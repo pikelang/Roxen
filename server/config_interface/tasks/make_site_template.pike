@@ -1,12 +1,12 @@
 /*
- * $Id: make_site_template.pike,v 1.8 2002/06/13 00:18:10 nilsson Exp $
+ * $Id: make_site_template.pike,v 1.9 2002/06/15 20:24:02 nilsson Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
  * Henrik Grubbström 2001-11-16
  */
 
-#include <config_interface.h>
+#include <admin_interface.h>
 
 constant task = "maintenance";
 constant name = "Create site template";

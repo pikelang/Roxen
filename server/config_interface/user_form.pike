@@ -1,6 +1,6 @@
-// $Id: user_form.pike,v 1.7 2002/06/15 18:31:11 nilsson Exp $
+// $Id: user_form.pike,v 1.8 2002/06/15 20:24:02 nilsson Exp $
 
-#include <config_interface.h>
+#include <admin_interface.h>
 
 mapping parse( RequestID id )
 {

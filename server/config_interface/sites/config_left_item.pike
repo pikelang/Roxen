@@ -1,4 +1,4 @@
-#include <config_interface.h>
+#include <admin_interface.h>
 
 string noendslash( string what )
 {

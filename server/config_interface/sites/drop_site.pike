@@ -1,4 +1,4 @@
-#include <config_interface.h>
+#include <admin_interface.h>
 
 void get_dead( string cfg, int del )
 {

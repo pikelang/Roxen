@@ -1,4 +1,4 @@
-#include <config_interface.h>
+#include <admin_interface.h>
 #include <config.h>
 
 string get_conf_name( string c )

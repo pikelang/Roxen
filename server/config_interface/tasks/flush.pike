@@ -1,7 +1,7 @@
 /*
- * $Id: flush.pike,v 1.11 2002/06/13 00:18:09 nilsson Exp $
+ * $Id: flush.pike,v 1.12 2002/06/15 20:24:02 nilsson Exp $
  */
-#include <config_interface.h>
+#include <admin_interface.h>
 
 constant task = "maintenance";
 constant name = "Flush caches";

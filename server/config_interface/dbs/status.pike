@@ -1,4 +1,4 @@
-#include <config_interface.h>
+#include <admin_interface.h>
 #include <config.h>
 
 #define q(X) Roxen.html_encode_string(X)

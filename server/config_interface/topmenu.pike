@@ -1,4 +1,4 @@
-#include <config_interface.h>
+#include <admin_interface.h>
 
 #define  tablist ("<tablist "+config_setting2("toptabs-args")+">")
 

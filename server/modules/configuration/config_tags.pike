@@ -4,13 +4,13 @@ inherit "module";
 inherit "html";
 inherit "roxenlib";
 #include <stat.h>
-#include <config_interface.h>
+#include <admin_interface.h>
 #include <config.h>
 #include <module.h>
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.178 2002/06/15 18:30:25 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.179 2002/06/15 20:24:55 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 

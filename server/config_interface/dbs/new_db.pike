@@ -1,4 +1,4 @@
-#include <config_interface.h>
+#include <admin_interface.h>
 #include <config.h>
 
 void really_do_create( RequestID id  )

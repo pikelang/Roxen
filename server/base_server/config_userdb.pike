@@ -6,7 +6,7 @@
 inherit "language";
 
 #define IN_ROXEN
-#include <config_interface.h>
+#include <admin_interface.h>
 #include <module.h>
 
 string query_configuration_dir();

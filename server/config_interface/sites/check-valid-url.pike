@@ -1,4 +1,4 @@
-#include <config_interface.h>
+#include <admin_interface.h>
 // return <false> if the url _is_ valid 
 mixed parse( RequestID id )
 {

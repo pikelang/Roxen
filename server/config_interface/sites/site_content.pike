@@ -1,11 +1,11 @@
-// $Id: site_content.pike,v 1.135 2002/06/15 18:31:12 nilsson Exp $
+// $Id: site_content.pike,v 1.136 2002/06/15 20:24:02 nilsson Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
 inherit "../statusinfo.pike";
 #include <module.h>
 #include <module_constants.h>
-#include <config_interface.h>
+#include <admin_interface.h>
 #include <config.h>
 #include <roxen.h>
 

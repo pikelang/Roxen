@@ -3,7 +3,7 @@
 // A filesystem for the roxen administration interface.
 #include <module.h>
 #include <stat.h>
-#include <config_interface.h>
+#include <admin_interface.h>
 
 inherit "module";
 
@@ -13,7 +13,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.112 2002/06/15 18:30:25 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.113 2002/06/15 20:24:55 nilsson Exp $";
 
 constant path = "config_interface/";
 
