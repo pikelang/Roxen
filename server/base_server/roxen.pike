@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.503 2000/07/11 01:52:52 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.504 2000/07/11 14:29:05 lange Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -368,6 +368,8 @@ void set_locale(void|string lang)
   //! codes and the old symbolic names.
 {
   string set;
+  if(!lang)
+    lang = default_locale;
   if(
 #if constant(Standards.ISO639_2)
      Standards.ISO639_2.get_language(lang)
@@ -376,23 +378,24 @@ void set_locale(void|string lang)
 #endif
      )
     set=lang;
-  else if(!lang)
-    set=default_locale;
   else if(
 #if constant(Standards.ISO639_2)
-     set=Standards.ISO639_2.map_639_1(lang)
+	  set=Standards.ISO639_2.map_639_1(lang)
 #else
-     set=RoxenLocale.ISO639_2.map_639_1(lang)
+	  set=RoxenLocale.ISO639_2.map_639_1(lang)
 #endif
-     )
+	  )
     ;
   else if(set=languages[lang])
     ;
-  else {
-    if(lang!=lower_case(lang)) set_locale(lower_case(lang));
-    // Default to default?
+  
+  if(!set) {
+    if(lang!=default_locale)
+      // lang not ok, try default_locale
+      set_locale(default_locale);
     return;
   }
+
   mapping objects;
 #if constant(Locale.get_objects)
   objects=Locale.get_objects( set );
