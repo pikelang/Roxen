@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.399 2003/04/22 08:08:51 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.400 2003/04/22 13:48:53 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -839,6 +839,7 @@ void end(int|void keepit)
   if( conf )
     conf->connection_drop( this_object() );
 
+#if constant(Parser.XML.Tree.XMLNSParser)
   if (xml_data) {
     catch {
       // Disconnect the XML graph to make it easier on the gc.
@@ -848,6 +849,7 @@ void end(int|void keepit)
       xml_data = 0;
     };
   }
+#endif /* Parser.XML.Tree.XMLNSParser */
 
   if(keepit
      && !file->raw

@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.58 2003/04/22 08:07:52 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.59 2003/04/22 13:48:24 grubba Exp $";
 
 class Variable
 {
@@ -687,6 +687,7 @@ class RequestID
   static void create(Stdio.File fd, Protocol port, Configuration conf){}
   void send(string|object what, int|void len){}
 
+#if constant(Parser.XML.Tree.XMLNSParser)
   static Parser.XML.Tree.Node xml_data;	// XML data for the request.
 
   Parser.XML.Tree.Node get_xml_data()
@@ -696,6 +697,7 @@ class RequestID
     //        the request is text/xml.
     return xml_data = Parser.XML.Tree.parse_input(data, 0, 0, 0, 1);
   }
+#endif /* Parser.XML.Tree.XMLNSParser */
 
   static string cached_url_base;
 
