@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.51 1998/09/19 18:55:29 grubba Exp $
+ * $Id: smtp.pike,v 1.52 1998/09/19 19:01:00 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.51 1998/09/19 18:55:29 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.52 1998/09/19 19:01:00 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -593,7 +593,7 @@ static class Smtp_Connection {
 
 	  foreach(conf->get_providers("smtp_filter")||({}), object o) {
 	    if (o->check_size) {
-	      int l = o->check_size(sz, current_mail);
+	      int l = o->check_size(current_mail);
 	      if (l) {
 		if (l < 0) {
 		  // Negative: Soft limit.
