@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.132 2001/01/29 05:41:59 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.133 2001/01/29 07:01:40 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -26,28 +26,17 @@ void create()
   query_tag_set()->prepare_context=set_entities;
 }
 
-class Scope_locale
-{
-  inherit RXML.Scope;
-  mixed `[]  (string var, void|RXML.Context c, void|string scope)
-  {
-    report_error("Warning: [%O] Use of the scope 'locale' is deprecated. \n", 
-		 var);
-    return var;
-  }
-}
-
 class Scope_cf
 {
   inherit RXML.Scope;
   mixed `[]  (string var, void|RXML.Context c, void|string scope)
   {
-    object id = c->id;
+    RequestID id = c->id;
     while( id->misc->orig ) id = id->misc->orig;
     switch( var )
     {
      case "num-dotdots":
-       int depth = sizeof( (id->not_query+(id->misc->path_info||"") )/"/" )-3;
+       int depth = sizeof( (id->not_query+(id->misc->path_info||"") )/"/" )-2;
        string dotodots = depth>0?(({ "../" })*depth)*"":"./";
        return dotodots;
 
@@ -65,7 +54,7 @@ class Scope_usr
 #define QALIAS( X ) (`[](X,c,scope)?"\""+roxen_encode(`[](X,c,scope),"html")+"\"":0)
   mixed `[]  (string var, void|RXML.Context c, void|string scope)
   {
-    object id = c->id;
+    RequestID id = c->id;
 
     if( id->misc->cf_theme &&
         id->misc->cf_theme[ var ] )
@@ -318,19 +307,17 @@ class Scope_usr
 }
 
 RXML.Scope usr_scope=Scope_usr();
-RXML.Scope locale_scope=Scope_locale();
 RXML.Scope cf_scope=Scope_cf();
 
 void set_entities(RXML.Context c)
 {
   c->extend_scope("usr", usr_scope);
-  c->extend_scope("locale", locale_scope);
   c->extend_scope("cf", cf_scope);
 }
 
 int upath;
 
-string get_var_form( string s, object var, object mod, object id,
+string get_var_form( string s, object var, object mod, RequestID id,
                      int set )
 {
   int view_mode;
@@ -373,12 +360,11 @@ string get_var_form( string s, object var, object mod, object id,
   //
   // Thus, we have to do all that  work above even if the variable will not
   // be visible
-  werror( RXML.get_var( "intiial", "form" )+"\n");
   if( !var->check_visibility( id,
                               config_setting2("more_mode"),
                               config_setting2("expert_mode"),
                               config_setting2("devel_mode"),
-                              (int)RXML.get_var( "intiial", "form" ),
+                              (int)RXML.get_var( "initial", "form" ),
                               get_conf( mod ) == id->conf) )
     return 0;
 
@@ -395,7 +381,7 @@ string get_var_form( string s, object var, object mod, object id,
   return pre + var->render_view( id );
 }
 
-mapping get_variable_map( string s, object mod, object id, int noset )
+mapping get_variable_map( string s, object mod, RequestID id, int noset )
 {
   if( !mod ) return ([]);
   object var = mod->getvar( s );
@@ -436,9 +422,10 @@ object get_conf( object mod )
   return mod;
 }
 
-mapping get_variable_section( string s, object mod, object id )
+mapping get_variable_section( string s, object mod, RequestID id )
 {
   Variable.Variable var = mod->getvar( s );
+  string section = RXML.get_var( "section", "form" );
 
   s = (string)var->name();
   if( !s ) return 0;
@@ -446,16 +433,14 @@ mapping get_variable_section( string s, object mod, object id )
     return ([
       "section":s,
       "sectionname":s,
-      "selected":(id->variables->section==s?"selected":"")
+      "selected":(section==s?"selected":"")
     ]);
   else
     return ([
       "section":"Settings",
       "sectionname":LOCALE(256,"Settings"),
       "selected":
-      ((id->variables->section=="Settings" ||
-	!id->variables->section)?
-       "selected":""),
+      ((section=="Settings" || !section)?"selected":""),
     ]);
   return 0;
 }
@@ -467,11 +452,13 @@ array get_variable_maps( object mod,
 {
   while( id->misc->orig )
     id = id->misc->orig;
+
   array variables = map( indices(mod->query()),
                          get_variable_map,
                          mod,
                          id,
                          fnset );
+
 
   variables = filter( variables,
                       lambda( mapping q ) {
@@ -509,7 +496,7 @@ array get_variable_maps( object mod,
                        } );
   }
 
-  switch( id->variables->sortorder || config_setting("sortorder") )
+  switch(  config_setting("sortorder") )
   {
     default:                    sort( variables->name, variables );  break;
     case "as defined":          sort( variables->id,   variables );  break;
@@ -532,7 +519,7 @@ array get_variable_maps( object mod,
   return variables;
 }
 
-array get_variable_sections( object mod, mapping m, object id )
+array get_variable_sections( object mod, mapping m, RequestID id )
 {
   mapping w = ([]);
   array vm = indices(mod->query());
@@ -716,7 +703,7 @@ class TagConfigPortsplugin
     sort( pos->get_key(), pos );
     pos = map( pos, get_port_map );
     foreach( pos, mapping v )
-      if( v->port == id->variables->port )
+      if( v->port == RXML.get_var( "port", "form" ) )
         v->selected = "selected";
     return pos;
   }
@@ -758,17 +745,21 @@ class TagConfigVariablesSectionsplugin
   {
     array v = get_variable_sections( find_config_or_error( m->configuration ),
                                      m, id );
+
+    string section = RXML.get_var( "section", "form" );
     if( m["add-status"] )
       v = ({ 
         ([
           "section":"Status",
           "sectionname":LOCALE(228,"Status"),
-          "selected":(!id->variables->section||(id->variables->section=="Status")?"selected":""),
+          "selected":(!section||(section=="Status")?"selected":""),
         ]),
       }) + v;
-    foreach( v, mapping q )
-      if( (q->section == "Settings") && (id->variables->section!="Settings"))
-        m_delete( q, "selected" );
+
+    if( section != "Settings" )
+      foreach( v, mapping q )
+	if( (q->section == "Settings") )
+	  m_delete( q, "selected" );
 
     v[0]->last = "last";
     v[-1]->first = "first";
@@ -801,24 +792,24 @@ class TagModuleVariablesSectionsplugin
   array get_dataset(mapping m, RequestID id)
   {
     array variables;
-     object conf = find_config_or_error( m->configuration );
-     object mod = conf->find_module( replace( m->module, "!", "#" ) );
-     if( !mod )
-       RXML.run_error("Unknown module: "+m->module+"\n");
-     variables =get_variable_sections( mod, m, id )|  ({ ([
+    Configuration conf = find_config_or_error( m->configuration );
+    RoxenModule mod = conf->find_module( replace( m->module, "!", "#" ) );
+    string section = RXML.get_var( "section", "form" );
+    if( !mod )
+      RXML.run_error("Unknown module: "+m->module+"\n");
+
+    variables = get_variable_sections( mod, m, id )|  ({ ([
        "section":"Information",
        "sectionname":LOCALE(299,"Information"),
        "selected":
-       ((id->variables->section=="Information" ||
-         !id->variables->section)?
-        "selected":""),
+       ((section=="Information" || !section)?"selected":""),
      ]) });
 
      if( sizeof( variables ) == 1 )
      {
        while( id->misc->orig )
          id = id->misc->orig;
-       id->variables->info_section_is_it = "1";
+       RXML.set_var( "info_section_is_it", "1", "form" );
        variables[0]->selected="selected";
      }
 
@@ -933,14 +924,14 @@ string simpletag_theme_set( string tag, mapping m, string s, RequestID id  )
   return "";
 }
 
-string simpletag_rli( string t, mapping m, string c, object id )
+string simpletag_rli( string t, mapping m, string c, RequestID id )
 {
   return "<tr>"
          "<td valign='top'><img src='&usr.count-"+(++id->misc->_rul_cnt&3)+
          ";' /></td><td valign='top'>"+c+"</td></tr>\n";
 }
 
-string simpletag_rul( string t, mapping m, string c, object id )
+string simpletag_rul( string t, mapping m, string c, RequestID id )
 {
   id->misc->_rul_cnt = -1;
   return "<table>"+c+"</table>";
