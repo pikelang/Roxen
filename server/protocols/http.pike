@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.250 2000/08/17 01:16:06 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.251 2000/08/20 03:02:01 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1805,6 +1805,8 @@ void send_result(mapping|void result)
             head_string += h+": "+heads[h]+"\r\n";
         head_string += "\r\n";
 #endif
+        if( strlen( charset ) )
+          head_string = output_encode( head_string )[1];
         conf->hsent += strlen(head_string);
       }
     }
