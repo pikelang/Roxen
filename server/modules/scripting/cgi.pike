@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.73 1998/02/27 05:54:56 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.74 1998/02/28 10:14:37 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -536,9 +536,23 @@ class spawn_cgi
       catch(roxen_perror("CGI: Exec failed!\n%O\n",
 			 describe_backtrace((array)err)));
       exit(0);
+    } else if (pid == -1) {
+      // fork() failed!
+      report_error(sprintf("CGI: fork() failed. No more processes?\n"));
+      pipe1->write("HTTP/1.0 500 No more processes\r\n"
+		   "\r\n"
+		   "<title>CGI failed: No more processes</title>\n"
+		   "<h2>CGI failed: No more processes</title>\n");
+      destruct(pipe1);
+      destruct(pipe2);
+      destruct(pipe3);
+      destruct(pipe4);
+      return;
     }
+
     destruct(pipe1);
     destruct(pipe3);
+
     if(kill_call_out) {
       call_out(lambda (int pid) {
 	object privs;
