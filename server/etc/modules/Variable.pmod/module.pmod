@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.19 2000/09/20 22:24:16 per Exp $
+// $Id: module.pmod,v 1.20 2000/09/22 14:14:09 jonasw Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1194,7 +1194,7 @@ static array(string) verify_port( string port, int nofhttp )
     {
       warning += 
               "SSL support not available in this pike version."
-              "Transformed "+protocol+" to";
+              "Transformed "+protocol+" to ";
       protocol = protocol[ ..strlen(protocol)-2 ];
       warning += protocol+"\n";
     }
