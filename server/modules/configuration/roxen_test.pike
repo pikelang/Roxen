@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.34 2001/07/21 11:05:42 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.35 2001/07/25 18:51:21 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -94,6 +94,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 
   string rxml="", res;
   RXML.PCode p_code = p_code_cache[ltests];
+  int pass = p_code ? 2 : 1;
 
   string indent( int l, string what )
   {
@@ -145,15 +146,23 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			 test_test( c );
 			 mixed err = catch {
 			   if (!p_code) {
-			     RXML.Parser parser = Roxen.get_rxml_parser (
-			       id, m->type && RXML.t_type->encode (m->type) (RXML.PXml),
-			       1);
+			     RXML.Type type = m->type ?
+			       RXML.t_type->encode (m->type) (
+				 conf->default_content_type->parser_prog) :
+			       conf->default_content_type;
+			     if (m->parser)
+			       type = type (RXML.t_parser->encode (m->parser));
+			     RXML.Parser parser = Roxen.get_rxml_parser (id, type, 1);
+			     parser->context->add_scope ("test", (["pass": pass]));
 			     parser->write_end (rxml);
 			     res = parser->eval();
 			     p_code_cache[ltests] = parser->p_code;
 			   }
-			   else
-			     res = Roxen.eval_p_code (p_code, id);
+			   else {
+			     RXML.Context ctx = p_code->new_context (id);
+			     ctx->add_scope ("test", (["pass": pass]));
+			     res = p_code->eval (ctx);
+			   }
 			 };
 			 if(err)
 			 {
@@ -168,14 +177,26 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 		       },
 		       "result" :
 		       lambda(object t, mapping m, string c) {
-			 if( !no_canon )
-			   c = canon_html( c );
-			 if(res != c) {
-			   if(m->not) return;
-			   test_error("Failed (result %O != %O)\n", res, c);
-			   throw(1);
+			 if (m->pass && (int) m->pass == pass) {
+			   if (m->type || m->parser) {
+			     RXML.Type type = m->type ? RXML.t_type->encode (m->type) :
+			       conf->default_content_type (RXML.PNone);
+			     if (m->parser)
+			       type = type (RXML.t_parser->encode (m->parser));
+			     RXML.Parser parser = Roxen.get_rxml_parser (id, type, 1);
+			     parser->context->add_scope ("test", (["pass": pass]));
+			     parser->write_end (c);
+			     c = parser->eval();
+			   }
+			   if( !no_canon )
+			     c = canon_html( c );
+			   if(res != c) {
+			     if(m->not) return;
+			     test_error("Failed (result %O != %O)\n", res, c);
+			     throw(1);
+			   }
+			   test_ok( );
 			 }
-			 test_ok( );
 		       },
 		       "glob" :
 		       lambda(object t, mapping m, string c) {
