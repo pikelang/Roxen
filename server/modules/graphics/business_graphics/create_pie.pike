@@ -13,11 +13,15 @@ constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
-constant cvs_version = "$Id: create_pie.pike,v 1.25 1997/10/24 19:13:31 peter Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.26 1997/11/23 17:05:55 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_pie can draw pie charts in different forms.
+
+The data is taken from the diagram_data-mapping which is described in doc/diagram_internals.txt
+
+
 */ 
 
 
@@ -25,7 +29,7 @@ Create_pie can draw pie charts in different forms.
 
 mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 {
-  //Supportar bara xsize>=100
+  //Only tested with xsize>=100
   int si=diagram_data["fontsize"];
 
   string where_is_ax;
@@ -40,10 +44,10 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
   diagram_data["ysize"]-=diagram_data["legend_size"];
   
-  //Bestäm största och minsta datavärden.
+  //Do the standard init (The init function is in create_graph)
   init(diagram_data);
 
-  //Initiera värden
+  //Initiate values
   int|void  size=diagram_data["xsize"];
   array(int|float) numbers=diagram_data["data"][0];
   void | array(string) names=diagram_data["xnames"];
@@ -101,9 +105,6 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
     if (notext=get_font("avant_garde", diagram_data["fontsize"], 0, 0, "left",0,0))
       for(int i=0; i<sizeof(names); i++)
 	{
-	  //if (names[i]=="")
-	    //names[i]="Fel så inåt helvete";
-	  
 	  if ((names[i]!=0) && (names[i]!=""))
 	    text[i]=notext->write((string)(names[i]))
 	      ->scale(0,diagram_data["fontsize"]);
@@ -112,8 +113,6 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
 	  if (text[i]->xsize()<1)
 	    text[i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
-
-	  // write("sizeof text"+text[i]->xsize()+", "+text[i]->ysize()+"\n");
 
 	  if (text[i]->xsize()>diagram_data["xsize"]/5+diagram_data["3Ddepth"])
 	    text[i]=text[i]->scale((int)diagram_data["xsize"]/5, 0);
@@ -128,9 +127,8 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	    ymaxtext=text[i]->ysize();
 	  
 	}
-  //skapa en array med fyra hundra koordinater
 
-  //Börja med att räkna ut lite saker
+  //Some calculations
   if (twoD)
     {
       xc=diagram_data["xsize"]/2;
@@ -152,6 +150,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
 
   //initiate the 0.25*% for different numbers:
+  //Ex: If numbers is ({3,3}) pnumbers will be ({200, 200}) 
   sum=`+(@ numbers);
   for(int i=0; i<sizeof(numbers); i++)
     {
@@ -162,6 +161,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
 
   //Now the rests are in the numbers-array
+  //We now make sure that the sum of pnumbers is 400.
   sort(numbers, order);
   sum2=`+(@ pnumbers);
   int i=sizeof(pnumbers);
@@ -178,7 +178,8 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   float FI=0;
   if (diagram_data["center"])
     {
-      //To great center integer is given! Center can not be greater than sizeof(data[0]).
+      //If to great center integer is given, module is used. 
+      // Center should not be greater than sizeof(data[0]).
       diagram_data["center"]%=(1+sizeof(numbers));
       FI=(400-`+(0,@pnumbers[0..diagram_data["center"]-2])
 	-pnumbers[diagram_data["center"]-1]*0.5)*2.0*PI/400.0;
@@ -192,10 +193,10 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
   for(int i=0; i<401; i++)
     {
-      arr[2*i]=xc+xr*sin((i*2.0*PI/400.0+0.0001)+FI);
-      arr[1+2*i]=yc+yr*sin(0.0001-PI/2+i*2.0*PI/400.0+FI);
-      arr2[2*i]=xc+(xr+w)*sin((i*2.0*PI/400.0+0.0001));
-      arr2[2*i+1]=yc+(w+yr)*sin(0.0001-PI/2+i*2.0*PI/400.0);
+      arr[2*i]=xc+xr*sin((i*2.0*PI/400.0)+FI);
+      arr[1+2*i]=yc+yr*sin(-PI/2+i*2.0*PI/400.0+FI);
+      arr2[2*i]=xc+(xr+w)*sin((i*2.0*PI/400.0));
+      arr2[2*i+1]=yc+(w+yr)*sin(-PI/2+i*2.0*PI/400.0);
     }
 
   //Draw the slices

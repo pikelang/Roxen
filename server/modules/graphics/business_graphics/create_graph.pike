@@ -12,7 +12,7 @@ inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.77 1997/11/22 22:10:12 noring Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.78 1997/11/23 17:05:49 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -552,7 +552,7 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
 					      diagram_data["xminvalue"])
 					     *xmore+xstart),
 					    diagram_data["ysize"]-
-					    diagram_data["ystop"]+0.01 //FIXME
+					    diagram_data["ystop"]
 					  }), 
 					  1, 1)[0]);
     }
@@ -577,7 +577,7 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
 					  (-(diagram_data["values_for_ynames"][i]-
 					     diagram_data["yminvalue"])
 					   *ymore+diagram_data["ysize"]-
-					   ystart)+0.01 //FIXME
+					   ystart)
 					}), 
 					1, 1)[0]);
     }
@@ -747,17 +747,17 @@ mapping set_legend_size(mapping diagram_data)
 						   );
 	  diagram_data["image"]->setcolor(0,0,0);
 	  draw( diagram_data["image"], 0.5, 
-	       ({(i/raws)*b+0.01, (i%raws)*diagram_data["legendfontsize"]+
-						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1 //FIXME
-		 ,(i/raws)*b+plupps[i]->xsize()-0.99 ,  (i%raws)*diagram_data["legendfontsize"]+
-						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1, //FIXME
+	       ({(i/raws)*b, (i%raws)*diagram_data["legendfontsize"]+
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1 
+		 ,(i/raws)*b+plupps[i]->xsize()-1.0 ,  (i%raws)*diagram_data["legendfontsize"]+
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1, 
 		 (i/raws)*b+plupps[i]->xsize()-1.0,  (i%raws)*diagram_data["legendfontsize"]+
-						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+plupps[i]->ysize()-1  //FIXME
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+plupps[i]->ysize()-1  
 		 ,(i/raws)*b+1 ,  (i%raws)*diagram_data["legendfontsize"]+
-						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+plupps[i]->ysize()-1 //FIXME
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+plupps[i]->ysize()-1
 
-		 ,(i/raws)*b+0.01, (i%raws)*diagram_data["legendfontsize"]+
-						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1 //FIXME
+		 ,(i/raws)*b, (i%raws)*diagram_data["legendfontsize"]+
+						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1
 
 	       })); 
 	
@@ -1112,7 +1112,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					diagram_data["linewidth"],
 					diagram_data["ysize"]- ypos_for_xaxis,
 					diagram_data["xsize"]-
-					si-labelx/2+0.01, //FIXME 
+					si-labelx/2, 
 					diagram_data["ysize"]-ypos_for_xaxis
 				      }), 
 				      1, 1)[0]);
@@ -1265,7 +1265,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					      diagram_data["ysize"]-ypos_for_xaxis-
 					      si*4.0/3.0,
 					    
-					      xpos_for_yaxis+0.01, //FIXME!
+					      xpos_for_yaxis,
 					      si+
 					      diagram_data["labelsize"]
 					      

@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.49 1997/11/22 22:10:44 noring Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.50 1997/11/23 17:05:42 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -352,8 +352,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	      barsdiagram->setcolor(@(diagram_data["datacolors"][j++]));
 	      
 	      barsdiagram->polygone(
-				    ({x-barw+0.01, y //FIXME
-				      , x+barw+0.01, y, //FIXME
+				    ({x-barw, y 
+				      , x+barw, y, 
 				      x+barw, start
 				      , x-barw, start
 				    }));  
@@ -361,8 +361,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	      draw(barsdiagram, 0.5, 
 		   ({
 		     x-barw, start,
-		     x-barw+0.01, y //FIXME
-		     , x+barw+0.01, y, //FIXME
+		     x-barw, y 
+		     , x+barw, y, 
 		     x+barw, start
 
 		   })
@@ -428,18 +428,18 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 		  barsdiagram->setcolor(@(diagram_data["datacolors"][farg]));
   
 		  barsdiagram->polygone(
-					({x-barw+0.02+dnr, y //FIXME
-					  , x+barw+0.02+dnr, y, //FIXME
+					({x-barw+dnr, y 
+					  , x+barw+dnr, y, 
 					  x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
 					  , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis
 					})); 
 		  barsdiagram->setcolor(0,0,0);		  
 		  draw(barsdiagram, 0.5, 
-		       ({x-barw+0.01+dnr, y //FIXME
-			 , x+barw+0.01+dnr, y, //FIXME
+		       ({x-barw+dnr, y 
+			 , x+barw+dnr, y, 
 			 x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
 			 , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis,
-			 x-barw+0.01+dnr, y //FIXME
+			 x-barw+dnr, y 
 			 }));
 		}
 	      dnr+=barw*2.0;
@@ -468,7 +468,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					xpos_for_yaxis,
 					diagram_data["ysize"]- ypos_for_xaxis,
 					diagram_data["xsize"]-
-					diagram_data["linewidth"]-labelx/2-0.01, //FIXME 
+					diagram_data["linewidth"]-labelx/2,  
 					diagram_data["ysize"]-ypos_for_xaxis
 				      }), 
 				      1, 1)[0]);
@@ -606,7 +606,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					      diagram_data["ysize"]-ypos_for_xaxis-
 					      si*4.0/3.0,
 					    
-					      xpos_for_yaxis+0.01, //FIXME!
+					      xpos_for_yaxis, 
 					      si+
 					      diagram_data["labelsize"]
 					      
