@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.40 1998/09/17 20:42:32 grubba Exp $
+ * $Id: smtp.pike,v 1.41 1998/09/17 22:10:14 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.40 1998/09/17 20:42:32 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.41 1998/09/17 22:10:14 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -748,11 +748,11 @@ static class Smtp_Connection {
     // Add received-headers here.
 
     string received = sprintf("from %s (%s@%s [%s])\r\n"
-			      "\tby %s with %s;\r\n"
+			      "\tby %s (%s) with %s;\r\n"
 			      "\t%s",
 			      remotename, remoteident||"", remotehost||"",
 			      remoteip,
-			      localhost, prot,
+			      localhost, roxen->version(), prot,
 			      mktimestamp(current_mail->timestamp));
   
     roxen_perror(sprintf("Received: %O\n", received));
@@ -843,6 +843,12 @@ static class Smtp_Connection {
       // All of the async lookups have returned.
 
       if (bad_con) {
+	// Log that we've disconnected.
+	// Note that syslog will put a \n last if needed.
+	openlog("Roxen SMTP", 0, LOG_MAIL);
+	syslog(LOG_NOTICE, sprintf("Access denied\n"
+				   "%s",
+				   disconnect_reason * "\n"));
 	if (sizeof(disconnect_reason)) {
 	  // Give a reason why we disconnect
 	  ::create(con, parent->query_timeout());
