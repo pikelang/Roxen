@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.559 2000/09/24 13:35:50 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.560 2000/09/24 18:59:45 grubba Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3694,11 +3694,11 @@ function compile_log_format( string fmt )
 
 static string cached_hostname = gethostname();
 
-class LogFile
+class LogFile(string fname)
 {
   Stdio.File fd;
   int opened;
-  string fname;
+
   void do_open()
   {
     mixed parent;
@@ -3764,12 +3764,6 @@ class LogFile
       call_out( do_the_write, 1 );
     write_buf += ({what});
     return strlen(what); 
-  }
-
-  static void create( string f ) 
-  {
-    fname = f;
-    opened = 0;
   }
 }
 
