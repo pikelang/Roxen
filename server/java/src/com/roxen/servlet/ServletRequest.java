@@ -13,6 +13,7 @@ import java.util.Hashtable;
 import java.util.Enumeration;
 import java.util.Vector;
 import java.util.Locale;
+import java.util.StringTokenizer;
 import java.text.ParseException;
 import java.security.Principal;
 
@@ -356,16 +357,56 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     attributes.remove(name);
   }
 
+  protected Locale parseLocale(String s)
+  {
+    StringTokenizer st = new StringTokenizer(s.trim(), ";-", true);
+    String lang=null, cntry=null, variant=null;
+    while (st.hasMoreTokens()) {
+      String t = st.nextToken();
+      if(";".equals(t))
+	break;
+      else if("-".equals(t))
+	;
+      else if(lang == null)
+	lang = t.toLowerCase();
+      else if(cntry == null)
+	cntry = t.toUpperCase();
+      else {
+	variant = t;
+	break;
+      }
+    }
+    if(lang == null)
+      return null;
+    else if(cntry == null)
+      return new Locale(lang, "");
+    else if(variant == null)
+      return new Locale(lang, cntry);
+    else
+      return new Locale(lang, cntry, variant);
+  }
+
   public Locale getLocale()
   {
-    // FIXME
-    return null;
+    String al = getHeader("Accept-Language");
+    if(al == null)
+      return Locale.getDefault();
+    StringTokenizer st = new StringTokenizer(al, ",");
+    return parseLocale(st.nextToken());
   }
 
   public Enumeration getLocales()
   {
-    // FIXME
-    return null;
+    Enumeration e = getHeaders("Accept-Language");
+    Vector v = new Vector();
+    if(e == null || !e.hasMoreElements())
+      v.add(Locale.getDefault());
+    else while(e.hasMoreElements()) {
+      StringTokenizer st = new StringTokenizer((String)e.nextElement(), ",");
+      while (st.hasMoreTokens())
+	v.add(parseLocale(st.nextToken()));
+    }
+    return v.elements();
   }
   
   public boolean isSecure()
@@ -396,8 +437,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
 
   public String getContextPath()
   {
-    // FIXME
-    return null;
+    return "";
   }
 
   public boolean isUserInRole(String role)
