@@ -55,6 +55,9 @@ int ymaxynames;
 int fontsize;
 //anger med vilken storlek texten ska skrivas
 
+int labelsize;
+// anger med vilken storlek texten för labels ska skrivas
+
 array(froat) values_for_xnames;
 //Innehåller en array med nivåerna som ska förknippas med vissa xnames.
 //Om dessa inte anges kan de sättas ut jämt.
