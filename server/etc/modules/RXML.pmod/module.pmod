@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.334 2004/08/11 15:31:40 grubba Exp $
+// $Id: module.pmod,v 1.335 2004/08/11 15:45:37 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8112,9 +8112,9 @@ class PCode
 	  item = exec[pos];
 	  int p;
 	  for (p=pos+10; p < end; p+=10) {
-	    item += `+(@exec[p-9..p]);
+	    item = `+(item, @exec[p-9..p]);
 	  }
-	  item += `+(@exec[p-9..end]);
+	  item = `+(item, @exec[p-9..end]);
 #else
 	  item = `+(@exec[pos..--end]);
 #endif
