@@ -7,7 +7,7 @@
 #endif
 #endif
 #ifndef IN_INSTALL
-// string cvs_version = "$Id: newdecode.pike,v 1.14 1999/11/19 10:08:37 per Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.15 1999/11/21 02:27:27 per Exp $";
 #endif
 
 #include <roxen.h>
@@ -81,6 +81,17 @@ string decode_config_region(string foo, mapping mr, string s, mapping res2)
   return "";
 }
 
+string trim_comments( string from )
+{
+  string res = "";
+  foreach( from /"\n", string l )
+  {
+    if( strlen(l) && l[0] == '#' )
+      continue;
+    res += l+"\n";
+  }
+  return res;
+}
 
 mapping decode_config_file(string s)
 {
@@ -88,6 +99,8 @@ mapping decode_config_file(string s)
   if(sizeof(s) < 10) return res; // Empty file..
   if( sscanf( s, "%*s<?XML version=\"1.0\"?>\n%*s" ) == 2 )
     s = utf8_to_string( s );
+  else
+    s = trim_comments( s );
   parse_html(s, ([]), ([ "region":decode_config_region ]), res);
   return res;
 }
