@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.29 2001/06/18 15:49:46 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.30 2001/06/21 20:13:13 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -406,11 +406,13 @@ void do_tests()
 
 // --- Some tags used in the RXML tests ---------------
 
-class EntityInc {
+class EntityDyn {
   inherit RXML.Value;
   int i;
   mixed rxml_var_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_INT(i++, type);
+    if(c->current_scope() && RXML.get_var("x"))
+      return ENCODE_RXML_INT(i++, type);
+    return ENCODE_RXML_INT(0, type);
   }
 }
 
@@ -443,7 +445,7 @@ class TagEmitTESTER {
       });
 
     case "3":
-      return ({ (["data":"a"]), (["data":RXML.nil]), (["data":EntityInc()]) });
+      return ({ (["data":"a"]), (["data":RXML.nil]), (["data":EntityDyn()]) });
 
     case "2":
       return map( "aa,a,aa,a,bb,b,cc,c,aa,a,dd,d,ee,e,aa,a,a,a,aa"/",",
