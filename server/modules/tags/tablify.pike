@@ -1,15 +1,13 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.39 1999/09/22 19:46:55 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.40 1999/11/24 15:39:52 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 inherit "state";
 
-#define old_rxml_compat 1
-
-mixed *register_module()
+array register_module()
 {
   return ({ 
     MODULE_PARSER,
@@ -19,7 +17,87 @@ mixed *register_module()
     0, 1, });
 }
 
-string encode_url(int col, int state, object stateobj, object id){
+mapping TAGDOCUMENTATION;
+mapping tagdocumentation() {
+  if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
+  int start=__LINE__;
+  /*
+    (["tablify":({#"<desc cont>Transforms texts into tables. No attributes required.</desc>
+
+<attr name=rowseparator value=string>Defines the rowseparator. Default is a newline.</attr>
+<attr name=cellseparator value=string>Defines the cellseparaotr. Default is a tab.</attr>
+<attr name=border value=int>Defines the width of the border. Default is 2 in
+ nice and nicer modes. Otherwise undefined.</attr>
+<attr name=cellspacing value=int>Defines the cellspacing attribute. Default is 0 in
+ nice and nicer modes. Otherwise undefined.</attr>
+<attr name=cellpadding value=int>Defines the cellpadding attribute. Default is 4 in
+ nice and nicer modes. Otherwise undefined.</attr>
+<attr name=interactive-sort>Makes it possible for the user to sort the table with
+ respect to any column.</attr>
+<attr name=sortcol value=int>Defines which column to sort the table with respect to.
+ The leftmost column is number 1. Negative value indicate reverse sort order.</attr>
+<attr name=min value=int>Indicates which of the inputed rows should be the first to
+ be displayed. The first row is number 1.</attr>
+<attr name=max value=int>Indicates which of the inputed rows should be the last to
+ be displayed.</attr>
+<attr name=negativecolor value=color>The color of negative values in economic fields. Default is #ff0000.</attr>
+<attr name=cellalign value=left,center,right>Defines how the cell contents should be align by default.</attr>
+<attr name=cellvalign value=top,middle,bottom>Defines how the cell contents should be verically aligned.</attr>
+<hr>
+<attr name=nice>Add some extra layout to the table. All attributes below
+ only applies in nice or nicer mode.</attr>
+<attr name=grid value=int>Draws a grid with the thickness given.</attr>
+<attr name=notitle>Don't add a title to each column.</attr>
+<attr name=bordercolor value=color>The colour of the border. Default is #000000.</attr>
+<attr name=titlebgcolor value=color>The background colour of the title. Default is #112266.</attr>
+<attr name=titlecolor value=color>The colour of the title. Default is #ffffff.</attr>
+<attr name=modulo value=int>Defines how many rows in a row should have the same colour.</attr>
+<attr name=oddbgcolor value=color>The first background color. Default is #ffffff.</attr>
+<attr name=evenbgcolor value=color>The second background color. Default is #ddeeff.</attr>
+<hr>
+<attr name=nicer>Add some extra extra layout to the table. All attributes
+ below only applies in nicer mode. Nicer requires the gtext module.</attr>
+<attr name=noxml>Don't terminate the gifs with slashes.</attr>
+<attr name=font value=text>Gtext font to write the column titles with. Default is 'lucida'.</attr>
+<attr name=scale value=float>Size of the gtext font to write the column titles with. Default is 0.36</attr>
+<attr name=textcolor value=color>The color of the text. This will also work with economic fields in any mode.
+ Default is #000000.</attr>
+<attr name=size value=int>The size of the table text. Default is 2.</attr>
+<attr name=font value=string>The font of the table text. Default is 'helvetica,arial'</attr>",
+  (["fields":#"<desc cont>The container 'fields' may be used inside the tablify container to describe
+   the type of contents the fields in a column has. Avaiable fields are<br>
+
+   <ul>
+   <li>text (default)</li>
+   <li>left</li>
+   <li>center</li>
+   <li>right</li>
+   <li>num</li>
+   <li>int</li>
+   <li>economic-int</li>
+   <li>float</li>
+   <li>economic-float</li>
+   </ul>
+
+   All fields except text overrides the cellvalign attribute.</desc>
+
+
+  <attr name=separator value=string>Defines the field type separator.</attr>
+
+  The fields types are separated by
+  <ol>
+  <li>The value given in the separator attribute to fields.</li>
+  <li>The value given in the cellseparator attribute to tablify.</li>
+  <li>Tab.</li>
+  </ol>"])
+})])
+  */
+  TAGDOCUMENTATION=get_commented_value(__FILE__,start);
+  if(!mappingp(TAGDOCUMENTATION)) TAGDOCUMENTATION=0;
+  return TAGDOCUMENTATION;
+}
+
+string encode_url(int col, int state, object stateobj, RequestID id){
   if(col==abs(state))
     state=-1*state;
   else
@@ -29,7 +107,7 @@ string encode_url(int col, int state, object stateobj, object id){
     stateobj->uri_encode(state);
 }
 
-string make_table(array subtitles, array table, mapping opt, object id)
+string make_table(array subtitles, array table, mapping opt, RequestID id)
 {
   string r = "",type;
 
@@ -147,56 +225,20 @@ string make_table(array subtitles, array table, mapping opt, object id)
   return make_container("table",opt,r);
 }
 
-string container_fields(string name, mapping arg, string q, mapping m)
+string _fields(string name, mapping arg, string q, mapping m)
 {
   m->fields = q/(arg->separator||m->cellseparator||"\t");
   return "";
 }
 
-string tag_tablify(string tag, mapping m, string q, object id)
+string container_tablify(string tag, mapping m, string q, RequestID id)
 {
   array rows, res;
   string sep;
 
-#if old_rxml_compat
-  // RXML <1.4 compatibility stuff
-  if(m->fgcolor0) {
-    m->oddbgcolor=m->fgcolor0;
-    m_delete(m, "fgcolor0");
-    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute fgcolor0","oddbgcolor");
-  }
-  if(m->fgcolor1) {
-    m->evenbgcolor=m->fgcolor1;
-    m_delete(m, "fgcolor1");
-    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute fgcolor1","evenbgcolor");
-  }
-  if(m->fgcolor) {
-    m->textcolor=m->fgcolor;
-    m_delete(m, "fgcolor");
-    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute fgcolor","textcolor");
-  }
-  if(m->rowalign) {
-    m->cellalign=m->rowalign;
-    m_delete(m, "rowalign");
-    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute rowalign","cellalign");
-  }
-  // When people have forgotten what bgcolor meant we can reuse it as evenbgcolor=oddbgcolor=m->bgcolor
-  if(m->bgcolor) {
-    m->bordercolor=m->bgcolor;
-    m_delete(m, "bgcolor");
-    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute bgcolor","bordercolor");
-  }
-  if (m->preprocess || m->parse) {
-    q = parse_rxml(q, id);
-    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute "+(m->parse?"parse":"preprocess","preparse"));
-    m_delete(m, "parse");
-    m_delete(m, "preprocess");
-  }
-#endif
-
   if(m->help) return register_module()[2];
 
-  q = parse_html(q, ([]), (["fields":container_fields]), m);
+  q = parse_html(q, ([]), (["fields":_fields]), m);
 
   if(m->intable) {
     q=`-(q,"\n","\r","\t");
@@ -244,7 +286,7 @@ string tag_tablify(string tag, mapping m, string q, object id)
 			}, sep);
 
   if(m["interactive-sort"]) {
-    m->state=page_state(id);
+    m->state=Page_state(id);
     m->state->register_consumer((m->name || "tb")+sizeof(rows), id);
     m->sortcol=(int)m->sortcol;
     if(id->variables->state){
@@ -285,14 +327,3 @@ string tag_tablify(string tag, mapping m, string q, object id)
 
   return make_table(title, rows, m, id);
 }
-
-mapping query_container_callers()
-{
-  return ([ "tablify" : tag_tablify ]);
-}
-
-mapping query_tag_callers()
-{
-  return ([]);
-}
-
