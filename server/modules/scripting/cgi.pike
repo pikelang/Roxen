@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.22 1997/04/26 03:38:39 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.23 1997/05/01 02:15:03 per Exp $";
 
 #include <module.h>
 
@@ -167,10 +167,10 @@ void create()
 	 "The maximum size of any file created, in 512 byte blocks. -2 "
 	 "is unlimited.");
 
-  defvar("open_files", 16, "Limits: Maximum number of open files",
+  defvar("open_files", 64, "Limits: Maximum number of open files",
 	 TYPE_INT_LIST,
 	 "The maximum number of files the script can keep open at any time.",
-	 ({8,16,32,64,128,256,512,1024,2048}));
+	 ({64,128,256,512,1024,2048}));
 
   defvar("stack", -2, "Limits: Stack size", TYPE_INT|VAR_EXPERT,
 	 "The maximum size of the stack used, in b. -2 is unlimited.");
@@ -241,7 +241,7 @@ void start(int n, object conf)
   env["SERVER_PROTOCOL"]="HTTP/1.0";
   env["SERVER_URL"]=conf->query("MyWorldLocation");
   env["AUTH_TYPE"]="Basic";
-  env["ROXEN_CGI_NICE_VALUE"] = (string)query("nice");
+  env["ROXEN_CGI_NICE_LEVEL"] = (string)query("nice");
   env["ROXEN_CGI_LIMITS"] = ("core_dump_size="+query("coresize")+
 			     ";time_cpu="+query("maxtime")+
 			     ";data_size="+query("datasize")+
@@ -343,7 +343,8 @@ mixed find_file(string f, object id)
     path_info = id->misc->path_info;
   else 
   {
-    if(!(tmp2 = extract_path_info( f ))) {
+    if(!(tmp2 = extract_path_info( f )))
+    {
       if(file_size( path + f ) == -2)
 	return -1; // It's a directory...
       return 0;
@@ -359,6 +360,7 @@ mixed find_file(string f, object id)
   wd = dirname(f);
   pipe1=files.file();
   pipe2=pipe1->pipe();
+  pipe2->set_blocking(); pipe1->set_blocking();
     
   mixed uid;
   array us;
@@ -401,12 +403,13 @@ mixed find_file(string f, object id)
   }
   destruct(pipe1);
     
-  if(id->data || id->misc->len)
-  {
-    pipe2->write(id->data);
-    id->my_fd->set_nonblocking(got_some_data, 0, 0); // for put..
-    id->my_fd->set_id( pipe2 );                     // lets try, atleast..
-  }
+  if(id->my_fd)
+    if(id->data || id->misc->len)
+    {
+      pipe2->write(id->data);
+      id->my_fd->set_nonblocking(got_some_data, 0, 0); // for put..
+      id->my_fd->set_id( pipe2 );                     // lets try, atleast..
+    }
   pipe2->set_id(pipe2);
   return http_stream(pipe2);
 }
