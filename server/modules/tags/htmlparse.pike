@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.171 1999/04/24 16:38:44 js Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.172 1999/05/08 06:22:59 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -664,7 +664,7 @@ mapping handle_file_extension( object file, string e, object id)
     if(search(QUERY(toparse),e)==-1)  /* Parse anyway */
       return 0;
   }
-  
+  werror("PARSING: %O\n", id->not_query);
   if(!defines->sizefmt)
   {
 #if efun(set_start_quote)
@@ -2688,7 +2688,7 @@ string tag_pr(string tagname, mapping m)
   m->height = (string)w;
   if(!m->alt) m->alt="Powered by Roxen";
   if(!m->border) m->border="0";
-  return ("<a href=http://www.roxen.com/>"+make_tag("img", m)+"</a>");
+  return ("<a href=\"http://www.roxen.com/\">"+make_tag("img", m)+"</a>");
 }
 
 string tag_number(string t, mapping args)
