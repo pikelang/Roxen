@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.105 1998/10/08 20:30:55 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.106 1999/03/20 00:50:06 js Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -13,7 +13,8 @@ int thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 
-// #define CGI_DEBUG
+//#define CGI_DEBUG
+// #define CGI_WRAPPER_DEBUG
 
 import Simulate;
 
@@ -53,15 +54,15 @@ void init_log_file()
     if(strlen(logfile))
     {
       do {
-#ifndef THREADS
-	object privs = Privs("Opening logfile \""+logfile+"\"");
-#endif
+// 	object privs;
+//      catch(privs = Privs("Opening logfile \""+logfile+"\""));
 	object lf=open( logfile, "wac");
-#if efun(chmod)
-#if efun(geteuid)
-	if(geteuid() != getuid()) catch {chmod(logfile,0666);};
-#endif
-#endif
+//         if(privs) destruct(privs);
+// #if efun(chmod)
+// #if efun(geteuid)
+// 	if(geteuid() != getuid()) catch {chmod(logfile,0666);};
+// #endif
+// #endif
 	if(!lf) {
 	  mkdirhier(logfile);
 	  if(!(lf=open( logfile, "wac"))) {
@@ -136,7 +137,7 @@ int run_as_user_enabled()
   return(uid_was_zero() || !QUERY(user));
 }
 
-void create()
+void create(object c)
 {
   defvar("Enhancements", 1, "Roxen CGI Enhancements", TYPE_FLAG|VAR_MORE,
 	 "If defined, Roxen will export a few extra varaibles, namely "
@@ -199,8 +200,7 @@ void create()
 	    "custom log file",
 	    "browser" }));
   defvar("cgilog", GLOBVAR(logdirprefix)+
-	 short_name(roxen->current_configuration?
-		    roxen->current_configuration->name:".")+"/cgi.log", 
+	 short_name(c? c->name:".")+"/cgi.log", 
 	 "Log file", TYPE_STRING,
 	 "Where to log errors from CGI scripts. You can also choose to send "
 	 "the errors to the browser or to the main Roxen log file. "
@@ -214,7 +214,7 @@ void create()
 	 lambda() { if(QUERY(stderr) != "custom log file") return 1; });
 
   defvar("virtual_cgi", 0, "Support dynamically generated CGI scripts",
-	 TYPE_FLAG|VAR_EXPERT,
+	 TYPE_FLAG|VAR_MORE,
 	 "If set, attempt to execute CGI's that only exist as virtual "
 	 "files, by copying them to /tmp/.<br>\n"
 	 "Not recomended.");
@@ -229,7 +229,13 @@ void create()
 	 "If set, the variable REMOTE_PASSWORD will be set to the decoded "
 	 "password value.");
 
-  defvar("use_wrapper", (getcwd()==""?0:1), "Use cgi wrapper", 
+  defvar("use_wrapper", 
+#ifdef __NT__
+         0
+#else
+         (getcwd()==""?0:1)
+#endif
+, "Use cgi wrapper", 
 	 TYPE_FLAG|VAR_EXPERT,
 	 "If set, an external wrapper will be used to start the CGI script.\n"
 	 "<br>This will:<ul>\n"
@@ -340,7 +346,6 @@ void start(int n, object conf)
   if(intp(QUERY(wrapper)))
     QUERY(wrapper)="bin/cgi";
 
-  if(!conf) conf=roxen->current_configuration;
   if(!conf) return;
 
   module_dependencies(conf, ({ "pathinfo" }));
@@ -435,6 +440,17 @@ array find_dir(string f, object id)
     return get_dir(search_path+f);
 }
 
+mapping cached_groups = ([]);
+array get_cached_groups_for_user( int uid )
+{
+#if constant(get_groups_for_user)
+  if(cached_groups[ uid ] && cached_groups[ uid ][1]+3600>time(1))
+    return cached_groups[ uid ][0];
+  return (cached_groups[ uid ] = ({ get_groups_for_user( uid ), time(1) }))[0];
+#else
+  return ({});
+#endif
+}
 
 class spawn_cgi
 {
@@ -452,6 +468,428 @@ class spawn_cgi
   int kill_call_out;
   array(object)| int dup_err;
   int setgroups;
+  object cgi_pipe;
+
+
+  class nat_wrapper // Wrapper emulator when not using the binary wrapper.
+  {
+    static string buffer;
+    static int nonblocking;
+    static function rcb, wcb, ccb;
+    static object realfd;
+    static string headers = "";
+    static int inread;
+    static object proc;
+
+    static void handle_headers()
+    {
+      string retcode = "200 Ok";
+      int pointer;
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: handle_headers()\n");
+#endif
+      if(((pointer = strstr(headers, "Location:"))!=-1||
+          ((pointer = strstr(headers, "location:")))!=-1))
+      {
+        retcode = "302 Redirection";
+      }
+
+      if(((pointer = strstr(headers, "status:"))!=-1||
+          ((pointer = strstr(headers, "Status:")))!=-1))
+      {
+        int end;
+        sscanf(headers[pointer+7..], "%s%n\n", retcode, end);
+        sscanf(retcode, "%*[ \t]%s", retcode);
+        sscanf(retcode, "%s\r", retcode);
+        headers = headers[..pointer-1]+headers[pointer+7+end+1..];
+      }
+      buffer = "HTTP/1.1 "+retcode+"\r\n" + headers +"\r\n\r\n"+ buffer;
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: handle_headers() --->\n"+buffer);
+#endif
+    }
+
+    void close()
+    {
+      int killed;
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: Closing down...\n");
+      werror("Killing "+proc->pid()+"\n");
+#endif
+      if(!kill(proc, signum("SIGKILL")) && !closed)
+      {
+        object privs;
+        catch(privs = Privs("Killing CGI script."));
+        kill(proc, signum("SIGKILL"));
+      }
+      set_blocking();
+      destruct(realfd);
+    }
+
+#ifdef CGI_WRAPPER_DEBUG
+    void destroy()
+    {
+      werror("CGI wrapper done!\n");
+      close();
+    }
+#endif
+
+    
+    void set_read_callback( function to )
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: set_read_callback(%O)\n", to);
+#endif
+      rcb = to;
+      if(buffer && sizeof(buffer) && to)
+      {
+        to(realfd->query_id(), buffer);
+        buffer=0;
+      }
+    }
+
+    void set_write_callback( function to )
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: set_write_callback(%O)\n", to);
+#endif
+      wcb = to;
+    }
+
+    void set_close_callback( function to )
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: set_close_callback(%O)\n", to);
+#endif
+      ccb = to;
+      if(closed && to)
+        to(realfd->query_id());
+    }
+
+    void set_nonblocking( function r, function w, function c )
+    {
+      nonblocking = 1;
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: set_nonblocking(%O,%O,%O)\n", r,w,c);
+#endif
+      set_read_callback( r );
+      set_read_callback( w );
+      set_read_callback( c );
+    }
+
+    void set_blocking()
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: set_blocking()\n");
+#endif
+      nonblocking = 0;
+      set_read_callback( 0 );
+      set_read_callback( 0 );
+      set_read_callback( 0 );
+    }
+
+
+#if constant(thread_create)
+    static void data_fetcher(  )
+    {
+      string data;
+      while(1)
+      {
+#ifdef CGI_WRAPPER_DEBUG
+        werror("CGI wrapper: reading... ->");
+#endif
+        
+        if(!realfd)
+        {
+          if(headers)
+          {
+            if(!buffer)
+              buffer = "";
+            handle_headers( );
+            headers=0;
+            if(rcb && !inread)
+            {
+              rcb(realfd->query_id(), buffer);
+              buffer = "";
+            }
+          }
+          closed = 1;
+          if(ccb) 
+            ccb(realfd->query_id());
+          return;
+        }
+        data = realfd->read(1024,1);
+#ifdef CGI_WRAPPER_DEBUG
+        werror("%O(%d)<--\n", data, data&&strlen(data));
+#endif
+        if(!data || !strlen(data))
+        {
+#ifdef CGI_WRAPPER_DEBUG
+          werror("Closed!\n");
+#endif
+          if(headers)
+          {
+            if(!buffer)
+              buffer = "";
+            handle_headers( );
+            headers=0;
+            if(rcb && !inread)
+            {
+              rcb(realfd->query_id(), buffer);
+              buffer = "";
+            }
+          }
+          closed = 1;
+          if(ccb) 
+            ccb(realfd->query_id());
+          return;
+        }
+//#ifdef CGI_WRAPPER_DEBUG
+//   werror("CGI wrapper: get_some_data(%s)\n", data);
+//#endif
+
+        if(headers)
+        {
+          headers += data;
+          if((sscanf(headers, "%s\r\n\r\n%s", headers, buffer) == 2) ||
+             (sscanf(headers, "%s\n\n%s", headers, buffer) == 2) ||
+             strlen(headers)>16536)
+          {
+            if(!buffer)
+              buffer = "";
+            handle_headers( );
+            headers=0;
+            if(rcb && !inread)
+            {
+              rcb(realfd->query_id(), buffer);
+              buffer = "";
+            }
+          }
+          continue;
+        }
+        buffer += data;
+        if(rcb && !inread)
+        {
+          call_out(rcb,0,realfd->query_id(),buffer);
+          buffer = "";
+        }
+      }
+    }
+
+    int closed;
+    string read(int nbytes, int less_is_enough)
+    {
+      if(closed) {
+        if(buffer)
+        {
+          string s = buffer;
+          buffer = 0;
+          return s;
+        }
+        return 0;
+      }
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: read(%d,%d)\n",nbytes,less_is_enough);
+#endif
+      if(!nbytes)
+        nbytes = 0x7fffffff;
+      string ret;
+      if(buffer && strlen(buffer))
+      {
+        if(strlen(buffer) >= nbytes || less_is_enough || nonblocking)
+        {
+          ret = buffer[..nbytes-1];
+          buffer = buffer[nbytes..];
+#ifdef CGI_WRAPPER_DEBUG
+          werror("returning "+ret+"\n");
+#endif
+          return ret;
+        }
+      }
+      if(nonblocking)
+        return "";
+
+      inread = 1;
+      while(!closed && (!buffer || strlen(buffer)<nbytes))
+      {
+#ifdef CGI_WRAPPER_DEBUG
+        werror("Wrapper: Waiting for data <%d,%d>->%d...\n",
+               nbytes, less_is_enough, buffer&&strlen(buffer));
+#endif
+        sleep(0.01);
+        if(less_is_enough && buffer && strlen(buffer))
+          break;
+      }
+      inread = 0;
+      if(buffer)
+      {
+        ret = buffer[..nbytes-1];
+        buffer = buffer[nbytes..];
+      }
+      else
+        ret=0;
+#ifdef CGI_WRAPPER_DEBUG
+      werror("returning "+ret+"\n");
+#endif
+      return ret;
+    }
+
+    int query_fd()
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: query_fd()\n");
+#endif
+      return -1;
+    }
+
+    void create( object _realfd, object _proc )
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("Creating new CGI wrapper\n");
+#endif
+      proc = _proc;
+      realfd = _realfd;
+      thread_create( data_fetcher );
+    }
+#else
+    static void get_some_data( mixed f, string data )
+    {
+      if(!data)
+      {
+        data = realfd->read(1024,1);
+        if(!data || !strlen(data))
+        {
+          closed = 1;
+          return;
+        }
+      }
+
+//#ifdef CGI_WRAPPER_DEBUG
+//   werror("CGI wrapper: get_some_data(%s)\n", data);
+//#endif
+
+      if(headers)
+      {
+        headers += data;
+        if((sscanf(headers, "%s\r\n\r\n%s", headers, buffer) == 2) ||
+           (sscanf(headers, "%s\n\n%s", headers, buffer) == 2) ||
+           strlen(headers)>16536)
+        {
+          if(!buffer)
+            buffer = "";
+          handle_headers( );
+          headers=0;
+          if(rcb && !inread)
+          {
+            rcb(realfd->query_id(), buffer);
+            buffer = "";
+          }
+        }
+        return;
+      }
+      buffer += data;
+      if(rcb && !inread)
+      {
+        rcb(realfd->query_id(), buffer);
+        buffer = "";
+      }
+    }
+
+    int closed;
+    string read(int nbytes, int less_is_enough)
+    {
+      if(closed) {
+        if(buffer)
+        {
+          string s = buffer;
+          buffer = 0;
+          return s;
+        }
+        return 0;
+      }
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: read(%d,%d)\n",nbytes,less_is_enough);
+#endif
+      if(!nbytes)
+        nbytes = 0x7fffffff;
+      string ret;
+      if(buffer && strlen(buffer))
+      {
+        if(strlen(buffer) >= nbytes || less_is_enough || nonblocking)
+        {
+          ret = buffer[..nbytes-1];
+          buffer = buffer[nbytes..];
+#ifdef CGI_WRAPPER_DEBUG
+          werror("returning "+ret+"\n");
+#endif
+          return ret;
+        }
+      }
+      if(nonblocking)
+        return "";
+
+      realfd->set_blocking();
+      inread = 1;
+      while(!closed && (!buffer || strlen(buffer)<nbytes))
+      {
+#ifdef CGI_WRAPPER_DEBUG
+        werror("Wrapper: Waiting for data <%d,%d>->%d...\n",
+               nbytes, less_is_enough, buffer&&strlen(buffer));
+#endif
+        get_some_data(0,0);
+        if(less_is_enough && buffer && strlen(buffer))
+          break;
+      }
+      inread = 0;
+      realfd->set_nonblocking(get_some_data, write_more, done_closed);
+      if(buffer)
+      {
+        ret = buffer[..nbytes-1];
+        buffer = buffer[nbytes..];
+      }
+      else
+        ret=0;
+#ifdef CGI_WRAPPER_DEBUG
+      werror("returning "+ret+"\n");
+#endif
+      return ret;
+    }
+
+    void done_closed()
+    {
+      closed = 1;
+      if(ccb) 
+        ccb(realfd->query_id());
+    }
+
+    int query_fd()
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: query_fd()\n");
+#endif
+      return -1;
+    }
+    
+    void write_more(mixed foo)
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("CGI wrapper: write_more(%O)\n", wcb);
+#endif
+      if(wcb) wcb(foo);
+    }
+
+    void create( object _realfd, object _proc )
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("Creating new CGI wrapper\n");
+#endif
+      proc = _proc;
+      realfd = _realfd;
+      realfd->set_nonblocking(get_some_data, write_more, done_closed);
+    }
+#endif
+  }
+
 
   void got_some_data(object to, string d)
   {
@@ -480,25 +918,36 @@ class spawn_cgi
   void do_cgi()
   {
     int pid;
+    int use_native_wrapper;
 #ifdef CGI_DEBUG
     roxen_perror("do_cgi()\n");
 #endif /* CGI_DEBUG */
 
 #if constant(Process.create_process)
 
-    if(wrapper) {
+    if(wrapper) 
+    {
       array us;
       wrapper = combine_path(getcwd(), wrapper);
-
       if(!(us = file_stat(wrapper)) ||
-	 !(us[0]&0111)) {
+	 !(us[0]&0111)) 
+      {
 	report_error(sprintf("Wrapper \"%s\" doesn't exist, or "
 			     "is not executable\n", wrapper));
 	return;
       }
       args = ({ wrapper, f }) + args;
-    } else {
+    } 
+    else 
+    {
       args = ({ f }) + args;
+      if(sscanf(f, "%*s/nph%*s" )< 2)
+      {
+#ifdef CGI_WRAPPER_DEBUG
+        werror("Will use internal wrapper.\n");
+#endif
+        use_native_wrapper = 1;
+      }
     }
 
     /* Be sure they are closed in the forked copy */
@@ -507,26 +956,32 @@ class spawn_cgi
     mapping options = ([ "cwd":wd,
 			 "stdin":pipe3,
 			 "stdout":pipe1,
+                         "noinitgroups":1,
 			 "env":env,
     ]);
 
     if (!getuid()) {
       options["uid"] = uid || 65534;
       if (!setgroups) {
-	options["noinitgroups"] = 1;
 #if constant(cleargroups)
 	options["setgroups"] = ({});
 #endif /* constant(cleargroups) */
-      }
+      } else
+        options["setgroups"] = get_cached_groups_for_user( uid||65534 );
     }
 
-    if (dup_err == 1) {
+    if (dup_err == 1) 
+    {
       options["stderr"] = pipe1;
-    } else if(dup_err) { 
+    } 
+    else if(dup_err) 
+    { 
       dup_err[1]->set_close_on_exec(1);
       options["stderr"] = dup_err[0];
     }
-
+#ifdef CGI_WRAPPER_DEBUG
+    werror("Starting CGI.\n");
+#endif
 #ifdef CGI_DEBUG
     roxen_perror(sprintf("create_process(%O, %O)...\n", args, options));
 #endif /* CGI_DEBUG */
@@ -534,13 +989,16 @@ class spawn_cgi
     object proc;
     mixed err = catch {
       proc = Process.create_process(args, options);
-
 #ifdef CGI_DEBUG
       if (!proc) {
 	roxen_perror(sprintf("CGI: Process.create_process() returned 0.\n"));
       }
 #endif /* CGI_DEBUG */
     };
+
+#ifdef CGI_WRAPPER_DEBUG
+    werror("CGI started.\n");
+#endif
 
     /* We don't want to keep these. */
     destruct(pipe1);
@@ -563,155 +1021,30 @@ class spawn_cgi
 #endif /* constant(strerror) */
     }
 
+#ifdef CGI_WRAPPER_DEBUG
+    werror("Starting wrapper.\n");
+#endif
+    if(use_native_wrapper)
+      cgi_pipe = nat_wrapper( pipe2, proc );
+    else 
+      cgi_pipe = pipe2;
+
     if(kill_call_out && proc && proc->pid() > 1) {
       call_out(lambda (object proc) {
-	object privs;
-	catch(privs = Privs("Killing CGI script."));
-	int killed;
-	
-	killed = kill(proc, signum("SIGINTR"));
-	if(!killed)
-	  killed = kill(proc, signum("SIGHUP"));
-	if(!killed)
-	  killed = kill(proc, signum("SIGKILL"));
-	if(killed)
-	  roxen_perror("Killed CGI pid "+proc->pid()+"\n");
+#ifndef THREADS
+                 if(!kill(proc, signum("SIGKILL")))
+                 {
+                   object privs;
+                   catch(privs = Privs("Killing CGI script."));
+                   kill(proc, signum("SIGKILL"));
+                 }
+#else
+                 if(proc->pid() > 1)
+                   kill(proc, signum("SIGKILL"));
+#endif
       }, kill_call_out * 60 , proc);
     }
-#else /* !constant(Process.create_process) */
-    if (!(pid = fork())) {
-      // werror("forked\n");
-      mixed err = catch {
-	array us;
-	/* The COREDUMPSIZE should be set to zero here !!
-	 * This should be done at least before the change of directory
-	 */
-	string oldwd = getcwd() + "/";
-	destruct(pipe2);
-	if (pipe4)
-	  destruct(pipe4);
-	pipe3->dup2(Stdio.File("stdin"));
-	destruct(pipe3);
-
-	object privs;
-	if (!getuid()) {
-	  // We are running as root -- change!
-	  privs = Privs("CGI script", uid || 65534);
-	} else {
-	  // Try to change user anyway, but don't throw an error if we fail.
-	  catch(privs = Privs("CGI script", uid || 65534));
-	}
-	int uid = geteuid() || 65534;
-	int gid = getegid() || 65534;
-	// Can't change uid & gid to euid & egid directly on some OS's
-	// -- stupid.
-	seteuid(0);
-	setgid(gid);
-	setegid(gid);
-	setuid(uid);
-	seteuid(uid);
-
-	// Moved here to avoid output by Privs().
-	pipe1->dup2(Stdio.File("stdout"));
-	if (dup_err == 1) {
-	  pipe1->dup2(Stdio.File("stderr"));
-	} else if(dup_err) { 
-	  destruct(dup_err[1]);
-	  dup_err[0]->dup2(Stdio.File("stderr"));
-	  destruct(dup_err[0]);
-	}
-	destruct(pipe1);
-#ifdef DEBUG
-	if (getuid() != uid) {
-	  roxen_perror("CGI: Failed to change uid! uid:%d target uid:%d\n",
-		       getuid(), uid);
-	}
-	if (getgid() != gid) {
-	  roxen_perror("CGI: Failed to change gid! gid:%d target gid:%d\n",
-		       getgid(), gid);
-	}
-#endif /* DEBUG */
-	
-	/* Now that the correct privileges are set, the current working
-	 * directory can be changed. This implies a check for user permissions
-	 * Also some technical requirements for execution can be checked
-	 * before control is given to the wrapper or the script.
-	 */
-	if(!cd(wd) ||
-	   !(us = file_stat(f)) ||
-	   !((us[0]&0111) ||
-	     ((us[0]&0100) && (uid == us[5])) ||
-	     (us[0]&0444) ||
-	     ((us[0]&0400) && (uid == us[5])))) {
-	  cgi_fail(403, "File exists, but access forbidden by user");
-	}
-	
-	if(wrapper) {
-	  if(!(us = file_stat(combine_path(oldwd, wrapper))) ||
-	     !(us[0]&0111)) {
-	    cgi_fail(403,
-		     "Wrapper exists, but access forbidden for user");
-	  }
-	  exece(combine_path(oldwd, wrapper), ({ f }) + args, env);
-	} else {
-	  exece(f, args, env);
-	}
-      };
-      catch {
-	if (err) {
-	  roxen_perror("CGI: Exec failed!\n%O\n",
-		       describe_backtrace((array)err));
-	} else {
-	  roxen_perror("CGI: Exec failed!\n"
-		       "CGI: CGI-wrapper not executable by the CGI user?\n");
-	}
-      };
-      exit(0);
-    } else if (pid == -1) {
-      // fork() failed!
-      int e = errno();
-#if constant(strerror)
-      report_error(sprintf("CGI: fork() failed. No more processes?\n"
-			   "errno: %d: %s\n", e, strerror(e)));
-#else /* !constant(strerror) */
-      report_error(sprintf("CGI: fork() failed. No more processes?\n"
-			   "errno: %d\n", e));
-#endif /* constant(strerror) */
-      pipe1->write("HTTP/1.0 500 No more processes\r\n"
-		   "\r\n"
-		   "<title>CGI failed: No more processes</title>\n"
-		   "<h2>CGI failed: No more processes</title>\n");
-      destruct(pipe1);
-      destruct(pipe2);
-      destruct(pipe3);
-      destruct(pipe4);
-      arrayp(dup_err) && Array.map(dup_err, lambda(object o) {
-					      destruct(o);
-					    });
-      
-      return;
-    }
-
-    destruct(pipe1);
-    destruct(pipe3);
-    if(arrayp(dup_err))
-      destruct(dup_err[1]);
-
-    if(kill_call_out && pid > 1) {
-      call_out(lambda (int pid) {
-	object privs;
-	catch(privs = Privs("Killing CGI script."));
-	int killed;
-	killed = kill(pid, signum("SIGINTR"));
-	if(!killed)
-	  killed = kill(pid, signum("SIGHUP"));
-	if(!killed)
-	  killed = kill(pid, signum("SIGKILL"));
-	if(killed)
-	  roxen_perror("Killed CGI pid "+pid+"\n");
-      }, kill_call_out * 60 , pid);
-    }
-#endif /* !constant(Process.create_process) */
+#endif /* constant(Process.create_process) */
 
   }
   
@@ -980,14 +1313,13 @@ mixed low_find_file(string f, object id, string path)
   
   if(id->my_fd && id->data) {
     sender(pipe4, id->data);
-
     id->my_fd->set_id( pipe4 );                       // for put.. post?
     id->my_fd->set_read_callback(cgi->got_some_data); // lets try, atleast..
     id->my_fd->set_nonblocking();
   } else {
     closer(pipe4);
   }
-  return http_stream(pipe2);
+  return http_stream(cgi->cgi_pipe);
 }
 
 mixed find_file(string f, object id)

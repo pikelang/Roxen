@@ -1,10 +1,12 @@
 //
-// $Id: Client.pike,v 1.6 1998/04/09 13:32:28 grubba Exp $
+// $Id: Client.pike,v 1.7 1999/03/20 00:53:18 js Exp $
 //
 // Roxen HTTP RPC
 //
 // Copyright © 1996 - 1998, Idonex AB
 //
+
+#ifndef __NT__
 
 static private int port;
 static private string host, path;
@@ -54,3 +56,5 @@ void create(string url)
   if(!path)
     path = "";
 }
+
+#endif

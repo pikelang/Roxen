@@ -1,5 +1,5 @@
 /*
- * $Id: Server.pike,v 1.16 1998/04/09 13:32:00 grubba Exp $
+ * $Id: Server.pike,v 1.17 1999/03/20 00:53:17 js Exp $
  */
 
 #define error(X) throw(({X, backtrace()}))
@@ -348,7 +348,12 @@ void got_connection(object on)
 
 string query_address()
 {
-  return port->query_address();
+  return
+#ifdef __NT__
+    replace(port->query_address(),"0.0.0.0","127.0.0.1");
+#else
+  port->query_address();
+#endif    
 }
 
 void create(string|object host, int|string|void p, string|void key)

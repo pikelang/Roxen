@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.166 1999/02/15 01:02:56 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.167 1999/03/20 00:49:36 js Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2779,6 +2779,9 @@ private string get_domain(int|void l)
   }
 #endif
 #endif
+#if __NT__
+  s="";
+#else
   if(!s) {
     t = Stdio.read_bytes("/etc/resolv.conf");
     if(t) {
@@ -2796,6 +2799,7 @@ private string get_domain(int|void l)
   } else {
     s="unknown"; 
   }
+#endif
   return s;
 }
 

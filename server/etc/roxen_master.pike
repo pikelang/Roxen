@@ -2,64 +2,19 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.48 1998/11/02 06:56:33 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.49 1999/03/20 00:50:52 js Exp $";
 
 /*
  * name = "Roxen Master";
  * doc = "Roxen's customized master.";
  */
 
-object stdout, stdin;
 mapping names=([]);
 int unique_id=time();
 
 object mm = (object)"/master";
 
 inherit "/master": old_master;
-
-mapping handled = ([]);
-
-object findmodule(string fullname)
-{
-  mixed res = old_master::findmodule(fullname);
-
-  if(objectp(res) && !handled[res])
-  {
-    array(string) arr = fullname/".pmod/";
-    if (sizeof(arr) > 1) {
-      /* Directory module */
-      if (sscanf(reverse(arr[0]), "%s/", fullname)) {
-	arr[0] = reverse(fullname);
-      }
-      if ((< "module", "module.pike" >)[arr[-1]]) {
-	/* Extended directory module */
-	arr = arr[..sizeof(arr)-2];
-      } else {
-	sscanf(arr[-1], "%s.pmod", arr[-1]);
-      }
-      fullname = arr*".";
-    } else {
-      /* .so or ordinary module */
-      sscanf(reverse(fullname), "%s/", fullname);
-      fullname = reverse(fullname);
-      sscanf(fullname, "%s.pmod", fullname);
-    }
-    handled[res]=1;
-
-    if (!programs[fullname]) {
-      programs[fullname] = object_program(res);
-    }
-//  foreach(indices(res), string foo) 
-//  {
-//    if(programp(res[foo]) && !programs[fullname+"."+foo]) 
-//    {
-//       programs[fullname+"."+foo] = res[foo];
-//    }
-//  }
-  }
-
-  return res;
-}
 
 
 
@@ -136,17 +91,6 @@ program programof(string foo)
   return saved_names[foo] || programs[foo] || (program) foo ;
 }
 
-/* This function is called when an error occurs that is not caught
- * with catch(). It's argument consists of:
- * ({ error_string, backtrace }) where backtrace is the output from the
- * backtrace() efun.
- */
-void handle_error(mixed *trace)
-{
-  predef::trace(0);
-  catch(werror(describe_backtrace(trace)));
-}
-
 object objectof(array foo)
 {
   object o;
@@ -199,58 +143,6 @@ function functionof(array f)
   return o[f[-1]];
 }
 
-#ifdef CVS_FILESYSTEM
-
-array cvs_get_dir(string name)
-{
-  array info;
-  string fname = getenv("CVSROOT") + name;
-  // werror(sprintf("find_dir: Looking for '%s'\n", name));
-//werror("CVS get dir "+name+"\n");
-
-  if((info = file_stat(fname))
-     && (info[1] == -2))
-  {
-    array dir = get_dir(fname);
-    if (dir)
-      dir = Array.map(dir, lambda(string entry) {
-	return (entry[strlen(entry)-2..] == ",v")
-	  ? entry[..strlen(entry)-3] : entry;
-      });
-    return dir - ({ "Attic" });
-  }
-  return 0;
-}
-
-mixed cvs_file_stat(string name, int|void nolink)
-{
-  name = getenv("CVSROOT") + "/" + name;
-//werror("CVS file stat "+name+"\n");
-  return predef::file_stat(name + ",v", nolink) || predef::file_stat(name, nolink);
-}
-
-#endif /* CVS_FILESYSTEM */
-
-array r_file_stat(string f, int|void nolink)
-{
-//werror("file stat "+f+"\n");
-#ifdef CVS_FILESYSTEM
-  if(sscanf(f, "/cvs:%s", f)||sscanf(f, "/cvs;%s", f))
-    return cvs_file_stat(f, nolink);
-#endif /* CVS_FILESYSTEM */
-  return predef::file_stat(f, nolink);
-}
-
-array r_get_dir(string f)
-{
-//  werror("get dir "+f+"\n");
-#ifdef CVS_FILESYSTEM
-  if(sscanf(f, "/cvs:%s", f)||sscanf(f, "/cvs;%s", f))
-    return cvs_get_dir(f);
-#endif /* CVS_FILESYSTEM */
-  return get_dir(f);
-}
-
 void create()
 {
   object o = this_object();
@@ -263,7 +155,6 @@ void create()
   objects[object_program(o)] = o;
   /* make ourselves known */
   add_constant("_master",o);
-  add_constant("version",lambda() { return version() + " Roxen Challenger master"; } );
 
   /* Move the old efuns to the new object. */
   if (o->master_efuns) {
@@ -279,13 +170,16 @@ void create()
     ::create();
   }
 
-  add_constant("get_dir", r_get_dir);
-  add_constant("file_stat", r_file_stat);
-  
   add_constant("persistent_variables", persistent_variables);
   add_constant("name_program", name_program);
   add_constant("objectof", objectof);
   add_constant("nameof", nameof);
+#ifdef __NT__
+  add_constant("getcwd", lambda()
+			 {
+			   return replace(getcwd(),"\\","/");
+			 });
+#endif  
 }
 
 
@@ -309,123 +203,4 @@ void compile_error(string file,int line,string err)
     errors += sprintf("%s:%d:%s\n",trim_file_name(file),line,err);
   else
     ::compile_error(file,line,err);
-}
-
-#ifdef CVS_FILESYSTEM
-
-string cvs_read_file(string name)
-{
-  if(cvs_file_stat(name))
-    return Process.popen("cvs co -p '" +
-			 replace(name, "'", "\\'") +
-			 "' 2>/dev/null");
-}
-
-#endif /* CVS_FILESYSTEM */
-
-#ifdef CVS_FILESYSTEM
-
-string handle_include(string f, string current_file, int local_include)
-{
-  string rfile;
-  if(f[0]=='/') rfile = f;
-  else rfile=combine_path(current_file+"/","../"+f);
-
-  if(sscanf(rfile, "/cvs:%s", rfile)|| sscanf(rfile, "/cvs;%s", rfile))
-  {
-    rfile=cvs_read_file(rfile);
-    if(rfile && strlen(rfile)) return rfile;
-  }
-  return ::handle_include(f,current_file,local_include);
-}
-
-program cvs_load_file(string name)
-{
-//werror("CVS load file "+name+"\n");
-  string data = cvs_read_file(name);
-  if(!data ||!strlen(data)) return 0;
-  return compile_string(data, "/cvs:"+name);
-}
-
-#endif /* CVS_FILESYSTEM */
-
-program findprog(string pname, string ext)
-{
-
-#ifdef CVS_FILESYSTEM
-
-  if(sscanf(pname, "/cvs:%s", pname) || sscanf(pname, "/cvs;%s", pname))
-  {
-    program prog;
-//  werror("CVS findprog "+pname+"    ("+ext+")\n");
-    if(!ext) ext = "";
-    if(ext != ".pike")
-      prog = cvs_load_file(pname+ext) || cvs_load_file(pname+ext+".pike");
-    else
-      prog = cvs_load_file(pname+ext);
-    if(prog) return prog;
-  }
-
-#endif /* CVS_FILESYSTEM */
-  
-  switch(ext)
-  {
-   case ".pike":
-   case ".so":
-    return low_findprog(pname,ext);
-
-   default:
-    pname+=ext;
-    return
-      low_findprog(pname,"") ||
-      low_findprog(pname,".pike") ||
-      low_findprog(pname,".so");
-  }
-}
-
-/* This function is called when the driver wants to cast a string
- * to a program, this might be because of an explicit cast, an inherit
- * or a implict cast. In the future it might receive more arguments,
- * to aid the master finding the right program.
- */
-program cast_to_program(string pname, string current_file)
-{
-  string ext;
-  string nname;
-
-  if(program ret=findprog(pname,""))
-    return ret;
-
-  if(sscanf(reverse(pname),"%s.%s",ext, nname) && search(ext, "/") == -1)
-  {
-    ext="."+reverse(ext);
-    pname=reverse(nname);
-  }else{
-    ext="";
-  }
-  if(pname[0]=='/')
-  {
-    pname=combine_path("/",pname);
-    return findprog(pname,ext);
-  }else{
-    string cwd;
-    if(current_file)
-    {
-      string *tmp=current_file/"/";
-      cwd=tmp[..sizeof(tmp)-2]*"/";
-
-      if(program ret=findprog(combine_path(cwd,pname),ext))
-	return ret;
-
-    }else{
-      if(program ret=findprog(pname,ext))
-	return ret;
-    }
-
-    foreach(pike_include_path, string path)
-      if(program ret=findprog(combine_path(path,pname),ext))
-	return ret;
-
-    return 0;
-  }
 }

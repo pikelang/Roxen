@@ -4,7 +4,7 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.26 1999/03/03 10:56:19 peter Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.27 1999/03/20 00:49:38 js Exp $";
 #else
 import spider;
 # define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -64,7 +64,11 @@ void save_it(string cl)
 #ifndef THREADS
   object privs = Privs("Saving config file"); // Change to root user.
 #endif
-  mv(f, f+"~");
+  mv(f,
+#ifdef __NT__
+     "."+  // Don't ask why...
+#endif      
+     f+"~");
   fd = open(f, "wc");
 #if efun(chmod)
 #if efun(geteuid)
