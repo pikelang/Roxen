@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000-2001, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.26 2001/06/15 11:48:08 jonasw Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.27 2001/06/27 19:21:23 jonasw Exp $";
 
 #include <module.h>
 inherit "module";
@@ -132,11 +132,16 @@ class TagBody
 	    ctx->add_runtime_tag(tag);
 	}
 	
-	args = mkmapping(map(indices(args), lower_case), values(args));
+	args =
+	  mkmapping(map(indices(args), lower_case), values(args)) -
+	  ({ "wiretap" });
 	if (Roxen.init_wiretap_stack(args, id, colormode))
 	  return ({ propagate_tag(args) });
       }
-      return ({ propagate_tag() });
+      if (args["wiretap"])
+	return ({ propagate_tag(args - ({ "wiretap" }) ) });
+      else
+	return ({ propagate_tag() });
     }
   }
 }
@@ -187,18 +192,28 @@ class TagPushColor
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
 		    RXML.FLAG_COMPAT_PARSE |
 		    RXML.FLAG_NO_PREFIX);
-
+  
   void create(string _name)
   {
     name = _name;
     colormode = (int) query("colormode");
   }
   
+  mixed _encode()
+  {
+    return ({ name, colormode });
+  }
+  
+  void _decode(mixed v)
+  {
+    [name, colormode] = v;
+  }
+  
   class Frame
   {
     inherit RXML.Frame;
     string raw_tag_text;
-
+    
     array do_return(RequestID id)
     {
       args = mkmapping(map(indices(args), lower_case), values(args));
@@ -218,13 +233,24 @@ class TagPopColor
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
 		    RXML.FLAG_COMPAT_PARSE |
 		    RXML.FLAG_NO_PREFIX);
-
+  
   void create(string _name)
   {
     tagname = _name;
     name = "/" + _name;
   }
-
+  
+  mixed _encode()
+  {
+    return ({ tagname });
+  }
+  
+  void _decode(mixed v)
+  {
+    [tagname] = v;
+    name = "/" + tagname;
+  }
+  
   class Frame
   {
     inherit RXML.Frame;
