@@ -1,3 +1,5 @@
+// $Id: site_content.pike,v 1.117 2001/07/21 11:02:41 mast Exp $
+
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
 inherit "../statusinfo.pike";
@@ -28,20 +30,9 @@ string describe_exts( RoxenModule m, string func )
 
 string describe_location( RoxenModule m, RequestID id )
 {
-  Configuration conf = m->my_configuration();
-  string url = conf->query("MyWorldLocation"),
-    mp = m && m->query_location();
-  if(!stringp(url) || !sizeof(url))
-  { // belt *and* suspenders :-)
-    array(string) urls = conf->query("URLs");
-    if(sizeof(urls))
-      url = urls[0];
-  }
-  if(sizeof(url/"*") == 2)
-    url = replace(url, "*", gethostname());
-  return url && mp ? sprintf("<a target='server_view' href=\"%s%s\">%s</a>",
-			     url, mp[1..], mp)
-		   : mp || "";
+  string mp = m->query_location();
+  return mp ? sprintf("<a target='server_view' href=\"%s%s\">%s</a>",
+		      m->my_configuration()->get_url(), mp[1..], mp) : "";
 }
 
 string describe_tags( RoxenModule m, int q )
