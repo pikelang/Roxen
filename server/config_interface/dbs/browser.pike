@@ -205,7 +205,7 @@ mapping|string parse( RequestID id )
 
   res +=
     "<table><tr><td valign=top><font size=-1>"
-    "<textarea rows=4 cols=40 name='query'>&form.query:html;</textarea>"
+    "<textarea rows=8 cols=50 wrap=soft name='query'>&form.query:html;</textarea>"
     "</font></td><td valign=top>"
     "<submit-gbutton2 name=clear_q> "+_(378,"Clear query")+" </submit-gbutton2>"
     "<br />"
