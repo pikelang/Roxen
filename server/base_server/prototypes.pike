@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.130 2004/05/14 21:18:34 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.131 2004/05/17 16:33:15 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -880,6 +880,12 @@ class RequestID
   // Parsed if-header for the request.
   static mapping(string:array(array(array(string)))) if_data;
 
+#ifdef IF_HEADER_DEBUG
+#define IF_HDR_MSG(X...) werror (X)
+#else
+#define IF_HDR_MSG(X...)
+#endif
+
   //! Parse an RFC 2518 9.4 "If Header".
   //!
   //! @note
@@ -899,17 +905,30 @@ class RequestID
   //!   The resource @expr{0@} (zero) represents the default resource.
   mapping(string:array(array(array(string)))) get_if_data()
   {
-    if (if_data) return sizeof(if_data) && if_data;
+    if (if_data) {
+      IF_HDR_MSG ("get_if_data(): Returning cached result\n");
+      return sizeof(if_data) && if_data;
+    }
 
     if_data  = ([]);	// Negative caching.
 
     string raw_header;
-    if (!(raw_header = request_headers->if) || !sizeof(data)) return 0;
+    if (!(raw_header = request_headers->if)) {
+      IF_HDR_MSG ("get_if_data(): No if header\n");
+      return 0;
+    }
 
     array(array(string|int|array(array(string)))) decoded_if =
       MIME.decode_words_tokenized_labled(raw_header);
 
-    if (!sizeof(decoded_if)) return 0;
+#if 0
+    IF_HDR_MSG("get_if_data(): decoded_if: %O\n", decoded_if);
+#endif
+
+    if (!sizeof(decoded_if)) {
+      IF_HDR_MSG("Got only whitespace.\n");
+      return 0;
+    }
 
     mapping(string:array(array(array(string)))) res = ([ 0: ({}) ]);
 
@@ -961,7 +980,10 @@ class RequestID
 	    switch(sub_expr[i][1]) {
 	    case '<': tmp_key = ""; break;
 	    case '>':
-	      if (!tmp_key) return 0;
+	      if (!tmp_key) {
+		IF_HDR_MSG("No tmp_key.\n");
+		return 0;
+	      }
 	      expr += ({ ({ "key", tmp_key }) });
 	      tmp_key = 0;
 	      break;
@@ -992,10 +1014,16 @@ class RequestID
 	      expr += ({ ({ "not", 0 }) });
 	      break;
 	    }
+	    IF_HDR_MSG("Word outside key: %O\n", sub_expr[i][1]);
+	    report_debug("Syntax error in if-header: %O\n", raw_header);
 	    return 0;
 	  }
 	}
-	if (tmp_key) return 0;
+	if (tmp_key) {
+	  IF_HDR_MSG("Active tmp_key: %O\n", tmp_key);
+	  report_debug("Syntax error in if-header: %O\n", raw_header);
+	  return 0;
+	}
 	res[resource] += ({ expr });
 	break;
       default:
@@ -1003,11 +1031,13 @@ class RequestID
 	return 0;
       }
     }
-    if (tmp_resource) return 0;
-#if defined(REQUEST_DEBUG) || defined(CONNECTION_TRACE)
-    werror("get_if_data(): Parsed if header: %s:\n"
-	   "%O\n", raw_header, res);
-#endif
+    if (tmp_resource) {
+      IF_HDR_MSG("Active tmp_resource: %O\n", tmp_resource);
+      report_debug("Syntax error in if-header: %O\n", raw_header);
+      return 0;
+    }
+    IF_HDR_MSG("get_if_data(): Parsed if header: %s:\n"
+	       "%O\n", raw_header, res);
     return if_data = res;
   }
 
