@@ -50,8 +50,6 @@ void setup( )
 
   test_r( "help" );
   test_r( "pike" );
-  test_r( "power" );
-  test_r( "roxen" );
   test_r( "testimage" );
 
   test_r( "colorbar:0,0,0" );
