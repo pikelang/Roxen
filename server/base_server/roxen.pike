@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.799 2002/08/13 15:05:22 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.800 2002/08/19 14:59:06 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1285,7 +1285,15 @@ class Protocol
 
 
 
-#define INIT(X) do{mapping _=(X);string __=_->path;c=_->conf;if(__&&id->adjust_for_config_path) id->adjust_for_config_path(__);if(!c->inited)c->enable_all_modules(); } while(0)
+#define INIT(X) do{			\
+    mapping _=(X);			\
+    string __=_->path;			\
+    c=_->conf;				\
+    if(__&&id->adjust_for_config_path)	\
+      id->adjust_for_config_path(__);	\
+    if(!c->inited)			\
+      c->enable_all_modules();		\
+  } while(0)
 
 #ifdef DEBUG_URL2CONF
 #define URL2CONF_MSG(X...) report_debug (X)
