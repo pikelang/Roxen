@@ -2346,7 +2346,8 @@ modules.&lt;/p&gt;
 </str>
 
 <str id="407">
-<o>It is not possible to connect to %s</o>
+<changed from="It is not possible to connect to %s"/>
+<o>It is not possible to connect to %s.</o>
 <t>Verbindung zu %s ist nicht möglich</t>
 </str>
 

@@ -95,8 +95,8 @@ ERROR
                "</font>";
       else if( mixed err = catch( Sql.Sql( id->variables->url ) ) )
         error = sprintf("<font color='&usr.warncolor;'>"+
-                        _(407,"It is not possible to connect to %s.<br />")+
-			" (%s)"
+                        _(407,"It is not possible to connect to %s.")+
+			"<br /> (%s)"
                         "</font>",
                         id->variables->url,
 			describe_error(err));
