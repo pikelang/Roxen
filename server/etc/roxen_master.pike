@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.90 2000/04/10 21:17:12 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.91 2000/04/11 00:31:59 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -36,12 +36,24 @@ class MyCodec
 	  return "_static_modules."+(indices(_static_modules)[tmp]);
       }
     }
-    else if (objectp (x)) {
+    else if (objectp (x)) 
+    {
       array(string) ids = ({});
-      while (1) {
-	if(mixed tmp=search(master()->objects,x))
+      if(object_program(x) == dirnode)
+      {
+        /* FIXME: this is a bit ad-hoc */
+        string dirname=x->dirname;
+        dirname-=".pmod";
+        sscanf(dirname,"%*smodules/%s",dirname);
+        dirname=replace(dirname,"/",".");
+        if(resolv(dirname) == x)
+          return "resolv:"+dirname;
+      }
+      while (1) 
+      {
+	if(mixed tmp=search(objects,x))
 	{
-	  if(tmp=search(master()->programs,tmp))
+	  if(tmp=search(programs,tmp))
 	  {
 	    if (sizeof (ids)) return tmp + "//" + ids * ".";
 	    else return tmp;
@@ -69,9 +81,10 @@ class MyCodec
   {
     if(!stringp(x))
       return lambda(){};
-
     if(sscanf(x,"efun:%s",x) && functionp(all_constants()[x]))
       return all_constants()[x];
+    if(sscanf(x,"resolv:%s",x)) 
+      return resolv(x);
     error("Failed to decode function %s\n",x);
   }
 
@@ -80,13 +93,14 @@ class MyCodec
   {
     if(!stringp(x))
       return class{}();
-
     if(sscanf(x,"efun:%s",x))
     {
       if( !objectp( all_constants()[x] ) )
         error("Failed to decode object efun:%s\n", x );
       return all_constants()[x];
     }
+    if(sscanf(x,"resolv:%s",x)) 
+      return resolv(x);
     sscanf (x, "%s//%s", x, string ids);
     object tmp;
     if(objectp(tmp=(object)x)) {
@@ -103,24 +117,27 @@ class MyCodec
   {
     if(sscanf(x,"efun:%s",x))
       return (program)all_constants()[x];
-
     if(sscanf(x,"_static_modules.%s",x))
       return (program)_static_modules[x];
-
-    if(program tmp=(program)x) {
+    if(sscanf(x,"resolv:%s",x)) 
+      return resolv(x);
+    if(program tmp=(program)x)
       return tmp;
-    }
     error("Failed to decode program %s\n", x );
   }
 
   mixed encode_object(object x)
   {
-    error("Cannot encode objects yet.\n");
+    if(x->_encode) return x->_encode();
+    error("Cannot encode objects without _encode/_decode yet.\n");
   }
 
-  mixed decode_object(object x)
+  mixed decode_object(object x, mixed data)
   {
-    error("Cannot decode objects yet.\n");
+    if( x->_decode )
+      x->_decode(data);
+    else
+      error("Cannot decode objects yet.\n");
   }
 
   void create( program|void q )
@@ -187,6 +204,7 @@ array(string) query_precompiled_names(string fname)
 
 array master_file_stat(string x) 
 { 
+  lambda(){}(); // avoid some optimizations
   return file_stat( x ); 
 }
 
