@@ -100,7 +100,6 @@ urw_itc_avant_garde-demi-r binary
 /server/config_actions/flush.pike foreign_ident
 /server/config_actions/ftpstatus.pike foreign_ident
 /server/config_actions/generate_rsa.pike foreign_ident
-/server/config_actions/hostnames.pike foreign_ident
 /server/config_actions/linuxproc.pike foreign_ident
 /server/config_actions/listfonts.pike foreign_ident
 /server/config_actions/locks.pike foreign_ident
