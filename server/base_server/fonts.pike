@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.15 1997/12/04 04:26:43 per Exp $ */
+/* $Id: fonts.pike,v 1.16 1998/01/24 21:38:19 js Exp $ */
 
 #include <module.h>
 
@@ -176,7 +176,7 @@ object resolve_font(string f, string|void justification)
     f = a+b;
   }
 
-  return get_font(f, 32, bold, italic, justification||"left", xspace, 0.0);
+  return get_font((f/" ")[0], 32, bold, italic, justification||"left", xspace, 0.0);
 }
 
 void create()
