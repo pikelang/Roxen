@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.7 2001/08/24 16:26:05 jhs Exp $
+ * $Id: openfiles.pike,v 1.8 2001/09/08 11:22:44 grubba Exp $
  */
 inherit "wizard";
 
@@ -77,7 +77,7 @@ string parse( RequestID id )
 	      string remote_port = f->query_address();
 	      string local_port = f->query_address(1);
 	      if (!remote_port) {
-		if (local_port != "0.0.0.0 0") {
+		if (local_port && (local_port != "0.0.0.0 0")) {
 		  type = "Port";
 		  details = fix_port(local_port);
 		}
