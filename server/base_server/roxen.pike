@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.588 2000/12/13 02:49:21 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.589 2000/12/13 04:24:54 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3168,9 +3168,6 @@ int main(int argc, array tmp)
   foreach( ({ "SIGQUIT", "SIGUSR1", "SIGUSR2", "SIGTRAP" }), string sig)
     catch( signal(signum(sig),async_sig_start(describe_all_threads,-1)));
 
-#ifdef __RUN_TRACE
-  trace(1);
-#endif
   start_time=time();		// Used by the "uptime" info later on.
 
 
@@ -3178,6 +3175,9 @@ int main(int argc, array tmp)
     call_out (restart,60*60*24*max(1,QUERY(suicide_timeout)));
 #ifndef __NT__
   restart_if_stuck( 0 );
+#endif
+#ifdef __RUN_TRACE
+  trace(1);
 #endif
   return -1;
 }
