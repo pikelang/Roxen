@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.19 2001/10/08 12:32:55 anders Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.20 2001/12/03 13:27:17 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -249,6 +249,12 @@ constant tagdoc=([
 
 <attr name='href' value='string'><p>
  The URL to the page that should be inserted.</p>
+</attr>
+
+<attr name='nocache' value='string'><p>
+ If provided the resulting page will get a zero cache time in the RAM cache.
+ The default time is up to 60 seconds depending on the cache limit imposed by
+ other RXML tags on the same page.</p>
 </attr>",
 
 "sscanf":#"<desc type='cont'><p><short>
