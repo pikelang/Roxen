@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.23 2000/09/25 11:14:33 per Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.24 2000/11/02 11:15:24 per Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -159,8 +159,9 @@ int|mapping first_try(RequestID id)
   {
      to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
      NOCACHE();
-     return Roxen.http_low_answer( 302, "")
-        + ([ "extra_heads":([ "Location":to ]) ]);
+     return Roxen.http_low_answer( 302,
+				   "See <a href='"+to+"'>"+to+"</a>")
+       + ([ "extra_heads":([ "Location":to,  ]) ]);
   } else {
     //  if the default file contains images, they will not be found,
     //  because they will be redirected just like the original request
