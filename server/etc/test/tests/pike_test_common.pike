@@ -30,8 +30,8 @@ void report_1st(function cb, array args, function check )
 	   check == check_is_module )
     checkid = '~';
 
-  report_error("  Test %3d %c%-40s  ", current_test,
-	       checkid,sprintf("%O("+describe_arglist( args )+")",cb)[..39]
+  report_error("%3d %c%-66s  ", current_test,
+	       checkid,sprintf("%O("+describe_arglist( args )+")",cb)[..65]
 	       );
 }
 
@@ -54,7 +54,8 @@ void report_test_failure( mixed err, function cb, array args, int st )
 
 void report_test_ok( mixed err, function cb, array args, int st )
 {
-  report_error("OK [%dms]\n", (gethrtime()-st)/1000);
+  int tt = (gethrtime()-st);
+  report_debug(" %4dms\n", tt/1000);
 //   if( err ) report_error( do_describe_error( err ) );
 }
 

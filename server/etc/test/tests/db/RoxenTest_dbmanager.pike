@@ -128,6 +128,5 @@ array(int) run_tests( Configuration c )
   do_test( 0, roxen.disable_configuration, "dbtest1" );
   do_test( 0, roxen.disable_configuration, "dbtest2" );
 
-  
   return ({ current_test, tests_failed });
 }
