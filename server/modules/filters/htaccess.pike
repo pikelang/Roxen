@@ -5,7 +5,7 @@
 
 import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.20 1997/10/12 21:12:28 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.21 1997/12/15 01:50:55 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -40,6 +40,7 @@ void create()
 	 ":-)"
 #endif
     );
+  defvar("file", ".htaccess", "Htaccess file name", TYPE_STRING|VAR_MORE);
 }
 
 
@@ -619,13 +620,13 @@ array rec_find_htaccess_file(object id, string vpath)
   if(path = roxen->real_file(vpath, id))
   {
     object f;
-    if(f=open(path +".htaccess", "r"))
+    if(f=open(path + query("file"), "r"))
     {
 #ifdef DEBUG
       mark_fd(f->query_fd(), ".htaccess file in "+path);
 #endif
-      cache_set_path_of_htaccess(vpath, path+".htaccess",id);
-      return ({ path +".htaccess", f });
+      cache_set_path_of_htaccess(vpath, path+ query("file"),id);
+      return ({ path + query("file"), f });
     }
   } 
   array res;
