@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.30 1997/04/05 01:25:52 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.31 1997/04/09 23:37:29 marcus Exp $";
 
 object stdout, stdin;
 mapping names=([]);
@@ -177,4 +177,51 @@ void compile_error(string file,int line,string err)
     errors+=sprintf("%s:%d:%s\n",file,line,err);
   else
     ::compile_error(file,line,err);
+}
+
+/* This function is called when the driver wants to cast a string
+ * to a program, this might be because of an explicit cast, an inherit
+ * or a implict cast. In the future it might receive more arguments,
+ * to aid the master finding the right program.
+ */
+program cast_to_program(string pname, string current_file)
+{
+  string ext;
+  string nname;
+
+  if(program ret=findprog(pname,""))
+    return ret;
+
+  if(sscanf(reverse(pname),"%s.%s",ext, nname) && search(ext, "/") == -1)
+  {
+    ext="."+reverse(ext);
+    pname=reverse(nname);
+  }else{
+    ext="";
+  }
+  if(pname[0]=='/')
+  {
+    pname=combine_path("/",pname);
+    return findprog(pname,ext);
+  }else{
+    string cwd;
+    if(current_file)
+    {
+      string *tmp=current_file/"/";
+      cwd=tmp[..sizeof(tmp)-2]*"/";
+
+      if(program ret=findprog(combine_path(cwd,pname),ext))
+	return ret;
+
+    }else{
+      if(program ret=findprog(pname,ext))
+	return ret;
+    }
+
+    foreach(pike_include_path, string path)
+      if(program ret=findprog(combine_path(path,pname),ext))
+	return ret;
+
+    return 0;
+  }
 }
