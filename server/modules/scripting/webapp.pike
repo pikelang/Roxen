@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.27 2002/07/16 08:42:53 wellhard Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.28 2002/07/23 14:58:57 mast Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -364,7 +364,7 @@ void start(int x, Configuration conf)
   webapp_info["webapp"] = (warname/"/")[-1];
 
   if(warname=="servlets/NONE") {
-    status_info = LOCALE(3, "No Web Application selected");
+    status_info = (string) LOCALE(3, "No Web Application selected");
     return;
   }
 
