@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.75 1999/02/19 17:06:39 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.76 1999/02/19 18:59:53 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -833,6 +833,7 @@ class imap_mailbox
   {
     array(array(string|object)) res = (contents->expunge() - ({ 0 }));
     contents -= ({ 0 });
+    uid_lookup = mkmapping(contents->uid, indices(contents));
     return res;
   }
 
@@ -851,7 +852,7 @@ class imap_mailbox
       res[i] = contents[message_numbers[i]-1]->store(new_flags, mode, silent, uid_mode);
     }
 
-    return((res - ({ 0 })));
+    return(res - ({ 0 }));
   }
 
   array(object) fetch_mail(object message_set)
