@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.1 1999/11/11 16:37:09 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.2 1999/11/11 22:13:27 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -13,8 +13,8 @@ array register_module()
 {
   return ({ 
     MODULE_PARSER|MODULE_FILTER,
-    "Javascript", 
-    "This module provides some tags to support JavaScript development.",
+    "Javascript Menus", 
+    "This module provides some tags to enable Javascript popup menus.",
     0, 1, });
 }
 
@@ -51,14 +51,14 @@ string container_js_write(string name, mapping args, string contents,
   contents =
     parse_html(contents, ([]), (["script":internal_container_script]), args);
   contents = parse_html("<"INT_TAG">"+contents+"</"INT_TAG">",
-		       ([]), ([INT_TAG:internal_container_js_quote]), args);
-  
-  return ("<noparse><script language='javascript'><!--\n"
+			([]), ([INT_TAG:internal_container_js_quote]), args);
+  return ((name!="js-post-write"?"<noparse>":"")+
+	  "<script language='javascript'><!--\n"
 	  // "var gt = String.fromCharCode(62);\n"
 	  // "var lt = String.fromCharCode(60);\n"
 	  // "var ha = String.fromCharCode(35);\n"
 	  +contents+
-	  "//--></script></noparse>\n");
+	  "//--></script>"+(name!="js-post-write"?"</noparse>":""));
 }
 
 string make_container_unquoted(string name, mapping args, string contents)
@@ -126,9 +126,9 @@ string container_js_popup(string name, mapping args,
   add_to_insert("javascript1.2", 
 		"if(isNav4) document."+popupname+
 		".onMouseOut = hidePopup;\n", id);
-  add_to_insert("style", "<style>#"+popupname+" {position:absolute; "
+  add_to_insert("style", "#"+popupname+" {position:absolute; "
 		"left:0; top:0; visibility:hidden; width:1; z-index:"+
-		id->misc->_popuplevel+"}</style>\n", id);
+		id->misc->_popuplevel+"}\n", id);
   string old_pparent = id->misc->_popupparent;
   id->misc->_popupparent = popupname;
   id->misc->_popuplevel++;
@@ -210,7 +210,10 @@ mixed int_tag_js_insert(string name, mapping args, object id, mapping m)
   if(args->name == "javascript1.2")
     return ({ "<script language='javascript1.2'><!--\n"+
 	      id->misc->javascript[args->name]+"//--></script>" });
-  else return id->misc->javascript[args->name];
+  if(args->jswrite)
+    return container_js_write("js-post-write", ([]),
+			      id->misc->javascript[args->name], id);
+  return id->misc->javascript[args->name];
 }
 
 mixed filter( mapping response, object id)
@@ -226,6 +229,9 @@ mixed filter( mapping response, object id)
     if(!m->done)
       response->data = parse_html(response->data, ([]),
 				  ([ "head": int_container_head ]), id);
+    
+    response->data = parse_html(response->data, ([]),
+				([ "js-post-write":container_js_write ]), id);
     return response;
   }
 }
