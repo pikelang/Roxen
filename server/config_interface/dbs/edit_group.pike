@@ -18,22 +18,35 @@ string parse( RequestID id )
     "<topmenu base='../' selected='dbs'/>"
     "<content><cv-split><subtablist width='100%'><st-tabs>"
     "<insert file='subtabs.pike'/></st-tabs><st-page>"
-    "<input type=hidden name='sort' value='&form.sort:http;' />\n"
-    "<input type=hidden name='db' value='&form.db:http;' />\n";
+    "<input type=hidden name=group value='&form.group;'/>";
+
+  if( id->variables->lname )
+    DBManager.create_group( id->variables->group,
+			    id->variables->lname,
+			    id->variables->comment,
+			    id->variables->pattern );
 
   c = DBManager.get_group( id->variables->group );
 
-  
-  res += "<blockquote><br />"+c->comment+"<table>";
 
-  res += "<tr><td><b>Name:</b></td><td> <input size=50 value='"+
+  
+  
+  res += "<blockquote><br /><h2>"+c->lname+"</h2>"
+    ""+c->comment+"<table>";
+
+  res += "<tr><td><b>Name:</b></td><td> <input size=50 name=lname value='"+
     Roxen.html_encode_string(c->lname)+"' /></td></tr>";
   
-  res += "<tr><td><b>URL:</b> </td><td> <input size=50 value='"+
+  res += "<tr><td><b>URL:</b> </td><td> <input size=50 name=pattern value='"+
     Roxen.html_encode_string(c->pattern)+"' /></td></tr>";
   
+  res += "<tr><td valign=top><b>Comment:</b></td><td valign=top> <textarea cols='50' rows=4 name=comment>"+
+    Roxen.html_encode_string(c->comment)+"</textarea></td></tr>";
 
+
+  res += "<tr><td></td><td align=right><cf-save /></td></tr>";
   res += "</table>";
+
   res += sprintf("<font size=+1><b>"+_(434,"Databases in the group %s")+
 		 "</b></font><br />", c->lname );
 
