@@ -20,7 +20,7 @@
   <table cellpadding=2 cellspacing=0 border=0 width="200" align=center>
   <tr bgcolor="&usr.fade2;">
     <td valign=top>
-      <gtext bgcolor="&usr.fade2;" fgcolor="&usr.bgcolor;" font=budhand font_size=24>&title;</gtext>
+      <font color="&usr.bgcolor;" face="helvetica,arial" size=+1><b>&title;</b></font>
     </td>
   </tr>
   <cset preparse variable=usr.fade2>&usr.bgcolor;</cset>
