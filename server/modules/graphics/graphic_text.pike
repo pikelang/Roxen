@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.218 2000/03/18 19:12:06 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.219 2000/03/19 23:38:04 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -230,7 +230,7 @@ opaque=70</gtext>
 <attr name=outline value=color,extra-radius>
  Draw an outline around the text. Quite useful when combined with textscale.
  <ex type=vert>
-<gtext xspacing=\"4\" textscale=\"red,red,yellow,yellow\" outline=\"black,1\">black, 2 pixels</gtext>
+<gtext xspacing=\"4\" quant=\"128\" textscale=\"red,red,yellow,yellow\" outline=\"black,1\">black, 2 pixels</gtext>
  </ex>
 </attr>
 
@@ -317,7 +317,7 @@ opaque=70</gtext>
  It is probably a good idea to increase the 'quant' value when
  using this argument.
  <ex type=vert>
-<gtext textscale=\"blue,red,black,darkgreen\">Blue, red, black, darkgreen</gtext>
+<gtext quant=\"128\" textscale=\"blue,red,black,darkgreen\">Blue, red, black, darkgreen</gtext>
  </ex>
 </attr>
 
@@ -549,7 +549,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
   }
 
   if( args->afont )
-    font = resolve_font((args->afont||args->font)+" "+(args["font-size"]||32));
+    font = resolve_font((args->afont||args->font)+" "+(args["fontsize"]||32));
   else
   {
     int bold=0, italic=0;
@@ -559,7 +559,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
     if(args->black) bold=2;
     if(args->italic) italic=1;
     font = get_font(args->font||"default",
-                    (int)args["font-size"]||32,
+                    (int)args["fontsize"]||32,
                     bold,
                     italic,
                     lower_case(args->talign||"left"),
@@ -669,7 +669,7 @@ constant textarg=({"afont",
 		   "fadein",
 		   "fgcolor",
 		   "font",
-		   "font-size",
+		   "fontsize",
 		   "ghost",
 		   "glow",
 		   "italic",
