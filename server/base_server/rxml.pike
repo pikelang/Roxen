@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.322 2001/11/27 18:53:38 mast Exp $
+// $Id: rxml.pike,v 1.323 2002/01/29 21:43:39 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -101,7 +101,7 @@ RXML.TagSet rxml_tag_set = class
 
     misc[" _ok"] = misc[" _prev_ok"] = 1;
     misc[" _error"] = 200;
-    misc[" _extra_heads"] = ([ ]);
+    ctx->add_scope ("headers", misc[" _extra_heads"] = ([ ]));
     if(id->misc->stat) misc[" _stat"] = id->misc->stat;
   }
 
@@ -110,11 +110,24 @@ RXML.TagSet rxml_tag_set = class
     RequestID id = ctx->id;
     mapping misc = ctx->misc;
 
-    if(sizeof(misc[" _extra_heads"]))
+    mapping extra_heads = ctx->get_scope ("headers");
+#ifdef DEBUG
+    if (extra_heads != misc[" _extra_heads"])
+      // Someone has probably replaced either of these mappings, which
+      // should never be done since they'll get out of synch then.
+      // Most likely it's some old code that has replaced
+      // id->misc->defines[" _extra_heads"]. Therefore we
+      // intentionally propagate the scope mapping here, so that the
+      // error is more likely to be discovered.
+      report_warning ("Warning: The \"headers\" scope and "
+		      "RXML_CONTEXT->misc[\" _extra_heads\"] "
+		      "isn't the same mapping.\n");
+#endif
+    if(sizeof(extra_heads))
       if (id->misc->moreheads)
-	id->misc->moreheads |= misc[" _extra_heads"];
+	id->misc->moreheads |= extra_heads;
       else
-	id->misc->moreheads = misc[" _extra_heads"];
+	id->misc->moreheads = extra_heads;
 
     if (mapping orig_defines = ctx->id_defines) {
       // Somehow it seems like these values are stored in the wrong place.. :P
@@ -185,7 +198,7 @@ string parse_rxml(string what, RequestID id,
     if (!defines[" _error"])
       defines[" _error"] = 200;
     if (!defines[" _extra_heads"])
-      defines[" _extra_heads"] = ([ ]);
+      ctx->add_scope ("headers", defines[" _extra_heads"] = ([ ]));
     if (!defines[" _stat"] && id->misc->stat)
       defines[" _stat"] = id->misc->stat;
   }
