@@ -57,14 +57,19 @@
   <insert name="General p2" _wizard_name="General">
   <insert name="General p3" _wizard_name="General" title="Link colors">
 
-  <insert name="Background p1" _wizard_name="Background" title="Background">
-  <insert name="Background p2" _wizard_name="Background" title="Text background">
+  <insert name="Background p1" _wizard_name="Background"
+    title="Background">
+  <insert name="Background p2" _wizard_name="Background"
+    title="Text background">
 
   <insert name="Title p1" _wizard_name="Title">
 
-  <insert name="Graphical element p1" _wizard_name="Graphical element" title="">
-  <insert name="Graphical element p2" _wizard_name="Graphical element" title="Logo">
-  <insert name="Graphical element p3" _wizard_name="Graphical element" title="Corner">
+  <insert name="Graphical element p1" _wizard_name="Graphical element"
+    title="">
+  <insert name="Graphical element p2" _wizard_name="Graphical element"
+    title="Logo">
+  <insert name="Graphical element p3" _wizard_name="Graphical element"
+    title="Corner">
 
   <insert name="Heading 1 p1" _wizard_name="Heading 1" title="">
   <insert name="Heading 1 p2" _wizard_name="Heading 1" title="">
@@ -192,13 +197,14 @@
   <!--  Graphical element  -->	  
   <insert name="page_head_image" title="Image"
           type="select" help=""
-	  _page_name="Graphical element p1" _option_group_name="page head images">
+	  _page_name="Graphical element p1"
+	  _option_group_name="page head images">
 
   <insert name="page_head_image_align" title="Image align"
           type="select" help=""
 	  _page_name="Graphical element p1" _option_group_name="align">
 
-  <insert name="page_head_bar_color" title="Bar color"
+  <insert name="page_head_bar_color" title="Bar/Border color"
           type="color-small" help=""
 	  _page_name="Graphical element p1">
 
@@ -411,7 +417,8 @@
 
 <sql-insert table="template_options" removevariables="_group_name"
             insertvariable="option_group_id"
-	    query="select id from template_option_groups where name='#_group_name#'">
+	    query="select id from template_option_groups
+	      where name='#_group_name#'">
 
   <delete all>
 
@@ -422,15 +429,21 @@
   <insert name="Dawn" value="dawn.tmpl" _group_name="template files">
   <insert name="Sand" value="sand.tmpl" _group_name="template files">
   <insert name="Blob" value="blob.tmpl" _group_name="template files">
+  <insert name="Border" value="border.tmpl" _group_name="template files">
+  <insert name="Border2" value="border2.tmpl" _group_name="template files">
 
   <!--  Background files  -->
   <insert name="--- None ---" value="" _group_name="background images">
-  <insert name="Paper" value="/img/bg/paper.pnm" _group_name="background images">
-  <insert name="Craters" value="/img/bg/craters.pnm" _group_name="background images">
+  <insert name="Paper" value="/img/bg/paper.pnm"
+    _group_name="background images">
+  <insert name="Craters" value="/img/bg/craters.pnm"
+    _group_name="background images">
   <insert name="Crincled paper" value="/img/bg/crinkle_paper.pnm"
     _group_name="background images">
-  <insert name="Cracks" value="/img/bg/cracks.pnm"  _group_name="background images">
-  <insert name="Small" value="/img/bg/small.pnm"  _group_name="background images">
+  <insert name="Cracks" value="/img/bg/cracks.pnm"
+    _group_name="background images">
+  <insert name="Small" value="/img/bg/small.pnm"
+    _group_name="background images">
 
   <!--  Navigation files  -->
   <insert name="Basic" value="basic.ntmpl" _group_name="navigation files">
@@ -471,7 +484,7 @@
     value="<img src=/img/Klee/rutor.gif width=92 height=47>">
 
   <!--  Logo position  -->
-  <insert name="--- None ---" value="none" _group_name="logo position">
+  <insert name="--- None ---" value="" _group_name="logo position">
   <insert name="Left" value="left" _group_name="logo position">
   <insert name="Center" value="center" _group_name="logo position">
   <insert name="Right" value="center" _group_name="logo position">
