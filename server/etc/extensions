@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.48 2000/11/22 22:30:30 nilsson Exp $
+# $Id: extensions,v 1.49 2001/11/21 11:51:53 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -682,6 +682,7 @@ scd	application/vnd.ms-schedule
 sch	application/vnd.ms-schedule
 #scm	application/x-icq
 sdf	application/e-score
+sgf	application/x-go-sgf
 sh	application/x-sh
 shar	application/x-shar
 shw	application/presentations
