@@ -21,8 +21,7 @@ string parse( RequestID id )
 <cv-startpage>
 <awizard>
 
-<page name=top>
-
+<page name=top><cf-perm perm="Edit Users">
 
   <table border=0 cellpadding=5 cellspacing=0><tr><td>
   <button gbutton_title=" <cf-locale get=create_user> "
@@ -35,7 +34,7 @@ string parse( RequestID id )
           gbutton-icon_src=/internal-roxen-next gbutton-preparse
           gbutton-align_icon=right page=delete_user>
   </td></tr></table>
-
+</cf-perm>
 <!-- */ -->
 <pike>
 string parse( RequestID id )
@@ -56,8 +55,8 @@ string parse( RequestID id )
 </pike>
 <!-- /* -->
 </page>
- 
-<page name=create_user>
+
+<page name=create_user><cf-perm perm="Edit Users">
 <table><tr><td>User ID:</td><td><input name=user_name></td><td><dbutton page=top gbutton_title=" Create User "></td></tr></table>
 <!-- */ -->
 <pike>
@@ -68,9 +67,9 @@ string parse( RequestID id )
 <!-- /* -->
 </dbutton>
 </table>
-</page>
+</cf-perm></page>
 
-<page name=delete_user>
+<page name=delete_user><cf-perm perm="Edit Users">
 <!-- */ -->
 <pike>
   string res="";
@@ -93,7 +92,8 @@ string parse( RequestID id )
 <!-- /* -->
 <p>
  <button gbutton_title=" <cf-locale width=300 get=cancel> " page=top gbutton-preparse>
-</page>
+
+</cf-perm></page>
 
 </awizard>
 </cv-startpage>
