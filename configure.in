@@ -1,11 +1,44 @@
 #
-# $Id: configure.in,v 1.7 1997/08/18 20:12:38 grubba Exp $
+# $Id: configure.in,v 1.8 1997/08/20 02:48:04 grubba Exp $
 #
 
 prefix=$PWD
 AC_INIT(Makefile.in)
 
 AC_SET_MAKE
+
+AC_PROG_INSTALL
+
+# installbsd seems to be broken on some versions of AIX
+#
+# /grubba 1997-08-16
+
+case "$ac_cv_path_install" in
+  *installbsd*)
+    AC_MSG_CHECKING(if $ac_cv_path_install works)
+    AC_CACHE_VAL(roxen_cv_install_works,
+[
+    if $ac_cv_path_install "$srcdir/configure.in" ./conftest >/dev/null 2>&1
+    then
+      if cmp "$srcdir/configure.in" ./conftest >/dev/null 2>&1; then
+        roxen_cv_install_works=yes;
+      else
+        roxen_cv_install_works=no;
+      fi
+    else
+      roxen_cv_install_works=no;
+    fi
+    if test -f ./conftest; then
+      rm -f ./conftest
+    fi
+])
+    AC_MSG_RESULT($roxen_cv_install_works)
+    if test "$roxen_cv_install_works" = "no"; then
+      echo "Warning: Falling back to $ac_install_sh"
+      INSTALL="$ac_install_sh"
+    fi
+  ;;
+esac
 
 # We want an absolute path to the source-dir.
 case "$srcdir" in
