@@ -243,7 +243,8 @@ array(string) get_module_list( function describe_module,
     mixed r = w[i];
     if(!classes[r[0]])
       classes[r[0]] = ([ "doc":r[1], "modules":({}) ]);
-    classes[r[0]]->modules += ({ mods[i] });
+    if( mods[i]->get_description() )
+      classes[r[0]]->modules += ({ mods[i] });
   }
 
   foreach( sort(indices(classes)), string c )
@@ -323,7 +324,7 @@ return sprintf(
      (image?module_image(module->type):""),
      module->sname,
    LOCALE(251, "Add Module"),
-     module->get_description(),
+   module->get_description(),
      LOCALE(266, "Will be loaded from: ")+module->filename
 );
     } else {
@@ -517,7 +518,8 @@ string page_really_compact( RequestID id )
 				  , id )) && r[0] ) {
     res += r[1];
     foreach(mods, object q) {
-      if( q->get_description() == "Undocumented" &&
+      if( (!q->get_description() ||
+	   (q->get_description() == "Undocumented")) &&
 	  q->type == 0 )
 	continue;
       object b = module_nomore(q->sname, q, conf);
