@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.135 2004/05/19 13:04:06 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.136 2004/05/25 18:56:52 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -672,20 +672,132 @@ class PrefLanguages
 }
 
 
+typedef function(CacheKey,mixed...:void) CacheActivationCB;
+
+class CacheKey
+//! @appears CacheKey
+//!
+//! Used as @expr{id->misc->cachekey@}. Every request that might be
+//! cacheable has an instance, and the protocol cache which store the
+//! result of the request checks that this object still exists before
+//! using the cache entry. Thus other subsystems that provide data to
+//! the result can keep track of this object and destruct it whenever
+//! they change state in a way that invalidates the previous result.
+//!
+//! Those data providers should however not store this object
+//! directly, but instead call @[add_activation_cb]. That avoids
+//! unnecessary garbage (see below).
+//!
+//! A cache implementation must call @[activate] before storing the
+//! cache key. At that point the functions registered with
+//! @[add_activation_cb] are called, and the key gets added in the
+//! internal structures of the data providers. This avoids registering
+//! cache keys for results that never get cached, which would
+//! otherwise produce excessive amounts of garbage objects in those
+//! internal structures. Note that other code might need to call
+//! @[activate] to process the callbacks, so a key being active
+//! doesn't necessarily mean it's used in a cache.
+//!
+//! @note
+//! These objects can be destructed asynchronously; all accesses for
+//! things inside them have to rely on the interpreter lock, and code
+//! can never assume that @expr{id->misc->cachekey@} exists to begin
+//! with. The wrapper functions in @[RequestID] handles all this.
+{
+#if ID_CACHEKEY_DEBUG
+  RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
+#endif
+
+  static array(array(CacheActivationCB|array)) activation_cbs;
+  // Functions to call when the cache key is activated, i.e. stored
+  // together with some result in a cache. Zero when the key already
+  // is active.
+
+  static void create (void|int activate_immediately)
+  {
+    if (!activate_immediately) activation_cbs = ({});
+  }
+
+  void add_activation_cb (CacheActivationCB cb, mixed... args)
+  //! Register a callback that will be called if and when this cache
+  //! key is used in a cache, i.e. is activated. The callback gets
+  //! this object followed by @[args] as arguments and should do
+  //! whatever bookkeeping necessary to keep track of the cache key so
+  //! that it can be destructed.
+  //!
+  //! If this cache key already is active then @[cb] is called right
+  //! away.
+  //!
+  //! The registered callbacks will be called in the same order they
+  //! are added.
+  //!
+  //! @note
+  //! Cache keys can be destructed at any time, and @[cb] might get
+  //! called with an already destructed object.
+  //!
+  //! @note
+  //! Take care to avoid cyclic refs when the activation callback is
+  //! registered. This object should e.g. not be among @[args], and
+  //! @[cb] should not be a lambda that contain a reference to this
+  //! object.
+  {
+    // Relying on the interpreter lock here.
+    if (activation_cbs)
+      // Relying on the interpreter lock here too.
+      activation_cbs += ({({cb, args})});
+    else
+      cb (this, @args);
+  }
+
+  void activate()
+  //! Activate the cache key. This must be called when the key is
+  //! stored in a cache.
+  {
+    // Relying on the interpreter lock here.
+    if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
+      // Relying on the interpreter lock here too.
+      activation_cbs = 0;
+      foreach (cbs, [CacheActivationCB cb, array args])
+	cb (this, @args);
+    }
+  }
+
+  int activated()
+  //! Returns nonzero iff the key is activated.
+  {
+    // Relying on the interpreter lock here.
+    return !activation_cbs;
+  }
+
+  void call_activation_cbs_only()
+  // Call the collected activation callbacks without activating the
+  // key. This is a kludge to play safe in situations early in the
+  // request path where we don't want to activate the key and where
+  // there aren't any outstanding callbacks in the common case with a
+  // direct request but might still be in the recursive case. Ignore
+  // if you can.
+  {
+    // Relying on the interpreter lock here.
+    if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
+      // Relying on the interpreter lock here too.
+      activation_cbs = ({});
+      foreach (cbs, [CacheActivationCB cb, array args])
+	cb (this, @args);
+    }
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && ("CacheKey()"
+#ifdef ID_CACHEKEY_DEBUG
+			   + (__marker ? "[" + __marker->count + "]" : "")
+#endif
+			  );
+  }
+}
+
 //  Kludge for resolver problems
 static function _charset_decoder_func;
-
-//! Used as @expr{id->misc->cachekey@}.
-class CacheKey {
-#if ID_CACHEKEY_DEBUG
-  constant __num = ({ 0 });
-  int _num;
-  string _sprintf() { return "CacheKey(#" + _num + ")"; }
-  void create() { _num = ++__num[0]; }
-  void destroy() { werror("CacheKey(#" + _num + "): --DESTROY--\n"
-			  "%s\n\n", "" || describe_backtrace(backtrace())); }
-#endif
-}
 
 class RequestID
 //! @appears RequestID
@@ -697,6 +809,10 @@ class RequestID
 //! request has passed through all levels of the <ref>module type calling
 //! sequence</ref>.
 {
+#ifdef ID_OBJ_DEBUG
+  RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
+#endif
+
   Configuration conf;
 
   Protocol port_obj;
@@ -1597,6 +1713,15 @@ class RequestID
   //! is handling the request.
   {
     return conf;
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && ("RequestID(" + (raw_url||"") + ")"
+#ifdef ID_OBJ_DEBUG
+			   + (__marker ? "[" + __marker->count + "]" : "")
+#endif
+			  );
   }
 }
 
