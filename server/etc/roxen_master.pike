@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.61 1999/11/26 21:44:42 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.62 1999/11/29 22:13:43 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -295,6 +295,54 @@ void name_program( program p, string name )
   programs[name] = p;
   load_time[ name ] = time();
 }
+
+string stupid_describe(mixed m, int maxlen)
+{
+  switch(string typ=sprintf("%t",m))
+  {
+    case "int":
+    case "float":
+      return (string)m;
+      
+    case "string":
+      canclip++;
+      if(sizeof(m) < 40)
+        return  sprintf("%O", m);;
+      clipped++;
+      return sprintf("%O+[%d]",m[..34],sizeof(m)-(35));
+      
+    case "array":
+      if(!sizeof(m)) return "({})";
+      return "({" + stupid_describe_comma_list(m,maxlen-2) +"})";
+      
+    case "mapping":
+      if(!sizeof(m)) return "([])";
+      return "mapping["+sizeof(m)+"]";
+      
+    case "multiset":
+      if(!sizeof(m)) return "(<>)";
+      return "multiset["+sizeof(m)+"]";
+      
+    case "function":
+      if(string tmp=describe_program(m)) return tmp;
+      if(object o=function_object(m))
+	return (describe_object(o)||"")+"->"+function_name(m);
+      else
+	return function_name(m) || "function";
+      
+    case "program":
+      if(string tmp=describe_program(m)) return tmp;
+      return typ;
+
+    case "object":
+      if(string tmp=describe_object(m)) return tmp;
+      return typ;
+
+    default:
+      return typ;
+  }
+}
+
 
 string describe_backtrace(mixed trace, void|int linewidth)
 {
