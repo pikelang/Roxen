@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.82 1998/08/04 04:05:55 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.83 1998/09/18 14:04:32 per Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -536,6 +536,8 @@ static string make_container(string s,mapping in, string contents)
 
 static string dirname( string file )
 {
+  if(!file) 
+    return "/";
   mixed tmp;
   if(file[-1] == '/')
     if(strlen(file) > 1)
