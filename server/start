@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.54 1999/04/24 17:49:22 mast Exp $
+# $Id: start,v 1.55 1999/05/22 23:46:47 mast Exp $
 
 VERSION=202; BETA=.b;
 
@@ -351,9 +351,9 @@ oo
       # Signal death.
       echo $$: "Roxen died of signal $exitcode. Restarting..."
     else
-      # Restart. Sleep a few seconds before restarting.
-      echo $$: Roxen died. Restarting in 5 seconds...
-      sleep 5
+      # Restart. Sleep a second before restarting.
+      echo $$: Roxen died. Restarting in 1 second...
+      sleep 1
     fi
   done
     
