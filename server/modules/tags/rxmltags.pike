@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.412 2004/05/21 01:23:54 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.413 2004/05/21 02:23:41 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1976,7 +1976,7 @@ class Smallcapsstr (string bigtag, string smalltag, mapping bigarg, mapping smal
   static string text="",part="";
   static int last=UNDEF;
 
-  string _sprintf() {
+  string _sprintf(int t) {
     return "Smallcapsstr("+bigtag+","+smalltag+")";
   }
 
@@ -3018,14 +3018,14 @@ class UserTag {
     array save() {return ({content_text, compiled_content});}
     void restore (array saved) {[content_text, compiled_content] = saved;}
 
-    string _sprintf ()
+    string _sprintf (int t)
     {
       if (catch {return "UserTag.Frame(" + name + ")";})
 	return "UserTag.Frame(?)";
     }
   }
 
-  string _sprintf() {return "UserTag(" + name + ")";}
+  string _sprintf(int t) {return "UserTag(" + name + ")";}
 }
 
 // A helper Scope class used when preparsing in TagDefine: Every
