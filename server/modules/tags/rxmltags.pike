@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.62 2000/02/10 04:11:21 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.63 2000/02/10 06:48:03 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -843,12 +843,15 @@ array(string) container_cache(string tag, mapping args,
 #else
   string key = (string)hash(HASH(contents));
 #endif
+  int tm;
+  if (args->timeout)
+    tm = (int)args->timeout;
   if(args->key)
     key += args->key;
   string parsed = cache_lookup("tag_cache", key);
   if(!parsed) {
     parsed = parse_rxml(contents, id);
-    cache_set("tag_cache", key, parsed);
+    cache_set("tag_cache", key, parsed, tm);
   }
   return ({parsed});
 #undef HASH
@@ -1544,6 +1547,12 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 <attr name=key value=string>
  Append this value to the hash used to identify the contents for less
  risk of incorrect caching. This shouldn't really be needed.
+</attr>
+
+<attr name=timeout value=int>
+ Set the number of seconds a cache entry should be valid. If not provided
+ the entry will be removed from the cache when it has beem untouched for
+ too long.
 </attr>",
 
 "catch":#"<desc cont>
