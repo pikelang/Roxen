@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.9 1998/04/28 17:06:33 grubba Exp $
+ * $Id: ftp2.pike,v 1.10 1998/04/29 15:46:37 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1919,6 +1919,11 @@ class FTPSession
 
   void ftp_REIN(string args)
   {
+    if (user && Query("ftp_user_session_limit") > 0) {
+      // Logging out...
+      conf->misc->ftp_sessions[user]--;
+    }
+
     master_session->auth = 0;
     dataport_addr = 0;
     dataport_port = 0;
@@ -1934,6 +1939,10 @@ class FTPSession
 
   void ftp_USER(string args)
   {
+    if (user && Query("ftp_user_session_limit") > 0) {
+      // Logging out...
+      conf->misc->ftp_sessions[user]--;
+    }
     auth = 0;
     user = args;
     password = 0;
@@ -1951,6 +1960,22 @@ class FTPSession
 	conf->log(([ "error":403 ]), master_session);
       }
     } else {
+      if (Query("ftp_user_session_limit") > 0) {
+	if (!conf->misc->ftp_sessions) {
+	  conf->misc->ftp_sessions = ([]);
+	}
+	if (conf->misc->ftp_sessions[user]++ >=
+	    Query("ftp_user_session_limit")) {
+	  // Session limit exceeded.
+	  send(532, ({
+	    sprintf("Concurrent session limit (%d) exceeded for user \"%s\".",
+		    Query("ftp_user_session_limit"), user)
+	  }));
+	  conf->log(([ "error":403 ]), master_session);
+	  return;
+	}
+	
+      }
       send(331, ({ sprintf("Password required for %s.", user) }));
       master_session->not_query = user;
       conf->log(([ "error":407 ]), master_session);
@@ -2601,6 +2626,17 @@ class FTPSession
 	      master_session);
   }
 
+  void destroy()
+  {
+    if (user && Query("ftp_user_session_limit") > 0) {
+      // Logging out...
+      conf->misc->ftp_sessions[user]--;
+    }
+
+    conf->extra_statistics->ftp->sessions--;
+    conf->misc->ftp_users_now--;
+  }
+
   void create(object fd, object c)
   {
     conf = c;
@@ -2621,22 +2657,16 @@ class FTPSession
   }
 };
 
-object conf;
-
-void destroy()
-{
-  conf->extra_statistics->ftp->sessions--;
-}
-
 void create(object f, object c)
 {
   if (f) {
-    conf = c;
-    if (!conf->extra_statistics->ftp) {
-      conf->extra_statistics->ftp = ([ "sessions":1 ]);
+    if (!c->extra_statistics->ftp) {
+      c->extra_statistics->ftp = ([ "sessions":1 ]);
     } else {
-      conf->extra_statistics->ftp->sessions++;
+      c->extra_statistics->ftp->sessions++;
     }
+    c->misc->ftp_users++;
+    c->misc->ftp_users_now++;
     FTPSession(f, c);
   }
 }
