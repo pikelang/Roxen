@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.32 2004/09/23 15:17:47 jonasw Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.33 2005/01/21 14:56:12 grubba Exp $";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -34,7 +34,16 @@ mapping find_internal(string f, RequestID id)
 void create() {
   defvar("spellchecker",
 #ifdef __NT__
-	 "C:/Program Files/Aspell/bin/aspell.exe",
+	 lambda() {
+	   catch {
+	     // RegGetValue() throws if the key isn't found.
+	     return replace(RegGetValue(HKEY_LOCAL_MACHINE,
+					"SOFTWARE\\Aspell",
+					"Path") + "\\aspell.exe", "\\", "/");
+	   };
+	   // Reasonable default.
+	   return "C:/Program Files/Aspell/bin/aspell.exe";
+	 }(),
 #else
 	 "/usr/bin/aspell",
 #endif
