@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.20 2001/05/07 12:36:11 peter Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.21 2001/05/11 04:37:52 per Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -43,7 +43,7 @@ class Relay
          res->Host = host+":"+port;
          break;
        default:
-         res[String.capitalize( i )] = from->request_headers[i];
+	 res[String.capitalize( i )] = from->request_headers[i];
          break;
       }
     }
@@ -58,7 +58,11 @@ class Relay
       if(lower_case(h)=="content-length")
 	content_length = (string)h+": "+(string)q[h]+"\r\n";
       else
-	res += (string)h+": "+(string)q[h]+"\r\n";
+	if( arrayp( q[h] ) )
+	  foreach( q[h], string w )
+	    res += (string)h+": "+(string)w+"\r\n";
+	else
+	  res += (string)h+": "+(string)q[h]+"\r\n";
     return res+content_length;
   }
 
@@ -209,10 +213,25 @@ class Relay
     return;
   }
 
+  string obuffer;
+  void write_more( )
+  {
+    if( strlen( obuffer ) )
+      obuffer = obuffer[ fd->write( obuffer ) .. ];
+#ifdef RELAY_DEBUG
+    else
+      werror("RELAY: Request sent OK\n");
+#endif
+  }
+    
+
   void connected( int how )
   {
     if( !how )
     {
+#ifdef RELAY_DEBUG
+      werror("RELAY: Connection failed\n");
+#endif
       id->send_result( ([
         "type":"text/plain",
         "data":"Connection to remote HTTP host failed."
@@ -221,19 +240,29 @@ class Relay
       return;
     }
 
+#ifdef RELAY_DEBUG
+      werror("RELAY: Connection OK\n");
+#endif
     // Send headers to remote server. (non-blocking)
-    Stdio.sendfile( ({ request_data }), 0, 0, 0, 0, fd );
+    
     if( options->stream )
     {
-      Stdio.sendfile( 0, fd, 0, 0, 0, id->my_fd );
+      Stdio.sendfile( ({ request_data }), 0, 0, 0, 0, fd,
+		      lambda(int q) {
+#ifdef RELAY_DEBUG
+			werror("RELAY: Request sent OK\n");
+#endif
+			Stdio.sendfile( 0, fd, 0, 0, 0, id->my_fd );
+		      } );
       destruct();
     }
     else
     {
+      obuffer = request_data;
+      request_data = 0;
       buffer="";
-      fd->set_read_callback( got_some_more_data );
-      fd->set_close_callback( done_with_data );
-    }      
+      fd->set_nonblocking( got_some_more_data, write_more, done_with_data );
+    }
   }
 
   void create( RequestID _id,
@@ -266,7 +295,15 @@ class Relay
     if( options->utf8 )
       request_data = string_to_utf8( request_data );
     fd = Stdio.File( );
-    fd->async_connect( host, port, connected );
+
+#ifdef RELAY_DEBUG
+    werror("RELAY: Connecting to "+host+":"+port+"\n");
+#endif
+
+    if( fd->connect( host, port ) )
+      connected( 1 );
+    else
+      connected( 0 );
   }
 }
 
