@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.452 2004/05/26 17:33:54 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.453 2004/06/20 23:32:34 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1008,19 +1008,81 @@ string link_to(string file, int line, string fun, int eid, int qq)
 	  "\">");
 }
 
-static string error_page_header (string title)
+static string error_page(string line1, string title, string body)
 {
-  title = Roxen.html_encode_string (title);
-  return #"<html><head><title>" + title + #"</title></head>
-<body bgcolor='white' text='black' link='#ce5c00' vlink='#ce5c00'>
-<table width='100%'><tr>
-<td><a href='http://www.roxen.com/'><img border='0' src='/internal-roxen-roxen-small'></a></td>
-<td><b><font size='+1'>" + title + #"</font></b></td>
-<td align='right'><font size='+1'>Roxen WebServer " + Roxen.html_encode_string (roxen_version()) + #"</font></td>
-</tr></table>
-
-";
+  return
+    "<html><head>"
+    "  <title>Internal Server Error</title>"
+    "  <style>"
+    "    .msg  { font-family:    verdana, helvetica, arial, sans-serif;"
+    "            font-size:      12px;"
+    "            line-height:    160% }"
+    "    .big  { font-family:    georgia, times, serif;"
+    "            font-size:      18px;"
+    "            padding-top:    6px;"
+    "            padding-bottom: 20px }"
+    "    .info { font-family:    verdana, helvetica, arial, sans-serif;"
+    "            font-size:      10px;"
+    "            color:          #999999 }"
+    "    .list { padding-left:   20px;"
+    "            list-style-type:square; }"
+    "    .code { font-family:    monaco, courier, monospace;"
+    "            font-size:      10px;"
+    "            color:          #404070; }"
+    "  </style>"
+    "</head>"
+    "<body text='#000000' style='margin: 0; padding: 0' vlink='#2331d1' "
+    "      rightmargin='0' leftmargin='0' alink='#f6f6ff' link='#0000ee' "
+    "      bgcolor='#f2f1eb' bottommargin='0' topmargin='0'>"
+    "<table border='0' cellspacing='0' cellpadding='0' height='100%'>"
+    "  <colgroup>"
+    "    <col span='3' />"
+    "    <col width='356' />"
+    "    <col width='0*' />"
+    "  </colgroup>"
+    "  <tr>"
+    "    <td><img src='/internal-roxen-unit' height='30' /></td>"
+    "  </tr><tr>"
+    "    <td></td>"
+    "    <td><img src='/internal-roxen-500' /></td>"
+    "    <td><img src='/internal-roxen-unit' width='30' /></td>"
+    "    <td valign='bottom'><img src='/internal-roxen-server-error' /></td>"
+    "    <td></td>"
+    "  </tr><tr>"
+    "    <td><img src='/internal-roxen-unit' height='30' /></td>"
+    "  </tr><tr>"
+    "    <td colspan='3'></td>"
+    "    <td colspan='2'>"
+    "      <div class='msg'>" + line1 + "</div>"
+    "      <div class='big'>" + title + "</div>"
+    "    </td>"
+    "  </tr><tr>"
+    "    <td colspan='3'></td>"
+    "    <td width='356'>"
+    "      <div class='msg'>" + body + "</div>"
+    "    </td>"
+    "    <td>&nbsp;</td>"
+    "  </tr><tr valign='bottom' height='100%'>"
+    "    <td colspan='3'></td>"
+    "    <td>"
+    "      <img src='/internal-roxen-unit' height='20' />"
+    "      <table border='0' cellspacing='0' cellpadding='0'>"
+    "        <tr>"
+    "          <td><img src='/internal-roxen-roxen-mini.gif' /></td>"
+    "          <td class='info'>"
+    "            &nbsp;&nbsp;<b>" + roxen_product_name + "</b>"
+    "            <font color='#ffbe00'>|</font> " + roxen_dist_version +
+    "          </td>"
+    "        </tr>"
+    "      </table>"
+    "      <img src='/internal-roxen-unit' height='20' />"
+    "    </td>"
+    "    <td></td>"
+    "  </tr>"
+    "</table>"
+    "</body></html>";
 }
+
 
 static string get_err_md5(array(string|array(string)|array(array)) err_info)
 {
@@ -1050,49 +1112,58 @@ string format_backtrace(int eid, string|void md5)
   array(string|array(string)|array(array)) err_info = get_err_info(eid, md5);
 
   if (!err_info) {
-    return error_page_header("Unregistred Error");
+    return error_page("Unregistered error", "", "");
   }
 
   [string msg, array(string) rxml_bt, array(array) bt,
    string raw_bt_descr, string raw_url, string raw] = err_info;
 
-  string res = error_page_header ("Internal Server Error") +
-    "<h1>" + replace (Roxen.html_encode_string (msg), "\n", "<br />\n") + "</h1>\n";
+  string title = replace(Roxen.html_encode_string(msg), "\n", "<br />\n");
+  string body = "";
 
   if (rxml_bt && sizeof (rxml_bt)) {
-    res += "<h3>RXML frame backtrace</h3>\n<ul>\n";
-    foreach (rxml_bt, string line)
-      res += "<li>" + Roxen.html_encode_string (line) + "</li>\n";
-    res += "</ul>\n\n";
+    body +=
+      "RXML frame backtrace"
+      "<ul class='list'>";
+    foreach(rxml_bt, string line)
+      body += "<li class='code'>" + Roxen.html_encode_string(line) + "</li>\n";
+    body += "</ul>\n";
   }
 
   if (bt && sizeof (bt)) {
-    res += "<h3>Pike backtrace</h3>\n<ul>\n";
+    body +=
+      "Pike backtrace"
+      "<ul class='list'>";
     int q = sizeof (bt);
     foreach(bt, [string file, int line, string func, string descr])
     {
 #if constant(PIKE_MODULE_RELOC)
       file = file && master()->relocate_module(file);
 #endif
-      res += "<li value="+(q--)+">" +
-	link_to (file, line, func, eid, q) +
-	(file ? Roxen.html_encode_string (file) : "<i>Unknown program</i>") +
+      q--;
+      body +=
+	"<li>" +
+	link_to(file, line, func, eid, q) +     //  inserts <a>
+	(file ? Roxen.html_encode_string(file) : "<i>Unknown program</i>") +
 	(line ? ":" + line : "") +
-	"</a>" + (file ? Roxen.html_encode_string (get_cvs_id (file)) : "") + ":<br />\n" +
-	replace (Roxen.html_encode_string (descr),
-		 ({"(", ")", " "}), ({"<b>(</b>", "<b>)</b>", "&nbsp;"})) +
-	"</li>\n";
+	"</a>" +
+	(file ? Roxen.html_encode_string(get_cvs_id(file)) : "") +
+	"<br /><span class='code'>" +
+	replace(Roxen.html_encode_string(descr),
+		({ "(", ")", " " }), ({ "<b>(</b>", "<b>)</b>", "&nbsp;"}) ) +
+	"</span></li>\n";
     }
-    res += "</ul>\n\n";
+    body += "</ul>\n\n";
   }
 
-  res += ("<p><b><a href=\"/(old_error,plain)/error/?"
-	  "error="+eid+
-	  "&error_md5="+get_err_md5(get_err_info(eid))+
-	  "\">"
-	  "Generate text only version of this error message, for bug reports"+
-	  "</a></b></p>\n\n");
-  return res+"</body></html>";
+  body +=
+    "<p>Generate "
+    "<a href=\"/(old_error,plain)/error/?"
+    "error=" + eid +
+    "&error_md5=" + get_err_md5(get_err_info(eid)) +
+    "\">"
+    "text-only version</a> of this error message for bug reports.</p>";
+  return error_page("The server failed to fulfill your query.", title, body);
 }
 
 string generate_bugreport(string msg, array(string) rxml_bt, array(string) bt,
@@ -1227,13 +1298,16 @@ void internal_error(array _err)
       werror("Internal server error in internal_error():\n" +
 	     describe_backtrace(err2)+"\n while processing \n"+
 	     describe_backtrace(err));
-      file = Roxen.http_low_answer(500, "<h1>Error: The server failed to "
-			     "fulfill your query, due to an "
-			     "internal error in the internal error routine.</h1>");
+      file =
+	Roxen.http_low_answer(500, error_page("The server failed to fulfill "
+					      "your query due to an internal "
+					      "error in the internal error "
+					      "routine.", "", ""));
     }
   } else {
-    file = Roxen.http_low_answer(500, "<h1>Error: The server failed to "
-			   "fulfill your query, due to an internal error.</h1>");
+    file =
+      Roxen.http_low_answer(500, error_page("The server failed to fulfill "
+					    "your query.", "", ""));
   }
   report_error("Internal server error: " +
 	       describe_backtrace(err) + "\n");
@@ -1317,10 +1391,8 @@ string handle_error_file_request (string msg, array(string) rxml_bt, array(array
   string data = Stdio.read_bytes(variables->file);
 
   if(!data)
-    return error_page_header (variables->file) +
-      "<h3><i>Source file could not be read</i></h3>\n"
-      "</body></html>";
-
+    return error_page("Source file could not be read:", variables->file, "");
+  
   string down;
   int next = (int) variables->off + 1;
 
@@ -1348,13 +1420,14 @@ string handle_error_file_request (string msg, array(string) rxml_bt, array(array
   if(sizeof(lines)>off) {
     sscanf (lines[off], "%[ \t]%s", string indent, string code);
     if (!sizeof (code)) code = "&nbsp;";
-    lines[off] = indent + "<font size='+1'><b>"+down+code+"</a></b></font></a>";
+    lines[off] = indent + "<font size='+1'><b>"+down+code+"</a></b></font>";
   }
   lines[max(off-20,0)] = "<a name=here>"+lines[max(off-20,0)]+"</a>";
 
-  return error_page_header (variables->file) +
-    "<font size='-1'><pre>" + lines*"\n" + "</pre></font>\n"
-    "</body></html>";
+  return error_page("Source code for", variables->file,
+		    "<span class='code'><pre>" +
+		    (lines * "\n") +
+		    "</pre></span>");
 }
 
 // The wrapper for multiple ranges (send a multipart/byteranges reply).
