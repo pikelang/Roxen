@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.13 1999/01/15 12:35:00 neotron Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.14 1999/03/05 01:32:36 grubba Exp $";
 
 //#define DEBUG
 
@@ -184,8 +184,8 @@ int read_cache_status()
   lastgc = status->lastgc;
 
   if((last_log < first_log) ||
-     (cache_size <= 0)||
-     (num_files <= 0)||
+     (max_cache_size>0&&cache_size <= 0)||
+     (max_num_files>0&&num_files <= 0)||
      (first_log <= 0)) {
     perror("read_cache_status: "+file+" contains rubbish\n");
     rm(file);
@@ -437,7 +437,7 @@ int check(int howmuch)
     num_files--;
 
   //  len is in units of BLOCK_SIZE bytes. 
-  if(((int)((float)cache_size)) > max_cache_size)
+  if((max_cache_size>0) && ((int)((float)cache_size)) > max_cache_size)
     gc(cache_size);
   else if((max_num_files>0) && (num_files > max_num_files))
     gc(cache_normal_garb);
@@ -587,13 +587,13 @@ string statistics()
 		     "\n"
 		     "%s\n"
 		     "%s",
-                    ctime(time())-"\n", num_files,
-                    max_num_files>0?
+		     ctime(time())-"\n", num_files,
+		     max_num_files>0?
 		     sprintf(" (%1.2f%%)",
 			     (float)cache_size*100/max_cache_size):"",
                      ((float)BLOCK_TO_KB(cache_size))/(1024.0),
-                    (float)cache_size*100/max_cache_size,
-                    gc_info, disk_info()));
+		     max_cache_size>0?(float)cache_size*100/max_cache_size:0.0,
+		     gc_info, disk_info()));
 }
 
 private string lf;
