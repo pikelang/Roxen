@@ -1,5 +1,5 @@
 
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // This module redirects requests to different places, depending on the
 // hostname that was used to access the server. It can be used as a
@@ -8,7 +8,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.16 1998/03/30 20:56:25 grubba Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.17 1999/09/24 17:16:07 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -84,11 +84,6 @@ mixed register_module()
              "all clients.</i><p>"
              "v2 now also allows HTTP redirects"), 
               ({}), 1, });
-}
-
-string comment()
-{
-  return "No comments!";
 }
 
 mixed first_try(object id)

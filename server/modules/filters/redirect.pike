@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // The redirect module. Redirects requests from one filename to
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.13 1998/03/11 19:42:37 neotron Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.14 1999/09/24 17:16:07 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -87,7 +87,7 @@ mixed register_module()
 	      ({}), 1, });
 }
 
-string comment()
+string status()
 {
   return sprintf("Number of patterns: %d+%d=%d, Redirects so far: %d", 
 		 sizeof(redirect_patterns),sizeof(exact_patterns),

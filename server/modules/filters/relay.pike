@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // Like the redirect module, but transparent to the user. This module
 // will connect to another server, and get the data from there, and
@@ -7,7 +7,7 @@
 // caching. This module is therefore quite obsolete, really.  But
 // since it is so small, I have left it here.
 
-constant cvs_version = "$Id: relay.pike,v 1.12 1998/08/27 14:40:39 wing Exp $";
+constant cvs_version = "$Id: relay.pike,v 1.13 1999/09/24 17:16:07 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -63,11 +63,6 @@ void create()
 
   defvar("anti", "", "Don`t redirect", TYPE_TEXT_FIELD,
 	 "Never relay these, unless the URL match the 'Always-list'.");
-}
-
-string comment()
-{
-  return "http://"+query("relayh")+":"+query("relayp")+"/";
 }
 
 void connected( object to, object from, object id )
