@@ -1,7 +1,5 @@
-inherit "roxenlib";
 inherit "module";
 inherit "socket";
-#include <module.h>;
 
 /*
  * This software is (C) 1998 Francesco Chemolli,
@@ -26,7 +24,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.6 2000/02/22 05:14:45 nilsson Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.7 2000/07/03 06:15:27 nilsson Exp $";
 
 #if DEBUG > 22
 #define TCPFORWARDER_DEBUG
@@ -165,7 +163,7 @@ void start() {
 	object privs;
 	int port;
 
-	port=QUERY(port);
+	port=query("port");
   if (accept_port) //I wonder why (at least on my setup) stop isn't called..
     stop();
   debug_perror("Opening port "+port+"\n");
@@ -194,7 +192,7 @@ void got_connection (mixed port) {
   if (!in)
     THROW("Couldn't accept connection");
 	total_connections_number++;
-  async_connect(QUERY(host),QUERY(r_port),connected,in);
+  async_connect(query("host"),query("r_port"),connected,in);
 }
 
 void connected (object out, object in) {

@@ -3,18 +3,16 @@
 // An implementation of the CONNECT methos, used for SSL tunneling in
 // Netscape (the "Secure proxy" field)
 
-constant cvs_version = "$Id: connect.pike,v 1.14 2000/03/17 13:59:34 nilsson Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: connect.pike,v 1.15 2000/07/03 06:15:27 nilsson Exp $";
+constant thread_safe = 1;
 
-#include <module.h>
 
 inherit "module";
-inherit "roxenlib";
 inherit "socket";
 
 #include <proxyauth.pike>
 
-#define CONN_REFUSED QUERY(ConRefused)
+#define CONN_REFUSED query("ConRefused")
 
 /* Simply relay a request to another server if the data was not found. */
 
@@ -173,7 +171,7 @@ mapping relay(object fid)
   if(allow(p))
     async_connect(find_host(fid->not_query), p, connected, fid);
   else
-    return http_string_answer(query("InvalidPort"));
+    return Roxen.http_string_answer(query("InvalidPort"));
   return http_pipe_in_progress();
 }
 

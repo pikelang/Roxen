@@ -4,10 +4,9 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.48 2000/03/30 18:41:49 grubba Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.49 2000/07/03 06:15:27 nilsson Exp $";
 constant thread_safe = 1;
 
-#include <module.h>
 #include <config.h>
 #include <stat.h>
 
@@ -18,7 +17,6 @@ constant thread_safe = 1;
 #endif
 
 inherit "module";
-inherit "roxenlib";
 
 #include <proxyauth.pike>
 #include <roxen.h>
@@ -47,7 +45,7 @@ int server_continue, server_socket_keepalive;
 void start(int level, Configuration conf)
 {
   string pos;
-  pos=QUERY(mountpoint);
+  pos=query("mountpoint");
 
   init_proxies();
   check_variable("browser_timeout", query("browser_timeout"));
@@ -67,8 +65,8 @@ void start(int level, Configuration conf)
   if(strlen(pos)>2 && (pos[-1] == pos[-2]) && pos[-1] == '/')
     set("mountpoint", pos[0..strlen(pos)-2]); // Evil me..
 
-  if(strlen(QUERY(NoCacheFor)))
-    if(catch(no_cache_for = Regexp("("+(QUERY(NoCacheFor)-"\r"-"\n\n")/"\n"*")|("
+  if(strlen(query("NoCacheFor")))
+    if(catch(no_cache_for = Regexp("("+(query("NoCacheFor")-"\r"-"\n\n")/"\n"*")|("
 				   +")")->match))
       report_error("Parse error in 'No cache' regular expression.\n");
 
@@ -83,9 +81,9 @@ void start(int level, Configuration conf)
     destruct(function_object(log_function));
     log_function = 0;
   }
-  if (!strlen(QUERY(logfile)))
+  if (!strlen(query("logfile")))
     return;
-  log_function = conf->LogFile( QUERY(logfile) )->write;
+  log_function = conf->LogFile( query("logfile") )->write;
 }
 
 mixed log(object id, mapping file)
@@ -139,7 +137,7 @@ string|void init_proxies()
   proxies = ({ });
   filters = ({ });
 
-  foreach(QUERY(Cachers)/"\n", foo)
+  foreach(query("Cachers")/"\n", foo)
   {
     array bar;
     if(!strlen(foo) || foo[0] == '#')
@@ -159,7 +157,7 @@ string|void init_proxies()
 	     bar[0] + "\n" + err[0];
   }
 
-  foreach(QUERY(Proxies)/"\n", foo)
+  foreach(query("Proxies")/"\n", foo)
   {
     array bar;
     if(!strlen(foo) || foo[0] == '#')
@@ -179,7 +177,7 @@ string|void init_proxies()
 	     bar[0] + "\n" + err[0];
   }
 
-  foreach(QUERY(Filters)/"\n", foo)
+  foreach(query("Filters")/"\n", foo)
   {
     array bar;
     if(!strlen(foo) || foo[0] == '#')
@@ -498,7 +496,7 @@ constant module_name = "HTTP-Proxy";
 constant module_doc  = "This is a caching HTTP-proxy with quite "
   " a few bells and whistles";
 
-string query_location()  { return QUERY(mountpoint); }
+string query_location()  { return query("mountpoint"); }
 
 string status()
 {
@@ -526,7 +524,7 @@ mapping find_file( string f, object id )
 #ifdef PROXY_DEBUG
   werror("PROXY: Request for "+f+"\n");
 #endif
-  f=id->raw_url[strlen(QUERY(mountpoint))+1 .. ];
+  f=id->raw_url[strlen(query("mountpoint"))+1 .. ];
 
   if(sscanf(f, "%[^:/]:%d/%s", host, port, file) < 2)
   {
@@ -1012,7 +1010,7 @@ class Server
     if((delimiter = search(new_raw, "\n")) >= 0)
       new_raw = new_raw[delimiter+1..];
 
-    url=id->raw_url[strlen(QUERY(mountpoint))..];
+    url=id->raw_url[strlen(query("mountpoint"))..];
     sscanf(url, "%*[/]%s", url);	// Strip initial '/''s.
     if(!sscanf(url, "%*s/%s", url))
       url="";

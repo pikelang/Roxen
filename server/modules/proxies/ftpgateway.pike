@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.35 2000/03/17 13:59:34 nilsson Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.36 2000/07/03 06:15:27 nilsson Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -42,7 +42,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.35 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.36 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -57,13 +57,11 @@ string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->
 
 inherit "module";
 inherit "socket";
-inherit "roxenlib";
 
 #include <proxyauth.pike>
 
 class Request {
   inherit "socket";
-  inherit "roxenlib";
 
 #define CONNECTION_TIMEOUT (master->query("connection_timeout"))
 #define ACTIVE_CONNECT_TIMEOUT (master->query("data_connection_timeout"))
@@ -183,7 +181,7 @@ class Request {
 	if (tmp[1]) type+=" ("+tmp[1]+")";
       }
       else type="unknown";
-      if (master->query("icons")=="Yes") icon=image_from_type(type);
+      if (master->query("icons")=="Yes") icon=Roxen.image_from_type(type);
     }
     else if (!icon && master->query("icons")=="Yes")
     {
@@ -194,7 +192,7 @@ class Request {
       {
 	type2=tmp[0];
 	if (tmp[1]) type2+=" ("+tmp[1]+")";
-	icon=image_from_type(type2);
+	icon=Roxen.image_from_type(type2);
       }
       else icon="internal-gopher-menu";
     }
@@ -1090,7 +1088,7 @@ import Stdio;
 void start()
 {
   string pos;
-  pos=QUERY(mountpoint);
+  pos=query("mountpoint");
   init_proxies();
   if(strlen(pos)>2 && (pos[-1] == pos[-2]) && pos[-1] == '/')
     set("mountpoint", pos[0..strlen(pos)-2]); // Evil me..
@@ -1098,18 +1096,18 @@ void start()
   if(logfile)
     destruct(logfile);
 
-  if(!strlen(QUERY(logfile)))
+  if(!strlen(query("logfile")))
     return;
 
   PROXY_WERR("FTP gateway online.");
 
-  if(QUERY(logfile) == "stdout")
+  if(query("logfile") == "stdout")
   {
     logfile=stdout;
-  } else if(QUERY(logfile) == "stderr") {
+  } else if(query("logfile") == "stderr") {
     logfile=stderr;
   } else {
-    logfile=open(QUERY(logfile), "wac");
+    logfile=open(query("logfile"), "wac");
   }
 }
 
@@ -1137,7 +1135,7 @@ void init_proxies()
   array err;
 
   proxies = ({ });
-  foreach(QUERY(Proxies)/"\n", foo)
+  foreach(query("Proxies")/"\n", foo)
   {
     array bar;
 
@@ -1160,7 +1158,7 @@ string check_variable(string name, mixed value)
     array tmp,c;
     string tmp2;
     tmp = proxies;
-    tmp2 = QUERY(Proxies);
+    tmp2 = query("Proxies");
 
     set("Proxies", value);
     if(c=catch(init_proxies()))
@@ -1178,7 +1176,7 @@ string check_variable(string name, mixed value)
 void create(object c)
 {
   defvar("logfile", GLOBVAR(logdirprefix)+
-	 short_name(c?c->name:".")+"/ftp_proxy_log",
+	 Roxen.short_name(c?c->name:".")+"/ftp_proxy_log",
 	 "Logfile", TYPE_FILE,  "Empty the field for no log at all");
 
   defvar("mountpoint", "ftp:/", "Location", TYPE_LOCATION|VAR_MORE,
@@ -1238,7 +1236,7 @@ constant module_type = MODULE_PROXY|MODULE_LOCATION;
 constant module_name = "FTP gateway";
 constant module_doc  = "FTP gateway, currently not caching";
 
-string query_location()  { return QUERY(mountpoint); }
+string query_location()  { return query("mountpoint"); }
 
 string status()
 {
@@ -1320,7 +1318,7 @@ mixed|mapping find_file( string f, object id )
   array more;
   int port;
 
-  f=id->raw_url[strlen(QUERY(mountpoint)) .. ];
+  f=id->raw_url[strlen(query("mountpoint")) .. ];
   while(sizeof(f) && f[0]=='/')
     f=f[1..];
 
@@ -1422,7 +1420,7 @@ void save_connection(string hostid,object server,string info)
 
    if (!(ftp_connections[hostid])) ftp_connections[hostid]=(<m=({server,info,serial++})>);
    else ftp_connections[hostid][m=({server,info,serial++})]=1;
-   call_out(remove_connection,QUERY(keeptime),hostid,m);
+   call_out(remove_connection, query("keeptime"),hostid,m);
    server->set_id(server);
    server->set_nonblocking(lambda() {},0,
 			   lambda(object serv) { if (objectp(serv)) { serv->set_id(0); destruct(serv); } });
@@ -1498,7 +1496,7 @@ mixed get_dataport(function acceptfunc)
 
 void save_dataport(array m) /* ({portno,object}) */
 {
-   if (QUERY(save_dataports)=="Yes")
+   if (query("save_dataports")=="Yes")
    {
       m+=({serial++});
       dataports[m]=1;

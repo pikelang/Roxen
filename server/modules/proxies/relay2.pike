@@ -1,7 +1,6 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 
 inherit "module";
-inherit "roxenlib";
 constant module_type = MODULE_FIRST|MODULE_LAST;
 
 constant module_name =
@@ -64,7 +63,7 @@ class Relay
   void done_with_data( )
   {
     destruct(fd);
-    id->send_result( http_rxml_answer( buffer, id ) );
+    id->send_result( Roxen.http_rxml_answer( buffer, id ) );
     destruct();
     return;
   }
@@ -123,7 +122,7 @@ class Relay
       mapping headers = ([]);
       headers = make_headers( id, options->trimheaders );
 
-      request_data = (id->method+" /"+http_encode_string(file)+" HTTP/1.0\r\n"+
+      request_data = (id->method+" /"+Roxen.http_encode_string(file)+" HTTP/1.0\r\n"+
                       encode_headers( headers ) +
                       "\r\n" + id->data );
 
@@ -285,12 +284,12 @@ mapping first_try( RequestID id )
 {
   foreach( relays, Relayer q )
     if( !q->last && q->relay( id ) )
-      return http_pipe_in_progress( );
+      return Roxen.http_pipe_in_progress( );
 }
 
 mapping last_resort( RequestID id )
 {
   foreach( relays, Relayer q )
     if( q->last && q->relay( id ) )
-      return http_pipe_in_progress( );
+      return Roxen.http_pipe_in_progress( );
 }

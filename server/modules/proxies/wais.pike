@@ -4,12 +4,12 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.18 2000/03/17 13:59:35 nilsson Exp $";
+string cvs_version = "$Id: wais.pike,v 1.19 2000/07/03 06:15:28 nilsson Exp $";
 
 #include <config.h>
 
 #define DEF_CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote host\r\nContent-type: text/html\r\n\r\n<title>Roxen error: Connection refused</title>\n<h1>Proxy request failed</h1><hr><font size=+2><i>Connection refused by remote host</i></font><hr><font size=-2><a href=http://www.roxen.com/>Roxen</a></font>"
-#define CONNECTION_REFUSED   QUERY(ConnRefuse)
+#define CONNECTION_REFUSED   query("ConnRefuse")
 
 
 // #define WAIS_DEBUG    //define this to have lot of debug
@@ -273,9 +273,7 @@ string cvs_version = "$Id: wais.pike,v 1.18 2000/03/17 13:59:35 nilsson Exp $";
 
 inherit "module";
 inherit "socket";
-inherit "roxenlib";
 
-#include <module.h>
 #include <proxyauth.pike>
 
 

@@ -2,10 +2,9 @@
 
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.8 2000/05/15 19:57:27 kinkie Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.9 2000/07/03 06:17:25 nilsson Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
