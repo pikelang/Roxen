@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.110 1999/03/30 22:44:11 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.111 1999/03/30 23:11:17 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -874,213 +874,153 @@ class nat_wrapper // Wrapper emulator when not using the binary wrapper.
 #endif
 }
 
-class spawn_cgi
+void got_some_data(object to, string d)
 {
-  // This program asserts that fork() is called from the backend to
-  // avoid some problems with threads, fork() and buggy OS's.
-  string wrapper;
-  string f;
-  array(string) args;
-  mapping env;
-  string wd;
-  int|string uid;
-  object pipe1, pipe2;	// Stdout/Stderr for the CGI
-  object pipe3, pipe4;	// Stdin for the CGI
-  object pipe5, pipe6;  // CGI log file
-  int kill_call_out;
-  array(object)| int dup_err;
-  int setgroups;
-  object cgi_pipe;
+  to->write( d );
+}
 
-
-
-  void got_some_data(object to, string d)
-  {
-    to->write( d );
-  }
-
-  void cgi_fail(int errcode, string err)
-  {
-    string to_write = sprintf("HTTP/1.0 %d %s\r\n"
-			      "\r\n"
-			      "<title>%s</title>\n"
-			      "<h2>%s</h2>\n", errcode, err, err, err);
-
-    object(Stdio.File) output = Stdio.File("stdout");
-    int bytes;
-    
-    while ((bytes = output->write(to_write)) > 0) {
-      if ((to_write = to_write[bytes..]) == "") {
-	break;
-      }
-    }
-
-    exit(0);
-  }
-  
-  void do_cgi()
-  {
-    int pid;
-    int use_native_wrapper;
+// Start a CGI.
+object spawn_cgi(string wrapper, string f, array(string) args, mapping env,
+		 string wd, int|string uid, object pipe1, object pipe2,
+		 object pipe3, object pipe4, array(object)|int dup_err,
+		 int kill_call_out, int setgroups)
+{
 #ifdef CGI_DEBUG
-    roxen_perror("do_cgi()\n");
+  roxen_perror(sprintf("spawn_cgi(%O, %O, %O, %O, "
+		       "%O, %O, X, X, "
+		       "X, X, %O, %O, %O)\n",
+		       wrapper_, f_, args_, env_,
+		       wd_, uid_, dup_err_, kill_call_out_, setgroups_));
+#endif /* CGI_DEBUG */
+  int pid;
+  int use_native_wrapper;
+#ifdef CGI_DEBUG
+  roxen_perror("do_cgi()\n");
 #endif /* CGI_DEBUG */
 
-#if constant(Process.create_process)
-
-    if(wrapper) 
+  if(wrapper && sizeof(wrapper))
+  {
+    array us;
+    wrapper = combine_path(getcwd(), wrapper);
+    if(!(us = file_stat(wrapper)) ||
+       !(us[0]&0111)) 
     {
-      array us;
-      wrapper = combine_path(getcwd(), wrapper);
-      if(!(us = file_stat(wrapper)) ||
-	 !(us[0]&0111)) 
-      {
-	report_error(sprintf("Wrapper \"%s\" doesn't exist, or "
-			     "is not executable\n", wrapper));
-	return;
-      }
-      args = ({ wrapper, f }) + args;
-    } 
-    else 
-    {
-      args = ({ f }) + args;
-      if(sscanf(f, "%*s/nph%*s" )< 2)
-      {
-#ifdef CGI_WRAPPER_DEBUG
-        werror("Will use internal wrapper.\n");
-#endif
-        use_native_wrapper = 1;
-      }
+      report_error(sprintf("Wrapper \"%s\" doesn't exist, or "
+			   "is not executable\n", wrapper));
+      return;
     }
+    args = ({ wrapper, f }) + args;
+  } 
+  else 
+  {
+    args = ({ f }) + args;
+    if(sscanf(f, "%*s/nph%*s" )< 2)
+    {
+#ifdef CGI_WRAPPER_DEBUG
+      werror("Will use internal wrapper.\n");
+#endif
+      use_native_wrapper = 1;
+    }
+  }
 
-    /* Be sure they are closed in the forked copy */
-    pipe2->set_close_on_exec(1);
-    pipe4->set_close_on_exec(1);
-    mapping options = ([ "cwd":wd,
-			 "stdin":pipe3,
-			 "stdout":pipe1,
-                         "noinitgroups":1,
-			 "env":env,
-    ]);
+  /* Make sure they are closed in the forked copy */
+  pipe2->set_close_on_exec(1);
+  pipe4->set_close_on_exec(1);
+  mapping options = ([
+    "cwd":wd,
+    "stdin":pipe3,
+    "stdout":pipe1,
+    "noinitgroups":1,
+    "env":env,
+  ]);
 
-    if (!getuid()) {
-      options["uid"] = uid || 65534;
-      if (!setgroups) {
+  if (!getuid()) {
+    options["uid"] = uid || 65534;
+    if (!setgroups) {
 #if constant(cleargroups)
-	options["setgroups"] = ({});
+      options["setgroups"] = ({});
 #endif /* constant(cleargroups) */
-      } else
-        options["setgroups"] = get_cached_groups_for_user( uid||65534 );
-    }
-
-    if (dup_err == 1) 
-    {
-      options["stderr"] = pipe1;
-    } 
-    else if(dup_err) 
-    { 
-      dup_err[1]->set_close_on_exec(1);
-      options["stderr"] = dup_err[0];
-    }
-#ifdef CGI_WRAPPER_DEBUG
-    werror("Starting CGI.\n");
-#endif
-#ifdef CGI_DEBUG
-    roxen_perror(sprintf("create_process(%O, %O)...\n", args, options));
-#endif /* CGI_DEBUG */
-
-    object proc;
-    mixed err = catch {
-      proc = Process.create_process(args, options);
-#ifdef CGI_DEBUG
-      if (!proc) {
-	roxen_perror(sprintf("CGI: Process.create_process() returned 0.\n"));
-      }
-#endif /* CGI_DEBUG */
-    };
-
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI started.\n");
-#endif
-
-    /* We don't want to keep these. */
-    destruct(pipe1);
-    destruct(pipe3);
-    if(arrayp(dup_err))
-      destruct(dup_err[0]);
-    if (err) {
-      int e = errno();
-#if constant(strerror)
-      report_error(sprintf("CGI: create_process() failed:\n"
-			   "errno: %d: %s\n"
-			   "%s\n",
-			   e, strerror(e),
-			   describe_backtrace(err)));
-#else /* !constant(strerror) */
-      report_error(sprintf("CGI: create_process() failed:\n"
-			   "errno: %d\n"
-			   "%s\n",
-			   e, describe_backtrace(err)));
-#endif /* constant(strerror) */
-    }
-
-#ifdef CGI_WRAPPER_DEBUG
-    werror("Starting wrapper.\n");
-#endif
-    if(use_native_wrapper)
-      cgi_pipe = nat_wrapper( pipe2, proc );
-    else 
-      cgi_pipe = pipe2;
-
-    if(kill_call_out && proc && proc->pid() > 1) {
-      call_out(lambda (object proc) {
-#ifndef THREADS
-                 if(!kill(proc, signum("SIGKILL")))
-                 {
-                   object privs;
-                   catch(privs = Privs("Killing CGI script."));
-                   kill(proc, signum("SIGKILL"));
-                 }
-#else
-                 if(proc->pid() > 1)
-                   kill(proc, signum("SIGKILL"));
-#endif
-      }, kill_call_out * 60 , proc);
-    }
-#endif /* constant(Process.create_process) */
-
+    } else
+      options["setgroups"] = get_cached_groups_for_user( uid||65534 );
   }
-  
-  void create(string wrapper_, string f_, array(string) args_, mapping env_,
-	      string wd_, int|string uid_, object pipe1_, object pipe2_,
-	      object pipe3_, object pipe4_, array(object)|int dup_err_,
-	      int kill_call_out_,
-	      int setgroups_)
+
+  if (dup_err == 1) 
   {
-#ifdef CGI_DEBUG
-    roxen_perror(sprintf("spawn_cgi(%O, %O, %O, %O, "
-			 "%O, %O, X, X, "
-			 "X, X, %O, %O, %O)\n",
-			 wrapper_, f_, args_, env_,
-			 wd_, uid_, dup_err_, kill_call_out_, setgroups_));
-#endif /* CGI_DEBUG */
-    wrapper = wrapper_;
-    f = f_;
-    args = args_;
-    env = env_;
-    wd = wd_;
-    uid = uid_;
-    pipe1 = pipe1_;
-    pipe2 = pipe2_;
-    pipe3 = pipe3_;
-    pipe4 = pipe4_;
-    dup_err = dup_err_;
-    kill_call_out = kill_call_out_;
-    setgroups = setgroups_;
-
-    do_cgi();
+    options["stderr"] = pipe1;
+  } 
+  else if(dup_err) 
+  { 
+    dup_err[1]->set_close_on_exec(1);
+    options["stderr"] = dup_err[0];
   }
-};
+#ifdef CGI_WRAPPER_DEBUG
+  werror("Starting CGI.\n");
+#endif
+#ifdef CGI_DEBUG
+  roxen_perror(sprintf("create_process(%O, %O)...\n", args, options));
+#endif /* CGI_DEBUG */
+
+  object proc;
+  mixed err = catch {
+    proc = Process.create_process(args, options);
+#ifdef CGI_DEBUG
+    if (!proc) {
+      roxen_perror(sprintf("CGI: Process.create_process() returned 0.\n"));
+    }
+#endif /* CGI_DEBUG */
+  };
+
+#ifdef CGI_WRAPPER_DEBUG
+  werror("CGI started.\n");
+#endif
+
+  /* We don't want to keep these. */
+  pipe1->close();
+  pipe3->close();
+  destruct(pipe1);
+  destruct(pipe3);
+  if(arrayp(dup_err))
+    destruct(dup_err[0]);
+  if (err) {
+    int e = errno();
+#if constant(strerror)
+    report_error(sprintf("CGI: create_process() failed:\n"
+			 "errno: %d: %s\n"
+			 "%s\n",
+			 e, strerror(e),
+			 describe_backtrace(err)));
+#else /* !constant(strerror) */
+    report_error(sprintf("CGI: create_process() failed:\n"
+			 "errno: %d\n"
+			 "%s\n",
+			 e, describe_backtrace(err)));
+#endif /* constant(strerror) */
+  }
+
+#ifdef CGI_WRAPPER_DEBUG
+  werror("Starting wrapper.\n");
+#endif
+  if(kill_call_out && proc && proc->pid() > 1) {
+    call_out(lambda (object proc) {
+#ifndef THREADS
+	       if(!kill(proc, signum("SIGKILL")))
+	       {
+		 object privs;
+		 catch(privs = Privs("Killing CGI script."));
+		 kill(proc, signum("SIGKILL"));
+	       }
+#else
+	       if(proc->pid() > 1)
+		 kill(proc, signum("SIGKILL"));
+#endif
+	     }, kill_call_out * 60 , proc);
+  }
+
+  if(use_native_wrapper)
+    return nat_wrapper(pipe2, proc);
+  else 
+    return pipe2;
+}
 
 // Used to close the stdin of the CGI-script.
 class closer
@@ -1319,7 +1259,8 @@ mixed low_find_file(string f, object id, string path)
   } else {
     closer(pipe4);
   }
-  return http_stream(cgi->cgi_pipe);
+
+  return http_stream(cgi);
 }
 
 mixed find_file(string f, object id)
