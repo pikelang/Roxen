@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.23 2000/08/09 11:12:15 per Exp $
+ * $Id: Roxen.pmod,v 1.24 2000/08/10 16:21:00 per Exp $
  *
  * Various helper functions.
  *
@@ -693,10 +693,13 @@ SRestore add_scope_constants( string|void name )
   SRestore res = SRestore();
   mapping ac = all_constants();
   if(!name) name = "";
-  foreach( RXML.get_context()->list_scopes()|({"_"}), string scope )
+  if( RXML.get_context() )
   {
-    res->osc[ name+scope ] = ac[ name+scope ];
-    add_constant( name+scope, EScope( scope ) );
+    foreach( RXML.get_context()->list_scopes()|({"_"}), string scope )
+    {
+      res->osc[ name+scope ] = ac[ name+scope ];
+      add_constant( name+scope, EScope( scope ) );
+    }
   }
   return res;
 }
