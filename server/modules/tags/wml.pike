@@ -8,7 +8,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wml.pike,v 1.9 2000/07/03 06:20:06 nilsson Exp $";
+constant cvs_version = "$Id: wml.pike,v 1.10 2000/08/22 20:08:08 nilsson Exp $";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "WAP WML helper";
@@ -65,17 +65,16 @@ class wap_1_1 {
     switch (type) {
     case "<>":
       m=m_up(m);
-      m["/"]="/";
       if(t=="VAR") t=="setvar";
       if(t=="TAB") return "&nbsp;";  //This might need a better fix...
-      return Roxen.make_tag(lower_case(t),m);
+      return RXML.t_xml->format_tag(lower_case(t),m);
     case "":
       if(c!="") return c;
       return 0;
     case ">":
       c=c*"";
       m=m_up(m);
-      return Roxen.make_container(lower_case(t),m,c);
+      return RXML.t_xml->format_tag(lower_case(t),m,c);
     default:
       return 0;
     }
@@ -146,7 +145,7 @@ class wap_1_1 {
   }
 
   string add_wml(string c, mapping m) {
-    return Roxen.make_container("wml",m,c);
+    return RXML.t_xml->format_tag("wml",m,c);
   }
 
   array char_from=({});
@@ -194,26 +193,25 @@ class wap_1_0 {
     switch (type) {
     case "<>":
       m=m_down(m);
-      m["/"]="/";
-      if(t=="td") return Roxen.make_tag("TAB",m+(["/":"/"]));
-      if(t=="tr") return Roxen.make_tag("BR",m+(["/":"/"]));
+      if(t=="td") return RXML.t_xml->format_tag("TAB",m);
+      if(t=="tr") return RXML.t_xml->format_tag("BR",m);
       if(t=="table") return "";
-      if(t=="p") return Roxen.make_tag("BR",m+(["/":"/"]));
+      if(t=="p") return RXML.t_xml->format_tag("BR",m);
       if(t=="postfield") return "";
       if(t=="setvar") t=="VAR";
-      return Roxen.make_tag(upper_case(t),m);
+      return RXML.t_xml->format_tag(upper_case(t),m);
     case "":
       if(c!="") return c;
       return 0;
     case ">":
       c=c*"";
       m=m_down(m);
-      if(t=="td") return c+Roxen.make_tag("TAB",m+(["/":"/"]));
-      if(t=="tr") return c+Roxen.make_tag("BR",m+(["/":"/"]));
+      if(t=="td") return c+RXML.t_xml->format_tag("TAB",m);
+      if(t=="tr") return c+RXML.t_xml->format_tag("BR",m);
       if(t=="table") return c;
-      if(t=="p") return Roxen.make_tag("BR",m+(["/":"/"]))+c+Roxen.make_tag("BR",m+(["/":"/"]));
+      if(t=="p") return RXML.t_xml->format_tag("BR",m)+c+RXML.t_xml->format_tag("BR",m);
       if(t=="postfield") return c; //FIXME
-      return Roxen.make_container(upper_case(t),m,c);
+      return RXML.t_xml->format_tag(upper_case(t),m,c);
     default:
       return 0;
     }
@@ -282,7 +280,7 @@ class wap_1_0 {
   }
 
   string add_wml(string c, mapping m) {
-    return Roxen.make_container("WML",m,c);
+    return RXML.t_xml->format_tag("WML",m,c);
   }
 
   array char_from=({});
@@ -332,7 +330,7 @@ string simpletag_wml(string tag, mapping m, string|array(string) c, RequestID id
 			    m->format="wbf";
 			  else
 			    m->format="gif";
-			  return Roxen.make_tag("cimg",m);
+			  return RXML.t_xml->format_tag("cimg",m);
 			}]));
 
   //Always preparse. Good/Bad?
