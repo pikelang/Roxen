@@ -1,11 +1,68 @@
+Changes since Roxen 2.0.19
+-----------------------------------------------
+
+o Changed behavior: If you delete a site and add a new one with the
+  same name as the old had it will now NOT get the old servers
+  configuration.
+
+o Added decoding of palette based TIMs to the Image module.
+
+o Fixed -KPIC problem on Solaris.
+
+o Fixed problem with uninstalled pikes.
+
+o Made configure work in a separate build dir.
+
+o Fixed bug virtual hosting bug.
+
+o Fixed bug in redirect module.
+
+o Fixed gbutton bug.
+
+o Fixed bug that made SSL use the demo certificate even if you
+  configured it to use another one.
+
+o Fixed resolve path.
+
+o Varoius other bugfixes.
+
+
+Changes since Roxen 2.0.15
+-----------------------------------------------
+
+o Added test to see if sendfile(2) on FreeBSD is broken.
+
+o Update-client now even more useful. There is a package available for
+  testing. Really.
+
+o You can now remove servers from the config interface.
+
+o Added TIM (PSX format) image support.
+
+o try_get_file() now supports more stuff like PATH_INFO and
+  query-variables.
+
+o Fixed bug in PATH_INFO.
+
+o The "create_configinterface" script now asks a few questions about
+  how you want your update client set up.
+
+o http_auth_failed() removed from roxenlib. It was deprecated in
+  favor of http_auth_required() some years ago.
+
+o Fixed bug in compatibility module.
+
+o The wizard tag now propagates enctype and method.
+
+
 Changes since Roxen 2.0.12
 -----------------------------------------------
 
-o Fixed memmory leak introduced in 2.0.12
+o Fixed memory leak introduced in 2.0.12
 
 o Fixed disabling of sendfile(2) on FreeBSD.
 
-o Update-client now usefull. There is a package available for testing.
+o Update-client now useful. There is a package available for testing.
 
 o New powered-by images.
 
