@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.51 2002/10/24 17:58:31 mast Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.52 2002/11/19 15:52:09 anders Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -175,7 +175,7 @@ string container_js_write(string name, mapping args, string contents, object id)
   contents = parse_html("<"INT_TAG">"+contents+"</"INT_TAG">",
 			([]), ([ INT_TAG: c_js_quote ]), args);
   return ("<script language='"+(args->language||"javascript")+
-	  "'><!--\n"+contents+"//--></script>");
+	  "' type='text/javascript'><!--\n"+contents+"//--></script>");
 }
 
 static private
@@ -308,7 +308,8 @@ class TagJSInclude {
 	 id->client_var && (float)(id->client_var->javascript) < 1.2)
 	result = "<!-- Client do not support Javascript 1.2 -->"; // Throw an run_error instead?
       else
-	result = "<script charset=\"iso-8859-1\" language=\"javascript\" src=\"" +
+	result = "<script charset=\"iso-8859-1\" type=\"text/javascript\" "
+	  "language=\"javascript\" src=\"" +
 	  query_absolute_internal_location(id) + args->file + "\"></script>";
       return 0;
     }
@@ -343,7 +344,8 @@ class TagJSExternal
       string key = Crypto.md5()->update(string_to_utf8(content))->digest();
       if(!externals[key])
 	externals[key] = c_js_quote("", ([]), content);
-      return ({ "<script language=\"javascript\" src=\""+
+      return ({ "<script language=\"javascript\" type=\"text/javascript\" "
+		"src=\""+
 		query_absolute_internal_location(id)+"__ex/"+
 		MIME.encode_base64(key)+"\"></script>" });
     }
@@ -408,7 +410,7 @@ static mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
     
   SIMPLE_TRACE_LEAVE ("");
   if(args->name == "javascript1.2")
-    return ({ "<script language='javascript1.2'><!--\n"+
+    return ({ "<script type=\"text/javascript\" language='javascript1.2'><!--\n"+
 	      js_insert->get()+"//--></script>" });
 
   if(args->jswrite)
