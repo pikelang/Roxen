@@ -97,9 +97,16 @@ class TagDirectoryplugin
   inherit RXML.Tag;
   constant name = "emit";
   constant plugin_name = "dir";
+  constant ws_dir = 1;
 
   array get_dataset(mapping args, RequestID id)
   {
+    if(!args->nosb) {
+      RXML.Tag t=tagset->get_overridden_tag(this_object());
+      if(t && t->sb_dir)
+	return t->get_dataset(args, id);
+    }
+
     // Now..
     string d;
     if( args->directory )
