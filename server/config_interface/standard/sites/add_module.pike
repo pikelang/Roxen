@@ -130,11 +130,13 @@ mixed do_it( RequestID id )
     return "Configuration gone!\n";
 
   foreach( id->variables->module_to_add/"\0", string mod )
-    last_module = replace(conf->otomod[ conf->enable_module( mod ) ],
+    last_module = replace((conf->otomod[ conf->enable_module( mod ) ]||""),
                           "#", "!" );
 
-  return http_redirect( site_url( id, id->variables->config )+
-                        "modules/"+last_module+"/?initial=1&section=_all", id );
+  if( strlen( last_module ) )
+    return http_redirect( site_url( id, id->variables->config )+
+                          "modules/"+last_module+"/?initial=1&section=_all", id );
+  return http_redirect( site_url( id, id->variables->config )+"modules/",id);
 }
 
 mixed parse( RequestID id )
