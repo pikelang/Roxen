@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.25 1996/12/10 05:04:20 neotron Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.26 1996/12/11 02:22:34 neotron Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -1642,9 +1642,12 @@ void init_log_file(object conf)
     } else {
       if(strlen(query("LogFile")))
       {
-	mkdirhier(query("LogFile"));
+	int opened;
 	lf=File();
-	if(!(lf->open( query("LogFile"), "wac")))
+	opened=lf->open( query("LogFile"), "wac");
+	if(!opened)
+	  mkdirhier(query("LogFile"));
+	if(!opened && !(lf->open( query("LogFile"), "wac")))	
 	{
 	  destruct(lf);
 	  report_error("Failed to open logfile. ("+query("LogFile")+")\n" +

@@ -1,6 +1,10 @@
 Changes since Roxen 1.1 alpha 4
 -----------------------------------------------
 
+o When opening the logfile, Roxen only tries to do mkdirhier if it is
+  needed. Thanks to Stephen R. van den Berg (srb@cuci.nl) for the
+  patch.
+
 o Roxen didn't write entries to 'Accessed.names' file, because this
   file was opened read-only. Fixed. Thanks to Jordi Murgo.
 
