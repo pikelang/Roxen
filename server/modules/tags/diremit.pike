@@ -2,8 +2,8 @@
 #include <stat.h>
 inherit "module";
 constant module_type = MODULE_TAG;
-constant module_name = "dir and path emit sources";
-constant module_doc = "This module provies the 'dir' and 'path' emit sources.";
+constant module_name = "Dir emit source";
+constant module_doc = "This module provies the 'dir' emit source.";
 
 class TagDirectoryplugin
 {
@@ -205,67 +205,9 @@ class TagDirectoryplugin
   }
 }
 
-class TagPathplugin
-{
-  inherit RXML.Tag;
-  constant name = "emit";
-  constant plugin_name = "path";
-
-  array get_dataset(mapping m, RequestID id)
-  {
-    string fp = "";
-    array res = ({});
-    string p = id->not_query;
-    if( m->trim )
-      sscanf( p, "%s"+m->trim, p );
-    if( p[-1] == '/' )
-      p = p[..strlen(p)-2];
-    array q = p / "/";
-    if( m->skip )
-      q = q[(int)m->skip..];
-    foreach( q, string elem )
-    {
-      fp += "/" + elem;
-      fp = replace( fp, "//", "/" );
-      res += ({
-        ([
-          "name":elem,
-          "path":fp
-        ])
-      });
-    }
-    return res;
-  }
-}
-
-
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"emit#path":({ #"<desc plugin><short>
- Prints paths.</short> This plugin traverses over all directories in
- the path from the root up to the current one.
-</desc>
-
-<attr name='trim' value='string'>
- Removes all of the remaining path after and including the specified
- string.
-</attr>
-
-<attr name='skip' value='number'>
- Skips the 'number' of slashes ('/') specified, with beginning from
- the root.
-</attr>",
-	       ([
-"&_.name;":#"<desc ent>
- Returns the name of the most recently traversed directory.
-</desc>",
-
-"&_.path;":#"<desc ent>
- Returns the path to the most recently traversed directory.
-</desc>"
-	       ])
-	    }),
 
 "emit#dir":({ #"<desc plugin><short>
  This plugin is used to generate directory listings.</short> The
