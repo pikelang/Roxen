@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.197 2000/02/08 22:14:42 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.198 2000/02/10 09:18:34 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -711,7 +711,7 @@ private int parse_got()
 	  case "ua-color":	/* Color scheme */
 	  case "ua-os":	/* OS-name */
 	  case "ua-cpu":	/* CPU-type */
-	    misc[linename - "ua-"] = contents ;
+// 	    misc[linename - "ua-"] = contents ;
 	    break;
 
 	  case "referer":
@@ -1668,7 +1668,8 @@ void handle_request( )
   array e;
   if(e= catch(file = conf->handle_request( this_object() )))
     INTERNAL_ERROR( e );
-  send_result();
+  if( file && !file->pipe )
+    send_result();
 }
 
 /* We got some data on a socket.
