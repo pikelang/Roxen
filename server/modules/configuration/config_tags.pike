@@ -4,6 +4,7 @@ inherit "roxenlib";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
+#include <config_interface.h>
 
 #define LOCALE	LOW_LOCALE->config_interface
 #define CU_AUTH id->misc->config_user->auth
@@ -36,10 +37,10 @@ void set_entities(RXML.Context c) {
   c->extend_scope("usr", usr_scope);
 }
 
-string internal_topmenu_tag_item(string t, mapping m, 
+string internal_topmenu_tag_item(string t, mapping m,
 				 mapping c, RequestID id)
 {
-  if( m->perm  && 
+  if( m->perm  &&
       (!id->misc->config_user || !CU_AUTH( m->perm )))
     return "";
   c->them += ({ m });
@@ -49,7 +50,7 @@ string internal_topmenu_tag_item(string t, mapping m,
 string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id)
 {
   mixed items = (["them":({})]);
-  
+
   mapping a = ([]);
   parse_html( d, (["item":internal_topmenu_tag_item]), a, items, id );
 
@@ -86,7 +87,7 @@ string i_lmenu_tag_item(string t, mapping m, string d, mapping c, RequestID id)
 {
   mapping a = ([]);
   mixed items = (["them":({})]);
-  if( m->perm  && 
+  if( m->perm  &&
      (!id->misc->config_user || !CU_AUTH( m->perm )))
     return "";
   parse_html( d, a, (["item":i_lmenu_tag_item]), items, id );
@@ -142,7 +143,7 @@ string present_items(array i, int ind, object id)
 string internal_c_leftmenu(string t, mapping m, string d, mapping c, RequestID id)
 {
   mixed items = (["them":({})]);
-  
+
   mapping a = ([]);
   parse_html( d, a, (["item":i_lmenu_tag_item]), items, id );
   items = items->them;
@@ -151,7 +152,7 @@ string internal_c_leftmenu(string t, mapping m, string d, mapping c, RequestID i
     m->title = "";
   c->left += "<gtext verbatim afont=haru font_size=40 scale=0.5 fg=#dcefff> "+
     (m->title/""*" ")+
-    "</gtext><br>\n<img src=/internal-roxen-unit height=3 width=1><br>\n" 
+    "</gtext><br>\n<img src=/internal-roxen-unit height=3 width=1><br>\n"
              + present_items( items,0,id );
   return "";
 }
@@ -176,7 +177,7 @@ string indent(string what, int how)
 
 string table(string data, string|void aa)
 {
-  if(!aa) 
+  if(!aa)
     aa = "";
   else
     aa=" "+aa;
@@ -185,7 +186,7 @@ string table(string data, string|void aa)
 
 string tr(string data, string|void aa)
 {
-  if(!aa) 
+  if(!aa)
     aa = "";
   else
     aa=" "+aa;
@@ -194,7 +195,7 @@ string tr(string data, string|void aa)
 
 string td(string data, string|void aa)
 {
-  if(!aa) 
+  if(!aa)
     aa = "";
   else
     aa=" "+aa;
@@ -215,16 +216,16 @@ string container_roxen_config(string t, mapping m, string data, RequestID id)
 
 
   string rest;
-  rest = parse_html(data,([]), 
-                    ([ 
+  rest = parse_html(data,([]),
+                    ([
                       "middle":internal_c_middle,
                       "top-menu":internal_c_topmenu,
                       "left-menu":internal_c_leftmenu,
                       "content":internal_c_content,
                     ]), c, id);
-    
 
-//   c->title = 
+
+//   c->title =
   string page =  #"
   <table width=100% cellpadding=0 cellspacing=0 border=0 bgcolor='#d9dee7'>
     <tr bgcolor='#d9dee7'>
@@ -256,7 +257,7 @@ string get_var_doc( string s, object mod, int n, object id )
   return s;
 }
 
-string get_var_value( string s, object mod, object id ) 
+string get_var_value( string s, object mod, object id )
 {
   array var = mod->variables[ s ];
   if( !var )
@@ -269,16 +270,16 @@ string get_var_value( string s, object mod, object id )
     array tmp;
    case TYPE_CUSTOM:
      return var[VAR_MISC][0]( var, 1 );
-    
+
    case TYPE_PASSWORD:
      return "****";
-    
+
    default:
      return (string)var[ VAR_VALUE ];
-    
+
    case TYPE_FLOAT:
      return sprintf("%.4f", var[VAR_VALUE]);
-    
+
    case TYPE_DIR_LIST:
    case TYPE_STRING_LIST:
    case TYPE_INT_LIST:
@@ -291,9 +292,9 @@ string get_var_value( string s, object mod, object id )
      }
      if(arrayp(var[VAR_VALUE]))
        return ((array(string))var[VAR_VALUE]) * ", ";
-     else 
+     else
        return "";
-    
+
    case TYPE_FLAG:
      if(var[VAR_VALUE])
        return LOW_LOCALE->yes;
@@ -347,7 +348,7 @@ string set_variable( string v, object in, mixed to, object id )
      break;
 
    case TYPE_FONT:
-     val = replace( val, " ", "_" ); 
+     val = replace( val, " ", "_" );
      break;
 
    case TYPE_CUSTOM:
@@ -372,7 +373,7 @@ string set_variable( string v, object in, mixed to, object id )
      } else {
        if( var[VAR_TYPE]  == TYPE_INT_LIST )
          val = (int)val;
-//        mapping translate = 
+//        mapping translate =
 //                LOW_LOCALE->module_doc_string(in, v, 2);
 //       if(!translate)
 // 	translate = mkmapping(var[ VAR_MISC ],var[ VAR_MISC ]);
@@ -397,8 +398,8 @@ string set_variable( string v, object in, mixed to, object id )
 //   if( stringp(val) )
 //     val = utf8_to_string(val);
 //   if( arrayp( val ) )
-//     val = map( val, lambda( mixed q ) { 
-//                       if(stringp(q)) 
+//     val = map( val, lambda( mixed q ) {
+//                       if(stringp(q))
 //                         return utf8_to_string(q);
 //                       return q;
 //                     } );
@@ -411,7 +412,7 @@ string set_variable( string v, object in, mixed to, object id )
   {
     remove_call_out( in->save_me );
     call_out( in->save_me, 1 );
-  } 
+  }
   else if( in->save )
   {
     remove_call_out( in->save );
@@ -455,7 +456,7 @@ string get_var_form( string s, object mod, object id )
 
   string pre = "";
   path = html_encode_string( replace( path, " " , "_" ) )-"\"";
-  
+
   if( id->variables[ path ] )
     pre = set_variable( s, mod, id->variables[ path ], id );
 
@@ -481,7 +482,7 @@ string get_var_form( string s, object mod, object id )
        return "<b>Password</b>";
      return pre + "<input name=\""+path+"\" type=password size=30,1>";
     break;
-    
+
    case TYPE_FONT:
      if( view_mode )
        return "<b>"+html_encode_string(var[VAR_VALUE])+"</b>";
@@ -527,7 +528,7 @@ string get_var_form( string s, object mod, object id )
       array misc;
       mapping translate;
       int i;
-      
+
       tmp="<select name=\""+path+"\">  ";
       misc=var[ VAR_MISC ];
       translate = LOW_LOCALE->module_doc_string(mod, s, 2);
@@ -576,14 +577,14 @@ string get_var_form( string s, object mod, object id )
     return "<input name=" + path + " size=12 value= "
            + ((var[ VAR_VALUE ] >> 16) & 255)
            + ":" + ((var[ VAR_VALUE ] >> 8) & 255)
-           + ":" + (var[ VAR_VALUE ] & 255) 
+           + ":" + (var[ VAR_VALUE ] & 255)
            + ">"+"<input type=submit value="+LOW_LOCALE->ok+">";
   }
-    
+
 
 }
 
-string get_var_type( string s, object mod, object id ) 
+string get_var_type( string s, object mod, object id )
 {
   int flag = !!mod->variables[ s ][ VAR_MISC ];
   switch( mod->variables[ s ][ VAR_TYPE ] )
@@ -647,6 +648,7 @@ mapping get_variable_map( string s, object mod, object id )
              get_var_doc( s, mod, 1, id ):""),
     "name": get_var_doc( s, mod, 2, id ),
     "value":get_var_value( s, mod, id ),
+    "type":mod->type,
     "type_hint":(id->misc->config_settings->query("docs")?
                   get_var_type( s, mod, id ):""),
     "form": get_var_form( s, mod, id ),
@@ -657,22 +659,23 @@ int var_configurable( array var, object id )
 {
   if( mixed cf = var[ VAR_CONFIGURABLE ] )
   {
-    if(functionp(cf) && cf( id->misc->config_settings->query("more_mode"),
-                            id->misc->config_settings->query("expert_mode"),
-                            id->misc->config_settings->query("devel_mode") ))
+    if(functionp(cf) &&
+       cf( config_setting("more_mode"),
+           config_setting("expert_mode"),
+           config_setting("devel_mode"),
+           (int)id->variables->initial))
+    {
       return 0;
+    }
     else if( intp( cf ) )
     {
-      if((cf & VAR_EXPERT) && !id->misc->config_settings->query("expert_mode"))
-        return 0;
-      if((cf & VAR_MORE) && !id->misc->config_settings->query("more_mode"))
-        return 0;
-      if((cf & VAR_DEVELOPER) && 
-         !id->misc->config_settings->query("devel_mode"))
-        return 0;
+      if((int)id->variables->initial && !(cf&VAR_INITIAL))      return 0;
+      if((cf & VAR_EXPERT) && !config_setting("expert_mode"))   return 0;
+      if((cf & VAR_MORE) && !config_setting("more_mode"))       return 0;
+      if((cf & VAR_DEVELOPER) && !config_setting("devel_mode")) return 0;
     }
     return 1;
-  } 
+  }
   return 0;
 }
 
@@ -687,12 +690,12 @@ mapping get_variable_section( string s, object mod, object id )
   s = LOW_LOCALE->module_doc_string( mod, s, 0 );
   if( !s ) return 0;
   if( sscanf( s, "%s:%*s", s ) )
-    return ([ 
+    return ([
       "section":s,
       "selected":(id->variables->section==s?"selected":"")
     ]);
   else
-    return ([ 
+    return ([
       "section":"Misc",
       "selected":
       ((id->variables->section=="Misc"||!id->variables->section)?
@@ -704,22 +707,22 @@ mapping get_variable_section( string s, object mod, object id )
 array get_variable_maps( object mod, mapping m, object id )
 {
   array variables = map( indices(mod->variables),get_variable_map,mod,id);
-  variables = Array.filter( variables, 
+  variables = Array.filter( variables,
                             lambda( mapping q ) {
-                              return q->form && 
+                              return q->form &&
                                      strlen(q->sname) &&
                                      (q->sname[0] != '_');
                             } );
-  if( m->section )
+  if( m->section && (m->section != "all"))
   {
     if( !strlen( m->section ) || (search( m->section, "Misc" ) != -1 ))
-      variables = Array.filter( variables, 
+      variables = Array.filter( variables,
                                 lambda( mapping q )
                                 {
                                   return search( q->rname, ":" ) == -1;
                                 } );
     else
-      variables = Array.filter( variables, 
+      variables = Array.filter( variables,
                                 lambda( mapping q )
                                 {
                                   return search( q->rname, m->section )!=-1;
@@ -733,7 +736,7 @@ array get_variable_sections( object mod, mapping m, object id )
 {
   mapping w = ([]);
   array variables = map(indices(mod->variables),get_variable_section,mod,id);
-  variables = Array.filter( variables-({0}), 
+  variables = Array.filter( variables-({0}),
                        lambda( mapping q ) {
                          return !w[ q->section ]++;
                        });
@@ -743,7 +746,7 @@ array get_variable_sections( object mod, mapping m, object id )
 
 string container_cf_dirlist( string t, mapping m, string c, object id )
 {
-  
+
 }
 
 object(Configuration) find_config_or_error(string config)
@@ -781,10 +784,10 @@ string container_configif_output(string t, mapping m, string c, object id)
                         return ([
                           "name":rl[l]->name,
                           "latin1-name":rl[l]->latin1_name,
-                          "path":fix_relative( "/"+l+"/"+ q + 
+                          "path":fix_relative( "/"+l+"/"+ q +
                                                (id->misc->path_info?
                                                 id->misc->path_info:"")+
-                                               (id->query&&sizeof(id->query)? 
+                                               (id->query&&sizeof(id->query)?
                                                 "?" +id->query:""),
                                                id),
                           "selected":( cl[l] ? "selected": "" ),
@@ -804,7 +807,7 @@ string container_configif_output(string t, mapping m, string c, object id)
      foreach( values(conf->otomod), string q )
      {
        object mi = roxen->find_module((q/"#")[0]);
-       variables += 
+       variables +=
        ({
          ([
            "sname":replace(q, "#", "!"),
@@ -812,7 +815,7 @@ string container_configif_output(string t, mapping m, string c, object id)
            "doc":mi->get_description(),
          ]),
        });
-     } 
+     }
      sort( variables->name, variables );
      break;
 
@@ -842,7 +845,6 @@ string container_configif_output(string t, mapping m, string c, object id)
 
    case "module-variables-sections":
      object conf = find_config_or_error( m->configuration );
-
      object mod = conf->find_module( replace( m->module, "!", "#" ) );
      if( !mod )
        error("Unknown module "+ m->module +"\n");
@@ -870,7 +872,14 @@ string container_configif_output(string t, mapping m, string c, object id)
        else
          hassel = strlen(q->selected);
      }
-
+     hassel=0;
+     foreach( reverse(variables), mapping q )
+     {
+       if( q->selected == "selected")
+         hassel = 1;
+     }
+     if(!hassel)
+       variables[0]->selected="selected";
      variables[0]->first = " first ";
      variables[-1]->last = " last=30 ";
      break;
@@ -887,12 +896,12 @@ string container_configif_output(string t, mapping m, string c, object id)
 
 
    case "configurations":
-     variables = map( roxen->configurations, 
+     variables = map( roxen->configurations,
                       lambda(object o ) {
                         return ([
                           "name":o->query_name(),
-                          "sname":replace(lower_case(o->name), 
-                                          ({" ","/","%"}), 
+                          "sname":replace(lower_case(o->name),
+                                          ({" ","/","%"}),
                                           ({"-","-","-"}) ),
                         ]);
                       } );
