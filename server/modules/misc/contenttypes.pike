@@ -4,7 +4,7 @@
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.15 1999/10/21 11:30:43 nilsson Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.16 1999/11/27 09:00:36 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -29,6 +29,7 @@ void create()
 	 "For a list of types, see <a href=ftp://ftp.isi.edu/in-"
 	 "notes/iana/assignments/media-types/media-types>ftp://ftp"
 	 ".isi.edu/in-notes/iana/assignments/media-types/media-types</a>");
+
   defvar("default", "application/octet-stream", "Default content type",
 	 TYPE_STRING, 
 	 "This is the default content type which is used if a file lacks "
