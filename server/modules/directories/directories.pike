@@ -15,7 +15,7 @@
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_directories",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: directories.pike,v 1.94 2004/06/30 16:58:56 mast Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.95 2004/12/28 17:15:05 anders Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -164,8 +164,10 @@ void start(int n, Configuration c)
   {
     indexfiles = query("indexfiles")-({""});
     override = query("override");
-    if( query("default-template" ) )
+    if( query("default-template" ) ) {
       template = default_template;
+      module_dependencies(c, ({ "rxmltags" }));
+    }
     else
       template = query("template");
 
