@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.7 1999/06/07 22:36:45 grubba Exp $
+ * $Id: ftp.pike,v 2.8 1999/06/25 20:59:29 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1795,7 +1795,7 @@ class FTPSession
     switch(file->mode) {
     case "A":
       if (file->data) {
-	file->data = replace(file->data, "\n", "\r\n");
+	file->data = replace(replace(file->data, "\r\n", "\n"), "\n", "\r\n");
       }
       if(objectp(file->file) && file->file->set_nonblocking)
       {
