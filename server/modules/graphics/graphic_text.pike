@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.58 1997/08/31 04:12:43 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.59 1997/09/01 01:38:58 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -160,8 +160,11 @@ object(Font) load_font(string name, string justification, int xs, int ys)
 {
   object fnt = Font();
 
-  if ((!name)||(name == "")) {
-    name = QUERY(default_size)+"/"+QUERY(default_font);
+  if ((!name)||(name == ""))
+  {
+    return get_font("default",(int)args->font_size||32,0,0,
+		    lower_case(args->justification||"left"),
+		    (float)xs, (float)ys);
   } else if(sscanf(name, "%*s/%*s") != 2) {
     name=QUERY(default_size)+"/"+name;
   }
@@ -170,12 +173,14 @@ object(Font) load_font(string name, string justification, int xs, int ys)
 
   if(!fnt->load( name ))
   {
-      report_debug("Failed to load the compatibility font "+name+
-		   ", using the default font.\n");
-    if(!fnt->load("fonts/"+QUERY(default_size) +"/"+ QUERY(default_font)))
-      report_error("Failed to load the default compatibility font\n");
+    report_debug("Failed to load the compatibility font "+name+
+		 ", using the default font.\n");
+    return get_font("default",(int)args->font_size||32,0,0,
+		    lower_case(args->justification||"left"),
+		    (float)xs, (float)ys);
   }
-  catch {
+  catch
+  {
     if(justification=="right") fnt->right();
     if(justification=="center") fnt->center();
     if(xs)fnt->set_x_spacing((100.0+(float)xs)/100.0);
@@ -629,7 +634,7 @@ array(int)|string write_text(int _args, string text, int size,
     if(args->light) bold=-1;
     if(args->italic) italic=1;
     if(args->black) bold=2;
-    data = get_font(args->nfont,(int)args->font_size,bold,italic,
+    data = get_font(args->nfont,(int)args->font_size||32,bold,italic,
 		    lower_case(args->talign||"left"),
 		    (float)(int)args->xpad, (float)(int)args->ypad);
   }
