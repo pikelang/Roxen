@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.111 1997/08/21 13:44:33 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.112 1997/08/21 13:45:27 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2193,9 +2193,9 @@ varargs int main(int argc, array (string) argv)
 
   perror("Restart initiated at "+ctime(time())); 
   
-  neighborhood = (object)"neighborhood";
 
   define_global_variables(argc, argv);
+  neighborhood = (object)"neighborhood";
 
   
   create_pid_file(QUERY(pidfile));
