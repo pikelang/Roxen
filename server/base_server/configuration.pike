@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.36 1997/06/23 03:28:13 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.37 1997/07/06 23:03:27 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -683,6 +683,7 @@ int|mapping check_security(function a, object id, void|int slevel)
   array level;
   int need_auth;
   array seclevels;
+  int ip_ok = 0;	// Unknown
 
   if(!(seclevels = misc_cache[ a ]))
     misc_cache[ a ] = seclevels = ({
@@ -697,13 +698,16 @@ int|mapping check_security(function a, object id, void|int slevel)
   if(!sizeof(seclevels[0]))
     return 0; // Ok if there are no patterns.
 
-  catch
-  {
-    foreach(seclevels[0], level)
+  catch {
+    foreach(seclevels[0], level) {
       switch(level[0])
       {
        case MOD_ALLOW: // allow ip=...
-	if(level[1](id->remoteaddr)) return 0; // Match. It's ok.
+	if(level[1](id->remoteaddr)) {
+	  ip_ok = ~0;		// Match. It's ok.
+	} else {
+	  ip_ok = ip_ok | 1;	// IP may be bad.
+	}
 	continue;
 	
        case MOD_DENY: // deny ip=...
@@ -721,7 +725,12 @@ int|mapping check_security(function a, object id, void|int slevel)
 	   level[1](id->misc->proxyauth[1])) return 0;
 	return http_proxy_auth_required(seclevels[2]);
       }
+    }
   };
+  if (ip_ok == 1) {
+    // IP not in any of the allow patterns
+    return http_low_answer(403, "<h2>Access forbidden</h2>");
+  }
   // If auth is needed (access might be allowed if you are the right user),
   // request authentification from the user. Otherwise this is a lost case,
   // the user will never be allowed access unless the patterns change.
