@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.87 2001/05/16 10:25:46 per Exp $";
+  "$Id: config_filesystem.pike,v 1.88 2001/05/16 13:20:41 per Exp $";
 
 constant path = "config_interface/";
 
@@ -490,11 +490,19 @@ void start(int n, Configuration cfg)
       else
 	cfg->enable_module( s+"#0" );
     }
+#ifndef AVERAGE_PROFILING
+	m_delete( cfg->enabled_modules, "avg_profiling#0" );
+	if( cfg->find_module( "avg_profiling#0" ) )
+	  cfg->disable_module( "avg_profiling#0" );
+#endif
     cfg->add_modules(({
       "config_tags", "contenttypes",    "indexfiles",
       "gbutton",     "graphic_text",    "pathinfo",        "javascript_support",
       "pikescript",  "translation_mod", "rxmlparse",       "rxmltags",
-      "tablist",     "update",          "cimg", 
+      "tablist",     "update",          "cimg",
+#ifdef AVERAGE_PROFILING
+      "avg_profiling",
+#endif
     }));
 
     RoxenModule m;
