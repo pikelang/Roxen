@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.125 2001/01/17 16:26:00 anders Exp $
+// $Id: wizard.pike,v 1.126 2001/02/05 11:44:56 per Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -504,7 +504,8 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 	  "<input type=\"hidden\" name=\"action\" value=\""+id->variables->action+"\" />\n" :
 	  "") +
 	 "<input type=\"hidden\" name=\"_page\" value=\""+page+"\" />\n"
-	 "<input type=\"hidden\" name=\"_state\" value=\""+compress_state(id->variables)+"\" />\n"
+	 "<input type=\"hidden\" name=\"_state\" value=\""+
+	 compress_state(id->real_variables)+"\" />\n"
 	 "<table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"80%\">\n"
 	 "  <tr><td><table bgcolor=\"#eeeeee\" cellpadding=\"0\" "
 	   "cellspacing=\"0\" border=\"0\" width=\"100%\">\n"
@@ -564,18 +565,21 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 {
   string data;
   int offset = 1;
-  mapping v=id->variables;
   string wiz_name = "page_";
 
-  mapping s = decompress_state(v->_state);
+  mapping s = decompress_state(id->real_variables->_state
+			       && id->real_variables->_state[0]);
 
-  if(v->cancel)
-  {
-     return http_redirect(s->cancel_url||cancel||id->not_query, @(id->conf?({id}):({})));
-  }
+  if(id->real_variables->cancel)
+     return http_redirect((s->cancel_url&&s->cancel_url[0])
+			  || cancel || id->not_query,
+			  @(id->conf?({id}):({})));
 
-  foreach(indices(s), string q)
-     v[q] = v[q]||s[q];
+  mapping å = id->real_variables;
+  foreach(indices(å), string q)
+     å[q] = å[q]||s[q];
+
+  FakedVariables v=id->variables;
 
   mapping(string:array) automaton = this_object()->wizard_automaton;
   function dispatcher;
