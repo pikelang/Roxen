@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.54 1998/09/20 01:00:07 grubba Exp $
+ * $Id: smtp.pike,v 1.55 1998/09/20 01:06:27 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.54 1998/09/20 01:00:07 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.55 1998/09/20 01:06:27 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -254,7 +254,8 @@ static class Smtp_Connection {
     roxen_perror(sprintf("SMTP: Command: %s\n", cmd));
 #endif /* SMTP_DEBUG */
 
-    if (!remotename && (!(< "EHLO", "HELO" >)[cmd])) {
+    if (!remotename && parent->query_polite() &&
+	(!(< "EHLO", "HELO" >)[cmd])) {
       // Client is required to be polite.
       report_warning(sprintf("Got command %O %O before EHLO or HELO "
 			     "from %s@%s [%s]\n",
@@ -1110,6 +1111,11 @@ static void init()
  * Some glue code
  */
 
+int query_polite()
+{
+  return(QUERY(polite));
+}
+
 int query_timeout()
 {
   return(QUERY(timeout));
@@ -1380,6 +1386,10 @@ void create()
 
   defvar("spooldir", "/var/spool/mqueue/", "Mail spool directory", TYPE_DIR,
 	 "Directory to temporary keep incoming mail.");
+
+  defvar("polite", 1, "Require EHLO/HELO", TYPE_FLAG | VAR_MORE,
+	 "Require the client to be polite, and say EHLO/HELO before "
+	 "accepting other commands.");
 
   defvar("timeout", 10*60, "Timeout", TYPE_INT | VAR_MORE,
 	 "Idle time before connection is closed (seconds).<br>\n"
