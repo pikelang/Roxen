@@ -10,6 +10,7 @@
 //     bgcolor         -- background color inside/outside button
 //     textcolor       -- button text color
 //     href            -- button URL
+//     target          -- target frame
 //     alt             -- alternative button alt text
 //     title           -- button tooltip
 //     border          -- image border
@@ -26,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.104 2003/12/18 13:15:21 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.105 2003/12/29 09:52:48 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -112,6 +113,10 @@ constant gbuttonattr=#"
 
 <attr name='href' value='uri'><p>
  Button URI.</p>
+</attr>
+
+<attr name='target' value='string'><p>
+ Button target frame.</p>
 </attr>
 
 <attr name='textstyle' value='normal|condensed'><p>
@@ -916,7 +921,9 @@ class TagGButton {
       //  Make button clickable if not dimmed
       if(args->href && !new_args->dim)
       {
-	mapping a_attrs = ([ "href" : args->href ]);
+	mapping a_attrs = ([ "href" : args->href,
+	]);
+	if (args->target) a_attrs->target = args->target;
 
 	foreach(indices(args), string arg)
 	  if(has_value("target/onmousedown/onmouseup/onclick/ondblclick/"
