@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.81 1997/09/26 17:39:18 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.82 1997/09/26 17:49:20 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1146,8 +1146,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(split)
   {
     string word;
-    array res = ({pre});
-    string pre = query_location()+num+"/";
+    array res = ({ pre });
+    string pre = query_location() + num + "/";
 
     if(lp) res+=({ lp });
     
@@ -1166,20 +1166,23 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	}
 	foreach (arr, word) {
 	  array size = write_text(num,word,1,id);
-	  res += ({ "<img _parsed=1 border=0 alt=\""+replace(word,"\"","'")
-		      +"\" src=\""+pre+quote(word)+"\" width="+
-		      size[0]+" height="+size[1]+" "+ea+">\n"
+	  res += ({ "<img _parsed=1 border=0 alt=\"" +
+		      replace(arg->alt || word, "\"", "'") +
+		      "\" src=\"" + pre + quote(word) + "\" width=" +
+		      size[0] + " height=" + size[1] + " " + ea + ">"
 		      });
 	}
+	res += ({"\n"});
       } else {
 	array size = write_text(num,word,1,id);
-	res += ({ "<img _parsed=1 border=0 alt=\""+replace(word,"\"","'")
-		    +"\" src=\""+pre+quote(word)+"\" width="+
-		    size[0]+" height="+size[1]+" "+ea+">\n"
+	res += ({ "<img _parsed=1 border=0 alt=\"" +
+		    replace(arg->alt || word, "\"", "'") +
+		    "\" src=\"" + pre + quote(word) + "\" width=" +
+		    size[0] + " height=" + size[1] + " " + ea + ">\n"
 		    });
       }
     }
-    if(lp) res+=({ "</a>"+post });
+    if(lp) res += ({ "</a>"+post });
     return res*"";
   }
   
