@@ -7,9 +7,15 @@ BETA=1
 DIR=../configurations/
 LOGDIR=../logs/
 FILES="default"
+if [ -d ../pike/lib/modules ]; then
+  DEFINES=-M../pike/lib/modules
+fi
+if [ -d etc/modules ]; then
+  DEFINES=$DEFINES -Metc/modules
+fi
 
-ulpc=pike
-if [ -x bin/pike ] ; then ulpc=bin/pike; fi
+pike=pike
+if [ -x bin/pike ] ; then pike=bin/pike; fi
 
 rotate () {
   b=5;
@@ -33,6 +39,12 @@ fixperms() {
  find $DIR -print | xargs chmod u+rw
 }
 
+
+start_roxen() {
+  args="-DROXEN $DEFINES $DEBUG base_server/roxenloader --config-dir=$DIR --start-script-pid=$$"
+  echo Executing $pike $args $@
+  $pike $args $@
+}
 ####### END PREAMBLE
 
 
@@ -41,6 +53,9 @@ fixperms() {
 while [ ! c"$1" = "c" ] ; do
   case $1 in
 # Used by the 'install' script
+  -D*)
+   DEFINES="$DEFINES $1"
+  ;;
   --no-chown) 
    NOCHOWN=TRUE
   ;;
@@ -118,9 +133,7 @@ oo
   
   echo "Server restart at `date`"
   rotate $LOGDIR/debug/$FILES
-  args="-DROXEN $DEBUG roxenloader --config-dir=$DIR --start-script-pid=$$"
-  echo Executing $ulpc -m etc/master.pike $args $@ 2>$LOGDIR/debug/$FILES.1 
-  $ulpc -m etc/master.pike $args $@ 2>>$LOGDIR/debug/$FILES.1 1>&2
+  start_roxen
   if [ -z "$noshutdown" ] ; then 
     if [ -f "$sdfile" ] ; then
 
@@ -154,7 +167,5 @@ You can use the configuration interface in the server to get debug info.
 oo
 else
   echo "Server restart at `date`"
-  args="-DROXEN $DEBUG roxenloader --config-dir=$DIR --start-script-pid=$$"
-  echo Executing $ulpc -m etc/master.pike $args $@
-  $ulpc -m etc/master.pike $args $@
+  start_roxen
 fi
