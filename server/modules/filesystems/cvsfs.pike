@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-static string cvs_version = "$Id: cvsfs.pike,v 1.5 1997/02/07 23:19:46 grubba Exp $";
+static string cvs_version = "$Id: cvsfs.pike,v 1.6 1997/02/08 00:54:50 nisse Exp $";
 
 #include <module.h>
 #include <string.h>
@@ -15,6 +15,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_module_path = 0; /* Path in CVS repository */
+string cvs_program, rlog_program;
 
 int accesses, dirlists, errors;
 
@@ -36,8 +37,9 @@ object|array run_cvs(string prog, string dir, int with_stderr, string ...args)
       stderr->create("stderr");
       result = stdout->pipe();
     }
-  return (spawne(prog, args, 0, stdin, stdout, stderr, dir) > 0)
-    ? result : 0;
+  return (spawne(prog, args, (["PATH" : query("path") ]),
+		 stdin, stdout, stderr, dir) > 0)
+     ? result : 0;
 }
 
 mapping parse_modules_file(string modules)
@@ -123,8 +125,13 @@ void create()
 	 "name space of your server.");
   defvar("cvsroot", getenv("CVSROOT") || "/usr/local/cvs",
 	 "CVS repository", TYPE_DIR, "Where CVS stores its files.");
+  defvar("path", "/usr/bin:/usr/local/bin:/usr/gnu/bin", "Path for locating binaries",
+	 TYPE_STRING, "Colon separated list of directories to search for the cvs "
+	 "and rcs binaries.");
+#if 0
   defvar("cvsprogram", "/usr/local/bin/cvs", "The <tt>cvs</tt> program",
 	 TYPE_FILE, "The program used for accessing the CVS repository.");
+#endif
   defvar("cvsmodule", "NONE", "CVS (sub)module", TYPE_STRING,
 	 "<tt>module/subdirectory</tt>, where <tt>module</tt> is a module "
 	 "defined in the CVS repository, and <tt>subdirectory</tt> "
@@ -146,7 +153,7 @@ string|void check_variable(string name, string value)
     case "cvsmodule":
       {
 	string path =
-	  lookup_cvs_module(query("cvsprogram"), query("cvsroot"),
+	  lookup_cvs_module(cvs_program, query("cvsroot"),
 			    (value / "/")[0] );
 	if (! (path && strlen(path) ))
 	  return "Module not found in CVS";
@@ -154,18 +161,59 @@ string|void check_variable(string name, string value)
 	  return "No such subdirectory"; 
 	break;
       }
+    case "path":
+      {
+	string name;
+	array required = ({"cvs", "rlog", "rcs", "co"});
+	foreach(value /":", name)
+	  {
+	    required = filter(required, lambda(string prog, string name)
+			      { return !file_stat(name + "/" + prog); },
+			      name);
+	    if (!sizeof(required))
+	      break;
+	  }
+	return (sizeof(required) ?
+		sprintf("Can't find binaries for: %s", required * " ")
+		: 0);
+      }
     default:
       return 0;
     }
 }
 
+string locate_binary(array path, string name)
+{
+  string dir;
+  array info;
+  foreach(path, dir)
+    {
+      string fname = dir + "/" + name;
+      if ((info = file_stat(fname))
+	  && (info[0] & 0111))
+	return fname;
+    }
+  return 0;
+}
+
 void start()
 {
-  array path = query("cvsmodule") / "/";
+  array path = query("path") / ":";
+
+  cvs_program = locate_binary(path, "cvs");
+  werror(sprintf("cvs program located as: %s\n", cvs_program));
+  rlog_program = locate_binary(path, "rlog");
+  werror(sprintf("rlog program located as: %s\n", rlog_program));
+  
+  path = query("cvsmodule") / "/";
   cvs_module_path =
-    lookup_cvs_module(query("cvsprogram"), query("cvsroot"), path[0]) +
+    lookup_cvs_module(cvs_program, query("cvsroot"), path[0]) +
     "/" + (path[1..] * "/");
+
   werror(sprintf("start: cvs_module_path ='%s'\n", cvs_module_path));
+  
+
+  
 }
 
 string status()
@@ -199,38 +247,40 @@ mapping(string:string|int) parse_prestate(multiset|array prestates)
     } else {
       return(1);
     }
-  }
+  } )));
 }
 
 object|mapping|int find_file(string name, object id)
 {
   array(string) extra_args = ({});
-  mapping(string:string|int) prestates = parse_prestates(id->prestate);
+  mapping(string:string|int) prestates = parse_prestate(id->prestate);
 
   werror(sprintf("find_file: Looking for '%s'\n", name));
   string fname = query("cvsroot") + cvs_module_path + "/" + name;
 
   if (cvs_module_path)
     {
+      int is_text = 0;
       if (file_stat(fname + ",v"))
 	{
 	  object f;
 
 	  if (prestates->log) {
-	    f = run_cvs("rlog", 0, 0, fname);
+	    f = run_cvs(rlog_program, 0, 0, fname + ",v" );
+	    is_text = 1;
 	  } else {
 	    if (stringp(prestates->revision)) {
 	      extra_args += ({ "-r", prestates->revision });
 	    }
 
-	    f = run_cvs(query("cvsprogram"), 0, 0,
+	    f = run_cvs(cvs_program, 0, 0,
 			"-d", query("cvsroot"), "checkout", "-p",
 			@extra_args,
 			cvs_module_path + "/" + name);
 	  }
 	  if (f)
 	    accesses++;
-	  return f;
+	  return is_text ? http_file_answer(f, "text/plain") : f;
 	}
       else if (file_stat(fname))
 	return -1;
