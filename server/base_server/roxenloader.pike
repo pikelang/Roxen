@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.312 2002/02/06 12:51:09 grubba Exp $
+// $Id: roxenloader.pike,v 1.313 2002/02/27 13:35:47 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.312 2002/02/06 12:51:09 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.313 2002/02/27 13:35:47 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1616,6 +1616,7 @@ void low_start_mysql( string datadir,
 		  "--pid-file="+pid_file,
 #endif
 		  "--skip-locking",
+		  "--skip-name-resolve",
 		  "--basedir="+basedir,
 		  "--datadir="+datadir,
   });
@@ -1636,14 +1637,19 @@ void low_start_mysql( string datadir,
   }
 
   // Create the configuration file.
+  string cfg_file = (datadir+"/my.cfg",
+		     "[mysqld]\n"
+		     "set-variable = max_allowed_packet=16M\n"
+		     "set-variable = net_buffer_length=8K\n"
+		     "skip-name-resolve\n"
+		     "bind-address = "+env->MYSQL_HOST+"\n");
+
+#ifdef __NT__
+  cfg_file = replace(cfg_file, "\n", "\r\n");
+#endif /* __NT__ */
+
   rm( datadir+"/my.cfg" );
-  catch(Stdio.write_file( datadir+"/my.cfg",
-			  "[mysqld]\n"
-			  "set-variable = max_allowed_packet=16M\n"
-			  "set-variable = net_buffer_length=8K\n"
-			  "skip-name-resolve\n"
-			  "bind-address = "+env->MYSQL_HOST+"\n"
-			));
+  catch(Stdio.write_file(cfg_file));
 
 #ifndef __NT__
   if( uid == "root" )
