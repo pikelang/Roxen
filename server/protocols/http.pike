@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.59 1998/03/08 12:48:03 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.60 1998/03/11 19:26:56 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -760,7 +760,7 @@ void handle_request( )
     if((file->file == -1) || file->leave_me) 
     {
       if(do_not_disconnect) return;
-      my_fd = 0; file->close(); file = 0;
+      my_fd = 0; objectp(file) && file->close(); file = 0;
       return;
     }
 

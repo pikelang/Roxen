@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.173 1998/03/10 18:38:45 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.174 1998/03/11 19:26:56 neotron Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -788,7 +788,7 @@ public string full_status()
 public string *userlist(void|object id)
 {
   if(id) current_configuration = id->conf;
-  if(current_configuration->auth_module)
+  if(current_configuration && current_configuration->auth_module)
     return current_configuration->auth_module->userlist();
   return 0;
 }
@@ -796,7 +796,7 @@ public string *userlist(void|object id)
 public string *user_from_uid(int u, void|object id)
 {
   if(id) current_configuration = id->conf;
-  if(current_configuration->auth_module)
+  if(current_configuration && current_configuration->auth_module)
     return current_configuration->auth_module->user_from_uid(u);
 }
 
