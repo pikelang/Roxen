@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.17 1997/01/15 18:38:30 grubba Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.18 1997/01/25 20:01:48 grubba Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -1669,6 +1669,40 @@ string tag_right(string t, mapping m, string s, object got)
   return "<table width=100%><tr><td align=right>"+s+"</td></tr></table>";
 }
 
+string tag_formoutput(string tag_name, mapping args, string contents,
+		      object request_id, mapping defines)
+{
+  string nullvalue="";
+  array(string) content_array = contents/"#";
+  int i;
+
+  if (args->nullvalue) {
+    nullvalue = (string)args->nullvalue;
+  }
+
+  for (i=0; i < sizeof(content_array); i++) {
+    if (i & 1) {
+      mixed var_value = request_id->variables[content_array[i]];
+
+      if (content_array[i] == "") {
+	content_array[i] = "#";
+      } else if (var_value) {
+	if (arrayp(var_value)) {
+	  content_array[i] = var_value*", ";
+	} else {
+	  content_array[i] = var_value;
+	}
+      } else {
+	content_array[i] = nullvalue;
+      }
+      content_array[i] = replace(content_array[i],
+				 ({ "<", ">", "&", "\"", "\'" }),
+				 ({ "&lt;", "&gt;", "&amp;", "&#34;", "&#27" }));
+    }
+  }
+  return(content_array*"");
+}
+
 mapping query_container_callers()
 {
   return (["comment":lambda(){ return ""; },
@@ -1690,6 +1724,7 @@ mapping query_container_callers()
 	   "aconfig":tag_aconfig,
 	   "deny":tag_deny,
 	   "smallcaps":tag_smallcaps,
+	   "formoutput":tag_formoutput,
 	   ]);
 }
 
