@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.9 1998/03/02 14:43:57 grubba Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.10 1998/03/02 15:04:57 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -29,12 +29,16 @@ object find_server_for(object id, string host)
 #if constant(Array.diff_longest_sequence)
   int best;
   array a = host/"";
+  string hn;
   object c;
   foreach(roxen->configurations, object s) {
-    int corr = sizeof(Array.diff_longest_sequence(a, lower_case(s->query("MyWorldLocation"))/""));
-    if (corr > best) {
+    string h = lower_case(s->query("MyWorldLocation"));
+    int corr = sizeof(Array.diff_longest_sequence(a, h/""));
+    if ((corr > best) ||
+	((corr == best) && hn && (sizeof(hn) < sizeof(h)))) {
       best = corr;
       c = s;
+      hn = h;
     }
   }
   return id->conf = config_cache[host] = (c || id->conf);
