@@ -70,7 +70,7 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
   if ((diagram_data["type"]=="sumbars")||
       (diagram_data["type"]=="bars"))
     if (diagram_data["xdatanames"])
-      if (sizeof(diagram_data["data"])<
+      if (sizeof(diagram_data["datasize"])<
 	  sizeof(diagram_data["xdatanames"]))
 	diagram_data["xdatanames"]=diagram_data["xdatanames"]
 	  [..sizeof(diagram_data["datasize"])-1];
