@@ -2,7 +2,7 @@
 //
 inherit "module";
 
-constant cvs_version = "$Id: language.pike,v 1.32 2001/01/04 06:03:08 nilsson Exp $";
+constant cvs_version = "$Id: language.pike,v 1.33 2001/08/28 17:49:14 grubba Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -116,8 +116,8 @@ void start()
       tmpl = tmp / " " - ({ "" });
       if (sizeof( tmpl ) >= 2)
       {
-	language_data[ tmpl[0] ] = ({ tmpl[1], tmpl[2..] });
-	language_order += ({ tmpl[0] });
+	language_data[ lower_case(tmpl[0]) ] = ({ tmpl[1], tmpl[2..] });
+	language_order += ({ lower_case(tmpl[0]) });
       }
     }
   language_list = aggregate_multiset( @indices( language_data ) );
@@ -160,7 +160,7 @@ mixed remap_url( RequestID id, string url )
 
   id->misc->in_language=1;
 
-  extension = reverse( (reverse( url ) / ".")[0] );
+  extension = lower_case(reverse( (reverse( url ) / ".")[0] ));
   if (language_list[ extension ])
   {
     string redirect_url;
