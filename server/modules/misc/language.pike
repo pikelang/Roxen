@@ -23,7 +23,7 @@ array register_module()
 	      "<br><b>&lt;language&gt;</b> that tells which language the "
 	      
 	      "current page is in. "
-	      "<br><b>&lt;avalable_languages&gt;</b> gives a list of other "
+	      "<br><b>&lt;available_languages&gt;</b> gives a list of other "
 	      "languages the current page is in, with links to them. "
 	      "<br><b>&lt;unavailable_language&gt;</b> shows the language "
 	      "the user wanted, if the page was not available in that "
@@ -38,7 +38,7 @@ void create()
 {
   defvar( "default_language", "en", "Default language", TYPE_STRING,
 	 "The default language for this server. Is used when trying to "
-	 "decide which language to send when the user hasn't selected any. "
+	 "decide which language to send when the user hasnt selected any. "
 	 "Also the language for the files with no language-extension." );
 
   defvar( "languages", "en	English\nde	Deutch		en\nsv	Svenska		en",
@@ -55,10 +55,10 @@ void create()
 	 "be used in case the chosen language is unavailable. To find a "
 	 "page with a suitable language the languages is tried as follows. "
 	 "<ol><li>The selected language, stored as a prestate"
-	 "<li>The user's agent's accept-headers (ok it doesn't do this at the moment)"
+	 "<li>The users agents accept-headers (ok it doesnt do this at the moment)"
 	 "<li>The selected languages next-languages-codes if any"
 	 "<li>The default language"
-	 "<li>If there were no selected language, the default language's "
+	 "<li>If there were no selected language, the default languages "
 	 "next-language-codes"
 	 "<li>All languages, in the order they appear in this text-field"
 	 "</ol>"
@@ -77,13 +77,14 @@ void create()
 	 "only be used if the page exists in that language."
 	 "<dt>language-code.unavailable.gif"
 	 "<dd>Shown to indicate that the user has selected an language that "
-	 "this page hasn't been translated to."
+	 "this page hasnt been translated to."
 /*	 "<dt>language-code.dir.selected.gif"
 	 "<dd>Shown to indicate that the dir-entry will be shown in that "
 	 "language."
-	 "<dt>language-code.dir.avalable.gif"
+	 "<dt>language-code.dir.available.gif"
 	 "<dd>Shown as a link to the dir-entry translated to that language."
-	 */	 "</dl>"
+	 */
+	 "</dl>"
 	 "<p>It is of course not necessary to have all this pictures if "
 	 "their use is not enabled in this module nor the header module." );
 
@@ -112,7 +113,8 @@ void create()
 	 "be excluded from directory listings, since they are considered "+
 	 "backups.");
 
-*/  defvar("indexfiles", ({ "index.html", "Main.html", "welcome.html", 
+*/  
+  defvar("indexfiles", ({ "index.html", "Main.html", "welcome.html", 
 			  "Welcome.html" }), 
 	 "Directory index files", 
 	 TYPE_STRING_LIST,
@@ -348,7 +350,7 @@ string tag_available_languages( string tag, mapping m, object id )
       || !id->misc[ "language_list" ])
     return "";
   result = "";
-  available_languages = indices( id->misc[ "available_languages" ] );
+  available_languages = indices( id->misc["available_languages"] );
   for (c=0; c < sizeof( available_languages ); c++)
   {
     if (query( "configp" ))
@@ -358,10 +360,14 @@ string tag_available_languages( string tag, mapping m, object id )
     foreach (indices( id->misc[ "language_list" ]
 		      - (< available_languages[c] >) ), lang)
       result += "-" + lang + " ";
-    result += "+" + available_languages[c]
-      + (id->misc[ "index_file" ] ? " href=\"\" >" : ">");
+    if (query( "configp" ))
+      result += "+" + available_languages[c]
+	 + (id->misc[ "index_file" ] ? " href=\"\" >" : ">");
+    else
+      result += available_languages[c]
+	 + (id->misc[ "index_file" ] ? " href=\"\" >" : ">");
     if (m[ "type" ] == "txt" || textonly && m[ "type" ] != "img")
-      result += id->misc[ "language_data" ][ available_languages[c] ];
+      result += ""+id->misc[ "language_data" ][ available_languages[c] ][0];
     else
       result += "<img src=" + query( "flag_dir" ) + available_languages[c]
             + ".available.gif alt=\""
