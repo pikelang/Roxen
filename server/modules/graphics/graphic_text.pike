@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.178 1999/05/25 10:45:55 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.179 1999/05/25 10:53:22 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -376,12 +376,22 @@ object make_text_image(mapping args, object font, string text,object id)
   
   background->setcolor(@bgcolor);
 
-  if(args->size || args->xsize || args->ysize)
+  int xs=background->xsize(), ys=background->ysize();
+
+  if( args->rescale )
   {
-    int xs=background->xsize(), ys=background->ysize();
-    if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
-    if(args->xsize) xs=(int)args->xsize; 
-    if(args->ysize) ys=(int)args->ysize;
+    xs = txsize;
+    ys = tysize;
+  }
+
+  if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
+  if(args->xsize) xs=(int)args->xsize; 
+  if(args->ysize) ys=(int)args->ysize;
+
+
+  if( xs != background->xsize() &&
+      ys != background->ysize() )
+  {
     if(!args->rescale)
       background = background->copy(0,0,xs-1,ys-1);
     else
@@ -828,7 +838,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   int i;
   string split;
 
-  contents = contents[..((int)arg->maxlen||QUERY(deflen))];
+  contents = contents[..(((int)arg->maxlen||QUERY(deflen))-1)];
   m_delete(arg, "maxlen");
 
   if(arg->magic)
