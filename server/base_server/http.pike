@@ -1,19 +1,16 @@
-/* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.30 1999/11/29 22:08:38 per Exp $";
+/*
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
+ * $Id: http.pike,v 1.31 1999/12/14 01:33:30 nilsson Exp $
  */
 
 #include <config.h>
+#include <variables.h>
 
 #if !efun(roxen)
 #define roxen roxenp()
 class RequestID {};
 #endif
-
-string http_date(int t);
-
-#include <variables.h>
 
 
 string http_res_to_string( mapping file, RequestID id )
@@ -24,13 +21,13 @@ string http_res_to_string( mapping file, RequestID id )
       "Server":replace(id->version(), " ", "·"),
       "Date":http_date(id->time)
       ]);
-    
+
   if(file->encoding)
     heads["Content-Encoding"] = file->encoding;
-    
-  if(!file->error) 
+
+  if(!file->error)
     file->error=200;
-    
+
   if(file->expires)
       heads->Expires = http_date(file->expires);
 
@@ -44,19 +41,19 @@ string http_res_to_string( mapping file, RequestID id )
     {
       if(file->file && !file->len)
 	file->len = fstat[1];
-      
+
       heads["Last-Modified"] = http_date(fstat[3]);
     }
-    if(stringp(file->data)) 
+    if(stringp(file->data))
       file->len += strlen(file->data);
   }
 
-  if(mappingp(file->extra_heads)) 
+  if(mappingp(file->extra_heads))
     heads |= file->extra_heads;
 
   if(mappingp(id->misc->moreheads))
     heads |= id->misc->moreheads;
-    
+
   array myheads=({id->prot+" "+(file->rettext||errors[file->error])});
   foreach(indices(heads), string h)
     if(arrayp(heads[h]))
@@ -64,7 +61,7 @@ string http_res_to_string( mapping file, RequestID id )
 	myheads += ({ `+(h,": ", tmp)});
     else
       myheads +=  ({ `+(h, ": ", heads[h])});
-  
+
 
   if(file->len > -1)
     myheads += ({"Content-length: " + file->len });
@@ -90,10 +87,10 @@ mapping http_low_answer( int errno, string data )
 {
   if(!data) data="";
 #ifdef HTTP_DEBUG
-  perror("HTTP: Return code "+errno+" ("+data+")\n");
-#endif  
-  return 
-    ([ 
+  werror("HTTP: Return code "+errno+" ("+data+")\n");
+#endif
+  return
+    ([
       "error" : errno,
       "data"  : data,
       "len"   : strlen( data ),
@@ -104,8 +101,8 @@ mapping http_low_answer( int errno, string data )
 mapping http_pipe_in_progress()
 {
 #ifdef HTTP_DEBUG
-  perror("HTTP: Pipe in progress\n");
-#endif  
+  werror("HTTP: Pipe in progress\n");
+#endif
   return ([ "file":-1, "pipe":1, ]);
 }
 
@@ -114,16 +111,16 @@ mapping http_pipe_in_progress()
 /* Convenience functions to use in Roxen modules. When you just want
  * to return a string of data, with an optional type, this is the
  * easiest way to do it if you don't want to worry about the internal
- * roxen structures.  
+ * roxen structures.
  */
-mapping http_rxml_answer( string rxml, RequestID id, 
-                          void|Stdio.File file, 
+mapping http_rxml_answer( string rxml, RequestID id,
+                          void|Stdio.File file,
                           void|string type )
 {
   rxml = id->conf->parse_rxml(rxml, id, file);
 #ifdef HTTP_DEBUG
   werror("HTTP: RXML answer ("+(type||"text/html")+")\n");
-#endif  
+#endif
   return (["data":rxml,
 	   "type":(type||"text/html"),
 	   "stat":id->misc->defines[" _stat"],
@@ -138,7 +135,7 @@ mapping http_string_answer(string text, string|void type)
 {
 #ifdef HTTP_DEBUG
   werror("HTTP: String answer ("+(type||"text/html")+")\n");
-#endif  
+#endif
   return ([ "data":text, "type":(type||"text/html") ]);
 }
 
@@ -146,7 +143,7 @@ mapping http_file_answer(Stdio.File text, string|void type, void|int len)
 {
 #ifdef HTTP_DEBUG
   werror("HTTP: file answer ("+(type||"text/html")+")\n");
-#endif  
+#endif
   return ([ "file":text, "type":(type||"text/html"), "len":len ]);
 }
 
@@ -173,7 +170,7 @@ string cern_http_date(int t)
 		 lt->hour, lt->min, lt->sec, c, tzh));
 }
 
-/* Returns a http_date, as specified by the HTTP-protocol standard. 
+/* Returns a http_date, as specified by the HTTP-protocol standard.
  * This is used for logging as well as the Last-Modified and Time
  * heads in the reply.  */
 
@@ -249,7 +246,9 @@ mapping http_redirect( string url, RequestID|void id )
       if(id->misc->host) 
       {
 	array h;
-	// werror("REDIR: id->port_obj:%O\n", id->port_obj);
+#ifdef HTTP_DEBUG
+	werror("REDIR: id->port_obj:%O\n", id->port_obj);
+#endif
 	string prot = id->port_obj->name + "://";
 	string p = ":" + id->port_obj->default_port;
 
@@ -264,9 +263,9 @@ mapping http_redirect( string url, RequestID|void id )
     }
   }
 #ifdef HTTP_DEBUG
-  perror("HTTP: Redirect -> "+http_encode_string(url)+"\n");
-#endif  
-  return http_low_answer( 302, "") 
+  werror("HTTP: Redirect -> "+http_encode_string(url)+"\n");
+#endif
+  return http_low_answer( 302, "")
     + ([ "extra_heads":([ "Location":http_encode_string( url ) ]) ]);
 }
 
@@ -281,8 +280,8 @@ mapping http_auth_required(string realm, string|void message)
   if(!message)
     message = "<h1>Authentication failed.\n</h1>";
 #ifdef HTTP_DEBUG
-  perror("HTTP: Auth required ("+realm+")\n");
-#endif  
+  werror("HTTP: Auth required ("+realm+")\n");
+#endif
   return http_low_answer(401, message)
     + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
@@ -291,8 +290,8 @@ mapping http_auth_required(string realm, string|void message)
 mapping http_auth_failed(string realm)
 {
 #ifdef HTTP_DEBUG
-  perror("HTTP: Auth failed ("+realm+")\n");
-#endif  
+  werror("HTTP: Auth failed ("+realm+")\n");
+#endif
   return http_low_answer(401, "<h1>Authentication failed.\n</h1>")
     + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
@@ -304,14 +303,14 @@ function http_auth_failed = http_auth_required;
 mapping http_proxy_auth_required(string realm, void|string message)
 {
 #ifdef HTTP_DEBUG
-  perror("HTTP: Proxy auth required ("+realm+")\n");
-#endif  
+  werror("HTTP: Proxy auth required ("+realm+")\n");
+#endif
   if(!message)
     message = "<h1>Proxy authentication failed.\n</h1>";
   return http_low_answer(407, message)
     + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
- 
+
 static string add_http_header(mapping to, string name, string value)
 {
   if(to[name])
@@ -322,4 +321,3 @@ static string add_http_header(mapping to, string name, string value)
   else
     to[name] = value;
 }
-
