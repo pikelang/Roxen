@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.76 2000/08/22 19:09:13 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.77 2000/09/02 00:17:59 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -42,7 +42,7 @@ string status()
 mapping query_action_buttons()
 {
   if(query("default-template") && query("template") != template )
-    return ([ "Reset template to the default template"  : set_template ]);
+    return ([ "Reset template to default"  : set_template ]);
   return ([]);
 }
 
