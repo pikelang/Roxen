@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.170 2000/04/19 14:44:42 nilsson Exp $
+// $Id: roxenlib.pike,v 1.171 2000/04/19 15:14:42 nilsson Exp $
 
 //#pragma strict_types
 
@@ -759,7 +759,7 @@ string simplify_path(string file)
 string short_date(int timestamp)
   //! Returns a short date string from a time-int
 {
-  int date = [int]time(1);
+  int date = time(1);
 
   if(ctime(date)[20..23] != ctime(timestamp)[20..23])
     return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[20..23];
@@ -1436,7 +1436,7 @@ string fix_relative( string file, RequestID id )
 
 Stdio.File open_log_file( string logfile )
 {
-  mapping m = localtime([int]time(1));
+  mapping m = localtime(time(1));
   m->year += 1900;	/* Adjust for years being counted since 1900 */
   m->mon++;		/* Adjust for months being counted 0-11 */
   if(m->mon < 10) m->mon = "0"+m->mon;

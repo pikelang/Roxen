@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.169 2000/04/16 22:09:46 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.170 2000/04/19 15:14:42 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -94,8 +94,8 @@ int use_syslog, loggingfield;
 
 string oct;
 int last_was_change;
-int roxen_started = [int]time();
-float roxen_started_flt = [float]time([int]time());
+int roxen_started = time();
+float roxen_started_flt = [float]time(time());
 string short_time()
 {
   if( last_was_change>0 )
@@ -114,7 +114,7 @@ string short_time()
        }
        return sprintf( "%2dm%4.1fs  : ",((int)up/60)%60, up%60 );
     }
-  mapping l = localtime( [int]time( ) );
+  mapping l = localtime( time( ) );
   string ct =  sprintf("%2d:%02d:%02d  : ", l->hour, l->min, l->sec );
   last_was_change=5;
   oct = ct;
@@ -911,7 +911,7 @@ void write_current_time()
     call_out( write_current_time, 10 );
     return;
   }
-  int t = [int]time(1);
+  int t = time(1);
   mapping lt = localtime(t);
   report_debug("\n** "+sprintf("%02d-%02d-%02d %02d:%02d", lt->year+1900,
 			       lt->mon+1, lt->mday, lt->hour, lt->min)+
