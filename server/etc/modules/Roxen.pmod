@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.126 2001/09/25 14:25:59 nilsson Exp $
+// $Id: Roxen.pmod,v 1.127 2001/10/05 15:08:02 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3438,7 +3438,9 @@ string get_world(array(string) urls) {
   foreach( ({"http:","https:","ftp:"}), string p)
     foreach(urls, string u)
       if(u[0..sizeof(p)-1]==p) {
-	url=u;
+	Standards.URI ui = Standards.URI(u);
+	ui->fragment=0;
+	url=(string)ui;
 	break;
       }
 

@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.68 2001/10/04 13:57:10 per Exp $
+// $Id: module.pmod,v 1.69 2001/10/05 15:08:02 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1581,8 +1581,31 @@ class PortList
              split->port+"' />";
 
     res += "/<input type=string name='"+prefix+"path' value='"+
-      Roxen.html_encode_string(split->path[1..])+"' />";
-    
+      Roxen.html_encode_string(split->path[1..])+"' /><br />";
+    mapping opts = ([]);
+    string a,b;
+    foreach( (split->fragment||"")/";", string x )
+    {
+      sscanf( x, "%s=%s", a, b );
+      opts[a]=b;
+    }
+    res += "IP#: <input size=15 type=string name='"+prefix+"ip' value='"+
+      Roxen.html_encode_string(opts->ip||"")+"' /> ";
+    res += LOCALE(0,"Bind this port: ");
+    res += "<select name='"+prefix+"bind'>";
+    if( (int)opts->nobind )
+    {
+      res +=
+	("<option value='1'>"+LOCALE(0,"Yes")+"</option>"
+	 "<option selected='t' value='0'>"+LOCALE(0,"No")+"</option>");
+    }
+    else
+    {
+      res +=
+	("<option selected='t' value='1'>"+LOCALE(0,"Yes")+"</option>"
+	 "<option value='0'>"+LOCALE(0,"No")+"</option>");
+    }
+    res += "</select>";
     return res;
   }
 
@@ -1590,7 +1613,15 @@ class PortList
   {
     if( v == "" ) return "http://*/";
     v = v[strlen(path())..];
-    return (string)Standards.URI(va[v+"prot"]+"://"+va[v+"host"]+":"+va[v+"port"]+"/"+va[v+"path"]);
+    if( strlen( va[v+"path"] ) && va[v+"path"][-1] != '/' )
+      va[v+"path"]+="/";
+    
+    return (string)Standards.URI(va[v+"prot"]+"://"+va[v+"host"]+":"+
+				 va[v+"port"]+"/"+va[v+"path"]+"#"
+		 // all options below this point
+				 "ip="+va[v+"ip"]+";"
+				 "nobind="+va[v+"nobind"]+";"
+				);
   }
 
   array verify_set_from_form( array(string) new_value )
@@ -1683,11 +1714,11 @@ static array(string) verify_port( string port )
     return ({ sprintf(LOCALE(335,"%s does not conform to URL syntax")+"\n",port),
 	      port });
   
-  if( path == "" || path[-1] != '/' )
-  {
-    warning += sprintf(LOCALE(336,"Added / to the end of %s")+"\n",port);
-    path += "/";
-  }
+//   if( path == "" || path[-1] != '/' )
+//   {
+//     warning += sprintf(LOCALE(336,"Added / to the end of %s")+"\n",port);
+//     path += "/";
+//   }
   if( protocol != lower_case( protocol ) )
   {
     warning += sprintf(LOCALE(338,"Changed %s to %s"),

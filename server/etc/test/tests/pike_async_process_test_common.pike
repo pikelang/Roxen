@@ -44,7 +44,7 @@ void run_pikescript( string p, string ... args  )
   if( !http_url )
     foreach( c->query("URLs"), string url )
       if( has_prefix( url, "http://" ) )
-	http_url = url;
+	http_url = (url/"#")[0];
 
   if( !http_url )
   {

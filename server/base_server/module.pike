@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.129 2001/08/28 15:47:59 per Exp $
+// $Id: module.pike,v 1.130 2001/10/05 15:08:00 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -243,8 +243,11 @@ array(string) location_urls()
     sscanf (world_url, "%*s://%s%*[:/]", hostname);
   if (!hostname) hostname = gethostname();
   for (int i = 0; i < sizeof (urls); i++)
+  {
+    urls[i] = (urls[i]/"#")[0];
     if (sizeof (urls[i]/"*") == 2)
       urls[i] = replace(urls[i], "*", hostname);
+  }
   return map (urls, `+, loc[1..]);
 }
 

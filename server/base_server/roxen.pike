@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.747 2001/10/01 15:07:47 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.748 2001/10/05 15:08:00 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1708,10 +1708,20 @@ void unregister_url( string url )
   string host, path, protocol;
   int port;
   if (!sizeof (url - " " - "\t")) return;
+  mapping opts = ([]);
+  string a, b;
+  Standards.URI ui = Standards.URI(url);
+  foreach( (ui->fragment||"")/";", string x )
+  {
+    sscanf( x, "%s=%s", a, b );
+    opts[a]=b;
+  }
+  ui->fragment = 0;
+  url = (string)ui;
 
   url = replace( url, "/ANY", "/*" );
   url = replace( url, "/any", "/*" );
-
+  
   sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
   if (!host || !stringp(host))   return;
   if( !protocols[ protocol ] )    return;
@@ -1763,6 +1773,24 @@ int register_url( string url, Configuration conf )
   int port;
   string path;
 
+  Standards.URI ui = Standards.URI(url);
+  mapping opts = ([]);
+  string a, b;
+  foreach( (ui->fragment||"")/";", string x )
+  {
+    sscanf( x, "%s=%s", a, b );
+    opts[a]=b;
+  }
+  ui->fragment = 0;
+  url = (string)ui;
+
+  if( (int)opts->nobind )
+  {
+    report_warning(
+      LOC_M(0,"Not binding the port %O, disabled in configuration")+"\n",
+      url );
+    return 0;
+  }
   url = replace( url, "/ANY", "/*" );
   url = replace( url, "/any", "/*" );
 
@@ -1831,6 +1859,8 @@ int register_url( string url, Configuration conf )
 
   if (is_ip(host))
     required_hosts = ({ host });
+  else if( is_ip(opts->ip) )
+    required_hosts = ({ opts->ip });
   else
     required_hosts = find_ips_for( host );
 
@@ -4180,7 +4210,7 @@ string check_variable(string name, mixed value)
 
 int is_ip(string s)
 {
-  return (sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>47 && s[-1]<58);
+  return s&&(sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>47 && s[-1]<58);
 }
 
 static string _sprintf( )

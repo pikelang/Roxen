@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.128 2001/09/03 17:43:10 per Exp $
+// $Id: site_content.pike,v 1.129 2001/10/05 15:08:01 per Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -412,6 +412,7 @@ string module_page( RequestID id, string conf, string module )
 
 string port_for( string url, int settings )
 {
+  url = (url/"#")[0];
   if(!roxen->urls[url] ) return "";
   Protocol p = roxen->urls[url]->port;
   if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
@@ -511,6 +512,7 @@ string parse( RequestID id )
  	 LOCALE(299,"URLs") + "</h1>";
        foreach( conf->query( "URLs" ), string url )
        {
+	 url = (url/"#")[0];
          int open = (roxen->urls[ url ] 
                      && roxen->urls[ url ]->port 
                      && roxen->urls[ url ]->port->bound);

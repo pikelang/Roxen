@@ -59,12 +59,14 @@ string|mapping parse( RequestID id )
 
     res += "<ul>\n";
     foreach( cf->query( "URLs" ), string url )
+    {
+      url = (url/"#")[0];
 #if constant(gethostname)
       res += "<li> "+replace(url,"*",gethostname())+"\n";
 #else
       res += "<li> "+url+"\n";
 #endif
-      
+    }      
     res += "</ul\n>";
     
     if( sizeof( dead ) )

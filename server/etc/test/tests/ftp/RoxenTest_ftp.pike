@@ -1,4 +1,4 @@
-// $Id: RoxenTest_ftp.pike,v 1.1 2001/08/24 12:04:06 grubba Exp $
+// $Id: RoxenTest_ftp.pike,v 1.2 2001/10/05 15:08:03 per Exp $
 //
 // Tests of the ftp protocol module.
 //
@@ -25,7 +25,7 @@ function run(string script, int testno)
 	   if (!http_url) {
 	     foreach(c->query("URLs"), string url) {
 	       if(has_prefix( url, "ftp://")) {
-		 http_url = url;
+		 http_url = (url/"#")[0];
 	       }
 	     }
 	     if(!http_url) {
