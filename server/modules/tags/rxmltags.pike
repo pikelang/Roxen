@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.341 2002/02/04 18:51:03 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.342 2002/02/05 19:55:55 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2486,7 +2486,8 @@ class UserTag {
 
   class Frame {
     inherit RXML.Frame;
-    RXML.TagSet additional_tags = user_tag_contents_tag_set;
+    RXML.TagSet additional_tags;
+    RXML.TagSet local_tags;
     string scope_name;
     mapping vars;
     string raw_tag_text;
@@ -2499,20 +2500,30 @@ class UserTag {
     mapping(RXML.Frame:array) saved_hidden;
     int compile;
 
+    array tagdef;
+
     array do_enter (RequestID id)
     {
       vars = 0;
       do_iterate = content_text ? -1 : 1;
+      if ((tagdef = RXML_CONTEXT->misc[lookup_name]))
+	if (tagdef[4]) {
+	  local_tags = user_tag_contents_tag_set;
+	  additional_tags = 0;
+	}
+	else {
+	  additional_tags = user_tag_contents_tag_set;
+	  local_tags = 0;
+	}
       return 0;
     }
 
     array do_return(RequestID id) {
-      RXML.Context ctx = RXML_CONTEXT;
-      array tagdef = ctx->misc[lookup_name];
       if (!tagdef) return ({propagate_tag()});
+      RXML.Context ctx = RXML_CONTEXT;
 
       [array(string|RXML.PCode) def, mapping defaults,
-       string def_scope_name, UserTag ignored] = tagdef;
+       string def_scope_name, UserTag ignored, int no_normal_eval] = tagdef;
       id->misc->last_tag_args = vars = defaults+args;
       scope_name = def_scope_name || name;
 
@@ -2548,6 +2559,7 @@ class UserTag {
 	  }
 #endif
 	}
+
 	content_text = content;
 	user_tag_contents = content || RXML.nil;
 	compile = ctx->make_p_code;
@@ -2605,6 +2617,8 @@ class TagDefine {
 
   class Frame {
     inherit RXML.Frame;
+
+    int preparse;
     array(string|RXML.PCode) def;
     mapping defaults;
     int do_iterate;
@@ -2614,6 +2628,7 @@ class TagDefine {
     string scope_name;
 
     array do_enter(RequestID id) {
+      preparse = 0;
       if (def)
 	// A previously evaluated tag was restored.
 	do_iterate = -1;
@@ -2626,6 +2641,7 @@ class TagDefine {
 	    // it to be overridden in this situation.
 	    vars = identity_vars;
 	    scope_name = args->scope;
+	    preparse = 1;
 	  }
 	}
 	else
@@ -2729,10 +2745,10 @@ class TagDefine {
 	if ((oldtagdef = ctx->misc[lookup_name]) &&
 	    !((user_tag = oldtagdef[3])->flags & RXML.FLAG_EMPTY_ELEMENT) ==
 	    !(moreflags & RXML.FLAG_EMPTY_ELEMENT)) // Redefine.
-	  ctx->misc[lookup_name] = ({def, defaults, args->scope, user_tag});
+	  ctx->misc[lookup_name] = ({def, defaults, args->scope, user_tag, preparse});
 	else {
 	  user_tag = UserTag (n, moreflags);
-	  ctx->misc[lookup_name] = ({def, defaults, args->scope, user_tag});
+	  ctx->misc[lookup_name] = ({def, defaults, args->scope, user_tag, preparse});
 	  ctx->add_runtime_tag(user_tag);
 	}
 	return 0;
@@ -2752,8 +2768,8 @@ class TagDefine {
       parse_error("No tag, variable, if or container specified.\n");
     }
 
-    array save() {return ({def, defaults});}
-    void restore (array saved) {[def, defaults] = saved;}
+    array save() {return ({def, defaults, preparse});}
+    void restore (array saved) {[def, defaults, preparse] = saved;}
   }
 }
 
@@ -6719,9 +6735,17 @@ just got zapped?
  contents.</p>
 </attr>
 
-<attr name='preparse' value='preparse'><p>
- Sends the definition through the RXML parser when defining. (Without
- this attribute, the definition is only RXML parsed when it is invoked.)</p>
+<attr name='preparse'><p>
+ Sends the definition through the RXML parser when the
+ <tag>define</tag> is executed instead of when the defined tag is
+ used.</p>
+
+ <p>Compatibility notes: If the compatibility level is 2.2 or earlier,
+ the result from the RXML parse is parsed again when the defined tag
+ is used, which can be a potential security problem. Also, the
+ <tag>define</tag> tag does not set up a local scope during the
+ preparse pass, which means that the enclosed code will still use the
+ closest surrounding '_' scope.</p>
 </attr>",
 
 	    ([
