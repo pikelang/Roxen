@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.29 2002/04/03 12:02:04 mast Exp $
+//! $Id: utils.pmod,v 1.30 2002/07/17 18:08:51 nilsson Exp $
 
 constant is_RXML_encodable = 1;
 
@@ -40,7 +40,8 @@ final string format_short (mixed val, void|int length)
     else if (mappingp (val)) {
       res += "([";
       if (sizeof (res) >= length) throw (0);
-      array ind = sort (indices (val));
+      array ind = indices (val);
+      catch (ind = sort (ind));	// sort might fail if there are objects without `< or `>.
       for (int i = 0; i < sizeof (ind);) {
 	format_val (ind[i]);
 	res += ": ";
@@ -185,7 +186,7 @@ final int(1..1)|string|array p_xml_entity_cb (object/*(RXML.PXml)*/ p, string st
       }
     }
     else
-      if (entity[0] == ':') str = entity[1..];
+      if (entity[0] == ':') return ({"&", entity[1..], ";"});
       else if (has_value (entity, ".")) {
 	p->drain_output();
 	mixed value = p->handle_var (
@@ -205,7 +206,7 @@ final int(1..1)|string|array p_xml_compat_entity_cb (object/*(RMXL.PXml)*/ p, st
   RXML.Type type = p->type;
   string entity = p->tag_name();
   if (sizeof (entity) && entity[0] != '#')
-    if (entity[0] == ':') str = entity[1..];
+    if (entity[0] == ':') return ({"&", entity[1..], ";"});
     else if (has_value (entity, ".")) {
       p->drain_output();
       mixed value = p->handle_var (
