@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.177 1999/01/21 23:37:14 marcus Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.178 1999/02/15 22:36:15 marcus Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1204,7 +1204,7 @@ string examine_return_mapping(mapping m)
 	res += LOCALE->returned_unknown_bytes();
 
    if (m->data) res += LOCALE->returned_static_data();
-   else if (m->file) res += LOCALE->returned_open_file;
+   else if (m->file) res += LOCALE->returned_open_file();
 
    if (stringp(m->extra_heads["http-content-type"]) ||
        stringp(m->type)) {
