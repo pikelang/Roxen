@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.378 2002/07/04 18:47:33 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.379 2002/07/05 02:10:36 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -132,7 +132,7 @@ string input_charset;
 
 void set_output_charset( string|function to, int|void mode )
 {
-  if( search( output_charset, to ) != -1 ) // Already done.
+  if( has_value( output_charset, to ) ) // Already done.
     return;
 
   switch( mode )
@@ -243,13 +243,11 @@ static array(string) output_encode( string what, int|void allow_entities,
 
 void decode_map( mapping what, function decoder )
 {
-  foreach( indices( what ), mixed q )
+  foreach( what; mixed q; mixed val )
   {
     string ni;
-    mixed val;
     if( stringp( q ) )
       catch { ni = decoder( q ); };
-    val = what[q];
     if( stringp( val ) )
       catch { val = decoder( val ); };
     else if( arrayp( val ) )
@@ -595,7 +593,7 @@ int things_to_do_when_not_sending_from_cache( )
   f = http_decode_string( f );
 
   // f is sent to Unix API's that take NUL-terminated strings...
-  if(search(f, "\0") != -1)
+  if( has_value(f, "\0") )
      sscanf(f, "%s\0", f);
   
   if( strlen( f ) > 5 )
@@ -1631,7 +1629,7 @@ void send_result(mapping|void result)
           if (file["type"][0..4] == "text/") 
           {
             [charset,file->data] = output_encode( file->data, 1 );
-            if( charset && (search(file["type"], "; charset=") == -1))
+            if( charset && has_value(file["type"], "; charset=") )
 	      charset = "; charset="+charset;
             else
               charset = "";
@@ -1718,14 +1716,14 @@ void send_result(mapping|void result)
         }
 	if( catch( head_string += Roxen.make_http_headers( heads ) ) )
 	{
-	  foreach( indices( heads ), string x )
-	    if( stringp( heads[x] ) )
-	      head_string += x+": "+heads[x]+"\r\n";
-	    else if( arrayp( heads[x] ) )
-	      foreach( heads[x], string xx )
+	  foreach( heads; string x; mixed head )
+	    if( stringp( head ) )
+	      head_string += x+": "+head+"\r\n";
+	    else if( arrayp( head ) )
+	      foreach( head, string xx )
 		head_string += x+": "+xx+"\r\n";
 	    else if( catch {
-	      head_string += x+": "+(string)heads[x];
+	      head_string += x+": "+(string)head;
 	    } )
 	      error("Illegal value in headers array! "
 		    "Expected string or array(string)\n");
