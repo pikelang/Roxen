@@ -122,7 +122,7 @@ void set_from_form( RequestID id )
     set( 0 );
 }
 
-string render_form( RequestID id, void|mapping additional_args ) {
+static string create_src( RequestID id ) {
   mapping state = ([ "width":width,
 		     "height":height ]);
   array coord = query();
@@ -136,11 +136,18 @@ string render_form( RequestID id, void|mapping additional_args ) {
   if(map_settings)
     state += map_settings;
 
-  string src = internal_location() + cache->store(state, id);
+  return internal_location() + cache->store(state, id);
+}
+
+string render_view( RequestID id, void|mapping additional_args ) {
+  return Roxen.make_tag( "img", additional_args + ([ "src":create_src(id) ]) );
+}
+
+string render_form( RequestID id, void|mapping additional_args ) {
   string ret = Variable.input(path(), 0, 0, additional_args +
-			([ "src":src,
+			([ "src":create_src(id),
 			   "type":"image" ]) );
-  if(coord)
+  if(query())
     ret += "<submit-gbutton2 name=\""+path()+"R\">"+"Remove marker"+"</submit-gbutton2>";
 
   return ret;
