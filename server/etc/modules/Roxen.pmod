@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.72 2001/03/08 14:35:41 per Exp $
+// $Id: Roxen.pmod,v 1.73 2001/03/12 15:46:23 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2649,6 +2649,7 @@ class ScopePage {
       val = c->id->misc->defines[converter[var]];
     else
       val = c->id->misc->scope_page[var];
+    if (objectp (val) && val->rxml_var_eval) return val;
     return type ? type->encode (val) : val;
   }
 
@@ -2873,7 +2874,7 @@ class FormScope( mapping variables )
     mixed q = variables[ what ];
     if( arrayp(q) && sizeof( q ) == 1 )
       q = q[0];
-    if (type) {
+    if (type && !(objectp (q) && q->rxml_var_eval)) {
       if (arrayp(q) && type->subtype_of (RXML.t_text))
 	q *= "\0";
       return type->encode (q);
