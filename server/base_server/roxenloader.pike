@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.114 1999/11/23 11:02:36 per Exp $
+ * $Id: roxenloader.pike,v 1.115 1999/11/23 15:05:47 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -12,6 +12,8 @@
 #error Roxen 1.4 requires Pike 0.7 or later.
 #endif /* __VERSION__ < 0.7 */
 
+#include <stat.h>
+
 //
 // NOTE:
 //	This file uses replace_master(). This implies that the
@@ -20,7 +22,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.114 1999/11/23 11:02:36 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.115 1999/11/23 15:05:47 per Exp $";
 
 #define perror roxen_perror
 
@@ -479,7 +481,18 @@ static private void initiate_cache()
                lambda(string s){return upper_case(s[0..0])+s[1..];});
 }
 
-class ErrorContainer
+array compile_error_handlers = ({});
+void push_compile_error_handler( object q )
+{
+  compile_error_handlers = ({q})+compile_error_handlers;
+}
+
+void pop_compile_error_handler()
+{
+  compile_error_handlers = compile_error_handlers[1..];
+}
+
+class LowErrorContainer
 {
   string d;
   string errors="";
@@ -509,9 +522,35 @@ class ErrorContainer
   void create()
   {
     d = getcwd();
-    if (sizeof(d) && (d[-1] != '/') && (d[-1] != '\\')) {
+    if (sizeof(d) && (d[-1] != '/') && (d[-1] != '\\'))
       d += "/";
-    }
+  }
+}
+
+class ErrorContainer
+{
+  inherit LowErrorContainer;
+
+  void compile_error(string file, int line, string err)
+  {
+    if( sizeof(compile_error_handlers) )
+      compile_error_handlers->compile_error( file,line, err );
+    else
+      ::compile_error(file,line,err);
+  }
+  void compile_warning(string file, int line, string err)
+  {
+    if( sizeof(compile_error_handlers) )
+      compile_error_handlers->compile_warning( file,line, err );
+    else
+      ::compile_warning(file,line,err);
+  }
+  void `() (string file, int line, string err)
+  {
+    if( sizeof(compile_error_handlers) )
+      compile_error_handlers->compile_error( file,line,err );
+    else
+      ::compile_error(file,line,err);
   }
 }
 
@@ -1041,6 +1080,10 @@ int main(int argc, array argv)
   add_constant("init_logger", init_logger);
   add_constant("open", open);
   add_constant("mkdirhier", mkdirhier);
+
+  add_constant( "ST_MTIME", ST_MTIME );
+  add_constant( "ST_CTIME", ST_CTIME );
+  add_constant( "ST_SIZE",  ST_SIZE );
 
   initiate_cache();
   load_roxen();
