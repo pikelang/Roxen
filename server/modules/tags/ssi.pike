@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.31 2000/07/02 16:59:40 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.32 2000/07/23 15:22:17 nilsson Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -371,7 +371,7 @@ string get_var(string var, RequestID id)
     return "CGI/1.1";
 
    case "server_protocol":
-    return "HTTP/1.0";
+    return id->prot;
 
    case "auth_type":
     return "Basic";
