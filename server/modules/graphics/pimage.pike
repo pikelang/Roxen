@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.1 1997/09/16 01:32:47 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.2 1997/09/18 02:29:08 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -11,17 +11,17 @@ class Constructors
   class Animation
   {
     object img, my_fd;
-    string buffer="";
+    string buffer="", oi;
     int toggle;
 
     void done()
     {
       img = 0; buffer = 0; my_fd = 0;
-      destruct();
     }
 
     void draw_image()
     {
+      if(!img) return;
       if(strlen(buffer))
       {
 	buffer = buffer[my_fd->write(buffer)..];
@@ -35,6 +35,8 @@ class Constructors
       } else {
 	toggle = 1;
 	buffer=img->do_gif_add();
+	if(buffer == oi) buffer=0;
+	oi = buffer;
 	if(buffer) buffer = buffer[my_fd->write(buffer)..];
 	else
 	{
@@ -105,9 +107,11 @@ class Constructors
     string tag(mapping m)
     {
       if(m->notrans) bg=0;
-      if(!image) return "<img src=\"$BASE\" alt=\"\">";
+      if(!image) return "<img src=\"$BASE\" alt=\"\" "
+		   "align=\""+(m->align||"baseline")+"\">";
       return ("<img src=\"$BASE\" alt=\"\" width="+
-	      image->xsize()+" height="+image->ysize()+">");
+	      image->xsize()+" height="+image->ysize()+" align=\""
+	      +(m->align||"baseline")+"\">");
     }
 
     mixed handle(object id)
@@ -287,7 +291,11 @@ class Constructors
 
   object PPM(string fname)
   {
-    return myimage(bg(),image()->fromppm(Stdio.read_bytes(fname)));
+    string q = Stdio.read_bytes(fname);
+    if(!q) q = roxen->try_get_file(dirname(id->not_query)+fname,id);
+    if(!q) throw("Unknown PPM image '"+fname+"'");
+    catch { q = Gz.inflate()->inflate(q); };
+    return myimage(bg(),image()->fromppm(q));
   }
 
   object Roxen( )
