@@ -1,6 +1,6 @@
 // Roxen Locale Support
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: language.pike,v 1.35 2001/01/19 12:41:34 per Exp $
+// $Id: language.pike,v 1.36 2001/02/22 05:18:07 nilsson Exp $
 
 // #pragma strict_types
 
@@ -33,11 +33,12 @@ class container
 container locale = container();
 #endif /* THREADS */
 
-int set_locale(void|string lang)
+int(0..1) set_locale(void|string lang)
   //! Changes the locale of the current thread. If no
   //! argument is given, the default locale if used.
   //! Valid arguments are ISO-639-2 codes, ISO-639-1
-  //! codes and the old symbolic names.
+  //! codes and the old symbolic names. No argument or
+  //! zero sets the locale to the default locale.
 {
   string set;
   if( !(set = verify_locale(lang)) ) {
