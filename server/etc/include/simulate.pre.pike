@@ -5,7 +5,9 @@
 
 #define error(X) throw( ({ (X), backtrace()[0..sizeof(backtrace())-2] }) )
 
+#if !constant(_static_modules)
 inherit "/precompiled/regexp";
+#endif /* _static_modules */
 
 varargs int member_array(mixed needle,mixed *haystack,int start)
 {
@@ -45,14 +47,16 @@ function get_function(object o, string a)
   return functionp(ret) ? ret : 0;
 }
 
+#if !constant(_static_modules)
+/* This is a #define in later versions of Pike */
 string *regexp(string *s, string reg)
 {
-  
   regexp::create(reg);
   s=filter(s,match);
   regexp::create(); /* Free compiled regexp */
   return s;
 }
+#endif /* _static_modules */
 
 void create()
 {
@@ -71,7 +75,9 @@ void create()
   add_constant("m_values",values);
   add_constant("member_array",member_array);
   add_constant("previous_object",previous_object);
+#if !constant(_static_modules)
   add_constant("regexp",regexp);
+#endif
   add_constant("strstr",search);
   add_constant("sum",`+);
   add_constant("this_function",this_function);
