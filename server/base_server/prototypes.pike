@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.81 2004/04/13 18:34:02 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.82 2004/04/13 18:44:11 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -994,13 +994,11 @@ class RequestID
 	heads["Expires"] = Roxen->http_date( predef::time(1)-31557600 );
       } else
 	heads["Expires"] = Roxen->http_date( predef::time(1)+misc->cacheable );
-#if 0
       if (misc->cacheable < INITIAL_CACHEABLE) {
 	// Data with expiry is assumed to have been generated at the
 	// same instant.
 	misc->last_modified = predef::time(1);
       }
-#endif /* 0 */
     }
 
     if (misc->last_modified)
@@ -1042,8 +1040,11 @@ class RequestID
     //if( file->len > 0 || (file->error != 200) )
     heads["Content-Length"] = (string)file->len;
 
+    if (misc->etag)
+      heads->ETag = misc->etag;
+
 #ifdef RAM_CACHE
-    if (!(heads->ETag = misc->etag) && file->len &&
+    if (!misc->etag && file->len &&
 	(file->data || file->file) &&
 	file->error == 200 && (<"HEAD", "GET">)[method] &&
 	(file->len < conf->datacache->max_file_size)) {
