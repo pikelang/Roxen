@@ -10,6 +10,9 @@ o The FTP-protocol module now supports named FTP. This is implemented by
   One interesting feature is that users using named FTP can still see
   the anonymous tree.
 
+o Added support for MODULE_FIRST modules to the FTP-protocol module. This
+  allows for using .htaccess-files to restrict access to certain directories.
+
 o Install-script updated.
 
 o Now sets --prefix to . for the Pike-tree.
