@@ -4,7 +4,7 @@
  * doc = "Handles the conversion of numbers and dates to English. You have to restart the server for updates to take effect.";
  */
 
-string cvs_version = "$Id: english.pike,v 1.8 1998/09/22 15:00:55 grubba Exp $";
+string cvs_version = "$Id: english.pike,v 1.9 1999/08/30 09:33:02 per Exp $";
 string month(int num)
 {
   return ({ "January", "February", "March", "April", "May",
@@ -125,7 +125,6 @@ string number(int num)
    case 1000000: case 1000100..999999999:
      return number(num/1000000)+" million "+number(num%1000000);
    default:
-    perror("foo\n"+ num +"\n");
     return "many";
   }
 }

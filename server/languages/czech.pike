@@ -1,4 +1,5 @@
 #charset iso-8859-2
+
 /* name="Czech language support for Roxen";
    doc="Author: Jan Petrous 16.10.1997<br>"
    "Based on Slovenian language module by Iztok Umek<br>"
@@ -13,7 +14,7 @@
              		(First letter must be lower case)
 
 */
-string cvs_version = "$Id: czech.pike,v 1.7 1999/06/16 21:59:53 grubba Exp $";
+string cvs_version = "$Id: czech.pike,v 1.8 1999/08/30 09:33:02 per Exp $";
 string month(int num)
 {
   return ({ "ledna", "únor", "bøezna", "dubna", "kvìtna",
@@ -112,7 +113,6 @@ string number(int num)
    case 1000000..999999999: 
      return (number(num/1000000)+" milion "+number(num%1000000));
    default:
-    perror("foo\n"+ num +"\n");
     return ("hodnì");
   }
 }

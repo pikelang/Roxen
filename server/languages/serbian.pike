@@ -8,7 +8,7 @@
    Please consult me before upgrading serbian.pike.
 */
 
-string cvs_version = "$Id: serbian.pike,v 1.4 1998/07/11 18:54:14 grubba Exp $";
+string cvs_version = "$Id: serbian.pike,v 1.5 1999/08/30 09:33:02 per Exp $";
 string month(int num)
 {
   return ({ "Januar", "Februar", "Mart", "April", "Maj",
@@ -115,7 +115,6 @@ string number(int num)
      if (((num%10000)/1000)==2) return number((num-(num%10000))/1000)+" dve hiljade "+number(num%1000); 
      if (((num%10000)/1000)==1) return number((num-(num%10000))/1000)+" jedna hiljada "+number(num%1000); };
     if ((num>4999) && (num<1000000)) return number(num/1000)+" hiljada "+number(num%1000);
-    perror("uf\n"+ num +"\n");
     return "mnogo";
   }
 }

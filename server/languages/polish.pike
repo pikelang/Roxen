@@ -1,4 +1,5 @@
 /* Bugs by: Mak */
+#charset iso-8859-2
 /*
  * name = "Polish language plugin ";
  * doc = "Handles the conversion of numbers and dates to polish. You have to restart the server for updates to take effect.";
@@ -8,7 +9,7 @@
  * Character encoding: ISO-8859-2
  */
 
-string cvs_version = "$Id: polish.pike,v 1.1 1999/01/13 03:44:03 grubba Exp $";
+string cvs_version = "$Id: polish.pike,v 1.2 1999/08/30 09:33:02 per Exp $";
 string month(int num)
 {
   return ({ "Styczeñ", "Luty", "Marzec", "Kwiecieñ", "Maj",
@@ -124,7 +125,6 @@ string number(int num)
 	     return number(num/1000000)+" millionów "+number(num%1000000);
      }
    default:
-    perror("foo\n"+ num +"\n");
     return "wiele";
   }
 }
@@ -139,6 +139,3 @@ array aliases()
 {
   return ({ "pl", "po", "pol", "polish" });
 }
-
-
-

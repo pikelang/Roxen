@@ -10,7 +10,7 @@
 
 
 
-string cvs_version = "$Id: croatian.pike,v 1.5 1999/06/16 21:59:52 grubba Exp $";
+string cvs_version = "$Id: croatian.pike,v 1.6 1999/08/30 09:33:02 per Exp $";
 string month(int num)
 {
   return ({ "Sijecanj", "Veljaca", "Ozujak", "Travanj", "Svibanj",
@@ -118,7 +118,7 @@ number((num-(num%1000))/1000)+" tisuce "+number(num%1000);
      if (((num%10000)/1000)==2) return number((num-(num%10000))/1000)+" dvije tisuce "+number(num%1000);
      if (((num%10000)/1000)==1) return number((num-(num%10000))/1000)+" tisucu "+number(num%1000); };
     if ((num>4999) && (num<1000000)) return number(num/1000)+" tisuca "+number(num%1000);
-    perror("uf\n"+ num +"\n");
+    werror("uf\n"+ num +"\n");
     return "mnogo";
   }
 }
