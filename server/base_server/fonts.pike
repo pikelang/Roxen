@@ -1,9 +1,9 @@
-/* $Id: fonts.pike,v 1.44 2000/02/16 07:08:37 per Exp $ */
+/* $Id: fonts.pike,v 1.45 2000/02/16 14:21:11 per Exp $ */
 
 #include <module_constants.h>
 #include <module.h>
 
-constant Font = Image.font;
+constant Font = Image.Font;
 
 string fix_name(string in)
 {
