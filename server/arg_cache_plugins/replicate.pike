@@ -42,15 +42,21 @@ static class Server( string secret )
   }
 }
 
+void low_initiate_servers()
+{
+  catch {
+    mapping(string:Server) tmp_servers = ([]);
+    foreach( sQUERY( "SELECT secret FROM servers" )->secret, string s )
+      tmp_servers[s] = Server( s );
+    servers = tmp_servers;
+  };
+}
 
 void initiate_servers()
 {
   // Locate new servers every minute.
   call_out( initiate_servers, 60 );
-  
-  servers = ([]);
-  foreach( sQUERY( "SELECT secret FROM servers" )->secret, string s )
-    servers[s] = Server( s );
+  low_initiate_servers();
 }
 
 mapping(string:Server) servers;
@@ -188,7 +194,7 @@ int create_key( int id, string data, string|void server )
     catch {
       sQUERY( "INSERT INTO servers (secret) VALUES (%s)", server );
     };
-    initiate_servers();
+    low_initiate_servers();
   }
   string secret = server||cache->secret;
   
