@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.99 2000/03/13 06:08:25 per Exp $
+# $Id: start,v 1.100 2000/03/24 19:09:05 grubba Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -12,6 +12,11 @@ LOGDIR=../logs/
 FILES="default"
 program=base_server/roxenloader.pike
 extra_args=""
+VARDIR=../var/
+LOCALDIR=../local/
+
+# Make LOCALDIR an absolute path
+LOCALDIR=`cd $LOCALSIR; pwd`
 
 roxen_version() {
    VERSION="`sed <etc/include/version.h -e'/__roxen_version__/s/[^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9]*/\1/p' -ed | head -1`"
@@ -19,7 +24,7 @@ roxen_version() {
    echo $VERSION.$BUILD
 }
 
-pcdir="../var/`roxen_version`/precompiled/`uname -m`.`uname -r`"
+pcdir="$VARDIR/`roxen_version`/precompiled/`uname -m`.`uname -r`"
 old_roxen_defines="$pcdir/old_roxen_defines"
 ./mkdir -p $pcdir
 
@@ -30,8 +35,8 @@ verbose=1
 roxendir="`pwd`"
 
 # Set up environment
-if test -f etc/environment; then
-  . etc/environment
+if test -f $LOCALDIR/environment; then
+  . $LOCALDIR/environment
 fi
 
 # Make sure $CLASSPATH contains the servlet stuff
@@ -42,8 +47,8 @@ export CLASSPATH
 pike=`type pike|head -1|sed -e 's,.*is ,,'`
 if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
 if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
-if [ -x ../local/bin/pike ] ; then pike=$roxendir/../local/bin/pike; fi
-if [ -x ../local/bin/roxen ] ; then  pike=$roxendir/../local/bin/roxen; fi
+if [ -x $LOCALDIR/bin/pike ] ; then pike=$LOCALDIR/bin/pike; fi
+if [ -x $LOCALDIR/bin/roxen ] ; then pike=$LOCALDIR/bin/roxen; fi
 if [ "x$PIKE" = "x" ]; then :; else
   if [ -x "$PIKE" ]; then pike="$PIKE"; fi
 fi
@@ -400,8 +405,8 @@ if [ -d etc/include ]; then
   DEFINES="$DEFINES -I$roxendir/etc/include"
 fi
 
-if [ -d ../local/include ]; then
-  DEFINES="$DEFINES -I$roxendir/../local/include"
+if [ -d $LOCALDIR/include ]; then
+  DEFINES="$DEFINES -I$LOCALDIR/include"
 fi
 
 # Extra include-path (2)
@@ -409,27 +414,27 @@ if [ -d base_server ]; then
   DEFINES="$DEFINES -I$roxendir/base_server"
 fi
 
-if [ -d ../local/base_server ]; then
-  DEFINES="$DEFINES -I$roxendir/../local/base_server -P$roxendir/../local/base_server"
+if [ -d $LOCALDIR/base_server ]; then
+  DEFINES="$DEFINES -I$LOCALDIR/base_server -P$LOCALDIR/base_server"
 fi
 
 # Extra program-path
 DEFINES="$DEFINES -P`pwd`"
 
 # Support for adding local pike-modules
-if [ -d ../local/etc/. ]; then
+if [ -d $LOCALDIR/etc/. ]; then
   # Extra module-path
-  if [ -d ../local/etc/modules/. ]; then
-    DEFINES="$DEFINES -M$roxendir/../local/etc/modules"
+  if [ -d $LOCALDIR/etc/modules/. ]; then
+    DEFINES="$DEFINES -M$LOCALDIR/etc/modules"
   fi
 
   # Extra include-path
-  if [ -d ../local/etc/include ]; then
-    DEFINES="$DEFINES -I$roxendir/../local/etc/include"
+  if [ -d $LOCALDIR/etc/include ]; then
+    DEFINES="$DEFINES -I$LOCALDIR/etc/include"
   fi
 
   # Extra program-path
-  DEFINES="$DEFINES -P$roxendir/../local/etc"
+  DEFINES="$DEFINES -P$LOCALDIR/etc"
 fi
 
 # Extra kludge for HPUX
