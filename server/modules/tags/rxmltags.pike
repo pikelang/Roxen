@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.313 2001/09/27 13:30:25 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.314 2001/09/27 20:38:31 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -445,7 +445,7 @@ class TagUnset {
     inherit RXML.Frame;
     array do_return(RequestID id) {
       if(!args->variable && !args->scope)
-	parse_error("No variable nor scope specified.\n");
+	parse_error("Neither variable nor scope specified.\n");
       if(!args->variable && args->scope!="roxen") {
 	RXML_CONTEXT->add_scope(args->scope, ([]) );
 	return 0;
@@ -2954,9 +2954,6 @@ class TagStrLen {
 class TagCase {
   inherit RXML.Tag;
   constant name = "case";
-#if ROXEN_COMPAT > 2.1
-  mapping(string:RXML.Type) req_arg_types = (["case": RXML.t_xml (RXML.PEnt)]);
-#endif
 
   class Frame {
     inherit RXML.Frame;
@@ -2985,15 +2982,16 @@ class TagCase {
 	    op = "capitalized";
 	    break;
 	  default:
-#if ROXEN_COMPAT > 2.1
-	    parse_error ("Invalid value %O to the case argument.\n", args->case);
-#endif
+	    if (compat_level > 2.1)
+	      parse_error ("Invalid value %O to the case argument.\n", args->case);
 	}
-#if ROXEN_COMPAT > 2.1
-	parse_error ("Content of type %s doesn't handle being %s.\n",
-		     content_type->name, op);
-#endif
+	if (compat_level > 2.1)
+	  parse_error ("Content of type %s doesn't handle being %s.\n",
+		       content_type->name, op);
       }
+      else
+	if (compat_level > 2.1)
+	  parse_error ("Argument \"case\" is required.\n");
 
 #if ROXEN_COMPAT <= 1.3
       if(args->lower) {
