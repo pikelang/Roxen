@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.48 1998/02/15 00:13:56 noring Exp $
+/* $Id: wizard.pike,v 1.49 1998/02/19 16:45:30 mirar Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -295,7 +295,10 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 "    <tr><td valign=top><table width=100% height=100% cellspacing=0 cellpadding=5>\n<tr><td valign=top>\n"
 	 "<font size=+2>"+make_title()+"</font>"
 	 " </td>\n<td align=right>"+
-	 (max_page?"Page "+(page+1)+"/"+(max_page+1):"")+"</td>\n"
+	 (wiz_name=="done"
+	  ?"Completed"
+	  :(max_page?"Page "+(page+1)+"/"+(max_page+1):""))+
+	 "</td>\n"
 	  " \n<td align=right>"+
 	 (foo->help && !id->variables->help?
 	  "<font size=-1><input type=image name=help src="+
@@ -311,15 +314,18 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 "\n<!-- End of the output from the page function -->\n"
 	 "\n</td></tr></table>\n"
 	 "      <table width=100%><tr><td width=33%>"+
-	 (page>0?
+	 ((page>0 && wiz_name!="done")?
 	  "        <input type=submit name=prev_page value=\"<- Previous\">":"")+
 	 "</td><td width=33% align=center >"+
-	 (page==max_page?
-	  "        <input type=submit name=ok value=\" Ok \">":"")+
-	 "         <input type=submit name=cancel value=\" Cancel \">"+
-	 "</td>"
+	 (wiz_name!="done"
+	  ?((page==max_page
+	     ?"        <input type=submit name=ok value=\" Ok \">"
+	     :"")+
+	    "         <input type=submit name=cancel value=\" Cancel \">")
+	  :"         <input type=submit name=cancel value=\" Ok \">")+
+	  "</td>"
 	 "</td><td width=33% align=right >"+
-	 (page!=max_page?
+	 ((page!=max_page && wiz_name!="done")?
 	  "        <input type=submit name=next_page value=\"Next ->\">":"")+
 	 "</td></tr></table>"
 	 "    </td><tr>\n"
@@ -422,6 +428,7 @@ mapping get_actions(string base,string dir, array args)
   foreach(get_dir(dir), string act)
   {
     mixed err;
+    _master->set_inhibit_compile_errors(0);
     err = catch
     {
       if(act[0]!='#' && act[-1]=='e')
