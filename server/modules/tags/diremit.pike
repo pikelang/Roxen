@@ -70,7 +70,7 @@ class TagDirectoryplugin
       if( opt["real-file"] )
       {
         string file = m->path;
-        foreach( id->conf->location_modules( id ), mixed tmp )
+        foreach( id->conf->location_modules( ), mixed tmp )
         {
           if(!search(file, tmp[0]))
           {
