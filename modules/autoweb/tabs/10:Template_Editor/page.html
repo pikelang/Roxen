@@ -1,15 +1,5 @@
 
-<if variable=types>
-<sqloutput query="select * from template_vars">
-  #name# #type# <br>
-</sqloutput>
-<br>
-</if>
-
-<if variable=help>
-<wizard help>
-<sqlquery help>
-</if>
+<comment><templateeditorp>t</templateeditorp></comment>
 
 <pike>
   id->variables->show_wizard=!(id->variables->ok||id->variables->cancel);
@@ -306,41 +296,24 @@
         "£template_scheme_id£</sqloutput>";
     </pike></cset>
   </formoutput>
-  <formoutput quote='¤'>
-    <sqloutput quote='£' query="select * from template_schemes where
-                                id=¤current_scheme¤">
-      <b>Active template:</b> £name:quote=mysql£<br>
-    </sqloutput>
-  </formoutput>
-  
-  <h3>Template</h3>
-  <blockquote><dl>
-    <dt><font size=+1>
-      <a href="./?edit=change_scheme">Change...</a>
-    </font>
-    <dd>Change active template
-    
-    <dt><font size=+1>
-      <a href="./?edit=load_scheme">Load...</a>
-    </font>
-    <dd>Load predefined template
 
-    <dt><font size=+1>
-      <a href="./?edit=new_scheme">New...</a>
-    </font>
-    <dd>Create a new template
-    
-    <dt><font size=+1>
-      <a href="./?edit=remove_scheme">Remove...</a>
-    </font>
-    <dd>Remove template
-    
-    <dt><font size=+1>
-      <a href="./?edit=apply_scheme">Apply...</a>
-    </font>
-    <dd>Apply template to the web site
-  </dl></blockquote>
+  <comment><toolbar><toolbarlayout>
+    <toolbarbuttonlayout name="Apply" href="./?apply=apply"
+                         help="Apply template to the web site">
 
+    <toolbarbuttonlayout name="Load..." href="./?edit=load_scheme"
+                         help="Load predefined template">
+			 
+    <toolbarbuttonlayout name="New..." href="./?edit=new_scheme"
+                         help="Create a new template">
+			 
+    <toolbarbuttonlayout name="Change..." href="./?edit=change_scheme"
+                         help="Change active template">
+
+    <toolbarbuttonlayout name="Remove..." href="./?edit=remove_scheme"
+                         help="Remove template">
+			 
+  </toolbarlayout></toolbar></comment>
   <h3>Layout</h3>
   <blockquote><dl>
     <sqloutput query="select * from template_wizards where category='tmpl'">
@@ -349,7 +322,7 @@
       </font>
       <dd>#title#
     </sqloutput>
-  </dl></blockquote>
+  </dl></blockquote><br>
 
   <h3>Navigation</h3>
   <blockquote><dl>
@@ -359,7 +332,17 @@
       </font>
       <dd>#title#
     </sqloutput>
-  </dl></blockquote>
+  </dl></blockquote><br>
+  <h3>Template Functions</h3>
+  <formoutput quote='¤'>
+    <sqloutput quote='£' query="select * from template_schemes where
+                                id=¤current_scheme¤">
+      <b>Active template:</b> £name:quote=mysql£<br>
+    </sqloutput>
+  </formoutput>
+  <if variable=apply>
+    <autosite-webadm-update-template>
+  </if>
 </if>
 
 <comment>

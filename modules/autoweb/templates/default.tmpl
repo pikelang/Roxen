@@ -1,3 +1,4 @@
+<cset variable=templateeditorp><tmplinsert tag=templateeditorp></cset>
 <cset variable=htmleditorp><tmplinsert tag=htmleditorp></cset>
 <cset variable=menueditorp><tmplinsert tag=menueditorp></cset>
 
@@ -126,6 +127,17 @@
 <if variable="menueditorp is t">
   <tmplinsert tag=content>
   <tmplinsert tag=toolbar>
+  <cset variable=else></cset>
+</if>
+
+<if variable="templateeditorp is t">
+  <tmplinsert tag=content>
+  <if variable=show_menu>
+    <tmplinsert tag=toolbar>
+    <if variable=apply>
+      <b>Active template is applied to the website</b>
+    </if>
+  </if>
   <cset variable=else></cset>
 </if>
 

@@ -26,6 +26,9 @@ int verify_0( object id )
 
 mixed wizard_done( object id )
 {
+  string path;
+  if(sscanf(id->variables->path, "%s/index.html", path)>0)
+    id->variables->path = path+"/";
   object file = AutoFile(id, "top.menu");
   array menu = MenuFile()->decode(file->read());
   menu += ({ ([ "url":id->variables->path, "title":id->variables->title ]) });

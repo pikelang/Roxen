@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.19 1998/08/10 20:25:58 wellhard Exp $
+ * $Id: webadm.pike,v 1.20 1998/08/11 18:53:24 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.19 1998/08/10 20:25:58 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.20 1998/08/11 18:53:24 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -210,7 +210,9 @@ string make_tablist(array(object) tabs, object current, object id)
 
 int validate_customer(object id)
 {
-  // werror("Validating customer: %O", id->misc->customer_id);
+  // werror("Validating user customer: %O, %O\n",
+  //	 id->misc->customer_id,
+  //	 credentials[id->misc->customer_id]);
   catch {
     return equal(credentials[id->misc->customer_id],
 		 ((id->realauth||"*:*")/":"));
@@ -223,10 +225,13 @@ string validate_admin(object id)
 {
   string user = ((id->realauth||"*:*")/":")[0];
   string key = ((id->realauth||"*:*")/":")[1];
+  //  werror("Validating admin customer: %O, %O, %O, %O, %O\n",
+  //	 id->misc->customer_id, user, key,
+  //	 query("admin_user"), query("admin_pass"));
   catch {
     if((id->misc->customer_id) &&
        (user == query("admin_user")) &&
-       (key == query("admin_pass")))
+       (crypt(key, query("admin_pass"))))
       return "admin";
   };
   return 0;
