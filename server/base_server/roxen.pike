@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.693 2001/08/13 18:21:58 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.694 2001/08/13 19:09:05 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -426,7 +426,7 @@ private void low_shutdown(int exit_code)
       stop_handler_threads();
 #endif /* THREADS */
     };
-    exit(-1);	// Restart.
+    exit(exit_code);
   }
 
 #ifdef SNMP_AGENT
@@ -676,8 +676,8 @@ void hold_handler_threads()
 void release_handler_threads (int numthreads)
 //! Releases any handler threads put on hold. If necessary new threads
 //! are started to ensure that at least @[numthreads] threads are
-//! responding. Any thread that haven't arrived to the hold state
-//! since @[hold_handler_threads] is considered nonresponding.
+//! responding. Threads that haven't arrived to the hold state since
+//! @[hold_handler_threads] are considered nonresponding.
 {
   if (Thread.Condition cond = hold_wakeup_cond) {
     // Flush out any remaining hold messages from the queue.
@@ -695,14 +695,12 @@ void release_handler_threads (int numthreads)
     int blocked_threads = number_of_threads - threads_on_hold;
     int threads_to_create = numthreads - threads_on_hold;
 
-    THREAD_WERR("Releasing " + was_on_hold + " threads on hold");
+    THREAD_WERR("Releasing " + threads_on_hold + " threads on hold");
     cond->broadcast();
 
     if (threads_to_create > 0) {
       array(object) new_threads = ({});
-      for (threads_to_create = 0;
-	   threads_on_hold < numthreads;
-	   number_of_threads++, threads_to_create++)
+      for (int n = 0; n < threads_to_create; number_of_threads++, n++)
 	new_threads += ({ do_thread_create( "Handle thread [" +
 					    number_of_threads + "]",
 					    handler_thread, number_of_threads ) });
