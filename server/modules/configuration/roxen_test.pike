@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.18 2001/03/24 02:34:41 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.19 2001/03/29 01:47:20 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -81,10 +81,12 @@ string canon_html(string in) {
 // --- XML-based test files -------------------------------
 
 void xml_add_module(string t, mapping m, string c) {
+  conf->enable_module(c);
   return;
 }
 
-void xml_remove_module(string t, mapping m, string c) {
+void xml_drop_module(string t, mapping m, string c) {
+  conf->disable_module(c);
   return;
 }
 
@@ -245,7 +247,7 @@ void run_xml_tests(string data) {
   ltests=0;
   lfails=0;
   Parser.HTML()->add_containers( ([ "add-module" : xml_add_module,
-				    "remove-module" : xml_remove_module,
+				    "drop-module" : xml_drop_module,
 				    "test" : xml_test,
 				    "comment": xml_comment,
   ]) )->finish(data);
@@ -289,7 +291,7 @@ void continue_find_tests( )
 	foreach( get_dir( dir ), string f )
 	  file_stack->push( dir+f );
       }
-      else if( glob("*/RoxenTest_*", file ) )
+      else if( glob("*/RoxenTest_*", file ) && file[-1]!='~')
       {
 	report_debug("\nFound test file %s\n",file);
 	int done;
