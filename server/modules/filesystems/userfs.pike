@@ -20,7 +20,7 @@
 
 inherit "chili-module:filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.75 2004/07/11 16:42:07 _cvs_stephen Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.76 2004/08/12 06:55:57 agehall Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "File systems: User file system";
 constant module_doc  =
@@ -335,7 +335,7 @@ mapping|array find_dir(string f, RequestID id)
       if((!us) || BAD_PASSWORD(us))
 	return 0;
       // FIXME: Use the banish multiset.
-      if(query("banish_list")[u])
+      if(has_value(query("banish_list"),u))
 	return 0;
       if(us[5][-1] != '/')
 	f = us[ 5 ] + "/" + query("pdir") + f;
@@ -376,7 +376,7 @@ Stat stat_file(string f, RequestID id)
       if((!us) || BAD_PASSWORD(us))
 	return 0;
       // FIXME: Use the banish multiset.
-      if(query("banish_list")[u])
+      if(has_value(query("banish_list"),u))
 	return 0;
       if(us[5] == "") {
 	// No home directory.
