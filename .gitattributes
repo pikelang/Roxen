@@ -1,5 +1,6 @@
 [attr]binary -text -crlf -diff -ident
 * text ident
+*.bat eol=crlf
 *.gif binary
 *.gz binary
 *.jpg binary
