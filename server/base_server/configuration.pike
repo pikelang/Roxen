@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.373 2000/09/19 09:24:47 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.374 2000/09/19 12:10:04 jhs Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -551,8 +551,10 @@ public void log(mapping file, RequestID request_id)
 }
 
 public array(string) userinfo(string u, RequestID|void id)
+//! Fetches user information from the authentication module by calling
+//! its userinfo() method. Returns zero if no auth module was present.
 {
-  if(auth_module) return auth_module->userinfo(u);
+  if(auth_module) return auth_module->userinfo(u, id);
   else report_warning(sprintf("userinfo(): %s\n"
 			      "%s\n",
 			      LOC_M(38, "No authorization module"),
@@ -560,8 +562,11 @@ public array(string) userinfo(string u, RequestID|void id)
 }
 
 public array(string) userlist(RequestID|void id)
+//! Fetches the full list of valid usernames from the authentication
+//! module by calling its userlist() method. Returns zero if no auth
+//! module was present.
 {
-  if(auth_module) return auth_module->userlist();
+  if(auth_module) return auth_module->userlist(id);
   else report_warning(sprintf("userlist(): %s\n"
 			      "%s\n",
 			      LOC_M(38, "No authorization module"),
@@ -569,9 +574,12 @@ public array(string) userlist(RequestID|void id)
 }
 
 public array(string) user_from_uid(int u, RequestID|void id)
+//! Return the user data for id u from the authentication module. The
+//! id parameter might be left out if FTP. Returns zero if no auth
+//! module was present.
 {
   if(auth_module)
-    return auth_module->user_from_uid(u);
+    return auth_module->user_from_uid(u, id);
   else report_warning(sprintf("user_from_uid(): %s\n"
 			      "%s\n",
 			      LOC_M(38, "No authorization module"),
