@@ -4,9 +4,7 @@
 /server/tools/ntroxen/startdll/enumproc.c eol=crlf
 *.cif binary
 *.cpp eol=crlf
-/server/tools/roxenstarter/roxenstarter.cpp -text -crlf
 *.dsp eol=crlf
-*.dsw eol=crlf
 *.gif binary
 /server/tools/ntroxen/ntstart/StdAfx.h eol=crlf
 /server/tools/ntroxen/ntstart/resource.h eol=crlf
@@ -352,5 +350,4 @@ worldmap binary
 /server/tools/ntroxen/startdll/startdll.idl foreign_ident
 /server/tools/ntroxen/version.h foreign_ident
 /server/tools/roxenis.mib foreign_ident
-/server/tools/roxenstarter/roxenstarter.cpp foreign_ident
 /start foreign_ident
