@@ -25,7 +25,7 @@ mixed *register_module()
 }
 
 
-constant cvs_version="$Id: newpikescript.pike,v 1.1 1998/03/20 03:37:09 per Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.2 1998/03/24 02:32:13 per Exp $";
 constant thread_safe=1;
 
 void create()
@@ -59,7 +59,6 @@ object server_for(int uid, int gid)
     {
       string host, key;
       int port;
-      werror("Read info: %O\n", data);
       sscanf(data, "%s %d\n%s", host, port, key);
       catch 
       {
@@ -138,9 +137,15 @@ mapping handle_file_extension(object file, string ext, object id)
   mixed res;
   if(err = catch(res=server->call_pikescript
 		 (file_name, roxen,mkmapping(indices(id),values(id)))))
+  {
+    if(!id->misc->__idipikescripterror++)
+    {
+      destruct(server);
+      return handle_file_extension(file,ext,id);
+    }
     throw(err);
-//   destruct( server );
-  if(stringp(res)) 
+  }
+  if(stringp(res))
     return http_string_answer(parse_rxml(res, id));
   return res;
 }
@@ -164,8 +169,9 @@ object get_pikescript(string file, mixed id)
   last_call = time();
   if(!scripts[file] || id->pragma["no-cache"])
   {
-    string data = cpp("#define roxen globals->roxen\n"+Stdio.read_bytes(file));
-    return scripts[file] = compile_string(data, file)();
+    string data = cpp("#define roxen globals->roxen\n# 1 \""+file+"\"\n"
+		      +Stdio.read_bytes(file), file);
+    return scripts[file] = compile(data)();
   }
   return scripts[file];
 }
