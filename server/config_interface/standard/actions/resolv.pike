@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.2 2000/02/20 05:33:29 mast Exp $
+ * $Id: resolv.pike,v 1.3 2000/03/02 21:00:40 mast Exp $
  */
 
 inherit "wizard";
@@ -245,6 +245,6 @@ string parse(object id)
     resolv += "</ol>";
     res += "<p><blockquote>"+resolv+"</blockquote>";
   }
-    id->variables->path = op;
+    id->variables->path = op || "";
   return res;
 }
