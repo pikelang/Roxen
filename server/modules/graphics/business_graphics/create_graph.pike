@@ -157,7 +157,16 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   if (diagram_data["type"]=="bars")
     diagram_data["xminvalue"]=0;
 
-
+  if (diagram_data["type"]=="sumbars")
+    {
+      diagram_data["xminvalue"]=0;
+      if (diagram_data["subtype"]=="norm")
+	{
+	  diagram_data["yminvalue"]=0;
+	  if (!(diagram_data["labels"]))
+	    diagram_data["labels"]=({"", "%", "", ""});
+	}
+    }
   if ((diagram_data["subtype"]==0) ||
       (diagram_data["subtype"]==""))
     diagram_data["subtype"]="line";
@@ -172,41 +181,80 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 	(diagram_data["drawtype"]==""))
       diagram_data["drawtype"]="2D";
 
-  foreach(diagram_data["data"], array(float) d)
+  if (diagram_data["type"]=="sumbars")
     {
-      int j=sizeof(d);
-
-      if (diagram_data["type"]=="graph")
+      int j=sizeof(diagram_data["data"]);
+      float k;
+      if (diagram_data["subtype"]=="norm")
+	{
+	  int j2=sizeof(diagram_data["data"][0]);
+	  for(int i=0; i<j2; i++)
+	    {
+	      k=`+(@column(diagram_data["data"], i));
+	      if (k<LITET)
+		k=LITET;
+	      else
+		k=100.0/k;
+	      for(int i2=0; i2<j; i2++)
+		diagram_data["data"][i2][i]*=k;
+	    }
+	  yminvalue=0.0;
+	  ymaxvalue=100.0;
+	  
+	}
+      else
 	for(int i; i<j; i++)
 	  {
-	    float k;
-	    if (xminvalue>(k=d[i]))
-	      xminvalue=k;
-	    if (xmaxvalue<(k=d[i]))
-	      xmaxvalue=k;
-	    if (yminvalue>(k=d[++i]))
+	    if (yminvalue>(k=`+(@column(diagram_data["data"], i))))
 	      yminvalue=k;
-	    if (ymaxvalue<(k=d[i]))
+	    if (ymaxvalue<(k))
 	      ymaxvalue=k;
 	  }
-      else
-	if ((diagram_data["type"]=="bars")||
-	    (diagram_data["type"]=="pie"))
+      xminvalue=0.0;
+      xmaxvalue=10.0;
+      
+
+    }
+  else
+    foreach(diagram_data["data"], array(float) d)
+      {
+	int j=sizeof(d);
+	
+	if (diagram_data["type"]=="graph")
 	  for(int i; i<j; i++)
 	    {
-	      float k; 
-	      if (yminvalue>(k=d[i]))
+	      float k;
+	      if (xminvalue>(k=d[i]))
+		xminvalue=k;
+	      if (xmaxvalue<(k))
+		xmaxvalue=k;
+	      if (yminvalue>(k=d[++i]))
 		yminvalue=k;
-	      if (ymaxvalue<(k=d[i]))
+	      if (ymaxvalue<(k))
 		ymaxvalue=k;
-	      xminvalue=0.0;
-	      xmaxvalue=10.0;
 	    }
 	else
-	  throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
-	backtrace()}));
-      //werror("\""+diagram_data["type"]+"is an unknown graph type!");
-    }
+	  if ((diagram_data["type"]=="bars")||
+	      (diagram_data["type"]=="pie"))
+	    for(int i; i<j; i++)
+	      {
+		float k; 
+		if (yminvalue>(k=d[i]))
+		  yminvalue=k;
+		if (ymaxvalue<(k))
+		  ymaxvalue=k;
+		xminvalue=0.0;
+		xmaxvalue=10.0;
+	      }
+	  else
+	    throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
+		     backtrace()}));
+      }
+
+  if (diagram_data["type"]=="sumbars")
+    diagram_data["box"]=0;
+
+
   xmaxvalue=max(xmaxvalue, xminvalue+LITET);
   ymaxvalue=max(ymaxvalue, yminvalue+LITET);
 
@@ -239,7 +287,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 
   //Ge tomma namn på xnames om namnen inte finns
   //Och ge bars max och minvärde på x-axeln.
-  if (diagram_data["type"]=="bars")
+  if ((diagram_data["type"]=="bars")||(diagram_data["type"]=="sumbars"))
     {
       if (!(diagram_data["xnames"]))
 	diagram_data["xnames"]=allocate(sizeof(diagram_data["data"][0]));
@@ -453,6 +501,7 @@ mapping set_legend_size(mapping diagram_data)
       write("J:"+j+"\n");
       if ((diagram_data["type"]=="graph") ||
 	  (diagram_data["type"]=="bars") ||
+	  (diagram_data["type"]=="sumbars") ||
 	  (diagram_data["type"]=="pie"))
 	for(int i=0; i<j; i++)
 	  {
@@ -693,8 +742,11 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	label=diagram_data["labels"][0]+" ["+diagram_data["labels"][2]+"]"; //Xstorhet
       else
 	label=diagram_data["labels"][0];
-      labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
-	write(label)->scale(0,diagram_data["labelsize"]);
+      if ((label!="")&&(label!=0))
+	labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
+	  write(label)->scale(0,diagram_data["labelsize"]);
+      else
+	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
       labely=diagram_data["labelsize"];
       labelx=labelimg->xsize();
     }
@@ -1190,8 +1242,11 @@ graph->
 	label=diagram_data["labels"][1]+" ["+diagram_data["labels"][3]+"]"; //Ystorhet
       else
 	label=diagram_data["labels"][1];
-      labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
-	write(label)->scale(0,diagram_data["labelsize"]);
+      if ((label!="")&&(label!=0))
+	labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
+	  write(label)->scale(0,diagram_data["labelsize"]);
+      else
+	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
       
       
 	//if (labelimg->xsize()> graph->xsize())
