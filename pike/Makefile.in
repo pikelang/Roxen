@@ -1,5 +1,9 @@
 @SET_MAKE@
 
+CFLAGS=@CFLAGS@
+WARN=@WARN@
+OPTIMIZE=@OPTIMIZE@
+
 all:
 	(cd src; $(MAKE))
 
