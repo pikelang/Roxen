@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.213 2000/08/07 17:17:26 kuntri Exp $
+// $Id: rxml.pike,v 1.214 2000/08/12 19:42:53 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1354,7 +1354,7 @@ class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
   constant flags = RXML.FLAG_SOCKET_TAG;
-  mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text]);
+  mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text(RXML.PEnt)]);
 
   class Frame {
     inherit RXML.Frame;
