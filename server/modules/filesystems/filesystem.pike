@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.129 2004/05/08 14:57:03 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.130 2004/05/09 17:59:37 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -421,23 +421,30 @@ array find_dir( string f, RequestID id )
 }
 
 void recursive_rm(string real_dir, string virt_dir,
-		  RequestID id)
+		  int(0..1) check_status_needed, RequestID id)
 {
-  TRACE_ENTER(sprintf("Deleting all files in directory %O...", real_dir),
-	      this_object());
+  SIMPLE_TRACE_ENTER(this, "Deleting all files in directory %O...", real_dir);
   foreach(get_dir(real_dir) || ({}), string fname) {
     string real_fname = combine_path(real_dir, fname);
     string virt_fname = virt_dir + "/" + fname;
+
     Stat stat = file_stat(real_fname);
-    TRACE_ENTER(sprintf("Deleting file %O.", real_fname),
-		this_object());
     if (!stat) {
       id->set_status_for_path(virt_fname, 404);
       TRACE_LEAVE("File not found.");
       continue;
     }
+    SIMPLE_TRACE_ENTER(this, "Deleting %s %O.",
+		       stat->isdir?"directory":"file", real_fname);
+    int(0..1)|mapping sub_status;
+    if (check_status_needed &&
+	mappingp(sub_status = write_access(virt_fname, 1, id))) {
+      id->set_status_for_path(virt_fname, sub_status->error);
+      TRACE_LEAVE("Write access denied.");
+      continue;
+    }
     if (stat->isdir) {
-      recursive_rm(real_fname, virt_fname, id);
+      recursive_rm(real_fname, virt_fname, sub_status, id);
     }
 
     /* Clear the stat-cache for this file */
@@ -645,7 +652,7 @@ mapping make_collection(string coll, RequestID id)
   if (query("no_symlinks") && (contains_symlinks(path, coll))) {
     privs = 0;
     errors++;
-    report_error(LOCALE(46,"Creation of %s failed. Permission denied.\n"),
+    report_error(LOCALE(46,"Creation of %O failed. Permission denied.\n"),
 		 coll);
     TRACE_LEAVE(sprintf("%s: Contains symlinks. Permission denied",
 			id->method));
@@ -664,10 +671,7 @@ mapping make_collection(string coll, RequestID id)
     chmod(norm_f, 0777 & ~(id->misc->umask || 022));
     TRACE_LEAVE(sprintf("%s: Success", id->method));
     TRACE_LEAVE(sprintf("%s: Success", id->method));
-    if (id->method == "MKCOL") {
-      return Roxen.http_low_answer(201, "Created");
-    }
-    return Roxen.http_string_answer("Ok");
+    return Roxen.http_low_answer(201, "Created");
   }
 
   TRACE_LEAVE(sprintf("%s: Failed", id->method));
@@ -875,7 +879,7 @@ mixed find_file( string f, RequestID id )
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
       errors++;
-      report_error(LOCALE(46,"Creation of %s failed. Permission denied.\n"),
+      report_error(LOCALE(46,"Creation of %O failed. Permission denied.\n"),
 		   oldf);
       TRACE_LEAVE(sprintf("%s: Contains symlinks. Permission denied",
 			  id->method));
@@ -950,22 +954,20 @@ mixed find_file( string f, RequestID id )
     if (id->misc->quota_obj && (id->misc->len > 0) &&
 	!id->misc->quota_obj->check_quota(URI, id->misc->len)) {
       errors++;
-      report_warning(LOCALE(47,"Creation of %s failed. Out of quota.\n"),f);
+      report_warning(LOCALE(47,"Creation of %O failed. Out of quota.\n"),f);
       TRACE_LEAVE("PUT: Out of quota.");
       return http_low_answer(413, "<h2>Out of disk quota.</h2>",
 			     "413 Out of disk quota");
     }
 
-
-    SETUID_TRACE("Saving file", 0);
-
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
-      privs = 0;
       errors++;
-      report_error(LOCALE(46,"Creation of %s failed. Permission denied.\n"),f);
+      report_error(LOCALE(46,"Creation of %O failed. Permission denied.\n"),f);
       TRACE_LEAVE("PUT: Contains symlinks. Permission denied");
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
+
+    SETUID_TRACE("Saving file", 0);
 
     rm(f);
     mkdirhier(f);
@@ -1354,9 +1356,14 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(400, "<h2>Unsupported depth.</h2>");
     }
 
-    // FIXME: write_access().
-
     if (size < 0) {
+      mapping|int(0..1) res;
+      if (mappingp(res = write_access(combine_path(oldf, "../"), 1, id)) ||
+	  (res && mappingp(res = write_access(oldf, 1, id)))) {
+	SIMPLE_TRACE_LEAVE("DELETE: Recursive write access denied.");
+	id->set_status_for_path(query_location()+oldf, res->error);
+	return 0;
+      }
       report_notice(LOCALE(64,"DELETING the directory %s.\n"), f);
 
       accesses++;
@@ -1364,7 +1371,7 @@ mixed find_file( string f, RequestID id )
       SETUID_TRACE("Deleting directory", 0);
 
       int start_ms_size = id->multi_status_size();
-      recursive_rm(f, query_location() + oldf, id);
+      recursive_rm(f, query_location() + oldf, res, id);
 
       if (!rm(f)) {
 	if (id->multi_status_size() > start_ms_size) {
@@ -1385,16 +1392,24 @@ mixed find_file( string f, RequestID id )
 	return ([]);
       }
     } else {
+      mapping|int(0..1) res;
+      if ((res = write_access(combine_path(oldf, "../"), 0, id)) ||
+	  (res = write_access(oldf, 0, id))) {
+	SIMPLE_TRACE_LEAVE("DELETE: Write access denied.");
+	id->set_status_for_path(query_location()+oldf, res->error);
+	return 0;
+      }
+
       report_notice(LOCALE(49,"DELETING the file %s.\n"),f);
 
       accesses++;
-
-      SETUID_TRACE("Deleting file", 0);
 
       /* Clear the stat-cache for this file */
       if (stat_cache) {
 	cache_set("stat_cache", f, 0);
       }
+
+      SETUID_TRACE("Deleting file", 0);
 
       if(!rm(f))
       {
@@ -1422,33 +1437,14 @@ mixed find_file( string f, RequestID id )
   return 0;
 }
 
-mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
+mapping copy_file(string source, string dest, int(-1..1) behavior,
+		  RequestID id)
 {
-  SIMPLE_TRACE_ENTER(this, "COPY: Copy %O to %O.", path, dest);
-  Stat source_st = stat_file(path, id);
+  SIMPLE_TRACE_ENTER(this, "COPY: Copy %O to %O.", source, dest);
+  Stat source_st = stat_file(source, id);
   if (!source_st) {
     TRACE_LEAVE("COPY: Source doesn't exist.");
     return Roxen.http_low_answer(404, "File not found.");
-  }
-  Stat dest_st = stat_file(path, id);
-  if (dest_st) {
-    if ((source_st->isreg != dest_st->isreg) ||
-	(source_st->isdir != dest_st->isdir)) {
-      TRACE_LEAVE("COPY: Resource types for source and destination differ.");
-      return Roxen.http_low_answer(412, "Destination and source are different resource types.");
-    }
-    if (source_st->isdir) {
-      TRACE_LEAVE("Already done (both are directories).");
-      return Roxen.http_low_answer(204, "Destination already existed.");
-    }
-    if (lower_case(id->request_headers->overwrite||"F") == "t") {
-      TRACE_LEAVE("COPY: Destination already exists.");
-      return Roxen.http_low_answer(412, "Destination already exists.");
-    }
-    if (!query("delete")) {
-      TRACE_LEAVE("COPY: Deletion not allowed.");
-      return Roxen.http_low_answer(405, "Not allowed.");
-    }
   }
   if (!query("put")) {
     TRACE_LEAVE("COPY: Put not allowed.");
@@ -1456,25 +1452,86 @@ mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
   }
   if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
     TRACE_LEAVE("COPY: Authentication required.");
-    return Roxen.http_auth_required("foo",
-				    sprintf("<h1>Permission to 'COPY' denied</h1>",
-					    id->method));
+    return
+      Roxen.http_auth_required("foo",
+			       sprintf("<h1>Permission to 'COPY' denied</h1>",
+				       id->method));
   }
+  mapping|int(0..1) res = write_access(combine_path(dest, "../"), 0, id);
+  if (mappingp(res)) return res;
   string dest_path = path + dest;
   catch { dest_path = decode_path(dest_path); };
+  if (query("no_symlinks") && (contains_symlinks(path, dest_path))) {
+    errors++;
+    report_error(LOCALE(46,"Copy to %O failed. Permission denied.\n"),
+		 dest);
+    TRACE_LEAVE("COPY: Contains symlinks. Permission denied");
+    return http_low_answer(403, "<h2>Permission denied.</h2>");
+  }
+  Stat dest_st = stat_file(dest, id);
+  if (dest_st) {
+    if (id->request_headers->overwrite) {
+      // Obey the overwrite header.
+      if (lower_case(id->request_headers->overwrite) != "t") {
+	TRACE_LEAVE("COPY: Destination already exists.");
+	return Roxen.http_low_answer(412, "Destination already exists.");
+      }
+      if (!query("delete")) {
+	TRACE_LEAVE("COPY: Deletion not allowed.");
+	return Roxen.http_low_answer(405, "Not allowed.");
+      }
+      object privs;
+      SETUID_TRACE("Deleting destination", 0);
+      if (dest_st->isdir) {
+	recursive_rm(dest_path, mountpoint + dest, 1, id);
+	if (source_st->isdir) {
+	  privs = 0;
+	  SIMPLE_TRACE_LEAVE("COPY: Cleared directory %O", dest_path);
+	  SIMPLE_TRACE_LEAVE("Copy done.");
+	  return Roxen.http_status(204);
+	}
+	if (!rm(dest_path)) {
+	  privs = 0;
+	  SIMPLE_TRACE_LEAVE("COPY: Delete failed.");
+#if constant(system.EEXIST)
+	  if (errno() != system.EEXIST)
+#endif
+	  {
+	    id->set_status_for_path(mountpoint + dest, 403);
+	  }
+	} else {
+	  SIMPLE_TRACE_LEAVE("COPY: Delete ok.");
+	}
+      } else if (source_st->isdir) {
+	if (!rm(dest_path)) {
+	  SIMPLE_TRACE_LEAVE("COPY: File deletion failed.");
+	  privs = 0;
+#if constant(system.EEXIST)
+	  if (errno() != system.EEXIST)
+#endif
+	  {
+	    id->set_status_for_path(mountpoint + dest, 403);
+	  }
+	} else {
+	  SIMPLE_TRACE_LEAVE("COPY: File deletion ok.");
+	}
+      } else {
+	SIMPLE_TRACE_LEAVE("COPY: No need to perform deletion.");
+      }
+      privs = 0;
+    } else if ((source_st->isreg != dest_st->isreg) ||
+	       (source_st->isdir != dest_st->isdir)) {
+      TRACE_LEAVE("COPY: Resource types for source and destination differ.");
+      return Roxen.http_low_answer(412, "Destination and source are different resource types.");
+    } else if (source_st->isdir) {
+      TRACE_LEAVE("Already done (both are directories).");
+      return Roxen.http_low_answer(204, "Destination already existed.");
+    }
+  }
   if (source_st->isdir) {
     mkdirs++;
     object privs;
     SETUID_TRACE("Creating directory/collection", 0);
-
-    if (query("no_symlinks") && (contains_symlinks(path, dest))) {
-      privs = 0;
-      errors++;
-      report_error(LOCALE(46,"Creation of %s failed. Permission denied.\n"),
-		   dest);
-      TRACE_LEAVE("COPY: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
-    }
 
     int code = mkdir(dest_path);
     int err_code = errno();
@@ -1485,7 +1542,7 @@ mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
       chmod(dest_path, 0777 & ~(id->misc->umask || 022));
       TRACE_LEAVE("COPY: Success");
       TRACE_LEAVE("Success");
-      return http_low_answer(201, "Created");
+      return http_low_answer(dest_st?204:201, "Created");
     } else {
       TRACE_LEAVE("COPY: Failed");
       TRACE_LEAVE("Failure");
@@ -1504,8 +1561,80 @@ mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
       }
     }
   } else {
-    TRACE_LEAVE("COPY: is file. Not supported yet.");
-    return Roxen.http_status(Protocols.HTTP.HTTP_NOT_IMPL);
+    if (res = write_access(dest, 0, id)) {
+      SIMPLE_TRACE_LEAVE("COPY: Write access to file %O denied.", dest);
+      return res;
+    }
+    string source_path = path + source;
+    catch { source_path = decode_path(source_path); };
+    if (query("no_symlinks") && (contains_symlinks(path, source_path))) {
+      errors++;
+      report_error(LOCALE(46,"Copy to %O failed. Permission denied.\n"),
+		   dest);
+      TRACE_LEAVE("COPY: Contains symlinks. Permission denied");
+      return http_low_answer(403, "<h2>Permission denied.</h2>");
+    }
+    puts++;
+
+    QUOTA_WERR("Checking quota.\n");
+    if (id->misc->quota_obj && (id->misc->len > 0) &&
+	!id->misc->quota_obj->check_quota(mountpoint + dest,
+					  source_st->size)) {
+      errors++;
+      report_warning(LOCALE(47,"Creation of %O failed. Out of quota.\n"),
+		     dest_path);
+      TRACE_LEAVE("PUT: Out of quota.");
+      return http_low_answer(413, "<h2>Out of disk quota.</h2>",
+			     "413 Out of disk quota");
+    }
+    object source_file = open(source_path, "r");
+    if (!source_file) {
+      TRACE_LEAVE("Failed to open source file.");
+      return Roxen.http_status(404);
+    }
+    object privs;
+    SIMPLE_TRACE_ENTER(this, "COPY: Copying file.");
+    object dest_file = open(dest_path, "cwt");
+    privs = 0;
+    if (!dest_file) {
+      TRACE_LEAVE("Failed to open destination file.");
+      TRACE_LEAVE("Copy failed.");
+      return Roxen.http_status(403);
+    }
+    int len = source_st->size;
+    while (len > 0) {
+      string buf = source_file->read((len > 4096)?4096:len);
+      if (buf && sizeof(buf)) {
+	int sub_len;
+	len -= (sub_len = sizeof(buf));
+	while (sub_len > 0) {
+	  int written = dest_file->write(buf);
+	  if ((sub_len -= written) > 0) {
+	    if (!written) {
+	      SIMPLE_TRACE_LEAVE("Write failed with errno %d",
+				 dest_file->errno());
+	      dest_file->close();
+	      source_file->close();
+	      SIMPLE_TRACE_LEAVE("Insufficient storage.");
+	      return Roxen.http_status(Protocols.HTTP.DAV_STORAGE_FULL);
+	    }
+	    buf = buf[written..];
+	  }
+	}
+      } else {
+	break;
+      }
+    }
+    if (len > 0) {
+      SIMPLE_TRACE_LEAVE("Read failed with %d bytes left.", len);
+    } else {
+      SIMPLE_TRACE_LEAVE("Copy complete.");
+    }
+    dest_file->close();
+    source_file->close();
+    TRACE_LEAVE("Copy ok.");
+    return Roxen.http_status(dest_st?Protocols.HTTP.HTTP_NO_CONTENT:
+			     Protocols.HTTP.HTTP_CREATED);
   }
 }
 
