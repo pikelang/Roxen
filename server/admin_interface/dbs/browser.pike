@@ -11,6 +11,8 @@ mapping actions = ([
 ]);
 
 
+#define CU_AUTH id->misc->config_user->auth
+
 #define VERIFY(X) do {						\
   if( !id->variables["yes.x"] )					\
   {								\
@@ -425,7 +427,8 @@ mapping|string parse( RequestID id )
   if( id->variables->image )
     return m_delete( .State->images, id->variables->image );
 
-  if( !id->variables->db )
+  if( !id->variables->db ||
+      !( CU_AUTH( "Edit Global Variables" ) ) )
     return Roxen.http_redirect( "/dbs/", id );
 
   string res =
@@ -753,9 +756,9 @@ mapping|string parse( RequestID id )
     "<table><tr><td valign=top><font size=-1>"
     "<textarea rows=8 cols=50 wrap=soft name='query'>&form.query:html;</textarea>"
     "</font></td><td valign=top>"
-    "<submit-gbutton2 name=clear_q> Clear query </submit-gbutton2>"
+    "<submit-gbutton2 name=clear_q width=150> Clear query </submit-gbutton2>"
     "<br />"
-    "<submit-gbutton2 name=run_q> Run query </submit-gbutton2>"
+    "<submit-gbutton2 name=run_q width=150> Run query </submit-gbutton2>"
     "<br /></td></tr></table>";
 
 
