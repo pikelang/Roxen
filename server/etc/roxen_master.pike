@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.57 1999/11/24 15:02:12 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.58 1999/11/24 17:35:02 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -118,6 +118,11 @@ void dump_program( string pname, program what )
   string outfile = make_ofilename( pname );
   string data = encode_value( what, MyCodec( what ) );
   _static_modules.files()->Fd(outfile,"wct")->write(data);
+} 
+
+int loaded_at( program p )
+{
+  return load_time[ search( programs, p ) ];
 } 
 
 program low_findprog(string pname, string ext, object|void handler)
