@@ -281,7 +281,7 @@ string module_image( int type )
 string strip_leading( LocaleString what )
 {
   if( !what ) return 0;
-  sscanf( (string)what, "%*s:%s", what );
+  sscanf( (string)what, "%*s:%*[ \t]%s", what );
   return what;
 }
 
@@ -299,7 +299,7 @@ return sprintf(
      <table width='100%%'>
       <tr>
        <td><font size='+2'>%s</font></td>
-       <td align='right'>%s</td>
+       <td align='right'>(%s) %s</td>
       </tr>
      </table>
      </td>
@@ -321,6 +321,7 @@ return sprintf(
   </tr>
 ",
      Roxen.html_encode_string(strip_leading(module->get_name())),
+     Roxen.html_encode_string (module->sname),
      (image?module_image(module->type):""),
      module->sname,
    LOCALE(251, "Add Module"),
@@ -385,14 +386,16 @@ string describe_module_faster( object module, object block)
   {
 return sprintf(
 #"
-    <tr><td colspan='2'><table width='100%%'><td><font size='+2'>%s</font></td>
-        <td align='right'>%s</td></table></td></tr>
+    <tr><td colspan='2'><table width='100%%'>
+        <td><font size='+2'>%s</font></td>
+        <td align='right'>(%s) %s</td></table></td></tr>
     <tr><td valign='top'><select multiple='multiple' name='module_to_add'>
                        <option value='%s'>%s</option></select>
         </td><td valign='top'>%s<p>%s</p></td>
     </tr>
 ",
    Roxen.html_encode_string(strip_leading(module->get_name())),
+   Roxen.html_encode_string (module->sname),
    module_image(module->type),
    module->sname,
    Roxen.html_encode_string(strip_leading(module->get_name())),
@@ -460,8 +463,14 @@ array(int|string) class_visible_compact( string c, string d, RequestID id )
 
 string describe_module_compact( object module, object block )
 {
-  if(!block)
-    return "<option value='"+module->sname+"'>"+Roxen.html_encode_string(strip_leading(module->get_name()))+"</option>";
+  if(!block) {
+    string modname = strip_leading (module->get_name());
+    return "<option value='"+module->sname+"'>"+
+      Roxen.html_encode_string(
+	modname + "\0240" * max (0, (int) ((40 - sizeof (modname)) * 1.4)) +
+	" (" + module->sname + ")")+
+      "</option>\n";
+  }
   return "";
 }
 
