@@ -14,7 +14,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.128 2004/06/15 22:11:01 _cvs_stephen Exp $";
+  "$Id: config_filesystem.pike,v 1.129 2004/07/12 12:19:04 _cvs_stephen Exp $";
 
 constant path = "admin_interface/";
 
@@ -95,8 +95,13 @@ array(int)|Stat stat_file( string f, object id )
     return file_stat(path);
 
   if( docs && sscanf( f, "docs/%s", f ) )
-    if( mapping rf = get_docfile( f ) )
-      return ({ 0555, sizeof(rf->contents), time(), 0, 0, 0, 0 });
+    if( mapping rf = get_docfile( f ) ) {
+      Stdio.Stat st = Stdio.Stat();
+      st->mode=0555;
+      st->size=sizeof(rf->contents);
+      st->atime=time();
+      return st;
+    }
 
   array(string|Stat) ret = low_stat_file(f, id);
   return ret && ret[1];

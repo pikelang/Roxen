@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.78 2004/07/08 23:32:56 _cvs_stephen Exp $
+// $Id: prototypes.pike,v 1.79 2004/07/12 12:19:05 _cvs_stephen Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -105,10 +105,13 @@ class StringFile( string data, mixed|void _st )
     return d;
   }
 
-  array stat()
+  Stat stat()
   {
-    if( _st ) return (array)_st;
-    return ({ 0, sizeof(data), time(), time(), time(), 0, 0, 0 });
+    if( _st ) return _st;
+    Stdio.Stat st=Stdio.Stat();
+    st->size=sizeof(data);
+    st->mtime=st->atime=st->ctime=time();
+    return st;
   }
 
   void write(mixed ... args)

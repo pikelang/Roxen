@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.573 2004/07/08 23:32:56 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.574 2004/07/12 12:19:05 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1598,13 +1598,15 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	PROTO_CACHE();
 	
 	TRACE_LEAVE("Magic internal image");
+        Stat st=Stdio.Stat();
+        st->mtime=900000000;
         if(loc=="unit" || loc=="pixel-of-destiny")
 	{
 	  TIMER_END(internal_magic);
 	  return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,"
 		   "\0\0\0\0\1\0\1\0\0\1\1""2\0;",
 		   "type":"image/gif",
-		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
+		   "stat": st]);
 	}
 	if(has_prefix(loc, "pixel-"))
 	{
@@ -1613,7 +1615,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 				  "\0\1\0\1\0\0\2\2L\1\0;",
 				  @Colors.parse_color(loc[6..])),
 		   "type":"image/gif",
-		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
+		   "stat": st]);
 	}
 	TIMER_END(internal_magic);
 	return internal_roxen_image(loc, id);
@@ -2240,7 +2242,10 @@ array(int)|Stat stat_file(string file, RequestID id)
       TRACE_ENTER(sprintf("Location module [%s] ", loc), fun);
       TRACE_LEAVE("Exact match.");
       TRACE_LEAVE("");
-      return Stdio.Stat(({ 0775, -3, 0, 0, 0, 0, 0 }));
+      Stdio.Stat st = Stdio.Stat();
+      st->mode=0775;
+      st->islnk=1;
+      return st;
     }
     if(has_prefix(file, loc))
     {
@@ -2462,7 +2467,10 @@ mapping(string:Stat) find_dir_stat(string file, RequestID id)
       loc=loc[sizeof(file)..];
       sscanf(loc, "%s/", loc);
       if (!dir[loc]) {
-	dir[loc] = ({ 0775, -3, 0, 0, 0, 0, 0 });
+        Stdio.Stat st = Stdio.Stat();
+        st->mode=0775;
+        st->islnk=1;
+	dir[loc] = st;
       }
       TRACE_LEAVE("");
     }

@@ -19,10 +19,13 @@ class StringFile( string data, mixed|void _st )
     return d;
   }
 
-  array stat()
+  Stat stat()
   {
-    if( _st ) return (array)_st;
-    return ({ 0, sizeof(data), time(), time(), time(), 0, 0, 0 });
+    if( _st ) return _st;
+    Stdio.Stat st = Stdio.Stat();
+    st->size = sizeof(data);
+    st->mtime=st->atime=st->ctime=time();
+    return st;
   }
 
   void write(mixed ... args)

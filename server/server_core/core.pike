@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.874 2004/06/23 00:42:55 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.875 2004/07/12 12:19:05 _cvs_stephen Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3156,7 +3156,8 @@ class ImageCache
       if( !(res = restore( na,id )) )
 	error("Draw callback did not generate any data\n");
     }
-    res->stat = ({ 0, 0, 0, 900000000, 0, 0, 0, 0, 0 });
+    res->stat = Stdio.Stat();
+    res->stat->mtime = 900000000;
     id->misc->cacheable = INITIAL_CACHEABLE;
 
     //  Setting the cacheable flag is done in order to get headers sent which

@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.10 2004/06/07 10:36:22 _cvs_stephen Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.11 2004/07/12 12:19:04 _cvs_stephen Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -19,6 +19,10 @@ int disabled;
 
 void create()
 {
+  dir_stat->mode = 0777;
+  dir_stat->isdir = 1;
+  dir_stat->mtime = dir_stat->atime = dir_stat->ctime = 10;
+
   defvar("location", "/", "Mount point",
 	 TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
 	 "Where the module will be mounted in the site's virtual file system.");
@@ -143,7 +147,7 @@ static array low_stat_file( string f, RequestID id )
   return ({ 0, 0 });
 }
 
-constant dir_stat = ({	0777|S_IFDIR, -1, 10, 10, 10, 0, 0 });
+Stdio.Stat dir_stat = Stdio.Stat();
 
 //  --- MODULE_LOCATION API
 
