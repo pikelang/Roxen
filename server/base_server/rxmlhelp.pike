@@ -57,10 +57,10 @@ static string desc_cont(Parser.HTML parser, mapping m, string c, string rt)
   switch(type)
   {
     case "tag":    rt = sprintf("&lt;%s/&gt;", rt); break;
-    case "cont":   rt = sprintf("&lt;%s/&gt; or "
+    case "cont":   rt = sprintf("&lt;%s&gt;&lt;/%s&gt;", rt, rt); break;
+    case "both":   rt = sprintf("&lt;%s/&gt; or "
 				"&lt;%s&gt;&lt;/%s&gt;",
 				rt, rt, rt); break;
-    case "both":   rt = sprintf("&lt;%s&gt;&lt;/%s&gt;", rt, rt); break;
     case "plugin": rt = replace(rt, "#", " plugin "); break;
   //case "entity": rt = rt; break;
     case "scope":  rt = rt[..sizeof(rt)-2] + " ... ;";
