@@ -1,6 +1,6 @@
 //#define USE_GDBM
 
-/* $Id: db.pike,v 1.8 1997/02/14 03:50:13 per Exp $ */
+/* $Id: db.pike,v 1.9 1997/02/14 04:07:33 per Exp $ */
 
 private static inherit files.file;
 private static mapping db;
@@ -19,9 +19,13 @@ private static void sync()
     perror("save ("+ last +")\n");
     if(!file::open(DIR+last,"wct"))
     {
-      perror("FAILED TO OPEN FILE\n");
-      error("Save of object not possible.\n");
+      mkdirhier(DIR+last);
+      if(!file::open(DIR+last, "wct")) {
+	perror("FAILED TO OPEN FILE\n");
+	error("Save of object not possible.\n");
+      }
     }
+    file::seek(0);
     file::write(encode_value(db));
     file::close();
   }
@@ -38,15 +42,12 @@ public int db_open(string f, int noread)
 #endif
   if(!noread && (last != f))
   {
-    int res;
     perror("restore ("+ f +")\n");
     last = f;
-    res = file::open(DIR+f, "rc");
-    if(!res)
+    if(!file::open(DIR+f, "rc"))
     {
       mkdirhier(DIR+f);
-      res = file::open(DIR+f, "rc");
-      if(!res) return 0;
+      if(!file::open(DIR+f, "rc")) return 0;
     }
     string s;
     if((s = file::read(0x7ffffff)) && strlen(s))
@@ -54,8 +55,10 @@ public int db_open(string f, int noread)
     else
       db = ([ ]);
     file::close();
-  } else
+  } else {
     db = ([ ]);
+    last = f;
+  }
   return 1;
 }
 

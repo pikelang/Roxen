@@ -71,10 +71,12 @@ object objectof(array foo)
   }
   catch {
     o = p();
-    o->persist && o->persist( foo );
 
     saved_names[ foo[0..1]*"\0" ] = o;
     saved_names[ o ] = foo;
+
+    o->persist && o->persist( foo );
+
     return o;
   };
   werror("objectof(): Failed to restore object"
