@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.280 2001/10/01 09:21:37 anders Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.281 2001/10/08 09:13:10 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -345,8 +345,8 @@ texture=\"/internal-roxen-squares\">A</gtext>
 </attr>
 
 <attr name='tile'>
- Tiles the background and foreground images if they are smaller than
- the actual image.
+ <p>Tiles the background and foreground images if they are smaller than
+ the actual image.</p>
 </attr>
 
 <attr name='xpad' value='percentage|integer ended with \"px\"'><p>
