@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.272 2001/07/25 15:14:58 jhs Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.273 2001/08/13 16:00:36 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -69,8 +69,9 @@ constant gtextargs=#"
 </attr>
 
 <attr name='bgcolor' value='color'><p>
- Sets the background color. Normally taken from the normal HTML tags
- in your document (Currently: body, table, tr or td).</p>
+ Sets the background color. If the module \"HTML color wiretap\" is
+ loaded, they are taken from the normal HTML tags in your document,
+ like body, table, tr and td.</p>
 
  <p>If you set the background color, it is probably best to add the
  notrans attribute as well.</p>
