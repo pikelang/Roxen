@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.323 1999/05/19 04:18:18 peter Exp $
+ * $Id: roxen.pike,v 1.324 1999/05/19 09:10:05 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.323 1999/05/19 04:18:18 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.324 1999/05/19 09:10:05 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -1628,7 +1628,7 @@ class ImageCache
   static void draw( string name, object id )
   {
     mapping args = argcache->lookup( name );
-    mixed reply = draw_function( copy_value(args), id );
+    mixed reply = draw_function( args, id );
 
     mapping meta;
     string data;
@@ -1638,8 +1638,11 @@ class ImageCache
       int quant = (int)args->quant;
       string format = lower_case(args->format || "gif");
       string dither = args->dither;
-      Image.Colortable ct;
+      object ct;
       object alpha;
+
+      if( args->fs  || dither == "fs" )
+	dither = "floyd_steinberg";
 
       if( format == "jpg" ) 
         format = "jpeg";
@@ -1653,14 +1656,13 @@ class ImageCache
       if( args->scale )
       {
         int x, y;
-        if( stringp( args->scale ) && 
-	    sscanf( args->scale, "%d,%d", x, y ) == 2)
+        if( sscanf( args->scale, "%d,%d", x, y ) == 2)
         {
           reply = reply->scale( x, y );
           if( alpha )
             alpha = alpha->scale( x, y );
         }
-        else 
+        else if( (float)args->scale < 3.0)
         {
           reply = reply->scale( ((float)args->scale) );
           if( alpha )
@@ -1687,7 +1689,7 @@ class ImageCache
 
       if( quant || (format=="gif") )
       {
-        ct = Image.Colortable( reply, quant||id->misc->defquant||16 );
+        ct = Image.colortable( reply, quant||id->misc->defquant||16 );
         if( dither )
           if( ct[dither] )
             ct[dither]();
@@ -1711,12 +1713,10 @@ class ImageCache
       switch(format)
       {
        case "gif":
-	 if( sizeof((array)ct) < 256)
+	 if( alpha )
 	   data = Image.GIF.encode_trans( reply, ct, alpha );
 	 else
-	   data = Image.GIF.encode_trans( reply, 
-					  Image.colortable( reply, 255 ), 
-					  alpha );
+	   data = Image.GIF.encode( reply, ct );
         break;
        case "png":
          if( ct )
@@ -1750,8 +1750,8 @@ class ImageCache
     meta_cache_insert( id, meta );
 
     string data = encode_value( meta );
-    Stdio.File f = Stdio.File( );
-    if(!f->open( dir+id+".i", "wct" ))
+    Stdio.File f = Stdio.File(  dir+id+".i", "wct" );
+    if(!f) 
     {
       report_error( "Failed to open image cache persistant cache file "+
                     dir+id+".i: "+strerror( errno() )+ "\n" );
@@ -1804,7 +1804,7 @@ class ImageCache
 
     if( stringp( f ) )
       return http_string_answer( f, m->type||("image/gif") );
-    return ([ "file":f, "type":(m->type||("image/gif")) ]);
+    return roxenp()->http_file_answer( f, m->type||("image/gif") );
   }
 
 
@@ -1857,11 +1857,9 @@ class ImageCache
   {
     string ci;
     if( mappingp( data ) )
-    {
       ci = argcache->store( data );
-    }
     else
-      ci = replace( data, "/", "");
+      ci = data;
     return ci;
   }
 
