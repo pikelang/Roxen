@@ -9,7 +9,7 @@
  * performance. We'll see.
  */
 
-constant cvs_version="$Id: slowpipe.pike,v 1.2 1999/09/05 15:51:41 grubba Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.3 1999/09/29 20:22:51 kinkie Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -160,6 +160,7 @@ void check_for_closing()
 
 void finish() {
   int delta=time(1)-writing_starttime;
+  if (!delta) delta=1; //avoid division by zero errors
   THROTTLING_DEBUG("slowpipe: cleaning up and leaving ("+
                    delta+" sec, "+(sent?(sent/delta):0)+" bps)");;
   if (outfd) {
