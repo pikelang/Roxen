@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.520 2002/06/17 09:36:32 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.521 2002/08/13 15:05:23 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3346,18 +3346,36 @@ static void create()
   defvar("compat_level", Variable.StringChoice (
 	   "", roxen.compat_levels, VAR_NO_DEFAULT,
 	   DLOCALE(246, "Compatibility level"),
-	   DLOCALE(386, "The compatibility level is used by different modules to select "
-		   "the right behavior to remain compatible with earlier Roxen "
-		   "versions. When a server configuration is created, this variable "
-		   "is set to the latest version. After that it's never changed "
-		   "automatically, thereby ensuring that server configurations "
-		   "migrated from earlier Roxen versions is kept at the right "
-		   "compatibility level.\n"
-		   "<p>\n"
-		   "This variable may be changed manually, but it's advisable to "
-		   "test the site carefully afterwards. A reload of the whole "
-		   "server configuration is required to propagate the change properly "
-		   "to all modules.")));
+	   DLOCALE(386, #"\
+<p>The compatibility level is used by different modules to select the
+right behavior to remain compatible with earlier Roxen versions. When
+a server configuration is created, this variable is set to the current
+version. After that it's never changed automatically, thereby ensuring
+that server configurations migrated from earlier Roxen versions is
+kept at the right compatibility level.</p>
+
+<p>This variable may be changed manually, but it's advisable to test
+the site carefully afterwards. A reload of the whole server
+configuration is required to propagate the change properly to all
+modules.</p>
+
+<p>Available compatibility levels:
+<table>
+<tr valign='top'><td>2.1&nbsp;&nbsp;</td>
+  <td>Corresponds to Roxen WebServer 2.1.</td></tr>
+<tr valign='top'><td>2.2&nbsp;&nbsp;</td>
+  <td>Corresponds to Roxen WebServer 2.2.</td></tr>
+<tr valign='top'><td>2.4&nbsp;&nbsp;</td>
+  <td>Corresponds to Roxen WebServer 2.4. This version is also
+  commonly known as 3.2 - the version number that applies to the
+  release of Roxen CMS which contains Roxen WebServer 2.4.</td></tr>
+<tr valign='top'><td>2.5&nbsp;&nbsp;</td>
+  <td>Corresponds to no released version. This compatibility level is
+  only used to turn on some optimizations that have compatibility
+  issues with 2.4, notably the optimization of cache static tags in
+  the &lt;cache&gt; tag.</td></tr>
+</table></p>")));
+
   set ("compat_level", roxen.__roxen_version__);
   // Note to developers: This setting can be accessed through
   // id->conf->query("compat_level") or similar, but observe that that

@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.388 2002/07/17 16:34:22 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.389 2002/08/13 15:05:29 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -37,12 +37,12 @@ void start()
   compat_level = (float) my_configuration()->query("compat_level");
 }
 
-int cache_static_in_2_4()
+int cache_static_in_2_5()
 {
   if (compat_level == 0.0) {
     compat_level = (float) my_configuration()->query("compat_level");
   }
-  return compat_level >= 2.4 && RXML.FLAG_IS_CACHE_STATIC;
+  return compat_level >= 2.5 && RXML.FLAG_IS_CACHE_STATIC;
 }
 
 multiset query_provides() {
@@ -3528,7 +3528,7 @@ class FrameIf {
 class TagIf {
   inherit RXML.Tag;
   constant name = "if";
-  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_4();
+  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
   program Frame = FrameIf;
 }
@@ -3536,7 +3536,7 @@ class TagIf {
 class TagElse {
   inherit RXML.Tag;
   constant name = "else";
-  int flags = cache_static_in_2_4();
+  int flags = cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit RXML.Frame;
@@ -3551,7 +3551,7 @@ class TagElse {
 class TagThen {
   inherit RXML.Tag;
   constant name = "then";
-  int flags = cache_static_in_2_4();
+  int flags = cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit RXML.Frame;
@@ -3566,7 +3566,7 @@ class TagThen {
 class TagElseif {
   inherit RXML.Tag;
   constant name = "elseif";
-  int flags = cache_static_in_2_4();
+  int flags = cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
@@ -3720,7 +3720,7 @@ class TagCond
 class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
-  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_4();
+  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_5();
   mapping(string:RXML.Type) req_arg_types = ([ "source":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([ "scope":RXML.t_text(RXML.PEnt),
 					       "maxrows":RXML.t_int(RXML.PEnt),
@@ -5779,6 +5779,9 @@ using the pre tag.
 
  <h1>Cache static tags</h1>
 
+ <note><p>Note that this is only applicable if the compatibility level
+ is set to 2.5 or higher.</p></note>
+
  <p>Some common tags, e.g. <tag>if</tag> and <tag>emit</tag>, are
  \"cache static\". That means that they are cached even though there
  are nested <tag>cache</tag> tag(s). That can be done since they
@@ -5791,13 +5794,13 @@ using the pre tag.
  <tag>cache</tag> or <tag>nocache</tag>. This can give side effects;
  consider this example:</p>
 
- <example>
-&lt;cache&gt;
-  &lt;registered-user&gt;
-    &lt;nocache&gt;Your name is &registered-user.name;&lt;/nocache&gt;
-  &lt;/registered-user&gt;
-&lt;/cache&gt;
-</example>
+<ex-box>
+<cache>
+  <registered-user>
+    <nocache>Your name is &registered-user.name;</nocache>
+  </registered-user>
+</cache>
+</ex-box>
 
  <p>Assume the tag <tag>registered-user</tag> is a custom tag that
  ignores its content whenever the user isn't registered. If it isn't
@@ -5821,8 +5824,8 @@ using the pre tag.
  <ent>page.path</ent>). This is often a bad policy since it's easy for
  a client to generate many cache entries.</p>
 
- <p>There are no cache static tags if the compatibility level is lower
- than 2.4.</p>
+ <p>There are no cache static tags if the compatibility level is 2.4
+ or lower.</p>
 </desc>
 
 <attr name='variable' value='string'>
@@ -7584,7 +7587,7 @@ just got zapped?
  touches the page's truth value earlier in the page.</p>
 
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
- unless the compatibility level is set to 2.2 or earlier.</p></note>
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -7594,7 +7597,7 @@ just got zapped?
  previous <tag>if</tag> returned false.</short></p>
 
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
- unless the compatibility level is set to 2.2 or earlier.</p></note>
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -7710,7 +7713,7 @@ just got zapped?
  contained in a SiteBuilder administrated site.</p>
 
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
- unless the compatibility level is set to 2.2 or earlier.</p></note>
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </desc>
 
 <attr name='not'><p>
@@ -8217,7 +8220,7 @@ just got zapped?
  tags.</p>
 
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
- unless the compatibility level is set to 2.2 or earlier.</p></note>
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -8428,7 +8431,7 @@ just got zapped?
  <tag>emit</tag> operation fails.</p>
 
  <note><p>This tag is cache static (see the <tag>cache</tag> tag)
- unless the compatibility level is set to 2.2 or earlier.</p></note>
+ if the compatibility level is set to 2.5 or higher.</p></note>
 </desc>
 
 <attr name='source' value='plugin' required='required'><p>

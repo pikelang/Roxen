@@ -999,9 +999,9 @@ hej</result>
     <set variable="var.items" value="3,1,2"/>
     <cache shared nohash key="yo2"/>
   </rxml>
-  <result>[1,2,3]1(1),2(1),3(1),;[1,2,3]1(1),2(1),3(1),</result>
-  <!-- In 2.2 we get this result since <emit> isn't cache static:
   <result>[1,2,3]1(1),2(1),3(1),;[1,2,3]3(1),1(1),2(1),</result>
+  <!-- In versions > 2.4 (a.k.a 3.2) we get this result since <emit> is cache static:
+  <result>[1,2,3]1(1),2(1),3(1),;[1,2,3]1(1),2(1),3(1),</result>
   -->
 </test>
 
@@ -1020,9 +1020,9 @@ hej</result>
     <set variable="var.foo" value="y"/>
     <cache shared nohash key="yo3"/>
   </rxml>
-  <result>[1,2,3]1(x),2(x),3(x),;[1,2,3]1(x),2(x),3(x),</result>
-  <!-- In 2.2 we get this result since <emit> isn't cache static:
   <result>[1,2,3]1(x),2(x),3(x),;[1,2,3]3(x),1(x),4(y),2(x),</result>
+  <!-- In versions > 2.4 (a.k.a 3.2) we get this result since <emit> is cache static:
+  <result>[1,2,3]1(x),2(x),3(x),;[1,2,3]1(x),2(x),3(x),</result>
   -->
 </test>
 
