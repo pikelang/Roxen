@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.13 2000/04/12 19:08:28 js Exp $
+ * $Id: update.pike,v 1.14 2000/06/02 21:18:50 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -602,11 +602,10 @@ class GetPackage
     return (float)downloaded_bytes() / (float)b;
   }
 
-  void request_ok(object httpquery, int _num)
+  void got_data()
   {
     // FIXME: rewrite this to use a file object and stream to disk?
     Stdio.File f;
-    num=_num;
 
     if(catch(f=Stdio.File(roxen_path(QUERY(pkgdir))+num+".tar","wc")))
     {
@@ -615,7 +614,7 @@ class GetPackage
       catch(m_delete(package_downloads, num));
       return;
     }
-    if(catch(f->write(httpquery->data())))
+    if(catch(f->write(data())))
     {
       report_error("Update: Failed to write package to file: "+
 		   roxen_path(QUERY(pkgdir))+num+".tar\n");
@@ -627,6 +626,11 @@ class GetPackage
     catch(m_delete(package_downloads, num));
   }
 
+  void request_ok(object httpquery, int _num)
+  {
+    async_fetch(got_data);
+  }
+
   void request_fail(object httpquery, int num)
   {
     report_error("Update: Failed to connect to update server to fetch "
@@ -636,7 +640,8 @@ class GetPackage
 
   void create(int pkgnum)
   {
-    set_callbacks(request_ok, request_fail, pkgnum);
+    num=pkgnum;
+    set_callbacks(request_ok, request_fail);
     async_request(get_server(), get_port(),
 		  "GET "+proxyprefix()+"/updateserver/packages/"+
 		  pkgnum+".tar HTTP/1.0",
@@ -675,29 +680,34 @@ mapping parse_info_file(string s)
 class GetInfoFile
 {
   inherit Protocols.HTTP.Query;
-
-
-  void request_ok(object httpquery, int num)
+  int num;
+  
+  void got_data()
   {
     spider;
     mapping res=([]);
 
-    if(httpquery->status!=200)
+    if(status!=200)
     {
       report_error("Update: Wrong answer from server for package %d. "
-		   "HTTP status code: %d\n",num,httpquery->status);
+		   "HTTP status code: %d\n",num,status);
       return;
     }
 
-    res=parse_info_file(httpquery->data());
-    res->size=(int)httpquery->headers->pkgsize;
+    res=parse_info_file(data());
+    res->size=(int)headers->pkgsize;
     pkginfo[(string)num]=res;
     pkginfo->sync();
     report_notice("Update: Added information about package number "
 		  +num+".\n");
   }
 
-  void request_fail(object httpquery, int num)
+  void request_ok(object httpquery)
+  {
+    async_fetch(got_data);
+  }
+
+  void request_fail(object httpquery)
   {
     report_error("Update: Failed to connect to update server to fetch "
 		 "information about package number "+num+".\n");
@@ -705,7 +715,8 @@ class GetInfoFile
 
   void create(int pkgnum)
   {
-    set_callbacks(request_ok, request_fail, pkgnum);
+    num=pkgnum;
+    set_callbacks(request_ok, request_fail);
     async_request(get_server(), get_port(),
 		  "GET "+proxyprefix()+"/updateserver/packages/"+pkgnum+
 		  ".info HTTP/1.0",
@@ -718,23 +729,23 @@ class UpdateInfoFiles
 {
   inherit Protocols.HTTP.Query;
 
-  void request_ok(object httpquery)
+  void got_data()
   {
-    string s=httpquery->data();
+    string s=data();
 
     array lines=s/"\n";
 
-    if(httpquery->status==401)
+    if(status==401)
     {
       report_error("Update: Authorization failed. Will not receive any "
 		   "new update packages.\n");
       return;
     }
     
-    if(httpquery->status!=200 || lines[0]!="update" || sizeof(lines)<3)
+    if(status!=200 || lines[0]!="update" || sizeof(lines)<3)
     {
       report_error("Update: Wrong answer from server. "
-		   "HTTP status code: %d\n",httpquery->status);
+		   "HTTP status code: %d\n",status);
       return;
     }
 
@@ -759,6 +770,11 @@ class UpdateInfoFiles
       catch(pkginfo->delete((string)i));
 
     catch(misc["last_updated"]=time());
+  }
+  
+  void request_ok(object httpquery)
+  {
+    async_fetch(got_data);
   }
 
   void request_fail(object httpquery)
