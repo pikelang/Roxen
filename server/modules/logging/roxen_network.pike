@@ -2,12 +2,13 @@
 //
 
 #include <module.h>
+#include <version.h>
 inherit "module";
 
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.2 2000/12/02 17:00:47 nilsson Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.3 2000/12/08 08:52:22 nilsson Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -18,7 +19,7 @@ following information to Roxen:
 <li>Server version</li>
 <li>Pike version</li>
 <li>Server identification</li>
-<li>URLs to all servers on port 80</li>
+<li>Server HTTP URLs</li>
 <li>All information that you choose to disclose in the module settings for this module.</li>
 </ul>
 All the above mentioned information is kept confidential except the URLs and the
@@ -26,6 +27,19 @@ disclosed information from the module settings.";
 
 Variable.MapLocation var;
 Configuration conf;
+
+class PositionAccess {
+  inherit Variable.MapLocation;
+
+  int low_set( mixed to ) {
+    return roxen->variables->global_position->set(to);
+  }
+
+  mixed query() {
+    return roxen->variables->global_position->query();
+  }
+}
+
 
 void create(Configuration _conf) {
 
@@ -41,9 +55,9 @@ void create(Configuration _conf) {
     -> may_be_empty(1);
 
   var = defvar("location",
-	       Variable.MapLocation(0, internal_location, 0,
-				    "Geographical location",
-				    "The physical location of the server."));
+	       PositionAccess(0, internal_location, 0,
+			      "Geographical location",
+			      "The physical location of the server."));
 
   defvar("ad",
 	 Variable.Text("", 0, "Free Text",
@@ -57,10 +71,59 @@ void create(Configuration _conf) {
 		       "see how Roxen WebServers in general are set up."));
 }
 
+void start() {
+}
+
 string internal_location() {
-  return conf->query("MyWorldLocation") + (query_internal_location()[1..]);
+  string server = conf->query("MyWorldLocation");
+  if(!server || !sizeof(server)) server = "/";
+  return server + (query_internal_location()[1..]);
 }
 
 mapping find_internal( string f, RequestID id) {
   return var->cache->http_file_answer( f, id );
+}
+
+string build_package() {
+
+  mapping info = ([]);
+
+  info->pike_version = predef::version();
+  info->roxen_version = __roxen_version__ + "." + __roxen_build__;
+  info->id_string = roxen->version();
+
+  foreach( ({ "owner", "webmaster", "ad" }), string var)
+    if(sizeof(query(var)))
+      info->owner = query(var);
+
+  string pkg = "";
+
+  foreach(indices(info), string var)
+    pkg += "<" + var + ">" + Roxen.html_encode_string(info[var]) + "</" + var + ">\n";
+
+  if(query("location"))
+    pkg += "<location x=\""+query("location")[0]+"\" y=\""+query("location")[1]+"\"/>\n";
+
+  if(query("trans_mods")) {
+    pkg += "<active_modules>" + ( sort(indices(conf->modules)) * ", " ) +
+      "</active_modules>";
+
+  array hosts=({ gethostname() }), dns;
+  catch(dns=Protocols.DNS.client()->gethostbyname(hosts[0]));
+  if(dns && sizeof(dns))
+    hosts+=dns[2];
+  hosts = Array.uniq(hosts);
+
+  foreach(conf->registered_urls, string url) {
+    if(url[0..3]!="http" && url[0..3]!="fhttp") continue;
+    foreach(hosts, string host) {
+      string tmpurl = url, port = "80", path = "";
+      sscanf(tmpurl, "%*s://%s/%s", tmpurl, path);
+      sscanf(tmpurl, "%s:%s", tmpurl, port);
+      if(glob(tmpurl, host))
+	pkg += "<port url=\"http://" + host + ":" + port + "/" + path + "\"/>\n";
+    }
+  }
+
+  return pkg;
 }
