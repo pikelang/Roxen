@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.36 1999/02/08 18:11:15 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.37 1999/02/08 18:15:15 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -899,7 +899,7 @@ class backend
       + (session->mailbox->update() || ({}));
   }
 
-  object uid_to_local(object uid_set)
+  object uid_to_local(object|mapping(string:mixed) session, object uid_set)
   {
     return session->mailbox->uid_to_local(uid_set);
   }
