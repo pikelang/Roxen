@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.242 2001/08/28 21:36:01 mast Exp $
+// $Id: module.pmod,v 1.243 2001/08/29 14:54:01 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4221,6 +4221,10 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 //!   an error. (This is a convenience to avoid many special cases
 //!   when treating both arrays and scalar types.)
 //!  @item
+//!   @[RXML.nil] and the undefined value is also treated as a scalar
+//!   type wrt indexing, i.e. it produces itself if indexed with 1 or
+//!   -1.
+//!  @item
 //!   If a value is an object which has an @tt{rxml_var_eval@}
 //!   identifier, it's treated as an @[RXML.Value] object and the
 //!   @[RXML.Value.rxml_var_eval] function is called to produce its
@@ -4268,9 +4272,11 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
       else
 	parse_error( "Cannot index the array in %s with %s.\n",
 		     scope_name, format_short (index) );
-    else if (val == nil)
-      parse_error ("%s produced no value to index with %s.\n",
-		   scope_name, format_short (index));
+    else if (val == nil) {
+      if (!(<1, -1>)[index])
+	parse_error ("%s produced no value to index with %s.\n",
+		     scope_name, format_short (index));
+    }
     else if( objectp( val ) && val->`[] ) {
 #ifdef MODULE_DEBUG
       Scope scope = [object(Scope)] val;
