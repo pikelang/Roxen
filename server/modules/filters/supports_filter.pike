@@ -71,7 +71,7 @@ mapping filter(mapping res, RequestID id) {
 
   if(filtered->mailto && !id->supports->mailto)
     conts->a=lambda(string t, mapping m, string c) {
-	       if(m->href[..5]=="mailto") return c;
+	       if(m->href && m->href[..5]=="mailto") return c;
 	       return 0;
 	     };
 
