@@ -11,4 +11,5 @@ logs
 ulpc
 configure
 build
+local
 VERSION

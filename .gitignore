@@ -43,4 +43,5 @@ core
 /ulpc
 /configure
 /build
+/local
 /VERSION
