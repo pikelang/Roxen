@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.356 2002/03/14 12:25:21 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.357 2002/03/19 13:26:41 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1485,9 +1485,10 @@ class TagCache {
 
 	else {
 	  do_iterate = -1;
-	  TAG_TRACE_ENTER ("cache hit (%s cache) for key %s",
-			   args->shared ? (timeout ? "shared timeout" : "shared")
-			   : (timeout ? "timeout" : "possibly persistent"),
+	  TAG_TRACE_ENTER ("cache hit%s for key %s",
+			   args->shared ?
+			   (timeout ? " (shared timeout cache)" : " (shared cache)") :
+			   (timeout ? " (timeout cache)" : ""),
 			   RXML.utils.format_short (keymap, 200));
 	  key = keymap = 0;
 	  return ({evaled_content});
@@ -1496,9 +1497,10 @@ class TagCache {
 
       keymap += ([]);
       do_iterate = 1;
-      TAG_TRACE_ENTER ("cache miss (%s cache), %s for key %s",
-		       args->shared ? (timeout ? "shared timeout" : "shared")
-		       : (timeout ? "timeout" : "possibly persistent"),
+      TAG_TRACE_ENTER ("cache miss%s, %s for key %s",
+		       args->shared ?
+		       (timeout ? " (shared timeout cache)" : " (shared cache)") :
+		       (timeout ? " (timeout cache)" : ""),
 		       removed == 1 ? "entry p-code is stale" :
 		       removed == 2 ? "entry had timed out" :
 		       removed == 3 ? "a pragma no-cache request removed the entry" :
