@@ -1,10 +1,17 @@
-This is where the Mysql binary should be located.
+This is where the Mysql installation should be located.
+
 If you already have a Mysql, you can symlink it to this directory.
 
-As an example, lets pretend that a mysql is installed in
-/i/mysql/default.
+As an example, lets pretend that a mysql is installed in /usr/local,
+and the mysqld server binary is located in the 'libexec' directory.
 
-Type "ln -s /i/mysql/default/* mysql/" in the server directory to use
-it.
+To set up roxen to use this mysql, run these commands:
 
-An alternative is to install a release into this directory.
+ln -s /i/usr/local/libexec .
+ln -s /i/usr/local/share .
+
+Sometimes the mysqld binary recides in sbin or bin instead, if so,
+modify the first ln command to link that directory instead.
+
+A binary tar.gz-type MySQL distribution can be installed directly into
+this directory.
