@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.67 2001/01/19 16:40:52 per Exp $
+// $Id: Roxen.pmod,v 1.68 2001/02/06 22:39:03 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3247,3 +3247,116 @@ void trace_leave (RequestID id, string desc)
     _trace_leave (desc);
 }
 #endif
+
+private inline string ns_color(array (int) col)
+{
+  if(!arrayp(col)||sizeof(col)!=3)
+    return "#000000";
+  return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
+}
+
+int(0..1) init_wiretap_stack (mapping(string:string) args, RequestID id, int(0..1) colormode)
+{
+  int changed=0;
+  mixed cols=(args->bgcolor||args->text||args->link||args->alink||args->vlink);
+
+#define FIX(Y,Z,X) do{ \
+  if(!args->Y || args->Y==""){ \
+    id->misc->defines[X]=Z; \
+    if(cols){ \
+      args->Y=Z; \
+      changed=1; \
+    } \
+  } \
+  else{ \
+    id->misc->defines[X]=args->Y; \
+    if(colormode&&args->Y[0]!='#'){ \
+      args->Y=ns_color(parse_color(args->Y)); \
+      changed=1; \
+    } \
+  } \
+}while(0)
+
+  //FIXME: These values are not up to date
+
+  FIX(text,   "#000000","fgcolor");
+  FIX(link,   "#0000ee","link");
+  FIX(alink,  "#ff0000","alink");
+  FIX(vlink,  "#551a8b","vlink");
+
+  if(id->client_var && has_value(id->client_var->fullname||"","windows"))
+  {
+    FIX(bgcolor,"#c0c0c0","bgcolor");
+  } else {
+    FIX(bgcolor,"#ffffff","bgcolor");
+  }
+
+  id->misc->wiretap_stack = ({});
+
+#ifdef WIRETAP_TRACE
+  werror ("Init wiretap stack for %O: "
+	  "fgcolor=%O, bgcolor=%O, link=%O, alink=%O, vlink=%O\n",
+	  id, id->misc->defines->fgcolor, id->misc->defines->bgcolor,
+	  id->misc->defines->alink, id->misc->defines->alink,
+	  id->misc->defines->vlink);
+#endif
+
+  return changed;
+}
+
+int(0..1) push_color (string tagname, mapping(string:string) args,
+		      RequestID id, void|int colormode)
+{
+  int changed;
+  if(!id->misc->wiretap_stack)
+    init_wiretap_stack (([]), id, colormode);
+
+  id->misc->wiretap_stack +=
+    ({ ({ tagname, id->misc->defines->fgcolor, id->misc->defines->bgcolor }) });
+
+#undef FIX
+#define FIX(X,Y) if(args->X && args->X!=""){ \
+  id->misc->defines->Y=args->X; \
+  if(colormode && args->X[0]!='#'){ \
+    args->X=ns_color(parse_color(args->X)); \
+    changed = 1; \
+  } \
+}
+
+  FIX(bgcolor,bgcolor);
+  FIX(color,fgcolor);
+  FIX(text,fgcolor);
+#undef FIX
+
+#ifdef WIRETAP_TRACE
+  werror ("%*sPush wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
+	  sizeof (id->misc->wiretap_stack) * 2, "", id, tagname,
+	  id->misc->defines->fgcolor, id->misc->defines->bgcolor);
+#endif
+
+  return changed;
+}
+
+void pop_color (string tagname, RequestID id)
+{
+  array c = id->misc->wiretap_stack;
+  if(c && sizeof(c)) {
+    int i;
+
+    for(i=0; i<sizeof(c); i++)
+      if(c[-i-1][0]==tagname)
+      {
+	id->misc->defines->fgcolor = c[-i-1][1];
+	id->misc->defines->bgcolor = c[-i-1][2];
+	break;
+      }
+
+    id->misc->wiretap_stack = c[..sizeof(c)-i-2];
+
+#ifdef WIRETAP_TRACE
+  werror ("%*sPop wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
+	  sizeof (c) * 2, "", id, tagname,
+	  id->misc->defines->fgcolor, id->misc->defines->bgcolor);
+#endif
+  }
+}
