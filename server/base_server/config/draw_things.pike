@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.9 1996/12/04 07:38:25 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.10 1996/12/05 01:54:45 per Exp $";
 
 object (Image) bevel(object (Image) in, int width)
 {
@@ -107,8 +107,8 @@ object (Image) draw_module_header(string name, int type, object font)
 #define B 0x80
 
 #define dR 0x00
-#define dG 0x20
-#define dB 0x50
+#define dG 0x10
+#define dB 0x30
 
 
 #define bR 0x00

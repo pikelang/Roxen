@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.19 1996/12/04 09:40:03 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.20 1996/12/05 01:54:44 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -7,15 +7,15 @@ inherit "config/draw_things";
 #include <module.h>
 
 #define dR "00"
-#define dG "20"
-#define dB "50"
+#define dG "10"
+#define dB "30"
 
 #define bdR "00"
 #define bdG "50"
 #define bdB "90"
 
 
-#define BODY "<body bgcolor=#002050 text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
+#define BODY "<body bgcolor=#"+dR+dG+dB+" text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
 
 #define TABLEP(x, y) (id->supports->tables ? x : y)
 #define PUSH(X) do{res+=({(X)});}while(0)
@@ -814,7 +814,7 @@ string tablist(array(string) nodes, array(string) links, int selected)
       PUSH("<a href=\""+links[i]+"\"><img alt=\"/"+nodes[i][1..strlen(nodes[i])-2]+"\\_\" src=/auto/unselected/"+replace(nodes[i]," ","%20")+" border=0></a>");
     else
       PUSH("<a href=\""+links[i]+"\"><b><img alt=\"/"+nodes[i][1..strlen(nodes[i])-2]+"\\_\" src=/auto/selected/"+replace(nodes[i]," ","%20")+" border=0></b></a>");
-  PUSH("<br>");
+//  PUSH("<br>");
   return res*"";
 }
 
@@ -935,6 +935,29 @@ string remove_font(string t, mapping m, string c)
 }
 
 
+int nfolded(object o)
+{
+  int i;
+  if(o = o->down)
+    do { i+=!!o->folded; } while(o=o->next);
+  return i;
+}
+
+int nfoldedr(object o)
+{
+  object node;
+  int i;
+  i = o->folded;
+  node=o->down;
+  while(node)
+  {
+    i+=nfoldedr(node);
+    node=node->next; 
+  }
+  return i;
+}
+
+
 mapping configuration_parse(object id)
 {
   array (string) res=({});
@@ -1017,6 +1040,16 @@ mapping configuration_parse(object id)
       // one of the top nodes.
     case "unfoldall":
       o->map(lambda(object o) { o->folded=0; });
+      break;
+
+     case "unfoldlevel":
+      object node;
+      node=o->down;
+      while(node)
+      {
+	node->folded=0;
+	node = node->next;
+      }
       break;
 
       
@@ -1318,9 +1351,13 @@ mapping configuration_parse(object id)
   }
   
   PUSH(default_head("Roxen server configuration", root->changed?o->path(1):0));
-  PUSH("\n"+display_tabular_header( o )+"\n<br>\n");
+//  PUSH("<table width=\"100%\" cellpadding=0 cellspacing=0>\n");
+//  PUSH("<tr><td>\n");
+  PUSH("\n"+display_tabular_header( o )+"\n");
+  PUSH("<br>");
+//  PUSH("</td></tr><tr><td width=\"100%\" bgcolor=#000000><br>");
 
-  if(o->up != root && o->up)
+   if(o->up != root && o->up)
     PUSH("<a href=\""+ o->up->path(1)+"?"+(bar++)+"\">"
 	 "<img src=/auto/back alt='[Up]' align=left hspace=0 border=0></a>\n");
 
@@ -1331,7 +1368,8 @@ mapping configuration_parse(object id)
   PUSH(tmp);
   o->folded=i;
   
-  PUSH("<br clear=all>\n");
+//  PUSH("</td></tr></table>\n");
+//  PUSH("<br clear=all>\n");
 
   int lm=1;
   
@@ -1360,12 +1398,19 @@ mapping configuration_parse(object id)
     BUTTON(delete,"Delete this server", left);
 
   if(nunfolded(o))
-    BUTTON(foldall, "Close all",left);
+    BUTTON(foldall, "Fold all",left);
   if(o->changed)
-    BUTTON(unfoldmodified, "Open modified", left);
+    BUTTON(unfoldmodified, "Unfold modified", left);
+
+  if(nfolded(o))
+    BUTTON(unfoldlevel, "Unfold level", left);
+  else if(nfoldedr(o))
+    BUTTON(unfoldall, "Unfold all", left);
+
 
   if((o->changed||root->changed))
     BUTTON(save, "Save", left);
+
   BUTTON(restart, "Restart", left);
   BUTTON(shutdown,"Shutdown", left);
 

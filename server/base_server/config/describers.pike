@@ -54,7 +54,7 @@ string describe_errors(object node)
     return (link("<font size=+2>Error and debug log</font>"));
   return (link("<font size=+2>Error and debug log")
 	  + "</font><dd><pre>"+
-	  (report*"")+"</pre>");
+	  (sizeof(report)?(report*""):"Empty")+"</pre>");
 }
 
 array|string describe_module_variable(object node)
@@ -204,26 +204,39 @@ string describe_configuration(object node)
 }
 
 
+#if efun(_memory_usage)
+mapping last_usage = ([]);
+#endif
 string describe_global_debug(object node)
 {
-#ifdef DEBUG
   string res;
   if(node->folded)
     return link("<font size=+1>Debug information for developers</font>");
   else
     res = link("<font size=+1>Debug information for developers</font><dd>");
+#if efun(_memory_usage)
+  res += ("Memory usage:<br>");
+  mapping foo = _memory_usage();
+  string f;
+  res+="<table border=0 cellspacing=0 cellpadding=2 width=50%><tr bgcolor=darkblue><th align=left>Entry<th align=right>Current (KB)<th align=right>Change (KB)</tr>";
+  foreach(sort(indices(foo)), f)
+    if(search(f, "num_"))
+      res += "<tr bgcolor=black><td><b>"+f+"</b></td><td align=right><b>"+(foo[f]/1024)+
+	"</b></td><td align=right><b>"+((foo[f]-last_usage[f])/1024)+"</b><br></td>";
+
+  res+="</table>";
+  res+="<table border=0 cellspacing=0 cellpadding=2 width=50%><tr bgcolor=darkblue><th align=left>Entry<th align=right>Current<th align=right>Change</tr>";
+  foreach(sort(indices(foo)), f)
+    if(!search(f, "num_"))
+      res += "<tr bgcolor=black><td><b>"+f[4..]+"</b></td><td align=right><b>"+(foo[f])+"</b>"
+	"</td><td align=right><b>"+((foo[f]-last_usage[f]))+"</b><br></td>";
+  last_usage=foo;
+  res+="</table>";
+#endif
 #if efun(_num_objects)
-  res += ("Number of objects            : " + _num_objects() 
-	  + " (" + _num_dest_objects() + " destructed)<br>\n");
-#endif  
-#if efun(_num_mappings)
-  res += ("Number of mappings           : " + _num_mappings()+ "\n<br>");
-#endif  
-#if efun(_num_arrays)
-  res += ("Number of arrays             : " + _num_arrays()  + "\n<br>");
+  res += ("Number of destructed objects: " + _num_dest_objects() +"<br>\n");
 #endif  
   return res;
-#endif
 }
 
 #define MB (1024*1024)
