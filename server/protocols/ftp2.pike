@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.12 1998/04/29 20:13:17 grubba Exp $
+ * $Id: ftp2.pike,v 1.13 1998/04/29 20:28:41 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1246,7 +1246,7 @@ class FTPSession
   static private object pasv_port;
   static private function(object, mixed:void) pasv_callback;
   static private mixed pasv_args;
-  static private array(object) pasv_accepted;
+  static private array(object) pasv_accepted = ({});
 
   void pasv_accept_callback(mixed id)
   {
@@ -1266,8 +1266,9 @@ class FTPSession
 	if(pasv_callback) {
 	  pasv_callback(fd, @pasv_args);
 	  pasv_callback = 0;
-	} else
+	} else {
 	  pasv_accepted += ({ fd });
+	}
       }
     }
   }
