@@ -19,10 +19,7 @@
 /server/nfonts/lucida_unicode.txt eol=crlf
 /server/nfonts/verdana.txt eol=crlf
 *.xcf binary
-bi binary
-bn binary
 map binary
-ni binary
 nn binary
 rbf binary
 
