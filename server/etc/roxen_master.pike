@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.33 1997/05/27 00:51:04 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.34 1997/05/27 01:15:53 per Exp $";
 
 object stdout, stdin;
 mapping names=([]);
@@ -174,7 +174,7 @@ mixed cvs_file_stat(string name)
 array r_file_stat(string f)
 {
 //werror("file stat "+f+"\n");
-  if(sscanf(f, "/cvs:%s", f))
+  if(sscanf(f, "/cvs:%s", f)||sscanf(f, "/cvs;%s", f))
     return cvs_file_stat(f);
   return file_stat(f);
 }
@@ -182,7 +182,7 @@ array r_file_stat(string f)
 array r_get_dir(string f)
 {
 //  werror("get dir "+f+"\n");
-  if(sscanf(f, "/cvs:%s", f))
+  if(sscanf(f, "/cvs:%s", f)||sscanf(f, "/cvs;%s", f))
     return cvs_get_dir(f);
   return get_dir(f);
 }
@@ -248,7 +248,7 @@ string handle_include(string f, string current_file, int local_include)
   if(f[0]=='/') rfile = f;
   else rfile=combine_path(current_file+"/","../"+f);
 
-  if(sscanf(rfile, "/cvs:%s", rfile))
+  if(sscanf(rfile, "/cvs:%s", rfile)|| sscanf(rfile, "/cvs;%s", rfile))
   {
     rfile=cvs_read_file(rfile);
     if(rfile && strlen(rfile)) return rfile;
@@ -266,7 +266,7 @@ program cvs_load_file(string name)
 
 program findprog(string pname, string ext)
 {
-  if(sscanf(pname, "/cvs:%s", pname))
+  if(sscanf(pname, "/cvs:%s", pname) || sscanf(pname, "/cvs;%s", pname))
   {
     program prog;
 //  werror("CVS findprog "+pname+"    ("+ext+")\n");
