@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.136 2002/03/27 17:51:38 per-bash Exp $
+// $Id: Roxen.pmod,v 1.137 2002/04/03 12:04:15 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -971,6 +971,7 @@ array(string|RXML.PCode) compile_rxml (string what, RequestID id)
   RXML.Parser parser = get_rxml_parser (id, 0, 1);
   parser->write_end (what);
   array(string|RXML.PCode) res = ({parser->eval(), parser->p_code});
+  res[1]->finish();
   //parser->type->give_back (parser); // RXML.PXml is not resettable anyway.
   return res;
 }
@@ -996,9 +997,14 @@ RXML.Parser get_rxml_parser (RequestID id, void|RXML.Type type, void|int make_p_
 //! Returns a parser object for parsing and evaluating a string as
 //! RXML in a new context. @[type] may be used to set the top level
 //! type to parse. It defaults to the standard type and parser for
-//! RXML code. If @[make_p_code] is nonzero, the parser is initialized
-//! with an @[RXML.PCode] object to collect p-code during the
-//! evaluation.
+//! RXML code.
+//!
+//! If @[make_p_code] is nonzero, the parser is initialized with an
+//! @[RXML.PCode] object to collect p-code during the evaluation. When
+//! the parser is finished, the p-code is available in the variable
+//! @[RXML.Parser.p_code]. The p-code itself is not finished, though;
+//! @[RXML.PCode.finished] should be called in it before use to
+//! compact it, although that isn't mandatory.
 {
   RXML.Parser parser = id->conf->rxml_tag_set->get_parser (
     type || id->conf->default_content_type, id, make_p_code);
