@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.42 2000/09/26 23:12:10 per Exp $
+ * $Id: Roxen.pmod,v 1.43 2000/10/16 14:08:08 grubba Exp $
  *
  * Various helper functions.
  *
@@ -1267,11 +1267,9 @@ void trace_leave (RequestID id, string desc)
 #endif
 
 #if !constant(Parser.C)
-object _Parser =
-  class 
+  static private class __Parser
   {
-    object C =
-    class 
+    static private class __C
     {
       mapping(string:string) global_groupings=(["{":"}","(":")","[":"]"]);
 
@@ -1672,6 +1670,8 @@ object _Parser =
 
         return ret;
       }
-    }();
-  }();
+    }
+    object C = __C();
+  }
+object _Parser = __Parser();
 #endif
