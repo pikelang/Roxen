@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.2 1997/08/24 03:57:39 per Exp $
+ * $Id: problems.pike,v 1.3 1997/08/25 23:47:40 grubba Exp $
  */
 
 inherit "wizard";
@@ -318,7 +318,7 @@ string page_4(object id)
   foreach(indices(id->variables), string v)
   {
     if(sscanf(v,"remove_module_%s", tmp))
-      actions += ({ ({ "Move the module <b>"+tmp+"</b> to diabled_modules/",
+      actions += ({ ({ "Move the module <b>"+tmp+"</b> to disabled_modules/",
 			 mv, tmp, "disabled_modules/"+(tmp-dirname(tmp)) }) });
     else if(sscanf(v,"remove_mpath_%s", tmp))
       actions +=({({"Remove the directory <b>"+tmp+"</b> from the module path",
