@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.17 2004/08/11 11:59:10 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.18 2004/08/16 23:19:05 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -337,8 +337,9 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
       result = sprintf(format_string, time[ calendar_method ]());
     else if(calendar_method == "number_of_days")
       result = (string)time->month()->number_of_days();
-    else
+    else {
       result = (string)time[ calendar_method ]();
+    }
     if(want_type && want_type != RXML.t_text)
       result = want_type->encode( result );
     DEBUG("\b => %O\n", result);
@@ -745,9 +746,8 @@ class TagEmitTimeRange
       }
       if(provider) {
 	// Here we retrieve the data...
-	werror(sprintf("We have a provider: %O\n", provider));
 	string compare_column = provider->get_column_name();
-	array(mapping(string:mixed)) provider_data = provider->get_dataset(args, range);
+	array(mapping(string:mixed)) provider_data = provider->get_dataset(args, range, id);
         foreach(dataset,Calendar.TimeRange test_date)
         {
 	  int i = 0;
