@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.15 1997/09/12 06:14:37 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.16 1997/09/16 22:58:19 grubba Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -245,18 +245,20 @@ mapping handle_file_extension(object f, string e, object got)
   if (!functionp(fun = scripts[got->not_query])) {
     file=f->read(655565);
 
-    array (function) ban = allocate(5, "function");
+    array (function) ban = allocate(6, "function");
     ban[0] = setegid;
     ban[1] = setgid;
     ban[2] = seteuid;
     ban[3] = setuid;
     //ban[4] = spawne;
+    ban[5] = cd;
 
     add_constant("setegid", 0);
     add_constant("seteuid", 0);
     add_constant("setgid", 0);
     add_constant("setuid", 0);
     //add_constant("spawne", 0);
+    add_constant("cd", 0);
 
     _master->set_inhibit_compile_errors("");
     err=catch(p=compile_string(file, got->realfile));
@@ -269,6 +271,7 @@ mapping handle_file_extension(object f, string e, object got)
     add_constant("seteuid", ban[2]);
     add_constant("setuid", ban[3]);
     //add_constant("spawne", ban[4]);
+    add_constant("cd", ban[5]);
 
     if(err) {
       destruct(f);
