@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.385 2002/10/23 20:58:21 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.386 2002/10/24 00:16:39 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1563,36 +1563,49 @@ void send_result(mapping|void result)
 
 	if ( fstat[ST_MTIME] > misc->last_modified )
 	  misc->last_modified = fstat[ST_MTIME];
-	
-  	if( misc->cacheable < INITIAL_CACHEABLE )
-	  heads["Expires"] = Roxen.http_date( predef::time(1)+misc->cacheable );
+      }	
 
+      if( misc->cacheable < INITIAL_CACHEABLE ) {
+	heads["Expires"] = Roxen.http_date( predef::time(1)+misc->cacheable );
+
+	if (!misc->cacheable && !misc->last_modified) {
+	  // Data with immediate expiry is assumed to have been generated
+	  // at the same instant.
+	  misc->last_modified = predef::time(1);
+	}
+      }
+
+      if (misc->last_modified)
 	heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
 
-	if(since)
-	{
-	  /* ({ time, len }) */
-	  array(int) since_info = Roxen.parse_since( since );
-//   	    werror("since: %{%O, %}\n"
-//   		   "lm:    %O\n"
-//  		   "cacheable: %O\n",
-//   		   since_info,
-//   		   misc->last_modified,
-//  		   misc->cacheable);
-	  if ( ((since_info[0] >= misc->last_modified) && 
-		((since_info[1] == -1) || (since_info[1] == file->len)))
-	       // never say 'not modified' if not cacheable at all.
-	       && (misc->cacheable != 0)
-		 // actually ok, or...
-// 		 || ((misc->cacheable>0) 
-// 		     && (since_info[0] + misc->cacheable<= predef::time(1))
-// 		 // cacheable, and not enough time has passed.
+//	    werror("lm:    %O\n"
+//		   "cacheable: %O\n",
+//		   misc->last_modified,
+//		   misc->cacheable);
+
+      if(since)
+      {
+	/* ({ time, len }) */
+	array(int) since_info = Roxen.parse_since( since );
+//	  werror("since: %{%O, %}\n"
+//		 "lm:    %O\n"
+//		 "cacheable: %O\n",
+//		 since_info,
+//		 misc->last_modified,
+//		 misc->cacheable);
+	if ( ((since_info[0] >= misc->last_modified) && 
+	      ((since_info[1] == -1) || (since_info[1] == file->len)))
+	     // never say 'not modified' if not cacheable at all.
+	     && (misc->cacheable != 0)
+	     // actually ok, or...
+//	       || ((misc->cacheable>0) 
+//		   && (since_info[0] + misc->cacheable<= predef::time(1))
+//		   // cacheable, and not enough time has passed.
 	     )
-	  {
-	    file->error = 304;
-	    file->file = 0;
-	    file->data="";
-	  }
+	{
+	  file->error = 304;
+	  file->file = 0;
+	  file->data="";
 	}
       }
 
@@ -2162,6 +2175,7 @@ object clone_me()
   c->pragma = pragma;
 
   c->cookies = cookies;
+  c->request_headers = request_headers;
   c->my_fd = 0;
   c->prot = prot;
   c->clientprot = clientprot;
