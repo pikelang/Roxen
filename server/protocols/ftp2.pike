@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.2 1998/04/03 18:01:33 grubba Exp $
+ * $Id: ftp2.pike,v 1.3 1998/04/03 18:19:47 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2011,6 +2011,7 @@ class FTPSession
 
     object session = RequestID(master_session);
     session->method = "CWD";
+    session->not_query = ncwd;
 
     array st = conf->stat_file(ncwd, session);
 
