@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.101 1998/05/17 23:51:06 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.102 1998/05/21 23:25:38 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -634,7 +634,9 @@ void end(string|void s, int|void keepit)
 
 static void do_timeout()
 {
+#ifdef DEBUG
   werror("do_timeout() called, time="+time+"; time()="+_time()+"\n");
+#endif /* DEBUG */
   int elapsed = _time()-time;
   if(time && elapsed >= 30)
   {
