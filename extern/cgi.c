@@ -1,5 +1,5 @@
 /*
- * $Id: cgi.c,v 1.30 1998/05/19 11:10:53 grubba Exp $
+ * $Id: cgi.c,v 1.31 1998/05/20 10:13:45 grubba Exp $
  *
  * CGI-wrapper for Roxen.
  *
@@ -224,7 +224,7 @@ int start_program(char **argv)
 
     if((pid = fork())) {
       if (pid == -1) {
-	int e = errno();
+	int e = errno;
 
 	fprintf(stderr, "CGI: fork() failed\n"
 		"errno: %d\n", e);
