@@ -5,12 +5,16 @@
 
    You can do enything you want this code.
    Please consult me before modifying czech.pike.
+
+   13.05.1998	hop	corrected one a little bug
+			All texts are now in ISO 8859-2
+
 */
-string cvs_version = "$Id: czech.pike,v 1.2 1997/11/19 15:38:51 grubba Exp $";
+string cvs_version = "$Id: czech.pike,v 1.3 1998/05/13 11:31:53 grubba Exp $";
 inline string month(int num)
 {
-  return ({ "Leden", "Unor", "Brezen", "Duben", "Kveten",
-	    "Cerven", "Cervenec", "Srpen", "Zari", "Rijen",
+  return ({ "Leden", "Únor", "Bøezen", "Duben", "Kvìten",
+	    "Èerven", "Èervenec", "Srpen", "Záøí", "Øíjen",
 	    "Listopad", "Prosinec" })[ num - 1 ];
 }
 
@@ -38,10 +42,10 @@ string date(int timestamp, mapping|void m)
       return ("dnes, "+ ctime(timestamp)[11..15]);
   
     if(t1["yday"]+1 == t2["yday"] && t1["year"] == t2["year"])
-      return ("vcera, "+ ctime(timestamp)[11..15]);
+      return ("vèera, "+ ctime(timestamp)[11..15]);
   
     if((t1["yday"]-1) == t2["yday"] && t1["year"] == t2["year"])
-      return ("zitra, "+ ctime(timestamp)[11..15]);
+      return ("zítra, "+ ctime(timestamp)[11..15]);
   
     if(t1["year"] != t2["year"])
       return (month(t1["mon"]+1) + " " + (t1["year"]+1900));
@@ -49,11 +53,11 @@ string date(int timestamp, mapping|void m)
   }
   if(m["full"])
     return (ctime(timestamp)[11..15]+", "+
-	   ordered(t1["mday"]) +
-           month(t1["mon"]+1) +
+	   ordered(t1["mday"]) + " " + 
+           month(t1["mon"]+1) + " " +
            (t2["year"]+1900));
   if(m["date"])
-    return (ordered(t1["mday"]) + month(t1["mon"]+1) + " " +
+    return (ordered(t1["mday"]) + " " + month(t1["mon"]+1) + " " +
        (t2["year"]+1900));
   if(m["time"])
     return (ctime(timestamp)[11..15]);
@@ -68,52 +72,52 @@ string number(int num)
   {
    case 0:  return ("");
    case 1:  return ("jedna");
-   case 2:  return ("dve");
-   case 3:  return ("tri");
-   case 4:  return ("ctyri");
-   case 5:  return ("pet");
-   case 6:  return ("sest");
+   case 2:  return ("dvì");
+   case 3:  return ("tøi");
+   case 4:  return ("ètyøi");
+   case 5:  return ("pìt");
+   case 6:  return ("±est");
    case 7:  return ("sedm");
    case 8:  return ("osm");
-   case 9:  return ("devet");
+   case 9:  return ("devìt");
    case 10: return ("deset");
-   case 11: return ("jedenact");
-   case 12: return ("dvanact");
-   case 13: case 16..18: return (number(num-10)+"nact");
-   case 14: return ("ctrnact");
-   case 15: return ("patnast");
-   case 19: return ("devatenact");
+   case 11: return ("jedenáct");
+   case 12: return ("dvanáct");
+   case 13: case 16..18: return (number(num-10)+"náct");
+   case 14: return ("ètrnáct");
+   case 15: return ("patnást");
+   case 19: return ("devatenáct");
    case 20: return ("dvacet");
-   case 30: return ("tricet");
-   case 40: return ("ctyricet");
-   case 50: return ("padesat");
-   case 60: return ("sedesat");
-   case 70: return ("sedmdesat");
-   case 80: return ("osmdesat");
-   case 90: return ("devadesat");
+   case 30: return ("tøicet");
+   case 40: return ("ètyøicet");
+   case 50: return ("padesát");
+   case 60: return ("±edesát");
+   case 70: return ("sedmdesát");
+   case 80: return ("osmdesát");
+   case 90: return ("devadesát");
    case 21..29: case 31..39: 
    case 51..59: case 61..69: case 71..79: 
    case 81..89: case 91..99: case 41..49: 
      return (number((num/10)*10)+number(num%10));
    case 100..199: return ("sto"+number(num%100));
-   case 200..299: return ("dveste "+number(num%100));
+   case 200..299: return ("dvìstì "+number(num%100));
    case 300..499: return (number(num/100)+"sta "+number(num%100));
    case 500..999: return (number(num/100)+"set "+number(num%100));
-   case 1000..1999: return ("tisic "+number(num%1000));
-   case 2000..2999: return ("dva tisice "+number(num%1000));
-   case 3000..999999: return (number(num/1000)+" tisic "+number(num%1000));
+   case 1000..1999: return ("tisíc "+number(num%1000));
+   case 2000..2999: return ("dva tisíce "+number(num%1000));
+   case 3000..999999: return (number(num/1000)+" tisíc "+number(num%1000));
    case 1000000..999999999: 
      return (number(num/1000000)+" milion "+number(num%1000000));
    default:
     perror("foo\n"+ num +"\n");
-    return ("hodne");
+    return ("hodnì");
   }
 }
 
 string day(int num)
 {
-  return ({ "Nedele","Pondeli","Utery","Streda",
-	    "Ctvrtek","Patek","Sobota" })[ num - 1 ];
+  return ({ "Nedìle","Pondìlí","Úterı","Støeda",
+	    "Ètvrtek","Pátek","Sobota" })[ num - 1 ];
 }
 
 array aliases()
