@@ -20,7 +20,7 @@ string parse( RequestID id )
   function exists =
      id->conf->find_module( "config_filesystem#0" )->stat_file;
 
-  docs += "<a href='"+path(rpath + "whatsnew.html")+"'>"+
+  docs += "<a href='"+path("whatsnew.html")+"'>"+
     _(0,"Release notes")+"</a><br />";
   
   foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
