@@ -6,56 +6,152 @@
 <body alink=#dd0000 bgcolor=#ffffff fgcolcor=#000000 link=#0000dd vlink=#000066>
 <h1>Administrator's Guide for AutoSite</h1>
 
+This is a guide for the administrator configuring the properties of
+the customers on an AutoSite server.
 
-<h2>Logging in to the Administrator's Configuration Interface</h2>
-/admin/
+
+<h2>Configuration Interface</h2>
+
+<h3>Logging in</h3>
+
+The configuration interface is found at
+<tt>http://tifa.idonex.se/admin/</tt>. When connecting you will be
+asked for the administrator's username and password.
 
 
 <h2>Customer Configuration</h2>
 
+From the start page you will be asked to either choose an existing
+customer or add a new one. Clicking on <i>Choose customer</i> will
+allow you to choose from a list of the existing customers.
+
+
+<h3>Add customer</h3>
+
+When adding a new customer you will be asked to fill in the following
+data:
+
+<ul>
+  <li>The name of the customer.
+
+  <li>A login name and password for the administrator or webmaster of
+  the site.
+
+  <li>The domain name for the customer's site. Note that
+  www.<i>domainname</i> is automatically registered for the web site.
+</ul>
+
 
 <h3>Change Username/Password</h3>
+
+Clicking on the <i>Configure customer</i> tab you will be able to
+change the name of the customer, the login name or the password for
+the webmaster of that site. Click on the <i>Save</i> button to confirm
+and save the changes.
 
 
 <h3>Delete Customer</h3>
 
+To delete a customer simply press the <i>Delete this customer</i> on
+the <i>Customer configuration</i> page. The action is irreversible and
+all information about the customer will be lost.
+
 
 <h2>DNS Configuration</h2>
+
+Here the the customer's domain name is set. Note that
+www.<i>domainname</i> is automatically registered for the web site, i
+e the site will be found at <tt>http://www.<i>domainname</i>/</tt>
 
 
 <h2>Mail Configuration</h2>
 
 
+
+
 <h3>Add User</h3>
+
+To add a new user choose the <i>Mail configuration</i> tab and click
+on the <i>Add a user</i> button. You will be asked to fill in the
+name, username and password for the new user.
+
+<p>You can also add a Fax number and an SMS number if the user wants
+the mail to be sent to fax or SMS
 
 
 <h3>Configure User</h3>
-Ändra lösenord eller annan uppgift på befintlig användare
+
+To configure the properties of an existing user, click on the name and
+you will be able to change the password, name or username of that
+user.
 
 
 <h3>Activate Mail Modules</h3>
-Databas, Fax, SMS
+
+Click on the check boxes to enable/disable the different mail modules
+for a user.
+
+
+<h4>Rcpt: AutoMail Database</h4>
+
+This module enables the web based mail client included with Roxen
+Mail, allowing the user to read his/her mail on:
+<tt>http://www.<i>domainname</i>/mail/</tt>
+
+
+<h4>Rcpt: Fax</h4>
+
+Enabling this module will send a copy of each mail to the Fax number
+set in the user's configuration.
+
+
+<h4>Rcpt: SMS</h4>
+
+Enabling this module will send a copy of each mail to the SMS number
+set in the user's configuration.
 
 
 <h2>Extra Services</h2>
 
+AutoSite includes a number of modules that can be enabled for the site
+providing additional services.
+
 
 <h3>Forms Mailer</h3>
+
+Adds the &lt;forms-mail&gt;-container tag.
 
 
 <h3>Hidden Site</h3>
 
+Makes the site password protected. The username and password set on
+the <i>Customer configuration</i> page must be provided for any access
+to the site.
+
 
 <h3>IntraSeek</h3>
+
+Enables the IntraSeek search engine and also adding the
+&lt;search&gt;-tag which can be used to put a search form on a web
+page.
 
 
 <h3>LogView</h3>
 
+The advanced LogView module adds a page in the site's configuration
+interface with an advanced log analyzer.
+
 
 <h3>Simple LogView</h3>
 
+The simple LogView module adds a page in the site's configuration
+interface with a simple log analyzer.
+
 
 <h3>Template Editor</h3>
+
+The template editor makes it possible to configure the layout of the
+site with the help of different templates.
 
 </body>
 </html>
