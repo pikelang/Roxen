@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.21 2002/07/03 12:45:05 nilsson Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.22 2004/05/16 00:44:35 mani Exp $";
 
 //#define DEBUG
 
@@ -668,6 +668,8 @@ void init_disk_check(string dir, int minfree)
 void create(string cdir, string logfiles, int cng, int mcs,
 	    int mnf, int minfree, string gc_lf)
 {
+  if(!stringp(cdir)) return; // Pike 7.6 calls create() with argv.
+
   int i;
   for(i = 1; i < 3; i++)
     signal(i,do_write_log);
