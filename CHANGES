@@ -1,7 +1,7 @@
 Changes since last version
 -----------------------------------------------
 
-o Fixed NULL-file security problem.
+o Fixed NUL filename security problem.
 
 
 Changes since Roxen 2.0.52
