@@ -30,14 +30,6 @@ class Scope_usr
     object id = c->id;
     switch( var )
     {
-     case "linkcolor":
-       object c1 = Image.Color( config_setting( "bgcolor" ) );
-       if(!c1)
-         c1 = Image.Color.black;
-       if( `+(0,@(array)c1) < 200 )
-         return (string)Image.Color.lightblue;
-       return (string)Image.Color.darkblue;
-
      case "fade1":
        object c1 = Image.Color( config_setting( "bgcolor" ) );
        if(!c1)
@@ -247,7 +239,7 @@ string container_roxen_config(string t, mapping m, string data, RequestID id)
   string page =  #"
   <table width=100% cellpadding=0 cellspacing=0 border=0 bgcolor='"+config_setting2("fade3")+#"'>
     <tr bgcolor='"+config_setting2("fade3")+#"'>
-       <td rowspan=2><img src=/internal-roxen-roxen.gif xspacing=2></td>
+       <td rowspan=2><a href=http://www.roxen.com/><img border=0 src=/internal-roxen-roxen.gif></a></td>
        <td align=center>
          <font size=+1 color='"+config_setting2("fade4")+#"'><cf-locale get=administration_interface></font>
        </td>
@@ -870,14 +862,14 @@ string container_configif_output(string t, mapping m, string c, object id)
      object mod = conf->find_module( replace( m->module, "!", "#" ) );
      if( !mod )
        error("Unknown module "+ m->module +"\n");
-     variables = get_variable_sections( mod, m, id ) |
-     ({ ([
+     variables =get_variable_sections( mod, m, id )|  ({ ([
        "section":"Information",
        "selected":
        (((id->variables->section=="Information")||
          !id->variables->section)?
         "selected":""),
      ]) });
+
      if( sizeof( variables ) == 1 )
      {
        while( id->misc->orig )
@@ -898,10 +890,14 @@ string container_configif_output(string t, mapping m, string c, object id)
      foreach( reverse(variables), mapping q )
      {
        if( q->selected == "selected")
+       {
          hassel = 1;
+         break;
+       }
      }
      if(!hassel)
        variables[0]->selected="selected";
+     variables = reverse(variables);
      variables[0]->first = " first ";
      variables[-1]->last = " last=30 ";
      break;
