@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.6 2003/01/22 16:16:03 grubba Exp $
+// $Id: RoxenDebug.pmod,v 1.7 2003/02/11 19:22:56 mast Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -20,42 +20,58 @@ class ObjectMarker
   string id;
   int flags;
 
-  //!
-  void create (void|string|object obj, void|int flags)
+  static void debug_msg (array bt, int ignore_frames, string msg, mixed... args)
   {
-    this_program::flags = flags;
+    if (sizeof (args)) msg = sprintf (msg, @args);
+
+    string file;
+    int i;
+
+  find_good_frame: {
+      for (i = -1 - ignore_frames; i >= -sizeof (bt); i--)
+	if ((file = bt[i][0]) && bt[i][1] && bt[i][2] &&
+	    !(<"__INIT", "create">)[function_name(bt[i][2])])
+	  break find_good_frame;
+
+      for (i = -1 - ignore_frames; i >= -sizeof (bt); i--)
+	if ((file = bt[i][0]) &&
+	    !(<"__INIT", "create">)[function_name(bt[i][2] || debug_msg)])
+	  break find_good_frame;
+
+      for (i = -1 - ignore_frames; i >= -sizeof (bt); i--)
+	if ((file = bt[i][0]))
+	  break find_good_frame;
+    }
+
+    if (file) {
+      string cwd = getcwd() + "/";
+      if (has_prefix (file, cwd)) file = file[sizeof (cwd)..];
+      werror ("%s:%d: %s", file, bt[i][1], msg);
+    }
+    else werror (msg);
+  }
+
+  //!
+  void create (void|string|object obj, void|int _flags)
+  {
+    flags = _flags;
     if (obj) {
       string new_id = stringp (obj) ? obj : sprintf ("%O", obj);
       string cnt = sprintf ("[%d]", count);
       if (!has_suffix (new_id, cnt)) new_id += cnt;
 
-      if (sscanf (new_id, "%s(0)[%*d]", string base) == 2) {
-	// Try to improve the name. The backtrace typically look like
-	// this: ({..., caller 1, caller 2, ObjectMarker(), this
-	// function}). Caller 2 is probably in the class containing
-	// the _sprintf that produced base, so we use the line number
-	// info for caller 1 instead to provide more info.
-	array|object bt = backtrace();
-	string file;
-	int i;
-	for (i = -2; i >= -sizeof (bt); i--)
-	  if (!!file & !!(file = bt[i][0])) break;
-	if (file) {
-	  string cwd = getcwd() + "/";
-	  if (has_prefix (file, cwd)) file = file[sizeof (cwd)..];
-	  new_id = sprintf ("%s(%s:%d)%s", base, file, bt[i][1], cnt);
-	}
-      }
-
       if (id) {
 	if (new_id == id) return;
 	if (log_create_destruct)
-	  if (object_markers[id] > 0) werror ("rename  %s -> %s\n", id, new_id);
-	  else werror ("rename  ** %s -> %s\n", id, new_id);
+	  if (object_markers[id] > 0)
+	    debug_msg (backtrace(), 1, "rename  %s -> %s\n", id, new_id);
+	  else
+	    debug_msg (backtrace(), 1, "rename  ** %s -> %s\n", id, new_id);
 	if (--object_markers[id] <= 0) m_delete (object_markers, id);
       }
       else
-	if (log_create_destruct) werror ("create  %s\n", new_id);
+	if (log_create_destruct)
+	  debug_msg (backtrace(), 1, "create  %s\n", new_id);
 
       id = new_id;
       object_markers[id]++;
@@ -66,8 +82,8 @@ class ObjectMarker
   {
     if (id) {
       if (log_create_destruct)
-	if (object_markers[id] > 0) werror ("destroy %s\n", id);
-	else werror ("destroy ** %s\n", id);
+	if (object_markers[id] > 0) debug_msg (backtrace(), 1, "destroy %s\n", id);
+	else debug_msg (backtrace(), 1, "destroy ** %s\n", id);
       if (--object_markers[id] <= 0) m_delete (object_markers, id);
     }
     if (flags && log_create_destruct) {
