@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.37 2004/05/20 21:59:04 _cvs_stephen Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.38 2004/05/20 22:01:24 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -183,7 +183,7 @@ mixed first_try(object id)
   if(!to)
     return 0;
 
-  string stmp,url;      // Don't use MyWorldLocation to support 'default' sites
+  string stmp,url;      // Don't use MyWorldLocation to support "default" sites
   sscanf(id->url_base(), "%[a-z]://%[^/]",stmp,url);
   to = replace(to, "%u", stmp+"://"+url);
   if(to == oldurl)
