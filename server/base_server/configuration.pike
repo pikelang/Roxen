@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.152 1998/09/02 19:32:18 js Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.153 1998/09/11 22:14:33 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -382,18 +382,19 @@ array(mixed) map_providers(string provides, string fun, mixed ... args)
   array error;
   array a=({ });
   mixed m;
-  foreach(prov, object mod) {
+  foreach(prov, object mod) 
+  {
     if(!objectp(mod))
       continue;
     if(functionp(mod[fun])) 
       error = catch(m=mod[fun](@args));
     if(arrayp(error))
-      werror(describe_backtrace(error + ({ "Error in map_providers:"})));
+      roxen_perror(describe_backtrace(error+({ "Error in map_providers:"})));
     else
-      a+=({ m });
+      a += ({ m });
     error = 0;
   }
-  return m;
+  return a;
 }
 
 // map the function "fun" over all matching provider modules and
@@ -600,9 +601,6 @@ array filter_modules(object id)
 }
 
 
-// Some logging stuff, should probably move to either the actual
-// configuration object, or into a module. That would be much more
-// beautiful, really. 
 void init_log_file()
 {
   remove_call_out(init_log_file);
@@ -1779,7 +1777,7 @@ public array open_file(string fname, string mode, object id)
     mode -= "R";
     if(f = real_file(fname, id))
     {
-      werror("opening "+fname+" in raw mode.\n");
+      //      werror("opening "+fname+" in raw mode.\n");
       return ({ open(f, mode), ([]) });
     }
 //     return ({ 0, (["error":302]) });
@@ -2657,60 +2655,6 @@ string check_variable(string name, string value)
 
 #define perr(X) do { report += X; perror(X); } while(0)
 
-private void update_vars(int from)
-{
-  string report = "";
-  int i;
-  string modname;
-  mapping redir;
-  mapping enabled_modules = retrieve("EnabledModules");
-  array p, res=({});
-
-  perr("Updating configuration file....\n");
-  perr("----------------------------------------------------\n");
-  switch(from)
-  {
-  case 0:
-
-   // Pre Spinnerb11p11 
-   // No longer supported!
-  case 1:
-  case 2:
-   perr("The 'No directory lists' variable is yet again available.\n");
-  case 3:
-   // The htaccess support moved to a module. 
-   if(query(".htaccess"))
-   {
-     perr("The 'HTACCESS' support has been moved to a module.\n");
-     enable_module("htaccess#0");
-   }
-   case 4:
-   case 5:
-    
-    while(sizeof(redir = retrieve(modname = "lpcscript#"+i)))
-    {
-      remove( modname, this );
-      if(search(redir->exts, "pike") == -1)
-	redir->exts += ({"pike"});
-      if(enabled_modules[modname] )
-	m_delete( enabled_modules, modname );
-      store("pikescript#"+i, redir, 1);
-      enable_module("pikescript#"+i);
-      perr("Renaming "+modname+" to pikescript#"+i+"\n");
-      i++;
-    }
-    store( "EnabledModules", enabled_modules, 1 );
-    
-   case 6:// Current level. 
-  }
-
-  perr("----------------------------------------------------\n");
-  report_debug(report);
-}
-
-
-
-
 // Used to hide some variables when logging is not enabled.
 
 int log_is_not_enabled()
@@ -3431,20 +3375,7 @@ void create(string config)
 	 "(usually /etc/shells). Used for named ftp.\n"
 	 "Specify the empty string to disable shell database lookup.\n");
 
-  defvar("_v", CONFIGURATION_FILE_LEVEL, 0, TYPE_INT, 0, 0, 1);
   setvars(retrieve("spider#0", this));
-  
-  if((sizeof(retrieve("spider#0", this)) && 
-      (!retrieve("spider#0",this)->_v) 
-      || (query("_v") < CONFIGURATION_FILE_LEVEL)))
-  {
-    update_vars(retrieve("spider#0",this)->_v?query("_v"):0);
-    killvar("PEther"); // From Spinner 1.0b11
-    variables->_v[VAR_VALUE] = CONFIGURATION_FILE_LEVEL;
-    store("spider#0", variables, 0);
-  }
-    
-  set("_v", CONFIGURATION_FILE_LEVEL);
 }
 
 
