@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.78 1998/02/14 21:53:06 wing Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.79 1998/02/15 14:10:53 wing Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -690,16 +690,16 @@ string tag_set( string tag, mapping m, object id )
       // Set variable to the value of another variable
       if (id->variables[ m->from ])
 	id->variables[ m->variable ] = id->variables[ m->from ];
-      else if (!m->debug)
-	return "<!-- set: from variable doesn't exist -->";
+      else if (!m->debug || id->misc->debug)
+	return "Set: from variable doesn't exist";
       else
 	return "";
     else if (m->other)
       // Set variable to the value of a misc variable
       if (id->misc->variables && id->misc->variables[ m->other ])
 	id->variables[ m->variable ] = id->misc->variables[ m->other ];
-      else if (m->debug)
-	return "<!-- set: other variable doesn't exist -->";
+      else if (m->debug || id->misc->debug)
+	return "Set: other variable doesn't exist";
       else
 	return "";
     else
@@ -728,8 +728,8 @@ string tag_append( string tag, mapping m, object id )
 	  id->variables[ m->variable ] += id->variables[ m->from ];
 	else
 	  id->variables[ m->variable ] = id->variables[ m->from ];
-      else if (m->debug)
-	return "<!-- append: from variable doesn't exist -->";
+      else if (m->debug || id->misc->debug)
+	return "<b>Append: from variable doesn't exist</b>";
       else
 	return "";
     else if (m->other)
@@ -739,18 +739,18 @@ string tag_append( string tag, mapping m, object id )
 	  id->variables[ m->variable ] += id->misc->variables[ m->other ];
 	else
 	  id->variables[ m->variable ] = id->misc->variables[ m->other ];
-      else if (m->debug)
-	return "<!-- append: other variable doesn't exist -->";
+      else if (m->debug || id->misc->debug)
+	return "<b>Append: other variable doesn't exist</b>";
       else
 	return "";
-    else if (m->debug)
-      return "<!-- append: nothing to append from -->";
+    else if (m->debug || id->misc->debug)
+      return "<b>Append: nothing to append from</b>";
     else
       return "";
     return("");
   }
-  else if (m->debug)
-    return("<!-- append: variable not specified -->");
+  else if (m->debug || id->misc->debug)
+    return("<b>Append: variable not specified</b>");
   else
     return "";
 }
@@ -1955,6 +1955,17 @@ string tag_number(string t, mapping args)
 		  args->type||"number")( (int)args->num );
 }
 
+string tag_debug( string tag_name, mapping args, object id )
+{
+  if (args->off)
+    id->misc->debug = 0;
+  else if (args->toggle)
+    id->misc->debug = !id->misc->debug;
+  else
+    id->misc->debug = 1;
+  return "";
+}
+
 mapping query_tag_callers()
 {
    return (["accessed":tag_accessed,
@@ -1995,7 +2006,8 @@ mapping query_tag_callers()
 	    "!--#flastmod":tag_compat_fsize,      /* Side includes.     */
 	    "!--#fsize":tag_compat_fsize, 
 	    "!--#include":tag_compat_include, 
-	    "!--#config":tag_compat_config, 
+	    "!--#config":tag_compat_config,
+	    "debug" : tag_debug,
 	    ]);
 }
 
