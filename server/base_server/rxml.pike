@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.187 2000/04/07 07:32:13 mast Exp $
+// $Id: rxml.pike,v 1.188 2000/04/14 22:10:25 per Exp $
 
 
 inherit "rxmlhelp";
@@ -1889,7 +1889,7 @@ private int format_support(string t, mapping m, string c, mapping doc) {
 
 #ifdef manual
 constant tagdoc=([
-"&roxen;":#"<desc scope>This scope contains information specific to this Roxen WebServer.</desc>",
+"&roxen;":#"<desc scope><short>This scope contains information specific to this Roxen WebServer.</short></desc>",
 "&roxen.hits;":#"<desc ent>The number of hits, i.e. requests the
  webserver has accumulated since it was last started.</desc>",
 "&roxen.hits-per-minute;":"<desc ent>The number of hits per minute, in average.</desc>",
@@ -1907,15 +1907,15 @@ constant tagdoc=([
 "&roxen.uptime-minutes;":"<desc ent>The total uptime of the webserver, in minutes.</desc>",
 "&roxen.version;":"<desc ent>Which version of Roxen WebServer that is running.</desc>",
 
-"&client;":#"<desc scope>
+"&client;":#"<desc scope><short>
  This scope contains information specific to the client/browser that
- is accessing the page.
+ is accessing the page.</short>
 </desc>",
 
-"&page;":"<desc scope>This scope contains information specific to this page.</desc>",
+"&page;":"<desc scope><short>This scope contains information specific to this page.</short></desc>",
 
-"case":#"<desc cont>
- Alters the case of the contents.
+"case":#"<desc cont><short>
+ Alters the case of the contents.</short>
 </desc>
 
 <attr name=case value=upper|lower|capitalize required>
@@ -1923,8 +1923,8 @@ constant tagdoc=([
  capitalizes the first letter in the content.
 </attr>",
 
-"cond":({ #"<desc cont>
- This tag is allmost eqvivalent to the <tag>if</tag>/<tag>else</tag>
+"cond":({ #"<desc cont><short hide>This tag makes a boolean test on a specified list of cases.</short>
+ This tag is almost eqvivalent to the <tag>if</tag>/<tag>else</tag>
  tag combination. The main diffirence is that the <tag>default</tag>
  tag may be put whereever you want it within the <tag>cond</tag> tag.
  This will of course affect the order the content is parsed. The
@@ -1947,7 +1947,7 @@ constant tagdoc=([
 
 	    "default":#"<desc cont>
  The <tag>default</tag> tag is eqvivalent to the <tag>else</tag> tag
- in an <tag>if</tag> statement. The diffirence between the two is that
+ in an <tag>if</tag> statement. The difference between the two is that
  the <tag>default</tag> may be put anywhere in the <tag>cond</tag>
  statement. This affects the parseorder of the statement. If the
  <tag>default</tag> tag is put first in the statement it will allways
@@ -1974,16 +1974,16 @@ constant tagdoc=([
 	    ])
 	  }),
 
-"comment":#"<desc cont>
- The enclosed text will be removed from the document. The difference
+"comment":#"<desc cont><short>
+ The enclosed text will be removed from the document.</short> The difference
  from a normal SGML (HTML/XML) comment is that the text is removed
  from the document, and can not be seen even with view source. Another
  difference is that any RXML tags inside this container will not be
  parsed.
 </desc>",
 
-"define":({ #"<desc cont>
- Defines variables, tags, containers, if-callers. One, and only one,
+"define":({ #"<desc cont><short>
+ Defines variables, tags, containers and if-callers.</short> One, and only one,
  attribute must be set.
 </desc>
 
@@ -2033,30 +2033,30 @@ scope created within the define tag.
 
 }),
 
-"else":#"<desc cont>
+"else":#"<desc cont><short>
  Show the contents if the previous <tag><ref type='tag'>if</ref></tag>
  tag didn't, or if there was a <tag><ref type='tag'>false</ref></tag>
- above. The result is undefined if there has been no <tag><ref
+ above.</short> The result is undefined if there has been no <tag><ref
  type='tag'>if</ref></tag>, <true> or <tag><ref
  type='tag'>false</ref></tag> tag above.
 </desc>",
 
-"elseif":#"<desc cont>
+"elseif":#"<desc cont><short>
  Same as the <tag><ref type='tag'>if</ref></tag>, but it will only
  evaluate if the previous <tag><ref type='tag'>if</ref></tag> tag
- returned false.
+ returned false.</short>
 </desc>",
 
-"false":#"<desc tag>
+"false":#"<desc tag><short>
  Internal tag used to set the return value of <tag><ref
- type='tag'>if</ref></tag> tags. It will ensure that the next <tag><ref
+ type='tag'>if</ref></tag> tags.</short> It will ensure that the next <tag><ref
  type='tag'>else</ref></tag> tag will show its contents. It can be
  useful if you are writing your own <tag><ref type='tag'>if</ref></tag>
  lookalike tag.
 </desc>",
 
-"help":#"<desc tag>
- Gives help texts for tags. If given no arguments, it will list all
+"help":#"<desc tag><short>
+ Gives help texts for tags.</short> If given no arguments, it will list all
  available tags.
 </desc>
 
@@ -2064,9 +2064,9 @@ scope created within the define tag.
  Gives the help text for that tag.
 </attr>",
 
-"if":#"<desc cont>
+"if":#"<desc cont><short>
  <tag><ref type='tag'>if</ref></tag> is used to conditionally show its
- contents. <tag><ref type='tag'>else</ref></tag>, <tag><ref
+ contents.</short> <tag><ref type='tag'>else</ref></tag>, <tag><ref
  type='tag'>elif</ref></tag> or <tag><ref type='tag'>elseif</ref></tag>
  can be used to suggest alternative content. It is possible to use
  glob patterns in almost all attributes, where * means match zero or
@@ -2240,17 +2240,17 @@ The following features are supported:
  Available variables are:
 ",
 
-"nooutput":#"<desc cont>
- The contents will not be sent through to the page. Side effects, for
+"nooutput":#"<desc cont><short>
+ The contents will not be sent through to the page.</short> Side effects, for
  example sending queries to databases, will take effect.
 </desc>",
 
-"noparse":#"<desc cont>
- The contents of this container tag won't be RXML parsed.
+"noparse":#"<desc cont><short>
+ The contents of this container tag won't be RXML parsed.</short>
 </desc>",
 
-"number":#"<desc tag>
- Prints a number as a word.
+"number":#"<desc tag><short>
+ Prints a number as a word.</short>
 </desc>
 
 <attr name=num value=number required>
@@ -2266,32 +2266,30 @@ The following features are supported:
  Sets output format.
 </attr>",
 
-"strlen":#"<desc cont>
- Returns the length of the contents.
+"strlen":#"<desc cont><short>
+ Returns the length of the contents.</short>
 </desc>",
 
-"then":#"<desc cont>
- Shows its content if the truth-value is true.
+"then":#"<desc cont><short>
+ Shows its content if the truth-value is true.</short>
 </desc>",
 
-"trace":#"<desc cont>
+"trace":#"<desc cont><short>
  Executes the contained RXML code and makes a trace report about how
- the contents are parsed by the RXML parser.
+ the contents are parsed by the RXML parser.</short>
 </desc>",
 
-"true":#"<desc tag>
+"true":#"<desc tag><short>
  An internal tag used to set the return value of
- <tag><ref type='tag'>if</ref></tag> tags. It will ensure that the next
+ <tag><ref type='tag'>if</ref></tag> tags.</short> It will ensure that the next
  <tag><ref type='tag'>else</ref></tag> tag will not show its contents.
  It can be useful if you are writing your own
  <tag><ref type='tag'>if</ref></tag> lookalike tag.
 </desc>",
 
-"undefine":#"<desc tag>
-
- Removes a definition made by the define container. One attribute is
+"undefine":#"<desc tag><short>
+ Removes a definition made by the define container.</short> One attribute is
  required.
-
 </desc>
 
 <attr name=variable value=name>
@@ -2310,9 +2308,9 @@ The following features are supported:
  Undefines this if-plugin.
 </attr>",
 
-"use":#"<desc cont>
+"use":#"<desc cont><short>
  Reads tags, container tags and defines from a file or package.
-</desc>
+</short></desc>
 
 <attr name=packageinfo>
  Show a all available packages.
@@ -2342,12 +2340,12 @@ The following features are supported:
  <tag><ref type='tag'>insert</ref></tag>, since the parsed definitions
  is cached.",
 
-"eval":#"<desc cont>Postparses its content. Useful when an entity contains
+"eval":#"<desc cont><short>Postparses its content.</short> Useful when an entity contains
  RXML-code. <tag>eval</tag> is then placed around the entity to get its
  content parsed.</desc>",
 
-"emit":#"<desc cont>Provides data, fetched from different sources, as
- entities</desc>
+"emit":#"<desc cont><short>Provides data, fetched from different sources, as
+ entities</short></desc>
 
 <attr name=source value=plugin required>
  The source from which the data should be fetched.

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.30 2000/04/06 06:16:06 wing Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.31 2000/04/14 22:10:25 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -14,8 +14,8 @@ constant module_doc  = "Provides the <tt>&lt;countdown&gt;</tt> tag, that "
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant tagdoc=(["countdown":#"<desc tag>
-This tag can count days, minutes, months, etc. from a specified date or time. It can also
+constant tagdoc=(["countdown":#"<desc tag><short>
+This tag can count days, minutes, months, etc. from a specified date or time.</short> It can also
 give the time to or from a few special events. See below for a full list.</desc>
 
 <p>Time:</p>
