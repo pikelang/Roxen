@@ -1,5 +1,5 @@
 /*
- * $Id: cgi.c,v 1.31 1998/05/20 10:13:45 grubba Exp $
+ * $Id: cgi.c,v 1.32 1998/05/20 19:21:17 grubba Exp $
  *
  * CGI-wrapper for Roxen.
  *
@@ -70,7 +70,7 @@
 # define MAXHEADERLEN 32769
 #endif
 
-#define DEBUG
+/* #define DEBUG */
 
 #include <errno.h>
 
