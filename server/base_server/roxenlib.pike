@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.171 2000/04/19 15:14:42 nilsson Exp $
+// $Id: roxenlib.pike,v 1.172 2000/04/25 15:47:20 mast Exp $
 
 //#pragma strict_types
 
@@ -13,7 +13,7 @@ inherit "http";
 #define roxen roxenp()
 
 class Configuration {
-  string parse_rxml(string,RequestID,Stdio.File,mapping(string:mixed));
+  string parse_rxml(string,RequestID,void|Stdio.File,void|mapping(string:mixed));
   int|mapping check_security(function, RequestID);
   string real_file(string, RequestID);
   string name;
