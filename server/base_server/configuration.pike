@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.386 2000/10/29 03:40:58 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.387 2000/11/02 08:30:38 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -663,10 +663,15 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
 	mod->query("_sec_group")
       });
     else
+    {
       misc_cache[ a ] = seclevels = ({({}),0,"foo" });
+    }
   }
 
-  if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
+// werror("check_security %O %d <-> %d%s\n", a, slevel, seclevels[1],
+//        (seclevels[-1]=="foo"?"  (No module found)":""));
+
+if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
     return 1;
 
   if(!sizeof(seclevels[0]))
@@ -2170,7 +2175,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       }
     }
 
-    if(module_type != MODULE_LOGGER && module_type != MODULE_PROVIDER)
+#ifdef MODULE_LEVEL_SECURITY
+    if( (module_type & ~(MODULE_LOGGER|MODULE_PROVIDER)) != 0 )
     {
       me->defvar("_sec_group", "user", DLOCALE(14, "Security: Realm"), 
 		 TYPE_STRING,
@@ -2240,6 +2246,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
       }
     }
+#endif
   } else {
     me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
   }
