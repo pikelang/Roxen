@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.642 2001/03/06 09:07:36 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.643 2001/03/06 13:38:15 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -2781,6 +2781,7 @@ class ArgCache
 	       "(%s,%d,UNIX_TIMESTAMP())",
 	       long_key, hl );
     int id = (int)db->master_sql->insert_id();
+    if( !plugins ) get_plugins();
     (plugins->create_key-({0}))( id, hl, long_key );
     return id;
   }
