@@ -2,8 +2,8 @@
 // This module can be used to turn off logging for some files.
 
 
-constant cvs_version = "$Id: nologging.pike,v 1.10 2000/03/02 04:38:12 nilsson Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: nologging.pike,v 1.11 2000/10/12 22:51:58 nilsson Exp $";
+constant thread_safe = 1;
 
 #include <module.h>
 inherit "module";
@@ -14,18 +14,40 @@ constant module_doc  = "This module can be used to turn off logging for some fil
   "It is based on "/*"<a href=$docurl/regexp.html>"*/"Regular"
   " expressions"/*"</a>"*/;
 
+class RegexpList {
+  inherit Variable.List;
+
+  array verify_set( array(string)values ) {
+    string warn="";
+
+    if(catch(Regexp(make_regexp(values))))
+      return ({ "Compile error in regular expression.\n", query() });
+
+    return ::verify_set( values );
+  }
+}
+
 void create()
 {
-  defvar("nlog", "", "No logging for",
-	 TYPE_TEXT_FIELD,
-	 "All files whose (virtual)filename match the pattern above "
-	 "will be excluded from logging. This is a regular expression");
 
-  defvar("log", ".*", "Logging for",
-	 TYPE_TEXT_FIELD,
-	 "All files whose (virtual)filename match the pattern above "
-	 "will be logged, unless they match any of the 'No logging for'"
-	 "patterns. This is a regular expression");
+  // Compatibility with old settings
+  definvisvar("nlog", "", TYPE_TEXT_FIELD);
+  definvisvar("log", "", TYPE_TEXT_FIELD);
+
+  defvar("nLog",
+	 RegexpList( ({ }), 0,
+		     "No logging for",
+		     "All files whose (virtual)filename match the pattern above "
+		     "will be excluded from logging. This is a regular expression"
+		     ) );
+
+  defvar("Log",
+	 RegexpList( ({ ".*" }), 0,
+		     "Logging for",
+		     "All files whose (virtual)filename match the pattern above "
+		     "will be logged, unless they match any of the 'No logging for'"
+		     "patterns. This is a regular expression"
+		     ) );
 }
 
 string make_regexp(array from)
@@ -33,21 +55,18 @@ string make_regexp(array from)
   return "("+from*")|("+")";
 }
 
-
-string check_variable(string name, mixed value)
-{
-  if(catch(Regexp(make_regexp(QUERY(value)/"\n"-({""})))))
-    return "Compile error in regular expression.\n";
-  return 0;
-}
-
-
-function no_log_match, log_match;
+function(string:int) no_log_match, log_match;
 
 void start()
 {
-  no_log_match = Regexp(make_regexp(QUERY(nlog)/"\n"-({""})))->match;
-  log_match = Regexp(make_regexp(QUERY(log)/"\n"-({""})))->match;
+  // Compatibility with old settings
+  if(QUERY(log) && sizeof(QUERY(log)))
+    set("Log", QUERY(log)/"\n"-({""}));
+  if(QUERY(nlog) && sizeof(QUERY(nlog)))
+    set("nLog", QUERY(nlog)/"\n"-({""}));
+
+  no_log_match = Regexp(make_regexp(QUERY(nLog)-({""})))->match;
+  log_match = Regexp(make_regexp(QUERY(Log)-({""})))->match;
 }
 
 
@@ -58,7 +77,7 @@ int nolog(string what)
 }
 
 
-int log(object id, mapping file)
+int log(RequestID id, mapping file)
 {
   if(nolog(id->not_query+"?"+id->query))
     return 1;
