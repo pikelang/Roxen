@@ -1,18 +1,28 @@
-<navigation maxwidth=150 preload imgbase=/img/
-  transparent=$$bg_color$$>
+<include file=nav_shadow.inc>
+	
+<formoutput quote=¤> 
+  <navigation maxwidth=150 preload transparent=$$bg_color$$
+              bg=$$bg_color$$>
+    <textstyle $$nav_align$$ scale=$$nav_size$$ xspacing=5 yspacing=1
+               font='$$nav_font$$'>
 
-  <textstyle scale=$$nav_size$$ xspacing=5 yspacing=5
-             font='$$nav_font$$'>
+    <boxstyle left text center bg=$$nav_bg_color$$
+      alpha=0 width=20>
+    <boxstyle left text selected bg=$$nav_bg_color_sel$$
+      alpha="/img/sand/line_left_alpha.pnm">
+    <boxstyle left text mouseover bg=$$nav_bg_color_mouse$$
+      alpha="/img/sand/line_left_alpha.pnm">
 
-  <boxstyle middle text bg=$$bg_color$$ fg=$$nav_text_color$$
-    alpha=255>
-  <boxstyle middle text selected bg=$$bg_color$$ fg=$$nav_text_color_sel$$
-    alpha=255>
-  <boxstyle middle text mouseover bg=$$bg_color$$ fg=$$nav_text_color_mouse$$
-    alpha=255>
+    <boxstyle middle text bg=$$nav_bg_color$$ fg=$$nav_text_color$$
+      alpha=0 ¤shadow¤>
+    <boxstyle middle text selected bg=$$nav_bg_color_sel$$ fg=$$nav_text_color_sel$$
+      alpha="/img/sand/line_alpha.pnm" ¤shadow¤>
+    <boxstyle middle text mouseover bg=$$nav_bg_color_mouse$$ fg=$$nav_text_color_mouse$$
+      alpha="/img/sand/line_alpha.pnm" ¤shadow_mouse¤>
 
-  <boxstyle middle delimit bg=$$bg_color$$ height=5 alpha=255>
+    <boxstyle left delimit bg=$$bg_color$$ height=5 alpha=0>
+    <boxstyle middle delimit bg=$$bg_color$$ height=5 alpha=0>
 
-  <menumaker menu=top>
-
-</navigation>
+    <menumaker menu=top>
+  </navigation>
+</formoutput>

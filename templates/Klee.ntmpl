@@ -1,10 +1,9 @@
-<navigation maxwidth=160 preload imgbase=/img/ transparent=$$bg_color$$ bg=$$bg_color$$>
-  <as-color var="bg_notrans" diffrent>$$bg_color$$</as-color>
-  <cset variable=shadow></cset>
-  <if match='$$nav_shadow$$ is 1'><cset variable=shadow>shadow='60,1'</cset></if>
-  <formoutput quote=¤>
-    <textstyle $$nav_align$$ scale=$$nav_size$$ xspacing=5 yspacing=5
-               font='$$nav_font$$' xspacing=10>
+<cset variable=shadow></cset>
+<if match='$$nav_shadow$$ is 1'><cset variable=shadow>shadow='60,1'</cset></if>
+<formoutput quote=¤>
+  <navigation maxwidth=160 preload imgbase=/img/ transparent=$$bg_color$$ bg=$$bg_color$$>
+    <textstyle $$nav_align$$ scale=$$nav_size$$ xspacing=10 yspacing=5
+               font='$$nav_font$$'>
 
     <boxstyle left text center bg=$$nav_bg_color$$
       alpha="Klee/Left-end_Alpha.pnm" width=8>
@@ -30,7 +29,6 @@
     <boxstyle left delimit bg=$$bg_color$$ alpha=255>
     <boxstyle middle delimit height=4 bg=$$bg_color$$ alpha=255>
     <boxstyle right delimit bg=$$bg_color$$ alpha=255>
-  </formoutput>
-  <menumaker menu=top>
-
-</navigation>
+    <menumaker menu=top>
+  </navigation>
+</formoutput>

@@ -5,21 +5,25 @@
 <body bgcolor='$$bg_color$$' text='$$text_color$$' link='$$link_color$$'
       vlink='$$vlink_color$$' alink='$$alink_color$$'>
   <table cellpadding=0 cellspacing=0 border=0>
-    <tr><if supports=tableimages>
-        <td height=50 align=center bgcolor=black
-            background="/img/dawn/blue_clouds.jpg">&nbsp;</td>
-      </if><else><td align=center bgcolor=black>
-          <img src="/img/dawn/blue_clouds_fix.jpg"></td>
-      </else>
+    <tr>
+      <if not match='$$page_head_image$$ is none'>
+        <if supports=tableimages>
+          <td height=50 align=$$page_head_image_align$$
+	      bgcolor=$$page_head_bar_color$$
+              background="$$page_head_image$$">&nbsp;</td>
+        </if>
+	<else><td align=$$page_head_image_align$$
+                  bgcolor=$$page_head_bar_color$$>
+          <img src="$$page_head_image$$"></td>
+        </else>
+      </if>
     </tr>
     <tr>
       <td><img height=2 width=100% src=/internal-roxen-unit></td>
     </tr>
     <tr>
       <td align=center bgcolor=$$nav_bg_color$$>
-        <!--  Navigation  -->
         <include file='$$nav_name$$'>
-        <!--  End Navigation  -->
       </td>
     </tr>
     <tr>

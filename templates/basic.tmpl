@@ -1,22 +1,24 @@
-<include file='gtext_headers.inc'>
-
+<include file=gtext_headers.inc>
+<include file=bg_image.inc>
+<formoutput quote='£'>
 <html>
 <head><title><as-meta var=title></title></head>
 <body bgcolor='$$bg_color$$' text='$$text_color$$' link='$$link_color$$'
-      vlink='$$vlink_color$$' alink='$$alink_color$$'>
+      vlink='$$vlink_color$$' alink='$$alink_color$$' £bg_image£>
   <table>
     <tr>
-      <td>
-        &nbsp;
-      </td>
-      <td>
-	<gtext><autosite-webadm-customername></gtext>        
-      </td>
+      <td colspan=2></td>
+      <td align=$$page_head_text_align$$>
+        <gtext bg=$$bg_color$$ fg=$$page_head_text_color$$
+	       scale=$$page_head_text_size$$
+	       £page_head_text_shadow£
+               afont=$$page_head_text_font$$>$$page_head_text$$</gtext></td>
     </tr>
     <tr>
-      <td valign=top>
+      <td valign=top><img src="/internal-roxen-unit" height=30 width=1>
         <include file='$$nav_name$$'>
       </td>
+      <td width=5%></td>
       <td valign=top>
         <tmplinsert tag=content>
       </td>
@@ -24,3 +26,4 @@
   </table>
 </body>
 </html>
+</formoutput>

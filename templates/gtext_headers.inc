@@ -1,6 +1,7 @@
 <tmplblock tag=h1>
   <cset variable=shadow></cset>
-  <if match='$$h1_shadow$$ is 1'><cset variable=shadow>shadow='60,1'</cset></if>
+  <if match='$$h1_shadow$$ is 1'><cset
+    variable=shadow>shadow='60,1'</cset></if>
   <formoutput quote='%'>
     <p><br>
     <div align=$$h1_align$$>
@@ -12,7 +13,8 @@
 
 <tmplblock tag=h2>
   <cset variable=shadow></cset>
-  <if match='$$h2_shadow$$ is 1'><cset variable=shadow>shadow='60,1'</cset></if>
+  <if match='$$h2_shadow$$ is 1'><cset
+    variable=shadow>shadow='60,1'</cset></if>
   <formoutput quote='%'>
     <p>
     <div align=$$h2_align$$>
