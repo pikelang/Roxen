@@ -710,9 +710,9 @@ mapping get_variable_section( string s, object mod, object id )
     ]);
   else
     return ([
-      "section":"Misc",
+      "section":"Main config",
       "selected":
-      ((id->variables->section=="Misc"||!id->variables->section)?
+      ((id->variables->section=="Main config"||!id->variables->section)?
        "selected":""),
     ]);
   return 0;
@@ -729,7 +729,7 @@ array get_variable_maps( object mod, mapping m, object id )
                             } );
   if( m->section && (m->section != "all"))
   {
-    if( !strlen( m->section ) || (search( m->section, "Misc" ) != -1 ))
+    if( !strlen( m->section ) || (search( m->section, "Main config" ) != -1 ))
       variables = Array.filter( variables,
                                 lambda( mapping q )
                                 {
