@@ -37,7 +37,7 @@ void old_rxml_warning(RequestID id, string problem, string solution)
 {
   if(query("logold"))
     report_warning("Old RXML in "+(id->query||id->not_query)+
-    ", contains "+problem+". Use "+solution+" instead.\n");
+    ": contains "+problem+". Use "+solution+" instead.\n");
 }
 
 // Changes the parsing order by first parsing it's contents and then
@@ -99,7 +99,7 @@ string|array tag_redirect(string tag, mapping m, RequestID id)
 
 array tag_refferrer(string tag, mapping m, RequestID id)
 {
-  if(tag=="refferrer") old_rxml_warning(id, "refferrer tag","referrer tag");
+  old_rxml_warning(id, "refferrer tag","referrer tag");
   return ({1, "referrer", 0});
 }
 
@@ -115,7 +115,7 @@ array tag_set(string tag, mapping m, RequestID id)
 
 array tag_pr(string tag, mapping m, RequestID id)
 {
-  if(tag=="pr") old_rxml_warning(id,"pr tag","roxen tag");
+  old_rxml_warning(id,"pr tag","roxen tag");
   return ({1, "roxen", 0});
 }
 
