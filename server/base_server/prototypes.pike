@@ -1,11 +1,11 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001, Roxen IS.
+// $Id: prototypes.pike,v 1.52 2002/06/11 09:59:38 nilsson Exp $
 
 #include <stat.h>
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.51 2002/06/11 00:01:54 nilsson Exp $";
 
 class Variable
 {
