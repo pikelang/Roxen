@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.287 2002/01/11 09:49:50 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.288 2002/01/21 17:53:02 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1074,6 +1074,10 @@ private string do_gtext(mapping arg, string c, RequestID id)
       {
         arg->width  = (string)size->xsize;
         arg->height = (string)size->ysize;
+      }
+      else {
+	m_delete (arg, "width");
+	m_delete (arg, "height");
       }
       res+=Roxen.make_tag( "img", arg, xml )+" ";
     }
