@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.52 2000/01/07 02:32:41 mast Exp $
+ * $Id: rxml.pike,v 1.53 2000/01/07 04:55:54 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -61,7 +61,7 @@ RXML.TagSet rxml_last_tag_set = class
     "amp": "&",
     "lt": "<",
     "gt": ">",
-    "nbsp": "\0240",
+    "nbsp": "\240",
     // FIXME: More...
   ]);
 } ("rxml_last_tag_set");
@@ -199,8 +199,9 @@ void build_callers()
       tag_set->changed();
     }
 
-    if (sizeof (tag_set->get_local_tags()) || sizeof (tag_set->imported) ||
-	tag_set->low_tags || tag_set->low_containers) {
+    if ((sizeof (tag_set->get_local_tags()) || sizeof (tag_set->imported) ||
+	 tag_set->low_tags || tag_set->low_containers) &&
+	mod != this_object()) {
       tag_sets[mod] = tag_set;
       ts_list += ({tag_set});
       ts_priorities += ({mod->query("_priority", 1) || 4});
@@ -444,9 +445,19 @@ string tag_list_tags( string t, mapping args, RequestID id, Stdio.File f )
   return res;
 }
 
-string tag_line( string t, mapping args, RequestID id)
+class TagLine
 {
-  return id->misc->line;
+  inherit RXML.Tag;
+  constant name = "line";
+  constant flags = 0;
+  class frame
+  {
+    inherit RXML.Frame;
+    array do_return (RequestID id)
+    {
+      return ({id->misc->line});
+    }
+  }
 }
 
 string tag_number(string t, mapping args)
@@ -976,9 +987,17 @@ mapping query_tag_callers()
     "number":tag_number,
     "undefine":tag_undefine,
     "help": tag_help,
-    "line":tag_line,
     "version":lambda() { return ({ roxen.version() }); }
   ]);
+}
+
+
+RXML.TagSet query_tag_set()
+{
+  // Note: By putting these tags in rxml_tag_set, they will always
+  // have the highest priority.
+  rxml_tag_set->add_tags(({TagLine()}));
+  return rxml_tag_set;
 }
 
 
