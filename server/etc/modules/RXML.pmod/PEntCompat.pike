@@ -5,7 +5,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEntCompat.pike,v 1.2 2000/01/28 16:48:44 mast Exp $
+//! $Id: PEntCompat.pike,v 1.3 2000/02/08 06:26:48 mast Exp $
 
 #pragma strict_types
 
@@ -26,6 +26,15 @@ static void create (
   RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
   _tag_set_parser_create (ctx, type, tag_set);
+
+  array(RXML.TagSet) list = ({tag_set});
+  for (int i = 0; i < sizeof (list); i++) {
+    array(RXML.TagSet) sublist = list[i]->imported;
+    if (sizeof (sublist))
+      list = list[..i] + sublist + list[i + 1..];
+  }
+  for (int i = sizeof (list) - 1; i >= 0; i--)
+    if (list[i]->low_entities) add_entities (list[i]->low_entities);
 
   mixed_mode (!type->free_text);
   lazy_entity_end (1);
