@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.65 2003/12/15 09:47:59 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.66 2003/12/22 17:12:18 grubba Exp $";
 
 class Variable
 {
@@ -1039,6 +1039,12 @@ class RequestID
 
 #if constant(Parser.XML.Tree.XMLNSParser)
 
+#ifdef DAV_DEBUG
+#define DAV_WERROR(X...)	werror(X)
+#else /* !DAV_DEBUG */
+#define DAV_WERROR(X...)
+#endif /* DAV_DEBUG */
+
 static constant Node = Parser.XML.Tree.Node;
 static constant TextNode = Parser.XML.Tree.TextNode;
 static constant ElementNode = Parser.XML.Tree.ElementNode;
@@ -1152,7 +1158,8 @@ class MultiStatus
       message = prop_value->data;
     }
 
-    werror("Adding property %O code:%O val:%O\n", prop_name, code, prop_value);
+    DAV_WERROR("Adding property %O code:%O val:%O\n",
+	       prop_name, code, prop_value);
     if (!(stat_nodes = status_set[href])) {
       status_set[href] = ({ stat_node = XMLPropStatNode(code, message) });
     } else {
@@ -1188,8 +1195,8 @@ class MultiStatus
     array(Node) response_xml = allocate(sizeof(status_set));
     int i;
 
-    werror("Generating XML Nodes for status_set:%O\n",
-	   status_set);
+    DAV_WERROR("Generating XML Nodes for status_set:%O\n",
+	       status_set);
 
     foreach(sort(indices(status_set)), string href) {
       array(Node) responses = status_set[href];

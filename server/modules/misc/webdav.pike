@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.1 2003/09/17 10:53:20 grubba Exp $
+// $Id: webdav.pike,v 1.2 2003/12/22 17:12:18 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,13 +9,19 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.1 2003/09/17 10:53:20 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.2 2003/12/22 17:12:18 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
 constant module_doc  = "Adds support for various HTTP extensions defined "
   "in <a href='http://rfc.roxen.com/2518'>RFC 2518 (WEBDAV)</a>, such as "
   "<b>PROPFIND</b> and <b>PROPPATCH</b>.";
+
+#ifdef DAV_DEBUG
+#define DAV_WERROR(X...)	werror(X)
+#else /* !DAV_DEBUG */
+#define DAV_WERROR(X...)
+#endif /* DAV_DEBUG */
 
 Configuration conf;
 

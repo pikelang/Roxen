@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.147 2003/11/17 16:01:23 anders Exp $
+// $Id: module.pike,v 1.148 2003/12/22 17:12:17 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -530,15 +530,11 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     }
     break;
 
-#if 0
-    // The following are properties in the DAV namespace
-    // that Microsoft has stolen.
   case "DAV:isreadonly":	// draft-ietf-dasl-protocol-00
     if (!(st->mode & 0222)) {
       return "1";
     }
     return "0";
-#endif
   case "DAV:iscollection":	// draft-ietf-dasl-protocol-00 5.18
   case "DAV:isfolder":		// draft-hopmann-collection-props-00 1.5
     if (st->isdir) {
@@ -548,6 +544,8 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   case "DAV:ishidden":		// draft-hopmann-collection-props-00 1.6
     return "0";
 #if 0
+    // The following are properties in the DAV namespace
+    // that Microsoft has stolen.
   case "DAV:isroot":		// MS
     if (path == "/") return "1";
     return "0";
@@ -576,17 +574,15 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   default:
     break;
   }
+#ifdef DAV_DEBUG
   report_debug("query_property(): Unimplemented property:%O\n", prop_name);
-#if 1
+#endif /* DAV_DEBUG */
   // RFC 2518 8.1:
   //   A request to retrieve the value of a property which does not
   //   exist is an error and MUST be noted, if the response uses a
   //   multistatus XML element, with a response XML element which
   //   contains a 404 (Not Found) status value.
   return Roxen.http_low_answer(404, "No such property.");
-#else /* !1 */
-  return Roxen.http_low_answer(200, "OK");
-#endif /* 1 */
 }
 
 //! Attempt to set property @[prop_name] for @[path] to @[value].
