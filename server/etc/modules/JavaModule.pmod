@@ -684,20 +684,19 @@ static object native_get_pragma(object id)
 static string native_real_file(object conf, object filename, object id)
 {
   conf = jotoconf[conf];
-  return conf && conf->real_file("/index.xml", jotoid[id]);
-  // return conf && conf->real_file(filename && (string)filename, jotoid[id]);
+  return filename && conf && conf->real_file((string)filename, jotoid[id]);
 }
 
 static string native_try_get_file(object conf, object filename, object id)
 {
   conf = jotoconf[conf];
-  return conf && conf->try_get_file((string)filename, jotoid[id]);
+  return filename && conf && conf->try_get_file((string)filename, jotoid[id]);
 }
 
 static string native_type_from_filename(object conf, object filename)
 {
   conf = jotoconf[conf];
-  return conf && conf->type_from_filename(filename && (string)filename);
+  return filename && conf && conf->type_from_filename((string)filename);
 }
 
 void create()
