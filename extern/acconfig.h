@@ -1,5 +1,5 @@
 /*
- * $Id: acconfig.h,v 1.2 1997/10/30 23:11:47 grubba Exp $
+ * $Id: acconfig.h,v 1.3 1998/02/28 16:43:25 grubba Exp $
  *
  * Config file for some of Roxen's external binaries.
  *
@@ -13,6 +13,9 @@
 
 /* Define if you signals are one-shot. */
 #undef SIGNAL_ONESHOT
+
+/* Number of possible filedesriptors */
+#define MAX_OPEN_FILEDESCRIPTORS 1024
 
 @TOP@
 @BOTTOM@
