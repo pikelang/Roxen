@@ -39,6 +39,18 @@ dp() {
   fi
 }
 
+dp_no_nl() {
+  if [ "x$SILENT_START" = "xy" ] ; then
+     :
+  elif [ "x$self_test" = "xy" ]; then
+    echo "$@" | tr -d '
+' >&2
+  else
+    echo "          :" "$@" | tr -d '
+' >&2
+  fi
+}
+
 chilimoon_version() {
    VERSION="`sed <data/include/version.h -e '/__chilimoon_version__/s/[^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
    BUILD="`sed <data/include/version.h -e '/__chilimoon_build__/s/[^0-9]*\([0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
