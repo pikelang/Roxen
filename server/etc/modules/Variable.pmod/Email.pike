@@ -21,12 +21,12 @@ array(string) verify_set( string new_value ) {
 
   domain=lower_case(domain);
   sscanf(domain,
-	 "%*[abcdefghijklmnopqrstuvwxyz0123456789.-_]%s", tmp); // More characters?
+	 "%*[-abcdefghijklmnopqrstuvwxyz0123456789._]%s", tmp); // More characters?
   if(sizeof(tmp))
     return ({ "The email address domain contains forbidden characters.", new_value });
 
   sscanf(lower_case(user),
-	 "%*[abcdefghijklmnopqrstuvwxyz0123456789.-_]%s", tmp); // More characters?
+	 "%*[-abcdefghijklmnopqrstuvwxyz0123456789._]%s", tmp); // More characters?
   if(sizeof(tmp))
     return ({ "The email address user contains forbidden characters.", new_value });
 
