@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.168 2000/04/11 04:54:53 per Exp $
+// $Id: roxenlib.pike,v 1.169 2000/04/15 03:57:04 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -87,7 +87,8 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 
   new["DOCUMENT_URI"]= tmpid->not_query;
 
-  if((tmp = file_stat(tmpid->conf->real_file(tmpid->not_query||"", tmpid)))
+  if(tmpid->conf->real_file(tmpid->not_query||"", tmpid) &&
+     (tmp = file_stat(tmpid->conf->real_file(tmpid->not_query||"", tmpid)))
      && sizeof(tmp))
     new["LAST_MODIFIED"]=http_date(tmp[3]);
 
