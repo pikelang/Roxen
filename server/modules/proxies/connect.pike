@@ -3,14 +3,12 @@
 // An implementation of the CONNECT methos, used for SSL tunneling in
 // Netscape (the "Secure proxy" field)
 
-string cvs_version = "$Id: connect.pike,v 1.4 1996/11/27 14:05:20 per Exp $";
+string cvs_version = "$Id: connect.pike,v 1.4.2.1 1997/03/02 19:26:22 grubba Exp $";
 #include <module.h>
 
 inherit "module";
 inherit "roxenlib";
 inherit "socket";
-
-#include "base_server/proxyauth.pike"
 
 #define CONN_REFUSED QUERY(ConRefused)
 
