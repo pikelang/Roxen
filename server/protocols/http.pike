@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.182 2000/01/03 01:25:31 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.183 2000/01/05 17:48:51 grubba Exp $";
 
 #define MAGIC_ERROR
 
@@ -61,7 +61,17 @@ int time;
 string raw_url;
 int do_not_disconnect;
 mapping (string:string) variables       = ([ ]);
-mapping (string:mixed)  misc            = ([ ]);
+mapping (string:mixed)  misc            =
+([
+#ifdef REQUEST_DEBUG
+  "trace_enter":lambda(mixed ...args) {
+		  DPERROR(sprintf("TRACE_ENTER(%{%O,%})", args));
+		},
+  "trace_leave":lambda(mixed ...args) {
+		  DPERROR(sprintf("TRACE_LEAVE(%{%O,%})", args));
+		}
+#endif /* REQUEST_DEBUG */
+]);
 mapping (string:string) cookies         = ([ ]);
 mapping (string:string) request_headers = ([ ]);
 
@@ -1044,6 +1054,9 @@ void internal_error(array err)
   }
   report_error("Internal server error: " +
 	       describe_backtrace(err) + "\n");
+#ifdef INTERNAL_ERROR_DEBUG
+  report_error(sprintf("Raw backtrace:%O\n", err));
+#endif /* INTERNAL_ERROR_DEBUG */
 }
 
 // This macro ensures that something gets reported even when the very
