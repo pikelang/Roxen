@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.38 1998/05/15 06:10:00 neotron Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.39 1998/05/15 10:26:36 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -558,7 +558,7 @@ mixed find_file( string f, object id )
 #ifdef DEBUG
     report_notice(sprintf("CHMODing file "+f+" to 0%o\n", id->misc->mode));
 #endif
-    array err = catch(chmod(f, id->misc->mode));
+    array err = catch(chmod(f, id->misc->mode & 0777));
     privs = 0;
     
     if(err)
