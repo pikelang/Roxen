@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.146 2002/02/01 17:07:57 anders Exp $";
+constant cvs_version = "$Id: business.pike,v 1.147 2003/06/04 16:36:20 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -427,7 +427,7 @@ int datacounter = 0;
 */
 
 constant _diagram_args =
-({ "xgridspace", "ygridspace", "horgrid", "size", "type", "3d",
+({ "xgridspace", "ygridspace", "horgrid", "size", "type", "3d", "do3d",
    "templatefontsize", "fontsize", "tone", "background","colorbg", "subtype",
    "dimensions", "dimensionsdepth", "xsize", "ysize", "fg", "bg",
    "orientation", "xstart", "xstop", "ystart", "ystop", "data", "colors",
@@ -548,11 +548,12 @@ string container_diagram(string tag, mapping m, string contents,
      return syntax("\""+res->type+"\" is an FIX unknown type of diagram\n");
   }
 
-  if(m["3d"])
+  if(string val = (m["do3d"] || m["3d"]))
   {
     res->drawtype = "3D";
-    if( lower_case(m["3d"])!="3d" )
-      res->dimensionsdepth = (int)m["3d"];
+    if( (!m["3d"] || lower_case(m["3d"])!="3d") &&
+	(!m["do3d"] || lower_case(m["do3d"])!="do3d") )
+      res->dimensionsdepth = (int)val;
     else
       res->dimensionsdepth = 20;
   }
@@ -834,7 +835,7 @@ constant tagdoc=([
  tags.</p>
 </desc>
 
-<attr name='3d' value='number'><p>
+<attr name='do3d' value='number'><p>
  Draws a pie-chart on top of a cylinder, takes the height in pixels of the
  cylinder as argument.</p>
  </attr>
