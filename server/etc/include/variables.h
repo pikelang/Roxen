@@ -1,5 +1,5 @@
 // -*- Pike -*-
-// $Id: variables.h,v 1.12 2000/12/10 02:41:40 per Exp $
+// $Id: variables.h,v 1.13 2004/03/02 20:01:01 mast Exp $
 // Fallback-resources, don't change here.
 
 private static constant errors =
@@ -16,13 +16,16 @@ private static constant errors =
   205:"Reset Content",
   206:"Partial Content", // Byte Ranges
   207:"Multi-Status",
+  226:"IM Used",		// RFC 3229
 
   300:"Moved",			// Multiple Choices
   301:"Permanent Relocation",
-  302:"Temporary Relocation",
-  303:"Temporary Relocation method and URI",
+  302:"Found",
+  303:"See Other",
   304:"Not Modified",
   305:"Use Proxy",
+  // RFC 2616 10.3.7: 306 not used but reserved.
+  307:"Temporary Redirect",
 
   400:"Bad Request",
   401:"Access denied",		// Unauthorized
