@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.91 1998/07/12 22:49:01 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.92 1998/07/14 19:32:39 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -29,6 +29,10 @@ mapping my_build_env_vars(string f, object id, string|void path_info)
 
   if(QUERY(Enhancements))
     new |= build_roxen_env_vars(id);
+
+  if (QUERY(ApacheBugCompliance)) {
+    new->SERVER_PORT = "80";
+  }
   
   if(id->misc->ssi_env)
     new |= id->misc->ssi_env;
@@ -75,6 +79,10 @@ void create()
 	 "VARIABLES: A space separated list of all form variables<br>"
 	 "PRESTATE_name: True if the prestate is present<br>"
 	 "PRESTATES: A space separated list of all states");
+
+  defvar("ApacheBugCompliance", 0, "Apache Bug Compliance", TYPE_FLAG|VAR_MORE,
+	 "If defined, Roxen will attempt to be a bit more bug-compliant "
+	 "with Apache.");
 
   defvar("mountpoint", "/cgi-bin/", "CGI-bin path", TYPE_LOCATION, 
 	 "This is where the module will be inserted in the "
