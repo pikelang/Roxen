@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.1 2002/03/27 15:06:11 js Exp $
+ * $Id: debug_summary.pike,v 1.2 2002/03/27 15:36:20 js Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -44,12 +44,20 @@ string indent(string text, int level)
   return a*"\n";
 }
 
-string describe_var(mixed value)
+string describe_var_low(mixed value)
 {
   if(arrayp(value))
-    return "{"+map(value, describe_var)*", "+"}";
+    return "{"+map(value, describe_var_low)*", "+"}";
   else 
     return sprintf("%O", value);
+}
+
+string describe_var(mixed var)
+{
+  if(var->type=="Password" || var->type=="VerifiedPassword")
+    return "***** (censored)";
+  else
+    return describe_var_low(var->query());
 }
 
 string make_headline(string title)
@@ -91,7 +99,7 @@ string make_variables_summary(mapping vars)
     res+=sprintf("%s%-30s %s\n",
 		 vars[varname]->is_defaulted()?"  ":" *",
 		 varname+":",
-		 describe_var(vars[varname]->query()));
+		 describe_var(vars[varname]));
   return res;
 }
 
