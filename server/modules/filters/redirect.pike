@@ -2,9 +2,9 @@
 
 // The redirect module. Redirects requests from one filename to
 // another. This can be done using "internal" redirects (much like a
-// symbolik link in unix), or with normal HTTP redirects.
+// symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.17 2000/03/09 13:46:46 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.18 2000/03/09 14:13:09 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -63,9 +63,9 @@ void create()
 	 "have to reload the module to do that." );
 }
 
-array redirect_indices, exact_indices;
-mapping redirect_patterns = ([]);
-mapping exact_patterns = ([]);
+array(string) redirect_from = ({});
+array(string) redirect_to = ({});
+mapping(string:string) exact_patterns = ([]);
 
 void parse_redirect_string(string what)
 {
@@ -75,42 +75,47 @@ void parse_redirect_string(string what)
       if(string contents=Stdio.read_bytes(file))
 	parse_redirect_string(contents);
       else
-	report_error("Cannot read redirect patterns from "+file+"\n");
+	report_warning ("Cannot read redirect patterns from "+file+".\n");
     }
     else if (s[..0] != "#") {
       array(string) a = s/" " - ({""});
-      if(sizeof(a)>=3 && a[0]=="exact")
+      if(sizeof(a)>=3 && a[0]=="exact") {
+	if (exact_patterns[a[1]] || search (redirect_from, a[1]) >= 0)
+	  report_warning ("Duplicate redirect pattern %O.\n", a[1]);
 	exact_patterns[a[1]] = a[2];
-      else if (sizeof(a)==2)
-	redirect_patterns[a[0]] = a[1];
+      }
+      else if (sizeof(a)==2) {
+	if (exact_patterns[a[0]] || search (redirect_from, a[0]) >= 0)
+	  report_warning ("Duplicate redirect pattern %O.\n", a[0]);
+	redirect_from += ({a[0]});
+	redirect_to += ({a[1]});
+      }
       else if (sizeof (a))
-	report_error ("Invalid redirect pattern %O\n", a[0]);
+	report_warning ("Invalid redirect pattern %O.\n", a[0]);
     }
   }
 }
 
 void start()
 {
-  redirect_patterns = ([]);
+  redirect_from = ({});
+  redirect_to = ({});
   exact_patterns = ([]);
-
   parse_redirect_string(QUERY(fileredirect));
-  redirect_indices = indices (redirect_patterns);
-  exact_indices = indices (exact_patterns);
 }
 
 constant module_type = MODULE_FIRST;
 constant module_name = "Redirect Module v2.0";
 constant module_doc  = "The redirect module. Redirects requests from one filename to "
   "another. This can be done using \"internal\" redirects (much"
-  " like a symbolik link in unix), or with normal HTTP redirects.";
+  " like a symbolic link in unix), or with normal HTTP redirects.";
 constant module_unique = 0;
 
 string status()
 {
   return sprintf("Number of patterns: %d+%d=%d, Redirects so far: %d",
-		 sizeof(redirect_patterns),sizeof(exact_patterns),
-		 sizeof(redirect_patterns)+sizeof(exact_patterns),
+		 sizeof(redirect_from),sizeof(exact_patterns),
+		 sizeof(redirect_from)+sizeof(exact_patterns),
 		 redirs);
 }
 
@@ -131,7 +136,7 @@ mixed first_try(object id)
        if(sscanf(id->raw, "%*s?%[^\n\r ]", tmp))
 	  m += "?"+tmp;
 
-    foreach(exact_indices, f)
+    foreach(indices(exact_patterns), f)
     {
       if(m == f)
       {
@@ -141,10 +146,12 @@ mixed first_try(object id)
       }
     }
     if(!ok)
-      foreach(redirect_indices, f)
+      for (int i = 0; i < sizeof (redirect_from); i++) {
+	string f = redirect_from[i];
+	werror ("%O\n%O\n", m, f);
 	if(!search(m, f))
 	{
-	  to = redirect_patterns[f] + m[strlen(f)..];
+	  to = redirect_to[i] + m[strlen(f)..];
 	  sscanf(to, "%s?", to);
 	  break;
 	} else if(search(f, "*")!=-1) {
@@ -164,10 +171,11 @@ mixed first_try(object id)
 	    bar +=({ "%f", "%p" });
 	    foo = Array.map(foo, lambda(mixed s) { return (string)s; });
 	    bar = Array.map(bar, lambda(mixed s) { return (string)s; });
-	    to = replace(redirect_patterns[f], bar, foo);
+	    to = replace(redirect_to[i], bar, foo);
 	    break;
 	  }
 	}
+      }
   })
     report_error("REDIRECT: Compile error in regular expression. ("+f+")\n");
 
