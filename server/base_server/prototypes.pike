@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.129 2004/05/14 18:10:55 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.130 2004/05/14 21:18:34 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -285,6 +285,17 @@ class DAVLock
 
     return res;
   }
+
+  static string _sprintf (int flag)
+  {
+    return flag == 'O' &&
+      sprintf ("DAVLock(%O on %O, %s, %s%s)", locktoken, path,
+	       recursive ? "rec" : "norec",
+	       lockscope == "DAV:exclusive" ? "excl" :
+	       lockscope == "DAV:shared" ? "shared" :
+	       sprintf ("%O", lockscope),
+	       locktype == "DAV:write" ? "" : sprintf (", %O", locktype));
+  }
 }
 
 class Configuration
@@ -374,7 +385,7 @@ class Configuration
   multiset(DAVLock) find_locks(string path, int(0..1) recursive,
 			       int(0..1) exclude_shared, RequestID id);
   DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id);
-  mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID id);
+  mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0) id);
   int expire_locks(RequestID id);
   void refresh_lock(DAVLock lock);
   mapping(string:mixed)|DAVLock lock_file(string path,
@@ -1935,9 +1946,9 @@ enum Overwrite {
 //!     DAV:keepalive "*".
 //!     All live properties must be kept alive.
 //!   @type multiset(string)
-//!     Set of properties to keep alive.
-//!     Properties not in the set should be copied according
-//!     to best effort.
+//!     Set of properties to keep alive. Properties not in the set
+//!     should be copied according to best effort. The properties are
+//!     listed with complete namespaces.
 //! @endmixed
 typedef int(0..1)|multiset(string) PropertyBehavior;
 
