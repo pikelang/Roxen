@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.376 2000/09/19 13:17:25 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.377 2000/09/19 14:25:36 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -790,17 +790,17 @@ array(string) draw_saturation_bar(int hue,int brightness, int where)
   where = 255-where;
   bar->line(0,where,29,where, 255,255,255);
 
-#if constant(Image.GIF) && constant(Image.GIF.encode)
-  return ({ Image.GIF.encode(bar), "image/gif" });
-#else
+#if constant(Image.JPEG) && constant(Image.JPEG.encode)
   return ({ Image.JPEG.encode(bar), "image/jpeg" });
+#else
+  return ({ Image.PNG.encode(bar), "image/png" });
 #endif
 }
 
 
 // Inspired by the internal-gopher-... thingie, this is the images
 // from the administration interface. :-)
-private mapping internal_roxen_image(string from)
+private mapping internal_roxen_image( string from, RequestID id )
 {
   sscanf(from, "%s.gif", from);
   sscanf(from, "%s.jpg", from);
@@ -997,7 +997,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       switch(type) {
        case "roxen":
 	TRACE_LEAVE("Magic internal gopher image");
-	return internal_roxen_image(loc);
+	return internal_roxen_image(loc, id);
 
        case "gopher":
 	TRACE_LEAVE("Magic internal roxen image");
