@@ -148,6 +148,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/logging/client_logger.pike foreign_ident
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
+/server/modules/misc/SQLuserdb.pike foreign_ident
 /server/modules/misc/contenttypes.pike foreign_ident
 /server/modules/misc/ip-less_hosts.pike foreign_ident
 /server/modules/misc/ismap.pike foreign_ident

@@ -1,0 +1,197 @@
+<HTML>
+<HEAD><TITLE>SQL User Authentication Module for Roxen/1.2</TITLE>
+<BODY bgcolor="#ffdead" text="#000000" alink="#ff0000" vlink="#ff0000">
+
+<H1 align=center>SQL User Authentication Module for Roxen/1.2</H1>
+
+<H2 align=center>Preamble</H2>
+This module fills a hole in Roxen capabilities, and completes the options
+an user has in adiministering its site. 
+In particular, it handles authentication data stored in a SQL database.<BR>
+
+<H2 align=center>Location and documentation</H2>
+The latest version of this module can be found at:<BR>
+<A href="http://kame.usr.dsi.unimi.it:1111/sw/roxen/sqluserauth/">
+http://kame.usr.dsi.unimi.it/sw/roxen/sqluserauth/</A> (my home site),<BR>
+<A href="ftp://ftp.roxen.com/pub/roxen/contrib/">
+ftp://ftp.roxen.com/pub/roxen/contrib/</A> or<BR>
+<A href="http://www.riverweb.com/source/">the Roxen Module Source</A>
+
+<H2 align=center>Copyright and Disclaimer of Warranty</H2>
+This software and the accompanying documentation are &copy; 1997
+Francesco Chemolli 
+&lt;<A href="mailto:kinkie@comedia.it">kinkie@comedia.it</A>&gt;.
+Use, reproduction and distribution are allowed
+under the terms of the GNU General Public License version 2 or, at
+your option, any later version. Use of the software implies you know
+all the terms therein explained and that you agree to these terms.<BR>
+This program is distributed in the hope that it will be useful,
+but <B>WITHOUT ANY WARRANTY</B>; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+<H2 align=center>Design Issues</H2>
+This module exploits Pike's unique ability to use an uniform interface
+to all supported databases. These currently options include
+<A href="http://www.hughes.com.au/">MiniSQL</A>,
+<A href="http://www.tcx.se/">MySql</A>,
+<A href="http://www.postgresql.org/">PostgreSql</A>. Commercial
+extensions should cover Ingres and Oracle.<P>
+While the interface is consistent, unluckily not all those databases
+follow ANSI SQL specifications except for very simple queries. This means that
+I couldn't automate the database creation process, short of following every
+SQL dialect of the supported servers.<BR>
+This module can do pretty everything, from simple authentication to driving
+an user filesystem or a named FTP server. The last is however deprecated,
+since too many security issues are at stake with this approach.
+
+<H2 align=center>Setup</H2>
+In this description, I assume you know the basics of Roxen confguration and
+how to use interactively your SQL server.<P>
+First off, make sure the Pike interpreter your Roxen server uses supports
+the database of your choice. Mysql driver is distributed along with the Pike
+interpreter, Msql and Postgres are not. You can fetch them at
+<A href="ftp://ftp.infovav.se/pub/pike/contrib/">the Roxen FTP site</A>.
+Follow the instruction therein contained to build and install your new
+interpreter should it be needed.<BR>
+Copy the <TT>SQLuserdb.pike</TT> file in a directory where Roxen can
+find it (see the Roxen configuration Interface), and then add it to
+the virtual server of your choice. Remember there can be only one
+user authentication module per virtual server.<BR>
+Connect to your SQL server, and create a new database. Make sure to grant
+the user running the WWW server enough privileges to read the database.<BR>
+Notice that the database server doesn't necesarily have to be on the
+same host. The host where the database resides, its name and the name of
+the table containing the authorization information are configurable, so
+you don't have to worry about this at this time. <BR>
+Let's suppose that the table is called <TT>passwd</TT>, it must have
+<B>at least</B> these column definitions (these are simil-SQL, you'll
+have to adapt them to your SQL server's syntax:
+<UL>
+<LI><TT>username</TT>
+<DD>A string or variable-length string. Must be <B>primary key</B>, or
+ at least <B>unique index</B>
+<LI><TT>passwd</TT>
+<DD>A string long exactly 13 characters, must be <B>not null</B>
+<LI><TT>uid</TT>
+<DD>integer
+<LI><TT>gid</TT>
+<DD>integer
+<LI><TT>homedir</TT>
+<DD>A string. I suggest a varchar, long at least 20-30 characters. If it 
+ can grow, better.
+<LI><TT>shell</TT>
+<DD>A string. I suggest a varchar, like for homedir
+</UL>
+<DIV align=center>
+<TABLE border=2 width=60%>
+<CAPTION>Example: mSQL 2.0 table definition</CAPTION>
+<TR><TD>
+<PRE>
+CREATE TABLE passwd (
+	username char(15) NOT NULL,
+	passwd char(13) NOT NULL,
+	uid int,
+	gid int,
+	homedir text(20),
+	shell text(10)
+)
+
+CREATE UNIQUE INDEX pass_index ON passwd (
+	username
+)
+</PRE>
+</TABLE>
+</DIV>
+Notice that you may want to have more tables or more columns for administrative
+tasks. It is of course possible.<BR>
+We're almost done. Now you only need to check the default values in the
+configuration interface.
+
+<H2 align=center>Configuration</H2>
+It is pretty straightforward.
+<UL>
+<LI>Cache entries
+<DD>defines whether the
+ module should cache in memory decoded password entries. This will allow
+ a good performance gain (remember that unless you're running a multithreaded
+ Roxen, the server blocks while looking up the database, so it could become
+ a serious bottleneck on a busy site. I recommend to leave it on.
+<LI>Close the database if not used
+<DD>Keeping an unused connection to the database uses one filedescriptor
+ and some computing power both on the client side (Roxen) and on the
+ server side. If this is set, the database connection will be closed
+ if it is idle for more than an amount of time.
+<LI>Database close timer
+<DD>This is the inactivity timeout for the database connection. You'll have
+ to find a balance for your site with this setting: opening a connection
+ to the database takes some overhead, so you'll want to keep in somewhat
+ high. At the same time, having this too high means you'll have no
+ profit from it. I believe (but have no solid proof) that a timeout of
+ 60 (seconds) or so is best.
+<LI>Defaults...
+<DD>These are the values returned for users who haven't set theirs: only 
+ username and password are mandatory, and you could have no interest in
+ the others. However, the database columns must be there, but can be
+ left empty. These values are returned in such a case.
+<LI>Disable userlist
+<DD>In some cases Roxen asks the authorization module a list of all the
+ user it knows, for example to print a directory listing of an userfilesystem
+ mountpoint. If you have an huge user list, and are not interested
+ in such features, you may want to have this flag turned on: memory is
+ a scarce resource, and its allocation and deallocation a long task.
+<LI>SQL server...
+<DD>These are the settings about the server: where it is, what table it
+ should use and the authentication information.
+</UL>
+
+<H2 align=center>Let's start</H2>
+Okay. Your authentication server is now hopefully set up. All you need is
+fill in the entries, and test it.<BR>
+You will probably want to write your customized application/CGI script/pike
+script/whatever to correctly fill in the entries. Especially since you'll
+probably have extra administrative information to manage.<BR>
+The program <TT>adduser</TT> can be used if such is not the case, or
+as an example. It simply interactively adds (or changes) user entries
+on the table <TT>passwd</TT> in database <TT>passwd</TT> on whatever
+server runs on localhost<P>
+The fields <TT>uid</TT> and <TT>gid</TT> are <B>deprecated</B>. It's in
+my opinion simply too dangerous to use them. The only use I can
+think of for them is to drive a named ftp upload. This is DANGEROUS!
+I will never stress it enough. <BR>
+My suggestion is to set the "noobody" user
+and group in the configuration interface and leave these entries in the
+database empty. Also, I'm afraid to say that for implementation reasons,
+user ID 0 and group ID 0 (root/root) <B>are not availible</B>. Given
+the premises, I don't think I'll ever try to implement a way aroud this.
+
+<H2 align=center>Bugs</H2>
+Bugs? What are those? &lt;grin&gt;<BR>
+Seriously. Should you notice strange behaviours, first off check your
+setup, your SQL server, your authentication.<BR>
+Should you find in your debug/default.1 log messages of "cannot open server for
+unknown reason", it's quite likely that you have permission problems or
+that your SQL server is down.<BR>
+If you're VERY SURE everything is fine, try to uncomment the 
+<CODE>#define SQLAUTHDEBUG</CODE> line at the beginning of the module and
+reload the module.
+This will produce a lot of debugging output in the default.1 file.<BR>
+Should everything else fail, <A href="mailto:kinkie@comedia.it">send me</A>
+a mail trying to describe exactly what the problem is and I'll see what
+I can do.
+
+<H2 align=center>Final notes</H2>
+This module, accompanying documentation and tools are <B>free software</B>.
+That means, you can use, copy, distribute them freely. Money donations to
+the author are of course welcome, but not required. My oversized ego
+however forces me to ask you to 
+<A href="mailto:kinkie@comedia.it">write me</A> if you find this program
+useful. This will not make me richer, but will for sure encourage me to
+write more, better software, and won't cost you one bit ^_^<BR>
+I hope my work will be useful, and to hear from you soon.<P>
+<DIV align=right>
+Sincerely,<BR>
+<ADDRESS><A href="mailto:kinkie@comedia.it">Francesco Chemolli</A></ADDRESS>
+</DIV>
+
+</BODY></HTML>
