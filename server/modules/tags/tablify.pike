@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.6 1997/11/14 06:52:00 per Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.7 1997/11/14 16:40:39 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -34,6 +34,8 @@ string tag_tablify( string tag, mapping m, string q, mapping request_id )
   array rows, res;
   string sep, td, color, table;
   int i;
+
+  if(tag == "htable") m->nice="nice";
 
   if(sep = m->rowseparator)
     m->rowseparator = 0;
@@ -82,72 +84,6 @@ string tag_tablify( string tag, mapping m, string q, mapping request_id )
 
 mapping query_container_callers()
 {
-  return ([ "tablify" : tag_tablify ]);
+  return ([ "tablify" : tag_tablify, "htable" : tag_tablify ]);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
