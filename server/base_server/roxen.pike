@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.42 1997/03/02 09:52:41 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.43 1997/03/09 18:46:04 marcus Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -53,7 +53,7 @@ int *six2pr=({
   'N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
   'a','b','c','d','e','f','g','h','i','j','k','l','m',
   'n','o','p','q','r','s','t','u','v','w','x','y','z',
-  '0','1','2','3','4','5','6','7','8','9','+','*', 
+  '0','1','2','3','4','5','6','7','8','9','+','/', 
   });
 
 int *pr2six = lambda() {
