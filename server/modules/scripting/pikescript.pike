@@ -9,7 +9,7 @@
 // This is an extension module.
 
 constant cvs_version=
-"$Id: pikescript.pike,v 1.48 1999/12/06 23:44:17 grubba Exp $";
+"$Id: pikescript.pike,v 1.49 1999/12/07 00:17:52 grubba Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -78,6 +78,13 @@ void create()
           "shift+reload, IE doesn't), even if they have not changed on disk. "
           " Please note that pike modules are currently not automatically "
           "reloaded from disk" );
+#if constant(__builtin.security)
+  defvar( "trusted", 0,
+	  "Pike scripts are trusted",
+	  TYPE_FLAG,
+	  "If this option is true, scripts will be able to do everything "
+	  "the Roxen server can do.");
+#endif /* constant(__builtin.security) */
 }
 
 array (string) query_file_extensions()
@@ -113,10 +120,12 @@ array|mapping call_script(function fun, object got, object file)
 #endif
 
 #if constant(__builtin.security)
-  // EXPERIMENTAL: Call with low credentials.
-  err = catch(result = call_with_creds(luser_creds, fun, got)); 
+  if (!QUERY(trusted)) {
+    // EXPERIMENTAL: Call with low credentials.
+    err = catch(result = call_with_creds(luser_creds, fun, got)); 
+  } else
 #else /* !constant(__builtin.security) */
-  err = catch(result = fun(got)); 
+    err = catch(result = fun(got)); 
 #endif /* constant(__builtin.security) */
 
   if(privs) 
