@@ -43,6 +43,15 @@ string describe_builtin_variables(object node)
   return link("<b>Builtin variables (security, comments etc.)</b>");
 }
 
+static private array(string) truncate(array(string) arr, int len)
+{
+  if (sizeof(arr) <= len) {
+    return(arr);
+  } else {
+    return(({ (arr[..len-1]*",")+"..." }));
+  }
+}
+
 string describe_errors(object node)
 {
   if(node->folded)
@@ -59,8 +68,8 @@ string describe_errors(object node)
     report += ({ (sizeof(node->data[err])>1?
 		  (sizeof(node->data[err]) + " times:<br>"):"")
 		   + "<font size=-1>"+
-		   Array.map(node->data[err],
-			     roxen->language("en","date"))*", "
+		   truncate(Array.map(node->data[err],
+				      roxen->language("en","date")),5)*", "
 		   +"</font><br>" + err + "<p>" });
 
   return (link("<font size=+2>&nbsp;Error and debug log")
