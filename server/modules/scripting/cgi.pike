@@ -5,8 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-
-string cvs_version = "$Id: cgi.pike,v 1.77 1998/03/11 19:42:41 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.78 1998/03/23 08:20:57 neotron Exp $";
 int thread_safe=1;
 
 #include <module.h>

@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.23 1998/03/16 02:55:43 mast Exp $ */
+/* $Id: low_describers.pike,v 1.24 1998/03/23 08:20:55 neotron Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -309,8 +309,9 @@ string encode_one_port(array port, int id)
     port[0]+"></td>\n    <td>"+all_protocols_as_selection(id, port[1])+
     "</td>\n    <td>"+all_ip_numbers_as_selection(id, port[2])+"</td>\n"
     "</tr>\n";
-  if(lower_case(port[1])=="ssl3")
+  switch(lower_case(port[1]))
   {
+   case "ssl3":
     string cf, kf;
     sscanf(port[3], "%*scert-file %s\n", cf);
     sscanf(port[3], "%*skey-file %s\n", kf);
@@ -324,12 +325,36 @@ string encode_one_port(array port, int id)
 	    "name=key_"+id+"  value="+html_encode_tag_value(kf||"")+
 	    "></td></tr>\n");
     res += "</table></td></tr>\n";
-  }
+    break;
+#if 0
+   case "smtp":
+    string arg1, arg2;
+    sscanf(port[3], "%*sid %s\n", arg1);
+    sscanf(port[3], "%*ssize %s\n", arg2);
+    if(!arg1 || !strlen(arg1))
+      arg1 = "ESMTP "+roxen->real_version;
+    if(!arg2 || !strlen(arg2))
+      arg2 = "1000000"; // 1MB
+    
+    res += ("<tr><td colspan=3>"
+	    "<table width=100% cellspacing=0  border=0 bgcolor=#f0f0ff>\n"
+	    "<tr width=100%><td colspan=2 width=100%><b>SMTP Options</b></td></tr>\n");
+    res += ("<tr><td>Server identification string:</td> <td><input size=30,1 "
+	    "name=smtp_id_"+id+" value=\""+html_encode_string(arg1)+
+	    "\"></td></tr>\n"
+	    "<tr><td>Max Message Size:</td> <td><input size=30,1 "
+	    "name=smtp_size_"+id+"  value=\""+html_encode_string(arg2)+
+	    "\"></td></tr>\n");
+    res += "</table></td></tr>\n";
+    break;
+#endif
+  } 
   return res +
     ("</table></td><td height=100% valign=top>\n"
      "<table bgcolor=#e0e0ff height=100% cellspacing=0 cellpadding=0 "
      "border=0>\n"+
-     "<tr height=100%><td height=100%>"+port_buttons(port,id)+"</td></tr>\n"
+     "<tr height=100%><td height=100%>&nbsp;"+
+     port_buttons(port,id)+"</td></tr>\n"
      "</table></td></tr>");
 }
 

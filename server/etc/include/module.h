@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.13 1998/03/02 18:28:49 grubba Exp $
+// $Id: module.h,v 1.14 1998/03/23 08:20:56 neotron Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -15,6 +15,8 @@
 #define TYPE_MULTIPLE_INT     6
 
 #define TYPE_FLAG             7
+#define TYPE_TOGGLE           7
+
 #define TYPE_ERROR            8
 #define TYPE_DIR_LIST	      9
 #define TYPE_FILE_LIST       10
@@ -83,7 +85,9 @@
 
 #define MODULE_SECURITY          (2<<14)
 
+// A module which can be called from other modules, protocols, scripts etc.
 #define MODULE_PROVIDER		 (2<<15)
+
 
 #define MOD_ALLOW   1
 #define MOD_USER    2

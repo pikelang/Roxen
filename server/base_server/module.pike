@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.29 1998/02/06 18:31:56 grubba Exp $ */
+/* $Id: module.pike,v 1.30 1998/03/23 08:20:55 neotron Exp $ */
 
 #include <module.h>
 
@@ -332,6 +332,8 @@ string query_location()
   return s;
 }
 
+/* By default, provide nothing. */
+string query_provides() { return 0; } 
 
 /*
  * Parse and return a parsed version of the security levels for this module

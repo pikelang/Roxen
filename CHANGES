@@ -1,6 +1,33 @@
 Changes since Roxen Challenger 1.2.21 Yellow
 -----------------------------------------------
 
+o Added new module type, MODULE_PROVIDER. This is a module type which
+  enables other modules, scripts or protocols to call it very
+  simply. Function needed in the module:
+  "string|array|multiset query_provides()" - Return the name of the
+  data this module provides. One existing example is "counter"
+  (which is the graphical counter module).
+
+  Functions available to other modules:
+   object conf->get_provider(string for);
+     Get the first (highest priority) provider for "for".
+   array (object) conf->get_providers(string for);
+     Dito, but return all matching modules.
+   void map_providers(string for, string fun, mixed ... args);
+     Run the function "fun" in all modules providing "for", with the
+     optional arguments "args".
+   mixed call_provider(string for, string fun, mixed ... args);
+     Run the function "fun" in all modules providing "for", with the
+     optional arguments "args" until a positive response
+     (!zero). Return the result. This is the main way of calling
+     functions in provider modules from other places.
+   
+o Added new tag - echo. It's usable with one of the following syntaxes:
+  <echo var='Remote Host'> <echo remote_host>  <insert remote_host>
+  Case doesn't matter and in the first syntax, ' ' and '_' are
+  interchangable. The available variables are identical to the SSI
+  <!--#echo var="..." -->
+
 o Added the graphical counter module by Jordi Murgo <jordi@lleida.net>
   to the distribution.  
 

@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.89 1998/03/20 03:37:58 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.90 1998/03/23 08:20:56 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -782,6 +782,114 @@ string tag_define(string tag,mapping m, string str, object got,object file,
   return ""; 
 }
 
+string tag_modified(string tag, mapping m, object got, object file,
+		    mapping defines);
+
+
+
+string tag_echo(string tag,mapping m,object got,object file,
+			  mapping defines)
+{
+  if(m->help) 
+    return ("This tag outputs the value of different configuration and request local variables. They are not really used by Roxen. This tag is included only to provide compatibility with \"normal\" WWW-servers");
+  if(!m->var)
+  {
+    if(sizeof(m) == 1)
+      m->var = m[indices(m)[0]];
+    else 
+      return "<!-- Que? -->";
+  } else if(tag == "insert")
+    return "";
+      
+  string addr=got->remoteaddr || "Internal";
+  switch(lower_case(replace(m->var, " ", "_")))
+  {
+   case "sizefmt":
+    return defines->sizefmt;
+    
+   case "timefmt": case "errmsg":
+    return "&lt;unimplemented&gt;";
+      
+   case "document_name": case "path_translated":
+    return roxen->real_file(got->not_query, got);
+
+   case "document_uri":
+    return got->not_query;
+
+   case "date_local":
+    return replace(ctime(time(1)), "\n", "");
+
+   case "date_gmt":
+    return replace(ctime(time(1) + localtime(time(1))->timezone), "\n", "");
+      
+   case "query_string_unescaped":
+    return got->query || "";
+
+   case "last_modified":
+    return tag_modified(tag, m, got, file, defines);
+      
+   case "server_software":
+    return roxen->version();
+      
+   case "server_name":
+    string tmp;
+    tmp=got->conf->query("MyWorldLocation");
+    sscanf(tmp, "%*s//%s", tmp);
+    sscanf(tmp, "%s:", tmp);
+    sscanf(tmp, "%s/", tmp);
+    return tmp;
+      
+   case "gateway_interface":
+    return "CGI/1.1";
+      
+   case "server_protocol":
+    return "HTTP/1.0";
+      
+   case "server_port":
+    tmp = objectp(got->my_fd) && got->my_fd->query_address(1);
+    if(tmp)
+      return (tmp/" ")[1];
+    return "Internal";
+
+   case "request_method":
+    return got->method;
+      
+   case "remote_host":
+    return roxen->quick_ip_to_host(addr);
+
+   case "remote_addr":
+    return addr;
+
+   case "auth_type":
+    return "Basic";
+      
+   case "remote_user":
+    if(got->auth && got->auth[0])
+      return got->auth[1];
+    return "Unknown";
+      
+   case "http_cookie": case "cookie":
+    return (got->misc->cookies || "");
+
+   case "http_accept":
+    return (got->misc->accept && sizeof(got->misc->accept)? 
+	    got->misc->accept*", ": "None");
+      
+   case "http_user_agent":
+    return got->client && sizeof(got->client)? 
+      got->client*" " : "Unknown";
+      
+   case "http_referer":
+    return got->referer && sizeof(got->referer) ? 
+      got->referer*", ": "Unknown";
+      
+   default:
+    if(tag == "insert")
+      return "";
+    return "<i>Unknown variable</i>: '"+m->var+"'";
+  }
+}
+
 string tag_insert(string tag,mapping m,object got,object file,mapping defines)
 {
   string n;
@@ -850,11 +958,8 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
 
     return do_replace(s, m);
   }
-  return "";
+  return tag_echo(tag, m, got, file, defines);
 }
-
-string tag_modified(string tag, mapping m, object got, object file,
-		    mapping defines);
 
 string tag_compat_exec(string tag,mapping m,object got,object file,
 		       mapping defines)
@@ -964,98 +1069,8 @@ string tag_compat_echo(string tag,mapping m,object got,object file,
 			  mapping defines)
 {
   if(!QUERY(ssi))
-    return "SSI support disabled";
-  if(m->help) 
-    return ("This tag outputs the value of different configuration and request local variables. They are not really used by Roxen. This tag is included only to provide compatibility with \"normal\" WWW-servers");
-  if(m->var)
-  {
-    string addr=got->remoteaddr || "Internal";
-    switch(m->var)
-    {
-     case "sizefmt":
-      return defines->sizefmt;
-      
-     case "timefmt": case "errmsg":
-      return "&lt;unimplemented&gt;";
-      
-     case "DOCUMENT_NAME": case "PATH_TRANSLATED":
-      return roxen->real_file(got->not_query, got);
-
-     case "DOCUMENT_URI":
-      return got->not_query;
-
-     case "DATE_LOCAL":
-      return replace(ctime(time(1)), "\n", "");
-
-     case "DATE_GMT":
-      return replace(ctime(time(1) + localtime(time(1))->timezone), "\n", "");
-      
-     case "QUERY_STRING_UNESCAPED":
-      return got->query || "";
-
-     case "LAST_MODIFIED":
-      return tag_modified(tag, m, got, file, defines);
-      
-     case "SERVER_SOFTWARE":
-      return roxen->version();
-      
-     case "SERVER_NAME":
-      string tmp;
-      tmp=got->conf->query("MyWorldLocation");
-      sscanf(tmp, "%*s//%s", tmp);
-      sscanf(tmp, "%s:", tmp);
-      sscanf(tmp, "%s/", tmp);
-      return tmp;
-      
-     case "GATEWAY_INTERFACE":
-      return "CGI/1.1";
-      
-     case "SERVER_PROTOCOL":
-      return "HTTP/1.0";
-      
-     case "SERVER_PORT":
-      tmp = objectp(got->my_fd) && got->my_fd->query_address(1);
-      if(tmp)
-	return (tmp/" ")[1];
-      return "Internal";
-
-     case "REQUEST_METHOD":
-      return got->method;
-      
-     case "REMOTE_HOST":
-      return roxen->quick_ip_to_host(addr);
-
-     case "REMOTE_ADDR":
-      return addr;
-
-     case "AUTH_TYPE":
-      return "Basic";
-      
-     case "REMOTE_USER":
-      if(got->auth && got->auth[0])
-	return got->auth[1];
-      return "Unknown";
-      
-     case "HTTP_COOKIE": case "COOKIE":
-      return (got->misc->cookies || "");
-
-     case "HTTP_ACCEPT":
-      return (got->misc->accept && sizeof(got->misc->accept)? 
-	      got->misc->accept*", ": "None");
-      
-     case "HTTP_USER_AGENT":
-      return got->client && sizeof(got->client)? 
-	got->client*" " : "Unknown";
-      
-     case "HTTP_REFERER":
-      return got->referer && sizeof(got->referer) ? 
-	got->referer*", ": "Unknown";
-      
-     default:
-      return "<i>Unknown variable</i>: '"+m->var+"'";
-    }
-  }
-  return "<!-- Que? -->";
+    return "SSI support disabled. Use &lt;echo var=name&gt; instead.";
+  return tag_echo(tag, m, got, file, defines);
 }
 
 string tag_compat_fsize(string tag,mapping m,object got,object file,
@@ -2102,6 +2117,7 @@ mapping query_tag_callers()
  	    "quote":tag_quote,
 	    "true":tag_true,	// Used internally
 	    "false":tag_false,	// by <if> and <else>
+	    "echo":tag_echo,           /* These commands are */
 	    "!--#echo":tag_compat_echo,           /* These commands are */
 	    "!--#exec":tag_compat_exec,           /* NCSA/Apache Server */
 	    "!--#flastmod":tag_compat_fsize,      /* Side includes.     */

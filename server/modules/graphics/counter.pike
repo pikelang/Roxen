@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.16 1998/03/18 19:51:20 neotron Exp $
+// $Id: counter.pike,v 1.17 1998/03/23 08:20:57 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,9 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.16  1998/03/18 19:51:20  neotron
+// Added Jordi's nicer ppm-fontlist.
+//
 // Revision 1.15  1998/03/18 19:30:31  neotron
 // - Now handles counter numbers larger than MAXINT.
 // - Adds ".gif" to the URL, being nice to browsers. :-)
@@ -81,7 +84,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.16 1998/03/18 19:51:20 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.17 1998/03/23 08:20:57 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -125,7 +128,7 @@ void create()
 array register_module()
 {
   return ({ 
-    MODULE_LOCATION | MODULE_PARSER,
+    MODULE_LOCATION | MODULE_PARSER | MODULE_PROVIDER,
     "Graphical Counter", 
     "This is the Graphic &lt;Counter&gt; Module.<br><p>"
 	"\n<p><pre>"
@@ -169,6 +172,12 @@ array register_module()
 // Where is located our Virtual Filesystem
 // 
 string query_location() { return query("mountpoint"); }
+
+//
+// This module provides "counter", and can easily be found with the
+// provider functions in configuration.pike.
+//
+string query_provides() { return "counter"; } 
 
 //
 //  Show a selectable Font list
@@ -459,7 +468,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.16 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.17 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes

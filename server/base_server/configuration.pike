@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.111 1998/03/20 03:34:09 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.112 1998/03/23 08:20:54 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -130,16 +130,18 @@ class Priority
   
   mapping (string:array(object)) extension_modules = ([ ]);
   mapping (string:array(object)) file_extension_modules = ([ ]);
+  mapping (object:multiset) provider_modules = ([ ]);
 
 
   void stop()
   {
-    foreach(url_modules, object m)      catch { m->stop(); };
-    foreach(logger_modules, object m)   catch { m->stop(); };
-    foreach(filter_modules, object m)  catch { m->stop(); };
-    foreach(location_modules, object m)catch { m->stop(); };
-    foreach(last_modules, object m)    catch { m->stop(); };
-    foreach(first_modules, object m)    catch { m->stop(); };
+    foreach(url_modules, object m)      		catch { m->stop(); };
+    foreach(logger_modules, object m)   		catch { m->stop(); };
+    foreach(filter_modules, object m)  			catch { m->stop(); };
+    foreach(location_modules, object m)			catch { m->stop(); };
+    foreach(last_modules, object m)    			catch { m->stop(); };
+    foreach(first_modules, object m)    		catch { m->stop(); };
+    foreach(indices(provider_modules), object m) 	catch { m->stop(); };
   }
 }
 
@@ -267,6 +269,7 @@ private array (function) filter_module_cache;
 private array (array (string|function)) location_module_cache;
 private mapping (string:array (function)) extension_module_cache=([]);
 private mapping (string:array (function)) file_extension_module_cache=([]);
+private mapping (string:array (object)) provider_module_cache=([]);
 
 
 // Call stop in all modules.
@@ -315,7 +318,72 @@ public string type_from_filename( string file, int|void to )
   return 0;
 }
 
+// Return an array with all provider modules that provides "provides".
+array (object) get_providers(string provides)
+{
+  if(!provider_module_cache[provides])
+  { 
+    int i;
+    provider_module_cache[provides]  = ({ });
+    for(i = 9; i >= 0; i--)
+    {
+      object d;
+      foreach(indices(pri[i]->provider_modules), d) 
+	if(pri[i]->provider_modules[ d ][ provides ]) 
+	  provider_module_cache[provides] += ({ d });
+    }
+  }
+  return provider_module_cache[provides];
+}
 
+// Return the first provider module that provides "provides".
+object get_provider(string provides)
+{
+  array (object) prov = get_providers(provides);
+  if(sizeof(prov))
+    return prov[0];
+  return 0;
+}
+
+// map the function "fun" over all matching provider modules.
+void map_providers(string provides, string fun, mixed ... args)
+{
+  array (object) prov = get_providers(provides);
+  array error;
+  foreach(prov, object mod) {
+    if(!objectp(mod))
+      continue;
+    if(functionp(mod[fun])) 
+      error = catch(mod[fun](@args));
+    else
+      error = 0;
+    if(arrayp(error))
+      werror(describe_backtrace(error + ({ "Error in map_providers:"})));
+  }
+}
+
+// map the function "fun" over all matching provider modules and
+// return the first positive response.
+mixed call_provider(string provides, string fun, mixed ... args)
+{
+  array (object) prov = get_providers(provides);
+  array error;
+  mixed ret;
+  foreach(prov, object mod) {
+    if(!objectp(mod))
+      continue;
+    if(functionp(mod[fun]))
+      error = catch {
+	ret = mod[fun](@args);
+      };
+    else
+      error = ret = 0;
+    if(arrayp(error))
+      throw(error + ({ "Error in call_provider:"}));
+    if(ret)
+      return ret;
+  }
+}
 
 array (function) extension_modules(string ext, object id)
 {
@@ -333,6 +401,7 @@ array (function) extension_modules(string ext, object id)
   }
   return extension_module_cache[ext];
 }
+
 
 array (function) file_extension_modules(string ext, object id)
 {
@@ -853,6 +922,7 @@ void invalidate_cache()
   logger_module_cache = 0;
   extension_module_cache      = ([]);
   file_extension_module_cache = ([]);
+  provider_module_cache = ([]);
 #ifdef MODULE_LEVEL_SECURITY
   if(misc_cache)
     misc_cache = ([ ]);
@@ -2046,7 +2116,9 @@ object enable_module( string modname )
     module = modules[ modname ];
   }
 
+#if constant(gethrtime)
   int start_time = gethrtime();
+#endif
   if( module )
   {
     object me;
@@ -2099,7 +2171,7 @@ object enable_module( string modname )
 #endif
     if (module->type & (MODULE_LOCATION | MODULE_EXTENSION |
 			MODULE_FILE_EXTENSION | MODULE_LOGGER |
-			MODULE_URL | MODULE_LAST |
+			MODULE_URL | MODULE_LAST | MODULE_PROVIDER |
 			MODULE_FILTER | MODULE_PARSER | MODULE_FIRST))
     {
       me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
@@ -2108,7 +2180,8 @@ object enable_module( string modname )
 		 "called in random order", 
 		 ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
       
-      if(module->type != MODULE_LOGGER)
+      if(module->type != MODULE_LOGGER &&
+	 module->type != MODULE_PROVIDER)
       {
         if(!(module->type & MODULE_PROXY))
         {
@@ -2244,6 +2317,22 @@ object enable_module( string modname )
       }
     }
 
+    if(module->type & MODULE_PROVIDER) {
+      if (err = catch {
+	mixed provs = me->query_provides();
+	if(stringp(provs))
+	  provs = (< provs >);
+	if(arrayp(provs))
+	  provs = mkmultiset(provs);
+	if (multisetp(provs)) {
+	  pri[pr]->provider_modules [ me ] = provs;
+	}
+      }) {
+	report_error("Error while initiating module copy of " +
+		     module->name + "\n" + describe_backtrace(err));
+      }
+    }
+    
     if(module->type & MODULE_TYPES)
     {
       types_module = me;
@@ -2320,7 +2409,7 @@ object enable_module( string modname )
     }
     invalidate_cache();
 #ifdef MODULE_DEBUG
-#if efun(gethrtime)
+#if constant(gethrtime)
   perror(" Done (%3.3f seconds).\n", (gethrtime()-start_time)/1000000.0);
 #else
   perror(" Done.\n");
@@ -2547,6 +2636,11 @@ int disable_module( string modname )
 	  pri[pr]->file_extension_modules[foo]-=({me});
   }
 
+  if(module->type & MODULE_PROVIDER) {
+    for(pr=0; pr<10; pr++)
+      m_delete(pri[pr]->provider_modules, me);
+  }
+  
   if(module["type"] & MODULE_TYPES)
   {
     types_module = 0;

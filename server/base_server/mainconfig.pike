@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.98 1998/03/08 12:31:56 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.99 1998/03/23 08:20:55 neotron Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -409,13 +409,16 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
        op[i][0] = (int)allvars["port_"+i]||op[i][0];
        op[i][1] = allvars["protocol_"+i]||op[i][1];
        op[i][2] = allvars["ip_number_"+i]||op[i][2];
-
-       if(allvars["key_"+i] || allvars["cert_"+i])
-	 op[i][3] =
-	   (allvars["key_"+i]&&strlen(allvars["key_"+i])?
-	    "key-file "+allvars["key_"+i]+"\n":"")+
-	   (allvars["cert_"+i]&&strlen(allvars["cert_"+i])?
-	    "cert-file "+allvars["cert_"+i]+"\n":"");
+       string args = "";
+       
+       if(allvars["key_"+i] && strlen(allvars["key_"+i]))
+	 args += "key-file "+allvars["key_"+i]+"\n";
+       if(allvars["cert_"+i] && strlen(allvars["cert_"+i]))
+	 args += "cert-file "+allvars["cert_"+i]+"\n";
+       
+       if(strlen(args))
+	 op[i][3] = args;
+       
      } else  // Delete this port.
        op[i]=0;
    }
