@@ -1,3 +1,6 @@
+gtext_cache
+ChangeLog.gz
+ChangeLog.rxml.gz
 configurations
 Makefile
 config.cache
