@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.84 2001/04/18 06:34:49 per Exp $";
+  "$Id: config_filesystem.pike,v 1.85 2001/05/16 08:56:57 per Exp $";
 
 constant path = "config_interface/";
 
@@ -480,7 +480,7 @@ void start(int n, Configuration cfg)
 
     cfg->add_modules(({
       "config_tags", "contenttypes",    "indexfiles",
-      "gbutton",     "graphic_text",    "pathinfo",
+      "gbutton",     "graphic_text",    "pathinfo",        "javascript_support",
       "pikescript",  "translation_mod", "rxmlparse",       "rxmltags",
       "tablist",     "update",          "cimg",            "auth_httpbasic"
     }));

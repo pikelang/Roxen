@@ -29,20 +29,33 @@ mapping group( array(string) w )
 string selected_item( string q, Configuration c, RequestID id,
 		      string module_group,string module )
 {
-  int first_js;
   while ( id->misc->orig )
     id = id->misc->orig;
 
-  string pre = 
-         ("<gbutton frame-image='&usr.left-buttonframe;' href='/sites/' "
-          "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' icon_src='&usr.selected-indicator;' "
-          "align_icon='left'>"+LOCALE(213, "Sites")+"</gbutton><br />"
-          "<gbutton frame-image='&usr.left-buttonframe;' width='&usr.left-buttonwidth;' "+
-          (module == "" ?
-           "bgcolor='&usr.left-selbuttonbg;'" : "bgcolor='&usr.left-buttonbg;'") +
-          " href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' "
-          " icon_src='&usr.selected-indicator;' align_icon='left'>"+
-          c->query_name()+"</gbutton><br /><br />");
+  string pre = "";
+  int do_js = config_setting( "modulelistmode" ) == "js";
+  int unfolded = config_setting( "modulelistmode" ) == "uf";
+  string hide_popup = "";
+
+  if( do_js )
+  {
+    RXML.set_var( "js-code", 
+		  "<js-include file='CrossPlatform.js'/>\n"
+	  "<js-include file='Popup.js'/>\n"
+		  "<style><js-insert name='style'/></style>"
+		  "<js-insert name='div'/>",
+		  "var" );
+  }
+  pre += 
+    ("<gbutton frame-image='&usr.left-buttonframe;' href='/sites/' "
+     "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' icon_src='&usr.selected-indicator;' "
+     "align_icon='left'>"+LOCALE(213, "Sites")+"</gbutton><br />"
+     "<gbutton frame-image='&usr.left-buttonframe;' width='&usr.left-buttonwidth;' "+
+     (module == "" ?
+      "bgcolor='&usr.left-selbuttonbg;'" : "bgcolor='&usr.left-buttonbg;'") +
+     " href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' "
+     " icon_src='&usr.selected-indicator;' align_icon='left'>"+
+     c->query_name()+"</gbutton><br /><br />");
 
   string url = id->not_query + id->misc->path_info;
   string pre_site_url="";
@@ -95,13 +108,6 @@ string selected_item( string q, Configuration c, RequestID id,
 
   sort( module_groups );
   pre += "<table cellspacing='0' cellpadding='0'>\n";
-
-  int do_js = config_setting( "modulelistmode" ) == "js";
-  int unfolded = config_setting( "modulelistmode" ) == "uf";
-  string hide_popup = "";
-
-  if( do_js )
-    hide_popup = "onMouseOver='if( last_popup != false ) hide( last_popup );'";
   
   foreach( module_groups, array gd )
   {
@@ -164,52 +170,31 @@ string selected_item( string q, Configuration c, RequestID id,
       }
     else
     {
-      string jfn = lower_case(group_name-" ");
-      if( do_js )
-	pre += "<a href=\""+quoted_url+Roxen.http_encode_string(group_name)+"\" "
-	  "onMouseOver='return popup_"+jfn+"(event);'>";
-      pre += "<font size=-1>("+sizeof(gd[1])+")</font>...";
+      pre += "<font size=-1>";
       if( do_js )
       {
-	pre += "</a>";
-	if( id->supports->layers )
-	  pre += "<layer id='ly_"+jfn+"' visibility='hidden'>";
-	else
-	  pre += "<div id='ly_"+jfn+"' "
-	    "style='position:absolute; z-index:1; visibility:hidden;'>";
-	pre += "<table border=0 bgcolor='&usr.bgcolor;' cellspacing='0' "
-	  "cellpadding='0'>\n"
-	  "<tr><td valign=top>";
-	pre += "<img src=\"&usr.selected-indicator;\" width='12' height='12' "
-	  "alt='&gt;' /></td><td>";
+	pre += "\n<js-popup label='("+sizeof(gd[1])+") ...'>"+
+	  "\n"
+	  "<table border=0 bgcolor='&usr.fgcolor;' cellspacing='0' "
+	  " cellpadding='1'>\n"
+	  "<tr><td>"
+	  "<table border=0 bgcolor='&usr.bgcolor;' cellspacing='0' "
+	  "cellpadding='5'>\n"
+	  "<tr>\n<td>";
+	
 	foreach( gd[1], mapping data )
-	  pre += ("<img src=\"&usr.item-indicator;\" width='12' "
+	  pre += ("\n<img src=\"&usr.item-indicator;\" width='12' "
 		  "height='12' alt='' />"
-		  "<nobr><a href=\""+quoted_url+
+		  "<a href=\""+quoted_url+
 		  Roxen.http_encode_string(group_name)+"!0/"+data->sname+
 		  "/\">"+Roxen.html_encode_string(data->name)+
-		  "</a></nobr><br />");
-	pre += "</td></tr></table>";
-	if( id->supports->layers )
-	  pre += "</layer>";
-	else
-	  pre += "</div>";
-	pre += "<script language=javascript><!--\n";
-
-	if( !first_js++ )
-	  pre += #string "support.js";
-	pre +=
-	  "function popup_"+jfn+"(event)\n"
-	  "{\n"
-	  "  shiftTo( \"ly_"+jfn+"\","
-	  "           getEventX(event)-30, getEventY(event)-8 );\n"
-	  "  if( last_popup != false ) hide( last_popup );\n"
-	  "  last_popup = \"ly_"+jfn+"\";\n"
-	  "  show( \"ly_"+jfn+"\" );\n"
-	  "}\n";
-	pre += "\n// --></script>";
+		  "</a><br />");
+	pre += "</td>\n</tr></table></td>\n</tr>\n</table>";
+	pre += "\n</js-popup>\n";
       }
-
+      else
+	pre += "("+sizeof(gd[1])+") ...";
+      pre += "</font></td></tr>";
     }
     if( fin )
       pre += "</table></td></tr>";
@@ -242,13 +227,14 @@ string selected_item( string q, Configuration c, RequestID id,
   return pre;
 }
 
-string parse( RequestID id )
+mapping|string parse( RequestID id )
 {
   string site;
   if( !id->misc->path_info ) id->misc->path_info = "";
   sscanf( id->misc->path_info, "/%[^/]/", site );
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
-  return selected_item( site, roxen.find_configuration( site ), id,
- 			(((sizeof(path)>=2)?path[1]:"")/"!")[0],
-			((sizeof(path)>=3)?path[2]:""));
+  return Roxen.http_string_answer(
+    selected_item( site, roxen.find_configuration( site ), id,
+		   (((sizeof(path)>=2)?path[1]:"")/"!")[0],
+		   ((sizeof(path)>=3)?path[2]:"")));
 }
