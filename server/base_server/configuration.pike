@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.588 2005/02/08 13:20:18 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.589 2005/02/25 14:56:33 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2285,15 +2285,15 @@ array(int)|Stat stat_file(string file, RequestID id)
       {
 	mixed err;
 	id->misc->stat_file_nest++;
-	id->not_query = of;
 	TRACE_LEAVE("Recursing");
 	err = catch {
 	    if( id->misc->stat_file_nest < 20 )
-	      tmp = (id->conf || this_object())->stat_file( file, id );
+	      tmp = (id->conf || this_object())->stat_file(id->not_query, id );
 	    else
 	      error("Too deep recursion in roxen::stat_file() while mapping "
 		    +file+".\n");
 	  };
+	id->not_query = of;
 	id->misc->stat_file_nest = 0;
 	if(err)
 	  throw(err);
