@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.46 2001/11/07 16:57:23 anders Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.47 2001/11/23 21:07:38 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -82,6 +82,10 @@ void register_callback(string token, function(string,string,object:string) cb)
 // Rewrote the JSSupport/JSInsert objects to work with p-code. All
 // data must be stored with mapping/array types in RXML_CONTEXT->misc
 // to be able to encode and decode p-code frames. /Wellhardh
+//
+// Actually not, but you need to tell the p-code codec that it's ok to
+// store the objects in the p-code by defining the constant
+// is_RXML_encodable. /mast
 class JSInsert
 {
   static private string name;
@@ -100,7 +104,7 @@ class JSInsert
   
   string _sprintf(int i, mapping(string:int)|void m)
   {
-    return sprintf("JSInsert: %O, %O, %O", name, args, content[0]);
+    return sprintf("JSInsert(%O,%O,%O)", name, args, content && content[0][..20]);
   }
 
   void create(string|mapping data, mapping(string:string)|void _args)
@@ -233,7 +237,7 @@ JSSupport get_jss(RequestID id)
   return JSSupport(jssupport);
 }
 
-class TagEmitJsHidePopup {
+class TagEmitJSHidePopup {
   inherit RXML.Tag;
   constant name = "emit";
   constant plugin_name = "js-hide-popup";
@@ -349,7 +353,7 @@ class TagJSInsert {
   }
 }
 
-class TagJsExternal
+class TagJSExternal
 {
   inherit RXML.Tag;
   constant name = "js-external";
@@ -374,7 +378,7 @@ class TagJsExternal
   }
 }
 
-class TagJsDynamicPopupDiv
+class TagJSDynamicPopupDiv
 {
   inherit RXML.Tag;
   constant name = "js-dynamic-popup-div";
@@ -403,7 +407,7 @@ string js_dynamic_popup_event(string name, string src, string props)
   return "return loadLayer(event, \""+name+"\", \""+src+"\", "+props+");";
 }
 
-class TagEmitJsDynamicPopup {
+class TagEmitJSDynamicPopup {
   inherit RXML.Tag;
   constant name = "emit";
   constant plugin_name = "js-dynamic-popup";
