@@ -1,4 +1,4 @@
-Changes since Roxen 1.1 alpha 3
+Changes since Roxen 1.1 alpha 4
 -----------------------------------------------
 
 o Fixed support for <form method=POST enctype=multipart/form-data>.
@@ -12,6 +12,9 @@ o Fixed support for <form method=POST enctype=multipart/form-data>.
   pass the contents of the file as an environment variable to CGI
   scripts.  This might not be the smartest thing in the world to do,
   but it seems to work quite well.
+
+Changes since Roxen 1.1 alpha 3
+-----------------------------------------------
 
 o Trust levels should really work as they are supposed to now.
 
