@@ -5,7 +5,7 @@
 
 import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.23 1998/01/15 16:55:13 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.24 1998/01/15 17:03:43 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -334,8 +334,14 @@ int validate_user(int|multiset users, array auth, string userfile, object id)
     return 0;
   }
 
-  if(!(passwd = read_bytes(userfile)))
+  array st;
+
+  if((!(st = file_stat(userfile))) || (st[1] == -4) || (!(passwd = read_bytes(userfile))))
   {
+    if (st && (st[1] == -4)) {
+      roxen_error(sprintf("HTACCESS: Userfile \"%s\" is a device!\n"
+			  "query: \"%s\"\n", userfile, id->query));
+    }
 #ifdef HTACCESS_DEBUG
     werror(sprintf("HTACCESS: Failed to read password file (%s)\n", 
 		   userfile));
