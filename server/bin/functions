@@ -9,6 +9,9 @@ rotate () {
 setup_environment() {
   # If environment file doesn't exist, try to create it.
   if test ! -f "$LOCALDIR"/environment && test -f bin/buildenv.pike;  then
+    if [ $verbose -gt 0 ]; then
+      dp "Building environment: $pike bin/buildenv.pike"
+    fi
     $pike bin/buildenv.pike
     touch "$LOCALDIR"/environment
   fi
