@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.91 1999/07/23 04:41:32 nilsson Exp $
+/* $Id: wizard.pike,v 1.92 1999/07/24 18:01:07 nilsson Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -981,7 +981,7 @@ string html_table(array(string) subtitles, array(array(string)) table,
     r += "</tr>\n";
   }
   r += "</table></td></tr>\n";
-  r += "</table><br />\n";
+  r += "</table>"+(opt->noxml?"<br>":"<br />")+"\n";
   return r;
 }
 
