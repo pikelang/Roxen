@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.315 2001/10/01 09:21:34 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.316 2001/10/01 16:38:14 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1643,7 +1643,7 @@ string simpletag_aconf(string tag, mapping m,
 {
   string href;
 
-  if(!m->href) {
+  if(m->href) {
     href=m_delete(m, "href");
     if (search(href, ":") == search(href, "//")-1)
       RXML.parse_error("It is not possible to add configs to absolute URLs.\n");
