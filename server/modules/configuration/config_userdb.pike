@@ -1,10 +1,8 @@
 #charset iso-2022-jp
 inherit "module";
 inherit "roxenlib";
-#include <module.h>
 #include <config_interface.h>
 #include <roxen.h>
-#include <stat.h>
 
 #define LOCALE	LOW_LOCALE->config_interface
 

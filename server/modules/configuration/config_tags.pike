@@ -2,7 +2,6 @@ inherit "module";
 inherit "html";
 inherit "roxenlib";
 #include <roxen.h>
-#include <module.h>
 #include <stat.h>
 #include <config_interface.h>
 

@@ -2,10 +2,9 @@
 
 // Logs the User-agent fields in a separate log.
 
-constant cvs_version = "$Id: client_logger.pike,v 1.8 2000/02/10 06:19:40 nilsson Exp $";
+constant cvs_version = "$Id: client_logger.pike,v 1.9 2000/02/16 07:18:33 per Exp $";
 constant thread_safe=1;
 
-#include <module.h>
 inherit "module";
 
 constant module_type = MODULE_LOGGER;
@@ -18,7 +17,7 @@ constant module_doc  = "This is a client logger. It simply logs the 'user-agent'
 
 void create()
 {
-  defvar("logfile", GLOBVAR(logdirprefix)+"/Clients", "Client log file", 
+  defvar("logfile", GLOBVAR(logdirprefix)+"/Clients", "Client log file",
 	 TYPE_STRING,
 	 "This is the file into which all client names will be put.\n");
 }
@@ -37,7 +36,7 @@ void start()
     logf = c->write;
 }
 
-void log(RequestID id, mapping file) 
+void log(RequestID id, mapping file)
 {
   logf && logf(id->client*" " + "\n");
 }
