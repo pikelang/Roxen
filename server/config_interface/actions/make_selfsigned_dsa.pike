@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.6 2001/12/14 15:37:54 grubba Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.7 2004/06/16 10:01:10 grubba Exp $
  */
 
 #if constant(_Crypto) && constant(Crypto.dsa)
@@ -221,7 +221,7 @@ mixed wizard_done(object id, object mc)
   return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+
 				     "</p>\n<p><cf-ok/></p>\n",
 				     strlen(id->variables->certificate),
-				     combine_path(getcwd(),
+				     combine_path(getcwd(), "../local", 
 						  id->variables->cert_file)) );
 }
 

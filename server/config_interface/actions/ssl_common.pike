@@ -1,5 +1,5 @@
 /*
- * $Id: ssl_common.pike,v 1.5 2001/12/14 15:37:54 grubba Exp $
+ * $Id: ssl_common.pike,v 1.6 2004/06/16 09:58:44 grubba Exp $
  */
 
 #if constant(_Crypto) 
@@ -142,7 +142,7 @@ string key_file_form (string filename)
     "<var name='key_file' type='string' default='"+filename+"'/><blockquote>\n"+
     sprintf(LOCALE(97, 
 		   "Where to store the file, may be relative to %s."),
-	    getcwd()) +
+	    combine_path(getcwd(), "../local/")) +
     "\n<help><p>" +
     LOCALE(98, 
 	   "A filename in the real filesystem, where the secret key should "
@@ -232,7 +232,7 @@ string save_certificate_form (string name, string filename)
     "<var type='string' name='"+name+"' default='"+filename+"'/>"
     "<br />"+ 
     sprintf(LOCALE(97, "Where to store the file, may be relative to %s."),
-	    getcwd()) +
+	    combine_path(getcwd(), "../local/")) +
     "</blockquote>";
 }
 
