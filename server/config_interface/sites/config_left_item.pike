@@ -140,7 +140,8 @@ string selected_item( string q, Configuration c, RequestID id,
 	if( !do_js )
 	  pre += "<a "+hide_popup+
 	    " href=\""+quoted_url+Roxen.http_encode_string(group_name)+
-	    "!0/"+module+"/\">"+Roxen.html_encode_string(group_name)+
+	    "!0/"+((module&&strlen(module))?module+"/":"")
+	    +"\">"+Roxen.html_encode_string(group_name)+
 	    ": ("+sizeof(gd[1])+" ) ...</a>\n";
       }
       else
