@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.389 2000/01/12 23:20:10 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.390 2000/01/14 19:04:19 marcus Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2254,7 +2254,7 @@ class ArgCache
       }
       return 0;
     } else {
-      if( file_stat( path+id ) )
+      if( search( id, "/" )<0 && file_stat( path+id ) )
         return Stdio.read_bytes(path+"/"+id);
     }
     return 0;
