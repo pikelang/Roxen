@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.191 2000/12/04 18:05:13 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.192 2000/12/09 19:10:28 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -266,7 +266,7 @@ class TagRoxenACV {
   class Frame {
     inherit RXML.Frame;
     constant magic=
-      "<input type=\"hidden\" name=\"magic_roxen_automatic_charset_variable\" value=\"едц\" />";
+      "<input type=\"hidden\" name=\"magic_roxen_automatic_charset_variable\" value=\"ед\" />";
 
     array do_return(RequestID id) {
       result=magic;
@@ -1090,18 +1090,29 @@ class TagSetMaxCache {
 
 
 // ------------------- Containers ----------------
-
-string simpletag_charset( string t, mapping m, string c, RequestID id )
+class TagCharset
 {
-  if( m->in )
-    if( catch {
-      c = Locale.Charset.decoder( m->in )->feed( c )->drain();
-    })
-      RXML.run_error( "Illegal charset, or unable to decode data: "+
-                      m->in+"\n" );
-  if( m->out && id->set_output_charset)
-    id->set_output_charset( m->out );
-  return c;
+  inherit RXML.Tag;
+  constant name="charset";
+  RXML.Type content_type = RXML.t_same;
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return( RequestID id )
+    {
+      if( args->in && catch {
+	content=Locale.Charset.decoder( args->in )->feed( content )->drain();
+      })
+	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
+		       args->in );
+      if( args->out && id->set_output_charset)
+	id->set_output_charset( args->out );
+      result_type = result_type (RXML.PXml);
+      result="";
+      return ({content});
+    }
+  }
 }
 
 class TagScope {
