@@ -32,6 +32,31 @@ void register_project(string name, string path, void|string path_base)
   projects[name]=path;
 }
 
+array(string) list_languages(string project) {
+  if(!projects[project]) return ({});
+  string pattern=replace(projects[project], "%%", "%");
+  string dirbase=(pattern/"%L")[0];
+  if(dirbase[-1]!='/') {
+    array split=dirbase/"/";
+    dirbase=split[..sizeof(split)-2]*"/"+"/";
+  }
+  string s_patt;
+  if(search(pattern, "/", sizeof(dirbase))==-1)
+    s_patt=pattern;
+  else
+    s_patt=pattern[sizeof(dirbase)..search(pattern, "/", sizeof(dirbase))-1];
+  s_patt=replace(s_patt, "%L", "%3s");
+
+  array list=({});
+  foreach(get_dir(dirbase), string path) {
+    string lang;
+    if(!sscanf(path, s_patt, lang)) continue;
+    if(!file_stat(replace(pattern, "%L", lang))) continue;
+    list+=({ lang });
+  }
+  return list;
+}
+
 class LocaleObject {
 
   // key:string
