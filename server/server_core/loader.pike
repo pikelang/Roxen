@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.361 2002/11/02 20:33:05 mani Exp $
+// $Id: loader.pike,v 1.362 2002/11/04 20:25:37 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -24,11 +24,12 @@ private static __builtin.__master new_master;
 constant s = spider; // compatibility
 
 static int(0..1) remove_dumped;
-static string    configuration_dir;
+static string    configuration_dir = "../configuration/";
+static string    var_dir = "../var/";
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.361 2002/11/02 20:33:05 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.362 2002/11/04 20:25:37 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -273,9 +274,9 @@ void roxen_perror(string format, mixed ... args)
 //! Make a directory hierachy. Path variables will be expanded.
 int mkdirhier(string from, int|void mode)
 {
-  int r = 1;
   from = roxen_path( from + "x" ); // "x" keeps roxen_path from stripping trailing '/'.
-  array(string) f=(from/"/");
+  from = combine_path(getcwd(), from);
+  array(string) f = from/"/";
   string b="";
 
   foreach(f[0..sizeof(f)-2], string a)
@@ -289,12 +290,11 @@ int mkdirhier(string from, int|void mode)
 	catch (chmod (b+a, [int]stat[0] & mode));
 #endif
     }
-    else mkdir(b+a);
+    else
+      mkdir(b+a);
     b+=a+"/";
   }
-  if(!r)
-    return (file_stat(from)||({0,0}))[1] == -2;
-  return 1;
+  return (file_stat(b)||({0,0}))[1] == -2;
 }
 
 // --- Prototypes
@@ -1024,11 +1024,11 @@ string roxen_version()
 //! @endstring
 string roxen_path( string filename )
 {
-  string vardir = getenv("VARDIR") || "../var";
+#define STRIP(X) (X[..sizeof(X)-2])
   filename = replace( filename,
-		      ([ "$VVARDIR" : vardir+"/"+roxen_version(),
-			 "$VARDIR"  : vardir,
-			 "$CONFIGDIR" : configuration_dir[..sizeof(configuration_dir)-2],
+		      ([ "$VVARDIR" : STRIP(var_dir)+"/"+roxen_version(),
+			 "$VARDIR"  : STRIP(var_dir),
+			 "$CONFIGDIR" : STRIP(configuration_dir),
 			 "$LOCALDIR": getenv ("LOCALDIR") || "../local" ]) );
   if( core )
     filename = replace( filename, 
@@ -1188,12 +1188,24 @@ int main(int argc, array(string) argv)
 
   // (. Note: Optimal implementation. .)
   array(string) av = copy_value( argv );
-  configuration_dir =
-    [string]Getopt.find_option(av, "d",
-			    ({ "config-dir", "configuration-directory" }),
-			    ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
-			    "../configurations");
-  if( configuration_dir[-1] != '/' ) configuration_dir+="/";
+  string tmp;
+  tmp = [string]Getopt.find_option(av, "d",
+				   ({ "config-dir", "configuration-directory" }),
+				   ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
+				   "../configurations");
+  if(tmp) {
+    if( tmp[-1] != '/' ) tmp+="/";
+    configuration_dir = tmp;
+    tmp = 0;
+  }
+  mkdirhier(configuration_dir);
+
+  tmp = getenv("VARDIR");
+  if(tmp) {
+    if( tmp[-1] != '/' ) tmp+="/";
+    var_dir = tmp;
+  }
+  // The start script has ensured that var_dir already exists.
 
   remove_dumped =
     [int(0..1)]Getopt.find_option(av, "remove-dumped",
