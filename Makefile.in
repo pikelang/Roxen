@@ -234,6 +234,13 @@ weak_cleanup:
 	  `find $(SRCDIR) -type f -name '#*' -print`; do \
 	  echo $$f; rm $$f || exit 1; \
 	done
+	@for d in $(SRCDIR)/pike/0.5/tutorial $(SRCDIR)/pike/0.5/about_pike \
+	  $(SRCDIR)/pike/0.5/doc $(SRCDIR)/pike/0.6/about_pike \
+	  $(SRCDIR)/pike/0.6/doc; do \
+	  if test -d $$d/. ; then \
+	    echo Removing $$d...; rm -rf $$d || exit 1; \
+	  else :; fi; \
+	done
 
 ./Makefile: $(SRCDIR)/Makefile.in config.status
 	CONFIG_FILES=Makefile CONFIG_HEADERS="" ./config.status
