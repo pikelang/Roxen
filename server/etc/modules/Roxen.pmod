@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.124 2001/09/13 00:45:07 nilsson Exp $
+// $Id: Roxen.pmod,v 1.125 2001/09/18 19:06:39 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3222,6 +3222,12 @@ class FormScope
       return type->encode (q);
     }
     else return q;
+  }
+
+  void _m_delete (string var, void|RXML.Context ctx, void|string scope_name)
+  {
+    if (!ctx) ctx = RXML_CONTEXT;
+    predef::m_delete (ctx->id->real_variables, var);
   }
 
   array _indices( void|RXML.Context ctx )
