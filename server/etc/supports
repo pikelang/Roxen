@@ -1,5 +1,7 @@
-## $Id: supports,v 1.38 1997/08/20 10:33:27 peter Exp $
-
+## $Id: supports,v 1.39 1997/08/30 15:57:45 peter Exp $
+# name="Supports database";
+# doc="The database used to determine what different user-agents (browsers) supports";
+#
 ######################################################################
 ## -+*				WARNING				*+- ##
 ## This file will be automatically upgraded from <www.roxen.com>    ##

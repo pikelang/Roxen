@@ -1,4 +1,7 @@
-# $Id: extensions,v 1.16 1997/08/21 03:20:07 nisse Exp $
+# $Id: extensions,v 1.17 1997/08/30 15:57:40 peter Exp $
+# name="Extension database";
+# doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
+#
 
 aif	audio/x-aiff
 aifc	audio/x-aiff
