@@ -4,7 +4,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.6 2000/11/03 05:00:39 nilsson Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.7 2000/12/30 00:01:46 nilsson Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILTER|MODULE_TAG;
 constant module_name = "WAP Adapter";
@@ -62,7 +62,11 @@ mixed filter(mixed result, RequestID id) {
 }
 
 array tag_wimg(string t, mapping m, RequestID id) {
-  m->format="gif";
+  if(id->supports->pnginline)
+    m->format="png";
+  else
+    m->format="gif";
+
   if(id->supports->wbmp0 && !id->supports->gifinline)
     m->format="wbf";
   ({ 1, "cimg", m });
