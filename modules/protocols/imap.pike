@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.66 1999/02/18 20:30:50 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.67 1999/02/18 20:42:00 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -299,14 +299,14 @@ class imap_mail
     if (!silent) {
       if (uid_mode) {
 	return({
-	  "FETCH", imap_list(({
+	  "FETCH", imap_number(index), imap_list(({
 	    "FLAGS", imap_list(indices(flags)),
 	    "UID", imap_number(uid),
 	  }))
 	});
       } else {
 	return({
-	  "FETCH", imap_list(({
+	  "FETCH", imap_number(index), imap_list(({
 	    "FLAGS", imap_list(indices(flags)),
 	  }))
 	});
@@ -817,7 +817,7 @@ class imap_mailbox
       res[i] = contents[message_numbers[i]-1]->store(new_flags, mode, silent, uid_mode);
     }
 
-    return(res - ({ 0 }));
+    return((res - ({ 0 })) * ({}));
   }
 
   array(object) fetch_mail(object message_set)
