@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.285 2001/11/27 18:21:16 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.286 2001/11/30 20:42:58 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1009,8 +1009,6 @@ private string do_gtext(mapping arg, string c, RequestID id)
 {
   if((c-" ")=="") return "";
 
-  id = id->root_id;
-
   c=fix_text(c,arg,id);
   mapping p=mk_gtext_arg(arg,id);
 
@@ -1104,7 +1102,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
 
     if(!id->supports->images) return sprintf(lp,arg->alt);
 
-    string sn = "gtext" + id->misc->gtext_mi++;
+    string sn = "gtext" + id->root_id->misc->gtext_mi++;
     if(!id->supports->js_image_object) {
       return (!input)?
         ("<a"+ea+"href=\""+url+"\">"+Roxen.make_tag("img",arg+(["name":sn]),xml)+"</a>"):
@@ -1113,7 +1111,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
 
     arg->name=sn;
     string res="<script>\n";
-    if(!id->misc->gtext_magic_java) {
+    if(!id->root_id->misc->gtext_magic_java) {
       res += "function gtext_mo(ri,hi,txt)\n"
         "{\n"
         "  document.images[ri].src = hi.src;\n"
@@ -1121,7 +1119,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
         "    setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
 	"}";
     }
-    id->misc->gtext_magic_java="yes";
+    id->root_id->misc->gtext_magic_java="yes";
 
     return
       res+
