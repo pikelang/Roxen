@@ -1,19 +1,18 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.90 2002/06/05 10:26:53 nilsson Exp $
+// $Id: global_variables.pike,v 1.91 2002/06/13 14:17:41 nilsson Exp $
+
+// NGSERVER: Move protocol settings to their own files.
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
 #define BDEFVAR mixed...:object
 
 #define IN_ROXEN
-#include <module.h>
 inherit "read_config";
 inherit "basic_defvar";
 #include <version.h>
-
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)  _DEF_LOCALE("roxen_config",X,Y)
+#include <module.h>
 
 mixed save()
 {
@@ -46,10 +45,10 @@ void set_up_hilfe_variables( Protocol o )
   function(DEFVAR) defvar = o->defvar;
 
   defvar( "require_auth", 1,
-	  LOCALE(309,"Require user with the 'hilfe' permission"), TYPE_FLAG,
-	  LOCALE(310,"If yes, require a user with the hilfe permission "
-		 "set, otherwise, any configuration interface user will "
-		 "be allowed, even one with only the view settings permission." ) );
+	  "Require user with the 'hilfe' permission", TYPE_FLAG,
+	  ("If yes, require a user with the hilfe permission "
+	   "set, otherwise, any configuration interface user will "
+	   "be allowed, even one with only the view settings permission." ) );
 }
 
 
@@ -62,42 +61,39 @@ void set_up_ftp_variables( Protocol o )
           "              +------------------------------------------------\n"
           "              +--      Welcome to the Roxen FTP server      ---\n"
           "              +------------------------------------------------\n",
-	  LOCALE(60, "Welcome text"), TYPE_TEXT,
-          LOCALE(61, "The text shown to the user on connect.") );
+	  "Welcome text", TYPE_TEXT,
+          "The text shown to the user on connect." );
 
-  defvar( "ftp_user_session_limit", 0, LOCALE(62, "User session limit"), 
+  defvar( "ftp_user_session_limit", 0, "User session limit",
 	  TYPE_INT,
-          LOCALE(63, "The maximum number of times a user can connect at once."
-          " 0 means unlimited.") );
+          "The maximum number of times a user can connect at once."
+          " 0 means unlimited." );
 
-  defvar( "named_ftp", 1,  LOCALE(64, "Allow named ftp"), TYPE_FLAG,
-          LOCALE(65, "If yes, non-anonymous users can connect.") );
+  defvar( "named_ftp", 1, "Allow named ftp", TYPE_FLAG,
+          "If yes, non-anonymous users can connect." );
 
   defvar( "guest_ftp", 1, 
-	  LOCALE(66, "Allow login with incorrect password/user"), 
+	  "Allow login with incorrect password/user",
 	  TYPE_FLAG,
-          LOCALE(67, "If yes, users can connect with the wrong password "
-		 "and/or username. This is useful since things like .htaccess "
-		 "files can later on authenticate the user."));
+          ("If yes, users can connect with the wrong password "
+	   "and/or username. This is useful since things like .htaccess "
+	   "files can later on authenticate the user."));
 
-  defvar( "anonymous_ftp", 1, LOCALE(68, "Allow anonymous ftp"), 
-	  TYPE_FLAG,
-          LOCALE(69, "If yes, anonymous users are allowed to connect.") );
+  defvar( "anonymous_ftp", 1, "Allow anonymous ftp",
+	  TYPE_FLAG, "If yes, anonymous users are allowed to connect." );
 
-  defvar( "shells", "",  LOCALE(70, "Shell database"), 
+  defvar( "shells", "", "Shell database",
 	  TYPE_FILE,
-          LOCALE(71, "If this string is set to anything but the empty string, "
-          "it should specify a file containing a list of valid shells. "
-          "Users with shells that are not in this list will not "
-          "be allowed to log in.") );
+          ("If this string is set to anything but the empty string, "
+	   "it should specify a file containing a list of valid shells. "
+	   "Users with shells that are not in this list will not "
+	   "be allowed to log in.") );
 
-  defvar( "passive_port_min", 0, LOCALE(257, "Passive port minimum"),
-	  TYPE_INT,
-	  LOCALE(320, "Minimum port number to use in the PASV/EPSV response."));
+  defvar( "passive_port_min", 0, "Passive port minimum",
+	  TYPE_INT, "Minimum port number to use in the PASV/EPSV response." );
 
-  defvar( "passive_port_max", 65535, LOCALE(321, "Passive port maximum"),
-	  TYPE_INT,
-	  LOCALE(322, "Maximum port number to use in the PASV/EPSV response."));
+  defvar( "passive_port_max", 65535, "Passive port maximum",
+	  TYPE_INT, "Maximum port number to use in the PASV/EPSV response." );
 }
 
 
@@ -112,52 +108,49 @@ void set_up_http_variables( Protocol o )
 	   };
   };
 
-  defvar( "minimum_bitrate", 0, LOCALE(205, "Minimum allowed bitrate" ),
+  defvar( "minimum_bitrate", 0, "Minimum allowed bitrate",
 	  TYPE_INT,
-	  LOCALE(215, "The minimum allowed bitrate, in bits/second. If the  "
-		 "client is slower than this set bitrate, it will be "
-		 "disconnected (after a timeout). Setting this higher than "
-		 "14000 is not recommended if you have modem users."));
+	  ("The minimum allowed bitrate, in bits/second. If the  "
+	   "client is slower than this set bitrate, it will be "
+	   "disconnected (after a timeout). Setting this higher than "
+	   "14000 is not recommended if you have modem users.") );
 
-  defvar("show_internals", 0, LOCALE(72, "Show internal errors"),
+  defvar("show_internals", 0, "Show internal errors",
 	 TYPE_FLAG,
-	 LOCALE(73, "Show 'Internal server error' messages to the user. "
-		"This is very useful if you are debugging your own modules "
-		"or writing Pike scripts."));
+	 ("Show 'Internal server error' messages to the user. "
+	  "This is very useful if you are debugging your own modules "
+	  "or writing Pike scripts."));
 
-  defvar("set_cookie", 0, LOCALE(74, "Logging: Set unique browser id cookies"),
+  defvar("set_cookie", 0, "Logging: Set unique browser id cookies",
 	 TYPE_FLAG,
-	 LOCALE(75, "If set to Yes, all clients that accepts cookies will get "
-		"a unique 'user-id-cookie', which can then be used in the log "
-		"and in scripts to track individual users."));
+	 ("If set to Yes, all clients that accepts cookies will get "
+	  "a unique 'user-id-cookie', which can then be used in the log "
+	  "and in scripts to track individual users."));
 
-  defvar("set_cookie_only_once", 1,
-	 LOCALE(76, "Logging: Set ID cookies only once"),
+  defvar("set_cookie_only_once", 1, "Logging: Set ID cookies only once",
 	 TYPE_FLAG,
-	 LOCALE(77, "If set to Yes, Roxen will attempt to set unique browser "
-		"ID cookies only upon receiving the first request (and "
-		"again after some minutes). Thus, if the user doesn't allow "
-		"the cookie to be set, she won't be bothered with "
-		"multiple requests."),0, do_set_cookie( o ));
+	 ("If set to Yes, Roxen will attempt to set unique browser "
+	  "ID cookies only upon receiving the first request (and "
+	  "again after some minutes). Thus, if the user doesn't allow "
+	  "the cookie to be set, she won't be bothered with "
+	  "multiple requests."), 0, do_set_cookie( o ));
 }
 
 void set_up_ssl_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
 
-  defvar( "ssl_cert_file", "demo_certificate.pem",
-	  LOCALE(86, "SSL certificate file"),
+  defvar( "ssl_cert_file", "demo_certificate.pem", "SSL certificate file",
 	  TYPE_STRING,
-	  sprintf(LOCALE(87, "The SSL certificate file to use. The path "
-			 "is relative to %s.")+"\n", getcwd() ));
+	  "The SSL certificate file to use. The path is relative to "+getcwd()+".\n" );
 
 
-  defvar( "ssl_key_file", "", LOCALE(88, "SSL key file"),
+  defvar( "ssl_key_file", "", "SSL key file",
 	  TYPE_STRING,
-	  sprintf(LOCALE(89, "The SSL key file to use. The path is "
-			 "relative to %s, you do not have to specify a key "
-			 "file, leave this field empty to use the certificate "
-			 "file only.")+"\n", getcwd() ));
+	  ("The SSL key file to use. The path is "
+	   "relative to "+getcwd()+", you do not have to specify a key "
+	   "file, leave this field empty to use the certificate "
+	   "file only.\n") );
 }
 
 
@@ -230,21 +223,21 @@ void define_global_variables(  )
   defvar("port_options", PortOptions());
 
   defvar("RestoreConnLogFull", 0,
-	  LOCALE(90, "Logging: Log entire file length in restored connections"),
+	  "Logging: Log entire file length in restored connections",
 	  TYPE_FLAG,
-	  LOCALE(91, "If this toggle is enabled log entries for restored connections "
-	  "will log the amount of sent data plus the restoration location. "
-	  "Ie if a user has downloaded 100 bytes of a file already, and makes "
-	  "a Range request fetching the remaining 900 bytes, the log entry "
-	  "will log it as if the entire 1000 bytes were downloaded. "
-	  "<p>This is useful if you want to know if downloads were successful "
-	  "(the user has the complete file downloaded). The drawback is that "
-	  "bandwidth statistics on the log file will be incorrect. The "
-	  "statistics in Roxen will still be correct.</p>"));
+	  ("If this toggle is enabled log entries for restored connections "
+	   "will log the amount of sent data plus the restoration location. "
+	   "Ie if a user has downloaded 100 bytes of a file already, and makes "
+	   "a Range request fetching the remaining 900 bytes, the log entry "
+	   "will log it as if the entire 1000 bytes were downloaded. "
+	   "<p>This is useful if you want to know if downloads were successful "
+	   "(the user has the complete file downloaded). The drawback is that "
+	   "bandwidth statistics on the log file will be incorrect. The "
+	   "statistics in Roxen will still be correct.</p>"));
 
-  defvar("default_font", "roxen builtin", LOCALE(92, "Default font"), 
+  defvar("default_font", "roxen builtin", "Default font",
 	 TYPE_FONT,
-	 LOCALE(93, "The default font to use when modules request a font."));
+	 "The default font to use when modules request a font.");
 
   defvar("font_dirs", ({"../local/fonts/", "data/fonts/" })+
 #ifdef __NT__
@@ -252,34 +245,34 @@ void define_global_variables(  )
 #else
          ((getenv("RX_FONTPATH")||"")/","-({""}))
 #endif
-         , LOCALE(94, "Font directories"), 
+         , "Font directories",
 	 TYPE_DIR_LIST,
-	 LOCALE(95, "This is where the fonts are located."));
+	 "This is where the fonts are located.");
 
-  defvar("logdirprefix", "../logs/", 
-	 LOCALE(96, "Logging: Log directory prefix"),
+  defvar("logdirprefix", "../logs/",
+	 "Logging: Log directory prefix",
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(97, "This is the default file path that will be prepended "
-		"to the log file path in all the default modules and the "
-		"site."));
+	 ("This is the default file path that will be prepended "
+	  "to the log file path in all the default modules and the "
+	  "site."));
 
-  defvar("cache", 0, LOCALE(98, "Cache: Proxy Disk Cache Enabled"), 
+  defvar("cache", 0, "Cache: Proxy Disk Cache Enabled",
 	 TYPE_FLAG,
-	 LOCALE(99, "If set to Yes, caching will be enabled."));
+	 "If set to Yes, caching will be enabled.");
 
-  defvar("garb_min_garb", 1, 
-	 LOCALE(100, "Cache: Proxy Disk Cache Clean size"),
+  defvar("garb_min_garb", 1,
+	 "Cache: Proxy Disk Cache Clean size",
 	 TYPE_INT,
-	 LOCALE(101, "Minimum number of Megabytes removed when a garbage collect is done."),
+	 "Minimum number of Megabytes removed when a garbage collect is done.",
 	  0, cache_disabled_p);
 
   defvar("cache_minimum_left", 5,
-	 LOCALE(102, "Cache: Proxy Disk Cache Minimum available free space and inodes (in %)"), 
+	 "Cache: Proxy Disk Cache Minimum available free space and inodes (in %)",
 	 TYPE_INT,
-	 LOCALE(103, "If less than this amount of disk space or inodes (in %) "
-		"is left, the cache will remove a few files. This check may "
-		"work half-hearted if the diskcache is spread over several "
-		"filesystems."),
+	 ("If less than this amount of disk space or inodes (in %) "
+	  "is left, the cache will remove a few files. This check may "
+	  "work half-hearted if the diskcache is spread over several "
+	  "filesystems."),
 	 0,
 #if constant(filesystem_stat)
 	 cache_disabled_p
@@ -288,106 +281,102 @@ void define_global_variables(  )
 #endif /* filesystem_stat */
 	 );
 
-  defvar("cache_size", 25, LOCALE(104, "Cache: Proxy Disk Cache Size"), 
+  defvar("cache_size", 25, "Cache: Proxy Disk Cache Size",
 	 TYPE_INT,
-	 LOCALE(105, "How many MB may the cache grow to before a garbage "
-		"collect is done?"),
+	 "How many MB may the cache grow to before a garbage collect is done?",
 	 0, cache_disabled_p);
 
   defvar("cache_max_num_files", 0,
-	 LOCALE(106, "Cache: Proxy Disk Cache Maximum number of files"), 
+	 "Cache: Proxy Disk Cache Maximum number of files",
 	 TYPE_INT, 
-	 LOCALE(107, "How many cache files (inodes) may be on disk before "
-		"a garbage collect is done? May be left at zero to disable "
-		"this check."),
+	 ("How many cache files (inodes) may be on disk before "
+	  "a garbage collect is done? May be left at zero to disable "
+	  "this check."),
 	 0, cache_disabled_p);
 
-  defvar("bytes_per_second", 50,
-	 LOCALE(108, "Cache: Proxy Disk Cache bytes per second"),
+  defvar("bytes_per_second", 50, "Cache: Proxy Disk Cache bytes per second",
 	 TYPE_INT,
-	 LOCALE(109, "How file size should be treated during garbage collect. "
+	 ("How file size should be treated during garbage collect. "
 	  "Each X bytes count as a second, so that larger files will "
 	  "be removed first."),
 	  0, cache_disabled_p);
 
   defvar("cachedir", "/tmp/roxen_cache/",
-	  LOCALE(110, "Cache: Proxy Disk Cache Base Cache Dir"),
-	  TYPE_DIR,
-	  LOCALE(111, "This is the base directory where cached files will "
-		 "reside. To avoid mishaps, 'roxen_cache/' is always "
-		 "appended to this variable."),
+	 "Cache: Proxy Disk Cache Base Cache Dir",
+	 TYPE_DIR,
+	 ("This is the base directory where cached files will "
+	  "reside. To avoid mishaps, 'roxen_cache/' is always "
+	  "appended to this variable."),
 	 0, cache_disabled_p);
 
   defvar("hash_num_dirs", 500,
-	 LOCALE(112, "Cache: Proxy Disk Cache Number of hash directories"),
+	 "Cache: Proxy Disk Cache Number of hash directories",
 	 TYPE_INT|VAR_MORE,
-	 LOCALE(113, "This is the number of directories to hash the contents "
-		"of the disk cache into. Changing this value currently "
-		"invalidates the whole cache, since the cache cannot find "
-		"the old files. In the future, the cache will be "
-		"recalculated when this value is changed."),
+	 ("This is the number of directories to hash the contents "
+	  "of the disk cache into. Changing this value currently "
+	  "invalidates the whole cache, since the cache cannot find "
+	  "the old files. In the future, the cache will be "
+	  "recalculated when this value is changed."),
 	 0, cache_disabled_p);
 
   defvar("cache_keep_without_content_length", 1,
-	 LOCALE(114, "Cache: Proxy Disk Cache Keep without Content-Length"),
-	 TYPE_FLAG, 
-	 LOCALE(115, "Keep files without Content-Length header information "
-		"in the cache?"),
+	 "Cache: Proxy Disk Cache Keep without Content-Length",
+	 TYPE_FLAG,
+	 "Keep files without Content-Length header information in the cache?",
 	 0, cache_disabled_p);
 
   defvar("cache_check_last_modified", 0,
-	 LOCALE(116, "Cache: Proxy Disk Cache Refreshes on Last-Modified"), 
+	 "Cache: Proxy Disk Cache Refreshes on Last-Modified",
 	 TYPE_FLAG,
-	 LOCALE(117, "If set, refreshes files without Expire header "
-		"information when they have reached double the age they had "
-		"when they got cached. This may be useful for some regularly "
-		"updated docs as online newspapers."),
+	 ("If set, refreshes files without Expire header "
+	  "information when they have reached double the age they had "
+	  "when they got cached. This may be useful for some regularly "
+	  "updated docs as online newspapers."),
 	 0, cache_disabled_p);
 
   defvar("cache_last_resort", 0,
-	 LOCALE(118, "Cache: Proxy Disk Cache Last resort (in days)"), 
+	 "Cache: Proxy Disk Cache Last resort (in days)",
 	 TYPE_INT,
-	 LOCALE(119, "How many days shall files without Expires and without "
-		"Last-Modified header information be kept?"),
+	 ("How many days shall files without Expires and without "
+	  "Last-Modified header information be kept?"),
 	 0, cache_disabled_p);
 
   defvar("cache_gc_logfile",  "",
-	 LOCALE(120, "Cache: Proxy Disk Cache Garbage collector logfile"), 
+	 "Cache: Proxy Disk Cache Garbage collector logfile",
 	 TYPE_FILE,
-	 LOCALE(121, "Information about garbage collector runs, removed and "
-		"refreshed files, cache and disk status goes here."),
+	 ("Information about garbage collector runs, removed and "
+	  "refreshed files, cache and disk status goes here."),
 	 0, cache_disabled_p);
 
   /// End of cache variables..
 
   // FIXME: Should mention real_version.
   defvar("default_ident", 1, 
-	 LOCALE(124, "Identify, Use default identification string"),
+	 "Identify, Use default identification string",
 	 TYPE_FLAG|VAR_MORE,
-	 LOCALE(125, "Setting this variable to No will display the "
-		"\"Identify as\" node where you can state what Roxen "
-		"should call itself when talking to clients.<br />"
-		"It is possible to disable this so that you can enter an "
-		"identification-string that does not include the actual "
-		"version of Roxen, as recommended by the HTTP/1.0 and "
-		"HTTP/1.1 RFCs:"
-         "<p><blockquote><i>"
-	 "Note: Revealing the specific software version of the server "
-	 "may allow the server machine to become more vulnerable to "
-	 "attacks against software that is known to contain security "
-	 "holes. Server implementors are encouraged to make this field "
-	 "a configurable option."
-	 "</i></blockquote></p>"));
+	 ("Setting this variable to No will display the "
+	  "\"Identify as\" node where you can state what Roxen "
+	  "should call itself when talking to clients.<br />"
+	  "It is possible to disable this so that you can enter an "
+	  "identification-string that does not include the actual "
+	  "version of Roxen, as recommended by the HTTP/1.0 and "
+	  "HTTP/1.1 RFCs:"
+	  "<p><blockquote><i>"
+	  "Note: Revealing the specific software version of the server "
+	  "may allow the server machine to become more vulnerable to "
+	  "attacks against software that is known to contain security "
+	  "holes. Server implementors are encouraged to make this field "
+	  "a configurable option."
+	  "</i></blockquote></p>"));
   
-  defvar("ident", replace(real_version," ","·"), 
-	 LOCALE(126, "Identify, Identify as"),
+  defvar("ident", replace(real_version," ","·"), "Identify, Identify as",
 	 TYPE_STRING /* |VAR_MORE */,
-	 LOCALE(127, "Enter the name that Roxen should use when talking to clients. "),
+	 "Enter the name that Roxen should use when talking to clients. ",
 	 0, ident_disabled_p);
   
-  defvar("User", "", LOCALE(128, "Change uid and gid to"), 
+  defvar("User", "", "Change uid and gid to",
 	 TYPE_STRING,
-	 LOCALE(129, #"\
+	 #"\
 When Roxen is run as root, to be able to open port 80 for listening,
 change to this user-id and group-id when the port has been opened. If
 you specify a symbolic username, the default group of that user will
@@ -396,91 +385,90 @@ be used. The syntax is user[:group].
 <p>A server restart is necessary for a change of this variable to take
 effect. Note that it also can lead to file permission errors if the
 Roxen process no longer can read files it previously has written.
-The start script attempts to fix this for the standard file locations.</p>"));
+The start script attempts to fix this for the standard file locations.</p>");
 
-  defvar("permanent_uid", 0, LOCALE(130, "Change uid and gid permanently"),
+  defvar("permanent_uid", 0, "Change uid and gid permanently",
 	 TYPE_FLAG,
-	 LOCALE(131, "If this variable is set, Roxen will set it's uid and gid "
+	 ("If this variable is set, Roxen will set it's uid and gid "
 	  "permanently. This disables the 'exec script as user' features "
 	  "for CGI, and also 'access files as user' in the filesystems, but "
 	  "it gives better security."));
 
   defvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
-	 LOCALE(132, "Module directories"), 
+	 "Module directories",
 	 TYPE_DIR_LIST,
-	 LOCALE(133, "This is a list of directories where Roxen should look "
-		"for modules. Can be relative paths, from the "
-		"directory you started Roxen. "
-		"The directories are searched in order for modules."));
+	 ("This is a list of directories where Roxen should look "
+	  "for modules. Can be relative paths, from the "
+	  "directory you started Roxen. "
+	  "The directories are searched in order for modules."));
 
   defvar("Supports",
          Variable.Text( "#include <data/supports>\n",
-                        VAR_MORE, LOCALE(134, "Client supports regexps"),
-                        LOCALE(135, "What do the different clients support?\n<br />"
-                               "The default information is normally fetched from the file "
-                               "server/data/supports in your Roxen directory.") ) )
+                        VAR_MORE, "Client supports regexps",
+                        ("What do the different clients support?\n<br />"
+			 "The default information is normally fetched from the file "
+			 "server/data/supports in your Roxen directory.") ) )
     -> add_changed_callback( lambda(Variable.Text s) {
                                roxenp()->initiate_supports();
                                cache.cache_expire("supports");
                              } );
 
-  defvar("audit", 0, LOCALE(136, "Logging: Audit trail"), 
+  defvar("audit", 0, "Logging: Audit trail",
 	 TYPE_FLAG,
-	 LOCALE(137, "If Audit trail is set to Yes, all changes of uid will be "
-		"logged in the Event log."));
+	 ("If Audit trail is set to Yes, all changes of uid will be "
+	  "logged in the Event log."));
 
 #if efun(syslog)
-  defvar("LogA", "file", LOCALE(138, "Logging: Debug log method"), 
+  defvar("LogA", "file", "Logging: Debug log method",
 	 TYPE_STRING_LIST|VAR_MORE,
-	 LOCALE(139, "What method to use for the debug log, default is file, "
-	  "but "
+	 ("What method to use for the debug log, default is file, but "
 	  "syslog is also available. When using file, the output is really"
 	  " sent to stdout and stderr, but this is handled by the "
 	  "start script."),
 	 ({ "file", "syslog" }));
 
-  defvar("LogSP", 1, LOCALE(140, "Logging: Log PID"), 
+  defvar("LogSP", 1, "Logging: Log PID",
 	 TYPE_FLAG,
-	 LOCALE(141, "If set, the PID will be included in the syslog."), 0,
+	 "If set, the PID will be included in the syslog.", 0,
 	 syslog_disabled);
 
-  defvar("LogCO", 0, LOCALE(142, "Logging: Log to system console"), 
+  defvar("LogCO", 0, "Logging: Log to system console",
 	 TYPE_FLAG,
-	 LOCALE(143, "If set and syslog is used, the error/debug message "
-		"will be printed to the system console as well as to the "
-		"system log."),
+	 ("If set and syslog is used, the error/debug message "
+	  "will be printed to the system console as well as to the "
+	  "system log."),
 	  0, syslog_disabled);
 
-  defvar("LogST", "Daemon", LOCALE(144, "Logging: Syslog type"), 
+  defvar("LogST", "Daemon", "Logging: Syslog type",
 	 TYPE_STRING_LIST,
-	 LOCALE(145, "When using SYSLOG, which log type should be used."),
+	 "When using SYSLOG, which log type should be used.",
 	 ({ "Daemon", "Local 0", "Local 1", "Local 2", "Local 3",
 	    "Local 4", "Local 5", "Local 6", "Local 7", "User" }),
 	 syslog_disabled);
 
-  defvar("LogWH", "Errors", LOCALE(146, "Logging: Log what to syslog"), 
+  defvar("LogWH", "Errors", "Logging: Log what to syslog",
 	 TYPE_STRING_LIST,
-	 LOCALE(147, "When syslog is used, how much should be sent to it?<br /><hr />"
-		"Fatal:    Only messages about fatal errors<br />"
-		"Errors:   Only error or fatal messages<br />"
-		"Warning:  Warning messages as well<br />"
-		"Debug:    Debug messager as well<br />"
-		"All:      Everything<br />"),
+	 ("When syslog is used, how much should be sent to it?<br /><hr />"
+	  "Fatal:    Only messages about fatal errors<br />"
+	  "Errors:   Only error or fatal messages<br />"
+	  "Warning:  Warning messages as well<br />"
+	  "Debug:    Debug messager as well<br />"
+	  "All:      Everything<br />"),
 	 ({ "Fatal", "Errors",  "Warnings", "Debug", "All" }),
 	 syslog_disabled);
 
-  defvar("LogNA", "Roxen", LOCALE(148, "Logging: Log as"), 
+  defvar("LogNA", "Roxen", "Logging: Log as",
 	 TYPE_STRING,
-	 LOCALE(149, "When syslog is used, this will be the identification "
-		"of the Roxen daemon. The entered value will be appended to "
-		"all logs."),
+	 ("When syslog is used, this will be the identification "
+	  "of the Roxen daemon. The entered value will be appended to "
+	  "all logs."),
 	 0, syslog_disabled);
 #endif // efun(syslog)
 
 #ifdef THREADS
-  defvar("numthreads", 5, LOCALE(150, "Number of threads to run"), 
+  defvar("numthreads", 5, "Number of threads to run",
 	 TYPE_INT,
-	 LOCALE(151, "The number of simultaneous threads Roxen will use.\n"
+	 ("The number of simultaneous threads Roxen will use.\n"
 	  "<p>Please note that even if this is one, Roxen will still "
 	  "be able to serve multiple requests, using a select loop based "
 	  "system.\n"
@@ -491,37 +479,36 @@ The start script attempts to fix this for the standard file locations.</p>"));
 #endif // THREADS
 
 #ifndef __NT__
-  defvar("abs_engage", 0, LOCALE(154, "Auto Restart: Enable Anti-Block-System"), 
+  defvar("abs_engage", 0, "Auto Restart: Enable Anti-Block-System",
 	 TYPE_FLAG|VAR_MORE,
-	 LOCALE(155, "If set, the anti-block-system will be enabled. "
-		"This will restart the server after a configurable number of minutes if it "
-		"locks up. If you are running in a single threaded environment heavy "
-		"calculations will also halt the server. In multi-threaded mode bugs such as "
-		"eternal loops will not cause the server to reboot, since only one thread is "
-		"blocked. In general there is no harm in having this option enabled. "));
+	 ("If set, the anti-block-system will be enabled. "
+	  "This will restart the server after a configurable number of minutes if it "
+	  "locks up. If you are running in a single threaded environment heavy "
+	  "calculations will also halt the server. In multi-threaded mode bugs such as "
+	  "eternal loops will not cause the server to reboot, since only one thread is "
+	  "blocked. In general there is no harm in having this option enabled. "));
 
-
-
-  defvar("abs_timeout", 5, LOCALE(156, "Auto Restart: ABS Timeout"),
+  defvar("abs_timeout", 5, "Auto Restart: ABS Timeout",
 	 TYPE_INT_LIST|VAR_MORE,
-	 LOCALE(157, "If the server is unable to accept connection for this many "
-		"minutes, it will be restarted. You need to find a balance: "
-		"if set too low, the server will be restarted even if it's doing "
-		"legal things (like generating many images), if set too high you might "
-		"get a long downtime if the server for some reason locks up."),
+	 ("If the server is unable to accept connection for this many "
+	  "minutes, it will be restarted. You need to find a balance: "
+	  "if set too low, the server will be restarted even if it's doing "
+	  "legal things (like generating many images), if set too high you might "
+	  "get a long downtime if the server for some reason locks up."),
 	 ({1,2,3,4,5,10,15}),
 	 lambda() {return !query("abs_engage");});
 #endif // __NT__
 
+  // Keep for now...
   defvar("locale",
 	 Variable.Language("Standard", ({ "Standard" }) +
 			   Locale.list_languages("roxen_config"),
-			   0, LOCALE(158, "Default language"), 
-			   LOCALE(159, "Locale, used to localize all "
-				  "messages in Roxen. Standard means using "
-				  "the default locale, which varies "
-				  "according to the value of "
-				  "the 'LANG' environment variable.")))
+			   0, "Default language",
+			   ("Locale, used to localize some "
+			    "messages in Roxen. Standard means using "
+			    "the default locale, which varies "
+			    "according to the value of "
+			    "the 'LANG' environment variable.")))
     ->set_changed_callback( lambda(Variable.Variable s) {
 			      roxenp()->set_default_locale(query("locale"));
 			      roxenp()->set_locale();
@@ -529,14 +516,14 @@ The start script attempts to fix this for the standard file locations.</p>"));
 
   string secret=Crypto.md5()->update(""+time(1)+random(100000))->digest();
   secret = MIME.encode_base64(secret,1);
-  defvar("server_salt", secret[..sizeof(secret)-3], LOCALE(8, "Server secret"),
+  defvar("server_salt", secret[..sizeof(secret)-3], "Server secret",
 	 TYPE_STRING|VAR_MORE|VAR_NO_DEFAULT,
-	 LOCALE(9, "The server secret is a string used in some "
-		"cryptographic functions, such as calculating "
-		"unique, non-guessable session id's. Change this "
-		"value into something that is hard to guess, unless "
-		"you are satisfied with what your computers random "
-		"generator has produced.") );
+	 ("The server secret is a string used in some "
+	  "cryptographic functions, such as calculating "
+	  "unique, non-guessable session id's. Change this "
+	  "value into something that is hard to guess, unless "
+	  "you are satisfied with what your computers random "
+	  "generator has produced.") );
 
   secret = Crypto.md5()->update(""+time(1)+random(100000)+"x"+gethrtime())
     ->digest();
@@ -546,63 +533,57 @@ The start script attempts to fix this for the standard file locations.</p>"));
   // force save.
 
   
-  defvar("suicide_engage", 0,
-	 LOCALE(160, "Auto Restart: Enable Automatic Restart"),
+  defvar("suicide_engage", 0, "Auto Restart: Enable Automatic Restart",
 	 TYPE_FLAG|VAR_MORE,
-	 LOCALE(161, "If set, Roxen will automatically restart after a "
-		"configurable number of days. Since Roxen uses a monolith, "
-		"non-forking server model the process tends to grow in size "
-		"over time. This is mainly due to heap fragmentation but "
-		"may also sometimes be because of memory leaks.")
+	 ("If set, Roxen will automatically restart after a "
+	  "configurable number of days. Since Roxen uses a monolith, "
+	  "non-forking server model the process tends to grow in size "
+	  "over time. This is mainly due to heap fragmentation but "
+	  "may also sometimes be because of memory leaks.")
 	  );
 
   definvisvar( "last_suicide", 0, TYPE_INT );
   
   defvar("suicide_schedule",
-	 Variable.Schedule( ({ 2, 1, 1, 0, 4 }), 0,
-			    LOCALE(387,"Auto Restart: Schedule"),
-			    LOCALE(388, "Automatically restart the "
-				   "server according to this schedule.") ) )
+	 Variable.Schedule( ({ 2, 1, 1, 0, 4 }), 0, "Auto Restart: Schedule",
+			    "Automatically restart the "
+			    "server according to this schedule." ) )
     ->set_invisibility_check_callback (
       lambda(RequestID id, Variable.Variable f)
 	{return !query("suicide_engage");}
     );
 
   defvar("mem_cache_gc",
-	 Variable.Int(300, 0, 
-		      LOCALE(170, "Cache: Memory Cache Garbage Collect Interval"),
-		      LOCALE(171, "The number of seconds between every garbage collect "
-			     "(removal of old content) from the memory cache. The "
-			     "memory cache is used for various tasks like remembering "
-			     "what supports flags matches what client.")))
-	 ->set_range(1, 60*60*24);
-	 // Note that the upper limit is arbitrary.
+	 Variable.Int(300, 0, "Cache: Memory Cache Garbage Collect Interval",
+		      ("The number of seconds between every garbage collect "
+		       "(removal of old content) from the memory cache. The "
+		       "memory cache is used for various tasks like remembering "
+		       "what supports flags matches what client.")))
+    ->set_range(1, 60*60*24);
+  // Note that the upper limit is arbitrary.
 
-  defvar("replicate", 0,
-	 LOCALE(163, "Enable replication system" ),
+  defvar("replicate", 0, "Enable replication system",
 	 TYPE_FLAG,
-	 LOCALE(337,"If enabled, Roxen will enable various replication systems "
-		"needed to set up multiple frontend systems. You will need "
-		"a database named 'replicate' that recides in a shared mysql "
-		"server for this to work. Also, all servers has to have this "
-		"flag set. Roxen must be restarted before changes to this "
-		"variable takes effect." ) );
+	 ("If enabled, Roxen will enable various replication systems "
+	  "needed to set up multiple frontend systems. You will need "
+	  "a database named 'replicate' that recides in a shared mysql "
+	  "server for this to work. Also, all servers has to have this "
+	  "flag set. Roxen must be restarted before changes to this "
+	  "variable takes effect." ) );
   
-  defvar("config_file_comments", 0,
-	 LOCALE(172, "Commented config files"),
+  defvar("config_file_comments", 0, "Commented config files",
 	 TYPE_FLAG,
-	 LOCALE(173, "Save the variable documentation strings as comments "
-		"in the configuration files. Only useful if you read or "
-		"edit the config files directly."));
-
+	 ("Save the variable documentation strings as comments "
+	  "in the configuration files. Only useful if you read or "
+	  "edit the config files directly."));
 
 
 #ifdef SNMP_AGENT
   // SNMP stuffs
-  defvar("snmp_agent", 0, LOCALE(999, "SNMP: Enable SNMP agent"),
+  defvar("snmp_agent", 0, "SNMP: Enable SNMP agent",
 	 TYPE_FLAG|VAR_MORE,
-	 "If set, the Roxen SNMP agent will be anabled."
-	 );
+	 "If set, the Roxen SNMP agent will be anabled.");
+
   defvar("snmp_community", ({"public:ro"}), "SNMP: Community string",
          TYPE_STRING_LIST,
          "One community name per line. Default permissions are 'read-only'. "
