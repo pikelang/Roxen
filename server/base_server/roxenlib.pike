@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.173 2000/04/25 19:37:29 nilsson Exp $
+// $Id: roxenlib.pike,v 1.174 2000/05/16 05:06:53 per Exp $
 
 //#pragma strict_types
 
@@ -845,7 +845,7 @@ string image_from_type( string t )
   return "internal-gopher-unknown";
 }
 
-#define  PREFIX ({ "bytes", "kB", "MB", "GB", "TB", "HB" })
+#define  PREFIX ({ "bytes", "Kb", "Mb", "Gb", "Tb", "Hb" })
 string sizetostring( int size )
 {
   if(size<0) return "--------";
