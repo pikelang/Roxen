@@ -223,7 +223,6 @@ nn binary
 /server/modules/scripting/cgi.pike foreign_ident
 /server/modules/scripting/fastcgi.pike foreign_ident
 /server/modules/scripting/fpscript.pike foreign_ident
-/server/modules/scripting/newpikescript.pike foreign_ident
 /server/modules/scripting/php4.pike foreign_ident
 /server/modules/scripting/pikescript.pike foreign_ident
 /server/modules/scripting/piketag.pike foreign_ident
@@ -235,7 +234,6 @@ nn binary
 /server/modules/tags/foldlist.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
 /server/modules/tags/killframe.pike foreign_ident
-/server/modules/tags/lisp.pike foreign_ident
 /server/modules/tags/obox.pike foreign_ident
 /server/modules/tags/rxmlparse.pike foreign_ident
 /server/modules/tags/rxmltags.pike foreign_ident
