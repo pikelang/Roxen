@@ -8,7 +8,7 @@ void got_info()
   mapping m = decode_value(udp_broad->read()->data);
   if(m->seq<=(neighborhood[m->configurl]?neighborhood[m->configurl]->seq:0))
     m->last_reboot = time();
-  neighborhood[m->configurl] |= m;
+  neighborhood[m->configurl] = (neighborhood[m->configurl]||([])) | m;
 }
 
 string network_number()
