@@ -4,6 +4,7 @@
 <language>nld</language>
 <file>../base_server/roxen.pike</file>
 <file>../config_interface/actions/cachestatus.pike</file>
+<file>../config_interface/actions/change_version.pike</file>
 <file>../config_interface/actions/debug_info.pike</file>
 <file>../config_interface/actions/feature_list.pike</file>
 <file>../config_interface/actions/flush.pike</file>
@@ -611,11 +612,7 @@
 <t></t>
 </str>
 
-<str id="87">
-<new/>
-<o>In order to use the SSL on your server, you first have to create a random RSA key pair. One part of the key is kept secret. </o>
-<t></t>
-</str>
+
 
 <str id="88">
 <new/>
@@ -661,7 +658,7 @@
 
 <str id="95">
 <new/>
-<o>The largest RSA key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 1024 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
+<o>The largest key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 1024 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
 <t></t>
 </str>
 
@@ -903,5 +900,89 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 <str id="135">
 <new/>
 <o>Invalid key size.</o>
+<t></t>
+</str>
+
+<str id="40">
+<new/>
+<o>In order to use the SSL on your server, you first have to create a random key pair. One part of the key is kept secret. </o>
+<t></t>
+</str>
+
+<str id="41">
+<new/>
+<o>Change roxen version...</o>
+<t></t>
+</str>
+
+<str id="42">
+<new/>
+<o>Indeed</o>
+<t></t>
+</str>
+
+<str id="43">
+<new/>
+<o>1 month</o>
+<t></t>
+</str>
+
+<str id="44">
+<new/>
+<o>%d months</o>
+<t></t>
+</str>
+
+<str id="45">
+<new/>
+<o>%d days</o>
+<t></t>
+</str>
+
+<str id="46">
+<new/>
+<o>Change Roxen version</o>
+<t></t>
+</str>
+
+<str id="47">
+<new/>
+<o>Changing roxen version</o>
+<t></t>
+</str>
+
+<str id="48">
+<new/>
+<o>Version</o>
+<t></t>
+</str>
+
+<str id="85">
+<new/>
+<o>Release date</o>
+<t></t>
+</str>
+
+<str id="86">
+<new/>
+<o>Age</o>
+<t></t>
+</str>
+
+<str id="136">
+<new/>
+<o>Directory</o>
+<t></t>
+</str>
+
+<str id="137">
+<new/>
+<o>If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
+<t></t>
+</str>
+
+<str id="138">
+<new/>
+<o>Change version</o>
 <t></t>
 </str>

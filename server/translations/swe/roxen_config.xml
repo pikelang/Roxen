@@ -16,9 +16,10 @@
 <file>../config_interface/boxes/slashdot.pike</file>
 <file>../config_interface/boxes/welcome.pike</file>
 <file>../config_interface/cv_startpage_tabs.pike</file>
+<file>../config_interface/dbs/browser.pike</file>
+<file>../config_interface/dbs/db_matrix.pike</file>
 <file>../config_interface/dbs/subtabs.pike</file>
 <file>../config_interface/event_log/clear_log.pike</file>
-<file>../config_interface/event_log/index.html</file>
 <file>../config_interface/event_log/log.pike</file>
 <file>../config_interface/logutil.pike</file>
 <file>../config_interface/sites/add_module.pike</file>
@@ -42,9 +43,8 @@
 <file>../etc/modules/Variable.pmod/Date.pike</file>
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
-<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../etc/modules/Variable.pmod/Upload.pike</file>
-<file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
+<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 
@@ -1106,8 +1106,6 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>Visa alla tillgängliga inställningar, inte bara de som oftast brukar ställas in.</t>
 </str>
 
-
-
 <str id="180">
 <o>Show developer options and actions</o>
 <t>Visa utvecklar-alternativ och funktioner</t>
@@ -1338,10 +1336,7 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <t>Inställningar</t>
 </str>
 
-<str id="257">
-<o>Modules</o>
-<t>Moduler</t>
-</str>
+
 
 <str id="258">
 <o>Add module</o>
@@ -1719,10 +1714,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 
 
 
-
-
-
-
 <str id="326">
 <o>unnamed</o>
 <t>utan namn</t>
@@ -1925,15 +1916,9 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <t>Användar-ID</t>
 </str>
 
-<str id="245">
-<o>Normal</o>
-<t>Normal</t>
-</str>
 
-<str id="246">
-<o>Reversed</o>
-<t>Omvänd</t>
-</str>
+
+
 
 <str id="248">
 <o>Create new site</o>
@@ -2147,52 +2132,134 @@ utifrån detta namn.</t>
 <t></t>
 </str>
 
-
-
 <str id="168">
 <new/>
 <o>Hide</o>
 <t></t>
 </str>
 
-<str id="320">
-<new/>
-<o>Value %s does not match the regexp %s.</o>
-<t></t>
-</str>
 
-<str id="321">
-<new/>
-<o>Value %s does not match the glob %s.</o>
-<t></t>
-</str>
 
-<str id="322">
-<new/>
-<o>Value %s must be at least %d characters long. (%d character short)</o>
-<t></t>
-</str>
 
-<str id="323">
-<new/>
-<o>Value %s must not be more than %d characters long. (%d character too long)</o>
-<t></t>
-</str>
 
-<str id="324">
-<new/>
-<o>Value %s is not uppercased.</o>
-<t></t>
-</str>
 
-<str id="325">
-<new/>
-<o>Value %s is not lowercased.</o>
-<t></t>
-</str>
+
+
+
+
+
+
 
 <str id="169">
 <new/>
 <o>Login attempt from %s</o>
+<t></t>
+</str>
+
+<str id="167">
+<new/>
+<o>Form font size</o>
+<t></t>
+</str>
+
+<str id="178">
+<new/>
+<o>The fontsize of the variables in the configuration interface</o>
+<t></t>
+</str>
+
+<str id="179">
+<new/>
+<o>Documentation font size</o>
+<t></t>
+</str>
+
+<str id="193">
+<new/>
+<o>The fontsize of the documentation in the configuration interface</o>
+<t></t>
+</str>
+
+<str id="205">
+<new/>
+<o>Minumum allowed bitrate</o>
+<t></t>
+</str>
+
+<str id="215">
+<new/>
+<o>The minimum allowed bitrate, in Kbits/second. If the  client is slower than this set bitrate, it will be disconnected (after a timeout). Setting this higher than 14 is not recommended if you have modem users.</o>
+<t></t>
+</str>
+
+<str id="233">
+<new/>
+<o>bytecode data</o>
+<t></t>
+</str>
+
+<str id="373">
+<new/>
+<o>Key</o>
+<t></t>
+</str>
+
+<str id="374">
+<new/>
+<o>rows</o>
+<t></t>
+</str>
+
+<str id="375">
+<new/>
+<o>KiB</o>
+<t></t>
+</str>
+
+<str id="376">
+<new/>
+<o>Name</o>
+<t></t>
+</str>
+
+<str id="377">
+<new/>
+<o>Size</o>
+<t></t>
+</str>
+
+<str id="378">
+<new/>
+<o>Clear query</o>
+<t></t>
+</str>
+
+<str id="379">
+<new/>
+<o>Run query</o>
+<t></t>
+</str>
+
+<str id="380">
+<new/>
+<o>While running %s: %s</o>
+<t></t>
+</str>
+
+<str id="381">
+<new/>
+<o>Failed to connect</o>
+<t></t>
+</str>
+
+<str id="382">
+<new/>
+<o>Failed to enable %s</o>
+<t></t>
+</str>
+
+<str id="383">
+<new/>
+<o>Documentation</o>
 <t></t>
 </str>

@@ -4,6 +4,7 @@
 <language>eng</language>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
+<file>../base_server/wizard.pike</file>
 <file>../protocols/prot_fhttp.pike</file>
 <file>../protocols/prot_hilfe.pike</file>
 <added id="1"/>
@@ -246,5 +247,75 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 
 <str id="12">
 <o>Hilfe</o>
+<t></t>
+</str>
+
+<str id="16">
+<o>Remove</o>
+<t></t>
+</str>
+
+<str id="18">
+<o>Add</o>
+<t></t>
+</str>
+
+<str id="38">
+<o>Ok</o>
+<t></t>
+</str>
+
+<str id="47">
+<o>Example</o>
+<t></t>
+</str>
+
+<str id="48">
+<o>Example Text</o>
+<t></t>
+</str>
+
+<str id="49">
+<o>Yes</o>
+<t></t>
+</str>
+
+<str id="50">
+<o>No</o>
+<t></t>
+</str>
+
+<str id="51">
+<o>No name</o>
+<t></t>
+</str>
+
+<str id="52">
+<o>Completed</o>
+<t></t>
+</str>
+
+<str id="53">
+<o>Page </o>
+<t></t>
+</str>
+
+<str id="54">
+<o>&amp;lt;- Previous</o>
+<t></t>
+</str>
+
+<str id="55">
+<o>OK</o>
+<t></t>
+</str>
+
+<str id="56">
+<o>Cancel</o>
+<t></t>
+</str>
+
+<str id="57">
+<o>Next -&amp;gt;</o>
 <t></t>
 </str>

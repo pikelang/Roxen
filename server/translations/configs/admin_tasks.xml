@@ -25,4 +25,5 @@
   <file>../config_interface/actions/ssl_common.pike</file>
   <file>../config_interface/actions/tablist.pike</file>
   <file>../config_interface/actions/threads.pike</file>
+  <file>../config_interface/actions/change_version.pike</file>
 </project>
