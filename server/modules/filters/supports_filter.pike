@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: supports_filter.pike,v 1.4 2000/11/19 04:42:23 nilsson Exp $";
+constant cvs_version = "$Id: supports_filter.pike,v 1.5 2000/11/19 04:56:55 nilsson Exp $";
 constant module_name = "Supports filter";
 constant module_type = MODULE_FILTER;
 constant thread_safe = 1;
@@ -67,15 +67,15 @@ mapping filter(mapping res, RequestID id) {
   mapping tags=([]), conts=([]);
 
   if(filtered->bigsmall && !id->supports->bigsmall) {
-    conts->big=lambda(string t, mapping m, string c) { return "<b>"+c+"</b>"; };
-    conts->small=lambda(string t, mapping m, string c) { return c; };
+    conts->big=lambda(object p, mapping m, string c) { return "<b>"+c+"</b>"; };
+    conts->small=lambda(object p, mapping m, string c) { return c; };
   }
 
   if(filtered->center && !id->supports->center)
-    conts->center=lambda(string r, mapping m, string c) { return c; };
+    conts->center=lambda(object p, mapping m, string c) { return c; };
 
   if(filtered->font && !id->supports->font)
-    conts->font=lambda(string t, mapping m, string c) { return c; };
+    conts->font=lambda(object p, mapping m, string c) { return c; };
 
   if(filtered->images && !id->supports->images)
     tags->img="";
@@ -84,7 +84,7 @@ mapping filter(mapping res, RequestID id) {
     conts->applet="";
 
   if(filtered->javascript && !id->supports->javascript)
-    conts->script=lambda(string t, mapping m, string c) {
+    conts->script=lambda(object p, mapping m, string c) {
 		    if(m->language && has_value(lower_case(m->language), "javascript"))
 		      return "";
 		    if(m->src && m->src[..sizeof(m->src)-4]==".js")
@@ -93,14 +93,14 @@ mapping filter(mapping res, RequestID id) {
 		  };
 
   if(filtered->mailto && !id->supports->mailto)
-    conts->a=lambda(string t, mapping m, string c) {
+    conts->a=lambda(object p, mapping m, string c) {
 	       if(m->href && m->href[..5]=="mailto") return c;
 	       return 0;
 	     };
 
   if(filtered->stylesheets && !id->supports->stylesheets) {
     conts->style="";
-    tags->link=lambda(string t, mapping m, string c) {
+    tags->link=lambda(object p, mapping m, string c) {
 		 if(m->type && lower_case(m->type)=="text/css") return "";
 		 return 0;
 	       };
