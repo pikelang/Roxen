@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.104 2004/05/05 21:17:03 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.105 2004/05/06 00:25:58 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1074,7 +1074,8 @@ class RequestID
   //! @param message
   //!   If given, it's a message to include in the response. The
   //!   message may contain line feeds ('\n') and ISO-8859-1
-  //!   characters in the ranges 32..126 and 128..255.
+  //!   characters in the ranges 32..126 and 128..255. Line feeds are
+  //!   converted to spaces if the response format doesn't allow them.
   //!
   //! @param args
   //!   If there are more arguments after @[message] then @[message]
@@ -1448,91 +1449,128 @@ class RequestID
   }
 }
 
-class XMLStatusNode
+class MultiStatusStatus (int http_code, void|string message)
 {
-  inherit ElementNode;
-  static void create(int|string code, void|string message)
+  constant is_status = 1;
+
+  void build_response (ElementNode response_node)
   {
-    ::create("DAV:status", ([]));
-    if (intp(code)) {
-      code = sprintf("HTTP/1.1 %d %s", code,
-		     message||errors[code]||"Unknown status");
+    ElementNode node = ElementNode("DAV:status", ([]));
+    response_node->add_child (node);
+    // No use wasting space on a good message in the status node since
+    // we have it in the responsedescription instead.
+    node->add_child(TextNode(sprintf("HTTP/1.1 %d ", http_code)));
+
+    if (message) {
+      node = ElementNode ("DAV:responsedescription", ([]));
+      response_node->add_child (node);
+      node->add_child (TextNode (message));
     }
-    add_child(TextNode(code));
+  }
+
+  int `== (mixed other)
+  {
+    return objectp (other) &&
+      object_program (other) == this_program &&
+      other->http_code == http_code &&
+      other->message == message;
+  }
+
+  int __hash()
+  {
+    return http_code + (message && hash (message));
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' &&
+      sprintf ("MultiStatusStatus(%d,%O)", http_code, message);
   }
 }
 
-class XMLPropStatNode
+private ElementNode ok_status_node =
+  lambda () {
+    ElementNode node = ElementNode ("DAV:status", ([]));
+    node->add_child (TextNode ("HTTP/1.1 200 OK"));
+    return node;
+  }();
+
+class MultiStatusPropStat
 {
-  inherit Parser.XML.Tree.ElementNode;
+  constant is_prop_stat = 1;
 
-  static mapping(string:Node) properties = ([]);
-  static multiset(string) descriptions = (<>);
+  mapping(string:string|array(Node)|Node|MultiStatusStatus) properties = ([]);
 
-  static Node prop_node;
-  static Node description_node;
-
-  void add_property(string prop_name, void|string|array(Node)|Node value)
+  void build_response (ElementNode response_node)
   {
-    Node n;
-    if (!(n = properties[prop_name])) {
-      string type;
-      // The DAV client in Windows XP Pro (at least) requries types on
-      // the date fields to parse them correctly. The type system is
-      // of course some MS goo.
-      switch (prop_name) {
-	case "DAV:creationdate":     type = "dateTime.tz"; break;
-	case "DAV:getlastmodified":  type = "dateTime.rfc1123"; break;
-	  // MS header - format unknown.
-	  //case "DAV:lastaccessed": type = "dateTime.tz"; break;
+    ElementNode ok_prop_node = ElementNode ("DAV:prop", ([]));
+    mapping(MultiStatusStatus:Node) prop_nodes = ([]);
+
+    foreach (properties;
+	     string prop_name; string|array(Node)|Node|MultiStatusStatus value) {
+      if (objectp (value) && value->is_status) {
+	// Group together failed properties according to status codes.
+	Node prop_node = prop_nodes[value];
+	if (!prop_node)
+	  prop_nodes[value] = prop_node = ElementNode ("DAV:prop", ([]));
+	prop_node->add_child (ElementNode (prop_name, ([])));
       }
-      n = ElementNode(prop_name,
-		      type ?
-		      (["urn:schemas-microsoft-com:datatypesdt": type]) :
+
+      else {
+	// The property is ok and has a value.
+
+	string ms_type;
+	// The DAV client in Windows XP Pro (at least) requires types
+	// on the date fields to parse them correctly. The type system
+	// is of course some MS goo.
+	switch (prop_name) {
+	  case "DAV:creationdate":     ms_type = "dateTime.tz"; break;
+	  case "DAV:getlastmodified":  ms_type = "dateTime.rfc1123"; break;
+	    // MS header - format unknown.
+	    //case "DAV:lastaccessed": ms_type = "dateTime.tz"; break;
+	}
+	ElementNode node =
+	  ElementNode(prop_name,
+		      ms_type ?
+		      (["urn:schemas-microsoft-com:datatypesdt": ms_type]) :
 		      ([]));
-      properties[prop_name] = n;
-      prop_node->add_child(n);
-    }
-    if (value) {
-      if (stringp(value)) {
-	value = TextNode(value);
+	ok_prop_node->add_child (node);
+
+	if (arrayp (value))
+	  node->replace_children (value);
+	else if (stringp (value))
+	  node->add_child (TextNode (value));
+	else if (objectp (value))
+	  node->add_child (value);
       }
-      if (arrayp(value)) {
-	n->replace_children(value);
-      } else {
-	n->replace_children(({ value }));
-      }      
-    } else {
-      n->replace_children(({}));
+    }
+
+    if (ok_prop_node->count_children()) {
+      ElementNode propstat_node = ElementNode ("DAV:propstat", ([]));
+      response_node->add_child (propstat_node);
+      propstat_node->add_child (ok_prop_node);
+      propstat_node->add_child (ok_status_node);
+    }
+
+    foreach (prop_nodes; MultiStatusStatus status; Node prop_node) {
+      ElementNode propstat_node = ElementNode ("DAV:propstat", ([]));
+      response_node->add_child (propstat_node);
+      propstat_node->add_child (prop_node);
+      status->build_response (propstat_node);
     }
   }
 
-  void add_description(string description)
+  string _sprintf (int flag)
   {
-    if (descriptions[description]) return;
-    descriptions[description] = 1;
-    if (!description_node) {
-      description_node = ElementNode("DAV:responsedescription", ([]));
-      add_child(description_node);
-    }
-    description_node->add_child(TextNode(description + "\n"));
-  }
-
-  int http_code;
-
-  static void create(int|void code, string|void message)
-  {
-    http_code = code || 200;
-
-    ::create("DAV:propstat", ([]));
-    add_child(XMLStatusNode(code, message));
-    add_child(prop_node = ElementNode("DAV:prop", ([])));
+    return flag == 'O' && sprintf ("MultiStatusPropStat(%O)", properties);
   }
 }
+
+typedef MultiStatusStatus|MultiStatusPropStat MultiStatusNode;
 
 class MultiStatus
 {
-  static mapping(string:array(Node)) status_set = ([]);
+  static mapping(string:MultiStatusNode) status_set = ([]);
 
   static mapping(string:string) args = ([
     "xmlns:DAV": "DAV:",
@@ -1543,23 +1581,55 @@ class MultiStatus
     "xmlns:MS": "urn:schemas-microsoft-com:datatypes",
   ]);
 
-  static int response_count;
-
   int num_responses()
   //! Returns the number of responses that have been added to this
   //! object.
   {
-    return response_count;
+    return sizeof (status_set);
   }
 
-  void add_response(string href, Node response_node)
+  MultiStatusNode get_response (string href)
+  //! Returns the response stored for @[href] if there is any.
+  //!
+  //! @returns
+  //!   @mixed
+  //!     @type MultiStatusStatus
+  //!       There was some kind of error on @[href] and this is the
+  //!       stored status. This type is preferably checked by testing
+  //!       for a nonzero @expr{is_status@} member.
+  //!     @type MultiStatusPropStat
+  //!       A property query was successful on @[href] and the
+  //!       returned object contains the results for some or all
+  //!       properties. This type is preferably checked by testing for
+  //!       a nonzero @expr{is_prop_stat@} member.
+  //!   @endmixed
   {
-    if (!status_set[href]) {
-      status_set[href] = ({ response_node });
-    } else {
-      status_set[href] += ({ response_node });
+    return status_set[href];
+  }
+
+  mapping(string:MultiStatusNode) get_responses_by_prefix (string href_prefix)
+  //! Returns the stored responses for all URI:s that got
+  //! @[href_prefix] as prefix. See @[get_response] for details about
+  //! the response value.
+  //!
+  //! Prefixes are only matched at @expr{"/"@} boundaries, so
+  //! @expr{"http://x.se/foo"@} is considered a prefix of
+  //! @expr{"http://x.se/foo/bar"@} but not
+  //! @expr{"http://x.se/foobar"@}. As a special case, the empty
+  //! string as @[href_prefix] returns all stored responses.
+  {
+    if (href_prefix == "")
+      return status_set + ([]);
+    mapping(string:MultiStatusNode) result = ([]);
+    if (!has_suffix (href_prefix, "/")) {
+      if (MultiStatusNode stat = status_set[href_prefix])
+	result[href_prefix] = stat;
+      href_prefix += "/";
     }
-    response_count++;
+    foreach (status_set; string href; MultiStatusNode stat)
+      if (has_prefix (href, href_prefix))
+	result[href] = stat;
+    return result;
   }
 
   //! Add DAV:propstat information about the property @[prop_name] for
@@ -1572,52 +1642,27 @@ class MultiStatus
   //!       Operation performed ok, no value.
   //!     @type string|array(Node)|Node
   //!       Property has value @[prop_value].
+  //!     @type MultiStatusStatus
   //!     @type mapping(string:mixed)
   //!       Operation failed as described by the mapping.
   //!   @endmixed
   void add_property(string href, string prop_name,
 		    void|int(0..0)|string|array(Node)|Node|
-		    mapping(string:mixed) prop_value)
+		    MultiStatusStatus|mapping(string:mixed) prop_value)
   {
-    array(XMLStatusNode) stat_nodes;
-    XMLStatusNode stat_node;
-    int code = 200;
-    string message;
-
-    if (mappingp(prop_value)) {
-      code = prop_value->error;
-      message = prop_value->rettext;
-    }
-
-    DAV_WERROR("Adding property %O code:%O val:%O\n",
-	       prop_name, code, prop_value);
-    if (!(stat_nodes = status_set[href])) {
-      status_set[href] = ({ stat_node = XMLPropStatNode(code, message) });
-      response_count++;
-    } else {
-      int index;
-      for (; index < sizeof (stat_nodes); index++) {
-	XMLStatusNode n = stat_nodes[index];
-	if (n->http_code == code) {
-	  stat_node = n;
-	  break;
-	}
-	if (n->http_code > code) break;
-      }
-      if (!stat_node) {
-	status_set[href] =
-	  status_set[href][..index-1] +
-	  ({ stat_node = XMLPropStatNode(code, message) }) +
-	  status_set[href][index..];
-	response_count++;
-      }
-    }
-    if (message) {
-      // FIXME: Add a global error description?
-      stat_node->add_description(message);
-      prop_value = 0;
-    }
-    stat_node->add_property(prop_name, prop_value);
+    MultiStatusPropStat prop_stat;
+    if (MultiStatusNode stat = status_set[href])
+      if (stat->is_prop_stat)
+	// This will cause override of an existing MultiStatusStatus.
+	// Presumably it came from another file system that is now
+	// being hidden. Or is it better to keep the status node and
+	// do nothing here instead?
+	prop_stat = stat;
+    if (!prop_stat)
+      prop_stat = status_set[href] = MultiStatusPropStat();
+    if (mappingp (prop_value))
+      prop_value = MultiStatusStatus (prop_value->error, prop_value->rettext);
+    prop_stat->properties[prop_name] = prop_value;
   }
 
   void add_status (string href, int status_code,
@@ -1625,14 +1670,8 @@ class MultiStatus
   //! Add a status for the specified url. The remaining arguments are
   //! the same as for @[Roxen.http_status].
   {
-    add_response (href, XMLStatusNode (status_code));
-    if (message) {
-      if (sizeof (args)) message = sprintf (message, @args);
-      Parser.XML.Tree.ElementNode descr =
-	Parser.XML.Tree.ElementNode ("DAV:responsedescription", ([]));
-      descr->add_child (Parser.XML.Tree.TextNode (message));
-      add_response (href, descr);
-    }
+    if (sizeof (args)) message = sprintf (message, @args);
+    status_set[href] = MultiStatusStatus (status_code, message);
   }
 
   void add_namespace (string namespace)
@@ -1662,12 +1701,12 @@ class MultiStatus
 	       status_set);
 
     foreach(sort(indices(status_set)), string href) {
-      array(Node) responses = status_set[href];
-      Node href_node = ElementNode("DAV:href", ([]));
+      ElementNode href_node = ElementNode("DAV:href", ([]));
       href_node->add_child(TextNode(href));
-      (response_xml[i++] =
-	ElementNode("DAV:response", ([])))->
-	  replace_children(({href_node})+responses);
+      ElementNode response_node = ElementNode("DAV:response", ([]));
+      response_xml[i++] = response_node;
+      response_node->add_child (href_node);
+      status_set[href]->build_response (response_node);
     }
     node->replace_children(response_xml);
 
@@ -1688,12 +1727,9 @@ class MultiStatus
   class Prefixed (static string href_prefix)
   {
     MultiStatus get_multi_status() {return MultiStatus::this;}
-    void add_response(string href, Node response_node) {
-      MultiStatus::add_response(href_prefix + href, response_node);
-    }
     void add_property(string path, string prop_name,
-		      void|int(0..0)|string|Node|mapping(string:mixed)
-		      prop_value)
+		      void|int(0..0)|string|array(Node)|Node|
+		      MultiStatusStatus|mapping(string:mixed) prop_value)
     {
       MultiStatus::add_property(href_prefix + path, prop_name, prop_value);
     }
