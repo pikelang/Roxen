@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.190 1998/04/21 19:07:29 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.191 1998/04/23 13:16:20 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -385,6 +385,19 @@ object configuration_interface()
     }
   }
   return configuration_interface_obj;
+}
+
+// Unload the configuration interface
+void unload_configuration_interface()
+{
+  report_notice("Unloading the configuration interface\n");
+
+  configuration_interface_obj = 0;
+  loading_config_interface = 0;
+  enabling_configurations = 0;
+  build_root = 0;
+  catch{root->dest();};
+  root = 0;
 }
 
 
