@@ -1,4 +1,4 @@
-string cvs_version = "$Id: hosts.pike,v 1.16 1997/12/04 04:26:45 per Exp $";
+string cvs_version = "$Id: hosts.pike,v 1.17 1997/12/04 21:07:41 neotron Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7
@@ -196,6 +196,10 @@ void create_host_name_lookup_processes()
 string blocking_ip_to_host(string ip)
 {
   array addr;
+  if(stringp(ip) && strlen(ip))
+    ip=(ip/" ")[0];
+  else
+    return ip;
   if(!(int)ip) return ip;
   addr = gethostbyaddr( ip );
   if(do_when_found[ip])  notify(do_when_found[ip], addr && addr[0]);
@@ -206,7 +210,21 @@ string blocking_ip_to_host(string ip)
 string blocking_host_to_ip(string host)
 {
   array addr;
-  if((int)host) return host;
+  int isip;
+  if(!stringp(host) || !strlen(host))
+    return host;
+  mixed entry = host / "." - ({""});
+  if(sizeof(entry) == 4) 
+  { // Could be an ip number
+    foreach(entry, string s)
+      if((string)((int)s) != s) {
+	isip = 0;
+	break;
+      } else
+	isip = 1;
+  }
+  if(isip) 
+    return host;
   addr = gethostbyname( host );
   if(do_when_found[host]) notify(do_when_found[host], addr&&addr[0]);
   m_delete(do_when_found, host);
@@ -241,6 +259,8 @@ string quick_ip_to_host(string ipnumber)
 
 string quick_host_to_ip(string h)
 {
+  if(!stringp(h) || !strlen(h))
+    return h;
   mixed entry = h / "." - ({""});
   int isip;
   string s;
