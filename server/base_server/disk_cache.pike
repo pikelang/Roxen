@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.11 1997/01/07 03:35:02 neotron Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.12 1997/01/26 23:47:07 per Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -28,9 +28,8 @@ string file_name(string what)
  | of this class.
  */
 
-
-class CacheStream {
-
+class CacheStream 
+{
   inherit "socket";
   string fname;
   object file;
@@ -231,6 +230,10 @@ public void reinit_garber()
 {
   if(!QUERY(cache)) return;
 
+  
+  if(!sscanf(QUERY(cachedir), "%*s/roxen_cache"))
+    QUERY(cachedir)+="roxen_cache/";
+  
   mkdirhier(QUERY(cachedir)+"logs/oo");
   if(file_size(QUERY(cachedir)+"logs")>-2)
   {
