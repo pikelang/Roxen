@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.83 2000/09/25 12:53:21 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.84 2000/11/03 01:28:28 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -21,7 +21,7 @@ array(string) readme, indexfiles;
 string template;
 int override;
 
-constant module_type = MODULE_DIRECTORIES;
+constant module_type = MODULE_DIRECTORIES|MODULE_TAG;
 constant module_name = "Directory Listings";
 constant module_doc = "This module pretty prints a list of files.";
 
@@ -90,7 +90,7 @@ void start(int n, Configuration c)
      <roxen align='right' size='small' />
     <font size='+3'>
    <emit source='path'>
-     <a href='&_.path;'> &_.name; <font color='black'>/</font></a>
+     <a href='&_.path:url;'> &_.name; <font color='black'>/</font></a>
    </emit> </font><br /><br />
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>
@@ -140,8 +140,8 @@ void start(int n, Configuration c)
             sort-order='&form.sort;'
             ::='&var.doreverse;'>
         <tr bgcolor='#eeeeee'>
-          <td align='left'><a href='&_.path;'><img src='&_.type-img;' border='0' /></a></td>
-          <td align='left'><a href='&_.path;'>&_.name;</a> &nbsp;</td>
+          <td align='left'><a href='&_.path:url;'><img src='&_.type-img;' border='0' /></a></td>
+          <td align='left'><a href='&_.path:url;'>&_.name;</a> &nbsp;</td>
           <td align='right'>&_.size; &nbsp;</td>
           <td align='right'>&_.type; &nbsp;</td>
           <td align='right'>&_.mtime; &nbsp;</td>
@@ -159,7 +159,7 @@ void start(int n, Configuration c)
     else
       template = query("template");
 
-    if( !(c->enabled_modules["sitebuilder_tags#0"] ||
+    if( !(c->enabled_modules["sbtags_2.0#0"] ||
           c->enabled_modules["sitebuilder#0"] ||
           c->enabled_modules["diremit#0"] ) )
         c->add_modules( ({ "diremit#0" }), 1 );
@@ -218,4 +218,67 @@ mapping parse_directory(RequestID id)
     }
   return Roxen.http_rxml_answer( template, id );
 }
+
+
+class TagPathplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "path";
+
+  array get_dataset(mapping m, RequestID id)
+  {
+    string fp = "";
+    array res = ({});
+    string p = id->not_query;
+    if( m->trim )
+      sscanf( p, "%s"+m->trim, p );
+    if( p[-1] == '/' )
+      p = p[..strlen(p)-2];
+    array q = p / "/";
+    if( m->skip )
+      q = q[(int)m->skip..];
+    foreach( q, string elem )
+    {
+      fp += "/" + elem;
+      fp = replace( fp, "//", "/" );
+      res += ({
+        ([
+          "name":elem,
+          "path":fp
+        ])
+      });
+    }
+    return res;
+  }
+}
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+"emit#path":({ #"<desc plugin><short>
+ Prints paths.</short> This plugin traverses over all directories in
+ the path from the root up to the current one.
+</desc>
+
+<attr name='trim' value='string'>
+ Removes all of the remaining path after and including the specified
+ string.
+</attr>
+
+<attr name='skip' value='number'>
+ Skips the 'number' of slashes ('/') specified, with beginning from
+ the root.
+</attr>",
+	       ([
+"&_.name;":#"<desc ent>
+ Returns the name of the most recently traversed directory.
+</desc>",
+
+"&_.path;":#"<desc ent>
+ Returns the path to the most recently traversed directory.
+</desc>"
+	       ])
+	    }) ]);
+#endif
 
