@@ -4,7 +4,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.7 2000/06/11 14:53:21 mast Exp $";
+constant cvs_version = "$Id: sqldb.pike,v 1.8 2000/10/18 21:37:13 mast Exp $";
 constant module_type = MODULE_ZERO;
 constant module_name = "SQL databases";
 constant module_doc  = 
@@ -65,22 +65,22 @@ string status()
 
       if (o) {
 	res += sprintf("<tr><td>Connection OK</td>"
-		       "<td><tt>%s</tt></td><td><tt>%s</tt></td></tr>\n",
+		       "<td><tt>%s</tt></td>"
+		       "<td>%s server on %s</td></tr>\n",
 		       Roxen.html_encode_string (s),
-		       Roxen.html_encode_string (sql_urls[s]));
+		       Roxen.html_encode_string (o->server_info()),
+		       Roxen.html_encode_string (o->host_info()));
       } else if (err) {
 	res += sprintf("<tr><td><font color=red>Connection failed</font>: %s</td>"
-		       "<td><tt>%s</tt></td><td><tt>%s</tt></td></tr>\n",
+		       "<td><tt>%s</tt></td><td>&nbsp;</td></tr>\n",
 		       Roxen.html_encode_string (describe_error (err)),
-		       Roxen.html_encode_string (s),
-		       Roxen.html_encode_string (sql_urls[s]));
+		       Roxen.html_encode_string (s));
       }
       else
 	res += sprintf("<tr><td><font color=red>Connection failed</font>: "
 		       "Unknown reason</td>"
-		       "<td><tt>%s</tt></td><td><tt>%s</tt></td></tr>\n",
-		       Roxen.html_encode_string (s),
-		       Roxen.html_encode_string (sql_urls[s]));
+		       "<td><tt>%s</tt></td><td>&nbsp;</td></tr>\n",
+		       Roxen.html_encode_string (s));
     }
     res += "</table>\n";
   } else {
