@@ -40,9 +40,9 @@ string parse( RequestID id )
       for( int i = 4; i<sizeof(st); i++ )
 	status += (st[i]/"</font")[0]+"<br />";
 
-      status = "<cimg format=png src='/internal-roxen-pixel-orange' "
+      status = "<cimg format='png' src='/%01/pixel-orange' "
 	"     scale='"+(int)(2.8*(int)tmp)+",12'/>"
-	"<cimg format=png src='/internal-roxen-pixel-black' "
+	"<cimg format='png' src='/%01/pixel-black' "
 	"     scale='"+(int)(280-(2.5*(int)tmp))+",12' />"
 	"<br />"+status;
     }
@@ -50,7 +50,7 @@ string parse( RequestID id )
 
     contents  =
       "<a href='http://www.megatokyo.com/'>"
-      "<center><cimg format=png border=0 max-width=390 "
+      "<center><cimg format='png' border='0' max-width='390' "
       "src='http://www.megatokyo.com/strips/"+img+".gif' /></center>"
       "</a><br /><b>Next strip:</b>"+status;
 //     werror( data );

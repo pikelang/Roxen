@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.13 2002/10/27 20:21:53 nilsson Exp $
+ * $Id: flush.pike,v 1.14 2002/11/07 18:07:33 mani Exp $
  */
 #include <admin_interface.h>
 
@@ -40,6 +40,8 @@ mixed doit()
 
 mixed parse( RequestID id )
 {
+  // NGSERVER: Make this a three button view;
+  // [Flush memory caches] [Flush persistant caches] [Return]
   doit();
   return "All memory caches have been flushed."
     "<p><cf-ok/></p>";

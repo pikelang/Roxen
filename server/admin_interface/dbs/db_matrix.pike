@@ -77,7 +77,7 @@ string|mapping parse( RequestID id )
       {
         string ct = colors[0][j%sizeof(colors)];
         res += "<td bgcolor='"+ct+"'>"
-            "<img src='/internal-roxen-unit' alt='' width='1' height='5' /></td>";
+            "<img src='/%01/unit' alt='' width='1' height='5' /></td>";
       }
       else
         res += "<td></td>";

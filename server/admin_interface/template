@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.118 2002/11/06 18:59:35 agehall Exp $ -->
+<!-- $Id: template,v 1.119 2002/11/07 18:07:32 mani Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -40,9 +40,9 @@
 <define container="cv-split">
  <table ::="&usr.content-toptableargs:none;" width="100%">
    <tr>
-     <td width="10"><img src="/internal-roxen-unit" width="10" height="1" alt="" /></td>
+     <td width="10"><img src="/%01/unit" width="10" height="1" alt="" /></td>
      <td ::="&usr.left-tableargs:none;">
-       <img src="/internal-roxen-unit" width="&usr.leftside-padwidth;" height="1" alt="" /><br />
+       <img src="/%01/unit" width="&usr.leftside-padwidth;" height="1" alt="" /><br />
        &var.leftside:none;&var.leftimage:none;
      </td>
      <td ::="&usr.content-tableargs:none;">
@@ -156,7 +156,7 @@
      </td>
    </tr>
    <tr>
-     <td colspan="2" ::="&usr.toptabs-tableargs:none;" width="100%" valign="bottom"><img src="/internal-roxen-unit" width="&usr.toptabs-padwidth;" height="1" alt="" />&var._top_content:none;</td>
+     <td colspan="2" ::="&usr.toptabs-tableargs:none;" width="100%" valign="bottom"><img src="/%01/unit" width="&usr.toptabs-padwidth;" height="1" alt="" />&var._top_content:none;</td>
    </tr>
   </table>
 

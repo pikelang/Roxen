@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.139 2002/10/23 16:37:25 nilsson Exp $
+// $Id: site_content.pike,v 1.140 2002/11/07 18:07:33 mani Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -326,6 +326,8 @@ string find_module_doc( string cn, string mn, RequestID id )
     dbuttons += "<font color='&usr.warncolor;'><pre>"+
       .State->current_compile_errors[ cn+"!"+mn ]+
       "</pre></font>";
+
+  // NGSERVER: Remove this replace
   return
     replace( "<br /><b><font size='+2'>" +
 	     Roxen.html_encode_string((string)EC(TRANSLATE(m->register_module()[1])))
@@ -358,7 +360,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    + 
                     "</dl>" 
                     : homepage + creators),
-                  ({ "/image/", }), ({ "/internal-roxen-" }));
+                  ({ "/image/", }), ({ "/%01/" }));
 }
 
 string find_module_documentation( string conf, string mn, RequestID id )
