@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.94 1999/04/24 10:00:00 neotron Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.95 1999/05/10 10:12:32 wing Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -953,6 +953,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
   string quote = args->quote || "#";
   mapping other_vars;
   string new_contents = "", unparsed_contents = "";
+  int first;
 
   // multi_separator must default to \000 since one sometimes need to
   // pass multivalues through several output tags, and it's a bit
@@ -975,6 +976,68 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	html_encode_string (contents) + "</pre><b>]</b>\n";
   }
 
+  if (args->sort)
+  {
+    array order;
+
+    order = args->sort / "," - ({ "" });
+    var_arr = Array.sort_array( var_arr,
+				lambda (mapping m1, mapping m2, array order)
+				{
+				  int tmp;
+				     
+				  foreach (order, string field)
+				  if (field[0] == '-')
+				    if (tmp = (m1[field[1..]]
+					       < m2[field[1..]]))
+				      return tmp;
+				    else
+				      ;
+				  else if (field[0] == '+')
+				    if (tmp = (m1[field[1..]]
+					       > m2[field[1..]]))
+				      return tmp;
+				    else
+				      ;
+				  else
+				    if (tmp = (m1[field]
+					       > m2[field]))
+				      return tmp;
+				  return 0;
+				}, order );
+  }
+
+  if (args->range)
+  {
+    int begin, end;
+    string b, e;
+    
+
+    sscanf( args->range, "%s..%s", b, e );
+    if (!b || b == "")
+      begin = 0;
+    else
+      begin = (int )b;
+    if (!e || e == "")
+      end = -1;
+    else
+      end = (int )e;
+
+    if (begin < 0)
+      begin += sizeof( var_arr );
+    if (end < 0)
+      end += sizeof( var_arr );
+    if (begin > end)
+      return "";
+    if (begin < 0)
+      if (end < 0)
+	return "";
+      else
+	begin = 0;
+    var_arr = var_arr[begin..end];
+  }
+
+  first = 1;
   foreach (var_arr, mapping vars)
   {
     if (args->set)
@@ -1166,6 +1229,10 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	  exploded[c] = val;
 	}
 
+      if (first)
+	first = 0;
+      else if (args->delimiter)
+	new_contents += args->delimiter;
       new_contents += args->preprocess ? exploded * "" :
 	parse_rxml (exploded * "", id);
       if (args["debug-output"]) unparsed_contents += exploded * "";
