@@ -1,8 +1,14 @@
 Changes since Roxen Challenger 1.3.115 Yellow
 -----------------------------------------------
 
+o The SSI compat command, <!--#exec cgi="..."--> changed to not use
+  the cache per default. If you do want to use the cache, use the
+  <cgi> tag or <insert file=...> instead.
+ 
 o Added byte-range handling. (Thanks to David Hedbor at Real Audio.)
   note: Experimental and must be enabled in global variables.
+
+o Added a supports lookup cache. 
 
 o Fixed start --version to acctually output the correct version.
 
