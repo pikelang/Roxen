@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.19 1998/03/09 18:33:26 marcus Exp $
+ * $Id: PDB.pmod,v 1.20 1998/03/16 15:11:45 noring Exp $
  */
 
 #if constant(thread_create)
@@ -274,7 +274,9 @@ class Table
     LOCK();
     object bucket = get_bucket(scheme(strlen(ts)));
     if(index[in] && index[in][0] == bucket->size) {
+      log('D', in);
       bucket->set_entry(index[in][1], ts);
+      log('C', in, index[in]);
       return to;
     }
     int of = bucket->allocate_entry();
