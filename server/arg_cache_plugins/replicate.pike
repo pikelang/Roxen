@@ -160,21 +160,6 @@ static int get_and_store_data_from_server( Server server, int id,
   return cache->create_key( data, 0, index_id );
 }
 
-static array(int) server_secret_decode( string a, string secret )
-{
-  object crypto = Crypto.arcfour();
-  crypto->set_encrypt_key( secret );
-  a = Gmp.mpz( a, 36 )->digits( 256 );
-  a = crypto->crypt( a );
-  int i, j;
-#ifdef REPLICATE_DEBUG
-  werror("Decoding with %O got %O\n", secret, a );
-#endif
-  if( sscanf( a, "%d\327%d", i, j ) == 2 )
-    return ({ i, j });
-  return 0;
-}
-
 #define ENSURE_NOT_OFF(X)						\
   if( off )								\
   {									\
@@ -254,7 +239,7 @@ array(int) decode_id( string data )
   foreach( indices(servers), string server )
   {
     string sec = servers[server]->secret;
-    if( array id = server_secret_decode( data, sec ) )
+    if( array id = cache->low_decode_id( data, sec ) )
     {
       Thread.MutexKey key;
       catch ( key = cache->mutex->lock() );
