@@ -1,7 +1,6 @@
-/*
- * Locale stuff.
- * <locale-token project="roxen_config"> _ </locale-token>
- */
+// Locale stuff.
+// <locale-token project="roxen_config"> _ </locale-token>
+
 #include <roxen.h>
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
