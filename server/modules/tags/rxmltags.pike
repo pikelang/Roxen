@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.175 2000/09/16 19:56:19 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.176 2000/09/18 14:40:07 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -124,10 +124,10 @@ class EntityPageSSLStrength {
 mapping(string:object) page_scope=([
   "realfile":EntityPageRealfile(),
   "virtroot":EntityPageVirtroot(),
-  "virtfile":EntityPageVirtfile(),
+  "virtfile":EntityPageVirtfile(),  //  deprecated; use &page.path; instead
+  "path": EntityPageVirtfile(),
   "query":EntityPageQuery(),
-  "url":EntityPageURL(), //  deprecated; use &page.path; instead
-  "path":EntityPageURL(),
+  "url":EntityPageURL(),
   "last-true":EntityPageLastTrue(),
   "language":EntityPageLanguage(),
   "scope":EntityPageScope(),
@@ -1755,14 +1755,15 @@ constant tagdoc=([
 
 "&page.realfile;":#"<desc ent>Path to this file in the file system.</desc>",
 "&page.virtroot;":#"<desc ent>The root of the present virtual filesystem.</desc>",
-"&page.virtfile;":#"<desc ent>Path to this file in the virtual filesystem.</desc>",
+//  &page.virtfile; is same as &page.path; but deprecated since we want to
+//  harmonize with SiteBuilder entities.
+"&page.path;":#"<desc ent>Absolute path to this file in the virtual filesystem.</desc>",
 "&page.pathinfo;":#"\
 <desc ent>The \"path info\" part of the URL, if any. Can only get set
 if the \"Path info support\" module is installed. For details see the
 documentation for that module.</desc>",
 "&page.query;":#"<desc ent>The query part of the page URI.</desc>",
-//  &page.url; is same as &page.path; but deprecated
-"&page.path;":#"<desc ent>The absolute path for this file, from the web server's root or point of view.</desc>",
+"&page.url;":#"<desc ent>The absolute path for this file from the web server's root or point of view including query variables</desc>",
 "&page.last-true;":#"<desc ent>Is 1 if the last <tag>if</tag>-statement succeeded, otherwise 0.
  (<tag>true/</tag> and <tag>false/</tag> is considered as <tag>if</tag>-statements here)</desc>",
 "&page.language;":#"<desc ent>What language the contens of this file is written in.
