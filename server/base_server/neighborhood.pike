@@ -64,13 +64,19 @@ class UDPNeigh
 
   static void read()
   {
-    mapping r = master->udp_sock->read();
-    if(r) {
+    mapping r;
+    if(r = master->udp_sock->read()) {
       last_from = r->ip;
       master->seen_on_udp[last_from]++;
       return master->low_got_info(r->data, this_object());
-    }
-    else {
+    } else {
+      // PATCH! Sometimes there is data that cannot be read on the socket.
+#ifdef NEIGH_DEBUG
+ werror("Ugly patch invoked. Waving a dead chicken in front of the socket\n");
+#endif
+      if(master->udp_sock->set_blocking)
+	master->udp_sock->set_blocking();
+      master->udp_sock->set_read_callback(0);
       destruct(master->udp_sock);
       master->udp_sock = spider.dumUDP();
       master->udp_sock->bind(port);
