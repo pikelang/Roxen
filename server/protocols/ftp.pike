@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 1.100 1999/05/01 19:01:01 grubba Exp $
+ * $Id: ftp.pike,v 1.101 1999/05/01 19:11:09 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2572,8 +2572,8 @@ class FTPSession
       mode = "A";
       break;
     case "E":
-      send(504, ({ "'TYPE': EBCDIC mode not supported." }));
-      return;
+      mode = "E";
+      break;
     default:
       send(504, ({ "'TYPE': Unknown type:"+args }));
       return;
