@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.135 1998/09/11 22:21:07 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.136 1998/09/17 12:31:57 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1781,6 +1781,9 @@ string tag_allow(string a, mapping (string:string) m,
   IS_TEST(cookie, id->cookies);
   IS_TEST(defined, defines);
 
+  if (m->successful) TEST (_ok);
+  if (m->failed) TEST (!_ok);
+
   if (m->match) {
     string a, b;
     if(sscanf(m->match, "%s is %s", a, b)==2)
@@ -2288,7 +2291,19 @@ string tag_redirect(string tag, mapping m, object id, object file,
   if (!m->to) {
     return("<!-- Redirect requires attribute \"to\". -->");
   }
+
+  multiset(string) orig_prestate = id->prestate;
+  multiset(string) prestate = (< @indices(orig_prestate) >);
+  foreach(indices(m), string s)
+    if(m[s]==s && sizeof(s))
+      switch (s[0]) {
+	case '+': prestate[s[1..]] = 1; break;
+	case '-': prestate[s[1..]] = 0; break;
+      }
+  id->prestate = prestate;
   mapping r = http_redirect(m->to, id);
+  id->prestate = orig_prestate;
+
   if (r->error) {
     _error = r->error;
   }
@@ -2299,6 +2314,16 @@ string tag_redirect(string tag, mapping m, object id, object file,
     _rettext = m->text;
   }
   return("");
+}
+
+string tag_auth_required (string tagname, mapping args, object id,
+			  object file, mapping defines)
+{
+  mapping hdrs = http_auth_required (args->realm, args->message);
+  if (hdrs->error) _error = hdrs->error;
+  if (hdrs->extra_heads) _extra_heads += hdrs->extra_heads;
+  if (hdrs->text) _rettext = hdrs->text;
+  return "";
 }
 
 string tag_expire_time(string tag, mapping m, object id, object file,
@@ -2542,6 +2567,7 @@ mapping query_tag_callers()
 	    "vfs":tag_vfs,
 	    "header":tag_header,
 	    "redirect":tag_redirect,
+	    "auth-required":tag_auth_required,
 	    "expire_time":tag_expire_time,
 	    "signature":tag_signature,
 	    "user":tag_user,
@@ -2882,6 +2908,47 @@ string tag_case(string t, mapping m, string c, object id)
   return c;
 }
 
+string tag_recursive_output (string tagname, mapping args, string contents,
+			     object id, object file, mapping defines)
+{
+  int limit;
+  array(string) inside, outside;
+  if (id->misc->recout_limit) {
+    limit = id->misc->recout_limit - 1;
+    inside = id->misc->recout_outside, outside = id->misc->recout_inside;
+  }
+  else {
+    limit = (int) args->limit || 100;
+    inside = args->inside ? args->inside / (args->multisep || ",") : ({});
+    outside = args->outside ? args->outside / (args->multisep || ",") : ({});
+    if (sizeof (inside) != sizeof (outside))
+      return "\n<b>'inside' and 'outside' replacement sequences "
+	"aren't of same length</b>\n";
+  }
+
+  if (limit <= 0) return contents;
+
+  int save_limit = id->misc->recout_limit;
+  string save_inside = id->misc->recout_inside, save_outside = id->misc->recout_outside;
+
+  id->misc->recout_limit = limit;
+  id->misc->recout_inside = inside;
+  id->misc->recout_outside = outside;
+
+  string res = parse_rxml (
+    parse_html (
+      contents,
+      (["recurse": lambda (string t, mapping a, string c) {return ({c});}]), ([]),
+      "<" + tagname + ">" + replace (contents, inside, outside) + "</" + tagname + ">"),
+    id);
+
+  id->misc->recout_limit = save_limit;
+  id->misc->recout_inside = save_inside;
+  id->misc->recout_outside = save_outside;
+
+  return res;
+}
+
 class Tracer
 {
   inherit "roxenlib";
@@ -2892,7 +2959,6 @@ class Tracer
 #if efun(gethrvtime)
   mapping et2 = ([]);
 #endif
-
 
   string module_name(function|object m)
   {
@@ -3079,6 +3145,7 @@ mapping query_container_callers()
 	   "preparse" : tag_preparse,
 	   "trimlines" : tag_trimlines,
 	   "default" : tag_default,
+	   "recursive-output": tag_recursive_output,
 	   ]);
 }
 
