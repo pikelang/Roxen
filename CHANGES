@@ -1,11 +1,58 @@
 Changes since Roxen Challenger 1.2 alpha 13
 -----------------------------------------------
 
+o Crypto and SSL3 modules removed from the distribution due to legal reasons.
+
 o Location-modules now have a secondary sorting-order (longest path first),
   which removes some cases where priorities were needed before.
 
 o SSL3 now reads data to be sent nonblocking, so cgi-scripts should work again
   on https ports.
+
+o Business Graphics module added.
+
+o Cleaned up the output from some of the Makefiles.
+
+o Disabled the non-working SGI sproc()-support fully.
+
+o Workaround for PANIC-causing bug in AIX.
+
+o Improved support for cyclic structures in Pike.
+
+o Kluge added to support the libz distributed with IRIX 6.3.
+
+o Improved colortable support in the Image module.
+
+o The Msql and Postgres modules by Francesco Chemolli added to the
+  distribution.
+
+o The <sqltable> tag now takes an optional attribute "ascii" to generate
+  a tab-separated output suitable for eg the <diagram> tag.
+
+o The Makefiles now pass along more arguments to the sub-makes.
+
+o -pipe option to gcc disabled since it caused configure to hang when
+  configuring gmp.
+
+o Several warnings when compiling fcgi fixed.
+
+o THREADS disabled on all OS's except Solaris.
+
+o Neighbourhood disabled by default.
+
+o pike/src/modules/Pipe/pipe.c reverted to version 1.11 due to problems
+  with 1.12 and later.
+
+o Fixed several bugs in the CVS filesystem.
+
+o Fixed some not-binary-clean bugs in the proxy.
+
+o The sqltag-module now only has one config-variable (unless SQL_TAG_COMPAT
+  is defined).
+
+o Some bugs in the ftp protocol-module fixed.
+
+o pikescript removed from the generic-server template.
 
 
 Changes since Roxen Challenger 1.2 alpha 12
