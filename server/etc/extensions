@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.29 1998/02/10 16:45:19 grubba Exp $
+# $Id: extensions,v 1.30 1998/03/05 19:00:23 grubba Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -98,6 +98,8 @@ asn     application/astound
 asp     application/x-asap 
 bcpio	application/x-bcpio
 bin	application/octet-stream
+cert	application/x-x509-ca-cert
+cer	application/x-x509-ca-cert
 cdf	application/x-netcdf
 cdr	application/x-coreldraw
 cdrw    application/x-coreldraw
@@ -169,6 +171,8 @@ texinfo application/x-texinfo
 tgz	application/unix-tar	x-gzip
 tr	application/x-troff
 tsp	application/dsptype            
+user	application/x-x509-user-cert
+usr	application/x-x509-user-cert
 ustar	application/x-ustar
 vcd	application/x-cdlink
 vmd 	application/vocaltec-media-desc
