@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.247 2001/02/23 02:26:34 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.248 2001/03/06 13:39:17 peter Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1190,7 +1190,7 @@ void low_start_mysql( string datadir,
       bindir = basedir+"sbin/";
       if( !file_stat( bindir+mysqld ) )
       {
-	report_debug( "\nNo mysql found in "+basedir+"!\n" );
+	report_debug( "\nNo mysqld found in "+basedir+"!\n" );
 	exit( 1 );
       }
     }
