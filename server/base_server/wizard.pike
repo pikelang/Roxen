@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.67 1998/07/08 16:55:44 grubba Exp $
+/* $Id: wizard.pike,v 1.68 1998/07/17 15:16:24 noring Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -12,7 +12,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     id = b;
     if(m->type == "select" || m->type == "select_multiple")
       if (m->parse)
-        m->options = (parse_rxml( a, id ) / "\n" - ({ "" })) * ",";
+        m->options = (replace(parse_rxml( a, id ), ",", "__CoMma__") / "\n" -
+		      ({ "" })) * ",";
       else
 	m->options = (a / "\n") * ",";
     else if (m->parse)
