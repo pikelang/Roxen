@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.20 2001/04/18 04:51:39 mast Exp $
+//! $Id: PEnt.pike,v 1.21 2001/04/19 12:59:51 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -48,6 +48,7 @@ void reset (RXML.Context ctx, RXML.Type _type, RXML.TagSet _tag_set)
   if (type != _type) error ("Internal error: Type change in reset().\n");
   if (tag_set != _tag_set) error ("Internal error: Tag set change in reset().\n");
 #endif
+  value = RXML.nil;
   initialize (ctx, _type, _tag_set);
 
 #ifdef OLD_RXML_COMPAT
