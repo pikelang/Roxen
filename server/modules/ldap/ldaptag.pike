@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 2000, Roxen IS
+// This is a roxen module. Copyright 2000, Roxen IS
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.6 2001/03/07 13:40:46 kuntri Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.12 2001/04/11 14:12:04 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -11,19 +11,23 @@ inherit "module";
 
 Configuration conf;
 
-#define LDAP_DEBUG 1
+#define LDAP_DEBUG 0
 #ifdef LDAP_DEBUG
 # define LDAP_WERR(X) werror("LDAPtags: "+X+"\n")
 #else
 # define LDAP_WERR(X)
 #endif
 
+// global vars
+string status_connect_server, status_connect_last, ldap_last_error;
+int status_connect_nums;
+
 
 // Module interface functions
 
 //constant module_type=MODULE_TAG|MODULE_PROVIDER;
 constant module_type=MODULE_TAG;
-constant module_name="LDAP tags";
+constant module_name="Tags: LDAP tags";
 constant module_doc  = "This module gives the tag <tt>&lt;ldap&gt;</tt> and "
   "<tt>&lt;emit&gt;</tt> plugin (<tt>&lt;emit source=\"ldap\" ... &gt;</tt>).\n";
 
@@ -94,7 +98,7 @@ constant tagdoc=([
 
 // Internal helpers
 
-mapping(string:array(mixed))|int read_attrs(string attrs, int op) {
+mapping(string:array(mixed))|int read_attrs(string attrs, string op) {
 // from string: (attname1:'val1','val2'...)(attname2:'val1',...) to
 // ADD: (["attname1":({"val1","val2"...}), ...
 // REPLACE|MODIFY: (["attname1":({op, "val1","val2"...}), ...
@@ -104,10 +108,15 @@ mapping(string:array(mixed))|int read_attrs(string attrs, int op) {
   array(mixed) tmpvals, tmparr;
   string aval;
   mapping(string:array(mixed)) rv;
-  int vcnt, ix, cnt = 0, flg = (op > 0);;
+  int vcnt, ix, cnt = 0, flg = (op == "replace" || op == "modify"), opval;
 
   if(flg)
-    flg = 1;
+    switch(op) {
+	case "replace": opval = 2;
+			break;
+	case "modify":  opval = 0; // equal to ADD attribute
+			break;
+    }
   if (sizeof(attrs / "(") < 2)
     return(0);
   atypes = allocate(sizeof(attrs / "(")-1);
@@ -126,7 +135,7 @@ mapping(string:array(mixed))|int read_attrs(string attrs, int op) {
 	tmpvals[ix+flg] = (sscanf(tmparr[ix], "'%s'", aval))? aval : "";
       }
       if(flg)
-	tmpvals[0] = op;
+	tmpvals[0] = opval;
       avals[cnt] = tmpvals;
       cnt++;
     } // if
@@ -191,19 +200,39 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
   else
     error = catch(con = Protocols.LDAP.client(host));
 
-  if (error)
+  if (error) {
     RXML.run_error("Couldn't connect to LDAP server. "+Roxen.html_encode_string(error[0]));
-
+     ldap_last_error = "Couldn't connect to LDAP server. "+Roxen.html_encode_string(error[0]);
+  }
 
   if(op != "delete" && op != "search") {
-    attrvals = read_attrs(args->attr, (args->op == "replace") ? 2 : 0); // ldap->modify with flag 'replace'
+    attrvals = read_attrs(args->attr, args->op);
+    //attrvals = read_attrs(args->attr, (args->op == "replace") ? 2 : 0); // ldap->modify with flag 'replace'
     if(intp(attrvals))
       RXML.run_error("Couldn't parse attribute values.");
   }
 
+  int ver = (int)(args->version)||3;
+  if(ver == 2 || sizeof(pass))
+    error = catch(sizeof(pass) ? con->bind(args->dn, pass, ver) : con->bind());
+  if(error || con->error_number()) // trying v2 of LDAP protocol as fallback
+    error = catch(sizeof(pass) ? con->bind(args->dn, pass, 2) : con->bind("","",2));
+  if(error) {
+    RXML.run_error("Couldn't bind to LDAP server. "+Roxen.html_encode_string(error[0]));
+    ldap_last_error = "Couldn't bind to LDAP server. "+Roxen.html_encode_string(error[0]);
+  }
+  status_connect_last = host + ", proto" + (string)con->ldap_version + ", "
+			+ ctime(time());
+  status_connect_nums++;
+
   switch (op) {
     case "search":
+#if __MAJOR__ == 7 && __MINOR__ == 0 && __BUILD__ < 236
+// buggy search required argument
+	error = catch(result = (con->search(args->filter||"")));
+#else
 	error = catch(result = (con->search()));
+#endif
 	break;
 
     case "add":
@@ -214,12 +243,18 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
 	error = catch(result = (con->delete(args->dn)));
 	break;
 
+    case "modify":
+    case "replace":
+	error = catch(result = (con->modify(args->dn, attrvals)));
+	break;
+
   } //switch
 
 
   if(error) {
     error = Roxen.html_encode_string(sprintf("LDAP operation %s failed. %s",
 	    op, con->error_string()||""));
+    ldap_last_error = error;
     con->unbind();
     RXML.run_error(error);
   }
@@ -334,9 +369,9 @@ class TagLDAPQuery {
 
 // ------------------- Callback functions -------------------------
 
-Protocols.LDAP.client ldap_object(void|string a_host)
+Protocols.LDAP.client ldap_object(void|string host)
 {
-  string host = stringp(a_host)?a_host:query("server");
+  string host = stringp(host)?host:query("server");
   Protocols.LDAP.client con;
   function ldap_connect = conf->ldap_connect;
   mixed error;
@@ -354,7 +389,7 @@ string query_provides()
 void create()
 {
   defvar("server", "ldap://localhost/??sub", "Default server URL",
-	 TYPE_STRING | VAR_INITIAL,
+	 TYPE_STRING | VAR_INITIAL | VAR_MORE,
 	 "The default LDAP URL that will be used if no <i>host</i> "
 	 "attribute is given to the tags. Usually the <i>host</i> "
 	 "attribute should be used with a symbolic name definied "
@@ -362,6 +397,7 @@ void create()
 	 "<p>The default connection is specified as a LDAP URL in the "
 	 "format "
 	 "<tt>ldap://host:port/basedn??scope?filter?!...</tt>.\n");
+
 }
 
 
@@ -371,11 +407,21 @@ void start(int level, Configuration _conf)
 {
   if (_conf)
     conf = _conf;
+  ldap_last_error = "";
+  status_connect_server = "";
+  status_connect_last = "";
 }
 
 string status()
 {
-      "<font color=\"red\">Not connected:</font> " +
-      replace (Roxen.html_encode_string ("BLAHBLAH..."), "\n", "<br />\n") +
-      "<br />\n";
+  string rv = "";
+
+    if(status_connect_nums) {
+      rv += "<h2>Connection status</h2>\n";
+      rv += sprintf("<p>Last connected to %s [ %s]<br>Number of connections: %d<br /></p><p>Last error: %s<br /></p>\n",
+                status_connect_server, status_connect_last,
+                status_connect_nums, sizeof(ldap_last_error) ? ldap_last_error : "[none]");
+    }
+
+    return rv;
 }
