@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.71 1997/09/12 06:14:32 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.72 1997/09/12 21:17:50 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -91,6 +91,7 @@ array register_module()
 	      "                 parse the whole document.\n"
 	      " help            Display this text\n"
 	      " scroll=width,steps,delay  Make a horrible scrolltext\n"
+	      " fadein=blur,steps,delay,initialdelay  Make a (somewhat less) horrible fadein\n"
 	      "\n"
 	      "<b>Arguments passed on the the &lt;a&gt; tag (if href is specified):</b>\n "
 	      " target=...\n"
@@ -359,6 +360,14 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
   {
     xsize+=(int)args->bshadow+3;
     ysize+=(int)args->bshadow+3;
+  }
+
+  if(args->fadein)
+  {
+    xsize+=6;
+    ysize+=6;
+    xoffset+=3;
+    yoffset+=3;
   }
 
   if(args->move)
@@ -733,32 +742,56 @@ array(int)|string write_text(int _args, string text, int size,
       img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
     }
 
-// place in cache, as a gif image. 
+// place in cache, as a gif image.
 
     if(!args->scroll)
-    {
-      if(args->fs)
-	data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
-		({img->xsize(),img->ysize()})});
-      else
-	data=({ img->togif(@(args->notrans?({}):parse_color(args->bg))),
-		({img->xsize(),img->ysize()})});
-      img=0;
-    } else {
-      int len=100, steps=30, delay=5, ox;
-      string res = img->gif_begin() + img->gif_netscape_loop();
-      sscanf(args->scroll, "%d,%d,%d", len, steps, delay);
-      img=img->copy(0,0,(ox=img->xsize())+len-1,img->ysize()-1);
-      img->paste(img, ox, 0);
-      for(int i = 0; i<steps; i++)
+      if(args->fadein)
       {
-	int xp = i*ox/steps;
-	res += img->copy(xp, 0, xp+len, img->ysize(),
-			 @parse_color(args->bg))->gif_add(0,0,delay);
+	int amount=2, steps=10, delay=10, initialdelay=0, ox;
+	string res = img->gif_begin();
+	sscanf(args->fadein, "%d,%d,%d,%d", amount, steps, delay, initialdelay);
+	if(initialdelay)
+	{
+	  object foo=image(img->xsize(),img->ysize(),0,0,0);
+	  res += foo->gif_add(0,0,initialdelay);
+	}
+	for(int i = 0; i<steps; i++)
+	{
+	  object foo=img->clone();
+	  foo = foo->apply_matrix(make_matrix(( (int)((steps-i)*amount))));
+	  werror((string)i);
+	  res += foo->gif_add(0,0,delay);
+	}
+	res+= img->gif_add(0,0,delay);
+	res += img->gif_end();
+	data = ({ res, ({ img->xsize(), img->ysize() }) });
       }
-      res += img->gif_end();
-      data = ({ res, ({ len, img->ysize() }) });
+      else
+      {
+	if(args->fs)
+	  data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
+		  ({img->xsize(),img->ysize()})});
+	else
+	  data=({ img->togif(@(args->notrans?({}):parse_color(args->bg))),
+		  ({img->xsize(),img->ysize()})});
+	img=0;
+      } else {
+	int len=100, steps=30, delay=5, ox;
+	string res = img->gif_begin() + img->gif_netscape_loop();
+	sscanf(args->scroll, "%d,%d,%d", len, steps, delay);
+	img=img->copy(0,0,(ox=img->xsize())+len-1,img->ysize()-1);
+	img->paste(img, ox, 0);
+	for(int i = 0; i<steps; i++)
+	{
+	  int xp = i*ox/steps;
+	  res += img->copy(xp, 0, xp+len, img->ysize(),
+			   @parse_color(args->bg))->gif_add(0,0,delay);
+	}
+	res += img->gif_end();
+	data = ({ res, ({ len, img->ysize() }) });
     }
+
+    
     cache_set(key, text, data);
     if(size) return data[1];
     return data[0];
