@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.106 1998/07/07 17:16:39 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.107 1998/07/11 18:48:30 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -838,9 +838,8 @@ int low_enable_configuration(string name, string type)
 	(sscanf(arr[1..]*" ", "%*s'%s'", from) == 2) &&
 	(tmp = roxen->copy_configuration(from, name)))
     {
-      // FIXME: Should "../logs/" be hard-coded here?
-      tmp["spider#0"]->LogFile =
-	"../logs/" + roxenp()->short_name(name) + "/Log";
+      tmp["spider#0"]->LogFile = GLOBVAR(logdirprefix) + "/" +
+	roxenp()->short_name(name) + "/Log";
       roxenp()->save_it(name);
       roxen->enable_configuration(name);
     }
