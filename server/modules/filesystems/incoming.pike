@@ -3,7 +3,7 @@
 
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.4 1998/07/25 04:20:44 neotron Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.5 1998/12/14 11:26:30 peter Exp $";
 
 
 static class decaying_file {
@@ -92,15 +92,18 @@ void create()
 {
   ::create();
 
-  defvar("bitrot", 0, "Return files with bitrot", TYPE_FLAG,
+  defvar("bitrot", 0,
+	 "Scrambled downloads: Return files with bitrot", TYPE_FLAG,
 	 "If this function is enabled, downloads <i>are</i> allowed, "
 	 "but the files will be scrambled.");
 
-  defvar("bitrot_header", 2376, "Unscrambled header length", TYPE_INT,
+  defvar("bitrot_header", 2376,
+	 "Scrambled downloads: Unscrambled header length", TYPE_INT,
 	 "Number of bytes to be sent without any bitrot at all.", 0,
 	 lambda(){ return !QUERY(bitrot); });
 	 
-  defvar("bitrot_percent", 3, "Percent of bits to rot", TYPE_INT,
+  defvar("bitrot_percent", 3,
+	 "Scrambled downloads: Percent of bits to rot", TYPE_INT,
 	 "Selects the percentage of the file that will receive bitrot", 0,
 	 lambda(){ return !QUERY(bitrot); });
 }
