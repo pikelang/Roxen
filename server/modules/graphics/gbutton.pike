@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.29 2000/02/21 17:50:48 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.30 2000/02/21 18:57:05 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -388,12 +388,6 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   if( background )
     button->paste_mask( background->image(), background->alpha() );
 
-  //  fix transparency (somewhat)
-  if( !equal( args->pagebg, args->bg ) )
-    button->paste_alpha_color( mask->alpha()->invert()->threshold( 200 ),
-                               args->pagebg );
-
-
   //  Draw icon.
   if (icon)
   {
@@ -443,12 +437,14 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     if( sizeof( l ) )
     {
       object q = Image.lay( l );
+      q->set_offset( 0, 0 );
       object b2 = Image.Image( button->xsize()+q->xsize(),
                                button->ysize(), @args->pagebg );
-      b2->paste( button, q->xsize() );
+      b2->paste( button, q->xsize(),0 );
       b2->paste_mask( q->image(), q->alpha() );
       button = b2;
-      mask = Image.lay( ({q, mask->set_offset( q->xsize(),0 )}) );
+      mask->set_offset( q->xsize(), 0 );
+      mask = Image.lay( ({q, mask}) );
     }
   }
 
@@ -464,14 +460,22 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     if( sizeof( l ) )
     {
       object q = Image.lay( l );
+      q->set_offset( 0, 0 );
       object b2 = Image.Image( button->xsize()+q->xsize(),
                                button->ysize(), @args->pagebg );
       b2->paste( button );
       b2->paste_mask( q->image(), q->alpha(), button->xsize(), 0 );
       button = b2;
-      mask = Image.lay( ({q->set_offset( mask->xsize(),0), mask }) );
+      q->set_offset( mask->xsize(),0);
+      mask = Image.lay( ({q, mask }) );
     }
   }
+
+  //  fix transparency (somewhat)
+  if( !equal( args->pagebg, args->bg ) )
+    button->paste_alpha_color( mask->alpha()->invert()->threshold( 200 ),
+                               args->pagebg );
+
 
   return
   ([
