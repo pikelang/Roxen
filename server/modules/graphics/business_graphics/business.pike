@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.40 1997/11/22 19:25:47 noring Exp $";
+constant cvs_version = "$Id: business.pike,v 1.41 1997/11/22 22:11:38 noring Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -294,6 +294,12 @@ string tag_diagram(string tag, mapping m, string contents,
 
   if(m->background)
     res->image = combine_path( dirname(id->not_query), (string)m->background);
+  if(m->tunedbox) {
+    array a = m->tunedbox/",";
+    if(sizeof(a) != 4)
+      return syntax("tunedbox must have a comma separated list of 4 colors.");
+    res->tunedbox = map(a, parse_color);
+  }
 
   /* Piechart */
   if(res->type[0..2] == "pie")
@@ -399,14 +405,11 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->labelsize) res->labelsize = (int)m->labelsize;
   else res->labelsize = res->fontsize;
 
-  if(m->labelcolor) res->labelcolor = parse_color(m->labelcolor);
-  else res->labelcolor=({0,0,0});
-  
-  if(m->linecolor) res->axcolor=parse_color(m->linecolor);
-  else res->axcolor=({0,0,0});
-  
-  if(m->linewidth) res->linewidth=m->linewidth;
-  else res->linewidth="2.2";
+  res->labelcolor=m->labelcolor?parse_color(m->labelcolor):({0,0,0});
+  res->axcolor=m->axcolor?parse_color(m->axcolor):({0,0,0});
+  res->gridcolor=m->gridcolor?parse_color(m->gridcolor):({0,0,0});
+  res->linewidth=m->linewidth || "2.2";
+  res->axwidth=m->axwidth || "2.2";
 
   if(m->rotate) res->rotate = m->rotate;
 
@@ -555,6 +558,10 @@ mapping find_file(string f, object id)
   {
     m_delete( res, "bg" );
     res->image = PPM(res->image, id);
+  } else if(res->tunedbox) {
+    m_delete( res, "bg" );
+    res->image = image(res->xsize, res->ysize)->
+      tuned_box(0, 0, res->xsize, res->ysize, res->tunedbox);
   }
 
   /* Image was not found or broken */
@@ -588,6 +595,7 @@ mapping find_file(string f, object id)
 		 "values_for_ynames":   res->yvalues,
 
 		 "axcolor":   res->axcolor,
+		 "gridcolor":   res->gridcolor,
 
 		 "gridwidth": res->gridwidth,
 		 "vertgrid":  res->vertgrid,
@@ -599,7 +607,8 @@ mapping find_file(string f, object id)
 		 "legend_texts":   res->legend_texts,
 		 "labelcolor":     res->labelcolor,
 
-		 "linewidth": (float)res->linewidth,
+		 "linewidth": (float)res->axwidth,
+		 "graphlinewidth": (float)res->linewidth,
 		 "tone":      res->tone,
 		 "center":    res->center,
 		 "rotate":    res->rotate,
