@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.47 2000/02/24 03:54:00 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.48 2000/02/25 01:33:50 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -50,10 +50,6 @@ constant tagdoc=([
  The actual SQL-statement.
 </attr>
 
-<attr name=quiet>
- Do not show any errors in the page, in case the query fails.
-</attr>
-
 <attribute name=parse>
  If specified, the query will be parsed by the RXML parser.
  Useful if you wish to dynamically build the query.
@@ -74,10 +70,6 @@ constant tagdoc=([
 
 <attr name=query type=SQL statement>
  The actual SQL-statement.
-</attr>
-
-<attr name=quiet>
- Do not show any errors in the page, in case the query fails.
 </attr>
 
 <attr name=parse>
@@ -147,14 +139,13 @@ array|object do_sql_query(string tag, mapping args, RequestID id)
     error = catch(con = Sql.sql(lower_case(host)=="localhost"?"":host));
 #endif
 
-  if (error && !args->quiet)
+  if (error)
     RXML.run_error("Couldn't connect to SQL server. "+html_encode_string(error[0]));
 
   if (error = catch(result = tag=="sqltable"?con->big_query(args->query):con->query(args->query))) {
     error = html_encode_string(sprintf("Query %O failed. %s", args->query,
 				       con->error()||""));
-    if (!args->quiet)
-      RXML.run_error(error);
+    RXML.run_error(error);
   }
 
   if(tag=="sqlquery") args["dbobj"]=con;
@@ -184,7 +175,6 @@ array|string container_sqloutput(string tag, mapping args, string contents,
   if (args["do-once"])
     return do_output_tag( args, ({([])}), contents, id )+ "<true>";
 
-  if(args->quiet) return "";
   RXML.run_error("No SQL return values.");
 }
 
@@ -258,7 +248,6 @@ string tag_sqltable(string tag, mapping args, RequestID id)
     return ret+"<true>";
   }
 
-  if(args->quiet) return "";
   RXML.run_error("No SQL return values.");
 }
 
