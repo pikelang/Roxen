@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.73 2000/02/14 09:21:33 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.74 2000/02/14 10:43:04 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -18,6 +18,7 @@ class MyCodec
   program p;
   string nameof(mixed x)
   {
+    if(zero_type(x)) return ([])[0];
     if(p!=x)
       if(mixed tmp=search(all_constants(),x))
 	return "efun:"+tmp;
@@ -56,7 +57,7 @@ class MyCodec
     if(sscanf(x,"efun:%s",x))
       return all_constants()[x];
 
-    werror("Failed to decode %s\n",x);
+    werror("Failed to decode function %s\n",x);
     return 0;
   }
 
@@ -64,12 +65,16 @@ class MyCodec
   object objectof(string x)
   {
     if(sscanf(x,"efun:%s",x))
+    {
+      if( !objectp( all_constants()[x] ) )
+        werror("Failed to decode object efun:%s\n", x );
       return all_constants()[x];
-
-    if(object tmp=(object)x) return tmp;
-    werror("Failed to decode %s\n",x);
+    }
+    object tmp;
+    if(objectp(tmp=(object)x))
+      return tmp;
+    werror("Failed to decode object %s\n",x);
     return 0;
-
   }
 
   program programof(string x)
@@ -78,12 +83,11 @@ class MyCodec
       return (program)all_constants()[x];
 
     if(sscanf(x,"_static_modules.%s",x))
-    {
       return (program)_static_modules[x];
-    }
 
     if(program tmp=(program)x)
       return tmp;
+    werror("Failed to decode program %s\n", x );
     return 0;
   }
 
@@ -97,7 +101,7 @@ class MyCodec
     error("Cannot decode objects yet.\n");
   }
 
-  void create( program q )
+  void create( program|void q )
   {
     p = q;
   }
@@ -169,7 +173,7 @@ program low_findprog(string pname, string ext, object|void handler)
               load_time[ fname ] = time();
               ret = programs[fname]=
                      decode_value(_static_modules.files()->
-                                  Fd(ofile,"r")->read(),Codec());
+                                  Fd(ofile,"r")->read(),MyCodec());
 	      program_names[ret] = fname;
 	      return ret;
             };

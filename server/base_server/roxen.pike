@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.426 2000/02/14 09:20:21 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.427 2000/02/14 10:43:04 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2533,7 +2533,6 @@ void create()
 
   // for module encoding stuff
 
-  add_constant( "roxen.argcache", argcache );
   add_constant( "ArgCache", ArgCache );
   add_constant( "roxen.load_image", load_image );
 
@@ -3146,6 +3145,7 @@ int main(int argc, array tmp)
     report_debug( describe_backtrace( e ) );
   }
   report_debug( "\n" );
+  add_constant( "roxen.argcache", argcache );
 
   enable_configurations_modules();
 
