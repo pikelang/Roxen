@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.190 1999/11/28 02:52:24 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.191 1999/11/28 16:44:52 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -239,8 +239,8 @@ object make_text_image(mapping args, object font, string text, RequestID id)
     ysize += ((int)args->border)*2;
   }
 
-  array (int) bgcolor = parse_color(args->bg);
-  array (int) fgcolor = parse_color(args->fg);
+  array (int) bgcolor = parse_color(args->bgcolor);
+  array (int) fgcolor = parse_color(args->fgcolor);
 
   object background,foreground;
 
@@ -620,7 +620,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
   {
     if(!args->notrans)
     {
-      array (int) bgcolor = parse_color(args->bg);
+      array (int) bgcolor = parse_color(args->bgcolor);
       object alpha;
       alpha = img->distancesq( @bgcolor );
       alpha->gamma( 8 );
@@ -636,7 +636,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
     sscanf(args->fadein,"%d,%d,%d,%d", amount, steps, delay, initialdelay);
     if(initialdelay)
     {
-      object foo=Image.Image(img->xsize(),img->ysize(),@parse_color(args->bg));
+      object foo=Image.Image(img->xsize(),img->ysize(),@parse_color(args->bgcolor));
       res += foo->gif_add(0,0,initialdelay);
     }
     for(int i = 0; i<(steps-1); i++)
@@ -660,7 +660,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
     {
       int xp = i*ox/steps;
       res += img->copy(xp, 0, xp+len, img->ysize(),
-                       @parse_color(args->bg))->gif_add(0,0,delay);
+                       @parse_color(args->bgcolor))->gif_add(0,0,delay);
     }
     res += img->gif_end();
     data = ({ res, ({ len, img->ysize() }) });
@@ -697,20 +697,19 @@ mapping find_internal(string f, object rid)
 
 // -------------- helpfunctions to gtext tags and containers -----------------
 
-constant filearg=({"background","texture","magic-texture","magic-background","magic-bg","alpha"});
+constant filearg=({"background","texture","alpha","magic-texture","magic-background","magic-alpha"});
 constant textarg=({"afont",
 		   "alpha",
 		   "bevel",
-		   "bg",
+		   "bgcolor",
 		   "black",
 		   "bold",
-		   "border",
 		   "bshadow",
 		   "chisel",
 		   "crop",
 		   "encoding",
 		   "fadein",
-		   "fg",
+		   "fgcolor",
 		   "fs",
 		   "font",
 		   "font_size",
@@ -762,14 +761,19 @@ mapping mk_gtext_arg(mapping arg, RequestID id) {
       m_delete(arg,tmp);
     }
 
+  if(arg->border && search(arg->border,",")) {
+    p->border=arg->border;
+    m_delete(arg,"border");
+  }
+
   foreach(textarg, string tmp)
     if(arg[tmp]) {
       p[tmp]=arg[tmp],id;
       m_delete(arg,tmp);
     }
 
-  if(defines->fg && !p->fg) p->fg=defines->fg;
-  if(defines->bg && !p->bg) p->bg=defines->bg;
+  if(defines->fgcolor && !p->fgcolor) p->fgcolor=defines->fgcolor;
+  if(defines->bgcolor && !p->bgcolor) p->bgcolor=defines->bgcolor;
   if(defines->nfont && !p->nfont) p->nfont=defines->nfont;
   if(defines->afont && !p->afont) p->afont=defines->afont;
   if(defines->font &&  !p->font) p->font=defines->font;
@@ -810,7 +814,7 @@ string fix_text(string c, mapping m, RequestID id) {
 string tag_gtext_url(string t, mapping arg, string c, RequestID id) {
   c=fix_text(c,arg,id);
   mapping p=mk_gtext_arg(arg,id);
-  if(arg->href && !p->fg) p->fg=id->misc->defines->link||"#0000ff";
+  if(arg->href && !p->fgcolor) p->fgcolor=id->misc->defines->link||"#0000ff";
   string ext="";
   if(query("ext")) ext="."+(p->format || "gif");
   if(!arg->short)
@@ -821,7 +825,7 @@ string tag_gtext_url(string t, mapping arg, string c, RequestID id) {
 
 string tag_gtext_id(string t, mapping arg, RequestID id) {
   mapping p=mk_gtext_arg(arg,id);
-  if(arg->href && !p->fg) p->fg=id->misc->defines->link||"#0000ff";
+  if(arg->href && !p->fgcolor) p->fgcolor=id->misc->defines->link||"#0000ff";
   if(!arg->short)
     return query_internal_location()+"$"+image_cache->store(p, id)+"/";
   else
@@ -855,8 +859,8 @@ string tag_graphicstext(string t, mapping arg, string c, RequestID id)
   if(arg->href)
   {
     url = arg->href;
-    lp = make_container("a",arg,"%s"); //This anchor might have some extra args.
-    if(!p->fg) p->fg=defines->link||"#0000ff";
+    lp = replace(make_tag("a",arg),"%","%%")+"%s</a>";
+    if(!p->fgcolor) p->fgcolor=defines->link||"#0000ff";
     m_delete(arg, "href");
   }
 
@@ -898,13 +902,8 @@ string tag_graphicstext(string t, mapping arg, string c, RequestID id)
     string magic=replace(arg->magic,"'","`");
     m_delete(arg,"magic");
 
-    if(!arg->fg) p->fg=defines->alink||"#ff0000";
+    if(!arg->fgcolor) p->fgcolor=defines->alink||"#ff0000";
     if(p->bevel) p->pressed=1;
-
-    if(arg->fuzz) p->glow = arg->fuzz!="fuzz"?arg->fuzz:p->fg;
-    if(arg["magic-bg"]) p->background = p["magic-bg"];
-    m_delete(p,"fuzz");
-    m_delete(p,"magic-bg");
 
     foreach(glob("magic-*", indices(arg)), string q)
     {
@@ -997,14 +996,14 @@ string|array (string) tag_body(string t, mapping args, RequestID id, object file
 
   if(!search((id->client||({}))*"","Mosaic"))
   {
-    FIX(bgcolor,"#bfbfbf",bg);
-    FIX(text,   "#000000",fg);
+    FIX(bgcolor,"#bfbfbf",bgcolor);
+    FIX(text,   "#000000",fgcolor);
     FIX(link,   "#0000b0",link);
     FIX(alink,  "#3f0f7b",alink);
     FIX(vlink,  "#ff0000",vlink);
   } else {
-    FIX(bgcolor,"#c0c0c0",bg);
-    FIX(text,   "#000000",fg);
+    FIX(bgcolor,"#c0c0c0",bgcolor);
+    FIX(text,   "#000000",fgcolor);
     FIX(link,   "#0000ee",link);
     FIX(alink,  "#ff0000",alink);
     FIX(vlink,  "#551a8b",vlink);
@@ -1019,15 +1018,15 @@ string|array(string) tag_fix_color(string tagname, mapping args, RequestID id,
   int changed;
 
   if(!id->misc->colors)
-    id->misc->colors = ({ ({ defines->fg, defines->bg, tagname }) });
+    id->misc->colors = ({ ({ defines->fgcolor, defines->bgcolor, tagname }) });
   else
-    id->misc->colors += ({ ({ defines->fg, defines->bg, tagname }) });
+    id->misc->colors += ({ ({ defines->fgcolor, defines->bgcolor, tagname }) });
 #undef FIX
 #define FIX(X,Y) if(args->X && args->X!=""){defines->Y=args->X;if(QUERY(colormode) && args->X[0]!='#'){args->X=ns_color(parse_color(args->X));changed = 1;}}
 
-  FIX(bgcolor,bg);
-  FIX(text,fg);
-  FIX(color,fg);
+  FIX(bgcolor,bgcolor);
+  FIX(color,fgcolor);
+  FIX(text,fgcolor);
 #undef FIX
 
   if(changed && QUERY(colormode))
@@ -1048,8 +1047,8 @@ string|void pop_color(string tagname,mapping args,RequestID id,object file,
   for(i=0;i<sizeof(c);i++)
     if(c[-i-1][2]==tagname)
     {
-      defines->fg = c[-i-1][0];
-      defines->bg = c[-i-1][1];
+      defines->fgcolor = c[-i-1][0];
+      defines->bgcolor = c[-i-1][1];
       break;
     }
   c = c[..sizeof(c)-i-2];
