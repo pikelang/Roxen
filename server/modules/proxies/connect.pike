@@ -3,7 +3,7 @@
 // An implementation of the CONNECT methos, used for SSL tunneling in
 // Netscape (the "Secure proxy" field)
 
-constant cvs_version = "$Id: connect.pike,v 1.16 2000/08/19 08:52:42 per Exp $";
+constant cvs_version = "$Id: connect.pike,v 1.17 2001/03/13 00:28:43 nilsson Exp $";
 constant thread_safe = 1;
 
 
@@ -19,8 +19,7 @@ inherit "socket";
 
 constant module_type = MODULE_FIRST|MODULE_PROXY;
 constant module_name = "SSL Proxy";
-constant module_doc  = "Implements the CONNECT method, as in <a href=\""
-  "http://www1.netscape.com/newsref/std/tunneling_ssl.html\">the draft</a>"
+constant module_doc  = "Implements the CONNECT method."
   " Useful for tunneling of SSL connections (Secure proxy in Netscape).";
 
 void nope(object hmm)
