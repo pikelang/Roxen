@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.198 2000/09/05 20:49:12 mast Exp $
+// $Id: roxenlib.pike,v 1.199 2000/09/12 14:20:21 per Exp $
 
 //#pragma strict_types
 
@@ -1719,7 +1719,7 @@ function get_client_charset_decoder( string едц, RequestID|void id )
   //! encoding of the string "едц". See the roxen-automatic-charset-variable
   //! tag.
 {
-  switch( едц )
+  switch( (едц/"\0")[0] )
   {
    case "edv":
      report_notice( "Warning: Non 8-bit safe client detected (%s)",
