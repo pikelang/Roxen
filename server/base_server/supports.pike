@@ -1,6 +1,6 @@
 // Handles supports
 // Copyright © 1999 - 2000, Roxen IS.
-// $Id: supports.pike,v 1.17 2000/03/13 06:19:09 per Exp $
+// $Id: supports.pike,v 1.18 2000/03/14 20:30:52 wellhard Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -29,7 +29,7 @@ private array(multiset(string)|mapping(string:string)) split_supports(array(stri
     }
     else
       if(s[0]=='-')
-	neg[s]=1;
+	neg[s[1..]]=1;
       else
 	pos[s]=1;
   }
