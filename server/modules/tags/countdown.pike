@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.9 1998/07/18 07:01:40 hubbe Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.10 1998/08/10 21:38:39 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -290,10 +290,12 @@ string time_period(int t,
   return String.implode_nicely(tmp);
 }
 
-string tag_countdown(string t, mapping m)
+string tag_countdown(string t, mapping m, object id)
 {
   string|int prec;
   mapping time_args = ([]);
+
+  CACHE(10);
 
   if(m->help) return usage();
   
