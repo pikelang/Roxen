@@ -20,7 +20,7 @@
 
 inherit "chili-module:filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.74 2004/06/09 21:44:19 _cvs_dirix Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.75 2004/07/11 16:42:07 _cvs_stephen Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "File systems: User file system";
 constant module_doc  =
@@ -351,14 +351,16 @@ mapping|array find_dir(string f, RequestID id)
   return users && (users - query("banish_list"));
 }
 
-array(int) stat_file(string f, RequestID id)
+Stat stat_file(string f, RequestID id)
 {
   USERFS_WERR(sprintf("stat_file(%O)", f));
 
   array a = find_user(f, id);
 
   if (!a) {
-    return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
+    Stat ret=Stdio.Stat();
+    ret->isdir=1;
+    return ret;
   }
 
   string u = a[0];
