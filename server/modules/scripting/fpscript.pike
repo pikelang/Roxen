@@ -4,7 +4,7 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-string cvs_version = "$Id: fpscript.pike,v 1.4 1998/07/19 02:46:20 neotron Exp $";
+string cvs_version = "$Id: fpscript.pike,v 1.5 1998/11/14 20:35:26 grubba Exp $";
 
 // #define FPSCRIPT_DEBUG
 
@@ -70,7 +70,8 @@ mixed *register_module()
     "differences are that this module is mainly a MODULE_FIRST. The reason "
     "for this is that otherwise you most likely would have to fight with "
     "priority levels to make it work correctly. It's there to make the setup "
-    "procedure easier. Also this module's default mountpath is <tt>/<tt>. The "
+    "procedure easier. Also this module's default mountpoint is <tt>/</tt>. "
+    "The "
     "reason for this is that we need to be able to handle Frontpage sub-webs. "
     "<p>Another feature is that you easily can modify the value of the "
     "environment variable SERVER_PORT. The reason for doing that is that "
