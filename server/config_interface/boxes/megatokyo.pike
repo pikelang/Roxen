@@ -25,7 +25,7 @@ string parse( RequestID id )
     string img;
     string rant, status;
 
-    sscanf( data, "%*s\"strips/%s.gif\"", img );
+    sscanf( data, "%*sstrips/%s.gif", img );
     sscanf( data, "%*s<!--%*sstuff you%*s - start -->%s<!--", status );
 
     sscanf( data,
