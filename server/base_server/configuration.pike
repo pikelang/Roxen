@@ -1,7 +1,8 @@
-string cvs_version = "$Id: configuration.pike,v 1.23 1997/04/28 16:48:20 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.24 1997/04/28 20:06:42 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
+
 
 inherit "roxenlib";
 
@@ -679,7 +680,7 @@ int|mapping check_security(function a, object id, void|int slevel)
   array level;
   int need_auth;
   array seclevels;
-  
+
   if(!(seclevels = misc_cache[ a ]))
     misc_cache[ a ] = seclevels = ({
       function_object(a)->query_seclevels(),
@@ -689,7 +690,6 @@ int|mapping check_security(function a, object id, void|int slevel)
   if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
     return 1;
   
-
   if(!sizeof(seclevels[0]))
     return 0; // Ok if there are no patterns.
 
@@ -1023,11 +1023,12 @@ public array find_dir(string file, object id)
 
   file=replace(file, "//", "/");
   
+  if(file[0] != '/')
+    file = "/" + file;
+
   foreach(location_modules(id), tmp)
   {
     loc = tmp[0];
-    if(file[0] != '/')
-      file = "/" + file;
     
     if(!search(file, loc))
     {
