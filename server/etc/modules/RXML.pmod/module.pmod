@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.35 2000/01/25 20:46:33 mast Exp $
+//! $Id: module.pmod,v 1.36 2000/01/28 16:25:17 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -47,6 +47,11 @@ class Tag
   //! on the argument value. Note that the order in which arguments
   //! are parsed is arbitrary.
 
+  Type def_arg_type = t_text (PEnt);
+  //! The type used for arguments that isn't present in neither
+  //! req_arg_types nor opt_arg_types. This default is a parser that
+  //! only parses HTML-style entities.
+
   Type content_type = t_text (PHtml);
   //! The handled type of the content, if the tag is used as a
   //! container. It's taken from the actual result type if set to
@@ -60,13 +65,6 @@ class Tag
   //! The possible types of the result, in order of precedence. If a
   //! result type has a parser, it'll be used to parse any strings
   //! gotten from Frame.do_return (see that function for details).
-
-  string scope_name;
-  //! RXML.Frame.scope_name is initialized from this.
-
-  TagSet additional_tags, local_tags;
-  //! RXML.Frame.additional_tags and RXML.Frame.local_tags are
-  //! initialized from these.
 
   program/*(Frame)HMM*/ Frame;
   //! This program is used to clone the objects used as frames. A
@@ -87,9 +85,6 @@ class Tag
     object/*(Frame)HMM*/ frame = ([function(:object/*(Frame)HMM*/)] this->Frame)();
     frame->tag = this;
     frame->flags = flags;
-    if (scope_name) frame->scope_name = scope_name;
-    if (additional_tags) frame->additional_tags = additional_tags;
-    if (local_tags) frame->local_tags = local_tags;
     frame->args = args;
     if (!zero_type (content)) frame->content = content;
     return frame;
@@ -1440,8 +1435,8 @@ class Frame
 	else atypes = raw_args & tag->opt_arg_types;
       if (atypes)
 	if (mixed err = catch {
-	  foreach (indices (atypes), string arg)
-	    args[arg] = atypes[arg]->eval (
+	  foreach (indices (args), string arg)
+	    args[arg] = (atypes[arg] || tag->def_arg_type)->eval (
 	      raw_args[arg], ctx, 0, parser, 1); // Should currently NOT unwind.
 	}) {
 	  if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -1938,8 +1933,9 @@ class TagSetParser
   //! configuration.
 
   mixed read();
-  //! Not optional. Since the evaluation is done in Tag._handle_tag()
-  //! or similar, this always does the same as eval().
+  //! No longer optional in this class. Since the evaluation is done
+  //! in Tag._handle_tag() or similar, this always does the same as
+  //! eval().
 
   void add_runtime_tag (Tag tag);
   //! Adds a tag that will exist from this point forward in the
@@ -2437,12 +2433,14 @@ class ScanStream
 
 // Argh!
 static program PHtml;
+static program PEnt;
 static program PExpr;
 void _fix_module_ref (string name, mixed val)
 {
   mixed err = catch {
     switch (name) {
       case "PHtml": PHtml = [program] val; break;
+      case "PEnt": PEnt = [program] val; break;
       case "PExpr": PExpr = [program] val; break;
       case "empty_tag_set": empty_tag_set = [object(TagSet)] val; break;
       default: error ("Herk\n");
