@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.120 1999/12/06 23:46:34 grubba Exp $
+ * $Id: roxenloader.pike,v 1.121 1999/12/06 23:47:28 grubba Exp $
  *
  * Roxen bootstrap program.
  *
@@ -17,7 +17,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.120 1999/12/06 23:46:34 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.121 1999/12/06 23:47:28 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -1029,7 +1029,7 @@ void write_current_time()
 
 void paranoia_throw(mixed err)
 {
-  if ((arrayp(err) && ((sizeof(err) < 2) || !arrayp(err[1]) ||
+  if ((arrayp(err) && ((sizeof(err) < 2) || !stringp(err[0]) !arrayp(err[1]) ||
 		       !(arrayp(err[1][0])||stringp(err[1][0])))) ||
       (!arrayp(err) && (!objectp(err) || !err->is_generic_error))) {
     roxen_perror(sprintf("Warning: throwing non-error: %O\n"
