@@ -8,6 +8,11 @@
 <theme-set what=linkcolor to=black />
 <theme-set what=font      to=bethhand />
 
+<theme-set what=toptabs-seltextcolor to=yellow />
+<theme-set what=toptabs-dimtextcolor to=black />
+<theme-set what=subtabs-seltextcolor to=yellow />
+<theme-set what=subtabs-dimtextcolor to=black />
+
 <theme-set what=selected-indicator to=heart.gif themefile />
 
 <theme-set what=err-1 to=err_1.gif themefile />
