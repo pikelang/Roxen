@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.33 2004/05/13 21:04:52 mast Exp $
+// $Id: webdav.pike,v 1.34 2004/05/14 16:37:21 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.33 2004/05/13 21:04:52 mast Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.34 2004/05/14 16:37:21 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -34,6 +34,18 @@ constant module_doc  = "Adds support for various HTTP extensions defined "
 
 
 Configuration conf;
+
+void create()
+{
+  defvar( "lock-timeout", 3600, "Default lock timeout", TYPE_INT,
+	  "Number of seconds a DAV lock should by default be valid for. "
+	  "Negative disables locking. Zero means that locks default to "
+	  "being valid for infinite duration." );
+  defvar( "max-lock-timeout", 86400, "Maximum lock timeout", TYPE_INT,
+	  "Maximum number of seconds a DAV lock should be valid for. "
+	  "Negative disables the timeout header. "
+	  "Zero enables infinite locks. " );
+}
 
 void start(int q, Configuration c)
 {
@@ -274,6 +286,35 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       }
       string locktype = "DAV:write";
 
+      int expiry_delta = query("lock-timeout");	// Default timeout.
+      if (expiry_delta < 0) {
+	// Locks disabled.
+	TRACE_LEAVE("LOCK: Locks disabled.");
+	return Roxen.http_status(403, "Locking not allowed.");
+      }
+      if (id->request_headers->timeout) {
+	// Parse the timeout header, and use the first valid timeout.
+	foreach(MIME.tokenize(id->request_headers->timeout),
+		string|int entry) {
+	  if (intp(entry)) continue;	// ',' etc.
+	  if (entry == "Infinite") {
+	    if (!query("max-lock-timeout")) {
+	      expiry_delta = 0;
+	      break;
+	    }
+	  } else if (has_prefix(entry, "Second-")) {
+	    int t;
+	    if (sscanf(entry, "Second-%d", t) && (t > 0)) {
+	      if (!query("max-lock-timeout") ||
+		  (t < query("max-lock-timeout"))) {
+		expiry_delta = t;
+		break;
+	      }
+	    }
+	  }
+	}
+      }
+
       array(SimpleNode) owner;
       if (SimpleNode owner_node = lock_info_node->get_first_element("DAV:owner", 1))
 	owner = owner_node->get_children();
@@ -288,6 +329,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 			    depth != 0,
 			    lockscope,
 			    "DAV:write",
+			    expiry_delta,
 			    owner,
 			    id);
       if (mappingp(new_lock)) {
@@ -436,14 +478,11 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		   }
 		   // Convert destination to module location relative.
 		   destination = destination[sizeof(loc)..];
-		   mapping(string:mixed) res;
-		   if (id->method == "COPY") {
-		     res = module->recurse_copy_files(source, destination,
-						      behavior, overwrite, id);
-		   } else {
-		     res = module->recurse_move_files(source, destination,
-						      behavior, overwrite, id);
-		   }
+		   mapping(string:mixed) res =
+		     ((id->method == "COPY")?
+		      module->recurse_copy_files:
+		      module->recurse_move_files)
+		     (source, destination, behavior, overwrite, id);
 		   if (res && ((res->error == 201) || (res->error == 204))) {
 		     empty_result = res;
 		     return 0;
