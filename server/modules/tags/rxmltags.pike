@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.286 2001/08/29 17:40:46 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.287 2001/08/29 17:47:23 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3712,9 +3712,9 @@ class IfIs
   }
 
   int(0..1) do_check( string var, array arr, RequestID id) {
-    if( !var && zero_type( var ) ) return 0;
+    if(zero_type( var ) ) return 0;
     if(sizeof(arr)<2) return !!var;
-    var = (string)var; //FIXME
+    if(!var) var = "0";
 
     string is;
 
