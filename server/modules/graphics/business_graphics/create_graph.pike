@@ -824,6 +824,9 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	  else
 	    space=space*2.0;
 	}
+      else
+	if (range/space<2.5)
+	  space*=0.5;
       diagram_data["xspace"]=space;      
     }
   if (!(diagram_data["yspace"]))
@@ -842,6 +845,9 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	  else
 	    space=space*2.0;
 	}
+      else
+	if (range/space<2.5)
+	  space*=0.5;
       diagram_data["yspace"]=space;      
     }
  
@@ -1042,8 +1048,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	  (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-diagram_data["xmaxxnames"]/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
 	diagram_data["xstart"]=xpos_for_yaxis;
-	write("h\n");
-
       }
     else
       {
