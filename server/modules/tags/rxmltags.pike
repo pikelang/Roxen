@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.178 2000/09/19 15:54:29 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.179 2000/09/24 17:03:09 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -403,16 +403,13 @@ class TagRedirect {
       multiset(string) orig_prestate = id->prestate;
       multiset(string) prestate = (< @indices(orig_prestate) >);
 
-      if(args->add) {
-	foreach((args->add-" ")/",", string s)
+      if(args->add)
+	foreach((m_delete(args,"add") - " ")/",", string s)
 	  prestate[s]=1;
-	m_delete(args,"add");
-      }
-      if(args->drop) {
-	foreach((args->drop-" ")/",", string s)
+
+      if(args->drop)
+	foreach((m_delete(args,"drop") - " ")/",", string s)
 	  prestate[s]=0;
-	m_delete(args,"drop");
-      }
 
       id->prestate = prestate;
       mapping r = Roxen.http_redirect(args->to, id);
@@ -581,8 +578,7 @@ class TagImgs {
 	  args->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
 	}
 
-	int xml=!args->noxml;
-	m_delete(args, "noxml");
+	int xml=!m_delete(args, "noxml");
 
 	result = Roxen.make_tag("img", args, xml);
 	return 0;
@@ -601,11 +597,10 @@ class TagRoxen {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      string size = args->size || "medium";
-      string color = args->color || "white";
+      string size = m_delete(args, "size") || "medium";
+      string color = m_delete(args, "color") || "white";
       mapping aargs = (["href": "http://www.roxen.com/"]);
-      m_delete(args, "color");
-      m_delete(args, "size");
+
       args->src = "/internal-roxen-power-"+size+"-"+color;
       args->width =  (["small":"40","medium":"60","large":"100"])[size];
       args->height = (["small":"40","medium":"60","large":"100"])[size];
@@ -613,8 +608,8 @@ class TagRoxen {
       if( color == "white" && size == "large" ) args->height="99";
       if(!args->alt) args->alt="Powered by Roxen";
       if(!args->border) args->border="0";
-      int xml=!args->noxml;
-      if(args->target) aargs->target = args->target, m_delete (args, "target");
+      int xml=!m_delete(args, "noxml");
+      if(args->target) aargs->target = m_delete (args, "target");
       result = RXML.t_xml->format_tag ("a", aargs, Roxen.make_tag("img", args, xml));
       return 0;
     }
@@ -722,8 +717,7 @@ class TagConfigImage {
       args->src = "/internal-roxen-" + args->src;
       args->border = args->border || "0";
 
-      int xml=!args->noxml;
-      m_delete(args, "noxml");
+      int xml=!m_delete(args, "noxml");
       result = Roxen.make_tag("img", args, xml);
       return 0;
     }
@@ -997,10 +991,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
   }
 
   if(m->file)
-  {
-    m->realfile = id->conf->real_file(Roxen.fix_relative(m->file,id), id);
-    m_delete(m, "file");
-  }
+    m->realfile = id->conf->real_file(Roxen.fix_relative( m_delete(m, "file"), id), id);
 
   if(m->by && m->realfile)
   {
@@ -1241,16 +1232,15 @@ string simpletag_apre(string tag, mapping m, string q, RequestID id)
 {
   string href;
 
-  if(!(href = m->href))
-    href=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
-  else
-  {
+  if(m->href) {
+    href=m_delete(m, "href");
     array(string) split = href/":";
     if ((sizeof(split) > 1) && (sizeof(split[0]/"/") == 1))
       return RXML.t_xml->format_tag("a", m, q);
     href=Roxen.strip_prestate(Roxen.fix_relative(href, id));
-    m_delete(m, "href");
   }
+  else
+    href=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
 
   if(!strlen(href))
     href="";
@@ -1258,16 +1248,14 @@ string simpletag_apre(string tag, mapping m, string q, RequestID id)
   multiset prestate = (< @indices(id->prestate) >);
 
   // FIXME: add and drop should handle t_array
-  if(m->add) {
-    foreach((m->add-" ")/",", string s)
+  if(m->add)
+    foreach((m_delete(m, "add") - " ")/",", string s)
       prestate[s]=1;
-    m_delete(m,"add");
-  }
-  if(m->drop) {
-    foreach((m->drop-" ")/",", string s)
+
+  if(m->drop)
+    foreach((m_delete(m,"drop") - " ")/",", string s)
       prestate[s]=0;
-    m_delete(m,"drop");
-  }
+
   m->href = Roxen.add_pre_state(href, prestate);
   return RXML.t_xml->format_tag("a", m, q);
 }
@@ -1277,29 +1265,24 @@ string simpletag_aconf(string tag, mapping m,
 {
   string href;
 
-  if(!m->href)
-    href=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
-  else
-  {
-    href=m->href;
+  if(!m->href) {
+    href=m_delete(m, "href");
     if (search(href, ":") == search(href, "//")-1)
       RXML.parse_error("It is not possible to add configs to absolute URLs.\n");
-    href=Roxen.fix_relative(href, id);
-    m_delete(m, "href");
+    href=Roxen.fix_relative(href, id);    
   }
+  else
+    href=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
 
   array cookies = ({});
   // FIXME: add and drop should handle t_array
-  if(m->add) {
-    foreach((m->add-" ")/",", string s)
+  if(m->add)
+    foreach((m_delete(m,"add") - " ")/",", string s)
       cookies+=({s});
-    m_delete(m,"add");
-  }
-  if(m->drop) {
-    foreach((m->drop-" ")/",", string s)
+
+  if(m->drop)
+    foreach((m_delete(m,"drop") - " ")/",", string s)
       cookies+=({"-"+s});
-    m_delete(m,"drop");
-  }
 
   m->href = Roxen.add_config(href, cookies, id->prestate);
   return RXML.t_xml->format_tag("a", m, q);
@@ -1396,21 +1379,14 @@ string simpletag_autoformat(string tag, mapping m, string s, RequestID id)
   return s;
 }
 
-class Smallcapsstr {
+class Smallcapsstr (string bigtag, string smalltag, mapping bigarg, mapping smallarg)
+{
   constant UNDEF=0, BIG=1, SMALL=2;
-  static string text="",part="",bigtag,smalltag;
-  static mapping bigarg,smallarg;
+  static string text="",part="";
   static int last=UNDEF;
 
-  void create(string bs, string ss, mapping bm, mapping sm) {
-    bigtag=bs;
-    smalltag=ss;
-    bigarg=bm;
-    smallarg=sm;
-  }
-
   string _sprintf() {
-    return "Smallcapsstr()";
+    return "Smallcapsstr("+bigtag+","+smalltag+")";
   }
 
   void add(string char) {
@@ -1572,8 +1548,7 @@ private int|array internal_tag_input(string t, mapping m, string name, multiset(
     m_delete(m, "checked" );
   }
 
-  int xml=!m->noxml;
-  m_delete(m, "noxml");
+  int xml=!m_delete(m, "noxml");
 
   return ({ Roxen.make_tag(t, m, xml) });
 }
