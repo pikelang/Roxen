@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.24 1998/11/02 07:36:33 peter Exp $ */
+/* $Id: fonts.pike,v 1.25 1999/05/19 09:08:28 peter Exp $ */
 
 #include <module.h>
 
@@ -14,6 +14,20 @@ string fix_name(string in)
 // name:([ version:fname, version:fname, ... ])
 mapping ttf_done = ([]);
 mapping ttf_font_names_cache = ([]);
+
+string trimttfname( string n )
+{
+  n = reverse(n);
+  sscanf("tb %s", n);
+  sscanf(n, "tl %s", n);
+  sscanf(n, "dm %s", n);
+  sscanf(n, "kb %s", n);
+  sscanf(n, "db %s", n);
+  sscanf(n, "xe %s", n);
+  sscanf(n, "nc %s", n);
+  sscanf(n, "klb %s", n);
+  return reverse(n);
+}
 
 string translate_ttf_style( string style )
 {
@@ -56,6 +70,8 @@ array available_font_versions(string name, int size)
   array available;
 #if constant(Image.TTF)
   int ttffound;
+  int ttffontschanged;
+
    if(ttf_font_names_cache[ name ])
      return indices(ttf_font_names_cache[ name ]);
   foreach(roxen->query("font_dirs"), dir)
@@ -66,24 +82,31 @@ array available_font_versions(string name, int size)
       {
 	if(!ttf_done[combine_path(dir+"/",fname)]++)
 	{
+//   werror("Trying TTF: "+combine_path(dir+"/",fname)+"\n");
 	  object ttf = Image.TTF( combine_path(dir+"/",fname) );
 	  if(ttf)
 	  {
 	    mapping n = ttf->names();
-	    if(!ttf_font_names_cache[lower_case(n->family)])
-	      ttf_font_names_cache[lower_case(n->family)] = ([]);
-	    ttf_font_names_cache[lower_case(n->family)]
-	      [ translate_ttf_style(n->style) ] =
-	      combine_path(dir+"/",fname);
-	    if(lower_case(n->family) == lower_case( name ))
-	      ttffound++;
+//        werror("okiedokie! "+n->family+"\n");
+	    ttffontschanged++;
+	    string f = lower_case(trimttfname(n->family));
+	    if(!ttf_font_names_cache[f])
+	      ttf_font_names_cache[f] = ([]);
+	    ttf_font_names_cache[f][ translate_ttf_style(n->style) ] 
+	      = combine_path(dir+"/",fname);
+	    if(f == lower_case( name ))  ttffound++;
 	  }
 	}
       };
     }
   }
+  if(ttffontschanged)
+    catch{
+      Stdio.File(".ttffontcache",
+		 "wct")->write(encode_value(ttf_font_names_cache));
+    };
   if(ttffound)
-    return  indices(ttf_font_names_cache[ name ]);
+    return  indices(ttf_font_names_cache[ lower_case(name) ]);
 #endif
 
   foreach(roxen->query("font_dirs"), dir)
@@ -179,22 +202,23 @@ object get_font(string f, int size, int bold, int italic,
 
   err = catch {
     name=make_font_name(f,size,bold,italic);
-//     werror("name is "+name+"; f is "+f+"\n");
-#if efun(Image.TTF)
+//  werror("name is "+name+"; f is "+f+"\n");
+#if constant(Image.TTF)
     if(ttf_font_names_cache[ lower_case(f) ])
     {
+      werror("using "+ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]]+"\n");
       f = lower_case(f);
-//       werror("font is ttf font.\n");
-      if( ttf_font_names_cache[ f ][ (name/"/")[1] ] )
+//    werror("font is ttf font.\n");
+      if( ttf_font_names_cache[ lower_case(f) ][ (name/"/")[1] ] )
       {
-	object f = Image.TTF( ttf_font_names_cache[ f ][(name/"/")[1]]);
+	object f = Image.TTF( ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]]);
 	// TODO: fix support for xpace/yspace etc.
 	f = f();
-	f->set_height( size*2 );
+	f->set_height( size );
 	cache_set("fonts", key, f); 
 	return f;
       }
-      object f = Image.TTF( values(ttf_font_names_cache[ f ])[0]);
+      object f = Image.TTF( values(ttf_font_names_cache[ lower_case(f) ])[0]);
       // TODO: fix support for xpace/yspace etc.
       return f()->set_height( size*2 );
     }
@@ -211,13 +235,13 @@ object get_font(string f, int size, int bold, int italic,
     }
     if(!fnt->load( name ))
     {
-      if(name == roxen->QUERY(default_font))
+      if(f == roxen->QUERY(default_font))
       {
 	report_error("Failed to load the default font.\n");
 	return 0;
       }
-      report_debug("Failed to load the font "+
-		   name+", using the default font.\n");
+//       report_debug("Failed to load the font "+
+// 		   name+", using the default font.\n");
       return get_font(roxen->QUERY(default_font), 
 		      size,bold,italic,justification,xspace,yspace);
     }
@@ -292,13 +316,16 @@ object resolve_font(string f, string|void justification)
   if(!fn)
     fn = get_font(roxen->query("default_font"),size,bold,italic,
 		  justification||"left",xspace, 0.0);
+  if(!fn)
+    report_error("failed miserably to open the default font ("+
+                 roxen->query("default_font")+")\n");
   return fn;
 }
 
 array available_fonts( )
 {
   array res = ({});
-#if efun(Image.TTF)
+#if constant(Image.TTF)
   // Populate the TTF font cache.
   available_font_versions( "No, there is no such font as this",32 );
 #endif
@@ -329,4 +356,11 @@ void create()
   add_constant("get_font_italic_bold", get_font_italic_bold);
   add_constant("resolve_font", resolve_font);
   add_constant("available_fonts", available_fonts);
+
+#if constant(Image.TTF)
+  catch {
+    ttf_font_names_cache =
+      decode_value(Stdio.read_bytes(".ttffontcache"));
+  };
+#endif
 }
