@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.55 2000/12/16 02:16:37 per Exp $
+// $Id: global_variables.pike,v 1.56 2000/12/30 07:16:58 per Exp $
 
 /*
 #pragma strict_types
@@ -556,29 +556,6 @@ void define_global_variables(  )
 	 LOCALE(163, "Automatically restart the server after this many days."),
 	 ({1,2,3,4,5,6,7,14,30}),
 	 lambda(){return !QUERY(suicide_engage);});
-
-  defvar("argument_cache_in_db", 0,
-         LOCALE(164, "Cache: Store the argument cache in a mysql database"),
-         TYPE_FLAG|VAR_MORE,
-         LOCALE(165, "If set, store the argument cache in a mysql "
-	 "database. This is very useful for load balancing using multiple "
-         "Roxen servers, since the mysql database will handle "
-	 "synchronization."));
-
-  defvar("argument_cache_db_path", "mysql://localhost/roxen",
-	 LOCALE(166, "Cache: Argument Cache Database URL to use"),
-	 TYPE_STRING|VAR_MORE,
-	 LOCALE(167, "The database to use to store the argument cache."),
-	 0,
-	 lambda(){ return !QUERY(argument_cache_in_db); });
-
-  defvar("argument_cache_dir", "$VARDIR/cache/",
-	 LOCALE(168, "Cache: Argument Cache Directory"),
-	 TYPE_DIR|VAR_MORE,
-         LOCALE(169, "The cache directory to use to store the argument cache."
-	 " Please note that load balancing is not available for most modules "
-         " (such as gtext, diagram etc) unless you use a mysql database to "
-         "store the argument cache meta data."));
 
   defvar("mem_cache_gc",
 	 Variable.Int(300, 0, 
