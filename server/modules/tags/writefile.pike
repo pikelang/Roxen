@@ -10,9 +10,9 @@
 
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: writefile.pike,v 1.9 2001/10/30 21:29:17 srb%cuci.nl Exp $";
+constant cvs_version =
+ "$Id: writefile.pike,v 1.10 2001/10/30 22:24:53 srb%cuci.nl Exp $";
 constant thread_safe = 1;
-constant language = roxen->language;
 
 #include <module.h>
 #include <config.h>
@@ -42,6 +42,12 @@ void create() {
 	  "It functions as an enforced dynamic chroot to constrain users in "
 	  "e.g. a user filesystem."
           );
+}
+
+static string lastfile;
+
+string status() {
+  return sprintf("Last file written: %s",lastfile||"NONE");
 }
 
 #define IS(arg)	((arg) && sizeof(arg))
@@ -111,14 +117,14 @@ class TagWritefile {
 	      diro=dirn, diro!=(dirn=dirname(dirn)) && !(st = file_stat(dirn));
 	      domkdir=1);
 	   if(st) {
-	     privs = Privs("Writefile", st[5], st[6]);
+	     privs = Privs("Writefile", st->uid, st->gid);
 	     if(domkdir && args->mkdirhier)
 	       Stdio.mkdirhier(dirname(filename));
 	   }
 	 }
 	_ok = 0;
         object file=Stdio.File();
-	if(file->open(filename, args->append?"wrca":"wrct")) {
+	if(file->open(lastfile=filename, args->append?"wrca":"wrct")) {
 	  _ok = 1;
 	  file->write(towrite);
 	  object dims;
