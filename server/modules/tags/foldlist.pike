@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.34 2002/01/24 01:12:04 mast Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.35 2003/09/11 11:23:18 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -120,9 +120,9 @@ class TagFoldlist {
 
       array do_return(RequestID id) {
 	if(show)
-	  result="<dt><dd>"+content+"</dd>";
+	  result="<dt><dd>"+content+"</dd></dt>";
 	else
-	  result="</dt>\n";
+	  result="";
 	return 0;
       }
     }
@@ -174,7 +174,7 @@ class TagFoldlist {
 	  "\"><img src=\""+
 	  (args[(show?"un":"")+"foldedsrc"]||id->misc->foldlist[(show?"u":"")+"fsrc"])+
 	  "\" border=\"0\" alt=\""+({ "+", "-" })[show]+"\" /></a>"+
-	  content;
+	  content+"</dt>";
 	return 0;
       }
 
