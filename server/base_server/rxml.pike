@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.199 2000/06/23 16:57:37 mast Exp $
+// $Id: rxml.pike,v 1.200 2000/06/29 19:37:54 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -1370,6 +1370,7 @@ class TagCond
       array do_return (RequestID id)
       {
 	::do_return (id);
+	if (up->result != RXML.Void) return 0;
 	up->result = result;
 	result = RXML.Void;
 	return 0;
