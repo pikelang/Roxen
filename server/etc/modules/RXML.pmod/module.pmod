@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.140 2001/03/14 01:02:10 mast Exp $
+//! $Id: module.pmod,v 1.141 2001/03/14 01:20:48 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -4114,6 +4114,7 @@ static class TAny
   inherit Type;
   constant name = "*";
   constant conversion_type = 0;
+  constant free_text = 1;	// FIXME: Temporary measure.
 
   mixed encode (mixed val, void|Type from)
   {
