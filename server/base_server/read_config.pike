@@ -2,9 +2,11 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.6.2.1 1997/03/02 19:14:54 grubba Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.6.2.2 1997/03/03 11:44:09 grubba Exp $";
 #else
-# include "base_server/newdecode.pike"
+import spider;
+# define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
+# include "newdecode.pike"
 #endif
 
 import Array;
