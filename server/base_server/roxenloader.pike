@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.142 2000/02/15 17:14:13 grubba Exp $
+ * $Id: roxenloader.pike,v 1.143 2000/02/16 08:22:48 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -8,7 +8,6 @@
 // Sets up the roxen environment. Including custom functions like spawne().
 
 #include <stat.h>
-
 //
 // NOTE:
 //	This file uses replace_master(). This implies that the
@@ -19,7 +18,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.142 2000/02/15 17:14:13 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.143 2000/02/16 08:22:48 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -86,6 +85,7 @@ int use_syslog, loggingfield;
 string oct;
 int last_was_change;
 int roxen_started = time();
+float roxen_started_flt = time(time());
 string short_time()
 {
   if( last_was_change>0 )
@@ -94,7 +94,7 @@ string short_time()
      default:
        return "          : ";
      case 5:
-       float up = time(roxen_started);
+       float up = time(roxen_started)-roxen_started_flt;
        if( up > 3600 )
        {
          return sprintf( "%2dd%2dh%2dm : ",
@@ -597,17 +597,17 @@ object really_load_roxen()
   report_debug("Loading roxen ... ");
   object e = ErrorContainer();
   object res;
-  master()->set_inhibit_compile_errors(e);
+  new_master->set_inhibit_compile_errors(e);
   mixed err = catch {
     res =((program)"roxen")();
   };
-  master()->set_inhibit_compile_errors(0);
+  new_master->set_inhibit_compile_errors(0);
   string q = e->get();
   if (err) {
     report_debug("ERROR\n" + (q||""));
     throw(err);
   }
-  report_debug("\nRoxen loaded in %.1fms\n",
+  report_debug("Done [%.1fms]\n",
 	       (gethrtime()-start_time)/1000.0);
 
   if (q && sizeof(q)) {
@@ -654,13 +654,6 @@ void load_roxen()
 #endif
 
   roxen = really_load_roxen();
-
-  report_debug("roxen.pike version "+(roxen->cvs_version/ " ")[2]+"\n"
-	       "Roxen release "+roxen->real_version+"\n"
-#ifdef __NT__
-	       "Running on NT\n"
-#endif
-    );
 }
 
 
@@ -847,180 +840,11 @@ object|void open(string filename, string mode, int|void perm)
 // Make a $PATH-style string
 string make_path(string ... from)
 {
-  return Array.map(from, lambda(string a, string b) {
+  return map(from, lambda(string a, string b) {
     return (a[0]=='/')?combine_path("/",a):combine_path(b,a);
     //return combine_path(b,a);
   }, getcwd())*":";
 }
-
-#if 0&&constant(fork)
-class getpw_kluge
-{
-  object pin;
-  object pout;
-
-#if constant(thread_create)
-  object lock = Thread.Mutex();
-#endif /* constant(thread_create) */
-
-  constant replace_tab = ({ "getpwnam", "getpwent", "setpwent", "setpwnam",
-			    "endpwent", "get_all_users", "get_groups_for_user",
-  });
-
-  void send_msg(string tag, mixed val)
-  {
-    string msg = encode_value(({ tag, val }));
-    msg = sprintf("%4c%s", sizeof(msg), msg);
-
-    int bytes;
-
-    while(sizeof(msg)) {
-      bytes = pout->write(msg);
-
-      if (bytes <= 0) {
-	// Connection probably closed!
-	throw(({ "Remote connection closed!\n", backtrace() }));
-      }
-      if (bytes == sizeof(msg)) {
-	return;
-      }
-      msg = msg[bytes..];
-    }
-  }
-
-  string expect(int len)
-  {
-    string msg = pin->read(len);
-
-    if (sizeof(msg) != len) {
-      throw(({ "Received short message!\n", backtrace() }));
-    }
-    return msg;
-  }
-
-  array(mixed) get_msg()
-  {
-    string msg = expect(4);
-
-    int bytes;
-    sscanf(msg, "%4c", bytes);
-
-    msg = expect(bytes);
-
-    return decode_value(msg);
-  }
-
-  mixed do_call(string fun, array(mixed) args)
-  {
-#if constant(thread_create)
-    mixed key = lock->lock();
-#endif /* constant(thread_create) */
-
-    send_msg(fun, args);
-
-    array(mixed) res = get_msg();
-
-#if constant(thread_create)
-    if (key) {
-      destruct(key);
-    }
-#endif /* constant(thread_create) */
-
-    if (res[0] == "throw") {
-      if (arrayp(res[1]) && (sizeof(res[1]) > 1) &&
-	  stringp(res[1][0]) && arrayp(res[1][1])) {
-	// Looks like a backtrace...
-	res[1][1] = backtrace() + res[1][1];
-      }
-      throw(res[1]);
-    }
-
-    return(res[1]);
-  }
-
-  void server()
-  {
-    mapping constants = all_constants();
-
-    while (1) {
-      array(mixed) call = get_msg();
-
-      function fun = constants[call[0]];
-
-      int got_res;
-      mixed res;
-      mixed err = catch {
-	res = fun(@call[1]);
-
-	got_res = 1;
-      };
-      if (got_res) {
-	send_msg("return", res);
-      } else {
-	send_msg("throw", err);
-      }
-    }
-  }
-
-  void do_replace(string fun)
-  {
-    add_constant(fun, lambda(mixed ... args) {
-			return do_call(fun, args);
-		      });
-  }
-
-  void init_error(string msg)
-  {
-    report_error("Error in bootstrap code: %s\n"
-		 "getpw_kluge not enabled.\n", msg));
-  }
-
-  void create()
-  {
-#if constant(thread_create)
-    if (sizeof(all_threads()) > 1) {
-      init_error("Threads are already active!");
-      return;
-    }
-#endif /* constant(thread_create) */
-    object pipe1 = Stdio.File();
-    object pipe2 = Stdio.File();
-    object pipe3 = pipe1 && pipe1->pipe();
-    object pipe4 = pipe2 && pipe2->pipe();
-    if (!pipe3 || !pipe4) {
-      init_error("Failed to open pipes.");
-      foreach(({ pipe1, pipe2, pipe3, pipe4 }), object p) {
-	p && p->close();
-      }
-      return;
-    }
-    mixed pid;
-    if (catch { pid = fork(); }) {
-      init_error("fork() failed!");
-      return;
-    }
-    if (pid) {
-      // Parent process
-      pin = pipe1;
-      pout = pipe4;
-      pipe2->close();
-      pipe3->close();
-
-      foreach(replace_tab, string fun_name) {
-	do_replace(fun_name);
-      }
-    } else {
-      // Child process
-      pin = pipe2;
-      pout = pipe3;
-      pipe1->close();
-      pipe4->close();
-      server();
-      throw(1);		// Tell main() we're now in the child.
-    }
-  }
-};
-#endif /* constant(fork) */
 
 void write_current_time()
 {
@@ -1116,25 +940,17 @@ Please install a newer pike version
   _exit(0); /* 0 means stop start script looping */
 #endif /* __VERSION__ < 0.7 */
 
-
-
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
   last_was_nl = 1;
-  report_debug("\n"+version()+"\n");
-  report_debug("Roxen loader version "+(cvs_version/" ")[2]+"\n");
+  report_debug("-"*58+"\n"+version()+"\n");
+//   report_debug("Roxen loader version "+(cvs_version/" ")[2]+"\n");
   master()->putenv("PIKE_INCLUDE_PATH", path);
   foreach(path/":", string p) {
     add_include_path(p);
     add_program_path(p);
   }
   add_module_path( "etc/modules" );
-#if 0&&constant(fork)
-  if (catch { getpw_kluge(); }) {
-    /* We're in the kluge process, and it's time to die... */
-    exit(0);
-  }
-#endif /* constant(fork) */
 
 #ifdef INTERNAL_ERROR_DEBUG
   add_constant("throw", paranoia_throw);
@@ -1171,7 +987,6 @@ Please install a newer pike version
   add_constant("mkdirhier", mkdirhier);
   add_constant("capitalize",
                lambda(string s){return upper_case(s[0..0])+s[1..];});
-
   add_constant( "ST_MTIME", ST_MTIME );
   add_constant( "ST_CTIME", ST_CTIME );
   add_constant( "ST_SIZE",  ST_SIZE );
@@ -1192,79 +1007,87 @@ Please install a newer pike version
   }
 
   // These are here to allow dumping of roxen.pike to a .o file.
-  add_constant( "Regexp", Regexp );
-  add_constant( "Stdio.File", Stdio.File );
-  add_constant( "Stdio.UDP", Stdio.UDP );
-  add_constant( "Stdio.Port", Stdio.Port );
-  add_constant( "Stdio.read_bytes", Stdio.read_bytes );
-  add_constant( "Stdio.read_file", Stdio.read_file );
-  add_constant( "Stdio.sendfile", Stdio.sendfile );
-  add_constant( "Stdio.stderr", Stdio.stderr );
-  add_constant( "Stdio.stderr", Stdio.stderr );
-  add_constant( "Stdio.stdin", Stdio.stdin );
-  add_constant( "Stdio.stdin", Stdio.stdin );
-  add_constant( "Stdio.stdout", Stdio.stdout );
-  add_constant( "Stdio.stdout", Stdio.stdout );
-  add_constant( "Stdio.write_file", Stdio.write_file );
+  report_debug("Loading pike modules ... ");
+  function nm_resolv = new_master->resolv;
+
+  int t = gethrtime();
+  add_constant( "Regexp", nm_resolv("Regexp") );
+  add_constant( "Stdio.File", nm_resolv("Stdio.File") );
+  add_constant( "Stdio.UDP", nm_resolv("Stdio.UDP") );
+  add_constant( "Stdio.Port", nm_resolv("Stdio.Port") );
+  add_constant( "Stdio.read_bytes", nm_resolv("Stdio.read_bytes") );
+  add_constant( "Stdio.read_file", nm_resolv("Stdio.read_file") );
+  add_constant( "Stdio.sendfile", nm_resolv("Stdio.sendfile") );
+  add_constant( "Stdio.stderr", nm_resolv("Stdio.stderr") );
+  add_constant( "Stdio.stderr", nm_resolv("Stdio.stderr") );
+  add_constant( "Stdio.stdin", nm_resolv("Stdio.stdin") );
+  add_constant( "Stdio.stdin", nm_resolv("Stdio.stdin") );
+  add_constant( "Stdio.stdout", nm_resolv("Stdio.stdout") );
+  add_constant( "Stdio.stdout", nm_resolv("Stdio.stdout") );
+  add_constant( "Stdio.write_file", nm_resolv("Stdio.write_file") );
 #if constant(thread_create)
-  add_constant( "Thread.Mutex", Thread.Mutex );
-  add_constant( "Thread.Condition", Thread.Condition );
-  add_constant( "Thread.Queue", Thread.Queue );
+  add_constant( "Thread.Mutex", nm_resolv("Thread.Mutex") );
+  add_constant( "Thread.Condition", nm_resolv("Thread.Condition") );
+  add_constant( "Thread.Queue", nm_resolv("Thread.Queue") );
 #endif
 
 #if constant(SSL) && constant(SSL.sslfile)
-  add_constant("SSL.sslfile", SSL.sslfile );
-  add_constant("SSL.context", SSL.context );
-  add_constant("Tools.PEM.pem_msg", Tools.PEM.pem_msg );
+  add_constant("SSL.sslfile", nm_resolv("SSL.sslfile") );
+  add_constant("SSL.context", nm_resolv("SSL.context") );
+  add_constant("Tools.PEM.pem_msg", nm_resolv("Tools.PEM.pem_msg") );
   add_constant("Crypto.randomness.reasonably_random",
-               Crypto.randomness.reasonably_random );
+               nm_resolv("Crypto.randomness.reasonably_random") );
   add_constant("Standards.PKCS.RSA.parse_private_key",
-               Standards.PKCS.RSA.parse_private_key);
+               nm_resolv("Standards.PKCS.RSA.parse_private_key"));
   add_constant("Crypto.rsa", Crypto.rsa );
   add_constant( "Tools.X509.decode_certificate",
-                Tools.X509.decode_certificate );
+                nm_resolv("Tools.X509.decode_certificate") );
   add_constant( "Standards.PKCS.DSA.parse_private_key",
-                Standards.PKCS.DSA.parse_private_key );
-  add_constant( "SSL.cipher.dh_parameters", SSL.cipher.dh_parameters );
+                nm_resolv("Standards.PKCS.DSA.parse_private_key") );
+  add_constant( "SSL.cipher.dh_parameters",
+                nm_resolv("SSL.cipher.dh_parameters") );
 #endif
 
 #if constant(HTTPLoop.prog)
-  add_constant( "HTTPLoop.prog", HTTPLoop.prog );
-  add_constant( "HTTPLoop.Loop", HTTPLoop.Loop );
+  add_constant( "HTTPLoop.prog", nm_resolv("HTTPLoop.prog") );
+  add_constant( "HTTPLoop.Loop", nm_resolv("HTTPLoop.Loop") );
 #endif
 
-  add_constant( "hsv_to_rgb",  Colors.hsv_to_rgb  );
-  add_constant( "rgb_to_hsv",  Colors.rgb_to_hsv  );
-  add_constant( "parse_color", Colors.parse_color );
-  add_constant( "color_name",  Colors.color_name  );
-  add_constant( "colors",      Colors             );
-  add_constant( "Process.create_process", Process.create_process );
-  add_constant( "MIME.Message", MIME.Message );
-  add_constant( "MIME.encode_base64", MIME.encode_base64 );
-  add_constant( "MIME.decode_base64", MIME.decode_base64 );
-  add_constant( "Image.Image", Image.Image );
-  add_constant( "Image.Font", Image.Font );
-  add_constant( "Image.Colortable", Image.Colortable );
-  add_constant( "Image.Layer", Image.Layer );
-  add_constant( "Image.lay", Image.lay );
-  add_constant( "Image.Color", Image.Color );
-  add_constant( "Image.GIF.encode", Image.GIF.encode );
-  add_constant( "Image.GIF.encode_trans", Image.GIF.encode_trans );
-  add_constant( "Image.Color.Color", Image.Color.Color );
-  add_constant( "Image", Image );
-  add_constant( "Locale", Locale );
-  add_constant( "Locale.Charset", Locale.Charset );
-  add_constant( "RoxenLocale", RoxenLocale );
-  add_constant( "RoxenLocale.Modules", RoxenLocale.Modules );
+  add_constant( "hsv_to_rgb",  nm_resolv("Colors.hsv_to_rgb")  );
+  add_constant( "rgb_to_hsv",  nm_resolv("Colors.rgb_to_hsv")  );
+  add_constant( "parse_color", nm_resolv("Colors.parse_color") );
+  add_constant( "color_name",  nm_resolv("Colors.color_name")  );
+  add_constant( "colors",      nm_resolv("Colors")             );
+  add_constant( "Process.create_process",
+                nm_resolv("Process.create_process") );
+  add_constant( "MIME.Message", nm_resolv("MIME.Message") );
+  add_constant( "MIME.encode_base64", nm_resolv("MIME.encode_base64") );
+  add_constant( "MIME.decode_base64", nm_resolv("MIME.decode_base64") );
+  add_constant( "Image.Image", nm_resolv("Image.Image") );
+  add_constant( "Image.Font", nm_resolv("Image.Font") );
+  add_constant( "Image.Colortable", nm_resolv("Image.Colortable") );
+  add_constant( "Image.Layer", nm_resolv("Image.Layer") );
+  add_constant( "Image.lay", nm_resolv("Image.lay") );
+  add_constant( "Image.Color", nm_resolv("Image.Color") );
+  add_constant( "Image.GIF.encode", nm_resolv("Image.GIF.encode") );
+  add_constant( "Image.GIF.encode_trans",
+                nm_resolv("Image.GIF.encode_trans") );
+  add_constant( "Image.Color.Color", nm_resolv("Image.Color.Color") );
+  add_constant( "Image", nm_resolv("Image") );
+  add_constant( "Locale", nm_resolv("Locale") );
+  add_constant( "Locale.Charset", nm_resolv("Locale.Charset") );
+  add_constant( "RoxenLocale", nm_resolv("RoxenLocale") );
+  add_constant( "RoxenLocale.Modules",
+                nm_resolv("RoxenLocale.Modules") );
 //    add_constant( "Image._decode", Image._decode );
 //    add_constant( "Image.decode_layers", Image.decode_layers );
-
+  report_debug("Done [%.1fms]\n", (gethrtime()-t)/1000.0);
 
   initiate_cache();
   load_roxen();
 
   int retval = roxen->main(argc,hider);
-  report_debug("\n-- Total boot time %2.1f seconds ---------------------------\n",
+  report_debug("-- Total boot time %2.1f seconds ---------------------------\n",
 	       (gethrtime()-start_time)/1000000.0);
   write_current_time();
   if( retval > -1 )
