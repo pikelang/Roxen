@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.36 1998/06/02 18:45:34 grubba Exp $
+# $Id: start,v 1.37 1998/06/18 01:13:09 grubba Exp $
 
 VERSION=202; BETA=.b;
 
@@ -80,7 +80,9 @@ fi
 pike=pike
 if [ -x bin/pike ] ; then pike=bin/pike; fi
 if [ -x bin/roxen ] ; then  pike=bin/roxen; fi
-if [ -x "$PIKE" ]; then pike="$PIKE"; fi
+if [ "x$PIKE" = "x" ]; then :; else
+  if [ -x "$PIKE" ]; then pike="$PIKE"; fi
+fi
 
 gdb=no
 
