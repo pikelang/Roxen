@@ -125,11 +125,38 @@ string devel_buttons( object c, string mn, object id )
     }
     else if( a == parse_rxml( "<cf-locale get=clear_log>",id ) )
     {
-      mod->error_log = ([
-        "2,,Event log cleared by "+id->misc->config_user->real_name+
-        " ("+id->misc->config_user->name+") from "+
-        id->misc->config_settings->host:({ time() }),
-      ]);
+      array(int) times, left;
+      Configuration conf = mod->my_configuration();
+      int flush_time = time();
+      string realname = id->misc->config_user->real_name,
+		 name = id->misc->config_user->name,
+		 host = id->misc->config_settings->host,
+	     mod_name = get_modname(mod),
+	      log_msg = sprintf("2,%s,Module event log for '%s' "
+				"cleared by %s (%s) from %s",
+				mod_name, get_modfullname(mod),
+				realname, name, host);
+      foreach(indices(mod->error_log), string error)
+      {
+	times = mod->error_log[error];
+
+	// Flush from global log:
+	if(left = roxen->error_log[error])
+	  if(sizeof(left -= times))
+	    roxen->error_log[error] = left;
+	  else
+	    m_delete(roxen->error_log, error);
+
+	// Flush from virtual server log:
+	if(left = conf->error_log[error])
+	  if(sizeof(left -= times))
+	    conf->error_log[error] = left;
+	  else
+	    m_delete(conf->error_log, error);
+      }
+      mod->error_log=([ log_msg : ({ flush_time }) ]);// Flush from module log
+      conf->error_log[log_msg]  = ({ flush_time });  // Kilroy was in the global log
+      roxen->error_log[log_msg] = ({ flush_time }); // and in the virtual server log
     }
   }
   return (current_compile_errors[ mn ] ?
