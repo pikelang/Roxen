@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.12 1998/03/17 23:11:33 neotron Exp $
+// $Id: counter.pike,v 1.13 1998/03/17 23:35:55 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,9 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.12  1998/03/17 23:11:33  neotron
+// Added thread safe constant.
+//
 // Revision 1.11  1998/02/23 01:00:33  neotron
 // Some minor fixes, which makes it possible to compile the module...
 //
@@ -66,7 +69,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.12 1998/03/17 23:11:33 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.13 1998/03/17 23:35:55 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -94,7 +97,7 @@ void create()
   defvar("mountpoint", "/counter/", "Mount point", TYPE_LOCATION, 
 	 "Counter location in virtual filesystem.");
 
-  defvar("ppmpath", "digits/", "PPM GIF Digits Path", TYPE_DIR,
+  defvar("ppmpath", "etc/digits/", "PPM GIF Digits Path", TYPE_DIR,
 	 "Were are located PPM/GIF digits (Ex: 'digits/')");
 
   defvar("userpath", "html/digits/", "PPM GIF path under Users HOME", TYPE_STRING,
@@ -441,7 +444,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.12 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.13 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
