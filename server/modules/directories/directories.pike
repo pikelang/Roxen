@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.84 2000/11/03 01:28:28 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.85 2000/11/13 10:53:11 per Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -140,8 +140,8 @@ void start(int n, Configuration c)
             sort-order='&form.sort;'
             ::='&var.doreverse;'>
         <tr bgcolor='#eeeeee'>
-          <td align='left'><a href='&_.path:url;'><img src='&_.type-img;' border='0' /></a></td>
-          <td align='left'><a href='&_.path:url;'>&_.name;</a> &nbsp;</td>
+          <td align='left'><a href='&_.path:http;'><img src='&_.type-img;' border='0' /></a></td>
+          <td align='left'><a href='&_.path:http;'>&_.name;</a> &nbsp;</td>
           <td align='right'>&_.size; &nbsp;</td>
           <td align='right'>&_.type; &nbsp;</td>
           <td align='right'>&_.mtime; &nbsp;</td>
