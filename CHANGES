@@ -5,6 +5,8 @@ o Changed some configure rules for MySQL.
 
 o Updated documentation for security patterns.
 
+o Fixed ftp2.
+
 o Fixed the global tag attributes.
 
 
