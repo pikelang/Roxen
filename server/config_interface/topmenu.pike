@@ -50,7 +50,8 @@ string parse( RequestID id )
         while( id->misc->orig )
           id = id->misc->orig;
         a->selected = "selected";
-        last_seen_on[t[1]] = id->raw_url;
+	if( id->method == "GET" )
+	  last_seen_on[t[1]] = id->raw_url;
         default_href();
       }
       if( !a->href )
