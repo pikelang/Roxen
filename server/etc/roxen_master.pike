@@ -11,7 +11,7 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.16 1997/01/20 14:42:04 kg Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.16.2.1 1997/02/05 14:11:39 grubba Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -249,7 +249,7 @@ void _main(string *argv, string *env)
       switch(opts[0])
       {
       case "version":
-	werror(version() + " Copyright (C) 1994-1997 Fredrik Hübinette\n");
+	werror(VERSION + " Copyright (C) 1994-1997 Fredrik Hübinette\n");
 	werror("Pike comes with ABSOLUTELY NO WARRANTY; This is free software and you are\n");
 	werror("welcome to redistribute it under certain conditions; Read the files\n");
 	werror("COPYING and DISCLAIMER in the Pike distribution for more details.\n");
