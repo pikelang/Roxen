@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.84 1999/12/13 05:01:23 per Exp $
+# $Id: start,v 1.85 1999/12/13 05:10:44 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -532,5 +532,5 @@ else
   if [ $verbose -gt 0 ]; then
     echo "$pre Start at `date`"
   else :; fi
-  start_roxen $extra_args
+  start_roxen $extra_args 2>&1
 fi
