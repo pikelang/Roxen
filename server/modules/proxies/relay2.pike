@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.27 2002/04/20 10:57:22 jhs Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.28 2003/03/04 17:18:28 anders Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -289,7 +289,7 @@ class Relay
       mapping headers = ([]);
       headers = make_headers( id, options->trimheaders );
 
-      request_data = (id->method+" /"+Roxen.http_encode_string(file)+" HTTP/1.0\r\n"+
+      request_data = (id->method+" /"+file+" HTTP/1.0\r\n"+
                       encode_headers( headers ) +
                       "\r\n" + id->data );
 
