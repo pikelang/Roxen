@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.308 2001/09/21 13:56:04 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.309 2001/09/25 20:49:44 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3435,7 +3435,17 @@ class TagEmit {
 
       if(objectp(res))
 	if(args->sort ||
-	   (args->skiprows<0) )
+	   (args->skiprows<0) ||
+	   args->rowinfo )
+	  // Expand the object into an array of mappings if sort,
+	  // negative skiprows or rowinfo is used. These arguments
+	  // should be intercepted, dealt with and removed by the
+	  // plugin, should it have a more clever solution. Note that
+	  // it would be possible to use a expand_on_demand-solution
+	  // where a value object is stored as the rowinfo value and,
+	  // if used inside the loop, triggers an expansion. That
+	  // would however force us to jump to another iterator function.
+	  // Let's save that complexity enhancement until later.
 	  res = expand(res);
 	else if(filter) {
 	  do_iterate = object_filter_iterate;
@@ -3538,6 +3548,8 @@ class TagEmit {
 			      max(sizeof(res)-args->maxrows, 0): 0);
 
 	  if(args->maxrows) res=res[..args->maxrows-1];
+	  if(args->rowinfo)
+	    RXML.user_set_var(m_delete(args, "rowinfo"), sizeof(res));
 	  if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
 
 	  do_iterate = array_iterate;
@@ -3632,8 +3644,6 @@ class TagEmit {
       id->misc->emit_args = outer_args;
 
       int rounds = vars->counter - !!args["do-once"];
-      if(args->rowinfo)
-	RXML.user_set_var(args->rowinfo, rounds);
       _ok = !!rounds;
 
       if(args->remainderinfo) {
