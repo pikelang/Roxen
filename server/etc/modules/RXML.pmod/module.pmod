@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.159 2001/05/19 05:34:27 mast Exp $
+// $Id: module.pmod,v 1.160 2001/05/22 16:59:23 marcus Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2578,7 +2578,7 @@ class Frame
     THIS_TAG_DEBUG ("Calling " #cb "\n");				\
     PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);		\
     COND_PROF_ENTER(tag,tag->name,"tag");				\
-    res = ([function] cb) (args); /* Might unwind. */			\
+    res = (cb) (args); /* Might unwind. */			\
     COND_PROF_LEAVE(tag,tag->name,"tag");				\
     PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");		\
   } while (0)
