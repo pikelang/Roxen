@@ -457,10 +457,9 @@ string type_warning( int type, mixed value )
      return verify_port( value, 0, 1 )[1];
 
    case TYPE_URL_LIST:
-     string warn;
+     string warn="";
      if( arrayp( value ) )
      {
-       string warn="";
        foreach( [array(string)]value, string value )
          warn += verify_port( value, 0, 1 )[1];
      } else
