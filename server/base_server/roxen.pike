@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.365 1999/12/07 22:01:54 mast Exp $
+ * $Id: roxen.pike,v 1.366 1999/12/08 08:08:43 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.365 1999/12/07 22:01:54 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.366 1999/12/08 08:08:43 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -716,7 +716,7 @@ class fallback_redirect_request
 
 class Protocol
 {
-  inherit Stdio.Port;
+  inherit Stdio.Port: port;
 
   constant name = "unknown";
   constant supports_ipless = 0;
@@ -1059,6 +1059,209 @@ class SSLProtocol
   }
 }
 
+#if constant(HTTPLoop.prog)
+class FHTTP
+{
+  inherit Protocol;
+//   inherit Stdio.Port : port;
+  constant supports_ipless=1;
+  constant name = "fhttp";
+  constant default_port = 80;
+
+  int dolog;
+
+  int requests, received, sent;
+
+  HTTPLoop.Loop l;
+  Stdio.Port portobj;
+
+  mapping flatten_headers( mapping from )
+  {
+    mapping res = ([]);
+    foreach(indices(from), string f)
+      res[f] = from[f]*", ";
+    return res;
+  }
+
+  void setup_fake(object o)
+  {
+    mapping vars = ([]);
+    o->extra_extension = "";
+    o->misc = flatten_headers(o->headers);
+
+    o->cmf = 100*1024;
+    o->cmp = 100*1024;
+  
+    //   werror("%O\n", o->variables);
+    if(o->method == "POST" && strlen(o->data))
+    {
+      mapping variabels = ([]);
+      switch((o->misc["content-type"]/";")[0])
+      {
+       default: // Normal form data, handled in the C part.
+         break;
+       
+       case "multipart/form-data":
+         object messg = MIME.Message(o->data, o->misc);
+         mapping misc = o->misc;
+         foreach(messg->body_parts, object part) 
+         {
+           if(part->disp_params->filename) 
+           {
+             vars[part->disp_params->name]=part->getdata();
+             vars[part->disp_params->name+".filename"]=
+               part->disp_params->filename;
+             if(!misc->files)
+               misc->files = ({ part->disp_params->name });
+             else
+               misc->files += ({ part->disp_params->name });
+           } else {
+             vars[part->disp_params->name]=part->getdata();
+           }
+         }
+         break;
+      }
+      o->variables = vars|o->variables;
+    }
+
+    string contents;
+    if(contents = o->misc["cookie"])
+    {
+      string c;
+      mapping cookies = ([]);
+      multiset config = (<>);
+      o->misc->cookies = contents;
+      foreach(((contents/";") - ({""})), c)
+      {
+        string name, value;
+        while(sizeof(c) && c[0]==' ') c=c[1..];
+        if(sscanf(c, "%s=%s", name, value) == 2)
+        {
+          value=http_decode_string(value);
+          name=http_decode_string(name);
+          cookies[ name ]=value;
+          if(name == "RoxenConfig" && strlen(value))
+            config = aggregate_multiset(@(value/"," + ({ })));
+        }
+      }
+
+
+      o->cookies = cookies;
+      o->config = config;
+    } else {
+      o->cookies = ([]);
+      o->config = (<>);
+    }
+  
+    if(contents = o->misc->accept)
+      o->misc->accept = contents/",";
+
+    if(contents = o->misc["accept-charset"])
+      o->misc["accept-charset"] = ({ contents/"," });
+
+    if(contents = o->misc["accept-language"])
+      o->misc["accept-language"] = ({ contents/"," });
+
+    if(contents = o->misc["session-id"])
+      o->misc["session-id"] = ({ contents/"," });
+  }
+
+
+  void handle_request(object o)
+  {
+    setup_fake( o ); // Equivalent to parse_got in http.pike
+    handle( o->handle_request, this_object() );
+  }
+
+  int cdel=10;
+  void do_log()
+  {
+    if(l->logp())
+    {
+      //     werror("log..\n");
+      switch(query("log"))
+      {
+       case "None":
+         l->log_as_array();
+         break;
+       case "Commonlog":
+         object f = Stdio.File( query("log_file"), "wca" );
+         l->log_as_commonlog_to_file( f );
+         destruct(f);
+         break;
+      }
+      cdel--;
+      if(cdel < 1) cdel=1;
+    } else {
+      cdel++;
+      //     werror("nolog..\n");
+    }
+    call_out(do_log, cdel);
+  }
+
+  void low_adjust_stats(mapping m)
+  {
+    //  werror("%O\n", m);
+    array q = values( urls )->conf;
+    if( sizeof( q ) ) /* This is not exactly correct if sizeof(q)>1 */
+    {
+      q[0]->requests += m->num_request;
+      q[0]->received += m->received_bytes;
+      q[0]->sent     += m->sent_bytes;
+    }
+    requests += m->num_requests;
+    received += m->received_bytes;
+    sent     += m->sent_bytes;
+  }
+
+
+  void adjust_stats()
+  {
+    call_out(adjust_stats, 2);
+    low_adjust_stats( l->cache_status() );
+  }
+
+
+  void create( int pn, string i )
+  {
+    requesthandler = (program)"protocols/fhttp.pike";
+
+    if (query_option("do_not_bind")) 
+    {
+      // This is useful if you run two Roxen processes,
+      // that both handle an URL which has two IPs, and
+      // use DNS round-robin.
+      report_warning(sprintf("Binding to %s://%s:%d/ disabled\n",
+			     name, ip, port));
+      destruct();
+      return;
+    }
+    port = pn;
+    ip = i;
+
+    dolog = (query_option( "log" ) && (query_option( "log" )!="none"));
+    portobj = Stdio.Port(); /* No way to use ::create easily */
+    if( !portobj->bind( port, 0, ip ) )
+    {
+      report_error("Failed to bind %s://%s:%d/ (%s)\n",
+                   name,ip||"*",(int)port, strerror(errno()));
+      destruct(portobj);
+      destruct();
+      return;
+    }
+
+    l = HTTPLoop.Loop( portobj, requesthandler, 
+                       handle_request, 0,
+                       (query_option("ram_cache")||20)*1024*1024,
+                       dolog, (query_option("read_timeout")||120) );
+
+    call_out(adjust_stats, 10);
+    if(dolog)
+      call_out(do_log, 5);
+  }
+}
+#endif
+
 class HTTP
 {
   inherit Protocol;
@@ -1216,6 +1419,11 @@ class IMAP
 }
 
 mapping protocols = ([
+#if constant(HTTPLoop.prog)
+  "fhttp":FHTTP,
+#else
+  "fhttp":HTTP,
+#endif
   "http":HTTP,
   "ftp":FTP,
 

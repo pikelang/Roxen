@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.174 1999/12/06 21:12:38 grubba Exp $
+// $Id: http.pike,v 1.175 1999/12/08 08:08:17 per Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.174 1999/12/06 21:12:38 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.175 1999/12/08 08:08:17 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1153,17 +1153,6 @@ string handle_error_file_request(array err, int eid)
     }
     int end = (int)variables->line+50;
     lines=highlight_pike("foo", ([ "nopre":1 ]), lines[start..end]*"\n")/"\n";
-
-//     foreach(bt, string b)
-//     {
-//       int line;
-//       string file, fun;
-//       sscanf(what, "%s(%*s in line %d in %s", fun, line, file);
-//       if(file && fun && line) sscanf(file, "%s (", file);
-//       if((file == variables->file) && 
-// 	 (fun == variables->fun) && 
-// 	 (line == variables->line))
-//     }
 
     if(sizeof(lines)>off)
       lines[off]=("<font size=+2><b>"+down+lines[off]+"</a></b></font></a>");
