@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.18 1997/12/29 19:14:23 neotron Exp $ */
+/* $Id: low_describers.pike,v 1.19 1998/01/19 19:19:16 mirar Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -494,7 +494,7 @@ string describe_variable_low(mixed *var, mixed path, int really_short,
       if(!arrayp(var[VAR_VALUE]))
 	var[VAR_VALUE]=({});
       
-      res="<input name="+path+" size=30,1 value=\""+
+      res="<input name="+path+" size=60,1 value=\""+
 	(map(var[VAR_VALUE], lambda(mixed s){ return ""+s; })*", ")+
 	  "\">"+"<input type=submit value=Ok>";
     }
