@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.7 1998/04/22 14:34:54 grubba Exp $
+ * $Id: generate_rsa.pike,v 1.8 1999/04/12 23:29:36 mast Exp $
  */
 
 inherit "wizard";
@@ -41,7 +41,7 @@ mixed page_0(object id, object mc)
   
   return (msg || "" )
     + ("<font size=+1>How large key do you want to generate?</font><p>"
-       "<var name=key_size type=int default=1031> Key size <br>\n"
+       "<var name=key_size type=int default=1024> Key size <br>\n"
        "<help><blockquote>"
        "The desired key size. This is a security parameter; larger "
        "keys gives better security, but it also makes connecting to "
