@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.18 2000/03/17 14:29:15 nilsson Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.19 2000/03/23 18:29:54 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -129,14 +129,17 @@ string container_js_write(string name, mapping args, string contents,
 }
 
 static private
+string make_args_unquoted(mapping args)
+{
+  return map(indices(args),
+	     lambda(string key)
+	     { return key+"="+"\""+args[key]+"\""; })*" ";
+}
+
+static private
 string make_container_unquoted(string name, mapping args, string contents)
 {
-  array ind = indices(args);
-  array val = values(args);
-  array a = ({});
-  for(int i; i < sizeof(ind); i++)
-    a += ({ ind[i]+"="+"\""+val[i]+"\"" });
-  return "<"+name+" " + (a*" ") + ">" + contents + "</"+name+">";
+  return "<"+name+" " + make_args_unquoted(args) + ">"+contents+"</"+name+">";
 }
 
 int jssp(object id)
@@ -172,20 +175,21 @@ static private string container_js_popup(string name, mapping args,
 					 string contents, object id)
 {
   //werror("Enter");
-  
   if(!args->label) {
     mapping m = ([ ]);
     contents = parse_html(contents, ([ ]),
 			  ([ "js-popup-label":int_cont_js_popup_label ]), m);
-    args->label = m->label;
+    if(m->label)
+      args->label = m->label;
   }
   
   mapping largs = copy_value(args);
+  if(largs["args-variable"]) m_delete(largs, "args-variable");
   if(largs->label) m_delete(largs, "label");
   if(largs->ox) m_delete(largs, "ox");
   if(largs->oy) m_delete(largs, "oy");
   if(largs->od) m_delete(largs, "od");
-  if(!largs->href) largs->href = "javascript:void";
+  if(!largs->href) largs->href = "javascript:void(0);";
   if(largs->event) m_delete(largs, "event");
 
   string popupname = get_jss(id)->get_unique_id("popup");
@@ -193,15 +197,17 @@ static private string container_js_popup(string name, mapping args,
     (id->misc->_popupparent?id->misc->_popupparent:"none");
   if(zero_type(id->misc->_popuplevel) && args["z-index"])
     id->misc->_popuplevel = (int)args["z-index"];
-  string showpopup = "return showPopup('"+popupname+
-		     "', '"+popupparent+"', "+args->ox+", "+args->oy+", "+args->od;
-  
+
   string event = "onMouseOver";
   if(lower_case(args->event||"") == "onclick")
     event = "onClick";
   
-  largs[event] = "if(isNav4) { "+showpopup+", event); } "
-		 "else { "+showpopup+"); }";
+  largs[event] = "return showPopup('"+popupname+
+		 "', '"+popupparent+"', "+args->ox+", "+args->oy+", "+args->od;
+  
+  if(id->supports->js_global_event)
+    largs[event] += ", event";
+  largs[event] += ");";
   
   get_jss(id)->get_insert("javascript1.2")->
     add("if(isNav4) document."+popupname+
@@ -224,6 +230,13 @@ static private string container_js_popup(string name, mapping args,
   id->misc->_popupparent = old_pparent;
   id->misc->_popuplevel--;
   //werror(" leaving.\n");
+  
+  if(args["args-variable"])
+    id->variables[args["args-variable"]] = make_args_unquoted(largs);
+  
+  if(!largs->label)
+    return "";
+  
   return make_container_unquoted("a", largs, args->label);
 }
 
