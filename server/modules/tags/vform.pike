@@ -4,198 +4,219 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.10 2000/09/14 00:14:05 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.11 2000/09/14 17:51:49 nilsson Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_TAG;
 constant module_name = "Verified form";
 constant module_doc  = "Creates a self verifying form.";
 
+constant ARGS=(< "type", "min", "max", "scope", "min", "max", "trim"
+		 "regexp", "glob", "minlength", "maxlength", "case",
+		 "mode", "fail-if-failed", "ignore-if-false",
+		 "ignore-if-failed", "ignore-if-verified", "optional" >);
+
+constant forbidden = ({"\\", ".", "[", "]", "^",
+		       "$", "(", ")", "*", "+", "|"});
+constant allowed = ({"\\\\", "\\.", "\\[", "\\]", "\\^",
+		     "\\$", "\\(", "\\)", "\\*", "\\+", "\\|"});
+
+class VInputFrame {
+  inherit RXML.Frame;
+  string scope_name;
+  mapping vars;
+
+  object var;
+  string warn;
+
+  array do_enter(RequestID id) {
+    scope_name=args->scope||"vinput";
+
+#ifdef VFORM_COMPAT
+    if(args->is) {
+      switch(args->is) {
+      case "int":
+	args->type="int";
+	break;
+      case "float":
+	args->type="float";
+	break;
+      case "mail":
+	args->type="email";
+	break;
+      case "date":
+	args->type="date";
+	break;
+      case "upper-alpha":
+	args->regexp="^[A-Z]*$";
+	break;
+      case "lower-aplha":
+	args->regexp="^[a-z]*$";
+	break;
+      case "upper-alpha-num":
+	args->regexp="^[A-Z0-9]*$";
+	break;
+      case "lower-alpha-num":
+	args->regexp="^[a-z0-9]*$";
+	break;
+      }
+      m_delete(args, "is");
+    }
+    if(args->filter) {
+      args->regexp="^["+args->filter+"]*$";
+      m_delete(args, "filter");
+    }
+#endif
+
+    switch(args->type) {
+    case "int":
+      var=Variable.Int(args->value||"");
+      var->set_range((int)args->min, (int)args->max);
+      break;
+    case "float":
+      var=Variable.Float(args->value||"");
+      var->set_range((float)args->min, (float)args->max);
+      break;
+    case "email":
+      var=Variable.Email(args->value||"");
+      break;
+    case "date":
+      var=Variable.Date(args->value||"");
+      break;
+    case "text":
+      var=Variable.VerifiedText(args->value||"");
+    case "string":
+    default:
+      if(!var) var=Variable.VerifiedString(args->value||"");
+      if(args->regexp) var->add_regexp(args->regexp);
+      if(args->glob) var->add_glob(args->glob);
+      if(args->minlength) var->add_minlength((int)args->minlength);
+      if(args->maxlength) var->add_maxlength((int)args->maxlength);
+
+      if(args->case=="upper")
+	var->add_upper();
+      else if(args->case=="lower")
+	var->add_lower();
+
+      // Shortcuts
+      if(args->equal)
+	var->add_regexp( "^" + replace(args->equal, forbidden, allowed) + "$" );
+      if(args->is=="empty") var->add_glob("");
+      break;
+    }
+
+    if(!id->variables["__clear"] && id->variables[args->name] &&
+       !(args->optional && id->variables[args->name]=="") ) {
+      mixed new_value=id->variables[args->name];
+      if(args->trim) new_value=String.trim_whites(new_value);
+      [warn, new_value]=var->verify_set(var->transform_from_form(new_value));
+      var->set(new_value);
+    }
+    var->set_path(args->name);
+
+    mapping new_args=([]);
+    foreach(indices(args), string arg)
+      if(!ARGS[arg]) new_args[arg]=args[arg];
+
+    vars=([ "input":var->render_form(id, new_args) ]);
+    if(warn) vars->warning=warn;
+    return 0;
+  }
+
+  array do_return(RequestID id) {
+    int ok=!warn;
+    int show_err=1;
+    if(args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]])
+      ok=1;
+
+    if(!id->variables[args->name] ||
+       (args["ignore-if-false"] && !id->misc->vform_ok) ||
+       id->variables["__reload"] ||
+       id->variables["__clear"] ||
+       (args["ignore-if-failed"] && id->misc->vform_failed[args["ignore-if-failed"]]) ||
+       (args["ignore-if-verified"] && id->misc->vform_verified[args["ignore-if-verified"]]) ) {
+      ok=0;
+      show_err=0;
+    }
+
+    if(ok) {
+      id->misc->vform_verified[args->name]=1;
+      verified_result(id);
+      return 0;
+    }
+
+    id->misc->vform_failed[args->name]=1;
+    if(show_err)
+      failed_result(id);
+    else
+      // Clear args->warning here?
+      verified_result(id);
+    id->misc->vform_ok = 0;
+    return 0;
+  }
+
+  void verified_result(RequestID id )
+  // Create a tag result without error response.
+  {
+    switch(args->mode||"after") {
+    case "complex":
+      result = parse_html(content, ([]),
+			  ([ "verified":lambda(string t, mapping m, string c) { return c; },
+			     "failed":"" ]) );
+      break;
+    case "before":
+    case "after":
+    default:
+      result = RXML.get_var("input");
+    }
+  }
+
+  void failed_result(RequestID id)
+  // Creates a tag result with widget and error response.
+  {
+    switch(args->mode||"after") {
+    case "complex":
+      result = parse_html(content, ([]),
+			  ([ "failed":lambda(string t, mapping m, string c) { return c; },
+			     "verified":"" ]) );
+      break;
+    case "before":
+      result = content + var->render_form(id, args);
+    case "after":
+    default:
+      result = RXML.get_var("input") + content;
+    }
+  }
+}
+
+class VInput {
+  inherit RXML.Tag;
+  constant name = "vinput";
+  mapping(string:RXML.Type) req_arg_types = ([ "name":RXML.t_text(RXML.PEnt) ]);
+
+  class Frame {
+    inherit VInputFrame;
+  }
+}
+
+/*
+class TagWizzVInput {
+  inherit VInput;
+  constant name="wizz";
+  constant plugin_name="vinput";
+
+  class Frame {
+    inherit VInputFrame;
+  }
+}
+*/
+
 class TagVForm {
   inherit RXML.Tag;
   constant name = "vform";
 
   class TagVInput {
-    inherit RXML.Tag;
-    constant name = "vinput";
-    mapping(string:RXML.Type) req_arg_types = ([ "name":RXML.t_text(RXML.PEnt) ]);
-
-    constant ARGS=(< "type", "min", "max", "scope", "min", "max", "trim"
-		     "regexp", "glob", "minlength", "maxlength", "case",
-		     "mode", "fail-if-failed", "ignore-if-false",
-		     "ignore-if-failed", "ignore-if-verified", "optional" >);
-
-    constant forbidden = ({"\\", ".", "[", "]", "^",
-			   "$", "(", ")", "*", "+", "|"});
-    constant allowed = ({"\\\\", "\\.", "\\[", "\\]", "\\^",
-			 "\\$", "\\(", "\\)", "\\*", "\\+", "\\|"});
-    class Frame {
-      inherit RXML.Frame;
-      string scope_name;
-      mapping vars;
-
-      object var;
-      string warn;
-
-      array do_enter(RequestID id) {
-	scope_name=args->scope||"vinput";
-
-#ifdef VFORM_COMPAT
-	if(args->is) {
-	  switch(args->is) {
-	  case "int":
-	    args->type="int";
-	    break;
-	  case "float":
-	    args->type="float";
-	    break;
-	  case "mail":
-	    args->type="email";
-	    break;
-	  case "date":
-	    args->type="date";
-	    break;
-	  case "upper-alpha":
-	    args->regexp="^[A-Z]*$";
-	    break;
-	  case "lower-aplha":
-	    args->regexp="^[a-z]*$";
-	    break;
-	  case "upper-alpha-num":
-	    args->regexp="^[A-Z0-9]*$";
-	    break;
-	  case "lower-alpha-num":
-	    args->regexp="^[a-z0-9]*$";
-	    break;
-	  }
-	  m_delete(args, "is");
-	}
-	if(args->filter) {
-	  args->regexp="^["+args->filter+"]*$";
-	  m_delete(args, "filter");
-	}
-#endif
-
-	switch(args->type) {
-	case "int":
-	  var=Variable.Int(args->value||"");
-	  var->set_range((int)args->min, (int)args->max);
-	  break;
-	case "float":
-	  var=Variable.Float(args->value||"");
-	  var->set_range((float)args->min, (float)args->max);
-	  break;
-	case "email":
-	  var=Variable.Email(args->value||"");
-	  break;
-	case "date":
-	  var=Variable.Date(args->value||"");
-	  break;
-	case "text":
-	  var=Variable.VerifiedText(args->value||"");
-	case "string":
-	default:
-	  var=Variable.VerifiedString(args->value||"");
-	  if(args->regexp) var->add_regexp(args->regexp);
-	  if(args->glob) var->add_glob(args->glob);
-	  if(args->minlength) var->add_minlength((int)args->minlength);
-	  if(args->maxlength) var->add_maxlength((int)args->maxlength);
-
-	  if(args->case=="upper")
-	    var->add_upper();
-	  else if(args->case=="lower")
-	    var->add_lower();
-
-	  // Shortcuts
-	  if(args->equal)
-	    var->add_regexp( "^" + replace(args->equal, forbidden, allowed) + "$" );
-	  if(args->is=="empty") var->add_glob("");
-	  break;
-	}
-
-	if(!id->variables["__clear"] && id->variables[args->name] &&
-	   !(args->optional && id->variables[args->name]=="") ) {
-	  mixed new_value=id->variables[args->name];
-	  if(args->trim) new_value=String.trim_whites(new_value);
-	  [warn, new_value]=var->verify_set(var->transform_from_form(new_value));
-	  var->set(new_value);
-	}
-	var->set_path(args->name);
-
-	mapping new_args=([]);
-	foreach(indices(args), string arg)
-	  if(!ARGS[arg]) new_args[arg]=args[arg];
-
-	vars=([ "input":var->render_form(id, new_args) ]);
-	if(warn) vars->warning=warn;
-	return 0;
-      }
-
-      array do_return(RequestID id) {
-	int ok=!warn;
-	int show_err=1;
-	if(args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]])
-	  ok=1;
-
-	if(!id->variables[args->name] ||
-	   (args["ignore-if-false"] && !id->misc->vform_ok) ||
-	   id->variables["__reload"] ||
-	   id->variables["__clear"] ||
-	   (args["ignore-if-failed"] && id->misc->vform_failed[args["ignore-if-failed"]]) ||
-	   (args["ignore-if-verified"] && id->misc->vform_verified[args["ignore-if-verified"]]) ) {
-	  ok=0;
-	  show_err=0;
-	}
-
-	if(ok) {
-	  id->misc->vform_verified[args->name]=1;
-	  verified_result(id);
-	  return 0;
-	}
-
-	id->misc->vform_failed[args->name]=1;
-	if(show_err)
-	  failed_result(id);
-	else
-	  // Clear args->warning here?
-	  verified_result(id);
-	id->misc->vform_ok = 0;
-	return 0;
-      }
-
-      void verified_result(RequestID id )
-      // Create a tag result without error response.
-      {
-	switch(args->mode||"after") {
-	case "complex":
-	  result = parse_html(content, ([]),
-			      ([ "verified":lambda(string t, mapping m, string c) { return c; },
-				 "failed":"" ]) );
-	  break;
-	case "before":
-	case "after":
-	default:
-	  result = RXML.get_var("input");
-	}
-      }
-
-      void failed_result(RequestID id)
-      // Creates a tag result with widget and error response.
-      {
-	switch(args->mode||"after") {
-	case "complex":
-	  result = parse_html(content, ([]),
-			      ([ "failed":lambda(string t, mapping m, string c) { return c; },
-				 "verified":"" ]) );
-	  break;
-	case "before":
-	  result = content + var->render_form(id, args);
-	case "after":
-	default:
-	  result = RXML.get_var("input") + content;
-	}
-      }
-    }
+    inherit VInput;
   }
 
   class TagVSelect {
@@ -423,25 +444,32 @@ true if the complete form so far is verified, otherwise only if the named field 
   and how the input should be verified.
 </attr>
 <attr name=minlength value=number>
-  Verify that the variable has at least this many characters. Only available when using the type string.
+  Verify that the variable has at least this many characters.
+  Only available when using the type string or text.
 </attr>
 <attr name=maxlength value=number>
-  Verify that the variable has at most this many characters. Only available when using the type string.
+  Verify that the variable has at most this many characters.
+  Only available when using the type string or text.
 </attr>
 <attr name=is value=empty>
   Verify that the variable is empty. Pretty useless...
+  Only available when using the type string or text.
 </attr>
 <attr name=glob value=pattern>
   Verify that the variable match a certain glob pattern.
+  Only available when using the type string or text.
 </attr>
 <attr name=regexp value=pattern>
   Verify that the variable match a certain regexp pattern.
+  Only available when using the type string or text.
 </attr>
 <attr name=case value=upper|lower>
   Verify that the variable is all uppercased (or all lowercased).
+  Only available when using the type string or text.
 </attr>
 <attr name=equal value=string>
   Verify that the variable is equal to a given string. Pretty useless...
+  Only available when using the type string or text.
 </attr>
 <attr name=mode value=before|after|complex>
   Select how to treat the contents of the vinput container. Before puts the contents before the
