@@ -1,9 +1,4 @@
-/*
- * $Id: roxenloader.pike,v 1.158 2000/03/17 01:55:54 js Exp $
- *
- * Roxen bootstrap program.
- *
- */
+// Roxen bootstrap program. Copyright © 1996 - 2000, Roxen IS.
 
 //#pragma strict_types
 
@@ -20,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.158 2000/03/17 01:55:54 js Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.159 2000/03/21 18:58:33 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -816,9 +811,9 @@ string roxen_version()
 string roxen_path( string filename )
 {
   filename = replace( filename, ({"$VVARDIR","$LOCALDIR"}),
-                      ({"$VARDIR/"+roxen_version(), 
+                      ({"$VARDIR/"+roxen_version(),
                         "../local"}) );
-  if( roxen && roxen->variables->logdirprefix ) 
+  if( roxen && roxen->variables->logdirprefix )
     filename = replace( filename, "$LOGDIR", [string]roxen->query("logdirprefix") );
   else
     if( search( filename, "$LOGDIR" ) != -1 )
