@@ -5,13 +5,16 @@ au	audio/basic
 m3u 	audio/x-mpegurl
 mid	audio/midi
 midi    audio/midi 
+mod	audio/x-mod
 mp2	audio/x-mpeg
 mp3 	audio/x-mpeg
 mp3url	audio/x-mpegurl
 mpa	audio/x-mpeg
+psid	audio/x-psid
 ra	audio/x-pn-realaudio
 ram	audio/x-pn-realaudio
 rpm 	audio/x-pn-realaudio-plugin
+sid	audio/x-psid
 snd	audio/basic
 vox     audio/voxware 
 wav	audio/x-wav
@@ -33,6 +36,7 @@ pnm	image/x-portable-anymap
 ppm	image/x-portable-pixmap
 ras	image/x-cmu-raster
 rgb	image/x-rgb
+rs	image/x-sun-raster
 tif	image/tiff
 tiff	image/tiff
 xbm	image/x-xbitmap
@@ -40,6 +44,7 @@ xpm	image/x-xpixmap
 xwd	image/x-xwindowdump
 
 avi	video/x-msvideo
+fli	video/x-fli
 mov	video/quicktime
 movie	video/x-sgi-movie
 mpe	video/mpeg
@@ -117,6 +122,7 @@ roff	application/x-troff
 rtf	application/rtf
 sh	application/x-sh
 shar	application/x-shar
+so	application/octet-stream
 spl     application/futuresplash 
 spr     application/x-sprite 
 sprite  application/x-sprite 
