@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.13 1997/02/27 07:59:03 neotron Exp $ */
+/* $Id: persistent.pike,v 1.14 1997/03/01 07:35:39 per Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -39,7 +39,7 @@ PRIVATE void really_save()
     if(!catch { this_object()[a]=b; } ) // It can be assigned. Its a variable!
       res += ({ ({ a, b }) });
   }
-  perror("save ("+ __id +")\n");
+//  perror("save ("+ __id +")\n");
   if(!file->open(DIR+__id,"wct"))
   {
     mkdirhier(DIR+__id);
@@ -76,7 +76,7 @@ nomask public void persist(mixed id)
   array var;
   catch {
     if(!file->open(DIR+__id, "r")) return 0;
-    perror("restore ("+ __id +")\n");
+//    perror("restore ("+ __id +")\n");
     var=decode_value(file->read(0x7ffffff));
   };
   if(var) foreach(var, var) catch {
