@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.30 1998/09/17 14:04:15 js Exp $
+# $Id: db.spec,v 1.31 1998/09/18 14:06:37 per Exp $
 
 drop table mail_misc;
 drop table user_misc;
@@ -30,92 +30,94 @@ create table mail_misc (
              id                bigint not null,
              variable          varchar(16) not null,
              qwerty            blob not null,
-	     PRIMARY KEY(id,variable)
+             PRIMARY KEY(id,variable)
   );
 
 create table user_misc (
              id                 bigint not null,
              variable           varchar(16) not null,
              qwerty             blob not null,
-	     PRIMARY KEY(id,variable)
- )
+             PRIMARY KEY(id,variable)
+ );
 
 
 create table message_body_id (
-	     last		bigint
+             last               bigint
   );
 
 create table messages (
-             id	                     bigint auto_increment primary key,
-             sender		     varchar(255),
-             subject                 varchar(255),
-	     body_id		     varchar(32),
-	     refcount		     int,
-	     headers		     blob,
-	     incoming_date	     timestamp
+             id                  bigint auto_increment primary key,
+             sender              varchar(255) not null,
+             subject             varchar(255) not null,
+             body_id             varchar(32) not null,
+             refcount            int not null,
+             headers             blob not null,
+             incoming_date       timestamp not null
      );
 
 create table mail (
-             id	                     bigint auto_increment primary key,
-	     mailbox_id		     int,
-             message_id		     bigint,
-	     INDEX mail_index (mailbox_id)
+             id                  bigint auto_increment primary key,
+             mailbox_id          int not null,
+             message_id          bigint not null,
+             INDEX mail_index (mailbox_id)
      );
 
      
 create table mailboxes (
-             id	                     int auto_increment primary key,	
-             user_id                 int,
-	     name		     varchar(64)
+             id                      int auto_increment primary key,    
+             user_id                 int not null,
+             name                    varchar(64) not null,
+	     INDEX user_index (user_id)
      );
 
 create table send_q (
-	     id			     int auto_increment primary key,
-	     sender		     varchar(255),
-	     user		     varchar(255),
-	     domain		     varchar(255),
-	     mailid		     varchar(32),
-	     received_at	     int,
-	     send_at		     int,
-	     times		     int
+             id                      int auto_increment primary key,
+             sender                  varchar(255) not null,
+             user                    varchar(255) not null,
+             domain                  varchar(255) not null,
+             mailid                  varchar(32) not null,
+             received_at             int not null,
+             send_at                 int not null,
+             times                   int not null
      );
  
 create table users (
-             id		             int auto_increment primary key,
-             realname		     varchar(255),
-             username		     varchar(64),
-	     password		     varchar(13),
-             customer_id	     int
+             id                      int auto_increment primary key,
+             realname                varchar(255) not null,
+             username                varchar(64) not null,
+             password                varchar(13) not null,
+             customer_id             int not null
      );
 
 create table flags ( 
-             mail_id                 int,
-	     name                    varchar(16)
+             mail_id                 int not null,
+             name                    varchar(16) not null,
+             INDEX flag_index (mail_id)
      );
 
 
 create table admin_status (
-             user_id                 int,
-	     rcpt_name		     varchar(64),
-             status                  varchar(1)
+             user_id                 int not null,
+             rcpt_name               varchar(64) not null,
+             status                  varchar(1) not null default '0'
      );
 
           
 create table admin_variables (
              user_id                 int not null,
-	     rcpt_name		     varchar(64) not null,
-	     name		     varchar(64) not null,
-	     value		     varchar(255),
-	     PRIMARY KEY(user_id,rcpt_name,name)
+             rcpt_name               varchar(64) not null,
+             name                    varchar(64) not null,
+             value                   varchar(255),
+             PRIMARY KEY(user_id,rcpt_name,name)
      );
-	     
+             
 # AutoAdmin         
 
 create table customers (
-             id	                     int auto_increment primary key,
+             id                      int auto_increment primary key,
              user_id                 varchar(64) not null,
-	     password		     varchar(64) not null,
-	     name		     varchar(255) not null,
+             password                varchar(64) not null,
+             name                    varchar(255) not null,
              registration_date       timestamp,
              template_scheme_id      int not null default 1
      );
@@ -123,20 +125,20 @@ create table customers (
 create table dns (
              id                      int auto_increment primary key,
              customer_id             int,
-	     domain		     varchar(255),
-	     rr_owner		     varchar(255),
-             rr_type		     varchar(8),
-             rr_value		     varchar(255)
+             domain                  varchar(255),
+             rr_owner                varchar(255),
+             rr_type                 varchar(8),
+             rr_value                varchar(255)
      );
 
 create table features (
              customer_id             int not null,
-	     feature		     varchar(64) not null,
-	     PRIMARY KEY(customer_id,feature)
+             feature                 varchar(64) not null,
+             PRIMARY KEY(customer_id,feature)
      );
   
 create table features_list (
-	     feature		     varchar(64)
+             feature                 varchar(64)
      );
   
 
@@ -147,8 +149,8 @@ create table template_wizards (
              id                      int auto_increment primary key,
              name                    varchar(64),
              title                   varchar(255),
-             help		     blob,
-	     category		     varchar(8)  # tmpl/nav
+             help                    blob,
+             category                varchar(8)  # tmpl/nav
      );
 
 # Tempate wizards pages
@@ -157,18 +159,18 @@ create table template_wizards_pages (
              name                    varchar(64),
              title                   varchar(255),
              wizard_id               int,
-             help		     blob,
+             help                    blob,
              example_html            blob
      );
 
 # Template variables
 create table template_vars (
-	     id                      int auto_increment primary key,
+             id                      int auto_increment primary key,
              name                    varchar(64) not null,
-             title		     varchar(255),
-	     page_id                 int not null,
-             help		     blob,
-	     type		     varchar(64), # font/color/image/select
+             title                   varchar(255),
+             page_id                 int not null,
+             help                    blob,
+             type                    varchar(64), # font/color/image/select
              option_group_id         int
      );
 
@@ -180,39 +182,39 @@ create table template_option_groups (
 
 # Template variables options
 create table template_options (
-             id		             int auto_increment primary key,
-	     option_group_id	     int not null,
-             name		     varchar(255),
-             value		     blob
+             id                      int auto_increment primary key,
+             option_group_id         int not null,
+             name                    varchar(255),
+             value                   blob
      );
 
 # Template schemes
 create table template_schemes (
              id                      int auto_increment primary key,
-	     name                    varchar(64),
-	     description             blob
+             name                    varchar(64),
+             description             blob
      );
 
 # Template schemes variables
 create table template_schemes_vars (
              id                      int auto_increment primary key,
              scheme_id               int,
-	     variable_id	     int,
-	     value		     blob
+             variable_id             int,
+             value                   blob
      );
 
 # Customers schemes
 create table customers_schemes (
              id                      int auto_increment primary key,
-	     customer_id             int,
-	     name                    varchar(64),
-	     description	     blob
+             customer_id             int,
+             name                    varchar(64),
+             description             blob
      );
 
 # Customers schemes variables
 create table customers_schemes_vars (
              id                      int auto_increment primary key,
              scheme_id               int,
-	     variable_id	     int,
-	     value		     blob
+             variable_id             int,
+             value                   blob
      );
