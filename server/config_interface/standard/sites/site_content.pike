@@ -94,12 +94,27 @@ do                                                                      \
   return res;
 }
 
+string devel_buttons( object c, string mn, object id )
+{
+  if( sizeof( glob( "*.x", indices( id->variables ) ) ) )
+    c->reload_module( replace(mn,"!","#" ) );
+  return "<input type=hidden name=section value='"+id->variables->section+"'>"
+         "<submit-gbutton preparse><cf-locale get=reload>"
+         "</submit-gbutton>";
+}
+
 string find_module_doc( string cn, string mn, object id )
 {
   object c = roxen.find_configuration( cn );
 
   if(!c)
     return "";
+
+  string dbuttons;
+  if( id->misc->config_settings->query( "devel_mode" ) )
+    dbuttons = devel_buttons( c, mn, id );
+  else
+    dbuttons="";
 
   object m = c->find_module( replace(mn,"!","#") );
 
@@ -110,10 +125,10 @@ string find_module_doc( string cn, string mn, object id )
 
   return replace( "<p><b><font size=+2>"
                   + translate(m->register_module()[1]) + "</font></b><br>"
+                  + dbuttons+"<br clear=all>"
                   + translate(m->info()) + "<p>"
                   + translate(m->status()||"") +"<p>"+
                   ( id->misc->config_settings->query( "devel_mode" ) ?
-                    
                     "<hr noshade size=1><h2>Developer information</h2>"+
                     "<b>Identifier:</b> " + mi->sname+" <br>"
                     "<table><tr><td valign=top><b>Type:</b></td><td valign=top>"+describe_type( m,mi->type )+"</td></table><br>"+

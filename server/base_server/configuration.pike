@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.223 1999/11/19 02:04:16 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.224 1999/11/19 18:07:03 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2175,6 +2175,25 @@ int save_one( object o )
   return 1;
 }
 
+object reload_module( string modname )
+{
+  werror( "reloading " + modname + "\n");
+  foreach( Program.inherit_list(object_program(find_module( modname ))), 
+           program p )
+  {
+    while( string ind = search( master()->programs, p ) )
+    {
+      roxen->old_programs[ p ] = ind;
+      m_delete( master()->programs, ind );
+    }
+  }
+  string ind = search( master()->programs, 
+                       object_program(find_module(modname)));
+  m_delete( master()->programs, ind );
+  rm( ind+".o" );
+  return enable_module( modname );
+}
+
 object enable_module( string modname )
 {
   int id;
@@ -2186,7 +2205,6 @@ object enable_module( string modname )
   int module_type;
 
   if( sscanf(modname, "%s#%d", modname, id ) != 2 )
-    /* here we go again... */
     while( modules[modname] && modules[modname]->copies[id] )
       id++;
 

@@ -1,10 +1,10 @@
 inherit "roxenlib";
 #include <stat.h>
 
-
 string get_id(string from)
 {
-  catch {
+  catch 
+  {
     object f = open(from,"r");
     string id;
     id = f->read(800);
@@ -33,8 +33,8 @@ object find_module( string foo )
 }
 string program_name_version( program what )
 {
-  string file = search(master()->programs,  what );
-  string name = (file-(getcwd()+"/"));
+  string file = roxen.filename( what );
+  string name = file;
   string color = "black";
 
 
@@ -65,12 +65,3 @@ string rec_print_tree( array q )
       res += "<dl> "+rec_print_tree( q[i] )+"</dl>";
   return res;
 }
-
-// string parse( object id )
-// {
-//   object module = find_module( id->misc->path_info );
-//   if( !module ) module = roxen;
-//   return "<dl>"+
-//          rec_print_tree( Program.inherit_tree( object_program(module) ) )+
-//          "</dl>";
-// }

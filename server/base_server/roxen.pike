@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.352 1999/11/19 10:08:55 per Exp $
+ * $Id: roxen.pike,v 1.353 1999/11/19 18:07:05 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.352 1999/11/19 10:08:55 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.353 1999/11/19 18:07:05 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -90,10 +90,20 @@ class RequestID
   RequestID clone_me();
 };
 
+mapping old_programs = set_weak_flag( ([]),1 );
 
-string filename( object o )
+string filename( program|object o )
 {
-  return search( master()->programs, object_program( o ) )-(getcwd()+"/");
+  if( objectp( o ) )
+    o = object_program( o );
+
+  string fname = search( master()->programs, o );
+  if( !fname )
+    if( old_programs[ o ] )
+      fname="OLD: "+old_programs[ o ];
+  if( !fname )
+    fname = "Unknown Program";
+  return fname-(getcwd()+"/");
 }
 
 #ifdef THREADS
@@ -1295,15 +1305,6 @@ int add_new_configuration(string name, string type)
 }
 
 mapping(string:array(int)) error_log=([]);
-
-string possibly_encode( string what )
-{
-  if( String.width( what ) > 8 )
-    return Locale.Charset.encoder( "utf-8" )
-           ->feed( what )
-           ->drain();
-  return what;
-}
 
 // Write a string to the configuration interface error log and to stderr.
 void nwrite(string s, int|void perr, int|void type, 
