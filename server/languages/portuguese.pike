@@ -1,6 +1,7 @@
 /* Bugs by: Per */
-string cvs_version = "$Id: portuguese.pike,v 1.2 1996/12/01 19:18:45 per Exp $";
 /* Trans by: cjsawaia@8415.com.br */
+
+string cvs_version = "$Id: portuguese.pike,v 1.3 1996/12/05 13:25:11 grubba Exp $";
  
 inline string month(int num)
 {
