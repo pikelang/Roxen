@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.184 2004/06/30 16:58:45 mast Exp $
+// $Id: Roxen.pmod,v 1.185 2004/07/02 13:17:50 wellhard Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1707,8 +1707,21 @@ string strftime(string fmt, int t,
   string res = a[0];
   mapping(string:string) m = (["type":"string"]);
 
+  string my_sprintf(int prefix, string f, int arg)
+  //! Filter prefix option in format string if prefix = 0.
+  {
+    if(!prefix && sscanf(f, "%%%*d%s", string format) == 2)
+      f = "%" + format;
+    return sprintf(f, arg);
+  };
+  
   foreach(a[1..], string key) {
     if(key=="") continue;
+    int(0..1) prefix = 1;
+    if(key[0] == '!' && sizeof(key) > 1) {
+      prefix = 0;
+      key = key[1..];
+    }
     switch(key[0]) {
     case 'a':	// Abbreviated weekday name
       if (language)
@@ -1743,41 +1756,41 @@ string strftime(string fmt, int t,
 			      lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
       break;
     case 'C':	// Century number; 0-prefix
-      res += sprintf("%02d", 19 + lt->year/100);
+      res += my_sprintf(prefix, "%02d", 19 + lt->year/100);
       break;
     case 'd':	// Day of month [1,31]; 0-prefix
-      res += sprintf("%02d", lt->mday);
+      res += my_sprintf(prefix, "%02d", lt->mday);
       break;
     case 'D':	// Date as %m/%d/%y
       res += strftime("%m/%d/%y", t);
       break;
     case 'e':	// Day of month [1,31]; space-prefix
-      res += sprintf("%2d", lt->mday);
+      res += my_sprintf(prefix, "%2d", lt->mday);
       break;
     case 'E':
     case 'O':
       key = key[1..]; // No support for E or O extension.
       break;
     case 'H':	// Hour (24-hour clock) [0,23]; 0-prefix
-      res += sprintf("%02d", lt->hour);
+      res += my_sprintf(prefix, "%02d", lt->hour);
       break;
     case 'I':	// Hour (12-hour clock) [1,12]; 0-prefix
-      res += sprintf("%02d", 1 + (lt->hour + 11)%12);
+      res += my_sprintf(prefix, "%02d", 1 + (lt->hour + 11)%12);
       break;
     case 'j':	// Day number of year [1,366]; 0-prefix
-      res += sprintf("%03d", lt->yday);
+      res += my_sprintf(prefix, "%03d", lt->yday);
       break;
     case 'k':	// Hour (24-hour clock) [0,23]; space-prefix
-      res += sprintf("%2d", lt->hour);
+      res += my_sprintf(prefix, "%2d", lt->hour);
       break;
     case 'l':	// Hour (12-hour clock) [1,12]; space-prefix
-      res += sprintf("%2d", 1 + (lt->hour + 11)%12);
+      res += my_sprintf(prefix, "%2d", 1 + (lt->hour + 11)%12);
       break;
     case 'm':	// Month number [1,12]; 0-prefix
-      res += sprintf("%02d", lt->mon + 1);
+      res += my_sprintf(prefix, "%02d", lt->mon + 1);
       break;
     case 'M':	// Minute [00,59]; 0-prefix
-      res += sprintf("%02d", lt->min);
+      res += my_sprintf(prefix, "%02d", lt->min);
       break;
     case 'n':	// Newline
       res += "\n";
@@ -1792,7 +1805,7 @@ string strftime(string fmt, int t,
       res += sprintf("%02d:%02d", lt->hour, lt->min);
       break;
     case 'S':	// Seconds [00,61]; 0-prefix
-      res += sprintf("%02d", lt->sec);
+      res += my_sprintf(prefix, "%02d", lt->sec);
       break;
     case 't':	// Tab
       res += "\t";
@@ -1802,31 +1815,31 @@ string strftime(string fmt, int t,
       res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
       break;
     case 'u':	// Weekday as a decimal number [1,7], Sunday == 1
-      res += sprintf("%d", lt->wday + 1);
+      res += my_sprintf(prefix, "%d", lt->wday + 1);
       break;
     case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
-      res += sprintf("%d", lt->wday);
+      res += my_sprintf(prefix, "%d", lt->wday);
       break;
     case 'x':	// Date
       res += strftime("%a %b %d %Y", t);
       break;
     case 'y':	// Year [00,99]; 0-prefix
-      res += sprintf("%02d", lt->year % 100);
+      res += my_sprintf(prefix, "%02d", lt->year % 100);
       break;
     case 'Y':	// Year [0000.9999]; 0-prefix
-      res += sprintf("%04d", 1900 + lt->year);
+      res += my_sprintf(prefix, "%04d", 1900 + lt->year);
       break;
 
     case 'U':	// Week number of year as a decimal number [00,53],
 		// with Sunday as the first day of week 1; 0-prefix
-      res += sprintf("%02d", ((lt->yday-1+lt->wday)/7));
+      res += my_sprintf(prefix, "%02d", ((lt->yday-1+lt->wday)/7));
       break;
     case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
-      res += sprintf("%02d", Calendar.ISO.Second(t)->week_no());
+      res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
       break;
     case 'W':	// Week number of year as a decimal number [00,53],
 		// with Monday as the first day of week 1; 0-prefix
-      res += sprintf("%02d", ((lt->yday+(5+lt->wday)%7)/7));
+      res += my_sprintf(prefix, "%02d", ((lt->yday+(5+lt->wday)%7)/7));
       break;
     case 'Z':	// FIXME: Time zone name or abbreviation, or no bytes if
 		// no time zone information exists
