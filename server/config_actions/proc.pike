@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.3 1997/09/03 07:51:35 grubba Exp $
+ * $Id: proc.pike,v 1.4 1997/09/06 16:26:34 grubba Exp $
  */
 
 inherit "wizard";
@@ -98,7 +98,7 @@ mixed page_0(object id, object mc)
 	  "</pre><font size=+1>Misc status for "+(id->variables->pid||getpid())
 	  +"</font><pre>Memory Usage: "+map+"\n\nCredentials: "+
 	  ((proc("cred",id->variables->pid)/":")[1..]*":")+
-	  "\nPwd: "+
+	  "\nCwd: "+
 	  ((proc("wdx",id->variables->pid)/":")[1..]*":")+
 //	  "Stack: "+(proc("stack",id->variables->pid)/":")[1..]*":"+
 	  "</pre>");
