@@ -23,7 +23,7 @@
 // -----------------------------------------------------------------------
 //
 
-constant cvs_version = "$Id: counter.pike,v 1.31 2000/03/16 17:29:53 nilsson Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.32 2000/04/02 20:49:14 nilsson Exp $";
 
 constant copyright = ("<br>Copyright 1997-1999 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</a> and "
@@ -65,39 +65,48 @@ void create()
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant tagdoc=(["counter":"","counter_url":""]);
-/*
-    "         border=...                 | like &lt;IMG BORDER=...\n"
-    "         bordercolor=...            | Changes the color of the border, if\n"
-    "                                    | the border is enabled.\n"
-    "         align=[left|center|right]  | like &lt;IMG ALIGN=...\n"
-    "         width=...                  | like &lt;IMG WIDTH=...\n"
-    "         height=...                 | like &lt;IMG HEIGHT=...\n"
-    "         cheat=xxx                  | Add xxx to the actual number of accesses.\n"
-    "         factor=...                 | Modify the number of accesses by factor/100, \n"
-    "                                    | that is, factor=200 means 5 accesses will\n"
-    "                                    | be seen as 10.\n"
-    "         file=xx                    | Show the number of times the file xxx has \n"
-    "                                    | been accessed instead of current page.\n"
-    "         prec=...                   | Number of precision digits. If prec=2\n"
-    "         precision=...              | show 1500 instead of 1543 \n"
-    "         add                        | Add one to the number of accesses \n"
-    "                                    | of the file that is accessed, or, \n"
-    "                                    | in the case of no file, the current\n"
-    "                                    | document. \n"
-    "         reset                      | Reset the counter.\n"
-    "         per=[second|minute|        | Access average per unit of time.\n"
-    "         hour|day|week|month]       | \n"
-    "         size=[1..10]               | 2.5=half, 5=normal, 10=double\n"
-    "         len=[1..10]                | Number of Digits (1=no leading zeroes)\n"
-    "         rotate=[-360..360]         | Rotation Angle \n"
-    "         fg=#rrggbb                 | Foreground Filter\n"
-    "         bg=#rrggbb                 | Bakground Color\n"
-    "         trans                      | make Background transparent\n"
-    "         user=\"user\"                | Search 'stylename' in user directory\n"
-    "         style=\"stylename\"          | Cool PPM font name (default style=a)\n"
-    "         nfont=\"fontname\" &gt;          | Standard NFONT name\n</pre>",
-*/
+constant cmargs=#"
+<attr name=border value=number>Like border in <tag>img</tag>.</attr>
+<attr name=bordercolor value=color>
+ Changes the color of the border, if the border is enabled.
+</attr>
+<attr name=align value=left|center|right>Like align in <tag>img</tag>.</attr>
+<attr name=width value=number>Like width in <tag>img</tag>.</attr>
+<attr name=height value=number>Like height in <tag>img</tag>.</attr>
+<attr name=cheat value=number>
+  Add this number to the actual number of accesses.
+</attr>
+<attr name=factor value=number>
+  Modify the number of accesses by factor/100, that is, factor=200
+  means 5 accesses will be seen as 10.
+</attr>
+<attr name=file value=string>
+  Show the number of times the selected file has been accessed instead of
+  the current page.
+</attr>
+<attr name=prec value=number>
+  Number of precision digits. If prec=2 1500 will be shown istead of 1543.
+</attr>
+<attr name=add>
+  Add one to the number of accesses of the file that is accesses, or,
+  in the case of no file, the current document.
+</attr>
+<attr name=reset>Reset the counter.</attr>
+<attr name=per value=second|minute|hour|day|week|month>
+  Access average per unit of time.
+</attr>
+<attr name=size value=number>2.5=half, 5=normal, 10=double</attr>
+<attr name=len value=number>Number of digits (1=no leading zeroes)</attr>
+<attr name=rotate value=number>Rotation angle</attr>
+<attr name=fgcolor value=color>Foreground color</attr>
+<attr name=bgcolor value=color>Background color</attr>
+<attr name=trans>Make background transparent</attr>
+<attr name=user value=string>Search 'stylename' in user directory.</attr>
+<attr name=style value=string>Cool PPM font name (default style=a)</attr>
+<attr name=nfont value=string>Standard NFONT name</attr>
+";
+
+constant tagdoc=(["counter":""+cmargs, "counter_url":""+cmargs]);
 #endif
 
 //
