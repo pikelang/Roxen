@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.196 2001/07/11 06:00:37 mast Exp $
+// $Id: module.pmod,v 1.197 2001/07/11 06:22:07 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6263,15 +6263,13 @@ static class PCodec
     if (arrayp (what) && sizeof (what)) {
       ENCODE_MSG ("objectof (({%{%O, %}}))\n", what);
       switch (what[0]) {
-//  	case "frame": {
-//  	  [string ignored, Tag tag,
-//  	   mapping(string:mixed)|EVAL_ARGS_FUNC args, mixed saved] = what;
-//  	  Frame frame = tag->Frame();
-//  	  frame->tag = tag;
-//  	  frame->args = args;
-//  	  frame->_restore (saved);
-//  	  return frame;
-//  	}
+	case "frame": {
+	  [string ignored, Tag tag, mixed saved] = what;
+	  Frame frame = tag->Frame();
+	  frame->tag = tag;
+	  frame->_restore (saved);
+	  return frame;
+	}
 	case "tag": {
 	  [string ignored, TagSet tag_set, int proc_instr, string name] = what;
 	  if (Tag tag = tag_set->get_local_tag(name, proc_instr))
@@ -6360,8 +6358,8 @@ static class PCodec
     if(objectp(what)) {
       ENCODE_MSG ("nameof (object %O)\n", what);
       if(what->is_RXML_Frame) {
-//  	if (Tag tag = what->tag)
-//  	  return ({"frame", tag, what->args, what->_save()});
+	if (Tag tag = what->RXML_dump_frame_reference && what->tag)
+	  return ({"frame", tag, what->_save()});
 	ENCODE_MSG ("encoding frame %O recursively\n", what);
 	return ([])[0];
       }
