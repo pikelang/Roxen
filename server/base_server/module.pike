@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.207 2004/05/13 15:59:22 mast Exp $
+// $Id: module.pike,v 1.208 2004/05/13 16:09:36 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1191,7 +1191,8 @@ mapping(string:mixed) recurse_delete_files(string path,
 {
   SIMPLE_TRACE_ENTER (this, "Deleting %O recursively", path);
   if (!stat)
-    id->get_multi_status()->prefix (id->url_base() + query_location()[1..]);
+    stat = id->get_multi_status()->prefix (id->url_base() +
+					   query_location()[1..]);
 
   Stat st = stat_file(path, id);
   if (!st) {
