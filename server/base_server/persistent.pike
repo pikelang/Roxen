@@ -1,4 +1,4 @@
-/* $Id: persistent.pike,v 1.31 1997/09/15 21:47:03 peter Exp $ */
+/* $Id: persistent.pike,v 1.32 1999/06/25 21:01:18 peter Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -11,6 +11,7 @@ private static array __id;
 
 void really_save()
 {
+  //Note: We'll get a backtrace here if the object is destructed before save.
   if(nosave()) return;
 
   array res = ({ });
@@ -23,7 +24,7 @@ void really_save()
     else __id = i;
   }
 
-//  perror("really save (%s)\n", __id*":");
+  //  perror("really save (%s)\n", __id*":");
   
   string a;
   foreach(persistent_variables(object_program(this_object()),this_object()),a)
