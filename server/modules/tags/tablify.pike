@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.20 1998/10/26 04:15:33 neotron Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.21 1999/05/17 19:58:33 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -65,15 +65,17 @@ string html_nicer_table(array(string) subtitles, array(array(string)) table,
 	"cellspacing=0 cellpadding=1>\n"
 	"<tr><td>\n");
   r += "<table border=0 cellspacing=0 cellpadding=2>\n";
-  r += "<tr bgcolor="+(opt->titlebgcolor||"#27215b")+">\n";
-  int cols;
-  foreach(subtitles, mixed s)
-    r+=
-      "<td align=left><gtext nfont="+(opt->font||"lucida")+" scale="+
-      (opt->scale||"0.36")+" fg="+(opt->titlecolor||"white")+" bg="+
-      (opt->titlebgcolor||"#27215b")+">"+s+"</gtext></td>";
-  r += "</tr>";
+  if (subtitles) {
+    r += "<tr bgcolor="+(opt->titlebgcolor||"#27215b")+">\n";
+    foreach(subtitles, mixed s)
+      r+=
+	"<td align=left><gtext nfont="+(opt->font||"lucida")+" scale="+
+	(opt->scale||"0.36")+" fg="+(opt->titlecolor||"white")+" bg="+
+	(opt->titlebgcolor||"#27215b")+">"+s+"</gtext></td>";
+    r += "</tr>";
+  }
   
+  int cols; // FIXME: Used in colspan below. Is never set!
   for(int i = 0; i < sizeof(table); i++) {
     string tr;
     r += tr = "<tr bgcolor="+((i/m)%2?opt->fgcolor1||"#ddeeff":
@@ -167,7 +169,7 @@ string tag_tablify( string tag, mapping m, string q, object request_id,
     td="<td>";
 
   array title;
-  if(m->nice||m->nicer) {
+  if((m->nice||m->nicer) && (!m->notitle)) {
     title = rows[0]/sep;
     rows = rows[1..];
   }
