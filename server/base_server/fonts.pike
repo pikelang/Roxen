@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.37 2000/01/25 04:03:02 per Exp $ */
+/* $Id: fonts.pike,v 1.38 2000/02/02 00:18:54 per Exp $ */
 
 #include <module.h>
 
@@ -6,7 +6,7 @@ constant Font = Image.font;
 
 string fix_name(string in)
 {
-  return replace(lower_case(in), ({"-"," "}), ({ "_", "_" }));
+  return replace(lower_case(in), ({"-"," "}), ({ "_", " " }));
 }
 
 
@@ -16,16 +16,11 @@ mapping ttf_font_names_cache = ([]);
 
 string trimttfname( string n )
 {
-  n = reverse(n);
-  sscanf("tb %s", n);
-  sscanf(n, "tl %s", n);
-  sscanf(n, "dm %s", n);
-  sscanf(n, "kb %s", n);
-  sscanf(n, "db %s", n);
-  sscanf(n, "xe %s", n);
-  sscanf(n, "nc %s", n);
-  sscanf(n, "klb %s", n);
-  return reverse(n);
+  n = lower_case(replace( n, "\t", " " ));
+  array q = (n/" ")-({""});
+  if( q[0] == "bitstream" )
+    return q[1];
+  return q[0];
 }
 
 string translate_ttf_style( string style )
