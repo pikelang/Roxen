@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.199 1999/06/10 23:39:59 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.200 1999/06/25 17:58:35 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1982,7 +1982,7 @@ public array open_file(string fname, string mode, object id)
       return ({ 0, file });
     }
 
-    if(file->data) 
+    if( file->data ) 
     {
       file->file = StringFile(file->data);
       m_delete(file, "data");
@@ -2947,9 +2947,6 @@ string check_variable(string name, string value)
 {
   switch(name)
   {
-   case "Ports":
-     ports_changed=1; 
-     return 0;
    case "MyWorldLocation":
     if(strlen(value)<7 || value[-1] != '/' ||
        !(sscanf(value,"%*s://%*s/")==2))
@@ -2957,14 +2954,6 @@ string check_variable(string name, string value)
     return 0;
   }
 }
-
-
-// This is used to update the server-global and module variables
-// between Roxen releases. It enables the poor roxen administrator to
-// reuse the configuration file from a previous release. without any
-// fuss. Configuration files from Roxen 1.0ß11 pre 11 and earlier
-// are not differentiated, but since that release is quite old already
-// when I write this, that is not really a problem....
 
 
 #define perr(X) do { report += X; perror(X); } while(0)
@@ -3047,9 +3036,6 @@ int disable_module( string modname )
     types_module = 0;
     types_fun = 0;
   }
-
-//   if(module->type & MODULE_MAIN_PARSER)
-//     parse_module = 0;
 
   if(module->type & MODULE_PARSER)
     remove_parse_module( me );
@@ -3744,7 +3730,3 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 
   setvars(retrieve("spider#0", this));
 }
-
-
-
-
