@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.15 2002/04/12 08:54:25 tomas Exp $
+// $Id: roxen.cpp,v 1.16 2002/10/07 08:43:18 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -312,7 +312,8 @@ void CRoxen::SetEnvFromIni()
       len = GetPrivateProfileString("Environment", p, "", envValue, sizeof(envValue), inifile);
       if (len > 2 && len < sizeof(envValue))
       {
-        printf("setting %s=%s\n", p, envValue);
+        if (_Module.GetCmdLine().GetVerbose() > 1)
+          printf("setting %s=%s\n", p, envValue);
 
         SetEnvironmentVariable(p, envValue);
       }
