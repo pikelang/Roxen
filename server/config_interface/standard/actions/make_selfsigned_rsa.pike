@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_rsa.pike,v 1.3 2000/04/06 05:20:24 per Exp $
+ * $Id: make_selfsigned_rsa.pike,v 1.4 2000/08/19 09:49:39 per Exp $
  */
 
 #if constant(_Crypto) &&  constant(Crypto.rsa)
@@ -317,22 +317,6 @@ mixed page_3(object id, object mc)
   return res;
 }
 
-#if 0
-mixed page_4(object id, object mc)
-{
-  string msg = "";
-
-  if (id->variables->_error)
-  {
-    msg = "<font color=red>" + id->variables->_error
-      + "</font><p>";
-    id->variables->_error = 0;
-  }
-
-  return msg
-    + ("Do you want to store the certificate in a file? ");
-}
-#endif
 
 mixed verify_3(object id, object mc)
 {
@@ -363,6 +347,20 @@ mixed verify_3(object id, object mc)
   return 0;
 }
 
-mixed parse(object id) { return wizard_for(id,0); }
+mixed wizard_done(object id, object mc)
+{
+  return http_string_answer( sprintf( "Wrote %d bytes to %s.<br />\n"
+                                      "<a href='index.html?class=SSL'><gbutton>  "
+                                      "Ok  </gbutton></a>", 
+                                      strlen(id->variables->certificate),
+                                      combine_path(getcwd(),
+                                                   id->variables->cert_file)) );
+}
+
+
+mixed parse(object id) 
+{ 
+  return wizard_for(id,0) || "Hm. No reply"; 
+}
 
 #endif /* constant(_Crypto) && constant(Crypto.rsa) */

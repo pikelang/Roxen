@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.3 2000/04/06 05:20:24 per Exp $
+ * $Id: generate_rsa.pike,v 1.4 2000/08/19 09:49:38 per Exp $
  */
 
 inherit "wizard";
@@ -123,9 +123,14 @@ mixed verify_0(object id, object mc)
 
 mixed wizard_done(object id, object mc)
 {
-  return 0;
+  return http_string_answer( sprintf( "Wrote %dbit key in %s.<br />\n"
+                                      "<a href='index.html?class=SSL'><gbutton>  "
+                                      "Ok  </gbutton></a>", 
+                                      (int)id->variables->key_size,
+                                      combine_path(getcwd(),
+                                                   id->variables->key_file)) );
 }
 
-mixed handle(object id) { return wizard_for(id,0); }
+mixed parse(object id) { return wizard_for(id,0); }
 
 #endif /* constant(_Crypto) && constant(Crypto.rsa) */
