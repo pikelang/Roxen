@@ -1,5 +1,3 @@
-import Simulate;
-
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 //
 // The main RXML parser. If this module is not added to a configuration,
@@ -14,7 +12,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.91 1998/03/26 08:10:50 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.92 1998/04/13 15:10:36 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -22,10 +20,6 @@ constant thread_safe=1;
 
 inherit "module";
 inherit "roxenlib";
-
-import String;
-import Array;
-import Stdio;
 
 constant language = roxen->language;
 
@@ -518,7 +512,7 @@ void sort_lists()
     ind = indices(real_tag_callers[c]);
     val = values(real_tag_callers[c]);
     sort(ind);
-    s = map(val, lambda(function f) {
+    s = Array.map(val, lambda(function f) {
       return function_object(f)->query("_priority");
     });
     sort(s,val);
@@ -529,7 +523,7 @@ void sort_lists()
     ind = indices(real_container_callers[c]);
     val = values(real_container_callers[c]);
     sort(ind);
-    s = map(val, lambda(function f) {
+    s = Array.map(val, lambda(function f) {
       if (functionp(f)) return function_object(f)->query("_priority");
       return 4;
     });
@@ -913,19 +907,19 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   if (n=m->variables) 
   {
     if(n!="variables")
-      return map(indices(got->variables), lambda(string s, mapping m) {
+      return Array.map(indices(got->variables), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
       }, got->variables)*"\n";
-    return implode_nicely(indices(got->variables));
+    return String.implode_nicely(indices(got->variables));
   }
 
   if (n=m->cookies) 
   {
     if(n!="cookies")
-      return map(indices(got->cookies), lambda(string s, mapping m) {
+      return Array.map(indices(got->cookies), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
       }, got->cookies)*"\n";
-    return implode_nicely(indices(got->cookies));
+    return String.implode_nicely(indices(got->cookies));
   }
 
   if (n=m->cookie) 
@@ -1057,8 +1051,8 @@ string tag_compat_include(string tag,mapping m,object got,object file,
     } else if ((sizeof(fname1) > 2) && (fname1[sizeof(fname1)-2..] == "--")) {
       fname2 = fname1[..sizeof(fname1)-3];
     }
-    return((fname1 && read_bytes(fname1)) ||
-	   (fname2 && read_bytes(fname2)) ||
+    return((fname1 && Stdio.read_bytes(fname1)) ||
+	   (fname2 && Stdio.read_bytes(fname2)) ||
 	   ("<!-- No such file: " +
 	    (fname1 || fname2 || m->file) +
 	    "! -->"));
@@ -1375,7 +1369,7 @@ int match_user(array u, string user, string f, int wwwfile, object got)
   if(!u)
     return 0; // No auth sent
   if(!wwwfile)
-    s=read_bytes(f);
+    s=Stdio.read_bytes(f);
   else
     s=roxen->try_get_file(f, got);
   if(!s)
@@ -1572,14 +1566,14 @@ string tag_allow(string a, mapping (string:string) m,
   
   if(m->user)
     if(m->user == "any")
-      if(m->file) {
+      if(m->file && got->auth) {
 	// FIXME: wwwfile attribute doesn't work.
 	TEST(match_user(got->auth,got->auth[1],fix_relative(m->file,got),
 			!!m->wwwfile, got));
       } else
 	TEST(got->auth && got->auth[0]);
     else
-      if(m->file) {
+      if(m->file && got->auth) {
 	// FIXME: wwwfile attribute doesn't work.
 	TEST(match_user(got->auth,m->user,fix_relative(m->file,got),
 			!!m->wwwfile, got));
@@ -1863,7 +1857,7 @@ string tag_client(string tag,mapping m, string s,object got,object file)
 
   if (!(isok && m->or) && m->name)
     isok=_match(got->client*" ",
-		map(m->name/",", lambda(string s){return s+"*";}));
+		Array.map(m->name/",", lambda(string s){return s+"*";}));
   return (isok^invert)?s:""; 
 }
 
