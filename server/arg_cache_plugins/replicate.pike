@@ -1,6 +1,8 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001, Roxen IS.
 
+constant cvs_version="$Id: replicate.pike,v 1.14 2003/06/18 10:48:46 wellhard Exp $";
+
 #if constant(WS_REPLICATE)
 #define QUERY(X,Y...)    get_db()->query(X,Y)
 #define sQUERY( X,Y...) get_sdb()->query(X,Y)
@@ -19,7 +21,10 @@ object cache;
 
 Sql.Sql get_sdb()
 {
-  return DBManager.cached_get( "replicate" );
+  object db = DBManager.cached_get( "replicate" );
+  // Make sure the db is online.
+  db->query("SELECT 1;");
+  return db;
 }
 
 Sql.Sql get_db()
@@ -42,15 +47,21 @@ static class Server( string secret )
   }
 }
 
+void low_initiate_servers()
+{
+  catch {
+    mapping(string:Server) tmp_servers = ([]);
+    foreach( sQUERY( "SELECT secret FROM servers" )->secret, string s )
+      tmp_servers[s] = Server( s );
+    servers = tmp_servers;
+  };
+}
 
 void initiate_servers()
 {
+  low_initiate_servers();
   // Locate new servers every minute.
-  call_out( initiate_servers, 60 );
-  
-  servers = ([]);
-  foreach( sQUERY( "SELECT secret FROM servers" )->secret, string s )
-    servers[s] = Server( s );
+  roxen.background_run( 60, initiate_servers );
 }
 
 mapping(string:Server) servers;
@@ -188,7 +199,7 @@ int create_key( int id, string data, string|void server )
     catch {
       sQUERY( "INSERT INTO servers (secret) VALUES (%s)", server );
     };
-    initiate_servers();
+    low_initiate_servers();
   }
   string secret = server||cache->secret;
   
@@ -269,6 +280,7 @@ array(int) get_local_ids(int|void from_time)
     cache->db->query( "SELECT id from "+cache->name+
 		      " WHERE atime >= %d", from_time )->id;
 
+  ENSURE_NOT_OFF( have );
   array shave = (array(int))
     sQUERY( "SELECT id FROM "+cache->name+
 	    " WHERE server!=%s", cache->secret )->id;
@@ -289,7 +301,7 @@ void create_remote_key(int id, string key,
   // If an index id is specified create a record in the remote
   // database and create local records for index key and value
   // key. Also create a record in the arguments_replicated table.
-  if(index_id >= 0) {
+  if(index_id >= 0 && index_key) {
     create_key(index_id, index_key, server);
     add_replicated_key(cache->create_key(index_key, 0),
 		       cache->create_key(key, 0, index_id),
