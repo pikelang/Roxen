@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded dokuments.
 
-string cvs_version = "$Id: directories.pike,v 1.39 2000/01/02 01:36:51 nilsson Exp $";
+string cvs_version = "$Id: directories.pike,v 1.40 2000/01/03 00:56:12 nilsson Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -25,14 +25,14 @@ constant thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 
-array README, INDEXFILES, NOBROWSE;
-string OUT_FORM;
+array readme, indexfiles, nobrowse;
+string out_form;
 void start()
 {
-  README=query("Readme")-({""});
-  INDEXFILES=query("indexfiles")-({""});
-  NOBROWSE=query("nobrowse")-({""});
-  OUT_FORM="<img border=\"0\" src=\"%s\" alt=\"\"> "
+  readme=query("Readme")-({""});
+  indexfiles=query("indexfiles")-({""});
+  nobrowse=query("nobrowse")-({""});
+  out_form="<img border=\"0\" src=\"%s\" alt=\"\"> "
     "<a href=\"%s\">%-40s</a>"+
     (query("size")?"   %11s":"%.0s")+
     (query("date")!="Don't show dates"?"   %s":"%.0s")+
@@ -112,13 +112,13 @@ string tag_directory_insert(string t, mapping m, RequestID id)
 
 string find_readme(string d, RequestID id)
 {
-  foreach(README, string f) {
-    string readme = id->conf->try_get_file(d+f, id);
+  foreach(readme, string f) {
+    string txt = id->conf->try_get_file(d+f, id);
 
-    if (readme) {
+    if (txt) {
       if (id->conf->type_from_filename(f)!="text/html")
-	readme = "<pre>" + html_encode_string(readme) +"</pre>";
-      return "<hr noshade>"+readme;
+	txt = "<pre>" + html_encode_string(txt) +"</pre>";
+      return "<hr noshade>"+txt;
     }
   }
   return "";
@@ -133,17 +133,17 @@ string spartan_directory(string d, RequestID id)
 
   return sprintf("<html><head><title>Directory listing of %s</title></head>\n"
 		 "<body><h1>Directory listing of %s</h1>\n"
-		 "<pre>%s</pre></body</html>\n",
+		 "<pre>%s</pre></body></html>\n",
 		 d, d,
 		 Array.map(sort(dir),
-			   lambda(string f, string d, object r, RequestID id)
+			   lambda(string f, string d)
 			   {
-			     array stats = r->stat_file(d+f, id);
+			     array stats = id->conf->stat_file(d+f, id);
 			     if(stats && stats[1]<0)
 			       return "<a href=\""+f+"/.\">"+f+"/</a>";
 			     else
 			       return "<a href=\""+f+"\">"+f+"</a>";
-			   }, d, id->conf, id)*"\n"+"</pre></body></html>\n");
+			   }, d)*"\n");
 }
 
 string describe_directory(string d, RequestID id)
@@ -161,13 +161,13 @@ string describe_directory(string d, RequestID id)
     result = "<html><head><title>Directory listing of "+d+"</title></head>\n"
 	     "<body><h1>Directory listing of "+d+"</h1>\n<p>";
 
-    if(sizeof(README))
+    if(sizeof(readme))
       result += find_readme(d, id);
     result += "<hr noshade><pre>\n";
   }
   else {
     DIRS_WERR("Looking for lock file in "+d);
-    foreach(NOBROWSE, string file) {
+    foreach(nobrowse, string file) {
       string lock=id->conf->try_get_file(d+file, id);
       if(lock) return lock;
     }
@@ -219,7 +219,7 @@ string describe_directory(string d, RequestID id)
     }
 
     if(id->misc->foldlist_exists) result+="<ft>";
-    result += sprintf(OUT_FORM, icon, id->misc->rel_base+file, file,
+    result += sprintf(out_form, icon, id->misc->rel_base+file, file,
 		      sizetostring(len), mtime, type);
 
     array(string) split_type = type/"/"+({"",""});
@@ -307,7 +307,7 @@ string|mapping parse_directory(RequestID id)
 
   if(f[-1] == '/') /* Handle indexfiles */
   {
-    foreach(INDEXFILES, string file) {
+    foreach(indexfiles, string file) {
       if(id->conf->stat_file(f+file, id))
       {
 	id->not_query = f + file;
@@ -322,8 +322,8 @@ string|mapping parse_directory(RequestID id)
     id->not_query = f;
   }
 
-  DIRS_WERR("Looking for lock file in"+f);  
-  foreach(NOBROWSE, string file) {
+  DIRS_WERR("Looking for lock file in "+f);
+  foreach(nobrowse, string file) {
     string lock=id->conf->try_get_file(f+file, id);
     if(lock) {
       if(sizeof(lock)) return http_string_answer(lock)+(["error":403]);
