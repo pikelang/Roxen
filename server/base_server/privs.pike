@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-// string cvs_version = "$Id: privs.pike,v 1.34 1998/03/03 12:18:59 grubba Exp $";
+// string cvs_version = "$Id: privs.pike,v 1.35 1998/05/17 18:41:48 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -191,10 +191,11 @@ void destroy()
     catch {
       array bt = backtrace();
       if (sizeof(bt) >= 2) {
-	report_notice(sprintf("Change back to uid#%d, from %s",saved_uid,
+	report_notice(sprintf("Change back to uid#%d, from %s\n", saved_uid,
 			      dbt(bt[-2])));
       } else {
-	report_notice(sprintf("Change back to uid#%d, from backend",saved_uid));
+	report_notice(sprintf("Change back to uid#%d, from backend\n",
+			      saved_uid));
       }
     };
   }
