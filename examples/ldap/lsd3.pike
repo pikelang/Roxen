@@ -1,4 +1,4 @@
-/* $Id: lsd3.pike,v 1.1 1999/04/24 16:39:41 js Exp $ */
+/* $Id: lsd3.pike,v 1.2 1999/08/16 00:41:45 peter Exp $ */
 /*
 
 
@@ -27,6 +27,8 @@
 		Initialize variable: filt = "objectclass"
   1998-11-11	v1.8, hop
 		Resolved problems with authorized access to the subtree
+  1999-08-08	v1.9, hop
+		A little nicer output (tablified)
 
 */
 
@@ -82,6 +84,7 @@ mixed parse(object id) {
     int ix;
     object ld, en;
     array ar;
+    mixed aval;
 
     if(!id->variables->host) { // query LDAP connection variables
 	  body = "<CENTER><H1>LDAP connection</H1></CENTER>" +
@@ -134,10 +137,7 @@ mixed parse(object id) {
     // do LDAP search
     ld->bind(userdn, userpw);
     ld->set_scope(1);
-    //if(sizeof(subtree) > sizeof(basedn))
-    //  ld->set_basedn(subtree);
-    //else
-      ld->set_basedn(basedn);
+    ld->set_basedn(basedn);
     if(!(objectp(en = ld->search("objectclass")))) {
       body = "<RED>Internal errror:</RED> \"" + ld->error_string() + "\"<BR><P>\n";
       return (header0 + body + footer);
@@ -155,9 +155,36 @@ mixed parse(object id) {
         return (header0 + body + footer);
       }
       // Entry exists -> output attributes
-      body = "\n<BR><P><PRE>" + sprintf("%O", en->fetch()) + "</PRE><BR>\n";
-
+      //body = "\n<BR><P><PRE>" + sprintf("%O", en->fetch()) + "</PRE><BR>\n";
+      aval = en->fetch();
       ld->unbind();
+
+      body ="<BR><FONT color=red size=5>" + en->get_dn() + "</FONT><BR> \n";
+      body +="<TABLE border=2>\n";
+      body +="  <TR bgcolor=#ffceac>\n";
+      body +="    <TD>Attribute name</TD><TD>Value(s)</TD>\n";
+      body +="  </TR>\n";
+      foreach (indices(aval), string attr) {
+        body +="  <TR>\n    <TD>" + attr + "</TD>\n";
+        body +="    <TD>";
+        switch(attr) {
+          case "labeleduri":
+            body += "<A href=\"" + ((aval[attr][0])/" ")[0] + "\">" +
+              ((sizeof((aval[attr][0])/" ")>1) ? ((aval[attr][0])/" ")[1] : ((aval[attr][0])/" ")[0]) + "</A>";
+	    break;
+          case "mail":
+            body += "<A href=\"mailto:" + aval[attr][0] + "\">" + aval[attr][0] + "</A>";
+            break;
+          default:
+            body +=aval[attr][0];
+        }
+        if (sizeof(aval[attr]) > 1)
+          foreach (aval[attr], string nextval)
+            body += " | " + nextval;
+        body +="</TD>\n  </TR>\n";
+      }
+      body +="</TABLE>\n";
+
       return (header0 + header1 + body + footer);
     }
     ld->unbind();

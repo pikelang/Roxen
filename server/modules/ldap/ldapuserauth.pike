@@ -17,8 +17,8 @@
   1998-07-03 v1.1	added support for Protocols.LDAP module
   1998-07-03 v1.2	added authenticate against server
 			(instead of using userpassword)
-  			bonis@kiss.de
-  1998-12-01 v1.3	added required attribute, more caching (bonis@kiss.de)
+  			bonis@bonis.de
+  1998-12-01 v1.3	added required attribute, more caching (bonis@bonis.de)
   1999-02-08 v1.4	more changes:
 			 - incorporated 'user' type of authentication by Wim
 			 - optimized
@@ -27,11 +27,21 @@
 			 - changed perror() to werror()
 			 - added logging of unsuccessful connections
 			 - added checking of 'geteuid()' /not exists on NT/
+  1999-07-26 v1.5	changed possibility of opened connection to the LDAP
+			server - now disabled for 'user' access mode
+  1999-08-07 v1.6	added more config options (i.e. attribute names)
+			fields like uid,gid,gecos,homedir,shell now works
+  1999-08-12 v1.7	added hack for pseudouser "A. Nonymous", now he isn't
+			checked at all
+  1999-08-14 v1.8a	- modified default attribute names to be compatible
+			  with RFC2307
+			- changed labels for 'Attribute names: ...' to
+			  to more readable ' ... map'
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.2 1999/05/31 22:19:31 js Exp $";
-constant thread_safe=0;
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.3 1999/08/16 00:42:25 peter Exp $";
+constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
 inherit "module";
@@ -47,6 +57,7 @@ import Array;
 #define DEBUGLOG(s)
 #endif
 
+#define LOG_ALL 1
 
 /*
  * Globals
@@ -54,15 +65,16 @@ import Array;
 object dir=0;
 int dir_accesses=0, last_dir_access=0, succ=0, att=0, nouser=0;
 mapping failed  = ([ ]);
+mapping accesses = ([ ]);
 
 int access_mode_is_user() {
 
   return (QUERY(CI_access_mode) != "user");
 }
 
-int access_mode_is_guess() {
+int access_mode_is_guest() {
 
-  return (QUERY(CI_access_mode) != "guess");
+  return (QUERY(CI_access_mode) != "guest");
 }
 
 int default_uid() {
@@ -87,11 +99,11 @@ void create()
 		   " in directory."
 		   "<br>Optional you can specify attribute/value"
 		   " pair must contained in."
-		   "<p><b>guess</b><br>"
+		   "<p><b>guest</b><br>"
 		   "The mode assume public access to the directory entries."
 		   "<br>This mode is for testing purpose. It's not recommended"
 		   " for real using.",
-		({ "user", "guess" }) );
+		({ "user", "guest" }) );
         defvar ("CI_access_type","search","Access type",
                    TYPE_STRING_LIST, "Type of LDAP operation used "
 		   "for authorization  checking."
@@ -140,21 +152,21 @@ void create()
 		   access_mode_is_user
 		   );
 
-	// "guess" access type
+	// "guest" access type
         defvar ("CI_dir_username","","LDAP server: Directory search username",
                    TYPE_STRING|VAR_MORE,
 		   "This username will be used to authenticate "
                    "when connecting to the LDAP server. Refer to your LDAP "
                    "server documentation, this could be irrelevant.",
 		   0,
-		   access_mode_is_guess
+		   access_mode_is_guest
 		   );
         defvar ("CI_dir_pwd","", "LDAP server: Directory user's password",
 		    TYPE_STRING|VAR_MORE,
 		    "This is the password used to authenticate "
 		    "connection to directory.",
 		   0,
-		   access_mode_is_guess
+		   access_mode_is_guest
 		    );
 //        defvar ("dirattrs","", "LDAP server: Directory authentication attributes",
 //		    TYPE_STRING, "These are the attributes that the entered "
@@ -166,14 +178,31 @@ void create()
                    "Some modules require an user ID to work correctly. This is the "
                    "user ID which will be returned to such requests if the information "
                    "is not supplied by the directory search.");
+        defvar ("CI_default_attrname_uid", "uidnumber",
+		   "Defaults: User ID map", TYPE_STRING,
+                   "The mapping between passwd:uid and LDAP.");
         defvar ("CI_default_gid", getegid(), "Defaults: Group ID", TYPE_INT,
                    "Same as User ID, only it refers rather to the group.");
+        defvar ("CI_default_attrname_gid", "gidnumber",
+		   "Defaults: Group ID map", TYPE_STRING,
+                   "The mapping between passwd:gid and LDAP.");
         defvar ("CI_default_gecos", "", "Defaults: Gecos", TYPE_STRING,
                    "The default Gecos.");
+        defvar ("CI_default_attrname_gecos", "gecos",
+		   "Defaults: Gecos map", TYPE_STRING,
+                   "The mapping between passwd:gecos and LDAP.");
         defvar ("CI_default_home","/", "Defaults: Home Directory", TYPE_DIR,
                    "It is possible to specify an user's home "
                    "directory. This is used if it's not provided.");
-        defvar ("CI_default_addname",0,"Defaults: Add username",TYPE_FLAG,
+        defvar ("CI_default_attrname_homedir", "homedirectory",
+		   "Defaults: Home Directory map", TYPE_STRING,
+                   "The mapping between passwd:homedir and LDAP.");
+        defvar ("CI_default_shell","/bin/false", "Defaults: Shell", TYPE_STRING,
+                   "The shell name for entries without own defined.");
+        defvar ("CI_default_attrname_shell", "loginshell",
+		   "Defaults: Shell map", TYPE_STRING,
+                   "The mapping between passwd:shell and LDAP.");
+        defvar ("CI_default_addname",0,"Defaults: Username add",TYPE_FLAG,
                    "Setting this will add username to path to default directory.");
 
 	// Etc.
@@ -181,12 +210,15 @@ void create()
                    "This flag defines whether the module will cache the directory "
                    "entries. Makes accesses faster, but changes in the directory will "
                    "not show immediately. <B>Recommended</B>.");
-        defvar ("CI_close_dir",1,"Close the directory if not used",TYPE_FLAG,
+        defvar ("CI_close_dir",1,"Close the directory if not used",
+		   TYPE_FLAG|VAR_MORE,
                    "Setting this will save one filedescriptor without a small "
-                   "performance loss.");
-        defvar ("CI_timer",60,"Directory connection close timer", TYPE_INT,
-                   "The timer after which the directory is closed",0,
-                   lambda(){return !QUERY(CI_close_dir);});
+                   "performance loss.",0,
+		   access_mode_is_guest);
+        defvar ("CI_timer",60,"Directory connection close timer",
+		   TYPE_INT|VAR_MORE,
+                   "The time after which the directory is closed",0,
+                   lambda(){return !QUERY(CI_close_dir) || !(QUERY(CI_access_mode) == "guest");});
 
 }
 
@@ -215,7 +247,7 @@ void open_dir(string u, string p) {
     if(dir)
 	return;
 
-    if(!access_mode_is_guess()) { // access type is "guess"
+    if(!access_mode_is_guest()) { // access type is "guest"
 	binddn = QUERY(CI_dir_username);
 	bindpwd = QUERY(CI_dir_pwd);
     } else {                      // access type is "user"
@@ -227,7 +259,7 @@ void open_dir(string u, string p) {
 
     err = catch(dir = Protocols.LDAP.client(QUERY(CI_dir_server)));
     if(!err)
-	err = catch(err |= dir->bind(binddn, bindpwd));
+	err = catch(err = dir->bind(binddn, bindpwd));
     if (arrayp(err)) {
 	werror ("LDAPauth: Couldn't open authentication directory!\n[Internal: "+err[0]+"]\n");
 	if (objectp(dir))
@@ -247,7 +279,7 @@ void open_dir(string u, string p) {
     }
     dir->set_basedn(QUERY(CI_basename));
     DEBUGLOG("directory successfully opened");
-    if(QUERY(CI_close_dir))
+    if(QUERY(CI_close_dir) && (QUERY(CI_access_mode) != "user"))
 	call_out(close_dir,QUERY(CI_timer));
 }
 
@@ -271,6 +303,17 @@ string status() {
 	       return roxen->quick_ip_to_host(s) + ": "+failed[s]+"<br>\n";
 	     }) * ""
 	     //+ "<p>The database has "+ sizeof(users)+" entries"
+#ifdef LOG_ALL
+	     + "<p>"+
+	     "<h3>Auth access by host</h3>" +
+	     Array.map(indices(accesses), lambda(string s) {
+	       return roxen->quick_ip_to_host(s) + ": "+accesses[s]->cnt+" ["+accesses[s]->name[0]+
+		((sizeof(accesses[s]->name) > 1) ?
+		  (Array.map(accesses[s]->name, lambda(string u) {
+		    return (", "+u); }) * "") : "" ) + "]" +
+		"<br>\n";
+	     }) * ""
+#endif
 	   );
 
 }
@@ -280,6 +323,11 @@ string status() {
  * Auth functions
  */
 
+string get_attrval(mapping attrval, string attrname, string dflt) {
+
+    return (zero_type(attrval[attrname]) ? dflt : attrval[attrname][0]);
+}
+
 string *userinfo (string u,mixed p) {
     string *dirinfo;
     object results;
@@ -287,7 +335,11 @@ string *userinfo (string u,mixed p) {
     mapping(string:array(string)) tmp;
 
     DEBUGLOG ("userinfo ("+u+")");
-    DEBUGLOG (sprintf("DEB:%O\n",p));
+    //DEBUGLOG (sprintf("DEB:%O\n",p));
+    if (u == "A. Nonymous") {
+      DEBUGLOG ("A. Nonymous pseudo user catched.");
+      return 0;
+    }
 
     if (QUERY(CI_use_cache))
 	dirinfo=cache_lookup("ldapauthentries",u);
@@ -311,7 +363,7 @@ string *userinfo (string u,mixed p) {
 	}
 	tmp=results->fetch();
 	//DEBUGLOG(sprintf("userinfo: got %O",tmp));
-	if(access_mode_is_user()) {	// mode is 'guess'
+	if(access_mode_is_user()) {	// mode is 'guest'
 	    if(zero_type(tmp["userpassword"]))
 		werror("LDAPuserauth: WARNING: entry haven't 'userpassword' attribute !\n");
 	    else
@@ -321,12 +373,11 @@ string *userinfo (string u,mixed p) {
 	dirinfo= ({
 		u, 			//tmp->uid[0],
 		rpwd,
-		QUERY(CI_default_uid),	//tmp->uid||QUERY(defaultuid),
-		QUERY(CI_default_gid),	//tmp->gid||QUERY(defaultgid),
-		QUERY(CI_default_gecos),
-		QUERY(CI_default_home)+(QUERY(CI_default_addname)?u:""), //tmp->homedir||QUERY(defaulthome),
-		"0", //tmp->shell||QUERY(CI_default_shell)
-		tmp
+		get_attrval(tmp, QUERY(CI_default_attrname_uid), QUERY(CI_default_uid)),
+		get_attrval(tmp, QUERY(CI_default_attrname_gid), QUERY(CI_default_gid)),
+		get_attrval(tmp, QUERY(CI_default_attrname_gecos), QUERY(CI_default_gecos)),
+		QUERY(CI_default_addname) ? QUERY(CI_default_home)+u : get_attrval(tmp, QUERY(CI_default_attrname_homedir), ""),
+		get_attrval(tmp, QUERY(CI_default_attrname_shell), QUERY(CI_default_shell))
 	});
     } else {
 	// Compare method is unimplemented, yet
@@ -335,6 +386,10 @@ string *userinfo (string u,mixed p) {
     if (QUERY(CI_use_cache))
 	cache_set("ldapauthentries",u,dirinfo);
     #endif
+    if(QUERY(CI_access_mode) == "user") { // Should be 'closedir' method?
+      dir->unbind();
+      dir=0;
+    }
 
     //DEBUGLOG(sprintf("Result: %O",dirinfo)-"\n");
     return dirinfo;
@@ -362,6 +417,14 @@ array|int auth (string *auth, object id)
 
     sscanf (auth[1],"%s:%s",u,p);
 
+#if LOG_ALL
+    if(!zero_type(accesses[id->remoteaddr]) && !zero_type(accesses[id->remoteaddr]["cnt"])) {
+      accesses[id->remoteaddr]->cnt++;
+      if(accesses[id->remoteaddr]->name[0] != u) // FIXME: needs the whole test
+	accesses[id->remoteaddr]->name = accesses[id->remoteaddr]->name + ({ u });
+    } else
+      accesses[id->remoteaddr] = (["cnt" : 1, "name":({ u })]);
+#endif
     if (!p||!strlen(p)) {
 	DEBUGLOG ("no password supplied by the user");
 	failed[id->remoteaddr]++;
@@ -448,7 +511,7 @@ array register_module()
 	"LDAP directory authorization",
 	"Experimental module for authorization using "
 	"Pike's internal Ldap directory interface."
-	"<p>&copy; 1998 Honza Petrous (with enhancements by Wim Bonis)<br>"
+	"<p>&copy; 1998,99 Honza Petrous (with enhancements by Wim Bonis)<br>"
 	"distributed freely under GPL license.",
 
 	({}), 1 }));
