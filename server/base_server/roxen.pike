@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.394 2000/01/21 12:11:38 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.395 2000/01/30 21:17:15 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2389,6 +2389,7 @@ void create()
 {
    SET_LOCALE(default_locale);
   // Dump some programs (for speed)
+
   dump( "base_server/newdecode.pike" );
   dump( "base_server/read_config.pike" );
   dump( "base_server/global_variables.pike" );
@@ -2470,6 +2471,12 @@ void create()
   // This is currently needed to resolve the circular references in
   // RXML.pmod correctly. :P
   master()->resolv ("RXML.refs");
+
+  foreach( glob("*.pike",get_dir( "etc/modules/RXML.pmod/")), string q )
+    dump( "etc/modules/RXML.pmod/"+ q );
+  foreach( glob("*.pmod",get_dir( "etc/modules/RXML.pmod/")), string q )
+    dump( "etc/modules/RXML.pmod/"+ q );
+
 
   call_out(post_create,1); //we just want to delay some things a little
 }
@@ -2889,7 +2896,7 @@ void dump( string file )
       report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
 #ifdef DUMP_DEBUG
     else
-      werror( file+" dumped successfully to "+file+".o\n" );
+      werror( file+" dumped successfully to "+ofile+"\n" );
 #endif
   }
 #ifdef DUMP_DEBUG
@@ -2902,10 +2909,9 @@ program slowpipe, fastpipe;
 
 int main(int argc, array argv)
 {
-  mkdir( "precompiled" );
+  mkdirhier("precompiled/"+ uname()->machine+"."+uname()->release+"/");
   slowpipe = ((program)"slowpipe");
   fastpipe = ((program)"fastpipe");
-
 
   call_out( lambda() {
               dump( "protocols/http.pike");
@@ -2921,6 +2927,7 @@ int main(int argc, array argv)
               dump( "base_server/smartpipe.pike" );
               dump( "base_server/slowpipe.pike" );
               dump( "base_server/fastpipe.pike" );
+              dump( "etc/modules/RXML.pmod/PHtml.pike" );
             }, 9);
 
 
