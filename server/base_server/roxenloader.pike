@@ -17,11 +17,13 @@
 //
 private static __builtin.__master new_master;
 
+int remove_dumped;
 constant s = spider;
+string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.217 2000/12/30 09:12:54 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.218 2000/12/30 10:30:02 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1577,6 +1579,15 @@ void paranoia_throw(mixed err)
 // Roxen bootstrap code.
 int main(int argc, array(string) argv)
 {
+  configuration_dir =
+    Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
+	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
+  remove_dumped =
+    Getopt.find_option(argv, "remove-dumped",({"remove-dumped", }), 0 );
+
+  if( configuration_dir[-1] != '/' )
+    configuration_dir+="/";
+  nwrite = lambda(mixed ... ){};
   call_out( do_main_wrapper, 0, argc, argv );
   // Get rid of the _main and main() backtrace elements..
   return -1;
@@ -1596,6 +1607,128 @@ void do_main_wrapper(int argc, array(string) argv)
     }
   };
   exit(1);
+}
+
+string query_mysql_dir()
+{
+  // FIXME: Should be configurable.
+  return combine_path( __FILE__, "../../mysql/" );
+}
+
+mapping my_mysql_cache = ([]);
+
+string query_configuration_dir()
+{
+  return configuration_dir;
+}
+
+Sql.sql connect_to_my_mysql( int ro, string db )
+{
+  Thread.Local tl;
+  if( !my_mysql_cache[ro] )
+    my_mysql_cache[ro] = ([]);
+  if( !( tl = my_mysql_cache[ro][db] ) )
+    tl = my_mysql_cache[ro][db] = Thread.Local();
+
+  if( tl->get() )
+    return tl->get();
+  
+  string mysql_socket = combine_path( getcwd(), query_configuration_dir()+
+                                      "_mysql/socket");
+  if( ro )
+    tl->set(Sql.sql("mysql://ro@localhost:"+mysql_socket+"/mysql"));
+  else
+    tl->set(Sql.sql("mysql://rw@localhost:"+mysql_socket+"/mysql"));
+
+  if( catch( tl->get()->query( "use "+db ) ) )
+  {
+    if( ro )
+      connect_to_my_mysql( 0, db );
+    else
+    {
+      tl->get()->query( "create database "+db );
+      tl->get()->query( "use "+db );
+    }
+  }
+  return tl->get();
+}
+
+void start_mysql()
+{
+  int st = gethrtime();
+  Sql.sql db;
+  
+  report_debug( "Starting mysql ... ");
+  void connected_ok(int was)
+  {
+    string version = db->query( "SELECT VERSION() as v" )[0]->v;
+    report_debug("%s %s [%.1fms]\n",
+                  (was?"Was running":"Done"),
+                  version, (gethrtime()-st)/1000.0);
+    if( (float)version < 3.23 )
+      report_debug( "Warning: This is a very old Mysql. "
+                     "Please use 3.23.*\n");
+
+    // 1: Create the 'ofiles' database.
+    if( !catch(db->query( "create database ofiles" )) )
+    {
+      db->query( "use ofiles" );
+      db->query( "create table files ("
+                 "id char(30) not null primary key, "
+                 "data mediumblob not null, "
+                 "mtime int not null)" );
+    }
+    if( remove_dumped )
+    {
+      werror("removing precompiled files\n");
+      db->query( "use ofiles" );
+      db->query( "delete from files" );
+    }
+  };
+
+  if( !catch( db = connect_to_my_mysql( 0, "mysql" ) ) )
+  {
+    connected_ok(1);
+    return;
+  }
+
+  string mysqldir = combine_path( getcwd(),
+                                  query_configuration_dir()+"_mysql");
+  if( !file_stat( mysqldir+"/mysql/user.MYD" ) )
+  {
+    report_debug("Mysql data directory does not exist -- copying template\n");
+    mkdirhier( mysqldir+"/mysql/" );
+    object tar = Filesystem.Tar( "etc/mysql-template.tar" );
+    foreach( tar->get_dir( "mysql" ), string f )
+    {
+      report_debug("copying "+f+" ... ");
+      Stdio.File to = Stdio.File( mysqldir+f, "wct" );
+      Stdio.File from = tar->open( f, "r" );
+      to->write( from->read() );
+      report_debug("\n");
+    }
+  }
+  object p = 
+  Process.create_process( ({"bin/start_mysql",
+                            mysqldir,
+                            query_mysql_dir() }) );
+  string mysql_socket = mysqldir+"/socket";
+  int repeat;
+  while( 1 )
+  {
+    sleep( 0.2 );
+    if( repeat++ > 100 )
+    {
+//       werror("%O", p->status() );
+      report_fatal("\nFailed to start mysql. Aborting\n");
+      exit(1);
+    }
+    if( !catch( db = connect_to_my_mysql( 0, "mysql" ) ) )
+    {
+      connected_ok(0);
+      return;
+    }
+  }
 }
 
 LocaleString da_String_type;
@@ -1711,6 +1844,10 @@ Please install a newer version of Pike.
   add_constant( "geteuid", lambda(){ return 0; } );
   add_constant( "getegid", lambda(){ return 0; } );
 #endif
+
+  add_constant( "connect_to_my_mysql", connect_to_my_mysql );
+  
+  start_mysql();
 
   if (err = catch {
     replace_master(new_master=[object(__builtin.__master)](((program)"etc/roxen_master.pike")()));

@@ -1,11 +1,12 @@
 object mm=(object)"/master";
 inherit "/master": master;
+object sql = connect_to_my_mysql( 0, "ofiles" );
 
 /*
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.108 2000/11/27 14:09:12 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.109 2000/12/30 10:30:14 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -430,31 +431,30 @@ string dump_path = "../var/"+roxen_version()+"/precompiled/"+
 
 string make_ofilename( string from )
 {
-  return dump_path+sprintf( "%s-%d-%08x.o",
-                            ((from/"/")[-1]/".")[0],getuid(),hash(from));
+  return sprintf( "%s-%x",
+                  ((from/"/")[-1]/".")[0],hash(from));
 }
 
 void dump_program( string pname, program what )
 {
-  string outfile = make_ofilename( pname );
+  string index = make_ofilename( pname );
   string data;
-#ifdef DUMP_PROGRAM_BUG
+#ifdef DUMP_PROGRAM_DEBUG
   if (!catch (data = encode_value( what, MyCodec( what ) ) ))
 #else
   data = encode_value( what, MyCodec( what ) );
 #endif
-  { mkdirhier( outfile );
-#if constant( chmod )
-    chmod( dirname( outfile ), 01777  );
-#endif
-    _static_modules.files()->Fd(outfile,"wct")->write(data);
-#if constant( chmod )
-    chmod( outfile, 0664  );
-#endif
+  {
+    sql->query( "DELETE FROM files WHERE id='"+sql->quote(index)+"'" );
+    sql->query( "INSERT INTO files values ("
+                "'"+sql->quote(index)+"', "
+                "'"+sql->quote(data)+"',"
+                +time()+")" );
   }
-#ifdef DUMP_PROGRAM_BUG
+#ifdef DUMP_PROGRAM_DEBUG
   else
-  { array parts = pname / "/";
+  {
+    array parts = pname / "/";
     if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
     werror("Couldn't dump " + parts * "/" + "\n");
   }
@@ -466,11 +466,10 @@ int loaded_at( program p )
   return load_time[ program_name (p) ];
 }
 
-// Make low_findprog() search in precompiled/ for precompiled files.
-array(string) query_precompiled_names(string fname)
-{
-  return ({ make_ofilename(fname) }) + ::query_precompiled_names(fname);
-}
+// array(string) query_precompiled_names(string fname)
+// {
+//   return ({ make_ofilename(fname) }) + ::query_precompiled_names(fname);
+// }
 
 array master_file_stat(string x) 
 { 
@@ -484,7 +483,7 @@ array master_file_stat(string x)
 // NOTE: compilation_mutex is inherited from the original master.
 #endif
 
-mapping(string:function) has_set_on_load = ([]);
+mapping(string:function|int) has_set_on_load = ([]);
 void set_on_load( string f, function cb )
 {
   has_set_on_load[ f ] = cb;
@@ -518,38 +517,39 @@ program low_findprog(string pname, string ext, object|void handler)
     {
     case "":
     case ".pike":
-      foreach(query_precompiled_names(fname), string ofile )
-      {
-        if(array s2=master_file_stat( ofile ))
-        {
-          if(s2[1]>0 && s2[3]>=s[3])
-          {
-            mixed err = catch
-            {
-              load_time[ fname ] = time();
-	      programs[fname] = 0;
-              ret = programs[fname]=
-                     decode_value(_static_modules.files()->
-                                  Fd(ofile,"r")->read(),MyCodec());
-	      program_names[ret] = fname;
-	      return ret;
-            };
+      // First check in mysql.
+      array q;
+
 #ifdef DUMP_DEBUG
-	    string msg = sprintf("Failed to decode dumped file for %s: %s",
-				 trim_file_name (fname), describe_error(err));
-	    werror(msg);
-// 	    if (ofile[..sizeof (dump_path) - 1] == dump_path)
-// 	      ofile = ofile[sizeof (dump_path)..];
-// 	    if (handler) {
-// 	      handler->compile_warning(ofile, 0, msg);
-// 	    } else {
-// 	      compile_warning(ofile, 0, msg);
-// 	    }
+#define DUMP_WARNING(fname,err)                                         \
+          werror("Failed to decode dumped file for %s: %s",             \
+                 trim_file_name (fname), describe_error(err));
+#else
+#define DUMP_WARNING(f,e)
 #endif
-	  }
-        }
-      }
-//     werror(" really compile "+fname+"\n");
+
+#define LOAD_DATA( DATA )                                                    \
+      do {                                                                   \
+        mixed err = catch                                                    \
+        {                                                                    \
+          load_time[ fname ] = time();                                       \
+          programs[ fname ] = 0;                                             \
+          ret = programs[ fname ] = decode_value( DATA, MyCodec() );         \
+          program_names[ ret ] = fname;                                      \
+          m_delete(has_set_on_load, fname );                                 \
+          return ret;                                                        \
+        }; DUMP_WARNING(fname,err)                                           \
+      } while(0)
+      if(sizeof(q=sql->query( "SELECT data,mtime FROM files WHERE id='"+
+                              sql->quote( make_ofilename( fname ) )+"'")))
+        if( (int)q[0]->mtime > s[3] )
+          LOAD_DATA( q[0]->data );
+
+      foreach(query_precompiled_names(fname), string ofile )
+        if(array s2=master_file_stat( ofile ))
+          if(s2[1]>0 && s2[3]>=s[3])
+            LOAD_DATA( _static_modules.files()->Fd(ofile,"r")->read() );
+
       if ( mixed e=catch { ret=compile_file(fname); } )
       {
 	// load_time[fname] = time(); not here, no.... reload breaks miserably
@@ -565,8 +565,14 @@ program low_findprog(string pname, string ext, object|void handler)
           e[1]=({});
 	throw(e);
       }
-      if( has_set_on_load[ fname ] )
-	call_out(has_set_on_load[ fname ],0.1,fname, ret );
+      function f;
+      if( functionp( f = has_set_on_load[ fname ] ) )
+      {
+        has_set_on_load[ fname ] = 1;
+	call_out(f,0.1,fname, ret );
+      }
+      else
+        has_set_on_load[ fname ] = 1;
       break;
 #if constant(load_module)
     case ".so":
@@ -611,7 +617,8 @@ int refresh( program p, int|void force )
   {
     m_delete( programs, fname );
     m_delete( load_time, fname );
-    rm( make_ofilename( fname ) );
+    sql->query( "DELETE FROM files WHERE id='"+
+                sql->quote(make_ofilename(fname))+"'" );
     return 1;
   }
 
@@ -627,7 +634,8 @@ int refresh( program p, int|void force )
 
   m_delete( programs, fname );
   m_delete( load_time, fname );
-  rm( make_ofilename( fname ) );
+  sql->query( "DELETE FROM files WHERE id='"+
+              sql->quote(make_ofilename(fname))+"'" );
   return 1;
 }
 

@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.595 2000/12/30 07:17:13 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.596 2000/12/30 10:30:02 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -54,97 +54,6 @@ inherit "config_userdb";
 
 #define DDUMP(X) sol( combine_path( __FILE__, "../../" + X ), dump )
 static function sol = master()->set_on_load;
-
-string query_mysql_dir()
-{
-  // FIXME: Should be configurable.
-  return combine_path( __FILE__, "../../mysql/" );
-}
-
-mapping my_mysql_cache = ([]);
-
-Sql.sql connect_to_my_mysql( int ro, string db )
-{
-  Thread.Local tl;
-  if( !my_mysql_cache[ro] )
-    my_mysql_cache[ro] = ([]);
-  if( !( tl = my_mysql_cache[ro][db] ) )
-    tl = my_mysql_cache[ro][db] = Thread.Local();
-
-  if( tl->get() )
-    return tl->get();
-  
-  string mysql_socket = combine_path( getcwd(), query_configuration_dir()+
-                                      "_mysql/socket");
-  if( ro )
-    tl->set(Sql.sql("mysql://ro@localhost:"+mysql_socket+"/"+db));
-  else
-    tl->set(Sql.sql("mysql://rw@localhost:"+mysql_socket+"/"+db));
-
-  return tl->get();
-}
-
-void start_mysql()
-{
-  int st = gethrtime();
-  Sql.sql db;
-  
-  report_notice( "Starting mysql ... ");
-  void connected_ok(int was)
-  {
-    string version = db->query( "SELECT VERSION() as v" )[0]->v;
-    report_notice("%s %s [%.1fms]\n",
-                  (was?"Was running":"Done"),
-                  version, (gethrtime()-st)/1000.0);
-    if( (float)version < 3.23 )
-      report_notice( "Warning: This is a very old Mysql. "
-                     "Please use 3.23.*\n");
-  };
-
-  if( !catch( db = connect_to_my_mysql( 0, "mysql" ) ) )
-  {
-    connected_ok(1);
-    return;
-  }
-
-  string mysqldir = combine_path( getcwd(),
-                                  query_configuration_dir()+"_mysql");
-  if( !file_stat( mysqldir+"/mysql/user.MYD" ) )
-  {
-    report_debug("Mysql data directory does not exist -- copying template\n");
-    mkdirhier( mysqldir+"/mysql/" );
-    object tar = Filesystem.Tar( "etc/mysql-template.tar" );
-    foreach( tar->get_dir( "mysql" ), string f )
-    {
-      report_debug("copying "+f+" ... ");
-      Stdio.File to = Stdio.File( mysqldir+f, "wct" );
-      Stdio.File from = tar->open( f, "r" );
-      to->write( from->read() );
-      report_debug("\n");
-    }
-  }
-  object p = 
-  Process.create_process( ({"bin/start_mysql",
-                            mysqldir,
-                            query_mysql_dir() }) );
-  string mysql_socket = mysqldir+"/socket";
-  int repeat;
-  while( 1 )
-  {
-    sleep( 0.2 );
-    if( repeat++ > 100 )
-    {
-//       werror("%O", p->status() );
-      report_fatal("\nFailed to start mysql. Aborting\n");
-      exit(1);
-    }
-    if( !catch( db = connect_to_my_mysql( 0, "mysql" ) ) )
-    {
-      connected_ok(0);
-      return;
-    }
-  }
-}
 
 string query_configuration_dir()
 {
@@ -2274,11 +2183,11 @@ class ImageCache
 
       db->query("create table "+name+"_data ("
                 "id char(64) not null primary key, "
-                "data blob not null default '')");
+                "data mediumblob not null default '')");
 
       db->query("create table "+name+"_meta ("
                 "id char(64) not null primary key, "
-                "data blob not null default '')");
+                "data mediumblob not null default '')");
     }
   }
 
@@ -2571,27 +2480,24 @@ void create()
 
   // This is currently needed to resolve the circular references in
   // RXML.pmod correctly. :P
-  foreach(({ "module.pmod","PEnt.pike", "PExpr.pike","PXml.pike",
-	     "refs.pmod","utils.pmod" }), string q )
-    DDUMP( "etc/modules/RXML.pmod/"+ q );
   master()->resolv ("RXML.refs");
   master()->resolv ("RXML.PXml");
   master()->resolv ("RXML.PEnt");
+  foreach(({ "module.pmod","PEnt.pike", "PExpr.pike","PXml.pike",
+	     "refs.pmod","utils.pmod" }), string q )
+    dump( "etc/modules/RXML.pmod/"+ q );
   dump( "etc/modules/RXML.pmod/module.pmod" );
   // Already loaded. No delayed dump possible.
   dump( "etc/roxen_master.pike" );
-  dump( "etc/modules/Dims.pmod" );
   dump( "etc/modules/Roxen.pmod" );
   dump( "base_server/config_userdb.pike" );
   dump( "base_server/disk_cache.pike" );
   dump( "base_server/roxen.pike" );
-  dump( "base_server/roxenlib.pike" );
   dump( "base_server/basic_defvar.pike" );
   dump( "base_server/newdecode.pike" );
   dump( "base_server/read_config.pike" );
   dump( "base_server/global_variables.pike" );
   dump( "base_server/module_support.pike" );
-  dump( "base_server/http.pike" );
   dump( "base_server/socket.pike" );
   dump( "base_server/cache.pike" );
   dump( "base_server/supports.pike" );
@@ -3148,11 +3054,9 @@ void dump( string file, program|void p )
     return;
   }
 
-  string ofile = master()->make_ofilename( replace(file, "//", "/") );
-  if(!file_stat( ofile ) ||
-     (file_stat( ofile )[ ST_MTIME ] < file_stat(file)[ ST_MTIME ]))
+  if( master()->has_set_on_load[ file ] == 1 )
   {
-    if(q=catch( master()->dump_program( replace(file, "//", "/"), p ) ) )
+    if( q = catch( master()->dump_program( file, p ) ) )
     {
 #ifdef DUMP_DEBUG
       report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
@@ -3164,7 +3068,7 @@ void dump( string file, program|void p )
     }
 #ifdef DUMP_DEBUG
     else
-      werror( file+" dumped successfully to "+ofile+"\n" );
+      werror( file+" dumped successfully\n" );
 #endif
   }
 #ifdef MUCHO_DUMP_DEBUG
@@ -3194,10 +3098,10 @@ int main(int argc, array tmp)
   array argv = tmp;
   tmp = 0;
 
-  DDUMP( "base_server/slowpipe.pike" );
-  DDUMP( "base_server/fastpipe.pike" );
-  slowpipe = ((program)"slowpipe");
-  fastpipe = ((program)"fastpipe");
+  slowpipe = ((program)"base_server/slowpipe");
+  fastpipe = ((program)"base_server/fastpipe");
+  dump( "base_server/slowpipe.pike" );
+  dump( "base_server/fastpipe.pike" );
   dump( "base_server/throttler.pike" );
 
   add_constant( "Protocol", Protocol );
@@ -3236,8 +3140,6 @@ int main(int argc, array tmp)
 
   argv -= ({ 0 });
   argc = sizeof(argv);
-
-  start_mysql();
 
   add_constant( "roxen.fonts",
                 (fonts = ((program)"base_server/fonts.pike")()) );

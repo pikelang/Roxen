@@ -12,28 +12,43 @@ inherit "language";
 #define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 #define SLOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 string query_configuration_dir();
-
 // Settings used by the various administration interface modules etc.
 class ConfigIFCache
 {
   string dir;
-  int settings;
+  Sql.sql db;
   private static inherit "newdecode";
+
   void create( string name, int|void _settings )
   {
-    if( settings = _settings )
+    if( _settings )
+    {
       dir = query_configuration_dir() + "_configinterface/" + name + "/";
+      mkdirhier( dir );
+    }
     else
-      dir = "../var/"+roxen_version()+"/config_caches/" + name + "/";
-    mkdirhier( dir );
+    {
+      dir = name;
+      db = connect_to_my_mysql( 0, "cache" );
+      catch(db->query( "create table "+name+" ("
+                       "  id varchar(80) not null primary key,"
+                       "  data blob not null default ''"
+                       ")" ));
+    }
   }
 
   mixed set( string name, mixed to )
   {
+    if( db )
+    {
+      db->query("DELETE FROM "+dir+" where id='"+db->quote(name)+"'");
+      db->query("INSERT INTO "+dir+" VALUES ('"+db->quote(name)+"','"+
+                db->quote(encode_value(to))+"')");
+      return to;
+    }
+
     Stdio.File f;
-    int mode = 0777;
-    if( settings )
-      mode = 0770;
+    int mode = 0770;
     if(!(f=open(  dir + replace( name, "/", "-" ), "wct", mode )))
     {
       mkdirhier( dir+"/foo" );
@@ -45,38 +60,39 @@ class ConfigIFCache
         return to;
       }
     }
-    if( settings )
-      f->write(
-#"<?XML version=\"1.0\" encoding=\"UTF-8\"?>
-" + string_to_utf8(encode_mixed( to, this_object() ) ));
-    else
-      f->write( encode_value( to ) );
+    f->write("<?XML version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+             string_to_utf8(encode_mixed( to, this_object() ) ));
     return to;
   }
 
   mixed get( string name )
   {
+    if( db )
+      if( catch {
+        return decode_value( db->query( "SELECT data  FROM "+dir+" where id='"
+                                        +db->quote(name)+"'")[0]->data );
+      })
+        return 0;
+
     Stdio.File f;
     mapping q = ([]);
     f=open( dir + replace( name, "/", "-" ), "r" );
     if(!f) return 0;
-    if( settings )
-      decode_variable( 0, ([ "name":"res" ]), utf8_to_string(f->read()), q );
-    else
-    {
-      catch{ return decode_value( f->read() ); };
-      return 0;
-    }
+    decode_variable( 0, ([ "name":"res" ]), utf8_to_string(f->read()), q );
     return q->res;
   }
 
   array list()
   {
+    if( db )
+      return db->query( "SELECT id from "+dir )->id;
     return r_get_dir( dir );
   }
 
   void delete( string name )
   {
+    if( db )
+      db->query("DELETE FROM "+dir+" WHERE id='"+db->quote(name)+"'");
     r_rm( dir + replace( name, "/", "-" ) );
   }
 }
