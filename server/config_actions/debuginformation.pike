@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.8 1998/03/02 04:36:16 neotron Exp $
+ * $Id: debuginformation.pike,v 1.9 1998/03/02 06:24:09 neotron Exp $
  */
 
 inherit "wizard";
@@ -108,6 +108,11 @@ mixed page_0(object id, object mc)
   int i;
   for(i = 0; i < sizeof(foo); i++) {
     string s = foo[i][0];
+    if(!stringp(s))
+    {
+      werror(sprintf("DebugInfo not string: %O\n", s));
+      continue;
+    }
     if(search(s,"base_server/mainconfig.pike")!=-1) s="ConfigNode";
     if(search(s,"base_server/configuration.pike")!=-1) s="Bignum";
     if(sscanf(s,"/precompiled/%s",s)) s=capitalize(s);
