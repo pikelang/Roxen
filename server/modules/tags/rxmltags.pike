@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.472 2004/12/07 14:45:26 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.473 2005/01/27 10:32:00 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -8123,7 +8123,8 @@ the respective attributes below for further information.</p></desc>
 
  <p>The set is normally an array (in document order), but if used with
  copy-of and the expression selects an attribute set then that set is
- returned as a mapping.</p>"
+ returned as a mapping.</p>
+</attr>"
 	    ])
 
 }),
