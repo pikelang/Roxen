@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.150 1999/08/06 03:15:10 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.151 1999/08/17 18:37:51 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1356,7 +1356,7 @@ void send_result(mapping|void result)
       string h;
       heads += ([
 	"MIME-Version" 	: (file["mime-version"] || "1.0"),
-	"Content-Type" 	: file["type"],
+	"Content-type" 	: file["type"],
 	"Accept-Ranges" 	: "bytes",
 	"Server" 		: replace(version(), " ", "·"),
 #ifdef KEEP_ALIVE
