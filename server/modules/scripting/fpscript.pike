@@ -4,7 +4,7 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-string cvs_version = "$Id: fpscript.pike,v 1.3 1998/07/18 22:01:03 neotron Exp $";
+string cvs_version = "$Id: fpscript.pike,v 1.4 1998/07/19 02:46:20 neotron Exp $";
 
 // #define FPSCRIPT_DEBUG
 
@@ -64,15 +64,20 @@ void create()
 mixed *register_module()
 {
   return ({ 
-    MODULE_LOCATION|MODULE_FIRST,
+    MODULE_LOCATION,
     "Frontpage Script support", 
-    "This module is an extension to the normal CGI module. "
-    "It has different default values for some variables. It also makes "
-    "it possible to configure the value of the environment variable "
-    "SERVER_PORT. The reason for doing that is that that is how Frontpage "
-    "figures out which configuration to use. Without it you wouldn't be able "
-    "to use Frontpage and Roxen to do virtual hosting (where many servers "
-    "will have the same port number).",  ({}), 1
+    "This module is an extension to the normal CGI module. The main "
+    "differences are that this module is mainly a MODULE_FIRST. The reason "
+    "for this is that otherwise you most likely would have to fight with "
+    "priority levels to make it work correctly. It's there to make the setup "
+    "procedure easier. Also this module's default mountpath is <tt>/<tt>. The "
+    "reason for this is that we need to be able to handle Frontpage sub-webs. "
+    "<p>Another feature is that you easily can modify the value of the "
+    "environment variable SERVER_PORT. The reason for doing that is that "
+    "Frontpage uses it to figure out which configuration file to use. "
+    "Without it you wouldn't be able to use Frontpage and Roxen when doing "
+    "virtual hosting (where many servers will have the same port number).",
+    ({}), 1
   });
 }
 
@@ -80,21 +85,6 @@ string query_name()
 { 
   return sprintf("FPScript mounted on <i>%s</i>, Search Path: <i>%s</i>",
 		 QUERY(mountpoint), QUERY(searchpath));
-}
-
-mixed first_try(object id)
-{
-#ifdef FPSCRIPT_DEBUG
-  werror("FPScript: first_try(%O)\n", id->not_query);
-#endif
-  int pos;
-  if(search(id->not_query, QUERY(mountpoint)) ||
-     search(id->not_query, "_vti_bin/") == -1)
-    return 0;
-  mixed res = ::find_file(id->not_query[strlen(QUERY(mountpoint))..], id);
-  if(mappingp(res))
-    return res;
-  return 0;
 }
 
 mixed find_file(string f, object id)
