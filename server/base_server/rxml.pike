@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.276 2001/01/30 00:36:32 nilsson Exp $
+// $Id: rxml.pike,v 1.277 2001/02/01 02:54:18 per Exp $
 
 
 inherit "rxmlhelp";
@@ -1761,7 +1761,7 @@ class TagPathplugin
   {
     string fp = "";
     array res = ({});
-    string p = id->not_query;
+    string p = m->path || id->not_query;
     if( m->trim )
       sscanf( p, "%s"+m->trim, p );
     if( p[-1] == '/' )
@@ -1769,6 +1769,8 @@ class TagPathplugin
     array q = p / "/";
     if( m->skip )
       q = q[(int)m->skip..];
+    if( m["skip-end"] )
+      q = q[..sizeof(q)-((int)m["skip-end"]+1)];
     foreach( q, string elem )
     {
       fp += "/" + elem;
@@ -3140,6 +3142,10 @@ Available variables are:",
  the path from the root up to the current one.
 </desc>
 
+<attr name='path' value='string'>
+   Use this path instead of the document path
+</attr>
+
 <attr name='trim' value='string'>
  Removes all of the remaining path after and including the specified
  string.
@@ -3148,6 +3154,11 @@ Available variables are:",
 <attr name='skip' value='number'>
  Skips the 'number' of slashes ('/') specified, with beginning from
  the root.
+</attr>
+
+<attr name='skip-end' value='number'>
+ Skips the 'number' of slashes ('/') specified, with beginning from
+ the end.
 </attr>",
 	       ([
 "&_.name;":#"<desc ent>
