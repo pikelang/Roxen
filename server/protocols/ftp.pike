@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.31 1997/08/12 12:07:28 grubba Exp $
+ * $Id: ftp.pike,v 1.32 1997/08/13 02:59:23 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -482,8 +482,6 @@ varargs int|string list_file(string arg, int srt, int short, int column,
       tmp = arg+"\r\n";
     else
       tmp = file_ls(st, arg);
-    roxen->log(([ "error": 200, "len": strlen(tmp) ]), this_object());
-    return tmp;
   } else {
     if(filename[-1] != '/')
       filename += "/";
@@ -540,9 +538,9 @@ varargs int|string list_file(string arg, int srt, int short, int column,
       else
 	tmp=parsed*"\r\n"+"\r\n";
     }
-    roxen->log(([ "error": 200, "len": strlen(tmp) ]), this_object());
-    return tmp;
   }
+  roxen->log(([ "error": 200, "len": strlen(tmp) ]), this_object());
+  return tmp;
 }
 
 int open_file(string arg, int|void noport)
@@ -652,6 +650,12 @@ mapping(string:string) site_help = ([
   "prestate":"<sp> prestate"
 ]);
 
+void timeout()
+{
+  reply("421 Timeout (3600 seconds): closing connection.\n");
+  end();
+}
+
 void got_data(mixed fooid, string s)
 {
   string cmdlin;
@@ -659,8 +663,8 @@ void got_data(mixed fooid, string s)
   if (!objectp(cmd_fd)) return;
   array y;
   conf->received += strlen(s);
-  remove_call_out(end);
-  call_out(end, 3600);
+  remove_call_out(timeout);
+  call_out(timeout, 3600);
   remoteaddr = cmd_fd->query_address();
   supports = (< "ftp", "images", "tables", >);
   prot = "FTP";
@@ -824,7 +828,7 @@ void got_data(mixed fooid, string s)
     case "port": 
       int a,b,c,d,e,f;
       if (sscanf(arg,"%d,%d,%d,%d,%d,%d",a,b,c,d,e,f)<6) 
-	reply("501 i don't understand your parameters\n");
+	reply("501 I don't understand your parameters\n");
       else {
 	dataport_addr=sprintf("%d.%d.%d.%d",a,b,c,d);
 	dataport_port=e*256+f;
@@ -1130,7 +1134,7 @@ void create(object f, object c)
     pasv_accepted = ({ });
 
     not_query = "/welcome.msg";
-    call_out(end, 3600);
+    call_out(timeout, 3600);
     
 #if 0
     if((fi = roxen->try_get_file("/welcome.msg", this_object()))||
