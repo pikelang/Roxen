@@ -2,9 +2,11 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.405 2004/05/31 23:02:02 _cvs_stephen Exp $";
-// #define REQUEST_DEBUG
+constant cvs_version = "$Id: http.pike,v 1.406 2004/06/03 02:52:07 _cvs_stephen Exp $";
+//#define REQUEST_DEBUG
+//#define CONNECTION_DEBUG
 #define MAGIC_ERROR
+#define HTTPTIMEOUT  90
 
 // HTTP protocol module.
 #include <config.h>
@@ -868,7 +870,7 @@ void end(int|void keepit)
 static void do_timeout()
 {
   int elapsed = predef::time(1)-time;
-  if(time && elapsed >= 30)
+  if(time && elapsed >= HTTPTIMEOUT/3)
   {
     REQUEST_WERR("HTTP: Connection timed out. Closing.");
     MARK_FD("HTTP timeout");
@@ -1713,6 +1715,7 @@ void send_result(mapping|void result)
 #endif
 	s = my_fd->write(data);
 	TIMER_END(blocking_write);
+        end(1);
         return;
       }
       if(strlen(head_string))                 send(head_string);
@@ -1887,7 +1890,7 @@ void got_data(mixed fooid, string s)
 
       // Reset timeout.
       remove_call_out(do_timeout);
-      call_out(do_timeout, 90);
+      call_out(do_timeout, HTTPTIMEOUT);
       REQUEST_WERR("HTTP: We want more data.");
       return;
     }
@@ -2224,7 +2227,7 @@ static void create(object f, object c, object cc)
     if( c ) port_obj = c;
     if( cc ) conf = cc;
     time = predef::time(1);
-    call_out(do_timeout, 90);
+    call_out(do_timeout, HTTPTIMEOUT);
   }
   root_id = this;
 }
@@ -2245,7 +2248,7 @@ void chain( object f, object c, string le )
   {
     // If no pipelined data is available, call out...
     remove_call_out(do_timeout);
-    call_out(do_timeout, 90);
+    call_out(do_timeout, HTTPTIMEOUT);
   }
 
   if(!my_fd)
