@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.192 1999/11/30 14:45:18 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.193 1999/12/06 05:41:43 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -715,7 +715,7 @@ constant textarg=({"afont",
 		   "italic",
 		   "light",
 		   "mirrortile",
-		   "more",
+		   "move",
 		   "narrow",
 		   "nfont",
 		   "notrans",
