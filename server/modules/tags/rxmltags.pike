@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.270 2001/08/10 22:42:57 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.271 2001/08/13 15:56:59 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2271,25 +2271,19 @@ class UserTagContents
   {
     inherit RXML.Frame;
     constant is_user_tag_contents = 1;
-    RXML.Frame frame;
     array exec;
 
     local RXML.Frame get_upframe()
     {
-      RXML.Frame upframe;
-      if (frame) upframe = frame->up;
-      else {
-	int nest = 1;
-	upframe = up;
-	for (; upframe; frame = upframe, upframe = upframe->up)
-	  if (upframe->is_user_tag) {
-	    if (!--nest) break;
-	  }
-	  else if (upframe->is_user_tag_contents) nest++;
-      }
-      if (!upframe)
-	parse_error ("No associated defined tag to get contents from.\n");
-      return upframe;
+      RXML.Frame upframe = up;
+      int nest = 1;
+      for (; upframe; upframe = upframe->up)
+	if (upframe->is_user_tag) {
+	  if (!--nest) return upframe;
+	}
+	else
+	  if (upframe->is_user_tag_contents) nest++;
+      parse_error ("No associated defined tag to get contents from.\n");
     }
 
     array do_return()
