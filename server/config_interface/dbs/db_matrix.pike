@@ -44,7 +44,7 @@ string parse( RequestID id )
   mapping q = DBManager.get_permission_map( );
   if( !sizeof( q ) )
     return "No defined datbases\n";
-  string res = "<br /><table width='80%' border='0' cellpadding='2' cellspacing='0'>\n";
+  string res = "<br /><table width='80%' border='0' cellpadding='4' cellspacing='0'>\n";
   int x, y;
   int i = 1;
   int tc = sizeof( roxen->configurations )+2;
@@ -64,8 +64,8 @@ string parse( RequestID id )
           res += "<td></td>";
       }
       string ct = colors[0][i%sizeof(colors)];
-      res += "<td bgcolor='"+ct+"' colspan='"+(tc-i)+"'><gtext scale='0.4'>    "+
-          get_conf_name(conf)+"</gtext></td>";
+      res += "<td bgcolor='"+ct+"' colspan='"+(tc-i)+"'>"+
+	get_conf_name(conf)+"</td>";
       res += "</tr>\n";
       i++;
     }
@@ -85,7 +85,7 @@ string parse( RequestID id )
   }
   else
   {
-    res += "<tr><td></td>";
+    res += "<tr><td>&nbsp;</td>";
     foreach( sort(roxen->configurations->name), string conf )
     {
       x++;
@@ -110,8 +110,7 @@ string parse( RequestID id )
         +"<a href='browser.pike?db="+db+"'>"+
         "<cimg border='0' format='gif'"
         "      src='&usr.database-small;' alt='' max-height='12'/>"
-        "  <gtext border='0' scale='0.4'>"+db+"</gtext> &nbsp;"
-        +"</a>"+
+        "  "+db+"</a>"+
         "</nobr>"
         "</td>";
     foreach( sort(roxen->configurations->name), string conf )
@@ -121,7 +120,7 @@ string parse( RequestID id )
       switch( p[conf] )
       {
        case DBManager.NONE:
-         res += sprintf("<td bgcolor='"+col+"'>"
+         res += sprintf("<td bgcolor='"+col+"' width='1%%'>"
                         "<a href='dbs.html?set_read=%s&db=%s'>"
                         "<gtext "
                         "        scale='0.5' verbatim=''>&nbsp; - </gtext>"
@@ -131,7 +130,7 @@ string parse( RequestID id )
                         Roxen.http_encode_string(db));
          break;
        case DBManager.READ:
-         res += sprintf("<td bgcolor='"+col+"'>"
+         res += sprintf("<td bgcolor='"+col+"' width='1%%'>"
                         "<a href='dbs.html?set_write=%s&db=%s'>"
                         "<gtext  scale=0.5>R</gtext>"
                         "</a>"
@@ -140,7 +139,7 @@ string parse( RequestID id )
                         Roxen.http_encode_string(db));
          break;
        case DBManager.WRITE:
-         res += sprintf("<td bgcolor='"+col+"'>"
+         res += sprintf("<td bgcolor='"+col+"' width='1%%'>"
                         "<a href='dbs.html?set_none=%s&db=%s'>"
                         "<gtext fgcolor='&usr.warncolor;' scale=0.5>W</gtext>"
                         "</a>"
@@ -170,14 +169,14 @@ string parse( RequestID id )
 
     array e;
     if( mixed e = catch {
-      res += "<td align=right width='100%' >"+
+      res += "<td align=right width='60%' >"+
 	format_stats( DBManager.db_stats( db ),
 		      DBManager.db_url( db ) )+"</td>";
     } )
     {
       string em = describe_error(e);
       sscanf( em, "%*sreconnect to SQL-server%s", em);
-      res += "<td width='100%'>"+DBManager.db_url( db )+"<br />"
+      res += "<td width='60%'>"+DBManager.db_url( db )+"<br />"
 	"<font color='&usr.warncolor;'>"+em+"</font></td>";
     }
     res += "</tr>\n";
