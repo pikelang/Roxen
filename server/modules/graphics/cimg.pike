@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.55 2002/11/05 18:09:56 anders Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.56 2002/11/06 15:06:07 anders Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -262,7 +262,7 @@ mapping get_my_args( mapping args, RequestID id )
 	a->filesize = (string) st[ST_SIZE];
 	
 #if constant(Sitebuilder)
-	//  The file we called stat_file() on above may be a SiteBuilder
+	//  The file we called try_stat_file() on above may be a SiteBuilder
 	//  file. If so we need to extend the argument data with e.g.
 	//  current language fork.
 	if (Sitebuilder.sb_prepare_imagecache)
