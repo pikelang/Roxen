@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.19 1997/09/07 12:38:13 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.20 1997/09/14 17:26:41 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -31,11 +31,20 @@ static private string dbt(array t)
   return (((t[0]||"Unknown program")-(_getcwd()+"/"))-"base_server/")+":"+t[1]+"\n";
 }
 
+#ifdef THREADS
+mixed mutex_key;	// Only one thread may modify the euid/egid at a time.
+#endif /* THREADS */
 
 void create(string reason, int|string|void uid, int|void gid)
 {
 #ifdef HAVE_EFFECTIVE_USER
   array u;
+
+#ifdef THREADS
+  if (roxen->euid_egid_lock) {
+    mutex_key = roxen->euid_egid_lock->lock();
+  }
+#endif /* THREADS */
 
   if(getuid()) return;
   if(!stringp(uid))
