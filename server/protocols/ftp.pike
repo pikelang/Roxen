@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.35 2000/07/10 22:22:23 mast Exp $
+ * $Id: ftp.pike,v 2.36 2001/03/03 00:42:06 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1643,7 +1643,7 @@ class FTPSession
 
     if (!dataport_addr) {
       DWRITE("FTP: No dataport specified.\n");
-      fun(0, @args);
+      fun(0, "", @args);
       return;
     }
 
@@ -2472,6 +2472,14 @@ class FTPSession
     connect_and_send(session->file, session);
   }
 
+  void send_MLST_response(mapping(string:array) dir, object session)
+  {
+    dir = dir || ([]);
+    send(250,({ "OK" }) + 
+	 Array.map(indices(dir), make_MLSD_fact, dir, session) +
+	 ({ "OK" }) );
+  }
+
   /*
    * FTP commands begin here
    */
@@ -2973,7 +2981,7 @@ class FTPSession
     if (st) {
       session->file = ([]);
       session->file->full_path = args;
-      send_MLSD_response(([ args:st ]), session);
+      send_MLST_response(([ args:st ]), session);
     } else {
       send_error("MLST", args, session->file, session);
     }
