@@ -8,7 +8,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.33 2000/02/16 16:21:42 mast Exp $
+//! $Id: PXml.pike,v 1.34 2000/02/16 23:16:19 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -37,11 +37,14 @@ constant unwind_safe = 1;
   string|array|								\
   function(void|Parser.HTML:int(1..1)|string|array)
 
-static mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) overridden;
+#define TAG_DEF_TYPE array(TAG_TYPE|CONTAINER_TYPE)
+// A tag definition is an array of ({noncontainer definition,
+// container definition}).
+
+static mapping(string:array(TAG_DEF_TYPE)) overridden;
 // Contains all tags with overridden definitions. Indexed on the
-// effective tag names. The values are arrays of ({tag_definition,
-// container_definition}) tuples, with the closest to top last. Shared
-// between clones.
+// effective tag names. The values are arrays of the tag definitions
+// with the closest to top last. Shared between clones.
 
 // Kludge to get to the functions in Parser.HTML from inheriting
 // programs.. :P
@@ -67,7 +70,7 @@ static void set_quote_tag_cbs()
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
   return [object(this_program)] low_parser::clone (
-    ctx, type, tag_set, overridden, rt_replacements, rt_tag_names,
+    ctx, type, tag_set, overridden, rt_replacements,
 #ifdef OLD_RXML_COMPAT
     not_compat
 #endif
@@ -80,9 +83,8 @@ static int not_compat = 1;
 
 static void create (
   RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
-  void|mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) orig_overridden,
-  void|mapping(string:array(TAG_TYPE|CONTAINER_TYPE)) orig_rt_replacements,
-  void|mapping(RXML.Tag:string) orig_rt_tag_names,
+  void|mapping(string:array(TAG_DEF_TYPE)) orig_overridden,
+  void|mapping(string:TAG_DEF_TYPE) orig_rt_replacements,
 #ifdef OLD_RXML_COMPAT
   void|int orig_not_compat
 #endif
@@ -100,11 +102,8 @@ static void create (
     if (not_compat == orig_not_compat) {
 #endif
       overridden = orig_overridden;
-      // The following mappings should be copied to behave cleanly,
-      // but we don't bother since they're only used in nested
-      // parsers, and changes propagate all the way up anyway.
-      rt_replacements = orig_rt_replacements;
-      rt_tag_names = orig_rt_tag_names;
+      if (orig_rt_replacements)
+	rt_replacements = orig_rt_replacements + ([]);
       return;
 #ifdef OLD_RXML_COMPAT
     }
@@ -118,7 +117,7 @@ static void create (
 
   array(RXML.TagSet) list = ({tag_set});
   array(string) plist = ({tag_set->prefix});
-  mapping(string:array(TAG_TYPE|CONTAINER_TYPE)) tagdefs = ([]);
+  mapping(string:TAG_DEF_TYPE) tagdefs = ([]);
 
   for (int i = 0; i < sizeof (list); i++) {
     array(RXML.TagSet) sublist = list[i]->imported;
@@ -133,7 +132,7 @@ static void create (
     string prefix = plist[i];
 
     array(RXML.Tag) tlist = tset->get_local_tags();
-    mapping(string:array(TAG_TYPE|CONTAINER_TYPE)) new_tagdefs = ([]);
+    mapping(string:TAG_DEF_TYPE) new_tagdefs = ([]);
 
     if (prefix) {
 #ifdef OLD_RXML_COMPAT
@@ -196,10 +195,10 @@ static void create (
 #endif
 
     foreach (indices (new_tagdefs), string name) {
-      if (array(TAG_TYPE|CONTAINER_TYPE) tagdef = tagdefs[name])
+      if (TAG_DEF_TYPE tagdef = tagdefs[name])
 	if (overridden[name]) overridden[name] += ({tagdef});
 	else overridden[name] = ({tagdef});
-      array(TAG_TYPE|CONTAINER_TYPE) tagdef = tagdefs[name] = new_tagdefs[name];
+      TAG_DEF_TYPE tagdef = tagdefs[name] = new_tagdefs[name];
       add_tag (name, [TAG_TYPE] tagdef[0]);
       add_container (name, [CONTAINER_TYPE] tagdef[1]);
     }
@@ -286,91 +285,84 @@ void finish (void|string in)
 
 // Runtime tags.
 
-static mapping(string:array(TAG_TYPE|CONTAINER_TYPE)) rt_replacements;
-
-local static void rt_replace_tag (string name, RXML.Tag tag)
-{
-  if (!rt_replacements) rt_replacements = ([]);
-  if (!rt_replacements[name])
-    array(TAG_TYPE|CONTAINER_TYPE) tag_def =
-      rt_replacements[name] = ({tags()[name], containers()[name]});
-  if (tag)
-    if (tag->flags & RXML.FLAG_NONCONTAINER) {
-      add_container (name, 0);
-      add_tag (name, tag->_handle_tag);
-    }
-    else {
-      add_tag (name, 0);
-      add_container (name, tag->_handle_tag);
-    }
-  else {
-    add_tag (name, 0);
-    add_container (name, 0);
-  }
-}
-
-local static void rt_restore_tag (string name)
-{
-  if (array(TAG_TYPE|CONTAINER_TYPE) tag_def = rt_replacements && rt_replacements[name]) {
-    add_tag (name, [TAG_TYPE] tag_def[0]);
-    add_container (name, [CONTAINER_TYPE] tag_def[1]);
-    m_delete (rt_replacements, name);
-  }
-}
-
-static mapping(RXML.Tag:string) rt_tag_names;
+static mapping(string:TAG_DEF_TYPE) rt_replacements;
 
 local void add_runtime_tag (RXML.Tag tag)
 {
   remove_runtime_tag (tag);
-  if (!rt_tag_names) rt_tag_names = ([]);
-  if (!tag_set->prefix_req)
-    rt_replace_tag (rt_tag_names[tag] = [string] tag->name, tag);
+  if (!rt_replacements) rt_replacements = ([]);
+  string name = tag->name;
+
+  if (!tag_set->prefix_req) {
+    rt_replacements[name] = ({tags()[name], containers()[name]});
+#ifdef OLD_RXML_COMPAT
+    if (not_compat)
+#endif
+      if ((tag->flags & (RXML.FLAG_NO_PREFIX|RXML.FLAG_NONCONTAINER)) ==
+	  (RXML.FLAG_NO_PREFIX|RXML.FLAG_NONCONTAINER))
+	add_tag (name, tag->_handle_tag), add_container (name, 0);
+      else
+	add_tag (name, 0), add_container (name, tag->_handle_tag);
+#ifdef OLD_RXML_COMPAT
+    else
+      if (tag->flags & RXML.FLAG_NONCONTAINER)
+	add_tag (name, tag->_handle_tag), add_container (name, 0);
+      else
+	add_tag (name, 0), add_container (name, tag->_handle_tag);
+#endif
+  }
+
   if (string prefix = tag_set->prefix) {
-    rt_tag_names[tag] = prefix + "\0" + [string] tag->name;
-    rt_replace_tag (tag_set->prefix + ":" + [string] tag->name, tag);
+    name = prefix + ":" + name;
+    rt_replacements[name] = ({tags()[name], containers()[name]});
+#ifdef OLD_RXML_COMPAT
+    if (not_compat)
+#endif
+      if ((tag->flags & (RXML.FLAG_NO_PREFIX|RXML.FLAG_NONCONTAINER)) ==
+	  (RXML.FLAG_NO_PREFIX|RXML.FLAG_NONCONTAINER))
+	add_tag (name, tag->_handle_tag), add_container (name, 0);
+      else
+	add_tag (name, 0), add_container (name, tag->_handle_tag);
+#ifdef OLD_RXML_COMPAT
+    else
+      if (tag->flags & RXML.FLAG_NONCONTAINER)
+	add_tag (name, tag->_handle_tag), add_container (name, 0);
+      else
+	add_tag (name, 0), add_container (name, tag->_handle_tag);
+#endif
   }
 }
 
 local void remove_runtime_tag (string|RXML.Tag tag)
 {
-  if (!rt_tag_names) return;
-  if (stringp (tag)) {
-    array(RXML.Tag) arr_tag_names = indices (rt_tag_names);
-    int i = search (arr_tag_names->name, tag);
-    if (i < 0) return;
-    tag = arr_tag_names[i];
-  }
-  if (string name = rt_tag_names[tag]) {
-    array(string) parts = name / "\0";
-    if (sizeof (parts)) {
-#ifdef MODULE_DEBUG
-      if (sizeof (parts) > 2)
-	RXML.fatal_error ("Whoa! I didn't expect a tag name containing \\0: %O\n", name);
-#endif
-      rt_restore_tag (parts * "");
-      rt_restore_tag (parts[-1]);
-    }
-    else rt_restore_tag (name);
-    m_delete (rt_tag_names, tag);
+  if (!stringp (tag)) tag = tag->name;
+  if (TAG_DEF_TYPE def = rt_replacements && rt_replacements[tag]) {
+    m_delete (rt_replacements, tag);
+    if (!tag_set->prefix_req)
+      add_tag (tag, def[0]), add_container (tag, def[1]);
+    if (string prefix = tag_set->prefix)
+      if ((def = rt_replacements[tag = prefix + ":" + tag])) {
+	m_delete (rt_replacements, tag);
+	add_tag (tag, def[0]), add_container (tag, def[1]);
+      }
   }
 }
 
 
 // Traversing overridden tag definitions.
 
-array(TAG_TYPE|CONTAINER_TYPE) get_overridden_low_tag (
-  string name, void|TAG_TYPE|CONTAINER_TYPE overrider)
+TAG_DEF_TYPE get_overridden_low_tag (string name, void|TAG_TYPE|CONTAINER_TYPE overrider)
 //! Returns the tag definition that is overridden by the given
 //! overrider tag definition on the given tag name, or the currently
 //! active definition if overrider is zero. The returned values are on
 //! the form ({tag_definition, container_definition}), where one
 //! element always is zero.
+//!
+//! Note: This function may go away in the future. Don't use.
 {
   if (overrider) {
-    if (array(array(TAG_TYPE|CONTAINER_TYPE)) tagdefs = overridden[name]) {
-      if (array(TAG_TYPE|CONTAINER_TYPE) rt_tagdef =
-	  rt_replacements && rt_replacements[name])
+    if (array(TAG_DEF_TYPE) tagdefs = overridden[name]) {
+      if (TAG_DEF_TYPE rt_tagdef = rt_replacements && rt_replacements[name])
 	tagdefs += ({rt_tagdef});
       TAG_TYPE tdef = tags()[name];
       CONTAINER_TYPE cdef = containers()[name];
