@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.322 1999/09/04 22:40:44 kinkie Exp $
+ * $Id: roxen.pike,v 1.323 1999/09/05 01:40:32 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.322 1999/09/04 22:40:44 kinkie Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.323 1999/09/05 01:40:32 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -38,7 +38,6 @@ string real_version= "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__+"
 #else
 string real_version= "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__;
 #endif
-
 
 // Prototypes for other parts of roxen.
 class RequestID 
@@ -89,13 +88,16 @@ class RequestID
 };
 
 
-constant pipe = (program)"slowpipe";
-
 /*
  * The privilege changer.
  *
  * Based on privs.pike,v 1.36.
  */
+
+string filename( object o )
+{
+  return search( master()->programs, object_program( o ) );
+}
 
 // Some variables used by Privs
 #ifdef THREADS
@@ -353,7 +355,7 @@ int new_id(){ return idcount++; }
 #endif
 
 #ifdef MODULE_DEBUG
-#define MD_PERROR(X)	werror X;
+#define MD_PERROR(X)	roxen_perror X;
 #else
 #define MD_PERROR(X)
 #endif /* MODULE_DEBUG */
@@ -444,8 +446,8 @@ mapping restart()
 { 
   low_shutdown(-1);
   return ([ "data": replace(Stdio.read_bytes("etc/restart.html"),
-			    ({"$docurl", "$PWD"}), ({docurl, getcwd()})),
-		  "type":"text/html" ]);
+		    ({"$docurl", "$PWD"}), ({docurl, getcwd()})),
+  	    "type":"text/html" ]);
 } 
 
 mapping shutdown() 
@@ -462,15 +464,7 @@ private static void accept_callback( object port )
   object file;
   int q=QUERY(NumAccept);
   array pn=portno[port];
-  
-#ifdef DEBUG
-  if(!pn)
-  {
-    destruct(port->accept());
-    perror("$&$$& Garbage Collector bug!!\n");
-    return;
-  }
-#endif
+
   while(q--)
   {
     catch { file = port->accept(); };
@@ -620,7 +614,7 @@ void start_handler_threads()
 
 void stop_handler_threads()
 {
-  int timeout=30;
+  int timeout=10;
   roxen_perror("Stopping all request handler threads.\n");
   while(number_of_threads>0) {
     number_of_threads--;
@@ -815,13 +809,13 @@ int add_new_configuration(string name, string type)
   return configuration_interface()->low_enable_configuration(name, type);
 }
 
-// Call the configuration interface function. This is more or less
-// equivalent to a virtual configuration with the configurationinterface
-// mounted on '/'. This will probably be the case in future versions
 #ifdef THREADS
 object configuration_lock = Thread.Mutex();
 #endif
 
+// Call the configuration interface function. This is more or less
+// equivalent to a virtual configuration with the configurationinterface
+// mounted on '/'. This will probably be the case in future versions
 mixed configuration_parse(mixed ... args)
 {
 #ifdef THREADS
@@ -973,19 +967,6 @@ array(object) get_configuration_ports()
   return(values(configuration_ports));
 }
 
-// I will remove this in a future version of roxen.
-private program __p;
-mapping my_loaded = ([]);
-program last_loaded() { return __p; }
-
-string last_module_name;
-
-string filename(object|program o)
-{
-  if(objectp(o)) o = object_program(o);
-  return my_loaded[(program)o]||last_module_name;
-}
-
 class Codec
 {
   program p;
@@ -1019,7 +1000,7 @@ class Codec
 	}
 	break;
     }
-//     werror("Did not find %O (%O)\n", x, indices(x) );
+
     return ([])[0];
   }
 
@@ -1107,19 +1088,12 @@ array compile_module( string file )
   object o;
   program p;
 
-  MD_PERROR(("Compiling " + file + "...\n"));
-  
   if (catch(p = my_compile_file(file)) || (!p)) {
     MD_PERROR((" compilation failed"));
     throw("MODULE: Compilation failed.\n");
   }
-  // Set the module-filename, so that create in the
-  // new object can get it.
-  last_module_name = file;
   
   array err = catch(o =  p());
-
-  last_module_name = 0;
 
   if (err) {
     MD_PERROR((" load failed\n"));
@@ -1155,30 +1129,35 @@ object load(string s, object conf)   // Should perhaps be renamed to 'reload'.
   array st;
   sscanf(s, "/cvs:%s", cvs);
 
-//   perror("Module is "+s+"?");
   if(st=file_stat(s+".pike"))
   {
-//     perror("Yes, compile "+s+"?");
-    if((cvs?(__p=master()->cvs_load_file( cvs+".pike" ))
-	:(__p=my_compile_file(s+".pike"))))
+    program p;
+    if((cvs?
+        (p=master()->cvs_load_file( cvs+".pike" ))
+	:(p=my_compile_file(s+".pike"))))
     {
-//      perror("Yes.");
-      my_loaded[__p]=s+".pike";
+      mixed q;
       module_stat_cache[s-dirname(s)]=st;
-      return __p(conf);
+      if(q = catch{ return p(conf); })
+        perror(s+".pike exists, but could not be instantiated.\n"+
+               describe_backtrace(q));
     } else
       perror(s+".pike exists, but compilation failed.\n");
   }
-// #if 0
+#if constant(load_module)
   if(st=file_stat(s+".so"))
-    if(__p=predef::load_module(s+".so"))
+    if(mixed q=predef::load_module(s+".so"))
     {
-      my_loaded[__p]=s+".so";
-      module_stat_cache[s-dirname(s)]=st;
-      return __p(conf);
-    } else
-      perror(s+".so exists, but compilation failed.\n");
-// #endif
+      if(!catch(q = q->instance(conf)))
+      {
+        module_stat_cache[s-dirname(s)]=st;
+        return q;
+      }
+      perror(s+".so exists, but could not be initated (no instance class?)\n");
+    }
+    else
+      perror(s+".so exists, but load failed.\n");
+#endif
   return 0; // FAILED..
 }
 
@@ -1187,12 +1166,11 @@ array(string) expand_dir(string d)
   string nd;
   array(string) dirs=({d});
 
-//perror("Expand dir "+d+"\n");
   catch {
-    foreach((get_dir(d) || ({})) - ({"CVS"}) , nd) 
+    foreach(get_dir(d) - ({"CVS"}) , nd) 
       if(file_stat(d+nd)[1]==-2)
 	dirs+=expand_dir(d+nd+"/");
-  }; // This catch is needed....
+  }; // This catch is needed... (permission denied problems)
   return dirs;
 }
 
@@ -1778,6 +1756,17 @@ class ArgCache
   }
 }
 
+mapping cached_decoders = ([]);
+string decode_charset( string charset, string data )
+{
+  if( charset == "iso-8859-1" ) return data;
+  if( !cached_decoders[ charset ] )
+    cached_decoders[ charset ] = Locale.Charset.decoder( charset );
+  data = cached_decoders[ charset ]->feed( data )->drain();
+  cached_decoders[ charset ]->flush();
+  return data;
+}
+
 void create()
 {
    SET_LOCALE(default_locale);
@@ -1786,12 +1775,6 @@ void create()
 //   module_stat_cache = decode_value(Stdio.read_bytes(".module_stat_cache"));
 //   allmodules = decode_value(Stdio.read_bytes(".allmodules"));
 // };
-#ifndef __NT__
-  if(!getuid()) {
-    add_constant("Privs", Privs);
-  } else
-#endif /* !__NT__ */
-    add_constant("Privs", class{});
 
   // Dump some programs (for speed)
   dump( "base_server/newdecode.pike" );
@@ -1799,7 +1782,6 @@ void create()
   dump( "base_server/global_variables.pike" );
   dump( "base_server/module_support.pike" );
   dump( "base_server/http.pike" );
-  dump( "base_server/smartpipe.pike" );
   dump( "base_server/socket.pike" );
   dump( "base_server/cache.pike" );
   dump( "base_server/supports.pike" );
@@ -1807,42 +1789,61 @@ void create()
   dump( "base_server/hosts.pike");
   dump( "base_server/language.pike");
 
+#ifndef __NT__
+  if(!getuid()) {
+    add_constant("Privs", Privs);
+  } else
+#endif /* !__NT__ */
+    add_constant("Privs", class{});
 
   // for module encoding stuff
+  
   add_constant( "Image", Image );
   add_constant( "Image.Image", Image.Image );
+  add_constant( "Image.Font", Image.Font );
   add_constant( "Image.Colortable", Image.Colortable );
-  add_constant("Fonts", fonts );
-  add_constant("_____argcache", argcache );
-  add_constant("ArgCache", ArgCache );
-  add_constant("Stdio_dot_File_indeed", Stdio.File );
+  add_constant( "Image.Color", Image.Color );
+  add_constant( "Image.GIF.encode", Image.GIF.encode );
+  add_constant( "Image.Color.Color", Image.Color.Color );
+  add_constant( "roxen.argcache", argcache );
+  add_constant( "ArgCache", ArgCache );
+  add_constant( "Regexp", Regexp );
+  add_constant( "Stdio.File", Stdio.File );
+  add_constant( "Stdio.stdout", Stdio.stdout );
+  add_constant( "Stdio.stderr", Stdio.stderr );
+  add_constant( "Stdio.stdin", Stdio.stdin );
+  add_constant( "Stdio.read_bytes", Stdio.read_bytes );
+  add_constant( "Stdio.write_file", Stdio.write_file );
+  add_constant( "Stdio.sendfile", Stdio.sendfile );
+  add_constant( "Process.create_process", Process.create_process );
+  add_constant( "roxen.load_image", load_image );
 #if constant(Thread.Mutex)
-  add_constant( "_Thread_dot_Mutex_", Thread.Mutex );
-  add_constant( "_Thread_dot_Queue_", Thread.Queue );
+  add_constant( "Thread.Mutex", Thread.Mutex );
+  add_constant( "Thread.Queue", Thread.Queue );
 #endif
 
-  add_constant("roxen", this_object());
-  add_constant("RequestID", RequestID);
-  add_constant("load",    load);
-  add_constant("_Roxen_dot_set_locale", set_locale );
-  add_constant("_Roxen_dot_locale", locale );
-  add_constant("_Locale_dot_Roxen", Locale.Roxen );
-  add_constant("_roxen_dot_ImageCache", ImageCache );
+  add_constant( "roxen", this_object());
+  add_constant( "roxen.decode_charset", decode_charset);
+  add_constant( "RequestID", RequestID);
+  add_constant( "load",    load);
+  add_constant( "Roxen.set_locale", set_locale );
+  add_constant( "Roxen.locale", locale );
+  add_constant( "Locale.Roxen", Locale.Roxen );
+  add_constant( "roxen.ImageCache", ImageCache );
   // compatibility
-  add_constant("hsv_to_rgb",  Colors.hsv_to_rgb  );
-  add_constant("rgb_to_hsv",  Colors.rgb_to_hsv  );
-  add_constant("parse_color", Colors.parse_color );
-  add_constant("color_name",  Colors.color_name  );
-  add_constant("colors",      Colors             );
-  fonts = (object)"fonts.pike";
-
+  add_constant( "hsv_to_rgb",  Colors.hsv_to_rgb  );
+  add_constant( "rgb_to_hsv",  Colors.rgb_to_hsv  );
+  add_constant( "parse_color", Colors.parse_color );
+  add_constant( "color_name",  Colors.color_name  );
+  add_constant( "colors",      Colors             );
+  add_constant( "roxen.fonts", (fonts = (object)"fonts.pike") );
   Configuration = (program)"configuration";
   if(!file_stat( "base_server/configuration.pike.o" ) ||
      file_stat("base_server/configuration.pike.o")[ST_MTIME] <
      file_stat("base_server/configuration.pike")[ST_MTIME])
   {
     Stdio.write_file( "base_server/configuration.pike.o", 
-                      encode_value( Configuration, Codec( Configuration) ) );
+                      encode_value( Configuration, Codec( Configuration ) ) );
   }
   add_constant("Configuration", Configuration );
 
@@ -2462,7 +2463,8 @@ void scan_module_dir(string d)
   {
     object e = ErrorContainer();
     master()->set_inhibit_compile_errors(e->got_error);
-    if ( file[0]!='.' && !backup_extension(file) && (file[-1]!='z'))
+    if ( file[0]!='.' && !backup_extension(file) && (file[-1]!='z') &&
+         ((file[-1] != 'o') || file[-2] == 's'))
     {
       array stat = file_stat(path+file);
       if(!stat || (stat[ST_SIZE] < 0))
@@ -2471,11 +2473,9 @@ void scan_module_dir(string d)
 	  MD_PERROR((sprintf("Error in module rescanning directory code:"
 			     " %s\n",describe_backtrace(err))));
       } else {
-	MD_PERROR(("Considering "+file+" - "));
 	if((module_stat_cache[path+file] &&
 	    module_stat_cache[path+file][ST_MTIME])==stat[ST_MTIME])
 	{
-	  MD_PERROR(("Already tried this one.\n"));
 	  continue;
 	}
 	module_stat_cache[path+file]=stat;
@@ -2484,6 +2484,7 @@ void scan_module_dir(string d)
 	{
 	case "pike":
 	case "lpc":
+          MD_PERROR(("Considering "+file+" - "));
 	  if(catch{
 	    if((open(path+file,"r")->read(4))=="#!NO") {
 	      MD_PERROR(("Not a module\n"));
@@ -2493,10 +2494,13 @@ void scan_module_dir(string d)
 	    MD_PERROR(("Couldn't open file\n"));
 	    file=0;
 	  }
-	  if(!file) break;
+	  if(!file) {
+            break;
+          }
 	case "mod":
 	case "so":
-	  string *module_info;
+	  array(string) module_info;
+          int s = gethrtime();
 	  if (!(err = catch( module_info = compile_module(path + file)))) {
 	    // Load OK
 	    if (module_info) {
@@ -2516,8 +2520,8 @@ void scan_module_dir(string d)
 // 	      _master->errors += path + file + ": " + err;
 // 	    }
 	  }
+          MD_PERROR(("     [%4.2fms]\n", (gethrtime()-s)/1000.0));
 	}
-	MD_PERROR(("\n"));
       }
     }
     master()->set_inhibit_compile_errors(0);
@@ -2545,10 +2549,10 @@ void rescan_modules()
     }
   }
   catch {
-    rm(".module_stat_cache");
-    rm(".allmodules");
-    Stdio.write_file(".module_stat_cache", encode_value(module_stat_cache));
-    Stdio.write_file(".allmodules", encode_value(allmodules));
+//     rm(".module_stat_cache");
+//     rm(".allmodules");
+//     Stdio.write_file(".module_stat_cache", encode_value(module_stat_cache));
+//     Stdio.write_file(".allmodules", encode_value(allmodules));
   };
   report_notice(LOCALE->module_scan_done(sizeof(allmodules)));
 }
@@ -2591,14 +2595,16 @@ void create_pid_file(string where)
 #endif
 }
 
-
+program pipe;
 object shuffle(object from, object to,
 	       object|void to2, function(:void)|void callback)
 {
 #if efun(spider.shuffle)
   if(!to2)
   {
-    object p = pipe();
+    if(!pipe)
+      pipe = ((program)"smartpipe");
+    object p = pipe( );
     p->input(from);
     p->set_done_callback(callback);
     p->output(to);
@@ -2713,7 +2719,6 @@ void dump( string file )
 {
   program p = master()->programs[ replace(getcwd() +"/"+ file , "//", "/" ) ];
   array q;
-
   if(!p)
   {
 #ifdef DUMP_DEBUG
@@ -2728,7 +2733,7 @@ void dump( string file )
     if(q=catch{
       Stdio.write_file(file+".o",encode_value(p,Codec(p)));
 #ifdef DUMP_DEBUG
-b      report_debug( file+" dumped successfully to "+file+".o\n" );
+      report_debug( file+" dumped successfully to "+file+".o\n" );
 #endif
     })
       report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
@@ -2739,15 +2744,21 @@ b      report_debug( file+" dumped successfully to "+file+".o\n" );
 #endif
 }
 
-// And then we have the main function, this is the oldest function in
-// Roxen :) It has not changed all that much since Spider 2.0.
-int main(int|void argc, array (string)|void argv)
+int main(int argc, array argv)
 {
 //   dump( "base_server/disk_cache.pike");
 // cannot encode this one yet...
 
   call_out( lambda() {
+              ((program)"fastpipe"),
+              ((program)"slowpipe"),
+
+              dump( "protocols/http.pike");
+              dump( "protocols/ftp.pike");
+              dump( "protocols/https.pike");
+
               dump( "base_server/state.pike" );
+              dump( "base_server/struct/node.pike" );
               dump( "base_server/persistent.pike");
               dump( "base_server/restorable.pike");
               dump( "base_server/highlight_pike.pike");
@@ -2756,6 +2767,10 @@ int main(int|void argc, array (string)|void argv)
               dump( "base_server/proxyauth.pike" );
               dump( "base_server/html.pike" );
               dump( "base_server/module.pike" );
+              dump( "base_server/throttler.pike" );
+              dump( "base_server/smartpipe.pike" );
+              dump( "base_server/slowpipe.pike" );
+              dump( "base_server/fastpipe.pike" );
             }, 9);
 
 
@@ -2793,25 +2808,22 @@ int main(int|void argc, array (string)|void argv)
   argc = sizeof(argv);
 
   define_global_variables(argc, argv);
+
   object o;
   if(QUERY(locale) != "standard" && (o = Locale.Roxen[QUERY(locale)]))
   {
     default_locale = o;
     SET_LOCALE(default_locale);
   }
-  report_notice(LOCALE->starting_roxen());
-  
 #if efun(syslog)
   init_logger();
 #endif
-
   init_garber();
   initiate_supports();
-  
   initiate_configuration_port( 1 );
   enable_configurations();
 
-  set_u_and_gid();		// Running with the right uid:gid from this point on.
+  set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
 
   create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE")
 		  || QUERY(pidfile));
@@ -2848,16 +2860,15 @@ int main(int|void argc, array (string)|void argv)
 #if efun(thread_set_concurrency)
   thread_set_concurrency(QUERY(numthreads)+1);
 #endif
-
 #endif /* THREADS */
 
   // Signals which cause a restart (exitcode != 0)
-  foreach( ({ "SIGINT" }), string sig) {
+  foreach( ({ "SIGINT","SIGTERM" }), string sig) {
     catch { signal(signum(sig), exit_when_done); };
   }
   catch { signal(signum("SIGHUP"), reload_all_configurations); };
   // Signals which cause a shutdown (exitcode == 0)
-  foreach( ({ "SIGTERM" }), string sig) {
+  foreach( ({  }), string sig) {
     catch { signal(signum(sig), shutdown); };
   }
   // Signals which cause Roxen to dump the thread state
@@ -2865,11 +2876,13 @@ int main(int|void argc, array (string)|void argv)
     catch { signal(signum(sig), describe_all_threads); };
   }
 
-  report_notice(LOCALE->roxen_started(time()-start_time));
 #ifdef __RUN_TRACE
   trace(1);
 #endif
   start_time=time();		// Used by the "uptime" info later on.
+
+  
+
   return -1;
 }
 
@@ -2886,17 +2899,17 @@ string check_variable(string name, mixed value)
     config_ports_changed = 1;
     break;
    case "cachedir":
-    if(!sscanf(value, "%*s/roxen_cache"))
-    {
+//     if(!sscanf(value, "%*s/roxen_cache"))
+//     {
       // FIXME: LOCALE?
       // We will skip this soon anyway....
-//       object node;
-//       node = (configuration_interface()->root->descend("Globals", 1)->
-// 	      descend("Proxy disk cache: Base Cache Dir", 1));
-//       if(node && !node->changed) node->change(1);
-      mkdirhier(value+"roxen_cache/foo");
-      call_out(set, 0, "cachedir", value+"roxen_cache/");
-    }
+//    object node;
+//    node = (configuration_interface()->root->descend("Globals", 1)->
+//            descend("Proxy disk cache: Base Cache Dir", 1));
+//    if(node && !node->changed) node->change(1);
+//       mkdirhier(value+"roxen_cache/foo");
+//       call_out(set, 0, "cachedir", value+"roxen_cache/");
+//     }
     break;
 
    case "ConfigurationURL":
