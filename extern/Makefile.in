@@ -23,6 +23,13 @@ fcgi: force
 force:
 	@:
 
+check: verify
+
+verbose_verify: verify
+
+verify: force
+	@echo No tests in extern/.
+
 install: fcgi
 	@for f in fcgi; do \
 		echo Installing $$f...; \
