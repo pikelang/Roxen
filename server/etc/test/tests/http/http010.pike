@@ -12,7 +12,7 @@ void main(int argc, array argv)
   write_fragmented( f,
 		    "GET "+argv[2]+" HTTP/"+argv[4]+sep+
 		    "Connection: close"+sep+
-		    "User-Agent: testscript"+sep+sep,
+		    "User-Agent: Roxen Testscript"+sep+sep,
 		    psize );
 
   string _d = f->read();
