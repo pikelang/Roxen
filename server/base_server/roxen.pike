@@ -4,12 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.662 2001/04/24 18:20:42 grubba Exp $";
-
-#ifdef THREADS
-// Used when running threaded to find out which thread is the backend thread.
-Thread.Thread backend_thread;
-#endif /* THREADS */
+constant cvs_version="$Id: roxen.pike,v 1.663 2001/04/25 08:33:59 jonasw Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -31,6 +26,11 @@ inherit "disk_cache";
 inherit "supports";
 inherit "module_support";
 inherit "config_userdb";
+
+#ifdef THREADS
+// Used when running threaded to find out which thread is the backend thread.
+Thread.Thread backend_thread;
+#endif /* THREADS */
 
 // --- Locale defines ---
 
