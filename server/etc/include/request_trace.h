@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.6 2001/11/01 13:06:24 grubba Exp $
+// $Id: request_trace.h,v 1.7 2001/11/01 14:52:59 grubba Exp $
 
 #ifdef REQUEST_TRACE
 
@@ -13,16 +13,20 @@
 
 # define TRACE_ENTER(A,B) do{ \
     function(string,mixed ...:void) _trace_enter; \
-    if(id && _trace_enter = \
-       [function(string,mixed ...:void)]([mapping(string:mixed)]id->misc)->trace_enter) \
-      _trace_enter ((A), (B)); \
+    if(id && \
+       (_trace_enter = \
+        [function(string,mixed ...:void)]([mapping(string:mixed)]id->misc)-> \
+          trace_enter)) \
+      _trace_enter((A), (B)); \
   }while(0)
 
 # define TRACE_LEAVE(A) do{ \
     function(string:void) _trace_leave; \
-    if(id && _trace_leave = \
-       [function(string:void)]([mapping(string:mixed)]id->misc)->trace_leave) \
-      _trace_leave (A); \
+    if(id && \
+       (_trace_leave = \
+        [function(string:void)]([mapping(string:mixed)]id->misc)-> \
+          trace_leave)) \
+      _trace_leave(A); \
   }while(0)
 
 #endif
