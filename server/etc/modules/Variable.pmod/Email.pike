@@ -26,12 +26,12 @@ array(string) verify_set( string new_value ) {
     return ({ "The email address domain contains forbidden characters", new_value });
 
   sscanf(lower_case(user),
-	 "%*[abcdefghijklmnopqrstuvwxyz 0123456789.-_]%s", tmp); // More characters?
+	 "%*[abcdefghijklmnopqrstuvwxyz0123456789.-_]%s", tmp); // More characters?
   if(sizeof(tmp))
     return ({ "The email address user contains forbidden characters", new_value });
 
   if(user[0]=='.')
-    return ({ "The email addres begins with an character that is not legal in that position.",
+    return ({ "The email address begins with an character that is not legal in that position.",
 	      new_value[1..] });
 
 #ifdef NSERIOUS
