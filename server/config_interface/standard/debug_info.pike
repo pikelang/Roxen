@@ -1,12 +1,17 @@
 /*
- * $Id: debug_info.pike,v 1.3 1999/11/17 15:13:32 per Exp $
+ * $Id: debug_info.pike,v 1.4 1999/11/23 06:42:15 per Exp $
  */
-
-// inherit "wizard";
-// inherit "configlocale";
 inherit "roxenlib";
+#include <stat.h>
 
 mapping last_usage;
+
+int creation_date = time();
+
+int no_reload()
+{
+  return creation_date > file_stat( __FILE__ )[ST_MTIME];
+}
 
 #if efun(get_profiling_info)
 string remove_cwd(string from)
@@ -113,20 +118,47 @@ mixed page_1(object id)
                                  "+chld",
                                  "t/call(ms)",
 				 "+chld(ms)"}));
-  return res;// + "\n\n<pre><font size=-20>"+ADT.Table.ASCII.encode( t )+"</font></pre>";
+  return res + "\n\n<pre><font size=-20>"+ADT.Table.ASCII.encode( t )+"</font></pre>";
 }
 #endif
 
 
-int wizard_done()
-{ 
-  return -1;
+mapping class_cache = ([]);
+
+string fix_cname( string what )
+{
+  if( what == "`()()" )
+    what = "()";
+  return what;
+}
+
+string find_class( string f, int l )
+{
+  if( l < 2 ) 
+    return 0;
+  if( class_cache[ f+":"+l ] )
+      return class_cache[ f+":"+l ];
+  string data = Stdio.read_bytes( f );
+  if( !data )
+    return 0;
+  array lines = data/"\n";
+  if( sizeof( lines ) < l )
+    return 0;
+  string cname;
+  if( sscanf( lines[l], "%*sclass %[^ \t]", cname ) == 2)
+    return class_cache[ f+":"+l ] = fix_cname(cname+"()");
+  if( sscanf( lines[l-1], "%*sclass %[^ \t]", cname ) == 2)
+    return class_cache[ f+":"+l ] = fix_cname(cname+"()");
+  if( sscanf( lines[l+1], "%*sclass %[^ \t]", cname ) == 2)
+    return class_cache[ f+":"+l ] = fix_cname(cname+"()");
+  return 0;
 }
 
 mixed page_0( object id )
 {
-  if(!last_usage) last_usage = roxen->query_var("__memory_usage");
-  if(!last_usage) last_usage = ([]); 
+  gc();
+  last_usage = roxen->query_var("__memory_usage");
+  if(!last_usage) last_usage = _memory_usage(); 
 
   string res="";
   string first="";
@@ -135,73 +167,141 @@ mixed page_0( object id )
   foo->num_total = 0;
   array ind = sort(indices(foo));
   string f;
-  res+=("<table width=100% cellpadding=0 cellspacing=0 border=0>"
-	"<tr valign=top><td valign=top>");
-  res+=("<table border=0 width=100% cellspacing=0 cellpadding=2>"
-	"<tr bgcolor=#d9dee7><td>&nbsp;</td>"
-	"<th colspan=2><b>number of</b></th></tr>"
-	"<tr bgcolor=#d9dee7><th align=left>Entry</th><th align"
-	"=right>Current</th><th align=right>Change</th></tr>");
   int row=0;
+
+  array table = ({});
+
   foreach(ind, f)
     if(!search(f, "num_"))
     {
-      string bg="white";
-      if( row++ % 2 )
-        bg = "#eeeeee";
       if(f!="num_total")
 	foo->num_total += foo[f];
-      else
-	bg="#d9dee7";
-      string col="darkred";
+
+      string col
+           ="darkred  ";
       if((foo[f]-last_usage[f]) < foo[f]/60)
-	col="brown";
+	col="brown    ";
       if((foo[f]-last_usage[f]) == 0)
-	col="black";
+	col="black    ";
       if((foo[f]-last_usage[f]) < 0)
 	col="darkgreen";
       
-      res += "<tr bgcolor="+bg+"><td><b><font color="+col+">"+f[4..]+"</font></b></td><td align=right><b><font color="+col+">"+
-	(foo[f])+"</font></b></td><td align=right><b><font color="+col+">"+
-	((foo[f]-last_usage[f]))+"</font></b><br></td>";
+      string bn = f[4..sizeof(f)-2]+"_bytes";
+      foo->total_bytes += foo[ bn ];
+      if( bn == "tota_bytes" )
+        bn = "total_bytes";
+      table += ({ ({ 
+        "<font color="+col+">"+f[4..], foo[f], foo[f]-last_usage[f], 
+        sprintf( "%.1f",foo[bn]/1024.0), 
+        sprintf( "%.1f",(foo[bn]-last_usage[bn])/1024.0 )+"</font>",
+      }) });
     }
-  res+="</table></td><td>";
 
-  res+=("<table width=100% border=0 cellspacing=0 cellpadding=2>"
-	"<tr bgcolor=#d9dee7><th colspan=2><b>memory usage</b></th></tr>"
-	"<tr bgcolor=#d9dee7><th align=right>Current (KB)</th><th align=right>"
-	"Change (KB)</th></tr>");
+  object t = ADT.Table->table(table, 
+                              ({ "<font color=black    >Entry", "Number", 
+                                 "Change", "KB", "Change</font>"}),
+                              ({
+                                0, 
+                                ([ "type":"num" ]),
+                                ([ "type":"num" ]),
+                                ([ "type":"num" ]),
+                                ([ "type":"num" ]),
+                              }));
+  res += "<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
 
-  row = 0;
-  foreach(ind, f)
-    if(search(f, "num_"))
+  roxen->set_var("__memory_usage", foo);
+
+#if efun(_dump_obj_table)
+  array table = ({
+  });
+
+  foo = _dump_obj_table();
+  mapping allobj = ([]);
+  string a = getcwd(), s;
+  if(a[-1] != '/')
+    a += "/";
+  int i;
+  for(i = 0; i < sizeof(foo); i++) 
+  {
+    string s = foo[i][0];
+    if(!stringp(s))
+      continue;
+    allobj[s]++;
+  }
+
+  foreach(Array.sort_array(indices(allobj),lambda(string a, string b ) {
+    return allobj[a] < allobj[b];
+  }), s) 
+    if((search(s, "Destructed?") == -1) && allobj[s]>2)
     {
-      string bg="white";
-      if( row++ % 2 )
-        bg = "#eeeeee";
-      if((f!="total_usage"))
-	foo->total_usage += foo[f];
-      else
-	bg="#d9dee7";
-      string col="darkred";
-      if((foo[f]-last_usage[f]) < foo[f]/60)
-	col="brown";
-      if((foo[f]-last_usage[f]) == 0)
-	col="black";
-      if((foo[f]-last_usage[f]) < 0)
-	col="darkgreen";
-      res += sprintf("<tr bgcolor="+bg+"><td align=right><b><font "
-		     "color="+col+">%.1f</font></b></td><td align=right>"
-		     "<b><font color="+col+">%.1f</font></b><br></td>",
-		     (foo[f]/1024.0),((foo[f]-last_usage[f])/1024.0));
-    }
-  last_usage=foo;
-  roxen->set_var("__memory_usage", last_usage);
-  res+="</table></td></tr></table>";
-  first = res;
-  res = "";
+      string n = s-a;
+      if( sscanf( n, "%*ssrc/%s.c", n ) )
+        continue;
 
-  return first +"</ul>";
+      string f = (n/":")[0];
+      int line = (int)(n/":"+({"0"}))[1];
+      switch( f )
+      {
+       case "protocols/http.pike":
+         f = "RequestID(http)";
+         line=0;
+         break;
+       case "protocols/ftp.pike":
+         f = "RequestID(ftp)";
+         line=0;
+         break;
+       case "protocols/gopher.pike":
+         f = "RequestID(gopher)";
+         line=0;
+         break;
+       case "base_server/module_support.pike":
+         f = "roxen."+find_class( f, line );
+         line=0;
+         break;
+       case "base_server/rxml.pike":
+         switch( line )
+         {
+          case 0..200:
+            f = "rxml.Parser()";
+            line=0;
+            break;
+         }
+         if( !line )
+           break;
+         /* intentional */
+       default:
+         string fn = f - "/module.pmod";
+         string n = (reverse((reverse( fn ) / "/") [0])/".")[0];
+         string q = find_class( f, line );
+         if( q )
+           f = n+"."+q;
+         else
+           f = n+":"+line+"()";
+         f = replace( f, ".()", "()");
+         line=0;
+         break;
+      }
+      if( line )
+        table += ({
+          ({ f+":"+line, allobj[s] }),
+        });
+      else
+        table += ({
+          ({ f, allobj[s] }),
+        });
+    }
+
+  object t = ADT.Table->table(table, ({ "File",  "Clones"}),
+                              ({ 0, ([ "type":"num" ])}));
+  res += "<pre>"+ADT.Table.ASCII.encode( t ) + "</pre>";
+  
+#endif
+
+#if efun(_num_objects)
+  res += ("Number of destructed objects: " + _num_dest_objects() +"<br>\n");
+#endif  
+
+  return res +"</ul>";
 }
 
 mixed parse(object id) 
