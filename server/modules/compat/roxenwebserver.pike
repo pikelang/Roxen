@@ -12,9 +12,9 @@
 //
 
 constant cvs_version =
- "$Id: roxenwebserver.pike,v 1.2 2004/05/30 23:15:55 _cvs_stephen Exp $";
+ "$Id: roxenwebserver.pike,v 1.3 2004/05/30 23:28:19 _cvs_stephen Exp $";
 constant thread_safe = 1;
-constant module_unique = 0;
+constant module_unique = 1;
 
 #include <module.h>
 
