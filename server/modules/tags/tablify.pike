@@ -1,6 +1,6 @@
 // This Isg a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.62 2001/02/20 09:48:13 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.63 2001/02/23 12:33:06 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -406,6 +406,9 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
 		    if(sizeof(t)>id->misc->tmp_colmax) id->misc->tmp_colmax=sizeof(t);
 		    return t;
 		  }, sep);
+
+  if(sizeof(rows[-1])==1 && !sizeof(String.trim_all_whites(rows[-1][0])))
+    rows = rows[..sizeof(rows)-2];
 
   if(m["interactive-sort"]) {
     m->state=Page_state(id);
