@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: newdecode.pike,v 1.27 2000/03/21 14:25:50 mast Exp $
+// $Id: newdecode.pike,v 1.28 2000/09/05 21:04:41 mast Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -126,25 +126,28 @@ string encode_mixed(mixed from, object c, int|void indent)
     return "<int>"+from+"</int>";
    case "float":
      return "<flt>"+from+"</flt>";
-   case "array":
+   case "array": {
      if (!sizeof (from)) return "<a></a>";
      string res = "<a>\n";
      foreach (from, mixed i)
        res += "  "*indent + "  " + encode_mixed (i, c, indent + 1) + "\n";
      return res + "  "*indent + "</a>";
-   case "multiset":
+   }
+   case "multiset": {
      if (!sizeof (from)) return "<lst></lst>";
      string res = "<lst>\n";
      foreach (sort (indices (from)), mixed i)
        res += "  "*indent + "  " + encode_mixed (i, c, indent + 1) + "\n";
      return res + "  "*indent + "</lst>";
-   case "mapping":
+   }
+   case "mapping": {
      if (!sizeof (from)) return "<map></map>";
      string res="<map>\n";
      foreach(sort (indices (from)), mixed i)
        res += "  "*indent + "  " + encode_mixed(i, c, indent + 1) + " : " +
 	 encode_mixed(from[i],c, indent + 1)+"\n";
      return res + "  "*indent + "</map>";
+   }
    default:
      if (objectp (from))
        return "<mod>"+name_of_module(from,c)+"</mod>";

@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.109 2000/09/05 08:50:35 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.110 2000/09/05 21:04:44 mast Exp $";
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -127,7 +127,7 @@ class Scope_usr
        return res;
 
      case "toptabs-tableargs":
-       string res = "";
+       res = "";
        if( ALIAS("toptabs-bgcolor") != "none" )
          res = "bgcolor="+QALIAS("toptabs-bgcolor");
        if( stringp(q = QALIAS( "toptabs-background" )) && strlen( q ) )
@@ -149,13 +149,13 @@ class Scope_usr
        return res;
 
      case "left-tableargs":
-       string res = "valign=\"top\" width=\"150\"";
+       res = "valign=\"top\" width=\"150\"";
        if( stringp(q = QALIAS( "left-background" )) && strlen( q ) )
          res += " background="+q;
        return res;
 
      case "content-tableargs":
-       string res = " width=\"100%\" valign=\"top\"";
+       res = " width=\"100%\" valign=\"top\"";
        if( stringp(q = QALIAS( "content-background" )) && strlen( q ) )
          res += " background="+q;
        return res;
@@ -240,7 +240,7 @@ class Scope_usr
          return (string)Image.Color( @map(map((array)c1, `+, 0x61 ),min,255));
        return (string)Image.Color( @map(map( (array)c1, `-, 0x51 ),max,0) );
 
-     case "fade3":
+     case "fade3": {
        array sub = ({ 0x26, 0x21, 0x18 });
        array add = ({ 0x18, 0x21, 0x26 });
        array a =  (array)c1;
@@ -255,8 +255,9 @@ class Scope_usr
          a[2] -= sub[2];
        }
        return (string)Image.Color( @map(map(a,max,0),min,255) );
+     }
 
-     case "fade4":
+     case "fade4": {
        array sub = ({ 0x87, 0x7b, 0x63 });
        array add = ({ 0x63, 0x7b, 0x87 });
        array a =  (array)c1;
@@ -271,6 +272,7 @@ class Scope_usr
          a[2] -= sub[2];
        }
        return (string)Image.Color( @map(map(a,max,0),min,255) );
+     }
     }
     return config_setting( var );
   }

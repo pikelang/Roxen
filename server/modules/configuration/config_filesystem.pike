@@ -16,7 +16,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.49 2000/08/28 05:31:53 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.50 2000/09/05 21:04:44 mast Exp $";
 
 constant path = "config_interface/";
 string encoding = "iso-8859-1";         // charset for pages
@@ -211,7 +211,6 @@ mixed find_file( string f, object id )
   {
    case "text/html":
      string data =  retval->read(), title="", pre;
-     string title = "";
      if( 3 == sscanf( data, "%s<title>%s</title>%s", pre, title, data ) )
        data = pre+data;
 

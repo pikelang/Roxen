@@ -12,7 +12,7 @@ inherit "polyline.pike";
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.50 2000/03/16 17:26:46 nilsson Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.51 2000/09/05 21:04:47 mast Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -72,7 +72,6 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
 
   array(object) text;
-  object notext;
   int ymaxtext;
   int xmaxtext;
 

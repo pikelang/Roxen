@@ -10,7 +10,7 @@ import Stdio;
 
 inherit "polyline.pike";
 
-constant cvs_version = "$Id: create_graph.pike,v 1.109 2000/03/16 17:26:46 nilsson Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.110 2000/09/05 21:04:46 mast Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -501,6 +501,7 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 					   diagram_data["fontsize"]);
     }
 
+    {
     GETFONT(ynamesfont);
 
     diagram_data["ynamesimg"]=allocate(j=sizeof(diagram_data["ynames"]));
@@ -606,7 +607,7 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 	tobig=0;
       else
 	tobig--;
-
+    }
   }
 }
 

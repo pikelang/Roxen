@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.54 2000/08/28 05:31:50 per Exp $
+// $Id: disk_cache.pike,v 1.55 2000/09/05 21:04:41 mast Exp $
 
 #include <config.h>
 #include <module_constants.h>
@@ -299,7 +299,6 @@ class Cache {
       return;
     }
     /* Master */
-    mixed err;
     err = catch {
       destruct(lcs);
       reinit(basename);
