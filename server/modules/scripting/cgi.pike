@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.68 1998/01/24 17:11:56 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.69 1998/01/27 12:18:29 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -290,9 +290,10 @@ string query_location()
 
 string query_name() 
 { 
-  return sprintf("CGI-bin path: <i>%s</i>"+
+  return sprintf("CGI-bin path: <i>%s</i>, CGI-searchpath: <i>%s</i>"+
 		 (QUERY(ex)?", CGI-extensions: <i>%s</i>":""),
-		 QUERY(mountpoint), implode_nicely(QUERY(ext)));
+		 QUERY(mountpoint), QUERY(searchpath),
+		 implode_nicely(QUERY(ext)));
 }
 
 static inline array make_args( string rest_query )
