@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.47 2000/01/24 19:21:31 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.48 2000/01/25 15:37:40 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -929,18 +929,23 @@ class Entity_page_scope {
   string rxml_var_eval(RXML.Context c) { return c->current_scope()||""; }
 }
 
+class Entity_page_filesize {
+  int rxml_var_eval(RXML.Context c) { return c->id->misc->defines[" _stat"]?c->id->misc->defines[" _stat"][1]:-4; }
+}
+
 mapping page_scope=(["realfile":Entity_page_realfile(),
 		     "virtroot":Entity_page_virtroot(),
 		     "virtfile":Entity_page_virtfile(),
 		     "url":Entity_page_url(),
-		     "last_true":Entity_page_last_true(),
+		     "last-true":Entity_page_last_true(),
 		     "language":Entity_page_language(),
-		     "scope":Entity_page_scope() ]);
+		     "scope":Entity_page_scope(),
+		     "filesize":Entity_page_filesize() ]);
 
 class Entity_client_referrer {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
-    array referrer=c->id->referrer;
+    array referrer=c->id->referer;
     return referrer && sizeof(referrer)?referrer[0]:"";
   }
 }
@@ -997,8 +1002,8 @@ class Entity_client_languages {
 mapping client_scope=([ "ip":Entity_client_ip(),
 			"name":Entity_client_name(),
 			"referrer":Entity_client_referrer(),
-			"accept_language":Entity_client_accept_language(),
-			"accept_languages":Entity_client_accept_languages(),
+			"accept-language":Entity_client_accept_language(),
+			"accept-languages":Entity_client_accept_languages(),
 			"language":Entity_client_language(),
 			"languages":Entity_client_languages()]);
 
@@ -1352,21 +1357,24 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
 
   if(n = m->variable)
   {
-    if(!id->variables[n])
-      return rxml_error(tag, "No such variable ("+n+").", id);
+    string var=RXML.get_context()->get_user_var(m->variable, m->scope);
+    if(!var) return rxml_error(tag, "No such variable ("+n+").", id);
     return m->quote=="none"?(string)id->variables[n]:({ html_encode_string((string)id->variables[n]) });
   }
 
-  if(n = m->variables) {
+  if(n = m->variables || m->scope) {
+    RXML.Context context=RXML.get_context();
     if(m->variables!="variables")
-      return ({ html_encode_string(Array.map(indices(id->variables),
-			lambda(string s, mapping m)
-			{ return sprintf("%s=%O\n", s, m[s]); },
-					   id->variables) * "\n")
-	    });
-    return ({ String.implode_nicely(indices(id->variables)) });
+      return ({ html_encode_string(Array.map(context->list_var(m->scope),
+					     lambda(string s) {
+					       return sprintf("%s=%O", s, context->get_var(s, m->scope) );
+					     } ) * "\n")
+				   });
+    return ({ String.implode_nicely(context->list_var(m->scope)) });
   }
 
+
+  //FIXME: Kill these ? --------------------------------
   if(n = m->other) {
     if(stringp(id->misc[n]) || intp(id->misc[n]))
       return m->quote=="none"?(string)id->misc[n]:({ html_encode_string((string)id->misc[n]) });
@@ -1392,6 +1400,7 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
       return m->quote=="none"?id->cookies[n]:({ html_encode_string(id->cookies[n]) });
     return rxml_error(tag, "No such cookie ("+n+").", id);
   }
+  //FIXME: ------------------------------------------
 
   if(m->file)
   {
