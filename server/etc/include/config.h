@@ -6,6 +6,12 @@
 #ifndef _ROXEN_CONFIG_H_
 #define _ROXEN_CONFIG_H_
 
+
+#if efun(thread_create) && efun(Queue)
+//#define THREADS
+#endif
+
+
 /* Reply 'PONG\r\n' to the query 'PING\r\n'.
  * For performance tests...
  */
