@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.14 2002/10/15 09:46:36 tomas Exp $
+// $Id: startdll.cpp,v 1.15 2002/10/31 15:36:46 tomas Exp $
 //
 
 
@@ -510,20 +510,25 @@ void CServiceModule::MsgLoopCallback(int index)
   else if (exitcode == 0)
   {
     //clean shutdown
-    LogEvent("Roxen CMS shutdown.");
+    if (m_Cmdline.GetVerbose() > 0)
+      LogEvent("Roxen CMS shutdown.");
+
     Stop(FALSE);
   }
   else if (exitcode == 50)
   {
     //clean shutdown
-    LogEvent("Failed to open any port. Shutdown.");
+    if (m_Cmdline.GetVerbose() > 0)
+      LogEvent("Failed to open any port. Shutdown.");
+
     m_Cmdline.SetKeepMysql();
     Stop(FALSE);
   }
   else if (exitcode == 100)
   {
     // restart using possibly new version of ourself
-    LogEvent("Changing Roxen CMS version. Restarting...");
+    if (m_Cmdline.GetVerbose() > 0)
+      LogEvent("Changing Roxen CMS version. Restarting...");
     
     if (!m_Cmdline.IsOnce())
       // restart the new version of the server!!
@@ -535,11 +540,13 @@ void CServiceModule::MsgLoopCallback(int index)
   {
     if (exitcode < 0)
     {
-      LogEvent("Roxen CMS died of signal %d. Restarting...", exitcode);
+      if (m_Cmdline.GetVerbose() > 0)
+        LogEvent("Roxen CMS died of signal %d. Restarting...", exitcode);
     }
     else // exitcode < 0
     {
-      LogEvent("Roxen CMS down. Restarting...");
+      if (m_Cmdline.GetVerbose() > 0)
+        LogEvent("Roxen CMS down. Restarting...");
     }
     Sleep(100);
     if (IsStopping())
