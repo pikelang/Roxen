@@ -176,7 +176,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   if (diagram_data["center"])
     {
       //To great center integer is given! Center can not be greater than sizeof(data[0]).
-      diagram_data["center"]%=sizeof(numbers);
+      diagram_data["center"]%=(1+sizeof(numbers));
       FI=(400-`+(0,@pnumbers[0..diagram_data["center"]-2])
 	-pnumbers[diagram_data["center"]-1]*0.5)*2.0*PI/400.0;
     }
