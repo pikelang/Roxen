@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.226 1998/07/25 04:20:43 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.227 1998/08/18 21:09:14 grubba Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -2247,7 +2247,7 @@ void scan_module_dir(string d)
 	    foo = o->register_module();
 	    if (!foo) {
 	      MD_PERROR(("registration failed"));
-	      throw("Failed to register module.\n");
+	      return 0;
 	    } else {
 	      MD_PERROR(("registered."));
 	    }
@@ -2256,7 +2256,13 @@ void scan_module_dir(string d)
 		       +"</i>", foo[0] });
 	  }(path + file)))) {
 	    // Load OK
-	    allmodules[ file-("."+extension(file)) ] = module_info;
+	    if (module_info) {
+	      // Module load OK.
+	      allmodules[ file-("."+extension(file)) ] = module_info;
+	    } else {
+	      // Disabled module.
+	      report_notice(sprintf("Module %O is disabled.\n", path+file));
+	    }
 	  } else {
 	    // Load failed.
 	    module_stat_cache[path+file]=0;
