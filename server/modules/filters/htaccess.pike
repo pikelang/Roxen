@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.58 2000/03/16 17:23:34 nilsson Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.59 2000/03/18 01:57:20 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -898,7 +898,7 @@ mapping remap_url(RequestID id)
     } else {
 
       string s = (id->not_query/"/")[-1];
-      if (search(QUERY(denyhtlist), s) != -1) {
+      if ((s != "") && (search(QUERY(denyhtlist), s) != -1)) {
 	report_debug("Denied access for "+s+"\n");
 	id->misc->error_code = 401;
 	TRACE_LEAVE("Access Denied");
