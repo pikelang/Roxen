@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.331 2003/01/22 16:12:12 grubba Exp $
+// $Id: roxenloader.pike,v 1.332 2003/01/22 17:37:38 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.331 2003/01/22 16:12:12 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.332 2003/01/22 17:37:38 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1122,9 +1122,9 @@ void write_current_time()
 }
 
 //! @appears throw
-//! Overloads Pikes throw function.
-//! @fixme
-//!    What is the purpose of this?
+//!   Overloads Pikes throw function.
+//! 
+//!   Exists for detection of code that throws non-errors.
 void paranoia_throw(mixed err)
 {
   if ((arrayp(err) && ((sizeof([array]err) < 2) || !stringp(([array]err)[0]) ||
