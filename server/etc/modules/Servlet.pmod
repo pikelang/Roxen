@@ -116,8 +116,7 @@ class servlet {
     if(stringp(name)) {
       if(!objectp(dir))
 	dir = loader(dir||".");
-      if(name = dir->low_load(name))
-	name = 0;
+      name = dir->low_load(name);
     }
 
     if(!name) {
