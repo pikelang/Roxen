@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.23 2004/02/06 12:54:05 anders Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.24 2004/02/09 17:54:51 wellhard Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -41,7 +41,7 @@ Image.Layer generate_image( mapping a, mapping node_tree, RequestID id )
 {
   LazyImage.clear_cache();
   LazyImage image = LazyImage.decode(node_tree);
-  array ll = image->run();
+  array ll = image->run(0, id);
   LazyImage.clear_cache();
   
   mapping e;
@@ -474,32 +474,34 @@ class TagGXML
       if( !i )
 	parse_error( "No image\n");
 
-      mapping aa = args;
-      string ind;
-      mapping a2 = aa+([]);
+      mapping my_args = ([
+	"quant":     args->quant,
+	"crop":      args->crop,
+	"format":    args->format,
+	"maxwidth":  args->maxwidth,
+	"maxheight": args->maxheight,
+	"scale":     args->scale,
+	"dither":    args->dither,
+	"gamma":     args->gamma,
+	"size":      args->size,
+      ]);
+      foreach( glob( "*-*", indices(args)), string n )
+	my_args[n] = args[n];
 
-      m_delete( a2, "src" );
-      m_delete( a2, "align" );
-      m_delete( a2, "border" );
-      aa->src = query_internal_location()+
-	(ind=the_cache->store(({a2,i->encode()}),id));
-
-      a2 = ([]);
-      a2->src = aa->src;
-      if( aa->align )  a2->align = aa->align;
-      if( aa->border ) a2->border = aa->border;
-
-      the_cache->http_file_answer( ind, id );
-      if( mapping size = the_cache->metadata( ind, id ) )
+      mapping res_args = args - my_args;
+      string key = the_cache->store( ({ my_args, i->encode() }), id);
+      res_args->src = query_internal_location() + key;
+      int no_draw = !id->misc->generate_images;
+      if( mapping size = the_cache->metadata( key, id, no_draw ) )
       {
-	aa->width = size->xsize;
-	aa->height = size->ysize;
+	res_args->width = size->xsize;
+	res_args->height = size->ysize;
       }
 
-      if( !args->url )
-	result = Roxen.make_tag( "img", a2, 1 );
+      if( !args->url ) 
+	result = Roxen.make_tag( "img", res_args, !res_args->noxml );
       else
-	result = a2->src;
+	result = res_args->src;
     }
   }
 }
