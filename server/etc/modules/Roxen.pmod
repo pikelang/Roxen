@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.92 2001/05/30 17:27:10 nilsson Exp $
+// $Id: Roxen.pmod,v 1.93 2001/05/30 17:35:36 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2694,7 +2694,7 @@ class ScopePage {
 	array parts = c->id->not_query/"/";
 	return ENCODE_RXML_TEXT( parts[..sizeof(parts)-2]*"/"+"/", type);
       case "counter":
-	return ENCODE_RXML_INT(c->id->misc->internal_counter++, type);
+	return ENCODE_RXML_INT(++c->id->misc->internal_counter, type);
     }
     mixed val;
     if(converter[var])
