@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.33 2000/04/30 18:58:06 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.34 2000/07/24 00:44:28 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER | MODULE_LOGGER;
 constant module_name = "Accessed counter";
@@ -19,9 +19,8 @@ string status() {
 }
 
 void create(Configuration c) {
-  defvar("Accesslog","$LOGDIR/"+Roxen.short_name(c?c->name:".")+"/Accessed",
-	 "Access database file", TYPE_FILE|VAR_MORE,
-	 "This file will be used to keep the database of file accesses.");
+
+  //------ Global defvars
 
   defvar("extcount", ({  }), "Extensions to access count",
           TYPE_STRING_LIST,
@@ -30,18 +29,37 @@ void create(Configuration c) {
 	 "<tt>&lt;accessed&gt;</tt> tag or the <tt>&amp;page.accessed;</tt> "
 	 "entity will be counted. "
 	 "<p>Note: This module must be reloaded before a change of this "
-	 "setting takes effect.");
-
-  defvar("close_db", 1, "Close the database if inactive",
-	 TYPE_FLAG|VAR_MORE,
-	 "If set, the accessed database will be closed if it is not used for "
-	 "8 seconds. This saves resourses on servers with many sites.");
-
-  defvar("database", "mysql://localhost", "SQL Database", TYPE_STRING, 
-	 "What database to use for the database backend.");
+	 "setting takes effect.</p>");
 
   defvar("restrict", 1, "Restrict reset", TYPE_FLAG, "Restrict the attribute reset "
 	 "so that the resetted file is in the same directory or below.");
+
+  defvar("backend", "File database", "Database backend", TYPE_MULTIPLE_STRING,
+	 "Select a accessed database backend",
+         ({ "File database", "SQL database", "Memory database" }) );
+
+  //------ File database settings
+
+  defvar("Accesslog","$LOGDIR/"+Roxen.short_name(c?c->name:".")+"/Accessed",
+	 "Access database file", TYPE_FILE|VAR_MORE,
+	 "This file will be used to keep the database of file accesses.",
+	 0, lambda(){ return query("backend")!="File database"; } );
+
+  defvar("close_db", 1, "Close inactive database",
+	 TYPE_FLAG|VAR_MORE,
+	 "If set, the accessed database will be closed if it is not used for "
+	 "8 seconds. This saves resourses on servers with many sites.",
+	 0, lambda(){ return query("backend")!="File database"; } );
+
+  //------ SQL database settings
+
+  defvar("sqldb", "mysql://localhost", "SQL Database", TYPE_STRING, 
+	 "What database to use for the database backend.",
+	 0, lambda(){ return query("backend")!="SQL database"; } );
+
+  defvar("table", "accessed", "SQL Table", TYPE_STRING,
+	 "Which table should be used for the database backend.",
+	 0, lambda(){ return query("backend")!="SQL database"; } );
 }
 
 TAGDOCUMENTATION
@@ -164,9 +182,18 @@ object counter;
 
 void start() {
   query_tag_set()->prepare_context=set_entities;
-  counter=FileCounter();
-  //  counter=MemCounter();
-  //  counter=SQLCounter();
+  switch(query("backend")) {
+  case "SQL database":
+    counter=SQLCounter();
+    break;
+  case "Memory database":
+    counter=MemCounter();
+    break;
+  case "File database":
+  default:
+    counter=FileCounter();
+    break;
+  }
 }
 
 class Entity_page_accessed {
@@ -199,10 +226,10 @@ class FileCounter {
   Stdio.File database, names_file;
 
   void create() {
-    if(olf != QUERY(Accesslog))
+    if(olf != module::query("Accesslog"))
     {
-      olf = QUERY(Accesslog);
-      mkdirhier(QUERY(Accesslog));
+      olf = module::query("Accesslog");
+      mkdirhier(module::query("Accesslog"));
       if(names_file=open(olf+".names", "wrca"))
       {
 	cnum=0;
@@ -220,7 +247,7 @@ class FileCounter {
   {
     if(objectp(names_file)) return;
     remove_call_out(names_file_callout_id);
-    names_file=open(QUERY(Accesslog)+".names", "wrca");
+    names_file=open(module::query("Accesslog")+".names", "wrca");
     names_file_callout_id = call_out(destruct, 1, names_file);
   }
 
@@ -249,13 +276,13 @@ class FileCounter {
     if(!database)
     {
       if(db_file_callout_id) remove_call_out(db_file_callout_id);
-      database=open(QUERY(Accesslog)+".db", "wrc");
+      database=open(module::query("Accesslog")+".db", "wrc");
       if (!database) {
 	throw(({ sprintf("Failed to open \"%s.db\". "
 			 "Insufficient permissions or out of fd's?\n",
-			 QUERY(Accesslog)), backtrace() }));
+			 module::query("Accesslog")), backtrace() }));
       }
-      if (QUERY(close_db)) {
+      if (module::query("close_db")) {
 	db_file_callout_id = call_out(close_db_file, 9, database);
       }
     }
@@ -361,23 +388,23 @@ class SQLCounter {
   Sql.sql db;
 
   void create() {
-    db=Sql.sql(QUERY(database));
+    db=Sql.sql(module::query("sqldb"));
     catch {
-      db->query("CREATE TABLE accessed (path VARCHAR(255) PRIMARY KEY, hits INT UNSIGNED DEFAULT 0,"
-		" made INT UNSIGNED)");
-      db->query("INSERT INTO accessed (path,made) VALUES ('///',"+time(1)+")" );
+      db->query("CREATE TABLE "+query("accessed")+" (path VARCHAR(255) PRIMARY KEY,"
+		" hits INT UNSIGNED DEFAULT 0, made INT UNSIGNED)");
+      db->query("INSERT INTO "+query("accessed")+" (path,made) VALUES ('///',"+time(1)+")" );
     };
   }
 
   int creation_date(void|string file) {
     if(!file) file="///";
-    array x=db->query("SELECT made FROM accessed WHERE path='"+fix_file(file)+"'");
+    array x=db->query("SELECT made FROM "+query("accessed")+" WHERE path='"+fix_file(file)+"'");
     return x && sizeof(x) && (int)(x[0]->made);
   }
 
   private void create_entry(string file) {
     if(cache_lookup("access_entry", file)) return;
-    catch(db->query("INSERT INTO accessed (path,made) VALUES ('"+file+"',"+time(1)+")" ));
+    catch(db->query("INSERT INTO "+query("accessed")+" (path,made) VALUES ('"+file+"',"+time(1)+")" ));
     cache_set("access_entry", file, 1);
   }
 
@@ -390,23 +417,23 @@ class SQLCounter {
   void add(string file, int count) {
     file=fix_file(file);
     create_entry(file);
-    db->query("UPDATE accessed SET hits=hits+"+(count||1)+" WHERE path='"+file+"'" );
+    db->query("UPDATE "+query("accessed")+" SET hits=hits+"+(count||1)+" WHERE path='"+file+"'" );
   }
 
   int query(string file) {
     file=fix_file(file);
-    array x=db->query("SELECT hits FROM accessed WHERE path='"+file+"'");
+    array x=db->query("SELECT hits FROM "+query("accessed")+" WHERE path='"+file+"'");
     return x && sizeof(x) && (int)(x[0]->hits);
   }
 
   void reset(string file) {
     file=fix_file(file);
     create_entry(file);
-    db->query("UPDATE accessed SET hits=0 WHERE path='"+file+"'");
+    db->query("UPDATE "+query("accessed")+" SET hits=0 WHERE path='"+file+"'");
   }
 
   int size() {
-    array x=db->query("SELECT count(*) from accessed");
+    array x=db->query("SELECT count(*) from "+query("accessed"));
     return (int)(x[0]["count(*)"])-1;
   }
 }
@@ -450,14 +477,14 @@ class MemCounter {
 // --- Log callback ------------------------------------
 
 int log(RequestID id, mapping file) {
-  if(id->misc->accessed || QUERY(extcount)==({})) {
+  if(id->misc->accessed || query("extcount")==({})) {
     return 0;
   }
 
   // Although we are not 100% sure we should make a count,
   // nothing bad happens if we shouldn't and still do.
   int a, b=sizeof(id->realfile);
-  foreach(QUERY(extcount), string tmp)
+  foreach(query("extcount"), string tmp)
     if(a=sizeof(tmp) && b>a &&
        id->realfile[b-a..]=="."+tmp) {
       counter->add(id->not_query, 1);
