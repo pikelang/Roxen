@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.86 2004/05/27 21:24:39 _cvs_stephen Exp $
+// $Id: module.pmod,v 1.87 2004/05/31 15:45:08 _cvs_stephen Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1412,13 +1412,14 @@ class List
 	query = "";
       else
 	query += "&";
+
       //  The URL will get a fragment identifier below and since some
       //  broken browsers (MSIE) incorrectly includes the fragment in
       //  the last variable value we'll place section before random.
       query +=
 	(section ? ("section=" + section + "&") : "") +
 	"random=" + random(4949494);
-
+      
       nid->misc->moreheads =
 	([
 	  "Location":nid->not_query+(nid->misc->path_info||"")+
@@ -1601,12 +1602,12 @@ class PortList
     }
     res += "</select>";
 
-    res += "://<input type='text' name='"+prefix+"host' value='"+
+    res += "://<input type=text name='"+prefix+"host' value='"+
            Roxen.html_encode_string(split->host)+"' />";
-    res += ":<input type='text' size='5' name='"+prefix+"port' value='"+
+    res += ":<input type=text size=5 name='"+prefix+"port' value='"+
              split->port+"' />";
 
-    res += "/<input type='text' name='"+prefix+"path' value='"+
+    res += "/<input type=text name='"+prefix+"path' value='"+
       Roxen.html_encode_string(split->path[1..])+"' /><br />";
     mapping opts = ([]);
     string a,b;
@@ -1615,7 +1616,7 @@ class PortList
       sscanf( x, "%s=%s", a, b );
       opts[a]=b;
     }
-    res += "IP#: <input size='15' type='text' name='"+prefix+"ip' value='"+
+    res += "IP#: <input size=15 type=text name='"+prefix+"ip' value='"+
       Roxen.html_encode_string(opts->ip||"")+"' /> ";
     res += LOCALE(510,"Bind this port: ");
     res += "<select name='"+prefix+"nobind'>";
