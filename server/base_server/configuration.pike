@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.534 2003/06/11 15:47:42 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.535 2003/06/16 13:32:28 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1933,9 +1933,16 @@ mapping|int(-1..0) handle_webdav(RequestID id)
       continue;
     }
 #ifdef MODULE_LEVEL_SECURITY
-    if(check_security(fun, id)) {
-      TRACE_LEAVE("Not allowed.");
-      continue;
+    int|mapping security_ret;
+    if(security_ret = check_security(fun, id)) {
+      if (mappingp(security_ret)) {
+	TRACE_LEAVE("Security check return.");
+	TRACE_LEAVE("Need authentication.");
+	return security_ret;
+      } else {
+	TRACE_LEAVE("Not allowed.");
+	continue;
+      }
     }
 #endif
     RoxenModule c = function_object(fun);
