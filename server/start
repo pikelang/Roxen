@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.55 1998/11/22 17:05:43 per Exp $
+# $Id: start,v 1.56 1998/11/22 21:15:10 grubba Exp $
 
 cd `dirname $0`
 VERSION=202; BETA=.b;
@@ -11,6 +11,8 @@ LOGDIR=../logs/
 FILES="default"
 program=base_server/roxenloader.pike
 extra_args=""
+
+roxendir=`pwd`
 
 # Enable threads (if available) on Solaris.
 # Most other OS's have thread bugs that cause them or Roxen to crash.
