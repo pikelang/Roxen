@@ -1,5 +1,5 @@
 //
-// $Id: php.pike,v 2.3 2005/03/09 17:04:44 grubba Exp $
+// $Id: php.pike,v 2.4 2005/03/09 17:46:50 grubba Exp $
 //
 // Support for files with php markup.
 //
@@ -11,7 +11,7 @@
 
 inherit "cgi.pike";
 
-constant cvs_version = "$Id: php.pike,v 2.3 2005/03/09 17:04:44 grubba Exp $";
+constant cvs_version = "$Id: php.pike,v 2.4 2005/03/09 17:46:50 grubba Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Scripting: PHP scripting support";
@@ -307,6 +307,9 @@ class PHPScript
     if (id->rawauth) {
       environment["AUTH_TYPE"] = (id->rawauth/" ")[0];
     }
+
+    environment->PHP_SELF = environment->DOCUMENT_URI =
+      environment->SCRIPT_NAME;
 
     // Make sure php doesn't think it's a cgi script.
     m_delete(environment, "SCRIPT_FILENAME");
