@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.18 1997/01/25 20:01:48 grubba Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.19 1997/01/25 20:45:13 grubba Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -1697,7 +1697,7 @@ string tag_formoutput(string tag_name, mapping args, string contents,
       }
       content_array[i] = replace(content_array[i],
 				 ({ "<", ">", "&", "\"", "\'" }),
-				 ({ "&lt;", "&gt;", "&amp;", "&#34;", "&#27" }));
+				 ({ "&lt;", "&gt;", "&amp;", "&#34;", "&#39;" }));
     }
   }
   return(content_array*"");
