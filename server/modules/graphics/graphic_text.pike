@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.226 2000/03/28 20:58:43 jhs Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.227 2000/04/06 07:34:41 wing Exp $";
 
 #include <module.h>
 inherit "module";
@@ -12,25 +12,27 @@ inherit "roxenlib";
 
 constant module_type   = MODULE_PARSER;
 constant module_name   = "Graphics text";
-constant module_doc    = "Generates graphical texts.";
+constant module_doc    = 
+#"Provides the <tt>&lt;gtext&gt;</tt> that is used to generate text into 
+graphical images.";
 constant thread_safe   = 1;
 
 void create()
 {
   defvar("colorparse", 1, "Parse tags for document colors", TYPE_FLAG,
-	 "If set, parse the specified tags for document colors.");
+	 "If set, it will use the <i>HTML color wiretrap</i> module to parse "
+	 "figure out the document colors by parsing tags that set colors.");
 
-  defvar("deflen", 300, "Default maximum text-length", TYPE_INT|VAR_MORE,
-	 "The module will, per default, not try to render texts "
-	 "longer than this. This is a safeguard for things like "
-	 "&lt;gh1&gt;&lt;/gh&gt;, which would otherwise parse the"
-	 " whole document. This can be overrided with maxlen=... in the "
-	 "tag.");
+  defvar("deflen", 300, "Default maximum length of text", TYPE_INT|VAR_MORE,
+	 "Per default, it will not be possible to render texts longer than "
+	 "this. This is a safeguard so that a simple RXML error doesn't "
+	 "cause a huge image to be generated. It can be turned of at a per "
+	 "tag bases, with the <i>maxlen</i> attribute.");
 
-  defvar("ext", 0, "Append .fmt (gif, jpeg etc) to all images",
+  defvar("ext", 0, "Append format to generated images",
 	 TYPE_FLAG|VAR_MORE,
-	 "Append .gif, .png, .gif etc to all images made by gtext. "
-         "Normally this will only waste bandwidth");
+	  "Append the image format (.gif, .png, .gif, etc) to the generated "
+	  "images. This is not necessary, but might seem nicer.");
 }
 
 TAGDOCUMENTATION;

@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.45 2000/04/04 20:46:16 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.46 2000/04/06 07:34:41 wing Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -37,8 +37,9 @@ roxen.ImageCache  button_cache;
 
 constant module_type = MODULE_PARSER;
 constant module_name = "GButton";
-constant module_doc  = "Provides the <tt>&lt;gbutton&gt;Title&lt;/gbutton&gt;</tt> "
-  "tag for drawing graphical buttons.";
+constant module_doc  = 
+"Provides the <tt>&lt;gbutton&gt;</tt> tag that is used to draw graphical "
+"buttons.";
 
 TAGDOCUMENTATION
 #ifdef manual

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.13 2000/03/27 17:28:51 marcus Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.14 2000/04/06 07:34:42 wing Exp $";
 
 #include <module.h>
 inherit "module";
@@ -11,10 +11,11 @@ inherit "roxenlib";
 //---------------------- Module Registration --------------------------------
 
 constant module_type   = MODULE_PARSER;
-constant module_name   = "HTML Color Wiretap";
-constant module_doc    = "Parses HTML tags and tries to determine the text and"
-  " background colors all over the page. This information can be used to let image"
-  " modules generate images that automatically blend into the page.";
+constant module_name   = "HTML color wiretap";
+constant module_doc    = 
+#"Parses HTML tags and tries to determine the text and background colors 
+all over the page. This information can be used to let graphical modules
+generate images that automatically blend into the page.";
 constant thread_safe   = 1;
 
 void create()

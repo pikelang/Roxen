@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.21 2000/03/02 04:18:38 nilsson Exp $";
+string cvs_version="$Id: pimage.pike,v 1.22 2000/04/06 07:34:42 wing Exp $";
 
 #include <module.h>
 inherit "module";
@@ -357,26 +357,32 @@ class Constructors
 mapping compiled = ([]);
 
 constant module_type = MODULE_PARSER;
-constant module_name = "Pike Image Module";
-constant module_doc  = "This module adds two new tags, &lt;gclock&gt; and "
-  "&lt;pimage&gt;&lt;/pimage&gt;. GClock draws clocks, and "
-  " pimage draws an image from pike-code. <p> "
-  "There are several predefined images-constructors to use "
-  "in pimage:"
-  "<p>Clock( delay, time_offset, background_image ); Animated clock-gif.<br>"
-  "Progress( callback_function ); Animated progress bar.<br>"
-  "load( \"file_name\" ); Loads an image file.<br>"
-  "PPM( \"file_name\" ); Loads an image file (compat).<br>"
-  "PImage(xs,ys, bg_color ); Simple (cleared) image<br>"
-  "Text( \"font\", \"string\", fg_color, bg_color ); <br>"
-  "Draws some text..</p>";
+constant module_name = "Pike image generator";
+constant module_doc  = 
+#"Provides two tags, <tt>&lt;gclock&gt;</tt> and <tt>&lt;pimage&gt;</tt>.
+<tt>&lt;gclock&gt;</tt> draws animated clocks, while &lt;pimage&gt; draws 
+an image from pike-code. 
+<p>There are several predefined images-constructors to use within pimage:
+<br><tt>Clock( delay, time_offset, background_image );</tt>
+Animated clock gif.
+<br><tt>Progress( callback_function )</tt>
+Animated progress bar.
+<br><tt>load( \"file_name\" )</tt>
+Loads an image file.
+<br><tt>PPM( \"file_name\" )</tt>
+Loads an image file (compability method).
+<br><tt>PImage(xs, ys, bg_color )</tt>
+Create a simple, cleared image
+<br><tt>Text( \"font\", \"string\", fg_color, bg_color )</tt>
+Draw some text.";
 
 void create()
 {
-  defvar("pimage", 1, "The PIMAGE tag is enabled", TYPE_FLAG,
+  defvar("pimage", 0, "Enable the <pimage> tag", TYPE_FLAG,
 	 "If set, the &lt;pimage&gt; tag will be available for use. This "
-	 "tag has the same security considerations as the &lt;pike&gt; tag. "
-	 "If not set, only the &lt;gclock&gt; tag vill be available.");
+	 "tag has the same security implications as the &lt;pike&gt; tag. "
+	 "If not set, only the &lt;gclock&gt; tag, which doesn't share these "
+	 "security implication, will be available.");
 }
 
 

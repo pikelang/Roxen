@@ -5,7 +5,7 @@
  */
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: atlas.pike,v 1.4 2000/03/02 04:18:38 nilsson Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.5 2000/04/06 07:34:43 wing Exp $";
 
 #include <module.h>
 
@@ -14,9 +14,9 @@ inherit "roxenlib";
 
 constant module_type = MODULE_PARSER | MODULE_EXPERIMENTAL;
 constant module_name = "Atlas";
-constant module_doc  = "Draws maps.<p>"
-  "See <tt>&lt;atlas help&gt;&lt;/atlas&gt;</tt> for "
-  "more information.\n</p>";
+constant module_doc  = 
+#"Provides the <tt>&lt;atlas&gt;</tt> tag that creates a world map. It is
+possible to highlight countries on the generated world map.";
 
 /* Temporary cache. */
 

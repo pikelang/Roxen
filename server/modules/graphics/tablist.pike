@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.43 2000/03/24 20:46:51 jonasw Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.44 2000/04/06 07:34:42 wing Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -10,8 +10,9 @@ inherit "roxenlib";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "Tab list";
-constant module_doc = ("Adds some tags for making tab lists."
-                       " Requires the gbutton module");
+constant module_doc = 
+#"Provides the <tt>&lt;tablist&gt;</tt> tag that is used to draw tab lists.
+It requires the <i>GButton</i> module.";
 
 /*
  * Functions

@@ -12,14 +12,13 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.124 2000/03/16 17:26:46 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.125 2000/04/06 07:34:43 wing Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER|MODULE_LOCATION;
-constant module_name = "Business Graphics";
-constant module_doc  = "The Business Graphics tag. This module draws\n"
-  "line charts, pie charts, graphs and bar charts.<p>\n"
-  "&lt;diagram help&gt;&lt;/diagram&gt; gives help.\n";
-
+constant module_name = "Business graphics";
+constant module_doc  = 
+#"Provides the <tt>&lt;diagram&gt;</tt> tag that draws bar charts, line charts,
+pie charts or graphs.";
 
 #define VOIDSYMBOL "\n"
 #define SEP "\t"
@@ -185,10 +184,11 @@ void create()
   defvar( "maxheight", 1000, "Limits:Max height", TYPE_INT,
 	  "Maximal height of the generated image." );
   defvar( "maxstringlength", 60, "Limits:Max string length", TYPE_INT,
-	  "Maximal length of the strings used in the diagram." );
-  defvar( "ext", 1, "Append .fmt (gif, jpeg etc) to all images",
-	  TYPE_FLAG|VAR_MORE, "Append .gif, .png, .gif etc to all images"
-	  " made. Normally this will only waste bandwidth");
+	  "Maximal length of each text label used in the diagram." );
+  defvar( "ext", 1, "Append format to generated images",
+	  TYPE_FLAG|VAR_MORE, 
+	  "Append the image format (.gif, .png, .gif, etc) to the generated "
+	  "images. This is not necessary, but might seem nicer.");
 }
 
 string itag_xaxis(string tag, mapping m, mapping res)
