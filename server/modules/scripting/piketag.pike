@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.9 2000/08/09 03:05:15 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.10 2000/08/09 05:15:43 per Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -97,6 +97,12 @@ class Helpers
     return r;
   }
 
+  string rxml( string what, object id )
+  {
+    return parse_rxml( what, id );
+  }
+
+
   constant seteuid=0;
   constant setegid=0;
   constant setuid=0;
@@ -156,11 +162,60 @@ string simpletag_pike(string tag, mapping m, string s,RequestID request_id )
   master()->set_inhibit_compile_errors(e);
   if(err=catch 
   {
-    for( int i = 0; i<sizeof( flat ); i++ )
-      if( flat[i] == "." && flat[++i] != "." )
-        flat[i-1]->text = "->";
+    object cip, cipup;
 
-    s = pre(flat,request_id)+Parser.C.simple_reconstitute( flat )+post(flat);
+#define OCIP( )                                                 \
+      if( cip )                                                 \
+      {                                                         \
+        cip->text=sprintf("write(rxml(%O,id));",cip->text);     \
+        cip = 0;                                                \
+      }
+
+#define OCIPUP( )                                       \
+      if( cipup )                                       \
+      {                                                 \
+        cipup->text=sprintf("write(%O);",cipup->text);  \
+        cipup = 0;                                      \
+      }
+
+#define CIP(X) if( X  )                                         \
+        {                                                       \
+          flat[i]->text=flat[i]->trailing_whitespaces="";       \
+          X->text += flat[i]->text[3..]+"\n";                   \
+        }                                                       \
+        else                                                    \
+        {                                                       \
+          X = flat[i];                                          \
+          flat[i]->text = flat[i]->text[3..]+"\n";              \
+        }
+
+
+    for( int i = 0; i<sizeof( flat ); i++ )
+    {
+      if( flat[i] == "." && flat[++i] != "." ) // Parser.C in 7.0 does not
+        flat[i-1]->text = "->";   // recognize .. as a single token.
+      else if( flat[i]->text[..2] == "//#" )
+      {
+        OCIPUP();
+        CIP( cip );
+      }
+      else if( flat[i]->text[..2] == "//@" )
+      {
+        OCIP();
+        CIP( cipup );
+      }
+      else
+      {
+        OCIP();
+        OCIPUP();
+      }
+    }
+    OCIP();
+    OCIPUP();
+
+    s = pre(flat,request_id)+"\n"+
+      Parser.C.simple_reconstitute( flat )+
+      post(flat);
     p = program_cache[s];
 
     if (!p) 
