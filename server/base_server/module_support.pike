@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.52 2000/01/31 03:46:12 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.53 2000/02/02 16:10:58 stewa Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -330,7 +330,7 @@ class ModuleInfo
         if( file[-1] == 'o' && file[-2] == '.')
           continue;
 
-        if( !search( file, what ) )
+        if( strip_extention(file) == what )
         {
           if( (search( file, ".pike" ) == strlen(file)-5 ) ||
               (search( file, ".so" ) == strlen(file)-3 ) ||
