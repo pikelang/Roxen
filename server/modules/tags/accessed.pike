@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.37 2000/09/20 23:40:55 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.38 2000/11/02 22:45:58 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Accessed counter";
@@ -65,16 +65,19 @@ void create(Configuration c) {
 TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
-  "&page.accessed;":#"<desc ent>Generates an access counter that shows how many
- times the page has been accessed. Needs the accessed module.</desc>",
+  "&page.accessed;":#"<desc ent='ent'><p>
+ Generates an access counter that shows how many times the page has
+ been accessed. Needs the accessed module.
+</p></desc>",
 
-  "accessed":#"<desc tag><short>Generates an access counter that shows how many
- times the page has been accessed.</short> A file, AccessedDB, in the logs directory is used to
- store the number of accesses to each page. By default the access count is
- only kept for files that actually contain an accessed-tag,
- but can also be configured to count all files of a certain type.
- <ex><accessed/></ex>
- </desc>
+  "accessed":#"<desc tag='tag'><p><short>
+ Generates an access counter that shows how many times the page has
+ been accessed.</short> A file, AccessedDB, in the logs directory is
+ used to store the number of accesses to each page. By default the
+ access count is only kept for files that actually contain an
+ accessed-tag, but can also be configured to count all files of a
+ certain type. <ex><accessed/></ex>
+</p></desc>
 
 <attr name=add value=number>
  Increments the number of accesses with this number instead of one,
@@ -99,7 +102,7 @@ constant tagdoc=([
 </attr>
 
 <attr name=factor value=percent>
- Multiplies the actual number of accesses by the factor. E.g. <accessed factor=50>
+ Multiplies the actual number of accesses by the factor. E.g. <tag>accessed factor='50'</tag>
  displays half the actual value.
 </attr>
 
@@ -209,6 +212,7 @@ void start() {
 
 class Entity_page_accessed {
   int rxml_var_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
     if(!c->id->misc->accessed) {
       counter->add(c->id->not_query, 1);
       c->id->misc->accessed=1;
