@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.33 1997/02/18 02:43:53 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.34 1997/02/22 22:28:57 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -1083,7 +1083,7 @@ mapping configuration_parse(object id)
       
       o->save();
       cache_remove("modules", modname);
-      _master->set_inhibit_compile_errors("");
+//      _master->set_inhibit_compile_errors("");
       
       if(!o->config()->load_module(modname))
       {
@@ -1091,7 +1091,7 @@ mapping configuration_parse(object id)
 	rep = http_string_answer("The reload of this module failed.\n"
 				 "This is (probably) the reason:\n<pre>"
 				 + _master->errors + "</pre>" );
-	_master->set_inhibit_compile_errors(0);
+//	_master->set_inhibit_compile_errors(0);
 	return rep;
       }
       object mod;

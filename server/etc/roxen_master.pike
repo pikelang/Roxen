@@ -59,6 +59,8 @@ object objectof(array foo)
 {
   object o;
   program p;
+
+  array err;
   
   if(!arrayp(foo)) return 0;
   
@@ -69,7 +71,7 @@ object objectof(array foo)
 	   ") failed).\n");
     return 0;
   }
-  catch {
+  err = catch {
     o = p();
 
     saved_names[ foo[0..1]*"\0" ] = o;
@@ -81,7 +83,8 @@ object objectof(array foo)
     return o;
   };
   werror("objectof(): Failed to restore object"
-	 " from existing program "+foo*"/"+"\n");
+	 " from existing program "+foo*"/"+"\n"+
+	 describe_backtrace( err ));
   return 0;
 }
 

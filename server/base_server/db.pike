@@ -1,6 +1,6 @@
 //#define USE_GDBM
 
-/* $Id: db.pike,v 1.9 1997/02/14 04:07:33 per Exp $ */
+/* $Id: db.pike,v 1.10 1997/02/22 22:28:56 per Exp $ */
 
 private static inherit files.file;
 private static mapping db;
@@ -42,13 +42,9 @@ public int db_open(string f, int noread)
 #endif
   if(!noread && (last != f))
   {
-    perror("restore ("+ f +")\n");
     last = f;
-    if(!file::open(DIR+f, "rc"))
-    {
-      mkdirhier(DIR+f);
-      if(!file::open(DIR+f, "rc")) return 0;
-    }
+    if(!file::open(DIR+f, "r")) return 0;
+    perror("restore ("+ f +")\n");
     string s;
     if((s = file::read(0x7ffffff)) && strlen(s))
       db = decode_value(s);
@@ -95,5 +91,6 @@ public mixed db_get(string varname)
 #ifdef DEBUG_DB
   perror("db_get "+varname+" ("+last+")\n");
 #endif
-  return db[varname];
+  if(db)
+    return db[varname];
 }
