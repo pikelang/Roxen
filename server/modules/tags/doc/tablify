@@ -1,0 +1,25 @@
+This module defines the tag {tablify}.<p>
+
+{tablify} generates tables from, for example, tab separated fields in
+newline separated records (this is the default).<p>
+
+<p><b>Arguments:</b>
+<pre>
+ help                Display this text.
+ cellseparator=str   Use str as the column-separator.
+ rowseparator=str    Use str as the row-separator.
+ cellalign=left|right|center
+                     Align the contents of the cells.
+ rowalign=left|right|center
+                     Align the contents of the rows.
+ nice                Generate ``nice'' tables. The first row is the title row. There are several additional
+                     arguments available for nice.
+
+   bgcolor,titlebgcolor,titlecolor,fgcolor0,fgcolor1
+                     Color definitions.
+   modulo            Sets the number of rows using the same color in a row
+   {fields}<i>[num|text, ...]</i>{/fields}
+                     Optional. This container tag sets the field type for each column. Numerical fields
+                     will be right aligned and formated.
+ 
+</pre>
