@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.379 2000/10/06 15:12:34 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.380 2000/10/29 03:40:56 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -121,7 +121,7 @@ class Priority
   mapping (string:array(RoxenModule)) file_extension_modules = ([ ]);
   mapping (RoxenModule:multiset(string)) provider_modules = ([ ]);
 
-  void stop()
+  array(RoxenModule) stop()
   {
     foreach(url_modules, RoxenModule m)
       CATCH("stopping url modules",m->stop && m->stop());
@@ -137,6 +137,8 @@ class Priority
       CATCH("stopping first modules",m->stop && m->stop());
     foreach(indices(provider_modules), RoxenModule m)
       CATCH("stopping provider modules",m->stop && m->stop());
+    return url_modules + logger_modules + filter_modules + location_modules +
+      last_modules + first_modules + indices (provider_modules);
   }
 }
 
@@ -200,19 +202,27 @@ private mapping (string:array (RoxenModule)) provider_module_cache=([]);
 // Call stop in all modules.
 void stop()
 {
+  multiset allmods = mkmultiset (indices (otomod));
   CATCH("stopping type modules",
         types_module && types_module->stop && types_module->stop());
+  allmods[types_module] = 0;
   CATCH("stopping auth module",
         auth_module && auth_module->stop && auth_module->stop());
+  allmods[auth_module] = 0;
   CATCH("stopping directory module",
         dir_module && dir_module->stop && dir_module->stop());
+  allmods[dir_module] = 0;
   for(int i=0; i<10; i++)
     CATCH("stopping priority group",
-          (pri[i] && pri[i]->stop && pri[i]->stop()));
+          (pri[i] && pri[i]->stop && (allmods -= mkmultiset (pri[i]->stop()))));
   CATCH("stopping the logger",
 	log_function && lambda(mixed m){
 			  destruct(m);
+			  allmods[m] = 0;
 			}(function_object(log_function)));
+  foreach (indices (allmods), RoxenModule m)
+    CATCH ("stopping unclassified module",
+	   m && m->stop && m->stop());
   foreach( registered_urls, string url )
     roxen.unregister_url(url);
 }
