@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.48 1999/03/23 00:43:03 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.49 1999/07/27 14:16:41 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -68,7 +68,7 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
   if(!sizeof(m))
     m = ([ "all": 1 ]);
   
-  foreach(s / "\n", line) {
+  foreach(replace(s, "\r", "\n") / "\n", line) {
     tmp = 0;
 
     line = (replace(line, "\t", " ") / " " - ({""})) * " ";
@@ -461,7 +461,9 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
     g = in_cache[1];
   else if(groups = f->read(0x7fffffff)) {
     g = ([]);
-    groups = replace(groups, "\\\n", " ");
+    groups = replace(groups,
+		     ({ "\\\r\n", "\\\n", "\r" }),
+		     ({ " ", " ", "\n" }));
     foreach(groups/"\n", s2)
     {
       if(sscanf(s2, "%s:%s", grp, members) == 2)
