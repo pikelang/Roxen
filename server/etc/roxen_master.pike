@@ -5,12 +5,281 @@ inherit "/master": master;
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.103 2000/10/04 21:29:39 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.104 2000/10/30 18:59:03 per Exp $";
 
 // Disable the precompiled file is out of date warning.
-#ifndef OUT_OF_DATE_WARNING
 constant out_of_date_warning = 0;
-#endif /* !OUT_OF_DATE_WARNING */
+
+#define SECURITY 1
+#define SECURITY_DEBUG 1
+
+#include <security.h>
+
+
+#ifdef SECURITY
+#if constant(thread_local)
+static object chroot_dir = thread_local();
+#else
+static string chroot_dir = "";
+#endif
+
+static void low_set_chroot_dir( string to )
+{
+#if constant(thread_local)
+  chroot_dir->set( to );
+#else
+  chroot_dir = to;
+#endif
+}
+
+static string low_get_chroot_dir( )
+{
+#if constant(thread_local)
+  return chroot_dir->get( );
+#else
+  return chroot_dir;
+#endif
+}
+
+class ChrootKey( string old_dir )
+{
+  void destroy( )
+  {
+    low_set_chroot_dir( old_dir );
+  }
+}
+
+ChrootKey chroot( string to )
+{
+  CHECK_SECURITY_BIT( SECURITY );
+  ChrootKey key = ChrootKey( low_get_chroot_dir() );
+  low_set_chroot_dir( to );
+  return key;
+}
+  
+
+class UID
+{
+  inherit Creds;
+
+  static string _name;
+  static string _rname;
+  static int _uid, _gid;
+  static int _data_bits, _allow_bits;
+  static int io_bits = BIT_IO_CHROOT | BIT_IO_CAN_READ | BIT_IO_CAN_WRITE | BIT_IO_CAN_CREATE;
+  static string always_chroot;
+  
+  constant modetobits = (["read":2, "write":4,   ]);
+
+  UID set_io_bits( int to )
+  {
+    CHECK_SECURITY_BIT( SECURITY );
+    io_bits = to;
+    return this_object();
+  }
+
+  string chroot( string dir )
+  {
+    always_chroot = dir;
+    if( dir )
+      io_bits |= BIT_IO_CHROOT; // enforced chroot
+    else
+      io_bits &= BIT_IO_CHROOT; // enforced not chroot
+  }
+  
+  int gid()   { return _gid; }
+  int uid()   { return _uid; }
+
+  /* Callback functions */
+  int valid_open( string dir,
+		  object current_object,
+		  string file,
+		  string mode,
+		  int access )
+  {
+    string chroot_dir;
+    file = combine_path( getcwd(), file );
+#ifdef SECURITY_DEBUG
+    werror("Security: valid_open( %O, %O, %o ) from %O\n", file, mode, access, current_object );
+#endif
+    if( (io_bits & BIT_IO_CHROOT) &&
+	((chroot_dir=always_chroot) || (chroot_dir=low_get_chroot_dir))
+	&& search( file, chroot_dir ) )
+    {
+#ifdef SECURITY_DEBUG
+      werror("Security error: Chroot set, but this file is not in it\n");
+#endif
+      return 3;
+    }
+    
+    if( !(io_bits & modetobits[ dir ] ) )
+    {
+#ifdef SECURITY_DEBUG
+      werror("Security error: Lacks bit for %O\n", dir );
+#endif
+      return 3;
+    }
+
+    mixed stat;
+
+    if( !(io_bits & BIT_IO_CAN_CREATE) && !(stat = file_stat( file ) ) )
+    {
+#ifdef SECURITY_DEBUG
+      werror("Security error: File does not exist, and user lacks permisson for create\n");
+#endif
+      return 0; // No such file
+    }
+    else  if( !stat )
+      stat = file_stat( file );
+#ifndef __NT__
+    if( stat )
+    {
+      if( (io_bits & BIT_IO_ONLY_OWNED) && (stat->uid != _uid) )
+      {
+#ifdef SECURITY_DEBUG
+	werror("Security error: ONLY_OWNED but file not owned\n");
+#endif
+	return 3;
+      }
+      if( (io_bits & BIT_IO_OWNED_AND_GROUP) && (stat->uid != _uid) && (stat->gid != _gid) )
+      {
+#ifdef SECURITY_DEBUG
+	werror("Security error: ONLY_GROUP_AND_OWNED but file not owned/nor group\n");
+#endif
+	return 3;
+      }
+    }
+    if( !(io_bits & BIT_IO_USER_OK) )
+    {
+      if( !stat )
+      {
+	dir = "create";
+	stat = file_stat( dirname( file ) );
+      }
+      if(!stat)
+      {
+#ifdef SECURITY_DEBUG
+	werror("Security error: File and directory both missing.\n");
+#endif 
+	return 2; // Not possible...
+      }
+      // check permission for the operation here, using more or less
+      // normal unix semantics.
+    }
+#endif
+#ifdef SECURITY_DEBUG
+    werror("Security: Open of %O ok\n", file );
+#endif 
+    return 2;
+  }
+
+  int valid_io( string operation, string dir, mixed ... args )
+  {
+#ifdef SECURITY_DEBUG
+    werror("valid_io( "+operation+", "+dir+" )\n" );
+#endif
+    if( !(io_bits & modetobits[ dir ] ) )
+    {
+#ifdef SECURITY_DEBUG
+      werror("Security error: Lacks bit for %O\n", dir );
+#endif
+      return 0;
+    }
+    
+//     switch( operation )
+//     {
+//       // ...
+//     }
+#ifdef SECURITY_DEBUG
+    werror("Security: IO ok\n" );
+#endif 
+    return 2;
+  }
+
+
+  Creds own( mixed what, int|void bits )
+  {
+    Creds creds;
+    if( !zero_type(bits) && (bits != get_data_bits()) )
+      creds = Creds( this_object(), get_allow_bits(), bits );
+    else
+      creds = this_object();
+    creds->apply( what );
+    return creds;
+  }
+
+  mixed call( function what, mixed  ... args )
+  {
+    return call_with_creds( this_object(), what, @args );
+  }
+
+  mixed call_with_bits( function what, int bits, mixed ... args )
+  {
+    return call_with_creds( Creds( this_object(), bits, get_data_bits() ), what, @args );
+  }
+
+  Creds get_new_creds( int allow_bits, int data_bits )
+  {
+    return Creds( this_object(), allow_bits, data_bits );
+  }
+  
+  void create( string name, string rname,
+	       int uid, int gid, 
+	       int allow_bits,
+	       int data_bits )
+  {
+    _name = name;
+    _rname = rname;
+    _uid = uid;
+    _gid = gid;
+    ::create( this_object(), allow_bits, data_bits );
+  }
+
+  static string _sprintf( )
+  {
+    return sprintf("UID( %s (%s) )",_name,_rname);
+  }
+}
+
+void init_security()
+{
+  werror("Initializing security system...");
+  add_constant( "chroot", chroot );
+  root->own( this_object() );
+//   root->call(   Stdio.File, "/tmp/foo", "wct");
+  werror("Done\n");
+}
+
+// There are three bit groups.
+//   may_always bits
+//   data bits        (overridden by may_always of current user)
+//   io bits          (used in valid_io and valid_open)
+
+
+// The root user can do everything. But objects owned by it cannot be
+// destructed by anyone but the root user.
+UID root   = UID( "root", "Supersture",0,0, ~0, ~BIT_DESTRUCT );
+
+
+// The nobody user cannot do anything, basically (it can read/stat files, though)
+UID nobody = UID( "nobody", "Nobody", 65535,65535,  BIT_CONDITIONAL_IO, ~0 )
+             ->set_io_bits( BIT_IO_CHROOT | BIT_IO_CAN_READ );
+
+// Default roxen user. Basically the same as the root user, but the IO bits apply.
+// More specifically, the chroot() function works.
+UID roxen = UID( "roxen", "Roxen internal user", getuid(), getgid(),
+		 ~BIT_SECURITY, ~BIT_DESTRUCT );
+
+// Like nobody, but cannot read files either.
+UID luser = UID( "luser", "total luser", 65535, 65535, 0, 0 );
+#else
+
+
+void init_security()
+{
+  add_constant( "chroot", lambda(string new){ return class{}(); } );
+}
+#endif
 
 class MyCodec
 {
@@ -487,6 +756,8 @@ void create()
     /* Ignore errors when copying functions */
   }
 
+  init_security();
+    
   foreach( indices(programs), string f )
     load_time[ f ] = time();
 
