@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.217 1999/11/05 07:17:04 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.218 1999/11/05 08:00:51 per Exp $";
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
@@ -2208,7 +2208,8 @@ object enable_module( string modname )
 
   if( sscanf(modname, "%s#%d", modname, id ) != 2 )
     /* here we go again... */
-    while( modules[modname] && modules[modname]->copies[id++] );
+    while( modules[modname] && modules[modname]->copies[id] )
+      id++;
 
 #if constant(gethrtime)
   int start_time = gethrtime();
