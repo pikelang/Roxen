@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-constant cvs_version = "$Id: gopher.pike,v 1.10 1998/07/02 13:41:56 grubba Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.11 1999/10/09 16:35:10 grubba Exp $";
 // Gopher protocol module
 
 inherit "protocols/http"; /* For the variables and such.. */
@@ -113,6 +113,12 @@ void got_data(mixed fooid, string s)
   supports = (< "gopher", "images", "tables", >);
   prot = "GOPHER";
   method = "GET";
+
+  // FIXME: host part?
+  conf = port_obj->find_configuration_for_url(port_obj->name + "://" +
+					      port_obj->urls[0] + ":" +
+					      port_obj->port + not_query,
+					      this_object());
 
   conf->received += strlen(s);
   
