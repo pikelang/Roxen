@@ -80,7 +80,7 @@ function layerLoadHandler(file_loader)
     getObject(layer).innerHTML = file_loader.document.body.innerHTML;
   
   boundPopup(layer);
-  addPopup(layer, "none", properties);
+  addPopup(layer, properties);
   captureMouseEvent(popupMove);
   show(layer);
 }
