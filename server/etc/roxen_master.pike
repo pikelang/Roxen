@@ -1,6 +1,6 @@
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.9 1996/12/10 02:56:49 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.10 1997/01/13 06:54:29 per Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -40,6 +40,11 @@ void create()
 }
 
 mapping (string:program) programs=([]);
+
+string program_name(program p)
+{
+  return search(programs, p);
+}
 
 /* This function is called whenever a module has built a clonable program
  * with functions written in C and wants to notify the Pike part about
