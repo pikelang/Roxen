@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.417 2004/05/24 10:15:14 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.418 2004/05/24 22:06:15 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -719,7 +719,7 @@ class TagDebug {
 	if(path[0]!="id" || sizeof(path)==1) RXML.parse_error("Can only show parts of the id object.");
 	mixed obj=id;
 	foreach(path[1..], string tmp) {
-	  if(search(indices(obj),tmp)==-1) RXML.run_error("Could only reach "+tmp+".");
+	  if(!has_value(indices(obj),tmp)) RXML.run_error("Could only reach "+tmp+".");
 	  obj=obj[tmp];
 	}
 	result = "<pre>"+Roxen.html_encode_string(sprintf("%O",obj))+"</pre>";
