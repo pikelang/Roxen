@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.81 2003/04/07 10:33:06 mast Exp $
+// $Id: cache.pike,v 1.82 2003/10/28 14:40:38 jonasw Exp $
 
 // #pragma strict_types
 
@@ -55,14 +55,14 @@ constant svalsize = 4*4;
 // Expire a whole cache
 void cache_expire(string in)
 {
-  CACHE_WERR(sprintf("cache_expire(\"%s\")", in));
+  CACHE_WERR(sprintf("cache_expire(%O)", in));
   m_delete(cache, in);
 }
 
 // Lookup an entry in a cache
 mixed cache_lookup(string in, mixed what)
 {
-  CACHE_WERR(sprintf("cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
+  CACHE_WERR(sprintf("cache_lookup(%O, %O)  ->  ", in, what));
   all[in]++;
   int t=time(1);
   // Does the entry exist at all?
@@ -122,7 +122,7 @@ mapping(string:array(int)) status()
 // entry key is given.
 void cache_remove(string in, mixed what)
 {
-  CACHE_WERR(sprintf("cache_remove(\"%s\",\"%O\")", in, what));
+  CACHE_WERR(sprintf("cache_remove(%O, %O)", in, what));
   if(!what)
     m_delete(cache, in);
   else
@@ -134,10 +134,10 @@ void cache_remove(string in, mixed what)
 mixed cache_set(string in, mixed what, mixed to, int|void tm)
 {
 #if MORE_CACHE_DEBUG
-  CACHE_WERR(sprintf("cache_set(\"%s\", \"%s\", %O)\n",
-		     in, what, to));
+  CACHE_WERR(sprintf("cache_set(%O, %O, %O)\n",
+		     in, what, /* to */ _typeof(to)));
 #else
-  CACHE_WERR(sprintf("cache_set(\"%s\", \"%s\", %t)\n",
+  CACHE_WERR(sprintf("cache_set(%O, %O, %t)\n",
 		     in, what, to));
 #endif
   int t=time(1);
@@ -160,10 +160,10 @@ void cache_clean()
   CACHE_WERR("cache_clean()");
   foreach(indices(cache), a)
   {
-    MORE_CACHE_WERR("  Class  " + a);
+    MORE_CACHE_WERR(sprintf("  Class  %O ", a));
     foreach(indices(cache[a]), b)
     {
-      MORE_CACHE_WERR("     " + b + " ");
+      MORE_CACHE_WERR(sprintf("     %O ", b));
       c = cache[a][b];
 #ifdef DEBUG
       if(!intp(c[TIMESTAMP]))
@@ -191,7 +191,7 @@ void cache_clean()
 	  c[SIZE] = (c[SIZE] + 5*svalsize + 4)/100;
 	  // (Entry size + cache overhead) / arbitrary factor
 	  MORE_CACHE_WERR("     Cache entry size perceived as " +
-			  ([int]c[SIZE]*100) + " bytes\n");
+			  ([int]c[SIZE]*100) + " bytes");
 	}
 	if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + gc_time -
 	   c[SIZE] < t)
@@ -201,7 +201,7 @@ void cache_clean()
 	  }
 #ifdef MORE_CACHE_DEBUG
 	else
-	  CACHE_WERR("Ok");
+	  CACHE_WERR("     Ok");
 #endif
       }
       if(!sizeof(cache[a]))
