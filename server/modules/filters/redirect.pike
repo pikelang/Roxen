@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.36 2004/05/20 13:39:53 _cvs_stephen Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.37 2004/05/20 21:59:04 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -132,12 +132,13 @@ mixed first_try(object id)
   if(id->misc->is_redirected)
     return 0;
 
-  string m;
+  string m,oldurl;
   int ok;
   m = id->not_query;
   if(id->query)
-    if(sscanf(id->raw, "%*s?%[^\n\r ]", tmp))
+    if(sscanf(id->raw_url, "%*s?%s", tmp))
       m += "?"+tmp;
+  oldurl = m;
 
   foreach(indices(exact_patterns), f)
   {
@@ -154,7 +155,6 @@ mixed first_try(object id)
       if(has_prefix(m, f))
       {
 	to = redirect_to[i] + m[strlen(f)..];
-	sscanf(to, "%s?", to);
 	break;
       } else if( has_value(f, "*") || has_value( f, "(") ) {
 	array foo;
@@ -183,10 +183,10 @@ mixed first_try(object id)
   if(!to)
     return 0;
 
-  string url = id->conf->query("MyWorldLocation");
-  url=url[..strlen(url)-2];
-  to = replace(to, "%u", url);
-  if(to == url + id->not_query || url == id->not_query)
+  string stmp,url;      // Don't use MyWorldLocation to support 'default' sites
+  sscanf(id->url_base(), "%[a-z]://%[^/]",stmp,url);
+  to = replace(to, "%u", stmp+"://"+url);
+  if(to == oldurl)
     return 0;
 
   id->misc->is_redirected = 1; // Prevent recursive internal redirects
