@@ -4,7 +4,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.4 2000/03/16 18:57:14 nilsson Exp $";
+constant cvs_version = "$Id: sqldb.pike,v 1.5 2000/04/04 18:49:09 jhs Exp $";
 constant module_type = MODULE_ZERO;
 constant module_name = "SQL Databases";
 constant module_doc  = "Associates names with SQL Database URLs.";
@@ -45,7 +45,7 @@ mapping(string:string) parse_table(string tab)
   return(res);
 }
 
-void start(int level, object conf)
+void start(int level, Configuration conf)
 {
   conf->sql_urls = parse_table(QUERY(table));
 }
@@ -59,7 +59,7 @@ string status()
   if (sizeof(sql_urls)) {
     res += "<table border=\"0\">\n";
     foreach(sort(indices(sql_urls)), string s) {
-      object o;
+      Sql.sql o;
 
       catch {
 	o = Sql.sql(sql_urls[s]);
