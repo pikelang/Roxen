@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.267 1999/04/22 14:17:40 per Exp $
+ * $Id: roxen.pike,v 1.268 1999/04/24 19:11:50 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.267 1999/04/22 14:17:40 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.268 1999/04/24 19:11:50 grubba Exp $";
 
 object backend_thread;
 
@@ -622,7 +622,7 @@ function handle = unthreaded_handle;
  * THREADS code starts here
  */
 #ifdef THREADS
-#define THREAD_DEBUG
+// #define THREAD_DEBUG
 
 object do_thread_create(string id, function f, mixed ... args)
 {
@@ -646,10 +646,14 @@ void handler_thread(int id)
   {
     if(q=catch {
       do {
+#ifdef THREAD_DEBUG
 	werror("Handle thread ["+id+"] waiting for next event\n");
+#endif /* THREAD_DEBUG */
 	if((h=handle_queue->read()) && h[0]) {
+#ifdef THREAD_DEBUG
 	  werror(sprintf("Handle thread [%O] calling %O(@%O)...\n",
-			 h[0], h[1..]));
+			 id, h[0], h[1..]));
+#endif /* THREAD_DEBUG */
 	  SET_LOCALE(default_locale);
 	  h[0](@h[1]);
 	  h=0;
@@ -661,7 +665,7 @@ void handler_thread(int id)
 	}
       } while(1);
     }) {
-      report_error(LOCALE->uncaught_error(describe_backtrace(q)));
+      report_error(/* LOCALE->uncaught_error(*/describe_backtrace(q)/*)*/);
       if (q = catch {h = 0;}) {
 	report_error(LOCALE->
 		     uncaught_error(describe_backtrace(q)));
@@ -3109,7 +3113,7 @@ object find_server_for(object id, string host, string|void port)
     best=best*100/strlen(host);
 #endif /* !String.fuzzymatch && Array.diff_longest_sequence */
 
-    if(best >= QUERY(minmatch))
+    if(best >= 50 /* QUERY(minmatch) */)
       id->conf = config_cache[host] = (c || id->conf);
     else
       config_cache[host] = id->conf;
