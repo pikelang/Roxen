@@ -97,18 +97,18 @@ string container_sql_insert(string tag, mapping args, string contents)
 int main(int argc, array(string) argv)
 {
   if(!(db=Sql.sql(DB_URL))) {
-    write("Can not connect to sql server");
+    write("Can not connect to sql server\n");
     return 0;
   }
 
   if(argc<2) {
-    write("USAGE: generate.pike inputfile");
+    write("USAGE: generate.pike inputfile\n");
     return 0;
   }
   
   string s = Stdio.read_bytes(argv[1]);
   if(!s) {
-    write("File not found");
+    write("File not found\n");
   }
   
   spider;

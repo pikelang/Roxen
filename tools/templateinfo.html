@@ -199,14 +199,20 @@
 	  _page_name="Title p1">
 
   <!--  Page head  -->
+  <insert name="page_head_image_bg_color" title="Image bg color"
+          type="color-small" help="" default_value="black"
+	  _page_name="Page head p1"
+	  _option_group_name="page head images">
+
+  <insert name="page_head_image_fg_color" title="Image fg color"
+          type="color-small" help="" default_value="white"
+	  _page_name="Page head p1"
+	  _option_group_name="page head images">
+
   <insert name="page_head_image" title="Image"
           type="select" help="" default_value=""
 	  _page_name="Page head p1"
 	  _option_group_name="page head images">
-
-  <insert name="page_head_image_align" title="Image align"
-          type="select" help="" default_value="left"
-	  _page_name="Page head p1" _option_group_name="align">
 
   <insert name="logo_position" title="Logo position"
           type="select" help="" default_value="left"
@@ -366,22 +372,30 @@
 
 <sql-insert table="template_wizards_pages" quote="$"
             query="select id from template_vars where name='$$'">
-
+  <!--  Heading 1  -->
   <update column="example_html"
     expression='<formoutput quote=§>
                   <if match="§variable_$h1_shadow$§ is 1">
 		    <cset variable=shadow>shadow=60,1</cset></if>
-		  </formoutput>
-		  <formoutput quote=§>
-                    <gtext align=center nfont="§variable_$h1_font$§"
-		      §variable_$h1_font_style$§
-                      fg=black scale=§variable_$h1_size$§
-		      §shadow§ bg=lightgrey>Example Text</gtext>
-		    </sqloutput>
-		  </formoutput>
-		</quote>'
+		</formoutput>
+		<formoutput quote=§>
+                  <gtext align=center nfont="§variable_$h1_font$§"
+		    §variable_$h1_font_style$§
+                    fg=black scale=§variable_$h1_size$§
+		    §shadow§ bg=lightgrey>Example Text</gtext>
+		</formoutput>'
     where="name='Heading 1 p1'">
+    
+  <!--  Heading 1 dingbat  -->
+  <update column="example_html"
+    expression='<formoutput quote=§>
+                  <gtext align=center nfont="zapf dingbats"
+                    fg=black scale=§variable_$h1_dingbat_size$§
+		    §shadow§ bg=lightgrey>§variable_$h1_dingbat$§</gtext>
+	        </formoutput>'
+    where="name='Heading 1 p2'">
 
+  <!--  Heading 2  -->
   <update column="example_html"
     expression='<formoutput quote=§>
                   <if match="§variable_$h2_shadow$§ is 1">
@@ -395,6 +409,16 @@
 		</formoutput>'
     where="name='Heading 2 p1'">
 
+  <!--  Heading 2 dingbat  -->
+  <update column="example_html"
+    expression='<formoutput quote=§>
+                  <gtext align=center nfont="zapf dingbats"
+                    fg=black scale=§variable_$h2_dingbat_size$§
+		    §shadow§ bg=lightgrey>§variable_$h2_dingbat$§</gtext>
+	        </formoutput>'
+    where="name='Heading 2 p2'">
+
+  <!--  Title  -->
   <update column="example_html"
     expression='<formoutput quote=§>
                   <if match="§variable_$title_shadow$§ is 1">
@@ -408,6 +432,7 @@
 		</formoutput>'
     where="name='Title p1'">
 
+  <!--  Navigation text  -->
   <update column="example_html"
     expression='<formoutput quote=§>
                   <if match="§variable_$nav_shadow$§ is 1">
@@ -483,14 +508,10 @@
   <!--  Page head images  -->
   <insert name="--- None ---" _group_name="page head images" value="">
 
-  <insert name="Sand" _group_name="page head images"
-    value="<img src=/img/sand/sand.jpg width=100% height=34>">
-
-  <insert name="Blue clouds" _group_name="page head images"
-    value="<img src=/img/dawn/blue_clouds.jpg width=100% height=41>">
-
-  <insert name="Squares" _group_name="page head images"
-    value="<img src=/img/Klee/rutor.gif width=92 height=47>">
+  <insert name="Money" _group_name="page head images" value="/img/top/money.ppm">
+  <insert name="Bricks" _group_name="page head images" value="/img/top/bricks.ppm">
+  <insert name="Stone" _group_name="page head images" value="/img/top/stone.ppm">
+  <insert name="Stone bricks" _group_name="page head images" value="/img/top/stone_bricks.ppm">
 
   <!--  Logo position  -->
   <insert name="--- None ---" value="" _group_name="logo position">
@@ -500,14 +521,124 @@
   
   <!--  Dingbat  -->
   <insert name="--- None ---" value="" _group_name="dingbat">
-  <insert name="Sun" value="j" _group_name="dingbat">
-  <insert name="Winter" value="d" _group_name="dingbat">
-  <insert name="1" value="1" _group_name="dingbat">
-  <insert name="2" value="2" _group_name="dingbat">
-  <insert name="3" value="3" _group_name="dingbat">
-  <insert name="4" value="4" _group_name="dingbat">
-  <insert name="5" value="5" _group_name="dingbat">
-  <insert name="6" value="6" _group_name="dingbat">
+<insert value=' ' name='Upper blade scissors' _group_name='dingbat'>
+<insert value='!' name='Black scissors' _group_name='dingbat'>
+<insert value='(' name='Envelope' _group_name='dingbat'>
+<insert value='+' name='Victory hand' _group_name='dingbat'>
+<insert value=',' name='Writing hand' _group_name='dingbat'>
+<insert value='-' name='Lower right pencil' _group_name='dingbat'>
+<insert value='.' name='Pencil' _group_name='dingbat'>
+<insert value='/' name='Upper right pencil' _group_name='dingbat'>
+<insert value='0' name='White nib' _group_name='dingbat'>
+<insert value='1' name='Black nib' _group_name='dingbat'>
+<insert value='2' name='Check mark' _group_name='dingbat'>
+<insert value='3' name='Heavy check mark' _group_name='dingbat'>
+<insert value='4' name='Multiplication x' _group_name='dingbat'>
+<insert value='5' name='Heavy multiplication x' _group_name='dingbat'>
+<insert value='6' name='Ballot x' _group_name='dingbat'>
+<insert value='7' name='Heavy ballot x' _group_name='dingbat'>
+<insert value='8' name='Outlined greek cross' _group_name='dingbat'>
+<insert value='9' name='Heavy greek cross' _group_name='dingbat'>
+<insert value=';' name='Heavy open centre cross' _group_name='dingbat'>
+<insert value='=' name='Shadowed white latin cross' _group_name='dingbat'>
+<insert value='?' name='Maltese cross' _group_name='dingbat'>
+<insert value='A' name='Four teardrop-spoked asterisk' _group_name='dingbat'>
+<insert value='B' name='Four balloon-spoked asterisk' _group_name='dingbat'>
+<insert value='C' name='Heavy four balloon-spoked asterisk' _group_name='dingbat'>
+<insert value='D' name='Four club-spoked asterisk' _group_name='dingbat'>
+<insert value='E' name='Black four pointed star' _group_name='dingbat'>
+<insert value='F' name='White four pointed star' _group_name='dingbat'>
+<insert value='H' name='Stress outlined white star' _group_name='dingbat'>
+<insert value='I' name='Circled white star' _group_name='dingbat'>
+<insert value='J' name='Open centre black star' _group_name='dingbat'>
+<insert value='K' name='Black centre white star' _group_name='dingbat'>
+<insert value='L' name='Outlined black star' _group_name='dingbat'>
+<insert value='M' name='Heavy outlined black star' _group_name='dingbat'>
+<insert value='N' name='Pinwheel star' _group_name='dingbat'>
+<insert value='O' name='Shadowed white star' _group_name='dingbat'>
+<insert value='P' name='Heavy asterisk' _group_name='dingbat'>
+<insert value='Q' name='Open centre asterisk' _group_name='dingbat'>
+<insert value='R' name='Eight spoked asterisk' _group_name='dingbat'>
+<insert value='S' name='Eight pointed black star' _group_name='dingbat'>
+<insert value='T' name='Eight pointed pinwheel star' _group_name='dingbat'>
+<insert value='U' name='Six pointed black star' _group_name='dingbat'>
+<insert value='V' name='Eight pointed rectilinear black star' _group_name='dingbat'>
+<insert value='W' name='Heavy eight pointed rectilinear black star' _group_name='dingbat'>
+<insert value='X' name='Twelve pointed black star' _group_name='dingbat'>
+<insert value='Y' name='Sixteen pointed asterisk' _group_name='dingbat'>
+<insert value='Z' name='Teardrop-spoked asterisk' _group_name='dingbat'>
+<insert value='[' name='Open centre teardrop-spoked asterisk' _group_name='dingbat'>
+<insert value='\' name='Heavy teardrop-spoked asterisk' _group_name='dingbat'>
+<insert value=']' name='Six petalled black and white florette' _group_name='dingbat'>
+<insert value='^' name='Black florette' _group_name='dingbat'>
+<insert value='_' name='White florette' _group_name='dingbat'>
+<insert value='`' name='Eight petalled outlined black florette' _group_name='dingbat'>
+<insert value='a' name='Circled open centre eight pointed star' _group_name='dingbat'>
+<insert value='b' name='Heavy teardrop-spoked pinwheel asterisk' _group_name='dingbat'>
+<insert value='c' name='Snowflake' _group_name='dingbat'>
+<insert value='d' name='Tight trifoliate snowflake' _group_name='dingbat'>
+<insert value='e' name='Heavy chevron snowflake' _group_name='dingbat'>
+<insert value='f' name='Sparkle' _group_name='dingbat'>
+<insert value='g' name='Heavy sparkle' _group_name='dingbat'>
+<insert value='h' name='Balloon-spoked asterisk' _group_name='dingbat'>
+<insert value='i' name='Eight teardrop-spoked propeller asterisk' _group_name='dingbat'>
+<insert value='j' name='Heavy eight teardrop-spoked propeller asterisk' _group_name='dingbat'>
+<insert value='l' name='Shadowed white circle' _group_name='dingbat'>
+<insert value='n' name='Lower right drop-shadowed white square' _group_name='dingbat'>
+<insert value='o' name='Upper right drop-shadowed white square' _group_name='dingbat'>
+<insert value='p' name='Lower right shadowed white square' _group_name='dingbat'>
+<insert value='q' name='Upper right shadowed white square' _group_name='dingbat'>
+<insert value='u' name='Black diamond minus white x' _group_name='dingbat'>
+<insert value='w' name='Light vertical bar' _group_name='dingbat'>
+<insert value='x' name='Medium vertical bar' _group_name='dingbat'>
+<insert value='y' name='Heavy vertical bar' _group_name='dingbat'>
+<insert value='z' name='Heavy single turned comma quotation mark ornament' _group_name='dingbat'>
+<insert value='{' name='Heavy single comma quotation mark ornament' _group_name='dingbat'>
+<insert value='|' name='Heavy double turned comma quotation mark ornament' _group_name='dingbat'>
+<insert value='}' name='Heavy double comma quotation mark ornament' _group_name='dingbat'>
+<insert value='€' name='Curved stem paragraph sign ornament' _group_name='dingbat'>
+<insert value='' name='Heavy exclamation mark ornament' _group_name='dingbat'>
+<insert value='‚' name='Heavy heart exclamation mark ornament' _group_name='dingbat'>
+<insert value='ƒ' name='Heavy black heart' _group_name='dingbat'>
+<insert value='„' name='Rotated heavy black heart bullet' _group_name='dingbat'>
+<insert value='…' name='Floral heart' _group_name='dingbat'>
+<insert value='†' name='Rotated floral heart bullet' _group_name='dingbat'>
+<insert value='³' name='Heavy wide-headed rightwards arrow' _group_name='dingbat'>
+<insert value='·' name='Heavy south east arrow' _group_name='dingbat'>
+<insert value='¸' name='Heavy rightwards arrow' _group_name='dingbat'>
+<insert value='¹' name='Heavy north east arrow' _group_name='dingbat'>
+<insert value='º' name='Drafting point rightwards arrow' _group_name='dingbat'>
+<insert value='»' name='Heavy round-tipped rightwards arrow' _group_name='dingbat'>
+<insert value='¿' name='Heavy dashed triangle-headed rightwards arrow' _group_name='dingbat'>
+<insert value='À' name='Black rightwards arrow' _group_name='dingbat'>
+<insert value='Á' name='Three-d top-lighted rightwards arrowhead' _group_name='dingbat'>
+<insert value='Â' name='Three-d bottom-lighted rightwards arrowhead' _group_name='dingbat'>
+<insert value='Ã' name='Black rightwards arrowhead' _group_name='dingbat'>
+<insert value='Ä' name='Heavy black curved downwards and rightwards arrow' _group_name='dingbat'>
+<insert value='Å' name='Heavy black curved upwards and rightwards arrow' _group_name='dingbat'>
+<insert value='Æ' name='Squat black rightwards arrow' _group_name='dingbat'>
+<insert value='Ç' name='Heavy concave-pointed black rightwards arrow' _group_name='dingbat'>
+<insert value='È' name='Right-shaded white rightwards arrow' _group_name='dingbat'>
+<insert value='É' name='Left-shaded white rightwards arrow' _group_name='dingbat'>
+<insert value='Ê' name='Back-tilted shadowed white rightwards arrow' _group_name='dingbat'>
+<insert value='Ë' name='Front-tilted shadowed white rightwards arrow' _group_name='dingbat'>
+<insert value='Ì' name='Heavy lower right-shadowed white rightwards arrow' _group_name='dingbat'>
+<insert value='Í' name='Heavy upper right-shadowed white rightwards arrow' _group_name='dingbat'>
+<insert value='Î' name='Notched lower right-shadowed white rightwards arrow' _group_name='dingbat'>
+<insert value='Ð' name='Notched upper right-shadowed white rightwards arrow' _group_name='dingbat'>
+<insert value='Ñ' name='Circled heavy white rightwards arrow' _group_name='dingbat'>
+<insert value='Ò' name='White-feathered rightwards arrow' _group_name='dingbat'>
+<insert value='Ó' name='Black-feathered south east arrow' _group_name='dingbat'>
+<insert value='Ô' name='Black-feathered rightwards arrow' _group_name='dingbat'>
+<insert value='Õ' name='Black-feathered north east arrow' _group_name='dingbat'>
+<insert value='Ö' name='Heavy black-feathered south east arrow' _group_name='dingbat'>
+<insert value='×' name='Heavy black-feathered rightwards arrow' _group_name='dingbat'>
+<insert value='Ø' name='Heavy black-feathered north east arrow' _group_name='dingbat'>
+<insert value='Ù' name='Teardrop-barbed rightwards arrow' _group_name='dingbat'>
+<insert value='Ú' name='Heavy teardrop-shanked rightwards arrow' _group_name='dingbat'>
+<insert value='Û' name='Wedge-tailed rightwards arrow' _group_name='dingbat'>
+<insert value='Ü' name='Heavy wedge-tailed rightwards arrow' _group_name='dingbat'>
+<insert value='Ý' name='Open-outlined rightwards arrow' _group_name='dingbat'>
 
 </sql-insert>
 
@@ -585,7 +716,6 @@
   <insert _scheme="Night" variable_name="title_shadow" value="0">
 
   <insert _scheme="Night" variable_name="page_head_image" value="none">
-  <insert _scheme="Night" variable_name="page_head_image_align" value="left">
   <insert _scheme="Night" variable_name="page_head_bar_color" value="#220070">
 
   <insert _scheme="Night" variable_name="nav_text_color" value="white">
@@ -640,9 +770,7 @@
   <insert _scheme="Klee" variable_name="title_align" value="right">
   <insert _scheme="Klee" variable_name="title_shadow" value="0">
 
-  <insert _scheme="Klee" variable_name="page_head_image"
-    _dummy_name="page_head_image" _option_name="Squares">
-  <insert _scheme="Klee" variable_name="page_head_image_align" value="right">
+  <insert _scheme="Klee" variable_name="page_head_image" value="">
   <insert _scheme="Klee" variable_name="page_head_bar_color" value="none">
 
   <insert _scheme="Klee" variable_name="nav_text_color" value="blue">
@@ -697,8 +825,7 @@
   <insert _scheme="Dawn" variable_name="title_align" value="center">
   <insert _scheme="Dawn" variable_name="title_shadow" value="0">
 
-  <insert _scheme="Dawn" variable_name="page_head_image"
-    _dummy_name="page_head_image" _option_name="Blue clouds">
+  <insert _scheme="Dawn" variable_name="page_head_image" value="">
   <insert _scheme="Dawn" variable_name="page_head_image_align" value="center">
   <insert _scheme="Dawn" variable_name="page_head_bar_color" value="black">
 
@@ -754,9 +881,7 @@
   <insert _scheme="Sand" variable_name="title_align" value="left">
   <insert _scheme="Sand" variable_name="title_shadow" value="0">
 
-  <insert _scheme="Sand" variable_name="page_head_image"
-    _dummy_name="page_head_image" _option_name="Sand">
-  <insert _scheme="Sand" variable_name="page_head_image_align" value="right">
+  <insert _scheme="Sand" variable_name="page_head_image" value="">
   <insert _scheme="Sand" variable_name="page_head_bar_color" value="#a31805">
 
   <insert _scheme="Sand" variable_name="nav_text_color" value="#180c60">
