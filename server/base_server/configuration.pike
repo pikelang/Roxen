@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.242 1999/12/21 23:51:33 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.243 1999/12/22 01:35:29 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2187,6 +2187,22 @@ void reload_module( string modname )
 class ModuleCopies
 {
   mapping copies = ([]);
+  mixed `[](mixed q )
+  {
+    return copies[q];
+  }
+  mixed `[]=(mixed q,mixed w )
+  {
+    return copies[q]=w;
+  }
+  mixed _indices()
+  {
+    return(indices(copies));
+  }
+  mixed _values()
+  {
+    return(values(copies));
+  }
   string _sprintf( ) { return "ModuleCopies()"; }
 }
 
@@ -2200,7 +2216,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
   int module_type;
 
   if( sscanf(modname, "%s#%d", modname, id ) != 2 )
-    while( modules[modname] && modules[modname]->copies[id] )
+    while( modules[modname] && modules[modname][id] )
       id++;
 
   int start_time = gethrtime();
@@ -2222,7 +2238,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
     report_debug(" %-33s ... \b", moduleinfo->get_name() );
 #endif
 
-  module = modules[ module ];
+  module = modules[ modname ];
 
   if(!module)
     modules[ modname ] = module = ModuleCopies();
@@ -2237,13 +2253,13 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
       report_error(LOCALE->
                    error_initializing_module_copy(moduleinfo->get_name(),
                                                   describe_backtrace(err)));
-      return module->copies[id];
+      return module[id];
     }
   }
 
-  if(module->copies[id] && module->copies[id] != me)
+  if(module[id] && module[id] != me)
   {
-    module->copies[id]->stop();
+    module[id]->stop();
 //     if( err = catch( disable_module( modname+"#"+id ) ) )
 //       report_error(LOCALE->error_disabling_module(moduleinfo->get_name(),
 //                                                   describe_backtrace(err)));
@@ -2486,7 +2502,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
   me->setvars(retrieve(modname + "#" + id, this_object()));
 
 
-  module->copies[ id ] = me;
+  module[ id ] = me;
   otomod[ me ] = modname+"#"+id;
       
   mixed err;
@@ -2502,8 +2518,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 
     /* Clean up some broken references to this module. */
     m_delete(otomod, me);
-    if(module->copies)
-      m_delete(module->copies, id);
+    m_delete(module->copies, id);
     destruct(me);
     return 0;
   }
@@ -2673,7 +2688,7 @@ int disable_module( string modname )
     return 0;
   }
 
-  me = module->copies[id];
+  me = module[id];
   m_delete(module->copies, id);
   
   if(!sizeof(module->copies))
