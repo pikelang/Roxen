@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.306 2003/01/20 12:37:31 mast Exp $
+// $Id: module.pmod,v 1.307 2003/03/24 18:05:41 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1983,6 +1983,23 @@ class Context
     else id->root_id->misc[index] = value;
     if (mapping var_chg = misc->variable_changes)
       var_chg[encode_value_canonic (({2, index}))] = value;
+  }
+
+  static constant p_code_callback_id = encode_value_canonic (({3}));
+
+  void add_p_code_callback (function|string callback, mixed... args)
+  //! If result p-code is collected then a call to @[callback] with
+  //! the given arguments is added to it, so that it will be called
+  //! when the result p-code is reevaluated.
+  //!
+  //! If @[callback] is a string then it's taken to be the name of a
+  //! function to call in the current @[id] object. The string can
+  //! also contain "->" to build index chains. E.g. the string
+  //! "misc->foo->bar" will cause a call to @[id]->misc->foo->bar()
+  //! when the result p-code is evaluated.
+  {
+    if (mapping var_chg = misc->variable_changes)
+      var_chg[p_code_callback_id] += ({callback, args});
   }
 
   static int last_internal_var_id = 0;
@@ -6113,7 +6130,8 @@ class Type
   string _sprintf()
   {
     return "RXML.Type(" + this_object()->name + ", " +
-      parser_prog->name + ")" + OBJ_COUNT;}
+      (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 static class PCacheObj
@@ -6156,7 +6174,10 @@ class TAny
     return val;
   }
 
-  string _sprintf() {return "RXML.t_any(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_any(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TNil t_nil = TNil();
@@ -6192,7 +6213,10 @@ static class TNil
 
   int subtype_of (Type other) {return 1;}
 
-  string _sprintf() {return "RXML.t_nil(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_nil(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TSame t_same = TSame();
@@ -6204,7 +6228,10 @@ static class TSame
   constant name = "same";
   Type supertype = t_any;
   Type conversion_type = 0;
-  string _sprintf() {return "RXML.t_same(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_same(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TType t_type = TType();
@@ -6249,7 +6276,10 @@ static class TType
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_type(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_type(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TParser t_parser = TParser();
@@ -6291,7 +6321,10 @@ static class TParser
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_parser(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_parser(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 // Basic types. Even though most of these have a `+ that fulfills
@@ -6335,7 +6368,10 @@ class TScalar
     return [string|int|float] val;
   }
 
-  string _sprintf() {return "RXML.t_scalar(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_scalar(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TNum t_num = TNum();
@@ -6379,7 +6415,10 @@ class TNum
     return [int|float] val;
   }
 
-  string _sprintf() {return "RXML.t_num(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_num(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TInt t_int = TInt();
@@ -6420,7 +6459,10 @@ class TInt
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_int(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_int(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TFloat t_float = TFloat();
@@ -6461,7 +6503,10 @@ class TFloat
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_float(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_float(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TString t_string = TString();
@@ -6530,7 +6575,10 @@ class TString
   string capitalize (string val) {return String.capitalize (val);}
   //! Converts the first literal character in @[val] to uppercase.
 
-  string _sprintf() {return "RXML.t_string(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_string(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 // Text types:
@@ -6561,7 +6609,10 @@ class TAnyText
   constant free_text = 1;
   constant handle_literals = 0;
 
-  string _sprintf() {return "RXML.t_any_text(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_any_text(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TText t_text = TText();
@@ -6589,7 +6640,10 @@ class TText
 		 format_short (val), name, describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_text(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_text(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TXml t_xml = TXml();
@@ -6743,7 +6797,10 @@ class TXml
     return "&" + entity + ";";
   }
 
-  string _sprintf() {return "RXML.t_xml(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_xml(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 THtml t_html = THtml();
@@ -6765,7 +6822,10 @@ class THtml
 
   constant decode = 0;		// Cover it; not needed here.
 
-  string _sprintf() {return "RXML.t_html(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return "RXML.t_html(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 
@@ -6942,6 +7002,28 @@ class VariableChange (/*static*/ mapping settings)
 			   format_short (var), format_short (settings[encoded_var]));
 #endif
 	      ctx->set_root_id_misc (var[1], settings[encoded_var]);
+	      break;
+
+	    case 3: {
+	      // Generic callbacks.
+	      array cb_list = settings[encoded_var];
+	      for (int i = 0; i < sizeof (cb_list); i += 2) {
+		mixed cb = cb_list[i];
+#ifdef DEBUG
+		if (TAG_DEBUG_TEST (ctx->frame))
+		  TAG_DEBUG (ctx->frame,
+			     "    Calling cached callback: %O (%s)\n",
+			     cb, map (cb_list[i + 1], format_short) * ", ");
+#endif
+		if (stringp (cb)) {
+		  array(string) names = cb / "->";
+		  cb = ctx->id;
+		  foreach (names, string name) cb = cb[name];
+		}
+		cb (@cb_list[i + 1]);
+	      }
+	      break;
+	    }
 	  }
 
 	  continue handle_var_loop;
@@ -8003,7 +8085,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 4.0;
+  constant P_CODE_VERSION = 4.1;
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
@@ -8409,8 +8491,8 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	  // If the program also is a function the encoder won't dump
 	  // the byte code, but instead the parent object and the
 	  // identifier within it.
-	  ENCODE_MSG ("  encoding reference to program %O->%O\n",
-		      function_object (what), what);
+	  ENCODE_MSG ("  encoding reference to program %O in object %O\n",
+		      what, function_object (what));
 	  return ([])[0];
 	}
       }
@@ -8419,7 +8501,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 
       if (object o = functionp (what) && function_object (what))
 	if (o->is_RXML_encodable) {
-	  ENCODE_MSG ("  encoding reference to function %O->%O\n", o, what);
+	  ENCODE_MSG ("  encoding reference to function %O in object %O\n", what, o);
 	  return ([])[0];
 	}
     }
@@ -8439,9 +8521,9 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
       if (object o = function_object (what)) {
 	s = sprintf ("%O", o);
 	if (s == "object") s = "";
-	else s += "->";
+	else s = " in object " + s;
       }
-      error ("Cannot encode function %s%O at %s.\n", s, what, Function.defined (what));
+      error ("Cannot encode function %O%s at %s.\n", what, s, Function.defined (what));
     }
     else
       error ("Cannot encode %O.\n", what);
