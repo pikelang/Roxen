@@ -277,10 +277,18 @@ string find_tag_doc(string name, void|object id) {
 	  plugindoc+=find_tag_doc(name+"#"+plugin, id);
 	plugindoc+="</dd></dl>";
       }
-      if(tag->is_generic_tag)
+      if(tag->is_compat_tag) {
+	RXMLHELP_WERR(sprintf("CompatTag %O", tag));
+	tag=tag->fn;
+      }
+      else if(tag->is_generic_tag) {
+	RXMLHELP_WERR(sprintf("GenericTag %O", tag));
 	tag=tag->_do_return;
-      else
+      }
+      else {
+	RXMLHELP_WERR(sprintf("NormalTag %O", tag));
 	tag=object_program(tag);
+      }
     }
     else if(arrayp(tag)) {
       if(tag[0])
