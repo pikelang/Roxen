@@ -1,4 +1,4 @@
-## $Id: supports,v 1.18 1997/04/05 01:25:54 per Exp $
+## $Id: supports,v 1.19 1997/04/11 20:30:03 grubba Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -111,6 +111,12 @@ ncsa.mosaic.*[2-9].[7-9]*.* pnginline
 .*mosaic.*final.beta.*  tables, jpeginline, backgrounds, mailto
 # }
 
+# Spyglass mosaic is distributed together with Oracle 7
+# Not very interresting, but for completeness:
+#section spyglass {
+.*	backgrounds, center, font, fontcolor, forms, imagealign, images
+.*	jpeginline, mailto, pjpeginline, tables
+# }
 
 # Old trusty character based and buggy lynx..  But it _does_ know
 # about forms!
