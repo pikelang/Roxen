@@ -1,6 +1,6 @@
 inherit "rxmlhelp";
 
-string parse( object id )
+string parse( RequestID id )
 {
   array q = id->misc->path_info / "/";
   if( sizeof( q ) >= 5 )

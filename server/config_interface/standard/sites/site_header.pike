@@ -41,7 +41,7 @@ string parse( RequestID id )
 
     array pages =
     ({
-      ({ 0, "status", 0, 0 }),
+      ({ 0, LOCALE(228,"Status"), 0, 0 }),
     });
 
     foreach ( pages, array page )
@@ -65,7 +65,7 @@ string parse( RequestID id )
             ((page[0] == q)?" selected":"")+">";
       else
         res += "<tab href=''"+((page[0] == q)?" selected":"")+">";
-      res += "&locale."+page[1]+";";
+      res += page[1];
       res += "</tab>";
       res += tpost;
     }

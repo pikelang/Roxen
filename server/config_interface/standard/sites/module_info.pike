@@ -30,7 +30,7 @@ string find_module_doc( string cn, string mn, object id )
                   ({ "/image/", }), ({ "/internal-roxen-" }));
 }
 
-string parse( object id )
+string parse( RequstID id )
 {
   array q = id->misc->path_info / "/";
   if( sizeof( q ) >= 5 )

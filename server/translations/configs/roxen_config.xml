@@ -9,6 +9,7 @@
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
 
+<file>../modules/configuration/config_tags.pike</file>
 <file>../modules/configuration/config_userdb.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 
@@ -29,13 +30,19 @@
 <file>../config_interface/standard/actions/feature_list.pike</file>
 
 <file>../config_interface/standard/event_log/index.html</file>
+<file>../config_interface/standard/event_log/log.pike</file>
+
 <file>../config_interface/standard/sites/index.html</file>
 <file>../config_interface/standard/sites/log.pike</file>
 <file>../config_interface/standard/sites/site_content.pike</file>
 <file>../config_interface/standard/sites/site_header.pike</file>
+<file>../config_interface/standard/sites/new_site.html</file>
+<file>../config_interface/standard/sites/create_site.pike</file>
 <file>../config_interface/standard/sites/drop_site.pike</file>
+<file>../config_interface/standard/sites/drop_site.html</file>
+<file>../config_interface/standard/sites/add_module.pike</file>
 <file>../config_interface/standard/sites/config_left_item.pike</file>
-
+<file>../config_interface/standard/sites/site_templates/common.pike</file>
 
 
 

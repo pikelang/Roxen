@@ -1,4 +1,4 @@
-void parse( object id )
+void parse( RequestID id )
 {
   if( id->misc->orig )
     parse( id->misc->orig );

@@ -2,10 +2,11 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>English</language>
-<dumped>964154859</dumped>
+<dumped>964529600</dumped>
 <file>../base_server/roxen.pike</file>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
+<file>../modules/configuration/config_tags.pike</file>
 <file>../modules/configuration/config_userdb.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../config_interface/standard/template</file>
@@ -23,12 +24,18 @@
 <file>../config_interface/standard/actions/listfonts.pike</file>
 <file>../config_interface/standard/actions/feature_list.pike</file>
 <file>../config_interface/standard/event_log/index.html</file>
+<file>../config_interface/standard/event_log/log.pike</file>
 <file>../config_interface/standard/sites/index.html</file>
 <file>../config_interface/standard/sites/log.pike</file>
 <file>../config_interface/standard/sites/site_content.pike</file>
 <file>../config_interface/standard/sites/site_header.pike</file>
+<file>../config_interface/standard/sites/new_site.html</file>
+<file>../config_interface/standard/sites/create_site.pike</file>
 <file>../config_interface/standard/sites/drop_site.pike</file>
+<file>../config_interface/standard/sites/drop_site.html</file>
+<file>../config_interface/standard/sites/add_module.pike</file>
 <file>../config_interface/standard/sites/config_left_item.pike</file>
+<file>../config_interface/standard/sites/site_templates/common.pike</file>
 <added id="1"/>
 
 <!-- [1] "No virtual servers enabled" -->
@@ -688,22 +695,6 @@ Standard means using the default locale, which varies according to the value of 
 <!-- [bA] "Save" -->
 <t id="bA"></t>
 
-<!-- [dt] "Administrator logged on as %s from %s.
-" -->
-<t id="dt"></t>
-
-<!-- [du] "Character encoding" -->
-<t id="du"></t>
-
-<!-- [dv] "Send pages to client in this character encoding." -->
-<t id="dv"></t>
-
-<!-- [dw] "Mountpoint" -->
-<t id="dw"></t>
-
-<!-- [dx] "Usually / is a good idea" -->
-<t id="dx"></t>
-
 <!-- [201] "Ok" -->
 <t id="201"></t>
 
@@ -941,3 +932,53 @@ string ftp_stat_line(string cmd, int times) {
 
 <!-- [261] "Inherit tree" -->
 <t id="261"></t>
+
+<!-- [dt] "Administrator logged on as %s from %s.
+" -->
+<t id="dt"></t>
+
+<!-- [262] "Character encoding" -->
+<t id="262"></t>
+
+<!-- [263] "Send pages to client in this character encoding." -->
+<t id="263"></t>
+
+<!-- [264] "Mountpoint" -->
+<t id="264"></t>
+
+<!-- [265] "Usually / is a good idea" -->
+<t id="265"></t>
+
+<!-- [266] "Will be loaded from: " -->
+<t id="266"></t>
+
+<!-- [267] "View" -->
+<t id="267"></t>
+
+<!-- [268] "Configuration gone!" -->
+<t id="268"></t>
+
+<!-- [269] "Site name:" -->
+<t id="269"></t>
+
+<!-- [270] "
+The name of the configuration must contain characters
+other than space and tab, it should not end with
+~, and it must not be 'CVS', 'Global Variables' or
+'global variables', nor the name of an existing
+configuration, and the character '/' cannot be
+used. This name will show up in the sites menu, a
+lowercased, filesystem-friendly version will become
+the virtual server's configuration file name as well
+as the name of its log file directory.
+" -->
+<t id="270"></t>
+
+<!-- [271] "with template" -->
+<t id="271"></t>
+
+<!-- [272] "Reload module list" -->
+<t id="272"></t>
+
+<!-- [273] "Select one or several modules to add." -->
+<t id="273"></t>

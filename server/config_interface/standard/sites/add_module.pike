@@ -64,7 +64,7 @@ string site_url( RequestID id, string site )
 string page_base( RequestID id, string content )
 {
   return sprintf( "<use file='/standard/template'>\n"
-                  "<tmpl title='Add module'>"
+                  "<tmpl title=' %s'>"
                   "<topmenu base='&cf.num-dotdots;' selected='sites'>\n"
                   "<content><cv-split>"
                   "<subtablist width='100%%'>"
@@ -72,11 +72,12 @@ string page_base( RequestID id, string content )
                   "<st-page>"
                   "<gbutton preparse='' "
                   "href='add_module.pike?config=&form.config:http;"
-                       "&reload_module_list=yes' > "
-                  "Reload module list </gbutton><p>"
+                  "&reload_module_list=yes' > %s </gbutton><p>"
                   "\n%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
-                  "</cv-split></content></tmpl>", content );
+                  "</cv-split></content></tmpl>", 
+		  LOCALE(258,"Add module"), 
+		  LOCALE(272,"Reload module list"), content );
 }
 
 array(string) get_module_list( function describe_module,
@@ -166,7 +167,7 @@ return sprintf(
        <form method='post' action='add_module.pike'>
          <input type='hidden' name='module_to_add' value='%s'>
          <input type='hidden' name='config' value='&form.config;'>
-         <submit-gbutton preparse=''>"+LOCALE("", "Add Module")+#"</submit-gbutton>
+         <submit-gbutton preparse=''>%s</submit-gbutton>
        </form>
      </td>
      <td valign=top>
@@ -180,8 +181,9 @@ return sprintf(
      module->get_name(),
      (image?module_image(module->type):""),
      module->sname,
+   LOCALE(251, "Add Module"),
      module->get_description(),
-     LOCALE("", "Will be loaded from: ")+module->filename
+     LOCALE(266, "Will be loaded from: ")+module->filename
 );
     } else {
       if( block == module )
@@ -200,7 +202,7 @@ array(int|string) class_visible_normal( string c, string d, RequestID id )
 
   if( id->variables->unfolded == c ) {
     header+=("<a name="+Roxen.http_encode_string(c)+
-	     "></a><gbutton preparse='' dim=''> "+LOCALE("", "View")+" </gbutton>");
+	     "></a><gbutton preparse='' dim=''> "+LOCALE(267, "View")+" </gbutton>");
     x=1;
   }
   else
@@ -208,7 +210,7 @@ array(int|string) class_visible_normal( string c, string d, RequestID id )
 	     "href='add_module.pike?config=&form.config;"
 	     "&unfolded="+Roxen.http_encode_string(c)+
 	     "#"+Roxen.http_encode_string(c)+"' > "+
-	     LOCALE("", "View")+" </gbutton>");
+	     LOCALE(267, "View")+" </gbutton>");
 
   header+=("</td><td width='100%'>"
 	   "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
@@ -252,7 +254,7 @@ return sprintf(
    module->sname,
    module->get_name(),
    module->get_description(),
-   LOCALE("", "Will be loaded from: ")+module->filename
+   LOCALE(266, "Will be loaded from: ")+module->filename
   );
   } else {
     if( block == module )
@@ -270,8 +272,8 @@ array(int|string) class_visible_faster( string c, string d, RequestID id )
 
   if( id->variables->unfolded == c ) {
     header+=("<a name="+Roxen.http_encode_string(c)+
-	     "></a><gbutton preparse='' dim=''> "+LOCALE("", "View")+" </gbutton>"
-	     "<tr><td><submit-gbutton> "+LOCALE("", "Add Module")+
+	     "></a><gbutton preparse='' dim=''> "+LOCALE(267, "View")+" </gbutton>"
+	     "<tr><td><submit-gbutton> "+LOCALE(251, "Add Module")+
 	     " </submit-gbutton></td></tr>");
     x=1;
   }
@@ -280,7 +282,7 @@ array(int|string) class_visible_faster( string c, string d, RequestID id )
 	     "href='add_module.pike?config=&form.config;"
 	     "&unfolded="+Roxen.http_encode_string(c)+
 	     "#"+Roxen.http_encode_string(c)+"' > "+
-	     LOCALE("", "View")+" </gbutton>");
+	     LOCALE(267, "View")+" </gbutton>");
 
   header+=("</td><td width='100%'>"
 	   "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
@@ -309,7 +311,7 @@ array(int|string) class_visible_compact( string c, string d, RequestID id )
 {
   string res="";
   if(first++)
-    res = "</select><br /><submit-gbutton> "+LOCALE("", "Add Module")+" </submit-gbutton> ";
+    res = "</select><br /><submit-gbutton> "+LOCALE(251, "Add Module")+" </submit-gbutton> ";
   res += "<p><font size='+2'>"+c+"</font><br />"+d+"<p><select multiple name='module_to_add'>";
   return ({ 1, res });
 }
@@ -331,7 +333,7 @@ string page_compact( RequestID id )
                    "<form action='add_module.pike' method='POST'>"
                    "<input type='hidden' name='config' value='&form.config;'>"+
                    desc+"</select><br /><submit-gbutton> "
-                   +LOCALE("", "Add Module")+" </submit-gbutton><p><pre>"
+                   +LOCALE(251, "Add Module")+" </submit-gbutton><p><pre>"
                    +Roxen.html_encode_string(err)+"</pre></form>",
                    );
 }
@@ -354,7 +356,9 @@ string page_really_compact( RequestID id )
   string res = "";
 
   mixed r;
-  if( (r = class_visible_compact( "Add module", "Select one or several modules to add.", id )) && r[0] ) {
+  if( (r = class_visible_compact( LOCALE(258,"Add module"), 
+				  LOCALE(273,"Select one or several modules to add.")
+				  , id )) && r[0] ) {
     res += r[1];
     foreach(mods, object q) {
       if( q->get_description() == "Undocumented" &&
@@ -374,7 +378,7 @@ string page_really_compact( RequestID id )
                    "<form action=\"add_module.pike\" method=\"post\">"
                    "<input type=\"hidden\" name=\"config\" value=\"&form.config;\" />"+
                    desc+"</select><br /><submit-gbutton> "
-                   +LOCALE("", "Add Module")+" </submit-gbutton><br /><pre>"
+                   +LOCALE(251, "Add Module")+" </submit-gbutton><br /><pre>"
                    +Roxen.html_encode_string(err)+"</pre></form>",
                    );
 }
@@ -397,7 +401,7 @@ mixed do_it( RequestID id )
   array(string) initial_modules = ({});
   int got_initial = 0;
   if(!conf)
-    return LOCALE("", "Configuration gone!")+"\n";
+    return LOCALE(268, "Configuration gone!")+"\n";
 
   if( !conf->inited )
     conf->enable_all_modules();
@@ -444,7 +448,7 @@ mixed do_it( RequestID id )
 mixed parse( RequestID id )
 {
   if( !config_perm( "Add Module" ) )
-    return LOCALE("", "Permission denied");
+    return LOCALE(226, "Permission denied");
 
   if( id->variables->module_to_add )
     return do_it( id );

@@ -731,7 +731,7 @@ något av de mönster som står i den här listan.  Den här variabeln
 påverkar även &lt;accessed&gt; RXML-styrkoden.</t>
 
 <!-- [34] "Domain" -->
-<t id="34">DNS-domän</t>
+<t id="34">Domän</t>
 
 <!-- [35] "The domainname of the server. The domainname is used to generate default URLs, and to generate email addresses." -->
 <t id="35">Serverns domännamn. Används av en del RXML styrkoder för att generera
@@ -744,11 +744,11 @@ epostadresser, samt för att generera skönsvärdet för serverurl-variablen.</t>
 <t id="37">Det här är huvudURLen till din startsida. Den används av många
 moduler för att bygga upp absoluta URLer från en relativ URL.</t>
 
-<!-- [b9] "URLs" -->
-<t id="b9">URLer</t>
+<!-- [38] "URLs" -->
+<t id="38">URLer</t>
 
-<!-- [ca] "Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris." -->
-<t id="ca">Bind till de här URLerna. Det går att använda '*' eller '?' för att binda till alla IP-nummer.
+<!-- [39] "Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris." -->
+<t id="39">Bind till de här URLerna. Det går att använda '*' eller '?' för att binda till alla IP-nummer.
 De möjliga protokollen är http, https, fhttp (snabbare version av det vanliga HTTP-protokollet, men inte 100% 
 kompatibel med alla moduler), ftp, ftps, gopher och tetris.</t>
 
@@ -892,23 +892,23 @@ multiplicera detta värde med den här faktorn.</t>
 <!-- [221] "Users" -->
 <t id="221">Användare</t>
 
-<!-- [cN] "Add Module" -->
-<t id="cN">Addera modul</t>
+<!-- [251] "Add Module" -->
+<t id="251">Addera modul</t>
 
-<!-- [cP] "Drop Module" -->
-<t id="cP">Ta bort modul</t>
+<!-- [252] "Drop Module" -->
+<t id="252">Ta bort modul</t>
 
-<!-- [cQ] "Reload" -->
-<t id="cQ">Ladda om</t>
+<!-- [253] "Reload" -->
+<t id="253">Ladda om</t>
 
 <!-- [247] "Clear Log" -->
 <t id="247">Töm loggbok</t>
 
-<!-- [cT] "Request status" -->
-<t id="cT">Trafikstatus</t>
+<!-- [260] "Request status" -->
+<t id="260">Trafik</t>
 
-<!-- [cU] "Inherit tree" -->
-<t id="cU">Struktur</t>
+<!-- [261] "Inherit tree" -->
+<t id="261">Struktur</t>
 
 <!-- [256] "Settings" -->
 <t id="256">Inställningar</t>
@@ -1128,13 +1128,44 @@ processen försvinner efter senast 15 minuter.</t>
 <!-- [235] "Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically." -->
 <t id="235">Roxen kommer &lt;b&gt;inte&lt;/b&gt; starta om automatiskt." --></t>
 
-<!-- [d2] "Urls" -->
-<t id="d2">URL:er</t>
-
 <!-- [255] "Disabling old configuration %s
 " -->
 <t id="255">Tar bort server %s
 </t>
+
+<!-- [266] "Will be loaded from: " -->
+<t id="266">Laddas från: </t>
+
+<!-- [267] "View" -->
+<t id="267">Visa</t>
+
+<!-- [268] "Configuration gone!" -->
+<t id="268">Konfigurationen borta!</t>
+
+<!-- [269] "Site name:" -->
+<t id="269">Sajtens namn:</t>
+
+<!-- [270] "
+The name of the configuration must contain characters
+other than space and tab, it should not end with
+~, and it must not be 'CVS', 'Global Variables' or
+'global variables', nor the name of an existing
+configuration, and the character '/' cannot be
+used. This name will show up in the sites menu, a
+lowercased, filesystem-friendly version will become
+the virtual server's configuration file name as well
+as the name of its log file directory.
+" -->
+<t id="270">
+Namnet måste innehålla minst ett tecken förutom mellanslag och tabsteg.
+Det får inte sluta med ~, och får inte vara 'CVS', 'Global Variables'
+eller 'global variables'.
+Det får inte heller vara samma namn som en redan existerande sajt har, och
+tecknen / och \ får inte användas.
+</t>
+
+<!-- [271] "with template" -->
+<t id="271">med mall</t>
 
 
 <pike>

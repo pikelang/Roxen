@@ -1,5 +1,3 @@
-inherit "roxenlib";
-    
 int check_config_name(string name)
 {
   if((name == "") || (name[-1] == '~') || (search(name, "/") != -1))
@@ -13,11 +11,11 @@ int check_config_name(string name)
   return (< " ", "\t", "cvs", "global variables" >)[ name ];
 }
 
-mixed parse( object id )
+mixed parse( RequestID id )
 {
   id->variables->name=
     (replace(id->variables->name||"","\000"," ")/" "-({""}))*" ";
   if( check_config_name( id->variables->name ) )
-    return http_string_answer("<error></error>");
+    return Roxen.http_string_answer("<error></error>");
   return "";
 }

@@ -1,3 +1,7 @@
+#include <roxen.h>
+//<locale-token project="roxen_config">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+
 constant modules = ({});
 
 //array(string) initial_variables;
@@ -43,5 +47,5 @@ mixed parse( RequestID id )
   }
   return "<b>URL</b>: <input size=50 name=url value='http://*/'>"
          "<br />"
-         "<submit-gbutton> &locale.ok; </submit-gbutton>";
+    "<submit-gbutton> "+LOCALE(201,"Ok")+" </submit-gbutton>";
 }

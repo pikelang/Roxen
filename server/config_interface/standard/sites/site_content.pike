@@ -356,7 +356,8 @@ string find_module_doc( string cn, string mn, RequestID id )
                     "valign='top'>" + describe_type( m, mi->type, id ) +
                     "</td></tr></table><br />\n" +
                     EC(TRANSLATE(m->file_name_and_stuff())) +
-		    homepage + creators + "<h1>Inherit tree</h1>"+
+		    homepage + creators + 
+		    "<h1>"+LOCALE(261,"Inherit tree")+"</h1>"+
                     program_info( m ) +
                     "<dl>" + 
                     inherit_tree( m ) + 
