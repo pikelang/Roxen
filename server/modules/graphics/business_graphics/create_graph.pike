@@ -14,7 +14,7 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.95 1998/02/25 16:38:19 peter Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.96 1998/03/01 15:14:17 hedda Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -984,8 +984,10 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       
     float range=(diagram_data["ymaxvalue"]
 		 - diagram_data["yminvalue"]);
-    // *FIXME* Kan inte range vara 0 här?
-    // Nej, det kollas i init()
+    if ((range>-LITET)&&
+	(range<LITET))
+      range=LITET*10.0;
+
     float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
     if (range/space>5.0)
       if(range/(2.0*space)>5.0)
