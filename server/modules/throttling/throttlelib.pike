@@ -7,7 +7,7 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.5 2000/05/06 09:35:52 kinkie Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.6 2000/05/14 16:13:00 kinkie Exp $";
 
 #include <module.h>
 inherit "module";
@@ -75,7 +75,7 @@ string update_rules() {
       THROTTLING_DEBUG("nothrottle");
       cmd="!";
       val=0;
-    } else if (sscanf(words[1],"%[+-*/=]%f",cmd,val) != 2) {
+    } else if (sscanf(words[1],"%[-+*/=]%f",cmd,val) != 2) {
       THROTTLING_DEBUG("command not understood");
 #ifdef IF_ONLY_COULD_CHANGE_RULES
       lines[lineno]="#(command not understood) "+line;
