@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.160 2002/11/19 07:02:22 mani Exp $
+// $Id: Roxen.pmod,v 1.161 2003/01/15 23:23:40 marcus Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2086,11 +2086,11 @@ function get_client_charset_decoder( string едц, RequestID|void id )
 			({ "&aring;", "&#229;", "&#xe5;",
 			   "&auml;", "&#228;", "&#xe4;",
 			   "&ouml;", "&#246;", "&#xf6;",
-			   "&#33439;","&#x829f;", "\201", "?x829f;" }),
+			   "&#33439;","&#x829f;", "\201", "?x829f;", " " }),
 			({ "?", "?", "?",
 			   "?", "?", "?",
 			   "?", "?", "?",
-			   "?", "?", "?", "?" }));
+			   "?", "?", "?", "?", "?" }));
 			
   switch( test ) {
   case "edv":
