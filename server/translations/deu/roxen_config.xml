@@ -133,8 +133,7 @@
 </str>
 
 <str id="342">
-<changed from="Warning: The protocol %s is not known by ChiliMoon"/>
-<o>Warning: The protocol %s is not known by roxen</o>
+<o>Warning: The protocol %s is not known by ChiliMoon</o>
 <t>Warnung: Das Protokoll %s wird nicht von ChiliMoon erkannt</t>
 </str>
 
