@@ -25,12 +25,12 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.10 2001/10/29 06:26:24 hop Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.11 2002/03/05 14:32:56 hop Exp $";
 
 
 
 constant module_type = MODULE_ZERO;
-constant module_name = "TCP Port Forwarder";
+constant module_name = "TCP Port Forwarder: ";
 constant module_doc  = "A basic port-forwarder"
   "&copy; 1998 Francesco Chemolli "
   "&lt;kinkie@kame.usr.dsi.unimi.it&gt;,<br />\nfreely distributed "
@@ -213,4 +213,9 @@ void connected (object out, object in)
     connections[ Connection(in,out,this_object()) ] = 1;
   else
     report_debug("Cannot connect to "+query("host")+":"+query("r_port") );
+}
+
+string query_name()
+{
+  return sprintf("%d to %s/%d", query("port"), query("host"), query("r_port"));
 }
