@@ -17,7 +17,6 @@ PIKEVERSION=@PIKEVERSION@
 
 all:	make_vpath @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
 
-# NOTE: The _ is significant!
 make_vpath: make_vpath.in
 	@echo
 	@echo "Warning: $(MAKE) doesn't seem to understand VPATH"
