@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.74 2000/03/21 17:12:26 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.75 2000/03/23 00:37:50 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -109,7 +109,7 @@ void create()
   defvar("check_auth", 1, "Require authentication for modification",
 	 TYPE_FLAG,
 	 "Only allow authenticated users to use methods other than "
-	 "GET and POST. If unset, this filesystem will be a _very_ "
+	 "GET and POST. If unset, this filesystem will be a <em>very</em> "
 	 "public one (anyone can edit files located on it)");
 
   defvar("stat_cache", 0, "Cache the results of stat(2)",
