@@ -1,6 +1,6 @@
 #charset iso-8859-2
 /*
- * $Id: magyar.pmod,v 1.3 2000/07/04 03:43:20 per Exp $
+ * $Id: magyar.pmod,v 1.4 2000/07/09 14:09:46 per Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -261,7 +261,7 @@ string days(int n)
   return _whatevers( "napja", n );
 }
 
-string module_doc_string(string var, int long)
+string module_doc_string(int var, int long)
 {
   return (::module_doc_string(var,long) ||
 	  RoxenLocale.standard.module_doc_string( var, long ));

@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.14 2000/07/04 03:43:21 per Exp $
+ * $Id: standard.pmod,v 1.15 2000/07/09 14:09:46 per Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -548,7 +548,7 @@ string days(int n)
 //
 //  ([  variable:({ name, doc, translate }), ...  ])
 //
-mapping(string:array(string|mapping(string:string))) _module_doc_strings=([]);
+mapping(int:array(string|mapping(string:string))) _module_doc_strings=([]);
 
 string module_name( object mod )
 {
@@ -561,12 +561,12 @@ string module_name( object mod )
   }
 }
 
-string module_doc_string( string ind, int long )
+string module_doc_string( int ind, int long )
 {
   return _module_doc_strings[ind] && _module_doc_strings[ind][long];
 }
 
-void register_module_doc( string ind, 
+void register_module_doc( int ind, 
                           string name,
 			  string desc, 
                           void|mapping translate_options )
@@ -574,7 +574,7 @@ void register_module_doc( string ind,
   _module_doc_strings[ind] = ({ name, desc, translate_options });
 }
 
-void unregister_module_doc( string ind )
+void unregister_module_doc( int ind )
 {
   m_delete( _module_doc_strings, ind );
 }

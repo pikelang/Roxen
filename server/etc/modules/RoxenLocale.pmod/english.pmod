@@ -1,5 +1,5 @@
 /*
- * $Id: english.pmod,v 1.2 2000/07/04 03:43:20 per Exp $
+ * $Id: english.pmod,v 1.3 2000/07/09 14:09:46 per Exp $
  *
  * Roxen locale support -- English
  *
@@ -11,7 +11,7 @@ constant name        = "english";
 constant language    = "language";
 constant latin1_name = "english";
 
-string module_doc_string(string var, int long)
+string module_doc_string(int var, int long)
 {
   return (::module_doc_string(var,long) ||
 	  RoxenLocale.standard.module_doc_string( var, long ));
