@@ -6,6 +6,8 @@
  netscape has a different font size for unicode fonts (defaulting to 18)
  than normal fonts (defaulting to 12).
 </p>
+<!--
 <p>
 <gtext href="whatsnew.html" scale="0.6" fgcolor="&usr.linkcolor;" font="franklin gothic demi">What's new?</gtext>
 </p>
+-->
