@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.301 1999/06/27 16:04:48 per Exp $
+ * $Id: roxen.pike,v 1.302 1999/06/27 16:09:14 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.301 1999/06/27 16:04:48 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.302 1999/06/27 16:09:14 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -413,52 +413,10 @@ void stop_all_modules()
 private static void really_low_shutdown(int exit_code)
 {
   // Die nicely.
-
-#ifdef SOCKET_DEBUG
-  roxen_perror("SOCKETS: really_low_shutdown\n"
-	       "                        Bye!\n");
-#endif
-
 #ifdef THREADS
-  stop_handler_threads();
+  catch( stop_handler_threads() );
 #endif /* THREADS */
-
-  // Don't use fork() with threaded servers.
-#if constant(fork) && !constant(create_thread)
-
-  // Fork, and then do a 'slow-quit' in the forked copy. Exit the
-  // original copy, after all listen ports are closed.
-  // Then the forked copy can finish all current connections.
-  if(fork()) {
-    // Kill the parent.
-    add_constant("roxen", 0);	// Remove some extra refs...
-
-    exit(exit_code);		// Die...
-  }
-  // Now we're running in the forked copy.
-
-  // FIXME: This probably doesn't work correctly on threaded servers,
-  // since only one thread is left running after the fork().
-#if efun(_pipe_debug)
-  call_out(lambda() {  // Wait for all connections to finish
-	     call_out(Simulate.this_function(), 20);
-	     if(!_pipe_debug()[0]) exit(0);
-	   }, 1);
-#endif /* efun(_pipe_debug) */
-  call_out(lambda(){ exit(0); }, 600); // Slow buggers..
-  array f=indices(portno);
-  for(int i=0; i<sizeof(f); i++)
-    catch(destruct(f[i]));
-#else /* !constant(fork) || constant(create_thread) */
-
-  // FIXME:
-  // Should probably attempt something similar to the above,
-  // but this should be sufficient for the time being.
-  add_constant("roxen", 0);	// Paranoia...
-
   exit(exit_code);		// Now we die...
-
-#endif /* constant(fork) && !constant(create_thread) */
 }
 
 // Shutdown Roxen
@@ -466,62 +424,21 @@ private static void really_low_shutdown(int exit_code)
 //  exit_code = -1	Restart
 private static void low_shutdown(int exit_code)
 {
-  // Change to root user if possible ( to kill the start script... )
-#if efun(seteuid)
-  seteuid(getuid());
-  setegid(getgid());
-#endif
-#if efun(setuid)
-  setuid(0);
-#endif
-  stop_all_modules();
+  catch( stop_all_modules() );
   
-  if(main_configuration_port && objectp(main_configuration_port))
-  {
-    // Only _really_ do something in the main process.
-    int pid;
-    if (exit_code) {
-      roxen_perror("Restarting Roxen.\n");
-    } else {
-      roxen_perror("Shutting down Roxen.\n");
-      _exit(0);
-
-      // This has to be refined in some way. It is not all that nice to do
-      // it like this (write a file in /tmp, and then exit.)  The major part
-      // of code to support this is in the 'start' script.
-#ifndef __NT__
-#ifdef USE_SHUTDOWN_FILE
-      // Fallback for systems without geteuid, Roxen will (probably)
-      // not be able to kill the start-script if this is the case.
-      rm("/tmp/Roxen_Shutdown_"+startpid);
-
-      object f;
-      f=open("/tmp/Roxen_Shutdown_"+startpid, "wc");
-      
-      if(!f) 
-	roxen_perror("cannot open shutdown file.\n");
-      else f->write(""+getpid());
-#endif /* USE_SHUTDOWN_FILE */
-
-      // Try to kill the start-script.
-      if(startpid != getpid())
-      {
-	kill(startpid, signum("SIGINTR"));
-	kill(startpid, signum("SIGHUP"));
-	kill(getppid(), signum("SIGINTR"));
-	kill(getppid(), signum("SIGHUP"));
-      }
-#endif /* !__NT__ */
-    }
+  int pid;
+  if (exit_code) {
+    roxen_perror("Restarting Roxen.\n");
+  } else {
+    roxen_perror("Shutting down Roxen.\n");
+    _exit(0);
   }
-
-  call_out(really_low_shutdown, 2, exit_code);
+  call_out(really_low_shutdown, 0.1, exit_code);
 }
 
 // Perhaps somewhat misnamed, really...  This function will close all
-// listen ports, fork a new copy to handle the last connections, and
-// then quit the original process.  The 'start' script should then
-// start a new copy of roxen automatically.
+// listen ports and then quit.  The 'start' script should then start a
+// new copy of roxen automatically.
 mapping restart() 
 { 
   low_shutdown(-1);
