@@ -8,7 +8,7 @@
  *	would be rude, wouldn't it? ^_^
  */
 
-string cvs_version = "$Id: italian.pike,v 1.2 1996/12/20 22:26:51 grubba Exp $";
+string cvs_version = "$Id: italian.pike,v 1.3 1997/01/09 14:39:07 grubba Exp $";
 
 inline string month(int num)
 {
@@ -51,9 +51,9 @@ string date(int timestamp, mapping|void m)
   }
   if (m["full"])
     return ctime(timestamp)[11..15]+", il "+t1["mday"]+" "+month(t1["mon"])+
-      " "+(string)(1900+(int)t2["year"]);
+      " "+(string)(1900+(int)t1["year"]);
   if(m["date"])
-    return t1["mday"]+" "+month(t1["mon"])+" "+(string)(1900+(int)t2["year"]);
+    return t1["mday"]+" "+month(t1["mon"])+" "+(string)(1900+(int)t1["year"]);
   if(m["time"])
     return ctime(timestamp)[11..15];
 }

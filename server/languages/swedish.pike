@@ -1,6 +1,6 @@
 /* Bugs by: Per */
 
-string cvs_version = "$Id: swedish.pike,v 1.2 1996/12/01 19:18:46 per Exp $";
+string cvs_version = "$Id: swedish.pike,v 1.3 1997/01/09 14:39:11 grubba Exp $";
 string month(int num)
 {
   return ({ "januari", "februari", "mars", "april", "maj",
@@ -48,10 +48,10 @@ string date(int timestamp, mapping m)
     return sprintf("%s, den %s %s %d", 
 		   ctime(timestamp)[11..15],
 		   ordered(t1["mday"]), 
-		   month(t1["mon"]+1), t2["year"]+1900);
+		   month(t1["mon"]+1), t1["year"]+1900);
   if(m["date"])
     return sprintf("den %s %s %d", ordered(t1["mday"]),
-		   month(t1["mon"]+1), t2["year"]+1900);
+		   month(t1["mon"]+1), t1["year"]+1900);
 
   if(m["time"])
     return ctime(timestamp)[11..15];

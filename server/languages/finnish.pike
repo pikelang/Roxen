@@ -1,5 +1,5 @@
 /* Created by Janne Edelman, Turku Unix Users Group ry, Turku, Finland
-string cvs_version = "$Id: finnish.pike,v 1.2 1996/12/01 19:18:42 per Exp $";
+string cvs_version = "$Id: finnish.pike,v 1.3 1997/01/09 14:39:04 grubba Exp $";
    http://www.tuug.utu.fi/~edelman/ or http://website.tuug.utu.fi/ 
    */
 
@@ -40,10 +40,10 @@ string date(int timestamp, mapping|void m)
   if(m["full"])
     return ctime(timestamp)[11..15]+", "+
            ordered(t1["mday"]) + ordered(t1["mon"]+1) +
-           (t2["year"]+1900);
+           (t1["year"]+1900);
   if(m["date"])
     return ordered(t1["mday"]) + " " + month(t1["mon"]+1) + "ta"  + 
-      " " + (t2["year"]+1900);
+      " " + (t1["year"]+1900);
   if(m["time"])
     return ctime(timestamp)[11..15];
 }

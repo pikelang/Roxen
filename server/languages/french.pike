@@ -1,6 +1,6 @@
 /*
 
-string cvs_version = "$Id: french.pike,v 1.2 1996/12/01 19:18:42 per Exp $";
+string cvs_version = "$Id: french.pike,v 1.3 1997/01/09 14:39:05 grubba Exp $";
 Created by:
 
 ---------------------+--------------------------------------------------
@@ -57,10 +57,10 @@ string date(int timestamp, mapping|void m)
   if(m["full"])
     return ctime(timestamp)[11..15]+", le "+
       ordered(t1["mday"]) + " "  + month(t1["mon"]+1) 
-      + " de l'année " +(t2["year"]+1900);
+      + " de l'année " +(t1["year"]+1900);
   if(m["date"])
     return ordered(t1["mday"]) + " "  + month(t1["mon"]+1) 
-      + " " +(t2["year"]+1900);
+      + " " +(t1["year"]+1900);
   if(m["time"])
     return ctime(timestamp)[11..15];
 }

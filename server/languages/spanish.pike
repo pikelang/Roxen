@@ -1,5 +1,5 @@
 /* Bugs by: Per */
-string cvs_version = "$Id: spanish.pike,v 1.2 1996/12/01 19:18:45 per Exp $";
+string cvs_version = "$Id: spanish.pike,v 1.3 1997/01/09 14:39:10 grubba Exp $";
 /* Trans by: jordi@lleida.net */
 
 inline string month(int num)
@@ -39,10 +39,10 @@ string date(int timestamp, mapping|void m)
   if(m["full"])
     return ctime(timestamp)[11..15]+", "+
            month(t1["mon"]+1) + " the "
-           + ordered(t1["mday"]) + ", " +(t2["year"]+1900);
+           + ordered(t1["mday"]) + ", " +(t1["year"]+1900);
   if(m["date"])
     return month(t1["mon"]+1) + " the "  + ordered(t1["mday"])
-      + " en el año " +(t2["year"]+1900);
+      + " en el año " +(t1["year"]+1900);
   if(m["time"])
     return ctime(timestamp)[11..15];
 }

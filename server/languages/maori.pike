@@ -1,7 +1,7 @@
 /* Maaori (New Zealand) */
 /* any bugs in this file were inserted by Jason Rumney <jasonr@pec.co.nz> */
 
-string cvs_version = "$Id: maori.pike,v 1.2 1996/12/05 03:09:06 grubba Exp $";
+string cvs_version = "$Id: maori.pike,v 1.3 1997/01/09 14:39:07 grubba Exp $";
 
 inline string month( int num )
      {
@@ -35,10 +35,10 @@ string date(int timestamp, mapping|void m)
 	if(m["full"])
 	  return ctime(timestamp)[11..15]+", "+
 	month(t1["mon"]+1) + " te "
-	+ ordered(t1["mday"]) + ", " +(t2["year"]+1900);
+	+ ordered(t1["mday"]) + ", " +(t1["year"]+1900);
 	if(m["date"])
 	  return month(t1["mon"]+1) + " te "  + ordered(t1["mday"])
-	+ " o te tau " +(t2["year"]+1900);
+	+ " o te tau " +(t1["year"]+1900);
 	if(m["time"])
 	  return ctime(timestamp)[11..15];
      }

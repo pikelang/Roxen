@@ -1,5 +1,5 @@
 /* Bugs by: Per */
-string cvs_version = "$Id: catala.pike,v 1.3 1997/01/07 03:35:08 neotron Exp $";
+string cvs_version = "$Id: catala.pike,v 1.4 1997/01/09 14:39:02 grubba Exp $";
 /* Trans by: jordi@lleida.net 
  * This version revised by a catalan linguist. 
  */
@@ -64,11 +64,11 @@ string date(int timestamp, mapping|void m)
   if(m["full"])
     return ctime(timestamp)[11..15]+ " del " +
            (t1["mday"]) + d_apostrof(t1["mon"]+1) + month(t1["mon"]+1) 
-           + " de l'any " + (t2["year"]+1900);
+           + " de l'any " + (t1["year"]+1900);
 
   if(m["date"])
     return (t1["mday"]) + d_apostrof(t1["mon"]+1) + month(t1["mon"]+1)
-           + " de " + (t2["year"]+1900);
+           + " de " + (t1["year"]+1900);
 
   if(m["time"])
     return ctime(timestamp)[11..15];

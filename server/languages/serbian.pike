@@ -8,7 +8,7 @@
    Please consult me before upgrading serbian.pike.
 */
 
-string cvs_version = "$Id: serbian.pike,v 1.1 1996/12/17 12:55:05 peter Exp $";
+string cvs_version = "$Id: serbian.pike,v 1.2 1997/01/09 14:39:10 grubba Exp $";
 inline string month(int num)
 {
   return ({ "Januar", "Februar", "Mart", "April", "Maj",
@@ -52,10 +52,10 @@ string date(int timestamp, mapping|void m)
   if(m["full"])
     return ctime(timestamp)[11..15]+", "+
            ordered(t1["mday"]) + " "
-           + month(t1["mon"]+1) + " " +(t2["year"]+1900) + ".";
+           + month(t1["mon"]+1) + " " +(t1["year"]+1900) + ".";
   if(m["date"])
     return ordered(t1["mday"]) + " " + month(t1["mon"]+1)
-      + " " + (t2["year"]+1900) + ".";
+      + " " + (t1["year"]+1900) + ".";
   if(m["time"])
     return ctime(timestamp)[11..15];
 }

@@ -1,6 +1,6 @@
 /* */
 
-string cvs_version = "$Id: dutch.pike,v 1.2 1996/12/01 19:18:41 per Exp $";
+string cvs_version = "$Id: dutch.pike,v 1.3 1997/01/09 14:39:03 grubba Exp $";
 inline string month(int num)
 {
   return ({ "Januari", "Februari", "Maart", "April", "Mei",
@@ -44,10 +44,10 @@ string date(int timestamp, mapping|void m)
   if(m["full"])
     return ctime(timestamp)[11..15]+", "+
            month(t1["mon"]+1) + " de "
-           + ordered(t1["mday"]) + " in het jaar " +(t2["year"]+1900);
+           + ordered(t1["mday"]) + " in het jaar " +(t1["year"]+1900);
   if(m["date"])
     return month(t1["mon"]+1) + " de "  + ordered(t1["mday"])
-      + " in het jaar " +(t2["year"]+1900);
+      + " in het jaar " +(t1["year"]+1900);
   if(m["time"])
     return ctime(timestamp)[11..15];
 }

@@ -1,5 +1,5 @@
 /*
-string cvs_version = "$Id: norwegian.pike,v 1.2 1996/12/01 19:18:44 per Exp $";
+string cvs_version = "$Id: norwegian.pike,v 1.3 1997/01/09 14:39:08 grubba Exp $";
   norwegian.lpc         morten@nvg.unit.no
   Støtte for norsk på www-serveren..
 */
@@ -43,10 +43,10 @@ string date(int timestamp, mapping m)
     return sprintf("%s, den %s %s %d",
                    ctime(timestamp)[11..15],
                    ordered(t1["mday"]),
-                   month(t1["mon"]+1), t2["year"]+1900);
+                   month(t1["mon"]+1), t1["year"]+1900);
   if(m["date"])
     return sprintf("den %s %s %d", ordered(t1["mday"]),
-                   month(t1["mon"]+1), t2["year"]+1900);
+                   month(t1["mon"]+1), t1["year"]+1900);
 
   if(m["time"])
     return ctime(timestamp)[11..15];
