@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.92 1999/06/21 19:18:12 mast Exp $
+ * $Id: roxenloader.pike,v 1.93 1999/07/10 21:38:37 peter Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.92 1999/06/21 19:18:12 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.93 1999/07/10 21:38:37 peter Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -166,7 +166,11 @@ object open_db(string id)
 #if constant(thread_create)
   object key = db_lock::lock();
 #endif
+#if constant(myPDB)
+  if(!db) db = myPDB->db("pdb_dir", "wcCr"); //myPDB ignores 2nd arg.
+#else
   if(!db) db = PDB->db("pdb_dir", "wcCr");
+#endif
   if(dbs[id]) return dbs[id];
   return dbs[id]=db[id];
 }
