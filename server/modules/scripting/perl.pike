@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.3 2000/08/17 10:17:14 leif Exp $";
+       "$Id: perl.pike,v 2.4 2000/08/17 15:18:52 leif Exp $";
 
 constant module_type = MODULE_EXPERIMENTAL |
             MODULE_FILE_EXTENSION | MODULE_PARSER;
@@ -20,6 +20,8 @@ constant module_doc =
 
 static string recent_error = 0;
 static int parsed_tags = 0, script_calls = 0, script_errors = 0;
+
+static mapping handler_settings = ([ ]);
 
 constant thread_safe = 1;
 
@@ -70,6 +72,11 @@ void create()
     "this higher than necessary, since it may cause the server to block. "
     "The default for this setting is 2.",
          ({ 1, 2, 3, 4, 5 }) );
+
+  defvar("identity", "nobody:*", "Run Perl as...", TYPE_STRING,
+    "User and group to run Perl scripts and tags as. The default for "
+    "this option is `nobody:*'. Note that Roxen can't change user ID "
+    "unless it has sufficient permissions to do so.");
 }
 
 string status()
@@ -77,27 +84,67 @@ string status()
              "<b>Script errors</b>: " + script_errors + " <br />\n" +
              "<b>Parsed tags</b>: "  + parsed_tags + " <br />\n";
 
+  if (handler_settings->set_uid)
+        s += sprintf("<b>Subprocess UID</b>: set uid=%O <br />\n",
+                     handler_settings->set_uid);
+  else
+        s += "<b>Subprocess UID</b>: same as Roxen<br />\n";
+
+  s += "<b>Helper script</b>: ";
+  if (Stdio.File(QUERY(bindir)+"/perlrun", "r"))
+       s += "found: " + QUERY(bindir)+"/perlrun <br />\n";
+  else
+       s += "not found.<br />\n";
+
   if (recent_error)
        s += "<b>Most recent error</b>: " + recent_error + " <br />\n";
 
   return s;
 }
 
+static object gethandler()
+{ return ExtScript.getscripthandler(QUERY(bindir)+"/perlrun",
+                                    QUERY(parallel), handler_settings);
+}
+
+static void fix_settings()
+{
+  string u, g;
+  mapping s = ([ ]);
+
+  if (sscanf(QUERY(identity), "%s:%s", u, g) == 2)
+  {
+    array ua = getpwnam(u), ga = getgrnam(g);
+
+    if (!ua) ua = getpwuid((int) u);
+    if (!ga) ga = getgrgid((int) g);
+
+    if (ua) s->set_uid = ua[2];
+    if (ga) s->set_gid = ga[2];
+  }
+
+  handler_settings = s;
+}
+
 static void periodic()
-{ ExtScript.periodic_cleanup();
+{
+  fix_settings();
+  ExtScript.periodic_cleanup();
   call_out(periodic, 900);
 }
 
 void start()
-{ call_out(periodic, 900);
+{ fix_settings();
+  call_out(periodic, 900);
 }
 
 mixed handle_file_extension(Stdio.File file, string ext, object id)
-{ object h = ExtScript.getscripthandler(QUERY(bindir)+"/perlrun",
-                                        QUERY(parallel));
+{ object h = gethandler();
 
   if (id->realfile && stringp(id->realfile))
   { array result;
+
+    NOCACHE();
 
     if (!h) return http_string_answer("<h1>Script support failed.</h1>");
 
@@ -107,7 +154,7 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
 
     if (bt)
     { ++script_errors;
-      report_error("Perl script '" + id->realfile + "' failed.\n");
+      report_error("Perl script `" + id->realfile + "' failed.\n");
       if (QUERY(showbacktrace))
         return http_string_answer("<h1>Script Error!</h1>\n<pre>" +
                        describe_backtrace(bt) + "\n</pre>");
@@ -152,11 +199,12 @@ mixed simpletag_perl(string tag, mapping attr, string contents, object id,
   if (!QUERY(tagenable))
        RXML.run_error("<perl>...</perl> tag not enabled in this server.");
 
-  object h = ExtScript.getscripthandler(QUERY(bindir)+"/perlrun",
-                                        QUERY(parallel));
+  object h = gethandler();
 
   if (!h)
         RXML.run_error("Perl tag support unavailable.");
+
+  NOCACHE();
 
   array result;
   mixed bt = catch (result = h->eval(contents, id));
@@ -186,11 +234,13 @@ mixed simpletag_perl(string tag, mapping attr, string contents, object id,
 
 mixed simple_pi_tag_perl(string tag, mapping attr, string contents, object id,
                      RXML.Frame frame)
-{ return simpletag_perl(tag, attr, contents, id, frame);
+{
+  return simpletag_perl(tag, attr, contents, id, frame);
 }
 
 array(string) query_file_extensions()
-{ return QUERY(extensions);
+{
+  return QUERY(extensions);
 }
 
 
