@@ -12,6 +12,17 @@
             <cf-boxes/>
           </eval>
         </colorscope>
+        <if supports='javascript'>
+         <if variable='form._box_fetching'>
+            <script language='javascript'><!-- // 4 seconds
+               setTimeout( "window.location.reload()", 4000 );
+            //--></script>
+         </if>
+         <else>
+            <script language='javascript'><!-- // one hour
+               setTimeout( "window.location.reload()", 3600000 );
+            //--></script>
+         </else>
       </td>
     </tr>
   </table>

@@ -107,6 +107,7 @@ string get_http_data( string host, int port, string query,
   else
   {
     cache[host+port+query] = ({0});
+    RXML.get_context()->id->variables->_box_fetching = 1;
     Fetcher( cb, host, port, query );
   }
 }
