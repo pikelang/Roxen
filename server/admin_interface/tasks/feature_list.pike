@@ -24,13 +24,20 @@ mixed parse(object id)
   array features = Tools.Install.features();
   array disabled = all_features - features;
 
-  res = "<font size='+1'>Features</font><ul>\n"+
-    String.implode_nicely( sort(map(features,nice_name)-({0})), "and" )
+  res =
+    "<font size='+1'><b>Pike module list</b></font>"
+    "<p />"
+    "Features\n"
+    "<ul>\n"+
+    String.implode_nicely( sort(map(features,nice_name)-({0})),
+			   "and")
     + "</ul><br />\n";
 
   if (sizeof(disabled))
-    res += "<font size='+1'>Unavailable features</font><ul>\n"
-      + String.implode_nicely( sort(map(disabled,nice_name)-({0})), "and" )
+    res += "Unavailable features\n"
+      "<ul>\n"
+      + String.implode_nicely( sort(map(disabled,nice_name)-({0})),
+			       "and")
       + "</ul><br />\n";
 
   return res+ "<p><cf-ok/></p>";

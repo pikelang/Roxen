@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.9 2002/06/13 00:18:09 nilsson Exp $
+ * $Id: debug_summary.pike,v 1.10 2004/05/28 18:48:41 _cvs_stephen Exp $
  */
 #include <stat.h>
 
@@ -39,13 +39,6 @@ string indent(string text, int level)
   return a*"\n";
 }
 
-string decomment(string text) {
-  text -= "\r";
-  while( sscanf(text, "%s#%*s\n%s", string a, string b)==3 )
-    text = a + b;
-  return text;
-}
-
 string describe_var_low(mixed value)
 {
   if(arrayp(value))
@@ -70,8 +63,8 @@ string make_headline(string title)
 string make_environment_summary()
 {
   string res = make_headline("Environment");
-  res+=sprintf("  %-30s %s\n", "Pike:", version());
-  res+=sprintf("  %-30s %s\n", "Version:", roxen_version());
+  res+=sprintf("  %-30s %s\n", "ChiliMoon version:", roxen_version());
+  res+=sprintf("  %-30s %s\n", "Pike version:", version());
   res+=sprintf("  %-30s %s", "Time:", ctime(time()));
   res+=sprintf("  %-30s %s\n", "Host:", gethostname());
 #ifdef __NT__
@@ -86,9 +79,9 @@ string make_environment_summary()
   res += "\n";
   res += make_headline("Local environment variables");
 #ifdef __NT__
-  res += indent(decomment(Stdio.read_file("../local/environment.ini")||""), 1);
+  res += indent(Stdio.read_file("../local/environment.ini")||"", 1);
 #else
-  res += indent(decomment(Stdio.read_file("../local/environment")||""), 1);
+  res += indent(Stdio.read_file("../local/environment")||"", 1);
 #endif
 
   res += "\n";
@@ -125,7 +118,7 @@ string make_extra_module_info(RoxenModule module)
 
 string make_configuration_summary(string configuration)
 {
-  mixed c=roxen->find_configuration(configuration);
+  mixed c=core->find_configuration(configuration);
   mapping vars = c->getvars();
   string res = make_headline("Globals");
   res += make_variables_summary(c->getvars())+"\n\n";
@@ -138,6 +131,13 @@ string make_configuration_summary(string configuration)
   return res;
 }
 
+string make_global_summary()
+{
+  string res = make_headline("Global Variables");
+  res += make_variables_summary(core->getvars());
+  return res + "\n";
+}
+
 string make_summary()
 {
   string res = make_environment_summary()+"\n";
@@ -145,7 +145,9 @@ string make_summary()
 //    res +=make_headline("CVS file versions");
 //    res +=indent(get_cvs_versions(getcwd()), 1);
 
-  foreach(roxen->list_all_configurations(), string configuration)
+  res += make_global_summary();
+
+  foreach(core->list_all_configurations(), string configuration)
   {
     res+=make_headline("Configuration: "+configuration)+"\n";
     res+=indent(make_configuration_summary(configuration),1);
@@ -181,15 +183,17 @@ mixed parse( RequestID id )
     return ret;
   }
   
-  res = "<h1>Debug summary</h1>\n";
+  res = "<font size='+1'><b>Debug summary</b></font>\n<p />";
   res += "<link-gbutton href='debug_summary.pike?download=summary'>Download"
     "</link-gbutton>";
   if (file_stat(debuglog))
     res += "<link-gbutton href='debug_summary.pike?download=debuglog'>"
-      "Download debug log"
+      "Download Debug Log"
     "</link-gbutton>";
 
-  res += "<pre>"+Roxen.html_encode_string(make_summary())+"</pre>";
+  res += "<pre>"+Roxen.html_encode_string(make_summary())+"</pre>"
+    "<br /><br />"
+    "<cf-ok/>";
 
   return res;
 }

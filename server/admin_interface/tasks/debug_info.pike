@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.26 2004/05/20 21:45:20 _cvs_stephen Exp $
+ * $Id: debug_info.pike,v 1.27 2004/05/28 18:42:54 _cvs_stephen Exp $
  */
 #include <stat.h>
 
@@ -14,128 +14,6 @@ int no_reload()
 {
   return creation_date > file_stat( __FILE__ )[ST_MTIME];
 }
-
-#if efun(get_profiling_info)
-string remove_cwd(string from)
-{
-  string s = from-(getcwd()+"/");
-  sscanf( s, "%*s/modules/%s", s );
-  s = replace( s, ".pmod/", "." );
-  s = replace( s, ".pmod", "" );
-  s = replace( s, ".pike", "" );
-  s = replace( s, ".so", "" );
-  s = replace( s, "Luke/", "Luke." );
-  return s;
-}
-
-array (program) all_modules()
-{
-  return values(master()->programs);
-}
-
-string program_name(program|object what)
-{
-  string p;
-  if(p = master()->program_name(what)) return remove_cwd(p);
-  return "?";
-}
-
-mapping get_prof()
-{
-  mapping res = ([]);
-  foreach(all_modules(), program prog) {
-    res[program_name(prog)] = prog && get_profiling_info( prog );
-  }
-  return res;
-}
-
-array get_prof_info(string|void foo)
-{
-  array res = ({});
-  mapping as_functions = ([]);
-  mapping tmp = get_prof();
-  foreach(indices(tmp), string c)
-  {
-    mapping g = tmp[c][1];
-    foreach(indices(g), string f)
-    {
-      if(g[f][2])
-      {
-        c = replace( c, "base_server/", "roxen." );
-        c = (c/"/")[-1];
-        string fn = c+"."+f;
-        if(  (!foo || !sizeof(foo) || glob(foo,c+"."+f)) )
-        {
-          switch( f )
-          {
-           case "cast":
-             fn = "(cast)"+c;
-             break;
-           case "__INIT":
-             fn = c;
-             break;
-           case "create":
-           case "`()":
-             fn = c+"()";
-             break;
-           case "`->":
-             fn = c+"->";
-             break;
-           case "`[]":
-             fn = c+"[]";
-             break;
-          }
-          if( !as_functions[fn] )
-            as_functions[fn] = ({ g[f][2],g[f][0],g[f][1] });
-          else
-          {
-            as_functions[fn][0] += g[f][2];
-            as_functions[fn][1] += g[f][0];
-            as_functions[fn][2] += g[f][1];
-          }
-        }
-      }
-    }
-  }
-  array q = indices(as_functions);
-//   sort(values(as_functions), q);
-  foreach(q, string i) if(as_functions[i][0])
-    res += ({({i,
-	       sprintf("%d",as_functions[i][1]),
-               sprintf("%5.2f",
-                       as_functions[i][0]/1000000.0),
-               sprintf("%5.2f",
-                       as_functions[i][2]/1000000.0),
-	       sprintf("%7.3f",
-		       (as_functions[i][0]/1000.0)/as_functions[i][1]),
-	       sprintf("%7.3f",
-                       (as_functions[i][2]/1000.0)/as_functions[i][1])})});
-  sort((array(float))column(res,3),res);
-  return reverse(res);
-}
-
-
-mixed page_1(object id)
-{
-  string res = ("<font size=+1>Profiling information</font><br />"
-		"All times are in seconds, and real-time. Times incude"
-		" time of child functions. No callgraph is available yet.<br />"
-		"Function glob: <input type=text name=subnode value='"+
-                Roxen.html_encode_string(id->variables->subnode||"")
-                +"'><br />");
-
-  object t = ADT.Table->table(get_prof_info("*"+
-                                            (id->variables->subnode||"")+"*"),
-			      ({ "Function",
-                                 "Calls",
-                                 "Time",
-                                 "+chld",
-                                 "t/call(ms)",
-				 "+chld(ms)"}));
-  return res + "\n\n<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
-}
-#endif
-
 
 mapping class_cache = ([]);
 
@@ -173,7 +51,6 @@ string find_class( string f, int l )
 mixed page_0( object id )
 {
   mapping last_usage;
-  gc();
   last_usage = roxen->query_var("__memory_usage");
   if(!last_usage)
   {
@@ -181,12 +58,78 @@ mixed page_0( object id )
     roxen->set_var( "__memory_usage", last_usage );
   }
 
-  string res="";
+  mapping(string|program:array) allobj = ([]);
+  mapping(string|program:int) numobjs = ([]);
+
+  // Collect data. Disable threads to avoid inconsistencies. Note that
+  // in Pike 7.4 and earlier, we can't stop automatic gc calls in here
+  // which would mess things up.
+  object threads_disabled = _disable_threads();
+
+#if constant (Pike.gc_parameters)
+  int orig_enabled = Pike.gc_parameters()->enabled;
+  Pike.gc_parameters ((["enabled": 0]));
+#endif
+
+  int gc_freed = id->real_variables->do_gc && gc();
+
+  mapping(string:int) mem_usage = _memory_usage();
+  int this_found = 0, walked_objects = 0;
+  object obj = next_object();
+  // next_object skips over destructed objects, so back up over them.
+  while (zero_type (_prev (obj))) obj = _prev (obj);
+  while (1) {
+    object next_obj;
+    // Objects can be very much like zeroes, so the only reliable way
+    // to go through them all is to continue until _next balks.
+    if (catch (next_obj = _next (obj))) break;
+    string|program p = object_program (obj);
+    if (p == this_program && obj == this_object()) this_found = 1;
+    p = p ? functionp (p) && Function.defined (p) ||
+      programp (p) && Program.defined (p) || p : "    ";
+    if (++numobjs[p] <= 50) allobj[p] += ({obj});
+    walked_objects++;
+    obj = next_obj;
+  }
+  mapping(string:int) mem_usage_afterwards = _memory_usage();
+  int num_things_afterwards =
+    mem_usage_afterwards->num_arrays +
+    mem_usage_afterwards->num_mappings +
+    mem_usage_afterwards->num_multisets +
+    mem_usage_afterwards->num_objects +
+    mem_usage_afterwards->num_programs;
+
+#if constant (Pike.gc_parameters)
+  Pike.gc_parameters ((["enabled": orig_enabled]));
+#endif
+  mapping gc_status = _gc_status();
+  threads_disabled = 0;
+
+  string res = "<p>Current time: " + ctime (time()) + "</p>\n"
+    "<p>";
+  if (id->real_variables->do_gc)
+    res += sprintf ("The garbage collector freed %d of %d things (%d%%).",
+		    gc_freed, gc_freed + num_things_afterwards,
+		    gc_freed * 100 / (gc_freed + num_things_afterwards));
+  else
+    res += sprintf ("%d seconds since last garbage collection, "
+			   "%d%% of the interval is consumed.",
+		    time() - gc_status->last_gc,
+		    (gc_status->num_allocs + 1) * 100 /
+		    (gc_status->alloc_threshold + 1));
+
+  res += "<br />\n<input type='checkbox' name='do_gc' value='yes'" +
+    (id->real_variables->do_gc ? " checked='checked'" : "") +
+    " /> Run the garbage collector first.</p>\n";
+
+  if (!this_found)
+    res += "<p><font color='&usr.warncolor;'>Internal inconsistency"
+      ":</font> Object(s) missing in object link list.</p>\n";
+
   string first="";
-  mixed foo = _memory_usage();
-  foo->total_usage = 0;
-  foo->num_total = 0;
-  array ind = sort(indices(foo));
+  mem_usage->total_usage = 0;
+  mem_usage->num_total = 0;
+  array ind = sort(indices(mem_usage));
   string f;
   int row=0;
 
@@ -196,31 +139,28 @@ mixed page_0( object id )
     if(!search(f, "num_"))
     {
       if(f!="num_total")
-	foo->num_total += foo[f];
+	mem_usage->num_total += mem_usage[f];
 
       string col
            ="&usr.warncolor;";
-      if((foo[f]-last_usage[f]) < foo[f]/60)
+      if((mem_usage[f]-last_usage[f]) < mem_usage[f]/60)
 	col="&usr.warncolor;";
-      if((foo[f]-last_usage[f]) == 0)
+      if((mem_usage[f]-last_usage[f]) == 0)
 	col="&usr.fgcolor;";
-      if((foo[f]-last_usage[f]) < 0)
+      if((mem_usage[f]-last_usage[f]) < 0)
 	col="&usr.fade4;";
 
       string bn = f[4..sizeof(f)-2]+"_bytes";
-      foo->total_bytes += foo[ bn ];
+      mem_usage->total_bytes += mem_usage[ bn ];
       if( bn == "tota_bytes" )
         bn = "total_bytes";
       table += ({ ({
-	col, f[4..], foo[f], foo[f]-last_usage[f],
-        sprintf( "%.1f",foo[bn]/1024.0),
-        sprintf( "%.1f",(foo[bn]-last_usage[bn])/1024.0 ),
+	col, f[4..], mem_usage[f], mem_usage[f]-last_usage[f],
+        sprintf( "%.1f",mem_usage[bn]/1024.0),
+        sprintf( "%.1f",(mem_usage[bn]-last_usage[bn])/1024.0 ),
       }) });
     }
-  roxen->set_var("__memory_usage", foo);
-
-
-  mapping bar = roxen->query_var( "__num_clones" )||([]);
+  roxen->set_var("__memory_usage", mem_usage);
 
 #define HCELL(thargs, color, text)					\
   ("<th " + thargs + ">"						\
@@ -247,35 +187,27 @@ mixed page_0( object id )
       TCELL ("align='right'", entry[0], entry[5]) + "</tr>\n";
   res += "</table></p>\n";
 
-  mapping(string|program:array) allobj = ([]);
-  mapping(string|program:int) numobjs = ([]);
+  if (walked_objects != mem_usage->num_objects) {
+    res += "<p><font color='&usr.warncolor;'>Warning:</font> ";
+    if (mem_usage_afterwards->num_objects != mem_usage->num_objects)
+      res += "Number of objects changed during object walkthrough "
+		    "(probably due to automatic gc call) - "
+		    "the list below is not complete.";
+    else
+      res += sprintf ("The object walkthrough visited %d of %d objects - "
+			     "the list below is not accurate.",
+		      walked_objects, mem_usage->num_objects);
+    res += "</p>\n";
+  }
 
-  // Go through all objects. Disable threads to avoid changes in the
-  // object linked list. Note that a gc call in here will mess things
-  // up, and we can't protect against that. It's however unlikely
-  // since it's done explicitly above.
-  object threads_disabled = _disable_threads();
-  object start = this_object();
-  for (object o = start;
-       objectp (o) ||		// It's a normal object.
-       (intp (o) && o) ||	// It's a bignum object.
-       zero_type (o);		// It's a destructed object.
-       o = _prev (o))
-    if (string|program p = object_program (o)) {
-      p = Program.defined (p) || p;
-      if (++numobjs[p] <= 50) allobj[p] += ({o});
-    }
-  start = _next (start);
-  for (object o = start; objectp (o) || (intp (o) && o) || zero_type (o); o = _next (o))
-    if (string|program p = object_program (o)) {
-      p = Program.defined (p) || p;
-      if (++numobjs[p] <= 50) allobj[p] += ({o});
-    }
-  threads_disabled = 0;
+  mapping save_numobjs = roxen->query_var( "__num_clones" );
+  int no_save_numobjs = !save_numobjs;
+  if (no_save_numobjs) save_numobjs = ([]);
 
   foreach (values (allobj), array objs)
     for (int i = 0; i < sizeof (objs); i++)
-      objs[i] = sprintf ("%O", objs[i]);
+      objs[i] = zero_type (objs[i]) ?
+	"<destructed object>" : sprintf ("%O", objs[i]);
 
   table = (array) allobj;
 
@@ -287,7 +219,21 @@ mixed page_0( object id )
   for (int i = 0; i < sizeof (table); i++) {
     [string|program prog, array(string) objs] = table[i];
 
-    if (sizeof (objs) > 2) {
+    string objstr = String.common_prefix (objs)[..30];
+    if (!(<"", "object">)[objstr]) {
+      if (sizeof (objstr) < max (@map (objs, sizeof))) objstr += "...";
+    }
+    else objstr = "";
+
+    int|string change;
+    if (array ent = save_numobjs[prog]) {
+      change = numobjs[prog] - ent[0];
+      ent[0] = numobjs[prog];
+    }
+    else
+      save_numobjs[prog] = ({change = numobjs[prog], objstr});
+
+    if (sizeof (objs) > 2 || abs (change) > 2) {
       string progstr;
       if (stringp (prog)) {
 	if (has_prefix (prog, cwd))
@@ -297,34 +243,37 @@ mixed page_0( object id )
       }
       else progstr = "";
 
-      string objstr = String.common_prefix (objs)[..30];
-      if (!(<"", "object">)[objstr]) {
-	int next = 0;
-	sscanf (objstr, "%*[^]`'\")}({[]%c", next);
-	if (sizeof (objstr) < max (@map (objs, sizeof))) objstr += "...";
-	if (int c = (['(': ')', '[': ']', '{': '}'])[next])
-	  if (objstr[-1] != c)
-	    objstr += (string) ({c});
-      }
-      else objstr = "";
-
-      int|string change;
       string color;
-      if (zero_type (bar[prog])) {
+      if (no_save_numobjs) {
 	change = "N/A";
 	color = same_color;
       }
       else {
-	change = numobjs[prog] - bar[prog];
 	if (change > 0) color = inc_color, change = "+" + change;
 	else if (change < 0) color = dec_color;
 	else color = same_color;
       }
-      bar[prog] = numobjs[prog];
 
       table[i] = ({color, progstr, objstr, numobjs[prog], change});
     }
     else table[i] = 0;
+  }
+
+  // Add decrement entries for the objects that have disappeared completely.
+  foreach (indices (save_numobjs - allobj), string|program prog) {
+    if (save_numobjs[prog][0] > 2) {
+      string progstr;
+      if (stringp (prog)) {
+	if (has_prefix (prog, cwd))
+	  progstr = prog[sizeof (cwd)..];
+	else
+	  progstr = prog;
+      }
+      else progstr = "";
+      table +=
+	({({dec_color, progstr, save_numobjs[prog][1], 0, -save_numobjs[prog][0]})});
+    }
+    save_numobjs[prog][0] = 0;
   }
 
   table = Array.sort_array (table - ({0}),
@@ -334,7 +283,7 @@ mixed page_0( object id )
 				  a[1] < b[1]));
 			    });
 
-  roxen->set_var("__num_clones", bar);
+  roxen->set_var("__num_clones", save_numobjs);
 
   res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
     HCELL ("align='left' ", "&usr.fgcolor;", "Source") +
@@ -358,21 +307,35 @@ mixed page_0( object id )
       TCELL ("align='right'", entry[0], entry[4]) + "</tr>\n";
   res += "</table></p>\n";
 
-#if efun(_num_dest_objects)
-  res += ("Number of destructed objects: " + _num_dest_objects() +"<br />\n");
-#endif
+  if (gc_status->non_gc_time)
+    gc_status->gc_time_ratio =
+      (float) gc_status->gc_time / gc_status->non_gc_time;
+
+  res += "<p><b>Garbage collector status</b><br />\n"
+    "<table border='0' cellpadding='0'>\n";
+  foreach (sort (indices (gc_status)), string field)
+    res += "<tr>" +
+      TCELL ("align='left'", "&usr.fgcolor;",
+	     Roxen.html_encode_string (field)) +
+      TCELL ("align='left'", "&usr.fgcolor;",
+	     Roxen.html_encode_string (gc_status[field])) +
+      "</tr>\n";
+  res += "</table></p>\n";
 
   return res;
 }
 
 mixed parse( RequestID id )
 {
-  return "<p><cf-refresh/></p>\n" +
-    page_0( id )
-#if 0
-#if constant( get_profiling_info )
-         + page_1( id )
-#endif
-#endif
-    + "<p><cf-ok/></p>";
+  return
+    "<font size='+1'><b>"+
+    "Pike memory usage information"+
+    "</b></font>"
+    "<p />"
+    "<input type='hidden' name='action' value='debug_info.pike' />\n"
+    "<p><submit-gbutton name='refresh'> "
+    "Refresh "// <cf-refresh> doesn't submit.
+    "</submit-gbutton>\n"
+    "<cf-cancel href='?class=&form.class;'/>\n" +
+    page_0( id );
 }
