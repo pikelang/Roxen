@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.153 2002/10/29 23:08:12 nilsson Exp $
+// $Id: Roxen.pmod,v 1.154 2002/11/14 21:02:35 agehall Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2954,15 +2954,6 @@ class ScopeRoxen {
        return ENCODE_RXML_TEXT(c->id->misc->site_prefix_path, type);
      case "unique-id":
        return ENCODE_RXML_TEXT(roxenp()->create_unique_id(), type);
-
-     case "license-type": {
-       object key = c->id->conf->getvar("license")->get_key();
-       return ENCODE_RXML_TEXT(key?key->type():"none", type);
-     }
-     case "license-warnings": {
-       object key = c->id->conf->getvar("license")->get_key();
-       return ENCODE_RXML_TEXT(key?sizeof(key->get_warnings()):0, type);
-     }
     }
     mixed val = c->misc->scope_roxen[var];
     if (zero_type(val)) return RXML.nil;
