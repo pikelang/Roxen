@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.407 2004/06/04 08:29:30 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.408 2004/06/04 22:39:22 _cvs_stephen Exp $";
 //#define REQUEST_DEBUG
 //#define CONNECTION_DEBUG
 #define MAGIC_ERROR
@@ -2108,14 +2108,16 @@ void got_data(mixed fooid, string s)
 	    MY_TRACE_LEAVE ("Using entry from ram cache");
 	    conf->hsent += sizeof(file->hs);
 	    cache_status["protcache"] = 1;
+	    d=fix_date(file->hs)+d;
 	    if( sizeof( d ) < (HTTP_BLOCKING_SIZE_THRESHOLD) )
 	    {
 	      TIMER_END(cache_lookup);
+	      my_fd->write(d);
 	    } 
 	    else 
 	    {
 	      TIMER_END(cache_lookup);
-	      send( fix_date(file->hs)+d );
+	      send(d);
 	      start_sender( );
 	    }
 	    return;
