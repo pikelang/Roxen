@@ -55,10 +55,10 @@ mozilla.[2-9].[0-9]b[2-9].*           -java
 mozilla/2.*	        -javascript
 mozilla/2.*solaris	javascript, netscape_javascript
 
-mozilla/3.*		tablecolor
+mozilla/3.*		tablecolor, netscape_javascript
 mozilla/3.*solaris	netscape_javascript
 
-mozilla/4.*		stylesheets
+mozilla/4.*		stylesheets, netscape_javascript
 mozilla/4.*solaris	netscape_javascript
 
 # BLAM BLAM BLAM BLAM
