@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.417 2003/01/29 16:32:57 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.418 2003/01/29 16:46:03 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1387,7 +1387,7 @@ class TagCache {
       // Cacheing is not allowed if there are keys except '1' and
       // none of them are page.path.
       array(string|int) keys = indices(keymap) - ({1});
-      if (sizeof(keys) && search(keys, "page.path") == -1) {
+      if (sizeof(keys) && !has_value(keys, "page.path")) {
 	if (!args["enable-client-cache"])
 	  NOCACHE();
 	else if(!args["enable-protocol-cache"])
