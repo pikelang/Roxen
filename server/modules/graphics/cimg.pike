@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.44 2001/08/15 17:43:55 per Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.45 2001/08/30 12:16:56 jhs Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -42,11 +42,9 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 <attr name='data' value='imagedata'><p>
  Insert images from other sources, e.g. databases through entities or
  variables.</p>
-<ex type='box'>
-<emit source='sql' query='select imagedata from images where id=37'>
+<ex-box><emit source='sql' query='select imagedata from images where id=37'>
 <cimg data='&sql.imagedata;'/>
-</emit>
-</ex>
+</emit></ex-box>
 </attr>",
 
 "cimg-url":#"<desc tag='tag'><p><short>
@@ -66,11 +64,9 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 <attr name='data' value='imagedata'><p>
  Insert images from other sources, e.g. databases through entities or
  variables.</p>
-<ex type='box'>
-<emit source='sql' query='select imagedata from images where id=37'>
-<cimg-url data='&sql.imagedata;'/>
-</emit>
-</ex>
+<ex-box><emit source='sql' query='select imagedata from images where id=37'>
+  <cimg-url data='&sql.imagedata;'/>
+</emit></ex-box>
 </attr>",
 
 "emit#cimg":({ #"<desc plugin='plugin'><p><short>
