@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.290 2002/08/14 18:22:55 mast Exp $
+// $Id: module.pmod,v 1.291 2002/10/15 12:44:49 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1327,9 +1327,7 @@ class Value
   //! is free to leave out that argument, not that the function
   //! implementor is free to ignore it.
   {
-    mixed val = rxml_const_eval (ctx, var, scope_name, type);
-    ctx->set_var(var, val, scope_name);
-    return val;
+    return rxml_const_eval (ctx, var, scope_name, type);
   }
 
   mixed rxml_const_eval (Context ctx, string var, string scope_name, void|Type type);
