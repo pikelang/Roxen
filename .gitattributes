@@ -32,6 +32,7 @@ nn binary
 # Remove the corresponding line before committing
 # changes to these files.
 /mkdir foreign_ident
+/rxml_packages/counter foreign_ident
 /rxml_packages/gtext_headers foreign_ident
 /rxml_packages/roxenlogo foreign_ident
 /server/base_server/basic_defvar.pike foreign_ident
