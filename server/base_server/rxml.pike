@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.255 2000/09/30 19:20:36 per Exp $
+// $Id: rxml.pike,v 1.256 2000/10/19 01:52:31 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -200,10 +200,13 @@ string parse_rxml(string what, RequestID id,
   RXML.PXml parser;
   RXML.Context ctx;
 
-  if (parent_parser && (ctx = parent_parser->context) && ctx->id == id)
+  if (parent_parser && (ctx = parent_parser->context) && ctx->id == id) {
     parser = default_content_type->get_parser (ctx, 0, parent_parser);
+    parser->recover_errors = parent_parser->recover_errors;
+  }
   else {
     parser = rxml_tag_set (default_content_type, id);
+    parser->recover_errors = 1;
     parent_parser = 0;
 #ifdef OLD_RXML_COMPAT
     if (old_rxml_compat) parser->context->compatible_scope = 1;
