@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.46 2000/09/19 12:55:09 per Exp $
+// $Id: global_variables.pike,v 1.47 2000/11/17 23:19:05 nilsson Exp $
 
 /*
 #pragma strict_types
@@ -419,12 +419,16 @@ void define_global_variables(  )
 		"directory you started Roxen. "
 		"The directories are searched in order for modules."));
 
-  defvar("Supports", "#include <etc/supports>\n",
-	 LOCALE(134, "Client supports regexps"), 
-	 TYPE_TEXT_FIELD|VAR_MORE,
-	 LOCALE(135, "What do the different clients support?\n<br />"
-	  "The default information is normally fetched from the file "
-	  "server/etc/supports in your Roxen directory."));
+  defvar("Supports",
+	 Variable.Text( "#include <etc/supports>\n",
+			VAR_MORE, LOCALE(134, "Client supports regexps"),
+			LOCALE(135, "What do the different clients support?\n<br />"
+			       "The default information is normally fetched from the file "
+			       "server/etc/supports in your Roxen directory.") ) )
+    -> add_changed_callback( lambda(Variable.Text s) {
+			       roxenp()->initiate_supports();
+			       cache.cache_expire("supports");
+			     } );
 
   defvar("audit", 0, LOCALE(136, "Logging: Audit trail"), 
 	 TYPE_FLAG,
