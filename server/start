@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.87 1999/12/21 16:48:14 per Exp $
+# $Id: start,v 1.88 2000/01/27 18:21:23 grubba Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -12,6 +12,8 @@ LOGDIR=../logs/
 FILES="default"
 program=base_server/roxenloader.pike
 extra_args=""
+old_roxen_defines=".old_roxen_defines"
+
 
 # Default verbosity level.
 verbose=1
@@ -481,10 +483,10 @@ PIKEVERSION=`$pike --version 2>&1`
 
 
 if [ "$program" = "base_server/roxenloader.pike" ] ; then 
-  if [ "`cat .old_roxen_defines 2>/dev/null`" != "$PIKEVERSION $DEFINES" ] ; then
+  if [ "`cat $old_roxen_defines 2>/dev/null`" != "$PIKEVERSION $DEFINES" ] ; then
     remove_old_dot_o_files "DEFINES changed"
   fi
-  echo "$PIKEVERSION $DEFINES" > .old_roxen_defines
+  echo "$PIKEVERSION $DEFINES" > $old_roxen_defines
 fi
 
 if [ -z "$once" ] ; then
@@ -504,30 +506,34 @@ oo
   # Some /bin/sh's have problems detaching otherwise.
 
   exec >/dev/null
-  exec 2>/dev/null
   exec </dev/null
 
-  (while : ; do
-    echo "$pre" "Server restart at `date`"
-    echo "$pre" "Debug log in $LOGDIR/debug/$FILES.1"
-    rotate $LOGDIR/debug/$FILES
+  if ((while : ; do
+      echo "$pre" "Server restart at `date`"
+      echo "$pre" "Debug log in $LOGDIR/debug/$FILES.1"
+      rotate $LOGDIR/debug/$FILES
 
-    start_roxen $extra_args 2>>$LOGDIR/debug/$FILES.1 1>&2
+      start_roxen $extra_args 2>>$LOGDIR/debug/$FILES.1 1>&2
 
-    exitcode="$?"
+      exitcode="$?"
 
-    if [ "$exitcode" -eq "0" ] ; then
-      # Clean shutdown.
-      echo "$pre" "Roxen shutdown."
-      exit 0
-    fi
-    if [ "$exitcode" -lt "0" ] ; then
-      # Signal death.
-      echo "$pre" "Roxen died of signal $exitcode. Restarting..."
-    else
-      echo "$pre" Roxen down. Restarting.
-    fi
-  done) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1 &
+      if [ "$exitcode" -eq "0" ] ; then
+        # Clean shutdown.
+        echo "$pre" "Roxen shutdown."
+        exit 0
+      fi
+      if [ "$exitcode" -lt "0" ] ; then
+        # Signal death.
+        echo "$pre" "Roxen died of signal $exitcode. Restarting..."
+      else
+        echo "$pre" Roxen down. Restarting.
+      fi
+      done) & ) </dev/null >$LOGDIR/debug/start_$FILES.output 2>&1; then
+    :;
+  else
+    echo 'Failed to spawn subshell. -- Permission problem?' 1>&2
+    exit 1
+  fi
 else
   if [ $verbose -gt 0 ]; then
     echo "$pre Start at `date`"
