@@ -39,21 +39,17 @@
       <font color="&usr.bgcolor;" face="helvetica,arial" size=+1><b>&title;</b></font>
     </td>
   </tr>
-  <cset preparse variable=usr.fade2>&usr.bgcolor;</cset>
-  <cset preparse variable=usr.fgcolor>&usr.fgcolor;</cset>
-  <formoutput>
-  <tr><td bgcolor="#usr.fade2#"><font color="#usr.fgcolor#" size=2>
+
+  <tr><td bgcolor="&usr.bgcolor;"><font color="&usr.fgcolor;" size=2>
     <contents>
   </font></td></tr>
-  </formoutput>
+
   </table>
   </td></tr></table>
 </define>
 
 <define container=subtablist default_width=90%>
 <contents>
-<cset variable=dammit preparse>&usr.fade1;</cset>
-<formoutput quote=½>
 <p><br><p>
 <div align=right>
 <table width=&width; border=0 cellpadding=0 cellspacing=0>
@@ -66,16 +62,14 @@
          textcolor="&usr.bgcolor;"
          seltextcolor="&usr.fgcolor;"
          selcolor="&usr.fade1;"
-         #selected#
          fgcolor="&usr.fgcolor;">
-   ½__tabs:quote=none½
+   <eval>&form.__tabs:none;</eval>
 </tablist
 ></td></tr>
 <tr>
-<td bgcolor="½dammit½">½__contents:quote=none½</td>
+<td bgcolor="&usr.fade1;">&form.__contents:none;</td>
 </tr></table>
 </div>
-</formoutput>
 </define>
 
 <define tag=topmenu default_base="" default_selected=home>

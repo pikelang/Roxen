@@ -266,18 +266,16 @@ string module_page( RequestID id, string conf, string module )
      ||id->variables->info_section_is_it)
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
 
-  return #"<formoutput quote=\"么">
-    <cf-save what=Module>
- <input type=hidden name=section value=\"山ection么">
+  return #"<cf-save what=Module>
+ <input type=hidden name=section value=\"&form.section;\">
 <table>
   <configif-output source=module-variables configuration=\""+
-   conf+"\" section=\"山ection:quote=dtag么" module=\""+module+#"\">
+   conf+"\" section=\"&form.section;\" module=\""+module+#"\">
     <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
     <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
    </configif-output>
   </table>
-    <cf-save what=Module>
-</formoutput>";
+    <cf-save what=Module>";
 }
 
 string port_for( string url )
@@ -341,20 +339,18 @@ string parse( RequestID id )
     {
      case "settings":
        return
-#"<formoutput quote=\"么">
-<configif-output source=config-variables configuration=\""+
-path[ 0 ]+#"\" section=\"山ection:quote=dtag么"></configif-output>"+#"
-<input type=hidden name=section value=\"山ection么">
+#"<configif-output source=config-variables configuration=\""+
+path[ 0 ]+#"\" section=\"&form.section;\"></configif-output>"+#"
+<input type=hidden name=section value=\"&form.section;\">
 <table>
    <cf-save what=Site>
   <configif-output source=config-variables configuration=\""+
-path[ 0 ]+#"\" section=\"山ection:quote=dtag么">
+path[ 0 ]+#"\" section=\"&form.section;\">
     <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
     <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
    </configif-output>
   </table>
-   <cf-save what=Site>
-</formoutput>";
+   <cf-save what=Site>";
        break;
 
      case "modules":
