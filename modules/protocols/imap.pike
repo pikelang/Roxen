@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.7 1998/10/18 20:05:48 nisse Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.8 1998/10/20 22:49:29 nisse Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -100,38 +100,119 @@ class imap_mail
       return 0;
     }
 
-  object make_bodystructure(MIME.Message msg)
+  object mapping_to_list(mapping m)
     {
-    }
+      return imap_list( ((array) m) * ({ }));
+			    (
+  object make_bodystructure(MIME.Message msg, int extension_data)
+    {
+      array a;
+      
+      if (msg->body_parts)
+      {
+	a = Array.map(msg->body_parts, make_bodystructure, extension_data)
+	  + ({ msg->subtype });
+	if (extension_data)
+	  a += ({ mapping_to_list(msg->params),
+		  // FIXME: Disposition header described in rfc 1806,
+		  // FIXME: Language tag (rfc 1766).
+	  });
+      } else {
+	string data = msg->getdata();
+	
+	a = ({ msg->type, msg->subtype,
+		     mapping_to_list(msg->params),
+		     // FIXME: Content id (rfc 2045)
+		     // FIXME: Body description
 
+		     // NOTE: The MIME module decodes any transfer encoding
+		     "binary",  // msg->transfer_encoding, 
+		     imap_number(strlen(data)) });
+	if (extension_data)
+	  a += ({ Crypto.md5()->update(data)->digest(),
+		  // Disposition,
+		  // Language
+		  });
+      }
+      return imap_list(a);
+    }
+				 
   object|string string_to_imap(string s)
     {
       return s ? imap_string(s) : "nil";
     }
 
+  /* Extracts real name, mailbox name and domain name from an rfc-822 mail address.
+   *
+   * FIXME: Doesn't handle groups or source routes */
+  mapping parse_address(array tokens)
+  {
+    int i = search(tokens, '<');
+    if (i >= 0)
+    {
+      if ( (i + 4 < sizeof(tokens) )
+	   && stringp(tokens[i+1])
+	   && (tokens[i + 2] == '@')
+	   && stringp(tokens[i + 3])
+	   && (tokens[i+4] == '>') )
+	return ([ "name" : (MIME.quote(tokens[..i-1])
+			    + MIME.quote(tokens[i+5..])),
+		  "mailbox" : tokens[i+1],
+		  "domain" : tokens[i+3] ]);
+      else
+	/* Invalid address */
+	return 0;
+    }
+    int i = search(tokens, '@', 1);
+    if ( (i>0)
+	 && (i+1 < sizeof(tokens))
+	 && stringp(tokens[i-1])
+	 && stringp(tokens[i+1]) )
+      return ([ "mailbox" : tokens[i-1],
+		"domain" : tokens[i+1] ]);
+    else
+      return 0;
+  }
+
   object|string address_to_imap(string s)
     {
+      mapping address = parse_address(MIME.tokenize(s));
+
+      return imap_list(s ?
+		       ({ address->name, 0, address->mailbox, address->domain })
+		       : /* Invalid address */
+		       ({ s, 0, "invalid", "invalid" }) );
     }
+
   object|string address_list_to_imap(string s)
     {
-      
+      array tokens = MIME.tokenize(s) / ',';
+
+      return imap_list(Array.map(tokens, parse_address));
     }
+
+  string first_header(array|string v)
+  {
+    return arrayp(v) ? v[0] : v:
+  }
+  
+  // FIXME: Handle multiple headers... 
   object make_envelope(mapping(string:string) h)
     {
-      object|string from = address_list_to_imap(h->from);
+      object|string from = address_list_to_imap(first_header(h->from));
       object|string sender = (h->sender
-			      ? address_list_to_imap(h->sender)
+			      ? address_list_to_imap(first_header(h->sender))
 			      : from);
       object|string reply_to = (h["reply-to"]
-				? address_list_to_imap(h["reply-to"])
+				? address_list_to_imap(first_header(h["reply-to"]))
 				: from);
       
       imap_list( ({ string_to_imap(h->date),
 		    string_to_imap(h->subject),
 		    from, sender, reply_to,
-		    address_list_to_imap(h->to),
-		    address_list_to_imap(h->cc),
-		    address_list_to_imap(h->bcc),
+		    address_list_to_imap(first_header(h->to)),
+		    address_list_to_imap(first_header(h->cc)),
+		    address_list_to_imap(first_header(h->bcc)),
 		    string_to_imap(h["in-reply-to"]),
 		    string_to_imap(h["message-id"]) }) );
     }
@@ -169,29 +250,9 @@ class imap_mail
       return MIME.Message(s || mail->getdata(), 0, 0, 1);
     }
 
-  string read_headers()
-    {
-      string h = "";
-      object fd = mail->body_fd();
-	
-      while(search(h, "\r\n\r\n") < 0)
-      {
-	/* 1024 octets should be enough for most messages */
-	string data = fd->read(1024);
-	if (!data || !strlen(data))
-	{
-	  if (h[strlen(h)-2..] != "\r\n")
-	    h += "\r\n";
-	  break;
-	}
-	h += data;
-      }
-      return h;
-    }
-  
   mapping get_headers(string|void s)
     {
-      return MIME.parse_headers(s || read_headers(), 1);
+      return MIME.parse_headers(s || read_headers_from_fd(mail->body_fd()), 1);
     }
   
   /* Returns a pair ({ atom[options], value }) */
@@ -321,7 +382,7 @@ class imap_mail
       }
       case "bodystructure": 
 	return make_bodystructure(MIME.Message(mail->getdata(), 0, 0, 1),
-				  attr->no_extention_data);
+				  !attr->no_extention_data);
 
       case "envelope": 
 	return make_envelope(get_headers());
