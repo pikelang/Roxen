@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.91 2000/06/23 16:50:13 mast Exp $
+//! $Id: module.pmod,v 1.92 2000/06/29 22:00:16 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -19,6 +19,7 @@ class RequestID { };
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
 #include <config.h>
+#include <request_trace.h>
 
 #ifdef RXML_OBJ_DEBUG
 #  define MARK_OBJECT \
@@ -1003,12 +1004,13 @@ class Context
       if (id && id->conf)
 	while (evaluator) {
 	  if (evaluator->report_error && evaluator->type->free_text) {
-	    string msg = (err->type == "run" ?
-			  ([function(Backtrace,Type:string)]
-			   ([object] id->conf)->handle_run_error) :
-			  ([function(Backtrace,Type:string)]
-			   ([object] id->conf)->handle_parse_error)
-			 ) ([object(Backtrace)] err, evaluator->type);
+	    string msg = err->type == "help" ? err->msg :
+	      (err->type == "run" ?
+	       ([function(Backtrace,Type:string)]
+		([object] id->conf)->handle_run_error) :
+	       ([function(Backtrace,Type:string)]
+		([object] id->conf)->handle_parse_error)
+	      ) ([object(Backtrace)] err, evaluator->type);
 	    if (evaluator->report_error (msg))
 	      break;
 	  }
@@ -1774,6 +1776,7 @@ class Frame
   {
     Frame this = this_object();
     Context ctx = parser->context;
+    RequestID id = ctx->id;
 
     // Unwind state data:
     //raw_content
@@ -1849,356 +1852,387 @@ class Frame
 #undef PRE_INIT_ERROR
     ctx->frame = this;
 
-    if (raw_args) {
-      if (sizeof (raw_args)) {
-	// Note: Code duplication in Tag.eval_args().
-	mapping(string:Type) atypes = raw_args & tag->req_arg_types;
-	if (sizeof (atypes) < sizeof (tag->req_arg_types)) {
-	  array(string) missing = sort (indices (tag->req_arg_types - atypes));
-	  parse_error ("Required " +
-		       (sizeof (missing) > 1 ?
-			"arguments " + String.implode_nicely (missing) + " are" :
-			"argument " + missing[0] + " is") + " missing.\n");
+    do {			// Target for breaks (goto wouldn't be all bad, really).
+      if (tag) {
+	if ((raw_args || args)->help) {
+	  TRACE_ENTER ("tag &lt;" + tag->name + " help&gt;", tag);
+	  string help = id->conf->find_tag_doc (tag->name, id);
+	  TRACE_LEAVE ("");
+	  ctx->handle_exception ( // Will throw if necessary.
+	    Backtrace ("help", help, ctx), parser);
+	  break;
 	}
-	atypes += raw_args & tag->opt_arg_types;
-#ifdef MODULE_DEBUG
-	if (mixed err = catch {
-#endif
-	  foreach (indices (raw_args), string arg)
-	    raw_args[arg] = (atypes[arg] || tag->def_arg_type)->
-	      eval (raw_args[arg], ctx, 0, parser, 1); // Should not unwind.
-#ifdef MODULE_DEBUG
-	}) {
-	  if (objectp (err) && ([object] err)->thrown_at_unwind)
-	    fatal_error ("Can't save parser state when evaluating arguments.\n");
-	  throw_fatal (err);
+
+	TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
+
+#ifdef MODULE_LEVEL_SECURITY
+	if (id->conf->check_security (tag, id, id->misc->seclevel)) {
+	  TRACE_LEAVE("access denied");
+	  break;
 	}
 #endif
       }
-      args = raw_args;
-    }
 
-#ifdef MODULE_DEBUG
-    if (!args) fatal_error ("args not set.\n");
-#endif
-
-    if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
-      TagSet tset = ctx->tag_set;
-      if (!tset->has_effective_tags (add_tags)) {
-	int hash = HASH_INT2 (tset->id_number, add_tags->id_number);
-	orig_tag_set = tset;
-	TagSet local_ts;
-	if (!(local_ts = local_tag_set_cache[hash])) {
-	  local_ts = TagSet (add_tags->name + "+" + orig_tag_set->name);
-	  local_ts->imported = ({add_tags, orig_tag_set});
-	  local_tag_set_cache[hash] = local_ts; // Race, but it doesn't matter.
-	}
-	ctx->tag_set = local_ts;
-      }
-    }
-
-    if (!result_type) {
-#ifdef MODULE_DEBUG
-      if (!tag) fatal_error ("result_type not set in Frame object %O, "
-			     "and it has no Tag object to use for inferring it.\n",
-			     this_object());
-#endif
-      Type ptype = parser->type;
-      foreach (tag->result_types, Type rtype)
-	if (ptype == rtype) {
-	  result_type = rtype;
-	  break;
-	}
-	else if (ptype->subtype_of (rtype)) {
-	  result_type = ptype (rtype->_parser_prog);
-	  break;
-	}
-      if (!result_type)		// Sigh..
-	parse_error (
-	  "Tag returns " +
-	  String.implode_nicely ([array(string)] tag->result_types->name, "or") +
-	  " but " + [string] parser->type->name + " is expected.\n");
-    }
-    if (!content_type) {
-#ifdef MODULE_DEBUG
-      if (!tag) fatal_error ("content_type not set in Frame object %O, "
-			     "and it has no Tag object to use for inferring it.\n",
-			     this_object());
-#endif
-      content_type = tag->content_type;
-      if (content_type == t_same)
-	content_type = result_type (content_type->_parser_prog);
-    }
-    if (raw_content) content = content_type->empty_value;
-
-    mixed err = catch {
-      switch (eval_state) {
-	case EVSTAT_BEGIN:
-	  if (array|function(RequestID,void|mixed:array) do_enter =
-	      [array|function(RequestID,void|mixed:array)] this->do_enter) {
-	    if (!exec) {
-	      exec = do_enter (ctx->id); // Might unwind.
-	      if (ctx->new_runtime_tags)
-		_handle_runtime_tags (ctx, parser);
-	    }
-	    if (exec) {
-	      if (!(flags & FLAG_PARENT_SCOPE)) ENTER_SCOPE (ctx, this);
-	      mixed res = _exec_array (parser, exec, 0); // Might unwind.
-	      if (flags & FLAG_STREAM_RESULT) {
-#ifdef DEBUG
-		if (ctx->unwind_state)
-		  fatal_error ("Internal error: Clobbering unwind_state "
-			       "to do streaming.\n");
-		if (piece != Void)
-		  fatal_error ("Internal error: Thanks, we think about how nice it must "
-			       "be to play the harmonica...\n");
-#endif
-		if (result_type->quoting_scheme != parser->type->quoting_scheme)
-		  res = parser->type->quote (res);
-		ctx->unwind_state = (["stream_piece": res]);
-		throw (this);
-	      }
-	      exec = 0;
-	    }
+      if (raw_args) {
+	if (sizeof (raw_args)) {
+	  // Note: Code duplication in Tag.eval_args().
+	  mapping(string:Type) atypes = raw_args & tag->req_arg_types;
+	  if (sizeof (atypes) < sizeof (tag->req_arg_types)) {
+	    array(string) missing = sort (indices (tag->req_arg_types - atypes));
+	    parse_error ("Required " +
+			 (sizeof (missing) > 1 ?
+			  "arguments " + String.implode_nicely (missing) + " are" :
+			  "argument " + missing[0] + " is") + " missing.\n");
 	  }
-	  eval_state = EVSTAT_ENTERED;
+	  atypes += raw_args & tag->opt_arg_types;
+#ifdef MODULE_DEBUG
+	  if (mixed err = catch {
+#endif
+	    foreach (indices (raw_args), string arg)
+	      raw_args[arg] = (atypes[arg] || tag->def_arg_type)->
+		eval (raw_args[arg], ctx, 0, parser, 1); // Should not unwind.
+#ifdef MODULE_DEBUG
+	  }) {
+	    if (objectp (err) && ([object] err)->thrown_at_unwind)
+	      fatal_error ("Can't save parser state when evaluating arguments.\n");
+	    throw_fatal (err);
+	  }
+#endif
+	}
+	args = raw_args;
+      }
 
-	  /* Fall through. */
-	case EVSTAT_ENTERED:
-	case EVSTAT_LAST_ITER:
-	  do {
-	    if (eval_state != EVSTAT_LAST_ITER) {
-	      int|function(RequestID:int) do_iterate =
-		[int|function(RequestID:int)] this->do_iterate;
-	      if (intp (do_iterate)) {
-		iter = [int] do_iterate || 1;
-		eval_state = EVSTAT_LAST_ITER;
-	      }
-	      else {
-		iter = (/*[function(RequestID:int)]HMM*/ do_iterate) (
-		  ctx->id); // Might unwind.
+#ifdef MODULE_DEBUG
+      if (!args) fatal_error ("args not set.\n");
+#endif
+
+      if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
+	TagSet tset = ctx->tag_set;
+	if (!tset->has_effective_tags (add_tags)) {
+	  int hash = HASH_INT2 (tset->id_number, add_tags->id_number);
+	  orig_tag_set = tset;
+	  TagSet local_ts;
+	  if (!(local_ts = local_tag_set_cache[hash])) {
+	    local_ts = TagSet (add_tags->name + "+" + orig_tag_set->name);
+	    local_ts->imported = ({add_tags, orig_tag_set});
+	    local_tag_set_cache[hash] = local_ts; // Race, but it doesn't matter.
+	  }
+	  ctx->tag_set = local_ts;
+	}
+      }
+
+      if (!result_type) {
+#ifdef MODULE_DEBUG
+	if (!tag) fatal_error ("result_type not set in Frame object %O, "
+			       "and it has no Tag object to use for inferring it.\n",
+			       this_object());
+#endif
+	Type ptype = parser->type;
+	foreach (tag->result_types, Type rtype)
+	  if (ptype == rtype) {
+	    result_type = rtype;
+	    break;
+	  }
+	  else if (ptype->subtype_of (rtype)) {
+	    result_type = ptype (rtype->_parser_prog);
+	    break;
+	  }
+	if (!result_type)		// Sigh..
+	  parse_error (
+	    "Tag returns " +
+	    String.implode_nicely ([array(string)] tag->result_types->name, "or") +
+	    " but " + [string] parser->type->name + " is expected.\n");
+      }
+      if (!content_type) {
+#ifdef MODULE_DEBUG
+	if (!tag) fatal_error ("content_type not set in Frame object %O, "
+			       "and it has no Tag object to use for inferring it.\n",
+			       this_object());
+#endif
+	content_type = tag->content_type;
+	if (content_type == t_same)
+	  content_type = result_type (content_type->_parser_prog);
+      }
+      if (raw_content) content = content_type->empty_value;
+
+      mixed err = catch {
+	switch (eval_state) {
+	  case EVSTAT_BEGIN:
+	    if (array|function(RequestID:array) do_enter =
+		[array|function(RequestID:array)] this->do_enter) {
+	      if (!exec) {
+		exec = arrayp (do_enter) ? [array] do_enter :
+		  ([function(RequestID:array)] do_enter) (
+		    id); // Might unwind.
 		if (ctx->new_runtime_tags)
 		  _handle_runtime_tags (ctx, parser);
-		if (!iter) eval_state = EVSTAT_LAST_ITER;
+	      }
+	      if (exec) {
+		if (!(flags & FLAG_PARENT_SCOPE)) ENTER_SCOPE (ctx, this);
+		mixed res = _exec_array (parser, exec, 0); // Might unwind.
+		if (flags & FLAG_STREAM_RESULT) {
+#ifdef DEBUG
+		  if (ctx->unwind_state)
+		    fatal_error ("Internal error: Clobbering unwind_state "
+				 "to do streaming.\n");
+		  if (piece != Void)
+		    fatal_error ("Internal error: Thanks, we think about how nice "
+				 "it must be to play the harmonica...\n");
+#endif
+		  if (result_type->quoting_scheme != parser->type->quoting_scheme)
+		    res = parser->type->quote (res);
+		  ctx->unwind_state = (["stream_piece": res]);
+		  throw (this);
+		}
+		exec = 0;
 	      }
 	    }
-	    ENTER_SCOPE (ctx, this);
+	    eval_state = EVSTAT_ENTERED;
 
-	    for (; iter > 0; iter--) {
-	      if (raw_content && raw_content != "") { // Got nested parsing to do.
-		int finished = 0;
-		if (!subparser) { // The nested content is not yet parsed.
-		  if (this->local_tags) {
-		    subparser = content_type->get_parser (
-		      ctx, [object(TagSet)] this->local_tags, parser);
-		    subparser->_local_tag_set = 1;
-		  }
-		  else
-		    subparser = content_type->get_parser (ctx, 0, parser);
-		  subparser->finish (raw_content); // Might unwind.
-		  finished = 1;
+	    /* Fall through. */
+	  case EVSTAT_ENTERED:
+	  case EVSTAT_LAST_ITER:
+	    do {
+	      if (eval_state != EVSTAT_LAST_ITER) {
+		int|function(RequestID:int) do_iterate =
+		  [int|function(RequestID:int)] this->do_iterate;
+		if (intp (do_iterate)) {
+		  iter = [int] do_iterate || 1;
+		  eval_state = EVSTAT_LAST_ITER;
 		}
-
-		do {
-		  if (flags & FLAG_STREAM_CONTENT && subparser->read) {
-		    // Handle a stream piece.
-		    // Squeeze out any free text from the subparser first.
-		    mixed res = subparser->read();
-		    if (content_type->sequential) piece = res + piece;
-		    else if (piece == Void) piece = res;
-		    if (piece != Void) {
-		      array|function(RequestID,void|mixed:array) do_process;
-		      if ((do_process =
-			   [array|function(RequestID,void|mixed:array)]
-			   this->do_process) &&
-			  !arrayp (do_process)) {
-			if (!exec) {
-			  exec = do_process (ctx->id, piece); // Might unwind.
-			  if (ctx->new_runtime_tags)
-			    _handle_runtime_tags (ctx, parser);
-			}
-			if (exec) {
-			  ENTER_SCOPE (ctx, this);
-			  mixed res = _exec_array (
-			    parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
-			  if (flags & FLAG_STREAM_RESULT) {
-#ifdef DEBUG
-			    if (!zero_type (ctx->unwind_state->stream_piece))
-			      fatal_error ("Internal error: "
-					   "Clobbering unwind_state->stream_piece.\n");
-#endif
-			    if (result_type->quoting_scheme !=
-				parser->type->quoting_scheme)
-			      res = parser->type->quote (res);
-			    ctx->unwind_state->stream_piece = res;
-			    throw (this);
-			  }
-			  exec = 0;
-			}
-			else if (flags & FLAG_STREAM_RESULT) {
-			  // do_process() finished the stream. Ignore remaining content.
-			  ctx->unwind_state = 0;
-			  piece = Void;
-			  break;
-			}
-		      }
-		      piece = Void;
-		    }
-		    if (finished) break;
-		  }
-		  else {	// The frame doesn't handle streamed content.
-		    piece = Void;
-		    if (finished) {
-		      mixed res = subparser->eval(); // Might unwind.
-		      if (content_type->sequential) content += res;
-		      else if (res != Void) content = res;
-		      break;
-		    }
-		  }
-
-		  subparser->finish(); // Might unwind.
-		  finished = 1;
-		} while (1); // Only loops when an unwound subparser has been recovered.
-		subparser = 0;
-	      }
-
-	      if (array|function(RequestID,void|mixed:array) do_process =
-		  [array|function(RequestID,void|mixed:array)] this->do_process) {
-		if (!exec) {
-		  exec = arrayp (do_process) ? [array] do_process :
-		    ([function(RequestID,void|mixed:array)] do_process) (
-		      ctx->id); // Might unwind.
+		else {
+		  iter = (/*[function(RequestID:int)]HMM*/ do_iterate) (
+		    id); // Might unwind.
 		  if (ctx->new_runtime_tags)
 		    _handle_runtime_tags (ctx, parser);
-		}
-		if (exec) {
-		  ENTER_SCOPE (ctx, this);
-		  mixed res = _exec_array (
-		    parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
-		  if (flags & FLAG_STREAM_RESULT) {
-#ifdef DEBUG
-		    if (ctx->unwind_state)
-		      fatal_error ("Internal error: Clobbering unwind_state "
-				   "to do streaming.\n");
-		    if (piece != Void)
-		      fatal_error ("Internal error: Thanks, we think about how nice "
-				   "it must be to play the harmonica...\n");
-#endif
-		    if (result_type->quoting_scheme != parser->type->quoting_scheme)
-		      res = parser->type->quote (res);
-		    ctx->unwind_state = (["stream_piece": res]);
-		    throw (this);
-		  }
-		  exec = 0;
+		  if (!iter) eval_state = EVSTAT_LAST_ITER;
 		}
 	      }
-
-	    }
-	  } while (eval_state != EVSTAT_LAST_ITER);
-
-	  /* Fall through. */
-	case EVSTAT_ITER_DONE:
-	  if (array|function(RequestID:array) do_return =
-	      [array|function(RequestID:array)] this->do_return) {
-	    eval_state = EVSTAT_ITER_DONE; // Only need to record this state here.
-	    if (!exec) {
-	      exec = arrayp (do_return) ? [array] do_return :
-		([function(RequestID:array)] do_return) (ctx->id); // Might unwind.
-	      if (ctx->new_runtime_tags)
-		_handle_runtime_tags (ctx, parser);
-	    }
-	    if (exec) {
 	      ENTER_SCOPE (ctx, this);
-	      _exec_array (parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
-	      exec = 0;
-	    }
-	  }
-	  else if (result == Void && !(flags & FLAG_EMPTY_ELEMENT))
-	    if (result_type->_parser_prog == PNone) {
-	      if (content_type->subtype_of (result_type))
-		result = content;
-	    }
-	    else
-	      if (stringp (content_type)) {
-		eval_state = EVSTAT_ITER_DONE; // Only need to record this state here.
-		if (!exec) exec = ({content});
+
+	      for (; iter > 0; iter--) {
+		if (raw_content && raw_content != "") { // Got nested parsing to do.
+		  int finished = 0;
+		  if (!subparser) { // The nested content is not yet parsed.
+		    if (this->local_tags) {
+		      subparser = content_type->get_parser (
+			ctx, [object(TagSet)] this->local_tags, parser);
+		      subparser->_local_tag_set = 1;
+		    }
+		    else
+		      subparser = content_type->get_parser (ctx, 0, parser);
+		    subparser->finish (raw_content); // Might unwind.
+		    finished = 1;
+		  }
+
+		  do {
+		    if (flags & FLAG_STREAM_CONTENT && subparser->read) {
+		      // Handle a stream piece.
+		      // Squeeze out any free text from the subparser first.
+		      mixed res = subparser->read();
+		      if (content_type->sequential) piece = res + piece;
+		      else if (piece == Void) piece = res;
+		      if (piece != Void) {
+			array|function(RequestID,void|mixed:array) do_process;
+			if ((do_process =
+			     [array|function(RequestID,void|mixed:array)]
+			     this->do_process) &&
+			    !arrayp (do_process)) {
+			  if (!exec) {
+			    exec = do_process (id, piece); // Might unwind.
+			    if (ctx->new_runtime_tags)
+			      _handle_runtime_tags (ctx, parser);
+			  }
+			  if (exec) {
+			    ENTER_SCOPE (ctx, this);
+			    mixed res = _exec_array (
+			      parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
+			    if (flags & FLAG_STREAM_RESULT) {
+#ifdef DEBUG
+			      if (!zero_type (ctx->unwind_state->stream_piece))
+				fatal_error ("Internal error: "
+					     "Clobbering unwind_state->stream_piece.\n");
+#endif
+			      if (result_type->quoting_scheme !=
+				  parser->type->quoting_scheme)
+				res = parser->type->quote (res);
+			      ctx->unwind_state->stream_piece = res;
+			      throw (this);
+			    }
+			    exec = 0;
+			  }
+			  else if (flags & FLAG_STREAM_RESULT) {
+			    // do_process() finished the stream. Ignore remaining content.
+			    ctx->unwind_state = 0;
+			    piece = Void;
+			    break;
+			  }
+			}
+			piece = Void;
+		      }
+		      if (finished) break;
+		    }
+		    else {	// The frame doesn't handle streamed content.
+		      piece = Void;
+		      if (finished) {
+			mixed res = subparser->eval(); // Might unwind.
+			if (content_type->sequential) content += res;
+			else if (res != Void) content = res;
+			break;
+		      }
+		    }
+
+		    subparser->finish(); // Might unwind.
+		    finished = 1;
+		  } while (1); // Only loops when an unwound subparser has been recovered.
+		  subparser = 0;
+		}
+
+		if (array|function(RequestID,void|mixed:array) do_process =
+		    [array|function(RequestID,void|mixed:array)] this->do_process) {
+		  if (!exec) {
+		    exec = arrayp (do_process) ? [array] do_process :
+		      ([function(RequestID,void|mixed:array)] do_process) (
+			id); // Might unwind.
+		    if (ctx->new_runtime_tags)
+		      _handle_runtime_tags (ctx, parser);
+		  }
+		  if (exec) {
+		    ENTER_SCOPE (ctx, this);
+		    mixed res = _exec_array (
+		      parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
+		    if (flags & FLAG_STREAM_RESULT) {
+#ifdef DEBUG
+		      if (ctx->unwind_state)
+			fatal_error ("Internal error: Clobbering unwind_state "
+				     "to do streaming.\n");
+		      if (piece != Void)
+			fatal_error ("Internal error: Thanks, we think about how nice "
+				     "it must be to play the harmonica...\n");
+#endif
+		      if (result_type->quoting_scheme != parser->type->quoting_scheme)
+			res = parser->type->quote (res);
+		      ctx->unwind_state = (["stream_piece": res]);
+		      throw (this);
+		    }
+		    exec = 0;
+		  }
+		}
+
+	      }
+	    } while (eval_state != EVSTAT_LAST_ITER);
+
+	    /* Fall through. */
+	  case EVSTAT_ITER_DONE:
+	    if (array|function(RequestID:array) do_return =
+		[array|function(RequestID:array)] this->do_return) {
+	      eval_state = EVSTAT_ITER_DONE; // Only need to record this state here.
+	      if (!exec) {
+		exec = arrayp (do_return) ? [array] do_return :
+		  ([function(RequestID:array)] do_return) (id); // Might unwind.
+		if (ctx->new_runtime_tags)
+		  _handle_runtime_tags (ctx, parser);
+	      }
+	      if (exec) {
+		ENTER_SCOPE (ctx, this);
 		_exec_array (parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
 		exec = 0;
 	      }
-	  LEAVE_SCOPE (ctx, this);
-      }
-
-      if (ctx->new_runtime_tags)
-	_handle_runtime_tags (ctx, parser);
-    };
-
-    ctx->frame_depth--;
-
-    if (err) {
-      LEAVE_SCOPE (ctx, this);
-      string action;
-      if (objectp (err) && ([object] err)->thrown_at_unwind) {
-	mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state;
-	if (!ustate) ustate = ctx->unwind_state = ([]);
-#ifdef DEBUG
-	if (ustate[this])
-	  fatal_error ("Internal error: Frame already has an unwind state.\n");
-#endif
-
-	if (ustate->exec_left) {
-	  exec = [array] ustate->exec_left;
-	  m_delete (ustate, "exec_left");
+	    }
+	    else if (result == Void && !(flags & FLAG_EMPTY_ELEMENT))
+	      if (result_type->_parser_prog == PNone) {
+		if (content_type->subtype_of (result_type))
+		  result = content;
+	      }
+	      else
+		if (stringp (content_type)) {
+		  eval_state = EVSTAT_ITER_DONE; // Only need to record this state here.
+		  if (!exec) exec = ({content});
+		  _exec_array (parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
+		  exec = 0;
+		}
+	    LEAVE_SCOPE (ctx, this);
 	}
 
-	if (err == this || exec && sizeof (exec) && err == exec[0])
-	  // This frame or a frame in the exec array wants to stream.
-	  if (parser->unwind_safe) {
-	    // Rethrow to continue in parent since we've already done
-	    // the appropriate do_process stuff in this frame in
-	    // either case.
-	    if (err == this) err = 0;
-	    if (orig_tag_set) ctx->tag_set = orig_tag_set, orig_tag_set = 0;
-	    action = "break";
+	if (ctx->new_runtime_tags)
+	  _handle_runtime_tags (ctx, parser);
+      };
+
+      ctx->frame_depth--;
+
+      if (err) {
+	LEAVE_SCOPE (ctx, this);
+	string action;
+	if (objectp (err) && ([object] err)->thrown_at_unwind) {
+	  mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state;
+	  if (!ustate) ustate = ctx->unwind_state = ([]);
+#ifdef DEBUG
+	  if (ustate[this])
+	    fatal_error ("Internal error: Frame already has an unwind state.\n");
+#endif
+
+	  if (ustate->exec_left) {
+	    exec = [array] ustate->exec_left;
+	    m_delete (ustate, "exec_left");
 	  }
-	  else {
-	    // Can't stream since the parser isn't unwind safe. Just
-	    // continue.
+
+	  if (err == this || exec && sizeof (exec) && err == exec[0])
+	    // This frame or a frame in the exec array wants to stream.
+	    if (parser->unwind_safe) {
+	      // Rethrow to continue in parent since we've already done
+	      // the appropriate do_process stuff in this frame in
+	      // either case.
+	      if (err == this) err = 0;
+	      if (orig_tag_set) ctx->tag_set = orig_tag_set, orig_tag_set = 0;
+	      action = "break";
+	    }
+	    else {
+	      // Can't stream since the parser isn't unwind safe. Just
+	      // continue.
+	      m_delete (ustate, "stream_piece");
+	      action = "continue";
+	    }
+	  else if (!zero_type (ustate->stream_piece)) {
+	    // Got a stream piece from a subframe. We handle it above;
+	    // store the state and tail recurse.
+	    piece = ustate->stream_piece;
 	    m_delete (ustate, "stream_piece");
 	    action = "continue";
 	  }
-	else if (!zero_type (ustate->stream_piece)) {
-	  // Got a stream piece from a subframe. We handle it above;
-	  // store the state and tail recurse.
-	  piece = ustate->stream_piece;
-	  m_delete (ustate, "stream_piece");
-	  action = "continue";
+	  else action = "break";	// Some other reason - back up to the top.
+
+	  ustate[this] = ({err, eval_state, iter, raw_content, subparser, piece,
+			   exec, orig_tag_set, ctx->new_runtime_tags});
+	  if (id->misc->trace_leave && tag)
+	    TRACE_LEAVE (action);
 	}
-	else action = "break";	// Some other reason - back up to the top.
+	else {
+	  if (id->misc->trace_leave && tag)
+	    TRACE_LEAVE ("exception");
+	  ctx->handle_exception (err, parser); // Will rethrow unknown errors.
+	  action = "return";
+	}
 
-	ustate[this] = ({err, eval_state, iter, raw_content, subparser, piece,
-			 exec, orig_tag_set, ctx->new_runtime_tags});
-      }
-      else {
-	ctx->handle_exception (err, parser); // Will rethrow unknown errors.
-	action = "return";
-      }
-
-      switch (action) {
-	case "break":		// Throw and handle in parent frame.
+	switch (action) {
+	  case "break":		// Throw and handle in parent frame.
 #ifdef MODULE_DEBUG
-	  if (!parser->unwind_state)
-	    fatal_error ("Trying to unwind inside a parser that isn't unwind safe.\n");
+	    if (!parser->unwind_state)
+	      fatal_error ("Trying to unwind inside a parser that isn't unwind safe.\n");
 #endif
-	  throw (this);
-	case "continue":	// Continue in this frame through tail recursion.
-	  _eval (parser);
-	  return;
-	case "return":		// A normal return.
-	  break;
-	default:
-	  fatal_error ("Internal error: Don't you come here and %O on me!\n", action);
+	    throw (this);
+	  case "continue":	// Continue in this frame through tail recursion.
+	    _eval (parser);
+	    return;
+	  case "return":		// A normal return.
+	    break;
+	  default:
+	    fatal_error ("Internal error: Don't you come here and %O on me!\n", action);
+	}
       }
-    }
+      else
+	if (id->misc->trace_leave && tag)
+	  TRACE_LEAVE ("");
+    } while (0);		// Breaks go here.
 
     if (orig_tag_set) ctx->tag_set = orig_tag_set;
     ctx->frame = up;
