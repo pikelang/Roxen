@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.24 1997/05/15 12:32:45 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.25 1997/05/27 23:02:32 grubba Exp $";
 
 #include <module.h>
 
@@ -384,8 +384,10 @@ mixed find_file(string f, object id)
   if(!fork())
   {
     mixed err = catch {
+      /* The COREDUMPSIZE should be set to zero here !!
+       * This should be done at least before the change of directory
+       */
       string oldwd = getcwd() + "/";
-      cd(wd);
       pipe1->dup2(files.file("stdin"));
       pipe1->dup2(files.file("stdout"));
       if(QUERY(err))
@@ -395,11 +397,34 @@ mixed find_file(string f, object id)
       }
       object privs;
       catch(privs = ((program)"privs")("CGI script", uid));
-      if(QUERY(use_wrapper))
+
+      /* Now that the correct privileges are set the current working
+       * directory can be changed. This implies a check for user permissions
+       * Also some technical requirements for execution can be checked
+       * before control is given to the wrapper or the script.
+       */
+      if(!cd(wd) ||
+	 !(us = file_stat(f)) ||
+	 !((us[0]&0111) ||
+	   ((us[0]&0100) && (uid == us[5])) ||
+	   (us[0]&0444) ||
+	   ((us[0]&0400) && (uid == us[5]))))
+	return http_low_answer(403, "<h2>File exists, but access forbidden "
+			       "by user</h2>");
+      
+      if(QUERY(use_wrapper)) {
+	if(!(us = file_stat(combine_path(oldwd,
+					 (QUERY(wrapper)||"bin/cgi")))) ||
+	   !(us[0]&0111))
+	  return http_low_answer(403, "<h2>Wrapper exists, but access forbidden "
+				 "for user</h2>");
 	exece(combine_path(oldwd, (QUERY(wrapper)||"bin/cgi")),
 	      ({f})+make_args(id->rest_query),
 	      my_build_env_vars(f, id, path_info));
-      exece(f, make_args(id->rest_query), my_build_env_vars(f, id, path_info));
+      } else {
+	exece(f, make_args(id->rest_query),
+	      my_build_env_vars(f, id, path_info));
+      }
     };
     catch(roxen_perror("CGI: Exec failed!\n%O\n",
 		       describe_backtrace((array)err)));
