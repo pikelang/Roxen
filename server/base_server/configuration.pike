@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.437 2001/06/17 20:07:09 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.438 2001/06/17 20:30:20 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3200,7 +3200,7 @@ static void create(string config)
   defvar("compat_level", Variable.StringChoice (
 	   "", roxen.compat_levels, 0,
 	   DLOCALE(246, "Compatibility level"),
-	   DLOCALE(0, "The compatibility level is used by different modules to select "
+	   DLOCALE(384, "The compatibility level is used by different modules to select "
 		   "the right behavior to remain compatible with earlier Roxen "
 		   "versions. When a server configuration is created, this variable "
 		   "is set to the latest version. After that it's never changed "
