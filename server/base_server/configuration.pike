@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.30 1997/05/28 01:45:04 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.31 1997/05/30 02:08:45 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -634,7 +634,7 @@ public string status()
 
   res += ("<tr align=right><td><b>Number of requests:</b></td><td>" 
 	  + sprintf("%8d", requests)
-	  + sprintf("</td><td>%.2f/min</td><td><b>Recieved data:</b></"
+	  + sprintf("</td><td>%.2f/min</td><td><b>Received data:</b></"
 		    "td><td>%.2f</td>", (float)tmp/(float)10,
 		    (received->mb())));
   
