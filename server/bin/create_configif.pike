@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.11 2000/03/22 21:25:32 peter Exp $
+ * $Id: create_configif.pike,v 1.12 2000/03/27 04:37:48 per Exp $
  *
  * Create an initial configuration interface server.
  */
@@ -42,6 +42,18 @@ int main(int argc, array argv)
                       "../configurations");
   int admin = has_value(argv, "-a");
 
+  
+  foreach( get_dir( configdir )||({}), string cf )
+    catch 
+    {
+      if( search( Stdio.read_file( configdir+"/"+cf ), 
+                  "'config_filesystem#0'" ) != -1 )
+      {
+        werror("There is already a configuration interface present in "
+               "this server.\nNo new will be created\n");
+        exit( 0 );
+      }
+    };
   if(configdir[-1] != '/')
     configdir+="/";
   if(admin)
