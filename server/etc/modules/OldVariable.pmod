@@ -39,7 +39,6 @@ class Variable
     m_delete( all_warnings, _id );
     m_delete( invisibility_callbacks, _id );
     m_delete( changed_values, _id );
-    RoxenLocale.standard.unregister_module_doc( _id );
   }
 
   string get_warnings()
