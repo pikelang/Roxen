@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.168 2000/03/13 18:30:36 nilsson Exp $
+// $Id: rxml.pike,v 1.169 2000/03/14 05:10:37 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -505,9 +505,8 @@ void add_parse_module (RoxenModule mod)
       mkmapping (indices (defs),
 		 Array.transpose (({({call_container}) * sizeof (defs),
 				    values (defs)})));
-
-  if (mod->query_simple_tag_callers &&
-      mappingp (defs = mod->query_simple_tag_callers()) &&
+  if (mod->query_simpletag_callers &&
+      mappingp (defs = mod->query_simpletag_callers()) &&
       sizeof (defs))
     tag_set->add_tags(Array.map(indices(defs),
 				lambda(string tag){ return GenericTag(tag, @defs[tag]); }));

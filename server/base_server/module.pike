@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.85 2000/03/06 12:34:19 jonasw Exp $
+// $Id: module.pike,v 1.86 2000/03/14 05:10:37 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -662,7 +662,7 @@ mapping query_container_callers()
   return m;
 }
 
-mapping query_simple_tag_callers()
+mapping query_simpletag_callers()
 {
   mapping m = ([]);
   foreach(glob("simpletag_*", indices(this_object())), string q)
