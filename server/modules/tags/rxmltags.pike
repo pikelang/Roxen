@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.131 2000/06/09 12:23:24 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.132 2000/06/09 13:39:02 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1959,7 +1959,7 @@ If several values are to be selected, this is the string that seperates them.
  {tr}
     {td} First cell {/td}
     {td} Second cell {/td}
- /tr}
+ {/tr}
 {/table}
 </doc>
 </ex>
@@ -2175,7 +2175,7 @@ This cascading style sheet (CSS) definition will be applied on the pre element.
  Print the modification date. Takes all the date attributes in the
  <tag><ref type='tag'>date</ref></tag> tag.
 
-<ex type='box'>This page was last modified &lt;modified date='' case='lower' type='string'/&gt;.</ex>
+<ex type='box'>This page was last modified <modified date='' case='lower' type='string'/>.</ex>
 </attr>
 
 <attr name=file value=path>
@@ -2614,7 +2614,7 @@ Communicating?
 
 <attr name=email>
  Only print the e-mail address of the user, with no link.
- <ex type='box'>Email: <tag>user name='foo' email=''/</tag></ex>
+ <ex type='box'>Email: <user name='foo' email=''/></ex>
 </attr>
 
 <attr name=link>
@@ -2624,7 +2624,7 @@ Communicating?
 <attr name=name>
  The login name of the user. If no other attributes are specified, the
  user's realname and email including links will be inserted.
-<ex type='box'><tag>user name='foo'/</tag></ex>
+<ex type='box'><user name='foo'/></ex>
 </attr>
 
 <attr name=nolink>
@@ -2637,7 +2637,7 @@ Communicating?
 
 <attr name=realname>
  Only print the full name of the user, with no link.
-<ex type='box'><tag>user name='foo' realname=''/</tag></ex>
+<ex type='box'><user name='foo' realname=''/></ex>
 </attr>",
 
 "if#expr":#"<desc plugin>
