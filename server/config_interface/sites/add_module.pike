@@ -3,6 +3,12 @@
 #include <module_constants.h>
 #include <roxen.h>
 
+int no_reload()
+{
+  if( sizeof( already_added ) )
+    return 1; // Reloading this script now would destroy state.
+}
+
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
@@ -63,9 +69,9 @@ string site_url( RequestID id, string site )
 
 string page_base( RequestID id, string content )
 {
-  return sprintf( "<use file='/standard/template' />\n"
+  return sprintf( "<use file='/template' />\n"
                   "<tmpl title=' %s'>"
-                  "<topmenu base='&cf.num-dotdots;' selected='sites'/>\n"
+                  "<topmenu base='/' selected='sites'/>\n"
                   "<content><cv-split>"
                   "<subtablist width='100%%'>"
                   "<st-tabs></st-tabs>"
@@ -328,8 +334,10 @@ array(int|string) class_visible_normal( string c, string d, RequestID id )
                    "bgcolor='&usr.content-titlebg;'><tr><td>");
 
   if( id->variables->unfolded == c ) {
-    header+=("<a name="+Roxen.http_encode_string(c)+
-	     "></a><gbutton dim='1'> "+LOCALE(267, "View")+" </gbutton>");
+    header+=("<gbutton "
+	     "href='add_module.pike?config=&form.config;"
+	     "#"+Roxen.http_encode_string(c)+"' > "+
+	     LOCALE(0, "Hide")+" </gbutton>");
     x=1;
   }
   else
@@ -531,9 +539,12 @@ string decode_site_name( string what )
 
 array initial_form( RequestID id, Configuration conf, array modules )
 {
-  id->variables->initial = 1;
+  id->variables->initial = "1";
+  id->real_variables->initial = ({ "1" });
+
   string res = "";
   int num;
+
   foreach( modules, string mod )
   {
     ModuleInfo mi = roxen.find_module( (mod/"!")[0] );
@@ -558,26 +569,30 @@ array initial_form( RequestID id, Configuration conf, array modules )
   return ({res,num});
 }
 
+mapping already_added =  ([]);
+
 mixed do_it_pass_2( array modules, Configuration conf,
                     RequestID id )
 {
   id->misc->do_not_goto = 1;  
   foreach( modules, string mod ) 
   {
+    if( already_added[mod] )
+      mod = already_added[ mod ];
     if( !has_value(mod, "!") || !conf->find_module( replace(mod,"!","#") ) )
     {
       RoxenModule mm = conf->enable_module( mod,0,0,1 );
       if( !mm || !conf->otomod[mm] )
       {
 	report_error("Failed to enable "+mod+"\n" );
-	// This will (hopefully) show the event log, with the message
-	// above at the top.
 	return Roxen.http_redirect( site_url(id,conf->name), id );
       }      
       conf->call_low_start_callbacks( mm, 
                                       roxen.find_module( (mod/"!")[0] ), 
                                       conf->modules[ mod ] );
-      modules = replace( modules, mod, mod+"!"+(conf->otomod[mm]/"#")[-1] );
+      modules = replace( modules, mod,
+			 (already_added[mod]=(mod/"!")[0]+"!"+
+			  (conf->otomod[mm]/"#")[-1]) );
     }
     remove_call_out( roxen.really_save_it );
   }
@@ -591,6 +606,7 @@ mixed do_it_pass_2( array modules, Configuration conf,
      conf->call_start_callbacks( conf->find_module( replace(mod,"!","#") ),
                                  roxen.find_module( (mod/"!")[0] ),
                                  conf->modules[ mod ] );
+    already_added = ([ ]);
     conf->save( ); // save it all in one go
     return Roxen.http_redirect( site_url(id,conf->name)+modules[-1]+"/" , id);
   }
@@ -601,7 +617,7 @@ mixed do_it_pass_2( array modules, Configuration conf,
                                           "value='"+q+"' />";
                                  } )*"\n" 
                    +"<input type='hidden' name='config' "
-                   "value='"+conf->name+"' />"+cf_form+"</table><p><cf-ok />");
+		   "value='"+conf->name+"' />"+cf_form+"</table><p><cf-ok />");
 }
 
 mixed do_it( RequestID id )
@@ -613,6 +629,7 @@ mixed do_it( RequestID id )
 
   if( !conf->inited )
     conf->enable_all_modules();
+
   array modules = (id->variables->module_to_add/"\0")-({""});
   if( !sizeof( modules ) )
     return Roxen.http_redirect( site_url(id,conf->name ), id );
