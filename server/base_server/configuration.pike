@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.391 2001/06/06 21:02:27 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.392 2001/07/31 07:41:03 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -983,14 +983,18 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
   object key;
 #endif
 
-#if defined(__NT__) || defined(STRIP_BSLASH)
   if( strlen(id->not_query ) )
   {
     int ss = (<'/','\\'>)[ id->not_query[0] ];
-    id->not_query = combine_path("/",replace(id->not_query,"\\","/"));
+    id->not_query = combine_path("/",
+#if defined(__NT__) || defined(STRIP_BSLASH)
+				 replace(id->not_query,"\\","/")
+#else
+				 id->not_query
+#endif
+				);
     if( !ss )  id->not_query = id->not_query[1..];
   }
-#endif
 
   TRACE_ENTER(sprintf("Request for %s", id->not_query), 0);
 
