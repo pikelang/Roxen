@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.38 1997/08/31 02:45:44 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.39 1997/08/31 21:51:53 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -74,7 +74,6 @@ string data;
 array (int|string) auth;
 string rawauth, realauth;
 string since;
-
 
 #if _DEBUG_HTTP_OBJECTS
 int my_id;
@@ -223,8 +222,8 @@ private int really_set_config(array mod_config)
 
 private int parse_got(string s)
 {
-  catch{mark_fd(my_fd->query_fd(), "HTTP: Parsing");};
 #if _DEBUG_HTTP_OBJECTS
+  if(my_fd) catch{mark_fd(my_fd->query_fd(), "HTTP: Parsing");};
   my_state = 9;
 #endif
   multiset (string) sup;
@@ -302,7 +301,7 @@ private int parse_got(string s)
 
   if(!remoteaddr)
   {
-    catch(remoteaddr = ((my_fd->query_address()||"")/" ")[0]);
+    if(my_fd) catch(remoteaddr = ((my_fd->query_address()||"")/" ")[0]);
     if(!remoteaddr) this_object()->end();
   }
 
@@ -614,7 +613,6 @@ void disconnect()
 #if _DEBUG_HTTP_OBJECTS
   my_state = 2;
 #endif
-  array err = catch {
     if(do_not_disconnect)
     {
 #ifdef REQUEST_DEBUG
@@ -638,9 +636,7 @@ void disconnect()
     roxen->httpobjects[my_id] += " - disconnect";  
 #endif
     my_fd = 0;
-  };
-  if(err)
-    roxen_perror("END: %O\n", describe_backtrace(err));
+//  };
   destruct();
 }
 
@@ -653,11 +649,11 @@ void no_more_keep_connection_alive(mapping foo)
 
 void end(string|void s)
 {
-  catch{mark_fd(my_fd->query_fd(), "");};
 #if _DEBUG_HTTP_OBJECTS
+  if(my_fd) catch{mark_fd(my_fd->query_fd(), "");};
   my_state = 1;
 #endif
-  array err = catch {
+//  array err = catch {
 #ifdef REQUEST_DEBUG
     perror("REQUEST: End...\n");
 #endif
@@ -675,9 +671,9 @@ void end(string|void s)
       }
       my_fd = 0;
     }
-  };
-  if(err)
-    roxen_perror("END: %O\n", describe_backtrace(err));
+//  };
+//  if(err)
+//    roxen_perror("END: %O\n", describe_backtrace(err));
   disconnect();  
 }
 
@@ -782,13 +778,13 @@ void do_log(array id)
   }
   my_fd=0;
   pipe=file=0;
-  destruct(this_object());
+  destruct();
 }
 
 void handle_request( )
 {
-  catch{mark_fd(my_fd->query_fd(), "HTTP: Handling");};
 #if _DEBUG_HTTP_OBJECTS
+  mark_fd(my_fd->query_fd(), "HTTP: Handling");
   my_state = 15;
 #endif
   mixed *err;
@@ -809,9 +805,6 @@ void handle_request( )
   remove_call_out(do_timeout);
   remove_call_out(do_timeout);
 #endif
-
-  my_fd->set_read_callback(0);
-  my_fd->set_close_callback(0); 
 
   if(conf)
   {
@@ -961,7 +954,7 @@ void handle_request( )
       return;
     }
 
-#ifdef USE_SHUFFLE 0
+#ifdef USE_SHUFFLE
     if(!file->data &&
        (file->len<=0 || (file->len > 30000))
 #ifdef KEEP_CONNECTION_ALIVE
@@ -973,7 +966,6 @@ void handle_request( )
       shuffle( file->file, my_fd );
       if(conf)conf->log(file, thiso); 
       my_fd=file->file=file=pipe=0;
-      destruct(thiso);
       return;
     }
 #endif
@@ -1037,10 +1029,8 @@ void got_data(mixed fooid, string s)
   roxen->httpobjects[my_id] = ("Got data - "+remoteaddr +" - "+ctime(_time())) - "\n";
 #endif
   remove_call_out(do_timeout);
-  remove_call_out(do_timeout);
-  call_out(do_timeout, 60); // Close down if we don't get more data 
+  call_out(do_timeout, 30); // Close down if we don't get more data 
                          // within 30 seconds. Should be more than enough.
-  call_out(do_timeout, 70);// There seems to be a bug where call_outs go missing...
 #endif
   if(wanted_data)
   {
@@ -1084,6 +1074,10 @@ void got_data(mixed fooid, string s)
     conf->received += strlen(s);
     conf->requests++;
   }
+
+  my_fd->set_close_callback(0); 
+  my_fd->set_read_callback(0); 
+  my_fd->set_blocking();
 #ifdef THREADS
   roxen->handle(this_object()->handle_request);
 #else
@@ -1165,7 +1159,7 @@ void clean()
 #if _DEBUG_HTTP_OBJECTS
 void destroy()
 {
-  catch{mark_fd(my_fd->query_fd(), "");};
+  if(my_fd) catch{mark_fd(my_fd->query_fd(), "");};
   roxen->httpobjects->num--;
   m_delete(roxen->httpobjects, my_id);
 } 
@@ -1188,7 +1182,7 @@ void create(object f, object c)
     my_fd->set_read_callback(got_data);
     my_fd->set_close_callback(end);
 #if _DEBUG_HTTP_OBJECTS
-    catch(remoteaddr = ((my_fd->query_address()||"")/" ")[0]);
+    if(my_fd) catch(remoteaddr = ((my_fd->query_address()||"")/" ")[0]);
     roxen->httpobjects[my_id] = ("Created - "+
 				 remoteaddr +" - "+ctime(_time())) - "\n" ;
 #endif

@@ -1,5 +1,5 @@
 /*
- * $Id: shutdown.pike,v 1.9 1997/08/31 02:45:38 per Exp $
+ * $Id: shutdown.pike,v 1.10 1997/08/31 21:52:00 per Exp $
  */
 
 inherit "wizard";
@@ -23,4 +23,4 @@ mapping wiz_done(object id)
   return http_redirect(roxen->config_url()+"(restart)/Actions/");
 }
 
-mixed handle(object id) { return wizard_for(id); }
+mixed handle(object id) { return wizard_for(id,0); }
