@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.408 2004/05/21 00:04:58 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.409 2004/05/21 00:12:22 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3519,8 +3519,7 @@ class TagThen {
   int flags = cache_static_in_2_5();
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
-    inherit RXML.Frame;
-    int do_iterate;
+    inherit FrameIf;
     array do_enter(RequestID id) {
       do_iterate= _ok ? 1 : -1;
       return 0;
@@ -3705,7 +3704,7 @@ class TagEmit {
     foreach(indices(filter), string v) {
       string|object val = vs[v];
       if(objectp(val))
-	val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "", RXML.t_text) :
+	val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "") :
 	  val->rxml_var_eval(ctx, v, "", RXML.t_text);
       if(!val)
 	return 1;
@@ -3764,7 +3763,7 @@ class TagEmit {
 
     if(objectp(a0) && a0->rxml_var_eval) {
       if(!ctx) ctx = RXML_CONTEXT;
-      a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+      a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "") :
 	a0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
     else
@@ -3772,7 +3771,7 @@ class TagEmit {
 
     if(objectp(b0) && b0->rxml_var_eval) {
       if(!ctx) ctx = RXML_CONTEXT;
-      b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+      b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "") :
 	b0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
     else
@@ -3793,8 +3792,8 @@ class TagEmit {
 
     string a2="",b2="";
     int a1,b1;
-    sscanf(a0,"%s%d%s",a0,a1,a2);
-    sscanf(b0,"%s%d%s",b0,b1,b2);
+    sscanf(a0,"%[^0-9]%d%s",a0,a1,a2);
+    sscanf(b0,"%[^0-9]%d%s",b0,b1,b2);
     if (a0>b0) return 1;
     if (a0<b0) return -1;
     if (a1>b1) return 1;
@@ -3816,13 +3815,13 @@ class TagEmit {
 
     if(objectp(a0) && a0->rxml_var_eval) {
       if(!ctx) ctx = RXML_CONTEXT;
-      a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+      a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "") :
 	a0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
 
     if(objectp(b0) && b0->rxml_var_eval) {
       if(!ctx) ctx = RXML_CONTEXT;
-      b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+      b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "") :
 	b0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
 
@@ -3873,6 +3872,7 @@ class TagEmit {
       do {
 	ret += ({ res->get_row() });
       } while(ret[-1]!=0);
+      destruct(res);
       return ret[..sizeof(ret)-2];
     }
 
@@ -3933,8 +3933,9 @@ class TagEmit {
 
       if(objectp(res))
 	if(args->sort ||
-	   (args->skiprows<0) ||
-	   args->rowinfo )
+	   (args->skiprows && args->skiprows<0) ||
+	   args->rowinfo ||
+	   args->remainderinfo )
 	  // Expand the object into an array of mappings if sort,
 	  // negative skiprows or rowinfo is used. These arguments
 	  // should be intercepted, dealt with and removed by the
@@ -3972,6 +3973,7 @@ class TagEmit {
 	    string name;
 	    int order;
 	    function compare;
+	    function lcase;
 	  };
 
 	  array(FieldData) fields = allocate (sizeof (raw_fields));
@@ -3996,6 +3998,10 @@ class TagEmit {
 		  if (field->compare) break field_flag_scan;
 		  field->compare = strict_compare;
 		  break;
+		case '^':
+		  if (field->lcase) break field_flag_scan;
+		  field->lcase = lower_case;
+		  break;
 		default:
 		  break field_flag_scan;
 	      }
@@ -4003,6 +4009,8 @@ class TagEmit {
 
 	    if (!field->compare)
 	      field->compare = dwim_compare;
+	    if (!field->lcase)
+	      field->lcase = lambda(mixed m){return m;};
 	  }
 
 	  res = Array.sort_array(
@@ -4016,12 +4024,14 @@ class TagEmit {
 		int tmp;
 		switch (field->order) {
 		  case '-':
-		    tmp = field->compare (m2[field->name], m1[field->name],
+		    tmp = field->compare (field->lcase(m2[field->name]),
+					  field->lcase(m1[field->name]),
 					  field->name);
 		    break;
 		  default:
 		  case '+':
-		    tmp = field->compare (m1[field->name], m2[field->name],
+		    tmp = field->compare (field->lcase(m1[field->name]),
+					  field->lcase(m2[field->name]),
 					  field->name);
 		}
 
@@ -4040,7 +4050,7 @@ class TagEmit {
 	  // If rowinfo or negative skiprows are used we have
 	  // to do filtering in a loop of its own, instead of
 	  // doing it during the emit loop.
-	  if(args->rowinfo || args->skiprows<0) {
+	  if(args->rowinfo || (args->skiprows && args->skiprows<0)) {
 	    for(int i; i<sizeof(res); i++)
 	      if(should_filter(res[i], filter)) {
 		res = res[..i-1] + res[i+1..];
@@ -4129,7 +4139,7 @@ class TagEmit {
       if(args->maxrows && counter == args->maxrows)
 	return do_once_more();
 
-      if(args->skiprows>0)
+      if(args->skiprows && args->skiprows>0)
 	while(args->skiprows-->-1)
 	  while((vars=res->get_row()) &&
 		should_filter(vars, filter));
@@ -4202,6 +4212,8 @@ class TagEmit {
 	  RXML.user_set_var(args->remainderinfo, res->num_rows_left());
       }
 
+      if(objectp(res))
+        destruct(res);
       res = 0;
       return 0;
     }
@@ -4291,7 +4303,7 @@ class IfIs
 
   constant cache = 0;
   constant case_sensitive = 0;
-  string|array source (RequestID id, string s);
+  string|array source (RequestID id, string s, void|int check_set_only);
 
   int(0..1) eval( string value, RequestID id, mapping args )
   {
@@ -4302,12 +4314,29 @@ class IfIs
 	CACHE(cache);
     }
     array arr=value/" ";
-    string|array var=source(id, arr[0]);
-    if(!arrayp(var)) return do_check(var, arr, id);
+    mixed var;
+    if (sizeof (arr) < 2) {
+      var = source (id, arr[0], 1);
+      // Compatibility kludge: Empty arrays are considered false. This
+      // is probably the result of that multiple values are
+      // represented by arrays. We don't want to escalate that to
+      // other types, though (empty strings are already considered
+      // true).
+      if (!arrayp (var))
+	return !!var;
+    }
+    else {
+      var=source(id, arr[0]);
+      if(!arrayp(var))
+	return do_check(var, arr, id);
+    }
 
     int(0..1) recurse_check(array var, array arr, RequestID id) {
-      foreach(var, mixed val) {
-	if(arrayp(val)) {
+      foreach(arrayp (var) ? var :
+	      mappingp (var) ? values (var) :
+	      indices (var),
+	      mixed val) {
+	if(arrayp(val) || mappingp (val) || multisetp (val)) {
 	  if(recurse_check(val, arr, id)) return 1;
 	  continue;
 	}
@@ -4324,9 +4353,20 @@ class IfIs
     if(sizeof(arr)<2) return !!var;
 
     if(!var)
-      // If var is zero then it had no value. Thus it's always
-      // different from any value it might be compared with.
-      return arr[1] == "!=";
+      if (compat_level == 2.2)
+	// This makes unset variables be compared as if they had the
+	// empty string as value. I can't understand the logic behind
+	// it, but it makes the test <if variable="form.foo is "> be
+	// true if form.foo is unset, a state very different from
+	// having the empty string as a value. To be on the safe side
+	// we're still bug compatible in 2.2 compatibility mode (but
+	// both earlier and later releases does the correct thing
+	// here). /mast
+	var = "";
+      else
+	// If var is zero then it had no value. Thus it's always
+	// different from any value it might be compared with.
+	return arr[1] == "!=";
 
     string is;
 
@@ -4366,7 +4406,7 @@ class IfMatch
   constant name = "if";
 
   constant cache = 0;
-  array|string source(RequestID id);
+  string|array source(RequestID id);
 
   int eval( string is, RequestID id, mapping args ) {
     array|string value=source(id);
@@ -4379,8 +4419,8 @@ class IfMatch
     if(!value) return 0;
     if(arrayp(value)) value=value*" ";
     value = lower_case( value );
-    is = lower_case( "*"+is+"*" );
-    return glob(is,value) || sizeof(filter( is/",", glob, value ));
+    string in = lower_case( "*"+is+"*" );
+    return glob(in,value) || sizeof(filter( in/",", glob, value ));
   }
 }
 
@@ -4514,7 +4554,7 @@ class TagIfTime {
 	return 1;
       return 0;
     }
-    else if(m->inclusive || !(m->before || m->after) && a==b)
+    else if( (m->inclusive || !(m->before || m->after)) && a==b )
       return 1;
     if(m->before && a>b)
       return 1;
@@ -4834,11 +4874,22 @@ class TagIfVariable {
   inherit IfIs;
   constant plugin_name = "variable";
   constant cache = 1;
-  string source(RequestID id, string s) {
+  mixed source(RequestID id, string s, void|int check_set_only) {
     mixed var;
-    if (zero_type (var=RXML.user_get_var(s))) return 0;
+    if (compat_level == 2.2) {
+      // The check below makes it impossible to tell the value 0 from
+      // an unset variable. It's clearly a bug, but we still keep it
+      // in 2.2 compatibility mode since fixing it would introduce an
+      // incompatibility in (at least) this case:
+      //
+      //    <set variable="var.foo" expr="0"/>
+      //    <if variable="var.foo"> <!-- This is expected to be false. -->
+      if (!(var=RXML.user_get_var(s))) return 0;
+    }
+    else
+      if (zero_type (var=RXML.user_get_var(s))) return 0;
     if(arrayp(var)) return var;
-    return RXML.t_text->encode (var);
+    return check_set_only ? 1 : RXML.t_text->encode (var);
   }
 }
 
@@ -4879,10 +4930,10 @@ class TagIfExpr {
   constant name = "if";
   constant plugin_name = "expr";
   int eval(string u) {
-    return (int)sexpr_eval(u);
+    int|float|string res = sexpr_eval(u);
+    return res && res != 0.0;
   }
 }
-
 
 // --------------------- Emit plugins -------------------
 
@@ -4976,6 +5027,56 @@ class TagEmitValues {
 			    return word;
 			  });
 	  break;
+	case "csv":
+         { array out=({});
+           int i=0;
+	   string values=m->values;
+#define GETCHAR()	(si->next(),si->value())
+           array(string) words=({});
+           int c,leadspace=1,inquotes=0;
+           string word="";
+           String.Iterator si=get_iterator(values);
+           for(c=si->value();si;)
+            { switch(c)
+               { case ',':
+                    if(!inquotes)
+                     { words+=({word});word="";leadspace=1;
+                       break;
+                     }
+                    word+=sprintf("%c",c);
+                    break;
+                 case '"':leadspace=0;
+                    if(!inquotes)
+                       inquotes=1;
+                    else if((c=GETCHAR())=='"')
+                       word+=sprintf("%c",c);
+                    else
+                     { inquotes=0;
+                       continue;
+                     }
+                    break;
+                 default:leadspace=0;
+                 case ' ':case '\t':
+                    if(!leadspace)
+                       word+=sprintf("%c",c);
+                    break;
+                 case -1:case '\r':case '\x1a':
+                    break;
+                 case '\n':
+                    if(!inquotes)
+                     { if(!sizeof(words)&&word=="")
+                          break;
+                       out+=({words+({word})});
+		       word="";words=({});
+		       break;
+                     }
+                    word+=sprintf("%c",c);
+               }
+              c=GETCHAR();
+            }
+           m->values=!sizeof(out)&&word==""?"":out+({words+({word})});
+	   break;
+         }
 	}
       }
       if(stringp(m->values))
@@ -4999,6 +5100,15 @@ class TagEmitValues {
 		    if(m->case=="upper") val=upper_case(val);
 		    else if(m->case=="lower") val=lower_case(val);
 		    return (["value":val]);
+		  } );
+
+    if(multisetp(m->values))
+      return map( m->values,
+		  lambda(mixed val) {
+		    if(m->trimwhites) val=String.trim_all_whites((string)val);
+		    if(m->case=="upper") val=upper_case(val);
+		    else if(m->case=="lower") val=lower_case(val);
+		    return (["index":val]);
 		  } );
 
     RXML.run_error("Values variable has wrong type %t.\n", m->values);
@@ -5235,7 +5345,7 @@ constant tagdoc=([
 </p></desc>",
 
 "&client.language;":#"<desc type='entity'><p>
- The clients most preferred language. Usually the same value as
+ The client's most preferred language. Usually the same value as
  <ent>client.accept-language</ent>, but is possibly altered by
  a customization module like the Preferred language analyzer.
  It is recommended that this entity is used over the <ent>client.accept-language</ent>
@@ -5243,7 +5353,7 @@ constant tagdoc=([
 </p></desc>",
 
 "&client.languages;":#"<desc type='entity'><p>
- An ordered list of the clients most preferred languages. Usually the
+ An ordered list of the client's most preferred languages. Usually the
  same value as <ent>client.accept-language</ent>, but is possibly altered
  by a customization module like the Preferred language analyzer, or
  reorganized according to quality identifiers according to the HTTP
@@ -5388,7 +5498,7 @@ constant tagdoc=([
 
 "&cookie;":#"<desc type='scope'><p><short>
  This scope contains the cookies sent by the client.</short> Adding,
- deleting or changing in this scope updates the clients cookies. There
+ deleting or changing in this scope updates the client's cookies. There
  are no predefined entities for this scope. When adding cookies to
  this scope they are automatically set to expire after two years.
 </p></desc>",
@@ -5817,6 +5927,12 @@ using the pre tag.
  shift+reload is pressed in Netscape Navigator.</p>
 </attr>
 
+<attr name='enable-client-cache'>
+</attr>
+
+<attr name='enable-protocol-cache'>
+</attr>
+
 <attr name='years' value='number'>
  <p>Add this number of years to the time this entry is valid.</p>
 </attr>
@@ -5892,6 +6008,32 @@ using the pre tag.
 <attr name='out' value='Character set'><p>
  Sets the output conversion character set of the current request. The page
  will be sent encoded with the indicated character set.</p>
+</attr>
+",
+
+
+
+//----------------------------------------------------------------------
+
+"recode":#"<desc type='cont'><p>
+ <short>Converts between character sets.</short>
+ The tag can be used both to decode texts encoded in strange character
+ encoding schemas, and encode internal data to a specified encoding
+ scheme. All character sets listed in <a
+ href='http://rfc.roxen.com/1345'>RFC 1345</a> are supported.
+</p>
+</desc>
+
+<attr name='from' value='Character set'><p>
+ Converts the contents of the charset tag from the character set indicated
+ by this attribute to the internal text representation. Useful for decoding
+ data stored in a database.</p>
+</attr>
+
+<attr name='to' value='Character set'><p>
+ Converts the contents of the charset tag from the internal representation
+ to the character set indicated by this attribute. Useful for encoding data
+ before storing it into a database.</p>
 </attr>
 ",
 
@@ -6469,6 +6611,20 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 //----------------------------------------------------------------------
 
+"combine-path":#"<desc type='tag'><p><short>
+ Combines paths.</short>
+</p></desc>
+
+<attr name='base' value='string' required='required'>
+ <p>The base path.</p>
+</attr>
+
+<attr name='path' value='number' required='required'>
+ <p>The path to be combined (appended) to the base path.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
 "inc":#"<desc type='tag'><p><short>
  Adds 1 to a variable.</short>
 </p></desc>
@@ -6573,6 +6729,11 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <p>The virtual path to the file to be inserted.</p>
 
  <ex-box><eval><insert file='html_header.inc'/></eval></ex-box>
+</attr>
+
+<attr name='language' value='string'>
+  <p>Optionally add this language at the top of the list of
+     preferred languages.</p>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -6644,6 +6805,8 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 "modified":#"<desc type='tag'><p><short hide='hide'>
  Prints when or by whom a page was last modified.</short> Prints when
  or by whom a page was last modified, by default the current page.
+ In addition to the attributes below, it also handles the same
+ attributes as <xref href='date.tag'/> for formating date output.
 </p></desc>
 
 <attr name='by'>
@@ -6737,7 +6900,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  remove the cookie.
 </p></desc>
 
-<attr name='name'>
+<attr name='name' required='required'>
  <p>Name of the cookie the browser should remove.</p>
 </attr>
 
@@ -6747,33 +6910,51 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  with this attribute will be the cookies intermediate value.</p>
 
  <p>Note that removing a cookie won't take effect until the next page
-load.</p>
+ load.</p>
+</attr>
 
+<attr name='domain'>
+ <p>Domain of the cookie the browser should remove.</p>
+</attr>
+
+<attr name='path' value='string' default=\"\">
+  <p>Path of the cookie the browser should remove</p>
 </attr>",
 
 //----------------------------------------------------------------------
 
 "replace":#"<desc type='cont'><p><short>
- Replaces strings in the contents with other strings.</short>
+ Replaces strings in the content with other strings.</short>
 </p></desc>
 
 <attr name='from' value='string' required='required'>
- <p>String or list of strings that should be replaced.</p>
+ <p>String to be replaced.</p>
+
+ <p>When the \"type\" argument is \"words\", this is a list of strings
+ separated according to the \"separator\" argument.</p>
 </attr>
 
 <attr name='to' value='string'>
- <p>String or list of strings with the replacement strings. Default is the
- empty string.</p>
-</attr>
+ <p>Replacement string. The default is \"\" (the empty string).</p>
 
-<attr name='separator' value='string' default=','>
- <p>Defines what string should separate the strings in the from and to
- attributes.</p>
+ <p>When the \"type\" argument is \"words\", this is a list of strings
+ separated according to the \"separator\" argument. The first string
+ in the \"from\" list will be replaced with the first one in the
+ \"to\" list, etc. If there are fewer \"to\" than \"from\" elements,
+ the remaining ones in the \"from\" list will be replaced with the
+ empty string. All replacements are done in parallel, i.e. the result
+ of one replacement is not replaced again with another.</p>
 </attr>
 
 <attr name='type' value='word|words' default='word'>
- <p>Word means that a single string should be replaced. Words that from
- and to are lists.</p>
+ <p>\"word\" means that a single string is replaced. \"words\"
+ replaces several strings, and the \"from\" and \"to\" values are
+ interpreted as string lists.</p>
+</attr>
+
+<attr name='separator' value='string' default=','>
+ <p>The separator between words in the \"from\" and \"to\" arguments.
+ This is only relevant when the \"type\" argument is \"words\".</p>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -6836,7 +7017,7 @@ load.</p>
  container will not affect variables in the rest of the page.
 </p></desc>
 
-<attr name='extend' value='name' default='form'>
+<attr name='extend' value='name'>
  <p>If set, all variables in the selected scope will be copied into
  the new scope. NOTE: if the source scope is \"magic\", as e.g. the
  roxen scope, the scope will not be copied, but rather linked and will
@@ -6908,7 +7089,7 @@ load.</p>
 <p>Note that the change of a cookie will not take effect until the
  next page load.</p></desc>
 
-<attr name='name' value='string'>
+<attr name='name' value='string' required='required'>
  <p>The name of the cookie.</p>
 </attr>
 
@@ -7320,23 +7501,40 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "define":({ #"<desc type='cont'><p><short>
- Defines variables, tags, containers and if-callers.</short></p>
-<p>The values of the attributes given to the defined tag are
- available in the scope created within the define tag.</p></desc>
+Defines new tags, containers and if-callers. Can also be used to set
+variable values.</short></p>
+
+<p>The attributes \"tag\", \"container\", \"if\" and \"variable\"
+specifies what is being defined. Exactly one of them are required. See
+the respective attributes below for further information.</p></desc>
 
 <attr name='variable' value='name'><p>
  Sets the value of the variable to the contents of the container.</p>
 </attr>
 
 <attr name='tag' value='name'><p>
- Defines a tag that outputs the contents of the container.</p>
+ Defines a tag with the given name that doesn't take any content. When
+ the defined tag is used, the content of this <tag>define</tag> is
+ RXML parsed and the result is inserted in place of the defined tag.
+ The arguments to the defined tag are available in the current scope
+ in the <tag>define</tag>. An example:
 
-<ex><define tag=\"hi\">Hello &_.name;!</define>
-<hi name=\"Martin\"/></ex>
+ <ex><define tag='my-tag'>
+  <inc variable='var.counter'/>
+  A counter: &var.counter;<br />
+  The 'foo' argument is: &_.foo;<br />
+</define>
+<my-tag/>
+<my-tag foo='bar'/></ex>
+</p>
 </attr>
 
 <attr name='container' value='name'><p>
- Defines a container that outputs the contents of the container.</p>
+ Like the 'tag' attribute, but the defined tag may also take content.
+ The unevaluated content is available in <ent>_.contents</ent> inside
+ the <tag>define</tag> (see the scope description below). You can also
+ get the content after RXML evaluation with the <tag>contents</tag>
+ tag - see below for further details.</p>
 </attr>
 
 <attr name='if' value='name'><p>
@@ -8254,7 +8452,7 @@ just got zapped?
  Reads <i>tag definitions</i>, user defined <i>if plugins</i> and 
  <i>variables</i> from a file or package and includes into the 
  current page.</short></p>
- <note>The file itself is not inserted into the page. This only 
+ <note><p>The file itself is not inserted into the page. This only 
  affects the environment in which the page is parsed. The benefit is 
  that the package file needs only be parsed once, and the compiled 
  versions of the user defined tags can then be used, thus saving time. 
@@ -8265,7 +8463,7 @@ just got zapped?
  such as form variables or client settings, at the compile time. Also 
  note that the use tag only lets you define variables in the form 
  and var scope in advance. Variables with the same name will be 
- overwritten when the use tag is parsed.</note>
+ overwritten when the use tag is parsed.</p></note>
 </desc>
 
 <attr name='packageinfo'><p>
@@ -8382,7 +8580,7 @@ just got zapped?
 </attr>
 
 <attr name='from-scope' value='name'>
- <p>Create a mapping out of a scope and give it as indata to the emit.</p>
+ <p>Create a mapping out of a scope and give it as input to the emit.</p>
 </attr>
 ",
 
@@ -8487,6 +8685,9 @@ just got zapped?
   be sorted on, in prioritized order, e.g. \"lastname,firstname\".
   By adding a \"-\" sign in front of a name, that entry will be
   sorted in the reversed order.</p>
+
+  <p>The sort order is case sensitive, but by adding \"^\" in front of
+  the variable name the order will be case insensitive.</p>
 
   <p>The sort algorithm will treat numbers as complete numbers and not
   digits in a string, hence \"foo8bar\" will be sorted before
