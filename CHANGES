@@ -1,3 +1,22 @@
+Changes since Roxen Challenger 1.2.31 Yellow
+-----------------------------------------------
+
+o Made kill CGI scripts after X real time minute(s) a VAR_MORE instead
+  of VAR_EXPERT and added a check to only allow killing of pid > 1.
+
+o Rewrote the "Reload configurations from disk" action, by adding a
+  stat cache and moving the entire functionality to roxen.pike. Fixed
+  it so that it only (re)loads new or changed configs, and that it
+  correctly removes modules and "rmed" configurations. Also attached
+  this functionality to SIGHUP. This means that if you add a config or
+  change it on the disk, a simple SIGHUP will reload it.
+
+o Added a "reload" target to the tools/init.d_roxen and changed
+  restart to only (try to) kill the Roxen process. Also added a new
+  variable, "flags" which makes it easy to for example enable threads
+  (without editing the file in 4711 places).
+
+
 Changes since Roxen Challenger 1.2.30 Yellow
 -----------------------------------------------
 
