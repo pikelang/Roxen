@@ -45,14 +45,14 @@ void old_rxml_warning(object id, string problem, string solution)
 // morphing itself into another tag that gets parsed. Makes it possible to
 // use, for example, tablify together with sqloutput.
 string container_preparse( string tag_name, mapping args, string contents,
-		     object id )
+		     RequestID id )
 {
   old_rxml_warning(id, "preparse tag","preparse attribute");
   return make_container( args->tag, args - ([ "tag" : 1 ]),
 			 parse_rxml( contents, id ) );
 }
 
-string|int tag_append(string tag, mapping m, object id)
+string|int tag_append(string tag, mapping m, RequestID id)
 {
   if(m->variable && m->define) {
     // Set variable to the value of a define
@@ -63,7 +63,7 @@ string|int tag_append(string tag, mapping m, object id)
   return 0;
 }
 
-string|int tag_redirect(string tag, mapping m, object id)
+string|int tag_redirect(string tag, mapping m, RequestID id)
 {
   if(m->add || m->drop) return 0;
 
@@ -99,13 +99,13 @@ string|int tag_redirect(string tag, mapping m, object id)
   return "";
 }
 
-string tag_refferrer(string tag, mapping m, object id)
+string tag_refferrer(string tag, mapping m, RequestID id)
 {
   if(tag=="refferrer") old_rxml_warning(id, "refferrer tag","referrer tag");
   return make_tag("referrer",m);
 }
 
-string tag_set(string tag, mapping m, object id)
+string tag_set(string tag, mapping m, RequestID id)
 {
   if(m->define && m->variable) {
     // Set variable to the value of a define
@@ -115,13 +115,13 @@ string tag_set(string tag, mapping m, object id)
   return 0;
 }
 
-string tag_pr(string tag, mapping m, object id)
+string tag_pr(string tag, mapping m, RequestID id)
 {
   if(tag=="pr") old_rxml_warning(id,"pr tag","roxen tag");
   return make_tag("roxen",m);
 }
 
-string tag_date(string q, mapping m, object id)
+string tag_date(string q, mapping m, RequestID id)
 {
   // unix_time is not part of RXML 1.4
   int t=(int)m["unix-time"] || (int)m->unix_time || time(1);
@@ -143,13 +143,13 @@ string tag_date(string q, mapping m, object id)
   return tagtime(t, m, id, language);
 }
 
-inline string do_replace(string s, mapping m, object id)
+inline string do_replace(string s, mapping m, RequestID id)
 {
   return replace(s, indices(m), values(m));
   old_rxml_warning(id, "replace (A=B) in in insert tag","the replace tag");
 }
 
-string|array(string)|int tag_insert(string tag,mapping m,object id)
+string|array(string)|int tag_insert(string tag,mapping m,RequestID id)
 {
   string n;
 
@@ -172,37 +172,11 @@ string|array(string)|int tag_insert(string tag,mapping m,object id)
       ({ html_encode_string(do_replace(id->variables[n], m-(["quote":""]), id)) });
   }
 
-  if(n = m->variables) {
-    if(m->variables!="variables")
-    {
-      old_rxml_warning(id, "insert attribute variables set to an value",
-		     "&lt;debug showid=\"id->variables\"&gt;" );
-      return ({ html_encode_string(Array.map(indices(id->variables),
-			lambda(string s, mapping m)
-			{ return sprintf("%s=%O\n", s, m[s]); },
-					   id->variables) * "\n")
-	    });
-    }
-    return ({ String.implode_nicely(indices(id->variables)) });
-  }
-
   if(n = m->other) {
     if(stringp(id->misc[n]) || intp(id->misc[n])) {
       return m->quote=="none"?(string)id->misc[n]:({ html_encode_string((string)id->misc[n]) });
     }
     return rxml_error(tag, "No such other variable ("+n+").", id);
-  }
-
-  if(n = m->cookies)
-  {
-    NOCACHE();
-    if(n!="cookies")
-      return ({ html_encode_string(Array.map(indices(id->cookies),
-			  lambda(string s, mapping m)
-			  { return sprintf("%s=%O\n", s, m[s]); },
-					     id->cookies) * "\n")
-	      });
-    return ({ String.implode_nicely(indices(id->cookies)) });
   }
 
   if(n=m->cookie)
@@ -234,7 +208,7 @@ string|array(string)|int tag_insert(string tag,mapping m,object id)
   return 0;
 }
 
-string|int container_apre(string tag, mapping m, string q, object id)
+string|int container_apre(string tag, mapping m, string q, RequestID id)
 {
   if(m->add || m->drop) return 0;
   old_rxml_warning(id, "prestates as atomic attributs in apre tag","add and drop");
@@ -272,7 +246,7 @@ string|int container_apre(string tag, mapping m, string q, object id)
   return make_container("a", m, q);
 }
 
-string|array(string)|int container_aconf(string tag, mapping m, string q, object id)
+string|array(string)|int container_aconf(string tag, mapping m, string q, RequestID id)
 {
   if(m->add || m->drop) return 0;
   old_rxml_warning(id, "config items as atomic attributes in aconf tag","add and drop");
@@ -315,7 +289,7 @@ string|array(string)|int container_aconf(string tag, mapping m, string q, object
   return make_container("a", m, q);
 }
 
-string|int container_autoformat(string tag, mapping m, string c, object id)
+string|int container_autoformat(string tag, mapping m, string c, RequestID id)
 {
   if(!m->pre) return 0;
   old_rxml_warning(id, "pre attribute in autoformat tag","p attribute");
@@ -324,7 +298,7 @@ string|int container_autoformat(string tag, mapping m, string c, object id)
   return make_container("autoformat", m, c);
 }
 
-string|int container_default(string tag, mapping m, string c, object id)
+string|int container_default(string tag, mapping m, string c, RequestID id)
 {
   if(!m->multi_separator) return 0;
   old_rxml_warning(id, "multiseparator attribute in default tag","separator attribute");
@@ -333,7 +307,7 @@ string|int container_default(string tag, mapping m, string c, object id)
   return make_container("default", m, c);
 }
 
-string|int container_recursive_output(string tag, mapping m, string c, object id)
+string|int container_recursive_output(string tag, mapping m, string c, RequestID id)
 {
   if(!m->multisep) return 0;
   old_rxml_warning(id, "multisep attribute in recursive-output tag","separator attribute");
@@ -342,7 +316,7 @@ string|int container_recursive_output(string tag, mapping m, string c, object id
   return make_container("recursive-output", m, c);
 }
 
-string container_source(string tag, mapping m, string s, object id)
+string container_source(string tag, mapping m, string s, RequestID id)
 {
   old_rxml_warning(id, "source tag","a template");
   string sep;
@@ -354,7 +328,7 @@ string container_source(string tag, mapping m, string s, object id)
 }
 
 //FIXME: I have serious doubts about this one...
-string|int tag_configimage(string tag, mapping m, object id)
+string|int tag_configimage(string tag, mapping m, RequestID id)
 {
   for(int i=1; i<4; i++)
     if(m->src=="err_"+i) {
@@ -365,7 +339,7 @@ string|int tag_configimage(string tag, mapping m, object id)
   return 0;
 }
 
-string|int tag_countdown(string tag, mapping m, string c, object id)
+string|int tag_countdown(string tag, mapping m, string c, RequestID id)
 {
   if(!m->min && !m->sec && !m->age && m->prec!="min" &&
      !m->christmas_eve && !m->christmas_day && !m->christmas && !m->year2000 &&
@@ -414,7 +388,7 @@ string|int tag_countdown(string tag, mapping m, string c, object id)
   }
 }
 
-string|int container_tablify(string tag, mapping m, string q, object id)
+string|int container_tablify(string tag, mapping m, string q, RequestID id)
 {
   if(!m->fgcolor0 && !m->fgcolor1 && !m->fgcolor && !m->rowalign &&
      !m->bgcolor && !m->preprocess && !m->parse) return 0;
@@ -457,4 +431,12 @@ string|int container_tablify(string tag, mapping m, string q, object id)
 string tag_echo(string t, mapping m, RequestID id) {
   old_rxml_warning(id, "echo tag","insert tag");
   return make_tag("!--#echo",m);  
+}
+
+mapping query_if_callers()
+{
+  return ([
+    "successful":lambda(string q, RequestID id){ return id->misc->defines[" _ok"]; },
+    "failed":lambda(string q, RequestID id){ return !id->misc->defines[" _ok"]; }
+  ]);
 }

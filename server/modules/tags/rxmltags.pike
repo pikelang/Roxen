@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.26 1999/10/17 22:54:52 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.27 1999/10/19 23:20:58 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -438,8 +438,17 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
     return m->quote=="none"?id->variables[n]:({ html_encode_string(id->variables[n]) });
   }
 
-  if(n = m->variables)
+  if(n = m->variables) {
+    if(m->variables!="variables")
+    {
+      return ({ html_encode_string(Array.map(indices(id->variables),
+			lambda(string s, mapping m)
+			{ return sprintf("%s=%O\n", s, m[s]); },
+					   id->variables) * "\n")
+	    });
+    }
     return ({ String.implode_nicely(indices(id->variables)) });
+  }
 
   if(n = m->other) {
     if(stringp(id->misc[n]) || intp(id->misc[n])) {
@@ -451,6 +460,12 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
   if(n = m->cookies)
   {
     NOCACHE();
+    if(n!="cookies")
+      return ({ html_encode_string(Array.map(indices(id->cookies),
+			  lambda(string s, mapping m)
+			  { return sprintf("%s=%O\n", s, m[s]); },
+					     id->cookies) * "\n")
+	      });
     return ({ String.implode_nicely(indices(id->cookies)) });
   }
 
@@ -1228,12 +1243,17 @@ mixed container_recursive_output (string tagname, mapping args,
   return ({res});
 }
 
+//I'll donate a Star Wars insiders guide to the
+//first one to figure out what this number means,
+//and how it was calculated. nilsson@idonex.se
+#define MAGIC_EXIT 4921325
+
 string tag_leave(string tag, mapping m, RequestID id)
 {
   if(id->misc->leave_repeat)
   {
     id->misc->leave_repeat--;
-    throw(3141);
+    throw(MAGIC_EXIT);
   }
   return rxml_error(tag, "Must be contained by &lt;repeat&gt;.", id);
 }
@@ -1249,7 +1269,7 @@ string container_repeat(string tag, mapping m, string c, RequestID id)
     mixed error=catch {
       iter=parse_rxml(c,id);
     };
-    if((intp(error) && error!=0 && error!=3141) || !intp(error))
+    if((intp(error) && error!=0 && error!=MAGIC_EXIT) || !intp(error))
       throw(error);
     if(id->misc->leave_repeat!=exit)
       ret+=iter;
@@ -1291,12 +1311,12 @@ array(string) container_cset( string t, mapping m, string c, RequestID id )
   return ({ "" });
 }
 
-// ----------------- Tag registration stuff --------------
+// ----------------- If registration stuff --------------
 
 mapping query_if_callers()
 {
   return ([
-    "expr":lambda( string q){ return (int)sexpr_eval(q); },
+    "expr":lambda( string q){ return (int)sexpr_eval(q); }
   ]);
 }
 
