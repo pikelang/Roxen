@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.117 2000/04/30 18:57:11 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.118 2000/05/02 20:15:36 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1484,7 +1484,7 @@ documentation for that module.</desc>",
 "&page.query;":"<desc ent>The query part of the page URI.</desc>",
 "&page.url;":"<desc ent>The URL to this file, from the web server's root or point of view.</desc>",
 "&page.last-true;":#"<desc ent>Is 1 if the last <tag>if</tag>-statement succeeded, otherwise 0.
-(<tag>true/</tag> and <tag>false/</tag> is considered as <tag>if</tag>-statements here)</desc>",
+ (<tag>true/</tag> and <tag>false/</tag> is considered as <tag>if</tag>-statements here)</desc>",
 "&page.language;":#"<desc ent>What language the contens of this file is written in.
  The language must be given as metadata to be found.</desc>",
 "&page.scope;":"<desc ent>The name of the current scope, i.e. the scope accessible through the name \"_\".</desc>",
@@ -1709,40 +1709,54 @@ documentation for that module.</desc>",
 </desc>
 
 <attr name=unix-time value=number>
- Display this time instead of the current.
-<ex><date unix-time=\"1\"/></ex>
+Display this time instead of the current. This attribute uses the
+specified Unix time_t time as the starting time, instead of the
+current time. This is mostly useful when the <date> tag is used from a
+Pike-script or Roxen module.
+<ex ><date unix-time=''/></ex>
+<ex ><date unix-time='1'/></ex>
+<ex ><date unix-time='60'/></ex>
+<ex ><date unix-time='120'/></ex>
 </attr>
 
 <attr name=years value=number>
  Add this number of years to the result.
+ <ex ><date date='' years='2' type='discordian'/></ex>
 </attr>
 
 <attr name=months value=number>
  Add this number of months to the result.
+ <ex ><date date='' months='2' type='discordian'/></ex>
 </attr>
 
 <attr name=weeks value=number>
  Add this number of weeks to the result.
+ <ex ><date date='' weeks='2' type='discordian'/></ex>
 </attr>
 
 <attr name=days value=number>
  Add this number of days to the result.
+ <ex ><date date='' days='2' type='discordian'/></ex>
 </attr>
 
 <attr name=hours value=number>
  Add this number of hours to the result.
+ <ex ><date time='' hours='2' type='iso'/></ex>
 </attr>
 
 <attr name=beats value=number>
  Add this number of beats to the result.
+ <ex ><date time='' beats='2'/></ex>
 </attr>
 
 <attr name=minutes value=number>
  Add this number of minutes to the result.
+ <ex ><date time='' minutes='2'/></ex>
 </attr>
 
 <attr name=seconds value=number>
  Add this number of seconds to the result.
+ <ex ><date time='' seconds='2'/></ex>
 </attr>
 
 <attr name=adjust value=number>
@@ -1751,23 +1765,32 @@ documentation for that module.</desc>",
 
 <attr name=brief>
  Show in brief format.
-<ex><date brief=\"\"/></ex>
+<ex ><date brief=''/></ex>
 </attr>
 
 <attr name=time>
  Show only time.
-<ex><date time=\"\"/></ex>
+<ex ><date time=''/></ex>
 </attr>
 
 <attr name=date>
  Show only date.
-<ex><date date=\"\"/></ex>
+<ex ><date date=''/></ex>
 </attr>
 
 <attr name=type value=string|ordered|iso|discordian|stardate|number>
- Defines in which format the date should be displayed in.
-<ex><date type=\"string\"/></ex>
-<ex><date type=\"discordian\"/></ex>
+ Defines in which format the date should be displayed in. Discordian
+ and stardate only make a difference when not using part. Note that
+ type=stardate has a separate companion attribute, prec, which sets
+ the precision.
+<table>
+<tr><td><i>type=discordian</i></td><td><ex ><date date='' type='discordian'/> </ex></td></tr>
+<tr><td><i>type=iso</i></td><td><ex ><date date='' type='iso'/></ex></td></tr>
+<tr><td><i>type=number</i></td><td><ex ><date date='' type='number'/></ex></td></tr>
+<tr><td><i>type=ordered</i></td><td><ex ><date date='' type='ordered'/></ex></td></tr>
+<tr><td><i>type=stardate</i></td><td><ex ><date date='' type='stardate'/></ex></td></tr>
+<tr><td><i>type=string</i></td><td><ex ><date date='' type='string'/></ex></td></tr>
+</table>
 </attr>
 
 <attr name=part value=year|month|day|wday|date|mday|hour|minute|second|yday|beat|week|seconds>
@@ -1775,22 +1798,45 @@ documentation for that module.</desc>",
  the same. Date and mday is the same. Yday is the day number of the
  year. Seconds is unix time type. Only the types string, number and
  ordered applies when the part attribute is used.
-<ex><date part=\"year\"/></ex>
-<ex><date part=\"beat\"/></ex>
+<table>
+<tr><td><i>part=year</i></td><td>Display the year.<ex ><date part='year' type='number'/></ex></td></tr>
+<tr><td><i>part=month</i></td><td>Display the month. <ex ><date part='month' type='ordered'/></ex></td></tr>
+<tr><td><i>part=day</i></td><td>Display the weekday, starting with Sunday. <ex ><date part='day' type='ordered'/></ex></td></tr>
+<tr><td><i>part=wday</i></td><td>Display the weekday. Same as 'day'. <ex ><date part='wday' type='string'/></ex></td></tr>
+<tr><td><i>part=date</i></td><td>Display the day of this month. <ex ><date part='date' type='ordered'/></ex></td></tr>
+<tr><td><i>part=mday</i></td><td>Display the number of days since the last full month. <ex ><date part='mday' type='number'/></ex></td></tr>
+<tr><td><i>part=hour</i></td><td>Display the numbers of hours since midnight. <ex ><date part='hour' type='ordered'/></ex></td></tr>
+<tr><td><i>part=minute</i></td><td>Display the numbers of minutes since the last full hour. <ex ><date part='minute' type='number'/></ex></td></tr>
+<tr><td><i>part=second</i></td><td>Display the numbers of seconds since the last full minute. <ex ><date part='second' type='string'/></ex></td></tr>
+<tr><td><i>part=yday</i></td><td>Display the number of days since the first of January. <ex ><date part='yday' type='ordered'/></ex></td></tr>
+<tr><td><i>part=beat</i></td><td>Display the number of beats since midnight Central European Time(CET). There is a total of 1000 beats per day. The beats system was designed by <a href://www.swatch.com>Swatch</a> as a means for a universal time, without time zones and day/night changes. <ex ><date part='beat' type='number'/></ex></td></tr>
+<tr><td><i>part=week</i></td><td>Display the number of the current week.<ex ><date part='week' type='number'/></ex></td></tr>
+<tr><td><i>part=seconds</i></td><td>Display the total number of seconds this year. <ex ><date part='seconds' type='number'/></ex></td></tr>
+</table>
 </attr>
 
 <attr name=lang value=langcode>
- Defines in what language the a string will be presented in.
+ Defines in what language a string will be presented in. Used together
+ with <att>type=string</att> and the <att>part</att> attribute to get
+ written dates in the specified language.
+
+ Available languages:
  <lang/>
+<ex> <date part='day' type='string' lang='de'></ex>
 <ex><date type=\"string\" lang=\"sv\"/></ex>
 </attr>
 
-<attr name=case value=upper|lower|capitalized>
- Changes the case of the output to upper, lower or capitalized.
+<attr name=case value=upper|lower|capitalize>
+ Changes the case of the output to upper, lower or capitalize.
+ <ex ><date part='day' type=string case='capitalize' lang='&client.accept-language;'></ex>
+<ex >Today is <date part='day' type=string case='lower'/>.</ex>
 </attr>
 
 <attr name=prec value=number>
  The number of decimals in the stardate.
+
+<ex ><date date='' lang='&client.language;' case='upper'/></ex>
+
 </attr>",
 
 "debug":#"<desc tag><short>
@@ -2071,12 +2117,14 @@ documentation for that module.</desc>",
 <attr name=by>
  Print by whom the page was modified. Takes the same attributes as the
  <tag><ref type='tag'>user</ref></tag> tag. This attribute requires a
- userdatabase.
+ userdatabase.<ex type='vert'>This page was last modified by <modified by='' realname=''/>.</ex>
 </attr>
 
 <attr name=date>
  Print the modification date. Takes all the date attributes in the
  <tag><ref type='tag'>date</ref></tag> tag.
+
+<ex type='vert'>This page was last modified <modified date='' case='lower' type='string'/>.</ex>
 </attr>
 
 <attr name=file value=path>
@@ -2207,12 +2255,14 @@ load.",
  Returns a nice Roxen logo.</short>
 </desc>
 
-<attr name=size value=small|medium|large default=small>
+<attr name=size value=small|medium|large default=medium>
  Defines the size of the image.
+<ex type='vert'><roxen size='small'/> <roxen/> <roxen size='large'/></ex>
 </attr>
 
 <attr name=color value=black|white default=white>
  Defines the color of the image.
+<ex type='vert'><roxen color='black'/></ex>
 </attr>
 
 <attr name=alt value=string default='\"Powered by Roxen\"'>
@@ -2449,6 +2499,7 @@ Sets a variable.</short>
 
 <attr name=email>
  Only print the e-mail address of the user, with no link.
+ <ex>Email: <user name='kuntri' email=''/></ex>
 </attr>
 
 <attr name=link>
@@ -2456,7 +2507,9 @@ Sets a variable.</short>
 </attr>
 
 <attr name=name>
- The login name of the user.
+ The login name of the user. If no other attributes are specified, the
+ user's realname and email including links will be inserted.
+<ex><user name='kuntri'/></ex>
 </attr>
 
 <attr name=nolink>
@@ -2469,6 +2522,7 @@ Sets a variable.</short>
 
 <attr name=realname>
  Only print the full name of the user, with no link.
+<ex><user name='kuntri' realname=''/></ex>
 </attr>",
 
 "if#expr":#"<desc plugin>
@@ -2479,3 +2533,13 @@ Sets a variable.</short>
 
     ]);
 #endif
+
+
+
+
+
+
+
+
+
+
