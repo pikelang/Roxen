@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.340 1999/10/12 13:19:17 per Exp $
+ * $Id: roxen.pike,v 1.341 1999/10/23 20:43:44 marcus Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.340 1999/10/12 13:19:17 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.341 1999/10/23 20:43:44 marcus Exp $";
 
 object backend_thread;
 object argcache;
@@ -1212,7 +1212,7 @@ int register_url( string url, object conf )
 
   array(string) required_hosts;
 
-  if( !prot->supports_ipless )
+  /*  if( !prot->supports_ipless ) */
     required_hosts = find_ips_for( host );
 
   if (!required_hosts) {
