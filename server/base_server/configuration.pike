@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.296 2000/04/05 07:04:17 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.297 2000/04/05 17:52:50 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2672,7 +2672,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
 
   me->defvar("_name", "", " Module name", TYPE_STRING|VAR_MORE,
-	     "An optional name. You can set it to something to remaind you what "
+	     "An optional name. You can set it to something to remind you what "
 	     "the module really does.");
 
   me->deflocaledoc("deutsch", "_name", "Modul-Name",
@@ -2683,7 +2683,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   "används dess värde istället för modulens riktiga namn "
 		   "i konfigurationsinterfacet.");
 
-  me->setvars(retrieve(modname + "#" + id, this_object()));
+  mapping(string:mixed) stored_vars = retrieve(modname + "#" + id, this_object());
+  int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
+  me->setvars(stored_vars);
 
   module[ id ] = me;
   otomod[ me ] = modname+"#"+id;
@@ -2818,6 +2820,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     enabled_modules[modname+"#"+id] = 1;
     store( "EnabledModules", enabled_modules, 1, this_object());
   }
+  if (!has_stored_vars)
+    store (modname + "#" + id, me->query(), 0, this_object());
   invalidate_cache();
 #ifdef MODULE_DEBUG
   if (enable_module_batch_msgs)
