@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.29 2001/08/31 19:45:04 grubba Exp $
+// $Id: DBManager.pmod,v 1.30 2001/08/31 19:46:13 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -41,7 +41,7 @@ private
   void clear_sql_caches()
   {
 #if DBMANAGER_DEBUG
-    werror("DBManager:\n"
+    werror("DBManager: clear_sql_caches():\n"
 	   "  sql_cache: %O\n"
 	   "  connection_cache: %O\n",
 	   sql_cache,
