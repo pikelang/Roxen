@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.109 2000/04/01 12:26:30 grubba Exp $
+# $Id: start,v 1.110 2000/04/03 03:47:43 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -34,6 +34,7 @@ roxen_version() {
 pcdir="$VARDIR/`roxen_version`/precompiled/`uname -m`.`uname -r`"
 old_roxen_defines="$pcdir/old_roxen_defines"
 ./mkdir -p $pcdir
+chmod 1777 $pcdir
 
 # Default verbosity level.
 verbose=1
