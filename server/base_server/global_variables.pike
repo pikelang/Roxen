@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.89 2002/08/16 13:10:03 mattias Exp $
+// $Id: global_variables.pike,v 1.90 2002/08/16 13:13:16 mattias Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -256,9 +256,9 @@ void define_global_variables(  )
 	 TYPE_DIR_LIST,
 	 LOCALE(95, "This is where the fonts are located."));
 
-  defvar("font_oversampling", 1, LOCALE(511, "Font oversampling"), 
+  defvar("font_oversampling", 1, LOCALE(521, "Font oversampling"), 
 	 TYPE_FLAG,
-	 LOCALE(512, "If set to Yes, fonts will be oversampled resulting "
+	 LOCALE(522, "If set to Yes, fonts will be oversampled resulting "
 		"in higher quality but more fuzz. This will require clearing "
 		"of various graphics caches like the Graphic text and "
 		"GButton caches to take full effect."));
