@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.59 1999/12/07 12:10:16 nilsson Exp $ */
+/* $Id: module.pike,v 1.60 1999/12/14 05:15:01 nilsson Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -607,8 +607,15 @@ mapping api_functions()
   return _api_functions;
 }
 
+function _rxml_error;
 string rxml_error(string tag, string error, RequestID id) {
-  return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
+  if(_rxml_error) return _rxml_error(tag, error, id);
+  if(id->conf->get_provider("RXMLErrorAlert")) {
+    _rxml_error=id->conf->get_provider("RXMLErrorAlert")->rxml_error;
+    return _rxml_error(tag, error, id);
+  }
+  return ((id->misc->debug||id->prestate->debug)?
+    sprintf("(%s: %s)", capitalize(tag), error):"")+"<false>";
 }
 
 mapping query_tag_callers()
