@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.46 2000/11/02 17:10:23 per Exp $
+ * $Id: Roxen.pmod,v 1.47 2000/11/02 17:20:08 per Exp $
  *
  * Various helper functions.
  *
@@ -1139,6 +1139,11 @@ class FormScope( mapping variables )
       else
 	RXML.parse_error( "Cannot index array with %O\n", ind );
     }
+  }
+
+  mixed `[]=( string index, mixed newval )
+  {
+    variables[ index ] = newval;
   }
 
   mixed `[]( string what )
