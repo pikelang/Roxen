@@ -3,9 +3,10 @@ inherit "wizard";
 string name = "Neighbourhood//Roxen Neighbourhood...";
 string doc = "";
 
-string sv(string in)
+string sv(mixed in)
 {
   if(!in) return "?";
+  in = (string) in;
   sscanf(in, "%*s/%s", in);
   in = replace(in, "alpha", "a");
   in = replace(in, "beta", "ß");
@@ -52,7 +53,7 @@ string page_0()
 	  "An orange line indicates that the server is not sending any "
 	  "information about its presence anymore.<p>" +
           html_table(({"Config URL", "User", "Host", "Uptime",
-		      "Last Reboot","Version", /*({"Server info"})*/}),
+		      "Last Reboot", "PID", "PPID", "Version" }),
 		    Array.map(sn, lambda(string s) {
      mapping ns = neighborhood[s];
      int vanished = ns->rec_time && ((time() - ns->rec_time) > 600);
@@ -72,6 +73,8 @@ string page_0()
 		   time_interval(time()-ns->rec_time)+"???)":
 		   time_interval(time()-ns->last_reboot))+ER,
 	       RE+roxen->language("en","date")(ns->last_reboot)+ER,
+	       RE+sv(ns->pid)+ER,
+	       RE+sv(ns->ppid)+ER,
 	       RE+sv(ns->version)+ER}) +
        (strlen(ns->comment)?
 		 ({({"<img src=/image/unit.gif height=1 width=20>"

@@ -29,13 +29,18 @@ string network_number()
 int seq,lr=time();
 void broadcast()
 {
-  call_out(broadcast,2*60);
+  if(seq)
+    call_out(broadcast,2*60);
+  else
+    call_out(broadcast,1);
   udp_broad->
     send(network_number(),51521,
 	 encode_value((["configurl":roxen->config_url(),
 			"host":gethostname(),
 			"sequence":seq++,
 		     	"uid":getuid(),
+			"pid":getpid(),
+			"ppid":getppid(),
 		     	"version":roxen->real_version,
 			"last_reboot":lr,
 			"comment":roxen->query("neigh_com"),
