@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.16 1997/08/26 16:28:38 peter Exp $
+ * $Id: upgrade.pike,v 1.17 1997/08/28 21:56:15 neotron Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -16,13 +16,13 @@ int is_older(string v1, string v2)
       return 1;
     else if(strlen(v1)>strlen(v2))
       return 0;
-  else
-    return v1<v2;
-
-  if(sizeof(a1)<sizeof(a2)) def=1;
-  for(int i=0; i<(def?sizeof(a1):sizeof(a2)); i++)
-    if((int)a1[i]!=(int)a2[i])
-      return (int)a1[i]<(int)a2[i];
+//    else
+//      return v1<v2; -> "1.11" < "1.2"...
+  if(sizeof(a1) < sizeof(a2))
+    def=1;
+  for(int i=0; i< (def ? sizeof(a1) : sizeof(a2)); i++)
+    if((int)a1[i] < (int)a2[i])
+      return 1;
   return def;
 }
 
@@ -318,8 +318,10 @@ string page_1(object id)
     {
       num++;
       tbl += ({({"<var type=checkbox name=M_"+m+">",
-		 modules[m]->name,modules[m]->fname,modules[m]->version,
-		 (mv[m]?mv[m]:"?")})});
+		 modules[m]->name,
+		   modules[m]->fname,		   
+		   (mv[m]?mv[m]:"?"),
+		   modules[m]->version})});
     }
   }
   if(num)
