@@ -120,7 +120,11 @@ string selected_item( string q, roxen.Configuration c, RequestID id,
          // from the configuration interface server. Most of the time
          // it's a really bad idea.  Basically, protect the user. :-)
 
-         if( (c != id->conf) && config_perm( "Add Module" ) )
+         if(
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+	    (c != id->conf) &&
+#endif
+	    config_perm( "Add Module" ) )
          {
            pre+=sprintf("<br />\n<gbutton frame-image='&usr.left-buttonframe;' "
                         "width='150' bgcolor='&usr.left-buttonbg;' preparse='' "

@@ -212,7 +212,9 @@ string buttons( Configuration c, string mn, RequestID id )
 
   // Do not allow reloading of modules _in_ the configuration interface.
   // It's not really all that good an idea, I promise.
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
   if( c != id->conf )
+#endif
     buttons += "<submit-gbutton>"+LOCALE(253, "Reload")+"</submit-gbutton>";
 
   if( sizeof( mod->error_log ) )
@@ -224,7 +226,9 @@ string buttons( Configuration c, string mn, RequestID id )
 
   // Nor is it a good idea to drop configuration interface modules.
   // It tends to make things rather unstable.
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
   if( c != id->conf )
+#endif
     buttons += "<a href='../../../drop_module.pike?config="+
             path[0]+"&drop="+mn+"'><gbutton>"+
             LOCALE(252, "Drop Module")+"</gbutton></a>";
