@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.18 2000/01/21 22:31:34 mast Exp $
+//! $Id: PXml.pike,v 1.19 2000/01/28 16:26:17 mast Exp $
 
 #pragma strict_types
 
@@ -46,6 +46,9 @@ static mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) overridden;
   {return [object(this_program)] low_parser::add_container (name, tdef);}
 static this_program _low_clone (mixed... args)
   {return [object(this_program)] low_parser::clone (@args);}
+static void _tag_set_parser_create (RXML.Context ctx, RXML.Type type,
+				    RXML.TagSet tag_set, mixed... args)
+  {TagSetParser::create (ctx, type, tag_set, @args);}
 
 static void set_comment_tag_cb()
 {
