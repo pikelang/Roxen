@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.25 2002/07/10 12:26:30 nilsson Exp $
+// $Id: roxen.h,v 1.26 2002/07/10 12:42:01 nilsson Exp $
 
 #ifndef _ROXEN_H_
 
@@ -12,12 +12,9 @@
 // Localization support
 
 #ifndef __LOCALEOBJECT
-#ifdef IN_ROXEN
-mixed get_locale();
-#define __LOCALE (get_locale)
-#else /* !IN_ROXEN */
+#ifndef IN_ROXEN
 #define __LOCALE (roxen.get_locale)
-#endif /* IN_ROXEN */
+#endif /* !IN_ROXEN */
 #endif /* !__LOCALEOBJECT */
 
 #ifndef _STR_LOCALE
