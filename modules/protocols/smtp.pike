@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.18 1998/09/10 17:10:40 grubba Exp $
+ * $Id: smtp.pike,v 1.19 1998/09/10 17:32:08 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.18 1998/09/10 17:10:40 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.19 1998/09/10 17:32:08 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -149,9 +149,9 @@ class Server {
     constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 
-    static string mktimestamp()
+    static string mktimestamp(int t)
     {
-      mapping lt = localtime(time());
+      mapping lt = localtime(t);
 
       string tz = "GMT";
       int off;
@@ -670,7 +670,8 @@ class Server {
 
       string received = sprintf("from %s (%s [%s]) by %s with %s id %s; %s",
 				remotename, remotehost||"", remoteip,
-				localhost, prot, spooler[1], mktimestamp());
+				localhost, prot, spooler[1],
+				mktimestamp(current_mail->timestamp));
 
       data = "Received: " + received + "\r\n" + data;
 
@@ -789,7 +790,8 @@ class Server {
       ::create(con_);
 
       send(220, ({ sprintf("%s ESMTP %s; %s",
-			   gethostname(), roxen->version(), mktimestamp()) }));
+			   gethostname(), roxen->version(),
+			   mktimestamp(time())) }));
     }
 
     void create(object con_, object conf_)
