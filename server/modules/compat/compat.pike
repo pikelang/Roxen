@@ -798,6 +798,10 @@ array container_obox(string t, mapping m, string c, RequestID id) {
   return ({ 1, "obox", m, c });
 }
 
+array container_if(string t, mapping m, string c, RequestID id) {
+  return ({ 1, "if", m, array_sscanf(c, "%s<otherwise>%s") * "</if><if false='1'>" });
+}
+
 
 // --------------- Register tags, containers and if-callers ---------------
 
@@ -805,7 +809,7 @@ mapping query_tag_callers() {
   if(!enabled) start(1, my_configuration());
   mapping active=(["list-tags":tag_list_tags,
 		   "version":tag_version,
-		   "line":tag_line
+		   "line":tag_line,
   ]);
   if(enabled->countdown) active->countdown=tag_countdown;
   if(enabled->counter) active->counter=tag_counter;
@@ -835,7 +839,9 @@ mapping query_tag_callers() {
 }
 
 mapping query_container_callers() {
-  mapping active=([]);
+  mapping active=([
+    "if":container_if,
+  ]);
   if(enabled->tablify) active->tablify=container_tablify;
   if(enabled->graphic_text) active+=([
     "gtext":container_gtext,
