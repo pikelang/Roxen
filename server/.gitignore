@@ -1,11 +1,6 @@
 /.config_settings
 /.pike-script-servers
 /.purify
-/.remove_dumped_mark
-/.removed_dumped_mark
 /.ttffontcache
-/disabled_modules
-/old_components
-/old_modules
 /precompiled
-/sqlnet.log
+/config_caches
