@@ -1,12 +1,6 @@
 // This is a roxen protocol module.
 // Copyright © 2001, Roxen IS.
 
-//<locale-token project="roxen_message"> LOC_M </locale-token>
-#include <roxen.h>
-
-#define LOC_M(X,Y)	_STR_LOCALE("roxen_message",X,Y)
-#define CALL_M(X,Y)	_LOCALE_FUN("roxen_message",X,Y)
-
 inherit Protocol;
 constant supports_ipless = 0;
 constant name = "hilfe";
@@ -403,7 +397,7 @@ class Connection
 
 void create( mixed ... args )
 {
-  roxen.add_permission( "Hilfe", LOC_M( 12, "Hilfe" ) );
+  roxen.add_permission( "Hilfe", "Hilfe" );
   roxen.set_up_hilfe_variables( this_object() );
   requesthandler = Connection;
   ::create( @args );
