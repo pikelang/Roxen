@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.227 1998/08/18 21:09:14 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.228 1998/08/20 07:36:01 per Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -828,7 +828,7 @@ public string full_status()
   
   res += "<td><b>Sent headers:</b></td><td>"+ foo[2] +"</td></tr>\n";
 	    
-  tmp=(int)(foo[4]*600.0)/(uptime+1);
+  tmp=(int)((foo[4]*600.0)/(uptime+1));
 
   res += (sprintf("<tr><td><b>Number of requests:</b></td>"
 		  "<td>%8d</td><td>%.2f/min</td></tr>\n"
