@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.5 1999/08/13 19:11:12 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.6 1999/08/20 15:48:06 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -219,7 +219,7 @@ int log(object id, mapping file)
 
   // Although we are not 100% sure we should make a count, nothing bad happens if we shouldn't and still do.
   foreach(query("extcount"), string tmp)
-    if(search(id->realfile,tmp)!=-1)
+    if(sizeof(tmp) && search(id->realfile,tmp)!=-1)
     {
       query_num(id->not_query, 1);
       id->misc->accessed = "1";
