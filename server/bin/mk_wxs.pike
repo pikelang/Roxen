@@ -1,5 +1,5 @@
 /*
- * $Id: mk_wxs.pike,v 1.6 2004/11/16 12:06:49 grubba Exp $
+ * $Id: mk_wxs.pike,v 1.7 2004/11/22 11:34:27 grubba Exp $
  *
  * Make a Windows Installer XML Source file (wxs) suitable
  * for a Roxen installer.
@@ -39,7 +39,7 @@ int main(int argc, array(string) argv)
       if (stringp(opt[1])) {
 	version_str = opt[1];
       } else {
-	werror("$Id: mk_wxs.pike,v 1.6 2004/11/16 12:06:49 grubba Exp $\n");
+	werror("$Id: mk_wxs.pike,v 1.7 2004/11/22 11:34:27 grubba Exp $\n");
 	exit(0);
       }
       break;
@@ -108,7 +108,15 @@ int main(int argc, array(string) argv)
 
   // Add cleanup.
   root->uninstall_file(combine_path(server_dir, "bin/roxen*.exe"));
+  feature_node->add_child(WixNode("ComponentRef", ([
+				    "Id":"C_" + root->sub_dirs->bin->id,
+				  ])))->
+    add_child(line_feed);
   root->uninstall_file(combine_path(server_dir, "pikelo*.txt"));
+  feature_node->add_child(WixNode("ComponentRef", ([
+				    "Id":"C_" + root->id,
+				  ])))->
+    add_child(line_feed);
 
   // Generate the XML.
   Parser.XML.Tree.SimpleRootNode root_node = Parser.XML.Tree.SimpleRootNode()->
