@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.337 2005/02/10 16:23:53 mast Exp $
+// $Id: module.pmod,v 1.338 2005/02/15 15:46:58 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6670,13 +6670,13 @@ class TString
 		 format_short (val), name, describe_error (err));
   }
 
-  string lower_case (string val) {return predef::lower_case (val);}
+  string lower_case (string val) {return val?predef::lower_case (val):val;}
   //! Converts all literal uppercase characters in @[val] to lowercase.
 
-  string upper_case (string val) {return predef::upper_case (val);}
+  string upper_case (string val) {return val?predef::upper_case (val):val;}
   //! Converts all literal lowercase characters in @[val] to uppercase.
 
-  string capitalize (string val) {return String.capitalize (val);}
+  string capitalize (string val) {return val?String.capitalize (val):val;}
   //! Converts the first literal character in @[val] to uppercase.
 
   string _sprintf()
@@ -9248,7 +9248,7 @@ static void init_parsers()
   p = Parser_HTML();
   p->_set_data_callback (
     lambda (object/*(Parser.HTML)*/ p, string data) {
-      return ({lower_case (data)});
+      return ({ data?lower_case(data):data });
     });
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p, string data) {
@@ -9261,7 +9261,7 @@ static void init_parsers()
   p = Parser_HTML();
   p->_set_data_callback (
     lambda (object/*(Parser.HTML)*/ p, string data) {
-      return ({upper_case (data)});
+      return ({ data?upper_case(data):data});
     });
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p, string data) {
@@ -9276,7 +9276,7 @@ static void init_parsers()
     lambda (object/*(Parser.HTML)*/ p, string data) {
       p->_set_data_callback (0);
       p->_set_entity_callback (0);
-      return ({String.capitalize (data)});
+      return ({ data?String.capitalize(data):data });
     });
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p, string data) {
