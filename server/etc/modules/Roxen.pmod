@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.57 2000/12/11 03:36:16 per Exp $
+ * $Id: Roxen.pmod,v 1.58 2000/12/11 03:38:48 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -51,7 +51,8 @@ int _match(string w, array (string) a)
 }
 
 
-// From the old 'http' file
+// --- From the old 'http' file ---------------------------------
+
 mapping http_low_answer( int errno, string data )
 //! Return a result mapping with the error and data specified. The
 //! error is infact the status response, so '200' is HTTP Document
@@ -348,7 +349,9 @@ mapping http_proxy_auth_required(string realm, void|string message)
     + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
 
-// From the old 'roxenlib' file
+
+// --- From the old 'roxenlib' file -------------------------------
+
 string extract_query(string from)
 {
   if(!from) return "";
@@ -883,8 +886,17 @@ constant greek
      "&omega;":   "\x3C9",
 ]);
 
-constant replace_entities=indices( iso88591 )+indices( international )+indices( symbols )+indices( greek )+({"&lt;","&gt;","&amp;","&quot;","&apos;","&#x22;","&#34;","&#39;","&#0;"});
-constant replace_values  =values( iso88591 )+values( international )+values( symbols )+values( greek )+({"<",">","&","\"","\'","\"","\"","\'","\000"});
+constant replace_entities = indices( iso88591 ) +
+  indices( international ) +
+  indices( symbols ) +
+  indices( greek ) +
+  ({"&lt;","&gt;","&amp;","&quot;","&apos;","&#x22;","&#34;","&#39;","&#0;"});
+
+constant replace_values = values( iso88591 ) +
+  values( international ) +
+  values( symbols ) +
+  values( greek ) +
+  ({"<",">","&","\"","\'","\"","\"","\'","\000"});
 
 constant safe_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"/"";
 constant empty_strings = ({""})*sizeof(safe_characters);
