@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.79 1998/04/06 19:05:55 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.80 1998/04/15 11:58:55 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -716,11 +716,14 @@ mixed low_find_file(string f, object id, string path)
 	  if (!a || (a[1] == -4) ||
 	      !b || ((b[5] != us[5]) && (b[5] >= 10)) ||
 	      !QUERY(allow_symlinks)) {
-	    report_notice(sprintf("CGI: Bad symlink or device encountered: \"%s\"\n", fname));
+	    report_notice(sprintf("CGI: Bad symlink or device encountered: "
+				  "\"%s\"\n", fname));
 	    fname = 0;
 	    break;
 	  }
 	  a = file_stat(fname);		// Get the permissions from the directory.
+	} else {
+	  a = file_stat("/");
 	}
 	b = a;
 	fname += "/";
