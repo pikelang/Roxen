@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.891 2005/02/10 17:50:00 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.892 2005/02/23 13:42:41 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1964,11 +1964,17 @@ array sorted_urls = ({});
 array(string) find_ips_for( string what )
 {
   if( what == "*" || lower_case(what) == "any" )
-    return ({ 0 });	// ANY
+    return ({ 0, "::" });	// ANY
 
   if( is_ip( what ) )
     return ({ what });
-
+  else if (has_suffix(lower_case(what), ".ipv6")) {
+    // draft-masinter-url-ipv6-00 3
+    //
+    //   a) replace every colon ":" with a "-"
+    //   b) append ".ipv6" to the end.
+    return ({ replace(what[..sizeof(what)-6], "-", ":") });
+  } 
   array res = gethostbyname( what );
   if( res && sizeof( res[1] ) )
     return Array.uniq(res[1]);
@@ -2155,21 +2161,31 @@ int register_url( string url, Configuration conf )
 
   mapping m;
   if( !( m = open_ports[ protocol ] ) )
-    // always add 'ANY' (0) here, as an empty mapping, for speed reasons.
+    // always add 'ANY' (0) and 'IPv6_ANY' (::) here, as empty mappings,
+    // for speed reasons.
     // There is now no need to check for both open_ports[prot][0] and
     // open_ports[prot][0][port], we can go directly to the latter
     // test.
-    m = open_ports[ protocol ] = ([ 0:([]) ]); 
+    m = open_ports[ protocol ] = ([ 0:([]), "::":([]) ]); 
 
-  if( sizeof( required_hosts - ({ 0 }) ) // not ANY
-      && m[ 0 ][ port ]
-      && prot->supports_ipless )
-    // The ANY port is already open for this port, and since this
+  if (prot->supports_ipless ) {
+    // Check if the ANY port is already open for this port, since this
     // protocol supports IP-less virtual hosting, there is no need to
-    // open yet another port, that would mosts probably only conflict
-    // with the ANY port anyway. (this is true on most OSes, it works
-    // on Solaris, but fails on linux)
-    required_hosts = ({ 0 });
+    // open yet another port if it is, since that would mosts probably
+    // only conflict with the ANY port anyway. (this is true on most
+    // OSes, it works on Solaris, but fails on linux)
+    array(string) ipv6 = filter(required_hosts - ({ 0 }), has_value, ":");
+    array(string) ipv4 = required_hosts - ipv6;
+    if (m[0][port] && sizeof(ipv4 - ({ 0 }))) {
+      // We have a non-ANY IPv4 IP number.
+      ipv4 = ({ 0 });
+    }
+    if (m["::"][port] && sizeof(ipv6 - ({ "::" }))) {
+      // We have a non-ANY IPv6 IP number.
+      ipv6 = ({ "::" });
+    }
+    required_hosts = ipv4 + ipv6;
+  }
 
   int failures;
 
@@ -4862,7 +4878,9 @@ string check_variable(string name, mixed value)
 
 int is_ip(string s)
 {
-  return s&&(sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>47 && s[-1]<58);
+  return s &&
+    ((sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>='0' && s[-1]<='9') || // IPv4
+     (sizeof(s/":") > 1));	// IPv6
 }
 
 static string _sprintf( )
