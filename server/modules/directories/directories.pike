@@ -1,4 +1,4 @@
-// This is a Roxen module. Copyright © 1996 - 2000, Idonex AB
+// This is a Roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 // Directory listings mark 2
 //
@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-string cvs_version = "$Id: directories.pike,v 1.48 2000/02/16 07:17:15 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.49 2000/02/24 04:02:39 nilsson Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -53,7 +53,6 @@ void start()
 constant module_type = MODULE_DIRECTORIES | MODULE_PARSER;
 constant module_name = "Enhanced Directory Listings";
 constant module_doc = "This module pretty prints a list of files.";
-constant module_unique = 1;
 
 void create()
 {
@@ -106,7 +105,7 @@ void create()
 
 string tag_directory_insert(string t, mapping m, RequestID id)
 {
-  if(!m->file) return rxml_error(t, "File not specified.", id);
+  if(!m->file) RXML.parse_error("File not specified.");
   if(m->dir) {
     string old_base=id->misc->rel_base||"";
     id->misc->rel_base=old_base+m->file;
@@ -122,7 +121,7 @@ string tag_directory_insert(string t, mapping m, RequestID id)
     if(s) return html_encode_string(s);
   }
 
-  return rxml_error(t, "Couldn't open file \""+m->file+"\".", id);
+  RXML.run_error("Couldn't open file \""+m->file+"\".");
 }
 
 string find_readme(string d, RequestID id)
@@ -349,11 +348,22 @@ string|mapping parse_directory(RequestID id)
     }
   }
 
-  DIRS_WERR("Deciding between fancy or slimmed down direcory view");
-  if(query("spartan") || id->prestate->spartan_directory)
-    return http_string_answer(spartan_directory(f,id));
+  string dirlist;
 
-  id->misc->foldlist_exists=search(indices(id->conf->modules),"foldlist")!=-1;
-  id->misc->rel_base="";
-  return http_string_answer(parse_rxml(describe_directory(f, id), id));
+  DIRS_WERR("Deciding between fancy or slimmed down direcory view");
+  if(query("spartan") || id->prestate->spartan_directory) {
+    if(!(dirlist=cache_lookup("directory-s",f))) {
+      dirlist=spartan_directory(f,id);
+      cache_set("directory-s",f,dirlist);
+    }
+    return http_string_answer(dirlist);
+  }
+
+  if(!(dirlist=cache_lookup("directory-f",f))) {
+    id->misc->foldlist_exists=search(indices(id->conf->modules),"foldlist")!=-1;
+    id->misc->rel_base="";
+    dirlist=parse_rxml(describe_directory(f,id),id);
+    cache_set("directory-f",f,dirlist);
+  }
+  return http_string_answer(dirlist);
 }
