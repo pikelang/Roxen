@@ -643,13 +643,6 @@ Trots att de flesta klienter accepterar 8-bitars ISO 8859-1 tecken i dessa fält 
 </str>
 
 <str id="112">
-<changed from="This is the DNS name of your server (i.e. the host part of the
-URL).&lt;p&gt;Browsers will compare the URL they are connecting to
-with the Common Name in the server's certificate, and warn the user if
-they don't match.&lt;p&gt;Some Certificate Authorities allow wild
-cards in the Common Name. This means that you can have a certificate
-for &lt;tt&gt;*.roxen.com&lt;/tt&gt; which will match all servers at
-Roxen. Thawte allows wild card certificates, while VeriSign does not."/>
 <o>This is the DNS name of your server (i.e. the host part of the URL).&lt;p&gt;Browsers will compare the URL they are connecting to with the Common Name in the server's certificate, and warn the user if they don't match.&lt;p&gt;Some Certificate Authorities allow wild cards in the Common Name. This means that you can have a certificate for &lt;tt&gt;*.roxen.com&lt;/tt&gt; which will match all servers at Roxen.Thawte allows wild card certificates, while VeriSign does not.</o>
 <t>Det här är DNS-namnet för din server (datordelen av
 URLen)&lt;p&gt;Webbläsare kommer jämföra URLen de hämtar med 'Common
@@ -870,5 +863,23 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 <str id="140">
 <new/>
 <o>Unavailable features</o>
+<t></t>
+</str>
+
+<str id="141">
+<new/>
+<o>Source</o>
+<t></t>
+</str>
+
+<str id="142">
+<new/>
+<o>Program</o>
+<t></t>
+</str>
+
+<str id="143">
+<new/>
+<o>Clones</o>
 <t></t>
 </str>

@@ -332,3 +332,8 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </o>
 <t></t>
 </str>
+
+<str id="61">
+<o>Not binding the port %O, disabled in configuration</o>
+<t></t>
+</str>

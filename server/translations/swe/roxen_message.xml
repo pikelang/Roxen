@@ -346,3 +346,9 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <t>Syntaxfel i säkerhetsmönstren: Letade efter 'allow' eller 'deny'
 </t>
 </str>
+
+<str id="61">
+<new/>
+<o>Not binding the port %O, disabled in configuration</o>
+<t></t>
+</str>

@@ -7,8 +7,8 @@
 <file>../base_server/global_variables.pike</file>
 <file>../base_server/module_support.pike</file>
 <file>../config_interface/actions/index.html</file>
-<file>../config_interface/boxes/articles.pike</file>
 <file>../config_interface/boxes/Box.pmod</file>
+<file>../config_interface/boxes/articles.pike</file>
 <file>../config_interface/boxes/crunch.pike</file>
 <file>../config_interface/boxes/doclinks.pike</file>
 <file>../config_interface/boxes/megatokyo.pike</file>
@@ -18,6 +18,8 @@
 <file>../config_interface/cv_startpage_tabs.pike</file>
 <file>../config_interface/dbs/backups.html</file>
 <file>../config_interface/dbs/browser.pike</file>
+<file>../config_interface/dbs/create_db.html</file>
+<file>../config_interface/dbs/create_group.html</file>
 <file>../config_interface/dbs/db_matrix.pike</file>
 <file>../config_interface/dbs/edit_group.pike</file>
 <file>../config_interface/dbs/import_dbs.pike</file>
@@ -25,11 +27,13 @@
 <file>../config_interface/dbs/new_db.pike</file>
 <file>../config_interface/dbs/new_group.pike</file>
 <file>../config_interface/dbs/restore_db.pike</file>
+<file>../config_interface/dbs/status.html</file>
 <file>../config_interface/dbs/status.pike</file>
 <file>../config_interface/dbs/subtabs.pike</file>
 <file>../config_interface/diff.pike</file>
 <file>../config_interface/event_log/clear_log.pike</file>
 <file>../config_interface/event_log/log.pike</file>
+<file>../config_interface/global_settings/index.html</file>
 <file>../config_interface/logutil.pike</file>
 <file>../config_interface/sites/add_module.pike</file>
 <file>../config_interface/sites/config_left_item.pike</file>
@@ -40,6 +44,7 @@
 <file>../config_interface/sites/index.html</file>
 <file>../config_interface/sites/log.pike</file>
 <file>../config_interface/sites/new_site.html</file>
+<file>../config_interface/sites/site.html</file>
 <file>../config_interface/sites/site_content.pike</file>
 <file>../config_interface/sites/site_header.pike</file>
 <file>../config_interface/statusinfo.pike</file>
@@ -52,10 +57,10 @@
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
 <file>../etc/modules/Variable.pmod/Mapping.pike</file>
-<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../etc/modules/Variable.pmod/Schedule.pike</file>
 <file>../etc/modules/Variable.pmod/Upload.pike</file>
 <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
+<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../site_templates/common.pike</file>
@@ -155,40 +160,6 @@ att användas.</t>
 </str>
 
 <str id="27">
-<changed from="What format to use for logging. The syntax is:
-&lt;pre&gt;response-code or *: Log format for that response code
-
-Log format is normal characters, or one or more of the variables below:
-
-\n \t \r       -- As in C, newline, tab and linefeed
-$char(int)     -- Insert the (1 byte) character specified by the integer.
-$wchar(int)    -- Insert the (2 byte) word specified by the integer.
-$int(int)      -- Insert the (4 byte) word specified by the integer.
-$^             -- Supress newline at the end of the logentry
-$host          -- The remote host name, or ip number.
-$vhost         -- The Host request-header sent by the client, or - if none
-$ip_number     -- The remote ip number.
-$bin-ip_number -- The remote host id as a binary integer number.
-
-$cern_date     -- Cern Common Log file format date.
-$bin-date      -- Time, but as an 32 bit integer in network byteorder
-
-$method        -- Request method
-$resource      -- Resource identifier
-$full_resource -- Full requested resource, including any query fields
-$protocol      -- The protocol used (normally HTTP/1.0)
-$response      -- The response code sent
-$bin-response  -- The response code sent as a binary short number
-$length        -- The length of the data section of the reply
-$bin-length    -- Same, but as an 32 bit integer in network byteorder
-$request-time  -- The time the request took (seconds)
-$referer       -- the header 'referer' from the request, or '-'.
-$user_agent    -- the header 'User-Agent' from the request, or '-'.
-
-$user          -- the name of the auth user used, if any
-$user_id       -- A unique user ID, if cookies are supported,
-                  by the client, otherwise '0'
-&lt;/pre&gt;"/>
 <o>What format to use for logging. The syntax is:
 &lt;pre&gt;response-code or *: Log format for that response code
 
@@ -238,7 +209,7 @@ svarskod eller *: Loggformat för svarskoden (eller alla koder som inte
 
 loggformatet är normala tecken, och en eller flera av koderna nedan.
 
-\\n \\t \\r    -- Precis som i C, ny rad, tab och carriage return
+\n \t \r       -- Precis som i C, ny rad, tab och carriage return
 $char(int)     -- Stoppa in det tecken vars teckenkod är det angivna nummret.
 $wchar(int)    -- Stoppa in det tvåocktetstecken vars teckenkod är det
                   angivna nummret.
@@ -247,6 +218,8 @@ $int(int)      -- Stoppa in det fyraocktetstecken vars teckenkod är det
 $^             -- Stoppa &lt;b&gt;inte&lt;/b&gt; in en vagnretur på slutet av
                   varje loggrad
 $host          -- DNS namnet för datorn som gjorde förfrågan
+$vhost         -- Host-headern som klienten skickade, eller '-' om den inte
+                  skickade någon.
 $ip_number     -- IP-nummret för datorn som gjorde förfrågan
 $bin-ip_number -- IP-nummret för datorn som gjorde förfrågan som
                   binärdata i nätverksoktettordning
@@ -258,6 +231,8 @@ $bin-date      -- Tiden för requesten som sekunder sedan 1970, binärt
 
 $method        -- Förfrågningsmetoden (GET, POST etc)
 $resource      -- Resursidentifieraren (filnamnet)
+$full_resource -- Hela den efterfrågade resursen, inklusive eventuella
+                  query-variabler.
 $protocol      -- Protokollet som användes för att fråga efter filen
 $response      -- Den skickade svarskoden
 $bin-response  -- Den skickade svarskoden som ett binärt ord (2
@@ -273,6 +248,14 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID; du
                   måste slå på kaksättningsfunktionaliteten i de
                   globala inställningarna. '0' används för de
                   förfrågningar som inte har kakan.
+$cache-status  -- En komma-separerad lista av identifierare som beskriver
+                  vilken cache/vilka cachear, som sidan skickades från:
+                  protcache -- Lågnivå-cachen i HTTP-protokollmodulen.
+                  xsltcache -- XSLT-cachen.
+                  pcoderam  -- RXML-parseträds RAM-cache.
+                  pcodedisk -- RXML-parseträds diskcache.
+                  cachetag  -- Inga RXML &amp;lt;cache&amp;gt;-tagsmissar.
+                  nocache   -- Cachemiss.
 &lt;/pre&gt;</t>
 </str>
 
@@ -332,7 +315,6 @@ epostadresser, samt för att generera skönsvärdet för serverurl-variablen.</t>
 </str>
 
 <str id="36">
-<changed from="Primary Server URL"/>
 <o>Ports: Primary Server URL</o>
 <t>Portar: Serverns URL</t>
 </str>
@@ -352,18 +334,11 @@ moduler för att bygga upp absoluta URLer från en relativ URL.</t>
 </str>
 
 <str id="38">
-e<changed from="URLs"/>
 <o>Ports: URLs</o>
 <t>Portar: URLer</t>
 </str>
 
-<str id="39">
-<changed from="Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris."/>
-<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, https, ftp, ftps, hilfe and tetris.</o>
-<t>Bind till de här URLerna. Det går att använda '*' eller '?' för att binda till alla IP-nummer.
-De möjliga protokollen är http, https, fhttp (snabbare version av det vanliga HTTP-protokollet, men inte 100% 
-kompatibel med alla moduler), ftp, ftps, gopher och tetris.</t>
-</str>
+
 
 <str id="40">
 <o>Internal module resource mountpoint</o>
@@ -1049,7 +1024,6 @@ servern.</t>
 </str>
 
 <str id="171">
-<changed from="The number of seconds between every garbage collect (removal of old content) from the memory cache. The memory cache is used for various tasks like remebering what supports flags matches what client."/>
 <o>The number of seconds between every garbage collect (removal of old content) from the memory cache. The memory cache is used for various tasks like remembering what supports flags matches what client.</o>
 <t>Hur många sekunder som ska gå mellan varje gång som
 allt gammalt innehåll i cachen städas bort. Minnescachen
@@ -1413,7 +1387,6 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="279">
-<changed from="If true, the list list will be presented in a compact format suitable for servers with many sites."/>
 <o>If true, the list of sites will be presented in a compact format suitable for servers with many sites.</o>
 <t>Om ja så kommer listan över sajter att presenteras i ettt kompaktare format. Lämpligt för servrar med många sajter.</t>
 </str>
@@ -1721,10 +1694,7 @@ användas: /foo/bar/404.inc, /foo/404.inc eller /404.inc.</t>
 <t>%s följer inte URL-syntaxen</t>
 </str>
 
-<str id="336">
-<o>Added / to the end of %s</o>
-<t>Lade till / på slutet av %s</t>
-</str>
+
 
 <str id="338">
 <o>Changed %s to %s</o>
@@ -2104,18 +2074,16 @@ det värde som din dators slumptalsfunktion har räknat fram åt dig.</t>
 </str>
 
 <str id="205">
-<changed from="Minumum allowed bitrate"/>
 <o>Minimum allowed bitrate</o>
 <t>Minsta tillåtna datahastighet</t>
 </str>
 
 <str id="215">
-<changed from="The minimum allowed bitrate, in Kbits/second. If the  client is slower than this set bitrate, it will be disconnected (after a timeout). Setting this higher than 14 is not recommended if you have modem users."/>
 <o>The minimum allowed bitrate, in bits/second. If the  client is slower than this set bitrate, it will be disconnected (after a timeout). Setting this higher than 14000 is not recommended if you have modem users.</o>
 <t>Den lägsta tillåtna datahastigheten, i bit/sekund. Om klienten är
 långsammare än den här inställda hastigheten så kommer den kopplas
 ner (efter en timeout). Det är inte rekommenderat att den här
-variabeln sätts till ett värde större än 14.</t>
+variabeln sätts till ett värde större än 14000 om du har modemanvändare.</t>
 </str>
 
 <str id="233">
@@ -2123,8 +2091,6 @@ variabeln sätts till ett värde större än 14.</t>
 <o>bytecode data</o>
 <t>Binärdata</t>
 </str>
-
-
 
 <str id="374">
 <o>rows</o>
@@ -2272,7 +2238,6 @@ ett fönster med modulerna upp.&lt;/dd&gt;&lt;/dl&gt;</t>
 </str>
 
 <str id="123">
-<changed from="Unfolded (old stype)"/>
 <o>Unfolded (old style)</o>
 <t>Uppfälld (gamla stilen)</t>
 </str>
@@ -2299,16 +2264,14 @@ konfigurationsgränssnittsanvändare</t>
 </str>
 
 <str id="384">
-<new/>
 <o>Warning: The theme %s  no longer exists, using default.
 </o>
-<t></t>
+<t>Varning: Temat %s existerar inte längre. Använder det vanliga temat istället.</t>
 </str>
 
 <str id="385">
-<new/>
 <o>Reload failed</o>
-<t></t>
+<t>Misslyckades att ladda om</t>
 </str>
 
 <str id="386">
@@ -2356,15 +2319,13 @@ This variable may be changed manually, but it's advisable to test the site caref
 </str>
 
 <str id="392">
-<new/>
 <o>Administrator Manual</o>
-<t></t>
+<t>Administratörsmanual</t>
 </str>
 
 <str id="393">
-<new/>
 <o>User Manual</o>
-<t></t>
+<t>Användarmanual</t>
 </str>
 
 <str id="394">
@@ -2374,9 +2335,8 @@ This variable may be changed manually, but it's advisable to test the site caref
 </str>
 
 <str id="395">
-<new/>
 <o>Programmer Manual</o>
-<t></t>
+<t>Programmerarmanual</t>
 </str>
 
 <str id="396">
@@ -2386,21 +2346,18 @@ This variable may be changed manually, but it's advisable to test the site caref
 </str>
 
 <str id="397">
-<new/>
 <o>No documentation found at all</o>
-<t></t>
+<t>Dokumentation saknas helt</t>
 </str>
 
 <str id="398">
-<new/>
 <o>Todays MegaTokyo comic</o>
-<t></t>
+<t>Dagens MegaTokyo-serie</t>
 </str>
 
 <str id="399">
-<new/>
 <o>Todays comic from MegaTokyo</o>
-<t></t>
+<t>Dagens serie från MegaTokyo</t>
 </str>
 
 <str id="400">
@@ -3159,5 +3116,29 @@ server must be a MySQL server, nothing else will work.
 <str id="507">
 <new/>
 <o>Cannot list fields in %s databases</o>
+<t></t>
+</str>
+
+<str id="373">
+<new/>
+<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  If you specify a IP# in the field it will take precedence over the hostname.</o>
+<t></t>
+</str>
+
+<str id="508">
+<new/>
+<o>Ports</o>
+<t></t>
+</str>
+
+<str id="509">
+<new/>
+<o>Select site</o>
+<t></t>
+</str>
+
+<str id="510">
+<new/>
+<o>Bind this port: </o>
 <t></t>
 </str>

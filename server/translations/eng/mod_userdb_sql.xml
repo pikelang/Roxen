@@ -24,3 +24,33 @@
 <o>This is the database that this module will store it's users in.</o>
 <t></t>
 </str>
+
+<str id="5">
+<o>MySQL Password</o>
+<t></t>
+</str>
+
+<str id="6">
+<o>Unix crypt</o>
+<t></t>
+</str>
+
+<str id="7">
+<o>Clear text</o>
+<t></t>
+</str>
+
+<str id="8">
+<o>MD5 crypt</o>
+<t></t>
+</str>
+
+<str id="9">
+<o>Password type</o>
+<t></t>
+</str>
+
+<str id="10">
+<o>Password hashing method. By changing this variable you can select the meaning of password field. By default the passwords are supposed to be hashed by internal MySQL PASSWORD() function.</o>
+<t></t>
+</str>

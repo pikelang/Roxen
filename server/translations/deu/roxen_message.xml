@@ -338,3 +338,9 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </o>
 <t>Syntaxfehler in Security-Muster: 'allow' oder 'deny' erwartet</t>
 </str>
+
+<str id="61">
+<new/>
+<o>Not binding the port %O, disabled in configuration</o>
+<t></t>
+</str>

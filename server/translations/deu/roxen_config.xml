@@ -7,8 +7,8 @@
 <file>../base_server/global_variables.pike</file>
 <file>../base_server/module_support.pike</file>
 <file>../config_interface/actions/index.html</file>
-<file>../config_interface/boxes/articles.pike</file>
 <file>../config_interface/boxes/Box.pmod</file>
+<file>../config_interface/boxes/articles.pike</file>
 <file>../config_interface/boxes/crunch.pike</file>
 <file>../config_interface/boxes/doclinks.pike</file>
 <file>../config_interface/boxes/megatokyo.pike</file>
@@ -18,6 +18,8 @@
 <file>../config_interface/cv_startpage_tabs.pike</file>
 <file>../config_interface/dbs/backups.html</file>
 <file>../config_interface/dbs/browser.pike</file>
+<file>../config_interface/dbs/create_db.html</file>
+<file>../config_interface/dbs/create_group.html</file>
 <file>../config_interface/dbs/db_matrix.pike</file>
 <file>../config_interface/dbs/edit_group.pike</file>
 <file>../config_interface/dbs/import_dbs.pike</file>
@@ -25,11 +27,13 @@
 <file>../config_interface/dbs/new_db.pike</file>
 <file>../config_interface/dbs/new_group.pike</file>
 <file>../config_interface/dbs/restore_db.pike</file>
+<file>../config_interface/dbs/status.html</file>
 <file>../config_interface/dbs/status.pike</file>
 <file>../config_interface/dbs/subtabs.pike</file>
 <file>../config_interface/diff.pike</file>
 <file>../config_interface/event_log/clear_log.pike</file>
 <file>../config_interface/event_log/log.pike</file>
+<file>../config_interface/global_settings/index.html</file>
 <file>../config_interface/logutil.pike</file>
 <file>../config_interface/sites/add_module.pike</file>
 <file>../config_interface/sites/config_left_item.pike</file>
@@ -40,6 +44,7 @@
 <file>../config_interface/sites/index.html</file>
 <file>../config_interface/sites/log.pike</file>
 <file>../config_interface/sites/new_site.html</file>
+<file>../config_interface/sites/site.html</file>
 <file>../config_interface/sites/site_content.pike</file>
 <file>../config_interface/sites/site_header.pike</file>
 <file>../config_interface/statusinfo.pike</file>
@@ -52,10 +57,10 @@
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
 <file>../etc/modules/Variable.pmod/Mapping.pike</file>
-<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../etc/modules/Variable.pmod/Schedule.pike</file>
 <file>../etc/modules/Variable.pmod/Upload.pike</file>
 <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
+<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../site_templates/common.pike</file>
@@ -318,10 +323,7 @@ vom ersten Eintrag in 'URLs', wenn diese Einstellung leer bleibt.
 <t>Ports: URLs</t>
 </str>
 
-<str id="39">
-<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, https, ftp, ftps, hilfe and tetris.</o>
-<t>Binde (horche) auf diese URLs. Hostnamen wie IP-Adressen sind zulässig. Die Meta-Zeichen '*' und '?' können als Joker verwendet werden, um auf alle verfügbaren IP-Adressen einer Maschine zu binden. Mögliche Protokolle sind http, https, ftps, hilfe und tetris.</t>
-</str>
+
 
 <str id="40">
 <o>Internal module resource mountpoint</o>
@@ -1604,10 +1606,7 @@ Wird zum Beispiel die Datei /foo/bar/nicht_vorhanden.html angefordert und in die
 <t>%s entspricht nicht der URL-Syntax</t>
 </str>
 
-<str id="336">
-<o>Added / to the end of %s</o>
-<t>/ an %s angehängt</t>
-</str>
+
 
 <str id="338">
 <o>Changed %s to %s</o>
@@ -1990,8 +1989,6 @@ as the name of its log file directory.
 <o>bytecode data</o>
 <t>Bytecode-Daten</t>
 </str>
-
-
 
 <str id="374">
 <o>rows</o>
@@ -2919,4 +2916,28 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <str id="507">
 <o>Cannot list fields in %s databases</o>
 <t>Felder in %s Datenbanken können nicht gelistet werden</t>
+</str>
+
+<str id="373">
+<new/>
+<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  If you specify a IP# in the field it will take precedence over the hostname.</o>
+<t></t>
+</str>
+
+<str id="508">
+<new/>
+<o>Ports</o>
+<t></t>
+</str>
+
+<str id="509">
+<new/>
+<o>Select site</o>
+<t></t>
+</str>
+
+<str id="510">
+<new/>
+<o>Bind this port: </o>
+<t></t>
 </str>
