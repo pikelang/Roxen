@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.317 2004/01/27 19:25:26 mast Exp $
+// $Id: module.pmod,v 1.318 2004/06/28 16:01:47 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2725,7 +2725,9 @@ constant FLAG_IS_CACHE_STATIC	= 0x00000200;
 //!   variables or introducing tag scope.
 //! @item
 //!   Neither @[FLAG_GET_EVALED_CONTENT] nor @[FLAG_DONT_CACHE_RESULT]
-//!   may be set.
+//!   may be set. (Note however that the parser might internally set
+//!   @[FLAG_DONT_CACHE_RESULT] for @[RXML.Frame] objects.
+//!   @[FLAG_IS_CACHE_STATIC] overrides it in that case.)
 //! @endul
 //!
 //! @note
@@ -2840,6 +2842,11 @@ constant FLAG_DONT_CACHE_RESULT	= 0x00080000;
 //! therefore automatically propagated by the parser into surrounding
 //! frames. The flag is tested after the first evaluation of the frame
 //! has finished.
+//!
+//! Since the flag is propagated, it might be set for frames which
+//! have @[FLAG_IS_CACHE_STATIC] set. That's necessary for correct
+//! propagation, but @[FLAG_IS_CACHE_STATIC] always overrides it for
+//! the frame itself.
 
 constant FLAG_MAY_CACHE_RESULT	= 0x00100000;
 //! Mostly for internal use to flag that the result may be cached.
@@ -4262,10 +4269,9 @@ class Frame
 	      }
 
 #ifdef MODULE_DEBUG
-	      if (flags & FLAG_IS_CACHE_STATIC &&
-		  flags & (FLAG_DONT_CACHE_RESULT|FLAG_GET_EVALED_CONTENT))
+	      if (flags & FLAG_IS_CACHE_STATIC && flags & FLAG_GET_EVALED_CONTENT)
 		fatal_error ("FLAG_IS_CACHE_STATIC cannot be set when "
-			     "FLAG_DONT_CACHE_RESULT or FLAG_GET_EVALED_CONTENT is.\n");
+			     "FLAG_GET_EVALED_CONTENT is.\n");
 #endif
 
 	      for (; iter > 0; iter-- DO_IF_DEBUG (, debug_iter++)) {
@@ -4570,9 +4576,9 @@ class Frame
 	  if (in_content) content = in_content;				\
 	  ctx->make_p_code = orig_make_p_code;				\
 	  if (orig_tag_set) ctx->tag_set = orig_tag_set;		\
-	  if (up && flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT) && \
-	      !(up->flags & FLAG_IS_CACHE_STATIC))			\
-	    up->flags |= flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT); \
+	  if (up)							\
+	    if (int f = flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) \
+	      up->flags |= f;						\
 	  ctx->frame = up;						\
 	  FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",	\
 			   ctx->frame_depth, "", this_object(),		\
@@ -4586,7 +4592,7 @@ class Frame
 	THIS_TAG_TOP_DEBUG ("Done%s\n",
 			    flags & FLAG_DONT_CACHE_RESULT ?
 			    " (don't cache result)" :
-			    !(flags & (FLAG_MAY_CACHE_RESULT|FLAG_IS_CACHE_STATIC)) ?
+			    !(flags & FLAG_MAY_CACHE_RESULT) ?
 			    " (don't cache result for now)" : "");
 	if (!(flags & FLAG_CUSTOM_TRACE))
 	  TRACE_LEAVE ("");
@@ -4683,7 +4689,7 @@ class Frame
 	THIS_TAG_TOP_DEBUG ("Exception%s\n",
 			    flags & FLAG_DONT_CACHE_RESULT ?
 			    " (don't cache result)" :
-			    !(flags & (FLAG_MAY_CACHE_RESULT|FLAG_IS_CACHE_STATIC)) ?
+			    !(flags & FLAG_MAY_CACHE_RESULT) ?
 			    " (don't cache result for now)" : "");
 	TRACE_LEAVE ("exception");
 	err = catch (throw_fatal (err));
