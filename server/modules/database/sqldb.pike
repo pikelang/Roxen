@@ -4,23 +4,30 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.8 2000/10/18 19:11:22 mast Exp $";
+constant cvs_version = "$Id: sqldb.pike,v 1.9 2000/10/18 21:28:04 mast Exp $";
 constant module_type = MODULE_ZERO;
 constant module_name = "SQL databases";
 constant module_doc  = 
-#"SQL databases provides symbolic names to any number of database URLs. The
-symbolic names can later be used instead of the database URL. This makes
-it unnecessary to store full database URLs in RXML pages, which enhances
-security. It also becomes possible to change database without having to
-change any RXML pages.";
+#"SQL databases provides symbolic names to any number of database URLs.
+The symbolic names can later be used instead of the database URL. This
+avoids storing full database URLs in RXML pages, which enhances
+security. It also becomes possible to change database without having
+to change any RXML pages.";
 
 void create()
 {
   defvar("table", "", "Database URL table", TYPE_TEXT_FIELD|VAR_INITIAL,
-	 "The table with database URLs in the format:"
-	 "<pre>name\tURL</pre>"
-	 "The database URL is specified as "
-	 "<tt>driver://username:password@host:port/database</tt>.\n");
+	 "The table with database URLs. Every line is on the form:\n"
+	 "<p><blockquote><pre><i>name</i>\t<i>URL</i>\n"
+	 "</pre></blockquote>\n"
+	 "<p><i>URL</i> is a database URL and the <i>name</i> is the alias "
+	 "given to it. Database URLs have the format:\n"
+	 "<p><blockquote><pre>"
+	 "<i>driver</i><b>://</b>"
+	 "[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]"
+	 "<i>host</i>[<b>:</b><i>port</i>]"
+	 "[<b>/</b><i>database</i>]\n"
+	 "</pre></blockquote>\n");
 }
 
 mapping(string:string) parse_table(string tab)
@@ -55,8 +62,12 @@ string status()
   string res = "";
 
   if (sizeof(sql_urls)) {
-    res += "<table border=\"0\">\n";
+    res += "<p><table border=\"0\">\n"
+      "<tr><th align='left'>Alias</th><td>&nbsp;&nbsp;</td>"
+      "<th align='left'>Connection status</th></tr>\n";
     foreach(sort(indices(sql_urls)), string s) {
+      res += "<tr><td>" + Roxen.html_encode_string (s) + "</td><td>&nbsp;</td>";
+
       Sql.sql o;
 
       mixed err = catch {
@@ -64,27 +75,21 @@ string status()
       };
 
       if (o) {
-	res += sprintf("<tr><td>Connection OK</td>"
-		       "<td><tt>%s</tt></td><td><tt>%s</tt></td></tr>\n",
-		       Roxen.html_encode_string (s),
-		       Roxen.html_encode_string (sql_urls[s]));
+	res += sprintf("<td>Connected to %s server on %s</td>",
+		       Roxen.html_encode_string (o->server_info()),
+		       Roxen.html_encode_string (o->host_info()));
       } else if (err) {
-	res += sprintf("<tr><td><font color=red>Connection failed</font>: %s</td>"
-		       "<td><tt>%s</tt></td><td><tt>%s</tt></td></tr>\n",
-		       Roxen.html_encode_string (describe_error (err)),
-		       Roxen.html_encode_string (s),
-		       Roxen.html_encode_string (sql_urls[s]));
+	res += sprintf("<td><font color='red'>Connection failed</font>: %s</td>",
+		       Roxen.html_encode_string (describe_error (err)));
       }
       else
-	res += sprintf("<tr><td><font color=red>Connection failed</font>: "
-		       "Unknown reason</td>"
-		       "<td><tt>%s</tt></td><td><tt>%s</tt></td></tr>\n",
-		       Roxen.html_encode_string (s),
-		       Roxen.html_encode_string (sql_urls[s]));
+	res += "<td><font color='red'>Connection failed</font>: Unknown reason</td>";
+
+      res += "</tr>\n";
     }
     res += "</table>\n";
   } else {
-    res += "No associations defined.<br>\n";
+    res += "<p>No associations defined.\n";
   }
   return(res);
 }
