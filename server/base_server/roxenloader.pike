@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.301 2001/11/07 15:37:57 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.302 2001/11/07 17:13:47 anders Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1295,7 +1295,7 @@ class MySQLKey
   
   object big_query( string f, mixed ... args )
   {
-    object o = real->big_query( f, @args )
+    object o = real->big_query( f, @args );
     return o && MySQLResKey(o, this_object());
   }
   
