@@ -4,7 +4,7 @@
  *
  * Copyright © 1996 - 2000, Roxen IS.
  *
- * $Id: language.pike,v 1.27 2000/03/13 06:12:56 per Exp $
+ * $Id: language.pike,v 1.28 2000/04/29 17:25:00 nilsson Exp $
  *
  * WARNING:
  * If the environment variable 'ROXEN_LANG' is set, it is used as the default
@@ -71,13 +71,21 @@ public function language(string what, string func, object|void id)
   werror("Function: " + func + " in "+ what+"\n");
 #endif
   object l;
-  if( id && id->set_output_charset && (l=languages[what]) && l->charset )
+  if( (l=languages[what]) && id && id->set_output_charset && l->charset )
     ([function(string,int:void)]id->set_output_charset)( [string]l->charset, 2 );
 
-  if(!l)
-    if(!(l=languages[default_language]))
+  if(!l) {
+#ifdef LANGUAGE_DEBUG
+    werror( what+" is not available. Trying default...\n");
+#endif
+    if(!(l=languages[default_language])) {
+#ifdef LANGUAGE_DEBUG
+      werror( default_language+" is not available. Trying english...\n");
+#endif
       if(!(l=languages->en))
 	return [function]languages->en[func];
+    }
+  }
 
   return [function]l[func] || nil;
 }
