@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.749 2001/10/09 12:38:05 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.750 2001/10/19 12:13:03 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1467,7 +1467,6 @@ class SSLProtocol
       if( catch{ f = lopen(cert_file, "r")->read(); } )
       {
 	report_error(LOC_M(8,"SSL3: Reading cert-file failed!")+"\n");
-	destruct();
 	return;
       }
 
@@ -1475,7 +1474,6 @@ class SSLProtocol
 	  catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
       {
 	report_error(LOC_M(9, "SSL3: Reading key-file failed!")+"\n");
-	destruct();
 	return;
       }
 
@@ -1486,7 +1484,6 @@ class SSLProtocol
       if (!part || !(cert = part->decoded_body())) 
       {
 	report_error(LOC_M(10, "SSL3: No certificate found.")+"\n");
-	destruct();
 	return;
       }
 
@@ -1504,7 +1501,6 @@ class SSLProtocol
 	if (!(key = part->decoded_body())) 
 	{
 	  report_error(LOC_M(11,"SSL3: Private rsa key not valid")+" (PEM).\n");
-	  destruct();
 	  return;
 	}
 
@@ -1512,7 +1508,6 @@ class SSLProtocol
 	if (!rsa) 
 	{
 	  report_error(LOC_M(11, "SSL3: Private rsa key not valid")+" (DER).\n");
-	  destruct();
 	  return;
 	}
 
@@ -1533,7 +1528,6 @@ class SSLProtocol
 	if (!tbs) 
 	{
 	  report_error(LOC_M(13,"SSL3: Certificate not valid (DER).")+"\n");
-	  destruct();
 	  return;
 	}
 	if (tbs->public_key->rsa->public_key_equal (rsa))
@@ -1548,7 +1542,6 @@ class SSLProtocol
 	if (!(key = part->decoded_body())) 
 	{
 	  report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (PEM).\n");
-	  destruct();
 	  return;
 	}
 
@@ -1556,7 +1549,6 @@ class SSLProtocol
 	if (!dsa) 
 	{
 	  report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (DER).\n");
-	  destruct();
 	  return;
 	}
 
@@ -1574,7 +1566,6 @@ class SSLProtocol
       else 
       {
 	report_error(LOC_M(17,"SSL3: No private key found.")+"\n");
-	destruct();
 	return;
       }
 
@@ -1585,7 +1576,6 @@ class SSLProtocol
     {
       report_error(LOC_M(14, "SSL3: Certificate and private key do not "
 			 "match.")+"\n");
-      destruct();
       return;
     }
 #if EXPORT
@@ -1923,9 +1913,9 @@ int register_url( string url, Configuration conf )
       m_delete( m[ required_host ], port );
       failures++;
       if (required_host) {
-	report_warning(LOC_M(22, "Binding the port on IP %s "
-			      "failed\n   for URL %s!\n"),
-		       url, required_host);
+	report_warning(LOC_M(22, "Binding the port on IP %s failed\n"
+			         "   for URL %s!\n"),
+		       required_host, url);
       }
       continue;
     }
