@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.4 2002/07/23 18:09:51 mast Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.5 2003/06/26 15:59:20 anders Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -10,8 +10,8 @@ constant cvs_version= "$Id: sqlfs.pike,v 1.4 2002/07/23 18:09:51 mast Exp $";
 
 constant thread_safe=1;
 
-//<locale-token project="mod_filesystem">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_filesystem",X,Y)
+//<locale-token project="mod_sqlfs">_</locale-token>
+#define _(X,Y)	_DEF_LOCALE("mod_sqlfs",X,Y)
 // end of the locale related stuff
 
 

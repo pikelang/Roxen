@@ -8,11 +8,12 @@
 // later version.
 //
 
+//<locale-token project="mod_writefile">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_writefile",X,Y)
 #define _ok	id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.14 2003/03/13 15:13:20 mattias Exp $";
+ "$Id: writefile.pike,v 1.15 2003/06/26 15:59:20 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -49,7 +50,7 @@ void create() {
 static string lastfile;
 
 string status() {
-  return sprintf(_(0,"Last file written: %s"),lastfile||"NONE");
+  return sprintf(_(5,"Last file written: %s"),lastfile||"NONE");
 }
 
 #define IS(arg)	((arg) && sizeof(arg))
