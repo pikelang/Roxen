@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.70 2001/11/01 14:58:53 grubba Exp $
+// $Id: module.pmod,v 1.71 2001/11/05 13:37:49 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1586,12 +1586,12 @@ class PortList
     }
     res += "</select>";
 
-    res += "://<input type=string name='"+prefix+"host' value='"+
+    res += "://<input type=text name='"+prefix+"host' value='"+
            Roxen.html_encode_string(split->host)+"' />";
-    res += ":<input type=string size=6 name='"+prefix+"port' value='"+
+    res += ":<input type=text size=6 name='"+prefix+"port' value='"+
              split->port+"' />";
 
-    res += "/<input type=string name='"+prefix+"path' value='"+
+    res += "/<input type=text name='"+prefix+"path' value='"+
       Roxen.html_encode_string(split->path[1..])+"' /><br />";
     mapping opts = ([]);
     string a,b;
@@ -1600,7 +1600,7 @@ class PortList
       sscanf( x, "%s=%s", a, b );
       opts[a]=b;
     }
-    res += "IP#: <input size=15 type=string name='"+prefix+"ip' value='"+
+    res += "IP#: <input size=15 type=text name='"+prefix+"ip' value='"+
       Roxen.html_encode_string(opts->ip||"")+"' /> ";
     res += LOCALE(0,"Bind this port: ");
     res += "<select name='"+prefix+"bind'>";
