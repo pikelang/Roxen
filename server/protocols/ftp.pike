@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.60 1997/10/07 04:28:15 grubba Exp $
+ * $Id: ftp.pike,v 1.61 1997/10/07 18:56:15 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -1097,7 +1097,11 @@ void handle_data(string s, mixed key)
 {
   string cmdlin;
   time = _time(1);
-  if (!objectp(cmd_fd)) return;
+  if (!objectp(cmd_fd)) {
+    if (objectp(key))
+      destruct(key);
+    return;
+  }
   array y;
   conf->received += strlen(s);
   remove_call_out(timeout);
@@ -1211,6 +1215,8 @@ void handle_data(string s, mixed key)
     case "quit": 
       reply("221 Bye! It was nice talking to you!\n"); 
       end(); 
+      if (objectp(key))
+	destruct(key);
       return;
 
     case "noop":
