@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.59 1998/06/27 15:24:12 grubba Exp $
+ * $Id: ftp2.pike,v 1.60 1998/06/30 20:25:36 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -202,7 +202,7 @@ class FileWrapper
 
   static private void read_callback(mixed i, string s)
   {
-    read_cb && read_cb(id, convert(s));
+    read_cb(id, convert(s));
     ftpsession->touch_me();
   }
 
