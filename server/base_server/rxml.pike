@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.207 2000/07/17 15:36:49 kuntri Exp $
+// $Id: rxml.pike,v 1.208 2000/07/20 23:33:46 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2249,7 +2249,7 @@ scope created within the define tag.
 </attr>",
 
 "if":#"<desc cont><short hide>
- <if> is used to conditionally show its contents.</short><tag><ref
+  <if> is used to conditionally show its contents.</short><tag><ref
  type='tag'>If</ref></tag> is used to conditionally show its contents.
  <tag><ref type='tag'>else</ref></tag>, <tag><ref
  type='tag'>elif</ref></tag> or <tag><ref
@@ -2262,28 +2262,85 @@ scope created within the define tag.
  trainfork or tfo. It is however not possible to use regexp's together
  with any of the if-plugins.</p>
 
-  The <tag>if</tag> tag itself is useless without its plugins. Its
- main functionality is to provide a framework for the plugins. The
- <tag>if</tag> tag only provides the attributes <att>not</att>,
- <att>or</att> and <att>and</att> which are used between two plugins.
- An if-plugin is a used inside the <tag>if</tag> tag like an
- attribute.</p>
+ <p>The <ref type='tag'>if</ref> tag itself is useless without its
+ plugins. Its main functionality is to provide a framework for the
+ plugins.</p>
 
- <p>There are two main types of if-plugins defined, <i>IfIs</i> and
- <i>IfMatch</i>. If the if-plugin is of an <i>IfMatch</i> type the if
- statement will be matched as a glob, i.e. * is considered a
- multicharacter wildcard:</p>
+ <p>It is mandatory to add a plugin as one attribute. The other
+ attributes provided are and, or and not, used for combining plugins
+ or logical negation.</p>
 
- <ex type=vert>Your domain <if
- ip='130.236.*'>is</if><else>isn't</else> liu.se.</ex>
+ <ex type='box'>
+  <if variable='var.foo > 0' and match='var.bar is No'>
+    ...
+  </if>
+ </ex>
 
- <p> If the if-plugin is of an <i>IfIs</i> type the if statement will
- be compared with one of the following operators 'is', '=', '==',
- '!=', '&lt;' and '&gt'. The operators 'is', '=' and '==' are the
- same.</p>
+ <ex type='box'>
+  <if variable='var.foo > 0' not>
+    &var.foo; <= 0
+  </if>
+  <else>
+    &var.foo; > 0
+  </else>
+ </ex>
 
- <ex><set variable='var.x' value='6'/>
- <if variable='var.x > 5'>More than one hand</if></ex>
+ <p>Operators valid in attribute expressions are: '=', '==', 'is', '!=',
+ '&lt;' and '&gt;'.</p>
+
+ <p>The If plugins are sorted according to their function into five
+ categories: Eval, Match, State, Utils and SiteBuilder.</p>
+
+ <p>The Eval category is the one corresponding to the regular tests made
+ in programming languages, and perhaps the most used. They evaluate
+ expressions containing variables, entities, strings etc and are a sort
+ of multi-use plugins. All If-tag operators and global patterns are
+ allowed.</p>
+
+ <ex>
+  <set variable='var.x' value='6'/>
+  <if variable='var.x > 5'>More than one hand</if>
+ </ex>
+
+ <p>The Match category contains plugins that match contents of
+ something, e.g. an IP package header, with arguments given to the
+ plugin as a string or a list of strings.</p>
+
+ <ex>
+  Your domain <if ip='130.236.*'> is  </if>
+  <else> isn't </else> liu.se.
+ </ex>
+
+ <p>State plugins check which of the possible states something is in,
+ e.g. if a flag is set or not, if something is supported or not, if
+ something is defined or not etc.</p>
+
+ <ex>
+   Your browser
+  <if supports='javascript'>
+   supports Javascript version &client.javascript;
+  </if>
+  <else>doesn't support Javascript</else>.
+ </ex>
+
+ <p>Utils are additonal plugins specialized for certain tests, e.g.
+ date and time tests.</p>
+
+ <ex>
+  <if time='1700' after>
+    Are you still at work?
+  </if>
+  <elseif time='0900' before>
+     Wow, you work early!
+  </elseif>
+  <else>
+   Somewhere between 9 to 5.
+  </else
+ </ex>
+
+ <p>SiteBuilder plugins requires a Roxen Platform SiteBuilder
+ installed to work. They are adding test capabilities to web pages
+ contained in a SiteBuilder administrated site.</p>
 </desc>
 
 <attr name=not>
@@ -2298,127 +2355,161 @@ scope created within the define tag.
 </attr>",
 
 "if#true":#"<desc plugin><short>
- This will always be true if the truth value is set to be true.</short>
- Equivalent with <tag><ref type=cont>then</ref></tag>.
+ This will always be true if the truth value is set to be
+ true.</short> Equivalent with <tag><ref type=cont>then</ref></tag>.
+ True is an <i>Eval</i> plugin.
 </desc>
-<attr name='true' value='' required>
+<attr name='true' required>
+ Foo?
 </attr>",
 
 "if#false":#"<desc plugin><short>
  This will always be true if the truth value is set to be false.</short>
- Equivalent with <tag><ref type='tag'>else</ref></tag>.
+ Equivalent with <tag><ref type='tag'>else</ref></tag>. False is an <i>Eval</i> plugin.
 </desc>
-<attr name='false' value='' required>
+<attr name='false' required>
+ Foo? Vad ska stå här?
 </attr>",
 
 "if#accept":#"<desc plugin><short>
- Returns true is the browser accept certain content types as specified
+ Returns true if the browser accepts certain content types as specified
  by it's Accept-header, for example image/jpeg or text/html.</short> If
  browser states that it accepts */* that is not taken in to account as
- this is always untrue. Accept is an IfMatch if-plugin.
+ this is always untrue. Accept is a <i>Match</i> plugin.
 </desc>
 <attr name='accept' value='type1[,type2,...]' required>
 </attr>",
 
 "if#config":#"<desc plugin><short>
  Has the config been set by use of the <tag><ref
- type='tag'>aconf</ref></tag> tag?</short> (Config is an <i>IfIs</i> if-plugin,
- although that functionality does not apply here.).
+ type='tag'>aconf</ref></tag> tag?</short> Config is a <i>State</i> plugin.
 </desc>
 <attr name='config' value='name' required>
 </attr>",
 
 "if#cookie":#"<desc plugin><short>
  Does the cookie exist and if a value is given, does it contain that
- value?</short> Cookie is an <i>IfIs</i> if-plugin.
+ value?</short> Cookie is an <i>Eval</i> plugin.
 </desc>
 <attr name='cookie' value='name[ is value]' required>
 </attr>",
 
 "if#client":#"<desc plugin><short>
  Compares the user agent string with a pattern.</short> Client and name is an
- <i>IfMatch</i> if-plugin.
+ <i>Match</i> plugin.
 </desc>
 <attr name='client' value='' required>
 </attr>",
 
 "if#date":#"<desc plugin><short>
  Is the date yyyymmdd?</short> The attributes before, after and inclusive
- modifies the behavior.
+ modifies the behavior. Date is a <i>Utils</i> plugin.
 </desc>
 <attr name='date' value='yyyymmdd' required>
+ Choose what date to test.
 </attr>
 
 <attr name=after>
+ The date after todays date.
 </attr>
 
 <attr name=before>
+ The date before todays date.
 </attr>
 
 <attr name=inclusive>
+ Adds todays date to after and before.
+
+ <ex>
+  <if date='19991231' before='' inclusive=''>
+     - 19991231
+  </if>
+  <else>
+    20000101 -
+  </else>
+ </ex>
 </attr>",
 
-"if#defined":#"<desc plugin><short>
- Tests if a certain define is defined?</short> Defined is an <i>IfIs</i> if-plugin.
+"if#defined":#"<desc plugin><short hide>
+ Tests if a certain RXML define is defined by use of the <define> tag.
+ </short> Tests if a certain RXML define is defined by use of the
+ <tag>define</tag> tag.Defined is a <i>State</i> plugin.
 </desc>
 <attr name='defined' value='define' required>
-</attr>
-",
+ Choose what define to test.
+</attr>",
 
 "if#domain":#"<desc plugin><short>
  Does the user's computer's DNS name match any of the patterns?</short> Note
- that domain names are resolved asynchronously, and the the first time
+ that domain names are resolved asynchronously, and that the first time
  someone accesses a page, the domain name will probably not have been
- resolved. Domain is an <i>IfMatch</i> if-plugin.
+ resolved. Domain is a <i>Match</i> plugin.
 </desc>
 <attr name='domain' value='pattern1[,pattern2,...]' required>
+ Choose what pattern to test.
 </attr>
 ",
 
 "if#exists":#"<desc plugin><short>
- Returns true if the file path exists.</short> If path does not begin with /,
- it is assumed to be a URL relative to the directory containing the page
- with the <tag><ref type='tag'>if</ref></tag>-statement.
+ Returns true if the file path exists.</short> If path does not begin
+ with /, it is assumed to be a URL relative to the directory
+ containing the page with the <tag><ref
+ type='tag'>if</ref></tag>-statement. Exists is a <i>SiteBuilder</i>
+ plugin.
 </desc>
 <attr name='exists' value='path' required>
+ Choose what path to test.
 </attr>
 ",
 
 "if#group":#"<desc plugin><short>
  Checks if the current user is a member of the group according
- the groupfile.</short> Syntax is groupfile=path.
+ the groupfile.</short> Group is a <i>SiteBuilder</i> plugin.
 </desc>
-<attr name='group' value='' required>
+<attr name='group' value='name' required>
+ Choose what group to test.
+</attr>
+
+<attr name='groupfile' value='path' required>
+ Specify where the groupfile is located.
 </attr>
 ",
 
 "if#ip":#"<desc plugin><short>
+
  Does the users computers IP address match any of the
- patterns?</short> Host and ip are <i>IfMatch</i> if-plugins.
+ patterns?</short> This plugin replaces the Host plugin of earlier
+ RXML versions. Ip is a <i>Match</i> plugin.
 </desc>
 <attr name='ip' value='pattern1[,pattern2,...]' required>
+ Choose what IP-adress pattern to test.
 </attr>
 ",
 
 "if#language":#"<desc plugin><short>
  Does the client prefer one of the languages listed, as specified by the
- Accept-Language header?</short> Language is an <i>IfMatch</i> if-plugin.
+ Accept-Language header?</short> Language is a <i>Match</i> plugin.
 </desc>
 <attr name='language' value='language1[,language2,...]' required>
+ Choose what language to test.
 </attr>
 ",
 
 "if#match":#"<desc plugin><short>
- Does the string match one of the patterns?</short> Match is an <i>IfMatch</i> if-plugin.
+ Evaluates patterns.</short> Match is an <i>Eval</i> plugin.
 </desc>
-<attr name='match' value='pattern1[,pattern2,...]' required>
+<attr name='match' value='pattern' required>
+ Choose what pattern to test.
 </attr>
 ",
 
 "if#pragma":#"<desc plugin><short>
- Compares the HTTP header pragma with a string.</short> Pragma is an <i>IfIs</i> if-plugin.
+ Compares the HTTP header pragma with a string.</short> Pragma is a
+ <i>State</i> plugin.
 </desc>
 <attr name='pragma' value='string' required>
+ Choose what pragma to test.
+
 <ex>
 <if pragma='no-cache'>The page has been reloaded!</if>
 <else>Reload this page!</else>
@@ -2427,46 +2518,63 @@ scope created within the define tag.
 ",
 
 "if#prestate":#"<desc plugin><short>
- Are all of the specified prestate options present in the URL?</short> Prestate is
- an <i>IfIs</i> if-plugin.
+ Are all of the specified prestate options present in the URL?</short>
+ Prestate is a <i>State</i> plugin.
 </desc>
 <attr name='prestate' value='option1[,option2,...]' required>
+ Choose what prestate to test.
 </attr>
 ",
 
 "if#referrer":#"<desc plugin><short>
- Does the referrer header match any of the patterns?</short> Referrer is an <i>IfMatch</i>
- if-plugin.
+ Does the referrer header match any of the patterns?</short> Referrer
+ is a <i>Match</i> plugin.
 </desc>
 <attr name='referrer' value='pattern1[,pattern2,...]' required>
+ Choose what pattern to test.
 </attr>
 ",
 
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
 "if#supports":#"<desc plugin><short>
- Does the browser support this feature?</short> Supports is an <i>IfIs</i> if-plugin.
+ Does the browser support this feature?</short> Supports is a
+ <i>State</i> plugin.
 </desc>
 
 <attr name=supports'' value='feature' required required>
+ Choose what supports feature to test.
 </attr>
 
 The following features are supported:",
 
 "if#time":#"<desc plugin><short>
  Is the time hhmm?</short> The attributes before, after and inclusive modifies
- the behavior.
+ the behavior. Time is a <i>Utils</i> plugin.
 </desc>
 <attr name='time' value='hhmm' required>
+ Choose what time to test.
 </attr>
 
 <attr name=after>
+ The time after present time.
 </attr>
 
 <attr name=before>
+ The time before present time.
 </attr>
 
 <attr name=inclusive>
+ Adds present time to after and before.
+
+ <ex>
+  <if time='1200' before inclusive>
+    ante meridiem
+  </if>
+  <else>
+    post meridiem
+  </else>
+ </ex>
 </attr>",
 
 "if#user":#"<desc plugin><short>
@@ -2478,20 +2586,26 @@ The following features are supported:",
 ",
 
 "if#variable":#"<desc plugin><short>
- Does the variable exist and, optionally, does it's content match the pattern?</short>
- Variable is an <i>IfIs</i> plugin.
+
+ Does the variable exist and, optionally, does it's content match the
+ pattern?</short> Variable is an <i>Eval</i> plugin.
 </desc>
 <attr name='variable' value='name[ is pattern]' required>
+ Choose variable to test. Valid operators are '=', '==', 'is', '!=',
+ '&lt;' and '&gt;'.
 </attr>
 ",
 
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
-"if#clientvar":#"<desc plugin><short></short>
- </desc>
-<attr name='clientvar' value='' required>
+"if#clientvar":#"<desc plugin><short>
+Evaluates expressions with client specific values.</short> Clientvar
+is an <i>Eval</i> plugin.
+</desc>
+<attr name='clientvar' value='variable [is value]' required>
+ Choose which variable to evaluate against. Valid operators are '=',
+ '==', 'is', '!=', '&lt;' and '&gt;'.
 </attr>
-
 
 Available variables are:",
 
@@ -2533,7 +2647,7 @@ Available variables are:",
 </desc>",
 
 "then":#"<desc cont><short>
- Shows its content if the truth-value is true.</short>
+ Shows its content if the truth value is true.</short>
 
  <ex>There is <strlen>foo bar gazonk</strlen> characters inside the
  tag.</ex>
