@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.137 2003/06/02 14:19:23 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.138 2003/06/24 12:55:28 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -662,13 +662,6 @@ int loaded_at( program p )
 //   return ({ make_ofilename(fname) }) + ::query_precompiled_names(fname);
 // }
 
-array master_file_stat(string x) 
-{ 
-  lambda(){}(); // avoid some optimizations
-  mixed y = file_stat( x );
-  return y?(array(int))y:0;
-}
-
 #if constant(_static_modules.Builtin.mutex)
 #define THREADED
 // NOTE: compilation_mutex is inherited from the original master.
@@ -684,7 +677,7 @@ program low_findprog(string pname, string ext,
 		     object|void handler, void|int mkobj)
 {
   program ret;
-  array s;
+  Stat s;
   string fname=pname+ext;
 
 #ifdef THREADED
@@ -762,7 +755,7 @@ program low_findprog(string pname, string ext,
       }
 
       foreach(query_precompiled_names(fname), string ofile )
-        if(array s2=master_file_stat( ofile ))
+        if(Stat s2=master_file_stat( ofile ))
           if(s2[1]>0 && s2[3]>=s[3])
             LOAD_OFILE( Stdio.File( ofile,"r")->read() );
 
@@ -865,7 +858,7 @@ int refresh( program p, int|void force )
     return 1;
   }
 
-  array s=master_file_stat( fname );
+  Stat s=master_file_stat( fname );
 
   if( s && s[1]>=0 )
   {
