@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.54 1999/02/13 16:18:40 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.55 1999/02/13 16:42:45 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -883,15 +883,12 @@ class backend
       if (arrayp(name)) {
 	foreach(name, string n) {
 	  if (glob == n) {
-	    return({ n });
+	    return ({ n });
 	  }
 	}
 	return ({});
       } else {
-	if (name == glob) {
-	  return 1;
-	}
-	return 0;
+	return (name == glob);
       }
     } else {
       int nglob = (sizeof(new_glob) - sizeof(glob))/2;
@@ -909,6 +906,21 @@ class backend
     }
   }
   
+  int create_mailbox(object|mapping(string:mixed) session,
+		     string mailbox_name)
+  {
+    if (lower_case(mailbox_name) == "inbox") {
+      // INBOX always exists, and is called "incoming" in the client layer.
+      return(0);
+    }
+    if (search(session->user->mailboxes()->query_name(), mailbox_name) != -1) {
+      // Mailbox already exists.
+      return(0);
+    }
+
+    return(session->create_mailbox(mailbox_name) != 0);
+  }
+
   array(array(object|string)) list(object|mapping(string:mixed) session,
 				   string reference, string glob)
   {
