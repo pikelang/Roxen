@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.51 2002/10/22 00:19:48 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.52 2003/01/23 16:54:35 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -241,7 +241,7 @@ class FileCounter {
       if(names_file=open(olf+".names", "wrca"))
       {
 	cnum=0;
-	array tmp=parse_accessed_database(names_file->read(0x7ffffff));
+	array tmp=spider.parse_accessed_database(names_file->read(0x7ffffff));
 	fton=tmp[0];
 	cnum=tmp[1];
 	names_file = 0;
