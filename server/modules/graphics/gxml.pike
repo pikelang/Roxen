@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.1 2001/04/02 09:24:15 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.2 2001/04/02 10:26:32 per Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(0,"Graphics: GXML Image processing tags");
@@ -38,7 +38,7 @@ string status() {
 }
 
 mapping(string:LazyImage.LazyImage) images = ([]);
-array(Image.Layer) generate_image( string hash, RequestID id )
+array(Image.Layer) generate_image( mapping a, string hash, RequestID id )
 {
   if( images[hash] )
     return m_delete(images,hash)->run( );
@@ -54,8 +54,209 @@ mapping find_internal( string f, RequestID id )
 
 array(RXML.Tag) gxml_find_builtin_tags(  )
 {
-  return map(glob("GXML*", indices( this_object() )), ::`[]);
+  return map(glob("GXML*", indices( this_object() )), ::`[])();
 }
+
+
+
+#define SIMPLE_LI( X )   						\
+class GXML##X								\
+{									\
+  inherit RXML.Tag;							\
+  constant name = LazyImage.X.operation_name;	  		        \
+									\
+  class Frame								\
+  {									\
+    inherit RXML.Frame;							\
+    array do_return( RequestID id )					\
+    {									\
+        id->misc->gxml_image = LazyImage.new(LazyImage.X,		\
+					     id->misc->gxml_image,	\
+					     args );			\
+    }									\
+  }									\
+}
+
+#define CONTENT_LI( X,Y )   						\
+class GXML##X								\
+{									\
+  inherit RXML.Tag;							\
+  constant name = LazyImage.X.operation_name;	  		        \
+									\
+  class Frame								\
+  {									\
+    inherit RXML.Frame;							\
+    array do_return( RequestID id )					\
+    {									\
+      args->Y = content;                                                \
+      id->misc->gxml_image = LazyImage.new(LazyImage.X,		        \
+					     id->misc->gxml_image,	\
+					     args );			\
+    }									\
+  }									\
+}
+
+class GXMLPush
+{
+  inherit RXML.Tag;
+  constant name = "push";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_enter( RequestID id )
+    {
+      id->misc->gxml_stack->push( id->misc->gxml_image );
+      id->misc->gxml_image = 0;
+    }
+    array do_return( RequestID id )
+    {
+      LazyImage.LazyImage i = id->misc->gxml_stack->pop();
+      if( id->misc->gxml_image )
+	id->misc->gxml_stack->push( id->misc->gxml_image->ref() );
+      else
+	id->misc->gxml_stack->push( i->ref() );
+      id->misc->gxml_image = i;
+    }
+  }
+}
+
+class GXMLDup
+{
+  inherit RXML.Tag;
+  constant name = "dup";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return( RequestID id )
+    {
+      LazyImage.LazyImage i = id->misc->gxml_stack->pop();
+      id->misc->gxml_stack->push( i );
+      id->misc->gxml_stack->push( i );
+    }
+  }
+}
+
+class GXMLClear
+{
+  inherit RXML.Tag;
+  constant name = "clear";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return( RequestID id )
+    {
+      id->misc->gxml_image = 0;
+    }
+  }
+}
+
+class GXMLClearStack
+{
+  inherit RXML.Tag;
+  constant name = "clear-stack";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return( RequestID id )
+    {
+      id->misc->gxml_stack->reset();
+    }
+  }
+}
+
+class GXMLPop
+{
+  inherit RXML.Tag;
+  constant name = "pop";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_enter( RequestID id )
+    {
+      catch
+      {
+	LazyImage.LazyImage i = id->misc->gxml_image ;
+	id->misc->gxml_image  = id->misc->gxml_stack->pop();
+	id->misc->gxml_stack->push( i );
+	return 0;
+      };
+      RXML.parse_error("Popping beyond end of stack\n");
+    }
+    
+    array do_return( RequestID id )
+    {
+      LazyImage.LazyImage b = id->misc->gxml_stack->pop();
+      id->misc->gxml_image = LazyImage.join_images(b,id->misc->gxml_image);
+      return 0;
+    }
+  }
+}
+
+class GXMLPopDup
+{
+  inherit RXML.Tag;
+  constant name = "pop-dup";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_enter( RequestID id )
+    {
+      catch
+      {
+	LazyImage.LazyImage i = id->misc->gxml_image;
+	id->misc->gxml_image  = id->misc->gxml_stack->pop();
+	id->misc->gxml_stack->push( id->misc->gxml_image );
+	id->misc->gxml_stack->push( i );
+	return 0;
+      };
+      RXML.parse_error("Popping beyond end of stack\n");
+    }
+    
+    array do_return( RequestID id )
+    {
+      LazyImage.LazyImage b = id->misc->gxml_stack->pop();
+      id->misc->gxml_image = LazyImage.join_images(b,id->misc->gxml_image);
+      return 0;
+    }
+  }
+}
+
+class GXMLPopReplace
+{
+  inherit RXML.Tag;
+  constant name = "pop-replace";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return( RequestID id )
+    {
+      catch
+      {
+	id->misc->gxml_image = id->misc->gxml_stack->pop();
+	return 0;
+      };
+      RXML.parse_error("Popping beyond end of stack\n");
+    }
+  }
+}
+
+CONTENT_LI(Text,text);
+
+SIMPLE_LI(LoadImage);
+SIMPLE_LI(SelectLayers);
+SIMPLE_LI(ReplaceAlpha);
+SIMPLE_LI(SetLayerMode);
+SIMPLE_LI(MoveLayer);
+SIMPLE_LI(NewLayer);
 
 array(string|RXML.Tag) builtin_tags = gxml_find_builtin_tags();
 
@@ -84,8 +285,11 @@ class TagGXML
 
   static mapping last_from;
   static array(RXML.Tag) last_result;
-  static array(RXML.Tag) gxml_make_tags( mapping from )
+  static array(RXML.Tag) gxml_make_tags( function get_plugins )
   {
+    mapping from = ([]);
+    catch( from = get_plugins() );
+
     if( from == last_from )
       return last_result;
 
@@ -103,8 +307,9 @@ class TagGXML
   class Frame 
   {
     inherit RXML.Frame;
+
     RXML.TagSet additional_tags=RXML.TagSet("TagGXML.internal",
-                                            gxml_make_tags(get_plugins()));
+					    gxml_make_tags( get_plugins ));
 
 
     array do_enter( RequestID id )
@@ -118,6 +323,11 @@ class TagGXML
     {
       // The image is now in id->misc->gxml_image, hopefully.
       LazyImage.LazyImage i = id->misc->gxml_image;
+
+      werror("%O\n", i->run() );
+      
+      if( !i ) RXML.parse_error( "No image\n");
+
       mapping aa = args;
       string ind;
       mapping a2 = aa+([]);
@@ -127,7 +337,7 @@ class TagGXML
       m_delete( a2, "border" );
       aa->src = query_internal_location()+
 	(ind=the_cache->store(({a2,i->hash()}),id));
-      images[ ind ] = i;
+      images[ i->hash() ] = i;
 
       a2 = ([]);
       a2->src = aa->src;
@@ -140,7 +350,7 @@ class TagGXML
 	aa->height = size->ysize;
       }
       if( !args->url )
-	result = RXML.make_tag( "img", a2, 1 );
+	result = Roxen.make_tag( "img", a2, 1 );
       else
 	result = a2->src;
 
