@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.37 2001/09/21 15:58:16 jhs Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.38 2002/05/22 09:51:51 anders Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -33,7 +33,10 @@ static string img_placeholder (mapping args)
 {
   int width=((int)args->outlinewidth)||1;
 
-  return sprintf("<img src=\"%s\" alt=\"\" width=\"%d\" height=\"%d\"%s>",
+  return sprintf("<img src=\"%s\" alt=\"\" "
+		 // border:1 is here to work around a buggy rendering in NS4.
+		 "style=\"display:block; border:1;\" "
+		 "width=\"%d\" height=\"%d\"%s>",
 		 unit_gif, width, width, (args->noxml?"":" /"));
 }
 
