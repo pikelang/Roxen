@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.200 2001/02/06 22:41:21 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.201 2001/02/10 22:02:04 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1181,25 +1181,32 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
   return ({r});
 }
 
-string container_cache(string tag, mapping args,
-		       string contents, RequestID id)
-{
+class TagCache {
+  inherit RXML.Tag;
+  constant name = "cache";
+  RXML.Type content_type = RXML.t_same;
+
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
 #define HASH(x) (x+id->not_query+id->query+id->realauth+id->conf->query("MyWorldLocation"))
-  string key="";
-  if(!args->nohash) {
-    object md5 = Crypto.md5();
-    md5->update(HASH(contents));
-    key=md5->digest();
-  }
-  if(args->key)
-    key += args->key;
-  string parsed = cache_lookup("tag_cache", key);
-  if(!parsed) {
-    parsed = Roxen.parse_rxml(contents, id);
-    cache_set("tag_cache", key, parsed, Roxen.time_dequantifier(args));
-  }
-  return parsed;
+      string key="";
+      if(!args->nohash) {
+	object md5 = Crypto.md5();
+	md5->update(HASH(content));
+	key=md5->digest();
+      }
+      if(args->key)
+	key += args->key;
+      result = cache_lookup("tag_cache", key);
+      if(!result) {
+	result = Roxen.parse_rxml(content, id);
+	cache_set("tag_cache", key, result, Roxen.time_dequantifier(args));
+      }
 #undef HASH
+      return 0;
+    }
+  }
 }
 
 class TagCrypt {
