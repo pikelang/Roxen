@@ -12,7 +12,7 @@
 #define _ok	id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.13 2003/01/08 10:24:31 mattias Exp $";
+ "$Id: writefile.pike,v 1.14 2003/03/13 15:10:18 mattias Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -111,7 +111,7 @@ class TagWritefile {
       real_filename = Stdio.append_path(real_dirname, basename(filename));
 
       if(args->remove) {
-        if(!rm(filename))
+        if(!rm(real_filename))
 	  _ok = 0;
       }
       else 
