@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.363 2000/09/05 15:06:28 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.364 2000/09/08 18:41:25 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2155,6 +2155,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 #ifdef MODULE_DEBUG
       }
 #endif
+      got_no_delayed_load = -1;
       return module[id];
     }
   }
@@ -2285,8 +2286,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if (!has_stored_vars)
     store (modname + "#" + id, me->query(), 0, this_object());
 
-  if( me->no_delayed_load )
-    set( "no_delayed_load", 1 );
+  if( me->no_delayed_load && got_no_delayed_load >= 0 )
+    got_no_delayed_load = 1;
 
   return me;
 }
@@ -2307,7 +2308,7 @@ void call_start_callbacks( RoxenModule me,
     string bt=describe_backtrace(err);
     report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
 			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
-    
+    got_no_delayed_load = -1;
     /* Clean up some broken references to this module. */
 //     m_delete(otomod, me);
 //     m_delete(module->copies, search( module->copies, me ));
@@ -2322,10 +2323,8 @@ void call_start_callbacks( RoxenModule me,
 #endif
       report_error( "While calling ready_to_receive_requests:\n"+
 		    describe_backtrace( q ) );
+      got_no_delayed_load = -1;
     }
-  
-  if( me->no_delayed_load )
-    save_me();
 }
 
 void call_low_start_callbacks( RoxenModule me, 
@@ -2371,9 +2370,10 @@ void call_low_start_callbacks( RoxenModule me,
 #ifdef MODULE_DEBUG
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
-    string bt=describe_backtrace(err);
-    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
-			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+      string bt=describe_backtrace(err);
+      report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
+		   moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+      got_no_delayed_load = -1;
     }
 
   if(module_type & MODULE_PROVIDER)
@@ -2391,9 +2391,10 @@ void call_low_start_callbacks( RoxenModule me,
 #ifdef MODULE_DEBUG
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
-    string bt=describe_backtrace(err);
-    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
-			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+      string bt=describe_backtrace(err);
+      report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
+		   moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+      got_no_delayed_load = -1;
     }
 
   if(module_type & MODULE_TYPES)
@@ -2689,14 +2690,20 @@ mixed add_init_hook( mixed what )
     after_init_hooks |= ({ what });
 }
 
+static int got_no_delayed_load;
+// 0 -> enabled delayed loading, 1 -> disable delayed loading,
+// -1 -> don't change.
+
 void enable_all_modules()
 {
   MODULE_LOCK;
   int q = query( "no_delayed_load" );
-  set( "no_delayed_load", 0 );
+  got_no_delayed_load = 0;
   low_init( );
-  if( q != query( "no_delayed_load" ) )
+  if( got_no_delayed_load >= 0 && q != got_no_delayed_load ) {
+    set( "no_delayed_load", got_no_delayed_load );
     save_one( 0 );
+  }
 }
 
 void low_init()
@@ -2725,9 +2732,11 @@ void low_init()
   foreach( modules_to_process, tmp_string )
   {
     if( !forcibly_added[ tmp_string ] )
-      if(err = catch( enable_module( tmp_string )))
+      if(err = catch( enable_module( tmp_string ))) {
 	report_error(LOC_M(45, "Failed to enable the module %s. Skipping.\n%s"),
 			    tmp_string, describe_backtrace(err));
+	got_no_delayed_load = -1;
+      }
   }
   enable_module_batch_msgs = 0;
   roxenloader.pop_compile_error_handler();
@@ -2738,15 +2747,19 @@ void low_init()
     
   foreach( ({this_object()})+indices( otomod ), object mod )
     if( mod->ready_to_receive_requests )
-      if( mixed q = catch( mod->ready_to_receive_requests( this_object() ) ) )
+      if( mixed q = catch( mod->ready_to_receive_requests( this_object() ) ) ) {
         report_error( "While calling ready_to_receive_requests in "+
                       otomod[mod]+":\n"+
                       describe_backtrace( q ) );
+	got_no_delayed_load = -1;
+      }
 
   foreach( after_init_hooks, function q )
-    if( mixed w = catch( q(this_object()) ) )
+    if( mixed w = catch( q(this_object()) ) ) {
       report_error( "While calling after_init_hook %O:\n%s",
                     q,  describe_backtrace( w ) );
+      got_no_delayed_load = -1;
+    }
 
   after_init_hooks = ({});
 
