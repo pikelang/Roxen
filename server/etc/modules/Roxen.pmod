@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.175 2004/05/12 17:41:18 mast Exp $
+// $Id: Roxen.pmod,v 1.176 2004/05/12 20:59:02 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -653,7 +653,7 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
 
   HTTP_WERR("Redirect -> "+url);
 
-  return http_low_answer( 302, "Redirect to "+html_encode_string(url))
+  return http_status( 302, "Redirect to "+html_encode_string(url))
     + ([ "extra_heads":([ "Location":url ]) ]);
 }
 
@@ -683,7 +683,7 @@ mapping http_auth_required(string realm, string|void message)
   if(!message)
     message = "<h1>Authentication failed.\n</h1>";
   HTTP_WERR("Auth required ("+realm+")");
-  return http_low_answer(401, message)
+  return http_status(401, message)
     + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
 
@@ -703,7 +703,7 @@ mapping http_proxy_auth_required(string realm, void|string message)
 {
   if(!message)
     message = "<h1>Proxy authentication failed.\n</h1>";
-  return http_low_answer(407, message)
+  return http_status(407, message)
     + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
 
