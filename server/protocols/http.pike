@@ -2,11 +2,15 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.265 2000/08/31 20:52:21 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.266 2000/09/01 13:47:40 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
 #undef OLD_RXML_COMPAT
+
+#ifndef INITIAL_CACHEABLE
+# define INITIAL_CACHEABLE 300
+#endif
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
@@ -1668,7 +1672,7 @@ void send_result(mapping|void result)
             misc->last_modified = fstat[ST_MTIME];
           }
 
-          if(prot != "HTTP/0.9" && misc->cacheable) 
+          if(prot != "HTTP/0.9" && (misc->cacheable==INITIAL_CACHEABLE) )
           {
             heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
 
@@ -1999,7 +2003,7 @@ void got_data(mixed fooid, string s)
     return;
   }
   if( method == "GET" )
-    misc->cacheable = 300; // FIXME: Make configurable.
+    misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
 
   TIMER("charset");
 
