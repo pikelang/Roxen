@@ -121,7 +121,7 @@ string parse( RequestID id )
       {
        case DBManager.NONE:
          res += sprintf("<td bgcolor='"+col+"' width='1%%'>"
-                        "<a href='dbs.html?set_read=%s&db=%s'>"
+                        "<a href='?set_read=%s&db=%s'>"
                         "<gtext "
                         "        scale='0.5' verbatim=''>&nbsp; - </gtext>"
                         "</a>"
@@ -131,7 +131,7 @@ string parse( RequestID id )
          break;
        case DBManager.READ:
          res += sprintf("<td bgcolor='"+col+"' width='1%%'>"
-                        "<a href='dbs.html?set_write=%s&db=%s'>"
+                        "<a href='?set_write=%s&db=%s'>"
                         "<gtext  scale=0.5>R</gtext>"
                         "</a>"
                         "</td>",
@@ -140,7 +140,7 @@ string parse( RequestID id )
          break;
        case DBManager.WRITE:
          res += sprintf("<td bgcolor='"+col+"' width='1%%'>"
-                        "<a href='dbs.html?set_none=%s&db=%s'>"
+                        "<a href='?set_none=%s&db=%s'>"
                         "<gtext fgcolor='&usr.warncolor;' scale=0.5>W</gtext>"
                         "</a>"
                         "</td>",
