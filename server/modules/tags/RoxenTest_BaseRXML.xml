@@ -81,7 +81,7 @@
 </test>
 
 <test>
-<rxml><case type="html" case="upper">a &amp; &quot; <br /></case></rxml>
+<rxml><case case="upper">a &amp; &quot; <br /></case></rxml>
 <result>A &amp; &#34; <br /></result>
 </test>
 
@@ -125,6 +125,11 @@
 </test>
 
 <test>
+<rxml><define variable="var.i" trimwhites="1"> a </define>x&var.i;</rxml>
+<result>xa</result>
+</test>
+
+<test>
 <rxml><define container='x'><p ::='&_.args;'><contents/></p></define><x align='center'>hej</x></rxml>
 <result><p align="center">hej</p></result>
 </test>
@@ -162,6 +167,51 @@
 <test>
 <rxml><define container='x'><attrib name='y'>z</attrib>a<contents/>&_.y;d</define><x y='c'>b</x>e<x>b</x></rxml>
 <result>abcdeabzd</result>
+</test>
+
+<test>
+<rxml><define container='x'>::&_.contents;::</define>a<x>b</x>c</rxml>
+<result>a::b::c</result>
+</test>
+
+<test>
+<rxml><define tag='x'><attrib name="y">z</attrib>&_.rest-args:none;</define><x a="b"/></rxml>
+<result>a="b"</result>
+</test>
+
+<test>
+<rxml><define tag="x" trimwhites="1"> <attrib name="y"> </attrib> a&_.y; </define><x/></rxml>
+<result>a </result>
+</test>
+
+<test>
+<rxml><define tag="x"> <attrib name="y"> </attrib> a&_.y; </define><x trimwhites="1"/></rxml>
+<result>  a  </result>
+</test>
+
+<test>
+<rxml><define container="x"> a&_.contents; </define><x trimwhites="1">b </x></rxml>
+<result> ab </result>
+</test>
+
+<test>
+<rxml><define tag="x">&_.y;&x.y;</define><x y="z"/></rxml>
+<result>zz</result>
+</test>
+
+<test>
+<rxml><define tag="x" scope="p">&_.y;&p.y;</define><x y="z"/></rxml>
+<result>zz</result>
+</test>
+
+<test>
+<rxml><define tag="x">&var.x;</define><set variable="var.x">y</set><x/></rxml>
+<result>y</result>
+</test>
+
+<test>
+<rxml><define tag="x" preparse="1">&var.x;</define><set variable="var.x">y</set><x/></rxml>
+<result></result>
 </test>
 
 
@@ -800,3 +850,92 @@ b</strlen></rxml>
 <has-value>RXML test package</has-value>
 </test>
 
+<comment>Missing test: load package from file</comment>
+
+<comment>Missing tets: <help> tag</comment>
+
+<comment>Number tests</comment>
+<test>
+<rxml><number num="3"/></rxml>
+<result>three</result>
+</test>
+
+<test>
+<rxml><number type="number" num="3"/></rxml>
+<result>three</result>
+</test>
+
+<test>
+<rxml><number type="roman" num="3"/></rxml>
+<result>III</result>
+</test>
+
+<test>
+<rxml><number type="memory" num="14588"/></rxml>
+<result>14.2 kb</result>
+</test>
+
+<test>
+<rxml><number num="3" language="sv"/></rxml>
+<result>tre</result>
+</test>
+
+<test>
+<rxml><number num="3" language="swe"/></rxml>
+<result>tre</result>
+</test>
+
+<test>
+<rxml><number type="ordered" num="3"/></rxml>
+<result>3rd</result>
+</test>
+
+<test>
+<rxml><number type="ordered" num="3" language="swe"/></rxml>
+<result>3:e</result>
+</test>
+
+
+<comment>Noparse/eval/nooutput tests</comment>
+<test>
+<rxml><noparse><roxen/></noparse></rxml>
+<result><roxen/></result>
+</test>
+
+<test>
+<rxml><?noparse <roxen/>?></rxml>
+<result><roxen/></result>
+</test>
+
+<test>
+<rxml><?cdata <roxen/>?></rxml>
+<result>&lt;roxen/&gt;</result>
+</test>
+
+<test>
+<rxml><define variable="var.x">&var.y;</define><set variable="var.y">Q</set><eval>&var.x:none;</eval></rxml>
+<result>Q</result>
+</test>
+
+<test>
+<rxml><nooutput><set variable="var.i">x</set>y</nooutput>z&var.i;</rxml>
+<result>zx</result>
+</test>
+
+
+<comment>Strlen tests</comment>
+<test>
+<rxml><strlen/></rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><strlen></strlen></rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><strlen>ab
+cd</rxml>
+<result>5</result>
+</test>
