@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.108 2002/06/10 14:13:45 anders Exp $";
+  "$Id: config_filesystem.pike,v 1.109 2002/06/10 14:24:30 anders Exp $";
 
 constant path = "config_interface/";
 
@@ -354,7 +354,6 @@ void start(int n, Configuration cfg)
     mixed err;
     array(mapping(string:string)) old_version;
     int ver;
-    werror("roxen_version: %O\n", roxen_version());
     if( !(docs = DBManager.get( "docs", cfg ) ) ||
 	(err = catch( old_version = DBManager.get( "docs", cfg )
 		      ->query("SELECT contents FROM docs where name='_version'") )) ||
