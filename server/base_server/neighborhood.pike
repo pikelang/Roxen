@@ -29,6 +29,7 @@ string network_number()
 int seq,lr=time();
 void broadcast()
 {
+  call_out(broadcast,2*60);
   udp_broad->
     send(network_number(),51521,
 	 encode_value((["configurl":roxen->config_url(),
@@ -37,17 +38,15 @@ void broadcast()
 		     	"uid":getuid(),
 		     	"version":roxen->real_version,
 			"last_reboot":lr,
-			"time":lr,
 			"comment":roxen->query("neigh_com"),
 			"server_urls":Array.map(roxen->configurations,
 				   lambda(object c)  {
 			  return ({
 			    strlen(c->query("name"))?c->query("name"):c->name,
 			      c->query("MyWorldLocation"),
-			  });
+ 		          });
 			})
 		      ])));
-  call_out(broadcast,2*60);
 }
 
 void create()

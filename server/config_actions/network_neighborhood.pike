@@ -72,8 +72,11 @@ string page_0()
 		   time_interval(time()-ns->rec_time)+"???)":
 		   time_interval(time()-ns->last_reboot))+ER,
 	       RE+roxen->language("en","date")(ns->last_reboot)+ER,
-	       RE+sv(ns->version)+ER
-     });
+	       RE+sv(ns->version)+ER}) +
+       (strlen(ns->comment)?
+		 ({({"<img src=/image/unit.gif height=1 width=20>"
+		     "<font size=-1>"+ns->comment
+		       +"</font>"})}):({}));
     }));
 }
 

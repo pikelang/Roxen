@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.41 1997/08/21 10:50:31 per Exp $ */
+/* $Id: describers.pike,v 1.42 1997/08/22 23:15:24 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -213,7 +213,7 @@ string describe_errors(object node)
     report += ({ describe_error(err, node->data[err]) });
 
 //  return (link("<font size=+2>&nbsp;Event log")+"</font><dd><pre>"+
-  return (sizeof(report)?(report*""):"Empty");
+  return "</dl>"+(sizeof(report)?(report*""):"Empty")+"<dl>";
 //+"</pre>");
 }
 
@@ -374,17 +374,17 @@ string describe_module(object node)
 
 string describe_global_variables( object node )
 {
-  return "";
+  return "</dl>";
 }
 
 string describe_root(object root)
 {
-  return "";
+  return "How did you find this node?";
 }
 
 string describe_configurations(object node)
 {
-  return "";
+  return "</dl>";
 }
 
 string describe_configuration(object node)
@@ -685,7 +685,7 @@ array describe_global_status(object node)
   if(node->folded)
     return ({"", ""});
   
-  res =  "<h2>&nbsp;Server uptime: " 
+  res =  "</dl><h2>&nbsp;Server uptime: " 
     + roxen->msectos((time(1) - roxen->start_time)*1000)
     + "</h2>";
 
