@@ -13,7 +13,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.18 2001/07/20 12:13:15 jhs Exp $";
+       "$Id: perl.pike,v 2.19 2001/08/08 12:41:50 leif Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -28,6 +28,8 @@ static string recent_error = 0;
 static int parsed_tags = 0, script_calls = 0, script_errors = 0;
 
 static mapping handler_settings = ([ ]);
+
+static int cache_output;
 
 static string script_output_mode;
 
@@ -56,7 +58,7 @@ void create()
   defvar("showbacktrace", 0,
     LOCALE(0, "Show Backtraces"), TYPE_FLAG,
     LOCALE(0, "This setting decides whether to deliver a backtrace in the "
-    "document if an error is caught while a script runs."));
+	   "document if an error is caught while a script runs."));
 
   defvar("tagenable", 0,
     LOCALE(0, "Enable Perl Tag"), TYPE_FLAG,
@@ -92,12 +94,18 @@ void create()
     "The default for this setting is `perl/bin/perlrun'."));
 #endif
 
-  defvar("parallel", 2,
+  defvar("parallel", 3,
     LOCALE(0, "Parallel scripts"), TYPE_MULTIPLE_INT,
     LOCALE(0, "Number of scripts/tags that may be evaluated in parallel. "
     "Don't set this higher than necessary, since it may cause the server "
-    "to block. The default for this setting is 2."),
-         ({ 1, 2, 3, 4, 5 }) );
+    "to block (by using all available threads). The default for this "
+    "setting is 3."),
+         ({ 1, 2, 3, 4, 5, 6 }) );
+
+  defvar("caching", 0,
+	 LOCALE(0, "Cache output"), TYPE_FLAG,
+	 LOCALE(0, "Whether to cache the result of scripts. This is usually "
+		"not desirable, so the default for this setting is No."));
 
 #if constant(getpwnam)
   defvar("identity", "nobody:*",
@@ -159,6 +167,8 @@ static void fix_settings()
 #endif
 
   handler_settings = s;
+
+  cache_output = query("caching");
 }
 
 static void periodic()
@@ -209,12 +219,16 @@ static void do_response_callback(RequestID id, array result)
 }
 
 mixed handle_file_extension(Stdio.File file, string ext, object id)
-{ object h = gethandler();
+{
+  object h = gethandler();
 
   if (id->realfile && stringp(id->realfile))
   { array result;
 
-    NOCACHE();
+    if (!cache_output)
+    {
+      NOCACHE();
+    }
 
     if (!h)
       return Roxen.http_string_answer("<h1>Script support failed.</h1>");
@@ -278,7 +292,14 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
       return Roxen.http_string_answer(sprintf("RESULT: %O", result));
   }
 
+#if 1
+  return http_string_answer("Script file not accessible in this filesystem "
+			    "(no real file).");
+#else
+  // Possible security leak allowing people to read the contents
+  // of script files.
   return 0;
+#endif
 }
 
 constant simpletag_perl_flags = 0;
