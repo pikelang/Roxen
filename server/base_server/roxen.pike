@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.706 2001/08/21 14:32:15 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.707 2001/08/22 15:41:24 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3090,10 +3090,10 @@ class ArgCache
       if( m->contents == long_key )
 	return (int)m->id;
     
-    int id = (int)get_db()->master_sql->insert_id();
-
     QUERY( "INSERT INTO "+name+" (contents,md5,atime) VALUES "
 	   "(%s,%s,UNIX_TIMESTAMP())", long_key, md );
+
+    int id = (int)get_db()->master_sql->insert_id();
 
     (plugins->create_key-({0}))( id, long_key, md );
 
@@ -3210,14 +3210,8 @@ class ArgCache
     if( cache[id] )
       return cache[id]+([]);
     array i = decode_id( id );
-//     if( !i )
-//     {
-//       mixed res;
-//       foreach( (plugins->lookup-({0})), function f )
-// 	if( res = f( id ) )
-// 	  return res;
-//       return 0;
-//     }
+    if( !i )
+      error("Requesting unknown key\n");
     array a = low_lookup( i[0] );
     array b = low_lookup( i[1] );
     if( a && b )
@@ -3232,12 +3226,6 @@ class ArgCache
     string q = read_args( id );
     if( !q )
       error("Requesting unknown key\n");
-//     {
-//       mixed res;
-//       foreach( (plugins->low_lookup-({0})), function f )
-// 	if( res = f( id ) )
-// 	  return res;
-//     }
     mixed data = decode_value(q);
     string hl = Crypto.md5()->update( q )->digest();
     cache[ hl ] = id;
@@ -4015,8 +4003,8 @@ int main(int argc, array tmp)
   start_time=time();		// Used by the "uptime" info later on.
 
 
-  if (query("suicide_engage"))
-    call_out (restart,60*60*24*max(1,query("suicide_timeout")));
+//   if (query("suicide_engage"))
+//     call_out (restart,60*60*24*max(1,query("suicide_timeout")));
 #ifndef __NT__
   restart_if_stuck( 0 );
 #endif
@@ -4024,6 +4012,17 @@ int main(int argc, array tmp)
   trace(1);
 #endif
   return -1;
+}
+
+void check_suicide( )
+{
+  int next = getvar("suicide_schedule")
+    ->get_next( query("last_suicide") );
+  if( next < time() )
+  {
+    set( "last_suicide", time() );
+    return 0;
+  }
 }
 
 // Called from the administration interface.
@@ -4042,9 +4041,12 @@ string check_variable(string name, mixed value)
 
    case "suicide_engage":
     if (value)
-      call_out(restart,60*60*24*max(1,query("suicide_timeout")));
+    {
+      remove_call_out( check_suicide );
+      call_out( check_suicide, 60 );
+    }
     else
-      remove_call_out(restart);
+      remove_call_out( check_suicide );
     break;
 
 #ifdef SNMP_AGENT
