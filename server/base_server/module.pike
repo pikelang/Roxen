@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.157 2004/03/04 12:58:16 grubba Exp $
+// $Id: module.pike,v 1.158 2004/03/15 17:12:41 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -604,124 +604,6 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   return Roxen.http_status (Protocols.HTTP.HTTP_NOT_FOUND, "No such property.");
 }
 
-//! Attempt to set property @[prop_name] for @[path] to @[value].
-//!
-//! @param value
-//!   Value to set the node to.
-//!   The case of an array of a single text node is special cased,
-//!   and is sent as a @expr{string@}.
-//!
-//! @param context
-//!   The value returned by @[patch_property_start()].
-//!
-//! @returns
-//!   Returns a result mapping. May return @expr{0@} (zero) on success.
-//!
-//! @note
-//!   Actual changing of the property should be done first
-//!   when @[patch_property_commit()] is called, or unrolled
-//!   when @[patch_property_unroll()] is called.
-//!
-//! @note
-//!   Overloaded variants should only set the live properties they can
-//!   handle and call the inherited implementation for all others.
-//!   Setting of dead properties should be done through overloading of
-//!   @[set_dead_property()]. This way, the live properties handled on
-//!   any level in the inherit hierachy take precedence over dead
-//!   properties.
-//!
-//! @note
-//!   RFC 2518: Live property - A property whose semantics and syntax
-//!   are enforced by the server. For example, the live
-//!   "getcontentlength" property has its value, the length of the
-//!   entity returned by a GET request, automatically calculated by
-//!   the server.
-mapping(string:mixed) set_property(string path, string prop_name,
-				   string|array(Parser.XML.Tree.Node) value,
-				   RequestID id, mixed context)
-{
-  switch(prop_name) {
-  case "http://apache.org/dav/props/executable":
-    // FIXME: Could probably be implemented R/W.
-    // FALL_THROUGH
-  case "DAV:displayname":	// 13.2
-  case "DAV:getcontentlength":	// 13.4
-  case "DAV:getcontenttype":	// 13.5
-  case "DAV:getlastmodified":	// 13.7
-    return Roxen.http_status (Protocols.HTTP.HTTP_CONFLICT,
-			      "Attempt to set read-only property.");
-  }
-  return set_dead_property(path, prop_name, value, id, context);
-}
-
-//! Attempt to set dead property @[prop_name] for @[path] to @[value].
-//!
-//! @param context
-//!   The value returned by @[patch_property_start()].
-//!
-//! @returns
-//!   Returns a result mapping. May return @expr{0@} (zero) on success.
-//!
-//! @note
-//!   Actual changing of the property should be done first
-//!   when @[patch_property_commit()] is called, or unrolled
-//!   when @[patch_property_unroll()] is called.
-//!
-//! @note
-//!   This function is called as a fallback by @[set_property()]
-//!   if all else fails.
-//!
-//! @note
-//!   The default implementation currently does not support setting
-//!   of dead properties, and will return an error code.
-//!
-//! @note
-//!    RFC 2518: Dead Property - A property whose semantics and syntax
-//!    are not enforced by the server. The server only records the
-//!    value of a dead property; the client is responsible for
-//!    maintaining the consistency of the syntax and semantics of a
-//!    dead property.
-mapping(string:mixed) set_dead_property(string path, string prop_name,
-					array(Parser.XML.Tree.Node) value,
-					RequestID id, mixed context)
-{
-  return Roxen.http_status (Protocols.HTTP.HTTP_METHOD_INVALID,
-			    "Setting of dead properties is not supported.");
-}
-
-//! Attempt to remove the property @[prop_name] for @[path].
-//!
-//! @param context
-//!   The value returned by @[patch_property_start()].
-//!
-//! @note
-//!   Actual removal of the property should be done first
-//!   when @[patch_property_commit()] is called, or unrolled
-//!   when @[patch_property_unroll()] is called.
-//!
-//! @returns
-//!   Returns a result mapping. May return @expr{0@} (zero) on success.
-//!
-//! @note
-//!   The default implementation does not support deletion.
-mapping(string:mixed) remove_property(string path, string prop_name,
-				      RequestID id, mixed context)
-{
-  switch(prop_name) {
-  case "http://apache.org/dav/props/executable":
-  case "DAV:displayname":	// 13.2
-  case "DAV:getcontentlength":	// 13.4
-  case "DAV:getcontenttype":	// 13.5
-  case "DAV:getlastmodified":	// 13.7
-    return Roxen.http_status (Protocols.HTTP.HTTP_CONFLICT,
-			      "Attempt to remove a read-only property.");
-  }
-  // RFC 2518 12.13.1:
-  //   Specifying the removal of a property that does not exist
-  //   is not an error.
-  return 0;
-}
-
 //! RFC 2518 PROPFIND implementation for a single resource (i.e. not
 //! recursive).
 //!
@@ -804,7 +686,7 @@ void recurse_find_properties(string path, string mode,
   mapping(string:mixed) ret =
     find_properties(path, mode, result, id, filt, st);
   if (ret) {
-    result->add_response(path, XMLStatusNode(ret->error));
+    result->add_response(path, XMLStatusNode(ret->error, ret->rettext));
     if (ret->rettext) {
       Parser.XML.Tree.ElementNode descr =
 	Parser.XML.Tree.ElementNode ("DAV:responsedescription", ([]));
@@ -828,121 +710,270 @@ void recurse_find_properties(string path, string mode,
 //   instructions MUST be undone and a proper error result
 //   returned.
 
-//! Signal start of patching of properties for @[path].
+//! Start property patching for @[path].
 //!
 //! @returns
 //!   @mixed
 //!     @type zero
-//!       File not found. @[patch_property_unroll()] will
-//!	  not be called in this case.
+//!       File not found.
+//!     @type PatchPropertyContext
+//!       A context that will be used to carry out the patching.
 //!     @type mapping
 //!       Return code. No patching will be performed.
-//!     @type mixed
-//!       A context to be passed to @[set_property()],
-//!       @[remove_property()], @[patch_property_commit()]
-//!       and @[patch_property_unroll()].
 //!   @endmixed
-mixed patch_property_start(string path, RequestID id)
+mapping(string:mixed)|PatchPropertyContext
+  patch_property_start(string path, RequestID id)
 {
-  return !!stat_file(path, id);
+  return stat_file(path, id) && PatchPropertyContext (path, id);
 }
 
-//! Patching of the properties for @[path] failed.
-//! Restore the state to what it was when @[patch_property_start()]
-//! was called.
-void patch_property_unroll(string path, RequestID id, mixed context)
+class PatchPropertyContext (optional string path, optional RequestID id)
+//! Context used for property patching. @[patch_property_start] should
+//! return an object compatible with this class when property patching
+//! should be carried out.
 {
-}
 
-//! Patching of the properties for @[path] succeeded.
-void patch_property_commit(string path, RequestID id, mixed context)
-{
+  //! Attempt to set property @[prop_name] to @[value].
+  //!
+  //! @param value
+  //!   Value to set the node to. The case of an array of a single
+  //!   text node is special cased, and is sent as a @expr{string@}.
+  //!
+  //! @returns
+  //!   Returns a result mapping. May return @expr{0@} (zero) on
+  //!   success.
+  //!
+  //! @note
+  //!   Actual changing of the property should be done first when
+  //!   @[patch_commit()] is called, or unrolled when
+  //!   @[patch_unroll()] is called.
+  //!
+  //! @note
+  //!   Overloaded variants should only set the live properties they
+  //!   can handle and call the inherited implementation for all
+  //!   others. Setting of dead properties should be done through
+  //!   overloading of @[set_dead_property()]. This way, the live
+  //!   properties handled on any level in the inherit hierachy take
+  //!   precedence over dead properties.
+  //!
+  //! @note
+  //!   RFC 2518: Live property - A property whose semantics and
+  //!   syntax are enforced by the server. For example, the live
+  //!   "getcontentlength" property has its value, the length of the
+  //!   entity returned by a GET request, automatically calculated by
+  //!   the server.
+  mapping(string:mixed) set_property(string prop_name,
+				     string|array(Parser.XML.Tree.Node) value)
+  {
+    switch(prop_name) {
+      case "http://apache.org/dav/props/executable":
+	// FIXME: Could probably be implemented R/W.
+	// FALL_THROUGH
+      case "DAV:displayname":	// 13.2
+      case "DAV:getcontentlength":	// 13.4
+      case "DAV:getcontenttype":	// 13.5
+      case "DAV:getlastmodified":	// 13.7
+	return Roxen.http_status (Protocols.HTTP.HTTP_CONFLICT,
+				  "Attempt to set read-only property.");
+    }
+    return set_dead_property(prop_name, value);
+  }
+
+  //! Attempt to set dead property @[prop_name] to @[value].
+  //!
+  //! @returns
+  //!   Returns a result mapping. May return @expr{0@} (zero) on success.
+  //!
+  //! @note
+  //!   Actual changing of the property should be done first when
+  //!   @[patch_commit()] is called, or unrolled when
+  //!   @[patch_unroll()] is called.
+  //!
+  //! @note
+  //!   This function is called as a fallback by @[set_property()].
+  //!
+  //! @note
+  //!   The default implementation currently does not support setting
+  //!   of dead properties, and will return an error code.
+  //!
+  //! @note
+  //!    RFC 2518: Dead Property - A property whose semantics and
+  //!    syntax are not enforced by the server. The server only
+  //!    records the value of a dead property; the client is
+  //!    responsible for maintaining the consistency of the syntax and
+  //!    semantics of a dead property.
+  mapping(string:mixed) set_dead_property(string prop_name,
+					  array(Parser.XML.Tree.Node) value)
+  {
+    return Roxen.http_status (Protocols.HTTP.HTTP_METHOD_INVALID,
+			      "Setting of dead properties is not supported.");
+  }
+
+  //! Attempt to remove the property @[prop_name].
+  //!
+  //! @note
+  //!   Actual removal of the property should be done first when
+  //!   @[patch_commit()] is called, or unrolled when
+  //!   @[patch_unroll()] is called.
+  //!
+  //! @returns
+  //!   Returns a result mapping. May return @expr{0@} (zero) on success.
+  //!
+  //! @note
+  //!   The default implementation does not support deletion.
+  mapping(string:mixed) remove_property(string prop_name)
+  {
+    switch(prop_name) {
+      case "http://apache.org/dav/props/executable":
+      case "DAV:displayname":	// 13.2
+      case "DAV:getcontentlength":	// 13.4
+      case "DAV:getcontenttype":	// 13.5
+      case "DAV:getlastmodified":	// 13.7
+	return Roxen.http_status (Protocols.HTTP.HTTP_CONFLICT,
+				  "Attempt to remove a read-only property.");
+    }
+    // RFC 2518 12.13.1:
+    //   Specifying the removal of a property that does not exist
+    //   is not an error.
+    return 0;
+  }
+
+  //! Patching of one or more properties failed, i.e. at least one
+  //! call to @[set_property] or @[remove_property] returned a mapping
+  //! containing an error. Restore the state to what it was when
+  //! @[patch_property_start()] was called.
+  void patch_unroll()
+  {
+  }
+
+  //! Patching of the properties succeeded.
+  //!
+  //! @returns
+  //!   Returns a result mapping. May return @expr{0@} (zero) on
+  //!   success. If an error is returned, it's taken as a general
+  //!   failure to patch any property (just like returning a mapping
+  //!   from @[patch_property_start]). @[patch_unroll] will not be
+  //!   called in that case.
+  mapping(string:mixed) patch_commit()
+  {
+    return 0;
+  }
 }
 
 mapping(string:mixed) patch_properties(string path,
 				       array(PatchPropertyCommand) instructions,
 				       MultiStatus result, RequestID id)
 {
-  mixed context = patch_property_start(path, id);
+  mapping(string:mixed)|PatchPropertyContext context =
+    patch_property_start(path, id);
 
-  if (!context || mappingp(context)) {
+  if (!objectp (context)) {
     return context;
   }
 
-  array(mapping(string:mixed)) results;
+  array(mapping(string:mixed)) results = instructions->execute(context);
 
-  mixed err = catch {
-      results = instructions->execute(path, this_object(), id, context);
-    };
-  if (err) {
-    patch_property_unroll(path, id, context);
-    throw (err);
-  } else {
-    int any_failed;
-    foreach(results, mapping(string:mixed) answer) {
-      if (any_failed = (answer && (answer->error >= 300))) {
-	break;
+  int any_failed;
+  foreach(results, mapping(string:mixed) answer) {
+    if (any_failed = (answer && (answer->error >= 300))) {
+      break;
+    }
+  }
+
+  if (any_failed) {
+    // Unroll and fail any succeeded items.
+    int i;
+    mapping(string:mixed) answer =
+      Roxen.http_status (Protocols.HTTP.DAV_FAILED_DEP, "Failed dependency.");
+    for(i = 0; i < sizeof(results); i++) {
+      if (!results[i] || results[i]->error < 300) {
+	result->add_property(path, instructions[i]->property_name,
+			     answer);
+      } else {
+	result->add_property(path, instructions[i]->property_name,
+			     results[i]);
       }
     }
-    if (any_failed) {
-      // Unroll and fail any succeeded items.
-      int i;
-      mapping(string:mixed) answer =
-	Roxen.http_status (Protocols.HTTP.DAV_FAILED_DEP, "Failed dependency.");
-      for(i = 0; i < sizeof(results); i++) {
-	if (!results[i] || results[i]->error < 300) {
-	  result->add_property(path, instructions[i]->property_name,
-			       answer);
-	} else {
-	  result->add_property(path, instructions[i]->property_name,
-			       results[i]);
-	}
-      }
-      patch_property_unroll(path, id, context);
-    } else {
+    context->patch_unroll();
+  }
+
+  else {
+    mapping(string:mixed) ret = context->patch_commit();
+    if (ret && ret->error >= 300)
+      return ret;
+    else {
       int i;
       for(i = 0; i < sizeof(results); i++) {
 	result->add_property(path, instructions[i]->property_name,
 			     results[i]);
       }
-      patch_property_commit(path, id, context);
+      if (ret && ret->rettext) {
+	Parser.XML.Tree.ElementNode descr =
+	  Parser.XML.Tree.ElementNode ("DAV:responsedescription", ([]));
+	descr->add_child (Parser.XML.Tree.TextNode (ret->rettext));
+	result->add_response (path, descr);
+      }
     }
   }
+
   return 0;
 }
 
-//! Convenience variant of @[set_property] that sets a single
-//! property: The default implementation calls
-//! @[patch_property_start], @[set_property], @[patch_property_unroll]
-//! and @[patch_property_commit] as appropriate.
+//! Convenience variant of @[patch_properties] that sets a single
+//! property.
+//!
+//! @returns
+//!   Returns a mapping on any error, zero otherwise.
 mapping(string:mixed) set_single_property (string path, string prop_name,
 					   string|array(Parser.XML.Tree.Node) value,
 					   RequestID id)
 {
-  mixed context = patch_property_start(path, id);
-  mapping(string:mixed) result = set_property (path, prop_name, value, id, context);
-  if (result && result->error >= 300)
-    patch_property_unroll (path, id, context);
+  mapping(string:mixed) result;
+  mapping(string:mixed)|PatchPropertyContext context =
+    patch_property_start(path, id);
+
+  if (!objectp (context))
+    result = context;
+  else {
+    result = context->set_property (prop_name, value);
+    if (result && result->error >= 300)
+      context->patch_unroll();
+    else
+      result = context->patch_commit();
+  }
+
+  if (mappingp (result) && result->error >= 300)
+    return result;
   else
-    patch_property_commit (path, id, context);
-  return result;
+    return 0;
 }
 
-//! Convenience variant of @[remove_property] that removes a single
-//! property: The default implementation calls
-//! @[patch_property_start], @[remove_property],
-//! @[patch_property_unroll] and @[patch_property_commit] as
-//! appropriate.
+//! Convenience variant of @[patch_properties] that removes a single
+//! property.
+//!
+//! @returns
+//!   Returns a mapping on any error, zero otherwise.
 mapping(string:mixed) remove_single_property (string path, string prop_name,
 					      RequestID id)
 {
-  mixed context = patch_property_start(path, id);
-  mapping(string:mixed) result = remove_property (path, prop_name, id, context);
-  if (result && result->error >= 300)
-    patch_property_unroll (path, id, context);
+  mapping(string:mixed) result;
+  mapping(string:mixed)|PatchPropertyContext context =
+    patch_property_start(path, id);
+
+  if (!objectp (context))
+    result = context;
+  else {
+    result = context->remove_property (prop_name);
+    if (result && result->error >= 300)
+      context->patch_unroll();
+    else
+      result = context->patch_commit();
+  }
+
+  if (mappingp (result) && result->error >= 300)
+    return result;
   else
-    patch_property_commit (path, id, context);
-  return result;
+    return 0;
 }
 
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,

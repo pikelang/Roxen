@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.74 2004/03/03 18:12:49 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.75 2004/03/15 17:12:41 mast Exp $";
 
 class Variable
 {
@@ -1254,14 +1254,6 @@ class MultiStatus
   }
 }
 
-class PatchPropertyCommand
-{
-  constant command = "";
-  string property_name;
-  mapping(string:mixed) execute(string path, RoxenModule module,
-				RequestID id, mixed context);
-}
-
 #endif /* Parser.XML.Tree.XMLNSParser */
 
 class RoxenModule
@@ -1301,23 +1293,24 @@ class RoxenModule
   multiset(string) query_all_properties(string path, RequestID id);
   string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     query_property(string path, string prop_name, RequestID id);
-  mapping(string:mixed) set_property(string path, string prop_name,
-				     string|array(Parser.XML.Tree.Node) value,
-				     RequestID id, mixed context);
-  mapping(string:mixed) set_dead_property(string path, string prop_name,
-					  array(Parser.XML.Tree.Node) value,
-					  RequestID id, mixed context);
-  mapping(string:mixed) remove_property(string path, string prop_name,
-					RequestID id, mixed context);
   mapping(string:mixed) find_properties(string path, string mode,
 					MultiStatus result, RequestID id,
 					multiset(string)|void filt);
   void recurse_find_properties(string path, string mode, int depth,
 			       MultiStatus result, RequestID id,
 			       multiset(string)|void filt);
-  mixed patch_property_start(string path, RequestID id);
-  void patch_property_unroll(string path, RequestID id, mixed context);
-  void patch_property_commit(string path, RequestID id, mixed context);
+  mapping(string:mixed)|PatchPropertyContext
+    patch_property_start(string path, RequestID id);
+  class PatchPropertyContext
+  {
+    mapping(string:mixed) set_property(string prop_name,
+				       string|array(Parser.XML.Tree.Node) value);
+    mapping(string:mixed) set_dead_property(string prop_name,
+					    array(Parser.XML.Tree.Node) value);
+    mapping(string:mixed) remove_property(string prop_name);
+    void patch_unroll();
+    mapping(string:mixed) patch_commit();
+  }
   mapping(string:mixed) patch_properties(string path,
 					 array(PatchPropertyCommand) instructions,
 					 MultiStatus result, RequestID id);
@@ -1326,6 +1319,19 @@ class RoxenModule
   mapping(string:mixed) delete_file(string path, RequestID id);
   int(0..1) recurse_delete_files(string path, MultiStatus result, RequestID id);
 }
+
+#if constant(Parser.XML.Tree.XMLNSParser)
+
+// Definition order is irrelevant. Yeah, right.. /mast
+
+class PatchPropertyCommand
+{
+  constant command = "";
+  string property_name;
+  mapping(string:mixed) execute(RoxenModule.PatchPropertyContext context);
+}
+
+#endif
 
 class _roxen
 {
