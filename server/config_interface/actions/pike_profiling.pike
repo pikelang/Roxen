@@ -1,5 +1,5 @@
 /*
- * $Id: pike_profiling.pike,v 1.1 2004/05/19 13:08:21 grubba Exp $
+ * $Id: pike_profiling.pike,v 1.2 2004/05/19 18:22:56 grubba Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -121,7 +121,7 @@ array get_prof_info(string|void foo)
 
 mixed page_0(object id)
 {
-  string res = ("All times are in seconds, and real-time. Times incude"
+  string res = ("All times are in seconds, and real-time. Times include"
 		" time of child functions. No callgraph is available yet.<br />"
 		"Function glob: <input type=text name=subnode value='"+
                 Roxen.html_encode_string(id->variables->subnode||"")
