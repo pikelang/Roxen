@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.32 2001/09/03 11:57:49 grubba Exp $
+// $Id: DBManager.pmod,v 1.33 2001/09/03 13:40:30 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -314,10 +314,9 @@ mapping(string:mapping(string:int)) get_permission_map( )
 {
   mapping(string:mapping(string:int)) res = ([]);
 
-  foreach( query("SELECT name FROM dbs"), mapping(string:string) n )
+  foreach( list(), string n )
   {
-    mixed m = query( "SELECT * FROM db_permissions WHERE db=%s",
-                     n->name );
+    mixed m = query( "SELECT * FROM db_permissions WHERE db=%s", n );
     if( sizeof( m ) )
       foreach( m, m )
       {
@@ -330,7 +329,7 @@ mapping(string:mapping(string:int)) get_permission_map( )
         }
       }
     else
-      res[n->name] = ([]);
+      res[n] = ([]);
   }
   foreach( indices(res), string q )
     foreach( roxenp()->configurations, Configuration c )
@@ -591,7 +590,7 @@ array(string|array(mapping)) backup( string dbname, string directory )
     directory = roxen_path( "$VARDIR/"+dbname+"-"+isodate(time(1)) );
   directory = combine_path( getcwd(), directory );
 
-  if( is_internal( dbname ) )
+o  if( is_internal( dbname ) )
   {
     mkdirhier( directory+"/" );
     array tables = db_tables( dbname );
@@ -853,7 +852,7 @@ static void create()
 	"  pattern varchar(255) not null default '')");
 
   catch(query("INSERT INTO groups (name,lname,comment,pattern) VALUES "
-      " ('internal','Uncategorized','Databases without any group','')"));
+      " ('internal','Uncategoriezed','Databases without any group','')"));
 
   query("CREATE TABLE IF NOT EXISTS module_tables ("
 	"  conf varchar(80) not null, "
