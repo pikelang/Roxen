@@ -39,6 +39,9 @@
   <file>../config_interface/standard/sites/site_content.pike</file>
   <file>../config_interface/standard/sites/site_header.pike</file>
   <file>../config_interface/standard/sites/site_templates/common.pike</file>
+  <file>../config_interface/standard/boxes/articles.pike</file>
+  <file>../config_interface/standard/boxes/crunch.pike</file>
+  <file>../config_interface/standard/boxes/ris_news.pike</file>
   <file>../etc/modules/Variable.pmod/Date.pike</file>
   <file>../etc/modules/Variable.pmod/Email.pike</file>
   <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>

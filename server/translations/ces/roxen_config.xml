@@ -8,16 +8,23 @@
 <file>../base_server/module_support.pike</file>
 <file>../base_server/roxen.pike</file>
 <file>../config_interface/standard/actions/index.html</file>
+<file>../config_interface/standard/boxes/articles.pike</file>
+<file>../config_interface/standard/boxes/crunch.pike</file>
+<file>../config_interface/standard/boxes/ris_news.pike</file>
 <file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/event_log/clear_log.pike</file>
+<file>../config_interface/standard/event_log/index.html</file>
 <file>../config_interface/standard/event_log/log.pike</file>
 <file>../config_interface/standard/logutil.pike</file>
 <file>../config_interface/standard/sites/add_module.pike</file>
 <file>../config_interface/standard/sites/config_left_item.pike</file>
 <file>../config_interface/standard/sites/create_site.pike</file>
 <file>../config_interface/standard/sites/drop_module.pike</file>
+<file>../config_interface/standard/sites/drop_site.html</file>
 <file>../config_interface/standard/sites/drop_site.pike</file>
+<file>../config_interface/standard/sites/index.html</file>
 <file>../config_interface/standard/sites/log.pike</file>
+<file>../config_interface/standard/sites/new_site.html</file>
 <file>../config_interface/standard/sites/site_content.pike</file>
 <file>../config_interface/standard/sites/site_header.pike</file>
 <file>../config_interface/standard/sites/site_templates/common.pike</file>
@@ -2043,5 +2050,93 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <str id="225">
 <new/>
 <o>User ID</o>
+<t></t>
+</str>
+
+<str id="245">
+<new/>
+<o>Normal</o>
+<t></t>
+</str>
+
+<str id="246">
+<new/>
+<o>Reversed</o>
+<t></t>
+</str>
+
+<str id="248">
+<new/>
+<o>Create new site</o>
+<t></t>
+</str>
+
+<str id="269">
+<new/>
+<o>Site name:</o>
+<t></t>
+</str>
+
+<str id="270">
+<new/>
+<o>
+The name of the configuration must contain characters
+other than space and tab, it should not end with
+~, and it must not be 'CVS', 'Global Variables' or
+'global variables', nor the name of an existing
+configuration, and the character '/' cannot be
+used. This name will show up in the sites menu, a
+lowercased, filesystem-friendly version will become
+the virtual server's configuration file name as well
+as the name of its log file directory.
+</o>
+<t></t>
+</str>
+
+<str id="271">
+<new/>
+<o>with template</o>
+<t></t>
+</str>
+
+<str id="296">
+<new/>
+<o>Illegal site name</o>
+<t></t>
+</str>
+
+<str id="195">
+<new/>
+<o>Community articles</o>
+<t></t>
+</str>
+
+<str id="231">
+<new/>
+<o>Most recently published community articles</o>
+<t></t>
+</str>
+
+<str id="232">
+<new/>
+<o>Crunch activity</o>
+<t></t>
+</str>
+
+<str id="262">
+<new/>
+<o>Recently changed Crunch reports</o>
+<t></t>
+</str>
+
+<str id="263">
+<new/>
+<o>News from www.roxen.com</o>
+<t></t>
+</str>
+
+<str id="281">
+<new/>
+<o>The news headlines from www.roxen.com</o>
 <t></t>
 </str>
