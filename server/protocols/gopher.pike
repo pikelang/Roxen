@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-constant cvs_version = "$Id: gopher.pike,v 1.8 1998/05/20 15:41:44 grubba Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.9 1998/05/20 15:54:29 grubba Exp $";
 // Gopher protocol module
 
 inherit "protocols/http"; /* For the variables and such.. */
@@ -100,6 +100,7 @@ void got_data(mixed fooid, string s)
 
   remove_call_out(do_timeout);
 
+  // FIXME: Improve the request parsing.
   not_query = (s-"\r")-"\n";
   if(!strlen(not_query))
     not_query = "/";
@@ -151,6 +152,7 @@ void got_data(mixed fooid, string s)
   return;
 }
 
+#ifdef GOPHER_DEBUG
 void gopher_trace_enter(string s, mixed foo)
 {
   roxen_perror("GOPHER ENTER:"+s+"\n");
@@ -160,6 +162,7 @@ void gopher_trace_leave(string s)
 {
   roxen_perror("GOPHER LEAVE:"+s+"\n");
 }
+#endif /* GOPHER_DEBUG */
 
 void create(object f, object c)
 {
@@ -168,8 +171,10 @@ void create(object f, object c)
     ::create(f, c);
     my_fd->set_nonblocking(got_data, lambda(){}, end);
 
+#ifdef GOPHER_DEBUG
     misc->trace_enter = gopher_trace_enter;
     misc->trace_leave = gopher_trace_leave;
+#endif /* GOPHER_DEBUG */
   }
 }
 
