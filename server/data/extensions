@@ -1,9 +1,9 @@
-# $Id: extensions,v 1.51 2003/01/23 17:23:18 mani Exp $
+# $Id: extensions,v 1.52 2003/01/29 01:12:11 jhs Exp $
 #
 # ---- Extension database ----
-# The database used by the content typ module to map from extension to mime-type
-# (example: *.gif to image/gif). Lines are commented with ## to resolve name
-# conflicts (same extension mapping to several MIME-types).
+# The database used by the content type module to map from extension to MIME
+# type (example: *.gif to image/gif). Lines are commented with ## to resolve
+# name conflicts (same extension mapping to several MIME types).
 #
 # Last synchronized with IANA media types list: 2002-02-05 (except applications)
 
@@ -735,6 +735,7 @@ texi	application/x-texinfo
 texinfo	application/x-texinfo
 tgz	application/unix-tar	x-gzip
 tmv	application/x-Parable-Thing
+torrent	application/x-bittorrent
 tr	application/x-troff
 tsp	application/dsptype
 txi	application/x-texinfo
