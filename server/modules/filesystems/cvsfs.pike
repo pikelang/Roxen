@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-constant cvs_version = "$Id: cvsfs.pike,v 1.19 1999/12/18 14:36:52 nilsson Exp $";
+constant cvs_version = "$Id: cvsfs.pike,v 1.20 1999/12/28 02:25:54 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -25,6 +25,12 @@ import Array;
 
 // #define CVSFS_DEBUG
 
+#ifdef CVSFS_DEBUG
+# define CVSFS_WERR(X) werror("CVSFS: "+X+"\n")
+#else
+# define CVSFS_WERR(X)
+#endif
+
 string cvs_module_path = 0; /* Path in CVS repository */
 string cvs_program, rlog_program, rcsdiff_program;
 
@@ -38,9 +44,7 @@ string secure_path(string path)
     string npath = ((combine_path(path, ".")/"/") - ({ "..", "" })) * "/";
     if (path[0] == '/')
       npath = "/" + npath;
-#ifdef CVSFS_DEBUG
-    werror(sprintf("secure_path(\"%s\") => \"%s\"\n", path, npath));
-#endif /* CVSFS_DEBUG */
+    CVSFS_WERR(sprintf("secure_path(\"%s\") => \"%s\"", path, npath));
     return npath;
   }
   return path;
@@ -319,9 +323,7 @@ object|mapping|int find_file(string name, object id)
   array(string) extra_args = ({});
   mapping(string:string|int) prestates = parse_prestate(id->prestate);
 
-#ifdef CVSFS_DEBUG
-  werror(sprintf("cvs->find_file: Looking for '%s'\n", name));
-#endif /* CVSFS_DEBUG */
+  CVSFS_WERR(sprintf("cvs->find_file: Looking for '%s'\n", name));
 
   if (cvs_module_path && sizeof(cvs_module_path)) {
     name = secure_path(name);
@@ -329,9 +331,7 @@ object|mapping|int find_file(string name, object id)
 				cvs_module_path + "/" + name);
     int is_text = 0;
 
-#ifdef CVSFS_DEBUG
-    werror("Real file '" + fname + "'\n");
-#endif /* CVSFS_DEBUG */
+    CVSFS_WERR("Real file '" + fname + "'");
 
     if (file_stat(fname + ",v")) {
       object f;
@@ -367,17 +367,13 @@ object|mapping|int find_file(string name, object id)
     else {
       array arr = file_stat(fname + "/.");
       if (arr && (arr[1] < 0)) {
-#ifdef CVSFS_DEBUG
-	werror("CVS: \"" + fname + "\" is a directory.\n");
-#endif /* CVSFS_DEBUG */
+	CVSFS_WERR("\"" + fname + "\" is a directory.");
 	return -1;
       }
     }
   }
 
-#ifdef CVSFS_DEBUG
-  werror("CVS: file \"" + name + "\" not found.\n");
-#endif /* CVSFS_DEBUG */
+  CVSFS_WERR("file \"" + name + "\" not found.");
   return 0;
 }
 

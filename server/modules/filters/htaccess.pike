@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@idonex.se 
 //   Changed into module by Per Hedbor, per@idonex.se
 
-constant cvs_version = "$Id: htaccess.pike,v 1.53 1999/12/18 23:25:16 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.54 1999/12/28 02:18:04 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -11,17 +11,16 @@ constant thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 
-#define SERIOUS
 //#define HTACCESS_DEBUG
 
 #ifdef HTACCESS_DEBUG
 # include <request_trace.h>
-# define HTWERROR(X) werror("HTACCESS: %s\n",X);
-#else /* !HTACCESS_DEBUG */
+# define HT_WERR(X) werror("HTACCESS: %s\n",X);
+#else
 # define TRACE_ENTER(A,B)
 # define TRACE_LEAVE(A)
-# define HTWERROR(X)
-#endif /* HTACCESS_DEBUG */
+# define HT_WERR(X)
+#endif
 
 array register_module()
 {
@@ -200,9 +199,9 @@ mapping|int parse_htaccess(Stdio.File f, RequestID id, string rht)
       break;
 
     default:
-      HTWERROR("Unsupported command in "+cache_key+": "+ cmd);
+      HT_WERR("Unsupported command in "+cache_key+": "+ cmd);
     }
-    HTWERROR(sprintf("Result of .htaccess file parsing -> %O\n", 
+    HT_WERR(sprintf("Result of .htaccess file parsing -> %O\n", 
 			   access));
   }
   cache_set(cache_key, rht, ({s[3], access}));
@@ -222,14 +221,14 @@ int allowed(multiset allow, string hname, string ip, int def)
     if(s == "all" || s==ip || s == hname)
     {
       ok = 1;
-      HTWERROR("IP/hostname access deny/allow exact match:");
-      HTWERROR("("+s+" -> "+ip+" || "+hname")");
+      HT_WERR("IP/hostname access deny/allow exact match:\n"
+	      "("+s+" -> "+ip+" || "+hname")");
     }
     if(!ok && (int)s && (ip/".")[0] == s)
     {
       ok = 1;
-      HTWERROR("IP/hostname access deny/allow ip match:");
-      HTWERROR("("+s+" -> "+ip+" || "+hname")");
+      HT_WERR("IP/hostname access deny/allow ip match:\n"
+	      "("+s+" -> "+ip+" || "+hname")");
     }
     if(!ok)
     {
@@ -251,9 +250,9 @@ int allowed(multiset allow, string hname, string ip, int def)
       }
 #ifdef HTACCESS_DEBUG
       if(ok) {
-	HTWERROR("IP/hostname access deny/allow hostname/"
-		 "domain match:");
-	HTWERROR("("+s+" -> "+ip+" || "+hname")");
+	HT_WERR("IP/hostname access deny/allow hostname/"
+		"domain match:\n"
+		"("+s+" -> "+ip+" || "+hname")");
       }
 #endif
       
@@ -276,8 +275,8 @@ int allowed(multiset allow, string hname, string ip, int def)
       }
 #ifdef HTACCESS_DEBUG
       if(ok) {
-	HTWERROR("IP/hostname access deny/allow ip-number match:");
-	HTWERROR("("+s+" -> "+ip+" || "+hname")");
+	HT_WERR("IP/hostname access deny/allow ip-number match:\n"
+		"("+s+" -> "+ip+" || "+hname")");
       }
 #endif
       
@@ -314,17 +313,17 @@ int match_passwd(string org, string try)
 int validate_user(int|multiset users, array auth, string userfile, RequestID id)
 {
   string passwd, line;
-  HTWERROR("Validating user "+auth[0]+".");
+  HT_WERR("Validating user "+auth[0]+".");
 
   if(!users) {
-    HTWERROR("Warning. No users are allowed to see this page.");
+    HT_WERR("Warning. No users are allowed to see this page.");
     return 0;
   } else {
     if(multisetp(users) && !users[auth[0]])
     {
-      HTWERROR("Failed auth. User "+auth[0]+"%s not among the "
-		     "valid users.");
-      HTWERROR(sprintf("Valid users -> %O\n", users));
+      HT_WERR("Failed auth. User "+auth[0]+"%s not among the "
+		     "valid users.\n"+
+	      sprintf("Valid users -> %O\n", users));
       return 0;
     }
   }
@@ -343,7 +342,7 @@ int validate_user(int|multiset users, array auth, string userfile, RequestID id)
       report_error(sprintf("HTACCESS: Userfile \"%s\" is a device!\n"
 			   "query: \"%s\"\n", userfile, id->query + ""));
     }
-    HTWERROR("Failed to read password file ("+userfile+")");
+    HT_WERR("Failed to read password file ("+userfile+")");
     return 0;
   }
   foreach(passwd/"\n", line)
@@ -356,7 +355,7 @@ int validate_user(int|multiset users, array auth, string userfile, RequestID id)
       if((users == 1 || users[user]) && (user == auth[0]) &&
 	 match_passwd(pass, auth[1]))
       {
-	HTWERROR("Successful auth.");
+	HT_WERR("Successful auth.");
 	return 1;
       }
     }
@@ -377,7 +376,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
   cache_key = "groupfile:" + id->conf->name;
 
   if (!groupfile) {
-    HTWERROR("!groupfile");
+    HT_WERR("!groupfile");
     if(!validate_user(1, auth, userfile, id))
       return 0;
 
@@ -387,19 +386,19 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 	= getgrnam(grp)
 #endif
 	;
-      HTWERROR("Checking for unix group "+grp+" ... "
+      HT_WERR("Checking for unix group "+grp+" ... "
 		     +(gr&&gr[3]?"Existant":"Nope"));
       if(!gr || !gr[3])
 	continue;
       if(!userfile && id->conf->userlist(id)){
-	HTWERROR("Checking login group for user "+auth[0]
+	HT_WERR("Checking login group for user "+auth[0]
 		       +"("+id->conf->userinfo(auth[0],id)[3]+") against gid("+gr[2]+")");
 	if((int)id->conf->userinfo(auth[0],id)[3]==gr[2])
 	  return 1;
       }
       int gr_i;
       foreach(indices(gr[3]), gr_i){
-	HTWERROR("Checking for user "+auth[0]+" in group "+grp+
+	HT_WERR("Checking for user "+auth[0]+" in group "+grp+
 		       " ("+gr[3][gr_i]+") ... "+
 		       (gr[3][gr_i]&&gr[3][gr_i]==auth[0]?"Yes":"Nope"));
 	if(gr[3][gr_i]&&gr[3][gr_i]==auth[0])
@@ -420,7 +419,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 			   "userfile: \"%s\"\n"
 			   "query: \"%s\"\n", groupfile, userfile, id->query + ""));
     }
-    HTWERROR("The groupfile "+groupfile+" cannot be opened.");
+    HT_WERR("The groupfile "+groupfile+" cannot be opened.");
     return 0;
   }
 
@@ -456,7 +455,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
   destruct(f);
   foreach(indices(grps), grp)
   {
-    HTWERROR("Checking for group "+grp+" ... "
+    HT_WERR("Checking for group "+grp+" ... "
 		   +(g[grp]?"Existant":"Nope"));
     if(g[grp])
       if(validate_user(g[grp], auth, userfile, id))
@@ -491,7 +490,7 @@ mapping|string|int htaccess(mapping access, RequestID id)
   aname      = access->authname || "authorization";
   userfile   = access->authuserfile;
   groupfile  = access->authgroupfile;
-  HTWERROR("Verifying access.");
+  HT_WERR("Verifying access.");
 
   TRACE_ENTER("Checking method", id->method);
 
@@ -604,16 +603,16 @@ mapping|string|int htaccess(mapping access, RequestID id)
     return 0;
   }
 #ifdef HTACCESS_DEBUG
-  if(hok) HTWERROR("Host based access verified and granted.");
+  if(hok) HT_WERR("Host based access verified and granted.");
 #endif
 
   if(access[method]->user || access[method]["valid-user"] 
      || access[method]->group)
   {
-    HTWERROR("Verifying user access.");
+    HT_WERR("Verifying user access.");
     if(!id->realauth)
     {
-      HTWERROR("No authification string from client.");
+      HT_WERR("No authification string from client.");
       TRACE_LEAVE("No auth");
       return validate(aname);
     } else {
@@ -629,13 +628,13 @@ mapping|string|int htaccess(mapping access, RequestID id)
 	  validate_group(access[method]->group, auth, 
 			 groupfile, userfile, id)))
       {
-	HTWERROR("User access ok!");
+	HT_WERR("User access ok!");
 	id->auth = ({ 1, auth[0], 0 });
 
 	TRACE_LEAVE("OK");
 	return 0;
       } else {
-	HTWERROR("User access denied, invalid user.");
+	HT_WERR("User access denied, invalid user.");
 	id->auth = ({ 0, auth[0], auth[1] });
 	TRACE_LEAVE("Invalid user");
 	return validate(aname);
@@ -657,18 +656,18 @@ string|int cache_path_of_htaccess(string path, RequestID id)
   f = cache_lookup("htaccess_files:"+id->conf->name, path);
 #ifdef HTACCESS_DEBUG
   if(f==0)
-    HTWERROR("Location of .htaccess file for "+path+" not cached.");
+    HT_WERR("Location of .htaccess file for "+path+" not cached.");
   else if(f==-1)
-    HTWERROR("Non-existant .htaccess file cached: "+path);
+    HT_WERR("Non-existant .htaccess file cached: "+path);
   else if(f)
-    HTWERROR("Existant .htaccess file cached: "+path);
+    HT_WERR("Existant .htaccess file cached: "+path);
 #endif
   return f;
 }
 
 void cache_set_path_of_htaccess(string path, string|int htaccess_file, RequestID id)
 {
-  HTWERROR("HTACCESS: Setting cached location for "
+  HT_WERR("HTACCESS: Setting cached location for "
 		 +path+" to "+htaccess_file);
   cache_set("htaccess_files:"+id->conf->name, path, htaccess_file);
 }
@@ -790,7 +789,7 @@ mapping try_htaccess(RequestID id)
 
   if(!(tmp = find_htaccess_file(id)))
   {
-    HTWERROR("No htaccess file for "+id->not_query);
+    HT_WERR("No htaccess file for "+id->not_query);
     TRACE_LEAVE("No htaccess file.");
     return 0;
   }

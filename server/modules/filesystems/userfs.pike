@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // User filesystem. Uses the userdatabase (and thus the system passwd
 // database) to find the home-dir of users, and then looks in a
@@ -8,16 +8,19 @@
 // / is quite useful for IPPs, enabling them to have URLs like
 // http://www.hostname.of.provider/customer/.
 
-// #define USERFS_DEBUG 
+// #define USERFS_DEBUG
+
+#ifdef USERFS_DEBUG
+# define USERFS_WERR(X) werror("USERFS: "+X+"\n")
+#else
+# define USERFS_WERR(X)
+#endif
 
 #include <module.h>
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.46 1999/12/18 14:42:44 nilsson Exp $";
-
-// import Array;
-// import Stdio;
+constant cvs_version="$Id: userfs.pike,v 1.47 1999/12/28 02:34:52 nilsson Exp $";
 
 #define BAD_PASSWORD(us)	(QUERY(only_password) && \
                                  ((us[1] == "") || (us[1][0] == '*')))
@@ -47,7 +50,7 @@ void create()
 	 0, hide_searchpath);
 
   set("mountpoint", "/~");
-  
+
   defvar("only_password", 1, "Password users only",
 	 TYPE_FLAG, "Only users who have a valid password can be accessed "
 	 "through this module");
@@ -55,20 +58,20 @@ void create()
   defvar("user_listing", 0, "Enable userlisting", TYPE_FLAG,
 	 "Enable a directory listing showing users with homepages. "
 	 "When the mountpoint is accessed.");
-  
-  defvar("banish_list", ({ "root", "daemon", "bin", "sys", "admin", 
-			   "lp", "smtp", "uucp", "nuucp", "listen", 
-			   "nobody", "noaccess", "ftp", "news", 
+
+  defvar("banish_list", ({ "root", "daemon", "bin", "sys", "admin",
+			   "lp", "smtp", "uucp", "nuucp", "listen",
+			   "nobody", "noaccess", "ftp", "news",
 			   "postmaster" }), "Banish list",
 	 TYPE_STRING_LIST, "None of these users are valid.");
-  
-  defvar("own", 0, "Only owned files", TYPE_FLAG, 
+
+  defvar("own", 0, "Only owned files", TYPE_FLAG,
 	 "If set, users can only send files they own through the user "
 	 "filesystem. This can be a problem if many users are working "
 	 "together with a project, but it will enhance security, since it "
 	 "will not be possible to link to some file the user does not own.");
 
-  defvar("virtual_hosting", 0, "Virtual User Hosting", TYPE_FLAG, 
+  defvar("virtual_hosting", 0, "Virtual User Hosting", TYPE_FLAG,
 	 "If set, virtual user hosting is enabled. This means that "
 	 "the module will look at the \"host\" header to determine "
 	 "which users directory to access. If this is set, you access "
@@ -89,7 +92,7 @@ void create()
 	 " was started as root "
 	 "(however, it doesn't matter if you changed uid/gid after startup).",
 	 0, uid_was_zero);
-  
+
   defvar("pdir", "html/", "Public directory",
 	 TYPE_STRING, "This is where the public directory is located. "
 	 "If the module is mounted on /~, and the file /~per/foo is "
@@ -119,17 +122,17 @@ void start()
   // This is needed to override the inherited filesystem module start().
 }
 
-mixed *register_module()
+array register_module()
 {
-  return ({ 
-    MODULE_LOCATION, 
-    "User Filesystem", 
+  return ({
+    MODULE_LOCATION,
+    "User Filesystem",
       "User filesystem. Uses the userdatabase (and thus the system passwd "
       "database) to find the home-dir of users, and then looks in a "
       "specified directory in that directory for the files requested. "
       "<p>Normaly mounted under /~, but / or /users/ would work equally well. "
       " is quite useful for IPPs, enabling them to have URLs like "
-      " http://www.hostname.of.provider/customer/. "
+      " http://www.hostname.of.provider/customer/."
     });
 }
 
@@ -167,9 +170,7 @@ static array(string) find_user(string f, object id)
     }
   }
 
-#ifdef USERFS_DEBUG
-  werror(sprintf("USERFS: find_user(%O, X) => u:%O, f:%O\n", of, u, f));
-#endif /* USERFS_DEBUG */
+  USERFS_WERR(sprintf("find_user(%O, X) => u:%O, f:%O", of, u, f));
 
   return({ u, f });
 }
@@ -179,9 +180,7 @@ mixed find_file(string f, object got)
   string u, of;
   of=f;
 
-#ifdef USERFS_DEBUG
-  werror(sprintf("USERFS: find_file(%O, X)\n", f));
-#endif /* USERFS_DEBUG */
+  USERFS_WERR(sprintf("USERFS: find_file(%O, X)", f));
 
   array a = find_user(f, got);
 
@@ -190,7 +189,7 @@ mixed find_file(string f, object got)
   }
   u = a[0];
   f = a[1];
-  
+
   if(u)
   {
     string *us;
@@ -203,7 +202,7 @@ mixed find_file(string f, object got)
       {
 	if (!banish_reported[u]) {
 	  banish_reported[u] = 1;
-	  werror(sprintf("User %s banished (%O)...\n", u, us));
+	  report_debug(sprintf("User %s banished (%O)...\n", u, us));
 	}
 	return 0;
       }
@@ -222,7 +221,7 @@ mixed find_file(string f, object got)
 
       dir = replace(dir, "//", "/");
 
-      // If public dir does not exist, or is not a directory 
+      // If public dir does not exist, or is not a directory
       st = filesystem::stat_file(dir, got);
       if(!st || st[1] != -2) {
 	return 0;	// File not found.
@@ -254,9 +253,7 @@ string real_file( mixed f, mixed id )
 {
   string u;
 
-#ifdef USERFS_DEBUG
-  werror(sprintf("USERFS: real_file(%O, X)\n", f));
-#endif /* USERFS_DEBUG */
+  USERFS_WERR(sprintf("real_file(%O, X)", f));
 
   array a = find_user(f, id);
 
@@ -283,7 +280,7 @@ string real_file( mixed f, mixed id )
 	f = us[ 5 ] + QUERY(pdir) + f;
     } else
       f = QUERY(searchpath) + u + "/" + f;
-    
+
     // Use the inherited stat_file
     fs = filesystem::stat_file( f,id );
 
@@ -297,12 +294,9 @@ string real_file( mixed f, mixed id )
 
 mapping|array find_dir(string f, object got)
 {
-#ifdef USERFS_DEBUG
-  werror(sprintf("USERFS: find_dir(%O, X)\n", f));
-#endif /* USERFS_DEBUG */
+  USERFS_WERR(sprintf("find_dir(%O, X)", f));
 
   array a = find_user(f, got);
-  
 
   if (!a) {
     if (QUERY(user_listing)) {
@@ -343,9 +337,7 @@ mapping|array find_dir(string f, object got)
 
 mixed stat_file( mixed f, mixed id )
 {
-#ifdef USERFS_DEBUG
-  werror(sprintf("USERFS: stat_file(%O, X)\n", f));
-#endif /* USERFS_DEBUG */
+  USERFS_WERR(sprintf("stat_file(%O, X)", f));
 
   array a = find_user(f, id);
 
@@ -364,7 +356,7 @@ mixed stat_file( mixed f, mixed id )
     {
       if((!us) || BAD_PASSWORD(us)) return 0;
       // FIXME: Use the banish multiset.
-      if(search(QUERY(banish_list), u) != -1)             return 0;
+      if(search(QUERY(banish_list), u) != -1) return 0;
       if(us[5][-1] != '/')
 	f = us[ 5 ] + "/" + QUERY(pdir) + f;
       else
@@ -378,8 +370,6 @@ mixed stat_file( mixed f, mixed id )
   }
   return 0;
 }
-
-
 
 string query_name()
 {
