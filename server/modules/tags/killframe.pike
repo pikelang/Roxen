@@ -8,7 +8,7 @@
  * made by Peter Bortas <peter@infovav.se> Januari -97
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.6 1997/08/12 17:47:31 peter Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.7 1997/08/27 12:37:13 grubba Exp $";
 #include <module.h>
 inherit "module";
 
@@ -35,21 +35,19 @@ string tag_killframe( string tag, mapping m, object id )
 {
   // Links to index.html are ugly.
   string my_url = id->conf->query("MyWorldLocation") + id->raw_url[1..];
-
   int l=strlen(my_url);
 
   if( my_url[l-10..] == "index.html" )
     my_url = my_url[..l-11];
 
   if (id->supports->javascript)
-    string head = "<script language=javascript>\n"
-      "<!--\n"
-      "   if(top.location.href != \""+ my_url  +"\")\n"
-      "     top.location.href = \""+ my_url  +"\";\n"
-      "//-->"
-      "</script>\n";
-  
-  return head;
+    return("<script language=javascript>\n"
+	   "<!--\n"
+	   "   if(top.location.href != \""+ my_url  +"\")\n"
+	   "     top.location.href = \""+ my_url  +"\";\n"
+	   "//-->"
+	   "</script>\n");
+  return "";
 }
 
 mapping query_tag_callers()
