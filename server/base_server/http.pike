@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.13 1998/02/04 05:17:37 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.14 1998/02/24 22:27:49 per Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -43,16 +43,6 @@ string http_res_to_string( mapping file, object id )
 	file->len = fstat[1];
       
       heads["Last-Modified"] = http_date(fstat[3]);
-#if 0
-      if(since)
-      {
-	if(is_modified(since, fstat[3], fstat[1]))
-	{
-	  file->error = 304;
-	  id->method="HEAD";
-	}
-      }
-#endif
     }
     if(stringp(file->data)) 
       file->len += strlen(file->data);
@@ -92,8 +82,6 @@ string http_res_to_string( mapping file, object id )
  * error is infact the status response, so '200' is HTTP Document
  * follows, and 500 Internal Server error, etc.
  */
-
-
 
 mapping http_low_answer( int errno, string data )
 {
