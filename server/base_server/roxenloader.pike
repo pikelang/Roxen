@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.162 2000/03/27 01:17:01 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.163 2000/03/28 20:58:43 jhs Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -267,7 +267,7 @@ mixed query(string arg)
   return roxen->variables[arg][VAR_VALUE];
 }
 
-// used for debug messages. Sent to the configuration interface and STDERR.
+// used for debug messages. Sent to the administration interface and STDERR.
 void init_logger()
 {
 #if efun(syslog)

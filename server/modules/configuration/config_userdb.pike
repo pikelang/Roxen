@@ -88,7 +88,7 @@ class ConfigurationSettings
 	      "svenska":"Bakgrundsfärg",
 	    ]),TYPE_STRING,
 	    ([
-	      "english":"Configuration interface background color.",
+	      "english":"Administration interface background color.",
 	      "svenska":"Bakgrundsfärg till konfigurationsgränssnittet."
 	    ]), 0, 0 );
 
@@ -98,7 +98,7 @@ class ConfigurationSettings
 	      "svenska":"Textfärg",
 	    ]),TYPE_STRING,
 	    ([
-	      "english":"Configuration interface text color.",
+	      "english":"Administration interface text color.",
 	      "svenska":"Textfärg till konfigurationsgränssnittet."
 	    ]), 0, 0 );
 
@@ -108,7 +108,7 @@ class ConfigurationSettings
 	      "svenska":"Länkfärg",
 	    ]),TYPE_STRING,
 	    ([
-	      "english":"Configuration interface text color.",
+	      "english":"Administration interface text color.",
 	      "svenska":"Textfärg till konfigurationsgränssnittet."
 	    ]), 0, 0 );
 
@@ -118,7 +118,7 @@ class ConfigurationSettings
 	      "svenska":"Typsnitt",
 	    ]),TYPE_FONT,
 	    ([
-	      "english":"Configuration interface font.",
+	      "english":"Administration interface font.",
 	      "svenska":"Typsnitt som konfigurationsgränssnittetet ska använda."
 	    ]), 0, 0 );
 

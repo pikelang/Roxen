@@ -1,6 +1,6 @@
 <standard>
- <name>Configuration interface modules</name>
- <doc>These modules are only useful for the configuration interface</doc>
+ <name>Administration interface modules</name>
+ <doc>These modules are only useful for the administration interface</doc>
 </standard>
 
 <svenska>

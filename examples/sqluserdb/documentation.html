@@ -55,7 +55,7 @@ interpreter, Msql and Postgres are not. You can fetch them at
 Follow the instruction therein contained to build and install your new
 interpreter should it be needed.<BR>
 Copy the <TT>SQLuserdb.pike</TT> file in a directory where Roxen can
-find it (see the Roxen configuration Interface), and then add it to
+find it (see the Roxen Administration Interface), and then add it to
 the virtual server of your choice. Remember there can be only one
 user authentication module per virtual server.<BR>
 Connect to your SQL server, and create a new database. Make sure to grant
@@ -106,7 +106,7 @@ CREATE UNIQUE INDEX pass_index ON passwd (
 Notice that you may want to have more tables or more columns for administrative
 tasks. It is of course possible.<BR>
 We're almost done. Now you only need to check the default values in the
-configuration interface.
+administration interface.
 
 <H2 align=center>Configuration</H2>
 It is pretty straightforward.
@@ -160,7 +160,7 @@ my opinion simply too dangerous to use them. The only use I can
 think of for them is to drive a named ftp upload. This is DANGEROUS!
 I will never stress it enough. <BR>
 My suggestion is to set the "noobody" user
-and group in the configuration interface and leave these entries in the
+and group in the administration interface and leave these entries in the
 database empty. Also, I'm afraid to say that for implementation reasons,
 user ID 0 and group ID 0 (root/root) <B>are not availible</B>. Given
 the premises, I don't think I'll ever try to implement a way aroud this.

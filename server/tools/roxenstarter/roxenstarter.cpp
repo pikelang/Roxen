@@ -1,5 +1,5 @@
 /*  Roxenstarter
-  $Id: roxenstarter.cpp,v 1.3 1998/04/26 21:46:41 js Exp $
+  $Id: roxenstarter.cpp,v 1.4 2000/03/28 21:09:39 jhs Exp $
 */
 #include <windows.h> 
 #include <string.h>
@@ -183,7 +183,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,
   if (!InitInstance(hInstance, nCmdShow))
     return (FALSE);
   hMenu = CreatePopupMenu();
-  if(!AppendMenu( hMenu,MF_ENABLED,IDM_CONFIG,"Configuration interface")) return FALSE;
+  if(!AppendMenu( hMenu,MF_ENABLED,IDM_CONFIG,"Administration interface")) return FALSE;
   if(!AppendMenu( hMenu,MF_ENABLED|MF_POPUP,(int)hVirtualMenu,"Virtual servers")) return FALSE;
   if(!AppendMenu( hMenu,MF_SEPARATOR,0,NULL)) return FALSE;
   if(!AppendMenu( hMenu,MF_ENABLED,IDM_RESTART,"Restart")) return FALSE;

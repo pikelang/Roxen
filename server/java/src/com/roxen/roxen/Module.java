@@ -1,5 +1,5 @@
 /*
- * $Id: Module.java,v 1.7 2000/02/21 18:30:45 marcus Exp $
+ * $Id: Module.java,v 1.8 2000/03/28 21:09:38 jhs Exp $
  *
  */
 
@@ -137,7 +137,7 @@ public abstract class Module {
   // The module implements a protocol.
   static final int MODULE_PROTOCOL        =  (1 << 16);
 
-  // A configuration interface module
+  // A administration interface module
   static final int MODULE_CONFIG          =  (1 << 17);
 
   // Flags.

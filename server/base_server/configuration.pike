@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.291 2000/03/27 01:17:00 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.292 2000/03/28 20:58:42 jhs Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -982,7 +982,7 @@ string draw_saturation_bar(int hue,int brightness, int where)
 
 
 // Inspired by the internal-gopher-... thingie, this is the images
-// from the configuration interface. :-)
+// from the administration interface. :-)
 private mapping internal_roxen_image(string from)
 {
   // changed 970820 by js to allow for jpeg images
@@ -2813,7 +2813,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   return me;
 }
 
-// Called from the configuration interface.
+// Called from the administration interface.
 string check_variable(string name, mixed value)
 {
   switch(name)
@@ -3125,7 +3125,7 @@ void create(string config)
 
   defvar("comment", "", "Virtual server comment",
 	 TYPE_TEXT_FIELD|VAR_MORE,
-	 "This text will be visible in the configuration interface, it "
+	 "This text will be visible in the administration interface, it "
 	 " can be quite useful to use as a memory helper.");
 
   deflocaledoc("deutsch", "comment", "Kommentar",

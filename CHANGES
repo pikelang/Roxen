@@ -112,7 +112,7 @@ o Lots of bugs fixed.
 Changes since Roxen Challenger 1.3
 -----------------------------------------------
 
- o New Configuration interface
+ o New Administration interface
  o New port system
  o New RXML parser 	
  o Updated and homogenized RXML language

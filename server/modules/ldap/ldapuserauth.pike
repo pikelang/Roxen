@@ -53,7 +53,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.17 2000/03/13 19:33:21 nilsson Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.18 2000/03/28 20:58:44 jhs Exp $";
 constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
@@ -297,7 +297,7 @@ void open_dir(string u, string p) {
 	}
 	else
 	    werror("LDAPauth: unknown reason\n");
-	werror ("LDAPauth: check the values in the configuration interface, and "
+	werror ("LDAPauth: check the values in the administration interface, and "
 		"that the user\n\trunning the server has adequate permissions "
 		"to the server\n");
 	dir=0;

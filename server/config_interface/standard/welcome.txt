@@ -2,7 +2,7 @@
 <blockquote> 
  If your fonts are way to large (or small, depending on personal
  preferences), please adjust the unicode font size in your
- browser. This configuration interface uses UTF-8, and at least
+ browser. This administration interface uses UTF-8, and at least
  netscape has a different font size for unicode fonts (defaulting to 18)
  than normal fonts (defaulting to 12).
 </blockquote> 

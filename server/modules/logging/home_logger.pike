@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.22 2000/03/02 04:37:09 nilsson Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.23 2000/03/28 20:58:44 jhs Exp $";
 constant thread_safe=1;
 
 
@@ -16,7 +16,7 @@ constant module_type = MODULE_LOGGER;
 constant module_name = "User logger";
 constant module_doc  = "This module log the accesses of each user in their home dirs, "
   "if they create a file named 'AccessLog' (or whatever is configurated "
-  "in the configuration interface) in that directory, and "
+  "in the administration interface) in that directory, and "
   "allow write access for roxen.";
 
 // Parse the logging format strings.

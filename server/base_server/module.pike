@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.88 2000/03/21 04:35:41 mast Exp $
+// $Id: module.pike,v 1.89 2000/03/28 20:58:42 jhs Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -333,7 +333,7 @@ void save()
 }
 
 // Convenience function, define an invisible variable, this variable
-// will be saved, but it won't be visible in the configuration interface.
+// will be saved, but it won't be visible in the administration interface.
 void definvisvar(string name, int value, int type, array|void misc)
 {
   defvar(name, value, "", type, "", misc, 1);

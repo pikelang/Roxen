@@ -12,7 +12,7 @@ inherit "roxenlib";
 #define CU_AUTH id->misc->config_user->auth
 
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
-constant module_name = "Configuration interface RXML tags";
+constant module_name = "Administration interface RXML tags";
 
 /* Not exactly true, but the config filesystem forbids parallell
  * accesses anyway so there is no need for an extra lock here..

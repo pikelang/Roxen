@@ -12,7 +12,7 @@ The theme tags:
 <theme-path match='glob'>
 </theme-path>
 
-   Only parse the contents if the current configuration interface path
+   Only parse the contents if the current administration interface path
    matches the specified glob pattern.
 
 

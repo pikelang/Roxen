@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.225 2000/03/25 02:30:19 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.226 2000/03/28 20:58:43 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -187,7 +187,7 @@ opaque=70</gtext>
 
 <attr name=nfont value=fontname>
  Select a font using somewhat more memonic font-names. You can get a
- font-list by accessing the configuration interface.
+ font-list by accessing the administration interface.
 
  <p>There are several modifiers available: bold, italic, black and light.
  If the requested version of the font is available, it will be used to

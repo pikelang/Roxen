@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.469 2000/03/28 16:02:27 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.470 2000/03/28 20:58:43 jhs Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1679,7 +1679,7 @@ object find_configuration( string name )
 
 mapping(string:array(int)) error_log=([]);
 
-// Write a string to the configuration interface error log and to stderr.
+// Write a string to the administration interface error log and to stderr.
 void nwrite(string s, int|void perr, int|void errtype,
             object|void mod, object|void conf)
 {
@@ -1871,7 +1871,7 @@ void restart_if_stuck (int force)
   alarm (60*QUERY(abs_timeout)+10);
 }
 
-// Settings used by the various configuration interface modules etc.
+// Settings used by the various administration interface modules etc.
 class ConfigIFCache
 {
   string dir;
@@ -1892,7 +1892,7 @@ class ConfigIFCache
       mkdirhier( dir+"/foo" );
       if(!f->open(  dir + replace( name, "/", "-" ), "wct" ))
       {
-        report_error("Failed to create configuration interface cache file ("+
+        report_error("Failed to create administration interface cache file ("+
                      dir + replace( name, "/", "-" )+") "+
                      strerror( errno() )+"\n");
         return to;
@@ -3265,7 +3265,7 @@ int main(int argc, array tmp)
   return -1;
 }
 
-// Called from the configuration interface.
+// Called from the administration interface.
 string check_variable(string name, mixed value)
 {
   switch(name)

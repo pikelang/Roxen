@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.103 2000/03/24 20:17:12 grubba Exp $
+# $Id: start,v 1.104 2000/03/28 21:09:38 jhs Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -235,7 +235,7 @@ the default arguments.
  				  not saved on permanent storage, it is only
 				  available until the next server restart
 				  This will enable a new 'action' in the
-				  configuration interface
+				  administration interface
 
       .B--with-file-profileB.:        Like .B--with-profileB., but save information
                                   for each and every file.
@@ -332,7 +332,7 @@ the default arguments.
   .BEnvironment variables:B.
 
      .BLANGB.:                        Used to determine the default locale
-                                  in the configuration interface and logs.
+                                  in the administration interface and logs.
      .BROXEN_CONFIGDIRB.:             Same as .B--config-dir=... B.
      .BROXEN_PID_FILEB.:              Same as .B--pid-file=... B.
      .BROXEN_LANGB.:                  The default language for all language
@@ -534,7 +534,7 @@ if [ -z "$once" ] ; then
   if [ $verbose -gt 0 ]; then
     cat << oo
 Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
-You can use the configuration interface in the server to get debug info.
+You can use the administration interface in the server to get debug info.
 oo
   else :; fi
 

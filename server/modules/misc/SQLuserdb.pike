@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-constant cvs_version="$Id: SQLuserdb.pike,v 1.15 2000/03/13 18:27:07 nilsson Exp $";
+constant cvs_version="$Id: SQLuserdb.pike,v 1.16 2000/03/28 20:58:44 jhs Exp $";
 
 #include <module.h>
 inherit "roxenlib";
@@ -152,7 +152,7 @@ void open_db() {
       report_debug("SQLauth: database interface replies: "+db->error()+"\n");
     else
       report_debug("SQLauth: unknown reason\n");
-    report_debug("SQLauth: check the values in the configuration interface, and "
+    report_debug("SQLauth: check the values in the administration interface, and "
 		 "that the user\n\trunning the server has adequate permissions "
 		 "to the server\n");
     db=0;

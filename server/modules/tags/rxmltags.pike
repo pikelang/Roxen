@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.106 2000/03/25 01:42:09 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.107 2000/03/28 20:58:44 jhs Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1655,7 +1655,7 @@ documentation for that module.</desc>",
  All other attributes will be inherited by the generated img tag.",
 
 "configurl":#"<desc tag><short>
- Returns a URL to the configuration interface.</short>
+ Returns a URL to the administration interface.</short>
 </desc>",
 
 "cset":#"<desc cont>Sets a variable with its content.</desc>
@@ -2258,8 +2258,10 @@ Sets a variable.</short> The variable attribute is required.
 "set-cookie":#"<desc tag><short>
  Sets a cookie that will be stored by the user's browser.</short> This
  is a simple and effective way of storing data that is local to the
- user. The cookie will be persistent, the next time the user visits
- the site, she will bring the cookie with her.
+ user. If no arguments specifying the time the cookie should survive
+ is given to the tag, it will live until the end of the current browser
+ session. Otherwise, the cookie will be persistent, and the next time
+ the user visits  the site, she will bring the cookie with her.
 </desc>
 
 <attr name=name value=string>

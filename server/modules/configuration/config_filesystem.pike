@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
-// A filesystem for the roxen configuration interface.
+// A filesystem for the roxen administration interface.
 #include <module.h>
 #include <stat.h>
 #include <roxen.h>
@@ -10,9 +10,9 @@ inherit "roxenlib";
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
-constant module_doc = "This filesystem serves the configuration interface";
+constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.31 2000/03/14 21:04:07 js Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.32 2000/03/28 20:58:43 jhs Exp $";
 
 constant path = "config_interface/";
 

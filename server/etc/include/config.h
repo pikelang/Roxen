@@ -1,8 +1,8 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.20 2000/03/10 18:07:24 mast Exp $
+ * $Id: config.h,v 1.21 2000/03/28 20:58:43 jhs Exp $
  *
  * User configurable things not accessible from the normal
- * configuration interface. Not much, but there are some things..  
+ * administration interface. Not much, but there are some things..  
  */
 
 #ifndef _ROXEN_CONFIG_H_
