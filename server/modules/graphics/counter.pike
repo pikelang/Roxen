@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.15 1998/03/18 19:30:31 neotron Exp $
+// $Id: counter.pike,v 1.16 1998/03/18 19:51:20 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,11 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.15  1998/03/18 19:30:31  neotron
+// - Now handles counter numbers larger than MAXINT.
+// - Adds ".gif" to the URL, being nice to browsers. :-)
+// - Fixes incorrect lengths.
+//
 // Revision 1.14  1998/03/18 18:50:44  neotron
 // Fixed a bunch of bugs. Before, the first time a font was used, it turned out
 // as 012345, due to an error in the colormap making...
@@ -76,7 +81,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.15 1998/03/18 19:30:31 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.16 1998/03/18 19:51:20 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -208,31 +213,35 @@ mapping ppmlist(string font, string user, string dir)
   string out;
   array  fnts;
   int    i;
-
   out =
     "<HTML><HEAD><TITLE>Cool PPM/GIF Font not Found</TITLE></HEAD>"
     "<BODY BGCOLOR=#ffffff TEXT=#000000>\n"
     "<H2>Cool PPM Font '"+font+"' not found!!</H2><HR>"+
     cvs_version + "<BR>" + copyright + "<HR>";
-		 
 
   catch( fnts=sort_array(get_dir( dir ) - ({".",".."})) );
   if( fnts ) {
-    out += "<B>Available PPM Fonts:</B><MENU>";
+    out += "<B>Available Digits:</B><DL>";
+    string initial="";
+    int totfonts=0;
     for( i=0; i<sizeof(fnts); i++ ) {
-      out += "<A HREF='";
-      out += query("mountpoint");
-      out += user + "/n/n/0/1/5/0/";
-      out += fnts[i] + "/1234567890'>";
-      out += fnts[i] + "</A><BR>\n";
+      if( initial != fnts[i][0..0] ) {
+	initial = fnts[i][0..0];
+	out += "<DT><FONT SIZE=+1><B> ["+ initial +"]</B></FONT>\n<DD>";
+      }
+      out +=
+	"<A HREF='" +query("mountpoint")+ user + "/n/n/0/0/5/0/"+ fnts[i] +
+	"/1234567890.gif'>" + fnts[i] + "</A> \n";
+      totfonts++;
     }
-    out += "</DL>";
+    out += "</DL>Total Digit Styles : " + totfonts;
   } else {
-    out += "Sorry, No Available PPM/GIF Fonts";
+    out += "Sorry, No Available Digits";
   }
-  
+
   out+= "<HR>" + copyright + "</BODY></HTML>";
-  
+	
+  return http_string_answer( out );
   return http_string_answer( out );
 }
 
@@ -450,7 +459,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.15 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.16 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
