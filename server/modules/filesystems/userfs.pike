@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.32 1998/07/05 13:18:55 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.33 1998/07/06 09:26:28 neotron Exp $";
 
 // import Array;
 // import Stdio;
@@ -266,8 +266,9 @@ array find_dir(string f, object got)
       return 0;
     }
     
-    if(sscanf(f, "%s/%s", u, f) != 2)
+    if(sscanf(f, "%s/%s", u, f) != 2) {
       u=f; f="";
+    }
   }
   if(u)
   {
