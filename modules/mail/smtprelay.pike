@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.28 1998/09/21 16:30:31 grubba Exp $
+ * $Id: smtprelay.pike,v 1.29 1998/09/23 23:30:54 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.28 1998/09/21 16:30:31 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.29 1998/09/23 23:30:54 grubba Exp $";
 
 /*
  * Some globals
@@ -298,11 +298,13 @@ class MailSender
   
   static void send_ehlo()
   {
+    message->prot = "ESMTP";
     send_command(sprintf("EHLO %s", gethostname()));
   }
 
   static void send_helo()
   {
+    message->prot = "SMTP";
     send_command(sprintf("HELO %s", gethostname()));
   }
 
@@ -376,8 +378,10 @@ class MailSender
       }
       m = replace(m, "\n.", "\n..") + ".\r\n";
       send(m);
+      message->sent = sizeof(m);
     } else {
       send(".\r\n");
+      message->sent = 3;
     }
   }
 
@@ -634,22 +638,38 @@ class MailSender
 
 static void mail_sent(int res, mapping message)
 {
+  // Fake request id for logging purposes.
+  mapping id = ([
+    "method":"SEND",
+    "prot":message->prot || "SMTP",
+    "remoteaddr":message->remote_mta || "0.0.0.0",
+    "time":time(),
+    "cookies":([]),
+    "not_query":sprintf("From:%s;To:%s@%s;%s",
+			message->sender,
+			message->user, message->domain,
+			message->mailid),
+  ]);
   if (res) {
     switch(res) {
     case 1:
+      conf->log(([ "error":200, "len":message->sent ]), id);
       report_notice(sprintf("SMTP: Mail %O sent successfully!\n",
 			    message->mailid));
       break;
     case -1:
+      conf->log(([ "error":404 ]), id);
       report_error(sprintf("SMTP: Failed to open %O!\n",
 			   message->mailid));
       
       return;	// FIXME: Should we remove it from the queue or not?
     case -2:
+      conf->log(([ "error":410 ]), id);
       report_error(sprintf("SMTP: Permanently bad address %s@%s\n",
 			   message->user, message->domain));
       break;
     case -3:
+      conf->log(([ "error":503 ]), id);
       report_error(sprintf("SMTP: Unknown SMTP server %s for domain %s\n",
 			   message->remote_mta, message->domain));
       break;
@@ -667,6 +687,7 @@ static void mail_sent(int res, mapping message)
       rm(combine_path(QUERY(spooldir), message->mailid));
     }
   } else {
+    conf->log(([ "error":408 ]), id);
     report_notice(sprintf("SMTP: Sending of %O failed!\n",
 			  message->mailid));
   }
@@ -765,7 +786,8 @@ int send_message(string from, multiset(string) rcpt, string message)
     }
   }
   if (!sent) {
-    report_error(sprintf("send_message() Failed!\n"));
+    report_error(sprintf("send_message(%O, %O, %O) Failed!\n",
+			 from, rcpt, message));
   }
   return(sent);
 }
