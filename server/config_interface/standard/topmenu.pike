@@ -15,7 +15,7 @@ array selections =
   ({ LOCALE(215, "Ports"),   "ports",     "ports/",          "View Settings"}),
   ({ LOCALE(216, "Events"),  "event_log", "event_log/",      "View Settings"}),
   ({ LOCALE(196, "Tasks"),   "actions",   "actions/",        "Tasks" }),
-  ({ LOCALE(0, "DBs"),     "dbs",       "dbs/",            "View Settings"}),
+  ({ LOCALE(218, "DBs"),     "dbs",       "dbs/",            "View Settings"}),
   ({ LOCALE(217, "Docs"),    "docs",      "docs/",           0 }),
 });
 
