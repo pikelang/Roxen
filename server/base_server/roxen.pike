@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.257 1999/02/15 23:21:46 per Exp $
+ * $Id: roxen.pike,v 1.258 1999/03/01 17:03:14 marcus Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.257 1999/02/15 23:21:46 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.258 1999/03/01 17:03:14 marcus Exp $";
 
 // Some headerfiles
 #define IN_ROXEN
@@ -2701,9 +2701,14 @@ int is_ip(string s)
 		 ({ "","","","","","","","","","","" })) == "");
 }
 
-object find_server_for(object id, string host)
+object find_server_for(object id, string host, string|void port)
 {
   object old_conf = id->conf;
+  int portno = ((int)port);
+
+  if(portno!=0 && portno!=21 && portno!=80 && portno!=443)
+    // Not likely to be anything else than the current virtual server.
+    return id->conf;
 
   host = lower_case(host);
   if(config_cache[host]) {
@@ -2809,6 +2814,6 @@ object find_server_for(object id, string host)
 object find_site_for( object id )
 {
   if(id->misc->host) 
-    return find_server_for(id,lower_case((id->misc->host/":")[0]));
+    return find_server_for(id,@lower_case(id->misc->host)/":");
   return id->conf;
 }
