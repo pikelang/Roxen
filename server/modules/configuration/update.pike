@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.9 2000/03/24 20:01:07 js Exp $
+ * $Id: update.pike,v 1.10 2000/03/24 23:49:40 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -372,7 +372,7 @@ string|void unpack_file(Stdio.File from, string to)
   }
 
   r_rm(prefix+to+"~");
-  return "Wrote "+prefix+to+".";
+  return "Wrote "+replace(prefix+to,"//","/")+".";
 }
 
 array(string) low_unpack_tarfile(Filesystem.Tar fs, string dir, mapping errors)
@@ -437,7 +437,7 @@ string tag_update_install_package(string t, mapping m, RequestID id)
   return res+"<br><br><b>Package installed completely.</b>";
 }
 
-array(string) tarfile_contents(string|object tarfile, void|string dir)
+array(mapping) tarfile_contents(string|object tarfile, void|string dir)
 {
   if(dir=="/info/")
     return ({ });
@@ -450,20 +450,23 @@ array(string) tarfile_contents(string|object tarfile, void|string dir)
 
   foreach(sort(tarfile->get_dir(dir)), string entry)
   {
-    if(tarfile->stat(entry)->isdir())
+    object stat=tarfile->stat(entry);
+    if(stat->isdir())
       res += tarfile_contents(tarfile,entry);
     else
-      res += ({ tarfile->stat(entry)->lsprint(1) });
+      res += ({ (["size":(string)stat->size, "path": stat->fullpath]) });
   }
   return res;
 }
 
-string tag_update_package_contents(string t, mapping m, RequestID id)
+string container_update_package_contents_output(string t, mapping m,
+						string c, RequestID id)
 {
   if(!m->package)
     return "No package argument.";
 
-  return tarfile_contents(roxen_path(QUERY(pkgdir))+m->package+".tar")*"\n";
+  return do_output_tag(m, tarfile_contents(roxen_path(QUERY(pkgdir))+m->package+".tar"),
+		       c, id);
 }
 
 string tag_update_update_list(string t, mapping m, RequestID id)
