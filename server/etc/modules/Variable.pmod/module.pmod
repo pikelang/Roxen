@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.20 2000/09/22 14:14:09 jonasw Exp $
+// $Id: module.pmod,v 1.21 2000/09/22 14:17:35 jonasw Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1193,10 +1193,10 @@ static array(string) verify_port( string port, int nofhttp )
     if( (protocol == "https" || protocol == "ftps") )
     {
       warning += 
-              "SSL support not available in this pike version."
+              "SSL support not available in this Pike version. "
               "Transformed "+protocol+" to ";
       protocol = protocol[ ..strlen(protocol)-2 ];
-      warning += protocol+"\n";
+      warning += protocol+".\n";
     }
 #endif
   }
