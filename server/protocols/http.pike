@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.132 1999/05/15 17:43:09 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.133 1999/05/20 14:22:34 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1256,8 +1256,9 @@ void handle_request( )
 	  "type":"text/html",
 	  "data":generate_bugreport( @err ),
 	]);
+        send_result();
+        return;
       } else {
-	
 	if(prestate->find_file)
         {
 	  if(!realauth)
@@ -1275,6 +1276,8 @@ void handle_request( )
 						  (int)variables->error ),
 	      ]);
 	  }
+          send_result();
+          return;
 	}
       }
     }
