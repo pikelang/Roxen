@@ -56,7 +56,7 @@ void read_from_stdin()
 
 int main(int argc, array (string) argv)
 {
-  int redirect;
+  int redirect = 1; // Default is to redirect stdout with friends.
   /* Syntax: ntroxenloader.pike <roxen-directory> <roxen loader options> */
   if(argc > 1 && argv[1][0]=='+')
   {
@@ -125,9 +125,34 @@ int main(int argc, array (string) argv)
     }
   }
 
-  werror("Compiling "+dir+"base_server\\roxenloader.pike\n");
+  function rget=
+    lambda(string ent) {
+      string res ;
+      catch(res=RegGetValue(HKEY_CURRENT_USER,"SOFTWARE\\Idonex\\Pike\\0.6",ent));
+      if(res) return res;
+      catch(res=RegGetValue(HKEY_LOCAL_MACHINE,"SOFTWARE\\Idonex\\Pike\\0.6",ent));
+      if(res) return res;
+      return "<undefined>";
+    };
+  werror("Primary bootstrap complete.\n"
+ "   Pike master file     : "+rget("PIKE_MASTER")+"\n"
+ "   Pike share directory : "+rget("share_prefix")+"\n"
+ "   Pike arch directory  : "+rget("lib_prefix")+"\n"
+ "   Roxen base directory : "+dir+"\n"
+ "   Roxen configurations : "+dir+"\\configurations\n"
+ "   Roxen status file    : "+log_dir+"\\status\n"
+ "   Roxen shutdown file  : "+(key?log_dir+"\\"+key:"None")+"\n"
+ "   Roxen log directory  : "+log_dir+"\n"
+ "   Roxen arguments      : "+(sizeof(argv)>2?argv[1..]*" ":"None")+"\n"
+#if constant(_Crypto) && constant(Crypto)
+ "   This version of roxen has crypto algorithms available\n"
+#endif
+ "\n");
+ 
+  werror("Compiling second level bootstrap ["
+	 +dir+"base_server\\roxenloader.pike]\n");
   call_out(write_status_file, 1);
   if(key) thread_create(read_from_stdin);
   return ((program)(dir+"base_server\\roxenloader.pike"))()
-    ->main(argc,argv);
+    ->main(argc, argv);
 }
