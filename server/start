@@ -8,8 +8,12 @@ LOGDIR=../logs/
 FILES="default"
 
 # Pike default Master-program
-if [ -f ../pike/src/lib/master.pike ]; then
-  DEFINES="$DEFINES -m ../pike/src/lib/master.pike"
+if [ -f lib/pike/master.pike ]; then
+  DEFINES="$DEFINES -m lib/pike/master.pike"
+else
+  if [ -f ../pike/src/lib/master.pike ]; then
+    DEFINES="$DEFINES -m ../pike/src/lib/master.pike"
+  fi
 fi
 
 # Extra module-path
