@@ -2,40 +2,41 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>nld</language>
-<dumped>969369621</dumped>
-<file>../base_server/configuration.pike</file>
+<dumped>975023404</dumped>
 <file>../base_server/config_userdb.pike</file>
+<file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
-<file>../etc/modules/Variable.pmod/module.pmod</file>
-<file>../modules/configuration/config_tags.pike</file>
-<file>../modules/configuration/config_userdb.pike</file>
-<file>../modules/configuration/config_filesystem.pike</file>
+<file>../base_server/module_support.pike</file>
+<file>../base_server/roxen.pike</file>
 <file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/logutil.pike</file>
 <file>../config_interface/standard/statusinfo.pike</file>
 <file>../config_interface/standard/template</file>
 <file>../config_interface/standard/topmenu.pike</file>
-<file>../config_interface/standard/users.html</file>
 <file>../config_interface/standard/user_delete.pike</file>
 <file>../config_interface/standard/user_form.pike</file>
 <file>../config_interface/standard/actions/index.html</file>
 <file>../config_interface/standard/event_log/clear_log.pike</file>
-<file>../config_interface/standard/event_log/index.html</file>
 <file>../config_interface/standard/event_log/log.pike</file>
 <file>../config_interface/standard/sites/add_module.pike</file>
 <file>../config_interface/standard/sites/config_left_item.pike</file>
 <file>../config_interface/standard/sites/create_site.pike</file>
 <file>../config_interface/standard/sites/drop_module.pike</file>
-<file>../config_interface/standard/sites/drop_site.html</file>
 <file>../config_interface/standard/sites/drop_site.pike</file>
-<file>../config_interface/standard/sites/index.html</file>
 <file>../config_interface/standard/sites/log.pike</file>
-<file>../config_interface/standard/sites/new_site.html</file>
 <file>../config_interface/standard/sites/site_content.pike</file>
 <file>../config_interface/standard/sites/site_header.pike</file>
 <file>../config_interface/standard/sites/site_templates/common.pike</file>
-
-
+<file>../etc/modules/Variable.pmod/Date.pike</file>
+<file>../etc/modules/Variable.pmod/Email.pike</file>
+<file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
+<file>../etc/modules/Variable.pmod/module.pmod</file>
+<file>../etc/modules/Variable.pmod/Image.pike</file>
+<file>../etc/modules/Variable.pmod/Upload.pike</file>
+<file>../modules/configuration/config_filesystem.pike</file>
+<file>../modules/configuration/config_tags.pike</file>
+<file>../modules/configuration/config_userdb.pike</file>
+<file>../modules/configuration/update.pike</file>
 
 <str id="2">
 <o>Sent data:</o>
@@ -50,11 +51,6 @@
 <str id="4">
 <o>Sent headers:</o>
 <t>Headers verstuurd:</t>
-</str>
-
-<str id="5">
-<o>Number of requests:</o>
-<t>Aantal verzoeken:</t>
 </str>
 
 <str id="6">
@@ -120,17 +116,6 @@
 <str id="18">
 <o>Security: Security level</o>
 <t>Beveiling: Beveiligingsniveau</t>
-</str>
-
-<str id="19">
-<new/>
-<o>The modules security level is used to determine if a  request should be handled by the module.
-&lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
-&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
-&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
-<t></t>
 </str>
 
 <str id="20">
@@ -322,7 +307,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="42">
 <new/>
-<o>Bandwidth Throttling: Server: Enabled</o>
+<o>Throttling: Server; Enabled</o>
 <t></t>
 </str>
 
@@ -334,7 +319,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="44">
 <new/>
-<o>Bandwidth Throttling: Server: Average available bandwidth</o>
+<o>Throttling: Server; Average available bandwidth</o>
 <t></t>
 </str>
 
@@ -346,7 +331,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="46">
 <new/>
-<o>Bandwidth Throttling: Server: Bucket Depth</o>
+<o>Throttling: Server; Bucket Depth</o>
 <t></t>
 </str>
 
@@ -358,7 +343,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="48">
 <new/>
-<o>Bandwidth Throttling: Server: Minimum Grant</o>
+<o>Throttling: Server; Minimum Grant</o>
 <t></t>
 </str>
 
@@ -370,7 +355,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="50">
 <new/>
-<o>Bandwidth Throttling: Server: Maximum Grant</o>
+<o>Throttling: Server; Maximum Grant</o>
 <t></t>
 </str>
 
@@ -382,7 +367,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="52">
 <new/>
-<o>Bandwidth Throttling: Request: Enabled</o>
+<o>Throttling: Request; Enabled</o>
 <t></t>
 </str>
 
@@ -394,7 +379,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="54">
 <new/>
-<o>Bandwidth Throttling: Request: Minimum guarranteed bandwidth</o>
+<o>Throttling: Request; Minimum guarranteed bandwidth</o>
 <t></t>
 </str>
 
@@ -406,7 +391,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="56">
 <new/>
-<o>Bandwidth Throttling: Request: Bucket Depth Multiplier</o>
+<o>Throttling: Request; Bucket Depth Multiplier</o>
 <t></t>
 </str>
 
@@ -418,7 +403,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="58">
 <new/>
-<o>Messages: No such file</o>
+<o>No such file message</o>
 <t></t>
 </str>
 
@@ -984,18 +969,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <t></t>
 </str>
 
-<str id="152">
-<new/>
-<o>Update the supports database automatically</o>
-<t></t>
-</str>
-
-<str id="153">
-<new/>
-<o>If set to Yes, the etc/supports file will be updated automatically from www.roxen.com now and then. This is recomended, since you will then automatically get supports information for new clients, and new versions of old ones.</o>
-<t></t>
-</str>
-
 <str id="154">
 <new/>
 <o>ABS: Enable Anti-Block-System</o>
@@ -1236,12 +1209,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <t></t>
 </str>
 
-<str id="195">
-<new/>
-<o>Edit Module Variables</o>
-<t></t>
-</str>
-
 <str id="196">
 <o>Tasks</o>
 <t>Acties</t>
@@ -1386,28 +1353,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <t>Gebruikers</t>
 </str>
 
-<str id="222">
-<o>Create new user</o>
-<t>Maak nieuwe gebruike aan</t>
-</str>
-
-<str id="223">
-<o>Delete old user</o>
-<t>Verwijder oude gebruiker</t>
-</str>
-
-<str id="224">
-<new/>
-<o>Create User</o>
-<t></t>
-</str>
-
-<str id="225">
-<new/>
-<o>User ID</o>
-<t></t>
-</str>
-
 <str id="226">
 <o>Permission denied</o>
 <t>Niet toegestaan</t>
@@ -1424,24 +1369,9 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <t></t>
 </str>
 
-<str id="245">
-<o>Normal</o>
-<t>Normaal</t>
-</str>
-
-<str id="246">
-<o>Reversed</o>
-<t>Omgekeerd</t>
-</str>
-
 <str id="247">
 <o>Clear Log</o>
 <t>Logboek opschonen</t>
-</str>
-
-<str id="248">
-<o>Create new site</o>
-<t>Maak nieuwe site</t>
 </str>
 
 <str id="249">
@@ -1453,12 +1383,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <str id="250">
 <o>Empty</o>
 <t>Leeg</t>
-</str>
-
-<str id="400">
-<new/>
-<o>Initial Variables</o>
-<t></t>
 </str>
 
 <str id="255">
@@ -1528,18 +1452,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <t></t>
 </str>
 
-<str id="262">
-<new/>
-<o>Character encoding</o>
-<t></t>
-</str>
-
-<str id="263">
-<new/>
-<o>Send pages to client in this character encoding.</o>
-<t></t>
-</str>
-
 <str id="264">
 <new/>
 <o>Mountpoint</o>
@@ -1564,33 +1476,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <t></t>
 </str>
 
-<str id="269">
-<new/>
-<o>Site name:</o>
-<t></t>
-</str>
-
-<str id="270">
-<new/>
-<o>
-The name of the configuration must contain characters
-other than space and tab, it should not end with
-~, and it must not be 'CVS', 'Global Variables' or
-'global variables', nor the name of an existing
-configuration, and the character '/' cannot be
-used. This name will show up in the sites menu, a
-lowercased, filesystem-friendly version will become
-the virtual server's configuration file name as well
-as the name of its log file directory.
-</o>
-<t></t>
-</str>
-
-<str id="271">
-<o>with template</o>
-<t>Met template</t>
-</str>
-
 <str id="272">
 <new/>
 <o>Reload module list</o>
@@ -1605,7 +1490,7 @@ as the name of its log file directory.
 
 <str id="274">
 <new/>
-<o>Data Cache:Cache size</o>
+<o>Cache:Cache size</o>
 <t></t>
 </str>
 
@@ -1617,7 +1502,7 @@ as the name of its log file directory.
 
 <str id="276">
 <new/>
-<o>Data Cache:Max file size</o>
+<o>Cache:Max file size</o>
 <t></t>
 </str>
 
@@ -1735,12 +1620,6 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="296">
-<new/>
-<o>Illegal site name</o>
-<t></t>
-</str>
-
 <str id="297">
 <new/>
 <o>New row</o>
@@ -1807,18 +1686,6 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="231">
-<new/>
-<o>Preferred language</o>
-<t></t>
-</str>
-
-<str id="232">
-<new/>
-<o>Which one of the completed translations of the administration interface to use.</o>
-<t></t>
-</str>
-
 <str id="233">
 <new/>
 <o>Failed login attempt %s from %s</o>
@@ -1834,5 +1701,420 @@ as the name of its log file directory.
 <str id="235">
 <new/>
 <o>Are you sure you want to disable the site %s?</o>
+<t></t>
+</str>
+
+<str id="236">
+<new/>
+<o>Default variable sort order</o>
+<t></t>
+</str>
+
+<str id="237">
+<new/>
+<o>The default order variables are sorted in</o>
+<t></t>
+</str>
+
+<str id="238">
+<new/>
+<o>alphabetical</o>
+<t></t>
+</str>
+
+<str id="239">
+<new/>
+<o>as defined</o>
+<t></t>
+</str>
+
+<str id="240">
+<new/>
+<o>alphabetical, changed first</o>
+<t></t>
+</str>
+
+<str id="241">
+<new/>
+<o>as defined, changed first</o>
+<t></t>
+</str>
+
+<str id="242">
+<new/>
+<o>Changed variables are highlighted</o>
+<t></t>
+</str>
+
+<str id="243">
+<new/>
+<o>How to highlight variables that does not have their default value</o>
+<t></t>
+</str>
+
+<str id="244">
+<new/>
+<o>Not at all</o>
+<t></t>
+</str>
+
+<str id="268">
+<new/>
+<o>Different background color</o>
+<t></t>
+</str>
+
+<str id="302">
+<new/>
+<o>Add a header</o>
+<t></t>
+</str>
+
+<str id="303">
+<new/>
+<o>Group Tasks</o>
+<t></t>
+</str>
+
+<str id="304">
+<new/>
+<o>If true, tasks are grouped acording to type, otherwise all tasks will be listed on one page</o>
+<t></t>
+</str>
+
+<str id="305">
+<new/>
+<o>The modules security level is used to determine if a  request should be handled by the module.
+&lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
+&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;, &lt;i&gt;unless&lt;/i&gt; the security         level of the module is 0, which is a special         case and means that no change should be made.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
+&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="306">
+<new/>
+<o>Site</o>
+<t></t>
+</str>
+
+<str id="307">
+<new/>
+<o>No such file message override files</o>
+<t></t>
+</str>
+
+<str id="308">
+<new/>
+<o>If no file match a given resource all directories above the wanted file is searched for one of the files in this list.&lt;p&gt;
+As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.</o>
+<t></t>
+</str>
+
+<str id="309">
+<new/>
+<o>Require user with the 'hilfe' permission</o>
+<t></t>
+</str>
+
+<str id="310">
+<new/>
+<o>If yes, require a user with the hilfe permission set, otherwise, any configuration interface user will work,  even one with only the view settings permission</o>
+<t></t>
+</str>
+
+<str id="311">
+<new/>
+<o>Site event log for '%s' cleared by %s (%s) from %s</o>
+<t></t>
+</str>
+
+<str id="312">
+<new/>
+<o>Could not interpret the date</o>
+<t></t>
+</str>
+
+<str id="313">
+<new/>
+<o>An email address must contain "@".</o>
+<t></t>
+</str>
+
+<str id="314">
+<new/>
+<o>The email address domain contains forbidden characters.</o>
+<t></t>
+</str>
+
+<str id="315">
+<new/>
+<o>The email address user contains forbidden characters.</o>
+<t></t>
+</str>
+
+<str id="316">
+<new/>
+<o>The email address does not contain a user.</o>
+<t></t>
+</str>
+
+<str id="317">
+<new/>
+<o>The email address does not contain a domain.</o>
+<t></t>
+</str>
+
+<str id="318">
+<new/>
+<o>The email address begins with an character that is not legal in that position.</o>
+<t></t>
+</str>
+
+<str id="319">
+<new/>
+<o>The domain %s could not be found.</o>
+<t></t>
+</str>
+
+<str id="320">
+<new/>
+<o>Value %s does not match the regexp %s.</o>
+<t></t>
+</str>
+
+<str id="321">
+<new/>
+<o>Value %s does not match the glob %s.</o>
+<t></t>
+</str>
+
+<str id="322">
+<new/>
+<o>Value %s must be at least %d characters long. (%d character short)</o>
+<t></t>
+</str>
+
+<str id="323">
+<new/>
+<o>Value %s must not be more than %d characters long. (%d character too long)</o>
+<t></t>
+</str>
+
+<str id="324">
+<new/>
+<o>Value %s is not uppercased.</o>
+<t></t>
+</str>
+
+<str id="325">
+<new/>
+<o>Value %s is not lowercased.</o>
+<t></t>
+</str>
+
+<str id="326">
+<new/>
+<o>unnamed</o>
+<t></t>
+</str>
+
+<str id="327">
+<new/>
+<o>Internal error: Illegal sized array from verify_set_from_form
+</o>
+<t></t>
+</str>
+
+<str id="328">
+<new/>
+<o>Value is bigger than %s, adjusted</o>
+<t></t>
+</str>
+
+<str id="329">
+<new/>
+<o>Value is less than %s, adjusted</o>
+<t></t>
+</str>
+
+<str id="330">
+<new/>
+<o>You most likely want an ending '/' on this variable</o>
+<t></t>
+</str>
+
+<str id="331">
+<new/>
+<o>%s is not a directory</o>
+<t></t>
+</str>
+
+<str id="332">
+<new/>
+<o>(keep stale value %s)</o>
+<t></t>
+</str>
+
+<str id="333">
+<new/>
+<o>Assuming http://*:%[0]d/ for %[0]d</o>
+<t></t>
+</str>
+
+<str id="334">
+<new/>
+<o>Empty URL field</o>
+<t></t>
+</str>
+
+<str id="335">
+<new/>
+<o>%s does not conform to URL syntax</o>
+<t></t>
+</str>
+
+<str id="336">
+<new/>
+<o>Added / to the end of %s</o>
+<t></t>
+</str>
+
+<str id="337">
+<new/>
+<o>Changed %s to http</o>
+<t></t>
+</str>
+
+<str id="338">
+<new/>
+<o>Changed %s to %s</o>
+<t></t>
+</str>
+
+<str id="339">
+<new/>
+<o>SSL support not available in this Pike version.</o>
+<t></t>
+</str>
+
+<str id="340">
+<new/>
+<o>Please use %s instead.</o>
+<t></t>
+</str>
+
+<str id="341">
+<new/>
+<o>Removed the default port number (%d) from %s</o>
+<t></t>
+</str>
+
+<str id="342">
+<new/>
+<o>Warning: The protocol %s is not known by roxen</o>
+<t></t>
+</str>
+
+<str id="343">
+<new/>
+<o>Internal error: Illegal sized array from verify_set_from_form</o>
+<t></t>
+</str>
+
+<str id="344">
+<new/>
+<o>Uploaded file: %s</o>
+<t></t>
+</str>
+
+<str id="345">
+<new/>
+<o>Cannot decode this file as an image</o>
+<t></t>
+</str>
+
+<str id="346">
+<new/>
+<o>Error while decoding image</o>
+<t></t>
+</str>
+
+<str id="347">
+<new/>
+<o>Valid image set (no cimg module available, cannot show it)</o>
+<t></t>
+</str>
+
+<str id="348">
+<new/>
+<o>No image set</o>
+<t></t>
+</str>
+
+<str id="349">
+<new/>
+<o>Update Client</o>
+<t></t>
+</str>
+
+<str id="350">
+<new/>
+<o>Load of %s (%s) failed</o>
+<t></t>
+</str>
+
+<str id="351">
+<new/>
+<o>The module %s (%s) could not be loaded.</o>
+<t></t>
+</str>
+
+<str id="352">
+<new/>
+<o>Found trailing data after the date. </o>
+<t></t>
+</str>
+
+<str id="353">
+<new/>
+<o>Month must be at least 1. </o>
+<t></t>
+</str>
+
+<str id="354">
+<new/>
+<o>Month must be 12 or less. </o>
+<t></t>
+</str>
+
+<str id="355">
+<new/>
+<o>Day must be at least 1.</o>
+<t></t>
+</str>
+
+<str id="356">
+<new/>
+<o>%s does not appear to be a valid date.</o>
+<t></t>
+</str>
+
+<str id="357">
+<new/>
+<o>Day must be %d or less.</o>
+<t></t>
+</str>
+
+<str id="5">
+<changed from="Number of requests:"/>
+<o>Interface language</o>
+<t>Aantal verzoeken:</t>
+</str>
+
+<str id="19">
+<new/>
+<o>Select the Administration interface language.</o>
 <t></t>
 </str>

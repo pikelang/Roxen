@@ -2,7 +2,7 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>eng</language>
-<dumped>975022891</dumped>
+<dumped>975023401</dumped>
 <file>../base_server/config_userdb.pike</file>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>

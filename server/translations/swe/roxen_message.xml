@@ -2,9 +2,12 @@
 <locale version="1.0"/>
 <project>roxen_message</project>
 <language>swe</language>
-<dumped>969369656</dumped>
-<file>../base_server/roxen.pike</file>
+<dumped>975023413</dumped>
 <file>../base_server/configuration.pike</file>
+<file>../base_server/roxen.pike</file>
+<file>../modules/configuration/update.pike</file>
+<file>../protocols/prot_fhttp.pike</file>
+<file>../protocols/prot_hilfe.pike</file>
 <added id="1"/>
 
 <str id="1">
@@ -79,11 +82,6 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 <str id="17">
 <o>SSL3: No private key found.</o>
 <t>SSL3: Hittade ingen privat nyckel.</t>
-</str>
-
-<str id="18">
-<o>No SSL support available.</o>
-<t>SSL-stöd saknas.</t>
 </str>
 
 <str id="19">
@@ -253,5 +251,17 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <str id="46">
 <new/>
 <o>Cannot possibly bind to %O, that host is unknown. Substituting with ANY</o>
+<t></t>
+</str>
+
+<str id="7">
+<new/>
+<o>The protocol '%s' is not available</o>
+<t></t>
+</str>
+
+<str id="12">
+<new/>
+<o>Hilfe</o>
 <t></t>
 </str>
