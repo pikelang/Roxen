@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.250 2000/09/29 07:52:28 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.251 2000/10/02 01:43:52 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -975,8 +975,8 @@ string do_gtext(mapping arg, string c, RequestID id)
     if(p->bevel) p->pressed=1;
 
     m_delete(p, "fgcolor");
-    foreach(glob("magic-*", indices(arg)), string q)
-      p[q[6..]]=m_delete(arg, q);
+    foreach(glob("magic-*", indices(p)), string q)
+      p[q[6..]]=m_delete(p, q);
 
     if(!p->fgcolor) p->fgcolor=id->misc->defines->theme_alink||
 			id->misc->defines->alink||"#ff0000";
