@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.171 1999/05/18 04:01:54 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.172 1999/05/18 06:19:19 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -509,12 +509,12 @@ object make_text_image(mapping args, object font, string text,object id)
   } else
     background->paste_mask(foreground, text_alpha, xoffset, yoffset);
 
-  if((float)args->scale>0.0)
-    if((float)args->scale <= 2.0)
-      background = background->scale((float)args->scale);
-
-
   foreground = text_alpha = 0;
+
+  // handled by the image cache nowdays. :-)
+//   if((float)args->scale>0.0)
+//     if((float)args->scale <= 2.0)
+//       background = background->scale((float)args->scale);
 
 
   if(args->rotate)

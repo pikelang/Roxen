@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.279 1999/05/18 03:55:09 per Exp $
+ * $Id: roxen.pike,v 1.280 1999/05/18 06:20:02 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.279 1999/05/18 03:55:09 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.280 1999/05/18 06:20:02 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1909,7 +1909,6 @@ class ImageCache
     mapping meta;
     string data;
 
-
     if( objectp( reply ) || (mappingp(reply) && reply->img) )
     {
       int quant = (int)args->quant;
@@ -1918,13 +1917,49 @@ class ImageCache
       Image.Colortable ct;
       object alpha;
 
-      if( format == "jpg" ) format = "jpeg";
+      if( format == "jpg" ) 
+        format = "jpeg";
 
       if(mappingp(reply))
       {
         alpha = reply->alpha;
         reply = reply->img;
       }
+
+      if( args->scale )
+      {
+        int x, y;
+        if( sscanf( args->scale, "%d,%d", x, y ) == 2)
+        {
+          reply = reply->scale( x, y );
+          if( alpha )
+            alpha = alpha->scale( x, y );
+        }
+        else 
+        {
+          reply->scale( ((float)args->scale)/100.0 );
+          if( alpha )
+            alpha->scale( ((float)args->scale)/100.0 );
+        }
+      }
+
+      if( args->maxwidth || args->maxheight )
+      {
+        int x = (int)args->maxwidth, y = (int)args->maxheight;
+        if( x && reply->xsize() > x )
+        {
+          reply = reply->scale( x, 0 );
+          if( alpha )
+            alpha = alpha->scale( x, 0 );
+        }
+        if( y && reply->ysize() > y )
+        {
+          reply = reply->scale( 0, y );
+          if( alpha )
+            alpha = alpha->scale( 0, y );
+        }
+      }
+
       if( quant || (format=="gif") )
       {
         ct = Image.Colortable( reply, quant||id->misc->defquant||16 );
@@ -1944,6 +1979,10 @@ class ImageCache
       if( alpha )
         enc_args->alpha = alpha;
 
+      foreach( glob( "*-*", indices(args)), string n )
+        if(sscanf(n, "%*[^-]-%s", string opt ) == 2)
+          enc_args[opt] = (int)args[n];
+
       switch(format)
       {
        case "gif":
@@ -1962,7 +2001,7 @@ class ImageCache
         "ysize":reply->ysize(),
         "type":"image/"+format,
       ]);
-    } 
+    }
     else if( mappingp(reply) ) 
     {
       meta = reply->meta;
@@ -2507,9 +2546,10 @@ mapping low_load_image(string f,object id)
   {
     // We were recursing very badly with the demo module here...
     id->misc->_load_image_called++;
-    if(!(data=id->conf->try_get_file(f, id))) {
+    if(!(data=id->conf->try_get_file(f, id)))
+    {
       file=Stdio.File();
-      if(!file->open(f,"r") || !(data=file->read))
+      if(!file->open(f,"r") || !(data=file->read()))
 	return 0;
     }
   }

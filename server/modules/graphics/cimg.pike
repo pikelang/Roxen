@@ -37,8 +37,16 @@ string tag_cimg( string t, mapping args, RequestID id )
   ([  
     "src":fix_relative( args->src, id ),
     "quant":args->quant,
-    "format":args->format
+    "format":args->format,
+    "maxwidth":args->maxwidth,
+    "maxheight":args->maxheight,
+    "scale":args->scale,
+    "dither":args->dither,
   ]);
+
+  foreach( glob( "*-*", indices(args)), string n )
+    a[n] = args[n];
+
   args -= a;
 
   args->src = query_internal_location()+the_cache->store( a );
