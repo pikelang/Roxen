@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.123 1999/07/02 18:21:09 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.124 1999/07/02 20:33:55 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -876,6 +876,7 @@ constant errors =
   202:"202 Accepted",
   203:"203 Provisional Information",
   204:"204 No Content",
+  206:"206 Partial Content",
   
   300:"300 Moved",
   301:"301 Permanent Relocation",
@@ -893,6 +894,7 @@ constant errors =
   408:"408 Request timeout",
   409:"409 Conflict",
   410:"410 This document is no more. It has gone to meet it's creator. It is gone. It will not be coming back. Give up. I promise. There is no such file or directory.",
+  416:"416 Requested range not satisfiable",
   
   500:"500 Internal Server Error.",
   501:"501 Not Implemented",
@@ -1036,7 +1038,7 @@ class MultiRangeWrapper
       num_bytes = args[0];
     else
       num_bytes = 0xeffffff;
-    werror(sprintf("Want to read %d bytes\n", num_bytes));
+    //    werror(sprintf("Want to read %d bytes\n", num_bytes));
     total = num_bytes;
     num_bytes -= strlen(out);
     foreach(ranges, array range)
@@ -1072,7 +1074,7 @@ class MultiRangeWrapper
 	// Oops. too much data. Send amount asked for and save
 	// the rest.
 	stored_data = out[total..];
-	werror(sprintf("Returning %d bytes in loop.\n", strlen(out[..total-1])));
+	//	werror(sprintf("Returning %d bytes in loop.\n", strlen(out[..total-1])));
 	return out[..total-1];
       }
     }
@@ -1085,11 +1087,11 @@ class MultiRangeWrapper
     {
       // Oops. too much data again. Write and store. Write and store.
       stored_data = out[total..];
-      werror(sprintf("Returning %d bytes outside loop.\n", strlen(out[..total-1])));
+      //      werror(sprintf("Returning %d bytes outside loop.\n", strlen(out[..total-1])));
       return out[..total-1];
     }
     stored_data = ""; // Very important. Ia.
-    werror(sprintf("Returning last %d bytes.\n", strlen(out[..total-1])));
+    //    werror(sprintf("Returning last %d bytes.\n", strlen(out[..total-1])));
     return out ; // We are finally done.
   }
   
