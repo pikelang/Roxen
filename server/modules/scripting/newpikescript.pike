@@ -1,4 +1,4 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.15 2000/02/17 08:42:43 per Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.16 2000/03/13 06:23:54 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -12,7 +12,7 @@ array register_module()
 }
 #endif // constant(roxen)
 #else /* constant(Remote) */
-#define SERVERDIR ".pike-script-servers/"
+#define SERVERDIR ("../var/pike-script-servers-"+gethostname()+"-"+getuid()+"/")
 
 #if constant(roxen)
 // Ok. This is a roxen module, then...
@@ -22,7 +22,8 @@ inherit "roxenlib";
 
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Pike script support mark II";
-constant module_doc  = "This is an enhanced version of the normal 'pike scripts' module. "
+constant module_doc  = "This is an enhanced, but <b>unfinished</b>, version "
+  "of the normal 'pike scripts' module. "
   "Major features:<ul>\n"
   "<li> A separate process for each user."
   "<li> The processes are quite persistent"
