@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.210 2001/07/21 14:23:24 mast Exp $
+// $Id: module.pmod,v 1.211 2001/07/24 22:35:41 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -508,13 +508,13 @@ class Tag
 	  Parser parser = t->get_parser (ctx, ctx->tag_set, 0);
 	  TAG_DEBUG (RXML_CONTEXT->frame,
 		     "Evaluating argument value %s with %O\n",
-		     utils->format_short (raw_args[arg]), parser);
+		     format_short (raw_args[arg]), parser);
 	  parser->finish (raw_args[arg]); // Should not unwind.
 	  raw_args[arg] = parser->eval(); // Should not unwind.
 	  TAG_DEBUG (RXML_CONTEXT->frame,
 		     "Setting dynamic argument %s to %s\n",
-		     utils->format_short (arg),
-		     utils->format_short (raw_args[arg]));
+		     format_short (arg),
+		     format_short (raw_args[arg]));
 	  t->give_back (parser, ctx->tag_set);
 	}
       }
@@ -1440,7 +1440,7 @@ class Context
 	  vars = rxml_index (vars, path, scope_name, this_object());
 	  scope_name += "." + (array(string)) path * ".";
 	  if (mapping(string:mixed) var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name}) + var, val)] = val;
+	    var_chg[encode_value_canonic (({scope_name}) + var)] = val;
 	}
 	else {
 	  index = var[0];
@@ -1467,10 +1467,11 @@ class Context
 	  else
 	    return vars[index - 1] = val;
 	else
-	  parse_error( "Cannot index the array in %s with %O.\n", scope_name, index );
+	  parse_error( "Cannot index the array in %s with %s.\n",
+		       scope_name, format_short (index) );
       else
-	parse_error ("%s is %O which cannot be indexed with %O.\n",
-		     scope_name, vars, index);
+	parse_error ("%s is %s which cannot be indexed with %s.\n",
+		     scope_name, format_short (vars), format_short (index));
     }
 
     else if (scope_name == "_") parse_error ("No current scope.\n");
@@ -1509,13 +1510,22 @@ class Context
     if (SCOPE_TYPE vars = scopes[scope_name]) {
       if (arrayp (var))
 	if (sizeof (var) > 1) {
-	  string|int last = var[-1];
-	  var = var[..sizeof (var) - 1];
-	  vars = rxml_index (vars, var, scope_name, this_object());
-	  scope_name += "." + (array(string)) var * ".";
-	  var = last;
+	  array(string|int) path = var[..sizeof (var) - 1];
+	  vars = rxml_index (vars, path, scope_name, this_object());
+	  scope_name += "." + (array(string)) path * ".";
+	  if (mapping(string:mixed) var_chg = misc->variable_changes)
+	    var_chg[encode_value_canonic (({scope_name}) + var)] = nil;
+	  var = var[-1];
 	}
-	else var = var[0];
+	else {
+	  var = var[0];
+	  if (mapping(string:mixed) var_chg = misc->variable_changes)
+	    var_chg[encode_value_canonic (({scope_name, var}))] = nil;
+	}
+      else {
+	if (mapping(string:mixed) var_chg = misc->variable_changes)
+	  var_chg[encode_value_canonic (({scope_name, var}))] = nil;
+      }
 
       if (objectp (vars) && vars->_m_delete)
 	([object(Scope)] vars)->_m_delete (var, this_object(), scope_name);
@@ -1524,8 +1534,8 @@ class Context
       else if (multisetp (vars))
 	vars[var] = 0;
       else
-	parse_error ("Cannot remove the index %O from the %t in %s.\n",
-		     var, vars, scope_name);
+	parse_error ("Cannot remove the index %s from the %t in %s.\n",
+		     format_short (var), vars, scope_name);
     }
 
     else if (scope_name == "_") parse_error ("No current scope.\n");
@@ -1577,10 +1587,6 @@ class Context
   //! Adds or replaces the specified scope at the global level. A
   //! scope can be a mapping or an @[RXML.Scope] object. A global
   //! @tt{"_"@} scope may also be defined this way.
-  //!
-  //! @note
-  //! Does not track variable changes for caching purposes like
-  //! @[set_var] does.
   {
     if (scopes[scope_name])
       if (scope_name == "_") {
@@ -1598,15 +1604,19 @@ class Context
 	else scopes[scope_name] = vars;
       }
     else scopes[scope_name] = vars;
+
+    if (mapping(string:mixed) var_chg = misc->variable_changes) {
+      foreach (indices (var_chg), string encoded_var) {
+	array var = decode_value (encoded_var);
+	if (var[0] == scope_name) m_delete (var_chg, encoded_var);
+      }
+      var_chg[encode_value_canonic (({scope_name}))] =
+	mappingp (vars) ? vars + ([]) : vars;
+    }
   }
 
-  int extend_scope (string scope_name, SCOPE_TYPE vars)
+  void extend_scope (string scope_name, SCOPE_TYPE vars)
   //! Adds or extends the specified scope at the global level.
-  //! Returns 1 on success and 0 on failure.
-  //!
-  //! @note
-  //! Does not track variable changes for caching purposes like
-  //! @[set_var] does.
   {
     if (scopes[scope_name]) {
       SCOPE_TYPE oldvars;
@@ -1627,22 +1637,26 @@ class Context
 #ifdef DEBUG
       if (!oldvars) fatal_error ("I before e except after c.\n");
 #endif
-      if (!mappingp(vars)) {
-	return 0;
-      }
       foreach (indices(vars), string var)
 	set_var(var, vars[var], scope_name);
     }
-    else scopes[scope_name] = vars;
-    return 1;
+
+    else {
+      scopes[scope_name] = vars;
+
+      if (mapping(string:mixed) var_chg = misc->variable_changes) {
+	foreach (indices (var_chg), string encoded_var) {
+	  array var = decode_value (encoded_var);
+	  if (var[0] == scope_name) m_delete (var_chg, encoded_var);
+	}
+	var_chg[encode_value_canonic (({scope_name}))] =
+	  mappingp (vars) ? vars + ([]) : vars;
+      }
+    }
   }
 
   void remove_scope (string scope_name)
   //! Removes the named scope from the global level, if it exists.
-  //!
-  //! @note
-  //! Does not track variable changes for caching purposes like
-  //! @[set_var] does.
   {
 #ifdef MODULE_DEBUG
     if (scope_name == "_") fatal_error ("Cannot remove current scope.\n");
@@ -1652,6 +1666,14 @@ class Context
       if (f->scope_name == scope_name) outermost = f;
     if (outermost) m_delete (hidden, outermost);
     else m_delete (scopes, scope_name);
+
+    if (mapping(string:mixed) var_chg = misc->variable_changes) {
+      foreach (indices (var_chg), string encoded_var) {
+	array var = decode_value (encoded_var);
+	if (var[0] == scope_name) m_delete (var_chg, encoded_var);
+      }
+      var_chg[encode_value_canonic (({scope_name}))] = 0;
+    }
   }
 
   string current_scope()
@@ -2841,8 +2863,7 @@ class Frame
 
 #define SET_SEQUENTIAL(from, to, desc)					\
   do {									\
-    THIS_TAG_DEBUG ("Adding %s to " desc "\n",				\
-		    utils->format_short (from));			\
+    THIS_TAG_DEBUG ("Adding %s to " desc "\n", format_short (from));	\
     /* Keep only one ref to to to allow destructive change. */		\
     to = to + (to = 0, from);						\
   } while (0)
@@ -2853,10 +2874,8 @@ class Frame
       if (to != nil)							\
 	parse_error (							\
 	  "Cannot append another value %s to non-sequential " desc	\
-	  " of type %s.\n", utils->format_short (from),			\
-	  to_type->name);						\
-      THIS_TAG_DEBUG ("Setting " desc " to %s\n",			\
-		      utils->format_short (from));			\
+	  " of type %s.\n", format_short (from), to_type->name);	\
+      THIS_TAG_DEBUG ("Setting " desc " to %s\n", format_short (from));	\
       to = from;							\
     }									\
   } while (0)
@@ -2895,7 +2914,7 @@ class Frame
 	switch (sprintf ("%t", elem)) {
 	  case "string":
 	    if (result_type->parser_prog == PNone) {
-	      THIS_TAG_DEBUG ("Exec[%d]: String %s\n", i, utils->format_short (elem));
+	      THIS_TAG_DEBUG ("Exec[%d]: String %s\n", i, format_short (elem));
 	      piece = elem;
 	    }
 	    else {
@@ -2912,7 +2931,7 @@ class Frame
 		}
 		THIS_TAG_DEBUG ("Exec[%d]: Parsing%s string %s with %O\n", i,
 				p_code ? " and compiling" : "",
-				utils->format_short (elem), subparser);
+				format_short (elem), subparser);
 	      }
 	      subparser->finish ([string] elem); // Might unwind.
 	      piece = subparser->eval(); // Might unwind.
@@ -2935,8 +2954,7 @@ class Frame
 	  case "multiset":
 	    if (sizeof ([multiset] elem) == 1) {
 	      piece = ((array) elem)[0];
-	      THIS_TAG_DEBUG ("Exec[%d]: Verbatim value %s\n", i,
-			      utils->format_short (piece));
+	      THIS_TAG_DEBUG ("Exec[%d]: Verbatim value %s\n", i, format_short (piece));
 	    }
 	    else
 	      _exec_array_fatal (where, i, elem,
@@ -3097,7 +3115,7 @@ class Frame
 	ctx->unwind_state = (["stream_piece": res,			\
 			      "reason": "streaming"]);			\
 	THIS_TAG_DEBUG ("Streaming %s from " #cb "\n",			\
-			utils->format_short (res));			\
+			format_short (res));				\
 	throw (this_object());						\
       }									\
       exec = 0;								\
@@ -3169,7 +3187,7 @@ class Frame
 	      Parser parser = splice_arg_type->get_parser (ctx, ctx->tag_set, 0,
 							   sub_p_code);
 	      THIS_TAG_DEBUG ("Evaluating splice argument %s\n",
-			      utils->format_short (splice_arg));
+			      format_short (splice_arg));
 #ifdef MODULE_DEBUG
 	      if (mixed err = catch {
 #endif
@@ -3209,12 +3227,11 @@ class Frame
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, sub_p_code);
 		    THIS_TAG_DEBUG ("Evaluating and compiling "
 				    "argument value %s with %O\n",
-				    utils->format_short (raw_args[arg]), parser);
+				    format_short (raw_args[arg]), parser);
 		    parser->finish (raw_args[arg]); // Should not unwind.
 		    args[arg] = parser->eval(); // Should not unwind.
 		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
-				    utils->format_short (arg),
-				    utils->format_short (args[arg]));
+				    format_short (arg), format_short (args[arg]));
 		    fn_text_add (sprintf ("%O: %s,\n", arg,
 					  sub_p_code->compile_text (comp)));
 		    t->give_back (parser, ctx_tag_set);
@@ -3230,12 +3247,11 @@ class Frame
 		  if (t->parser_prog != PNone) {
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, 0);
 		    THIS_TAG_DEBUG ("Evaluating argument value %s with %O\n",
-				    utils->format_short (raw_args[arg]), parser);
+				    format_short (raw_args[arg]), parser);
 		    parser->finish (raw_args[arg]); // Should not unwind.
 		    args[arg] = parser->eval(); // Should not unwind.
 		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
-				    utils->format_short (arg),
-				    utils->format_short (args[arg]));
+				    format_short (arg), format_short (args[arg]));
 		    t->give_back (parser, ctx_tag_set);
 		  }
 		  else
@@ -3306,11 +3322,13 @@ class Frame
 	if (content_type == t_same) {
 	  content_type =
 	    result_type (content_type->parser_prog, @content_type->parser_args);
-	  THIS_TAG_DEBUG ("Resolved t_same to content_type %O\n", content_type);
+	  THIS_TAG_DEBUG ("Resolved t_same to content_type %s\n",
+			  content_type->name);
 	}
-	else THIS_TAG_DEBUG ("Setting content_type to %O from tag\n", content_type);
+	else THIS_TAG_DEBUG ("Setting content_type to %s from tag\n",
+			     content_type->name);
       }
-      else THIS_TAG_DEBUG ("Keeping content_type %O\n", content_type);
+      else THIS_TAG_DEBUG ("Keeping content_type %s\n", content_type->name);
 
       return func;
     };
@@ -3565,7 +3583,7 @@ class Frame
 					  ctx->make_p_code ? " and compiling" : "",
 					  flags & FLAG_GET_EVALED_CONTENT ?
 					  " and result compiling" : "",
-					  utils->format_short (in_content), subevaler);
+					  format_short (in_content), subevaler);
 			}
 			else {
 			  subevaler = content_type->get_parser (
@@ -3575,7 +3593,7 @@ class Frame
 					  ctx->make_p_code ? " and compiling" : "",
 					  flags & FLAG_GET_EVALED_CONTENT ?
 					  " and result compiling" : "",
-					  utils->format_short (in_content), subevaler,
+					  format_short (in_content), subevaler,
 					  this_object()->additional_tags ?
 					  " from additional_tags" : "");
 			}
@@ -3609,7 +3627,7 @@ class Frame
 		      // Handle a stream piece.
 		      THIS_TAG_DEBUG ("Iter[%d]: Got %s stream piece %s\n",
 				      debug_iter, finished ? "ending" : "a",
-				      utils->format_short (piece));
+				      format_short (piece));
 		      if (!arrayp (do_process)) {
 			EXEC_CALLBACK (ctx, evaler, exec, do_process, id, piece);
 			if (exec) {
@@ -3624,7 +3642,7 @@ class Frame
 			    ctx->unwind_state->stream_piece = res;
 			    ctx->unwind_state->reason = "streaming";
 			    THIS_TAG_DEBUG ("Iter[%d]: Streaming %s from do_process\n",
-					    debug_iter, utils->format_short (res));
+					    debug_iter, format_short (res));
 			    throw (this_object());
 			  }
 			  exec = 0;
@@ -4022,9 +4040,11 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 	else
 	  val = val[index-1];
       else
-	parse_error( "Cannot index the array in %s with %O.\n", scope_name, index );
+	parse_error( "Cannot index the array in %s with %s.\n",
+		     scope_name, format_short (index) );
     else if (val == nil)
-      parse_error ("%s produced no value to index with %O.\n", scope_name, index);
+      parse_error ("%s produced no value to index with %s.\n",
+		   scope_name, format_short (index));
     else if( objectp( val ) && val->`[] ) {
 #ifdef MODULE_DEBUG
       Scope scope = [object(Scope)] val;
@@ -4051,8 +4071,8 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
       if (!val[index]) val = nil;
     }
     else if (!(<1, -1>)[index])
-      parse_error ("%s is %O which cannot be indexed with %O.\n",
-		   scope_name, val, index);
+      parse_error ("%s is %s which cannot be indexed with %s.\n",
+		   scope_name, format_short (val), format_short (index));
 
     if (i == sizeof (idxpath)) break;
     scope_name += "." + index;
@@ -4069,8 +4089,9 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
       // but we'll live with that. Besides, that situation ought to be
       // solved internally in them anyway.
       if (called[val])
-	fatal_error ("Cyclic rxml_var_eval chain detected in %O.\n"
-		     "All called objects:%{ %O%}\n", val, indices (called));
+	fatal_error ("Cyclic rxml_var_eval chain detected in %s.\n"
+		     "All called objects:%{ %O%}\n",
+		     format_short (val), indices (called));
       called[val] = 1;
 #endif
       if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
@@ -4097,8 +4118,9 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
   do {
 #ifdef MODULE_DEBUG
     if (called[val])
-      fatal_error ("Cyclic rxml_var_eval chain detected in %O.\n"
-		   "All called objects:%{ %O%}\n", val, indices (called));
+      fatal_error ("Cyclic rxml_var_eval chain detected in %s.\n"
+		   "All called objects:%{ %O%}\n",
+		   format_short (val), indices (called));
     called[val] = 1;
     Value val_obj = [object(Value)] val;
 #endif
@@ -4227,7 +4249,7 @@ class Parser
   //! Writes some source data to the parser. Returns nonzero if there
   //! might be data available in eval().
   {
-    //werror ("%O write %s\n", this_object(), utils->format_short (in));
+    //werror ("%O write %s\n", this_object(), format_short (in));
     int res;
     ENTER_CONTEXT (context);
     if (mixed err = catch {
@@ -4266,7 +4288,7 @@ class Parser
   //! Closes the source data stream, optionally with a last bit of
   //! data.
   {
-    //werror ("%O write_end %s\n", this_object(), utils->format_short (in));
+    //werror ("%O write_end %s\n", this_object(), format_short (in));
     int res;
     ENTER_CONTEXT (context);
     if (mixed err = catch {
@@ -4350,13 +4372,13 @@ class Parser
 #ifdef DEBUG
 	  if (TAG_DEBUG_TEST (context->frame))
 	    TAG_DEBUG (context->frame, "    Got value %s after conversion "
-		       "with encoding %s\n", utils->format_short (val), encoding);
+		       "with encoding %s\n", format_short (val), encoding);
 #endif
 	}
 #ifdef DEBUG
 	else
 	  if (TAG_DEBUG_TEST (context->frame))
-	    TAG_DEBUG (context->frame, "    Got value %s\n", utils->format_short (val));
+	    TAG_DEBUG (context->frame, "    Got value %s\n", format_short (val));
 #endif
 
       }) {
@@ -5393,12 +5415,12 @@ static class TType
       }
     if (stringp (val)) {
       Type type = reg_types[val];
-      if (!type) parse_error ("There is no type %s.\n", utils->format_short (val));
+      if (!type) parse_error ("There is no type %s.\n", format_short (val));
       return type;
     }
     mixed err = catch {return (object(Type)) val;};
     parse_error ("Cannot convert %s to type: %s",
-		 utils->format_short (val), describe_error (err));
+		 format_short (val), describe_error (err));
   }
 
   string _sprintf() {return "RXML.t_type" + OBJ_COUNT;}
@@ -5441,7 +5463,7 @@ static class TScalar
       }
     if (!stringp (val) && !intp (val) && !floatp (val))
       // Cannot unambigiously use a cast for this type.
-      parse_error ("Cannot convert %s to scalar.\n", utils->format_short (val));
+      parse_error ("Cannot convert %s to scalar.\n", format_short (val));
     return [string|int|float] val;
   }
 
@@ -5482,10 +5504,10 @@ static class TNum
       if (sscanf (val, "%d%*c", int i) == 1) return i;
       else if (sscanf (val, "%f%*c", float f) == 1) return f;
       else parse_error ("%s cannot be parsed as neither integer nor float.\n",
-			utils->format_short (val));
+			format_short (val));
     if (!intp (val) && !floatp (val))
       // Cannot unambigiously use a cast for this type.
-      parse_error ("Cannot convert %s to number.\n", utils->format_short (val));
+      parse_error ("Cannot convert %s to number.\n", format_short (val));
     return [int|float] val;
   }
 
@@ -5524,10 +5546,10 @@ static class TInt
       }
     if (stringp (val))
       if (sscanf (val, "%d%*c", int i) == 1) return i;
-      else parse_error ("%s cannot be parsed as integer.\n", utils->format_short (val));
+      else parse_error ("%s cannot be parsed as integer.\n", format_short (val));
     mixed err = catch {return (int) val;};
     parse_error ("Cannot convert %s to integer: %s",
-		 utils->format_short (val), describe_error (err));
+		 format_short (val), describe_error (err));
   }
 
   string _sprintf() {return "RXML.t_int" + OBJ_COUNT;}
@@ -5565,10 +5587,10 @@ static class TFloat
       }
     if (stringp (val))
       if (sscanf (val, "%f%*c", float f) == 1) return f;
-      else parse_error ("%s cannot be parsed as float.\n", utils->format_short (val));
+      else parse_error ("%s cannot be parsed as float.\n", format_short (val));
     mixed err = catch {return (float) val;};
     parse_error ("Cannot convert %s to float: %s",
-		 utils->format_short (val), describe_error (err));
+		 format_short (val), describe_error (err));
   }
 
   string _sprintf() {return "RXML.t_float" + OBJ_COUNT;}
@@ -5621,7 +5643,7 @@ static class TString
       }
     mixed err = catch {return (string) val;};
     parse_error ("Cannot convert %s to %s: %s",
-		 utils->format_short (val), name, describe_error (err));
+		 format_short (val), name, describe_error (err));
   }
 
   string lower_case (string val) {return predef::lower_case (val);}
@@ -5689,7 +5711,7 @@ static class TText
       }
     mixed err = catch {return (string) val;};
     parse_error ("Cannot convert %s to %s: %s",
-		 utils->format_short (val), name, describe_error (err));
+		 format_short (val), name, describe_error (err));
   }
 
   string _sprintf() {return "RXML.t_text" + OBJ_COUNT;}
@@ -5724,7 +5746,7 @@ static class TXml
       return _Roxen.html_encode_string( val );
     } )
       parse_error ("Cannot convert %s to %s: %s",
- 		   utils->format_short (val), name, describe_error (err));
+ 		   format_short (val), name, describe_error (err));
   }
 
   string decode (mixed val)
@@ -5911,14 +5933,14 @@ class VarRef (string scope, string|array(string|int) var,
 #ifdef DEBUG
 	if (TAG_DEBUG_TEST (ctx->frame))
 	  TAG_DEBUG (ctx->frame, "    Got value %s after conversion "
-		     "with encoding %s\n", utils->format_short (val), encoding);
+		     "with encoding %s\n", format_short (val), encoding);
 #endif
       }
 
       else
 #ifdef DEBUG
 	if (TAG_DEBUG_TEST (ctx->frame))
-	  TAG_DEBUG (ctx->frame, "    Got value %s\n", utils->format_short (val));
+	  TAG_DEBUG (ctx->frame, "    Got value %s\n", format_short (val));
 #endif
 
       FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",
@@ -5959,11 +5981,11 @@ class VarRef (string scope, string|array(string|int) var,
   string _sprintf() {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
 }
 
-class ScopeChange (static mapping(string:mixed) settings)
+class VariableChange (static mapping(string:mixed) settings)
 // A compiled-in change of some scope variables. Used when caching
 // results.
 {
-  constant is_RXML_ScopeChange = 1;
+  constant is_RXML_VariableChange = 1;
   constant is_RXML_encodable = 1;
   constant is_RXML_p_code_entry = 1;
 
@@ -5971,13 +5993,30 @@ class ScopeChange (static mapping(string:mixed) settings)
   {
     foreach (indices (settings), string encoded_var) {
       array var = decode_value (encoded_var);
+      if (sizeof (var) == 1) {
 #ifdef DEBUG
-      if (TAG_DEBUG_TEST (ctx->frame))
-	TAG_DEBUG (ctx->frame, "    Installing cached value for %s: %s\n",
-		   map ((array(string)) var, replace, ".", "..") * ".",
-		   utils->format_short (settings[encoded_var]));
+	if (TAG_DEBUG_TEST (ctx->frame))
+	  TAG_DEBUG (ctx->frame, "    Installing cached scope %s with %d variables\n",
+		     replace (var[0], ".", ".."), sizeof (settings[encoded_var]));
 #endif
-      ctx->set_var (var[1..], settings[encoded_var], var[0]);
+	if (SCOPE_TYPE vars = settings[encoded_var])
+	  ctx->add_scope (var[0], settings[encoded_var]);
+	else
+	  ctx->remove_scope (var[0]);
+      }
+      else {
+#ifdef DEBUG
+	if (TAG_DEBUG_TEST (ctx->frame))
+	  TAG_DEBUG (ctx->frame, "    Installing cached value for %s: %s\n",
+		     map ((array(string)) var, replace, ".", "..") * ".",
+		     format_short (settings[encoded_var]));
+#endif
+	mixed val = settings[encoded_var];
+	if (val != nil)
+	  ctx->set_var (var[1..], val, var[0]);
+	else
+	  ctx->delete_var (var[1..], var[0]);
+      }
     }
     return nil;
   }
@@ -5986,7 +6025,7 @@ class ScopeChange (static mapping(string:mixed) settings)
   void _decode (mapping(string:mixed) saved) {settings = saved;}
 
   MARK_OBJECT;
-  string _sprintf() {return "RXML.ScopeChange" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.VariableChange" + OBJ_COUNT;}
 }
 
 class CompiledError
@@ -6346,7 +6385,7 @@ class PCode
       exec[length++] = evaled_value;
       mapping(string:mixed) var_chg = ctx->misc->variable_changes;
       if (sizeof (var_chg)) {
-	exec[length++] = ScopeChange (var_chg);
+	exec[length++] = VariableChange (var_chg);
 	ctx->misc->variable_changes = ([]);
       }
     }
@@ -6383,7 +6422,7 @@ class PCode
 	exec[length++] = evaled_value;
 	mapping(string:mixed) var_chg = ctx->misc->variable_changes;
 	if (sizeof (var_chg)) {
-	  exec[length++] = ScopeChange (var_chg);
+	  exec[length++] = VariableChange (var_chg);
 	  ctx->misc->variable_changes = ([]);
 	}
 	break add_frame;
@@ -6394,7 +6433,7 @@ class PCode
 #ifdef DEBUG
       if (!stringp (frame->args) && !functionp (frame->args) && !mappingp (frame->args))
 	error ("Invalid args %s in frame about to be added to p-code.\n",
-	       utils->format_short (frame->args));
+	       format_short (frame->args));
 #endif
       exec[length + 1] = frame;	// Cached for reuse.
       array frame_state = exec[length + 2] = frame->_save();
@@ -6763,7 +6802,7 @@ class RenewablePCode
   mixed _v__ = (val);							\
   report_debug ("  returned %s\n",					\
 		zero_type (_v__) ? "([])[0]" :				\
-		utils->format_short (_v__, 160));			\
+		format_short (_v__, 160));				\
   return _v__;								\
 } while (0)
 string _sprintf() {return "RXML.pmod";}
@@ -7104,7 +7143,7 @@ mixed add_to_value (Type type, mixed value, mixed piece)
     if (piece == nil) return value;
     else if (value != nil)
       parse_error ("Cannot append another value %s to non-sequential "
-		   "result of type %s.\n", utils->format_short (piece), type->name);
+		   "result of type %s.\n", format_short (piece), type->name);
     else return piece;
 }
 
@@ -7271,7 +7310,7 @@ static void init_parsers()
     lambda (object/*(Parser.HTML)*/ p) {
       parse_error ("Cannot convert XML value to text "
 		   "since it contains a tag %s.\n",
-		   utils->format_short (p->current()));
+		   format_short (p->current()));
     });
   charref_decode_parser = p;
 
@@ -7322,6 +7361,8 @@ static void init_parsers()
 static function(string,mixed...:void) _run_error = run_error;
 static function(string,mixed...:void) _parse_error = parse_error;
 
+static function(mixed,void|int:string) format_short;
+
 // Argh!
 static program PXml;
 static program PEnt;
@@ -7348,7 +7389,10 @@ void _fix_module_ref (string name, mixed val)
 	splice_arg_type = t_any_text (PEnt);
 	break;
       case "PExpr": PExpr = [program] val; break;
-      case "utils": utils = [object] val; break;
+      case "utils":
+	utils = [object] val;
+	format_short = utils->format_short;
+	break;
       case "Roxen": Roxen = [object] val; init_parsers(); break;
       case "empty_tag_set": empty_tag_set = [object(TagSet)] val; break;
       default: error ("Herk\n");
