@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.466 2001/08/22 21:21:35 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.467 2001/08/22 22:23:15 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3280,10 +3280,8 @@ $host          -- The remote host name, or ip number.
 $vhost         -- The Host request-header sent by the client, or - if none
 $ip_number     -- The remote ip number.
 $bin-ip_number -- The remote host id as a binary integer number.
-
 $cern_date     -- Cern Common Log file format date.
 $bin-date      -- Time, but as an 32 bit integer in network byteorder
-
 $method        -- Request method
 $resource      -- Resource identifier
 $full_resource -- Full requested resource, including any query fields
@@ -3304,8 +3302,8 @@ $cache-status  -- A comma separated list of words (containing no
                   protcache -- The low-level cache in the HTTP
                                protocol module.
                   xsltcache -- The XSLT cache.
-		  pcoderam  -- RXML parse tree RAM cache.
-		  pcodedisk -- RXML parse tree persistent cache.
+                  pcoderam  -- RXML parse tree RAM cache.
+                  pcodedisk -- RXML parse tree persistent cache.
                   cachetag  -- No RXML &lt;cache&gt; tag misses.
                   nocache   -- No hit in any known cache.
 </pre>"), 0, lambda(){ return !query("Log");});
