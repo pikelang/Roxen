@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.184 2002/10/23 22:37:31 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.185 2002/10/29 22:38:30 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -213,7 +213,9 @@ class Scope_usr
 
      case "content-bg":           return ENCODE_RXML_TEXT( ALIAS( "fade1" ), type);
      case "left-buttonbg":        return ENCODE_RXML_TEXT( ALIAS( "fade1" ), type);
+     case "left-buttonfg":        return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
      case "left-selbuttonbg":     return ENCODE_RXML_TEXT( ALIAS( "fade3" ), type);
+     case "left-selbuttonfg":     return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
      case "obox-titlebg":         return ENCODE_RXML_TEXT( ALIAS( "fade2" ), type);
      case "subtabs-dimcolor":     return ENCODE_RXML_TEXT( ALIAS( "fade2" ), type);
      case "subtabs-font":         return ENCODE_RXML_TEXT( ALIAS( "tabs-font" ), type);
