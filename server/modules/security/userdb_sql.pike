@@ -1,5 +1,3 @@
-//<locale-token project="mod_userdb_sql">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_userdb_sql",X,Y)
 
 inherit UserDB;
 constant name = "sql";
@@ -10,11 +8,11 @@ inherit "module";
 int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql.pike,v 1.8 2002/01/17 22:35:38 nilsson Exp $";
+  "$Id: userdb_sql.pike,v 1.9 2002/06/14 11:10:18 nilsson Exp $";
 
-LocaleString module_name = _(1,"Authentication: SQL user database");
-LocaleString module_doc  = _(2,"This module implements a user database via "
-			     "a SQL server.\n");
+constant module_name = "Authentication: SQL user database";
+constant module_doc  = ("This module implements a user database via "
+			"a SQL server.\n");
 
 class SqlUser
 {
@@ -208,28 +206,27 @@ class DatabaseVar
 void create()
 {
   defvar( "db",
-          DatabaseVar( "sql_users",({}),0,
-                       _(3,"Database"),
-                       _(4,"This is the database that this module will "
-			      "store it's users in.") ) );
+          DatabaseVar( "sql_users", ({}), 0, "Database",
+                       ("This is the database that this module will "
+			"store it's users in.") ) );
 
   defvar( "passwd_type",
           Variable.StringChoice("password",
 				([
-				  "password":_(5,"MySQL Password"),
-				  "crypt":_(6,"Unix crypt"),
-				  "clear text":_(7,"Clear text"),
+				  "password":"MySQL Password",
+				  "crypt":"Unix crypt",
+				  "clear text":"Clear text",
 #if constant(Crypto.crypt_md5)
-				  "md5 crypt":_(8,"MD5 crypt"),
+				  "md5 crypt":"MD5 crypt",
 #endif
 				]), 0,
-				_(9,"Password type"),
-				_(10,"Password hashing method. "
-				  "By changing this variable you can "
-				  "select the meaning of password field. "
-				  "By default the passwords are supposed "
-				  "to be hashed by internal MySQL PASSWORD() "
-				  "function.")
+				"Password type",
+				("Password hashing method. "
+				 "By changing this variable you can "
+				 "select the meaning of password field. "
+				 "By default the passwords are supposed "
+				 "to be hashed by internal MySQL PASSWORD() "
+				 "function.")
 				));
 
 }

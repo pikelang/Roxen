@@ -1,22 +1,16 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: userdb_system.pike,v 1.8 2001/10/04 13:47:38 wellhard Exp $";
+  "$Id: userdb_system.pike,v 1.9 2002/06/14 11:10:18 nilsson Exp $";
 inherit UserDB;
 inherit "module";
 
 constant name = "system";
 
-//<locale-token project="mod_userdb_system">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_userdb_system",X,Y)
-
 #include <module.h>
 
-LocaleString module_name =
-  _(1,"Authentication: System user database");
-
-LocaleString module_doc =
-  _(2,"The system user and group database");
+constant module_name = "Authentication: System user database";
+constant  module_doc = "The system user and group database";
 
 
 #ifndef __NT__
