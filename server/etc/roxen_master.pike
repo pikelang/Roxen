@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.72 2000/02/11 08:53:30 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.73 2000/02/14 09:21:33 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -44,6 +44,8 @@ class MyCodec
 	    return tmp;
 	  }
 	}
+        if( x == mm )
+          return "/master";
 	break;
     }
     return ([])[0];
