@@ -15,7 +15,7 @@
 #define _rettext _defines[" _rettext"]
 #define _ok _defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.48 2000/08/28 06:51:28 per Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.49 2000/08/28 17:35:02 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -148,6 +148,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 // ------------------ Error handling -------------------
 
 string rxml_run_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
+  NOCACHE();
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
     if(query("logerrorsr"))
       report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
@@ -161,6 +162,7 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
 }
 
 string rxml_parse_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
+  NOCACHE();
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
     if(query("logerrorsp"))
       report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
