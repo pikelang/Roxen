@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.105 2000/02/07 17:11:46 nilsson Exp $
+ * $Id: rxml.pike,v 1.106 2000/02/07 18:11:26 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -1134,7 +1134,7 @@ class TagIf {
     int do_iterate = -1;
 
     array do_enter(RequestID id) {
-      int res, and = 1;
+      int and = 1;
 
       if(args->not) {
 	m_delete(args, "not");
@@ -1151,12 +1151,9 @@ class TagIf {
 
       int last=0;
       foreach(possible, string s) {
-	res = plugins[ s ]( args[s], id, args, and, s );
-	LAST_IF_TRUE=res;
-	last=res;
-	if(res) {
+	last = LAST_IF_TRUE = plugins[ s ]( args[s], id, args, and, s );
+	if(last) {
 	  if(!and) {
-	    LAST_IF_TRUE = 1;
 	    do_iterate = 1;
 	    return 0;
 	  }
@@ -1169,10 +1166,15 @@ class TagIf {
       }
       if(last) {
 	do_iterate = 1;
-	LAST_IF_TRUE = 1;
 	return 0;
       }
       LAST_IF_TRUE = 0;
+      return 0;
+    }
+
+    array do_return(RequestID id) {
+      LAST_IF_TRUE = 1;
+      result = content;
       return 0;
     }
   }
