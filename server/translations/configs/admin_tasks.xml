@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project name="admin_tasks">
+<nocopy />
+<baselang>eng</baselang>
+<xmlpath>../translations/%L/admin_tasks.xml</xmlpath>
+
+<file>../config_interface/standard/actions/cachestatus.pike</file>
+<file>../config_interface/standard/actions/debug_info.pike</file>
+<file>../config_interface/standard/actions/feature_list.pike</file>
+<file>../config_interface/standard/actions/flush.pike</file>
+<file>../config_interface/standard/actions/ftpstatus.pike</file>
+<file>../config_interface/standard/actions/listfonts.pike</file>
+<file>../config_interface/standard/actions/locks.pike</file>
+<file>../config_interface/standard/actions/openfiles.pike</file>
+<file>../config_interface/standard/actions/proc.pike</file>
+<file>../config_interface/standard/actions/processstatus.pike</file>
+<file>../config_interface/standard/actions/reloadconfigurations.pike</file>
+<file>../config_interface/standard/actions/resolv.pike</file>
+<file>../config_interface/standard/actions/restart.pike</file>
+<file>../config_interface/standard/actions/requeststatus.pike</file>
+<file>../config_interface/standard/actions/tablist.pike</file>
+<file>../config_interface/standard/actions/threads.pike</file>
+
+<file>../config_interface/standard/actions/ssl_common.pike</file>
+<file>../config_interface/standard/actions/generate_rsa.pike</file>
+<file>../config_interface/standard/actions/make_rsa_csr.pike</file>
+<file>../config_interface/standard/actions/make_selfsigned_rsa.pike</file>
+<file>../config_interface/standard/actions/make_selfsigned_dsa.pike</file>
+</project>

@@ -1,0 +1,847 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>admin_tasks</project>
+<language>eng</language>
+<dumped>968472251</dumped>
+<file>../config_interface/standard/actions/cachestatus.pike</file>
+<file>../config_interface/standard/actions/debug_info.pike</file>
+<file>../config_interface/standard/actions/feature_list.pike</file>
+<file>../config_interface/standard/actions/flush.pike</file>
+<file>../config_interface/standard/actions/ftpstatus.pike</file>
+<file>../config_interface/standard/actions/listfonts.pike</file>
+<file>../config_interface/standard/actions/locks.pike</file>
+<file>../config_interface/standard/actions/openfiles.pike</file>
+<file>../config_interface/standard/actions/proc.pike</file>
+<file>../config_interface/standard/actions/processstatus.pike</file>
+<file>../config_interface/standard/actions/reloadconfigurations.pike</file>
+<file>../config_interface/standard/actions/resolv.pike</file>
+<file>../config_interface/standard/actions/restart.pike</file>
+<file>../config_interface/standard/actions/requeststatus.pike</file>
+<file>../config_interface/standard/actions/tablist.pike</file>
+<file>../config_interface/standard/actions/threads.pike</file>
+<file>../config_interface/standard/actions/ssl_common.pike</file>
+<file>../config_interface/standard/actions/generate_rsa.pike</file>
+<file>../config_interface/standard/actions/make_rsa_csr.pike</file>
+<file>../config_interface/standard/actions/make_selfsigned_rsa.pike</file>
+<file>../config_interface/standard/actions/make_selfsigned_dsa.pike</file>
+
+<str id="1">
+<o>Pike memory usage information</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>Show some information about how pike is using the memory it has allocated. Mostly useful for developers.</o>
+<t></t>
+</str>
+
+<str id="3">
+<o>Type</o>
+<t></t>
+</str>
+
+<str id="4">
+<o>Number</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>Change</o>
+<t></t>
+</str>
+
+<str id="6">
+<o>Pike module list</o>
+<t></t>
+</str>
+
+<str id="7">
+<o>Show information about which features and modules are available in the Pike this Roxen is using.</o>
+<t></t>
+</str>
+
+<str id="238">
+<o>Features</o>
+<t></t>
+</str>
+
+<str id="dM">
+<o>Disabled modules</o>
+<t></t>
+</str>
+
+<str id="239">
+<o>All modules</o>
+<t></t>
+</str>
+
+<str id="240">
+<o>Name</o>
+<t></t>
+</str>
+
+<str id="241">
+<o>State</o>
+<t></t>
+</str>
+
+<str id="242">
+<o>Disabled</o>
+<t></t>
+</str>
+
+<str id="243">
+<o>N/A</o>
+<t></t>
+</str>
+
+<str id="244">
+<o>Enabled</o>
+<t></t>
+</str>
+
+<str id="8">
+<o>Flush caches</o>
+<t></t>
+</str>
+
+<str id="9">
+<o>Flush all memory caches.</o>
+<t></t>
+</str>
+
+<str id="232">
+<o>All memory caches have been flushed.</o>
+<t></t>
+</str>
+
+<str id="10">
+<o>List fonts</o>
+<t></t>
+</str>
+
+<str id="11">
+<o>List all available fonts</o>
+<t></t>
+</str>
+
+<str id="dH">
+<o>Not available.</o>
+<t></t>
+</str>
+
+<str id="dI">
+<o>All available fonts</o>
+<t></t>
+</str>
+
+<str id="236">
+<o>Example text</o>
+<t></t>
+</str>
+
+<str id="237">
+<o>Jackdaws love my big sphinx of quartz.</o>
+<t></t>
+</str>
+
+<str id="280">
+<o>Module lock status</o>
+<t></t>
+</str>
+
+<str id="281">
+<o>Shows various information about the module thread locks in Roxen.</o>
+<t></t>
+</str>
+
+<str id="12">
+<o>Unknown module</o>
+<t></t>
+</str>
+
+<str id="13">
+<o>Module lock status : Accesses to all modules</o>
+<t></t>
+</str>
+
+<str id="14">
+<o>Locked means that the access was done using a serializing lock since the module was not thread-safe, unlocked means that there was no need for a lock.</o>
+<t></t>
+</str>
+
+<str id="15">
+<o>Locked accesses to a single module can inflict quite a severe performance degradation of the whole server, since a locked module will act as a bottleneck, blocking access for all other threads that want to access that module.</o>
+<t></t>
+</str>
+
+<str id="17">
+<o>Module</o>
+<t></t>
+</str>
+
+<str id="18">
+<o>File</o>
+<t></t>
+</str>
+
+<str id="19">
+<o>Locked</o>
+<t></t>
+</str>
+
+<str id="20">
+<o>Unlocked</o>
+<t></t>
+</str>
+
+<str id="21">
+<o>Open files</o>
+<t></t>
+</str>
+
+<str id="22">
+<o>Show a list of all open files and network connections.</o>
+<t></t>
+</str>
+
+<str id="23">
+<o>Active filedescriptors</o>
+<t></t>
+</str>
+
+<str id="24">
+<o>Reload configurations from disk</o>
+<t></t>
+</str>
+
+<str id="25">
+<o>Force a reload of all configuration information from the configuration files.</o>
+<t></t>
+</str>
+
+<str id="26">
+<o>All configurations reloaded from disk.</o>
+<t></t>
+</str>
+
+<str id="27">
+<o>Resolve path...</o>
+<t></t>
+</str>
+
+<str id="28">
+<o>Check which modules handles the path you enter in the form</o>
+<t></t>
+</str>
+
+<str id="29">
+<o>URL</o>
+<t></t>
+</str>
+
+<str id="206">
+<o>User</o>
+<t></t>
+</str>
+
+<str id="30">
+<o>Password</o>
+<t></t>
+</str>
+
+<str id="31">
+<o>There is no configuration available that matches this URL.</o>
+<t></t>
+</str>
+
+<str id="32">
+<o>Resolving</o>
+<t></t>
+</str>
+
+<str id="33">
+<o>in</o>
+<t></t>
+</str>
+
+<str id="34">
+<o>Restart or shutdown</o>
+<t></t>
+</str>
+
+<str id="197">
+<o>Restart</o>
+<t></t>
+</str>
+
+<str id="233">
+<o>Roxen will restart automatically.</o>
+<t></t>
+</str>
+
+<str id="234">
+<o>You might see the old process for a while in the process table when doing 'ps' or running 'top'. This is normal. Roxen waits for a while for all connections to finish, the process will go away after at most 15 minutes.</o>
+<t></t>
+</str>
+
+<str id="226">
+<o>Permission denied</o>
+<t></t>
+</str>
+
+<str id="198">
+<o>Shutdown</o>
+<t></t>
+</str>
+
+<str id="235">
+<o>Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically.</o>
+<t></t>
+</str>
+
+<str id="35">
+<o>Thread backtrace</o>
+<t></t>
+</str>
+
+<str id="36">
+<o>Shows a backtrace (stack) for each and every thread in Roxen.</o>
+<t></t>
+</str>
+
+<str id="37">
+<o>version</o>
+<t></t>
+</str>
+
+<str id="38">
+<o>Backend thread</o>
+<t></t>
+</str>
+
+<str id="39">
+<o>Thread</o>
+<t></t>
+</str>
+
+<str id="16">
+<o>This is only a problem if a significant percentage of the accesses are passed through non-threadsafe modules.</o>
+<t></t>
+</str>
+
+<str id="228">
+<o>Status</o>
+<t></t>
+</str>
+
+<str id="229">
+<o>Maintenance</o>
+<t></t>
+</str>
+
+<str id="230">
+<o>SSL</o>
+<t></t>
+</str>
+
+<str id="231">
+<o>Debug information</o>
+<t></t>
+</str>
+
+<str id="40">
+<o>Version:</o>
+<t></t>
+</str>
+
+<str id="41">
+<o>Booted:</o>
+<t></t>
+</str>
+
+<str id="42">
+<o>Uptime:</o>
+<t></t>
+</str>
+
+<str id="43">
+<o>These are all active virtual servers. They are sorted by the number of requests they have received - the most active being first. Servers which haven't recieved any requests are not listed.</o>
+<t></t>
+</str>
+
+<str id="44">
+<o>Server Overview</o>
+<t></t>
+</str>
+
+<str id="45">
+<o>Access / request status</o>
+<t></t>
+</str>
+
+<str id="46">
+<o>Shows the amount of data handled since last restart.</o>
+<t></t>
+</str>
+
+<str id="47">
+<o>day</o>
+<t></t>
+</str>
+
+<str id="48">
+<o>days</o>
+<t></t>
+</str>
+
+<str id="49">
+<o>Current FTP sessions</o>
+<t></t>
+</str>
+
+<str id="50">
+<o>List all active FTP sessions and what files they are currently transferring.</o>
+<t></t>
+</str>
+
+<str id="51">
+<o>anonymous</o>
+<t></t>
+</str>
+
+<str id="52">
+<o>idle</o>
+<t></t>
+</str>
+
+<str id="53">
+<o>From</o>
+<t></t>
+</str>
+
+<str id="54">
+<o>CWD</o>
+<t></t>
+</str>
+
+<str id="55">
+<o>Action</o>
+<t></t>
+</str>
+
+<str id="56">
+<o>Transferred</o>
+<t></t>
+</str>
+
+<str id="57">
+<o>There are currently no active FTP sessions.</o>
+<t></t>
+</str>
+
+<str id="58">
+<o>Available font loaders</o>
+<t></t>
+</str>
+
+<str id="59">
+<o>Cache status</o>
+<t></t>
+</str>
+
+<str id="60">
+<o>Show information about the main memory cache in Roxen</o>
+<t></t>
+</str>
+
+<str id="61">
+<o>WebServer Memory Cache</o>
+<t></t>
+</str>
+
+<str id="62">
+<o>Class</o>
+<t></t>
+</str>
+
+<str id="64">
+<o>Size</o>
+<t></t>
+</str>
+
+<str id="67">
+<o>Hit rate</o>
+<t></t>
+</str>
+
+<str id="68">
+<o>supportdb</o>
+<t></t>
+</str>
+
+<str id="69">
+<o>Fonts</o>
+<t></t>
+</str>
+
+<str id="70">
+<o>DNS</o>
+<t></t>
+</str>
+
+<str id="71">
+<o>Locale Cache</o>
+<t></t>
+</str>
+
+<str id="72">
+<o>Used languages:</o>
+<t></t>
+</str>
+
+<str id="73">
+<o>Registered projects:</o>
+<t></t>
+</str>
+
+<str id="74">
+<o>Loaded projects:</o>
+<t></t>
+</str>
+
+<str id="75">
+<o>Current cache size:</o>
+<t></t>
+</str>
+
+<str id="295">
+<o>Entries</o>
+<t></t>
+</str>
+
+<str id="293">
+<o>Hits</o>
+<t></t>
+</str>
+
+<str id="294">
+<o>Misses</o>
+<t></t>
+</str>
+
+<str id="63">
+<o>Extended process status</o>
+<t></t>
+</str>
+
+<str id="65">
+<o>Shows detailed process status on Solaris 2.5 and later.</o>
+<t></t>
+</str>
+
+<str id="66">
+<o>shared</o>
+<t></t>
+</str>
+
+<str id="76">
+<o>private</o>
+<t></t>
+</str>
+
+<str id="77">
+<o>resident</o>
+<t></t>
+</str>
+
+<str id="78">
+<o>groups:</o>
+<t></t>
+</str>
+
+<str id="79">
+<o>and</o>
+<t></t>
+</str>
+
+<str id="80">
+<o>Process Tree for %s</o>
+<t></t>
+</str>
+
+<str id="81">
+<o>Misc status for %s</o>
+<t></t>
+</str>
+
+<str id="82">
+<o>Memory Usage:</o>
+<t></t>
+</str>
+
+<str id="83">
+<o>Credentials:</o>
+<t></t>
+</str>
+
+<str id="84">
+<o>Current working directory:</o>
+<t></t>
+</str>
+
+<str id="85">
+<o>Process status</o>
+<t></t>
+</str>
+
+<str id="86">
+<o>Shows various information about the Roxen process.</o>
+<t></t>
+</str>
+
+<str id="87">
+<o>In order to use the SSL on your server, you first have to create a random RSA key pair. One part of the key is kept secret. </o>
+<t></t>
+</str>
+
+<str id="88">
+<o>The other part should be submitted to a certificate authority, such as Thawte or VeriSign. The certificate authority will return the signed certificate that need to run a secure server.</o>
+<t></t>
+</str>
+
+<str id="89">
+<o>The other part is used to create a certificate. You can create a certificate yourself; this is not the recommended way to use SSL, and browsers will complain about not recognizing the entity that has signed the key (i.e. you). But a self-signed certificate is a lot better than nothing.</o>
+<t></t>
+</str>
+
+<str id="90">
+<o>Keys smaller than %d bits are ridiculous.</o>
+<t></t>
+</str>
+
+<str id="91">
+<o>Keys larger than %d bits would take too long to generate.</o>
+<t></t>
+</str>
+
+<str id="92">
+<o>How large key do you want to generate?</o>
+<t></t>
+</str>
+
+<str id="93">
+<o>The desired key size. This is a security parameter; larger keys gives better security, but it also makes connecting to the server a little slower.</o>
+<t></t>
+</str>
+
+<str id="94">
+<o>Key size</o>
+<t></t>
+</str>
+
+<str id="95">
+<o>The largest RSA key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 1024 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
+<t></t>
+</str>
+
+<str id="96">
+<o>Key file</o>
+<t></t>
+</str>
+
+<str id="97">
+<o>Where to store the file, may be relative to %s.</o>
+<t></t>
+</str>
+
+<str id="98">
+<o>A filename in the real filesystem, where the secret key should be stored. This is the filename you enter in the 'Key file'-field when you configure an SSL listen port.</o>
+<t></t>
+</str>
+
+<str id="99">
+<o>Your Distinguished Name?</o>
+<t></t>
+</str>
+
+<str id="100">
+<o>Your X.501 Distinguished Name consists of a chain of attributes and values, where each link in the chain defines more precisely who you are. Which attributes are necessary or useful depends on what you will use the certificate for, and which Certificate Authority you use. This page lets you specify the most useful attributes. If you leave a field blank, that attribute will be omitted from your name.&lt;p&gt;
+Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, it can't be counted on. To be on the safe side, use only US-ASCII.</o>
+<t></t>
+</str>
+
+<str id="101">
+<o>Your country code</o>
+<t></t>
+</str>
+
+<str id="102">
+<o>Your two-letter country code, for example GB (United Kingdom). This attribute is required.</o>
+<t></t>
+</str>
+
+<str id="103">
+<o>State/Province</o>
+<t></t>
+</str>
+
+<str id="104">
+<o>The state where you are operating. VeriSign requires this attribute to be present for US and Canadian customers. Do not abbreviate.</o>
+<t></t>
+</str>
+
+<str id="105">
+<o>City/Locality</o>
+<t></t>
+</str>
+
+<str id="106">
+<o>The city or locality where you are registered. VeriSign requires that at least one of the locality and the state attributes are present. Do not abbreviate.</o>
+<t></t>
+</str>
+
+<str id="107">
+<o>Organization/Company</o>
+<t></t>
+</str>
+
+<str id="108">
+<o>The organization name under which you are registered with some national or regional authority.</o>
+<t></t>
+</str>
+
+<str id="109">
+<o>Organizational unit</o>
+<t></t>
+</str>
+
+<str id="110">
+<o>This attribute is optional, and there are no specific requirements on the value of this attribute.</o>
+<t></t>
+</str>
+
+<str id="111">
+<o>Common Name</o>
+<t></t>
+</str>
+
+<str id="112">
+<o>This is the DNS name of your server (i.e. the host part of the URL).&lt;p&gt;Browsers will compare the URL they are connecting to with the Common Name in the server's certificate, and warn the user if they don't match.&lt;p&gt;Some Certificate Authorities allow wild cards in the Common Name. This means that you can have a certificate for &lt;tt&gt;*.roxen.com&lt;/tt&gt; which will match all servers at Roxen.Thawte allows wild card certificates, while VeriSign does not.</o>
+<t></t>
+</str>
+
+<str id="113">
+<o>For how long should the certificate be valid?</o>
+<t></t>
+</str>
+
+<str id="114">
+<o>Certificate lifetime, in days</o>
+<t></t>
+</str>
+
+<str id="115">
+<o>A certificate includes a validity period. How many days, from now, do you want the certificate to be valid?</o>
+<t></t>
+</str>
+
+<str id="116">
+<o>Save the request in a file:</o>
+<t></t>
+</str>
+
+<str id="117">
+<o>Filename</o>
+<t></t>
+</str>
+
+<str id="118">
+<o>Generate a new RSA key pair...</o>
+<t></t>
+</str>
+
+<str id="119">
+<o>Note that it is possible to have more than one certificate for the same key.</o>
+<t></t>
+</str>
+
+<str id="120">
+<o>Wrote %d-bit key in %s</o>
+<t></t>
+</str>
+
+<str id="121">
+<o>Generate a Certificate Signing Request and an RSA key...</o>
+<t></t>
+</str>
+
+<str id="122">
+<o>Certificate Attributes?</o>
+<t></t>
+</str>
+
+<str id="123">
+<o>An X.509 certificate associates a Common Name with a public key. Some certificate authorities support "extended certificates", defined in PKCS#10. An extended certificate may contain other useful information associated with the name and the key. This information is signed by the CA, together with the X.509 certificate.</o>
+<t></t>
+</str>
+
+<str id="124">
+<o>Email address</o>
+<t></t>
+</str>
+
+<str id="125">
+<o>An email address to be embedded in the certificate.</o>
+<t></t>
+</str>
+
+<str id="126">
+<o>CSR Attributes?</o>
+<t></t>
+</str>
+
+<str id="127">
+<o>At last, you can add attributes to the Certificate Signing Request, which are meant for the Certificate Authority and are not included in the issued Certificate.</o>
+<t></t>
+</str>
+
+<str id="128">
+<o>Challenge Password</o>
+<t></t>
+</str>
+
+<str id="129">
+<o>This password could be used if you ever want to revoke your certificate. Of course, this depends on the policy of your Certificate Authority.</o>
+<t></t>
+</str>
+
+<str id="130">
+<o>This is your Certificate Signing Request.</o>
+<t></t>
+</str>
+
+<str id="131">
+<o>Wrote %d bytes to %s.</o>
+<t></t>
+</str>
+
+<str id="132">
+<o>Generate an RSA key and a Self Signed Certificate...</o>
+<t></t>
+</str>
+
+<str id="133">
+<o>This is your Certificate.</o>
+<t></t>
+</str>
+
+<str id="134">
+<o>Generate an DSA key and a Self Signed Certificate...</o>
+<t></t>
+</str>
+
+<str id="135">
+<o>Invalid key size.</o>
+<t></t>
+</str>
