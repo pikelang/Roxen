@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.44 1999/09/14 21:33:16 marcus Exp $
+ * $Id: clientlayer.pike,v 1.45 1999/09/15 22:21:23 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.44 1999/09/14 21:33:16 marcus Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.45 1999/09/15 22:21:23 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -376,10 +376,11 @@ class Common
     string enc = encode_binary( to );
 
     // FIXME: Should probably use UPDATE instead.
-    squery("delete from %s where id=%s and variable='%s'", table, 
-	   (string)id, name);
-    squery("insert into %s values (%s,'%s','%s')", table, 
-	   (string)id, name, enc);
+    squery("delete from %s where id='%s' and variable='%s'", table, 
+	   id, name);
+    squery("insert into %s values ('%s','%s','%s')", table, 
+	   id, name, enc);
+
     return cached_misc[name]=to;
   }
 }
@@ -670,6 +671,8 @@ class Mailbox
 			       (string)q[w], this_object()) });
     
     sort((array(int))_mail->message_id, _mail);
+
+    // FIXME: Add quota warning message here?
 
     return _mail;
   }
