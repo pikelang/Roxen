@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.81 2001/03/30 17:07:33 kuntri Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.82 2001/03/30 17:12:49 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -100,7 +100,7 @@ constant gbuttonattr=#"
  Use this XCF-image as a frame for the button. The image is required
  to have at least the following layers: background, mask and frame.
 
-<!--
+<?comment
 Non working example.
 
  More information on how to create frame images can be found in the
@@ -108,7 +108,7 @@ Non working example.
 <ex>
 <gbutton frame-image='internal-roxen-tabframe'>foo</gbutton>
 </ex>
--->
+?>
 
 </attr>
 
