@@ -15,7 +15,7 @@
 #define _rettext _defines[" _rettext"]
 #define _ok _defines[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.55 2001/04/23 18:43:46 nilsson Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.56 2001/04/24 00:48:49 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -27,7 +27,7 @@ inherit "module";
 
 // ------------- Module registration and configuration. ---------------
 
-constant module_type = MODULE_FILE_EXTENSION | MODULE_PROVIDER;
+constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Tags: RXML 2 parser";
 constant module_doc  = 
 #"This module handles RXML parsing of pages. Other modules can provide 
@@ -83,14 +83,14 @@ void start(int q, Configuration c)
   define_API_functions();
   require_exec=[int]query("require_exec");
   parse_exec=[int]query("parse_exec");
+  c->rxml_tag_set->handle_run_error = rxml_run_error;
+  c->rxml_tag_set->handle_parse_error = rxml_parse_error;
 }
 
 array(string) query_file_extensions()
 {
   return [array(string)]query("toparse");
 }
-
-multiset query_provides() { return (< "RXMLRunError", "RXMLParseError" >); }
 
 
 // ------------------- RXML Parsing -------------------
@@ -144,7 +144,22 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 
 // ------------------ Error handling -------------------
 
-string rxml_run_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
+function _run_error;
+string rxml_run_error(RXML.Backtrace err, RXML.Type type)
+// This is used to report thrown RXML run errors. See
+// RXML.run_error().
+{
+  RequestID id = RXML.get_context()->id;
+
+  if(id->conf->get_provider("RXMLRunError")) {
+    if(!_run_error)
+      _run_error=id->conf->get_provider("RXMLRunError")->rxml_run_error;
+    string res=_run_error(err, type, id);
+    if(res) return res;
+  }
+  else
+    _run_error=0;
+
   NOCACHE();
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
     if(query("logerrorsr"))
@@ -158,7 +173,22 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
   return 0;
 }
 
-string rxml_parse_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
+function _parse_error;
+string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
+// This is used to report thrown RXML parse errors. See
+// RXML.parse_error().
+{
+  RequestID id = RXML.get_context()->id;
+
+  if(id->conf->get_provider("RXMLParseError")) {
+    if(!_parse_error)
+      _parse_error=id->conf->get_provider("RXMLParseError")->rxml_parse_error;
+    string res=_parse_error(err, type, id);
+    if(res) return res;
+  }
+  else
+    _parse_error=0;
+
   NOCACHE();
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
     if(query("logerrorsp"))
