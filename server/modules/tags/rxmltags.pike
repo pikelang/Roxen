@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.144 2000/07/23 14:42:19 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.145 2000/07/26 12:37:00 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1788,14 +1788,15 @@ using the pre tag.
  Inserts the time and date.</short> Does not require attributes.
 </desc>
 
-<attr name=unix-time value=number>
+<attr name=unix-time value=number of seconds>
+
 Display this time instead of the current. This attribute uses the
-specified Unix time_t time as the starting time, instead of the
-current time. This is mostly useful when the <date> tag is used from a
-Pike-script or Roxen module.
-<ex ><date unix-time=''/></ex>
+specified Unix 'time_t' time as the starting time, (which is <i>01:00,
+January the 1st, 1970</i>) instead of the current time. This is mostly
+useful when the <tag>date</tag> tag is used from a Pike-script or
+Roxen module.
+
 <ex ><date unix-time='1'/></ex>
-<ex ><date unix-time='60'/></ex>
 <ex ><date unix-time='120'/></ex>
 </attr>
 
@@ -2154,6 +2155,11 @@ Pike-script or Roxen module.
  Inserts a file, variable or other object into a webpage.</short>
 </desc>
 
+<attr name=quote value=html|none>
+ How the inserted data should be quoted. Default is \"html\", except for
+ href and file where it's \"none\".
+</attr>
+
 <attr name=variable value=string>
  Inserts the value of that variable.
 </attr>
@@ -2179,16 +2185,18 @@ Pike-script or Roxen module.
 </attr>
 
 <attr name=file value=string>
- Inserts the contents of that file.
+ Inserts the contents of that file. Note that the file is parsed
+ before it is inserted. Put the tag <tag>eval</tag> around the
+ <tag>insert</tag> if the file isn't to be parsed before it is
+ inserted.
+
+ <ex type='box'>
+  <insert file='foo.xml'/>
+ </ex>
 </attr>
 
 <attr name=href value=string>
  Inserts the contents at that URL.
-</attr>
-
-<attr name=quote value=html|none>
- How the inserted data should be quoted. Default is \"html\", except for
- href and file where it's \"none\".
 </attr>",
 
 "maketag":#"<desc cont><short hide>Makes it possible to create tags.</short>
