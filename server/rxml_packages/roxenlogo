@@ -1,0 +1,40 @@
+-*- html -*-
+<info>
+version="$Id: roxenlogo,v 1.1 2000/09/06 02:18:48 nilsson Exp $";
+name="roxenlogo";
+doc="Defines the tag 'roxenlogo', with the attribute size, which makes a roxen logo. Default size is 10.";
+help=1;
+</info>
+
+<define tag="x"><attrib name="r">1</attrib><attrib name="c">1</attrib>
+<td colspan="&_.c;" rowspan="&_.r;" ::="&_.rest-args;"><img src="internal-roxen-unit" width="1" height="1" alt="" /></td></define>
+
+<define tag="u"><attrib name="w">0</attrib><attrib name="h">0</attrib><attrib name="s">1</attrib>
+<set variable="var.w" expr="(int)(&_.w;/10.0*&_.s;)+1"/><set variable="var.h" expr="(int)(&_.h;/10.0*&_.s;)+1"/>
+<if variable="_.h is 0"><td></if><else><td bgcolor="black"></else>
+<img src="internal-roxen-unit" width="&var.w;" height="&var.h;" alt=""/></td></define>
+
+<define tag="o"><x bgcolor="#ff8c00" ::="&_.args;"/></define>
+<define tag="s"><x bgcolor="black" ::="&_.args;"/></define>
+<define tag="t"><define tag="img"/><x ::="&_.args;"/><undefine tag="img"/></define>
+
+<define tag="roxenlogo" scope="rx" trimwhites="1"><trimlines>
+<attrib name="size">10</attrib>
+<define tag="w"><u s="&rx.size;" w="&_.w;"/></define>
+<define tag="h"><u s="&rx.size;" h="&_.h;"/></define>
+
+<table border="0" cellpadding="0" cellspacing="0">
+<tr bgcolor="black"><u/><w w="7"/><w w="7"/><u/><w w="8"/><u/><w w="5"/>
+<u/><w w="5"/><w w="8"/><u/><u/><w w="8"/><u/><w w="5"/><u/></tr>
+<tr><h h="10"/><o c="14"/><s r="5"/></tr>
+<tr><s/><o r="8" c="2"/><s r="9"/><s c="7"/><o c="4" r="3"/></tr>
+<tr><h h="8"/><t c="6"/><s/></tr>
+<tr><s/><t r="7"/><s c="6"/></tr>
+<tr><h h="10"/><s r="2"/><o c="9"/></tr>
+<tr><s/><s c="2"/><o c="3" r="4"/><s c="5"/></tr>
+<tr><h h="11"/><t c="2" r="4"/><s r="4"/><s r="4"/></tr>
+<tr><s/><t r="3"/><s c="3"/></tr>
+<tr><h h="5"/><s/><o/><s/></tr>
+<tr><s/><s c="2"/><s c="3"/><s c="3"/></tr>
+</table>
+</trimlines></define>
