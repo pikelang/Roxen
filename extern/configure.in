@@ -1,4 +1,7 @@
+AC_REVISION("$Id: configure.in,v 1.17 1997/10/30 23:05:52 grubba Exp $")
 AC_INIT(cgi.c)
+AC_CONFIG_HEADER(config.h)
+
 AC_PROG_CC
 AC_SET_MAKE
 
