@@ -360,7 +360,7 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 
   diagram_data["ynamesimg"]=allocate(j=sizeof(diagram_data["ynames"]));
   for(int i=0; i<j; i++)
-    if ((diagram_data["values_for_ynames"][i]>LITET)||(diagram_data["values_for_ynames"][i]<-LITET))
+    if ((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i])))
       diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
 #ifndef ROXEN
 ->scale(0,diagram_data["fontsize"])
