@@ -245,9 +245,10 @@ class Connection
 
     class CommandExit {
       inherit Tools.Hilfe.Command;
-      string help() { return "Exit Hilfe."; }
+      string help(string what) { return "Exit Hilfe."; }
 
-      void exec() {
+      void exec(Tools.Hilfe.Evaluator e, string line, array(string) words,
+		array(string) tokens) {
 	begone();
       }
     }
