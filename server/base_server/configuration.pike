@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.571 2004/05/07 19:45:49 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.572 2004/05/10 17:16:06 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1474,7 +1474,11 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 
   if (!intp(lock_info)) {
     // We already hold a lock that prevents us.
-    return Roxen.http_status(412, "Precondition Failed");
+    if (id->request_headers->if) {
+      return Roxen.http_status(412, "Precondition Failed");
+    } else {
+      return Roxen.http_status(423, "Locked");
+    }
   } else if (lockscope == "DAV:exclusive" ?
 	     lock_info >= LOCK_SHARED_BELOW :
 	     lock_info >= LOCK_OWN_BELOW) {
