@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.414 2003/11/17 17:38:26 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.415 2003/11/25 16:02:01 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1494,6 +1494,11 @@ void send_result(mapping|void result)
   REQUEST_WERR(sprintf("HTTP: response: prot %O, method %O, file %O, misc: %O",
 		       prot, method, file, misc));
 
+#ifdef DEBUG_CACHEABLE
+  report_debug("<=== Request for %s returned cacheable %d.\n", raw_url,
+	       misc->cacheable);
+#endif
+
   if( prot == "HTTP/0.9" )  misc->no_proto_cache = 1;
 
   if(!leftovers) 
@@ -1991,8 +1996,13 @@ void got_data(mixed fooid, string s)
 	return;
     }
 
-    if( method == "GET" || method == "HEAD" )
+    if( method == "GET" || method == "HEAD" ) {
       misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
+#ifdef DEBUG_CACHEABLE
+      report_debug("===> Request for %s initiated cacheable to %d.\n", raw_url,
+		   misc->cacheable);
+#endif
+    }
 
     TIMER_START(find_conf);
     string path;
