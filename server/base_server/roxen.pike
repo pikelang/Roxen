@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.787 2002/10/14 09:07:50 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.788 2002/10/28 19:24:50 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4401,14 +4401,15 @@ void check_commit_suicide()
   if (query("suicide_engage")) {
     int next = getvar("suicide_schedule")
       ->get_next( query("last_suicide") );
-    if (next >= 0 && next <= time(1)) {
-      report_notice("Auto Restart triggered.\n");
-      set( "last_suicide", time(1) );
-      save( );
-      restart();
-    } else {
-      call_out(check_commit_suicide, next - time(1));
-    }
+    if (next >= 0)
+      if (next <= time(1)) {
+	report_notice("Auto Restart triggered.\n");
+	set( "last_suicide", time(1) );
+	save( );
+	restart();
+      } else {
+	call_out(check_commit_suicide, next - time(1));
+      }
   }
 }
 
