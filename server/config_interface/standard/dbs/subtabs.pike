@@ -5,8 +5,8 @@
 
 array pages =
 ({
-  ({ "status",      "",   "View Settings",   0, LOCALE(219, "MySQL status")}),
-  ({ "dbs",   "dbs.html", "Edit Global Variables", 0, LOCALE(220, "Other DBs") }),
+  ({ "status",      "",   "View Settings",   0, LOCALE(372, "MySQL status")}),
+  ({ "dbs",   "dbs.html", "Edit Global Variables", 0, LOCALE(373, "Other DBs") }),
 });
 
 string parse( RequestID id )
