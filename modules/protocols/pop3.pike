@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.21 1998/10/05 23:14:28 grubba Exp $
+ * $Id: pop3.pike,v 1.22 1998/12/06 23:30:43 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.21 1998/10/05 23:14:28 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.22 1998/12/06 23:30:43 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -420,6 +420,8 @@ static class Pop_Session
     if (user) {
       send_ok(sprintf("User %s logged in.", username));
       log("PASS", username, 200);
+      parent->con_class[(con->query_address()/" ")[0]] =
+	time() + parent->query("con_time");
     } else {
       send_error(sprintf("Access denied for %O.", username));
       log("PASS", username, 401);
@@ -509,6 +511,21 @@ static void init()
 }
 
 /*
+ * SMTP_FILTER interface
+ */
+
+mapping(string:int) con_class = ([]);
+
+int classify_connection(string remoteip, int remoteport, string remotehost)
+{
+  if (con_class[remoteip] < time()) {
+    m_delete(con_class, remoteip);
+    return(0);
+  }
+  return(query("con_class"));
+}
+
+/*
  * Roxen module interface
  */
 
@@ -528,7 +545,7 @@ array register_module()
 
 array(string)|multiset(string)|string query_provides()
 {
-  return(< "pop3_protocol" >);
+  return(< "pop3_protocol", "smtp_filter" >);
 }
 
 void create()
@@ -545,6 +562,12 @@ void create()
   defvar("timeout", 10*60, "Timeout", TYPE_INT | VAR_MORE,
 	 "Idle time before connection is closed (seconds).<br>\n"
 	 "Zero or negative to disable timeouts.");
+
+  defvar("con_class", 100, "SMTP: Connection class", TYPE_INT | VAR_MORE,
+	 "Connection class for the SMTP server.");
+
+  defvar("con_time", 24*60*60, "SMTP: Connection time", TYPE_INT | VAR_MORE,
+	 "Time the connection class is valid.");
 }
 
 void start(int i, object c)
