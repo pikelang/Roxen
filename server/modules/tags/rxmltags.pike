@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.397 2002/09/03 14:38:51 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.398 2002/09/03 16:05:44 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2223,6 +2223,7 @@ class TagHelp {
       string ret="<h2>Roxen Interactive RXML Help</h2>";
 
       if(!help_for) {
+	NOCACHE();
 	array tags=map(indices(RXML_CONTEXT->tag_set->get_tag_names()),
 		       lambda(string tag) {
 			 if (!has_prefix (tag, "_"))
@@ -2234,12 +2235,10 @@ class TagHelp {
 		    lambda(string tag) { return "&lt;?"+tag+"?&gt;"; } );
 	tags = Array.sort_array(tags,
 				lambda(string a, string b) {
-				  if(a[..4]=="&lt;?") a=a[5..];
-				  if(b[..4]=="&lt;?") b=b[5..];
-				  if(lower_case(a)==lower_case(b))
-				    return a < b ? -1 : a > b;
-				  return
-				    lower_case (a) < lower_case (b) ? -1 : 1;
+				  if(has_prefix (a, "&lt;?")) a=a[5..];
+				  if(has_prefix (b, "&lt;?")) b=b[5..];
+				  if(lower_case(a)==lower_case(b)) return a > b;
+				  return lower_case (a) > lower_case (b);
 				})-({"\x266a"});
 
 	string char;
@@ -2249,16 +2248,12 @@ class TagHelp {
 	array tag_links;
 
 	foreach(tags, string tag) {
-	  if(tag[0]!='&' && lower_case(tag[0..0])!=char) {
+	  string tag_char =
+	    lower_case (has_prefix (tag, "&lt;?") ? tag[5..5] : tag[0..0]);
+	  if (tag_char != char) {
 	    if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+
 					 String.implode_nicely(tag_links)+"</p>";
-	    char=lower_case(tag[0..0]);
-	    tag_links=({});
-	  }
-	  if (tag[0]=='&' && lower_case(tag[5..5])!=char) {
-	    if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+
-					 String.implode_nicely(tag_links)+"</p>";
-	    char=lower_case(tag[5..5]);
+	    char = tag_char;
 	    tag_links=({});
 	  }
 	  if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":") {
