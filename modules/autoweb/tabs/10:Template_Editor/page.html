@@ -232,7 +232,7 @@
 		  "£value£</sqloutput>";
 		</pike></cset>
 	      <formoutput quote='$'>
-		<var name="variable_#id#" type="#type#"
+		<var name="variable_#id#" type="#type#" advanced
 		      options="$options$" default="$default$">
 		<cset variable=__show_example__></cset>
                 <if match="#name# is nav_name">
@@ -269,7 +269,11 @@
 		       "insert into customers_schemes_vars "
 		       "(scheme_id,variable_id,value) "
 		       " values ('¤current_scheme¤','"+variable_id+"','"+
-		       id->variables[variable]+"')"+
+		       id->variables[variable]+
+                       ((id->variables[variable+"_bold"]||"0")!="0"?" bold":"")+
+		       ((id->variables[variable+"_italic"]||"0")!="0"?
+		        " italic":"")+
+		       "')"+
 		       "\">\n";
 		}
 	      return r;
@@ -345,4 +349,3 @@
 <tablify preparse nice cellseparator='='>Variable=Value
   <insert variables=full></tablify>
 </comment>
-
