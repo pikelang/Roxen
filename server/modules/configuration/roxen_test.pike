@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.24 2001/05/17 12:03:56 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.25 2001/05/20 13:03:11 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -249,7 +249,7 @@ void xml_test(string t, mapping args, string c) {
 			         break;
 			     }
 			   },
-    ]) )->add_quote_tag("!--","","--");
+    ]) );
 
   if( catch(parser->finish(c)) ) {
     fails++;
