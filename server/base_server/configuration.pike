@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.251 2000/01/10 09:05:55 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.252 2000/01/12 14:29:13 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2167,17 +2167,15 @@ int save_one( RoxenModule o )
 void reload_module( string modname )
 {
   RoxenModule old_module = find_module( modname );
-  int do_delete_doto;
 
   if( !old_module )
     return;
 
+  save_one (old_module);
+
   master()->refresh_inherit( object_program( old_module ) );
 
-  if( enable_module( modname ) == old_module )
-    return;
-
-  catch( disable_module( modname ) );
+  disable_module( modname );
 
   if( enable_module( modname ) == 0 )
     enable_module( modname, old_module );
@@ -2205,6 +2203,8 @@ class ModuleCopies
   string _sprintf( ) { return "ModuleCopies()"; }
 }
 
+static int enable_module_batch_msgs;
+
 RoxenModule enable_module( string modname, RoxenModule|void me )
 {
   int id;
@@ -2230,11 +2230,13 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
     return 0;
   }
 
+  string descr = moduleinfo->get_name() + (id ? " copy " + (id + 1) : "");
+
 #ifdef MODULE_DEBUG
-  if( id )
-    report_debug(" %-43s... \b", moduleinfo->get_name()+" copy "+(id+1));
+  if (enable_module_batch_msgs)
+    report_debug(" %-43s... \b", descr );
   else
-    report_debug(" %-43s... \b", moduleinfo->get_name() );
+    report_debug("Enabling " + descr + "\n");
 #endif
 
   module = modules[ modname ];
@@ -2247,7 +2249,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
     if(err = catch(me = moduleinfo->instance(this_object())))
     {
 #ifdef MODULE_DEBUG
-      report_debug("\bERROR\n");
+      if (enable_module_batch_msgs) report_debug("\bERROR\n");
       if (err != "")
 #endif
 	report_error(LOCALE->
@@ -2509,7 +2511,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
   if((me->start) && (err = catch( me->start(0, this_object()) ) ) )
   {
 #ifdef MODULE_DEBUG
-    report_debug("\bERROR\n");
+    if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
     report_error(LOCALE->
 		 error_initializing_module_copy(moduleinfo->get_name(),
@@ -2526,7 +2528,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
   if (err = catch(pr = me->query("_priority")))
   {
 #ifdef MODULE_DEBUG
-    report_debug("\bERROR\n");
+    if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
     report_error(LOCALE->
 		 error_initializing_module_copy(moduleinfo->get_name(),
@@ -2559,7 +2561,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
       }
     }) {
 #ifdef MODULE_DEBUG
-      report_debug("\bERROR\n");
+      if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
       report_error(LOCALE->
 		   error_initializing_module_copy(moduleinfo->get_name(),
@@ -2579,7 +2581,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
       }
     }) {
 #ifdef MODULE_DEBUG
-      report_debug("\bERROR\n");
+      if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
       report_error(LOCALE->
 		   error_initializing_module_copy(moduleinfo->get_name(),
@@ -2630,7 +2632,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
   }
   invalidate_cache();
 #ifdef MODULE_DEBUG
-  report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
+  if (enable_module_batch_msgs)
+    report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
 #endif
   return me;
 }
@@ -2681,6 +2684,7 @@ int disable_module( string modname )
 
   ModuleInfo moduleinfo =  roxen->find_module( modname );
   mapping module = modules[ modname ];
+  string descr = moduleinfo->get_name() + (id ? " copy " + (id + 1) : "");
 
   if(!module)
   {
@@ -2698,21 +2702,16 @@ int disable_module( string modname )
 
   if(!me)
   {
-    if( id )
-      report_error(LOCALE->disable_module_failed(moduleinfo->get_name()
-                                                 +" # "+id));
-    else
-      report_error(LOCALE->disable_module_failed(moduleinfo->get_name()));
+    report_error(LOCALE->disable_module_failed(descr));
     return 0;
   }
 
-  if(me->stop) me->stop();
+  if(me->stop)
+    if (mixed err = catch (me->stop()))
+      report_error (LOCALE->error_disabling_module (descr, describe_backtrace (err)));
 
 #ifdef MODULE_DEBUG
-  if( id )
-    report_debug("Disabling "+moduleinfo->get_name()+" # "+id+"\n");
-  else
-    report_debug("Disabling "+moduleinfo->get_name()+"\n");
+  report_debug("Disabling "+descr+"\n");
 #endif
 
   if(moduleinfo->type & MODULE_FILE_EXTENSION)
@@ -2806,14 +2805,17 @@ int add_modules( array(string) mods, int|void now )
     {
 #ifdef MODULE_DEBUG
       if( !wr++ )
-        report_debug("\b[ adding req module" + (sizeof (mods) > 1 ? "s" : "") + "\n");
+	if (enable_module_batch_msgs)
+	  report_debug("\b[ adding req module" + (sizeof (mods) > 1 ? "s" : "") + "\n");
+	else
+	  report_debug("Adding required module" + (sizeof (mods) > 1 ? "s" : "") + "\n");
 #endif
-        forcibly_added[ mod+"#0" ] = 1;
-        enable_module( mod+"#0" );
+      forcibly_added[ mod+"#0" ] = 1;
+      enable_module( mod+"#0" );
     }
   }
 #ifdef MODULE_DEBUG
-  if( wr )
+  if( wr && enable_module_batch_msgs )
     report_debug("] \b");
 #endif
 }
@@ -2887,6 +2889,7 @@ void enable_all_modules()
 
   array err;
   forcibly_added = (<>);
+  enable_module_batch_msgs = 1;
   foreach( modules_to_process, tmp_string )
   {
     if( !forcibly_added[ tmp_string ] )
@@ -2894,6 +2897,7 @@ void enable_all_modules()
         report_error(LOCALE->enable_module_failed(tmp_string,
                                                   describe_backtrace(err)));
   }
+  enable_module_batch_msgs = 0;
   roxenloader.pop_compile_error_handler();
   if( strlen( ec->get() ) )
     report_error( "While enabling modules in "+name+":\n"+ec->get() );
