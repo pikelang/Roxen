@@ -15,7 +15,7 @@
 #define _rettext _defines[" _rettext"]
 #define _ok _defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.44 2000/03/19 17:43:32 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.45 2000/03/19 22:09:42 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -295,7 +295,7 @@ string api_html_quote_attr(RequestID id, string value)
 }
 
 string api_read_file(RequestID id, string file) {
-  return Roxen.API_read_file(id,file);
+  return Roxen.read_file(id,file);
 }
 
 void add_api_function(string name, function f, void|array(string) types)

@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.22 2000/02/24 05:20:11 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.23 2000/03/19 22:10:04 nilsson Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -446,7 +446,7 @@ string|array(string) tag_include(string tag, mapping m, RequestID id)
   if(!m->file) m->file=http_decode_string(m->virtual);
 
   m->file=fix_var(m->file, id);
-  string ret=API_read_file(id, m->file);
+  string ret=read_file(id, m->file);
   if(!ret) return ({ id->misc->ssi_errmsg||"No such file ("+m->file+")." });
   return ret;
 }
@@ -493,7 +493,7 @@ string|array(string) tag_exec(string tag, mapping m, RequestID id)
       CACHE((int)m->cache);
     else
       NOCACHE();
-    return API_read_file(id, http_decode_string(fix_var(m->cgi, id)))||"";
+    return read_file(id, http_decode_string(fix_var(m->cgi, id)))||"";
   }
 
   if(m->cmd)
