@@ -147,11 +147,16 @@ static string ex_src_cont(Parser.HTML parser, mapping m, string c, string rt, vo
 
 static string list_cont( Parser.HTML parser, mapping m, string c )
 {
-  if( m->type == "ol" )
-    return "<ol>"+replace( c, ({"<item>","</item>", "<item/>"}), 
-                           ({"<li>","","<li>"}) )+"</ol>";
-  return "<ul>"+replace( c, ({"<item>","</item>", "<item/>"}), 
-                         ({"<li>","","<li>"}) )+"</ul>";
+  string type = m->type || "ul";
+  return "<"+type+">"+
+    Parser.HTML()->
+    add_containers( ([ "item":lambda(Parser.HTML p, mapping m, string c) {
+				return ({
+				  "<li>"+
+				  (m->name ? "<b>"+m->name+"</b><br />" : "")+
+				  c+"</li>" });
+			      } ]) )->finish(c)->read()+
+    "</"+type+">";
 }
 
 static string xtable_cont( mixed a, mixed b, string c )
