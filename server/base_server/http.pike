@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.41 2000/08/12 06:13:26 per Exp $
+// $Id: http.pike,v 1.42 2000/08/15 12:50:10 jhs Exp $
 
 //#pragma strict_types
 
@@ -217,7 +217,7 @@ string add_pre_state( string url, multiset state )
 }
 
 mapping http_redirect( string url, RequestID|void id )
-  //! Simply returns a http-redirect message to the specified URL.
+//! Simply returns a http-redirect message to the specified URL.
 {
   if(strlen(url) && url[0] == '/')
   {
@@ -249,11 +249,20 @@ mapping http_redirect( string url, RequestID|void id )
 }
 
 mapping http_stream(Stdio.File from)
+//! Returns a result mapping where the data returned to the client
+//! will be streamed raw from the given Stdio.File object, instead of
+//! being packaged by roxen. In other words, it's entirely up to you
+//! to make sure what you send is HTTP data.
 {
   return ([ "raw":1, "file":from, "len":-1, ]);
 }
 
 mapping http_auth_required(string realm, string|void message)
+//! Generates a result mapping that will instruct the web browser that
+//! the user needs to authorize himself before being allowed access.
+//! `realm' is the name of the realm on the server, which will typically
+//! end up in the browser's prompt for a name and password (e g "Enter
+//! username for <i>realm</i> at <i>hostname</i>:").
 {
   if(!message)
     message = "<h1>Authentication failed.\n</h1>";
