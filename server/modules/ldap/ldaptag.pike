@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.24 2001/11/05 13:09:07 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.25 2001/11/21 13:42:46 anders Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -261,8 +261,11 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
 
 
   if(error) {
+    if (!con->error_number())
+      report_debug("LDAP operation failed: %s\n%s\n", describe_error(error),
+		   describe_backtrace(error[1]));
     error = Roxen.html_encode_string(sprintf("LDAP operation %s failed. %s",
-	    op, con->error_string()||""));
+					     op, con->error_string()||""));
     ldap_last_error = error;
     con->unbind();
     RXML.run_error(error);
