@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.65 2001/02/28 00:13:36 nilsson Exp $
+// $Id: fonts.pike,v 1.66 2001/02/28 04:15:24 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -272,7 +272,7 @@ array get_font_information(void|int scalable_only)
     if( scalable_only && !fh->scalable )
       continue;
     foreach( fh->available_fonts(), string fontname)
-      res += fh->font_information(fontname);
+      res += ({fh->font_information(fontname)});
   }
   return res;
 }
