@@ -1,8 +1,9 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.23 2001/08/14 15:12:06 per Exp $
-//! @module DBManager
+// $Id: DBManager.pmod,v 1.24 2001/08/20 12:01:11 nilsson Exp $
+
 //! Manages database aliases and permissions
+
 #include <roxen.h>
 #include <config.h>
 
