@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.73 2001/03/12 15:46:23 mast Exp $
+// $Id: Roxen.pmod,v 1.74 2001/03/12 20:46:42 jhs Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -136,11 +136,17 @@ mapping http_low_answer( int errno, string data )
       ]);
 }
 
+//! Returns a response mapping indicating that the module or script
+//! will take over the rest of the handling of the request. This
+//! aborts the request chain and leaves you in control for as long as
+//! you wish.
+//!
+//! Typically, you'll want to return the control again by sending a
+//! new result mapping to @[RequestID.send_result()], but should you
+//! want to glue together request headers and close the socket on your
+//! own, you are free to do so. The method @[RequestID.connection()]
+//! gives you the Stdio.File object for the current client connection.
 mapping http_pipe_in_progress()
-//! Return a result mapping that indicates that the request file
-//! should be kept open, but no result should be sent. Another result
-//! mapping can be sent later on with the send_result member
-//! function of the protocol object, if it is available.
 {
   HTTP_WERR("Pipe in progress");
   return ([ "file":-1, "pipe":1, ]);
