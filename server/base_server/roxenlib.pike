@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.45 1998/02/02 00:59:19 wing Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.46 1998/02/04 07:28:34 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -853,7 +853,7 @@ string get_modname (object module)
 // `<config name>/<module short name>#<copy>', where `#<copy>' only is
 // added for modules with copies.
 {
-  if (!module) return "/";
+  if (!module) return 0;
 
   foreach (roxen->configurations, object conf)
     foreach (indices (conf->modules), string mname) {
@@ -867,7 +867,7 @@ string get_modname (object module)
 	return conf->name + "/" + mname;
     }
 
-  return "/";
+  return 0;
 }
 
 // internal method for do_output_tag
