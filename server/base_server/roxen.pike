@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.569 2000/11/02 09:10:56 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.570 2000/11/11 04:26:41 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3516,12 +3516,16 @@ int main(int argc, array tmp)
   create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE")
 		  || QUERY(pidfile));
 
-  if( Getopt.find_option( argv, 0, "no-delayed-load" ) )
+#ifdef RUN_SELF_TEST
+  enable_configurations_modules();
+#else
+  if( Getopt.find_option( argv, 0, "no-delayed-load" ))
     enable_configurations_modules();
   else
     foreach( configurations, Configuration c )
       if( c->query( "no_delayed_load" ) )
         c->enable_all_modules();
+#endif // RUN_SELF_TEST
 
 #ifdef THREADS
   start_handler_threads();
