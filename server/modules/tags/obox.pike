@@ -41,16 +41,16 @@ string container_obox(string name, mapping args,
           "<td colspan=2>&nbsp;</td></tr>\n"
       
           "<tr><td bgcolor=#000000 colspan=2 height=1>\n"
-          "<img src="+unit_gif+" height=1></td>\n"
+          "<img alt='' src="+unit_gif+" height=1></td>\n"
           "<td bgcolor=#000000 colspan=2 height=1>\n"
-	  "<img src="+unit_gif+"></td></tr>\n"
+	  "<img alt='' src="+unit_gif+"></td></tr>\n"
       
-          "<tr><td bgcolor=#000000><img src="+unit_gif+"></td>\n"
+          "<tr><td bgcolor=#000000><img alt='' src="+unit_gif+"></td>\n"
           "<td width="+(string)left+">&nbsp;</td>"
 	  "<td width="+(string)right+">&nbsp;</td>\n"
-          "<td bgcolor=#000000><img src="+unit_gif+"></td></tr>\n"
+          "<td bgcolor=#000000><img alt='' src="+unit_gif+"></td></tr>\n"
 
-          "<tr><td bgcolor=#000000><img src="+unit_gif+"></td>\n"
+          "<tr><td bgcolor=#000000><img alt='' src="+unit_gif+"></td>\n"
           "<td colspan=3>\n"
 
           "<table border=0 cellspacing=5 "+
@@ -59,9 +59,9 @@ string container_obox(string name, mapping args,
       s += contents;
       
       s += "</td></tr></table>\n"
-	   "</td><td bgcolor=#000000><img src="+unit_gif+"></td></tr>\n"
+	   "</td><td bgcolor=#000000><img alt='' src="+unit_gif+"></td></tr>\n"
            "<tr><td colspan=5 bgcolor=#000000>\n"
-	   "<img src="+unit_gif+"></td></tr>\n"
+	   "<img alt='' src="+unit_gif+"></td></tr>\n"
            "</table>\n";
     break;
   }
