@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.782 2002/02/27 17:41:19 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.783 2002/03/21 09:15:35 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1566,7 +1566,7 @@ class SSLProtocol
 	  // DWIM: Make sure the main cert comes first in the cert list.
 	  ctx->certificates = ({ cert }) + ctx->certificates;
 	} else {
-	  ctx->certificates += ctx->certificates;
+	  ctx->certificates += ({ cert });
 	  continue;
 	}
       }
