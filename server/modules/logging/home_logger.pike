@@ -4,8 +4,8 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-constant cvs_version = "$Id: home_logger.pike,v 1.27 2000/08/15 13:03:15 jhs Exp $";
-constant thread_safe = 1;
+constant cvs_version="$Id: home_logger.pike,v 1.28 2000/08/19 01:53:46 per Exp $";
+constant thread_safe=1;
 
 #include <config.h>
 inherit "module";
@@ -13,84 +13,12 @@ inherit "module";
 
 constant module_type = MODULE_LOGGER;
 constant module_name = "User logger";
-constant module_doc  = "This module log the accesses of each user in their home dirs, "
-  "if they create a file named 'AccessLog' (or whatever is configurated "
-  "in the administration interface) in that directory, and "
-  "allow write access for roxen.";
-
-// Parse the logging format strings.
-private inline string fix_logging(string s)
-{
-  string pre, post, c;
-  sscanf(s, "%*[\t ]", s);
-  s = replace(s, ({"\\t", "\\n", "\\r" }), ({"\t", "\n", "\r" }));
-  // FIXME: This looks like a bug.
-  // Is it supposed to strip all initial whitespace, or do what it does?
-  //    /grubba 1997-10-03
-  while(s[0] == ' ') s = s[1..];
-  while(s[0] == '\t') s = s[1..];
-  while(sscanf(s, "%s$char(%d)%s", pre, c, post)==3)
-    s=sprintf("%s%c%s", pre, c, post);
-  while(sscanf(s, "%s$wchar(%d)%s", pre, c, post)==3)
-    s=sprintf("%s%2c%s", pre, c, post);
-  while(sscanf(s, "%s$int(%d)%s", pre, c, post)==3)
-    s=sprintf("%s%4c%s", pre, c, post);
-  if(!sscanf(s, "%s$^%s", pre, post))
-    s+="\n";
-  else
-    s=pre+post;
-  return s;
-}
-
-// Really write an entry to the log.
-private void write_to_log( string host, string rest, string oh, function fun )
-{
-  int s;
-  if(!host) host=oh;
-  if(!stringp(host))
-    host = "error:no_host";
-  if(fun) fun(replace(rest, "$host", host));
-}
-
-// Logging format support functions.
-nomask private inline string host_ip_to_int(string s)
-{
-  int a, b, c, d;
-  sscanf(s, "%d.%d.%d.%d", a, b, c, d);
-  return sprintf("%c%c%c%c",a, b, c, d);
-}
-
-nomask private inline string unsigned_to_bin(int a)
-{
-  return sprintf("%4c", a);
-}
-
-nomask private inline string unsigned_short_to_bin(int a)
-{
-  return sprintf("%2c", a);
-}
-
-nomask private inline string extract_user(string from)
-{
-  array tmp;
-  if (!from || sizeof(tmp = from/":")<2)
-    return "-";
-
-  return tmp[0];      // username only, no password
-}
-
-mapping (string:string) log_format = ([]);
-
-private void parse_log_formats()
-{
-  string b;
-  array foo=query("LogFormat")/"\n";
-  log_format = ([]);
-  foreach(foo, b)
-    if(strlen(b) && b[0] != '#' && sizeof(b/":")>1)
-      log_format[(b/":")[0]] = fix_logging((b/":")[1..]*":");
-}
-
+constant module_doc  = 
+#"This module log the accesses of each user in their home dirs, 
+  if they create a file named 'AccessLog' (or whatever is configurated
+  in the administration interface) in that directory, and 
+ allow write access for roxen. As an alternative, if a directory with the
+ same name is created, a file for each day will be created in it.";
 
 
 string create()
@@ -98,9 +26,6 @@ string create()
   defvar("num", 5, "Maximum number of open user logfiles.", TYPE_INT|VAR_MORE,
 	 "How many logfiles to keep open for speed (the same user often has "
 	 " her files accessed many times in a row)");
-
-  defvar("delay", 600, "Logfile garb timeout", TYPE_INT|VAR_MORE,
-	 "After how many seconds should the file be closed?");
 
   defvar("block", 0, "Only log in userlog", TYPE_FLAG,
 	 "If set, no entry will be written to the normal log.\n");
@@ -164,7 +89,6 @@ class CacheFile {
   string file, set_file;
   int ready = 1, d, n, waiting;
   object next;
-  object master;
 #ifdef THREADS
   object mutex;
 #endif
@@ -178,21 +102,16 @@ class CacheFile {
       call_out( really_timeout, 1 );
     } else {
       close();
-      remove_call_out(timeout);
+      remove_call_out( really_timeout );
+      set_file = 0;
       ready = 1;
       move_this_to_tail();
     }
   }
 
-  void timeout()
-  {
-    really_timeout();
-  }
-
   void wait()
   {
     waiting++;
-    remove_call_out(timeout);
   }
 
   string make_date()
@@ -211,15 +130,6 @@ class CacheFile {
       if( a[ 1 ] < 0 )
       {
         s += "/" + make_date();
-        mode += "c";
-      }
-      call_out( really_timeout, 60 );
-    }
-    if( array a = file_stat( s-"Log" ) )
-    {
-      if( a[ 1 ] < 0 )
-      {
-        s = (s-"Log") + "/" + make_date();
         mode += "c";
       }
       call_out( really_timeout, 60 );
@@ -243,11 +153,11 @@ class CacheFile {
 #ifdef THREADS
     object key = mutex?mutex->lock():0;
 #endif
-    tmp2 = tmp = master->cache_head;
+    tmp2 = tmp = cache_head;
 
     if(tmp == this_object()) return;
 
-    master->cache_head = this_object();
+    cache_head = this_object();
     while(tmp && (tmp->next != this_object()))
       tmp = tmp->next;
     if(tmp)
@@ -262,14 +172,14 @@ class CacheFile {
     object key = mutex?mutex->lock():0;
 #endif
 
-    if(this_object() == master->cache_head)
+    if(this_object() == cache_head)
     {
-      master->cache_head = next;
+      cache_head = next;
       tmp = next;
     }
     else
     {
-      tmp = master->cache_head;
+      tmp = cache_head;
       while(tmp->next != this_object())
 	tmp = tmp->next;
       tmp->next = next;
@@ -285,8 +195,6 @@ class CacheFile {
   void write(string s)
   {
     move_this_to_head();
-    remove_call_out(timeout);
-    call_out(timeout, d);
     if(ready)
       report_debug("home_logger: Trying to write to a closed file "+file+"\n");
     else
@@ -294,21 +202,18 @@ class CacheFile {
     waiting--;
   }
 
-  void create(int num, int delay, object m, object mu)
+  void create(int num, object mu)
   {
 #ifdef THREADS
     mutex = mu;
 #endif
     n = num;
-    d = delay;
-    master = m;
-    if(num > 1)
-      next = object_program(this_object())( --num, delay, m, mu );
+    if(num > 1) next = object_program(this_object())( --num, mu );
   }
 
   void destroy()
   {
-    remove_call_out(timeout);
+    remove_call_out(really_timeout);
     if(next) destruct(next);
   }
 };
@@ -321,59 +226,33 @@ object mutex  = Thread.Mutex();
 object mutex;
 #endif
 
+mapping(int:string) log_format = ([]);
+
+private void parse_log_formats()
+{
+  string b;
+  array foo=query("LogFormat")/"\n";
+  log_format = ([]);
+  foreach(foo, b)
+    if(strlen(b) && b[0] != '#' && sizeof(b/":")>1)
+      log_format[(int)(b/":")[0]]=String.trim_whites((b/":")[1..]*":");
+}
+
+
 string start()
 {
   object f;
   if(cache_head) destruct(cache_head);
-  cache_head = CacheFile(query("num"), query("delay"), this_object(), mutex);
+  cache_head = CacheFile(query("num"), mutex);
   parse_log_formats();
 }
 
 static void do_log(mapping file, object request_id, function log_function)
 {
-  string a;
   string form;
-  function f;
-
-  if(!log_function) return;// No file is open for logging.
-
-  if(!(form=log_format[(string)file->error]))
-    form = log_format["*"];
-
-  if(!form) return;
-
-  form=replace(form,
-	       ({
-		 "$ip_number", "$bin-ip_number", "$cern_date",
-		 "$bin-date", "$method", "$resource", "$protocol",
-		 "$response", "$bin-response", "$length", "$bin-length",
-		 "$referer", "$user_agent", "$user", "$user_id",
-	       }), ({
-		 (string)request_id->remoteaddr,
-		   host_ip_to_int(request_id->remoteaddr),
-		   Roxen.cern_http_date(time(1)),
-		   unsigned_to_bin(time(1)),
-		   (string)request_id->method,
-		   Roxen.http_encode_string(request_id->not_query+
-				      (request_id->query?"?"+request_id->query:
-				       "")),
-		   (string)request_id->prot,
-		   (string)(file->error||200),
-		   unsigned_short_to_bin(file->error||200),
-		   (string)(file->len>=0?file->len:"?"),
-		   unsigned_to_bin(file->len),
-		   (string)
-		   (sizeof(request_id->referer)?request_id->referer[0]:"-"),
-		   Roxen.http_encode_string(sizeof(request_id->client)?request_id->client*" ":"-"),
-		   extract_user(request_id->realauth),
-		   (string)request_id->cookies->RoxenUserID,
-		 }));
-
-  if(search(form, "host") != -1)
-    roxen->ip_to_host(request_id->remoteaddr, write_to_log, form,
-		      request_id->remoteaddr, log_function);
-  else
-    log_function(form);
+  if(!(form=log_format[file->error]))  form = log_format[0];
+  if(!form)  return;
+  roxen.run_log_format( form, log_function, request_id, file );
 }
 
 
@@ -467,8 +346,7 @@ int log(RequestID id, mapping file)
   string s;
   object fnord;
 
-  if((s = home(id->not_query, id)) &&
-     (fnord=find_cache_file(s)))
+  if((s = home(id->not_query, id)) && (fnord=find_cache_file(s)))
   {
     fnord->wait(); // Tell it not to die
     do_log(file,id,fnord->write);
