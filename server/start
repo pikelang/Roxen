@@ -51,6 +51,9 @@ while [ ! c"$1" = "c" ] ; do
    DIR=`echo $1 | sed -e 's/--config-dir=//'`
    FILES=`echo $1 | sed -e 's/--config-dir=//' -e 's/..//' -e 's./..g' -e 's.-..g'`
   ;;
+  '--once')
+    once=1
+  ;;
   '--version')
     if [ x$BETA = x1 ] ; then
       more='ß'
@@ -83,13 +86,13 @@ echo Starting the Roxen Challenger World Wide Web server.
 if [ "$NOCHOWN" != "TRUE" ]; then 
   fixperms 2>/dev/null
 fi
-
-(while : ; do
-  sdfile="/tmp/Roxen_Shutdown_$$"
-  rm $sdfile
-  if [ -f "$sdfile" ] ; then
-    cat << oo
-WARNING:
+if [ -z "$once" ] ; then
+ (while : ; do
+   sdfile="/tmp/Roxen_Shutdown_$$"
+   rm $sdfile
+   if [ -f "$sdfile" ] ; then
+     cat << oo
+ WARNING:
 A shutdown file '('$sdfile')' is present, and the file cannot be
 removed by this script.
 
@@ -136,8 +139,13 @@ done
 echo Not Reached "(famous last words)"
 
 ) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1&
-
 cat << oo
 Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
 You can use the configuration interface in the server to get debug info.
 oo
+else
+  echo "Server restart at `date`"
+  args="-DROXEN roxenloader --config-dir=$DIR --start-script-pid=$$"
+  echo Executing $ulpc -m etc/master.pike $args $@
+  $ulpc -m etc/master.pike $args $@
+fi
