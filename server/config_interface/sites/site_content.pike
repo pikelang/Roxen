@@ -120,6 +120,7 @@ do                                                                      \
   T(MODULE_PROTOCOL,                   0,                        0);
   T(MODULE_CONFIG,                     0,                        0);
   T(MODULE_SECURITY,                   0,                        0);
+  T(MODULE_USERDB,                     0,                        0);
   T(MODULE_EXPERIMENTAL,               0,                        0);
 
   return res;
