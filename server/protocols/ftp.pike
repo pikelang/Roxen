@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.21 1997/05/28 00:29:18 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.22 1997/05/28 15:02:46 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -646,8 +646,7 @@ void got_data(mixed fooid, string s)
     switch (cmd)
     {
      case "user":
-      if(!arg || arg == "ftp" || arg == "anonymous")
-      {
+      if(!arg || arg == "ftp" || arg == "anonymous") {
 	reply("230 Anonymous ftp, at your service\n");
 	session_auth = 0;
 	rawauth = 0;
@@ -977,7 +976,10 @@ void got_data(mixed fooid, string s)
       reply("220 Prestate set\n");
       break;
 
-     default:
+    case "":
+      /* The empty command, some stupid ftp-proxies send this. */
+      break;
+    default:
       reply("502 command '"+ cmd +"' unimplemented.\n");
     }
   }
