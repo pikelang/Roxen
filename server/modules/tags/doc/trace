@@ -1,0 +1,9 @@
+<b><kbd>{trace}rxml-code{/trace}</kbd></b><p>
+
+Executes the rxml code with tracing enabled. A report is appended at
+the end of the result.
+<p>
+<b>Example:</b>
+{trace}{catch}{set variable=verbose value=set0}{list-tags}{throw}Hide the rather long result{/throw}{/catch}{/trace}
+<p>
+<trace><catch><set variable=verbose value=set0><list-tags><throw>Hide the rather long result</throw></catch></trace>
