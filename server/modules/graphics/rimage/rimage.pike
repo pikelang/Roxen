@@ -5,6 +5,8 @@ inherit "module";
 #define DEBUG
 
 
+constant cvs_version = "$Id: rimage.pike,v 1.4 1998/08/11 10:13:53 grubba Exp $";
+
 /*  ------------------------------------------- MODULE GLUE */
 
 void create(object c)
