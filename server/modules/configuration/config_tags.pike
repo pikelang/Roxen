@@ -407,7 +407,7 @@ string set_variable( string v, object in, mixed to, object id )
    case TYPE_DIR:
      if(!strlen(val)) val = "./";
      if( !(file_stat( val ) && (file_stat( val )[ ST_SIZE ] == -2 )))
-       warning = "<font color='&usr.warncolor;'>"+val+" is not a directory</font>";
+       warning = "<font color='&usr.warncolor;'>"+val+" is not a directory</font><br>";
      if( val[-1] != '/' )
        val += "/";
      break;
@@ -453,7 +453,7 @@ string set_variable( string v, object in, mixed to, object id )
          {
            if( !(file_stat( d ) && (file_stat( d )[ ST_SIZE ] == -2 )))
              warning += "<font color='&usr.warncolor;'>"+d+
-                     " is not a directory</font><br>";
+                     " is not a directory</font><br />";
            if( d[-1] != '/' )
              val = replace( val, d, d+"/" );
          }
@@ -477,7 +477,7 @@ string set_variable( string v, object in, mixed to, object id )
   if (in->check_variable) {
     string err = in->check_variable(v, val);
     if (err) {
-      warning += "<font color='&usr.warncolor;'>"+err+"</font>";
+      warning += "<font color='&usr.warncolor;'>"+err+"</font><br />";
     }
   }
 
@@ -490,34 +490,34 @@ string set_variable( string v, object in, mixed to, object id )
     if( (int)port )
     {
       warning += "<font color='&usr.warncolor;'>Asuming http://*:"+
-              port+"/ for "+port+"</font><br>";
+              port+"/ for "+port+"</font><br />";
       port = "http://*:"+port+"/";
     }
     string protocol, host, path;
 
     if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
-      warning += "<font color='&usr.warncolor;'>"+port+" does not conform to URL syntax</font><br>";
+      warning += "<font color='&usr.warncolor;'>"+port+" does not conform to URL syntax</font><br />";
     else if( path == "" )
     {
       warning += "<font color='&usr.warncolor;'>Added / to the end of "+port+
-              "</font><br>";
+              "</font><br />";
       port += "/";
     }
     if( nofhttp && protocol == "fhttp" )
     {
-      warning += "<font color='&usr.warncolor;'>Changed "+protocol+" to http</font><br>";
+      warning += "<font color='&usr.warncolor;'>Changed "+protocol+" to http</font><br />";
       protocol = "http";
       port = lower_case( protocol )+"://"+host+path;
     }
     if( protocol != lower_case( protocol ) )
     {
       warning += "<font color='&usr.warncolor;'>Changed "+protocol+" to "+
-              lower_case( protocol )+"</font><br>";  
+              lower_case( protocol )+"</font><br />";  
       port = lower_case( protocol )+"://"+host+path;
     }
     if( !roxen->protocols[ lower_case( protocol ) ] )
       warning += "<font color='&usr.warncolor;'>Warning: The protocol "+
-              lower_case(protocol)+" is unknown</font><br>";
+              lower_case(protocol)+" is unknown</font><br />";
     return port;
   };
 
