@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.43 2000/02/24 03:54:42 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.44 2000/03/01 00:01:57 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -35,6 +35,7 @@ constant tagdoc=(["tablify":({#"<desc cont>Transforms texts into tables. No attr
 <attr name=negativecolor value=color>The color of negative values in economic fields. Default is #ff0000.</attr>
 <attr name=cellalign value=left,center,right>Defines how the cell contents should be align by default.</attr>
 <attr name=cellvalign value=top,middle,bottom>Defines how the cell contents should be verically aligned.</attr>
+<attr name=width value=int>Defines the width of the table.</attr>
 <hr>
 <attr name=nice>Add some extra layout to the table. All attributes below
  only applies in nice or nicer mode.</attr>
@@ -102,10 +103,11 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
   int m = (int)opt->modulo || 1;
   if(opt->nice || opt->nicer)
     r+="<table bgcolor=\""+(opt->bordercolor||"#000000")+"\" border=\"0\" "
-       "cellspacing=\"0\" cellpadding=\""+(opt->border||"1")+"\">\n"
+       "cellspacing=\"0\" cellpadding=\""+(opt->border||"1")+"\""+
+      (opt->width?" width=\""+opt->width+"\"":"")+">\n"
        "<tr><td>\n"
        "<table border=\""+(opt->grid||"0")+"\" cellspacing=\""+(opt->cellspacing||"0")+
-       "\" cellpadding=\""+(opt->cellpadding||"4")+"\">\n";
+       "\" cellpadding=\""+(opt->cellpadding||"4")+"\" width=\"100%\">\n";
 
   if (subtitles) {
     int col=0;
@@ -118,7 +120,7 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
       r+="<th align=\"left\">"+(opt["interactive-sort"]?"<a href=\""+encode_url(col,opt->sortcol||0,opt->state,id)+"\">":"");
       if(opt->nicer)
         r+="<gtext nfont=\""+(opt->font||"lucida")+"\" scale=\""+
-	   (opt->scale||"0.36")+"\" fg=\""+(opt->titlecolor||"white")+"\" bg=\""+
+	   (opt->scale||"0.36")+"\" fgcolor=\""+(opt->titlecolor||"white")+"\" bgcolor=\""+
 	   (opt->titlebgcolor||"#112266")+"\""+(opt->noxml?" noxml":"")+">"+s+"</gtext>";
       else if(opt->nice)
         r+="<font color=\""+(opt->titlecolor||"#ffffff")+"\">"+s+"</font>";
