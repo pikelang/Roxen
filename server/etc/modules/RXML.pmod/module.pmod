@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.141 2001/03/14 01:20:48 mast Exp $
+//! $Id: module.pmod,v 1.142 2001/03/15 00:30:55 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -257,7 +257,7 @@ class Tag
 #ifdef MODULE_DEBUG
       if (mixed err = catch {
 #endif
-	splice_args = t_text (PEnt)->eval (splice_args, ctx, 0, parser, 1);
+	splice_args = t_string (PEnt)->eval (splice_args, ctx, 0, parser, 1);
 #ifdef MODULE_DEBUG
       }) {
 	if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -3359,7 +3359,7 @@ class Parser
 	mixed val;
 	if (zero_type (val = context->get_var ( // May throw.
 			 splitted[1..], splitted[0],
-			 encoding ? t_text : surrounding_type))) {
+			 encoding ? t_string : surrounding_type))) {
 	  context->current_var = 0;
 	  return ({});
 	}

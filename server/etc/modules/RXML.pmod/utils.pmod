@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.17 2001/03/14 01:02:10 mast Exp $
+//! $Id: utils.pmod,v 1.18 2001/03/15 00:30:56 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
@@ -73,7 +73,7 @@ int(1..1)|string|array p_xml_entity_cb (Parser.HTML p, string str)
 			    // No quoting of splice args. FIXME: Add
 			    // some sort of safeguard against splicing
 			    // in things like "nice><evil stuff='...'"?
-			    RXML.t_text :
+			    RXML.t_string :
 			    p->type);
     if (!p->type->entity_syntax) {
       // Don't decode normal entities if we're outputting xml-like stuff.
@@ -101,7 +101,7 @@ int(1..1)|string|array p_xml_compat_entity_cb (Parser.HTML p, string str)
 			  // No quoting of splice args. FIXME: Add
 			  // some sort of safeguard against splicing
 			  // in things like "nice><evil stuff='...'"?
-			  RXML.t_text :
+			  RXML.t_string :
 			  p->type);
   if (!p->type->free_text)
     RXML.parse_error ("Unknown entity &%s; not allowed in this context.\n", entity);
