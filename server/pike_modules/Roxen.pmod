@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.184 2004/05/23 23:20:38 mani Exp $
+// $Id: Roxen.pmod,v 1.185 2004/05/24 00:27:51 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2016,13 +2016,13 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
     {
      case "year":
       return number2string(localtime(t)->year+1900,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      case "month":
       return number2string(localtime(t)->mon+1,m,
-			   language(lang, sp||"month"));
+			   language(lang, sp||"month",id));
      case "week":
       return number2string(Calendar.ISO.Second(t)->week_no(),
-			   m, language(lang, sp||"number"));
+			   m, language(lang, sp||"number",id));
      case "beat":
        //FIXME This should be done inside Calendar.
        mapping lt=gmtime(t);
@@ -2034,34 +2034,34 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
        float beats=secs/86.4;
        if(!sp) return sprintf("@%03d",(int)beats);
        return number2string((int)beats,m,
-                            language(lang, sp||"number"));
+                            language(lang, sp||"number",id));
 
      case "day":
      case "wday":
       return number2string(localtime(t)->wday+1,m,
-			   language(lang, sp||"day"));
+			   language(lang, sp||"day",id));
      case "date":
      case "mday":
       return number2string(localtime(t)->mday,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      case "hour":
       return number2string(localtime(t)->hour,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
 
      case "min":  // Not part of RXML 2.0
      case "minute":
       return number2string(localtime(t)->min,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      case "sec":  // Not part of RXML 2.0
      case "second":
       return number2string(localtime(t)->sec,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      case "seconds":
       return number2string(t,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      case "yday":
       return number2string(localtime(t)->yday,m,
-			   language(lang, sp||"number"));
+			   language(lang, sp||"number",id));
      default: return "";
     }
   }
@@ -2091,7 +2091,7 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
     }
   }
 
-  res=language(lang, "date")(t,m);
+  res=language(lang, "date", id)(t,m);
 
   if(m["case"])
     switch(lower_case(m["case"]))
