@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.55 1997/12/03 14:15:03 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.56 1997/12/17 18:13:46 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -598,7 +598,7 @@ mapping find_file(string f, object id)
       /* Catch here later */
       f = MIME.decode_base64(f);
     }
-    res = decode_value(f);  
+    res = decode_value(f);  //FIXME Fix error in f
   } else
     perror( "Diagram: Fatal Error, f: %s\n", f );
 
