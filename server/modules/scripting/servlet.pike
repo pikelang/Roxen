@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 1.5 1999/08/26 16:50:53 js Exp $";
+string cvs_version = "$Id: servlet.pike,v 1.6 1999/11/01 16:11:20 js Exp $";
 int thread_safe=1;
 
 inherit "module";
@@ -143,4 +143,4 @@ mixed find_file( string f, object id )
 }
 
 #endif
-#end
+#endif
