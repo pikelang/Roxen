@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.40 2001/09/06 09:57:21 per Exp $
+// $Id: DBManager.pmod,v 1.41 2001/09/06 11:08:32 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -192,8 +192,11 @@ mixed sql_cache_get(string what)
 {
   mixed key = roxenloader.sq_cache_lock();  
   string i = replace(what,":",";")+":-";
-  return roxenloader.sq_cache_get( i ) ||
-         roxenloader.sq_cache_set( i, Sql.Sql( what ) );
+  mixed res = roxenloader.sq_cache_get( i ) ||
+    roxenloader.sq_cache_set( i, Sql.Sql( what ) );
+  // Fool the optimizer so that key is not released prematurely
+  if( res )
+    return res; 
 }
 
 void add_dblist_changed_callback( function(void:void) callback )

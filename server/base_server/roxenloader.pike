@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.286 2001/09/06 09:47:03 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.287 2001/09/06 11:07:00 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1262,15 +1262,10 @@ class MySQLKey( object real, string name )
   }
 }
 
-#ifdef THREADS
-Thread.Mutex mt = Thread.Mutex();
-#endif
-
+static Thread.Mutex mt = Thread.Mutex();
 mixed sq_cache_lock()
 {
-#ifdef THREADS
   return mt->lock();
-#endif
 }
 
 mixed sq_cache_get( string i )
@@ -1304,7 +1299,9 @@ mixed connect_to_my_mysql( string|int ro, void|string db )
 {
   mixed key = sq_cache_lock();  
   string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
-  return sq_cache_get(i)||sq_cache_set(i,low_connect_to_my_mysql( ro, db ));
+  mixed res = sq_cache_get(i)||sq_cache_set(i,low_connect_to_my_mysql( ro, db ));
+  if( res )
+    return res;
 }
 
 static mixed low_connect_to_my_mysql( string|int ro, void|string db )
