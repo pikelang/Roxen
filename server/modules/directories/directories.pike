@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-constant cvs_version = "$Id: directories.pike,v 1.50 2000/02/29 23:40:54 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.51 2000/03/01 16:35:03 nilsson Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -306,9 +306,10 @@ string|mapping parse_directory(RequestID id)
   if(strlen(f) > 1)
   {
     if(f[-1]!='/' && f[-1]!='.') return http_redirect(f+"/", id);
-    if(f[-1]=='/' && f[-2]=='/') return http_redirect((f/"/"-({""}))*"/"+"/", id);
+    if(f[-1]=='/' && has_value(f, "//"))
+      return http_redirect("/"+(f/"/"-({""}))*"/"+"/", id);
     if(f[-1]=='.') {
-      if(!query("override")) return http_redirect(f[..sizeof(f)-3], id);
+      if(!query("override")) return http_redirect(f[..sizeof(f)-2], id);
       id->not_query="/.";
     }
   }
