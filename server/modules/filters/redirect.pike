@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.14 1999/09/24 17:16:07 nilsson Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.15 2000/02/06 20:21:32 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -77,15 +77,11 @@ void start()
   }
 }
 
-mixed register_module()
-{
-  return ({ MODULE_FIRST, 
-	    "Redirect Module v2.0", 
-	      "The redirect module. Redirects requests from one filename to "
-	      "another. This can be done using \"internal\" redirects (much"
-	      " like a symbolik link in unix), or with normal HTTP redirects.",
-	      ({}), 1, });
-}
+constant module_type = MODULE_FIRST;
+constant module_name = "Redirect Module v2.0";
+constant module_desc = "The redirect module. Redirects requests from one filename to "
+  "another. This can be done using \"internal\" redirects (much"
+  " like a symbolik link in unix), or with normal HTTP redirects.";
 
 string status()
 {
