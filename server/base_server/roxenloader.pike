@@ -1,9 +1,11 @@
 /*
- * $Id: roxenloader.pike,v 1.153 2000/03/12 07:40:03 per Exp $
+ * $Id: roxenloader.pike,v 1.154 2000/03/12 23:58:13 nilsson Exp $
  *
  * Roxen bootstrap program.
  *
  */
+
+//#pragma strict_types
 
 // Sets up the roxen environment. Including custom functions like spawne().
 
@@ -18,19 +20,19 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.153 2000/03/12 07:40:03 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.154 2000/03/12 23:58:13 nilsson Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
 
-mapping pwn=([]);
+mapping(int:string) pwn=([]);
 string pw_name(int uid)
 {
 #if !constant(getpwuid)
   return "uid #"+uid;
 #else
   if(pwn[uid]) return pwn[uid];
-  return pwn[uid]=(getpwuid(uid)||((""+uid)/":"))[0];
+  return pwn[uid]=([array(string)]getpwuid(uid)||((""+uid)/":"))[0];
 #endif
 }
 
@@ -84,8 +86,8 @@ int use_syslog, loggingfield;
 
 string oct;
 int last_was_change;
-int roxen_started = time();
-float roxen_started_flt = time(time());
+int roxen_started = [int]time();
+float roxen_started_flt = [float]time([int]time());
 string short_time()
 {
   if( last_was_change>0 )
@@ -104,7 +106,7 @@ string short_time()
        }
        return sprintf( "%2dm%4.1fs  : ",((int)up/60)%60, up%60 );
     }
-  mapping l = localtime( time( ) );
+  mapping l = localtime( [int]time( ) );
   string ct =  sprintf("%2d:%02d:%02d  : ", l->hour, l->min, l->sec );
   last_was_change=5;
   oct = ct;
@@ -125,7 +127,6 @@ int last_was_nl;
 // Used to print error/debug messages
 void roxen_perror(string format, mixed ... args)
 {
-  int t = time();
   spider;
 
   if(sizeof(args))
@@ -192,13 +193,10 @@ void roxen_perror(string format, mixed ... args)
 int mkdirhier(string from, int|void mode)
 {
   int r = 1;
-  string a, b;
-  array f;
+  array(string) f=(from/"/");
+  string b="";
 
-  f=(from/"/");
-  b="";
-
-  foreach(f[0..sizeof(f)-2], a)
+  foreach(f[0..sizeof(f)-2], string a)
   {
     if (query_num_arg() > 1) {
       mkdir(b+a, mode);
@@ -263,12 +261,14 @@ class _roxen {
   object locale;
   int start_time;
 
-  mixed query(string var) { }
-  void store(string a, mapping b, int c, object d) { }
-  mapping(string:mixed) retrieve(string a, object b) { }
-  void remove(string a, object b) { }
-  string version() { }
-  void dump(string what) { }
+  function(string:mixed) query;
+  function(string, mapping, int, object:void) store;
+  function(string, object:mapping(string:mixed)) retrieve;
+  function(string, object:void) remove;
+  function(void:string) version;
+  function(string:void) dump;
+  function(string, int|void, int|void, void|mixed ...:void) nwrite;
+  function(int, array(string):int) main;
 }
 
 
@@ -276,7 +276,7 @@ class _roxen {
 object(_roxen) roxen;
 
 // The function used to report notices/debug/errors etc.
-function nwrite;
+function(string, int|void, int|void, void|mixed ...:void) nwrite;
 
 
 /*
@@ -332,7 +332,8 @@ void init_logger()
   }
 
   closelog();
-  openlog(query("LogNA"), (query("LogSP")*LOG_PID)|(query("LogCO")*LOG_CONS),
+  openlog([string]query("LogNA"),
+	  ([int]query("LogSP")*LOG_PID)|([int]query("LogCO")*LOG_CONS),
           res);
 #endif
 }
@@ -346,7 +347,7 @@ void report_debug(string message, mixed ... foo)
 }
 
 
-array find_module_and_conf_for_log( array q )
+array(object) find_module_and_conf_for_log( array q )
 {
   object conf, mod;
   for( int i = 0; i<sizeof( q ); i++ )
@@ -355,7 +356,7 @@ array find_module_and_conf_for_log( array q )
     if( o->is_module ) {
       if( !mod ) mod = o;
       if (!conf && functionp (mod->my_configuration))
-	conf = mod->my_configuration();
+	conf = [object]mod->my_configuration();
     }
     if( o->is_configuration ) {
       if( !conf ) conf = o;
@@ -428,7 +429,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   if(!p)
     error("Popen failed. (couldn't create pipe)\n");
 
-  mapping opts = ([
+  mapping(string:mixed) opts = ([
     "env": (env || getenv()),
     "stdout":p,
   ]);
@@ -508,7 +509,7 @@ static private void initiate_cache()
   add_constant("cache_expire", cache->cache_expire);
 }
 
-array compile_error_handlers = ({});
+array(object) compile_error_handlers = ({});
 void push_compile_error_handler( object q )
 {
   compile_error_handlers = ({q})+compile_error_handlers;
@@ -611,12 +612,12 @@ int gethrtime()
 #endif
 
 // Load Roxen for real
-object really_load_roxen()
+object(_roxen) really_load_roxen()
 {
   int start_time = gethrtime();
   report_debug("Loading roxen ... ");
-  object e = ErrorContainer();
-  object res;
+  ErrorContainer e = ErrorContainer();
+  object(_roxen) res;
   new_master->set_inhibit_compile_errors(e);
   mixed err = catch {
     res =((program)"roxen")();
@@ -688,8 +689,8 @@ static int|string|array(string) compat_call_tag (
 {
   string name = lower_case (p->tag_name());
   if (string|function tag = p->m_tags[name])
-    if (stringp (tag)) return ({tag});
-    else return tag (name, p->tag_args(), @extra);
+    if (stringp (tag)) return ({[string]tag});
+    else return ([function(string,mapping,mixed...:string|array(string))]tag) (name, p->tag_args(), @extra);
   else if (string|function container = p->m_containers[name])
     // A container has been added.
     p->add_container (name, compat_call_container);
@@ -877,7 +878,7 @@ void write_current_time()
     call_out( write_current_time, 10 );
     return;
   }
-  int t = time();
+  int t = [int]time();
   report_debug("\n** "+roxen->strftime("%Y-%m-%d %H:%M", t )+
                "   pid: "+pid+"   ppid: "+getppid()+
 #if efun(geteuid)
@@ -889,10 +890,10 @@ void write_current_time()
 
 void paranoia_throw(mixed err)
 {
-  if ((arrayp(err) && ((sizeof(err) < 2) || !stringp(err[0]) ||
-		       !arrayp(err[1]) ||
-		       !(arrayp(err[1][0])||stringp(err[1][0])))) ||
-      (!arrayp(err) && (!objectp(err) || !err->is_generic_error))) {
+  if ((arrayp(err) && ((sizeof([array]err) < 2) || !stringp(([array]err)[0]) ||
+		       !arrayp(([array]err)[1]) ||
+		       !(arrayp(([array(array)]err)[1][0])||stringp(([array(array)]err)[1][0])))) ||
+      (!arrayp(err) && (!objectp(err) || !([object]err)->is_generic_error))) {
     report_debug(sprintf("Warning: throwing non-error: %O\n"
 			 "From: %s\n",
 			 err, describe_backtrace(backtrace())));
@@ -1053,7 +1054,7 @@ Please install a newer pike version
 
   // These are here to allow dumping of roxen.pike to a .o file.
   report_debug("Loading pike modules ... ");
-  function nm_resolv = new_master->resolv;
+  function(string:function) nm_resolv = new_master->resolv;
 
   int t = gethrtime();
   add_constant( "Regexp", nm_resolv("Regexp") );
