@@ -1,21 +1,16 @@
 #!NOMODULE
-#define max(i, j) (((i)>(j)) ? (i) : (j))
-#define min(i, j) (((i)<(j)) ? (i) : (j))
-#define abs(arg) ((arg)*(1-2*((arg)<0)))
 
-#define PI 3.14159265358979
+#include "diagram.h"
 
 import Image;
 import Array;
 import Stdio;
-inherit "polyline.pike";
-constant LITET = 1.0e-40;
-constant STORT = 1.0e40;
 
+inherit "polyline.pike";
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.39 1998/03/09 23:40:40 hedda Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.40 1998/03/12 03:25:19 peter Exp $";
 
 /*
  * name = "BG: Create pies";
