@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-constant cvs_version = "$Id: cvsfs.pike,v 1.14 1997/10/10 13:42:56 grubba Exp $";
+constant cvs_version = "$Id: cvsfs.pike,v 1.15 1997/10/10 17:22:51 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -29,6 +29,20 @@ string cvs_program, rlog_program, rcsdiff_program;
 int cvs_initialized = 0;
 
 int accesses, dirlists, errors;
+
+string secure_path(string path)
+{
+  if (path && sizeof(path)) {
+    string npath = ((combine_path(path, ".")/"/") - ({ "..", "" })) * "/";
+    if (path[0] == '/')
+      npath = "/" + npath;
+#ifdef CVSFS_DEBUG
+    roxen_perror(sprintf("secure_path(\"%s\") => \"%s\"\n", path, npath));
+#endif /* CVSFS_DEBUG */
+    return npath;
+  }
+  return path;
+}
 
 object|array run_cvs(string prog, string dir, int with_stderr, string ...args)
 {
@@ -166,7 +180,7 @@ string find_binaries(array path, array|void extra)
 
 string find_cvs_dir(string path)
 {
-  path = combine_path(path, ".");
+  path = secure_path(path);
   array(string) components = path / "/";
   string subpath = components[1..] * "/";
   if (strlen(components[0])) {
@@ -269,10 +283,7 @@ mixed stat_file(string name, object id)
 {
   // werror(sprintf("file_stat: Looking for '%s'\n", name));
   // Strip .. and .
-  name = combine_path(name, ".");
-  while (sizeof(name) && (name[0] == '/')) {
-    name = name[1..];
-  }
+  name = secure_path(name);
   name = combine_path(query("cvsroot"), cvs_module_path + "/" + name);
   return file_stat(name + ",v") || file_stat(name);
 }
@@ -304,7 +315,7 @@ object|mapping|int find_file(string name, object id)
 
   // werror("Real file '" + fname + "'\n");
   if (cvs_module_path) {
-    name = combine_path(name, ".");
+    name = secure_path(name);
     string fname = combine_path(query("cvsroot"),
 				cvs_module_path + "/" + name);
     int is_text = 0;
@@ -359,8 +370,8 @@ string try_get_file(string name, object id)
 array find_dir(string name, object id)
 {
   array info;
-  string fname = combine_path(combine_path(query("cvsroot"),
-					   cvs_module_path), name);
+  string fname = combine_path(query("cvsroot"),
+			      cvs_module_path + "/" + secure_path(name));
   // werror(sprintf("find_dir: Looking for '%s'\n", name));
 
   if (cvs_module_path
