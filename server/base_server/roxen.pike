@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.347 1999/11/15 03:27:54 per Exp $
+ * $Id: roxen.pike,v 1.348 1999/11/15 08:35:35 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.347 1999/11/15 03:27:54 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.348 1999/11/15 08:35:35 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1482,6 +1482,11 @@ class ConfigIFCache
     if(!f->open(  dir + replace( name, "/", "-" ), "r" ))
       return 0;
     return decode_value( f->read() );
+  }
+
+  array list()
+  {
+    return get_dir( dir );
   }
 
   void delete( string name )
