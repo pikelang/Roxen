@@ -351,6 +351,20 @@ array(array(float)) make_polygon_from_line(float h,
 }
 
 
+static mapping(program:string) programs;
+static object dirnode = master()->handle_import(".", __FILE__);
+
+static string get_program_name (program p)
+{
+  if (!programs) {
+    array inds = indices (dirnode);
+    array vals = rows (dirnode, inds);
+    programs = mkmapping (vals, inds);
+  }
+  return programs[p];
+}
+
+int image_object_count;
 
 class LazyImage( LazyImage parent )
 //! One or more layers, with lazy evaluation.
@@ -372,6 +386,9 @@ class LazyImage( LazyImage parent )
   
   int refs;
 
+  int id = ++image_object_count;
+  //! A unique object identifier used for debug
+  
   this_program ref( )
   //! Add a reference to this image. Not normally called directly
   {
@@ -402,7 +419,15 @@ class LazyImage( LazyImage parent )
     switch( f )
     {
       case 'O':
-	return sprintf( "%s(%O)", operation_name, parent );
+#ifdef GXML_DEBUG
+	string s1 = sprintf("%O", args) - "\n";
+	string s2 = parent?sprintf("(\n%O)", parent):"";
+	return replace(sprintf( "%s[%d:%d]: %s %s", operation_name, id, refs, s1, s2 ),
+		       "\n", "\n  ");
+#else
+	string s = parent?sprintf("(%O)", parent):"";
+	return sprintf( "%s%s", operation_name, s );
+#endif /* GXML_DEBUG */
       default:
 	error("Cannot sprintf image to '%c'\n", f );
     }
@@ -667,10 +692,17 @@ class LazyImage( LazyImage parent )
     parent = 0;
     if( result )
       add_layers( result );
+    
+#ifdef GXML_DEBUG
     int t2 = gethrtime();
     werror("%20s:", operation_name);
-    float t = gauge{ result = process( result ); };
+    float t = gauge{
+#endif /* GXML_DEBUG */
+	result = process( result );
+#ifdef GXML_DEBUG
+      };
     werror(" %.3f %.3f\n",t,(gethrtime()-t2)/1000000.0 );
+#endif /* GXML_DEBUG */
     return result;
   }
 
@@ -712,6 +744,17 @@ class LazyImage( LazyImage parent )
   //! Not normally called directly.
   {
     args = check_args( a ) || a;
+  }
+
+  mapping encode()
+  {
+    mapping res = ([ "n": get_program_name(object_program(this_object())),
+		     "a": args,
+		     "r": refs ]);
+    if(parent)
+      res["p"] = parent->encode();
+    
+    return res;
   }
 }
 
@@ -967,7 +1010,9 @@ class Shadow
 	return layers;
       
       foreach( q, Image.Layer l )
-	shadow->paste_alpha_color( l->alpha(), 255,255,255,
+	shadow->paste_alpha_color( (l->alpha() ||
+				    l->image()->copy()->clear(255,255,255)),
+				   255,255,255,
 				   l->xoffset()-e->x0+5,
 				   l->yoffset()-e->y0+5 );
       // Blur, if wanted.
@@ -1018,8 +1063,15 @@ class Join
       switch( f )
       {
 	case 'O':
-	  return sprintf( "%s(%{%O %} %O)", operation_name,
-			  args->contents, hash() );
+#ifdef GXML_DEBUG
+	  return replace(sprintf( "%s[%d:%d]: %O (%{\n%O %})",
+				  operation_name, id, refs, args - ([ "contents":1 ]),
+				  args->contents),
+			 "\n", "\n  ");
+#else
+	  return sprintf( "%s(%{%O, %})", operation_name, args->contents);
+	  
+#endif
 	default:
 	  error("Cannot sprintf image to '%c'\n", f );
       }
@@ -1029,6 +1081,15 @@ class Join
   {
     return `+( ({}), @args->contents->run(i+1) );
   }
+
+  mapping encode()
+  {
+    return ([ "n": get_program_name(object_program(this_object())),
+	      "a": args - ([ "contents": 1 ]),
+	      "p": args->contents->encode(),
+	      "r": refs ]);
+  }
+  
 }
 
 class SetLayerMode
@@ -1737,7 +1798,7 @@ LazyImage join_images( LazyImage ... i )
   return j;
 }
 
-LazyImage new( program p, LazyImage parent, mapping args )
+LazyImage new( program p, LazyImage parent, mapping args, void|int no_refs )
 //! Create a new (shared) LazyImage.
 //!
 //! The @[args] mapping is intended to be the args received in
@@ -1753,10 +1814,31 @@ LazyImage new( program p, LazyImage parent, mapping args )
   string hash = (parent?parent->hash():"") + low_hash( p, args );
   mapping ki = known_images->get();
   if( ki[ hash ] )
-    return ki[ hash ]->ref();
+    return no_refs? ki[ hash ]: ki[ hash ]->ref();
 
-  LazyImage res = p( parent ? parent->ref() : 0 );
+  LazyImage res = p( parent ? no_refs?parent:parent->ref() : 0 );
   res->set_args( args );
   ki[ res->_hash = hash ] = res;
-  return res->ref(); // no ->ref() here.
+  return no_refs? res: res->ref(); // no ->ref() here.
+}
+
+LazyImage decode(mapping node_tree)
+{
+  if(!node_tree)
+    return 0;
+  
+  if(arrayp(node_tree->p)) {
+    LazyImage image = join_images(@map(node_tree->p, decode));
+    image->refs = node_tree->r;
+    return image;
+  }
+  
+  program prog = dirnode[node_tree->n];
+
+  if(!prog || !prog->operation_name)
+    error("Unknown program: %O.\n", node_tree->n);
+
+  LazyImage image = new(prog, decode(node_tree->p), node_tree->a, 1);
+  image->refs = node_tree->r;
+  return image;
 }
