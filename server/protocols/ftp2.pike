@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.1 1998/04/03 17:46:29 grubba Exp $
+ * $Id: ftp2.pike,v 1.2 1998/04/03 18:01:33 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2152,8 +2152,6 @@ class FTPSession
 
   void ftp_RETR(string args)
   {
-    conf->requests++;
-
     if (!expect_argument("RETR", args)) {
       return;
     }
@@ -2196,7 +2194,6 @@ class FTPSession
     if (!expect_argument("STOR", args)) {
       return;
     }
-    master_session->conf->requests++;
 
     args = fix_path(args);
 
@@ -2480,6 +2477,15 @@ class FTPSession
       args = line[i+1..];
     }
     cmd = upper_case(cmd);
+
+    if (!conf->extra_statistics->ftp) {
+      conf->extra_statistics->ftp = (["commands":([ cmd:1 ])]);
+    } else if (!conf->extra_statistics->ftp->commands) {
+      conf->extra_statistics->ftp->commands = ([ cmd:1 ]);
+    } else {
+      conf->extra_statistics->ftp->commands[cmd]++;
+    }
+
     if (cmd_help[cmd]) {
       if (!logged_in) {
 	if (!(< "REIN", "USER", "PASS", "SYST",
@@ -2491,6 +2497,7 @@ class FTPSession
 	}
       }
       if (this_object()["ftp_"+cmd]) {
+	conf->requests++;
 	this_object()["ftp_"+cmd](args);
       } else {
 	send(502, ({ sprintf("'%s' is not currently supported.", cmd) }));
