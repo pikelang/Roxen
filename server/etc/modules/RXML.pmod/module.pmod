@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.67 2000/02/20 02:05:32 mast Exp $
+//! $Id: module.pmod,v 1.68 2000/02/20 04:16:22 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1910,7 +1910,7 @@ class Frame
 
 	  /* Fall through. */
 	case EVSTAT_ITER_DONE:
-	  if (!this->do_return && result == Void)
+	  if (!this->do_return && result == Void && !(flags & FLAG_NONCONTAINER))
 	    if (result_type->_parser_prog == PNone) {
 	      if (content_type->subtype_of (result_type))
 		result = content;
