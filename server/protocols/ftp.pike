@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.63 2001/08/15 10:44:32 grubba Exp $
+ * $Id: ftp.pike,v 2.64 2001/08/22 16:50:20 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1333,8 +1333,8 @@ class FTPSession
     "STOR":"<sp> file-name (Store file)",
     "STOU":"(Store file with unique name)",
     "RETR":"<sp> file-name (Retreive file)",
-    "LIST":"[ <sp> path-name ] (List directory)",
-    "NLST":"[ <sp> path-name ] (List directory)",
+    "LIST":"[ <sp> <pathname> ] (List directory)",
+    "NLST":"[ <sp> <pathname> ] (List directory)",
     "APPE":"<sp> <pathname> (Append file)",
     "RNFR":"<sp> <pathname> (Rename from)",
     "RNTO":"<sp> <pathname> (Rename to)",
@@ -1345,7 +1345,7 @@ class FTPSession
     "ABOR":"(Abort current transmission)",
     // Informational commands
     "SYST":"(Get type of operating system)",
-    "STAT":"<sp> path-name (Status for file)",
+    "STAT":"[ <sp> <pathname> ] (Status for server/file)",
     "HELP":"[ <sp> <string> ] (Give help)",
     // Miscellaneous commands
     "SITE":"<sp> <string> (Site parameters)",	// Has separate help
@@ -3364,9 +3364,39 @@ class FTPSession
   {
     // According to RFC 1123 4.1.3.3, this command can be sent during
     // a file-transfer.
-    // FIXME: That is not supported yet.
+    // RFC 959 4.1.3:
+    // The command may be sent during a file transfer (along with the
+    // Telnet IP and Synch signals--see the Section on FTP Commands)
+    // in which case the server will respond with the status of the
+    // operation in progress, [...]
+    // FIXME: This is not supported yet.
 
-    if (!expect_argument("STAT", args)) {
+    if ((< "", 0 >)[args]) {
+      /* RFC 959 4.1.3:
+       * If no argument is given, the server should return general
+       * status information about the server FTP process.  This
+       * should include current values of all transfer parameters and
+       * the status of connections.
+       */
+      send(211,
+	   sprintf("%s FTP server status:\n"
+		   "Version %s\n"
+		   "Listening on %s\n"
+		   "Connected to %s\n"
+		   "Logged in %s\n"
+		   "TYPE: %s, FORM: %s; STRUcture: %s; transfer MODE: %s\n"
+		   "End of status",
+		   replace(fd->query_address(1), " ", ":"),
+		   roxen.version(),
+		   port_obj->sorted_urls * "\nListening on ",
+		   replace(fd->query_address(), " ", ":"),
+		   user?sprintf("as %s", user):"anonymously",
+		   (["A":"ASCII", "E":"EBCDIC", "I":"IMAGE", "L":"LOCAL"])
+		   [mode],
+		   "Non-Print",
+		   "File",
+		   "Stream"
+		   )/"\n");
       return;
     }
     string long = fix_path(args);
