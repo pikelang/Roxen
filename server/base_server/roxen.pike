@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.894 2005/02/23 17:01:03 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.895 2005/02/25 15:21:06 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -388,6 +388,9 @@ static Privs PRIVS(string r, int|string|void u, int|string|void g)
 {
   return Privs(r, u, g);
 }
+
+// Current Configuration.
+Thread.Local current_configuration = Thread.Local();
 
 // font cache and loading.
 // 
@@ -3277,6 +3280,7 @@ class ImageCache
   //! but instead zero will be returned (this will be seen as a 'File
   //! not found' error)
   {
+    current_configuration->set(id->conf);
     string na = store( data,id );
     mixed res;
 #ifdef ARG_CACHE_DEBUG
@@ -4780,6 +4784,10 @@ int main(int argc, array tmp)
 
   restart_suicide_checker();
 
+#ifdef ROXEN_DEBUG_MEMORY_TRACE
+  restart_roxen_debug_memory_trace();
+#endif
+
 #ifndef __NT__
   restart_if_stuck( 0 );
 #endif
@@ -4845,6 +4853,26 @@ void restart_suicide_checker()
   call_out(check_suicide, 60);
   call_out(check_commit_suicide, 180);	// Minimum uptime: 3 minutes.
 }
+
+#ifdef ROXEN_DEBUG_MEMORY_TRACE
+static object roxen_debug_info_obj;
+void restart_roxen_debug_memory_trace()
+{
+  remove_call_out(restart_roxen_debug_memory_trace);
+
+  if (!roxen_debug_info_obj) {
+    roxen_debug_info_obj = ((program)"config_interface/actions/debug_info.pike"
+)();
+  }
+  int t = time(0);
+  string html = roxen_debug_info_obj->parse((["real_variables":([])]));
+  if (!Stdio.is_dir("../var/debug")) {
+    mkdir("../var/debug");
+  }
+  Stdio.write_file(sprintf("../var/debug/memory_info_%d.rxml", t), html);
+  call_out(restart_roxen_debug_memory_trace, 5);
+}
+#endif
 
 // Called from the administration interface.
 string check_variable(string name, mixed value)
