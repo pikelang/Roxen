@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.39 2000/03/16 17:30:24 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.40 2000/03/24 09:00:37 wellhard Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -565,6 +565,13 @@ class TagGButtom {
 	mapping a_attrs = ([ "href" : args->href ]);
 	if (args->target)
 	  a_attrs->target = args->target;
+	
+	if (args->onClick)
+	  a_attrs->onClick = args->onClick;
+	
+	if (args->onclick)
+	  a_attrs->onclick = args->onclick;
+	
 	result=make_container("a", a_attrs, make_tag("img", img_attrs));
       } else
 	result=make_tag("img", img_attrs);
