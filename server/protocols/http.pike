@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.194 2000/01/30 21:19:30 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.195 2000/02/03 20:33:03 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -1911,4 +1911,14 @@ void chain(object f, object c, string le)
 string _sprintf( )
 {
   return "RequestID()";
+}
+
+Stdio.File connection( )
+{
+  return my_fd;
+}
+
+Configuration configuration()
+{
+  return conf;
 }

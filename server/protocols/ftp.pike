@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.26 2000/02/02 20:42:53 per Exp $
+ * $Id: ftp.pike,v 2.27 2000/02/03 20:33:03 per Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -122,6 +122,16 @@ class RequestID2
   void ready_to_receive()
   {
     // FIXME: Should hook the STOR reply to this function.
+  }
+
+  Configuration configuration()
+  {
+    return conf;
+  }
+
+  Stdio.File connection( )
+  {
+    return my_fd;
   }
 
   void send_result(mapping|void result)
@@ -782,7 +792,7 @@ class LSFile
 	total += blocks;
 	if (flags & LS_FLAG_s) {
 	  res += sprintf("%7d ", blocks);
-	}	
+	}
 	if (flags & LS_FLAG_b) {
 	  short = quote_non_print(short);
 	}
@@ -1098,7 +1108,7 @@ class TelnetSession {
 
 	if (n >= 0) {
 	  conf->hsent += n;
-	
+
 	  to_send = to_send[n..];
 
 	  if (sizeof(to_send)) {
@@ -2530,10 +2540,10 @@ class FTPSession
 	  DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n",user));
 	  port_obj->ftp_sessions[user]--;
 
-	  user = 0;	
+	  user = 0;
 	  return;
 	}
-	
+
       }
       send(331, ({ sprintf("Password required for %s.", user) }));
       master_session->not_query = user;

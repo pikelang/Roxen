@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.407 2000/02/02 20:39:46 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.408 2000/02/03 20:32:52 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -112,7 +112,7 @@ class RequestID
   array(string) client;
   array(string) referer;
 
-  Stdio.File my_fd;
+  private Stdio.File my_fd;
   string prot;
   string clientprot;
   string method;
@@ -140,6 +140,9 @@ class RequestID
   void ready_to_receive();
   void send_result(mapping|void result);
   RequestID clone_me();
+
+  Stdio.File connection( );
+  object     configuration(); // really Configuration
 };
 
 string filename( program|object o )

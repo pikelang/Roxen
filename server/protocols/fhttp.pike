@@ -44,18 +44,23 @@ mixed `->(string a)
    case "clone_me": return clone_me;
    case "send_result": return send_result;
    case "my_fd":
-#if 0
-     report_debug(describe_backtrace( backtrace()) );
-#endif
-     object o = Stdio.File();
-     o->_fd = orig::`->("my_fd");
-     return o;
+     return connection();
    case "_nono": return _nono;
    default:
      if(_modified[a]) return _modified[a];
      if(!_nono) return orig::`->(a);
   }
 }
+
+private Stdio.File fdo;
+Stdio.File connection( )
+{
+  if( fdo )  return fdo;
+  object fdo = Stdio.File();
+  fdo->_fd = orig::`->("my_fd");
+  return fdo;
+}
+
 
 mixed `[](string a)
 {
