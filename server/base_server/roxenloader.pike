@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.277 2001/08/23 18:05:42 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.278 2001/08/24 14:25:35 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1667,20 +1667,36 @@ some environment variables are ignored.
 ");
 #endif
 
-#if __VERSION__ < 7.1
+#if __VERSION__ < 7.2
   report_debug(
 #"
 
 
 ******************************************************
-Roxen 2.2 requires pike 7.1.
+Roxen 2.2 requires pike 7.2.
 Please install a newer version of Pike.
 ******************************************************
 
 
 ");
   _exit(0); /* 0 means stop start script looping */
-#endif /* __VERSION__ < 7.1 */
+#endif /* __VERSION__ < 7.2 */
+
+#if !constant (Mysql.mysql)
+  report_debug (#"
+
+
+******************************************************
+Roxen 2.2 requires MySQL support in Pike.
+Your Pike has been compiled without support for MySQL.
+Please install MySQL client libraries and reconfigure
+and rebuild Pike from scratch.
+******************************************************
+
+
+");
+  _exit(0); // 0 means stop start script looping
+#endif // !constant (Mysql.mysql)
 
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
