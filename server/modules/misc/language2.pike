@@ -5,7 +5,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: language2.pike,v 1.1 2000/01/12 08:58:03 nilsson Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.2 2000/01/17 21:15:34 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_PARSER;
 constant module_name = "Language module II";
@@ -13,7 +13,6 @@ constant module_doc  = "Handles documents in different languages. "
             "What language a file is in is specified with an "
 	    "extra extension. index.html.sv would be a file in swedish "
             "while index.html.en would be one in english. ";
-constant module_unique = 1;
 
 void create()
 {
@@ -54,7 +53,7 @@ multiset(string) find_files(string url, RequestID id) {
 
 array(string) find_language(RequestID id) {
   array langs=indices(id->prestate)+
-    (id->cookies->RoxenConfig/"," || ({}))+
+    (id->cookies->RoxemConfig?id->cookies->RoxenConfig/",":({}))+
     (((id->request_headers["accept-language"]||"")-" ")/"," || ({}) )+
     ({query("default_language")});
   return langs-(langs-query("languages"));
@@ -90,8 +89,8 @@ string tag_language(string t, mapping m, RequestID id) {
   string lang=id->misc->defines->language;
   if(m->type=="short") return lang;
   object tmp=roxen->languages[lang];
-  mapping trans=tmp?tmp->language:roxen->languages[query("default_language")]->language;
-  return trans[lang];
+  function trans=tmp?tmp->language:roxen->languages[query("default_language")]->language;
+  return trans(lang);
 }
 
 string tag_unavailable_language(string t, mapping m, RequestID id) {
@@ -99,25 +98,24 @@ string tag_unavailable_language(string t, mapping m, RequestID id) {
   if(lang==id->misc->defines->language) return "";
   if(m->type=="short") return lang;
   object tmp=roxen->languages[lang];
-  mapping trans=tmp?tmp->language:roxen->languages[query("default_language")]->language;
-  return trans[lang];
+  function trans=tmp?tmp->language:roxen->languages[query("default_language")]->language;
+  return trans(lang);
 }
 
 string container_languages(string t, mapping m, string c, RequestID id) {
   object tmp=roxen->languages[find_language(id)[0]];
-  mapping trans=tmp?tmp->language:roxen->languages[query("default_language")]->language;
+  function trans=tmp?tmp->language:roxen->languages[query("default_language")]->language;
 
   string ret="", url=strip_prestate(strip_config(id->raw_url));
 
-
-  array conf_langs=id->cookies->RoxenConfig/",";
+  array conf_langs=id->cookies->RoxenConfig?id->cookies->RoxenConfig/",":({});
   conf_langs=Array.map(conf_langs-(conf_langs-query("languages")),
 		       lambda(string lang) { return "-"+lang; } );
 
   foreach(query("languages"), string lang) {
     ret+=replace(c, ({"&short;", "&long;", "&preurl;", "&confurl;" }),
 		 ({lang,
-		   trans[lang]||"",
+		   trans(lang)||"",
 		   add_pre_state(url, id->prestate-aggregate_multiset(@query("languages"))+(<lang>)),
 		   add_config(url, conf_langs+({lang}), id->prestate)
 		 }) );
