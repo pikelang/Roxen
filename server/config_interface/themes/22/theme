@@ -49,10 +49,12 @@
 <theme-set what=fgcolor   to="black"/>
 <theme-set what=warncolor   to="#aa3c00"/>
 
+<!--
 <theme-set what=content-contentbackground to=contentbg.gif themefile />
 
 <theme-set what=content-extratableargs 
            to="background='&usr.content-contentbackground;'" />
+-->
 
 <theme-set what=linkcolor to="#425a84"/>
 
