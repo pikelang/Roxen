@@ -32,6 +32,13 @@ if [ -d base_server ]; then
   DEFINES="$DEFINES -Ibase_server"
 fi
 
+# Extra kludge for HPUX
+# HPUX doesn't like group 60001(nobody)
+if uname | grep 'HP-UX' >/dev/null 2>&1; then
+  echo 'WARNING: Applying kludge for HPUX. (see base_server/privs.pike)'
+  DEFINES="$DEFINES -DHPUX_KLUDGE"
+fi
+
 pike=pike
 if [ -x bin/pike ] ; then pike=bin/pike; fi
 
