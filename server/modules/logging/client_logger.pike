@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // Logs the User-agent fields in a separate log.
 
-constant cvs_version = "$Id: client_logger.pike,v 1.6 1998/03/11 19:42:37 neotron Exp $";
+constant cvs_version = "$Id: client_logger.pike,v 1.7 1999/12/14 01:49:57 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -35,14 +35,15 @@ function logf;
 void start()
 {
   object c;
-  logf=0; // Reset the old value, if any..
-  if(!(c=open(query("logfile"), "wca")))
+  if(!(c=open(query("logfile"), "wca"))) {
     report_error("Clientlogger: Cannot open logfile.\n");
+    logf=0; // Reset the old value, if any..
+  }
   else
     logf = c->write;
 }
 
-void log(object id, mapping file) 
+void log(RequestID id, mapping file) 
 {
   logf && logf(id->client*" " + "\n");
 }
