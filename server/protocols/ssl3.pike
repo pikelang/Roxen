@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.27 1998/03/17 14:10:46 grubba Exp $
+/* $Id: ssl3.pike,v 1.28 1998/03/20 03:32:23 per Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -36,7 +36,7 @@ class roxen_ssl_context {
 private object new_context(object c)
 {
   mapping contexts = roxen->query_var("ssl3_contexts");
-  object ctx = roxen_ssl_context();;
+  object ctx = roxen_ssl_context();
   
   if (!contexts)
   {
