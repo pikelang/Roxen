@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.83 1997/11/07 06:04:33 mirar Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.84 1997/12/13 16:40:05 grubba Exp $";
 //inherit "roxenlib";
 import Image;
 
@@ -800,6 +800,7 @@ int low_enable_configuration(string name, string type)
 	(sscanf(arr[1..]*" ", "%*s'%s'", from) == 2) &&
 	(tmp = roxen->copy_configuration(from, name)))
     {
+      // FIXME: Should "../logs/" be hard-coded here?
       tmp["spider#0"]->LogFile =
 	"../logs/" + roxenp()->short_name(name) + "/Log";
       roxenp()->save_it(name);
