@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.141 1998/07/03 12:06:19 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.142 1998/07/04 13:05:47 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -980,6 +980,24 @@ void invalidate_cache()
   if(misc_cache)
     misc_cache = ([ ]);
 #endif
+}
+
+// Empty all the caches above AND the ones in the loaded modules.
+void clear_memory_caches()
+{
+  invalidate_cache();
+  foreach(indices(otomod), object m) {
+    if (m->clear_memory_caches) {
+      mixed err = catch {
+	m->clear_memory_caches();
+      };
+      if (err) {
+	report_error(sprintf("clear_memory_caches() failed for module %O:\n"
+			     "%s\n",
+			     otomod[m], describe_backtrace(err)));
+      }
+    }
+  }
 }
 
 
