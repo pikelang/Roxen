@@ -844,18 +844,20 @@ class Text
 						    ti));
 
 	if( !on )  return (l||({})) + ({ ti });
+
+	array layers = l; // l will be destroyed below...
 	foreach( on, int i )
 	{
 	  ti = copy_layer( ti );
-	  if( string n = l[i]->get_misc_value( "name" ) )
+	  if( string n = layers[i]->get_misc_value( "name" ) )
 	    ti->set_misc_value( "name", parse_variables(n,ti) );
 	  else
 	    ti->set_misc_value( "name",
 				parse_variables(args->name || args->text,
 						ti) );
-	  l[ i ] = ({ l[i], ti });
+	  layers[ i ] = ({ layers[i], ti });
 	}
-	return Array.flatten( l );
+	return Array.flatten( layers );
       }
     }
 
