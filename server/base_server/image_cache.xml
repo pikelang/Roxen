@@ -34,7 +34,7 @@ All examples are made for the &lt;cimg&gt; tag.
 <attr name='quant' value='number' default='format dependant'>
  The number of colors to quantizize the image to.
 <p>
-   Default for gif is 255(+1 transparent), for most other formats
+   Default for gif is 32(+1 transparent), for most other formats
    (except black and white) is it unlimited.</p>
 
 <ex>
