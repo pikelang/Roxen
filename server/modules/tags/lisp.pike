@@ -1,5 +1,5 @@
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.5 1998/01/29 17:25:28 per Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.6 1998/02/03 22:47:53 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -58,10 +58,17 @@ void init_for(object e);
 
 mapping environs = ([]);
 program E = this_object()->Environment;
-object find_environment(string f)
+object find_environment(string f, mapping m, object id)
 {
-  if(environs[f]) return environs[f];
+  if(environs[f]) 
+  {
+    environs[f]->id = id;
+    return environs[f];
+  }
+
+  m_delete(m, "once");
   environs[f] = E();
+  environs[f]->id = id;
   init_for( environs[f] );
   return environs[f];
 }
@@ -69,10 +76,10 @@ object find_environment(string f)
 string tag_lisp(string t, mapping m, string c, 
 		object id, object f, mapping defines)
 {
+  object e = find_environment(m->context||id->not_query, m, id);
+  if(m->once) return "";
   object lisp = parse( "(progn\n"+c+")" );
-  object e = find_environment(m->context||id->not_query);
   id->misc->lisp_result="";
-  e->id = id;
   e->eval_limit = query("max-eval-time");
   lisp->eval( e, e );
   return (id->misc->lisp_result);
@@ -84,15 +91,12 @@ mapping query_container_callers()
 }
 
 
-
-
 class lisp_types
 {
   /* Data shared between all Lisp objects */
   mapping symbol_table = ([ ]);
   object Nil = NilSymbol(symbol_table);
   object True = ConstantSymbol("t", symbol_table);
-
 
   class LObject 
   {
@@ -151,7 +155,8 @@ class lisp_types
       if (stringp(fun) ? car[fun](@extra) : fun(car, @extra))
 	return cdr->map(fun, @extra);
       else
-	error("Unknown function");
+	error("Function ["+(stringp(fun)?fun:sprintf("%O", fun))+
+	      "]\nin "+car->print()+" returned error\n");
 
     }
   
@@ -328,8 +333,18 @@ class lisp_types
       env[symbol] = Binding(value);
     }
 
-    string print() { return sprintf("<Environment: %O>\n",
-				    Array.map(indices(env), "print")); }
+    string print() 
+    {
+      string res="";
+      foreach(indices(env), object s)
+      {
+	if(env[s]->value != this_object())
+	  res += s->print()+": "+env[s]->value->print()+"\n";
+	else
+	  res += "global-environment: ...\n";
+      }
+      return res;
+    }
   }
   
   class Lambda
@@ -345,7 +360,7 @@ class lisp_types
       list = expressions;
     }
 
-    string print() { return "<lambda>"; }
+    string print() { return "lambda "+list->print(); }
 
     int build_env1(object env, object symbols, object arglist)
     {
@@ -375,7 +390,7 @@ class lisp_types
       env = new_env(env, arglist); 
       if (env)
 	return list->map("eval", env, globals);
-      error("Nothing to apply with.");
+      error("Nothing to apply with.\n");
     }
   }
   
@@ -430,7 +445,7 @@ class lisp_types
 
     string print()
     {
-      return "<Builtin>";
+      return sprintf("Builtin (%O)", apply);
     }
   }  
 
@@ -440,10 +455,60 @@ class lisp_types
     constant is_special = 1;
     string print()
     {
-      return "<Special>";
+      return sprintf("Special (%O)", apply);
     }
   }
 
+
+  class APIObject
+  {
+    inherit LObject;
+    function fun;
+
+    string print() { return sprintf("APIfunction %O", fun); }
+    
+    object apply(object arglist, object env, object globals)
+    {
+      array args = ({ globals->id });
+      while(arglist->car && !arglist->car->is_nil)
+      {
+	mixed v = arglist->car->print();
+	if((int)v || v=="0") v=(int)v;
+	args += ({ v });
+	arglist = arglist->cdr;
+      }
+      mixed val = fun( @ args );
+
+      if(stringp(val)) 
+	return String( val );
+
+      if(intp(val) && !zero_type(val)) 
+	return Number( val );
+
+      if(arrayp(val) || multisetp(val))
+      {
+	object res = Nil;
+	int m;
+	if(multisetp(val)) { m = 1; val = indices( val ); }
+	for(int i=sizeof(val)-1; i>=0; i--)
+	{
+	  object t;
+	  if(m)
+	    t = make_symbol( (string)val[i] );
+	  else
+	    t = stringp(val[i])?String(val[i]):Number((int)val[i]);
+	  res = Cons( t , res );
+	}
+	return res;
+      }
+      return Nil;
+    }
+
+    void create(array f)
+    {
+      fun = f[0]; // f[1] is list of types for arguments..
+    }
+  }
   /* Parser */
 
   class Parser 
@@ -667,8 +732,8 @@ object s_while(object arglist, object env, object globals)
   object to_eval = arglist->cdr;
   werror( to_eval->print() );
   while (!expr->eval(env,globals)->is_nil)
-    res=to_eval->map("eval", env, globals);    //f_eval (to_eval,env,globals);
-  return res;
+    to_eval->map("eval", env, globals);//f_eval (to_eval,env,globals);
+  return Nil;
 }
 
 void init_specials(object environment)
@@ -892,8 +957,6 @@ object f_format(object arglist, object env, object globals)
   return String( sprintf(f, @args) );
 }
   
-
-
 object f_line_break(object arglist, object env, object globals)
 {
   string f = arglist->car->print();
@@ -939,6 +1002,10 @@ void init_functions(object environment)
   environment->extend(make_symbol("setcdr!"), Builtin(f_setcdr));
   environment->extend(make_symbol("cons"), Builtin(f_cons));
   environment->extend(make_symbol("list"), Builtin(f_list));
+  
+  mapping m = environment->id->conf->api_functions();
+  foreach(indices(m), string f)
+    environment->extend(make_symbol(replace(f, "_", "-")), APIObject( m[f] ));
 }
 
 
@@ -946,5 +1013,6 @@ void init_for(object e)
 {
   init_specials(e);
   init_functions(e);
+
   boot_code->eval(e,e);
 }
