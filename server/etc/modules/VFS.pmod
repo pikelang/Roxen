@@ -1,6 +1,10 @@
 //! Utility functions for the virtual filesystem in Roxen. Contains
 //! functions that otherwise tend to get reinvented a few times per
 //! module.
+
+
+
+
 static Stat stat( string file, RequestID id )
 {
   int oi = id->misc->internal_get;
@@ -8,6 +12,28 @@ static Stat stat( string file, RequestID id )
   Stat s = id->conf->stat_file( file, id );
   id->misc->internal_get = oi;
   return s;
+}
+
+
+string normalize_path( string path )
+//! Normalize the path in 'path'. Does ../ and ./ calculations, if
+//! running on NT or if the start-script is started with
+//! --strip-backslash, \ characters are changed to /.
+{
+  if( strlen( path ) )
+  {
+    int ss = (<'/','\\'>)[ path[0] ];
+    path = combine_path( "/",
+#if defined(__NT__) || defined(STRIP_BSLASH)
+			 replace(path,"\\","/")
+#else
+			 path
+#endif
+		       );
+    if( !ss )
+      return path[1..];
+  }
+  return path;
 }
 
 

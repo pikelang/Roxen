@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.455 2001/07/21 14:22:26 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.456 2001/07/31 07:46:43 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1255,15 +1255,8 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 #ifdef THREADS
   Thread.MutexKey key;
 #endif
-  
-#if defined(__NT__) || defined(STRIP_BSLASH)
-  if( strlen(id->not_query ) )
-  {
-    int ss = (<'/','\\'>)[ id->not_query[0] ];
-    id->not_query = combine_path("/",replace(id->not_query,"\\","/"));
-    if( !ss )  id->not_query = id->not_query[1..];
-  }
-#endif
+
+  id->not_query = VFS.normalize_path( id->not_query );
 
   TRACE_ENTER(sprintf("Request for %s", id->not_query), 0);
 
