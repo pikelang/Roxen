@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.92 2001/08/13 18:17:06 per Exp $";
+  "$Id: config_filesystem.pike,v 1.93 2001/08/20 18:41:55 mast Exp $";
 
 constant path = "config_interface/";
 
@@ -237,27 +237,28 @@ mixed find_file( string f, RequestID id )
 
         if( charset_decoder )
         {
-          void decode_variable( string v )
-          {
-	    string decode( mixed what ) {
-	      return charset_decoder->clear()->feed(what)->drain();
-	    };
-            id->real_variables[v] =  map( id->real_variables[v], decode );
-          };
           f = charset_decoder->clear()->feed( f )->drain();
           id->not_query =
 	    charset_decoder->clear()->feed( id->not_query )->drain();
-          map( indices(id->real_variables), decode_variable );
+          map( indices(id->real_variables),
+	       lambda ( string v )
+	       {
+		 id->real_variables[v] =
+		   map( id->real_variables[v],
+			lambda ( mixed what ) {
+			  return charset_decoder->clear()->feed(what)->drain();
+			} );
+	       });
         }
         else
         {
-          void decode_variable( string v )
-          {
-            id->real_variables[v]=map( id->real_variables[v], utf8_to_string );
-          };
           f = utf8_to_string( f );
           id->not_query = utf8_to_string( id->not_query );
-          map( indices(id->real_variables), decode_variable );
+          map( indices(id->real_variables),
+	       lambda ( string v )
+	       {
+		 id->real_variables[v]=map( id->real_variables[v], utf8_to_string );
+	       } );
         }
       }
     };
