@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.34 2000/02/24 04:45:54 nilsson Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.35 2000/03/09 15:33:08 grubba Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -738,6 +738,8 @@ class CGIScript
     if( limits )
       options->rlimit = limits;
 #endif
+
+    DWERR(sprintf("Options: %O\n", options));
 
 #ifdef __NT__
     if(!(pid = Process.create_process( nt_opencommand(command, arguments),
