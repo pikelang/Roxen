@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.52 2000/08/02 14:05:07 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.53 2000/08/15 23:08:50 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -216,7 +216,10 @@ string encode_url(int col, int state, object stateobj, RequestID id){
   else
     state=col;
 
-  return id->not_query+"?state="+
+  string global_not_query=id->raw_url;
+  sscanf(global_not_query, "%s?", global_not_query);
+
+  return global_not_query+"?state="+
     stateobj->uri_encode(state);
 }
 
