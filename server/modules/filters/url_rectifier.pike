@@ -2,9 +2,10 @@
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
-string cvs_version = "$Id: url_rectifier.pike,v 1.10 2000/03/20 08:21:21 nilsson Exp $";
+string cvs_version = "$Id: url_rectifier.pike,v 1.11 2000/04/03 03:50:51 per Exp $";
 inherit "module";
 inherit "roxenlib";
+constant thread_safe=1;
 
 int unsuccessful = 0;
 array(string) encodings = ({ "utf-8", "macintosh", "iso-2022" });
