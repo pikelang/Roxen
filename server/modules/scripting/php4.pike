@@ -17,7 +17,7 @@ inherit "module";
 inherit "roxenlib";
 
 
-constant cvs_version="$Id: php4.pike,v 2.6 2000/04/25 04:55:58 per Exp $";
+constant cvs_version="$Id: php4.pike,v 2.7 2000/06/04 19:18:03 nilsson Exp $";
 constant thread_safe=1;
 constant module_type=MODULE_FILE_EXTENSION;
 
@@ -266,7 +266,8 @@ string status()
 #"<font color='&usr.warncolor;'>PHP4 is not available in this roxen.<p>
   To get php4:
   <ol>
-    <li> Check php4 out from CVS (there is no release version with roxen support available yet)<br>
+    <li> Check php4 out from CVS or download the release from
+         <a href='http://us.php.net/downloads.php'>http://us.php.net/downloads.php</a>.<br />
          See <a target=new href='http://www.php.net/version4/cvs.php'>the PHP4 CVS instructions</a>
     <li> Configure php4 with --with-roxen="+(getcwd()-"server")+#"
     <li> Make and install php4
