@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.11 1996/12/02 14:43:02 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.12 1996/12/02 16:31:31 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -138,23 +138,23 @@ void create()
   call_out(init_ip_list, 0);
 }
 
-inline string shutdown_restart(string save, int compact)
-{
-#define CBR (compact?"":"<br clear=right>\n")
+#define PUSH(X) do{res+=({(X)});}while(0)
+#define BUTTON(ACTION,TEXT,ALIGN) PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=/auto/button/"+replace(TEXT," ","%20")+" alt=\""+TEXT+"\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>")
 
-  return 
-    ("<a href=/(shutdown)/Configurations/?"+(bar++)+">"
-       "<img src=/image/shutdown.gif alt=Kill hspace=0 border=0 align=right>"
-       "</a>")
-    + CBR
-    + ("<a href=/(restart)/Configurations/?"+(bar++)+">"
-      "<img src=/image/restart.gif alt=Restart hspace=0 border=0 align=right>"
-      "</a>") 
-    + CBR
-    + (save?
-       ("<a href=/(save)"+ save +"?"+(bar++)+ ">"
-	"<img src=/image/save.gif alt=Save hspace=0 border=0 align=right>"
-	"</a>"):"");
+inline string shutdown_restart(string save, int compact,void|object o)
+{
+  array res = ({});
+
+
+  PUSH("<br clear=all><table width=100%><tr><td bgcolor=#7f7755>");
+  
+  if(save)
+    BUTTON(save, "Save current configuration", left);
+  BUTTON(restart, "Restart Roxen", left);
+  BUTTON(shutdown,"Shutdown Roxen", left);
+  PUSH("<img src=/auto/button/%20>");
+  PUSH("</table>");
+  return res*"";
 }
 
 string default_head(string h, string|void save)
@@ -883,6 +883,7 @@ int nunfolded(object o)
 
 
 object module_font = Font()->load("fonts/32/urw_itc_avant_garde-demi-r");
+object button_font = module_font;
 
 mapping auto_image(string in, object id)
 {
@@ -902,18 +903,31 @@ mapping auto_image(string in, object id)
 			     ->togif(64), "image/gif");
     })
       perror("While drawing auto-image: \n"+describe_backtrace(e)+"\n");
-    cache_set("module_images", key, r);
+    cache_set("module_images", value, r);
     return r;
-    break;
+
+   case "button":
+    if(!id->pragma["no-cache"] && (r=cache_lookup("config_button_image", value)))
+      return r;
+    if(e=catch {
+      r = http_string_answer(draw_config_button(value,button_font)->togif(32),
+			     "image/gif");
+    })
+      perror("While drawing auto-image: \n"+describe_backtrace(e)+"\n");
+    cache_set("config_button_image", value, r);
+    return r;
+
   }
 }
 
+
 mapping configuration_parse(object id)
 {
-  string res;
+  array (string) res=({});
+  string tmp;
   // Is it an image?
-  if(sscanf(id->not_query, "/image/%s", res))
-    return file_image(res) || (["data":"No such image"]);
+  if(sscanf(id->not_query, "/image/%s", tmp))
+    return file_image(tmp) || (["data":"No such image"]);
   
   object o;
   int i;
@@ -943,8 +957,8 @@ mapping configuration_parse(object id)
       id->variables = ([ ]);
   }
 
-  if(sscanf(id->not_query, "/auto/%s", res))
-    return auto_image(res,id) || (["data":"No such image"]);
+  if(sscanf(id->not_query, "/auto/%s", tmp))
+    return auto_image(tmp,id) || (["data":"No such image"]);
 
   o = find_node(id->not_query); // Find the requested node (from the filename)
 
@@ -1069,43 +1083,42 @@ mapping configuration_parse(object id)
        * the node */
 
     case "delete":	
-      res = default_head("Roxen Configuration")+ "<hr noshade>";
+     PUSH(default_head("Roxen Configuration"));
+     PUSH("<hr noshade>");
       
       switch(o->type)
       {
        case NODE_CONFIGURATION:
-	res += ("<font size=+2>Do you really want to delete the configuration "
-		+ o->data->name + ", all its modules and their copies?"
-		"\n\n<p></font>");
+	PUSH("<font size=+2>Do you really want to delete the configuration "+
+	     o->data->name + ", all its modules and their copies?"
+	     "\n\n<p></font>");
 	break;
 	
        case NODE_MODULE_MASTER_COPY:
        case NODE_MODULE:
-	res += ("<font size=+2>Do you really want to delete the module "
-		+ o->data->name + ", and its copies?"
-		"\n\n<p></font>");
+	PUSH("<font size=+2>Do you really want to delete the module "+
+	     o->data->name + ", and its copies?\n\n<p></font>");
 	break;
 	
        case NODE_MODULE_COPY_VARIABLES:
 	
        case NODE_MODULE_COPY:
-	res += ("<font size=+2>Do you really want to delete this copy "
-		" of the module "+ o->up->data->name + "?\n\n<p></font>");
-	
+	PUSH("<font size=+2>Do you really want to delete this copy "
+	     " of the module "+ o->up->data->name + "?\n\n<p></font>");
 	break;
 	
        case NODE_CONFIGURATIONS:
 	return stores("You don't want to do that...\n");
       }
-      res += ("<font size=+2><i>This action cannot be undone.\n\n<p></font>"
-	      + TABLEP("<table>", "") +"<tr><td><form action="+
-	      o->path(1)+">"
-	      "<input type=submit value=\"No, I do not want to delete it\"> "
-	      "</form></td><td><form action=/(really_delete)"+o->path(1)
-	      + "><input type=submit value=\"Go ahead\"></form></td></tr> "
-	      "</table>");
+      PUSH("<font size=+2><i>This action cannot be undone.\n\n<p></font>"+
+	   TABLEP("<table>", "") +"<tr><td><form action="+
+	   o->path(1)+">"
+	   "<input type=submit value=\"No, I do not want to delete it\"> "
+	   "</form></td><td><form action=/(really_delete)"+o->path(1)+
+	   "><input type=submit value=\"Go ahead\"></form></td></tr> "
+	   "</table>");
       
-      return stores(res);
+      return stores(res*"");
       break;
       
       /* When this has been called, the node will be * _very_ deleted
@@ -1291,93 +1304,57 @@ mapping configuration_parse(object id)
     return std_redirect(o, id);
   }
   
-  res = (default_head("Roxen server configuration", 
-		     root->changed?o->path(1):0)
-	 + "\n" + display_tabular_header( o ) + "\n<br>\n"
-	 + "<dl>\n");
+  PUSH(default_head("Roxen server configuration", root->changed?o->path(1):0));
+  PUSH("\n"+display_tabular_header( o )+"\n<br>\n");
+  PUSH("<dl>\n");
 
   if(o->up != root && o->up)
-    res += ("<a href=\""+ o->up->path(1)+"?"+(bar++)+"\">"
-	    "<img src=/image/up.gif alt='[Up]' align=left hspace=0 border=0></a> ");
+    PUSH("<a href=\""+ o->up->path(1)+"?"+(bar++)+"\">"
+	 "<img src=/image/up.gif alt='[Up]' align=left hspace=0 border=0></a> ");
 
   if(i=o->folded) o->folded=0;
-  res += o->describe(1) ;
+  PUSH(o->describe(1));
   o->folded=i;
   
-  res += "</dl>\n\n<p>";
-  
-  if(nunfolded(o))
-    res += ("<a href=\"/(foldall)"+o->path(1)+"?"+(bar++)+"\">"
-	    "<img src=/image/foldall.gif align=left hspace=0 border=0"
-	    " height=19 alt=\"Close all\">"
-	    "</a>");
+  PUSH("</dl>\n\n<p>");
+//  PUSH("<nobr><img height=15 src=/auto/button/ width=100% align=right>");
+  PUSH("<table width=100%><tr><td bgcolor=#7f7755>");
+  PUSH("<img src=/auto/button/>");
   
   if(o->type == NODE_CONFIGURATIONS)
-    res += ("<a href=/(newconfig)/Configurations?"+(bar++)+">"
-	    "<img src=/image/newconf.gif align=left hspace=0 border=0"
-	    " height=19 alt=\"Add virtual server\">"
-	    "</a>");
+    BUTTON(newconfig, "New virtual server", left);
   
   if(o->type == NODE_CONFIGURATION)
-    res += ("<a href=\"/(newmodule)"+o->path(1)+"?"+(bar++)+"\">"
-	    "<img src=/image/newmod.gif align=left hspace=0 border=0"
-	    " height=19 alt=\"Add a module\">"
-	    "</a>");
+    BUTTON(newmodule, "New module", left);
   
   if(o->type == NODE_MODULE)
   {
-    res += ("<a href=\"/(delete)"+o->path(1)+"?"+(bar++)+"\">"
-	    "<img src=/image/delmodcop.gif align=left hspace=0 border=0"
-	    " height=19 alt=\"Remove this module and it's copies\">"
-	    "</a>");
+    BUTTON(delete, "Delete module and copies", left);
     if(o->data->copies)
-    {
-      res += ("<a href=\"/(newmodulecopy)"+o->path(1)+"?"+(bar++)+"\">"
-	      "<img src=/image/newmod.gif align=left hspace=0 border=0"
-	      " height=19 alt=\"Add a new copy\">"
-	      "</a>");
-    }
+      BUTTON(newmodulecopy, "New module copy", left);
   }
 
   i=0;
   if(o->type == NODE_MODULE_MASTER_COPY || o->type == NODE_MODULE_COPY 
      || o->type == NODE_MODULE_COPY_VARIABLES)
   {
-    res += ("<a href=\"/(delete)"+o->path(1)+"?"+(bar++)+"\">"
-	    "<img src=/image/delmod.gif align=left hspace=0 border=0"
-	    " height=19 alt=\"Remove this module\">"
-	    "</a>")
-      + ("<a href=\"/(refresh)"+o->path(1)+"?"+(bar++)+"\">"
-	 "<img src=/image/refresh.gif align=left hspace=0 border=0"
-	 " height=19 alt=\"Refresh\">"
-	 "</a>");
-    i++;
+    BUTTON(delete, "Delete module", left);
+    BUTTON(refresh, "Reload module", left);
   }
   
   if(o->type == NODE_CONFIGURATION)
-  {
-    res += ("<a href=\"/(delete)"+o->path(1)+"?"+(bar++)+"\">"
-	    "<img src=/image/delconf.gif align=left hspace=0 border=0"
-	    " height=19 alt=\"Remove this configuration\">"
-	    "</a>");
-    i++;
-  }
+    BUTTON(delete,"Remove virtual server", left);
 
+  if(nunfolded(o))
+    BUTTON(foldall, "Close all",left);
   if(o->changed)
-  {
-    res += ("<a href=\"/(unfoldmodified)"+o->path(1)+"?"+(bar++)+"\">"
-	    "<img src=/image/unmod.gif align=right hspace=0 border=0"
-	    " height=19 alt=\"Open all modified\">"
-	    "</a>");
-  }
+    BUTTON(unfoldmodified, "Open all modified", left);
 
-  if(i)
-    res += ("<img src=/image/right.gif align=left height=19"
-	    " hspace=0 border=0 alt=\"\">");
-  
-  res += "<hr noshade>";
-  return stores(res+"<p align=right><a href=$docurl>"+
-		roxen->real_version +"</a></body>");
+  PUSH("<img src=/auto/button/%20>");
+  PUSH("</nobr><br clear=all>");
+  PUSH("</td></tr></table>");
+  PUSH("<p align=right><a href=$docurl>"+roxen->real_version +"</a></body>");
+  return stores(res*"");
 }
 
 

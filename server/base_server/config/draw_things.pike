@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.1 1996/12/02 04:32:37 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.2 1996/12/02 16:31:32 per Exp $";
 
 object (Image) bevel(object (Image) in, int width)
 {
@@ -100,11 +100,21 @@ object (Image) draw_module_header(string name, int type, object font)
   return result;
 }
 
-#if 0
-void main()
+object (Image) draw_config_button(string name, object font)
 {
-  object fnt = Font();
-  fnt->load("/home/per/roxen/roxen_src/server/fonts/32/urw_itc_avant_garde-demi-r");
-  write(draw_module_info("Foo module", MODULE_FILTER|MODULE_URL|MODULE_EXTENSION|MODULE_FIRST|MODULE_LAST,fnt));
+  if(!strlen(name)) return Image(1,15,0xff/2, 0xee/2, 0xaa/2);
+
+  object txt = font->write(name)->scale(0.5);
+  object ruta = Image(txt->xsize()+25, 20, 0xff/2, 0xee/2, 0xaa/2);
+  object linje = Image(2,30, 255,255,255);
+
+  linje=linje->setcolor(0,0,0)->line(0,0,0,30);
+
+  linje=linje->setcolor(0xff/2, 0xee/2, 0xaa/2)->rotate(-25)->copy(0,3,29,28);
+
+  ruta=ruta->paste_alpha(linje, 50);
+  ruta=ruta->paste_mask(Image(txt->xsize(),20), txt, 22, 0);
+
+  txt=linje=0;
+  return ruta->scale(0,15);
 }
-#endif
