@@ -2,8 +2,6 @@
 #include <variables.h>
 inherit "module";
 
-
-#if constant(PHP4.Interpreter)
 /* Roxen PHP module.
  *   (c) David Hedbor  1999
  *   Modified by Per Hedbor 2000
@@ -19,13 +17,15 @@ inherit "module";
 inherit "roxenlib";
 
 
-constant cvs_version = "$Id: php4.pike,v 2.5 2000/04/12 23:05:16 neotron Exp $";
-constant thread_safe = 1;
+constant cvs_version="$Id: php4.pike,v 2.6 2000/04/25 04:55:40 per Exp $";
+constant thread_safe=1;
+constant module_type=MODULE_FILE_EXTENSION;
 
-constant module_type = MODULE_FILE_EXTENSION;
-constant module_name = "PHP Script Support";
-constant module_doc  = "This module allows Roxen users to run PHP scripts, "
-                       "optionally in combination with RXML. ";
+constant module_name="PHP Script Support";
+constant module_doc =("This module allows Roxen users to run PHP scripts, "
+                      "optionally in combination with RXML. ");
+
+#if constant(PHP4.Interpreter)
 
 class PHPScript
 {
@@ -254,32 +254,39 @@ int|mapping handle_file_extension(object o, string e, object id)
   DWERROR("PHP:handle_file_extension done\n");
   return http_pipe_in_progress();
 }
+#else
 
-/*
-** Variables et. al.
-*/
+// Do not dump to a .o file if no PHP4 is available, since it will then
+// not be possible to get it later on without removal of the .o file.
+constant dont_dump_program = 1; 
+
+string status()
+{
+  return 
+#"<font color='&usr.warncolor;'>PHP4 is not available in this roxen.<p>
+  To get php4:
+  <ol>
+    <li> Check php4 out from CVS (there is no release version with roxen support available yet)<br>
+         See <a target=new href='http://www.php.net/version4/cvs.php'>the PHP4 CVS instructions</a>
+    <li> Configure php4 with --with-roxen="+(getcwd()-"server")+#"
+    <li> Make and install php4
+    <li> Restart roxen
+  </ol></font>";
+}
+
+int|mapping handle_file_extension(object o, string e, object id)
+{
+  return http_string_answer( status(), "text/html" );
+}
+#endif
+
 array (string) query_file_extensions()
 {
   return QUERY(ext);
 }
 
-
 void create(object conf)
 {
-#if 0
-  Done by default by php4...
-  defvar("env", 0, "Pass environment variables", TYPE_FLAG,
-	 "If this is set, all environment variables roxen has will be "
-         "passed to PHP scripts, not only those defined in the PHP/1.1 standard. "
-         "This includes PATH. (For a quick test, try this script with "
-	 "and without this variable set:"
-	 "<pre>"
-	 "#!/bin/sh\n\n"
-         "echo Content-type: text/plain\n"
-	 "echo ''\n"
-	 "env\n"
-	 "</pre>)");
-#endif
   defvar("rxml", 0, "Parse RXML in PHP-scripts", TYPE_FLAG,
 	 "If this is set, the output from PHP-scripts handled by this "
          "module will be RXMl parsed. NOTE: No data will be returned to the "
@@ -308,10 +315,3 @@ void create(object conf)
 	 "If set, the variable REMOTE_PASSWORD will be set to the decoded "
 	 "password value.");
 }
-#else
-
-void create() {
-  report_error("No PHP support found in pike.\n");
-}
-
-#endif
