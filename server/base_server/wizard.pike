@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.78 1999/01/05 02:37:39 mast Exp $
+ * $Id: wizard.pike,v 1.79 1999/01/09 09:22:47 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  * 
@@ -725,7 +725,7 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
 	    page_state[dir] (id, v->_page, @args) : page_state[dir];
 	  DEBUGMSG ("Wizard: No data from page function; going to " +
 		    (stringp (v->_page) ? (offset > 0 ? "next" : "previous") +
-		     " page " + v->_page : "done page"));
+		     " page " + v->_page : "done page") + "\n");
 	  if (!stringp (v->_page)) v->_page = 0;
 	}
       }
