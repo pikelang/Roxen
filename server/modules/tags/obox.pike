@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.9 1999/05/24 23:48:08 neotron Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.10 1999/05/25 00:40:33 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -50,19 +50,20 @@ static string title(mapping args)
   if (!args->title)
     return horiz_line(args);
   string empty=img_placeholder(args);
+  if (!args->left && !args->fixedleft)
+    if (args->width && !args->fixedright)
+      args->fixedleft = "7";
+    else
+      args->left = "20";
+  if (!args->right && !args->fixedright)
+    args->right = args->width || "20";
   switch (args->style) {
-  case "groupbox":
-    if (!args->left)
-      args->left="25";
-    if (args->width && !args->right)
-      args->right=args->width;
-    if (!args->right)
-      args->right="350";
-    return sprintf("<tr><td colspan=2>&nbsp;</td>\n"
-		   "<td rowspan=3%s>&nbsp;<b>"		/* bgcolor */
+   case "groupbox":
+    return sprintf("<tr><td colspan=2><font size=-3>&nbsp;</font></td>\n"
+		   "<td rowspan=3%s nowrap>&nbsp;<b>"		/* bgcolor */
 		   "%s%s%s"                 /* titlecolor, title, titlecolor */
-		   "</b></td>\n"
-		   "<td colspan=2>&nbsp;</td></tr>\n"
+		   "</b>&nbsp;</td>\n"
+		   "<td colspan=2><font size=-3>&nbsp;</font></td></tr>\n"
 		   "<tr%s>"				/* bgcolor */
 		   "<td bgcolor=\"%s\" colspan=2>\n"	/* outlinecolor */
 		   "%s</td>\n"				/* empty */
@@ -71,8 +72,8 @@ static string title(mapping args)
 
 		   "<tr%s><td bgcolor=\"%s\">"      /* bgcolor, outlinecolor */
 		   "%s</td>\n"				/* empty */
-		   "<td%s>&nbsp;</td>"			/* left */
-		   "<td%s>&nbsp;</td>\n"		/* right */
+		   "<td%s><font size=-3>%s</font></td>" /* left, fixedleft */
+		   "<td%s><font size=-3>%s</font></td>\n" /* right, fixedright */
 		   "<td bgcolor=\"%s\">"		/* outlinecolor */
 		   "%s</td></tr>\n"			/* empty */
 		   ,
@@ -88,24 +89,49 @@ static string title(mapping args)
 		   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
 		   args->outlinecolor,
 		   empty,
-		   " width="+args->left,
-		   " width="+args->right,
+		   (args->left ? " width="+args->left : ""),
+		   (args->fixedleft ?
+		    String.strmult ("&nbsp;", (int) args->fixedleft) : "&nbsp;"),
+		   (args->right ? " width="+args->right : ""),
+		   (args->fixedright ?
+		    String.strmult ("&nbsp;", (int) args->fixedright) : "&nbsp;"),
 		   args->outlinecolor,
 		   empty);
-  case "caption":
-    return sprintf("<TR bgcolor=\"%s\">"
-		   "<TD>%s</TD>"
-		   "<TD%s>&nbsp;</TD>"
-		   "<TD>%s%s%s</TD>"
-		   "<TD%s>&nbsp;</TD>"
-		   "<TD>%s</TD></TR>",
-		   args->outlinecolor,
-		   empty,
-		   (args->left ? " width="+args->left : ""),
+   case "caption":
+    return sprintf("<tr%s><td colspan=2><font size=-3>&nbsp;</font></td>\n"
+		   "<td rowspan=3 nowrap>&nbsp;<b>"		/* bgcolor */
+		   "%s%s%s"                 /* titlecolor, title, titlecolor */
+		   "</b>&nbsp;</td>\n"
+		   "<td colspan=2><font size=-3>&nbsp;</font></td></tr>\n"
+		   "<tr bgcolor=\"%s\">"		/* outlinecolor */
+		   "<td colspan=2>\n"	
+		   "%s</td>\n"				/* empty */
+		   "<td colspan=2>\n"
+		   "%s</td></tr>\n"			/* empty */
+
+		   "<tr bgcolor=\"%s\"><td>"      /*  outlinecolor */
+		   "%s</td>\n"				/* empty */
+		   "<td%s><font size=-3>%s</font></td>" /* left, fixedleft */
+		   "<td%s><font size=-3>%s</font></td>\n" /* right, fixedright */
+		   "<td bgcolor=\"%s\">"		/* outlinecolor */
+		   "%s</td></tr>\n"			/* empty */
+		   ,
+		   args->outlinecolor ? " bgcolor=\""+args->outlinecolor+"\"" : "",
 		   args->titlecolor ? "<FONT color=\""+args->titlecolor+"\">" : "",
 		   args->title,
 		   args->titlecolor ? "</FONT>" : "",
+		   args->outlinecolor,
+		   empty,
+		   empty,
+		   args->outlinecolor,
+		   empty,
+		   (args->left ? " width="+args->left : ""),
+		   (args->fixedleft ?
+		    String.strmult ("&nbsp;", (int) args->fixedleft) : "&nbsp;"),
 		   (args->right ? " width="+args->right : ""),
+		   (args->fixedright ?
+		    String.strmult ("&nbsp;", (int) args->fixedright) : "&nbsp;"),
+		   args->outlinecolor,
 		   empty);
   }
 }
