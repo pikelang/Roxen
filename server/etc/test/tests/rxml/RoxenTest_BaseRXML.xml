@@ -660,6 +660,70 @@ a&auml; &amp; b  &gt;
 </test>
 
 <test>
+  <rxml
+    ><define container="x"><contents copy-of="*[@foo]"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result><a foo="bar"/><c foo="gnu"/><d foo="bar"/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="b[@foo]"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="*[@foo='bar']"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result><a foo="bar"/><d foo="bar"/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="* [ @ foo = &quot;bar&quot; ]"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result><a foo="bar"/><d foo="bar"/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="* [ @ foo = &quot;bar &quot; ]"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="*/@foo[@foo]"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result> foo="bar" foo="gnu" foo="bar"</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="*/@foo[@foo='bar']"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result> foo="bar" foo="bar"</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="a[@foo]/y"/></define
+    ><x><a foo="bar"><y id="1"/></a><a><y id="2"/></a><a foo="gnu"><y id="3"/></a></x
+  ></rxml>
+  <result><y id="1"/><y id="3"/></result>
+</test>
+
+<test>
   <rxml><define variable="var.i" preparse=""><contents/></define></rxml>
   <glob>[Error (parse): *]</glob>
 </test>
