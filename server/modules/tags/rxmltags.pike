@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.406 2004/05/16 21:31:10 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.407 2004/05/20 23:54:21 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -388,7 +388,10 @@ class TagHeader {
       } else if(args->name=="URI")
 	args->value = "<" + args->value + ">";
 
-      id->add_response_header(args->name, args->value);
+      if(args->name == "Content-Type")
+        id->set_response_header(args->name, args->value);
+      else
+        id->add_response_header(args->name, args->value);
       return 0;
     }
   }
@@ -697,7 +700,7 @@ class TagDebug {
 	id->misc->debug = !id->misc->debug;
       else
 	id->misc->debug = 1;
-      result = "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
+      //result = "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
       TAG_TRACE_LEAVE ("");
       return 0;
     }
