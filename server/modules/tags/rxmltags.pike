@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.357 2002/12/17 13:07:59 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.358 2004/02/04 17:57:18 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3135,8 +3135,7 @@ class TagThen {
   constant flags = 0;
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
-    inherit RXML.Frame;
-    int do_iterate;
+    inherit FrameIf;
     array do_enter(RequestID id) {
       do_iterate= _ok ? 1 : -1;
       return 0;
