@@ -8,8 +8,14 @@
 
 
 #if efun(thread_create)
+// Some OS's (eg Linux) can get severe problems (PANIC)
+// if threads are enabled.
+//
+// If it works, good for you. If it doesn't, too bad.
+#ifdef ENABLE_THREADS
 # define THREADS
-#endif
+#endif /* ENABLE_THREADS */
+#endif /* efun(thread_create) */
 
 
 /* Reply 'PONG\r\n' to the query 'PING\r\n'.
@@ -45,7 +51,10 @@
  * Some other debug thingies:
  *  HTACCESS_DEBUG
  *  SSL_DEBUG
+ *  NEIGH_DEBUG
  */
+
+// #define HTACCESS_DEBUG
 
 /* #undef DEBUG_LEVEL */
 #ifndef DEBUG_LEVEL
@@ -64,6 +73,12 @@
  * it probably isn't..)  
  */
 #define MODULE_LEVEL_SECURITY
+
+/* Roxen neighbourhood
+ *
+ * Experimental. Currently does not work on all Operating Systems.
+ */
+// #define ENABLE_NEIGHBOURHOOD
 
 /* If set, the maximum, minimum and average time used to serve
  * requests is logged.
