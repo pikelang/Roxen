@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.20 2001/09/06 12:52:17 per Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.21 2001/09/10 15:29:52 nilsson Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -523,6 +523,32 @@ constant tagdoc=([
  downloadtime.</short><tag>page-size</tag> calculates the size of a
  page, including inline images, and gives estimates of the time it
  will take to download the page. All information is shown in a box.
+
+<ex-html>
+<table width='400' cellpadding='0' cellspacing='0' border='0' bgcolor='black'><tr><td>
+<table cellpadding='10' cellspacing='1' border='0' width='100%' bgcolor='white'>
+<tr><td>
+<table width='100%' cellpadding='0' cellspacing='0'>
+  <tr><th align='left'><font size='-1' color='black'>File</font></th><th align='right'><font size='-1' color='black'>Size (kb)</font></th><th align='right'><font size='-1' color='black'>&nbsp; Headers (b)</font></th><th align='right'><font size='-1' color='black'>&nbsp; % of page</font></td></tr><tr><td colspan='4'><hr noshade='noshade' size='1'></td></tr>  <tr><td><font color='black' size='-1'>/index.html</font></td><td align='right'><font color='black' size='-1'>0.5</font></td><td align='right'><font color='black' size='-1'>188</font></td><td align='right'><font color='black' size='-1'>0%</font></td></tr>
+  <tr><td><font color='black' size='-1'>Gtext (\"roxen.com\")</font></td><td align='right'><font color='black' size='-1'>1.5</font></td><td align='right'><font color='black' size='-1'>189</font></td><td align='right'><font color='black' size='-1'>1%</font></td></tr>
+  <tr><td><font color='black' size='-1'>/pic/apples.jpeg</font></td><td align='right'><font color='black' size='-1'>96.6</font></td><td align='right'><font color='black' size='-1'>163</font></td><td align='right'><font color='black' size='-1'>97%</font></td></tr>
+
+<tr><td><font color='black' size='-1'><b>Total size:</b></font></td><td align='right'><font color='black' size='-1'>98.7</font></td><td align='right'><font color='black' size='-1'>540</font></td><td>&nbsp;</td></tr><tr><td colspan='4'><hr noshade size='1'></td></tr></table>
+<b><font size='-1'>Estimated download time:</font></b> (bandwidth in kb/s)
+<table><tr><td align='right'><font color='darkorange' size='-1'><b>28.8</b>:</td><td align='right'><font color='darkorange' size='-1'>28s</font></td>
+<td align='right'><font color='darkred' size='-1'><b>56.0</b>:</td><td align='right'><font color='darkred' size='-1'>15s</font></td>
+<td align='right'><font color='darkred' size='-1'><b>64.0</b>:</td><td align='right'><font color='darkred' size='-1'>13s</font></td>
+</tr>
+<tr><td align='right'><font color='darkgreen' size='-1'><b>256.0</b>:</td><td align='right'><font color='darkgreen' size='-1'>3s</font></td>
+<td align='right'><font color='darkgreen' size='-1'><b>384.0</b>:</td><td align='right'><font color='darkgreen' size='-1'>2s</font></td>
+<td align='right'><font color='darkgreen' size='-1'><b>1024.0</b>:</td><td align='right'><font color='darkgreen' size='-1'>1s</font></td>
+</tr>
+<tr></tr>
+</table><hr noshade size='1' /><table></table></td></tr>
+</table>
+</td></tr></table>
+</ex-html>
+
 </p>
 
 </desc>
