@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_sucker.pike,v 1.6 2001/09/03 18:12:20 nilsson Exp $";
+constant cvs_version = "$Id: whitespace_sucker.pike,v 1.7 2001/10/10 09:01:40 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Sucker";
@@ -52,7 +52,7 @@ array(string) verbatim(Parser.HTML p, mapping(string:string) args, string c) {
 mapping filter(mapping result, RequestID id)
 {
   if(!result
-  || search(result->type, "text/")
+  || !has_prefix(result->type||"", "text/html")
   || !stringp(result->data)
   || id->prestate->keepws
   || id->misc->ws_filtered++)
