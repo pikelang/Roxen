@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.86 1998/05/19 11:04:04 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.87 1998/05/22 21:03:59 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -515,10 +515,6 @@ class spawn_cgi
 	
 	pipe3->dup2(Stdio.File("stdin"));
 	destruct(pipe3);
-	pipe1->dup2(Stdio.File("stdout"));
-	if(dup_err)
-	  pipe1->dup2(Stdio.File("stderr"));
-	destruct(pipe1);
 
 	object privs;
 	if (!getuid()) {
@@ -537,6 +533,12 @@ class spawn_cgi
 	setegid(gid);
 	setuid(uid);
 	seteuid(uid);
+
+	// Moved here to avoid output by Privs().
+	pipe1->dup2(Stdio.File("stdout"));
+	if(dup_err)
+	  pipe1->dup2(Stdio.File("stderr"));
+	destruct(pipe1);
 
 #ifdef DEBUG
 	if (getuid() != uid) {
