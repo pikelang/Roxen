@@ -1,22 +1,19 @@
-This is where the Mysql installation should be located.
+This is where the MySQL installation should be located.
 
-If you already have a Mysql, you can symlink it to this directory.
+If you already have a MySQL, you can symlink it to this directory.
 
-As an example, lets pretend that a mysql is installed in /usr/local,
-and the mysqld server binary is located in the 'libexec' directory.
+As an example, if MySQL is installed in /usr/local and the mysqld
+server binary is located in the 'libexec' directory, run these
+commands to set up Roxen:
 
-To set up roxen to use this mysql, run these commands:
+  ln -s /usr/local/libexec .
+  ln -s /usr/local/share .
 
-ln -s /usr/local/libexec .
-ln -s /usr/local/share .
+Sometimes the mysqld binary resides in sbin or bin instead. If so,
+modify the first 'ln' command to link that directory.
 
-Sometimes the mysqld binary recides in sbin or bin instead, if so,
-modify the first ln command to link that directory instead.
+If you don't have a MySQL server installed you can get it from
+<http://www.mysql.com/>. A binary tar.gz-type MySQL distribution can
+be installed directly into this directory.
 
-If you don't have a Mysql server installed, you can get it from:
-http://www.mysql.com/
-
-Roxen currently requires at least version 3.23.49 MySQL.
-
-A binary tar.gz-type MySQL distribution can be installed directly into
-this directory.
+Roxen currently requires at least version 3.23.49 of MySQL.
