@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.72 2000/01/31 03:45:36 per Exp $ */
+/* $Id: module.pike,v 1.73 2000/02/03 17:12:54 jhs Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -85,10 +85,10 @@ nomask void set_configuration(Configuration c)
   _my_configuration = c;
 }
 
-string module_creator;
+string|array(string) module_creator;
 string module_url;
 
-void set_module_creator(string c)
+void set_module_creator(string|array(string) c)
 {
   module_creator = c;
 }
