@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.131 2002/02/04 12:09:15 stewa Exp $
+// $Id: Roxen.pmod,v 1.132 2002/02/13 14:46:27 wellhard Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2980,18 +2980,32 @@ class ScopeRoxen {
        return ENCODE_RXML_TEXT(c->id->misc->site_prefix_path, type);
      case "unique-id":
        return ENCODE_RXML_TEXT(roxenp()->create_unique_id(), type);
-     default:
-       return RXML.nil;
     }
-    :: `[] (var, c, scope);
+    mixed val = c->misc->scope_roxen[var];
+    if (zero_type(val)) return RXML.nil;
+    if (objectp(val) && val->rxml_var_eval) return val;
+    return ENCODE_RXML_TEXT(val, type);
   }
 
-  array(string) _indices() {
-    return ({"uptime", "uptime-days", "uptime-hours", "uptime-minutes",
-	     "hits-per-minute", "hits", "sent-mb", "sent", "unique-id",
-             "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
-	     "pike-version", "version", "time", "server", "domain",
-	     "locale", "path"});
+  mixed `[]= (string var, mixed val, void|RXML.Context c, 
+	      void|string scope_name) {
+    if (!c) c = RXML_CONTEXT;
+    return c->misc->scope_roxen[var]=val;
+  }
+
+  array(string) _indices(void|RXML.Context c) {
+    if (!c) c = RXML_CONTEXT;
+    return indices(c->misc->scope_roxen) +
+      ({ "uptime", "uptime-days", "uptime-hours", "uptime-minutes",
+	 "hits-per-minute", "hits", "sent-mb", "sent", "unique-id",
+	 "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
+	 "pike-version", "version", "time", "server", "domain",
+	 "locale", "path" });
+  }
+
+  void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
+    if (!c) c = RXML_CONTEXT;
+    predef::m_delete(c->misc->scope_roxen, var);
   }
 
   string _sprintf() { return "RXML.Scope(roxen)"; }
@@ -3292,6 +3306,7 @@ RXML.TagSet entities_tag_set = class
   inherit RXML.TagSet;
 
   void prepare_context (RXML.Context c) {
+    c->misc->scope_roxen=([]);
     c->add_scope("roxen",scope_roxen);
     c->misc->scope_page=([]);
     c->add_scope("page",scope_page);
