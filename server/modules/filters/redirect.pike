@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.24 2000/03/18 02:55:58 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.25 2000/04/28 17:32:02 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -53,9 +53,9 @@ void create()
 	 "internally, so add %u to generate an actual redirect.<p>"
 	 ""
 	 "<b>Note 1:</b> "
-	 "For speed reasons: If the from pattern does _not_ contain"
-	 "any '*' characters, it will not be treated like an regular"
-	 "expression, instead it will be treated as a prefix that must "
+	 "For speed reasons: If the from pattern does <i>not</i> contain "
+	 "any '*' characters, it will not be treated like a regular "
+	 "expression, instead it will be treated like a prefix that must "
 	 "match exactly."
 
 	 "<p><b>Note 2:</b> "
