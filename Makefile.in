@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.in,v 1.96 1999/05/13 21:58:45 neotron Exp $
+# $Id: Makefile.in,v 1.97 1999/06/11 06:37:19 mast Exp $
 #
 
 # @configure_input@
@@ -27,7 +27,10 @@ all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern tools
 	-@$(BIN_TRUE)
 
 pike: force
-	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS) @LINKFORSHARED@")
+	@test $(PIKEVERSION) = none || ( \
+	  cd pike/$(PIKEVERSION)/src && \
+	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS) @LINKFORSHARED@"; \
+	)
 
 extern: force
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
@@ -55,13 +58,22 @@ hard: all
 	-@$(BIN_TRUE)
 
 depend:
-	-@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" depend)
+	-@test $(PIKEVERSION) = none || ( \
+	  cd pike/$(PIKEVERSION)/src && \
+	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" depend; \
+	)
 
 verify: all verify_other
-	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify)
+	@test $(PIKEVERSION) = none || ( \
+	  cd pike/$(PIKEVERSION)/src && \
+	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify; \
+	)
 
 verbose_verify: all verify_other
-	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verbose_verify)
+	@test $(PIKEVERSION) = none || ( \
+	  cd pike/$(PIKEVERSION)/src && \
+	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verbose_verify; \
+	)
 
 verify_other: verify_extern
 	@if test "@MAKE_ZLIB@" = "zlib"; then \
@@ -81,13 +93,19 @@ verify_gmp:
 	@(cd gmp;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" "AR=$(AR)" check)
 
 new_peep_engine:
-	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" new_peep_engine)
+	@test $(PIKEVERSION) = none || ( \
+	  cd pike/$(PIKEVERSION)/src && \
+	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" new_peep_engine; \
+	)
 
 check: verify
 	-@$(BIN_TRUE)
 
 clean:
-	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
+	@test $(PIKEVERSION) = none || ( \
+	  cd pike/$(PIKEVERSION)/src && \
+	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean; \
+	)
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
 	@(cd tools;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
 
@@ -122,11 +140,14 @@ install_only:
 	else :; fi
 	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
 		$(prefix)/roxen/server/*/*/CVS
-	(cd pike/$(PIKEVERSION)/src; $(MAKE) "prefix=$(prefix)/roxen/server" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install)
-	-@rm -f $(prefix)/roxen/server/bin/pike
-	ln $(prefix)/roxen/server/pike/$(PIKEVERSION).*/pike $(prefix)/roxen/server/bin/pike
-	-@rm -f $(prefix)/roxen/server/bin/roxen >/dev/null 2>&1
-	ln $(prefix)/roxen/server/bin/pike $(prefix)/roxen/server/bin/roxen
+	test $(PIKEVERSION) = none || ( \
+	  cd pike/$(PIKEVERSION)/src || exit 1; \
+	  $(MAKE) "prefix=$(prefix)/roxen/server" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install; \
+	  rm -f $(prefix)/roxen/server/bin/pike; \
+	  ln $(prefix)/roxen/server/pike/$(PIKEVERSION).*/bin/pike $(prefix)/roxen/server/bin/pike || exit 1; \
+	  rm -f $(prefix)/roxen/server/bin/roxen >/dev/null 2>&1; \
+	  ln $(prefix)/roxen/server/bin/pike $(prefix)/roxen/server/bin/roxen; \
+	)
 	-@(cd extern;$(MAKE) install "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)";cd ../)
 	-@(cd tools;$(MAKE) install "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)";cd ../)
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
@@ -171,61 +192,30 @@ install_only:
 	@echo Roxen installed.
 
 install_pike: all
-	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install)
+	@test $(PIKEVERSION) = none || ( \
+	  cd pike/$(PIKEVERSION)/src && \
+	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install; \
+	)
 
 localinstall: all
-	cp pike/$(PIKEVERSION)/src/pike $(SRCDIR)/server/bin/
-	-@rm -f $(SRCDIR)/server/bin/roxen >/dev/null 2>&1
-	ln $(SRCDIR)/server/bin/pike $(SRCDIR)/server/bin/roxen
-	@for d in lib lib/pike; do \
-	  if [ -d "$(SRCDIR)/server/$$d/." ]; then : ; else \
-	    echo "$$d"; \
-	    mkdir "$(SRCDIR)/server/$$d" || exit 1; \
-	    chmod a+rx "$(SRCDIR)/server/$$d/."; \
-	    chmod u+w "$(SRCDIR)/server/$$d/."; \
-	  fi; \
-	done
-	@(cd pike/$(PIKEVERSION)/src/lib && { \
-	  echo "Updating from pike/$(PIKEVERSION)/src/lib"; \
-	  for d in `find . -type d \( -name CVS -o -print \)`; do \
-	    if [ -d "$(SRCDIR)/server/lib/pike/$$d/." ]; then : ; else \
-	      echo "Creating directory $(SRCDIR)/server/lib/pike/$$d"; \
-	      mkdir "$(SRCDIR)/server/lib/pike/$$d" || exit 1; \
-	      chmod a+rx "$(SRCDIR)/server/lib/pike/$$d/."; \
-	      chmod u+w "$(SRCDIR)/server/lib/pike/$$d/."; \
-	    fi; \
-	  done; \
-	  for f in `find . -type d -name CVS -prune -o -type f -print`; do \
-	    if cmp "$(SRCDIR)/server/lib/pike/$$f" "$$f" >/dev/null 2>&1 ; \
-	    then : ; else \
-	      echo "Copying pike/$(PIKEVERSION)/src/lib/$$f"; \
-	      if [ -f "$(SRCDIR)/server/lib/pike/$$f" ]; then \
-		mv -f "$(SRCDIR)/server/lib/pike/$$f" \
-		      "$(SRCDIR)/server/lib/pike/$$f.old"; \
-	      else : ; fi; \
-	      cp "$$f" "$(SRCDIR)/server/lib/pike/$$f" || exit 1; \
-	      chmod a+r "$(SRCDIR)/server/lib/pike/$$f"; \
-	      chmod u+w "$(SRCDIR)/server/lib/pike/$$f"; \
-	    fi; \
-	  done; \
-	} )
-	@(if [ -d $(SRCDIR)/pike/$(PIKEVERSION)/lib ] ; then \
-	  if [ -d "$(SRCDIR)/server/share/." ]; then : ; else \
-	    echo "$(SRCDIR)/server/share"; \
-	    mkdir "$(SRCDIR)/server/share" || exit 1; \
-	    chmod a+rx "$(SRCDIR)/server/share/."; \
-	    chmod u+w "$(SRCDIR)/server/share/."; \
-	  fi; \
-	  rm -f "$(SRCDIR)/server/share/pike" >/dev/null 2>&1; \
-	  ln -s "../../pike/$(PIKEVERSION)/lib" "$(SRCDIR)/server/share/pike"; \
-	else : ; fi)
+	test $(PIKEVERSION) = none || ( \
+	  cd pike/$(PIKEVERSION)/src || exit 1; \
+	  $(MAKE) "prefix=$(SRCDIR)/server" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install; \
+	  rm -f $(SRCDIR)/server/bin/pike; \
+	  ln $(SRCDIR)/server/pike/$(PIKEVERSION).*/bin/pike $(SRCDIR)/server/bin/pike || exit 1; \
+	  rm -f $(SRCDIR)/server/bin/roxen >/dev/null 2>&1; \
+	  ln $(SRCDIR)/server/bin/pike $(SRCDIR)/server/bin/roxen; \
+	)
 	(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 	(cd tools; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 
 spotless:  clean
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" spotless)
 	@(cd tools;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" spotless)
-	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" spotless)
+	@test $(PIKEVERSION) = none || ( \
+	  cd pike/$(PIKEVERSION)/src && \
+	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" spotless; \
+	)
 	rm -f server/bin/selfdir server/bin/roxen_hostname pike/$(PIKEVERSION)/src/pike\
 	pike/$(PIKEVERSION)/src/pike.old server/bin/proxygarb 
 	find . '(' -name '#*#' -o -name '*~' -o -name '.*~' -o -name '*.bak'\
@@ -241,7 +231,11 @@ distribute:	spotless
 	@(cd tools; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" distribute)
 
 run_autoconfig:
-	@(cd $(SRCDIR); pike/$(PIKEVERSION)/src/run_autoconfig .)
+	@( \
+	  cd $(SRCDIR); \
+	  runauto=`echo pike/*/src/run_autoconfig|tr ' ' '\n'|tail -1`; \
+	  $$runauto . \
+	)
 
 ./Makefile: $(SRCDIR)/Makefile.in config.status
 	CONFIG_FILES=Makefile CONFIG_HEADERS="" ./config.status
