@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.7 1999/06/01 14:14:38 kinkie Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.8 1999/07/27 16:11:49 kinkie Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -238,7 +238,7 @@ string user_from_uid (int u)
 		return 0;
 	}
 	data=db->query("select username from " + QUERY(table) +
-		       " where uid=" + u);
+		       " where uid='" + (int)u +"'");
 	if(sizeof(data)!=1) //either there's noone with that uid or there's many
 		return 0;
 	return data[0]->username;
