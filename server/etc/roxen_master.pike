@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.47 1998/07/23 01:20:39 neotron Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.48 1998/11/02 06:56:33 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -49,11 +49,13 @@ object findmodule(string fullname)
     if (!programs[fullname]) {
       programs[fullname] = object_program(res);
     }
-    foreach(indices(res), string foo) {
-      if(programp(res[foo]) && !programs[fullname+"."+foo]) {
-	programs[fullname+"."+foo] = res[foo];
-      }
-    }
+//  foreach(indices(res), string foo) 
+//  {
+//    if(programp(res[foo]) && !programs[fullname+"."+foo]) 
+//    {
+//       programs[fullname+"."+foo] = res[foo];
+//    }
+//  }
   }
 
   return res;
