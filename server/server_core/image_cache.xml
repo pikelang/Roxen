@@ -65,7 +65,7 @@
 <attr name='true-alpha'><p>
  If present, render a real alpha channel instead of on/off alpha. If
  the file format only supports on/off alpha, the alpha channel is
- dithered using a floyd-steinberg dither.</p>
+ dithered using a floyd-steinberg dither. Set to 0 to force off.</p>
 
 <ex type='vert'>
 <### opaque-value='20'/>
