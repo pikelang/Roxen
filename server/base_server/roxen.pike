@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.113 1997/08/21 15:36:07 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.114 1997/08/25 17:22:53 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1697,36 +1697,44 @@ void initiate_configuration_port( int|void first )
   {
     foreach(QUERY(ConfigPorts), port)
     {
-      if ((< "ssl", "ssleay" >)[port[1]]) {
-	// Obsolete versions of the SSL protocol.
-	report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
-		       "Converted to SSL3.\n");
-	port[1] = "ssl3";
-      }
-      program requestprogram = (program)(getcwd()+"/protocols/"+port[1]);
-      function rp;
-      array tmp;
-      if(!requestprogram) {
-	report_error("No request program for "+port[1]+"\n");
-	continue;
-      }
-      if(rp = requestprogram()->real_port)
-	if(tmp = rp(port, 0))
-	  port = tmp;
-
-      object privs;
-      if(port[0] < 1024)
-	privs = ((program)"privs")("Opening listen port below 1024");
-      if(o=create_listen_socket(port[0],0,port[2],requestprogram,port))
-      {
-	perror("Configuration port: "+port[1]+" port number "
-	       +port[0]+" interface " +port[2]+"\n");
-	main_configuration_port = o;
-	configuration_ports += ({ o });
-      } else {
-	report_error("The configuration port "+port[0]
-		     +" on the interface " +port[2]+" "
-		     "could not be opened\n");
+      array old = port;
+      mixed erro;
+      erro = catch {
+	if ((< "ssl", "ssleay" >)[port[1]]) {
+	  // Obsolete versions of the SSL protocol.
+	  report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
+			 "Converted to SSL3.\n");
+	  port[1] = "ssl3";
+	}
+	program requestprogram = (program)(getcwd()+"/protocols/"+port[1]);
+	function rp;
+	array tmp;
+	if(!requestprogram) {
+	  report_error("No request program for "+port[1]+"\n");
+	  continue;
+	}
+	if(rp = requestprogram()->real_port)
+	  if(tmp = rp(port, 0))
+	    port = tmp;
+	
+	object privs;
+	if(port[0] < 1024)
+	  privs = ((program)"privs")("Opening listen port below 1024");
+	if(o=create_listen_socket(port[0],0,port[2],requestprogram,port)) {
+	  perror("Configuration port: "+port[1]+" port number "+
+		 port[0]+" interface " +port[2]+"\n");
+	  main_configuration_port = o;
+	  configuration_ports += ({ o });
+	} else {
+	  report_error("The configuration port " + port[0] +
+		       " on the interface " + port[2] + " (" + port[1] + ") "
+		       "could not be opened\n");
+	}
+      };
+      if (erro) {
+	report_error("Failed to open configuration port " +
+		     old[0] + " at " + old[2] + " (" + old[1] + "): " +
+		     (stringp(erro)?erro:describe_backtrace(erro)));
       }
     }
     if(!main_configuration_port)
