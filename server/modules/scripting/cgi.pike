@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.115 1999/04/27 19:53:50 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.116 1999/04/28 17:54:22 neotron Exp $";
 
 class Shuffle
 {
@@ -654,6 +654,7 @@ class CGIScript
 mapping(string:string) global_env = ([]);
 void start(int n, object conf)
 {
+  module_dependencies(conf, ({ "pathinfo" }));
   if(conf)
   {
     string tmp=conf->query("MyWorldLocation");
@@ -685,17 +686,10 @@ string real_file( string f, object id )
 
 mapping handle_file_extension(object o, string e, object id)
 {
-  array stat = o->stat();
   if(!QUERY(ex))
     return 0;
-  if(!stat) return 0;
-  if(stat[1] < 0 || !strlen(id->not_query) || id->not_query[-1] == '/')
-    // Can't run directories or nonexisting files, and if the script exists
-    // but the name ends with '/' we want to let it fall through for path
-    // info parsing.
-    return 0;
 #if UNIX
-  if(QUERY(noexec) && o && !(stat[0]&0111))
+  if(QUERY(noexec) && o && !(o->stat()[0]&0111))
     return 0;
 #endif
   return http_stream( CGIScript( id )->run()->get_fd() );
@@ -721,7 +715,14 @@ int|object(Stdio.File)|mapping find_file( string f, object id )
   }
 #endif  
   if(stat[1] < 0)
-    return -1;
+    if(QUERY(ls))
+      return http_low_answer(403, "<title>CGI Directory Listing "
+			     "Disabled</title><h1>Listing of CGI directories "
+			     "is disabled.</h1>");
+    else
+      rerturn -1;
+  if(!strlen(f) || f[-1] == '/')
+    return 0;
   id->realfile = real_file( f,id );
   return http_stream( CGIScript( id )->run()->get_fd() );
 }
