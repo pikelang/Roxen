@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.535 2002/10/01 22:20:11 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.536 2002/10/01 22:43:38 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1870,7 +1870,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       TRACE_LEAVE("Added module mountpoint.");
     }
   }
-  if(!dir) return verbose ? ({0})+locks : ([])[0];
+  if(!dir) return verbose ? ({0})+locks : UNDEFINED;
   if(sizeof(dir))
   {
     TRACE_LEAVE(sprintf("Returning list of %d files.", sizeof(dir)));

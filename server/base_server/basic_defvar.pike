@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 2000 - 2001, Roxen IS.
-// $Id: basic_defvar.pike,v 1.32 2002/07/03 20:20:32 nilsson Exp $
+// $Id: basic_defvar.pike,v 1.33 2002/10/01 22:43:38 nilsson Exp $
 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -234,7 +234,7 @@ mixed query(string|void var, int|void ok)
       return variables[var]->query();
     else if(!ok && var[0] != '_')
       error("Querying undefined variable %O in %O\n", var, this_object());
-    return ([])[0];
+    return UNDEFINED;
   }
   return variables;
 }

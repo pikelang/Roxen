@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.126 2002/05/06 15:14:38 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.127 2002/10/01 22:52:45 nilsson Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -378,7 +378,7 @@ class MyCodec
 #ifdef DUMP_DEBUG
 	last_failed = x;
 #endif
-	DUMP_DEBUG_RETURN (([])[ 0 ]);
+	DUMP_DEBUG_RETURN UNDEFINED;
       }
     }
 
@@ -433,7 +433,7 @@ class MyCodec
 #ifdef DUMP_DEBUG
     last_failed = x;
 #endif
-    DUMP_DEBUG_RETURN (([])[0]);
+    DUMP_DEBUG_RETURN UNDEFINED;
   }
 
   function functionof(string x)

@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.83 2002/07/03 20:20:32 nilsson Exp $
+// $Id: cache.pike,v 1.84 2002/10/01 22:43:38 nilsson Exp $
 
 // #pragma strict_types
 
@@ -212,7 +212,7 @@ void nongarbing_cache_set(string cache_id, string key, mixed value) {
 //! Returns the value associated to the @[key] in the cache
 //! identified by @[cache_id] in the non-garbing cache.
 mixed nongarbing_cache_lookup(string cache_id, string key) {
-  return nongc_cache[cache_id]?nongc_cache[cache_id][key]:([])[0];
+  return nongc_cache[cache_id]?nongc_cache[cache_id][key]:UNDEFINED;
 }
 
 //! Remove a value from the non-garbing cache.
@@ -344,7 +344,7 @@ mixed get_session_data(string id) {
   if(sizeof([array]data) &&
      !catch(data=decode_value( ([array(mapping(string:string))]data)[0]->data )))
     return data;
-  return ([])[0];
+  return UNDEFINED;
 }
 
 //! Assiciates the session @[id] to the @[data]. If no @[id] is provided

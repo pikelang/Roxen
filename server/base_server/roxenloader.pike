@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.341 2002/09/26 22:23:24 nilsson Exp $
+// $Id: roxenloader.pike,v 1.342 2002/10/01 22:43:38 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.341 2002/09/26 22:23:24 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.342 2002/10/01 22:43:38 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -766,7 +766,7 @@ mixed nm_resolv(string x )
   catch {
     return new_master->resolv( x );
   };
-  return ([])[0];
+  return UNDEFINED;
 };
   
 // Set up efuns and load Roxen.

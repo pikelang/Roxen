@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.80 2002/09/26 22:59:48 nilsson Exp $
+// $Id: module.pmod,v 1.81 2002/10/01 22:52:06 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -399,7 +399,7 @@ class Variable
     //! changed, and -1 is returned if the variable was changed back to
     //! its default value.
     //!
-    //! If verify_set() threw a string, ([])[0] is returned, that is,
+    //! If verify_set() threw a string, UNDEFINED is returned, that is,
     //! 0 with zero_type set.
     //!
     //! If verify_set() threw an exception, the exception is thrown.
@@ -411,7 +411,7 @@ class Variable
       if( stringp( e2 ) )
       {
         add_warning( e2 );
-        return ([])[0];
+        return UNDEFINED;
       }
       throw( e2 );
     }

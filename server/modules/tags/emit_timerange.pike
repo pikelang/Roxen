@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.5 2002/07/03 12:47:31 nilsson Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.6 2002/10/01 22:43:47 nilsson Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -275,8 +275,8 @@ class TimeRangeValue(Calendar.TimeRange time, string type)
     foreach((scope/".")[1..] + ({ var }), string index)
       if(!(result = result[ index ]))
       {
-	DEBUG("\b => ([])[0] (user gave incorrect variable name)\n");
-	return ([])[0];
+	DEBUG("\b => UNDEFINED (user gave incorrect variable name)\n");
+	return UNDEFINED;
       }
     return result;
   }
@@ -288,7 +288,7 @@ class TimeRangeValue(Calendar.TimeRange time, string type)
     DEBUG("%O->`[](%O, %O, %O, %O)\b", this_object(), var, ctx, scope, want_type);
     mixed what;
     if(!(what = dig_out(scope, var)))
-      return ([])[0]; // conserve zero_type
+      return UNDEFINED; // conserve zero_type
     if(!mappingp( what )) // if it's not a mapping, it's a calendar method name
       return fetch_and_quote_value([string]what, want_type);
     DEBUG("\b => %O\n", this_object());
@@ -304,11 +304,11 @@ class TimeRangeValue(Calendar.TimeRange time, string type)
 	  this_object(), ctx, var, scope, want_type);
     mixed what, result;
     if(!(what  = dig_out(scope, var)))
-      return ([])[0]; // conserve zero_type
+      return UNDEFINED; // conserve zero_type
     if(mappingp( what ) && !(result = what[""])) // allows using a scope as a leaf
     { // this probably only occurs if the layout mapping is incorrectly set up:
-      DEBUG("\b => ([])[0] (what:%O)\n", what);
-      return ([])[0];
+      DEBUG("\b => UNDEFINED (what:%O)\n", what);
+      return UNDEFINED;
     }
     return fetch_and_quote_value(result || what, want_type);
   }
