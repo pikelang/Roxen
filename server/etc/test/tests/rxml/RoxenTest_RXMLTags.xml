@@ -580,6 +580,16 @@ e</result>
 <result>abc</result>
 </test>
 
+<test>
+  <rxml
+    ><set variable="form.foo" split=",">a,b,c</set
+    ><replace from="&#x0;" to=":">&form.foo;</replace
+    >|<replace from="&#0;" to=":">a&#0;b&#x0;c</replace
+    >|<replace from=":" to="&#x0;">a:b:c</replace
+  ></rxml>
+  <result>a:b:c|a:b:c|a&#0;b&#0;c</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Trimlines</comment>
