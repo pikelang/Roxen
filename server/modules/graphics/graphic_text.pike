@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.284 2001/11/15 09:50:57 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.285 2001/11/27 18:21:16 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -959,7 +959,7 @@ class TagGTextURL {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
-      content=fix_text(content,args,id);
+      content=fix_text(content||"",args,id);
       mapping p=mk_gtext_arg(args,id);
       if(args->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
       string ext="";
