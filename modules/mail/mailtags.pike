@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.3 1998/09/01 03:09:20 per Exp $";
+"$Id: mailtags.pike,v 1.4 1998/09/04 11:44:57 per Exp $";
 
 constant thread_safe = 1;
 
@@ -114,8 +114,6 @@ class Mail
     clientlayer->delete_flag( id, name );
   }
 
-
-
   void create(int i, object m)
   {
     id = i;
@@ -157,8 +155,6 @@ class Mailbox
 		     Mail, this_object());
   }
 
-
-
   void create(int i, object u, string n)
   {
     id = i;
@@ -193,11 +189,9 @@ class User
 		    get_any_obj, Mailbox, this_object(), name );
   }
 
-
-
   void create(int _id)
   {
-p    id = _id;
+    id = _id;
   }
 }
 
@@ -331,7 +325,7 @@ string login(object id)
     if(!id->realauth) return force;
     id = clientlayer->authenticate_user( @(id->realauth/":") );
     if(!id) return force;
-    UID = User( id );
+    UID = get_any_obj( id, User );
   }
 }
 
