@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.29 1998/02/22 14:06:16 mirar Exp $";
+string cvs_version = "$Id: install.pike,v 1.30 1998/04/07 22:19:30 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -15,7 +15,7 @@ string cvs_version = "$Id: install.pike,v 1.29 1998/02/22 14:06:16 mirar Exp $";
 
 string version = "1.0";
 
-object stderr = files.file("stderr");
+object stderr = Stdio.File("stderr");
 
 void roxen_perror(string format,mixed ... args)
 {
@@ -106,7 +106,7 @@ int verify_port(int try)
 {
   int ret;
   object p;
-  p = files.port();
+  p = Stdio.Port();
   ret = p->bind(try);
   destruct(p);
   return ret;  
@@ -118,7 +118,7 @@ int getport()
   int port;
   int tries;
 
-  p = files.port();
+  p = Stdio.Port();
 
   for (tries = 8192; tries--;) {
     if (p->bind(port = 10000 + random(10000))) {
