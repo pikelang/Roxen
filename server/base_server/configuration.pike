@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.385 2000/11/24 15:52:04 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.386 2000/12/10 02:01:44 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -225,6 +225,7 @@ void stop()
 	   m && m->stop && m->stop());
   foreach( registered_urls, string url )
     roxen.unregister_url(url);
+  registered_urls = ({});
 }
 
 public string type_from_filename( string file, int|void to, string|void myext )
