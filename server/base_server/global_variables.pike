@@ -3,7 +3,8 @@
 #include <config.h>
 inherit "read_config";
 inherit "module_support";
-string real_version;
+#include <version.h>
+
 // The following three functions are used to hide variables when they
 // are not used. This makes the user-interface clearer and quite a lot
 // less clobbered.

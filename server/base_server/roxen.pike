@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.405 2000/02/02 19:14:28 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.406 2000/02/02 19:40:15 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -17,7 +17,6 @@ ArgCache argcache;
 #include <module.h>
 #include <variables.h>
 #include <stat.h>
-#include <version.h>
 
 // Inherits
 inherit "global_variables";
