@@ -119,6 +119,29 @@ array(string) render_row(string prefix, mixed val, int width)
 	    Variable.input( prefix+"b", val[1], width ) });
 }
 
+string render_view( RequestID id, void|mapping additional_args )
+{
+  mapping val = query();
+  string res = "<table>\n";
+
+  if(sizeof(val))
+  {
+    res += "<tr><th align='left'>"+LOCALE(0,"Name")+"</th>"
+      "<th align='left'>"+LOCALE(0,"Value")+"</th></tr>";
+    foreach( sort(indices(val)), mixed var )
+    {
+      res += "<tr>\n"
+	"<td><font size='-1'>"+var+
+	"</font></td><td><font size='-1'>"
+	+transform_to_form(val[var])+
+	"</font></td>\n"
+	"</tr>\n";
+    }
+  }
+  res += "</table>\n\n";
+  return res;
+}
+
 string render_form( RequestID id, void|mapping additional_args )
 {
   string prefix = path()+".";
