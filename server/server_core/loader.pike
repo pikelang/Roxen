@@ -26,7 +26,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.393 2004/07/12 00:49:52 _cvs_stephen Exp $";
+constant cvs_version="$Id: loader.pike,v 1.394 2004/07/18 00:59:23 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1318,7 +1318,7 @@ class CSql {
     Thread.MutexKey k;
     if(id) {
 #ifdef DB_DEBUG
-      werror("Saving DB to RequestID %O\n", dbname),
+      werror("Saving DB to RequestID %O\n", dbname);
 #endif
       if(id->misc->sqlsession)
         id->misc->sqlsession->id=0;			    // avoid quarrels
@@ -1327,7 +1327,7 @@ class CSql {
     else if(k=mt->lock(2)) {
 #ifdef DB_DEBUG
       werror("Saving DB to pool %O %d\n",
-       dbname, sizeof(sql_free_list[dbname]));
+       dbname, sql_free_list[dbname]&&sizeof(sql_free_list[dbname]));
 #endif
       if(sizeof(sql_free_list[dbname]+=({master_sql}))
        >max_sql_connections_cached)
@@ -1349,7 +1349,7 @@ Sql.Sql sq_cache_get(string dbname, string url, void|/*RequestID*/object id) {
     array flist;
 #ifdef DB_DEBUG
     if(dbname!="local:rw"&&dbname!="roxen:rw")
-      werror("%O found in free list\n", i );
+      werror("%O found in free list\n", dbname );
 #endif
     Thread.MutexKey k=mt->lock();
     if(flist = sql_free_list[dbname]) {
