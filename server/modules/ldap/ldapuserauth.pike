@@ -53,7 +53,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.16 2000/02/22 05:14:03 nilsson Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.17 2000/03/13 19:33:21 nilsson Exp $";
 constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
@@ -327,27 +327,25 @@ void open_dir(string u, string p) {
 
 string status() {
 
-    return ("<H2>Security info</H2>"
-	   "Attempted authentications: "+att+"<BR>\n"
+    return ("<h2>Security info</h2>"
+	   "Attempted authentications: "+att+"<br />\n"
 	   "Failed: "+(att-succ+nouser)+" ("+nouser+" because of wrong username)"
-	   "<BR>\n"+
-	   dir_accesses +" accesses to the directory were required.<BR>\n" +
+	   "<br />\n"+
+	   dir_accesses +" accesses to the directory were required.<br /><br />\n" +
 
-	     "<p>"+
 	     "<h3>Failure by host</h3>" +
 	     Array.map(indices(failed), lambda(string s) {
-	       return roxen->quick_ip_to_host(s) + ": "+failed[s]+"<br>\n";
+	       return roxen->quick_ip_to_host(s) + ": "+failed[s]+"<br />\n";
 	     }) * ""
-	     //+ "<p>The database has "+ sizeof(users)+" entries"
+	     //+ "The database has "+ sizeof(users)+" entries<br />"
 #ifdef LOG_ALL
-	     + "<p>"+
 	     "<h3>Auth attempt by host</h3>" +
 	     Array.map(indices(accesses), lambda(string s) {
 	       return roxen->quick_ip_to_host(s) + ": "+accesses[s]->cnt+" ["+accesses[s]->name[0]+
 		((sizeof(accesses[s]->name) > 1) ?
 		  (Array.map(accesses[s]->name, lambda(string u) {
 		    return (", "+u); }) * "") : "" ) + "]" +
-		"<br>\n";
+		"<br />\n";
 	     }) * ""
 #endif
 	   );
@@ -378,7 +376,7 @@ array(string) userinfo (string u,mixed p) {
     }
 
     if (QUERY(CI_use_cache))
-	dirinfo=cache_lookup("ldapauthentries",u);
+	dirinfo=cache_lookup("ldapauth"+QUERY(CI_dir_server),u);
 	if (dirinfo)
 	    return dirinfo;
 
@@ -425,7 +423,7 @@ array(string) userinfo (string u,mixed p) {
     }
     #if 0
     if (QUERY(CI_use_cache))
-	cache_set("ldapauthentries",u,dirinfo);
+	cache_set("ldapauth"+QUERY(CI_dir_server),u,dirinfo);
     #endif
     if(QUERY(CI_access_mode) == "user") { // Should be 'closedir' method?
       dir->unbind();
@@ -576,7 +574,7 @@ array|int auth (array(string) auth, object id)
 
     // Its OK so save them
     if (QUERY(CI_use_cache))
-	cache_set("ldapauthentries",u,dirinfo);
+	cache_set("ldapauth"+QUERY(CI_dir_server),u,dirinfo);
 
     id->misc->uid = dirinfo[2];
     id->misc->gid = dirinfo[3];
