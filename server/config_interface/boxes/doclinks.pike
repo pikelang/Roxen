@@ -33,6 +33,9 @@ string parse( RequestID id )
   
   foreach( ({ "docs/roxen/3.3/" }), string rpath )
   {
+    add_doc_link(rpath + "content_editor_manual/index.xml",
+		 _(0, "Content Editor"));
+
     add_doc_link(rpath + "content_editor_manual_(instant)/index.xml",
 		 _(512, "Content Editor (Instant Edition)"));
 
@@ -45,14 +48,14 @@ string parse( RequestID id )
     add_doc_link(rpath + "web_developer_manual/index.xml",
 		 _(514, "Web Developer"));
 
-    add_doc_link(rpath + "system_developer_manual/index.xml",
-		 _(515, "System Developer (Pike)"));
+    add_doc_link(rpath + "administrator_manual/index.xml",
+		 _(516, "Administrator"));
 
     add_doc_link(rpath + "system_developer_manual_java/index.xml",
 		 _(390, "System Developer (Java)"));
 
-    add_doc_link(rpath + "administrator_manual/index.xml",
-		 _(516, "Administrator"));
+    add_doc_link(rpath + "system_developer_manual/index.xml",
+		 _(515, "System Developer (Pike)"));
 
     add_doc_link(rpath + "forms_and_response_module/index.xml",
 		 _(517, "Forms And Response Module"));
@@ -60,7 +63,7 @@ string parse( RequestID id )
     add_doc_link(rpath + "categorization_module/index.xml",
 		 _(518, "Categorization Module"));
 
-    add_doc_link(rpath + "forum/index.xml",
+    add_doc_link(rpath + "forum_module/index.xml",
 		 _(523, "Forum Module"));
     
     add_doc_link(rpath + "tutorial/index.xml",
