@@ -51,6 +51,9 @@ while [ ! c"$1" = "c" ] ; do
    DIR=`echo $1 | sed -e 's/--config-dir=//'`
    FILES=`echo $1 | sed -e 's/--config-dir=//' -e 's/..//' -e 's./..g' -e 's.-..g'`
   ;;
+  '--debug')
+    debug=1
+  ;;
   '--once')
     once=1
   ;;
@@ -86,6 +89,12 @@ echo Starting the Roxen Challenger World Wide Web server.
 if [ "$NOCHOWN" != "TRUE" ]; then 
   fixperms 2>/dev/null
 fi
+if [ -z "$debug" ] ; then
+  DEBUG="";
+else
+  DEBUG="-DDEBUG -DMODULE_DEBUG"
+fi
+
 if [ -z "$once" ] ; then
  (while : ; do
    sdfile="/tmp/Roxen_Shutdown_$$"
@@ -109,7 +118,7 @@ oo
   
   echo "Server restart at `date`"
   rotate $LOGDIR/debug/$FILES
-  args="-DROXEN roxenloader --config-dir=$DIR --start-script-pid=$$"
+  args="-DROXEN $DEBUG roxenloader --config-dir=$DIR --start-script-pid=$$"
   echo Executing $ulpc -m etc/master.pike $args $@ 2>$LOGDIR/debug/$FILES.1 
   $ulpc -m etc/master.pike $args $@ 2>>$LOGDIR/debug/$FILES.1 1>&2
   if [ -z "$noshutdown" ] ; then 
@@ -145,7 +154,7 @@ You can use the configuration interface in the server to get debug info.
 oo
 else
   echo "Server restart at `date`"
-  args="-DROXEN roxenloader --config-dir=$DIR --start-script-pid=$$"
+  args="-DROXEN $DEBUG roxenloader --config-dir=$DIR --start-script-pid=$$"
   echo Executing $ulpc -m etc/master.pike $args $@
   $ulpc -m etc/master.pike $args $@
 fi
