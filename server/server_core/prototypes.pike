@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.65 2004/01/25 18:29:59 norrby Exp $
+// $Id: prototypes.pike,v 1.66 2004/04/04 01:30:40 mani Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -141,7 +141,7 @@ class ModuleCopies
     return values(copies);
   }
   string _sprintf(int t) {
-    return t=='O' && sprintf("%O(%d)", sizeof(copies));
+    return t=='O' && sprintf("%O(%d)", this_program, sizeof(copies));
   }
 }
 
