@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.35 1998/04/03 12:50:01 grubba Exp $
+# $Id: Makefile,v 1.36 1998/04/03 13:31:41 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -54,7 +54,7 @@ all : configure_all
 configure : configure.in
 	@echo Rebuilding the configure-scripts...
 	@echo
-	@pike/*/src/run_autoconfig 2>&1 | grep -v warning
+	@pike/*/src/run_autoconfig . 2>&1 | grep -v warning
 	@echo
 	@test -f "$(BUILDDIR)"/stamp-h && rm -f "$(BUILDDIR)"/stamp-h
 
@@ -178,7 +178,7 @@ censor_crypto :
 	done
 
 	@echo "Running autoconf..."; \
-	(cd pike; 0.6/src/run_autoconfig)
+	(cd pike; 0.6/src/run_autoconfig .)
 
 	@echo "Censoring the Crypto implementation..."
 	@for d in pike/*/src/. pike/src/.; do \
