@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.386 2002/10/23 20:18:05 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.387 2002/10/23 23:58:26 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -806,6 +806,23 @@ class TagDate {
 
     array do_return(RequestID id) {
       int t=(int)args["unix-time"] || time(1);
+
+      if(args["iso-time"])
+      {
+	int year, month, day, hour, minute, second;
+	if(sscanf(args["iso-time"], "%d-%d-%d%*c%d:%d:%d", year, month, day, hour, minute, second) < 3)
+	  // Format yyyy-mm-dd{|{T| }hh:mm|{T| }hh:mm:ss}
+	  RXML.parse_error("Attribute iso-time needs at least yyyy-mm-dd specified.\n");
+	t = mktime(([
+	  "sec":second,
+	  "min":minute,
+	  "hour":hour,
+	  "mday":day,
+	  "mon":month-1,
+	  "year":year-1900
+	]));
+      }
+      
       if(args->timezone=="GMT") t += localtime(t)->timezone;
       t = Roxen.time_dequantifier(args, t);
 
@@ -2224,6 +2241,7 @@ class TagHelp {
       string ret="<h2>Roxen Interactive RXML Help</h2>";
 
       if(!help_for) {
+	NOCACHE();
 	array tags=map(indices(RXML_CONTEXT->tag_set->get_tag_names()),
 		       lambda(string tag) {
 			 if (!has_prefix (tag, "_"))
@@ -2235,12 +2253,10 @@ class TagHelp {
 		    lambda(string tag) { return "&lt;?"+tag+"?&gt;"; } );
 	tags = Array.sort_array(tags,
 				lambda(string a, string b) {
-				  if(a[..4]=="&lt;?") a=a[5..];
-				  if(b[..4]=="&lt;?") b=b[5..];
-				  if(lower_case(a)==lower_case(b))
-				    return a < b ? -1 : a > b;
-				  return
-				    lower_case (a) < lower_case (b) ? -1 : 1;
+				  if(has_prefix (a, "&lt;?")) a=a[5..];
+				  if(has_prefix (b, "&lt;?")) b=b[5..];
+				  if(lower_case(a)==lower_case(b)) return a > b;
+				  return lower_case (a) > lower_case (b);
 				})-({"\x266a"});
 
 	string char;
@@ -2250,16 +2266,12 @@ class TagHelp {
 	array tag_links;
 
 	foreach(tags, string tag) {
-	  if(tag[0]!='&' && lower_case(tag[0..0])!=char) {
+	  string tag_char =
+	    lower_case (has_prefix (tag, "&lt;?") ? tag[5..5] : tag[0..0]);
+	  if (tag_char != char) {
 	    if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+
 					 String.implode_nicely(tag_links)+"</p>";
-	    char=lower_case(tag[0..0]);
-	    tag_links=({});
-	  }
-	  if (tag[0]=='&' && lower_case(tag[5..5])!=char) {
-	    if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+
-					 String.implode_nicely(tag_links)+"</p>";
-	    char=lower_case(tag[5..5]);
+	    char = tag_char;
 	    tag_links=({});
 	  }
 	  if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":") {
@@ -4533,21 +4545,52 @@ class TagIfTime {
   int eval(string ti, RequestID id, mapping m) {
     CACHE(time(1)%60); // minute resolution...
 
-    int tok, a, b, d;
-    mapping c;
-    c=localtime(time(1));
+    int|object a, b, d;
+    
+    if(sizeof(ti) <= 5 /* Format is hhmm or hh:mm. */)
+    {
+	    mapping c = localtime(time(1));
+	    
+	    b=(int)sprintf("%02d%02d", c->hour, c->min);
+	    a=(int)replace(ti,":","");
 
-    b=(int)sprintf("%02d%02d", c->hour, c->min);
-    a=(int)replace(ti,":","");
+	    if(m->until)
+		    d = (int)m->until;
+		    
+    }
+    else /* Format is ISO8601 yyyy-mm-dd or yyyy-mm-ddThh:mm etc. */
+    {
+	    if(has_value(ti, "T"))
+	    {
+		    /* The Calendar module can for some reason not
+		     * handle the ISO8601 standard "T" extension. */
+		    a = Calendar.ISO.dwim_time(replace(ti, "T", " "))->minute();
+		    b = Calendar.ISO.Minute();
+	    }
+	    else
+	    {
+		    a = Calendar.ISO.dwim_day(ti);
+		    b = Calendar.ISO.Day();
+	    }
 
-    if(m->until) {
-      d = (int)m->until;
+	    if(m->until)
+		    if(has_value(m->until, "T"))
+			    /* The Calendar module can for some reason not
+			     * handle the ISO8601 standard "T" extension. */
+			    d = Calendar.ISO.dwim_time(replace(m->until, "T", " "))->minute();
+		    else
+			    d = Calendar.ISO.dwim_day(m->until);
+    }
+    
+    if(d)
+    {
       if (d > a && (b > a && b < d) )
 	return 1;
       if (d < a && (b > a || b < d) )
 	return 1;
       if (m->inclusive && ( b==a || b==d ) )
 	return 1;
+      return 0;
     }
     else if(m->inclusive || !(m->before || m->after) && a==b)
       return 1;
@@ -6081,6 +6124,14 @@ using the pre tag.
  Pike-script or Roxen module.</p>
 
 <ex><date unix-time='120'/></ex>
+</attr>
+
+<attr name='iso-time' value='{yyyy-mm-dd, yyyy-mm-dd hh:mm, yyyy-mm-dd hh:mm:ss}'>
+ <p>Display this time instead of the current. This attribute uses the specified
+ISO 8601 time as the starting time, instead of the current time. The character
+between the date and the time can be either \" \" (space) or \"T\" (the letter T).</p>
+
+<ex><date iso-time='2002-09-03 16:06'/></ex>
 </attr>
 
 <attr name='timezone' value='local|GMT' default='local'>
@@ -8064,10 +8115,10 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if#time":#"<desc type='plugin'><p><short>
- Is the time hhmm?</short> The attributes before, after and inclusive modifies
- the behavior. Time is a <i>Utils</i> plugin.
+ Is the time hhmm, hh:mm, yyyy-mm-dd or yyyy-mm-ddThh:mm?</short> The attributes before, after,
+ inclusive and until modifies the behavior. Time is a <i>Utils</i> plugin.
 </p></desc>
-<attr name='time' value='hhmm' required='required'><p>
+<attr name='time' value='hhmm|yyyy-mm-dd|yyyy-mm-ddThh:mm' required='required'><p>
  Choose what time to test.</p>
 </attr>
 
@@ -8077,6 +8128,10 @@ just got zapped?
 
 <attr name='before'><p>
  The time before present time.</p>
+</attr>
+
+<attr name='until' value='hhmm|yyyy-mm-dd|yyyy-mm-ddThh:mm'><p>
+ Gives true for the time range between present time and the time value of 'until'.</p>
 </attr>
 
 <attr name='inclusive'><p>
