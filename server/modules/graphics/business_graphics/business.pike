@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.90 1998/03/07 18:09:34 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.91 1998/03/07 18:22:41 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -910,6 +910,10 @@ mapping find_file(string f, object id)
   if(res->image)
     diagram_data["image"] = res->image;
 
+#ifdef BG_DEBUG
+  bg_timers->drawing = gauge {
+#endif
+
   switch(res->type) {
    case "pie":
      img = create_pie(diagram_data)["image"];
@@ -922,6 +926,10 @@ mapping find_file(string f, object id)
      img = create_graph(diagram_data)["image"];
      break;
   }
+#ifdef BG_DEBUG
+  };
+#endif
+
 
   if (res->image)
   {
