@@ -42,7 +42,6 @@ mapping dl(object id, string filename)
     return 0;
 }
 
-#if 1
 string encode_url(string base, string func, string path)
 {
   if(func=="dl") {
@@ -61,23 +60,6 @@ mapping decode_url(string s)
   if(!sizeof(path)||path[0]!='/') path = "/" + path;
   return ([ "func":func, "path":path ]);
 }
-#else
-string encode_url(string base, string func, string path)
-{
-  if(sizeof(path)) path = path[1..];
-  return combine_path(base, func, http_encode_string(path));
-}
-
-mapping decode_url(string s)
-{
-  string func = "", path = "";
-  sscanf("hej", "%s/%s", func, path);
-  sscanf(s, "%s/%s", func, path);
-//  path = MIME.decode_base64(path);
-  if(!sizeof(path)||path[0]!='/') path = "/" + path;
-  return ([ "func":func, "path":path ]);
-}
-#endif
 
 string|mapping navigate(object id, string f, string base_url)
 {
@@ -97,18 +79,18 @@ string|mapping navigate(object id, string f, string base_url)
   {
     array br = ({ });
     int t;
-    
+    string path = http_encode_url(f);
     mapping md = MetaData(id, f)->get();
     br += ({ ({ "View",  "'"+http_encode_string(f)+"'"+
 		  " target='_autosite_show_real'" }) });
     //werror("%O\n", md);
     if(md->content_type=="text/html")
-      br += ({ ({ "Edit File", (["path":http_encode_string(f) ]) }) });
-    br += ({ ({ "Edit Metadata", ([ "path":http_encode_string(f) ]) }),
-	     ({ "Add To Menu", ([ "path":http_encode_string(f) ]) }),
+      br += ({ ({ "Edit File", (["path":path ]) }) });
+    br += ({ ({ "Edit Metadata", ([ "path":path ]) }),
+	     ({ "Add To Menu", ([ "path":path ]) }),
 	     ({ "Download File", "'"+encode_url(base_url, "dl", f)+"'" }),
-	     ({ "Move/Rename File", ([ "path":http_encode_string(f) ]) }),
-	     ({ "Remove File", ([ "path":http_encode_string(f) ]) })
+	     ({ "Move/Rename File", ([ "path":path ]) }),
+	     ({ "Remove File", ([ "path":MIME.encode_base64(f) ]) })
     });
     wanted_buttons=br;
 
