@@ -15,7 +15,7 @@ inherit "module";
 
 #include <roxen.h>
 
-constant cvs_version = "$Id: php4.pike,v 2.13 2001/02/16 19:52:57 grubba Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.14 2001/02/17 16:42:29 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILE_EXTENSION;
 
@@ -76,10 +76,10 @@ class PHPScript
     if( err || nelems < 0 )
     // if nelems == 0, network buffer is full. We still want to continue.
     {
-      buffer="";	// Is this a good idea?
+      buffer="";
       close_when_done = -1;
     }
-    else // caudium/php has "else if(nelems>0)"
+    else if(nelems>0)
     {
       written += nelems;
       buffer = buffer[nelems..];
