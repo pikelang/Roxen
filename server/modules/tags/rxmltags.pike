@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.458 2004/04/22 16:47:46 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.459 2004/04/27 17:02:28 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7841,6 +7841,7 @@ the respective attributes below for further information.</p></desc>
 </define>
 <my-tag/>
 <my-tag foo='bar'/></ex>
+</p>
 </attr>
 
 <attr name='container' value='name'><p>
@@ -7848,7 +7849,7 @@ the respective attributes below for further information.</p></desc>
  The unevaluated content is available in <ent>_.contents</ent> inside
  the <tag>define</tag> (see the scope description below). You can also
  get the content after RXML evaluation with the <tag>contents</tag>
- tag - see below for further details.
+ tag - see below for further details.</p>
 </attr>
 
 <attr name='if' value='name'><p>
