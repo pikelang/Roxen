@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.502 2002/03/13 14:11:18 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.503 2002/03/22 15:33:59 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1311,7 +1311,8 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  TIMER_END(internal_magic);
 	  return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,"
 		   "\0\0\0\0\1\0\1\0\0\1\1""2\0;",
-		   "type":"image/gif" ]);
+		   "type":"image/gif",
+		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
 	}
 	if(has_prefix(loc, "pixel-"))
 	{
@@ -1319,7 +1320,8 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  return (["data":sprintf("GIF89a\1\0\1\0\200\0\0\0\0\0%c%c%c,\0\0\0"
 				  "\0\1\0\1\0\0\2\2L\1\0;",
 				  @parse_color(loc[6..])),
-		   "type":"image/gif" ]);
+		   "type":"image/gif",
+		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
 	}
 	TIMER_END(internal_magic);
 	return internal_roxen_image(loc, id);
