@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.425 2000/02/13 18:09:46 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.426 2000/02/14 09:20:21 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -149,7 +149,7 @@ string filename( program|object o )
   if( objectp( o ) )
     o = object_program( o );
 
-  string fname = master()->program_name (o);
+  string fname = master()->program_name( o );
   if( !fname )
     fname = "Unknown Program";
   return fname-(getcwd()+"/");
@@ -424,7 +424,7 @@ class container
 #endif
 
 // Locale support
-Locale.Roxen.standard default_locale=Locale.Roxen.standard;
+RoxenLocale.standard default_locale=RoxenLocale.standard;
 object fonts;
 #if constant( thread_local )
 object locale = thread_local();
@@ -656,7 +656,7 @@ class fallback_redirect_request
 	else
 	{
 	  name = req[1..sizeof(req)-2] * " ";
-	  foreach(Array.map(lines[1..], `/, ":"), array header)
+	  foreach(map(lines[1..], `/, ":"), array header)
 	  {
 	    if ( (sizeof(header) >= 2) &&
 		 (lower_case(header[0]) == "host") )
@@ -1929,13 +1929,13 @@ class ImageCache
           ov = 255;
         if( alpha )
         {
-          Image.image i = Image.image( reply->xsize(), reply->ysize(), ov,ov,ov );
+          Image.Image i = Image.Image( reply->xsize(), reply->ysize(), ov,ov,ov );
           i = i->paste_alpha( alpha, ov );
           alpha = i;
         }
         else
         {
-          alpha = Image.image( reply->xsize(), reply->ysize(), ov,ov,ov );
+          alpha = Image.Image( reply->xsize(), reply->ysize(), ov,ov,ov );
         }
       }
 
@@ -2501,9 +2501,11 @@ string decode_charset( string charset, string data )
 
 void create()
 {
-   SET_LOCALE(default_locale);
+  SET_LOCALE(default_locale);
   // Dump some programs (for speed)
-
+  foreach( glob("*.pmod",get_dir( "etc/modules/RoxenLocale.pmod/")), string q )
+    dump( "etc/modules/RoxenLocale.pmod/"+ q );
+  dump( "base_server/roxen.pike" );
   dump( "base_server/roxenlib.pike" );
   dump( "base_server/basic_defvar.pike" );
   dump( "base_server/newdecode.pike" );
@@ -2531,32 +2533,9 @@ void create()
 
   // for module encoding stuff
 
-  add_constant( "MIME.encode_base64", MIME.encode_base64 );
-  add_constant( "MIME.decode_base64", MIME.decode_base64 );
-
-  add_constant( "Image", Image );
-  add_constant( "Image.Image", Image.Image );
-  add_constant( "Image.Font", Image.Font );
-  add_constant( "Image.Colortable", Image.Colortable );
-  add_constant( "Image.Color", Image.Color );
-  add_constant( "Image.GIF.encode", Image.GIF.encode );
-  add_constant( "Image.Color.Color", Image.Color.Color );
   add_constant( "roxen.argcache", argcache );
   add_constant( "ArgCache", ArgCache );
-  add_constant( "Regexp", Regexp );
-  add_constant( "Stdio.File", Stdio.File );
-  add_constant( "Stdio.stdout", Stdio.stdout );
-  add_constant( "Stdio.stderr", Stdio.stderr );
-  add_constant( "Stdio.stdin", Stdio.stdin );
-  add_constant( "Stdio.read_bytes", Stdio.read_bytes );
-  add_constant( "Stdio.write_file", Stdio.write_file );
-  add_constant( "Stdio.sendfile", Stdio.sendfile );
-  add_constant( "Process.create_process", Process.create_process );
   add_constant( "roxen.load_image", load_image );
-#if constant(Thread.Mutex)
-  add_constant( "Thread.Mutex", Thread.Mutex );
-  add_constant( "Thread.Queue", Thread.Queue );
-#endif
 
   add_constant( "roxen", this_object());
   add_constant( "roxen.decode_charset", decode_charset);
@@ -2567,20 +2546,16 @@ void create()
 
   add_constant( "load",    load);
   add_constant( "Roxen.set_locale", set_locale );
-  add_constant( "Roxen.locale", locale );
-  add_constant( "Locale.Roxen", Locale.Roxen );
-  add_constant( "Locale.Roxen.standard", Locale.Roxen.standard );
-  add_constant( "Locale.Roxen.standard.register_module_doc",
-                 Locale.Roxen.standard.register_module_doc );
+  add_constant( "roxen.locale", locale );
   add_constant( "roxen.ImageCache", ImageCache );
-  // compatibility
-  add_constant( "hsv_to_rgb",  Colors.hsv_to_rgb  );
-  add_constant( "rgb_to_hsv",  Colors.rgb_to_hsv  );
-  add_constant( "parse_color", Colors.parse_color );
-  add_constant( "color_name",  Colors.color_name  );
-  add_constant( "colors",      Colors             );
-  add_constant( "roxen.fonts", (fonts = (object)"fonts.pike") );
 
+  // compatibility
+  int s = gethrtime();
+  add_constant( "roxen.fonts", (fonts = (object)"fonts.pike") );
+  report_debug( "[fonts: %.2fms] ", (gethrtime()-s)/1000.0);
+
+  /* Delayed loading. */
+  int s = gethrtime();
   master()->resolv ("RXML.refs");
   foreach( glob("*.pike",get_dir( "etc/modules/RXML.pmod/")), string q )
   {
@@ -2589,23 +2564,31 @@ void create()
   }
   foreach( glob("*.pmod",get_dir( "etc/modules/RXML.pmod/")), string q )
     dump( "etc/modules/RXML.pmod/"+ q );
+
   /* Used in all 'new style' tag modules */
   add_constant( "RXML.Context", master()->resolv("RXML.Context") );
   add_constant( "RXML.Tag", master()->resolv("RXML.Tag") );
   add_constant( "RXML.TagSet", master()->resolv("RXML.Tag") );
   add_constant( "RXML.Frame", master()->resolv("RXML.Frame") );
+  add_constant( "RXML.Void", master()->resolv("RXML.Void") );
   add_constant( "RXML.get_context", master()->resolv("RXML.get_context") );
+
   add_constant( "RXML.t_text", master()->resolv("RXML.t_text") );
   add_constant( "RXML.t_same", master()->resolv("RXML.t_same") );
+  add_constant( "RXML.t_none", master()->resolv("RXML.t_none") );
+  add_constant( "RXML.t_any", master()->resolv("RXML.t_any") );
   add_constant( "RXML.t_html", master()->resolv("RXML.t_html") );
   add_constant( "RXML.t_xml", master()->resolv("RXML.t_xml") );
 
+  report_debug( "[RXML: %.2fms] ", (gethrtime()-s)/1000.0);
 
+  int s = gethrtime();
   Configuration = (program)"configuration";
   dump( "base_server/configuration.pike" );
   dump( "base_server/rxmlhelp.pike" );
   add_constant( "Configuration", Configuration );
 
+  report_debug( "[Configuration: %.2fms] ", (gethrtime()-s)/1000.0);
   // This is currently needed to resolve the circular references in
   // RXML.pmod correctly. :P
 
@@ -2896,7 +2879,7 @@ array(Image.Layer) load_layers(string f, RequestID id)
   return decode_layers( data );
 }
 
-Image.image load_image(string f, RequestID id)
+Image.Image load_image(string f, RequestID id)
 {
   mapping q = low_load_image( f, id );
   if( q ) return q->img;
@@ -3005,7 +2988,7 @@ void set_locale( string to )
 {
   if( to == "standard" )
     SET_LOCALE( default_locale );
-  SET_LOCALE( Locale.Roxen[ to ] || default_locale );
+  SET_LOCALE( RoxenLocale[ to ] || default_locale );
 }
 
 
@@ -3075,6 +3058,9 @@ int main(int argc, array tmp)
   fastpipe = ((program)"fastpipe");
 
   call_out( lambda() {
+              foreach(glob("*.pmod",get_dir( "etc/modules/RoxenLocale.pmod/")),
+                      string q )
+                dump( "etc/modules/RoxenLocale.pmod/"+ q );
               dump( "protocols/http.pike");
               dump( "protocols/ftp.pike");
               dump( "protocols/https.pike");
@@ -3094,10 +3080,10 @@ int main(int argc, array tmp)
   switch(getenv("LANG"))
   {
    case "sv":
-     default_locale = Locale.Roxen["svenska"];
+     default_locale = RoxenLocale["svenska"];
      break;
    case "jp":
-     default_locale = Locale.Roxen["nihongo"];
+     default_locale = RoxenLocale["nihongo"];
      break;
   }
   SET_LOCALE(default_locale);
@@ -3124,7 +3110,7 @@ int main(int argc, array tmp)
   define_global_variables(argc, argv);
 
   object o;
-  if(QUERY(locale) != "standard" && (o = Locale.Roxen[QUERY(locale)]))
+  if(QUERY(locale) != "standard" && (o = RoxenLocale[QUERY(locale)]))
   {
     default_locale = o;
     SET_LOCALE(default_locale);
@@ -3213,7 +3199,7 @@ string check_variable(string name, mixed value)
     break;
    case "locale":
      object o;
-     if(value != "standard" && (o = Locale.Roxen[value]))
+     if(value != "standard" && (o = RoxenLocale[value]))
      {
        default_locale = o;
        SET_LOCALE(default_locale);

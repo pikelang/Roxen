@@ -6,8 +6,7 @@ void deflocaledoc( string locale, string variable,
                    string name, string doc, mapping|void translate)
 {
   if(!locs[locale] )
-    locs[locale] = master()->resolv("Locale")["Roxen"][locale]
-                 ->register_module_doc;
+    locs[locale] = RoxenLocale[locale]->register_module_doc;
   if(!locs[locale])
     report_debug("Invalid locale: "+locale+". Ignoring.\n");
   else

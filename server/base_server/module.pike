@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.78 2000/02/10 03:33:29 mast Exp $ */
+/* $Id: module.pike,v 1.79 2000/02/14 09:20:00 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -121,7 +121,7 @@ string info(Configuration conf)
 }
 
 constant ConfigurableWrapper = roxen.ConfigurableWrapper;
-constant reg_s_loc = Locale.Roxen.standard.register_module_doc;
+constant reg_s_loc = RoxenLocale.standard.register_module_doc;
 
 // Define a variable, with more than a little error checking...
 void defvar(string var, mixed value, string name,
@@ -290,7 +290,7 @@ void deflocaledoc( string locale, string variable,
 		   string name, string doc, mapping|void translate )
 {
   if(!locs[locale] )
-    locs[locale] = Locale.Roxen[locale]->register_module_doc;
+    locs[locale] = RoxenLocale[locale]->register_module_doc;
   if(!locs[locale])
     report_debug("Invalid locale: "+locale+". Ignoring.\n");
   else

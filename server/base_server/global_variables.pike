@@ -709,8 +709,7 @@ anlending.");
 	  "Locale, used to localise all messages in roxen.\n"
 #"Standard means using the default locale, which varies according to the
 value of the 'LANG' environment variable.",
-          sort(indices(master()->resolv("Locale")["Roxen"])
-               - ({ "Modules" })));
+          (sort(indices(RoxenLocale)) - ({ "Modules" })));
   deflocaledoc("svenska", "locale", "Språk",
 	       "Den här variablen anger vilket språk roxen ska använda. "
 	       "'standard' betyder att språket sätts automatiskt från "
