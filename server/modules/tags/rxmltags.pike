@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.269 2001/08/07 16:51:25 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.270 2001/08/10 22:42:57 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2272,10 +2272,10 @@ class UserTagContents
     inherit RXML.Frame;
     constant is_user_tag_contents = 1;
     RXML.Frame frame;
+    array exec;
 
-    array do_return()
+    local RXML.Frame get_upframe()
     {
-      RXML.Context ctx = RXML_CONTEXT;
       RXML.Frame upframe;
       if (frame) upframe = frame->up;
       else {
@@ -2289,32 +2289,51 @@ class UserTagContents
       }
       if (!upframe)
 	parse_error ("No associated defined tag to get contents from.\n");
+      return upframe;
+    }
 
-      array ret = upframe->user_tag_contents;
+    array do_return()
+    {
+      RXML.Frame upframe = get_upframe();
+      RXML.Context ctx = RXML_CONTEXT;
+      array ret;
 
       if (ctx->scopes == upframe->saved_scopes)
-	ret[1] = RXML.nil;
+	ret = ({upframe->user_tag_contents});
       else {
 	// This is poking in the internals; there ought to be some
 	// sort of interface here.
-	ret[1] = lambda (mapping(string:mixed) old_scopes,
-			 mapping(RXML.Frame:array) old_hidden)
-		 {
-		   // Wrap this in a lambda to avoid getting all the
-		   // locals in do_return in the dynamic frame.
-		   return lambda()
-			  {
-			    RXML_CONTEXT->scopes = old_scopes;
-			    RXML_CONTEXT->hidden = old_hidden;
-			    return RXML.nil;
-			  };
-		 } (ctx->scopes, ctx->hidden);
+	ret = ({upframe->user_tag_contents,
+		lambda (mapping(string:mixed) old_scopes,
+			mapping(RXML.Frame:array) old_hidden)
+		{
+		  // Wrap this in a lambda to avoid getting all the
+		  // locals in do_return in the dynamic frame.
+		  return lambda()
+			 {
+			   RXML_CONTEXT->scopes = old_scopes;
+			   RXML_CONTEXT->hidden = old_hidden;
+			   return RXML.nil;
+			 };
+		} (ctx->scopes, ctx->hidden)});
 	ctx->scopes = upframe->saved_scopes;
 	ctx->hidden = upframe->saved_hidden;
       }
 
-      if (upframe->compile) flags |= RXML.FLAG_COMPILE_RESULT;
+      if (upframe->compile) {
+	flags |= RXML.FLAG_COMPILE_RESULT;
+	exec = stringp (ret[0]) && ret;
+      }
       return ret;
+    }
+
+    int save()
+    {
+      if (exec) {
+	RXML.Frame upframe = get_upframe();
+	upframe->user_tag_contents = exec[0];
+      }
+      return 0;
     }
   }
 }
@@ -2365,7 +2384,7 @@ class UserTag {
 
     constant is_user_tag = 1;
     string content_text;
-    array(string|RXML.PCode) user_tag_contents;
+    string|RXML.PCode user_tag_contents;
     mapping(string:mixed) saved_scopes;
     mapping(RXML.Frame:array) saved_hidden;
     int compile;
@@ -2420,7 +2439,7 @@ class UserTag {
 #endif
 	}
 	content_text = content;
-	user_tag_contents = ({content || RXML.nil, 0});
+	user_tag_contents = content || RXML.nil;
 	compile = ctx->make_p_code;
       }
 
