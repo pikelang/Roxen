@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.426 2001/04/18 04:25:08 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.427 2001/04/23 15:55:34 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2925,8 +2925,6 @@ void low_init(void|int modules_already_enabled)
   int start_time = gethrtime();
   if (!modules_already_enabled)
     report_debug("\nEnabling all modules for "+query_name()+"... \n");
-
-  add_parse_module( (object)this_object() );
 
   if (!modules_already_enabled) {
     enabled_modules = retrieve("EnabledModules", this_object());
