@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.3 2000/08/21 15:20:42 wellhard Exp $";
+constant cvs_version="$Id: vform.pike,v 1.4 2000/08/22 19:26:17 nilsson Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_PARSER;
@@ -161,7 +161,7 @@ class TagVForm {
 	    m_delete(new_args, arg);
 	  new_args->value=c->id->variables[args->name]||args->value||"";
 	  if(c->id->variables["__clear"]) new_args->value=args->value||"";
-	  return Roxen.make_tag("input", new_args);
+	  return Roxen.make_tag("input", new_args, c->id->misc->vform_xml);
 	}
       }
 
@@ -182,20 +182,20 @@ class TagVForm {
 	
 	if(ok) {
 	  id->misc->vform_verified[args->name]=1;
-	  verified_result();
+	  verified_result(id->misc->vform_xml);
 	}
 	else {
 	  id->misc->vform_failed[args->name]=1;
 	  if(show_err)
-	    failed_result();
+	    failed_result(id->misc->vform_xml);
 	  else
-	    verified_result();
+	    verified_result(id->misc->vform_xml);
 	  id->misc->vform_ok = 0;
 	}
 	return;
       }
 
-      void verified_result()
+      void verified_result(int xml)
 	// Create a tag result withut error response.
       {
 	switch(args->mode||"after") {
@@ -207,11 +207,11 @@ class TagVForm {
 	case "before":
 	case "after":
 	default:
-	  result = Roxen.make_tag("input", args);
+	  result = Roxen.make_tag("input", args, xml);
 	}
       }
 
-      void failed_result()
+      void failed_result(int xml)
 	// Creates a tag result with widget and error response.
       {
 	switch(args->mode||"after") {
@@ -221,10 +221,10 @@ class TagVForm {
 				 "verified":"" ]) );
 	  break;
 	case "before":
-	  result = content + Roxen.make_tag("input", args);
+	  result = content + Roxen.make_tag("input", args, xml);
 	case "after":
 	default:
-	  result = Roxen.make_tag("input", args) + content;
+	  result = Roxen.make_tag("input", args, xml) + content;
 	}
       }
     }
@@ -252,7 +252,7 @@ class TagVForm {
 	    m_delete(new_args, arg);
 	  new_args->value=c->id->variables[args->name]||args->value||"";
 	  if(c->id->variables["__clear"]) new_args->value=args->value||"";
-	  return Roxen.make_container("textarea", new_args-(["value":0]),new_args->value);
+	  return RXML.t_xml->format_tag("textarea", new_args-(["value":0]),new_args->value);
 	}
       }
 
@@ -299,7 +299,7 @@ class TagVForm {
 	case "before":
 	case "after":
 	default:
-	  result = Roxen.make_container("textarea", args-(["value":0]),args->value);
+	  result = RXML.t_xml->format_tag("textarea", args-(["value":0]), args->value);
 	}
       }
 
@@ -314,12 +314,12 @@ class TagVForm {
 				 "verified":"" ]) );
 	  break;
 	case "before":
-	  result = content + Roxen.make_container("textarea",
-						  args-(["value":0]),args->value);
+	  result = content + RXML.t_xml->format_tag("textarea",
+						    args-(["value":0]), args->value);
 	case "after":
 	default:
-	  result = Roxen.make_container("textarea",
-					args-(["value":0]),args->value) + content;
+	  result = RXML.t_xml->format_tag("textarea",
+					  args-(["value":0]), args->value) + content;
 	}
       }
     }
@@ -341,7 +341,7 @@ class TagVForm {
 	m_delete(args, "not");
 	if(ok) {
 	  id->misc->vform_verified[args->name]=1;
-	  result = Roxen.make_container("select", args, content);
+	  result = RXML.t_xml->format_tag("select", args, content);
 	}
 	else {
 	  id->misc->vform_failed[args->name]=1;
@@ -358,13 +358,13 @@ class TagVForm {
 	    string error = parse_html(content, ([]),
 				      ([ "error-message":lambda(string t, mapping m, string c) { return c; },
 					 "option":"" ]) );
-	    result = error + Roxen.make_container("select", args, content);
+	    result = error + RXML.t_xml->format_tag("select", args, content);
 	  case "after":
 	  default:
 	    string error = parse_html(content, ([]),
 				      ([ "error-message":lambda(string t, mapping m, string c) { return c; },
 					 "option":"" ]) );
-	    result = Roxen.make_container("select", args, content) + error;
+	    result = RXML.t_xml->format_tag("select", args, content) + error;
 	  }
 	}
 	return 0;
@@ -380,12 +380,12 @@ class TagVForm {
     class Frame {
       inherit RXML.Frame;
 
-      array do_return() {
+      array do_return(RequestID id) {
 	if(!args->type) args->type = "submit";
 	args->name="__reload";
 	args["/"]="/";
 	
-	result = Roxen.make_tag("input", args);
+	result = Roxen.make_tag("input", args, id->misc->vform_xml);
 	return 0;
       }
     }
@@ -418,12 +418,11 @@ class TagVForm {
     class Frame {
       inherit RXML.Frame;
 
-      array do_return() {
+      array do_return(RequestID id) {
 	if(!args->type) args->type = "submit";
 	args->name="__clear";
-	args["/"]="/";
 
-	result = Roxen.make_tag("input", args);
+	result = Roxen.make_tag("input", args, id->misc->vform_xml);
 	return 0;
       }
     }
@@ -469,6 +468,7 @@ class TagVForm {
       id->misc->vform_ok = 1;
       id->misc->vform_verified=(<>);
       id->misc->vform_failed=(<>);
+      id->misc->vform_xml = !args->noxml;
       return 0;
     }
 
@@ -486,7 +486,7 @@ class TagVForm {
 
       m_delete(id->misc, "vform_verified");
       m_delete(id->misc, "vform_failed");
-      result = Roxen.make_container("form", args, content);
+      result = RXML.t_xml->format_tag("form", args, content);
       return 0;
     }
   }
