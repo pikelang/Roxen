@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.117 2004/07/11 13:40:56 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.118 2005/02/07 22:24:42 _cvs_dirix Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -201,7 +201,7 @@ array|object do_sql_query(mapping args, RequestID id,
       error = con->error();
       if (error) error = ": " + error;
       error = sprintf("Query failed%s\n", error||".");
-      RXML.parse_error(error);
+      RXML.run_error(error);
     }
   }
   else
@@ -216,7 +216,7 @@ array|object do_sql_query(mapping args, RequestID id,
       error = con->error();
       if (error) error = ": " + error;
       error = sprintf("Query failed%s\n", error||".");
-      RXML.parse_error(error);
+      RXML.run_error(error);
     }
   }
 
