@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.180 1999/03/28 21:23:01 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.181 1999/04/14 17:10:04 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2216,7 +2216,7 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
   } else
     error("No ID passed to 'try_get_file'\n");
 
-  if(!id->pragma["no-cache"] && !nocache)
+  if(!id->pragma["no-cache"] && !nocache && (!id->auth || !id->auth[0]))
     if(res = cache_lookup("file:"+id->conf->name, s))
       return res;
 
@@ -2265,7 +2265,9 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
     if(!sscanf(res, "%*s\n\n%s", res))
       sscanf(res, "%*s\n%s", res);
   }
-  cache_set("file:"+id->conf->name, s, res);
+  if (!id->auth || !id->auth[0]) {
+    cache_set("file:"+id->conf->name, s, res);
+  }
   return res;
 }
 
