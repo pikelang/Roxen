@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.10 1998/02/15 00:15:09 noring Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.11 1998/03/06 11:25:43 noring Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -16,16 +16,8 @@ mixed *register_module()
   return ({ 
     MODULE_PARSER,
     "Tablify",
-      ("Generates tables from, as an example, tab separated fields in newline"
-       " separated records (this is the default)."
-       "<p>This module defines a tag, &lt;tablify&gt;<p>Arguments:<br>"
-       "help: This help<br>\n"
-       "nice: Generate \"nice\" tables. The first row is the title row<br>\n"
-       "cellseparator=str: Use str as the column-separator<br>\n"
-       "rowseparator=str: Use str as the row-separator<br>\n"
-       "cellalign=left|right|center: Align the contents of the cells<br>\n"
-       "rowalign=left|right|center: Align the contents of the rows<br>\n"),
-      ({}), 1, });
+    (Stdio.read_bytes("modules/tags/docs/tablify")),
+    ({}), 1, });
 }
 
 /* The meat of the module. Convert the contents of the tag (in 'q') to
