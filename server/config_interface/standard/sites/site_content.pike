@@ -478,11 +478,13 @@ string parse( RequestID id )
 	   res += url + " "+port_for(url)+"<br />\n";
        }
 
-       res += "<br /><br /><table><tr><td valign=top>";
-       res +="<h2>"+LOCALE(260, "Request status")+"</h2>";
+       res += "<p>"+Roxen.html_encode_string(conf->variables->comment->query())+"</p>";
+
+       res += "<br /><table><tr><td valign=\"top\">"
+	 "<h2>"+LOCALE(260, "Request status")+"</h2>";
        res += status(conf);
-       res += "</td><td valign=top>";
-       res += "<h2>"+LOCALE(292, "Cache status")+"</h2><table cellpading='0' cellspacing='0' width='50'%>\n";
+       res += "</td><td valign=top>"
+	 "<h2>"+LOCALE(292, "Cache status")+"</h2><table cellpading='0' cellspacing='0' width='50'%>\n";
 
        int total = conf->datacache->hits+conf->datacache->misses;
 
