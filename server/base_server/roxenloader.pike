@@ -4,7 +4,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.22 1997/05/07 23:07:40 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.23 1997/05/13 17:07:02 marcus Exp $";
 
 #define perror roxen_perror
 
@@ -241,6 +241,29 @@ int spawne(string s,string *args, mapping|array env, object stdin,
   exit(0); 
 }
 
+int spawn_pike(array(string) args, void|string wd)
+{
+  int pid;
+  string cwd = getcwd();
+  string pikebin = combine_path(cwd, "bin/pike");
+  string mast = combine_path(cwd,"../pike/src/lib/master.pike");
+  array preargs = ({ });
+
+  if (file_stat(mast))
+    preargs += ({ "-m", mast });
+  preargs += ({ "-I", combine_path(cwd,"etc/include"),
+		  "-M", combine_path(cwd,"etc/modules") });
+  if ((pid = fork()) == 0) {
+    if(wd)
+      cd(wd);
+    exece(pikebin, preargs+args, getenv());
+    perror(sprintf("Spawn_pike: Failed to exece %s\n", pikebin));
+    exit(-1);
+  }
+  return pid;
+}
+
+
 object roxen;
 function nwrite;
 
@@ -429,6 +452,7 @@ void main(mixed ... args)
   add_constant("error", lambda(string s){error(s);});
 
   add_constant("spawne",spawne);
+  add_constant("spawn_pike",spawn_pike);
   add_constant("perror",perror);
   add_constant("roxen_perror",perror);
   add_constant("popen",popen);
