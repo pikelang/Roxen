@@ -34,7 +34,7 @@ string drawtype;
  "quadratic"; //Om !=0 så är bars/graph-diagrammet kvadratiskt spline
  "cubic";//Om !=0 så är bars/graph-diagrammet kubiskt spline 
  //För bars-box och pie:
- "2D" - ritar 2D boxar
+ "2D" - ritar 2D boxar/kakor
  "3D" - flash!!!
 
 int tone;

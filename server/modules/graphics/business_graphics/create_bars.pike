@@ -282,6 +282,10 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
     (diagram_data["ymaxvalue"]-diagram_data["yminvalue"]);
   
   
+  draw_grind(diagram_data, xpos_for_yaxis, ypos_for_xaxis, 
+	     xmore, ymore, xstart, ystart, (float) si);
+  
+
 
   //Rita ut bars datan
   int farg=0;
@@ -570,7 +574,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	}
     
   //Rita pilen
-  barsdiagram->
+  /* barsdiagram->
     polygone(make_polygon_from_line(diagram_data["linewidth"], 
 				    ({
 				      xpos_for_yaxis-
@@ -590,6 +594,26 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					  diagram_data["labelsize"]
 				    }), 
 				    1, 1)[0]);
+  */
+  barsdiagram->
+    polygone(
+	     ({
+	       xpos_for_yaxis-
+	       (float)si/4.0,
+	       diagram_data["linewidth"]/2.0+
+	       (float)si/2.0+
+	       diagram_data["labelsize"],
+				      
+	       xpos_for_yaxis,
+	       diagram_data["linewidth"]/2.0+
+	       diagram_data["labelsize"],
+	
+	       xpos_for_yaxis+
+	       (float)si/4.0,
+	       diagram_data["linewidth"]/2.0+
+	       (float)si/2.0+
+	       diagram_data["labelsize"]
+	     })); 
   
 
 
@@ -724,7 +748,7 @@ int main(int argc, string *argv)
 		    ({93.2, -103.3, 93.5, 103.7, 94.3, -91.2 }) */}),
 		 "fontsize":32,
 		 "axcolor":({0,0,0}),
-		 "bgcolor":({0,255,255}),
+		 "bgcolor":({255,255,255}),
 		 "labelcolor":({0,0,0}),
 		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
 		 "linewidth":2.2,
@@ -737,8 +761,9 @@ int main(int argc, string *argv)
 		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" }),
 		 "labelsize":12,
 		 "xminvalue":0.1,
-		 "yminvalue":0
-
+		 "yminvalue":0,
+		 "horgrind": 1,
+		 "grindwidth": 0.5
   ]);
   /*
   diagram_data["data"]=({({ 

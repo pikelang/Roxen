@@ -333,7 +333,7 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 // (["graph":image-object, "xstart": var_i_bilden_vi_kan_börja_rita_data-int,
 //   "ystart": var_i_bilden_vi_kan_börja_rita_data-int,
 //   "xstop":int, "ystop":int 
-//    osv...]);
+//    osv...]); Don
 
 /*
  foreach(make_polygon_from_line(...), array(float) p)
@@ -355,6 +355,61 @@ string no_end_zeros(string f)
   return f;
 }
 
+
+//Denna funktion ritar ut grinden i bilden.
+mapping draw_grind(mapping diagram_data, int|float xpos_for_yaxis,
+		   int|float ypos_for_xaxis, float xmore, float ymore, 
+		   float xstart, float ystart, float si)
+{
+  //Placera ut vert grinden
+  int s=sizeof(diagram_data["xnamesimg"]);
+  object graph=diagram_data["image"];
+  float gw=diagram_data["grindwidth"];
+  if ((diagram_data["vertgrind"])&&
+      (gw>LITET))
+    for(int i=0; i<s; i++)
+      {
+	graph->
+	  polygone(make_polygon_from_line(gw,
+					  ({
+					    ((diagram_data["values_for_xnames"][i]-
+					      diagram_data["xminvalue"])
+					     *xmore+xstart),
+					    diagram_data["ysize"]-ystart
+					    ,
+					    
+					    ((diagram_data["values_for_xnames"][i]-
+					      diagram_data["xminvalue"])
+					     *xmore+xstart),
+					    gw
+					  }), 
+					  1, 1)[0]);
+    }
+
+  //Placera ut horgrinden
+  s=sizeof(diagram_data["ynamesimg"]);
+  if ((diagram_data["horgrind"])&&
+      (gw>LITET))
+  for(int i=0; i<s; i++)
+    {
+      graph->
+	polygone(make_polygon_from_line(gw,
+					({
+					  xstart,
+					  (-(diagram_data["values_for_ynames"][i]-
+					     diagram_data["yminvalue"])
+					   *ymore+diagram_data["ysize"]-ystart),
+
+					  diagram_data["xsize"]-gw,
+					  (-(diagram_data["values_for_ynames"][i]-
+					     diagram_data["yminvalue"])
+					   *ymore+diagram_data["ysize"]-ystart)
+					}), 
+					1, 1)[0]);
+    }
+  
+
+}
 
 //Denna funktion skriver också ut infon i Legenden
 mapping set_legend_size(mapping diagram_data)
@@ -788,7 +843,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					diagram_data["linewidth"],
 					diagram_data["ysize"]- ypos_for_xaxis,
 					diagram_data["xsize"]-
-					diagram_data["linewidth"]-labelx/2, 
+					si-labelx/2, 
 					diagram_data["ysize"]-ypos_for_xaxis
 				      }), 
 				      1, 1)[0]);
@@ -817,7 +872,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					    xpos_for_yaxis-si/3.0, 
 					    diagram_data["ysize"]-ypos_for_xaxis,
 
-					    diagram_data["xsize"]-diagram_data["linewidth"]-labelx/2, 
+					    diagram_data["xsize"]-si-labelx/2, 
 					    diagram_data["ysize"]-ypos_for_xaxis
 
 					  }), 
@@ -846,7 +901,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					      xpos_for_yaxis+4.0/3.0*si, 
 					      diagram_data["ysize"]-ypos_for_xaxis,
 					      
-					      diagram_data["xsize"]-diagram_data["linewidth"]-labelx/2, 
+					      diagram_data["xsize"]-si-labelx/2, 
 					      diagram_data["ysize"]-ypos_for_xaxis
 					      
 					    }), 
@@ -855,7 +910,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	}
   
   //Rita pilen på xaxeln
-  graph->
+  /*graph->
     polygone(make_polygon_from_line(diagram_data["linewidth"], 
 				    ({
 				      diagram_data["xsize"]-
@@ -873,6 +928,25 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 				      (float)si/2.0
 				    }), 
 				    1, 1)[0]);
+  */
+ graph->polygone(
+	  ({
+	    diagram_data["xsize"]-
+	    diagram_data["linewidth"]/2-
+	    (float)si-labelx/2, 
+	    diagram_data["ysize"]-ypos_for_xaxis-
+	    (float)si/4.0,
+	    diagram_data["xsize"]-
+	    diagram_data["linewidth"]/2-labelx/2, 
+	    diagram_data["ysize"]-ypos_for_xaxis,
+	    diagram_data["xsize"]-
+	    diagram_data["linewidth"]/2-
+	    (float)si-labelx/2, 
+	    diagram_data["ysize"]-ypos_for_xaxis+
+	    (float)si/4.0
+	  })
+	  );
+
 
   //Rita yaxeln
   if ((diagram_data["yminvalue"]<=LITET)&&
@@ -884,7 +958,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					  diagram_data["ysize"]-diagram_data["linewidth"],
 					  
 					  xpos_for_yaxis,
-					  diagram_data["linewidth"]+
+					  si+
 					  diagram_data["labelsize"]
 					}), 
 					1, 1)[0]);
@@ -914,7 +988,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					    si/3.0,
 					    
 					    xpos_for_yaxis,
-					    diagram_data["linewidth"]+
+					    si+
 					    diagram_data["labelsize"]
 					  }), 
 					  1, 1)[0]);
@@ -972,8 +1046,8 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					      diagram_data["ysize"]-ypos_for_xaxis-
 					      si*4.0/3.0,
 					    
-					      xpos_for_yaxis+0.0001, //FIXME!
-					      diagram_data["linewidth"]+
+					      xpos_for_yaxis+0.01, //FIXME!
+					      si+
 					      diagram_data["labelsize"]
 					      
 					    }), 
@@ -982,7 +1056,8 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	}
     
   //Rita pilen
-  graph->
+  /*
+graph->
     polygone(make_polygon_from_line(diagram_data["linewidth"], 
 				    ({
 				      xpos_for_yaxis-
@@ -1002,7 +1077,27 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					  diagram_data["labelsize"]
 				    }), 
 				    1, 1)[0]);
-
+  */
+  graph->
+    polygone(
+	     ({
+	       xpos_for_yaxis-
+	       (float)si/4.0,
+	       diagram_data["linewidth"]/2.0+
+	       (float)si+
+	       diagram_data["labelsize"],
+				      
+	       xpos_for_yaxis,
+	       diagram_data["linewidth"]/2.0+
+	       diagram_data["labelsize"],
+	
+	       xpos_for_yaxis+
+	       (float)si/4.0,
+	       diagram_data["linewidth"]/2.0+
+	       (float)si+
+	       diagram_data["labelsize"]
+	     })); 
+  
 
   //Räkna ut lite skit
   float xstart=(float)diagram_data["xstart"];
@@ -1012,8 +1107,9 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   float ymore=(-ystart+diagram_data["ystop"])/
     (diagram_data["ymaxvalue"]-diagram_data["yminvalue"]);
   
+  draw_grind(diagram_data, xpos_for_yaxis, ypos_for_xaxis, 
+	     xmore, ymore, xstart, ystart, (float) si);
   
-
   //Placera ut texten på X-axeln
   int s=sizeof(diagram_data["xnamesimg"]);
   for(int i=0; i<s; i++)
@@ -1171,8 +1267,10 @@ int main(int argc, string *argv)
 		 "legendfontsize":12,
 		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" }),
 		 "labelsize":0,
-		 "xminvalue":0.1,
-		 "yminvalue":0.1
+		 "xminvalue":0,
+		 "yminvalue":0.1,
+		 "vertgrind": 1,
+		 "grindwidth": 0.5
 
   ]);
   /*
