@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.701 2001/08/20 15:11:36 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.702 2001/08/20 16:15:08 wellhard Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3116,7 +3116,7 @@ class ArgCache
     plugins = ({});
     foreach( ({ "../local/arg_cache_plugins", "arg_cache_plugins" }), string d)
       if( file_stat( d  ) )
-	foreach( get_dir( d ), string f )
+	foreach( glob("*.pike", get_dir( d )), string f )
 	{
 	  object plug = ((program)(d+"/"+f))(this_object());
 	  if( !plug->disabled )
