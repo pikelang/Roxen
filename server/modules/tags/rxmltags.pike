@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.41 2000/01/18 12:05:40 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.42 2000/01/21 15:19:56 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -120,44 +120,44 @@ class Entity_page_vfs {
   string rxml_var_eval(RXML.Context c) { return c->id->virtfile||""; }
 }
 
-class Entity_page_uri {
+class Entity_page_url {
   string rxml_var_eval(RXML.Context c) { return c->id->raw_url; }
 }
 
-class Entity_page_truth {
+class Entity_page_last_true {
   int rxml_var_eval(RXML.Context c) { return c->id->misc->defines[" _ok"]; }
 }
 
 class Entity_page_language {
-  string rxml_var_eval(RXML.Context c) { return c->id->misc->defines?c->id->misc->defines->language || "":""; }
+  string rxml_var_eval(RXML.Context c) { return c->id->misc->defines->language || ""; }
 }
 
 mapping page_scope=(["realfile":Entity_page_realfile(),
 		     "vfs":Entity_page_vfs(),
-		     "uri":Entity_page_uri(),
-		     "truth":Entity_page_truth(),
+		     "url":Entity_page_url(),
+		     "last_true":Entity_page_last_true(),
 		     "language":Entity_page_language() ]);
-
-class Entity_client_name {
-  string rxml_var_eval(RXML.Context c) { return c->id->client?c->id->client[0]:""; }
-}
-
-class Entity_client_fullname {
-  string rxml_var_eval(RXML.Context c) { return c->id->client?c->id->client*" ":""; }
-}
 
 class Entity_client_referer {
   string rxml_var_eval(RXML.Context c) { return c->id->referer?c->id->referer[0]:""; }
 }
 
-mapping client_scope=(["name":Entity_client_name(),
-		       "fullname":Entity_client_fullname(),
-		       "referer":Entity_client_referer(),
-		       "referrer":Entity_client_referer()]);
+class Entity_client_name {
+  string rxml_var_eval(RXML.Context c) { return c->id->client?c->id->client[0]:""; }
+}
+
+class Entity_client_host {
+  string rxml_var_eval(RXML.Context c) { return c->id->remoteaddr; }
+}
+
+mapping client_scope=([ "host":Entity_client_host(),
+			"name":Entity_client_name(),
+			"referer":Entity_client_referer(),
+			"referrer":Entity_client_referer()]);
 
 void set_entities(RXML.Context c) {
-  c->add_scope("page", page_scope);
-  c->add_scope("client", client_scope);
+  c->extend_scope("page", page_scope);
+  c->extend_scope("client", client_scope);
 }
 
 
