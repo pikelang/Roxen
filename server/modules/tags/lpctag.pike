@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.17 1998/08/10 21:39:46 per Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.18 1998/09/17 12:36:59 mast Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -56,11 +56,11 @@ string reporterr (string header, string dump)
 {
   if (QUERY (debugmode) == "Off") return "";
 
-  report_error (header + dump);
+  report_error (header + dump + "\n");
 
   switch (QUERY (debugmode)) {
     case "HTML comment":
-      return "\n<!-- " + header + dump + "-->\n";
+      return "\n<!-- " + header + dump + "\n-->\n";
     case "HTML text":
       return "\n<br><font color=red><b>" + html_encode_string (header) +
 	"</b></font><pre>\n" + html_encode_string (dump) + "</pre><br>\n";
