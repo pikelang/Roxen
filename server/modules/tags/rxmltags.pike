@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.221 2001/04/05 11:24:55 kuntri Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.222 2001/04/18 04:57:34 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -329,7 +329,7 @@ class TagAppend {
       if (args->from) {
 	// Append the value of another entity variable.
 	mixed from=RXML.user_get_var(args->from, args->scope);
-	if(!from) parse_error("From variable doesn't exist.\n");
+	if(!from) parse_error("From variable %O doesn't exist.\n", args->from);
 	if (value)
 	  value+=from;
 	else
@@ -487,41 +487,44 @@ class TagSet {
   inherit RXML.Tag;
   constant name = "set";
   mapping(string:RXML.Type) req_arg_types = ([ "variable": RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_type(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
+
+    array do_enter (RequestID id)
+    {
+      if (args->type) content_type = args->type (RXML.PXml);
+    }
+
     array do_return(RequestID id) {
-      if (args->value) {
-	// Set an entity variable to a value.
-	if(args->split && stringp(args->value))
-	  RXML.user_set_var(args->variable, args->value/args->split, args->scope);
-	else
-	  RXML.user_set_var(args->variable, args->value, args->scope);
-	return 0;
-      }
-      if (args->expr) {
-	// Set an entity variable to an evaluated expression.
-	mixed val;
-	if(catch(val=sexpr_eval(args->expr)))
-	  parse_error("Error in expr attribute.\n");
-	RXML.user_set_var(args->variable, val, args->scope);
-	return 0;
-      }
-      if (args->from) {
-	// Copy a value from another entity variable.
-	mixed from=RXML.user_get_var(args->from, args->scope);
-	if(!from) run_error("From variable doesn't exist.\n");
-	RXML.user_set_var(args->variable, from, args->scope);
-	return 0;
+      if (args->value) content = args->value;
+      else {
+	if (args->expr) {
+	  // Set an entity variable to an evaluated expression.
+	  mixed val;
+	  if(catch(val=sexpr_eval(args->expr)))
+	    parse_error("Error in expr attribute.\n");
+	  RXML.user_set_var(args->variable, val, args->scope);
+	  return 0;
+	}
+	if (args->from) {
+	  // Copy a value from another entity variable.
+	  mixed from;
+	  if (zero_type (from = RXML.user_get_var(args->from, args->scope)))
+	    run_error("From variable doesn't exist.\n");
+	  RXML.user_set_var(args->variable, from, args->scope);
+	  return 0;
+	}
       }
 
-      args->value = content || RXML.nil;
-      if(args->split && stringp(args->value))
-	RXML.user_set_var(args->variable, args->value/args->split, args->scope);
+      // Set an entity variable to a value.
+      if(args->split && stringp(content))
+	RXML.user_set_var(args->variable, content/args->split, args->scope);
       else
-	RXML.user_set_var(args->variable, args->value, args->scope);
+	RXML.user_set_var(args->variable, content, args->scope);
       return 0;
     }
   }
