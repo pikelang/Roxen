@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.129 2000/09/25 07:55:02 per Exp $
+# $Id: start,v 1.130 2000/10/02 16:34:07 jonasw Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -70,7 +70,7 @@ fullpath() {
   )
 }
 
-pcdir="$VARDIR/`roxen_version`/precompiled/`uname -m`.`uname -r`"
+pcdir="$VARDIR/`roxen_version`/precompiled/`uname -m | tr ' ' '_' `.`uname -r`"
 old_roxen_defines="$pcdir/old_roxen_defines"
 ./mkdir -p $pcdir
 chmod 1777 $pcdir
