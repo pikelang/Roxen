@@ -106,6 +106,9 @@ install_only:
 	ln $(prefix)/roxen/server/bin/pike $(prefix)/roxen/server/bin/roxen
 #	cp $(SRCDIR)/pike/$(PIKEVERSION)/bin/feature_list $(prefix)/roxen/server/bin
 	test -d $(prefix)/roxen/local/. || mkdir $(prefix)/roxen/local
+	test -d $(prefix)/roxen/local/etc/. || mkdir $(prefix)/roxen/local/etc
+	test -d $(prefix)/roxen/local/etc/modules/. || mkdir $(prefix)/roxen/local/etc/modules
+	test -d $(prefix)/roxen/local/etc/include/. || mkdir $(prefix)/roxen/local/etc/include
 	test -d $(prefix)/roxen/local/modules/. || mkdir $(prefix)/roxen/local/modules
 	test -d $(prefix)/roxen/local/nfonts/. || mkdir $(prefix)/roxen/local/nfonts
 	test -d $(prefix)/roxen/server/lib/. || mkdir $(prefix)/roxen/server/lib
