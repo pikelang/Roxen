@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.90 2001/06/26 09:40:47 per Exp $";
+  "$Id: config_filesystem.pike,v 1.91 2001/08/10 13:35:08 per Exp $";
 
 constant path = "config_interface/";
 
@@ -297,7 +297,7 @@ mixed find_file( string f, RequestID id )
         sscanf( data, "%*s<title>%s</title>", title );
         sscanf( data, "%*s<br clear=\"all\">%s", data );
         sscanf( data, "%s</body>", data );
-        retval = "<topmenu selected='docs' base='"+query_location()+"/'/>"
+        retval = "<topmenu selected='docs' base='"+query_location()+"'/>"
                "<content>"+data+"</content>";
         if( title )
           retval="<title>: Docs "+Roxen.html_encode_string(title)+"</title>" +
@@ -439,9 +439,9 @@ void start(int n, Configuration cfg)
 {
   if( cfg )
   {
-    if( !(docs = DBManager.get( "docs", cfg ) ) )
+    if( !(docs = DBManager.cached_get( "docs", cfg ) ) )
     {
-      if( DBManager.get( "docs" ) )
+      if( DBManager.cached_get( "docs" ) )
         report_warning( "The database 'docs' exists, but this server can "
                         "not read from it.\n"
                         "Documentation will be unavailable.\n" );
