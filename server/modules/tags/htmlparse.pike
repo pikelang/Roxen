@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.173 1999/06/10 03:36:52 mast Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.174 1999/06/11 13:42:52 mast Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1851,13 +1851,6 @@ private mixed tag_input( string tag_name, mapping args, string name,
   return ({ make_tag( tag_name, args ) });
 }
 
-private string remove_leading_trailing_ws( string str )
-{
-  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str ); 
-  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str );
-  return str;
-}
-
 // Internal method for the default tag
 private mixed tag_option( string tag_name, mapping args, string contents,
 				  multiset (string) value )
@@ -1871,7 +1864,7 @@ private mixed tag_option( string tag_name, mapping args, string contents,
     else
       return 0;
   else
-    if (value[ remove_leading_trailing_ws( contents ) ])
+    if (value[ trim( contents ) ])
       if (args->selected)
 	return 0;
       else
