@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.80 2000/09/14 19:26:15 kuntri Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.81 2000/09/18 22:03:22 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -75,6 +75,8 @@ void create()
          lambda(){ return query("default-template"); } );
 }
 
+RXML.TagSet tagset;
+
 void start(int n, Configuration c)
 {
   indexfiles = query("indexfiles")-({""});
@@ -90,9 +92,9 @@ void start(int n, Configuration c)
   <head><title>Listing of &page.virtfile;</title></head>
   <body bgcolor='white' text='black' link='#ae3c00' vlink='#ae3c00'>
      <roxen align='right' size='small' />
-    <font size=+3>
-   <emit source=path>
-     <a href='&_.path;'> &_.name; <font color=black>/</font></a>
+    <font size='+3'>
+   <emit source='path'>
+     <a href='&_.path;'> &_.name; <font color='black'>/</font></a>
    </emit> </font><br /><br />
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>
@@ -100,26 +102,26 @@ void start(int n, Configuration c)
           src='/internal-roxen-unit' width='100%' height='1' /></td>
       </tr>
 
-    <define tag=mitem>
+    <define tag='mitem'>
       <th ::='&_.args;'>
          <if variable='form.reverse'>
           <cset variable='var.doreverse'>sort-reverse</cset>
           <if match='&form.sort; is &_.order;'>
-            <font size=-1>^</font>
+            <img src='/internal-roxen-up' />
           </if>
           <else>
-            <font size=-1>&nbsp;</font>
+            <font size='-1'>&nbsp;</font>
           </else>
-          <a href='?sort=&_.order;'><font color=black>&_.title;</font></a> &nbsp;
+          <a href='?sort=&_.order;'><font color='black'>&_.title;</font></a> &nbsp;
          </if>
          <else>
          <if match='&form.sort; is &_.order;'>
-          <font size=-1>v</font>
-          <a href='?sort=&_.order;&reverse=1'><font color=black>&_.title;</font></a> &nbsp;
+          <img src='/internal-roxen-down' />
+          <a href='?sort=&_.order;&reverse=1'><font color='black'>&_.title;</font></a> &nbsp;
         </if>
         <else>
-          <font size=-1>&nbsp;</font>
-          <a href='?sort=&_.order;'><font color=black>&_.title;</font></a> &nbsp;
+          <font size='-1'>&nbsp;</font>
+          <a href='?sort=&_.order;'><font color='black'>&_.title;</font></a> &nbsp;
         </else>
        </else>
       </th>
@@ -142,11 +144,11 @@ void start(int n, Configuration c)
             sort-order='&form.sort;'
             ::='&var.doreverse;'>
         <tr bgcolor='#eeeeee'>
-          <td align=left><a href='&_.path;'><img src='&_.icon;' border='0' /></a></td>
-          <td align=left><a href='&_.path;'>&_.name;</a> &nbsp;</td>
-          <td align=right>&_.size; &nbsp;</td>
-          <td align=right>&_.type; &nbsp;</td>
-          <td align=right>&_.mtime; &nbsp;</td>
+          <td align='left'><a href='&_.path;'><img src='&_.type-img;' border='0' /></a></td>
+          <td align='left'><a href='&_.path;'>&_.name;</a> &nbsp;</td>
+          <td align='right'>&_.size; &nbsp;</td>
+          <td align='right'>&_.type; &nbsp;</td>
+          <td align='right'>&_.mtime; &nbsp;</td>
         </tr>
       </emit>
       <tr>
@@ -191,7 +193,7 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
       "mtime-iso":Roxen.strftime( "%Y-%m-%d", st[ST_MTIME] ),
       "atime-iso":Roxen.strftime( "%Y-%m-%d", st[ST_ATIME] ),
       "mode-int":st[ ST_MODE ],
-      "size-int":st[ ST_SIZE ],
+      "filesize":st[ ST_SIZE ],
       "mode":(Roxen.decode_mode( st[ ST_MODE ] )/"<tt>")[-1]-"</tt>",
     ]);
 
@@ -209,11 +211,11 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
       m->size = "0";
       m->type = "directory";
       m["size"] = "";
-      m->icon = "internal-gopher-menu";
+      m["type-img"] = "internal-gopher-menu";
     } else {
       m->type = id->conf->type_from_filename( file );
       m->size = Roxen.sizetostring( st[ ST_SIZE ] );
-      m->icon = Roxen.image_from_type( m->type );
+      m["type-img"] = Roxen.image_from_type( m->type );
     }
 
     if( opt["real-file"] )
@@ -258,7 +260,7 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
          ]);
          m->thumbnail = Roxen.parse_rxml( RXML.t_xml->format_tag( "cimg-url", cia ), id );
       } else
-        m->thumbnail = m->icon;
+        m->thumbnail = m["type-img"];
 
     if( opt->imagesize )
       if( (m->type / "/") [ 0 ]  == "image" )
@@ -306,7 +308,7 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
        return 0;
 
      case "size":
-       if( a["size-int"] < b["size-int"] )
+       if( a->filesize < b->filesize )
          return 1;
        if( a->size == b->size )
          return Array.dwim_sort_func( a->name, b->name );
@@ -330,12 +332,12 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
     files = tmp;
   }
   array res = map( files, get_datum );
-  if( args["type-glob"] )
+  if( args->type )
   {
     array tmp = ({});
     foreach( res, mapping a )
     {
-      foreach( args["type-glob"]/",", string g )
+      foreach( args->type/",", string g )
         if( glob( g, a->type ) )
         {
           tmp += ({ a });
@@ -349,7 +351,7 @@ local static array(mapping) get_directory_dataset( mapping args, RequestID id )
   return res;
 }
 
-class TagDirectoryplugin
+class _TagDirectoryplugin
 {
   inherit RXML.Tag;
   constant name = "emit";
@@ -444,7 +446,20 @@ mapping parse_directory(RequestID id)
       }
     }
 
-  return Roxen.http_rxml_answer( template, id );
+  if(!tagset) {
+    tagset=RXML.TagSet("__directory", ({ _TagDirectoryplugin() }) );
+    tagset->imported+=({ id->conf->rxml_tag_set });
+  }
+
+  if(!id->misc->defines) id->misc->defines=([ " _ok":1,
+					      " _error":200,
+					      " _rettext":"",
+					      " _stat":id->misc->stat,
+					      " _extra_heads":([]), ]);
+
+  RXML.Parser parser = tagset(RXML.t_xml(RXML.PXml), id);
+  parser->write_end(template);
+  return Roxen.http_string_answer( parser->eval() );
 }
 
 TAGDOCUMENTATION;
@@ -475,10 +490,10 @@ constant tagdoc=([
 	       ])
 	    }),
 
-
 "emit#directory":({ #"<desc plugin><short>
  This plugin is used to generate directory listings.</short> The
- directory module must be added to use these entities.</desc>
+ directory module must be added to use these entities. This plugin
+ is only available in the directory template.</desc>
 
 <attr name='directory' value='path'>
  Apply the listing to this directory.
@@ -533,7 +548,7 @@ resolve the image's height and width.</c></row>
  Only show files matching the glob-pattern.
 </attr>
 
-<attr name='type-glob' value='glob-pattern1[,glob-pattern2,...]'>
+<attr name='type' value='glob-pattern1[,glob-pattern2,...]'>
  Only show files which content-type matches the glob-pattern.
 </attr>
 
@@ -574,7 +589,7 @@ resolve the image's height and width.</c></row>
  Returns the filename.
 </desc>",
 
-"&_.icon;":#"<desc ent>
+"&_.type-img;":#"<desc ent>
  Returns the internal Roxen name of the icon representating the
  directory or the file's content-type, e.g. internal-gopher-menu for a
  directory-folder or internal-gopher-text for a HTML-file.
@@ -614,7 +629,7 @@ resolve the image's height and width.</c></row>
  Returns a file's size in kb(kilobytes).
 </desc>",
 
-"&_.size-int;":#"<desc ent>
+"&_.filesize;":#"<desc ent>
  Returns a file's size in bytes. Directories get the size \"-2\".
 </desc>",
 
