@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.20 1997/05/20 10:48:33 per Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.21 1997/05/25 10:51:36 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -286,6 +286,7 @@ program Connection = class {
   }
 
   int new;
+  array stat;
   
   void my_pipe_done(object cache)
   {
@@ -305,7 +306,10 @@ program Connection = class {
 	cache->done_callback(cache);
       }
     } else if(from) {
-      catch(b=from->stat());
+      if (catch(b=from->stat()) && stat) {
+	// Used cached stat info.
+	b = stat;
+      }
       destruct(from);
     }
     
@@ -348,39 +352,31 @@ program Connection = class {
     my_clients = ({ i->remoteaddr });
     ids = ({ i });
 
+    /* The convenience function (shuffle) is used to do the actual
+     * transport. The callback has to be used to log the size of
+     * new incoming connections.
+     */
     if(!no_cache && (!i || cache_wanted(i)))
     {
       if(cache = roxen->create_cache_file("http", f))
       {
-	/* For fresh incoming cachefiles we have two pipe outputs
-	 * which is (not) yet handled by the global shuffle function
-	 */
-	pipe = Pipe.pipe();
-	pipe->output(cache->file);
 	cache->done_callback = roxen->http_check_cache_file;
-	pipe->set_done_callback(my_pipe_done, cache);
-	pipe->input(s);
-	pipe->output(i->my_fd);
-	return;
+	/* For fresh incoming cachefiles we have two pipe outputs
+	 * where the order in which they are given to the fallback
+	 * pipe->output in the global shuffle function is relevant.
+	 */
+	return roxen->shuffle(s, cache->file, i->my_fd,
+			      lambda(){my_pipe_done(cache);});
       }
     }
-    // Using convenience-function instead of doing this manually.
-    // Send all from s to i->my_fd.
-    roxen->shuffle(s, i->my_fd);
-    /* Call to logging function (my_pipe_done) has to be done differently
-     * if fallback in shuffle is used. The current way this is recognized
-     * "objectp(roxen->shuffler)" should probably replaced by introducing 
-     * a shuffle_set_done_callback function.
+    /* If the fallback is used in the global shuffle function with cached
+     * files the actual file is closed when my_pipe_done is reached.
+     * With the following stat workaround the size can be logged.
      */
-    if(objectp(roxen->shuffler))
-      return my_pipe_done(cache);
-    else {
-      /* Without a callback we have a "contains no data" situation
-       * if fallback is used in shuffle
-       */
-      s->set_close_callback(lambda(){my_pipe_done(cache);});
-      return;
+    if(!new){
+      stat = s->stat();
     }
+    return roxen->shuffle(s, i->my_fd, 0, lambda(){my_pipe_done(0);});
   }
     
   int send_to(object o, object b)
