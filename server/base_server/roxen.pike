@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.811 2002/06/19 22:59:36 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.812 2002/06/28 23:19:51 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -360,27 +360,7 @@ static Privs PRIVS(string r, int|string|void u, int|string|void g)
   return Privs(r, u, g);
 }
 
-// font cache and loading.
-// 
-// This will be changed to a list of server global modules, to make it
-// easier to implement new types of fonts (such as PPM color fonts, as
-// an example)
-class Fonts
-{
-  class Font
-  {
-    Image.Image write( string ... what );
-    array(int) text_extents( string ... what );
-  };
-  array available_font_versions(string name, int size);
-  string describe_font_type(string n);
-  Font get_font(string f, int size, int bold, int italic,
-		string justification, float|int xspace, float|int yspace);
-
-  Font resolve_font(string f, string|void justification);
-  array(string) available_fonts(int(0..1)|void force_reload);
-}
-Fonts fonts;
+Prototypes.FontHandlers fonts;
 
 // Will replace Configuration after create() is run.
 program _configuration;	/*set in create*/
@@ -2116,10 +2096,8 @@ int increase_id()
 private int unique_id_counter;
 string create_unique_id()
 {
-  object md5 = Crypto.md5();
-  md5->update(query("server_salt") + start_time + "|" +
-	      (unique_id_counter++) + "|" + time(1));
-  return Crypto.string_to_hex(md5->digest());
+  return md5( query("server_salt") + start_time + "|" +
+	      (unique_id_counter++) + "|" + time(1) );
 }
 
 #ifndef __NT__
@@ -4063,30 +4041,17 @@ void create_pid_file(string where)
 #endif
 }
 
+// NGSERVER: Compatibility method. Remove.
 Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
 		  Stdio.File|void to2,
 		  function(:void)|void callback)
 {
-#if efun(spider.shuffle)
-  if(!to2)
-  {
-    object p = fastpipe( );
-    p->input(from);
-    p->set_done_callback(callback);
-    p->output(to);
-    return p;
-  } else {
-#endif
-    // 'fastpipe' does not support multiple outputs.
-    Pipe.pipe p = Pipe.pipe();
-    if (callback) p->set_done_callback(callback);
-    p->output(to);
-    if(to2) p->output(to2);
-    p->input(from);
-    return p;
-#if efun(spider.shuffle)
-  }
-#endif
+  Pipe.pipe p = Pipe.pipe();
+  if (callback) p->set_done_callback(callback);
+  p->output(to);
+  if(to2) p->output(to2);
+  p->input(from);
+  return p;
 }
 
 // Dump all threads to the debug log.
