@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.67 2002/10/22 00:06:12 nilsson Exp $
+// $Id: read_config.pike,v 1.68 2002/11/02 17:56:36 mani Exp $
 
 #include <module.h>
 #include <module_constants.h>
@@ -12,24 +12,25 @@ inherit "newdecode";
 #define COPY( X ) ((X||([])) + ([]))
 
 mapping (string:array(int)) config_stat_cache = ([]);
-string configuration_dir; // Set by Roxen.
+string configuration_dir; // NGSERVER: Remove this
 
 array(string) list_all_configurations()
 {
-  array (string) fii;
-  fii=get_dir(configuration_dir);
+  array (string) fii = r_get_dir("$CONFIGDIR");
+
   if(!fii)
   {
-    mkdirhier(configuration_dir+"test"); // removes the last element..
-    fii=get_dir(configuration_dir);
+    mkdirhier("$CONFIGDIR/test"); // removes the last element..
+    fii=get_dir("$CONFIGDIR");
     if(!fii)
     {
       report_fatal("I cannot read from the configurations directory ("+
-		   combine_path(getcwd(), configuration_dir)+")\n");
+		   combine_path(getcwd(), roxen_path("$CONFIGDIR"))+")\n");
       exit(-1);	// Restart.
     }
     return ({});
   }
+
   return map(filter(fii, lambda(string s){
     if(s=="CVS" || s=="Global_Variables" || s=="Global Variables"
        || s=="global_variables" || s=="global variables" || s=="server_version"
@@ -39,6 +40,9 @@ array(string) list_all_configurations()
   }), lambda(string s) { return replace(utf8_to_string(s), "_", " "); });
 }
 
+private string config_file(string cl) {
+  return "$CONFIGDIR/" + replace(string_to_utf8(cl), " ", "_");
+}
 
 mapping call_outs = ([]);
 Thread.Mutex call_outs_mutex = Thread.Mutex();
@@ -58,16 +62,14 @@ void save_it(string cl, mapping data)
 
 void really_save_it( string cl, mapping data, int counter )
 {
-  Stdio.File fd;
-  string f, new;
 
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Writing configuration file for cl "+cl+"\n");
 #endif
 
-  f = configuration_dir + replace(string_to_utf8(cl), " ", "_");
-  new = f + ".new~";
-  fd = open(new, "wct");
+  string f = config_file(cl);
+  string new = f + ".new~";
+  Stdio.File fd = open(new, "wct");
 
   if(!fd)
     error("Creation of new config file ("+new+") failed"
@@ -98,7 +100,7 @@ void really_save_it( string cl, mapping data, int counter )
 
     fd = open( new, "r" );
     config_stat_cache[cl] = fd->stat();
-    
+
     if(!fd)
       error("Failed to open new config file (" + new + ") for reading"
 	    " (" + strerror (errno()) + ")\n" );
@@ -119,7 +121,7 @@ void really_save_it( string cl, mapping data, int counter )
 	    "to backup file (" + f + "~)"
 	    " (" + strerror (errno()) + ")\n");
 
-    if( !mv(new, f) )
+    if( !r_mv(new, f) )
     {
       string msg = "Failed to move new config file (" + new + ") "
 	"to current file (" + f + ")"
@@ -156,13 +158,13 @@ void really_save_it( string cl, mapping data, int counter )
     Stdio.cp( f+"~2~", f+"~" );
   }
   catch (fd->close());		// Can't remove open files on NT.
-  rm( new);
+  r_rm( new);
   throw( err );
 }
 
 Stat config_is_modified(string cl)
 {
-  Stat st = file_stat(configuration_dir + replace(cl, " ", "_"));
+  Stat st = r_file_stat(config_file(cl));
   if(st)
     if( !config_stat_cache[ cl ] )
       return st;
@@ -170,6 +172,7 @@ Stat config_is_modified(string cl)
       foreach( ({ 1, 3, 5, 6 }), int i)
 	if(st[i] != config_stat_cache[cl][i])
 	  return st;
+  return 0;
 }
 
 mapping read_it(string cl)
@@ -201,16 +204,14 @@ mapping read_it(string cl)
     };
   };
 
-  // FIXME: Buggy code?
-  string base = configuration_dir + replace(cl, " ", "_");
-  foreach( ({ base }), string attempt )
-    if( string data = try_read( attempt ) )
-      return decode_config_file( data );
+  string base = config_file(cl);
+  if( string data = try_read( base ) )
+    return decode_config_file( data );
 
   if (err) {
     string backup_file;
-    if (file_stat (base + "~")) backup_file = base + "~";
-    if (file_stat (base + "~2~")) backup_file = base + "~2~";
+    if (r_file_stat (base + "~")) backup_file = base + "~";
+    if (r_file_stat (base + "~2~")) backup_file = base + "~2~";
     report_error("Failed to read configuration file (%s) for %O.%s\n"
 		 "%s\n",
 		 base, cl,
@@ -218,13 +219,12 @@ mapping read_it(string cl)
 		 "You can try it instead by moving it to the original name. " : "",
 		 describe_backtrace(err));
   }
-//else
-//  report_error( "Failed to read configuration file for %O\n", cl );
+
   return ([]);
 }
 
 
-void remove( string reg , Configuration current_configuration )
+void remove( string reg, Configuration current_configuration )
 {
   string cl;
   if(!current_configuration)
@@ -241,19 +241,17 @@ void remove( string reg , Configuration current_configuration )
 
 void remove_configuration( string name )
 {
-  string f;
-  f = configuration_dir + replace(name, " ", "_");
-  if(!file_stat( f ))   
-    f = configuration_dir+name;
+  string f = config_file(name);
+
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Remove "+f+"\n");
 #endif
-  catch(rm( f+"~2~" ));   catch(mv( f+"~", f+"~2~" ));
-  catch(rm( f+"~" ));     catch(mv( f, f+"~" ));
-  catch(rm( f ));
+  catch(r_rm( f+"~2~" ));   catch(r_mv( f+"~", f+"~2~" ));
+  catch(r_rm( f+"~" ));     catch(r_mv( f, f+"~" ));
+  catch(r_rm( f ));
   last_read = 0; last_data = 0;
 
-  if( file_stat( f ) )
+  if( r_file_stat( f ) )
     error("Failed to remove configuration file ("+f+")!\n");
 }
 
