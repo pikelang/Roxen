@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.146 1998/08/26 14:34:14 wellhard Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.147 1998/08/26 17:48:03 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -57,6 +57,9 @@ void create()
 	 "number of hours they are removed.");
 
 
+  defvar("colorparse", 1, "Parse tags for document colors", TYPE_FLAG,
+	 "If set, parse the specified tags for document colors.");
+  
   defvar("colorparsing", ({"body", "td", "layer", "ilayer", "table"}),
 	 "Tags to parse for color", 
 	 TYPE_STRING_LIST,
@@ -64,30 +67,16 @@ void create()
 	 "This will affect documents without gtext as well as documents "
 	 "with it, the parsing time is relative to the number of parsed "
 	 "tags in a document. You have to reload this module or restart "
-	 "roxen for changes of this variable to take effect.");
+	 "roxen for changes of this variable to take effect.", 0,
+	 lambda(){return !query("colorparse");});
 
   defvar("colormode", 1, "Normalize colors in parsed tags", TYPE_FLAG,
 	 "If set, replace 'roxen' colors (@c,m,y,k etc) with "
-	 "'netscape' colors (#rrggbb). Setting this to off will make the "
+	 "'netscape' colors (#rrggbb). Setting this to off will lessen the "
 	 "performance impact of the 'Tags to parse for color' option quite"
-	 " dramatically. You can try this out with the &lt;gauge&gt; tag.");
+	 " dramatically. You can try this out with the &lt;gauge&gt; tag.",
+	 0,  lambda(){return !query("colorparse");});
 	 
-//   defvar("notspeedy", 0, "Automaticaly detect colors in tables",
-// 	 TYPE_FLAG,
-// 	 "If this flag is set, the tags 'table', 'th', 'tr', 'td', 'font'"
-// 	 " 'layer' and 'ilayer'"
-// 	 " will be parsed to automatically detect the colors of"
-// 	 " a document. This will slow down the parser in a noticeable way, "
-// 	 "but it will be easier to use &lt;gtext&gt; since the colors "
-// 	 "will almost always have the correct default values");
-  
-//   defvar("body", 1, "Automatically detect colors in the &lt;body&gt; tag",
-// 	 TYPE_FLAG,
-// 	 "If this flag is not set, the 'body' tag"
-// 	 " will <b>not</b> be parsed to automatically detect the colors of "
-// 	 " a document. You will then have to specify all colors in all calls "
-// 	 " to &lt;gtext&gt;");
-
   defvar("deflen", 300, "Default maximum text-length", TYPE_INT|VAR_MORE,
 	 "The module will, per default, not try to render texts "
 	 "longer than this. This is a safeguard for things like "
@@ -106,6 +95,7 @@ void create()
   defvar("gif", 0, "Append .gif to all images", TYPE_FLAG|VAR_MORE,
 	 "Append .gif to all images made by gtext. Normally this will "
 	 "only waste bandwidth");
+
 
 #ifdef TYPE_FONT
   // compatibility variables...
@@ -1588,18 +1578,19 @@ string|void pop_color(string tagname,mapping args,object id,object file,
 mapping query_tag_callers()
 {
   mapping tags = ([ "gtext-id":tag_gtext_id]);
-  foreach(query("colorparsing"), string t)
-  {
-    switch(t)
+  if(query("colorparse"))
+    foreach(query("colorparsing"), string t)
     {
-     case "body":
-       tags[t] = tag_body;
-       break;
-     default:
-       tags[t] = tag_fix_color;
-       tags["/"+t]=pop_color;
+      switch(t)
+      {
+       case "body":
+	 tags[t] = tag_body;
+	 break;
+       default:
+	 tags[t] = tag_fix_color;
+	 tags["/"+t]=pop_color;
+      }
     }
-  }
   return tags;
 }
 
