@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.322 2001/07/21 10:13:30 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.323 2001/07/21 12:01:44 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1893,26 +1893,8 @@ string url_base()
   // Note: Code duplication in base_server/prototypes.pike.
 
   if (!cached_url_base) {
-    string tmp;
-//     werror ("port_obj->default_port: %O\n"
-// 	    "port_obj->port: %O\n"
-// 	    "port_obj->prot_name: %O\n"
-// 	    "port_obj->conf_data[conf]: %O\n"
-// 	    "port_obj->ip: %O\n"
-// 	    "misc->host: %O\n"
-// 	    "misc->site_prefix_path: %O\n"
-// 	    "conf->query (\"MyWorldLocation\"): %O\n",
-// 	    port_obj->default_port,
-// 	    port_obj->port,
-// 	    port_obj->prot_name,
-// 	    port_obj->conf_data[conf],
-// 	    port_obj->ip,
-// 	    misc->host,
-// 	    misc->site_prefix_path,
-// 	    conf->query ("MyWorldLocation"));
-
     // First look at the host header in the request.
-    if ((tmp = misc->host)) {
+    if (string tmp = misc->host) {
       string default_port = ":" + port_obj->default_port;
       if (has_suffix (tmp, default_port))
 	// Remove redundant port number.
@@ -1922,31 +1904,24 @@ string url_base()
 	cached_url_base = port_obj->prot_name + "://" + tmp;
     }
 
-    // Then try the hostname in the port setting.
-    else if ((tmp = port_obj->conf_data[conf]->hostname) && tmp != "*") {
-      cached_url_base = port_obj->prot_name + "://" + tmp;
-      if (port_obj->port != port_obj->default_port)
-	cached_url_base += ":" + port_obj->port;
-    }
-
-    // Then try MyWorldLocation.
-    else if (sizeof (tmp = conf->query ("MyWorldLocation"))) {
-      if (has_suffix (tmp, "/"))
-	cached_url_base = tmp[..sizeof (tmp) - 2];
-      else
-	cached_url_base = tmp;
-    }
-
-    // Last fall back to the numeric ip.
+    // Then use the port object.
     else {
-      cached_url_base = port_obj->prot_name + "://" + port_obj->ip;
+      string host = port_obj->conf_data[conf]->hostname;
+      if (host == "*")
+	if (conf && sizeof (host = conf->get_url()) &&
+	    sscanf (host, "%*s://%[^:/]", host) == 2) {
+	  // Use the hostname in the configuration url.
+	}
+	else
+	  // Fall back to the numeric ip.
+	  host = port_obj->ip;
+      cached_url_base = port_obj->prot_name + "://" + host;
       if (port_obj->port != port_obj->default_port)
 	cached_url_base += ":" + port_obj->port;
     }
 
     if (string p = misc->site_prefix_path) cached_url_base += p;
     cached_url_base += "/";
-//     werror ("url_base: %O\n", cached_url_base);
   }
   return cached_url_base;
 }

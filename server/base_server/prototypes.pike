@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.25 2001/07/21 10:55:00 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.26 2001/07/21 12:01:32 mast Exp $";
 
 class Variable
 {
@@ -598,7 +598,8 @@ class RequestID
   string url_base()
   //! Returns the base part of the URL, i.e. what should be added in
   //! front of a path in the virtual filesystem to get the absolute
-  //! URL to the page. The returned string ends with a "/".
+  //! URL to the page. The returned string ends with a "/", or is ""
+  //! if no server base could be found.
   //!
   //! This function gets the correct host for protocols that handles
   //! IP-less hosts.
@@ -608,30 +609,24 @@ class RequestID
     if (!cached_url_base) {
       string tmp;
 
-      // First try the hostname in port × configuration.
-      if (port_obj && (tmp = port_obj->conf_data[conf]->hostname) && tmp != "*") {
-	cached_url_base = port_obj->prot_name + "://" + tmp;
+      // First consult the port object.
+      if (port_obj) {
+	string host = port_obj->conf_data[conf]->hostname;
+	if (host == "*" && conf && sizeof (host = conf->get_url()))
+	  if (sscanf (host, "%*s://%[^:/]", host) < 2)
+	    host = port_obj->ip;
+	cached_url_base = port_obj->prot_name + "://" + host;
 	if (port_obj->port != port_obj->default_port)
 	  cached_url_base += ":" + port_obj->port;
       }
 
-      // Then try MyWorldLocation.
-      else if (conf && sizeof (tmp = conf->query ("MyWorldLocation"))) {
-	if (has_suffix (tmp, "/"))
-	  cached_url_base = tmp[..sizeof (tmp) - 2];
-	else
-	  cached_url_base = tmp;
-      }
+      // Then try the configuration url.
+      else if (conf && sizeof (tmp = conf->get_url()))
+	cached_url_base = tmp[..sizeof (tmp) - 2]; // Remove trailing '/'.
 
-      // Then use the numeric ip in the port.
-      else if (port_obj) {
-	cached_url_base = port_obj->prot_name + "://" + port_obj->ip;
-	if (port_obj->port != port_obj->default_port)
-	  cached_url_base += ":" + port_obj->port;
-      }
-
-      // Lastly use a pathetic fallback.
-      else cached_url_base = "?";
+      // Lastly use a pathetic fallback. With this the produced urls
+      // will still be relative, which has some chance of working.
+      else return cached_url_base = "";
 
       if (string p = misc->site_prefix_path) cached_url_base += p;
       cached_url_base += "/";
