@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 
-string cvs_version = "$Id: http.pike,v 1.15 1997/01/29 07:40:53 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.16 1997/01/29 07:42:38 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -805,7 +805,7 @@ static void handle_request( )
     }
   }
 
-perror("Last case...\n");
+// perror("Last case...\n");
   if(head_string) send(head_string);
   if(file->data)  send(file->data);
   if(file->file)  send(file->file);
