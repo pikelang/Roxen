@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.55 1998/09/20 01:06:27 grubba Exp $
+ * $Id: smtp.pike,v 1.56 1998/09/20 01:47:05 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.55 1998/09/20 01:06:27 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.56 1998/09/20 01:47:05 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1126,7 +1126,7 @@ string query_spooldir()
   return(QUERY(spooldir));
 }
 
-int query_size_factor()
+float query_size_factor()
 {
   return(((float)(QUERY(size_factor)))/100.0);
 }
