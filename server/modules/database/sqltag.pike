@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.93 2001/10/25 14:58:51 grubba Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.94 2001/10/26 14:12:47 grubba Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -259,7 +259,7 @@ class SqlEmitResponse {
 		     if (x) return x;
 		     // Might be a dbnull object.
 		     // Transform NULLString to "".
-		     if ((x != 0) && (x->type)) return x->type;
+		     if ((x != 0) && stringp(x->type)) return x->type;
 		     // Let other null objects become 0.
 		     return 0;
 		   });
