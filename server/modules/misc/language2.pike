@@ -6,7 +6,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: language2.pike,v 1.7 2000/04/24 22:37:03 nilsson Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.8 2000/07/28 08:44:14 hop Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_PARSER;
 constant module_name = "Language module II";
@@ -67,7 +67,6 @@ object remap_url(RequestID id, string url) {
 
     split=url/"/";
     string path=split[..sizeof(split)-2]*"/"+"/", file=split[-1];
-    if(path=="/") return 0;
 
     id->misc->language_remap[path]=1;
     array realdir=id->conf->find_dir(path, id);
