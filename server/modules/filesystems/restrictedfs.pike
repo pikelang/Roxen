@@ -10,7 +10,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.20 2001/05/16 07:50:59 per Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.21 2001/08/30 11:40:56 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -27,6 +27,12 @@ LocaleString module_doc  =
   _(2,"The restricted file system makes a users real home "
     "directory available to her. Useful for FTP sites.");
 constant module_unique = 0;
+
+#if constant(system.normalize_path)
+#define NORMALIZE_PATH(X)	system.normalize_path(X)
+#else /* !constant(system.normalize_path) */
+#define NORMALIZE_PATH(X)	(X)
+#endif /* constant(system.normalize_path) */
 
 void create()
 {
@@ -106,6 +112,17 @@ array find_dir(string f, object id)
   }
 }
 
+// Duplicate of ::real_file(), that uses ::stat_file() instead of
+// stat_file(). This fixes [bug 618].
+static string low_real_file(string f, RequestID id)
+{
+  if (::stat_file(f, id)) {
+    catch {
+      return NORMALIZE_PATH(decode_path(path + f));
+    };
+  }
+}
+
 string real_file(string f, object id)
 {
   string home = id->misc->home;
@@ -116,7 +133,7 @@ string real_file(string f, object id)
     return(0);
   }
   if (query("remap_home")) {
-    string res = ::real_file(f = (fix_slashes(home) + f), id);
+    string res = low_real_file(f = (fix_slashes(home) + f), id);
     TRACE_LEAVE(sprintf("=> %O => %O", f, res));
     return res;
   } else {
@@ -124,7 +141,7 @@ string real_file(string f, object id)
       TRACE_LEAVE("Bad prefix.");
       return(0);
     }
-    string res = ::real_file(f, id);
+    string res = low_real_file(f, id);
     TRACE_LEAVE(sprintf("=> %O => %O", f, res));
     return res;
   }
@@ -138,7 +155,11 @@ mixed find_file(string f, object id)
     return(0);
   }
   if (query("remap_home")) {
-    return(::find_file(fix_slashes (home) + f, id));
+    mixed res = ::find_file((home = fix_slashes(home)) + f, id);
+
+    // FIXME: Should readjust not_query here if it was modified.
+
+    return res;
   } else {
     if (!has_prefix("/" + f, home)) {
       // Not a prefix, or short.
