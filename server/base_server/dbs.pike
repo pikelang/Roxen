@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: dbs.pike,v 1.4 2001/01/08 16:07:21 per Exp $
+// $Id: dbs.pike,v 1.5 2001/01/09 09:03:19 per Exp $
 
 Sql.sql db = connect_to_my_mysql( 0, "roxen" );
 function(string,mixed...:array(mapping(string:string))) query = db->query;
@@ -193,6 +193,48 @@ static object low_get( string user, string db )
     return ROWrapper( sql_cache_get( d[0]->path ) );
 
   return sql_cache_get( d[0]->path );
+}
+
+mapping db_stats( string name )
+//! Return statistics for the specified database (such as the number
+//! of tables and their total size). If the database is not an
+//! internal database, or the database does not exist, 0 is returned
+{
+//   array(mapping(string:mixed)) d =
+//            query("SELECT path,local FROM dbs WHERE name='%s'", db );
+//   if( !(sizeof( d ) && (int)d[0]["local"] ) )
+//     return 0;
+  array d;
+  Sql.sql db = get( name );
+  if( catch( d = db->query( "SHOW TABLE STATUS" ) ) )
+    return 0;
+  mapping res = ([]);
+  foreach( d, mapping r )
+  {
+    res->size += (int)r->Data_length+(int)r->Index_length;
+    res->tables++;
+    res->rows += (int)r->Rows;
+  }
+  return res;
+}
+
+
+int is_internal( string name )
+//! Return true if the DB @[name] is an internal database
+{
+  array(mapping(string:mixed)) d =
+           query("SELECT path,local FROM dbs WHERE name='%s'", name );
+  if( !sizeof( d ) ) return 0;
+  return (int)d[0]["local"];
+}
+
+string db_url( string name )
+//! Return true if the DB @[name] is an internal database
+{
+  array(mapping(string:mixed)) d =
+           query("SELECT path,local FROM dbs WHERE name='%s'", name );
+  if( !sizeof( d ) ) return 0;
+  return d[0]->path;
 }
 
 ROWrapper get( string name, void|Configuration c, int|void ro )

@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.129 2000/12/13 04:23:49 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.130 2001/01/09 09:03:20 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -234,20 +234,48 @@ class Scope_usr
         c1 = Image.Color.black;
     }
 
+
+    string fade_color( int type )
+    {
+      int add;
+      switch( type )
+      {
+       case 1: add = 0x21;  type=1; break;
+       case 2: add = 0x61;  type=1; break;
+
+       case 11: add = 0x5; type=2; break;
+       case 12: add = 0x15; type=2; break;
+       case 21: add = 0x25; type=2; break;
+       case 22: add = 0x35; type=2; break;
+      }
+      switch( type )
+      {
+       case 1: /* RGB */
+         if( `+(0,@(array)c1) < 200 )
+           return (string)Image.Color( @map(map((array)c1,`+,add),min,255));
+         return (string)Image.Color(@map(map((array)c1, `-,(add-0x10)),max,0));
+       case 2: /* HSV */
+         array hsv = c1->hsv();
+         if( !hsv[2]  )
+           hsv[2] = add;
+         else
+           hsv[2] = max( hsv[2]-add, 0);
+         return (string)Image.Color.hsv(@hsv);
+      }
+    };
+
 #undef ALIAS
 #undef QALIAS
 
     switch( var )
     {
-     case "fade1":
-       if( `+(0,@(array)c1) < 200 )
-         return (string)Image.Color(@map(map((array)c1, `+, 0x21 ),min,255));
-       return (string)Image.Color(@map(map( (array)c1, `-, 0x11 ),max,0) );
+     case "matrix11": return fade_color( 11 );
+     case "matrix12": return fade_color( 12 );
+     case "matrix21": return fade_color( 21 );
+     case "matrix22": return fade_color( 22 );
 
-     case "fade2":
-       if( `+(0,@(array)c1) < 200 )
-         return (string)Image.Color( @map(map((array)c1, `+, 0x61 ),min,255));
-       return (string)Image.Color( @map(map( (array)c1, `-, 0x51 ),max,0) );
+     case "fade1":    return fade_color( 1 );
+     case "fade2":    return fade_color( 2 );
 
      case "fade3": {
        array sub = ({ 0x26, 0x21, 0x18 });

@@ -70,6 +70,10 @@ Second level settings, by default derived from base settings:
   fade2                bgcolor
   fade3                bgcolor
   fade4                bgcolor
+  matrix11             bgcolor
+  matrix12             bgcolor
+  matrix21             bgcolor
+  matrix22             bgcolor
   toptabs-frame        tab-frame-image
   subtabs-frame        tab-frame-image
   left-buttonframe     gbutton-frame-image
