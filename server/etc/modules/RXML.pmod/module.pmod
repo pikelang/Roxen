@@ -2,13 +2,17 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.52 2000/02/13 11:03:32 mast Exp $
+//! $Id: module.pmod,v 1.53 2000/02/13 18:04:40 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
 
-//! WARNING: This API is not yet set in stone; expect incompatible
-//! changes.
+//! WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+//! WARNING                                                 WARNING
+//! WARNING        This API is not yet set in stone.        WARNING
+//! WARNING        Expect incompatible changes.             WARNING
+//! WARNING                                                 WARNING
+//! WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -49,16 +53,16 @@ class Tag
   Type def_arg_type = t_text (PEnt);
   //! The type used for arguments that isn't present in neither
   //! req_arg_types nor opt_arg_types. This default is a parser that
-  //! only parses HTML-style entities.
+  //! only parses XML-style entities.
 
-  Type content_type = t_same (PHtml);
+  Type content_type = t_same (PXml);
   //! The handled type of the content, if the tag gets any.
   //!
   //! This default is the special type t_same, which means the type is
-  //! taken from the effective type of the result. The PHtml argument
-  //! causes the HTML parser to be used to read it, which means that
-  //! the content is preparsed with HTML syntax. Use no parser to get
-  //! the raw text.
+  //! taken from the effective type of the result. The PXml argument
+  //! causes the standard XML parser to be used to read it, which
+  //! means that the content is preparsed with XML syntax. Use no
+  //! parser to get the raw text.
 
   array(Type) result_types = ({t_xml, t_html, t_text});
   //! The possible types of the result, in order of precedence. If a
@@ -141,10 +145,10 @@ class Tag
       if (dont_throw) return 0;
       else {
 	array(string) missing = sort (indices (req_arg_types - atypes));
-	rxml_fatal ("Required " +
-		    (sizeof (missing) > 1 ?
-		     "arguments " + String.implode_nicely (missing) + " are" :
-		     "argument " + missing[0] + " is") + " missing.\n");
+	rxml_parse_error ("Required " +
+			  (sizeof (missing) > 1 ?
+			   "arguments " + String.implode_nicely (missing) + " are" :
+			   "argument " + missing[0] + " is") + " missing.\n");
       }
     atypes += args & opt_arg_types;
 #ifdef MODULE_DEBUG
@@ -155,8 +159,8 @@ class Tag
 #ifdef MODULE_DEBUG
     }) {
       if (objectp (err) && ([object] err)->thrown_at_unwind)
-	error ("Can't save parser state when evaluating arguments.\n");
-      throw (err);
+	fatal_error ("Can't save parser state when evaluating arguments.\n");
+      throw_fatal (err);
     }
 #endif
     return 1;
@@ -204,15 +208,14 @@ class Tag
       if (!ustate) ustate = ctx->unwind_state = ([]);
 #ifdef DEBUG
       if (err != frame)
-	error ("Internal error: Unexpected unwind object catched.\n");
+	fatal_error ("Internal error: Unexpected unwind object catched.\n");
       if (ustate[parser])
-	error ("Internal error: Clobbering unwind state for parser.\n");
+	fatal_error ("Internal error: Clobbering unwind state for parser.\n");
 #endif
       ustate[parser] = ({err});
-      err = parser;
+      throw (err = parser);
     }
-
-    throw (err);
+    else throw_fatal (err);
   }
 
   DECLARE_CNT (__count);
@@ -358,7 +361,7 @@ class TagSet
     if (objectp (tagdef) && ([object] tagdef)->is_RXML_Tag)
       name = [string] ([object] tagdef)->name;
 #ifdef MODULE_DEBUG
-    if (!name) error ("Need tag name.\n");
+    if (!name) fatal_error ("Need tag name.\n");
 #endif
     if (tags[name] == tagdef ||
 	(low_containers && low_containers[name] == tagdef) ||
@@ -549,16 +552,16 @@ class Scope
 //! Interface for objects that emulates a scope mapping.
 {
   mixed `[] (string var, void|Context ctx, void|string scope_name)
-    {rxml_fatal ("Cannot query variable" + _in_the_scope (scope_name) + ".\n");}
+    {rxml_parse_error ("Cannot query variable" + _in_the_scope (scope_name) + ".\n");}
 
   mixed `[]= (string var, mixed val, void|Context ctx, void|string scope_name)
-    {rxml_fatal ("Cannot set variable" + _in_the_scope (scope_name) + ".\n");}
+    {rxml_parse_error ("Cannot set variable" + _in_the_scope (scope_name) + ".\n");}
 
   array(string) _indices (void|Context ctx, void|string scope_name)
-    {rxml_fatal ("Cannot list variables" + _in_the_scope (scope_name) + ".\n");}
+    {rxml_parse_error ("Cannot list variables" + _in_the_scope (scope_name) + ".\n");}
 
   void m_delete (string var, void|Context ctx, void|string scope_name)
-    {rxml_fatal ("Cannot delete variable" + _in_the_scope (scope_name) + ".\n");}
+    {rxml_parse_error ("Cannot delete variable" + _in_the_scope (scope_name) + ".\n");}
 
   private string _in_the_scope (string scope_name)
   {
@@ -650,8 +653,8 @@ class Context
 	else
 	  return val;
     }
-    else if (scope_name) rxml_fatal ("Unknown scope %O.\n", scope_name);
-    else rxml_fatal ("No current scope.\n");
+    else if (scope_name) rxml_parse_error ("Unknown scope %O.\n", scope_name);
+    else rxml_parse_error ("No current scope.\n");
   }
 
   mixed user_get_var (string var, void|string scope_name, void|Type want_type)
@@ -677,8 +680,8 @@ class Context
 	return ([object(Scope)] vars)->`[]= (var, val, this_object(), scope_name || "_");
       else
 	return vars[var] = val;
-    else if (scope_name) rxml_fatal ("Unknown scope %O.\n", scope_name);
-    else rxml_fatal ("No current scope.\n");
+    else if (scope_name) rxml_parse_error ("Unknown scope %O.\n", scope_name);
+    else rxml_parse_error ("No current scope.\n");
   }
 
   mixed user_set_var (string var, mixed val, void|string scope_name)
@@ -704,8 +707,8 @@ class Context
 	([object(Scope)] vars)->m_delete (var, this_object(), scope_name || "_");
       else
 	m_delete ([mapping(string:mixed)] vars, var);
-    else if (scope_name) rxml_fatal ("Unknown scope %O.\n", scope_name);
-    else rxml_fatal ("No current scope.\n");
+    else if (scope_name) rxml_parse_error ("Unknown scope %O.\n", scope_name);
+    else rxml_parse_error ("No current scope.\n");
   }
 
   void user_delete_var (string var, void|string scope_name)
@@ -731,8 +734,8 @@ class Context
 	return ([object(Scope)] vars)->_indices (this_object(), scope_name || "_");
       else
 	return indices ([mapping(string:mixed)] vars);
-    else if (scope_name) rxml_fatal ("Unknown scope %O.\n", scope_name);
-    else rxml_fatal ("No current scope.\n");
+    else if (scope_name) rxml_parse_error ("Unknown scope %O.\n", scope_name);
+    else rxml_parse_error ("No current scope.\n");
   }
 
   array(string) list_scopes()
@@ -791,7 +794,7 @@ class Context
 	else oldvars = scopes[scope_name];
       }
 #ifdef DEBUG
-      if (!oldvars) error ("Internal error: I before e except after c.\n");
+      if (!oldvars) fatal_error ("Internal error: I before e except after c.\n");
 #endif
       if (!mappingp(vars)) {
 	return 0;
@@ -807,7 +810,7 @@ class Context
   //! Removes the named scope from the global level, if it exists.
   {
 #ifdef MODULE_DEBUG
-    if (scope_name == "_") error ("Cannot remove current scope.\n");
+    if (scope_name == "_") fatal_error ("Cannot remove current scope.\n");
 #endif
     Frame outermost;
     for (Frame f = frame; f; f = f->up)
@@ -848,100 +851,41 @@ class Context
     new_runtime_tags->remove_tags[tag] = 1;
   }
 
-  string describe_rxml_backtrace (Frame f, void|string current_var)
-  //! Returns a formatted backtrace from the given frame. If
-  //! current_var is specified, it's taken to be the a variable entity
-  //! being parsed on top of the frame.
-  {
-    string msg = current_var ? " | &" + current_var + ";\n" : "";
-    for (; f; f = f->up) {
-      if (f->tag) msg += " | <" + f->tag->name;
-      else if (!f->up) break;
-      else msg += " | <(unknown tag)";
-      if (f->args)
-	foreach (sort (indices (f->args)), string arg) {
-	  mixed val = f->args[arg];
-	  msg += " " + arg + "=";
-	  if (arrayp (val)) msg += map (val, error_print_val) * ",";
-	  else msg += error_print_val (val);
-	}
-      else msg += " (no argmap)";
-      msg += ">\n";
-    }
-    return msg;
-  }
-
-  void rxml_error (string msg, mixed... args)
-  //! Throws an RXML error with a dump of the parser stack. This is
-  //! intended to be used by tags for errors that can occur during
-  //! normal operation, such as when the connection to an SQL server
-  //! fails.
-  {
-    if (sizeof (args)) msg = sprintf (msg, @args);
-    msg = rxml_error_prefix + ": " + msg +
-      describe_rxml_backtrace (frame, current_var);
-    array b = backtrace();
-    throw (({msg, b[..sizeof (b) - 2]}));
-  }
-
-  void rxml_fatal (string msg, mixed... args)
-  //! Throws an RXML fatal error with a dump of the parser stack. This
-  //! is intended to be used for programming errors in the RXML code,
-  //! such as lookups in nonexisting scopes and invalid arguments to a
-  //! tag.
-  {
-    if (sizeof (args)) msg = sprintf (msg, @args);
-    msg = rxml_fatal_prefix + ": " + msg +
-      describe_rxml_backtrace (frame, current_var);
-    array b = backtrace();
-    throw (({msg, b[..sizeof (b) - 2]}));
-  }
-
   void handle_exception (mixed err, PCode|Parser evaluator)
   //! This function gets any exception that is catched during
   //! evaluation. evaluator is the object that catched the error.
   {
     error_count++;
-    string msg = describe_error (err);
-    int error = msg[..sizeof (rxml_error_prefix) - 1] == rxml_error_prefix;
-    if (error || msg[..sizeof (rxml_fatal_prefix) - 1] == rxml_fatal_prefix) {
-      // An RXML error.
-      while (evaluator->_parent) {
-	evaluator->error_count++;
-	evaluator = evaluator->_parent;
-      }
+    if (objectp (err) && err->is_RXML_Backtrace && err->type != "fatal") {
+      string msg;
+      for (object(PCode)|object(Parser) e = evaluator->_parent; e; e = e->_parent)
+	e->error_count++;
       if (id && id->conf)
-	msg = (error ?
-	       ([function(mixed,Type:string)]
-		([object] id->conf)->handle_rxml_error) :
-	       ([function(mixed,Type:string)]
-		([object] id->conf)->handle_rxml_fatal)
-	      ) (err, evaluator->type);
+	msg = (err->type == "run" ?
+	       ([function(Backtrace,Type:string)]
+		([object] id->conf)->handle_rxml_run_error) :
+	       ([function(Backtrace,Type:string)]
+		([object] id->conf)->handle_rxml_parse_error)
+	      ) ([object(Backtrace)] err, evaluator->type);
       else {
 #ifdef MODULE_DEBUG
 	report_notice (describe_backtrace (err));
 #else
-	report_notice (msg);
+	report_notice (err->msg);
 #endif
       }
-      if (msg && evaluator->type->free_text && evaluator->report_error)
-	evaluator->report_error (msg);
+      if (msg)
+	while (evaluator) {
+	  if (evaluator->report_error && evaluator->type->free_text &&
+	      evaluator->report_error (msg))
+	    break;
+	  evaluator = evaluator->_parent;
+	}
     }
-    else throw (err);
+    else throw_fatal (err);
   }
 
   // Internals.
-
-  constant rxml_error_prefix = "RXML error";
-  constant rxml_fatal_prefix = "RXML fatal";
-
-  private string error_print_val (mixed val)
-  {
-    if (arrayp (val)) return "array";
-    else if (mappingp (val)) return "mapping";
-    else if (multisetp (val)) return "multiset";
-    else return sprintf ("%O", val);
-  }
 
   string current_var;
   // Used to get the parsed variable into the RXML error backtrace.
@@ -951,7 +895,7 @@ class Context
   // Normally TagSet.`() should be used instead of this.
   {
 #ifdef MODULE_DEBUG
-    if (in_use || frame) error ("Context already in use.\n");
+    if (in_use || frame) fatal_error ("Context already in use.\n");
 #endif
     return top_level_type->get_parser (this_object());
   }
@@ -968,7 +912,7 @@ class Context
   void enter_scope (Frame frame)
   {
 #ifdef DEBUG
-    if (!frame->vars) error ("Internal error: Frame has no variables.\n");
+    if (!frame->vars) fatal_error ("Internal error: Frame has no variables.\n");
 #endif
     if (!hidden[frame])
       if (string scope_name = [string] frame->scope_name) {
@@ -989,7 +933,7 @@ class Context
       if (SCOPE_TYPE named = back[1]) {
 #ifdef MODULE_DEBUG
 	if (!stringp (frame->scope_name))
-	  error ("Scope named changed to %O during parsing.\n", frame->scope_name);
+	  fatal_error ("Scope named changed to %O during parsing.\n", frame->scope_name);
 #endif
 	scopes[[string] frame->scope_name] = named;
       }
@@ -1053,6 +997,77 @@ class Context
 #endif
 }
 
+class Backtrace
+//! The object used to throw RXML errors.
+{
+  constant is_generic_error = 1;
+  constant is_RXML_Backtrace = 1;
+
+  string type;			// Currently "run", "parse" or "fatal".
+  string msg;
+  Context context;
+  Frame frame;
+  string current_var;
+  array backtrace;
+
+  void create (string _type, string _msg, void|Context _context)
+  {
+    type = _type;
+    msg = _msg;
+    if (context = _context || get_context()) {
+      frame = context->frame;
+      current_var = context->current_var;
+    }
+    backtrace = predef::backtrace();
+    backtrace = backtrace[..sizeof (backtrace) - 2];
+  }
+
+  string describe_rxml_backtrace (void|int no_msg)
+  //! Returns a formatted RXML frame backtrace.
+  {
+    string txt = no_msg ? "" : "RXML " + type + " error";
+    if (context) {
+      if (!no_msg) txt += ": " + (msg || "(no error message)\n");
+      txt += current_var ? " | &" + current_var + ";\n" : "";
+      for (Frame f = frame; f; f = f->up) {
+	if (f->tag) txt += " | <" + f->tag->name;
+	else if (!f->up) break;
+	else txt += " | <(unknown tag)";
+	if (f->args)
+	  foreach (sort (indices (f->args)), string arg) {
+	    mixed val = f->args[arg];
+	    txt += " " + arg + "=";
+	    if (arrayp (val)) txt += map (val, error_print_val) * ",";
+	    else txt += error_print_val (val);
+	  }
+	else txt += " (no argmap)";
+	txt += ">\n";
+      }
+    }
+    else
+      if (!no_msg) txt += " (no context): " + (msg || "(no error message)\n");
+    return txt;
+  }
+
+  private string error_print_val (mixed val)
+  {
+    if (arrayp (val)) return "array";
+    else if (mappingp (val)) return "mapping";
+    else if (multisetp (val)) return "multiset";
+    else return sprintf ("%O", val);
+  }
+
+  string|array `[] (int i)
+  {
+    switch (i) {
+      case 0: return describe_rxml_backtrace();
+      case 1: return backtrace;
+    }
+  }
+
+  string _sprintf() {return "RXML.Backtrace(" + type + ")";}
+}
+
 
 //! Current context.
 
@@ -1077,7 +1092,7 @@ inline Context get_context() {return _context;}
   set_context (ctx);							\
   if (ctx) {								\
     if (ctx->in_use && ctx->in_use != this_thread())			\
-      error ("Attempt to use context asynchronously.\n");		\
+      fatal_error ("Attempt to use context asynchronously.\n");		\
     ctx->in_use = this_thread();					\
   }
 
@@ -1100,46 +1115,47 @@ inline Context get_context() {return _context;}
 
 //! Constants for the bit field RXML.Frame.flags.
 
-constant FLAG_NONE = 0x00000000;
+constant FLAG_NONE		= 0x00000000;
 //! The no-flags flag. In case you think 0 is too ugly. ;)
 
 //! Static flags (i.e. tested in the Tag object).
 
-constant FLAG_CONTAINER = 0x00000001;
-//! If set, the tag accepts non-empty content. E.g. with the standard
-//! HTML parser this defines whether the tag is a container or not.
+constant FLAG_NONCONTAINER	= 0x00000001;
+//! If set, the tag does not use any content. E.g. with a HTML parser
+//! this defines whether the tag is a container or not, and in XML
+//! parsing it simply causes the content (if any) to be thrown away.
 
-constant FLAG_NO_PREFIX = 0x00000002;
+constant FLAG_NO_PREFIX		= 0x00000002;
 //! Never apply any prefix to this tag.
 
-constant FLAG_SOCKET_TAG = 0x0000004;
+constant FLAG_SOCKET_TAG	= 0x0000004;
 //! Declare the tag to be a socket tag, which accepts plugin tags (see
 //! Tag.plugin_name for details).
 
-constant FLAG_DONT_PREPARSE = 0x00000040;
-//! Don't preparse the content with the PHtml parser. This is only
-//! used in the simple tag wrapper. Defined here as placeholder.
+constant FLAG_DONT_PREPARSE	= 0x00000040;
+//! Don't preparse the content with the PXml parser. This is only used
+//! in the simple tag wrapper. Defined here as placeholder.
 
-constant FLAG_POSTPARSE = 0x00000080;
-//! Postparse the result with the PHtml parser. This is only used in
+constant FLAG_POSTPARSE		= 0x00000080;
+//! Postparse the result with the PXml parser. This is only used in
 //! the simple tag wrapper. Defined here as placeholder.
 
 //! The rest of the flags are dynamic (i.e. tested in the Frame object).
 
-constant FLAG_PARENT_SCOPE = 0x00000100;
+constant FLAG_PARENT_SCOPE	= 0x00000100;
 //! If set, the array from do_enter(), do_return() and cached_return()
 //! will be interpreted in the scope of the parent tag, rather than in
 //! the current one.
 
-constant FLAG_NO_IMPLICIT_ARGS = 0x00000200;
+constant FLAG_NO_IMPLICIT_ARGS	= 0x00000200;
 //! If set, the parser won't apply any implicit arguments. FIXME: Not
 //! yet implemented.
 
-constant FLAG_STREAM_RESULT = 0x00000400;
+constant FLAG_STREAM_RESULT	= 0x00000400;
 //! If set, the do_return() function will be called repeatedly until
 //! it returns 0 or no more content is wanted.
 
-constant FLAG_STREAM_CONTENT = 0x00000800;
+constant FLAG_STREAM_CONTENT	= 0x00000800;
 //! If set, the tag supports getting its content in streaming mode:
 //! do_return() will be called repeatedly with successive parts of the
 //! content then. Can't be changed from do_return().
@@ -1148,9 +1164,9 @@ constant FLAG_STREAM_CONTENT = 0x00000800;
 //! less effective than nonstreaming, so it should only be done when
 //! big delays are expected.
 
-constant FLAG_STREAM = FLAG_STREAM_RESULT | FLAG_STREAM_CONTENT;
+constant FLAG_STREAM		= FLAG_STREAM_RESULT | FLAG_STREAM_CONTENT;
 
-constant FLAG_UNPARSED = 0x00001000;
+constant FLAG_UNPARSED		= 0x00001000;
 //! If set, args and content in the frame contain unparsed strings.
 //! The frame will be parsed before it's evaluated. This flag should
 //! never be set in Tag.flags, but it's useful when creating frames
@@ -1162,7 +1178,7 @@ constant FLAG_UNPARSED = 0x00001000;
 //! The tag name is always the same. FIXME: These are ideas only; not
 //! yet implemented.
 
-constant FLAG_CACHE_DIFF_ARGS = 0x00010000;
+constant FLAG_CACHE_DIFF_ARGS	= 0x00010000;
 //! If set, the arguments to the tag need not be the same (using
 //! equal()) as the cached args.
 
@@ -1173,12 +1189,12 @@ constant FLAG_CACHE_DIFF_RESULT_TYPE = 0x00040000;
 //! If set, the result type need not be the same. (Typically
 //! not useful unless cached_return() is used.)
 
-constant FLAG_CACHE_DIFF_VARS = 0x00080000;
+constant FLAG_CACHE_DIFF_VARS	= 0x00080000;
 //! If set, the variables with external scope in vars (i.e. normally
 //! those that has been accessed with get_var()) need not have the
 //! same values (using equal()) as the actual variables.
 
-constant FLAG_CACHE_SAME_STACK = 0x00100000;
+constant FLAG_CACHE_SAME_STACK	= 0x00100000;
 //! If set, the stack of call frames needs to be the same.
 
 constant FLAG_CACHE_EXECUTE_RESULT = 0x00200000;
@@ -1352,28 +1368,29 @@ class Frame
 
   //! Services.
 
-  void rxml_error (string msg, mixed... args)
-  //! Throws an RXML error from the current context. This is intended
-  //! to be used by tags for errors that can occur during normal
-  //! operation, such as when the connection to an SQL server fails.
+  void rxml_run_error (string msg, mixed... args)
+  //! Throws an RXML run error with a dump of the parser stack in the
+  //! current context. This is intended to be used by tags for errors
+  //! that can occur during normal operation, such as when the
+  //! connection to an SQL server fails.
   {
-    get_context()/*HMM*/->rxml_error (msg, @args);
+    _rxml_run_error (msg, @args);
   }
 
-  void rxml_fatal (string msg, mixed... args)
-  //! Throws an RXML fatal error from the current context. This is
-  //! intended to be used for programming errors in the RXML code,
-  //! such as lookups in nonexisting scopes and invalid arguments to a
-  //! tag.
+  void rxml_parse_error (string msg, mixed... args)
+  //! Throws an RXML parse error with a dump of the parser stack in
+  //! the current context. This is intended to be used for programming
+  //! errors in the RXML code, such as lookups in nonexisting scopes
+  //! and invalid arguments to a tag.
   {
-    get_context()/*HMM*/->rxml_fatal (msg, @args);
+    _rxml_parse_error (msg, @args);
   }
 
   void terminate()
   //! Makes the parser abort. The data parsed so far will be returned.
   //! Does not return; throws a special exception instead.
   {
-    error ("FIXME\n");
+    fatal_error ("FIXME\n");
   }
 
   void suspend()
@@ -1383,14 +1400,14 @@ class Frame
   //! parser is used in a place that doesn't support nonblocking, so
   //! just go ahead and block.
   {
-    error ("FIXME\n");
+    fatal_error ("FIXME\n");
   }
 
   void resume()
   //! Makes the parser continue where it left off. The function that
   //! called suspend() will be called again.
   {
-    error ("FIXME\n");
+    fatal_error ("FIXME\n");
   }
 
   mapping(string:Tag) get_plugins()
@@ -1402,7 +1419,7 @@ class Frame
   {
 #ifdef MODULE_DEBUG
     if (!(flags & FLAG_SOCKET_TAG))
-      error ("This tag is not a socket tag.\n");
+      fatal_error ("This tag is not a socket tag.\n");
 #endif
     return get_context()->tag_set->get_plugins (tag->name);
   }
@@ -1436,13 +1453,14 @@ class Frame
 	    }
 	    break;
 	  case "mapping":
-	    error ("Header mappings not yet implemented.\n");
+	    fatal_error ("Header mappings not yet implemented.\n");
 	    break;
 	  case "multiset":
 	    if (sizeof ([multiset] elem) == 1) piece = ((array) elem)[0];
 	    else if (sizeof ([multiset] elem) > 1)
-	      error (sizeof ([multiset] elem) + " values in multiset in exec array.\n");
-	    else error ("No value in multiset in exec array.\n");
+	      fatal_error (sizeof ([multiset] elem) +
+			   " values in multiset in exec array.\n");
+	    else fatal_error ("No value in multiset in exec array.\n");
 	    break;
 	  default:
 	    if (objectp (elem))
@@ -1458,9 +1476,9 @@ class Frame
 		piece = ([object(Parser)] elem)->eval(); // Might unwind.
 	      }
 	      else
-		error ("File objects not yet implemented.\n");
+		fatal_error ("File objects not yet implemented.\n");
 	    else
-	      error ("Invalid type %t in exec array.\n", elem);
+	      fatal_error ("Invalid type %t in exec array.\n", elem);
 	}
 
 	if (result_type->sequential) res += piece;
@@ -1490,8 +1508,9 @@ class Frame
 	// continue in it later. It's done here to keep the original
 	// exec array untouched.
 	([array] ustate->exec_left)[0] = subparser;
+      throw (err);
     }
-    throw (err);
+    throw_fatal (err);
   }
 
   private void _handle_runtime_tags (TagSetParser parser,
@@ -1536,7 +1555,7 @@ class Frame
     int tags_added;		// Flag that we added additional_tags to ctx->tag_set.
     //ctx->new_runtime_tags
 
-#define PRE_INIT_ERROR(X) (ctx->frame = this, error (X))
+#define PRE_INIT_ERROR(X) (ctx->frame = this, fatal_error (X))
 #ifdef DEBUG
     // Internal sanity checks.
     if (ctx != get_context())
@@ -1597,10 +1616,10 @@ class Frame
 	mapping(string:Type) atypes = raw_args & tag->req_arg_types;
 	if (sizeof (atypes) < sizeof (tag->req_arg_types)) {
 	  array(string) missing = sort (indices (tag->req_arg_types - atypes));
-	  rxml_fatal ("Required " +
-		      (sizeof (missing) > 1 ?
-		       "arguments " + String.implode_nicely (missing) + " are" :
-		       "argument " + missing[0] + " is") + " missing.\n");
+	  rxml_parse_error ("Required " +
+			    (sizeof (missing) > 1 ?
+			     "arguments " + String.implode_nicely (missing) + " are" :
+			     "argument " + missing[0] + " is") + " missing.\n");
 	}
 	atypes += raw_args & tag->opt_arg_types;
 #ifdef MODULE_DEBUG
@@ -1612,15 +1631,15 @@ class Frame
 #ifdef MODULE_DEBUG
 	}) {
 	  if (objectp (err) && ([object] err)->thrown_at_unwind)
-	    error ("Can't save parser state when evaluating arguments.\n");
-	  throw (err);
+	    fatal_error ("Can't save parser state when evaluating arguments.\n");
+	  throw_fatal (err);
 	}
 #endif
       }
     }
 
 #ifdef MODULE_DEBUG
-    if (!args) error ("args not set.\n");
+    if (!args) fatal_error ("args not set.\n");
 #endif
 
     if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
@@ -1633,9 +1652,9 @@ class Frame
 
     if (!result_type) {
 #ifdef MODULE_DEBUG
-      if (!tag) error ("result_type not set in Frame object %O, "
-		       "and it has no Tag object to use for inferring it.\n",
-		       this_object());
+      if (!tag) fatal_error ("result_type not set in Frame object %O, "
+			     "and it has no Tag object to use for inferring it.\n",
+			     this_object());
 #endif
       Type ptype = parser->type;
       foreach (tag->result_types, Type rtype)
@@ -1648,16 +1667,16 @@ class Frame
 	  break;
 	}
       if (!result_type)		// Sigh..
-	rxml_fatal (
+	rxml_parse_error (
 	  "Tag returns " +
 	  String.implode_nicely ([array(string)] tag->result_types->name, "or") +
 	  " but " + [string] parser->type->name + " is expected.\n");
     }
     if (!content_type) {
 #ifdef MODULE_DEBUG
-      if (!tag) error ("content_type not set in Frame object %O, "
-		       "and it has no Tag object to use for inferring it.\n",
-		       this_object());
+      if (!tag) fatal_error ("content_type not set in Frame object %O, "
+			     "and it has no Tag object to use for inferring it.\n",
+			     this_object());
 #endif
       content_type = tag->content_type;
       if (content_type == t_same)
@@ -1675,10 +1694,11 @@ class Frame
 	      if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 		if (ctx->unwind_state)
-		  error ("Internal error: Clobbering unwind_state to do streaming.\n");
+		  fatal_error ("Internal error: Clobbering unwind_state "
+			       "to do streaming.\n");
 		if (piece != Void)
-		  error ("Internal error: Thanks, we think about how nice it must "
-			 "be to play the harmonica...\n");
+		  fatal_error ("Internal error: Thanks, we think about how nice it must "
+			       "be to play the harmonica...\n");
 #endif
 		if (result_type->quoting_scheme != parser->type->quoting_scheme)
 		  res = parser->type->quote (res);
@@ -1742,8 +1762,8 @@ class Frame
 			  if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 			    if (!zero_type (ctx->unwind_state->stream_piece))
-			      error ("Internal error: "
-				     "Clobbering unwind_state->stream_piece.\n");
+			      fatal_error ("Internal error: "
+					   "Clobbering unwind_state->stream_piece.\n");
 #endif
 			    if (result_type->quoting_scheme !=
 				parser->type->quoting_scheme)
@@ -1792,11 +1812,11 @@ class Frame
 		  if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 		    if (ctx->unwind_state)
-		      error ("Internal error: Clobbering unwind_state "
-			     "to do streaming.\n");
+		      fatal_error ("Internal error: Clobbering unwind_state "
+				   "to do streaming.\n");
 		    if (piece != Void)
-		      error ("Internal error: Thanks, we think about how nice it must "
-			     "be to play the harmonica...\n");
+		      fatal_error ("Internal error: Thanks, we think about how nice "
+				   "it must be to play the harmonica...\n");
 #endif
 		    if (result_type->quoting_scheme != parser->type->quoting_scheme)
 		      res = parser->type->quote (res);
@@ -1840,7 +1860,7 @@ class Frame
 	if (!ustate) ustate = ctx->unwind_state = ([]);
 #ifdef DEBUG
 	if (ustate[this])
-	  error ("Internal error: Frame already has an unwind state.\n");
+	  fatal_error ("Internal error: Frame already has an unwind state.\n");
 #endif
 
 	if (ustate->exec_left) {
@@ -1880,7 +1900,7 @@ class Frame
 			 exec, tags_added, ctx->new_runtime_tags});
       }
       else {
-	ctx->handle_exception (err, parser); // May throw.
+	ctx->handle_exception (err, parser); // Will rethrow unknown errors.
 	action = "return";
       }
 
@@ -1888,7 +1908,7 @@ class Frame
 	case "break":		// Throw and handle in parent frame.
 #ifdef MODULE_DEBUG
 	  if (!parser->unwind_state)
-	    error ("Trying to unwind inside a parser that isn't unwind safe.\n");
+	    fatal_error ("Trying to unwind inside a parser that isn't unwind safe.\n");
 #endif
 	  throw (this);
 	case "continue":	// Continue in this frame through tail recursion.
@@ -1897,7 +1917,7 @@ class Frame
 	case "return":		// A normal return.
 	  break;
 	default:
-	  error ("Internal error: Don't you come here and %O on me!\n", action);
+	  fatal_error ("Internal error: Don't you come here and %O on me!\n", action);
       }
     }
 
@@ -1917,43 +1937,52 @@ class Frame
 
 // Global services.
 
-void rxml_error (string msg, mixed... args)
-//! Tries to throw an error with rxml_error() in the current context.
+void rxml_run_error (string msg, mixed... args)
+//! Throws an RXML run error with a dump of the parser stack in the
+//! current context. This is intended to be used by tags for errors
+//! that can occur during normal operation, such as when the
+//! connection to an SQL server fails.
 {
-  Context ctx = get_context();
-  if (ctx && ctx->rxml_error)
-    ctx->rxml_error (msg, @args);
-  else {
-    if (sizeof (args)) msg = sprintf (msg, @args);
-    msg = Context.rxml_error_prefix + " (no context): " + msg;
-    array b = backtrace();
-    throw (({msg, b[..sizeof (b) - 2]}));
-  }
+  if (sizeof (args)) msg = sprintf (msg, @args);
+  throw (Backtrace ("run", msg, get_context()));
 }
 
-void rxml_fatal (string msg, mixed... args)
-//! Tries to throw a fatal error with rxml_fatal() in the current
-//! context.
+void rxml_parse_error (string msg, mixed... args)
+//! Throws an RXML parse error with a dump of the parser stack in the
+//! current context. This is intended to be used for programming
+//! errors in the RXML code, such as lookups in nonexisting scopes and
+//! invalid arguments to a tag.
 {
-  Context ctx = get_context();
-  if (ctx && ctx->rxml_fatal)
-    ctx->rxml_fatal (msg, @args);
-  else {
-    if (sizeof (args)) msg = sprintf (msg, @args);
-    msg = Context.rxml_fatal_prefix + " (no context): " + msg;
-    array b = backtrace();
-    throw (({msg, b[..sizeof (b) - 2]}));
-  }
+  if (sizeof (args)) msg = sprintf (msg, @args);
+  throw (Backtrace ("parse", msg, get_context()));
 }
 
-void error (string msg, mixed... args)
+void fatal_error (string msg, mixed... args)
+//! Throws a Pike error that isn't catched and handled anywhere. It's
+//! just like the common error() function, but includes the RXML frame
+//! backtrace.
 {
-  Context ctx = get_context();
-  array b = backtrace();
-  if (ctx && ctx->describe_rxml_backtrace)
-    throw (({msg + "RXML backtrace: " + ctx->describe_rxml_backtrace (ctx->frame, ctx->current_var), b[..sizeof (b) - 2]}));
-  else
-    throw (({msg, b[..sizeof (b) - 2]}));
+  if (sizeof (args)) msg = sprintf (msg, @args);
+  array bt = backtrace();
+  throw_fatal (({msg, bt[..sizeof (bt) - 2]}));
+}
+
+void throw_fatal (mixed err)
+//! Mainly used internally to throw an error that includes the RXML
+//! frame backtrace.
+{
+  if (arrayp (err) && sizeof (err) == 2 ||
+      objectp (err) && !err->is_RXML_Backtrace && err->is_generic_error) {
+    string msg;
+    if (catch (msg = err[0])) throw (err);
+    if (stringp (msg) && !has_value (msg, "\nRXML frame backtrace:\n")) {
+      Backtrace b = Backtrace ("fatal", 0);
+      if (sizeof (msg) && msg[-1] != '\n') msg += "\n";
+      msg += "RXML frame backtrace:\n" + b->describe_rxml_backtrace (1);
+      catch (err[0] = msg);
+    }
+  }
+  throw (err);
 }
 
 Frame make_tag (string name, mapping(string:mixed) args, void|mixed content)
@@ -1964,7 +1993,7 @@ Frame make_tag (string name, mapping(string:mixed) args, void|mixed content)
   TagSet tag_set = get_context()->tag_set;
   object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag = tag_set->get_tag (name);
   if (arrayp (tag))
-    error ("Getting frames for low level tags are currently not implemented.\n");
+    fatal_error ("Getting frames for low level tags are currently not implemented.\n");
   return tag (args, content);
 }
 
@@ -1977,7 +2006,7 @@ Frame make_unparsed_tag (string name, mapping(string:string) args, void|string c
   TagSet tag_set = get_context()->tag_set;
   object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag = tag_set->get_tag (name);
   if (arrayp (tag))
-    error ("Getting frames for low level tags are currently not implemented.\n");
+    fatal_error ("Getting frames for low level tags are currently not implemented.\n");
   Frame frame = tag (args, content);
   frame->flags |= FLAG_UNPARSED;
   return frame;
@@ -2035,7 +2064,8 @@ class Parser
       if (context && context->unwind_state && context->unwind_state->top) {
 #ifdef MODULE_DEBUG
 	if (context->unwind_state->top != this_object())
-	  error ("The context got an unwound state from another parser. Can't rewind.\n");
+	  fatal_error ("The context got an unwound state from another parser. "
+		       "Can't rewind.\n");
 #endif
 	m_delete (context->unwind_state, "top");
 	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
@@ -2048,14 +2078,14 @@ class Parser
       if (objectp (err) && ([object] err)->thrown_at_unwind) {
 #ifdef DEBUG
 	if (err != this_object())
-	  error ("Internal error: Unexpected unwind object catched.\n");
+	  fatal_error ("Internal error: Unexpected unwind object catched.\n");
 #endif
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
       else if (context)
-	context->handle_exception (err, this_object()); // May throw.
-      else throw (err);
+	context->handle_exception (err, this_object()); // Will rethrow unknown errors.
+      else throw_fatal (err);
     return res;
   }
 
@@ -2069,7 +2099,8 @@ class Parser
       if (context && context->unwind_state && context->unwind_state->top) {
 #ifdef MODULE_DEBUG
 	if (context->unwind_state->top != this_object())
-	  error ("The context got an unwound state from another parser. Can't rewind.\n");
+	  fatal_error ("The context got an unwound state from another parser. "
+		       "Can't rewind.\n");
 #endif
 	m_delete (context->unwind_state, "top");
 	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
@@ -2082,14 +2113,14 @@ class Parser
       if (objectp (err) && ([object] err)->thrown_at_unwind) {
 #ifdef DEBUG
 	if (err != this_object())
-	  error ("Internal error: Unexpected unwind object catched.\n");
+	  fatal_error ("Internal error: Unexpected unwind object catched.\n");
 #endif
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
       else if (context)
-	context->handle_exception (err, this_object()); // May throw.
-      else throw (err);
+	context->handle_exception (err, this_object()); // Will rethrow unknown errors.
+      else throw_fatal (err);
   }
 
   array handle_var (string varref)
@@ -2150,10 +2181,12 @@ class Parser
   //! data may be given. It should work to call this on an already
   //! finished stream if no argument is given to it.
 
-  optional void report_error (string msg);
+  optional int report_error (string msg);
   //! Used to report errors to the end user through the output. This
-  //! is only called when the type allows free text. msg should be
-  //! stored in the output queue to be returned by eval().
+  //! is only called when type->free_text is nonzero. msg should be
+  //! stored in the output queue to be returned by eval(). If the
+  //! context is bad for an error message, do nothing and return zero,
+  //! and return nonzero if a message was written.
 
   optional mixed read();
   //! Define to allow streaming operation. Returns the evaluated
@@ -2345,12 +2378,12 @@ class Type
 
   //!mixed free_text;
   //! Nonzero if the type keeps the free text between parsed tokens,
-  //! e.g. the plain text between tags in HTML. The type must be
+  //! e.g. the plain text between tags in XML. The type must be
   //! sequential and use strings.
 
   void type_check (mixed val);
   //! Checks whether the given value is a valid one of this type. Type
-  //! errors are thrown with RXML.rxml_fatal().
+  //! errors are thrown with RXML.rxml_parse_error().
 
   //!string quoting_scheme;
   //! An identifier for the quoting scheme this type uses, if any. The
@@ -2565,7 +2598,7 @@ static class TNone
 
   void type_check (mixed val)
   {
-    if (val != Void) rxml_fatal ("A value is not accepted.\n");
+    if (val != Void) rxml_parse_error ("A value is not accepted.\n");
   }
 
   mixed convert (mixed val)
@@ -2600,7 +2633,7 @@ static class TText
   string convert (mixed val)
   {
     if (mixed err = catch {return (string) val;})
-      rxml_fatal ("Couldn't convert value to text: " + describe_error (err));
+      rxml_parse_error ("Couldn't convert value to text: " + describe_error (err));
   }
 
   string _sprintf() {return "RXML.t_text" + PAREN_CNT (__count);}
@@ -2636,7 +2669,7 @@ static class TXml
   string convert (mixed val, void|Type from)
   {
     if (mixed err = catch {val = (string) val;})
-      rxml_fatal ("Couldn't convert value to text: " + describe_error (err));
+      rxml_parse_error ("Couldn't convert value to text: " + describe_error (err));
     if (!from || from->quoting_scheme != quoting_scheme)
       val = quote ([string] val);
     return val;
@@ -2755,7 +2788,7 @@ class ScanStream
   //!
   {
 #ifdef MODULE_DEBUG
-    if (fin) error ("Cannot feed data to a finished stream.\n");
+    if (fin) fatal_error ("Cannot feed data to a finished stream.\n");
 #endif
     array tokens = scan (end + in, 0);
     end = [string] tokens[-1];
@@ -2770,7 +2803,7 @@ class ScanStream
   {
     if (in || !fin && sizeof (end)) {
 #ifdef MODULE_DEBUG
-      if (in && fin) error ("Cannot feed data to a finished stream.\n");
+      if (in && fin) fatal_error ("Cannot feed data to a finished stream.\n");
 #endif
       fin = 1;
       if (in) end += in;
@@ -2843,17 +2876,20 @@ class ScanStream
 }
 
 
-// Various internal stuff.
+// Various internal kludges.
+
+static function(string,mixed...:void) _rxml_run_error = rxml_run_error;
+static function(string,mixed...:void) _rxml_parse_error = rxml_parse_error;
 
 // Argh!
-static program PHtml;
+static program PXml;
 static program PEnt;
 static program PExpr;
 void _fix_module_ref (string name, mixed val)
 {
   mixed err = catch {
     switch (name) {
-      case "PHtml": PHtml = [program] val; break;
+      case "PXml": PXml = [program] val; break;
       case "PEnt": PEnt = [program] val; break;
       case "PExpr": PExpr = [program] val; break;
       case "empty_tag_set": empty_tag_set = [object(TagSet)] val; break;
