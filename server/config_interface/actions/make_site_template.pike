@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.7 2003/11/17 16:01:27 anders Exp $
+ * $Id: make_site_template.pike,v 1.8 2004/02/03 12:04:31 anders Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -13,7 +13,7 @@
 
 constant action = "maintenance";
 
-string name = LOCALE(0, "Create site template")+"...";
+string name = LOCALE(144, "Create site template")+"...";
 string doc  = LOCALE(145, "Create a site template from a site configuration");
 
 string indent(string s)
@@ -31,7 +31,7 @@ string parse(RequestID id)
     error("No permission, dude!\n"); // This should not happen, really.
 
   string res = "<font size='+1'><b>"+
-    LOCALE(0, "Create site template")+"</b></font>";
+    LOCALE(144, "Create site template")+"</b></font>";
 
   string conf_name;
   Configuration conf;

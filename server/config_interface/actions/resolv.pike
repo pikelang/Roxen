@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.28 2003/11/17 16:01:28 anders Exp $
+ * $Id: resolv.pike,v 1.29 2004/02/03 12:04:31 anders Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -252,7 +252,7 @@ string parse( RequestID id )
 
     resolv =
       "<hr noshade size='1' width='100%'/>\n" +
-      LOCALE(0, "Canonic URL: ") +
+      LOCALE(179, "Canonic URL: ") +
       Roxen.html_encode_string(canonic_url) + "<br />\n" +
       LOCALE(32, "Resolving")+" " +
       link(canonic_url, Roxen.html_encode_string (nid->not_query)) +

@@ -759,11 +759,6 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 <t></t>
 </str>
 
-<str id="41">
-<o>Change Roxen version...</o>
-<t></t>
-</str>
-
 <str id="42">
 <o>If you have more than one Roxen version installed
 in the same location, you can use this action to
@@ -901,11 +896,6 @@ change the currently running version.</o>
 <t></t>
 </str>
 
-<str id="153">
-<o>Ok</o>
-<t></t>
-</str>
-
 <str id="154">
 <o>Note that you will have to start the new server manually because you may have to answer a few questions for the new environment file.</o>
 <t></t>
@@ -946,11 +936,6 @@ change the currently running version.</o>
 <t></t>
 </str>
 
-<str id="162">
-<o>Refresh</o>
-<t></t>
-</str>
-
 <str id="163">
 <o>Debug Summary</o>
 <t></t>
@@ -968,11 +953,6 @@ change the currently running version.</o>
 
 <str id="166">
 <o>Show information about the installed licenses and there usage.</o>
-<t></t>
-</str>
-
-<str id="167">
-<o>Upload license</o>
 <t></t>
 </str>
 
@@ -1023,5 +1003,20 @@ change the currently running version.</o>
 
 <str id="177">
 <o>The object walkthrough visited %d of %d objects - the list below is not accurate.</o>
+<t></t>
+</str>
+
+<str id="178">
+<o>Total</o>
+<t></t>
+</str>
+
+<str id="179">
+<o>Canonic URL: </o>
+<t></t>
+</str>
+
+<str id="180">
+<o>Upload license...</o>
 <t></t>
 </str>

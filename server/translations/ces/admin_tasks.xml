@@ -841,12 +841,6 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 <t></t>
 </str>
 
-<str id="41">
-<new/>
-<o>Change Roxen version...</o>
-<t></t>
-</str>
-
 <str id="42">
 <changed from="Indeed"/>
 <o>If you have more than one Roxen version installed
@@ -1002,12 +996,6 @@ change the currently running version.</o>
 <t></t>
 </str>
 
-<str id="153">
-<new/>
-<o>Ok</o>
-<t></t>
-</str>
-
 <str id="154">
 <new/>
 <o>Note that you will have to start the new server manually because you may have to answer a few questions for the new environment file.</o>
@@ -1056,12 +1044,6 @@ change the currently running version.</o>
 <t></t>
 </str>
 
-<str id="162">
-<new/>
-<o>Refresh</o>
-<t></t>
-</str>
-
 <str id="163">
 <new/>
 <o>Debug Summary</o>
@@ -1083,12 +1065,6 @@ change the currently running version.</o>
 <str id="166">
 <new/>
 <o>Show information about the installed licenses and there usage.</o>
-<t></t>
-</str>
-
-<str id="167">
-<new/>
-<o>Upload license</o>
 <t></t>
 </str>
 
@@ -1149,5 +1125,23 @@ change the currently running version.</o>
 <str id="177">
 <new/>
 <o>The object walkthrough visited %d of %d objects - the list below is not accurate.</o>
+<t></t>
+</str>
+
+<str id="178">
+<new/>
+<o>Total</o>
+<t></t>
+</str>
+
+<str id="179">
+<new/>
+<o>Canonic URL: </o>
+<t></t>
+</str>
+
+<str id="180">
+<new/>
+<o>Upload license...</o>
 <t></t>
 </str>

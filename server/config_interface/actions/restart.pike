@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.14 2003/11/17 16:01:29 anders Exp $
+ * $Id: restart.pike,v 1.15 2004/02/03 12:04:31 anders Exp $
  */
 
 #include <config_interface.h>
@@ -10,14 +10,14 @@
 
 constant action = "maintenance";
 
-LocaleString name= LOCALE(0, "Restart or shutdown")+"...";
+LocaleString name= LOCALE(34, "Restart or shutdown")+"...";
 constant doc = "";
 
 
 mixed parse( RequestID id )
 {
   string res = "<font size='+1'><b>" +
-    LOCALE(0, "Restart or shutdown") + "</b></font>"
+    LOCALE(34, "Restart or shutdown") + "</b></font>"
     "<p />";
   switch( id->variables->what )
   {

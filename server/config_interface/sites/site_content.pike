@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.138 2003/11/25 15:35:07 anders Exp $
+// $Id: site_content.pike,v 1.139 2004/02/03 12:04:32 anders Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -65,7 +65,7 @@ string describe_tags( RoxenModule m, int q )
 				lambda(string tag) {
 				  return "<nobr>&lt;?"+tag+" ?&gt;</nobr>";
 				} ),
-			    LOCALE(0,"and"));
+			    LOCALE("cw","and"));
 }
 
 string describe_provides( RoxenModule m, int q )
@@ -469,10 +469,10 @@ string port_for( string url, int settings )
           <if not variable='_.url is &var.url;'>
             <if not='' variable='var.end'>
               <set variable='var.end' value='.'/>"
-              +LOCALE(0,"Shared with ")+
+              +LOCALE(323,"Shared with ")+
 #"          </if>
             <else>"
-              +LOCALE(0,"and")+" "
+              +LOCALE("cw","and")+" "
             "</else>"
             "<a href='../&_.conf;/'>&_.confname;</a>"
           "</if>"

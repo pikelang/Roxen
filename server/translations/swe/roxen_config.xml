@@ -537,7 +537,7 @@ multiplicera detta värde med den här faktorn.</t>
 
 <str id="65">
 <changed from="If yes, non-anonymous users can connect"/>
-<o>If yes, non-anonymous users can connect.</o>
+<o>If yes, non-anonymous users can connect. Note that for password authentication to be performed you will need to have the "Authentication: Password" module in your site.</o>
 <t>Om ja så tillåts icke-anonyma användare</t>
 </str>
 
@@ -984,11 +984,11 @@ Roxen använda?</t>
 <str id="147">
 <o>When syslog is used, how much should be sent to it?&lt;br /&gt;&lt;hr /&gt;Fatal:    Only messages about fatal errors&lt;br /&gt;Errors:   Only error or fatal messages&lt;br /&gt;Warning:  Warning messages as well&lt;br /&gt;Debug:    Debug messager as well&lt;br /&gt;All:      Everything&lt;br /&gt;</o>
 <t>När systemlogen används, vad ska skickas till den?&lt;br /&gt;&lt;hr /&gt;
-          "Fatala:    Bara felmeddelenaden som är uppmärkta som fatala&lt;br /&gt;
-	  "Fel:       Bara felmeddelanden och fatala fel&lt;br /&gt;
-	  "Varningar: Samma som ovan, men även alla varningsmeddelanden&lt;br /&gt;
-	  "Debug:     Samma som ovan, men även alla felmeddelanden&lt;br /&gt;
-          "Allt:     Allt&lt;br /&gt;</t>
+          Fatala:    Bara felmeddelenaden som är uppmärkta som fatala&lt;br /&gt;
+	  Fel:       Bara felmeddelanden och fatala fel&lt;br /&gt;
+	  Varningar: Samma som ovan, men även alla varningsmeddelanden&lt;br /&gt;
+	  Debug:     Samma som ovan, men även alla felmeddelanden&lt;br /&gt;
+          Allt:     Allt&lt;br /&gt;</t>
 </str>
 
 <str id="148">
@@ -1221,7 +1221,8 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="201">
-<o>Ok</o>
+<changed from="Ok"/>
+<o>OK</o>
 <t>Ok</t>
 </str>
 
@@ -1457,27 +1458,32 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="280">
-<o>normal</o>
+<changed from="normal"/>
+<o>Normal</o>
 <t>normal</t>
 </str>
 
 <str id="282">
-<o>fast</o>
+<changed from="fast"/>
+<o>Fast</o>
 <t>snabb</t>
 </str>
 
 <str id="284">
-<o>faster</o>
+<changed from="faster"/>
+<o>Faster</o>
 <t>snabbare</t>
 </str>
 
 <str id="286">
-<o>compact</o>
+<changed from="compact"/>
+<o>Compact</o>
 <t>kompakt</t>
 </str>
 
 <str id="288">
-<o>really compact</o>
+<changed from="really compact"/>
+<o>Really compact</o>
 <t>väldigt kompakt</t>
 </str>
 
@@ -1514,11 +1520,6 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <str id="yes">
 <o>Yes</o>
 <t>Ja</t>
-</str>
-
-<str id="no">
-<o>No</o>
-<t>Nej</t>
 </str>
 
 <str id="298">
@@ -1836,12 +1837,19 @@ användas: /foo/bar/404.inc, /foo/404.inc eller /404.inc.</t>
 </str>
 
 <str id="153">
-<o>&lt;dl&gt;
+<changed from="&lt;dl&gt;
 &lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
 &lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
 &lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows selecting multiple modules at once.&lt;/dd&gt;
 &lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
 &lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
+&lt;/dl&gt;"/>
+<o>&lt;dl&gt;
+&lt;dt&gt;Normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
+&lt;dt&gt;Fast&lt;/dt&gt;&lt;dd&gt;Like Normal, but no type images.&lt;/dd&gt;
+&lt;dt&gt;Faster&lt;/dt&gt;&lt;dd&gt;Like Normal, but allows selecting multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;Compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;Really compact&lt;/dt&gt;&lt;dd&gt;Like Compact, but no module classes.&lt;/dd&gt;
 &lt;/dl&gt;</o>
 <t>&lt;dl&gt;
 &lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Visa modulnamn och dokumentation med bilder.&lt;/dd&gt;
@@ -2411,12 +2419,6 @@ modules.&lt;/p&gt;
 <str id="399">
 <o>Todays comic from MegaTokyo</o>
 <t>Dagens serie från MegaTokyo</t>
-</str>
-
-<str id="400">
-<new/>
-<o>Update</o>
-<t></t>
 </str>
 
 <str id="401">
@@ -3307,4 +3309,39 @@ server must be a MySQL server, nothing else will work.
 <new/>
 <o>FAQ</o>
 <t></t>
+</str>
+
+<str id="513">
+<new/>
+<o>No modules</o>
+<t></t>
+</str>
+
+<str id="525">
+<new/>
+<o>Other</o>
+<t></t>
+</str>
+
+<str id="526">
+<new/>
+<o>requests</o>
+<t></t>
+</str>
+
+<str id="527">
+<new/>
+<o>hits</o>
+<t></t>
+</str>
+
+<str id="400">
+<new/>
+<o>Select site to drop.</o>
+<t></t>
+</str>
+
+<str id="no">
+<o>No</o>
+<t>Nej</t>
 </str>

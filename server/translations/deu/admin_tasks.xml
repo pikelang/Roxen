@@ -762,11 +762,6 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 <t>Um SSL auf Ihren Server zu benutzen, müssen Sie zunöchst ein zufälliges Schlüsselpaar erzeugen. Ein Teil des Schlüssels wird privat verwahrt.</t>
 </str>
 
-<str id="41">
-<o>Change Roxen version...</o>
-<t>Roxen-Version wechseln...</t>
-</str>
-
 <str id="42">
 <o>If you have more than one Roxen version installed
 in the same location, you can use this action to
@@ -907,11 +902,6 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 <t>Site-Template erfolgreich erstellt.</t>
 </str>
 
-<str id="153">
-<o>Ok</o>
-<t>Ok</t>
-</str>
-
 <str id="154">
 <o>Note that you will have to start the new server manually because you may have to answer a few questions for the new environment file.</o>
 <t>Hinweis: Der neue Server muss manuell gestartet werden, weil möglicherweise eine Fragen zur neuen Umgebung beantwortet werden müssen</t>
@@ -952,11 +942,6 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 <t>Gesamte Bandbreite</t>
 </str>
 
-<str id="162">
-<o>Refresh</o>
-<t>Neuladen</t>
-</str>
-
 <str id="163">
 <o>Debug Summary</o>
 <t>Debug-Zusammenfassung</t>
@@ -975,11 +960,6 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 <str id="166">
 <o>Show information about the installed licenses and there usage.</o>
 <t>Zeigt Informationen über die installierten Lizenzen und deren Verwendung</t>
-</str>
-
-<str id="167">
-<o>Upload license</o>
-<t>Lizenz einspielen</t>
 </str>
 
 <str id="168">
@@ -1039,5 +1019,23 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 <str id="177">
 <new/>
 <o>The object walkthrough visited %d of %d objects - the list below is not accurate.</o>
+<t></t>
+</str>
+
+<str id="178">
+<new/>
+<o>Total</o>
+<t></t>
+</str>
+
+<str id="179">
+<new/>
+<o>Canonic URL: </o>
+<t></t>
+</str>
+
+<str id="180">
+<new/>
+<o>Upload license...</o>
 <t></t>
 </str>

@@ -419,7 +419,7 @@ also set 'URLs'.</o>
 
 <str id="65">
 <changed from="If yes, non-anonymous users can connect"/>
-<o>If yes, non-anonymous users can connect.</o>
+<o>If yes, non-anonymous users can connect. Note that for password authentication to be performed you will need to have the "Authentication: Password" module in your site.</o>
 <t>Pøi povolení je povoleno pøipojení neanonymních u¾ivatelù</t>
 </str>
 
@@ -1085,7 +1085,8 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 </str>
 
 <str id="201">
-<o>Ok</o>
+<changed from="Ok"/>
+<o>OK</o>
 <t>Ok</t>
 </str>
 
@@ -1333,31 +1334,31 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 
 <str id="280">
 <new/>
-<o>normal</o>
+<o>Normal</o>
 <t></t>
 </str>
 
 <str id="282">
 <new/>
-<o>fast</o>
+<o>Fast</o>
 <t></t>
 </str>
 
 <str id="284">
 <new/>
-<o>faster</o>
+<o>Faster</o>
 <t></t>
 </str>
 
 <str id="286">
 <new/>
-<o>compact</o>
+<o>Compact</o>
 <t></t>
 </str>
 
 <str id="288">
 <new/>
-<o>really compact</o>
+<o>Really compact</o>
 <t></t>
 </str>
 
@@ -1399,11 +1400,6 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 <str id="yes">
 <o>Yes</o>
 <t>Ano</t>
-</str>
-
-<str id="no">
-<o>No</o>
-<t>Ne</t>
 </str>
 
 <str id="298">
@@ -1775,11 +1771,11 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <str id="153">
 <new/>
 <o>&lt;dl&gt;
-&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
-&lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
-&lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows selecting multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
+&lt;dt&gt;Normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
+&lt;dt&gt;Fast&lt;/dt&gt;&lt;dd&gt;Like Normal, but no type images.&lt;/dd&gt;
+&lt;dt&gt;Faster&lt;/dt&gt;&lt;dd&gt;Like Normal, but allows selecting multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;Compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;Really compact&lt;/dt&gt;&lt;dd&gt;Like Compact, but no module classes.&lt;/dd&gt;
 &lt;/dl&gt;</o>
 <t></t>
 </str>
@@ -2400,12 +2396,6 @@ modules.&lt;/p&gt;
 <str id="399">
 <new/>
 <o>Todays comic from MegaTokyo</o>
-<t></t>
-</str>
-
-<str id="400">
-<new/>
-<o>Update</o>
 <t></t>
 </str>
 
@@ -3310,4 +3300,39 @@ server must be a MySQL server, nothing else will work.
 <new/>
 <o>FAQ</o>
 <t></t>
+</str>
+
+<str id="513">
+<new/>
+<o>No modules</o>
+<t></t>
+</str>
+
+<str id="525">
+<new/>
+<o>Other</o>
+<t></t>
+</str>
+
+<str id="526">
+<new/>
+<o>requests</o>
+<t></t>
+</str>
+
+<str id="527">
+<new/>
+<o>hits</o>
+<t></t>
+</str>
+
+<str id="400">
+<new/>
+<o>Select site to drop.</o>
+<t></t>
+</str>
+
+<str id="no">
+<o>No</o>
+<t>Ne</t>
 </str>

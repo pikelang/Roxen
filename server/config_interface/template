@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.119 2004/01/14 16:14:48 jonasw Exp $ -->
+<!-- $Id: template,v 1.120 2004/02/03 12:04:30 anders Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -146,7 +146,7 @@
 <define tag="cf-save"> <submit-gbutton2 width="&usr.gbutton-width;" align="center" name="save" img-align="right"> <translate id="bA">Save</translate> </submit-gbutton2> </define>
 <define tag="cf-ok"> <submit-gbutton2 width="&usr.gbutton-width;" align="center" name="ok"> <translate id="201">OK</translate> </submit-gbutton2> </define>
 <define tag="cf-cancel"> <gbutton href="&_.href;" width="75" align="center" vspace="4" img-align="middle"> <translate id="202">Cancel</translate> </gbutton> </define>
-<define tag="cf-no"> <gbutton href="&_.href;" width="&usr.gbutton-width;" align="center" vspace="4" img-align="middle" font="&usr.gbutton-font;"> <translate id="0">No</translate> </gbutton> </define>
+<define tag="cf-no"> <gbutton href="&_.href;" width="&usr.gbutton-width;" align="center" vspace="4" img-align="middle" font="&usr.gbutton-font;"> <translate id="no">No</translate> </gbutton> </define>
 <define tag="cf-refresh"> <gbutton width="&usr.gbutton-width;" align="center" vspace='4' img-align='middle' href="&page.url;" font="&usr.gbutton-font;"> <translate id="520">Refresh</translate> </gbutton> </define>
 <define tag="cf-ok-button"> <gbutton width="&usr.gbutton-width;" align="center" vspace='4' img-align='middle' href="&_.href;" font="&usr.gbutton-font;"> <translate id="201">OK</translate> </gbutton> </define>
 

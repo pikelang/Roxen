@@ -5,7 +5,7 @@
 
 constant action = "maintenance";
 
-LocaleString name = _(0,"Change Roxen version")+"...";
+LocaleString name = _(46,"Change Roxen version")+"...";
 LocaleString doc =  _(42,"If you have more than one Roxen version installed\n"
 		     "in the same location, you can use this action to\n"
 		     "change the currently running version.");
@@ -97,7 +97,7 @@ string nice_relative_date( object t )
 string parse( RequestID id )
 {
   string res =
-    "<font size='+1'><b>"+_(0,"Change Roxen version")+"</b></font>\n"
+    "<font size='+1'><b>"+_(46,"Change Roxen version")+"</b></font>\n"
     "<br />\n"
     "<p>";
   int warn;

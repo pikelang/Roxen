@@ -46,7 +46,7 @@ mixed change_group( string db, RequestID id )
 	res += "<option selected value='"+g+"'>"+DBManager.get_group( g )->lname;
       else
 	res += "<option value='"+g+"'>"+DBManager.get_group( g )->lname;
-    return res + "</select><submit-gbutton2 name='ok'>"+(201,"Ok")+
+    return res + "</select><submit-gbutton2 name='ok'>"+(201,"OK")+
       "</submit-gbutton2>";
   }
   DBManager.set_db_group( db, id->variables->group );
@@ -67,7 +67,7 @@ mixed backup_db( string db, RequestID id )
     "<i>The directory the backup will be saved in. If you chose auto, Roxen will generate a directory name that includes the database name and todays date.</i>"
     "<table width='100%'><tr><td valign=top>"
     "<input type=hidden name=action value='&form.action;' />"
-    "<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
+    "<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
     "<td valign=top align=right><cf-cancel href='"+
       Roxen.html_encode_string(id->not_query)+
       "?db="+Roxen.html_encode_string(id->variables->db)+"'/>"
@@ -306,7 +306,7 @@ mixed move_db( string db, RequestID id )
     "</table>\n"+
     "<table width='100%'><tr><td>"
     "<input type=hidden name=action value='&form.action;' />"
-    "<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
+    "<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
     "<td align=right>"
     "<cf-cancel href='"+Roxen.html_encode_string(id->not_query)+
       "?db="+

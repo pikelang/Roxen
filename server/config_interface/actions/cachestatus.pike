@@ -59,7 +59,7 @@ string parse( RequestID id )
     i++;
   }
   res += "<tr align=\"right\" bgcolor=\"&usr.fade2;\">"
-    "<td align=\"left\"><b>"+LOCALE(0, "Total")+"</b></td><td>" +
+    "<td align=\"left\"><b>"+LOCALE(178, "Total")+"</b></td><td>" +
     totale + "</td><td>" + Roxen.sizetostring(totalm) + "</td>" +
     "<td>" + totalh + "</td><td>" + (totalt-totalh) + "</td>";
   if(totalt)
@@ -103,7 +103,7 @@ string parse( RequestID id )
     }
 
     res += "<tr align=\"right\" bgcolor=\"&usr.fade2;\">"
-      "<td align=\"left\"><b>"+LOCALE(0, "Total")+"</b></td><td>" +
+      "<td align=\"left\"><b>"+LOCALE(178, "Total")+"</b></td><td>" +
       totale + "</td><td>" + Roxen.sizetostring(totalm) + "</td></tr>\n"
       "</table>\n"
       "</box-frame>\n"

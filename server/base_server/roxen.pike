@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.858 2004/02/03 10:52:24 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.859 2004/02/03 12:04:28 anders Exp $";
 
 //! @appears roxen
 //!
@@ -1545,7 +1545,7 @@ class Protocol
 	(retries++ < 10)) {
       // We may get spurious failures on rebinding ports on some OS'es
       // (eg Linux, WIN32). See [bug 3031].
-      report_notice(LOC_M(0, "Attempt %d. Retrying in 1 minute.")+"\n",
+      report_notice(LOC_M(62, "Attempt %d. Retrying in 1 minute.")+"\n",
 		    retries);
       call_out(bind, 60);
     }

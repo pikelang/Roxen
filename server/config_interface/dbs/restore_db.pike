@@ -131,7 +131,7 @@ mapping|string parse( RequestID id )
       res += "</select>";
       
       res += "</blockquote><table width='100%'><tr><td>"
-	"<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
+	"<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
 	"<td align=right><cf-cancel href=''/></td>\n</table>\n";
     }
   }
