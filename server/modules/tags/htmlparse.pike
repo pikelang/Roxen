@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.38 1997/08/19 02:32:05 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.39 1997/08/19 23:10:03 grubba Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -788,7 +788,8 @@ string tag_compat_include(string tag,mapping m,object got,object file,
 		   ({ m->file }))*"/";
       m->file = roxen->real_file(m->file, got);
     }
-    return read_bytes(m->file) || "<!-- No such file: "+m->file+"-->";
+    return (m->file && read_bytes(m->file)) ||
+      "<!-- No such file: "+m->file+"-->";
   }
   return "<!-- What? -->";
 }
