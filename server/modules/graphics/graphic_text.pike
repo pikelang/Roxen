@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.46 1997/06/23 03:28:19 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.47 1997/07/06 18:40:33 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -559,7 +559,12 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
   return background;
 }
 
-string base_key = "gtext:"+roxen->current_configuration->name;
+string base_key;
+
+void start()
+{
+  base_key = "gtext:"+roxen->current_configuration->name;
+}
 
 #ifdef QUANT_DEBUG
 void print_colors(array from)
