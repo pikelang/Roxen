@@ -30,6 +30,9 @@ A few guidelines to people contributing to the code:
 
 - We're aiming for compatibility with RXML2 of Roxen 4.0.
 
+- Changes in the code are visible through the codelibrarian at:
+   http://www.lysator.liu.se/codelibrarian/
+
 - Anonymous access to the CVS should be possible through:
   cvs -d :pserver:anonymous@cvs.lysator.liu.se:/cvsroot/ChiliMoon login
   cvs -d :pserver:anonymous@cvs.lysator.liu.se:/cvsroot/ChiliMoon \
