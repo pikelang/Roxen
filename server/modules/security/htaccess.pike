@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.89 2001/10/19 13:01:39 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.90 2001/11/27 15:14:26 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -216,21 +216,42 @@ mapping parse_and_find_htaccess( RequestID id )
     string line, ent;
     string|int data;
 
-    string roxen_allow = "", roxen_deny = "";
     int any_ok = 0, order = 1;
+
+    string roxen_allow = "", roxen_deny = "";
+
+    // The following two are used for grouping.
+    mapping(string:array(string)) allow = ([]);
+    mapping(string:array(string)) deny = ([]);
+
+    // Fluch the grouped patterns. 
+    void flush_patterns()
+    {
+      foreach(indices(allow), string cat) {
+	roxen_allow += "allow "+cat+"="+(allow[cat]*",");
+      }
+      allow = ([]);
+      foreach(indices(deny), string cat) {
+	roxen_deny += "deny "+cat+"="+(deny[cat]*",");
+      }
+      deny = ([]);
+    };
 
     if( access->authname )
     {
+      flush_patterns();
       roxen_allow += "realm "+access->authname+"\n";
       roxen_deny += "realm "+access->authname+"\n";
     }
     if( access->userdb )
     {
+      flush_patterns();
       roxen_allow += "userdb "+access->userdb+"\n";
       roxen_deny += "userdb "+access->userdb+"\n";
     }
     if( access->authmethod )
     {
+      flush_patterns();
       roxen_allow += "authmethod "+access->userdb+"\n";
       roxen_deny += "authmethod "+access->userdb+"\n";
     }
@@ -256,33 +277,34 @@ mapping parse_and_find_htaccess( RequestID id )
 	roxen_allow = "allow ip=*\n";
       else if(sscanf(line, "realm %s", data)||
 	      sscanf(line, "authmethod %s", data)||
-	     sscanf(line, "userdb %s", data))
+	      sscanf(line, "userdb %s", data))
       {
+	flush_patterns();
 	roxen_allow += line+"\n";
 	roxen_deny += line+"\n";
       }
       else if(sscanf(line, "deny from %s", data))
-	if (data != "all")
+	if (data != "all") {
 	  if( (int)data )
-	    roxen_deny += "deny ip="+data+"*\n";
+	    deny->ip += ({data+"*"});
 	  else
-	    roxen_deny += "deny dns=*"+data+"\n";
+	    deny->dns += ({"*"+data});
+	}
 	else
 	  roxen_deny += "deny ip=*\n";
       else if(sscanf(line, "allow from %s", data))
-	if( data != "all" )
+	if( data != "all" ) {
 	  if( (int)data )
-	    roxen_allow += "allow ip="+data+"*\n";
+	    allow->ip += ({data+"*"});
 	  else
-	    roxen_allow += "allow dns=*"+data+"\n";
+	    allow->dns += ({"*"+data});
+	}
 	else
 	  roxen_allow += "allow ip=*\n";
       else if(sscanf(line, "require %s %s", ent, data) == 2)
-	roxen_allow += "allow "+ent+"=" +
-	  ((replace(data, ([" ":",","\t":","]))/",") - ({""}))*"," +
-	  "\n";
+	allow[ent] += (replace(data, ([" ":",","\t":","]))/",") - ({""});
       else if(sscanf(line, "deny %s %s", ent, data) == 2)
-	roxen_deny += "deny "+ent+"="+data+"\n";
+	deny[ent] += ({data});
       else if(sscanf(line, "satisfy %s", data))
 	if(data == "any")
 	  any_ok = 1;
@@ -310,6 +332,8 @@ mapping parse_and_find_htaccess( RequestID id )
 #endif /* HTACCESS_DEBUG */
       }
     }
+
+    flush_patterns();
 
     roxen_deny += "allow ip=*\n";
 
