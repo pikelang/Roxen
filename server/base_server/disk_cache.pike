@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.25 1997/06/14 19:09:39 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.26 1997/08/15 20:16:33 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -230,7 +230,7 @@ class Cache {
   object this = this_object();
   string cd;
   object command_stream = files.file();
-  int last_ressort;
+  int last_resort;
 
   string to_send="";
 
@@ -377,8 +377,8 @@ public void reinit_garber()
     cache = Cache (QUERY(cachedir)+"logs/");
 
 #define DAY (60*60*24)
-  if(QUERY(cache_last_ressort))
-    cache->last_ressort = QUERY(cache_last_ressort) * DAY;
+  if(QUERY(cache_last_resort))
+    cache->last_resort = QUERY(cache_last_resort) * DAY;
 }
 
 public void init_garber()
@@ -419,7 +419,7 @@ object new_cache_stream(object fp, string fn)
  *             now
  *
  *     configured:
- *             last-ressort
+ *             last-resort
  *
  *  - checks if header is present
  *
@@ -433,7 +433,7 @@ object new_cache_stream(object fp, string fn)
  *             if (arrival - last-modified) < (now - arrival)
  *             then
  *                     try refresh
- *     else if (transmitted + last-ressort) > now
+ *     else if (transmitted + last-resort) > now
  *     then
  *             refresh
  *
@@ -554,12 +554,12 @@ object cache_file(string cl, string entry)
       return 0;
     }
   }
-  else if(QUERY(cache_last_ressort))
+  else if(QUERY(cache_last_resort))
   {
-    if((stat[ST_CTIME] + cache->last_ressort) < time())
+    if((stat[ST_CTIME] + cache->last_resort) < time())
     {
 #ifdef CACHE_DEBUG
-      perror("refresh(last ressort=" + cache->last_ressort + "): " + name +
+      perror("refresh(last resort=" + cache->last_resort + "): " + name +
 	     "(" + entry + "), " + age(stat[ST_CTIME]) + "\n");
 #endif
       destruct(cf);

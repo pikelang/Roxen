@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.101 1997/08/15 09:47:20 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.102 1997/08/15 20:16:31 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1377,8 +1377,8 @@ private void define_global_variables( int argc, array (string) argv )
 	  "online newpapers.",
 	  0, cache_disabled_p);
 
-  globvar("cache_last_ressort", 0, "Proxy disk cache: "
-	  "Last ressort (in days)", TYPE_INT, "How many days "
+  globvar("cache_last_resort", 0, "Proxy disk cache: "
+	  "Last resort (in days)", TYPE_INT, "How many days "
 	  "shall files without Expires and without Last-Modified header "
 	  "information be kept ?",
 	  0, cache_disabled_p);
