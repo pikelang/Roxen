@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.628 2001/02/05 14:43:46 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.629 2001/02/05 17:26:05 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2439,7 +2439,7 @@ class ArgCache
 
     mixed data = decode_value(q);
 
-    if( !mapingp( data ) )
+    if( !mappingp( data ) )
       data = mkmapping( data[0],data[1] );
      
     cache[ q ] = ({data,id});
