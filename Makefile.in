@@ -5,7 +5,7 @@ prefix=@prefix@
 
 @SET_MAKE@
 
-all:	MAKE_GMP MAKE_GDBM MAKE_ZLIB pike extern
+all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern
 
 pike: force
 	@(cd pike/src;$(MAKE))
