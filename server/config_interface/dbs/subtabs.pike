@@ -7,6 +7,8 @@
 array pages =
 ({
   ({ "dbs",         "", "Edit Global Variables", 0, LOCALE(164, "Databases") }),
+  ({ "backups",      "backups.html",   "Edit Global Variables",   0,
+     LOCALE(372, "Database Backups") }),
   ({ "status",      "status.html",   "View Settings",   0,  LOCALE(372, "MySQL status") }),
 });
 
@@ -15,7 +17,7 @@ string parse( RequestID id )
   string q="";
   while( id->misc->orig )  id = id->misc->orig;
   q = (id->not_query/"/")[-1];
-  if( q == "index.html" )
+  if( q == "index.html" || q == "browser.pike"  )
     q = "";
   if( q == "whatsnew.html" )
     q = "";
@@ -38,7 +40,7 @@ string parse( RequestID id )
     if( page == pages[0] )       ea = "first ";
     if( page == pages[-1] )      ea = "last=30 ";
 
-    res += "<tab "+ea+"href='"+page[1]+"'"+((q!="" && page[1] != "") || (page[1] == q)?" selected='1'":"")+">" +
+    res += "<tab "+ea+"href='"+page[1]+"'"+((page[1] == q)?" selected='1'":"")+">" +
       page[4]+"</tab>" + tpost;
   }
 

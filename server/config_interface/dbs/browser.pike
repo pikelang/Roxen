@@ -5,29 +5,271 @@
 #define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 mapping actions = ([
-  "move":   ({  _(0,"Move database"),        move_db,   }),
-  "delete": ({  _(0,"Delete this database"), delete_db, }),
-  "clear":  ({  _(0,"Delete all tables"),    clear_db,  }),
+  // name         title                      function   must be internal
+  "move":   ({  _(0,"Copy or move database"),move_db,   0 }),
+  "delete": ({  _(0,"Delete this database"), delete_db, 0 }),
+  "clear":  ({  _(0,"Delete all tables"),    clear_db,  0 }),
+  "backup": ({  _(0,"Make a backup"),        backup_db, 1 }),
 ]);
 
-#define VERIFY(X) do {								\
-  if( !id->variables["yes.x"] )							\
-  {										\
-    return									\
-      ("<table><tr><td colspan='2'>\n"+						\
-       sprintf((string)(X), db)+						\
-       "</td><tr><td><input type=hidden name=action value='&form.action;' />"   \
-       "<submit-gbutton2 name='yes'>"+_(0,"Yes")+"</submit-gbutton2></td>\n"	\
-       "<td align=right><a href="+Roxen.html_encode_string(id->not_query)+"?db="+\
-       Roxen.html_encode_string(id->variables->db)+"><gbutton> "+		\
-       _(0,"No")+" </gbutton></a></td>\n</table>\n");				\
-  }										\
+#define VERIFY(X) do {						\
+  if( !id->variables["yes.x"] )					\
+  {								\
+    return							\
+      ("<table><tr><td colspan='2'>\n"+				\
+       sprintf((string)(X), db)+				\
+       "</td><tr><td><input type=hidden name=action value='&form.action;' />"\
+       "<submit-gbutton2 name='yes'>"+_(0,"Yes")+"</submit-gbutton2></td>\n"\
+       "<td align=right><a href="+Roxen.html_encode_string(id->not_query)+\
+      "?db="+\
+       Roxen.html_encode_string(id->variables->db)+"><gbutton> "+\
+       _(0,"No")+" </gbutton></a></td>\n</table>\n");			\
+  }									\
 } while(0)
 
 
+mixed backup_db( string db, RequestID id )
+{
+  if( id->variables["ok.x"] )
+  {
+    DBManager.backup( db,
+		      (id->variables->dir == "auto" ? 0 :
+		       id->variables->dir )  );
+    return 0;
+  }
+  return
+    "<b>"+_(0,"Directory")+":</b> <input name='dir' size='80' value='auto' /><br />"
+    "<i>The directory the backup will be saved in. If you chose auto, Roxen will generate a directory name that includes the database name and todays date.</i>"
+    "<table width='100%'><tr><td valign=top>"
+    "<input type=hidden name=action value='&form.action;' />"
+    "<submit-gbutton2 name='ok'>"+_(0,"Ok")+"</submit-gbutton2></td>\n"
+    "<td valign=top align=right><a href='"+Roxen.html_encode_string(id->not_query)+
+      "?db="+
+       Roxen.html_encode_string(id->variables->db)+"'><gbutton> "+
+    _(0,"Cancel")+" </gbutton></a></td>\n</table>\n";
+}
+
 mixed move_db( string db, RequestID id )
 {
-  return "Not finished yet";
+  string warning="";
+  if( id->variables["ok.x"] )
+  {
+    if( id->variables->type=="external" )
+    {
+      if( !strlen(id->variables->url) )
+        warning= "<font color='&usr.warncolor;'>"
+	  +_(0,"Please specify an URL to define an external database")+
+	  "</font>";
+      else if( catch( Sql.Sql( id->variables->url ) ) )
+        warning = sprintf("<font color='&usr.warncolor;'>"+
+			  _(0,"It is not possible to connect to %s")+
+			  "</font>",
+			  id->variables->url );
+    }
+    if( !strlen( warning ) )
+      switch( id->variables->name )
+      {
+       case "":
+         warning =  "<font color='&usr.warncolor;'>"+
+	   _(0,"Please specify a name for the database")+
+	   "</font>";
+         break;
+       case "mysql":
+       case "roxen":
+         warning = sprintf("<font color='&usr.warncolor;'>"+
+                         _(0,"%s is an internal database, used by roxen."
+			   "Please select another name")+
+                         "</font>", id->variables->name );
+         break;
+	default:
+      }
+    if( !strlen( warning ) )
+    {
+      int ni, move_later;
+      // In all cases, create the new db.
+      if( catch {
+	DBManager.create_db( id->variables->name,
+			     id->variables->url,
+			     (ni = (id->variables->type == "internal")));
+      } )
+	move_later = 1;
+
+      Sql.Sql odb = DBManager.cached_get( db );
+      if( move_later )
+	DBManager.set_url( id->variables->name,
+			   id->variables->url,
+			   ni );
+      Sql.Sql ndb = DBManager.cached_get( id->variables->name );
+
+      // And copy the data...
+      if( DBManager.is_internal( db ) && ni )
+      {
+	// Both are internal.
+	// So... Use the backup thingies.
+	if( db != id->variables->name )
+	{
+	  DBManager.backup( db, "/tmp/tmpdb" );
+	  DBManager.restore( db, "/tmp/tmpdb", id->variables->name );
+	  DBManager.delete_backup( db, "/tmp/tmpdb" );
+	}
+      }
+      else
+      {
+	foreach( DBManager.db_tables( db ), string table )
+	{
+	  mixed err;
+	  werror( "Copying the table "+table+" ... ");
+	  if( err = catch {
+	    string def;
+	    if( catch( def = 
+		   odb->query( "SHOW CREATE TABLE "+table )[0]
+		       ["Create Table"] ) )
+	    {
+	      array res = odb->query( "DESCRIBE "+table );
+	      report_warning( _(0,"While copying %s.%s: "
+				"The source database does not "
+				"support %s.\nThe copy will not "
+				"contain all metadata")+"\n",
+			      db,table,"SHOW CREATE TABLE" );
+	      def = "CREATE TABLE "+table+ "(";
+	      array defs = ({});
+	      int has_multi_pri = -1;
+	      foreach( res->Key, string p )
+		has_multi_pri += (p == "PRI");
+	      foreach( res, mapping m )
+	      {
+		// FIXME: A real keyword list here.
+		if( m->Field == "when" )
+		{
+		  report_warning( _(0,"The source database used the string "
+				    "%s as a fieldname.\nThis is reserved in "
+				    "newer MySQL versions.\nSubstituting "
+				    "with %s")+"\n",
+				  m->Field, "whn" );
+		  m->Field = "whn";
+		}
+		defs += ({
+		  (m->Field+" "+m->Type+" "
+		   +(m->Null=="YES"?"":"NOT NULL ")+
+		   ("DEFAULT "+(m->Default?"'"+m->Default+"'":"NULL")+" ")+
+		   ((has_multi_pri<1 && (m->Key == "PRI")) ?
+		    ("PRIMARY KEY") : "" )
+		   + " " +m->Extra )
+		});
+	      }
+	      def += defs * "," + ")";
+	    }
+	    
+	    sscanf( def, "%s TYPE=%*s", def );
+	    if( catch ( ndb->query( def ) ) )
+	      ndb->query( "DELETE FROM "+table );
+	    foreach( odb->query( "SELECT * FROM "+table ), mapping row )
+	    {
+	      if( row->when )
+	      {
+		row->whn = row->when;
+		m_delete( row, "when" );
+	      }
+	      ndb->query( DBManager.insert_statement( id->variables->name,
+						      table, row ) );
+	    }
+	  })
+	  {
+	    report_error( _(0,"Failed to copy data from source table.\n")+
+			  describe_error( err )+"\n" );
+	    break;
+	  }
+	}
+      }
+
+      switch( id->variables->what )
+      {
+	case "copy": // move, no delete
+	case "dup":  // create new
+	  if( db != id->variables->name )
+	    DBManager.copy_db_md( db, id->variables->name );
+	  // Done.
+	  break;
+	case "move": // move & delete
+	  // Delete the old data.
+	  if( db != id->variables->name )
+	  {
+	    DBManager.copy_db_md( db, id->variables->name );
+	    if( !strlen(warning) )
+	      DBManager.drop_db( db );
+	  }
+	  break;
+      }
+      return Roxen.http_redirect( "/dbs/", id );
+    }
+  }
+  if(!id->variables->name)
+    id->variables->name = db;
+  if(!id->variables->type)
+    id->variables->type =
+      DBManager.is_internal( db ) ? "internal" : "external";
+  if( !id->variables->url )
+    id->variables->url  = DBManager.db_url( db ) || "";
+
+  return
+    "<gtext scale=0.6>"+_(0,"Move or copy this database")+"</gtext><br />\n"
+    +warning+
+    "<table>\n"
+    "<tr><td><b>"+_(0,"Action")+":</b></td>"
+    "<td><default variable='form.what'><select name=what>\n"
+//     "   <option value='copy'>"+_(0,"Move but do not delete old data")+
+//     "</option>\n"
+    "   <option value='dup'>"+_(0,"Copy the data to a new database")+
+    "</option>\n"
+    "   <option value='move'>"+_(0,"Move database")+"</option>\n"
+    "  </select></default>\n"
+    "  <tr>\n"
+    "    <td><b>"+ _(0,"New name")+
+    ":</b></td> <td><input name='name' value='&form.name;'/></td>\n"
+    "<td><b>"+_(0,"Type")+":</b></td> <td width='100%'>\n"
+#"   <default variable=form.type><select name=type>
+       <option value='internal'>  Internal  </option>
+       <option value='external'>  External  </option>
+     </select></default>
+    </td>
+  </tr>
+  <tr>
+  <td valign=top colspan='2'>
+    <i>"+
+    _(0,"The new name of the database. You do not have to change the "
+      "name if you change the database type from internal to external, "
+      "or change the URL of an external database. To make it easy on "
+      "your users, use all lowercaps characters, and avoid hard to type "
+      "characters")+
+    "</i>\n"
+
+    "</td>\n"
+    "<td valign=top colspan='2' width='100%'>\n"
+
+    "<i>"+
+    _(0,"The database type. Internal means that it will be stored"
+      " in the Roxen MySQL database, and the permissions of the"
+      " database will be automatically manged by Roxen. External"
+      " means that the database resides in another database.")+"</i>\n"
+    "</td>\n"
+    "</tr>\n"
+    "<tr>\n"
+    "<td><nbsp><b>URL:</b></nbsp></td>\n"
+    "<td colspan='3'><input name='url' size=50 value='&form.url;'/></td>\n"
+    "</tr>\n"
+    "<tr><td colspan='4'><i>\n"+
+    _(0,"This URL is only used for </i>External<i> databases, it is "
+      "totally ignored for databases defined internally in Roxen ")+
+    "\n</i>\n"
+    "</td></tr>\n"
+    "</table>\n"+
+    "<table width='100%'><tr><td>"
+    "<input type=hidden name=action value='&form.action;' />"
+    "<submit-gbutton2 name='ok'>"+_(0,"Ok")+"</submit-gbutton2></td>\n"
+    "<td align=right><a href='"+Roxen.html_encode_string(id->not_query)+
+      "?db="+
+       Roxen.html_encode_string(id->variables->db)+"'><gbutton> "+
+    _(0,"Cancel")+" </gbutton></a></td>\n</table>\n";
 }
 
 mixed delete_db( string db, RequestID id )
@@ -36,7 +278,7 @@ mixed delete_db( string db, RequestID id )
   report_notice( _(0,"The database %s was deleted by %s")+"\n",
 		 db, id->misc->authenticated_user->name() );
   DBManager.drop_db( db );
-  return Roxen.http_redirect( "../../", id );
+  return Roxen.http_redirect( "/dbs/", id );
 }
 
 mixed clear_db( string db, RequestID id )
@@ -83,7 +325,7 @@ string format_decode_value( string what )
     mixed q = decode_value( what );
     if( objectp( q ) || programp( q ) )
       return Roxen.html_encode_string("<"+_(233,"bytecode data")+">");
-    return Roxen.html_encode_string( trim_comments( sprintf("%O", q ) ) );
+    return "<pre>"+Roxen.html_encode_string( trim_comments( sprintf("%O", q ) ) )+"</pre>";
   };
   return Roxen.html_encode_string( what );
 }
@@ -107,21 +349,22 @@ mapping|string parse( RequestID id )
     "<use file='/template'/><tmpl>"
     "<topmenu base='../' selected='dbs'/>"
     "<content><cv-split><subtablist width='100%'><st-tabs>"
-    "<!--<insert file='subtabs.pike'/>--></st-tabs><st-page>"
+    "<insert file='subtabs.pike'/></st-tabs><st-page>"
+    "<input type=hidden name='sort' value='&form.sort:http;' />\n"
     "<input type=hidden name='db' value='&form.db:http;' />\n";
   if( id->variables->image )
     return m_delete( images, id->variables->image );
 
   if( !id->variables->db )
-    return Roxen.http_redirect( "../", id );
+    return Roxen.http_redirect( "/dbs/", id );
 
   if( id->variables->action && actions[ id->variables->action ])
   {
     mixed tmp = actions[ id->variables->action ][1]( id->variables->db, id );
     if( stringp( tmp ) )
       return res+tmp+"\n</st-page></content></tmpl>";
-    if( res )
-      return res;
+    if( tmp )
+      return tmp;
   }
 
   Sql.Sql db = DBManager.get( id->variables->db );
@@ -216,7 +459,7 @@ mapping|string parse( RequestID id )
 	  while( array q = big_q->fetch_row() )
 	  {
 	    qrows++;
-	    qres += "<tr>";
+	    qres += "<tr valign=top>";
 	    for( int i = 0; i<sizeof(q); i++ )
 	      if( !q[i] )
 		qres += "<td><i>NULL</i></td>";
@@ -251,8 +494,8 @@ mapping|string parse( RequestID id )
 
   res +=
     "<br />"
-    "<table cellspacing=0 cellpadding=0 border=0 width=100% bgcolor='&usr.titlebg;'><tr><td>"
-    "<colorscope bgcolor='&usr.titlebg;' text='&usr.titlefg;'>"
+    "<table cellspacing=0 cellpadding=0 border=0 width=100%><tr><td>"
+    "<colorscope bgcolor='&usr.content-bg;' text='&usr.fgcolor;'>"
     "<cimg border='0' format='gif' src='&usr.database-small;' alt='' "
     "max-height='20'/></td><td>"
     "<gtext fontsize='20'>"+id->variables->db+
@@ -287,13 +530,53 @@ mapping|string parse( RequestID id )
     return res+ "</table></td></tr>";
   };
 
+  string table_module_info( string table )
+  {
+    mapping mi = DBManager.module_table_info( id->variables->db, table );
+    string res = "";
+
+    if(!mi->comment)
+      return "";
+    
+    if( strlen(mi->conf) && strlen(mi->module) )
+    {
+      Configuration c = roxen.find_configuration( mi->conf );
+      RoxenModule   m = c && c->find_module( mi->module );
+      ModuleInfo    i = roxen.find_module( (mi->module/"#")[0] );
+      string mn;
+
+      if( c && m )
+	mn =  "<a href='../sites/site.html/"+
+	  Roxen.http_encode_string(mi->conf)+"/n!n/"+
+	  replace(mi->module,"#","!")+"/"+
+	  "'>"+i->get_name()+"</a> in "+c->query_name();
+      else if( i )
+	mn =  sprintf((string)_(0,"the deleted module %s from %s"),
+		      i->get_name(), mi->conf );
+      res=sprintf((string)_(0,"Defined by %s"),mn)+"<br />";
+    }
+
+    sscanf( mi->comment, "%s\0%s", mi->tbl, mi->comment );
+    if( mi->tbl && mi->tbl != table)
+      if( mi->tbl != (string)0 )
+	return sprintf(_(0,"The table is known as '%s' in the module"),
+		       mi->tbl )+"<br />"+res+mi->comment;
+      else
+	return sprintf(_(0,"The table is an anymous table defined by "
+			 "the module"), mi->tbl )+
+	  "<br />"+res+mi->comment;
+
+    return res+mi->comment;
+  };
+
   void add_table_info( string table, mapping tbi )
   {
-    string res ="";
+    string res = "";
     res += "<tr>\n";
     res += "<td> <cimg src='&usr.table-small;' max-height='12'/> </td>\n";
-    res += "<td> <a href='browser.pike?db=&form.db:http;&table="+
-      Roxen.http_encode_string(table)+"'>"+table+"</a> </td>";
+    res += "<td> <a href='browser.pike?sort=&form.sort:http;&"
+      "db=&form.db:http;&table="+Roxen.http_encode_string(table)+"'>"+
+      table+"</a> </td>";
 
     
     if( tbi )
@@ -303,7 +586,10 @@ mapping|string parse( RequestID id )
 	( (int)tbi->Data_length+(int)tbi->Index_length)/1024+_(375,"KiB")+
 	"</font></td>";
     }
-    res += "</tr>\n";
+    if( id->variables->table == table )
+      res += "</tr>\n<tr><td colspan='4'><font size='-1'>"
+	+ table_module_info( table )+"</font></td></tr>\n";
+
     if( tbi )
       sort_ok = 1;
     table_data += ({({ table,
@@ -323,13 +609,8 @@ mapping|string parse( RequestID id )
       add_table_info( tb->Name, tb );
   } )
   {
-    if( catch
-    {
-      object _tables = db->big_query( "show tables" );
-      array tables = ({});
-      while( array q = _tables->fetch_row() )
-	tables += q;
-      foreach( tables, string tb )
+    if( catch {
+      foreach( DBManager.db_tables( id->variables->db ), string tb )
 	add_table_info( tb, 0 );
     } )
       ;
@@ -355,13 +636,13 @@ mapping|string parse( RequestID id )
   {
     res +=
       "<tr><td align=right>"+SEL("name",1)+"</td>"
-      "<td><b><a href='browser.pike?db=&form.db:http;&sort=name'>"+
+      "<td><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=name'>"+
       _(376,"Name")+
       "</a></b></td>\n"
-      "<td align=right><b><a href='browser.pike?db=&form.db:http;&sort=rows'>"+
+      "<td align=right><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=rows'>"+
       SEL("rows",0)+String.capitalize(_(374,"rows"))+
       "</a></b></td>\n"
-      "<td align=right><b><a href='browser.pike?db=&form.db:http;&sort=size'>"+
+      "<td align=right><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=size'>"+
       SEL("size",0)+_(377,"Size")+
       "</a></b></td>\n"
       "</tr>";
@@ -383,7 +664,7 @@ mapping|string parse( RequestID id )
 
   res += qres;
 
-#define ADD_ACTION(X) 								\
+#define ADD_ACTION(X) if(!actions[X][2] || DBManager.is_internal(id->variables->db) ) \
    res += sprintf("<a href='%s?db=%s&action=%s'><gbutton>%s</gbutton></a>\n",	\
 		  id->not_query, id->variables->db, X, actions[X][0] )
   
@@ -391,7 +672,7 @@ mapping|string parse( RequestID id )
   {
     case "local":
     case "shared":
-      foreach( ({ "move" }), string x )
+      foreach( ({ "move","backup" }), string x )
 	ADD_ACTION( x );
       break;
       
