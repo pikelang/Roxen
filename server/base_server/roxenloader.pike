@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.151 2000/03/09 03:48:38 per Exp $
+ * $Id: roxenloader.pike,v 1.152 2000/03/09 14:43:18 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -18,7 +18,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.151 2000/03/09 03:48:38 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.152 2000/03/09 14:43:18 mast Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -352,10 +352,14 @@ array find_module_and_conf_for_log( array q )
   for( int i = 0; i<sizeof( q ); i++ )
   {
     object o = function_object( q[i][2] );
-    if( o->is_configuration )
-      if( !conf ) conf = o;
-    else if( o->is_module )
+    if( o->is_module ) {
       if( !mod ) mod = o;
+      if (!conf && functionp (mod->my_configuration))
+	conf = mod->my_configuration();
+    }
+    if( o->is_configuration ) {
+      if( !conf ) conf = o;
+    }
     if( mod && conf )
       break;
   }
