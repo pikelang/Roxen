@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.67 1997/06/04 00:37:07 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.68 1997/06/06 16:28:42 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -1738,7 +1738,7 @@ void scan_module_dir(string d)
 	case "lpc":
 	  if(catch{
 	    if((open(path+file,"r")->read(4))=="#!NO") {
-	      MD_PERROR(("no module\n"));
+	      MD_PERROR(("not a module\n"));
 	      continue;
 	    }
 	  }) {
