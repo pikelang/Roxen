@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.189 1999/05/12 10:00:36 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.190 1999/05/15 17:46:14 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1632,12 +1632,15 @@ mixed handle_request( object id  )
   werror("CONFIG: handle_request()\n");
 #endif /* REQUEST_DEBUG */
 
+#if 0
   if(roxen->find_site_for( id ) != this_object()) {
 #ifdef REQUEST_DEBUG
     werror("CONFIG: handle_request(): Redirected (1)\n");
 #endif /* REQUEST_DEBUG */
     return id->conf->handle_request(id);
   }
+#endif /* 0 */
+
   foreach(first_modules(id), funp)
   {
     if(file = funp( id )) 
