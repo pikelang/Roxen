@@ -22,7 +22,6 @@
 /server/nfonts/lucida_unicode.txt eol=crlf
 /server/nfonts/verdana.txt eol=crlf
 *.xcf binary
-/server/translations/deu/roxen_config.xml -text -crlf
 nn binary
 rbf binary
 worldmap binary
