@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.68 2001/11/23 21:29:41 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.69 2001/12/14 17:45:25 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -50,14 +50,14 @@ void create()
 
   defvar("require_exec", 0, "Require exec bit to parse",
 	 TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
-	 "If set, files has to have a execute bit (any of them) set "
+	 "If enabled, files has to have a execute bit (any of them) set "
 	 "to be parsed. The exec bit is the one set by "
 	 "<tt>chmod +x filename</tt>");
 
   defvar("parse_exec", 1, "Parse files with exec bit",
 	 TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
-	 "If set, files with the exec bit set will be parsed. If not set "
-	 "and the <i>Require exec bit to parse</i> option is set, no "
+	 "If enabled, files with the exec bit set will be parsed. If disabled "
+	 "and the <i>Require exec bit to parse</i> option is enabled, no "
 	 "parsing will occur.");
 
   defvar ("ram_cache_pages", 1, "RAM cache RXML pages",
@@ -67,18 +67,18 @@ the RXML pages in RAM when this is enabled, which speeds up the
 evaluation of them.");
 
   defvar("logerrorsp", 0, "RXML Errors:Log RXML parse errors", TYPE_FLAG,
-	 "If set, all RXML parse errors will be logged in the debug log.");
+	 "If enabled, all RXML parse errors will be logged in the debug log.");
 
   defvar("logerrorsr", 1, "RXML Errors:Log RXML run errors", TYPE_FLAG,
-	 "If set, all RXML run errors will be logged in the debug log.");
+	 "If enabled, all RXML run errors will be logged in the debug log.");
 
   defvar("quietp", 0, "RXML Errors:Quiet RXML parse errors", TYPE_FLAG,
-	 "If set, RXML parse errors will not be shown in a page unless "
+	 "If enabled, RXML parse errors will not be shown in a page unless "
 	 "debug has been turned on with <tt>&lt;debug on&gt;</tt> or with "
 	 "the <i>debug</i> prestate.");
 
   defvar("quietr", 1, "RXML Errors:Quiet RXML run errors", TYPE_FLAG,
-	 "If set, RXML run errors will not be shown in a page unless "
+	 "If enabled, RXML run errors will not be shown in a page unless "
 	 "debug has been turned on with <tt>&lt;debug on&gt;</tt> or with "
 	 "the <i>debug</i> prestate.");
 }
