@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.5 2002/03/27 21:39:44 mast Exp $
+// $Id: SloppyDOM.pmod,v 1.6 2002/08/05 13:24:48 nilsson Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -669,7 +669,7 @@ class Document
 
   /*protected*/ int raw_values;
   static Element document_element = 0;
-  /*protected*/ mapping(string:array(Node)) _lookup_mapping = set_weak_flag (([]), 1);
+  /*protected*/ mapping(string:array(Node)) _lookup_mapping = ([]);
 
   /*protected*/ Document _get_doc() {return this_object();}
 
