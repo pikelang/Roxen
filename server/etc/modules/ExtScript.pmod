@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.3 2000/08/22 14:06:26 leif Exp $
+// $Id: ExtScript.pmod,v 1.4 2000/08/22 14:58:49 leif Exp $
 
 #define THREADS 1
 
@@ -94,6 +94,8 @@ class Handler
               return ({ -1, "external process didn't respond"
                 + sprintf("(Got: %O)", res) });
       diag("(NewSubprocess)");
+      if (how == "run")
+        putvar("L", "cd", dirname(arg));
       if (mappingp(settings))
         foreach( ({ "libdir", "cd" }), string s)
           if (settings[s] && stringp(settings[s]))
