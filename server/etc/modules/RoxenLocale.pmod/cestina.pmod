@@ -1,6 +1,6 @@
 #charset iso-8859-2
 /*
- * $Id: cestina.pmod,v 1.2 2000/03/10 22:30:21 hop Exp $
+ * $Id: cestina.pmod,v 1.3 2000/03/13 13:14:42 hop Exp $
  *
  * Roxen locale support -- Cestina (Czech)
  *
@@ -8,6 +8,8 @@
  *
  * Poznamka: Preklad neni nic moc, chtelo by to nejaky
  *           slovnik odbornych vyrazu :-(
+ *
+ * Translation against "standard.pmod,v 1.3 2000/03/07 22:47:40 mast"
  */
 inherit RoxenLocale.standard;
 constant name="cestina";
