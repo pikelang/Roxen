@@ -76,3 +76,11 @@ function showLayer(path, e)
   l.src = path;
   return false;
 }
+
+// Function to render Internet Explorer popup.
+function ieShowPopup(lang, path, url, url_target, actions)
+{
+  getObject("popup").innerHTML
+    = renderPopup("popup", lang, path, url, url_target, actions, 1);
+  return showPopup("popup", "none", 1, 1, 0);
+}
