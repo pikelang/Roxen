@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.106 2002/03/06 16:21:23 wellhard Exp $ -->
+<!-- $Id: template,v 1.107 2002/04/09 11:57:37 wellhard Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -92,8 +92,9 @@
 
 <define container="submit-gbutton" scope="submit-gbutton">
 <attrib name="align">baseline</attrib>
+<attrib name="name">ok</attrib>
   <define variable="var.url" preparse="1"><gbutton-url font="&usr.gbutton-font;" preparse="">&submit-gbutton.contents;</gbutton-url></define>
-   <input align="&_.align;" type="image" name="&_.contents;" value="&_.contents;" src="&var.url;" border="0" />
+   <input align="&_.align;" type="image" name="&_.contents;" value="&_.contents;" src="&var.url;" border="0" ::="&_.rest-args;"/>
 </define>
 
 <define container="submit-gbutton2" scope="submit-gbutton2">
