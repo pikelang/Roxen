@@ -27,7 +27,7 @@ void clean(string path) {
     foreach(globs, string g)
       if( glob(g, file) )
 	my_rm(path+file);
-    object s = file_stat(path+file);
+    Stdio.Stat s = file_stat(path+file);
     if(s && s[1]==-2)
       clean(path+file+"/");
   }

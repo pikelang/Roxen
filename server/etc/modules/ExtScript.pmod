@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.11 2000/12/13 19:01:46 leif Exp $
+// $Id: ExtScript.pmod,v 1.12 2001/01/19 12:41:38 per Exp $
 
 mapping scripthandlers = ([ ]);
 
@@ -12,7 +12,9 @@ static void diag(string x)
 }
 
 class Handler
-{ object     proc;
+{
+  Process.Process
+             proc;
   Stdio.File pipe;
   Stdio.File pipe_other;
   string     binpath;
@@ -420,7 +422,7 @@ void periodic_cleanup()
       mapping m = scripthandlers[binpath];
       if (m->expire < now)
       {
-        object lock = m->mutex->lock();
+        Thread.MutexKey lock = m->mutex->lock();
   	diag("(Z)");
   	if (m->handlers[0])
   	{ if (m->handlers[0]->probe())

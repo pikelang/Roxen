@@ -1,6 +1,7 @@
 #include <stat.h>
 #include <config.h>
-constant cvs_version="$Id: prototypes.pike,v 1.4 2001/01/16 14:44:38 nilsson Exp $";
+#include <module_constants.h>
+constant cvs_version="$Id: prototypes.pike,v 1.5 2001/01/19 12:41:34 per Exp $";
 
 class Variable
 {
@@ -623,3 +624,54 @@ class _roxen
   void   nwrite(string a, int|void b, int|void c, void|mixed ... d);
   int    main(int a, array(string) b);
 }
+
+class AuthModule
+//! The interface an authentication module must implement
+{
+  inherit RoxenModule;
+  constant module_type = MODULE_AUTH;
+  constant thread_safe=1;
+
+  constant name = "method name";
+  
+  int authenticate( RequestID id, UserDB db );
+  //! Try to authenticate the request with users from the specified user
+  //! database. If no @[db] is specified, all datbases in the current
+  //! configuration are searched in order, then the configuration user
+  //! database.
+
+  mapping authenticate_throw( RequestID id , UserDB db );
+  //! Returns a reply mapping, similar to @[Roxen.http_rxml_reply] with
+  //! friends. If no @[db] is specified,  all datbases in the current
+  //! configuration are searched in order, then the configuration user
+  //! database.
+}
+
+class User
+{
+  string name();
+  string real_name();
+
+  void set( RoxenModule m, string index, string value );
+  void get( RoxenModule m, string index );
+}
+
+class UserDB
+//! The interface a UserDB module must implement.
+{
+  inherit RoxenModule;
+  constant module_type = MODULE_USERDB;
+
+  User find_user( string s );
+  //! Find a user
+
+  array(string) list_users( );
+  //! Return a list of all users handled by this database module.
+
+  User create_user( string s );
+  //! Not nessesarily implemented, as an example, it's not possible to
+  //! create users in the system user database from Roxen WebServer.
+  //!
+  //! Returns 0 on failure
+}
+

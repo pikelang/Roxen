@@ -99,7 +99,7 @@ class ConfigIFCache
 
 
 static mapping settings_cache = ([ ]);
-object config_settings;
+ConfigIFCache config_settings;
 
 class ConfigurationSettings
 {
@@ -182,11 +182,18 @@ class ConfigurationSettings
     static mapping bdata = ([]);
     array possible( )
     {
+      class Box
+      {
+	constant box = "box";
+	LocaleString box_name;
+	LocaleString box_doc;
+	int box_initial;
+      };
       foreach( glob("*.pike", get_dir( BDIR ) ), string f )
       {
         catch
         {
-          object box = (object)(BDIR+f);
+          Box box = (object)(BDIR+f);
           if( box->box && box->box == box_type )
             bdata[ (f/".")[0] ] = ([ "name":box->box_name,
                                      "doc":box->box_doc,
@@ -408,7 +415,7 @@ class ConfigurationSettings
   }
 }
 
-void adminrequest_get_context( string ident, string host, object id )
+void adminrequest_get_context( string ident, string host, RequestID id )
 {
   if( settings_cache[ ident ] )
     id->misc->config_settings = settings_cache[ ident ];

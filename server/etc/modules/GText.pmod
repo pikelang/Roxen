@@ -18,7 +18,7 @@ string fix_relative(string file, string bd)
   return combine_path(bd+"/",file);
 }
 
-Image.Image blur(object img, int amnt)
+Image.Image blur(Image.Image img, int amnt)
 {
   img->setcolor(0,0,0);
   img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
@@ -88,9 +88,9 @@ Image.Image bevel(Image.Image in, int width, int|void invert)
 }
 
 #if !constant(open)
-object open(string file, string mode)
+Stdio.File open(string file, string mode)
 {
-  object f = Stdio.File();
+  Stdio.File f = Stdio.File();
   if(f->open(file, mode))
     return f;
   return 0;
@@ -99,9 +99,9 @@ object open(string file, string mode)
 
 
 #if constant(roxen)
-object last_image;      // Cache the last image for a while.
+Image.Image last_image;      // Cache the last image for a while.
 string last_image_name;
-object load_image(string f,string bd, object|void id)
+Image.Image load_image(string f,string bd, object|void id)
 {
   if(last_image_name == f && last_image) return last_image->copy();
   string data;

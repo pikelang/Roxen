@@ -22,10 +22,10 @@ string parse( RequestID id )
     contents = "";
     string title,link;
     Parser.HTML itemparser = Parser.HTML() ->
-      add_containers( ([ "title": lambda(object p, mapping m, string c) { title = c; },
-			 "link": lambda(object p, mapping m, string c) { link = c; } ]) );
+      add_containers( ([ "title": lambda(Parser.HTML p, mapping m, string c) { title = c; },
+			 "link": lambda(Parser.HTML p, mapping m, string c) { link = c; } ]) );
     Parser.HTML() -> add_container("item",
-				   lambda(object p, mapping m, string c) {
+				   lambda(Parser.HTML p, mapping m, string c) {
 				     title = link = 0;
 				     itemparser -> finish(c);
 				     if(title && link)

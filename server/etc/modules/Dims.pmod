@@ -1,4 +1,4 @@
-//   $Id: Dims.pmod,v 1.9 2000/04/19 15:09:30 nilsson Exp $
+//   $Id: Dims.pmod,v 1.10 2001/01/19 12:41:38 per Exp $
 //
 //   Imagedimensionreadermodule for Pike.
 //   Created by Johan Schön, <js@roxen.com>.
@@ -26,7 +26,7 @@
 
 class dims
 {
-  object f;
+  Stdio.File f;
 
   int read_1_byte()
   {
@@ -196,7 +196,7 @@ class dims
 
   // Read dimensions from a JPEG, GIF or PNG file and return an array with
   // width and height, or if the file isn't a valid image, 0.
-  array(int) get(string|object fn)
+  array(int) get(string|Stdio.File fn)
   {
     if(stringp(fn))
       f=Stdio.File(fn,"r");

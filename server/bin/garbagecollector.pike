@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.19 2000/08/28 05:31:52 per Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.20 2001/01/19 12:41:36 per Exp $";
 
 //#define DEBUG
 
@@ -102,7 +102,7 @@ int disk_max, disk_used, disk_avail, disk_capacity,
 string disk_name, disk_type;
 
 #define LOGGER(x) if(gc_log)gc_log->write(x);else werror(x)
-object gc_log;
+Stdio.File gc_log;
 
 string disk_info()
 {

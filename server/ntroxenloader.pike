@@ -1,6 +1,6 @@
 /* This file is executed by Pike to bootstrap Roxen on NT.
  *
- * $Id: ntroxenloader.pike,v 1.6 2000/08/09 14:50:56 mast Exp $
+ * $Id: ntroxenloader.pike,v 1.7 2001/01/19 12:41:32 per Exp $
  */
 
 string dir;
@@ -29,13 +29,13 @@ int write_status_file()
 {
   call_out(write_status_file, 30);
 
-  object fd = Stdio.File();
+  Stdio.File fd = Stdio.File();
   if(fd->open(log_dir+"/status", "wct"))
   {
     if( roxen() )
     {
-//       fd->write(roxen()->config_url()+"\r\n");
       foreach(roxen()->configurations, object c)
+	// Configuration not usable here
 	fd->write(c->query_name()+"\r\n"+
 		  c->query("MyWorldLocation")+"\r\n");
       fd->close();
@@ -135,7 +135,7 @@ int main(int argc, array (string) argv)
   add_program_path( dir );
 
 
-  object fd = Stdio.File();
+  Stdio.File fd = Stdio.File();
 
   mkdir(log_dir);
 

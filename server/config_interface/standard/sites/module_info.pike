@@ -1,6 +1,6 @@
 #define translate( X ) _translate( (X), id )
 
-string _translate( mixed what, object id )
+string _translate( mixed what, RequestID id )
 {
   if( mappingp( what ) )
     if( what[ id->misc->cf_locale ] )
@@ -10,14 +10,14 @@ string _translate( mixed what, object id )
   return what;
 }
 
-string find_module_doc( string cn, string mn, object id )
+string find_module_doc( string cn, string mn, RequestID id )
 {
-  object c = roxen.find_configuration( cn );
+  Configuration c = roxen.find_configuration( cn );
 
   if(!c)
     return "";
 
-  object m = c->find_module( replace(mn,"!","#") );
+  RoxenModule m = c->find_module( replace(mn,"!","#") );
 
   if(!m)
     return "";

@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.22 2000/11/24 16:50:33 per Exp $
+// $Id: basic_defvar.pike,v 1.23 2001/01/19 12:41:32 per Exp $
 // (string:Variable.Variable) 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -219,7 +219,7 @@ error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
   if (functionp(not_in_config)) 
     vv->set_invisibility_check_callback( not_in_config );
   else if( not_in_config )
-    vv->set_invisibility_check_callback( lambda(object id,
+    vv->set_invisibility_check_callback( lambda(RequestID id,
                                                 Variable.Variable i )
                                          { return 1; } );
     

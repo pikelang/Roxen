@@ -1,6 +1,6 @@
 // Roxen Locale Support
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: language.pike,v 1.34 2000/09/24 13:35:49 nilsson Exp $
+// $Id: language.pike,v 1.35 2001/01/19 12:41:34 per Exp $
 
 // #pragma strict_types
 
@@ -14,7 +14,7 @@ string default_page_locale;
 //! Contains the default locale for web pages.
 
 #ifdef THREADS
-object locale = thread_local();
+Thread.Local locale = thread_local();
 #else
 // Emulates a thread_local() object.
 class container
@@ -30,7 +30,7 @@ class container
   }
 }
 
-object locale = container();
+container locale = container();
 #endif /* THREADS */
 
 int set_locale(void|string lang)

@@ -4,11 +4,11 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.609 2001/01/13 17:43:28 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.610 2001/01/19 12:41:35 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
-object backend_thread;
+Thread.Thread backend_thread;
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -324,7 +324,7 @@ static class Privs
 /* Used by read_config.pike, since there seems to be problems with
  * overloading otherwise.
  */
-static object PRIVS(string r, int|string|void u, int|string|void g)
+static Privs PRIVS(string r, int|string|void u, int|string|void g)
 {
   return Privs(r, u, g);
 }
@@ -334,7 +334,22 @@ static object PRIVS(string r, int|string|void u, int|string|void g)
 // This will be changed to a list of server global modules, to make it
 // easier to implement new types of fonts (such as PPM color fonts, as
 // an example)
-object fonts;
+class Fonts
+{
+  class Font
+  {
+    Image.Image write( string ... what );
+    array(int) text_extents( string ... what );
+  };
+  array available_font_versions(string name, int size);
+  string describe_font_type(string n);
+  Font get_font(string f, int size, int bold, int italic,
+		string justification, float|int xspace, float|int yspace);
+
+  Font resolve_font(string f, string|void justification);
+  array(string) available_fonts( );
+}
+Fonts fonts;
 
 // Will replace Configuration after create() is run.
 program _configuration;	/*set in create*/
@@ -411,9 +426,9 @@ function handle = threaded_handle;
  */
 #ifdef THREADS
 
-object do_thread_create(string id, function f, mixed ... args)
+Thread do_thread_create(string id, function f, mixed ... args)
 {
-  object t = thread_create(f, @args);
+  Thread.Thread t = thread_create(f, @args);
   catch(t->set_name( id ));
   THREAD_WERR(id+" started");
   return t;
@@ -754,14 +769,14 @@ class Protocol
   string rrhf;
   static void got_connection()
   {
-    object q = accept( );
+    Stdio.File q = accept( );
     if( q )
     {
       if( !requesthandler )
       {
 	requesthandler = (program)(rrhf);
       }
-      object c;
+      Configuration c;
       if( refs < 2 )
       {
         if(!mu) 
@@ -923,11 +938,11 @@ class SSLProtocol
   inherit Protocol;
 
   // SSL context
-  object ctx;
+  SSL.context ctx;
 
   class destruct_protected_sslfile
   {
-    object sslfile;
+    SSL.sslfile sslfile;
 
     mixed `[](string s)
     {
@@ -955,16 +970,17 @@ class SSLProtocol
 	sslfile->close();
     }
 
-    void create(object q, object ctx)
+    void create(object q)
     {
       sslfile = SSL.sslfile(q, ctx);
     }
   }
 
-  object accept()
+  Stdio.File accept()
   {
-    object q = ::accept();
-    if (q) return destruct_protected_sslfile(q, ctx);
+    Stdio.File q = ::accept();
+    if (q)
+      return [object(Stdio.File)](object)destruct_protected_sslfile(q);
     return 0;
   }
 
@@ -977,7 +993,7 @@ class SSLProtocol
 
     restore();
     
-    object privs = Privs("Reading cert file");
+    Privs privs = Privs("Reading cert file");
 
     string f, f2;
 
@@ -1531,8 +1547,9 @@ public void log(mapping file, RequestID request_id)
   request_id->conf->log(file, request_id);
 }
 
+#if ROXEN_COMPAT < 2.2
 // Support for unique user id's
-private object current_user_id_file;
+private Stdio.File current_user_id_file;
 private int current_user_id_number, current_user_id_file_last_mod;
 
 private void restore_current_user_id_number()
@@ -1577,7 +1594,7 @@ string create_unique_id()
   md5->update(query("server_salt") + (unique_id_counter++) + time(1));
   return Crypto.string_to_hex(md5->digest());
 }
-
+#endif
 
 #ifndef __NT__
 static int abs_started;
@@ -1679,7 +1696,7 @@ class ImageCache
       string dither = args->dither;
       Image.Colortable ct;
       Image.Color.Color bgcolor;
-      object alpha;
+      Image.Image alpha;
       int true_alpha;
 
       if( args->fs  || dither == "fs" )
@@ -2527,7 +2544,7 @@ int set_u_and_gid()
       }
 
 #ifdef THREADS
-      object mutex_key;
+      Thread.MutexKey mutex_key;
       catch { mutex_key = euid_egid_lock->lock(); };
       object threads_disabled = _disable_threads();
 #endif
@@ -2662,7 +2679,6 @@ void reload_all_configurations()
   {
     modified = 1;
     report_notice(LOC_M(34,"Disabling old configuration %s")+"\n", conf->name);
-    //    Array.map(values(conf->server_ports), lambda(object o) { destruct(o); });
     conf->stop();
     destruct(conf);
   }
@@ -2710,7 +2726,7 @@ Configuration enable_configuration(string name)
 
 void disable_configuration (string name)
 {
-  if (object conf = config_lookup[ name ]) {
+  if (Configuration conf = config_lookup[ name ]) {
     configurations -= ({conf});
     fix_config_lookup();
   }
@@ -2876,8 +2892,9 @@ void create_pid_file(string where)
 }
 
 program pipe;
-object shuffle(object from, object to,
-	       object|void to2, function(:void)|void callback)
+Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
+		       Stdio.File|void to2,
+		       function(:void)|void callback)
 {
 #if efun(spider.shuffle)
   if(!to2)
@@ -2892,7 +2909,7 @@ object shuffle(object from, object to,
   } else {
 #endif
     // 'smartpipe' does not support multiple outputs.
-    object p = Pipe.pipe();
+    Pipe.pipe p = Pipe.pipe();
     if (callback) p->set_done_callback(callback);
     p->output(to);
     if(to2) p->output(to2);
@@ -3233,7 +3250,7 @@ function compile_log_format( string fmt )
   string code = sprintf(
 #"
   inherit ___LogFormat;
-  void log( function callback, object request_id, mapping file )
+  void log( function callback, RequestID request_id, mapping file )
   {
      if(!callback) return;
      string data = sprintf( %O %{, %s%} );

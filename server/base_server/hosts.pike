@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: hosts.pike,v 1.28 2000/02/20 17:41:33 nilsson Exp $
+// $Id: hosts.pike,v 1.29 2001/01/19 12:41:34 per Exp $
 
 #include <roxen.h>
 
@@ -21,7 +21,7 @@ void host_to_ip(string host, function callback, mixed ... args)
 }
 #else
 public mapping (string:array(mixed)) do_when_found=([]);
-object dns = Protocols.DNS.async_client();
+Protocols.DNS.async_client dns = Protocols.DNS.async_client();
 mapping lookup_funs=([IP_TO_HOST:dns->ip_to_host,HOST_TO_IP:dns->host_to_ip]);
 
 #define lookup(MODE,NAME) lookup_funs[MODE](NAME, got_one_result)

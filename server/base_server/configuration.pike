@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.408 2001/01/13 17:43:28 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.409 2001/01/19 12:41:32 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -639,7 +639,8 @@ private static int nest = 0;
 #ifdef MODULE_LEVEL_SECURITY
 private mapping misc_cache=([]);
 
-int|mapping check_security(function|object a, RequestID id, void|int slevel)
+int|mapping check_security(function|RoxenModule a, RequestID id,
+			   void|int slevel)
 {
   array level;
   array seclevels;
@@ -653,7 +654,7 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
   //    ~0  OK -- Test passed.
 
   if(!(seclevels = misc_cache[ a ])) {
-    object mod = Roxen.get_owning_module (a);
+    RoxenModule mod = Roxen.get_owning_module (a);
     if(mod && mod->query_seclevels)
       misc_cache[ a ] = seclevels = ({
 	mod->query_seclevels(),
@@ -863,7 +864,7 @@ mapping locked = ([]), thread_safe = ([]);
 
 mixed _lock(object|function f)
 {
-  object key;
+  Thread.MutexKey key;
   function|int l;
 
   if (functionp(f)) {
@@ -987,7 +988,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 #endif
 
 #ifdef THREADS
-  object key;
+  Thread.MutexKey key;
 #endif
   TRACE_ENTER(sprintf("Request for %s", id->not_query), 0);
 
@@ -1390,7 +1391,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 
 #ifdef URL_MODULES
 #ifdef THREADS
-  object key;
+  Thread.MutexKey key;
 #endif
   // Map URL-modules
   foreach(url_modules(), function funp)
@@ -1399,7 +1400,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
     id->not_query = file;
     LOCK(funp);
     TRACE_ENTER("URL module", funp);
-    void|mapping|object remap=funp( id, file );
+    mixed remap=funp( id, file );
     UNLOCK();
 
     if(mappingp( remap ))
@@ -1433,9 +1434,9 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
   }
 #endif /* URL_MODULES */
 
-  array(string) | mapping d;
+  array | mapping d;
   array(string) locks=({});
-  object mod;
+  RoxenModule mod;
   string loc;
   foreach(location_modules(), array tmp)
   {
@@ -1505,7 +1506,7 @@ array(int)|Stat stat_file(string file, RequestID id)
   string loc;
   mixed s, tmp;
 #ifdef THREADS
-  object key;
+  Thread.MutexKey key;
 #endif
   TRACE_ENTER(sprintf("Stat file %O.", file), 0);
 
@@ -1606,7 +1607,7 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get)
   if( id->conf && (id->conf != this_object()) )
     return id->conf->open_file( fname, mode, id, internal_get );
 
-  object oc = id->conf;
+  Configuration oc = id->conf;
   string oq = id->not_query;
   function funp;
   mapping|int(0..1) file;
@@ -1694,7 +1695,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
 
 #ifdef URL_MODULES
 #ifdef THREADS
-  object key;
+  Thread.MutexKey key;
 #endif
   // Map URL-modules
   foreach(url_modules(), function funp)
@@ -2765,7 +2766,7 @@ void low_init(void|int modules_already_enabled)
 
   if (!modules_already_enabled) {
     enabled_modules = retrieve("EnabledModules", this_object());
-    object ec = roxenloader.LowErrorContainer();
+    roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer();
     roxenloader.push_compile_error_handler( ec );
 
     array modules_to_process = indices( enabled_modules );
@@ -2795,7 +2796,7 @@ void low_init(void|int modules_already_enabled)
       report_warning( "While enabling modules in "+name+":\n"+ec->get_warnings());
   }
     
-  foreach( ({this_object()})+indices( otomod ), object mod )
+  foreach( ({this_object()})+indices( otomod ), RoxenModule mod )
     if( mod->ready_to_receive_requests )
       if( mixed q = catch( mod->ready_to_receive_requests( this_object() ) ) ) {
         report_error( "While calling ready_to_receive_requests in "+

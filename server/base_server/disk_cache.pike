@@ -1,10 +1,11 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.57 2000/09/24 16:24:15 nilsson Exp $
+// $Id: disk_cache.pike,v 1.58 2001/01/19 12:41:33 per Exp $
 
 #include <config.h>
 #include <module_constants.h>
 #include <stat.h>
+
 
 // Still experimental
 #define CACHE_DEBUG
@@ -15,8 +16,6 @@
 #else
 # define CACHE_WERR(X)
 #endif
-
-object this = this_object();
 
 #undef QUERY
 #define QUERY(x) roxenp()->query(#x)
@@ -204,9 +203,8 @@ class CacheStream ( Stdio.File file, string fname, int new )
 class Cache 
 {
 #ifdef THREADS
-  object lock = Thread.Mutex();
+  Thread.Mutex lock = Thread.Mutex();
 #endif
-  object this = this_object();
   string cd;
   Stdio.File command_stream = Stdio.File();
   int last_resort;
@@ -270,7 +268,7 @@ class Cache
 
     // FIXME: Should probably use spawn_pike() here.
     mixed err;
-    object proc;
+    Process.Process proc;
     if( catch {
       proc = Process.create_process(({
         "./start", "--once", "--program", "bin/garbagecollector.pike"
@@ -338,7 +336,7 @@ class Cache
  |
  */
 
-private object cache;
+private Cache cache;
 
 
 /*
@@ -378,9 +376,9 @@ public void init_garber()
 
 void default_check_cache_file(Stdio.File file);
 
-object new_cache_stream(object fp, string fn)
+CacheStream new_cache_stream(Stdio.File fp, string fn)
 {
-  object res;
+  CacheStream res;
   if(!QUERY(cache)) return 0;
   res=CacheStream (fp, fn, 1);
 #ifdef FD_DEBUG
@@ -436,22 +434,23 @@ string age(int x)
 }
 #endif
 
-object cache_file(string cl, string entry)
+CacheStream cache_file(string cl, string entry)
 {
   if(!QUERY(cache)) return 0;
   string name = cl+"/"+file_name(entry)+".done";
-  object cf;
+  CacheStream cf;
+  Stdio.File fd;
 
-  if(!(cf=open(QUERY(cachedir)+name, "r")))
+  if(!(fd=open(QUERY(cachedir)+name, "r")))
     return 0;
 
-  cf=new_cache_stream(cf, name);
+  cf=new_cache_stream(fd, name);
   cf->done_callback = 0;
   cf->rfile = QUERY(cachedir)+name;
 
-  array (int) stat = cf->file->stat();
+  Stat stat = cf->file->stat();
 
-  if(stat[ST_SIZE]<=0)
+  if(stat->size <= 0)
   {
     destruct(cf);
     return 0;
@@ -561,22 +560,23 @@ object cache_file(string cl, string entry)
   return cf;
 }
 
-object create_cache_file(string cl, string entry)
+CacheStream create_cache_file(string cl, string entry)
 {
   if(!QUERY(cache)) return 0;
   string name = cl+"/"+file_name(entry);
   string rfile = QUERY(cachedir)+name;
   string rfiledone = rfile+".done";
-  object cf;
+  CacheStream cf;
+  Stdio.File fd;
   int i;
 
   // to reduce IO-load try open before making directories
-  if(!(cf=open(rfile, "rwcx")))
+  if(!(fd=open(rfile, "rwcx")))
   {
     mkdirhier(rfile);
 
     for(i=10; i>=0; i--) {
-      if(cf=open(rfile, "rwcx"))
+      if(fd=open(rfile, "rwcx"))
 	break;
 
       if(i>1) {
@@ -592,7 +592,7 @@ object create_cache_file(string cl, string entry)
   }
 
   cache->accessed(name, 0);
-  cf=new_cache_stream(cf, name);
+  cf=new_cache_stream(fd, name);
   cf->headers->name = entry;
   cf->headers->head_vers = ROXEN_HEAD_VERS;
   cf->headers->head_size = ROXEN_HEAD_SIZE;
@@ -623,11 +623,11 @@ void rmold(string fname)
   }
 }
 
-void default_check_cache_file(object stream)
+void default_check_cache_file(CacheStream stream)
 {
   if (QUERY(cache)) {
     int s;
-    array (int) stat = stream->file->stat();
+    Stat stat = stream->file->stat();
 
     rmold(stream->rfiledone);
 
@@ -653,10 +653,10 @@ string get_garb_info()
 #define DELETE_AND_RETURN(){rmold(cachef->rfiledone);if(cachef){cachef->new=1;}return;}
 #define RETURN() {return;}
 
-void http_check_cache_file(object cachef)
+void http_check_cache_file(CacheStream cachef)
 {
   if(!cachef->file) RETURN();
-  array (int) stat = cachef->file->stat();
+  Stat stat = cachef->file->stat();
   int i;
   /*  soo..  Lets check if this is a file we want to keep. */
   /*  Initial screening is done in the proxy module. */
@@ -669,8 +669,8 @@ void http_check_cache_file(object cachef)
   // Check for files remaining from the last crash
   if(cachef->rfile[strlen(cachef->rfile)-1]=='+') {
     string tocheck = cachef->rfile;
-    object tc;
-    array (int) tc_stat;
+    Stdio.File tc;
+    Stat tc_stat;
     while(tocheck[strlen(tocheck)-1]=='+') {
       tocheck=tocheck[.. strlen(tocheck)-2];
       if((tc = open(tocheck,"rx")) &&

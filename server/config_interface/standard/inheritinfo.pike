@@ -4,7 +4,7 @@ string get_id(string from)
 {
   catch
   {
-    object f = open(from,"r");
+    Stdio.File f = open(from,"r");
     string id;
     id = f->read(800);
     if(sscanf(id, "%*s$"+"Id: %*s,v %s ", id) == 3)
@@ -13,10 +13,10 @@ string get_id(string from)
   return "";
 }
 
-object find_module( string foo )
+RoxenModule find_module( string foo )
 {
   string mod;
-  object cfg;
+  Configuration cfg;
 
   if( !foo || !strlen(foo))
     return 0;
@@ -64,7 +64,7 @@ string program_name_version( program what )
   return name+" "+get_id( file )+" "+warning;
 }
 
-string program_info( object m )
+string program_info( RoxenModule m )
 {
   if( m->get_program_info )
     return m->get_program_info( );
@@ -83,7 +83,7 @@ string rec_print_tree( array q )
   return res;
 }
 
-string inherit_tree( object m )
+string inherit_tree( RoxenModule m )
 {
   catch{ // won't work for programs in other programs.
     if( m->get_inherit_tree )

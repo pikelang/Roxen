@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.67 2000/12/31 23:53:36 nilsson Exp $
+// $Id: fonts.pike,v 1.68 2001/01/19 12:41:33 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -150,13 +150,14 @@ string describe_font_type(string n)
   return res;
 }
 
-object get_font(string f, int size, int bold, int italic,
+Font get_font(string f, int size, int bold, int italic,
                 string justification, float|int xspace, float|int yspace)
 {
-  object fnt;
+  Font fnt;
 
   foreach( font_handlers, FontHandler fh )
-    if(fnt = fh->open(f,size,bold,italic))
+    if( fh->has_font( f,size )  && 
+	(fnt = fh->open(f,size,bold,italic)))
     {
       if(justification=="right") fnt->right();
       if(justification=="center") fnt->center();
@@ -186,7 +187,7 @@ object get_font(string f, int size, int bold, int italic,
                   size,bold,italic,justification,xspace,yspace);
 }
 
-object resolve_font(string f, string|void justification)
+Font resolve_font(string f, string|void justification)
 {
   int bold, italic;
   float xspace=0.0;
@@ -255,7 +256,7 @@ object resolve_font(string f, string|void justification)
     size = (int)q[-1];
     f = q[..sizeof(q)-2]*" ";
   }
-  object fn;
+  Font fn;
   fn = get_font(f, size, bold, italic,
 	      justification||"left",xspace, 0.0);
   if(!fn)
@@ -267,7 +268,7 @@ object resolve_font(string f, string|void justification)
   return fn;
 }
 
-array available_fonts( )
+array(string) available_fonts( )
 {
   return sort(`+( ({}),  @font_handlers->available_fonts() ));
 }
@@ -286,7 +287,7 @@ array get_font_information(void|int scalable_only)
   return res;
 }
 
-void create()
+static void create()
 {
   int h = gethrtime();
   // Must have this _before_ the add_contant()s

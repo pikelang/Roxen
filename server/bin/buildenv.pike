@@ -8,7 +8,7 @@
  *    various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.5 2000/08/31 12:20:14 noring Exp $";
+string cvs_version = "$Id: buildenv.pike,v 1.6 2001/01/19 12:41:36 per Exp $";
 
 class Environment
 {
@@ -19,7 +19,7 @@ class Environment
   {
     string var, def;
     multiset(string) exports = (<>);
-    object f;
+    Stdio.File f;
     env = ([]);
     oldenv = ([]);
     if (catch (f = Stdio.File(filename, "r")))
@@ -60,7 +60,7 @@ class Environment
 
   static void write()
   {
-    object f = Stdio.File(filename, "cwt");
+    Stdio.File f = Stdio.File(filename, "cwt");
     if (!f)
     {
       error("Failed to write "+filename+"\n");
@@ -149,7 +149,9 @@ class Environment
 
 void config_env(object(Environment) env)
 {
-  string dir = "etc/env.d"; program p; object eo;
+  string dir = "etc/env.d";
+  program p;
+  object eo;
 
   foreach(glob("*.pike", get_dir(dir)||({})), string e)
   { string name = (e/".")[0];
@@ -182,7 +184,7 @@ void main(int argc, array argv)
     }
   }
 
-  object envobj = Environment("../local/environment");
+  Environment envobj = Environment("../local/environment");
 
   config_env(envobj);
   if (envobj->finalize())

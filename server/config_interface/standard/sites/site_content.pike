@@ -136,7 +136,7 @@ string buttons( Configuration c, string mn, RequestID id )
     string a = glob( "*.x", indices( id->variables ) )[0]-".x";
     if( a == LOCALE(253, "Reload") )
     {
-      object ec = roxenloader.LowErrorContainer(), nm;
+      roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer(), nm;
 
       roxenloader.push_compile_error_handler( ec );
 
@@ -386,7 +386,7 @@ string module_page( RequestID id, string conf, string module )
 string port_for( string url )
 {
   if(!roxen->urls[url] ) return "";
-  object p = roxen->urls[url]->port;
+  Protocol p = roxen->urls[url]->port;
   if(!p)
     return "";
   return "<font size='-1'>(" + LOCALE(291,"handled by") +
@@ -489,7 +489,7 @@ string parse( RequestID id )
 
        if( id->variables[ LOCALE(247, "Clear Log")+".x" ] )
        {
-	 foreach( values(conf->modules), object m )
+	 foreach( values(conf->modules), ModuleCopies m )
 	   foreach( values( m ), RoxenModule md )
 	     md->error_log = ([]);
 	 foreach( indices( conf->error_log ), string error )

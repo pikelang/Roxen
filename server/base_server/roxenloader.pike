@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.229 2001/01/13 23:26:46 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.230 2001/01/19 12:41:35 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -391,22 +391,24 @@ void report_fatal(string message, mixed ... foo)
 #endif
 }
 
-// Pipe open
+// popen, starts the specified process and returns a string
+// with the result. Mostly a compatibility functions, uses
+// Process.create_process
 string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
-  Stdio.File f = Stdio.File();
-  Stdio.File p = f->pipe(Stdio.PROP_IPC);
+  Stdio.File f = Stdio.File(), p = f->pipe(Stdio.PROP_IPC);
 
-  if(!p)
-    error("Popen failed. (couldn't create pipe)\n");
+  if(!p) error("Popen failed. (could not create pipe)\n");
 
   mapping(string:mixed) opts = ([
     "env": (env || getenv()),
     "stdout":p,
   ]);
 
-  if (!getuid()) {
-    switch(query_num_arg()) {
+  if (!getuid())
+  {
+    switch(query_num_arg())
+    {
     case 4:
       opts->gid = gid;
     case 3:
@@ -415,18 +417,12 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
     }
   }
   opts->noinitgroups = 1;
-  object proc;
-#if defined(__NT__) || defined(__amigaos__)
-  proc = Process.create_process(Process.split_quoted_string(s), opts);
-#else /* !__NT||__amigaos__ */
-  proc = Process.create_process( ({"/bin/sh", "-c", s}), opts );
-#endif /* __NT__ || __amigaos__ */
+  Process.Process proc = Process.Process( s, opts );
   p->close();
-  destruct(p);
 
-  if (proc)
+  if( proc )
   {
-    string t = f->read(0x7fffffff);
+    string t = f->read();
     f->close();
     destruct(f);
     return t;
@@ -437,16 +433,16 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 }
 
 // Create a process
-object spawne(string s, array(string) args, mapping|array env, object stdin,
-	      object stdout, object stderr, void|string wd,
-	      void|array (int) uid)
+Process.Process spawne(string s, array(string) args, mapping|array env,
+		       Stdio.File stdin, Stdio.File stdout, Stdio.File stderr,
+		       void|string wd, void|array(int) uid)
 {
   int u, g;
   if(uid) { u = uid[0]; g = uid[1]; }
 #if efun(geteuid)
   else { u=geteuid(); g=getegid(); }
 #endif
-  return Process.create_process(({ s }) + (args || ({})), ([
+  return Process.create_process(({s}) + (args || ({})), ([
     "toggle_uid":1,
     "stdin":stdin,
     "stdout":stdout,
@@ -459,8 +455,9 @@ object spawne(string s, array(string) args, mapping|array env, object stdin,
 }
 
 // Start a new Pike process with the same configuration as the current one
-object spawn_pike(array(string) args, void|string wd, object|void stdin,
-		  object|void stdout, object|void stderr)
+Process.Process spawn_pike(array(string) args, void|string wd,
+			   Stdio.File|void stdin, Stdio.File|void stdout,
+			   Stdio.File|void stderr)
 {
   return Process.create_process(
 #ifndef __NT__
@@ -478,14 +475,12 @@ object spawn_pike(array(string) args, void|string wd, object|void stdin,
 
 
 // Add a few cache control related efuns
-object(Stdio.Stat)|array(int) ___stat;
 static private void initiate_cache()
 {
   object cache;
   cache=((program)"base_server/cache")();
 
   add_constant("http_decode_string", _Roxen.http_decode_string );
-  add_constant("Stat", typeof(___stat));
   add_constant("cache_set",    cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
@@ -899,7 +894,7 @@ object|void open(string filename, string mode, int|void perm)
 
 object|void lopen(string filename, string mode, int|void perm)
 {
-  object o;
+  Stdio.File o;
   if( filename[0] != '/' )
     o = open( "../local/"+filename, mode, perm );
   if( !o )
@@ -1078,7 +1073,7 @@ void start_mysql()
   {
     report_debug("Mysql data directory does not exist -- copying template\n");
     mkdirhier( mysqldir+"/mysql/" );
-    object tar = Filesystem.Tar( "etc/mysql-template.tar" );
+    Filesystem.Tar tar = Filesystem.Tar( "etc/mysql-template.tar" );
     foreach( tar->get_dir( "mysql" ), string f )
     {
       report_debug("copying "+f+" ... ");
@@ -1088,7 +1083,7 @@ void start_mysql()
       report_debug("\n");
     }
   }
-  object p = 
+  Process.Process p = 
   Process.create_process( ({"bin/start_mysql",
                             mysqldir,
                             query_mysql_dir() }) );
@@ -1166,6 +1161,7 @@ int dump( string file, program|void p )
   return 0;
 }
 
+object(Stdio.Stat)|array(int) da_Stat_type;
 LocaleString da_String_type;
 void do_main( int argc, array(string) argv )
 {
@@ -1253,6 +1249,7 @@ Please install a newer version of Pike.
   add_constant( "mark_fd", mark_fd );
 
   add_constant( "LocaleString", typeof(da_String_type) );
+  add_constant( "Stat", typeof(da_Stat_type) );
   
   mixed err;
 
@@ -1451,6 +1448,11 @@ library should be enough.
   add_constant("ModuleInfo",    prototypes->ModuleInfo );
   add_constant("ModuleCopies",  prototypes->ModuleCopies );
 
+  // Specific module types
+  add_constant("AuthModule", prototypes->AuthModule );
+  add_constant("UserDB",     prototypes->UserDB );
+  add_constant("User",     prototypes->User );
+  
   report_debug("Done [%.1fms]\n", (gethrtime()-t)/1000.0);
 
   initiate_cache();

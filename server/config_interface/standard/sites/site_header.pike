@@ -31,7 +31,7 @@ string parse( RequestID id )
   if( !sizeof( path )  )
     return "Hm?";
 
-  object conf = roxen->find_configuration( path[0] );
+  Configuration conf = roxen->find_configuration( path[0] );
   if( !conf->inited )
     conf->enable_all_modules();
   id->misc->current_configuration = conf;

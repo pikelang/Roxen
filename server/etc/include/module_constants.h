@@ -18,6 +18,7 @@ constant MODULE_PROXY             = (1<<11);
 constant MODULE_LOGGER            = (1<<12);
 constant MODULE_FILTER            = (1<<13);
 constant MODULE_PROVIDER          = (1<<15);
+constant MODULE_USERDB            = (1<<16);
 
 // Module type flags. Not _really_ types, only useful for information
 // to the roxen administrations, not used by roxen.

@@ -1,5 +1,5 @@
 /*
- * $Id: lsquota.pike,v 1.1 1999/06/20 15:42:10 grubba Exp $
+ * $Id: lsquota.pike,v 1.2 2001/01/19 12:41:36 per Exp $
  *
  * List the keys of a quotadb.
  *
@@ -8,7 +8,7 @@
 
 int main(int argc, array(string) argv)
 {
-  object cat = Stdio.File();
+  Stdio.File cat = Stdio.File();
 
   array args = Getopt.find_all_options(argv, ({
     ({ "version", Getopt.NO_ARG, ({ "-v", "--version" }) }),
@@ -27,7 +27,7 @@ int main(int argc, array(string) argv)
       exit(0);
       break;
     case "version":
-      werror("$Id: lsquota.pike,v 1.1 1999/06/20 15:42:10 grubba Exp $\n");
+      werror("$Id: lsquota.pike,v 1.2 2001/01/19 12:41:36 per Exp $\n");
       exit(0);
       break;
     }

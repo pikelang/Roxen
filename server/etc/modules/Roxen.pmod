@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.65 2001/01/13 23:52:44 per Exp $
+// $Id: Roxen.pmod,v 1.66 2001/01/19 12:41:39 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1995,9 +1995,9 @@ class QuotaDB
     return QuotaEntry(key, data_offset, quota);
   }
 
-  static object open(string fname, int|void create_new)
+  static Stdio.File open(string fname, int|void create_new)
   {
-    object f = Stdio.File();
+    Stdio.File f = Stdio.File();
     string mode = create_new?"rwc":"rw";
 
     if (!f->open(fname, mode)) {

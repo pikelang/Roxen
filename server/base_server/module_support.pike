@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.84 2000/12/30 21:47:24 per Exp $
+// $Id: module_support.pike,v 1.85 2001/01/19 12:41:34 per Exp $
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
@@ -94,7 +94,7 @@ function|program load( string what, void|int silent )
 //
 //  This is stored in a ConfigurationIFCache instance.
 //
-object module_cache;
+object module_cache; // Cannot be ConfigurationIFCache, load order problems
 
 class BasicModule
 {
@@ -335,7 +335,7 @@ class ModuleInfo( string sname, string filename )
     filename = what;
     mixed q =catch
     {
-      object mod = instance( 0, 1 );
+      RoxenModule mod = instance( 0, 1 );
       if(!mod)
         throw(sprintf("Failed to instance %s (%s)\n", sname,what));
       if(!mod->register_module)
@@ -495,7 +495,7 @@ void clear_all_modules_cache()
 {
   all_modules_cache = 0;
   master()->clear_compilation_failures();
-  foreach( values( modules ), object o )
+  foreach( values( modules ), RoxenModule o )
     if( !o || !o->check() )
       m_delete( modules, search( modules, o ) );
 }

@@ -76,7 +76,7 @@ class CIF
     return c;
   }
 
-  object open( string fname, string mode )
+  Stdio.File open( string fname, string mode )
   {
     if(!offsets) get_dir( "foo" );
     fname -= "/";

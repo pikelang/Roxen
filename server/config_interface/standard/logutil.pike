@@ -21,7 +21,8 @@ string describe_time(int t)
     return sprintf("%02d:%02d",localtime(t)->hour,localtime(t)->min);
 }
 
-string _units(string unit, int num) {
+string _units(string unit, int num)
+{
   if(num==1) return "one "+unit;
   return num+" "+unit+"s";
 }
@@ -42,7 +43,8 @@ string describe_times(array (int) times)
 {
   __lt=0;
   if(sizeof(times) < 6)
-    return String.implode_nicely(map(times, describe_time), LOCALE("cw", "and"));
+    return String.implode_nicely(map(times, describe_time),
+				 LOCALE("cw", "and"));
 
   int d, every=1;
   int ot = times[0];
@@ -112,8 +114,9 @@ string describe_error(string err, array (int) times,
 
 
 // Returns ({ URL to module config page, human-readable (full) module name })
-array(string) get_conf_url_to_module(string|object(RoxenModule) m, string|void lang)
-{ // module is either a RoxenModule object or a string as returned by
+array(string) get_conf_url_to_module(string|RoxenModule m, string|void lang)
+{
+  // module is either a RoxenModule object or a string as returned by
   // get_modname(some RoxenModule), eg "ConfigInterface/piketag#0"
   RoxenModule module = stringp(m) ? Roxen.get_module(m) : m;
   Configuration conf = module->my_configuration();
@@ -126,15 +129,17 @@ array(string) get_conf_url_to_module(string|object(RoxenModule) m, string|void l
 }
 
 // Returns ({ URL to virtual server config page, virtual server name })
-array(string) get_conf_url_to_virtual_server(string|object(Configuration) conf,
+array(string) get_conf_url_to_virtual_server(string|Configuration conf,
 					     string|void lang)
-{ // conf is either a conf object or the configuration's real name, eg "ConfigInterface"
+{
+  // conf is either a conf object or the configuration's real name,
+  // eg "ConfigInterface"
   string url_confname;
   if(stringp(conf))
     conf = roxen->find_configuration(url_confname = conf);
   else
     url_confname = conf->name;
 
-  return ({ sprintf("/%s/sites/site.html/%s/", lang || "standard", url_confname),
-            conf->query_name() });
+  return ({ sprintf("/%s/sites/site.html/%s/", lang || "standard",
+		    url_confname), conf->query_name() });
 }

@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.59 2001/01/13 23:24:41 per Exp $
+// $Id: global_variables.pike,v 1.60 2001/01/19 12:41:33 per Exp $
 
 /*
 #pragma strict_types
@@ -36,7 +36,7 @@ private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident");
 // The answer is that there is actually a reason for it, it's for
 // performance reasons. This file is dumped to a .o file, roxen.pike
 // is not.
-void set_up_hilfe_variables( object o )
+void set_up_hilfe_variables( Protocol o )
 {
   function(DEFVAR) defvar = [function(DEFVAR)] o->defvar;
 
@@ -48,7 +48,7 @@ void set_up_hilfe_variables( object o )
 }
 
 
-void set_up_ftp_variables( object o )
+void set_up_ftp_variables( Protocol o )
 {
   function(DEFVAR) defvar =
    [function(DEFVAR)] o->defvar;
@@ -89,7 +89,7 @@ void set_up_ftp_variables( object o )
 }
 
 
-void set_up_http_variables( object o, int|void fhttp )
+void set_up_http_variables( Protocol o, int|void fhttp )
 {
   function(DEFVAR) defvar =
     [function(DEFVAR)] o->defvar;
@@ -121,7 +121,7 @@ void set_up_http_variables( object o, int|void fhttp )
   }
 }
 
-void set_up_fhttp_variables( object o )
+void set_up_fhttp_variables( Protocol o )
 {
   function(BDEFVAR) defvar =
     [function(BDEFVAR)] o->defvar;
@@ -154,7 +154,7 @@ void set_up_fhttp_variables( object o )
 
 }
 
-void set_up_ssl_variables( object o )
+void set_up_ssl_variables( Protocol o )
 {
   function(DEFVAR) defvar =
     [function(DEFVAR)] o->defvar;
@@ -210,8 +210,8 @@ class PortOptions
   inherit Variable.Variable;
   constant type = "PortOptions";
 
-  int check_visibility(object id, int a, int b, int c, int d) { return 0;  }
-  void set_from_form(object id ) { return; }
+  int check_visibility(RequestID id, int a, int b, int c, int d) { return 0;  }
+  void set_from_form(RequestID id ) { return; }
   void create()
   {
     ::create( ([]), 0, 0, 0 );

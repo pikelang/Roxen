@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: newdecode.pike,v 1.28 2000/09/05 21:04:41 mast Exp $
+// $Id: newdecode.pike,v 1.29 2001/01/19 12:41:34 per Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -52,7 +52,7 @@ string decode_variable(Parser.HTML p, mapping m, string s, mapping res)
   return "bar";
 }
 
-string name_of_module( object m, object c )
+string name_of_module( RoxenModule m, Configuration c )
 {
   return (c && c->otomod && c->otomod[m]) || "?";
 }
@@ -114,7 +114,7 @@ mapping decode_config_file(string s)
   return res;
 }
 
-string encode_mixed(mixed from, object c, int|void indent)
+string encode_mixed(mixed from, Configuration c, int|void indent)
 {
   switch(sprintf("%t", from))
   {
@@ -199,7 +199,8 @@ string trim_ws( string indata )
   return res;
 }
 
-string encode_config_region(mapping m, string reg, object c, int comments)
+string encode_config_region(mapping m, string reg, Configuration c,
+			    int comments)
 {
   string res = "";
   string v;
@@ -264,7 +265,7 @@ string encode_config_region(mapping m, string reg, object c, int comments)
   return res;
 }
 
-string encode_regions(mapping r, object c)
+string encode_regions(mapping r, Configuration c)
 {
   string v;
   string res = (xml_header + "\n\n");

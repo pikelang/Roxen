@@ -63,7 +63,7 @@ string|mapping parse( RequestID id )
     return sprintf(base,q);
   }
 
-  object e = roxenloader.ErrorContainer( );
+  roxenloader.ErrorContainer e = roxenloader.ErrorContainer( );
   master()->set_inhibit_compile_errors( e );
   string res = "";
   array sts = ({});

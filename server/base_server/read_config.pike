@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.53 2000/09/26 23:58:13 per Exp $
+// $Id: read_config.pike,v 1.54 2001/01/19 12:41:35 per Exp $
 
 #include <module.h>
 
@@ -73,7 +73,7 @@ void really_save_it( string cl, mapping data )
 
   mixed err = catch 
   {
-    object config;
+    Configuration config;
 #if constant( roxenp )
     config = roxenp();
     foreach(config->configurations||({}), Configuration c)
@@ -181,7 +181,7 @@ mapping read_it(string cl)
 }
 
 
-void remove( string reg , object current_configuration)
+void remove( string reg , Configuration current_configuration )
 {
   string cl;
 #ifndef IN_INSTALL
@@ -218,7 +218,8 @@ void remove_configuration( string name )
     error("Failed to remove configuration file ("+f+")!\n");
 }
 
-void store( string reg, mapping vars, int q, object current_configuration )
+void store( string reg, mapping vars, int q,
+	    Configuration current_configuration )
 {
   string cl;
   mapping m;
@@ -263,7 +264,8 @@ void store( string reg, mapping vars, int q, object current_configuration )
 string last_read;
 mapping last_data;
 
-mapping(string:mixed) retrieve(string reg, object current_configuration)
+mapping(string:mixed) retrieve(string reg,
+			       Configuration current_configuration)
 {
   string cl;
 #ifndef IN_INSTALL
