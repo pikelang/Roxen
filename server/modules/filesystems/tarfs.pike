@@ -1,6 +1,6 @@
 inherit "module";
 
-constant cvs_version= "$Id: tarfs.pike,v 1.1 2000/09/13 14:15:19 per Exp $";
+constant cvs_version= "$Id: tarfs.pike,v 1.2 2000/09/14 13:51:13 per Exp $";
 
 // The Filesystem.Tar module is not threadsafe.
 constant thread_safe=0;
@@ -28,7 +28,9 @@ void create()
 }
 
 string mp, error_msg;
-Filesystem.Tar tar;
+
+// Filesystem.Tar (does not work with 7.0)
+object tar;
 
 void start()
 {
