@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.7 1999/05/16 15:36:46 grubba Exp $
+ * $Id: Roxen.pmod,v 1.8 1999/05/16 16:05:53 grubba Exp $
  *
  * Various helper functions.
  *
@@ -249,10 +249,10 @@ class QuotaDB
 
       while (i) {
 	i /= 4;
-	acc_scale <<= 1;
+	acc_scale *= 2;
       }
     }
-    index_acc = allocate(sizeof(index)/acc_scale);
+    index_acc = allocate((sizeof(index) + acc_scale -1)/acc_scale);
 
     QD_WRITE(sprintf("QuotaDB()::init_index_acc(): "
 		     "sizeof(index):%d, sizeof(index_acc):%d acc_scale:%d\n",
@@ -261,13 +261,15 @@ class QuotaDB
 
   void rebuild_index()
   {
-    // FIXME: Actually make an index file.
     array(string) new_keys = sort(indices(new_entries_cache));
 
     int prev;
     array(int) new_index = ({});
 
     foreach(new_keys, string key) {
+      QD_WRITE(sprintf("QuotaDB::rebuild_index(): key:%O lo:0 hi:%d\n",
+		       key, sizeof(index_acc)));
+
       int lo;
       int hi = sizeof(index_acc);
       if (hi) {
@@ -277,6 +279,10 @@ class QuotaDB
 	  //   lo-1 is an element < key.
 
 	  int probe = (lo + hi)/2;
+
+	  QD_WRITE(sprintf("QuotaDB::rebuild_index(): acc: "
+			   "key:%O lo:%d probe:%d hi:%d\n",
+			   key, lo, probe, hi));
 
 	  if (!index_acc[probe]) {
 	    object e = read_entry(index[probe * acc_scale]);
@@ -300,29 +306,40 @@ class QuotaDB
 	  // Skip to the next key...
 	  continue;
 	}
-	hi *= acc_scale;
-	lo = hi - acc_scale;
+	if (hi) {
+	  hi *= acc_scale;
+	  lo = hi - acc_scale;
 
-	do {
-	  // Same loop invariants as above.
-
-	  int probe = (lo + hi)/2;
-	  object e = read_entry(index[probe]);
-	  if (e->name < key) {
-	    lo = probe + 1;
-	  } else if (e->name > key) {
-	    hi = probe;
-	  } else {
-	    /* Found */
-	    // Shouldn't happen...
-	    break;
+	  if (hi > sizeof(index)) {
+	    hi = sizeof(index);
 	  }
-	} while (lo < hi);
-	if (lo < hi) {
-	  // Found...
-	  // Shouldn't happen, but...
-	  // Skip to the next key...
-	  continue;
+
+	  do {
+	    // Same loop invariants as above.
+
+	    int probe = (lo + hi)/2;
+
+	    QD_WRITE(sprintf("QuotaDB::rebuild_index(): "
+			     "key:%O lo:%d probe:%d hi:%d\n",
+			     key, lo, probe, hi));
+	    
+	    object e = read_entry(index[probe]);
+	    if (e->name < key) {
+	      lo = probe + 1;
+	    } else if (e->name > key) {
+	      hi = probe;
+	    } else {
+	      /* Found */
+	      // Shouldn't happen...
+	      break;
+	    }
+	  } while (lo < hi);
+	  if (lo < hi) {
+	    // Found...
+	    // Shouldn't happen, but...
+	    // Skip to the next key...
+	    continue;
+	  }
 	}
 	new_index += index[prev..hi-1] + ({ new_entries_cache[key] });
 	prev = hi;
@@ -330,6 +347,11 @@ class QuotaDB
 	new_index += ({ new_entries_cache[key] });
       }
     }
+
+    // Add the trailing elements...
+    new_index += index[prev..];
+
+    QD_WRITE("Index rebuilt.\n");
 
     LOCK();
 
@@ -411,6 +433,11 @@ class QuotaDB
 
 	hi *= acc_scale;
 	lo = hi - acc_scale;
+
+	if (hi > sizeof(index)) {
+	  hi = sizeof(index);
+	}
+
 	do {
 	  // Same loop invariant as above.
 
