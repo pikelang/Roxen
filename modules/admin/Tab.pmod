@@ -4,7 +4,6 @@ class tab
    
   string dir;   // setup by create()
   string tab;   // | 
-  string loc;   // |
   object o;     // |
   object parent;// |
   string title; // |
@@ -195,11 +194,10 @@ class tab
     return !o->visible || o->visible(id);
   }
 
-  void create(string _dir,string _loc,string _tab,object _par)
+  void create(string _dir,string _tab,object _par)
   {
     dir=_dir;
     tab=_tab;
-    loc=_loc;
     parent=_par;
 
     title=String.capitalize(tab[3..]);

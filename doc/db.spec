@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.1 1998/07/13 00:13:05 js Exp $
+# $Id: db.spec,v 1.2 1998/07/13 07:11:19 js Exp $
 
 drop table clients;
 drop table dns;
@@ -6,7 +6,7 @@ drop table messages;
 drop table mailboxes;
 drop table users;
 
-create table clients (
+create table customers (
              id	                     int auto_increment primary key,
              user_id                 varchar(64) not null,
 	     name		     varchar(255) not null,
