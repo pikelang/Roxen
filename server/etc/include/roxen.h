@@ -1,4 +1,4 @@
-// $Id: roxen.h,v 1.10 1999/11/06 08:28:44 per Exp $
+// $Id: roxen.h,v 1.11 2000/07/10 17:39:26 nilsson Exp $
 #ifndef _ROXEN_H_
 
 #define _ROXEN_H_
@@ -10,13 +10,16 @@
 
 // Localization support
 #ifndef LOW_LOCALE
-#ifdef IN_ROXEN
-#define LOW_LOCALE	locale->get()
-#define SET_LOCALE(X)	locale->set(X)
-#else
-#define LOW_LOCALE	roxen.locale->get()
-#define SET_LOCALE(X)	roxen.locale->set(X)
-#endif /* IN_ROXEN */
-#endif /* !LOW_LOCALE */
+# if constant(Locale.translate)
+#  define LOW_LOCALE(X,Y)	([string](mixed)Locale.DeferredLocale(GETLOCOBJ,X,Y))
+# else
+#  define LOW_LOCALE(X,Y)	([string](mixed)RoxenLocale.DeferredLocale(GETLOCOBJ,X,Y))
+# endif // Locale.translate
+# ifdef IN_ROXEN
+#  define LOCALE_PROJECT(X)	static object GETLOCOBJ() {return locale->get()->X;}
+# else
+#  define LOCALE_PROJECT(X)	static object GETLOCOBJ() {return roxen.locale->get()->X;}
+# endif // IN_ROXEN
+#endif // !LOW_LOCALE
 
 #endif  /* _ROXEN_H_ */
