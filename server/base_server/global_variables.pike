@@ -17,6 +17,7 @@ void define_global_variables( int argc, array (string) argv )
 {
   int p;
 
+
   globvar("set_cookie", 0, "Set unique user id cookies", TYPE_FLAG,
 	  #"If set to Yes, all users of your server whose clients support 
 cookies will get a unique 'user-id-cookie', this can then be 
@@ -252,7 +253,8 @@ källservern om de har en last-modified header som anger när de senast
 	  TYPE_FILE|VAR_MORE,
 	  "In this file, the server will write out it's PID, and the PID "
 	  "of the start script. $pid will be replaced with the pid, and "
-	  "$uid with the uid of the user running the process.");
+	  "$uid with the uid of the user running the process.\n"
+	  "<p>Note: It will be overridden by the command line option.");
   deflocaledoc("svenska", "pidfile", "ProcessIDfil",
 	       "I den här filen sparas roxen processid och processidt "
 	       "for roxens start-skript. $uid byts ut mot användaridt för "
@@ -675,6 +677,9 @@ så här ofta. Tiden är angiven i dagar");
           "store the argument caches",
           0,
           lambda(){ return QUERY(argument_cache_in_db); });
+
+
+
 
   setvars(retrieve("Variables", 0));
 
