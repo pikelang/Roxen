@@ -184,6 +184,7 @@ worldmap binary
 /server/java/src/com/roxen/roxen/SimpleTagCaller.java foreign_ident
 /server/java/src/com/roxen/roxen/UniqueModule.java foreign_ident
 /server/languages/catala.pike foreign_ident
+/server/languages/chinese.pike foreign_ident
 /server/languages/croatian.pike foreign_ident
 /server/languages/czech.pike foreign_ident
 /server/languages/dutch.pike foreign_ident
