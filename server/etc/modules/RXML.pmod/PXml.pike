@@ -3,11 +3,11 @@
 //! Parses tags and entities. Entities on the form &scope.variable;
 //! are replaced by variable references.
 //!
-//! $Id: PXml.pike,v 1.11 2000/01/08 06:54:59 mast Exp $
+//! Created 1999-07-30 by Martin Stjernholm.
+//!
+//! $Id: PXml.pike,v 1.12 2000/01/08 12:13:02 mast Exp $
 
 #pragma strict_types
-
-#define TAGMAP_COMPAT
 
 inherit RXML.TagSetParser : TagSetParser;
 inherit Parser.HTML : low_parser;
@@ -30,69 +30,11 @@ inherit Parser.HTML : low_parser;
   string|array|								\
   function(void|Parser.HTML:int(1..1)|string|array)
 
-#ifdef TAGMAP_COMPAT
-constant tagmap_compat = 1;
-
-// Local mappings for the tagdefs. Used instead of the one built-in in
-// Parser.HTML for compatibility with certain things that changes the
-// tag definition maps destructively. This is slower and will go away
-// as soon as possible.
-mapping(string:TAG_TYPE) tagmap_tags;
-mapping(string:CONTAINER_TYPE) tagmap_containers;
-
-static int(1..1)|string|array tagmap_tag_cb (
-  Parser.HTML this, string str, mixed... extra)
-{
-  string name = lower_case (tag_name());
-  if (TAG_TYPE tdef = tagmap_tags[name])
-    if (stringp (tdef))
-      return ({[string] tdef});
-    else if (arrayp (tdef))
-      return ([TAG_FUNC_TYPE] tdef[0]) (this, tag_args(), @tdef[1..], @extra);
-    else
-      return ([TAG_FUNC_TYPE] tdef) (this, tag_args(), @extra);
-  else if (CONTAINER_TYPE cdef = tagmap_containers[name])
-    // A container has been added.
-    low_parser::add_container (name, tagmap_container_cb);
-  return 1;
-}
-
-static int(1..1)|string|array tagmap_container_cb (
-  Parser.HTML this, mapping(string:string) args, string content, mixed... extra)
-{
-  string name = lower_case (tag_name());
-  if (CONTAINER_TYPE cdef = tagmap_containers[name])
-    if (stringp (cdef))
-      return ({[string] cdef});
-    else if (arrayp (cdef))
-      return ([CONTAINER_FUNC_TYPE] cdef[0]) (this, args, content, @cdef[1..], @extra);
-    else
-      return ([CONTAINER_FUNC_TYPE] cdef) (this, args, content, @extra);
-  else
-    // The container has disappeared from the mapping.
-    low_parser::add_container (name, 0);
-  return 1;
-}
-
-this_program add_tag (string name, TAG_TYPE tdef)
-{
-  if (tdef) tagmap_tags[name] = tdef;
-  else m_delete (tagmap_tags, name);
-  return this_object();
-}
-
-this_program add_container (string name, CONTAINER_TYPE cdef)
-{
-  if (cdef) tagmap_containers[name] = cdef;
-  else m_delete (tagmap_containers, name);
-  return this_object();
-}
-
-mapping(string:TAG_TYPE) tags() {return tagmap_tags;}
-
-mapping(string:CONTAINER_TYPE) containers() {return tagmap_containers;}
-
-#endif
+static mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) overridden;
+// Contains all tags with overridden definitions. Indexed on the
+// effective tag names. The values are arrays of ({tag_definition,
+// container_definition}) tuples, with the closest to top last. Shared
+// between clones.
 
 static array entity_cb (Parser.HTML ignored, string str)
 {
@@ -117,12 +59,18 @@ static array entity_cb (Parser.HTML ignored, string str)
   return type->free_text ? ({str}) : ({});
 }
 
+// Kludge to get to the functions in Parser.HTML from inheriting
+// programs.. :P
+static this_program _low_add_tag (string name, TAG_TYPE tdef)
+  {return [object(this_program)] low_parser::add_tag (name, tdef);}
+static this_program _low_add_container (string name, CONTAINER_TYPE tdef)
+  {return [object(this_program)] low_parser::add_container (name, tdef);}
+static this_program _low_clone (mixed... args)
+  {return [object(this_program)] low_parser::clone (@args);}
+
 /*static*/ void set_cbs()
 {
   _set_entity_callback (entity_cb);
-#ifdef TAGMAP_COMPAT
-  _set_tag_callback (tagmap_tag_cb);
-#endif
   if (!type->free_text)
     _set_data_callback (lambda (object this, string str) {return ({});});
 }
@@ -130,39 +78,22 @@ static array entity_cb (Parser.HTML ignored, string str)
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
   this_program clone =
-    [object(this_program)] low_parser::clone (ctx, type, tag_set, overridden,
-#ifdef TAGMAP_COMPAT
-					      tagmap_tags, tagmap_containers,
-#endif
-					     );
+    [object(this_program)] low_parser::clone (ctx, type, tag_set, overridden);
   clone->set_cbs();
   return clone;
 }
 
 static void create (
   RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
-  void|mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) orig_overridden,
-#ifdef TAGMAP_COMPAT
-  void|mapping(string:TAG_TYPE) orig_tagmap_tags,
-  void|mapping(string:CONTAINER_TYPE) orig_tagmap_containers,
-#endif
-)
+  void|mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) orig_overridden)
 {
   TagSetParser::create (ctx, type, tag_set);
 
-  if (orig_overridden) {	// We're cloned.
+  if (orig_overridden) { // We're cloned.
     overridden = orig_overridden;
-#ifdef TAGMAP_COMPAT
-    tagmap_tags = orig_tagmap_tags + ([]);
-    tagmap_containers = orig_tagmap_containers + ([]);
-#endif
     return;
   }
   overridden = ([]);
-#ifdef TAGMAP_COMPAT
-  tagmap_tags = ([]);
-  tagmap_containers = ([]);
-#endif
 
   mixed_mode (!type->free_text);
   lazy_entity_end (1);
@@ -268,28 +199,6 @@ mixed read()
 // void finish (void|string in) {low_parser::finish (in);}
 
 
-// Misc services.
-
-static mapping(string:ENTITY_TYPE) saved_entities;
-
-int parse_entities (int flag)
-{
-  int oldflag = !saved_entities;
-  if (!oldflag != !flag)
-    if (flag) {
-      add_entities (saved_entities);
-      saved_entities = 0;
-      _set_entity_callback (entity_cb);
-    }
-    else {
-      saved_entities = entities();
-      map (indices (saved_entities), add_entity, 0);
-      _set_entity_callback (0);
-    }
-  return oldflag;
-}
-
-
 // Runtime tags.
 
 static mapping(string:array(TAG_TYPE|CONTAINER_TYPE)) rt_replacements;
@@ -368,12 +277,6 @@ local void remove_runtime_tag (string|RXML.Tag tag)
 
 
 // Traversing overridden tag definitions.
-
-static mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) overridden;
-// Contains all tags with overridden definitions. Indexed on the
-// effective tag names. The values are arrays of ({tag_definition,
-// container_definition}) tuples, with the closest to top last. Shared
-// between clones.
 
 array(TAG_TYPE|CONTAINER_TYPE) get_overridden_low_tag (
   string name, TAG_TYPE|CONTAINER_TYPE overrider)
