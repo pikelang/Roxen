@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.27 1998/05/23 13:34:27 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.28 1998/05/27 11:59:00 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -86,6 +86,8 @@ void create()
 
 multiset banish_list;
 mapping dude_ok;
+mapping banish_reported = ([]);
+
 void start()
 {
   ::start();
@@ -140,7 +142,10 @@ mixed find_file(string f, object got)
 	 (QUERY(only_password) && (<"","*">)[us[ 1 ]]) ||
 	 banish_list[u])
       {
-	roxen_perror(sprintf("User %s banished (%O)...\n", u, us));
+	if (!banish_reported[u]) {
+	  banish_reported[u] = 1;
+	  roxen_perror(sprintf("User %s banished (%O)...\n", u, us));
+	}
 	return 0;
       }
 
