@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.1 1997/09/03 05:16:32 per Exp $
+ * $Id: proc.pike,v 1.2 1997/09/03 05:19:29 per Exp $
  */
 
 inherit "wizard";
@@ -8,6 +8,11 @@ constant name= "Status//Extended process status";
 constant doc = "Shows detailed process status on Solaris 2.5 and 2.6.";
 
 constant more=1;
+
+void create()
+{
+  if(!file_stat("/usr/proc/bin/")) throw("Only available under Solaris 2.4 and newer\n");
+}
 
 string proc(string prog, int pid )
 {
