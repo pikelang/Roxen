@@ -10,7 +10,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.179 2002/06/15 20:24:55 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.180 2002/06/15 20:46:32 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -638,10 +638,10 @@ class TagCFBoxes
 
       string id;
       if( sscanf( box, "%s:%s", box, id ) )
-	boxes[box] = Roxen.parse_box_xml( "config_interface/boxes/"
+	boxes[box] = Roxen.parse_box_xml( "admin_interface/boxes/"
 					  +box+".xml", id );
-      else if(!catch(boxes[box]=(object)("config_interface/boxes/"+box+".pike")))
-	roxen.dump("config_interface/boxes/"+box+".pike");
+      else if(!catch(boxes[box]=(object)("admin_interface/boxes/"+box+".pike")))
+	roxen.dump("admin_interface/boxes/"+box+".pike");
       return boxes[box];
     }
 

@@ -13,9 +13,9 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.113 2002/06/15 20:24:55 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.114 2002/06/15 20:46:32 nilsson Exp $";
 
-constant path = "config_interface/";
+constant path = "admin_interface/";
 
 object charset_decoder;
 Sql.Sql docs;

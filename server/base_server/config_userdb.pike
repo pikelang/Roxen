@@ -131,7 +131,7 @@ class ConfigurationSettings
     string theme_name( string theme )
     {
       catch {
-        return String.trim_all_whites(lopen("config_interface/themes/"+
+        return String.trim_all_whites(lopen("admin_interface/themes/"+
                                             theme+"/name","r")->read());
       };
       return "Unknown theme ("+theme+")";
@@ -139,12 +139,12 @@ class ConfigurationSettings
 
     static array(string) all_themes( )
     {
-      return filter((get_dir( "config_interface/themes/" ) + 
-		     (get_dir( "../local/config_interface/themes/" )||({}))-
+      return filter((get_dir( "admin_interface/themes/" ) +
+		     (get_dir( "../local/admin_interface/themes/" )||({}))-
 		     ({"CVS","README",".distignore",".cvsignore"})),
 		    lambda(string theme) {
 		      catch {
-			return lopen("config_interface/themes/"+theme+"/name",
+			return lopen("admin_interface/themes/"+theme+"/name",
 				     "r")->read() != "";
 		      };
 		      return 0;
@@ -214,7 +214,7 @@ class ConfigurationSettings
     constant type = "ContentBoxes";
     static string box_type;
 
-#define BDIR "config_interface/boxes/"
+#define BDIR "admin_interface/boxes/"
     static mapping bdata = ([]);
     array possible( )
     {
