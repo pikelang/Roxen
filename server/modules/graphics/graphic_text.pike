@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.184 1999/07/16 02:34:38 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.185 1999/07/19 22:03:59 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -721,13 +721,13 @@ string magic_javascript_header(object id)
 {
   if(!id->supports->netscape_javascript || !id->supports->images) return "";
   return
-    ("\n<script>\n"
+    ("<script>\n"
      "function i(ri,hi,txt)\n"
      "{\n"
      "  document.images[ri].src = hi.src;\n"
      "  setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
      "}\n"
-     "</script>\n");
+     "</script>");
 
 }
 
@@ -747,7 +747,7 @@ string magic_image(string url, int xs, int ys, string sn,
     ("<script>\n"
      " "+sn+"l = new Image("+xs+", "+ys+");"+sn+"l.src = \""+image_1+"\";\n"
      " "+sn+"h = new Image("+xs+", "+ys+");"+sn+"h.src = \""+image_2+"\";\n"
-     "</script>\n"+
+     "</script>"+
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
       +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
@@ -1036,7 +1036,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 			       (arg->alt?arg->alt:replace(gt, "\"","'")),
 			       (magic=="magic"?0:magic),
 			       id,input?na||"submit":0,ea,lp),
-		   "</script>\n<script>","");
+		   "</script><script>","");
   }
   if(input)
     return (pre+"<input type=image name=\""+na+"\" border=0 alt=\""+
