@@ -12,7 +12,6 @@ constant box_position = -1;
 String box_name = _(363,"Documentation links");
 String box_doc = _(364,"Links to the inline documentation");
 
-#define path(X) X
 string parse( RequestID id )
 {
   string docs = "";
@@ -22,78 +21,81 @@ string parse( RequestID id )
 //    docs += "<a href='"+path("whatsnew.html")+"'>"+
 //      _(390,"Release notes")+"</a><br />";
 
-  docs += "<font size=-1>";
-
+  void add_doc_link(string doc_path, string title) {
+    if (exists(doc_path))
+      docs +=
+	"<tr><td valign='top'>"
+	"<a href='" + (doc_path - "index.html") + "'>"
+	"<font size='-1'>" + title + "</font>"
+	"</a>"
+	"</td></tr>";
+  };
+  
   foreach( ({ "docs/roxen/3.2/" }), string rpath )
   {
-    if( exists(  rpath + "content_editor_manual_(instant)/index.html" ) )
-      docs += "<a href='"+path(rpath+"content_editor_manual_(instant)/")+"'>"+
-	_(391,"Content Editor (Instant Edition)")+"</a><br />";
+    add_doc_link(rpath + "content_editor_manual_(instant)/index.html",
+		 _(0, "Content Editor (Instant Edition)"));
 
-      if( exists(  rpath + "content_editor_manual_(advanced)/index.html" ) )
-      docs += "<a href='"+path(rpath+"content_editor_manual_(advanced)/")+"'>"+
-	_(391,"Content Editor (Advanced Edition)")+"</a><br />";
+    add_doc_link(rpath + "content_editor_manual_(advanced)/index.html",
+		 _(0, "Content Editor (Advanced Edition)"));
 
-      if( exists(  rpath + "web_developer_manual/index.html" ) )
-      docs += "<a href='"+path(rpath+"web_developer_manual/")+"'>"+
-	_(391,"Web Developer")+"</a><br />";
+    add_doc_link(rpath + "web_developer_manual/index.html",
+		 _(0, "Web Developer"));
 
-      if( exists(  rpath + "system_developer_manual/index.html" ) )
-      docs += "<a href='"+path(rpath+"system_developer_manual/")+"'>"+
-	_(391,"System Developer")+"</a><br />";
+    add_doc_link(rpath + "system_developer_manual/index.html",
+		 _(0, "System Developer"));
 
-      if( exists(  rpath + "administrator_manual/index.html" ) )
-      docs += "<a href='"+path(rpath+"administrator_manual/")+"'>"+
-	_(391,"Administrator")+"</a><br />";
+    add_doc_link(rpath + "administrator_manual/index.html",
+		 _(0, "Administrator"));
 
-      if( exists(  rpath + "forms_and_response_module/index.html" ) )
-      docs += "<a href='"+path(rpath+"forms_and_response_module/")+"'>"+
-	_(391,"Forms And Response Module")+"</a><br />";
+    add_doc_link(rpath + "forms_and_response_module/index.html",
+		 _(0, "Forms And Response Module"));
 
-      if( exists(  rpath + "categorization_module/index.html" ) )
-      docs += "<a href='"+path(rpath+"categorization_module/")+"'>"+
-	_(391,"Categorization Module")+"</a><br />";
+    add_doc_link(rpath + "categorization_module/index.html",
+		 _(0, "Categorization Module"));
+
+    add_doc_link(rpath + "tutorial/index.html",
+		 _(0, "Tutorials"));
   }
 
   foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
   {
-    if( exists(  rpath + "creator/index.html" ) )
-      docs += "<a href='"+path(rpath+"creator/")+"'>"+
-	_(391,"Web Site Creator")+"</a><br />";
+    add_doc_link(rpath + "creator/index.html",
+		 _(391, "Web Site Creator"));
 
-    if( exists( rpath + "administrator/index.html" ) )
-      docs += "<a href='"+path(rpath+ "administrator/")+"'>"+
-	_(392,"Administrator Manual")+"</a><br />";
+    add_doc_link(rpath + "administrator/index.html",
+		 _(392, "Administrator Manual"));
 
-    if( exists( rpath + "user/index.html" ) )
-      docs += "<a href='"+path(rpath+ "user/")+"'>"+
-	_(393,"User Manual")+"</a><br />";
+    add_doc_link(rpath + "user/index.html",
+		 _(393, "User Manual"));
 
-    if( exists( rpath + "tutorial/rxml/index.html" ) )
-      docs += "<a href='"+path(rpath+ "tutorial/rxml/")+"'>"+
-	_(394,"RXML Tutorial")+"</a><br />";
-    else if( exists( rpath + "rxml_tutorial/index.html" ) )
-      docs += "<a href='"+path(rpath+ "rxml_tutorial/")+"'>"+
-	_(394,"RXML Tutorial")+"</a><br />";
+    if (exists(rpath + "tutorial/rxml/index.html"))
+      add_doc_link(rpath + "tutorial/rxml/index.html",
+		   _(394, "RXML Tutorial"));
+    else if (exists(rpath + "tutorial/rxml_tutorial.html"))
+      add_doc_link(rpath + "tutorial/rxml/index.html",
+		   _(394, "RXML Tutorial"));
 
-    if( exists( rpath+"programmer/index.html") )
-      docs += "<a href='"+path(rpath+ "programmer/")+"'>"+
-	_(395,"Programmer Manual")+"</a><br />";
+    add_doc_link(rpath + "programmer/index.html",
+		 _(393, "Programmer Manual"));
   }
 
   foreach( ({"docs/pike/7.1/","docs/pike/7.0/" }), string ppath )
   {
-    if( exists( ppath+"tutorial/index.html") )
-      docs += "<a href='"+path(ppath+ "tutorial/")+"'>"+
-	_(396,"Pike Tutorial")+"</a><br />";
+    add_doc_link(ppath + "tutorial/index.html",
+		 _(396, "Pike Tutorial"));
   }
 
   if( docs == "" )
-    docs="<font color='&usr.warncolor;'>"+
-      _(397,"No documentation found at all")+"</font>";
-
-  docs += "</font>";
-
+    docs =
+      "<tr><td>"
+      "<font color='&usr.warncolor;'>" +
+      _(397, "No documentation found at all") + 
+      "</font>"
+      "</td></tr>";
+  
+  docs = "<table>" + docs + "</table>";
+  
   return "<box type='"+box+"' title='"+box_name+"'>"+docs+"</box>";
 }
 
