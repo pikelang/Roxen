@@ -218,8 +218,14 @@ localinstall: all
 	  done; \
 	} )
 	@(if [ -d $(SRCDIR)/pike/$(PIKEVERSION)/lib ] ; then \
-	  rm -f "$(SRCDIR)/server/lib/pike/share" >/dev/null 2>&1; \
-	  ln -s "../../../pike/$(PIKEVERSION)/lib" "$(SRCDIR)/server/lib/pike/share"; \
+	  if [ -d "$(SRCDIR)/server/share/." ]; then : ; else \
+	    echo "$(SRCDIR)/server/share"; \
+	    mkdir "$(SRCDIR)/server/share" || exit 1; \
+	    chmod a+rx "$(SRCDIR)/server/share/."; \
+	    chmod u+w "$(SRCDIR)/server/share/."; \
+	  fi; \
+	  rm -f "$(SRCDIR)/server/share/pike" >/dev/null 2>&1; \
+	  ln -s "../../../pike/$(PIKEVERSION)/lib" "$(SRCDIR)/server/share/pike"; \
 	else : ; fi)
 	(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 
