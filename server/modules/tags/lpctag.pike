@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.15 1998/08/03 10:09:58 grubba Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.16 1998/08/03 10:25:21 grubba Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -108,10 +108,10 @@ private nomask inline string pre(string what)
     return functions();
   if(search(what, "return") != -1)
     return functions() + 
-    "string parse(object id, mapping defines, object file, mapping args) { ";
+    "string|int parse(object id, mapping defines, object file, mapping args) { ";
   else
     return functions() +
-    "string parse(object id, mapping defines, object file, mapping args) { return ";
+    "string|int parse(object id, mapping defines, object file, mapping args) { return ";
 }
 
 // Will be added at the end...
@@ -144,8 +144,9 @@ string tag_pike(string tag, mapping m, string s, object request_id,
       p = compile_string(s, "Pike-tag");
     })
     {
-      return reporterr ("Error compiling <pike> tag in " + request_id->not_query + ":\n",
-			_master->errors || "");
+      return reporterr(sprintf("Error compiling <pike> tag in %O:\n"
+			       "%s\n\n", request_id->not_query, s), 
+		       _master->errors || "");
     }
     _master->set_inhibit_compile_errors(0);
 
@@ -166,10 +167,10 @@ string tag_pike(string tag, mapping m, string s, object request_id,
     remove_max_eval_time(); // Remove the limit.
   }
 #endif
-  if(o) destruct(o);
 
-  if(!stringp(res))
-    res="";
+  res = (res || "") + (o && o->flush() || "");
+
+  if(o) destruct(o);
 
   return res;
 }
