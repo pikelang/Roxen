@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.55 2004/02/16 21:44:09 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.56 2004/02/20 20:04:34 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -611,8 +611,8 @@ void run_xml_tests(string data) {
     set_extra (p_code_cache, used_modules)->
     finish(data);
 
-  if(ltests < sizeof(Roxen.get_xml_parser()->finish(data)
-					   ->add_quote_tag("!--","","--")
+  if(ltests < sizeof(Roxen.get_xml_parser()->add_quote_tag("!--","","--")
+					   ->finish(data)
 					   ->read() / "</test>") - 1)
     report_warning("Possibly XML error in testsuite.\n");
 
