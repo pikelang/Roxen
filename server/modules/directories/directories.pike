@@ -1,14 +1,13 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 // A quite complex directory module. Generates macintosh like listings.
-string cvs_version = "$Id: directories.pike,v 1.13 1997/08/14 22:18:49 grubba Exp $";
+string cvs_version = "$Id: directories.pike,v 1.14 1997/08/19 05:50:42 peter Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 /************** Generic module stuff ***************/
 int idi;
-
 
 
 class Dirnode
@@ -154,7 +153,7 @@ void create()
 	 "If one of these files is present in a directory, it will "
 	 "be returned instead of the directory listing.");
 
-  defvar("readme", 1, "Include readme files", TYPE_FLAG,
+  defvar("readme", 1, "Include readme files", TYPE_FLAG|VAR_MORE,
 	 "If set, include readme files in directory listings");
   
 #if 0
@@ -169,19 +168,19 @@ void create()
 
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
-	 "in a directory by prepending '.' or '/' to the directory name, like this: "
-	 "<a href=http://www.roxen.com//>http://www.roxen.com//</a>"
-	 ". It is _very_ useful for debugging, but some people regard it as a "
-	 "security hole.");
+	 "in a directory by prepending '.' or '/' to the directory name, like"
+	 " this: <a href=http://www.roxen.com//>http://www.roxen.com//</a>"
+	 ". It is _very_ useful for debugging, but some people regard it as a"
+	 " security hole.");
 
-  defvar ("sizes", 25, "Size of the listed filenames", TYPE_INT,
-	  "This is the width (in characters) of the filenames appearing in the directory listings");
+  defvar ("sizes", 25, "Size of the listed filenames", TYPE_INT|VAR_MORE,
+	  "This is the width (in characters) of the filenames appearing"
+	  " in the directory listings");
    
   
-  defvar("size", 1, "Include file size", TYPE_FLAG,
+  defvar("size", 1, "Include file size", TYPE_FLAG|VAR_MORE,
 	 "If set, include the size of the file in the listing.");
 }
-
 
 
 function global_describer, head, foot;
