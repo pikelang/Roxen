@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.12 1998/08/03 15:01:35 wellhard Exp $
+ * $Id: webadm.pike,v 1.13 1998/08/03 16:34:09 js Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.12 1998/08/03 15:01:35 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.13 1998/08/03 16:34:09 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -328,6 +328,7 @@ void create()
   defvar("admin_pass", "www", "Administrator password" ,TYPE_PASSWORD,
 	 "This password grants full access to all customers in"
 	 "AutoWeb.");
+  add_module_path(combine_path(__FILE__,"../"));
 }
 
 
