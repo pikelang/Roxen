@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.95 1999/03/02 23:13:04 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.96 1999/03/02 23:14:04 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -297,7 +297,7 @@ class imap_mail
 				   parse_address(token);
 				 return imap_list( ({
 				   addr->name,
-				   0
+				   0,
 				   addr->mailbox,
 				   addr->domain
 				 }) );
