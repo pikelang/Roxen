@@ -10,15 +10,15 @@
   <st-page><blockquote><br />
     <if not="" variable="form.class"><set variable="form.class" value="status"/></if>
     <if not variable="form.cancel">
-      <if variable="form.task">
+      <if variable="form.action">
 	<input type="hidden" name="class" value="&form.class;" />
-	<eval><insert file="&form.task;" nocache="" /></eval>
+	<eval><insert file="&form.action;" nocache="" /></eval>
 	<set variable="var.doing-task" value="yes"/>
       </if>
     </if>
     <if not variable="var.doing-task">
       <define container="task">
-	<font size="+1"><a href="?task=&_.fname;&amp;class=&form.class;">&_.name;</a></font><br /><blockquote>
+	<font size="+1"><a href="?action=&_.fname;&amp;class=&form.class;">&_.name;</a></font><br /><blockquote>
 	<contents/></blockquote>
       </define>
       <eval><insert file="list_tasks.pike" nocache="" /></eval>
