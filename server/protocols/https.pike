@@ -1,4 +1,4 @@
-/* $Id: https.pike,v 1.3 1999/01/14 02:22:25 neotron Exp $
+/* $Id: https.pike,v 1.4 1999/03/09 15:21:16 nisse Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -42,6 +42,14 @@ mapping parse_args(string options)
 class roxen_ssl_context {
   inherit SSL.context;
   int port; /* port number */
+
+#if 0
+  void create()
+    {
+      ::create();
+      export_mode();
+    }
+#endif
 }
 
 private object new_context(object c)
@@ -111,31 +119,70 @@ array|void real_port(array port, object cfg)
     msg = Tools.PEM.pem_msg()->init(f);
   }
 
-  part = msg->parts["RSA PRIVATE KEY"];
-  
-  if (!part || !(key = part->decoded_body()))
-    ({ report_error, throw }) ("ssl3: Private key not found.\n");
-
-  object rsa = Standards.PKCS.RSA.parse_private_key(key);
-  if (!rsa)
-    ({ report_error, throw }) ("ssl3: Private key not valid.\n");
-
   function r = Crypto.randomness.reasonably_random()->read;
 
 #ifdef SSL3_DEBUG
-  werror(sprintf("RSA key size: %d bits\n", rsa->rsa_size()));
+    werror(sprintf("https: key file contains: %O\n", indices(msg->parts)));
 #endif
-
-  if (rsa->rsa_size() > 512)
+  
+  if (part = msg->parts["RSA PRIVATE KEY"])
   {
-    /* Too large for export */
-    ctx->short_rsa = Crypto.rsa()->generate_key(512, r);
+    if (!(key = part->decoded_body()))
+      ({ report_error, throw })
+	("https: Private rsa key not valid (PEM).\n");
+      
+    object rsa = Standards.PKCS.RSA.parse_private_key(key);
+    if (!rsa)
+      ({ report_error, throw })
+	("https: Private rsa key not valid (DER).\n");
+      
+    ctx->rsa = rsa;
     
-    // ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
-  }  
+#ifdef SSL3_DEBUG
+    werror(sprintf("RSA key size: %d bits\n", rsa->rsa_size()));
+#endif
+    
+    if (rsa->rsa_size() > 512)
+    {
+      /* Too large for export */
+      ctx->short_rsa = Crypto.rsa()->generate_key(512, r);
+      
+      // ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
+    }
+    ctx->rsa_mode();
+  }
+  else if (part = msg->parts["DSA PRIVATE KEY"])
+  {
+    if (!(key = part->decoded_body()))
+      ({ report_error, throw })
+	("https: Private dsa key not valid (PEM).\n");
+      
+    object dsa = Standards.PKCS.DSA.parse_private_key(key);
+    if (!dsa)
+      ({ report_error, throw })
+	("https: Private dsa key not valid (DER).\n");
+
+#ifdef SSL3_DEBUG
+    werror(sprintf("https: Using DSA key.\n"));
+#endif
+	
+    dsa->use_random(r);
+    ctx->dsa = dsa;
+    /* Use default DH parameters */
+    ctx->dh_params = SSL.cipher.dh_parameters();
+
+    ctx->dhe_dss_mode();
+  }
+  else
+    ({ report_error, throw })
+      ("https: No private key found.\n");
+    
   ctx->certificates = ({ cert });
-  ctx->rsa = rsa;
   ctx->random = r;
+
+#if EXPORT
+  ctx->export_mode();
+#endif
 }
 
 #define CHUNK 16384
