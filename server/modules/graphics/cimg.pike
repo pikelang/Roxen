@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.37 2001/03/01 20:44:07 per Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.38 2001/03/12 10:01:09 jhs Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -18,10 +18,9 @@ mapping tagdocumentation() {
   Stdio.File file=Stdio.File();
   if(!file->open(__FILE__,"r")) return 0;
   mapping doc=compile_string("#define manual\n"+file->read())->tagdoc;
-  string imagecache=the_cache->documentation("cimg src='internal-roxen-testimage'");
-
-  doc->cimg+=imagecache;
-  doc["cimg-url"]=imagecache;
+  foreach(({ "cimg", "cimg-url" }), string tag)
+    doc[tag] += the_cache->documentation(tag +
+					 " src='/internal-roxen-testimage'");
   return doc;
 }
 
@@ -36,7 +35,7 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 <attr name='src' value='uri' required='required'><p>
  The path to the indata file.</p>
 
-<ex><cimg src='internal-roxen-testimage'/></ex>
+<ex><cimg src='/internal-roxen-testimage'/></ex>
 </attr>
 
 <attr name='data' value='imagedata'><p>
@@ -60,7 +59,7 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 <attr name='src' value='uri' required='required'><p>
  The path to the indata file.</p>
 
-<ex><cimg-url src='internal-roxen-testimage'/></ex>
+<ex><cimg-url src='/internal-roxen-testimage'/></ex>
 </attr>
 
 <attr name='data' value='imagedata'><p>
@@ -68,7 +67,7 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
  variables.</p>
 <ex type='box'>
 <emit source='sql' query='select imagedata from images where id=37'>
-<cimg data='&sql.imagedata;'/>
+<cimg-url data='&sql.imagedata;'/>
 </emit>
 </ex>
 </attr>",
@@ -226,7 +225,7 @@ class TagCImg
   {
     inherit RXML.Frame;
 
-    array do_return(RequestID id) 
+    array do_return(RequestID id)
     {
       mapping a = get_my_args( check_args( args ), id );
       args -= a;
