@@ -2,7 +2,7 @@
 /*
  * name = "BG: Create pies";
  * doc = "Business Graphics sub-module providing draw functions.";
- * $Id: polyline.pike,v 1.4 1998/03/13 01:09:40 peter Exp $
+ * $Id: polyline.pike,v 1.5 1998/06/24 16:29:45 grubba Exp $
  */
 
 #define CAP_BUTT       0
@@ -19,6 +19,38 @@
 
 
 constant PI = 3.1415926535897932384626433832795080;
+
+/*
+ * Some optimizations for the cappings.
+ *
+ * /grubba (who got tired of BG beeing so slow)
+ */
+
+static array(float) init_cap_sin_table()
+{
+  array(float) s_t = allocate(CAPSTEPS);
+
+  for (int i = 0; i < CAPSTEPS; i++) {
+    s_t[i] = sin(PI*i/(CAPSTEPS-1));
+  }
+  return(s_t);
+}
+
+static array(float) cap_sin_table = init_cap_sin_table();
+
+static array(float) init_cap_cos_table()
+{
+  array(float) c_t = allocate(CAPSTEPS);
+
+  for (int i = 0; i < CAPSTEPS; i++) {
+    c_t[i] = cos(PI*i/(CAPSTEPS-1));
+  }
+  return(c_t);
+}
+
+static array(float) cap_cos_table = init_cap_cos_table();
+
+
 
 static private array(float) xyreverse(array(float) a)
 {
@@ -70,11 +102,14 @@ array(array(float)) make_polygon_from_line(float h, array(float) coords,
 	right += ({ ox-sx-sy, oy-sy+sx });
 	break;
       case CAP_ROUND:
+	array(float) initial_cap = allocate(CAPSTEPS*2);
+	
+	int j=0;
 	for(int i=0; i<CAPSTEPS; i++) {
-	  float theta = PI*i/(CAPSTEPS-1);
-	  float sint = sin(theta), cost = cos(theta);
-	  right += ({ ox+sx*cost-sy*sint, oy+sy*cost+sx*sint });
+	  initial_cap[j++] = ox + sx*cap_cos_table[i] - sy*cap_sin_table[i];
+	  initial_cap[j++] = oy + sy*cap_cos_table[i] + sx*cap_sin_table[i];
 	}
+	right += initial_cap;
 	break;
       }
 
@@ -160,11 +195,14 @@ array(array(float)) make_polygon_from_line(float h, array(float) coords,
 	right += ({ ox-sx+sy, oy-sy-sx });
 	break;
       case CAP_ROUND:
+	array(float) end_cap = allocate(CAPSTEPS*2);
+	
+	int j=0;
 	for(int i=0; i<CAPSTEPS; i++) {
-	  float theta = PI*i/(CAPSTEPS-1);
-	  float sint = sin(theta), cost = cos(theta);
-	  right += ({ ox-sx*cost+sy*sint, oy-sy*cost-sx*sint });
+	  end_cap[j++] = ox - sx*cap_cos_table[i] + sy*cap_sin_table[i];
+	  end_cap[j++] = oy - sy*cap_cos_table[i] - sx*cap_sin_table[i];
 	}
+	right += end_cap;
 	break;
       }
 
