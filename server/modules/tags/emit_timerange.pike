@@ -4,7 +4,7 @@
 inherit "module";
 
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.15 2004/05/23 03:02:56 _cvs_stephen Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.16 2004/05/23 14:14:41 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -147,7 +147,7 @@ function(Calendar.TimeRange:Calendar.TimeRange) get_next_timerange(string Unit)
 
 void create(Configuration conf)
 {
-  DEBUG("%O->create(%O)\b", this_object(), conf);
+  DEBUG("%O->create(%O)\b", this, conf);
   if(layout)
   {
     DEBUG("\b => layout already defined.\n");
@@ -157,9 +157,9 @@ void create(Configuration conf)
   foreach(units, string Unit)
   {
     string unit = lower_case(Unit);
-    this_object()["prev_"+unit] = get_prev_timerange(Unit);
-    this_object()["this_"+unit] = get_this_timerange(unit);
-    this_object()["next_"+unit] = get_next_timerange(Unit);
+    this["prev_"+unit] = get_prev_timerange(Unit);
+    this["this_"+unit] = get_this_timerange(unit);
+    this["next_"+unit] = get_next_timerange(Unit);
   }
 
 
@@ -175,7 +175,7 @@ void create(Configuration conf)
     {
       string|function value = vals[i];
       if(sscanf(value, "o:%s", value))
-	value = [function]this_object()[value];
+	value = [function]this[value];
       if(j == last)
 	if(t2 = t1[index])
 	  if(mappingp(t2))
@@ -365,7 +365,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
 	    void|string scope, void|RXML.Type want_type)
   {
     DEBUG("%O->`[](var %O, ctx %O, scope %O, type %O)\b",
-	  this_object(), var, ctx, scope, want_type);
+	  this, var, ctx, scope, want_type);
     RequestID id = ctx->id; NOCACHE();
 
     // If we further down decide on creating a new TimeRangeValue, this will
@@ -395,7 +395,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
     if(what && stringp( what )) // it's a plain old Calendar method name
       return fetch_and_quote_value([string]what, want_type);
     DEBUG("\b => same object\n",);
-    return this_object();
+    return this;
   }
 
   //! Called to dereference the final leaf of a variable entity, i e var=="leaf"
@@ -406,7 +406,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
 		      string scope, void|RXML.Type want_type)
   {
     DEBUG("%O->rxml_var_eval(ctx %O, var %O, scope %O, type %O)\b",
-	  this_object(), ctx, var, scope, want_type);
+	  this, ctx, var, scope, want_type);
     RequestID id = ctx->id; NOCACHE();
 
     // Just as in `[], we might have arrived via some parent. In the specific
@@ -437,7 +437,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
 
   array(string) _indices(void|RXML.Context ctx, void|string scope_name)
   {
-    DEBUG("%O->_indices(%s)\b", this_object(),
+    DEBUG("%O->_indices(%s)\b", this,
 	  zero_type(ctx) ? "" : zero_type(scope_name) ?
 	  sprintf("ctx: %O, no scope", ctx) :
 	  sprintf("ctx: %O, scope %O", ctx, scope_name));

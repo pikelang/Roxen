@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.17 2004/05/22 17:08:35 _cvs_stephen Exp $";
+  "$Id: userdb_ldap.pike,v 1.18 2004/05/23 14:14:38 _cvs_dirix Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -179,7 +179,7 @@ User find_user( string u )
     pwent=cache_lookup("ldapuserdb"+query("CI_dir_server"),u);
     if (pwent) {
       DEBUGLOG("user ("+u+") retrieved from cache.");
-      return LDAPUser(this_object(), pwent);
+      return LDAPUser(this, pwent);
     }
 
   // connect to the server (if it is not already)
@@ -217,7 +217,7 @@ User find_user( string u )
   if(pwent) { 
     if (query("CI_use_cache"))
       cache_set("ldapuserdb"+query("CI_dir_server"),u,pwent);
-    return LDAPUser(this_object(), pwent);
+    return LDAPUser(this, pwent);
     } else {
     werror ("LDAPuserdb: Returning 'user unknown'.\n");
     return 0;

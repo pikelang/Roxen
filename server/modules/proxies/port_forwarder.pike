@@ -25,7 +25,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.14 2004/05/23 00:33:51 _cvs_stephen Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.15 2004/05/23 14:14:39 _cvs_dirix Exp $";
 
 
 
@@ -93,7 +93,7 @@ class Connection
   void client_closed()
   {
     WERR("Connection: Client closed connection.\n");
-    destruct(this_object());
+    destruct(this);
   }
 
   void write_more(object f)
@@ -132,7 +132,7 @@ class Connection
     WERR("Destroying connection\n");
     fdescs[0]->close();
     fdescs[1]->close();
-    mastermodule->connections-=(<this_object()>);
+    mastermodule->connections-=(<this>);
     mastermodule->total_transferred_kb+=(traffic/1024);
   }
 };
@@ -217,7 +217,7 @@ void got_connection (mixed port) {
 void connected (object out, object in)
 {
   if( out )
-    connections[ Connection(in,out,this_object()) ] = 1;
+    connections[ Connection(in,out,this) ] = 1;
   else
     report_debug("Cannot connect to "+query("host")+":"+query("r_port") );
 }

@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.72 2002/10/02 00:03:18 nilsson Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.73 2004/05/23 14:14:41 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -151,7 +151,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
       if ((cache_ent = cache_lookup (ram_cache_name, id->not_query)) &&
 	  cache_ent[0] == stat[ST_MTIME]) {
 	TRACE_ENTER (sprintf ("Evaluating RXML page %O from RAM cache",
-			      id->not_query), this_object());
+			      id->not_query), this);
 	if (cache_ent[1]->is_stale()) {
 	  cache_remove (ram_cache_name, id->not_query);
 	  TRACE_LEAVE ("RAM cache entry was stale");
@@ -164,7 +164,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 	}
       }
       TRACE_ENTER (sprintf ("Evaluating and compiling RXML page %O",
-			    id->not_query), this_object());
+			    id->not_query), this);
       RXML.Parser parser = Roxen.get_rxml_parser (id, 0, 1);
       context = parser->context;
       parser->write_end (data);
@@ -175,7 +175,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
     }
     else {
       TRACE_ENTER (sprintf ("Evaluating RXML page %O",
-			    id->not_query), this_object());
+			    id->not_query), this);
       RXML.Parser parser = Roxen.get_rxml_parser (id);
       context = parser->context;
       parser->write_end (data);

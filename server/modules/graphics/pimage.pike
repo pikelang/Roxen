@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.31 2004/05/16 23:21:19 mani Exp $";
+string cvs_version="$Id: pimage.pike,v 1.32 2004/05/23 14:14:37 _cvs_dirix Exp $";
 
 #include <module.h>
 inherit "module";
@@ -141,7 +141,7 @@ class Constructors
     {
       if(animator)
       {
-	Animation(id, this_object());
+	Animation(id, this);
 	return http_pipe_in_progress();
       }
       if(ci) { image=0; return ci; }
@@ -177,8 +177,8 @@ class Constructors
     {
       function f;
 //       trace(1);
-      if(image && (f = image[q])) return FunctionCall(f, this_object());
-      return predef::`[](this_object(),q);
+      if(image && (f = image[q])) return FunctionCall(f, this);
+      return predef::`[](this,q);
     }
 
     void create(mapping(string:object)|array (int) b, void|object i, float|void delay,

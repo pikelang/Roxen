@@ -1,6 +1,6 @@
 // This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.55 2004/05/23 12:56:02 _cvs_stephen Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.56 2004/05/23 14:14:42 _cvs_dirix Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -409,7 +409,7 @@ class TagEmitJSDynamicPopup {
 
 static mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
 {
-  SIMPLE_TRACE_ENTER (this_object(), "Filtering tag <js-filter-insert%s>",
+  SIMPLE_TRACE_ENTER (this, "Filtering tag <js-filter-insert%s>",
 		      Roxen.make_tag_attributes (args));
   JSInsert js_insert = get_jss(id)->get_insert(args->name);
     
@@ -431,7 +431,7 @@ static mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
 
 mapping filter(mapping response, RequestID id)
 {
-  SIMPLE_TRACE_ENTER (this_object(), "Filtering %O", id->not_query);
+  SIMPLE_TRACE_ENTER (this, "Filtering %O", id->not_query);
 
   if(!response) {
     SIMPLE_TRACE_LEAVE ("No response to filter");

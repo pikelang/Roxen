@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.13 2002/11/19 00:56:27 _cvs_hop Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.14 2004/05/23 14:14:38 _cvs_dirix Exp $";
 constant thread_safe=1;
 
 #define BSIZE 16384
@@ -347,7 +347,7 @@ class Location( string location,
       i += initial;
     
     conn += ({ Connection( id->my_fd, i,protocol,use_metadata,
-			   stream, this_object(),
+			   stream, this,
 			   lambda( Connection c ){
 			     int pt = time()-c->connected;
 			     conn -= ({ c });
@@ -594,9 +594,9 @@ If your web host does not allow you to access your mime types, you can request t
     fd = 0;
     stream->remove_callback( callback );
     stream->get_playlist()->remove_md_callback( md_callback );
-    _ccb( this_object() );
+    _ccb( this );
     werror("Closed from client side\n");
-//     destruct( this_object() );
+//     destruct( this );
   }
   
   static void create( Stdio.File _fd, string buffer, 

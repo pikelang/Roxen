@@ -7,7 +7,7 @@ inherit "module";
 static int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql1.pike,v 1.1 2004/05/22 17:45:30 _cvs_stephen Exp $";
+  "$Id: userdb_sql1.pike,v 1.2 2004/05/23 14:14:41 _cvs_dirix Exp $";
 
 constant module_type = MODULE_USERDB | MODULE_TAG;
 constant module_name = "Authentication: SQL extuser database";
@@ -263,9 +263,9 @@ User find_user( string s, RequestID id )
     User ucache;
     if (passwrd)
       r[0]->password=passwrd,r[0]+=(["rootuser":superuser]);
-    ucache=SqlUser( this_object(), r[0]);
+    ucache=SqlUser( this, r[0]);
     cache_set(cachemap, s, ucache, QUERY(usecache));
-    return SqlUser( this_object(), r[0]+(["ip":id->remoteaddr]));
+    return SqlUser( this, r[0]+(["ip":id->remoteaddr]));
   }
   baduser++;
 }
@@ -278,7 +278,7 @@ User find_user_from_uid( int id )
 		       " AND function IS NOT NULL "
 		       " LIMIT 1", id );
   if( sizeof( r ) )
-    return SqlUser( this_object(), r[0] );
+    return SqlUser( this, r[0] );
 }
 
 array(string) list_users( )
@@ -296,7 +296,7 @@ Group find_group( string s )
 		       " %s>'' AND nick=%s ) "
 		       " AND function IS NULL LIMIT 1", s );
   if( sizeof( r ) )
-    return SqlGroup( this_object(), r[0] );
+    return SqlGroup( this, r[0] );
 }
 
 Group find_group_from_gid( int i )
@@ -307,7 +307,7 @@ Group find_group_from_gid( int i )
 		       " AND function IS NULL "
 		       " LIMIT 1", i );
   if( sizeof( r ) )
-    return SqlGroup( this_object(), r[0] );
+    return SqlGroup( this, r[0] );
 }
 
 array(string) list_groups( )

@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version = "$Id: filesystem.pike,v 1.124 2004/05/22 11:10:30 _cvs_stephen Exp $";
+constant cvs_version = "$Id: filesystem.pike,v 1.125 2004/05/23 14:14:37 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -680,7 +680,7 @@ int contains_symlinks(string root, string path)
 
 mapping make_collection(string coll, RequestID id)
 {
-  TRACE_ENTER(sprintf("make_collection(%O)", coll), this_object());
+  TRACE_ENTER(sprintf("make_collection(%O)", coll), this);
 
   string norm_f = real_path(coll, id);
 

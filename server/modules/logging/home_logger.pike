@@ -4,7 +4,7 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-constant cvs_version="$Id: home_logger.pike,v 1.32 2002/10/22 00:24:49 nilsson Exp $";
+constant cvs_version="$Id: home_logger.pike,v 1.33 2004/05/23 14:14:39 _cvs_dirix Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -155,10 +155,10 @@ class CacheFile {
 #endif
     tmp2 = tmp = cache_head;
 
-    if(tmp == this_object()) return;
+    if(tmp == this) return;
 
-    cache_head = this_object();
-    while(tmp && (tmp->next != this_object()))
+    cache_head = this;
+    while(tmp && (tmp->next != this))
       tmp = tmp->next;
     if(tmp)
       tmp->next = next;
@@ -172,7 +172,7 @@ class CacheFile {
     object key = mutex?mutex->lock():0;
 #endif
 
-    if(this_object() == cache_head)
+    if(this == cache_head)
     {
       cache_head = next;
       tmp = next;
@@ -180,15 +180,15 @@ class CacheFile {
     else
     {
       tmp = cache_head;
-      while(tmp->next != this_object())
+      while(tmp->next != this)
 	tmp = tmp->next;
       tmp->next = next;
     }
 
-    // Now this_object() is removed.
+    // Now this is removed.
     while (tmp->next)
       tmp = tmp->next;
-    tmp->next = this_object();
+    tmp->next = this;
     next = 0;
   }
 
@@ -208,7 +208,7 @@ class CacheFile {
     mutex = mu;
 #endif
     n = num;
-    if(num > 1) next = object_program(this_object())( --num, mu );
+    if(num > 1) next = object_program(this)( --num, mu );
   }
 
   void destroy()

@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: userdb_system.pike,v 1.12 2004/05/23 02:35:25 _cvs_stephen Exp $";
+  "$Id: userdb_system.pike,v 1.13 2004/05/23 14:14:41 _cvs_dirix Exp $";
 #ifndef __NT__
 inherit UserDB;
 #endif
@@ -111,14 +111,14 @@ User find_user( string s )
 {
   mixed key = mt->lock();
   array a = getpwnam( s );
-  if( a )  return SysUser( this_object(), a );
+  if( a )  return SysUser( this, a );
 }
 
 User find_user_from_uid( int id )
 {
   mixed key = mt->lock();
   array a = getpwuid( id );
-  if( a ) return SysUser( this_object(), a );
+  if( a ) return SysUser( this, a );
 }
 
 array(string) list_users( )
@@ -138,7 +138,7 @@ Group find_group( string group )
   if( a )
   {
     call_out( m_delete, 60, group_cache, group );
-    return group_cache[ group ] = SysGroup( this_object(), a );
+    return group_cache[ group ] = SysGroup( this, a );
   }
 }
 
@@ -152,7 +152,7 @@ Group find_group_from_gid( int id  )
   if( a )
   {
     call_out( m_delete, 60, cached_groups, id );
-    return group_cache[ id ] = SysGroup( this_object(), a );
+    return group_cache[ id ] = SysGroup( this, a );
   }
 }
 

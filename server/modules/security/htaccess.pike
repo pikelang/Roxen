@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.98 2004/05/23 01:35:23 _cvs_stephen Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.99 2004/05/23 14:14:41 _cvs_dirix Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -355,8 +355,8 @@ mapping parse_and_find_htaccess( RequestID id )
 #endif /* HTACCESS_DEBUG */
     
     function fun =
-      allow_deny( roxen.compile_security_pattern( roxen_allow, this_object() ),
-		  roxen.compile_security_pattern( roxen_deny, this_object() ),
+      allow_deny( roxen.compile_security_pattern( roxen_allow, this ),
+		  roxen.compile_security_pattern( roxen_deny, this ),
 		  order );
     
     foreach( indices( m ), string s )
@@ -705,7 +705,7 @@ User find_user( string s, RequestID id )
   [groups,u2g] = parse_groupfile(uu->groupfile);
   users = parse_userfile( uu->userfile, u2g, groups );
   if( users[ s ] )
-    return HtUser(this_object(),users[s]);
+    return HtUser(this,users[s]);
 }
 
 User find_user_from_uid( int uid, RequestID|void id )
@@ -718,7 +718,7 @@ User find_user_from_uid( int uid, RequestID|void id )
   users  = parse_userfile( uu->userfile, u2g, groups );
 
   if( users[ uid ] )
-    return HtUser( this_object(), users[uid] );
+    return HtUser( this, users[uid] );
 }
 
 array(string) list_users( RequestID|void id )
@@ -735,7 +735,7 @@ Group find_group( string group, RequestID|void id )
   mapping groups = ([]), u2g = ([]);
   [groups,u2g] = parse_groupfile(uu->groupfile);
   if( groups[group] )
-    return HtGroup( this_object(), groups[group] );
+    return HtGroup( this, groups[group] );
 }
 
 Group find_group_from_gid( int gid, RequestID|void id  )
@@ -745,7 +745,7 @@ Group find_group_from_gid( int gid, RequestID|void id  )
   mapping groups = ([]), u2g = ([]);
   [groups,u2g] = parse_groupfile(uu->groupfile);
   if( groups[gid] )
-    return HtGroup( this_object(), groups[gid] );
+    return HtGroup( this, groups[gid] );
 }
 
 array(string) list_groups( RequestID|void id )

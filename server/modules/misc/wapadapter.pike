@@ -11,7 +11,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.12 2004/01/25 18:28:00 norrby Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.13 2004/05/23 14:14:39 _cvs_dirix Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG;
 constant module_name = "WAP Adapter";
@@ -89,7 +89,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id) {
       if ((cache_ent = cache_lookup (ram_cache_name, id->not_query)) &&
 	  cache_ent[0] == stat[ST_MTIME]) {
 	TRACE_ENTER (sprintf ("Evaluating RXML page %O from RAM cache",
-			      id->not_query), this_object());
+			      id->not_query), this);
 	if (cache_ent[1]->is_stale()) {
 	  cache_remove (ram_cache_name, id->not_query);
 	  TRACE_LEAVE ("RAM cache entry was stale");
@@ -102,7 +102,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id) {
 	}
       }
       TRACE_ENTER (sprintf ("Evaluating and compiling RXML page %O",
-			    id->not_query), this_object());
+			    id->not_query), this);
       RXML.Parser parser = Roxen.get_rxml_parser (id, type, 1);
       context = parser->context;
       parser->write_end (data);
@@ -112,7 +112,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id) {
     }
     else {
       TRACE_ENTER (sprintf ("Evaluating RXML page %O",
-			    id->not_query), this_object());
+			    id->not_query), this);
       RXML.Parser parser = Roxen.get_rxml_parser (id, type);
       context = parser->context;
       parser->write_end (data);

@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.57 2003/01/14 22:55:09 zino Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.58 2004/05/23 14:14:39 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -235,19 +235,19 @@ string check_variable(string name, mixed value)
    case "Filters":
      array tmp,c;
      string tmp2, res;
-     tmp = this_object()[lower_case(name)];
+     tmp = this[lower_case(name)];
      tmp2 = query(name);
 
      set(name, value);
      if(c=catch(res = init_proxies()) || res)
      {
-       this_object()[lower_case(name)] = tmp;
+       this[lower_case(name)] = tmp;
        set(name, tmp2);
        res += "Error while compiling regular expression. Syntax error: " + c[0];
      }
      else
      {
-       //this_object()[lower_case(name)] = tmp;
+       //this[lower_case(name)] = tmp;
        set(name, tmp2);
      }
   }
@@ -551,7 +551,7 @@ mapping find_file( string f, object id )
 
   // http_pipe_in_progress MUST reach id->pipe before send_result comes there
   // otherwise id->pipe and id->file will be messed up
-  Request(id, this_object(), host, port, file);
+  Request(id, this, host, port, file);
   return http_pipe_in_progress();
 }
 
@@ -785,7 +785,7 @@ class Server
  */
     // caching
 
-    if(!this_object() || !cache_is_wanted){
+    if(!this || !cache_is_wanted){
       return;
     }
 
@@ -1050,7 +1050,7 @@ class Server
     proxy = _proxy;
     server_continue = proxy->server_continue;
 
-    client->server = this_object();
+    client->server = this;
     conf = client->id->conf;
     browser_socket_buffersize = client->browser_socket_buffersize;
 
@@ -1502,7 +1502,7 @@ class Request
 
     id = _id;
 
-    id->misc->proxy_request = this_object();
+    id->misc->proxy_request = this;
 
     proxy = _proxy;
 
@@ -1584,22 +1584,22 @@ class Request
           finish(304, NOT_MODIFIED);
 	  return;
 	}
-	if(request->server->add_client(this_object()))
+	if(request->server->add_client(this))
 	{
-          //add_request(this_object());
+          //add_request(this);
           return;
 	}
       }
       */
     }
 
-    server = Server(this_object(), proxy, host, port, name);
+    server = Server(this, proxy, host, port, name);
   }
 
   int done_done;
   void finish(int|string|void http_or_last_message, string|void s)
   {
-    if(!this_object())
+    if(!this)
       return;
 
     //REQUEST_DEBUG("finish(" + http_or_last_message + "," + s + ")")

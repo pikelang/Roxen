@@ -1,5 +1,5 @@
 // This is a ChiliMoon module. Copyright © 2001, Roxen IS.
-// $Id: avg_profiling.pike,v 1.13 2004/05/22 18:11:53 _cvs_stephen Exp $
+// $Id: avg_profiling.pike,v 1.14 2004/05/23 14:14:36 _cvs_dirix Exp $
 
 inherit "module.pike";
 
@@ -29,7 +29,7 @@ void create()
 
 void dump_iter( function cb )
 {
-  foreach( roxen->configurations - ({ this_object() }),
+  foreach( roxen->configurations - ({ this }),
 	   Configuration c )
   {
     mapping p;
@@ -49,7 +49,7 @@ void dump_to_db( )
   Sql.Sql sql = DBManager.get( query( "db" ) );
 
   catch {
-    DBManager.is_module_table( this_object(), query("db"),
+    DBManager.is_module_table( this, query("db"),
 			       "average_profiling",
 			       "Average profiling information taken from "
 			       "the built-in profiling system in ChiliMoon. "
@@ -552,7 +552,7 @@ string status()
 
   res += "<font size=\"+1\"><b>Statistics</b></font>"
 	 "<table><tr><td><b>Configuration</b></td><td><b>Pages</b></td></tr>";
-  foreach( roxen->configurations - ({ this_object() }), Configuration c )
+  foreach( roxen->configurations - ({ this }), Configuration c )
     res += "<tr><td>"+c->query_name()+"</td>"
 	   "<td align=\"right\">"+sizeof(indices(c->profiling_info))+"</td></tr>";
   return res+"</table>";

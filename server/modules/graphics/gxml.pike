@@ -5,7 +5,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.26 2004/05/22 22:02:41 _cvs_stephen Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.27 2004/05/23 14:14:37 _cvs_dirix Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: GXML tag";
 constant module_doc  = "Provides the tag <tt>&lt;gxml&gt;</tt>.";
@@ -73,7 +73,7 @@ mapping find_internal( string f, RequestID id )
 
 array(RXML.Tag) gxml_find_builtin_tags(  )
 {
-  return map(glob("GXML*", indices( this_object() )), ::`[])();
+  return map(glob("GXML*", indices( this )), ::`[])();
 }
 
 

@@ -11,7 +11,7 @@ inherit "module";
 
 #include <roxen.h>
 
-constant cvs_version = "$Id: php4.pike,v 2.17 2002/11/11 01:55:36 mani Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.18 2004/05/23 14:14:40 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILE_EXTENSION;
 
@@ -169,8 +169,8 @@ class PHPScript
     }
 
     mid->my_fd->set_close_callback(done);
-    interpreter->run(command, options, this_object(), done);
-    return this_object();
+    interpreter->run(command, options, this, done);
+    return this;
   }
   int post_sent;
   string read_post(int length)

@@ -6,7 +6,7 @@ inherit "chili-module:filesystem";
 
 import Parser.XML.Tree;
 
-constant cvs_version = "$Id: webapp.pike,v 2.25 2004/05/23 01:10:37 _cvs_stephen Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.26 2004/05/23 14:14:40 _cvs_dirix Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -510,7 +510,7 @@ void start(int x, Configuration conf)
   mixed exc2 = catch {
     cls_loader = Servlet.loader(codebase);
     //conf_ctx = Servlet.conf_context(conf);
-    conf_ctx = Servlet.context(conf, this_object(), roxen_path("$VVARDIR/servlettmp/"));
+    conf_ctx = Servlet.context(conf, this, roxen_path("$VVARDIR/servlettmp/"));
   };
   
   if(exc2)
@@ -847,7 +847,7 @@ class BaseWrapper
   mixed `->(string n)
   {
     //WRAP_WERR(sprintf("`->(%s)", n));
-    mixed val = this_object()[n];
+    mixed val = this[n];
     if (!zero_type(val)) return val;
 
     //WRAP_WERR(sprintf("::`->(%s)", n));
@@ -1589,7 +1589,7 @@ class TagServlet
 	  // Remove mountpoint from the faked uri.
 	  string f = has_prefix(uri, mountpoint)? uri[sizeof(mountpoint)..]: uri;
 
-          mapping hdrs = m->call_servlet(this_object(), fake_id,
+          mapping hdrs = m->call_servlet(this, fake_id,
                                          f, args->name || "");
 
           CACHE( fake_id->misc->cacheable );

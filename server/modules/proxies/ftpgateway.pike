@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.41 2002/10/22 00:22:13 nilsson Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.42 2004/05/23 14:14:39 _cvs_dirix Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -36,7 +36,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.41 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.42 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -1377,7 +1377,7 @@ mixed|mapping find_file( string f, object id )
   if(more = is_remote_proxy(host))
     async_connect(more[0], more[1], connected_to_server,  key, id, 1);
 
-  requests[Request(id,this_object(),host,port,file, user, passw)]=1;
+  requests[Request(id,this,host,port,file, user, passw)]=1;
   log(key, "- New "+hostname(id->remoteaddr));
   return http_pipe_in_progress();
 }	

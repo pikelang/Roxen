@@ -8,7 +8,7 @@ inherit "module";
 int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql.pike,v 1.10 2002/10/23 23:40:13 nilsson Exp $";
+  "$Id: userdb_sql.pike,v 1.11 2004/05/23 14:14:41 _cvs_dirix Exp $";
 
 constant module_name = "Authentication: SQL user database";
 constant module_doc  = ("This module implements a user database via "
@@ -133,7 +133,7 @@ User find_user( string s )
   if(!inited) return 0;
   array r = sql_query( "SELECT * FROM users WHERE name=%s", s );
   if( sizeof( r ) )
-    return SqlUser( this_object(), r[0] );
+    return SqlUser( this, r[0] );
 }
 
 User find_user_from_uid( int id )
@@ -141,7 +141,7 @@ User find_user_from_uid( int id )
   if(!inited) return 0;
   array r = sql_query( "SELECT * FROM users WHERE uid=%d", id );
   if( sizeof( r ) )
-    return SqlUser( this_object(), r[0] );
+    return SqlUser( this, r[0] );
 }
 
 array(string) list_users( )
@@ -155,7 +155,7 @@ Group find_group( string s )
   if(!inited) return 0;
   array r = sql_query( "SELECT * FROM groups WHERE name=%s", s );
   if( sizeof( r ) )
-    return SqlGroup( this_object(), r[0] );
+    return SqlGroup( this, r[0] );
 }
 
 Group find_group_from_gid( int i )
@@ -163,7 +163,7 @@ Group find_group_from_gid( int i )
   if(!inited) return 0;
   array r = sql_query( "SELECT * FROM groups WHERE gid=%d", i );
   if( sizeof( r ) )
-    return SqlGroup( this_object(), r[0] );
+    return SqlGroup( this, r[0] );
 }
 
 array(string) list_groups( )

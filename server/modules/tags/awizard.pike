@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.28 2004/05/23 01:54:05 _cvs_stephen Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.29 2004/05/23 14:14:41 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";
@@ -247,7 +247,7 @@ class Page
     if(!what) return "";
     id->misc->offset = line_offset;
 
-    id->misc->awizard_page = this_object();
+    id->misc->awizard_page = this;
     string res = parse_rxml(what, id);
     m_delete (id->misc, "awizard_page"); // Assuming wizards can't be nested..
     return res;
@@ -377,7 +377,7 @@ class AWizard
     m_delete(v, "_____state");
     id->misc->next_possible = ((int)v->_page_num) < (sizeof(pages)-1);
     id->misc->prev_possible = ((int)v->_page_num) > 0;
-    id->misc->_awizard_object = this_object();
+    id->misc->_awizard_object = this;
     foreach(glob("goto_*", indices(v)), string q)
     {
       goto = q;
@@ -522,7 +522,7 @@ mixed container_awizard(string tagname, mapping arguments,
   mixed res;
 
   if(!wizards[id->not_query])
-    wizards[ id->not_query ]=AWizard(arguments, contents, id, this_object() );
+    wizards[ id->not_query ]=AWizard(arguments, contents, id, this );
   else
     wizards[ id->not_query ]->update( contents, id );
 

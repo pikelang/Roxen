@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.62 2004/05/20 23:07:02 _cvs_stephen Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.63 2004/05/23 14:14:40 _cvs_dirix Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -278,7 +278,7 @@ class Wrapper
   {
     DWERR("Wrapper::destroy()");
 
-    catch(done_cb(this_object()));
+    catch(done_cb(this));
     catch(tofd->set_blocking());
     catch(fromfd->set_blocking());
     catch(tofd->close());
@@ -606,7 +606,7 @@ class NTOpenCommand
                                          }); 
     }
     expiry = time(1)+600;
-    nt_opencommands[ext]=this_object();
+    nt_opencommands[ext]=this;
   }
 }
 #endif
@@ -806,7 +806,7 @@ class CGIScript
       error("Failed to create CGI process.\n");
     if(query("kill_call_out"))
       call_out( kill_script, query("kill_call_out")*60 );
-    return this_object();
+    return this;
   }
 
 

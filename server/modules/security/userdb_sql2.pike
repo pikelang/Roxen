@@ -10,7 +10,7 @@
 //
 
 constant cvs_version =
- "$Id: userdb_sql2.pike,v 1.1 2004/05/22 17:45:30 _cvs_stephen Exp $";
+ "$Id: userdb_sql2.pike,v 1.2 2004/05/23 14:14:41 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -304,9 +304,9 @@ User find_user( string s, RequestID id )
     User ucache;
     if (passwrd)
       r[0]->password=passwrd,r[0]+=(["rootuser":superuser]);
-    ucache=SqlUser( this_object(), r[0]);
+    ucache=SqlUser( this, r[0]);
     cache_set(cachemap, s, ucache, usecache);
-    return SqlUser( this_object(), id?r[0]+(["ip":id->remoteaddr]):r[0]);
+    return SqlUser( this, id?r[0]+(["ip":id->remoteaddr]):r[0]);
   }
   baduser++;
 }
@@ -319,7 +319,7 @@ User find_user_from_uid( int id )
 		       "FROM namedata WHERE id=%d AND function IS NOT NULL "
 		       "LIMIT 1", id );
   if( sizeof( r ) )
-    return SqlUser( this_object(), r[0] );
+    return SqlUser( this, r[0] );
 }
 
 array(string) list_users( )
@@ -341,7 +341,7 @@ Group find_group( string s )
 		       "WHERE ( parent=%d )"
 		       " AND function IS NULL LIMIT 1", (int)s );
   if( sizeof( r ) )
-    return SqlGroup( this_object(), r[0] );
+    return SqlGroup( this, r[0] );
 }
 
 Group find_group_from_gid( int i )
@@ -351,7 +351,7 @@ Group find_group_from_gid( int i )
   array r = mdb->query( "SELECT id,parent,owner,nick FROM namedata "
 		       "WHERE id=%d AND function IS NULL LIMIT 1", i );
   if( sizeof( r ) )
-    return SqlGroup( this_object(), r[0] );
+    return SqlGroup( this, r[0] );
 }
 
 array(string) list_groups( )

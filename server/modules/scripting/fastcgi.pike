@@ -2,7 +2,7 @@
 
 inherit "chili-module:cgi": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.13 2002/11/14 05:02:09 mani Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.14 2004/05/23 14:14:40 _cvs_dirix Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -189,7 +189,7 @@ class FCGIChannel
       if( fd )
       {
         if( close_callback )
-          close_callback( this_object() );
+          close_callback( this );
         catch(fd->close());
         foreach( values( stream )-({0}), mapping q )
           foreach( values( q ), mapping q )
@@ -478,7 +478,7 @@ class Stream
       if( close_callback_2 )
       {
         closed = 1;
-        close_callback_2( this_object() );
+        close_callback_2( this );
       }
   }
 
@@ -507,7 +507,7 @@ class Stream
   {
     close_callback_2 = q;
     if( closed )
-      close_callback_2( this_object() );
+      close_callback_2( this );
   }
 
   void set_blocking()
@@ -653,7 +653,7 @@ class FCGIRun
   {
     parent->free_requestid( rid );
     if( done_callback )
-      done_callback( this_object() );
+      done_callback( this );
     is_done = 1;
   }
 
@@ -999,13 +999,13 @@ class CGIScript
 
   CGIScript run()
   {
-    fcgi = do_fcgiscript( this_object() );
+    fcgi = do_fcgiscript( this );
     fcgi->set_done_callback( done );
     ready = 1;
     stdin = fcgi->stdin;
     stdout= fcgi->stdout;
     pid   = fcgi->fake_pid();
-    return this_object( );
+    return this;
   }
 }
 

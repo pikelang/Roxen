@@ -1,5 +1,5 @@
 <name>Logging modules</name>
 <doc>
- Modules that alter the logging process in Roxen, either disabling
+ Modules that alter the logging process in ChiliMoon, either disabling
  logging for certain requests or writing to more than the default log.
 </doc>
