@@ -1,6 +1,7 @@
 inherit "roxenlib";
 #include <config_interface.h>
 #include <module.h>
+#include <module_constants.h>
 
 // Class is the name of the directory.
 array(string) class_description( string d, RequestID id )
@@ -385,10 +386,12 @@ mixed do_it( RequestID id )
   if( !conf->inited )
     conf->enable_all_modules();
 
+  // FIXME! 
   foreach( id->variables->module_to_add/"\0", string mod ) {
     if (RoxenModule m = conf->enable_module( mod )) {
       mod = conf->otomod[m];
       last_module = replace(mod, "#", "!" );
+      /*
       if (id->variables->mod_init_vars) {
 	foreach (indices (m->variables), string var)
 	  roxen.change_configurable (m->variables[var], VAR_INITIAL, 0);
@@ -407,6 +410,7 @@ mixed do_it( RequestID id )
 	    got_initial = 1;
 	    initial_modules += ({ last_module });
 	  }
+    */
     }
     else last_module = "";
   }
