@@ -1,11 +1,9 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.32 2001/05/16 10:26:17 per Exp $";
-//constant thread_safe=1;
+constant cvs_version = "$Id: javascript_support.pike,v 1.33 2001/05/16 19:57:46 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 #define INT_TAG "_js_quote"
 
@@ -29,26 +27,26 @@ static private mapping(string:function(string,string,object:string)) callbacks =
 //  Mapping of serverside exludes.
 static private mapping(string:string) externals;
 
-string|array(string) query_provides()
+string query_provides()
 {
   return "javascript_support";
 }
 
 
-mapping find_internal(string f, object id)
+mapping find_internal(string f, RequestID id)
 {
   //  On-the-fly generation using callback function
   if (sscanf(f, "__cb/%s/%s", string token, string path) == 2) {
     function cb = callbacks[token];
-    return http_string_answer((cb && cb(token, path, id)) || "",
-			      "application/x-javascript");
+    return Roxen.http_string_answer((cb && cb(token, path, id)) || "",
+				    "application/x-javascript");
   }
   
   if (sscanf(f, "__ex/%s", string key) == 1) {
     mixed error = catch {key = MIME.decode_base64(key);};
     if(error || !externals[key])
       return 0;
-    return http_string_answer(externals[key], "application/x-javascript");
+    return Roxen.http_string_answer(externals[key], "application/x-javascript");
   }
   
   string file = combine_path(__FILE__, "../scripts", (f-".."));
@@ -178,12 +176,12 @@ string make_container_unquoted(string name, mapping args, string contents)
   return "<"+name+" " + make_args_unquoted(args) + ">"+contents+"</"+name+">";
 }
 
-int jssp(object id)
+int jssp(RequestID id)
 {
   return !!id->misc->javascript_support;
 }
 
-JSSupport get_jss(object id)
+JSSupport get_jss(RequestID id)
 {
   if(!id->misc->javascript_support)
     id->misc->javascript_support = JSSupport();
@@ -241,7 +239,7 @@ string container_js_popup(string name, mapping args, string contents, object id)
   
   get_jss(id)->get_insert("div")->
     add("<div id='"+popupname+"'>\n"+
-	parse_rxml(contents, id)+"</div>\n");
+	Roxen.parse_rxml(contents, id)+"</div>\n");
   
   id->misc->_popupparent = old_pparent;
   id->misc->_popuplevel--;
@@ -256,22 +254,38 @@ string container_js_popup(string name, mapping args, string contents, object id)
   return make_container_unquoted("a", largs, args->label);
 }
 
-static private
-string container_js_include(string name, mapping args, string contents,
-			    object id)
-{
-  if(!id->supports["javascript1.2"] &&
-     id->client_var && (float)(id->client_var->javascript) < 1.2)
-    return "<!-- Client do not support Javascript 1.2 -->";;
-  return ("<script language=\"javascript\" src=\""+
-	  query_internal_location()+args->file+"\"></script>");
+class TagJSInclude {
+  inherit RXML.Tag;
+  constant name = "js-include";
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(!id->supports["javascript1.2"] &&
+	 id->client_var && (float)(id->client_var->javascript) < 1.2)
+	result = "<!-- Client do not support Javascript 1.2 -->"; // Throw an run_error instead?
+      else
+	result = "<script language=\"javascript\" src=\"" +
+	  query_absolute_internal_location(id) + args->file + "\"></script>";
+      return 0;
+    }
+  }
 }
 
-static private
-string container_js_insert(string name, mapping args, string contents, object id)
-{
-  get_jss(id); // Signal that filter is necessary.
-  return make_tag("js-filter-insert", args);
+class TagJSInsert {
+  inherit RXML.Tag;
+  constant name = "js-insert";
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      get_jss(id); // Signal that filter is necessary.
+      result = Roxen.make_tag("js-filter-insert", args);
+      return 0;
+    }
+  }
 }
 
 class TagJsExternal
@@ -288,7 +302,7 @@ class TagJsExternal
       if(!externals[key])
 	externals[key] = c_js_quote("", ([]), content);
       return ({ "<script language=\"javascript\" src=\""+
-		query_internal_location()+"__ex/"+
+		query_absolute_internal_location(id)+"__ex/"+
 		MIME.encode_base64(key)+"\"></script>" });
     }
   }
@@ -339,7 +353,7 @@ class TagEmitJsDynamicPopup {
   }
 }
 
-mixed filter(mapping response, RequestID id)
+mapping filter(mapping response, RequestID id)
 {
   mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
   {
@@ -375,8 +389,6 @@ mapping query_container_callers()
 {
   return ([ "js-popup"       : container_js_popup,
 	    "js-write"       : container_js_write,
-	    "js-include"     : container_js_include,
-	    "js-insert"      : container_js_insert
   ]);
 }
 
