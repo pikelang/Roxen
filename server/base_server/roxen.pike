@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.613 2001/01/29 07:16:51 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.614 2001/01/29 09:05:44 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2269,7 +2269,7 @@ class ImageCache
   //! you give the <ref>store()</ref> method, but its final argument
   //! will be the RequestID object.
   {
-    db = connect_to_my_mysql( 0, "cache" );
+    db = master()->resolv( "DBManager.get" )( "local" );
     name = id;
     draw_function = draw_func;
     catch(setup_tables());
@@ -2327,7 +2327,9 @@ class ArgCache
   //! Instantiates an argument cache of your own.
   {
     name = _name;
-    db = connect_to_my_mysql( 0, "cache" );
+    // Delay DBManager resolving to before the 'roxen' object is
+    // compiled.
+    db = master()->resolv( "DBManager.get" )( "shared" );
     setup_table( );
   }
 
@@ -2503,8 +2505,8 @@ void create()
   add_constant( "roxen", this_object());
   //add_constant( "roxen.decode_charset", decode_charset);
 
-  add_constant( "DBManager", ((object)"base_server/dbs.pike") );
-  dump( "base_server/dbs.pike");
+//   add_constant( "DBManager", ((object)"base_server/dbs.pike") );
+  dump( "etc/modules/DBManager.pmod");
 
   add_constant( "RoxenModule", RoxenModule);
   add_constant( "ModuleInfo", ModuleInfo );
@@ -2516,13 +2518,14 @@ void create()
   add_constant( "roxen.locale", locale );
   //add_constant( "roxen.ImageCache", ImageCache );
 
-//   int s = gethrtime();
+//int s = gethrtime();
   _configuration = (program)"configuration";
   dump( "base_server/configuration.pike" );
   dump( "base_server/rxmlhelp.pike" );
-  add_constant( "Configuration", _configuration );
 
-//   report_debug( "[Configuration: %.2fms] ", (gethrtime()-s)/1000.0);
+  // Override the one from prototypes.pike
+  add_constant( "Configuration", _configuration );
+//report_debug( "[Configuration: %.2fms] ", (gethrtime()-s)/1000.0);
 }
 
 mixed get_locale( )
