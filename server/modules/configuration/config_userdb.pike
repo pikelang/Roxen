@@ -334,7 +334,7 @@ class User
     Password:   <input type=password name=PPPpassword value=''>
        Again:   <input type=password name=PPPpassword2 value=''>
      Crypted:   <input name=PPPc_password value='"+password+"'>  </pre></td>"
-      "<td><img src=\"/internal-roxen-unit\" height=5><br>\n\n";
+      "<td><img src=\"/internal-roxen-unit\" height=5 /><br />\n\n";
 
     foreach( possible_permissions, string perm )
     {
@@ -364,7 +364,7 @@ class User
       }
     }
     return replace(form,"PPP",varpath)+
-      "<br><input type=image border=0 alt=' Set ' value=' Set ' src='"+set_src+"'>"
+      "<br /><input type=image border=0 alt=' Set ' value=' Set ' src='"+set_src+"' />"
       "</td></tr></table>";
   }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.11 2000/04/05 16:55:10 js Exp $
+ * $Id: update.pike,v 1.12 2000/04/05 23:43:18 per Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -163,30 +163,30 @@ string tag_update_sidemenu(string t, mapping m, RequestID id)
 {
   string ret =
     "<gbutton href=\"update.html?update_list=1\" width=150 "
-    "bgcolor=&usr.fade1;>Update List</gbutton><br><br>";
+    "bgcolor=&usr.fade1;>Update List</gbutton><br /><br />";
 
   foreach(menu, array entry)
   {
-    ret += "<gbutton width=150 ";
+    ret += "<gbutton width='150' ";
     if((id->variables->category||(id->variables->uninstall||""))==entry[1])
     {
-      ret += "bgcolor=&usr.left-selbuttonbg; "+
-	" icon_src=&usr.selected-indicator; ";
+      ret += "bgcolor='&usr.left-selbuttonbg;' "+
+	" icon_src='&usr.selected-indicator;' ";
     }
     else
-      ret += "bgcolor=&usr.fade1; ";
-    ret += "icon_align=left preparse href=\"update.html?category="+
-      entry[1]+"\">"+entry[0]+"</gbutton><br>";
+      ret += "bgcolor='&usr.fade1;' ";
+    ret += "icon_align='left' preparse href=\"update.html?category="+
+      entry[1]+"\">"+entry[0]+"</gbutton><br />";
   }
 
-  ret += "<br><gbutton href=\"update.html?uninstall=1\" width=150 ";
+  ret += "<br /><gbutton href=\"update.html?uninstall=1\" width='150' ";
   if(id->variables->uninstall)
-    ret += "bgcolor=&usr.left-selbuttonbg; "+
-      " icon_src=&usr.selected-indicator; ";
+    ret += "bgcolor='&usr.left-selbuttonbg;' "+
+      " icon_src='&usr.selected-indicator;' ";
   else
-      ret += "bgcolor=&usr.fade1; ";
+      ret += "bgcolor='&usr.fade1;' ";
   
-  ret+="icon_align=left>Uninstall packages</gbutton>";
+  ret+="icon_align='left'>Uninstall packages</gbutton>";
   return ret;
 }
 
@@ -408,8 +408,8 @@ string unpack_tarfile(string tarfile)
   if(err=catch(res=low_unpack_tarfile(fs, "", errors)))
     throw(err);
   if(errors->found)
-    throw(res*"<br>");
-  return res*"<br>";
+    throw(res*"<br />");
+  return res*"<br />";
 }
 
 
@@ -426,7 +426,7 @@ string tag_update_install_package(string t, mapping m, RequestID id)
   mixed err;
   string res;
   if(err=catch(res=unpack_tarfile(roxen_path(QUERY(pkgdir))+(int)m->package+".tar")))
-    return err+"<br><br><b>Could not install package. Fix the problems above and try again.</b>";
+    return err+"<br /><br /><b>Could not install package. Fix the problems above and try again.</b>";
 
   id->variables[m->variable]="1";
   installed[m->package]=1;
@@ -434,7 +434,7 @@ string tag_update_install_package(string t, mapping m, RequestID id)
 
   Stdio.recursive_rm(roxen_path("$VVARDIR/precompiled/"));
   
-  return res+"<br><br><b>Package installed completely.</b>";
+  return res+"<br /><br /><b>Package installed completely.</b>";
 }
 
 array(mapping) tarfile_contents(string|object tarfile, void|string dir)
