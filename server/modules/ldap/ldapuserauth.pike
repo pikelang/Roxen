@@ -51,10 +51,12 @@
   1999-12-14 v1.13	- fixed bug in required atrribute part
 			- a litle optimalisation of cached values
   2000-02-13 v1.14	- added roaming auth mode
+  2000-03-27 v1.15	- fixed settings of 'rpwd' for "roaming" mode
+			  (Thanx Turbo Fredriksson!)
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.14 2000/02/13 04:54:26 hop Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.15 2000/03/27 14:17:31 hop Exp $";
 constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
@@ -435,7 +437,7 @@ string *userinfo (string u,mixed p) {
 	    else
 		rpwd = tmp[QUERY(CI_default_attrname_upw)][0];
 	}
-	if(!access_mode_is_user())	// mode is 'user'
+	if(!access_mode_is_user_or_roaming())	// mode is 'user'
 	    rpwd = stringp(p) ? p : "{x-hop}*";
 	if(!access_mode_is_roaming()) {	// mode is 'roaming'
 	  // OK, now we'll try to bind ...
