@@ -50,8 +50,11 @@ array(string) list_languages(string project) {
     s_patt=pattern[sizeof(dirbase)..search(pattern, "/", sizeof(dirbase))-1];
   s_patt=replace(s_patt, "%L", "%3s");
 
+  array dirlist = get_dir(dirbase);
+  if(!dirlist)
+    return ({});
   array list=({});
-  foreach(get_dir(dirbase), string path) {
+  foreach(dirlist, string path) {
     string lang;
     if(!sscanf(path, s_patt, lang)) continue;
     if(!file_stat(replace(pattern, "%L", lang))) continue;
@@ -121,26 +124,67 @@ object get_object(string project, string lang) {
   string filename=replace(projects[project],
 			  ({ "%L", "%%" }),
 			  ({ lang, "%" }) );
-  Stdio.File file=Stdio.File();
+  Stdio.File file=Stdio.FILE();
   if(!(file->open(filename, "r")))
     return 0;
+  string line=file->gets();
   string data=file->read();
   file->close();
+  if(!line)
+    return 0;
+
+  function(string:string) decode=0;
+  sscanf(line, "%*sencoding=\"%s\"",string encoding);
+  if(encoding && encoding!="") {
+    switch(lower_case(encoding)) 
+      {
+      case "iso-8859-1":
+	// No decode needed
+	break;
+
+      case "utf-8": case "utf8":
+	decode = 
+	  lambda(string s) {
+	    return utf8_to_string(s);
+	  };
+	break;
+	
+      case "utf-16": case "utf16":
+      case "unicode":
+	decode = 
+	  lambda(string s) {
+	    return unicode_to_string(s);
+	  };
+	break;
+	
+      default:
+	object dec;
+	if(catch(dec = Locale.Charset.decoder(encoding))) {
+	  werror("\n* Warning: unknown encoding %O in %O\n",
+		 encoding, filename);
+	  break;
+	}
+	decode =
+	  lambda(string s) {
+	    return dec->clear()->feed(s)->drain();
+	  };
+      }
+  } else
+    data = line+data;
+
+  if(decode && catch( data = decode(data) )) {
+    werror("\n* Warning: unable to decode %O from %O\n",
+	   filename, encoding);
+    return 0;
+  }
 
   mapping(string:string) bindings=([]);
   mapping(string:function) functions=([]);
-  function(string:string) decode=0;
   function t_tag = lambda(string t, mapping m, string c) {
 		     if(m->id && m->id!="" && c!="") {
 		       // Replace encoded entities
 		       c = replace(c, ({"&lt;","&gt;","&amp;"}),
 		                      ({ "<",   ">",    "&"  }));
-		       if(decode && catch( c = decode(c) ))
-			 // FIXME logging of decoding error?
-			 return 0;
-#ifdef LOCALE_DEBUG
-		       c="["+m->id+":]"+c;
-#endif
 		       bindings[m->id]=c;
 		     }
 		     return 0;
@@ -149,15 +193,11 @@ object get_object(string project, string lang) {
 			// Replace encoded entities
 			c = replace(c, ({"&lt;","&gt;","&amp;"}),
 				       ({ "<",   ">",    "&"  }));
-			if(decode && catch( c = decode(c) ))
-			  // FIXME logging of decoding error?
-			  return 0;
-			mixed err;
 			object gazonk;
-			err = catch{ gazonk=compile_string("class gazonk {"+
-							   c+"}")->gazonk(); };
-			if(err) {
-			  // FIXME logging of error?
+			if(catch( gazonk=compile_string("class gazonk {"+
+							c+"}")->gazonk() )) {
+			  werror("\n* Warning: could not compile code in "
+				 "<pike> in %O\n", filename);
 			  return 0;
 			}
 			foreach(indices(gazonk), string name)
@@ -171,46 +211,6 @@ object get_object(string project, string lang) {
     add_containers( ([ "t"         : t_tag,
 		       "translate" : t_tag,
 		       "pike"      : pike_tag, ]) );
-  xml_parser->
-    add_quote_tag("?xml",
-		    lambda(object foo, string c) {
-		      sscanf(c,"%*sencoding=\"%s\"",string encoding);
-		      if(encoding && encoding!="") {
-			switch(lower_case(encoding)) 
-			  {
-			  case "utf-8": case "utf8":
-			    decode = 
-			      lambda(string s) {
-				return utf8_to_string(s);
-			      };
-			    break;
-
-			  case "utf-16": case "utf16":
-			  case "unicode":
-			    decode = 
-			      lambda(string s) {
-				return unicode_to_string(s);
-			      };
-			    break;
-
-			  default:
-			    object dec;
-			    if(catch(dec = Locale.Charset.decoder(encoding))) {
-			      // FIXME logging of encoding error?
-			      break;
-			    }
-			    decode =
-			      lambda(string s) {
-				return dec->clear()->feed(s)->drain();
-			      };
-			    break;
-
-			  case "iso-8859-1":
-			  // No decode needed
-			  }
-		      }
-		      return 0;
-		    },"?");
   xml_parser->feed(data)->finish();
 
 #ifdef LOCALE_DEBUG
@@ -237,11 +237,15 @@ string translate(LocaleObject locale_object, string id,
   if(locale_object) {
     locale_object->timestamp=time(1);
     string t_str = locale_object->translate(id);
+#ifdef LOCALE_DEBUG
+    if(t_str) t_str="("+id+":)"+t_str;
+#endif
     if(t_str) return t_str;
   }
 #ifdef LOCALE_DEBUG
   else
     werror("\nlocale.translate: no object, only %O (%O)\n", id, str);
+  str="("+id+")"+str;
 #endif
   return str;
 }
