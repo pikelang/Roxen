@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.145 2000/07/26 14:52:30 jhs Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.146 2000/07/26 15:38:46 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -2939,5 +2939,24 @@ Sets a variable.</short>
 <attr name='expr' value='expression'>
  Choose what expression to test.
 </attr>",
+
+"emit#fonts":({ #"<desc plugin><short>
+ Prints available fonts.</short> This plugin makes it easy to list all
+ available fonts in Roxen WebServer.
+</desc>",
+		([
+"&_.name;":#"<desc ent>
+ Returns a fontname.
+
+<p>This example will print all available fonts in gtext-style.</p>
+<ex type='box'>
+ <emit source='fonts'>
+   &_.name;:<br />
+   <gtext font='&_.name;'>Full speed ahead, Mr Cohen!</gtext><br />
+ </emit>
+</ex>
+</desc>"
+		])
+	     }),
     ]);
 #endif
