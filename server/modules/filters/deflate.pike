@@ -9,10 +9,11 @@
 //
 
 constant cvs_version =
- "$Id: deflate.pike,v 1.5 2004/06/19 22:50:28 mani Exp $";
+ "$Id: deflate.pike,v 1.6 2004/06/19 23:17:42 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
+#include <request_trace.h>
 inherit "module";
 
 constant module_type = MODULE_FILTER;
