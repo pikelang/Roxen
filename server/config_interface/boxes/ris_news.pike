@@ -7,8 +7,8 @@
 constant box      = "small";
 constant box_initial = 1;
 
-String box_name = _(263,"News from www.roxen.com");
-String box_doc  = _(281,"The news headlines from www.roxen.com");
+LocaleString box_name = _(263,"News from www.roxen.com");
+LocaleString box_doc  = _(281,"The news headlines from www.roxen.com");
 
 string isodate( string date )
 {

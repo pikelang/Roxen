@@ -7,8 +7,8 @@
 constant box      = "large";
 constant box_initial = 1;
 
-String box_name = _(367,"Server status");
-String box_doc  = _(368,"Various global server statistics");
+LocaleString box_name = _(367,"Server status");
+LocaleString box_doc  = _(368,"Various global server statistics");
 
 string add_row( string item, string value ) {
   return "<tr><td>" + item + ":</td><td>" + value + "</td></tr>";
@@ -23,7 +23,9 @@ string parse( RequestID id )
   contents += add_row( _(370, "Server uptime"),
 		      Roxen.msectos( dt*1000 ));
   array ru;
+#pike 7.4
   if(!catch(ru=rusage())) {
+#pike __REAL_VERSION__
     int tmp;
     if(ru[0])
       tmp = ru[0]/(time() - roxen->start_time+1);

@@ -9,8 +9,8 @@ constant box_initial = 1;
 
 constant box_position = -1;
 
-String box_name = _(365,"Welcome message");
-String box_doc  = _(366,"Roxen welcome message and news");
+LocaleString box_name = _(365,"Welcome message");
+LocaleString box_doc  = _(366,"Roxen welcome message and news");
 
 string parse( RequestID id )
 {

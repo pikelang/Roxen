@@ -7,8 +7,8 @@
 constant box      = "large";
 constant box_initial = 0;
 
-String box_name = _(232,"Crunch activity");
-String box_doc  = _(262,"Recently changed Crunch reports");
+LocaleString box_name = _(232,"Crunch activity");
+LocaleString box_doc  = _(262,"Recently changed Crunch reports");
 
 class Fetcher
 {

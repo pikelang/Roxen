@@ -7,8 +7,8 @@
 constant box      = "small";
 constant box_initial = 0;
 
-String box_name = _(195,"Community articles");
-String box_doc  = _(231,"Most recently published community articles");
+LocaleString box_name = _(195,"Community articles");
+LocaleString box_doc  = _(231,"Most recently published community articles");
 
 string parse( RequestID id )
 {
