@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.55 2000/01/31 02:11:46 per Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.56 2000/01/31 16:36:37 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -166,7 +166,7 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 "catch":#"<desc cont>
  Evaluates the RXML code, and, if nothing goes wrong, returns the
  parsed contents. If something does go wrong, the error message is
- returned instead. See also <tag><ref type=cont>throw</ref></tag>.
+ returned instead. See also <tag><ref type=tag>throw</ref></tag>.
 </desc>",
 
 "configimage":#"<desc tag>
@@ -677,7 +677,7 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  Arguments prefixed with \"add\" or \"drop\" are treated as prestate
  toggles, which are added or removed, respectively, from the current
  set of prestates in the URL in the redirect header (see also <tag
- <ref type=cont>apre</ref></tag>). Note that this only works when the
+ <ref type=tag>apre</ref></tag>). Note that this only works when the
  to=... URL is absolute, i.e. begins with a \"/\", otherwise these
  state toggles have no effect.",
 
@@ -807,8 +807,8 @@ Sets a variable. The variable attribute is required.
 
  If none of the above attributes are specified, the variable is unset.
  If debug is currently on, more specific debug information is provided
- if the operation failed. See also: <tag><ref
- type=tag>append</ref></tag> and <tag><ref type=tag>debug</ref></tag>",
+ if the operation failed. See also: <tag><ref type=tag>append</ref></tag>
+ and <tag><ref type=tag>debug</ref></tag>",
 
 "set-cookie":#"<desc tag>
  Sets a cookie that will be stored by the user's browser. This is a
@@ -862,8 +862,8 @@ Adds a cookie named \"name\" with the value \"value\".
 </attr>
 
  If persistent is specified; the cookie will be persistent until year
- 2038, otherwise, the specified delays are used, just as for <tag><ref
- type=tag>expire-time</ref></tag>.
+ 2038, otherwise, the specified delays are used, just as for
+ <tag><ref type=tag>expire-time</ref></tag>.
 
  Note that the change of a cookie will not take effect until the
  next page load.",
@@ -975,7 +975,7 @@ Adds a cookie named \"name\" with the value \"value\".
     ]);
 #endif
 
-constant permitted = "123456789xabcdefnt\"XABCDEFlo<>=0-*+/%%|()"/"";
+constant permitted = "123456789.xabcdefint\"XABCDEFlo<>=0-*+/%%|()"/"";
 
 string sexpr_eval(string what)
 {
@@ -1012,11 +1012,19 @@ class Entity_page_language {
 }
 
 class Entity_page_scope {
-  string rxml_var_eval(RXML.Context c) { return c->current_scope()||""; }
+  string rxml_var_eval(RXML.Context c) { return sprintf("%O", c->current_scope() ); }
 }
 
 class Entity_page_filesize {
   int rxml_var_eval(RXML.Context c) { return c->id->misc->defines[" _stat"]?c->id->misc->defines[" _stat"][1]:-4; }
+}
+
+//class Entity_page_line {
+//  int rxml_var_eval(RXML.Context c) { return c->id->misc->line; }
+//}
+
+class Entity_page_self {
+  string rxml_var_eval(RXML.Context c) { return (c->id->not_query/"/")[-1]; }
 }
 
 mapping page_scope=(["realfile":Entity_page_realfile(),
@@ -1026,7 +1034,9 @@ mapping page_scope=(["realfile":Entity_page_realfile(),
 		     "last-true":Entity_page_last_true(),
 		     "language":Entity_page_language(),
 		     "scope":Entity_page_scope(),
-		     "filesize":Entity_page_filesize() ]);
+		     "filesize":Entity_page_filesize(),
+		     //		     "line":Entity_page_line(),
+		     "self":Entity_page_self()]);
 
 class Entity_client_referrer {
   string rxml_var_eval(RXML.Context c) {
@@ -1099,64 +1109,60 @@ void set_entities(RXML.Context c) {
 
 // ------------------- Tags ------------------------
 
-string tag_roxen_automatic_charset_variable( string t, mapping m,
-                                             RequestID id )
-{
-  return make_tag( "input",
-                   ([
-                     "type":"hidden",
-                     "name":"magic_roxen_automatic_charset_variable",
-                     "value":"едц",
-                   ]) );
-}
+class TagRoxenACV {
+  inherit RXML.Tag;
+  constant name = "roxen-automatic-charset-variable";
+  constant flags = 0;
 
-string tag_append( string tag, mapping m, RequestID id )
-{
-  if (m->variable)
-  {
-    RXML.Context context=RXML.get_context();
-    mixed value=context->user_get_var(m->variable, m->scope);
-    if (m->value) {
-      // Append a value to an entity variable.
-      if (value)
-	value+=m->value;
-      else
-	value=m->value;
-      context->user_set_var(m->variable, value, m->scope);
-      return "";
-    }
-    if (m->from) {
-      // Append the value of another entity variable.
-      mixed from=context->user_get_var(m->from, m->scope);
-      if(!from) return rxml_error(tag, "From variable doesn't exist.", id);
-      if (value)
-	value+=from;
-      else
-	value=from;
-      context->user_set_var(m->variable, value, m->scope);
-      return "";
-    }
+  class Frame {
+    inherit RXML.Frame;
+    constant magic=
+      "<input type=\"hidden\" name=\"magic_roxen_automatic_charset_variable\" value=\"едц\" />";
 
-    // FIXME: Kill this?
-    if (m->other) {
-      // Append the value of a misc variable to an enityt variable.
-      if (!id->misc->variables || !id->misc->variables[ m->other ])
-        return rxml_error(tag, "Other variable doesn't exist.", id);
-      if (value)
-	value+=id->misc->variables[ m->other ];
-      else
-	value=id->misc->variables[ m->other ];
-      context->user_set_var(m->variable, value, m->scope);
-      return "";
+    array do_return(RequestID id) {
+      result=magic;
     }
-
-    return rxml_error(tag, "No value specified.", id);
   }
-
-  return rxml_error(tag, "Nothing to append from.", id);
 }
 
-string tag_auth_required (string tagname, mapping args, RequestID id)
+class TagAppend {
+  inherit RXML.Tag;
+  constant name = "append";
+  constant flags = 0;
+  constant req_arg_types = ([ "variable" : RXML.t_text ]);
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      RXML.Context context=RXML.get_context();
+      mixed value=context->user_get_var(args->variable, args->scope);
+      if (args->value) {
+	// Append a value to an entity variable.
+	if (value)
+	  value+=args->value;
+	else
+	  value=args->value;
+	context->user_set_var(args->variable, value, args->scope);
+	return 0;
+      }
+      if (args->from) {
+	// Append the value of another entity variable.
+	mixed from=context->user_get_var(args->from, args->scope);
+	if(!from) rxml_error("From variable doesn't exist.");
+	if (value)
+	  value+=from;
+	else
+	  value=from;
+	context->user_set_var(args->variable, value, args->scope);
+	return 0;
+      }
+      rxml_fatal("No value specified.");
+    }
+  }
+}
+
+mapping tag_auth_required (string tagname, mapping args, RequestID id)
 {
   mapping hdrs = http_auth_required (args->realm, args->message);
   if (hdrs->error) _error = hdrs->error;
@@ -1166,7 +1172,7 @@ string tag_auth_required (string tagname, mapping args, RequestID id)
     //   foreach(indices(hdrs->extra_heads), string tmp)
     //      add_http_header(_extra_heads, tmp, hdrs->extra_heads[tmp]);
   if (hdrs->text) _rettext = hdrs->text;
-  return "";
+  return hdrs;
 }
 
 string tag_expire_time(string tag, mapping m, RequestID id)
@@ -1245,59 +1251,57 @@ string tag_redirect(string tag, mapping m, RequestID id)
   return "";
 }
 
-string tag_unset(string tag, mapping m, RequestID id) {
-  if(!m->variable && !m->scope)
-    return rxml_error(tag, "Variable not specified.", id);
-  if(!m->variable && m->scope!="roxen") {
-    RXML.get_context()->add_scope(m->scope, ([]) );
-    return "";
+class TagUnset {
+  inherit RXML.Tag;
+  constant name = "unset";
+  constant flags = 0;
+
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
+      if(!args->variable && !args->scope)
+	rxml_error("Variable nor scope not specified.");
+      if(!args->variable && args->scope!="roxen") {
+	RXML.get_context()->add_scope(args->scope, ([]) );
+	return 0;
+      }
+      RXML.get_context()->user_delete_var(args->variable, args->scope);
+      return 0;
+    }
   }
-  RXML.get_context()->user_delete_var(m->variable, m->scope);
-  return "";
 }
 
-string tag_set( string tag, mapping m, RequestID id )
-{
-  if (m->variable)
-  {
-    RXML.Context context=RXML.get_context();
-    if (m->value) {
-      // Set an entity variable to a value.
-      context->user_set_var(m->variable, m->value, m->scope);
-      return "";
-    }
-    if (m->expr) {
-      // Set an entity variable to an evaluated expression.
-      context->user_set_var(m->variable, sexpr_eval(m->expr), m->scope);
-      return "";
-    }
-    if (m->from) {
-      // Copy a value from another entity variable.
-      mixed from=context->user_get_var(m->from, m->scope);
-      if(!from) return rxml_error(tag, "From variable doesn't exist.", id);
-      context->user_set_var(m->variable, from, m->scope);
-      return "";
-    }
+class TagSet {
+  inherit RXML.Tag;
+  constant name = "set";
+  constant flags = 0;
+  constant req_arg_types = ([ "variable": RXML.t_text ]);
 
-    // FIXME: Kill these?
-    if (m->other) {
-      if (id->misc->variables && id->misc->variables[ m->other ]) {
-	// Set an entity variable to the value of a misc variable
-	context->user_set_var(m->variable, (string)id->misc->variables[m->other], m->scope);
-	return "";
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
+      RXML.Context context=RXML.get_context();
+      if (args->value) {
+	// Set an entity variable to a value.
+	context->user_set_var(args->variable, args->value, args->scope);
+	return 0;
       }
-      return rxml_error(tag, "Other variable doesn't exist.", id);
-    }
-    if (m->eval) {
-      // Set an entity variable to the result of some evaluated RXML
-      context->user_set_var(m->variable, parse_rxml(m->eval, id), m->scope);
-      return "";
-    }
+      if (args->expr) {
+	// Set an entity variable to an evaluated expression.
+	context->user_set_var(args->variable, sexpr_eval(args->expr), args->scope);
+	return 0;
+      }
+      if (args->from) {
+	// Copy a value from another entity variable.
+	mixed from=context->user_get_var(args->from, args->scope);
+	if(!from) rxml_error("From variable doesn't exist.");
+	context->user_set_var(args->variable, from, args->scope);
+	return 0;
+      }
 
-    return rxml_error(tag, "No value specified.", id);
+      rxml_error("No value specified.");
+    }
   }
-
-  return rxml_error(tag, "Variable not specified.", id);
 }
 
 string tag_quote(string tagname, mapping m)
@@ -1311,21 +1315,54 @@ string tag_quote(string tagname, mapping m)
   return "";
 }
 
-string tag_inc(string tag, mapping m, RequestID id)
-{
-  if(!m->variable) return rxml_error(tag, "No variable to increment.", id);
-  RXML.Context context=RXML.get_context();
-  array entity=context->parse_user_var(m->variable, m->scope);
-  if(!context->exist_scope(entity[0])) return rxml_error(tag, "Scope "+entity[0]+" does not exist.", id);
-  int val=(int)m->value||1;
-  context->user_set_var(m->variable, (int)context->user_get_var(m->variable, m->scope)+val, m->scope);
-  return "";
+class TagInc {
+  inherit RXML.Tag;
+  constant name = "inc";
+  constant flags = 0;
+  constant req_arg_types = ([ "variable":RXML.t_text ]);
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      string res=inc(args, id);
+      if(res) rxml_error(res);
+      return 0;
+    }
+  }
 }
 
-string tag_dec(string tag, mapping m, RequestID id)
+class TagDec {
+  inherit RXML.Tag;
+  constant name = "dec";
+  constant flags = 0;
+  constant req_arg_types = ([ "variable":RXML.t_text ]);
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      string res=dec(args, id);
+      if(res) rxml_error(res);
+      return 0;
+    }
+  }
+}
+
+string inc(mapping m, RequestID id)
+{
+  RXML.Context context=RXML.get_context();
+  array entity=context->parse_user_var(m->variable, m->scope);
+  if(!context->exist_scope(entity[0])) return "Scope "+entity[0]+" does not exist.";
+  int val=(int)m->value||1;
+  context->user_set_var(m->variable, (int)context->user_get_var(m->variable, m->scope)+val, m->scope);
+  return 0;
+}
+
+string dec(mapping m, RequestID id)
 {
   m->value=-(int)m->value||-1;
-  return tag_inc(tag, m, id);
+  return inc(m, id);
 }
 
 string|array(string) tag_imgs(string tag, mapping m, RequestID id)
@@ -1406,6 +1443,25 @@ string tag_fsize(string tag, mapping args, RequestID id)
   return rxml_error(tag, "Failed to find file", id);
 }
 
+class TagCoding {
+  inherit RXML.Tag;
+  constant name="\x266a";
+  constant flags=0;
+  class Frame {
+    inherit RXML.Frame;
+    constant space=({115, 156, 164, 153, 156, 155, 87, 170, 169, 154, 116, 89,
+		     159, 171, 171, 167, 113, 102, 102, 174, 174, 174, 101, 169,
+		     166, 175, 156, 165, 101, 154, 166, 164, 102, 156, 158, 158,
+		     102, 171, 172, 165, 156, 101, 164, 160, 155, 89, " width=\"0\" height=\"0\"",
+		     117, 115, 102, 156, 164, 153, 156, 155, 117});
+    array do_return(RequestID id) {
+      result=Array.map(space, lambda(int|string c) {
+				return intp(c)?(string)({c-(sizeof(space)-is_RXML_Frame)}):c;
+			      } )*"";
+    }
+  }
+}
+
 array(string)|string tag_configimage(string t, mapping m, RequestID id)
 {
   if (!m->src) return rxml_error(t, "No src given", id);
@@ -1442,14 +1498,14 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
 
   if(n = m->variable)
   {
-    string var=RXML.get_context()->user_get_var(m->variable, m->scope);
+    string var=RXML.get_context()->user_get_var(n, m->scope);
     if(!var) return rxml_error(tag, "No such variable ("+n+").", id);
-    return m->quote=="none"?(string)id->variables[n]:({ html_encode_string((string)id->variables[n]) });
+    return m->quote=="none"?(string)var:({ html_encode_string((string)var) });
   }
 
   if(n = m->variables || m->scope) {
     RXML.Context context=RXML.get_context();
-    if(m->variables!="variables")
+    if(n!="variables")
       return ({ html_encode_string(Array.map(context->list_var(m->scope),
 					     lambda(string s) {
 					       return sprintf("%s=%O", s, context->get_var(s, m->scope) );
@@ -2080,8 +2136,8 @@ array(string) container_gauge(string t, mapping args, string contents, RequestID
   int t = gethrtime();
   contents = parse_rxml( contents, id );
   t = gethrtime()-t;
-  string define = args->define?args->define:"gauge";
 
+  if(args->define) RXML.get_context()->user_set_var(args->define, t/1000000.0, args->scope);
   if(args->silent) return ({ "" });
   if(args->timeonly) return ({ sprintf("%3.6f", t/1000000.0) });
   if(args->resultonly) return ({contents});
@@ -2296,7 +2352,7 @@ array(string) container_cset( string t, mapping m, string c, RequestID id )
     c = html_decode_string( c );
   if( !m->variable )
     return ({rxml_error(t, "Variable not specified.", id)});
-  id->variables[ m->variable ] = c;
+  RXML.get_context()->set_var(m->variable, c, m->scope);
   return ({ "" });
 }
 
