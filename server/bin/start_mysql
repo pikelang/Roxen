@@ -35,6 +35,9 @@ fi
 MYSQL_UNIX_PORT="$datadir/socket"
 export MYSQL_UNIX_PORT    
 
+MYSQL_TCP_PORT="0"
+export MYSQL_TCP_PORT
+
 raise_limit -silent
 
 echo "Restart at `date`" >> $err_log
