@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.2 1998/01/21 18:55:34 grubba Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.3 1998/02/03 22:51:07 per Exp $";
 
 #define FILE "etc/errordata"
 
@@ -50,10 +50,23 @@ mapping query_container_callers()
 {
   return (["spell":do_spell, ]);
 }
-  
+
+string api_do_spell(object id, string q, int warn)
+{
+  return do_spell("spell", (["warn":warn]), q);
+}
+
+// compat code..  
+void add_api_function( string name, function f, void|array(string) types)
+{
+  if(this_object()["_api_functions"])
+    this_object()["_api_functions"][name] = ({ f, types });
+}
+
 /* startup code */
 void start(int arg)
 {
+  add_api_function("spell_check", api_do_spell, ({"string","int"}));
   mixed stat1,stat2;
   int e;
   if(arg) return;

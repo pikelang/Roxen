@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.72 1998/02/02 12:14:54 wing Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.73 1998/02/03 22:51:07 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -184,10 +184,11 @@ inline mixed open_db_file()
   return key;
 }
 
+void define_API_functions();
 void start()
 {
   mixed tmp;
-
+  define_API_functions();
   build_callers();
 
   if(!QUERY(ac))
@@ -2273,6 +2274,176 @@ mapping query_container_callers()
 	   "trimlines" : tag_trimlines,
 	   "default" : tag_default,
 	   ]);
+}
+
+int api_query_num(object id, string f, int|void i)
+{
+  return query_num(f, i);
+}
+
+string api_parse_rxml(object id, string r)
+{
+  return parse_rxml( r, id );
+}
+
+
+string api_tagtime(object id, int ti, string t, string l)
+{
+  mapping m = ([ "type":t, "lang":l ]);
+  return tagtime( ti, m );
+}
+
+string api_relative(object id, string path)
+{
+  return fix_relative( path, id );
+}
+
+string api_set(object id, string what, string to)
+{
+  tag_set("set",(["variable":what, "value":to]) , id);
+  return ([])[0];
+}
+
+string api_define(object id, string what, string to)
+{
+  tag_define("define",(["name":what]), to, id,id,id->misc->defines);
+  return ([])[0];
+}
+
+
+string api_query_define(object id, string what)
+{
+  return id->misc->defines[what];
+}
+
+string api_query_variable(object id, string what)
+{
+  return id->variables[what];
+}
+
+string api_read_file(object id, string f)
+{
+  mapping m = ([ "file":f ]);
+  return tag_insert("insert", m, id, id, id->misc->defines);
+}
+
+string api_query_cookie(object id, string f)
+{
+  mapping m = ([ "cookie":f ]);
+  return tag_insert("insert", m, id, id, id->misc->defines);
+}
+
+string api_query_modified(object id, string f, int|void by)
+{
+  mapping m = ([ "by":by, "file":f ]);
+  return tag_modified("modified", m, id, id, id->misc->defines);
+}
+
+void api_add_header(object id, string h, string v)
+{
+  add_header(id->misc->defines[" _extra_heads"], h, v);
+}
+
+void api_set_cookie(object id, string c, string v)
+{
+  tag_add_cookie( "add_cookie", (["name":c,"persistent":1,"value":v]),
+		  id, id, id->misc->defines);
+}
+
+void api_remove_cookie(object id, string c, string v)
+{
+  tag_remove_cookie( "remove_cookie", (["name":c,"value":v]),
+		     id, id, id->misc->defines);
+}
+
+int api_prestate(object id, string p)
+{
+  return id->prestate[p];
+}
+
+int api_set_prestate(object id, string p)
+{
+  return id->prestate[p]=1;
+}
+
+int api_supports(object id, string p)
+{
+  return id->supports[p];
+}
+
+int api_set_supports(object id, string p)
+{
+  return id->supports[p]=1;
+}
+
+
+int api_set_return_code(object id, int c, string p)
+{
+  tag_return("return", ([ "code":c, "text":p ]), id,id,id->misc->defines);
+  return ([])[0];
+}
+
+string api_get_referer(object id)
+{
+  if(id->referer && sizeof(id->referer)) return id->referer*"";
+  return ([])[0];
+}
+
+string api_html_quote(object id, string what)
+{
+  return replace(what, ({ "<", ">", "&" }),({"&lt;", "&gt;", "&amp;" }));
+}
+
+constant replace_from = indices( iso88591 )+ ({"&lt;","&gt;", "&amp;","&#022;"});
+constant replace_to   = values( iso88591 )+ ({"<",">", "&","\""});
+
+string api_html_dequote(object id, string what)
+{
+  return replace(what, replace_from, replace_to);
+}
+
+// compat code..  
+void add_api_function( string name, function f, void|array(string) types)
+{
+  if(this_object()["_api_functions"])
+    this_object()["_api_functions"][name] = ({ f, types });
+}
+
+
+void define_API_functions()
+{
+  add_api_function("accessed", api_query_num, ({ "string", 0,"int" }));
+  add_api_function("parse_rxml", api_parse_rxml, ({ "string" }));
+  add_api_function("tag_time", api_tagtime, ({ "int", 0,"string", "string" }));
+  add_api_function("fix_relative", api_relative, ({ "string" }));
+  add_api_function("set_variable", api_set, ({ "string", "string" }));
+  add_api_function("define", api_define, ({ "string", "string" }));
+
+  add_api_function("query_define", api_query_define, ({ "string", }));
+  add_api_function("query_variable", api_query_variable, ({ "string", }));
+  add_api_function("query_cookie", api_query_cookie, ({ "string", }));
+  add_api_function("query_modified", api_query_modified, ({ "string", }));
+  add_api_function("read_file", api_read_file, ({ "string", 0,"int"}));
+
+  add_api_function("read_file", api_read_file, ({ "string", 0,"int"}));
+  add_api_function("add_header", api_add_header, ({"string", "string"}));
+  add_api_function("add_cookie", api_set_cookie, ({"string", "string"}));
+  add_api_function("remove_cookie", api_remove_cookie, ({"string", "string"}));
+
+  add_api_function("html_quote", api_html_quote, ({"string"}));
+  add_api_function("html_dequote", api_html_dequote, ({"string"}));
+
+  add_api_function("prestate", api_prestate, ({"string"}));
+  add_api_function("set_prestate", api_set_prestate, ({"string"}));
+
+  add_api_function("supports", api_supports, ({"string"}));
+  add_api_function("set_supports", api_set_supports, ({"string"}));
+
+  add_api_function("set_return_code", api_set_return_code, ({ "int", 0, "string" }));
+  add_api_function("query_referer", api_get_referer, ({ "int", 0, "string" }));
+
+  add_api_function("roxen_version", tag_version, ({}));
+  add_api_function("config_url", tag_configurl, ({}));
 }
 
 int may_disable()  { return 0; }

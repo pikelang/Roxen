@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.2 1997/11/14 19:39:06 per Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.3 1998/02/03 22:51:08 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -70,12 +70,7 @@ mapping query_container_callers()
   return ([ "wizard" : tag_wizard ]);
 }
 
-
-
-
-
-
-
-
-
-
+void start()
+{
+  
+} 
