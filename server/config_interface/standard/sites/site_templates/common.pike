@@ -8,7 +8,6 @@ constant modules = ({});
 constant silent_modules = ({}); 
 //! Silent modules does not get their initial variables shown.
 
-
 string initial_form( RequestID id )
 {
   Configuration conf = id->misc->new_configuration;
@@ -37,6 +36,30 @@ string initial_form( RequestID id )
   return res;
 }
 
+int form_is_ok( RequestID id )
+{
+  Configuration conf = id->misc->new_configuration;
+  foreach( modules, string mod )
+  {
+    ModuleInfo mi = roxen.find_module( mod );
+    if( mi )
+    {
+      RoxenModule moo = conf->find_module( mod );
+      if( moo )
+      {
+        foreach( indices(moo->query()), string v )
+        {
+          Variable.Variable v;
+          if( ((v=moo->getvar( v ))->get_flags() & VAR_INITIAL) &&
+              v->get_warnings())
+            return 0;
+        }
+      }
+    }
+  }
+  return 1;
+}
+
 mixed parse( RequestID id )
 {
   Configuration conf = id->misc->new_configuration;
@@ -58,7 +81,7 @@ string cf_form =
   <tr><td></td><td colspan=2>&_.doc:none;<p>&_.type_hint;</td></tr>";
 
 
-  if( id->variables["ok.x"] )
+  if( id->variables["ok.x"] && form_is_ok( id ) )
   {
     // set initial variables from form variables...
     Roxen.parse_rxml( cf_form, id );
