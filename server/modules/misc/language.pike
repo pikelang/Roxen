@@ -234,7 +234,8 @@ mixed remap_url( object id, string url )
     if (id->query)
       redirect_url += "?" + id->query;
     redirect_url = add_pre_state( redirect_url, (id->prestate - language_list) + (< extension >) );
-    redirect_url = roxen->query( "MyWorldLocation" ) + redirect_url[1..17000000];
+    redirect_url = id->conf->query( "MyWorldLocation" ) +
+      redirect_url[1..17000000];
     WATCH( 1, redirect_url );
     
     return http_redirect( redirect_url );

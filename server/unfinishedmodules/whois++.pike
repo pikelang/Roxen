@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 
-string cvs_version = "$Id: whois++.pike,v 1.4 1997/04/05 01:26:35 per Exp $";
+string cvs_version = "$Id: whois++.pike,v 1.5 1997/05/24 13:51:37 grubba Exp $";
 // Experimental whois++ *client* module
 // Written by Pontus Hagland <law@infovav.se>
 #include <module.h>
@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 import Array;
 
-#define MY_URL (roxen->query("MyWorldLocation") + QUERY(mountpoint))
+//#define MY_URL (id->conf->query("MyWorldLocation") + QUERY(mountpoint))
 
 int request_counter=0;
 array hosts;

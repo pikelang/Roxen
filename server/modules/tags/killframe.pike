@@ -1,5 +1,5 @@
 /* This is a roxen module. (c) Informationsvävarna AB 1997.
- * $Id: killframe.pike,v 1.2 1997/01/25 11:58:41 peter Exp $
+ * $Id: killframe.pike,v 1.3 1997/05/24 13:51:36 grubba Exp $
  *
  * Adds some java script that will prevent others from putting
  * your page in a frame.
@@ -36,8 +36,8 @@ mixed *register_module()
 
 string tag_killframe( string tag, mapping m, object id )
 {
-  //Det är fult med länkar till index.html
-  string my_url = roxen->query("MyWorldLocation") + id->raw_url[1..] -
+  // Links to index.html are ugly.
+  string my_url = id->conf->query("MyWorldLocation") + id->raw_url[1..] -
     "index.html";
 
   if (id->supports->javascript)
