@@ -1,5 +1,5 @@
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.2 2001/04/10 05:13:58 per Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.3 2001/04/10 05:23:42 per Exp $";
 constant thread_safe=1;
 
 #define BSIZE 8192
@@ -279,7 +279,7 @@ class Location( string location,
     connections++;
     int use_metadata;
     string i, metahd="";
-    string protocol = "ShoutCast";
+    string protocol = "ICY";
 
     werror("%O\n", id->request_headers );
     if( id->request_headers[ "icy-metadata" ] )
@@ -292,7 +292,6 @@ class Location( string location,
     if( id->request_headers[ "x-audiocast-udpport" ] )
     {
       protocol = "AudioCast";
-      // shoutcast..
       i = ("HTTP/1.0 200 OK\r\n"
 	   "Server: "+roxen.version()+"\r\n"
 	   "Content-type: audio/mpeg\r\n"
@@ -308,7 +307,6 @@ class Location( string location,
     }
     else
     {
-      // icecast..
       i = ("ICY 200 OK\r\n"
 	   "Server: "+roxen.version()+"\r\n"
 	   "Content-type: audio/mpeg\r\n"
@@ -433,7 +431,8 @@ class Connection
       skipped++;
       buffer = buffer[1..];
     }
-    send_more();
+    if( !sizeof( buffer ) )
+      send_more();
   }
 
   int headers_done;
@@ -445,7 +444,6 @@ class Connection
       headers_done = 1;
       if( !sizeof(buffer) )
       {
-// 	werror("out of buffer\n");
 	return;
       }
       current_block = buffer[0];
@@ -462,9 +460,7 @@ class Connection
       buffer = buffer[1..];
       sent++;
     }
-//     werror("writing ... ");
     int n = fd->write( current_block );
-//     werror(" %d bytes\n", n, current_block );
     if( !n || n < 0 )
       closed();
     if( headers_done )
