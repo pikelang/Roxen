@@ -1,6 +1,13 @@
 Changes since Roxen Challenger 1.2.31 Yellow
 -----------------------------------------------
 
+o Added support for SSL3 ServerKeyExchange.
+  This makes SSL3 work with Netscape 4.5.
+
+o First release of the accept-and-parse optimized HTTP module. EXPERIMENTAL.
+  NOTE: Modules returning http_stream (eg the CGI module) are not
+        supported yet.
+
 o Made kill CGI scripts after X real time minute(s) a VAR_MORE instead
   of VAR_EXPERT and added a check to only allow killing of pid > 1.
 
@@ -15,6 +22,63 @@ o Added a "reload" target to the tools/init.d_roxen and changed
   restart to only (try to) kill the Roxen process. Also added a new
   variable, "flags" which makes it easy to for example enable threads
   (without editing the file in 4711 places).
+
+o Fixed the "clean" target in several Makefiles.
+
+o Updated the Postgress module to 1.0.3 level. Thanks to Francesco Chemolli.
+
+o Improved support for threads on AIX.
+
+o Improved support for HPUX.
+
+o Improved support for IRIX.
+
+o Fixed several obscure bugs in Pike 0.6.
+
+o Added some checks for stack overflow to Pike 0.6.
+
+o Improved support for NT.
+
+o Fixed several compilation warnings when compiling Pike 0.6.
+
+o Added option --truss to the start-script (only usefull on Solaris).
+
+o Added options --without-debug, --file-profile to the start-script.
+
+o Improved help in the start-script.
+
+o The RoxenConfig cookie now expires two years into the future.
+
+o Automatic redirects now support SSL.
+
+o Now reloads all configurations on SIGHUP.
+
+o Improved quoting support in the *output tags.
+
+o Added new module type: MODULE_EXPERIMENTAL.
+
+o Improved parsing of the query in the Resolv Path action.
+
+o Added setting of id->misc->cacheable to most modules.
+
+o Disabled the automatic redirect from /foo/file.html/ to /foo/file.html
+  to be able to support the path-info "/".
+
+o Fixed a few bugs in the userfs module.
+
+o Optimized htaccess to use less reverse IP lookups.
+
+o Improved the gtext cache performance.
+
+o Added support for logging of stderr to the CGI module.
+
+o Killframe now checks the client.
+
+o Reenabled the extra_extension code.
+
+o Some default images have been changed.
+
+o The tools/init.d_roxen script has been cleaned up.
 
 
 Changes since Roxen Challenger 1.2.30 Yellow
