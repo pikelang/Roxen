@@ -149,6 +149,16 @@ class ConfigurationSettings
               ({"CVS","README",".distignore",".cvsignore"}));
     }
 
+    mixed set( string nv )
+    {
+      // Support disappearing themes.
+      if( has_value( all_themes(), nv ) )
+	return ::set( nv );
+      report_warning((string)LOCALE(0, "Warning: The theme %s "
+			    " no longer exists, using default.\n"),nv);
+      return ::set( "default" );
+    }
+    
     void set_choice_list()
     {
     }
@@ -193,8 +203,8 @@ class ConfigurationSettings
     mapping vv = config_settings2->get( name );
     if( vv ) 
       foreach( indices( vv ), string i )
-        if( variables[i] )
-          variables[i]->low_set( vv[i] );
+        if( variables[ i ] )
+          variables[ i ]->set( vv[i] );
   }
 
   class BoxVariable
@@ -387,7 +397,7 @@ class ConfigurationSettings
 // 	      "iso646-se",
             }));
 
-    defvar( "sortorder", "alphabetical",
+    defvar( "sortorder", "as defined",
 	    LOCALE(236, "Default variable sort order"), TYPE_STRING_LIST,
 	    LOCALE(237, "The default order variables are sorted in" ),
 	    ([
@@ -397,7 +407,7 @@ class ConfigurationSettings
 	      "changed/as defined"   : LOCALE(241,"as defined, changed first"),
 	    ]) );
 
-    defvar( "changemark", "not",
+    defvar( "changemark", "color",
 	    LOCALE(242, "Changed variables are highlighted"),
 	    TYPE_STRING_LIST,
 	    LOCALE(243, "How to highlight variables that does not have "
@@ -451,7 +461,7 @@ class ConfigurationSettings
 	    TYPE_STRING, LOCALE(185, "Administration interface text color."))
             ->set_invisibility_check_callback( theme_can_change_colors );
 
-    defvar( "font", "franklin gothic demi", LOCALE(187, "Font"),
+    defvar( "font", "roxen builtin", LOCALE(187, "Font"),
 	    TYPE_FONT, LOCALE(188, "Administration interface font."));
 
     defvar( "group_tasks", 1, LOCALE(303,"Group Tasks"),
@@ -760,6 +770,8 @@ class UserDBModule
 {
   inherit UserDB;
 
+  string module_identifier(){ return 0; }
+  
   static class CFUser
   {
     inherit User;
