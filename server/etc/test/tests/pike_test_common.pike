@@ -241,3 +241,12 @@ mixed test_not_equal( mixed what, function f, mixed ... args )
   return test_generic( check_not_equal( what ), f, @args );
 }
 
+
+void run_tests( Configuration c );
+
+void low_run_tests( Configuration c,
+		    function go_on )
+{
+  run_tests( c );
+  go_on(  current_test, tests_failed  );
+}

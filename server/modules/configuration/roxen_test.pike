@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.12 2001/01/31 08:09:24 per Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.13 2001/02/01 04:32:30 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -17,14 +17,15 @@ Protocol port;
 int verbose;
 
 
-void start(int n, Configuration c) {
+void start(int n, Configuration c)
+{
   conf=c;
   index_file = Stdio.File();
-  call_out( do_tests, 2 );
-  report_debug("Call out requested\n");
+  call_out( do_tests, 0.5 );
 }
 
-RequestID get_id() {
+RequestID get_id()
+{
   object id = RequestID(index_file, port, conf);
   id->conf = conf;
   id->misc = ([ "defines":([ " _ok":1 ]) ]);
@@ -235,53 +236,67 @@ void run_xml_tests(string data) {
   if(ltests<sizeof(data/"</test>")-1)
     report_warning("Possibly XML error in testsuite.\n");
   report_debug("Did %d tests, failed on %d.\n", ltests, lfails);
+  continue_find_tests();
 }
 
-void run_pike_tests(object test, string path) {
+void run_pike_tests(object test, string path)
+{
+  void update_num_tests(int tsts, int fail)
+  {
+    tests+=tsts;
+    fails+=fail;
+    report_debug("Did %d tests, failed on %d.\n", tsts, fail);
+    continue_find_tests();
+  };
+
   if(!test)
     return;
-  if(test->run_tests)
-    catch
-    {
-      int tsts, fail;
-      [tsts,fail] = test->run_tests(conf);
-      tests+=tsts;
-      fails+=fail;
-      report_debug("Did %d tests, failed on %d.\n", tsts, fail);
-    };
+  if( catch(test->low_run_tests(conf, update_num_tests)) )
+    update_num_tests( 1, 1 );
 }
 
 
 // --- Mission control ------------------------
 
 array(string) tests_to_run;
+ADT.Stack file_stack = ADT.Stack();
 
-void find_tests(string path) {
-  if( verbose )
-    report_debug("Looking for tests in %s\n",path);
-  foreach(get_dir(path), string file)
+void continue_find_tests( )
+{
+  while( string file = file_stack->pop() )
   {
-    if( Stdio.Stat st = file_stat(path+file) )
+    if( Stdio.Stat st = file_stat( file ) )
     {
-      if(file!="CVS" && st[1]==-2)
-	find_tests( path + file + "/" );
-      else if(file[-1]!='~' && glob("RoxenTest_*", file))
+      if( file!="CVS" && st->isdir )
       {
-	report_debug("\nFound test file %s\n",path+file);
+	string dir = file+"/";
+	foreach( get_dir( dir ), string f )
+	  file_stack->push( dir+f );
+      }
+      else if( glob("*/RoxenTest_*", file ) )
+      {
+	report_debug("\nFound test file %s\n",file);
 	int done;
 	foreach( tests_to_run, string p )
 	  if( glob( "*"+p+"*", file ) )
 	  {
 	    if(glob("*.xml",file))
-	      run_xml_tests(Stdio.read_file(path+file));
+	    {
+	      call_out( run_xml_tests, 0, Stdio.read_file(file) );
+	      return;
+	    }
 	    else if(glob("*.pike",file))
 	    {
 	      object test;
 	      mixed error;
-	      if( error=catch( test=compile_file(path+file)() ) )
-		report_error("Failed to compile %s\n%O\n", path+file, error);
+	      if( error=catch( test=compile_file(file)( verbose ) ) )
+		report_error("Failed to compile %s\n%s\n", file,
+			     describe_backtrace(error));
 	      else
-		run_pike_tests( compile_file(path+file)(), path+file );
+	      {
+		call_out( run_pike_tests,0,test,file );
+		return;
+	      }
 	    }
 	    done++;
 	    break;
@@ -291,27 +306,27 @@ void find_tests(string path) {
       }
     }
   }
-}
 
-int die;
-void do_tests() {
-
-  tests_to_run = Getopt.find_option(roxen.argv, "d",({"tests"}),0,"" )/",";
-  verbose = (int)Getopt.find_option(roxen.argv, "d",({"tests-verbose"}),0, 0 );
-  
-  if(time() - roxen->start_time < 2) {
-    call_out( do_tests, 2 );
-    return;
-  }
-
-  if(die) return;
-  die=1;
-  find_tests("etc/roxen_test/tests/");
-  report_debug("\n\nDid a grand total of %d tests, %d failed.\n", tests, fails);
+  report_debug("\n\nDid a grand total of %d tests, %d failed.\n",
+	       tests, fails);
   if( fails > 127 )
     fails = 127;
   _exit( fails );
-//   roxen->shutdown(1.0);
+}
+
+void do_tests()
+{
+  remove_call_out( do_tests );
+  if(time() - roxen->start_time < 2 ) {
+    call_out( do_tests, 0.2 );
+    return;
+  }
+
+  tests_to_run = Getopt.find_option(roxen.argv, "d",({"tests"}),0,"" )/",";
+  verbose = (int)Getopt.find_option(roxen.argv, "d",({"tests-verbose"}),0, 0 );
+  file_stack->push( 0 );
+  file_stack->push( "etc/roxen_test/tests" );
+  call_out( continue_find_tests, 0 );
 }
 
 

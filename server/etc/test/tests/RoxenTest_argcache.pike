@@ -1,7 +1,7 @@
 inherit "pike_test_common.pike";
 
 
-array run_tests( Configuration c  )
+void run_tests( Configuration c  )
 {
   string key2,key = test( roxen.argcache.store,
 		     ([ "foo":"\4711",
@@ -43,7 +43,4 @@ array run_tests( Configuration c  )
   
   test_error( roxen.argcache.lookup, key );
   test_error( roxen.argcache.lookup, key );
-  
-  
-  return ({ current_test, tests_failed });
 }

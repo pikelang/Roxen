@@ -118,7 +118,7 @@ void verify_compat_user_from_uid( Configuration c, array list )
   }
 }
 
-array(int) run_tests( Configuration c )
+void run_tests( Configuration c )
 {
   RoxenModule m;
 
@@ -131,7 +131,7 @@ array(int) run_tests( Configuration c )
 
   if( !c )  {
     report_error( "Failed to find test configuration\n");
-    return ({ current_test, tests_failed });
+    return;
   }
 
   test( c->enable_module, "userdb_system" );
@@ -140,7 +140,7 @@ array(int) run_tests( Configuration c )
 
   if( !test_true( predef::`[], m, "list_users"  ) )  {
     report_error( "Failed to enable userdb module\n");
-    return ({ current_test, tests_failed });
+    return;
   }
   
   
@@ -212,5 +212,5 @@ array(int) run_tests( Configuration c )
   test( c->disable_module, "userdb_system" );
   test( roxen.disable_configuration, "usertestconfig" );
 
-  return ({ current_test, tests_failed });
+  return;
 }

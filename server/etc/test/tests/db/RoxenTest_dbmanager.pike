@@ -1,6 +1,6 @@
 inherit "../pike_test_common.pike";
 
-array(int) run_tests( Configuration c )
+void run_tests( Configuration c )
 {
   Configuration c1, c2;
   RoxenModule m;
@@ -19,7 +19,7 @@ array(int) run_tests( Configuration c )
 
   if( !c2 || !c1 )  {
     report_error( "Failed to find test configurations\n");
-    return ({ current_test, tests_failed });
+    return;
   }
 
   test_false( pass, DBManager.NONE );
@@ -111,6 +111,4 @@ array(int) run_tests( Configuration c )
 
   test( roxen.disable_configuration, "dbtest1" );
   test( roxen.disable_configuration, "dbtest2" );
-
-  return ({ current_test, tests_failed });
 }

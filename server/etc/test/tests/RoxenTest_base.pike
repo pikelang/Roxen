@@ -137,7 +137,7 @@ void test_spawn_pike( array args,
   test_true( `==, expected_stdout, data );
 }
 
-array(int) run_tests( Configuration c )
+void run_tests( Configuration c )
 {
   // Test (some) public APIs in the 'roxen' and 'roxenloader' objects.
 
@@ -253,7 +253,4 @@ array(int) run_tests( Configuration c )
   test( format1, do_log, minimum_id, fake_response );
 
   test( verify_logged_data, logged, 1 );
-
-  
-  return ({ current_test, tests_failed });
 }
