@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.105 1999/06/10 23:44:07 per Exp $
+// $Id: roxenlib.pike,v 1.106 1999/06/11 13:35:58 mast Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -865,33 +865,6 @@ string html_encode_tag_value(string str)
   return "\"" + replace(str, ({"&", "\""}), ({"&amp;", "&quot;"})) + "\"";
 }
 
-object get_module (string modname)
-// Resolves a string as returned by get_modname to a module object if
-// one exists.
-{
-  string cname, mname;
-  int mid = 0;
-
-  if (sscanf (modname, "%s/%s", cname, mname) != 2 ||
-      !sizeof (cname) || !sizeof(mname)) return 0;
-  sscanf (mname, "%s#%d", mname, mid);
-
-  foreach (roxen->configurations, object conf) {
-    mapping moddata;
-    if (conf->name == cname && (moddata = conf->modules[mname])) {
-      if (mid >= 0) {
-	if (moddata->copies) return moddata->copies[mid];
-      }
-      else if (moddata->enabled) return moddata->enabled;
-      if (moddata->master) return moddata->master;
-      return 0;
-    }
-  }
-
-  return 0;
-}
-
-
 string strftime(string fmt, int t)
 {
   mapping lt = localtime(t);
@@ -1030,6 +1003,32 @@ string strftime(string fmt, int t)
     a[i] = res + a[i][1..];
   }
   return(a*"");
+}
+
+object get_module (string modname)
+// Resolves a string as returned by get_modname to a module object if
+// one exists.
+{
+  string cname, mname;
+  int mid = 0;
+
+  if (sscanf (modname, "%s/%s", cname, mname) != 2 ||
+      !sizeof (cname) || !sizeof(mname)) return 0;
+  sscanf (mname, "%s#%d", mname, mid);
+
+  foreach (roxen->configurations, object conf) {
+    mapping moddata;
+    if (conf->name == cname && (moddata = conf->modules[mname])) {
+      if (mid >= 0) {
+	if (moddata->copies) return moddata->copies[mid];
+      }
+      else if (moddata->enabled) return moddata->enabled;
+      if (moddata->master) return moddata->master;
+      return 0;
+    }
+  }
+
+  return 0;
 }
 
 string get_modname (object module)
