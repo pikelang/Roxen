@@ -64,15 +64,33 @@ string format_backtrace(array bt, object id)
 
 mixed parse( RequestID id )
 {
-  string res="";
-  int thr=1;
+  // Disable all threads to avoid potential locking problems while we
+  // have the backtraces. It also gives an atomic view of the state.
+  object threads_disabled = _disable_threads();
 
-  foreach(all_threads(), object t)
-    res += (t==roxen->backend_thread?
-	    "<h3>"+LOCALE(38,"Backend thread")+"</h3>":
-            ("<h3>"+LOCALE(39,"Thread")+" "+(thr++)+"</h3>"))+"<ol> "+
-      format_backtrace(describe_backtrace(t->backtrace())/"\n",id)+
+  array(Thread.Thread) threads = all_threads();
+  array(string|int) thread_ids =
+    map (threads,
+	 lambda (Thread.Thread t) {
+	   string desc = sprintf ("%O", t);
+	   if (sscanf (desc, "Thread.Thread(%d)", int i)) return i;
+	   else return desc;
+	 });
+  sort (thread_ids, threads);
+
+  string res = "<p><cf-refresh/></p>\n";
+  for (int i = 0; i < sizeof (threads); i++)
+    res +=
+      "<h3>" + LOCALE(39,"Thread") + " " + thread_ids[i] +
+#ifdef THREADS
+      (threads[i] == roxen->backend_thread ?
+       " (" + LOCALE(38,"backend thread")+ ")" : "") +
+#endif
+      "</h3>\n"
+      "<ol> "+
+      format_backtrace(describe_backtrace(threads[i]->backtrace())/"\n",id)+
       "</ol>";
+
   return res+"<p><cf-ok/></p>";
 }
 #endif /* constant(all_threads) */
