@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.32 1999/12/07 12:12:36 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.33 1999/12/12 08:15:11 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -449,22 +449,16 @@ string tag_fsize(string tag, mapping args, RequestID id)
   return rxml_error(tag, "Failed to find file", id);
 }
 
-array(string) tag_configimage(string f, mapping m, RequestID id)
+array(string) tag_configimage(string t, mapping m, RequestID id)
 {
-  if (m->src) {
+  if (!m->src) return rxml_error(t, "No src given", id);
 
-    // This should really be fixed the other way around; renaming the files to err1, err2 & err3
-    if(m->src=="err1") m->src="err_1";
-    if(m->src=="err2") m->src="err_2";
-    if(m->src=="err3") m->src="err_3";
+  if (m->src[sizeof(m->src)-4..][0] == '.')
+    m->src = m->src[..sizeof(m->src)-5];
 
-    if (m->src[sizeof(m->src)-4..] == ".gif")
-      m->src = m->src[..sizeof(m->src)-5];
-    m->src = "/internal-roxen-" + m->src;
-  }
-
-  m->border = m->border || "0";
   m->alt = m->alt || m->src;
+  m->src = "/internal-roxen-" + m->src;
+  m->border = m->border || "0";
 
   return ({ make_tag("img", m) });
 }
