@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.125 1999/05/18 03:54:10 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.126 1999/05/19 09:43:14 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1189,7 +1189,7 @@ int nunfolded(object o)
 
 
 object module_font = resolve_font("haru 42");
-object button_font = resolve_font("haru 64");
+object button_font = resolve_font("haru 32");
 
 mapping auto_image(string in, object id)
 {
