@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.382 2004/05/22 00:06:55 mani Exp $
+// $Id: loader.pike,v 1.383 2004/05/24 13:40:50 _cvs_stephen Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.382 2004/05/22 00:06:55 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.383 2004/05/24 13:40:50 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2314,6 +2314,7 @@ void do_main( int argc, array(string) argv )
   foreach(indices(prototypes), string id)
     if(prototypes->globals[id])
       add_constant(id, prototypes[id]);
+  prototypes->Roxen = master()->resolv ("Roxen");
 
   Cache cache = initiate_cache();
   load_core();

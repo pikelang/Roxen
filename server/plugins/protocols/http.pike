@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.398 2004/05/23 02:35:26 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.399 2004/05/24 13:40:49 _cvs_stephen Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -15,8 +15,6 @@ inherit RequestID;
 
 #ifdef PROFILE
 #define HRTIME() gethrtime()
-#define HRSEC(X) ((int)((X)*1000000))
-#define SECHR(X) ((X)/(float)1000000)
 int req_time = HRTIME();
 #endif
 
@@ -26,19 +24,19 @@ RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker(this);
 
 #ifdef REQUEST_DEBUG
 int footime, bartime;
-#define REQUEST_WERR(X) bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime()
+#define REQUEST_WERR(X) do {bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime();} while (0)
 #else
-#define REQUEST_WERR(X)
+#define REQUEST_WERR(X) do {} while (0)
 #endif
 
 #ifdef FD_DEBUG
-#define MARK_FD(X)							\
-  catch{								\
-    REQUEST_WERR("FD " + my_fd->query_fd() + ": " + (X));		\
-    mark_fd(my_fd->query_fd(), (X)+" "+remoteaddr);			\
-  }
+#define MARK_FD(X) do {							\
+    int _fd = my_fd && my_fd->query_fd ? my_fd->query_fd() : -1;	\
+    REQUEST_WERR("FD " + (_fd == -1 ? sprintf ("%O", my_fd) : _fd) + ": " + (X)); \
+    mark_fd(_fd, (X)+" "+remoteaddr);					\
+  } while (0)
 #else
-#define MARK_FD(X)
+#define MARK_FD(X) do {} while (0)
 #endif
 
 #ifdef THROTTLING_DEBUG
@@ -56,6 +54,22 @@ constant _query          = core.query;
 private static array(string) cache;
 private static int wanted_data, have_data;
 private static String.Buffer data_buffer;
+
+private static multiset(string) none_match;
+
+int kept_alive;
+
+#ifdef DEBUG
+#define CHECK_FD_SAFE_USE do {						\
+    if (this_thread() != roxen->backend_thread &&			\
+	(my_fd->query_read_callback() || my_fd->query_write_callback() || \
+	 my_fd->query_close_callback() ||				\
+	 !zero_type (find_call_out (do_timeout))))			\
+      error ("Got callbacks but not called from backend thread.\n");	\
+  } while (0)
+#else
+#define CHECK_FD_SAFE_USE do {} while (0)
+#endif
 
 #include <roxen.h>
 #include <module.h>
@@ -82,6 +96,7 @@ mapping (string:mixed)  misc            =
 		}
 #endif // REQUEST_DEBUG
 ]);
+mapping (string:mixed)  connection_misc = ([ ]);
 mapping (string:string) cookies         = ([ ]);
 mapping (string:string) request_headers = ([ ]);
 mapping (string:string) client_var      = ([ ]);
@@ -105,15 +120,15 @@ class AuthEmulator
     switch( i )
     {
       case 0:
-	return conf->authenticate( this );
+	return conf->authenticate( this_object() );
       case 1:
-	if( u = conf->authenticate( this ) )
+	if( u = conf->authenticate( this_object() ) )
 	  return u->name();
 	if( realauth )
 	  return (realauth/":")[0];
 
       case 2:
-	if( u = conf->authenticate( this ) )
+	if( u = conf->authenticate( this_object() ) )
 	  return 0;
 	if( realauth )
 	  return ((realauth/":")[1..])*":";
@@ -125,96 +140,7 @@ class AuthEmulator
   }
 }
 
-AuthEmulator auth;
-
-string charset_name( function|string what )
-{
-  switch( f )
-  {
-   case string_to_unicode:   return "ISO10646-1";
-   case string_to_utf8:      return "UTF-8";
-   default:                  return upper_case((string)what);
-  }
-}
-
-function charset_function( function|string what, int allow_entities )
-{
-  switch( what )
-  {
-   case "ISO-10646-1":
-   case "ISO10646-1":
-   case string_to_unicode:
-     return string_to_unicode;
-   case "UTF-8":
-   case string_to_utf8:
-     return string_to_utf8;
-   default:
-     catch {
-       //  If current file is "text/html" or "text/xml" we'll use an entity
-       //  encoding fallback instead of empty string subsitution.
-       function fallback_func =
-	 allow_entities &&
-	 (file->type[0..8] == "text/html" || file->type[0..7] == "text/xml") &&
-	 lambda(string char) {
-	   return sprintf("&#x%x;", char[0]);
-	 };
-       return
-	 Roxen._charset_decoder( Locale.Charset.encoder( (string) what,
-							 "", fallback_func ) )
-	 ->decode;
-     };
-  }
-  return lambda(string what){return what;};
-}
-
-static array(string) join_charset( string old,
-                                   function|string add,
-                                   function oldcodec,
-				   int allow_entities )
-{
-  switch( old&&upper_case(old) )
-  {
-   case 0:
-     return ({ charset_name( add ), charset_function( add, allow_entities ) });
-   case "ISO10646-1":
-   case "UTF-8":
-     return ({ old, oldcodec }); // Everything goes here. :-)
-   case "ISO-2022":
-     return ({ old, oldcodec }); // Not really true, but how to know this?
-   default:
-     // Not true, but there is no easy way to add charsets yet...
-     return ({ charset_name( add ), charset_function( add, allow_entities ) });
-  }
-}
-
-static array(string) output_encode( string what, int|void allow_entities,
-				    string|void force_charset )
-{
-  if( !force_charset )
-  {
-    string charset;
-    function encoder;
-
-    foreach( output_charset, string|function f )
-      [charset,encoder] = join_charset( charset, f, encoder, allow_entities );
-    
-    
-    if( !encoder )
-      if( String.width( what ) > 8 )
-      {
-	charset = "UTF-8";
-	encoder = string_to_utf8;
-      }
-    if( encoder )
-      what = encoder( what );
-    return ({ charset, what });
-  }
-  else
-    return ({
-      0,
-      Locale.Charset.encoder( (force_charset/"=")[-1] )->feed( what )->drain()
-    });
-}
+array|AuthEmulator auth;
 
 void decode_map( mapping what, function decoder )
 {
@@ -247,16 +173,14 @@ void decode_map( mapping what, function decoder )
 
 void decode_charset_encoding( string|function(string:string) decoder )
 {
+  if( misc->request_charset_decoded )
+    return;
   if(stringp(decoder))
     decoder = Roxen._charset_decoder(Locale.Charset.decoder(decoder))->decode;
-
-  if( misc->request_charset_decoded )
+  if( !decoder )
     return;
 
   misc->request_charset_decoded = 1;
-
-  if( !decoder )
-    return;
 
   string safe_decoder(string s) {
     catch { return decoder(s); };
@@ -384,6 +308,7 @@ private void really_set_config(array mod_config)
   };
 
   void do_send_reply( string what, string url ) {
+    CHECK_FD_SAFE_USE;
     url = url_base() + url[1..];
     my_fd->set_blocking();
     my_fd->write( prot + " 302 ChiliMoon config coming up\r\n"+
@@ -415,19 +340,6 @@ private void really_set_config(array mod_config)
 private static mixed f, line;
 private static int hstart;
 
-class CacheKey {
-#if ID_CACHEKEY_DEBUG
-  constant __num = ({ 0 });
-  int _num;
-  string _sprintf(int t) {
-    return t=='O' && sprintf("%O(#%d)", this_program, _num);
-  }
-  void create() { _num = ++__num[0]; }
-  void destroy() { werror("CacheKey(#" + _num + "): --DESTROY--\n"
-			  "%s\n\n", "" || describe_backtrace(backtrace())); }
-#endif
-}
-
 //! Parse a cookie string.
 //!
 //! @param contents
@@ -440,6 +352,7 @@ mapping(string:string) parse_cookies( string contents )
   if(!contents)
     return cookies;
 
+//       misc->cookies += ({contents});
   foreach(((contents/";") - ({""})), string c)
   {
     string name, value;
@@ -621,11 +534,14 @@ private int parse_got( string new_data )
     line = res[1];
     request_headers = res[2];
   }
+  TIMER_END(parse_got);
   return parse_got_2();
 }
 
 private final int parse_got_2( )
 {
+  TIMER_START(parse_got_2);
+  TIMER_START(parse_got_2_parse_line);
   string trailer, trailer_trailer;
   multiset (string) sup;
   string a, b, s="", linename, contents;
@@ -667,6 +583,7 @@ private final int parse_got_2( )
       else
       {
 	my_fd->write("PONG\r\n");
+	TIMER_END(parse_got_2);
 	return 2;
       }
       s = data = ""; // no headers or extra data...
@@ -678,6 +595,7 @@ private final int parse_got_2( )
       /* Not reached */
       break;
   }
+  TIMER_END(parse_got_2_parse_line);
   REQUEST_WERR(sprintf("HTTP: request line %O", line));
   REQUEST_WERR(sprintf("HTTP: headers %O", request_headers));
   REQUEST_WERR(sprintf("HTTP: data (length %d) %O", strlen(data),data));
@@ -695,11 +613,12 @@ private final int parse_got_2( )
     }
     if(!remoteaddr) {
       REQUEST_WERR("HTTP: No remote address.");
-      TIMER_END(parse_got);
+      TIMER_END(parse_got_2);
       return 2;
     }
   }
 
+  TIMER_START(parse_got_2_parse_headers);
   foreach( (array)request_headers, [string linename, array|string contents] )
   {
     if( arrayp(contents) ) contents = contents[0];
@@ -712,6 +631,10 @@ private final int parse_got_2( )
      case "authorization":  rawauth = contents;              break;
      case "referer": referer = ({contents}); break;
      case "if-modified-since": since=contents; break;
+     case "if-match": break; // Not supported yet.
+     case "if-none-match":
+       none_match = (multiset)((contents-" ")/",");
+       break;
 
      case "proxy-authorization":
        array y;
@@ -748,16 +671,35 @@ private final int parse_got_2( )
          misc->range = contents[6..];
        break;
 
-
-     case "host":
      case "connection":
+       misc->client_connection = (<@(lower_case(contents)/" " - ({""}))>);
+       if (misc->client_connection->close) {
+	 misc->connection = "close";
+       } else if (misc->client_connection["keep-alive"]) {
+	 misc->connection = "keep-alive";
+       }
+       break;
+     case "host":
        misc[linename] = lower_case(contents);
        break;
      case "content-type":
        misc[linename] = contents;
        break;
+     case "destination":
+       misc["new-uri"] = contents;
+       if (mixed err = catch {
+	   misc["new-uri"] = Standards.URI(contents)->path;
+	 }) {
+#ifdef DEBUG
+	 report_debug(sprintf("Destination header contained a bad URI: %O\n"
+			      "%s", contents, describe_error(err)));
+#endif /* DEBUG */
+       }
+       break;
     }
   }
+  TIMER_END(parse_got_2_parse_headers);
+  TIMER_START(parse_got_2_more_data);
   if(misc->len)
   {
     if(!data) data="";
@@ -768,13 +710,15 @@ private final int parse_got_2( )
     if(strlen(data) < l)
     {
       REQUEST_WERR(sprintf("HTTP: More data needed in %s.", method));
-      TIMER_END(parse_got);
+      ready_to_receive();
+      TIMER_END(parse_got_2);
       return 0;
     }
     leftovers = data[l+2..];
     data = data[..l+1];
 	
-    if (method == "POST") {
+    switch(method) {
+    case "POST":
       switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
       {
       default: 
@@ -831,6 +775,7 @@ private final int parse_got_2( )
       }
     }
   }
+  TIMER_END(parse_got_2_more_data);
   if (!(< "HTTP/1.0", "HTTP/0.9" >)[prot]) {
     if (!misc->host) {
       // RFC 2616 requires this behaviour.
@@ -840,10 +785,11 @@ private final int parse_got_2( )
 		   "Content-Length: 0\r\n"
 		   "Date: "+Roxen.http_date(predef::time())+"\r\n"
 		   "\r\n");
+      TIMER_END(parse_got_2);
       return 2;
     }
   }
-  TIMER_END(parse_got);
+  TIMER_END(parse_got_2);
   return 3;	// Done.
 }
 
@@ -863,28 +809,39 @@ void disconnect()
 {
   file = 0;
   conf && conf->connection_drop( this );
-#ifdef REQUEST_DEBUG
-  if (my_fd) 
+  if (my_fd) {
     MARK_FD("HTTP my_fd in HTTP disconnected?");
-#endif
+    my_fd->close();
+    my_fd = 0;
+  }
   MERGE_TIMERS(conf);
   if(do_not_disconnect) return;
   destruct();
 }
 
-void end(int|void keepit)
+static void cleanup_request_object()
 {
   if( conf )
     conf->connection_drop( this );
+}
+
+void end(int|void keepit)
+{
+  CHECK_FD_SAFE_USE;
+
+  cleanup_request_object();
+
   if(keepit
      && !file->raw
-     && (misc->connection == "keep-alive" ||
-         (prot == "HTTP/1.1" && misc->connection != "close"))
+     && misc->connection != "close"
+     && ((prot == "HTTP/1.1") || (misc->connection == "keep-alive"))
      && my_fd
+     // Is this necessary now when this function no longer is called
+     // from the close callback? /mast
      && !catch(my_fd->query_address()) )
   {
     // Now.. Transfer control to a new http-object. Reset all variables etc..
-    this_program o = this_program(0, 0, 0);
+    object o = object_program(this)(0, 0, 0);
     o->remoteaddr = remoteaddr;
     o->client = client;
     o->supports = supports;
@@ -892,7 +849,8 @@ void end(int|void keepit)
     o->host = host;
     o->conf = conf;
     o->pipe = pipe;
-    MARK_FD("HTTP kept alive");
+    o->connection_misc = connection_misc;
+    o->kept_alive = kept_alive+1;
     object fd = my_fd;
     my_fd=0;
     o->chain(fd,port_obj,leftovers);
@@ -901,29 +859,8 @@ void end(int|void keepit)
     return;
   }
 
+  data_buffer = 0;
   pipe = 0;
-  if(objectp(my_fd))
-  {
-    MARK_FD("HTTP closed");
-    mixed err = catch
-    {
-      // Don't set to blocking mode if SSL.
-      if (!my_fd->CipherSpec) {
-	my_fd->set_blocking();
-      }
-      my_fd->close();
-      destruct(my_fd);
-    };
-#ifdef DEBUG
-    if (err) report_debug ("Close failure (1): %s", describe_backtrace (err));
-#endif
-    err = catch {
-      my_fd = 0;
-    };
-#ifdef DEBUG
-    if (err) report_debug ("Close failure (2): %s", describe_backtrace (err));
-#endif
-  }
   disconnect();
 }
 
@@ -936,6 +873,9 @@ static void do_timeout()
     MARK_FD("HTTP timeout");
     end();
   } else {
+#ifdef DEBUG
+    error ("This shouldn't happen.\n");
+#endif
     // premature call_out... *¤#!"
     call_out(do_timeout, 10);
     MARK_FD("HTTP premature timeout");
@@ -951,6 +891,7 @@ string link_to(string file, int line, string fun, int eid, int qq)
 	  (fun ? "&fun="+Roxen.http_encode_url(fun) : "") +
 	  "&off="+qq+
 	  "&error="+eid+
+	  "&error_md5="+get_err_md5(get_err_info(eid))+
 	  (line ? "&line="+line+"#here" : "") +
 	  "\">");
 }
@@ -969,14 +910,39 @@ static string error_page_header (string title)
 ";
 }
 
-string format_backtrace(int eid)
+static string get_err_md5(array(string|array(string)|array(array)) err_info)
 {
-  array info = cache_lookup( "http_bt_error", eid);
-  if(!info)
-    return error_page_header("Unregistered Error");
-  [string msg, array(string) rxml_bt, array(array) bt,
-   string raw_bt_descr, string raw_url, string raw] = info;
+  if (err_info) {
+    return String.string2hex(Crypto.MD5.hash(err_info[3]));
+  }
+  return "NONE";
+}
 
+static array(string|array(string)|array(array)) get_err_info(int eid,
+							     string|void md5)
+{
+  array(string|array(string)|array(array)) err_info = 
+    core.query_var ("errors")[eid];
+  
+  if (!err_info ||
+      (md5 && (md5 != get_err_md5(err_info)))) {
+    // Extra safety...
+    return 0;
+  }
+  return err_info;
+}
+
+
+string format_backtrace(int eid, string|void md5)
+{
+  array(string|array(string)|array(array)) err_info = get_err_info(eid, md5);
+
+  if (!err_info) {
+    return error_page_header("Unregistred Error");
+  }
+
+  [string msg, array(string) rxml_bt, array(array) bt,
+   string raw_bt_descr, string raw_url, string raw] = err_info;
 
   string res = error_page_header ("Internal Server Error") +
     "<h1>" + replace (Roxen.html_encode_string (msg), "\n", "<br />\n") + "</h1>\n";
@@ -1008,7 +974,10 @@ string format_backtrace(int eid)
     res += "</ul>\n\n";
   }
 
-  res += ("<p><b><a href=\"/(old_error,plain)/error/?error="+eid+"\">"
+  res += ("<p><b><a href=\"/(old_error,plain)/error/?"
+	  "error="+eid+
+	  "&error_md5="+get_err_md5(get_err_info(eid))+
+	  "\">"
 	  "Generate text only version of this error message, for bug reports"+
 	  "</a></b></p>\n\n");
   return res+"</body></html>";
@@ -1040,11 +1009,12 @@ int store_error(mixed _err)
 {
   mixed err = _err;
   _err = 0; // hide in backtrace, they are bad enough anyway...
+  mapping e = core.query_var("errors");
+  if(!e) core.set_var("errors", ([]));
+  e = core.query_var("errors"); /* threads... */
 
-  int id;
-  do {
-    id = random( (1<<64)-1 ); // 64 bit random number
-  } while(!cache_lookup("http_bt_error", id));
+  int id = ++e[0];
+  if(id>1024) id = 1;
 
   string msg;
   array(string) rxml_bt;
@@ -1112,13 +1082,20 @@ int store_error(mixed _err)
   }
 
   add_cvs_ids (err);
-  cache_set( "http_bt_error", id, ({msg,rxml_bt,bt,describe_backtrace (err),raw_url,censor(raw)}) );
+  e[id] = ({msg,rxml_bt,bt,describe_backtrace (err),raw_url,censor(raw)});
   return id;
 }
 
-array get_error(string eid)
+array get_error(string eid, string md5)
 {
-  return cache_lookup( "http_bt_error", (int)eid );
+  mapping e = core.query_var("errors");
+  if(e) {
+    array r = e[(int)eid];
+    if (r && md5 == String.string2hex(Crypto.MD5.hash(r[3]))) {
+      return r;
+    }
+  }
+  return 0;
 }
 
 
@@ -1153,13 +1130,13 @@ void internal_error(array _err)
 }
 
 // This macro ensures that something gets reported even when the very
-// call to internal_error() fails. That happens eg when this has been
+// call to internal_error() fails. That happens eg when "this" has been
 // destructed.
 #define INTERNAL_ERROR(err) do {					\
-  if (mixed __eRr = catch (internal_error (err)))			\
-    report_error("Internal server error: " + describe_backtrace(err) +	\
-		 "internal_error() also failed: "+describe_backtrace(__eRr));\
-  } while(0)
+   if (mixed __eRr = catch (internal_error (err)))			\
+     report_error("Internal server error: " + describe_backtrace(err) + \
+       	   "internal_error() also failed: " + describe_backtrace(__eRr)); \
+ } while (0)
 
 int wants_more()
 {
@@ -1185,15 +1162,7 @@ void do_log( Shuffler.Shuffle r, int reason )
     MERGE_TIMERS(conf);
     if( conf )
       conf->connection_drop( this );
-    mixed err = catch  // paranoia
-    {
-      my_fd->close();
-      destruct( my_fd );
-      destruct( );
-    };
-#ifdef DEBUG
-    if (err) report_debug ("Close failure (3): %s", describe_backtrace (err));
-#endif
+    call_out (disconnect, 0);
     return;
   }
   TIMER_END(do_log);
@@ -1421,9 +1390,10 @@ array parse_range_header(int len)
 // Tell the client that it can start sending some more data
 void ready_to_receive()
 {
-  if (clientprot == "HTTP/1.1" && request_headers->Expect &&
-      (request_headers->Expect ==  "100-continue" ||
-       has_value(request_headers->Expect, "100-continue" )))
+  // FIXME: Only send once?
+  if (clientprot == "HTTP/1.1" && request_headers->expect &&
+      (request_headers->expect ==  "100-continue" ||
+       has_value(request_headers->expect, "100-continue" )))
     my_fd->write("HTTP/1.1 100 Continue\r\n");
 }
 
@@ -1432,160 +1402,158 @@ void send_result(mapping|void result)
 {
   TIMER_START(send_result);
 
+  CHECK_FD_SAFE_USE;
+
   array err;
   int tmp;
-  mapping heads;
   string head_string="";
   if (result)
     file = result;
 #ifdef PROFILE
-  float elapsed = SECHR(HRTIME()-req_time);
+  int elapsed = HRTIME()-req_time;
   string nid =
 #ifdef FILE_PROFILE
     (raw_url/"?")[0]
 #else
     dirname((raw_url/"?")[0])
 #endif
-         ;
+    + "?method="+method;
   array p;
-  if(!(p=conf->profile_map[nid]))
-    p = conf->profile_map[nid] = ({0,0.0,0.0});
+  if(!(p=conf->profile_map[nid])) {
+    // ({ count, sum, max })
+    p = conf->profile_map[nid] = ({0, 0, 0});
+  }
   p[0]++;
   p[1] += elapsed;
   if(elapsed > p[2]) p[2]=elapsed;
 #endif
 
-  REQUEST_WERR(sprintf("HTTP: response: prot %O, method %O, file %O, misc: %O",
-		       prot, method, file, misc));
+#ifdef DEBUG_CACHEABLE
+  report_debug("<=== Request for %s returned cacheable %d (proto cache %s).\n",
+	       raw_url, misc->cacheable,
+	       misc->no_proto_cache ? "disabled" : "enabled");
+#endif
 
   if( prot == "HTTP/0.9" )  misc->no_proto_cache = 1;
 
-  if(!leftovers)
+  if(!leftovers) 
     leftovers = data||"";
 
   if(!mappingp(file))
   {
     misc->no_proto_cache = 1;
     if(misc->error_code)
-      file = Roxen.http_low_answer(misc->error_code, errors[misc->error]);
+      file = Roxen.http_status(misc->error_code, errors[misc->error]);
     else if(err = catch {
       file = conf->error_file( this );
     })
       INTERNAL_ERROR(err);
   } 
-    else 
+  else 
+  {
+    if((file->file == -1) || file->leave_me)
     {
-      if((file->file == -1) || file->leave_me)
-      {
-	TIMER_END(send_result);
-	file = 0;
-	pipe = 0;
-        if(do_not_disconnect) 
-          return;
-        my_fd = 0;
-        return;
-      }
-
-      if(file->type == "raw")  file->raw = 1;
-      else if(!file->type)     file->type="text/plain";
+      TIMER_END(send_result);
+      file = 0;
+      pipe = 0;
+      if(do_not_disconnect) 
+	return;
+      my_fd = 0;
+      return;
     }
 
-    if(!file->raw)
-    {
-      heads = ([]);
-      if (!file->stat) file->stat = misc->stat;
-      if(objectp(file->file)) {
-	if(!file->stat)
-	  file->stat = file->file->stat();
-	if (zero_type(misc->cacheable) && file->file->is_file) {
-	  // Assume a cacheablity on the order of the age of the file.
-	  misc->cacheable = (predef::time(1) - file->stat[ST_MTIME])/4;
-	}
+    if(file->type == "raw")  file->raw = 1;
+  }
+
+  if(!file->raw && (prot != "HTTP/0.9"))
+  {
+      if (!sizeof (file) && multi_status)
+	file = multi_status->http_answer();
+
+      if (file->error == Protocols.HTTP.HTTP_NO_CONTENT) {
+#if 0
+	// We actually give some content cf comment below.
+	file->len = 2;
+	file->data = "\r\n";
+#else
+	file->len = 0;
+	file->data = "";
+#endif /* 0 */
       }
 
-      if( Stat fstat = file->stat )
-      {
-	if( !file->len )
-	  file->len = fstat[1];
+      string head_status = file->rettext;
+      if (head_status) {
+	if (!file->file && !file->data &&
+	    (!file->type || file->type == "text/html")) {
+	  // If we got no body then put the message there to make it
+	  // more visible.
+	  file->data = "<html><body>" +
+	    replace (Roxen.html_encode_string (head_status), "\n", "<br />\n") +
+	    "</body></html>";
+	  file->len = sizeof (file->data);
+	  file->type = "text/html";
+	}
+	if (has_value (head_status, "\n"))
+	  // Fold lines nicely.
+	  head_status = map (head_status / "\n", String.trim_all_whites) * " ";
+      }
 
-	if ( fstat[ST_MTIME] > misc->last_modified )
-	  misc->last_modified = fstat[ST_MTIME];
-      }	
+      mapping(string:string) heads = make_response_headers (file);
 
-      if( !zero_type(misc->cacheable) &&
-	  misc->cacheable < INITIAL_CACHEABLE ) {
-	if (misc->cacheable == 0) {
-	  heads["Expires"] = Roxen.http_date( 0 );
-
-	  if (misc->cacheable < INITIAL_CACHEABLE) {
-	    // Data with expiry is assumed to have been generated at
-	    // the same instant.
-	    misc->last_modified = predef::time(1);
+      if (file->error == 200) {
+	int conditional;
+	if (none_match) {
+	  // NOTE: misc->etag may be zero below, but that's ok.
+	  if (none_match[misc->etag] || (misc->etag && none_match["*"])) {
+	    // We have a if-none-match header that matches our etag.
+	    if ((<"HEAD", "GET">)[method]) {
+	      // RFC 2616 14.26:
+	      //   Instead, if the request method was GET or HEAD, the server
+	      //   SHOULD respond with a 304 (Not Modified) response, including
+	      //   the cache- related header fields (particularly ETag) of one
+	      //   of the entities that matched. For all other request methods,
+	      //   the server MUST respond with a status of 412 (Precondition
+	      //   Failed). 
+	      conditional = 304;
+	    } else {
+	      conditional = 412;
+	    }
+	  } else {
+	    conditional = -1;
 	  }
 	}
-	else
-	  heads["Expires"] = Roxen.http_date( predef::time(1)+misc->cacheable );
-      }
-
-      if (misc->last_modified)
-	heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
-
-      if(since && (!file->error || file->error == 200) && misc->last_modified)
-      {
-	// ({ time, len })
-	array(int) since_info = Roxen.parse_since( since );
-
-	if ( (since_info[0] >= misc->last_modified) &&
-	     ((since_info[1] == -1) || (since_info[1] == file->len))
-	     // never say 'not modified' if cacheable has been lowered.
-	     && (zero_type(misc->cacheable) ||
-		 misc->cacheable >= INITIAL_CACHEABLE) )
+	if(since && misc->last_modified && (conditional >= 0))
 	{
-	  file->error = 304;
-	  file->file = 0;
-	  file->data="";
+	  /* ({ time, len }) */
+	  array(int) since_info = Roxen.parse_since( since );
+//	  werror("since: %{%O, %}\n"
+//		 "lm:    %O\n"
+//		 "cacheable: %O\n",
+//		 since_info,
+//		 misc->last_modified,
+//		 misc->cacheable);
+	  if ( ((since_info[0] >= misc->last_modified) && 
+		((since_info[1] == -1) || (since_info[1] == file->len)))
+	       // never say 'not modified' if cacheable has been lowered.
+	       && (zero_type(misc->cacheable) ||
+		   (misc->cacheable >= INITIAL_CACHEABLE))
+	       // actually ok, or...
+//	       || ((misc->cacheable>0) 
+//		   && (since_info[0] + misc->cacheable<= predef::time(1))
+//		   // cacheable, and not enough time has passed.
+	       )
+	  {
+	    conditional = conditional || 304;
+	  } else {
+	    conditional = -1;
+	  }
 	}
-      }
-
-      if(prot != "HTTP/0.9") 
-      {
-        string h, charset="";
-
-        if( stringp(file->data) )
-        {
-          if (file["type"][0..4] == "text/") 
-          {
-            [charset,file->data] = output_encode( file->data, 1 );
-            if( charset && has_value(file["type"], "; charset=") )
-	      charset = "; charset="+charset;
-            else
-              charset = "";
-          }
-          file->len = strlen(file->data);
-        }
-        heads["Content-Type"] = file["type"]+charset;
-        heads["Accept-Ranges"] = "bytes";
-        heads["Server"] = replace(version(), " ", "·");
-        if( misc->connection )
-          heads["Connection"] = misc->connection;
-
-        if(file->encoding) heads["Content-Encoding"] = file->encoding;
-
-        if(!file->error)
-          file->error=200;
-
-        heads->Date = Roxen.http_date(predef::time(1));
-        if(file->expires)
-          heads->Expires = Roxen.http_date(file->expires);
-
-        if(mappingp(file->extra_heads))
-          heads |= file->extra_heads;
-
-        if(mappingp(misc->moreheads))
-          heads |= misc->moreheads;
-
-        if(misc->range && file->len && objectp(file->file) && !file->data &&
-           file->error == 200 && (method == "GET" || method == "HEAD"))
+	if (conditional > 0) {
+	  // All conditionals apply.
+	  file->error = conditional;
+	  file->file = file->data = file->len = 0;
+	} else if(misc->range && file->len && objectp(file->file) &&
+		  !file->data && (method == "GET" || method == "HEAD"))
           // Plain and simple file and a Range header. Let's play.
           // Also we only bother with 200-requests. Anything else should be
           // nicely and completely ignored. Also this is only used for GET and
@@ -1605,7 +1573,13 @@ void send_result(mapping|void result)
               {
                 heads["Content-Range"] = sprintf("bytes %d-%d/%d",
                                                  @ranges[0], file->len);
-                file->start = ranges[0][0];
+                file->file->seek(ranges[0][0]);
+                if(ranges[0][1] == (file->len - 1) &&
+                   GLOBVAR(RestoreConnLogFull))
+                  // Log continuations (ie REST in FTP), 'range XXX-'
+                  // using the entire length of the file, not just the
+                  // "sent" part. Ie add the "start" byte location when logging
+                  misc->_log_cheat_addition = ranges[0][0];
                 file->len = ranges[0][1] - ranges[0][0]+1;
               } else {
                 // Multiple ranges. Multipart reply and stuff needed.
@@ -1614,61 +1588,69 @@ void send_result(mapping|void result)
                 file->file = MultiRangeWrapper(file, heads, ranges, this);
               }
             } else {
-              // Got the header, but the specified ranges was out of bounds.
+	      // Got the header, but the specified ranges were out of bounds.
               // Reply with a 416 Requested Range not satisfiable.
               file->error = 416;
               heads["Content-Range"] = "*/"+file->len;
-              if(method == "GET") {
-                file->data = "The requested byte range is out-of-bounds. Sorry.";
-                file->len = strlen(file->data);
-                file->file = 0;
+	      if(method == "GET") {
+		file->file = file->data = file->type = file->len = 0;
               }
             }
           }
-        }
-	head_string = sprintf("%s %d %s\r\n",
-			      prot, file->error,
-			      file->rettext ||errors[file->error]||"");
+	}
+      }
 
-//         if( file->len > 0 || (file->error != 200) )
-	heads["Content-Length"] = (string)file->len;
+      head_string = sprintf("%s %d %s\r\n", prot, file->error,
+			    head_status || errors[file->error] || "");
 
-        // Some browsers, e.g. Netscape 4.7, doesn't trust a zero
-        // content length when using keep-alive. So let's force a
-        // close in that case.
-        if( file->error/100 == 2 && file->len <= 0 )
-	{
-	  heads->Connection = "close";
-          misc->connection = "close";
-        }
+      // Must update the content length after the modifications of the
+      // data to send that might have been done above for 206 or 304.
+      heads["Content-Length"] = (string)file->len;
+
+      // Some browsers, e.g. Netscape 4.7, don't trust a zero
+      // content length when using keep-alive. So let's force a
+      // close in that case.
+      if( file->error/100 == 2 && file->len <= 0 )
+      {
+	heads->Connection = "close";
+	misc->connection = "close";
+      }
+
 	if( mixed err = catch( head_string += Roxen.make_http_headers( heads ) ) )
 	{
 #ifdef DEBUG
-	  report_debug("Roxen.make_http_headers failed: " +
-		       describe_error(err));
+	  report_debug ("Roxen.make_http_headers failed: " +
+			describe_error (err));
 #endif
-	  foreach( heads; string x; mixed head )
-	    if( stringp( head ) )
-	      head_string += x+": "+head+"\r\n";
-	    else if( arrayp( head ) )
-	      foreach( head, string xx )
+	  foreach(heads; string x; string|array(string) val) {
+	    if (stringp(val))
+	      head_string += x+": "+val+"\r\n";
+	    else if( arrayp( val ) )
+	      foreach( val, string xx )
 		head_string += x+": "+xx+"\r\n";
 	    else if( catch {
-	      head_string += x+": "+(string)head;
+	      head_string += x+": "+(string)val+"\r\n";
 	    } )
 	      error("Illegal value in headers array! "
 		    "Expected string or array(string)\n");
+	  }
 	  head_string += "\r\n";
 	}
 
-        if( strlen( charset ) || String.width( head_string ) > 8 )
+	if (sscanf (heads["Content-Type"], "; charset=%s", string charset) ||
+	    String.width( head_string ) > 8 )
           head_string = output_encode( head_string, 0, charset )[1];
         conf->hsent += strlen(head_string);
-      }
     }
+  else
+    if(!file->type) file->type="text/plain";
+#if 0
+    REQUEST_WERR(sprintf("HTTP: Sending result for prot:%O, method:%O, file:%O",
+			 prot, method, file));
+#endif
     MARK_FD("HTTP handled");
   
-    if( (method!="HEAD") && (file->error!=304) )
+    if( (method!="HEAD") && (file->error!=204) )
       // No data for these two...
     {
 #ifdef RAM_CACHE
@@ -1684,11 +1666,13 @@ void send_result(mapping|void result)
           if( file->file )   data += file->file->read();
           if( file->data )   data += file->data;
 	  MY_TRACE_ENTER (sprintf ("Storing in ram cache, entry: %O", raw_url), 0);
+	  MY_TRACE_LEAVE ("");
           conf->datacache->set( raw_url, data,
                                 ([
                                   // We have to handle the date header.
                                   "hs":head_string,
                                   "key":misc->cachekey,
+				  "etag":misc->etag,
                                   "callbacks":misc->_cachecallbacks,
                                   "len":file->len,
                                   // fix non-keep-alive when sending from cache
@@ -1699,26 +1683,62 @@ void send_result(mapping|void result)
                                 ]), 
                                 misc->cacheable );
           file = ([ "data":data, "raw":file->raw, "len":strlen(data) ]);
-	  MY_TRACE_LEAVE ("");
         }
       }
 #endif
-      if(strlen(head_string))
-	send(head_string);
-      if(file->data && strlen(file->data))
-	send(file->data, file->len, file->start);
-      if(file->file)
-	send(file->file, file->len, file->start);
+      if(!kept_alive &&
+	 (file->len > 0) &&
+	 ((sizeof(head_string) + file->len) < (HTTP_BLOCKING_SIZE_THRESHOLD)))
+      {
+	// The first time we get a request, the output buffers will
+	// be empty. We can thus just do a single blocking write()
+	// if the data will fit in the output buffer (usually 4KB).
+        int s;
+	TIMER_END(send_result);
+	TIMER_START(blocking_write);
+	string data = head_string;
+	if (file->data)
+	  data += file->data[..file->len-1];
+	if (file->file)
+	  data += file->file->read(file->len);
+#ifdef CONNECTION_DEBUG
+	werror ("HTTP: Response =================================================\n"
+		"%s\n",
+		replace (sprintf ("%O", data),
+			 ({"\\r\\n", "\\n", "\\t"}),
+			 ({"\n",     "\n",  "\t"})));
+#else
+	REQUEST_WERR (sprintf ("HTTP: Send blocking %O", data));
+#endif
+	s = my_fd->write(data);
+	TIMER_END(blocking_write);
+        return;
+      }
+      if(strlen(head_string))                 send(head_string);
+      if(file->data && strlen(file->data))    send(file->data, file->len);
+      if(file->file)                          send(file->file, file->len);
     }
     else 
     {
+      if( strlen( head_string ) < (HTTP_BLOCKING_SIZE_THRESHOLD))
+      {
+#ifdef CONNECTION_DEBUG
+	werror ("HTTP: Response =================================================\n"
+		"%s\n",
+		replace (sprintf ("%O", head_string),
+			 ({"\\r\\n", "\\n", "\\t"}),
+			 ({"\n",     "\n",  "\t"})));
+#else
+	REQUEST_WERR (sprintf ("HTTP: Send headers blocking %O", head_string));
+#endif
+        return;
+      }
       send(head_string);
       file->len = 1; // Keep those alive, please...
     }
   TIMER_END(send_result);
   start_sender();
 }
-
 
 // Execute the request
 void handle_request( )
@@ -1728,7 +1748,7 @@ void handle_request( )
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
   {
-    array err = get_error(variables->error);
+    array err = get_error(variables->error, variables->error_md5 || "NONE");
     if(err && arrayp(err))
     {
       if(prestate->plain)
@@ -1774,15 +1794,14 @@ void handle_request( )
     file = result;
   }
 
-  if( file )
-    if( file->try_again_later )
-    {
-      if( objectp( file->try_again_later ) )
-	;
-      else
-	call_out( core.handle, file->try_again_later, handle_request );
-      return;
-    }
+  if( file && file->try_again_later )
+  {
+    if( objectp( file->try_again_later ) )
+      ;
+    else
+      call_out( core.handle, file->try_again_later, handle_request );
+    return;
+  }
 
   TIMER_END(handle_request);
   send_result();
@@ -1812,7 +1831,8 @@ string url_base()
 
     // Then use the port object.
     else {
-      string host = port_obj->conf_data[conf]->hostname;
+      string host = (port_obj->conf_data[conf] ||
+		     (["hostname":"*"]))->hostname;
       if (host == "*")
 	if (conf && sizeof (host = conf->get_url()) &&
 	    sscanf (host, "%*s://%[^:/]", host) == 2) {
@@ -1839,10 +1859,19 @@ int processed;
 // array ccd = ({});
 void got_data(mixed fooid, string s)
 {
+#ifdef CONNECTION_DEBUG
+  werror ("HTTP: Request --------------------------------------------------\n"
+	  "%s\n",
+	  replace (sprintf ("%O", s),
+		   ({"\\r\\n", "\\n", "\\t"}),
+		   ({"\n",     "\n",  "\t"})));
+#else
   REQUEST_WERR(sprintf("HTTP: Got %O", s));
+#endif
 
   if(wanted_data)
   {
+    // NOTE: No need to make a data buffer if it's a small request.
     if(strlen(s) + have_data < wanted_data)
     {
       if(!data_buffer) {
@@ -1880,16 +1909,8 @@ void got_data(mixed fooid, string s)
     {
       if( conf )
 	conf->connection_drop( this );
-      mixed err = catch  // paranoia
-      {
-	my_fd->set_blocking();
-	my_fd->close();
-	destruct( my_fd );
-	destruct( );
-      };
-#ifdef DEBUG
-    if (err) report_debug ("Close failure (4): %s", describe_backtrace (err));
-#endif
+      MARK_FD ("HTTP: Port closed.");
+      call_out (disconnect, 0);
       return;
     }
 
@@ -1914,8 +1935,17 @@ void got_data(mixed fooid, string s)
 	return;
     }
 
-    if( (< "GET", "HEAD" >)[method] )
+#ifdef CONNECTION_DEBUG
+    werror ("HTTP: Request received -----------------------------------------\n");
+#endif
+
+    if( method == "GET" || method == "HEAD" ) {
       misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
+#ifdef DEBUG_CACHEABLE
+      report_debug("===> Request for %s initiated cacheable to %d.\n", raw_url,
+		   misc->cacheable);
+#endif
+    }
 
     TIMER_START(find_conf);
     string path;
@@ -1995,6 +2025,7 @@ void got_data(mixed fooid, string s)
       conf->received += strlen(raw);
       conf->requests++;
     }
+    CHECK_FD_SAFE_USE;
     my_fd->set_close_callback(0);
     my_fd->set_read_callback(0);
     if (my_fd->set_accept_callback) my_fd->set_accept_callback(0);
@@ -2073,9 +2104,16 @@ void got_data(mixed fooid, string s)
 	    MY_TRACE_LEAVE ("Using entry from ram cache");
 	    conf->hsent += strlen(file->hs);
 	    cache_status["protcache"] = 1;
-	    TIMER_END(cache_lookup);
-	    send( fix_date(file->hs)+d );
-	    start_sender( );
+	    if( strlen( d ) < (HTTP_BLOCKING_SIZE_THRESHOLD) )
+	    {
+	      TIMER_END(cache_lookup);
+	    } 
+	    else 
+	    {
+	      TIMER_END(cache_lookup);
+	      send( fix_date(file->hs)+d );
+	      start_sender( );
+	    }
 	    return;
 	  }
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
@@ -2094,19 +2132,19 @@ void got_data(mixed fooid, string s)
     TIMER_START(parse_request);
     if( things_to_do_when_not_sending_from_cache( ) )
       return;
+    REQUEST_WERR(sprintf("HTTP: cooked headers %O", request_headers));
+    REQUEST_WERR(sprintf("HTTP: cooked variables %O", real_variables));
+    REQUEST_WERR(sprintf("HTTP: cooked cookies %O", cookies));
     TIMER_END(parse_request);
 
-#ifdef THREADS
     REQUEST_WERR("HTTP: Calling core.handle().");
     core.handle(handle_request);
-#else
-    handle_request();
-#endif
   })
   {
     report_error("Internal server error: " + describe_backtrace(err));
     my_fd->set_blocking();
     my_fd->close();
+    my_fd = 0;
     disconnect();
   }
 }
@@ -2114,9 +2152,9 @@ void got_data(mixed fooid, string s)
 /* Get a somewhat identical copy of this object, used when doing
  * 'simulated' requests. */
 
-this_program clone_me()
+object clone_me()
 {
-  this_program c=this_program(0, port_obj, conf);
+  object c=object_program(this)(0, port_obj, conf);
 #ifdef ID_OBJ_DEBUG
   werror ("clone %O -> %O\n", this, c);
 #endif
@@ -2145,7 +2183,7 @@ this_program clone_me()
   c->pragma = pragma;
 
   c->cookies = cookies;
-  c->request_headers = request_headers;
+  c->request_headers = request_headers + ([]);
   c->my_fd = 0;
   c->prot = prot;
   c->clientprot = clientprot;
@@ -2180,6 +2218,7 @@ static void create(object f, object c, object cc)
   {
     f->set_nonblocking(got_data, f->query_write_callback(), end);
     my_fd = f;
+    CHECK_FD_SAFE_USE;
     MARK_FD("HTTP connection");
     if( c ) port_obj = c;
     if( cc ) conf = cc;
@@ -2199,7 +2238,7 @@ void chain( object f, object c, string le )
   MARK_FD("HTTP kept alive");
   time = predef::time();
 
-  if ( strlen( le ) )
+  if ( le && strlen( le ) )
     got_data( 0,le );
   else
   {
@@ -2220,8 +2259,7 @@ void chain( object f, object c, string le )
   {
     if(do_not_disconnect == -1)
       do_not_disconnect = 0;
-    if(!processed)
-      f->set_nonblocking(got_data, f->query_write_callback(), end);
+    f->set_nonblocking(!processed && got_data, f->query_write_callback(), end);
   }
 }
 

@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.33 2002/06/13 13:55:13 nilsson Exp $
+ * $Id: config.h,v 1.34 2004/05/24 13:40:49 _cvs_stephen Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -90,10 +90,18 @@
 // compatibility.
 #define ROXEN_COMPAT 1.3
 
+
 //  Cache timeout for RAM cache
 #ifndef INITIAL_CACHEABLE
 # define INITIAL_CACHEABLE 300
 #endif
+
+#ifndef HTTP_BLOCKING_SIZE_THRESHOLD
+// Size at below which blocking writes may be performed without penalty.
+// Should correspond to the network buffer size (usually 4KB or 1500 bytes).
+// Set to zero or negative to always use nonblocking I/O.
+#define HTTP_BLOCKING_SIZE_THRESHOLD	1000
+#endif /* !HTTP_BLOCKING_SIZE_THRESHOLD */
 
 /*---------------- End of configurable options. */
 #endif /* if _ROXEN_CONFIG_H_ */

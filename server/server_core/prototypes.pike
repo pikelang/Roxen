@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.70 2004/05/22 15:27:58 _cvs_stephen Exp $
+// $Id: prototypes.pike,v 1.71 2004/05/24 13:40:50 _cvs_stephen Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -15,7 +15,7 @@
 #endif /* DAV_DEBUG */
 
 // To avoid reference cycles. Set to the Roxen module object by
-// roxenloader.pike.
+// loader.pike.
 object Roxen;
 
 multiset(string) globals = (<
@@ -23,6 +23,7 @@ multiset(string) globals = (<
   "RoxenModule", "ModuleInfo", "ModuleCopies", "FakedVariables",
   "AuthModule", "UserDB", "User", "Group", "PrefLanguages", "DAVLock",
   "MultiStatus", "Overwrite", "PropertyBehavior", "PatchPropertyCommand",
+  "CacheKey",
   >);
 
 static class Variable
@@ -1109,20 +1110,8 @@ class RequestID
     mapping hdrs = misc->defines && misc->defines[" _extra_heads"] || misc->moreheads;
     if (!hdrs) hdrs = misc->moreheads = ([]);
 
-    // Essentially Roxen.add_http_header inlined. Can't refer to it
-    // from here due to the recursive resolver problems in Pike.
+    Roxen->add_http_header(hdrs, name, value);
     array|string cur_val = hdrs[name];
-    if(cur_val) {
-      if(arrayp(cur_val)) {
-	if (!has_value(cur_val, value))
-	  cur_val += ({ value });
-      } else {
-	if (cur_val != value)
-	  cur_val = ({ cur_val, value });
-      }
-    }
-    else
-      cur_val = value;
 
     if (hdrs == misc->moreheads)
       hdrs[name] = cur_val;
@@ -1216,7 +1205,7 @@ class RequestID
   //!   format @[args].
   //!
   //! @seealso
-  //! @[Roxen.http_status]
+  //! @[Roxen->http_status]
   {
     if (sizeof (args)) message = sprintf (message, @args);
     ASSERT_IF_DEBUG (has_prefix (path, "/"));
@@ -1373,14 +1362,14 @@ class RequestID
       foreach(query / "&", v)
 	if(sscanf(v, "%s=%s", a, b) == 2)
 	{
-	  a = _Roxen.http_decode_string(replace(a, "+", " "));
-	  b = _Roxen.http_decode_string(replace(b, "+", " "));
+	  a = _Roxen->http_decode_string(replace(a, "+", " "));
+	  b = _Roxen->http_decode_string(replace(b, "+", " "));
 	  real_variables[ a ] += ({ b });
 	} else
 	  if(strlen( rest_query ))
-	    rest_query += "&" + _Roxen.http_decode_string( v );
+	    rest_query += "&" + _Roxen->http_decode_string( v );
 	  else
-	    rest_query = _Roxen.http_decode_string( v );
+	    rest_query = _Roxen->http_decode_string( v );
       rest_query=replace(rest_query, "+", "\000");
     }
     return f;
@@ -1834,7 +1823,7 @@ class MultiStatus
   void add_status (string href, int status_code,
 		   void|string message, mixed... args)
   //! Add a status for the specified url. The remaining arguments are
-  //! the same as for @[Roxen.http_status].
+  //! the same as for @[Roxen->http_status].
   {
     if (sizeof (args)) message = sprintf (message, @args);
     if (!status_code) error("Bad status code!\n");
@@ -2093,7 +2082,7 @@ class AuthModule
   //! database.
 
   mapping authenticate_throw( RequestID id, string realm, UserDB db );
-  //! Returns a reply mapping, similar to @[Roxen.http_rxml_reply] with
+  //! Returns a reply mapping, similar to @[Roxen->http_rxml_reply] with
   //! friends. If no @[db] is specified,  all datbases in the current
   //! configuration are searched in order, then the configuration user
   //! database.
