@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.105 1999/03/06 15:57:41 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.106 1999/03/08 20:47:47 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -232,7 +232,7 @@ class imap_mail
 	
       // FIXME: Type specific fields, for text/* and message/rfc822 messages
       if (extension_data)
-	a += ({ Crypto.md5()->update(data)->digest(),
+	a += ({ MIME.encode_base64(Crypto.md5()->update(data)->digest()),
 		// Disposition,
 		// Language
 	});
@@ -558,7 +558,7 @@ class imap_mail
 	  throw("Invalid section");
 	  
 	if (sizeof(attr->options) != 1)
-	  throw("Invalid section");
+	  throw("Invalid section - header names not specified.");
 	
 	array(mapping(string:mixed)|string) list = attr->options[0]->list;
 
