@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.174 2004/05/16 21:46:46 mani Exp $
+// $Id: Roxen.pmod,v 1.175 2004/05/16 21:47:47 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2943,6 +2943,14 @@ class ScopeRoxen {
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
+    
+    mixed val = c->misc->scope_roxen[var];
+    if(!zero_type(val))
+    {
+      if (objectp(val) && val->rxml_var_eval) return val;
+      return ENCODE_RXML_TEXT(val, type);
+    }
+    
     switch(var)
     {
      case "uptime":
@@ -3018,10 +3026,8 @@ class ScopeRoxen {
        NOCACHE(c->id);
        return ENCODE_RXML_TEXT(get_core()->create_unique_id(), type);
     }
-    mixed val = c->misc->scope_roxen[var];
-    if (zero_type(val)) return RXML.nil;
-    if (objectp(val) && val->rxml_var_eval) return val;
-    return ENCODE_RXML_TEXT(val, type);
+    
+    return RXML.nil;
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c, 
@@ -3058,6 +3064,19 @@ class ScopePage {
   mixed `[] (string var, void|RXML.Context c, void|string scope,
 	     void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
+    
+    mixed val;
+    if(converter[var])
+      val = c->misc[converter[var]];
+    else
+      val = c->misc->scope_page[var];
+    if(!zero_type(val))
+    {
+      if (objectp (val) && val->rxml_var_eval)
+	return val;
+      return ENCODE_RXML_TEXT(val, type);
+    }
+    
     switch (var) {
       case "pathinfo": return ENCODE_RXML_TEXT(c->id->misc->path_info, type);
       case "realfile": return ENCODE_RXML_TEXT(c->id->realfile, type);
@@ -3090,14 +3109,8 @@ class ScopePage {
       case "prestates":
 	return indices(c->id->prestate);
     }
-    mixed val;
-    if(converter[var])
-      val = c->misc[converter[var]];
-    else
-      val = c->misc->scope_page[var];
-    if( zero_type(val) ) return RXML.nil;
-    if (objectp (val) && val->rxml_var_eval) return val;
-    return ENCODE_RXML_TEXT(val, type);
+    
+    return RXML.nil;
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c,
