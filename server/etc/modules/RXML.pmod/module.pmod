@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.15 2000/01/12 20:14:52 mast Exp $
+//! $Id: module.pmod,v 1.16 2000/01/14 05:14:48 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -82,7 +82,7 @@ class Tag
 
   // Internals.
 
-  mixed _handle_tag (TagSetParser parser, mapping(string:string) args,
+  array _handle_tag (TagSetParser parser, mapping(string:string) args,
 		     void|string content)
   // Callback for tag set parsers. Returns a sequence of result values
   // to be added to the result queue. Note that this function handles
@@ -106,9 +106,9 @@ class Tag
       if (!ustate) ustate = ctx->unwind_state = ([]);
 #ifdef DEBUG
       if (err != frame)
-	parse_error ("Internal error: Unexpected unwind object catched.\n");
+	error ("Internal error: Unexpected unwind object catched.\n");
       if (ustate[parser])
-	parse_error ("Internal error: Clobbering unwind state for parser.\n");
+	error ("Internal error: Clobbering unwind state for parser.\n");
 #endif
       ustate[parser] = ({err});
       err = parser;
@@ -392,10 +392,28 @@ class Value
 class Scope
 //! Interface for objects that emulates a scope mapping.
 {
-  mixed `[] (string var);
-  array(string) _indices();
-  void m_delete (string var);
+  mixed `[] (string var, void|Context ctx, void|string scope_name)
+    {rxml_error ("Cannot query variable" + _in_the_scope (scope_name) + ".\n");}
+
+  mixed `[]= (string var, mixed val, void|Context ctx, void|string scope_name)
+    {rxml_error ("Cannot set variable" + _in_the_scope (scope_name) + ".\n");}
+
+  array(string) _indices (void|Context ctx, void|string scope_name)
+    {rxml_error ("Cannot list variables" + _in_the_scope (scope_name) + ".\n");}
+
+  void m_delete (string var, void|Context ctx, void|string scope_name)
+    {rxml_error ("Cannot delete variable" + _in_the_scope (scope_name) + ".\n");}
+
+  private string _in_the_scope (string scope_name)
+  {
+    if (scope_name)
+      if (scope_name != "") return " in the scope " + scope_name;
+      else return " in the current scope";
+    else return "";
+  }
 }
+
+#define SCOPE_TYPE mapping(string:mixed)|object(Scope)
 
 
 class Context
@@ -416,14 +434,15 @@ class Context
   int type_check;
   //! Whether to do type checking.
 
+  int got_error;
+  //! Nonzero if an RXML error is encountered.
+
   TagSet tag_set;
   //! The current tag set that will be inherited by subparsers.
 
   int tag_set_is_local;
   //! Nonzero if tag_set is a copy local to this context. A local tag
   //! set that imports the old tag set is created whenever need be.
-
-#define SCOPE_TYPE mapping(string:mixed)|object(Scope)
 
   mixed get_var (string var, void|string scope_name)
   //! Returns the value a variable in the specified scope, or the
@@ -432,13 +451,18 @@ class Context
   {
     if (SCOPE_TYPE vars = scopes[scope_name || ""]) {
       mixed val;
-      if (zero_type (val = vars[var])) return ([])[0];
+      if (mappingp (vars)) {
+	val = ([object(Scope)] vars)->`[] (var, this_object(), scope_name || "");
+	if (val == Void) return ([])[0];
+      }
+      else if (zero_type (val = vars[var])) return ([])[0];
       else if (objectp (val) && ([object] val)->rxml_var_eval)
-	return ([object(Value)] val)->rxml_var_eval (this_object(), var, scope_name);
+	return ([object(Value)] val)->
+	  rxml_var_eval (this_object(), var, scope_name || "");
       else return val;
     }
-    else if (scope_name) error ("Unknown scope %O.\n", scope_name);
-    else error ("No current scope.\n");
+    else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
+    else rxml_error ("No current scope.\n");
   }
 
   mixed set_var (string var, mixed val, void|string scope_name)
@@ -446,9 +470,12 @@ class Context
   //! current scope if none is given. Returns val.
   {
     if (SCOPE_TYPE vars = scopes[scope_name || ""])
-      return vars[var] = val;
-    else if (scope_name) error ("Unknown scope %O.\n", scope_name);
-    else error ("No current scope.\n");
+      if (objectp (vars))
+	return ([object(Scope)] vars)->`[]= (var, val, this_object(), scope_name || "");
+      else
+	return vars[var] = val;
+    else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
+    else rxml_error ("No current scope.\n");
   }
 
   void delete_var (string var, void|string scope_name)
@@ -456,10 +483,12 @@ class Context
   //! if none is given.
   {
     if (SCOPE_TYPE vars = scopes[scope_name || ""])
-      if (objectp (vars)) ([object(Scope)] vars)->m_delete (var);
-      else m_delete ([mapping(string:mixed)] vars, var);
-    else if (scope_name) error ("Unknown scope %O.\n", scope_name);
-    else error ("No current scope.\n");
+      if (objectp (vars))
+	([object(Scope)] vars)->m_delete (var, this_object(), scope_name || "");
+      else
+	m_delete ([mapping(string:mixed)] vars, var);
+    else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
+    else rxml_error ("No current scope.\n");
   }
 
   array(string) list_var (void|string scope_name)
@@ -467,9 +496,12 @@ class Context
   //! the current scope if none is given.
   {
     if (SCOPE_TYPE vars = scopes[scope_name || ""])
-      return indices (vars);
-    else if (scope_name) error ("Unknown scope %O.\n", scope_name);
-    else error ("No current scope.\n");
+      if (objectp (vars))
+	return ([object(Scope)] vars)->_indices (this_object(), scope_name || "");
+      else
+	return indices ([mapping(string:mixed)] vars);
+    else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
+    else rxml_error ("No current scope.\n");
   }
 
   array(string) list_scopes()
@@ -550,13 +582,11 @@ class Context
     new_runtime_tags->remove_tags[tag] = 1;
   }
 
-  static constant rxml_errmsg_prefix = "RXML parser error: ";
-
-  void error (string msg, mixed... args)
-  //! Throws an error with a dump of the parser stack.
+  void rxml_error (string msg, mixed... args)
+  //! Throws an RXML error with a dump of the parser stack.
   {
     if (sizeof (args)) msg = sprintf (msg, @args);
-    msg = rxml_errmsg_prefix + msg;
+    msg = rxml_errmsg_prefix + ": " + msg;
     for (Frame f = frame; f; f = f->up) {
       if (f->tag) msg += "<" + f->tag->name;
       else if (!f->up) break;
@@ -575,32 +605,34 @@ class Context
     throw (({msg, b[..sizeof (b) - 2]}));
   }
 
-  string handle_exception (mixed err)
-  //! This function gets any exception that is catched at the top
-  //! level of the parser. The returned value is added to the result,
-  //! if possible.
+  void handle_exception (mixed err, PCode|Parser evaluator)
+  //! This function gets any exception that is catched during
+  //! evaluation. evaluator is the object that catched the error.
   {
-    if (arrayp (err) && sizeof ([array] err) == 2) {
-      array err = [array] err;
-      if (stringp (err[0]) &&
-	  ([string] err[0])[..sizeof (rxml_errmsg_prefix) - 1] == rxml_errmsg_prefix)
-	// An RXML error.
-	if (id && id->conf)
-	  return ([function(mixed:string)]
-		  ([object] id->conf)->report_rxml_error) (err);
-	else {
+    got_error = 1;
+    string msg = describe_error (err);
+    if (msg[..sizeof (rxml_errmsg_prefix) - 1] == rxml_errmsg_prefix) {
+      // An RXML error.
+      while (evaluator->_parent) evaluator = evaluator->_parent;
+      if (id && id->conf)
+	msg = ([function(mixed,Type:string)]
+	       ([object] id->conf)->report_rxml_error) (err, evaluator->type);
+      else {
 #ifdef MODULE_DEBUG
-	  report_notice (describe_backtrace (err));
+	report_notice (describe_backtrace (err));
 #else
-	  report_notice (err[0]);
+	report_notice (msg);
 #endif
-	  return [string] err[0];
-	}
+      }
+      if (evaluator->type->free_text && evaluator->report_error)
+	evaluator->report_error (msg);
     }
-    throw (err);
+    else throw (err);
   }
 
   // Internals.
+
+  constant rxml_errmsg_prefix = "RXML parser error";
 
   private string error_print_val (mixed val)
   {
@@ -733,7 +765,7 @@ inline Context get_context() {return _context;}
   set_context (ctx);							\
   if (ctx) {								\
     if (ctx->in_use && __old_ctx != ctx)				\
-      parse_error ("Attempt to use context asynchronously.\n");		\
+      error ("Attempt to use context asynchronously.\n");		\
     ctx->in_use = 1;							\
   }
 
@@ -753,16 +785,15 @@ inline Context get_context() {return _context;}
 
 #endif
 
-void parse_error (string msg, mixed... args)
-//! Tries to throw an error with error() in the current context to
-//! include the frame stack.
+void rxml_error (string msg, mixed... args)
+//! Tries to throw an error with rxml_error() in the current context.
 {
   Context ctx = get_context();
-  if (ctx && ctx->error)
-    ctx->error (msg, @args);
+  if (ctx && ctx->rxml_error)
+    ctx->rxml_error (msg, @args);
   else {
     if (sizeof (args)) msg = sprintf (msg, @args);
-    msg = "RXML parser error (no context): " + msg;
+    msg = Context.rxml_errmsg_prefix + " (no context): " + msg;
     array b = backtrace();
     throw (({msg, b[..sizeof (b) - 2]}));
   }
@@ -975,10 +1006,10 @@ class Frame
 
   //! Services.
 
-  void error (string msg, mixed... args)
-  //! Throws an error with a backtrace from the current context.
+  void rxml_error (string msg, mixed... args)
+  //! Throws an RXML error from the current context.
   {
-    parse_error (msg, @args);
+    get_context()/*HMM*/->rxml_error (msg, @args);
   }
 
   void terminate()
@@ -1166,16 +1197,16 @@ class Frame
     ctx->frame = this;
 
     if (raw_args) {
-      args = ([]);
+      args = raw_args;
       mapping(string:Type) atypes;
       if (tag->req_arg_types) {
 	atypes = raw_args & tag->req_arg_types;
 	if (sizeof (atypes) < sizeof (tag->req_arg_types)) {
 	  array(string) missing = sort (indices (tag->req_arg_types - atypes));
-	  parse_error ("Required " +
-		       (sizeof (missing) > 1 ?
-			"arguments " + String.implode_nicely (missing) + " are" :
-			"argument " + missing[0] + " is") + " missing.\n");
+	  rxml_error ("Required " +
+		      (sizeof (missing) > 1 ?
+		       "arguments " + String.implode_nicely (missing) + " are" :
+		       "argument " + missing[0] + " is") + " missing.\n");
 	}
       }
       if (tag->opt_arg_types)
@@ -1185,7 +1216,7 @@ class Frame
 	if (mixed err = catch {
 	  foreach (indices (atypes), string arg)
 	    args[arg] = atypes[arg]->eval (
-	      raw_args[arg], ctx, 0, 1); // Should currently NOT unwind.
+	      raw_args[arg], ctx, 0, parser, 1); // Should currently NOT unwind.
 	}) {
 	  if (objectp (err) && ([object] err)->thrown_at_unwind)
 	    error ("Can't save parser state when evaluating arguments.\n");
@@ -1207,11 +1238,12 @@ class Frame
     if (!result_type) {
       Type ptype = parser->type;
       foreach (tag->result_types, Type rtype)
-	if (rtype->subtype_of (ptype)) {result_type = rtype; break;}
+	if (ptype->subtype_of (rtype)) {result_type = rtype; break;}
       if (!result_type)		// Sigh..
-	error ("Tag returns " +
-	       String.implode_nicely ([array(string)] tag->result_types->name, "or") +
-	       " but " + [string] parser->type->name + " is expected.\n");
+	rxml_error (
+	  "Tag returns " +
+	  String.implode_nicely ([array(string)] tag->result_types->name, "or") +
+	  " but " + [string] parser->type->name + " is expected.\n");
     }
     if (!content_type) content_type = tag->content_type || result_type;
 
@@ -1382,7 +1414,10 @@ class Frame
 	ustate[this] = ({err, fn, iter, raw_content, subparser, piece, exec, tags_added,
 			 ctx->new_runtime_tags});
       }
-      else action = "throw";
+      else {
+	ctx->handle_exception (err, parser); // May throw.
+	action = "return";
+      }
 
       switch (action) {
 	case "break":		// Throw and handle in parent frame.
@@ -1394,18 +1429,16 @@ class Frame
 	case "continue":	// Continue in this frame through tail recursion.
 	  _eval (parser);
 	  return;
-	case "throw":		// Any old exception.
-	  throw (err);
+	case "return":		// A normal return.
+	  break;
 	default:
 	  error ("Internal error: Don't you come here and %O on me!\n", action);
       }
     }
 
-    else {
-      if (tags_added)
-	ctx->tag_set->imported -= ({/*[object(TagSet)]HMM*/ this->additional_tags});
-      ctx->frame = up;
-    }
+    if (tags_added)
+      ctx->tag_set->imported -= ({/*[object(TagSet)]HMM*/ this->additional_tags});
+    ctx->frame = up;
   }
 
   string _sprintf()
@@ -1458,18 +1491,14 @@ class Parser
       if (objectp (err) && ([object] err)->thrown_at_unwind) {
 #ifdef DEBUG
 	if (err != this_object())
-	  parse_error ("Internal error: Unexpected unwind object catched.\n");
+	  error ("Internal error: Unexpected unwind object catched.\n");
 #endif
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
-      else
-	if (context) {
-	  if (string msg = context->handle_exception (err))
-	    if (type->free_text && this_object()->write_out)
-	      ([function(string:void)] this_object()->write_out) (msg);
-	}
-	else throw (err);
+      else if (context)
+	context->handle_exception (err, this_object()); // May throw.
+      else throw (err);
     return res;
   }
 
@@ -1496,18 +1525,34 @@ class Parser
       if (objectp (err) && ([object] err)->thrown_at_unwind) {
 #ifdef DEBUG
 	if (err != this_object())
-	  parse_error ("Internal error: Unexpected unwind object catched.\n");
+	  error ("Internal error: Unexpected unwind object catched.\n");
 #endif
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
-      else
-	if (context) {
-	  if (string msg = context->handle_exception (err))
-	    if (type->free_text && this_object()->write_out)
-	      ([function(string:void)] this_object()->write_out) (msg);
-	}
-	else throw (err);
+      else if (context)
+	context->handle_exception (err, this_object()); // May throw.
+      else throw (err);
+  }
+
+  array handle_var (string varref)
+  // Parses and evaluates a possible variable reference, with the
+  // appropriate error handling.
+  {
+    // We're always evaluating here, so context is always set.
+    array(string) split = varref / ".";
+    if (sizeof (split) == 2)
+      if (mixed err = catch {
+	mixed val;
+	if (zero_type (val = context->get_var (split[1], split[0]))) // May throw.
+	  return ({});
+	if (type->free_text) val = (string) val;
+	else return val == Void ? ({}) : ({val});
+      }) {
+	context->handle_exception (err, this_object()); // May throw.
+	return ({});
+      }
+    return type->free_text ? 0 : ({});
   }
 
   //! Interface.
@@ -1541,6 +1586,11 @@ class Parser
   //! Like feed(), but also finishes the parse stream. A last bit of
   //! data may be given. It should work to call this on an already
   //! finished stream if no argument is given to it.
+
+  optional void report_error (string msg);
+  //! Used to report errors to the end user through the output. This
+  //! is only called when the type allows free text. msg should be
+  //! stored in the output queue to be returned by eval().
 
   optional mixed read();
   //! Define to allow streaming operation. Returns the evaluated
@@ -1585,6 +1635,10 @@ class Parser
   Parser _parent;
   // The parent parser if this one is nested.
 
+  Stdio.File _source_file;
+  mapping _defines;
+  // These two are compatibility kludges for use with parse_rxml().
+
   string _sprintf() {return "RXML.Parser";}
 }
 
@@ -1593,7 +1647,7 @@ class TagSetParser
 //! Interface class for parsers that evaluates using the tag set. It
 //! provides the evaluation and compilation functionality. The parser
 //! should call Tag._handle_tag() from feed() and finish() for every
-//! encountered tag, and Context.get_var() for encountered variable
+//! encountered tag, and Parser.handle_var() for encountered variable
 //! references. It must be able to continue cleanly after throw() from
 //! Tag._handle_tag().
 {
@@ -1729,8 +1783,8 @@ class Type
   //! sequential and use strings.
 
   void type_check (mixed val);
-  //! Checks whether the given value is a valid one of this type.
-  //! Errors are thrown with parse_error().
+  //! Checks whether the given value is a valid one of this type. Type
+  //! errors are thrown with RXML.rxml_error().
 
   Type clone()
   //! Returns a copy of the type.
@@ -1836,7 +1890,8 @@ class Type
     return p;
   }
 
-  mixed eval (string in, void|Context ctx, void|TagSet tag_set, void|int dont_switch_ctx)
+  mixed eval (string in, void|Context ctx, void|TagSet tag_set,
+	      void|Parser|PCode parent, void|int dont_switch_ctx)
   //! Convenience function to parse and evaluate the value in the
   //! given string. If a context isn't given, the current one is used.
   //! The current context and ctx are assumed to be the same if
@@ -1847,6 +1902,7 @@ class Type
     if (_parser_prog == PNone) res = in;
     else {
       Parser p = get_parser (ctx, tag_set);
+      p->_parent = parent;
       if (dont_switch_ctx) p->finish (in); // Optimize the job in p->write_end().
       else p->write_end (in);
       res = p->eval();
@@ -1894,7 +1950,16 @@ class Type
 }
 
 
-Type t_text = class
+static class TypeAny
+//! A completely unspecified nonsequential type.
+{
+  inherit Type;
+  constant name = "*";
+  string _sprintf() {return "RXML.t_any";}
+}
+TypeAny t_any = TypeAny();
+
+static class TypeText
 //! The standard type for generic document text.
 {
   inherit Type;
@@ -1903,16 +1968,17 @@ Type t_text = class
   constant empty_value = "";
   constant free_text = 1;
   string _sprintf() {return "RXML.t_text";}
-}();
+}
+TypeText t_text = TypeText();
 
-
-Type t_any = class
-//! A completely unspecified nonsequential type.
+static class TypeHtml
+//! The standard type for generic document text.
 {
-  inherit Type;
-  constant name = "*";
-  string _sprintf() {return "RXML.t_any";}
-}();
+  inherit TypeText;
+  constant name = "text/html";
+  string _sprintf() {return "RXML.t_html";}
+}
+TypeHtml t_html = TypeHtml();
 
 
 // P-code compilation and evaluation.
@@ -1951,6 +2017,17 @@ class PCode
   //! function will receive a context to do the evaluation in.
 
   string _sprintf() {return "RXML.PCode";}
+
+
+  // Internals.
+
+  void report_error (string msg)
+  {
+    // FIXME
+  }
+
+  PCode|Parser _parent;
+  // The parent evaluator if this one is nested.
 }
 
 
