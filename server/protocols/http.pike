@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.349 2001/12/05 13:53:06 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.350 2002/03/22 12:30:20 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -581,6 +581,37 @@ class CacheKey {
 #endif
 }
 
+//! Parse a cookie string.
+//!
+//! @param contents
+//!   HTTP transport-encoded cookie header value.
+//!
+//! @returns
+//!   Returns the resulting current cookie mapping.
+mapping(string:string) parse_cookies( string contents )
+{
+  if(!contents)
+    return cookies;
+
+//       misc->cookies += ({contents});
+  foreach(((contents/";") - ({""})), string c)
+  {
+    string name, value;
+    while(sizeof(c) && c[0]==' ') c=c[1..];
+    if(sscanf(c, "%s=%s", name, value) == 2)
+    {
+      value=http_decode_string(value);
+      name=http_decode_string(name);
+      cookies[ name ]=value;
+#ifdef OLD_RXML_CONFIG
+      if( (name == "RoxenConfig") && strlen(value) )
+	config =  mkmultiset( value/"," );
+#endif
+    }
+  }
+  return cookies;
+}
+
 int things_to_do_when_not_sending_from_cache( )
 {
 #ifdef OLD_RXML_CONFIG
@@ -605,26 +636,13 @@ int things_to_do_when_not_sending_from_cache( )
 
   if( contents = request_headers[ "cookie" ] )
   {
+    // FIXME:
+    // "misc->cookies"? Shouldn't it be just "cookies"?
+    //   /grubba 2002-03-22
     misc->cookies = ({});
     foreach( arrayp( contents )? contents : ({ contents }), contents )
     {
-      string c;
-//       misc->cookies += ({contents});
-      foreach(((contents/";") - ({""})), c)
-      {
-        string name, value;
-        while(sizeof(c) && c[0]==' ') c=c[1..];
-        if(sscanf(c, "%s=%s", name, value) == 2)
-        {
-          value=http_decode_string(value);
-          name=http_decode_string(name);
-          cookies[ name ]=value;
-#ifdef OLD_RXML_CONFIG
-          if( (name == "RoxenConfig") && strlen(value) )
-            config =  mkmultiset( value/"," );
-#endif
-        }
-      }
+      parse_cookies(contents);
     }
   }
 
