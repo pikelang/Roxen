@@ -36,6 +36,10 @@ umask 022
 test "x$pidfile" = "x" || flags="$flags --pid-file=$pidfile"
 test "x$configdir" = "x" || flags="$flags --config-dir=$configdir"
 
+# Some systems have stupid rc scripts are written in shells with job support
+# (read Linux/bash), and send SIGHUP when they finish.
+trap "" 1
+
 case $1 in
         'start_msg')
 	  echo 'Start Roxen 1.4'
