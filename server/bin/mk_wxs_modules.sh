@@ -1,6 +1,6 @@
 #/bin/sh
 #
-# $Id: mk_wxs_modules.sh,v 1.1 2004/11/09 17:48:04 grubba Exp $
+# $Id: mk_wxs_modules.sh,v 1.2 2004/11/10 09:21:03 grubba Exp $
 #
 # Make a set of Windows Installer XML source module files
 # from a typical roxen module layout.
@@ -10,12 +10,18 @@
 
 if [ "$#" = "2" ]; then :; else
   echo "Usage:" >&2
-  echo "  $0 <base_name> <directory>" >&2
+  echo "  $0 [-v <version>] <base_name> <directory>" >&2
   exit 1
 fi
 
-# FIXME
 version="1.0.0"
+
+if [ "$1" = "-v" ] then
+  # FIXME: Improve option parsing...
+  shift
+  version="$1"
+  shift
+fi
 
 base="$1"
 dir="$2"
