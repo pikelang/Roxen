@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.3 1996/12/01 19:18:01 per Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.4 1996/12/16 22:11:39 neotron Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -31,7 +31,7 @@ int GRUK = random(_time(1));
 /********************************/
 /* private functions            */
 
-#define reply(X) do{conf->hsent += strlen(X); my_fd->write(replace(X, "\n","\r\n"))}while(0)
+#define reply(X) do { conf->hsent += strlen(X); my_fd->write(replace(X, "\n","\r\n")); } while(0)
 
 private string reply_enumerate(string s,string num)
 {
@@ -371,7 +371,7 @@ void got_data(mixed fooid, string s)
   string cmdlin;
   time = _time(1);
   if (!objectp(my_fd)) return;
-
+  array y;
   conf->received += strlen(s);
   remove_call_out(end);
   call_out(end, 3600);
@@ -408,7 +408,6 @@ void got_data(mixed fooid, string s)
       if(!rawauth)
 	reply("230 Guest login ok, access restrictions apply.\n"); 
       else {
-	array y;
 	y = ({ "Basic", rawauth+":"+arg});
 	realauth = y[1];
 	if(conf && conf->auth_module)
@@ -480,7 +479,7 @@ void got_data(mixed fooid, string s)
 	  message += "\n" + readme * "\n";
 	if(strlen(message))
 	  reply(reply_enumerate(message+"\nCWD command successful.\n","250"));
-	else
+	else 
 	  reply("250 CWD command successful.\n");
 	break;	  
       }
@@ -495,7 +494,7 @@ void got_data(mixed fooid, string s)
 
      case "port": 
       int a,b,c,d,e,f;
-      if (sscanf(arg,"%d,%d,%d,%d,%d,%d",a,b,c,d,e,f)<6)
+      if (sscanf(arg,"%d,%d,%d,%d,%d,%d",a,b,c,d,e,f)<6) 
 	reply("501 i don't understand your parameters\n");
       else {
 	dataport_addr=sprintf("%d.%d.%d.%d",a,b,c,d);
