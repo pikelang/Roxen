@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.190 2001/11/21 22:35:14 mast Exp $
+# $Id: start,v 1.191 2002/01/03 13:07:12 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -851,6 +851,8 @@ if [ -z "$once" ] ; then
          case "$exitcode" in
          100)
            dp "Changing Roxen WebServer version. Restarting."
+	   # We need to clean up the pid file, since we're mentioned in it...
+	   cleanup_pid_file
            cd .. && exec ./start "$@"
            dp 'Failed to spawn start script. -- Permission problem?'
            exit 1
