@@ -4,13 +4,23 @@
 <dt><b>help</b><dd>
          Display this text.
 <dt><b>left</b>=<tt>size</tt><dd>
-         Length of line on the left side of the title.
+         Length of line on the left side of the title. This tries to be an
+	 amount relative to the right argument.
 <dt><b>right</b>=<tt>size</tt><dd>
-         Length of line on the right side of to the title. Notice that left
-         and right arguments are constrained by the width argument,
-         if specified.
+         Length of line on the right side of to the title. This tries to be an
+	 amount relative to the left argument.
+<dt><b>fixedleft</b>=<tt>size</tt><dd>
+         Fixed length of line on the left side of the title. The unit is the
+	 approximate width of a character.
+<dt><b>fixedright</b>=<tt>size</tt><dd>
+         Fixed length of line on the right side of the title. The unit is the
+	 approximate width of a character.
 <dt><b>spacing</b>=<tt>size</tt><dd>
          Width of the space inside the box.
+<dt><b>aligncontents</b>=<tt>[left|right]</tt><dd>
+         How to align the contents in the box.
+<dt><b>padding</b>=<tt>size</tt><dd>
+         Padding around the contents of the box. Defaults to 5.
 <dt><b>titlecolor</b>=<tt>color</tt><dd>
          Color of the title of the box.
 <dt><b>outlinecolor</b>=<tt>color</tt><dd>
