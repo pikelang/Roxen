@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.33 2000/11/27 10:31:05 per Exp $
+// $Id: module.pmod,v 1.34 2000/12/30 16:49:45 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -482,7 +482,7 @@ class Float
     int size = 15;
     if( _max != _min ) 
       size = max( strlen(_format(_max)), strlen(_format(_min)) )+2;
-    return input(path(), _format(query()), size, additional_args);
+    return input(path(), (query()==""?"":_format(query())), size, additional_args);
   }
 }
 
