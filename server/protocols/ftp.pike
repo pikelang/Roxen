@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.8 1999/06/25 20:59:29 neotron Exp $
+ * $Id: ftp.pike,v 2.9 1999/06/27 18:22:30 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1730,7 +1730,7 @@ class FTPSession
 	send(550, ({ sprintf("%s: Error, can't open file.", fname) }));
 	return 0;
       }
-    } else if ((< "STOR", "MKD", "MOVE" >)[cmd]) {
+    } else if ((< "STOR", "APPE", "MKD", "MOVE" >)[cmd]) {
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
 	DWRITE(sprintf("FTP: Error opening file \"%s\"\n"
@@ -1795,7 +1795,9 @@ class FTPSession
     switch(file->mode) {
     case "A":
       if (file->data) {
-	file->data = replace(replace(file->data, "\r\n", "\n"), "\n", "\r\n");
+	file->data = replace(file->data,
+			     ({ "\r\n", "\n",   "\r" }),
+			     ({ "\r\n", "\r\n", "\r\n" }));
       }
       if(objectp(file->file) && file->file->set_nonblocking)
       {
