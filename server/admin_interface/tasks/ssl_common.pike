@@ -1,5 +1,5 @@
 /*
- * $Id: ssl_common.pike,v 1.6 2002/06/12 23:47:05 nilsson Exp $
+ * $Id: ssl_common.pike,v 1.7 2002/10/27 20:22:13 nilsson Exp $
  */
 
 #if constant(_Crypto) 
@@ -76,15 +76,10 @@ mixed verify_0(object id, object mc)
   object rsa = Crypto.rsa();
   rsa->generate_key(key_size, Crypto.randomness.reasonably_random()->read);
 
-#if constant(Tools)
   string key = Tools.PEM.simple_build_pem
     ("RSA PRIVATE KEY",
      Standards.PKCS.RSA.private_key(rsa));
-#else /* !constant(Tools) */
-  /* Backward compatibility */
-  string key = SSL.pem.build_pem("RSA PRIVATE KEY",
-				 Standards.PKCS.RSA.rsa_private_key(rsa));
-#endif /* constant(Tools) */
+
   WERROR(key);
   
   if (strlen(key) != file->write(key))
