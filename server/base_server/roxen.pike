@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.452 2000/03/09 03:56:53 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.453 2000/03/09 04:32:39 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2632,6 +2632,8 @@ void create()
   add_constant( "RXML.Void",    master()->resolv("RXML.Void") );
   add_constant( "RXML.get_context", master()->resolv("RXML.get_context") );
 
+  // This is currently needed to resolve the circular references in
+  // RXML.pmod correctly. :P
   master()->resolv ("RXML.refs");
 
   foreach( glob("*.p???",get_dir( "etc/modules/RXML.pmod/")), string q )
@@ -2653,10 +2655,6 @@ void create()
   add_constant( "Configuration", Configuration );
 
 //   report_debug( "[Configuration: %.2fms] ", (gethrtime()-s)/1000.0);
-  // This is currently needed to resolve the circular references in
-  // RXML.pmod correctly. :P
-
-
 }
 
 // Set the uid and gid to the ones requested by the user. If the sete*
