@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.53 2001/09/03 18:35:37 nilsson Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.54 2001/12/03 15:35:23 grubba Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -78,7 +78,7 @@ void start(int level, Configuration conf)
   }
   if (!strlen(query("logfile")))
     return;
-  log_function = conf->LogFile( query("logfile") )->write;
+  log_function = roxen.LogFile( query("logfile") )->write;
 }
 
 mixed log(object id, mapping file)
