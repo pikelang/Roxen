@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.51 2000/06/30 16:00:18 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.52 2000/07/17 15:55:35 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -198,14 +198,14 @@ Finland, 5 158 372
    All fields except text overrides the cellvalign attribute.</desc>
 
 
-  <attr name=separator value=string>Defines the field type separator.</attr>
+  <attr name=separator value=string>Defines the field type separator.
 
   The fields types are separated by
   <ul>
   <li>The value given in the separator attribute to fields.</li>
   <li>The value given in the cellseparator attribute to tablify.</li>
   <li>Tab.</li>
-  </ul>"])
+  </ul></attr>"])
 })]);
 #endif
 
