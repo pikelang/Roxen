@@ -19,7 +19,10 @@ object cache;
 
 Sql.Sql get_sdb()
 {
-  return DBManager.cached_get( "replicate" );
+  object db = DBManager.cached_get( "replicate" );
+  // Make sure the db is online.
+  db->query("SELECT 1;");
+  return db;
 }
 
 Sql.Sql get_db()
@@ -275,6 +278,7 @@ array(int) get_local_ids(int|void from_time)
     cache->db->query( "SELECT id from "+cache->name+
 		      " WHERE atime >= %d", from_time )->id;
 
+  ENSURE_NOT_OFF( have );
   array shave = (array(int))
     sQUERY( "SELECT id FROM "+cache->name+
 	    " WHERE server!=%s", cache->secret )->id;
