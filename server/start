@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.76 1999/09/06 12:40:36 per Exp $
+# $Id: start,v 1.77 1999/09/10 19:58:05 mast Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` : "
 
@@ -175,7 +175,7 @@ parse_args() {
     fi
   ;;
   '--help'|'-?')
-  sed -e "s/\\.B/`tput 'bold' 2>/dev/null`/g" -e "s/B\\./`tput 'rmso' 2>/dev/null`/g" << EOF
+  sed -e "s/\\.B/`tput 'bold' 2>/dev/null`/g" -e "s/B\\./`tput 'sgr0' 2>/dev/null`/g" << EOF
 .BThis command will start the Roxen serverB..
 
 The environment variable .BROXEN_ARGSB. can be used to specify
