@@ -24,7 +24,7 @@ static class Server( string secret )
     catch
     {
       return
-	sQUERY( "SELECT dat_content FROM ac_"+cache->name+
+	sQUERY( "SELECT dat_content FROM "+cache->name+
 		" WHERE server=%s AND id=%d", secret, id )[0]->dat_content;
     };
   }
@@ -33,8 +33,11 @@ static class Server( string secret )
 
 void initiate_servers()
 {
+  // Locate new servers every minute.
+  call_out( initiate_servers, 60 );
+  
   servers = ([]);
-  foreach( sQUERY( "SELECT ac_secret FROM ac_servers" )->ac_secret, string s )
+  foreach( sQUERY( "SELECT secret FROM servers" )->secret, string s )
     servers[s] = Server( s );
 }
 
@@ -45,7 +48,7 @@ static void init_replicate_db()
 {
   mixed err = catch {
     // Avoid the 'IF NOT EXISTS' feature here to be more compatible.
-    sQUERY( "CREATE TABLE ac_"+cache->name+" ("
+    sQUERY( "CREATE TABLE "+cache->name+" ("
 	    "   server varchar(80) not null, "
 	    "   id int not null, "
 	    "   dat_content blob not null, "
@@ -56,12 +59,12 @@ static void init_replicate_db()
 	    ")" );
   };
   err = catch {
-    sQUERY( "CREATE TABLE ac_servers ("
-	    "   ac_secret varchar(255) not null primary key"
+    sQUERY( "CREATE TABLE servers ("
+	    "   secret varchar(255) not null primary key"
 	    ")" );
   };
   catch {
-    sQUERY( "INSERT INTO ac_servers (ac_secret) VALUES (%s)",
+    sQUERY( "INSERT INTO servers (secret) VALUES (%s)",
 	    cache->secret );
   };
 
@@ -70,19 +73,17 @@ static void init_replicate_db()
     cache->get_db()->query( "SELECT id from "+cache->name )->id;
 
   array shave = (array(int))
-    sQUERY( "SELECT id FROM ac_"+cache->name+
+    sQUERY( "SELECT id FROM "+cache->name+
 	    " WHERE server=%s", cache->secret )->id;
 
   werror("Synchronizing remote arg-cache with local cache... ");
   foreach( have-shave, int id )
-  {
     create_key( id, cache->read_args( id ) );
-  }
   werror("Done\n");
-  DBManager.is_module_table( 0, "replicate", "ac_"+cache->name, 
+  DBManager.is_module_table( 0, "replicate", ""+cache->name, 
 			     "A shared arg-cache database used for "
 			     "replication purposes.");
-  DBManager.is_module_table( 0, "replicate", "ac_servers", 
+  DBManager.is_module_table( 0, "replicate", "servers", 
 			     "Server identities.");
 
   initiate_servers();
@@ -141,6 +142,9 @@ static array(int) server_secret_decode( string a, string secret )
   a = Gmp.mpz( a, 36 )->digits( 256 );
   a = crypto->crypt( a );
   int i, j;
+#ifdef REPLICATE_DEBUG
+  werror("Decoding with %O got %O\n", secret, a );
+#endif
   if( sscanf( a, "%d\327%d", i, j ) == 2 )
     return ({ i, j });
   return 0;
@@ -167,20 +171,35 @@ static array(int) server_secret_decode( string a, string secret )
 int create_key( int id, string data )
 {
   ENSURE_NOT_OFF( 0 );
-  sQUERY( "INSERT INTO ac_"+cache->name+" (server,id,dat_content,ctime) "
+#ifdef REPLICATE_DEBUG
+  werror("Create new key %O for %O\n", id, cache->secret );
+#endif
+  sQUERY( "INSERT INTO "+cache->name+" (server,id,dat_content,ctime) "
 	  "VALUES (%s,%d,%s,%d)", cache->secret, id, data, time() );
 }
 
 array(int) decode_id( string data )
 {
   ENSURE_NOT_OFF( 0 );
+#ifdef REPLICATE_DEBUG
+  werror("Request for ID %O\n", data );
+#endif
   array res;
   if( quick_cache[data] )
+  {
+#ifdef REPLICATE_DEBUG
+    werror("Found in quick cache.\n" );
+#endif
     return quick_cache[ data ];
-
+  }
   if( sizeof(res = QUERY( "SELECT id FROM "+cache->name+
 		           "_foreign WHERE remote=%s", data ) ) )
+  {
+#ifdef REPLICATE_DEBUG
+    werror("Found in local cache.\n" );
+#endif
     return quick_cache[data]=(array(int))(res[0]->id/",");
+  }
 
   foreach( indices(servers), string server )
   {
@@ -193,6 +212,9 @@ array(int) decode_id( string data )
 
       if( off == -1 )
 	return 0;
+#ifdef REPLICATE_DEBUG
+      werror("Found in remote cache. Server is %O\n", server );
+#endif
       QUERY( "INSERT INTO "+cache->name+"_foreign (id,remote) VALUES (%s,%s)",
 	     ((array(string))id)*",", data );
       return quick_cache[data] = id;
