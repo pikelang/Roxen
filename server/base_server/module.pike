@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.142 2003/07/07 18:15:43 mast Exp $
+// $Id: module.pike,v 1.143 2003/08/07 12:52:04 jonasw Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -701,10 +701,12 @@ mixed get_value_from_file(string path, string index, void|string pre)
 {
   Stdio.File file=Stdio.File();
   if(!file->open(path,"r")) return 0;
-  if(index[sizeof(index)-2..sizeof(index)-1]=="()") {
-    return compile_string((pre||"")+file->read())[index[..sizeof(index)-3]]();
-  }
-  return compile_string((pre||"")+file->read())[index];
+  if(has_suffix(index, "()"))
+    index = index[..sizeof(index) - 3];
+
+  //  Pass path to original file so that include statements for local files
+  //  work correctly.
+  return compile_string((pre || "") + file->read(), path)[index];
 }
 
 static private mapping __my_tables = ([]);
