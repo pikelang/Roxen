@@ -261,7 +261,7 @@ void reaper(int i)
   exit(0);
 }
 
-void kill_kill_kill()
+void kill_kill_kill(void)
 {
 #ifdef DEBUG
   fprintf(stderr, "kill kill kill\n");
@@ -311,7 +311,7 @@ void send_data(char *bar, int re)
   } while(re);
 }
 
-int parse_and_send_headers()
+int parse_and_send_headers(void)
 {
   char *error, *pointer;
   if(headers)
