@@ -9,7 +9,7 @@
 //
 
 constant cvs_version =
- "$Id: datacache.pike,v 1.4 2004/06/07 10:58:09 _cvs_stephen Exp $";
+ "$Id: datacache.pike,v 1.5 2004/06/09 00:17:11 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -52,7 +52,7 @@ void create() {
  * A generic memory-based cache implementation
  * by Stephen R. van den Berg <srb@cuci.nl>
  *
- * $Id: datacache.pike,v 1.4 2004/06/07 10:58:09 _cvs_stephen Exp $
+ * $Id: datacache.pike,v 1.5 2004/06/09 00:17:11 _cvs_stephen Exp $
  *
  */
 
@@ -70,9 +70,10 @@ class MemCache {
   static int ccount;
   static int smaxsize;
   static int(0..1) spurge;
-  static array(mixed) root=({0,0});
+  constant rootx = UNDEFINED;
+  static array(mixed) root=({rootx,rootx});
   static enum storetype {inext, iprev, iexpires, iautorefresh, isize, ivalue};
-  static mapping(string|int:array(mixed)) thestore=([0:root]);
+  static mapping(string|int:array(mixed)) thestore=([rootx:root]);
   private Thread.Mutex listorder=Thread.Mutex();
 
 //! The total amount of memory in use as accounted by the @[size] parameter
@@ -140,7 +141,7 @@ class MemCache {
    void|int purge) {
     if(maxsize && (!smaxsize || maxsize<smaxsize)) {
       array match;
-      for(mixed key=root[inext];match=thestore[key];) {
+      for(mixed key=root[inext];!zero_type(match=thestore[key]);) {
         string nextkey=match[inext];
         if(match[isize]>maxsize)
           drop(key,purge);
@@ -165,13 +166,12 @@ class MemCache {
 //!  The unique key referencing the element to be deleted.
 //! @param purge
 //!  If set to one, expiring cache elements will use an explicit @[destruct],
-//!  if omitted or set to zero, the default setting will be used instead.
 //! @seealso
 //!  @[create], @[setparameters]
   void drop(string|int key, void|int(0..1) purge) {
     array match;
     { Thread.MutexKey k=listorder->lock();
-      if(!key || !(match=thestore[key]))
+      if(!key || zero_type(match=thestore[key]))
         return;
       thestore[match[inext]][iprev]=match[iprev];    // Take it out of the list
       thestore[match[iprev]][inext]=match[inext];
@@ -180,27 +180,27 @@ class MemCache {
     }
     mixed op=match[ivalue];
     cmem-=match[isize];
-    if((spurge||purge) && objectp(op))
+    if((zero_type(purge)?spurge:purge) && objectp(op))
       destruct(op);
     ccount--;
   }
 
-//! Retrieve an element from the cache.  Returns 0 if the element could not
-//! be found.
+//! Retrieve an element from the cache.  Returns UNDEFINED if the element
+//! could not be found.
 //! @param key
 //!  The unique key referencing the element to be retrieved.
 //! @seealso
 //!  @[store], @[create]
   mixed get(string|int key) {
     array match;
-    if(key && (match=thestore[key])) {
+    if(!zero_type(key) && (match=thestore[key])) {
       int t=time(1);
       int iar=match[iautorefresh];
       if(iar || match[iexpires]>t) {
         if(iar)
           match[iexpires]=t+iar;
         Thread.MutexKey k=listorder->lock();
-        if(match=thestore[key])
+        if(!zero_type(match=thestore[key]))
           hit(key, match);
         destruct(k);
       }
@@ -232,7 +232,7 @@ class MemCache {
 //!  @[get], @[create]
   mixed store(string|int key, mixed value, void|int expires, void|int size,
    void|int autorefresh) {
-    if(key) {
+    if(!zero_type(key)) {
       int t=time(1);
       if(!size)
         size=sizeof(value);		       // This is far from ideal, FIXME
@@ -247,7 +247,7 @@ class MemCache {
             expires++, autorefresh=1;
       }
       array match;
-      if(match=thestore[key]) {
+      if(!zero_type(match=thestore[key])) {
         mixed op=match[ivalue];
         { Thread.MutexKey k=listorder->lock();
           if(match=thestore[key]) {
@@ -265,7 +265,7 @@ class MemCache {
       else {
         match=({0,0,expires,autorefresh,size,value});
         { Thread.MutexKey k=listorder->lock();
-          if(!thestore[key]) {
+          if(zero_type(thestore[key])) {
             thestore[root[iprev]=thestore[match[iprev]=root[iprev]][inext]=key]
              = match;
 	    ccount++;cmem+=size;
@@ -275,10 +275,6 @@ class MemCache {
       }
       doexpire(t);
     }
-#ifdef DEBUG
-    else
-      throw("Empty keys should not and cannot be stored in the MemCache");
-#endif
     return value;
   }
 
@@ -300,6 +296,10 @@ class MemCache {
 //!  @[store]
   mixed `[]= (string|int key, mixed value) {
     return store(key, value);
+  }
+
+  string _sprintf(int t) {
+    return sprintf("MemCache(%O)",thestore);
   }
 }
 
