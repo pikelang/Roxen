@@ -1,5 +1,11 @@
 Changes since Roxen 1.1 alpha 3
 -----------------------------------------------
+o FTP gateway now handles the 213 status response code.
+
+o If you access ftp://foo.bar.com via the FTP gateway, you now get a
+  redirect to ftp://ftp.bar.com/. If the trailing slash is missing,
+  the links from that page got screwed up.
+
 o Proxy authentification support once again added. Wonder where it
   disappeared?
 

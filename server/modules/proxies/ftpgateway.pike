@@ -3,18 +3,23 @@
 // This module implements an ftp proxy
 
 // changelog:
-// 1.8   nov19 kg
+// 1.8a  dec 8 david
+//       Now handles the 213 Stat result code as well. Also fixed a
+//       bug so that you get a redirect from ftp://foo.bar.com to
+//       ftp://foo.bar.com/. The links from the first page didn't work
+//       if the trailing slash was missing.
+// 1.8   nov 19 kg
 //       Update to newer Pike/Roxen.
 //       Handle passwords.
 //       Do not reuse sessions with same host but different users.
 //       Include the request class in the main file.
-// 1.7b4 oct4 david
+// 1.7e  oct 4 david
 //       Fixed the case when you open a directory that is a link.
 //       Some 'stat' replies with 212 instead of 211. 
 //	 The proxy now supports them as well.
-// 1.7b3 aug28 per
+// 1.7d  aug 28 per
 //       Fixed all 'spinner' -> 'roxen'
-// 1.7b2 feb24 per
+// 1.7c  feb 24 per
 //       Fixed all 'spider' -> 'spinner'
 // 1.7b  jan 11 law
 //       bugfix in stat_result
@@ -32,7 +37,7 @@
 // 1.6   nov 23 law
 //       new directory format (used by ftp.uwp.edu) 
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.6 1996/11/30 15:13:05 kg Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.7 1996/12/08 11:25:54 neotron Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -42,7 +47,7 @@ string cvs_version = "$Id: ftpgateway.pike,v 1.6 1996/11/30 15:13:05 kg Exp $";
 # endif
 #endif
 
-#define VERSION "1.8"
+#define VERSION "1.8b"
 
 // If this is defined, the session log will be included in a HTML
 // comment on the returned page.
@@ -819,7 +824,7 @@ program Request = class
     if (r=="226") return; /* message from previous session? */
     if (r=="230") return; /* login ok (?) */
     // Should check for 213 in the next check, according to Jason Rumney
-    if (r=="211" || r=="212") /* stat done */
+    if (r=="211" || r=="212" || r == "213") /* stat done */
     {
       dir_completed();
       dontsaveserver=0;
@@ -1358,7 +1363,9 @@ mixed|mapping find_file( string f, object id )
   int port;
   
   f=id->raw_url[strlen(QUERY(mountpoint))+1 .. 100000];
-  
+  if(search(f, "/") == -1)
+    return http_redirect(f+"/");
+      
   if(sscanf(f, "%[^/]/%s", host, file) < 2)
   {
     host = f;
