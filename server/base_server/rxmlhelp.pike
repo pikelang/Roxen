@@ -84,7 +84,7 @@ private string format_doc(string|mapping doc, string name, void|object id) {
   if(mappingp(doc)) {
     if(id && id->misc->pref_languages) {
       foreach(id->misc->pref_languages->get_languages()+({"en"}), string code) {
-	object lang=roxen->languages[code];
+	object lang=roxen->language_low(code);
 	if(lang) {
 	  array lang_id=lang->id();
 	  if(doc[lang_id[2]]) {
@@ -125,7 +125,7 @@ private string parse_doc(string|mapping|array doc, string name, void|object id) 
 private string parse_mapping(mapping doc, void|object id) {
   string ret="";
   if(!mappingp(doc)) return "";
-  foreach(indices(doc), string tmp) {
+  foreach(sort(indices(doc)), string tmp) {
     ret+=parse_doc(doc[tmp], tmp, id);
   }
   return ret;
