@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.41 1999/02/08 21:19:58 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.42 1999/02/08 21:21:03 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -636,7 +636,7 @@ class imap_mailbox
       contents = new_contents;
 
       /* Update the UID to mail id lookup table */
-      array(int) uids = contents->get(UID);
+      array(int) uids = contents->uid;
       uid_lookup = mkmapping(uids, indices(uids));
 
       res += ({ get_exists() });
