@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.57 1997/05/15 23:39:56 neotron Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.58 1997/05/25 10:32:19 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -196,7 +196,7 @@ private static void accept_callback( object port )
 # if efun(real_perror)
 	real_perror();
 # endif
-#endif
+#endif /* DEBUG */
  	return;
 
        case 24:
@@ -230,7 +230,7 @@ void handler_thread(int id)
   while( h=handle_queue->read() )
   {
 #ifdef THREAD_DEBUG
-    perror(id+" START.\n");
+    //perror(id+" START.\n");
 #endif
 #ifdef DEBUG
     array err=
@@ -240,7 +240,7 @@ void handler_thread(int id)
     if(err) perror("Error in handler thread:\n"+describe_backtrace(err)+"\n");
 #endif
 #ifdef THREAD_DEBUG
-    perror(id+" DONE.\n");
+    //perror(id+" DONE.\n");
 #endif
     h=0;
   }
@@ -256,7 +256,7 @@ void start_handler_threads()
   for(; number_of_threads < QUERY(numthreads); number_of_threads++)
     thread_create( handler_thread, number_of_threads );
 }
-#endif
+#endif /* THREADS */
 
 void handle(function f, mixed ... args)
 {
@@ -1904,23 +1904,35 @@ void init_shuffler();
 // serve new requests. The file descriptors of the open files and the
 // clients are sent to the program, then the shuffler just shuffles 
 // the data to the client.
-void _shuffle(object from, object to)
+void _shuffle(object from, object to,
+	      object|void to2, function(:void)|void callback)
 {
 #if efun(send_fd)
-  if(shuffle_fd)
+  if(shuffle_fd && !to2)
   {
     from->set_blocking();
     to->set_blocking();
     if(send_fd(shuffle_fd,from->query_fd())&&
-       send_fd(shuffle_fd,to->query_fd()))
+       send_fd(shuffle_fd,to->query_fd())) {
+      if (callback) {
+	callback();
+      }
       return;
+    }
     init_shuffler();
   }
-#endif
+#endif /* send_fd */
   // Fallback, when there is no external shuffler.
   object p = Pipe.pipe();
   p->input(from);
   p->output(to);
+  if (to2) {
+    p->output(to2);
+  }
+  if (callback) {
+    p->set_done_callback(callback);
+  }
+  p->input(from);
 }
 
 
@@ -1929,16 +1941,19 @@ object shuffle_queue = Queue();
 
 void shuffle_thread()
 {
+#ifdef THREAD_DEBUG
+  perror("Starting shuffle_thread\n");
+#endif
   while(mixed s=shuffle_queue->read())
     _shuffle(@s);
 }
-void shuffle(object a, object b)
+void shuffle(object a, object b, object|void c, function(:void)|void d)
 {
-  shuffle_queue->write(({a,b}));
+  shuffle_queue->write(({a, b, c, d}));
 }
-#else
+#else /* THREADS */
 function shuffle = _shuffle;
-#endif
+#endif /* THREADS */
 
 #ifdef THREADS
 object st=thread_create(shuffle_thread);
@@ -1965,8 +1980,8 @@ void init_shuffler()
     shuffle_fd = out->query_fd();
   }
 }
-#endif
-#endif
+#endif /* send_fd */
+#endif	// FIXME: Is this one needed?
 static private int _recurse;
 
 void exit_when_done()
