@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.274 2000/09/16 20:44:47 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.275 2000/09/19 18:28:04 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1370,15 +1370,17 @@ int wants_more()
   return !!cache;
 }
 
-void do_log()
+void do_log( int|void fsent )
 {
   MARK_FD("HTTP logging"); // fd can be closed here
   TIMER("data sent");
   if(conf)
   {
     int len;
-    if(pipe)
+    if(!fsent && pipe)
       file->len = pipe->bytes_sent();
+    else
+      file->len = fsent;
     if(conf)
     {
       if(file->len > 0) conf->sent+=file->len;
@@ -1880,10 +1882,11 @@ void send_result(mapping|void result)
       if( file->len > 0 && file->len < 4000 )
       {
         // Just do a blocking write().
-        my_fd->write(head_string + 
-                     (file->file?file->file->read(file->len):
-                      (file->data[..file->len-1])));
-        do_log();
+        int s;
+        s = my_fd->write(head_string + 
+                         (file->file?file->file->read(file->len):
+                          (file->data[..file->len-1])));
+        do_log( s );
         return;
       }
       if(strlen(head_string))                 send(head_string);
@@ -1894,8 +1897,7 @@ void send_result(mapping|void result)
     {
       if( strlen( head_string ) < 4000)
       {
-        my_fd->write( head_string );
-        do_log( );
+        do_log( my_fd->write( head_string ) );
         return;
       }
       send(head_string);
@@ -2143,8 +2145,7 @@ void got_data(mixed fooid, string s)
           conf->hsent += file->hs;
           if( strlen( d ) < 4000 )
           {
-            my_fd->write( d );
-            do_log();
+            do_log( my_fd->write( d ) );
           } 
           else 
           {
