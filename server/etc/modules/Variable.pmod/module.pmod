@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.45 2001/01/29 05:44:37 per Exp $
+// $Id: module.pmod,v 1.46 2001/02/02 07:30:35 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -303,7 +303,7 @@ class Variable
     return res;
   }
 
-  mixed transform_from_form( string what )
+  mixed transform_from_form( string what,mapping|void v )
     //! Given a form value, return what should be set.
     //! Used by the default set_from_form implementation.
   {
@@ -915,7 +915,7 @@ class List
     return (string)what;
   }
 
-  mixed transform_from_form( string what )
+  mixed transform_from_form( string what,mapping v )
   {
     return what;
   }
@@ -932,10 +932,10 @@ class List
     _current_count++;
 
     foreach( indices( vl ), string vv )
-      if( sscanf( vv, ".set.%d", rn ) )
+      if( sscanf( vv, ".set.%d", rn ) && (vv == ".set."+rn) )
       {
         m_delete( id->variables, path()+vv );
-        l[rn] = transform_from_form( vl[vv] );
+        l[rn] = transform_from_form( vl[vv], vl );
         m_delete( vl, vv );
       }
     // then the move...
@@ -958,7 +958,7 @@ class List
     {
       do_goto = 1;
       m_delete( id->variables, path()+".new.x" );
-      l += ({ transform_from_form( "" ) });
+      l += ({ transform_from_form( "",vl ) });
     }
 
     // .. and delete ..
@@ -1012,6 +1012,12 @@ class List
     }
   }
 
+
+  string render_row(string prefix, mixed val, int width)
+  {
+    return input( prefix, val, width );
+  }
+
   string render_form( RequestID id, void|mapping additional_args )
   {
     string prefix = path()+".";
@@ -1020,9 +1026,10 @@ class List
     string res = "<a name='"+path()+"'>\n</a><table>\n"
     "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />\n";
 
-    foreach( map(query(), transform_to_form), string val )
+    foreach( map(query(), transform_to_form), mixed val )
     {
-      res += "<tr>\n<td><font size='-1'>"+ input( prefix+"set."+i, val, width) + "</font></td>\n";
+      res += "<tr>\n<td><font size='-1'>"+ render_row(prefix+"set."+i, val, width)
+	+ "</font></td>\n";
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
 #define REORDER(X,Y) ("<submit-gbutton2 name='"+X+"' icon-src='"+Y+"'></submit-gbutton2>")
       if( i )
@@ -1099,7 +1106,7 @@ class IntList
   constant width=20;
 
   string transform_to_form(int what) { return (string)what; }
-  int transform_from_form(string what) { return (int)what; }
+  int transform_from_form(string what,mapping v) { return (int)what; }
 }
 
 class FloatList
@@ -1123,7 +1130,7 @@ class FloatList
   {
     return sprintf("%1."+_prec+"f",  what); 
   }
-  float transform_from_form(string what) { return (float)what; }
+  float transform_from_form(string what,mapping v) { return (float)what; }
 }
 
 class URLList
@@ -1155,6 +1162,46 @@ class PortList
 {
   inherit List;
   constant type="PortList";
+
+  string render_row( string prefix, mixed val, int width )
+  {
+    string res = "<input type=hidden name='"+prefix+"' value='"+prefix+"' />";
+
+    array split = val/"://";
+
+    res += "<select name='"+prefix+"prot'>";
+    foreach( sort(indices( roxenp()->protocols )), string p )
+    {
+      if( p == split[0] )
+	res += "<option selected='t'>"+p+"</option>";
+      else
+	res += "<option>"+p+"</option>";
+    }
+    res += "</select>";
+
+    split = split[-1]/"/";
+    if( sizeof( split ) > 2 )
+      split[1] = split[1..]*"/";
+    else if( sizeof( split ) < 2 )
+      split += ({ "" });
+
+    res += "://<input type=string name='"+prefix+"host' value='"+
+           Roxen.html_encode_string(split[0])+"' />";
+
+    res += "/<input type=string name='"+prefix+"path' value='"+
+      Roxen.html_encode_string(split[1])+"' />";
+    
+    return res;
+  }
+
+  string transform_from_form( string v, mapping va )
+  {
+    if( v == "" ) return "http://*/";
+    
+    werror("%O %O %O\n", v, v[strlen(path())..],va );
+    v = v[strlen(path())..];
+    return va[v+"prot"]+"://"+va[v+"host"]+"/"+va[v+"path"];
+  }
 
   array verify_set_from_form( array(string) new_value )
   {
