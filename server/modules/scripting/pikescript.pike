@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.33 1999/07/06 22:54:29 grubba Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.34 1999/09/18 00:27:36 nilsson Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -303,7 +303,7 @@ mapping handle_file_extension(object f, string e, object got)
     else
       file = cpp(file);
 #endif
-    array (function) ban = allocate(6, "function");
+    array (function) ban = allocate(6);
 #ifndef __NT__
 #if efun(setegid)
     ban[0] = setegid;
