@@ -4,13 +4,9 @@
  * 
  * Made by Peter Bortas <peter@idonex.se> and Henrik Wallin <hedda@idonex.se>
  * in October 1997
- *
- * BUGS:
- * Sends the data through the URL. This will be changed to a internal
- * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.81 1998/03/02 18:56:19 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.82 1998/03/05 18:48:32 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -179,11 +175,11 @@ void create()
 {
   defvar( "location", "/diagram/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
 	  "The URL-prefix for the diagrams." );
-  defvar( "maxwidth", 800, "Restrictions:Max width", TYPE_INT,
+  defvar( "maxwidth", 3000, "Limits:Max width", TYPE_INT,
 	  "Maximal width of the generated image." );
-  defvar( "maxheight", 600, "Restrictions:Max height", TYPE_INT,
+  defvar( "maxheight", 1000, "Limits:Max height", TYPE_INT,
 	  "Maximal height of the generated image." );
-  defvar( "maxstringlength", 60, "Restrictions:Max string length", TYPE_INT,
+  defvar( "maxstringlength", 60, "Limits:Max string length", TYPE_INT,
 	  "Maximal length of the strings used in the diagram." );
 }
 
@@ -237,18 +233,18 @@ string itag_names(string tag, mapping m, string contents,
   if( contents-" " != "" )
   {
     if(tag=="xnames")
-      {
-	foo=res->xnames = contents/sep;
-	if(m->orient) 
-	  if (m->orient[0..3] == "vert")
-	    res->orientation = "vert";
-	  else 
-	    res->orientation="hor";
-      }
+    {
+      foo=res->xnames = contents/sep;
+      if(m->orient) 
+	if (m->orient[0..3] == "vert")
+	  res->orientation = "vert";
+	else 
+	  res->orientation="hor";
+    }
     else
       foo=res->ynames = contents/sep;
   }
-
+  
   for(int i=0; i<sizeof(foo); i++)
     if (voidsep==foo[i])
       foo[i]=" ";
@@ -419,15 +415,17 @@ string syntax( string error )
     + "<hr noshade>";
 }
 
-mapping(int:mapping) cache = ([]);
+mapping(string:mapping) cache = ([]);
 int datacounter = 0; 
 
 string quote(mapping in)
 {
-  //  string pack;
-  //  pack = MIME.encode_base64(in, 1);
-  cache[ ++datacounter ] = in;
-  return (string)datacounter;
+  // Don't try to be clever here. It will break threads.
+  string out;
+  cache[ out =
+       sprintf("%d%08x%x", ++datacounter, random(99999999), time(1)) ] = in;
+  
+  return out;
 }
 
 constant _diagram_args =
@@ -470,7 +468,8 @@ string tag_diagram(string tag, mapping m, string contents,
 		     "<b>graph</b>");
 
   if(m->background)
-    res->image = combine_path( dirname(id->not_query), (string)m->background);
+    res->background =
+      combine_path( dirname(id->not_query), (string)m->background);
 
   if (m->name)
     {
@@ -578,7 +577,7 @@ string tag_diagram(string tag, mapping m, string contents,
       m->width  = (string)query("maxwidth");
     if((int)m->width < 100)
       m->width  = "100";
-  } else if(!res->image)
+  } else if(!res->background)
     m->width = "350";
 
   if(m->height) {  
@@ -586,10 +585,10 @@ string tag_diagram(string tag, mapping m, string contents,
       m->height = (string)query("maxheight");
     if((int)m->height < 100)
       m->height = "100";
-  } else if(!res->image)
+  } else if(!res->background)
     m->height = "250";
 
-  if(!res->image)
+  if(!res->background)
   {
     if(m->width) res->xsize = (int)m->width;
     else         res->xsize = 400; // A better algo for this is coming.
@@ -662,48 +661,51 @@ mapping query_container_callers()
 
 int|object PPM(string fname, object id)
 {
+  perror("fname: %O\n",fname);
+  if( objectp(fname) )
+    perror("fname: %O\n",indices(fname));
   string q;
   q = roxen->try_get_file( fname, id );
 
   if(!q) perror("Diagram: Unknown image '"+fname+"'\n");
-  mixed g = Gz;
-  if (g->inflate) {
-    catch {
-      q = g->inflate()->inflate(q);
-    };
-  }
+
+  object g;
+  if (sizeof(indices( g=Gz )))
+    if (g->inflate)
+      catch { q = g->inflate()->inflate(q); };
+
   if(q)
-    { 
-      object foo;
+  { 
+    object img_decode;
 #if constant(Image.JPEG.decode)
-      if (q[0..2]=="GIF")
-	if (catch{foo=Image.GIF.decode(q);})
-	  return 1;
-	else
-	  return foo;
-      else if (search(q[0..13],"JFIF")!=-1)
-	if (catch{foo=Image.JPEG.decode(q);})
-	  return 1;
-	else
-	  return foo;
-      else 
+    if (q[0..2]=="GIF")
+      if (catch{img_decode=Image.GIF.decode(q);})
+	return 1;
+      else
+	return img_decode;
+    else if (search(q[0..13],"JFIF")!=-1)
+      if (catch{img_decode=Image.JPEG.decode(q);})
+	return 1;
+      else
+	return img_decode;
+    else 
 #endif
-	if (q[0..0]=="P")
-	  if (catch{foo=Image.PNM.decode(q);})
-	    return 1;
-	  else
-	    return foo;
+      if (q[0..0]=="P")
+	if (catch{img_decode=Image.PNM.decode(q);})
+	  return 1;
+	else
+	  return img_decode;
 
 #if constant(Image.JPEG.decode)
-      perror("Diagram: Unknown image type for '"+fname+"', "
-	     "only GIF, jpeg and pnm is supported.\n");
-      return 1;
+    perror("Diagram: Unknown image type for '"+fname+"', "
+	   "only GIF, jpeg and pnm is supported.\n");
+    return 1;
 #else
-      perror("Diagram: Unknown image type for '"+fname+"', "
-	     "only pnm is supported.\n");
-       return 1;
+    perror("Diagram: Unknown image type for '"+fname+"', "
+	   "only pnm is supported.\n");
+    return 1;
 #endif
-    }
+  }
   else
     return 1;
 }
@@ -715,7 +717,7 @@ mapping http_img_answer( string msg )
 
 mapping unquote( string f )
 {
-  return cache[ (int)f ];
+  return cache[ f ];
 }
 
 mapping find_file(string f, object id)
@@ -730,21 +732,20 @@ mapping find_file(string f, object id)
 
   if(!res)
     return http_img_answer( "Please reload this page." );
-    
 
   if(id->prestate->debug)
     return http_string_answer( sprintf("<pre>%O\n", res) );
   
   mapping(string:mixed) diagram_data;
 
-  array back;  
+  array back;
   if(res->bgcolor)
     back = res->bgcolor;
 
-  if(res->image)
+  if(res->background)
   {
     m_delete( res, "bgcolor" );
-    res->image = PPM(res->image, id);
+    res->image = PPM(res->background, id);
 
     /* Image was not found or broken */
     if(res->image == 1) 
