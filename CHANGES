@@ -1,7 +1,37 @@
-Changes since Roxen 3.4
+Changes since Roxen 3.4.64
 -----------------------------------------------
 
-o The start script now lets the mysql deamon have some time to shutdown.
+o Now uses Pike 7.4.
+
+o Now supports RFC 2518 (webdav).
+
+o GXML improvements:
+  - Added a new scope to access layer properties.
+    Accessible through &_.layers.<name>.{l,r,t,b,w,h};
+    Ex. &_.layers.Background.w;.
+  - Added <rotate degrees=""/>.
+  - Added basic operation "clear".
+  - Handle layers attribute to "scale".
+  - shadow now handles offset and yoffset attributes.
+  - scale now obeys max-width and max-height.
+
+o GText improvements:
+  - The background image may now have an alpha channel.
+  - Fixed various bugs inte alpha channel handling.
+  - The attributes magic-{texture,background,alpha} now work again.
+
+o Fixed rendering of Photoshop images.
+
+o The check_spelling module now implements the <emit#spellcheck> tag.
+
+o <emit#timerange> improvments:
+  - Added a calendar scope.
+  - Added a plugin API.
+  - Days can be padded to the calendar timerange to eg complete full weeks.
+
+o Improved support for various browsers (Firefox, IE, Opera, Safari, etc).
+
+o The mysql server is now taken down cleanly on server shutdown.
 
 o The logfile directory now automatically gets a corresponding .nsr
   (Networker) configuration file that informs that it contains logfiles.
@@ -10,15 +40,31 @@ o Improved diagnostics in lots of places.
 
 o Several places now use REPLACE INTO in preference to INSERT/UPDATE.
 
-o Now supports RFC 2518 (webdav).
+o Several optimizations.
+
+o Fixed UI bugs in several server templates.
+
+o Fixed support for Perl on NT.
+
+o Fixed various installation issues on NT.
+
+o New security pattern compiler.
 
 o Improved support for .htaccess.
 
+o Improved argument cache replication robustness.
+
 o New administration interface look.
 
-o Now uses Pike 7.4.
-
 o FTP protocol module extended with some support for RFC 2228.
+
+o Various minor bugfixes.
+
+o Fixed bugs 835, 2147, 2658, 3313, 3367, 3453, 3454, 3468, 3474,
+  3478, 3491, 3495, 3513, 3521, 3527, 3529, 3530, 3531, 3550, 3551,
+  3561, 3565, 3566, 3571, 3575, 3580, 3581, 3582, 3586, 3587, 3590,
+  3597, 3604, 3615, 3632, 3640, 3647, 3648, 3666, 3667, 3669, 3703,
+  3704, 3709, 3720, 3734 and 3737.
 
 
 Changes since Roxen 3.3.81
