@@ -69,7 +69,56 @@ class Relay
   void done_with_data( )
   {
     destruct(fd);
-    id->send_result( Roxen.http_rxml_answer( buffer, id ) );
+    string headers, data;
+    string type, charset, status;
+    mapping h = ([]);
+    NOCACHE();
+    if( sscanf( buffer, "%s\r\n\r\n%s", headers, data ) != 2 )
+      sscanf( buffer, "%s\n\n%s", headers, data );
+
+    if( headers )
+    {
+      foreach( (headers-"\r")/"\n", string header )
+      {
+        if( sscanf( header, "%s:%s", string a, string b ) == 2 )
+        {
+          a = String.trim_all_whites( a );
+          b = String.trim_all_whites( b );
+          h[ a ] = b;
+          if( lower_case( a ) == "content-type" )
+            type = b;
+        } else 
+          status = header;
+      }
+      if( sscanf( type, "text/%*s;charset=%s", charset ) == 2 )
+        type = String.trim_all_whites( (type/";")[0] );
+    }
+
+    if( !headers || !data )
+    {
+      mapping q = Roxen.http_string_answer( buffer, "" );
+      q->raw = 1;
+      id->send_result( q );
+      destruct( );
+      return;
+    }
+    if( lower_case(type) == "text/html" ||
+        lower_case(type) == "text/plain" )
+    {
+      if( charset )
+      {
+        id->set_output_charset( charset );
+        catch
+        {
+          data = Locale.Charset.decoder(charset)->feed(data)->drain();
+        };    
+      }
+      id->send_result( Roxen.http_rxml_answer( query("pre-rxml")
+                                               + data +
+                                               query("post-rxml"), id ) );
+    } 
+    else 
+      id->send_result( Roxen.http_string_answer( data, type ) );
     destruct();
     return;
   }
@@ -192,6 +241,7 @@ class Relayer
 void create( Configuration c )
 {
   if( c )
+  {
     defvar( "patterns", "", "Relay patterns", TYPE_TEXT,
             "Syntax: \n"
             "<pre>\n"
@@ -211,7 +261,17 @@ void create( Configuration c )
             " For EXTENSION and LOCATION, the matching local filename is "
             "appended to the url-prefix specified, no replacing is done.<p>"
             "If last is specified, the match is only tried if roxen "
-            "fails to find a file (a 404 error)");
+            "fails to find a file (a 404 error). If rewrite is specified, "
+            "redirects are rewritten.");
+    defvar("pre-rxml", "", 
+           "Header-RXML", TYPE_TEXT,
+           "Included before the page contents for redirectpatterns with "
+           "the 'rxml' attribute set if the content-type is text/*" );
+    defvar("post-rxml", "", 
+           "Footer-RXML", TYPE_TEXT,
+           "Included after the page contents for redirectpatterns with "
+           "the 'rxml' attribute set if the content-type is text/*" );
+  }
 }
 
 string status()
@@ -229,7 +289,7 @@ void start( int i, Configuration c )
   if( c )
   {
     relays = ({});
-    foreach( query( "patterns" ) / "\n" - ({ "" }), string line )
+    foreach( (query( "patterns" )-"\r") / "\n" - ({ "" }), string line )
     {
       if( strlen(line) && line[0] == '#' )
         continue;
