@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.45 1998/05/20 23:02:45 grubba Exp $
+ * $Id: ftp2.pike,v 1.46 1998/05/21 17:52:28 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -507,6 +507,7 @@ class LSFile
 
   static array(string) output_queue = ({});
   static int output_pos;
+  static string output_mode = "A";
 
   static mapping(string:array) stat_cache = ([]);
 
@@ -529,6 +530,7 @@ class LSFile
   {
     if(stringp(s)) {
       // ls is always ASCII-mode...
+      // FIXME: Check output_mode here.
       s = replace(s, "\n", "\r\n");
     }
     output_queue += ({ s });
@@ -785,14 +787,17 @@ class LSFile
     }
   }
 
-  void create(string cwd_, array(string) argv_, int flags_, object session_)
+  void create(string cwd_, array(string) argv_, int flags_,
+	      object session_, string output_mode_)
   {
-    DWRITE(sprintf("FTP: LSFile(\"%s\", %O, %08x, X)\n", cwd_, argv_, flags_));
+    DWRITE(sprintf("FTP: LSFile(\"%s\", %O, %08x, X, \"%s\")\n",
+		   cwd_, argv_, flags_, output_mode_));
 
     ::create(session_, flags_);
 
     cwd = cwd_;
     argv = argv_;
+    output_mode = output_mode;
     
     array(string) files = allocate(sizeof(argv));
     int n_files;
@@ -1241,7 +1246,7 @@ class FTPSession
     }
   }
 
-  void send(int code, array(string) data)
+  void send(int code, array(string) data, int|void enumerate_all)
   {
     DWRITE(sprintf("FTP2: send(%d, %O)\n", code, data));
 
@@ -1256,7 +1261,11 @@ class FTPSession
     if (sizeof(data) > 1) {
       data[0] = sprintf("%03d-%s\r\n", code, data[i]);
       for (i = sizeof(data)-1; --i; ) {
-	data[i] = " " + data[i] + "\r\n";
+	if (enumerate_all) {
+	  data[i] = sprintf("%03d-%s\r\n", code, data[i]);
+	} else {
+	  data[i] = " " + data[i] + "\r\n";
+	}
       }
     }
     data[sizeof(data)-1] = sprintf("%03d %s\r\n", code, data[sizeof(data)-1]);
@@ -1291,6 +1300,8 @@ class FTPSession
   static private object curr_pipe;
   static private int restart_point;
 
+  static private multiset|int allowed_shells = 0;
+
   // On a multihomed server host, the default data transfer port
   // (L-1) MUST be associated with the same local IP address as
   // the corresponding control connection to port L.
@@ -1304,7 +1315,33 @@ class FTPSession
 
   static private int check_shell(string shell)
   {
-    // ******
+    if (Query("shells") != "") {
+      // FIXME: Hmm, the cache will probably be empty almost always
+      // since it's part of the FTPsession object.
+      // Oh, well, shouldn't matter much unless you have *lots* of
+      // shells.
+      //	/grubba 1998-05-21
+      if (!allowed_shells) {
+	object(Stdio.File) file = Stdio.File();
+
+	if (file->open(Query("shells"), "r")) {
+	  allowed_shells =
+	    aggregate_multiset(@(Array.map(file->read(0x7fffffff)/"\n",
+					   lambda(string line) {
+					     return(((((line/"#")[0])/"") -
+						     ({" ", "\t"}))*"");
+					   } )-({""})));
+#ifdef DEBUG
+	  perror(sprintf("ftp.pike: allowed_shells:%O\n", allowed_shells));
+#endif /* DEBUG */
+	} else {
+	  perror(sprintf("ftp.pike: Failed to open shell database (\"%s\")\n",
+			 Query("shells")));
+	  return(0);
+	}
+      }
+      return(allowed_shells[shell]);
+    }
     return 1;
   }
 
@@ -1979,14 +2016,22 @@ class FTPSession
     // For logging purposes...
     session->not_query = Array.map(argv[1..], fix_path)*" ";
 
-    mapping file;
+    mapping file = ([]);
+
+    // The listings returned by a LIST or NLST command SHOULD use an
+    // implied TYPE AN, unless the current type is EBCDIC, in which
+    // case an implied TYPE EN SHOULD be used.
+    // RFC 1123 4.1.2.7
+    if (mode != "E") {
+      file->mode = "A";
+    } else {
+      file->mode = "E";
+    }
 
     if (flags & LS_FLAG_v) {
-      file = ([
-	"data":"ls - builtin_ls 1.1\n" ]);
+      file->data = "ls - builtin_ls 1.1\n";
     } else if (flags & LS_FLAG_h) {
-      file = ([
-	"data": ls_help(argv[0]) ]);
+      file->data = ls_help(argv[0]);
     } else {
       if (flags & LS_FLAG_d) {
 	flags &= ~LS_FLAG_R;
@@ -1998,31 +2043,14 @@ class FTPSession
 	flags &= ~LS_FLAG_m;
       }
 
-      // Do something interresting here...
-      file = ([
-	"file":LSFile(cwd, argv[1..], flags, session),
-      ]);
+      file->file = LSFile(cwd, argv[1..], flags, session, file->mode);
     }
-    if (file) {
-      // The listings returned by a LIST or NLST command SHOULD use an
-      // implied TYPE AN, unless the current type is EBCDIC, in which
-      // case an implied TYPE EN SHOULD be used.
-      // RFC 1123 4.1.2.7
 
-      if (mode != "E") {
-	file->mode = "A";
-      } else {
-	file->mode = "E";
-      }
-
-      if (!file->full_path) {
-	file->full_path = argv[0];
-      }
-      session->file = file;
-      connect_and_send(file, session);
-    } else {
-      send(550, ({ sprintf("%s: Nothing to send", argv[0]) }));
+    if (!file->full_path) {
+      file->full_path = argv[0];
     }
+    session->file = file;
+    connect_and_send(file, session);
   }
 
   /*
@@ -3019,7 +3047,13 @@ class FTPSession
 
     call_out(timeout, FTP2_TIMEOUT);
 
-    send(220, ({ "Welcome" }));
+    string s = replace(Query("FTPWelcome"),
+		       ({ "$roxen_version", "$roxen_build", "$full_version",
+			  "$pike_version", "$ident", }),
+		       ({ roxen->__roxen_version__, roxen->__roxen_build__,
+			  roxen->real_version, version(), roxen->version() }));
+
+    send(220, s/"\n", 1);
   }
 };
 
