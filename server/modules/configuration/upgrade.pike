@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.17 2000/02/24 05:34:17 nilsson Exp $
+ * $Id: upgrade.pike,v 1.18 2000/02/24 17:15:14 per Exp $
  *
  * The Roxen Upgrade Client
  * Copyright © 2000, Roxen IS.
@@ -26,14 +26,25 @@ Yabu.Table pkginfo, misc;
 
 mapping(int:GetPackage) package_downloads = ([ ]);
 
+int inited;
+void post_start()
+{
+  catch(db=Yabu.db(QUERY(yabudir),"wcSQ"));
+  pkginfo=db["pkginfo"];
+  misc=misc;
+  updater=UpdateInfoFiles();
+}
+
 void start(int num, Configuration conf)
 {
-  if(!num)
+  if(conf && !inited)
   {
-    catch(db=Yabu.db(QUERY(yabudir),"wcSQ"));
-    pkginfo=db["pkginfo"];
-    misc=misc;
-    updater=UpdateInfoFiles();
+    inited++;
+#if !constant(thread_create)
+    call_out( post_start, 1 );
+#else
+    thread_create( post_start );
+#endif
   }
 }
 
@@ -512,7 +523,7 @@ class GetInfoFile
 		       "issued-date": get_containers,
 		       "roxen-low": get_containers,
 		       "roxen-high": get_containers,
-		       "crypto": get_containers ]),		
+		       "crypto": get_containers ]),
 		     res);
     res->size=(int)httpquery->headers->pkgsize;
     werror("%O\n",res);
