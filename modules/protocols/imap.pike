@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.9 1998/10/21 01:09:21 nisse Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.10 1998/11/16 22:07:46 nisse Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -103,7 +103,8 @@ class imap_mail
   object mapping_to_list(mapping m)
     {
       return imap_list( ((array) m) * ({ }));
-			    (
+    }
+
   object make_bodystructure(MIME.Message msg, int extension_data)
     {
       array a;
@@ -194,9 +195,9 @@ class imap_mail
     }
 
   string first_header(array|string v)
-  {
-    return arrayp(v) ? v[0] : v:
-  }
+    {
+      return arrayp(v) ? v[0] : v;
+    }
   
   // FIXME: Handle multiple headers... 
   object make_envelope(mapping(string:string) h)
@@ -223,11 +224,8 @@ class imap_mail
   
   array fetch(array attrs)
     {
-      return ({ "FETCH",
-		imap_list(Array.transpose
-			  ( ({ fetch_attrs->raw,
-			       Array.map(fetch_attrs, fetch_attr) }) )
-			  * ({})) });
+      return ({ "FETCH", 
+		  imap_list(Array.map(attrs, fetch_attr) * ({})) });
     }
 
   string format_headers(mapping headers)
@@ -249,30 +247,84 @@ class imap_mail
 
   object get_message(string|void s)
     {
-      return MIME.Message(s || mail->getdata(), 0, 0, 1);
+      return MIME.Message(s || mail->body(), 0, 0, 1);
     }
 
   mapping get_headers(string|void s)
     {
-      return MIME.parse_headers(s || read_headers_from_fd(mail->body_fd()), 1);
+      return MIME.parse_headers(s || mail->read_headers(), 1)[0];
     }
-  
+
+  /* Read a part of the body */
+  string get_body_range(array range, string|void s)
+    {
+      if (!range)
+	return s || mail->body();
+
+      if (s)
+	return s[range[0]..range[0] + range[1] - 1];
+
+      object f = mail->body_fd();
+      if (f->seek(range[0]) < 0)
+	throw( ({ "imap->get_body_range: seek failed!\n", backtrace() }) );
+
+      return f->read(range[1]);
+    }
+
+  class fetch_response
+  {
+    object wanted;
+
+    void create(string w)
+      {
+	wanted = imap_atom(w);
+      }
+
+    array `()(mixed response) { return ({ wanted, response }); }
+  }
+    
+  class fetch_body_response
+  {
+    object item;
+    array range;
+    
+    void create(string wanted, array raw, array r)
+      {
+	range = r;
+	item = imap_atom_options(wanted,
+					raw,
+					range);
+      }
+
+    array `()(string|void s)
+      {
+	return ({ item, get_body_range(range, s) });
+      }
+  }
+
   /* Returns a pair ({ atom[options], value }) */
+  /* FIXME: Don't do too much MIME-decoding. Use
+   * MIME.Message->getencoded(), not MIME.Message->getdata(). */
   mixed fetch_attr(mapping attr)
     {
       /* This variable is cleared if we recurse into a multipart the
        * message. It is used to decide if the headers in the database
        * are relevant. */
       int top_level = 1;
+
+      object response = fetch_response(attr->raw_wanted || attr->wanted);
       
       switch(attr->wanted)
       {
       case "body":
       case "body.peek": {
+	object body_response = fetch_body_response(attr->wanted,
+						   attr->raw_options,
+						   attr->range);
 	if (!(sizeof(attr->section) + sizeof(attr->part)))
 	{
 	  /* Entire message */
-	  return mail->body();
+	  return body_response();
 	}
 
 	string raw_body = mail->body();
@@ -316,35 +368,35 @@ class imap_mail
 	}
 
 	if (!sizeof(attr->section))
-	  return top_level ? raw_body : (string) msg;
+	  return body_response(top_level ? raw_body : (string) msg);
 	
 	switch(attr->section[0])
 	{
 	case "text":
 	  if (sizeof(attr->section) != 1)
 	    throw("Invalid section");
-	  return msg->getdata();
-
+	  return body_response(msg->getdata());
+	  
 	case "mime": 
 	  if (sizeof(attr->section) != 1)
 	    throw("Invalid section");
 
-	  if (!sizeof(parts))
+	  if (!sizeof(attr->parts))
 	    throw("MIME section requires numeric part specifier");
 
 	  /* Filter headers */
-	  return format_headers
-	    ( ([ "mime-version" : 1,
-		 "content-type" : 1,
-		 "content-length" : 1,
-		 "content-transfer-encoding" : 1 ])
-	      & msg->headers );
-	  
+	  return body_response(format_headers
+			       ( ([ "mime-version" : 1,
+				    "content-type" : 1,
+				    "content-length" : 1,
+				    "content-transfer-encoding" : 1 ])
+				 & msg->headers ));
+	    
 	case "header": {
 	  mapping headers = msg->headers;
 	  
 	  if (sizeof(attr->section) == 1)
-	    return format_headers(headers);
+	    return body_response(format_headers(headers));
 
 	  /* Section should be HEADER.FIELDS or HEADER.FIELDS.NOT.
 	   * Options should be a list of atoms corresponding to header names. */
@@ -367,10 +419,10 @@ class imap_mail
 	  switch(sizeof(attr->section))
 	  {
 	  case 2:
-	    return format_headers(filter & headers);
+	    return body_response(format_headers(filter & headers));
 	  case 3:
 	    if (attr->section[2] == "not")
-	      return format_headers(headers - filter);
+	      return body_response(format_headers(headers - filter));
 	    /* Fall through */
 	  default:
 	    throw("Invalid section");
@@ -383,42 +435,47 @@ class imap_mail
 	throw( ({ "Internal error", backtrace() }) );
       }
       case "bodystructure": 
-	return make_bodystructure(MIME.Message(mail->getdata(), 0, 0, 1),
-				  !attr->no_extention_data);
+	return response(make_bodystructure
+			      (MIME.Message(mail->getdata(), 0, 0, 1),
+			       !attr->no_extention_data));
 
       case "envelope": 
-	return make_envelope(get_headers());
+	return response(make_envelope(get_headers()));
 	
       case "flags":
-	return imap_list(indices(get_flags()));
+	return response(imap_list(indices(get_flags())));
 
       case "internaldate":
 	// FIXME: Where can a suitable date be found?
 	// Use mail->headers()->incoming_date
-	throw("Not implemented");
+	werror("mail->headers(): %O\n", mail->headers());
+	// FIXME
+	return response("internaldate_unimplemented");
 
       case "rfc822":
-	if (sizeof(attr->section == 1))
-	  return mail->body();
-
-	if (sizeof(attr->section != 2))
-	  throw("Invalid fetch");
-
-	switch(attr->section[1])
-	{
-	case "header":
-	  return read_headers();
-	case "size":
-	  // FIXME: How does rfc-822 define the size of the message?
-	  throw("Not implemented");
-	case "text":
-	  return get_message()->getdata();
-	default:
-	  throw("Invalid fetch");
-	}
+	switch(sizeof(attr->section))
+	  {
+	  default:
+	    throw("Invalid fetch");
+	  case 0:
+	    return response(mail->body());
+	  case 1:
+	    switch(attr->section[0])
+	    {
+	    case "header":
+	      return response(mail->read_headers());
+	    case "size":
+	      // FIXME: How does rfc-822 define the size of the message?
+	      return response(imap_number(mail->get_size()));
+	    case "text":
+	      return response(get_message()->getdata());
+	    default:
+	      throw("Invalid fetch");
+	    }
+	  }
 	break;
       case "uid":
-	return imap_number(uid);
+	return response(imap_number(uid));
       default:
 	throw( ({ "Internal error", backtrace() }) );
       }
@@ -603,25 +660,25 @@ class imap_mailbox
 	     })) }) ) });
     }
 
-  array fetch(object message_set, mixed attr)
+  array fetch(object message_set, array(mapping) attrs)
     {
       array message_numbers =  message_set->expand(sizeof(contents));
       array res
 	= `+( ({ }),
 	      @Array.map(message_numbers,
-			 lambda(int i, array fetch_attrs)
+			 lambda(int i, array attrs)
 			   {
-			     return Array.map(fetch_attr,
+			     return Array.map(attrs,
 					      lambda(mixed attr, int i)
 						{
 						  return contents[i-1]->fetch(attr);
 						},
 					      i);
 			   },
-			 fetch_attrs));
+			 attrs));
       
       /* Fetch was successful. Consider setting the \Read flag. */
-      if (sizeof(fetch_attrs->mark_as_read - ({ 0 }) ))
+      if (sizeof(attrs->mark_as_read - ({ 0 }) ))
       {
 	foreach(message_numbers, int i)
 	  contents[i-1]->mark_as_read();
@@ -734,7 +791,8 @@ class backend
       
     }
 
-  array fetch(mapping|object session, object message_set, array fetch_attrs)
+  array fetch(mapping|object session, object message_set,
+	      array(mapping) fetch_attrs)
     {
       return session->mailbox->fetch(message_set, fetch_attrs)
 	+ session->mailbox->update();
@@ -748,16 +806,25 @@ array register_module()
 	    "IMAP interface to the mail system." });
 }
 
+#if 0
+/* This doesn't work, for some reason */
+#define PORT Protocols.Ports.tcp.imap2
+#else
+#define PORT 143
+#endif
+
 void create()
 {
   werror("imap->create\n");
-  defvar("port", Protocols.Ports.tcp.imap2, "SMTP port number", TYPE_INT,
+  defvar("port", PORT, "SMTP port number", TYPE_INT,
 	 "Portnumber to listen to. "
-	 "Usually " + Protocols.Ports.tcp.imap2 + ".\n");
+	 "Usually " + PORT + ".\n");
   defvar("timeout", 600, "Max idle time.", TYPE_INT,
 	 "Clients who are inactive this long are logged out automatically.\n");
-  defvar("debug", 0, "Debug", TYPE_INT, "Enable IMAP debug output.\n");
+  defvar("debug", 0, "Debug", TYPE_FLAG, "Enable IMAP debug output.\n");
 }
+
+#undef PORT
 
 object server;
 
