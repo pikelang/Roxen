@@ -1308,7 +1308,7 @@ hej</result>
 <rxml><random seed="foo">a
 b
 c</random></rxml>
-<result>b</result>
+<result>c</result>
 </test>
 
 <test>
