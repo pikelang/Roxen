@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.34 1998/04/27 14:30:23 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.35 1998/05/01 01:05:56 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -29,7 +29,7 @@ constant thread_safe=1;
 
 
 int redirects, accesses, errors, dirlists;
-int puts, deletes;
+int puts, deletes, mkdirs;
 
 static int do_stat = 1;
 
@@ -40,6 +40,7 @@ string status()
 	  (accesses?"<b>Normal files</b>: "+accesses+"<br>"
 	   :"No file accesses<br>")+
 	  (QUERY(put)&&puts?"<b>Puts</b>: "+puts+"<br>":"")+
+	  (QUERY(put)&&mkdirs?"<b>Mkdirs</b>: "+mkdirs+"<br>":"")+
 	  (QUERY(delete)&&deletes?"<b>Deletes</b>: "+deletes+"<br>":"")+
 	  (errors?"<b>Permission denied</b>: "+errors
 	   +" (not counting .htaccess)<br>":"")+
@@ -387,6 +388,55 @@ mixed find_file( string f, object id )
     }
     break;
   
+  case "MKDIR":
+    if(!QUERY(put))
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MKDIR disallowed (since PUT is disallowed)");
+      return 0;
+    }    
+
+    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+      TRACE_LEAVE("MKDIR: Permission denied");
+      return http_auth_required("foo",
+				"<h1>Permission to 'MKDIR' denied</h1>");
+    }
+    mkdirs++;
+    object privs;
+
+// #ifndef THREADS // Ouch. This is is _needed_. Well well...
+    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
+      // NB: Root-access is prevented.
+      privs=Privs("Creating directory",
+		  (int)id->misc->uid, (int)id->misc->gid );
+    }
+// #endif
+
+    if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
+      privs = 0;
+      errors++;
+      report_error("Creation of " + f + " failed. Permission denied.\n");
+      TRACE_LEAVE("MKDIR: Contains symlinks. Permission denied");
+      return http_low_answer(403, "<h2>Permission denied.</h2>");
+    }
+
+    TRACE_ENTER("MKDIR: Accepted", 0);
+
+    int code = mkdir( f );
+
+    privs = 0;
+    if (code) {
+      TRACE_LEAVE("MKDIR: Success");
+      TRACE_LEAVE("Success");
+      return http_string_answer("Ok");
+    } else {
+      TRACE_LEAVE("MKDIR: Failed");
+      TRACE_LEAVE("Failure");
+      return 0;
+    }
+
+    break;
+
   case "PUT":
     if(!QUERY(put))
     {
