@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.188 2004/10/11 17:39:53 mast Exp $
+// $Id: Roxen.pmod,v 1.189 2004/10/11 18:40:37 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -575,7 +575,7 @@ string http_encode_invalids (string f)
       "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
       "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
       "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
-      "\377",
+      "\177",
       // Space (RFC 2396 2.4.3).
       " ",
       // Escaped by legacy (presumably since they're used to delimit
@@ -590,7 +590,7 @@ string http_encode_invalids (string f)
       "%08", "%09", "%0a", "%0b", "%0c", "%0d", "%0e", "%0f",
       "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
       "%18", "%19", "%1a", "%1b", "%1c", "%1d", "%1e", "%1f",
-      "%ff",
+      "%7f",
       "%20",
       "%22", "%27"
     }));
@@ -606,14 +606,14 @@ string http_encode_cookie(string f)
       "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
       "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
       "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
-      "\377",
+      "\177",
       "=", ",", ";", "%"
     }), ({
       "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
       "%08", "%09", "%0a", "%0b", "%0c", "%0d", "%0e", "%0f",
       "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
       "%18", "%19", "%1a", "%1b", "%1c", "%1d", "%1e", "%1f",
-      "%ff",
+      "%7f",
       "%3d", "%2c", "%3b", "%25"
     }));
 }
@@ -623,14 +623,17 @@ string http_encode_url (string f)
 //! means that all URI reserved and excluded characters are escaped,
 //! e.g. /, #, ?, &, \n, etc (see RFC 2396).
 //!
-//! Note that eight bit chars and wider are left unescaped, even
-//! though they aren't allowed in a URI according to RFC 2396. This is
-//! normally not a problem provided the URI is included in a page
-//! whose charset include those characters.
-//! @[correctly_http_encode_url] encodes such chars too.
+//! Eight bit chars and wider are encoded using UTF-8 followed by http
+//! escaping. This is in line with the recommendations in RFC 2718
+//! section 2.2.5, B.2 in the HTML 4.01 standard
+//! (http://www.w3.org/TR/html4/appendix/notes.html#non-ascii-chars),
+//! and the IRI recommendation
+//! (http://www.w3.org/International/O-URL-and-ident.html). (It should
+//! work regardless of the charset used in the XML document the URL
+//! might be inserted into.)
 {
   return replace (
-    f, ({
+    string_to_utf8 (f), ({
       // Reserved URI chars according to RFC 2396 section 2.2.
       ";", "/", "?", ":", "@", "&", "=", "+", "$", ",",
       // Control chars (RFC 2396 2.4.3).
@@ -638,18 +641,39 @@ string http_encode_url (string f)
       "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
       "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
       "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
-      "\377",
+      "\177",
       // Space (RFC 2396 2.4.3).
       " ",
       // Delimiters (RFC 2396 2.4.3).
       "<", ">", "#", "%", "\"",
       // Unwise chars (RFC 2396 2.4.3).
       "{", "}", "|", "\\", "^", "[", "]", "`",
-      // Encoded by http_encode_url legacy (imho this is also an
-      // unwise char since it's used to delimit attributes in xml).
-      // Encoding it does not change its meaning in a URI (RFC 2396
-      // 2.3).
+      // Encoded by http_encode_url legacy. Imho this is also an
+      // unwise char since it's used to delimit attributes in XML
+      // (note however that URLs in attributes typically still needs
+      // to be HTML quoted to cope with e.g. "&").
+      //
+      // Encoding the single quote does not change its meaning in a
+      // URI (RFC 2396 2.3).
       "'",
+      // All eight bit chars (this is fast with the current replace()
+      // implementation).
+      "\200", "\201", "\202", "\203", "\204", "\205", "\206", "\207",
+      "\210", "\211", "\212", "\213", "\214", "\215", "\216", "\217",
+      "\220", "\221", "\222", "\223", "\224", "\225", "\226", "\227",
+      "\230", "\231", "\232", "\233", "\234", "\235", "\236", "\237",
+      "\240", "\241", "\242", "\243", "\244", "\245", "\246", "\247",
+      "\250", "\251", "\252", "\253", "\254", "\255", "\256", "\257",
+      "\260", "\261", "\262", "\263", "\264", "\265", "\266", "\267",
+      "\270", "\271", "\272", "\273", "\274", "\275", "\276", "\277",
+      "\300", "\301", "\302", "\303", "\304", "\305", "\306", "\307",
+      "\310", "\311", "\312", "\313", "\314", "\315", "\316", "\317",
+      "\320", "\321", "\322", "\323", "\324", "\325", "\326", "\327",
+      "\330", "\331", "\332", "\333", "\334", "\335", "\336", "\337",
+      "\340", "\341", "\342", "\343", "\344", "\345", "\346", "\347",
+      "\350", "\351", "\352", "\353", "\354", "\355", "\356", "\357",
+      "\360", "\361", "\362", "\363", "\364", "\365", "\366", "\367",
+      "\370", "\371", "\372", "\373", "\374", "\375", "\376", "\377",
     }),
     ({
       "%3b", "%2f", "%3f", "%3a", "%40", "%26", "%3d", "%2b", "%24", "%2c",
@@ -657,45 +681,33 @@ string http_encode_url (string f)
       "%08", "%09", "%0a", "%0b", "%0c", "%0d", "%0e", "%0f",
       "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
       "%18", "%19", "%1a", "%1b", "%1c", "%1d", "%1e", "%1f",
-      "%ff",
+      "%7f",
       "%20",
       "%3c", "%3e", "%23", "%25", "%22",
       "%7b", "%7d", "%7c", "%5c", "%5e", "%5b", "%5d", "%60",
-      "%27"
+      "%27",
+      "%80", "%81", "%82", "%83", "%84", "%85", "%86", "%87",
+      "%88", "%89", "%8a", "%8b", "%8c", "%8d", "%8e", "%8f",
+      "%90", "%91", "%92", "%93", "%94", "%95", "%96", "%97",
+      "%98", "%99", "%9a", "%9b", "%9c", "%9d", "%9e", "%9f",
+      "%a0", "%a1", "%a2", "%a3", "%a4", "%a5", "%a6", "%a7",
+      "%a8", "%a9", "%aa", "%ab", "%ac", "%ad", "%ae", "%af",
+      "%b0", "%b1", "%b2", "%b3", "%b4", "%b5", "%b6", "%b7",
+      "%b8", "%b9", "%ba", "%bb", "%bc", "%bd", "%be", "%bf",
+      "%c0", "%c1", "%c2", "%c3", "%c4", "%c5", "%c6", "%c7",
+      "%c8", "%c9", "%ca", "%cb", "%cc", "%cd", "%ce", "%cf",
+      "%d0", "%d1", "%d2", "%d3", "%d4", "%d5", "%d6", "%d7",
+      "%d8", "%d9", "%da", "%db", "%dc", "%dd", "%de", "%df",
+      "%e0", "%e1", "%e2", "%e3", "%e4", "%e5", "%e6", "%e7",
+      "%e8", "%e9", "%ea", "%eb", "%ec", "%ed", "%ee", "%ef",
+      "%f0", "%f1", "%f2", "%f3", "%f4", "%f5", "%f6", "%f7",
+      "%f8", "%f9", "%fa", "%fb", "%fc", "%fd", "%fe", "%ff",
     }));
 }
 
-//! Encodes any string to be used as a literal in a URL. In addition
-//! to @[http_encode_url], this function encodes eight bit characters.
-//! If the string is wide then it's UTF-8 encoded first.
-//!
-//! @note
-//! Avoid this function, at least if the input string might be wide.
-//! Despite its name it's not very correct since the UTF-8 conversion
-//! isn't applied consistently - there is no one-to-one mapping
-//! between unencoded and encoded strings.
+//! Compatibility alias for @[http_encode_url].
 string correctly_http_encode_url(string f) {
-  if(String.width(f)>8)
-    f = string_to_utf8(f);
-  // This ain't fast. Nosiree.. :P
-  return map(f/1, lambda(string in) {
-    int c = in[0];
-    // if(c>255) return sprintf("%%u%04x", c);
-    if( c<33 || c>126 ||
-	(<
-	  // Reserved URI chars according to RFC 2396 section 2.2.
-	  ';', '/', '?', ':', '@', '&', '=', '+', '$', ',',
-	  // Delimiters (RFC 2396 2.4.3).
-	  '<', '>', '#', '%', '"',
-	  // Unwise chars (RFC 2396 2.4.3).
-	  '{', '}', '|', '\\', '^', '[', ']', '`',
-	  // Encoded by legacy (imho this is also an unwise char since
-	  // it's used to delimit attributes in xml).
-	  '\'',
-	>)[c] )
-      return sprintf("%%%02x", c);
-    return in;
-  } ) * "";
+  return http_encode_url (f);
 }
 
 string add_pre_state( string url, multiset state )
