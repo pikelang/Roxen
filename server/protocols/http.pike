@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.260 2000/08/28 09:53:59 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.261 2000/08/28 12:02:19 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1820,6 +1820,8 @@ void send_result(mapping|void result)
                                 ([
                                   "hs":strlen(head_string),
                                   "len":file->len,
+                                  // fix non-keep-alive when sending from cache
+                                  "raw":(file->raw||misc->connection=="close"),
                                   "error":file->error,
                                   "mtime":(file->stat && file->stat[ST_MTIME]),
                                   "rf":realfile,
