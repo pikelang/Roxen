@@ -247,6 +247,10 @@ class Table
       };
     LOCK();
     object bucket = get_bucket(scheme(strlen(ts)));
+    if(index[in] && index[in][0] == bucket->size) {
+      bucket->set_entry(index[in][1], ts);
+      return to;
+    }
     delete(in);
     int of = bucket->allocate_entry();
     bucket->set_entry(of, ts);
