@@ -11,8 +11,10 @@ constant type="Image";
 array(Image.Layer) get_layers() 
 //! Returns the image as an array of layers
 {
+  string data = query();
+  if(!data || !sizeof(data)) return 0;
   catch{
-    return Image.decode_layers( query() );
+    return Image.decode_layers( data );
   };
 }
 
@@ -33,7 +35,7 @@ int is_valid_image()
 {
   if( _ivi )  return _ivi > 0 ? 1 : 0;
   if( get_layers() )  _ivi = 1;   else   _ivi = -1;
-  return _ivi;
+  return _ivi > 0 ? 1 : 0;
 }
 
 array(string) verify_set( string newval )
@@ -61,11 +63,11 @@ string render_view( RequestID id, int|void thumb )
     {
       RXML.get_context()->set_var( "___imagedata", query(), "var" );
       if( thumb )
-        return Roxen.parse_rxml("<cimg max-width=90 max-height=90 "
-                                "data='&var.___imagedata;' "
-                                "format='gif' quant=255 dither=fs/>",id );
+        return Roxen.parse_rxml("<cimg max-width='90' max-height='90' "
+                                "data='&var.___imagedata:none;' "
+                                "format='gif' quant='255' dither='fs'/>",id );
       else
-        return Roxen.parse_rxml("<cimg data='&var.___imagedata;' "
+        return Roxen.parse_rxml("<cimg data='&var.___imagedata:none;' "
                                 "format='png'/>",id );
     }
     else 
@@ -80,5 +82,5 @@ string render_view( RequestID id, int|void thumb )
 
 string render_form( RequestID id )
 {
-  return render_view( id, 1  ) + ::render_form( id );
+  return render_view( id, 1  ) + " " + ::render_form( id );
 }
