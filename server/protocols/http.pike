@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.308 2001/03/16 02:18:22 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.309 2001/03/20 01:04:39 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -64,6 +64,12 @@ Protocol port_obj;
 #include <roxen.h>
 #include <module.h>
 #include <variables.h>
+#include <request_trace.h>
+
+#define MY_TRACE_ENTER(A, B) \
+  do {RequestID id = this_object(); TRACE_ENTER (A, B);} while (0)
+#define MY_TRACE_LEAVE(A) \
+  do {RequestID id = this_object(); TRACE_LEAVE (A);} while (0)
 
 int time;
 
@@ -1741,7 +1747,9 @@ void send_result(mapping|void result)
           string data = "";
           if( file->file )   data += file->file->read();
           if( file->data )   data += file->data;
-          conf->datacache->set( raw_url, data, 
+	  MY_TRACE_ENTER (sprintf ("Storing in ram cache, entry: %O", raw_url), 0);
+	  MY_TRACE_LEAVE ("");
+          conf->datacache->set( raw_url, data,
                                 ([
                                   // We have to handle the date header.
                                   "hs":head_string,
@@ -1986,8 +1994,11 @@ void got_data(mixed fooid, string s)
       misc->cacheable &&
       (cv = conf->datacache->get( raw_url )) )
   {
-    if( !cv[1]->key )
+    MY_TRACE_ENTER (sprintf ("Found %O in ram cache - checking entry", raw_url), 0);
+    if( !cv[1]->key ) {
+      MY_TRACE_LEAVE ("Entry invalid due to zero key");
       conf->datacache->expire_entry( raw_url );
+    }
     else 
     {
       int can_cache = 1;
@@ -2001,12 +2012,18 @@ void got_data(mixed fooid, string s)
       {
         if( mixed e = catch 
         {
-          foreach( file->callbacks, function f )
+          foreach( file->callbacks, function f ) {
+	    MY_TRACE_ENTER (sprintf ("Checking with %s",
+				     master()->describe_function (f)), 0);
             if( !f(this_object(), cv[1]->key ) )
             {
+	      MY_TRACE_LEAVE ("Entry invalid according to callback");
+	      MY_TRACE_LEAVE ("");
               can_cache = 0;
               break;
             }
+	    MY_TRACE_LEAVE ("");
+	  }
         } )
         {
           INTERNAL_ERROR( e );
@@ -2017,6 +2034,7 @@ void got_data(mixed fooid, string s)
       }
       if( !cv[1]->key )
       {
+	MY_TRACE_LEAVE ("Entry invalid due to zero key");
         conf->datacache->expire_entry( raw_url );
         can_cache = 0;
       }
@@ -2035,7 +2053,8 @@ void got_data(mixed fooid, string s)
               return a+"Date: "+Roxen.http_date( predef::time(1) ) +"\n"+b;
             return headers;
           };
-        
+
+	  MY_TRACE_LEAVE ("Using entry from ram cache");
           conf->hsent += strlen(file->hs);
           if( strlen( d ) < 4000 )
           {
@@ -2050,7 +2069,13 @@ void got_data(mixed fooid, string s)
           }
           return;
         }
-      } else 
+#ifndef RAM_CACHE_ASUME_STATIC_CONTENT
+	else
+	  MY_TRACE_LEAVE (
+	    sprintf ("Entry out of date (disk: %s, cache: mtime %d)",
+		     st ? "mtime " + st->mtime : "gone", file->mtime));
+#endif
+      } else
         misc->cacheable = 0; // Never cache in this case.
       file = 0;
     }
