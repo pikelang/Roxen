@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.16 2004/06/07 17:07:24 grubba Exp $
+// $Id: startdll.cpp,v 1.17 2004/06/08 09:40:50 grubba Exp $
 //
 
 
@@ -193,17 +193,17 @@ inline BOOL CServiceModule::Install()
         return FALSE;
       }
     } else {
-      SC_HANDLE hService = ::CreateService(
+      hService = ::CreateService(
           hSCM, m_szServiceName, m_szServiceName,
           SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
           SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
           szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL);
-    }
-    if (hService == NULL)
-    {
+      if (hService == NULL)
+      {
         ::CloseServiceHandle(hSCM);
         MessageBox(NULL, _T("Couldn't create service"), m_szServiceName, MB_OK);
         return FALSE;
+      }
     }
 
     SERVICE_DESCRIPTION desc;
