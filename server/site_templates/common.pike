@@ -151,8 +151,16 @@ mixed parse( RequestID id, mapping|void opt )
 				    conf->modules[ mod ] );
     }
     
+    License.Key key = conf->getvar("license")->get_key();
     foreach( silent_modules, string mod )
+    {
+      ModuleInfo module = roxen.find_module(mod);
+      if(module->locked && (!key || !module->unlocked(key)) ) {
+	report_debug("Ignoring module "+mod+", disabled in license.\n");
+	continue;
+      }
       conf->enable_module( mod );
+    }
 
     conf->forcibly_added = ([]);
 
