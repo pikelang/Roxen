@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.245 2000/09/18 11:02:43 nilsson Exp $
+// $Id: rxml.pike,v 1.246 2000/09/19 00:03:58 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1880,6 +1880,31 @@ class TagIfExists {
   }
 }
 
+class TagIfNserious {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "nserious";
+
+  int eval() {
+#ifdef NSERIOUS
+    return 1;
+#else
+    return 0;
+#endif
+  }
+}
+
+class TagIfModule {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "module";
+
+  int eval(string u, RequestID id) {
+    if (!u || !sizeof(u)) return 0;
+    return sizeof(glob(u+"#*", indices(id->conf->enabled_modules)));
+  }
+}
+
 class TagIfTrue {
   inherit RXML.Tag;
   constant name = "if";
@@ -2439,6 +2464,12 @@ scope created within the define tag.
 <attr name='false' required>
  Show contents if truth value is true.
 </attr>",
+
+"if#module":#"<desc plugin><short>Enables true if the selected module is enabled
+ in the current server.</short></desc>
+ <attr name='module' value='name'>
+ The \"real\" name of the module to look for, i.e. its filename without extension.
+ </attr>",
 
 "if#accept":#"<desc plugin><short>
  Returns true if the browser accepts certain content types as specified
