@@ -3,7 +3,7 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: ypuserdb.pike,v 1.4 1997/06/09 18:54:44 grubba Exp $";
+string cvs_version = "$Id: ypuserdb.pike,v 1.5 1997/06/09 18:55:03 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -41,7 +41,7 @@ string status()
 	   return roxen->quick_ip_to_host(s) + ": " + failed[s] + "<br>\n";
 	 }) * "") +
 	 "<p>The database has " + sizeof(domain->all("passwd.byname")) +
-	 " entries."
+	 " entries.");
 }
 
 /*
