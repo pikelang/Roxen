@@ -1,4 +1,7 @@
-/* $Id: ftpstatus.pike,v 1.2 2000/09/08 20:24:18 lange Exp $ */
+/* $Id: ftpstatus.pike,v 1.3 2000/09/18 17:34:46 grubba Exp $ */
+
+/* Disabled for now. (Was originally written for ftp mk I). */
+#if 0
 
 inherit "wizard";
 #include <roxen.h>
@@ -75,3 +78,5 @@ string parse( RequestID id )
     return LOCALE(57, "There are currently no active FTP sessions.")+
       "<p><cf-ok/></p>";
 }
+
+#endif /* 0 */
