@@ -3,7 +3,7 @@
 // An implementation of the CONNECT methos, used for SSL tunneling in
 // Netscape (the "Secure proxy" field)
 
-string cvs_version = "$Id: connect.pike,v 1.7 1997/05/28 00:29:14 grubba Exp $";
+string cvs_version = "$Id: connect.pike,v 1.8 1997/05/31 19:17:18 grubba Exp $";
 #include <module.h>
 
 inherit "module";
@@ -140,8 +140,10 @@ void send_some(array to, string data)
 void connected(object to, object id)
 {
   array myid, hmm;
-  if(!to) 
-    return nope(id);
+  if(!to) {
+    nope(id);
+    return;
+  }
 
   myid = ({  id->my_fd->write, to->write, "", "" });
   hmm = ({ id->not_query, 0 });
