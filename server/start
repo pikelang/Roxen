@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.220 2004/05/14 18:31:39 grubba Exp $
+# $Id: start,v 1.221 2004/08/11 15:18:46 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -26,13 +26,19 @@ check_owner() {
         dp "Doing uid change to $ugid"
         oifs="$IFS";IFS=':';set $ugid;IFS="$oifs"
 	if [ ! "x$2" = x ]; then
-	  ok=`ls -lgd . 2>/dev/null | grep $2 |wc -l`
+	  ok=`ls -lgd . 2>/dev/null | grep "$2" |wc -l`
 	  ok=`echo $ok`
 	  if [ "x$ok" = x1 ] ; then
 	    dp "The server directory is already readable by group $2"
 	  else
-	    chgrp -R "$2" .
-	    chmod -R g+r  .
+	    ok=`ls -ngd . 2>/dev/null | grep "$2" |wc -l`
+	    ok=`echo $ok`
+	    if [ "x$ok" = x1 ] ; then
+	      dp "The server directory is already readable by group $2"
+	    else
+	      chgrp -R "$2" .
+	      chmod -R g+r  .
+	    fi
 	  fi
 	fi
 	change_owner "$1" "$2" "$DIR" "$VARDIR" "$LOGDIR"
