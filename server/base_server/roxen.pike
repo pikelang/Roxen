@@ -1,10 +1,10 @@
 // The Roxen Webserver main program.
 // Copyright © 1996 - 2000, Roxen IS.
 //
-// Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
+// Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.589 2000/12/13 04:24:54 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.590 2000/12/17 21:18:43 grubba Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
