@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.359 2002/02/14 10:01:25 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.360 2002/02/26 19:04:36 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -36,7 +36,11 @@ int footime, bartime;
 #endif
 
 #ifdef FD_DEBUG
-#define MARK_FD(X) catch{REQUEST_WERR(X); mark_fd(my_fd->query_fd(), (X)+" "+remoteaddr);}
+#define MARK_FD(X)							\
+  catch{								\
+    REQUEST_WERR("FD " + my_fd->query_fd() + ": " + (X));		\
+    mark_fd(my_fd->query_fd(), (X)+" "+remoteaddr);			\
+  }
 #else
 #define MARK_FD(X)
 #endif
@@ -71,6 +75,7 @@ mapping(string:mixed)|FakedVariables variables = FakedVariables( real_variables 
 
 mapping (string:mixed)  misc            =
 ([
+#if 0
 #ifdef REQUEST_DEBUG
   "trace_enter":lambda(mixed ...args) {
 		  REQUEST_WERR(sprintf("TRACE_ENTER(%{%O,%})", args));
@@ -79,6 +84,7 @@ mapping (string:mixed)  misc            =
 		  REQUEST_WERR(sprintf("TRACE_LEAVE(%{%O,%})", args));
 		}
 #endif // REQUEST_DEBUG
+#endif
 ]);
 mapping (string:string) cookies         = ([ ]);
 mapping (string:string) request_headers = ([ ]);
@@ -366,21 +372,26 @@ private void setup_pipe()
 
 void send (string|object what, int|void len)
 {
-  REQUEST_WERR(sprintf("send(%O, %O)\n", what, len));
   if( len && port_obj && port_obj->minimum_byterate )
     call_out( end, len / port_obj->minimum_byterate );
 
   if(!what) return;
   if(!pipe) setup_pipe();
-  if(stringp(what))  pipe->write(what);
-  else               pipe->input(what,len);
+  if(stringp(what))  {
+    REQUEST_WERR(sprintf("HTTP: Pipe string %O", what));
+    pipe->write(what);
+  }
+  else {
+    REQUEST_WERR(sprintf("HTTP: Pipe stream %O, length %O", what, len));
+    pipe->input(what,len);
+  }
 }
 
 void start_sender( )
 {
   if (pipe) 
   {
-    MARK_FD("HTTP really handled, piping "+not_query);
+    MARK_FD("HTTP really handled, piping response");
 #ifdef FD_DEBUG
     call_out(timer, 30, predef::time(1)); // Update FD with time...
 #endif
@@ -666,7 +677,7 @@ int things_to_do_when_not_sending_from_cache( )
 #else
   supports = (< "images", "gifinline", "forms", "mailto">);
 #endif
-  REQUEST_WERR("HTTP: parse_got(): supports");
+  //REQUEST_WERR("HTTP: parse_got(): supports");
   if(!referer) referer = ({ });
   if(misc->proxyauth) 
   {
@@ -681,7 +692,7 @@ int things_to_do_when_not_sending_from_cache( )
   }
 #ifdef OLD_RXML_CONFIG
   if(config_in_url) {
-    REQUEST_WERR("HTTP: parse_got(): config_in_url");
+    //REQUEST_WERR("HTTP: parse_got(): config_in_url");
     really_set_config( mod_config );
     return 1;
   }
@@ -782,13 +793,13 @@ private final int parse_got_2( )
       /* Not reached */
       break;
   }
-  REQUEST_WERR(sprintf("***** req line: %O", line));
-  REQUEST_WERR(sprintf("***** headers:  %O", request_headers));
-  REQUEST_WERR(sprintf("***** data (%d):%O", strlen(data),data));
+  REQUEST_WERR(sprintf("HTTP: request line %O", line));
+  REQUEST_WERR(sprintf("HTTP: headers %O", request_headers));
+  REQUEST_WERR(sprintf("HTTP: data (length %d) %O", strlen(data),data));
   raw_url    = f;
   time       = predef::time(1);
   // if(!data) data = "";
-  REQUEST_WERR(sprintf("RAW_URL:%O", raw_url));
+  //REQUEST_WERR(sprintf("HTTP: raw_url %O", raw_url));
 
   if(!remoteaddr)
   {
@@ -798,7 +809,7 @@ private final int parse_got_2( )
       	sscanf(remoteaddr, "%s %*s", remoteaddr);
     }
     if(!remoteaddr) {
-      REQUEST_WERR("HTTP: parse_request(): No remote address.");
+      REQUEST_WERR("HTTP: No remote address.");
       TIMER_END(parse_got);
       return 2;
     }
@@ -869,8 +880,7 @@ private final int parse_got_2( )
 	
     if(strlen(data) < l)
     {
-      REQUEST_WERR(sprintf("HTTP: parse_request(): More data needed in %s.",
-			   method));
+      REQUEST_WERR(sprintf("HTTP: More data needed in %s.", method));
       TIMER_END(parse_got);
       return 0;
     }
@@ -963,7 +973,7 @@ void disconnect()
   file = 0;
 #ifdef REQUEST_DEBUG
   if (my_fd) 
-    MARK_FD("my_fd in HTTP disconnected?");
+    MARK_FD("HTTP my_fd in HTTP disconnected?");
 #endif
   MERGE_TIMERS(conf);
   if(do_not_disconnect) return;
@@ -1294,7 +1304,7 @@ void timer(int start)
   if(pipe) {
     // FIXME: Disconnect if no data has been sent for a long while
     //   (30min?)
-    MARK_FD(sprintf("HTTP_piping_%d_%d_%d_%d_(%s)",
+    MARK_FD(sprintf("HTTP piping %d %d %d %d (%s)",
 		    pipe->sent,
 		    stringp(pipe->current_input) ?
 		    strlen(pipe->current_input) : -1,
@@ -1544,7 +1554,8 @@ void send_result(mapping|void result)
   if(elapsed > p[2]) p[2]=elapsed;
 #endif
 
-  REQUEST_WERR(sprintf("HTTP: send_result(%O)", file));
+  REQUEST_WERR(sprintf("HTTP: response: prot %O, method %O, file %O",
+		       prot, method, file));
 
   if( prot == "HTTP/0.9" )  misc->cacheable = 0;
 
@@ -1726,8 +1737,8 @@ void send_result(mapping|void result)
         // content length when using keep-alive. So let's force a
         // close in that case.
         if( file->error/100 == 2 && file->len <= 0 )
-        {
-          heads->Connection = "close";
+	{
+	  heads->Connection = "close";
           misc->connection = "close";
         }
 	if( catch( head_string += Roxen.make_http_headers( heads ) ) )
@@ -1751,8 +1762,10 @@ void send_result(mapping|void result)
         conf->hsent += strlen(head_string);
       }
     }
-    REQUEST_WERR(sprintf("Sending result for prot:%O, method:%O file:%O\n",
-                         prot, method, file));
+#if 0
+    REQUEST_WERR(sprintf("HTTP: Sending result for prot:%O, method:%O, file:%O",
+			 prot, method, file));
+#endif
     MARK_FD("HTTP handled");
   
     if( (method!="HEAD") && (file->error!=304) )
@@ -1796,9 +1809,11 @@ void send_result(mapping|void result)
         int s;
 	TIMER_END(send_result);
 	TIMER_START(blocking_write);
-        s = my_fd->write(head_string + 
-                         (file->file?file->file->read(file->len):
-                          (file->data[..file->len-1])));
+	string data = head_string +
+	  (file->file?file->file->read(file->len):
+	   (file->data[..file->len-1]));
+	REQUEST_WERR (sprintf ("HTTP: Send %O", data));
+	s = my_fd->write(data);
 	TIMER_END(blocking_write);
         do_log( s );
         return;
@@ -1811,7 +1826,8 @@ void send_result(mapping|void result)
     {
       if( strlen( head_string ) < 4000)
       {
-        do_log( my_fd->write( head_string ) );
+	REQUEST_WERR (sprintf ("HTTP: Send %O", head_string));
+	do_log( my_fd->write( head_string ) );
         return;
       }
       send(head_string);
@@ -1940,7 +1956,7 @@ int processed;
 // array ccd = ({});
 void got_data(mixed fooid, string s)
 {
-  REQUEST_WERR(sprintf("HTTP: Got %O\n", s));
+  REQUEST_WERR(sprintf("HTTP: Got %O", s));
 
   if(wanted_data)
   {
@@ -1978,7 +1994,7 @@ void got_data(mixed fooid, string s)
 	return;
 
       case 1:
-	REQUEST_WERR("HTTP: Stupid Client Error");
+	REQUEST_WERR("HTTP: Stupid Client Error.");
 	my_fd->write((prot||"HTTP/1.0")+" 500 Illegal request\r\n"
 		     "Content-Length: 0\r\n"+
 		     "Date: "+Roxen.http_date(predef::time())+"\r\n"
@@ -1987,7 +2003,7 @@ void got_data(mixed fooid, string s)
 	return;			// Stupid request.
     
       case 2:
-	REQUEST_WERR("HTTP: Done");
+	REQUEST_WERR("HTTP: Done.");
 	end();
 	return;
     }
@@ -2175,9 +2191,9 @@ void got_data(mixed fooid, string s)
     if( things_to_do_when_not_sending_from_cache( ) )
       return;
     TIMER_END(parse_request);
-    REQUEST_WERR("HTTP: Calling roxen.handle().");
 
 #ifdef THREADS
+    REQUEST_WERR("HTTP: Calling roxen.handle().");
     roxen.handle(handle_request);
 #else
     handle_request();
@@ -2258,10 +2274,10 @@ static void create(object f, object c, object cc)
 {
   if(f)
   {
-    MARK_FD("HTTP connection");
     f->set_read_callback(got_data);
     f->set_close_callback(end);
     my_fd = f;
+    MARK_FD("HTTP connection");
     if( c ) port_obj = c;
     if( cc ) conf = cc;
     time = predef::time(1);
@@ -2278,7 +2294,7 @@ void chain(object f, object c, string le)
   port_obj = c;
   processed = 0;
   do_not_disconnect=-1;		// Block destruction until we return.
-  MARK_FD("Kept alive");
+  MARK_FD("HTTP kept alive");
   time = predef::time(1);
 
   if ( strlen( le ) )
