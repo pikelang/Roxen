@@ -1,6 +1,6 @@
 #include <module.h>
 inherit "module";
-inherit "roxen";
+inherit "roxenlib";
 
 #define DBURL    "Database URL"
 
