@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.88 2005/02/04 20:14:44 mast Exp $
+// $Id: module.pmod,v 1.89 2005/02/11 15:26:01 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1650,10 +1650,13 @@ class PortList
     Standards.URI split = Standards.URI( val );
 
     res += "<select name='"+prefix+"prot'>";
+    int default_port;
     foreach( sort(indices( roxenp()->protocols )), string p )
     {
-      if( p == split->scheme )
+      if( p == split->scheme ) {
 	res += "<option selected='t'>"+p+"</option>";
+	default_port = roxenp()->protocols[p]->default_port;
+      }
       else
 	res += "<option>"+p+"</option>";
     }
@@ -1662,7 +1665,7 @@ class PortList
     res += "://<input type=text name='"+prefix+"host' value='"+
            Roxen.html_encode_string(split->host)+"' />";
     res += ":<input type=text size=5 name='"+prefix+"port' value='"+
-             split->port+"' />";
+      (split->port == default_port ? "" : split->port) +"' />";
 
     res += "/<input type=text name='"+prefix+"path' value='"+
       Roxen.html_encode_string(split->path[1..])+"' /><br />";
@@ -1700,8 +1703,9 @@ class PortList
     if( strlen( va[v+"path"] ) && va[v+"path"][-1] != '/' )
       va[v+"path"]+="/";
     
-    return (string)Standards.URI(va[v+"prot"]+"://"+va[v+"host"]+":"+
-				 va[v+"port"]+"/"+va[v+"path"]+"#"
+    return (string)Standards.URI(va[v+"prot"]+"://"+va[v+"host"]+
+				 (va[v+"port"] && sizeof (va[v+"port"]) ?
+				  ":"+ va[v+"port"] : "") +"/"+va[v+"path"]+"#"
 		 // all options below this point
 				 "ip="+va[v+"ip"]+";"
 				 "nobind="+va[v+"nobind"]+";"
