@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.360 1999/11/27 12:57:46 nilsson Exp $
+ * $Id: roxen.pike,v 1.361 1999/11/28 07:18:33 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.360 1999/11/27 12:57:46 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.361 1999/11/28 07:18:33 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -2124,6 +2124,9 @@ void create()
     add_constant("Privs", class{});
 
   // for module encoding stuff
+
+  add_constant( "MIME.encode_base64", MIME.encode_base64 );
+  add_constant( "MIME.decode_base64", MIME.decode_base64 );
   
   add_constant( "Image", Image );
   add_constant( "Image.Image", Image.Image );
