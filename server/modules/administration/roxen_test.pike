@@ -1,14 +1,14 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.59 2002/11/17 17:57:00 mani Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.60 2002/11/17 23:57:38 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "ChiliMoon self test module";
 constant module_doc  = "Tests ChiliMoon.";
-constant is_roxen_tester_module = 1;
+constant is_chilimoon_tester_module = 1;
 
 Configuration conf;
 Stdio.File index_file;
@@ -31,16 +31,16 @@ int is_not_finished()
 int is_ready_to_start()
 {
   int ready = 1;
-  foreach(roxen.configurations, Configuration config)
-    if(config->call_provider("roxen_test", "is_running"))
+  foreach(core.configurations, Configuration config)
+    if(config->call_provider("chilimoon_test", "is_running"))
       ready = 0;
   return ready;
 }
 
 int is_last_test_configuration()
 {
-  foreach(roxen.configurations, Configuration config)
-    if(config->call_provider("roxen_test", "is_not_finished"))
+  foreach(core.configurations, Configuration config)
+    if(config->call_provider("chilimoon_test", "is_not_finished"))
       return 0;
   return 1;
 }
@@ -61,7 +61,7 @@ int do_continue(int _tests, int _fails)
 
 string query_provides()
 {
-  return "roxen_test";
+  return "chilimoon_test";
 }
 
 void create()
@@ -84,9 +84,9 @@ void start(int n, Configuration c)
 
 RequestID get_id()
 {
-  object id = roxen.InternalRequestID();
+  object id = core.InternalRequestID();
   id->supports = (< "images" >);
-  id->client = ({ "RoxenTest" });
+  id->client = ({ "ChiliMoonTest" });
   id->set_url("http://localhost:17369/index.html");
 
   id->realfile = combine_path_unix(query("selftestdir"), "filesystem/index.html");
@@ -446,7 +446,7 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 			 if(args->admin && args->password)
 			   request_headers->authorization =
 			     "Basic " + MIME.encode_base64(args->user+":"+args->password);
-			 roxen.InternalRequestID id = roxen.InternalRequestID();
+			 core.InternalRequestID id = core.InternalRequestID();
 			 id->misc->pref_languages = PrefLang();
 			 id->conf = conf;
 			 id->realauth = args->user+":"+args->password;
@@ -649,22 +649,22 @@ void continue_find_tests( )
     exit( fails > 127? 127: fails );
   }
   else
-    foreach(roxen.configurations, Configuration config)
-      if(config->call_provider("roxen_test", "do_continue", tests, fails))
+    foreach(core.configurations, Configuration config)
+      if(config->call_provider("chilimoon_test", "do_continue", tests, fails))
 	return;
 }
 
 void do_tests()
 {
   remove_call_out( do_tests );
-  if(time() - roxen->start_time < 2 ) {
+  if(time() - core->start_time < 2 ) {
     call_out( do_tests, 0.2 );
     return;
   }
-  report_debug("Starting roxen self test in directory %O.\n", query("selftestdir"));
+  report_debug("Starting ChiliMoon self test in directory %O.\n", query("selftestdir"));
 
-  tests_to_run = Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
-  verbose = !!Getopt.find_option(roxen.argv, 0,({"tests-verbose"}),0, 0 );
+  tests_to_run = Getopt.find_option(core.argv, 0,({"tests"}),0,"" )/",";
+  verbose = !!Getopt.find_option(core.argv, 0,({"tests-verbose"}),0, 0 );
 
   conf->rxml_tag_set->handle_run_error = rxml_error;
   conf->rxml_tag_set->handle_parse_error = rxml_error;
