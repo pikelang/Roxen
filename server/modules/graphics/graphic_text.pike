@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.265 2001/03/28 22:57:43 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.266 2001/04/24 23:35:04 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1070,7 +1070,7 @@ string do_gtext(mapping arg, string c, RequestID id)
 
     if(!id->supports->images) return sprintf(lp,arg->alt);
 
-    string sn="i"+id->misc->gtext_mi++;
+    string sn="gtext"+id->misc->gtext_mi++;
     if(!id->supports->js_image_object) {
       return (!input)?
         ("<a"+ea+"href=\""+url+"\">"+Roxen.make_tag("img",arg+(["name":sn]),xml)+"</a>"):
@@ -1080,7 +1080,7 @@ string do_gtext(mapping arg, string c, RequestID id)
     arg->name=sn;
     string res="<script>\n";
     if(!id->misc->gtext_magic_java) {
-      res += "function i(ri,hi,txt)\n"
+      res += "function gtext_mo(ri,hi,txt)\n"
         "{\n"
         "  document.images[ri].src = hi.src;\n"
         "  if( txt != 0 )\n"
@@ -1097,9 +1097,9 @@ string do_gtext(mapping arg, string c, RequestID id)
       "</script>"+
       "<a"+ea+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
-      +"onMouseover=\"i('"+sn+"',"+sn+"h,"+((strlen(magic) && magic != "magic")?
-                                            "'"+replace(magic,"'","`")+"'":
-                                            "0")+"); return true;\" "
+      +"onMouseover=\"gtext_mo('"+sn+"',"+sn+"h,"+((strlen(magic) && magic != "magic")?
+						   "'"+replace(magic,"'","`")+"'":
+						   "0")+"); return true;\" "
       "onMouseout=\"document.images['"+sn+"'].src = "+sn+"l.src;\">"
       +Roxen.make_tag("img",arg,xml)+"</a>";
   }
