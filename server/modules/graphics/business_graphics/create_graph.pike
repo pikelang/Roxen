@@ -61,8 +61,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   write("xmaxvalue:"+xmaxvalue+"\n");
   write("xminvalue:"+xminvalue+"\n");
 
-  if ((!(diagram_data["xminvalue"])) ||
-      (diagram_data["xminvalue"]>xminvalue))
+  if (!(diagram_data["xminvalue"]))
     diagram_data["xminvalue"]=xminvalue;
   if ((!(diagram_data["xmaxvalue"])) ||
       (diagram_data["xmaxvalue"]<xmaxvalue))
@@ -70,8 +69,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
       diagram_data["xmaxvalue"]=0.0;
     else
       diagram_data["xmaxvalue"]=xmaxvalue;
-  if ((!(diagram_data["yminvalue"])) ||
-      (diagram_data["yminvalue"]>yminvalue))
+  if (!(diagram_data["yminvalue"]))
     diagram_data["yminvalue"]=yminvalue;
   if ((!(diagram_data["ymaxvalue"])) ||
       (diagram_data["ymaxvalue"]<ymaxvalue))
@@ -80,6 +78,10 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
     else
       diagram_data["ymaxvalue"]=ymaxvalue;
 
+  write("Dymaxvalue:"+ diagram_data["ymaxvalue"]+"\n");
+  write("Dyminvalue:"+ diagram_data["yminvalue"]+"\n");
+  write("Dxmaxvalue:"+diagram_data["xmaxvalue"]+"\n");
+  write("Dxminvalue:"+ diagram_data["xminvalue"]+"\n");
 
   return diagram_data;
 
@@ -177,6 +179,55 @@ string no_end_zeros(string f)
   return f;
 }
 
+mapping set_legend_size(mapping diagram_data)
+{
+  if (diagram_data["legend_texts"])
+    {
+      array(object(image)) texts;
+      array(object(image)) plupps; //Det som ska ritas ut före texterna
+      texts=allocate(diagram_data["legend_texts"]);
+      plupps=allocate(diagram_data["legend_texts"]);
+      
+      object notext=get_font("avant_garde", 32, 0, 0, "left",0,0);
+
+      int j=sizeof(texts);
+      for(int i=0; i<j; i++)
+	if (diagram_data["legend_texts"][i] && (sizeof(diagram_data["legend_texts"][i])))
+	  texts[i]=notext->write(diagram_data["legend_texts"][i])->
+	    scale(0,diagram_data["legendfontsize"]);
+      	else
+	  tests[i]=
+	    image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
+
+
+      int xmax=0, ymax=0;
+  
+      foreach(texts, object img)
+	{
+	  if (img->ysize()>ymax) 
+	    ymax=img->ysize();
+	}
+      foreach(texts, object img)
+	{
+	  if (img->xsize()>xmax) 
+	    xmax=img->xsize();
+	}
+      
+      //Skapa strecket för graph/boxen för bars.
+     
+      if (diagram_data["type"]=="graph")
+	{
+	  
+
+	}
+
+
+      
+    }
+  else
+    diagram_data["legend_size"]=0;
+}
+
 mapping(string:mixed) create_graph(mapping diagram_data)
 {
   //Supportar bara xsize>=100
@@ -191,8 +242,12 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   else
     graph=diagram_data["image"];
 
-  //Bestäm var vi ska rita ut x och y-axeln:
+  set_legend_size(diagram_data);
+  diagram_data["ysize"]-=diagram_data["legend_size"];
+  
+  //Bestäm största och minsta datavärden.
   init(diagram_data);
+
   //Ta reda hur många och hur stora textmassor vi ska skriva ut
   if (!(diagram_data["xspace"]))
     {
@@ -418,7 +473,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
 
 
-
+  
 
   
   //Rita ut axlarna
@@ -426,6 +481,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   
   write((string)diagram_data["xminvalue"]+"\n"+(string)diagram_data["xmaxvalue"]+"\n");
 
+  
   //Rita xaxeln
   if ((diagram_data["xminvalue"]<=LITET)&&
       (diagram_data["xmaxvalue"]>=-LITET))
@@ -569,32 +625,34 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     else
       if (diagram_data["yminvalue"]>LITET)
 	{
-	  /*write("\n\n"+sprintf("%O", make_polygon_from_line(diagram_data["linewidth"], 
-							   ({
-							     xpos_for_yaxis,
-							     diagram_data["xsize"]-diagram_data["linewidth"],
-							     
-							     xpos_for_yaxis,
-							     diagram_data["ysize"]-ypos_for_xaxis-
-							     si/3.0,
-							     
-							     xpos_for_yaxis-si/2.0,
-							     diagram_data["ysize"]-ypos_for_xaxis-
-							     si/1.5,
-							     
-							     xpos_for_yaxis+si/2.0,
-							     diagram_data["ysize"]-ypos_for_xaxis-
-							     si,
-							     
-							     xpos_for_yaxis,
-							     diagram_data["ysize"]-ypos_for_xaxis-
-							     si*4.0/3.0,
+	  write("\n\n"+sprintf("%O",make_polygon_from_line(diagram_data["linewidth"], 
+					    ({
+					      xpos_for_yaxis,
+					      diagram_data["xsize"]-diagram_data["linewidth"],
+
+					      xpos_for_yaxis,
+					      diagram_data["ysize"]-ypos_for_xaxis-
+					      si/3.0,
+					      
+					      xpos_for_yaxis-si/2.0,
+					      diagram_data["ysize"]-ypos_for_xaxis-
+					      si/1.5,
 					    
-							     xpos_for_yaxis,
-							     diagram_data["linewidth"]
-							     
-							   }), 
-							   1, 1)[0])+"\n\n");*/
+					      xpos_for_yaxis+si/2.0,
+					      diagram_data["ysize"]-ypos_for_xaxis-
+					      si,
+					      
+					      xpos_for_yaxis,
+					      diagram_data["ysize"]-ypos_for_xaxis-
+					      si*4.0/3.0,
+					    
+					      xpos_for_yaxis+0.0001, //FIXME!
+					      diagram_data["linewidth"]+
+					      diagram_data["labelsize"]
+					      
+					    }), 
+					    1, 1)[0])+
+		"\n\n");
 	  graph->
 	    polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					    ({
@@ -617,7 +675,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					      diagram_data["ysize"]-ypos_for_xaxis-
 					      si*4.0/3.0,
 					    
-					      xpos_for_yaxis+0.01, //FIXME!
+					      xpos_for_yaxis+0.0001, //FIXME!
 					      diagram_data["linewidth"]+
 					      diagram_data["labelsize"]
 					      
@@ -625,7 +683,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					    1, 1)[0]);
 
 	}
-  
+    
   //Rita pilen
   graph->
     polygone(make_polygon_from_line(diagram_data["linewidth"], 
@@ -724,7 +782,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
 
   //Sätt ut labels ({xstorhet, ystorhet, xenhet, yenhet})
-  if (diagram_data["labels"])
+  if (diagram_data["labelsize"])
     {
       graph->paste_alpha_color(labelimg, 
 			       @(diagram_data["labelcolor"]), 
@@ -739,10 +797,10 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
 	write(label)->scale(0,diagram_data["labelsize"]);
       
-      /*
-	if (labelimg->xsize()> graph->xsize())
-	labelimg->scale(graph->xsize(),labelimg->ysize());
-      */
+      
+	//if (labelimg->xsize()> graph->xsize())
+	//labelimg->scale(graph->xsize(),labelimg->ysize());
+      
       x=max(0,((int)floor((float)xpos_for_yaxis)-labelimg->xsize()/2));
       x=min(x, graph->xsize()-labelimg->xsize());
       
@@ -779,6 +837,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       draw(graph, diagram_data["linewidth"],d);
     }
 
+  diagram_data["ysize"]-=diagram_data["legend_size"];
   diagram_data["image"]=graph;
   return diagram_data;
 }
@@ -794,10 +853,10 @@ int main(int argc, string *argv)
 		 "subtyp":"",
 		 "orient":"vert",
 		 "datapoints": 
-		 ({ ({-1.2, 12.3, -4.01, 10.0, -4.3, 12.0 }),
-		    ({-1.2, 11.3, -1.5, 11.7,  -1.0, 11.5, -1.0, 13.0, -2.0, 16.0  }),
-		    ({-1.2, 13.3, 1.5, 10.1 }),
-		    ({-3.2, 13.3, -3.5, 13.7} )}),
+		 ({ ({1.2, 12.3, 4.01, 10.0, 4.3, 12.0 }),
+		    ({1.2, 11.3, -1.5, 11.7,  1.0, 11.5, 1.0, 13.0, 2.0, 16.0  }),
+		    ({1.2, 13.3, 1.5, 10.1 }),
+		    ({3.2, 13.3, 3.5, 13.7} )}),
 		 "fontsize":32,
 		 "axcolor":({0,0,0}),
 		 "bgcolor":({255,255,255}),
@@ -805,107 +864,109 @@ int main(int argc, string *argv)
 		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
 		 "orient":"hor",
 		 "linewidth":2.2,
-		 "xsize":300,
+		 "xsize":400,
 		 "ysize":200,
 		 "fontsize":16,
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
-		 "labelsize":50/*,
-		 "xminvalue":0.0,
-		 "yminvalue":0.0*/
+		 "legendfontsize":12,
+		 "labelsize":0//,
+		 //"xminvalue":0.1,
+		 ,"yminvalue":0.1
 
   ]);
-  /*
+
   diagram_data["datapoints"]=({({ 
-    49.099998,
-    155.666672,
-    49.066963,
-    155.399109,
-    48.969841,
-    155.147629,
-    48.814468,
-    154.927322,
-    48.610172,
-    154.751419,
-    42.481537,
-    150.665649,
-    56.347851,
-    146.043549,
-    56.847610,
-    145.701111,
-    57.090267,
-    145.145996,
-    57.002220,
-    144.546616,
-    56.610172,
-    144.084732,
-    49.099998,
-    139.077972,
-    49.099998,
-    2.200000,
-    49.033661,
-    1.823778,
-    48.842648,
+     101.858620,
+    146.666672,
+    101.825584,
+    146.399109,
+    101.728462,
+    146.147629,
+    101.573090,
+    145.927322,
+    101.368790,
+    145.751419,
+    95.240158,
+    141.665649,
+    109.106468,
+    137.043549,
+    109.606232,
+    136.701111,
+    109.848892,
+    136.145996,
+    109.760834,
+    135.546616,
+    109.368790,
+    135.084732,
+    101.858620,
+    130.077972,
+    101.858719,
+    2.200001,
+    101.792381,
+    1.823779,
+    101.601372,
     1.492934,
-    48.549999,
-    1.247372,
-    48.191013,
+    101.308723,
+    1.247373,
+    100.949730,
+    1.116712,
+    100.567711,
     1.116711,
-    47.808987,
-    1.116711,
-    47.450001,
+    100.208717,
     1.247372,
-    47.157352,
-    1.492934,
-    46.966339,
-    1.823778,
-    46.900002,
-    2.200000,
-    46.899998,
-    139.666672,
-    46.933033,
-    139.934219,
-    47.030159,
-    140.185715,
-    47.185532,
-    140.406036,
-    47.389832,
-    140.581924,
-    53.518459,
-    144.667679,
-    39.652149,
-    149.289780,
-    39.152390,
-    149.632217,
-    38.909737,
-    150.187317,
-    38.997780,
-    150.786713,
-    39.389828,
-    151.248581,
-    46.900002,
-    156.255371,
-    46.900002,
-    197.800003,
-    46.966339,
-    198.176224,
-    47.157352,
-    198.507065,
-    47.450001,
-    198.752625,
-    47.808987,
-    198.883286,
-    48.191013,
-    198.883286,
-    48.549999,
-    198.752625,
-    48.842648,
-    198.507065,
-    49.033661,
-    198.176224,
-    49.099998,
-    197.800003
+    99.916069,
+    1.492933,
+    99.725060,
+    1.823777,
+    99.658722,
+    2.199999,
+    99.658623,
+    130.666672,
+    99.691658,
+    130.934219,
+    99.788780,
+    131.185715,
+    99.944160,
+    131.406036,
+    100.148453,
+    131.581924,
+    106.277084,
+    135.667679,
+    92.410774,
+    140.289780,
+    91.911018,
+    140.632217,
+    91.668350,
+    141.187317,
+    91.756401,
+    141.786713,
+    92.148453,
+    142.248581,
+    99.658623,
+    147.255371,
+    99.658623,
+    397.799988,
+    99.724960,
+    398.176208,
+    99.915970,
+    398.507050,
+    100.208618,
+    398.752625,
+    100.567612,
+    398.883270,
+    100.949631,
+    398.883270,
+    101.308624,
+    398.752625,
+    101.601273,
+    398.507050,
+    101.792282,
+    398.176208,
+    101.858620,
+    397.799988
+
 })});
-*/
+
 
   object o=Stdio.File();
   o->open("test.ppm", "wtc");

@@ -57,6 +57,18 @@ int labelsize;
 // anger med vilken storlek texten för labels ska skrivas
 // Denna ska sättas till 0 om det inte finns några labels!!!
 
+int legendfontsize;
+//Anger storleken på legend-texten.
+// (Default fontsize)
+//Om den är för stor minskas den. 
+
+int legend_size;
+//Storleken på legenden.
+
+array(string) legend_texts;
+// innehåller texten som ska stå i Legenden.
+// Det ska vara en text per data
+// Är 0 om ingen text ska skrivas ut.
 array(froat) values_for_xnames;
 //Innehåller en array med nivåerna som ska förknippas med vissa xnames.
 //Om dessa inte anges kan de sättas ut jämt.
