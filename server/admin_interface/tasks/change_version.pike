@@ -100,7 +100,7 @@ string parse( RequestID id )
   {
     werror("Change to "+id->variables->server+"\n" );
     mv("../local/environment", "../local/environment~");
-    Stdio.write_file( combine_path(core.configuration_dir,
+    Stdio.write_file( combine_path(loader.query_configuration_dir(),
 				   "server_version"),
 		      id->variables->server );
     core->shutdown(0.5);
@@ -127,7 +127,7 @@ string parse( RequestID id )
   foreach( available_versions(), Server f )
   {
     res += "<tr><td>";
-    if( f->version != core.__roxen_version__+"."+roxen.__roxen_build__ )
+    if( f->version != core.__chilimoon_version__+"."+roxen.__chilimoon_build__ )
       res += "<input type='radio' name='server' value='"+f->dir+"' /> ";
     else
       res += "";
@@ -166,7 +166,7 @@ string parse( RequestID id )
 	      "instead have to edit the file %O manually, shutdown the server, "
 	      "and execute %O again",
 	      combine_path(getcwd(),
-			   core.configuration_dir,
+			   loader.query_configuration_dir(),
 			   "server_version"),
 	      combine_path(getcwd(),"../start") )
       +"</td></tr></table>";

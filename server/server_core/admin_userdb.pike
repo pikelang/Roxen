@@ -9,8 +9,6 @@ inherit "language";
 #include <admin_interface.h>
 #include <module.h>
 
-string query_configuration_dir();
-
 //! Settings used by the various administration interface modules etc.
 class AdminIFCache
 {
@@ -27,7 +25,7 @@ class AdminIFCache
   {
     if( _settings )
     {
-      dir = query_configuration_dir();
+      dir = loader.query_configuration_dir();
       if( file_stat(dir+"_configinterface") )
 	dir += "_configinterface/";
       else
@@ -838,4 +836,3 @@ class UserDBModule
 }
 
 UserDBModule admin_userdb_module = UserDBModule();
-UserDBModule config_userdb_module = admin_userdb_module; // NGSERVER: Compatibility only. Remove.

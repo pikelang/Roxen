@@ -4,15 +4,15 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.60 2004/05/31 23:01:54 _cvs_stephen Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.61 2004/05/31 23:48:19 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
 #include <stat.h>
 
 inherit "module";
+inherit "roxenlib";
 
-#include <proxyauth.pike>
 #include <roxen.h>
 #include <module.h>
 

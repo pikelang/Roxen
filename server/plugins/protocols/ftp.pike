@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.99 2004/05/27 17:26:23 _cvs_stephen Exp $
+ * $Id: ftp.pike,v 2.100 2004/05/31 23:48:20 _cvs_stephen Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3911,7 +3911,7 @@ class FTPSession
     s = replace(s,
 		({ "$roxen_version", "$roxen_build", "$full_version",
 		   "$pike_version", "$ident", }),
-		({ core.__roxen_version__, core.__roxen_build__,
+		({ core.__chilimoon_version__, core.__chilimoon_build__,
 		   core.real_version, version(), core.version() }));
 
     send(220, s/"\n", 1);

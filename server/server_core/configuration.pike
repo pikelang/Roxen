@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.568 2004/05/31 23:02:02 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.569 2004/05/31 23:48:21 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3735,7 +3735,7 @@ static void create()
 	    "test the site carefully afterwards. A reload of the whole "
 	    "server configuration is required to propagate the change properly "
 	    "to all modules.</p>")));
-  set ("compat_level", core.__roxen_version__);
+  set ("compat_level", core.__chilimoon_version__);
   // Note to developers: This setting can be accessed through
   // id->conf->query("compat_level") or similar, but observe that that
   // call is not entirely cheap. It's therefore advisable to put it in

@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.73 2004/05/17 00:41:01 mani Exp $
+// $Id: read_config.pike,v 1.74 2004/05/31 23:48:21 _cvs_stephen Exp $
 
 #include <module.h>
 #include <module_constants.h>
@@ -17,7 +17,6 @@ constant IGNORE_NAMES = ({ "CVS", "Global_Variables", "Global Variables",
 			   });
 
 mapping (string:array(int)) config_stat_cache = ([]);
-string configuration_dir; // NGSERVER: Remove this
 
 //! @return
 //! @array all configurationfiles

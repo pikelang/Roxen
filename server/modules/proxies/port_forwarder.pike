@@ -1,5 +1,7 @@
 inherit "module";
 inherit "socket";
+inherit "roxenlib";
+
 #include <module.h>
 
 /*
@@ -25,7 +27,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.15 2004/05/23 14:14:39 _cvs_dirix Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.16 2004/05/31 23:48:19 _cvs_stephen Exp $";
 
 
 

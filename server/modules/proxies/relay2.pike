@@ -1,9 +1,11 @@
 // This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.31 2004/05/31 23:01:54 _cvs_stephen Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.32 2004/05/31 23:48:19 _cvs_stephen Exp $";
 
 inherit "module";
+inherit "roxenlib";
+
 constant module_type = MODULE_FIRST|MODULE_LAST;
 
 

@@ -14,7 +14,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.122 2004/05/31 23:01:49 _cvs_stephen Exp $";
+  "$Id: config_filesystem.pike,v 1.123 2004/05/31 23:48:18 _cvs_stephen Exp $";
 
 constant path = "admin_interface/";
 
@@ -362,9 +362,9 @@ void start(int n, Configuration cfg)
 {
   if( cfg )
   {
-    if (cfg->query ("compat_level") != core.__roxen_version__)
+    if (cfg->query ("compat_level") != core.__chilimoon_version__)
       // The admin interface always runs with the current compatibility level.
-      cfg->set ("compat_level", core.__roxen_version__);
+      cfg->set ("compat_level", core.__chilimoon_version__);
 
     mixed err;
     array(mapping(string:string)) old_version;

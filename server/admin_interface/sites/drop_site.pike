@@ -119,7 +119,7 @@ string|mapping parse( RequestID id )
     d = d[7..];
     DBManager.drop_db( d );
   }
-  string cfname = core.configuration_dir + "/" + cf->name;
+  string cfname = loader.query_configuration_dir() + "/" + cf->name;
   mv (cfname, cfname + "~");
   core->remove_configuration( cf->name );
   cf->stop();

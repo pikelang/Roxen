@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.867 2004/05/31 23:02:03 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.868 2004/05/31 23:48:21 _cvs_stephen Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -91,12 +91,6 @@ Shuffler.Shuffle get_shuffler( Stdio.File fd )
 string md5( string what )
 {
   return String.string2hex(Crypto.MD5.hash(what));
-}
-
-// NGSERVER: remove this function
-string query_configuration_dir()
-{
-  return loader.query_configuration_dir();
 }
 
 string filename( program|object o )
@@ -3842,7 +3836,6 @@ void create()
   add_constant( "Roxen.get_locale", get_locale );
 
   add_constant( "core.locale",  locale );
-  add_constant( "roxen.locale", locale ); // NGSERVER
 
 //int s = gethrtime();
   _configuration = (program)"configuration";
@@ -4419,9 +4412,9 @@ int main(array(string) tmp)
   dump( "pike_modules/VFS.pmod" );
   dump( "server_core/throttler.pike" );
 
-  if (!has_value (compat_levels, __roxen_version__))
+  if (!has_value (compat_levels, __chilimoon_version__))
     report_debug ("Warning: The current version %s does not exist in "
-		  "roxen.compat_levels.\n", __roxen_version__);
+		  "roxen.compat_levels.\n", __chilimoon_version__);
 
   add_constant( "Protocol", Protocol );
 #ifdef TIMERS
@@ -4450,9 +4443,6 @@ int main(array(string) tmp)
   mark_fd(2, "Stderr");
 
   once_mode = (int)Getopt.find_option(argv, "o", "once");
-
-  // NGSERVER: Remove this.
-  configuration_dir = loader.query_configuration_dir();
 
   restore_global_variables(); // restore settings...
 
@@ -5094,7 +5084,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     else if( sscanf( line, "userdb %s", line ) )
     {
       line = String.trim_all_whites( line );
-      if( line == "config_userdb" || line == "admin_userdb" ) // NGSERVER: No config_userdb
+      if( line == "admin_userdb" )
 	code += "    userdb_module = core.admin_userdb_module;\n";
       else if( line == "all" )
 	code += "    userdb_module = 0;\n";

@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.31 2004/05/31 23:01:54 _cvs_stephen Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.32 2004/05/31 23:48:19 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -21,9 +21,9 @@ constant thread_safe = 1;
 
 inherit "module";
 inherit "socket";
+inherit "roxenlib";
 
 #include <module.h>
-#include <proxyauth.pike>
 
 constant module_type = MODULE_LOCATION|MODULE_PROXY;
 constant module_name = "Gopher Gateway";

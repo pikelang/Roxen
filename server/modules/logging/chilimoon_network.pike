@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: chilimoon_network.pike,v 1.1 2004/05/29 02:25:50 _cvs_stephen Exp $";
+constant cvs_version = "$Id: chilimoon_network.pike,v 1.2 2004/05/31 23:48:18 _cvs_stephen Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "ChiliMoon Network module";
@@ -128,7 +128,7 @@ string build_package() {
   mapping info = ([]);
 
   info->pike_version = predef::version();
-  info->roxen_version = __roxen_version__ + "." + __roxen_build__;
+  info->roxen_version = __chilimoon_version__ + "." + __chilimoon_build__;
   info->id_string = core->version();
 
   foreach( ({ "owner", "webmaster", "ad" }), string var)

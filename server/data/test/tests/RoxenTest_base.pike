@@ -141,14 +141,6 @@ void run_tests( Configuration c )
 {
   // Test (some) public APIs in the 'roxen' and 'loader' objects.
 
-  // Should we really test this? I don't know, but for now (as long as
-  // both functions exists) verify that they return the same value...
-  test( core.query_configuration_dir );
-  test( loader.query_configuration_dir );
-  test_equal( core.query_configuration_dir(),
-	      loader.query_configuration_dir );
-
-
   test_spawn_pike( ({combine_path( __FILE__,"../echo.pike" )}),
 		     "Testing testing\n",
 		     "\nTesting testing\n" );

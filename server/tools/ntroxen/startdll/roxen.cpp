@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.22 2004/05/29 15:28:02 _cvs_dirix Exp $
+// $Id: roxen.cpp,v 1.23 2004/05/31 23:48:22 _cvs_stephen Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -97,7 +97,7 @@ void CRoxen::PrintVersion()
         if (!fgets(line, sizeof(line), f))
           break;
 
-        if (!ver_done && strstr(line, "__roxen_version__") != NULL)
+        if (!ver_done && strstr(line, "__chilimoon_version__") != NULL)
         {
           char *p = line;
           char *v = version;
@@ -110,7 +110,7 @@ void CRoxen::PrintVersion()
           ver_done = TRUE;
         }
 
-        if (!build_done && strstr(line, "__roxen_build__") != NULL)
+        if (!build_done && strstr(line, "__chilimoon_build__") != NULL)
         {
           char *p = line;
           char *b = build;

@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.31 2004/05/31 23:01:54 _cvs_stephen Exp $";
+string cvs_version = "$Id: wais.pike,v 1.32 2004/05/31 23:48:19 _cvs_stephen Exp $";
 
 #include <config.h>
 #include <module.h>
@@ -268,10 +268,7 @@ string cvs_version = "$Id: wais.pike,v 1.31 2004/05/31 23:01:54 _cvs_stephen Exp
 
 inherit "module";
 inherit "socket";
-
-#include <proxyauth.pike>
-
-
+inherit "roxenlib";
 
 string debug_print_string(string str)
 {
