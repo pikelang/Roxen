@@ -32,7 +32,13 @@ string parse(object id )
     return "No such luck, dude, permission denied";
 
   object conf = id->misc->current_configuration;
-  array mods = roxen->all_modules();
+
+  object ec = roxenloader.LowErrorContainer();
+  array mods;
+  roxenloader.push_compile_error_handler( ec );
+  mods = roxen->all_modules();
+  roxenloader.pop_compile_error_handler();
+  
   string res = 
          (/*LS( "select_compact_module" )+*/
           "<table><tr><td valign=top>"
@@ -66,7 +72,7 @@ string parse(object id )
   if(strlen(already))
     doubles += "<b>Already enabled:</b><dl>\n"+already+"</dl>\n";
   res += ("</select></td>\n\n<td valign=top>\n"
-          + doubles + "</td>\n</tr>\n</table>\n");
+          + doubles + "</td>\n</tr>\n</table>\n<pre>"+ec->get()+"</pre><p>");
   return res;
 }
 </pike>    
