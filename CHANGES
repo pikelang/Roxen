@@ -47,7 +47,8 @@ o Added module for easy IP-less virtual host configuration.
 
 o Language-module updated.
 
-o The flik-module now has support for being in frames.
+o The flik-module now has support for being in frames uses <a name> to
+  automaticly center on the right place.
 
 o The http-protocol module now handles multipart/form-data correctly.
   This might affect some old form-handling code.
