@@ -1,5 +1,5 @@
 /*
- * $Id: reloadconfiginterface.pike,v 1.7 1998/04/27 11:10:03 grubba Exp $
+ * $Id: reloadconfiginterface.pike,v 1.8 1998/07/29 20:03:28 neotron Exp $
  */
 
 inherit "roxenlib";
@@ -32,7 +32,7 @@ mixed handle(object id, object mc)
     roxen->root=0;
   }
 
-  report_notice("Reloading the configuration interface from disk\n");
+  report_notice("Reloading the configuration interface from disk...\n");
 
   foreach(indices(master()->programs), string s)
     foreach(programs, string s2)
@@ -41,7 +41,7 @@ mixed handle(object id, object mc)
 	m_delete(master()->programs, s);
       }
 
-  report_notice("Configuration interface reloaded from disk");
+  report_notice("Configuration interface reloaded from disk.\n");
   
   return http_redirect(roxen->config_url()+"Actions/?"+time(1));
 }
