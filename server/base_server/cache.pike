@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.52 2000/06/20 19:59:04 grubba Exp $
+// $Id: cache.pike,v 1.53 2000/08/01 00:26:00 nilsson Exp $
 
 #pragma strict_types
 
@@ -41,8 +41,8 @@
 #endif
 
 // The actual cache along with some statistics mappings.
-mapping(string:mapping(string:array)) cache;
-mapping(string:int) hits=([]), all=([]);
+static mapping(string:mapping(string:array)) cache;
+static mapping(string:int) hits=([]), all=([]);
 
 void flush_memory_cache() {
   cache=([]);
@@ -113,70 +113,17 @@ mixed cache_lookup(string in, string what)
 }
 
 // Return some fancy cache statistics.
-string status()
+mapping(string:array(int)) status()
 {
-  string res, a;
-  res = "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
-      #"<tr bgcolor=\"&usr.fade3;\">
-<td>&locale.class_;</td>
-<td align=\"right\">&locale.entries;</td>
-<td align=\"right\">&locale.size;</td>
-<td align=\"right\">&locale.hits;</td>
-<td align=\"right\">&locale.misses;</td>
-<td align=\"right\">&locale.hitpct;</td>
-";
-
-  mapping(string:int) ca=([]), cb=([]), ch=([]), ct=([]);
-  array(string) b=indices(cache);
-  array(int) c=Array.map(values(cache), get_size);
-  int i;
-
-  for(i=0; i<sizeof(b); i++)
-  {
-    int s = sizeof(cache[b[i]]);
-    int h = hits[b[i]];
-    int t = all[b[i]];
-    sscanf(b[i], "%s:", b[i]);
-    b[i] = ([function(void:object(RoxenLocale.standard))]roxenp()->locale->get)()
-      ->config_interface
-      ->translate_cache_class( b[i] );
-    ca[b[i]]+=c[i]; cb[b[i]]+=s; ch[b[i]]+=h; ct[b[i]]+=t;
+  mapping(string:array(int)) ret=([]);
+  foreach(indices(cache), string n) {
+    ret[n]=({ sizeof(cache[n]),
+	      hits[n],
+	      all[n],
+	      get_size(cache[n]),
+    });
   }
-  b=indices(ca);
-  c=values(ca);
-  sort(c,b);
-  int n, totale, totalm, totalh, mem, totalr;
-  i=0;
-  c=reverse(c);
-  foreach(reverse(b), a)
-  {
-    if(ct[a])
-    {
-      res += ("<tr align=\"right\" bgcolor=\""+(n/3%2?"&usr.bgcolor;":"&usr.fade1;")+
-	      "\"><td align=\"left\">"+a+"</td><td>"+cb[a]+"</td><td>" +
-	      sprintf("%.1f", ((mem=c[i])/1024.0)) + "</td>");
-      res += "<td>"+ch[a]+"</td><td>"+(ct[a]-ch[a])+"</td>";
-      if(ct[a])
-	res += "<td>"+(ch[a]*100)/ct[a]+"%</td>";
-      else
-	res += "<td>0%</td>";
-      res += "</tr>";
-      totale += cb[a];
-      totalm += mem;
-      totalh += ch[a];
-      totalr += ct[a];
-    }
-    i++;
-  }
-  res += "<tr align=\"right\" bgcolor=\"&usr.fade3;\"><td align=\"left\">&nbsp;</td><td>"+
-    totale+"</td><td>" + sprintf("%.1f", (totalm/1024.0)) + "</td>";
-  res += "<td>"+totalh+"</td><td>"+(totalr-totalh)+"</td>";
-  if(totalr)
-    res += "<td>"+(totalh*100)/totalr+"%</td>";
-  else
-    res += "<td>0%</td>";
-  res += "</tr>";
-  return res + "</table>";
+  return ret;
 }
 
 // Remove an entry from the cache. Removes the entire cache if no
