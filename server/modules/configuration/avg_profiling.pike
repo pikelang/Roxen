@@ -127,12 +127,12 @@ array(mapping) get_events(array where, string sort, string sort_dir, string grou
 
   string select =
     "calls, "
-    "real_ns/1000 as real_us, round(real_ns/calls/1000, 2) as real_us_average, "
-    "cpu_ns/1000 as cpu_us, round(cpu_ns/calls/1000, 2) as cpu_us_average";
+    "real_ns/1000 as real_ms, round(real_ns/calls/1000, 2) as real_ms_average, "
+    "cpu_ns/1000 as cpu_ms, round(cpu_ns/calls/1000, 2) as cpu_ms_average";
   string group_select =
     "SUM(calls) as calls, "
-    "SUM(real_ns/1000) as real_us, round(SUM(real_ns/calls/1000), 2) as real_us_average, "
-    "SUM(cpu_ns/1000) as cpu_us, round(SUM(cpu_ns/calls/1000), 2) as cpu_us_average";
+    "SUM(real_ns/1000) as real_ms, round(SUM(real_ns/calls/1000), 2) as real_ms_average, "
+    "SUM(cpu_ns/1000) as cpu_ms, round(SUM(cpu_ns/calls/1000), 2) as cpu_ms_average";
   string q = "SELECT session, config, file, event_name, event_class, "+
 	     (group_by? group_select: select)+" "
 	     "  FROM average_profiling "+
@@ -263,7 +263,7 @@ mapping find_file (string f, RequestID id)
 <body bgcolor='white'>
 
 <if not='not' variable='form.order-by'>
-  <set variable='form.order-by' value='real-us'/>
+  <set variable='form.order-by' value='real-ms'/>
 </if>
 
 <if not='not' variable='form.sort-dir'>
@@ -358,8 +358,8 @@ mapping find_file (string f, RequestID id)
   	<td>
   	  <default name='order-by' value='&form.order-by;'>
   	    <select name='order-by'>
-  	      <option value='real-us'>Real</option>
-  	      <option value='cpu-us'>CPU</option>
+  	      <option value='real-ms'>Real</option>
+  	      <option value='cpu-ms'>CPU</option>
   	      <option value='calls'>Calls</option>
   	      <option value='session'>Session</option>
   	      <option value='config'>Configuration</option>
@@ -480,10 +480,10 @@ mapping find_file (string f, RequestID id)
   	  <td><b>Event&nbsp;Name</b>&nbsp;</td>
   	</if>
   	<td><b>Calls</b>&nbsp;</td>
-  	<td><b>Real&nbsp;(탎)</b>&nbsp;</td>
-  	<td><b>Av.&nbsp;Real&nbsp;(탎)</b>&nbsp;</td>
-  	<td><b>CPU&nbsp;(탎)</b>&nbsp;</td>
-  	<td><b>Av.&nbsp;CPU&nbsp;(탎)</b></td>
+  	<td><b>Real&nbsp;(ms)</b>&nbsp;</td>
+  	<td><b>Av.&nbsp;Real&nbsp;(ms)</b>&nbsp;</td>
+  	<td><b>CPU&nbsp;(ms)</b>&nbsp;</td>
+  	<td><b>Av.&nbsp;CPU&nbsp;(ms)</b></td>
       </tr>
     
       <set variable='var.bgcolor' value='#dee2eb'/>
@@ -515,10 +515,10 @@ mapping find_file (string f, RequestID id)
   	    <td>&_.event-name;</td>
   	  </if>
   	  <td align='right'>&_.calls;</td>
-  	  <td align='right'>&_.real-us;</td>
-  	  <td align='right'>&_.real-us-average;</td>
-  	  <td align='right'>&_.cpu-us;</td>
-  	  <td align='right'>&_.cpu-us-average;</td>
+  	  <td align='right'>&_.real-ms;</td>
+  	  <td align='right'>&_.real-ms-average;</td>
+  	  <td align='right'>&_.cpu-ms;</td>
+  	  <td align='right'>&_.cpu-ms-average;</td>
   	</tr>
       </emit>
     </table>
