@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.124 1999/03/22 22:25:45 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.125 1999/03/23 00:07:18 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -456,7 +456,9 @@ class imap_mail
 		array options, array(int) r)
     {
       range = r;
-      item = imap_atom_options(wanted, raw_section && sizeof(raw_section) &&
+      /* Note: Always BODY, and not BODY.PEEK */
+      item = imap_atom_options("BODY",
+			       raw_section && sizeof(raw_section) &&
 			       raw_section[0], options, range);
     }
 
