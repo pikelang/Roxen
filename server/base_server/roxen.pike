@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.358 1999/11/24 19:11:19 per Exp $
+ * $Id: roxen.pike,v 1.359 1999/11/25 22:44:23 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.358 1999/11/24 19:11:19 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.359 1999/11/25 22:44:23 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -27,7 +27,7 @@ inherit "disk_cache";
 inherit "language";
 inherit "supports";
 
-// #define SSL3_DEBUG
+#define SSL3_DEBUG
 
 /*
  * Version information
@@ -810,7 +810,7 @@ class SSLProtocol
 {
   inherit Protocol;
 
-#if constant(SSL.sslfile)
+#if constant(Standards) && constant(Standards.PKCS.RSA) && constant(SSL.sslfile)
 
   // SSL context
   object ctx;
@@ -1138,6 +1138,33 @@ class TETRIS
   constant default_port = 2050;
 }
 
+class SMTP
+{
+  inherit Protocol;
+  constant supports_ipless = 1;
+  constant name = "smtp";
+  constant requesthandlerfile = "protocols/smtp.pike";
+  constant default_port = Protocols.Ports.tcp.smtp;
+}
+
+class POP3
+{
+  inherit Protocol;
+  constant supports_ipless = 0;
+  constant name = "pop3";
+  constant requesthandlerfile = "protocols/pop3.pike";
+  constant default_port = Protocols.Ports.tcp.pop3;
+}
+
+class IMAP
+{
+  inherit Protocol;
+  constant supports_ipless = 0;
+  constant name = "imap";
+  constant requesthandlerfile = "protocols/imap.pike";
+  constant default_port = Protocols.Ports.tcp.imap2;
+}
+
 mapping protocols = ([
   "http":HTTP,
   "ftp":FTP,
@@ -1147,6 +1174,10 @@ mapping protocols = ([
 
   "gopher":GOPHER,
   "tetris":TETRIS,
+
+  "smtp":SMTP,
+  "pop3":POP3,
+  "imap":IMAP,
 ]);
 
 mapping(string:mapping) open_ports = ([ ]);
@@ -2295,9 +2326,11 @@ void reload_all_configurations()
       // Closing ports...
       if (conf->server_ports) {
 	// Roxen 1.2.26 or later
-	Array.map(values(conf->server_ports), destruct);
+	Array.map(values(conf->server_ports),
+		  lambda(object o) { destruct(o); });
       } else {
-	Array.map(indices(conf->open_ports), destruct);
+	Array.map(indices(conf->open_ports),
+		  lambda(object o) { destruct(o); });
       }
       conf->stop();
       conf->invalidate_cache();
@@ -2331,7 +2364,7 @@ void reload_all_configurations()
   {
     modified = 1;
     report_notice(LOCALE->disabling_configuration(conf->name));
-    Array.map(values(conf->server_ports), destruct);
+    Array.map(values(conf->server_ports), lambda(object o) { destruct(o); });
     conf->stop();
     destruct(conf);
   }
