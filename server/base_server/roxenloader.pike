@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.143 2000/02/16 08:22:48 per Exp $
+ * $Id: roxenloader.pike,v 1.144 2000/02/16 14:21:47 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -18,7 +18,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.143 2000/02/16 08:22:48 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.144 2000/02/16 14:21:47 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -995,7 +995,10 @@ Please install a newer pike version
   // preprocessor directive, so let's add a constant for it.
 #if constant (Image.TTF)
   if (sizeof (indices (Image.TTF)))
+  {
     add_constant ("has_Image_TTF", 1);
+    add_constant( "Image.TTF", Image.TTF );
+  }
 #endif
 
   if( search( hider, "--long-error-file-names" ) != -1 )
