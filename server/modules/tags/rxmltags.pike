@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.412 2002/12/17 13:00:35 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.413 2003/01/09 10:32:33 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -8396,7 +8396,7 @@ just got zapped?
 </attr>
 
 <attr name='scope' value='string'>
- <p>The name of the scope, unless given in the variable attribute.</p<
+ <p>The name of the scope, unless given in the variable attribute.</p>
 </attr>",
 
 //----------------------------------------------------------------------
