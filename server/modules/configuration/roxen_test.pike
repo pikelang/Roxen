@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.40 2001/08/17 20:03:41 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.41 2001/08/21 14:33:27 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -220,6 +220,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			     parser->context->add_scope ("test", (["pass": pass]));
 			     parser->write_end (rxml);
 			     res = parser->eval();
+			     parser->p_code->finish();
 			     p_code_cache[ltests] = parser->p_code;
 			   }
 			   else {
