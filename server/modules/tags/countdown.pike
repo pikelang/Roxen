@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.50 2001/12/03 17:26:55 anders Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.51 2003/03/27 10:02:04 wellhard Exp $";
 #include <module.h>
 inherit "module";
 
@@ -183,7 +183,7 @@ string time_period(int t, int prec)
   if(i && prec<60) tmp=({i+ " second"+(i==1?"":"s") });
 
   t/=60;
-  i=t&60;
+  i=t%60;
   if(i && prec<3600) tmp=({i+ " minute"+(i==1?"":"s") })+tmp;
 
   t/=60;
