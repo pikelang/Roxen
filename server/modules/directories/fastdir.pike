@@ -4,7 +4,7 @@
  * in the normal one.
  */
 
-constant cvs_version = "$Id: fastdir.pike,v 1.13 1998/10/12 22:55:36 per Exp $";
+constant cvs_version = "$Id: fastdir.pike,v 1.14 2000/01/19 16:04:26 jonasw Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -26,7 +26,8 @@ array register_module()
 
 void create()
 {
-  defvar("indexfiles", ({ "index.html", "Main.html", "welcome.html", }),
+  defvar("indexfiles", ({ "index.html", "index.xml", "Main.html",
+			  "welcome.html" }),
 	 "Index files", TYPE_STRING_LIST,
 	 "If one of these files is present in a directory, it will "
 	 "be returned instead of 'no such file'.");

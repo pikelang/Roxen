@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded dokuments.
 
-string cvs_version = "$Id: directories.pike,v 1.41 2000/01/08 19:01:50 jhs Exp $";
+string cvs_version = "$Id: directories.pike,v 1.42 2000/01/19 16:04:25 jonasw Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -46,7 +46,7 @@ constant module_unique = 1;
 
 void create()
 {
-  defvar("indexfiles", ({ "index.html", "index.htm", "index.pike",
+  defvar("indexfiles", ({ "index.html", "index.xml", "index.htm", "index.pike",
 			  "index.cgi", "welcome.html", "Main.html" }),
 	 "Index files", TYPE_STRING_LIST,
 	 "If one of these files is present in a directory, it will "
