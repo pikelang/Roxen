@@ -1,6 +1,6 @@
 /*
 
-string cvs_version = "$Id: french.pike,v 1.5 1997/08/19 06:38:12 per Exp $";
+string cvs_version = "$Id: french.pike,v 1.6 1998/07/11 18:54:04 grubba Exp $";
 Created by:
 
 ---------------------+--------------------------------------------------
@@ -19,7 +19,7 @@ http://ftp.geog.ucl.ac.be/~patrick/
  */
 
 
-inline string month(int num)
+string month(int num)
 {
   return ({ "janvier", "février", "mars", "avril", "mai",
 	    "juin", "juillet", "août", "septembre", "octobre",

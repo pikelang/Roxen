@@ -4,8 +4,8 @@
  * doc = "Handles the conversion of numbers and dates to English. You have to restart the server for updates to take effect.";
  */
 
-string cvs_version = "$Id: english.pike,v 1.5 1998/03/18 23:33:16 grubba Exp $";
-inline string month(int num)
+string cvs_version = "$Id: english.pike,v 1.6 1998/07/11 18:54:01 grubba Exp $";
+string month(int num)
 {
   return ({ "January", "February", "March", "April", "May",
 	    "June", "July", "August", "September", "October",

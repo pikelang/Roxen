@@ -10,8 +10,8 @@
 
 
 
-string cvs_version = "$Id: croatian.pike,v 1.3 1997/08/19 06:38:08 per Exp $";
-inline string month(int num)
+string cvs_version = "$Id: croatian.pike,v 1.4 1998/07/11 18:53:58 grubba Exp $";
+string month(int num)
 {
   return ({ "Sijecanj", "Veljaca", "Ozujak", "Travanj", "Svibanj",
 	    "Lipanj", "Srpanj", "Kolovoz", "Rujan", "Listopad",

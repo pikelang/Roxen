@@ -1,5 +1,5 @@
 /* Bugs by: Per */
-string cvs_version = "$Id: catala.pike,v 1.5 1997/08/19 06:38:08 per Exp $";
+string cvs_version = "$Id: catala.pike,v 1.6 1998/07/11 18:53:57 grubba Exp $";
 /* Trans by: jordi@lleida.net 
  * This version revised by a catalan linguist. 
  */
@@ -9,7 +9,7 @@ string cvs_version = "$Id: catala.pike,v 1.5 1997/08/19 06:38:08 per Exp $";
  */
 
 
-inline string month(int num)
+string month(int num)
 {
   return ({ "gener", "febrer", "març", "abril", "maig",
             "juny", "juliol", "agost", "setembre", "octubre",

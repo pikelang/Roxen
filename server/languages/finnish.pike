@@ -1,5 +1,5 @@
 /* Created by Janne Edelman, Turku Unix Users Group ry, Turku, Finland
-string cvs_version = "$Id: finnish.pike,v 1.4 1997/08/19 06:38:11 per Exp $";
+string cvs_version = "$Id: finnish.pike,v 1.5 1998/07/11 18:54:03 grubba Exp $";
    http://www.tuug.utu.fi/~edelman/ or http://website.tuug.utu.fi/ 
    */
 /*
@@ -7,7 +7,7 @@ string cvs_version = "$Id: finnish.pike,v 1.4 1997/08/19 06:38:11 per Exp $";
  * doc = "Handles the conversion of numbers and dates to finnish. You have to restart the server for updates to take effect. Translation by Janne Edelman, Turku Unix Users Group ry, Turku, Finland";
  */
 
-inline string month(int num)
+string month(int num)
 {
   return ({ "tammikuu", "helmikuu", "maaliskuu", "huhtikuu", "toukokuu",
 	    "kesäkuu", "heinäkuu", "elokuu", "syyskuu", "lokakuu",

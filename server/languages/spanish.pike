@@ -1,12 +1,12 @@
 /* Bugs by: Per */
-string cvs_version = "$Id: spanish.pike,v 1.5 1998/03/17 16:46:51 grubba Exp $";
+string cvs_version = "$Id: spanish.pike,v 1.6 1998/07/11 18:54:16 grubba Exp $";
 /*
  * name = "Spanish language plugin ";
  * doc = "Handles the conversion of numbers and dates to spanish. Translated by jordi@lleida.net. You have to restart the server for updates to take effect.";
  */
 /* Trans by: jordi@lleida.net */
 
-inline string month(int num)
+string month(int num)
 {
   return ({ "Enero", "Febrero", "Marzo", "Abril", "Mayo",
 	    "Junio", "Julio", "Agosto", "Septiembre", "Octubre",

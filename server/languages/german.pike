@@ -1,5 +1,5 @@
 /* From: Tvns B|ker <bueker@bidnix.bid.fh-hannover.de> 
-string cvs_version = "$Id: german.pike,v 1.6 1998/03/10 13:58:14 grubba Exp $";
+string cvs_version = "$Id: german.pike,v 1.7 1998/07/11 18:54:05 grubba Exp $";
    Subject: New 'german.lpc' ...
  
    Hi,
@@ -16,7 +16,7 @@ string cvs_version = "$Id: german.pike,v 1.6 1998/03/10 13:58:14 grubba Exp $";
  * doc = "Handles the conversion of numbers and dates to German. You have to restart the server for updates to take effect. Translation by Tvns Böker (bueker@bidnix.bid.fh-hannover.de)";
  */
 
-inline string month(int num)
+string month(int num)
 {
   return ({ "Januar", "Februar", "März", "April", "Mai",
 	    "Juni", "Juli", "August", "September", "Oktober",

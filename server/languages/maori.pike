@@ -8,9 +8,9 @@
  */
 
 
-string cvs_version = "$Id: maori.pike,v 1.4 1997/08/19 06:38:15 per Exp $";
+string cvs_version = "$Id: maori.pike,v 1.5 1998/07/11 18:54:10 grubba Exp $";
 
-inline string month( int num )
+string month( int num )
      {
 	return ( {
 	   "Haanuere", "Pepuere", "Maehe", "Aaperira", "Mei",

@@ -10,8 +10,8 @@
 			All texts are now in ISO 8859-2
 
 */
-string cvs_version = "$Id: czech.pike,v 1.3 1998/05/13 11:31:53 grubba Exp $";
-inline string month(int num)
+string cvs_version = "$Id: czech.pike,v 1.4 1998/07/11 18:54:00 grubba Exp $";
+string month(int num)
 {
   return ({ "Leden", "Únor", "Bøezen", "Duben", "Kvìten",
 	    "Èerven", "Èervenec", "Srpen", "Záøí", "Øíjen",

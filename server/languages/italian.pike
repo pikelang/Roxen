@@ -14,9 +14,9 @@
  *	would be rude, wouldn't it? ^_^
  */
 
-string cvs_version = "$Id: italian.pike,v 1.6 1997/08/19 06:43:24 per Exp $";
+string cvs_version = "$Id: italian.pike,v 1.7 1998/07/11 18:54:08 grubba Exp $";
 
-inline string month(int num)
+string month(int num)
 {
   return ({ "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio",
 	    "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre",

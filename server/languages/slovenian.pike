@@ -6,8 +6,8 @@
    Please consult me before modifying slovenian.pike.
 */
 
-string cvs_version = "$Id: slovenian.pike,v 1.9 1998/03/11 19:42:34 neotron Exp $";
-inline string month(int num)
+string cvs_version = "$Id: slovenian.pike,v 1.10 1998/07/11 18:54:15 grubba Exp $";
+string month(int num)
 {
   return ({ "Januar", "Februar", "Marec", "April", "Maj",
 	    "Junij", "Julij", "Avgust", "September", "Oktober",

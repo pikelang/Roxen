@@ -11,9 +11,9 @@
  *  source.
  */
 
-string cvs_version = "$Id: hungarian.pike,v 1.1 1997/12/16 15:24:54 grubba Exp $";
+string cvs_version = "$Id: hungarian.pike,v 1.2 1998/07/11 18:54:07 grubba Exp $";
 
-inline string month(int num)
+string month(int num)
 {
   return ({ "janu&aacute;r",  "febru&aacute;r", "m&aacute;rcius",
             "&aacute;prilis", "m&aacute;jus",   "j&uacute;nius",

@@ -6,9 +6,9 @@
  * doc = "Handles the conversion of numbers and dates to Portuguese. You have to restart the server for updates to take effect. Translation by cjsawaia@8415.com.br";
  */
 
-string cvs_version = "$Id: portuguese.pike,v 1.6 1997/12/23 11:13:23 per Exp $";
+string cvs_version = "$Id: portuguese.pike,v 1.7 1998/07/11 18:54:12 grubba Exp $";
  
-inline string month(int num)
+string month(int num)
 {
   return ({ "Janeiro", "Fevereiro", "Março", "Abril", "Maio",
             "Junho", "Julho", "Agosto", "Setembro", "Outubro",

@@ -8,8 +8,8 @@
    Please consult me before upgrading serbian.pike.
 */
 
-string cvs_version = "$Id: serbian.pike,v 1.3 1997/08/19 06:38:18 per Exp $";
-inline string month(int num)
+string cvs_version = "$Id: serbian.pike,v 1.4 1998/07/11 18:54:14 grubba Exp $";
+string month(int num)
 {
   return ({ "Januar", "Februar", "Mart", "April", "Maj",
 	    "Jun", "Jul", "Avgust", "Septembar", "Oktobar",
