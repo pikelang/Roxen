@@ -1,6 +1,6 @@
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.6 2000/04/28 22:39:00 per Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.7 2000/12/19 18:28:59 leif Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -78,6 +78,7 @@ class FCGIChannel
       }
     }
 
+    string wbuffer = "";
 #if constant( thread_create )
     void read_thread()
     {
@@ -89,7 +90,6 @@ class FCGIChannel
     }
 
     Thread.Condition cond = Thread.Condition();
-    string wbuffer = "";
     void write_thread()
     {
       int ok=1;
@@ -143,7 +143,7 @@ class FCGIChannel
     {
       if( strlen(wbuffer) )
       {
-        written = fd->write( wbuffer );
+        int written = fd->write( wbuffer );
         if( written < 0 )
           end_cb();
         else
