@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.149 1997/11/26 22:08:55 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.150 1997/11/26 22:26:07 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -575,7 +575,9 @@ void connected_to_roxen_com(object port)
 #endif
   _new_supports = ({});
   port->set_id(port);
-  port->write("GET /supports\n");
+  port->write("GET /supports HTTP/1.0\r\n"
+	      "User-Agent: " + real_version + "\r\n"
+	      "\r\n");
   port->set_nonblocking(got_data_from_roxen_com,
 			got_data_from_roxen_com,
 			done_with_roxen_com);
