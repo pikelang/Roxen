@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.470 2004/12/01 17:20:39 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.471 2004/12/01 19:22:26 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2771,12 +2771,24 @@ class UserTagContents
       }
     }
 
+    static mapping(string:mixed) get_input_attrs (RXML.Frame upframe)
+    {
+      mapping(string:mixed) res = ([]);
+      foreach (upframe->vars; string var; mixed val)
+	if (!(<"args", "rest-args", "contents">)[var] &&
+	    !has_prefix (var, "__contents__"))
+	  res[var] = val;
+      return res;
+    }
+
     local mixed get_content (RXML.Frame upframe, mixed content)
     {
       if (string expr = args["copy-of"] || args["value-of"]) {
 	string insert_type = args["copy-of"] ? "copy-of" : "value-of";
+	int result_set = !!args["result-set"];
 
-	string value;
+	string|array|mapping value;
+
 	if (sscanf (expr, "%*[ \t\n\r]@%*[ \t\n\r]%s", expr) == 3) {
 	  // Special treatment to select attributes at the top level.
 	  sscanf (expr, "%[^][ \t\n\r/@(){},]%*[ \t\n\r]%s", expr, string rest);
@@ -2789,20 +2801,24 @@ class UserTagContents
 			 insert_type, rest, expr);
 	  if (expr == "*") {
 	    if (insert_type == "copy-of")
-	      value = upframe->vars->args;
+	      if (result_set)
+		value = get_input_attrs (upframe);
+	      else
+		value = upframe->vars->args;
 	    else
-	      foreach (indices (upframe->vars), string var)
-		if (!(<"args", "rest-args", "contents">)[var] &&
-		    !has_prefix (var, "__contents__")) {
-		  value = upframe->vars[var];
-		  break;
-		}
+	      if (result_set)
+		value = values (get_input_attrs (upframe));
+	      else
+		value = Mapping.Iterator (get_input_attrs (upframe))->value();
 	  }
 	  else if (!(<"args", "rest-args", "contents">)[expr] &&
 		   !has_prefix (expr, "__contents__"))
 	    if (string val = upframe->vars[expr])
 	      if (insert_type == "copy-of")
-		value = Roxen.make_tag_attributes (([expr: val]));
+		if (result_set)
+		  value = ([expr: val]);
+		else
+		  value = Roxen.make_tag_attributes (([expr: val]));
 	      else
 		value = val;
 	}
@@ -2813,22 +2829,58 @@ class UserTagContents
 
 	  mixed res = 0;
 	  if (mixed err = catch (
-		res = content->simple_path (expr, insert_type == "copy-of")))
+		res = content->simple_path (
+		  expr, !result_set && insert_type == "copy-of")))
 	    // We're sloppy and assume that the error is some parse
 	    // error regarding the expression.
 	    parse_error ("Error in %s attribute: %s", insert_type,
 			 describe_error (err));
 
-	  if (insert_type == "copy-of")
-	    value = res;
-	  else {
-	    if (arrayp (res)) res = sizeof (res) && res[0];
-	    if (objectp (res))
-	      value = res->get_text_content();
-	    else if (mappingp (res) && sizeof (res))
-	      value = values (res)[0];
+	  if (insert_type == "copy-of") {
+	    if (result_set) {
+	      if (arrayp (res))
+		value = map (res, lambda (mapping|SloppyDOM.Node elem) {
+				    if (objectp (elem))
+				      return elem->xml_format();
+				    else
+				      return Roxen.make_tag_attributes (elem);
+				  });
+	      else if (objectp (res))
+		value = ({res->xml_format()});
+	      else if (mappingp (res))
+		value = res;
+	      else
+		value = ({});
+	    }
 	    else
-	      value = "";
+	      value = res;
+	  }
+
+	  else {
+	    if (result_set) {
+	      if (arrayp (res))
+		value = map (res, lambda (mapping|SloppyDOM.Node elem) {
+				    if (objectp (elem))
+				      return elem->get_text_content();
+				    else
+				      return values (res)[0];
+				  });
+	      else if (objectp (res))
+		value = ({res->get_text_content()});
+	      else if (mappingp (res))
+		value = values (res);
+	      else
+		value = ({});
+	    }
+	    else {
+	      if (arrayp (res)) res = sizeof (res) && res[0];
+	      if (objectp (res))
+		value = res->get_text_content();
+	      else if (mappingp (res))
+		value = values (res)[0];
+	      else
+		value = "";
+	    }
 	  }
 	}
 
@@ -7959,6 +8011,11 @@ the respective attributes below for further information.</p></desc>
  value-of attribute, all the selected nodes are copied, with all
  markup.</p>
 
+ <p>If the result-set attribute is not used then the selected nodes
+ are returned as a string, otherwise they are returned as an array
+ with one node per element (see the result-set attribute for
+ details).</p>
+
  <p>The expression is a simplified variant of an XPath location path:
  It consists of one or more steps delimited by \'<tt>/</tt>\'.
  Each step selects some part(s) of the current node. The first step
@@ -8028,14 +8085,42 @@ the respective attributes below for further information.</p></desc>
 
 <attr name='value-of' value='expression'><p>
  Selects a part of the content node tree and inserts its text value.
- As opposed to the copy-of attribute, only the value of the first
- selected node is inserted. The expression is the same as for the
- copy-of attribute.</p>
+ As opposed to the copy-of attribute, only the node values are
+ inserted. The expression is the same as for the copy-of
+ attribute.</p>
+
+ <p>If the result-set attribute is not used then only the first node
+ value in the selected set is returned, otherwise all values are
+ returned as an array (see the result-set attribute for details).</p>
 
  <p>The text value of an element node is all the text in it and all
  its subelements, without the elements themselves or any processing
  instructions.</p>
-</attr>"
+</attr>
+
+<attr name='result-set'><p>
+ Used together with the copy-of or value-of attributes. Add this
+ attribute to make them return the selected nodes or values as a set
+ instead of a plain string.</p>
+
+ <p>The result can not be inserted directly into the page in this
+ case, but it can be assigned to a variable and manipulated further,
+ e.g. fed to <tag>emit</tag> to iterate over the elements in the
+ set. An example:</p>
+
+ <ex><define container='sort-items'>
+  <set variable='_.item'><contents copy-of='item' result-set=''/></set>
+  <emit source='values' variable='_.item' sort='value'>&_.value;</emit>
+</define>
+<sort-items>
+  <item>one</item>
+  <item>two</item>
+  <item>three</item>
+</sort-items></ex>
+
+ <p>The set is normally an array (in document order), but if used with
+ copy-of and the expression selects an attribute set then that set is
+ returned as a mapping.</p>"
 	    ])
 
 }),
