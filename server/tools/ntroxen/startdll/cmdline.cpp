@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.9 2001/09/28 12:02:49 tomas Exp $
+// $Id: cmdline.cpp,v 1.10 2001/10/02 10:00:02 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -1390,16 +1390,12 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         m_saPikeArgs.Add(("-DSELF_TEST_DIR=\\\"" + selfTestDirUnx + "\\\"").c_str());
 
         m_bOnce = TRUE;
-        m_iDebug = max(m_iDebug, 0);
+        m_iDebug = max(m_iDebug, 1);
         m_saRoxenArgs.Add("--config-dir=../var/test_config");
         m_saRoxenArgs.Add("--remove-dumped");
         
         SetEnvironmentVariable("COPYCMD", "/Y");
         system("rmdir /Q /S ..\\var\\test_config >NUL:");
-        //system("xcopy etc\\test\\config ..\\var\\test_config\\ /E /Q >NUL:");
-        //system("copy etc\\test\\filesystem\\test_rxml_package rxml_packages\\test_rxml_package >NUL:");
-        system(("xcopy " + m_SelfTestDir + "\\config ..\\var\\test_config\\ /E /Q >NUL:").c_str());
-        
 
         std::string setupCmd = m_SelfTestDir + "\\scripts\\setup.pike";
         DWORD attr = GetFileAttributes(setupCmd.c_str());

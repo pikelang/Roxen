@@ -152,5 +152,9 @@ SOURCE=..\version.h
 SOURCE=.\startdll.rgs
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=..\VERSION
+# End Source File
 # End Target
 # End Project
