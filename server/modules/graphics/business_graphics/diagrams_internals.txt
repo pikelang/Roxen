@@ -36,6 +36,9 @@ string drawtype;
  //För bars-box och pie:
  "2D" - ritar 2D boxar
  "3D" - flash!!!
+
+int tone;
+  //Anger om skuggning ska ske
  
 float|int 3Ddepth;
 //Anger hur djup 3D ska vara i pixel
