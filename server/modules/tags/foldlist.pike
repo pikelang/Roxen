@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.32 2001/09/21 15:58:15 jhs Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.33 2001/12/06 23:00:38 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -27,7 +27,14 @@ constant tagdoc=([
 <attr name='unfolded'><p>
  Will make all the elements in the list unfolded by default.</p>
 </attr>
-",
+
+<attr name='foldedsrc'><p>
+ The image to use for folded items. The default is '/internal-roxen-unfold'.</p>
+</attr>
+
+<attr name='unfoldedsrc'><p>
+ The image to use for unfolded items. The default is '/internal-roxen-fold'.</p>
+</attr>",
 
 ([ "ft":({#"<desc type='cont'><p>
 This tag is used within the foldlist tag. The contents of this
@@ -41,6 +48,16 @@ element is folded and unfolded.</p></desc>
 
 <attr name='unfolded'><p>
  Will make this element unfolded by default.</p>
+</attr>
+
+<attr name='foldedsrc'><p>
+ The image to use for folded items. Overrides the 'foldedsrc'
+ attribute in <tag>tablist</tag> for this item.</p>
+</attr>
+
+<attr name='unfoldedsrc'><p>
+ The image to use for unfolded items. Overrides the 'foldedsrc'
+ attribute in <tag>tablist</tag> for this item.</p>
 </attr>",
 
 ([ "fd":#"<desc type='cont'><p>
