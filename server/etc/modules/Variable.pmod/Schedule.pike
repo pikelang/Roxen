@@ -78,10 +78,9 @@ private mapping next_day(mapping from, int day)
 {
   from->hour = 0;
   if(from->wday<day) {
-    from->wday = day;
-    return from;
+    return localtime(mktime(from) + (day - from->wday)*3600*24);
   }
-  return localtime(mktime(from) + (7-from->wday)*3600*24 + day*3600*24);
+  return localtime(mktime(from) + (7 - from->wday + day)*3600*24);
 }
 
 private mapping next_or_same_time(mapping from, int hour, void|int delta)
@@ -96,7 +95,7 @@ private mapping next_time(mapping from, int hour, void|int delta)
     from->hour = hour;
     return from;
   }
-  return localtime(mktime(from) + (24-from->hour)*3600 + delta + hour*3600);
+  return localtime(mktime(from) + (24 - from->hour + hour)*3600 + delta);
 }
 
 int get_next( int last )
@@ -124,21 +123,17 @@ int get_next( int last )
 
   mapping m = localtime( last || time(1) );
   m->min = m->sec = 0;
-  if( !last )
-  {
-    if( !vals[3] )
-      return mktime( next_or_same_time( m, vals[4] ) );
-    return mktime( next_or_same_time(
-		     next_or_same_day( m, vals[3]-1 ),
-		     vals[4], 7*24*3600 ) );
+  if( !vals[3] ) {
+    for(int i; i<vals[2]; i++)
+      m = next_or_same_time( m, vals[4] );
+    return mktime(m);
   }
-
-  m->hour = 0;
-  if(!vals[3])
-    return mktime(m)+vals[2]*24*3600 + vals[4]*3600;
   for(int i; i<vals[2]; i++)
-    m = next_day(m, vals[3]-1);
-  return mktime(m) + vals[4]*3600;
+  {
+    m = next_or_same_time( next_or_same_day( m, vals[3]-1 ),
+			   vals[4], 6*24*3600 );
+  }
+  return mktime(m);
 }
 
 string render_form( RequestID id, void|mapping additional_args )
