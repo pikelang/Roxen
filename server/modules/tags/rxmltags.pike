@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.95 2000/03/13 02:40:42 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.96 2000/03/13 20:50:25 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -185,13 +185,15 @@ class EntityClientLanguages {
   }
 }
 
-mapping client_scope=([ "ip":EntityClientIP(),
-			"name":EntityClientName(),
-			"referrer":EntityClientReferrer(),
-			"accept-language":EntityClientAcceptLanguage(),
-			"accept-languages":EntityClientAcceptLanguages(),
-			"language":EntityClientLanguage(),
-			"languages":EntityClientLanguages()]);
+mapping client_scope=([
+  "ip":EntityClientIP(),
+  "name":EntityClientName(),
+  "referrer":EntityClientReferrer(),
+  "accept-language":EntityClientAcceptLanguage(),
+  "accept-languages":EntityClientAcceptLanguages(),
+  "language":EntityClientLanguage(),
+  "languages":EntityClientLanguages(),
+]);
 
 void set_entities(RXML.Context c) {
   c->extend_scope("page", page_scope);
@@ -865,9 +867,9 @@ array(string) container_cache(string tag, mapping args,
 {
 #define HASH(x) (x+id->not_query+id->query+id->realauth+id->conf->query("MyWorldLocation"))
   string key="";
+  contents=parse_html(contents, ([]), (["cache":container_cache]) );
   if(!args->nohash) {
 #if constant(Crypto.md5)
-    contents=parse_html(contents, ([]), (["cache":container_cache]) );
     object md5 = Crypto.md5();
     md5->update(HASH(contents));
     key=md5->digest();
@@ -917,7 +919,8 @@ class TagFor {
       from = (int)args->from;
       to = (int)args->to;
       step = (int)args->step!=0?(int)args->step:(to<from?-1:1);
-      if((to<from && step>0)||(to>from && step<0)) to=from+step;
+      if((to<from && step>0)||(to>from && step<0))
+	run_error("Step has the wrong sign.\n");
       from-=step;
       count=from;
       return 0;
@@ -1219,21 +1222,30 @@ string simpletag_random(string tag, mapping m, string s)
   return (q=s/q)[random(sizeof(q))];
 }
 
-array(string) container_gauge(string t, mapping args, string contents, RequestID id)
-{
-  NOCACHE();
+class TagGauge {
+  inherit RXML.Tag;
+  constant name = "gauge";
 
-  int t = gethrtime();
-  contents = parse_rxml( contents, id );
-  t = gethrtime()-t;
+  class Frame {
+    inherit RXML.Frame;
+    int t;
 
-  if(args->variable) RXML.user_set_var(args->variable, t/1000000.0, args->scope);
-  if(args->silent) return ({ "" });
-  if(args->timeonly) return ({ sprintf("%3.6f", t/1000000.0) });
-  if(args->resultonly) return ({contents});
-  return ({ "<br><font size=\"-1\"><b>Time: "+
-	   sprintf("%3.6f", t/1000000.0)+
-	   " seconds</b></font><br>"+contents });
+    array do_enter(RequestID id) {
+      NOCACHE();
+      t=gethrtime();
+    }
+
+    array do_return(RequestID id) {
+      t=gethrtime()-t;
+      if(args->variable) RXML.user_set_var(args->variable, t/1000000.0, args->scope);
+      if(args->silent) return ({ "" });
+      if(args->timeonly) return ({ sprintf("%3.6f", t/1000000.0) });
+      if(args->resultonly) return ({content});
+      return ({ "<br /><font size=\"-1\"><b>Time: "+
+		sprintf("%3.6f", t/1000000.0)+
+		" seconds</b></font><br />"+content });
+    }
+  }
 }
 
 // Removes empty lines
