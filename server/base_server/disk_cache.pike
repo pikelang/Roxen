@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.58 2001/01/19 12:41:33 per Exp $
+// $Id: disk_cache.pike,v 1.59 2001/02/23 00:29:25 per Exp $
 
 #include <config.h>
 #include <module_constants.h>
@@ -647,7 +647,9 @@ void default_check_cache_file(CacheStream stream)
 
 string get_garb_info()
 {
-  return "<pre>"+cache->status()+"</pre>";
+  if( cache )
+    return "<pre>"+cache->status()+"</pre>";
+  return "<pre>No cache</pre>";
 }
 
 #define DELETE_AND_RETURN(){rmold(cachef->rfiledone);if(cachef){cachef->new=1;}return;}
