@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.13 2000/10/13 13:30:08 kuntri Exp $";
+       "$Id: perl.pike,v 2.14 2000/11/03 11:09:48 kuntri Exp $";
 
 constant module_type = MODULE_EXPERIMENTAL |
             MODULE_FILE_EXTENSION | MODULE_TAG;
@@ -253,9 +253,9 @@ array(string) query_file_extensions()
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"<?perl":#"<desc pi><short hide>
+"?perl":#"<desc pi='pi'><short hide='hide'>
  Perl processing instruction tag.</short>This processing intruction
- tag allows for evaluating Perl code directly in the document.
+ tag allows for evaluating Perl code directly in the document.</p>
 
  <p>Note: Read the installation and configuration documentation in the
  Administration manual to set up the Perl support properly. If the
