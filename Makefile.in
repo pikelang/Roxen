@@ -77,11 +77,14 @@ install: all
 	cp pike/src/pike $(prefix)/roxen/server/bin
 	ln $(prefix)/roxen/server/bin/pike $(prefix)/roxen/server/bin/roxen
 	cp $(SRCDIR)/pike/bin/feature_list $(prefix)/roxen/server/bin
-	test -d $(prefix)/roxen/server/lib || mkdir $(prefix)/roxen/server/lib
-	test -d $(prefix)/roxen/server/lib/pike || mkdir $(prefix)/roxen/server/lib/pike
+	test -d $(prefix)/roxen/local/. || mkdir $(prefix)/roxen/local
+	test -d $(prefix)/roxen/local/modules/. || mkdir $(prefix)/roxen/local/modules
+	test -d $(prefix)/roxen/local/nfonts/. || mkdir $(prefix)/roxen/local/nfonts
+	test -d $(prefix)/roxen/server/lib/. || mkdir $(prefix)/roxen/server/lib
+	test -d $(prefix)/roxen/server/lib/pike/. || mkdir $(prefix)/roxen/server/lib/pike
 	cp -r pike/src/lib/* $(prefix)/roxen/server/lib/pike/
-	test -d $(prefix)/roxen/server/include || mkdir $(prefix)/roxen/server/include
-	test -d $(prefix)/roxen/server/include/pike || mkdir $(prefix)/roxen/server/include/pike
+	test -d $(prefix)/roxen/server/include/. || mkdir $(prefix)/roxen/server/include
+	test -d $(prefix)/roxen/server/include/pike/. || mkdir $(prefix)/roxen/server/include/pike
 	for a in $(SRCDIR)/pike/src/*.h ./pike/src/*.h; do $(INSTALL) $$a $(prefix)/roxen/server/include/pike; done
 	-@(cd extern;$(MAKE) install;cd ../)
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
