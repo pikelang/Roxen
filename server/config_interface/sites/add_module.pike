@@ -270,7 +270,8 @@ array(string) get_module_list( function describe_module,
     mixed r;
     if( c == "" )
       continue;
-    if( (r = class_visible( c, classes[c]->doc, id )) && r[0] )
+    if( (r = class_visible( c, classes[c]->doc, sizeof(classes[c]->modules), id )) &&
+	r[0] )
     {
       res += r[1];
       array m = classes[c]->modules;
@@ -361,7 +362,8 @@ function describe_module_normal( int image )
   };
 }
 
-array(int|string) class_visible_normal( string c, string d, RequestID id )
+array(int|string) class_visible_normal( string c, string d, int size,
+					RequestID id )
 {
   int x;
   string header = ("<tr><td colspan='2'><table width='100%' "
@@ -438,7 +440,8 @@ return sprintf(
   }
 }
 
-array(int|string) class_visible_faster( string c, string d, RequestID id )
+array(int|string) class_visible_faster( string c, string d, int size,
+					RequestID id )
 {
   int x;
   string header = ("<tr><td colspan='2'><table width='100%' cellspacing='0' "
@@ -482,13 +485,16 @@ string page_faster( RequestID id )
 
 int first;
 
-array(int|string) class_visible_compact( string c, string d, RequestID id )
+array(int|string) class_visible_compact( string c, string d, int size,
+					 RequestID id )
 {
   string res="";
   if(first++)
-    res = "</select><br /><submit-gbutton> "+LOCALE(251, "Add Module")+" </submit-gbutton> ";
+    res = "</select><br /><submit-gbutton> "+LOCALE(251, "Add Module")+
+      " </submit-gbutton> ";
   res += "<p><a name="+Roxen.http_encode_string(c)+
-    "></a><font size='+2'>"+c+"</font><br />"+d+"<p><select multiple name='module_to_add'>";
+    "></a><font size='+2'>"+c+"</font><br />"+d+"<p>"
+    "<select size='"+size+"' multiple name='module_to_add' style='font-family: monospace'>";
   return ({ 1, res });
 }
 
@@ -498,9 +504,9 @@ string describe_module_compact( object module, object block )
     //string modname = strip_leading (module->get_name());
     string modname = module->get_name();
     return "<option value='"+module->sname+"'>"+
-      Roxen.html_encode_string(
-	modname + "\0240" * max (0, (int) ((40 - sizeof (modname)) * 1.4)) +
-	" (" + module->sname + ")")+
+      Roxen.html_encode_string(modname)
+      + "&nbsp;" * max (0, (int) ((49 - sizeof (modname)))) +
+      " (" + Roxen.html_encode_string(module->sname) + ")"+
       "</option>\n";
   }
   return "";
@@ -558,8 +564,8 @@ string page_really_compact( RequestID id )
   array(RoxenModule) locked_modules = ({});
   
   if( (r = class_visible_compact( LOCALE(258,"Add module"), 
-				  LOCALE(273,"Select one or several modules to add.")
-				  , id )) && r[0] ) {
+				  LOCALE(273,"Select one or several modules to add."),
+				  sizeof(mods), id )) && r[0] ) {
     res += r[1];
     foreach(mods, object q) {
       if( (!q->get_description() ||
