@@ -48,6 +48,7 @@
   <file>../etc/modules/Variable.pmod/Email.pike</file>
   <file>../etc/modules/Variable.pmod/Image.pike</file>
   <file>../etc/modules/Variable.pmod/Upload.pike</file>
+  <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
   <file>../etc/modules/Variable.pmod/module.pmod</file>
   <file>../modules/configuration/config_tags.pike</file>
   <file>../modules/configuration/config_filesystem.pike</file>

@@ -67,7 +67,7 @@
 </str>
 
 <str id="12">
-<o>Thirs party modules</o>
+<o>Third party modules</o>
 <t></t>
 </str>
 
@@ -193,41 +193,6 @@
 
 <str id="37">
 <o>infinitely long</o>
-<t></t>
-</str>
-
-<str id="38">
-<o>Update client initialization error</o>
-<t></t>
-</str>
-
-<str id="39">
-<o>Possible causes:</o>
-<t></t>
-</str>
-
-<str id="40">
-<o>Yabu does not have permission to create/write/read its files.</o>
-<t></t>
-</str>
-
-<str id="41">
-<o>Solution: Change permissions on the relevant files.</o>
-<t></t>
-</str>
-
-<str id="42">
-<o>Yabu is out locked by another process. This indicates that several Roxen servers are running on the same files!</o>
-<t></t>
-</str>
-
-<str id="43">
-<o>Solution: Kill the offending Roxen processes.</o>
-<t></t>
-</str>
-
-<str id="44">
-<o>Backtrace:</o>
 <t></t>
 </str>
 
