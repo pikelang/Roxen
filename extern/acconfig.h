@@ -1,5 +1,5 @@
 /*
- * $Id: acconfig.h,v 1.1 1997/10/30 23:09:01 grubba Exp $
+ * $Id: acconfig.h,v 1.2 1997/10/30 23:11:47 grubba Exp $
  *
  * Config file for some of Roxen's external binaries.
  *
@@ -7,6 +7,12 @@
  */
 #ifndef EXTERN_CONFIG_H
 #define EXTERN_CONFIG_H
+
+/* Define if you have h_errno */
+#undef HAVE_H_ERRNO
+
+/* Define if you signals are one-shot. */
+#undef SIGNAL_ONESHOT
 
 @TOP@
 @BOTTOM@
