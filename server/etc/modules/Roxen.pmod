@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.54 2000/12/04 22:41:16 nilsson Exp $
+ * $Id: Roxen.pmod,v 1.55 2000/12/04 22:45:04 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -847,7 +847,7 @@ class ScopeRoxen {
        NOCACHE(c->id);
        return roxenp()->locale->get();
      case "path":
-       return id->misc->site_path_prefix || "";
+       return c->id->misc->site_prefix_path || "";
      default:
        return RXML.nil;
     }
