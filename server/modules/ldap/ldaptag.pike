@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.9 2000/12/19 23:59:01 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.10 2001/01/30 12:56:00 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -201,9 +201,17 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
       RXML.run_error("Couldn't parse attribute values.");
   }
 
+  int ver = (int)(args->version)||query("ldap_ver");
+  if(ver == 2 || ver == 3)
+    con->ldap_version = ver;
+  if(con->ldap_version == 2)
+    error = catch(con->bind());
+  if(error)
+    RXML.run_error("Couldn't bind to LDAP server. "+Roxen.html_encode_string(error[0]));
+
   switch (op) {
     case "search":
-#if __MAJOR__ = 7 && __MINOR__ = 0 && __BUILD__ < 236
+#if __MAJOR__ == 7 && __MINOR__ == 0 && __BUILD__ < 236
 // buggy search required argument
 	error = catch(result = (con->search(args->filter||"")));
 #else
@@ -359,7 +367,7 @@ string query_provides()
 void create()
 {
   defvar("server", "ldap://localhost/??sub", "Default server URL",
-	 TYPE_STRING | VAR_INITIAL,
+	 TYPE_STRING | VAR_INITIAL | VAR_MORE,
 	 "The default LDAP URL that will be used if no <i>host</i> "
 	 "attribute is given to the tags. Usually the <i>host</i> "
 	 "attribute should be used with a symbolic name definied "
@@ -367,6 +375,13 @@ void create()
 	 "<p>The default connection is specified as a LDAP URL in the "
 	 "format "
 	 "<tt>ldap://host:port/basedn??scope?filter?!...</tt>.\n");
+
+  defvar("ldap_ver", 3, "Default LDAP protocol version",
+	 TYPE_INT | VAR_INITIAL,
+	 "The default version of LDAP protocol used by LDAP client "
+	 "for connection to the LDAP server. <br />"
+	 "NOTE: Internal LDAP client isn't smarty, so only explicit "
+	 "protocol version will be used.");
 }
 
 
@@ -382,7 +397,7 @@ string status()
 {
   string rv = "";
 
-#if __MAJOR__ = 7 && __MINOR__ = 0 && __BUILD__ < 236
+#if __MAJOR__ == 7 && __MINOR__ == 0 && __BUILD__ < 236
     rv += "<br /><p><b>WARNING:</b> Roxen is powered by Pike with BUGGY LDAP";
     rv += " client support! You must use 'filter=' attribute inside ";
     rv += " &lt;emit source='ldap' &gt;&lt/emit&gt; container or upgrade ";
