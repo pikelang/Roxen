@@ -5,7 +5,7 @@
 
 import Stdio;
 
-string cvs_version = "$Id: htaccess.pike,v 1.12 1997/06/12 02:41:45 per Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.13 1997/07/06 18:48:35 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 inherit "module";
@@ -380,7 +380,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
   object f;
   mixed in_cache;
 
-  cache_key = "groupfile:" + roxen->current_configuration->name;
+  cache_key = "groupfile:" + id->conf->name;
 
   f = files.file();
   if(!(f->open(groupfile, "r")))
