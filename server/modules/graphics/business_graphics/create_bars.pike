@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.57 1997/12/21 19:32:51 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.58 1997/12/21 20:53:25 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -306,7 +306,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	diagram_data["xstop"]=diagram_data["xsize"]-
 	  (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-
 	  diagram_data["xmaxxnames"]/2;
-	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2;
+	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2+2;
 	diagram_data["xstart"]=xpos_for_yaxis+si/2;
       }
     else
@@ -797,7 +797,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	//if (labelimg->xsize()> barsdiagram->xsize())
 	//labelimg->scale(barsdiagram->xsize(),labelimg->ysize());
       
-      x=max(0,((int)floor((float)xpos_for_yaxis)-labelimg->xsize()/2));
+      x=max(2,((int)floor((float)xpos_for_yaxis)-labelimg->xsize()/2));
       x=min(x, barsdiagram->xsize()-labelimg->xsize());
       
       y=0; 
@@ -807,7 +807,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	barsdiagram->paste_alpha_color(labelimg, 
 				 @(diagram_data["labelcolor"]), 
 				 x,
-				 0);
+				 2);
       
       
 
