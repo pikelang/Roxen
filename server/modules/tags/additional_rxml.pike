@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.5 2000/09/10 16:35:05 nilsson Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.6 2000/09/15 19:44:24 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Additional RXML tags";
@@ -92,7 +92,6 @@ class TagSprintf {
 
     array do_return(RequestID id) {
       array(string) in;
-      // if(args->in) in=args->in;
       if(args->split)
 	in=content/args->split;
       else
@@ -177,16 +176,16 @@ class TagDice {
 
     string do_return(RequestID id) {
       NOCACHE();
-      if(!args->type) args->type="T6";
-      args->type = replace( args->type, "D", "T" );
+      if(!args->type) args->type="D6";
+      args->type = replace( args->type, "T", "D" );
       int value;
       args->type=replace(args->type, "-", "+-");
       foreach(args->type/"+", string dice) {
-	if(has_value(dice, "T")) {
-	  if(dice[0]=='T')
+	if(has_value(dice, "D")) {
+	  if(dice[0]=='D')
 	    value+=random((int)dice[1..])+1;
 	  else {
-	    array(int) x=(array(int))(dice/"T");
+	    array(int) x=(array(int))(dice/"D");
 	    if(sizeof(x)!=2)
 	      RXML.parse_error("Malformed dice type.\n");
 	    value+=x[0]*(random(x[1])+1);
@@ -212,20 +211,59 @@ constant tagdoc=([
 
   "dice":#"<desc cont>Simulates a D&D style dice algorithm.</desc>
 
-<attr name=type value=string default=T6>
+<attr name=type value=string default=D6>
  Describes the dices. A six sided dice is called 'D6' or '1D6', while
  two eight sided dices is called '2D8' or 'D8+D8'. Constants may also
  be used, so that a random number between 10 and 20 could be written
  as 'D9+10' (excluding 10 and 20, including 10 and 20 would be 'D11+9').
+ The character 'T' may be used instead of 'D'.
 </attr>",
 
   "insert#href":#"<desc plugin>Inserts the contents at that URL. This function has to be enabled in
- the <module>RXML 2.0 tags</module> module in the Roxen WebServer
+ the <module>Additional RXML tags</module> module in the Roxen WebServer
  configuration interface.</desc>
 
 <attr name=href value=string>
  The URL to the page that should be inserted.
 </attr>",
+
+  "sscanf":#"<desc cont>Extract parts of a string and put them in other variables.
+Refer to the sscanf function in the Pike reference manual for a complete description.</desc>
+
+<attr name=variables value=list required>
+ A comma seperated list with the name of the variables that should be set.
+<ex type=vert>
+<sscanf variables='form.year,var.month,var.day' format='%4d%2d%2d'>19771003</sscanf>
+&form.year;-&var.month;-&var.day;
+</ex>
+</attr>
+
+<attr name=scope value=name required>
+ The name of the fallback scope to be used when no scope is given.
+<ex type=vert>
+<sscanf variables='form.year,month,day' scope='var' format='%4d%2d%2d'>19801228</sscanf>
+&form.year;-&var.month;-&var.day;
+</ex>
+</attr>
+
+<attr name=return value=name>
+ If used, the number of successfull variable 'extractions' will be available in the
+ given variable.
+</attr>",
+
+  "sprintf":#"<desc cont>Prints out variables with the formating functions availble in
+the Pike function sprintf. Refer to the Pike reference manual for a complete
+description.</desc>
+
+<attr name=format value=string>
+  The formatting string.
+</attr>
+
+<attr name=split value=character>
+  If used, the tag content will be splitted with the given string.
+<ex>
+<sprintf format='#%02x%02x%02x' split=','>250,0,33</sprintf>
+</ex></attr>",
 
 ]);
 #endif
