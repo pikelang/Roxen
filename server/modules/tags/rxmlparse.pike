@@ -7,15 +7,15 @@
 //This can be turned on when types in dumped files are working properly.
 //#pragma strict_types
 
-#define _misc ([mapping(string:mixed)]id->misc)
-#define _defines ([mapping(string:mixed)]_misc->defines)
-#define _stat _defines[" _stat"]
-#define _error _defines[" _error"]
-#define _extra_heads _defines[" _extra_heads"]
-#define _rettext _defines[" _rettext"]
-#define _ok _defines[" _ok"]
+#define _id_misc ([mapping(string:mixed)]id->misc)
+#define _context_misc ([mapping(string:mixed)] RXML_CONTEXT->misc)
+#define _stat _context_misc[" _stat"]
+#define _error _context_misc[" _error"]
+#define _extra_heads _context_misc[" _extra_heads"]
+#define _rettext _context_misc[" _rettext"]
+#define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.57 2001/04/27 16:24:30 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.58 2001/06/18 15:32:54 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -101,14 +101,7 @@ function(string,int|void,string|void:string) file2type;
 
 mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 {
-  if(!_misc->defines)
-    _misc->defines=([" _ok":1]);
-
-  array stat;
-  if(_stat)
-    stat=[array]_stat;
-  else
-    stat=_stat=[array]_misc->stat || file->stat();
+  array stat = [array]_id_misc->stat || file->stat();
 
   if(require_exec && !(stat[0] & 07111)) return 0;
   if(!parse_exec && (stat[0] & 07111)) return 0;
@@ -116,7 +109,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
   bytes += stat[1];
 
   string data = file->read();
-  switch( _misc->input_charset )
+  switch( _id_misc->input_charset )
   {
    case 0:
    case "iso-8859-1":
@@ -128,7 +121,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
      data = unicode_to_string( data );
      break;
    default:
-     data = [string] (Locale.Charset.decoder( [string]_misc->input_charset )
+     data = [string] (Locale.Charset.decoder( [string]_id_misc->input_charset )
 		      ->feed( data )
 		      ->drain());
      break;
@@ -169,7 +162,7 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type)
       report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
 #endif
     _ok=0;
-    if(query("quietr") && !_misc->debug && !([multiset(string)]id->prestate)->debug)
+    if(query("quietr") && !_id_misc->debug && !([multiset(string)]id->prestate)->debug)
       return "";
     return "<br clear=\"all\" />\n<pre>" +
       Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
@@ -201,7 +194,7 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
     if(query("logerrorsp"))
       report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
 #endif
-    if(query("quietp") && !_misc->debug && !([multiset(string)]id->prestate)->debug)
+    if(query("quietp") && !_id_misc->debug && !([multiset(string)]id->prestate)->debug)
       return "";
     return "<br clear=\"all\" />\n<pre>" +
       Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
@@ -237,13 +230,13 @@ string api_set(RequestID id, string what, string to, void|string scope)
 
 string api_define(RequestID id, string what, string to)
 {
-  _defines[what]=to;
+  _context_misc[what]=to;
   return ([])[0];
 }
 
 string api_query_define(RequestID id, string what)
 {
-  return (string)_defines[what];
+  return (string)_context_misc[what];
 }
 
 string api_query_variable(RequestID id, string what, void|string scope)
