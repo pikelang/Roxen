@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.298 2001/09/27 17:07:27 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.299 2001/10/05 14:16:22 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1338,6 +1338,9 @@ class MySQLKey
 #endif
       clear_connect_to_my_mysql_cache();
     }
+#else
+    // Slow'R'us
+    call_out(gc,0);
 #endif
   }
 
@@ -1361,9 +1364,9 @@ class MySQLKey
   {
 #ifdef DB_DEBUG
     if (type == 'd') return (string)num;
-    return sprintf( "MySQL( %O:%d )", name, num );
+    return sprintf( "SQL( %O:%d )", name, num );
 #else
-    return sprintf( "MySQL( %O )", name );
+    return sprintf( "SQL( %O )", name );
 #endif /* DB_DEBUG */
   }
 }
@@ -2046,6 +2049,21 @@ library should be enough.
   DC("Thread.Mutex");     DC("Thread.MutexKey");
   DC("Thread.Condition"); DC("thread_create");
   DC( "Thread.Queue" );
+  DC("Sql");  DC("Sql.mysql");
+
+
+#if constant(Sql.oracle)
+  DC("Sql.oracle");
+#endif
+#if constant(Sql.odbc)
+  DC("Sql.odbc");
+#endif
+#if constant(Sql.postgres)
+  DC("Sql.postgres");
+#endif
+#if constant(Sql.msql)
+  DC("Sql.msql");
+#endif
   
   DC( "_Roxen.HeaderParser" );
   
