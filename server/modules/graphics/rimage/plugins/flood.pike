@@ -2,6 +2,7 @@ constant doc="Makes an grey-scale image, for alpha-channel use. The specified ch
 
 void render(mapping args, mapping this, string channel, object id, object m)
 {
-  if(!this[channel]) return;
-  this[channel]=this[channel]->select_from((int)args->x,(int)args->y,(int)args->edge||30);
+  object i = m->get_channel( this, channel );
+  m->set_channel(this,channel,i->select_from((int)args->x,(int)args->y,
+                                             (int)args->edge||30));
 }

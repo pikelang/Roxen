@@ -2,7 +2,6 @@ constant doc = "Makes an grey-scale image, for mask-channel use. The given 'colo
 
 void render( mapping args, mapping this, string channel, object id, object m )
 {
-  if(!this[channel]) return;
-  this[channel]=
-    this[channel]->distanceq(@Colors.parse_color(args->color||"black"));
+  object i = m->get_channel( this, channel );
+  m->set_channel( this, channel, i->distanceq(@Colors.parse_color(args->color||"black")));
 }

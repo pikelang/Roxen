@@ -3,20 +3,20 @@ constant doc = "If channel is 'image', rotates both channels in the layer by 'de
 void render(mapping args, mapping this, string channel, object id, object m)
 {
   float degrees = (float)args->degrees;
-  if(channel == "mask")
+  
+  if((degrees%360.0) == 0.0) 
+    return;
+
+  if(channel != "image")
   {
-    if(this->mask)
-      this->mask = this->mask->rotate(degrees, 0,0,0);
+    m->set_channel( this, channel, m->get_channel( this, channel )->rgb2hsv() );
     return;
   }
+  
+  object i = m->get_channel( this, "image" );
+  if(!i) return;
+  object a = m->get_channel(this,"alpha")||Image.Image(i->xsize(),i->ysize(),255,255,255);
 
-  if(!this->image)
-    return;
-
-  if(!this->mask)
-    this->mask = Image.image( this->image->xsize(), 
-			      this->image->ysize(),
-			      255,255,255 );
-  this->image = this->image->rotate_expand(degrees);
-  this->mask  = this->mask->rotate( degrees, 0,0,0 );
+  m->set_channel( this, "image", i->rotate_expand(degrees) );
+  m->set_channel( this, "alpha", a->rotate(degrees,0,0,0) );
 }

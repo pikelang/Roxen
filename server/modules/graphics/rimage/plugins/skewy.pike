@@ -3,20 +3,16 @@ constant doc = "If channel is 'image', skews both channels in the layer by 'amou
 void render(mapping args, mapping this, string channel, object id, object m)
 {
   int amnt = (int)args->amount;
-  if(channel == "mask")
+  object i = m->get_channel( this, channel );
+  object a = m->get_channel( this, "alpha" );
+  
+  if(!i) return;
+
+  if(channel == "image")
   {
-    if(this->mask)
-      this->mask->skewy(amnt, 0,0,0);
-    return;
+    m->set_channel( this, "image", i->skewy_expand( amnt ));
+    m->set_channel( this, "alpha", a->skewy( amnt ));
+  } else {
+    m->set_channel( this, channel, i->skewy( amnt ));
   }
-
-  if(!this->image)
-    return;
-
-  if(!this->mask)
-    this->mask = Image.image( this->image->xsize(), 
-			      this->image->ysize(),
-			      255,255,255 );
-  this->image->skewy_expand(amnt);
-  this->mask->skewy( amnt, 0,0,0 );
 }

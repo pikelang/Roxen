@@ -3,27 +3,26 @@ constant doc="Copy the contents of another channel to this channel. Supported 's
 
 void render( mapping args, mapping this, string channel, object id, object m )
 {
-  object i;
-  if(!this["image"]) return;
+  object i = m->get_channel( this, channel );
+
   switch( args->source )
   {
    case "red": 
-     i = this["image"]->color(255,0,0)->grey(255,0,0);
+     i = i->color(255,0,0)->grey(255,0,0);
      break;
    case "green": 
-     i = this["image"]->color(0,255,0)->grey(0,255,0);
+     i = i->color(0,255,0)->grey(0,255,0);
      break;
    case "blue": 
-     i = this["image"]->color(0,0,255)->grey(0,0,255);
+     i = i->color(0,0,255)->grey(0,0,255);
      break;
    case "value": 
-     i = this["image"]->grey();  
+     i = i->grey();  
      break;
    case "saturation": 
-     i = this["image"]->rgb_to_hsv()->color(0,255,0)->grey(0,255,0);
+     i = i->rgb_to_hsv()->color(0,255,0)->grey(0,255,0);
      break;
-   case "image":
-     i = this["image"];
   }
-    this[channel] = i;
+  
+  m->set_channel( this. channel, i );
 }

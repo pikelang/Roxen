@@ -2,6 +2,5 @@ constant doc="Convert the channel from rgb to hsv";
 
 void render(mapping args, mapping this, string channel, object id, object m)
 {
-  if(this[channel])
-    this[ channel ] = this[ channel ]->rgb_to_hsv();
+  m->set_channel( this, channel, m->get_channel( this, channel )->rgb2hsv() );
 }

@@ -7,14 +7,17 @@ void render( mapping args, mapping this, string channel, object id, object m)
   string txt = args->text;
   int xp = (int)args->xpos;
   int yp = (int)args->xpos;
-  
   m_delete(args, "xpos");
   m_delete(args, "ypos");
+  m_delete(args, "text");
+
   string prefix = parse_rxml( make_tag("gtext-id", args), id );
   
-  mapping a = ([ "file":prefix+"$"+txt, 
-		 "xpos":xp,
-		 "ypos":yp, ]);
-  werror("file: "+prefix+"$"+txt+"\n");
-  return m->plugin_for( "load" )( a, this, channel, id, m );
+  mapping a = ([ 
+    "file":prefix+"^"+txt, 
+    "xpos":xp,
+    "ypos":yp, 
+  ]);
+
+  return m->plugin_for( "load" )( a, this, channel, id, m ); // cute. :-)
 }

@@ -2,26 +2,24 @@ constant doc = "If channel is 'image', scale both channels in the layer by 'scal
 
 void render(mapping args, mapping this, string channel, object id, object m)
 {
-  if(!this[channel]) return;
+  object i = m->get_channel( this, channel );
+  object a = m->get_channel( this, "alpha" );
+  
+  if(!i) return;
+
   if(args->width || args->height)
   {
+    m->set_channel( this, channel, i->scale( (int)args->width, (int)args->height ));
     if(channel == "image")
-    {
-      if(this->mask) 
-	this->mask = this->mask->scale( (int)args->width, (int)args->height );
-    }
-    this[channel] = this[channel]->scale( (int)args->width, (int)args->height );
+      m->set_channel( this, "alpha", a->scale( (int)args->width, (int)args->height ))
     return;
   }
   
   if(args->scale)
   {
+    m->set_channel( this, channel, i->scale( (float)args->scale ));
     if(channel == "image")
-    {
-      if(this->mask) 
-	this->mask = this->mask->scale( (float)args->scale );
-    }
-    this[channel] = this[channel]->scale( (float)args->scale );
+      m->set_channel( this, "alpha", a->scale( (float)args->scale  ))
     return;
   }
 }

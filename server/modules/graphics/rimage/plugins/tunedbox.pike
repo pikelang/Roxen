@@ -5,8 +5,12 @@ void render( mapping args, mapping this, string channel, object id, object m)
   int ys = (int)(args->height || this->height);
   int xp = (int)args->xpos;
   int yp = (int)args->ypos;
+  object i = m->get_channel( this, channel );
   
-  if(!this[channel]) this[channel] = Image.image( xs+xp, ys+yp );
-  this[channel]->tuned_box( xp,yp,xp+xs-1,yp+ys-1,
-			   Array.map((args->corners||"black,white,black,white")/",", Colors.parse_color));
+  if(!i) 
+    i = Image.image( xs+xp, ys+yp );
+  m->set_channel( this, channel, 
+                  i->tuned_box( xp,yp,xp+xs-1,yp+ys-1,
+                                Array.map((args->corners||"black,white,black,white")/",", 
+                                          Colors.parse_color)));
 }

@@ -3,14 +3,18 @@ constant doc = "Generic matrix filter. Specify a 'matrix' argument with a matrix
 void render( mapping args, mapping this, string channel, object id, object m )
 {
   array color = Colors.parse_color( args->color||"black" );
-  if(!this[channel]) return;
+  object i = m->get_channel( this, channel );
   array matrix = (args->matrix||"0 1 0\n1 2 1\n0 1 0")/"\n";
-  matrix = Array.map(matrix, lambda(string s){
-			       return (array(int))(s/" "-({""}));
-			     });
+
+  matrix = Array.map(matrix, 
+                     lambda(string s)
+                     {
+                       return (array(int))(s/" "-({""}));
+                     });
   
   if(args->divisor = (int)args->divisor)
-    this[channel]=this[channel]->apply_matrix(matrix,@color,args->divisor);
+    i=i->apply_matrix(matrix,@color,args->divisor);
   else
-    this[channel]=this[channel]->apply_matrix(matrix,@color);
+    i=i->apply_matrix(matrix,@color);
+  m->set_channel( this, channel );
 }

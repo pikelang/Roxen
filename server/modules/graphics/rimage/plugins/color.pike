@@ -2,7 +2,9 @@ constant doc="Colorize an image. The red, green and blue values of the pixels ar
 
 void render( mapping args, mapping this, string channel, object id, object m )
 {
-  if(!this[channel]) return;
-  this[channel]=this[channel]->color(@parse_color(args->color||"red"));
+  Image.Image i = m->get_channel( this, channel );
+  if( i ) 
+    i = i->color( Image.Colors[args->color||"red"] );
+  m->set_channel( this, channel, i );
 }
 

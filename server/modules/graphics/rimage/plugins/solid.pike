@@ -5,23 +5,34 @@ constant doc =
 
 void render( mapping args, mapping this, string channel, object id, object m )
 {
-  int xs = (int)(args->width  || this->width);
-  int ys = (int)(args->height || this->height);
   int xp = (int)args->xpos;
   int yp = (int)args->ypos;
+  int xs = (int)(args->width  || (this->xsize()-xp));
+  int ys = (int)(args->height || (this->ysize()-yp));
   array (int) color = Colors.parse_color( args->color || "black" );
+  object i = m->get_channel( this, channel );
+  object a = m->get_channel( this, "alpha" );
 
-  if(!args->replace && this[channel])
+  if(!args->replace && i)
   {
     if(!args["nomask"] && channel == "image")
-      this->mask->box( xp,yp,xp+xs-1,yp+ys-1, 255,255,255, 255-(int)this->alpha);
-    this[channel]->box( xp,yp,xp+xs-1,yp+ys-1, @color, 
-			255-(int)this->alpha);
+    {
+      if(!a)      
+        a = Image.image( xs+xp,ys+yp, 0,0,0 );
+      a->box( xp,yp,xp+xs-1,yp+ys-1, 255,255,255, (int)(255-((int)(args->alpha)*2.55)) );
+      m->set_channel( this, "alpha", a );
+    }
+    i->box( xp,yp,xp+xs-1,yp+ys-1, @color, (int)(255-((int)(args->alpha)*2.55)) );
+    m->set_channel( this, channel, i );
   }
   else
   {
     if(!args["nomask"] && channel == "image")
-      this->mask = Image.image(xs,ys,255,255,255);
-    this[channel] = Image.image( xs,ys, @color );
+    {
+      int av = (int)(255-((int)(args->alpha)*2.55));
+      a = Image.image( xs,ys, av,av,av);
+    } else if(a)
+      a = 0;
+    this->set_image( i, a );
   }
 }
