@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.84 2001/09/11 14:30:47 hop Exp $
+// $Id: global_variables.pike,v 1.85 2001/09/28 23:47:27 nilsson Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -125,17 +125,16 @@ void set_up_http_variables( Protocol o )
 		"This is very useful if you are debugging your own modules "
 		"or writing Pike scripts."));
 
-  defvar("set_cookie", 0, LOCALE(74, "Logging: Set unique user id cookies"),
+  defvar("set_cookie", 0, LOCALE(74, "Logging: Set unique browser id cookies"),
 	 TYPE_FLAG,
-	 LOCALE(75, "If set to Yes, all users of your server whose clients "
-		"support cookies will get a unique 'user-id-cookie', this "
-		"can then be used in the log and in scripts to track "
-		"individual users."));
+	 LOCALE(75, "If set to Yes, all clients that accepts cookies will get "
+		"a unique 'user-id-cookie', which can then be used in the log "
+		"and in scripts to track individual users."));
 
   defvar("set_cookie_only_once", 1,
 	 LOCALE(76, "Logging: Set ID cookies only once"),
 	 TYPE_FLAG,
-	 LOCALE(77, "If set to Yes, Roxen will attempt to set unique user "
+	 LOCALE(77, "If set to Yes, Roxen will attempt to set unique browser "
 		"ID cookies only upon receiving the first request (and "
 		"again after some minutes). Thus, if the user doesn't allow "
 		"the cookie to be set, she won't be bothered with "
