@@ -1,8 +1,13 @@
-<tablify nice preparse cellseparator=, rowseparator=$$>
-  Mailbox,unread,read,mail
+<font size=-1>
+<select onChange='document.forms[0].submit();' 
+        name=mailbox_id>
   <list-mailboxes>
-     $$<font size=-1><mail-a mail_id=0 mailbox_id=#id#>#name#</mail-a></font>,
-     <font size=-1>#unread#</font>,<font size=-1>#read#</font>,<font size=-1>#mail#</font>
- </list-mailboxes>
-</tablify>
+    <option 
+<if variable="mailbox_id is #id#">
+     selected
+</if>
+     value=#id#>#name# (unread: #unread#/#mail#)
+  </list-mailboxes>
+</select>
+</font> <gbutton name=list_unread value="List unread"><gbutton name=list_all value="List all">
 

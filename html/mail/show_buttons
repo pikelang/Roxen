@@ -1,0 +1,5 @@
+<br><if variable=mail_id>
+ <gbutton name=previous value="Previous"><gbutton name=previous_unread value="Previous unread">
+ <gbutton name=next value="Next mail"><gbutton name=next_unread value="Next unread">
+ <gbutton name=reply value="Reply to sender"><gbutton name=followup value="Reply to all">
+</if>

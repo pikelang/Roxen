@@ -1,0 +1,23 @@
+<formoutput quote=$ noparse>
+  <get-mail mail=$mail_id$ noparse>
+    <table cellspacing=0 border=0 cellpadding=1 bgcolor=black><tr><td>
+    <table cellspacing=0 border=0 cellpadding=2 bgcolor=##ffeedd
+      <tr>
+        <td valign=top colspan=4><font color=##550000><b>#subject#</b></td>
+      </tr>
+      <tr>
+        <td valign=top><font color=black>Sender:</td>
+        <td valign=top><font color=##550000>#from#</td>
+        <td valign=top><font color=black>To:</td> 
+        <td valign=top><font color=##550000>#to#</td>
+      </tr>
+      <tr>
+        <td valign=top><font color=black>Sent:</td>
+        <td valign=top><font color=##550000>#reldate#</td>
+        <td valign=botom><font color=black>Date:</td>  
+        <td valign=bottom><font color=##550000><font size=-1>#date#</font></td>
+      </tr>
+    </table></td></tr></table>
+    <mail-body-parts mail=$mail_id$>#body:quote=none#</mail-body-parts>
+  </get-mail>
+</formoutput>

@@ -1,16 +1,2 @@
 <mail-verify-login>
-<use package=gtext_headers>
-<use file=macros>
-
-<mset variable=font from=font       default=lucida>
-<mset variable=bg   from=background default=white>
-<mset variable=fg   from=foreground default=black>
-<mset variable=link from=link       default=darkblue>
-
-<formoutput>
-  <body bgcolor="#bg#"
-        text="#fg#"
-        link="#link#"
-        vlink="#link#"
-        alink="#foreground#">
-</formoutput>
+<body bgcolor="#ffffff" text="#000000" link="#000088" vlink="#000088" alink="#880000">
