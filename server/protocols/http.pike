@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.297 2001/01/19 18:34:47 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.298 2001/01/28 05:44:15 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1871,16 +1871,17 @@ void handle_request( )
     INTERNAL_ERROR( e );
   
   TIMER("conf->handle_request");
-  if( file && file->try_again_later )
-  {
-    if( objectp( file->try_again_later ) )
-      ;
-    else
-      call_out( roxen.handle, file->try_again_later, handle_request );
-    return;
-  }
-  if( file && file->pipe )
-    return;
+  if( file )
+    if( file->try_again_later )
+    {
+      if( objectp( file->try_again_later ) )
+	;
+      else
+	call_out( roxen.handle, file->try_again_later, handle_request );
+      return;
+    }
+    else if( file->pipe )
+      return;
   send_result();
 }
 
