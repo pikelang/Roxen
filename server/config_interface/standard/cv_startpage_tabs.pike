@@ -3,7 +3,6 @@ array pages =
   ({ "welcome",     "",                0,               0             }),
   ({ "usersettings","settings.html",   0,               0             }),
   ({ "users",       "users.html",      "Edit Users",    0             }),
-  ({ "debug_info",  "debug_info.html", "View Settings", "devel_mode"  }),
 });
 
 string parse(object id)

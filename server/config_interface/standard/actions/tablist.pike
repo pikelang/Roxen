@@ -2,7 +2,7 @@ array pages =
 ({
   ({ "status",            "Tasks",               0             }),
   ({ "maintenance",       "Tasks",               0             }),
-  ({ "developer",         "Tasks",               "devel_mode"  }),
+  /*  ({ "developer",         "Tasks",               "devel_mode"  }),*/
   ({ "debug_info",        "Tasks",               0             }),
 });
 

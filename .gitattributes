@@ -52,6 +52,7 @@ map binary
 /server/bin/lsquota.pike foreign_ident
 /server/bin/pdbi.pike foreign_ident
 /server/bin/sqladduser.pike foreign_ident
+/server/config_interface/standard/actions/debug_info.pike foreign_ident
 /server/config_interface/standard/actions/flush.pike foreign_ident
 /server/config_interface/standard/actions/locks.pike foreign_ident
 /server/config_interface/standard/actions/proc.pike foreign_ident
