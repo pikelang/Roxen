@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.141 1998/09/25 13:11:52 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.142 1998/09/25 13:14:38 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1401,7 +1401,7 @@ string tag_compat_exec(string tag,mapping m,object id,object file,
 
   if(m->cgi)
   {
-    m->file = m->cgi;
+    m->file = http_decode_string(m->cgi);
     m_delete(m, "cgi");
     return tag_insert(tag, m, id, file, defines);
   }
@@ -1545,8 +1545,7 @@ string tag_compat_fsize(string tag,mapping m,object id,object file,
 	else
 	  return sizetostring(s[1]);
       } else {
-	// FIXME: Should use defines->timefmt here.
-	return ctime(s[3]);
+	return strftime(defines->timefmt || "c", s[3]);
       }
     }
     return "Error: Cannot stat file";
