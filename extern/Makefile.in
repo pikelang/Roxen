@@ -32,7 +32,7 @@ none-localinstall:
 -install:
 
 fcgi: 
-	(cd fast_cgi; $(MAKE) "CFLAGS=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
+	(cd fast_cgi; $(MAKE) "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
 	cp fast_cgi/cgi-fcgi/cgi-fcgi fcgi
 	@(strip fcgi || echo)
 
@@ -84,7 +84,7 @@ localinstall: fcgi roxen_hostname cgi
 
 clean: 
 	@rm -f roxen_hostname cgi shuffle fcgi *.o  core
-	@(cd fast_cgi; $(MAKE) clean "CFLAGS=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
+	@(cd fast_cgi; $(MAKE) clean "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
 
 spotless: clean
 	@rm -f config.* stamp-h
