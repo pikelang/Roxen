@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.18 2000/01/14 06:08:17 mast Exp $
+//! $Id: module.pmod,v 1.19 2000/01/15 19:35:07 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -451,7 +451,7 @@ class Context
   {
     if (SCOPE_TYPE vars = scopes[scope_name || ""]) {
       mixed val;
-      if (mappingp (vars)) {
+      if (objectp (vars)) {
 	val = ([object(Scope)] vars)->`[] (var, this_object(), scope_name || "");
 	if (val == Void) return ([])[0];
       }
