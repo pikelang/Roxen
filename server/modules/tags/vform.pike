@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.24 2001/05/22 20:10:46 nilsson Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.25 2001/08/21 20:48:09 mast Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -229,6 +229,7 @@ class TagWizzVInput {
   inherit RXML.Tag;
   constant name="wizz";
   constant plugin_name="vinput";
+  constant flags = RXML.FLAG_DONT_CACHE_RESULT;
 
   RXML.Tag get_tag() {
     return TagVInput();
@@ -264,6 +265,10 @@ class TagWizzVInput {
 class TagVForm {
   inherit RXML.Tag;
   constant name = "vform";
+
+  // Can't be cached due to the use of id->misc. That's no big deal
+  // however, since form stuff like this hardly can be cached anyway.
+  constant flags = RXML.FLAG_DONT_CACHE_RESULT;
 
   class TagVInput {
     inherit VInput;
@@ -392,14 +397,16 @@ class TagVForm {
     }
   }
 
-  RXML.TagSet internal = RXML.TagSet("TagVForm.internal", ({ TagVInput(),
-							     TagReload(),
-							     TagClear(),
-							     TagVSelect(),
-							     TagIfVFailed(),
-							     TagIfVVerified(),
-							     TagVerifyFail(),
-  }) );
+  // This tag set can probably be shared, but I don't know for sure. /mast
+  RXML.TagSet internal = RXML.TagSet (module_identifier() + "/TagVForm.internal",
+				      ({ TagVInput(),
+					 TagReload(),
+					 TagClear(),
+					 TagVSelect(),
+					 TagIfVFailed(),
+					 TagIfVVerified(),
+					 TagVerifyFail(),
+				      }) );
 
   class Frame {
     inherit RXML.Frame;
