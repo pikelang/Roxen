@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.136 2004/05/10 21:38:45 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.137 2004/05/12 21:21:56 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -353,6 +353,7 @@ mapping(string:mixed) lock_file(string path, DAVLock lock, RequestID id)
   if(query("check_auth") &&  (!id->conf->authenticate( id ) ) ) {
     TRACE_LEAVE("PUT: Permission denied");
     return
+      // FIXME: Sane realm.
       Roxen.http_auth_required("foo",
 			       "<h1>Permission to 'PUT' files denied</h1>");
   }
@@ -501,12 +502,12 @@ void done_with_put( array(object|string|int) id_arr )
 
   if (putting[from] && (putting[from] != 0x7fffffff)) {
     // Truncated!
-    id->send_result(http_low_answer(400,
-				    "<h2>Bad Request - "
-				    "Expected more data.</h2>"));
+    id->send_result(Roxen.http_status(400,
+				      "Bad Request - "
+				      "Expected more data."));
   } else {
-    id->send_result(http_low_answer((size < 0)?201:200,
-				    "<h2>Transfer Complete.</h2>"));
+    id->send_result(Roxen.http_status((size < 0)?201:200,
+				      "Transfer Complete."));
   }
 }
 
@@ -530,8 +531,8 @@ void got_put_data( array(object|string|int) id_arr, string data )
     to->close();
     from->set_blocking();
     m_delete(putting, from);
-    id->send_result(http_low_answer(413, "<h2>Out of disk quota.</h2>",
-				    "413 Out of disk quota"));
+    // FIXME: Ought to be 507 when it's a WebDAV request?
+    id->send_result(Roxen.http_status(413, "Out of disk quota."));
     return;
   }
 
@@ -541,7 +542,8 @@ void got_put_data( array(object|string|int) id_arr, string data )
     to->close();
     from->set_blocking();
     m_delete(putting, from);
-    id->send_result(http_low_answer(413, "<h2>Disk full.</h2>"));
+    // FIXME: Ought to be 507 when it's a WebDAV request?
+    id->send_result(Roxen.http_status(413, "Disk full."));
     return;
   } else {
     if (id->misc->quota_obj &&
@@ -549,8 +551,8 @@ void got_put_data( array(object|string|int) id_arr, string data )
       to->close();
       from->set_blocking();
       m_delete(putting, from);
-      id->send_result(http_low_answer(413, "<h2>Out of disk quota.</h2>",
-				      "413 Out of disk quota"));
+      // FIXME: Ought to be 507 when it's a WebDAV request?
+      id->send_result(Roxen.http_status(413, "Out of disk quota."));
       return;
     }
     if (putting[from] != 0x7fffffff) {
@@ -610,14 +612,14 @@ mapping make_collection(string coll, RequestID id)
 
   if (!norm_f) {
     TRACE_LEAVE(sprintf("%s: Bad path", id->method));
-    return Roxen.http_low_answer(405, "Bad path.");
+    return Roxen.http_status(405, "Bad path.");
   }
 
   if(!query("put"))
   {
     TRACE_LEAVE(sprintf("%s disallowed (since PUT is disallowed)",
 			id->method));
-    return http_low_answer(405, "Disallowed.");
+    return Roxen.http_status(405, "Disallowed.");
   }
 
   // FIXME: Is this the correct filename?
@@ -627,14 +629,15 @@ mapping make_collection(string coll, RequestID id)
     TRACE_LEAVE(sprintf("%s failed. Directory name already exists. ",
 			id->method));
     if (id->method == "MKCOL") {
-      return http_low_answer(405,
-			     "<h2>Collection already exists.</h2>");
+      return Roxen.http_status(405,
+			       "Collection already exists.");
     }
     return 0;
   }
 
   if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
     TRACE_LEAVE(sprintf("%s: Permission denied", id->method));
+    // FIXME: Sane realm.
     return Roxen.http_auth_required("foo",
 				    sprintf("<h1>Permission to '%s' denied</h1>",
 					    id->method));
@@ -656,10 +659,8 @@ mapping make_collection(string coll, RequestID id)
 		 coll);
     TRACE_LEAVE(sprintf("%s: Contains symlinks. Permission denied",
 			id->method));
-    return http_low_answer(403, "<h2>Permission denied.</h2>");
+    return Roxen.http_status(403, "Permission denied.");
   }
-
-  werror("mkdir(%O)\n", norm_f);
 
   int code = mkdir(norm_f);
   int err_code = errno();
@@ -671,7 +672,7 @@ mapping make_collection(string coll, RequestID id)
     chmod(norm_f, 0777 & ~(id->misc->umask || 022));
     TRACE_LEAVE(sprintf("%s: Success", id->method));
     TRACE_LEAVE(sprintf("%s: Success", id->method));
-    return Roxen.http_low_answer(201, "Created");
+    return Roxen.http_status(201, "Created");
   }
 
   TRACE_LEAVE(sprintf("%s: Failed", id->method));
@@ -686,7 +687,7 @@ mapping make_collection(string coll, RequestID id)
 #endif
       ) {
     TRACE_LEAVE(sprintf("%s: Missing intermediate.", id->method));
-    return Roxen.http_low_answer(409, "Missing intermediate.");
+    return Roxen.http_status(409, "Missing intermediate.");
   } else {
     TRACE_LEAVE(sprintf("%s: Failed.", id->method));
   }
@@ -730,8 +731,8 @@ mixed find_file( string f, RequestID id )
 			  ), oldf, normalized_path, norm_f);
       TRACE_LEAVE("");
       TRACE_LEAVE("Permission denied.");
-      return http_low_answer(403, "<h2>File exists, but access forbidden "
-			     "by user</h2>");
+      return Roxen.http_status(403, "File exists, but access forbidden "
+			       "by user");
     }
 
     /* Adjust not_query */
@@ -808,8 +809,8 @@ mixed find_file( string f, RequestID id )
 
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Permission denied.");
-	return http_low_answer(403, "<h2>File exists, but access forbidden "
-			       "by user</h2>");
+	return Roxen.http_status(403, "File exists, but access forbidden "
+				 "by user");
       }
 
       id->realfile = norm_f;
@@ -859,14 +860,15 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE(sprintf("%s failed. Directory name already exists. ",
 			  id->method));
       if (id->method == "MKCOL") {
-	return http_low_answer(405,
-			       "<h2>Collection already exists.</h2>");
+	return Roxen.http_status(405,
+				 "Collection already exists.");
       }
       return 0;
     }
 
     if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
       TRACE_LEAVE(sprintf("%s: Permission denied", id->method));
+      // FIXME: Sane realm.
       return Roxen.http_auth_required("foo",
 				sprintf("<h1>Permission to '%s' denied</h1>",
 					id->method));
@@ -881,7 +883,7 @@ mixed find_file( string f, RequestID id )
 		   oldf);
       TRACE_LEAVE(sprintf("%s: Contains symlinks. Permission denied",
 			  id->method));
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return Roxen.http_status(403, "Permission denied.");
     }
 
     code = mkdir(f);
@@ -895,7 +897,7 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE(sprintf("%s: Success", id->method));
       TRACE_LEAVE("Success");
       if (id->method == "MKCOL") {
-	return http_low_answer(201, "Created");
+	return Roxen.http_status(201, "Created");
       }
       return Roxen.http_string_answer("Ok");
     } else {
@@ -911,9 +913,9 @@ mixed find_file( string f, RequestID id )
 	    2
 #endif
 	    ) {
-	  return http_low_answer(409, "Missing intermediate.");
+	  return Roxen.http_status(409, "Missing intermediate.");
 	} else {
-	  return http_low_answer(507, "Failed.");
+	  return Roxen.http_status(507, "Failed.");
 	}
       }
       return 0;
@@ -937,6 +939,7 @@ mixed find_file( string f, RequestID id )
 
     if(query("check_auth") &&  (!id->conf->authenticate( id ) ) ) {
       TRACE_LEAVE("PUT: Permission denied");
+      // FIXME: Sane realm.
       return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'PUT' files denied</h1>");
     }
@@ -954,15 +957,15 @@ mixed find_file( string f, RequestID id )
       errors++;
       report_warning(LOCALE(47,"Creation of %O failed. Out of quota.\n"),f);
       TRACE_LEAVE("PUT: Out of quota.");
-      return http_low_answer(413, "<h2>Out of disk quota.</h2>",
-			     "413 Out of disk quota");
+      // FIXME: Ought to be 507 when it's a WebDAV request?
+      return Roxen.http_status(413, "Out of disk quota.");
     }
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       errors++;
       report_error(LOCALE(46,"Creation of %O failed. Permission denied.\n"),f);
       TRACE_LEAVE("PUT: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return Roxen.http_status(403, "Permission denied.");
     }
 
     SETUID_TRACE("Saving file", 0);
@@ -1012,8 +1015,8 @@ mixed find_file( string f, RequestID id )
 	if (!id->misc->quota_obj->allocate(f, bytes)) {
 	  TRACE_LEAVE("PUT: A string");
 	  TRACE_LEAVE("PUT: Out of quota");
-	  return http_low_answer(413, "<h2>Out of disk quota.</h2>",
-				 "413 Out of disk quota");
+	  // FIXME: Ought to be 507 when it's a WebDAV request?
+	  return Roxen.http_status(413, "Out of disk quota.");
 	}
       }
     }
@@ -1021,8 +1024,9 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE("PUT: Just a string");
       TRACE_LEAVE("Put: Success");
       if (size < 0) {
-	return Roxen.http_low_answer(201, "Created.");
+	return Roxen.http_status(201, "Created.");
       } else {
+	// FIXME: Isn't 204 better? /mast
 	return Roxen.http_string_answer("Ok");
       }
     }
@@ -1056,6 +1060,7 @@ mixed find_file( string f, RequestID id )
 
     if(query("check_auth") &&  (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("CHMOD: Permission denied");
+      // FIXME: Sane realm.
       return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'CHMOD' files denied</h1>");
     }
@@ -1071,7 +1076,7 @@ mixed find_file( string f, RequestID id )
       privs = 0;
       errors++;
       TRACE_LEAVE("CHMOD: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return Roxen.http_status(403, "Permission denied.");
     }
 
     array err = catch(chmod(f, id->misc->mode & 0777));
@@ -1123,6 +1128,7 @@ mixed find_file( string f, RequestID id )
 
     if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("MV: Permission denied");
+      // FIXME: Sane realm.
       return Roxen.http_auth_required("foo",
 				"<h1>Permission to 'MV' files denied</h1>");
     }
@@ -1150,7 +1156,7 @@ mixed find_file( string f, RequestID id )
 	 (contains_symlinks(path, id->misc->move_from)))) {
       errors++;
       TRACE_LEAVE("MV: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return Roxen.http_status(403, "Permission denied.");
     }
 
     // FIXME: What about moving of directories containing locked files?
@@ -1206,6 +1212,7 @@ mixed find_file( string f, RequestID id )
 
     if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("MOVE: Permission denied");
+      // FIXME: Sane realm.
       return Roxen.http_auth_required("foo",
                                 "<h1>Permission to 'MOVE' files denied</h1>");
     }
@@ -1240,7 +1247,7 @@ mixed find_file( string f, RequestID id )
       privs = 0;
       errors++;
       TRACE_LEAVE("MOVE: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return Roxen.http_status(403, "Permission denied.");
     }
 
     if (mapping(string:mixed) ret =
@@ -1277,10 +1284,12 @@ mixed find_file( string f, RequestID id )
       if ((overwrite == DO_OVERWRITE) || (size > -1)) {
 	mapping(string:mixed) res =
 	  recurse_delete_files(new_uri, id);
-	if (res && res->error >= 300) {
+	if (res && (!sizeof (res) || res->error >= 300)) {
 	  privs = 0;
 	  TRACE_LEAVE("MOVE: Recursive delete failed.");
-	  return Roxen.http_status(412);
+	  if (sizeof (res))
+	    set_status_for_path (new_uri, res->error, res->rettext);
+	  return ([]);
 	}
       } else {
 	privs = 0;
@@ -1335,14 +1344,14 @@ mixed find_file( string f, RequestID id )
 
     if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
       TRACE_LEAVE("DELETE: Permission denied");
-      return http_low_answer(403, "<h1>Permission to DELETE file denied</h1>");
+      return Roxen.http_status(403, "Permission to DELETE file denied");
     }
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       errors++;
       report_error(LOCALE(48,"Deletion of %s failed. Permission denied.\n"),f);
       TRACE_LEAVE("DELETE: Contains symlinks");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return Roxen.http_status(403, "Permission denied.");
     }
 
     if ((size < 0) &&
@@ -1353,7 +1362,7 @@ mixed find_file( string f, RequestID id )
       //   header was used on it.
       TRACE_LEAVE(sprintf("DELETE: Bad depth header: %O.",
 			  id->request_headers->depth));
-      return http_low_answer(400, "<h2>Unsupported depth.</h2>");
+      return Roxen.http_status(400, "Unsupported depth.");
     }
 
     if (size < 0) {
@@ -1363,7 +1372,9 @@ mixed find_file( string f, RequestID id )
 	SIMPLE_TRACE_LEAVE("DELETE: Recursive write access denied.");
 	return res;
       }
+#if 0
       report_notice(LOCALE(64,"DELETING the directory %s.\n"), f);
+#endif
 
       accesses++;
 
@@ -1383,7 +1394,7 @@ mixed find_file( string f, RequestID id )
 	  }
 	} else {
 	  TRACE_LEAVE("DELETE: Failed to delete directory.");
-	  return http_low_answer(403, "<h2>Failed to delete directory.</h2>");
+	  return Roxen.http_status(403, "Failed to delete directory.");
 	}
       }
 
@@ -1399,7 +1410,9 @@ mixed find_file( string f, RequestID id )
 	return res;
       }
 
+#if 0
       report_notice(LOCALE(49,"DELETING the file %s.\n"),f);
+#endif
 
       accesses++;
 
@@ -1425,7 +1438,7 @@ mixed find_file( string f, RequestID id )
       }
     }
     TRACE_LEAVE("DELETE: Success");
-    return http_low_answer(204,(f+" DELETED from the server"));
+    return Roxen.http_status(204,(f+" DELETED from the server"));
 
   default:
     id->misc->error_code = 501;
@@ -1443,15 +1456,16 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
   Stat source_st = stat_file(source, id);
   if (!source_st) {
     TRACE_LEAVE("COPY: Source doesn't exist.");
-    return Roxen.http_low_answer(404, "File not found.");
+    return Roxen.http_status(404, "File not found.");
   }
   if (!query("put")) {
     TRACE_LEAVE("COPY: Put not allowed.");
-    return Roxen.http_low_answer(405, "Not allowed.");
+    return Roxen.http_status(405, "Not allowed.");
   }
   if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
     TRACE_LEAVE("COPY: Authentication required.");
     return
+      // FIXME: Sane realm.
       Roxen.http_auth_required("foo",
 			       sprintf("<h1>Permission to 'COPY' denied</h1>",
 				       id->method));
@@ -1465,18 +1479,18 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     report_error(LOCALE(46,"Copy to %O failed. Permission denied.\n"),
 		 dest);
     TRACE_LEAVE("COPY: Contains symlinks. Permission denied");
-    return http_low_answer(403, "<h2>Permission denied.</h2>");
+    return Roxen.http_status(403, "Permission denied.");
   }
   Stat dest_st = stat_file(dest, id);
   if (dest_st) {
     switch(overwrite) {
     case NEVER_OVERWRITE:
       TRACE_LEAVE("COPY: Destination already exists.");
-      return Roxen.http_low_answer(412, "Destination already exists.");
+      return Roxen.http_status(412, "Destination already exists.");
     case DO_OVERWRITE:
       if (!query("delete")) {
 	TRACE_LEAVE("COPY: Deletion not allowed.");
-	return Roxen.http_low_answer(405, "Not allowed.");
+	return Roxen.http_status(405, "Not allowed.");
       }
       object privs;
       SETUID_TRACE("Deleting destination", 0);
@@ -1491,6 +1505,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 	if (!rm(dest_path)) {
 	  privs = 0;
 	  SIMPLE_TRACE_LEAVE("COPY: Delete failed.");
+	  // Shouldn't this bail out? /mast
 #if constant(system.EEXIST)
 	  if (errno() != system.EEXIST)
 #endif
@@ -1504,6 +1519,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 	if (!rm(dest_path)) {
 	  SIMPLE_TRACE_LEAVE("COPY: File deletion failed.");
 	  privs = 0;
+	  // Shouldn't this bail out? /mast
 #if constant(system.EEXIST)
 	  if (errno() != system.EEXIST)
 #endif
@@ -1522,10 +1538,10 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
       if ((source_st->isreg != dest_st->isreg) ||
 	  (source_st->isdir != dest_st->isdir)) {
 	TRACE_LEAVE("COPY: Resource types for source and destination differ.");
-	return Roxen.http_low_answer(412, "Destination and source are different resource types.");
+	return Roxen.http_status(412, "Destination and source are different resource types.");
       } else if (source_st->isdir) {
 	TRACE_LEAVE("Already done (both are directories).");
-	return Roxen.http_low_answer(204, "Destination already existed.");
+	return Roxen.http_status(204, "Destination already existed.");
       }
       break;
     }
@@ -1544,7 +1560,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
       chmod(dest_path, 0777 & ~(id->misc->umask || 022));
       TRACE_LEAVE("COPY: Success");
       TRACE_LEAVE("Success");
-      return http_low_answer(dest_st?204:201, "Created");
+      return Roxen.http_status(dest_st?204:201, "Created");
     } else {
       TRACE_LEAVE("COPY: Failed");
       TRACE_LEAVE("Failure");
@@ -1557,9 +1573,9 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 	  2
 #endif
 	  ) {
-	return http_low_answer(409, "Missing intermediate.");
+	return Roxen.http_status(409, "Missing intermediate.");
       } else {
-	return http_low_answer(507, "Failed.");
+	return Roxen.http_status(507, "Failed.");
       }
     }
   } else {
@@ -1574,7 +1590,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
       report_error(LOCALE(46,"Copy to %O failed. Permission denied.\n"),
 		   dest);
       TRACE_LEAVE("COPY: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
+      return Roxen.http_status(403, "Permission denied.");
     }
     puts++;
 
@@ -1586,8 +1602,8 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
       report_warning(LOCALE(47,"Creation of %O failed. Out of quota.\n"),
 		     dest_path);
       TRACE_LEAVE("PUT: Out of quota.");
-      return http_low_answer(413, "<h2>Out of disk quota.</h2>",
-			     "413 Out of disk quota");
+      // FIXME: Shouldn't this be 507?
+      return Roxen.http_status(413, "Out of disk quota.");
     }
     object source_file = open(source_path, "r");
     if (!source_file) {
