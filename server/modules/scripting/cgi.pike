@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.32 1997/08/12 06:32:31 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.33 1997/08/13 14:28:54 grubba Exp $";
 
 #include <module.h>
 
@@ -25,21 +25,26 @@ mapping my_build_env_vars(string f, object id, string|void path_info)
 {
   mapping new = build_env_vars(f, id, path_info);
 
-  if(QUERY(rawauth) && id->rawauth)
-    new["HTTP_AUTHORIZATION"] = (string)id->rawauth;
-  if(QUERY(clearpass) && id->realauth)
-    new["REMOTE_PASSWORD"] = (id->realauth/":")[1];
-
-  if(id->auth && !id->auth[0] && id->realauth ) {
-    new["REMOTE_USER"] = (id->realauth/":")[0];
-    env["AUTH_TYPE"] = "";
-  }
   if(QUERY(Enhancements))
     new |= build_roxen_env_vars(id);
   
   if(id->misc->ssi_env)
     new |= id->misc->ssi_env;
   
+  if(QUERY(rawauth) && id->rawauth) {
+    new["HTTP_AUTHORIZATION"] = (string)id->rawauth;
+  } else {
+    m_delete(new, "HTTP_AUTHORIZATION");
+  }
+  if(QUERY(clearpass) && id->auth && id->realauth ) {
+    new["REMOTE_USER"] = (id->realauth/":")[0];
+    new["REMOTE_PASSWORD"] = (id->realauth/":")[1];
+  } else {
+    m_delete(new, "REMOTE_PASSWORD");
+  }
+
+  new["AUTH_TYPE"] = "Basic";
+
   return new|env|(QUERY(env)?getenv():([]));
 }
 
