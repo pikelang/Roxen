@@ -64,9 +64,13 @@ string describe_tags( object m, int q )
 
 string describe_provides( object m, int q )
 {
-  if( arrayp( m->query_provides() ) )
-    return String.implode_nicely( m->query_provides() );
-  return m->query_provides();
+  array(string)|multiset(string)|string provides = m->query_provides();
+  if (multisetp(provides)) {
+    provides = (array(string))provides;
+  }
+  if( arrayp(provides) )
+    return String.implode_nicely(provides);
+  return provides;
 }
 
 string describe_type( object m, int t )
@@ -236,7 +240,9 @@ string module_page( RequestID id, string conf, string module )
 
 string parse( RequestID id )
 {
-  array path = ((id->misc->path_info||"")/"/")-({""});
+  array(string) path = ((id->misc->path_info||"")/"/")-({""});
+
+  // roxen_perror(sprintf("site_content:parse(): path: %{%O,%}\n", path));
   
   if( id->variables->section )
     sscanf( id->variables->section, "%s\0", id->variables->section );
@@ -244,7 +250,7 @@ string parse( RequestID id )
   if( !sizeof( path )  )
     return "Hm?";
   
-  object conf = roxen->find_configuration( path[0] );
+  object(Configuration) conf = roxen->find_configuration( path[0] );
   id->misc->current_configuration = conf;
 
   if( sizeof( path ) == 1 )
@@ -293,7 +299,7 @@ path[ 0 ]+#"\" section=\"¤section:quote=dtag¤\">
 
      case "modules":
        if( sizeof( path ) == 2 )
-         return module_global_page( id, path[0] );
+         return module_global_page( id, conf );
        else
          return module_page( id, path[0], path[2] );
     }
