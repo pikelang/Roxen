@@ -5,14 +5,14 @@
 
 <content>
 <cv-startpage>
-<table>
-  <submit-gbutton align="right"> <translate id="bA">Save</translate> </submit-gbutton><br clear="all" />
-  <emit source="config-settings">
-    <tr><td width="20%"><b>&_.name;</b></td><td>&_.form:none;</td></tr>
-    <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</td></tr>
-  </emit>
-</table>
-  <submit-gbutton align="right"> <translate id="bA">Save</translate> </submit-gbutton>
+  <cf-save/><br clear="all" />
+  <table>
+    <emit source="config-settings">
+      <tr><td width="20%"><b>&_.name;</b></td><td>&_.form:none;</td></tr>
+      <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
+    </emit>
+  </table>
+  <cf-save/>
 </cv-startpage>
 
 </content>
