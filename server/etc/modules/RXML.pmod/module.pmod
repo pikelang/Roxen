@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.226 2001/08/21 14:46:04 mast Exp $
+// $Id: module.pmod,v 1.227 2001/08/21 18:03:55 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -63,6 +63,7 @@ class RequestID { };
 // #define PARSER_OBJ_DEBUG
 // #define FRAME_DEPTH_DEBUG
 // #define RXML_PCODE_DEBUG
+// #define RXML_PCODE_UPDATE_DEBUG
 
 
 #ifdef RXML_OBJ_DEBUG
@@ -117,6 +118,12 @@ class RequestID { };
 #  define FRAME_DEPTH_MSG(msg...) report_debug (msg)
 #else
 #  define FRAME_DEPTH_MSG(msg...)
+#endif
+
+#ifdef RXML_PCODE_UPDATE_DEBUG
+#  define PCODE_UPDATE_MSG(msg...) report_debug (msg)
+#else
+#  define PCODE_UPDATE_MSG(msg...)
 #endif
 
 #define _LITERAL(X) #X
@@ -386,6 +393,7 @@ class Tag
 #define EVAL_FRAME(_frame, _ctx, _parser, _type, _res)			\
   do {									\
     EVAL_ARGS_FUNC argfunc = 0;						\
+    int orig_state_updated = _ctx->state_updated;			\
     if (mixed err = catch {						\
       _res = _frame->_eval (_ctx, _parser, _type);			\
       if (PCode p_code = _parser->p_code)				\
@@ -404,8 +412,15 @@ class Tag
 	throw (_parser);						\
       }									\
       else {								\
-	if (PCode p_code = _parser->p_code)				\
+	if (PCode p_code = _parser->p_code) {				\
+	  PCODE_UPDATE_MSG (						\
+	    "%O: Restoring p-code update count from %d to %d "		\
+	    "since the frame is stored unevaluated "			\
+	    "due to exception.\n",					\
+	    _frame, _ctx->state_updated, orig_state_updated);		\
+	  _ctx->state_updated = orig_state_updated;			\
 	  p_code->add_frame (_ctx, _frame, PCode);			\
+	}								\
 	throw (err);							\
       }									\
   } while (0)
@@ -1366,6 +1381,12 @@ class Context
   //! implementors that means whenever the value that
   //! @[RXML.Frame.save] would return changes.
   {
+#ifdef RXML_PCODE_UPDATE_DEBUG
+    array a = backtrace();
+    PCODE_UPDATE_MSG ("%O: P-code update by request from %s",
+		      this_object(),
+		      describe_backtrace (a[sizeof (a) - 2..sizeof (a) - 2]));
+#endif
     state_updated++;
   }
 
@@ -1752,6 +1773,12 @@ class Context
   //! used by some other tag or variable later in the evaluation. In
   //! other situations it's perfectly alright to access @[misc]
   //! directly.
+  //!
+  //! @note
+  //! Neither @[index] nor @[value] is copied when stored in the
+  //! cache. That means that you probably don't want to change them
+  //! destructively, or else those changes can have propagated
+  //! "backwards" when the cached p-code is used.
   {
     if (mapping var_chg = misc->variable_changes) {
       if (stringp (index)) index = encode_value_canonic (index);
@@ -1874,6 +1901,8 @@ class Context
     mixed res;
     PCode p_code;
     int orig_make_p_code = make_p_code, orig_state_updated = state_updated;
+    PCODE_UPDATE_MSG ("%O: Saved p-code update count %d before eval_and_compile\n",
+		      this_object(), orig_state_updated);
     make_p_code = 1;
     Parser parser = type->get_parser (
       this_object(), tag_set, 0, stale_safe ? RenewablePCode (0) : PCode (0));
@@ -1882,10 +1911,16 @@ class Context
       res = parser->eval();
       p_code = parser->p_code;
       type->give_back (parser, tag_set);
+      PCODE_UPDATE_MSG ("%O: Restoring p-code update count from %d to %d "
+			"after eval_and_compile\n",
+			this_object(), state_updated, orig_state_updated);
       make_p_code = orig_make_p_code, state_updated = orig_state_updated;
       return ({res, p_code});
     };
     type->give_back (parser, tag_set);
+    PCODE_UPDATE_MSG ("%O: Restoring p-code update count from %d to %d "
+		      "after eval_and_compile\n",
+		      this_object(), state_updated, orig_state_updated);
     make_p_code = orig_make_p_code, state_updated = orig_state_updated;
     throw (err);
   }
@@ -1982,7 +2017,7 @@ class Context
 
   int state_updated;
   // Nonzero if the persistent state of the evaluated rxml has
-  // changed.
+  // changed. Never negative.
 
   PikeCompile p_code_comp;
   // The PikeCompile object for collecting any produce Pike byte code
@@ -3472,7 +3507,7 @@ class Frame
 
   process_tag:
     while (1) {			// Looping only when continuing in streaming mode.
-      if (mixed err = catch {	// Catch errors but don't allow unwinds.
+      if (mixed err = catch {
 	if (array state = ctx->unwind_state && ctx->unwind_state[this_object()]) {
 	  object ignored;
 	  [ignored, eval_state, in_args, in_content, iter,
@@ -3524,6 +3559,8 @@ class Frame
 	      // doesn't provide one?
 	      if (!ctx->p_code_comp) ctx->p_code_comp = PikeCompile();
 	      in_args = _prepare (ctx, type, args && args + ([]), p_code);
+	      PCODE_UPDATE_MSG ("%O: P-code update since args has been compiled.\n",
+				this_object());
 	      ctx->state_updated++;
 	    }
 	    else
@@ -3766,6 +3803,8 @@ class Frame
 		    p_code->finish();
 		    if (stringp (in_content) && ctx->make_p_code) {
 		      in_content = p_code;
+		      PCODE_UPDATE_MSG ("%O: P-code update since content "
+					"has been compiled.\n", this_object());
 		      ctx->state_updated++;
 		    }
 		    subevaler->p_code = 0;
@@ -6819,7 +6858,12 @@ class PCode
 	  throw (this_object());
 	}
 	else {
-	  if (ctx->state_updated > update_count) flags |= UPDATED;
+	  PCODE_UPDATE_MSG (
+	    "%O: Restoring p-code update count from %d to %d "
+	    "since the frame is stored unevaluated "
+	    "due to exception.\n",
+	    item, _ctx->state_updated, update_count);
+	  ctx->state_updated = update_count;
 	  if (objectp (item) && item->is_RXML_p_code_frame) {
 	    // If the exception comes from a frame, handle_exception
 	    // already has been called. Thus we don't try to recover
