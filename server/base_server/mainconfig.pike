@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.81 1997/10/16 12:16:24 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.82 1997/10/18 20:53:20 grubba Exp $";
 //inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -1192,13 +1192,13 @@ string status_row(object node)
 	   "</td>\n<td>&nbsp;</td><td  width=100% height=39>"
 	   "<table cellpadding=0 cellspacing=0 width=100% border=0>\n"
 	   "<tr width=\"100%\">\n"
-	   "<td width=\"1000%\" align=right valigh=center height=28>"
+	   "<td width=\"100%\" align=right valigh=center height=28>"
 	   +describe_node_path(node)+"</td>"
 	   "</tr><tr width=\"100%\">"
 	   "<td bgcolor=\"#003366\" align=right height=12 width=\"100%\">"
 	   "<font color=white size=-2>Administration Interface</font>"
-	   "</td></table>"
-	   "\n<td>&nbsp;</td></tr>\n</table><br>");
+	   "</td></tr></table></td>"
+	   "\n</tr>\n</table><br>");
 }
 
 mapping logged = ([ ]);
