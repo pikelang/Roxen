@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.179 2000/03/28 16:33:56 nilsson Exp $
+// $Id: rxml.pike,v 1.180 2000/03/28 22:16:48 nilsson Exp $
 
 inherit "rxmlhelp";
 #include <request_trace.h>
@@ -1497,7 +1497,6 @@ class IfIs
     if(sizeof(arr)==1) return !!var;
     string is=lower_case(arr[2..]*" ");
 
-    werror("IF: %O %O %O\n",value,var,is);
     if(arr[1]=="==" || arr[1]=="=" || arr[1]=="is")
       return ((is==var)||glob(is,var)||
             sizeof(filter( is/",", glob, var )));
