@@ -2124,10 +2124,7 @@ variabeln sätts till ett värde större än 14.</t>
 <t>Binärdata</t>
 </str>
 
-<str id="373">
-<o>Key</o>
-<t>Nyckel</t>
-</str>
+
 
 <str id="374">
 <o>rows</o>
@@ -3156,5 +3153,11 @@ server must be a MySQL server, nothing else will work.
 <str id="506">
 <new/>
 <o>Member of the %s database group</o>
+<t></t>
+</str>
+
+<str id="507">
+<new/>
+<o>Cannot list fields in %s databases</o>
 <t></t>
 </str>

@@ -1994,10 +1994,7 @@ as the name of its log file directory.
 <t>Bytecode-Daten</t>
 </str>
 
-<str id="373">
-<o>Key</o>
-<t>Schlüssel</t>
-</str>
+
 
 <str id="374">
 <o>rows</o>
@@ -2920,4 +2917,10 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <str id="506">
 <o>Member of the %s database group</o>
 <t>Mitglieder der Datenbankgruppe %s</t>
+</str>
+
+<str id="507">
+<new/>
+<o>Cannot list fields in %s databases</o>
+<t></t>
 </str>

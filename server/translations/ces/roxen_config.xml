@@ -2120,11 +2120,7 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="373">
-<new/>
-<o>Key</o>
-<t></t>
-</str>
+
 
 <str id="374">
 <new/>
@@ -3168,5 +3164,11 @@ server must be a MySQL server, nothing else will work.
 <str id="506">
 <new/>
 <o>Member of the %s database group</o>
+<t></t>
+</str>
+
+<str id="507">
+<new/>
+<o>Cannot list fields in %s databases</o>
 <t></t>
 </str>
