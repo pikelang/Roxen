@@ -4,7 +4,7 @@
 // Updated 2000-06-14 from http://lcweb.loc.gov/standards/iso639-2/
 
 // ISO 639-2/T
-private mapping(string:string) languages=([
+static mapping(string:string) languages=([
   "aar":"Afar",
   "abk":"Abkhazian",
   "ace":"Achinese",
@@ -445,7 +445,11 @@ string get_language(string code) {
   return languages[code];
 }
 
-private mapping(string:string) conversion=([
+mapping list_languages() {
+  return languages+([]);
+}
+
+static mapping(string:string) conversion=([
   "aa":"aar",
   "ab":"abk",
   "ae":"ave",
@@ -608,4 +612,8 @@ private mapping(string:string) conversion=([
 
 string map_639_1(string code) {
   return conversion[code];
+}
+
+mapping list_639_1() {
+  return conversion+([]);
 }
