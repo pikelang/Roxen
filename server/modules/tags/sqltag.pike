@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.45 2000/02/20 22:46:05 kuntri Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.46 2000/02/21 17:26:50 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -28,9 +28,10 @@ constant module_desc="This module gives the three tags &lt;SQLQUERY&gt;, "
 TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
-"sqltable":"
-<desc tag>
+"sqltable":#"
+<desc tag><short>
  Creates an HTML or ASCII table from the results of an SQL query.
+</short>
 </desc>
 
 <attr name=ascii>
@@ -40,12 +41,13 @@ constant tagdoc=([
 </attr>
 
 <attr name=host type=database>
- Which database to connect to, usually a symbolic name. If omitted the
- default database will be used.
+ Which database to connect to, usually a symbolic name set in the
+ <module>SQL Databases</module> module. If omitted the default
+ database will be used.
 </attr>
 
-<attr name=query>
- The actual SQL-query.
+<attr name=SQL statement>
+ The actual SQL-statement.
 </attr>
 
 <attr name=quiet>
@@ -57,20 +59,21 @@ constant tagdoc=([
  Useful if you wish to dynamically build the query.
 </attribute>",
 
-"sqlquery":"
-<desc tag>
- Executes an SQL query, but doesn't do anything with the result. This
- is mostly used for SQL queries that change the contents of the
- database, for example INSERT or UPDATE.
+"sqlquery":#"
+<desc tag><short>
+ Executes an SQL query, but doesn't do anything with the
+ result.</short> This is mostly used for SQL queries that change the
+ contents of the database, for example INSERT or UPDATE.
 </desc>
 
 <attr name=host type=database>
- Which database to connect to, usually a symbolic name. If omitted the
- default database will be used.
+ Which database to connect to, usually a symbolic name set in the
+ <module>SQL Databases</module> module. If omitted the default
+ database will be used.
 </attr>
 
-<attr name=query type=SQL query>
- The actual SQL-query.
+<attr name=query type=SQL statement>
+ The actual SQL-statement.
 </attr>
 
 <attr name=quiet>
@@ -80,52 +83,13 @@ constant tagdoc=([
 <attr name=parse>
  If specified, the query will be parsed by the RXML parser. Useful if
  you wish to dynamically build the query.
-</attr>"]);
-/*
+</attr>
 
-	     "<tr><td valign=top><b>&lt;sqlquery&gt;</b></td>\n"
-	     "<td>Executes an SQL query, but "
-	     "doesn't do anything with the result. This is useful if "
-	     "you do queries like INSERT and CREATE.</td></tr>\n"
-	     "<tr><td valign=top><b>&lt;sqltable&gt;</td>"
-	     "<td>Executes an SQL query, and makes "
-	     "an HTML table from the result.</td></tr>\n"
-	     "</table></ul>\n"
-	     "The following attributes are used by the above tags:<ul>\n"
-	     "<table border=0>\n"
-	     "<tr><td valign=top><b>query</b></td>"
-	     "<td>The actual SQL query. (<b>REQUIRED</b>)</td></tr>\n"
-	     "<tr><td valign=top><b>host<b></td>"
-	     "<td>The hostname of the machine the SQL server runs on.<br>\n"
-	     "This argument can also be used to specify which SQL server "
-	     "to use by specifying an \"SQL URL\":<br><ul>\n"
-	     "<pre>[<i>sqlserver</i>://][[<i>user</i>][:<i>password</i>]@]"
-	     "[<i>host</i>[:<i>port</i>]]/<i>database</i></pre><br>\n"
-	     "</ul>Valid values for \"sqlserver\" depend on which "
-	     "SQL servers your pike has support for, but the following "
-	     "might exist: msql, mysql, odbc, oracle, postgres.</td></tr>\n"
-	     "<tr><td valign=top><b>database</b></td>"
-	     "<td>The name of the database to use.</td></tr>\n"
-	     "<tr><td valign=top><b>user</b></td>"
-	     "<td>The name of the user to access the database with.</td></tr>\n"
-	     "<tr><td valign=top><b>password</b></td>"
-	     "<td>The password to access the database.</td></tr>\n"
-	     "<tr><td valign=top><b>parse</b></td>"
-	     "<td>If specified, the query will be parsed by the "
-	     "RXML parser</td></tr>\n"
-	     "<tr><td valign=top><b>quiet</b></td>"
-	     "<td>If specified, SQL errors will be kept quiet.</td></tr>\n"
-	     "</table></ul><p>\n"
-	     "The &lt;sqltable&gt; tag has an additional attribute "
-	     "<b>ascii</b>, which generates a tab separated table (usefull "
-	     "with eg the &lt;diagram&gt; tag).<p>\n"
-	     "\n"
-	     "<b>NOTE</b>: Specifying passwords in the documents may prove "
-	     "to be a security hole if the module is not loaded for some "
-	     "reason.<br>\n"
-	     "<b>SEE ALSO</b>: The &lt;FORMOUTPUT&gt; tag can be "
-	     "useful to generate the queries.<br>\n"
- */
+<attr name=mysql-insert-id type=form-variable>
+ Set form-variable to the insert id used by Mysql for
+ auto-incrementing columns. Note: This is only available with Mysql.
+</attr>
+"]);
 #endif
 
 array|string|object do_sql_query(string tag, mapping args, RequestID id)
