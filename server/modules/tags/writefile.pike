@@ -8,10 +8,11 @@
 // later version.
 //
 
-#define _ok id->misc->defines[" _ok"]
+#define _(X,Y)	_DEF_LOCALE("mod_writefile",X,Y)
+#define _ok	id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.12 2001/12/03 13:03:17 anders Exp $";
+ "$Id: writefile.pike,v 1.13 2002/01/04 02:01:35 srb%cuci.nl Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -23,31 +24,32 @@ inherit "module";
 // ---------------- Module registration stuff ----------------
 
 constant module_type = MODULE_TAG;
-constant module_name = "Writefile";
-constant module_doc  = "This module provides the writefile RXML tags.<br>"
- "<p>Copyright &copy; 2001, by "
+LocaleString module_name = _(1,"Tags: Writefile");
+LocaleString module_doc  = _(2,
+ "This module provides the writefile RXML tags.<br>"
+ "<p>Copyright &copy; 2001-2002, by "
  "<a href='mailto:srb@cuci.nl'>Stephen R. van den Berg</a>, "
  "The Netherlands.</p>"
  "<p>This module is open source software; you can redistribute it and/or "
  "modify it under the terms of the GNU General Public License as published "
  "by the Free Software Foundation; either version 2, or (at your option) any "
- "later version.</p>";
+ "later version.</p>");
 
 void create() {
   set_module_creator("Stephen R. van den Berg <srb@cuci.nl>");
   defvar ("onlysubdirs", 1,
-	  "Within tree only", TYPE_FLAG,
-          "Setting this will force all specified chroots and filenames to be "
-	  "relative to the directory this tag is located in.  "
-	  "It functions as an enforced dynamic chroot to constrain users in "
-	  "e.g. a user filesystem."
-          );
+	_(3,"Within tree only"), TYPE_FLAG,
+        _(4,"Setting this will force all specified chroots and filenames "
+	    "to be relative to the directory this tag is located in.  "
+	    "It functions as an enforced dynamic chroot to constrain users in "
+	    "e.g. a user filesystem.")
+        );
 }
 
 static string lastfile;
 
 string status() {
-  return sprintf("Last file written: %s",lastfile||"NONE");
+  return sprintf(_(0,"Last file written: %s"),lastfile||"NONE");
 }
 
 #define IS(arg)	((arg) && sizeof(arg))
