@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.175 1999/12/08 08:08:17 per Exp $
+// $Id: http.pike,v 1.176 1999/12/21 00:03:14 marcus Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.175 1999/12/08 08:08:17 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.176 1999/12/21 00:03:14 marcus Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1497,10 +1497,11 @@ void send_result(mapping|void result)
 	    tmp_head += ({ `+(h, ": ", tmp) });
 	else
 	  tmp_head += ({ `+(h, ": ", heads[h]) });
-      head_string += tmp_head * "\r\n";
+      if(sizeof(tmp_head))
+	head_string += tmp_head * "\r\n" + "\r\n";
     
       if(file->len > -1) 
-	head_string += "\r\nContent-Length: "+ file->len +"\r\n";
+	head_string += "Content-Length: "+ file->len +"\r\n";
       head_string += "\r\n";
     
       if(conf) conf->hsent += strlen(head_string);
