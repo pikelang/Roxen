@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.46 1997/08/29 16:24:35 grubba Exp $
+ * $Id: ftp.pike,v 1.47 1997/08/29 17:58:08 marcus Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -40,6 +40,7 @@ import Array;
 string controlport_addr, dataport_addr, cwd ="/";
 int controlport_port, dataport_port;
 object cmd_fd, pasv_port;
+object curr_pipe=0;
 int GRUK = random(_time(1));
 function(object,mixed:void) pasv_callback;
 mixed pasv_arg;
@@ -292,6 +293,7 @@ void done_callback(object fd)
     fd->close();
     destruct(fd);
   }
+  curr_pipe = 0;
   reply("226 Transfer complete.\n");
   cmd_fd->set_read_callback(got_data);
   cmd_fd->set_write_callback(lambda(){});
@@ -323,6 +325,7 @@ void connected_to_send(object fd,mapping file)
     pipe->input(file->file);
   }
 
+  curr_pipe = pipe;
   pipe->set_done_callback(done_callback, fd);
   pipe->output(fd);
 }
@@ -394,10 +397,16 @@ class put_file_wrapper {
 
   inherit files.file;
 
-  object id;
-  string response;
-  string gotdata;
-  int done;
+  static object id;
+  static string response;
+  static string gotdata;
+  static int done, recvd;
+  static function other_read_callback;
+
+  int bytes_received()
+  {
+    return recvd;
+  }
 
   int close(string|void how)
   {
@@ -405,8 +414,42 @@ class put_file_wrapper {
       id->reply(response);
       done = 1;
       id->file = 0;
+      id->my_fd = 0;
     }
     return (how? ::close(how) : ::close());
+  }
+
+  string read(mixed ... args)
+  {
+    string r = ::read(@args);
+    if(stringp(r))
+      recvd += sizeof(r);
+    return r;
+  }
+
+  static mixed my_read_callback(mixed id, string data)
+  {
+    if(stringp(data))
+      recvd += sizeof(data);
+    return other_read_callback(id, data);
+  }
+
+  void set_read_callback(function read_callback)
+  {
+    if(read_callback) {
+      other_read_callback = read_callback;
+      ::set_read_callback(my_read_callback);
+    } else
+      ::set_read_callback(read_callback);
+  }
+
+  void set_nonblocking(function ... args)
+  {
+    if(sizeof(args) && args[0]) {
+      other_read_callback = args[0];
+      ::set_nonblocking(my_read_callback, @args[1..]);
+    } else
+      ::set_nonblocking(@args);
   }
 
   int write(string data)
@@ -435,6 +478,7 @@ class put_file_wrapper {
     response = "200 Stored.\n";
     gotdata = "";
     done = 0;
+    recvd = 0;
   }
 
 }
