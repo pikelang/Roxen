@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.20 1997/09/20 15:16:29 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.21 1997/09/20 15:18:52 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -435,7 +435,7 @@ void main(int argc, string *argv)
   {
     if (prot_prog == "ssl3") {
       write("Waiting for SSL3 to initialize...\n");
-      sleep(60);
+      sleep(40);
     } else {
       sleep(10);
     }
