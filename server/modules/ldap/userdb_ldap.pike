@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.6 2001/05/25 08:59:52 hop Exp $";
+  "$Id: userdb_ldap.pike,v 1.7 2001/10/12 06:42:44 hop Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -75,7 +75,7 @@ class LDAPUser
 DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
     
     // check for nonacceptable password
-    if(!stringp(pass) || sizeof(pass) < 1) {
+    if(!stringp(pass) || sizeof(pass) < 1 || !sizeof(password)) {
       DEBUGLOG("pass_auth("+name()+") failed.");
       return 0; // FIXME: what about users with EMPTY password???
     }
