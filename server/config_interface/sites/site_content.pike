@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.135 2003/05/20 15:07:29 anders Exp $
+// $Id: site_content.pike,v 1.136 2003/08/13 12:12:29 jonasw Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -527,11 +527,25 @@ string parse( RequestID id )
        foreach( conf->query( "URLs" ), string url )
        {
 	 url = (url/"#")[0];
-         int open = (roxen->urls[ url ] 
-                     && roxen->urls[ url ]->port 
-                     && roxen->urls[ url ]->port->bound);
+
+	 //  If no port number is present we add the default port for
+	 //  the given protocol. This is needed to get a match in the
+	 //  roxen->urls mapping.
+	 string match_url = url;
+	 if (sizeof(url / ":") < 3) {
+	   sscanf(url, "%s://%s/%s", string proto, string host, string path);
+	   int portnum =
+	     roxen->protocols[proto] &&
+	     roxen->protocols[proto]->default_port;
+	   match_url = proto + "://" + host + ":" + portnum + "/" + path;
+	 }
+	 
+         int open = (roxen->urls[ match_url ] 
+                     && roxen->urls[ match_url ]->port 
+                     && roxen->urls[ match_url ]->port->bound);
+	 
          if( !open )
-           res += url + " "+port_for(url,0);
+           res += url + " "+port_for(url,0) + "<br >\n";
          else if(search(url, "*")==-1)
            res += ("<a target='server_view' href='"+url+"'>"+
                    url+"</a> "+port_for(url,0)+"<br />\n");
