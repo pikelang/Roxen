@@ -2,10 +2,6 @@
 #include <variables.h>
 inherit "module";
 
-/* Roxen PHP module.
- *   (c) David Hedbor  1999
- *   Modified by Per Hedbor 2000
- */
 #ifdef PHP_DEBUG
 #define DWERROR(X)	report_debug(X)
 #else /* !PHP_DEBUG */
@@ -15,13 +11,13 @@ inherit "module";
 
 #include <roxen.h>
 
-constant cvs_version = "$Id: php4.pike,v 2.16 2002/07/17 17:54:39 nilsson Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.17 2002/11/11 01:55:36 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILE_EXTENSION;
 
 constant module_name = "Scripting: PHP Support";
-constant module_doc  = ("This module allows Roxen users to run PHP scripts, "
-			"optionally in combination with RXML.");
+constant module_doc  = ("This module allows ChiliMoon users to run PHP "
+			"scripts, optionally in combination with RXML.");
 
 #if constant(PHP4.Interpreter)
 
@@ -271,7 +267,7 @@ constant dont_dump_program = 1;
 string status()
 {
   return 
-#"<font color='&usr.warncolor;'>PHP4 is not available in this Roxen.<br />
+#"<font color='&usr.warncolor;'>PHP4 is not available in this ChiliMoon.<br />
 <br />
   To get php4:
   <ol>
@@ -281,7 +277,7 @@ string status()
          See <a target='new' href='http://www.php.net/version4/cvs.php'>the PHP4 CVS instructions</a></li>
     <li> Configure php4 with --with-roxen="+(getcwd()-"server")+#"</li>
     <li> Make and install php4</li>
-    <li> Restart Roxen</li>
+    <li> Restart ChiliMoon</li>
   </ol></font>";
 }
 

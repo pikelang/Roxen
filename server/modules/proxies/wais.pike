@@ -1,15 +1,15 @@
-// This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1997 - 2001, Roxen IS.
 
 // A WAIS proxy module, not written by anyone at Roxen IS, and it would
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.27 2002/10/22 00:23:29 nilsson Exp $";
+string cvs_version = "$Id: wais.pike,v 1.28 2002/11/11 01:56:04 mani Exp $";
 
 #include <config.h>
 #include <module.h>
 
-#define DEF_CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote host\r\nContent-type: text/html\r\n\r\n<title>Roxen error: Connection refused</title>\n<h1>Proxy request failed</h1><hr><font size=+2><i>Connection refused by remote host</i></font><hr><font size=-2><a href=http://www.roxen.com/>Roxen</a></font>"
+#define DEF_CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote host\r\nContent-type: text/html\r\n\r\n<title>ChiliMoon error: Connection refused</title>\n<h1>Proxy request failed</h1><hr><font size='+2'><i>Connection refused by remote host</i></font><hr /><font size='-2'><a href='http://www.chilimoon.org/'>ChiliMoon</a></font>"
 #define CONNECTION_REFUSED   query("ConnRefuse")
 
 

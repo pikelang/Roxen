@@ -1,17 +1,17 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.26 2001/09/03 18:35:37 nilsson Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.27 2002/11/11 01:56:04 mani Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
 
 #define CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote "	\
-"host\r\nContent-type: text/html\r\n\r\n<title>Roxen: Connection "	\
+"host\r\nContent-type: text/html\r\n\r\n<title>ChiliMoon: Connection "	\
 "refused </title>\n<h1>Proxy request failed</h1><hr /><font "		\
 "size=\"+2\"><i>Connection refused by remote host</i></font><hr><font "	\
-"size=\"-2\"><a href=http://www.roxen.com/>Roxen</a></font>"
+"size=\"-2\"><a href='http://www.chilimoon.org/'>ChiliMoon</a></font>"
 
 #ifdef GOPHER_DEBUG
 # define GOPHER_WERR(X) werror("GOPHER: "+X+"\n")

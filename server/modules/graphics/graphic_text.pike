@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.293 2002/11/06 02:07:02 mani Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.294 2002/11/11 01:53:34 mani Exp $";
 
 #include <module.h>
 inherit "module";
@@ -135,7 +135,7 @@ bshadow=\"2\">&lt;gtext bshadow=2&gt;</gtext>
  <ex>
 <gtext font=\"lucida\" bold=\"\" chisel=\"\" talign=\"center\" tile=\"\"
 opaque=\"70\" fgcolor=\"gold\" bevel=\"2\"
-background=\"/internal-roxen-squares\"> Chisel opaque=\"70\"</gtext>
+background=\"/%01/squares\"> Chisel opaque=\"70\"</gtext>
  </ex>
 </attr>
 
@@ -314,9 +314,9 @@ shadow=\"40,2\">&lt;gtext shadow=40,2&gt;</gtext></ex>
  Place the text centered in a box of the given color below the image
  area. Useful together with background to make captions for images.</p>
  <ex>
-<img src=\"/internal-roxen-roxen\" /> &nbsp;
-<gtext scale=\"0.5\" background=\"/internal-roxen-roxen\"
-textbelow=\"#c0c0c0\">Roxen</gtext>
+<img src=\"/%01/chili-small-white\" /> &nbsp;
+<gtext scale=\"0.5\" background=\"/%01/chili-small-white\"
+textbelow=\"#c0c0c0\">ChiliMoon</gtext>
  </ex>
 </attr>
 
@@ -339,7 +339,7 @@ red, darkgreen</gtext>
 <attr name='texture' value='path'><p>
  Uses the specified images as a field texture.</p>
 <ex>
-<gtext texture=\"/internal-roxen-squares\"
+<gtext texture=\"/%01/squares\"
  tile=\"1\" fontsize=\"100\">A</gtext>
 </ex>
 </attr>
@@ -358,9 +358,9 @@ red, darkgreen</gtext>
  and the font implementation.</p>
 
 <ex>
-<gtext font=\"niquel\">HELLO ROXEN</gtext><br />
-<gtext xpad=\"4px\" font=\"niquel\">HELLO ROXEN</gtext><br />
-<gtext xpad=\"50%\" font=\"niquel\">HELLO ROXEN</gtext><br />
+<gtext font=\"niquel\">HELLO CHILIMOON</gtext><br />
+<gtext xpad=\"4px\" font=\"niquel\">HELLO CHILIMOON</gtext><br />
+<gtext xpad=\"50%\" font=\"niquel\">HELLO CHILIMOON</gtext><br />
 </ex>
 </attr>
 
@@ -462,7 +462,7 @@ constant tagdoc=([
  is shown in the browser's status bar.</p>
 
  <ex>
-<gtext href=\"http://www.roxen.com\" magic=\"Roxen\">www.roxen.com</gtext>
+<gtext href=\"http://www.chilimoon.org\" magic=\"ChiliMoon\">www.chilimoon.org</gtext>
  </ex>
 </attr>
 

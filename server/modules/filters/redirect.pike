@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 // The redirect module. Redirects requests from one filename to
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.34 2002/10/22 00:29:58 nilsson Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.35 2002/11/11 01:53:04 mani Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -17,16 +17,17 @@ void create()
   defvar("fileredirect", "", "Redirect patterns", TYPE_TEXT_FIELD|VAR_INITIAL,
 	 "Redirect one file to another. The syntax is 'regexp to_URL',"
 	 "or 'prefix to_URL', or 'exact file_name to_URL. More patterns "
-	 "can be read from a file by using '#include &lt;filename&gt;' on a line. "
-	 "The path is relative to the Roxen server directory in the real "
-	 "filesystem. Other lines beginning with '#' are treated as comments.\n"
+	 "can be read from a file by using '#include &lt;filename&gt;' on a "
+	 "line. The path is relative to the ChiliMoon server directory in "
+	 "the real filesystem. Other lines beginning with '#' are treated as "
+	 "comments.\n"
 
 	 "<p>Some examples:'"
 	 "<pre>"
-         "/from/.*      http://to.roxen.com/to/%f\n"
+         "/from/.*      http://to.chilimoon.com/to/%f\n"
          ".*\\.cgi       http://cgi.foo.bar/cgi-bin/%p\n"
 	 "/thb/.*       %u/thb_gone.html\n"
-	 "/roxen/       http://www.roxen.com/\n"
+	 "/chili/       http://www.chilimoon.org/\n"
 	 "exact /       /main/index.html\n"
 	 "</pre>"
 

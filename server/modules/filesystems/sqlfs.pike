@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.5 2002/08/05 13:33:11 nilsson Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.6 2002/11/11 01:52:34 mani Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -39,9 +39,9 @@ void create()
   defvar("charset", "iso-8859-1", "File contents charset",
 	 TYPE_STRING,
 	 ("The charset of the contents of the files on this file "
-	  "system. This variable makes it possible for Roxen to use "
+	  "system. This variable makes it possible for ChiliMoon to use "
 	  "any text file, no matter what charset it is written in. If"
-	  " necessary, Roxen will convert the file to Unicode before "
+	  " necessary, ChiliMoon will convert the file to Unicode before "
 	  "processing the file."));
 
   defvar("path_encoding", "iso-8859-1", "Filename charset",

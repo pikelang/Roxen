@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 #include <module.h>
 
 inherit UserDB;
@@ -20,17 +20,17 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version = "$Id: userdb_ex.pike,v 1.5 2002/10/23 23:31:44 nilsson Exp $";
+constant cvs_version = "$Id: userdb_ex.pike,v 1.6 2002/11/11 01:51:57 mani Exp $";
 constant module_name = "RefDoc for MODULE_USERDB";
 constant  module_doc =
   ("This module does nothing special, it implements a simple "
    "user database with the passwords and usernames in a string list, "
-   "but its inlined documentation gets imported into the Roxen "
+   "but its inlined documentation gets imported into the ChiliMoon "
    "programmer manual.\n"
    "You definetely don't want to use this module in your virtual "
    "servers, since anybody with access to your admin interface or "
    "server configuration file automatically gains access to all "
-   "your passwords. For a budding roxen programmer, the module "
+   "your passwords. For a budding ChiliMoon programmer, the module "
    "however does show the basics of making a user database module.");
 
 

@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 // This is a virtual "file-system".
 // It will be located somewhere in the name-space of the server.
@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version = "$Id: filesystem.pike,v 1.120 2002/08/05 13:26:56 nilsson Exp $";
+constant cvs_version = "$Id: filesystem.pike,v 1.121 2002/11/11 01:52:34 mani Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -170,9 +170,9 @@ void create()
   defvar("charset", "iso-8859-1", "File contents charset",
 	 TYPE_STRING,
 	 ("The charset of the contents of the files on this file "
-	  "system. This variable makes it possible for Roxen to use "
+	  "system. This variable makes it possible for ChiliMoon to use "
 	  "any text file, no matter what charset it is written in. If "
-	  "necessary, Roxen will convert the file to Unicode before "
+	  "necessary, ChiliMoon will convert the file to Unicode before "
 	  "processing the file."));
 
   defvar("path_encoding", "iso-8859-1", "Filename charset",

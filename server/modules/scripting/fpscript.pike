@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1998 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1998 - 2001, Roxen IS.
 //
 // This module is basically the CGI module with some different
 // defaults and a new variable, to make it possible to use Frontpage
-// with Roxen when using virtual hosting.
+// with ChiliMoon when using virtual hosting.
 
-constant cvs_version = "$Id: fpscript.pike,v 1.14 2002/10/22 00:21:06 nilsson Exp $";
+constant cvs_version = "$Id: fpscript.pike,v 1.15 2002/11/11 01:55:36 mani Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi.pike";
@@ -55,7 +55,7 @@ constant module_doc  = "This module is an extension to the normal CGI module. "
   "<p>Another feature is that you easily can modify the value of the "
   "environment variable SERVER_PORT. The reason for doing that is that "
   "Frontpage uses it to figure out which configuration file to use. "
-  "Without it you wouldn't be able to use Frontpage and Roxen when doing "
+  "Without it you wouldn't be able to use Frontpage and ChiliMoon when doing "
   "virtual hosting (where many servers will have the same port number).</p>";
 
 int|object(Stdio.File)|mapping find_file(string f, RequestID id)

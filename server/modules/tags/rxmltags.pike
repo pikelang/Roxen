@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
 #define _stat RXML_CONTEXT->misc[" _stat"]
@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.395 2002/11/07 15:59:56 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.396 2002/11/11 01:56:30 mani Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2236,7 +2236,7 @@ class TagHelp {
 
     array do_return(RequestID id) {
       string help_for = args->for || id->variables->_r_t_h;
-      string ret="<h2>Roxen Interactive RXML Help</h2>";
+      string ret="<h2>ChiliMoon Interactive RXML Help</h2>";
 
       if(!help_for) {
 	NOCACHE();
@@ -5194,9 +5194,8 @@ class TagIWCache {
 #ifdef manual
 constant tagdoc=([
 "&roxen;":#"<desc type='scope'><p><short>
- This scope contains information specific to this Roxen
- WebServer.</short> It is not possible to write any information to
- this scope.
+ This scope contains information specific to this ChiliMoon server.</short>
+ It is not possible to write any information to this scope.
 </p></desc>",
 
 "&roxen.domain;":#"<desc type='entity'><p>

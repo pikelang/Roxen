@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.11 2002/06/14 00:08:58 nilsson Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.12 2002/11/11 01:54:01 mani Exp $";
 constant thread_safe=1;
 
 #define BSIZE 16384
@@ -315,7 +315,7 @@ class Location( string location,
 	   "x-audiocast-streamid:1\r\n"+metahd+
 	   "x-audiocast-public:1\r\n"
 	   "x-audiocast-bitrate:"+(stream->bitrate/1000)+"\r\n"
-	   "x-audiocast-description:Served by Roxen\r\n"
+	   "x-audiocast-description:Served by ChiliMoon\r\n"
 	   "\r\n" );
     }
     else
@@ -325,7 +325,7 @@ class Location( string location,
 	   "Server: "+roxen.version()+"\r\n"
 	   "Content-type: audio/mpeg\r\n"
 	   "icy-notice1:This stream requires a shoutcast compatible player.\r\n"
-	   "icy-notice2:Roxen mod_mp3\r\n"+metahd+
+	   "icy-notice2:ChiliMoon mod_mp3\r\n"+metahd+
 	   "icy-name:"+name+"\r\n"
 	   "icy-gengre:"+(meta->gengre||"unknown")+"\r\n"
 	   +((meta->url||url)?"icy-url:"+(meta->url||url)+"\r\n":"")+

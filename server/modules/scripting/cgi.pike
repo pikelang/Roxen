@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.59 2002/07/03 12:41:47 nilsson Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.60 2002/11/11 01:55:36 mani Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -675,10 +675,7 @@ class CGIScript
       if (next_kill < sizeof(kill_signals)) {
 	signum = kill_signals[next_kill++];
       }
-      if(pid->kill)  // Pike 0.7, for roxen 1.4 and later
-        pid->kill(signum);
-      else
-        kill( pid->pid(), signum); // Pike 0.6, for roxen 1.3
+      pid->kill(signum);
       call_out(kill_script, kill_interval);
     }
   }
@@ -744,7 +741,7 @@ class CGIScript
       }
 
       // this is not really 100% correct, since it will keep the group list
-      // of roxen when starting a script as a different user when that user
+      // of ChiliMoon when starting a script as a different user when that user
       // should really have no extra groups at all, but on Linux this fails
       // for some reason. So, when the extra group list is empty, ignore it
       if( sizeof( extra_gids ) ) 
@@ -992,7 +989,7 @@ int run_as_user_enabled() { return (getuid() || !query("user")); }
 void create(Configuration conf)
 {
   defvar("env", Variable.Flag(0, VAR_MORE, "Pass environment variables",
-	 "If this is set, all environment variables roxen has will be "
+	 "If this is set, all environment variables ChiliMoon has will be "
          "passed to CGI scripts, not only those defined in the CGI/1.1 standard. "
          "This includes PATH. (For a quick test, try this script with "
 	 "and without this variable set:"
@@ -1056,7 +1053,7 @@ void create(Configuration conf)
 	 Roxen.short_name(conf? conf->name:".")+"/cgi.log",
 	 "Log file", TYPE_STRING,
 	 "Where to log errors from CGI scripts. You can also choose to send "
-	 "the errors to the browser or to the main Roxen log file. "
+	 "the errors to the browser or to the main ChiliMoon log file. "
 	 " Some substitutions of the file name will be done to allow "
 	 "automatic rotating:"
 	 "<pre>"
@@ -1111,7 +1108,8 @@ void create(Configuration conf)
 	 0, getuid);
 
   defvar("runuser", "nobody", "Run scripts as", TYPE_STRING,
-	 "If you start roxen as root, and this variable is set, CGI scripts "
+	 "If you start ChiliMoon as root, and this variable is set, CGI "
+	 "scripts "
 	 "will be run as this user. You can use either the user name or the "
 	 "UID. Note however, that if you don't have a working user database "
 	 "enabled, only UID's will work correctly. If unset, scripts will "

@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 // HTTP Proxy module. Should be cleaned and optimized. Currently the
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.55 2002/10/22 00:22:34 nilsson Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.56 2002/11/11 01:56:04 mani Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -297,7 +297,8 @@ void create()
 	 "Cache documents with these http codes. "
 	 "A reasonable set is \"200\", \"300\", \"301\", \"404\".");
 
-  defvar("reload_from_cache", 0, "Handle reloads from diskcache", TYPE_FLAG|VAR_MORE,
+  defvar("reload_from_cache", 0, "Handle reloads from diskcache",
+	 TYPE_FLAG|VAR_MORE,
 	 "This option disables the no-cache pragma and reloads will be done "
 	 "from the proxy's diskcache. "
 	 "Note that with this option set there is no way the client can "
@@ -308,11 +309,14 @@ void create()
 	 "Please consider this option only if you have installed other means "
 	 "to force reload of pages.");
 
-  defvar("modified_from_cache", 0, "Handle if-modified-since from diskcache", TYPE_FLAG|VAR_MORE,
+  defvar("modified_from_cache", 0, "Handle if-modified-since from diskcache",
+	 TYPE_FLAG|VAR_MORE,
 	 "With this option set if-modified-since requests will be checked "
 	 "against the proxy's diskcache. "
-	 "This can be a major improvement to proxy response times if there are "
-	 "many clients with local cache and uptodate checks set to every time. "
+	 "This can be a major improvement to proxy response times if there "
+	 "are "
+	 "many clients with local cache and uptodate checks set to every "
+	 "time. "
 	 "Set to \"No\" if requests should go to the original server. ");
 
   defvar("cache_cookies", 0, "Cache pages with cookies", TYPE_FLAG|VAR_MORE,
@@ -320,7 +324,8 @@ void create()
 	 "As such pages might be dynamically made depending on the values of "
 	 "the cookies, you might want to leave this option off.");
 
-  defvar("cache_without_content_length", 0, "Cache pages without content-length",
+  defvar("cache_without_content_length", 0,
+	 "Cache pages without content-length",
 	 TYPE_FLAG|VAR_MORE,
 	 "A content-length of zero is often used to prevent caching of pages. "
 	 "To bypass content-length checks set this to true.");
@@ -1079,13 +1084,13 @@ class Server
   string error_msg(string s)
   {
     return
-      "<title>Roxen: " + s + "</title>\n"
+      "<title>ChiliMoon: " + s + "</title>\n"
       "<h1>Proxy Request Failed</h1>"
       "<hr>"
-      "<font size=+2><i>" + s + "</i></font>"
-      "<hr>"
-      "<font size=-2>Roxen"
-      " at <a href=" + conf->query("MyWorldLocation")+">" +
+      "<font size='+2'><i>" + s + "</i></font>"
+      "<hr />"
+      "<font size='-2'>ChiliMoon"
+      " at <a href='" + conf->query("MyWorldLocation")+"'>" +
       conf->query("MyWorldLocation") + "</a></font>";
   }
 

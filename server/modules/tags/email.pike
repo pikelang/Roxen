@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 // Todo:
 //	- multiple Bcc recipients
@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.21 2002/10/23 23:42:15 nilsson Exp $";
+constant cvs_version = "$Id: email.pike,v 1.22 2002/11/11 01:56:30 mani Exp $";
 
 constant thread_safe=1;
 
@@ -87,7 +87,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.21 $"/" ")[1];
+string revision = ("$Revision: 1.22 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -384,7 +384,7 @@ class TagEmail {
 			     "from":nice_from_h(fromx),
 			     "to":replace(tox, split, ","),
 			     "content-type":"multipart/mixed",
-			     "x-mailer":"Roxen's email, r"+revision
+			     "x-mailer":"ChiliMoon email, r"+revision
 			   ]) + headers,
 			({ m }) + id->misc->_email_atts_
          ));
@@ -397,7 +397,7 @@ class TagEmail {
 			     "content-type":(headers["CONTENT-TYPE"]||args->mimetype||"text/plain")
 				+ chs,
 			     "content-transfer-encoding":(headers["CONTENT-TRANSFER-ENCODING"]||"8bit"),
-			     "x-mailer":"Roxen's email, r"+revision
+			     "x-mailer":"ChiliMoon email, r"+revision
 			   ]) + headers)
      );
 
@@ -571,7 +571,7 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 <signature>
 -------------------
 John Doe
-Roxen Administrator
+ChiliMoon Administrator
 </signature>
 </email>
 </ex-box>",

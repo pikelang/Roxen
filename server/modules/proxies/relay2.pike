@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.28 2002/10/22 00:23:03 nilsson Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.29 2002/11/11 01:56:04 mani Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -381,12 +381,12 @@ void create( Configuration c )
 	    "the most essential headers are sent to the remote server "
 	    "(actually, no headers at all right now), if <b>raw</b> is "
 	    "specified, the request is sent to the remote server exactly as it "
-	    "arrived to Roxen, not even the Host: header is changed.  If "
+	    "arrived to ChiliMoon, not even the Host: header is changed. If "
 	    "<b>utf8</b> is specified the request is utf-8 encoded before it "
 	    "is sent to the remote server.</p><p>"
 
 	    "Cache and stream alter the sending of data to the client. If "
-	    "<b>cache</b> is specified, the data can end up in the roxen "
+	    "<b>cache</b> is specified, the data can end up in the ChiliMoon "
 	    "data cache, if <b>stream</b> is specified, the data is streamed "
 	    "directly from the server to the client. This disables logging, "
 	    "headers will be exactly those sent by the remote server, and this "
@@ -396,7 +396,8 @@ void create( Configuration c )
 	    "components (<b>location</b> part trimmed off) is appended to the "
 	    "<b>url-prefix</b> specified; no replacing is done.</p><p>"
 
-            "If <b>LAST</b> is specified, the match is only tried if Roxen "
+            "If <b>LAST</b> is specified, the match is only tried if "
+	    "ChiliMoon "
             "fails to find a file (a 404 error). If <b>rewrite</b> is "
 	    "specified, redirects and file contents are rewritten if possible, "
 	    "so that links and images point to the correct place.</p>");

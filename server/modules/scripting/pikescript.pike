@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 // Support for user Pike-scripts, like CGI, but handled internally in
 // the server, and thus much faster, but blocking, and somewhat less
@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.72 2002/07/03 12:41:47 nilsson Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.73 2002/11/11 01:55:36 mani Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -19,7 +19,7 @@ constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Scripting: Pike script support";
 constant module_doc  = #"Support for user Pike-scripts, like CGI, but
 handled internally in the server, and thus much faster, but blocking,
-and less secure.<br /><img src=\"/internal-roxen-err_2\" align=\"left\"
+and less secure.<br /><img src=\"/%01/err_2\" align=\"left\"
 alt=\"Warning\" />NOTE: This module should not be enabled if you allow
 anonymous PUT!<br />NOTE: Enabling this module is the same thing as
 letting your users run programs with the same right as the server!";
@@ -77,7 +77,7 @@ void create()
 	  "Pike scripts are trusted",
 	  TYPE_FLAG|VAR_NOT_CFIF,
 	  "If this option is true, scripts will be able to do everything "
-	  "the Roxen server can do.");
+	  "the ChiliMoon server can do.");
 #endif /* constant(__builtin.security) */
 }
 
