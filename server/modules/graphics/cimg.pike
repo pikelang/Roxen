@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.63 2004/05/05 09:41:20 anders Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.64 2004/05/21 09:46:19 jonasw Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -145,6 +145,11 @@ mapping(string:function) query_action_buttons() {
 
 void flush_cache() {
   the_cache->flush();
+  
+  //  It's possible that user code contains a number of stale URLs in
+  //  e.g. <cache> blocks so we can just as well flush the RAM cache to
+  //  reduce the risk of broken images.
+  cache.flush_memory_cache();
 }
 
 string status() {
