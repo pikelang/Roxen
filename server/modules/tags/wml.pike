@@ -125,12 +125,14 @@ class wap_1_1 {
     string att,arg;
     foreach(indices(m), string tmp) {
       att=lower_case(tmp);
-      arg=case_arg_up[m[tmp]]?lower_case(m[tmp]):m[tmp];
-      if(att=="style" && arg=="list") arg="true";
-      if(att=="style" && arg=="set") arg="false";
-      if(conv_att_up[att]) att=conv_att_up[att];
-      if(conv_arg_up[arg]) arg=conv_arg_up[arg];
-      n[att]=arg;
+      if(conv_att_up[att]!="") {
+        arg=case_arg_up[m[tmp]]?lower_case(m[tmp]):m[tmp];
+        if(att=="style" && arg=="list") arg="true";
+        if(att=="style" && arg=="set") arg="false";
+        if(conv_att_up[att]) att=conv_att_up[att];
+        if(conv_arg_up[arg]) arg=conv_arg_up[arg];
+        n[att]=arg;
+      }
     }
     return n;
   }
