@@ -60,7 +60,7 @@ class Scope_cf
        return dotodots;
 
      case "current-url":
-       return id->not_query;
+       return (id->not_query+(id->misc->path_info||""));
     }
   }
 }
