@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.4 2001/08/28 21:35:59 mast Exp $
+// $Id: RoxenDebug.pmod,v 1.5 2003/01/20 14:33:31 mast Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -25,7 +25,26 @@ class ObjectMarker
     if (obj) {
       string new_id = stringp (obj) ? obj : sprintf ("%O", obj);
       string cnt = sprintf ("[%d]", count);
-      if (new_id[sizeof (new_id) - sizeof (cnt)..] != cnt) new_id += cnt;
+      if (!has_suffix (new_id, cnt)) new_id += cnt;
+
+      if (sscanf (new_id, "%s(0)[%*d]", string base) == 2) {
+	// Try to improve the name. The backtrace typically look like
+	// this: ({..., caller 1, caller 2, ObjectMarker(), this
+	// function}). Caller 2 is probably in the class containing
+	// the _sprintf that produced base, so we use the line number
+	// info for caller 1 instead to provide more info.
+	array|object bt = backtrace();
+	string file;
+	int i;
+	for (i = -2; i >= -sizeof (bt); i--)
+	  if (!!file & !!(file = bt[i][0])) break;
+	if (file) {
+	  string cwd = getcwd() + "/";
+	  if (has_prefix (file, cwd)) file = file[sizeof (cwd)..];
+	  new_id = sprintf ("%s(%s:%d)%s", base, file, bt[i][1], cnt);
+	}
+      }
+
       if (id) {
 	if (new_id == id) return;
 	if (log_create_destruct)
@@ -35,6 +54,7 @@ class ObjectMarker
       }
       else
 	if (log_create_destruct) werror ("create  %s\n", new_id);
+
       id = new_id;
       object_markers[id]++;
     }
