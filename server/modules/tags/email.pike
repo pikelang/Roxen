@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.31 2005/01/18 08:41:26 noring Exp $";
+constant cvs_version = "$Id: email.pike,v 1.32 2005/01/18 09:44:00 noring Exp $";
 
 constant thread_safe=1;
 
@@ -64,7 +64,7 @@ void create(Configuration conf)
          "Log e-mail messages to this mbox format file. This is "
 	 "useful to find messages that may have been lost. Undelivered "
 	 "messages may have the header X-Roxen-Email-Error included.");
-  defvar ("mbox_file_errors_only", 0, "Log undelivered messages only",
+  defvar ("mbox_file_errors_only", 1, "Log undelivered messages only",
          TYPE_FLAG,
          "Log only e-mail messages which the system knows will not be "
 	  "delivered. Beware! All undelivered messages may not always be "
@@ -98,7 +98,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.31 $"/" ")[1];
+string revision = ("$Revision: 1.32 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
