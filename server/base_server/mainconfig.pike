@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.128 1999/06/11 15:46:30 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.129 1999/09/02 18:38:42 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1107,6 +1107,8 @@ object module_of(object node)
       return node->data;
     if(node->type == NODE_MODULE_MASTER_COPY)
       return node->data->master;
+    if(node->type == NODE_CONFIGURATION)
+      return node->data;
     node = node->up;
   }
   return roxen;
@@ -1848,10 +1850,8 @@ mapping configuration_parse(object id)
       else
 	tmp=0;
       if(!module_of(o)) perror("No module for this node.\n");
-      if(!o->error && module_of(o) 
-	 && module_of(o)->check_variable)
+      if(!o->error && module_of(o) && module_of(o)->check_variable)
 	o->error = module_of(o)->check_variable(o->data[VAR_SHORTNAME], tmp);
-	
       if(!o->error)
 	if(!equal(tmp, o->data[VAR_VALUE]))
 	{
