@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.20 1998/05/01 15:32:43 grubba Exp $
+ * $Id: ftp2.pike,v 1.21 1998/05/01 21:39:49 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -907,6 +907,9 @@ class TelnetSession {
 
 	report_warning("FTP2: Write callback with nothing to send.\n");
       }
+    } else {
+      report_error("FTP2: Write callback with no fd.\n");
+      destruct();
     }
   }
 
@@ -1186,7 +1189,7 @@ class FTPSession
       ::set_write_callback(0);
     } else if (s == "") {
       ::set_write_callback(0);
-      return(0);
+      return(0);	// Mark EOF
     }
     return(s);
   }
@@ -1195,8 +1198,9 @@ class FTPSession
   {
     DWRITE(sprintf("FTP2: send(%d, %O)\n", code, data));
 
-    if (!data) {
+    if (!data || end_marker) {
       end_marker = 1;
+      ::set_write_callback(write_cb);
       return;
     }
 
@@ -1939,7 +1943,7 @@ class FTPSession
    * FTP commands begin here
    */
 
-  void ftp_REIN(string args)
+  void ftp_REIN(string|int args)
   {
     if (user && Query("ftp_user_session_limit") > 0) {
       // Logging out...
@@ -1956,7 +1960,10 @@ class FTPSession
     curr_pipe = 0;
     restart_point = 0;
     logged_in = 0;
-    send(220, ({ "Server ready for new user." }));
+    if (args != 1) {
+      // Not called by QUIT.
+      send(220, ({ "Server ready for new user." }));
+    }
   }
 
   void ftp_USER(string args)
@@ -2182,13 +2189,14 @@ class FTPSession
   void ftp_QUIT(string args)
   {
     send(221, ({ "Bye! It was nice talking to you!" }));
-    send(0, 0);
+    send(0, 0);		// EOF marker.
 
     master_session->method = "QUIT";
     master_session->not_query = user || "Anonymous";
     conf->log(([ "error":200 ]), master_session);
-    ftp_REIN(0);
-    logged_in = 0;
+
+    // Reinitialize the connection.
+    ftp_REIN(1);
   }
 
   void ftp_BYE(string args)
