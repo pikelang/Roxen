@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.312 1999/08/04 21:24:27 neotron Exp $
+ * $Id: roxen.pike,v 1.313 1999/08/12 13:30:14 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.312 1999/08/04 21:24:27 neotron Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.313 1999/08/12 13:30:14 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -431,7 +431,7 @@ private static void low_shutdown(int exit_code)
     roxen_perror("Restarting Roxen.\n");
   } else {
     roxen_perror("Shutting down Roxen.\n");
-    _exit(0);
+    // exit(0);
   }
   call_out(really_low_shutdown, 0.1, exit_code);
 }
@@ -3813,12 +3813,12 @@ int main(int|void argc, array (string)|void argv)
 #endif /* THREADS */
 
   // Signals which cause a restart (exitcode != 0)
-  foreach( ({ "SIGTERM" }), string sig) {
+  foreach( ({ "SIGINT" }), string sig) {
     catch { signal(signum(sig), exit_when_done); };
   }
   catch { signal(signum("SIGHUP"), reload_all_configurations); };
   // Signals which cause a shutdown (exitcode == 0)
-  foreach( ({ "SIGINT" }), string sig) {
+  foreach( ({ "SIGTERM" }), string sig) {
     catch { signal(signum(sig), shutdown); };
   }
   // Signals which cause Roxen to dump the thread state
