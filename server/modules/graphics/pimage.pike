@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.6 1997/10/25 05:28:42 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.7 1997/12/15 01:51:45 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -25,15 +25,15 @@ class Constructors
       if(!img) return;
       if(strlen(buffer))
       {
-	werror(strlen(buffer)+" bytes in buffer.\n");
+// 	werror(strlen(buffer)+" bytes in buffer.\n");
 	buffer = buffer[my_fd->write(buffer)..];
 	return;
       }
       if(!first)
       {
-	werror("first frame...\n");
+// 	werror("first frame...\n");
 	buffer=img->first_frame();
-	werror(strlen(buffer)+" bytes in buffer.\n");
+// 	werror(strlen(buffer)+" bytes in buffer.\n");
 	if(buffer) buffer = buffer[my_fd->write(buffer)..];
 	oi = buffer;
 	first++;
@@ -45,9 +45,10 @@ class Constructors
 	my_fd->set_blocking();
 	call_out(my_fd->set_nonblocking,img->anim_delay,lambda(){},draw_image,done);
       } else {
-	werror("new frame..\n");
+// 	werror("new frame..\n");
 	toggle = 1;
 	buffer=img->do_gif_add();
+// 	werror("got: "+buffer+"..\n");
 	if(buffer == oi) buffer=0;
 	oi = buffer;
 	if(buffer) buffer = buffer[my_fd->write(buffer)..];
@@ -107,6 +108,7 @@ class Constructors
 	else
 	  last_add = d;
 	last_drawn = time();
+// 	werror("gif_add returned: "+last_add+"\n");
 	return last_add;
       }
     }
@@ -384,7 +386,7 @@ string do_replace(string in, int id)
 
 object compile(string c, object id)
 {
-  werror("compile...\n");
+//   werror("compile...\n");
   add_constant("__PRIVATE_TO_PIMAGE_Constructors", Constructors);
   string pre =
     "#include <config.h>\n"
