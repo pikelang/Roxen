@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.22 2000/02/08 22:40:56 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.23 2000/02/08 22:54:10 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -293,22 +293,45 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     break;
   }
 
-  right = frame->xsize()-right;
-  frame = stretch_layer( frame, left, right, req_width );
-  if (mask != frame)
-    mask = stretch_layer( mask, left, right, req_width );
+  if( args->extra_frame_layers )
+  {
+    array l = ({ frame });
+    foreach( args->extra_frame_layers/",", string q )
+      l += ({ ll[q] });
+    l-=({ 0 });
+    if( sizeof( l ) )
+      mask = Image.lay( l );
+  }
 
-  if( args->extra_layers )
+  if( args->extra_mask_layers )
+  {
+    array l = ({ });
+    if( mask )
+      l = ({ mask });
+    foreach( args->extra_mask_layers/",", string q )
+      l += ({ ll[q] });
+    l-=({ 0 });
+    if( sizeof( l ) )
+      mask = Image.lay( l );
+  }
+
+  if( args->extra_background_layers )
   {
     array l = ({ });
     if( background )
       l = ({ background });
-    foreach( args->extra_layers/",", string q )
+    foreach( args->extra_background_layers/",", string q )
       l += ({ ll[q] });
     l-=({ 0 });
-    background = Image.lay( l );
+    if( sizeof( l ) )
+      background = Image.lay( l );
   }
 
+
+  right = frame->xsize()-right;
+  frame = stretch_layer( frame, left, right, req_width );
+  if (mask != frame)
+    mask = stretch_layer( mask, left, right, req_width );
 
   if( background )
   {
@@ -374,6 +397,21 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   if(text_img)
     button->paste_alpha_color(text_img, args->txt, txt_x, top);
 
+  if( args->extra_layers )
+  {
+    array l = ({ });
+    foreach( args->extra_layers/",", string q )
+      l += ({ ll[q] });
+    l-=({ 0 });
+    if( sizeof( l ) )
+    {
+      object q = Image.lay( l );
+      q = stretch_layer( q, left, right, req_width );
+      button->paste_mask( q->image(), q->alpha() );
+    }
+  }
+
+
   return ([
     "img":button,
     "alpha":mask->alpha()->threshold( 40 ),
@@ -416,6 +454,9 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
              roxen->query("default_font")),
     "border_image":fi,
     "extra_layers":args["extra-layers"],
+    "extra_background_layers":args["extra-background-layers"],
+    "extra_mask_layers":args["extra-mask-layers"],
+    "extra_frame_layers":args["extra-frame-layers"],
   ]);
 
 //   array hsv = Image.Color( @new_args->bg )->hsv( );
