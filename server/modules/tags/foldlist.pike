@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999, Idonex AB.
-// $Id: foldlist.pike,v 1.5 1999/08/13 16:49:06 nilsson Exp $
+// $Id: foldlist.pike,v 1.6 1999/09/22 19:46:55 nilsson Exp $
 
-constant cvs_version = "$Id: foldlist.pike,v 1.5 1999/08/13 16:49:06 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.6 1999/09/22 19:46:55 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -27,22 +27,22 @@ array (mixed) register_module()
 	       0,1 });
 }
 
-string encode_url(array states, string state_id, object id){
-  string ret="";
+string encode_url(array states, object state, object id){
+  string value="";
   
   foreach(states, int tmp) {
     if(tmp>-1)
-      ret+=(string)tmp;
+      value+=(string)tmp;
     else
       return id->not_query+"?state="+
-        uri_encode(preview_altered_state(state_id, ret, id));
+        state->uri_encode(value);
   }    
   return id->not_query+"?state="+
-    uri_encode(preview_altered_state(state_id, ret, id));
+    state->uri_encode(value);
 }
 
 //It seams like the fold/unfold images are mixed up.
-string tag_ft(string tag, mapping m, string cont, object id, string state_id, mapping fl) {
+string tag_ft(string tag, mapping m, string cont, object id, object state, mapping fl) {
     int index=fl->cnt++;
     array states=copy_value(fl->states);
     if((m->unfolded && states[index]==-1) ||
@@ -52,7 +52,7 @@ string tag_ft(string tag, mapping m, string cont, object id, string state_id, ma
         id->misc->defines[" fl "]=fl->inh+(fl->cnt>10?":":"")+(string)fl->cnt;
         states[index]=0;
 	return "<dt><a target=\"_self\" href=\""+
-	       encode_url(states,state_id,id)+
+	       encode_url(states,state,id)+
                "\"><img width=\"20\" height=\"20\" "
                "src=\"internal-roxen-fold\" border=\"0\" "
 	       "alt=\"-\" /></a>"+
@@ -66,7 +66,7 @@ string tag_ft(string tag, mapping m, string cont, object id, string state_id, ma
     fl->states[index]=0;
     states[index]=1;
     return "<dt><a target=\"_self\" href=\""+
-           encode_url(states,state_id,id)+
+           encode_url(states,state,id)+
            "\"><img width=\"20\" height=\"20\" "
            "src=\"internal-roxen-unfold\" border=\"0\" "
 	   "alt=\"+\" /></a>"+parse_html(cont,([]),(["fd":""]))+"</dt>";
@@ -79,7 +79,7 @@ string tag_foldlist(string tag, mapping m, string c, object id) {
   if(!id->misc->defines[" fl "])
     id->misc->defines[" fl "]="";
 
-  //Make an initial guess of what should bew folded and wht should not.
+  //Make an initial guess of what should be folded and what should not.
   if(m->unfolded)
     states=allocate(fds,1);  //All unfolded
   else if(m->folded)
@@ -89,21 +89,22 @@ string tag_foldlist(string tag, mapping m, string c, object id) {
 
   //Register ourselfs as state consumers and incorporate our initial state.
   string fl_name = (m->name || "fl")+fds+(id->misc->defines[" fl "]!=""?":"+id->misc->defines[" fl "]:"");
-  string state_id = register_state_consumer(fl_name, id);
+  object state=page_state(id);
+  string state_id = state->register_consumer(fl_name, id);
   string error="";
   if(id->variables->state)
-    if(!decode_state(uri_decode(id->variables->state), id))
+    if(!state->uri_decode(id->variables->state))
       error=rxml_error(tag, "Error in state.", id);
 
   //Get our real state
-  array new=(get_state(state_id,id)||"")/"";
+  array new=(state->get(state_id)||"")/"";
   for(int i=0; i<sizeof(new); i++)
     states[i]=(int)new[i];
 
   mapping fl=(["states":states,"cnt":0,"inh":id->misc->defines[" fl "],"txt":""]);
 
   //Do the real thing.
-  c=parse_html(c,([]),(["ft":tag_ft]),id,state_id,fl);
+  c=parse_html(c,([]),(["ft":tag_ft]),id,state,fl);
   id->misc->defines[" fl "]=fl->inh;
 
   return (id->misc->debug?"<!-- "+state_id+" -->":"")+"<dl>"+c+"</dl>"+error+"\n";

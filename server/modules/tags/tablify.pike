@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.38 1999/08/21 10:42:16 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.39 1999/09/22 19:46:55 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -19,14 +19,14 @@ mixed *register_module()
     0, 1, });
 }
 
-string encode_url(int col, int state, string state_id, object id){
+string encode_url(int col, int state, object stateobj, object id){
   if(col==abs(state))
     state=-1*state;
   else
     state=col;
 
   return id->not_query+"?state="+
-    uri_encode(preview_altered_state(state_id, state, id));
+    stateobj->uri_encode(state);
 }
 
 string make_table(array subtitles, array table, mapping opt, object id)
@@ -49,7 +49,7 @@ string make_table(array subtitles, array table, mapping opt, object id)
       r+="<tr>";
     foreach(subtitles, string s) {
       col++;
-      r+="<th align=\"left\">"+(opt["interactive-sort"]?"<a href=\""+encode_url(col,opt->sortcol||0,opt->state_id,id)+"\">":"");
+      r+="<th align=\"left\">"+(opt["interactive-sort"]?"<a href=\""+encode_url(col,opt->sortcol||0,opt->state,id)+"\">":"");
       if(opt->nicer)
         r+="<gtext nfont=\""+(opt->font||"lucida")+"\" scale=\""+
 	   (opt->scale||"0.36")+"\" fg=\""+(opt->titlecolor||"white")+"\" bg=\""+
@@ -143,6 +143,7 @@ string make_table(array subtitles, array table, mapping opt, object id)
   m_delete(opt, "cellalign");
   m_delete(opt, "cellvalign");
   m_delete(opt, "fields");
+  m_delete(opt, "state");
   return make_container("table",opt,r);
 }
 
@@ -243,13 +244,12 @@ string tag_tablify(string tag, mapping m, string q, object id)
 			}, sep);
 
   if(m["interactive-sort"]) {
-    string state_id="";
-    state_id = register_state_consumer((m->name || "tb")+sizeof(rows), id);
-    m->state_id=state_id;
+    m->state=page_state(id);
+    m->state->register_consumer((m->name || "tb")+sizeof(rows), id);
     m->sortcol=(int)m->sortcol;
     if(id->variables->state){
-      decode_state(uri_decode(id->variables->state), id);
-      m->sortcol=get_state(state_id,id)?get_state(state_id,id):m->sortcol;
+      m->state->uri_decode(id->variables->state);
+      m->sortcol=m->state->get()||m->sortcol;
     }
   }
 
