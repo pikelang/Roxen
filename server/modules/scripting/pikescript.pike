@@ -1,5 +1,3 @@
-#include <config.h>
-
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // Support for user Pike-scripts, like CGI, but handled internally in
@@ -8,14 +6,14 @@
 
 // This is an extension module.
 
-constant cvs_version=
-"$Id: pikescript.pike,v 1.52 1999/12/22 01:34:26 per Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.53 1999/12/28 07:58:19 nilsson Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
+#include <config.h>
 #include <module.h>
 
 array register_module()
@@ -102,7 +100,7 @@ array|mapping call_script(function fun, object got, object file)
   string s;
   object privs;
   if(!functionp(fun)) {
-    werror("call_script() failed: %O is not a function!\n", fun);
+    report_debug("call_script() failed: %O is not a function!\n", fun);
     return 0;
   }
   string|array (int) uid, olduid, us;
@@ -215,7 +213,7 @@ mapping handle_file_extension(object f, string e, object got)
     {
       if(strlen(e->get()))
       {
-        werror(e->get());
+        report_debug(e->get());
         return http_string_answer("<h1>Error compiling pike script</h1><p><pre>"+
                                   html_encode_string(e->get())+"</pre>");
       } 
@@ -260,5 +258,5 @@ string status()
   }
   res += "<hr>";
 
-  return ("<pre><font size=+1>" + res + "</font></pre>");
+  return ("<pre><font size=\"+1\">" + res + "</font></pre>");
 }
