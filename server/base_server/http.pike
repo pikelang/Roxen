@@ -1,7 +1,9 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.36 2000/02/20 17:41:33 nilsson Exp $
+// $Id: http.pike,v 1.37 2000/03/17 17:47:06 nilsson Exp $
+
+//#pragma strict_types
 
 #include <config.h>
 #include <variables.h>
@@ -19,26 +21,26 @@ class RequestID {};
 
 string http_res_to_string( mapping file, RequestID id )
 {
-  mapping heads=
+  mapping(string:string|array(string)) heads=
     ([
-      "Content-type":file["type"],
-      "Server":replace(id->version(), " ", "·"),
-      "Date":http_date(id->time)
+      "Content-type":[string]file["type"],
+      "Server":replace([string]id->version(), " ", "·"),
+      "Date":http_date([int]id->time)
       ]);
 
   if(file->encoding)
-    heads["Content-Encoding"] = file->encoding;
+    heads["Content-Encoding"] = [string]file->encoding;
 
   if(!file->error)
     file->error=200;
 
   if(file->expires)
-      heads->Expires = http_date(file->expires);
+      heads->Expires = http_date([int]file->expires);
 
   if(!file->len)
   {
     if(objectp(file->file))
-      if(!file->stat && !(file->stat=id->misc->stat))
+      if(!file->stat && !(file->stat=([mapping(string:mixed)]id->misc)->stat))
 	file->stat = (array(int))file->file->stat();
     array fstat;
     if(arrayp(fstat = file->stat))
@@ -46,22 +48,22 @@ string http_res_to_string( mapping file, RequestID id )
       if(file->file && !file->len)
 	file->len = fstat[1];
 
-      heads["Last-Modified"] = http_date(fstat[3]);
+      heads["Last-Modified"] = http_date([int]fstat[3]);
     }
     if(stringp(file->data))
-      file->len += strlen(file->data);
+      file->len += strlen([string]file->data);
   }
 
   if(mappingp(file->extra_heads))
     heads |= file->extra_heads;
 
-  if(mappingp(id->misc->moreheads))
-    heads |= id->misc->moreheads;
+  if(mappingp(([mapping(string:mixed)]id->misc)->moreheads))
+    heads |= ([mapping(string:mixed)]id->misc)->moreheads;
 
   array myheads=({id->prot+" "+(file->rettext||errors[file->error])});
   foreach(indices(heads), string h)
     if(arrayp(heads[h]))
-      foreach(heads[h], string tmp)
+      foreach([array(string)]heads[h], string tmp)
 	myheads += ({ `+(h,": ", tmp)});
     else
       myheads +=  ({ `+(h, ": ", heads[h])});
@@ -81,13 +83,10 @@ string http_res_to_string( mapping file, RequestID id )
   return head_string;
 }
 
-
-/* Return a filled out struct with the error and data specified.  The
- * error is infact the status response, so '200' is HTTP Document
- * follows, and 500 Internal Server error, etc.
- */
-
 mapping http_low_answer( int errno, string data )
+  //! Return a filled out struct with the error and data specified.  The
+  //! error is infact the status response, so '200' is HTTP Document
+  //! follows, and 500 Internal Server error, etc.
 {
   if(!data) data="";
   HTTP_WERR("Return code "+errno+" ("+data+")");
@@ -106,18 +105,15 @@ mapping http_pipe_in_progress()
   return ([ "file":-1, "pipe":1, ]);
 }
 
-
-
-/* Convenience functions to use in Roxen modules. When you just want
- * to return a string of data, with an optional type, this is the
- * easiest way to do it if you don't want to worry about the internal
- * roxen structures.
- */
 mapping http_rxml_answer( string rxml, RequestID id,
                           void|Stdio.File file,
                           void|string type )
+  //! Convenience functions to use in Roxen modules. When you just want
+  //! to return a string of data, with an optional type, this is the
+  //! easiest way to do it if you don't want to worry about the internal
+  //! roxen structures.
 {
-  rxml = id->conf->parse_rxml(rxml, id, file);
+  rxml = ([function(string, RequestID, Stdio.File:string)]id->conf->parse_rxml)(rxml, id, file);
   HTTP_WERR("RXML answer ("+(type||"text/html")+")");
   return (["data":rxml,
 	   "type":(type||"text/html"),
@@ -127,7 +123,6 @@ mapping http_rxml_answer( string rxml, RequestID id,
 	   "extra_heads":id->misc->defines[" _extra_heads"],
 	   ]);
 }
-
 
 mapping http_string_answer(string text, string|void type)
 {
@@ -145,11 +140,11 @@ constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 		     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
 
-/* Return a date, used in the common log format */
 string cern_http_date(int t)
+  //! Return a date, used in the common log format
 {
   string c;
-  mapping lt = localtime(t);
+  mapping(string:int) lt = localtime(t);
   int tzh = lt->timezone/3600 - lt->isdst;
 
   if(tzh > 0)
@@ -164,24 +159,16 @@ string cern_http_date(int t)
 		 lt->hour, lt->min, lt->sec, c, tzh));
 }
 
-/* Returns a http_date, as specified by the HTTP-protocol standard.
- * This is used for logging as well as the Last-Modified and Time
- * heads in the reply.  */
-
 string http_date(int t)
+  //! Returns a http_date, as specified by the HTTP-protocol standard.
+  //! This is used for logging as well as the Last-Modified and Time
+  //! heads in the reply.
 {
-#if constant(gmtime)
-  mapping l = gmtime( t );
-#else
-  mapping l = localtime( t );
-  t += l->timezone - 3600*l->isdst;
-  l = localtime(t);
-#endif
+  mapping(string:int) l = gmtime( t );
   return(sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT",
 		 days[l->wday], l->mday, months[l->mon], 1900+l->year,
 		 l->hour, l->min, l->sec));
 }
-
 
 string http_encode_string(string f)
 {
@@ -226,31 +213,31 @@ static string add_pre_state( string url, multiset state )
   return "/(" + sort(indices(state)) * "," + ")" + url ;
 }
 
-/* Simply returns a http-redirect message to the specified URL.  */
 mapping http_redirect( string url, RequestID|void id )
+  //! Simply returns a http-redirect message to the specified URL.
 {
   if(strlen(url) && url[0] == '/')
   {
     if(id)
     {
       if( id->misc->site_prefix_path )
-        url = replace( id->misc->site_prefix_path + url, "//", "/" );
-      url = add_pre_state(url, id->prestate);
+        url = replace( [string]id->misc->site_prefix_path + url, "//", "/" );
+      url = add_pre_state(url, [multiset]id->prestate);
       if(id->misc->host)
       {
-	array h;
+	array(string) h;
 	HTTP_WERR(sprintf("(REDIR) id->port_obj:%O", id->port_obj));
-	string prot = id->port_obj->name + "://";
-	string p = ":" + id->port_obj->default_port;
+	string prot = [string]id->port_obj->name + "://";
+	string p = ":" + [string]id->port_obj->default_port;
 
-	h = id->misc->host / p  - ({""});
+	h = [string]id->misc->host / p  - ({""});
 	if(sizeof(h) == 1)
 	  // Remove redundant port number.
 	  url=prot+h[0]+url;
 	else
-	  url=prot+id->misc->host+url;
+	  url=prot+[string]id->misc->host+url;
       } else
-	url = id->conf->query("MyWorldLocation") + url[1..];
+	url = [string]id->conf->query("MyWorldLocation") + url[1..];
     }
   }
   HTTP_WERR("Redirect -> "+http_encode_string(url));
@@ -263,7 +250,6 @@ mapping http_stream(Stdio.File from)
   return ([ "raw":1, "file":from, "len":-1, ]);
 }
 
-
 mapping http_auth_required(string realm, string|void message)
 {
   if(!message)
@@ -272,18 +258,6 @@ mapping http_auth_required(string realm, string|void message)
   return http_low_answer(401, message)
     + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
-
-#ifdef API_COMPAT
-mapping http_auth_failed(string realm)
-{
-  HTTP_WERR("Auth failed ("+realm+")");
-  return http_low_answer(401, "<h1>Authentication failed.\n</h1>")
-    + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
-}
-#else
-function http_auth_failed = http_auth_required;
-#endif
-
 
 mapping http_proxy_auth_required(string realm, void|string message)
 {
