@@ -3,62 +3,19 @@
   <if not variable='_.nosave'><cf-save/></if>
   <if variable='form.section'>
     <input type='hidden' name='section' value='&form.section;'/>
+    <set variable='var.section' value='&form.section;'/>
   </if>
   <br clear="all" />
   <emit ::='&_.args;'/>
-  <set variable='var.oldchanged' value='notreally'/>
+  <set variable='var.oldchanged' value='0'/>
   <table cellspacing="0" cellpadding="4">
-    <emit ::='&_.args;' noset=''>
-      <cond>
-        <case variable='usr.changemark is not'>
-          <tr><td valign=top width="20%" valign="top"><b>&_.name;</b></td>
-		<td valign="top"><eval>&_.form:none;</eval></td></tr>
-          <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
-        </case>
-    
-        <case variable='usr.changemark is color'>
-          <if variable='_.changed is 1'>
-           <set variable='var.extraargs' value='bgcolor="&usr.fade2;"'/>
-          </if>
-          <else>
-           <set variable='var.extraargs' value=''/>
-          </else>
-          <tr>
-            <td valign="top" width="20%"><b>&_.name;</b></td>
-            <td valign="top" ::='&var.extraargs;'><eval>&_.form:none;</eval></td>
-          </tr>
-          <tr>
-            <td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td>
-          </tr>
-        </case>
-    
-        <case variable='usr.changemark is header'>
-          <if not variable='_.changed is &var.oldchanged;'>
-            <set variable='var.oldchanged' value='&_.changed;'/>
-            <if variable='_.changed is 1'>
-            <tr bgcolor='&usr.content-titlebg;'>
-              <td colspan="2" width="100%">
-                <font size='+1' color='&usr.content-titlefg;'><translate id="358">Changed</translate></font>
-             </td>
-            </tr>
-          </if>
-          <else>
-            <tr bgcolor='&usr.content-titlebg;'>
-              <td colspan="2" width="100%">
-                <font size='+1' color='&usr.content-titlefg;'><translate id="359">Unchanged</translate></font>
-              </td>
-            </tr>
-          </else>
-         </if>
-         <tr><td valign="top" width="20%"><b>&_.name;</b></td><td valign="top"><eval>&_.form:none;</eval></td></tr>
-         <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
-        </case>
-      </cond>
-    </emit>
+    <eval><emit ::='&_.args;' noset=''>
+      <cf-render-variable/>
+    </emit></eval>
   </table>
   <if not variable='_.nosave'><cf-save/></if>
-
 </define>
+
 <define container="st-tabs">
   <colorscope ::="&usr.subtabs-tableargs:none;">
     <define preparse="1" variable="var.__tabs"><contents/></define>
@@ -99,33 +56,6 @@
       <st-page><contents/></st-page>
     </subtablist>
    </cv-split>
-</define>
-
-<define container="cv-obox">
-  <table cellpadding="1" cellspacing="0" border="0" width="&_.width;" align="center" bgcolor="&usr.obox-border;">
-  <tr><td>
-  <table cellpadding="2" cellspacing="0" border="0" width="&_.iwidth;" align="center">
-  <tr bgcolor="&usr.obox-titlebg;">
-    <td valign="top">
-      <font color="&usr.obox-titlefg;" face="&usr.obox-titlefont;"
-            size="+1"><b>&_.title;</b></font>
-    </td>
-  </tr>
-
-  <tr><td bgcolor="&usr.obox-bodybg;"><font color="&usr.obox-bodyfg;" size="2">
-    <contents/>
-  </font></td></tr>
-  </table>
-  </td></tr></table>
-</define>
-
-<define container='box'>
- <if variable="_.type is small">
-   <cv-obox width='200' iwidth=198 title='&_.title;'><contents/></cv-obox>
- </if>
- <else>
-   <cv-obox width='400' iwidth='398' title='&_.title;'><contents/></cv-obox>
- </else>
 </define>
 
 <define container="subtablist">
@@ -232,8 +162,7 @@ Total render time: <sprintf format='%d'>&var.time-ms;</sprintf>ms <br />
 <set variable=var.time-ms expr='&var.time-parse-spent; * 1000'/>
 Content file: <sprintf format='%d'>&var.time-ms;</sprintf>ms <br />
 
-
-</font>    
+</font>
      </div>
   </body>
 </html>
