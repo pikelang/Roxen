@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.59 1997/08/18 01:35:53 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.60 1997/08/18 13:57:33 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -885,7 +885,8 @@ mapping|int low_get_file(object id, int|void no_magic)
   {
 #ifndef NO_INTERNAL_HACK 
     // No, this is not beautiful... :) 
-    if(id->not_query[0] == '/'&& sscanf(id->not_query, "%*s/internal-%s", loc))
+    if(sizeof(id->not_query) && (id->not_query[0] == '/') &&
+       sscanf(id->not_query, "%*s/internal-%s", loc))
     {
       if(sscanf(loc, "gopher-%[^/]", loc))    // The directory icons.
 	return internal_gopher_image(loc);
@@ -2290,7 +2291,7 @@ int load_module(string module_file)
     return 0;
   }
 
-  if (err = catch (module_data = obj->register_module())) {
+  if (err = catch (module_data = obj->register_module(this_object()))) {
 #ifdef MODULE_DEBUG
     perror("FAILED\n" + describe_backtrace( err ));
 #endif
