@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.349 2000/08/22 23:30:18 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.350 2000/08/24 19:54:17 lange Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -548,51 +548,6 @@ public void log(mapping file, RequestID request_id)
   if(!form) return;
 
   roxen.run_log_format( form, log_function, request_id, file );
-}
-
-// These are here for statistics and debug reasons only.
-public string status()
-{
-  float tmp;
-  string res="";
-  float dt = (float)(time(1) - roxen->start_time + 1);
-
-  res = "<p><table>";
-  res += sprintf("<tr align=\"right\"><td><b>%s:</b></td><td>%.2fMB"
-		 "</td><td>%.2f Kbit/%s</td>"
-		 "<td><b>%s:</b></td><td>%.2fMB</td></tr>\n"
-		 "<tr align=\"right\"><td><b>%s:</b></td>"
-		 "<td>%8d</td><td>%.2f/%s</td>"
-		 "<td><b>%s:</b></td><td>%.2fMB</td></tr>\n",
-		 LOC_C(2,"Sent data"),((float)sent/(1024.0*1024.0)),
-		 (((float)sent)/(1024.0*1024.0)/dt) * 8192.0, LOC_C(3,"sec"),
-		 LOC_C(4,"Sent headers"),((float)hsent)/(1024.0*1024.0),
-		 LOC_C(5,"Number of requests"), requests,
-		 (((float)requests * 60.0)/dt), LOC_C(6,"min"),
-		 LOC_C(7,"Received data"),((float)received)/(1024.0*1024.0));
-
-  if (!zero_type(misc->ftp_users)) {
-    res += sprintf("<tr align=\"right\"><td><b>%s:</b></td><td>%8d</td>"
-		   "<td>%.2f/%s</td>"
-		   "<td><b>%s:</b></td><td>%d</td></tr>\n",
-		   LOC_C(8,"FTP users (total)"), misc->ftp_users,
-		   (((float)misc->ftp_users*(float)60.0)/dt), LOC_C(6,"min"),
-		   LOC_C(9,"FTP users (now)"), misc->ftp_users_now);
-  }
-  res += "</table></p>\n\n";
-
-  if ((extra_statistics->ftp) && (extra_statistics->ftp->commands)) {
-    // FTP statistics.
-    res += "<b>"+LOC_C(10, "FTP statistics") + ":</b><br />\n"
-      "<ul><table>\n";
-    foreach(sort(indices(extra_statistics->ftp->commands)), string cmd) {
-      res += CALL("ftp_stat_line", "eng")
-	(upper_case(cmd), extra_statistics->ftp->commands[cmd]);
-    }
-    res += "</table></ul>\n";
-  }
-
-  return res;
 }
 
 public array(string) userinfo(string u, RequestID|void id)

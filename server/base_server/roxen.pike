@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.533 2000/08/23 16:06:29 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.534 2000/08/24 19:54:18 lange Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1909,50 +1909,6 @@ int increase_id()
   current_user_id_file->write((string)current_user_id_number);
   current_user_id_file_last_mod = current_user_id_file->stat()[2];
   return current_user_id_number;
-}
-
-public string full_status()
-{
-  int tmp;
-  string res="";
-  array foo = ({0.0, 0.0, 0.0, 0.0, 0});
-  if(!sizeof(configurations))
-    return "<b>"+LOC_C(1, "No virtual servers enabled")+"</b>\n";
-
-  foreach(configurations, object conf)
-  {
-    if(!conf->sent
-       ||!conf->received
-       ||!conf->hsent)
-      continue;
-    foo[0] += conf->sent/(1024.0*1024.0)/(float)(time(1)-start_time+1);
-    foo[1] += conf->sent/(1024.0*1024.0);
-    foo[2] += conf->hsent/(1024.0*1024.0);
-    foo[3] += conf->received/(1024.0*1024.0);
-    foo[4] += conf->requests;
-  }
-
-  for(tmp = 1; tmp < 4; tmp ++)
-  {
-    // FIXME: LOCALE?
-    if(foo[tmp] < 1024.0)
-      foo[tmp] = sprintf("%.2f MB", foo[tmp]);
-    else
-      foo[tmp] = sprintf("%.2f GB", foo[tmp]/1024.0);
-  }
-
-  int uptime = time(1)-start_time;
-  int days = uptime/(24*60*60);
-  int hrs = uptime/(60*60);
-  int min = uptime/60 - hrs*60;
-  hrs -= days*24;
-
-  tmp=(int)((foo[4]*600.0)/(uptime+1));
-
-  return(CALL_C("full_status", "eng")(real_version, 
-				    start_time, days, hrs, min, uptime%60,
-				    foo[1], foo[0] * 8192.0, foo[2], 
-				    foo[4], (float)tmp/(float)10, foo[3]));
 }
 
 #ifndef __NT__
