@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.3 2000/08/16 11:34:07 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.4 2000/08/17 15:11:26 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "HTML washer";
@@ -75,9 +75,19 @@ class TagWashHtml
 
   string link_dwim(string s)
   {
+    Parser.HTML parser = Parser.HTML();
     
-    return link_regexp->replace(s, lambda(string link)
-				   {return "<a href='"+link+"'>"+link+"</a>"; });
+    parser->add_container("a", lambda(Parser.HTML p, mapping args)
+			       { return ({ p->current() }); });
+    
+    parser->_set_data_callback(
+      lambda(Parser.HTML p, string data)
+      { return ({ link_regexp->
+		  replace(data, lambda(string link)
+				{ return "<a href='"+link+"'>"+
+				    link+"</a>"; }) }); });
+    
+    return parser->finish(s)->read();
   }
   
   string unlink_dwim(string s)
