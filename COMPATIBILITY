@@ -1,3 +1,10 @@
 This file lists the known compatibility issues between ChiliMoon 2004
 and ChiliMoon 2003.
 
+ - The hashing of the seed for the <random> tag has changed so a
+   certain seed no longer corresponds to the same random value.
+
+ - The RXML module is no longer a provider module for "modified" and
+   "rxmltags".
+
+ - The entity &client.tm; is removed.
