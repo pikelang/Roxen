@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.69 2000/01/18 18:12:31 mast Exp $
+ * $Id: rxml.pike,v 1.70 2000/01/19 16:52:27 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -16,7 +16,6 @@ inherit "rxmlhelp";
 #define RXML_NAMESPACE "rxml"
 
 mapping (string:function) real_if_callers;
-array (RoxenModule) parse_modules = ({  });
 
 string rxml_error(string tag, string error, RequestID id) {
   return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
@@ -75,23 +74,44 @@ class Scope_roxen {
 
 RXML.Scope scope_roxen=Scope_roxen();
 
-void global_entities(RXML.Context c) {
-  c->add_scope("roxen",scope_roxen);
-  c->add_scope("cookie" ,c->id->cookies);
-  c->add_scope("form", c->id->variables);
-  c->add_scope("var", ([]) );
-}
-
-RXML.TagSet rxml_tag_set = lambda ()
+RXML.TagSet rxml_tag_set = class
 {
-  RXML.TagSet tag_set = RXML.TagSet ("rxml_tag_set");
-  tag_set->prefix = RXML_NAMESPACE;
-  tag_set->prepare_context = global_entities;
-  return tag_set;
-}();
+  inherit RXML.TagSet;
 
-mapping(RoxenModule:RXML.TagSet) module_tag_sets = ([]);
-int parse_html_compat;
+  string prefix = RXML_NAMESPACE;
+
+  void prepare_context (RXML.Context c) {
+    c->add_scope("roxen",scope_roxen);
+    c->add_scope("cookie" ,c->id->cookies);
+    c->add_scope("form", c->id->variables);
+    c->add_scope("var", ([]) );
+  }
+
+  array(RoxenModule) modules = ({});
+  // Each element in the imported array is the registered tag set of a
+  // parser module. This array contains the corresponding module
+  // object.
+
+  void sort_on_priority()
+  {
+    array(int) priorities = modules->query ("_priority", 1);
+    priorities = replace (priorities, 0, 4);
+    array(RXML.TagSet) new_imported = imported + ({});
+    array(RoxenModule) new_modules = modules + ({});
+    sort (priorities, new_imported, new_modules);
+    new_imported = reverse (new_imported);
+    if (equal (imported, new_imported)) return;
+    new_modules = reverse (new_modules);
+    imported = new_imported, modules = new_modules;
+  }
+
+  void set_modules (array(RoxenModule) _modules)
+  // Kludge currently necessary in Pike 7.
+  {
+    modules = _modules;
+  }
+
+} ("rxml_tag_set");
 
 RXML.TagSet entities_tag_set = class
 {
@@ -109,6 +129,8 @@ RXML.TagSet entities_tag_set = class
 } ("entities_tag_set");
 
 RXML.Type t_html_parse_varrefs = RXML.t_html (RXML.PHtmlCompat);
+
+int parse_html_compat;
 
 class BacktraceFrame
 // Only used to get old style tags in the RXML backtraces.
@@ -324,82 +346,68 @@ string do_parse(string to_parse, RequestID id,
   }
 }
 
-void build_callers()
+void build_if_callers()
 {
-  mapping(RoxenModule:RXML.TagSet) tag_sets = ([]);
-  array(RXML.TagSet) ts_list = ({});
-  array(int) ts_priorities = ({});
   real_if_callers=([]);
 
-  parse_modules-=({0});
-
-  foreach (parse_modules, RoxenModule mod) {
-    mapping(string:mixed) defs;
-    RXML.TagSet tag_set;
-
+  foreach (rxml_tag_set->modules, RoxenModule mod) {
+    mapping(string:function) defs;
     if (mod->query_if_callers &&
 	mappingp (defs = mod->query_if_callers()) &&
 	sizeof (defs))
       real_if_callers |= defs;
+  }
+}
 
-    tag_set = mod->query_tag_set ? mod->query_tag_set() :
-      module_tag_sets[mod] || RXML.TagSet (sprintf ("%O", mod));
+void add_parse_module (RoxenModule mod)
+{
+  RXML.TagSet tag_set =
+    mod->query_tag_set ? mod->query_tag_set() : RXML.TagSet (sprintf ("%O", mod));
+  mapping(string:mixed) defs;
 
-    if (mod->query_tag_callers &&
-	mappingp (defs = mod->query_tag_callers()) &&
-	sizeof (defs)) {
-      tag_set->low_tags =
-	mkmapping (indices (defs),
-		   Array.transpose (({({call_tag}) * sizeof (defs),
-				      values (defs)})));
-      tag_set->changed();
-    }
+  if (mod->query_tag_callers &&
+      mappingp (defs = mod->query_tag_callers()) &&
+      sizeof (defs))
+    tag_set->low_tags =
+      mkmapping (indices (defs),
+		 Array.transpose (({({call_tag}) * sizeof (defs),
+				    values (defs)})));
 
-    if (mod->query_container_callers &&
-	mappingp (defs = mod->query_container_callers()) &&
-	sizeof (defs)) {
-      tag_set->low_containers =
-	mkmapping (indices (defs),
-		   Array.transpose (({({call_container}) * sizeof (defs),
-				      values (defs)})));
-      tag_set->changed();
-    }
+  if (mod->query_container_callers &&
+      mappingp (defs = mod->query_container_callers()) &&
+      sizeof (defs))
+    tag_set->low_containers =
+      mkmapping (indices (defs),
+		 Array.transpose (({({call_container}) * sizeof (defs),
+				    values (defs)})));
 
-    if (!(sizeof (tag_set->get_local_tags()) || sizeof (tag_set->imported) ||
-	  tag_set->low_tags || tag_set->low_containers) ||
-	mod == this_object())
-      continue;
-
-    tag_sets[mod] = tag_set;
-    ts_list += ({tag_set});
-    ts_priorities += ({mod->query("_priority", 1) || 4});
+  if (search (rxml_tag_set->imported, tag_set) < 0) {
+    rxml_tag_set->set_modules (rxml_tag_set->modules + ({mod}));
+    array(RXML.Tag) foo = rxml_tag_set->imported;
+    rxml_tag_set->imported = foo + ({tag_set});
+    remove_call_out (rxml_tag_set->sort_on_priority);
+    call_out (rxml_tag_set->sort_on_priority, 0);
   }
 
-  sort (ts_priorities, ts_list);
-  reverse (ts_list);
-  ts_list += ({entities_tag_set});
-  rxml_tag_set->imported = ts_list;
-  module_tag_sets = tag_sets;
+  remove_call_out (build_if_callers);
+  call_out (build_if_callers, 0);
 }
 
-void add_parse_module(RoxenModule o)
+void remove_parse_module (RoxenModule mod)
 {
-  parse_modules |= ({o});
-  remove_call_out(build_callers);
-  call_out(build_callers,0);
-}
-
-void remove_parse_module(RoxenModule o)
-{
-  parse_modules -= ({o});
-  if (module_tag_sets[o]) {
-    destruct (module_tag_sets[o]);
-    m_delete (module_tag_sets, o);
+  int i = search (rxml_tag_set->modules, mod);
+  if (i >= 0) {
+    RXML.TagSet tag_set = rxml_tag_set->imported[i];
+    rxml_tag_set->set_modules (
+      rxml_tag_set->modules[..i - 1] + rxml_tag_set->modules[i + 1..]);
+    rxml_tag_set->imported =
+      rxml_tag_set->imported[..i - 1] + rxml_tag_set->imported[i + 1..];
+    if (tag_set) destruct (tag_set);
   }
-  remove_call_out(build_callers);
-  call_out(build_callers,0);
-}
 
+  remove_call_out (build_if_callers);
+  call_out (build_if_callers, 0);
+}
 
 
 string call_user_tag(RXML.PHtml parser, mapping args)
@@ -1087,10 +1095,12 @@ mapping query_tag_callers()
 
 RXML.TagSet query_tag_set()
 {
-  // Note: By putting these tags in rxml_tag_set, they will always
-  // have the highest priority.
-  rxml_tag_set->add_tags(({TagLine()}));
-  return rxml_tag_set;
+  // Note: By putting the tags in rxml_tag_set, they will always have
+  // the highest priority.
+  rxml_tag_set->add_tags (filter (rows (this_object(),
+					glob ("Tag*", indices (this_object()))),
+				  functionp)());
+  return entities_tag_set;
 }
 
 
