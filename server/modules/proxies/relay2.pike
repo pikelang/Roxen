@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.21 2001/05/11 04:37:52 per Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.22 2001/05/16 01:14:02 per Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -300,10 +300,14 @@ class Relay
     werror("RELAY: Connecting to "+host+":"+port+"\n");
 #endif
 
+#if 1
+    fd->async_connect( host, port, connected );
+#else
     if( fd->connect( host, port ) )
       connected( 1 );
     else
       connected( 0 );
+#endif
   }
 }
 
