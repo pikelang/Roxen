@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.44 2002/06/27 14:53:34 nilsson Exp $
+ * $Id: create_configif.pike,v 1.45 2002/07/10 12:42:38 nilsson Exp $
  *
  * Create an initial administration interface server.
  */
@@ -108,11 +108,11 @@ interface. Arguments:
           name of a question field and the value to be
           filled into it. Available fields:
       server_name    The name of the server. Defaults to
-                     \"Administration Interface\".
+                     \"Administration\".
       server_url     The server url, e.g.
                      \"http://*:1234/\".
       user           The name of the administrator.
-                     Defaults to \"administrator\".
+                     Defaults to \"admin\".
       password       The administrator password.
       ok             Disable user confirmation of the
                      above information with the value
@@ -172,7 +172,7 @@ Example of a batch installation:
     if(!admin) 
     {
       write("\n");
-      name = read_string(rl, "Server name:", "Administration Interface",
+      name = read_string(rl, "Server name:", "Administration",
 			 batch->server_name);
 
       int port_ok;
@@ -229,7 +229,7 @@ Example of a batch installation:
 
     do
     {
-      user = read_string(rl, "Administrator user name:", "administrator",
+      user = read_string(rl, "Administrator user name:", "admin",
 			 batch->user);
       m_delete(batch, "user");
     } while(((search(user, "/") != -1) || (search(user, "\\") != -1)) &&
@@ -318,7 +318,7 @@ ent text/html
 string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
-  <str>real_name</str>   : <str>Administration Interface Default User</str>
+  <str>real_name</str>   : <str>Default Administrator</str>
   <str>password</str>    : <str>" + crypt(password) + #"</str>
   <str>name</str>        : <str>" + user + "</str>\n</map>" ));
 
