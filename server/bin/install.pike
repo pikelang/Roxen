@@ -5,7 +5,7 @@
  * doc = "Main part of the install script that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.36 1999/06/07 04:34:45 mast Exp $";
+string cvs_version = "$Id: install.pike,v 1.37 1999/06/10 23:13:21 peter Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -287,7 +287,7 @@ string find_arg(array argv, array|string shortform,
   return def;
 }
 
-void main(int argc, string *argv)
+void main(int argc, array argv)
 {
   string host, client, log_dir, domain;
   mixed tmp;
