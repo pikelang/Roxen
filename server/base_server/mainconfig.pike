@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.123 1999/05/14 02:49:27 neotron Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.124 1999/05/15 21:25:07 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -195,7 +195,7 @@ void create()
 }
 
 // Note stringification of ACTION and ALIGN
-#define BUTTON(ACTION,TEXT,ALIGN) do{buttons += ({({"<a href=\"/("#ACTION")"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":""),replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+((#ALIGN-" ")=="left"?"":" align="+(#ALIGN-" "))+"></a>"})});lm=0;}while(0)
+#define BUTTON(ACTION,TEXT,ALIGN) do{buttons += ({({"<a href=\"/("#ACTION")"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":""),replace(/*string_to_utf8(*/TEXT/*)*/," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+((#ALIGN-" ")=="left"?"":" align="+(#ALIGN-" "))+"></a>"})});lm=0;}while(0)
 #define PUSH_BUTTONS(CLEAR) do{if(sizeof(buttons)){buttons[-1][0]+="rm/";res+=`+(@buttons);if(CLEAR){PUSH("<br clear=all>");}}lm=1;buttons=({});}while(0)
 
 
@@ -233,7 +233,14 @@ mapping charset_encode( mapping what )
     string enc = LOW_LOCALE->reply_encoding || LOW_LOCALE->encoding;
     if(enc)
     {
-      what->data = Locale.Charset->encoder(enc)->feed(what->data)->drain();
+      if (catch {
+	what->data = Locale.Charset->encoder(enc)->feed(what->data)->drain();
+      }) {
+	// Error during encoding.
+	// Try using UTF8 instead.
+	enc = "utf-8";
+	what->data = Locale.Charset->encoder(enc)->feed(what->data)->drain();
+      }
       if(!what->extra_heads)
         what->extra_heads = ([]);
       what->extra_heads["Content-type"] = what->type+"; charset="+enc;
@@ -1204,7 +1211,6 @@ mapping auto_image(string in, object id)
   if(e=file_image(encode_filename(img_key)))
     return e;
   
-
   key = (in/"/")[0];
   value = (in/"/")[1..]*"/";
 //   werror("key=%O; value=%O\n", key,value);
@@ -1377,6 +1383,7 @@ void check_login(object id)
   logged[id->remoteaddr] = time(1);
 }
 
+/* This is the equvivalent to find_file() in a location module. */
 mapping configuration_parse(object id)
 {
   array (string) res=({});
@@ -1447,13 +1454,14 @@ mapping configuration_parse(object id)
       }
     };
 
-    mapping tmp = http_string_answer(default_head("Roxen Challenger " +
-                                        roxen->__roxen_version__ + "." +
-                                        roxen->__roxen_build__)+
-                                     status_row(root)+
-                                     display_tabular_header(root)+
-                              Stdio.read_bytes(full_version?"etc/config.html":
-                                    "etc/config.int.html"), "text/html");
+    mapping tmp =
+      http_string_answer(default_head("Roxen Challenger " +
+				      roxen->__roxen_version__ + "." +
+				      roxen->__roxen_build__)+
+			 status_row(root)+
+			 display_tabular_header(root)+
+			 Stdio.read_bytes(full_version?"etc/config.html":
+					  "etc/config.int.html"), "text/html");
     return charset_encode(tmp);
   }
   
