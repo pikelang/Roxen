@@ -1,4 +1,4 @@
-dnl     $Id: configure.in,v 1.8 1999/05/24 00:59:53 peter Exp $
+dnl     $Id: configure.in,v 1.9 1999/05/24 02:28:22 mast Exp $
 dnl
 dnl     This file is an input file used by the GNU "autoconf" program to
 dnl     generate the file "configure", which is run during the build
@@ -99,15 +99,18 @@ if test "$pike_cv_constant_stdio" = "yes"; then :; else
     AC_TRY_RUN([
 #include <stdio.h>
 
-      FILE *f[3];
+FILE *f[3];
 
 static void f_init(void) __attribute__((constructor)) {
   f[0] = stdin;
   f[1] = stdout;
   f[2] = stderr;
 }
-    ], [
-  return ((f[0] != stdin) || (f[1] != stdout) || (f[2] != stderr));
+
+int main(int argc, char **argv)
+{
+  exit((f[0] != stdin) || (f[1] != stdout) || (f[2] != stderr));
+}
     ], [
       pike_cv_gcc_constructor_attr="yes"
     ], [
