@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.90 2001/10/12 11:34:29 grubba Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.91 2001/10/12 12:36:08 grubba Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -119,7 +119,8 @@ string compat_level;
 
 
 array|object do_sql_query(mapping args, RequestID id,
-			  void|int(0..1) big_query)
+			  void|int(0..1) big_query,
+			  void|int(0..1) ret_con)
 {
   string host;
   if (args->host)
@@ -183,7 +184,10 @@ array|object do_sql_query(mapping args, RequestID id,
     }
   }
 
-  args->dbobj=con;
+  if (ret_con) {
+    // NOTE: Use of this feature may lead to circularities...
+    args->dbobj=con;
+  }
   if(result && args->rowinfo) {
     int rows;
     if(arrayp(result)) rows=sizeof(result);
@@ -275,7 +279,7 @@ class TagSqlplugin {
   ]);
 
   object get_dataset(mapping m, RequestID id) {
-    return SqlEmitResponse(do_sql_query(m, id, 1));
+    return SqlEmitResponse(do_sql_query(m+([]), id, 1));
   }
 }
 
@@ -296,14 +300,17 @@ class TagSQLQuery {
     array do_return(RequestID id) {
       NOCACHE();
 
-      array res=do_sql_query(args, id);
+      array res=do_sql_query(args, id, 0, 1);
 
-      if(args["mysql-insert-id"])
-	if(args->dbobj && args->dbobj->master_sql)
-	  RXML.user_set_var(args["mysql-insert-id"], args->dbobj->master_sql->insert_id());
+      if(args["mysql-insert-id"]) {
+	object con = args->dbobj;
+	m_delete(args, "dbobj");
+	if(con && con->master_sql)
+	  RXML.user_set_var(args["mysql-insert-id"],
+			    con->master_sql->insert_id());
 	else
 	  RXML.parse_error("No insert_id present.\n");
-
+      }
       id->misc->defines[" _ok"] = 1;
       return 0;
     }
