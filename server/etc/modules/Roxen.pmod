@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.192 2005/02/08 14:18:04 mast Exp $
+// $Id: Roxen.pmod,v 1.193 2005/02/25 15:51:16 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -803,6 +803,32 @@ mapping http_stream(Stdio.File from)
 //! to make sure what you send is HTTP data.
 {
   return ([ "raw":1, "file":from, "len":-1, ]);
+}
+
+mapping http_digest_required(mapping(string:string) challenge,
+			     string|void message)
+//! Generates a result mapping that will instruct the web browser that
+//! the user needs to authorize himself before being allowed access.
+//! `realm' is the name of the realm on the server, which will
+//! typically end up in the browser's prompt for a name and password
+//! (e g "Enter username for <i>realm</i> at <i>hostname</i>:"). The
+//! optional message is the message body that the client typically
+//! shows the user, should he decide not to authenticate himself, but
+//! rather refraim from trying to authenticate himself.
+//!
+//! In HTTP terms, this sends a <tt>401 Auth Required</tt> response
+//! with the header <tt>WWW-Authenticate: basic realm="`realm'"</tt>.
+//! For more info, see RFC 2617.
+{
+  if(!message)
+    message = "<h1>Authentication failed.\n</h1>";
+  HTTP_WERR(sprintf("Auth required (%O)", challenge));
+  string digest_challenge = "";
+  foreach(challenge; string key; string val) {
+    digest_challenge += sprintf(" %s=%O", key, val);
+  }
+  return http_low_answer(401, message)
+    + ([ "extra_heads":([ "WWW-Authenticate":"Digest "+digest_challenge,]),]);
 }
 
 mapping http_auth_required(string realm, string|void message)
