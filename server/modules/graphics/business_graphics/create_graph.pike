@@ -14,7 +14,7 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.86 1997/12/21 20:53:12 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.87 1997/12/21 21:26:34 hedda Exp $";
 
 /*
 These functions are written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -417,14 +417,15 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   //Om xnames finns så sätt xspace om inte values_for_xnames finns
   if (diagram_data["xnames"] && sizeof(diagram_data["xnames"])==0)
     diagram_data["xnames"]=0;
-  if (diagram_data["xnames"])
-    diagram_data["xspace"]=max((diagram_data["xmaxvalue"]-
-				diagram_data["xminvalue"])
-			       /(float)(max(sizeof(diagram_data["xnames"])
-					   ,diagram_data["datasize"]))
-					   , 
-			       LITET*20);
-
+  if (diagram_data["type"]!="graph")
+    if (diagram_data["xnames"])
+      diagram_data["xspace"]=max((diagram_data["xmaxvalue"]-
+				  diagram_data["xminvalue"])
+				 /(float)(max(sizeof(diagram_data["xnames"])
+					      ,diagram_data["datasize"]))
+				 , 
+				 LITET*20);
+  
   //Om ynames finns så sätt yspace.
   if (diagram_data["ynames"])
     diagram_data["yspace"]=(diagram_data["ymaxvalue"]-
@@ -908,29 +909,37 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
   //Ta reda hur många och hur stora textmassor vi ska skriva ut
   if (!(diagram_data["xspace"]))
-    {
-      //Initera hur långt det ska vara emellan.
-      float range=(diagram_data["xmaxvalue"]-
-		 diagram_data["xminvalue"]);
-      if ((range>-LITET)&&
-	  (range<LITET))
-	range=LITET*10.0;
-
-      float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
-      if (range/space>5.0)
-	{
-	  if(range/(2.0*space)>5.0)
-	    {
-	      space=space*5.0;
-	    }
-	  else
-	    space=space*2.0;
-	}
-      else
-	if (range/space<2.5)
-	  space*=0.5;
-      diagram_data["xspace"]=space;      
-    }
+    if (diagram_data["xnames"])
+      {
+	diagram_data["xnames"]=({" "})+diagram_data["xnames"];
+	diagram_data["xspace"]=(diagram_data["xmaxvalue"]-
+				diagram_data["xminvalue"])/
+	  (LITET+sizeof(diagram_data["xnames"]));
+      }
+    else
+      {
+	//Initera hur långt det ska vara emellan.
+	float range=(diagram_data["xmaxvalue"]-
+		     diagram_data["xminvalue"]);
+	if ((range>-LITET)&&
+	    (range<LITET))
+	  range=LITET*10.0;
+	
+	float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
+	if (range/space>5.0)
+	  {
+	    if(range/(2.0*space)>5.0)
+	      {
+		space=space*5.0;
+	      }
+	    else
+	      space=space*2.0;
+	  }
+	else
+	  if (range/space<2.5)
+	    space*=0.5;
+	diagram_data["xspace"]=space;      
+      }
   if (!(diagram_data["yspace"]))
     {
       //Initera hur långt det ska vara emellan.
