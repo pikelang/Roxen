@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.127 2001/09/03 14:09:52 nilsson Exp $
+// $Id: site_content.pike,v 1.128 2001/09/03 17:43:10 per Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -501,7 +501,7 @@ string parse( RequestID id )
        {
 	 res += port_for( url, 1 );
        }
-       return res+"</blockquote><cf-save/><br />\n";
+       return res+"</blockquote><br />\n";
        break;
 
      case 0:
