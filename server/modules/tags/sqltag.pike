@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.3 1997/06/20 16:57:15 grubba Exp $
+ * $Id: sqltag.pike,v 1.4 1997/06/24 08:42:51 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -29,7 +29,7 @@ array register_module()
 	       1 }) );
 }
 
-string cvs_version = "$Id: sqltag.pike,v 1.3 1997/06/20 16:57:15 grubba Exp $";
+string cvs_version = "$Id: sqltag.pike,v 1.4 1997/06/24 08:42:51 grubba Exp $";
 
 /*
  * Tag handlers
@@ -297,7 +297,7 @@ string status()
   if (catch {
     object o = Sql.sql(QUERY(hostname), QUERY(database),
 		       QUERY(user), QUERY(password));
-    return(sprintf("Connected to %s-server on %s<br>\n"
+    return(sprintf("Connected to %s-server on %s<br>\n",
 		   o->server_info(), o->host_info()));
   }) {
     return("<font color=red>Not connected.</font><br>\n");
