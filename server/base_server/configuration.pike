@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.33 1997/05/31 21:44:22 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.34 1997/06/11 18:50:08 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1375,37 +1375,56 @@ object enable_module( string modname )
     object me;
     mapping tmp;
     int pr;
+    array err;
 
 #ifdef MODULE_DEBUG
     perror("Modules: Enabling "+module->name+" # "+id+" ... ");
 #endif
 
-
     if(module->copies)
     {
-      me = module["program"]();
-      if(module->copies[id])
-      {
-	module->copies[id]->stop();
+      if (err = catch(me = module["program"]())) {
+	report_error("Couldn't clone module \"" + module->name + "\"\n" +
+		     describe_backtrace(err));
+	if (module->copies[id]) {
+#ifdef MODULE_DEBUG
+	  perror("Keeping old copy\n");
+#endif
+	}
+	return(module->copies[id]);
+      }
+      if(module->copies[id]) {
+#ifdef MODULE_DEBUG
+	perror("Disabling old copy ... ");
+#endif
+	if (err = catch{
+	  module->copies[id]->stop();
+	}) {
+	  report_error("Error during disabling of module \"" + module->name +
+		       "\"\n" + describe_backtrace(err));
+	}
 	destruct(module->copies[id]);
       }
     } else {
-      if(objectp(module->master))
+      if(objectp(module->master)) {
 	me = module->master;
-      else
-	me = module["program"]();
+      } else {
+	if (err = catch(me = module["program"]())) {
+	  report_error("Couldn't clone module \"" + module->name + "\"\n" +
+		       describe_backtrace(err));
+	  return(0);
+	}
+      }
     }
 
+#ifdef MODULE_DEBUG
+    perror("Initializing ");
+#endif
 
-    if((module->type & MODULE_LOCATION)       ||
-       (module->type & MODULE_EXTENSION)      ||
-       (module->type & MODULE_FILE_EXTENSION) ||
-       (module->type & MODULE_LOGGER)         ||
-       (module->type & MODULE_URL)  	      ||
-       (module->type & MODULE_LAST)           ||
-       (module->type & MODULE_FILTER)         ||
-       (module->type & MODULE_PARSER)         ||
-       (module->type & MODULE_FIRST))
+    if (module->type & (MODULE_LOCATION | MODULE_EXTENSION |
+			MODULE_FILE_EXTENSION | MODULE_LOGGER |
+			MODULE_URL | MODULE_LAST |
+			MODULE_FILTER | MODULE_PARSER | MODULE_FIRST))
     {
       me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
 		 "The priority of the module. 9 is highest and 0 is lowest."
@@ -1463,8 +1482,9 @@ object enable_module( string modname )
 		     " or auth-module. The default is 'deny ip=*'");
 	}
       }
-    } else
+    } else {
       me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
+    }
 
     me->defvar("_comment", "", " Comment", TYPE_TEXT_FIELD,
 	       "An optional comment. This has no effect on the module, it "
@@ -1478,35 +1498,53 @@ object enable_module( string modname )
     me->setvars(retrieve(modname + "#" + id, this));
       
     mixed err;
-    if(err=catch{if(me->start) me->start(0, this);})
-    {
-      report_error("Error while initiating module copy of "+module->name+"\n"
-		    + describe_backtrace(err));
+    if((me->start) && (err = catch{
+      me->start(0, this);
+    })) {
+      report_error("Error while initiating module copy of " +
+		   module->name + "\n" + describe_backtrace(err));
       destruct(me);
       return 0;
     }
-      
-    pr = me->query("_priority");
+    
+    if (err = catch(pr = me->query("_priority"))) {
+      report_error("Error while initiating module copy of " +
+		   module->name + "\n" + describe_backtrace(err));
+      pr = 3;
+    }
 
-    if((module->type&MODULE_EXTENSION) && arrayp(me->query_extensions()))
-    {
-      string foo;
-      foreach( me->query_extensions(), foo )
-	if(pri[pr]->extension_modules[ foo ])
-	  pri[pr]->extension_modules[foo] += ({ me });
-	else
-	  pri[pr]->extension_modules[foo] = ({ me });
+    if(module->type & MODULE_EXTENSION) {
+      if (err = catch {
+	array arr = me->query_extensions();
+	if (arrayp(arr)) {
+	  string foo;
+	  foreach( arr, foo )
+	    if(pri[pr]->extension_modules[ foo ])
+	      pri[pr]->extension_modules[foo] += ({ me });
+	    else
+	      pri[pr]->extension_modules[foo] = ({ me });
+	}
+      }) {
+	report_error("Error while initiating module copy of " +
+		     module->name + "\n" + describe_backtrace(err));
+      }
     }	  
 
-    if((module->type & MODULE_FILE_EXTENSION) && 
-       arrayp(me->query_file_extensions()))
-    {
-      string foo;
-      foreach( me->query_file_extensions(), foo )
-	if(pri[pr]->file_extension_modules[foo] ) 
-	  pri[pr]->file_extension_modules[foo]+=({me});
-	else
-	  pri[pr]->file_extension_modules[foo]=({me});
+    if(module->type & MODULE_FILE_EXTENSION) {
+      if (err = catch {
+	array arr = me->query_file_extensions();
+	if (arrayp(arr)) {
+	  string foo;
+	  foreach( me->query_file_extensions(), foo )
+	    if(pri[pr]->file_extension_modules[foo] ) 
+	      pri[pr]->file_extension_modules[foo]+=({me});
+	    else
+	      pri[pr]->file_extension_modules[foo]=({me});
+	}
+      }) {
+	report_error("Error while initiating module copy of " +
+		     module->name + "\n" + describe_backtrace(err));
+      }
     }
 
     if(module->type & MODULE_TYPES)
@@ -1515,20 +1553,30 @@ object enable_module( string modname )
       types_fun = me->type_from_extension;
     }
 
-
     if((module->type & MODULE_MAIN_PARSER))
     {
       parse_module = me;
-      if(_toparse_modules)
-	map(_toparse_modules,
-	    lambda(object o, object me) 
-	    { me->add_parse_module(o); }, me);
+      if (_toparse_modules) {
+	map(_toparse_modules, lambda(object o, object me, mapping module) {
+	  array err;
+	  if (err = catch{me->add_parse_module(o);}) {
+	    report_error("Error while initiating module copy of " +
+			 module->name + "\n" + describe_backtrace(err));
+	  }
+	}, me, module);
+      }
     }
 
     if(module->type & MODULE_PARSER)
     {
-      if(parse_module)
-	parse_module->add_parse_module( me );
+      if(parse_module) {
+	if (err = catch {
+	  parse_module->add_parse_module( me );
+	}) {
+	  report_error("Error while initiating module copy of " +
+		       module->name + "\n" + describe_backtrace(err));
+	}
+      }
       _toparse_modules += ({ me });
     }
 
@@ -1576,7 +1624,7 @@ object enable_module( string modname )
       perror("New module...");
 #endif
       enabled_modules[modname+"#"+id] = 1;
-      store( "EnabledModules",enabled_modules, 1, this);
+      store( "EnabledModules", enabled_modules, 1, this);
     }
 #ifdef MODULE_DEBUG
     perror(" Done.\n");
