@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.198 2000/06/19 12:47:26 grubba Exp $
+// $Id: rxml.pike,v 1.199 2000/06/23 16:57:37 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -160,8 +160,9 @@ class BacktraceFrame
 }
 
 // A note on tag overriding: It's possible for old style tags to
-// propagate their results to the tags they have overridden. This is
-// done by an extension to the return value:
+// propagate their results to the tags they have overridden (new style
+// tags can use RXML.Frame.propagate_tag()). This is done by an
+// extension to the return value:
 //
 // If an array of the form
 //
@@ -451,6 +452,79 @@ string parse_rxml(string what, RequestID id,
   return what;
 }
 
+#define COMPAT_TAG_TYPE \
+  function(string,mapping(string:string),RequestID,void|Stdio.File,void|mapping: \
+	   string|array(int|string))
+
+#define COMPAT_CONTAINER_TYPE \
+  function(string,mapping(string:string),string,RequestID,void|Stdio.File,void|mapping: \
+	   string|array(int|string))
+
+class CompatTag
+{
+  inherit RXML.Tag;
+
+  string name;
+  int flags;
+  string|COMPAT_TAG_TYPE|COMPAT_CONTAINER_TYPE fn;
+
+  RXML.Type content_type = RXML.t_same; // No preparsing.
+  array(RXML.Type) result_types =
+    ({RXML.t_xml (RXML.PXml), RXML.t_html (RXML.PXml)}); // Postparsing.
+
+  void create (string _name, int empty, string|COMPAT_TAG_TYPE|COMPAT_CONTAINER_TYPE _fn)
+  {
+    name = _name, fn = _fn;
+    flags = empty && RXML.FLAG_EMPTY_ELEMENT;
+  }
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    string raw_tag_text;
+
+    array do_return (RequestID id)
+    {
+      id->misc->line = "0";	// No working system for this yet.
+
+      if (stringp (fn)) return ({fn});
+      if (!fn) return ({propagate_tag()});
+
+      Stdio.File source_file;
+      mapping defines;
+      if (id->misc->_parser) {
+	source_file = id->misc->_parser->_source_file;
+	defines = id->misc->_parser->_defines;
+      }
+
+      string|array(string) result;
+      if (flags & RXML.FLAG_EMPTY_ELEMENT)
+	result = fn (name, args, id, source_file, defines);
+      else
+	result = fn (name, args, content, id, source_file, defines);
+
+      if (arrayp (result)) {
+	result_type = result_type (RXML.PNone);
+	if (sizeof (result) && result[0] == 1) {
+	  [string pname, mapping(string:string) pargs, string pcontent] =
+	    (result[1..] + ({0, 0, 0}))[..2];
+	  if (!pname || pname == name)
+	    return ({!pargs && !pcontent ? propagate_tag () :
+		     propagate_tag (pargs || args, pcontent || content)});
+	  else
+	    return ({RXML.make_unparsed_tag (pname, pargs || args, pcontent || content)});
+	}
+	else return result;
+      }
+      else if (result) {
+	if (args->noparse) result_type = result_type (RXML.PNone);
+	return ({result});
+      }
+      else return ({propagate_tag()});
+    }
+  }
+}
+
 class GenericTag {
   inherit RXML.Tag;
   constant is_generic_tag=1;
@@ -493,18 +567,19 @@ void add_parse_module (RoxenModule mod)
   if (mod->query_tag_callers &&
       mappingp (defs = mod->query_tag_callers()) &&
       sizeof (defs))
-    tag_set->low_tags =
-      mkmapping (indices (defs),
-		 Array.transpose (({({call_tag}) * sizeof (defs),
-				    values (defs)})));
+    tag_set->add_tags (map (indices (defs),
+			    lambda (string name) {
+			      return CompatTag (name, 1, defs[name]);
+			    }));
 
   if (mod->query_container_callers &&
       mappingp (defs = mod->query_container_callers()) &&
       sizeof (defs))
-    tag_set->low_containers =
-      mkmapping (indices (defs),
-		 Array.transpose (({({call_container}) * sizeof (defs),
-				    values (defs)})));
+    tag_set->add_tags (map (indices (defs),
+			    lambda (string name) {
+			      return CompatTag (name, 0, defs[name]);
+			    }));
+
   if (mod->query_simpletag_callers &&
       mappingp (defs = mod->query_simpletag_callers()) &&
       sizeof (defs))
