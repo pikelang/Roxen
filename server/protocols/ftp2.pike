@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.41 1998/05/18 21:22:24 grubba Exp $
+ * $Id: ftp2.pike,v 1.42 1998/05/20 07:43:01 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -287,7 +287,7 @@ class PutFileWrapper
   static object from_fd;
   static object ftpsession;
   static object session;
-  static int response_code = 200;
+  static int response_code = 226;
   static string response = "Stored.";
   static string gotdata = "";
   static int done, recvd;
@@ -371,7 +371,7 @@ class PutFileWrapper
       if(3==sscanf(gotdata[..n], "HTTP/%*s %d %[^\r\n]", code, msg)
          && code>199) {
         if(code < 300)
-          code = 200;
+          code = 226;
         else
           code = 550;
 	response_code = code;

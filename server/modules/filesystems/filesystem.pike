@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.39 1998/05/15 10:26:36 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.40 1998/05/20 07:43:03 neotron Exp $";
 constant thread_safe=1;
 
 
@@ -241,7 +241,7 @@ void done_with_put( array(object) id )
 {
 //  perror("Done with put.\n");
   id[0]->close();
-  id[1]->write("HTTP/1.0 200 Created\r\nContent-Length: 0\r\n\r\n");
+  id[1]->write("HTTP/1.0 200 Transfer Complete.\r\nContent-Length: 0\r\n\r\n");
   id[1]->close();
   m_delete(putting, id[1]);
   destruct(id[0]);
