@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.18 1998/05/01 01:12:45 grubba Exp $
+ * $Id: ftp2.pike,v 1.19 1998/05/01 15:26:47 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2029,14 +2029,24 @@ class FTPSession
     master_session->method = "LOGIN";
     master_session->realauth = user + ":" + password;
     master_session->auth = ({ 0, master_session->realauth, -1 });
+    master_session->not_query = user;
 
     if (conf && conf->auth_module) {
-      master_session->auth[0] = "Basic";
-      master_session->auth = conf->auth_module->auth(master_session->auth,
-						     master_session);
+      mixed err = catch {
+	master_session->auth[0] = "Basic";
+	master_session->auth = conf->auth_module->auth(master_session->auth,
+						       master_session);
+      };
+      if (err) {
+	master_session->auth = 0;
+	report_error(sprintf("FTP2: Authentication error.\n"
+			     "%s\n", describe_backtrace(err)));
+	send(451, ({ "Authentication error." }));
+	conf->log(([ "error":500 ]), master_session);
+	return;
+      }
     }
 
-    master_session->not_query = user;
     if (!master_session->auth ||
 	(master_session->auth[0] != 1)) {
       if (!Query("guest_ftp")) {
