@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.832 2002/10/26 00:09:29 nilsson Exp $";
+constant cvs_version="$Id: core.pike,v 1.833 2002/10/28 01:39:41 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1539,7 +1539,8 @@ class SSLProtocol
   // SSL context
   SSL.context ctx;
 
-  class destruct_protected_sslfile
+  // Shields SSL from destruction
+  class ProtectedSSL
   {
     SSL.sslfile sslfile;
 
@@ -1578,14 +1579,14 @@ class SSLProtocol
       sslfile = SSL.sslfile(q, ctx);
     }
 
-    string _sprintf() { return sprintf("destruct_protected_sslfile(%O)",sslfile); }
+    string _sprintf() { return sprintf("ProtectedSSL(%O)",sslfile); }
   }
 
   Stdio.File accept()
   {
     Stdio.File q = ::accept();
     if (q)
-      return [object(Stdio.File)](object)destruct_protected_sslfile(q);
+      return [object(Stdio.File)](object)ProtectedSSL(q);
     return 0;
   }
 
@@ -4258,7 +4259,7 @@ void show_timers()
 
 
 array argv;
-int main(int argc, array tmp)
+int main(array(string) tmp)
 {
   argv = tmp;
   tmp = 0;
@@ -4342,7 +4343,6 @@ int main(int argc, array tmp)
   if(tmp_root = Getopt.find_option(argv, "r", "root")) fix_root(tmp_root);
 
   argv -= ({ 0 });
-  argc = sizeof(argv);
 
   fonts = ((program)"server_core/fonts.pike")();
 
