@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.49 1997/08/12 09:04:33 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.50 1997/08/12 09:06:19 neotron Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -29,6 +29,7 @@ string display_tabular_header(object node);
 #define PUSH(X) do{res+=({(X)});}while(0)
 
 int bar=time(1);
+multiset changed_port_servers;
 
 class Node {
   inherit "struct/node";
@@ -133,6 +134,11 @@ class Node {
       if(node->changed) node->save();
       node=node->next; 
     }
+    if(changed && type == NODE_MODULE_COPY_VARIABLE &&
+       data[VAR_TYPE] == TYPE_PORTS) {
+      roxen->configuration_interface_obj->changed_port_servers[config()] = 1;
+      // A port was changed in the current server...
+    }
     if(saver) saver(this_object());
   }
 }
@@ -178,16 +184,6 @@ mapping file_image(string img)
   return ([ "file":o, "type":"image/" + ((img[-1]=='f')?"gif":"jpeg"), ]);
 }
 
-#define CONFIG_URL roxen->config_url()
-
-mapping save_it(object id, object o)
-{
-  id->referer = ({ CONFIG_URL + o->path(1) });
-  root->save();
-  roxen->update_supports_from_roxen_com();
-  roxen->initiate_configuration_port( 0 );
-}
-
 mapping stores( string s )
 {
   return 
@@ -203,6 +199,70 @@ mapping stores( string s )
 	])
       ]);
 }
+
+#define CONFIG_URL roxen->config_url()
+
+mapping verify_changed_ports(object id, object o)
+{
+  string res = default_head("Roxen Config: Setting Server URL") +
+    ("<h1>Set the correct server URL</h1>"
+     "As you have changed the open ports in one or more servers "
+     "you might have to adjust the default server URL(s). Check the "
+     "correct URL(s) below and modify it as needed."
+     "<form action=\"/(modify_server_url)"+o->path(1)+"\">");
+  foreach(indices(changed_port_servers), object server)
+  {
+    perror("Server %s, URL %s, Ports %O\n", server->name,
+	   server->query("MyWorldLocation"),
+	   server->query("Ports"));
+
+    string def = server->query("MyWorldLocation");
+    
+      res += sprintf("<h3>Select server URL for for %s: </h3>\n"
+		     "<pre>", server->name);
+      
+      foreach(server->query("Ports"), array port) {
+      string prt;
+      if(port[1] == "tetris")
+	continue;
+      switch(port[1][0..2])
+      {
+       case "ssl":
+	prt = "https://";
+	break;
+	
+       default:
+	prt = port[1]+"://";
+      }
+      if(port[2] && port[2]!="ANY")
+	prt += port[2];
+      else
+	prt += (gethostname()/".")[0] + "." + server->query("Domain");
+      prt += ":"+port[0]+"/";
+      if(prt != def)
+	res += sprintf("     <input type=radio name=\"%s\" value=\"%s\">     %s\n",
+		       server->name, prt, prt);
+
+    }
+      res += sprintf("     <input type=radio checked value=own name=\"%s\">     "
+		     "<input size=70 name=\"%s->own\" "
+		     "value=\"%s\">\n</pre><p>",
+		     server->name, server->name, def);
+  }
+  return stores(res+"<input type=submit value=\"Continue...\"></form>");
+}
+
+mapping save_it(object id, object o)
+{
+  changed_port_servers = (<>);
+  id->referer = ({ CONFIG_URL + o->path(1) });
+  root->save();
+  roxen->update_supports_from_roxen_com();
+  roxen->initiate_configuration_port( 0 );
+  if(sizeof(changed_port_servers))
+    return verify_changed_ports(id, o);
+}
+
 
 object find_module(string name, object in)
 {
@@ -1407,11 +1467,36 @@ mapping configuration_parse(object id)
        return new_configuration(id);
 
 
-       // Save changes done to the node 'o'. Currently 'o' is the root
-       // node most of the time, thus saving _everything_.
+       // When a port has been changed the admin are prompted to
+       // change the server URL. This is where we come when we are
+       // done.
+       
+     case "modify_server_url":
+       id->referer = ({ CONFIG_URL + o->path(1) });
+
+       string srv, url;
+       object thenode;
+       foreach(indices(id->variables), string var)
+       {
+	 if(sscanf(var, "%s->own", srv)) {
+	   url = id->variables[srv] == "own" ?
+	     id->variables[var] : id->variables[srv];
+	   thenode = find_node("/Configurations/"+srv+
+			       "/Global/Server URL");
+	   if(thenode) {
+	     thenode->data[VAR_VALUE] = url;
+	     thenode->change(1);
+	     thenode->up->save();
+	   }
+	 }
+       }
+      break;
+      // Save changes done to the node 'o'. Currently 'o' is the root
+      // node most of the time, thus saving _everything_.
      case "save":
-      if(save_it(id, o))
-	return 0;
+      mapping cf;
+      if(cf = save_it(id, o))
+	return cf;
       break;
 
 
