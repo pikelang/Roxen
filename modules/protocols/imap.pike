@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.83 1999/02/22 16:36:52 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.84 1999/02/22 16:38:36 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -591,7 +591,7 @@ class imap_mail
 	switch(attr->section[0])
 	{
 	case "header":
-	  return response(mail->read_headers());
+	  return response(mail->read_headers()+"\r\n\r\n");
 	case "size":
 	  // FIXME: How does rfc-822 define the size of the message?
 	  return response(imap_number(mail->get_size()));
