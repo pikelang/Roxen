@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.453 2004/06/20 23:32:34 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.454 2004/06/20 23:45:33 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1149,8 +1149,7 @@ string format_backtrace(int eid, string|void md5)
 	"</a>" +
 	(file ? Roxen.html_encode_string(get_cvs_id(file)) : "") +
 	"<br /><span class='code'>" +
-	replace(Roxen.html_encode_string(descr),
-		({ "(", ")", " " }), ({ "<b>(</b>", "<b>)</b>", "&nbsp;"}) ) +
+	replace(Roxen.html_encode_string(descr), " ", "&nbsp;") +
 	"</span></li>\n";
     }
     body += "</ul>\n\n";
