@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.567 2000/10/17 21:00:34 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.568 2000/10/19 12:24:09 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1455,6 +1455,13 @@ class HILFE
   constant name = "hilfe";
   constant requesthandlerfile = "protocols/hilfe.pike";
   constant default_port = 2345;
+
+  void create( mixed ... args )
+  {
+    add_permission( "Hilfe", LOC_M( 0, "Hilfe" ) );
+    set_up_hilfe_variables( this_object() );
+    ::create( @args );
+  }
 }
 
 class FTP

@@ -347,7 +347,13 @@ void got_user_line( mixed q, string line )
      } 
      else
      {
-       state++;
+       if( !my_port_obj->query( "require_auth" ) || user->auth( "Hilfe" ) )
+	 state++;
+       else
+       {
+	 rl->readline->write("User lacks permission to access hilfe\n");
+	 state = USER;
+       }
      }
      break;
    default:

@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.47 2000/09/24 13:35:49 nilsson Exp $
+// $Id: global_variables.pike,v 1.48 2000/10/19 12:24:02 per Exp $
 
 /*
 #pragma strict_types
@@ -40,6 +40,16 @@ private int ident_disabled_p() { return [int(0..1)]QUERY(default_ident); }
 // The answer is that there is actually a reason for it, it's for
 // performance reasons. This file is dumped to a .o file, roxen.pike
 // is not.
+void set_up_hilfe_variables( object o )
+{
+  function(DEFVAR) defvar = [function(DEFVAR)] o->defvar;
+
+  defvar( "require_auth", 1,
+	  LOCALE(0,"Require user with the 'hilfe' permission"), TYPE_FLAG,
+	  LOCALE(0,"If yes, require a user with the hilfe permission "
+		 "set, otherwise, any configuration interface user will "
+		 "work,  even one with only the view settings permission" ) );
+}
 
 
 void set_up_ftp_variables( object o )
