@@ -1,3 +1,6 @@
+// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+//
+
 inherit "module";
 inherit "html";
 inherit "roxenlib";

@@ -1,4 +1,7 @@
-constant cvs_version="$Id: ximg.pike,v 1.6 2000/02/16 07:16:30 per Exp $";
+// This is (not really) a roxen module. Copyright © 2000, Roxen IS.
+//
+
+constant cvs_version="$Id: ximg.pike,v 1.7 2000/02/24 05:27:36 nilsson Exp $";
 inherit "module";
 inherit "roxenlib";
 

@@ -805,6 +805,7 @@ mapping query_tag_callers() {
     "realfile":tag_realfile,
     "vfs":tag_vfs,
     "set-max-cache":tag_set_max_cache,
+    "configurl":"",
     "accept-language":tag_accept_language
   ]);
   return active;

@@ -1,3 +1,6 @@
+// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+//
+
 #charset iso-2022-jp
 inherit "module";
 inherit "roxenlib";

@@ -1,4 +1,6 @@
-// This is (not really) a roxen module.
+// This is (not really) a roxen module. Copyright © 2000, Roxen IS.
+//
+
 inherit "module";
 
 void start(int num, Configuration conf)
