@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: newdecode.pike,v 1.19 1999/12/28 01:03:33 nilsson Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.20 2000/02/06 20:41:55 nilsson Exp $";
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -191,8 +191,10 @@ string encode_config_region(mapping m, string reg, object c)
   {
     foreach( sort(indices( m )), string q )
       if( catch {
+	string|mapping name=roxenp()->find_module( (q/"#")[0] )->name;
+	if(mappingp(name)) name=name->standard;
         res += "<var name='"+q+"'> <int>1</int>  </var> <!-- "+
-            replace(roxenp()->find_module( (q/"#")[0] )->name, "'", "`" )
+            replace(name, "'", "`" )
             +" -->\n";
       })
         res += "<var name='"+q+"'>  <int>1</int>  </var> <!-- Error? -->\n";
