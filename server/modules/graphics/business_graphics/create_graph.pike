@@ -534,14 +534,12 @@ mapping set_legend_size(mapping diagram_data)
   object notext;
 
 
-  while(tobig)
-    {
-      if (tobig>3)
-	throw( ({"Very bad error while trying to resize the legendfonts!\n",
-		 backtrace()}));
-      
-      
-      if (diagram_data["legend_texts"])
+  if (diagram_data["legend_texts"])
+    while(tobig)
+      {
+	if (tobig>3)
+	  throw( ({"Very bad error while trying to resize the legendfonts!\n",
+		   backtrace()}));
 	{
 	  texts=allocate(sizeof(diagram_data["legend_texts"]));
 	  plupps=allocate(sizeof(diagram_data["legend_texts"]));
@@ -641,9 +639,9 @@ mapping set_legend_size(mapping diagram_data)
 	    {
 	      tobig++;
 	      if (tobig==2)
-		diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/raws-1;
+		diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/raws;
 	      else
-		diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/2/raws-1;
+		diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/2/raws;
 	    }
 	}
       
