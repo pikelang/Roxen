@@ -27,7 +27,7 @@ string mktable(array table) {
 
 string available_languages(object id) {
   string pl;
-  if(id->misc->pref_languages && (pl=id->misc->pref_languages->get_language()))
+  if(id && id->misc->pref_languages && (pl=id->misc->pref_languages->get_language()))
     if(!has_value(roxen->list_languages(),pl)) pl="en";
   else
     pl="en";
@@ -228,11 +228,7 @@ string parse_all_doc(RoxenModule o, void|RequestID id) {
 mapping call_tagdocumentation(RoxenModule o) {
   if(!o->tagdocumentation) return 0;
 
-  string name;
-  if(o->is_configuration)
-    name="RXML Core";
-  else
-    name=o->register_module()[1];
+  string name = o->register_module()[1];
 
   mapping doc;
   if(!zero_type(doc=cache_lookup("tagdoc", name)))
