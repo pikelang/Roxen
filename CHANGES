@@ -1,3 +1,13 @@
+Changes since Roxen Challenger 1.2.43 Yellow
+-----------------------------------------------
+
+o Fixed bug that made the config object sent to modules sometimes be 0.
+
+o Renabled the decoding of URLs in a way that shouldn't break anything.
+
+o Fixed Business Graphics to use background and forground colors if available.
+
+
 Changes since Roxen Challenger 1.2.42 Red
 -----------------------------------------------
 
@@ -10,11 +20,14 @@ o Fixed bug in the Counter module.
 o Fixed bug in the Pathinfo module.
 
 o Made configuration of container name in the Indirect href module
-  inte an expert variable.
+  into an expert variable.
 
-o Fixed Bussiness Graphics to use the global default font.
+o Fixed Business Graphics to use the global default font.
 
 o Repaired support for multiple font dirs.
+
+o Added support for multiple checkboxes with the same name in wizards.
+  Thanks to Francesco Chemolli.
 
 
 Changes since Roxen Challenger 1.2.41 Yellow
