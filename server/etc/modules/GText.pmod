@@ -1,6 +1,4 @@
 
-class Gtext {
-
 #if !efun(make_matrix)
 static private mapping (int:array(array(int))) matrixes = ([]);
 array (array(int)) make_matrix(int size)
@@ -515,7 +513,4 @@ Image.Image make_text_image(mapping args, Image.Font font, string text, RequestI
 
   if(args->crop) background = background->autocrop();
   return background;
-}
-
-
 }
