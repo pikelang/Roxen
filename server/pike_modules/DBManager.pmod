@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.57 2002/07/03 12:46:07 nilsson Exp $
+// $Id: DBManager.pmod,v 1.58 2002/07/03 13:05:11 nilsson Exp $
 
 //! Manages database aliases and permissions
 
@@ -761,6 +761,16 @@ int create_group( string name,    string lname,
     query("INSERT INTO groups (comment,pattern,lname,name) "
 	  "VALUES (%s,%s,%s,%s)", comment, pattern, lname, name );
   }
+}
+
+int delete_group( string name )
+{
+  if( !get_group( name ) )
+    return 0;
+  if( sizeof(group_dbs( name )) )
+    return 0;
+  query( "DELETE FROM groups WHERE name=%s", name );
+  return 1;
 }
 
 array(string) group_dbs( string group )
