@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.17 2000/07/10 17:59:51 mast Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.18 2000/09/04 17:21:01 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -21,19 +21,22 @@ void create()
 {
   defvar("colorparsing", ({"body", "td", "layer", "ilayer", "table"}),
 	 "Tags to parse for color",
-	 TYPE_STRING_LIST|VAR_INITIAL,
+	 TYPE_STRING_LIST,
 	 "Which tags should be parsed for document colors? "
 	 "This will affect documents without gtext as well as documents "
 	 "with it, the parsing time is relative to the number of parsed "
 	 "tags in a document. You have to reload this module or restart "
 	 "roxen for changes of this variable to take effect.");
 
-  defvar("colormode", 1, "Normalize colors in parsed tags",
-         TYPE_FLAG|VAR_INITIAL,
-	 "If set, replace 'roxen' colors (@c,m,y,k etc) with "
-	 "'netscape' colors (#rrggbb). Setting this to off will lessen the "
-	 "performance impact of the 'Tags to parse for color' option quite"
-	 " dramatically. You can try this out with the &lt;gauge&gt; tag." );
+  defvar("colormode", 0, "Normalize colors in parsed tags",
+         TYPE_FLAG, #"\
+If set, replace 'roxen' colors (@c,m,y,k etc) with 'netscape'
+colors (#rrggbb). This means that if this is enabled, Roxen will
+rewrite the parsed tags, which can potentially cause problems with
+quotes etc if they aren't correcly written. Setting this to off will
+also lessen the performance impact of the 'Tags to parse for color'
+option quite dramatically. You can try this out with the &lt;gauge&gt;
+tag.");
 }
 
 
