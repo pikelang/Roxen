@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.7 2000/07/17 19:18:39 jhs Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.8 2000/08/09 02:33:09 per Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -80,6 +80,16 @@ class Helpers
       data += args[0];
   }
 
+  void write(mixed ... args) 
+  {
+    if(!sizeof(args)) 
+      return;
+    if(sizeof(args) > 1) 
+      data += sprintf(@args);
+    else 
+      data += args[0];
+  }
+
   string flush() 
   {
     string r = data;
@@ -98,42 +108,38 @@ class Helpers
 
 string functions(string page, int line)
 {
-  add_constant( "__magic_helpers", Helpers );
-  return 
-    "inherit __magic_helpers;\n"
-    "#"+line+" \""+replace(page,"\"","\\\"")+"\"\n";
+  add_constant( "__ps_magic_helpers", Helpers );
+  return  "inherit __ps_magic_helpers;\n" +
+         "#"+line+" \""+replace(page,"\"","\\\"")+"\"\n";
 }
 
 // Preamble
 string pre(string what, object id)
 {
-  if(search(what, "parse(") != -1)
+  if(search(what, " parse(") != -1)
     return functions(id->not_query, id->misc->line);
-  if(search(what, "return") != -1)
-    return functions(id->not_query, id->misc->line) + 
-    "string|int parse(RequestID id, mapping defines, object file, mapping args) { ";
-  else
     return functions(id->not_query, id->misc->line) +
-    "string|int parse(RequestID id, mapping defines, object file, mapping args) { return ";
+           "string|int parse(RequestID id) { ";
 }
 
 // Will be added at the end...
 string post(string what) 
 {
-  if(search(what, "parse(") != -1)
+  if(search(what, " parse(") != -1)
     return "";
-  if (!strlen(what) || what[-1] != ';')
-    return ";}";
-  else
-    return "}";
+  return "}";
 }
 
 private static mapping(string:program) program_cache = ([]);
 
+string simple_pi_tag_pike( string tag, mapping m, string s,RequestID id  )
+{
+  return simpletag_pike( tag, ([]), s, id );
+}
+
 // Compile and run the contents of the tag (in s) as a pike
 // program. 
-string container_pike(string tag, mapping m, string s, RequestID request_id,
-                      object file, mapping defs)
+string simpletag_pike(string tag, mapping m, string s,RequestID request_id )
 {
   program p;
   object o;
@@ -152,8 +158,11 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
     if (!p) 
     {
       // Not in the program cache.
+      object key = Roxen.add_scope_constants();
       p = compile_string(s, "Pike-tag("+request_id->not_query+":"+
                          request_id->misc->line+")");
+      destruct( key );
+
       if (sizeof(program_cache) > query("program_cache_limit")) 
       {
 	array a = indices(program_cache);
@@ -169,13 +178,14 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
   {
     master()->set_inhibit_compile_errors(0);
     return reporterr(sprintf("Error compiling <pike> tag in %s:\n"
-			     "%s\n\n", request_id->not_query, s),
+			     "%s\n\n", request_id->not_query, 
+                             s),
                      e->get());
   }
   master()->set_inhibit_compile_errors(0);
   
   if(err = catch{
-    res = (o=p())->parse(request_id, defs, file, m);
+    res = (o=p())->parse(request_id);
   })
   {
     return (res || "") + (o && o->flush() || "") +
