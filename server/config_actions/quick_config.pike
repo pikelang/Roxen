@@ -1,5 +1,5 @@
 /*
- * $Id: quick_config.pike,v 1.4 1997/12/15 20:03:30 peter Exp $
+ * $Id: quick_config.pike,v 1.5 1997/12/16 17:26:08 grubba Exp $
  */
 
 inherit "wizard";
@@ -10,30 +10,30 @@ string doc = "You can here automate the most common configuration and maintenanc
 
 constant features = ([
   "&lt;GText&gt;":([ "module":"graphic_text", "depend":"htmlparse",
-	              "help":"The RXML graphical text tag &lt;gtext&gt;"]),
-    "RXML":([ "module":"htmlparse",
-	      "help":"If removed, all RXML parsing will be disbled"]),
-    "CGI":([
-     "module":"cgi",
-     "help":"Support for CGI scripts",
-     "settings":([
-         
-      ]),
+		     "help":"The RXML graphical text tag &lt;gtext&gt;."]),
+  "RXML":([ "module":"htmlparse",
+	    "help":"If removed, all RXML parsing will be disabled."]),
+  "CGI":([
+    "module":"cgi",
+    "help":"Support for CGI scripts.",
+    "settings":([
+      
     ]),
-    "Pike":([ "module":"pikescript","help":"Support for pike scripts", ]),
-    "&lt;Pike&gt;":([ "module":"lpctag","depend":"htmlparse",
-		      "help":"Support for the pike tag",]),
-    "IP-VHM":([ "module":"ip-less_hosts",
-		"help":"IP less virtual server master<br>Select this option"
-		"in the configuration that has open ports you want to use "
-		"for ip-less virtual hosting"]),
-    "&lt;OBox&gt;":([ "module":"obox", "depend":"htmlparse",]),
-    "Imagemaps":([ "module":"ismap", ]),
-    "&lt;Tablify&gt;":([ "module":"tablify", "depend":"htmlparse" ]),
-    "Userfs":([
-      "module":"userfs", "depend":"userdb",
-      "help":"Enable user directories"
-     ]),
+  ]),
+  "Pike":([ "module":"pikescript","help":"Support for pike scripts.", ]),
+  "&lt;Pike&gt;":([ "module":"lpctag","depend":"htmlparse",
+		    "help":"Support for the pike tag.",]),
+  "IP-VHM":([ "module":"ip-less_hosts",
+	      "help":"IP less virtual server master<br>Select this option"
+	      "in the configuration that has open ports you want to use "
+	      "for ip-less virtual hosting."]),
+  "&lt;OBox&gt;":([ "module":"obox", "depend":"htmlparse",]),
+  "Imagemaps":([ "module":"ismap", ]),
+  "&lt;Tablify&gt;":([ "module":"tablify", "depend":"htmlparse" ]),
+  "Userfs":([
+    "module":"userfs", "depend":"userdb",
+    "help":"Enable user directories."
+  ]),
 ]);
 
 string config_name(object c)
