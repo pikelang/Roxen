@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.48 1997/10/28 12:41:58 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.49 1997/11/22 22:10:44 noring Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -395,7 +395,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	    }
 
 	  barsdiagram->setcolor(@(diagram_data["datacolors"][farg++]));
-	  draw(barsdiagram, diagram_data["linewidth"],l);
+	  draw(barsdiagram, diagram_data["graphlinewidth"],l);
 	}
     else
       throw( ({"\""+diagram_data["drawtype"]+"\" is an unknown bars-diagram drawtype!\n",
