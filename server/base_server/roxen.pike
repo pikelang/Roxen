@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.109 1997/08/21 10:50:27 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.110 1997/08/21 13:16:33 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1596,6 +1596,24 @@ private void define_global_variables( int argc, array (string) argv )
 
   globvar("next_supports_update", time()+3600, "", TYPE_INT,"",0,1);
   
+  globvar("neighborhood", 1,
+	  "Neighborhood: Register with other Roxen servers on the local network"
+	  ,TYPE_FLAG|VAR_MORE,
+	  "If this option is set, Roxen will automatically broadcast it's "
+	  "existence to other Roxen servers on the local network");
+
+  globvar("neigh_ip",  lambda(){
+    string n = reverse(gethostbyname(gethostname())[1][0]);
+    sscanf(n,"%*d.%s", n);
+    n=reverse(n)+".";
+    // Currently only defaults to C-nets..
+    return n+"255";
+  }(), "Neighborhood: Local network broadcast address", TYPE_STRING|VAR_MORE,
+  "Usually included in the output from 'ifconfig -a'");
+
+  globvar("neigh_com", "", "Neighborhood: Server informational comment",
+	  TYPE_TEXT|VAR_MORE, "A short string describing this server");
+  
   setvars(retrieve("Variables", 0));
 
   if(QUERY(_v) < CONFIGURATION_FILE_LEVEL)
@@ -2138,7 +2156,7 @@ array fork_it(){}
 
 // And then we have the main function, this is the oldest function in
 // Roxen :) It has not changed all that much since Spider 2.0.
-
+object neighborhood;
 varargs int main(int argc, array (string) argv)
 {
   mixed tmp;
@@ -2177,7 +2195,8 @@ varargs int main(int argc, array (string) argv)
   
   define_global_variables(argc, argv);
 
-
+  neighborhood = (object)"neighborhood";
+  
   create_pid_file(QUERY(pidfile));
 
 #if efun(syslog)

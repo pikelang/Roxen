@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.23 1997/08/21 11:31:22 per Exp $
+/* $Id: wizard.pike,v 1.24 1997/08/21 13:16:35 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -62,7 +62,7 @@ string wizard_tag_var(string n, mapping m, object id)
     m_delete(m,"default");
     m_delete(m, m->name);
     m_delete(id->variables, m->name);
-    if(!search(lower_case(current||""),"on")) current="1";
+    if(search(lower_case(current||""),"on")+1) current="1";
     if((int)current) m->checked="checked";
     res=make_tag("input", m);
     m->type="hidden";
@@ -365,13 +365,27 @@ string html_table(array(string) subtitles, array(array(string)) table)
 	"<tr><td>\n");
   r += "<table border=0 cellspacing=0 cellpadding=4>\n";
   r += "<tr bgcolor=#113377>\n";
-  foreach(subtitles, string s)
-    r += "<th nowrap align=left><font color=#ffffff>"+s+" &nbsp; </font></th>";
+  int cols;
+  foreach(subtitles, mixed s)
+  {
+    if(stringp(s))
+    {
+      r += "<th nowrap align=left><font color=#ffffff>"+s+" &nbsp; </font></th>";
+      cols++;
+    } else {
+      r += "</tr><tr><th nowrap align=left colspan="+cols+">"
+	"<font color=#ffffff>"+s[0]+"</font></th>";
+    }
+      
   r += "</tr>";
   for(int i = 0; i < sizeof(table); i++) {
     r += "<tr bgcolor="+(i%2?"#ddeeff":"#ffffff")+">";
-    foreach(table[i], string s) {
-      r += "<td nowrap>"+s+"&nbsp;&nbsp;</td>";
+    foreach(table[i], mixed s)
+      if(stringp(s))
+	r += "<td nowrap>"+s+"&nbsp;&nbsp;</td>";
+      else
+	r += "</tr><tr bgcolor="+(i%2?"#ddeeff":"#ffffff")+
+	  "><td colspan="+cols+">"+s[0]+"</td>";
     }
     r += "</tr>\n";
   }

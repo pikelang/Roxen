@@ -1,6 +1,8 @@
 /*
- * $Id: upgrade.pike,v 1.10 1997/08/21 11:31:24 per Exp $
+ * $Id: upgrade.pike,v 1.11 1997/08/21 13:16:38 per Exp $
  */
+constant name= "Maintenance//Upgrade components from roxen.com...";
+constant doc = "Selectively upgrade Roxen components from roxen.com.";
 
 inherit "wizard";
 
@@ -21,8 +23,65 @@ int is_older(string v1, string v2)
 
 
 
-constant name= "Maintenance//Upgrade components from roxen.com...";
-constant doc = "Selectively upgrade Roxen components from roxen.com.";
+
+// Scan dirs to find currently installed components
+mapping comps=([]);
+
+mixed parse_expression(string expr)
+{
+  catch {return compile_string("mixed e="+expr+";")()->e;};
+}
+
+void recurse_one_dir(string d)
+{
+  foreach(get_dir(d), string f)
+  {
+    if(search(f, "#")!=-1) continue;
+    if(search(f, "~")!=-1) continue;
+    if(sscanf(f, "%s.pike", f))
+    {
+      string mod = Stdio.read_bytes(d+f+".pike");
+      if(!mod) {
+	werror("Failed to read "+d+f+".pike.\n");
+      } else {
+	string version;
+	string doc, name;
+	if(sscanf(mod, "%*s$Id: %*s.pike,v %s ", version)==3)
+	{
+	  if(sscanf(mod, "%*sname%*[ \t]=%s;", name)==3)
+	    name = parse_expression(name);
+	  if(sscanf(mod, "%*sdoc%*[ \t]=%s;", doc)==3)
+	    doc = parse_expression(doc);
+	  else if(sscanf(mod, "%*sdesc%*[ \t]=%s;", doc)==3)
+	    doc = parse_expression(doc);
+	}
+	comps[f]=([
+	  "fname":d+f,
+	   "doc":doc,
+	   "name":name,
+	   "version":version,
+	]);
+      }
+    }
+#if 0
+    else if(Stdio.file_size(d+f)==-2) {
+      recurse_one_dir(d+f+"/");
+    }
+#endif
+  }
+}
+
+void update_comps()
+{
+  comps = ([]);
+  recurse_one_dir("config_actions/");
+  recurse_one_dir("server_templates/");
+  recurse_one_dir("bin/");
+  recurse_one_dir("languages/");
+}
+
+
+
 
 mapping modules;
 
@@ -168,7 +227,38 @@ string page_2(object id)
     rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
   };
   if(!rpc)return "Failed to connect to update server at skuld.infovav.se:23.\n";
-//  if((int)id->variables["how:3"]) return handle_components(id,rpc);
+  update_comps();
+  string res=
+    ("<font size=+1>Components that have a newer version available.</font> <br>"
+     "Select the box to add the component to the list of components to "
+     "be updated\n<p");
+
+
+    "<td>Component name</td><td>Filename</td>"
+    "<td>Version</td><td>Currently installed version</td></tr>\n";
+
+  mapping rm = rpc->all_components(roxen->real_version);
+  array tbl = ({});
+  int num;
+  foreach(sort(indices(rm)), string s)
+  {
+    if(!comps[s] || (is_older(comps[s]->version, rm[s]->version)))
+    {
+      tbl += ({
+	"<input type=checkbox name=C_"+s+"> ",
+	  rm[s]->name,
+	  rm[s]->fname,
+	  rm[s]->version,
+	  (comps[s]?comps[s]->version:"New"),
+	  ({"<font size=-1>"+doc+"</font>"}),
+      });
+    }
+  }
+  if(sizeof(tbl))
+    return res + html_table(({"","Name","File","Available Version",
+				"Your Version", ({"Doc"})}),tbl);
+
+  return "There are no new components available.";
 }
 
 string page_3(object id)
@@ -278,66 +368,6 @@ string new_form(object id, object rpc)
   return res;
 }
 
-
-
-
-// Scan dirs to find currently installed components
-mapping comps=([]);
-
-mixed parse_expression(string expr)
-{
-  catch {return compile_string("mixed e="+expr+";")()->e;};
-}
-
-void recurse_one_dir(string d)
-{
-  foreach(get_dir(d), string f)
-  {
-    if(search(f, "#")!=-1) continue;
-    if(search(f, "~")!=-1) continue;
-    if(sscanf(f, "%s.pike", f))
-    {
-      string mod = Stdio.read_bytes(d+f+".pike");
-      if(!mod) {
-	werror("Failed to read "+d+f+".pike.\n");
-      } else {
-	string version;
-	string doc, name;
-	if(sscanf(mod, "%*s$Id: %*s.pike,v %s ", version)==3)
-	{
-	  if(sscanf(mod, "%*sname%*[ \t]=%s;", name)==3)
-	    name = parse_expression(name);
-	  if(sscanf(mod, "%*sdoc%*[ \t]=%s;", doc)==3)
-	    doc = parse_expression(doc);
-	  else if(sscanf(mod, "%*sdesc%*[ \t]=%s;", doc)==3)
-	    doc = parse_expression(doc);
-	}
-	comps[f]=([
-	  "fname":d+f,
-	   "doc":doc,
-	   "name":name,
-	   "version":version,
-	]);
-      }
-    }
-#if 0
-    else if(Stdio.file_size(d+f)==-2) {
-      recurse_one_dir(d+f+"/");
-    }
-#endif
-  }
-}
-
-void update_comps()
-{
-  comps = ([]);
-  recurse_one_dir("config_actions/");
-  recurse_one_dir("server_templates/");
-  recurse_one_dir("bin/");
-  recurse_one_dir("languages/");
-}
-
-
 string upgrade_component(string m, object rpc)
 {
   array rm = rpc->get_component(m,roxen->real_version);
@@ -383,10 +413,6 @@ string upgrade_components(object id, object rpc)
 
 string handle_components(object id, object rpc)
 {
-
-  if(id->variables->go)
-    return upgrade_components(id,rpc);
-  
   update_comps();
   string res=""
     "<form>\n"
