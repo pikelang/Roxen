@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.5 2001/03/13 10:19:15 kuntri Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.6 2001/06/22 03:25:22 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -147,8 +147,11 @@ class TagAtlas {
 	sscanf(args->height||"300", "%d", h);
 	w = (int)(h*5.0/3.0);
       }
-      state->width = args->width = w;
-      state->height = args->height = h;
+      state->width = w;
+      state->height = h;
+
+      args->width = (string)w;
+      args->height = (string)h;
 
       foreach( imgargs, string arg)
 	if(args[arg])
@@ -164,7 +167,7 @@ class TagAtlas {
 	the_cache->store(state, id);
       if(!args->alt)
 	args->alt = state->region || "The World";
- 
+
       result = RXML.t_xml->format_tag("img", args);
       return 0;
     }
