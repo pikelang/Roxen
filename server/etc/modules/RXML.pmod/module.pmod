@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.146 2001/03/26 23:59:36 mast Exp $
+//! $Id: module.pmod,v 1.147 2001/04/08 23:10:24 per Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -414,7 +414,7 @@ class TagSet
 #ifdef MODULE_DEBUG
     if (!stringp (tag->name))
       error ("Trying to register a tag %O without a name.\n", tag);
-    if (!functionp (tag->Frame) && !tag->plugin_name)
+    if (!callablep (tag->Frame) && !tag->plugin_name)
       error ("Trying to register a tag %O without a Frame class or function.\n", tag);
     if (tag->name[..3] != "!--#" && // Ugly special case for SSI tags.
 	replace (tag->name, "#<>& \t\n\r" / "", ({""}) * 8) != tag->name)
@@ -438,7 +438,7 @@ class TagSet
 #ifdef MODULE_DEBUG
       if (!stringp (tag->name))
 	error ("Trying to register a tag %O without a name.\n", tag);
-      if (!functionp (tag->Frame) && !tag->plugin_name)
+      if (!callablep (tag->Frame)&& !tag->plugin_name)
 	error ("Trying to register a tag %O without a Frame class or function.\n", tag);
       if (tag->name[..3] != "!--#" && // Ugly special case for SSI tags.
 	  replace (tag->name, "#<>& \t\n\r" / "", ({""}) * 8) != tag->name)
