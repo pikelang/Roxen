@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: newdecode.pike,v 1.24 2000/03/01 20:19:46 per Exp $
+// $Id: newdecode.pike,v 1.25 2000/03/06 14:16:04 mast Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -18,6 +18,8 @@ SIMPLE_DECODE(decode_int, (int)s );
 SIMPLE_DECODE(decode_module, s );
 SIMPLE_DECODE(decode_float, (float)s );
 SIMPLE_DECODE(decode_string, http_decode_string(s));
+
+constant xml_header = "<?XML version=\"1.0\" encoding=\"UTF-8\"?>";
 
 private string decode_list(Parser.HTML p, mapping m, string s, mapping res)
 {
@@ -87,8 +89,11 @@ string trim_comments( string from )
   foreach( from /"\n", string l )
   {
     if( strlen(l) && l[0] == '#' )
-      continue;
-    res += l+"\n";
+      // Just defeat any tags on the line. This won't clobber any
+      // variable values, since '<' is always encoded in them.
+      res += replace (l, "<", "") + "\n";
+    else
+      res += l+"\n";
   }
   return res;
 }
@@ -97,7 +102,7 @@ mapping decode_config_file(string s)
 {
   mapping res = ([ ]);
   if(sizeof(s) < 10) return res; // Empty file..
-  if( sscanf( s, "%*s<?XML version=\"1.0\"?>\n%*s" ) == 2 )
+  if( sscanf( s, "%*s" + xml_header + "\n%*s" ) == 2 )
     s = utf8_to_string( s );
   else
     s = trim_comments( s );
@@ -114,7 +119,7 @@ string encode_mixed(mixed from, object c)
   switch(sprintf("%t", from))
   {
    case "string":
-    return "<str>"+replace(from, ({ ">", "<" }), ({ "%3e", "%3c" })  )
+    return "<str>"+replace(from, ({ ">", "<", "%" }), ({ "%3e", "%3c", "%25" })  )
            + "</str>";
    case "int":
    case "mixed":
@@ -247,7 +252,7 @@ string encode_config_region(mapping m, string reg, object c)
 string encode_regions(mapping r, object c)
 {
   string v;
-  string res = ("<?XML version=\"1.0\" encoding=\"UTF-8\"?>\n\n");
+  string res = (xml_header + "\n\n");
   foreach(sort(indices(r)), v)
     res += "<region name='"+v+"'>\n" +
              encode_config_region(r[v],v,c)
