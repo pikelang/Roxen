@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.339 2000/08/15 13:05:28 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.340 2000/08/16 02:58:11 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2092,14 +2092,14 @@ int|string try_get_file(string s, RequestID id,
 
   s = Roxen.fix_relative (s, id);
 
-  if(!id->pragma["no-cache"] && !nocache && (!id->auth || !id->auth[0])) {
-    cache_key =
-      s + "\0" +
-      id->request_headers->cookie + "\0" +
-      id->request_headers["user-agent"];
-    if(res = cache_lookup("file:"+name, cache_key))
-      return res;
-  }
+//   if(!id->pragma["no-cache"] && !nocache && (!id->auth || !id->auth[0])) {
+//     cache_key =
+//       s + "\0" +
+//       id->request_headers->cookie + "\0" +
+//       id->request_headers["user-agent"];
+//     if(res = cache_lookup("file:"+name, cache_key))
+//       return res;
+//   }
 
   if (fake_id->scan_for_query)
     // FIXME: If we're using e.g. ftp this doesn't exist. But the
@@ -2124,6 +2124,7 @@ int|string try_get_file(string s, RequestID id,
     }
   }
 
+  CACHE( fake_id->misc->cacheable );
   destruct (fake_id);
 
   if (!mappingp(m) && !objectp(m)) {
@@ -2155,8 +2156,8 @@ int|string try_get_file(string s, RequestID id,
     if(!sscanf(res, "%*s\n\n%s", res))
       sscanf(res, "%*s\n%s", res);
   }
-  if (cache_key)
-    cache_set("file:"+name, cache_key, res);
+//   if (cache_key)
+//     cache_set("file:"+name, cache_key, res);
   return res;
 }
 
