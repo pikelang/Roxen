@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.28 1997/02/22 00:02:14 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.29 1997/02/22 13:02:50 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -708,7 +708,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(!id->supports->images || id->prestate->noimages)
   {
     if(!arg->split) contents=replace(contents,"\n", "\n<br>\n");
-    if(arg->submit) return "<input type=submit value=\""+contents+"\">";
+    if(arg->submit) return "<input type=submit name=\""+(arg->name+".x")+"\" value=\""+contents+"\">";
     switch(t)
     {
      case "gtext":
@@ -908,10 +908,17 @@ string tag_body(string t, mapping args, object id, object file,
   if(changed) return ("<body "+make_args(args)+">");
 }
 
+
 string tag_fix_color(string tagname, mapping args, object id, object file,
 		     mapping defines)
 {
   int changed;
+
+  if(!id->misc->colors)
+    id->misc->colors = ({ ({ defines->fg, defines->bg }) });
+  else
+    id->misc->colors += ({ ({ defines->fg, defines->bg }) });
+      
 #define FIX(X,Y) if(args->X){defines->Y=args->X;if(args->X[0]!='#'){args->X=ns_color(parse_color(args->X));changed = 1;}}
 
   FIX(bgcolor,bg);
@@ -921,12 +928,31 @@ string tag_fix_color(string tagname, mapping args, object id, object file,
   return 0;
 }
 
+string pop_color(string tagname,mapping args,object id,object file,
+		 mapping defines)
+{
+  array c = id->misc->colors;
+  if(c && sizeof(c))
+  {
+    defines->fg = c[-1][0];
+    defines->bg = c[-1][1];
+    id->misc->colors = c[..sizeof(c)-2];
+  }
+}
+
 mapping query_tag_callers()
 {
   return ([
-    "body":tag_body, "font":tag_fix_color,
+    "body":tag_body,
+    "font":tag_fix_color,
     "table":tag_fix_color,
-    "tr":tag_fix_color, "td":tag_fix_color
+    "tr":tag_fix_color,
+    "td":tag_fix_color,
+    "/td":pop_color,
+    "/tr":pop_color,
+    "/font":pop_color,
+    "/body":pop_color,
+    "/table":pop_color,
   ]);
 }
 
