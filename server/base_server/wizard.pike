@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.107 1999/12/28 01:39:33 nilsson Exp $
+/* $Id: wizard.pike,v 1.108 2000/01/17 11:50:37 jonasw Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -313,7 +313,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      string res="";
      m->type = "select";
      m->lines = "20";
-     m->choices = roxen->available_fonts(0)*",";
+     m->choices = roxen.fonts->available_fonts() * ",";
      if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
        res = ("<input type=\"submit\" value=\"Example\"><br />"+
 	      ((current&&strlen(current))?
