@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.107 1998/06/28 17:02:33 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.108 1998/06/28 17:25:30 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1578,9 +1578,12 @@ int group_member(array auth, string group, string groupfile, object id)
     return 0;
   }
 
+  s = replace(s, ({ " ", "\t", "\r" }), ({ "", "", "" }));
+
   multiset(string) members = simple_parse_group_file(s, group);
 
-  return members && members[auth[1]];
+  return members && members[replace(auth[1],
+				    ({ " ", "\t", "\r" }), ({ "", "", "" }))];
 }
 
 string tag_prestate(string tag, mapping m, string q, object got);
