@@ -1,10 +1,3 @@
-<comment>Zap the caches for the cache tests to work correctly.</comment>
-<use-module>piketag</use-module>
-<test>
-  <rxml><?pike cache.flush_memory_cache ("tag_cache"); ?></rxml>
-</test>
-
-
 <!-- ............................................................ -->
 <comment>Config image</comment>
 <test>
@@ -858,9 +851,17 @@ These only tests that the tags does not produce a backtrace, for now.
 
 <!-- ............................................................ -->
 <comment>Cache tests</comment>
+
 <test>
 <rxml><cache><append variable="var.foo" value="x"/></cache>
 <cache><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
+<result>
+xx</result>
+</test>
+
+<test>
+<rxml><cache shared><append variable="var.foo" value="x"/></cache>
+<cache shared><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
 <result>
 x</result>
 </test>
@@ -868,6 +869,13 @@ x</result>
 <test>
 <rxml><cache key="a"><append variable="var.foo" value="x"/></cache>
 <cache key="a"><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
+<result>
+xx</result>
+</test>
+
+<test>
+<rxml><cache shared key="a"><append variable="var.foo" value="x"/></cache>
+<cache shared key="a"><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
 <result>
 x</result>
 </test>
@@ -880,16 +888,32 @@ yy</result>
 </test>
 
 <test>
-<rxml><cache nohash="1" key="a">hej</cache><cache nohash="1" key="a">hopp</cache></rxml>
-<result>hejhej</result>
+<rxml><cache shared key="a"><append variable="var.foo" value="y"/></cache>
+<cache shared key="b"><append variable="var.foo" value="y"/></cache>&var.foo;</rxml>
+<result>
+yy</result>
+</test>
+
+<test>
+<rxml><cache nohash="1" key="a">hej</cache>
+<cache nohash="1" key="a">hopp</cache></rxml>
+<result>hej
+hopp</result>
+</test>
+
+<test>
+<rxml><cache shared nohash="1" key="a">hej</cache>
+<cache shared nohash="1" key="a">hopp</cache></rxml>
+<result>hej
+hej</result>
 </test>
 
 <test>
   <rxml type="string">
-    <cache nohash key="set"><set variable="var.foo" value="1"/></cache>
+    <cache shared nohash key="set"><set variable="var.foo" value="1"/></cache>
     &var.foo;
     <set variable="var.foo" value="2"/>
-    <cache nohash key="set"/>
+    <cache shared nohash key="set"/>
     &var.foo;
   </rxml>
   <result>11</result>
@@ -899,18 +923,18 @@ yy</result>
   <rxml type="string">
     <set variable="var.foo" value="1"/>
     <set variable="var.bar" value="a"/>
-    <cache nohash key="x">
+    <cache shared nohash key="x">
       (&var.foo;,&var.bar;)
-      <cache nohash key="&var.foo;">(&var.foo;,&var.bar;)</cache>
+      <cache shared nohash key="&var.foo;">(&var.foo;,&var.bar;)</cache>
     </cache>
     ;
     <set variable="var.foo" value="2"/>
     <set variable="var.bar" value="b"/>
-    <cache nohash key="x"/>
+    <cache shared nohash key="x"/>
     ;
     <set variable="var.foo" value="1"/>
     <set variable="var.bar" value="c"/>
-    <cache nohash key="x"/>
+    <cache shared nohash key="x"/>
   </rxml>
   <result>(1,a)(1,a);(1,a)(2,b);(1,a)(1,a)</result>
 </test>
@@ -918,7 +942,7 @@ yy</result>
 <test>
   <rxml type="string">
     <set variable="var.items" value="1,2,3"/>
-    <cache nohash key="yo1">
+    <cache shared nohash key="yo1">
       [&var.items;]
       <emit source="values" values="&var.items;" split=",">
         &_.value;,
@@ -926,7 +950,7 @@ yy</result>
     </cache>
     ;
     <set variable="var.items" value="3,1,2"/>
-    <cache nohash key="yo1"/>
+    <cache shared nohash key="yo1"/>
   </rxml>
   <result>[1,2,3]1,2,3,;[1,2,3]1,2,3,</result>
 </test>
@@ -934,16 +958,16 @@ yy</result>
 <test>
   <rxml type="string">
     <set variable="var.items" value="1,2,3"/>
-    <cache nohash key="yo2">
+    <cache shared nohash key="yo2">
       [&var.items;]
       <emit source="values" values="&var.items;" split=",">
         &_.value;
-	<cache>(&_.value;)</cache>,
+	<cache shared>(&_.value;)</cache>,
       </emit>
     </cache>
     ;
     <set variable="var.items" value="3,1,2"/>
-    <cache nohash key="yo2"/>
+    <cache shared nohash key="yo2"/>
   </rxml>
   <result>[1,2,3]1(1),2(1),3(1),;[1,2,3]3(1),1(1),2(1),</result>
 </test>
@@ -952,18 +976,66 @@ yy</result>
   <rxml type="string">
     <set variable="var.items" value="1,2,3"/>
     <set variable="var.foo" value="x"/>
-    <cache nohash key="yo3">
+    <cache shared nohash key="yo3">
       [&var.items;]
       <emit source="values" values="&var.items;" split=",">
-	<cache key="&_.value;">&_.value;(&var.foo;)</cache>,
+	<cache shared key="&_.value;">&_.value;(&var.foo;)</cache>,
       </emit>
     </cache>
     ;
-    <set variable="var.items" value="3,1,2"/>
+    <set variable="var.items" value="3,1,4,2"/>
     <set variable="var.foo" value="y"/>
-    <cache nohash key="yo3"/>
+    <cache shared nohash key="yo3"/>
   </rxml>
-  <result>[1,2,3]1(x),2(x),3(x),;[1,2,3]3(x),1(x),2(x),</result>
+  <result>[1,2,3]1(x),2(x),3(x),;[1,2,3]3(x),1(x),4(y),2(x),</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>&test.pass;</cache>
+  </rxml>
+  <result>1</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache variable="test.pass">&test.pass;</cache>
+  </rxml>
+  <result pass="1">1</result>
+  <result pass="2">2</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      &test.pass;
+      <cache variable="test.pass">&test.pass;</cache>
+    </cache>
+  </rxml>
+  <result pass="1">11</result>
+  <result pass="2">12</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      &test.pass;
+      <cache propagate variable="test.pass">&test.pass;</cache>
+    </cache>
+  </rxml>
+  <result pass="1">11</result>
+  <result pass="2">22</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      &test.pass;
+      <cache nocache>&test.pass;</cache>
+    </cache>
+  </rxml>
+  <result pass="1">11</result>
+  <result pass="2">12</result>
 </test>
 
 
