@@ -5,7 +5,7 @@
 
 import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.21 1997/12/15 01:50:55 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.22 1998/01/14 20:19:53 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -386,8 +386,11 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 
   cache_key = "groupfile:" + id->conf->name;
 
+  array st;
+
   f = files.file();
-  if(!(f->open(groupfile, "r")))
+  if((!(st = file_stat(groupfile))) || (st[1] == -4) ||
+     (!(f->open(groupfile, "r"))))
   {
 #ifdef HTACCESS_DEBUG
     werror("HTACCESS: The groupfile "+groupfile+" cannot be opened.\n");
@@ -608,7 +611,9 @@ array rec_find_htaccess_file(object id, string vpath)
     if((path = cache_path_of_htaccess(vpath,id)) != 0)
     {
       object o;
-      if(stringp(path))
+      array st;
+
+      if (stringp(path) && (st = file_stat(path)) && (st[1] != -4))
       {
 	o = open(path, "r");
 	if(o)  return ({ path, o });
@@ -620,7 +625,10 @@ array rec_find_htaccess_file(object id, string vpath)
   if(path = roxen->real_file(vpath, id))
   {
     object f;
-    if(f=open(path + query("file"), "r"))
+    array st;
+
+    if((st = file_stat(path + query("file"))) && (st[1] != -4) &&
+       (f = open(path + query("file"), "r")))
     {
 #ifdef DEBUG
       mark_fd(f->query_fd(), ".htaccess file in "+path);
