@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.521 2000/08/15 12:54:04 jhs Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.522 2000/08/16 01:14:39 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1740,6 +1740,8 @@ int register_url( string url, object/*(Configuration)*/ conf )
 
 
 object/*(Configuration)*/ find_configuration( string name )
+//! Searches for a configuration with a name or fullname like the
+//! given string. See also get_configuration().
 {
   name = replace( lower_case( replace(name,"-"," ") )-" ", "/", "-" );
   foreach( configurations, object/*(Configuration)*/ o )
@@ -3078,6 +3080,7 @@ void fix_config_lookup()
 }
 
 object/*(Configuration)*/ get_configuration (string name)
+//! Gets the configuration with the given identifier name.
 {
 #ifdef DEBUG
   if (sizeof (configurations) != sizeof (config_lookup))
@@ -3096,6 +3099,20 @@ object/*(Configuration)*/ enable_configuration(string name)
   configurations += ({ cf });
   config_lookup[name] = cf;
   return cf;
+}
+
+void disable_configuration (string name)
+{
+  if (object conf = config_lookup[name]) {
+    configurations -= ({conf});
+    m_delete (config_lookup, name);
+  }
+}
+
+void remove_configuration (string name)
+{
+  disable_configuration (name);
+  ::remove_configuration (name);
 }
 
 // Enable all configurations
