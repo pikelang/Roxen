@@ -49,6 +49,7 @@ qt	video/quicktime
 viv     video/vnd.vivo 
 vivo    video/vnd.vivo 
 
+css	text/css
 etx	text/x-setext
 htm	text/html
 html	text/html
@@ -60,7 +61,6 @@ sgml    text/x-sgml
 spider  text/spidercode 
 spml	text/spinnercode
 spml    text/spidercode 
-tsv	text/tab-separated-values
 tsv     text/tab-separated-values
 txt	text/plain
 
