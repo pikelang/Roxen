@@ -41,7 +41,12 @@
       <font color="&usr.content-titlefg;"><if variable="form.port is &_.port;"><img src="&usr.selected-indicator;" /></if><else>&nbsp;</else>&nbsp;<a href='?port=&_.port:http;&section=&form.section:http;'><b><font size="+2">&_.name;</font></a></font>
        </td>
         <td align="right">
-    <if variable="form.port is &_.port;"><cf-save></if>
+          <if variable="form.port is &_.port;">
+           <colorscope bgcolor='&usr.content-titlebg;' text='&usr.content-titlefg;'>
+            <cf-save/>
+           </colorscope>
+          </if>
+          <else>&nbsp;</else>
         </td>
       </tr>
     <if not="1" variable="_.warning is "><tr><td colspan="2"><font color='&usr.warncolor;'><b>&_.warning;</b></font></td></tr></if>
