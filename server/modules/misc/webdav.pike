@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.24 2004/05/10 14:57:29 grubba Exp $
+// $Id: webdav.pike,v 1.25 2004/05/10 17:17:22 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.24 2004/05/10 14:57:29 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.25 2004/05/10 17:17:22 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -281,6 +281,11 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       TRACE_LEAVE(sprintf("UNLOCK: Lock-token %O not found.", locktoken));
       return Roxen.http_status(403, "UNLOCK: Lock not found.");
     }
+    if (lock->locktoken != locktoken) {
+      SIMPLE_TRACE_LEAVE("UNLOCK: Locktoken mismatch: %O != %O.\n",
+			 locktoken, lock->locktoken);
+      return Roxen.http_status(423, "Invalid locktoken.");
+    }
     mapping res = id->conf->unlock_file(id->not_query, lock, id);
     if (res) {
       TRACE_LEAVE(sprintf("UNLOCK: Unlocking of %O failed.", locktoken));
@@ -376,11 +381,13 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
   case "DELETE":
     recur_func = lambda(string path, string ignored, int d, RoxenModule module,
 			MultiStatus.Prefixed stat, RequestID id) {
-		   if (!module->recurse_delete_files(path, stat, id)) {
+		   mapping res = module->recurse_delete_files(path, stat, id);
+		   if (res && res->error < 300) {
 		     // Succeed in deleting some file(s).
-		     empty_result = Roxen.http_status(204);
+		     empty_result = res;
+		     return 0;
 		   }
-		   return 0;
+		   return res;
 		 };
     // The multi status will be empty if everything went well,
     // or if the file didn't exist.
