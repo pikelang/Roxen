@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.90 2000/12/29 16:03:15 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.91 2001/01/02 22:25:50 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -193,7 +193,7 @@ string query_location()
 #define FILTER_INTERNAL_FILE(f, id) \
   (!id->misc->internal_get && sizeof (filter (internal_files, glob, (f/"/")[-1])))
 
-mixed stat_file( string f, RequestID id )
+local mixed stat_file( string f, RequestID id )
 {
   Stat fs;
 
@@ -221,7 +221,7 @@ mixed stat_file( string f, RequestID id )
 
 string real_file( string f, RequestID id )
 {
-  if(local::stat_file( f, id ))
+  if(stat_file( f, id ))
     return path + f;
 }
 
