@@ -32,11 +32,19 @@ depend:
 	@(cd pike/src;$(MAKE) depend)
 	echo "You need to run configure once again."
 
-verify: all
+verify: all verify_other
 	@(cd pike/src;$(MAKE) verify)
 
-verbose_verify: all
+verbose_verify: all verify_other
 	@(cd pike/src;$(MAKE) verbose_verify)
+
+verify_other:
+	@if test "@MAKE_ZLIB@" = "zlib"; then \
+	  $(MAKE) verify_zlib; \
+	fi
+
+verify_zlib:
+	@(cd zlib;$(MAKE) test)
 
 new_peep_engine:
 	@(cd pike/src;$(MAKE) new_peep_engine)
