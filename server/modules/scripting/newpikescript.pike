@@ -1,9 +1,9 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.5 1998/05/26 08:42:47 per Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.6 1998/05/31 18:33:45 grubba Exp $";
 constant thread_safe=1;
 
 #if !constant(Remote)
 # error The remote module was not present
-#endif
+#else /* constant(Remote) */
 #define SERVERDIR ".pike-script-servers/"
 
 #if constant(roxen)
@@ -501,3 +501,5 @@ int main()
   return -1;
 }
 #endif
+
+#endif /* constant(Remote) */
