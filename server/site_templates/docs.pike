@@ -5,7 +5,7 @@ constant doc  = "A site with the online roxen documentation.";
 
 constant silent_modules = 
 ({
-  "tarfs",
+  "sqlfs",
   "indexfiles",
   "url_rectifier",
   "contenttypes",
@@ -27,6 +27,4 @@ tag text/html
 xml text/html
 rad text/html
 ent text/html" );
-  c->find_module( "tarfs#0" )->set("mountpoint","/" );
-  c->find_module( "tarfs#0" )->set("tarfile","config_interface/docs.tar" );
 }
