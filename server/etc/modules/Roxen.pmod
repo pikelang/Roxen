@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.188 2004/10/11 18:41:38 mast Exp $
+// $Id: Roxen.pmod,v 1.189 2004/11/22 13:48:51 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -785,6 +785,32 @@ mapping http_stream(Stdio.File from)
 //! to make sure what you send is HTTP data.
 {
   return ([ "raw":1, "file":from, "len":-1, ]);
+}
+
+mapping http_digest_required(mapping(string:string) challenge,
+			     string|void message)
+//! Generates a result mapping that will instruct the web browser that
+//! the user needs to authorize himself before being allowed access.
+//! `realm' is the name of the realm on the server, which will
+//! typically end up in the browser's prompt for a name and password
+//! (e g "Enter username for <i>realm</i> at <i>hostname</i>:"). The
+//! optional message is the message body that the client typically
+//! shows the user, should he decide not to authenticate himself, but
+//! rather refraim from trying to authenticate himself.
+//!
+//! In HTTP terms, this sends a <tt>401 Auth Required</tt> response
+//! with the header <tt>WWW-Authenticate: basic realm="`realm'"</tt>.
+//! For more info, see RFC 2617.
+{
+  if(!message)
+    message = "<h1>Authentication failed.\n</h1>";
+  HTTP_WERR(sprintf("Auth required (%O)", challenge));
+  string digest_challenge = "";
+  foreach(challenge; string key; string val) {
+    digest_challenge += sprintf(" %s=%O", key, val);
+  }
+  return http_low_answer(401, message)
+    + ([ "extra_heads":([ "WWW-Authenticate":"Digest "+digest_challenge,]),]);
 }
 
 mapping http_auth_required(string realm, string|void message)
@@ -2419,38 +2445,53 @@ function get_client_charset_decoder( string едц, RequestID|void id )
   array tmp = test/"@";
   if(sizeof(tmp)>1)
     charset = tmp[1];
-  test = tmp[0];
+  string entity_test =
+    replace(tmp[0], ({ "\201", "?x829f;" }), ({ "?", "?" }));
 
-  test = replace(test,
-		 ({ "&aring;", "&#229;", "&#xe5;",
-		    "&auml;", "&#228;", "&#xe4;",
-		    "&ouml;", "&#246;", "&#xf6;",
-		    "&#33439;","&#x829f;", "\201", "?x829f;" }),
+  test = replace(entity_test,
+		 ({ "&aring;", "&#229;", "&#xe5;",	// е
+		    "&auml;", "&#228;", "&#xe4;",	// д
+		    "&ouml;", "&#246;", "&#xf6;",	// ц
+		    "&#33439;","&#x829f;", }),		// \u829f
 		 ({ "?", "?", "?",
 		    "?", "?", "?",
 		    "?", "?", "?",
-		    "?", "?", "?", "?" }));
+		    "?", "?", }));
+
+  function(function:function) wrap = lambda(function x) { return x; };
+
+  if (test != entity_test) {
+    wrap = lambda(function decoder) {
+	     Parser.HTML entity_parser = Parser.html_entity_parser();
+	     return lambda(string x) {
+		      return entity_parser->finish(decoder(x))->read();
+		    };
+	   };
+  }
   
   switch( test ) {
   case "edv":
   case "edv?":
     report_notice( "Warning: Non 8-bit safe client detected (%s)",
 		   (id?id->client*" ":"unknown client"));
-    return 0;
-
+    // FALL_THROUGH
+    
   case "едц":
   case "едц?":
+    if (test != entity_test)
+      return Parser.parse_html_entities;
     return 0;
     
   case "\33-Aедц":
   case "\33-A\345\344\366\33$Bgl":
     id && id->set_output_charset && id->set_output_charset( "iso-2022" );
-    return _charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->decode;
+    return wrap(_charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->
+		decode);
     
   case "+AOUA5AD2-":
   case "+AOUA5AD2gp8-":
     id && id->set_output_charset && id->set_output_charset( "utf-7" );
-     return _charset_decoder(Locale.Charset.decoder("utf-7"))->decode;
+    return wrap(_charset_decoder(Locale.Charset.decoder("utf-7"))->decode);
      
   case "ГҐГ¤Г¶":
   case "ГҐГ¤Г¶?":
@@ -2458,29 +2499,29 @@ function get_client_charset_decoder( string едц, RequestID|void id )
   case "ГҐГ¤Г¶\350\212\237":
   case "\357\277\275\357\277\275\357\277\275\350\212\237":
     id && id->set_output_charset && id->set_output_charset( "utf-8" );
-    return utf8_to_string;
+    return wrap(utf8_to_string);
 
   case "\214\212\232":
   case "\214\212\232?":
     id && id->set_output_charset && id->set_output_charset( "mac" );
-    return _charset_decoder( Locale.Charset.decoder( "mac" ) )->decode;
+    return wrap(_charset_decoder( Locale.Charset.decoder( "mac" ) )->decode);
     
   case "\0е\0д\0ц":
   case "\0е\0д\0ц\202\237":
      id&&id->set_output_charset&&id->set_output_charset(string_to_unicode);
-     return unicode_to_string;
+     return wrap(unicode_to_string);
      
   case "\344\214":
   case "???\344\214":
   case "\217\206H\217\206B\217\206r\344\214": // Netscape sends this (?!)
     id && id->set_output_charset && id->set_output_charset( "shift_jis" );
-    return _charset_decoder(Locale.Charset.decoder("shift_jis"))->decode;
+    return wrap(_charset_decoder(Locale.Charset.decoder("shift_jis"))->decode);
   }
 
   // If the actual charset is valid, return a decoder for that charset
   catch {
     function f = _charset_decoder(Locale.Charset.decoder(charset))->decode;
-    return f;
+    return wrap(f);
   };
   
   if (!charset_warned_for[test] && (sizeof(charset_warned_for) < 256)) {
