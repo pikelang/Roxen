@@ -70,14 +70,15 @@ string page_base( RequestID id, string content )
                   "<subtablist width='100%%'>"
                   "<st-tabs></st-tabs>"
                   "<st-page>"
+                  "<if not variable='form.initial'>"
                   "<gbutton href='add_module.pike?config=&form.config:http;"
                   "&reload_module_list=yes' > %s </gbutton> "
                   "<gbutton href='site.html/&form.config;'> %s </gbutton>"
-                  "<p>\n%s\n</p>\n"
+                  "<p>\n</if>%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
 		  LOCALE(258,"Add module"), 
-		  LOCALE(272,"Reload module list"), 
+                  LOCALE(272,"Reload module list"),
 		  LOCALE(202,"Cancel"), content );
 }
 
@@ -216,15 +217,17 @@ array(string) get_module_list( function describe_module,
   if( id->variables->reload_module_list )
     roxen->clear_all_modules_cache();
 
-  array mods;
+  array(ModuleInfo) mods;
   roxenloader.push_compile_error_handler( ec );
   mods = roxen->all_modules();
   roxenloader.pop_compile_error_handler();
 
+  foreach( mods, ModuleInfo m )
+    if( module_nomore( m->sname, m, conf ) )
+      mods -= ({ m });
+
   string res = "";
-
   string doubles="", already="";
-
   array w = map(mods, module_class, id);
 
   mapping classes = ([
@@ -524,69 +527,90 @@ string decode_site_name( string what )
   return what;
 }
 
+
+
+
+array initial_form( RequestID id, Configuration conf, array modules )
+{
+  id->variables->initial = 1;
+  string res = "";
+  int num;
+  foreach( modules, string mod )
+  {
+    ModuleInfo mi = roxen.find_module( (mod/"!")[0] );
+    RoxenModule moo = conf->find_module( replace(mod,"!","#") );
+    foreach( indices(moo->query()), string v )
+    {
+      if( moo->getvar( v )->get_flags() & VAR_INITIAL )
+      {
+        num++;
+        res += "<tr><td colspan='3'><h2>"
+        +LOCALE("","Initial variables for ")+
+            mi->get_name()+"</h2></td></tr>"
+        "<emit source=module-variables configuration=\""+conf->name+"\""
+        " module=\""+mod+#"\">
+ <tr><td width='50'></td><td width=20%><b>&_.name;</b></td><td><eval>&_.form:none;</eval></td></tr>
+ <tr><td></td><td colspan=2>&_.doc:none;<p>&_.type_hint;</td></tr>
+</emit>";
+        break;
+      }
+    }
+  }
+  return ({res,num});
+}
+
+mixed do_it_pass_2( array modules, Configuration conf,
+                    RequestID id )
+{
+  id->misc->do_not_goto = 1;  
+  foreach( modules, string mod ) 
+  {
+    if( !has_value(mod, "!") || !conf->find_module( replace(mod,"!","#") ) )
+    {
+      RoxenModule mm = conf->enable_module( mod,0,0,1 );
+      conf->call_low_start_callbacks( mm, 
+                                      roxen.find_module( (mod/"!")[0] ), 
+                                      conf->modules[ mod ] );
+      modules = replace( modules, mod, mod+"!"+(conf->otomod[mm]/"#")[-1] );
+    }
+    remove_call_out( roxen.really_save_it );
+  }
+
+  [string cf_form, int num] = initial_form( id, conf, modules );
+  if( !num || id->variables["ok.x"] )
+  {
+    // set initial variables from form variables...
+    if( num ) Roxen.parse_rxml( cf_form, id );
+    foreach( modules, string mod )
+     conf->call_start_callbacks( conf->find_module( replace(mod,"!","#") ),
+                                 roxen.find_module( (mod/"!")[0] ),
+                                 conf->modules[ mod ] );
+    conf->save( ); // save it all in one go
+    return Roxen.http_redirect( site_url(id,conf->name)+modules[-1]+"/" , id);
+  }
+  return page_base(id,"<table>"+
+                   map( modules, lambda( string q ) {
+                                   return "<input type=hidden "
+                                          "name='module_to_add' "
+                                          "value='"+q+"' />";
+                                 } )*"\n" 
+                   +"<input type=hidden name=config "
+                   "value='"+conf->name+"' />"+cf_form+"</table><p><cf-ok />");
+}
+
 mixed do_it( RequestID id )
 {
   if( id->variables->encoded )
     id->variables->config = decode_site_name( id->variables->config );
 
-  object conf = roxen.find_configuration( id->variables->config );
-  string last_module = "";
-  array(string) initial_modules = ({});
-  int got_initial = 0;
-  if(!conf)
-    return LOCALE(268, "Configuration gone!")+"\n";
+  Configuration conf = roxen.find_configuration( id->variables->config );
 
   if( !conf->inited )
     conf->enable_all_modules();
-
-  //werror("%O\n", id->variables->mod_init_vars);
-  array do_start = ({});
-  array(string) mtoadd = id->variables->module_to_add/"\0";
-  foreach( mtoadd, string mod ) 
-  {
-    if (RoxenModule m = conf->enable_module( mod,0,0,1 )) 
-    {
-      do_start += ({ m });
-      mod = conf->otomod[m];
-      last_module = replace(mod, "#", "!" );
-      foreach (indices (m->variables), string var)
-	if ( m->variables[var]->get_flags()&VAR_INITIAL ) 
-        {
-	  got_initial = 1;
-	  initial_modules |= ({ last_module });
-	}
-    }
-    else 
-    {
-      do_start += ({ 0 });
-      last_module = "";
-    }
-  }
-
-  for( int i = 0; i<sizeof( mtoadd ); i++ )
-  {
-    if( RoxenModule mo = do_start[ i ] )
-    {
-      string s = (mtoadd[i]/"#")[0];
-      ModuleInfo mi = roxen.find_module( s );
-      object mc = conf->modules[ s ];
-      conf->call_start_callbacks( mo, mi, mc );
-      mo->save_me();
-    }
-  }
-  conf->save();
-  conf->save_me();
-
-  if( strlen( last_module ) )
-    if (got_initial)
-      return Roxen.http_redirect( site_url( id, id->variables->config )+
-			    last_module+
-                           "/?initial=1&mod="+initial_modules*",", 
-                                  id );
-    else
-      return Roxen.http_redirect( site_url( id, id->variables->config )+
-                                  last_module+"/", id );
-  return Roxen.http_redirect( site_url( id, id->variables->config ),id);
+  array modules = (id->variables->module_to_add/"\0")-({""});
+  if( !sizeof( modules ) )
+    return Roxen.http_redirect( site_url(id,conf->name ), id );
+  return do_it_pass_2( modules, conf, id );
 }
 
 mixed parse( RequestID id )
