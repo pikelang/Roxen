@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.132 2000/06/09 13:39:02 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.133 2000/06/13 15:21:43 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1059,7 +1059,7 @@ class TagDoc {
     inherit RXML.Frame;
 
     array do_enter(RequestID id) {
-      if(args->preparse) content_type = RXML.t_same(RXML.PXml);
+      if(args->preparse) content_type = result_type(RXML.PXml);
       return 0;
     }
 
