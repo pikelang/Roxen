@@ -1,4 +1,6 @@
-// $Id: roxen.h,v 1.14 2000/07/15 02:27:43 lange Exp $
+// $Id: roxen.h,v 1.15 2000/07/15 11:17:44 grubba Exp $
+// -*- Pike -*-
+
 #ifndef _ROXEN_H_
 
 #define _ROXEN_H_
@@ -9,53 +11,44 @@
 #define perror	roxen_perror
 
 // Localization support
+
+#ifndef __LOCALEMODULE
+#if constant(Locale.translate)
+#define __LOCALEMODULE Locale
+#else /* !constant(Locale.translate) */
+#define __LOCALEMODULE RoxenLocale
+#endif /* constant(Locale.translate) */
+#endif /* !__LOCALEMODULE */
+
+#ifndef __LOCALEOBJECT
+#ifdef IN_ROXEN
+#define __LOCALEOBJECT locale
+#else /* !IN_ROXEN */
+#define __LOCALEOBJECT roxen.locale
+#endif /* IN_ROXEN */
+#endif /* !__LOCALEOBJECT */
+
 #ifndef _STR_LOCALE
-# if constant(Locale.translate)
-#  ifdef IN_ROXEN
-#   define _STR_LOCALE(Z,X,Y)	(Locale.translate(Z, locale->get(), X, Y))
-#  else
-#   define _STR_LOCALE(Z,X,Y)	(Locale.translate(Z, roxen.locale->get(), X,Y))
-#  endif
-# else
-#  ifdef IN_ROXEN
-#   define _STR_LOCALE(Z,X,Y)	(RoxenLocale.translate(Z, locale->get(), X, Y))
-#  else
-#   define _STR_LOCALE(Z,X,Y)	(RoxenLocale.translate(Z, roxen.locale->get(), X, Y))
-#  endif
-# endif
-#endif
+#define _STR_LOCALE(Z, X, Y)	\
+    (__LOCALEMODULE.translate(X, __LOCALEOBJECT->get, X, Y))
+#endif /* !_STR_LOCALE */
 
 #ifndef _DEF_LOCALE
-# if constant(Locale.translate)
-#  define _DEF_LOCALE(Z,X,Y)	([string](mixed)Locale.DeferredLocale(Z,GETLOCLANG,X,Y))
-# else
-#  define _DEF_LOCALE(Z,X,Y)	([string](mixed)RoxenLocale.DeferredLocale(Z,GETLOCLANG,X,Y))
-# endif
-#endif
+#define _DEF_LOCALE(Z, X, Y)	\
+    ([string](mixed)__LOCALEMODULE.DeferredLocale(Z, GETLOCLANG, X, Y))
+#endif /* !_DEF_LOCALE */
 
 #ifndef USE_DEFERRED_LOCALE
-# ifdef IN_ROXEN
-#  define USE_DEFERRED_LOCALE static inline string GETLOCLANG() {return locale->get();}
-# else
-#  define USE_DEFERRED_LOCALE static inline string GETLOCLANG() {return roxen.locale->get();}
-# endif
-#endif
+#define USE_DEFERRED_LOCALE	\
+    static local inline string GETLOCLANG() { \
+      return __LOCALEOBJECT->get(); \
+    }
+#endif /* !USE_DEFERRED_LOCALE */
 
 #ifndef _LOCALE_FUN
-# if constant(Locale.call)
-#  ifdef IN_ROXEN
-#    define _LOCALE_FUN(X,Y,Z)	Locale.call(X,locale->get(),Y,Z)
-#  else
-#    define _LOCALE_FUN(X,Y,Z)	Locale.call(X,roxen.locale->get(),Y,Z)
-#  endif
-# else
-#  ifdef IN_ROXEN
-#    define _LOCALE_FUN(X,Y,Z)	RoxenLocale.call(X,locale->get(),Y,Z)
-#  else
-#    define _LOCALE_FUN(X,Y,Z)	RoxenLocale.call(X,roxen.locale->get(),Y,Z)
-#  endif
-# endif
-#endif
+#define _LOCALE_FUN(X, Y, Z)	\
+    (__LOCALEMODULE.call(X, __LOCALEOBJECT->get(), Y, Z))
+#endif /* !_LOCALE_FUN */
 
 
-#endif  /* _ROXEN_H_ */
+#endif  /* !_ROXEN_H_ */
