@@ -4,3 +4,9 @@ Major changes from Roxen WebServer 2.4:
  - The directory structure has been updated. See COMPATIBILITY
    compatibility issues.
  - The update client is removed.
+ - Several major improvements has been made to the Icecast modules.
+
+ New modules:
+   - CVS Repository file system; can mount a CVS repository.
+   - Icecast ID3 tag emit plugin; shows ID3 (1.0, 1.1, 2.2.x, 2.3.x,
+     2.4.x) information about MP3 files.
