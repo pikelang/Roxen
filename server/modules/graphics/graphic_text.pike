@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.244 2000/09/19 06:45:48 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.245 2000/09/19 14:21:32 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -288,12 +288,9 @@ opaque=70</gtext>
  Add space around the text.
 </attr>
 
-"
-//  <attr name=talign value=left|right|center>
-//   Adjust the alignment of the text.
-//  </attr>
-//  At least temporarily removed from the documentation
-#"
+<attr name=talign value=left|right|center>
+ Adjust the alignment of the text.
+</attr>
 
 <attr name=textbelow value=color>
  Place the text centered in a box of the given color below the image
@@ -356,12 +353,10 @@ opaque=70</gtext>
  Sets the horizontal spacing.
 </attr>
 
-"
-//  <attr name=ypad value=percentage>
-//  Sets the padding beteen lines.
-//  </attr>
-//  At least temporarily removed from the documentation
-#"
+<attr name=ypad value=percentage>
+ Sets the padding beteen lines.
+</attr>
+
 
 <attr name=ysize value=number>
  Sets the height.
