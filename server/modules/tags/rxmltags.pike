@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.434 2004/08/18 18:51:32 _cvs_stenitzer Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.435 2005/02/05 16:14:50 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -969,8 +969,9 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
 {
   string r;
   mixed e = catch(r=Roxen.parse_rxml(c, id));
-  if(e && objectp(e) && e->tag_throw) return ({ e->tag_throw });
+  if(e && objectp(e) && e->tag_throw) {_ok=1 ; return ({ e->tag_throw });}
   if(e) throw(e);
+  _ok=0;
   return ({r});
 }
 
