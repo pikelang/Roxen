@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.97 2004/05/20 23:31:10 _cvs_stephen Exp $
+ * $Id: ftp.pike,v 2.98 2004/05/20 23:32:03 _cvs_stephen Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3366,6 +3366,7 @@ class FTPSession
     session->data = 0;
     session->misc->len = 0;
     session->method = "DELETE";
+    session->not_query = args;
 
     if (open_file(args, session, "DELE")) {
       send(250, ({ sprintf("%s deleted.", args) }));
@@ -3387,6 +3388,7 @@ class FTPSession
     session->data = 0;
     session->misc->len = 0;
     session->method = "DELETE";
+    session->not_query = args;
 
     array|object st = stat_file(args, session);
 
@@ -3431,6 +3433,7 @@ class FTPSession
     session->method = "MKDIR";
     session->data = 0;
     session->misc->len = 0;
+    session->not_query = args;
 
     if (open_file(args, session, "MKD")) {
       send(257, ({ sprintf("\"%s\" created.", args) }));
