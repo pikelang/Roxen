@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.100 2001/10/04 14:18:25 per Exp $";
+  "$Id: config_filesystem.pike,v 1.101 2001/10/04 15:04:58 per Exp $";
 
 constant path = "config_interface/";
 
@@ -130,9 +130,9 @@ mixed find_file( string f, RequestID id )
   if( !id->misc->internal_get )
   {
     string host;
-    if( array h = gethostbyaddr( id->remoteaddr ) )
-      host = h[0];
-    else
+//     if( array h = gethostbyaddr( id->remoteaddr ) )
+//       host = h[0];
+//     else
       host = id->remoteaddr;
 
     // Patch it in. This is needed for the image-cache authentication handling.
