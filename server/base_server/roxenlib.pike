@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.63 1998/05/15 03:02:25 wing Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.64 1998/06/26 13:14:32 grubba Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -24,7 +24,7 @@ static string extract_query(string from)
 {
   if(!from) return "";
   if(sscanf(from, "%*s?%s%*[ \t\n]", from))
-    return from;
+    return (from/"\r")[0];
   return "";
 }
 
