@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.48 2001/09/21 15:58:13 jhs Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.49 2002/01/30 00:21:13 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -286,9 +286,8 @@ class FileCounter {
       if(db_file_callout_id) remove_call_out(db_file_callout_id);
       database=open(module::query("Accesslog")+".db", "wrc");
       if (!database) {
-	throw(({ sprintf("Failed to open \"%s.db\". "
-			 "Insufficient permissions or out of fd's?\n",
-			 module::query("Accesslog")), backtrace() }));
+	error ("Failed to open \"%s.db\": %s\n",
+	       module::query("Accesslog"), strerror (errno()));
       }
       if (module::query("close_db")) {
 	db_file_callout_id = call_out(close_db_file, 9, database);
