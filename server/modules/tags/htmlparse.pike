@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.19.2.1 1997/02/19 00:23:12 grubba Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.19.2.2 1997/03/01 13:01:54 grubba Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -111,6 +111,7 @@ inline void open_names_file()
 {
   if(objectp(names_file)) return;
   remove_call_out(names_file_callout_id);
+  object privs = ((program)"privs")("Opening Access-log names file");
   names_file=open(QUERY(Accesslog)+".names", "wrca");
   names_file_callout_id = call_out(destruct, 1, names_file);
 }
@@ -123,6 +124,7 @@ inline void open_db_file()
   if(!database)
   {
     if(db_file_callout_id) remove_call_out(db_file_callout_id);
+    object privs = ((program)"privs")("Opening Access-log database file");
     database=open(QUERY(Accesslog)+".db", "wrc");
     if (QUERY(close_db)) {
       db_file_callout_id = call_out(destruct, 9, database);
@@ -147,14 +149,16 @@ void start()
   {
     olf = QUERY(Accesslog);
 
+    object privs = ((program)"privs")("Opening Access-log names file");
     mkdirhier(query("Accesslog"));
+#if 0
     if(!QUERY(close_db))
       if(!(database=open(olf+".db", "wrc")))
       {
 	perror("RXMLPARSE: Failed to open access database.\n");
 	return;
       }
-
+#endif /* 0 */
 
     if(names_file=open(olf+".names", "wrca"))
     {
