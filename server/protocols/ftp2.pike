@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.14 1998/04/29 21:22:11 grubba Exp $
+ * $Id: ftp2.pike,v 1.15 1998/04/30 14:47:25 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -304,6 +304,7 @@ class PutFileWrapper
     if(how != "w" && !done) {
       ftpsession->send(response_code, ({ response }));
       done = 1;
+      session->received += recvd;
       session->file->len = recvd;
       session->conf->log(session->file, session);
       session->file = 0;
@@ -830,6 +831,8 @@ class LSFile
 
 class TelnetSession {
   static object fd;
+  static object conf;
+
   static private mapping cb;
   static private mixed id;
   static private function(mixed|void:string) write_cb;
@@ -861,25 +864,49 @@ class TelnetSession {
     255:"IAC",		// Interpret As Command
   ]);
 
+  void set_write_callback(function(mixed|void:string) w_cb)
+  {
+    if (fd) {
+      write_cb = w_cb;
+      fd->set_nonblocking(got_data, w_cb && send_data, close_cb, got_oob);
+    }
+  }
+
   static private string to_send = "";
   static private void send(string s)
   {
     to_send += s;
   }
+
   static private void send_data()
   {
     if (!sizeof(to_send)) {
       to_send = write_cb(id);
     }
-    if (!to_send) {
-      // Support for delayed close.
-      if (fd) {
+    if (fd) {
+      if (!to_send) {
+	// Support for delayed close.
 	BACKEND_CLOSE(fd);
-      }
-    } else if (sizeof(to_send)) {
-      int n = fd->write(to_send);
+      } else if (sizeof(to_send)) {
+	int n = fd->write(to_send);
 
-      to_send = to_send[n..];
+	if (n >= 0) {
+	  conf->hsent += n;
+	
+	  to_send = to_send[n..];
+	} else {
+	  // Error.
+	  DWRITE(sprintf("TELNET: write failed: errno:%d\n", fd->errno()));
+	  BACKEND_CLOSE(fd);
+	}
+      } else {
+	// Nothing to send for the moment.
+
+	// FIXME: Is this the correct use?
+	set_write_callback(0);
+
+	report_warning("FTP2: Write callback with nothing to send.\n");
+      }
     }
   }
 
@@ -904,6 +931,7 @@ class TelnetSession {
   static private void got_oob(mixed ignored, string s)
   {
     DWRITE(sprintf("TELNET: got_oob(\"%s\")\n", s));
+
     sync = sync || (s == "\377");
     if (cb["URG"]) {
       cb["URG"](id, s);
@@ -1016,14 +1044,6 @@ class TelnetSession {
 	DWRITE(sprintf("TELNET: Partial line is \"%s\"\n", line));
 	rest = line;
       }
-    }
-  }
-
-  void set_write_callback(function(mixed|void:string) w_cb)
-  {
-    if (fd) {
-      write_cb = w_cb;
-      fd->set_nonblocking(got_data, w_cb && send_data, close_cb, got_oob);
     }
   }
 
@@ -1187,15 +1207,14 @@ class FTPSession
       data[i] = sprintf("%03d-%s\r\n", code, data[i]);
     }
     s = data * "";
+
     if (sizeof(s) && !sizeof(to_send)) {
-      to_send += s;
+      to_send = s;
       ::set_write_callback(write_cb);
     } else {
       to_send += s;
     }
   }
-
-  static private object conf;
 
   static private object master_session;
 
