@@ -14,7 +14,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.40 1998/10/07 23:13:04 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.41 1998/10/08 13:50:01 peter Exp $";
 
 // import Array;
 // import Stdio;
@@ -51,7 +51,7 @@ void create()
 
   defvar("user_listing", 0, "Enable userlisting", TYPE_FLAG,
 	 "Enable a directory listing showing users with homepages. "
-	 "When the mountpoint is accessed.")
+	 "When the mountpoint is accessed.");
   
   defvar("banish_list", ({ "root", "daemon", "bin", "sys", "admin", 
 			   "lp", "smtp", "uucp", "nuucp", "listen", 
