@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.273 2001/08/10 12:08:59 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.274 2001/08/10 13:35:51 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -76,7 +76,7 @@ class MyMysql( Sql.Sql real, mixed ro, string name )
       real = low_connect_to_my_mysql( ro, name );
     if( used[real] != name )
     {
-#ifdef DEBUG
+#ifdef DB_DEBUG
       werror("Switching databaseconnection to %O:%O from %O\n",
 	     ro, name, used[real] );
 #endif
@@ -1186,6 +1186,9 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
 {
   object res;
   mapping m = my_mysql_cache;
+#ifdef DB_DEBUG
+  werror("Requested %O for %O DB\n", db, ro );
+#endif
   if( !db )
     db = "mysql";
   
@@ -1207,7 +1210,7 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
       used[res] = db;
       return res;
     } )
-#ifdef MYSQL_CONNECT_DEBUG
+#ifdef DB_DEBUG
       werror ("Couldn't connect to mysql as %s: %s", ro, describe_backtrace (err));
 #else
       my_mysql_num_connections--;
@@ -1227,7 +1230,7 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
   } )
     if( db == "mysql" )
       throw( err );
-#ifdef MYSQL_CONNECT_DEBUG
+#ifdef DB_DEBUG
     else
       werror ("Couldn't connect to mysql as %s: %s", ro, describe_error (err));
 #endif
