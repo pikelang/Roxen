@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.32 1997/05/20 10:48:36 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.33 1997/05/26 01:26:49 grubba Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -1400,11 +1400,10 @@ string tag_aprestate(string tag, mapping m, string q, object got)
   string href, s, *foo;
   multiset prestate=(< >);
 
-  if(!m->href)
+  if(!(href = m->href))
     href=strip_prestate(strip_config(got->raw_url));
   else 
   {
-    href=m->href;
     if ((sizeof(foo = href / ":") > 1) && (sizeof(foo[0] / "/") == 1))
       return make_container("a",m,q);
     href=fix_relative(href, got);
@@ -1414,14 +1413,17 @@ string tag_aprestate(string tag, mapping m, string q, object got)
   if(!strlen(href))
     href="";
 
-  foreach(indices(got->prestate) + indices(m), s)
-  {
-    if(m[s]==s) m_delete(m,s);
+  prestate = (< @indices(got->prestate) >);
 
-    if(strlen(s) && s[0] == '-')
-      prestate[s[1..1000]]=0;
-    else
-      prestate[s]=1;
+  foreach(indices(m), s) {
+    if(m[s]==s) {
+      m_delete(m,s);
+
+      if(strlen(s) && s[0] == '-')
+	prestate[s[1..]]=0;
+      else
+	prestate[s]=1;
+    }
   }
   m->href = add_pre_state(href, prestate);
   return make_container("a",m,q);
