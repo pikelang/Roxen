@@ -36,7 +36,7 @@ void run_tests( Configuration c )
   test_true( DBManager.set_permission, "local", c2, DBManager.WRITE );
 
   test_equal( DBManager.list(c2), DBManager.list, c1 );
-  test_equal( DBManager.list(), DBManager.list, c2 );
+  test_equal( DBManager.list(c1), DBManager.list, c2 );
   
 
   test_true( DBManager.get_permission_map );
