@@ -1,13 +1,13 @@
 /*
  * Roxen master
  */
-
-string cvs_version = "$Id: roxen_master.pike,v 1.50 1999/06/26 02:00:38 peter Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.51 1999/10/08 02:41:01 per Exp $";
 
 /*
  * name = "Roxen Master";
  * doc = "Roxen's customized master.";
  */
+
 
 object mm=(object)"/master";
 inherit "/master": old_master;
@@ -131,7 +131,6 @@ object objectof(array foo)
 function functionof(array f)
 {
   object o;
-//  werror(sprintf("Functionof %O\n", f));
   if(!arrayp(f) || sizeof(f) != 3)
   return 0;
   o = objectof( f[..1] );
@@ -159,7 +158,6 @@ void create()
   }
   programs["/master"] = object_program(o);
   objects[object_program(o)] = o;
-//   add_constant("_master",o);
   /* Move the old efuns to the new object. */
   if (master_efuns) {
     foreach(master_efuns, string e)
@@ -171,26 +169,5 @@ void create()
   add_constant("name_program", name_program);
   add_constant("objectof", objectof);
   add_constant("nameof", nameof);
+//   autoreload_on=1;
 }
-
-// string errors = "";
-// void set_inhibit_compile_errors(mixed f)
-// {
-//   ::set_inhibit_compile_errors(f);
-//   errors="";
-// }
-
-// /*
-//  * This function is called whenever a compiling error occurs,
-//  * Nothing strange about it.
-//  * Note that previous_object cannot be trusted in this function, because
-//  * the compiler calls this function.
-//  */
-
-// void compile_error(string file,int line,string err)
-// {
-//   if(stringp(inhibit_compile_errors))
-//     errors += sprintf("%s:%d:%s\n",trim_file_name(file),line,err);
-//   else
-//     ::compile_error(file,line,err);
-// }
