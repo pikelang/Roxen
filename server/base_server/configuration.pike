@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.95 1998/02/19 05:21:01 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.96 1998/02/19 19:41:42 noring Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -11,6 +11,8 @@ mapping profile_map = ([]);
 
 
 inherit "roxenlib";
+
+public string real_file(string file, object id);
 
 
 function store = roxen->store;
