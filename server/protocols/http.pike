@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.61 1998/03/11 19:42:44 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.62 1998/03/16 19:42:45 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -42,7 +42,7 @@ object conf;
 #define QUERY(X) 	_query("X")
 #endif /* constant(cpp) */
 
-int time;
+int time = predef::time(1);
 string raw_url;
 int do_not_disconnect;
 
@@ -622,7 +622,7 @@ void end(string|void s, int|void keepit)
 static void do_timeout(mapping foo)
 {
   int elapsed = _time()-time;
-  if(elapsed > 30)
+  if(elapsed >= 30)
   {
     end("HTTP/1.0 408 Timeout\r\n"
 	"Content-type: text/plain\r\n"
@@ -641,9 +641,12 @@ static void do_timeout(mapping foo)
 mapping internal_error(array err)
 {
   if(QUERY(show_internals))
-    file = http_low_answer(500, "<h1>Error: Internal server error.</h1>"
-			   + "<font size=+1><pre>"+ describe_backtrace(err)
-			   + "</pre></font>");
+    array(string) bt = (describe_backtrace(err)/"\n") - ({""});
+    file = http_low_answer(500,
+			   sprintf("<h1>Error: Internal server error.</h1>"
+				   "<pre><font size=+1>%s</font></pre>"
+				   "&lt;backtrace&gt;<ol><li>%s</ol>\n",
+				   bt[..1]*"\n", bt[2..]*"<li>"));
   else
     file = http_low_answer(500, "<h1>Error: The server failed to "
 			   "fulfill your query.</h1>");
