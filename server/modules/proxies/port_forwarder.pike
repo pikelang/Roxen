@@ -26,7 +26,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.4 2000/02/06 20:11:56 kinkie Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.5 2000/02/08 22:10:00 nilsson Exp $";
 
 #if DEBUG > 22
 #define TCPFORWARDER_DEBUG
@@ -119,16 +119,12 @@ class Connection
 	}
 };
 
-array register_module() {
-	return ({
-			0,
-			"TCP Port Forwarder",
-			"A basic port-forwarder"
-			"&copy; 1998 Francesco Chemolli "
-			"&lt;kinkie@kame.usr.dsi.unimi.it&gt;,<BR>\nfreely distributed "
-			"under the terms of the GNU General Public License, version 2"
-			});
-}
+constant module_type = MODULE_ZERO;
+constant module_name = "TCP Port Forwarder";
+constant module_doc  = "A basic port-forwarder"
+  "&copy; 1998 Francesco Chemolli "
+  "&lt;kinkie@kame.usr.dsi.unimi.it&gt;,<br />\nfreely distributed "
+  "under the terms of the GNU General Public License, version 2";
 
 multiset connections=(<>);
 int total_connections_number=0, total_transferred_kb=0;

@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 
 // HTTP Proxy module. Should be cleaned and optimized. Currently the
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.42 2000/02/02 20:41:38 per Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.43 2000/02/08 22:10:00 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -31,8 +31,6 @@ object stats_mutex = Thread.Mutex();
 #endif
 
 object logfile;
-
-//function nf=lambda(){};
 
 string|void init_proxies();
 
@@ -498,12 +496,10 @@ void destroy()
 
 }
 
-mixed *register_module()
-{
-  return ({  MODULE_PROXY|MODULE_LOCATION|MODULE_LOGGER, 
-	       "HTTP-Proxy", "This is a caching HTTP-proxy with quite "
-	       " a few bells and whistles", });
-}
+constant module_type = MODULE_PROXY|MODULE_LOCATION|MODULE_LOGGER;
+constant module_name = "HTTP-Proxy";
+constant module_doc  = "This is a caching HTTP-proxy with quite "
+  " a few bells and whistles";
 
 string query_location()  { return QUERY(mountpoint); }
 

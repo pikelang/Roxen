@@ -4,13 +4,12 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.16 1999/12/28 04:37:03 nilsson Exp $";
+string cvs_version = "$Id: wais.pike,v 1.17 2000/02/08 22:10:00 nilsson Exp $";
 
 #include <config.h>
 
 #define DEF_CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote host\r\nContent-type: text/html\r\n\r\n<title>Roxen error: Connection refused</title>\n<h1>Proxy request failed</h1><hr><font size=+2><i>Connection refused by remote host</i></font><hr><font size=-2><a href=http://www.roxen.com/>Roxen</a></font>"
 #define CONNECTION_REFUSED   QUERY(ConnRefuse)
-
 
 
 // #define WAIS_DEBUG    //define this to have lot of debug
@@ -329,15 +328,10 @@ string trim_junk(string headline)
 }
 
 
-array register_module()
-{
-  return ({
-    MODULE_LOCATION|MODULE_PROXY,
-    "Wais Gateway",
-    "This is a caching wais gateway, useful for firewall sites."
-      " It has not been maintained for quite a while, but it works", ({}), 1
-    });
-}
+constant module_type = MODULE_LOCATION|MODULE_PROXY;
+constant module_name = "Wais Gateway";
+constant module_doc  = "This is a caching wais gateway, useful for firewall sites."
+  " It has not been maintained for quite a while, but it works";
 
 string query_location() { return query("loc"); }
 

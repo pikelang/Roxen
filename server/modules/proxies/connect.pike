@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 
 // An implementation of the CONNECT methos, used for SSL tunneling in
 // Netscape (the "Secure proxy" field)
 
-constant cvs_version = "$Id: connect.pike,v 1.12 1998/03/11 19:42:39 neotron Exp $";
+constant cvs_version = "$Id: connect.pike,v 1.13 2000/02/08 22:10:00 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -18,18 +18,11 @@ inherit "socket";
 
 /* Simply relay a request to another server if the data was not found. */
 
-
-mixed *register_module()
-{
-  return ({ 
-    MODULE_FIRST|MODULE_PROXY,
-    "SSL Proxy", 
-    "Implements the CONNECT method, as in <a href="
-      "http://www1.netscape.com/newsref/std/tunneling_ssl.html>the draft</a>"
-      " Useful for tunneling of SSL connections (Secure proxy in Netscape).",
-      ({}), 1
-    });
-}
+constant module_type = MODULE_FIRST|MODULE_PROXY;
+constant module_name = "SSL Proxy";
+constant module_doc  = "Implements the CONNECT method, as in <a href=\""
+  "http://www1.netscape.com/newsref/std/tunneling_ssl.html\">the draft</a>"
+  " Useful for tunneling of SSL connections (Secure proxy in Netscape).";
 
 void nope(object hmm)
 {

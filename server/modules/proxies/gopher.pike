@@ -1,17 +1,17 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.18 2000/02/02 20:41:38 per Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.19 2000/02/08 22:10:00 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
 
 #define CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote "	\
 "host\r\nContent-type: text/html\r\n\r\n<title>Roxen: Connection "	\
-"refused </title>\n<h1>Proxy request failed</h1><hr><font "		\
-"size=+2><i>Connection refused by remote host</i></font><hr><font "	\
-"size=-2><a href=http://www.roxen.com/>Roxen</a></font>"
+"refused </title>\n<h1>Proxy request failed</h1><hr /><font "		\
+"size=\"+2\"><i>Connection refused by remote host</i></font><hr><font "	\
+"size=\"-2\"><a href=http://www.roxen.com/>Roxen</a></font>"
 
 #if DEBUG_LEVEL > 22
 # ifndef GOPHER_DEBUG
@@ -32,15 +32,10 @@ inherit "roxenlib";
 #include <module.h>
 #include <proxyauth.pike>
 
-array register_module()
-{
-  return ({ 
-    MODULE_LOCATION|MODULE_PROXY,
-    "Gopher Gateway",
-    "This is a caching gopher gateway, might be useful for firewall sites, if "
-      "anyone is still using gopher.", ({}), 1
-    });
-}
+constant module_type = MODULE_LOCATION|MODULE_PROXY;
+constant module_name = "Gopher Gateway";
+constant module_doc  = "This is a caching gopher gateway, might be useful for firewall sites, if "
+  "anyone is still using gopher.";
 
 string query_location() { return query("loc"); }
 

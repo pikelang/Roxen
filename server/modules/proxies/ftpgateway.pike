@@ -1,6 +1,6 @@
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.31 1999/12/28 05:18:08 nilsson Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.32 2000/02/08 22:10:00 nilsson Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -29,18 +29,19 @@ import Stdio;
 #define SESSION_INFO
 
 
-#define CONNECTION_REFUSED "\
-HTTP/1.0 500 Connection refused by remote host\r\n\
-Content-type: text/html\r\n\
-\r\n\
-<title>Roxen internal error</title>\n\
-<h1>Proxy request failed</h1>\
-<hr>\
-<font size=+2><i>Host unknown or connection refused</i></font>\
-<hr>\
-<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a></font>"
+string CONNECTION_REFUSED=#"
+HTTP/1.0 500 Connection refused by remote host\r\n
+Content-type: text/html\r\n
+\r\n
+<title>Roxen internal error</title>\n
+<h1>Proxy request failed</h1>
+<hr>
+<font size=\"+2\"><i>Host unknown or connection refused</i></font>
+<hr>
+<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+"</a></font>";
 
-#define INFOSTRING "<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a> FTP Gateway $Revision: 1.31 $ / <i>law@idonex.se</i></font>"
+string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+
+                  "</a> FTP Gateway "+("$Revision: 1.32 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -1212,8 +1213,6 @@ void create(object c)
 	 "How long time in <b>seconds</b> a dataport is kept open without usage before closage");
   defvar("icons", "Yes", "Icons", TYPE_STRING_LIST|VAR_MORE,
 	 "Icons in directory listnings",({"Yes","No"}));
-//  defvar("logo", "Yes", "Roxen logo", TYPE_STRING_LIST,
-//	 "Show a Roxen logo in the right-up corner on directories",({"Yes","No"}));
   defvar("hold", "Yes", "Hold until response", TYPE_STRING_LIST|VAR_MORE,
 	 "Hold data transfer until response from server; "+
 	 "if the server sends file size, size will be sent to the http client. "+
@@ -1231,14 +1230,9 @@ void create(object c)
 	 ({"Yes","No"}));
 }
 
-mixed *register_module()
-{
-  return
-    ({  MODULE_PROXY|MODULE_LOCATION,
-	  "FTP gateway",
-	  "FTP gateway, not currently caching",
-	  });
-}
+constant module_type = MODULE_PROXY|MODULE_LOCATION;
+constant module_name = "FTP gateway";
+constant module_doc  = "FTP gateway, currently not caching";
 
 string query_location()  { return QUERY(mountpoint); }
 
