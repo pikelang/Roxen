@@ -1,3 +1,7 @@
+/*
+ * $Id: Client.pike,v 1.10 1997/09/14 17:32:59 grubba Exp $
+ */
+
 #define error(X) throw( ({ X, backtrace() }) )
 
 class RemoteFunctionCall

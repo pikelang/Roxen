@@ -1,3 +1,7 @@
+/*
+ * $Id: Server.pike,v 1.12 1997/09/14 17:32:34 grubba Exp $
+ */
+
 #define error(X) throw(({X, backtrace()}))
 
 class Connection

@@ -1,3 +1,7 @@
+/*
+ * $Id: PDB.pmod,v 1.11 1997/09/14 17:31:31 grubba Exp $
+ */
+
 #if constant(thread_create)
 #define THREAD_SAFE
 #define LOCK() do { object key; catch(key=lock())
