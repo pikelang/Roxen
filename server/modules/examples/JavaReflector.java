@@ -6,13 +6,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
 
+
+/*
+ * This is an example Roxen location module.
+ */
+
+
 public class JavaReflector extends AbstractLocationModule
 {
-  String modifierFont = "<font color=\"red\">";
-  String typeFont = "<font color=\"steelblue\">";
-  String variableFont = "<font color=\"purple\">";
-  String methodFont = "<font color=\"brown\">";
-  String keywordFont = "<font color=\"green\">";
+
+  String modifierFont, typeFont, variableFont, methodFont, keywordFont;
 
   public String queryName()
   {
@@ -26,6 +29,10 @@ public class JavaReflector extends AbstractLocationModule
 
   protected RoxenResponse response(String title, String body)
   {
+    /*
+     * Package the content in an HTML page and return it with
+     * RXML parsing.
+     */
     String page = "<html><head><title>"+title+"</title>\n"+
       "<body bgcolor=\"white\" text=\"black\" link=\"#6699cc\" "+
       "alink=\"red\" vlink=\"#6677cc\">\n"+
@@ -37,6 +44,9 @@ public class JavaReflector extends AbstractLocationModule
 
   public RoxenResponse packageList(RoxenRequest id)
   {
+    /*
+     * Default page, lists known packages.
+     */
     StringBuffer page = new StringBuffer();
     page.append("<h1>All packages</h1>\n<ul>\n");
     Package[] packages = Package.getPackages();
@@ -49,11 +59,25 @@ public class JavaReflector extends AbstractLocationModule
       page.append("</li>\n");
     }
     page.append("</ul>\n");
+    /*
+     * Include a link to the reflection of this class, just
+     * to get people started...
+     */
+    page.append("Class of module: ");
+    HashMap args = new HashMap();
+    Class c = getClass();
+    args.put("href", queryLocation()+c.getName());
+    page.append(RoxenLib.makeContainer("a", args, c.getName()));
+    page.append("\n");
     return response("Packages", page.toString());
   }
 
   public RoxenResponse describePackage(Package p, RoxenRequest id)
   {
+    /*
+     * Unfortunately, there is no way to list all classes
+     * in a package.  So this page only contains some manifest info.
+     */
     StringBuffer page = new StringBuffer();
     page.append("<h1>Package "+p.getName()+"</h1>\n");
     page.append("<table border=1>\n<tr><td></td><th>Title</th>"+
@@ -76,13 +100,15 @@ public class JavaReflector extends AbstractLocationModule
 
   static protected void indentedLine(StringBuffer buf, String txt, int indent)
   {
+    /* Append a line with indentation to a StringBuffer */
     while(indent-->0) buf.append("&nbsp;");
     buf.append(txt);
     buf.append("<br>\n");
   }
 
-  protected String describe(int modifiers)
+  protected String modifierNames(int modifiers)
   {
+    /* Translate a mask of modifiers to clear text */
     if((modifiers&Modifier.INTERFACE)>0)
       modifiers &= ~(Modifier.ABSTRACT | Modifier.STATIC | Modifier.INTERFACE);
     return (modifiers==0? "" :
@@ -91,6 +117,7 @@ public class JavaReflector extends AbstractLocationModule
 
   protected String simpleClassName(String name)
   {
+    /* Translate a qualified name to a simple name */
     int i = name.lastIndexOf('$');
     if(i<0)
       i = name.lastIndexOf('.');
@@ -99,6 +126,7 @@ public class JavaReflector extends AbstractLocationModule
 
   protected String classLink(Class c)
   {
+    /* Translate a type to clear text with hyperlinks where applicable */
     if(c.isArray())
       return classLink(c.getComponentType())+"[]";
     String n = c.getName();
@@ -113,6 +141,7 @@ public class JavaReflector extends AbstractLocationModule
 
   protected String classLink(Class[] c)
   {
+    /* Translate a list of types to clear text with hyperlinks */
     StringBuffer buf = new StringBuffer();
     for(int i=0; i<c.length; i++) {
       if(i>0)
@@ -125,7 +154,8 @@ public class JavaReflector extends AbstractLocationModule
   protected void describe(StringBuffer page, Field f, RoxenRequest id,
 			  int indent)
   {
-    indentedLine(page, describe(f.getModifiers())+
+    /* Append description of a field to a StringBuffer */
+    indentedLine(page, modifierNames(f.getModifiers())+
 		 classLink(f.getType())+" "+variableFont+
 		 f.getName()+"</font>;", indent);
   }
@@ -133,8 +163,9 @@ public class JavaReflector extends AbstractLocationModule
   protected void describe(StringBuffer page, Method m, RoxenRequest id,
 			  int indent)
   {
+    /* Append description of a method to a StringBuffer */
     Class[] th = m.getExceptionTypes();
-    indentedLine(page, describe(m.getModifiers())+
+    indentedLine(page, modifierNames(m.getModifiers())+
 		 classLink(m.getReturnType())+" "+methodFont+
 		 m.getName()+"</font>("+classLink(m.getParameterTypes())+
 		 ")"+(th.length>0? " "+keywordFont+"throws</font> "+
@@ -144,8 +175,9 @@ public class JavaReflector extends AbstractLocationModule
   protected void describe(StringBuffer page, Constructor c, RoxenRequest id,
 			  int indent)
   {
+    /* Append description of a constructor to a StringBuffer */
     Class[] th = c.getExceptionTypes();
-    indentedLine(page, describe(c.getModifiers())+
+    indentedLine(page, modifierNames(c.getModifiers())+
 		 methodFont+simpleClassName(c.getName())+
 		 "</font>("+classLink(c.getParameterTypes())+
 		 ")"+(th.length>0? " "+keywordFont+"throws</font> "+
@@ -155,9 +187,10 @@ public class JavaReflector extends AbstractLocationModule
   protected void describe(StringBuffer page, Class c, RoxenRequest id,
 			  int indent)
   {
+    /* Append description of a class or interface to a StringBuffer */
     Class[] ifcs = c.getInterfaces();
     if(c.isInterface())
-      indentedLine(page, describe(c.getModifiers())+
+      indentedLine(page, modifierNames(c.getModifiers())+
 		   keywordFont+"interface</font> "+
 		   methodFont+simpleClassName(c.getName())+"</font> "+
 		   (ifcs.length>0? keywordFont+"extends</font> "+
@@ -165,7 +198,7 @@ public class JavaReflector extends AbstractLocationModule
 		   "{", indent);
     else {
       Class s = c.getSuperclass();
-      indentedLine(page, describe(c.getModifiers())+
+      indentedLine(page, modifierNames(c.getModifiers())+
 		   keywordFont+"class</font> "+
 		   methodFont+simpleClassName(c.getName())+"</font> "+
 		   (s!=null? keywordFont+"extends</font> "+
@@ -202,6 +235,9 @@ public class JavaReflector extends AbstractLocationModule
 
   public RoxenResponse describeClass(Class c, RoxenRequest id)
   {
+    /*
+     * Page describing a class or interface (including inner classes)
+     */
     StringBuffer page = new StringBuffer();
     String ci = (c.isInterface()? "Interface":"Class");
     page.append("<h1>"+ci+" "+c.getName()+"</h1>\n");
@@ -222,10 +258,13 @@ public class JavaReflector extends AbstractLocationModule
 
   public RoxenResponse findFile(String f, RoxenRequest id)
   {
+    /* If no class or package name is given, show a default page */
     if("".equals(f))
       return packageList(id);
 
     try {
+
+      /* Is it a class/interface ? */
 
       Class c = Class.forName(f);
 
@@ -235,16 +274,23 @@ public class JavaReflector extends AbstractLocationModule
 
     } catch (ClassNotFoundException e) { }
 
+    /* No?  Maybe a package? */
+
     Package p = Package.getPackage(f);
 
     if(p != null)
       return describePackage(p, id);
 
+    /* Nope.  No appropriate page found. */
     return null;
   }
 
   protected void start()
   {
+    /*
+     * Prefabricate font tags using the customizable colors,
+     * for speed and simplicity.
+     */
     modifierFont = "<font color=\""+queryString("modifier_color")+"\">";
     typeFont = "<font color=\""+queryString("type_color")+"\">";
     variableFont = "<font color=\""+queryString("variable_color")+"\">";
@@ -258,6 +304,8 @@ public class JavaReflector extends AbstractLocationModule
 	   "This is where the module will be inserted in the "+
 	   "namespace of your server.");
 
+    /* To get some interresting config variables, all the
+       syntactic highlight colors are customizable.  :-)  */
     defvar("modifier_color", "red", "Modifier font color", TYPE_STRING,
 	   "Color to use for names of modifiers.");
     defvar("type_color", "steelblue", "Type font color", TYPE_STRING,
