@@ -160,6 +160,7 @@ class ContentTypes {
   {
     switch(type) {
     case "autosite/unknown":
+    case "application/x-shockwave-flash":
     case "text/html":
     case "text/plain": return "<a href="+f+">Link text</a>";
     case "image/jpeg":
@@ -207,7 +208,14 @@ class ContentTypes {
 	  "handler" : "default",
 	  "downloadp" : 1,
 	  "extensions" : (< >),
-	  "img" : image_base+"unknown"+image_ext ])
+	  "img" : image_base+"unknown"+image_ext ]),
+
+     "application/x-shockwave-flash":
+       ([ "name" : "Shockwave Flash",
+	  "handler" : "default",
+	  "downloadp" : 1,
+	  "extensions" : (< "swf" >),
+	  "img" : image_base+"unknown"+image_ext ]),
        
     ]);
     name_to_type = ([ ]);

@@ -1,12 +1,12 @@
 /*
- * $Id: admin.pike,v 1.10 1998/09/16 21:04:46 js Exp $
+ * $Id: admin.pike,v 1.11 1999/09/20 22:54:00 js Exp $
  *
  * AutoAdmin, administration interface
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: admin.pike,v 1.10 1998/09/16 21:04:46 js Exp $";
+constant cvs_version = "$Id: admin.pike,v 1.11 1999/09/20 22:54:00 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -88,10 +88,10 @@ mixed find_file(string f, object id)
   mapping state;
 
   int t1,t2,t3;
-
   // User validation
   string user = validate_user(id);
   if(!user)
+  {
     return (["type":"text/html",
 		   "error":401,
 		   "extra_heads":
@@ -100,10 +100,13 @@ mixed find_file(string f, object id)
 		   "data":"<title>Access Denied</title>"
 		   "<h2 align=center>Access forbidden</h2>"
     ]);
+  }
   sscanf(f, "%s/%s/%s", customer, tab, sub);
   id->variables->customer=customer;
   res =
-    "<title>AutoSite Administration Interface</title>"+BODY+status_row(tab,id)+
+    "<title>AutoSite Administration Interface</title>"+
+    "<expire-time now>"+
+    BODY+status_row(tab,id)+
     make_tablist(actionlist,actions[tab],customer,id)+
     "<sqloutput query=\"select name from customers where id='"+
     (int)customer+"'\"><b>Customer: #name#</b></sqloutput>";

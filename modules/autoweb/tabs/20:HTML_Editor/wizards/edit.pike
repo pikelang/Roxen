@@ -21,3 +21,11 @@ mixed wizard_done( object id )
 }
 
 
+
+string parse_wizard_page(string form, object id, string wiz_name)
+{
+  // Big kludge. No shit?
+  return "<!--Wizard-->\n"
+    "<form method=post>\n"
+    + ::parse_wizard_page(form, id, wiz_name)[32..];
+}
