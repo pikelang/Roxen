@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.17 2000/03/17 17:47:44 nilsson Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.18 2000/03/20 04:11:27 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -185,7 +185,7 @@ mixed not_allowed(string f, object id)
 				     ({id->not_query,
 				       id->conf->query("MyWorldLocation")})));
     } else {
-      return http_auth_failed("user");
+      return http_auth_required("user");
     }
   }
   return  1;
