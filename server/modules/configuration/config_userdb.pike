@@ -1,18 +1,14 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
 
-#charset iso-2022-jp
 inherit "module";
 inherit "roxenlib";
 #include <config_interface.h>
 #include <roxen.h>
 #include <module.h>
 
-#if constant(Locale.translate)
-# define LOCALE(X,Y)   Locale.translate(roxen.locale->get()->config_interface, X, Y)
-#else
-# define LOCALE(X,Y)   RoxenLocale.translate(roxen.locale->get()->config_interface, X, Y)
-#endif
+LOCALE_PROJECT(config_interface);
+#define LOCALE(X,Y)	_DEF_LOCALE(X,Y)
 
 constant module_type   = MODULE_AUTH | MODULE_FIRST;
 constant module_name   = "Configuration UserDB";
@@ -94,115 +90,52 @@ class ConfigurationSettings
                                     "Theme",
                                     "The theme to use" ) );
 
-    defvar( "docs", 1,
-            ([
-              "english":"Show documentation",
-              "svenska":"Visa dokumentation",
-            ]), TYPE_FLAG,
-            ([
-              "english":"Show the variable documentation.",
-              "svenska":"Visa variabeldokumentationen.",
-            ]), 0, 0 );
+    defvar( "docs", 1, LOCALE("", "Show documentation"),
+            TYPE_FLAG, LOCALE("", "Show the variable documentation."),
+            0, 0 );
 
-    defvar( "more_mode", 1,
-            ([
-              "english":"Show advanced configuration options",
-              "svenska":"Visa avancerade val",
-            ]), TYPE_FLAG,
-            ([ "english":"Show all possible configuration options, not only "
-               "the ones that are most often changed.",
-               "svenska":"Visa alla konfigureringsval, inte bara de som "
-               "oftast ändras."
-	    ]), 0, 0 );
+    defvar( "more_mode", 1, LOCALE("", "Show advanced configuration options"),
+	    TYPE_FLAG, LOCALE("", "Show all possible configuration options, not only "
+			      "the ones that are most often changed."),
+	    0, 0 );
 
-    defvar( "translations", 0,
-            ([
-              "english":"Show the incomplete translations",
-            ]), TYPE_FLAG,
-            ([ "english":"Show the language selection flags. The translation "
-               "of the configuration interface is not done yet, so this is "
-               "mostly useful for the curious or the translator."
-	    ]), 0, 0 );
+    defvar( "translations", 0, LOCALE("", "Show the incomplete translations"),
+            TYPE_FLAG, LOCALE("", "Show the language selection flags. The translation "
+			      "of the configuration interface is not done yet, so this is "
+			      "mostly useful for the curious or the translator."),
+	    0, 0 );
 
-    defvar( "devel_mode", 1,
-            ([
-              "english":"Show developer options and actions",
-              "svenska":"Visa utvecklingsval och funktioner",
-            ]), TYPE_FLAG,
-            ([
-              "english":"Show settings and actions that are not normaly "
-              "useful for non-developer users. If you develop your own "
-              "roxen modules, this option is for you.",
-              "svenska":"Visa inställningar och funktioner som normalt "
-              "sett inte är intressanta för icke-utvecklare. Om du utvecklar "
-              "egna moduler så är det här valet för dig."
-            ]), 0, 0 );
+    defvar( "devel_mode", 1, LOCALE("", "Show developer options and actions"),
+	    TYPE_FLAG, LOCALE("", "Show settings and actions that are not normaly "
+			      "useful for non-developer users. If you develop your own "
+			      "roxen modules, this option is for you."),
+	    0, 0 );
 
-    defvar( "bgcolor", "white",
-	    ([
-	      "english":"Background color",
-	      "svenska":"Bakgrundsfärg",
-	    ]),TYPE_STRING,
-	    ([
-	      "english":"Administration interface background color.",
-	      "svenska":"Bakgrundsfärg till konfigurationsgränssnittet."
-	    ]), 0, 0 );
+    defvar( "bgcolor", "white", LOCALE("", "Background color"),
+	    TYPE_STRING, LOCALE("", "Administration interface background color."),
+	    0, 0 );
 
-    defvar( "fgcolor", "black",
-	    ([
-	      "english":"Text color",
-	      "svenska":"Textfärg",
-	    ]),TYPE_STRING,
-	    ([
-	      "english":"Administration interface text color.",
-	      "svenska":"Textfärg till konfigurationsgränssnittet."
-	    ]), 0, 0 );
+    defvar( "fgcolor", "black", LOCALE("", "Text color"),
+	    TYPE_STRING, LOCALE("", "Administration interface text color."),
+	    0, 0 );
 
-    defvar( "linkcolor", "darkblue",
-	    ([
-	      "english":"Link color",
-	      "svenska":"Länkfärg",
-	    ]),TYPE_STRING,
-	    ([
-	      "english":"Administration interface text color.",
-	      "svenska":"Textfärg till konfigurationsgränssnittet."
-	    ]), 0, 0 );
+    defvar( "linkcolor", "darkblue", LOCALE("", "Link color"),
+	    TYPE_STRING, LOCALE("", "Administration interface text color."),
+	    0, 0 );
 
-    defvar( "font", "franklin gothic demi",
-	    ([
-	      "english":"Font",
-	      "svenska":"Typsnitt",
-	    ]),TYPE_FONT,
-	    ([
-	      "english":"Administration interface font.",
-	      "svenska":"Typsnitt som konfigurationsgränssnittetet ska använda."
-	    ]), 0, 0 );
+    defvar( "font", "franklin gothic demi", LOCALE("", "Font"),
+	    TYPE_FONT, LOCALE("", "Administration interface font."),
+	    0, 0 );
 
-    defvar( "addmodulemethod", "normal",
-            ([
-              "english":"Add/Delete module page type",
-              "svenska":"Typ som addera/ta bort modulsidorna har",
-            ]),TYPE_STRING_LIST,
-            ([
-              "english":
-#"<dl>
-<dt>normal</dt><dd>Show module name and documentation with images.</dd>
-<dt>fast</dt><dd>Like verbose, but no type images.</dd>
-<dt>faster</dt><dd>Like verbose, but allows to select multiple modules at once.</dd>
-<dt>compact</dt><dd>Only show the names of modules, and allow
-addition/deletion of multiple modules at once.</dd>
-<dt>really compact</dt><dd>Like compact, but no module classes.</dd>
-</dl>
-",
-              "svenska":
-#"<dl>
-<dt>normal</dt><dd>Visa modulnamnet, dokumentationen och typbilder.</dd>
-<dt>snabb</dt><dd>Som normal, men inga typbilder.</dd>
-<dt>kompakt</dt><dd>Visa bara namnet, och tillåt adderande av flera
-moduler på samma gång.</dd>
-<dt>kompaktare</dt><dd>Som kompakt, men utan modulkategorier.</dd>
-</dl>
-" ]),
+    defvar( "addmodulemethod", "normal", LOCALE("", "Add/Delete module page type"),
+            TYPE_STRING_LIST, LOCALE("", "<dl>\n"
+	     "<dt>normal</dt><dd>Show module name and documentation with images.</dd>\n"
+	     "<dt>fast</dt><dd>Like verbose, but no type images.</dd>\n"
+	     "<dt>faster</dt><dd>Like verbose, but allows to select multiple modules at once.</dd>\n"
+	     "<dt>compact</dt><dd>Only show the names of modules, and allow "
+	     "addition/deletion of multiple modules at once.</dd>\n"
+	     "<dt>really compact</dt><dd>Like compact, but no module classes.</dd>\n"
+	     "</dl>"),
 ({ "normal","fast","faster","compact","really compact"}),
  0, 
 (["svenska":([ "normal":"normal","fast":"snabb","faster":"snabbare","compact":"kompakt","really compact":"kompaktare"]),
@@ -230,74 +163,26 @@ array possible_permissions = ({ });
 
 mapping permission_translations = ([ ]);
 
-void add_permission( string perm, mapping translations )
+void add_permission( string perm, string text )
 {
   possible_permissions -= ({ perm });
   possible_permissions += ({ perm });
-  if( !translations )
-    translations = ([]);
-  if( !translations->standard )
-    translations->standard = perm;
-  permission_translations[ perm ] = translations;
-}
-
-string translate_perm( string perm, object id )
-{
-  return (permission_translations[ perm ][ id->misc->cf_locale ] ||
-          permission_translations[ perm ]->standard );
+  permission_translations[ perm ] = text;
 }
 
 void create()
 {
-  add_permission( "Everything",
-                  ([ "svenska":"Alla rättingheter",
-                     "nihongo":"$(BK|>l0t5v(B",
-                     "standard":"All permissions", ]) );
-  add_permission( "View Settings",
-                  ([
-                    "nihongo":"$(B%j!<%I%*%s%j!<(B",
-                    "svenska":"Läsa inställingar",
-                  ]));
-  add_permission( "Edit Users",
-                  ([
-                    "nihongo":"$(B%(%G%#%H%f!<%6!<%:(B",
-                    "svenska":"Editera användare",
-                  ]) );
-  add_permission( "Edit Global Variables",
-                  ([
-                    "nihongo":"$(B%(%G%#%H%0%m!<%P%k(B",
-                    "svenska":"Editera globala inställningar"
-                  ]));
-  add_permission( "Edit Module Variables",
-                  ([
-                    "nihongo":"$(B%(%G%#%H%"%I%*%s%b%8%e!<%k(B",
-                    "svenska":"Editera modulinställingar"
-                  ]));
-  add_permission( "Tasks",
-                  ([
-                    "nihongo":"$(BMQ;v(B",
-                    "svenska":"Funktioner"
-                  ]));
-  add_permission( "Restart",
-                  ([
-                    "nihongo":"$(B%j%9%?!<%H(B",
-                    "svenska":"Starta om"
-                  ]));
-  add_permission( "Shutdown",
-                  ([
-                    "nihongo":"$(B%7%c%C%H%@%&%s(B",
-                    "svenska":"Stäng av"
-                  ]));
-  add_permission( "Create Site",
-                  ([
-                    "nihongo":"$(B<yN)%5%$%H(B",
-                    "svenska":"Skapa ny site"
-                  ]));
-  add_permission( "Add Module",
-                  ([
-                    "nihongo":"$(BIU$1$k%"%I%*%s%b%8%e!<%k(B",
-                    "svenska":"Addera moduler"
-                  ]));
+  add_permission( "Everything", LOCALE("", "All Permissions"));
+  add_permission( "View Settings", LOCALE("", "View Settings"));
+  add_permission( "Edit Users", LOCALE("", "Edit Users"));
+  add_permission( "Edit Global Variables", LOCALE("", "Edit Global Variables"));
+  add_permission( "Edit Module Variables", LOCALE("", "Edit Module Variables"));
+  add_permission( "Tasks", LOCALE("", "Tasks"));
+  add_permission( "Restart", LOCALE("", "Restart"));
+  add_permission( "Shutdown", LOCALE("", "Shutdown"));
+  add_permission( "Create Site", LOCALE("", "Create Sites"));
+  add_permission( "Add Module", LOCALE("", "Add Modules"));
+
   if(sizeof(roxen->configuration_perm))
     foreach(indices(roxen->configuration_perm), string perm)
       add_permission(perm, roxen->configuration_perm[perm]);
@@ -394,7 +279,7 @@ class User
         string s = parse_rxml( "<gbutton-url "+(dim?"dim":"")+
                                "    icon_src=/standard/img/selected.gif "
                                "    font=&usr.font; "
-                               "    width=180>"+translate_perm(perm,id)+
+                               "    width=180>"+permission_translations[ perm ]+
                                "</gbutton-url>", id );
 
         form += sprintf( "<input border=0 type=image name='PPPremove_%s'"
@@ -405,14 +290,14 @@ class User
         string s = parse_rxml( "<gbutton-url "+(dim?"dim":"")+
                                "    icon_src=/standard/img/unselected.gif "
                                "    font=&usr.font; "
-                               "    width=180>"+translate_perm(perm,id)+
+                               "    width=180>"+permission_translations[ perm ]+
                                "</gbutton-url>", id );
         form += sprintf( "<input border=0 type=image name='PPPadd_%s'"
                          " src='%s'>\n", perm, s );
       }
     }
     return replace(form,"PPP",varpath)+
-      "<br /><input type=image border=0 alt=' Set ' value=' Set ' src='"+set_src+"' />"
+      "<br /><input type='image' border='0' alt=' Set ' value=' Set ' src='"+set_src+"' />"
       "</td></tr></table>";
   }
 
