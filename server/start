@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.148 2001/01/31 08:04:01 per Exp $
+# $Id: start,v 1.149 2001/02/01 02:53:08 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -220,6 +220,7 @@ parse_args() {
   '--program')
     program="$2"
     once=1
+    passhelp=1
     shift
   ;;
   '--cd')
@@ -238,6 +239,9 @@ parse_args() {
     DEFINES="$DEFINES $1"
   ;;
   '--version')
+   if [ "x$passhelp" = "x1" ] ; then
+     pass="$pass --version"
+   else
     if [ -f base_server/roxen.pike ]; then
       echo "Roxen WebServer `roxen_version`"
       exit 0
@@ -245,6 +249,7 @@ parse_args() {
       echo 'base_server/roxen.pike not found!'
       exit 1
     fi
+   fi
   ;;
   '--self-test')
     setup_for_tests
@@ -260,6 +265,9 @@ parse_args() {
     setup_for_tests
   ;;
   '--help'|'-?')
+   if [ "x$passhelp" = "x1" ] ; then
+     pass="$pass --help"
+   else
   sed -e "s/\\.B/`tput 'bold' 2>/dev/null`/g" -e "s/B\\./`tput 'sgr0' 2>/dev/null`/g" << EOF
 .BThis command will start the Roxen WebServerB..
 
@@ -408,6 +416,7 @@ the default arguments.
 EOF
     tput 'rmso' 2>/dev/null
     exit 0
+    fi
    ;;
   *)
     pass="$pass $1"

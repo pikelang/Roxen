@@ -106,11 +106,40 @@ void verify_logged_data( array logged, int min )
 }
 
 
+void test_spawn_pike( array args,
+		      string stdin,
+		      string expected_stdout )
+{
+  // Try to create a process...
+
+  Stdio.File  fd = Stdio.File(), fd2 =  fd->pipe();
+  Stdio.File fd3 = Stdio.File(), fd4 = fd3->pipe();
+#ifdef __NT__
+  Stdio.File fd5 = Stdio.File(), fd6 = fd5->pipe();
+#else
+  Stdio.File fd5 = Stdio.File("/dev/null", "w");
+#endif
+
+  Process.Process p =
+    test_true(spawn_pike, args, getcwd(), fd, fd3, fd5 );
+
+  fd->close();  fd3->close();  fd5->close();
+
+  fd2->write( stdin );
+  fd2->close();
+#ifdef __NT__
+  fd6->close();
+#endif
+  
+  string data  = test( fd4->read );
+  test( fd4->close );
+  test( p->wait );
+  test_true( `==, expected_stdout, data );
+}
+
 array(int) run_tests( Configuration c )
 {
   // Test (some) public APIs in the 'roxen' and 'roxenloader' objects.
-
-
 
   // Should we really test this? I don't know, but for now (as long as
   // both functions exists) verify that they return the same value...
@@ -120,31 +149,24 @@ array(int) run_tests( Configuration c )
 	      roxenloader.query_configuration_dir );
 
 
+  test_spawn_pike( ({combine_path( __FILE__,"../echo.pike" )}),
+		     "Testing testing\n",
+		     "\nTesting testing\n" );
 
+  test_spawn_pike( ({combine_path( __FILE__,"../echo.pike" ), "--help"}),
+		     "Testing testing\n",
+		     "--help\nTesting testing\n" );
 
-  // Try to create a process...
+  test_spawn_pike( ({combine_path( __FILE__,"../echo.pike" ),
+		     "--version"}),
+		     "Testing testing\n",
+		     "--version\nTesting testing\n" );
 
-  Stdio.File  fd = Stdio.File(), fd2 =  fd->pipe();
-  Stdio.File fd3 = Stdio.File(), fd4 = fd3->pipe();
-  Stdio.File fd5 = Stdio.File(), fd6 = fd5->pipe();
-  
-  Process.Process p =
-    test_true(spawn_pike,
-	     ({combine_path( __FILE__,"../echo.pike" )}),
-	     getcwd(),
-	     fd, fd3, fd5 );
+  test_spawn_pike( ({combine_path( __FILE__,"../echo.pike" ),
+		     "--version", "--help",}),
+		     "Testing testing\n",
+		     "--version--help\nTesting testing\n" );
 
-  fd->close();
-  fd3->close();
-  fd5->close();
-
-  fd2->write( "Testing testing\n" );
-  fd2->close();fd6->close();
-
-  string data  = test( fd4->read );
-  test( fd4->close );
-  test( p->wait );
-  test_equal( data,  pass, "Testing testing\n" );
 
   test_error( cd, "/tmp/" );
 
