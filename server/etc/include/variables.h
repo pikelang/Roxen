@@ -1,3 +1,4 @@
+// -*- Pike -*-
 // Fallback-resources, don't change here.
 
 mapping errors=

@@ -1,4 +1,5 @@
-/* User configurable things not accessible from the normal
+/* -*- Pike -*-
+ * User configurable things not accessible from the normal
  * configuration interface. Not much, but there are some things..  
  */
  
