@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.25 1999/02/15 23:19:34 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.26 1999/10/08 13:25:59 grubba Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -242,13 +242,10 @@ mapping http_redirect( string url, object|void id )
     {
       url = add_pre_state(url, id->prestate);
       if(id->misc->host) {
-	string p = ":80", prot = "http://";
 	array h;
-	if(id->ssl_accept_callback) {
-	  // This is an SSL port. Not a great check, but what is one to do?
-	  p = ":443";
-	  prot = "https://";
-	}
+	string prot = id->port_obj->name + "://";
+	string p = ":" + id->port_obj->port;
+
 	h = id->misc->host / p  - ({""});
 	if(sizeof(h) == 1)
 	  // Remove redundant port number.
