@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.16 1998/09/28 15:07:45 grubba Exp $
+ * $Id: pop3.pike,v 1.17 1998/09/28 22:37:13 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.16 1998/09/28 15:07:45 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.17 1998/09/28 22:37:13 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -74,7 +74,7 @@ static class Pop_Session
   {
     user = 0;
     inbox = 0;
-    deleted = (<>);
+    deleted = (< 0 >);	// Make sure destructed objects are counted as deleted.
   }
 
   static void handle_command(string line)
@@ -127,7 +127,6 @@ static class Pop_Session
       send_error("Bad number of arguments to LIST.");
       return;
     }
-    object mbox = user->get_incoming();
     if (sizeof(args)) {
       int n = (int)args[0];
       
@@ -222,7 +221,7 @@ static class Pop_Session
 
   void pop_RSET()
   {
-    deleted = (<>);
+    deleted = (< 0 >);
 
     int num = sizeof(inbox);
     int sz = `+(0, @(inbox->get_size()));
