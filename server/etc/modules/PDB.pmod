@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.26 1998/03/25 15:23:39 noring Exp $
+ * $Id: PDB.pmod,v 1.27 1998/03/28 19:10:14 noring Exp $
  */
 
 #if constant(thread_create)
@@ -501,8 +501,9 @@ class db
   {
     LOCK();
     return Array.map(glob("*.INDEX", get_dir(dir) || ({})),
-		     lambda(string s)
-		     { return s[..(sizeof(s)-1-sizeof(".INDEX"))]; });
+		     lambda(string s) {
+		       return s[..(sizeof(s)-1-sizeof(".INDEX"))];
+		     })|indices(tables);
     UNLOCK();
   }
 
