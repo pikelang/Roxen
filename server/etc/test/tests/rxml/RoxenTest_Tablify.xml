@@ -1,0 +1,12 @@
+<use-module>tablify</use-module>
+
+<test>
+  <rxml>
+    <tablify nice="" cellseparator="|" sortcol="-2">
+      <fields>text|num|num</fields>
+      Zakaznik|celkem
+      x
+      y|-10|p
+    </tablify>
+  </rxml>
+</test>
