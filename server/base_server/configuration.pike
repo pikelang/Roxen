@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.383 2000/11/02 14:02:24 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.384 2000/11/15 09:55:22 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2281,7 +2281,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       {
 	me->defvar("_seclvl",  0, DLOCALE(18, "Security: Security level"), 
 		   TYPE_INT,
-		   DLOCALE(19, "The modules security level is used to determine if a "
+		   DLOCALE(0, "The modules security level is used to determine if a "
 		   " request should be handled by the module."
 		   "\n<p><h2>Security level vs Trust level</h2>"
 		   " Each module has a configurable <i>security level</i>."
@@ -2296,7 +2296,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   " <li> Each time the request is handled by a module the"
 		   "     <i>trust level</i> of the module will be set to the"
 		   "      lower of its <i>trust level</i> and the modules"
-		   "     <i>security level</i>.</li>"
+		   "     <i>security level</i>, <i>unless</i> the security level "
+		   "        of the module is 0, which is a special case and "
+	           "        means that no change should be made.</li>"
 		   " </ul></p>"
 		   "\n<p><h2>Example</h2>"
 		   " Modules:<ul>"
