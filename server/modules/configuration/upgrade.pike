@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.13 2000/02/21 14:44:25 js Exp $
+ * $Id: upgrade.pike,v 1.14 2000/02/22 13:05:17 js Exp $
  *
  * The Roxen Upgrade Client
  *
@@ -152,11 +152,50 @@ string container_upgrade_package_output(string t, mapping m, string c, RequestID
     
     mapping p=db["pkginfo"][m->package];
     if(p)
+    {
+      mapping t=localtime((int)p["issued-date"]);
+      p->date=sprintf("%04d-%02d-%02d",1900+t->year,t->month, t->mday);;
       res=({ p });
+    }
   }
   return do_output_tag(m, res, c, id);
 }
+
+
+
+string container_upgrade_download_progress_output(string t, mapping m,
+					  string c, RequestID id)
+{
+  array(int) packages=sort(indices(package_downloads));
+  array res=({ });
   
+  foreach(packages, int package)
+  {
+    mapping pkg=db["pkginfo"][(string)package];
+    pkg->size=(string)round(pkg->size/1024.0);
+    pkg->progress=sprintf("%3.1f",package_downloads[package]->percent_done());
+    res+=({ pkg });
+  }
+
+  return do_output_tag(m, res, c, id);
+}
+
+string container_upgrade_downloaded_packages_output(string t, mapping m,
+					    string c, RequestID id)
+{
+  array(int) packages=sort((array(int))glob("*.tar",get_dir(QUERY(pkgdir))));
+  array res=({ });
+
+  foreach(packages, int package)
+  {
+    mapping pkg=db["pkginfo"][(string)package];
+    pkg->size=sprintf("%3.1f",pkg->size/1024.0);
+    res+=({ pkg });
+  }
+
+  return do_output_tag(m, res, c, id);
+}
+
 
 string encode_ranges(array(int) a)
 {
@@ -237,11 +276,11 @@ class GetPackage
   
   inherit Protocols.HTTP.Query;
 
-  int|float percent_done()
+  float percent_done()
   {
     int b=total_bytes();
     if(b==-1)
-      return 0;
+      return 0.0;
     return (float)downloaded_bytes() / (float)b;
   }
   
