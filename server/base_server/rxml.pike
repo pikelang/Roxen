@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.170 2000/03/14 07:50:44 nilsson Exp $
+// $Id: rxml.pike,v 1.171 2000/03/15 23:27:43 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -455,8 +455,10 @@ string parse_rxml(string what, RequestID id,
 
 class GenericTag {
   inherit RXML.Tag;
+  constant is_generic_tag=1;
   string name;
   int flags;
+
   function(string,mapping(string:string),string,RequestID,RXML.Frame:
 	   array|string) _do_return;
 
