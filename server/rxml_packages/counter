@@ -1,6 +1,6 @@
 -*- html -*-
 <info>
-version="$Id: counter,v 1.1 2000/09/06 02:18:47 nilsson Exp $";
+version="$Id: counter,v 1.2 2000/11/10 23:22:29 nilsson Exp $";
 name="graphical_counter";
 doc="Generates a graphical accessed counter.";
 help=1;
@@ -8,10 +8,14 @@ help=1;
 
 <define tag="xcounter">
 <attrib name="font">counter_a</attrib>
+<if not="1" module="accessed">You need to install the accessed module in order to use xcounter.</if>
+<if not="1" module="graphic_text">You need to install the graphic text module in order to use xcounter.</if>
 <gtext font="&_.font;" ::="&_.rest-args;"><accessed ::="&_.rest-args;"/></gtext>
 </define>
 
 <define tag="xcounter-url">
 <attrib name="font">counter_a</attrib>
+<if not="1" module="accessed">You need to install the accessed module in order to use xcounter.</if>
+<if not="1" module="graphic_text">You need to install the graphic text module in order to use xcounter.</if>
 <gtext-url font="&_.font;" ::="&_.rest-args;"><accessed ::="&_.rest-args;"/></gtext-url>
 </define>
