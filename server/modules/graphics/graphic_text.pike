@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.147 1998/08/26 17:48:03 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.148 1998/08/28 17:43:21 wellhard Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -426,6 +426,8 @@ object make_text_image(mapping args, object font, string text,object id)
     {
       xsize=MAX(xsize,alpha->xsize());
       ysize=MAX(ysize,alpha->ysize());
+      if((float)args->scale)
+	alpha=alpha->scale(1/(float)args->scale);
       background=Image.image(xsize,ysize, @(parse_color(args->background[1..])));
     }
       
