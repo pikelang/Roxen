@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.288 2001/09/06 11:40:00 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.289 2001/09/06 11:50:23 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1244,6 +1244,7 @@ class MySQLKey
   
   static void destroy()
   {
+#ifndef NO_DB_REUSE
     mixed key = sq_cache_lock();
 #ifdef DB_DEBUG
     werror("%O:%d added to free list\n", name, num );
@@ -1265,6 +1266,7 @@ class MySQLKey
 #endif
       clear_connect_to_my_mysql_cache();
     }
+#endif
   }
 
   static mixed `[]( string what )
