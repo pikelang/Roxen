@@ -2,15 +2,16 @@
 <locale version="1.0"/>
 <project>mod_auth</project>
 <language>eng</language>
-<file>../modules/examples/auth.pike</file>
+<file>../modules/examples/userdb_ex.pike</file>
 
 <str id="1">
-<o>RefDoc for MODULE_AUTH</o>
+<o>RefDoc for MODULE_USERDB</o>
 <t></t>
 </str>
 
 <str id="2">
-<o>This module does nothing, but its inlined documentation gets imported into the roxen programmer manual. You definetely don't want to use this module in your virtual servers, since anybody with access to your admin interface or server configuration  file automatically gains access to all yourpasswords. For a  budding roxen programmer, the module however does show the  basics of making an authentication module.</o>
+<o>This module does nothing special, it implements a simple user database with the passwords and usernames in a string list, but its inlined documentation gets imported into the Roxen programmer manual.
+You definetely don't want to use this module in your virtual servers, since anybody with access to your admin interface or server configuration file automatically gains access to all your passwords. For a budding roxen programmer, the module however does show the basics of making a user database module.</o>
 <t></t>
 </str>
 
@@ -20,6 +21,6 @@
 </str>
 
 <str id="4">
-<o>A list of username:password pairs the module should grant access for.</o>
+<o>A list of username:password pairs.</o>
 <t></t>
 </str>

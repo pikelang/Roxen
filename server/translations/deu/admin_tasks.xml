@@ -282,7 +282,8 @@ schmerz bis qual folgt jeder unexakten motivtypwahl.
 </str>
 
 <str id="38">
-<o>Backend thread</o>
+<changed from="Backend thread"/>
+<o>backend thread</o>
 <t>Backend-Thread</t>
 </str>
 
@@ -913,5 +914,17 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 <str id="153">
 <new/>
 <o>Ok</o>
+<t></t>
+</str>
+
+<str id="296">
+<new/>
+<o>Note that the server will be automatically restarted with the new version.</o>
+<t></t>
+</str>
+
+<str id="297">
+<new/>
+<o>Failed to write CSR to %s.</o>
 <t></t>
 </str>

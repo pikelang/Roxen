@@ -2240,7 +2240,7 @@ Substituting with %s</o>
 </str>
 
 <str id="424">
-<o>The database %s was deleted by b%s</o>
+<o>The database %s was deleted by %s</o>
 <t></t>
 </str>
 

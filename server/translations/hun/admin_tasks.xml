@@ -332,7 +332,7 @@
 
 <str id="38">
 <new/>
-<o>Backend thread</o>
+<o>backend thread</o>
 <t></t>
 </str>
 
@@ -1074,5 +1074,17 @@ change the currently running version.</o>
 <str id="153">
 <new/>
 <o>Ok</o>
+<t></t>
+</str>
+
+<str id="296">
+<new/>
+<o>Note that the server will be automatically restarted with the new version.</o>
+<t></t>
+</str>
+
+<str id="297">
+<new/>
+<o>Failed to write CSR to %s.</o>
 <t></t>
 </str>
