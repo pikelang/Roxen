@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.38 1999/04/22 14:18:09 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.39 1999/04/23 17:55:23 per Exp $";
 
 Image.image load_image(string f)
 {
@@ -131,7 +131,7 @@ Image.image draw_config_button(string name, object font, int lm, int rm)
 {
   if(!strlen(name)) return Image.image(1,20, dR,dG,dB);
 
-  object txt = font->write(name)->scale(0.5);
+  object txt = font->write(name)->scale(0.5)->scale(0.5);
   int w = txt->xsize();
   object ruta = Image.image(w + (rm?40:20), 20, bR,bG,bB);
 
@@ -170,8 +170,8 @@ Image.image draw_tab( object tab, object text, array(int) bgcolor )
   }
   else
   {
-    i->paste_alpha_color( text, 0,0,0, tab->xsize(), -OFFSET-1 );
-    i->paste_alpha_color( text, 0,0,0, tab->xsize(), -OFFSET-1 );
+//     i->paste_alpha_color( text, 0,0,0, tab->xsize(), -OFFSET-1 );
+    i->paste_alpha_color( text, 0,0,0, tab->xsize(), -(OFFSET-1)-1 );
   }
   return i;
 }
