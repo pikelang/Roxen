@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.189 2000/04/15 00:37:46 nilsson Exp $
+// $Id: rxml.pike,v 1.190 2000/04/19 00:27:10 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1499,6 +1499,7 @@ class IfIs
     if(!cache) CACHE(0);
     array arr=value/" ";
     string var=source(id, arr[0]);
+    if( zero_type( var ) ) return 0;
     if(sizeof(arr)<2) return !!var;
     var = lower_case( (var+"") );
     if(sizeof(arr)==1) return !!var;
@@ -1848,6 +1849,7 @@ class TagIfVariable {
   constant cache = 1;
   string source(RequestID id, string s) {
     mixed var=RXML.user_get_var(s);
+    if(!var) return var;
     return RXML.t_text->convert (var);
   }
 }
