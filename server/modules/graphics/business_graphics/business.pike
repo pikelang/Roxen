@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.67 1998/02/17 09:16:15 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.68 1998/02/17 15:08:41 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -701,14 +701,14 @@ mapping find_file(string f, object id)
 
     /* Image was not found or broken */
     if(res->image == 1) 
-      {
-	res->image=get_font("avant_garde", 24, 0, 0,"left", 0, 0);
-	if (!(res->image))
-	  throw(({"Missing font or similar error!\n", backtrace() }));
-	res->image=res->image->
-	  write("The file was","not found ",
-		"or was not a","ppm-picture.  ");
-      }
+    {
+      res->image=get_font("avant_garde", 24, 0, 0,"left", 0, 0);
+      if (!(res->image))
+	throw(({"Missing font or similar error!\n", backtrace() }));
+      res->image=res->image->
+	write("The file was","not found ",
+	      "or was not a","ppm-picture.  ");
+    }
   } else if(res->tonedbox) {
     m_delete( res, "bg" );
     res->image = image(res->xsize, res->ysize)->
@@ -720,7 +720,6 @@ mapping find_file(string f, object id)
 
   if (res->ystop)
     if(res->ystart > res->ystop) m_delete( res, "ystart" );
-
 
   diagram_data=(["type":      res->type,
 		 "subtype":   res->subtype,
@@ -782,31 +781,34 @@ mapping find_file(string f, object id)
   if(!res->ystop)   m_delete( diagram_data, "ymaxvalue" );
   if(!res->bg)      m_delete( diagram_data, "bgcolor" );
   if(!res->rotate)  m_delete( diagram_data, "rotate" );
-  if(!res->xmin)  m_delete( diagram_data, "xmin" );
-  if(!res->ymin)  m_delete( diagram_data, "ymin" );
+  if(!res->xmin)    m_delete( diagram_data, "xmin" );
+  if(!res->ymin)    m_delete( diagram_data, "ymin" );
 
   object(Image.image) img;
 
   if(res->image)
     diagram_data["image"] = res->image;
 
-  if(res->type == "pie")
-    img = create_pie(diagram_data)["image"];
-  else
-    if(res->type == "bars" || res->type == "sumbars")
+  switch(res->type)
+  {
+   case "pie":
+     img = create_pie(diagram_data)["image"];
+     break;
+   case "bars":
+   case "sumbars":
       img = create_bars(diagram_data)["image"];
-    else
-      if(res->type == "graph")
-	img = create_graph(diagram_data)["image"];
-  
-  //img = img->map_closest(img->select_colors(254)+({ back }));
-  
+      break;
+   case "graph":
+     img = create_graph(diagram_data)["image"];
+     break;
+  }
+
   if (res->image)
-    return http_string_answer( Image.GIF.encode( img,
-	    Image.colortable( 6,6,6,
-			      ({0,0,0}),
-			      ({255,255,255}), 39)->floyd_steinberg(), 
-			      @back), "image/gif");  
+    return http_string_answer(Image.GIF.encode( img,
+	     Image.colortable( 6,6,6,
+			       ({0,0,0}),
+			       ({255,255,255}), 39)->floyd_steinberg(), 
+			       @back), "image/gif");  
   else
     return http_string_answer(Image.GIF.encode(img, @back), "image/gif");      
 }
