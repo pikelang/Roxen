@@ -33,28 +33,37 @@ string parse( RequestID id )
   
   foreach( ({ "docs/roxen/3.2/" }), string rpath )
   {
-    add_doc_link(rpath + "content_editor_manual_(instant)/index.html",
+    add_doc_link(rpath + "content_editor_manual_(instant)/index.xml",
 		 _(512, "Content Editor (Instant Edition)"));
 
-    add_doc_link(rpath + "content_editor_manual_(advanced)/index.html",
+    add_doc_link(rpath + "content_editor_manual_(instant_mac)/index.xml",
+		 _(0, "Content Editor (Instant Edition for Mac)"));
+
+    add_doc_link(rpath + "content_editor_manual_(advanced)/index.xml",
 		 _(513, "Content Editor (Advanced Edition)"));
 
-    add_doc_link(rpath + "web_developer_manual/index.html",
+    add_doc_link(rpath + "web_developer_manual/index.xml",
 		 _(514, "Web Developer"));
 
-    add_doc_link(rpath + "system_developer_manual/index.html",
-		 _(515, "System Developer"));
+    add_doc_link(rpath + "system_developer_manual/index.xml",
+		 _(515, "System Developer (Pike)"));
 
-    add_doc_link(rpath + "administrator_manual/index.html",
+    add_doc_link(rpath + "system_developer_manual_java/index.xml",
+		 _(0, "System Developer (Java)"));
+
+    add_doc_link(rpath + "administrator_manual/index.xml",
 		 _(516, "Administrator"));
 
-    add_doc_link(rpath + "forms_and_response_module/index.html",
+    add_doc_link(rpath + "forms_and_response_module/index.xml",
 		 _(517, "Forms And Response Module"));
 
-    add_doc_link(rpath + "categorization_module/index.html",
+    add_doc_link(rpath + "categorization_module/index.xml",
 		 _(518, "Categorization Module"));
 
-    add_doc_link(rpath + "tutorial/index.html",
+    add_doc_link(rpath + "forum/index.xml",
+		 _(0, "Forum Module"));
+    
+    add_doc_link(rpath + "tutorial/index.xml",
 		 _(519, "Tutorials"));
   }
 
@@ -82,7 +91,7 @@ string parse( RequestID id )
 
   foreach( ({"docs/pike/7.1/","docs/pike/7.0/" }), string ppath )
   {
-    add_doc_link(ppath + "tutorial/index.html",
+    add_doc_link(ppath + "tutorial/index.xml",
 		 _(396, "Pike Tutorial"));
   }
 
