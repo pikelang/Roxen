@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.23 2002/03/12 13:18:27 mast Exp $
+// $Id: roxen.h,v 1.24 2002/07/05 02:02:04 nilsson Exp $
 
 #ifndef _ROXEN_H_
 
@@ -10,15 +10,6 @@
 #define IP_TO_HOST 'I'
 
 // Localization support
-
-#ifndef __LOCALEOBJECT
-#ifdef IN_ROXEN
-mixed get_locale();
-#define __LOCALE (get_locale)
-#else /* !IN_ROXEN */
-#define __LOCALE (roxen.get_locale)
-#endif /* IN_ROXEN */
-#endif /* !__LOCALEOBJECT */
 
 #ifndef _STR_LOCALE
 #define _STR_LOCALE(X, Y, Z)    Locale.translate(X, __LOCALE(), Y, Z)
