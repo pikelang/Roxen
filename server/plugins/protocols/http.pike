@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.394 2004/04/04 00:13:11 mani Exp $";
+constant cvs_version = "$Id: http.pike,v 1.395 2004/04/04 00:37:11 mani Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -604,8 +604,13 @@ private int parse_got( string new_data )
   if( !method )
   {
     array res;
-    if( catch( res = hpf( new_data ) ) )
+    if( mixed err = catch( res = hpf( new_data ) ) ) {
+#ifdef DEBUG
+      report_debug("Got bad request, HeaderParser error: " +
+		   describe_error(err));
+#endif
       return 1;
+    }
     if( !res )
     {
       TIMER_END(parse_got);
@@ -898,7 +903,7 @@ void end(int|void keepit)
   if(objectp(my_fd))
   {
     MARK_FD("HTTP closed");
-    catch 
+    mixed err = catch
     {
       // Don't set to blocking mode if SSL.
       if (!my_fd->CipherSpec) {
@@ -907,9 +912,15 @@ void end(int|void keepit)
       my_fd->close();
       destruct(my_fd);
     };
-    catch {
+#ifdef DEBUG
+    if (err) report_debug ("Close failure (1): %s", describe_backtrace (err));
+#endif
+    err = catch {
       my_fd = 0;
     };
+#ifdef DEBUG
+    if (err) report_debug ("Close failure (2): %s", describe_backtrace (err));
+#endif
   }
   disconnect();
 }
@@ -1142,10 +1153,11 @@ void internal_error(array _err)
 // This macro ensures that something gets reported even when the very
 // call to internal_error() fails. That happens eg when this_object()
 // has been destructed.
-#define INTERNAL_ERROR(err)							\
-  if (mixed __eRr = catch (internal_error (err)))				\
-    report_error("Internal server error: " + describe_backtrace(err) +		\
-		 "internal_error() also failed: " + describe_backtrace(__eRr))
+#define INTERNAL_ERROR(err) do {					\
+  if (mixed __eRr = catch (internal_error (err)))			\
+    report_error("Internal server error: " + describe_backtrace(err) +	\
+		 "internal_error() also failed: "+describe_backtrace(__eRr));\
+  } while(0)
 
 int wants_more()
 {
@@ -1171,12 +1183,15 @@ void do_log( Shuffler.Shuffle r, int reason )
     MERGE_TIMERS(conf);
     if( conf )
       conf->connection_drop( this_object() );
-    catch  // paranoia
+    mixed err = catch  // paranoia
     {
       my_fd->close();
       destruct( my_fd );
       destruct( );
     };
+#ifdef DEBUG
+    if (err) report_debug ("Close failure (3): %s", describe_backtrace (err));
+#endif
     return;
   }
   TIMER_END(do_log);
@@ -1500,9 +1515,9 @@ void send_result(mapping|void result)
 	if (misc->cacheable == 0) {
 	  heads["Expires"] = Roxen.http_date( 0 );
 
-	  if (!misc->last_modified) {
-	    // Data with immediate expiry is assumed to have been generated
-	    // at the same instant.
+	  if (misc->cacheable < INITIAL_CACHEABLE) {
+	    // Data with expiry is assumed to have been generated at
+	    // the same instant.
 	    misc->last_modified = predef::time(1);
 	  }
 	}
@@ -1624,8 +1639,12 @@ void send_result(mapping|void result)
 	  heads->Connection = "close";
           misc->connection = "close";
         }
-	if( catch( head_string += Roxen.make_http_headers( heads ) ) )
+	if( mixed err = catch( head_string += Roxen.make_http_headers( heads ) ) )
 	{
+#ifdef DEBUG
+	  report_debug("Roxen.make_http_headers failed: " +
+		       describe_error(err));
+#endif
 	  foreach( heads; string x; mixed head )
 	    if( stringp( head ) )
 	      head_string += x+": "+head+"\r\n";
@@ -1741,9 +1760,18 @@ void handle_request( )
   MARK_FD("HTTP handling request");
 
   array e;
-  if(e= catch(file = conf->handle_request( this_object() )))
+  mapping result;
+  if(e= catch(result = conf->handle_request( this_object() )))
     INTERNAL_ERROR( e );
-  
+
+  else {
+    if (result && result->pipe)
+      // Could be destructed here already since handle_request might
+      // have handed over us to another thread that finished quickly.
+      return;
+    file = result;
+  }
+
   if( file )
     if( file->try_again_later )
     {
@@ -1753,8 +1781,7 @@ void handle_request( )
 	call_out( core.handle, file->try_again_later, handle_request );
       return;
     }
-    else if( file->pipe )
-      return;
+
   TIMER_END(handle_request);
   send_result();
 }
@@ -1851,13 +1878,16 @@ void got_data(mixed fooid, string s)
     {
       if( conf )
 	conf->connection_drop( this_object() );
-      catch  // paranoia
+      mixed err = catch  // paranoia
       {
 	my_fd->set_blocking();
 	my_fd->close();
 	destruct( my_fd );
 	destruct( );
       };
+#ifdef DEBUG
+    if (err) report_debug ("Close failure (4): %s", describe_backtrace (err));
+#endif
       return;
     }
 
@@ -1968,6 +1998,7 @@ void got_data(mixed fooid, string s)
     }
     my_fd->set_close_callback(0);
     my_fd->set_read_callback(0);
+    if (my_fd->set_accept_callback) my_fd->set_accept_callback(0);
     processed=1;
 
     remove_call_out(do_timeout);
@@ -1976,6 +2007,7 @@ void got_data(mixed fooid, string s)
     array cv;
     if( prot != "HTTP/0.9" &&
 	misc->cacheable    &&
+	!misc->no_proto_cache &&
 	!since             &&
 	(cv = conf->datacache->get( raw_url )) )
     {
@@ -2148,8 +2180,7 @@ static void create(object f, object c, object cc)
 {
   if(f)
   {
-    f->set_read_callback(got_data);
-    f->set_close_callback(end);
+    f->set_nonblocking(got_data, f->query_write_callback(), end);
     my_fd = f;
     MARK_FD("HTTP connection");
     if( c ) port_obj = c;
@@ -2163,13 +2194,12 @@ static void create(object f, object c, object cc)
 void chain( object f, object c, string le )
 {
   my_fd = f;
-  f->set_read_callback(0);
-  f->set_close_callback(end);
+  f->set_nonblocking(0, f->query_write_callback(), end);
   port_obj = c;
   processed = 0;
   do_not_disconnect=-1;		// Block destruction until we return.
   MARK_FD("HTTP kept alive");
-  time = predef::time(1);
+  time = predef::time();
 
   if ( strlen( le ) )
     got_data( 0,le );
@@ -2193,10 +2223,7 @@ void chain( object f, object c, string le )
     if(do_not_disconnect == -1)
       do_not_disconnect = 0;
     if(!processed)
-    {
-      my_fd->set_read_callback(got_data);
-      my_fd->set_close_callback(end);
-    }
+      f->set_nonblocking(got_data, f->query_write_callback(), end);
   }
 }
 
