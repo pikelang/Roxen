@@ -2,7 +2,7 @@
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.10 2001/09/03 18:38:37 nilsson Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.11 2002/10/01 13:57:41 mast Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -97,6 +97,7 @@ class FCGIChannel
     }
 
     Thread.Condition cond = Thread.Condition();
+    Thread.Mutex cond_mutex = Thread.Mutex();
     string wbuffer = "";
     void write_thread()
     {
@@ -118,8 +119,11 @@ class FCGIChannel
               wbuffer = wbuffer[written..];
             } else
               ok=0;
-          if(!ok) break;
-          cond->wait();
+	  if(!ok) break;
+	  Thread.MutexKey lock = cond_mutex->lock();
+	  if (!sizeof (wbuffer))
+	    cond->wait (lock);
+	  lock = 0;
         }
       };
       catch(fd->close());
@@ -139,8 +143,10 @@ class FCGIChannel
 
     void write( string what )
     {
+      Thread.MutexKey lock = cond_mutex->lock();
       wbuffer += what;
       cond->signal();
+      lock = 0;
     }
 #else
     void write( string what )
