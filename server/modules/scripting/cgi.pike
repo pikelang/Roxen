@@ -1,165 +1,692 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+#if !defined(__NT__) && !defined(__AmigaOS__)
+# define UNIX 1
+#else
+# define UNIX 0
+#endif
 
-// Support for the <a
-// href="http://hoohoo.ncsa.uiuc.edu/docs/cgi/interface.html">CGI/1.1
-// interface</a> (and more, the documented interface does _not_ cover
-// the current implementation in NCSA/Apache)
-
-string cvs_version = "$Id: cgi.pike,v 1.114 1999/04/16 20:46:02 grubba Exp $";
-int thread_safe=1;
-
+#include <roxen.h>
 #include <module.h>
-
 inherit "module";
 inherit "roxenlib";
 
-// #define CGI_DEBUG
-// #define CGI_WRAPPER_DEBUG
 
-import Simulate;
-
-static mapping env=([]);
-static array runuser;
-static function log_function;
-
-import String;
-import Stdio;
-
-// Some logging stuff, should probably move to either the actual
-// configuration object, or into a module. That would be much more
-// beautiful, really. 
-void init_log_file()
+array register_module()
 {
-  remove_call_out(init_log_file);
+  return 
+  ({
+    MODULE_LOCATION | MODULE_FILE_EXTENSION | MODULE_PARSER,
+    "CGI executable support", 
+    "Support for the <a href=\"http://hoohoo.ncsa.uiuc.edu/docs/cgi/"
+    "interface.html\">CGI/1.1 interface</a>, and more.",
+  });
+}
+#if UNIX
+/*
+** All this code to handle UID, GID and some other permission
+** problems gracefully.
+**
+** Sometimes I really like single user systems like NT. :-)
+**
+*/
+mapping pwuid_cache = ([]);
+mapping cached_groups = ([]);
 
-  if(log_function)
+array get_cached_groups_for_user( int uid )
+{
+  if(cached_groups[ uid ] && cached_groups[ uid ][1]+3600>time(1))
+    return cached_groups[ uid ][0];
+  return (cached_groups[ uid ] = ({ get_groups_for_user( uid ), time(1) }))[0];
+}
+
+array lookup_user( string what )
+{
+  array uid;
+  if(pwuid_cache[what]) return pwuid_cache[what];
+  if((int)what)
+    uid = getpwuid( (int)what );
+  else
+    uid = getpwnam( what );
+  if(uid)
+    return pwuid_cache[what] = ({ uid[2],uid[3] });
+  report_warning("CGI: Failed to get user information for "+what+"\n");
+  catch {
+    return getpwnam("nobody")[2..3];
+  };
+  report_error("CGI: Failed to get user information for nobody! "
+               "Assuming 65535,65535\n");
+  return ({ 65535, 65535 });
+}
+
+array init_groups( int uid, int gid )
+{
+  if(!QUERY(setgroups))
+    return 0;
+  return get_cached_groups_for_user( uid )-({ gid });
+}
+
+array verify_access( RequestID id )
+{
+  array us;
+  if(!getuid())
   {
-    destruct(function_object(log_function)); 
-    // Free the old one.
-  }
-  
-  if(QUERY(stderr) == "custom log file")
-    // Only try to open the log file if logging is enabled!!
-  {
-    mapping m = localtime(time());
-    string logfile = QUERY(cgilog);
-    m->year += 1900;	/* Adjust for years being counted since 1900 */
-    m->mon++;		/* Adjust for months being counted 0-11 */
-    if(m->mon < 10) m->mon = "0"+m->mon;
-    if(m->mday < 10) m->mday = "0"+m->mday;
-    if(m->hour < 10) m->hour = "0"+m->hour;
-    logfile = replace(logfile,({"%d","%m","%y","%h" }),
-		      ({ (string)m->mday, (string)(m->mon),
-			 (string)(m->year),(string)m->hour,}));
-    if(strlen(logfile))
+    if(QUERY(user) && id->misc->is_user &&
+       (us = file_stat(id->misc->is_user)) &&
+       (us[5] >= 10))
     {
-      do {
-// 	object privs;
-//      catch(privs = Privs("Opening logfile \""+logfile+"\""));
-	object lf=open( logfile, "wac");
-//         if(privs) destruct(privs);
-// #if efun(chmod)
-// #if efun(geteuid)
-// 	if(geteuid() != getuid()) catch {chmod(logfile,0666);};
-// #endif
-// #endif
-	if(!lf) {
-	  mkdirhier(logfile);
-	  if(!(lf=open( logfile, "wac"))) {
-	    report_error("Failed to open logfile. ("+logfile+")\n" +
-			 "No logging will take place!\n");
-	    log_function=0;
-	    break;
-	  }
-	}
-	log_function=lf->write;	
-	// Function pointer, speeds everything up (a little..).
-	lf=0;
-      } while(0);
-    } else
-      log_function=0;	
-    call_out(init_log_file, 60);
+      // Scan for symlinks
+      string fname = "";
+      array a, b;
+      foreach(id->misc->is_user/"/", string part) 
+      {
+        fname += part;
+        if ((fname != ""))
+          if(((!(a = file_stat(fname, 1))) || ((< -3, -4 >)[a[1]])))
+          {
+            // Symlink or device encountered.
+            // Don't allow symlinks from directories not owned by the
+            // same user as the file itself.
+            // Assume that symlinks from directories owned by users 1-9 are safe.
+            if (!a || (a[1] == -4) ||
+                !b || ((b[5] != us[5]) && (b[5] >= 10)) ||
+                !QUERY(allow_symlinks)) 
+              error("CGI: Bad symlink or device encountered: \"%s\"\n", fname);
+          }
+        fname += "/";
+      }
+      b = a;
+      us = us[5..6];
+    } 
+    else if(us)
+      us = us[5..6];
+    else
+      us = lookup_user( QUERY(runuser) );
   } else
-    log_function=0;	
+    us = ({ getuid(), getgid() });
+  return ({ us[0], us[1], init_groups( us[0], us[1] ) });
 }
+#endif
 
 
-mapping my_build_env_vars(string f, object id, string|void path_info)
-{
-  mapping new = build_env_vars(f, id, path_info);
+/* Basic wrapper.
+** 
+**  This program sends everything from the fd given as argument to 
+**  a new filedescriptor. The other end of that FD is available by
+**  calling get_fd()
+** 
+**  The wrappers are used to parse the data from the CGI script in
+**  several different ways.
+** 
+**  There is a reason for the abundant FD-use, this code must support
+**  the following operation operation modes:
+** 
+** Non parsed no header parsing:
+**  o nonblocking w/o threads
+**  o nonblocking w threads
+**  o blocking w/o threads
+**  o blocking w threads
+** 
+** Parsed no header parsing:
+**  o nonblocking w/o threads
+**  o nonblocking w threads
+**  o blocking w/o threads
+**  o blocking w threads
+** 
+** Non parsed:
+**  o nonblocking w/o threads
+**  o nonblocking w threads
+**  o blocking w/o threads
+**  o blocking w threads
+** 
+** Parsed:
+**  o nonblocking w/o threads
+**  o nonblocking w threads
+**  o blocking w/o threads
+**  o blocking w threads
+** 
+**  Right now this is handled more or less automatically by the
+**  Stdio.File module and the operating system. :-)
+*/
 
-  if(QUERY(Enhancements))
-    new |= build_roxen_env_vars(id);
+class Wrapper 
+{ 
+  constant name="Wrapper";
+  string buffer = ""; 
+  Stdio.File fromfd, tofd, tofdremote; 
+  RequestID mid;
+  mixed done_cb;
 
-#if 0
-  // Not needed here...
-  if (QUERY(ApacheBugCompliance)) {
-    new->SERVER_PORT = "80";
+  int close_when_done;
+  void write_callback() 
+  {
+    if(!strlen(buffer)) 
+      return;
+    int nelems = tofd->write( buffer ); 
+    if( nelems <= 0 )
+    {
+      buffer="";
+      done(); 
+    } else {
+      buffer = buffer[nelems..]; 
+      if(close_when_done && !strlen(buffer))
+        destroy();
+    }
   }
-#endif /* 0 */
 
-  if(id->misc->ssi_env)
-    new |= id->misc->ssi_env;
+  void read_callback( mixed id, string what )
+  {
+    process( what );
+  }
 
-  if(id->misc->is_redirected)
-    new["REDIRECT_STATUS"] = "1";
+  void close_callback()
+  {
+    done();
+  }
+
+  void output( string what )
+  {
+    if(buffer == "" )
+    {
+      buffer=what;
+      write_callback();
+    } else
+      buffer += what;
+  }
+
+  void destroy()
+  {
+    catch(done_cb(this_object()));
+    catch(tofd->set_blocking());
+    catch(fromfd->set_blocking());
+    catch(tofd->close());
+    catch(fromfd->close());
+    tofd=fromfd=0;
+  }
+
+  object get_fd()
+  {
+    return tofdremote;
+    destruct(tofdremote);
+    tofdremote=0;
+  }
   
-  if(QUERY(rawauth) && id->rawauth) {
-    new["HTTP_AUTHORIZATION"] = (string)id->rawauth;
-  } else {
-    m_delete(new, "HTTP_AUTHORIZATION");
+
+  void create( Stdio.File _f, RequestID _m, mixed _done_cb )
+  {
+    fromfd = _f;
+    mid = _m;
+    done_cb = _done_cb;
+    tofdremote = Stdio.File( );
+    tofd = tofdremote->pipe( );// Stdio.PROP_NONBLOCK );
+    fromfd->set_nonblocking( read_callback, lambda(){}, close_callback );
+    tofd->set_nonblocking( lambda(){}, write_callback, destroy );
   }
-  if(QUERY(clearpass) && id->auth && id->realauth ) {
-    new["REMOTE_USER"] = (id->realauth/":")[0];
-    new["REMOTE_PASSWORD"] = (id->realauth/":")[1];
-  } else {
-    m_delete(new, "REMOTE_PASSWORD");
+
+
+  // override these to get somewhat more non-trivial behaviour
+  void done()
+  {
+    if(strlen(buffer))
+      close_when_done = 1;
+    else
+      destroy();
   }
 
-  new["AUTH_TYPE"] = "Basic";
-
-  return new|env|(QUERY(env)?getenv():([]));
+  void process( string what )
+  {
+    output( what );
+  }
 }
 
 
-void nil(){}
 
-#define ipaddr(x,y) (((x)/" ")[y])
+/* RXML wrapper.
+**
+** Simply waits until the CGI-script is done, then 
+** parses the result and sends it to the client. 
+** Please note that the headers are also parsed.
+*/
 
-int uid_was_zero()
+class RXMLWrapper
 {
-  return !(getuid() == 0); // Somewhat misnamed function.. :-)
+  inherit Wrapper;
+  constant name="RXMLWrapper";
+  
+  string data="";
+
+  void done()
+  {
+    if(strlen(data))
+    {
+      output( parse_rxml( data, mid ) );
+      data="";
+    }
+    ::done();
+  }
+
+  void process( string what )
+  {
+    data += what;
+  }
 }
 
-int run_as_user_enabled()
+
+
+
+/* CGI wrapper.
+**
+** Simply waits until the headers has been received, then 
+** parse them according to the CGI specification, and send
+** them and the rest of the data to the client. After the 
+** headers are received, all data is sent as soon as it's 
+** received from the CGI script
+*/
+class CGIWrapper
 {
-  // Return 0 if run_as_user is enabled...
-  return(uid_was_zero() || !QUERY(user));
+  inherit Wrapper;
+  constant name="CGIWrapper";
+
+  string headers="";
+
+  void done()
+  {
+    if(strlen(headers))
+    {
+      output( headers );
+      headers="";
+    }
+    ::done();
+  }
+
+  string handle_headers( string headers )
+  {
+    string result = "", post="";
+    string code = "200 OK";
+    int ct_received = 0, sv_received = 0;
+    foreach((headers-"\r") / "\n", string h)
+    {
+      string header, value;
+      sscanf(h, "%s:%s", header, value);
+      if(!header || !value)
+      {
+        // Heavy DWIM. For persons who forget about headers altogether.
+        post += h+"\n";
+        continue;
+      }
+      header = trim(header);
+      value = trim(value);
+      switch(lower_case( header ))
+      {
+       case "status":
+         code = value;
+         break;
+
+       case "content-type":
+         ct_received=1;
+         result += header+": "+value+"\r\n";
+         break;
+
+       case "server":
+         sv_received=1;
+         result += header+": "+value+"\r\n";
+         break;
+
+       case "location":
+         code = "302 Redirection";
+         result += header+": "+value+"\r\n";
+         break;
+
+       default:
+         result += header+": "+value+"\r\n";
+         break;
+      }
+    }
+    if(!sv_received)
+      result += "Server: "+roxen.version()+"\r\n";
+    if(!ct_received)
+      result += "Content-Type: text/html\r\n";
+    return "HTTP/1.1 "+code+"\r\n"+result+"\r\n"+post;
+  }
+
+  string parse_headers( )
+  {
+    int pos, skip=4;
+    if(((pos=search( headers, "\r\n\r\n" )) != -1) ||
+       (skip=2 && ((pos=search( headers, "\n\n" )) != -1)))
+    {
+      output( handle_headers( headers[..pos-1] ) );
+      output( headers[pos+skip+1..] );
+      headers="";
+      return "";
+    }
+  }
+
+  static int mode;
+  void process( string what )
+  {
+    switch( mode )
+    {
+     case 0:
+       headers += what;
+       if(parse_headers( ))
+         mode++;
+       break;
+     case 1:
+       output( what );
+    }
+  }
 }
 
-void create(object c)
-{
-  defvar("Enhancements", 1, "Roxen CGI Enhancements", TYPE_FLAG|VAR_MORE,
-	 "If defined, Roxen will export a few extra varaibles, namely "
-	 "VAR_variable_name: Parsed form variable (like CGI parse)<br>"
-	 "QUERY_variable_name: Parsed form variable<br>"
-	 "VARIABLES: A space separated list of all form variables<br>"
-	 "PRESTATE_name: True if the prestate is present<br>"
-	 "PRESTATES: A space separated list of all states");
 
-  defvar("mountpoint", "/cgi-bin/", "CGI-bin path", TYPE_LOCATION, 
+class CGIScript
+{
+  string command;
+  array (string) arguments;
+  Stdio.File stdin;
+  Stdio.File stdout;
+  // stderr is handled by run().
+  mapping (string:string) environment;
+  int blocking;
+
+  string priority;   // gneric priority
+  object pid;       // the process id of the CGI script
+  string tosend;   // data from the client to the script.
+  Stdio.File ffd; // pipe from the client to the script
+  RequestID mid;
+#if UNIX
+  mapping (string:int)    limits;
+  int nice_value; // Can be used to replace 'priority' on unix.
+  int uid, gid;  
+  array(int) extra_gids;
+#endif
+
+  void check_pid()
+  {
+    if(!pid || pid->status())
+    {
+      remove_call_out(kill_script);
+      destruct();
+    }
+    call_out( check_pid, 0.1 );
+  }
+
+  Stdio.File get_fd()
+  {
+    // Send input to script..
+    if( tosend || ffd )
+      Stdio.sendfile(({tosend||""}),ffd,0,0,0,stdin,
+                     lambda(int i,mixed q){ stdin->close();stdin=0; });
+    else
+    {
+      stdin->close();
+      stdin=0;
+    }
+
+    // And then read the output.
+    if(!blocking)
+    {
+      Stdio.File fd = stdout;
+      if( (command/"/")[-1][0..2] != "nph" )
+        fd = CGIWrapper( fd,mid,kill_script )->get_fd();
+      if( QUERY(rxml) )
+        fd = RXMLWrapper( fd,mid,kill_script )->get_fd();
+      stdout = 0;
+      call_out( check_pid, 0.1 );
+      return fd;
+    }
+    //
+    // Blocking (<insert file=foo.cgi> and <!--#exec cgi=..>)
+    // Quick'n'dirty version.
+    // 
+    // This will not be parsed. At all. And why is this not a problem?
+    //   o <insert file=...> dicards all headers.
+    //   o <insert file=...> does RXML parsing on it's own (automatically)
+    //   o The user probably does not want the .cgi rxml-parsed twice, 
+    //     even though that's the correct solution to the problem (and rather 
+    //     easy to add, as well)
+    //
+    remove_call_out( kill_script );
+    return stdout;
+  }
+
+  void kill_script()
+  {
+    if(pid && !pid->status())
+    {
+      if(pid->kill)  // Pike 0.7, for roxen 1.4 and later 
+        pid->kill( -9 );
+      else
+        kill( pid, -9 ); // Pike 0.6, for roxen 1.3 
+    }
+  }
+
+  CGIScript run()
+  {
+    Stdio.File t, stderr;
+    stdin  = Stdio.File();
+    stdout = Stdio.File();
+    switch( QUERY(stderr) )
+    {
+     case "main log file":
+       stderr = Stdio.stderr;
+       break;
+     case "custom log file":
+       stderr = open_log_file( query( "cgilog" ) );
+       break;
+     case "browser":
+       stderr = stdout;
+       break;
+    }
+
+    mapping options = ([
+      "stdin":stdin,
+      "stdout":(t=stdout->pipe(Stdio.PROP_IPC|Stdio.PROP_NONBLOCK)),
+      "stderr":(stderr==stdout?t:stderr),
+      "cwd":dirname( command ),
+      "env":environment,
+      "noinitgroups":1,
+    ]);
+    stdin = stdin->pipe(Stdio.PROP_IPC|Stdio.PROP_NONBLOCK);
+
+#if UNIX
+    if(!getuid())
+    {
+      options->uid = uid;
+      options->gid = gid;
+      options->setgroups = extra_gids;
+      if( !uid && QUERY(warn_root_cgi) )
+        report_warning( "CGI: Running "+command+" as root (as per request)" );
+    }
+    if(nice_value)
+    {
+      m_delete(options, "priority");
+      options->nice = nice_value;
+    }
+    if( limits )
+      options->rlimit = limits;
+#endif
+
+    if(!(pid = Process.create_process( ({ command }) + arguments, options )))
+      error("Failed to create CGI process.\n");
+    if(QUERY(kill_call_out))
+      call_out( kill_script, QUERY(kill_call_out)*60 );
+    return this_object();
+  }
+
+
+  void create( RequestID id )
+  {
+    mid = id;
+
+#ifndef THREADS
+    if(id->misc->orig) // An <insert file=...> operation, and we have no threads.
+      blocking = 1;
+#else
+    if(id->misc->orig && this_thread() == roxen.backend_thread)
+      blocking = 1; 
+    // An <insert file=...> and we are 
+    // currently in the backend thread.
+#endif
+    if(!id->realfile)
+    {
+      id->realfile = id->conf->real_file( id->not_query, id );
+      if(!id->realfile)
+        error("No real file associated with "+id->not_query+
+              ", thus it's not possible to run it as a CGI script.\n");
+    }
+    command = id->realfile;
+#if UNIX
+#define LIMIT(L,X,Y,M,N) if(query(#Y)!=N){if(!L)L=([]);L->X=query(#Y)*M;}
+    [uid,gid,extra_gids] = verify_access( id );
+    LIMIT( limits, core, coresize, 1, -2 );
+    LIMIT( limits, cpu, maxtime, 1, -2 );
+    LIMIT( limits, fsize, filesize, 1, -2 );
+    LIMIT( limits, nofiles, open_files, 1, 0 );
+    LIMIT( limits, stack, stack, 1024, -2 );
+    LIMIT( limits, data, datasize, 1024, -2 );
+    LIMIT( limits, map_mem, datasize, 1024, -2 );
+    LIMIT( limits, mem, datasize, 1024, -2 );
+#undef LIMIT
+#endif
+
+    environment =(QUERY(env)?getenv():([]));
+    environment |= global_env;
+    environment |= build_env_vars( id->realfile, id, id->misc->path_info );
+    environment |= build_roxen_env_vars(id);
+    if(id->misc->ssi_env)
+      environment |= id->misc->ssi_env;
+    if(id->misc->is_redirected)
+      environment["REDIRECT_STATUS"] = "1";
+    if(id->rawauth && QUERY(rawauth))
+      environment["HTTP_AUTHORIZATION"] = (string)id->rawauth;
+    else
+      m_delete(environment, "HTTP_AUTHORIZATION");
+    if(QUERY(clearpass) && id->auth && id->realauth ) {
+      environment["REMOTE_USER"] = (id->realauth/":")[0];
+      environment["REMOTE_PASSWORD"] = (id->realauth/":")[1];
+    } else {
+      m_delete(environment, "REMOTE_PASSWORD");
+    }
+    environment["AUTH_TYPE"] = "Basic";
+
+    if(environment->INDEX)
+      arguments = environment->INDEX/"+";
+    else
+      arguments = ({});
+
+    tosend = id->data;
+    ffd = id->my_fd;
+  }
+}
+
+mapping(string:string) global_env = ([]);
+void start(int n, object conf)
+{
+  if(conf)
+  {
+    string tmp=conf->query("MyWorldLocation");
+    sscanf(tmp, "%*s//%s", tmp);
+    sscanf(tmp, "%s:", tmp);
+    sscanf(tmp, "%s/", tmp);
+    global_env["SERVER_NAME"]=tmp;
+    global_env["SERVER_SOFTWARE"]=roxen.version();
+    global_env["GATEWAY_INTERFACE"]="CGI/1.1";
+    global_env["SERVER_PROTOCOL"]="HTTP/1.0";
+    global_env["SERVER_URL"]=conf->query("MyWorldLocation");
+
+    array us = ({0,0});
+    foreach(query("extra_env")/"\n", tmp)
+      if(sscanf(tmp, "%s=%s", us[0], us[1])==2)
+        global_env[us[0]] = us[1];
+  }
+}
+
+array stat_file( string f, RequestID id )
+{
+  return file_stat( real_file( f, id ) );
+}
+
+string real_file( string f, RequestID id )
+{
+  return combine_path( QUERY(searchpath), f );
+}
+
+mapping handle_file_extension(object o, string e, object id)
+{
+  if(!QUERY(ex))
+    return 0;
+  if(QUERY(noexec) && o && !(o->stat()[0]&0111))
+    return 0;
+  return http_stream( CGIScript( id )->run()->get_fd() );
+}
+
+array(string) find_dir( string f, RequestID id )
+{
+  if(QUERY(ls))
+    return get_dir(real_file( f,id ));
+}
+
+int|object(Stdio.File)|mapping find_file( string f, RequestID id )
+{
+  array stat=stat_file(f,id);
+  if(!stat) return 0;
+  if(!(stat[0]&0111))
+  {
+    if(QUERY(noexec))
+      return Stdio.File(f, "r");
+    report_notice( "CGI: "+real_file(f,id)+" is not executable\n");
+    return 0;
+  }
+  if(stat[1] < 0)
+    return -1;
+  id->realfile = real_file( f,id );
+  return http_stream( CGIScript( id )->run()->get_fd() );
+}
+
+
+
+/*
+** Variables et. al.
+*/
+array (string) query_file_extensions()
+{
+  return query("ext");
+}
+
+int run_as_user_enabled() { return (getuid() || !QUERY(user)); }
+void create(object conf)
+{
+  defvar("env", 0, "Pass environment variables", TYPE_FLAG|VAR_MORE,
+	 "If this is set, all environment variables roxen has will be "
+         "passed to CGI scripts, not only those defined in the CGI/1.1 standard. "
+         "This includes PATH. (For a quick test, try this script with "
+	 "and without this variable set:"
+	 "<pre>"
+	 "#!/bin/sh\n\n"
+         "echo Content-type: text/plain\n"
+	 "echo ''\n"
+	 "env\n"
+	 "</pre>)");
+
+  defvar("rxml", 0, "Parse RXML in CGI-scripts", TYPE_FLAG|VAR_MORE,
+	 "If this is set, the output from CGI-scripts handled by this "
+         "module will be RXMl parsed. NOTE: No data will be returned to the "
+         "client until the CGI-script is fully parsed.");
+
+  defvar("extra_env", "", "Extra environment variables", TYPE_TEXT_FIELD|VAR_MORE,
+	 "Extra variables to be sent to the script, format:<pre>"
+	 "NAME=value\n"
+	 "NAME=value\n"
+	 "</pre>Please note that normal CGI variables will override these.");
+
+  defvar("location", "/cgi-bin/", "CGI-bin path", TYPE_LOCATION, 
 	 "This is where the module will be inserted in the "
 	 "namespace of your server. The module will, per default, also"
 	 " service one or more extensions, from anywhere in the "
 	 "namespace.");
 
   defvar("searchpath", "NONE/", "Search path", TYPE_DIR,
-	 "This is where the module will find the files in the <b>real</b> "
+	 "This is where the module will find the CGI scripts in the <b>real</b> "
 	 "file system.");
-
-  defvar("noexec", 1, "Ignore non-executable files", TYPE_FLAG,
-	 "If this flag is set, non-executable files will be returned "
-	 "as normal files to the client.");
 
   defvar("ls", 0, "Allow listing of cgi-bin directory", TYPE_FLAG,
 	 "If set, the users can get a listing of all files in the CGI-bin "
@@ -168,25 +695,12 @@ void create(object c)
   defvar("ex", 1, "Handle *.cgi", TYPE_FLAG,
 	 "Also handle all '.cgi' files as CGI-scripts, as well "
 	 " as files in the cgi-bin directory. This emulates the behaviour "
-	 "of the NCSA server (the extensions to handle can be set in the "
+	 "of the Apache server (the extensions to handle can be set in the "
 	 "CGI-script extensions variable).");
 
   defvar("ext", ({"cgi"}), "CGI-script extensions", TYPE_STRING_LIST,
-	 "All files ending with these extensions, will be parsed as "+
+         "All files ending with these extensions, will be parsed as "+
 	 "CGI-scripts.");
-
-  defvar("env", 0, "Pass environment variables", TYPE_FLAG|VAR_MORE,
-	 "If this is set, all environment variables will be passed to CGI "
-	 "scripts, not only those defined in the CGI/1.1 standard (with "
-	 "Roxen CGI enhancements added, if defined). This include LOGNAME "
-	 "and all the other ones (For a quick test, try this script with "
-	 "and without this variable set:"
-	 "<pre>"
-	 "#!/bin/sh\n\n"
-         "echo Content-type: text/plain\n"
-	 "echo ''\n"
-	 "env\n"
-	 "</pre>)");
 
   defvar("stderr","main log file",	 
 	 "Log CGI errors to...", TYPE_STRING_LIST,
@@ -199,8 +713,9 @@ void create(object c)
 	 ({ "main log file",
 	    "custom log file",
 	    "browser" }));
+
   defvar("cgilog", GLOBVAR(logdirprefix)+
-	 short_name(c? c->name:".")+"/cgi.log", 
+	 short_name(conf? conf->name:".")+"/cgi.log", 
 	 "Log file", TYPE_STRING,
 	 "Where to log errors from CGI scripts. You can also choose to send "
 	 "the errors to the browser or to the main Roxen log file. "
@@ -211,13 +726,7 @@ void create(object c)
 	 "%m    Month (i.e. '08')\n"
 	 "%d    Date  (i.e. '10' for the tenth)\n"
 	 "%h    Hour  (i.e. '00')\n</pre>", 0,
-	 lambda() { if(QUERY(stderr) != "custom log file") return 1; });
-
-  defvar("virtual_cgi", 0, "Support dynamically generated CGI scripts",
-	 TYPE_FLAG|VAR_MORE,
-	 "If set, attempt to execute CGI's that only exist as virtual "
-	 "files, by copying them to /tmp/.<br>\n"
-	 "Not recomended.");
+	 lambda() { return (QUERY(stderr) != "custom log file"); });
 
   defvar("rawauth", 0, "Raw user info", TYPE_FLAG|VAR_MORE,
 	 "If set, the raw, unparsed, user info will be sent to the script, "
@@ -229,48 +738,54 @@ void create(object c)
 	 "If set, the variable REMOTE_PASSWORD will be set to the decoded "
 	 "password value.");
 
-  defvar("use_wrapper", 
-#ifdef __NT__
-         0
-#else
-         (getcwd()==""?0:1)
-#endif
-, "Use cgi wrapper", 
-	 TYPE_FLAG|VAR_EXPERT,
-	 "If set, an external wrapper will be used to start the CGI script.\n"
-	 "<br>This will:<ul>\n"
-	 "<li>Enable Roxen to send redirects from cgi scripts\n"
-	 "<li>Work around the fact that stdout is set to nonblocking mode\n"
-	 "    for the script. It simply will _not_ work for most scripts\n"
-	 "<li>Make scripts start somewhat slower...\n"
-	 "</ul>"
-	 "<p>"
-	 "You only need this if you plan to send more than 8Kb of data from "
-	 " a script, or use Location: headers in a non-nph script.\n"
-	 "<p>More or less always, that is..");
+  defvar( "cgi_tag", 1, "Provide the &lt;cgi&gt; tag", TYPE_FLAG,
+           "If set, the &lt;cgi&gt; tag will be available" );
 
-  defvar("wrapper", "bin/cgi", "The wrapper to use",
-	 TYPE_STRING|VAR_EXPERT,
-	 "This is the pathname of the wrapper to use.\n");
-  
+  defvar("priority", "normal", "Limits: Priority", TYPE_STRING_LIST,
+         "The priority, in somewhat general terms (for portability, this works on "
+         " all operating systems). 'realtime' is not recommended for CGI scripts. "
+         "On most operating systems, a process with this priority can "
+         "monopolize the CPU and IO resources, even preemtping the kernel "
+         "in some cases.",
+         ({
+           "lowest",
+           "low",
+           "normal",
+           "high",
+           "higher",
+           "realtime",
+         }) 
+#if UNIX
+         ,lambda(){return QUERY(nice);}
+#endif
+         );
+#if UNIX
+  defvar("noexec", 1, "Ignore non-executable files", TYPE_FLAG,
+	 "If this flag is set, non-executable files will be returned "
+	 "as normal files to the client.");
+
+  defvar("warn_root_cgi", 1, "Warn for CGIs executing as root", TYPE_FLAG,
+	 "If this flag is set, a warning will be issued to the event and "
+         " debug log when a script is run as the root user. This will "
+         "only happend if the 'Run scripts as' variable is set to root (or 0)",
+         0, getuid);
+
   defvar("runuser", "", "Run scripts as", TYPE_STRING,
 	 "If you start roxen as root, and this variable is set, CGI scripts "
 	 "will be run as this user. You can use either the user name or the "
 	 "UID. Note however, that if you don't have a working user database "
 	 "enabled, only UID's will work correctly. If unset, scripts will "
-	 "be run as nobody.", 0, uid_was_zero);
+	 "be run as nobody.", 0, getuid);
 
   defvar("user", 1, "Run user scripts as owner", TYPE_FLAG,
 	 "If set, scripts in the home-dirs of users will be run as the "
-	 "user. This overrides the Run scripts as variable.", 0, uid_was_zero);
+	 "user. This overrides the Run scripts as variable.", 0, getuid);
 
-#if constant(Process.create_process)
   defvar("setgroups", 1, "Set the supplementary group access list", TYPE_FLAG,
 	 "If set, the supplementary group access list will be set for "
 	 "the CGI scripts. This can slow down CGI-scripts significantly "
 	 "if you are using eg NIS+. If not set, the supplementary group "
 	 "access list will be cleared.");
-#endif /* constant(Process.create_process) */
 
   defvar("allow_symlinks", 1, "Allow symlinks", TYPE_FLAG,
 	 "If set, allows symbolic links to binaries owned by the directory "
@@ -278,11 +793,12 @@ void create(object c)
 	 "NOTE: This option only has effect if scripts are run as owner.",
 	 0, run_as_user_enabled);
 
-  defvar("nice", 1, "Nice value", TYPE_INT|VAR_MORE,
+  defvar("nice", 0, "Limits: Nice value", TYPE_INT|VAR_MORE,
 	 "The nice level to use when running scripts. "
 	 "20 is nicest, and 0 is the most aggressive available to "
-	 "normal users.");
-  
+	 "normal users. Defining the Nice value to anyting but 0 will override"
+         " the 'Priority' setting.");
+
   defvar("coresize", 0, "Limits: Core dump size", TYPE_INT|VAR_MORE,
 	 "The maximum size of a core-dump, in 512 byte blocks."
 	 " -2 is unlimited.");
@@ -305,1078 +821,69 @@ void create(object c)
 
   defvar("open_files", 64, "Limits: Maximum number of open files",
 	 TYPE_INT_LIST|VAR_MORE,
-	 "The maximum number of files the script can keep open at any time.",
+	 "The maximum number of files the script can keep open at any time. "
+         "It is not possible to set this value over the system maximum. "
+         "On most systems, there is no limit, but some unix systems still "
+         "have a static filetable (Linux and *BSD, basically).",
 	 ({64,128,256,512,1024,2048}));
 
   defvar("stack", -2, "Limits: Stack size", TYPE_INT|VAR_EXPERT,
-	 "The maximum size of the stack used, in b. -2 is unlimited.");
-
-  defvar("extra_env", "", "Extra environment variables", TYPE_TEXT_FIELD|VAR_MORE,
-	 "Extra variables to be sent to the script, format:<pre>"
-	 "NAME=value\n"
-	 "NAME=value\n"
-	 "</pre>Please note that normal CGI variables will override these.");
+	 "The maximum size of the stack used, in kilobytes. -2 is unlimited.");
+#endif
 }
 
-
-mixed *register_module()
+int|string tag_cgi( string tag, mapping args, RequestID id )
 {
-  return ({ 
-    MODULE_LOCATION | MODULE_FILE_EXTENSION,
-    "CGI executable support", 
-    "Support for the <a href=\"http://hoohoo.ncsa.uiuc.edu/docs/cgi/"
-      "interface.html\">CGI/1.1 interface</a>, and more. It is too bad "
-      "that the CGI specification is a moving target, it is hard to "
-      "implement a fully compatible copy of it."
-    });
-}
+  if(!query("cgi_tag")) 
+    return 0;
 
-string check_variable(string name, string value)
-{
-  if(name == "mountpoint" && value[-1] != '/')
-    call_out(set, 0, "mountpoint", value+"/");
-}
+  if(args->help)
+    return ("<b>&lt;"+tag+" script=path [cache=seconds] [default-argument=value] "
+            "[argument=value]&gt;:</b>");
 
-static string search_path;
-
-void start(int n, object conf)
-{
-  if(n==2) return;
-
-  if(intp(QUERY(wrapper)))
-    QUERY(wrapper)="bin/cgi";
-
-  if(!conf) return;
-
-  module_dependencies(conf, ({ "pathinfo" }));
-
-  init_log_file();
-
-  string tmp;
-  array us;
-  search_path = query("searchpath");
-#if efun(getpwnam)
-  if(us = getpwnam(  QUERY(runuser) ))
-    runuser = ({ (int)us[2], (int)us[3] });
+  if(!args->cache) 
+    NOCACHE();
   else
-#endif
-    if(strlen(QUERY(runuser)))
-      if (sizeof(us = (QUERY(runuser)/":")) == 2) 
-	runuser = ({ (int)us[0], (int)us[1] });
-      else
-	runuser = ({ (int)QUERY(runuser), (int)QUERY(runuser) });
+    CACHE( (int)args->cache || 60 );
 
-  tmp=conf->query("MyWorldLocation");
-  sscanf(tmp, "%*s//%s", tmp);
-  sscanf(tmp, "%s:", tmp);
-  sscanf(tmp, "%s/", tmp);
 
-  env["SERVER_NAME"]=tmp;
-  env["SERVER_SOFTWARE"]=roxen->version();
-  env["GATEWAY_INTERFACE"]="CGI/1.1";
-  env["SERVER_PROTOCOL"]="HTTP/1.0";
-  env["SERVER_URL"]=conf->query("MyWorldLocation");
-  env["AUTH_TYPE"]="Basic";
-  env["ROXEN_CGI_NICE_LEVEL"] = (string)query("nice");
-  env["ROXEN_CGI_LIMITS"] = ("core_dump_size:"+query("coresize")+
-			     ";time_cpu:"+query("maxtime")+
-			     ";data_size:"+query("datasize")+
-			     ";file_size:"+query("filesize")+
-			     ";open_files:"+query("open_files")+
-			     ";stack_size:"+query("stack"));
-  
-  us = ({ "", "" });
-
-  foreach(query("extra_env")/"\n", tmp)
-    if(sscanf(tmp, "%s=%s", us[0], us[1])==2)
-      env[us[0]] = us[1];
-}
-
-string query_location() 
-{ 
-  return QUERY(mountpoint); 
-}
-
-string query_name() 
-{ 
-  return sprintf("CGI-bin path: <i>%s</i>, CGI-searchpath: <i>%s</i>"+
-		 (QUERY(ex)?", CGI-extensions: <i>%s</i>":""),
-		 QUERY(mountpoint), QUERY(searchpath),
-		 implode_nicely(QUERY(ext)));
-}
-
-static inline array make_args( string rest_query )
-{
-  if(!rest_query || !strlen(rest_query))
-    return (array (string))({});  return replace(rest_query,"\000", " ")/" ";
-}
-
-array stat_file(string f, object id) 
-{
-#ifdef CGI_DEBUG
-  roxen_perror("CGI: stat_file(\"" + f + "\")\n");
-#endif /* CGI_DEBUG */
-
-  return file_stat(search_path+f);
-}
-
-string real_file( mixed f, mixed id )
-{
-#ifdef CGI_DEBUG
-  roxen_perror("CGI: real_file(\"" + f + "\")\n");
-#endif /* CGI_DEBUG */
-
-  if(stat_file( f, id )) 
-    return search_path+f;
-}
-
-array find_dir(string f, object id) 
-{
-#ifdef CGI_DEBUG
-  roxen_perror("CGI: find_dir(\"" + f + "\")\n");
-#endif /* CGI_DEBUG */
-
-  if(QUERY(ls)) 
-    return get_dir(search_path+f);
-}
-
-mapping cached_groups = ([]);
-array get_cached_groups_for_user( int uid )
-{
-#if constant(get_groups_for_user)
-  if(cached_groups[ uid ] && cached_groups[ uid ][1]+3600>time(1))
-    return cached_groups[ uid ][0];
-  return (cached_groups[ uid ] = ({ get_groups_for_user( uid ), time(1) }))[0];
-#else
-  return ({});
-#endif
-}
-
-class nat_wrapper // Wrapper emulator when not using the binary wrapper.
-{
-  static string buffer;
-  static int nonblocking;
-  static function rcb, wcb, ccb;
-  static object realfd;
-  static string headers = "";
-  static int inread;
-  static object proc;
-
-  static void handle_headers()
+  RequestID fid = id->clone_me();
+  string file = args->script;
+  if(!file)
+    return "No 'script' argument to the CGI tag";
+  fid->not_query = fix_relative( file, id );
+  foreach(indices(args), string arg )
   {
-    string retcode = "200 Ok";
-    int pointer;
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: handle_headers()\n");
-#endif
-    if(((pointer = strstr(headers, "Location:"))!=-1||
-	((pointer = strstr(headers, "location:")))!=-1))
+    if(arg == "script")
+      continue;
+    if(arg == "cache")
+      continue;
+    if(arg[..7] == "default-")
     {
-      retcode = "302 Redirection";
-    }
-
-    if(((pointer = strstr(headers, "status:"))!=-1||
-	((pointer = strstr(headers, "Status:")))!=-1))
-    {
-      int end;
-      sscanf(headers[pointer+7..], "%s%n\n", retcode, end);
-      sscanf(retcode, "%*[ \t]%s", retcode);
-      sscanf(retcode, "%s\r", retcode);
-      headers = headers[..pointer-1]+headers[pointer+7+end+1..];
-    }
-    buffer = "HTTP/1.1 "+retcode+"\r\n" + headers +"\r\n\r\n"+ buffer;
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: handle_headers() --->\n"+buffer);
-#endif
-  }
-
-  void close()
-  {
-    int killed;
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: Closing down...\n");
-    werror("Killing "+proc->pid()+"\n");
-#endif
-    if(!kill(proc, signum("SIGKILL")) && !closed)
-    {
-      object privs;
-      catch(privs = Privs("Killing CGI script."));
-      kill(proc, signum("SIGKILL"));
-    }
-    set_blocking();
-    destruct(realfd);
-  }
-
-#ifdef CGI_WRAPPER_DEBUG
-  void destroy()
-  {
-    werror("CGI wrapper done!\n");
-    close();
-  }
-#endif
-
-    
-  void set_read_callback( function to )
-  {
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: set_read_callback(%O)\n", to);
-#endif
-    rcb = to;
-    if(buffer && sizeof(buffer) && to)
-    {
-      to(realfd->query_id(), buffer);
-      buffer=0;
-    }
-  }
-
-  void set_write_callback( function to )
-  {
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: set_write_callback(%O)\n", to);
-#endif
-    wcb = to;
-  }
-
-  void set_close_callback( function to )
-  {
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: set_close_callback(%O)\n", to);
-#endif
-    ccb = to;
-    if(closed && to)
-      to(realfd->query_id());
-  }
-
-  void set_nonblocking( function r, function w, function c )
-  {
-    nonblocking = 1;
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: set_nonblocking(%O,%O,%O)\n", r,w,c);
-#endif
-    set_read_callback( r );
-    set_write_callback( w );
-    set_close_callback( c );
-  }
-
-  void set_blocking()
-  {
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: set_blocking()\n");
-#endif
-    nonblocking = 0;
-    set_read_callback( 0 );
-    set_write_callback( 0 );
-    set_close_callback( 0 );
-  }
-
-
-#if constant(thread_create)
-  static void data_fetcher(  )
-  {
-    string data;
-    while(1)
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("CGI wrapper: reading... ->");
-#endif
-        
-      if(!realfd)
-      {
-	if(headers)
-	{
-	  if(!buffer)
-	    buffer = "";
-	  handle_headers( );
-	  headers=0;
-	  if(rcb && !inread)
-	  {
-	    rcb(realfd->query_id(), buffer);
-	    buffer = "";
-	  }
-	}
-	closed = 1;
-	if(ccb) 
-	  ccb(realfd->query_id());
-	return;
-      }
-      data = realfd->read(1024,1);
-#ifdef CGI_WRAPPER_DEBUG
-      werror("%O(%d)<--\n", data, data&&strlen(data));
-#endif
-      if(!data || !strlen(data))
-      {
-#ifdef CGI_WRAPPER_DEBUG
-	werror("Closed!\n");
-#endif
-	if(headers)
-	{
-	  if(!buffer)
-	    buffer = "";
-	  handle_headers( );
-	  headers=0;
-	  if(rcb && !inread)
-	  {
-	    rcb(realfd->query_id(), buffer);
-	    buffer = "";
-	  }
-	}
-	closed = 1;
-	if(ccb) 
-	  ccb(realfd->query_id());
-	return;
-      }
-//#ifdef CGI_WRAPPER_DEBUG
-//      werror("CGI wrapper: get_some_data(%s)\n", data);
-//#endif
-
-      if(headers)
-      {
-	headers += data;
-	if((sscanf(headers, "%s\r\n\r\n%s", headers, buffer) == 2) ||
-	   (sscanf(headers, "%s\n\n%s", headers, buffer) == 2) ||
-	   strlen(headers)>16536)
-	{
-	  if(!buffer)
-	    buffer = "";
-	  handle_headers( );
-	  headers=0;
-	  if(rcb && !inread)
-	  {
-	    rcb(realfd->query_id(), buffer);
-	    buffer = "";
-	  }
-	}
-	continue;
-      }
-      buffer += data;
-      if(rcb && !inread)
-      {
-	call_out(rcb,0,realfd->query_id(),buffer);
-	buffer = "";
-      }
-    }
-  }
-
-  int closed;
-  string read(int nbytes, int less_is_enough)
-  {
-    if(closed) {
-      if(buffer)
-      {
-	string s = buffer[..nbytes-1];
-	buffer = buffer[nbytes..];
-	if (buffer == "") {
-	  buffer = 0;
-	}
-	return s;
-      }
-      return 0;
-    }
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: read(%d,%d)\n",nbytes,less_is_enough);
-#endif
-    if(!nbytes)
-      nbytes = 0x7fffffff;
-    string ret;
-    if(buffer && strlen(buffer))
-    {
-      if(strlen(buffer) >= nbytes || less_is_enough || nonblocking)
-      {
-	ret = buffer[..nbytes-1];
-	buffer = buffer[nbytes..];
-#ifdef CGI_WRAPPER_DEBUG
-	werror("returning "+ret+"\n");
-#endif
-	return ret;
-      }
-    }
-    if(nonblocking)
-      return "";
-
-    inread = 1;
-    while(!closed && (!buffer || strlen(buffer)<nbytes))
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("Wrapper: Waiting for data <%d,%d>->%d...\n",
-	     nbytes, less_is_enough, buffer&&strlen(buffer));
-#endif
-      sleep(0.01);
-      if(less_is_enough && buffer && strlen(buffer))
-	break;
-    }
-    inread = 0;
-    if(buffer)
-    {
-      ret = buffer[..nbytes-1];
-      buffer = buffer[nbytes..];
+      if(!id->variables[arg[8..]])
+        fid->variables[arg[8..]] = args[arg];
     }
     else
-      ret=0;
-#ifdef CGI_WRAPPER_DEBUG
-    werror("returning "+ret+"\n");
-#endif
-    return ret;
+      fid->variables[arg] = args[arg];
   }
-
-  int query_fd()
+  fid->realfile=0;
+  fid->method = "GET";
+  mixed e = catch 
   {
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: query_fd()\n");
-#endif
-    return -1;
-  }
-
-  void create( object _realfd, object _proc )
-  {
-#ifdef CGI_WRAPPER_DEBUG
-    werror("Creating new CGI wrapper\n");
-#endif
-    proc = _proc;
-    realfd = _realfd;
-    thread_create( data_fetcher );
-  }
-#else
-  static void get_some_data( mixed f, string data )
-  {
-    if(!data)
-    {
-      data = realfd->read(1024,1);
-      if(!data || !strlen(data))
-      {
-	closed = 1;
-	return;
-      }
-    }
-
-//#ifdef CGI_WRAPPER_DEBUG
-//   werror("CGI wrapper: get_some_data(%s)\n", data);
-//#endif
-
-    if(headers)
-    {
-      headers += data;
-      if((sscanf(headers, "%s\r\n\r\n%s", headers, buffer) == 2) ||
-	 (sscanf(headers, "%s\n\n%s", headers, buffer) == 2) ||
-	 strlen(headers)>16536)
-      {
-	if(!buffer)
-	  buffer = "";
-	handle_headers( );
-	headers=0;
-	if(rcb && !inread)
-	{
-	  rcb(realfd->query_id(), buffer);
-	  buffer = "";
-	}
-      }
-      return;
-    }
-    buffer += data;
-    if(rcb && !inread)
-    {
-      rcb(realfd->query_id(), buffer);
-      buffer = "";
-    }
-  }
-
-  int closed;
-  string read(int nbytes, int less_is_enough)
-  {
-    if(closed) {
-      if(buffer)
-      {
-	string s = buffer;
-	buffer = 0;
-	return s;
-      }
-      return 0;
-    }
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: read(%d,%d)\n",nbytes,less_is_enough);
-#endif
-    if(!nbytes)
-      nbytes = 0x7fffffff;
-    string ret;
-    if(buffer && strlen(buffer))
-    {
-      if(strlen(buffer) >= nbytes || less_is_enough || nonblocking)
-      {
-	ret = buffer[..nbytes-1];
-	buffer = buffer[nbytes..];
-#ifdef CGI_WRAPPER_DEBUG
-	werror("returning "+ret+"\n");
-#endif
-	return ret;
-      }
-    }
-    if(nonblocking)
-      return "";
-
-    realfd->set_blocking();
-    inread = 1;
-    while(!closed && (!buffer || strlen(buffer)<nbytes))
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("Wrapper: Waiting for data <%d,%d>->%d...\n",
-	     nbytes, less_is_enough, buffer&&strlen(buffer));
-#endif
-      get_some_data(0,0);
-      if(less_is_enough && buffer && strlen(buffer))
-	break;
-    }
-    inread = 0;
-    realfd->set_nonblocking(get_some_data, write_more, done_closed);
-    if(buffer)
-    {
-      ret = buffer[..nbytes-1];
-      buffer = buffer[nbytes..];
-    }
-    else
-      ret=0;
-#ifdef CGI_WRAPPER_DEBUG
-    werror("returning "+ret+"\n");
-#endif
-    return ret;
-  }
-
-  void done_closed()
-  {
-    closed = 1;
-    if(ccb) 
-      ccb(realfd->query_id());
-  }
-
-  int query_fd()
-  {
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: query_fd()\n");
-#endif
-    return -1;
-  }
-    
-  void write_more(mixed foo)
-  {
-#ifdef CGI_WRAPPER_DEBUG
-    werror("CGI wrapper: write_more(%O)\n", wcb);
-#endif
-    if(wcb) wcb(foo);
-  }
-
-  void create( object _realfd, object _proc )
-  {
-#ifdef CGI_WRAPPER_DEBUG
-    werror("Creating new CGI wrapper\n");
-#endif
-    proc = _proc;
-    realfd = _realfd;
-    realfd->set_nonblocking(get_some_data, write_more, done_closed);
-  }
-#endif
-}
-
-// Start a CGI.
-object spawn_cgi(string wrapper, string f, array(string) args, mapping env,
-		 string wd, int|string uid, object pipe1, object pipe2,
-		 object pipe3, object pipe4, array(object)|int dup_err,
-		 int kill_call_out, int setgroups)
-{
-#ifdef CGI_DEBUG
-  roxen_perror(sprintf("spawn_cgi(%O, %O, %O, %O, "
-		       "%O, %O, X, X, "
-		       "X, X, %O, %O, %O)\n",
-		       wrapper_, f_, args_, env_,
-		       wd_, uid_, dup_err_, kill_call_out_, setgroups_));
-#endif /* CGI_DEBUG */
-  int pid;
-  int use_native_wrapper;
-#ifdef CGI_DEBUG
-  roxen_perror("do_cgi()\n");
-#endif /* CGI_DEBUG */
-
-  if(wrapper && sizeof(wrapper))
-  {
-    array us;
-    wrapper = combine_path(getcwd(), wrapper);
-    if(!(us = file_stat(wrapper)) ||
-       !(us[0]&0111)) 
-    {
-      report_error(sprintf("Wrapper \"%s\" doesn't exist, or "
-			   "is not executable\n", wrapper));
-      return 0;
-    }
-    args = ({ wrapper, f }) + args;
-  } 
-  else 
-  {
-    args = ({ f }) + args;
-    if(sscanf(f, "%*s/nph%*s" )< 2)
-    {
-#ifdef CGI_WRAPPER_DEBUG
-      werror("Will use internal wrapper.\n");
-#endif
-      use_native_wrapper = 1;
-    }
-  }
-
-  /* Make sure they are closed in the forked copy */
-  pipe2->set_close_on_exec(1);
-  pipe4->set_close_on_exec(1);
-  mapping options = ([
-    "cwd":wd,
-    "stdin":pipe3,
-    "stdout":pipe1,
-    "noinitgroups":1,
-    "env":env,
-  ]);
-
-  if (!getuid()) {
-    options["uid"] = uid || 65534;
-    if (!setgroups) {
-#if constant(cleargroups)
-      options["setgroups"] = ({});
-#endif /* constant(cleargroups) */
-    } else
-      options["setgroups"] = get_cached_groups_for_user( uid||65534 );
-  }
-
-  if (dup_err == 1) 
-  {
-    options["stderr"] = pipe1;
-  } 
-  else if(dup_err) 
-  { 
-    dup_err[1]->set_close_on_exec(1);
-    options["stderr"] = dup_err[0];
-  }
-#ifdef CGI_WRAPPER_DEBUG
-  werror("Starting CGI.\n");
-#endif
-#ifdef CGI_DEBUG
-  roxen_perror(sprintf("create_process(%O, %O)...\n", args, options));
-#endif /* CGI_DEBUG */
-
-  object proc;
-  mixed err = catch {
-    proc = Process.create_process(args, options);
-#ifdef CGI_DEBUG
-    if (!proc) {
-      roxen_perror(sprintf("CGI: Process.create_process() returned 0.\n"));
-    }
-#endif /* CGI_DEBUG */
+    string data=handle_file_extension( 0, "cgi", fid )->file->read();
+    if(!sscanf(data, "%*s\r\n\r\n%s", data))
+      sscanf(data, "%*s\n\n%s", data);
+    return data;
   };
-
-#ifdef CGI_WRAPPER_DEBUG
-  werror("CGI started.\n");
-#endif
-
-  /* We don't want to keep these. */
-  pipe1->close();
-  pipe3->close();
-  destruct(pipe1);
-  destruct(pipe3);
-  if(arrayp(dup_err))
-    destruct(dup_err[0]);
-  if (err) {
-    int e = errno();
-#if constant(strerror)
-    report_error(sprintf("CGI: create_process() failed:\n"
-			 "errno: %d: %s\n"
-			 "%s\n",
-			 e, strerror(e),
-			 describe_backtrace(err)));
-#else /* !constant(strerror) */
-    report_error(sprintf("CGI: create_process() failed:\n"
-			 "errno: %d\n"
-			 "%s\n",
-			 e, describe_backtrace(err)));
-#endif /* constant(strerror) */
-  }
-
-#ifdef CGI_WRAPPER_DEBUG
-  werror("Starting wrapper.\n");
-#endif
-  if(kill_call_out && proc && proc->pid() > 1) {
-    call_out(lambda (object proc) {
-#ifndef THREADS
-	       if(!kill(proc, signum("SIGKILL")))
-	       {
-		 object privs;
-		 catch(privs = Privs("Killing CGI script."));
-		 kill(proc, signum("SIGKILL"));
-	       }
-#else
-	       if(proc->pid() > 1)
-		 kill(proc, signum("SIGKILL"));
-#endif
-	     }, kill_call_out * 60 , proc);
-  }
-
-  if(use_native_wrapper)
-    return nat_wrapper(pipe2, proc);
-  else 
-    return pipe2;
+  return ("Failed to run CGI script: <font color=red><pre>"+
+          (html_encode_string(describe_backtrace(e))/"\n")[0]+
+          "</pre></font>");
 }
 
-// Used to close the stdin of the CGI-script.
-class closer
+
+mapping query_tag_callers()
 {
-  object fd;
-  void close_cb()
-  {
-    fd->close();
-  }
-  void create(object fd_)
-  {
-    fd = fd_;
-    fd->set_nonblocking(close_cb, close_cb, close_cb);
-  }
-};
-
-// Used to send some data to the CGI-script.
-class sender
-{
-  object more_to_send;
-  string to_send;
-  object fd;
-
-  void read_more(mixed ignored, string more)
-  {
-    to_send += more;
-    if (sizeof(to_send) > 0x10000) {
-      more_to_send->set_nonblocking(0,0,0);
-    }
-    fd->set_nonblocking(0, write_cb, 0);
-  }
-
-  void no_more(mixed ignored)
-  {
-    more_to_send->close();
-    more_to_send = 0;
-  }
-
-  void write_cb()
-  {
-    if (sizeof(to_send)) {
-      int len = fd->write(to_send);
-      to_send = to_send[len..];
-      if (len <= 0) {
-	fd->close();
-	fd = 0;
-	if (more_to_send) {
-	  more_to_send->close();
-	  more_to_send = 0;
-	}
-	return;
-      }
-    }
-    if (to_send == "") {
-      if (more_to_send) {
-	more_to_send->set_nonblocking(read_more, 0, no_more);
-	fd->set_nonblocking(0, 0, 0);
-      } else {
-	fd->close();
-	fd = 0;
-      }
-    }
-  }
-
-  void create(object fd_, string to_send_, object more_to_send_)
-  {
-    fd = fd_;
-    // fd->close("r");	// We aren't interrested in reading from the fd.
-    to_send = to_send_;
-    more_to_send = more_to_send_;
-    fd->set_nonblocking(0, write_cb, 0);
-  }
-};
-
-mixed low_find_file(string f, object id, string path)
-{
-  array tmp2;
-  object pipe1, pipe2;
-  object pipe3, pipe4;
-  object pipe5, pipe6; // This is for logging stderr to a separate file.
-  string path_info, wd;
-  int pid;
-
-  NOCACHE();
-
-#ifdef CGI_DEBUG
-  roxen_perror(sprintf("CGI: find_file(%O, X, %O)...\n", f, path));
-#endif /* CGI_DEBUG */
-
-  if (sizeof(path) && (path[-1] != '/')) {
-    f = path + "/" + f;
-  } else {
-    f = path + f;
-  }
-
-#ifdef CGI_DEBUG
-  roxen_perror("CGI: => f = \"" + f + "\"\n");
-#endif /* CGI_DEBUG */
-
-  if(id->misc->path_info)
-    // From the PATH_INFO last-try module.
-    path_info = id->misc->path_info;
-  else 
-  {
-    int sz;
-    if((sz = file_size( f )) < 0) {
-      return (sz == -2)?-1:0; // It's a directory...
-    } else if (f[-1] == '/') {
-      // Special case.
-      // Most UNIXen ignore the trailing /
-      // but we have to make path-info out of it.
-      path_info = "/";
-      f = f[..sizeof(f)-2];
-    }
-  }
-  
-#ifdef CGI_DEBUG
-  roxen_perror("CGI: Starting '"+f+"'...\n");
-#endif
-
-  wd = dirname(f);
-  if ((!(pipe1=Stdio.File())) || (!(pipe2=pipe1->pipe()))) {
-    int e = errno();
-#if constant(strerror)
-    report_error(sprintf("cgi->find_file(\"%s\"): Can't open pipe "
-			 "-- Out of fd's?\n"
-			 "errno: %d: %s\n", f, e, strerror(e)));
-#else /* !constant(strerror) */
-    report_error(sprintf("cgi->find_file(\"%s\"): Can't open pipe "
-			 "-- Out of fd's?\n"
-			 "errno: %d\n", f, e));
-#endif /* constant(strerror) */
-    return(0);
-  }
-  pipe2->set_blocking(); pipe1->set_blocking();
-  pipe2->set_id(pipe2);
-
-  if ((!(pipe3=Stdio.File())) || (!(pipe4=pipe3->pipe()))) {
-    int e = errno();
-#if constant(strerror)
-    report_error(sprintf("cgi->find_file(\"%s\"): Can't open input pipe "
-			 "-- Out of fd's?\n"
-			 "errno: %d: %s\n", f, e, strerror(e)));
-#else /* !constant(strerror) */
-    report_error(sprintf("cgi->find_file(\"%s\"): Can't open input pipe "
-			 "-- Out of fd's?\n"
-			 "errno: %d\n", f, e));
-#endif /* constant(strerror) */
-    return(0);
-  }
-  pipe4->set_blocking(); pipe3->set_blocking();
-  pipe4->set_id(pipe4);
-  if(log_function)
-  {
-    if ((!(pipe5=Stdio.File())) || (!(pipe6=pipe5->pipe()))) {
-      int e = errno();
-#if constant(strerror)
-      report_error(sprintf("cgi->find_file(\"%s\"): Can't open pipe "
-			   "-- Out of fd's?\n"
-			   "errno: %d: %s\n", f, e, strerror(e)));
-#else /* !constant(strerror) */
-      report_error(sprintf("cgi->find_file(\"%s\"): Can't open pipe "
-			   "-- Out of fd's?\n"
-			   "errno: %d\n", f, e));
-#endif /* constant(strerror) */
-      return(0);
-    }
-    pipe6->set_nonblocking();
-    pipe6->set_id(pipe6);
-    pipe6->set_read_callback(lambda(object this, string s) {
-			       if(stringp(s) && functionp(log_function))
-				 log_function(s);
-			     });
-    pipe6->set_close_callback(lambda(object this)
-			      {
-				if(this)
-				  destruct(this);
-			      });
-    pipe5->set_blocking();
-    //    pipe6->set_id(pipe6);
-
-  }
-  
-  mixed uid;
-  array us;
-  if(query("noexec"))
-  {
-    us = file_stat(f);
-    if(us && !(us[0]&0111)) // Not executable...
-      return open(f,"r");
-  }
-  
-  if(!getuid())
-  {
-    if(QUERY(user) && id->misc->is_user &&
-       (us = file_stat(id->misc->is_user)) &&
-       (us[5] >= 10)) {
-      // Scan for symlinks
-      string fname = "";
-      array a,b;
-      foreach(id->misc->is_user/"/", string part) {
-	fname += part;
-	if ((fname != "") &&
-	    ((!(a = file_stat(fname, 1))) ||
-	     ((< -3, -4 >)[a[1]]))) {
-	  // Symlink or device encountered.
-	  // Don't allow symlinks from directories not owned by the
-	  // same user as the file itself.
-	  // Assume that symlinks from directories owned by users 1-9 are safe.
-	  if (!a || (a[1] == -4) ||
-	      !b || ((b[5] != us[5]) && (b[5] >= 10)) ||
-	      !QUERY(allow_symlinks)) {
-	    report_notice(sprintf("CGI: Bad symlink or device encountered: "
-				  "\"%s\"\n", fname));
-	    fname = 0;
-	    break;
-	  }
-	  a = file_stat(fname);		// Get the permissions from the directory.
-	} else {
-	  a = file_stat("/");
-	}
-	b = a;
-	fname += "/";
-      }
-      if (fname) {
-	uid = us[5..6];
-      }
-    }
-    else if(runuser)
-      uid = runuser;
-  }
-  if(!uid)
-    uid = "nobody";
-
-  if (arrayp(uid)) {
-    uid = uid[0];
-  }
-  mixed stderr;
-  if(QUERY(stderr) != "main log file") {
-    if(QUERY(stderr) == "custom log file")
-      stderr = ({ pipe5, pipe6 });
-    else
-      stderr = 1;
-  }
-  
-  object cgi = spawn_cgi(QUERY(use_wrapper) && (QUERY(wrapper) || "/bin/cgi"),
-			 f, make_args(id->rest_query),
-			 my_build_env_vars(f, id, path_info),
-			 wd, uid, pipe1, pipe2, pipe3, pipe4,
-			 stderr,QUERY(kill_call_out),
-#if constant(Process.create_process)
-			 QUERY(setgroups)
-#else /* !constant(Process.create_process) */
-			 /* Ignored anyway */
-			 0
-#endif /* constant(Process.create_process) */
-			 );
-  
-  if(id->my_fd && id->data) {
-    sender(pipe4, id->data, id->my_fd);
-    // for put.. post?
-    // lets try, atleast..
-
-    // NOTE: Race-condition against sender above.
-    id->my_fd->set_read_callback(lambda(mixed ignored, string d) {
-				   // NOTE: Lexical scope.
-				   pipe4->write(d);
-				 });
-    id->my_fd->set_close_callback(lambda(mixed ignored) {
-				    // NOTE: Lexical scope.
-				    pipe4->close();
-				  });
-    id->my_fd->set_nonblocking();
-  } else {
-    closer(pipe4);
-  }
-
-  return http_stream(cgi);
-}
-
-mixed find_file(string f, object id)
-{
-  return(low_find_file(f, id, search_path));
-}
-
-array (string) query_file_extensions()
-{
-  return query("ext");
-}
-
-mapping handle_file_extension(object o, string e, object id)
-{
-  string f, q, w;
-  mixed toret;
-  string path;
-  mixed err;
-
-  if(!QUERY(ex))
-    return 0;
-
-  if(QUERY(noexec) && !(o->stat()[0]&0111))
-    return 0;
-
-  if(id->realfile) 
-  {
-    array c;
-
-    c=id->realfile/"/";
-    
-    // Handle the request with the location code.
-    // This is done by setting the cgi-bin dir to the path of the 
-    // script, and then calling the location dependant code.
-    //
-    // This isn't thread-safe (discovered by Wilhelm Köhler), so send
-    // the path to be used directly to find_file() instead.
-    destruct( o );
-    o = 0;
-    path=c[0..sizeof(c)-2]*"/" + "/";
-
-    //  use full path in case of path_info                         1-Nov-96-wk
-    // FIXME: Why?	/grubba 1998-10-02
-    // if(id->misc->path_info)
-    //   err=catch(toret = low_find_file(id->realfile, id, path));
-    // else
-    err=catch(toret = low_find_file(c[-1], id, path));
-
-    if(err) throw(err);
-    return toret;
-  }
-
-  if (!QUERY(virtual_cgi))
-    return 0;
-
-  // Fallback for odd location modules that do not set the
-  // realfile entry in the id object.
-  // This could be useful when the data is not really a file, but instead
-  // generated internally, or if it is a socket.
-
-  // FIXME: This should probably use a configurable directory
-  // instead of /tmp/ but I don't think this code has ever been
-  // used.	/grubba 1998-10-02
-#ifdef CGI_DEBUG
-  roxen_perror("CGI: Handling "+e+" by copying to /tmp/....\n");
-#endif
-  
-  o->set_blocking();
-  f=o->read(0x7ffffff);         // We really hope that this is not located on 
-                               // a NFS server far-far away...
-  destruct(o);
-  q="/tmp/"+(w=(((id->not_query/"/")[-1][0..2])+"Roxen_tmp"));
-  rm(q);
-  write_file(q, f);
-
-#if constant(chmod)
-  chmod(q, 0555);
-#else /* !constant(chmod) */
-  popen("chmod u+x "+q);
-#endif /* constant(chmod) */
-
-  err=catch(toret = low_find_file(w, id, "/tmp/"));
-
-  if(err) throw(err);
-  return toret;
+  return ([
+    "cgi":tag_cgi,
+  ]);
 }
