@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.111 1999/03/11 01:31:20 mast Exp $";
+constant cvs_version = "$Id: business.pike,v 1.112 1999/05/01 17:01:20 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -18,7 +18,7 @@ constant thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 import Array;
-import Image;
+// import Image;
 
 function create_pie, create_bars, create_graph;
 
@@ -961,14 +961,14 @@ mapping find_file(string f, object id)
     }
   } else if(res->tonedbox) {
     m_delete( res, "bgcolor" );
-    res->image = image(res->xsize, res->ysize)->
+    res->image = Image.image(res->xsize, res->ysize)->
       tuned_box(0, 0, res->xsize, res->ysize, res->tonedbox);
   }
   else if (res->colorbg)
   {
     back=0; //res->bgcolor;
     m_delete( res, "bgcolor" );
-    res->image = image(res->xsize, res->ysize, @res->colorbg);
+    res->image = Image.image(res->xsize, res->ysize, @res->colorbg);
   } 
   /*else if (res->notrans)
     {

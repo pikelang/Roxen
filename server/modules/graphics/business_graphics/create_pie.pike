@@ -2,7 +2,7 @@
 
 #include "diagram.h"
 
-import Image;
+// import Image;
 import Array;
 import Stdio;
 
@@ -10,7 +10,7 @@ inherit "polyline.pike";
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.45 1998/11/04 20:13:40 peter Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.46 1999/05/01 17:01:07 grubba Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -34,7 +34,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
   string where_is_ax;
 
-  object(image) piediagram;
+  object(Image.image) piediagram;
 
   init_bg(diagram_data);
   piediagram=diagram_data["image"];
@@ -114,10 +114,12 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	      ->write(UNICODE((string)(names[i]),diagram_data["encoding"]))
 	      ->scale(0,diagram_data["fontsize"]);
 	  else
-	    text[i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
+	    text[i]=Image.image(diagram_data["fontsize"],
+				diagram_data["fontsize"]);
 
 	  if (text[i]->xsize()<1)
-	    text[i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
+	    text[i]=Image.image(diagram_data["fontsize"],
+				diagram_data["fontsize"]);
 
 	  if (text[i]->xsize()>diagram_data["xsize"]/5+diagram_data["3Ddepth"])
 	    text[i]=text[i]->scale((int)diagram_data["xsize"]/5, 0);
@@ -404,7 +406,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	{
 	  
 	  
-	  tbild=image(imxsize, imysize, 255, 255, 255)->
+	  tbild=Image.image(imxsize, imysize, 255, 255, 255)->
 	    tuned_box(0, 0 , 1, imysize,
 		      ({a,a,b,b}));
 	  tbild=tbild->paste(tbild->copy(0,0,0, imysize), 1, 0);
