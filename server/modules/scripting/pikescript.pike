@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.63 2000/07/04 03:42:45 per Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.64 2000/08/09 02:31:56 per Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -205,15 +205,23 @@ mapping handle_file_extension(object f, string e, object got)
     master()->set_inhibit_compile_errors(e);
     catch
     {
+      object key = Roxen.add_scope_constants( "rxml_scope_" );
       if(got->realfile)
         p=(program)got->realfile;
       else
         p=compile_string(cpp(file));
+      destruct( key );
     };
     master()->set_inhibit_compile_errors(0);
 
     if(!p)
     {
+      if( got->realfile ) // force reload on next access. Really.
+      {
+        m_delete( master()->programs, got->realfile );
+        m_delete( master()->load_time, got->realfile );
+      }
+
       if(strlen(e->get()))
       {
         report_debug(e->get());
