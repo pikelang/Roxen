@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.171 2000/06/28 20:58:35 jonasw Exp $
+// $Id: roxenlib.pike,v 1.172 2000/07/18 19:56:52 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -906,9 +906,9 @@ string strftime(string fmt, int t)
 {
   mapping lt = localtime(t);
   array a = fmt/"%";
-  string res = "";
+  string res = a[0];
 
-  foreach(a, string key) {
+  foreach(a[1..], string key) {
     if (key=="") {
       key = "%";
       continue;
@@ -1468,6 +1468,7 @@ string tagtime(int t, mapping m, RequestID id, function language)
   string res;
 
   if (m->adjust) t+=(int)m->adjust;
+  if (m->strftime) return strftime( m->strftime, t );
 
   string lang;
   if(id->misc->defines->theme_language) lang=id->misc->defines->theme_language;
