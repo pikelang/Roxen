@@ -11,6 +11,7 @@ FILES="default"
 if [ -f lib/pike/master.pike ]; then
   DEFINES="$DEFINES -mlib/pike/master.pike"
 else
+  # This is used with localinstall
   if [ -f ../pike/src/lib/master.pike ]; then
     DEFINES="$DEFINES -m../pike/src/lib/master.pike"
   fi
@@ -69,7 +70,7 @@ parse_args() {
     once=1
   ;;
   '--version')
-    echo 1.`expr $VERSION / 100`$BETA`expr $VERSION % 100`
+    echo Roxen Challenger 1.`expr $VERSION / 100`$BETA`expr $VERSION % 100`
     exit 0
   ;;
   '--help'|'-?')
