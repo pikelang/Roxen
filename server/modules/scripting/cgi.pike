@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.100 1998/08/10 21:37:44 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.101 1998/08/17 15:46:49 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -538,6 +538,12 @@ class spawn_cgi
 
     if (!getuid()) {
       options["uid"] = uid || 65534;
+      if (!setgroups) {
+	options["noinitgroups"] = 1;
+#if constant(cleargroups)
+	options["setgroups"] = ({});
+#endif /* constant(cleargroups) */
+      }
     }
 
     if (dup_err == 1) {
@@ -547,13 +553,6 @@ class spawn_cgi
       options["stderr"] = dup_err[0];
     }
 
-    if (!setgroups) {
-      options["noinitgroups"] = 1;
-#if constant(cleargroups)
-      options["setgroups"] = ({});
-#endif /* constant(cleargroups) */
-    }
-
 #ifdef CGI_DEBUG
     roxen_perror(sprintf("create_process(%O, %O)...\n", args, options));
 #endif /* CGI_DEBUG */
@@ -561,6 +560,12 @@ class spawn_cgi
     object proc;
     mixed err = catch {
       proc = Process.create_process(args, options);
+
+#ifdef CGI_DEBUG
+      if (!proc) {
+	roxen_perror(sprintf("CGI: Process.create_process() returned 0.\n"));
+      }
+#endif /* CGI_DEBUG */
     };
 
     /* We don't want to keep these. */
@@ -979,7 +984,7 @@ mixed low_find_file(string f, object id, string path)
 			 my_build_env_vars(f, id, path_info),
 			 wd, uid, pipe1, pipe2, pipe3, pipe4,
 			 stderr,QUERY(kill_call_out),
-#if 0 &&  constant(Process.create_process)
+#if constant(Process.create_process)
 			 QUERY(setgroups)
 #else /* !constant(Process.create_process) */
 			 /* Ignored anyway */
