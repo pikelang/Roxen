@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.268 2001/07/26 01:53:23 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.269 2001/08/07 16:51:25 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1439,6 +1439,17 @@ class TagCache {
       [content_hash, subvariables, alternatives, timeouts] = saved;
       if (timeouts) add_timeouts (alternatives, timeouts);
     }
+  }
+}
+
+class TagNocache
+{
+  inherit RXML.Tag;
+  constant name = "nocache";
+  constant flags = RXML.FLAG_DONT_CACHE_RESULT;
+  class Frame
+  {
+    inherit RXML.Frame;
   }
 }
 
@@ -4723,7 +4734,7 @@ using the pre tag.
  their contents too. It's thus possible to change the cache parameters
  or completely disable caching of a certain part of the content inside
  a <tag>cache</tag> tag. Note that this implies that any RXML tags
- that surrounds the inner <tag>cache</tag> won't be cached.</p>
+ that surrounds the inner <tag>cache</tag> tag(s) won't be cached.</p>
 
  <p>Besides the value produced by the content, any assignments to RXML
  variables in any scope are cached. I.e. an RXML code block which
@@ -4852,6 +4863,18 @@ using the pre tag.
 //  but since that makes it theoretically possible that two cache
 //  entries clash, this attribute may be used to avoid it.
 // </attr>
+
+//----------------------------------------------------------------------
+
+"nocache": #"<desc cont='nocache'><p><short>
+ Avoid caching of a part inside a <tag>cache</tag> tag.</short> This
+ is the same as using the <tag>cache</tag> tag with the nocache
+ argument.</p>
+
+ <p>Note that when a part inside a <tag>cache</tag> tag isn't cached,
+ it implies that any RXML tags that surround the <tag>nocache</tag>
+ tag inside the <tag>cache</tag> tag also aren't cached.</p>
+</desc>",
 
 //----------------------------------------------------------------------
 

@@ -1038,6 +1038,17 @@ hej</result>
   <result pass="2">12</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      &test.pass;
+      <nocache>&test.pass;</nocache>
+    </cache>
+  </rxml>
+  <result pass="1">11</result>
+  <result pass="2">12</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
