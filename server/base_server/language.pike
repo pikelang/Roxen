@@ -1,8 +1,8 @@
 // Roxen Locale Support
-// Copyright © 1996 - 2000, Roxen IS.
-// $Id: language.pike,v 1.37 2001/03/12 14:06:21 nilsson Exp $
+// Copyright © 1996 - 2001, Roxen IS.
+// $Id: language.pike,v 1.38 2001/06/24 14:13:02 nilsson Exp $
 
-// #pragma strict_types
+#pragma strict_types
 
 #include <roxen.h>
 #define PROJECT "languages"
