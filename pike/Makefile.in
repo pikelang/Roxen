@@ -7,6 +7,6 @@ prefix=@prefix@
 pre_dist:
 	-rm -rf $(SRCDIR)/*/about_pike $(SRCDIR)/*/doc $(SRCDIR)/0.5/tutorial
 	@for d in [0-9]*; do \
-	  (cd $$d; $(MAKE) new_peep_engine); \
+	  (cd $$d; $(MAKE); $(MAKE) new_peep_engine); \
 	done
 
