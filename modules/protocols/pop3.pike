@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.14 1998/09/28 14:10:42 grubba Exp $
+ * $Id: pop3.pike,v 1.15 1998/09/28 15:03:57 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.14 1998/09/28 14:10:42 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.15 1998/09/28 15:03:57 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -155,7 +155,7 @@ static class Pop_Session
     int n;
     for(n = 0; n < sizeof(inbox); n++) {
       if (!deleted[inbox[n]]) {
-	send(sprintf("%d %d\r\n", n+1, m->get_size()));
+	send(sprintf("%d %d\r\n", n+1, inbox[n]->get_size()));
       }
     }
     send(".\r\n");
