@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.18 1997/10/25 17:07:19 grubba Exp $
+# $Id: Makefile,v 1.19 1997/11/03 23:29:42 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -78,7 +78,11 @@ localinstall : all
 	echo "Installing Roxen 1.2 from $$builddir ..."; \
 	echo; \
 	cd "$$builddir" && \
-	$(MAKE) localinstall;
+	$(MAKE) localinstall; \
+	builddir=`pwd`; \
+	$$srcdir/mkdir -p $$srcdir/server/lib; \
+	rm -f $$srcdir/server/lib/pike; \
+	ln -s "$$builddir"/pike/src/lib $$srcdir/server/lib/pike;
 	@echo
 	@echo Roxen successfully installed.
 	@echo
