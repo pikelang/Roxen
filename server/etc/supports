@@ -1,4 +1,4 @@
-## $Id: supports,v 1.37 1997/07/23 16:13:25 grubba Exp $
+## $Id: supports,v 1.38 1997/08/20 10:33:27 peter Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -166,8 +166,8 @@ cern.*linemode.*           nothing
                         font, fontcolor, imagealign, images,\
                         jpeginline, pjpeginline, pnginline,\
                         tables
-.*1.11.*		frames
-.*1.12.*		frames, pull
+.*1.1.*			frames, pull
+.*1.1[2-9].*		ssl
 # }
 
 #section amiga-aweb {
@@ -179,7 +179,8 @@ cern.*linemode.*           nothing
                         supsub
 
 .*1\.[5-9].*		tables
-.*[2-9]\.[1-9].*	tables
+.*[2-9]\.[0-9].*	tables
+.*[3-9]\.[0-9].*	cookies, frames, pull, push
 # }
 
 # section tiber {  --- I have not seen one for quite a while
