@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.356 2000/08/29 23:54:23 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.357 2000/09/01 00:47:28 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2060,7 +2060,11 @@ RoxenModule reload_module( string modname )
     // It's possible e.g. in the config interface that the module
     // being reloaded is in use for the current request, so delay it a
     // little.
-    call_out (destruct, 2, old_module);
+    //call_out (destruct, 2, old_module);
+    // Nope, can't do that since there are things like lookup caches
+    // that count on that the old module object is gone before the new
+    // is started.
+    destruct (old_module);
   }
 
   call_start_callbacks( nm, mi, modules[ (modname/"#")[0] ] );
