@@ -107,7 +107,7 @@ static private void initiate_cache()
 
 void load_roxen()
 {
-  roxen = (object)"roxen";
+  roxen = ((program)"roxen")();
   nwrite = roxen->nwrite;
 }
 

@@ -3,7 +3,6 @@
 #include <variables.h>
 #include <roxen.h>
 
-
 #ifdef NO_DNS
 inherit "dummy_hosts";
 #else
@@ -103,7 +102,6 @@ public string decode(string bufcoded)
   return bufplain[0..nbytesdecoded];
 }
 // End of what was formely known as decode.pike, the base64 decoder
-
 
 // Function pointer and the root of the to the configuration interface
 // object.
@@ -1520,18 +1518,38 @@ program last_loaded() { return __p; }
 object load(string s) 
 {
   if(file_size(s+".pike")>0)
-    if(__p=compile_file(s+".pike")) return __p();
+    if(__p=(program)(s+".pike")) return __p();
   if(file_size(s+".lpc")>0)
-    if(__p=compile_file(s+".lpc")) return __p();
+    if(__p=(program)(s+".lpc")) return __p();
   if(file_size(s+".module")>0)
-    if(__p=compile_file(s+".module")) return __p();
+    if(__p=(program)(s+".module")) return __p();
   if(file_size(s)>0)
-    if(__p=compile_file(s)) return __p();
+    if(__p=(program)(s)) return __p();
   if(file_size(s+".so")>0) // Loadable C-library.. TBD
-    ; /*if(__p=compile_file(s+".module")) return clone(__p);*/
+    ; /* */
   return 0; // FAILED..
 }
 
+object load_from_dir(string d, string f)
+{
+  object o;
+  string nd;
+  if(o = load(d+f)) return o;
+
+  foreach(get_dir(d), nd) if(file_size(d+nd)==-2)
+    if(o=load_from_dir(d+nd+"/",f))
+      return o;
+}
+
+object load_from_dirs(array dirs, string f)
+{
+  string dir;
+  object o;
+  foreach(dirs, dir)
+    if(o=load_from_dir(dir, f))
+      return o;
+  return 0;
+}
 
 // Some logging stuff, should probably move to either the actual
 // configuration object, or into a module. That would be much more
@@ -1664,15 +1682,11 @@ void start(int num)
 }
 
 
-// Don't ask about the roxenlib and http things, it is just to ugly :-/
 void create()
 {
-
   add_efun("roxen", this_object());
   add_efun("spinner", this_object());
   add_efun("load",    load);
-  _master->programs->roxenlib = 0;
-  _master->programs->http = 0;
 }
 
 
@@ -2255,10 +2269,15 @@ void enable_configuration(string config)
     modules_to_process = (({"userdb#0"})
 			  + (modules_to_process-({"userdb#0"})));
 
-  
+
+  array err;
   foreach( modules_to_process, tmp_string )
-    if(catch( enable_module( tmp_string ) ))
-      perror("Failed to enable the module "+tmp_string+". Skipping\n");
+    if(err = catch( enable_module( tmp_string ) ))
+      perror("Failed to enable the module "+tmp_string+". Skipping\n"+
+#ifdef MODULE_DEBUG
+	     describe_backtrace(err)+"\n"
+#endif
+	);
 }
 
 // Enable all configurations
@@ -2780,10 +2799,13 @@ void scan_module_dir(string d)
 
   foreach( get_dir( d )||({}), file)
   {
-    if ( !backup_extension(file) )
+    if ( !backup_extension(file) && (file[-1]!='z'))
     {
       if(file_size(path+file) == -2)
-	scan_module_dir(path+file+"/");
+      {
+	if(file!="CVS")
+	  scan_module_dir(path+file+"/");
+      }
       else
       {
 #ifdef MODULE_DEBUG
@@ -2815,7 +2837,7 @@ void scan_module_dir(string d)
 	  allmodules[ file ] = module_info;
 	} else {
 #ifdef MODULE_DEBUG
-	  perror("\n" + describe_backtrace(err));
+	  perror("\n"+err[0]+_master->set_inhibit_compile_errors( 1 ));
 #endif
 	}
 #ifdef MODULE_DEBUG
@@ -2835,14 +2857,12 @@ void rescan_modules()
   foreach(QUERY(ModuleDirs), path)
   {
     _master->set_inhibit_compile_errors(1);
-    scan_module_dir( path );
+    catch(scan_module_dir( path ));
   }
   if(strlen(_master->errors))
   {
-    string s;
-    s=_master->errors;
+    nwrite("While rescanning module list:\n" + _master->errors, 1);
     _master->set_inhibit_compile_errors(0);
-    nwrite("While rescanning module list:\n" + s, 1);
   }
 
   _master->set_inhibit_compile_errors(0);

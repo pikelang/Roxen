@@ -50,9 +50,9 @@ varargs int defvar(string var, mixed value, string name, int type,
   if(!strlen(var))
     error("No name for variable!\n");
 
-  if(var[0]=='_' && previous_object() != roxen)
-    error("Variable names beginning with '_' are reserved for"
-	  " internal usage.\n");
+//  if(var[0]=='_' && previous_object() != roxen)
+//    error("Variable names beginning with '_' are reserved for"
+//	    " internal usage.\n");
 
   if (!stringp(name))
     name = var;

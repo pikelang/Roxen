@@ -68,10 +68,10 @@ string describe_type(int type, mixed flag)
 	 "<dl><dt>resident\n"
 	 "<dd>Keep the SSL process in real memory, if possible\n"
 	 "<dt>cert-file FILENAME"
-	 "<dd>Filename of the certificate file, relative to "+cwd()+". "
+	 "<dd>Filename of the certificate file, relative to "+getcwd()+". "
 	 "<b>This is needed</b>\n"
 	 "<dt>key-file FILENAME"
-	 "<dd>Filename of the private key file, relative to "+cwd()+".\n"
+	 "<dd>Filename of the private key file, relative to "+getcwd()+".\n"
 	 "If unspecified, same as cert-file.</dl>");
     break;
 
@@ -281,8 +281,9 @@ string all_ip_numbers_as_selection(int id, string sel)
 array protocols()
 {
   return map_array(filter_array(get_dir("protocols"), lambda(string s) {
-    return (s[strlen(s)-4..]==".pike");
-  }), lambda(string s) { return s[..strlen(s)-5]; });
+    return ((search(s,".pike") == search(s,".")) &&
+	    (search(s,".")!=-1) && s[-1]!="~");
+  }), lambda(string s) { return (s/".")[0]; });
 }
 
 string all_protocols_as_selection(int id, string sel)

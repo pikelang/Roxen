@@ -1,3 +1,42 @@
+string popen(string s, void|mapping env)
+{
+  object p,p2;
+
+  p2 = File();
+  p=p2->pipe();
+  if(!p) error("Popen failed. (couldn't create pipe)\n");
+
+  if(!fork())
+  {
+    array (int) olduid;
+    catch {
+      if(p->query_fd() < 0)
+      {
+	perror("File to dup2 to closed!\n");
+	exit(99);
+      }
+      p->dup2(File("stdout"));
+      
+      olduid = ({ geteuid(), getegid() });
+      seteuid(0);
+#if efun(setegid)
+      setegid(getgid());
+#endif
+      setgid(olduid[1]);
+      setuid(olduid[0]);
+      catch(exece("/bin/sh", ({ "-c", s }), (env||environment)));
+    };
+    exit(69);
+  }else{
+    string t;
+    destruct(p);
+    t=p2->read(6553555);
+    destruct(p2);
+    return t;
+  }
+}
+
+
 mapping make_mapping(string *f)
 {
   mapping foo=([ ]);
@@ -79,4 +118,5 @@ void create()
 {
    add_constant("spawne",spawne);
    add_constant("perror",werror);
+   add_constant("popen",popen);
 }

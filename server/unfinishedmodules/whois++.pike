@@ -118,7 +118,7 @@ void fixa_data(object pipe,string s)
 void server_closed(array v)
 {
    object pipe;
-   pipe=new(Pipe);
+   pipe=Pipe();
    fixa_data(pipe,v[4]);
    pipe->output(v[1]);
    v[2]->disconnect();
@@ -164,7 +164,7 @@ void serv_request(string host,object id,mapping var)
     }
     return;
   }
-  server=new(File);
+  server=File();
   if (!server->open_socket())
   {
     destruct(server);

@@ -1,5 +1,5 @@
-#include "confignode.h";
-#include "module.h";
+#include <confignode.h>
+#include <module.h>
 
 object find_module(string s)
 {

@@ -141,6 +141,7 @@ void _main(string *argv, string *env)
 
   foreach(env,a) if(sscanf(a,"%s=%s",a,b)) environment[a]=b;
   add_constant("getenv",getenv);
+  add_constant("environment",environment);
   add_constant("putenv",putenv);
   add_constant("error",lambda(string s, mixed ... args) {
     if(sizeof(args)) s=sprintf(s, @args);
@@ -177,10 +178,12 @@ void _main(string *argv, string *env)
 mixed inhibit_compile_errors;
 
 string errors;
-void set_inhibit_compile_errors(mixed f)
+string set_inhibit_compile_errors(mixed f)
 {
+  mixed f = errors||"";
   inhibit_compile_errors=f;
   errors="";
+  return f;
 }
 
 /*

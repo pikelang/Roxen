@@ -125,7 +125,7 @@ program Node = class {
   }
 };
 
-object root=new(Node);
+object root=Node();
 int expert_mode;
 
 
@@ -538,7 +538,7 @@ string new_module_form(object id, object node)
     if(!(b = module_nomore(mods[i], a[mods[i]][2], node->config())))
     {
       if(id->supports->tables)
-	res += ("<tr><td><table><tr valign=top><td><input type=submit value=\"" + 
+	res += ("<tr><td><table><tr valign=top><td valign=top><input type=submit value=\"" + 
 		a[mods[i]][0] + "\" name=\"" + mods[i] + "\"><br></td><td>" +
 		a[mods[i]][1]+"<p></td></tr>\n</table>"
 		"<hr noshade size=1></td></tr>\n\n");
@@ -904,7 +904,7 @@ mapping configuration_parse(object id)
   // Permisson denied by address?
   if(id->remoteaddr)
     if(strlen(roxen->QUERY(ConfigurationIPpattern)) &&
-       !do_match(id->remoteaddr, roxen->QUERY(ConfigurationIPpattern)))
+       !glob(roxen->QUERY(ConfigurationIPpattern),id->remoteaddr))
       return stores("Permission denied.\n");
   
   // Permission denied by userid?
@@ -916,7 +916,8 @@ mapping configuration_parse(object id)
     else if(!conf_auth_ok(id->auth))
       return http_auth_failed("Roxen server maintenance"); // Denied
   } else {
-    id->prestate = aggregate_list(@indices(id->prestate)&({"fold","unfold"}));
+    id->prestate = aggregate_multiset(@indices(id->prestate)
+                                      &({"fold","unfold"}));
 
     if(sizeof(id->variables)) // This is not 100% neccesary, really.
       id->variables = ([ ]);

@@ -232,8 +232,6 @@ string decode_mode(int m)
   return s;
 }
 
-// Functions here might be usable for other modules than roxen as well.
-
 #define MONTHS (["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,\
 	         "Jul":6, "Aug":7, "Sep":8, "Oct":9, "Nov":10, "Dec":11,\
 		 "jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,\

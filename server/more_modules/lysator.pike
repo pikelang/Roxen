@@ -172,7 +172,7 @@ string lys_header(string t, mapping m, string s, object id)
   return res;
 }
 
-object regexp = clone((program)"/precompiled/regexp");
+object regexp = Regexp();
 inline array regexp_match(string match, string in)
 {
   regexp->create("^"+match+"$");

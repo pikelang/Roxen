@@ -132,7 +132,7 @@ mixed set(string var, mixed val)
 
 
 program last_loaded();
-object load(string);
+object load_from_dirs(array q, string);
 
 varargs void store(string what, mapping map, int mode);
 
@@ -574,32 +574,23 @@ int load_module(string module_file)
   else
   {
     string dir;
-    foreach(QUERY(ModuleDirs), dir)
-      if((file_size(dir + module_file+".pike")>0)
-	 ||(file_size(dir + module_file+".module")>0)
-	 ||(file_size(dir + module_file+".so")>0)
-	 ||(file_size(dir + module_file)>0)
-	 ||(file_size(dir + module_file+".lpc")>0))
-	break;
-    err = catch (obj = load(dir + module_file));
-    if (err)
-    {
+    obj = load_from_dirs(QUERY(ModuleDirs), module_file);
+    prog = last_loaded();
+  }
+  if(!obj)
+  {
 #ifdef MODULE_DEBUG
-      perror("FAILED\n");
+    perror("FAILED\n");
 #endif
-      report_error( "Failed to load " + module_file + ".\n" +
-		    describe_backtrace( err ) 
-		    + "\n\n" + master()->errors);
-      return 0;
-    }
-    prog=last_loaded();
+    report_error( "Module load failed.\n");
+    return 0;
   }
   err = catch (module_data = obj->register_module());
 
   if (err)
   {
 #ifdef MODULE_DEBUG
-    report_debug("FAILED\n");
+    perror("FAILED\n");
 #endif
     report_error( "Module loaded, but register_module() failed (" 
 		 + module_file + ").\n"  +
@@ -674,7 +665,7 @@ int load_module(string module_file)
   tmpp->sname=module_file;
       
 #ifdef MODULE_DEBUG
-  perror(" Done.\n");
+  perror(" Done ("+search(_master->programs,prog)+").\n");
 #endif
   cache_set("modules", module_file,
 	    current_configuration->modules[module_file]["program"]);

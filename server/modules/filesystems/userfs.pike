@@ -1,5 +1,5 @@
 #include <module.h>
-inherit "modules/filesystem";
+inherit "modules/filesystems/filesystem";
 
 int uid_was_zero()
 {

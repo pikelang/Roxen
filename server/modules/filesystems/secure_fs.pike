@@ -1,5 +1,5 @@
 #include <module.h>
-inherit "modules/filesystem";
+inherit "modules/filesystems/filesystem";
 
 array register_module()
 {

@@ -2,6 +2,7 @@
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
+ * WARNING:
  * If the environment variable 'LANG' is set, it is used as the default 
  * language.
  */
