@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.64 2000/05/17 04:32:02 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.65 2000/05/17 20:48:14 per Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -58,33 +58,66 @@ void start(int n, Configuration c)
     set( "template", 
          #"
 <html>
-  <head><title>Listing of $DIR$</title></head>
+  <head><title>Listing of &page.virtfile;</title></head>
   <body bgcolor='white' text='black' link='#ae3c00' vlink='#ae3c00'>
      <roxen align='right' size='small' />
-    <h1>Directory listing of $DIR$</h1>
+    <font size=+3>
+   <emit source=path>
+     <a href='&_.path;'> &_.name; <font color=black>/</font></a>
+   </emit> </font><br /><br />
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>
         <td width='100%' height='1' colspan='5' bgcolor='#ce5c00'><img 
           src='/internal-roxen-unit' width='100%' height='1' /></td>
       </tr>
-      <tr bgcolor='#eeeeee'>
-        <th align=left>&nbsp;</th>
-        <th align=left><a href='?sort=name'>Filename</a></th>
-        <th align=right><a href='?sort=size'>Size</a></th>
-        <th align=right><a href='?sort=type'>Type</a></th>
-        <th align=right><a href='?sort=modified'>Last modified</a></th>
+
+    <define tag=mitem>
+      <th ::='&_.args;'>
+         <if variable='form.reverse'>
+          <cset variable='var.doreverse'>sort-reverse</cset>
+          <if match='&form.sort; is &_.order;'>
+            <font size=-1>^</font>
+          </if>
+          <else>
+            <font size=-1>&nbsp;</font>
+          </else>
+          <a href='?sort=&_.order;'><font color=black>&_.title; &nbsp;</font></a>
+         </if>
+         <else>
+         <if match='&form.sort; is &_.order;'>
+          <font size=-1>v</font>
+          <a href='?sort=&_.order;&reverse=1'><font color=black>&_.title; &nbsp;</font></a>
+        </if>
+        <else>
+          <font size=-1>&nbsp;</font>
+          <a href='?sort=&_.order;'><font color=black>&_.title; &nbsp;</font></a>
+        </else>
+       </else>
+      </th>
+    </define>
+
+      <tr bgcolor='#aaaaaa'>
+        <th>&nbsp;</th>
+        <mitem order='name' title='Name' align='left'/>
+        <mitem order='size' title='Size' align='right' />
+        <mitem order='type' title='Type' align='right'/>
+        <mitem order='modified' title='Last modified' align='right'/>
       </tr>
       <tr>
         <td width='100%' height='1' colspan='5' bgcolor='#ce5c00'><img 
           src='/internal-roxen-unit' width='100%' height='1' /></td>
       </tr>
-      <emit source='directory' directory='$DIR$' sort-order='&form.sort;'>
-        <tr>
+
+      <emit source='directory' 
+            directory='&page.virtfile;'
+            sort-order='&form.sort;' 
+            ::='&var.doreverse;'>
+        <tr bgcolor='#eeeeee'>
           <td align=left><a href='&_.path;'><img src='&_.icon;' border='0' /></a></td>
-          <td align=left><a href='&_.path;'>&_.name;</a></td>
-          <td align=right>&_.size;</td>
-          <td align=right>&_.type;</td>
-          <td align=right>&_.mtime;</td>
+          <td align=left><a href='&_.path;'>&_.name; &nbsp;</a></td>
+          <td align=right>&_.size; &nbsp;</td>
+          <td align=right>&_.type; &nbsp;</td>
+          <td align=right>&_.mtime; &nbsp;</td>
         </tr>
       </emit>
       <tr>
@@ -299,6 +332,34 @@ class TagDirectoryplugin
   }
 }
 
+class TagPathplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "path";
+
+  array get_dataset(mapping m, RequestID id) 
+  {
+    string fp = "";
+    array res = ({});
+    string p = id->not_query;
+    if( p[-1] == '/' )
+      p = p[..strlen(p)-2];
+    foreach( p / "/", string elem )
+    {
+      fp += "/" + elem;
+      fp = replace( fp, "//", "/" );
+      res += ({
+        ([
+          "name":elem,
+          "path":fp
+        ])
+      });
+    }
+    return res;
+  }
+}
+
 string|mapping parse_directory(RequestID id)
 {
   string f = id->not_query;
@@ -349,6 +410,5 @@ string|mapping parse_directory(RequestID id)
       }
     }
 
-  return Roxen.http_rxml_answer(replace(query("template"),
-                                        "$DIR$",id->not_query ), id);
+  return Roxen.http_rxml_answer( query("template"), id );
 }
