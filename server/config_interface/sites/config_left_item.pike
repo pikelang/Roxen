@@ -107,7 +107,7 @@ string selected_item( string q, Configuration c, RequestID id,
   }
 
   sort( module_groups );
-  pre += "<box-frame width='150' iwidth='150' ::='&usr.content-frame;'>"
+  pre += "<box-frame width='100%' iwidth='100%' ::='&usr.content-frame;'>"
     "<table cellspacing='0' cellpadding='0'>\n";
   
   foreach( module_groups, array gd )
