@@ -10,7 +10,7 @@ import .AutoWeb;
 #define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
 #define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
 
-constant cvs_version="$Id: autositefs.pike,v 1.32 1999/09/20 22:20:26 wellhard Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.33 1999/09/21 21:35:10 wellhard Exp $";
 
 mapping host_to_id;
 multiset(int) hidden_sites;
@@ -79,33 +79,6 @@ string file_from_host(object id, string file)
   if(id->misc->customer_id)
     return "/"+id->misc->customer_id+"/"+(rest?rest:"");
 }
-
-
-// string file_from_host(object id, string file)
-// {
-//   string prefix,dir;
-//   if(prefix=id->misc->customer_id)
-//     return "/"+prefix+"/"+file;
-//   string prefix=id->misc->customer_id=id->variables->customer_id=
-//     host_to_id[get_host(id)];
-//   if(prefix)
-//     dir = "/" + prefix + "/";
-//   else
-//   {
-//     string host,rest="";
-//     sscanf(file,"%s/%s",host,rest);
-//     if(prefix=host_to_id[host])
-//     {
-//       id->misc->customer_id=id->variables->customer_id=prefix;
-//       dir="/" + prefix + "/";
-//       if(rest)
-// 	file=rest;
-//     }
-//     else
-//       return 0; // No such host
-//   }
-//   return dir+file;
-//}
 
 int hiddenp(object id)
 {
@@ -275,20 +248,6 @@ mixed find_file(string f, object id)
     return http_pipe_in_progress();
     break;
   }
-  
-  array f_arr = f / "/";
-  if(sizeof(f_arr))
-    switch(f_arr[0]) {
-    case "webadmimg":
-      if(get_protocol(id) == "ftp") return 0;
-      file = combine_path(__FILE__+"/", "../img", f_arr[1..]*"/");
-      break;
-    case "img":
-      if(get_protocol(id) == "ftp") return 0;
-      file = combine_path(__FILE__+"/", "../../../templates/img",
-			  f_arr[1..]*"/");
-      break;
-    }
   
   mixed res = filesystem::find_file(file, id);
   if(objectp(res)) {
