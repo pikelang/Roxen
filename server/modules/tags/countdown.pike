@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.3 1997/10/25 09:49:25 per Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.4 1997/10/25 15:09:06 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -188,17 +188,17 @@ constant examples =
 
 //   E("When is easter year 2000?", "<countdown easter year=2000 when date>, which is a <countdown easter when date part=day type=string>"),
 
-  E("How many days left to year 2000?", "There is <countdown year2000 days> days left until year 2000"),
+  E("How many days are left to year 2000?", "There are <countdown year2000 days> days left until year 2000"),
 
-  E("Which date is the first monday in january 1998?",
+  E("Which date is the first monday in January 1998?",
     "<countdown month=january day=monday year=1998 date when part=date type=ordered>"),
 
   E("Is this a Sunday?",
-    "<if eval='<countdown day=sunday nowp>'>This is indeed a sunday</if><else>Nope</else>"),
+    "<if eval='<countdown day=sunday nowp>'>This is indeed a Sunday</if><else>Nope</else>."),
 
   E("On which day will the next christmas eve be?",
     "It will be a <countdown christmas_eve lang=en when date part=day type=string>"),
-  });
+});
 
 string describe_examples()
 {
@@ -207,11 +207,10 @@ string describe_examples()
 
 string usage()
 {
-  
   return ("<h1>The &lt;countdown&gt; tag.</h1>\n"
-	  " This tags can count days, minute, months etc. It can also "
-	  " give the time for a few special events. See below for a full list."
-	  "<p>"
+	  "This tags can count days, minute, months etc. It can also "
+	  "give the time for a few special events. See below for a full list."
+	  "<p>\n\n"
 	  "<b>Time:</b>\n"
 	  "<table border=0 cellpadding=0 cellspacing=0>\n"
 	  "<tr valign=top><td>year=int</td><td><i>sets the year</i></td></tr>\n"
@@ -234,7 +233,7 @@ string usage()
 	  "<tr valign=top><td>seconds</td><td><i>How many seconds until the time</i></td></tr>\n"
 	  "<tr valign=top><td>type=type, lang=language</td><td><i>As for 'date'. Useful values for type include string, number and ordered.</i></td></tr>\n"
 	  "<tr valign=top><td>since</td><td><i>Negate the period of time (replace 'until' with 'since' in the above sentences to see why it is named 'since') </i></td></tr>\n"
-	  "<tr valign=top><td>nowp</td><td><i>Return 1 or 0, depending on if the time is _now_ or not. The fuzziness of 'now' is decided by the 'prec' option. Per default, this is set to 'day'</td></tr>"
+	  "<tr valign=top><td>nowp</td><td><i>Return 1 or 0, depending on if the time is _now_ or not. The fuzziness of 'now' is decided by the 'prec' option. By default, this is set to 'day'</td></tr>"
 	  "<tr valign=top><td>prec</td><td><i>modifier for 'nowp'. Can be one of "
 	  "year, month, week, day, hour minute of second.</td></tr></table>"+
 	  "<p><b>Examples</b>"+
