@@ -1,0 +1,25 @@
+#!/bin/sh
+
+echo "  Rebuilding locale stuff for $1"
+
+TMP=/tmp/$$.tmp
+grep -v '<file>' $2 | grep -v '</project>' > $TMP
+
+for a in `grep -cr '"'$1'"' ..|grep -v ':0'|sed -e 's/:.*//'|
+         grep -v /translations/` ;  do
+  echo "  <file>$a</file>" >> $TMP
+done
+
+echo "</project>" >> $TMP
+
+if mv $2 $2~ ; then 
+  if cp $TMP $2 ; then
+    rm $TMP
+  else
+    echo "Cannot copy $TMP to $2!"
+    mv $2~ $2
+  fi
+else
+  echo "Cannot move $2 out of the way!"
+fi
+ 

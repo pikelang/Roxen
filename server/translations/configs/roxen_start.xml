@@ -18,8 +18,8 @@
 *
 -->
 
-<file>../base_server/roxen.pike</file>
-<file>../base_server/configuration.pike</file>
-<file>../modules/configuration/update.pike</file>
 
+  <file>../base_server/configuration.pike</file>
+  <file>../base_server/roxen.pike</file>
+  <file>../modules/configuration/update.pike</file>
 </project>

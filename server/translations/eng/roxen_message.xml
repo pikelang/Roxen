@@ -2,9 +2,12 @@
 <locale version="1.0"/>
 <project>roxen_message</project>
 <language>eng</language>
-<dumped>969369655</dumped>
-<file>../base_server/roxen.pike</file>
+<dumped>974723218</dumped>
 <file>../base_server/configuration.pike</file>
+<file>../base_server/roxen.pike</file>
+<file>../modules/configuration/update.pike</file>
+<file>../protocols/prot_hilfe.pike</file>
+<file>../protocols/prot_fhttp.pike</file>
 <added id="1"/>
 
 <str id="1">
@@ -245,5 +248,15 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 
 <str id="46">
 <o>Cannot possibly bind to %O, that host is unknown. Substituting with ANY</o>
+<t></t>
+</str>
+
+<str id="7">
+<o>The protocol '%s' is not available</o>
+<t></t>
+</str>
+
+<str id="12">
+<o>Hilfe</o>
 <t></t>
 </str>

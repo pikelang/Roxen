@@ -1,0 +1,19 @@
+#!/bin/sh
+
+token=`echo $1 | sed -e 's,",,g'`
+file="$2"
+if [ ! -f configs/$token.xml ] ; then 
+
+echo "  Generating .xml file for $token"
+cat > configs/$token.xml << EOF
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project name="$token">
+  <nocopy />
+  <baselang>eng</baselang>
+  <xmlpath>../translations/%L/$token.xml</xmlpath>
+
+  <file>$file</file>
+</project>
+EOF
+fi

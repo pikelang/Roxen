@@ -1,0 +1,18 @@
+#!/bin/sh
+
+CFGFILE="$1"
+PIKE="$2"
+EXTRACT="$3"
+#
+# extract.pike [arguments] infile(s)
+#
+#  Arguments: --project=name  default: first found in infile
+#             --config=file   default: [project].xml
+#             --out=file      default: [project]_eng.xml
+#             --nocopy        update infile instead of infile.new
+#             --wipe          remove unused ids from xml
+#             --encoding=enc  default: ISO-8859-1
+#             --verbose       more informative text in xml
+#
+echo "  Rebuilding $CFGFILE"
+$EXTRACT --config=$CFGFILE > $CFGFILE.log~ 2>&1
