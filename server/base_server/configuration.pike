@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.138 1998/06/24 15:12:48 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.139 1998/06/29 13:19:19 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -901,6 +901,32 @@ int|mapping check_security(function a, object id, void|int slevel)
 	  // Bad IP.
 	  return(1);
 	}
+        break;
+
+      case MOD_ACCEPT: // accept ip=...
+	// Short-circuit version on allow.
+	if(level[1](id->remoteaddr)) {
+	  // Match. It's ok.
+	  return(0);
+	} else {
+	  ip_ok |= 1;	// IP may be bad.
+	}
+	break;
+
+      case MOD_ACCEPT_USER: // accept user=...
+	// Short-circuit version on allow.
+	if(id->auth && id->auth[0] && level[1](id->auth[1])) {
+	  // Match. It's ok.
+	  return(0);
+	} else {
+	  if (id->auth) {
+	    auth_ok |= 1;	// Auth may be bad.
+	  } else {
+	    // No auth yet, get some.
+	    return(http_auth_failed(seclevels[2]));
+	  }
+	}
+	break;
       }
     }
   };
