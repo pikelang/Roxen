@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.65 1997/09/03 18:49:27 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.66 1997/09/04 12:40:02 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -633,21 +633,25 @@ array(int)|string write_text(int _args, string text, int size,
     }
     if(!args->verbatim)
     {
-      string res="",nspace="",cspace="", nonum;
+      string res="",nspace="",cspace="";
       foreach(text/"\n", string line)
       {
 	cspace="";nspace="";
 	foreach(line/" ", string word)
 	{
+	  string nonum;
 	  if(strlen(word) &&
-	     (nonum=replace(word,({"1","2","3","4","5","6","7","8","9","0","."}),
-			    ({"","","","","","","","","","",""})))
-	     =="")
+	     (nonum = replace(word,
+			      ({"1","2","3","4","5","6","7","8","9","0","."}),
+			      ({"","","","","","","","","","",""}))) == "") {
 	    cspace=nbsp+nbsp;
-	  else if(cspace!="")
+	    if((strlen(word)-strlen(nonum)<strlen(word)/2) &&
+	       (upper_case(word) == word)) {
+	      word=((word/"")*nbsp);
+	    }
+	  } else if(cspace!="") {
 	    cspace=" ";
-	  if((strlen(word)-strlen(nonum)<strlen(word)/2) && (upper_case(word) == word))
-	    word=((word/"")*nbsp);
+	  }
 	  res+=(nspace==cspace?nspace:" ")+word;
 
 	  if(cspace!="")   nspace=cspace;
