@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.199 2001/02/05 11:52:40 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.200 2001/02/06 22:41:21 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1699,6 +1699,35 @@ class TagCSet {
   }
 }
 
+class TagColorScope {
+  inherit RXML.Tag;
+  constant name = "colorscope";
+
+  class Frame {
+    inherit RXML.Frame;
+    string link, alink, vlink;
+
+#define LOCAL_PUSH(X) if(args->X) { X=id->misc->defines->X; id->misc->defines->X=args->X; }
+    array do_enter(RequestID id) {
+      Roxen.push_color("colorscope",args,id);
+      LOCAL_PUSH(link);
+      LOCAL_PUSH(alink);
+      LOCAL_PUSH(vlink);
+      return 0;
+    }
+
+#define LOCAL_POP(X) if(X) id->misc->defines->X=X
+    array do_return(RequestID id) {
+      Roxen.pop_color("colorscope",id);
+      LOCAL_POP(link);
+      LOCAL_POP(alink);
+      LOCAL_POP(vlink);
+      result=content;
+      return 0;
+    }
+  }
+}
+
 
 // ----------------- If registration stuff --------------
 
@@ -1789,6 +1818,43 @@ documentation for that module.</desc>",
  If put inside a form, the right character encoding of the submitted form can be guessed
  by Roxen Webserver.
 </desc>",
+
+"colorscope":#"<desc cont>Makes it possible to change the autodetected
+colors within the tag. Useful when out-of-order parsing occurs, e.g.
+<ex type=box>
+<define tag=\"hello\">
+  <colorscope bgcolor=\"red\">
+    <gtext>Hello</gtext>
+  </colorscope>
+</define>
+
+<table><tr>
+  <td bgcolor=\"red\">
+    <hello/>
+  </td>
+</tr></table>
+</ex>
+</desc>
+
+<attr name=text value=color>
+ Set the text color within the scope.
+</attr>
+
+<attr name=bgcolor value=color>
+ Set the background color within the scope.
+</attr>
+
+<attr name=link value=color>
+ Set the link color within the scope.
+</attr>
+
+<attr name=alink value=color>
+ Set the active link color within the scope.
+</attr>
+
+<attr name=vlink value=color>
+ Set the visited link color within the scope.
+</attr>",
 
 "aconf":#"<desc cont><short>
  Creates a link that can modify the persistent states in the cookie
