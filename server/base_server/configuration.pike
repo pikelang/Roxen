@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.24 1997/04/28 20:06:42 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.25 1997/04/29 10:26:33 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1065,7 +1065,7 @@ public array stat_file(string file, object id)
   {
     loc = tmp[0];
     if((file == loc) || ((file+"/")==loc))
-      return ({ 0, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+      return ({ 0775, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
     if(!search(file, loc)) 
     {
 #ifdef MODULE_LEVEL_SECURITY
