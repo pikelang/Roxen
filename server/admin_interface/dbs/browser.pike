@@ -731,7 +731,7 @@ mapping|string parse( RequestID id )
       table_data = reverse( table_data );
       break;
   }
-#define SEL(X,Y) ((id->variables->sort==X||(Y&&!id->variables->sort))?"<imgs src='&usr.selected-indicator;' border=0 alt='&gt;' />":"")
+#define SEL(X,Y) ((id->variables->sort==X||(Y&&!id->variables->sort))?"<img src='&usr.selected-indicator;' border=0 alt='&gt;' />":"")
 
   if( sort_ok )
   {
