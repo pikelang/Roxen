@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.14 1999/10/28 21:26:59 grubba Exp $
+ * $Id: ftp.pike,v 2.15 1999/10/28 21:54:49 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1560,6 +1560,9 @@ class FTPSession
   
     object(Stdio.File) f = Stdio.File();
 
+    // FIXME: Race-condition: open_socket() for other connections will fail
+    //        until the socket has been connected.
+
     object privs;
     if(local_port-1 < 1024)
       privs = Privs("FTP: Opening the data connection on " + local_addr +
@@ -1586,16 +1589,13 @@ class FTPSession
     }
     privs = 0;
 
-    f->set_id( ({ fun, args, f }) );
-    f->set_nonblocking(0, lambda(array args) {
+    f->set_nonblocking(0, lambda(mixed ignored) {
 			    DWRITE("FTP: async_connect ok.\n");
-			    args[2]->set_id(0);
-			    args[0](args[2], @args[1]);
-			  }, lambda(array args) {
+			    fun(f, @args);
+			  }, lambda(mixed ignored) {
 			       DWRITE("FTP: connect_and_send failed\n");
-			       args[2]->set_id(0);
-			       destruct(args[2]);
-			       args[0](0, @args[1]);
+			       destruct(f);
+			       fun(0, @args);
 			     });
 
     if (dataport_addr) {
@@ -1607,14 +1607,14 @@ class FTPSession
 
       if(catch(f->connect(dataport_addr, dataport_port))) {
 	DWRITE("FTP: Illegal internet address in connect in async comm.\n");
-	fun(0, @args);
 	destruct(f);
+	fun(0, @args);
 	return;
       }
     } else {
       DWRITE("FTP: No dataport specified.\n");
-      fun(0, @args);
       destruct(f);
+      fun(0, @args);
       return;
     }
   }
