@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.96 1997/08/13 03:02:02 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.97 1997/08/13 03:36:08 neotron Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -838,8 +838,10 @@ void stop_all_modules()
 mapping restart() 
 { 
   stop_all_modules();
-  call_out(fork_or_quit, 1);
-  return ([ "data":Stdio.read_bytes("etc/restart.html"), "type":"text/html" ]);
+  call_out(fork_or_quit, 5);
+  return ([ "data": replace(Stdio.read_bytes("etc/restart.html"),
+			    ({"$docurl", "$PWD"}), ({roxen->docurl, getcwd()})),
+		  "type":"text/html" ]);
 } 
 
 private array configuration_ports = ({  });
@@ -850,13 +852,13 @@ int startpid;
 // This has to be refined in some way. It is not all that nice to do
 // it like this (write a file in /tmp, and then exit.)  The major part
 // of code to support this is in the 'start' script.
-mapping shutdown() 
+void kill_me()
 {
   catch(Array.map(indices(portno)), destruct);
-
+  
   object privs = ((program)"privs")("Shutting down the server");
   // Change to root user.
-
+  
   stop_all_modules();
   
   if(main_configuration_port && objectp(main_configuration_port))
@@ -886,9 +888,13 @@ mapping shutdown()
 //	kill(startpid, signum("SIGKILL"));
     }
   }
-  
-  call_out(exit, 1, 0);
-  return ([ "data":replace(Stdio.read_bytes("etc/shutdown.html"), "$PWD", getcwd()),
+}
+
+mapping shutdown() 
+{
+  call_out(kill_me, 5, 0);
+  return ([ "data":replace(Stdio.read_bytes("etc/shutdown.html"),
+			   ({"$docurl", "$PWD"}), ({roxen->docurl, getcwd()})),
 	    "type":"text/html" ]);
 } 
 
