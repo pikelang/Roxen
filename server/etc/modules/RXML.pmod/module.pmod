@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.30 2000/01/23 02:59:20 nilsson Exp $
+//! $Id: module.pmod,v 1.31 2000/01/23 06:20:31 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -636,6 +636,15 @@ class Context
     if (!exist_scope(scope_name)) {
       add_scope (scope_name, vars);
       return ;
+    }
+    if (objectp(vars)) {
+      if (!mappingp(scopes[scope_name])) {
+	add_scope (scope_name, vars);
+	return;
+      }
+      mapping tmp = scopes[scope_name];
+      add_scope (scope_name, vars);
+      vars = tmp;
     }
     foreach (indices(vars), string var)
       set_var(var, vars[var], scope_name);
