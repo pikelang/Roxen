@@ -219,7 +219,7 @@ string get_stats(int run, object db)
 //	updates the desired hourly impressions (weight) for a run
 void update_weight(object db, string rid)
 {
-  object db, result;
+  object result;
   array row;
   string query;
 
