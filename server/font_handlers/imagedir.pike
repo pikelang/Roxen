@@ -1,6 +1,6 @@
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.9 2001/01/02 18:56:35 nilsson Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.10 2001/01/04 10:00:12 nilsson Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
@@ -231,9 +231,14 @@ Font open( string name, int size, int bold, int italic )
   object key = lock->lock();
 #endif
   if( !font_list ) update_font_list();
+  int xpad,ypad;
+  if(meta_data && meta_data[name]) {
+    xpad = meta_data[name]->xpad;
+    ypad = meta_data[name]->ypad;
+  }
   if( font_list[ name ] )
     return myFont( font_list[name], size,
-		   meta_data[name]->xpad, meta_data[name]->ypad );
+		   xpad, ypad );
 }
 
 
