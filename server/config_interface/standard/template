@@ -70,6 +70,7 @@
         bgcolor=white text=black>
 
     <form method=POST action='<cf-current-url>'>
+      <roxen-automatic-charset-variable>
       <roxen-config preparse>
         <middle title="">
           <table>
@@ -91,7 +92,9 @@
               <gbutton href='/standard/change_user.html?uid=#config_user_uid#'
                        align=right bgcolor=##d9dee7 width=70>User:</gbutton> 
           </td><td>
-            <font color=##78849c>#config_user_name# (#config_user_uid#)
+            <font color=##78849c><pike> 
+                   return id->misc->config_user->real_name + " (" + id->misc->config_user->name +")";
+               </pike></font>
            </td></tr>
              </formoutput>
           </table>
