@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.146 1998/09/26 14:28:12 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.147 1998/09/28 12:44:20 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -176,6 +176,9 @@ string strftime(string fmt, int t)
 }
 #endif /* !constant(strftime) */
 
+#if 0
+// Dead code...
+// Will be used by the SSI code later.
 mapping get_cgi_env(object id)
 {
   if (id->misc->cgi_env) {
@@ -183,6 +186,7 @@ mapping get_cgi_env(object id)
   }
   mapping low_env = my_build_env_vars(id->not_query, id, id->misc->path_info);
 }
+#endif /* 0 */
 
 // If the string 'w' match any of the patterns in 'a', return 1, else 0.
 int _match(string w, array (string) a)
