@@ -57,6 +57,22 @@ shuffle:	shuffle.o
 pureshuffle:	shuffle.o
 	purify $(CC) -O $(LDFLAGS) -o shuffle shuffle.o -lthread -lsocket $(LIBS)
 
+check: verify
+
+verify: cgi
+	@test -d cgi.testsuite || mkdir cgi.testsuite
+	@for t in `cd $(SRCDIR)/cgi.testsuite; find . -name '*.in' -print`; \
+	  do \
+	    base="`echo $$t|sed -e 's/\.in$$//'`"; \
+	    echo CGI Test: $$base; \
+	    INPUT="$(SRCDIR)/cgi.testsuite/$$t"; export INPUT; \
+	    ./cgi testsuite.cgi >cgi.testsuite/$$base.out || exit 1; \
+	    if cmp "$(SRCDIR)/cgi.testsuite/$$base.output" \
+		cgi.testsuite/$$base.out ; then :; else \
+	      echo "Failed."; exit 1; \
+	    fi; \
+	  done
+
 shuffle-install: shuffle
 	-/bin/rm -f $(prefix)/roxen/server/bin/shuffle
 	/bin/cp shuffle $(prefix)/roxen/server/bin
@@ -111,3 +127,8 @@ $(SRCDIR)/config.h.in : $(SRCDIR)/stamp-h.in
 $(SRCDIR)/stamp-h.in : $(SRCDIR)/configure.in $(SRCDIR)/acconfig.h
 	cd $(SRCDIR) && autoheader
 	echo foo > $(SRCDIR)/stamp-h.in
+
+Makefile: $(SRCDIR)/Makefile.in config.status
+	CONFIG_FILES=Makefile CONFIG_HEADERS="" ./config.status
+	@echo "Run make again"
+	@exit 1
