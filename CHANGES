@@ -39,11 +39,14 @@ Major changes from Roxen 3.3:
    - CVS Repository file system; can mount a CVS repository.
    - Icecast ID3 tag emit plugin; shows ID3 (1.0, 1.1, 2.2.x, 2.3.x,
      2.4.x) information about MP3 files.
-
-   expandvariables
-   deflate
-   ext_userdb_sql1
-   ext_userdb_sql2
-   html2x
-   snmp
-   webdav
+   - Expand variables: allows you to expand content for certain scopes
+     of variables first, before parsing the rest of the RXML.
+   - Deflate: a temporary module which supports dynamically compressing
+     all text content; this module will be integrated into the ChiliMoon
+     HTTP core in the future.
+   - Ext_userdb_sql1: An extended user database using MySQL as a backend.
+   - Ext_userdb_sql2: An extended user database using PostgreSQL as a backend.
+   - Html2x: convert HTML into several other popular formats.
+   - SNMP-client query support
+   - Webdav: supports the new WebDAV standard.
+   - Datacache: Implements a highly controlled memory cache.
