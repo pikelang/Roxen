@@ -78,7 +78,7 @@ and Roxen WebServer 4.0.
    stick to Roxen WebServer.
 
  - Default image format for gtext images is now PNGs with alpha
-   channels. Alter you gtext tags to use format="gif" for the old
+   channels.  Alter your gtext tags to use format="gif" for the old
    behaviour.
 
  - You need Pike 7.7, from the CVS, or from the supplied snapshot.
@@ -101,12 +101,17 @@ and Roxen WebServer 4.0.
  - Locales in the admininterface have been dropped.  All interactions with
    the administrator are in English.
 
- - /internal-roxen- support has been dropped.  Anyone needing it is invited
-   to create a compatibility module which will support this.
+ - Support for certain constructs which are part of Roxen 4.0, but
+   which were dropped or replaced by others in the ChiliMoon core,
+   has been moved to the roxenwebserver compatibility module:
 
- - /internal-gopher- generation has been dropped, but should reappear in
-   a separate module.  Volunteers please.
+   In the compatibility module:	 	  Should become in ChiliMoon:
+    /internal-roxen-			   /*/
+    &roxen.				   &system.
+
+ - /internal-gopher- generation has moved to the diremit module.
 
  - roxen-module:// needs to be replaced by chili-module: in inherits
 
  - Obsolete doOutputTag support dropped from JavaModule and roxenlib
+

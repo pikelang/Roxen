@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.189 2004/05/27 23:21:07 mani Exp $
+// $Id: Roxen.pmod,v 1.190 2004/05/30 14:54:07 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3069,7 +3069,7 @@ class ScopeRoxen {
     predef::m_delete(c->misc->scope_roxen, var);
   }
 
-  string _sprintf(int t) { return "RXML.Scope(roxen)"; }
+  string _sprintf(int t) { return "RXML.Scope(system)"; }
 }
 
 class ScopePage {
@@ -3403,7 +3403,7 @@ RXML.TagSet entities_tag_set = class
 
   static void entities_prepare_context (RXML.Context c) {
     c->misc->scope_roxen=([]);
-    c->add_scope("roxen",scope_roxen);
+    c->add_scope("system",scope_roxen);
     c->misc->scope_page=([]);
     c->add_scope("page",scope_page);
     c->add_scope("cookie", scope_cookie);

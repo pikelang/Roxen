@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.420 2004/05/27 21:24:38 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.421 2004/05/30 14:54:06 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -5314,50 +5314,50 @@ class TagIWCache {
 
 #ifdef manual
 constant tagdoc=([
-"&chili;":#"<desc type='scope'><p><short>
+"&system;":#"<desc type='scope'><p><short>
  This scope contains information specific to this ChiliMoon server.</short>
  It is not possible to write any information to this scope.
 </p></desc>",
 
-"&chili.domain;":#"<desc type='entity'><p>
+"&system.domain;":#"<desc type='entity'><p>
  The domain name of this site. The information is taken from the
  client request, so a request to \"http://community.roxen.com/\" would
  give this entity the value \"community.roxen.com\", while a request
  for \"http://community/\" would give the entity value \"community\".
 </p></desc>",
 
-"&chili.hits;":#"<desc type='entity'><p>
+"&system.hits;":#"<desc type='entity'><p>
  The number of hits, i.e. requests the webserver has accumulated since
  it was last started.
 </p></desc>",
 
-"&chili.hits-per-minute;":#"<desc type='entity'><p>
+"&system.hits-per-minute;":#"<desc type='entity'><p>
  The average number of requests per minute since the webserver last
  started.
 </p></desc>",
 
-"&chili.pike-version;":#"<desc type='entity'><p>
+"&system.pike-version;":#"<desc type='entity'><p>
  The version of Pike the webserver is using, e.g. \"Pike v7.2 release 140\".
 </p></desc>",
 
-"&chili.sent;":#"<desc type='entity'><p>
+"&system.sent;":#"<desc type='entity'><p>
  The total amount of data the webserver has sent since it last started.
 </p></desc>",
 
-"&chili.sent-kbit-per-second;":#"<desc type='entity'><p>
+"&system.sent-kbit-per-second;":#"<desc type='entity'><p>
  The average amount of data the webserver has sent, in Kibibits.
 </p></desc>",
 
-"&chili.sent-mb;":#"<desc type='entity'><p>
+"&system.sent-mb;":#"<desc type='entity'><p>
  The total amount of data the webserver has sent, in Mebibits.
 </p></desc>",
 
-"&chili.sent-per-minute;":#"<desc type='entity'><p>
+"&system.sent-per-minute;":#"<desc type='entity'><p>
  The average number of bytes that the webserver sends during a
  minute. Based on the sent amount of data and uptime since last server start.
 </p></desc>",
 
-"&chili.server;":#"<desc type='entity'><p>
+"&system.server;":#"<desc type='entity'><p>
  The URL of the webserver. The information is taken from the client request,
  so a request to \"http://community.roxen.com/index.html\" would give this
  entity the value \"http://community.roxen.com/\", while a request for
@@ -5365,17 +5365,17 @@ constant tagdoc=([
  \"http://community/\".
 </p></desc>",
 
-"&chili.ssl-strength;":#"<desc type='entity'><p>
+"&system.ssl-strength;":#"<desc type='entity'><p>
  Contains the maximum number of bits encryption strength that the SSL is capable of.
  Note that this is the server side capability, not the client capability.
  Possible values are 0, 40, 128 or 168.
 </p></desc>",
 
-"&chili.time;":#"<desc type='entity'><p>
+"&system.time;":#"<desc type='entity'><p>
  The current posix time. An example output: \"244742740\".
 </p></desc>",
 
-"&chili.unique-id;":#"<desc type='entity'><p>
+"&system.unique-id;":#"<desc type='entity'><p>
  Returns a unique id that can be used for e.g. session
  identification. An example output: \"7fcda35e1f9c3f7092db331780db9392\".
  Note that a new id will be generated every time this entity is used,
@@ -5383,19 +5383,19 @@ constant tagdoc=([
  to use it more than once.
 </p></desc>",
 
-"&chili.uptime;":#"<desc type='entity'><p>
+"&system.uptime;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in seconds.
 </p></desc>",
 
-"&chili.uptime-days;":#"<desc type='entity'><p>
+"&system.uptime-days;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in days.
 </p></desc>",
 
-"&chili.uptime-hours;":#"<desc type='entity'><p>
+"&system.uptime-hours;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in hours.
 </p></desc>",
 
-"&chili.uptime-minutes;":#"<desc type='entity'><p>
+"&system.uptime-minutes;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in minutes.
 </p></desc>",
 
