@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: newdecode.pike,v 1.33 2002/10/22 00:06:12 nilsson Exp $
+// $Id: newdecode.pike,v 1.34 2002/11/02 17:57:39 mani Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -19,7 +19,7 @@ SIMPLE_DECODE(decode_module, s );
 SIMPLE_DECODE(decode_float, (float)s );
 SIMPLE_DECODE(decode_string, http_decode_string(s));
 
-constant xml_header = "<?XML version=\"1.0\" encoding=\"UTF-8\"?>";
+private constant xml_header = "<?XML version=\"1.0\" encoding=\"UTF-8\"?>";
 
 private string decode_list(Parser.HTML p, mapping m, string s, mapping res)
 {
@@ -57,7 +57,7 @@ string name_of_module( RoxenModule m, Configuration c )
   return (c && c->otomod && c->otomod[m]) || "?";
 }
 
-void parse(string s, mapping mr)
+private void parse(string s, mapping mr)
 {
   Parser.HTML()
     ->add_containers (([
@@ -71,7 +71,7 @@ void parse(string s, mapping mr)
     ->finish (s);
 }
 
-string decode_config_region(Parser.HTML p, mapping mr, string s, mapping res2)
+private string decode_config_region(Parser.HTML p, mapping mr, string s, mapping res2)
 {
   mapping res = ([ ]);
   Parser.HTML()
