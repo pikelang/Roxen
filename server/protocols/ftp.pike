@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.22 1999/12/27 14:41:34 nilsson Exp $
+ * $Id: ftp.pike,v 2.23 2000/01/05 09:14:50 mast Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -979,7 +979,7 @@ class LSFile
       session->method = "LIST";
       string long = fix_path(short);
       array st = stat_file(long, session);
-      if (st && st != -1) {
+      if (st) {
 	if ((< -2, -3 >)[st[1]] &&
 	    (!(flags & LS_FLAG_d))) {
 	  // Directory
