@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.363 2002/03/27 09:54:27 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.364 2002/03/27 17:49:10 per-bash Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -99,6 +99,9 @@ mapping file;
 string rest_query="";
 string raw="";
 string extra_extension = ""; // special hack for the language module
+
+
+static mapping connection_stats = ([]);
 
 class AuthEmulator
 // Emulate the old (rather cumbersome) authentication API 
@@ -355,7 +358,6 @@ private void setup_pipe()
     pipe=roxen.slowpipe();
   else
     pipe=roxen.fastpipe();
-
   if (throttle->doit) 
   { 
     //we are sure that pipe is really a slowpipe.
@@ -365,8 +367,10 @@ private void setup_pipe()
                    0);
     THROTTLING_DEBUG("throtting request at "+throttle->rate);
   }
+  if( pipe->set_status_mapping )
+    pipe->set_status_mapping( connection_stats );
   if ( conf->throttler )
-    pipe->assign_throttler(conf->throttler);
+    pipe->assign_throttler( conf->throttler );
 }
 
 
@@ -991,6 +995,7 @@ int set_max_cache( int t )
 void disconnect()
 {
   file = 0;
+  conf->connection_drop( this_object() );
 #ifdef REQUEST_DEBUG
   if (my_fd) 
     MARK_FD("HTTP my_fd in HTTP disconnected?");
@@ -1305,6 +1310,8 @@ void do_log( int|void fsent )
   {
     TIMER_END(do_log);
     MERGE_TIMERS(conf);
+    if( conf )
+      conf->connection_drop( this_object() );
     catch  // paranoia
     {
       my_fd->close();
@@ -1997,6 +2004,8 @@ void got_data(mixed fooid, string s)
     // connections remain.  Close those connections.
     if( !port_obj ) 
     {
+      if( conf )
+	conf->connection_drop( this_object() );
       catch  // paranoia
       {
 	my_fd->set_blocking();
@@ -2103,7 +2112,8 @@ void got_data(mixed fooid, string s)
       }
     }
 
-    conf->received += strlen(s);
+    conf->connection_add( this_object(), connection_stats );
+    conf->received += strlen(raw);
     conf->requests++;
     my_fd->set_close_callback(0);
     my_fd->set_read_callback(0);

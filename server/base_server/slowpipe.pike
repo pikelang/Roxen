@@ -10,7 +10,7 @@
 // on demand might be very interesting to save memory and increase
 // performance. We'll see.
 
-constant cvs_version="$Id: slowpipe.pike,v 1.11 2002/03/20 18:45:10 per-bash Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.12 2002/03/27 17:49:01 per-bash Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -18,7 +18,7 @@ constant cvs_version="$Id: slowpipe.pike,v 1.11 2002/03/20 18:45:10 per-bash Exp
 #else
 #define THROTTLING_DEBUG(X)
 #endif
-
+private mapping status = ([]);
 private Stdio.File outfd=0; //assigned by output
 private string tosend="";
 private function done_callback;
@@ -65,10 +65,22 @@ void input (Stdio.File what, int len) {
   if (len<=0)
     file_len=0x7fffffff;
   else
+  {
+    status->len = len;
     file_len = len;
+  }
   fd_in = what;
   fd_in->set_nonblocking();
 //   tosend+=what->read(len);
+}
+
+// This mapping will be updated when data is sent.
+void set_status_mapping( mapping m )
+{
+  foreach( indices( status ), string x )
+    m[x] = status[x];
+  status = m;
+  status->start = time();
 }
 
 //add a string to the write-queue
@@ -174,6 +186,7 @@ void finally_write(int howmuch) {
   //actual write
   written=outfd->write( tosend[..howmuch-1] );
   THROTTLING_DEBUG("slowpipe: actually wrote "+written);
+  status->written += written;
   if (written==-1) {
     finish();
     return;
@@ -202,6 +215,7 @@ void check_for_closing()
 }
 
 void finish() {
+  status->closed = 1;
   int delta=time(1)-writing_starttime;
   if (!delta) delta=1; //avoid division by zero errors
   THROTTLING_DEBUG("slowpipe: cleaning up and leaving ("+
