@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.1 1999/07/23 01:36:31 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.2 1999/08/01 18:11:52 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -208,7 +208,7 @@ array register_module()
   return ({ MODULE_PARSER, 
 	    "Accessed counter", 
 	    ("This module provides an accessed counter, both through the &lt;accessed&gt; tag and"
-             "filewise."), ({}), 1 });
+             "filewise."), 0, 1 });
 }
 
 string tag_accessed(string tag,mapping m,object id,object file,
@@ -216,8 +216,8 @@ string tag_accessed(string tag,mapping m,object id,object file,
 {
   int counts, n, prec, q, timep;
   string real, res;
-
   NOCACHE();
+
   if(m->file)
   {
     m->file = fix_relative(m->file, id);
@@ -264,10 +264,8 @@ string tag_accessed(string tag,mapping m,object id,object file,
   if(m->since) 
   {
     if(m->database)
-      return id->conf->api_functions()->tag_time[0](id,database_created(0),m->type,m->lang);
-    //      return tagtime(database_created(0),m);
-    return id->conf->api_functions()->tag_time[0](id,database_created(m->file),m->type,m->lang);
-    //    return tagtime(database_created(m->file),m);
+      return id->conf->api_functions()->tag_time_map[0](id,database_created(0),m);
+    return id->conf->api_functions()->tag_time_map[0](id,database_created(m->file),m);
   }
 
   real="<!-- ("+counts+") -->";
