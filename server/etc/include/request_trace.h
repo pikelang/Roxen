@@ -2,7 +2,13 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.7 2001/11/01 14:52:59 grubba Exp $
+// $Id: request_trace.h,v 1.8 2002/03/12 13:20:38 mast Exp $
+
+#ifndef REQUEST_TRACE_H
+#define REQUEST_TRACE_H
+
+#include <roxen.h>
+#include <module.h>
 
 #ifdef REQUEST_TRACE
 
@@ -31,6 +37,45 @@
 
 #endif
 
+// The following variant should be used inside RXML.Frame callbacks
+// such as do_enter. In addition to the request trace, it does rxml
+// debug logging which is activated with the DEBUG define in
+// combination with the magic _debug_ tag argument or the RXML_VERBOSE
+// or RXML_REQUEST_VERBOSE defines.
+
+#define TAG_TRACE_ENTER(MSG...) do {					\
+    array _msg_arr_;							\
+    string _msg_;							\
+    TRACE_ENTER ("tag &lt;" + (tag && tag->name) + "&gt; " +		\
+		 (_msg_arr_ = ({MSG}),					\
+		  _msg_ = sizeof (_msg_arr_) > 1 ?			\
+		  sprintf (@_msg_arr_) : _msg_arr_[0]),			\
+		 tag);							\
+    DO_IF_DEBUG (							\
+      if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG))			\
+	tag_debug ("%O:   %s\n", this_object(),				\
+		   _msg_ || (_msg_arr_ = ({MSG}),			\
+			     sizeof (_msg_arr_) > 1 ?			\
+			     sprintf (@_msg_arr_) : _msg_arr_[0]));	\
+    );									\
+  } while (0)
+
+#define TAG_TRACE_LEAVE(MSG...) do {					\
+    array _msg_arr_;							\
+    string _msg_;							\
+    TRACE_LEAVE ((_msg_arr_ = ({MSG}),					\
+		  _msg_ = sizeof (_msg_arr_) > 1 ?			\
+		  sprintf (@_msg_arr_) : _msg_arr_[0]));		\
+    DO_IF_DEBUG (							\
+      if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG)) {			\
+	if (!_msg_) {							\
+	  _msg_arr_ = ({MSG});						\
+	  _msg_ = sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) : _msg_arr_[0]; \
+	}								\
+	if (sizeof (_msg_)) tag_debug ("%O:   %s\n", this_object(), _msg_); \
+      }									\
+    );									\
+  } while (0)
 
 #ifdef AVERAGE_PROFILING
 #define PROF_ENTER(X,Y) id->conf->avg_prof_enter( X, Y, id )
@@ -43,3 +88,5 @@
 #define COND_PROF_ENTER(X,Y,Z)
 #define COND_PROF_LEAVE(X,Y,Z)
 #endif
+
+#endif	// !REQUEST_TRACE_H
