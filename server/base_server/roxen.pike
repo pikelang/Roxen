@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.44 1997/03/11 01:19:23 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.45 1997/03/12 19:38:34 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -1571,30 +1571,46 @@ void scan_module_dir(string d)
 #ifdef MODULE_DEBUG
 	perror("Loading module: "+(file-("."+extension(file)))+" - ");
 #endif
-	string *module_info;
-	if (!(err=catch( module_info = lambda ( string file ) {
-	  array foo;
-	  object o;
-	  o =  (compile_file(file))();
-#ifdef MODULE_DEBUG
-	  perror(" load ok - ");
-#endif
-	  foo =  o->register_module();
-#ifdef MODULE_DEBUG
-	  perror("registered.");
-#endif	  
-	  return ({ foo[1], foo[2]+"<p><i>"+
-		      replace(o->file_name_and_stuff(), "0<br>", file+"<br>")
-		      +"</i>", foo[0] });
-	}(path + file))))
+	switch(extension(file))
 	{
-	  allmodules[ file-("."+extension(file)) ] = module_info;
-	} else {
-	  _master->errors += "\n";
-#if 0
-	  perror(file+": "+describe_backtrace(err[sizeof(err)-4..])+
-		 _master->set_inhibit_compile_errors( 0 ));
+	 case "pike":
+	 case "lpc":
+//	  if(catch{
+	    if((open(path+file,"r")->read(4))=="#!NO")
+	    {
+//	      perror("Nomodule: "+path+file+"\n");
+	      continue;
+	    }
+//	  })
+//	    break;
+
+	 case "mod":
+	 case "so":
+	  string *module_info;
+	  if (!(err=catch( module_info = lambda ( string file ) {
+	    array foo;
+	    object o;
+	    o =  (compile_file(file))();
+#ifdef MODULE_DEBUG
+	    perror(" load ok - ");
 #endif
+	    foo =  o->register_module();
+#ifdef MODULE_DEBUG
+	    perror("registered.");
+#endif	  
+	    return ({ foo[1], foo[2]+"<p><i>"+
+			replace(o->file_name_and_stuff(), "0<br>", file+"<br>")
+			+"</i>", foo[0] });
+	  }(path + file))))
+	  {
+	    allmodules[ file-("."+extension(file)) ] = module_info;
+	  } else {
+	    _master->errors += "\n";
+#if 0
+	    perror(file+": "+describe_backtrace(err[sizeof(err)-4..])+
+		   _master->set_inhibit_compile_errors( 0 ));
+#endif
+	  }
 	}
 #ifdef MODULE_DEBUG
 	perror("\n");

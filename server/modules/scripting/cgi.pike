@@ -6,10 +6,10 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.11 1997/02/14 03:43:03 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.12 1997/03/12 19:41:37 per Exp $";
 #include <module.h>
 
-inherit "module";
+binherit "module";
 inherit "roxenlib";
 
 import Simulate;

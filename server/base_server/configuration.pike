@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.16 1997/02/27 19:45:58 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.17 1997/03/12 19:38:29 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -893,6 +893,7 @@ static private mapping|int low_get_file(object id, int|void no_magic)
 	fid = tmp;
 #ifdef MODULE_LEVEL_SECURITY
 	slevel = function_object(funp)->query("_seclvl");
+	id->misc->seclevel = slevel;
 #endif
 	break;
       }
@@ -927,6 +928,7 @@ static private mapping|int low_get_file(object id, int|void no_magic)
 	{
 #ifdef MODULE_LEVEL_SECURITY
 	  slevel = misc_cache[ tmp[1] ][1];// misc_cache from check_security
+	  id->misc->seclevel = slevel;
 #endif
 	  break;
 	}
@@ -1398,6 +1400,7 @@ object enable_module( string modname )
        (module->type & MODULE_URL)  	      ||
        (module->type & MODULE_LAST)           ||
        (module->type & MODULE_FILTER)         ||
+       (module->type & MODULE_PARSER)         ||
        (module->type & MODULE_FIRST))
     {
       me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,

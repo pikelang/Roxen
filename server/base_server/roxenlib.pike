@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.17 1997/03/11 01:19:25 per Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.18 1997/03/12 19:38:38 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -337,32 +337,21 @@ static string strip_prestate(string from)
 #define _extra_heads defines[" _extra_heads"]
 #define _rettext defines[" _rettext"]
 
-static string parse_rxml(string what, void|object|mapping id, void|object file,
-		  void|mapping defines)
+static string parse_rxml(string what, object id,
+			 void|object file, void|mapping defines)
 {
-  if(!defines)
-    defines = ([]);
+  if(!defines) defines = id->misc->defines||([]);
   
   _error=200;
   _extra_heads=([ ]);
-  if(!id)
-    id=([
-	 "prestate":(< >), 
-	 "client":({ "Internal" }), 
-	 "supports":(< "unknown" >),
-	 "variables":([ ]),
-	 "not_query":"",
-	 "raw_url":"",
-	 "conf":roxen->current_configuration,
-	 ]);
+
+  if(!id) error("No id passed to parse_rxml\n");
 
   if(!(id->conf && id->conf->parse_module))
     return what;
   
-  what = parse_html(what, 
-		    (mapping)id->conf->parse_module->tag_callers,
-		    (mapping)id->conf->parse_module->container_callers,
-		    id, file||this_object(), defines, id->my_fd);
+  what = id->conf->parse_module->
+    do_parse(what, id, file||this_object(), defines, id->my_fd);
 
   if(!id->misc->moreheads)
     id->misc->moreheads= ([]);

@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.23 1997/03/11 01:19:46 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.24 1997/03/12 19:41:31 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -29,6 +29,7 @@ function language = roxen->language;
 int cnum=0;
 mapping fton=([]);
 array (mapping) tag_callers, container_callers;
+mapping (string:mapping(int:function)) real_tag_callers, real_container_callers;
 int bytes;
 array (object) parse_modules = ({ });
 
@@ -286,12 +287,61 @@ string *query_file_extensions()
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
+string call_tag(string tag, mapping args, int i,
+		object id, object file, mapping defines,
+		object client)
+{
+  function rf = real_tag_callers[tag][i];
+  if(!rf)
+  {
+    report_error("Call to non-registered tag from parse module.\n");
+    return 0;
+  }
+  if(id->conf->check_security(rf, id, id->misc->seclevel))
+    return 0;
+  return rf(tag,args,id,file,defines,client);
+}
+
+string call_container(string tag, mapping args, string contents, int i,
+		      object id, object file, mapping defines,
+		      object client)
+{
+  function rf = real_container_callers[tag][i];
+  if(!rf)
+  {
+    report_error("Call to non-registered container from parse module.\n");
+    return 0;
+  }
+  if(id->conf->check_security(rf, id, id->misc->seclevel))
+    return 0;
+  return rf(tag,args,contents,id,file,defines,client);
+}
+
+string do_parse(string to_parse, object id, object file, mapping defines,
+		object my_fd)
+{  
+  for(int i = 0; i<sizeof(tag_callers); i++)
+  {
+#ifdef PARSE_DEBUG
+    werror("Parse pass "+i+"\n");
+    werror(sprintf("Tags: %s\nContainers:%s\n",
+		   indices(tag_callers[i])*", ",
+		   indices(container_callers[i])*", "));
+#endif
+    to_parse=parse_html(to_parse, tag_callers[i], container_callers[i],
+			i, id, file, defines, my_fd);
+  }
+  return to_parse;
+}
+
+
 mapping handle_file_extension( object file, string e, object id)
 {
   mixed err;
   string to_parse;
-  mapping defines = ([]);
+  mapping defines = id->misc->defines || ([]);
 
+  id->misc->defines = defines;
   if(search(QUERY(noparse),e)!=-1)
   {
     query_num(id->not_query, 1);
@@ -317,22 +367,10 @@ mapping handle_file_extension( object file, string e, object id)
   }
 
   to_parse = file->read(0x7fffffff);
-
-  for(int i = 0; i<sizeof(tag_callers); i++)
+  if(err = catch( to_parse = do_parse( to_parse,id,file,defines,id->my_fd ) ))
   {
-#ifdef PARSE_DEBUG
-    werror("Parse pass "+i+"\n");
-    werror(sprintf("Tags: %s\nContainers:%s\n",
-		   indices(tag_callers[i])*", ",
-		   indices(container_callers[i])*", "));
-#endif
-    if(err=catch(to_parse=parse_html(to_parse, tag_callers[i],
-				     container_callers[i],
-				     id, file, defines, id->my_fd)))
-    {
-      destruct(file);
-      throw(err);
-    }
+    destruct(file);
+    throw(err);
   }
 
 //  if(id->misc->is_redirected)
@@ -356,34 +394,74 @@ mapping handle_file_extension( object file, string e, object id)
 /* parsing modules */
 void insert_in_map_list(mapping to_insert, string map_in_object)
 {
-  array (mapping) in = this_object()[map_in_object];
+  function do_call = this_object()["call_"+map_in_object];
 
+  array (mapping) in = this_object()[map_in_object+"_callers"];
+  mapping (string:mapping) in2=this_object()["real_"+map_in_object+"_callers"];
+
+  
   foreach(indices(to_insert), string s)
   {
+    if(!in2[s]) in2[s] = ([]);
     for(int i=0; i<sizeof(in); i++)
       if(!in[i][s])
       {
-	in[i][s] = to_insert[s];
+	in[i][s] = do_call;
+	in2[s][i] = to_insert[s];
 	break;
       }
     if(i==sizeof(in))
     {
       in += ({ ([]) });
-      if(map_in_object == "tag_callers")
+      if(map_in_object == "tag")
 	container_callers += ({ ([]) });
       else
 	tag_callers += ({ ([]) });
-      in[i][s] = to_insert[s];
+      in[i][s] = do_call;
+      in2[s][i] = to_insert[s];
     }
   }
-  this_object()[map_in_object]=in;
+  this_object()[map_in_object+"_callers"]=in;
+  this_object()["real_"+map_in_object+"_callers"]=in2;
+}
+
+void sort_lists()
+{
+  array ind, val, s;
+  foreach(indices(real_tag_callers), string c)
+  {
+    ind = indices(real_tag_callers[c]);
+    val = values(real_tag_callers[c]);
+    sort(ind);
+    s = Array.map(val, lambda(function f) {
+      return function_object(f)->query("_priority");
+    });
+    sort(s,val);
+    real_tag_callers[c]=mkmapping(ind,val);
+  }
+  foreach(indices(real_container_callers), string c)
+  {
+    ind = indices(real_container_callers[c]);
+    val = values(real_container_callers[c]);
+    sort(ind);
+    s = Array.map(val, lambda(function f) {
+      return function_object(f)->query("_priority");
+    });
+    sort(s,val);
+    real_container_callers[c]=mkmapping(ind,val);
+  }
 }
 
 void build_callers()
 {
    object o;
+   real_tag_callers=([]);
+   real_container_callers=([]);
+
+//   misc_cache = ([]);
    tag_callers=({ ([]) });
    container_callers=({ ([]) });
+
    parse_modules-=({0});
 
    foreach (parse_modules,o)
@@ -392,25 +470,28 @@ void build_callers()
      if(o->query_tag_callers)
        foo=o->query_tag_callers();
 
-     if(mappingp(foo)) insert_in_map_list(foo, "tag_callers");
+     if(mappingp(foo)) insert_in_map_list(foo, "tag");
      
      if(o->query_container_callers)
        foo=o->query_container_callers();
 
-     if(mappingp(foo)) insert_in_map_list(foo, "container_callers");
+     if(mappingp(foo)) insert_in_map_list(foo, "container");
    }
+   sort_lists();
 }
 
 void add_parse_module(object o)
 {
   parse_modules |= ({o});
-  build_callers();
+  remove_call_out(build_callers);
+  call_out(build_callers,0);
 }
 
 void remove_parse_module(object o)
 {
   parse_modules -= ({o});
-  build_callers();
+  remove_call_out(build_callers);
+  call_out(build_callers,0);
 }
 
 /* standard roxen tags */
