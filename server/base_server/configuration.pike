@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.178 1999/02/15 22:36:15 marcus Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.179 1999/02/15 23:19:03 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -7,7 +7,7 @@ string cvs_version = "$Id: configuration.pike,v 1.178 1999/02/15 22:36:15 marcus
 mapping profile_map = ([]);
 #endif
 
-#define CATCH(X)	do { mixed err; if(err = catch{X;}) report_error(describe_backtrace(err)); } while(0)
+#define CATCH(P,X) do{mixed e;if(e=catch{X;})report_error("While "+P+"\n"+describe_backtrace(e));}while(0)
 
 // Locale support...
 #define LOCALE	LOW_LOCALE->base_server
@@ -43,6 +43,26 @@ string name;
  * This looked like a likely spot.. :)
  */
 mapping variables = ([]); 
+
+
+
+string get_doc_for( string region, string variable )
+{
+  object module;
+  if(variable[0] == '_')
+    return 0;
+  if((int)reverse(region))
+    return 0;
+  if(module = find_module( region ))
+  {
+    if(module->variables[variable])
+      return module->variables[variable][VAR_NAME]+
+        "\n"+module->variables[ variable ][ VAR_DOC_STR ];
+  }
+  if(variables[ variable ])
+    return variables[variable][VAR_NAME]+
+      "\n"+variables[ variable ][ VAR_DOC_STR ];
+}
 
 public mixed query(string var)
 {
@@ -185,13 +205,20 @@ class Priority
 
   void stop()
   {
-    foreach(url_modules, object m)      	 CATCH(m->stop && m->stop());
-    foreach(logger_modules, object m)   	 CATCH(m->stop && m->stop());
-    foreach(filter_modules, object m)  		 CATCH(m->stop && m->stop());
-    foreach(location_modules, object m)		 CATCH(m->stop && m->stop());
-    foreach(last_modules, object m)    		 CATCH(m->stop && m->stop());
-    foreach(first_modules, object m)    	 CATCH(m->stop && m->stop());
-    foreach(indices(provider_modules), object m) CATCH(m->stop && m->stop());
+    foreach(url_modules, object m)      	 
+      CATCH("stopping url modules",m->stop && m->stop());
+    foreach(logger_modules, object m)   	 
+      CATCH("stopping logging modules",m->stop && m->stop());
+    foreach(filter_modules, object m)  		 
+      CATCH("stopping filter modules",m->stop && m->stop());
+    foreach(location_modules, object m)		 
+      CATCH("stopping location modules",m->stop && m->stop());
+    foreach(last_modules, object m)    		 
+      CATCH("stopping last modules",m->stop && m->stop());
+    foreach(first_modules, object m)    	 
+      CATCH("stopping first modules",m->stop && m->stop());
+    foreach(indices(provider_modules), object m) 
+      CATCH("stopping provider modules",m->stop && m->stop());
   }
 }
 
@@ -325,10 +352,15 @@ private mapping (string:array (object)) provider_module_cache=([]);
 // Call stop in all modules.
 void stop()
 {
-  CATCH(types_module && types_module->stop && types_module->stop());
-  CATCH(auth_module && auth_module->stop && auth_module->stop());
-  CATCH(dir_module && dir_module->stop && dir_module->stop());
-  for(int i=0; i<10; i++) CATCH(pri[i] && pri[i]->stop && pri[i]->stop());
+  CATCH("stopping type modules",
+        types_module && types_module->stop && types_module->stop());
+  CATCH("stopping auth module",
+        auth_module && auth_module->stop && auth_module->stop());
+  CATCH("stopping directory module",
+        dir_module && dir_module->stop && dir_module->stop());
+  for(int i=0; i<10; i++) 
+    CATCH("stopping priority group",
+          pri[i] && pri[i]->stop && pri[i]->stop());
 }
 
 public string type_from_filename( string file, int|void to )
@@ -643,15 +675,15 @@ void init_log_file()
     if(strlen(logfile))
     {
       do {
-#ifndef THREADS
-	object privs = Privs(LOCALE->opening_logfile(logfile));
-#endif
+// #ifndef THREADS
+// 	object privs = Privs(LOCALE->opening_logfile(logfile));
+// #endif
 	object lf=open( logfile, "wac");
-#if efun(chmod)
-#if efun(geteuid)
-	if(geteuid() != getuid()) catch {chmod(logfile,0666);};
-#endif
-#endif
+// #if efun(chmod)
+// #if efun(geteuid)
+// 	if(geteuid() != getuid()) catch {chmod(logfile,0666);};
+// #endif
+// #endif
 	if(!lf) {
 	  mkdirhier(logfile);
 	  if(!(lf=open( logfile, "wac"))) {
@@ -782,7 +814,10 @@ public void log(mapping file, object request_id)
 		 (string)request_id->method,
 		 http_encode_string((string)request_id->not_query +
 				    ((request_id->misc &&
-				      request_id->misc->path_info) || "")),
+				      request_id->misc->path_info) || "") +
+                                    ((request_id->query && 
+                                      strlen(request_id->query))?
+                                     "?"+request_id->query:"")),
 		 (string)request_id->prot,
 		 (string)(file->error||200),
 		 unsigned_short_to_bin(file->error||200),
@@ -1095,8 +1130,6 @@ private mapping internal_roxen_image(string from)
 
 mapping (mixed:function|int) locks = ([]);
 
-public mapping|int get_file(object id, int|void no_magic);
-
 #ifdef THREADS
 // import Thread;
 
@@ -1215,7 +1248,6 @@ string examine_return_mapping(mapping m)
 
    return res;
 }
-
 mapping|int low_get_file(object id, int|void no_magic)
 {
 #ifdef MODULE_LEVEL_SECURITY
@@ -1587,10 +1619,41 @@ mapping|int low_get_file(object id, int|void no_magic)
     return ([ "file":fid, ]);
   }
   if(!fid)
+  {
     TRACE_LEAVE(LOCALE->returned_not_found());
+  }
   else
     TRACE_LEAVE(LOCALE->returning_data());
   return fid;
+}
+
+
+mixed handle_request( object id  )
+{
+  function funp;
+  mixed file;
+
+  if(roxen->find_site_for( id ) != this_object())
+    return id->conf->handle_request(id);
+  foreach(first_modules(id), funp)
+  {
+    if(file = funp( id )) 
+      break;
+    if(id->conf != this_object) 
+      return id->conf->handle_request(id);
+  }
+
+  file = get_file(id);
+    
+  if(!mappingp(file)) 
+  {
+    mixed ret;
+    foreach(last_modules(id), funp) if(ret = funp(id)) break;
+    if (ret == 1) 
+      return handle_request(id);
+    file = ret;
+  }
+  return file;
 }
 
 mixed get_file(object id, int|void no_magic)
@@ -1621,8 +1684,10 @@ public array find_dir(string file, object id)
   string loc;
   array dir = ({ }), tmp;
   array | mapping d;
+//   if(roxen->find_site_for( id ) != this_object())
+//     return id->conf->find_dir( file, id );
   TRACE_ENTER(LOCALE->list_directory(file), 0);
-  file=replace(file, "//", "/");
+//   file=replace(file, "//", "/");
   
   if(file[0] != '/')
     file = "/" + file;
@@ -1855,7 +1920,11 @@ public array open_file(string fname, string mode, object id)
   function funp;
   mapping file;
 
+  if(roxen->find_site_for( id ) != this_object())
+    return id->open_file( fname, mode, id );
+  
   id->not_query = fname;
+
   foreach(oc->first_modules(), funp)
     if(file = funp( id )) 
       break;
@@ -1904,6 +1973,7 @@ public array open_file(string fname, string mode, object id)
 					 ({fname,query("MyWorldLocation")})));
 
       id->not_query = oq;
+  
       return ({ 0, file });
     }
 
@@ -1925,6 +1995,10 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
   string loc;
   mapping(string:array(mixed)) dir = ([]);
   mixed d, tmp;
+
+
+  if(roxen->find_site_for( id ) != this_object())
+    return id->find_dir_stat( file, id );
 
   file=replace(file, "//", "/");
   
