@@ -1,3 +1,36 @@
+Changes since Roxen 2.0.22
+-----------------------------------------------
+
+o Configuration Interface changed name to Administration Interface.
+
+o create_configinterface(sp) will now abort if there already exists an
+  administration interface.
+
+o Fixed binary installation-script to work even if there was earlier
+  installtions with a server.older in.
+
+o Fixes for AIX m4, FreeBSD make and True64 cc.
+
+o Threadfixes for FreeBSD 4.0+.
+
+o rc4 was renamed arcfour.
+
+o Added automatic enviroment setup for Java, Oracle and Informix.
+
+o Changed default mountpoint for SiteBuilder to /edit/.
+
+o Applied patch to proxy by Wilhelm Koehler, thanks.
+
+o Applied patch for UnixWare by Boyd Lynn Gerber. Thanks.
+
+o Fixed bug where Pike warnings were reported as errors in the
+  admininterface.
+
+o Pike is now called 7.0 instead of 0.7 in most places.
+
+o --without-Perl is now default.
+
+
 Changes since Roxen 2.0.20
 -----------------------------------------------
 
