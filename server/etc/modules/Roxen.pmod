@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.48 2001/01/13 23:52:41 per Exp $
+ * $Id: Roxen.pmod,v 1.49 2001/02/20 00:44:59 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -1091,7 +1091,7 @@ void set_cookie( RequestID id,
   if( expire_time_delta )
     cookie += "; expires="+http_date( expire_time_delta+time(1) );
   if( domain ) cookie += "; domain="+http_encode_cookie( domain );
-  if( path )   cookie += "; path="+http_encode_cookie( path );
+  if( path!="" ) cookie += "; path="+http_encode_cookie( path||"/" );
   if(!id->misc->moreheads)
     id->misc->moreheads = ([]);
   add_http_header( id->misc->moreheads, "Set-Cookie",cookie );
