@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.144 1998/09/25 13:24:36 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.145 1998/09/25 14:01:30 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1233,11 +1233,11 @@ string tag_echo(string tag,mapping m,object id,object file,
 
    case "date_local":
     NOCACHE();
-    return strftime(defines->timefmt || "c", time(1));
+    return strftime(defines->timefmt || "%c", time(1));
 
    case "date_gmt":
     NOCACHE();
-    return strftime(defines->timefmt || "c", time(1) + localtime(time(1))->timezone);
+    return strftime(defines->timefmt || "%c", time(1) + localtime(time(1))->timezone);
       
    case "query_string_unescaped":
     return id->query || "";
@@ -1545,7 +1545,7 @@ string tag_compat_fsize(string tag,mapping m,object id,object file,
 	else
 	  return sizetostring(s[1]);
       } else {
-	return strftime(defines->timefmt || "c", s[3]);
+	return strftime(defines->timefmt || "%c", s[3]);
       }
     }
     return "Error: Cannot stat file";
