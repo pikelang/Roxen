@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.27 1998/07/14 16:47:22 marcus Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.28 1998/07/16 12:21:44 grubba Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -64,6 +64,15 @@ void create()
 	 "If set, scripts in the home-dirs of users will be run as the "
 	 "user. This overrides the Run scripts as variable.", 0, fork_exec_p);
 
+  defvar("rawauth", 0, "Raw user info", TYPE_FLAG|VAR_MORE,
+	 "If set, the raw, unparsed, user info will be sent to the script. "
+	 "Please note that this will give the scripts access to the password "
+	 "used. This is not recommended !", 0, fork_exec_p);
+
+  defvar("clearpass", 0, "Send decoded password", TYPE_FLAG|VAR_MORE,
+	 "If set, the decoded password value will be sent to the script. "
+	 "This is not recommended !", 0, fork_exec_p);
+
   defvar("exec-mask", "0777", 
 	 "Exec mask: Needed", 
 	 TYPE_STRING|VAR_MORE,
@@ -114,6 +123,11 @@ array|mapping call_script(function fun, object got, object file)
   if(!functionp(fun))
     return 0;
   string|array (int) uid, olduid, us;
+
+  if(got->rawauth && (!QUERY(rawauth) || !QUERY(clearpass)))
+    got->rawauth=0;
+  if(got->realauth && !QUERY(clearpass))
+    got->realauth=0;
 
 #if efun(fork)
   if(QUERY(fork_exec)) {
