@@ -3,7 +3,7 @@
 
 inherit "modules/filesystems/filesystem";
 
-string cvs_version= "$Id: incoming.pike,v 1.1 1997/08/29 21:48:43 marcus Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.2 1998/02/24 11:02:40 grubba Exp $";
 
 
 static class decaying_file {
