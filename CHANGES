@@ -11,6 +11,8 @@ o Copying of configurations now works again.
 o The htaccess module is now a MODULE_URL module, which improves the internal
   security in Roxen.
 
+o Improved fallbacks in the htaccess-module.
+
 o The start-script now uses the pike named "roxen" if it exists, so that
   Roxen shows up as "roxen" instead of as "pike" in process-listings.
 
@@ -58,6 +60,33 @@ o Bug with never dieing cgi-scripts fixed.
 
 o The start-script now waits 5 seconds before restarting Roxen. This
   is to keep it from taking 100% CPU if Roxen fails to load.
+
+o Updated README.ssl3 file.
+
+o Shuffle disabled for everything except Solaris 2.4, 2.5 and 2.5.1.
+
+o feature_list now checks for some more modules.
+
+o CommonLog and WideValues modules added to the standard distribution.
+
+o Missing Sql.pmod glue added.
+
+o Sql conventions changed somewhat. Data-values returned from queries are
+  now either a string with the value, or zero (0) for NULL.
+
+o Added config-check for broken installbsd on AIX.
+
+o /roxen-internal-* images may now be jpegs.
+
+o Contents under the "Status"-tab moved to actions.
+
+o New demo-certificate for ssl.
+
+o Module for IP-less hosting added. Simply add this module to the virtual-
+  servers having real ports, and it will redirect requests to the virtual-
+  server whose server-URL matches the host-header best.
+
+o Added the sqltag-module to the default distribution.
 
 
 Changes since Roxen Challenger 1.2 alpha 8
