@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.80 1998/03/02 16:06:16 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.81 1998/03/02 18:56:19 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -708,6 +708,11 @@ int|object PPM(string fname, object id)
     return 1;
 }
 
+mapping http_img_answer( string msg )
+{
+  return http_string_answer( msg );
+}
+
 mapping unquote( string f )
 {
   return cache[ (int)f ];
@@ -718,15 +723,21 @@ mapping find_file(string f, object id)
   if (f[sizeof(f)-4..] == ".gif")
     f = f[..sizeof(f)-5];
 
+  if( f=="" )
+    return http_img_answer( "This is BG's mountpoint." );
+
   mapping res = unquote( f );
 
-  if(id->prestate->debug2)
+  if(!res)
+    return http_img_answer( "Please reload this page." );
+    
+
+  if(id->prestate->debug)
     return http_string_answer( sprintf("<pre>%O\n", res) );
   
   mapping(string:mixed) diagram_data;
 
-  array back;
-  
+  array back;  
   if(res->bgcolor)
     back = res->bgcolor;
 
@@ -756,8 +767,6 @@ mapping find_file(string f, object id)
       tuned_box(0, 0, res->xsize, res->ysize, res->tonedbox);
   }
 
-  if( id->prestate->debug2 )
-    return http_string_answer( sprintf("<pre>%O\n", res) );
   diagram_data = res;
 
   object(Image.image) img;
