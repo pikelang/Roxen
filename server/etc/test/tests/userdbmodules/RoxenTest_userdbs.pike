@@ -138,7 +138,7 @@ array(int) run_tests( Configuration c )
 
   m = do_test( check_is_module, c->find_module,  "userdb_system#0" );
 
-  if( !do_test( check_is_not_zero, predef::`[], m, "list_users"  ) )  {
+  if( !do_test( check_true, predef::`[], m, "list_users"  ) )  {
     report_error( "Failed to enable userdb module\n");
     return ({ current_test, tests_failed });
   }
@@ -206,5 +206,11 @@ array(int) run_tests( Configuration c )
   do_test( 0, verify_compat_userinfo, c, list );
   do_test( 0, verify_compat_user_from_uid, c, list );
   
+
+  // 6: Shutdown.
+
+  do_test( 0, c->disable_module, "userdb_system" );
+  do_test( 0, roxen.disable_configuration, "usertestconfig" );
+
   return ({ current_test, tests_failed });
 }

@@ -11,7 +11,7 @@ string describe_arglist( array args )
       if( arg->is_module )
 	res += ({ sprintf("%s",arg->my_configuration()->otomod[arg])});
       else if( arg->is_configuration )
-	res += ({ "Config" });
+	res += ({ sprintf("%s", arg->name ) });
       else
 	res += ({ sprintf("%O", arg ) });
     else
@@ -19,10 +19,20 @@ string describe_arglist( array args )
   return res * ", ";
 }
 
-void report_1st(function cb, array args )
+void report_1st(function cb, array args, function check )
 {
-  report_error("  Test %3d %-40s  ", current_test,
-	       sprintf("%O("+describe_arglist( args )+")",cb)[..39]);
+  int checkid = ' ';
+  if( check == check_error )
+    checkid = '#';
+  else if( check == check_false )
+    checkid = '!';
+  else if( check != check_is_configuration &&
+	   check == check_is_module )
+    checkid = '~';
+
+  report_error("  Test %3d %c%-40s  ", current_test,
+	       checkid,sprintf("%O("+describe_arglist( args )+")",cb)[..39]
+	       );
 }
 
 string do_describe_error( mixed err )
@@ -45,7 +55,7 @@ void report_test_failure( mixed err, function cb, array args, int st )
 void report_test_ok( mixed err, function cb, array args, int st )
 {
   report_error("OK [%dms]\n", (gethrtime()-st)/1000);
-  if( err ) report_error( do_describe_error( err ) );
+//   if( err ) report_error( do_describe_error( err ) );
 }
 
 
@@ -53,7 +63,7 @@ mixed do_test( function check_return, function cb, mixed ... args )
 {
   current_test++;
   mixed result;
-  report_1st( cb, args );
+  report_1st( cb, args, check_return );
   int st = gethrtime();
   mixed err = catch {
     result = cb( @args );
@@ -101,13 +111,24 @@ void check_is_configuration( mixed res, mixed err, function cb, array args,
 }
 
 
-void check_is_not_zero( mixed res, mixed err, function cb, array args, int st )
+void check_true( mixed res, mixed err, function cb, array args, int st )
 {
   if( err )
     report_test_failure( err, cb, args, st );
   else
     if( !res )
       report_test_failure( "expected non-zero", cb, args, st);
+    else
+      report_test_ok( err, cb, args, st );
+}
+
+void check_false( mixed res, mixed err, function cb, array args, int st )
+{
+  if( err )
+    report_test_failure( err, cb, args, st );
+  else
+    if( res )
+      report_test_failure( sprintf("expected zero, got %O",res), cb, args, st);
     else
       report_test_ok( err, cb, args, st );
 }
@@ -127,6 +148,11 @@ function check_is( mixed m )
 	else
 	  report_test_ok( err, cb, args, st );
     };
+}
+
+mixed pass( mixed arg )
+{
+  return arg;
 }
 
 function check_equal( mixed m )
