@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.15 1999/10/05 14:07:23 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.16 1999/10/05 21:16:56 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -222,7 +222,9 @@ string|array(string) tag_referrer(string tag, mapping m, object id)
   if(m->help) 
     return ("Shows from which page the client linked to this one.");
 
-  return ({ sizeof(id->referer) ? id->referer*"" : m->alt || "" });
+  return({ sizeof(id->referer) ?
+	   html_encode_string(id->referer*"") :
+	   m->alt || "" });
 }
 
 array(string) tag_scope(string tag, mapping m, string contents, object id)
