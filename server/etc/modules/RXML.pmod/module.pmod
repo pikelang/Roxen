@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.150 2001/04/24 00:44:08 nilsson Exp $
+// $Id: module.pmod,v 1.151 2001/04/25 14:05:24 nilsson Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -724,15 +724,29 @@ class TagSet
   function(Backtrace,Type:string) handle_run_error =
     lambda (Backtrace err, Type type)
     //! Formats the run error backtrace.
+    // This wrapper function however only search for a
+    // "real" handle_run_error function.
     {
-      return describe_error(err);
+      string result;
+      foreach(imported, TagSet tag_set) {
+	result = tag_set->handle_run_error(err, type);
+	if(result) return result;
+      }
+      return 0;
     };
 
   function(Backtrace,Type:string) handle_parse_error =
     lambda (Backtrace err, Type type)
     //! Formats the parse error backtrace.
+    // This wrapper function however only search for a
+    // "real" handle_parse_error function.
     {
-      return describe_error(err);
+      string result;
+      foreach(imported, TagSet tag_set) {
+	result = tag_set->handle_parse_error(err, type);
+	if(result) return result;
+      }
+      return 0;
     };
 
   //(!) Internals:
@@ -1390,7 +1404,7 @@ class Context
       if (evaluator->report_error && evaluator->recover_errors &&
 	  evaluator->type->free_text) {
 	string msg;
-	if (id && id->conf)
+	if (id && id->conf) {
 	  msg = err->type == "help" ? err->msg :
 	    (err->type == "run" ?
 	     ([function(Backtrace,Type:string)]
@@ -1398,6 +1412,9 @@ class Context
 	     ([function(Backtrace,Type:string)]
 	      tag_set->handle_parse_error)
 	    ) ([object(Backtrace)] err, evaluator->type);
+	  if(!msg)
+	    msg = describe_error(err);
+	}
 	else
 	  msg = err->msg;
 	if (evaluator->report_error (msg))
