@@ -1,4 +1,4 @@
-/* $Id: https.pike,v 1.8 1999/08/04 14:17:41 grubba Exp $
+/* $Id: https.pike,v 1.9 1999/09/26 02:40:15 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -382,13 +382,16 @@ void send_result(mapping|void result)
   {
     if(misc->error_code)
       file = http_low_answer(misc->error_code, errors[misc->error]);
-    else
+    else if(err = catch {
       file=http_low_answer(404,
 			   replace(parse_rxml(conf->query("ZNoSuchFile"),
 					      this_object()),
 				   ({"$File", "$Me"}), 
 				   ({not_query,
 				       conf->query("MyWorldLocation")})));
+    }) {
+      internal_error(err);
+    }
   } else {
     if((file->file == -1) || file->leave_me) 
     {
