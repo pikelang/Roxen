@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.111 1998/02/27 07:10:03 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.112 1998/03/01 02:42:14 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -809,6 +809,12 @@ array(int)|string write_text(int _args, string text, int size, object id)
   string orig_text = text;
   mixed data;
   mapping args = find_cached_args(_args);
+
+  if(!args)
+  {
+    throw( ({ "Internal error in gtext: Got request for non-existant gtext class", backtrace() }) );
+  }
+
   if(data = cache_lookup(key, text))
   {
     if(args->nocache) // Remove from cache. Very useful for access counters
@@ -818,8 +824,11 @@ array(int)|string write_text(int _args, string text, int size, object id)
   } else if(data = get_cache_file( key, text )) {
     cache_set(key, text, data);
     if(size) return data[1];
-    return err[0];
+    return data[0];
   }
+
+
+  // So. We have to actually draw the thing...
 
   err = catch
   {
