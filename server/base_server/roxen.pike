@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.307 1999/07/19 18:43:26 grubba Exp $
+ * $Id: roxen.pike,v 1.308 1999/07/20 20:42:55 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.307 1999/07/19 18:43:26 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.308 1999/07/20 20:42:55 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -1352,10 +1352,15 @@ void restart_if_stuck (int force)
   call_out (restart_if_stuck,10);
   signal(signum("SIGALRM"),
 	 lambda( int n ) {
-	   roxen_perror(master()->describe_backtrace( ({
-	     sprintf("**** %s: ABS engaged! Trying to dump backlog: \n",
-		     ctime(time()) - "\n"),
-	     backtrace() }) ) );
+	   werror(sprintf("**** %s: ABS engaged!\n"
+			  "Trying to dump backlog: \n",
+			  ctime(time()) - "\n"));
+	   catch {
+	     // Catch for paranoia reasons.
+	     describe_all_threads();
+	   };
+	   werror(sprintf("**** %s: ABS exiting roxen!\n\n",
+			  ctime(time())));
 	   _exit(1); 	// It might now quit correctly otherwise, if it's
 	   //  locked up
 	 });
