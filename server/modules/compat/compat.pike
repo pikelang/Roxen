@@ -40,7 +40,7 @@ void create()
 	 "the 'Enable all tag compatibility' setting.");
 }
 
-constant relevant=(<"rxmltags","graphic_text","tablify","countdown","counter","ssi">);
+constant relevant=(<"rxmltags","graphic_text","tablify","countdown","counter","ssi","obox">);
 multiset enabled;
 void start (int when, Configuration conf)
 {
@@ -736,6 +736,11 @@ array tag_remove_cookie(string t, mapping m, RequestID id) {
   return ({ 1, "remove-cookie", m });
 }
 
+array container_obox(string t, mapping m, string c, RequestID id) {
+  m->title = parse_rxml(m->title, id);
+  return ({ 1, "obox", m, c });
+}
+
 
 // --------------- Register tags, containers and if-callers ---------------
 
@@ -798,6 +803,9 @@ mapping query_container_callers() {
     "cset":container_cset,
     "elif":container_elif,
     "preparse":container_preparse
+  ]);
+  if(enabled->obox) active+=([
+    "obox":container_obox,
   ]);
   return active;
 }
