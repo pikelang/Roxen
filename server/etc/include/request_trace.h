@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.12 2002/10/25 17:46:18 mast Exp $
+// $Id: request_trace.h,v 1.13 2004/05/14 17:08:24 mast Exp $
 
 #ifndef REQUEST_TRACE_H
 #define REQUEST_TRACE_H
@@ -57,9 +57,10 @@
 
 #define SIMPLE_TRACE_LEAVE(MSG...) do {					\
     array _msg_arr_;							\
-    TRACE_LEAVE ((_msg_arr_ = ({MSG}),					\
-		  sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
-		  (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
+    TRACE_LEAVE (Roxen.html_encode_string (				\
+		   (_msg_arr_ = ({MSG}),				\
+		    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
+		    (sizeof (_msg_arr_) ? _msg_arr_[0] : ""))));	\
   } while (0)
 
 // The following variant should be used inside RXML.Frame callbacks
