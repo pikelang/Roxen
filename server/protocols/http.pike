@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.142 1999/07/15 16:59:28 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.143 1999/07/15 20:32:00 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -290,12 +290,12 @@ private int parse_got(string raw)
 {
   multiset (string) sup;
   array mod_config;
-  string a, b, s, linename, contents;
+  string a, b, s="", linename, contents;
   int config_in_url;
 
   DPERROR(sprintf("HTTP: parse_got(%O)", s));
   if (!line) {    
-    // We check for \n only if \r\n fails, since Netscape 4.5 sends "
+    // We check for \n only if \r\n fails, since Netscape 4.5 sends
     // just a \n when doing a proxy-request. 
     // example line:
     //   "CONNECT mikabran:443 HTTP/1.0\n"
@@ -303,13 +303,12 @@ private int parse_got(string raw)
     // Die Netscape, die! *grumble*
     // Luckily the solution below shouldn't ever cause any slowdowns
     
-    if (sscanf(raw, "%s\r\n%s", line, s) != 2 &&
-	sscanf(raw, "%s\n%s", line, s) != 2) {
+    if (!sscanf(raw, "%s\r\n%s", line, s) &&
+	!sscanf(raw, "%s\n%s", line, s)) {
       // Not enough data. Unless the client writes one byte at a time,
       // this should never happen, really.
       
-      DPERROR(sprintf("HTTP: parse_got(%O): Not enough data.",
-		      s));
+      DPERROR(sprintf("HTTP: parse_got(%O): Not enough data.", raw));
       return 0;
     }
     if(strlen(line) < 4)
@@ -317,61 +316,71 @@ private int parse_got(string raw)
       // Incorrect request actually - min possible (HTTP/0.9) is "GET /"
       // but need to support PING of course!
       
-      DPERROR(sprintf("HTTP: parse_got(%O): Malformed request.",
-		      s));
+      DPERROR(sprintf("HTTP: parse_got(%O): Malformed request.", raw));
       return 1;
     }
 
-    // David H new request parse.
-    // Less forgiving, more to the spec and hopefully somewhat (although
-    // it's marginal) faster. Still forgives incorrect protocols however,
-    // since that is how Apache handles "GET /incorrect uri HTTP/1.0".
-    string p1,p2,p3;
-    switch(sscanf(line+" ", "%s %s %s", p1, p2, p3))
+    string trailer;
+    switch(sscanf(line+" ", "%s %s %s %s", method, f, clientprot, trailer))
     {
-     case 1:
+    case 1:
       // PING...
-      if(p1 == "PING") {
+      if(method == "PING") {
 	my_fd->write("PONG\r\n"); 
 	return 2;
       }
       // only PING is valid here.
       return 1;
       
-     case 2:
-     case 3:
-      if(!p3 || !strlen(p3)) {
-	// HTTP/0.9
-	clientprot = prot = "HTTP/0.9";
-	f = p2;
-	method = "GET"; // 0.9 only supports get.
-	s = ""; // no headers...
-	break;
+    case 2:
+      // HTTP/0.9
+      clientprot = prot = "HTTP/0.9";
+      method = "GET"; // 0.9 only supports get.
+      s = data = ""; // no headers or extra data...
+      break;
+
+    case 4:
+      // Got extra spaces in the URI.
+      // All the extra stuff is now in the trailer.
+
+      // Get rid of the extra space from the sscanf above.
+      trailer = trailer[..sizeof(trailer) - 2];
+      f += " " + clientprot;
+
+      // Find the last space delimiter.
+      if (!(end = (search(reverse(trailer), " ") + 1))) {
+	// Just one space in the URI.
+	clientprot = trailer;
+      } else {
+	f += " " + trailer[..sizeof(trailer) - (end + 1)];
+	clientprot = trailer[sizeof(trailer) - end ..];
       }
+      /* FALL_THROUGH */
+    case 3:
       // >= HTTP/1.0
-      clientprot = prot = p3;
-      f = p2;
-      method = upper_case(p1);
-      if(!(< "HTTP/1.0", "HTTP/1.1" >)[prot])
-	// Where nice here and assumes HTTP even if the protocol
-	// is something very weird (like if a browser sends file names
-	// with unencoded spaces. 
+
+      prot = clientprot;
+      // method = upper_case(p1);
+      if(!(< "HTTP/1.0", "HTTP/1.1" >)[prot]) {
+	// We're nice here and assume HTTP even if the protocol
+	// is something very weird.
 	prot = "HTTP/1.1";
-      int end;
+      }
+
+      // Do we have all the headers?
       if (!sscanf(s, "%s\r\n\r\n%s", s, data)) {
 	// No, we need more data.
 	DPERROR("HTTP: parse_got(): Request is not complete.");
 	return 0;
       }
       break;
-     default:
+    default:
       // Too many or too few entries ->  Hum.
       return 1;
     }
   } else {
     // HTTP/1.0 or later
     // Check that the request is complete
-    int end;
     if (!sscanf(raw, "%s\r\n\r\n%s", s, data)) {
       // No, we need more data.
       DPERROR("HTTP: parse_got(): Request is not complete.");
@@ -381,7 +390,7 @@ private int parse_got(string raw)
   
   raw_url    = f;
   time       = _time(1);
-  if(!data) data = "";
+  // if(!data) data = "";
   DPERROR(sprintf("RAW_URL:%O", raw_url));
 
   if(!remoteaddr)
@@ -443,7 +452,8 @@ private int parse_got(string raw)
       	DPERROR(sprintf("Header-sscanf :%s", linename));
       	linename=lower_case(linename);
       	DPERROR(sprintf("lower-case :%s", linename));
-	
+
+	// FIXME: Multiple headers?
       	request_headers[linename] = contents;
 	if(strlen(contents))
 	{
