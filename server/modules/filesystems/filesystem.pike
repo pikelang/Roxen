@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.140 2004/05/13 17:39:33 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.141 2004/05/13 18:11:06 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1465,7 +1465,8 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     TRACE_LEAVE("COPY: Put not allowed.");
     return Roxen.http_status(405, "Not allowed.");
   }
-  mapping|int(0..1) res = write_access(combine_path(dest, "../"), 0, id);
+  mapping|int(0..1) res = write_access(dest, 0, id) ||
+    write_access(combine_path(dest, "../"), 0, id);
   if (mappingp(res)) return res;
   string dest_path = path + dest;
   catch { dest_path = decode_path(dest_path); };
@@ -1556,12 +1557,6 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 	return Roxen.http_status(204, "Destination already existed.");
       }
       break;
-    }
-  }
-  else {
-    if (res = write_access(dest, 0, id)) {
-      SIMPLE_TRACE_LEAVE("COPY: Write access to file %O denied.", dest);
-      return res;
     }
   }
 
