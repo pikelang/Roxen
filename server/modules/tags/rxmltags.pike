@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.29 1999/11/17 22:34:17 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.30 1999/11/19 06:54:20 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -52,6 +52,17 @@ string sexpr_eval(string what)
 
 
 // ------------------- Tags ------------------------
+
+string tag_roxen_automatic_charset_variable( string t, mapping m, 
+                                             RequestID id )
+{
+  return make_tag( "input", 
+                   ([ 
+                     "type":"hidden",
+                     "name":"magic_roxen_automatic_charset_variable",
+                     "value":"едц",
+                   ]) );
+}
 
 string tag_append( string tag, mapping m, RequestID id )
 {
