@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.216 2000/08/07 21:05:58 nilsson Exp $
+// $Id: rxml.pike,v 1.217 2000/08/08 12:27:49 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2513,6 +2513,12 @@ is an <i>Eval</i> plugin.
 
 Available variables are:",
 
+"if#sizeof":#"<desc plugin><short>
+
+</short>
+
+</desc>",
+
 "nooutput":#"<desc cont><short>
  The contents will not be sent through to the page.</short> Side effects, for
  example sending queries to databases, will take effect.
@@ -2678,5 +2684,7 @@ Available variables are:",
 
 	  ])
        }),
+
 ]);
 #endif
+
