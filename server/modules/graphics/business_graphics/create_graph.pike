@@ -568,7 +568,7 @@ mapping set_legend_size(mapping diagram_data)
       foreach(texts, object img)
 	{
 	  if (img->xsize()>xmax) 
-	    xmax=img->xsize();
+	    xmax=img->xsize(); 
 	}
       
       //Skapa strecket för graph/boxen för bars.

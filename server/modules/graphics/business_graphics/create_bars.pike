@@ -770,6 +770,6 @@ int main(int argc, string *argv)
   o->open("test.ppm", "wtc");
   o->write(create_bars(diagram_data)["image"]->toppm());
   o->close();
-
+ 
 };
 #endif
