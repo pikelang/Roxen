@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.655 2001/03/17 02:27:22 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.656 2001/03/28 19:35:15 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -572,7 +572,7 @@ local static void handler_thread(int id)
 		       "Client will not get any response from Roxen.\n"),*/
 		     describe_backtrace(q));
 	if (q = catch {h = 0;}) {
-	  report_error(LOC_M(5, "Uncaught error in handler thread: %s Client"
+	  report_error(LOC_M(5, "Uncaught error in handler thread: %sClient "
 			     "will not get any response from Roxen.")+"\n",
 		       describe_backtrace(q));
 	}
