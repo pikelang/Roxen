@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.88 1999/10/11 12:27:07 peter Exp $
+ * $Id: wizard.pike,v 1.89 1999/11/28 21:35:29 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generates all the nice wizards";
  * 
@@ -486,7 +486,14 @@ string parse_wizard_page(string form, object id, string wiz_name, void|string pa
 		    (id->misc->extra_wizard_container || ([])) +
 		    ([ "cvar":wizard_tag_var, 
 		       "help":parse_wizard_help]), id, foo );
-  
+
+  // We commonly feed the action variable both from the URL with
+  // "...?action=foo.pike" and with an <input> tag from the previous
+  // page. Netscape ignores one of them, but IE sends both. Thus we
+  // have to discard the extra value in the IE case. (We simply assume
+  // both values are the same here; maybe it could be done better.)
+  id->variables->action = (id->variables->action/"\0")[0];
+
   res = ("<!--Wizard-->\n"
          "<form method=get>\n"
 	 " <input type=hidden name=action value=\""+id->variables->action+"\">\n"
