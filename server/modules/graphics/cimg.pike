@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 core.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.62 2004/09/12 00:08:46 _cvs_dirix Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.63 2004/09/12 13:20:50 _cvs_dirix Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -180,20 +180,19 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
     layers = core.decode_layers( args->data, opts );
   else
   {
-#ifndef SiteBuilder
-    mixed tmp = core.load_layers( args->src, id, opts );
-#else
     mixed tmp;
+#if constant(Sitebuilder)
         //  Let SiteBuilder get a chance to decode its argument data
     if (Sitebuilder.sb_start_use_imagecache) {
       Sitebuilder.sb_start_use_imagecache(args, id);
       tmp = roxen.load_layers(args->src, id, opts);
       Sitebuilder.sb_end_use_imagecache(args, id);
     } else
+#endif
     {
       tmp = roxen.load_layers(args->src, id, opts);
     }
-#endif
+
     if (mappingp(tmp)) {
       if (tmp->error == Protocols.HTTP.HTTP_UNAUTH)
 	return tmp;

@@ -805,21 +805,16 @@ class LoadImage
       if(!id)
 	error("Oops, no request id object.");
       array|mapping res;
-      {
-#ifndef SiteBuilder
-	res = core.load_layers(args->src, id);
-#else
-      array|mapping res;
+#if constant(Sitebuilder)
       //  Let SiteBuilder get a chance to decode its argument data
       if (Sitebuilder.sb_start_use_imagecache) {
         Sitebuilder.sb_start_use_imagecache(args, id);
         res = roxen.load_layers(args->src, id);
         Sitebuilder.sb_end_use_imagecache(args, id);
       } else
+#endif
       {
         res = roxen.load_layers(args->src, id);
-      }
-#endif
       }
       if( !res || mappingp(res) )
 	RXML.parse_error("Failed to load %O\n", args->src );
@@ -842,7 +837,7 @@ class LoadImage
       string fn = id->conf->real_file( args->src, id );
       if( fn ) Roxen.add_cache_stat_callback( id, fn, s[ST_MTIME] );
       args->stat = s[ ST_MTIME ];
-#ifdef SiteBuilder
+#if constant(Sitebuilder)
       //  The file we called try_stat_file() on above may be a SiteBuilder
       //  file. If so we need to extend the argument data with e.g.
       //  current language fork.
