@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.42 1999/08/11 16:19:08 grubba Exp $
+ * $Id: smtprelay.pike,v 2.0 1999/10/18 14:18:08 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.42 1999/08/11 16:19:08 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 2.0 1999/10/18 14:18:08 grubba Exp $";
 
 /*
  * Some globals
@@ -26,9 +26,6 @@ static object conf;
 static object sql;
 
 static object dns = Protocols.DNS.async_client();
-
-static void check_mail(int seconds);
-static void init_db();
 
 /*
  * Roxen glue
@@ -151,479 +148,530 @@ static string get_addr(string addr)
   return(a*"");
 }
 
-class SocketNotSelf
+/*
+ * Async connection to socket.
+ */
+
+constant ACON_REFUSED = 0;
+constant ACON_LOOP = -1;
+constant ACON_DNS_FAIL = -2;
+
+static void async_connected(int status, function(int, mixed ...:void) cb,
+			    object f, mixed ... args)
 {
-  private void connected(array args)
-  {
-    if (!args) {
-#ifdef SOCKET_DEBUG
-      roxen_perror("SOCKETS: async_connect: No arguments to connected\n");
-#endif /* SOCKET_DEBUG */
-      return;
-    }
-#ifdef SOCKET_DEBUG
-    roxen_perror("SOCKETS: async_connect ok.\n");
-#endif
-    args[2]->set_id(0);
-    args[0](args[2], @args[1]);
+  /* Done */
+  cb(status && f, @args);
+}
+
+static void async_connect_got_hostname(string host, int port,
+				       function(int, mixed ...:void) cb,
+				       mixed ... args)
+{
+  if (!host) {
+    // DNS Failure
+
+    cb(ACON_DNS_FAIL, @args);
   }
 
-  private void failed(array args)
-  {
-#ifdef SOCKET_DEBUG
-    roxen_perror("SOCKETS: async_connect failed\n");
-#endif
-    args[2]->set_id(0);
-    destruct(args[2]);
-    args[0](0, @args[1]);
-  }
+  // Check that we aren't looping.
+  object p = Stdio.Port();
 
-  private void got_host_name(string host, string oh, int port,
-			     function callback, mixed ... args)
-  {
-    // *** BEGIN CODE THAT DIFFERS FROM socket.pike ***
+  if (p->bind(0,0,host)) {
+    // We were just about to connect to ourselves!
 
-    if (!host) {
-      // DNS Failure
-
-      callback(-2, @args);
-      return;
-    }
-
-    object p = Stdio.Port();
-
-    if (p->bind(0,0,host)) {
-      // We were just about to connect to ourselves!
-
-      callback(-1, @args);
-      destruct(p);
-      return;
-    }
+    cb(ACON_LOOP, @args);
     destruct(p);
-
-    // *** END CODE THAT DIFFERS FROM socket.pike ***
-
-    object f;
-    f=Stdio.File();
-#ifdef SOCKET_DEBUG
-    roxen_perror("SOCKETS: async_connect "+oh+" == "+host+"\n");
-#endif
-    if(!f->open_socket())
-    {
-#ifdef SOCKET_DEBUG
-      roxen_perror("SOCKETS: socket() failed. Out of sockets?\n");
-#endif
-      callback(0, @args);
-      destruct(f);
-      return;
-    }
-    f->set_id( ({ callback, args, f }) );
-    f->set_nonblocking(0, connected, failed);
-#ifdef FD_DEBUG
-    mark_fd(f->query_fd(), "async socket communication: -> "+host+":"+port);
-#endif
-    if(catch(f->connect(host, port))) // Illegal format...
-    {
-#ifdef SOCKET_DEBUG
-      roxen_perror("SOCKETS: Illegal internet address in connect "
-		   "in async comm.\n");
-#endif
-      callback(0, @args);
-      destruct(f);
-      return;
-    }
+    return;
   }
+  destruct(p);
 
-  void async_connect(string host, int port, function|void callback,
-		     mixed ... args)
+  // Looks OK so far. Try connecting.
+  object f = Stdio.File();
+
+  if (!f->async_connect(host, port, async_connected, cb, f, @args)) {
+    // Connection failed.
+    cb(ACON_REFUSED, @args);
+    return;
+  }
+}
+
+int async_connect_not_self(string host, int port,
+			   function(int, mixed ...:void) callback,
+			   mixed ... args)
+{
+#ifdef SOCKET_DEBUG
+  roxen_perror("SOCKETS: async_connect requested to "+host+":"+port+"\n");
+#endif
+  roxen->host_to_ip(host, async_connect_got_host_name, port, callback, @args);
+}
+
+class SMTP_Reader
+{
+  object con;
+
+  int sent_bytes;
+  int recv_bytes;
+
+  static string read_buffer = "";
+
+  static function(string, array(string):void) _got_code;
+
+  /* ({ ({ "code", ({ "line 1", "line 2" }) }) }) */
+  static array(array(string|array(string))) codes = ({});
+
+  static array(string) partial = ({});
+
+  static void reset()
   {
-#ifdef SOCKET_DEBUG
-    roxen_perror("SOCKETS: async_connect requested to "+host+":"+port+"\n");
-#endif
-    roxen->host_to_ip(host, got_host_name, host, port, callback, @args);
+    if (con) {
+      con->close();
+      con = 0;
+    }
+    read_buffer = "";
+    _got_code = 0;
+    codes = ({});
+    partial = ({});
   }
-};
+
+  static void call_callback()
+  {
+    function(string, array(string):void) cb = _got_code;
+    _got_code = 0;
+
+    if (sizeof(codes)) {
+      string code = codes[0][0];
+      array(string) text = codes[0][1];
+      codes = codes[1..];
+
+      cb(code, text);
+      return;
+    }
+    cb(0, 0);
+  }
+
+  static void parse_buffer()
+  {
+    array(string) arr = read_buffer/"\r\n";
+
+    if (sizeof(arr) > 1) {
+      read_buffer = arr[-1];
+
+      int i;
+      for(i=0; i < sizeof(arr)-1; i++) {
+	if ((sizeof(arr[i]) < 3) ||
+	    ((sizeof(arr) > 3) && (arr[i][3] == '-'))) {
+	  // Broken code, or continuation line.
+	  if (sizeof(arr) > 4) {
+	    partial += ({ arr[4..] });
+	  }
+	} else {
+	  codes += ({ ({ arr[i][..2], partial + ({ arr[4..] }) }) });
+	  partial = ({});
+	}
+      }
+    }
+  }
+
+  static void con_closed(mixed ignored)
+  {
+    if (con) {
+      con->set_nonblocking(0,0,0);
+      con->close();
+      con = 0;
+    }
+    if (read_buffer != "") {
+      // Some data left in the buffer.
+      // Add a terminating "\r\n", and parse it.
+      if (read_buffer[-1] == '\r') {
+	read_buffer += "\n";
+      } else {
+	read_buffer += "\r\n";
+      }
+      parse_buffer();
+    }
+
+    call_callback();
+  }
+
+  static void got_data(mixed ignored, string s)
+  {
+    read_buffer += s;
+
+    recv_bytes += sizeof(s);
+
+    parse_buffer();
+
+    if (sizeof(codes)) {
+      con->set_nonblocking(0,0,0);
+
+      call_callback();
+    }
+  }
+
+  static void async_get_code(function(string, array(string):void) cb)
+  {
+    got_code = cb;
+
+    if (con) {
+      con->set_nonblocking(got_data, 0, con_closed);
+    } else {
+      call_out(con_closed, 0);
+    }
+  }
+
+  static string send_buffer = "";
+
+  static void write_data(mixed ignored)
+  {
+    int n = con->write(send_buffer);
+
+    if (n <= 0) {
+      // Error!
+      con->set_nonblocking(0,0,0);
+      con->close();
+      con = 0;
+
+      call_callback();
+      return;
+    }
+
+    sent_bytes += n;
+
+    send_buffer = send_buffer[n..];
+    if (send_buffer == "") {
+      if (sizeof(codes)) {
+	// Already received a reply?
+	// This shouldn't happen...
+	// But better safe than sorry...
+	con->set_nonblocking(0,0,0);
+
+	call_callback();
+	return;
+      }
+      con->set_nonblocking(got_data, 0, con_closed);
+      return;
+    }
+    // More data to send.
+  }
+
+  string last_command = "";
+
+  static void send_command(string command,
+			   function(string, array(string):void) cb)
+  {
+    last_command = command;
+
+    got_code = cb;
+
+    if (con) {
+      send_buffer += command + "\r\n";
+
+      con->set_nonblocking(0, write_data, 0);
+    } else {
+      // Connection closed.
+      call_callback();
+    }
+  }
+}
+
+constant SEND_OK = 1;
+constant SEND_FAIL = 0;
+constant SEND_OPEN_FAIL = -1;
+constant SEND_ADDR_FAIL = -2;
+constant SEND_DNS_UNKNOWN = -3;
 
 class MailSender
 {
-  private static inherit SocketNotSelf;
-
-  static object parent;
+  inherit SMTPReader;
 
   static mapping message;
   static array(string) servers;
   static int servercount;
 
-  static object dns;
-
-  static object con;
   static object mail;
 
-  static int state;
-  static int result;
-
-  static function send_done;
+  static function(int, mapping:void) send_done;
 
   static multiset(string) esmtp_features = (<>);
 
-  static void connect_and_send();
-
-  static string out_buf = "";
-  static void send_data()
-  {
-    int i = con->write(out_buf);
-#ifdef RELAY_DEBUG
-    report_debug(sprintf("SMTP: Wrote %d bytes\n", i));
-#endif /* RELAY_DEBUG */
-    if (i < 0) {
-      // Error
-      con->close();
-      connect_and_send();
-    } else {
-      out_buf = out_buf[i..];
-      if (!sizeof(out_buf)) {
-	con->set_write_callback(0);
-      }
-    }
-  }
-
-  static void send(string s)
-  {
-#ifdef RELAY_DEBUG
-    // roxen_perror("SMTP: send(%O)\n", s);
-#endif /* RELAY_DEBUG */
-    out_buf += s;
-
-    if (sizeof(out_buf)) {
-      con->set_write_callback(send_data);
-    }
-  }
-
-  static string last_command = "";
-  static void send_command(string s)
-  {
-#ifdef RELAY_DEBUG
-    report_debug(sprintf("SMTP: send_command(%O)\n", s));
-#endif /* RELAY_DEBUG */
-    last_command = s;
-    send(s + "\r\n");
-  }
-
-  /*
-   * Functions called by the state machine
-   */
-  
-  static void send_ehlo()
-  {
-    message->prot = "ESMTP";
-    send_command(sprintf("EHLO %s", gethostname()));
-  }
-
-  static void send_helo()
-  {
-    message->prot = "SMTP";
-    send_command(sprintf("HELO %s", gethostname()));
-  }
-
-  static void send_mail_from(string code, array(string) reply)
-  {
-    if (state == 1) {
-      if (sizeof(reply) > 1) {
-	// Parse EHLO reply
-	esmtp_features = (< @Array.map(reply[1..], lower_case) >);
-      }
-    }
-    string extras = "";
-    if (esmtp_features["8bitmime"]) {
-      extras += " BODY=8BITMIME";
-    }
-    if (esmtp_features["size"]) {
-      array a = mail->stat();
-      if (a && (a[1] >= 0)) {
-	// Add some margin for safety.
-	extras += " SIZE="+(a[1]+128);
-      } else {
-	// Shouldn't happen, but...
-	extras += " SIZE=10240";
-      }
-    }
-    send_command(sprintf("MAIL FROM:<%s>%s", message->sender, extras));
-  }
-
-  static void send_rcpt_to()
-  {
-    send_command(sprintf("RCPT TO:<%s@%s>", message->user, message->domain));
-  }
-
   static void send_bounce(string code, array(string) text)
   {
-    parent->bounce(message, code, text, last_command);
+    message->sent += sent_bytes;
+    sent_bytes = 0;
+    bounce(message, code, text, last_command);
 
-    send_command("QUIT");
+    send_command("QUIT", got_quit_reply_fail);
   }
 
   static void send_bounce_and_stop(string code, array(string) text)
   {
-    // Stop sending the message, since it won't be possible to
-    // deliver it.
-    result = -2;
+    message->sent += sent_bytes;
+    sent_bytes = 0;
+    bounce(message, code, text, last_command);
 
-    send_bounce(code, text);
+    send_command("QUIT", got_quit_reply_stop);
   }
 
   static void bad_address(string code, array(string) text)
   {
-    // Permanently bad address.
-    result = -2;
-
-    send_bounce(code, text);
+    send_bounce_and_stop(code, text);
   }
 
-  static void send_body()
+  static void got_quit_reply_ok(string code, array(string) text)
   {
-    string m = mail->read(0x7fffffff);
-    if (sizeof(m)) { 
-      // Stupid Qmail doesn't allow single lf's in the body...
-      m = replace(m, ({ "\r\n", "\r", "\n" }), ({ "\r\n", "\r\n", "\r\n" }));
-      if (m[0] == '.') {
-	// Not likely...
-	// Especially not since the first line is probably the
-	// Received header...
-	m = "." + m;
-      }
-      if (m[-1] != '\n') {
-	// Not likely either, but...
-	m += "\r\n";
-      }
-      m = replace(m, "\n.", "\n..") + ".\r\n";
-      send(m);
-      message->sent = sizeof(m);
-    } else {
-      send(".\r\n");
-      message->sent = 3;
-    }
-  }
-
-  static void send_ok()
-  {
-#ifdef RELAY_DEBUG
-    report_debug(sprintf("SMTP: Message %O sent ok!\n", message->mailid));
-#endif /* RELAY_DEBUG */
-    result = 1;
-    send_command("QUIT");
-  }
-
-  // The state machine
-
-  static constant state_machine = ({
-    ([ "220":1, ]), 			// 0 (Connection established), EHLO
-    ([ "250":2, "":3, "221":7 ]),	// 1 EHLO reply, MAIL FROM:, HELO
-    ([ "250":4, ]),			// 2 MAIL FROM: reply, RCPT TO:
-    ([ "250":2, ]),			// 3 HELO reply, MAIL FROM:
-    ([ "25":5, ]),			// 4 RCPT TO: reply, DATA
-    ([ "354":6, ]),			// 5 DATA reply, body
-    ([]),				// 6 body reply,
-    ([ "":-1 ]),			// 7 QUIT reply, disconnect
-  });
-
-  static array(mapping) state_actions = ({
-    ([ "220":send_ehlo, ]),
-    ([ "250":send_mail_from, "":send_helo, "221":"QUIT", ]),
-    ([ "250":send_rcpt_to, "5":send_bounce_and_stop, ]),
-    ([ "250":send_mail_from, "5":send_bounce, ]),
-    ([ "25":"DATA", "55":bad_address, ]),
-    ([ "354":send_body, "":send_bounce, ]),
-    ([ "250":send_ok, "5":send_bounce_and_stop, "":send_bounce, ]),
-    ([]),
-  });
-
-#if 0
-  static array disconnect_actions = ({
-    0,
-    reconnect_with_helo,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-  });
-#endif /* 0 */
-    
-
-  static mixed find_next(mapping(string:mixed) machine,
-			 string code, mixed def)
-  {
-    mixed res;
-    int i;
-    for (i=sizeof(code); i--; ) {
-      if (!zero_type(res = machine[code[..i]])) {
-	return res;
-      }
-    }
-    if (!zero_type(res = machine[""])) {
-      return res;
-    }
-    return def;
-  }
-
-  static void got_reply(string code, array(string) data)
-  {
-    int next_state = find_next(state_machine[state], code, 7);
-    function|string action = find_next(state_actions[state], code, "QUIT");
-
-#ifdef DEBUG
-    report_debug(sprintf("code %s: State %d => State %d:%O\n",
-			 code, state, next_state, action));
-#endif /* DEBUG */
-
-    if (stringp(action)) {
-      send_command(action);
-    } else {
-      action(code, data);
-    }
-    state = next_state;
-    if (state < 0) {
+    if (con) {
       con->close();
-      connect_and_send();
-      return;
+      con = 0;
     }
+    message->sent += sent_bytes;
+    sent_bytes = 0;
+    send_done(SEND_OK, message);
   }
 
-  static string in_code = "";
-  static array(string) in_arr = ({});
-  static string in_buf = "";
-  static void got_data(mixed id, string data)
+  static void got_quit_reply_fail(string code, array(string) text)
   {
-#ifdef RELAY_DEBUG
-    report_debug(sprintf("SMTP: got_data(%O, %O)\n", id, data));
-#endif /* RELAY_DEBUG */
-    in_buf += data;
-
-    int i;
-    while ((i = search(in_buf, "\r\n")) != -1) {
-      if (i < 3) {
-	// Shouldn't happen, but...
-	in_buf = in_buf[i+2..];
-
-	if (sizeof(in_arr)) {
-	  got_reply(in_code, in_arr);
-	}
-
-	continue;
-      }
-      string line = in_buf[..i-1];	// No crlf;
-      in_buf = in_buf[i+2..];
-
-      in_code = line[..2];
-      int cont = line[3..3] == "-";
-      line = line[4..];
-      in_arr += ({ line });
-      if (!cont) {
-	got_reply(in_code, in_arr);
-	in_arr = ({});
-      }
+    if (con) {
+      con->close();
+      con = 0;
     }
-  }
-
-  static void con_closed()
-  {
-    if (state == 1) {
-      // FIXME: Reconnect, and try with HELO this time.
-    }
-    con->close();
     connect_and_send();
   }
 
-  static void got_connection(object c)
+  static void got_quit_reply_stop(string code, array(string) text)
+  {
+    if (con) {
+      con->close();
+      con = 0;
+    }
+    message->sent += sent_bytes;
+    sent_bytes = 0;
+
+    send_done(SEND_ADDR_FAIL, message);
+  }
+
+  static void got_message_reply(string code, array(string) text)
+  {
+    switch(code) {
+    case "250":
+      // Message sent OK.
+      send_command("QUIT", got_quit_reply_ok);
+      break;
+    default:
+      if (code && (code[0] == '5')) {
+	send_bounce_and_stop(code, text);
+      } else {
+	send_bounce(code, text);
+      }
+      break;
+    }
+  }
+
+  static void message_sent(int bytes)
+  {
+    sent_bytes += bytes;
+
+    send_command(".", got_message_reply);
+  }
+
+  static void got_data_reply(string code, array(string) text)
+  {
+    switch(code) {
+    case "354":
+      // DATA OK.
+      // Send the actual message.
+      // Note that the spoolfile has already been sufficiently quoted.
+      // Required quoting:
+      //   * No lone '\r' or '\n', only "\r\n".
+      //   * If a line starts with '.', it must be doubled.
+      //   * The file must end with "\r\n".
+      Stdio.sendfile(0, mail, 0, -1, 0, message_sent);
+      break;
+    default:
+      // Bounce.
+      send_bounce(code, text);
+      break;
+    }
+  }
+
+  static void got_rcpt_to_reply(string code, array(string) text)
+  {
+    switch(code[..1]) {
+    case "25":
+      // RCPT TO: OK.
+      send_command("DATA", got_data_reply);
+      break;
+    case "55":
+      // Bad address.
+      bad_address(code, text);
+      break;
+    default:
+      // Try the mext MX.
+      send_command("QUIT", got_quit_reply_fail);
+      break;
+    }
+  }
+
+  static void got_mail_from_reply(string code, array(string) text)
+  {
+    switch(code) {
+    case "250":
+      // MAIL FROM: OK.
+      send_command(sprintf("RCPT TO:<%s@%s>",
+			   message->user, message->domain,
+			   got_rcpt_to_reply));
+      break;
+    default:
+      if (code[0] == '5') {
+	// The sender isn't allowed to send messages to this server.
+	send_bounce_and_stop(code, text);
+      } else {
+	// Try the next MX.
+	send_command("QUIT", got_quit_reply_fail);
+      }
+      break;
+    }
+  }
+
+  static void got_helo_reply(string code, array(string) text)
+  {
+    switch(code) {
+    case 250:
+      // HELO OK.
+      send_command(sprintf("MAIL FROM:<%s>", message->sender),
+		   got_mail_from_reply);
+      break;
+    default:
+      // Try the next MX.
+      send_command("QUIT", got_quit_reply_fail);
+      break;
+    }
+  }
+
+  static void got_ehlo_reply(string code, array(string) text)
+  {
+    switch(code) {
+    case "250":
+      // EHLO OK.
+      if (sizeof(text) > 1) {
+	// Parse EHLO reply
+	esmtp_features = (< @Array.map(text[1..], lower_case) >);
+      }
+      string extras = "";
+      if (esmtp_features["8bitmime"]) {
+	extras += " BODY=8BITMIME";
+      }
+      if (esmtp_features["size"]) {
+	array a = mail->stat();
+	if (a && (a[1] >= 0)) {
+	  // Add some margin for safety.
+	  extras += " SIZE="+(a[1]+128);
+	}
+      }
+      send_command(sprintf("MAIL FROM:<%s>%s", message->sender, extras),
+		   got_mail_from_reply);
+      break;
+    case "221":
+      // Server too busy?
+      // Try the next MX.
+      got_quit_reply_fail(code, text);
+      break;
+    case 0:
+      // Disconnected.
+      // EHLO not supported in a bad way.
+      // FIXME: Try reconnecting with HELO.
+      // Workaround: Try the next MX.
+      got_quit_reply_fail(0, 0);
+      break;
+    default:
+      // EHLO not supported.
+      // Try HELO.
+      message->prot = "SMTP";
+      send_command(sprintf("HELO %s", QUERY(hostname)), got_helo_reply);
+      break;
+    }
+  }
+
+  static void got_con_reply(string code, array(string) text)
+  {
+    switch(code) {
+    case "220":
+      message->prot = "ESMTP";
+      send_command(sprintf("EHLO %s", QUERY(hostname)), got_ehlo_reply);
+      break;
+    case 0:
+      // Immediate disconnect.
+      // Try the next MX.
+      got_quit_reply_fail(0, 0);
+      break;
+    default:
+      send_command("QUIT", got_quit_reply_fail);
+      break;
+    }
+  }
+
+  static void got_connection(int|object c)
   {
     if (intp(c)) {
       switch(c) {
-      case 0:
-#ifdef RELAY_DEBUG
-	report_debug(sprintf("SMTP: Connection to %s refused.\n",
-			     message->remote_mta));
-#endif /* RELAY_DEBUG */
-	// Connection refused.
+      case ACON_REFUSED:
+	// Try the next one.
+	connect_and_send();
 	break;
-      case -1:
-	// Connected to ourselves.
+      case ACON_LOOP:
 	if (servercount == 1) {
 	  // We're the primary MX!
-	  result = -2;
-	  
-	  parent->bounce(message, "554", ({
-	    sprintf("MX list for %s points back to %s(%s)",
-		    message->domain, message->remote_mta, gethostname()),
-	    sprintf("<%s@%s>... Local configuration error",
-		    message->user, message->domain),
-	  }), "");
+	  bounce(message, "554",
+		 sprintf("MX list for %s points back to %s(%s)\n"
+			 "<%s@%2>... Local configuration error",
+			 message->domain, message->remote_mta, QUERY(hostname),
+			 message->user, message->domain)/"\n",
+		 "");
+	  send_done(SEND_ADDR_FAIL, message);
+	  return;
 	}
-	break;
-      case -2:
-	// DNS failure
+	// Try again later.
+	send_done(SEND_FAIL, message);
+	break;;
+      case ACON_DNS_FAIL:
 	if (sizeof(servers) == 1) {
 	  // Permanently bad address.
-	  result = -3;
-	  // Status 5.1.2
 	  message->status = "5.1.2";
+	  bounce(message, "550",
+		 sprintf("DNS lookup failed for SMTP server %s",
+			 mesage->remote_mta)/"\n",
+		 "");
+	  send_done(SEND_DNS_UNKNOWN, message);
+	  return;
 	}
-	parent->bounce(message, "550", ({
-	  sprintf("DNS lookup failed for SMTP server %s",
-		  message->remote_mta),
-	}), "");
+	bounce(message, "550",
+	       sprintf("DNS lookup failed for SMTP server %s",
+		       mesage->remote_mta)/"\n",
+	       "");
+	// Try the next server.
+	connect_and_send();
 	break;
       }
-      connect_and_send();
       return;
     }
 
+    // Connection ok.
+
+    // Reset buffers etc.
+    reset();
+
     con = c;
 
-    in_buf = "";
-    con->set_nonblocking(got_data, 0, con_closed);
+    async_get_code(send_ehlo);
   }
 
   static void connect_and_send()
   {
-    if (result) {
-      // We've succeeded to send the message!
-      send_done(result, message);
-      return;
-    }
-
     // Try the next SMTP server.
-    int server = servercount++;
+    int server = servercouint++;
 
     if (server >= sizeof(servers)) {
-      // Failure
+      // Failure.
 
-      report_error(sprintf("SMTP: Failed to send message to domain %O\n",
-			   message->domain));
-
-      int t = ((int)message->times);
-      // Try send a notify bounce after 4, 8, and 16 hours and 
-      // after 1, 2, 4 and 7 days.
-      if ((< 4, 8, 16, 24, 48, 96, 168 >)[t]) {
-	if (t < 168) {
-	  parent->bounce(message, "554", ({
-	    sprintf("Message not delivered after %d attempts.", t),
-	    sprintf("Will continue to attempt to send %d more times.",
-		    168 - t),
-	  }), "");
-	} else {
-	  parent->bounce(message, "554", ({
-	    sprintf("Message not delivered after %d attempts.", t),
-	    "Giving up.",
-	  }), "");
-	  // Give up.
-	  send_done(-2, message);
-	  return;
-	}
-      }
-
-      // Send failure message.
-      send_done(0, message);
       return;
     }
 
@@ -632,43 +680,40 @@ class MailSender
 			 servers[server]));
 #endif /* RELAY_DEBUG */
 
-    // Reset the state.
-    state = 0;
-    out_buf = "";
     esmtp_features = (<>);
 
     message->remote_mta = servers[server];
     message->last_attempt_at = time();
 
-    async_connect(servers[server], 25, got_connection);
+    mail->seek(0);
+
+    async_connect_not_self(servers[server], 25, got_connection);
   }
 
   static void got_mx(array(string) mx)
   {
     if (!(servers = mx)) {
-    // No MX record for the domain.
+      // No MX record for the domain.
       servers = ({ message->domain });
     }
     
     connect_and_send();
   }
 
-  void create(object d, mapping(string:string) m, string dir,
-	      function cb, object p)
+  void create(mapping(string:string) m, function(int, mapping:void) cb)
   {
-    dns = d;
-    message = m;
-    send_done = cb;
-    parent = p;
-
-    string fname = combine_path(dir, m->mailid);
+    string fname = combine_path(QUERY(spooldir), m->mailid);
 
     mail = Stdio.File();
     if (!(mail->open(fname, "r"))) {
       report_error(sprintf("Failed to open spoolfile %O\n", fname));
-      call_out(cb, 0, -1, m);
+      call_out(cb, 0, PERMANENT_SEND_FAIL, m);
       return;
     }
+
+    message = m;
+
+    send_done = cb;
 
 #ifdef RELAY_DEBUG
     report_debug(sprintf("Sending %O to %s@%s from %s...\n",
@@ -676,9 +721,9 @@ class MailSender
 			 message->sender));
 #endif /* RELAY_DEBUG */
 
-    dns->get_mx(message->domain, got_mx);
+    dns->get_mx(message->domain, got_mx);    
   }
-};
+}
 
 static void mail_sent(int res, mapping message)
 {
@@ -764,7 +809,7 @@ static void send_mail()
 		       "SET send_at = %d, times = %d WHERE id = %s",
 		       time() + 60*60, ((int)mm->times) + 1, mm->id));
     // Send the message.
-    MailSender(dns, mm, QUERY(spooldir), mail_sent, this_object());
+    MailSender(mm, mail_sent);
   }
 
   // Recheck again in 10 sec <= X <= 1 hour.
@@ -805,7 +850,7 @@ static void check_mail(int t)
 }
 
 /*
- * Callable from elsewhere to send message's
+ * Callable from elsewhere to send messages
  */
 int send_message(string from, multiset(string) rcpt, string message)
 {
@@ -863,6 +908,21 @@ void bounce(mapping msg, string code, array(string) text, string last_command,
       string s;
       while((s = f->read(8192)) && (s != "")) {
 	oldmessage += s;
+
+	if (sizeof(oldmessage) > QUERY(bounce_size_limit)) {
+	  // Too large bounce.
+	  if ((i = search(oldmessage, "\r\n\r\n")) != -1) {
+	    // Just keep the headers.
+	    oldmessage = oldmessage[..i+3] + "[ Body truncated ]\r\n";
+	  } else {
+	    // Lots of headers.
+	    oldmessage =
+	      "Subject: Huge amount of headers -- Headers truncated\r\n"
+	      "\r\n"
+	      "[ Body truncated ]\r\n";
+	  }
+	  break;
+	}
       }
       f->close();
       oldheaders = oldmessage;
@@ -1053,7 +1113,27 @@ int relay(string from, string user, string domain,
     string s;
     string headers = "";
     int headers_found;
+    string rest = "";
+    int last_was_lf = 1;
     while((s = mail->read(8192)) && (s != "")) {
+      if (last_was_lf && (rest == "") && (s[0] == '.')) {
+	s = "." + s;
+      } else {
+	s = rest + s;
+      }
+      if (s[-1] == '\r') {
+	rest = "\r";
+	s = s[..sizeof(s)-2];
+      } else {
+	rest = "";
+      }
+      // Perform quoting...
+      s = replace(s, ({ "\r.", "\n.", "\r\n.", 
+			"\r", "\n", "\r\n", }),
+		  ({ "\r\n..", "\r\n..", "\r\n..",
+		     "\r\n", "\r\n", "\r\n" }));
+      last_was_lf = (s[-1] == '\n');
+
       if (QUERY(maxhops) && !headers_found) {
 	headers += s;
 	headers_found = (sscanf(headers, "%s\r\n\r\n", headers) ||
@@ -1093,6 +1173,19 @@ int relay(string from, string user, string domain,
 	}
       }
       if (spoolfile->write(s) != sizeof(s)) {
+	report_error(sprintf("SMTPRelay: Failed to write spoolfile %O!\n",
+			     fname));
+
+	// FIXME: Should send a message to from here.
+
+	rm(fname);
+
+	return(0);
+      }
+    }
+    if ((rest != "") || (!last_was_lf)) {
+      // The file must be terminated with a \r\n.
+      if (spoolfile->write("\r\n") != 2) {
 	report_error(sprintf("SMTPRelay: Failed to write spoolfile %O!\n",
 			     fname));
 
