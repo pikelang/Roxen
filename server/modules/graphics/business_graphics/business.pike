@@ -11,12 +11,13 @@
  *
  * Idag:
  * Skriv dok och skriv ut åt PetNo.
+ * Se till att sumbars får jämnstora arrayer.
  *
  * Senare:
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.18 1997/10/15 11:38:53 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.19 1997/10/15 11:46:33 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -149,16 +150,17 @@ string itag_data(mapping tag, mapping m, string contents,
   if(m->lineseparator)
     linesep=m->lineseparator;
 
-  if(m->form == "db" || m->form == "straight")
+  if( !m->form || m->form == "db" || m->form == "straight" )
   {
-    array lines = contents/linesep;
+    contents = contents - " ";
+    array lines = filter( contents/linesep, sizeof );
     array foo = ({});
     array bar = ({});
     int maxsize=0;
 
     foreach( lines, string entries )
     {
-      foreach( Array.filter( ({ entries/sep - ({""}) }), sizeof ), array item)
+      foreach( filter( ({ entries/sep - ({""}) }), sizeof ), array item)
       {
 	foreach( item, string gaz )
 	  foo += ({ (float)gaz });
@@ -358,11 +360,11 @@ string tag_diagram(string tag, mapping m, string contents,
 
   if(!res->xnames)
     if(res->xname) res->xnames = ({ res->xname });
-    else res->xnames = ({ });
+    else res->xnames = 0;
       
   if(!res->ynames)
     if(res->yname) res->ynames = ({ res->yname });
-    else res->ynames = ({ });
+    else res->ynames = 0;
       
   m_delete( m, "ysize" );
   m_delete( m, "xsize" );
