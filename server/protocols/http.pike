@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.125 1999/02/15 23:24:30 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.126 1999/03/18 00:45:40 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -224,6 +224,7 @@ private int really_set_config(array mod_config)
 }
 
 private static mixed f, line;
+private static int hstart;
 
 private int parse_got(string s)
 {
@@ -235,16 +236,27 @@ private int parse_got(string s)
   raw = s;
 
   if (!line) {
-    int start = search(s, "\r\n");
+    // Used to search for \r\n, but Netscape 4.5 sends just a \n
+    // when doing a proxy-request.
+    // example line:
+    //   "CONNECT mikabran:443 HTTP/1.0\n"
+    //   "User-Agent: Mozilla/4.5 [en] (X11; U; Linux 2.0.35 i586)"
+    hstart = search(s, "\n");
 
-    if ((< -1, 0 >)[start]) {
+    if ((< -1, 0 >)[hstart]) {
       // Not enough data, or malformed request.
-      return ([ -1:0, 0:2 ])[start];
+      return ([ -1:0, 0:2 ])[hstart];
     }
-    line = s[..start-1];
+
+    if (s[hstart-1] == '\r') {
+      line = s[..hstart-2];
+    } else {
+      // Kludge for Netscape 4.5 sending bad requests.
+      line = s[..hstart-1];
+    }
 
     // Parse the command
-    start = search(line, " ");
+    int start = search(line, " ");
     if (start != -1) {
       method = upper_case(line[..start-1]);
 
@@ -274,7 +286,7 @@ private int parse_got(string s)
 	  return 0;
 	}
 	data = s[end+4..];
-	s = s[sizeof(line)+2..end-1];
+	s = s[hstart+1..end-1];
       } else {
 	f = line[start+1..];
 	prot = clientprot = "HTTP/0.9";
@@ -295,7 +307,7 @@ private int parse_got(string s)
       return 0;
     }
     data = s[end+4..];
-    s = s[sizeof(line)+2..end-1];
+    s = s[hstart+1..end-1];
   }
 
 
