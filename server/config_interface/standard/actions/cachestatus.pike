@@ -13,7 +13,8 @@ constant doc_svenska = "Visa information om minnescachen i roxen";
 string parse( RequestID id )
 {
 
-  string res = "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
+  string res = "<b>"+LOCALE(0, "WebServer Memory Cache")+"</b><br />"
+    "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
     "<tr bgcolor=\"&usr.fade3;\">"
     "<td>"+LOCALE(0, "Class")+"</td>"
     "<td align=\"right\">"+LOCALE(0, "Entries")+"</td>"
@@ -62,7 +63,21 @@ string parse( RequestID id )
   else
     res += "<td>0%</td>";
 
-  return res + "</tr></table>" +
-    (roxen->query("cache")?"<p>"+ roxen->get_garb_info():"") +
-    "<p><cf-ok>";
+  res += "</tr></table>" +
+    (roxen->query("cache")?"<br />"+ roxen->get_garb_info():"");
+
+#if constant(Locale.cache_status)
+  mapping l=Locale.cache_status();
+#else
+  mapping l=RoxenLocale.cache_status();
+#endif
+  res += "<br /><b>"+LOCALE(0, "Locale Cache")+"</b><br />"
+    "<table>"
+    "<tr><td>"+LOCALE(0, "Loaded languages:")+"</td><td>"+l->languages+"</td></tr>"
+    "<tr><td>"+LOCALE(0, "Registered projects:")+"</td><td>"+l->reg_proj+"</td></tr>"
+    "<tr><td>"+LOCALE(0, "Loaded projects:")+"</td><td>"+l->load_proj+"</td></tr>"
+    "<tr><td>"+LOCALE(0, "Current cache size:")+"</td><td>"+Roxen.sizetostring(l->bytes)+"</td></tr>"
+    "</table><br />";
+
+  return res +  "<p><cf-ok/></p>";
 }
