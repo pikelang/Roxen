@@ -3,7 +3,7 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: ypuserdb.pike,v 1.1 1997/06/09 17:52:00 grubba Exp $";
+string cvs_version = "$Id: ypuserdb.pike,v 1.2 1997/06/09 18:49:07 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -16,8 +16,7 @@ import Yp;
 /*
  * Globals
  */
-object(YpMap) users;		// passwd.byname
-object(YpMap) uid2user;		// passwd.byuid
+object(YpDomain) domain;
 
 /*
  * Statistics
@@ -29,7 +28,7 @@ mapping(string:int) failed = ([]);
 string status()
 {
   return("<h1>Security info</h1>\n"
-	 "<b>YP-server:</b> " + users->server() + "<br>\n"
+	 "<b>YP-server:</b> " + domain->server() + "<br>\n"
 	 "<b>YP-domain:</b> " + default_yp_domain() + "<br>\n"
 	 "<p>\n"
 	 "<b>Successful auths:</b> " + (string)succ +
@@ -41,7 +40,8 @@ string status()
 	 (map(indices(failed), lambda(string s) {
 	   return roxen->quick_ip_to_host(s) + ": " + failed[s] + "<br>\n";
 	 }) * "") +
-	 "<p>The database has " + sizeof(users->all()) + " entries."
+	 "<p>The database has " + sizeof(domain->all("passwd.byname")) +
+	 " entries."
 }
 
 /*
@@ -50,7 +50,7 @@ string status()
 
 array(string) userinfo(string u)
 {
-  string s = users->match(u);
+  string s = domain->match("passwd.byname", u);
   if (s) {
     return(s/":");
   }
@@ -59,7 +59,7 @@ array(string) userinfo(string u)
 
 array(string) userlist()
 {
-  mapping(string:string) m = users->all();
+  mapping(string:string) m = domain->all("passwd.byname");
   if (m) {
     return(indices(m));
   }
@@ -68,7 +68,7 @@ array(string) userlist()
 
 string user_from_uid(int u)
 {
-  string s = uid2user->match((string)u);
+  string s = domain->match("passwd.byuid", (string)u);
   if (s) {
     return((s/":")[0]);
   }
@@ -86,7 +86,7 @@ array|int auth(array(string) auth, object id)
   } else {
     p = arr[1..]*":";
   }
-  string s = users->match(u);
+  string s = domain->match("passwd.byname", u);
   if (!s) {
     fail++;
     nouser++;
@@ -125,11 +125,8 @@ array register_module()
 
 void start(int i)
 {
-  if (!users) {
-    users = YpMap("passwd.byname");
-  }
-  if (!uid2user) {
-    uid2user = YpMap("passwd.byuid");
+  if (!domain) {
+    domain = YpDomain();
   }
 }
 
