@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.109 2002/06/10 14:24:30 anders Exp $";
+  "$Id: config_filesystem.pike,v 1.110 2003/11/17 14:52:04 anders Exp $";
 
 constant path = "config_interface/";
 
@@ -120,6 +120,7 @@ mixed find_file( string f, RequestID id )
   int is_docs;
   User user;
   string locale = "standard";
+  string encoding;
 
   if( (time(1) - last_cache_clear_time) > 4 )
   {
@@ -159,7 +160,7 @@ mixed find_file( string f, RequestID id )
 					   roxen.config_userdb_module );
     }
 
-    string encoding = config_setting( "charset" );
+    encoding = config_setting( "charset" );
     if( encoding != "utf-8" &&
 	encoding != "iso-8859-1")
       catch {
@@ -167,7 +168,6 @@ mixed find_file( string f, RequestID id )
       };
     else
       charset_decoder = 0;
-    id->set_output_charset( encoding );
     id->since = 0;
     catch 
     {
@@ -223,8 +223,10 @@ mixed find_file( string f, RequestID id )
 
     if( locale != "standard" ) 
       roxen.set_locale( locale );
-  }
 
+    if (glob("text*", type))
+      id->set_output_charset( encoding );
+  }
 
   if( docs && (sscanf( f, "docs/%s", f ) ) || (f=="docs"))
   {
@@ -242,7 +244,21 @@ mixed find_file( string f, RequestID id )
         sscanf( data, "%*s<br clear=\"all\">%s", data );
         sscanf( data, "%s</body>", data );
         retval = "<topmenu selected='docs' base='"+query_location()+"'/>"
-               "<content>"+data+"</content>";
+	  "<define container='dox'>"
+	  "<if variable='usr.doc-content-box = ?*'>"
+	  "<subtablist><st-page>"
+	  "<contents/>"
+	  "</st-page></subtablist>"
+	  "</if>"
+	  "<else>"
+	  "<contents/>"
+	  "</else>"
+	  "</define>"
+	  "<content>"
+	  "<dox>"
+	  +data+
+	  "</dox>"
+	  "</content>";
         if( title )
           retval="<title>: Docs "+Roxen.html_encode_string(title)+"</title>" +
                            retval;
