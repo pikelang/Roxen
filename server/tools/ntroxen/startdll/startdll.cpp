@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.17 2004/06/08 09:40:50 grubba Exp $
+// $Id: startdll.cpp,v 1.18 2004/06/08 09:47:36 grubba Exp $
 //
 
 
@@ -180,7 +180,7 @@ inline BOOL CServiceModule::Install()
     TCHAR szFilePath[_MAX_PATH];
     ::GetModuleFileName(NULL, szFilePath, _MAX_PATH);
 
-    SC_HANDLE hService = ::OpenService(hSCM, m_szServiceName, SERVICE_CHANGE_CONFIG);
+    SC_HANDLE hService = ::OpenService(hSCM, m_szServiceName, SERVICE_QUERY_CONFIG|SERVICE_CHANGE_CONFIG);
     if (hService) {
       // Update a previously installed entry.
       if (!::ChangeServiceConfig(hSCM, SERVICE_WIN32_OWN_PROCESS,
