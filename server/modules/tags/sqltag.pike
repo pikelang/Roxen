@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.13 1997/10/15 18:59:32 grubba Exp $
+ * $Id: sqltag.pike,v 1.14 1997/10/15 19:05:08 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.13 1997/10/15 18:59:32 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.14 1997/10/15 19:05:08 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -113,7 +113,7 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
     if (args->password) {
       password = args->password;
     }
-    host = (lowercase(host) == "localhost")?"":host;
+    host = (lower_case(host) == "localhost")?"":host;
     
     if (error = catch(con = sql(host, database, user, password))) {
       contents = "<h1>Couldn't connect to SQL-server</h1><br>\n" +
@@ -193,7 +193,7 @@ string sqlquery_tag(string tag_name, mapping args,
     if (args->password) {
       password = args->password;
     }
-    host = (lowercase(host) == "localhost")?"":host;
+    host = (lower_case(host) == "localhost")?"":host;
     
     if (error = catch(con = sql(host, database, user, password))) {
       return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
@@ -212,6 +212,13 @@ string sqlquery_tag(string tag_name, mapping args,
 string sqltable_tag(string tag_name, mapping args,
 		    object request_id, mapping defines)
 {
+  int ascii;
+
+  if (args->ascii) {
+    // ASCII-mode
+    ascii = 1;
+  }
+
   if (args->query) {
     string host = query("hostname");
 #ifdef SQL_TAG_COMPAT
@@ -225,12 +232,6 @@ string sqltable_tag(string tag_name, mapping args,
     mixed error;
     object(sql_result) result;
     string res;
-    int ascii;
-
-    if (args->ascii) {
-      // ASCII-mode
-      ascii = 1;
-    }
 
     if (args->host) {
       host = args->host;
@@ -248,7 +249,7 @@ string sqltable_tag(string tag_name, mapping args,
     if (args->password) {
       password = args->password;
     }
-    host = (lowercase(host) == "localhost")?"":host;
+    host = (lower_case(host) == "localhost")?"":host;
     
     if (error = catch(con = sql(host, database, user, password))) {
       return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
@@ -367,12 +368,15 @@ void create()
 	 "sql-servers your pike has support for, but the following "
 	 "might exist: msql, mysql, odbc, oracle, postgres.\n");
 #ifdef SQL_TAG_COMPAT
-  defvar("database", "", "Default SQL-database",
-	 TYPE_STRING, "Specifies the name of the default SQL-database.\n");
-  defvar("user", "", "Default username",
-	 TYPE_STRING, "Specifies the default username to use for access.\n");
-  defvar("password", "", "Default password",
-	 TYPE_STRING, "Specifies the default password to use for access.\n");
+  defvar("database", "", "Default SQL-database (deprecated)",
+	 TYPE_STRING|VAR_MORE,
+	 "Specifies the name of the default SQL-database.\n");
+  defvar("user", "", "Default username (deprecated)",
+	 TYPE_STRING|VAR_MORE,
+	 "Specifies the default username to use for access.\n");
+  defvar("password", "", "Default password (deprecated)",
+	 TYPE_STRING|VAR_MORE,
+	 "Specifies the default password to use for access.\n");
 #endif /* SQL_TAG_COMPAT */
 }
 
@@ -391,8 +395,11 @@ void stop()
 string status()
 {
   if (catch {
-    object o = Sql.sql(QUERY(hostname), QUERY(database),
-		       QUERY(user), QUERY(password));
+    object o = Sql.sql(QUERY(hostname)
+#ifdef SQL_TAG_COMPAT
+		       , QUERY(database), QUERY(user), QUERY(password)
+#endif /* SQL_TAG_COMPAT */
+		       );
     return(sprintf("Connected to %s-server on %s<br>\n",
 		   o->server_info(), o->host_info()));
   }) {
