@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.7 1998/07/21 14:35:55 wellhard Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.8 1998/07/21 18:52:34 js Exp $";
 
 mapping host_to_id;
 
@@ -43,7 +43,11 @@ void update_host_cache(object id)
 
 string file_from_host(object id, string file)
 {
+//   werror("file_from_host: %O\n",file);
+//   werror("   customer_id: %O\n",id->misc->customer_id);
   string prefix,dir;
+  if(prefix=id->misc->customer_id)
+    return "/"+prefix+"/"+file;
   string prefix=id->misc->customer_id=id->variables->customer_id=host_to_id[get_host(id)];
   if(prefix)
     dir = "/" + prefix + "/";
@@ -53,6 +57,7 @@ string file_from_host(object id, string file)
     sscanf(file,"%s/%s",host,rest);
     if(prefix=host_to_id[host])
     {
+      id->misc->customer_id=id->variables->customer_id=prefix;
       dir="/" + prefix + "/";
       if(rest)
 	file=rest;
@@ -60,7 +65,6 @@ string file_from_host(object id, string file)
     else
       return 0; // No such host
   }
-  dir = replace(dir, "//", "/");
   return dir+file;
 }
 
@@ -135,7 +139,7 @@ mixed stat_file(mixed f, mixed id)
     update_host_cache(id);
   string file=file_from_host(id,f);
   if(!file)
-    return 0; // FIXME, return a helpful page
+    return 0;
   else
     return filesystem::stat_file( file,id );
 }
