@@ -132,7 +132,7 @@ page.
 %3c/body%3e
 </str></var>
   <var name='comment'>           <str></str> </var>
-  <var name='compat_level'>       <str>2.4</str> </var>
+  <var name='compat_level'>       <str>4.0</str> </var>
   <var name='data_cache_file_max_size'> <int>50</int> </var>
   <var name='data_cache_size'>   <int>2048</int> </var>
   <var name='default_server'>    <int>0</int> </var>
