@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.91 1998/04/21 19:10:39 grubba Exp $
+ * $Id: ftp.pike,v 1.92 1998/05/08 00:27:13 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -1385,8 +1385,15 @@ void handle_data(string s, mixed key)
 
 
     // Lets hope the ftp-module doesn't store things in misc between
-    // requests    
-    misc = ([ ]);
+    // requests.
+    // IT DOES!	/grubba
+    mapping new_misc = ([]);
+    foreach(({ "uid","gid","gecos","home","shell" }), string s) {
+      if (misc[s]) {
+	new_misc[s] = misc[s];
+      }
+    }
+    misc = new_misc;
     if (sscanf(cmdlin,"%s %s",cmd,arg)<2) 
       arg="",cmd=cmdlin;
     cmd=lower_case(cmd);
