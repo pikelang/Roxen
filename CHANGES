@@ -9,6 +9,12 @@ o Fixed Business Graphics to use background and forground colors if available.
 
 o Made a new SSL3 demo certificate that expires in the year 2011.
 
+o Changed name of "Directory Parsing Module MkII" to "Extended
+  Directory Parsing Module"
+
+o Modified SQLuserdb to use the standard SQL-URL to specify database and its
+  metadata.
+
 
 Changes since Roxen Challenger 1.2.42 Red
 -----------------------------------------------
