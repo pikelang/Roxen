@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.9 1997/12/15 20:04:04 peter Exp $
+ * $Id: problems.pike,v 1.10 1998/02/05 00:11:11 grubba Exp $
  */
 
 inherit "wizard";
@@ -67,6 +67,7 @@ string page_1(object id)
     {
       if(mod_problems[n]==DIR_DONT_EXIST)
       {
+#if constant(readlink)
 	int in_main_path;
 	string symlink;
 	if(search(roxen->query("ModuleDirs"), n)+1)
@@ -86,6 +87,7 @@ string page_1(object id)
 			   "Module Path variable<br>":"")
 			  ,id);
 	else
+#endif /* constant(readlink) */
 	  res+=html_error("The module directory <b>"+n+
 			  "</b>, mentioned in the "
 			  "'Module Path' variable, does not exist.<br>"
