@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: auth_httpbasic.pike,v 1.9 2002/06/14 00:08:58 nilsson Exp $";
+  "$Id: auth_httpbasic.pike,v 1.10 2004/05/23 01:30:51 _cvs_stephen Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -73,15 +73,24 @@ User authenticate( RequestID id, UserDB db )
   if( !user || !password )
     return 0;
   
+  User res;
   if( !db )
   {
-    User res;
     foreach( id->conf->user_databases(), UserDB db )
       if( res = low_authenticate( id, user, password, db ) )
-	return res;
-    return 0;
+	break;
   }
-  return low_authenticate( id, user, password, db );
+  else
+    res = low_authenticate( id, user, password, db );
+  if (res)
+  {
+    id->misc->uid = res->uid();
+    id->misc->gid = res->gid();
+    id->misc->gecos = res->gecos();
+    id->misc->home = res->homedir();
+    id->misc->shell = res->shell();
+  }
+  return res;
 }
 
 
