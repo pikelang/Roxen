@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.108 2000/02/08 00:32:34 mast Exp $
+ * $Id: rxml.pike,v 1.109 2000/02/08 00:33:02 mast Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -504,7 +504,7 @@ class GenericTag {
     array do_return(RequestID id, void|mixed piece) {
       if (flags & RXML.FLAG_POSTPARSE)
 	result_type = result_type (RXML.PHtml);
-      if (flags & RXML.FLAG_STREAM_CONTENT)
+      if (!(flags & RXML.FLAG_STREAM_CONTENT))
 	piece = content || "";
       array|string res = _do_return(name, args, piece, id, this_object());
       return stringp (res) ? ({res}) : res;
