@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.486 2000/05/26 22:19:48 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.487 2000/06/01 14:36:18 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1980,6 +1980,14 @@ class ImageCache
   mapping data_cache = ([]); // not normally used.
   mapping meta_cache = ([]);
 
+  string documentation(void|string tag_n_args) {
+    Stdio.File doc_file;
+    if(!(doc_file=Stdio.File("base_server/image_cache.xml"))) return "";
+    string doc=doc_file->read();
+    if(!tag_n_args)
+      return Parser.HTML()->add_container("ex", "")->feed(doc)->read();
+    return replace(doc, "###", tag_n_args);
+  }
 
   static mapping meta_cache_insert( string i, mapping what )
   {
