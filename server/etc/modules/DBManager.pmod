@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: dbs.pike,v 1.7 2001/01/14 06:31:03 per Exp $
+// $Id: DBManager.pmod,v 1.1 2001/01/29 09:03:50 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 
@@ -20,6 +20,14 @@ private
   string short( string n )
   {
     return lower_case(sprintf("%s%4x", n[..6],(hash( n )&65535) ));
+  }
+
+
+  array changed_callbacks = ({});
+  void changed()
+  {
+    changed_callbacks-=({0});
+    foreach( changed_callbacks, function cb ) catch( cb() );
   }
 
   void ensure_has_users( Sql.Sql db, Configuration c )
@@ -151,6 +159,23 @@ private
   }
 };
 
+void add_dblist_changed_callback( function(void:void) callback )
+//! Add a function to be called when the database list has been
+//! changed. This function will be called after all @[create_db] and
+//! @[drop_db] calls.
+{
+  changed_callbacks |= ({ callback });
+}
+
+int remove_dblist_changed_callback( function(void:void) callback )
+//! Remove a function previously added with @[add_dblist_changed_callback].
+//! Returns non-zero if the function was in the callback list.
+{
+  int s = sizeof( changed_callbacks );
+  changed_callbacks -= ({ callback });
+  return s-sizeof( changed_callbacks );
+}
+
 array(string) list( void|Configuration c )
 //! List all database aliases.
 //!
@@ -279,6 +304,7 @@ void drop_db( string name )
     query( "DROP DATABASE "+name );
   query( "DELETE FROM dbs WHERE name=%s", name );
   query( "DELETE FROM permissions WHERE db=%s", name );
+  changed();
 }
 
 
@@ -296,6 +322,7 @@ void create_db( string name, string path, int is_internal )
          name, (is_internal?name:path), (is_internal?"1":"0") );
   if( is_internal )
     catch(query( "CREATE DATABASE "+name));
+  changed();
 }
 
 
@@ -350,12 +377,12 @@ CREATE TABLE dbs (
  path VARCHAR(100) NOT NULL, 
  local INT UNSIGNED NOT NULL )
  " );
-    query( "INSERT INTO dbs values ('mysql', 'mysql', 1)" ); 
-    query( "INSERT INTO dbs values ('roxen', 'roxen', 1)" ); 
-    query( "INSERT INTO dbs values ('cache', 'cache', 1)" );
+    create_db( "shared", 0, 1 );
+    create_db( "local",  0, 1 );
   }
   
   if( !q->db_permissions )
+  {
     query(#"
 CREATE TABLE db_permissions (
  db VARCHAR(20) NOT NULL, 
@@ -363,4 +390,16 @@ CREATE TABLE db_permissions (
  permission ENUM ('none','read','write') NOT NULL,
  INDEX db_conf (db,config))
 " );
+    // Must be done from a call_out -- the configurations does not
+    // exist yet (this code is called before 'main' is called in
+    // roxen)
+    call_out(
+      lambda(){
+	foreach( roxen->configurations, object c )
+	{
+	  set_permission( "shared", c, WRITE );
+	  set_permission( "local", c, WRITE );
+	}
+      }, 0 );
+  }
 }
