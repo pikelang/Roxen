@@ -18,7 +18,7 @@ import Stdio;
 
 inherit "polyline.pike";
 
-constant cvs_version = "$Id: create_graph.pike,v 1.104 1998/06/24 02:10:43 js Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.105 1998/11/02 07:37:03 peter Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -133,9 +133,6 @@ void draw(object(image) img, float h, array(float|string) coords,
 
 mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 {
-  if (!diagram_data->font)
-    diagram_data->font="avant_garde";
-
   //diagram_data["datasize"]=0;
   foreach(diagram_data["data"], mixed* fo)
     if (sizeof(fo)>diagram_data["datasize"])

@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.108 1998/10/11 00:51:03 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.109 1998/11/02 07:37:01 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -943,7 +943,7 @@ mapping find_file(string f, object id)
     /* Image was not found or broken */
     if(res->image == 1) 
     {
-      res->image=get_font("avant_garde", 24, 0, 0,"left", 0, 0);
+      res->image=get_font(0, 24, 0, 0,"left", 0, 0);
       if (!(res->image))
 	throw(({"Missing font or similar error!\n", backtrace() }));
       res->image=res->image->
@@ -1046,16 +1046,15 @@ mapping find_file(string f, object id)
   //NU: Save the created gif as <f>.gif!
 
   if(back)
-    {
-      string foo=Image.GIF.encode(img, ct, @back);
-      Stdio.write_file(query("cachedir")+f+".gif", foo);
-      return http_string_answer(foo, "image/gif");
-    }
+  {
+    string foo=Image.GIF.encode(img, ct, @back);
+    Stdio.write_file(query("cachedir")+f+".gif", foo);
+    return http_string_answer(foo, "image/gif");
+  }
   else
-    {
-      string foo=Image.GIF.encode(img, ct);
-      Stdio.write_file(query("cachedir")+f+".gif", foo);
-      return http_string_answer(foo, "image/gif");
-    }
-
+  {
+    string foo=Image.GIF.encode(img, ct);
+    Stdio.write_file(query("cachedir")+f+".gif", foo);
+    return http_string_answer(foo, "image/gif");
+  }
 }
