@@ -5,6 +5,10 @@ o Fixed the manual-server server template.
 
 o Ignore \r in .htaccess passwd and group files.
 
+o ldapuserauth.pike:
+  o Added checking of hashed password (SHA, MD5, CRYPT);
+  o Added 'userPassword' map
+
 o Added the image conversion module.
 
 Changes since Roxen Challenger 1.3.120 Yellow
