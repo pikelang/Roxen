@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.19 1997/01/25 20:45:13 grubba Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.20 1997/01/27 01:31:21 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -20,7 +20,7 @@ string cvs_version = "$Id: htmlparse.pike,v 1.19 1997/01/25 20:45:13 grubba Exp 
 
 inherit "module";
 inherit "roxenlib";
-int ok;
+
 
 function language = roxen->language;
 
@@ -30,8 +30,6 @@ int bytes;
 array (object) parse_modules = ({ });
 
 object database, names_file;
-string sizefmt = "abbrev";
-
 void build_callers();
 
 // If the string 'w' match any of the patterns in 'a', return 1, else 0.
@@ -51,7 +49,8 @@ string comment()
 
 string status()
 {
-  return bytes/1024 + " Kb parsed";
+  return (bytes/1024 + " Kb parsed<br>"+
+	  sizeof(fton)+" entries in the accessed database<br>");
 }
 
 private int ac_is_not_set()
@@ -67,7 +66,7 @@ private int ssi_is_not_set()
 void create()
 {
   defvar("Accesslog", 
-	GLOBVAR(logdirprefix)+
+	 GLOBVAR(logdirprefix)+
 	 short_name(roxen->current_configuration->name)+"/Accessed", 
 	 "Access log file", TYPE_FILE,
 	 "In this file all accesses to files using the &lt;accessd&gt;"
@@ -278,19 +277,17 @@ string *query_file_extensions()
 }
 
 
-// Ugly global variables, will have to be removed before this module
-// can be threaded.
-array (int) stat;
-int error;
-mapping extra_heads;
-string rettext;
+#define _stat defines[" _stat"]
+#define _error defines[" _error"]
+#define _extra_heads defines[" _extra_heads"]
+#define _rettext defines[" _rettext"]
+#define _ok     defines[" _ok"]
 
 mapping handle_file_extension( object file, string e, object id)
 {
   mixed err;
   string to_parse;
-  int ook;
-  array (int) ostat;
+  mapping defines = ([]);
 
   if(search(QUERY(noparse),e)!=-1)
   {
@@ -302,46 +299,39 @@ mapping handle_file_extension( object file, string e, object id)
   set_start_quote(set_end_quote(0));
 #endif
 
-  ook=ok;
-  ostat=stat;
-  sizefmt = "abbrev"; 
-  ok=0;
+  defines->sizefmt = "abbrev"; 
 
-  error=200;
-  extra_heads=([ ]);
-  stat=file->stat();
+  _error=200;
+  _extra_heads=([ ]);
+  _stat=file->stat();
 
-  if(stat[1] > (QUERY(max_parse)*1024))
+  if(_stat[1] > (QUERY(max_parse)*1024))
   {
     return 0; // To large for me..
   }
   
   if(err=catch(to_parse=parse_html(file->read(QUERY(max_parse)*1024), 
 				   tag_callers, container_callers, id, 
-				   file, ([]), id->my_fd)))
+				   file, defines, id->my_fd)))
   {
     destruct(file);
     throw(err);
   }
 
-  if(id->misc->is_redirected)
-    to_parse = "<base href="+id->not_query+">\n"+to_parse;
+//  if(id->misc->is_redirected)
+//    to_parse = "<base href="+id->not_query+">\n"+to_parse;
 
   bytes += strlen(to_parse);
 
   file->close();
   destruct(file);
 
-  ok=ook;
-  err=stat; /* We need this later on.. */
-  stat=ostat;
-
   return (["data":to_parse,
 	   "type":"text/html",
-	   "stat":err,
-	   "error":error,
-	   "rettext":rettext,
-	   "extra_heads":extra_heads,
+	   "stat":_stat,
+	   "error":_error,
+	   "rettext":_rettext,
+	   "extra_heads":_extra_heads,
 //	   "expires": time(1) - 100,
 	   ]);
 }
@@ -565,7 +555,8 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   return "";
 }
 
-string tag_modified(string tag, mapping m, object got, object file);
+string tag_modified(string tag, mapping m, object got, object file,
+		    mapping defines);
 
 string tag_compat_exec(string tag,mapping m,object got,object file,
 		       mapping defines)
@@ -585,7 +576,7 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
     if(QUERY(exec))
     {
       string tmp;
-      tmp=roxen->query("MyWorldLocation");
+      tmp=got->conf->query("MyWorldLocation");
       sscanf(tmp, "%*s//%s", tmp);
       sscanf(tmp, "%s:", tmp);
       sscanf(tmp, "%s/", tmp);
@@ -610,7 +601,7 @@ string tag_compat_config(string tag,mapping m,object got,object file,
 			 mapping defines)
 {
   if(QUERY(ssi)&& m->sizefmt == "abbrev" || m->sizefmt == "bytes")
-    sizefmt = m->sizefmt;
+    defines->sizefmt = m->sizefmt;
   else
     return "<!-- Config what? -->";
 }
@@ -655,7 +646,7 @@ string tag_compat_echo(string tag,mapping m,object got,object file,
     switch(m->var)
     {
      case "sizefmt":
-      return sizefmt;
+      return defines->sizefmt;
       
      case "timefmt": case "errmsg":
       return "&lt;unimplemented&gt;";
@@ -676,14 +667,14 @@ string tag_compat_echo(string tag,mapping m,object got,object file,
       return got->query || "";
 
      case "LAST_MODIFIED":
-      return tag_modified(tag, m, got, file);
+      return tag_modified(tag, m, got, file, defines);
       
      case "SERVER_SOFTWARE":
       return roxen->version();
       
      case "SERVER_NAME":
       string tmp;
-      tmp=roxen->query("MyWorldLocation");
+      tmp=got->conf->query("MyWorldLocation");
       sscanf(tmp, "%*s//%s", tmp);
       sscanf(tmp, "%s:", tmp);
       sscanf(tmp, "%s/", tmp);
@@ -759,7 +750,7 @@ string tag_compat_fsize(string tag,mapping m,object got,object file,
     {
       if(tag == "!--#fsize")
       {
-	if(sizefmt=="bytes")
+	if(defines->sizefmt=="bytes")
 	  return (string)s[1];
 	else
 	  return sizetostring(s[1]);
@@ -785,11 +776,11 @@ string tag_accessed(string tag,mapping m,object got,object file,
   {
     m->file = fix_relative(m->file, got);
     if(m->add) 
-      counts = query_num(m->file, (int)m->add || 1);
+      counts = query_num(m->file, (int)m->add||1);
     else
       counts = query_num(m->file, 0);
   } else {
-    if(_match(got->remoteaddr, roxen->query("NoLog")))
+    if(_match(got->remoteaddr, got->conf->query("NoLog")))
       counts = query_num(got->not_query, 0);
     else if(defines->counted != "1") 
     {
@@ -886,6 +877,7 @@ string tag_accessed(string tag,mapping m,object got,object file,
     break;
 
    case "ordered":
+    m->type="string";
     res=number2string(counts,m,language(m->lang, "ordered"));
     break;
 
@@ -897,7 +889,8 @@ string tag_accessed(string tag,mapping m,object got,object file,
 
 string tag_user(string a, mapping b, object foo, object file);
 
-string tag_modified(string tag, mapping m, object got, object file)
+string tag_modified(string tag, mapping m, object got, object file,
+		    mapping defines)
 {
   array (int) s;
   object f;
@@ -924,7 +917,6 @@ string tag_modified(string tag, mapping m, object got, object file)
     if(f = open(m->realfile, "r"))
     {
       m->name = roxen->last_modified_by(f, got);
-      f->close();
       destruct(f);
       return tag_user(tag, m, got, file);
     }
@@ -932,22 +924,14 @@ string tag_modified(string tag, mapping m, object got, object file)
   }
   
   if(m->realfile)
-  {
-    f = open(m->realfile, "r");
-    if(f)
-    {
-      s = f->stat();
-      f->close();
-      destruct(f);
-    }
-  }
-  if(!(stat || s) && !m->realfile)
+    s = file_stat(m->realfile);
+
+  if(!(_stat || s) && !m->realfile && got->realfile)
   {
     m->realfile = got->realfile;
-    return tag_modified(tag, m, got, file);
+    return tag_modified(tag, m, got, file, defines);
   }
-  if(!s)
-    s = stat;
+  if(!s) s = _stat;
   return s ? tagtime(s[3], m) : "Error: Cannot stat file";
 }
 
@@ -981,7 +965,9 @@ string tag_user(string tag, mapping m, object got, object file)
     return(tag_modified("modified", m | ([ "by":"by" ]), got, file));
   }
 
-  dom=roxen->query("Domain");
+  b=m->name;
+
+  dom=got->conf->query("Domain");
   if(dom[-1]=='.')
     dom=dom[0..strlen(dom)-2];
   if(!b) return "";
@@ -1333,7 +1319,8 @@ string add_header(mapping to, string name, string value)
     to[name] = value;
 }
 
-string tag_add_cookie(string tag, mapping m, object got)
+string tag_add_cookie(string tag, mapping m, object got, object file,
+		      mapping defines)
 {
   string cookies;
   
@@ -1343,12 +1330,13 @@ string tag_add_cookie(string tag, mapping m, object got)
   else
     return "<!-- set_cookie requires a `name' -->";
 
-  add_header(extra_heads, "Set-Cookie", cookies);
+  add_header(_extra_heads, "Set-Cookie", cookies);
 
   return "";
 }
 
-string tag_remove_cookie(string tag, mapping m, object got)
+string tag_remove_cookie(string tag, mapping m, object got, object file,
+			 mapping defines)
 {
   string cookies;
   if(m->name)
@@ -1357,7 +1345,7 @@ string tag_remove_cookie(string tag, mapping m, object got)
   else
     return "<!-- remove_cookie requires a `name' -->";
 
-  add_header(extra_heads, "Set-Cookie", cookies);
+  add_header(_extra_heads, "Set-Cookie", cookies);
   return "";
 }
 
@@ -1397,10 +1385,10 @@ string tag_if(string tag, mapping m, string s, object got, object file,
 {
   string res, a, b;
   res=tag_allow(tag, m, s, got, file, defines, client);
-  ok = strlen(res);
+  _ok = strlen(res);
   if(sscanf(s, "%s<otherwise>%s", a, b) == 2)
   {
-    if(ok) return a;
+    if(_ok) return a;
     else   return b;
   }
   return res;
@@ -1423,13 +1411,13 @@ string tag_deny(string tag, mapping m, string s, object got, object file,
 string tag_else(string tag, mapping m, string s, object got, object file, 
 		mapping defines) 
 { 
-  return ok?"":s; 
+  return _ok?"":s; 
 }
 
 string tag_elseif(string tag, mapping m, string s, object got, object file, 
 		  mapping defines, object client) 
 { 
-  return ok?"":tag_if(tag, m, s, got, file, defines, client); 
+  return _ok?"":tag_if(tag, m, s, got, file, defines, client); 
 }
 
 string tag_client(string tag,mapping m, string s,object got,object file)
@@ -1450,21 +1438,24 @@ string tag_client(string tag,mapping m, string s,object got,object file)
   return (isok^invert)?s:""; 
 }
 
-string tag_return(string tag, mapping m, object got, object file)
+string tag_return(string tag, mapping m, object got, object file,
+		  mapping defines)
 {
-  error=(int)m->code || 200;
-  rettext=m->text;
+  if(m->code)_error=(int)m->code || 200;
+  if(m->text)_rettext=m->text;
   return "";
 }
 
-string tag_referer(string tag, mapping m, object got, object file)
+string tag_referer(string tag, mapping m, object got, object file,
+		   mapping defines)
 {
   if(got->referer)
     return sizeof(got->referer)?got->referer*"":m->alt?m->alt:"..";
   return m->alt?m->alt:"..";
 }
 
-string tag_header(string tag, mapping m, object got, object file)
+string tag_header(string tag, mapping m, object got, object file,
+		  mapping defines)
 {
   if(m->name == "WWW-Authenticate")
   {
