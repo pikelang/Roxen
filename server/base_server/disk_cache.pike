@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.55 2000/09/05 21:04:41 mast Exp $
+// $Id: disk_cache.pike,v 1.56 2000/09/12 11:29:30 per Exp $
 
 #include <config.h>
 #include <module_constants.h>
@@ -211,11 +211,11 @@ class CacheStream
 }
 
 
-class Cache {
-
-#if constant(thread_create)
+class Cache 
+{
+#ifdef THREADS
   object lock = Thread.Mutex();
-#endif /* constant(thread_create) */
+#endif
   object this = this_object();
   string cd;
   Stdio.File command_stream = Stdio.File();
@@ -225,15 +225,15 @@ class Cache {
 
   void really_send()
   {
-#if constant(thread_create)
+#ifdef THREADS
     mixed key = lock->lock();
-#endif /* constant(thread_create) */
+#endif
     if(strlen(to_send))
       to_send=to_send[ command_stream->write(to_send) .. ];
-#if constant(thread_create)
+#ifdef THREADS
     destruct(key);
     key = 0;
-#endif /* constant(thread_create) */
+#endif
   }
 
   void command(mixed ... cmd)
