@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.257 2001/07/12 21:59:32 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.258 2001/07/19 23:33:37 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -469,8 +469,8 @@ class TagSet {
 
     array do_return(RequestID id) {
       if (args->value) {
-	if(content) parse_error("No content allowed when the value attribute is used.\n");
 	content = args->value;
+	if (args->type) content = args->type->encode (content);
       }
       else {
 	if (args->expr) {
@@ -1213,8 +1213,10 @@ class TagCache {
 
     array do_return(RequestID id) {
 
-      if( args["not-post-method"] && id->method == "POST" )
-	return ({ Roxen.parse_rxml(content, id) });
+      if( args["not-post-method"] && id->method == "POST" ) {
+	result_type = result_type (RXML.PXml);
+	return ({ content });
+      }
 
       string key="";
       if(!args->nohash) {
