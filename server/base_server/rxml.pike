@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.269 2000/12/19 15:42:58 anders Exp $
+// $Id: rxml.pike,v 1.270 2000/12/30 10:13:51 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -563,71 +563,96 @@ class TagNumber {
   }
 }
 
-private array(string) list_packages()
-{
-  return filter(((get_dir("../local/rxml_packages")||({}))
-                 |(get_dir("rxml_packages")||({}))),
-                lambda( string s ) {
-                  return (Stdio.file_size("../local/rxml_packages/"+s)+
-                          Stdio.file_size( "rxml_packages/"+s )) > 0;
-                });
-
-}
-
-private string read_package( string p )
-{
-  string data;
-  p = combine_path("/", p);
-  if(file_stat( "../local/rxml_packages/"+p ))
-    catch(data=Stdio.File( "../local/rxml_packages/"+p, "r" )->read());
-  if(!data && file_stat( "rxml_packages/"+p ))
-    catch(data=Stdio.File( "rxml_packages/"+p, "r" )->read());
-  return data;
-}
-
-private string use_file_doc(string f, string data)
-{
-  string res="", doc="";
-  int help=0; /* If true, all tags support the 'help' argument. */
-  sscanf(data, "%*sdoc=\"%s\"", doc);
-  sscanf(data, "%*shelp=%d", help);
-  res += "<dt><b>"+f+"</b></dt><dd>"+(doc?doc+"<br />":"")+"</dd>";
-
-  mapping d=(["tag":({}),
-	      "container":({}),
-	      "if":({}),
-	      "variable":({}) ]);
-
-  parse_html(data, ([]), (["define":
-			   lambda(string t, mapping m, string c) {
-			     foreach(indices(d), string type)
-			       if(m[type]) d[type]+=({m[type]});
-			     return "";
-			   },
-			   "undefine":
-			   lambda(string t, mapping m, string c) {
-			     foreach(indices(d), string type)
-			       if(m[type]) d[type]+=({m[type]});
-			     return "";
-			   } ]) );
-
-  foreach(indices(d), string type) {
-    array ind=d[type];
-    if(sizeof(ind))
-      res += "defines the following tag"+
-	(sizeof(ind)!=1?"s":"") +": "+
-	String.implode_nicely( sort(ind) )+"<br />";
-  }
-
-  if(help) res+="<br /><br />All tags accept the <i>help</i> attribute.";
-
-  return res;
-}
 
 class TagUse {
   inherit RXML.Tag;
   constant name = "use";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  private array(string) list_packages() { 
+    return filter(((get_dir("../local/rxml_packages")||({}))
+		   |(get_dir("rxml_packages")||({}))),
+		  lambda( string s ) {
+		    return s!=".cvsignore" &&
+		      (Stdio.file_size("../local/rxml_packages/"+s)+
+		       Stdio.file_size( "rxml_packages/"+s )) > 0;
+		  });
+  }
+
+  private string read_package( string p ) {
+    string data;
+    p = combine_path("/", p);
+    if(file_stat( "../local/rxml_packages/"+p ))
+      catch(data=Stdio.File( "../local/rxml_packages/"+p, "r" )->read());
+    if(!data && file_stat( "rxml_packages/"+p ))
+      catch(data=Stdio.File( "rxml_packages/"+p, "r" )->read());
+    return data;
+  }
+
+  private string use_file_doc(string f, string data) {
+    string res, doc;
+    int help; // If true, all tags support the 'help' argument.
+    sscanf(data, "%*sdoc=\"%s\"", doc);
+    sscanf(data, "%*shelp=%d", help);
+    res = "<dt><b>"+f+"</b></dt><dd>"+(doc?doc+"<br />":"")+"</dd>";
+
+    array pack = parse_use_package(data, RXML.get_context());
+    cache_set("macrofiles", "|"+f, pack, 300);
+
+    constant types = ({ "if plugin", "tag", "variable" });
+
+    pack = pack + ({});
+    pack[0] = indices(pack[0]);
+    pack[1] = pack[1]->name;
+    pack[2] = indices(pack[2])+indices(pack[3]);
+
+    for(int i; i<3; i++)
+      if(sizeof(pack[i])) {
+	res += "Defines the following " + types[i] + (sizeof(pack[i])!=1?"s":"") +
+	  ": " + String.implode_nicely( sort(pack[i]) ) + ".<br />";
+      }
+
+    if(help) res+="<br /><br />All tags accept the <i>help</i> attribute.";
+    return res;
+  }
+
+  private array parse_use_package(string data, RXML.Context ctx) {
+    array res = allocate(4);
+    multiset before=ctx->get_runtime_tags();
+    if(!ctx->id->misc->_ifs) ctx->id->misc->_ifs = ([]);
+    mapping before_ifs = mkmapping(indices(ctx->id->misc->_ifs),
+				   indices(ctx->id->misc->_ifs));
+    mapping scope_form = mkmapping(ctx->list_var("form"),
+				   map(ctx->list_var("form"),
+				       lambda(string v) { return ctx->get_var(v, "form"); } ));
+    mapping scope_var = mkmapping(ctx->list_var("var"),
+				  map(ctx->list_var("var"),
+				      lambda(string v) { return ctx->get_var(v, "var"); } ));
+
+    parse_rxml( data, ctx->id );
+
+    foreach( ctx->list_var("form"), string var ) {
+      mixed val = ctx->get_var(var, "form");
+      if(scope_form[var]==val)
+	m_delete(scope_form, var);
+      else
+	scope_form[var]=val;
+    }
+
+    foreach( ctx->list_var("var"), string var ) {
+      mixed val = ctx->get_var(var, "var");
+      if(scope_var[var]==val)
+	m_delete(scope_var, var);
+      else
+	scope_var[var]=val;
+    }
+
+    res[0] = ctx->id->misc->_ifs - before_ifs;
+    res[1] = indices(RXML.get_context()->get_runtime_tags()-before);
+    res[2] = scope_form;
+    res[3] = scope_var;
+    return res;
+  }
 
   class Frame {
     inherit RXML.Frame;
@@ -644,9 +669,7 @@ class TagUse {
       if(!args->file && !args->package)
 	parse_error("No file or package selected.\n");
 
-
       array res;
-      if(!id->misc->_ifs) id->misc->_ifs=([]);
       string name, filename;
       if(args->file)
       {
@@ -659,11 +682,10 @@ class TagUse {
 
       if(args->info || id->pragma["no-cache"] ||
 	 !(res=cache_lookup("macrofiles",name)) ) {
-	res = ({ ([]), ({}) });
 
 	string file;
 	if(filename)
-	  file = try_get_file( filename, id );
+	  file = id->conf->try_get_file( filename, id );
 	else
 	  file = read_package( args->package );
 
@@ -673,19 +695,17 @@ class TagUse {
 	if( args->info )
 	  return ({"<dl>"+use_file_doc( args->file || args->package, file )+"</dl>"});
 
-	multiset before=ctx->get_runtime_tags();
-	mapping before_ifs = mkmapping(indices(id->misc->_ifs),
-				       indices(id->misc->_ifs));
-	parse_rxml( file, id );
-
-	res[0] = id->misc->_ifs - before_ifs;
-	res[1]=indices(RXML.get_context()->get_runtime_tags()-before);
+	res = parse_use_package(file, ctx);
 	cache_set("macrofiles", name, res);
       }
 
       id->misc->_ifs += res[0];
       foreach(res[1], RXML.Tag tag)
 	ctx->add_runtime_tag(tag);
+      foreach(indices(res[2]), string var)
+	ctx->set_var(var, res[2][var], "form");
+      foreach(indices(res[3]), string var)
+	ctx->set_var(var, res[3][var], "var");
 
       return 0;
     }
