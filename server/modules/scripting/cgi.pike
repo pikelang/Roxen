@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.102 1998/08/25 20:09:22 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.103 1998/09/15 20:47:13 neotron Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -99,6 +99,9 @@ mapping my_build_env_vars(string f, object id, string|void path_info)
 
   if(id->misc->ssi_env)
     new |= id->misc->ssi_env;
+
+  if(id->misc->is_redirected)
+    new["REDIRECT_STATUS"] = "1";
   
   if(QUERY(rawauth) && id->rawauth) {
     new["HTTP_AUTHORIZATION"] = (string)id->rawauth;
