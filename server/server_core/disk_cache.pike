@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: disk_cache.pike,v 1.67 2003/01/26 02:10:46 mani Exp $
+// $Id: disk_cache.pike,v 1.68 2004/05/31 16:34:58 _cvs_stephen Exp $
 
 #include <config.h>
 #include <module_constants.h>
@@ -512,7 +512,7 @@ CacheStream cache_file(string cl, string entry)
 
   if(cf->headers["expires"])
   {
-    if(!Roxen.is_modified(cf->headers["expires"], time(1)))
+    if(Roxen.httpdate_to_time(cf->headers["expires"])<time(1))
     {
       CACHE_WERR("refresh(expired): " + name + "(" + entry +
 		 "), " + age(stat[ST_CTIME]) +
@@ -524,8 +524,8 @@ CacheStream cache_file(string cl, string entry)
   else if(cf->headers["last-modified"])
   {
     if(QUERY(cache_check_last_modified) &&
-       Roxen.is_modified(cf->headers["last-modified"],
-		   stat[ST_CTIME] - time(1) + stat[ST_CTIME]))
+       Roxen.httpdate_to_time(cf->headers["last-modified"])>=
+		   stat[ST_CTIME] - time(1) + stat[ST_CTIME])
     {
       CACHE_WERR("refresh(last-modified): " + name + "(" + entry +
 		 "), " + age(stat[ST_CTIME]) +
@@ -692,7 +692,8 @@ void http_check_cache_file(CacheStream cachef)
   if(cachef->headers[" returncode"] == 304) {
     Stat fstat = file_stat(cachef->rfiledone);
     if(fstat && cachef->headers["last-modified"]) {
-      if(Roxen.is_modified(cachef->headers["last-modified"], fstat[ST_CTIME])) {
+      if(Roxen.httpdate_to_time(cachef->headers["last-modified"])
+	  >=fstat[ST_CTIME]) {
         rmold(cachef->rfiledone);
 #ifdef CACHE_DEBUG
         CACHE_WERR(cachef->rfiledone+"("+cachef->headers->name+"): "+
@@ -738,7 +739,7 @@ void http_check_cache_file(CacheStream cachef)
       stat[ST_SIZE] - cachef->headers->headers_size;
 
   if(cachef->headers["expires"]&&
-     !Roxen.is_modified(cachef->headers["expires"], time(1))) {
+     Roxen.httpdate_to_time(cachef->headers["expires"])<time(1)) {
     CACHE_WERR(cachef->rfile + "(" + cachef->headers->name +
 	       "): already expired " + cachef->headers["expires"]);
     DELETE_AND_RETURN();

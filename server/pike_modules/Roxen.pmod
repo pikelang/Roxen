@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.191 2004/05/31 16:09:27 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.192 2004/05/31 16:34:57 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3477,15 +3477,6 @@ array(int) parse_since(string date)
   }
 
   return ({ t, length });
-}
-
-// OBSOLETED by parse_since()
-int is_modified(string a, int t, void|int len)
-{
-  array vals=parse_since(a);
-  if(len && len!=vals[1]) return 0;
-  if(vals[0]<t) return 0;
-  return 1;
 }
 
 //! Converts the @[date] string into a posix time integer
