@@ -2,7 +2,7 @@
  * A quite complex directory module. Generates macintosh like listings.
  */
 
-string cvs_version = "$Id: directories.pike,v 1.20 1998/03/11 19:42:34 neotron Exp $";
+string cvs_version = "$Id: directories.pike,v 1.21 1998/03/20 16:37:46 grubba Exp $";
 int thread_safe=1;   /* Probably. Check _root */
 
 #include <module.h>
@@ -64,6 +64,14 @@ class Dirnode
     return o;
   }
 
+  string mk_prestate(multiset p)
+  {
+    if (sizeof(p)) {
+      return("("+(indices(p)*",")+")");
+    }
+    return("");
+  }
+
   string show_me(string s, string root, object id)
   {
     string name = prefix + path(1), lname;
@@ -71,15 +79,17 @@ class Dirnode
     if(!stat) return "";
     if(stat[1]>-1) return "   "+link(s, name);
     if(stat[1]<0) lname+="/";
+    multiset m = id->prestate - (< "unfold", "fold" >);
     if (id->supports->robot) {
       return linkname(link(s, lname), name);
     } else if(folded) {
-      return linkname(link(configimage("unfold"), "/(diract,unfold)" +
+      return linkname(link(configimage("unfold"), "/" +
+			   mk_prestate(m + (<"diract","unfold">)) +
 			   name+"?"+(nocache++)) + blink(s, lname), name);
     } else {
-      return linkname(link(configimage("fold"), "/(diract,fold)"+name+"?"
-			    +(nocache++))
-		      + blink(s, name), name);
+      return linkname(link(configimage("fold"), "/" +
+			   mk_prestate(m + (<"diract","fold">)) +
+			   name+"?"+(nocache++)) + blink(s, name), name);
     }
   }
 
