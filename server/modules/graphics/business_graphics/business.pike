@@ -16,7 +16,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.9 1997/10/15 02:24:59 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.10 1997/10/15 02:29:04 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -136,7 +136,7 @@ string itag_data(mapping tag, mapping m, string contents,
       foreach( Array.filter( ({ entries/sep - ({""}) }), sizeof ), array item)
       {
 	foreach( item, string gaz )
-	  foo += ({ (int)gaz });
+	  foo += ({ (float)gaz });
       }
       bar += ({ foo });
     }
