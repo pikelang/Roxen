@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.34 2000/09/24 00:39:19 jonasw Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.35 2000/11/02 13:10:11 kuntri Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -77,9 +77,9 @@ void set_entities(RXML.Context c) {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"!--#config":#"<desc tag><short>
+"!--#config":#"<desc tag='tag'><p><short>
  The config command is used to configure how things should be printed.</short>
-</desc>
+</p></desc>
 
 <attr name=errmsg value=string>
  Where msg is a message that is sent back to the client if an error
@@ -97,7 +97,7 @@ constant tagdoc=([
 </attr>",
 
 "!--#echo":#"
-<desc tag><short>
+<desc tag='tag'><p><short>
  Prints a variable from the server or request.</short>
 
  <p>Some of the most useful ones are \"http referrer\" (the page
@@ -108,7 +108,7 @@ constant tagdoc=([
 
  <p>Note that these variables are SSI-related. You cannot access them
  as RXML variables, nor use this tag to print RXML variables.</p>
-</desc>
+</p></desc>
 
 <attr name=var value=sizefmt>
  Print format for file sizes.
@@ -209,11 +209,11 @@ constant tagdoc=([
 </attr>",
 
 "!--#exec":#"
-<desc tag><short>
+<desc tag='tag'><p><short>
  Executes a CGI script or shell command.</short> This command has security
  implications and therefore, might not be available on all web sites.
 
-</desc>
+</p></desc>
 
 <attr name=cgi value=URL> Path to the CGI script URL encoded. That is,
  a character can be quoted by % followed by its hex value. The CGI
@@ -230,12 +230,12 @@ constant tagdoc=([
 </attr>",
 
 "!--#flastmod":#"
-<desc tag><short hide>
+<desc tag='tag'><p><short hide>
  This tag prints the last modification date of the specified file,
  subject to timefmt format specification used in the <tag>!--#config</tag>
  SSI tag.</short> This tag prints the last modification date of the
  specified file, subject to timefmt format specification used in the
- <ref type=tag>!--#config</ref> SSI tag. </desc>
+ <ref type=tag>!--#config</ref> SSI tag. </p></desc>
 
 <attr name=file value=path>
  Path to the file.
@@ -247,13 +247,13 @@ constant tagdoc=([
 </attr>",
 
 "!--#fsize":#"
-<desc tag><short hide>
+<desc tag='tag'><p><short hide>
 
  Prints the size of the specified file, subject to the sizefmt format
  specification used in the <tag>!--#config</tag> SSI tag. </short>Prints the
  size of the specified file, subject to the sizefmt format
  specification used in the <ref type=tag>!--#config</ref> SSI tag.
- </desc>
+ </p></desc>
 
 <attr name=file value=path>
  Path to the file.
@@ -265,9 +265,9 @@ constant tagdoc=([
 </attr>",
 
 "!--#include":#"
-<desc tag><short>
+<desc tag='tag'><p><short>
  Insert a text from another file into the page.</short>
-</desc>
+</p></desc>
 
 <attr name=file value=path>
  The file as a path relative to the directory containing the current
@@ -281,15 +281,15 @@ constant tagdoc=([
 </attr>",
 
 "!--#printenv":#"
-<desc tag><short>
+<desc tag='tag'><p><short>
  This tag outputs a listing of all existing variables and their
  values.</short> Attributes won't be printed.
  <ex type=vert><pre><!--#printenv --></pre></ex>
-</desc>",
+</p></desc>",
 
-"!--#set":#"<desc tag><short>
+"!--#set":#"<desc tag='tag'><p><short>
  Sets a value of a variable.</short>
-</desc>
+</p></desc>
 
 <attr name=var value=value>
  The name of the variable to set. Value sets the variables value.

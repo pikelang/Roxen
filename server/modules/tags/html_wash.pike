@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.15 2000/10/27 14:59:16 jhs Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.16 2000/11/02 13:11:37 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "HTML washer";
@@ -179,7 +179,7 @@ class TagWashHtml
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"wash-html":#"<desc cont><short hide>
+"wash-html":#"<desc cont='cont'><p><short hide='hide'>
 
  Turns a text into HTML.</short>This tag is mostly useful for turning
  user freetext input from a form into HTML intelligently, by turning
@@ -187,7 +187,7 @@ constant tagdoc=([
  <tag>p</tag>paragraphs<tag>/p</tag>, filtering out or explicitly
  allowing some HTML tags in the input and creating
  <tag>a</tag>anchor-links<tag>/a</tag> out of potential www-addresses.
-</desc>
+</p></desc>
 
 <attr name='keep-all'>
  Leave all tags containing info intact. Overrides the value of

@@ -209,10 +209,11 @@ class TagDirectoryplugin
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"emit#dir":({ #"<desc plugin><short>
+"emit#dir":({ #"<desc plugin='plugin'><p><short>
  This plugin is used to generate directory listings.</short> The
  directory module must be added to use these entities. This plugin
- is only available in the directory template.</desc>
+ is only available in the directory template.
+</p></desc>
 
 <attr name='directory' value='path'>
  Apply the listing to this directory.
@@ -287,90 +288,90 @@ resolve the image's height and width.</c></row>
 </attr>",
 
 ([
-"&_.atime;":#"<desc ent>
+"&_.atime;":#"<desc ent='ent'><p>
   Returns the date when the file was last accessed.
-</desc>",
+</p></desc>",
 
-"&_.atime-iso;":#"<desc ent>
+"&_.atime-iso;":#"<desc ent='ent'><p>
  Returns the date when the file was last accessed. Uses isotime
  (%Y-%m-%d).
-</desc>",
+</p></desc>",
 
-"&_.atime-unix;":#"<desc ent>
+"&_.atime-unix;":#"<desc ent='ent'><p>
  Returns the date when the file was last accessed. Uses unixtime.
-</desc>",
+</p></desc>",
 
-"&_.dirname;":#"<desc ent>
+"&_.dirname;":#"<desc ent='ent'><p>
  Returns the directoryname.
-</desc>",
+</p></desc>",
 
-"&_.filename;":#"<desc ent>
+"&_.filename;":#"<desc ent='ent'><p>
  Returns the filename.
-</desc>",
+</p></desc>",
 
-"&_.type-img;":#"<desc ent>
+"&_.type-img;":#"<desc ent='ent'><p>
  Returns the internal Roxen name of the icon representating the
  directory or the file's content-type, e.g. internal-gopher-menu for a
  directory-folder or internal-gopher-text for a HTML-file.
-</desc>",
+</p></desc>",
 
-"&_.mode;":#"<desc ent>
+"&_.mode;":#"<desc ent='ent'><p>
  Returns file permission rights represented binary, e.g. \"r-xr-xr-x\".
-</desc>",
+</p></desc>",
 
-"&_.mode-int;":#"<desc ent>
+"&_.mode-int;":#"<desc ent='ent'><p>
  Returns file permission rights represented by integers. When encoded to
  binary this represents what is shown when using the Unix command \"ls
  -l\" or as shown using <ent>_.mode</ent>, e.g. \"16749\".
-</desc>",
+</p></desc>",
 
-"&_.mtime;":#"<desc ent>
+"&_.mtime;":#"<desc ent='ent'><p>
  Returns the date when the file was last modified.
-</desc>",
+</p></desc>",
 
-"&_.mtime-iso;":#"<desc ent>
+"&_.mtime-iso;":#"<desc ent='ent'><p>
  Returns the date when the file was last modified. Uses isotime (%Y-%m-%d).
-</desc>",
+</p></desc>",
 
-"&_.mtime-unix;":#"<desc ent>
+"&_.mtime-unix;":#"<desc ent='ent'><p>
  Returns the date when the file was last modified. Uses unixtime.
-</desc>",
+</p></desc>",
 
-"&_.name;":#"<desc ent>
+"&_.name;":#"<desc ent='ent'><p>
  Returns the name of the file or directory.
-</desc>",
+</p></desc>",
 
-"&_.path;":#"<desc ent>
+"&_.path;":#"<desc ent='ent'><p>
  Returns the path to the file or directory.
-</desc>",
+</p></desc>",
 
-"&_.size;":#"<desc ent>
+"&_.size;":#"<desc ent='ent'><p>
  Returns a file's size in kb(kilobytes).
-</desc>",
+</p></desc>",
 
-"&_.filesize;":#"<desc ent>
+"&_.filesize;":#"<desc ent='ent'><p>
  Returns a file's size in bytes. Directories get the size \"-2\".
-</desc>",
+</p></desc>",
 
-"&_.type;":#"<desc ent>
+"&_.type;":#"<desc ent='ent'><p>
  Returns the file's content-type.
-</desc>",
+</p></desc>",
 
-"&_.thumbnail;":#"<desc ent>
+"&_.thumbnail;":#"<desc ent='ent'><p>
  Returns the image associated with the file's content-type or
  directory. Only available when <att>option=\"thumbnail\"</att> is
  used.
-</desc>",
+</p></desc>",
 
-"&_.x-size;":#"<desc ent>
+"&_.x-size;":#"<desc ent='ent'><p>
  Returns the width of the image. Only available when
  <att>option=\"imagesize\"</att> is used.
-</desc>",
+</p></desc>",
 
-"&_.y-size;":#"<desc ent>
+"&_.y-size;":#"<desc ent='ent'><p>
  Returns the height of the image. Only available when
  <att>option=\"imagesize\"</att> is used.
-</desc>",
+</p></desc>",
 ])
 		 })
 ]);

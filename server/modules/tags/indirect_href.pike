@@ -7,7 +7,7 @@
 
 #pragma strict_types
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.24 2000/09/10 16:35:07 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.25 2000/11/02 13:10:23 kuntri Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -87,13 +87,13 @@ class TagAI {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "ai":#"<desc cont><short>
+  "ai":#"<desc cont='cont'><p><short>
  Makes it possible to use a database of links.</short> Each link is referred
  to by a symbolic name instead of the URL.
 
  <p>The database is updated through the configuration interface. The
  tag is available through the <ref type=module>Indirect href</ref>
- module.</p></desc>
+ module.</p></p></desc>
 
  <attr name='name' value='string' required>
  Which link to fetch from the database. There is a special case,

@@ -1,6 +1,6 @@
 // This Isg a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.58 2000/10/13 13:27:25 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.59 2000/11/02 13:14:03 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -14,9 +14,9 @@ generate nice tables.";
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["tablify":({#"<desc cont><short>
+constant tagdoc=(["tablify":({ #"<desc cont='cont'><p><short>
  Transforms texts into tables.</short> No attributes required.
-</desc>
+</p></desc>
 
 <attr name=rowseparator value=string default='newline'>
  Defines the rowseparator.
@@ -179,7 +179,7 @@ Finland, 5 158 372
 </ex>
 
 </attr>",
-  (["fields":#"<desc cont>
+  (["fields":#"<desc cont='cont'><p>
  The container 'fields' may be used inside the tablify container to
  describe the type of contents the fields in a column has. Available
  fields are<br />
@@ -196,7 +196,7 @@ Finland, 5 158 372
    <item>economic-float</item>
    </list>
 
-   All fields except text overrides the cellvalign attribute.</desc>
+   All fields except text overrides the cellvalign attribute.</p></desc>
 
 
   <attr name='separator' value='string'>Defines the field type separator.

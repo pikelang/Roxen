@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.7 2000/09/26 13:19:21 nilsson Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.8 2000/11/02 13:09:53 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Additional RXML tags";
@@ -209,7 +209,8 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 
-  "dice":#"<desc cont>Simulates a D&amp;D style dice algorithm.</desc>
+  "dice":#"<desc cont='cont'><p><short>
+ Simulates a D&amp;D style dice algorithm.</short></p></desc>
 
 <attr name=type value=string default=D6>
  Describes the dices. A six sided dice is called 'D6' or '1D6', while
@@ -219,16 +220,19 @@ constant tagdoc=([
  The character 'T' may be used instead of 'D'.
 </attr>",
 
-  "insert#href":#"<desc plugin>Inserts the contents at that URL. This function has to be enabled in
- the <module>Additional RXML tags</module> module in the Roxen WebServer
- configuration interface.</desc>
+  "insert#href":#"<desc plugin='plugin'><p><short>
+ Inserts the contents at that URL.</short> This function has to be
+ enabled in the <module>Additional RXML tags</module> module in the
+ Roxen WebServer configuration interface.</p></desc>
 
 <attr name=href value=string>
  The URL to the page that should be inserted.
 </attr>",
 
-  "sscanf":#"<desc cont>Extract parts of a string and put them in other variables.
-Refer to the sscanf function in the Pike reference manual for a complete description.</desc>
+  "sscanf":#"<desc cont='cont'><p><short>
+ Extract parts of a string and put them in other variables.</short> Refer to
+ the sscanf function in the Pike reference manual for a complete
+ description.</p></desc>
 
 <attr name=variables value=list required>
  A comma seperated list with the name of the variables that should be set.
@@ -251,9 +255,10 @@ Refer to the sscanf function in the Pike reference manual for a complete descrip
  given variable.
 </attr>",
 
-  "sprintf":#"<desc cont>Prints out variables with the formating functions availble in
-the Pike function sprintf. Refer to the Pike reference manual for a complete
-description.</desc>
+  "sprintf":#"<desc cont='cont'><p><short>
+ Prints out variables with the formating functions availble in the
+ Pike function sprintf.</short> Refer to the Pike reference manual for
+ a complete description.</p></desc>
 
 <attr name=format value=string>
   The formatting string.
