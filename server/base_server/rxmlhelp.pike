@@ -151,38 +151,37 @@ private string parse_mapping(mapping doc, void|object id) {
 // --------------------- Find documentation --------------
 
 mapping call_tagdocumentation(RoxenModule o) {
-  mapping doc;
+  if(!o->tagdocumentation) return 0;
+
   string name;
   if(o->is_configuration)
     name="RXML Core";
   else
     name=o->register_module()[1];
 
-  if(doc=cache_lookup("tagdoc"+conf_id, name))
+  mapping doc;
+  if(!zero_type(doc=cache_lookup("tagdoc", name)))
     return doc;
   doc=o->tagdocumentation();
   RXMLHELP_WERR(sprintf("tagdocumentation() returned %t.",doc));
   if(!doc || !mappingp(doc)) {
-    cache_set("tagdoc"+conf_id, name, 0);
+    cache_set("tagdoc", name, 0);
     return 0;
   }
-  cache_set("tagdoc"+conf_id, name, doc);
+  cache_set("tagdoc", name, doc);
   return doc;
 }
 
 private int generation;
-private int conf_id;
 multiset undocumented_tags=(<>);
 string find_tag_doc(string name, void|object id) {
   RXMLHELP_WERR("Help for tag "+name+" requested.");
   RXML.TagSet tag_set=RXML.get_context()->tag_set;
   string doc;
   int new_gen=tag_set->generation;
-  if(id) conf_id=id->conf->get_config_id();
 
   if(generation!=new_gen) {
     undocumented_tags=(<>);
-    cache_expire("tagdoc"+conf_id);
     generation=new_gen;
   }
 
