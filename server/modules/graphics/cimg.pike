@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.19 2000/06/02 01:29:42 nilsson Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.20 2000/06/03 04:10:30 nilsson Exp $";
 constant module_type = MODULE_PARSER;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -78,7 +78,11 @@ void start()
 }
 
 mapping(string:function) query_action_buttons() {
-  return ([ "Clear cache":the_cache->flush ]);
+  return ([ "Clear cache":flush_cache ]);
+}
+
+void flush_cache() {
+  the_cache->flush();
 }
 
 string status() {
