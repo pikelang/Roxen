@@ -1,8 +1,9 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: proxyauth.pike,v 1.8 2001/09/06 11:40:27 per Exp $
+// $Id: proxyauth.pike,v 1.9 2001/09/06 15:28:33 per Exp $
 
 // Mostly compatibility file
+inherit "roxenlib";
 mapping proxy_auth_needed(RequestID id)
 {
   mixed res = id->conf->check_security(proxy_auth_needed, id);

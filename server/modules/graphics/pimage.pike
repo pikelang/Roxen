@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.27 2001/09/06 11:40:38 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.28 2001/09/06 15:28:33 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -92,6 +92,8 @@ class Constructors
     int last_drawn;
     string last_add;
 
+    inherit "html";
+    
     string do_gif_add()
     {
       if(time()-last_drawn < (int)anim_delay) return last_add;
@@ -140,19 +142,19 @@ class Constructors
       if(animator)
       {
 	Animation(id, this_object());
-	return Roxen.http_pipe_in_progress();
+	return http_pipe_in_progress();
       }
       if(ci) { image=0; return ci; }
 #if constant(Image.GIF) && constant(Image.GIF.encode)
       if (alpha)
-	return (ci=Roxen.http_string_answer(Image.GIF.encode_trans(image,alpha),
+	return (ci=http_string_answer(Image.GIF.encode_trans(image,alpha),
 				      "image/gif"));
       else if (bg)
-	return (ci=Roxen.http_string_answer(Image.GIF.encode_trans(image,@bg),
+	return (ci=http_string_answer(Image.GIF.encode_trans(image,@bg),
 				      "image/gif"));
-      return (ci=Roxen.http_string_answer(Image.GIF.encode(image), "image/gif"));
+      return (ci=http_string_answer(Image.GIF.encode(image), "image/gif"));
 #else
-      return (ci=Roxen.http_string_answer(Image.PNG.encode(image), "image/png"));
+      return (ci=http_string_answer(Image.PNG.encode(image), "image/png"));
 #endif
     }
 
