@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.401 2000/12/10 02:01:42 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.402 2000/12/11 00:03:27 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1016,7 +1016,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
        case "roxen":
 	TRACE_LEAVE("Magic internal roxen image");
         if(loc=="unit")
-	  return (["data":"GIF89a\1\0\1\0\200\0ÀÀÀ\0\0\0!\4\1\0\0\0\0,\0\0\0\0\1\0\1\0\0\1\1""2\0;",
+	  return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,\0\0\0\0\1\0\1\0\0\1\1""2\0;",
 		   "type":"image/gif" ]);
 	return internal_roxen_image(loc, id);
 
@@ -3076,7 +3076,7 @@ static void create(string config)
     <td><img src=\"/internal-roxen-page-not-found&var.404;\" border=\"0\" alt=\"Page not found\" width=\"404\" hspace=\"2\" /></td>
     <td>&nbsp;</td>
     <td align=\"right\"><font face=\"lucida,helvetica,arial\">
-      <b>Roxen WebServer &roxen.base-version;</b></font></td>
+      <b>Roxen WebServer &roxen.base-version;&nbsp;</b></font></td>
   </tr>
   <tr>
     <td width=\"100%\" height=\"21\" colspan=\"3\" background=\"/internal-roxen-tile\"><img src=\"/internal-roxen-unit\" alt=\"\" /></td>
