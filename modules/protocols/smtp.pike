@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.42 1998/09/18 15:02:01 grubba Exp $
+ * $Id: smtp.pike,v 1.43 1998/09/18 18:56:48 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.42 1998/09/18 15:02:01 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.43 1998/09/18 18:56:48 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -108,6 +108,10 @@ static class do_multi_async
 
   void create(array(function) func, array args, function cb, mixed ... cb_args)
   {
+#ifdef SMTP_DEBUG
+    roxen_perror(sprintf("do_multi_async(%O, %O, %O, %O)\n",
+			 func, args, cb, cb_args));
+#endif /* SMTP_DEBUG */
     if (!(count = sizeof(func))) {
       // Nothing to do...
       cb(res, @cb_args);
@@ -119,7 +123,7 @@ static class do_multi_async
     callback_args = cb_args;
 
     foreach(func, function f) {
-      func(@args, low_callback);
+      f(@args, low_callback);
     }
   }
 };
@@ -608,7 +612,7 @@ static class Smtp_Connection {
 	  foreach(conf->get_providers("smtp_filter")||({}), object o) {
 	    // roxen_perror("Got SMTP filter\n");
 	    if (functionp(o->verify_sender) &&
-		o->verify_sender(current_mail->sender)) {
+		o->verify_sender(current_mail->from)) {
 	      // Refuse connection.
 #ifdef SMTP_DEBUG
 	      roxen_perror("Refuse sender.\n");
@@ -625,8 +629,9 @@ static class Smtp_Connection {
 				   lambda(object o) {
 				     return(o->async_verify_sender);
 				   }),
-			 ({ current_mail->sender }),
+			 ({ current_mail->from }),
 			 lambda(array res) {
+			   roxen_perror("do_multi_async_cb()\n");
 			   if (sizeof(res)) {
 			     do_RSET();
 			     send(550, res);
