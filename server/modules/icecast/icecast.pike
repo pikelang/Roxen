@@ -1,6 +1,9 @@
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.1 2001/04/10 01:20:47 per Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.2 2001/04/10 05:13:58 per Exp $";
 constant thread_safe=1;
+
+#define BSIZE 8192
+#define METAINTERVAL 4192
 
 #include <module.h>
 #include <roxen.h>
@@ -33,6 +36,15 @@ class MPEGStream( Playlist playlist )
   int stream_position; // 1000:th of a second.
   int stream_start = time()*1000+(int)(time(time())*1000);
   Stdio.File fd;
+
+  string status()
+  {
+    return ""+playlist->status()+"<br />"+
+      sprintf( "Uptime: %.1fs   Bitrate: %dKbit/sec",
+	       stream_position/1000.0,
+	       bitrate/1000 );
+  }
+  
   
   void add_callback( function callback )
   {
@@ -46,9 +58,13 @@ class MPEGStream( Playlist playlist )
 
   void call_callbacks( mixed ... args )
   {
+    
     foreach( callbacks, function f )
-      if( catch( f(@args) ) )
+      if( mixed e = catch( f(@args) ) )
+      {
+	werror(describe_backtrace( e ) );
 	callbacks -= ({f});
+      }
   }
 
   int realtime()
@@ -56,6 +72,12 @@ class MPEGStream( Playlist playlist )
     return (time()*1000+(int)(time(time())*1000)) - stream_start;
   }
 
+  void destroy()
+  {
+    catch(fd->set_blocking());
+    catch(fd->close());
+  }
+  
   void feeder_thread( )
   {
     while( realtime() > stream_position )
@@ -63,9 +85,10 @@ class MPEGStream( Playlist playlist )
       string frame = get_frame();
       while( !frame )
       {
+	fd->set_blocking();
 	fd->close();
 	fd = playlist->next_file();
-	buffer = "";
+	buffer = 0;
 	bpos = 0;
 	frame = get_frame();
       }
@@ -79,9 +102,6 @@ class MPEGStream( Playlist playlist )
   {
     feeder_thread( ); // not actually a thread right now.
   }
-
-#define BSIZE 8192
-
   
   // Low level code.
   static string buffer;
@@ -91,8 +111,13 @@ class MPEGStream( Playlist playlist )
   {
     if( !fd )
       fd = playlist->next_file();
-    if( !buffer )
+    if( !buffer || !strlen(buffer) )
+    {
+      bpos = 0;
       buffer = fd->read( BSIZE );
+    }
+    if( !strlen(buffer) )
+      return s?0:-1;
     if( s )
     {
       if( strlen(buffer) - bpos > n )
@@ -210,7 +235,10 @@ class MPEGStream( Playlist playlist )
 	    break;
 	}
 
-	return data + getbytes( blen,1 );
+	string q = getbytes( blen,1 );
+	if(!q)
+	  return 0;
+	return data + q;
       }
     }
     return 0;
@@ -226,10 +254,13 @@ class Location( string location,
   int accessed, denied;
   int connections;
 
+  int total_time, max_time, successful;
+  
   array(Connection) conn = ({});
   
   mapping handle( RequestID id )
   {
+    NOCACHE();
     accessed++;
     if( connections == max_connections )
     {
@@ -237,37 +268,162 @@ class Location( string location,
       return Roxen.http_string_answer( "Too many listeners\n" );
     }
 
+
+    mapping meta = stream->playlist->metadata();
+    if( !meta )
+    {
+      denied++;
+      return Roxen.http_string_answer( "Too early\n" );
+    }
+
     connections++;
+    int use_metadata;
+    string i, metahd="";
+    string protocol = "ShoutCast";
 
-    string i = ("HTTP/1.0 200 OK\r\n"
-		"Server: Roxen\r\n"
-		"Content-type: audio/mpeg\r\n"
-		"\r\n" );
-
+    werror("%O\n", id->request_headers );
+    if( id->request_headers[ "icy-metadata" ] )
+    {
+//       use_metadata = (int)id->request_headers[ "icy-metadata" ];
+//       if( use_metadata )
+// 	metahd = "icy-metaint:"+METAINTERVAL+"\r\n";
+    }
+    
+    if( id->request_headers[ "x-audiocast-udpport" ] )
+    {
+      protocol = "AudioCast";
+      // shoutcast..
+      i = ("HTTP/1.0 200 OK\r\n"
+	   "Server: "+roxen.version()+"\r\n"
+	   "Content-type: audio/mpeg\r\n"
+	   "x-audiocast-name:"+(meta->name||meta->path)+"\r\n"
+	   "x-audiocast-gengre:"+(meta->gengre||"unknown")+"\r\n"
+	   "x-audiocast-url:"+("http://"+id->misc->host+
+			       query_location()+location)+"\r\n"+
+	   "x-audiocast-streamid:1\r\n"+metahd+
+	   "x-audiocast-public:1\r\n"
+	   "x-audiocast-bitrate:"+(stream->bitrate/1000)+"\r\n"
+	   "x-audiocast-description:Served by Roxen\r\n"
+	   "\r\n" );
+    }
+    else
+    {
+      // icecast..
+      i = ("ICY 200 OK\r\n"
+	   "Server: "+roxen.version()+"\r\n"
+	   "Content-type: audio/mpeg\r\n"
+	   "icy-notice1:This stream requires a shoutcast compatible player.\r\n"
+	   "icy-notice2:Roxen mod_mp3\r\n"+metahd+
+	   "icy-name:"+(meta->name||meta->path)+"\r\n"
+	   "icy-gengre:"+(meta->gengre||"unknown")+"\r\n"
+	   "icy-url:"+("http://"+id->misc->host+
+		       query_location()+location)+"\r\n"+
+	   "icy-pub:1\r\n"
+	   "icy-br:"+(stream->bitrate/1000)+"\r\n"
+	   "\r\n" );
+    }
     if( initial )
       i += initial;
     
-    conn += ({ Connection( id->my_fd, i,
+    conn += ({ Connection( id->my_fd, i,protocol,use_metadata,
 			   stream,
 			   lambda( Connection c ){
+			     int pt = time()-c->connected;
 			     conn-=({c});
+			     total_time += pt;
+			     if( pt > max_time )
+			       max_time = pt;
+			     successful++;
 			     connections--;
 			   } ) });
     return Roxen.http_pipe_in_progress( );
   }
+
+  string format_time( int t )
+  {
+    if( t > 60*60 )
+      return sprintf( "%d:%02d:%02d", t/3600, (t/60)%60, t%60 );
+    return sprintf( "%2d:%02d", (t/60)%60, t%60 );
+  }
+
+  string avg_listen_time()
+  {
+    int tt = total_time;
+    int n  = successful;
+    foreach( conn, Connection c )
+    {
+      n++;
+      tt += time()-c->connected;
+    }
+    int t = tt / (n||1);
+    return format_time( t );
+  }
+
+  string longest_listen_time()
+  {
+    foreach( conn, Connection c )
+      if( time()-c->connected > max_time )
+	max_time = time()-c->connected;
+    return format_time( max_time );
+  }
+  
+  string status()
+  {
+    string res = "<table>";
+    res += "<tr> <td colspan=2>"+
+      ""+stream->status()+"</td></tr>"
+      "<tr><td>Connections:</td><td>"+connections+"/"+max_connections+" ("+
+      accessed+" since server start, "+denied+" denied)</td></tr><tr>"
+      "<tr><td>Average listen time:</td><td>"+avg_listen_time()+"</td></tr>"
+      "<tr><td>Longest listen time:</td><td>"+longest_listen_time()+"</td></tr>"
+      "<tr><td>Current connections:</td><td>";
+    foreach( conn, Connection c )
+      res += "  "+c->status()+"\n";
+    return res+"</td></tr></table>";
+  }
+  
 }
 
 mapping(string:Location) locations = ([]);
+
+int __id=1;
 
 class Connection
 {
   Stdio.File fd;
   MPEGStream stream;
-
+  int do_meta, last_meta;
+  string protocol;
   int sent, skipped; // frames.
+  int sent_bytes;
+  int id = __id++;
   array buffer = ({});
   string current_block;
   function _ccb;
+  mapping current_md;
+  
+  int connected = time();
+  
+  string status()
+  {
+    return sprintf( "%d. %s Time: %ds  Remote: %s  "
+		    "%d sent, %d skipped<br />",id,protocol,
+		    time()-connected,
+		    (fd->query_address()/" ")[0],
+		    sent-skipped, skipped );
+  }
+
+  string gen_metadata( )
+  {
+    if(!current_md )
+      current_md = stream->playlist->metadata();
+    string s = sprintf( " StreamTitle='%s';StreamUrl='%s';",
+			current_md->name || current_md->path,
+			"")+"\0";
+    while( strlen(s) & 15 ) s+= "\0";
+    s[0]=strlen(s);
+    return s;
+  }
   
   static void callback( string frame )
   {
@@ -277,45 +433,74 @@ class Connection
       skipped++;
       buffer = buffer[1..];
     }
-    if( sizeof( buffer ) == 1 )
-      send_more();
+    send_more();
   }
 
+  int headers_done;
+  
   static void send_more()
   {
-    // FIXME: Check metadata here!
     if( !strlen(current_block) )
     {
+      headers_done = 1;
       if( !sizeof(buffer) )
+      {
+// 	werror("out of buffer\n");
 	return;
+      }
       current_block = buffer[0];
+
+      if( do_meta )
+      {
+	if( (strlen( current_block ) + sent_bytes) - last_meta >= METAINTERVAL )
+	{
+	  last_meta = (strlen( current_block ) + sent_bytes);
+	  current_block += gen_metadata();
+	}
+      }
+      
       buffer = buffer[1..];
       sent++;
     }
+//     werror("writing ... ");
     int n = fd->write( current_block );
+//     werror(" %d bytes\n", n, current_block );
     if( !n || n < 0 )
       closed();
+    if( headers_done )
+      sent_bytes += n;
     current_block = current_block[n..];
   }
 
+  static void md_callback( mapping metadata )
+  {
+    current_md = metadata;
+  }
+  
   static void closed( )
   {
     fd = 0;
     stream->remove_callback( callback );
+    stream->playlist->remove_md_callback( md_callback );
     _ccb( this_object() );
     destruct( this_object() );
   }
   
-  static void create( Stdio.File _fd, string buffer,
-		      MPEGStream _stream,
+  static void create( Stdio.File _fd, string buffer, 
+		      string prot, int _meta,  MPEGStream _stream,
 		      function _closed )
   {
+    protocol = prot;
     fd = _fd;
+    do_meta = _meta;
     stream = _stream;
     _ccb = _closed;
     current_block = buffer;
     fd->set_nonblocking( lambda(){}, send_more, closed );
-    stream->add_callback( callback );
+    if( stream ) 
+      stream->add_callback( callback );
+    if( stream->playlist )
+      stream->playlist->add_md_callback( md_callback );
   }
 }
 
@@ -404,19 +589,21 @@ mapping playlists(int s)
 
 mapping streams = ([ ]);
 
-void start()
+void st2()
 {
   mapping pl = playlists( 1 );
   foreach( getvar( "streams" )->get_streams(), mapping strm )
   {
     MPEGStream mps;
 
-    if( strm->playlist && pl[strm->playlist] )
+    if( strm->playlist && pl[ strm->playlist ] )
       if( !(mps = streams[ pl[strm->playlist] ]) )
       {
 	mps = streams[pl[strm->playlist]] = MPEGStream( pl[strm->playlist] );
         mps->start();
       }
+    if( !mps )
+      continue;
     if( !locations[ strm->location ] )
       locations[ strm->location ] =
 	Location( strm->location,
@@ -428,9 +615,26 @@ void start()
   }
 }
 
+void start()
+{
+  call_out( st2, 0.5 );
+}
+
 mapping find_file( string f, RequestID id )
 {
   if( locations[f] )
     return locations[f]->handle( id );
   return 0;
+}
+
+
+string status()
+{
+  string res = "<table>";
+  foreach( indices( locations ), string loc )
+  {
+    res += "<tr><td valign=top>"+loc+"</td><td valign=top>"+
+      locations[loc]->status()+"</td></tr>";
+  }
+  return res+"</table>";
 }

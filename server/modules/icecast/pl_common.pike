@@ -2,6 +2,74 @@
 static array md_callbacks = ({});
 static mapping md; // ID3 etc.
 
+string codec   = "null";
+string decoder = "null";
+
+#include <module.h>
+#include <roxen.h>
+//<locale-token project="mod_icecast">LOCALE</locale-token>
+#define _(X,Y)	_DEF_LOCALE("mod_icecast",X,Y)
+
+Stdio.File recode( Stdio.File fd, int bitrate )
+{
+#ifndef __NT__
+  Stdio.File devnull = Stdio.File("/dev/null", "r" );
+#else
+  Stdio.File devnull = Stdio.File("NL:", "r" );
+#endif
+  if( codec == "null" )
+    return fd;
+
+  array args;
+  switch( decoder )
+  {
+    case "mpg123":
+      args = ({ decoder,  "-s",  "-" });
+      break;
+    case "null":
+      args = 0;
+  }
+
+  if( args )
+  {
+    Stdio.File in = Stdio.File(), in2 = in->pipe();
+    Process.create_process( args,  ([ "stdin":fd, "stdout":in2,
+				      "stderr":devnull, ]) );
+    destruct( in2 );
+    destruct( fd );
+    fd = in;
+  }
+
+  args = 0;
+  switch( codec )
+  {
+    case "null":
+      break;
+
+    case "gogo":
+      args = ({codec,"-b",(string)bitrate,"-m","j","stdin",});
+      break;
+
+    case "bladeenc":
+      array mono = ({});
+      if( bitrate < 128 ) mono = ({ "-mono" });
+      args = ({ codec, "-"+(string)bitrate, "-progress=0", @mono})
+		"STDIN","STDOUT" });
+      break;
+  }
+
+  if( args )
+  {
+    Stdio.File out = Stdio.File(), out2 = out->pipe();
+    Process.create_process( args ,(["stdin":fd,"stdout":out2,
+				    "stderr":devnull, ]));
+    destruct( out2 );
+    destruct( fd );
+    fd = out;
+  }
+  return fd;
+}
+
 mapping metadata()
 {
   return md;
@@ -21,6 +89,25 @@ void remove_md_callback( function f )
 {
   md_callbacks -= ({ f });
 }
+
+
+void init_codec( function query )
+{
+  codec = query("codec");
+  decoder = query("decoder");
+}
+
+void codec_vars(function defvar)
+{
+  defvar("codec", "null", _(0,"Encoder"), TYPE_STRING_LIST,
+	 _(0,"The codec program to use to encode MPEG"),
+	 ({ "null", "bladeenc" }) );
+  defvar("decoder", "null", _(0,"Decoder"), TYPE_STRING_LIST,
+	 _(0,"The decoder program to use to decode MPEG"),
+	 ({ "null", "mpg123" }) );
+  defvar("bitrate", 128, _(0,"Bitrate"), TYPE_INT,
+	 _(0,"The bitrate to use when recoding") );
+};
 
 void call_md_callbacks( )
 {
