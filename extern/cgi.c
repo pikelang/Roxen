@@ -76,6 +76,7 @@ int start_program(char **argv)
   }
   close(fds[0]);
   dup2(fds[1], 1);
+  close(fds[1]);
   execv(argv[0], argv);
   exit(0);
   return 0;
