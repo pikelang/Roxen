@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.180 2004/05/20 22:33:15 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.181 2004/05/20 22:39:38 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3190,6 +3190,13 @@ class ScopePage {
       case "filesize": return ENCODE_RXML_INT(c->misc[" _stat"]?
 					      c->misc[" _stat"][1]:-4, type);
       case "self": return ENCODE_RXML_TEXT( (c->id->not_query/"/")[-1], type);
+      case "contenttype": return c->id->request_headers["content-type"]
+	 ?ENCODE_RXML_TEXT(c->id->request_headers["content-type"],type)
+	 :RXML.nil;
+      case "contentlength": return c->id->request_headers["content-length"]
+	 ?ENCODE_RXML_INT(c->id->len, type):RXML.nil;
+      case "content": return ENCODE_RXML_TEXT(c->id->data, type);
+      case "method": return ENCODE_RXML_TEXT(c->id->method, type);
       case "ssl-strength":
 	NOCACHE(c->id);
 	if (!c->id->my_fd || !c->id->my_fd->session)
@@ -3224,10 +3231,11 @@ class ScopePage {
     array ind=indices(c->misc->scope_page) +
       ({ "pathinfo", "realfile", "virtroot", "mountpoint", "virtfile", "path",
 	 "query", "url", "last-true", "language", "scope", "filesize", "self",
-	 "ssl-strength", "dir", "counter" });
+         "contenttype", "contentlength", "content", "method",
+	 "ssl-strength", "dir", "counter", "prestates" });
     foreach(indices(converter), string def)
       if(c->misc[converter[def]]) ind+=({def});
-    return ind + ({"pathinfo"});
+    return ind;
   }
 
   void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
