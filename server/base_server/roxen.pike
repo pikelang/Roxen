@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.150 1997/11/26 22:26:07 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.151 1997/11/27 19:56:45 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -22,7 +22,7 @@ inherit "language";
 
 // This is the real Roxen version. It should be changed before each
 // release
-constant real_version = "Roxen Challenger/1.2alpha15";
+constant real_version = "Roxen Challenger/1.2beta1";
 
 #if _DEBUG_HTTP_OBJECTS
 mapping httpobjects = ([]);
@@ -575,8 +575,14 @@ void connected_to_roxen_com(object port)
 #endif
   _new_supports = ({});
   port->set_id(port);
+  string v = version();
+  if (v != real_version) {
+    v = v + " (" + real_version + ")";
+  }
   port->write("GET /supports HTTP/1.0\r\n"
-	      "User-Agent: " + real_version + "\r\n"
+	      "User-Agent: " + v + "\r\n"
+	      "Host: www.roxen.com:80\r\n"
+	      "Pragma: no-cache\r\n"
 	      "\r\n");
   port->set_nonblocking(got_data_from_roxen_com,
 			got_data_from_roxen_com,
