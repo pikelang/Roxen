@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.86 2000/01/27 01:55:52 kuntri Exp $
+ * $Id: rxml.pike,v 1.87 2000/01/28 16:29:04 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -241,7 +241,7 @@ RXML.TagSet rxml_tag_set = class
   }
 } ("rxml_tag_set", this_object());
 
-RXML.Type t_html_parse_varrefs = RXML.t_html (RXML.PHtmlCompat);
+RXML.Type default_arg_type = RXML.t_text (RXML.PEnt);
 
 int parse_html_compat;
 
@@ -339,7 +339,7 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf)
   mixed err = catch {
     foreach (indices (args), string arg)
       // Parse variable entities in arguments.
-      args[arg] = t_html_parse_varrefs->eval (args[arg], 0, entities_tag_set, parser, 1);
+      args[arg] = default_arg_type->eval (args[arg], 0, rxml_tag_set, parser, 1);
     result=rf(tag,args,id,parser->_source_file,parser->_defines);
   };
   ctx->frame = orig_frame;
@@ -396,7 +396,7 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
   mixed err = catch {
     foreach (indices (args), string arg)
       // Parse variable entities in arguments.
-      args[arg] = t_html_parse_varrefs->eval (args[arg], 0, entities_tag_set, parser, 1);
+      args[arg] = default_arg_type->eval (args[arg], 0, rxml_tag_set, parser, 1);
     result=rf(tag,args,contents,id,parser->_source_file,parser->_defines);
   };
   ctx->frame = orig_frame;
