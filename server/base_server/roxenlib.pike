@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.61 1998/04/15 18:47:03 grubba Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.62 1998/05/12 23:07:37 js Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -699,6 +699,27 @@ static string short_date(int timestamp)
     return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[19..22];
   
   return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[11..15];
+}
+
+
+int httpdate_to_time(string date)
+{     
+   if (intp(date)) return -1;
+   // Tue, 28 Apr 1998 13:31:29 GMT
+   // 0    1  2    3    4  5  6
+   int mday,hour,min,sec,year;
+   string month;
+   if(sscanf(date,"%*s, %d %s %d %d:%d:%d GMT",mday,month,year,hour,min,sec)==6)
+     return mktime((["year":year-1900,
+		     "mon":MONTHS[lower_case(month)],
+		     "mday":mday,
+		     "hour":hour,
+		     "min":min,
+		     "sec":sec,
+		     "timezone":0]));
+   
+   
+   return -1; 
 }
 
 static string int2roman(int m)
