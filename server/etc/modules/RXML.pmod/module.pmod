@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.317 2003/10/13 13:11:05 mast Exp $
+// $Id: module.pmod,v 1.318 2003/12/15 09:51:53 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1001,7 +1001,10 @@ class TagSet
   //! context. The parser will collect an @[RXML.PCode] object if
   //! @[make_p_code] is nonzero.
   {
-    return new_context (id)->new_parser (top_level_type, make_p_code);
+    // Soft cast due to circular forward reference.
+    // Will hopefully be resolved with the next generation compiler.
+    return [object(Parser)]
+      new_context (id)->new_parser (top_level_type, make_p_code);
   }
 
   final Parser `() (Type top_level_type, void|RequestID id, void|int make_p_code)
