@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.445 2001/06/30 21:56:09 hop Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.446 2001/07/02 21:59:34 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3312,7 +3312,7 @@ static void create()
 		   "all IP-numbers on your machine).  The possible protocols "
 		   "are http, fhttp (a faster version of the normal HTTP "
 		   "protocol, but not 100% compatible with all modules) "
-		   "https, ftp, ftps, gopher and tetris.")));
+		   "https, ftp, ftps, hilfe and tetris.")));
 
   defvar("InternalLoc", "/_internal/",
 	 DLOCALE(40, "Internal module resource mountpoint"),
