@@ -4,10 +4,10 @@
   <table width=100% cellpadding=2 cellspacing=1
  	 bgcolor=white cellspacing=0 border=0>
   <tr bgcolor=#223366>
-     <td><font color=white>Flag</td>
-     <td><font color=white>Subject</td>
-     <td><font color=white>From</td>
-     <td><font color=white>Age</td>
+     <td width=5%><font color=white>Flag</td>
+     <td width=40%><font color=white>Subject</td>
+     <td width=40%><font color=white>From</td>
+     <td width=40%><font color=white>Age</td>
      <td width=15><img src=/internal-roxen-unit width=1 height=1></td>
   </tr>
   <list-mail-quick mailbox=$mailbox_id$>

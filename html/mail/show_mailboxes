@@ -1,8 +1,8 @@
 <table border=0 cellpadding=2 cellspacing=0 bgcolor="#cbcbea" width=100%>
 <tr>
 <tr valign=center>
-  <td>Display a list of</td>
-  <td>
+  <td nowrap>List</td>
+  <td nowrap>
 <input type=hidden name=mailbox_id value=<insert variable=mailbox_id>>
 <comment><gbutton name=list_boxes value=" All mailboxes "></comment>
 <if not variable=listall
@@ -20,14 +20,14 @@
      ><gbutton selected name=list_selected value="Selected"
    ></else
 ></else></td>
-<td>messages with headers containing</td>
+<td nowrap>messages with headers containing</td>
 <formoutput>
- <td><input name=mail_match value="#mail_match:quote=dtag#"></td>
+ <td nowrap><input name=mail_match value="#mail_match:quote=dtag#"></td>
 </formoutput>
-<td><if variable=mail_match><gbutton name=list_clear_match value="Clear"></if><gbutton name=list_match value="Ok"></td>
+<td nowrap><if variable=mail_match><gbutton name=list_clear_match value="Clear"></if><gbutton name=list_match value="Ok"></td>
 </tr>
 <tr>
-<td colspan=5>
+<td nowrap colspan=5>
 in mailbox
 <list-mailboxes>
   <if variable="mailbox_id is #id#">

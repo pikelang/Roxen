@@ -27,7 +27,7 @@
 <headline>Compose a new message</headline>
 <content>
   <use file=macros>
-  <expire_time now>
+  <expire-time now>
 
   <set variable="gtextid&selected;" 
        eval="<gtext-id talign=center xspacing=20 yspacing=8 
@@ -57,6 +57,7 @@
 
 <table>
 <formoutput>
+<comment>
 <form action="edit.html" method=GET>
 <mail-if-address-book>
   <tr><td></td>
@@ -70,7 +71,8 @@
 </mail-if-address-book>
 <input type=hidden name=mail_id value=#mail_id#>
 </form>
-<form enctype=multipart/form-data method=POST action=edit.html>
+</comment>
+<form enctype=multipart/form-data method=post action=edit.html>
 <input type=hidden name=mail_id value=#mail_id#>
   <tr><td align=right><b>To:</td><td>
 <input size=64 name=to value='#to:quote=html#'></td></tr>
@@ -83,7 +85,7 @@
 <tt>
 <br>
 <input type=submit name=send value="   Send   ">
-<input type=submit name=cancel value=" Save Draft ">
+<input type=submit name=cancel value=" Save Draft">
 <input type=submit name=abort value=" Cancel ">
 <input type=hidden name=mail_id value=#mail_id#></tt>
 </form>
