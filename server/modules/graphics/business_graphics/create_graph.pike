@@ -12,7 +12,7 @@ inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.76 1997/10/28 12:38:45 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.77 1997/11/22 22:10:12 noring Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -531,7 +531,7 @@ mapping draw_grid(mapping diagram_data, int|float xpos_for_yaxis,
   if (!diagram_data["gridwidth"])
     diagram_data["gridwidth"]=diagram_data["linewidth"]/4.0;
 
-  graph->setcolor(@diagram_data["axcolor"]);
+  graph->setcolor(@diagram_data["gridcolor"]);
   float gw=(float)diagram_data["gridwidth"];
   if ((diagram_data["vertgrid"])&&
       (gw>LITET))
