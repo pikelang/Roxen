@@ -1,12 +1,12 @@
 // This file is part of Roxen WebServer.
-// Copyright )I© 1996 - 2001, Roxen IS.-A
+// Copyright © 1996 - 2001, Roxen IS.
 //
 // The Roxen WebServer main program.
 //
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.704 2001/08/21 11:35:14 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.705 2001/08/21 13:20:12 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3027,18 +3027,20 @@ class ArgCache
 
   static void setup_table()
   {
-    if(catch(QUERY("SELECT id FROM "+name+" WHERE id=0")))
+    if(catch(QUERY("SELECT md5 FROM "+name+" WHERE id=0")))
     {
-      master()->resolv("DBManager.is_module_table")( 0, "shared", name,
-				 "The argument cache, used to map between "
-				 "a short unique string and an argument "
-				 "mapping" );
+      master()->resolv("DBManager.is_module_table")
+	( 0, "shared", name,
+	  "The argument cache, used to map between "
+	  "a short unique string and an argument "
+	  "mapping" );
+      catch(QUERY("DROP TABLE "+name ));
       QUERY("CREATE TABLE "+name+" ("
-                "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, "
-                "hash INT NOT NULL DEFAULT 0, "
-                "atime INT UNSIGNED NOT NULL DEFAULT 0, "
-                "contents BLOB NOT NULL DEFAULT '', "
-                "INDEX hind (hash))");
+	    "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, "
+	    "md5 CHAR(32) NOT NULL DEFAULT '', "
+	    "atime INT UNSIGNED NOT NULL DEFAULT 0, "
+	    "contents BLOB NOT NULL DEFAULT '', "
+	    "INDEX hind (md5))");
     }
   }
 
@@ -3073,19 +3075,29 @@ class ArgCache
     return 0;
   }
 
-  int create_key( string long_key )
+  string md5( string what )
   {
-    array data = QUERY("SELECT id,contents FROM "+name+" WHERE hash=%d",
-		       hash(long_key));
+    return Gmp.mpz(Crypto.md5()->update( what )->digest(),256)
+      ->digits(32);
+  }
+  
+  int create_key( string long_key, string|void md )
+  {
+    if( !md )  md = md5(long_key);
+    array data =
+      QUERY("SELECT id,contents FROM "+name+" WHERE md5=%s", md );
+    
     foreach( data, mapping m )
       if( m->contents == long_key )
 	return (int)m->id;
     
     int id = (int)get_db()->master_sql->insert_id();
-    QUERY( "INSERT INTO "+name+" (contents,hash,atime) VALUES "
-	   "(%s,%d,UNIX_TIMESTAMP())",
-	   long_key, hash(long_key) );
-    (plugins->create_key-({0}))( id, long_key );
+
+    QUERY( "INSERT INTO "+name+" (contents,md5,atime) VALUES "
+	   "(%s,%s,UNIX_TIMESTAMP())", long_key, md );
+
+    (plugins->create_key-({0}))( id, long_key, md );
+
     return id;
   }
   
@@ -3101,15 +3113,17 @@ class ArgCache
     if( !secret )
       secret = query( "argcache_secret" );
   }
+
   static string encode_id( int a, int b )
   {
     ensure_secret();
     object crypto = Crypto.arcfour();
     crypto->set_encrypt_key( secret );
-    string res = crypto->crypt( a+")I×"+b );-A
+    string res = crypto->crypt( a+"\327"+b );
     res = Gmp.mpz( res, 256 )->digits( 36 );
     return res;
   }
+
   static array plugins;
   static void get_plugins()
   {
@@ -3143,7 +3157,7 @@ class ArgCache
     a = Gmp.mpz( a, 36 )->digits( 256 );
     a = crypto->crypt( a );
     int i, j;
-    if( sscanf( a, "%d)I×%d", i, j ) != 2 )-A
+    if( sscanf( a, "%d\327%d", i, j ) != 2 )
       return plugin_decode_id( oa );
     return ({ i, j });
   }
@@ -3173,7 +3187,7 @@ class ArgCache
   int low_store( array a )
   {
     string data = encode_value_canonic( a );
-    string hv = Crypto.md5()->update( data )->digest();
+    string hv = md5( data );
     if( mixed q = cache[ hv ] )
       return q;
 
@@ -3183,16 +3197,9 @@ class ArgCache
       return q;
 #endif
     if( sizeof( cache ) >= CACHE_SIZE )
-    {
-      array i = indices(cache);
-      while( sizeof(cache) > CACHE_SIZE-CLEAN_SIZE ) {
-        string idx=i[ random(sizeof(i)) ];
-	m_delete( cache, cache[idx] );
-	m_delete( cache, idx );
-      }
-    }
+      cache = ([]);
 
-    int id = create_key( data );
+    int id = create_key( data, hv );
     cache[ hv ] = id;
     cache[ id ] = a;
     return id;
@@ -3204,15 +3211,14 @@ class ArgCache
     if( cache[id] )
       return cache[id]+([]);
     array i = decode_id( id );
-    if( !i )
-    {
-      mixed res;
-      foreach( (plugins->lookup-({0})), function f )
-	if( res = f( id ) )
-
-	  return res;
-      return 0;
-    }
+//     if( !i )
+//     {
+//       mixed res;
+//       foreach( (plugins->lookup-({0})), function f )
+// 	if( res = f( id ) )
+// 	  return res;
+//       return 0;
+//     }
     array a = low_lookup( i[0] );
     array b = low_lookup( i[1] );
     if( a && b )
@@ -3226,13 +3232,13 @@ class ArgCache
       return v;
     string q = read_args( id );
     if( !q )
-    {
-      mixed res;
-      foreach( (plugins->low_lookup-({0})), function f )
-	if( res = f( id ) )
-	  return res;
       error("Requesting unknown key\n");
-    }
+//     {
+//       mixed res;
+//       foreach( (plugins->low_lookup-({0})), function f )
+// 	if( res = f( id ) )
+// 	  return res;
+//     }
     mixed data = decode_value(q);
     string hl = Crypto.md5()->update( q )->digest();
     cache[ hl ] = id;
