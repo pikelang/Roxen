@@ -1204,6 +1204,89 @@ hej</result>
   <result>ok</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </if>
+      <else>
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+  </rxml>
+  <result>[1]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </if>
+      <else>
+	<set variable="var.x" value="1"/>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+  </rxml>
+  <result>[1]</result>
+</test>
+
+<!test>
+  <!-- The inverted condition in the <if> should ideally be
+       evaluated dynamically in the <else>. Now it's the cached
+       result from the <if> that causes <else> to always fail. -->
+  <rxml type="string">
+    <cache>
+      <if variable="test.pass = 1"> <!-- Evaluated statically -->
+	<set variable="var.x" value="1"/>
+      </if>
+      <else> <!-- Evaluated dynamically -->
+	<nocache><set variable="var.x" value="2"/></nocache>
+      </else>
+      <nocache>
+	<if variable="test.pass = &var.x;">ok</if>
+	<else>var.x=&var.x;</else>
+      </nocache>
+    </cache>
+  </rxml>
+  <result>ok</result>
+</!test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <if variable="test.pass = 1"> <!-- Evaluated statically -->
+	<set variable="var.x" value="1"/>
+      </if>
+      <else> <!-- Currently never removed in cache since the content
+		  is never evaluated. -->
+	<set variable="var.x" value="2"/>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+  </rxml>
+  <result>[1]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache shared nohash key="yo4">
+      <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </if>
+      <else>
+	<set variable="var.x" value="1"/>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+    <cache shared nohash key="yo4"/>
+  </rxml>
+  <result>[1][1]</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
