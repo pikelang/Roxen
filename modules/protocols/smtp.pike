@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.33 1998/09/13 20:01:46 grubba Exp $
+ * $Id: smtp.pike,v 1.34 1998/09/15 18:17:49 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.33 1998/09/13 20:01:46 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.34 1998/09/15 18:17:49 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -37,6 +37,8 @@ inherit "module";
  * smtp_relay:
  * 	int relay(string sender, string user, string domain,
  * 	          object spoolfile, string csum, object o);
+ *
+ * NOTE: Modules need to handle the terminating '.'.
  */
 
 static class Mail {
@@ -134,11 +136,11 @@ static class Smtp_Connection {
 
   string localhost = gethostname();
   int connection_class;
-  int counter;
+  string remoteident;		// User according to ident.
   string remoteip;		// IP
   string remoteport;		// PORT
   string remotehost;		// Name from the IP.
-  string remotename;		// Name given in HELO or EHLO.
+  string remotename = "";	// Name given in HELO or EHLO.
   array(string) ident;
   object conf;
   object parent;
@@ -172,30 +174,6 @@ static class Smtp_Connection {
 		   off/60, off%60, tz));
   }
 
-  static string spoolid;
-
-  static object open_spoolfile()
-  {
-    string dir = parent->query_spooldir();
-    int i;
-    object o = Stdio.File();
-
-    for (i = 0; i < 10; i++) {
-      spoolid = sprintf("%08x%08x%08x%08x",
-			getpid(), time(), gethrtime(), ++counter);
-
-      string f = combine_path(dir, spoolid);
-
-      if (o->open(f, "crwax")) {
-#ifndef __NT__
-	rm(f);
-#endif /* !__NT__ */
-	return(o);
-      }
-    }
-    return(0);
-  }
-
   static void got_remotehost(string h,
 			     function|void callback, mixed ... args)
   {
@@ -209,6 +187,11 @@ static class Smtp_Connection {
 			      function|void callback, mixed ... args)
   {
     ident = i;
+
+    if ((sizeof(ident) >= 3) && ((ident[0] - " ") != "ERROR")) {
+      remoteident = ident[2];
+    }
+
     if (callback) {
       callback(@args);
     }
@@ -257,52 +240,6 @@ static class Smtp_Connection {
       roxen_perror(sprintf("SMTP: Unknown command: %O\n", cmd));
       send(500, ({ sprintf("'%s': Unknown command.", cmd) }));
     }
-  }
-
-  static multiset do_expn(multiset in)
-  {
-#ifdef SMTP_DEBUG
-    roxen_perror(sprintf("SMTP: Expanding %O\n", in));
-#endif /* SMTP_DEBUG */
-
-    multiset expanded = (<>);		// Addresses expanded ok.
-    multiset done = (<>);		// Addresses that have been EXPN'ed.
-    multiset to_do = copy_value(in);	// Addresses still left to expand.
-    
-    array expns = Array.filter(conf->get_providers("smtp_rcpt")||({}),
-			       lambda(object o){ return(o->expn); });
-
-    while (sizeof(to_do)) {
-      foreach(indices(to_do), string addr) {
-	done[addr] = 1;
-	to_do[addr] = 0;
-	int verbatim = 1;
-	foreach(expns, object o) {
-	  string|multiset e = o->expn(addr, this_object());
-	  if (e) {
-	    verbatim = 0;
-	    if (stringp(e)) {
-	      expanded[e] = 1;
-	    } else if (multisetp(e)) {
-	      to_do |= e - done;
-	    } else {
-	      report_error(sprintf("SMTP: EXPN returned other than "
-				   "mapping or string!\n"
-				   "%O => %O\n", addr, e));
-	    }
-	  }
-	}
-	if (verbatim) {
-	  expanded[addr] = 1;
-	}
-      }
-    }
-
-#ifdef SMTP_DEBUG
-    roxen_perror(sprintf("SMTP: EXPN pass done: %O\n", expanded));
-#endif /* SMTP_DEBUG */
-
-    return(expanded);
   }
 
   static array(string) do_parse_address(string addr)
@@ -402,23 +339,6 @@ static class Smtp_Connection {
     smtp_HELO("HELO", args);
   }
 
-  multiset(string) handled_domains = (<>);
-
-  static void update_domains()
-  {
-    if (!handled_domains || (!sizeof(handled_domains))) {
-      // Update the table of locally handled domains.
-      multiset(string) domains = (<>);
-      foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	if (o->query_domain) {
-	  domains |= o->query_domain();
-	}
-      }
-
-      handled_domains = domains;
-    }
-  }
-
   void smtp_EXPN(string mail, string args)
   {
     if (!sizeof(args)) {
@@ -426,14 +346,14 @@ static class Smtp_Connection {
       return;
     }
 
-    multiset m = do_expn((<@do_parse_address(args)>));
+    multiset m = parent->do_expn((<@do_parse_address(args)>), this_object());
 
     array result = ({});
 
     array rcpts = Array.filter(conf->get_providers("smtp_rcpt")||({}),
 			       lambda(object o) { return(o->desc); });
 
-    update_domains();
+    parent->update_domains();
 
     foreach(indices(m), string addr) {
       array a = addr/"@";
@@ -448,7 +368,7 @@ static class Smtp_Connection {
       }
 
       int handled = 0;
-      if ((!domain) || (handled_domains[domain])) {
+      if ((!domain) || (parent->handled_domains[domain])) {
 	// Local address.
 	if (domain) {
 	  foreach(rcpts, object o) {
@@ -522,7 +442,7 @@ static class Smtp_Connection {
     array expns = Array.filter(conf->get_providers("smtp_rcpt")||({}),
 			       lambda(object o) { return(o->expn); });
     
-    update_domains();
+    parent->update_domains();
 
     int i;
     for(i=0; i < sizeof(a); i++) {
@@ -540,7 +460,7 @@ static class Smtp_Connection {
 	domain = 0;
       }
 
-      if (domain && !handled_domains[domain]) {
+      if (domain && !parent->handled_domains[domain]) {
 	// External address.
 	s = "";
       } else {
@@ -697,7 +617,7 @@ static class Smtp_Connection {
 	    }
 	  }
 
-	  update_domains();
+	  parent->update_domains();
 
 	  send(250);
 	  return;
@@ -709,7 +629,7 @@ static class Smtp_Connection {
 
   void smtp_RCPT(string rcpt, string args)
   {
-    if (!current_mail || !sizeof(current_mail->from)) {
+    if (!current_mail || !sizeof(current_mail->from || "")) {
       send(503);
       return;
     }
@@ -753,7 +673,7 @@ static class Smtp_Connection {
 
 	  int recipient_ok;
 
-	  if ((!domain) || (handled_domains[domain])) {
+	  if ((!domain) || (parent->handled_domains[domain])) {
 	    // Local address.
 
 	    if (domain) {
@@ -814,7 +734,7 @@ static class Smtp_Connection {
 
   void handle_DATA(string data)
   {
-    roxen_perror(sprintf("GOT: %O\n", data));
+    roxen_perror(sprintf("SMTP: %O\n", data));
 
     // Unquote the lines...
     // ie delete any initial period ('.') signs.
@@ -824,111 +744,26 @@ static class Smtp_Connection {
       data = data[1..];
     }
 
-    object spool = open_spoolfile();
-
-    if (!spool) {
-      send(550, "No spooler available");
-      report_error("SMTP: Failed to open spoolfile!\n");
-      do_RSET();
-      return;
-    }
-
     // Add received-headers here.
 
-    string received = sprintf("from %s (%s [%s]) by %s with %s id %s; %s",
-			      remotename, remotehost||"", remoteip,
-			      localhost, prot, spoolid,
+    string received = sprintf("from %s (%s@%s [%s])\r\n"
+			      "\tby %s with %s;\r\n"
+			      "\t%s",
+			      remotename, remoteident||"", remotehost||"",
+			      remoteip,
+			      localhost, prot,
 			      mktimestamp(current_mail->timestamp));
+  
+    roxen_perror(sprintf("Received: %O\n", received));
 
     data = "Received: " + received + "\r\n" + data;
 
-    string csum = Crypto.sha()->update(data)->digest();
+    array res = parent->send_mail(data, current_mail, this_object());
 
-    current_mail->set_contents(data);
+    // Send the status code
+    send(@res);
 
-    roxen_perror(sprintf("Received: %O\n", received));
-
-    if (spool->write(data) != sizeof(data)) {
-      spool->close();
-      send(452);
-      report_error("SMTP: Spooler failed. Disk full?\n");
-      do_RSET();
-      return;
-    }
-
-    // Now it's time to actually deliver the message.
-
-    // Expand.
-    multiset expanded = do_expn(current_mail->recipients);
-
-    int any_handled = 0;
-
-    /* Do the delivery */
-    foreach(indices(expanded), string addr) {
-      array a = addr/"@";
-      string domain;
-      string user;
-
-      if (sizeof(a) > 1) {
-	domain = a[-1];
-	user = a[..sizeof(a)-2]*"@";
-      } else {
-	user = addr;
-      }
-
-      int handled;
-
-      if ((!domain) || (handled_domains[domain])) {
-	// Local delivery.
-	if (domain) {
-	  // Primary delivery.
-	  foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	    handled |= o->put(current_mail->from, user, domain,
-			      spool, csum, this_object());
-	  }
-	}
-	if (!handled) {
-	  // Fallback delivery.
-	  foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	    handled |= o->put(current_mail->from, user, 0,
-			      spool, csum, this_object());
-	  }
-	}
-      } else {
-	// Remote delivery.
-	foreach(conf->get_providers("smtp_relay")||({}), object o) {
-	  handled |= o->relay(current_mail->from, user, domain,
-			      spool, csum, this_object());
-	}
-      }
-      if (handled) {
-	expanded[addr] = 0;
-	any_handled = 1;
-      }
-    }
-
-    if (!any_handled) {
-      // None of the recipients accepted the message.
-      send(554);
-      report_notice("SMTP: Failed to spool mail.\n");
-      return;
-    }
-
-    // NOTE: After this point error-messages must be sent by mail.
-
-    if (sizeof(expanded)) {
-      // Partial success.
-      send(250, "Partial failure. See bounce for details.");
-      roxen_perror(sprintf("The following recipients were unavailable:\n"
-			   "%s\n", String.implode_nicely(indices(expanded))));
-
-      // FIXME: Send bounce here.
-    } else {
-      // Message received successfully.
-      send(250);
-      report_notice("SMTP: Mail spooled OK.\n");
-    }
-
+    // Make ready for the next mail.
     do_RSET();
   }
 
@@ -1068,14 +903,207 @@ static void init()
  * Some glue code
  */
 
-string query_spooldir()
-{
-  return(QUERY(spooldir));
-}
-
 int query_timeout()
 {
   return(QUERY(timeout));
+}
+
+multiset do_expn(multiset in, object|void smtp)
+{
+#ifdef SMTP_DEBUG
+  roxen_perror(sprintf("SMTP: Expanding %O\n", in));
+#endif /* SMTP_DEBUG */
+
+  multiset expanded = (<>);		// Addresses expanded ok.
+  multiset done = (<>);			// Addresses that have been EXPN'ed.
+  multiset to_do = copy_value(in);	// Addresses still left to expand.
+    
+  array expns = Array.filter(conf->get_providers("smtp_rcpt")||({}),
+			     lambda(object o){ return(o->expn); });
+
+  while (sizeof(to_do)) {
+    foreach(indices(to_do), string addr) {
+      done[addr] = 1;
+      to_do[addr] = 0;
+      int verbatim = 1;
+      foreach(expns, object o) {
+	string|multiset e = o->expn(addr, smtp);
+	if (e) {
+	  verbatim = 0;
+	  if (stringp(e)) {
+	    expanded[e] = 1;
+	  } else if (multisetp(e)) {
+	    to_do |= e - done;
+	  } else {
+	    report_error(sprintf("SMTP: EXPN returned other than "
+				 "mapping or string!\n"
+				 "%O => %O\n", addr, e));
+	  }
+	}
+      }
+      if (verbatim) {
+	expanded[addr] = 1;
+      }
+    }
+  }
+
+#ifdef SMTP_DEBUG
+  roxen_perror(sprintf("SMTP: EXPN pass done: %O\n", expanded));
+#endif /* SMTP_DEBUG */
+
+  return(expanded);
+}
+
+multiset(string) handled_domains = (<>);
+
+void update_domains(int|void force)
+{
+  if (force || !handled_domains || (!sizeof(handled_domains))) {
+    // Update the table of locally handled domains.
+    multiset(string) domains = (<>);
+    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+      if (o->query_domain) {
+	domains |= o->query_domain();
+      }
+    }
+
+    // Ensure that both foo.domain.org and foo.domain.org. are in
+    // the multiset.
+    foreach(indices(domains), string d) {
+      if (d[-1] == '.') {
+	domains[d[..sizeof(d)-2]] = 1;
+      } else {
+	domains[d + "."] = 1;
+      }
+    }
+
+    handled_domains = domains;
+  }
+}
+
+static int counter;
+static object open_spoolfile()
+{
+  string dir = QUERY(spooldir);
+  int i;
+  object o = Stdio.File();
+
+  for (i = 0; i < 10; i++) {
+    string spoolid = sprintf("%08x%08x%08x%08x",
+			     getpid(), time(), gethrtime(), ++counter);
+    
+    string f = combine_path(dir, spoolid);
+
+    if (o->open(f, "crwax")) {
+#ifndef __NT__
+      rm(f);
+#endif /* !__NT__ */
+      return(o);
+    }
+  }
+  return(0);
+}
+
+/*
+ * Send a mail
+ *
+ * data			is the mail to send.
+ *
+ * mail->from		is the MAIL FROM: address
+ * mail->recipients	is an array(string) with recipients.
+ *
+ * smtp			is the Smtp_Connection from which the mail originates.
+ */
+array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
+{
+  object spool = open_spoolfile();
+
+  if (!spool) {
+    report_error("SMTP: Failed to open spoolfile!\n");
+    return(({ 550, "No spooler available" }));
+  }
+
+  string csum = Crypto.sha()->update(data)->digest();
+
+  if (spool->write(data) != sizeof(data)) {
+    spool->close();
+    report_error("SMTP: Spooler failed. Disk full?\n");
+    return(({ 452 }));
+  }
+
+  // Now it's time to actually deliver the message.
+
+  update_domains();
+
+  // Expand.
+  multiset expanded = do_expn(mail->recipients, smtp);
+
+  int any_handled = 0;
+
+  /* Do the delivery */
+  foreach(indices(expanded), string addr) {
+    array a = addr/"@";
+    string domain;
+    string user;
+
+    if (sizeof(a) > 1) {
+      domain = a[-1];
+      user = a[..sizeof(a)-2]*"@";
+    } else {
+      user = addr;
+    }
+
+    int handled;
+
+    if ((!domain) || (handled_domains[domain])) {
+      // Local delivery.
+      if (domain) {
+	// Primary delivery.
+	foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+	  handled |= o->put(mail->from, user, domain,
+			    spool, csum, this_object());
+	}
+      }
+      if (!handled) {
+	// Fallback delivery.
+	foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+	  handled |= o->put(mail->from, user, 0,
+			    spool, csum, this_object());
+	}
+      }
+    } else {
+      // Remote delivery.
+      foreach(conf->get_providers("smtp_relay")||({}), object o) {
+	handled |= o->relay(mail->from, user, domain,
+			    spool, csum, this_object());
+      }
+    }
+    if (handled) {
+      expanded[addr] = 0;
+      any_handled = 1;
+    }
+  }
+
+  if (!any_handled) {
+    // None of the recipients accepted the message.
+    report_notice("SMTP: Failed to spool mail.\n");
+    return(({ 554 }));
+  }
+
+  // NOTE: After this point error-messages must be sent by mail.
+
+  if (sizeof(expanded)) {
+    // Partial success.
+    roxen_perror(sprintf("The following recipients were unavailable:\n"
+			 "%s\n", String.implode_nicely(indices(expanded))));
+
+    return(({ 250, "Partial failure. See bounce for details." }));
+    // FIXME: Send bounce here.
+  } else {
+    // Message received successfully.
+    report_notice("SMTP: Mail spooled OK.\n");
+    return(({ 250 }));
+  }
 }
 
 /*
@@ -1091,9 +1119,14 @@ void destroy()
 
 array register_module()
 {
-  return({ 0,
+  return({ MODULE_PROVIDER,
 	   "SMTP protocol",
 	   "Experimental module for receiving mail." });
+}
+
+array(string)|multiset(string)|string query_provides()
+{
+  return(< "smtp_protocol" >);
 }
 
 void create()
