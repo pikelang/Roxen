@@ -1,62 +1,62 @@
 // -*- Pike -*-
-// $Id: variables.h,v 1.11 2000/05/10 00:54:03 nilsson Exp $
+// $Id: variables.h,v 1.12 2000/12/10 02:41:40 per Exp $
 // Fallback-resources, don't change here.
 
 private static constant errors =
 ([
-  100:"100 Continue",
-  101:"101 Switching Protocols",
-  102:"102 Processing",
+  100:"Continue",
+  101:"Switching Protocols",
+  102:"Processing",
 
-  200:"200 OK",
-  201:"201 URI follows",	// Created
-  202:"202 Accepted",
-  203:"203 Provisional Information",	// Non-Authoritative Information
-  204:"204 No Content",
-  205:"205 Reset Content",
-  206:"206 Partial Content", // Byte Ranges
-  207:"207 Multi-Status",
+  200:"OK",
+  201:"URI follows",	// Created
+  202:"Accepted",
+  203:"Provisional Information",	// Non-Authoritative Information
+  204:"No Content",
+  205:"Reset Content",
+  206:"Partial Content", // Byte Ranges
+  207:"Multi-Status",
 
-  300:"300 Moved",			// Multiple Choices
-  301:"301 Permanent Relocation",
-  302:"302 Temporary Relocation",
-  303:"303 Temporary Relocation method and URI",
-  304:"304 Not Modified",
-  305:"305 Use Proxy",
+  300:"Moved",			// Multiple Choices
+  301:"Permanent Relocation",
+  302:"Temporary Relocation",
+  303:"Temporary Relocation method and URI",
+  304:"Not Modified",
+  305:"Use Proxy",
 
-  400:"400 Bad Request",
-  401:"401 Access denied",		// Unauthorized
-  402:"402 Payment Required",
-  403:"403 Forbidden",
-  404:"404 No such file or directory.",
-  405:"405 Method not allowed",
-  406:"406 Not Acceptable",
-  407:"407 Proxy authorization needed",
-  408:"408 Request timeout",
-  409:"409 Conflict",
-  410:"410 This document is no more. It has gone to meet its creator. It is gone. It will not be back. Give up. I promise. There is no such file or directory.",
-  411:"411 Length Required",
-  412:"412 Precondition Failed",
-  413:"413 Request Entity Too Large",
-  414:"414 Request-URI Too Large",
-  415:"415 Unsupported Media Type",
-  416:"416 Requested range not satisfiable",
-  417:"417 Expectation Failed",
-  418:"418 I'm a teapot",
+  400:"Bad Request",
+  401:"Access denied",		// Unauthorized
+  402:"Payment Required",
+  403:"Forbidden",
+  404:"No such file or directory.",
+  405:"Method not allowed",
+  406:"Not Acceptable",
+  407:"Proxy authorization needed",
+  408:"Request timeout",
+  409:"Conflict",
+  410:"This document is no more. It has gone to meet its creator. It is gone. It will not be back. Give up. I promise. There is no such file or directory.",
+  411:"Length Required",
+  412:"Precondition Failed",
+  413:"Request Entity Too Large",
+  414:"Request-URI Too Large",
+  415:"Unsupported Media Type",
+  416:"Requested range not satisfiable",
+  417:"Expectation Failed",
+  418:"I'm a teapot",
   // FIXME: What is 419?
-  420:"420 Server temporarily unavailable",
-  421:"421 Server shutting down at operator request",
-  422:"422 Unprocessable Entity",
-  423:"423 Locked",
-  424:"424 Failed Dependency",
+  420:"Server temporarily unavailable",
+  421:"Server shutting down at operator request",
+  422:"Unprocessable Entity",
+  423:"Locked",
+  424:"Failed Dependency",
 
-  500:"500 Internal Server Error.",
-  501:"501 Not Implemented",
-  502:"502 Gateway Timeout",
-  503:"503 Service unavailable",
-  504:"504 Gateway Time-out",
-  505:"505 HTTP Version not supported",
-  506:"506 Variant aldo negotiates",
-  507:"507 Insufficient Storage",
+  500:"Internal Server Error.",
+  501:"Not Implemented",
+  502:"Gateway Timeout",
+  503:"Service unavailable",
+  504:"Gateway Time-out",
+  505:"HTTP Version not supported",
+  506:"Variant aldo negotiates",
+  507:"Insufficient Storage",
 ]);
 
