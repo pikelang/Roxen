@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.233 1999/11/25 11:32:07 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.234 1999/11/27 07:52:32 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -217,7 +217,7 @@ int received; // Received data
 // entirely by log-modules in the future, since this would be much
 // cleaner.
 
-function log_function;
+function(string:int) log_function;
 
 // The logging format used. This will probably move the the above
 // mentioned module in the future.
@@ -646,7 +646,7 @@ nomask private inline string extract_user(string from)
   return tmp[0];      // username only, no password
 }
 
-public void log(mapping file, object request_id)
+public void log(mapping file, RequestID request_id)
 {
 //    _debug(2);
   string a;
@@ -674,7 +674,8 @@ public void log(mapping file, object request_id)
 		 "$response", "$bin-response", "$length", "$bin-length",
 		 "$referer", "$user_agent", "$user", "$user_id",
 		 "$request-time"
-	       }), ({
+	       }), 
+               ({
 		 (string)request_id->remoteaddr,
 		 host_ip_to_int(request_id->remoteaddr),
 		 cern_http_date(time(1)),
@@ -691,7 +692,7 @@ public void log(mapping file, object request_id)
 		 (sizeof(request_id->referer||({}))?request_id->referer[0]:"-"),
 		 http_encode_string(sizeof(request_id->client||({}))?request_id->client*" ":"-"),
 		 extract_user(request_id->realauth),
-		 (string)request_id->cookies->RoxenUserID,
+		 request_id->cookies->RoxenUserID||"0",
 		 (string)(time(1)-request_id->time)
 	       }));
   
@@ -3056,66 +3057,17 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 #"Det här är huvudURLen till din startsida. Den används av många 
   moduler för att bygga upp absoluta URLer från en relativ URL.");
 
-  defvar("URLs", ({"http://*:80/"}), "URLs", TYPE_STRING_LIST,
+  defvar("URLs", ({"http://*:80/"}), "URLs", TYPE_STRING_LIST|VAR_INITIAL,
          "Bind to these URLs" );
 
-// This should be somewhere else, I think. Same goes for HTTP related ones
-
-//   defvar("FTPWelcome",  
-// 	 "              +-------------------------------------------------\n"
-// 	 "              +-- Welcome to the Roxen Challenger FTP server ---\n"
-// 	 "              +-------------------------------------------------\n",
-// 	 "FTP: FTP Welcome",
-// 	 TYPE_TEXT_FIELD|VAR_MORE,
-// 	 "FTP Welcome answer; transmitted to new FTP connections if the file "
-// 	 "<i>/welcome.msg</i> doesn't exist.\n");
-//   deflocaledoc("svenska", "FTPWelcome",
-// 	       "FTP: Välkomstmeddelande",
-// #"Det här meddelanden skickas till alla FTP klienter så
-//   fort de kopplar upp sig till servern");
-
-//   defvar("named_ftp", 0, "FTP: Allow named FTP", TYPE_FLAG|VAR_MORE,
-// 	 "Allow ftp to normal user-accounts (requires an auth module, "
-// 	 "e.g. 'User database and security').\n");
-//   deflocaledoc("svenska", "named_ftp", "FTP: Tillåt icke-anonym FTP",
-// 	       "Tillåt FTP med loginnamn och lösenord. Du måste ha en "
-// 	       " authentifikationsmodul för att kunna "
-// 	       "använda icke-anonym FTP.");
-//   defvar("anonymous_ftp", 1, "FTP: Allow anonymous FTP", TYPE_FLAG|VAR_MORE,
-// 	 "Allows anonymous ftp.\n");
-//   deflocaledoc("svenska", "anonymous_ftp", "FTP: Tillåt anonym FTP",
-// 	       "Tillåt anonym FTP");
-
-//   defvar("guest_ftp", 0, "FTP: Allow FTP guest users", TYPE_FLAG|VAR_MORE,
-// 	 "Allows FTP guest users.\n");
-//   deflocaledoc( "svenska", "guest_ftp", 
-// 		"FTP: Tillåt FTPgästanvändare",
-// 		"Tillåt FTPgästanvändare");
-
-//   defvar("ftp_user_session_limit", 0,
-// 	 "FTP: User session limit", TYPE_INT|VAR_MORE,
-// 	 "Limit of concurrent sessions a FTP user may have. 0 = unlimited.\n");
-
-//   deflocaledoc( "svenska", "ftp_user_session_limit", 
-// 		"FTP: Maximalt antal samtidiga användarsessioner",
-// 		"0=obegränsat antal");
-
-//   defvar("shells", "/etc/shells", "FTP: Shell database", TYPE_FILE|VAR_MORE,
-// 	 "File which contains a list of all valid shells\n"
-// 	 "(usually /etc/shells). Used for named ftp.\n"
-// 	 "Specify the empty string to disable shell database lookup.\n");
-//   deflocaledoc( "svenska", "shells", 
-// 		"FTP: Skaldatabas",
-// 		#"En fil som innehåller en lista på alla tillåtna
-//  skal. (normalt sett /etc/shells). Används för icke-anonym ftp. Ange
-//  tomma strängen för att stänga av verifieringen av användarskal");
-
   defvar("InternalLoc", "/_internal/",
-	 "Internal module resource mountpoint", TYPE_LOCATION|VAR_MORE,
+	 "Internal module resource mountpoint", 
+         TYPE_LOCATION|VAR_MORE|VAR_DEVELOPER,
          "Some modules may want to create links to internal resources.  "
 	 "This setting configures an internally handled location that can "
 	 "be used for such purposes.  Simply select a location that you are "
 	 "not likely to use for regular resources.");
+
   deflocaledoc("svenska", "InternalLoc", 
 	       "Intern modulresursmountpoint",
 #"Somliga moduler kan vilja skapa länkar till interna resurser.
