@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.328 2001/08/17 19:40:53 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.329 2001/08/20 11:46:47 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -387,8 +387,8 @@ private void setup_pipe()
 void send (string|object what, int|void len)
 {
   REQUEST_WERR(sprintf("send(%O, %O)\n", what, len));
-  if( len && port_obj && port_obj->minimum_bitrate )
-    call_out( end, len / port_obj->minimum_bitrate );
+  if( len && port_obj && port_obj->minimum_byterate )
+    call_out( end, len / port_obj->minimum_byterate );
 
   if(!what) return;
   if(!pipe) setup_pipe();
@@ -1784,7 +1784,7 @@ void send_result(mapping|void result)
                                   "callbacks":misc->_cachecallbacks,
                                   "len":file->len,
                                   // fix non-keep-alive when sending from cache
-                                  "raw":(file->raw||misc->connection=="close"),
+                                  "raw":file->raw,
                                   "error":file->error,
                                   "mtime":(file->stat && file->stat[ST_MTIME]),
                                   "rf":realfile,
