@@ -8,7 +8,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.38 2000/03/04 22:28:12 mast Exp $
+//! $Id: PXml.pike,v 1.39 2000/03/06 13:02:17 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -62,9 +62,10 @@ string html_context() {return low_parser::context();}
 
 static void set_quote_tag_cbs()
 {
-  add_quote_tag ("!--",
-		 type->free_text ? .utils.return_zero : .utils.return_empty_array,
-		 "--");
+  add_quote_tag ("!--", .utils.p_xml_comment_cb, "--");
+//   add_quote_tag ("!--",
+// 		 type->free_text ? .utils.return_zero : .utils.return_empty_array,
+// 		 "--");
   add_quote_tag ("?", .utils.return_zero, "?");
   add_quote_tag ("![CDATA[", .utils.return_zero, "]]");
 }
