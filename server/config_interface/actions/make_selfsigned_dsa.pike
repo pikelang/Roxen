@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.5 2000/09/09 03:11:56 lange Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.6 2001/12/14 15:37:42 grubba Exp $
  */
 
 #if constant(_Crypto) && constant(Crypto.dsa)
@@ -45,13 +45,13 @@ mixed verify_0(object id, object mc)
       LOCALE(135, "Invalid key size.");
     return 1;
   }
-  object file = Stdio.File();
+  object file;
   object privs = Privs("Storing private DSA key.");
-  if (!file->open(id->variables->key_file, "wct", 0600))
+  if (!(file = lopen(id->variables->key_file, "wct", 0600)))
   {
     id->variables->_error =
       "Could not open file: "
-      + (strerror(file->errno()) || (string) file->errno())
+      + (strerror(errno()) || (string) errno())
       + ".";
     privs = 0;
     return 1;
@@ -110,15 +110,15 @@ mixed verify_2(object id, object mc)
 
 mixed page_3(object id, object mc)
 {
-  object file = Stdio.File();
+  object file;
 
   object privs = Privs("Reading private DSA key");
-  if (!file->open(id->variables->key_file, "r"))
+  if (!(file = lopen(id->variables->key_file, "r")))
   {
     privs = 0;
 
     return "<font color='red'>Could not open key file: "
-      + strerror(file->errno()) + "\n</font>";
+      + strerror(errno()) + "\n</font>";
   }
   privs = 0;
   string s = file->read(0x10000);
@@ -192,14 +192,14 @@ mixed verify_3(object id, object mc)
 {
   if (sizeof(id->variables->cert_file))
   {
-    object file = Stdio.File();
-    if (!file->open(id->variables->cert_file, "wct"))
+    object file;
+    if (!(file = lopen(id->variables->cert_file, "wct")))
     {
       /* FIXME: Should we use a verify function, to get
        * better error handling? */
       id->variables->_error =
 	"Could not open certificate file: "
-	+ (strerror(file->errno()) || (string) file->errno())
+	+ (strerror(errno()) || (string) errno())
 	+ ".";
       return 1;
     }
