@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.65 2000/11/21 12:44:14 mast Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.66 2000/12/28 20:09:13 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -303,17 +303,17 @@ class TagSQLTable {
 
 Sql.sql sql_object(void|string host)
 {
-  string host = stringp(host)?host:query("hostname");
+  string hostname = stringp(host)?host:query("hostname");
   Sql.sql con;
   function sql_connect = conf->sql_connect;
   mixed error;
   /* Is this really a good idea? /mast
-  error = catch(con = sql_connect(host));
+  error = catch(con = sql_connect(hostname));
   if(error)
     return 0;
   return con;
   */
-  return sql_connect(host);
+  return sql_connect(hostname);
 }
 
 string query_provides()

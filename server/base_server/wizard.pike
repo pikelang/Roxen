@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.123 2000/09/05 15:06:36 per Exp $
+// $Id: wizard.pike,v 1.124 2000/12/28 20:09:13 mast Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -914,13 +914,13 @@ string format_numeric(string s, string|void sep)
   sep = reverse(sep||"&nbsp;");
   array(string) as = s/" ";
   string t = "";
-  string s = reverse(as[0]);
-  while(sizeof(s)) {
-    if(sizeof(s) > 3)
-      t += s[0..2]+sep;
+  string s2 = reverse(as[0]);
+  while(sizeof(s2)) {
+    if(sizeof(s2) > 3)
+      t += s2[0..2]+sep;
     else
-      t += s;
-    s = s[3..];
+      t += s2;
+    s2 = s2[3..];
   }
   return (({reverse(t)})+as[1..])*" ";
 }
