@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.66 2000/01/14 05:11:03 mast Exp $ */
+/* $Id: module.pike,v 1.67 2000/01/18 14:07:35 noring Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -659,11 +659,12 @@ RXML.TagSet query_tag_set()
 {
   return
     my_configuration()->module_tag_sets[this_object()] ||
-    RXML.TagSet (module_identifier(),
-		 filter (rows (this_object(),
-			       glob ("Tag*",
-				     indices (this_object()))),
-			 functionp)());
+    (this_object()->ModuleTagSet || RXML.TagSet) (
+      module_identifier(),
+      filter (rows (this_object(),
+		    glob ("Tag*",
+			  indices (this_object()))),
+	      functionp)());
 }
 
 mixed get_value_from_file(string path, string index, void|string pre)
