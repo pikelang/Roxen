@@ -14,7 +14,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.39 1998/08/21 22:57:49 neotron Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.40 1998/10/07 23:13:04 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -48,6 +48,10 @@ void create()
   defvar("only_password", 1, "Password users only",
 	 TYPE_FLAG, "Only users who have a valid password can be accessed "
 	 "through this module");
+
+  defvar("user_listing", 0, "Enable userlisting", TYPE_FLAG,
+	 "Enable a directory listing showing users with homepages. "
+	 "When the mountpoint is accessed.")
   
   defvar("banish_list", ({ "root", "daemon", "bin", "sys", "admin", 
 			   "lp", "smtp", "uucp", "nuucp", "listen", 
@@ -296,10 +300,12 @@ mapping|array find_dir(string f, object got)
   
 
   if (!a) {
-    array l;
-    l = got->conf->userlist(got);
+    if (QUERY(user_listing)) {
+      array l;
+      l = got->conf->userlist(got);
 
-    if(l) return(l - QUERY(banish_list));
+      if(l) return(l - QUERY(banish_list));
+    }
     return 0;
   }
 
