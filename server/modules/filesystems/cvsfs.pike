@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-static string cvs_version = "$Id: cvsfs.pike,v 1.7 1997/02/12 20:45:13 grubba Exp $";
+static string cvs_version = "$Id: cvsfs.pike,v 1.8 1997/02/14 03:40:40 grubba Exp $";
 
 #include <module.h>
 #include <string.h>
@@ -27,7 +27,7 @@ object|array run_cvs(string prog, string dir, int with_stderr, string ...args)
   int id;
   object|array result;
 
-  werror(sprintf("run_cvs: %s %s\n", prog, args * " ")); 
+  // werror(sprintf("run_cvs: %s %s\n", prog, args * " ")); 
   
   stdin->open("/dev/null", "r");
   if (with_stderr)
@@ -79,7 +79,7 @@ string lookup_cvs_module(string prog, string root, string module)
   if (!f)
     return 0;
 
-  werror("Reading from cvs\n");
+  // werror("Reading from cvs\n");
   mods = f->read(1000000);
   
   if (!strlen(mods))
@@ -92,7 +92,7 @@ string lookup_cvs_module(string prog, string root, string module)
   
   if (!mod)
     return 0;
-  werror(sprintf("Module: %O\n", mod));
+  // werror(sprintf("Module: %O\n", mod));
   int index=1;
   while (mod[index][0] == '-') /* Skip flags */
     {
@@ -113,8 +113,7 @@ array register_module()
 {
   return ({ MODULE_LOCATION,
 	      "CVS File system",
-	      "Accessing files under CVS control",
-	      0, 0 });
+	      "Accessing files under CVS control" });
 }
 
 void create()
@@ -229,7 +228,7 @@ string status()
 
 mixed stat_file(string name, object id)
 {
-  werror(sprintf("file_stat: Looking for '%s'\n", name));
+  // werror(sprintf("file_stat: Looking for '%s'\n", name));
   name = query("cvsroot") + cvs_module_path + "/" + name;
   return file_stat(name + ",v") || file_stat(name);
 }
@@ -257,7 +256,7 @@ object|mapping|int find_file(string name, object id)
   array(string) extra_args = ({});
   mapping(string:string|int) prestates = parse_prestate(id->prestate);
 
-  werror(sprintf("find_file: Looking for '%s'\n", name));
+  // werror(sprintf("find_file: Looking for '%s'\n", name));
   string fname = query("cvsroot") + cvs_module_path + "/" + name;
 
   if (cvs_module_path)
@@ -306,7 +305,7 @@ array find_dir(string name, object id)
 {
   array info;
   string fname = query("cvsroot") + cvs_module_path + "/" + name;
-  werror(sprintf("find_dir: Looking for '%s'\n", name));
+  // werror(sprintf("find_dir: Looking for '%s'\n", name));
 
   if (cvs_module_path
       && (info = file_stat(fname))
