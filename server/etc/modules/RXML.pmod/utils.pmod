@@ -1,11 +1,13 @@
-//! Things that belong elsewhere but can't lie there for various silly reasons.
+//! Things that belong elsewhere but can't lie there for various silly
+//! reasons. Everything here is considered internal and not part of
+//! the RXML.pmod API.
 //!
 //! E.g. one reason is to avoid circular references in the parser
 //! objects when the callbacks are defined in them.
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.11 2000/05/03 08:52:15 mast Exp $
+//! $Id: utils.pmod,v 1.12 2000/08/12 21:29:22 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
