@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.13 1998/03/17 23:35:55 neotron Exp $
+// $Id: counter.pike,v 1.14 1998/03/18 18:50:44 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,9 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.13  1998/03/17 23:35:55  neotron
+// Changed counter default dir, and added default ppm fonts (a).
+//
 // Revision 1.12  1998/03/17 23:11:33  neotron
 // Added thread safe constant.
 //
@@ -69,7 +72,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.13 1998/03/17 23:35:55 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.14 1998/03/18 18:50:44 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -263,13 +266,14 @@ mapping find_file_font( string f, object id )
   
   if( len > 10 )
     len = 10;
+  else if(len < 1)
+    len = 6;
   
   object fnt;
   fnt=get_font(fontname, 32 ,0, 0, "left", 0, 0);
 
   if(!fnt)
     return fontlist(bg,fg,(int)(scale*5.0));
-  
   object txt  = fnt->write(sprintf("%0*d", len, counter));	
   object img  = image(txt->xsize(), txt->ysize(), @mkcolor(bg));
 
@@ -328,7 +332,8 @@ mapping find_file_ppm( string f, object id )
 
   if( len > 10 )
     len = 10;
-  
+  else if(len < 1)
+    len = 6;
   strcounter = sprintf("%0*d", len, counter ) / "";
   int numdigits = sizeof(strcounter);
   int currx;
@@ -346,7 +351,7 @@ mapping find_file_ppm( string f, object id )
 
     digits = allocate(10);
     object digit;
-    for( int dn=0; dn < 10; dn++ )
+    for(int dn = 0; dn < 10; dn++ )
     {
       buff = Stdio.read_bytes(dir + fontname+"/"+dn+".ppm" );// Try .ppm
       if (!buff 
@@ -357,7 +362,7 @@ mapping find_file_ppm( string f, object id )
 #endif
 	  || !digit)
       {
-	buff = Stdio.read_bytes( dir + fontname+"/"+dn+".ppm" ); // Try .gif
+	buff = Stdio.read_bytes( dir + fontname+"/"+dn+".gif" ); // Try .gif
 	if(!buff)
 	  return ppmlist( fontname, user, dir );	// Failed !!
 	mixed err;
@@ -383,10 +388,11 @@ mapping find_file_ppm( string f, object id )
   for( int dn=0; dn < numdigits; dn++ )
   {
     int c = (int)strcounter[dn];
+    werror(sprintf("%O:", c));
     result = result->paste(digits[c], currx, 0);
     currx += digits[c]->xsize();
   }	  
-  
+  write("\n");
   // Apply Color Filter 	
   //
   result = result->copy(0,0,currx-1,result->ysize()-1);
@@ -406,7 +412,7 @@ mapping find_file_ppm( string f, object id )
     data = image(digits[0]->xsize()*2 * numdigits,
 		       digits[0]->ysize());
     for( int dn = 0; dn < 10; dn++ ) {
-      data = result->paste(digits[dn], x, 0);
+      data = data->paste(digits[dn], x, 0);
       x += digits[dn]->xsize();
     }
     ct = colortable(data->copy(0,0,x-1,data->ysize()-1), 64)
@@ -444,7 +450,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.13 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.14 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
