@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.51 2000/07/17 15:55:19 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.52 2000/08/02 14:05:07 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -14,51 +14,175 @@ generate nice tables.";
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["tablify":({#"<desc cont><short>Transforms texts into tables.</short> No attributes required.</desc>
+constant tagdoc=(["tablify":({#"<desc cont><short>
+ Transforms texts into tables.</short> No attributes required.
+</desc>
 
-<attr name=rowseparator value=string>Defines the rowseparator. Default is a newline.</attr>
-<attr name=cellseparator value=string>Defines the cellseparaotr. Default is a tab.</attr>
-<attr name=border value=number>Defines the width of the border. Default is 2 in
- nice and nicer modes. Otherwise undefined.</attr>
-<attr name=cellspacing value=number>Defines the cellspacing attribute. Default is 0 in
- nice and nicer modes. Otherwise undefined.</attr>
-<attr name=cellpadding value=number>Defines the cellpadding attribute. Default is 4 in
- nice and nicer modes. Otherwise undefined.</attr>
-<attr name=interactive-sort>Makes it possible for the user to sort the table with
- respect to any column.</attr>
-<attr name=sortcol value=number>Defines which column to sort the table with respect to.
- The leftmost column is number 1. Negative value indicate reverse sort order.</attr>
-<attr name=min value=number>Indicates which of the inputed rows should be the first to
- be displayed. The first row is number 1.</attr>
-<attr name=max value=number>Indicates which of the inputed rows should be the last to
- be displayed.</attr>
-<attr name=negativecolor value=color>The color of negative values in economic fields. Default is #ff0000.</attr>
-<attr name=cellalign value=left|center|right>Defines how the cell contents should be align by default.</attr>
-<attr name=cellvalign value=top|middle|bottom>Defines how the cell contents should be verically aligned.</attr>
-<attr name=width value=number>Defines the width of the table.</attr>
+<attr name=rowseparator value=string default='newline'>
+ Defines the rowseparator.
+</attr>
+
+<attr name=cellseparator value=string default='tab'>
+ Defines the cellseparator.
+</attr>
+
+<attr name=border value=number>
+ Defines the width of the border. Default is 2 in nice and nicer
+ modes. Otherwise undefined.
+</attr>
+
+<attr name=cellspacing value=number>
+ Defines the cellspacing attribute. Default is 0 in nice and nicer
+ modes. Otherwise undefined.
+</attr>
+
+<attr name=cellpadding value=number>
+ Defines the cellpadding attribute. Default is 4 in nice and nicer
+ modes. Otherwise undefined.
+</attr>
+
+<attr name=interactive-sort>
+ Makes it possible for the user to sort the table with respect to any
+ column.
+</attr>
+
+<attr name=sortcol value=number>
+ Defines which column to sort the table with respect to. The leftmost
+ column is number 1. Negative value indicate reverse sort order.
+</attr>
+
+<attr name=min value=number>
+ Indicates which of the inputed rows should be the first to be
+ displayed. The first row is number 1.
+</attr>
+
+<attr name=max value=number>
+ Indicates which of the inputed rows should be the last to be
+ displayed.
+</attr>
+
+<attr name=negativecolor value=color default='#ff0000'>
+ The color of negative values in economic fields.
+</attr>
+
+<attr name=cellalign value=left|center|right>
+ Defines how the cell contents should be align by default.
+</attr>
+
+<attr name=cellvalign value=top|middle|bottom>
+ Defines how the cell contents should be verically aligned.</attr>
+
+<attr name=width value=number>
+ Defines the width of the table.
+
+<ex>
+<tablify cellseparator=','>
+Country, Population
+Sweden, 8 911 296
+Denmark, 5 356 845
+Norway, 4 438 547
+Iceland, 272 512
+Finland, 5 158 372
+</tablify>
+</ex>
+</attr>
+
 <hr>
-<attr name=nice>Add some extra layout to the table. All attributes below
- only applies in nice or nicer mode.</attr>
-<attr name=grid value=number>Draws a grid with the thickness given.</attr>
-<attr name=notitle>Don't add a title to each column.</attr>
-<attr name=bordercolor value=color>The colour of the border. Default is #000000.</attr>
-<attr name=titlebgcolor value=color>The background colour of the title. Default is #112266.</attr>
-<attr name=titlecolor value=color>The colour of the title. Default is #ffffff.</attr>
-<attr name=modulo value=number>Defines how many rows in a row should have the same colour.</attr>
-<attr name=oddbgcolor value=color>The first background color. Default is #ffffff.</attr>
-<attr name=evenbgcolor value=color>The second background color. Default is #ddeeff.</attr>
+
+<attr name=nice>
+ Add some extra layout to the table. All attributes below only applies
+ in nice or nicer mode.
+</attr>
+
+<attr name=grid value=number>
+ Draws a grid with the thickness given.
+</attr>
+
+<attr name=notitle>
+ Don't add a title to each column.
+</attr>
+
+<attr name=bordercolor value=color default='#000000'>
+ The color of the border.
+</attr>
+
+<attr name=titlebgcolor value=color default='#112266'>
+ The background color of the title.
+</attr>
+
+<attr name=titlecolor value=color default='#ffffff'>
+ The color of the title.
+</attr>
+
+<attr name=modulo value=number>
+ Defines how many rows in a row should have the same color.
+</attr>
+
+<attr name=oddbgcolor value=color default='#ffffff'>
+ The first background color.
+</attr>
+
+<attr name=evenbgcolor value=color default='#ddeeff'>
+ The second background color.
+
+<ex>
+<tablify nice='' cellseparator=',' modulo='2'>
+Country, Population
+Sweden, 8 911 296
+Denmark, 5 356 845
+Norway, 4 438 547
+Iceland, 272 512
+Finland, 5 158 372
+</tablify>
+</ex>
+</attr>
 <hr>
-<attr name=nicer>Add some extra extra layout to the table. All attributes
- below only applies in nicer mode. Nicer requires the gtext module.</attr>
-<attr name=noxml>Don't terminate the gifs with slashes.</attr>
-<attr name=font value=text>Gtext font to write the column titles with. Default is 'lucida'.</attr>
-<attr name=scale value=float>Size of the gtext font to write the column titles with. Default is 0.36</attr>
-<attr name=textcolor value=color>The color of the text. This will also work with economic fields in any mode.
- Default is #000000.</attr>
-<attr name=size value=number>The size of the table text. Default is 2.</attr>
-<attr name=font value=string>The font of the table text. Default is 'helvetica,arial'</attr>",
-  (["fields":#"<desc cont>The container 'fields' may be used inside the tablify container to describe
-   the type of contents the fields in a column has. Avaiable fields are<br>
+
+<attr name=nicer>
+ Add some extra extra layout to the table. All attributes below only
+ applies in nicer mode. Nicer requires the gtext module.
+</attr>
+
+<attr name=noxml>
+ Don't terminate the gifs with slashes.
+</attr>
+
+<attr name=font value=text default='lucida'>
+ Gtext font to write the column titles with.
+</attr>
+
+<attr name=scale value=float default='0.36'>
+ Size of the gtext font to write the column titles with.
+</attr>
+
+<attr name=textcolor value=color default='#000000'>
+ The color of the text. This will also work with economic fields in
+ any mode.
+</attr>
+
+<attr name=size value=number default='2'>
+ The size of the table text.
+</attr>
+
+<attr name=font value=string default='helvetica,arial'>
+ The font of the table text.
+
+<ex>
+<tablify nicer='' cellseparator=',' font='andover' scale='1.0'>
+Country, Population
+Sweden, 8 911 296
+Denmark, 5 356 845
+Norway, 4 438 547
+Iceland, 272 512
+Finland, 5 158 372
+</tablify>
+</ex>
+
+</attr>",
+  (["fields":#"<desc cont>
+ The container 'fields' may be used inside the tablify container to
+ describe the type of contents the fields in a column has. Available
+ fields are<br>
 
    <ul>
    <li>text (default)</li>
