@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 1.101 1999/05/01 19:11:09 grubba Exp $
+ * $Id: ftp.pike,v 1.102 1999/05/01 21:56:47 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -285,6 +285,7 @@ class FromAsciiWrapper
   }
 }
 
+// This one is needed for touch_me() to be called as needed.
 class BinaryWrapper
 {
   inherit FileWrapper;
@@ -1577,7 +1578,11 @@ class FTPSession
   /*
    * Data connection handling
    */
-  static private void send_done_callback(array(object) args)
+  static private void send_done_callback(
+#if constant(Stdio.sendfile)
+					 int sent,
+#endif /* constant(Stdio.sendfile) */
+					 array(object) args)
   {
     DWRITE("FTP: send_done_callback()\n");
 
@@ -1594,6 +1599,10 @@ class FTPSession
     curr_pipe = 0;
 
     if (session && session->file) {
+#if constant(Stdio.sendfile)
+      session->file->len = sent;
+#endif /* constant(Stdio.sendfile) */
+
       session->conf->log(session->file, session);
       session->file = 0;
     }
@@ -1702,7 +1711,7 @@ class FTPSession
 
     session->file = file;
 
-    if (!file || (file->error && (file->error/100 != 2))) {
+    if (!file || (file->error && (file->error/100 <= 2))) {
       DWRITE(sprintf("FTP: open_file(\"%s\") failed: %O\n", fname, file));
       send_error(cmd, fname, file, session);
       return 0;
@@ -1729,8 +1738,6 @@ class FTPSession
     DWRITE(sprintf("FTP: connected_to_send(X, %O)\n", file));
 
     touch_me();
-
-    object pipe=roxen->pipe();
 
     if(!file->len)
       file->len = file->data?(stringp(file->data)?strlen(file->data):0):0;
@@ -1789,6 +1796,16 @@ class FTPSession
       }
       break;
     }
+#if constant(Stdio.sendfile)
+    curr_pipe = Stdio.sendfile(stringp(file->data) && ({ file->data }),
+			       file->file, -1, -1,
+			       0,
+			       fd,
+			       send_done_callback,
+			       ({ fd, session }));
+#else /* !constant(Stdio.sendfile) */
+    object pipe=roxen->pipe();
+
     pipe->set_done_callback(send_done_callback, ({ fd, session }) );
     master_session->file = session->file = file;
     if(stringp(file->data)) {
@@ -1800,6 +1817,7 @@ class FTPSession
     }
     curr_pipe = pipe;
     pipe->output(fd);
+#endif /* constant(Stdio.sendfile) */
   }
 
   static private void connected_to_receive(object fd, string args)
