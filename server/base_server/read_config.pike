@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.46 2000/08/23 16:09:34 per Exp $
+// $Id: read_config.pike,v 1.47 2000/08/24 22:45:19 per Exp $
 
 #include <module.h>
 
@@ -163,9 +163,8 @@ mapping read_it(string cl)
   if (err) 
     report_error("Failed to read configuration file for %O\n"
                  "%s\n", cl, describe_backtrace(err));
-  else
-    report_error( "Failed to read configuration file for %O\n", cl );
-
+//else
+//  report_error( "Failed to read configuration file for %O\n", cl );
   return ([]);
 }
 
