@@ -55,6 +55,8 @@ private constant all_properties_common = (<
   "DAV:supportedlock",
   "DAV:iscollection",
   "DAV:isfolder",
+  "DAV:lockdiscovery",
+  "DAV:supportedlock",
 >);
 
 private constant all_properties_file = all_properties_common + (<
@@ -95,6 +97,9 @@ private constant all_properties_dir = all_properties_common;
 //!
 //!     @value "DAV:getlastmodified"
 //!	  RFC2518 13.7
+//!
+//!     @value "DAV:lockdiscovery"
+//!       RFC2518 13.8
 //!
 //!     @value "DAV:resourcetype"
 //!	  RFC2518 13.9
@@ -287,6 +292,9 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   case "DAV:getlastmodified":	// RFC2518 13.7
     return get_response_headers()["Last-Modified"];
 
+  case "DAV:lockdiscovery":	// RFC2518 13.8
+    return indices(id->conf->find_locks(path, 0, 0, id))->get_xml();
+
   case "DAV:resourcetype":	// RFC2518 13.9
     if (get_stat()->isdir) {
       return ({
@@ -296,8 +304,20 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     return 0;
 
   case "DAV:supportedlock":	// RFC2518 13.11
-    return "";
-
+    {
+      array(Parser.XML.Tree.Node) res = ({
+	Parser.XML.Tree.ElementNode("DAV:lockentry", ([])),
+	Parser.XML.Tree.ElementNode("DAV:lockentry", ([])),
+      });
+      res->add_child(Parser.XML.Tree.ElementNode("DAV:lockscope", ([])));
+      res[0]->get_last_child()->
+	add_child(Parser.XML.Tree.ElementNode("DAV:exclusive", ([])));
+      res[1]->get_last_child()->
+	add_child(Parser.XML.Tree.ElementNode("DAV:exclusive", ([])));
+      res->add_child(Parser.XML.Tree.ElementNode("DAV:locktype", ([])))->
+	add_child(Parser.XML.Tree.ElementNode("DAV:write", ([])));
+      return res;
+    }
   case "http://apache.org/dav/props/executable":
     // http://www.webdav.org/mod_dav/:
     //
