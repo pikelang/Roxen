@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.13 1998/09/28 12:30:26 grubba Exp $
+ * $Id: pop3.pike,v 1.14 1998/09/28 14:10:42 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.13 1998/09/28 12:30:26 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.14 1998/09/28 14:10:42 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -14,6 +14,17 @@ constant thread_safe = 1;
 inherit "module";
 
 #define POP3_DEBUG
+
+/*
+ * TODO:
+ *
+ * o Mark messages fetched with TOP or RETR as read?
+ *
+ * o What happens to messages deleted from elsewhere?
+ *
+ * o Logging.
+ *
+ */
 
 static class Pop_Session
 {
@@ -23,6 +34,8 @@ static class Pop_Session
 
   static object user;
   static string username;
+
+  static array(object) inbox;
 
   static multiset(object) deleted = (<>);
 
@@ -57,6 +70,13 @@ static class Pop_Session
     return(s);
   }
 
+  static void reset()
+  {
+    user = 0;
+    inbox = 0;
+    deleted = (<>);
+  }
+
   static void handle_command(string line)
   {
     if (sizeof(line)) {
@@ -89,16 +109,13 @@ static class Pop_Session
     send_ok(sprintf("%s POP3 server signing off", gethostname()));
     disconnect();
     if (user) {
-      array(object) mail = user->get_incoming()->mail();
       indices(deleted)->delete();
     }
   }
 
   void pop_STAT()
   {
-    object mbox = user->get_incoming();
-
-    array(object) mail = mbox->mail() - indices(deleted);
+    array(object) mail = inbox - indices(deleted);
     int num = sizeof(mail);
     int sz = `+(0, @(mail->get_size()));
     send_ok(sprintf("%d %d", num, sz));
@@ -112,28 +129,34 @@ static class Pop_Session
     }
     object mbox = user->get_incoming();
     if (sizeof(args)) {
-      object mail = mbox->get_mail_by_id(args[0]);
-
-      if (!mail) {
+      int n = (int)args[0];
+      
+      if ((n < 1) || (n > sizeof(inbox))) {
 	send_error(sprintf("No such mail %s.", args[0]));
 	return;
       }
       
+      object mail = inbox[n-1];
+
       if (deleted[mail]) {
 	send_error(sprintf("Mail %s is deleted.", args[0]));
 	return;
       }
 
-      send_ok(sprintf("%s %s", mail->id, mail->get_size()));
+      send_ok(sprintf("%s %s", n, mail->get_size()));
       return;
     }
-    array(object) mail = mbox->mail() - indices(deleted);
+
+    array(object) mail = inbox - indices(deleted);
     int num = sizeof(mail);
-    
     int sz = `+(0, @(mail->get_size()));
     send_ok(sprintf("%d messages (%d octets)", num, sz));
-    foreach(mail, object m) {
-      send(sprintf("%s %d\r\n", m->id, m->get_size()));
+
+    int n;
+    for(n = 0; n < sizeof(inbox); n++) {
+      if (!deleted[inbox[n]]) {
+	send(sprintf("%d %d\r\n", n+1, m->get_size()));
+      }
     }
     send(".\r\n");
   }
@@ -144,16 +167,18 @@ static class Pop_Session
       send_error("Bad number of aguments to RETR.");
       return;
     }
-    object mbox = user->get_incoming();
-    object mail = mbox->get_mail_by_id(args[0]);
 
-    if (!mail) {
+    int n = (int)args[0];
+    
+    if ((n < 1) || (n > sizeof(inbox))) {
       send_error(sprintf("No such mail %s.", args[0]));
       return;
     }
 
+    object mail = inbox[n-1];
+
     if (deleted[mail]) {
-      send_error(sprintf("Mail %s is deleted.", args[0]));
+      send_error(sprintf("Mail %d is deleted.", n));
       return;
     }
 
@@ -172,21 +197,22 @@ static class Pop_Session
       send_error("Bad number of arguments to DELE.");
       return;
     }
-    
-    object mbox = user->get_incoming();
-    object mail = mbox->get_mail_by_id(args[0]);
 
-    if (!mail) {
+    int n = (int)args[0];
+
+    if ((n < 1) || (n > sizeof(inbox))) {
       send_error(sprintf("No such message %s.", args[0]));
       return;
     }
 
+    object mail = inbox[n-1];
+
     if (deleted[mail]) {
-      send_error(sprintf("message %s already deleted.", args[0]));
+      send_error(sprintf("message %d already deleted.", n));
       return;
     }
     deleted[mail] = 1;
-    send_ok(sprintf("message %s deleted.", args[0]));
+    send_ok(sprintf("message %d deleted.", n));
   }
 
   void pop_NOOP()
@@ -198,11 +224,8 @@ static class Pop_Session
   {
     deleted = (<>);
 
-    object mbox = user->get_incoming();
-    array(object) mail = mbox->mail();
-
-    int num = sizeof(mail);
-    int sz = `+(0, @(mail->get_size()));
+    int num = sizeof(inbox);
+    int sz = `+(0, @(inbox->get_size()));
     send_ok(sprintf("maildrop has %d messages (%d octets)", num, sz));
   }
 
@@ -212,17 +235,18 @@ static class Pop_Session
       send_error("Bad number of arguments to TOP.");
       return;
     }
-    
-    object mbox = user->get_incoming();
-    object mail = mbox->get_mail_by_id(args[0]);
 
-    if (!mail) {
+    int n = (int)args[0];
+    
+    if ((n < 1) || (n > sizeof(inbox))) {
       send_error(sprintf("No such message %s.", args[0]));
       return;
     }
 
+    object mail = inbox[n-1];
+
     if (deleted[mail]) {
-      send_error(sprintf("message %s is deleted.", args[0]));
+      send_error(sprintf("message %d is deleted.", n));
       return;
     }
 
@@ -239,7 +263,7 @@ static class Pop_Session
       i = 2;
     }
     // i is the start of the real body...
-    int n = (int)args[1];
+    n = (int)args[1];
     int j;
     for(j = 0; j < n; j++) {
       if ((i = search(body, "\r\n", i)) != -1) {
@@ -263,21 +287,29 @@ static class Pop_Session
       return;
     }
     if (sizeof(args)) {
-      object mail = user->get_incoming()->get_mail_by_id(args[0]);
-      if (!mail) {
+      int n = (int)args[0];
+
+      if ((n < 1) || (n > sizeof(inbox))) {
 	send_error(sprintf("No such message %s.", args[0]));
 	return;
       }
+
+      object mail = inbox[n];
       if (deleted[mail]) {
 	send_error(sprintf("Message %s is deleted.", args[0]));
 	return;
       }
-      send_ok(sprintf("%s %s", mail->id, mail->id));
+
+      send_ok(sprintf("%d %s", n, mail->id));
       return;
     } else {
       send_ok("");
-      foreach(user->get_incoming()->mail() - indices(deleted), object m) {
-	send(sprintf("%s %s\r\n", m->id, m->id));
+      int n;
+      for(n = 0; n < sizeof(inbox); n++) {
+	object mail = inbox[n];
+	if (!deleted[mail]) {
+	  send(sprintf("%d %s\r\n", n+1, mail->id));
+	}
       }
       send(".\r\n");
       return;
@@ -290,14 +322,14 @@ static class Pop_Session
       send_error("Bad number of arguments to USER command.");
       return;
     }
+    reset();
     username = args[0];
-    user = 0;
     send_ok(sprintf("Password required for %s.", username));
   }
 
   void pop_PASS(array(string) args)
   {
-    user = 0;	// Logout...
+    reset();
     if (!username) {
       send_error("Expected USER.");
       return;
@@ -308,9 +340,8 @@ static class Pop_Session
       mixed u = o->get_user(username, pass);
       if (objectp(u)) {
 	user = u;
+	inbox = u->get_incoming()->mail();
 	break;
-      } else if (u) {
-	roxen_perror(sprintf("POP3: Unexpected result: %O\n", u));
       }
     }
     if (user) {
@@ -323,8 +354,7 @@ static class Pop_Session
 
   void pop_APOP()
   {
-    user = 0;	// Logout;
-
+    reset();
     send_error("Not supported yet.");
   }
 
@@ -332,6 +362,8 @@ static class Pop_Session
   {
     conf = c;
     ::create(con);
+
+    reset();
 
     send_ok(sprintf("POP3 (%s). Timestamp: <%d.%d@%s>",
 		    roxen->version(), getpid(), time(), gethostname()));
