@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.32 1999/11/11 05:25:06 mast Exp $
+ * $Id: rxml.pike,v 1.33 1999/11/22 00:13:52 grubba Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -1158,7 +1158,7 @@ class IfMatch
     cache = c;
     misc = m;
   }
-  void `()( string is, RequestID id )
+  int `()( string is, RequestID id )
   {
     array|string value = misc?id->misc[index]:id[index];
     if(!cache) CACHE(0);
