@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.19 1998/02/10 18:36:00 per Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.20 1998/05/07 20:06:52 js Exp $";
 
 #include <config.h>
 
@@ -6,8 +6,9 @@ inherit "roxenlib";
 
 #define TIMESTAMP 0
 #define DATA 1
+#define TIMEOUT 2
 
-#define ENTRY_SIZE 2
+#define ENTRY_SIZE 3
 
 #define CACHE_TIME_OUT 300
 
@@ -134,7 +135,7 @@ void cache_remove(string in, string what)
       m_delete(cache[in], what);
 }
 
-void cache_set(string in, string what, mixed to)
+void cache_set(string in, string what, mixed to, int|void tm)
 {
 // #ifdef THREADS
 //   mixed key;
@@ -148,6 +149,7 @@ void cache_set(string in, string what, mixed to)
     cache[in]=([ ]);
   cache[in][what] = allocate(ENTRY_SIZE);
   cache[in][what][DATA] = to;
+  cache[in][what][TIMEOUT] = tm;
   cache[in][what][TIMESTAMP] = time(1);
 }
 
@@ -198,7 +200,7 @@ void cache_clean()
       if(!intp(cache[a][b][TIMESTAMP]))
 	error("Illegal timestamp in cache ("+a+":"+b+")\n");
 #endif
-      if(cache[a][b][TIMESTAMP] <
+      if(cache[a][b][TIMESTAMP]+cache[a][b][TIMEOUT] <
 	 (time(1) - (cache_time_out - get_size(cache[a][b][DATA])/100)))
       {
 #ifdef CACHE_DEBUG
