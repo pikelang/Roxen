@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.344 2002/03/12 11:55:54 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.345 2002/03/25 16:55:35 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1460,12 +1460,11 @@ class TagCache {
 	    array entry = timeout_cache[key];
 	    if (entry) {
 	      evaled_content = entry[1];
-	      if (evaled_content->is_stale()) {
+	      if (evaled_content->is_stale() || entry[0] < time (1)) {
 		m_delete (timeout_cache, key);
 		evaled_content = 0;
 	      }
 	      else {
-		entry[0] = time() + timeout;
 		do_iterate = -1;
 		key = keymap = 0;
 		TRACE_ENTER("tag &lt;cache&gt; cache hit", tag);
@@ -3724,7 +3723,14 @@ class TagComment {
     inherit RXML.Frame;
     int do_iterate;
     array do_enter() {
-      do_iterate = args && args->preparse ? 1 : -1;
+      if (args && args->preparse)
+	do_iterate = 1;
+      else {
+	do_iterate = -1;
+	// Argument existence can be assumed static, so we can set
+	// FLAG_MAY_CACHE_RESULT here.
+	flags |= RXML.FLAG_MAY_CACHE_RESULT;
+      }
       return 0;
     }
     array do_return = ({});
@@ -3733,7 +3739,7 @@ class TagComment {
 
 class TagPIComment {
   inherit TagComment;
-  constant flags = RXML.FLAG_PROC_INSTR;
+  constant flags = RXML.FLAG_PROC_INSTR|RXML.FLAG_MAY_CACHE_RESULT;
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 }
