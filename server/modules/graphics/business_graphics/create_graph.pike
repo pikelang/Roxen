@@ -13,7 +13,7 @@ constant LITET = 1.0e-40;
 constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.81 1997/11/30 05:36:03 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.82 1997/11/30 21:14:47 hedda Exp $";
 
 /*
 These functions are written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -50,6 +50,12 @@ object tileimage(object img, int xs, int ys)
 //This function writes a float like on a engineer-format
 string diagram_eng(float a)
 {
+  string foo="";
+  if (a<0.0)
+    {
+      foo="-";
+      a=-a;
+    }
   array(string) pfix = ({ "a", "f", "p", "n", "µ", "m", "",
 			  "k", "M", "G", "T", "P", "E" });
   if (a == 0.0) return "0";
@@ -59,7 +65,7 @@ string diagram_eng(float a)
   int i = (int) floor(p+0.000001);
   string s;
   sscanf(sprintf("%g%s", a*exp(-i*log(1000.0)), pfix[6+i]), "%*[ ]%s", s);
-  return s;
+  return foo+s;
 }
 
 void draw(object(image) img, float h, array(float) coords)
