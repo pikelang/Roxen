@@ -4,7 +4,7 @@ inherit "roxenlib";
 constant thread_safe=1;
 
 roxen.ImageCache the_cache;
-constant cvs_version="$Id: cimg.pike,v 1.7 1999/11/15 03:27:13 per Exp $";
+constant cvs_version="$Id: cimg.pike,v 1.8 1999/11/24 15:03:05 per Exp $";
 
 array register_module()
 {
@@ -60,7 +60,7 @@ string tag_cimg( string t, mapping args, RequestID id )
 
   args -= a;
 
-  args->src = query_internal_location()+the_cache->store( a );
+  args->src = query_internal_location()+the_cache->store( a,id );
   if( mapping size = the_cache->metadata( a, id, 1 ) ) 
   {
     // image in cache (1 above prevents generation on-the-fly)
@@ -72,5 +72,5 @@ string tag_cimg( string t, mapping args, RequestID id )
 
 string tag_cimg_url( string t, mapping args, RequestID id )
 {
-  return query_internal_location()+the_cache->store( get_my_args( args,id ) );
+  return query_internal_location()+the_cache->store(get_my_args(args,id),id);
 }

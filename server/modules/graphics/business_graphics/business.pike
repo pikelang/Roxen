@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.118 1999/09/05 01:43:40 per Exp $";
+constant cvs_version = "$Id: business.pike,v 1.119 1999/11/24 15:03:14 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -801,7 +801,7 @@ string container_diagram(string tag, mapping m, string contents,
   string ext = "";
   if(query("ext")) ext="."+res->format;
 
-  m->src = query_internal_location()+image_cache->store( res )+ext;
+  m->src = query_internal_location() + image_cache->store( res,id )+ext;
 
   if( mapping size = image_cache->metadata( m, id, 1 ) ) 
   {
