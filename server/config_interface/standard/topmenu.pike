@@ -31,7 +31,7 @@ string parse( object id )
       a->href = id->misc->last_tag_args->base + t[2];
       if( id->misc->last_tag_args->selected == t[1] )
         a->selected = "selected";
-      res += make_container( "tab", a, " <cf-locale get="+t[0]+"> " );
+      res += make_container( "tab", a, " &locale."+t[0]+"; " );
     }
   }
   return res+"</tablist>";

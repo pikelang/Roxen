@@ -55,7 +55,7 @@ string parse( RequestID id )
             ((page[0] == q)?" selected":"")+">";
       else
         res += "<tab href=''"+((page[0] == q)?" selected":"")+">";
-      res += "<cf-locale get="+page[1]+">";
+      res += "&locale."+page[1]+";";
       res += "</tab>";
       res += tpost;
     }

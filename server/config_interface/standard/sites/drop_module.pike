@@ -11,7 +11,7 @@ string page_base( RequestID id, string content )
 {
   return sprintf( "<use file=/standard/template>\n"
                   "<tmpl title=''>"
-                  "<topmenu base='<cf-num-dotdots>' selected=sites>\n"
+                  "<topmenu base='&cf.num-dotdots;' selected=sites>\n"
                   "<content><cv-split>"
                   "<subtablist width=100%%>"
                   "<st-tabs></st-tabs>"
@@ -38,7 +38,7 @@ mapping|string parse( RequestID id )
     object m = roxen.find_module( (q/"#")[0] );
     int c = (int)((q/"#")[-1]);
     res += ("<gbutton preparse href='drop_module.pike?config=&form.config;&"
-            "drop="+replace(q,"#","!")+"'> <cf-locale get=drop_module> "
+            "drop="+replace(q,"#","!")+"'> &locale.drop_module; "
             "</gbutton>"+"&nbsp; <font size=+2>&nbsp;"+m->get_name()+"</font> "+(c?" #"+(c+1):"")+"<p>" );
   }
   return page_base( id, res );

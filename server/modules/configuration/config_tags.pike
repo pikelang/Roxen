@@ -20,12 +20,49 @@ constant thread_safe = 1;
 
 void start(int num, Configuration conf)
 {
-  conf->parse_html_compat=1;
+//   conf->parse_html_compat=1;
 }
 
 void create()
 {
   query_tag_set()->prepare_context=set_entities;
+}
+
+class Scope_locale
+{
+  inherit RXML.Scope;
+  mixed `[]  (string var, void|RXML.Context c, void|string scope)
+  {
+    function(void:string)|string val;
+    if( !(val = LOCALE[ var ]) )
+      val = LOW_LOCALE[ var ];
+
+    if(!val)
+      return "Unknown locale field: "+var;
+    if( functionp( val ) )
+      return val( );
+    return val;
+  }
+}
+
+class Scope_cf
+{
+  inherit RXML.Scope;
+  mixed `[]  (string var, void|RXML.Context c, void|string scope)
+  {
+    object id = c->id;
+    while( id->misc->orig ) id = id->misc->orig;
+    switch( var )
+    {
+     case "num-dotdots":
+       int depth = sizeof( (id->not_query+(id->misc->path_info||"") )/"/" )-3;
+       string dotodots = depth>0?(({ "../" })*depth)*"":"./";
+       return dotodots;
+
+     case "current-url":
+       return id->not_query;
+    }
+  }
 }
 
 class Scope_usr
@@ -48,6 +85,10 @@ class Scope_usr
     {
       string q, res;
       /* composite */
+     case "count-0": return "/internal-roxen-count_0";
+     case "count-1": return "/internal-roxen-count_1";
+     case "count-2": return "/internal-roxen-count_2";
+     case "count-3": return "/internal-roxen-count_3";
 
      case "logo-html":
        return "<img border=0 src="+QALIAS("logo")+">";
@@ -74,8 +115,6 @@ class Scope_usr
        res = "link="+QALIAS("linkcolor")+" vlink="+QALIAS("linkcolor")+
              " alink="+QALIAS("fade2")+" bgcolor="+QALIAS("bgcolor")+
              " text="+QALIAS("fgcolor");
-       res += (" topmargin=0 leftmargin=0 marginwidth=0 marginheight=0 "
-               "bottommargin=0 rightmargin=0 margin=0");
        if( stringp(q = QALIAS( "background" )) && strlen( q ) )
          res += " background="+q;
        return res;
@@ -240,10 +279,14 @@ class Scope_usr
 }
 
 RXML.Scope usr_scope=Scope_usr();
+RXML.Scope locale_scope=Scope_locale();
+RXML.Scope cf_scope=Scope_cf();
 
 void set_entities(RXML.Context c)
 {
   c->extend_scope("usr", usr_scope);
+  c->extend_scope("locale", locale_scope);
+  c->extend_scope("cf", cf_scope);
 }
 
 string get_var_doc( string s, object mod, int n, object id )
@@ -994,39 +1037,23 @@ string tag_theme_set( string t, mapping m, object id )
   return "";
 }
 
-
-string tag_cf_num_dotdots( string t, mapping m, object id )
+string container_rli( string t, mapping m, string c, object id )
 {
-  while( id->misc->orig ) id = id->misc->orig;
-  int depth = sizeof( (id->not_query+(id->misc->path_info||"") )/"/" )-3;
-  string dotodots = depth>0?(({ "../" })*depth)*"":"./";
-  return dotodots;
+  return "<tr>"
+         "<td valign=top><img src=&usr.count-"+(++id->misc->_rul_cnt&3)+
+         ";></td><td valign=top>"+ c+"</td></tr>\n";
 }
 
-
-array(string) tag_cf_current_url( string t, mapping m, object id )
+string container_rul( string t, mapping m, string c, object id )
 {
-  while ( id->misc->orig )
-    id = id->misc->orig;
-  return ({ id->not_query+(id->misc->path_info?id->misc->path_info:"") });
+  id->misc->_rul_cnt = -1;
+  return "<table>"+c+"</table>";
 }
+
 
 string tag_cf_locale( string t, mapping m, object id )
 {
-  mixed val;
-  object q;
-
-  q = LOW_LOCALE[ m->section||"config_actions" ];
-
-  if( !q || !(val = q[ m->get ] ) )
-    if( !(val = LOCALE[ m->get ]) )
-      val = LOW_LOCALE[ m->get ];
-
-  if(!val)
-    return "Unknown field: "+m->get;
-  if( functionp( val ) )
-    return val( );
-  return val;
+  return "DEPRECATED: Use &amp;locale.variable; instead.";
 }
 
 string container_cf_perm( string t, mapping m, string c, RequestID id )

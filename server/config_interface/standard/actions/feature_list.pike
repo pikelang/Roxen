@@ -82,7 +82,7 @@ mixed page_0(object id, object mc)
   if (!sizeof(modules)) {
     find_modules();
   }
-  string res = "<font size=+1><cf-locale get=features></font>"+
+  string res = "<font size=+1>&locale.features;</font>"+
          "<ul>\n";
   foreach(({ "dynamic_modules", "threads",
              "_Crypto",
@@ -102,7 +102,7 @@ mixed page_0(object id, object mc)
 				 return(m[s] != 1);
 			       }, modules));
   if (sizeof(disabled)) {
-    res += "<font size=+1><cf-locale get=module_disabled></font>"+
+    res += "<font size=+1>&locale.module_disabled;</font>"+
         "<ul>\n";
     res += disabled * " ";
     res += "</ul><br>\n";
@@ -143,17 +143,17 @@ mixed page_1(object id, object mc)
   mapping trans = mkmapping(map(indices(modules),fix_module_name),
                             indices(modules));
 
-  return("<font size=+1><cf-locale get=all_modules></font><ul>\n"
+  return("<font size=+1>&locale.all_modules;</font><ul>\n"
          "<table cellpadding=2 cellspacing=0 border=0>"
-         "<tr><td><b><cf-locale get=name></b></td>"
-         "<td><b><cf-locale get=state></b></td>"
+         "<tr><td><b>&locale.name;</b></td>"
+         "<td><b>&locale.state;</b></td>"
          +map(filter(sort(indices(trans)),no_double_),
              lambda(string s, mapping r) {
                return
                  "<tr><td>"+s+"</td><td>"+
-                 ({"<cf-locale get=disabled>",
-                   "<cf-locale get=na>",
-                   "<cf-locale get=enabled>" })[ r[trans[s]] + 1]+
+                 ({"&locale.disabled;",
+                   "&locale.na;",
+                   "&locale.enabled;" })[ r[trans[s]] + 1]+
                  "</td></tr>\n";
              }, modules)*"")+"</table>";
 }

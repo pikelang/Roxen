@@ -23,13 +23,13 @@ string parse( RequestID id )
 <page name=top><cf-perm perm="Edit Users">
 
   <table border=0 cellpadding=5 cellspacing=0><tr><td>
-  <button gbutton_title=" <cf-locale get=create_user> "
+  <button gbutton_title=" &locale.create_user; "
           gbutton-icon_src=/internal-roxen-next  gbutton-preparse
           gbutton-font=&usr.gbutton-font;
           gbutton-width=200
           gbutton-align_icon=right page=create_user>
   <br>
-  <button gbutton_title=" <cf-locale get=delete_user> "
+  <button gbutton_title=" &locale.delete_user; "
           gbutton-width=200
           gbutton-font=&usr.gbutton-font;
           gbutton-icon_src=/internal-roxen-next gbutton-preparse
@@ -80,11 +80,11 @@ string parse( RequestID id )
   {
     object u = id->misc->get_config_user( uid );
     if( u == id->misc->config_user )
-       res += ("<gbutton font=&usr.gbutton-font; dim width=300 preparse><cf-locale get=delete> "
+       res += ("<gbutton font=&usr.gbutton-font; dim width=300 preparse>&locale.delete; "
                +u->real_name+" ("+uid+")</gbutton><br>");
     else
        res += ("<dbutton gbutton-width=300 gbutton-font=&usr.gbutton-font; gbutton-preparse "
-               "gbutton_title='<cf-locale get=delete> "
+               "gbutton_title='&locale.delete; "
                +u->real_name+" ("+uid+")'>"
                " <pike> id->misc->delete_old_config_user( \""+uid+"\");"
                "</pike></dbutton><br>");
@@ -93,7 +93,7 @@ string parse( RequestID id )
 </pike>
 <!-- /* -->
 <p>
- <button gbutton-font=&usr.gbutton-font; gbutton_title=" <cf-locale width=300 get=cancel> " page=top gbutton-preparse>
+ <button gbutton-font=&usr.gbutton-font; gbutton_title=" &locale.cancel; " page=top gbutton-preparse>
 
 </cf-perm></page>
 

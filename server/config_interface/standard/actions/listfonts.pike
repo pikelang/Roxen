@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.5 2000/02/08 17:43:22 grubba Exp $
+ * $Id: listfonts.pike,v 1.6 2000/02/13 16:27:51 per Exp $
  */
 
 constant action = "maintenance";
@@ -33,7 +33,7 @@ string page_0(object id)
   res+=list_font(font);
   // FIXME: locale?
   res += ("<p>Example text: <font size=-1><input name=text size=46 value='"
-          "<cf-locale get=font_test_string>'><p>"
+          "&locale.font_test_string;'><p>"
 	  "<table width='70%'><tr><td align=left>"
           "<cf-cancel href='?class=maintenance'></td><td align=right>"
 	  "<cf-next></td></tr></table>");

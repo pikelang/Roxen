@@ -27,7 +27,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 
   string pre = ("<gbutton frame-image=&usr.left-buttonframe; href='/"+id->misc->cf_locale+"/sites' "
                 "width=150 bgcolor=&usr.left-buttonbg; icon_src=&usr.selected-indicator; "
-                "align_icon=left preparse><cf-locale get=servers></gbutton><br>"
+                "align_icon=left preparse>&locale.servers;</gbutton><br>"
                 "<gbutton frame-image=&usr.left-buttonframe; width=150 "+(subsel == ""?"bgcolor=&usr.left-selbuttonbg;":
 			      "bgcolor=&usr.left-buttonbg; href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' ")+
                 " icon_src=&usr.selected-indicator; align_icon=left>"+
@@ -43,7 +43,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
     {
       pre += ("<gbutton frame-image=&usr.left-buttonframe; icon_src=&usr.selected-indicator; align_icon=left "
               "width=150 preparse bgcolor=&usr.left-selbuttonbg; href='"+DOTDOT(3)+q+"/'>"
-              "<cf-locale get="+q+"></gbutton><br>");
+              "&locale."+q+";</gbutton><br>");
 
       string url = id->not_query + id->misc->path_info;
       id->variables->_config = cfg;
@@ -59,11 +59,11 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 	 sscanf(id->not_query, "%ssite.html", tmp);
 	 pre+=sprintf("<br><gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-buttonbg; preparse href='"+tmp+
 		      "add_module.pike?config=%s'> "
-		      "<cf-locale get=add_module> </gbutton>",
+		      "&locale.add_module; </gbutton>",
 		      http_encode_string( c->name ) )+
 	   sprintf("<br><gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-buttonbg; preparse href='"+tmp+
 		   "drop_module.pike?config=%s'> "
-		   "<cf-locale get=drop_module> </gbutton><br>",
+		   "&locale.drop_module; </gbutton><br>",
 		   http_encode_string( c->name ));
          string qurl = url;
          if( search( qurl, "!" ) != -1 )
@@ -103,7 +103,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
     } else
       pre += ("<gbutton frame-image=&usr.left-buttonframe; preparse bgcolor=&usr.left-buttonbg; "
               " width=150 href='"+DOTDOT(3)+q+"/'>"
-              "<cf-locale get="+q+"></gbutton><br>");
+              "&locale."+q+";</gbutton><br>");
   }
   pre += "</item>";
   return pre;

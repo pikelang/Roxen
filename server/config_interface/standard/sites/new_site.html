@@ -1,16 +1,16 @@
 <topmenu base="../" selected=sites>
 
 <content>
-<h1><cf-locale get=create_new_site></h1>
+<h1>&locale.create_new_site;</h1>
 
 <awizard>
    <page name=select_name>
      <blockquote>
      <obox>
-       <b><cf-locale get=site_name>:</b> <var name=name default=""><p>
+       <b>&locale.site_name;:</b> <var name=name default=""><p>
 
-<blockquote> 
-       <cf-locale get=site_name_doc></blockquote>
+<blockquote>
+       &locale.site_name_doc;</blockquote>
 
 <table width=100%>
 <tr>
@@ -18,24 +18,24 @@
        <dbutton gbutton-preparse  gbutton-width=150
                 gbutton-align_icon=right
                 gbutton-icon_src=/internal-roxen-next
-                gbutton_title="<cf-locale get=create_new_site> <cf-locale get=with_template>" 
+                gbutton_title="&locale.create_new_site; &locale.with_template;"
                 page=new_with_template>
          <insert file=verify_site_name.pike nocache>
        </dbutton><br>
-       <dbutton 
+       <dbutton
           gbutton-preparse gbutton-width=150
           gbutton-icon_src=/internal-roxen-next
           gbutton-align_icon=right
-          gbutton_title="<cf-locale get=create_new_site>" 
+          gbutton_title="&locale.create_new_site;"
           page=final_create>
          <insert file=verify_site_name.pike nocache>
        </dbutton>
 </td><td align=right valign=top>
        <button gbutton-preparse
-               gbutton_title=" <cf-locale get=cancel> " 
+               gbutton_title=" &locale.cancel; "
                href="../sites/">
 </td></tr></table>
-     </obox> 
+     </obox>
      </blockquote>
    </page>
 
@@ -51,6 +51,6 @@
    </page>
 
 </awizard>
-   
+
 
 </content>

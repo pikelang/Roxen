@@ -59,7 +59,7 @@ string page_base( RequestID id, string content )
 {
   return sprintf( "<use file=/standard/template>\n"
                   "<tmpl title=''>"
-                  "<topmenu base='<cf-num-dotdots>' selected=sites>\n"
+                  "<topmenu base='&cf.num-dotdots;' selected=sites>\n"
                   "<content><cv-split>"
                   "<subtablist width=100%%>"
                   "<st-tabs></st-tabs>"
@@ -134,7 +134,7 @@ function describe_module_normal( int image )
 return sprintf(
 #"
     <tr><td colspan=2><table width='100%%'><td><font size=+2>%s</font></td><td align=right>%s</td></table></td></tr>
-    <tr><td valign=top><form method=post action='add_module.pike'><input type=hidden name=module_to_add value='%s'><input type=hidden name='config' value='&form.config;'><submit-gbutton preparse><cf-locale get=add_module></submit-gbutton></form></td><td valign=top>%s<p>%s</td>
+    <tr><td valign=top><form method=post action='add_module.pike'><input type=hidden name=module_to_add value='%s'><input type=hidden name='config' value='&form.config;'><submit-gbutton preparse>&locale.add_module;</submit-gbutton></form></td><td valign=top>%s<p>%s</td>
     </tr>
 ",
      module->get_name(),
@@ -190,7 +190,7 @@ array(int|string) class_visible_compact( string c, string d, object id )
 {
   string res="";
   if(first++)
-    res = "</select><br><submit-gbutton> <cf-locale get=add_module> </submit-gbutton> ";
+    res = "</select><br><submit-gbutton> &locale.add_module; </submit-gbutton> ";
   res += "<p><font size=+2>"+c+"</font><br>"+d+"<p><select multiple name=module_to_add>";
   return ({ 1, res });
 }
@@ -211,7 +211,7 @@ string page_compact( RequestID id )
                    "<form action=add_module.pike method=POST>"
                    "<input type=hidden name=config value=&form.config;>"+
                    desc+"</select><br><submit-gbutton> "
-                   "<cf-locale get=add_module> </submit-gbutton><p><pre>"
+                   "&locale.add_module; </submit-gbutton><p><pre>"
                    +html_encode_string(err)+"</pre></form>",
                    );
 }

@@ -4,13 +4,15 @@
 
 <cv-split>
 <subtablist width=100%>
-  <st-tabs preparse>
-    <tab href="?" first
-    <if not variable=reversed> selected </if>
-  ><cf-locale get=normal></tab>
-    <tab href="?reversed=1" last
-    <if  variable=reversed> selected </if>
-  ><cf-locale get=reverse></tab>
+  <st-tabs>
+  <if variable="reversed is 1">
+    <tab selected href="?"> &locale.normal; </tab>
+    <tab href="?reversed=1"> &locale.reverse; </tab>
+  </if>
+  <else>
+    <tab href="?"> &locale.normal; </tab>
+    <tab selected href="?reversed=1"> &locale.reverse; </tab>
+  </else>
   </st-tabs>
   <st-page>
     <insert file=log.pike nocache>

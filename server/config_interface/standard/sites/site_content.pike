@@ -5,10 +5,10 @@ inherit "../logutil.pike";
 string module_global_page( RequestID id, string conf )
 {
   return sprintf("<gbutton preparse href='../../../add_module.pike?config=%s'> "
-                 "<cf-locale get=add_module> </gbutton>",
+                 "&locale.add_module; </gbutton>",
                  http_encode_string( conf ) )+
          sprintf("<gbutton preparse href='../../../drop_module.pike?config=%s'> "
-                 "<cf-locale get=drop_module> </gbutton>",
+                 "&locale.drop_module; </gbutton>",
                  http_encode_string( conf ) );
 }
 
@@ -112,7 +112,7 @@ string devel_buttons( object c, string mn, object id )
   if( sizeof( glob( "*.x", indices( id->variables ) ) ) )
   {
     string a = glob( "*.x", indices( id->variables ) )[0]-".x";
-    if( a == parse_rxml( "<cf-locale get=reload>",id ) )
+    if( a == parse_rxml( "&locale.reload;",id ) )
     {
       object ec = roxenloader.LowErrorContainer();
       roxenloader.push_compile_error_handler( ec );
@@ -126,7 +126,7 @@ string devel_buttons( object c, string mn, object id )
       if( !mod )
         return "<h1>FAILED TO RELOAD MODULE! FATAL! AJEN!</h1>";
     }
-    else if( a == parse_rxml( "<cf-locale get=clear_log>",id ) )
+    else if( a == parse_rxml( "&locale.clear_log;",id ) )
     {
       array(int) times, left;
       Configuration conf = mod->my_configuration();
@@ -167,9 +167,9 @@ string devel_buttons( object c, string mn, object id )
           "</pre></font>" : "" )
          + "<input type=hidden name=section value='" +
 	 (id->variables->section||"Information") + "'>"
-         "<submit-gbutton preparse><cf-locale get=reload></submit-gbutton>"+
+         "<submit-gbutton preparse>&locale.reload;</submit-gbutton>"+
          (sizeof( mod->error_log ) ?
-         "<submit-gbutton preparse><cf-locale get=clear_log></submit-gbutton>":
+         "<submit-gbutton preparse>&locale.clear_log;</submit-gbutton>":
           "");
 }
 
@@ -188,7 +188,7 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
   for(int i=0;i<sizeof(report);i++)
      report[i] = describe_error(report[i], log[report[i]],
 				id->misc->cf_locale, no_links);
-  return "<h2><cf-locale get=eventlog></h2>" + (report*"");
+  return "<h2>&locale.eventlog;</h2>" + (report*"");
 }
 
 string find_module_doc( string cn, string mn, object id )
@@ -200,7 +200,7 @@ string find_module_doc( string cn, string mn, object id )
 
   string dbuttons;
   if( id->misc->config_settings->query( "devel_mode" ) )
-    dbuttons = "<h2><cf-locale get=actions></h2>"+devel_buttons( c, mn, id );
+    dbuttons = "<h2>&locale.actions;</h2>"+devel_buttons( c, mn, id );
 
   object m = c->find_module( replace(mn,"!","#") );
 
@@ -321,7 +321,7 @@ string parse( RequestID id )
          else
 	   res += url + " "+port_for(url)+"<br>";
        }
-       res+="<h1><cf-locale get=eventlog></h1><insert file=log.pike nocache>";
+       res+="<h1>&locale.eventlog;</h1><insert file=log.pike nocache>";
 
        res +="<h1>Request status</h1>";
        res += conf->status();

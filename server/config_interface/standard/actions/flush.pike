@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.1 2000/02/02 04:14:17 per Exp $
+ * $Id: flush.pike,v 1.2 2000/02/13 16:27:51 per Exp $
  */
 #include <config_interface.h>
 
@@ -42,6 +42,6 @@ mixed doit()
 mixed parse(object id)
 {
   doit();
-  return "<cf-locale get=all_memory_caches_flushed> "
-         "<p><submit-gbutton> <cf-locale get=ok> </submit-gbutton>";
+  return "&locale.all_memory_caches_flushed; "
+         "<p><submit-gbutton> &locale.ok; </submit-gbutton>";
 }

@@ -15,7 +15,7 @@ string parse(object id)
        roxen->restart(0.1);
        return
 #"<input type=hidden name=action value=restart.pike>
-<font color=darkred><h1><cf-locale get=restart></h1></font>
+<font color=darkred><h1>&locale.restart;</h1></font>
 Roxen will restart automatically.
 
 <p><i>You might see the old process for a while in the process table
@@ -30,7 +30,7 @@ most 15 minutes.</i> </font>";
      {
        roxen->shutdown(0.1);
        return
-#"<font color=darkred><h1><cf-locale get=shutdown></h1></font>
+#"<font color=darkred><h1>&locale.shutdown;</h1></font>
 Roxen will <b>not</b> restart automatically.
 
 <p><i>You might see the old process for a while in the process table
@@ -46,22 +46,22 @@ most 15 minutes.</i> </font>";
 
  <cf-perm perm='Restart'>
    <gbutton href='?what=restart&action=restart.pike&class=maintenance' width=300
-           icon_src=/internal-roxen-err_2 preparse> <cf-locale get=restart> </gbutton>
+           icon_src=/internal-roxen-err_2 preparse> &locale.restart; </gbutton>
  </cf-perm>
 
 <cf-perm not perm='Restart'>
   <gbutton dim width=300  preparse
-           icon_src=/internal-roxen-err_2> <cf-locale get=restart> </gbutton>
+           icon_src=/internal-roxen-err_2> &locale.restart; </gbutton>
 </cf-perm>
 
 <cf-perm perm='Shutdown'>
   <gbutton href='?what=restart&action=restart.pike&class=maintenance' width=300  preparse
-          icon_src=/internal-roxen-err_3> <cf-locale get=shutdown> </gbutton>
+          icon_src=/internal-roxen-err_3> &locale.shutdown; </gbutton>
 </cf-perm>
 
 <cf-perm not perm='Shutdown'>
   <gbutton dim width=300  preparse
-           icon_src=/internal-roxen-err_3> <cf-locale get=shutdown> </gbutton>
+           icon_src=/internal-roxen-err_3> &locale.shutdown; </gbutton>
 </cf-perm>";
      }
 }

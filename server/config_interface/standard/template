@@ -81,21 +81,21 @@
 </define>
 
 <define tag=cf-ok>
-   <submit-gbutton> <cf-locale get=ok> </submit-gbutton>
+   <submit-gbutton> &locale.ok; </submit-gbutton>
 </define>
 
 <define tag=cf-cancel>
-   <gbutton preparse href='&href;'> <cf-locale get=cancel> </gbutton>
+   <gbutton preparse href='&href;'> &locale.cancel; </gbutton>
 </define>
 
 <define tag=cf-next>
-   <submit-gbutton preparse href='&href;'> <cf-locale get=next> > </submit-gbutton>
+   <submit-gbutton preparse href='&href;'> &locale.next; > </submit-gbutton>
 </define>
 
 <define container=content><cset quote=none preparse variable=content><contents></cset></define>
 
 <define container=tmpl>
-<title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
+<title>&roxen.version; &locale.administration_interface; &title;</title>
 <comment preparse> <!-- We do not want any output from this. -->
   <insert file=/standard/themes/&usr.theme;/theme nocache>
   <define preparse variable=leftimage><img src=&usr.left-image;></define>
@@ -104,11 +104,9 @@
   <define preparse name=gbutton-frame-image>&usr.gbutton-frame-image;</define>
   <define name=font preparse>&usr.font;</define>
   <expire-time now>
+  <contents>
 </comment>
-<comment preparse><contents></comment>
   <body ::=&usr.body-args:none;>
-    <form method=POST action='<cf-current-url>'>
-      <roxen-automatic-charset-variable>
       <table width=100% cellpadding=0 cellspacing=0 border=0
              ::=&usr.top-tableargs:none;>
       <tr>
@@ -117,7 +115,7 @@
         <table><tr><td align=right>
            <gtext preparse  font=&usr.font;
                   fgcolor=&usr.top-fgcolor; scale=0.45
-                  hspace=3><cf-locale get=language>:</gtext>
+                  hspace=3>&locale.language;:</gtext>
            </td>
            <td>
              <font color=&usr.fgcolor;>
@@ -136,7 +134,7 @@
               <gbutton preparse
                  href='/standard/change_user.pike?uid=&form.config_user_uid;'
                   align=right textcolor=&usr.top-fgcolor;
-                  width=70> <cf-locale get=user>: </gbutton>
+                  width=70> &locale.user;: </gbutton>
             </td>
             <td>
                <font color=&usr.top-fgcolor;>
@@ -151,14 +149,17 @@
      <td colspan=2 ::=&usr.toptabs-tableargs:none; width=100% valign=bottom><img src=/internal-roxen-unit width=50 height=1>&form._top_content:none;</td>
    </tr>
   </table>
-   <insert variable=content quote=none>
-  </form>
-  <div align=right>
-   <b><font size=-1>&roxen.version; / &roxen.pike-version;</font></b>
-  </div>
+
+   <form method=POST action='&cf.current-url;'>
+     <roxen-automatic-charset-variable>
+     <insert variable=content quote=none>
+   </form>
+    <div align=right>
+    <b><font size=-1>&roxen.version; / &roxen.pike-version;</font></b>
+    </p>
  </body>
 </define>
 
 <define tag=cf-save>
-  <submit-gbutton align=right> <cf-locale get=save> </submit-gbutton>
+  <submit-gbutton align=right> &locale.save; </submit-gbutton>
 </define>

@@ -31,7 +31,7 @@ string parse(object id)
     if( page == pages[-1] )      ea = "last=30 ";
 
     res += "<tab "+ea+"href='?class="+page[0]+"'"+((page[0] == q)?" selected":"")+" preparse>";
-    res += "<cf-locale get="+page[0]+">";
+    res += "&locale."+page[0]+";";
     res += "</tab>";
     res += tpost;
   }

@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.2 2000/02/03 20:33:43 per Exp $
+ * $Id: proc.pike,v 1.3 2000/02/13 16:27:51 per Exp $
  */
 
 inherit "wizard";
@@ -137,5 +137,5 @@ mixed parse(object id)
 	  "\nCurrent working directory: "+
 	  ((proc("wdx",id->variables->pid)/":")[1..]*":")+
 //	  "Stack: "+(proc("stack",id->variables->pid)/":")[1..]*":"+
-	  "</pre><p><submit-gbutton> <cf-locale get=ok> </submit-gbutton>");
+	  "</pre><p><submit-gbutton> &locale.ok; </submit-gbutton>");
 }
