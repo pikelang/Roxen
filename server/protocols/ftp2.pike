@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.48 1998/05/24 00:03:26 grubba Exp $
+ * $Id: ftp2.pike,v 1.49 1998/05/24 00:35:58 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -744,12 +744,18 @@ class LSFile
 	}
 	if (sizeof(dir)) {
 	  listing = list_files(indices(dir), long);
+	} else if (flags & LS_FLAG_l) {
+	  listing = "total 0\n";
 	}
       } else {
 	DWRITE("FTP: LSFile->list_next_directory(): NO FILES!\n");
+
+	if (flags & LS_FLAG_l) {
+	  listing = "total 0\n";
+	}
       }
       if (name_directories) {
-	listing = short + ":\n" + listing + "\n";
+	listing = "\n" + short + ":\n" + listing;
       }
       if (listing != "") {
 	output(listing);
