@@ -6,5 +6,6 @@
 
 <svenska>
   <name>Exempelmoduler</name>
-  <doc>De här modulerna är här för att hjälpa modulskrivare.</doc>
-</standard>
+  <doc>De här modulerna är här för att hjälpa modulskrivare, och
+       fyller ingen vettig funktion i en typisk server.</doc>
+</svenska>
