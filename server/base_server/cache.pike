@@ -1,5 +1,5 @@
-#define LOCALE	roxenp()->locale->get()->base_server
-//string cvs_version = "$Id: cache.pike,v 1.22 1998/11/18 04:53:43 per Exp $";
+#define LOCALE	roxenp()->locale->get()->config_interface
+//string cvs_version = "$Id: cache.pike,v 1.23 1999/05/20 23:00:17 neotron Exp $";
 #include <roxen.h>
 #include <config.h>
 

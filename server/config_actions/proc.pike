@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.9 1998/10/10 03:41:05 per Exp $
+ * $Id: proc.pike,v 1.10 1999/05/20 23:00:18 neotron Exp $
  */
 
 inherit "wizard";
@@ -19,8 +19,8 @@ void create()
 string proc(string prog, int pid )
 {
   if(!pid) pid=getpid();
-  object p = ((program)"privs")("Process status");
-  return popen("/usr/proc/bin/p"+prog+" "+pid);
+  object p = Privs("Process status");
+  return Process.popen("/usr/proc/bin/p"+prog+" "+pid);
 }
 
 string process_map(string in)
