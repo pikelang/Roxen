@@ -820,6 +820,26 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="values" values="a,b,c" split="," skiprows="0">&_.value;</emit></rxml>
+<result>abc</result>
+</test>
+
+<test>
+<rxml><emit source="values" values="a,b,c" split="," skiprows="-0">&_.value;</emit></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><emit source="values" values="a,b,c" split="," skiprows="-2">&_.value;</emit></rxml>
+<result>bc</result>
+</test>
+
+<test>
+<rxml><emit source="values" values="x,a,b,c" split="," skiprows="-2">&_.value;</emit></rxml>
+<result>bc</result>
+</test>
+
+<test>
 <rxml><emit source="values" values="a,b,c,d,e" split="," skiprows="2">&_.value; </emit></rxml>
 <result>c d e </result>
 </test>
@@ -925,6 +945,11 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="TESTER" sort="c" filter="a=basun" rowinfo="var.row" do-once="1">&_.c;:</emit>&var.row;</rxml>
+<result>:0</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" test="2" filter="data=?">&_.data;:</emit></rxml>
 <result>a:a:b:c:a:d:e:a:a:a:</result>
 </test>
@@ -947,6 +972,16 @@ b</strlen></rxml>
 <test>
 <rxml><emit source="TESTER" test="2" filter="data=?" skiprows="3" maxrows="5">&_.data;<delimiter>:</delimiter></emit></rxml>
 <result>c:a:d:e:a</result>
+</test>
+
+<test>
+<rxml><true/><emit source="values" values="a" filter="value=c">.</emit><then>a</then><else>b</else></rxml>
+<result>b</result>
+</test>
+
+<test>
+<rxml><true/><emit source="values" values="a">.</emit><then>a</then><else>b</else></rxml>
+<result>.a</result>
 </test>
 
 <comment>Missing test: values emit plugin</comment>
