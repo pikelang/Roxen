@@ -2046,6 +2046,8 @@ modules.&lt;/p&gt;
   only used to turn on some optimizations that have compatibility
   issues with 2.4, notably the optimization of cache static tags in
   the &amp;lt;cache&amp;gt; tag.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;3.3&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen WebServer 3.3.&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;&lt;/p&gt;</o>
 <t></t>
 </str>
@@ -2802,7 +2804,7 @@ server must be a MySQL server, nothing else will work.
 </str>
 
 <str id="515">
-<o>System Developer</o>
+<o>System Developer (Pike)</o>
 <t></t>
 </str>
 
@@ -2858,5 +2860,20 @@ server must be a MySQL server, nothing else will work.
 
 <str id="356">
 <o>Configuration %O not found.</o>
+<t></t>
+</str>
+
+<str id="357">
+<o>Content Editor (Instant Edition for Mac)</o>
+<t></t>
+</str>
+
+<str id="390">
+<o>System Developer (Java)</o>
+<t></t>
+</str>
+
+<str id="523">
+<o>Forum Module</o>
 <t></t>
 </str>

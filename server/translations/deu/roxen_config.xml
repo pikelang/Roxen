@@ -2162,6 +2162,34 @@ as the name of its log file directory.
 </str>
 
 <str id="386">
+<changed from="&lt;p&gt;The compatibility level is used by different modules to select the
+right behavior to remain compatible with earlier Roxen versions. When
+a server configuration is created, this variable is set to the current
+version. After that it's never changed automatically, thereby ensuring
+that server configurations migrated from earlier Roxen versions is
+kept at the right compatibility level.&lt;/p&gt;
+
+&lt;p&gt;This variable may be changed manually, but it's advisable to test
+the site carefully afterwards. A reload of the whole server
+configuration is required to propagate the change properly to all
+modules.&lt;/p&gt;
+
+&lt;p&gt;Available compatibility levels:
+&lt;table&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.1&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen WebServer 2.1.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.2&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen WebServer 2.2.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen WebServer 2.4. This version is also
+  commonly known as 3.2 - the version number that applies to the
+  release of Roxen CMS which contains Roxen WebServer 2.4.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to no released version. This compatibility level is
+  only used to turn on some optimizations that have compatibility
+  issues with 2.4, notably the optimization of cache static tags in
+  the &amp;lt;cache&amp;gt; tag.&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;&lt;/p&gt;"/>
 <o>&lt;p&gt;The compatibility level is used by different modules to select the
 right behavior to remain compatible with earlier Roxen versions. When
 a server configuration is created, this variable is set to the current
@@ -2189,6 +2217,8 @@ modules.&lt;/p&gt;
   only used to turn on some optimizations that have compatibility
   issues with 2.4, notably the optimization of cache static tags in
   the &amp;lt;cache&amp;gt; tag.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;3.3&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen WebServer 3.3.&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;&lt;/p&gt;</o>
 <t>&lt;p&gt;Der Kompatibilitäts-Level wird von einigen Modulen benutzt, um das korrekte Verhalten zu wählen, um mit früheren Roxen-Version kompatibel zu bleiben. Wenn eine Server-Konfiguration erstellt wird, wird diese Variable auf die aktuelle Version gesetzt. Danach wird sie niemals automatisch geändert, um zu gewährleisten, dass Server-Konfigurationen, die von früheren Roxen-Versionen migriert werden, auf dem richtigen Kompatibilitäts-Level zu halten.&lt;/p&gt;
 
@@ -2206,6 +2236,7 @@ modules.&lt;/p&gt;
   WebServer 2.4 enthält.&lt;/td&gt;&lt;/tr&gt;&lt;tr valign='top'&gt;&lt;td&gt;2.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
   &lt;td&gt;Entspricht keiner veröffentlichten Version. Dieser Kompatibilitäts-Level wird nur für einige Optimierungen gegenüber der Version 2.4 benutzt,
   besonders der Optimierung des &amp;lt;cache&amp;gt;-Tags.&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/p&gt;
+</t>
 </str>
 
 <str id="387">
@@ -2974,7 +3005,8 @@ Roxen verwaltet.&lt;/p&gt;</t>
 </str>
 
 <str id="515">
-<o>System Developer</o>
+<changed from="System Developer"/>
+<o>System Developer (Pike)</o>
 <t>System Developer</t>
 </str>
 
@@ -3031,4 +3063,22 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <str id="356">
 <o>Configuration %O not found.</o>
 <t>Konfiguration %O nicht gefunden.</t>
+</str>
+
+<str id="357">
+<new/>
+<o>Content Editor (Instant Edition for Mac)</o>
+<t></t>
+</str>
+
+<str id="390">
+<new/>
+<o>System Developer (Java)</o>
+<t></t>
+</str>
+
+<str id="523">
+<new/>
+<o>Forum Module</o>
+<t></t>
 </str>

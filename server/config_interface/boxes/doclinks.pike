@@ -37,7 +37,7 @@ string parse( RequestID id )
 		 _(512, "Content Editor (Instant Edition)"));
 
     add_doc_link(rpath + "content_editor_manual_(instant_mac)/index.xml",
-		 _(0, "Content Editor (Instant Edition for Mac)"));
+		 _(357, "Content Editor (Instant Edition for Mac)"));
 
     add_doc_link(rpath + "content_editor_manual_(advanced)/index.xml",
 		 _(513, "Content Editor (Advanced Edition)"));
@@ -49,7 +49,7 @@ string parse( RequestID id )
 		 _(515, "System Developer (Pike)"));
 
     add_doc_link(rpath + "system_developer_manual_java/index.xml",
-		 _(0, "System Developer (Java)"));
+		 _(390, "System Developer (Java)"));
 
     add_doc_link(rpath + "administrator_manual/index.xml",
 		 _(516, "Administrator"));
@@ -61,7 +61,7 @@ string parse( RequestID id )
 		 _(518, "Categorization Module"));
 
     add_doc_link(rpath + "forum/index.xml",
-		 _(0, "Forum Module"));
+		 _(523, "Forum Module"));
     
     add_doc_link(rpath + "tutorial/index.xml",
 		 _(519, "Tutorials"));
