@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.10 1998/03/28 23:30:02 neotron Exp $
+ * $Id: smartpipe.pike,v 1.11 1998/03/28 23:43:31 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -99,11 +99,16 @@ void next_input()
   if(current_input_len < 8192)
   {
     outfd->set_blocking();
-    sent +=
+    int written = 
       outfd->write((objectp(current_input)
-		   ?current_input->read(current_input_len)
-		   :current_input) || "");
-    next_input();
+		    ?current_input->read(current_input_len)
+		    :current_input) || "");
+    if(written == -1) {
+      finish();
+    } else {
+      sent += written;
+      next_input();
+    }
     return;
   }
 
