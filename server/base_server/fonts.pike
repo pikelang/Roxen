@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.85 2002/06/28 23:16:14 nilsson Exp $
+// $Id: fonts.pike,v 1.86 2002/07/17 17:33:06 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -158,47 +158,73 @@ string describe_font_type(string n)
   return res;
 }
 
-Font get_font(string f, int size, int bold, int italic,
-	      string justification, float|int xspace, float|int yspace)
+static Font get_font_3(string f, int size, int bold, int italic)
 {
   Font fnt;
-  f = lower_case( f );
   foreach( font_handlers, FontHandler fh )
     if( fh->has_font( f,size ) &&
 	(fnt = fh->open(f,size,bold,italic)))
-    {
-      if(justification=="right") fnt->right();
-      if(justification=="center") fnt->center();
-
-      if(floatp(xspace))
-	fnt->set_x_spacing((100.0+xspace)/100.0);
-      else
-	fnt->set_x_spacing(xspace);
-
-      if(floatp(yspace))
-	fnt->set_y_spacing((100.0+yspace)/100.0);
-      else
-	fnt->set_y_spacing(yspace);
-
       return fnt;
+  return 0;
+}
+
+static Font get_font_2(string f, int size, int bold, int italic)
+{
+  if (Font fnt = get_font_3 (f, size, bold, italic))
+    return fnt;
+
+  if( has_value( f, "_" ) ) {
+    string f2 = f - "_";
+    if (Font fnt = get_font_3 (f2, size, bold, italic))
+      return fnt;
+    if( has_value( f2, " " ) ) {
+      // The old code tested this as a side effect of the tail
+      // recursion thingies, but I doubt it was really intended. Keep
+      // it to avoid compatibility trouble (although that's unlikely).
+      f2 = replace (f2, " ", "_");
+      if (Font fnt = get_font_3 (f2, size, bold, italic))
+	return fnt;
     }
-
-  
-  if( has_value( f, "_" ) )
-    return get_font(f-"_", size, bold, italic, justification, xspace, yspace);
-
-  if( has_value( f, " " ) )
-    return get_font(replace(f," ", "_"), 
-                    size, bold, italic, justification, xspace, yspace );
-
-  if( f == replace( roxen->query("default_font"),([" ":"","_":""])) )
-  {
-    report_error("Failed to load the default font (%O)\n",
-		 roxen->query("default_font"));
-    return 0;
   }
-  return get_font(roxen->query("default_font"), size, bold, italic,
-		  justification, xspace, yspace);
+
+  if( has_value( f, " " ) ) {
+    f = replace (f, " ", "_");
+    if (Font fnt = get_font_3 (f, size, bold, italic))
+      return fnt;
+    return get_font_3 (f - "_", size, bold, italic);
+  }
+
+  return 0;
+}
+
+Font get_font(string f, int size, int bold, int italic,
+	      string justification, float|int xspace, float|int yspace)
+{
+  f = lower_case( f );
+  Font fnt = get_font_2 (f, size, bold, italic);
+  if (!fnt) {
+    fnt = get_font_2 (roxen->query ("default_font"), size, bold, italic);
+    if (!fnt) {
+      report_error("Failed to load the default font (%O)\n",
+		   roxen->query("default_font"));
+      return 0;
+    }
+  }
+
+  if(justification=="right") fnt->right();
+  else if(justification=="center") fnt->center();
+
+  if(floatp(xspace))
+    fnt->set_x_spacing((100.0+xspace)/100.0);
+  else
+    fnt->set_x_spacing(xspace);
+
+  if(floatp(yspace))
+    fnt->set_y_spacing((100.0+yspace)/100.0);
+  else
+    fnt->set_y_spacing(yspace);
+
+  return fnt;
 }
 
 Font resolve_font(string f, string|void justification)
@@ -276,6 +302,40 @@ Font resolve_font(string f, string|void justification)
 		  justification||"left",xspace, 0.0);
 }
 
+static string verify_font_3 (string font, int size)
+{
+  foreach( font_handlers, FontHandler fh )
+    if( fh->has_font( font,size ) )
+      return font;
+  return 0;
+}
+
+static string verify_font_2 (string font, int size)
+{
+  if (verify_font_3 (font, size)) return font;
+
+  if( has_value( font, "_" ) ) {
+    string f = font - "_";
+    if (verify_font_3 (f, size)) return f;
+    if( has_value( f, " " ) ) {
+      // The old code tested this as a side effect of the tail
+      // recursion thingies, but I doubt it was really intended. Keep
+      // it to avoid compatibility trouble (although that's unlikely).
+      f = replace (f, " ", "_");
+      if (verify_font_3 (f, size)) return f;
+    }
+  }
+
+  if( has_value( font, " " ) ) {
+    string f = replace (font, " ", "_");
+    if (verify_font_3 (f, size)) return f;
+    f -= "_";
+    if (verify_font_3 (f, size)) return f;
+  }
+
+  return 0;
+}
+
 //! Returns the real name of the resolved font.
 string verify_font(string font, void|int size)
 {
@@ -285,21 +345,13 @@ string verify_font(string font, void|int size)
   font = lower_case( font );
 
   if(size) {
-    foreach( font_handlers, FontHandler fh )
-      if( fh->has_font( font,size ) )
-	return font;
-
-    if(has_value(font,"_"))
-      return verify_font(font-"_", size);
-
-    if(has_value(font," "))
-      return verify_font(replace(font, " ", "_"), size);
-
-    if(font == replace( roxen->query("default_font"),([" ":"","_":""])) )
-      return 0;
-
-    return verify_font(roxen->query("default_font"), size);
+    if (string f = verify_font_2 (font, size)) return f;
+    return verify_font_2 (roxen->query ("default_font"), size);
   }
+
+  // Note that we'll never get here if size != 0. I suspect the
+  // fallback to default_font should be delayed longer, but I don't
+  // know for sure. /mast
 
   string a,b;
   foreach( ({ "bold", "normal", "black", "light", "italic", "slant",
