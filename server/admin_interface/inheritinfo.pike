@@ -13,7 +13,7 @@ string get_id(string from)
   return "";
 }
 
-RoxenModule find_module( string foo )
+RoxenModule|Configuration find_module( string foo )
 {
   string mod;
   Configuration cfg;
