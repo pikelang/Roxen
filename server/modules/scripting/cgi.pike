@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.64 1998/01/23 17:24:35 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.65 1998/01/23 17:43:02 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -331,7 +331,7 @@ array find_dir(string f, object id)
 }
 
 
-array extract_path_info(string f)
+array extract_path_info(string f, string path)
 {
   string hmm, tmp_path=path, path_info="";
   int found = 0;
@@ -635,7 +635,7 @@ class sender
   }
 };
 
-mixed find_file(string f, object id)
+mixed low_find_file(string f, object id, string path)
 {
   array tmp2;
   object pipe1, pipe2;
@@ -652,7 +652,7 @@ mixed find_file(string f, object id)
     path_info = id->misc->path_info;
   else 
   {
-    if(!(tmp2 = extract_path_info( f )))
+    if(!(tmp2 = extract_path_info( f, path )))
     {
       if(file_size( path + f ) == -2)
 	return -1; // It's a directory...
@@ -748,6 +748,10 @@ mixed find_file(string f, object id)
   return http_stream(pipe2);
 }
 
+mixed find_file(string f, object id)
+{
+  return(low_find_file(f, id, path));
+}
 
 array (string) query_file_extensions()
 {
@@ -757,8 +761,8 @@ array (string) query_file_extensions()
 mapping handle_file_extension(object o, string e, object id)
 {
   string f, q, w;
-  string oldp;
   mixed toret;
+  string path;
   mixed err;
 
 
@@ -777,17 +781,19 @@ mapping handle_file_extension(object o, string e, object id)
     // Handle the request with the location code.
     // This is done by setting the cgi-bin dir to the path of the 
     // script, and then calling the location dependant code.
+    //
+    // This isn't thread-safe (discovered by Wilhelm Köhler), so send
+    // the path to be used directly to find_file() instead.
     destruct( o );
     o = 0;
-    oldp=path;
     path=c[0..sizeof(c)-2]*"/" + "/";
 
     //  use full path in case of path_info                         1-Nov-96-wk
     if(id->misc->path_info)
-      err=catch(toret = find_file(id->realfile, id));
+      err=catch(toret = low_find_file(id->realfile, id, path));
     else
-      err=catch(toret = find_file(c[-1], id));
-    path=oldp;
+      err=catch(toret = low_find_file(c[-1], id, path));
+
     if(err) throw(err);
     return toret;
   }
@@ -800,7 +806,6 @@ mapping handle_file_extension(object o, string e, object id)
   roxen_perror("CGI: Handling "+e+" by copying to /tmp/....\n");
 #endif
   
-  oldp=path;
   o->set_blocking();
   f=o->read(0x7ffffff);         // We really hope that this is not located on 
                                // a NFS server far-far away...
@@ -810,9 +815,8 @@ mapping handle_file_extension(object o, string e, object id)
   write_file(q, f);
 
   popen("chmod u+x "+q);
-  path="/tmp/";
-  err=catch(toret = find_file(w, id));
-  path=oldp;
+  err=catch(toret = find_file(w, id, "/tmp/"));
+
   if(err) throw(err);
   return toret;
 }
