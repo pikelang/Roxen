@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.173 2002/04/12 16:31:59 wellhard Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.174 2002/04/15 14:50:57 wellhard Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1335,36 +1335,17 @@ class TagEmitLicenses {
   constant plugin_name = "licenses";
   array get_dataset(mapping args, RequestID id)
   {
-    array(mapping) licenses = ({});
-    foreach(glob("*.lic", get_dir(license_dir)), string filename)
+    array(License.Key|mapping) licenses = License.get_licenses(license_dir);
+    array(mapping) vars = ({});
+    foreach(licenses, License.Key key)
     {
-      License.Key key;
-      if(mixed err = catch { key = License.get_license(license_dir, filename); } )
-      {
-	werror(describe_backtrace(err));
-	licenses += ({ ([ "filename": filename,
-			  "malformed": "yes" ]) });
-      }
-      else licenses += ({ get_license_vars(key) });
+      if(mappingp(key))
+	vars += ({ key + ([ "malformed":"yes" ]) });
+      if(objectp(key))
+	vars += ({ get_license_vars(key) });
     }
-    return licenses;
+    return vars;
   }
 }
 
-class TagEmitLicenseWarnings {
-  inherit RXML.Tag;
-  constant name = "emit";
-  constant plugin_name = "license-warnings";
-  array get_dataset(mapping args, RequestID id)
-  {
-    RXML.Context c = RXML.get_context();
-    License.Key key = c->get_var("key");
-    if(!key)
-    {
-      RXML.parse_error("No key defined. emit#license-warnings can only be used "
-		       "within <license> or emit#licenses.\n");
-      return ({});
-    }
-    return key->get_warnings();
-  }
-}
+// TagEmitLicenseWarnings is moved to server/modules/tags/rxmltags.pike
