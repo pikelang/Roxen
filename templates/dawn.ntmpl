@@ -1,7 +1,7 @@
 <navigation maxwidth=160 preload imgbase=/img/ horiz>
 
   <textstyle right scale=$$nav_size$$ xspacing=5 yspacing=3
-             font='$$nav_font$$' xspacing=10>
+             font='$$nav_font$$ $$nav_font_style$$' xspacing=10>
 
   <boxstyle middle text bg=$$nav_bg_color$$
     fg=$$nav_text_color$$ alpha=255>

@@ -1,6 +1,7 @@
 <navigation maxwidth=130 imgbase=/img/ bg=$$bg_color$$>  
 
-  <textstyle $$nav_align$$ scale=$$nav_size$$ font='$$nav_font$$' xspacing=5 yspacing=5>
+  <textstyle $$nav_align$$ scale=$$nav_size$$
+    font='$$nav_font$$ $$nav_font_style$$' xspacing=5 yspacing=5>
 
   <boxstyle middle text bg=$$nav_bg_color$$ fg=$$nav_text_color$$
     alpha="night/galler_fade.ppm" alphainvert>

@@ -1,7 +1,8 @@
 <cset variable=shadow></cset>
 <if match='$$nav_shadow$$ is 1'><cset variable=shadow>shadow='60,1'</cset></if>
 <formoutput quote=¤>
-  <textstyle $$nav_align$$ scale=$$nav_size$$ font='$$nav_font$$' xspacing=5 yspacing=5>
+  <textstyle $$nav_align$$ font='$$nav_font$$ $$nav_font_style$$'
+    scale=$$nav_size$$ xspacing=5 yspacing=5>
 
   <boxstyle middle text bg=$$nav_bg_color$$ fg=$$nav_text_color$$
     alpha=255 ¤shadow¤>
