@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.353 2004/04/28 19:52:59 grubba Exp $
+// $Id: roxenloader.pike,v 1.354 2004/05/07 18:26:20 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.353 2004/04/28 19:52:59 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.354 2004/05/07 18:26:20 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2317,29 +2317,9 @@ library should be enough.
   // possible to dump them to a .o file (in the mysql))
   object prototypes = (object)"base_server/prototypes.pike";
   dump( "base_server/prototypes.pike", object_program( prototypes ) );
-  
-  add_constant("Protocol",      prototypes->Protocol );
-  add_constant("DAVLock",	prototypes->DAVLock);
-  add_constant("Configuration", prototypes->Configuration );
-  add_constant("StringFile",    prototypes->StringFile );
-  add_constant("PrefLanguages", prototypes->PrefLanguages);
-  add_constant("RequestID",     prototypes->RequestID );
-#if constant(Parser.XML.Tree.XMLNSParser)
-  add_constant("XMLStatusNode",	prototypes->XMLStatusNode);
-  add_constant("MultiStatus", 	prototypes->MultiStatus);
-  add_constant("PatchPropertyCommand",	prototypes->PatchPropertyCommand);
-#endif
-  add_constant("RoxenModule",   prototypes->RoxenModule );
-  add_constant("ModuleInfo",    prototypes->ModuleInfo );
-  add_constant("ModuleCopies",  prototypes->ModuleCopies );
-  add_constant("FakedVariables",prototypes->FakedVariables );
-
-  // Specific module types
-  add_constant("AuthModule", prototypes->AuthModule );
-  add_constant("UserDB",     prototypes->UserDB );
-  add_constant("User",       prototypes->User );
-  add_constant("Group",      prototypes->Group );
-
+  foreach (indices (prototypes), string id)
+    if (!prototypes->ignore_identifiers[id])
+      add_constant (id, prototypes[id]);
   prototypes->Roxen = master()->resolv ("Roxen");
 
   object cache = initiate_cache();

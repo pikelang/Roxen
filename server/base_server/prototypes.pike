@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.109 2004/05/07 11:52:51 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.110 2004/05/07 18:26:20 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -18,6 +18,13 @@ constant cvs_version="$Id: prototypes.pike,v 1.109 2004/05/07 11:52:51 grubba Ex
 // roxenloader.pike.
 object Roxen;
 
+// Externally visible identifiers in this module that shouldn't be
+// added as constants by roxenloader.pike.
+constant ignore_identifiers = (<
+  "cvs_version", "Roxen", "ignore_identifiers", "Variable"
+>);
+
+// What does this do here when it can't be added as a constant? /mast
 class Variable
 {
   constant is_variable = 1;
@@ -1022,15 +1029,15 @@ class RequestID
   static MultiStatus multi_status;
 
   MultiStatus get_multi_status()
-  //! Returns a @[MultiStatus] object to be used to produce a 207
-  //! Multi-Status response (RFC 2518 10.2). It's only used if the
-  //! result returned from @[RoxenModule.find_file] et al is an empty
-  //! mapping.
+  //! Returns a @[MultiStatus] object that will be used to produce a
+  //! 207 Multi-Status response (RFC 2518 10.2). It's only consultet
+  //! if the result returned from @[RoxenModule.find_file] et al is an
+  //! empty mapping.
   //!
   //! @note
   //! It's not necessarily safe to assume that there aren't any
   //! multi-status responses stored here already on entry to
-  //! @[find_file] et al. C.f. @[multi_status_updates].
+  //! @[find_file] et al. C.f. @[multi_status_size].
   //!
   //! @seealso
   //! @[set_status_for_path]
@@ -1717,6 +1724,8 @@ class MultiStatus
     DAV_WERROR("Generating XML Nodes for status_set:%O\n",
 	       status_set);
 
+    // Sort this because some client (which one?) requires collections
+    // to come before the entries they contain.
     foreach(sort(indices(status_set)), string href) {
       SimpleElementNode response_node =
 	SimpleElementNode("DAV:response", ([]))->
@@ -1843,6 +1852,7 @@ class RoxenModule
 				      RequestID id);
   mapping(string:mixed) remove_property (string path, string prop_name,
 					 RequestID id);
+
   string resource_id (string path, RequestID id);
   string|int authenticated_user_id (string path, RequestID id);
   multiset(DAVLock) find_locks(string path,
@@ -1859,6 +1869,7 @@ class RoxenModule
 				     DAVLock lock,
 				     RequestID id);
   mapping(string:mixed) write_access(string path, int(0..1) recursive, RequestID id);
+
   mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 							RequestID id);
   mapping(string:mixed) delete_file(string path, RequestID id);
