@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.84 1999/09/14 21:34:14 grubba Exp $
+ * $Id: smtp.pike,v 1.85 1999/09/14 21:56:34 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.84 1999/09/14 21:34:14 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.85 1999/09/14 21:56:34 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -922,7 +922,7 @@ static class Smtp_Connection {
     // FIXME: Ought to use host_to_ip_all() when it exists.
     dns->host_to_ip(mx->mx,
 		    lambda(string host, string ip) {
-		      cb(({ mx->name, ip }));
+		      cb(({ ip, mx->name }));
 		    });
   }
 
@@ -931,7 +931,8 @@ static class Smtp_Connection {
   {
     async_domain_to_mx_info(domain,
 			    lambda(array(mapping(string:mixed)) mx_info) {
-			      do_multi_async_args(async_mx_to_ip, mx_info,
+			      do_multi_async_args(async_mx_to_ip,
+						  mx_info || ({}),
 						  ({}), cb);
 			    });
   }
@@ -1035,32 +1036,23 @@ static class Smtp_Connection {
 
 	    if (domain) {
 	      // Full address check.
-	      foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-		if (functionp(o->expn) &&
-		    o->expn(recipient, this_object())) {
-		  recipient_ok = 1;
-		  break;
-		}
-		if (functionp(o->desc) &&
-		    o->desc(recipient, this_object())) {
-		  recipient_ok = 1;
-		  break;
+	      recipient_ok = check_recipient(recipient);
+	    } else {
+	      multiset(string) domains = parent->domain_cache[localip];
+	      if (domains) {
+		foreach(indices(domains), string d) {
+		  if (recipient_ok = check_recipient(user + "@" + d)) {
+		    recipient = user + "@" + d;
+		    domain = d;
+		    break;
+		  }
 		}
 	      }
 	    }
 	    if (!recipient_ok) {
 	      // Check if we have a default handler for this user.
 	      foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-		if (functionp(o->expn) &&
-		    o->expn(user, this_object())) {
-		  recipient_ok = 1;
-		  break;
-		}
-		if (functionp(o->desc) &&
-		    o->desc(user, this_object())) {
-		  recipient_ok = 1;
-		  break;
-		}
+		recipient_ok = check_recipient(user);
 	      }
 	    }
 	  } else {
@@ -1125,6 +1117,21 @@ static class Smtp_Connection {
     }
     conf->log(([ "error":400 ]), id);
     send(501);
+  }
+
+  int check_recipient(string recipient)
+  {
+    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+      if (functionp(o->expn) &&
+	  o->expn(recipient, this_object())) {
+	return 1;
+      }
+      if (functionp(o->desc) &&
+	  o->desc(recipient, this_object())) {
+	return 1;
+      }
+    }
+    return 0;
   }
 
   // DATA handling
@@ -1484,6 +1491,7 @@ multiset do_expn(multiset in, object|void smtp)
   return(expanded);
 }
 
+// ([ IP : (< "domain", "domain" >) ]);
 mapping(string:multiset(string)) domain_cache = ([]);
 int domain_cache_ok;
 
