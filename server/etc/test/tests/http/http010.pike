@@ -7,28 +7,10 @@ void main(int argc, array argv)
   if( argc < 4 )
     exit( BADARG );
 
-  if( argc == 5 )
-  {
-    switch( (int)argv[4] )
-    {
-      case 1:
-	break;
-      case 2:
-	sep = "\n";
-	break;
-      case 3:
-	psize = 1;
-	break;
-      case 4:
-	psize = 10;
-	break;
-    }
-  }
-
   Stdio.File f = connect(  argv[1] );
 
   write_fragmented( f,
-		    "GET "+argv[2]+" HTTP/1.0"+sep+
+		    "GET "+argv[2]+" HTTP/"+argv[4]+sep+
 		    "Connection: close"+sep+
 		    "User-Agent: testscript"+sep+sep,
 		    psize );

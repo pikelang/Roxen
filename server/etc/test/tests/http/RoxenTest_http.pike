@@ -32,6 +32,8 @@ function run( string script, string file, int len, string ... ma  )
 #define stest3( X,Y,Z,Å )  _test( X,Y,Z,Å," (1 b packets)",  "3" )
 #define stest4( X,Y,Z,Å )  _test( X,Y,Z,Å," (10 b packets)", "4" )
 
+#define btest( X,Y,Z,Å,Ä)  _test( X,Y,Z,Å, "", Ä )
+
 void setup( )
 {
   stest( "HTTP/0.9 /1k.raw",  "http/http09.pike", "/1k.raw",  1024 );
@@ -43,6 +45,16 @@ void setup( )
   stest( "HTTP/1.0 /10k.raw", "http/http10.pike", "/10k.raw", 1024*10 );
   stest( "HTTP/1.0 /",        "http/http10.pike", "/",        0 );
   stest( "HTTP/1.0 /nofile",  "http/http10.pike", "/nofile",  0 );
+
+  //  stest( "HTTP/1.1 /1k.raw",  "http/http11.pike", "/1k.raw",  1024 );
+  //  stest( "HTTP/1.1 /10k.raw", "http/http11.pike", "/10k.raw", 1024*10 );
+  //  stest( "HTTP/1.1 /",        "http/http11.pike", "/",        0 );
+  //  stest( "HTTP/1.1 /nofile",  "http/http11.pike", "/nofile",  0 );
+
+  btest( "HTTP/01.0 /1k.raw", "http/http010.pike", "/1k.raw", 1024, "01.0" );
+  btest( "HTTP/01.0 /nofile", "http/http010.pike", "/nofile", 0, "01.0" );
+  btest( "HTTP/001.00 /1k.raw", "http/http010.pike", "/1k.raw", 1024, "001.00" );
+  btest( "HTTP/001.00 /nofile", "http/http010.pike", "/nofile", 0, "001.00" );
 
   stest( "PING",              "http/ping.pike",   "/",        0 );
 
@@ -56,7 +68,12 @@ void setup( )
   stest2( "HTTP/1.0 /",        "http/http10.pike", "/",        0 );
   stest2( "HTTP/1.0 /nofile",  "http/http10.pike", "/nofile",  0 );
 
-  stest3( "PING",              "http/ping.pike",   "/",        0 );
+  //  stest2( "HTTP/1.1 /1k.raw",  "http/http11.pike", "/1k.raw",  1024 );
+  //  stest2( "HTTP/1.1 /10k.raw", "http/http11.pike", "/10k.raw", 1024*10 );
+  //  stest2( "HTTP/1.1 /",        "http/http11.pike", "/",        0 );
+  //  stest2( "HTTP/1.1 /nofile",  "http/http11.pike", "/nofile",  0 );
+
+  stest2( "PING",              "http/ping.pike",   "/",        0 );
 
   stest3( "HTTP/0.9 /1k.raw",  "http/http09.pike", "/1k.raw",  1024 );
   stest3( "HTTP/0.9 /10k.raw", "http/http09.pike", "/10k.raw", 1024*10 );
@@ -68,6 +85,12 @@ void setup( )
   stest3( "HTTP/1.0 /",        "http/http10.pike", "/",        0 );
   stest3( "HTTP/1.0 /nofile",  "http/http10.pike", "/nofile",  0 );
 
+  //  stest3( "HTTP/1.1 /1k.raw",  "http/http11.pike", "/1k.raw",  1024 );
+  //  stest3( "HTTP/1.1 /10k.raw", "http/http11.pike", "/10k.raw", 1024*10 );
+  //  stest3( "HTTP/1.1 /",        "http/http11.pike", "/",        0 );
+  //  stest3( "HTTP/1.1 /nofile",  "http/http11.pike", "/nofile",  0 );
+
+  stest3( "PING",              "http/ping.pike",   "/",        0 );
 
   stest4( "HTTP/0.9 /1k.raw",  "http/http09.pike", "/1k.raw",  1024 );
   stest4( "HTTP/0.9 /10k.raw", "http/http09.pike", "/10k.raw", 1024*10 );
@@ -78,4 +101,9 @@ void setup( )
   stest4( "HTTP/1.0 /10k.raw", "http/http10.pike", "/10k.raw", 1024*10 );
   stest4( "HTTP/1.0 /",        "http/http10.pike", "/",        0 );
   stest4( "HTTP/1.0 /nofile",  "http/http10.pike", "/nofile",  0 );
+
+  //  stest4( "HTTP/1.1 /1k.raw",  "http/http11.pike", "/1k.raw",  1024 );
+  //  stest4( "HTTP/1.1 /10k.raw", "http/http11.pike", "/10k.raw", 1024*10 );
+  //  stest4( "HTTP/1.1 /",        "http/http11.pike", "/",        0 );
+  //  stest4( "HTTP/1.1 /nofile",  "http/http11.pike", "/nofile",  0 );
 }

@@ -60,8 +60,11 @@ void write_fragmented( Stdio.File to,
 }
 
 #define EXIT(X)  while(1){write("\n\n\nThe offending response header:\n%O\n\n" \
-				"Protocol: %O\nReturn code: %d (%d)\nResponse mapping: %O\n", \
-                                headers,prot,code,expected_code,hd);exit((X));}
+				"Protocol: %O (%O)\n" \
+				"Return code: %d (%d)\n" \
+				"Response mapping: %O\n", \
+                                headers,prot,expected_prot, \
+				code,expected_code,hd);exit((X));}
 
 void verify_headers( string headers, int content_length,
 		     string expected_prot, int expected_code,
