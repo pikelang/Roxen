@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.555 2004/04/19 16:44:57 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.556 2004/04/20 14:06:45 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1803,7 +1803,7 @@ mixed handle_request( RequestID id, void|int recurse_count)
   return file;
 }
 
-mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
+mapping|int get_file(RequestID id, int|void no_magic, int|void internal_get)
 //! Return a result mapping for the id object at hand, mapping all
 //! modules, including the filter modules. This function is mostly a
 //! wrapper for <ref>low_get_file()</ref>.
@@ -1832,7 +1832,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
     PROF_ENTER(Roxen.get_owning_module(tmp)->module_name,"filter");
     if(res2=tmp(res,id))
     {
-      if(res && res->file && (res2->file != res->file))
+      if(mappinp(res) && res->file && (res2->file != res->file))
 	destruct(res->file);
       TRACE_LEAVE("Rewrote result.");
       res=res2;
