@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.344 2003/04/22 08:01:53 mattias Exp $
+// $Id: roxenloader.pike,v 1.345 2003/06/02 12:07:33 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.344 2003/04/22 08:01:53 mattias Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.345 2003/06/02 12:07:33 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2304,6 +2304,11 @@ library should be enough.
   add_constant("StringFile",    prototypes->StringFile );
   add_constant("PrefLanguages", prototypes->PrefLanguages);
   add_constant("RequestID",     prototypes->RequestID );
+#if constant(Parser.XML.Tree.XMLNSParser)
+  add_constant("XMLStatusNode",	prototypes->XMLStatusNode);
+  add_constant("MultiStatus", 	prototypes->MultiStatus);
+  add_constant("PatchPropertyCommand",	prototypes->PatchPropertyCommand);
+#endif
   add_constant("RoxenModule",   prototypes->RoxenModule );
   add_constant("ModuleInfo",    prototypes->ModuleInfo );
   add_constant("ModuleCopies",  prototypes->ModuleCopies );
