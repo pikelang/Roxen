@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
-inherit "cgi.pike": normalcgi;
+inherit "chili-module:cgi": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.12 2002/10/01 23:01:46 nilsson Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.13 2002/11/14 05:02:09 mani Exp $";
 
 #include <roxen.h>
 #include <module.h>
