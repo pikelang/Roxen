@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999, Idonex AB.
-// $Id: foldlist.pike,v 1.2 1999/08/05 00:51:10 nilsson Exp $
+// $Id: foldlist.pike,v 1.3 1999/08/07 16:46:49 nilsson Exp $
 
-constant cvs_version = "$Id: foldlist.pike,v 1.2 1999/08/05 00:51:10 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.3 1999/08/07 16:46:49 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -49,7 +49,7 @@ string tag_ft(string tag, mapping m, string cont, object id, string state_id, ma
       states[index]==1) {
         fl->txt="";
         fl->states[index]=1;
-        id->misc->defines[" fl "]=fl->inh+(string)fl->cnt;
+        id->misc->defines[" fl "]=fl->inh+(fl->cnt>10?":":"")+(string)fl->cnt;
         states[index]=0;
 	return "<dt><a target=\"_self\" href=\""+
 	       encode_url(states,state_id,id)+
@@ -76,6 +76,9 @@ string tag_foldlist(string tag, mapping m, string c, object id) {
   array states;
   int fds=sizeof(lower_case(c)/"<fd")-1;
 
+  if(!id->misc->defines[" fl "])
+    id->misc->defines[" fl "]="";
+
   //Make an initial guess of what should bew folded and wht should not.
   if(m->unfolded)
     states=allocate(fds,1);  //All unfolded
@@ -85,17 +88,17 @@ string tag_foldlist(string tag, mapping m, string c, object id) {
     states=allocate(fds,-1); //All unknown
 
   //Register ourselfs as state consumers and incorporate our initial state.
-  string fl_name = (m->name || "fl")+fds+":"+(id->misc->defines[" fl "] || "");
+  string fl_name = (m->name || "fl")+fds+(id->misc->defines[" fl "]!=""?":"+id->misc->defines[" fl "]:"");
   string state_id = register_state_consumer(fl_name, id);
   if(id->variables->state)
     decode_state(replace(id->variables->state,({"-","!","*"}),({"+","/","="})), id);
 
   //Get our real state
-  array new=get_state(state_id,id)/"";
+  array new=(get_state(state_id,id)||"")/"";
   for(int i=0; i<sizeof(new); i++)
     states[i]=(int)new[i];
 
-  mapping fl=(["states":states,"cnt":0,"inh":(id->misc->defines[" fl "] || ""),"txt":""]);
+  mapping fl=(["states":states,"cnt":0,"inh":id->misc->defines[" fl "],"txt":""]);
 
   //Do the real thing.
   c=parse_html(c,([]),(["ft":tag_ft]),id,state_id,fl);
