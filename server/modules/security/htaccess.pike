@@ -3,12 +3,14 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.80 2001/08/29 13:49:32 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.81 2001/08/30 18:40:49 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 #include <roxen.h>
 inherit "module";
+
+#define HTACCESS_DEBUG
 
 #ifdef HTACCESS_DEBUG
 # include <request_trace.h>
@@ -109,7 +111,7 @@ mapping|string|int htaccess(mapping access, RequestID id)
 	return Roxen.http_redirect(to,id);
     }
   
-  HT_WERR("Verifying access.");
+  HT_WERR(sprintf("Verifying access. method: %O", id->method));
   string method;
   if(!access[method = lower_case(id->method)])
   {
@@ -149,6 +151,9 @@ mapping|string|int htaccess(mapping access, RequestID id)
 	return 1;
     }
   }
+#ifdef HTACCESS_DEBUG
+  report_debug(sprintf("HTACCESS: access[%O]: %O\n", method, access[method]));
+#endif /* HTACCESS_DEBUG */
   return access[ method ]( id );
 }
 
@@ -159,8 +164,14 @@ function(RequestID:mapping|int) allow_deny( function allow,
   return lambda( RequestID id ) {
 	   mixed not_allowed = allow && allow( id );
 	   mixed denied  = deny && deny( id );
-// 	   werror("not_allowed: %O\n", not_allowed );
-// 	   werror("denied: %O\n", denied );
+#ifdef HTACCESS_DEBUG
+	   report_debug("HTACCESS: not_allowed: %O\n"
+			"          denied: %O\n"
+			"          order: %s\n",
+			not_allowed, denied,
+			([1:"allow, deny", -1:"mutual-failure",
+			  0:"deny, allow"])[order] || "UNKNOWN");
+#endif /* HTACCESS_DEBUG */
 	   int ok;
 	   switch( order )
 	   {
@@ -300,10 +311,16 @@ mapping parse_and_find_htaccess( RequestID id )
   string cache_key;
 
   array cv = VFS.find_above_read( id->not_query, htfile, id, "htaccess", 1 );
+
   if( !cv ) return 0;
 
   [string file,string htaccess,int mtime] = cv;
 
+#ifdef HTACCESS_DEBUG
+  report_debug(sprintf("HTACCESS: File:%O, mtime: %d\n"
+		       "%{    %s\n%}\n", file, mtime, (htaccess||"-")/"\n"));
+#endif /* HTACCESS_DEBUG */
+    
   cache_key = "htaccess:parsed:" + id->conf->name + ":" + (id->misc->host||"*");
 
   array in_cache;
@@ -313,11 +330,6 @@ mapping parse_and_find_htaccess( RequestID id )
   if( !strlen(htaccess) )
     return 0;
 
-#ifdef HTACCESS_DEBUG
-  report_debug(sprintf("HTACCESS: File:%O, mtime: %d\n"
-		       "%{    %s\n%}\n", file, mtime, htaccess/"\n"));
-#endif /* HTACCESS_DEBUG */
-    
   htaccess = replace(htaccess, ([ "\\\r\n":" ", "\\\n":" ", "\r":"" ]));
   foreach(htaccess / "\n"-({""}), string line)
   {
@@ -474,8 +486,9 @@ mapping remap_url(RequestID id)
 
 multiset denylist;
 string   htfile;
-void start()
+void start(int num, Configuration conf)
 {
+  module_dependencies(conf, ({ "auth_httpbasic" }));
   denylist = mkmultiset(map(query("denyhtlist"), lower_case));
   htfile = query("file");
 }
