@@ -113,7 +113,7 @@ class tab
 
     if(!search(sub,"wizard")&&(f[0..1]!="25"))
     {
-      _master->set_inhibit_compile_errors("");
+      master()->set_inhibit_compile_errors("");
       mixed e = catch
       {
 	    tmp=wizard_menu(id,dir+"/wizards/",
@@ -121,12 +121,12 @@ class tab
       };
       if(e)
       {
-	parent->sbdebug("show compile wizard failed:\n"+_master->errors+
+	parent->sbdebug("show compile wizard failed:\n"+master()->errors+
 			master()->describe_backtrace(e));
-	tmp = "<pre>" + _master->errors + "\n"
+	tmp = "<pre>" + master()->errors + "\n"
 	  + master()->describe_backtrace(e)+"</pre>";
       }
-      _master->set_inhibit_compile_errors(0);
+      master()->set_inhibit_compile_errors(0);
       return tmp;
     }
     
@@ -142,13 +142,13 @@ class tab
 	+ err + "</pre>\n";
     else
     {
-      _master->set_inhibit_compile_errors("");
+      master()->set_inhibit_compile_errors("");
       mixed e = catch
       {
 	tmp = o->handle( sub, id );
 	wanted_buttons = o->get_buttons ? o->get_buttons( id ) : ({ });
       };
-      _master->set_inhibit_compile_errors(0);
+      master()->set_inhibit_compile_errors(0);
       if (e)
       {
 	werror("show compile buttons error:\n"+
@@ -160,7 +160,7 @@ class tab
     res="<!-- Result of tab object handle() -->\n"+tmp;
     if(file_stat(dir+"/wizards/"))
     {
-      _master->set_inhibit_compile_errors("");
+      master()->set_inhibit_compile_errors("");
       mixed err=
       catch
       {
@@ -174,12 +174,12 @@ class tab
       if(err)
       {
 	werror("wizard compilation failure...\n"
-	       + _master->errors + "\n" );
-	tmp="<font color=red><pre>"+_master->errors+
+	       + master()->errors + "\n" );
+	tmp="<font color=red><pre>"+master()->errors+
 	  "\n"+master()->describe_backtrace(err)
 	  +"</pre></font>";
       }
-      _master->set_inhibit_compile_errors(0);
+      master()->set_inhibit_compile_errors(0);
       if(arrayp(tmp)) return res;
       if(mappingp(tmp)) return tmp;
       res+="<p><!-- Wizard menu -->\n"+tmp;
