@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.20 2001/09/19 12:23:34 jhs Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.21 2001/09/19 15:02:40 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -45,7 +45,7 @@ class TagWashHtml
 
   string unparagraphify(string s)
   {
-    return replace(s,
+    return replace(replace(s, ({ "<P>", "</P>" }), ({ "<p>", "</p>" })),
 		   ({ "</p>\n<p>", "</p><p>", "<p>", "</p>" }),
 		   ({ "\n\n",      "\n\n",    "",    "" }) );
   }
@@ -95,6 +95,10 @@ class TagWashHtml
     {
       if(l[0..6] == "http://" || l[0..7] == "https://" || l[0..5] == "ftp://")
 	return l;
+      
+      if(l[0..3] == "ftp.")
+	return "ftp://"+l;
+
       return "http://"+l;
     };
 
