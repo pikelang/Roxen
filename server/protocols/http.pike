@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.128 1999/07/04 18:28:01 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.129 1999/07/04 18:39:43 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1079,15 +1079,8 @@ class MultiRangeWrapper
 	  num_bytes = 0;
 	}
       }
-      if(strlen(out) > total)
-      {
-	// Oops. too much data. Send amount asked for and save
-	// the rest.
-	stored_data = out[total..];
-	//	werror(sprintf("Returning partial from loop %d of %d.\n",
-	//strlen(out[..total-1]), strlen(out)));
-	return out[..total-1];
-      } 
+      if(num_bytes <= 0)
+	break; // Return data
     }
     if(!sizeof(ranges) && !is_single_range && separator != 2) {
       // End boundary. Only write once.
