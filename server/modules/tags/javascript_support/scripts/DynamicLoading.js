@@ -73,7 +73,7 @@ FileLoader.elements = new Array();
 // The argument <file_loader> is not present if Nav4.
 function layerLoadHandler(file_loader)
 {
-  var layer = (isNav4? this: file_loader.layer_name);
+  var layer = (isNav4? this.name: file_loader.layer_name);
   var properties = (isNav4? this.properties: file_loader.properties);
 
   if(!isNav4)
@@ -91,10 +91,18 @@ var file_loader;
 // properties <properties>. 
 function loadLayer(e, layer_name, src, properties, parent)
 {
+  if(popups.length != 0 &&
+     popups[popups.length - 1].name == layer_name &&
+     properties.hide_2nd_click) {
+    clearToPopup(parent);
+    return retFromEvent(false);
+  }
+  
   clearToPopup(parent);
   if(isNav4)
   {
     var l = getObject(layer_name);
+    l.name = layer_name;
     l.onload = layerLoadHandler;
     l.src = src;
     l.properties = properties;
@@ -110,5 +118,5 @@ function loadLayer(e, layer_name, src, properties, parent)
   }
   var pos = new properties.LayerPosition(new TriggerCoord(e, 0), 0, properties);
   shiftTo(layer_name, pos.x, pos.y);
-  return false;
+  return retFromEvent(false);
 }
