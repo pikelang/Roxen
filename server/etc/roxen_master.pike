@@ -13,7 +13,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.114 2001/08/09 13:30:36 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.115 2001/08/09 14:07:59 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -489,7 +489,7 @@ void dump_program( string pname, program what )
   {
     sql_query( "DELETE FROM precompiled_files WHERE id=%s",index );
     sql_query( "INSERT INTO precompiled_files values (%s,%s,%d)",
-	       index, data, time );
+	       index, data, time(1) );
   }
 #ifdef DUMP_DEBUG
   else
