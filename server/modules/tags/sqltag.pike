@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.48 2000/02/25 01:33:50 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.49 2000/03/09 09:05:18 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -22,7 +22,7 @@ Configuration conf;
 
 constant module_type=MODULE_PARSER|MODULE_PROVIDER;
 constant module_name="SQL tag module";
-constant module_desc="This module gives the three tags &lt;SQLQUERY&gt;, "
+constant module_doc ="This module gives the three tags &lt;SQLQUERY&gt;, "
   "&lt;SQLOUTPUT&gt;, and &lt;SQLTABLE&gt;.<br>\n";
 
 TAGDOCUMENTATION
