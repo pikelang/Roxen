@@ -1,3 +1,5 @@
+constant cvs_version = "$Id: cgi.pike,v 2.30 2000/01/17 02:42:01 nilsson Exp $";
+
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
 #else
@@ -39,24 +41,17 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.29 1999/09/05 01:44:47 per Exp $";
-
 #ifdef CGI_DEBUG
-#define DWERROR(X)	report_debug(X)
+# define DWERR(X) werror("CGI: "+X+"\n")
 #else /* !CGI_DEBUG */
-#define DWERROR(X)
+# define DWERR(X)
 #endif /* CGI_DEBUG */
 
-array register_module()
-{
-  return 
-  ({
-    MODULE_LOCATION | MODULE_FILE_EXTENSION | MODULE_PARSER,
-    "CGI executable support", 
-    "Support for the <a href=\"http://hoohoo.ncsa.uiuc.edu/docs/cgi/"
-    "interface.html\">CGI/1.1 interface</a>, and more.",
-  });
-}
+constant module_type = MODULE_LOCATION | MODULE_FILE_EXTENSION | MODULE_PARSER;
+constant module_name = "CGI executable support";
+constant module_doc  = "Support for the <a href=\"http://hoohoo.ncsa.uiuc.edu/docs/cgi/"
+  "interface.html\">CGI/1.1 interface</a>, and more.";
+
 #if UNIX
 /*
 ** All this code to handle UID, GID and some other permission
@@ -81,7 +76,7 @@ array lookup_user( string what )
   if(pwuid_cache[what]) return pwuid_cache[what];
   if((int)what)
     uid = getpwuid( (int)what );
-  else 
+  else
     uid = getpwnam( what );
   if(uid)
     return pwuid_cache[what] = ({ uid[2],uid[3] });
@@ -113,7 +108,7 @@ array verify_access( RequestID id )
       // Scan for symlinks
       string fname = "";
       array a, b;
-      foreach(id->misc->is_user/"/", string part) 
+      foreach(id->misc->is_user/"/", string part)
       {
         fname += part;
         if ((fname != "")) {
@@ -148,7 +143,7 @@ array verify_access( RequestID id )
         fname += "/";
       }
       us = us[5..6];
-    } 
+    }
     else if(us)
       us = us[5..6];
     else
@@ -161,71 +156,71 @@ array verify_access( RequestID id )
 
 
 /* Basic wrapper.
-** 
-**  This program sends everything from the fd given as argument to 
+**
+**  This program sends everything from the fd given as argument to
 **  a new filedescriptor. The other end of that FD is available by
 **  calling get_fd()
-** 
+**
 **  The wrappers are used to parse the data from the CGI script in
 **  several different ways.
-** 
+**
 **  There is a reason for the abundant FD-use, this code must support
 **  the following operation operation modes:
-** 
+**
 ** Non parsed no header parsing:
 **  o nonblocking w/o threads
 **  o nonblocking w threads
 **  o blocking w/o threads
 **  o blocking w threads
-** 
+**
 ** Parsed no header parsing:
 **  o nonblocking w/o threads
 **  o nonblocking w threads
 **  o blocking w/o threads
 **  o blocking w threads
-** 
+**
 ** Non parsed:
 **  o nonblocking w/o threads
 **  o nonblocking w threads
 **  o blocking w/o threads
 **  o blocking w threads
-** 
+**
 ** Parsed:
 **  o nonblocking w/o threads
 **  o nonblocking w threads
 **  o blocking w/o threads
 **  o blocking w threads
-** 
+**
 **  Right now this is handled more or less automatically by the
 **  Stdio.File module and the operating system. :-)
 */
 
-class Wrapper 
-{ 
+class Wrapper
+{
   constant name="Wrapper";
-  string buffer = ""; 
-  Stdio.File fromfd, tofd, tofdremote; 
+  string buffer = "";
+  Stdio.File fromfd, tofd, tofdremote;
   RequestID mid;
   mixed done_cb;
   int close_when_done;
-  void write_callback() 
+  void write_callback()
   {
-    DWERROR("CGI:Wrapper::write_callback()\n");
+    DWERR("Wrapper::write_callback()");
 
-    if(!strlen(buffer)) 
+    if(!strlen(buffer))
       return;
     int nelems = tofd->write( buffer );
 
-    DWERROR(sprintf("CGI:Wrapper::write_callback(): write(%O) => %d\n",
+    DWERR(sprintf("Wrapper::write_callback(): write(%O) => %d",
 		    buffer, nelems));
 
     if( nelems < 0 )
       // if nelems == 0, network buffer is full. We still want to continue.
     {
       buffer="";
-      done(); 
+      done();
     } else {
-      buffer = buffer[nelems..]; 
+      buffer = buffer[nelems..];
       if(close_when_done && !strlen(buffer))
         destroy();
     }
@@ -233,21 +228,21 @@ class Wrapper
 
   void read_callback( mixed id, string what )
   {
-    DWERROR(sprintf("CGI:Wrapper::read_callback(%O, %O)\n", id, what));
+    DWERR(sprintf("Wrapper::read_callback(%O, %O)", id, what));
 
     process( what );
   }
 
   void close_callback()
   {
-    DWERROR("CGI:Wrapper::close_callback()\n");
-    
+    DWERR("Wrapper::close_callback()");
+
     done();
   }
 
   void output( string what )
   {
-    DWERROR(sprintf("CGI:Wrapper::output(%O)\n", what));
+    DWERR(sprintf("Wrapper::output(%O)", what));
 
     if(buffer == "" )
     {
@@ -259,7 +254,7 @@ class Wrapper
 
   void destroy()
   {
-    DWERROR("CGI:Wrapper::destroy()\n");
+    DWERR("Wrapper::destroy()");
 
     catch(done_cb(this_object()));
     catch(tofd->set_blocking());
@@ -271,7 +266,7 @@ class Wrapper
 
   object get_fd()
   {
-    DWERROR("CGI:Wrapper::get_fd()\n");
+    DWERR("Wrapper::get_fd()");
 
     /* Get rid of the reference, so that it gets closed properly
      * if the client breaks the connection.
@@ -281,11 +276,10 @@ class Wrapper
 
     return fd;
   }
-  
 
   void create( Stdio.File _f, RequestID _m, mixed _done_cb )
   {
-    DWERROR("CGI:Wrapper()\n");
+    DWERR("Wrapper()");
 
     fromfd = _f;
     mid = _m;
@@ -293,17 +287,17 @@ class Wrapper
     tofdremote = Stdio.File( );
     tofd = tofdremote->pipe( );// Stdio.PROP_NONBLOCK );
     fromfd->set_nonblocking( read_callback, 0, close_callback );
-    
+
 #ifdef CGI_DEBUG
     function read_cb = class
     {
       void read_cb(mixed id, string s)
       {
-	DWERROR(sprintf("CGI:Wrapper::tofd->read_cb(%O, %O)\n", id, s));
+	DWERR(sprintf("Wrapper::tofd->read_cb(%O, %O)", id, s));
       }
       void destroy()
       {
-	DWERROR(sprintf("CGI:Wrapper::tofd->read_cb Zapped from:\n"
+	DWERR(sprintf("Wrapper::tofd->read_cb Zapped from:"
 			"%s\n", describe_backtrace(backtrace())));
       }
     }()->read_cb;
@@ -317,8 +311,8 @@ class Wrapper
   // override these to get somewhat more non-trivial behaviour
   void done()
   {
-    DWERROR(sprintf("CGI:Wrapper::done(%d)\n", strlen(buffer)));
-    
+    DWERR(sprintf("Wrapper::done(%d)", strlen(buffer)));
+
     if(strlen(buffer))
       close_when_done = 1;
     else
@@ -327,7 +321,7 @@ class Wrapper
 
   void process( string what )
   {
-    DWERROR(sprintf("CGI:Wrapper::process(%O)\n", what));
+    DWERR(sprintf("Wrapper::process(%O)", what));
 
     output( what );
   }
@@ -338,7 +332,7 @@ class Wrapper
 /* RXML wrapper.
 **
 ** Simply waits until the CGI-script is done, then 
-** parses the result and sends it to the client. 
+** parses the result and sends it to the client.
 ** Please note that the headers are also parsed.
 */
 
@@ -346,12 +340,12 @@ class RXMLWrapper
 {
   inherit Wrapper;
   constant name="RXMLWrapper";
-  
+
   string data="";
 
   void done()
   {
-    DWERROR("CGI:RXMLWrapper::done()\n");
+    DWERR("RXMLWrapper::done()");
 
     if(strlen(data))
     {
@@ -363,7 +357,7 @@ class RXMLWrapper
 
   void process( string what )
   {
-    DWERROR(sprintf("CGI:RXMLWrapper::process(%O)\n", what));
+    DWERR(sprintf("RXMLWrapper::process(%O)", what));
 
     data += what;
   }
@@ -374,10 +368,10 @@ class RXMLWrapper
 
 /* CGI wrapper.
 **
-** Simply waits until the headers has been received, then 
+** Simply waits until the headers has been received, then
 ** parse them according to the CGI specification, and send
-** them and the rest of the data to the client. After the 
-** headers are received, all data is sent as soon as it's 
+** them and the rest of the data to the client. After the
+** headers are received, all data is sent as soon as it's
 ** received from the CGI script
 */
 class CGIWrapper
@@ -389,7 +383,7 @@ class CGIWrapper
 
   void done()
   {
-    DWERROR("CGI:CGIWrapper::done()\n");
+    DWERR("CGIWrapper::done()");
 
     if(!mode && !parse_headers( ))
       headers = NOHEADER;
@@ -399,7 +393,7 @@ class CGIWrapper
 
   string handle_headers( string headers )
   {
-    DWERROR(sprintf("CGI:CGIWrapper::handle_headers(%O)\n", headers));
+    DWERR(sprintf("CGIWrapper::handle_headers(%O)", headers));
 
     string result = "", post="";
     string code = "200 OK";
@@ -455,12 +449,12 @@ class CGIWrapper
 
   int parse_headers( )
   {
-    DWERROR("CGI:CGIWrapper::parse_headers()\n");
+    DWERR("CGIWrapper::parse_headers()");
 
     int pos, skip = 4, force_exit;
     if(strlen(headers) > MAXHEADERLEN)
     {
-      DWERROR("CGI:CGIWrapper::parse_headers()::Incorrect Headers\n");
+      DWERR("CGIWrapper::parse_headers()::Incorrect Headers");
       headers = LONGHEADER;
       force_exit = 1;
     }
@@ -483,7 +477,7 @@ class CGIWrapper
     }
     string tmphead = headers;
     headers = "";
-    
+
     output( handle_headers( tmphead[..pos-1] ) );
     output( tmphead[pos+skip..] );
 
@@ -495,7 +489,7 @@ class CGIWrapper
   static int mode;
   void process( string what )
   {
-    DWERROR(sprintf("CGI:CGIWrapper::process(%O)\n", what));
+    DWERR(sprintf("CGIWrapper::process(%O)", what));
 
     switch( mode )
     {
@@ -529,7 +523,7 @@ class NTOpenCommand
   array(string) open(string file, array(string) args)
   {
     array(string) res;
-    res = map(line, replace, repsrc, 
+    res = map(line, replace, repsrc,
               (({file})+args+
                (sizeof(args)+1>=sizeof(repsrc)? ({}) :
                 allocate(sizeof(repsrc)-sizeof(args)-1, "")))
@@ -540,7 +534,7 @@ class NTOpenCommand
   }
 
   void create(string ext)
-  {    
+  {
     string ft, cmd;
 
     catch {
@@ -588,7 +582,7 @@ class CGIScript
   RequestID mid;
 #if UNIX
   mapping (string:int)    limits;
-  int uid, gid;  
+  int uid, gid;
   array(int) extra_gids;
 #endif
 #ifdef __NT__
@@ -597,7 +591,7 @@ class CGIScript
 
   void check_pid()
   {
-    DWERROR("CGI:CGIScript::check_pid()\n");
+    DWERR("CGIScript::check_pid()");
 
     if(!pid || pid->status())
     {
@@ -610,7 +604,7 @@ class CGIScript
 
   Stdio.File get_fd()
   {
-    DWERROR("CGI:CGIScript::get_fd()\n");
+    DWERR("CGIScript::get_fd()");
 
     // Send input to script..
     if( tosend || ffd )
@@ -637,12 +631,12 @@ class CGIScript
     //
     // Blocking (<insert file=foo.cgi> and <!--#exec cgi=..>)
     // Quick'n'dirty version.
-    // 
+    //
     // This will not be parsed. At all. And why is this not a problem?
     //   o <insert file=...> dicards all headers.
     //   o <insert file=...> does RXML parsing on it's own (automatically)
-    //   o The user probably does not want the .cgi rxml-parsed twice, 
-    //     even though that's the correct solution to the problem (and rather 
+    //   o The user probably does not want the .cgi rxml-parsed twice,
+    //     even though that's the correct solution to the problem (and rather
     //     easy to add, as well)
     //
     remove_call_out( kill_script );
@@ -656,7 +650,7 @@ class CGIScript
 
   void kill_script()
   {
-    DWERROR(sprintf("CGI:CGIScript::kill_script()\n"
+    DWERR(sprintf("CGIScript::kill_script()"
 		    "next_kill: %d\n", next_kill));
 
     if(pid && !pid->status())
@@ -665,17 +659,17 @@ class CGIScript
       if (next_kill < sizeof(kill_signals)) {
 	signum = kill_signals[next_kill++];
       }
-      if(pid->kill)  // Pike 0.7, for roxen 1.4 and later 
+      if(pid->kill)  // Pike 0.7, for roxen 1.4 and later
         pid->kill(signum);
       else
-        kill( pid->pid(), signum); // Pike 0.6, for roxen 1.3 
+        kill( pid->pid(), signum); // Pike 0.6, for roxen 1.3
       call_out(kill_script, kill_interval);
     }
   }
 
   CGIScript run()
   {
-    DWERROR("CGI:CGIScript::run()\n");
+    DWERR("CGIScript::run()");
 
     Stdio.File t, stderr;
     stdin  = Stdio.File();
@@ -747,7 +741,7 @@ class CGIScript
 
 #ifdef __NT__
     if(!(pid = Process.create_process( nt_opencommand(command, arguments),
- 				       options ))) 
+ 				       options )))
 #else
     if(!(pid = Process.create_process( ({ command }) + arguments, options )))
 #endif /* __NT__ */
@@ -760,7 +754,7 @@ class CGIScript
 
   void create( RequestID id )
   {
-    DWERROR("CGI:CGIScript()\n");
+    DWERR("CGIScript()");
 
     mid = id;
 
@@ -769,8 +763,8 @@ class CGIScript
       blocking = 1;
 #else
     if(id->misc->orig && this_thread() == roxen.backend_thread)
-      blocking = 1; 
-    // An <insert file=...> and we are 
+      blocking = 1;
+    // An <insert file=...> and we are
     // currently in the backend thread.
 #endif
     if(!id->realfile)
@@ -803,7 +797,7 @@ class CGIScript
       object ntopencmd = nt_opencommands[extn];
       if(!ntopencmd || ntopencmd->expired())
 	ntopencmd = NTOpenCommand(extn);
-      nt_opencommand = ntopencmd->open;    
+      nt_opencommand = ntopencmd->open;
     }
 #endif
 
@@ -840,9 +834,9 @@ class CGIScript
 }
 
 mapping(string:string) global_env = ([]);
-void start(int n, object conf)
+void start(int n, Configuration conf)
 {
-  DWERROR("CGI:start()\n");
+  DWERR("start()");
 
   module_dependencies(conf, ({ "pathinfo" }));
   if(conf)
@@ -866,21 +860,21 @@ void start(int n, object conf)
 
 array stat_file( string f, RequestID id )
 {
-  DWERROR("CGI:stat_file()\n");
+  DWERR("stat_file()");
 
   return file_stat( real_file( f, id ) );
 }
 
 string real_file( string f, RequestID id )
 {
-  DWERROR("CGI:real_file()\n");
+  DWERR("real_file()");
 
   return combine_path( QUERY(searchpath), f );
 }
 
-mapping handle_file_extension(object o, string e, object id)
+mapping handle_file_extension(object o, string e, RequestID id)
 {
-  DWERROR("CGI:handle_file_extension()\n");
+  DWERR("handle_file_extension()");
 
   if(!QUERY(ex))
     return 0;
@@ -890,7 +884,7 @@ mapping handle_file_extension(object o, string e, object id)
       return 0;
     else
       return http_low_answer(500, "<title>CGI - File Not Executable</title>"
-			     "<h1>CGI Error - File Not Executable</h1> <b>"
+			     "<h1>CGI Error - File Not Executable</h1><b>"
 			     "The script you tried to run is not executable."
 			     "Please contact the server administrator about "
 			     "this problem.</b>");
@@ -900,7 +894,7 @@ mapping handle_file_extension(object o, string e, object id)
 
 array(string) find_dir( string f, RequestID id )
 {
-  DWERROR("CGI:find_dir()\n");
+  DWERR("find_dir()");
 
   if(QUERY(ls))
     return get_dir(real_file( f,id ));
@@ -908,7 +902,7 @@ array(string) find_dir( string f, RequestID id )
 
 int|object(Stdio.File)|mapping find_file( string f, RequestID id )
 {
-  DWERROR("CGI:find_file()\n");
+  DWERR("find_file()");
 
   array stat=stat_file(f,id);
   if(!stat) return 0;
@@ -950,7 +944,7 @@ array (string) query_file_extensions()
 }
 
 int run_as_user_enabled() { return (getuid() || !QUERY(user)); }
-void create(object conf)
+void create(Configuration conf)
 {
   defvar("env", 0, "Pass environment variables", TYPE_FLAG|VAR_MORE,
 	 "If this is set, all environment variables roxen has will be "
@@ -975,7 +969,7 @@ void create(object conf)
 	 "NAME=value\n"
 	 "</pre>Please note that normal CGI variables will override these.");
 
-  defvar("location", "/cgi-bin/", "CGI-bin path", TYPE_LOCATION, 
+  defvar("location", "/cgi-bin/", "CGI-bin path", TYPE_LOCATION,
 	 "This is where the module will be inserted in the "
 	 "namespace of your server. The module will, per default, also"
 	 " service one or more extensions, from anywhere in the "
@@ -999,12 +993,12 @@ void create(object conf)
 	 ({"cgi",
 #ifdef __NT__
 	   "exe",
-#endif	   
+#endif
 	 }), "CGI-script extensions", TYPE_STRING_LIST,
          "All files ending with these extensions, will be parsed as "+
 	 "CGI-scripts.");
 
-  defvar("stderr","main log file",	 
+  defvar("stderr","main log file",
 	 "Log CGI errors to...", TYPE_STRING_LIST,
 	 "By changing this variable you can select where error messages "
 	 "(which means all text written to stderr) from "
@@ -1017,7 +1011,7 @@ void create(object conf)
 	    "browser" }));
 
   defvar("cgilog", GLOBVAR(logdirprefix)+
-	 short_name(conf? conf->name:".")+"/cgi.log", 
+	 short_name(conf? conf->name:".")+"/cgi.log",
 	 "Log file", TYPE_STRING,
 	 "Where to log errors from CGI scripts. You can also choose to send "
 	 "the errors to the browser or to the main Roxen log file. "
@@ -1057,7 +1051,7 @@ void create(object conf)
            "high",
            "higher",
            "realtime",
-         }) 
+         })
 #if UNIX
          ,lambda(){return QUERY(nice);}
 #endif
@@ -1137,36 +1131,36 @@ void create(object conf)
 	 "killed. 0 means unlimited.", ({ 0, 1, 2, 3, 4, 5, 7, 10, 15 }));
 }
 
-int|string tag_runcgi( string tag, mapping args, string cont, RequestID id )
+int|string container_runcgi( string tag, mapping args, string cont, RequestID id )
 {
-  if(!query("cgi_tag")) 
+  if(!query("cgi_tag"))
     return 0;
 
   cont=parse_html(cont, ([]), (["attrib":
-    lambda(string tag, mapping m, string cont, object id) {
-       id->variables[m->attrib]=cont;
+    lambda(string tag, mapping m, string cont, RequestID id) {
+       if(m->name) id->variables[m->name]=cont;
        return "";
     }]),id);
 
   return parse_html(cont, (["cgi":
-    lambda(string tag, mapping m, object id) {
+    lambda(string tag, mapping m) {
       return tag_cgi(tag, m, id);
     }
-  ]),([]),id);
+  ]),([]));
 }
 
 int|string tag_cgi( string tag, mapping args, RequestID id )
 {
-  DWERROR("CGI:tag_cgi()\n");
+  DWERR("tag_cgi()");
 
-  if(!query("cgi_tag")) 
+  if(!query("cgi_tag"))
     return 0;
 
   if(args->help)
     return ("<b>&lt;"+tag+" script=path [cache=seconds] [default-argument=value] "
             "[argument=value]&gt;:</b>");
 
-  if(!args->cache) 
+  if(!args->cache)
     NOCACHE();
   else {
     CACHE( (int)args->cache || 60 );
@@ -1195,7 +1189,7 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
 
   fid->realfile=0;
   fid->method = "GET";
-  mixed e = catch 
+  mixed e = catch
   {
     string data=handle_file_extension( 0, "cgi", fid )->file->read();
     if(!sscanf(data, "%*s\r\n\r\n%s", data))
@@ -1205,19 +1199,4 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
   return ("Failed to run CGI script: <font color=\"red\"><pre>"+
           (html_encode_string(describe_backtrace(e))/"\n")[0]+
           "</pre></font>");
-}
-
-
-mapping query_tag_callers()
-{
-  return ([
-    "cgi":tag_cgi
-  ]);
-}
-
-mapping query_container_callers()
-{
-  return ([
-    "runcgi":tag_runcgi
-  ]);
 }
