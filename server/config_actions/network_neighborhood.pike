@@ -30,11 +30,12 @@ string page_0()
 {
   array sn = indices(neighborhood);
   sort(Array.map(sn, lambda(string s){ return neighborhood[s]->host; }), sn);
-  return html_table(({"Config URL", "Host", "Uptime", "Last Reboot","Version",
+  return html_table(({"Config URL", "User", "Host", "Uptime", "Last Reboot","Version",
 			/*({"Server info"})*/}),
 		    Array.map(sn, lambda(string s) {
      mapping ns = neighborhood[s];
      return({(string)"<font size=+1><a href='"+s+"'>"+s+"</a></font>",
+	     (string)getpwuid(ns->uid)[0],
 	     (string)"<font size=+1>"+ns->host+"</font>",
 	     (string)"<font size=+1>"+(ns->sequence/2)+"</font>",
 	     (string)"<font size=+1>"+(ns->seq_reboots>1?"<font fg=red><blink>":"")+
