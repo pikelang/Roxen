@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.250 1998/11/02 06:53:41 per Exp $
+ * $Id: roxen.pike,v 1.251 1998/11/13 17:12:26 marcus Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.250 1998/11/02 06:53:41 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.251 1998/11/13 17:12:26 marcus Exp $";
 
 
 // Some headerfiles
@@ -1005,6 +1005,7 @@ object load(string s, object conf)   // Should perhaps be renamed to 'reload'.
     } else
       perror(s+".pike exists, but compilation failed.\n");
   }
+#if 0
   if(st=file_stat(s+".lpc"))
     if(cvs?(__p=master()->cvs_load_file( cvs+".lpc" )):
        (__p=my_compile_file(s+".lpc")))
@@ -1022,6 +1023,7 @@ object load(string s, object conf)   // Should perhaps be renamed to 'reload'.
       return __p(conf);
     } else
       perror(s+".so exists, but compilation failed.\n");
+#endif
   return 0; // FAILED..
 }
 
