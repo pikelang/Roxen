@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.5 1998/02/19 05:21:03 per Exp $
+ * $Id: flush.pike,v 1.6 1998/03/11 19:18:52 neotron Exp $
  */
 
 inherit "wizard";
@@ -25,7 +25,7 @@ mixed page_0(object id, object mc)
 	  "Force a flush of the memory cache (the one described "
 	  "under the Actions -> Cache -> Cache status)."
 	  "</blockquote></help>"
-	  "<var default=1 name=other_cache type=checkbox> Directory caches<br>\n"
+	  "<var default=1 name=dir_cache type=checkbox> Directory caches<br>\n"
 	  "<help><blockquote>"
 	  "Force a flush of all directory module caches."
 	  "</blockquote></help>"
@@ -35,22 +35,20 @@ mixed page_0(object id, object mc)
 	  "</blockquote></help>");
 }
 
+#define CHECKED(x) (id->variables->x != "0")
+
 mixed page_1(object id, object mc)
 {
-  string ret = "To flush the following caches press 'OK':\n<p>";
+  string ret = "";
+  if(CHECKED(user_cache))   ret += "The userdb cache<br>";
+  if(CHECKED(memory_cache)) ret += "The memory cache<br>";    
+  if(CHECKED(dir_cache))    ret += "The directory cache<br>";
+  if(CHECKED(module_cache)) ret += "The module cache<br>";
+  if(CHECKED(gtext_cache)) ret += "The graphical text cache<br>";
+  if(!strlen(ret))
+    ret = "No items selected!";
 
-  if(id->variables->user_cache || id->variables->memory_cache ||
-     id->variables->dir_cache  || id->variables->module_cache)
-  {
-    if(id->variables->user_cache != "0")   ret += "The userdb cache<br>";
-    if(id->variables->memory_cache != "0") ret += "The memory cache<br>";    
-    if(id->variables->dir_cache != "0")    ret += "The directory cache<br>";
-    if(id->variables->module_cache != "0") ret += "The module cache<br>";
-    if(id->variables->gtext_cache != "0") ret += "The graphical text cache<br>";
-  } else
-    ret += "No items selected!";
-
-  return ret;
+  return  "To flush the following caches press 'OK':\n<p>"+ ret;
 }
 
 string text_andify( array(string) info )
@@ -78,7 +76,7 @@ mixed wizard_done(object id, object mc)
   array(string) info= ({ });
   
   /* Flush the userdb. */ 
-  if(id->variables->user_cache != "0")
+  if(CHECKED(user_cache))
   {
     info += ({ "the userdb" });
     foreach(roxen->configurations, object c)
@@ -87,14 +85,14 @@ mixed wizard_done(object id, object mc)
   }
   
   /* Flush the memory cache. */ 
-  if(id->variables->memory_cache != "0")
+  if(CHECKED(memory_cache))
   {
     info += ({ "the memory cache" });
     function_object(cache_set)->cache = ([]);
   }
 
   /* Flush the gtext cache. */ 
-  if(id->variables->gtext_cache != "0")
+  if(CHECKED(gtext_cache))
   {
     info += ({ "the graphical text cache" });
     foreach(roxen->configurations, object c)
@@ -111,7 +109,7 @@ mixed wizard_done(object id, object mc)
   }
 
   /* Flush the dir cache. */ 
-  if(id->variables->dir_cache != "0")
+  if(CHECKED(dir_cache))
   {
     info += ({ "the directory cache" });
   foreach(roxen->configurations, object c)
@@ -125,7 +123,7 @@ mixed wizard_done(object id, object mc)
   }
   
   /* Flush the module cache. */ 
-  if(id->variables->module_cache != "0")
+  if(CHECKED(module_cache))
   {
     info += ({ "the module cache" });
     roxen->allmodules=0;
