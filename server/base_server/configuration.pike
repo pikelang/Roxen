@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.512 2002/05/13 15:55:44 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.513 2002/05/16 12:28:41 stewa Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1737,6 +1737,11 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   TIMER_START(get_file);
   int orig_internal_get = id->misc->internal_get;
   id->misc->internal_get = internal_get;
+  RequestID root_id = id->root_id || id;
+  int sub_req_limit = query("SubRequestLimit");
+  root_id->misc->_request_depth++;
+  if(sub_req_limit && root_id->misc->_request_depth > sub_req_limit)
+    throw( ({ "Subrequest limit reached. (Possibly an insertion loop.)", backtrace() }) );
 
   mapping|int res;
   mapping res2;
@@ -1764,6 +1769,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   }
   TIMER_END(filter_modules);
 
+  root_id->misc->_request_depth--;
   id->misc->internal_get = orig_internal_get;
   return res;
 }
@@ -3462,7 +3468,13 @@ also set 'URLs'."));
 		 "location that can be used for such purposes.  Simply select "
 		 "a location that you are not likely to use for regular "
 		 "resources."));
-
+  
+  defvar("SubRequestLimit", 30,
+	 "Subrequest depth limit",
+	 TYPE_INT | VAR_MORE,
+	 "A limit for the number of nested sub requests for each request. "
+	 "This is intented to catch unintended infinite loops when for example "
+	 "inserting files in RXML. 0 for no limit." );
 
   // Throttling-related variables
 
