@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.18 1998/08/02 22:08:47 mast Exp $";
+string cvs_version = "$Id: http.pike,v 1.19 1998/08/20 07:35:26 per Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -12,9 +12,10 @@ string cvs_version = "$Id: http.pike,v 1.18 1998/08/02 22:08:47 mast Exp $";
 
 string http_date(int t);
 
+#include <variables.h>
+
 string http_res_to_string( mapping file, object id )
 {
-#include <variables.h>
   mapping heads=
     ([
       "Content-type":file["type"],
