@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.13 1997/08/12 06:32:36 per Exp $
+/* $Id: ssl3.pike,v 1.14 1997/08/13 10:24:04 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -293,7 +293,7 @@ void handle_request( )
     heads=
       ([
 	"Content-type":file["type"],
-		      "Server":version(),
+		      "Server":replace(version(), " ", "·"),
 		      "Date":http_date(time)
 	 ]);
     

@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.34 1997/08/04 12:53:27 grubba Exp $";
+string cvs_version = "$Id: http.pike,v 1.35 1997/08/13 10:24:15 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -869,7 +869,7 @@ void handle_request( )
     heads=
       ([
 	"Content-type":file["type"],
-		      "Server":version(),
+		      "Server":replace(version(), " ", "·"),
 		      "Date":http_date(time)
 	 ]);
     
