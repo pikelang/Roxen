@@ -105,12 +105,12 @@
 
 <str id="20">
 <o>Default site</o>
-<t>Standaard site</t>
+<t>Dit is de standaard site</t>
 </str>
 
 <str id="21">
 <o>If true, this site will be selected in preference of other sites when virtual hosting is used and no host header is supplied, or the supplied host header does not match the address of any of the other servers.</o>
-<t>Als waar, dan is deze site als eerste gekozen als virtual hosting inschakeld is en de client geen host header meegegeeft of de host header niet bekend is.</t>
+<t>Zo ja, dan is deze site als eerste gekozen als virtual hosting inschakeld is en de client geen host header meegegeeft of de host header niet bekend is.</t>
 </str>
 
 <str id="22">
@@ -313,97 +313,83 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 </str>
 
 <str id="40">
-<new/>
 <o>Internal module resource mountpoint</o>
-<t></t>
+<t>Locatie binnen de virtuele directory voor resources van de module</t>
 </str>
 
 <str id="41">
-<new/>
 <o>Some modules may want to create links to internal resources. This setting configures an internally handled location that can be used for such purposes.  Simply select a location that you are not likely to use for regular resources.</o>
-<t></t>
+<t>Sommige modules willen verwijzingen maken naar interne resources. Deze instelling is een interne lokatie die hiervoor gebruikt kan worden. Kies een locatie die u niet zal gebruiken voor 'normale' resources</t>
 </str>
 
 <str id="42">
-<new/>
 <o>Throttling: Server; Enabled</o>
-<t></t>
+<t>Bandbreedtebeperking: Server: Ingeschakeld</t>
 </str>
 
 <str id="43">
-<new/>
+<!-- fixme token bucket -->
 <o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this site.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
-<t></t>
+<t>Als ingeschakeld dan is bandbreedteperking per server ingeschakeld. Het stelt u in staat de totale bandbreedte voor deze site te beperking .&lt;br /&gt;Bandbreedte wordt toegekend d.m.v een Token Bucket. Voor elke byte die de server stuur gebruiken we een token. Tokens worden in een vaste hoeveelheid toegevoegd aan een reservoir. Als er geen tokens in het reservoir zitten kan de server niets versturen. Als  er te veel tokens zijn (het reservoir zit 'vol') woden deze niet toegevoegd </t>
 </str>
 
 <str id="44">
-<new/>
 <o>Throttling: Server; Average available bandwidth</o>
-<t></t>
+<t>Bandbreedtebeperking: Server; Gemiddeld beschikbare bandbreedte</t>
 </str>
 
 <str id="45">
-<new/>
 <o>This is the average bandwidth available to this site in bytes/sec (the bucket "fill rate").</o>
-<t></t>
+<t>Dit is de gemiddelte bandbreedte die beschikbaar is voor deze site in bytes/sec. (de 'vulsnelheid' van het tokenreservoir).</t>
 </str>
 
 <str id="46">
-<new/>
 <o>Throttling: Server; Bucket Depth</o>
-<t></t>
+<t>Bandbreedtebeperking: Server; Reservoir diepte</t>
 </str>
 
 <str id="47">
-<new/>
+<!-- fixme data bursts -->
 <o>This is the maximum depth of the bucket. After a long enough period of inactivity, a request will get this many unthrottled bytes of data, before throttling kicks back in.&lt;br&gt;Set equal to the Fill Rate in order not to allow any data bursts. This value determines the length of the time over which the bandwidth is averaged.</o>
-<t></t>
+<t>Dit is de maximale diepte van het reservoir. Na een lange periode van inactiviteit krijgt een verzoek dit aantal tokens voordat de bandbreedtebeperking zich weer inschakeld. &lt;br&gt; Zet deze gelijk aan de vulsnelheid om geen data-bursts to te staan. Deze waarde bepaald de tijdsduur waarover de bandbreedte wordt gemiddeld.</t>
 </str>
 
 <str id="48">
-<new/>
 <o>Throttling: Server; Minimum Grant</o>
-<t></t>
+<t>Bandbreedtebeperking: Server; Minimum toekenning</t>
 </str>
 
 <str id="49">
-<new/>
 <o>When the bandwidth availability is below this value, connections will be delayed rather than granted minimal amounts of bandwidth. The purpose is to avoid sending too small packets (which would increase the IP overhead).</o>
-<t></t>
+<t>Zodra de bandbreedte onder deze waarde komt worden connecties uitgesteld in plaats van ze een minimale bandbreedte te geven. Het doel is het versturen van te klein pakketten met gegevens te beperken (dit vergroot de IP 'overhead').</t>
 </str>
 
 <str id="50">
-<new/>
 <o>Throttling: Server; Maximum Grant</o>
-<t></t>
+<t>Bandbreedtebeperking: Server; Maximale toekenning</t>
 </str>
 
 <str id="51">
-<new/>
 <o>This is the maximum number of bytes assigned in a single request to a connection. Keeping this number low will share bandwidth more evenly among the pending connections, but keeping it too low will increase IP overhead and (marginally) CPU usage. You'll want to set it just a tiny bit lower than any integer multiple of your network's MTU (typically 1500 for ethernet).</o>
-<t></t>
+<t>Dit is het maximale aantal bytes dat een enkele connectie mag versturen. Door deze waarde klein te houden verspreidt de bandbreedte zich beter over de connecties. Bij een te kleine waarde is er echter meer IP overhead. Deze waarde wilt u normaliter iets lager hebben dan een geheel meervouw van de MTU op uw netwerk (MTU voor ethernet is  1500)</t> 
 </str>
 
 <str id="52">
-<new/>
 <o>Throttling: Request; Enabled</o>
-<t></t>
+<t>Bandbreedtebeperking: Verzoek; Ingeschakeld</t>
 </str>
 
 <str id="53">
-<new/>
 <o>If set, per-request bandwidth throttling will be enabled.</o>
-<t></t>
+<t>Per verzoek bandbreedte beperking wordt hiermee geactiveerd</t>
 </str>
 
 <str id="54">
-<new/>
 <o>Throttling: Request; Minimum guarranteed bandwidth</o>
-<t></t>
+<t>Bandbreedtebeperking: Verzoek; minimum gegarandeerde bandbreedte </t>
 </str>
 
 <str id="55">
-<new/>
 <o>The maximum bandwidth each connection (in bytes/sec) can use is determined combining a number of modules. But doing so can lead to too small or even negative bandwidths for particularly unlucky requests. This variable guarantees a minimum bandwidth for each request.</o>
 <t></t>
 </str>

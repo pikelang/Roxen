@@ -161,19 +161,17 @@
 
 <str id="13">
 <o>Module lock status : Accesses to all modules</o>
-<t>Module lock status : toegangen tot alle modules</t>
+<t>Module vergrendelings status : toegangen tot alle modules</t>
 </str>
 
 <str id="14">
-<new/>
 <o>Locked means that the access was done using a serializing lock since the module was not thread-safe, unlocked means that there was no need for a lock.</o>
-<t></t>
+<t>Vergrendeld betekent dat de toegang serieel werd gedaan omdat de module niet met meerdere threads kan omgaan, Ontgrendeld betekent dat er geen reden is voor een vergrendeling.</t>
 </str>
 
 <str id="15">
-<new/>
 <o>Locked accesses to a single module can inflict quite a severe performance degradation of the whole server, since a locked module will act as a bottleneck, blocking access for all other threads that want to access that module.</o>
-<t></t>
+<t>Vergrendelde toegang tot een enkele module kan leiden tot sterk verminderde prestaties van de server omdat een vergrendeld module een bottleneck is. Deze houdt de toegang tegen voor alle andere threads die de module willen gebruiken.</t>
 </str>
 
 <str id="17">
@@ -329,9 +327,9 @@ verzoeken wordt het oude proces gestopt.</t>
 </str>
 
 <str id="16">
-<new/>
+<!-- fixme thread-safe -->
 <o>This is only a problem if a significant percentage of the accesses are passed through non-threadsafe modules.</o>
-<t></t>
+<t>Dit is alleen een probleem als een significant percentage van de verzoeken door niet thread-safe  modules lopen.</t>
 </str>
 
 <str id="228">
@@ -435,9 +433,8 @@ verzoeken wordt het oude proces gestopt.</t>
 </str>
 
 <str id="68">
-<new/>
 <o>supportdb</o>
-<t></t>
+<t>supportdb</t>
 </str>
 
 <str id="69">
@@ -446,7 +443,6 @@ verzoeken wordt het oude proces gestopt.</t>
 </str>
 
 <str id="70">
-<new/>
 <o>DNS</o>
 <t>DNS</t>
 </str>
@@ -477,93 +473,81 @@ verzoeken wordt het oude proces gestopt.</t>
 </str>
 
 <str id="295">
-<new/>
 <o>Entries</o>
-<t></t>
+<t>Regels</t>
 </str>
 
 <str id="293">
-<new/>
 <o>Hits</o>
-<t></t>
+<t>Hits</t>
 </str>
 
 <str id="294">
-<new/>
+<!-- fixme -->
 <o>Misses</o>
-<t></t>
+<t>Missers</t>
 </str>
 
 <str id="63">
-<new/>
 <o>Extended process status</o>
-<t></t>
+<t>Uitgebreide proces-status</t>
 </str>
 
 <str id="65">
-<new/>
 <o>Shows detailed process status on Solaris 2.5 and later.</o>
-<t></t>
+<t>Toont een gedetailleerd overzicht van processen op Solaris 2.5 en hoger</t>
 </str>
 
 <str id="66">
-<new/>
 <o>shared</o>
-<t></t>
+<t>gedeeld</t>
 </str>
 
 <str id="76">
-<new/>
 <o>private</o>
-<t></t>
+<t>privaat/lokaal</t>
 </str>
 
 <str id="77">
-<new/>
 <o>resident</o>
-<t></t>
+<t>resident</t>
 </str>
 
 <str id="78">
-<new/>
 <o>groups:</o>
-<t></t>
+<t>groepen:</t>
 </str>
 
 <str id="79">
-<new/>
 <o>and</o>
-<t></t>
+<t>en</t>
 </str>
 
 <str id="80">
-<new/>
 <o>Process Tree for %d</o>
-<t></t>
+<t>Procesboom voor %d</t>
 </str>
 
 <str id="81">
-<new/>
 <o>Misc status for %d</o>
-<t></t>
+<t>div. status foor %d</t>
 </str>
 
 <str id="82">
-<new/>
 <o>Memory Usage:</o>
-<t></t>
+<t>geheugengebruik:</t>
 </str>
 
 <str id="83">
-<new/>
+<!-- fixme context? -->
 <o>Credentials:</o>
-<t></t>
+<t>Personalia:</t>
 </str>
 
 <str id="84">
-<new/>
+<!-- fixme -->
 <o>Current working directory:</o>
-<t></t>
+<t>Huidige 'werk' directory </t>
 </str>
 
 <str id="88">
