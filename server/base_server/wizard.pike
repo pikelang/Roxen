@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.69 1998/07/19 17:55:29 per Exp $
+/* $Id: wizard.pike,v 1.70 1998/07/22 00:06:23 js Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -110,11 +110,11 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
        array tmp = rgb_to_hsv(@parse_color(current||"black"));
        h = tmp[0]; s = tmp[1];  v = tmp[2];
      } 
-     if(id->variables["foo.x"]) {
-       h = (int)id->variables["foo.x"];
-       v = 255-(int)id->variables["foo.y"];
-     } else if(id->variables["bar.y"])
-       s=255-(int)id->variables["bar.y"];
+     if(id->variables[m->name+".foo.x"]) {
+       h = (int)id->variables[m->name+".foo.x"];
+       v = 255-(int)id->variables[m->name+".foo.y"];
+     } else if(id->variables[m->name+".bar.y"])
+       s=255-(int)id->variables[m->name+".bar.y"];
      else if(id->variables[m->name+".entered"] &&
 	     strlen(current=id->variables[m->name+".entered"]))
      {
@@ -122,10 +122,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
        h = tmp[0]; s = tmp[1];  v = tmp[2];
      }
 
-     m_delete(id->variables, "foo.x");
-     m_delete(id->variables, "foo.y");
-     m_delete(id->variables, "bar.x");
-     m_delete(id->variables, "bar.y");
+     m_delete(id->variables, m->name+".foo.x");
+     m_delete(id->variables, m->name+".foo.y");
+     m_delete(id->variables, m->name+".bar.x");
+     m_delete(id->variables, m->name+".bar.y");
      id->variables[m->name+".hsv"] = h+","+s+","+v;
 
      array a=hsv_to_rgb(h,s,v);
@@ -135,7 +135,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
      ("<table><tr>\n"
       "<td width=258 rowspan=2>\n"
       "  <table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=258><tr><td>\n"
-      "  <input type=image name=foo src=/internal-roxen-colsel width=256 height=256 border=0></a>\n"
+      "  <input type=image name='"+m->name+".foo' src=/internal-roxen-colsel width=256 height=256 border=0></a>\n"
       "  </td></table>\n"
       "</td>\n"
       "<td width=30 rowspan=2></td>\n"
@@ -143,7 +143,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
       "  <table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=32><tr><td>\n"
       "<input type=image src=\"/internal-roxen-colorbar:"+
       (string)h+","+(string)v+","+(string)s+"\" "
-      "name=bar width=30 height=256 border=0></a>"
+      "name='"+m->name+".bar' width=30 height=256 border=0></a>"
       "</td></table>\n"
       "</td>\n"
       "<td width=32 rowspan=2></td>\n"
