@@ -24,6 +24,11 @@ void create()
          "logged in the event log, enabeling you to upgrade those RXML tags.");
 }
 
+void start (int when, Configuration conf)
+{
+  conf->parse_html_compat = 1;
+}
+
 string query_provides() {
   return "oldRXMLwarning";
 }
