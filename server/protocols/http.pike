@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.356 2002/02/04 13:28:53 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.357 2002/02/06 17:04:51 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1949,37 +1949,6 @@ string url_base()
     cached_url_base += "/";
   }
   return cached_url_base;
-}
-
-// The following two ought to be in RequestID, but we get resolve
-// order problems with the RXML module then.
-
-void add_response_header (string name, string value)
-// See the RequestID class for doc.
-{
-  if (misc->defines && misc->defines[" _extra_heads"]) {
-    Roxen.add_http_header (misc->defines[" _extra_heads"], name, value);
-    if (RXML.Context ctx = RXML_CONTEXT)
-      ctx->signal_var_change (name, "header");
-  }
-  else {
-    if (!misc->moreheads) misc->moreheads = ([]);
-    Roxen.add_http_header (misc->moreheads, name, value);
-  }
-}
-
-void set_response_header (string name, string value)
-// See the RequestID class for doc.
-{
-  if (misc->defines && misc->defines[" _extra_heads"]) {
-    misc->defines[" _extra_heads"][name] = value;
-    if (RXML.Context ctx = RXML_CONTEXT)
-      ctx->signal_var_change (name, "header");
-  }
-  else {
-    if (!misc->moreheads) misc->moreheads = ([]);
-    misc->moreheads[name] = value;
-  }
 }
 
 /* We got some data on a socket.

@@ -3,8 +3,9 @@
 
 #include <stat.h>
 #include <config.h>
+#include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.47 2002/01/29 21:48:11 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.48 2002/02/06 17:04:52 mast Exp $";
 
 class Variable
 {
@@ -647,7 +648,7 @@ class RequestID
     return cached_url_base;
   }
 
-  void add_response_header (string name, string value);
+  void add_response_header (string name, string value)
   //! Adds a header @[name] with the value @[value] to be sent in the
   //! http response. An existing header with the same name will not be
   //! overridden, instead another (duplicate) header line will be sent
@@ -659,8 +660,34 @@ class RequestID
   //! p-code cache. That's the primary reason to used it instead of
   //! adding the header directly to @tt{misc->moreheads@} or
   //! @tt{misc->defines[" _extra_heads"]@}.
+  {
+    mapping hdrs = misc->defines && misc->defines[" _extra_heads"] || misc->moreheads;
+    if (!hdrs) hdrs = misc->moreheads = ([]);
 
-  void set_response_header (string name, string value);
+    // Essentially Roxen.add_http_header inlined. Can't refer to it
+    // from here due to the recursive resolver problems in Pike.
+    array|string cur_val = hdrs[name];
+    if(cur_val) {
+      if(arrayp(cur_val)) {
+	if (!has_value(cur_val, value))
+	  cur_val += ({ value });
+      } else {
+	if (cur_val != value)
+	  cur_val = ({ cur_val, value });
+      }
+    }
+    else
+      cur_val = value;
+
+    if (hdrs == misc->moreheads)
+      hdrs[name] = cur_val;
+    else if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
+      ctx->set_var (name, cur_val, "header");
+    else
+      hdrs[name] = cur_val;
+  }
+
+  void set_response_header (string name, string value)
   //! Sets the header @[name] to the value @[value] to be sent in the
   //! http response. If an existing header with the same name exists,
   //! its value(s) will be overridden. This is useful for headers like
@@ -673,6 +700,17 @@ class RequestID
   //! p-code cache. That's the primary reason to used it instead of
   //! adding the header directly to @tt{misc->moreheads@} or
   //! @tt{misc->defines[" _extra_heads"]@}.
+  {
+    if (misc->defines && misc->defines[" _extra_heads"]) {
+      misc->defines[" _extra_heads"][name] = value;
+      if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
+	ctx->signal_var_change (name, "header");
+    }
+    else {
+      if (!misc->moreheads) misc->moreheads = ([]);
+      misc->moreheads[name] = value;
+    }
+  }
 
   string scan_for_query( string f )
   {
