@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.563 2000/09/25 09:20:56 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.564 2000/09/25 09:31:53 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1740,6 +1740,7 @@ int register_url( string url, Configuration conf )
       m[required_host][port]->ref(url, urls[url]);
 
       urls[url]->port = m[required_host][port];
+      urls[ourl]->port = m[required_host][port];
       continue;    /* No need to open a new port */
     }
 
