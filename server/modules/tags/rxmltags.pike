@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.2 1999/08/16 11:00:25 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.3 1999/08/16 17:37:08 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -548,24 +548,25 @@ string tag_insert(string tag,mapping m,object id)
 #endif
   }
 
-  if (m->file) 
+  if (m->file)
   {
     if(m->nocache) {
       int nocache=id->pragma["no-cache"];
       id->pragma["no-cache"] = 1;
-      string ret=id->conf->api_functions()->read_file[0](id, m->file);
+      n=id->conf->api_functions()->read_file[0](id, m->file);
       id->pragma["no-cache"] = nocache;
 #if old_rxml_compat
       m_delete(m, "nocache");
       m_delete(m, "file");
-      return do_replace(ret, m, id);
+      return do_replace(n, m, id);
 #else
-      return ret;
+      return n;
 #endif
     }
 #if old_rxml_compat
+    n=m->file;
     m_delete(m, "file");
-    return do_replace(id->conf->api_functions()->read_file[0](id, m->file), m, id);
+    return do_replace(id->conf->api_functions()->read_file[0](id, n), m, id);
 #else
     return id->conf->api_functions()->read_file[0](id, m->file);
 #endif
