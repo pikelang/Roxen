@@ -8,7 +8,6 @@
 #include <netinet/in.h>
 
 static Display *display;
-static Window win;
 static Pixmap me;
 static XFontStruct *font;
 static GC gc;
@@ -46,12 +45,8 @@ static void init_x(int argc, char *argv[])
     exit(1);
   }
   
-
-#if 0
-  win = XCreateSimpleWindow(display, RootWindow(display, screen_num),
-			   0,0,400,400,0,0,0);
-#endif
-  me = XCreatePixmap(display, RootWindow(display, screen_num), 400, 400, 8);
+  me = XCreatePixmap(display, RootWindow(display, screen_num), 400, 400,
+		     DefaultDepth(display, screen_num));
   font = XLoadQueryFont(display, fname);
 
   if(!font)
@@ -81,38 +76,6 @@ struct char_t {
   char data; /* width x height bytes (grey, 255=full color). */
 };
 
-
-void save_pgm_char(unsigned char c, struct char_t *cid)
-{
-  FILE *f;
-  char name[4];
-  sprintf(name, "%03d%c", c, 0);
-  unlink(name);
-  if(cid)
-  {
-    f = fopen(name, "w");
-    fprintf(stderr, "%s(%dx%d)", name, cid->width, height);
-    fprintf(f, "P5\n# CREATOR: XDumpFont\n%d %d\n%d\n", cid->width, height, 255);
-    fwrite(&(cid->data), cid->width*height, 1, f);
-    fflush(f);
-    fclose(f);
-  }
-  fputs("\n", stderr);
-}
-
-#define MAX(x,y) ((x)<(y)?(y):(x))
-#define MIN(x,y) ((x)>(y)?(y):(x))
-#define ABS(x)   ((x)<(0)?-(x):(x))
-
-static inline int MSB_8_GetPixel(XImage *im, int x, int y)
-{
-#if 0
-  if(im->format != ZPixmap && im->bits_per_pixel != 8)
-    perror("InvalidFormat");
-#endif
-  if(y>im->height || x>im->width || y<0 || x<0) return 0;
-  return ((unsigned char *)im->data)[y * im->bytes_per_line + x];
-}
 
 #define GetPixel(i,x,y) (0!=XGetPixel(i,x,y))
 
@@ -196,16 +159,12 @@ void dump_char(unsigned char c)
     character->spacing=width;
   }
     
-//  fprintf(stderr, "%d (%d, %d) x %d\r", c, character->width, 
-//	  character->spacing, height);
-
   XDrawRectangle(display, me, gc2, 0, 0, 2100, 2100);
   XDrawImageString(display, me, gc, 0, font->ascent, todraw, 3);
   XFlush(display);
   
   low_dump_char(c, character);
-  font_size += 
-    ((sizeof(struct char_t)+character->width*(height/3)-1)/4+1)*4;
+  font_size += ((sizeof(struct char_t)+character->width*(height/3)-1)/4+1)*4;
   chars[ c ] = character;
 }
 
@@ -222,7 +181,7 @@ void concatenate_and_write_font()
     ulong offsets[256];
   } *font;
   char *data;
-  int pos, clen, c;
+  unsigned int pos, clen, c;
   FILE *f;
   pos = sizeof(struct font);
   data = (char *)malloc(font_size + sizeof(struct font));
@@ -232,7 +191,7 @@ void concatenate_and_write_font()
   font->version = htonl(FONT_FILE_VERSION);
   font->height = htonl(height);
   font->baseline = htonl(baseline);
-  font->numchars = 256;
+  font->numchars = htonl(256);
   
   for(c=0; c<256; c++)
   {
@@ -254,11 +213,7 @@ void main(int argc, char *argv[])
   int i;
   XEvent xev;
   init_x(argc,argv);
-#if 0
-  XNextEvent(display, &xev);
-#endif
-  for(i=0;i<256;i++)
-    dump_char(i);
+  for(i=0;i<256;i++) dump_char(i);
   height /= 3;
   concatenate_and_write_font();
 } 
