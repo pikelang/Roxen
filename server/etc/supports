@@ -1,4 +1,4 @@
-# $Id: supports,v 1.85 2000/11/15 04:31:37 nilsson Exp $
+# $Id: supports,v 1.86 2000/12/12 13:37:06 anders Exp $
 
 # --- Supports database ---
 # The database used to determine what different user-agents (browsers) support.
@@ -123,12 +123,13 @@
 ^mozilla/[2-9].*	js_global_event
 ^mozilla/[3-9].*	javascript, tablecolor, *javascript=1.1
 
-^mozilla/[4-9].*	stylesheets, tableimages, *javascript=1.1, layer
+^mozilla/[4-9].*	stylesheets, tableimages, *javascript=1.1
+^mozilla/[4].*		layer
 ^mozilla/4\.0[4-9].*	pnginline
 ^mozilla/4\.0[5-9].*	*javascript=1.2
 ^mozilla/4\.[5-9].*	pnginline, *javascript=1.2
 ^mozilla/5\.0b1		-java, pnginline
-^mozilla/[5-9].*	pnginline, *javascript=1.3
+^mozilla/[5-9].*	pnginline, *javascript=1.3, js_inner_html
 
 # Opera
 
