@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.273 2002/10/15 12:44:52 mast Exp $
+// $Id: module.pmod,v 1.274 2002/11/12 18:32:47 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6533,11 +6533,14 @@ class CompiledError
 #  define COMP_MSG(X...) do {} while (0)
 #endif
 
+// Count the identifiers globally to avoid the slightly bogus cyclic
+// check in the compiler.
+static int p_comp_idnr = 0;
+
 static class PikeCompile
 //! Helper class to paste together a Pike program from strings. This
 //! is thread safe.
 {
-  static int idnr = 0;
   static inherit String.Buffer: code;
   static inherit Thread.Mutex: mutex;
   static mapping(string:mixed) bindings = ([]);
@@ -6546,7 +6549,7 @@ static class PikeCompile
 
   string bind (mixed val)
   {
-    string id = "b" + idnr++;
+    string id = "b" + p_comp_idnr++;
     COMP_MSG ("%O bind %O to %s\n", this_object(), val, id);
     bindings[id] = val;
     return id;
@@ -6554,7 +6557,7 @@ static class PikeCompile
 
   string add_var (string type, void|string init)
   {
-    string id = "v" + idnr++;
+    string id = "v" + p_comp_idnr++;
     string txt;
 
     if (init) {
@@ -6575,7 +6578,7 @@ static class PikeCompile
 
   string add_func (string rettype, string arglist, string def)
   {
-    string id = "f" + idnr++;
+    string id = "f" + p_comp_idnr++;
     COMP_MSG ("%O add func: %s %s (%s)\n{%s}\n",
 	      this_object(), rettype, id, arglist, def);
     string txt = sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
