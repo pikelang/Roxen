@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.11 2004/02/03 12:04:31 anders Exp $
+ * $Id: upload_license.pike,v 1.12 2004/05/07 11:57:10 wellhard Exp $
  */
 
 #include <roxen.h>
@@ -22,34 +22,42 @@ mixed parse( RequestID id )
   string txt = #"
   <font size='+1'><b>Upload License</b></font>
   <p />
+  <set variable='var.show-form' value='true'/>
   <if variable='form.file'>
-    <set variable='var.filename'
-      ><get-post-filename filename='&form.file..filename;'
-                          js-filename='&form.fixedfilename;'/></set>
-    <if variable='form.Overwrite..x'>
-      <set variable='var.ok' value='ok'/>
+    <if variable='form.file = ?*'>
+      <set variable='var.show-form' value='false'/>
+      <set variable='var.filename'
+      	><get-post-filename filename='&form.file..filename;'
+      			    js-filename='&form.fixedfilename;'/></set>
+      <if variable='form.Overwrite..x'>
+      	<set variable='var.ok' value='ok'/>
+      </if>
+      <elseif license='&var.filename;'>
+      	<input type='hidden' name='action' value='&form.action;'/>
+      	<input type='hidden' name='file' value='&form.file;'/>
+      	<input type='hidden' name='file.filename' value='&var.filename;'/>
+      	<imgs src='&usr.err-2;' alt='#' />
+      	Warning: The license file <b>&var.filename;</b> does already exists.
+      	Do you want to overwrite the file?<br /><br />
+      	<submit-gbutton>Overwrite</submit-gbutton>
+      	<cf-cancel href='./?class="+action+#"'/>
+      </elseif>
+      <else>
+      	<set variable='var.ok' value='ok'/>
+      </else>
+      <if variable='var.ok'>
+      	<upload-license filename='&var.filename;' from='form.file'/>
+      	License uploaded successfully.
+      	<br /><br />
+      	<cf-ok/>
+      </if>
     </if>
-    <elseif license='&var.filename;'>
-      <input type='hidden' name='action' value='&form.action;'/>
-      <input type='hidden' name='file' value='&form.file;'/>
-      <input type='hidden' name='file.filename' value='&var.filename;'/>
-      <imgs src='&usr.err-2;' alt='#' />
-      Warning: The license file <b>&var.filename;</b> does already exists.
-      Do you want to overwrite the file?<br /><br />
-      <submit-gbutton>Overwrite</submit-gbutton>
-      <cf-cancel href='./?class="+action+#"'/>
-    </elseif>
     <else>
-      <set variable='var.ok' value='ok'/>
+      <p><imgs src='&usr.err-3;' alt='#' /> This is not a valid file.</p>
     </else>
-    <if variable='var.ok'>
-      <upload-license filename='&var.filename;' from='form.file'/>
-      License uploaded successfully.
-      <br /><br />
-      <cf-ok/>
-    </if>
   </if>
-  <else>
+
+  <if variable='var.show-form = true'>
     <input type='hidden' name='action' value='&form.action;'/>
     Select local file to upload: <br />
     <input type='file' name='file' size='40'/>
@@ -59,7 +67,7 @@ mixed parse( RequestID id )
     <br /><br />
 
     <cf-cancel href='./?class="+action+#"'/>
-  </else>
+  </if>
 ";
   
   return txt;
