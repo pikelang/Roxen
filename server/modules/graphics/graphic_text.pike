@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.193 1999/12/06 05:41:43 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.194 1999/12/07 13:58:08 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -524,7 +524,7 @@ object make_text_image(mapping args, object font, string text, RequestID id)
 
 roxen.ImageCache image_cache;
 
-void start(int|void val, object|void conf)
+void start()
 {
   image_cache = roxen.ImageCache( "gtext", draw_callback );
 }
@@ -537,11 +537,9 @@ constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", });
 
 mixed draw_callback(mapping args, string text, RequestID id)
 {
-  array err;
-  mixed data;
+  object|array data;
+  Image.Image img;
   int elapsed;
-  string orig_text = text;
-  object img;
 
   if( objectp( text ) )
   {
@@ -559,7 +557,8 @@ mixed draw_callback(mapping args, string text, RequestID id)
     string res="",nspace="",cspace="";
     foreach(text/"\n", string line)
     {
-      cspace="";nspace="";
+      cspace="";
+      nspace="";
       foreach(line/" ", string word)
       {
         string nonum;
@@ -569,16 +568,18 @@ mixed draw_callback(mapping args, string text, RequestID id)
                             ({"","","","","","","","","","",""}))) == "") {
           cspace=nbsp+nbsp;
           if((strlen(word)-strlen(nonum)<strlen(word)/2) &&
-             (upper_case(word) == word)) {
+             (upper_case(word) == word))
             word=((word/"")*nbsp);
-          }
-        } else if(cspace!="") {
-          cspace=" ";
         }
+        else if(cspace!="")
+          cspace=" ";
+
         res+=(nspace==cspace?nspace:" ")+word;
 
-        if(cspace!="")   nspace=cspace;
-        else    	   nspace=" ";
+        if(cspace!="")
+          nspace=cspace;
+        else
+          nspace=" ";
       }
       res+="\n";
     }
@@ -593,7 +594,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
   else
   {
     if(!args->nfont) args->nfont = args->font;
-    int bold, italic;
+    int bold=0, italic=0;
     if(args->bold) bold=1;
     if(args->light) bold=-1;
     if(args->black) bold=2;
@@ -974,15 +975,13 @@ inline string ns_color(array (int) col)
   return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
 }
 
-string|array (string) tag_body(string t, mapping args, RequestID id, object file,
+int|array (string) tag_body(string t, mapping args, RequestID id, object file,
 			       mapping defines)
 {
-  int cols,changed;
-  if(args->bgcolor||args->text||args->link||args->alink
-     ||args->background||args->vlink)
-    cols=1;
+  int changed=0;
+  int cols=(args->bgcolor||args->text||args->link||args->alink||args->vlink);
 
-#define FIX(Y,Z,X) do{if(!args->Y || args->Y==""){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;if(QUERY(colormode)&&args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
+#define FIX(Y,Z,X) do{if(!args->Y || args->Y==""){defines->X=Z;if(cols){args->Y=Z;changed=1;}}else{defines->X=args->Y;if(QUERY(colormode)&&args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
 
   if(!search((id->client||({}))*"","Mosaic"))
   {
@@ -1000,6 +999,7 @@ string|array (string) tag_body(string t, mapping args, RequestID id, object file
   }
   if(changed && QUERY(colormode))
     return ({make_tag("body", args) });
+  return 0;
 }
 
 string|array(string) tag_fix_color(string tagname, mapping args, RequestID id,
