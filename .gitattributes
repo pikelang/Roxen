@@ -188,6 +188,7 @@ worldmap binary
 /server/mkdir foreign_ident
 /server/modules/compat/configtablist.pike foreign_ident
 /server/modules/compat/flik.pike foreign_ident
+/server/modules/compat/language.pike foreign_ident
 /server/modules/compat/secure_fs.pike foreign_ident
 /server/modules/compat/sqldb.pike foreign_ident
 /server/modules/compat/ximg.pike foreign_ident
@@ -240,7 +241,6 @@ worldmap binary
 /server/modules/misc/demo.pike foreign_ident
 /server/modules/misc/implicit_use.pike foreign_ident
 /server/modules/misc/ismap.pike foreign_ident
-/server/modules/misc/language.pike foreign_ident
 /server/modules/misc/language2.pike foreign_ident
 /server/modules/misc/pathinfo.pike foreign_ident
 /server/modules/misc/preferred_language.pike foreign_ident
