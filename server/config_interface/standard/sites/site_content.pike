@@ -6,6 +6,9 @@ string module_global_page( RequestID id, string conf )
 {
   return sprintf("<gbutton preparse href='../../../add_module.pike?config=%s'> "
                  "<cf-locale get=add_module> </gbutton>",
+                 http_encode_string( conf ) )+
+         sprintf("<gbutton preparse href='../../../drop_module.pike?config=%s'> "
+                 "<cf-locale get=drop_module> </gbutton>",
                  http_encode_string( conf ) );
 }
 

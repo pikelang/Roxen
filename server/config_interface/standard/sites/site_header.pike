@@ -6,8 +6,8 @@ string module_global_page( RequestID id, Configuration conf )
 string module_page( RequestID id, string conf, string module )
 {
   /* return tabs for module ... */
-  return replace( #string "module_variables.html", 
-                 ({"¤_url¤","¤_config¤", "¤module¤" }), 
+  return replace( #string "module_variables.html",
+                 ({"¤_url¤","¤_config¤", "¤module¤" }),
                  ({ "", conf, module }) );
 }
 
@@ -18,10 +18,10 @@ string parse( RequestID id )
 
   if( id->variables->section )
     sscanf( id->variables->section, "%s\0", id->variables->section );
-  
+
   if( !sizeof( path )  )
     return "Hm?";
-  
+
   object conf = roxen->find_configuration( path[0] );
   id->misc->current_configuration = conf;
   if( sizeof( path ) == 1 )
@@ -29,7 +29,7 @@ string parse( RequestID id )
     string res="";
     string q = id->variables->config_page;
 
-    array pages = 
+    array pages =
     ({
       ({ 0, "status", 0, 0 }),
     });
@@ -47,7 +47,7 @@ string parse( RequestID id )
         res += "<cf-userwants option='"+page[3]+"'>";
         tpost = "</cf-userwants>"+tpost;
       }
-    
+
       if( page[0] )
         res += "<tab href='?config_page="+page[0]+"'"+
             (page == pages[0]?" first ":
@@ -64,8 +64,8 @@ string parse( RequestID id )
     switch( path[ 1 ] )
     {
      case "settings":
-       return replace( #string "module_variables.html", 
-       ({"¤_url¤","¤_config¤", "module=\"¤module¤\"", "module-variables" }), 
+       return replace( #string "module_variables.html",
+       ({"¤_url¤","¤_config¤", "module=\"¤module¤\"", "module-variables" }),
        ({ "", path[0], "", "config-variables" }) );
        break;
 
