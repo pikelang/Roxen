@@ -1,20 +1,17 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: dir_playlist.pike,v 1.5 2002/06/12 05:06:30 hop Exp $";
+constant cvs_version="$Id: dir_playlist.pike,v 1.6 2002/07/10 15:38:49 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 #include <roxen.h>
 
-//<locale-token project="mod_icecast">LOCALE</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_icecast",X,Y)
-
-constant     module_type = MODULE_PROVIDER;
-LocaleString module_name = _(0,"Icecast: MPEG-directory playlist");
-LocaleString  module_doc = _(0,"Provides a directory as a playlist. "
-			       "The files are played in random order");
-constant   module_unique = 0;
+constant module_type = MODULE_PROVIDER;
+constant module_name = "Icecast: MPEG-directory playlist";
+constant module_doc = "Provides a directory as a playlist. "
+  "The files are played in random order";
+constant module_unique = 0;
 
 inherit "pl_common";
 
@@ -99,13 +96,13 @@ string real_dir()
 
 void create()
 {
-  defvar("dir", "NONE", _(0,"Directory"), TYPE_DIR|VAR_INITIAL,
-	 _(0,"The directory that contains the mpeg-files."));
-  defvar("mode", "shuffle", _(0,"Playing mode"), TYPE_STRING_LIST,
-         _(0,"The mode used to serve mpeg-files."),
+  defvar("dir", "NONE", "Directory", TYPE_DIR|VAR_INITIAL,
+	 "The directory that contains the mpeg-files.");
+  defvar("mode", "shuffle", "Playing mode", TYPE_STRING_LIST,
+         "The mode used to serve mpeg-files.",
 	 ({ "shuffle", "linear" }) );
-  defvar("exts", "mpg,mp1,mp2,mp3", _(0,"File extensions"), TYPE_STRING,
-         _(0,"Comma separated list of file extensions of mpeg-files."));
+  defvar("exts", "mpg,mp1,mp2,mp3", "File extensions", TYPE_STRING,
+         "Comma separated list of file extensions of mpeg-files.");
 
   codec_vars(defvar);
 }
