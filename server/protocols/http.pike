@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.319 2001/06/25 17:46:51 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.320 2001/07/15 23:59:48 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -60,6 +60,7 @@ private static int wanted_data, have_data;
 
 Configuration conf;
 Protocol port_obj;
+RequestID root_id;
 
 #include <roxen.h>
 #include <module.h>
@@ -2136,6 +2137,7 @@ object clone_me()
 // c->first = first;
   c->port_obj = port_obj;
   c->conf = conf;
+  c->root_id = root_id;
   c->time = time;
   c->raw_url = raw_url;
 
@@ -2202,6 +2204,7 @@ static void create(object f, object c, object cc)
 //     string q = f->read( 8192, 1 );
 //     if( q ) got_data( 0, q );
   }
+  root_id = this_object();
 }
 
 void chain(object f, object c, string le)
