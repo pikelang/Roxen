@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.19 1998/08/20 07:37:17 per Exp $
+// $Id: module.h,v 1.20 1998/11/22 17:04:47 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -88,6 +88,9 @@
 #define MODULE_PROVIDER		 (1<<15)
 // The module implements a protocol.
 #define MODULE_PROTOCOL          (1<<16)
+
+// A configuration interface module
+#define MODULE_CONFIG            (1<<17)
 
 
 // Flags.
