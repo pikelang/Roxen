@@ -21,10 +21,10 @@
 <row><c>xbm</c><c>XWindows Bitmap File</c></row>
 <row><c>xpm</c><c>XWindows Pixmap File</c></row>
 </xtable>
-<ex>
+<ex type='vert'>
 <### format='png'/>
 </ex>
-<ex>
+<ex type='vert'>
 <### format='gif'/>
 </ex>
 </attr>
@@ -36,7 +36,7 @@
    Default for gif is 32(+1 transparent), for most other formats
    (except black and white) is it unlimited.</p>
 
-<ex>
+<ex type='vert'>
 <### quant='2'/>
 </ex>
 
@@ -52,10 +52,10 @@
 <row><c>floyd-steinberg</c><c>Error diffusion dithering. Usually the best dithering method.</c></row>
 </xtable>
 
-<ex>
+<ex type='vert'>
 <### dither='random' quant='10'/>
 </ex>
-<ex>
+<ex type='vert'>
 <### dither='floyd-steinberg' quant='10'/>
 </ex>
 </attr>
@@ -65,17 +65,17 @@
  the file format only supports on/off alpha, the alpha channel is
  dithered using a floyd-steinberg dither.</p>
 
-<ex>
+<ex type='vert'>
 <### opaque-value='20'/>
 </ex>
-<ex>
+<ex type='vert'>
 <### opaque-value='20' true-alpha='1'/>
 </ex>
 </attr>
 
 <attr name='background-color' value='color' default='taken from the page'><p>
  The color to render the image against.</p>
-<ex>
+<ex type='vert'>
 <### background-color='red' opaque-value='50'/>
 </ex>
 </attr>
@@ -87,38 +87,38 @@
 
 <attr name='cs-rgb-hsv' value='0|1' default='0'><p>
  Perform rgb to hsv colorspace conversion.</p>
-<ex>
+<ex type='vert'>
 <### cs-rgb-hsv='1'/>
 </ex>
 </attr>
 
 <attr name='gamma' value='number' default='1.0'><p>
  Perform gamma adjustment.</p>
-<ex>
+<ex type='vert'>
 <### gamma='0.5'/>
 </ex>
-<ex>
+<ex type='vert'>
 <### gamma='1.5'/>
 </ex>
 </attr>
 
 <attr name='cs-grey' value='0|1' default='0'><p>
  Perform rgb to greyscale colorspace conversion.</p>
-<ex>
+<ex type='vert'>
 <### cs-grey='1'/>
 </ex>
 </attr>
 
 <attr name='cs-invert' value='0|1' default='0'><p>
  Invert all colors</p>
-<ex>
+<ex type='vert'>
 <### cs-invert='1'/>
 </ex>
 </attr>
 
 <attr name='cs-hsv-rgb' value='0|1' default='0'><p>
  Perform hsv to rgb colorspace conversion.</p>
-<ex>
+<ex type='vert'>
 <### cs-hsv-rgb='1'/>
 </ex>
 </attr>
@@ -127,7 +127,7 @@
 
 <attr name='rotate-cw' value='degree' default='0'><p>
  Rotate the image clock-wise.</p>
-<ex>
+<ex type='vert'>
 <### rotate-cw='20'/>
 </ex>
 </attr>
@@ -177,13 +177,31 @@
 </attr>
 
 <attr name='max-height' value='ysize'><p>
- If width is larger than 'ysize', scale width to 'ysize' while
+ If height is larger than 'ysize', scale height to 'ysize' while
  keeping aspect.</p>
+</attr>
+
+<attr name='span-width' value='xsize'><p>
+ If width is larger than 'xsize', scale width to 'xsize' while
+ keeping aspect. If width is smaller than 'xsize', extend width
+ to 'xsize' by filling the new space with current background color.</p>
+<ex>
+<### span-width="350" background-color='white'/>
+</ex>
+</attr>
+
+<attr name='span-height' value='ysize'><p>
+ If height is larger than 'ysize', scale height to 'ysize' while
+ keeping aspect. If height is smaller than 'ysize', extend height
+ to 'ysize' by filling the new space with current background color.</p>
+<ex>
+<### span-height="350" background-color='white'/>
+</ex>
 </attr>
 
 <attr name='x-offset' value='pixels' default='0'><p>
  Cut n pixels from the beginning of the X scale.</p>
-<ex>
+<ex type='vert'>
 <### x-offset='100'/>
 </ex>
 </attr>
@@ -205,7 +223,7 @@
 
 <attr name=crop value='x0,y0-x1,y1' default='whole image'><p>
  Crop the image by specifying the pixel coordinates.</p>
-<ex>
+<ex type='vert'>
 <### crop='50,28-150,92'/>
 </ex>
 </attr>
@@ -214,10 +232,10 @@
 
 <attr name='jpeg-quality' value='percentage' default='75'><p>
  Set the quality on the output jpeg image.</p>
-<ex>
+<ex type='vert'>
 <### format='jpeg' jpeg-quality='30'/>
 </ex>
-<ex>
+<ex type='vert'>
 <### format='jpeg' jpeg-quality='1'/>
 </ex>
 </attr>
