@@ -3,7 +3,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.1 1997/11/14 06:51:15 per Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.2 1997/11/14 19:39:06 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -11,7 +11,28 @@ inherit "wizard";
 
 mixed *register_module()
 {
-  return ({MODULE_PARSER,"Wizard generator",("Generates wizards"),({}),1,});
+  return ({MODULE_PARSER,"Wizard generator",
+	   ("Generates wizards<p>\n"
+	    "Syntax:<br>\n"
+"<br>"
+"&lt;wizard name=\"A Name\" done=\"url to go to when ok or cancel is pressed\"&gt;<br>"
+"&nbsp;&nbsp;&lt;page&gt;<br>"
+"&nbsp;&nbsp;&nbsp;&nbsp;A page (RXML code, with two extra tags, &lt;var&gt; and &lt;cvar&gt;, see below)<br>"
+"&nbsp;&nbsp;&lt;/page&gt;<br>"
+"&nbsp;&nbsp;&lt;page&gt;<br>"
+"&nbsp;&nbsp;&nbsp;&nbsp;Another page...<br>"
+"&nbsp;&nbsp;&lt;/page&gt;<br>"
+"&lt;/wizard&gt;<br>"
+"<br>"
+"&lt;var <br>"
+"&nbsp;&nbsp; <nobr>type=\"string|password|list|text|radio|checkbox|int|float|color|font|toggle|select|select_multiple\"</nobr><br>"
+"&nbsp;&nbsp;   name=\"var_name\"<br>"
+"&nbsp;&nbsp;   options=\"foo,bar,gazonk\"    -- (for select and select_multiple) --<br>"
+"&nbsp;&nbsp;   default=\"default value\"<br>"
+"&nbsp;&nbsp;   rows=num and cols=num       -- (for text) --<br>"
+"&nbsp;&nbsp;   size=chars                  -- (for most) --&gt;<br>"
+"&lt;cvar -- same as var,but the default value is the contents of the container --&gt;<br>"
+"&lt;/cvar&gt;<br>"),({}),1,});
 }
 
 string internal_page(string t, mapping args, string contents, mapping f)
