@@ -1,4 +1,4 @@
-The file named 'rbf' (File) that is distributed in the Roxen WebServer
+The file named 'rbf' (File) that is distributed with the Roxen WebServer
 2.X and higher (Roxen WebServer) includes font technology from Bitstream Inc.,
 Massachutes, USA, which owns the full proprietary rights to
 the File. Accordingly this particluar File is not released under the GPL.
@@ -7,7 +7,7 @@ Roxen Internet Software AB, Sweden, has licensed this font technology
 from BitStream Inc. and the File is for internal Roxen WebServer use only.
 
 You are free to use Roxen WebServer including the File and to
-redsitribute the Roxen WebServer including the File as long as the
+redistribute the Roxen WebServer including the File as long as the
 File resides unmodified in the same location and is used internally in
 Roxen WebServer only.
 
