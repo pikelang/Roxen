@@ -9,7 +9,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: catala.pike,v 1.9 2000/01/26 00:29:53 nilsson Exp $";
+constant cvs_version = "$Id: catala.pike,v 1.10 2000/11/27 14:09:12 per Exp $";
 constant _id = ({ "ca", "catala", "" });
 constant _aliases = ({ "ca", "cat", "catala", "es_CA" });
 
@@ -139,4 +139,9 @@ string number(int num)
    default:
     return "moltíssim";
   }
+}
+
+static void create()
+{
+  roxen.dump( __FILE__ );
 }

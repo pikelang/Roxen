@@ -1,5 +1,5 @@
 /* From: Tvns B|ker <bueker@bidnix.bid.fh-hannover.de> 
-string cvs_version = "$Id: german.pike,v 1.9 2000/01/26 00:29:54 nilsson Exp $";
+string cvs_version = "$Id: german.pike,v 1.10 2000/11/27 14:09:14 per Exp $";
    Subject: New 'german.lpc' ...
  
    Hi,
@@ -115,4 +115,9 @@ string number(int num)
    default:
     return "verdammt viele";
   }
+}
+
+static void create()
+{
+  roxen.dump( __FILE__ );
 }

@@ -12,7 +12,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: serbian.pike,v 1.8 2000/09/16 19:52:23 nilsson Exp $";
+constant cvs_version = "$Id: serbian.pike,v 1.9 2000/11/27 14:09:15 per Exp $";
 constant _id = ({ "sr", "serbian", "" });
 constant _aliases = ({ "sr", "ser", "serbian" });
 
@@ -126,4 +126,10 @@ string number(int num)
     if ((num>4999) && (num<1000000)) return number(num/1000)+" hiljada "+number(num%1000);
     return "mnogo";
   }
+}
+
+
+static void create()
+{
+  roxen.dump( __FILE__ );
 }

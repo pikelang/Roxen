@@ -5,7 +5,7 @@ inherit "/master": master;
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.107 2000/11/13 09:57:05 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.108 2000/11/27 14:09:12 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -484,6 +484,12 @@ array master_file_stat(string x)
 // NOTE: compilation_mutex is inherited from the original master.
 #endif
 
+mapping(string:function) has_set_on_load = ([]);
+void set_on_load( string f, function cb )
+{
+  has_set_on_load[ f ] = cb;
+}
+
 program low_findprog(string pname, string ext, object|void handler)
 {
   program ret;
@@ -531,17 +537,19 @@ program low_findprog(string pname, string ext, object|void handler)
 #ifdef DUMP_DEBUG
 	    string msg = sprintf("Failed to decode dumped file for %s: %s",
 				 trim_file_name (fname), describe_error(err));
-	    if (ofile[..sizeof (dump_path) - 1] == dump_path)
-	      ofile = ofile[sizeof (dump_path)..];
-	    if (handler) {
-	      handler->compile_warning(ofile, 0, msg);
-	    } else {
-	      compile_warning(ofile, 0, msg);
-	    }
+	    werror(msg);
+// 	    if (ofile[..sizeof (dump_path) - 1] == dump_path)
+// 	      ofile = ofile[sizeof (dump_path)..];
+// 	    if (handler) {
+// 	      handler->compile_warning(ofile, 0, msg);
+// 	    } else {
+// 	      compile_warning(ofile, 0, msg);
+// 	    }
 #endif
 	  }
         }
       }
+//     werror(" really compile "+fname+"\n");
       if ( mixed e=catch { ret=compile_file(fname); } )
       {
 	// load_time[fname] = time(); not here, no.... reload breaks miserably
@@ -557,7 +565,8 @@ program low_findprog(string pname, string ext, object|void handler)
           e[1]=({});
 	throw(e);
       }
-//    dump_program( fname, ret );
+      if( has_set_on_load[ fname ] )
+	call_out(has_set_on_load[ fname ],0.1,fname, ret );
       break;
 #if constant(load_module)
     case ".so":

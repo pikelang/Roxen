@@ -17,7 +17,7 @@ constant required_charset = "iso-8859-2";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: czech.pike,v 1.15 2000/09/16 19:52:21 nilsson Exp $";
+constant cvs_version = "$Id: czech.pike,v 1.16 2000/11/27 14:09:12 per Exp $";
 constant _id = ({ "cs", "czech", "" });
 constant _aliases = ({ "cs", "cz", "cze", "ces", "czech" });
 
@@ -148,4 +148,10 @@ string number(int num)
    default:
     return ("hodnì");
   }
+}
+
+
+static void create()
+{
+  roxen.dump( __FILE__ );
 }

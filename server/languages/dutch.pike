@@ -7,7 +7,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version="$Id: dutch.pike,v 1.8 2000/01/26 00:29:54 nilsson Exp $";
+constant cvs_version="$Id: dutch.pike,v 1.9 2000/11/27 14:09:13 per Exp $";
 constant _id = ({ "du", "dutch", "" });
 constant _aliases = ({ "du", "nl", "ned", "dutch" });
 
@@ -123,4 +123,9 @@ static string snumber(int num)
 string number(int num)
 {
   return num?snumber(num):"nul";
+}
+
+static void create()
+{
+  roxen.dump( __FILE__ );
 }

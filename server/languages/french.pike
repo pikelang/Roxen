@@ -1,6 +1,6 @@
 /*
 
-string cvs_version = "$Id: french.pike,v 1.10 2000/01/26 00:29:54 nilsson Exp $";
+string cvs_version = "$Id: french.pike,v 1.11 2000/11/27 14:09:13 per Exp $";
 Created by:
 
 ---------------------+--------------------------------------------------
@@ -141,4 +141,9 @@ string number(int num)
    default:
     return "beaucoup";
   }
+}
+
+static void create()
+{
+  roxen.dump( __FILE__ );
 }

@@ -12,7 +12,7 @@ constant required_charset = "iso-8859-2";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: polish.pike,v 1.6 2000/07/11 10:55:01 grubba Exp $";
+constant cvs_version = "$Id: polish.pike,v 1.7 2000/11/27 14:09:15 per Exp $";
 constant _id = ({ "pl", "polish", "" });
 constant _aliases = ({ "pl", "po", "pol", "polish" });
 
@@ -135,4 +135,9 @@ string number(int num)
    default:
     return "wiele";
   }
+}
+
+static void create()
+{
+  roxen.dump( __FILE__ );
 }

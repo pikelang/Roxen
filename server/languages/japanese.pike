@@ -8,7 +8,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: japanese.pike,v 1.16 2000/09/16 19:52:21 nilsson Exp $";
+constant cvs_version = "$Id: japanese.pike,v 1.17 2000/11/27 14:09:14 per Exp $";
 constant _id = ({ "kj", "japanese", "" });
 constant _aliases =  ({ "kj", "kanji", /* For backward compatibility */
 			"jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
@@ -122,4 +122,9 @@ string day(int num)
 {
   return ({ "日", "月", "火", "水", "木", "金", "土" })[ num - 1 ]+
 	    "曜日";
+}
+
+static void create()
+{
+  roxen.dump( __FILE__ );
 }

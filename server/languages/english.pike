@@ -6,7 +6,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: english.pike,v 1.12 2000/01/31 16:44:29 nilsson Exp $";
+constant cvs_version = "$Id: english.pike,v 1.13 2000/11/27 14:09:13 per Exp $";
 
 // English is a special case, since it is also the standard language...
 constant _id = ({ "en", "standard", "english" });
@@ -136,4 +136,10 @@ string number(int num)
    default:
     return "many";
   }
+}
+
+
+void create()
+{
+  roxen.dump( __FILE__ );
 }

@@ -11,7 +11,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: croatian.pike,v 1.9 2000/09/16 19:52:20 nilsson Exp $";
+constant cvs_version = "$Id: croatian.pike,v 1.10 2000/11/27 14:09:12 per Exp $";
 constant _id = ({ "hr", "croatian", "" });
 constant _aliases = ({ "hr", "cro", "croatian" });
 
@@ -127,4 +127,9 @@ number((num-(num%1000))/1000)+" tisuce "+number(num%1000);
     //    werror("uf\n"+ num +"\n");
     return "mnogo";
   }
+}
+
+static void create()
+{
+  roxen.dump( __FILE__ );
 }

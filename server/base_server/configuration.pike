@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.398 2000/11/24 15:52:02 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.399 2000/11/27 14:09:10 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1965,12 +1965,12 @@ void start(int num)
 
   failed_urls = ({ });
 
+  int st = gethrtime();
   foreach( (query( "URLs" )-registered_urls), string url )
     if( roxen.register_url( url, this_object() ) )
       registered_urls += ({ url });
     else
       failed_urls += ({ url });
-
   if( !datacache )
     datacache = DataCache( );
   else
@@ -2818,7 +2818,7 @@ DataCache datacache;
 static void create(string config)
 {
   name=config;
-
+//   int st = gethrtime();
   roxen.add_permission( "Site:"+config, LOC_C(306,"Site")+": "+config );
 
   // for now only theese two. In the future there might be more variables.
@@ -3110,8 +3110,11 @@ page.
 
   definvisvar( "no_delayed_load", 0, TYPE_FLAG|VAR_PUBLIC );
 
+//   werror("[defvar: %.1fms] ", (gethrtime()-st)/1000.0 );
+//   st = gethrtime();
   setvars( retrieve("spider#0", this_object()) );
 
+//   werror("[restore: %.1fms] ", (gethrtime()-st)/1000.0 );
   if (query("throttle"))
   {
     throttler=.throttler();

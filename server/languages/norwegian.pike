@@ -4,7 +4,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: norwegian.pike,v 1.8 2000/09/16 19:52:22 nilsson Exp $";
+constant cvs_version = "$Id: norwegian.pike,v 1.9 2000/11/27 14:09:14 per Exp $";
 constant _id = ({ "no", "norwegian", "norsk" });
 constant _aliases = ({ "no", "nor", "norwegian", "norsk" });
 
@@ -103,4 +103,9 @@ string number(int num)
    default:
     return "ekstremt mange";
   }
+}
+
+static void create()
+{
+  roxen.dump( __FILE__ );
 }

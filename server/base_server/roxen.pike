@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.581 2000/11/27 09:46:03 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.582 2000/11/27 14:09:11 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -51,6 +51,10 @@ inherit "config_userdb";
 #else
 # define THREAD_WERR(X)
 #endif
+
+#define DDUMP(X) sol( combine_path( __FILE__, "../../" + X ), dump )
+static function sol = master()->set_on_load;
+
 
 string query_configuration_dir()
 {
@@ -672,12 +676,16 @@ class Protocol
   }
 
   mapping mu;
-
+  string rrhf;
   static void got_connection()
   {
     object q = accept( );
     if( q )
     {
+      if( !requesthandler )
+      {
+	requesthandler = (program)(rrhf);
+      }
       object c;
       if( refs < 2 )
       {
@@ -808,12 +816,15 @@ class Protocol
     ip = i;
 
     restore();
-    catch {
-      if( !requesthandler )
-	requesthandler = (program)("../local/"+requesthandlerfile);
-    };
+    if( file_stat( "../local/"+requesthandlerfile ) )
+      rrhf = "../local/"+requesthandlerfile;
+    else
+      rrhf = requesthandlerfile;
+    DDUMP( rrhf );
+#ifdef DEBUG
     if( !requesthandler )
-      requesthandler = (program)(requesthandlerfile);
+      requesthandler = (program)(rrhf);
+#endif
     ::create();
     if(!bind( port, got_connection, ip ))
     {
@@ -1043,6 +1054,7 @@ mapping(string:Protocol) build_protocols_mapping()
     static void realize()
     {
       if( catch {
+	DDUMP( prog );
 	real = (program)prog;
 	protocols[name] = real;
       } )
@@ -1342,7 +1354,7 @@ int register_url( string url, Configuration conf )
     return 0;
   }
   sort_urls();
-  report_notice(LOC_S(3, "Registered %s for %s")+"\n",
+  report_notice(" "+LOC_S(3, "Registered %s for %s")+"\n",
 		url, conf->query_name() );
 
   return 1;
@@ -2351,19 +2363,17 @@ void create()
 
   // This is currently needed to resolve the circular references in
   // RXML.pmod correctly. :P
+  foreach(({ "module.pmod","PEnt.pike", "PExpr.pike","PXml.pike",
+	     "refs.pmod","utils.pmod" }), string q )
+    DDUMP( "etc/modules/RXML.pmod/"+ q );
   master()->resolv ("RXML.refs");
   master()->resolv ("RXML.PXml");
   master()->resolv ("RXML.PEnt");
-
-  // Dump some programs (for speed)
+  dump( "etc/modules/RXML.pmod/module.pmod" );
+  // Already loaded. No delayed dump possible.
   dump( "etc/roxen_master.pike" );
   dump( "etc/modules/Dims.pmod" );
-  //   dump( "etc/modules/RXML.pmod/module.pmod" );
-  foreach(({ "module.pmod","PEnt.pike", "PExpr.pike","PXml.pike",
-	       "refs.pmod","utils.pmod" }), string q )
-    dump( "etc/modules/RXML.pmod/"+ q );
   dump( "etc/modules/Roxen.pmod" );
-
   dump( "base_server/config_userdb.pike" );
   dump( "base_server/disk_cache.pike" );
   dump( "base_server/roxen.pike" );
@@ -2898,15 +2908,15 @@ void describe_all_threads()
   }
 }
 
-
-void dump( string file )
+void dump( string file, program|void p )
 {
   if( file[0] != '/' )
     file = getcwd() +"/"+ file;
 #ifdef __NT__
   file = normalize_path( file );
 #endif
-  program p = master()->programs[ replace(file, "//", "/" ) ];
+  if(!p)
+    p = master()->programs[ replace(file, "//", "/" ) ];
 #ifdef __NT__
   if( !p )
   {
@@ -2919,7 +2929,9 @@ void dump( string file )
 #endif
     
   array q;
-
+#ifdef MUCHU_DUMP_DEBUG
+# define DUMP_DEBUG
+#endif
   if(!p)
   {
 #ifdef DUMP_DEBUG
@@ -2937,9 +2949,9 @@ void dump( string file )
 #ifdef DUMP_DEBUG
       report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
 #else
-//       array parts = replace(file, "//", "/") / "/";
-//       if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
-//       report_debug("Dumping failed for " + parts*"/" + "\n");
+      array parts = replace(file, "//", "/") / "/";
+      if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
+      report_debug("Notice: Dumping failed for " + parts*"/"+" (not a bug)\n");
 #endif
     }
 #ifdef DUMP_DEBUG
@@ -2947,7 +2959,7 @@ void dump( string file )
       werror( file+" dumped successfully to "+ofile+"\n" );
 #endif
   }
-#ifdef DUMP_DEBUG
+#ifdef MUCHO_DUMP_DEBUG
   else
     werror(file+" already dumped (and up to date)\n");
 #endif
@@ -2985,30 +2997,28 @@ int main(int argc, array tmp)
   array argv = tmp;
   tmp = 0;
 
+  DDUMP( "base_server/slowpipe.pike" );
+  DDUMP( "base_server/fastpipe.pike" );
   slowpipe = ((program)"slowpipe");
   fastpipe = ((program)"fastpipe");
+  dump( "base_server/throttler.pike" );
 
   add_constant( "Protocol", Protocol );
 #if constant(SSL.sslfile)
   add_constant( "SSLProtocol", SSLProtocol );
 #endif
 
-  call_out( lambda() {
-              (program)"module";
-              dump( "protocols/http.pike");
-              dump( "protocols/ftp.pike");
-              dump( "base_server/state.pike" );
-              dump( "base_server/highlight_pike.pike");
-              dump( "base_server/wizard.pike" );
-              dump( "base_server/proxyauth.pike" );
-              dump( "base_server/html.pike" );
-              dump( "base_server/module.pike" );
-              dump( "base_server/throttler.pike" );
-              dump( "base_server/smartpipe.pike" );
-              dump( "base_server/slowpipe.pike" );
-              dump( "base_server/fastpipe.pike" );
-	      dump( "languages/abstract.pike" );
-            }, 9);
+  dump( "etc/modules/Variable.pmod/module.pmod" );
+  dump( "etc/modules/Variable.pmod/Language.pike" );
+
+  DDUMP(  "base_server/state.pike" );
+  DDUMP(  "base_server/highlight_pike.pike" );
+  DDUMP(  "base_server/wizard.pike" );
+  DDUMP(  "base_server/proxyauth.pike" );
+  DDUMP(  "base_server/module.pike" );
+  DDUMP(  "base_server/throttler.pike" );
+  DDUMP(  "base_server/smartpipe.pike" );
+  DDUMP(  "base_server/fastpipe.pike" );
 
   mark_fd(0, "Stdin");
   mark_fd(1, "Stdout");
@@ -3032,9 +3042,11 @@ int main(int argc, array tmp)
 
   add_constant( "roxen.fonts",
                 (fonts = ((program)"base_server/fonts.pike")()) );
-  dump( "base_server/fonts.pike" );
 
+
+  DDUMP( "languages/abstract.pike" );
   initiate_languages(query("locale"));
+
   set_locale();
 
 #if efun(syslog)

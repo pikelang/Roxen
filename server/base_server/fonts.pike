@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.64 2000/09/24 16:24:36 nilsson Exp $
+// $Id: fonts.pike,v 1.65 2000/11/27 14:09:11 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -279,6 +279,9 @@ array get_font_information(void|int scalable_only)
 
 void create()
 {
+  int h = gethrtime();
+  // Must have this _before_ the add_contant()s
+  roxen.dump( "base_server/fonts.pike", object_program(this_object()) );
   add_constant( "FontHandler", FontHandler );
   add_constant( "Font", Font );
   add_constant("get_font", get_font);
@@ -286,9 +289,6 @@ void create()
   add_constant("describe_font_type", describe_font_type);
   add_constant("resolve_font", resolve_font);
   add_constant("available_fonts", available_fonts);
-
-
-  int h = gethrtime();
   report_debug("Loading font handlers ...\n" );
   foreach( r_get_dir( "font_handlers" ), string fh )
   {
