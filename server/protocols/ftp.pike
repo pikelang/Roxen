@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.2 1999/05/19 18:59:32 grubba Exp $
+ * $Id: ftp.pike,v 2.3 1999/05/19 19:00:24 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -558,7 +558,7 @@ class LS_L
   
     mapping lt = localtime(st[3]);
 
-    // NOTE: SiteBuilder may se st[5] and st[6] to strings.
+    // NOTE: SiteBuilder may set st[5] and st[6] to strings.
     string user = (string)st[5];
     string group = (string)st[6];
     if (!(flags & LS_FLAG_n)) {
