@@ -64,9 +64,7 @@ string parse( RequestID id )
   if( docs == "" )
   {
     docs =
-      "<font color='&usr.warncolor;'>" +
-      _(397, "No documentation found at all") + 
-      "</font>";
+      "<font color='&usr.warncolor;'>No documentation found at all</font>";
   }
   else
   {

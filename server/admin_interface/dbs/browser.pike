@@ -20,12 +20,12 @@ mapping actions = ([
       ("<table><tr><td colspan='2'>\n"+				\
        sprintf((string)(X), db)+				\
        "</td><tr><td><input type=hidden name=action value='&form.action;' />"\
-       "<submit-gbutton2 name='yes'>Yes</submit-gbutton2></td>\n"\
-       "<td align=right><a href="+Roxen.html_encode_string(id->not_query)+\
-       "?db="+\
-       Roxen.html_encode_string(id->variables->db)+"><gbutton> "+\
-       "No </gbutton></a></td>\n</table>\n");			\
-  }									\
+       "<submit-gbutton2 name='yes' align='center' "		\
+       " width='&usr.gbutton-width;'>Yes</submit-gbutton2></td>\n"	\
+       "<td align=right><cf-no href="+Roxen.html_encode_string(id->not_query)+\
+      "?db="+Roxen.html_encode_string(id->variables->db)+"/>"+	\
+       "</td>\n</table>\n");					\
+  }								\
 } while(0)
 
 
@@ -44,7 +44,7 @@ mixed change_group( string db, RequestID id )
 	res += "<option selected value='"+g+"'>"+DBManager.get_group( g )->lname;
       else
 	res += "<option value='"+g+"'>"+DBManager.get_group( g )->lname;
-    return res + "</select><submit-gbutton2 name='ok'>"+(201,"Ok")+
+    return res + "</select><submit-gbutton2 name='ok'>"+(201,"OK")+
       "</submit-gbutton2>";
   }
   DBManager.set_db_group( db, id->variables->group );
@@ -61,16 +61,14 @@ mixed backup_db( string db, RequestID id )
     return 0;
   }
   return
-    "<b>Directory:</b> <input name='dir' size='80' value='auto' /><br />"
+    "<b>Directory:</b> <input name='dir' size='60' value='auto' /><br />"
     "<i>The directory the backup will be saved in. If you chose auto, Roxen will generate a directory name that includes the database name and todays date.</i>"
     "<table width='100%'><tr><td valign=top>"
     "<input type=hidden name=action value='&form.action;' />"
-    "<submit-gbutton2 name='ok'>Ok</submit-gbutton2></td>\n"
-    "<td valign=top align=right><a href='"+
-    Roxen.html_encode_string(id->not_query)+
-    "?db="+
-    Roxen.html_encode_string(id->variables->db)+"'><gbutton> "
-    "Cancel </gbutton></a></td>\n</table>\n";
+    "<td valign=top align=right><cf-cancel href='"+
+      Roxen.html_encode_string(id->not_query)+
+      "?db="+Roxen.html_encode_string(id->variables->db)+"'/>"
+    "</td>\n</table>\n";
 }
 
 mixed move_db( string db, RequestID id )
@@ -84,11 +82,13 @@ mixed move_db( string db, RequestID id )
         warning= "<font color='&usr.warncolor;'>"
 	  "Please specify an URL to define an external database"
 	  "</font>";
-      else if( catch( Sql.Sql( id->variables->url ) ) )
+      else if( mixed err = catch( Sql.Sql( id->variables->url ) ) )
         warning = sprintf("<font color='&usr.warncolor;'>"
-			  "It is not possible to connect to %s"
+			  "It is not possible to connect to %s."
+			  "<br /> (%s)"
 			  "</font>",
-			  id->variables->url );
+			  id->variables->url,
+			  describe_error(err));
     }
     if( !strlen( warning ) )
       switch( id->variables->name )
@@ -108,7 +108,7 @@ mixed move_db( string db, RequestID id )
 	default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
 	   warning = sprintf("<font color='&usr.warncolor;'>"
-			     "%s is a mysql keyword, used by mysql."
+			     "%s is a MySQL keyword, used by MySQL."
 			     "Please select another name"
 			     "</font>", id->variables->name );
 	 break;
@@ -303,10 +303,11 @@ mixed move_db( string db, RequestID id )
 <table width='100%'><tr><td>
  <input type=hidden name=action value='&form.action;' />
  <submit-gbutton2 name='ok'>Ok</submit-gbutton2></td>
- <td align=right><a href='"+Roxen.html_encode_string(id->not_query)+
-    "?db="+
-    Roxen.html_encode_string(id->variables->db)+"'><gbutton> "
-    "Cancel </gbutton></a></td>\n</table>\n";
+ <td align=right>
+    <cf-cancel href='"+Roxen.html_encode_string(id->not_query)+
+      "?db="+
+       Roxen.html_encode_string(id->variables->db)+"'/>"
+    "</td>\n</table>\n";
 }
 
 mixed delete_db( string db, RequestID id )
@@ -625,10 +626,10 @@ mapping|string parse( RequestID id )
 
   res +=
     "<br />"
-    "<table cellspacing=0 cellpadding=0 border=0 width=100%><tr><td>"
+    "<table cellspacing=3 cellpadding=0 border=0 width=100%><tr><td>"
     "<colorscope bgcolor='&usr.content-bg;' text='&usr.fgcolor;'>"
     "<cimg border='0' format='gif' src='&usr.database-small;' alt='' "
-    "max-height='20'/></td><td>"
+    "max-height='20'/></td><td width=100%>"
     "<gtext fontsize='20'>"+id->variables->db+
     "</gtext></colorscope></td></tr>"
     "<tr><td></td><td>";
