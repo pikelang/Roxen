@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.663 2001/04/25 08:33:59 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.664 2001/05/07 02:48:35 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3592,11 +3592,22 @@ void show_timers()
 }
 #endif
 
+void show_avg_prof()
+{
+  foreach(configurations, Configuration c )
+    c->debug_write_prof( );
+  call_out(show_avg_prof, 10 );
+}
+
 array argv;
 int main(int argc, array tmp)
 {
   argv = tmp;
   tmp = 0;
+#ifdef AVERAGE_PROFILING
+  call_out(show_avg_prof, 10 );
+#endif
+
   slowpipe = ((program)"base_server/slowpipe");
   fastpipe = ((program)"base_server/fastpipe");
   dump( "base_server/slowpipe.pike" );

@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.428 2001/05/03 17:26:41 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.429 2001/05/07 02:48:33 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -31,6 +31,123 @@ constant cvs_version = "$Id: configuration.pike,v 1.428 2001/05/03 17:26:41 per 
 #else
 # define REQUEST_WERR(X)
 #endif
+
+
+#ifdef AVERAGE_PROFILING
+class ProfStack
+{
+  array current_stack = ({});
+
+  void enter( string k, RequestID id )
+  {
+    current_stack += ({ ({ k, gethrtime(), gethrvtime() }) });
+  }
+  
+  void leave( string k, RequestID id )
+  {
+    int t0 = gethrtime();
+    int t1 = gethrvtime();
+
+    if( !sizeof(current_stack ) )
+    {
+      report_error("Popping out of profiling stack\n");
+      return;
+    }
+      
+    int i = sizeof( current_stack )-1;
+    while( current_stack[ i ][0] != k && i >= 0 ) i--;
+
+    if(i < 0 )
+    {
+      report_error("Popping out of profiling stack, cannot find %O in %O\n",
+		  k, current_stack);
+      return;
+    }
+      
+    int tt = t0-current_stack[i][1];
+    int ttv = t1-current_stack[i][2];
+
+    if( i > 0 ) // Do not count child time in parent.
+    {
+      current_stack[i-1][1]+=tt+gethrtime()-t0;
+      current_stack[i-1][2]+=ttv+gethrvtime()-t1;
+    }
+    current_stack = current_stack[..i-1];
+    add_prof_entry( id, k, tt, ttv );
+  }
+}
+
+class ProfInfo( string url )
+{
+  mapping data = ([]);
+  void add( string k, int h, int hrv )
+  {
+    if( !data[k] )
+      data[k] = ({ h, hrv, 1 });
+    else
+    {
+      data[k][0]+=h;
+      data[k][1]+=hrv;
+      data[k][2]++;
+    }
+  }
+
+  array summarize_table( )
+  {
+    array table = ({});
+    int n, t, v;
+    foreach( indices( data ), string k  )
+      table += ({ ({ k,
+		     sprintf( "%d", (n=data[k][2]) ),
+		     sprintf("%5.2f",(t=data[k][0])/1000000.0),
+		     sprintf("%5.2f", (v=data[k][1])/1000000.0),
+		     sprintf("%8.2f", t/n/1000.0),
+		     sprintf("%8.2f",v/n/1000.0), }) });
+    sort( (array(float))column(table,2), table );
+    return reverse(table);
+  }
+
+  void dump( )
+  {
+    write( "\n"+url+": \n" );
+    ADT.Table t = ADT.Table->table( summarize_table(),
+				    ({ "What", "Calls",
+				       "Time", "CPU",
+				       "t/call(ms)", "cpu/call(ms)" }));
+
+    write( ADT.Table.ASCII.encode( t )+"\n" );
+
+  }
+}
+
+mapping profiling_info = ([]);
+
+void debug_write_prof( )
+{
+  foreach( sort( indices( profiling_info ) ), string p )
+    profiling_info[p]->dump();
+}
+
+void add_prof_entry( RequestID id, string k, int hr, int hrv )
+{
+  if( !profiling_info[id->not_query] )
+    profiling_info[id->not_query] = ProfInfo(id->not_query);
+  profiling_info[id->not_query]->add( k, hr, hrv );
+}
+
+void avg_prof_enter( string name, string type, RequestID id )
+{
+  if( !id->misc->prof_stack )
+    id->misc->prof_stack = ProfStack();
+  id->misc->prof_stack->enter( name+":"+type,id );
+}
+void avg_prof_leave( string name, string type, RequestID id )
+{
+  if( !id->misc->prof_stack ) id->misc->prof_stack = ProfStack();
+  id->misc->prof_stack->leave( name+":"+type,id );
+}
+#endif
+
 
 /* A configuration.. */
 inherit Configuration;
@@ -1170,10 +1287,12 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	if(find_internal)
 	{
 	  TRACE_ENTER("Calling find_internal()...", find_internal);
+	  PROF_ENTER("find_internal","location");
 	  LOCK(find_internal);
 	  fid=find_internal( rest, id );
 	  UNLOCK();
 	  TRACE_LEAVE(sprintf("find_internal has returned %O", fid));
+	  PROF_LEAVE("find_internal","location");
 	  if(fid)
 	  {
 	    if(mappingp(fid))
@@ -1226,10 +1345,12 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     TIMER_START(url_modules);
     foreach(url_module_cache||url_modules(), funp)
     {
+      PROF_ENTER(Roxen.get_owning_module(funp)->module_name,"url module");
       LOCK(funp);
       TRACE_ENTER("URL module", funp);
       tmp=funp( id, file );
       UNLOCK();
+      PROF_LEAVE(Roxen.get_owning_module(funp)->module_name,"url module");
 
       if(mappingp(tmp))
       {
@@ -1285,11 +1406,13 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	    return tmp2;
 	  }
 #endif
+	PROF_ENTER(Roxen.get_owning_module(tmp[1])->module_name,"location module");
 	TRACE_ENTER("Calling find_file()...", 0);
 	LOCK(tmp[1]);
 	fid=tmp[1]( file[ strlen(loc) .. ] + id->extra_extension, id);
 	UNLOCK();
 	TRACE_LEAVE("");
+	PROF_LEAVE(Roxen.get_owning_module(tmp[1])->module_name,"location module");
 	if(fid)
 	{
 	  id->virtfile = loc;
@@ -1359,10 +1482,12 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     TIMER_START(directory_module);
     if(dir_module)
     {
+      PROF_ENTER(dir_module->module_name,"directory module");
       LOCK(dir_module);
       TRACE_ENTER("Directory module", dir_module);
       fid = dir_module->parse_directory(id);
       UNLOCK();
+      PROF_LEAVE(dir_module->module_name,"directory module");
     }
     else
     {
@@ -1400,9 +1525,11 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  return tmp;
 	}
 #endif
+      PROF_ENTER(Roxen.get_owning_module(funp)->module_name,"ext module");
       LOCK(funp);
       tmp=funp(fid, loc, id);
       UNLOCK();
+      PROF_LEAVE(Roxen.get_owning_module(funp)->module_name,"ext module");
       if(tmp)
       {
 	if(!objectp(tmp))
@@ -1511,6 +1638,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   foreach(filter_module_cache||filter_modules(), tmp)
   {
     TRACE_ENTER("Filter module", tmp);
+    PROF_ENTER(Roxen.get_owning_module(tmp)->module_name,"filter");
     if(res2=tmp(res,id))
     {
       if(res && res->file && (res2->file != res->file))
@@ -1519,6 +1647,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
       res=res2;
     } else
       TRACE_LEAVE("");
+    PROF_LEAVE(Roxen.get_owning_module(tmp)->module_name,"filter");
   }
   TIMER_END(filter_modules);
 
