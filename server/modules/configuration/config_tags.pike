@@ -48,7 +48,7 @@ class Scope_usr
      case "err-1":              return "/internal-roxen-err_1";
      case "err-2":              return "/internal-roxen-err_2";
      case "err-3":              return "/internal-roxen-err_3";
-     case "tab-frame-image":    return "/internal-roxen-tab_frame";
+     case "tab-frame-image":    return "/internal-roxen-tabframe";
      case "gbutton-frame-image":return "/internal-roxen-gbutton";
      case "backgroundimage-top":
      case "backgroundimage-leftside":
