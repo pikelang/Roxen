@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.237 2001/08/24 00:25:10 mast Exp $
+// $Id: module.pmod,v 1.238 2001/08/24 01:00:33 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -591,6 +591,11 @@ class TagSet
   //! contain the characters "!", "#", "(", ")", ",", "-", ".", "/",
   //! ":", ";", "<", "=", ">", "?", "@@", "_", and any alphanumeric
   //! character.
+  //!
+  //! @note
+  //! The module tag set for Roxen parser modules has the name "", so
+  //! you should not use that if you create more tag sets in such a
+  //! module.
 
   string prefix;
   //! A namespace prefix that may precede the tags. If it's zero, it's
