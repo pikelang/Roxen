@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.22 2001/03/08 14:35:48 per Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.23 2001/04/26 14:20:56 nilsson Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -448,6 +448,7 @@ class TagVForm {
       m_delete(id->misc, "vform_failed");
       m_delete(id->misc, "vform_xml");
 
+      if(!args->method) args->method="post";
       result = RXML.t_xml->format_tag("form", args, content);
       return 0;
     }
