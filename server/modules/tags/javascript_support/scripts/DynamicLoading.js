@@ -82,6 +82,7 @@ function layerLoadHandler(file_loader)
   if(!isNav4) {
     var o = getObject(layer);
     o.innerHTML = "";
+    o.innerText = "";
     o.innerHTML = file_loader.document.body.innerHTML;
   }
   boundPopup(layer);
