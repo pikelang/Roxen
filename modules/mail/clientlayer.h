@@ -62,17 +62,17 @@ class ClientLayer
   User get_user( string username, string password );
   User get_user_from_address( string adress );
 
-  object get_cache_obj( program type, int id );
+  object get_cache_obj( program type, string|int id );
 
   /* low level functions */
-  int authenticate_user(string username, string passwordcleartext);
-  int find_user( string username_at_host );
-  mapping(string:int)    list_mailboxes(int user);
+  int|string authenticate_user(string username, string passwordcleartext);
+  int|string find_user( string username_at_host );
+  mapping(string:int)    list_mailboxes(int|string user);
   mapping(string:string) list_mail(int mailbox_id);
   mapping(string:mixed)  get_mail_headers(string message_id);
   int    update_message_refcount(string message_id, int deltacount);
   int    delete_mail(string mail_id);
-  int    create_user_mailbox(int user, string mailbox);
+  int    create_user_mailbox(int|string user, string mailbox);
   string create_message(mapping mess);
   string get_mailbox_name(int mailbox_id);
   int    delete_mailbox(int mailbox_id);

@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.37 1999/08/17 15:40:22 marcus Exp $
+ * $Id: clientlayer.pike,v 1.38 1999/08/23 23:44:51 marcus Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.37 1999/08/17 15:40:22 marcus Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.38 1999/08/23 23:44:51 marcus Exp $";
 constant thread_safe=1;
 
 
@@ -35,6 +35,18 @@ void create()
 
   defvar("db_location", "mysql://auto:site@kopparorm/autosite",
 	 "Database URL" ,TYPE_STRING,"");
+
+  defvar("ldapurl", "", "LDAP base URL", TYPE_STRING,
+	 "Enter an LDAP URL here to enable LDAP mode.<p>"
+	 "Attributes that will be used:\n<pre>"
+	 "dn\n"
+         "inetOrgPerson.cn\n"
+         "inetOrgPerson.ou\n"
+         "inetOrgPerson.mail\n"
+         "inetOrgPerson.userpassword\n"
+         "inetOrgPerson.uid\n"
+         "domain.associatedomain\n"
+	 "</pre>");
 }
 
 string query_provides()
@@ -43,11 +55,10 @@ string query_provides()
 }
 
 
-
-
 /* Global variables -------------------------------------------------- */
 
 object sql = thread_local();
+object ldapcon = thread_local();
 Thread.Mutex lock = Thread.Mutex();
 mapping (program:mapping(int:object)) object_cache = ([]);
 
@@ -176,6 +187,125 @@ Stdio.File new_body( string body_id )
 
 
 
+/* LDAP Stuff ------------------------------------------------------ */
+
+class LDAPURL {
+
+  string scheme;
+  string user, password;
+  string hostport;
+  string dn;
+  array(string) attributes;
+  string scope;
+  string filter;
+  mapping(string:string) critical_extensions = ([]);
+  mapping(string:string) noncritical_extensions = ([]);
+
+  void create(string u)
+  {
+    sscanf(u, "%[a-zA-Z]://%s", scheme, u);
+    scheme = (scheme && lower_case(scheme)) || "ldap";
+    if(2==sscanf(u, "%s/%s", hostport, u)) {
+      array(string) p = u/"?";
+      dn = p[0];
+      if(sizeof(p)>1 && sizeof(p[1])) {
+	attributes = p[1]/",";
+      }
+      if(sizeof(p)>2 && sizeof(p[2])) {
+	scope = lower_case(p[2]);
+      }
+      if(sizeof(p)>3 && sizeof(p[3])) {
+	filter = p[3];
+      }
+      if(sizeof(p)>4 && sizeof(p[4])) {
+	foreach(p[4]/",", string ext) {
+	  int c = 0;
+	  string val = 0;
+	  if(ext[..0]=="!") {
+	    c++;
+	    ext = ext[1..];
+	  }
+	  sscanf(ext, "%s=%s", ext, val);
+	  if(c)
+	    critical_extensions[lower_case(ext)] = val;
+	  else
+	    noncritical_extensions[lower_case(ext)] = val;
+	}
+      }
+    } else hostport=u;
+    if(2==sscanf(hostport, "%s@%s", user, hostport))
+      sscanf(user, "%s:%s", user, password);
+    if(!sizeof(hostport))
+      hostport=0;
+    if(dn && !sizeof(dn))
+      dn=0;
+  }
+
+};
+
+
+class LDAPConnection {
+
+  static object ldap, ldap2;
+  static string extra_filt;
+
+  object find_all(string filt)
+  {
+    if(extra_filt)
+      filt = "(&"+extra_filt+filt+")";
+    object res = ldap->search(filt);
+    if(res->num_entries()<1)
+      return 0;
+    return res;
+  }
+
+  mapping find_one(string filt)
+  {
+    object res = find_all(filt);
+    return res && res->fetch();
+  }
+
+  array get_attrs(string dn, string ... attrs)
+  {
+    ldap2->set_basedn(dn);
+    object r = ldap2->search(extra_filt||"(objectclass=*)"/*, 0, attrs*/);
+    if(!r || r->num_entries()<1)
+      return 0;
+    mixed res = Array.map(rows(r->fetch(), attrs), lambda(array a) {
+						     return a && a[0];
+						   });
+    return res;
+  }
+
+  void create(string url)
+  {
+    object u = LDAPURL(url);
+    ldap = Protocols.LDAP.client(u->hostport||"localhost");
+    ldap2 = Protocols.LDAP.client(u->hostport||"localhost");
+    if(u->user) {
+      ldap->bind(u->user, u->password);
+      ldap2->bind(u->user, u->password);
+    }
+    if(u->dn)
+      ldap->set_basedn(u->dn);
+    if(u->scope)
+      ldap->set_scope((["base":0,"one":1,"sub":2])[u->scope]);
+    ldap2->set_scope(0);
+    extra_filt = u->filter;
+  }
+
+};
+
+object get_ldap()
+{
+  if(ldapcon->get())
+    return ldapcon->get();
+  string l = query("ldapurl");
+  if(!l || !sizeof(l))
+    return 0;
+  return ldapcon->set(LDAPConnection(l));
+}
+
 
 
 /* Client Layer Abstraction ---------------------------------------- */
@@ -224,7 +354,7 @@ class Common
 
     if(!zero_type(cached_misc[var])) return cached_misc[var];
     array(mapping) a;
-    a=squery("select qwerty from %s where id=%s and variable='%s'", 
+    a=squery("select qwerty from %s where id='%s' and variable='%s'", 
 	     table, (string)id, var);
     if(sizeof(a))
       return cached_misc[var]=decode_binary( a[0]->qwerty );
@@ -655,6 +785,8 @@ class User
 
   int query_customer_id()
   {
+    /* Not supported in LDAP mode... */
+    /* Affects FAX and SMS */
     return get_customer(id);
   }
   
@@ -701,7 +833,7 @@ class User
     return create_mailbox( name );
   }
 
-  void create(int _id)
+  void create(int|string _id)
   {
     id = _id;
   }
@@ -709,7 +841,7 @@ class User
 
 User get_user( string username_at_host, string password )
 {
-  int id;
+  int|string id;
   id = authenticate_user( username_at_host, password );
   if(!id) return 0;
   return get_any_obj( id, User );
@@ -717,7 +849,7 @@ User get_user( string username_at_host, string password )
 
 User get_user_from_address( string username_at_host )
 {
-  int id;
+  int|string id;
   id = find_user( username_at_host );
   if(!id) return 0;
   return get_any_obj( id, User );
@@ -762,11 +894,27 @@ string get_addr(string addr)
 
 multiset(string) list_domains()
 {
-  return aggregate_multiset(@squery("select distinct domain from dns")->domain);
+  multiset(string) res;
+  object l = get_ldap();
+  if(l) {
+    object r = l->find_all("(objectclass=domain)");
+    array(string) dns = ({});
+    if(r)
+      for(int i=0; i<r->num_entries(); i++)
+	dns += r->fetch(i+1)->associateddomain;
+    res=mkmultiset(dns);
+  }
+  else
+    res=aggregate_multiset(@squery("select distinct domain from dns")->domain);
+  return res;
 }
 
-string get_user_realname(int user_id)
+string get_user_realname(int|string user_id)
 {
+  if(stringp(user_id)) {
+    object l = get_ldap();
+    return l && (l->get_attrs(user_id, "cn")||({0}))[0];
+  }
   array a = squery("select realname from users where id='%d'",
 		   user_id);
   if(!sizeof(a))
@@ -775,8 +923,12 @@ string get_user_realname(int user_id)
     return a[0]->realname;
 }
 
-string get_organization(int user_id)
+string get_organization(int|string user_id)
 {
+  if(stringp(user_id)) {
+    object l = get_ldap();
+    return l && (l->get_attrs(user_id, "ou")||({0}))[0];
+  }
   array a = squery("select customers.name from users,customers where users.id='%d'" 
 		   " and users.customer_id=customers.id", user_id);
   if(!sizeof(a))
@@ -786,8 +938,11 @@ string get_organization(int user_id)
 }
 
 
-int get_customer(int user_id)
+int get_customer(int|string user_id)
 {
+  /* Not supported in LDAP mode... */
+  if(stringp(user_id))
+    return 0;
   array a = squery("select customer_id from users where id='%d'",user_id);
   if(!sizeof(a))
     return 0;
@@ -795,7 +950,7 @@ int get_customer(int user_id)
     return (int)a[0]->customer_id;
 }
 
-int find_user( string username_at_host )
+int|string find_user( string username_at_host )
 {
   catch {
     string user,domain;
@@ -803,6 +958,17 @@ int find_user( string username_at_host )
       [user,domain]=get_addr(lower_case(username_at_host))/"@";
     else if(search(username_at_host,"*")!=-1)
       [user,domain]=get_addr(lower_case(username_at_host))/"*";
+
+    object l = get_ldap();
+
+    if(l) {
+      object r = l->find_all("(mail="+username_at_host+")");
+      if(!r || r->num_entries()<1)
+	return 0;
+      if(r->num_entries()>1) error("Ambigious user list.\n");
+      return r->fetch()->dn[0];
+    }
+
     int customer_id;
     array a = squery("select customer_id from dns where domain='%s' "
 		     " group by customer_id", domain);
@@ -816,15 +982,29 @@ int find_user( string username_at_host )
   };
 }
 
-int delete_user(int user_id)
+int delete_user(int|string user_id)
 {
-  squery("delete from users where id='%d'",user_id);
-  squery("delete from user_misc where id='%d'",user_id);
+  if(intp(user_id))
+    squery("delete from users where id='%d'",user_id);
+  squery("delete from user_misc where id='%s'",(string)user_id);
 }
 
 
-int authenticate_user(string username_at_host, string passwordcleartext)
+int|string authenticate_user(string username_at_host, string passwordcleartext)
 {
+  object l = get_ldap();
+
+  if(l) {
+    object r = l->find_all("(&(uid="+username_at_host+")(userpassword={SHA}"+
+			   MIME.encode_base64(Crypto.sha()->
+					      update(passwordcleartext)->
+					      digest(), 1)+"))");
+    if(!r || r->num_entries()<1)
+      return 0;
+    if(r->num_entries()>1) error("Ambigious user list.\n");
+    return r->fetch()->dn[0];
+  }
+
   int id = find_user( username_at_host );
   if(!id) return 0;
   array a=squery("select password from users where id='%d'", id);
@@ -833,9 +1013,9 @@ int authenticate_user(string username_at_host, string passwordcleartext)
   return (crypt(passwordcleartext, a[0]->password)) && id;
 }
 
-mapping(string:int) list_mailboxes(int user)
+mapping(string:int) list_mailboxes(int|string user)
 {
-  array a=squery("select id,name from mailboxes where user_id='%d'",user);
+  array a=squery("select id,name from mailboxes where user_id='%s'",(string)user);
   return mkmapping( column( a, "name" ), (array(int))column(a, "id" ) );
 //   mapping mailboxes=([]);
 //   foreach(a, mapping row)
@@ -900,10 +1080,10 @@ int delete_mail(string mail_id)
   return 1;
 }
 
-int create_user_mailbox(int user, string mailbox)
+int create_user_mailbox(int|string user, string mailbox)
 {
-  squery("insert into mailboxes values(NULL,'%d','%s')",
-	 user,sql_quote(mailbox));
+  squery("insert into mailboxes values(NULL,'%s','%s')",
+	 (string)user,sql_quote(mailbox));
   return (int)get_sql()->master_sql->insert_id();
 }
 
