@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.120 2000/05/02 16:40:17 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.121 2000/05/05 15:31:50 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1522,7 +1522,7 @@ documentation for that module.</desc>",
 </attr>
 
 <attr name=class value=string>
- This CSS class definition will apply to the a-element.
+ This cascading style sheet (CSS) class definition will apply to the a-element.
 </attr>
  <p>All other attributes will be inherited by the generated a tag.</p>",
 
@@ -1567,7 +1567,7 @@ documentation for that module.</desc>",
 </attr>
 
 <attr name=class value=string>
- This CSS class definition will apply to the a-element.
+ This cascading style sheet (CSS) class definition will apply to the a-element.
 </attr>",
 
 "auth-required":#"<desc tag><short>
@@ -1587,6 +1587,12 @@ documentation for that module.</desc>",
 
 "autoformat":#"<desc cont><short hide>
  Replaces newlines with <br/>:s'.</short>Replaces newlines with <tag>br /</tag>:s'.
+
+<ex><autoformat>
+It is almost like
+using the pre tag.
+</autoformat></ex>
+
 </desc>
 
 <attr name=nobr>
@@ -1595,10 +1601,16 @@ documentation for that module.</desc>",
 
 <attr name=p>
  Replace double newlines with <tag>p</tag>:s.
+
+<ex><autoformat p=''>
+It is almost like
+
+using the pre tag.
+</autoformat></ex>
 </attr>
 
 <attr name=class value=string>
- This CSS definition will be applied on the p elements.
+ This cascading style sheet (CSS) definition will be applied on the p elements.
 </attr>",
 
 "cache":#"<desc cont><short>
@@ -1671,7 +1683,7 @@ documentation for that module.</desc>",
 </attr>
 
 <attr name=class value=string>
- This CSS class definition will be applied to the image.
+ This cascading style sheet (CSS) class definition will be applied to the image.
 </attr>
  All other attributes will be inherited by the generated img tag.",
 
@@ -1892,7 +1904,11 @@ Pike-script or Roxen module.
 </attr>
 
 <attr name=separator value=string>
+<ex>
+<default name='my-checkbox' value='2,3'>
 
+</default>
+</ex>
 </attr>
 
 <attr name=name value=string>
@@ -1901,25 +1917,64 @@ Pike-script or Roxen module.
 
 <attr name=variable value=string>
 
-</attr>",
+</attr>
+<ex>
+<default name='my-checkbox' value='2,3'>
+  <input type='checkbox' name='my-checkbox' value='1' />
+  <input type='checkbox' name='my-checkbox' value='2' />
+  <input type='checkbox' name='my-checkbox' value='3' />
+  <input type='checkbox' name='my-checkbox' value='4' />
+  <input type='checkbox' name='other-checkbox' value='3' />
+</default>
+
+<default name='my-select' value='2'>
+  <select name='my-select'>
+    <option value='1'>First</option>
+    <option value='2'>Second</option>
+    <option value='3'>Third</option>
+  </select>
+</default>
+</ex>
+
+",
 
 "doc":#"<desc cont><short hide>
  Eases code documentation by reformatting it.</short>
- Eases documentation by replacing \"{\", \"}\" and \"&amp;\" with \"&amp;lt;\", \"&amp;gt;\" and
+ Eases documentation by replacing \"{\". \"}\" and \"&amp;\" with \"&amp;lt;\", \"&amp;gt;\" and
  \"&amp;amp;\". No attributes required.
 </desc>
 
 <attr name=quote>
- Instead of replacing \"{\" and \"}\", \"&lt;\" and \"&gt;\" is replaced with \"&amp;lt;\"
+ Instead of replacing with \"{\" and \"}\", \"&lt;\" and \"&gt;\" is replaced with \"&amp;lt;\"
  and \"&amp;gt;\".
+
+<ex><doc quote=''>
+<table>
+ <tr>
+    <td> First cell </td>
+    <td> Second cell </td>
+ </tr>
+</table>
+</doc>
+</ex>
+
 </attr>
 
 <attr name=pre>
  The result is encapsulated within a <tag>pre</tag> container.
+<ex><doc pre=''>
+{table}
+ {tr}
+    {td} First cell {/td}
+    {td} Second cell {/td}
+ /tr}
+{/table}
+</doc>
+</ex>
 </attr>
 
 <attr name=class value=string>
- This CSS definition will be applied on the pre element.
+This cascading style sheet (CSS) definition will be applied on the pre element.
 </attr>",
 
 "expire-time":#"<desc tag><short>
@@ -2146,6 +2201,12 @@ Pike-script or Roxen module.
 
 <attr name=separator value=string>
  The separator used to separate the messages, by default newline.
+
+<ex><random separator=#>
+Roxen#Pike#Foo#Bar#roxen.com#community.roxen.com#Roxen Internet Software
+</random>
+</ex>
+
 </attr>",
 
 "recursive-output":#"<desc cont>
@@ -2278,7 +2339,7 @@ load.",
 </attr>
 
 <attr name=class value=string>
- This CSS definition will be applied on the img element.
+ This cascading style sheet (CSS) definition will be applied on the img element.
 </attr>
 
 <attr name=target value=string>
@@ -2439,18 +2500,21 @@ Sets a variable.</short>
 
 <attr name=space>
  Put a space between every character.
+<ex>
+<smallcaps space=''>Roxen WebServer</smallcaps>
+</ex>
 </attr>
 
 <attr name=class value=string>
- Apply this CSS style on all elements.
+ Apply this cascading style sheet (CSS) style on all elements.
 </attr>
 
 <attr name=smallclass value=string>
- Apply this CSS style on all small elements.
+ Apply this cascading style sheet (CSS) style on all small elements.
 </attr>
 
 <attr name=bigclass value=string>
- Apply this CSS style on all big elements.
+ Apply this cascading style sheet (CSS) style on all big elements.
 </attr>
 
 <attr name=size value=number>
@@ -2459,18 +2523,62 @@ Sets a variable.</short>
 
 <attr name=small value=number default=size-1>
  Size of the small tags. Only applies when size is specified.
-</attr>",
+</attr>
+
+<ex>
+<smallcaps size='6' small='2'>Roxen WebServer</smallcaps>
+</ex>
+<ex>
+<smallcaps>Roxen WebServer</smallcaps>
+</ex>
+
+",
 
 "sort":#"<desc cont><short>
  Sorts the contents.</short>
 </desc>
 
+<ex>
+<sort>
+1
+Hello
+3
+World
+Are
+2
+We
+4
+Communicating?
+</sort>
+</ex>
+
 <attr name=separator value=string>
- Defines what the strings to be sorted are separated with.
+ Defines what the strings to be sorted are separated with. The sorted
+ string will be separated by the string.
+
+<ex>
+<sort separator='#'>
+1#Hello#3#World#Are#2#We#4#Communicating?
+</sort>
+</ex>
 </attr>
 
 <attr name=reverse>
  Reversed order sort.
+
+<ex>
+<sort reverse=''>
+1
+Hello
+3
+World
+Are
+2
+We
+4
+Communicating?
+</sort>
+</ex>
 </attr>",
 
 "throw":#"<desc cont><short hide>
@@ -2482,7 +2590,22 @@ Sets a variable.</short>
 
 "trimlines":#"<desc cont><short>
  Removes all empty lines from the contents.</short>
-</desc>",
+</desc>
+
+<ex>
+<trimlines>
+
+
+Are
+
+
+We
+
+Communicating?
+
+
+</trimlines>
+</ex>",
 
 "unset":#"
 <desc tag><short>
