@@ -993,7 +993,7 @@ class IfIs
     string is;
     if(!cache) CACHE(0);
     sscanf( value, "%s is %s", value, is );
-    value = misc?id->misc[index][value]:id[index][value];
+    value = misc? id->misc[index][value] : id[index][value];
     if(!is || !value) return !!value;
     value = lower_case( value );
     is = lower_case( is );
@@ -1166,7 +1166,7 @@ mapping query_if_callers()
     "cookie":IfIs( "cookies", 0 ),
     "client":IfMatch( "client", 0 ),
     "date":if_date,
-    "defined":IfIs( "defines", 1 ),
+    "defined":IfIs( "defines", 1, 1 ),
     "domain":IfMatch( "host", 0 ),
     "group":if_group,
     "host":IfMatch( "remoteaddr", 0 ),
