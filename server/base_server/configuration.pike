@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.297 2000/04/05 17:52:50 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.298 2000/04/05 21:07:21 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2235,8 +2235,12 @@ RoxenModule reload_module( string modname )
 
   RoxenModule nm;
   
-  if( catch( nm = enable_module( modname ) ) || (nm == 0) )
-    enable_module( modname, (nm=old_module), mi );
+  if( catch( nm = enable_module( modname, 0, 0, 1 ) ) || (nm == 0) )
+    enable_module( modname, (nm=old_module), mi, 1 );
+  else
+    destruct( old_module );
+
+  call_start_callbacks( nm, mi, modules[ (modname/"#")[0] ] );
 
   return nm;
 }
@@ -2274,7 +2278,8 @@ Thread.Mutex enable_modules_mutex = Thread.Mutex();
 static int enable_module_batch_msgs;
 
 RoxenModule enable_module( string modname, RoxenModule|void me, 
-                           ModuleInfo|void moduleinfo )
+                           ModuleInfo|void moduleinfo, 
+                           int|void nostart )
 {
   MODULE_LOCK;
   int id;
@@ -2691,24 +2696,52 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   otomod[ me ] = modname+"#"+id;
 
   mixed err;
+  if(!nostart) call_start_callbacks( me, moduleinfo, module );
+
+#ifdef MODULE_DEBUG
+  if (enable_module_batch_msgs)
+    report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
+#endif
+  if( me->no_delayed_load )
+    set( "no_delayed_load", 1 );
+
+  if(!enabled_modules[ modname+"#"+id ])
+  {
+    enabled_modules[modname+"#"+id] = 1;
+    store( "EnabledModules", enabled_modules, 1, this_object());
+  }
+  if (!has_stored_vars)
+    store (modname + "#" + id, me->query(), 0, this_object());
+
+  return me;
+}
+
+void call_start_callbacks( RoxenModule me, 
+                           ModuleInfo moduleinfo, 
+                           ModuleCopies module )
+{
+  int module_type = moduleinfo->type, pr;
+  mixed err;
   if((me->start) && (err = catch( me->start(0, this_object()) ) ) )
   {
 #ifdef MODULE_DEBUG
-    if (enable_module_batch_msgs) report_debug("\bERROR\n");
+    if (enable_module_batch_msgs) 
+      report_debug("\bERROR\n");
 #endif
     report_error(LOCALE->
-		 error_initializing_module_copy(moduleinfo->get_name(),
-						describe_backtrace(err)));
-
-
+                 error_initializing_module_copy(moduleinfo->get_name(),
+                                                describe_backtrace(err)));
+    
+    
     /* Clean up some broken references to this module. */
-    m_delete(otomod, me);
-    m_delete(module->copies, id);
-    destruct(me);
-    return 0;
+//     m_delete(otomod, me);
+//     m_delete(module->copies, search( module->copies, me ));
+//     destruct(me);
+//     return 0;
   }
   if( inited && me->ready_to_receive_requests )
-    if( mixed q = catch( me->ready_to_receive_requests( this_object() ) ) ) {
+    if( mixed q = catch( me->ready_to_receive_requests( this_object() ) ) ) 
+    {
 #ifdef MODULE_DEBUG
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
@@ -2815,21 +2848,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if(module_type & MODULE_FIRST)
     pri[pr]->first_modules += ({ me });
 
-  if(!enabled_modules[ modname+"#"+id ])
-  {
-    enabled_modules[modname+"#"+id] = 1;
-    store( "EnabledModules", enabled_modules, 1, this_object());
-  }
-  if (!has_stored_vars)
-    store (modname + "#" + id, me->query(), 0, this_object());
   invalidate_cache();
-#ifdef MODULE_DEBUG
-  if (enable_module_batch_msgs)
-    report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
-#endif
-  if( me->no_delayed_load )
-    set( "no_delayed_load", 1 );
-  return me;
 }
 
 // Called from the administration interface.
