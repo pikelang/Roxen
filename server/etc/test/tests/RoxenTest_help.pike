@@ -52,8 +52,8 @@ void run_tests( Configuration c )
 	      lambda(string tag) { return "?"+tag; } );
 
   RequestID id = roxen.InternalRequestID( );
+  id->set_url( "http://localhost:80/" ); //  Will clear id->conf
   id->conf = c;
-  id->set_url( "http://localhost:80/" );
 
   foreach(tags, string tag)
     test_true(find_tag_doc, tag, id);
