@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.495 2001/11/12 17:51:54 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.496 2002/03/06 09:27:49 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -128,10 +128,10 @@ class ProfInfo( string url )
   void dump( )
   {
     write( "\n"+url+": \n" );
-    ADT.Table t = ADT.Table->table( summarize_table(),
-				    ({ "What", "Calls",
-				       "Time", "CPU",
-				       "t/call(ms)", "cpu/call(ms)" }));
+    ADT.Table.table t = ADT.Table.table( summarize_table(),
+					 ({ "What", "Calls",
+					    "Time", "CPU",
+					    "t/call(ms)", "cpu/call(ms)" }));
 
     write( ADT.Table.ASCII.encode( t )+"\n" );
 
