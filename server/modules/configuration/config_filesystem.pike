@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.75 2001/01/29 07:09:42 per Exp $";
+  "$Id: config_filesystem.pike,v 1.76 2001/01/29 09:06:12 per Exp $";
 
 constant path = "config_interface/";
 
@@ -428,13 +428,15 @@ void start(int n, Configuration cfg)
       else
       {
         Filesystem.System T;
-        report_notice( "Creating the 'docs' database\n");
         catch(T = Filesystem.Tar( "config_interface/docs.tar" ));
         if( !T )
           report_notice( "Failed to open the documentation tar-file.\n");
         else
         {
+	  report_notice( "Creating the 'docs' database\n");
           DBManager.create_db( "docs", "docs", 1 );
+	  foreach( roxen.configurations, Configuration c )
+	    DBManager.set_permission( "docs", c, DBManager.READ );
           DBManager.set_permission( "docs", cfg, DBManager.WRITE );
           docs = DBManager.get( "docs", cfg );
           catch(docs->query( "DROP TABLE docs" ));
