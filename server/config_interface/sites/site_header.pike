@@ -35,13 +35,13 @@ mixed parse( RequestID id )
   if( !conf->inited )
     conf->enable_all_modules();
   id->misc->current_configuration = conf;
-  switch( sizeof(path)<3?"settings":path[ 1 ] )
+  switch( sizeof(path)<3? "settings" : path[ 1 ] )
   {
    case "settings":
      return
        Roxen.http_string_answer(
-	 "<emit source='config-variables-sections' add-status='1'"
-	 "configuration='"+path[0]+"'>\n"
+	 "<emit source='config-variables-sections' add-status='1' "
+	 "      configuration='"+path[0]+"'>\n"
 	 "  <tab ::='&_.first; &_.last; &_.selected;'\n"
 	 "       href='?section=&_.section:http;'>&_.sectionname;</tab>"
 	 "</emit>");
