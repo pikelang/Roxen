@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.172 2004/04/02 13:11:37 grubba Exp $
+// $Id: Roxen.pmod,v 1.173 2004/04/14 16:27:25 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2123,6 +2123,9 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
       return sprintf("%d-%02d-%02dT%02d:%02d:%02d",
 		     (eris->year+1900), eris->mon+1, eris->mday,
 		     eris->hour, eris->min, eris->sec);
+
+     case "http":
+       return http_date (t);
 
      case "discordian":
 #if efun(discdate)

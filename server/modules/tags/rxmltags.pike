@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.454 2004/04/06 11:47:12 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.455 2004/04/14 16:27:23 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6458,14 +6458,16 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 <ex><date date=''/></ex>
 </attr>
 
-<attr name='type' value='string|ordered|iso|discordian|stardate|number|unix'>
- <p>Defines in which format the date should be displayed in. Discordian
- and stardate only make a difference when not using part. Note that
- type='stardate' has a separate companion attribute, prec, which sets
- the precision.</p>
+<attr name='type' value='discordian|http|iso|number|ordered|stardate|string|unix'>
+ <p>Defines in which format the date should be displayed in. 'http' is
+ the format specified for use in the HTTP protocol (useful for headers
+ etc). Discordian and stardate only make a difference when not using
+ part. Note that type='stardate' has a separate companion attribute,
+ prec, which sets the precision.</p>
 
 <xtable>
 <row><c><p><i>type=discordian</i></p></c><c><ex><date date='' type='discordian'/> </ex></c></row>
+<row><c><p><i>type=http</i></p></c><c><ex><date date='' type='http'/> </ex></c></row>
 <row><c><p><i>type=iso</i></p></c><c><ex><date date='' type='iso'/></ex></c></row>
 <row><c><p><i>type=number</i></p></c><c><ex><date date='' type='number'/></ex></c></row>
 <row><c><p><i>type=ordered</i></p></c><c><ex><date date='' type='ordered'/></ex></c></row>
