@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.8 1996/12/10 06:47:37 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.9 1996/12/10 06:57:20 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -331,6 +331,10 @@ private int parse_got(string s)
 		    {
 		      variables[info->name]=contents;
 		      variables[info->name+".filename"]=info->filename;
+		      if(!misc->files)
+			misc->files = ({ info->name });
+		      else
+			misc->files += ({ info->name });
 		    } else {
 		      variables[info->name]=contents;
 		    }
