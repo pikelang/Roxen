@@ -42,7 +42,7 @@ string describe_location( object m, RequestID id )
   }
   if(sizeof(url/"*") == 2)
     url = replace(url, "*", gethostname());
-  return url && mp ? sprintf("<a href=\"%s%s\">%s</a>",
+  return url && mp ? sprintf("<a target=server_view href=\"%s%s\">%s</a>",
 			     url, mp[1..], mp)
 		   : mp || "";
 }
@@ -331,9 +331,10 @@ string parse( RequestID id )
        foreach( conf->query( "URLs" ), string url )
        {
 	 if(search(url, "*")==-1)
-           res += "<a href='"+url+"'>"+url+"</a> "+port_for(url)+"<br>";
+           res += "<a target=server_view href='"+url+"'>"+
+	     url+"</a> "+port_for(url)+"<br>";
 	 else if( sizeof( url/"*" ) == 2 )
-	   res += "<a href='"+replace(url, "*", gethostname() )+"'>"+
+	   res += "<a target=server_view href='"+replace(url, "*", gethostname() )+"'>"+
                url+"</a> "+port_for(url)+"<br>";
          else
 	   res += url + " "+port_for(url)+"<br>";
