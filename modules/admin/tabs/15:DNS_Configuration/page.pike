@@ -1,10 +1,10 @@
 inherit "roxenlib";
 
-object ac = 0, ce;
+object wa;
 
-void create (object content_editor)
+void create (object webadm)
 {
-  ce = content_editor;
+  wa = webadm;
 }
 
 mapping|string handle (string sub, object id)
