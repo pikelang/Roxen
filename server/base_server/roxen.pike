@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.840 2003/11/03 13:04:39 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.841 2003/11/03 14:11:47 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -5043,8 +5043,14 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 		       "  object authmethod = id->conf",
 		       "  string realm = \"User\"",
 		       "  mapping(string:int|mapping) state = ([])",
+		       "  int shorted = 0;",
   });
-  int shorted, patterns, cmd;
+
+  // Some state variables for optimizing.
+  int all_shorted = 1;			// All allow patterns have return.
+  int need_auth = 0;			// We need auth for some checks.
+  int patterns;				// Number of patterns.
+  multiset(string) checks = (<>);	// Checks in state.
 
   foreach( pattern / "\n", string line )
   {
@@ -5052,6 +5058,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     if( !strlen(line) || line[0] == '#' )
       continue;
     sscanf( line, "%[^#]#", line );
+
+    int cmd;
 
     if( sscanf( line, "allow %s", line ) )
       cmd = ALLOW;
@@ -5097,7 +5105,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     else
       m->report_notice( LOC_M( 60,"Syntax error in security patterns: "
 			       "Expected 'allow' or 'deny'\n" ));
-    shorted = sscanf( line, "%s return", line );
+    int shorted = sscanf( line, "%s return", line );
 
 
     // Notes on the state variable:
@@ -5106,23 +5114,32 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     // "time", "date", "referer", "language" and "luck").
     // An entry exists in the mapping if a corresponding accept directive
     // has been executed.
-    // The value in the mapping is 0 (zero) if a successful match against
-    // the directive has been executed.
-    // The value in the mapping is a mapping if authentication is required.
-    // Otherwise the value in the mapping is 1 (one).
+    // @mixed
+    //   @value 0
+    //     Successful match.
+    //   @value 1
+    //     Fail with return.
+    //   @value 2
+    //     Fail with authenticate return.
+    //   @value 3
+    //     Fail without return.
+    //   @value 4
+    //     Fail with authenticate without return.
+    // @endmixed
     //
-    // If any entry in the state mapping contains a mapping, that entry
-    // will be returned on exit. Otherwise, if there is any non-zero
-    // entry in the state mapping it will be returned. If the state
-    // mapping only contains zero's zero will be returned.
+    // If the checking ends with an ok return (ie shorted == 1) only
+    // entries with a value of 3 or higher will be regarded.
+    // The highest regarded failure value will be used to determine
+    // the action.
 
     foreach(security_checks, array(string|int|array) check)
     {
       array args;      
       if (sizeof(args = array_sscanf(line, check[0])) == check[1])
       {
+	// Got a match for this security check.
 	patterns++;
-	string thr_code = "1";
+	int thr_code = 3;
 	// run instructions.
 	foreach(check[2], mixed instr )
 	{
@@ -5134,26 +5151,64 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	      if( !has_value( variables, v ) )
 		variables += ({ v });
 	  }
-	  else if( intp( instr ) )
-	    thr_code = "authmethod->authenticate_throw( id, realm )";
+	  else if( intp( instr ) ) {
+	    thr_code = 4;
+	    need_auth = 1;
+	  }
 	  else if( stringp( instr ) )
 	  {
 	    code += sprintf( instr, @args )+"\n";
 	    if( cmd == DENY )
 	    {
-	      code += "      return " + thr_code + ";\n";
+	      code += "      return " +
+		((thr_code == 4)?"authmethod->authenticate_throw(id, realm)":
+		 "1") +
+		";\n";
 	    }
 	    else
 	    {
+	      if (shorted) {
+		// OK with return. Ignore FAIL/return.
+		if (checks[check[3]]) {
+		  code +=
+		    sprintf("    {\n"
+			    "      m_delete(state, %O);\n"
+			    "      shorted = 1;\n"
+			    "      break;\n"
+			    "    }\n",
+			    check[3]);
+		} else {
+		  code +=
+		    "    {\n"
+		    "      shorted = 1;\n"
+		    "      break;\n"
+		    "    }\n";
+		}
+	      } else {
+		// OK without return. Mark as OK.
+		code +=
+		  sprintf("    {\n"
+			  "      state->%s = 0;\n"
+			  "    }\n",
+			  check[3]);
+		all_shorted = 0;
+	      }
+	      if (checks[check[3]]) {
+		// If not marked, or marked as lower failure
+		// set the failure level.
+		code +=
+		  sprintf("    else if (zero_type(state->%s) ||\n"
+			  "             (state->%s && state->%s < %d))\n",
+			  check[3],
+			  check[3], check[3], thr_code-(shorted*2));
+	      } else {
+		code += "    else\n";
+	      }
 	      code += sprintf("    {\n"
-			      "      state->%s = 0;\n" +
-			      (shorted?"      break;\n":"") +
-			      "    } else if (zero_type(state->%s)) {\n"
-			      "      state->%s = %s;\n"
+			      "      state->%s = %d;\n"
 			      "    }\n",
-			      check[3],
-			      check[3],
-			      check[3], thr_code);
+			      check[3], thr_code-(shorted*2));
+	      checks[check[3]] = 1;
 	    }
 	  }
 	}
@@ -5181,12 +5236,23 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 #else /* !SECURITY_PATTERN_DEBUG && !HTACCESS_DEBUG */
 	  code +
 #endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
-	  "  int fail;\n"
-	  "  foreach(values(state), int|mapping value) {\n"
-	  "    if (mappingp(value)) return value;\n"
-	  "    fail = fail || value;\n"
-	  "  }\n"
-	  "  return fail;\n"
+	  (all_shorted?
+	   "  if(shorted) return 0;\n":
+	   "")+
+	  ((need_auth || !all_shorted)?
+	   "  int fail = 0;\n"
+	   "  foreach(values(state), int value) {\n"
+	   "    if (fail < value) fail = value;\n"
+	   "  }\n":
+	   "")+
+	  (all_shorted?
+	   "":
+	   "  if (!fail || (shorted && fail < 3)) return 0;\n")+
+	  (need_auth?
+	   "  if ((fail-1) & 1)\n"
+	   "    return authmethod->authenticate_throw(id, realm);\n":
+	   "")+
+	  "  return 1;\n"
 	  "}\n");
 #if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
   report_debug(sprintf("Compiling security pattern:\n"
