@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.546 2002/11/07 14:13:40 mani Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.547 2002/11/07 15:30:33 mani Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -315,7 +315,7 @@ string get_doc_for( string region, string variable )
 
 string query_internal_location(RoxenModule|void mod)
 {
-  return query("InternalLoc")+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
+  return internal_location+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
 }
 
 string query_name()
@@ -340,6 +340,10 @@ array (Priority) allocate_pris()
   return allocate(10, Priority)();
 }
 
+
+// Cache some configuration variables.
+private int sub_req_limit = 30;
+private string internal_location = "/_internal/";
 
 // The logging format used. This will probably move to the above
 // mentioned module in the future.
@@ -1360,13 +1364,13 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 #endif
 
     // Locate internal location resources.
-    if(has_prefix(file, query("InternalLoc")))
+    if(has_prefix(file, internal_location))
     {
       TRACE_ENTER("Magic internal module location", 0);
       RoxenModule module;
       string name, rest;
       function find_internal;
-      if(2==sscanf(file[strlen(query("InternalLoc"))..], "%s/%s", name, rest) &&
+      if(2==sscanf(file[strlen(internal_location)..], "%s/%s", name, rest) &&
 	 (module = find_module(replace(name, "!", "#"))) &&
 	 (find_internal = module->find_internal))
       {
@@ -1727,7 +1731,6 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   int orig_internal_get = id->misc->internal_get;
   id->misc->internal_get = internal_get;
   RequestID root_id = id->root_id || id;
-  int sub_req_limit = query("SubRequestLimit");
   root_id->misc->_request_depth++;
   if(sub_req_limit && root_id->misc->_request_depth > sub_req_limit)
     error( "Subrequest limit reached. (Possibly an insertion loop.)" );
@@ -2237,6 +2240,46 @@ string real_file(string file, RequestID id)
 	return s;
     }
   }
+}
+
+array(int)|Stat try_stat_file(string s, RequestID id, int|void not_internal)
+{
+  RequestID fake_id;
+  array(int)|Stat res;
+
+  if(!objectp(id))
+    error("No ID passed to 'try_stat_file'\n");
+
+  // id->misc->common is here for compatibility; it's better to use
+  // id->root_id->misc.
+  if ( !id->misc )
+    id->misc = ([]);
+  if ( !id->misc->common )
+    id->misc->common = ([]);
+
+  fake_id = id->clone_me();
+
+  fake_id->misc->common = id->misc->common;
+  fake_id->misc->internal_get = !not_internal;
+  fake_id->conf = this_object();
+
+  if (fake_id->scan_for_query)
+    // FIXME: If we're using e.g. ftp this doesn't exist. But the
+    // right solution might be that clone_me() in an ftp id object
+    // returns a vanilla (i.e. http) id instead when this function is
+    // used.
+    s = fake_id->scan_for_query (s);
+
+  s = Roxen.fix_relative (s, id);
+
+  fake_id->raw_url = s;
+  fake_id->not_query = s;
+  fake_id->method = "GET";
+
+  res = stat_file(fake_id->not_query, fake_id);
+
+  destruct (fake_id);
+  return res;
 }
 
 int|string try_get_file(string s, RequestID id,
@@ -3454,14 +3497,18 @@ also set 'URLs'.</p>");
 	  "resources. This setting configures an internally handled "
 	  "location that can be used for such purposes.  Simply select "
 	  "a location that you are not likely to use for regular "
-	  "resources."));
+	  "resources."))
+    ->add_changed_callback(lambda(object v) {
+			     internal_location = v->query();
+			   });
   
   defvar("SubRequestLimit", 30,
 	 "Subrequest depth limit",
 	 TYPE_INT | VAR_MORE,
 	 "A limit for the number of nested sub requests for each request. "
-	 "This is intented to catch unintended infinite loops when for example "
-	 "inserting files in RXML. 0 for no limit." );
+	 "This is intented to catch unintended infinite loops when for "
+	 "example inserting files in RXML. 0 for no limit." )
+    ->add_changed_callback(lambda(object v) { sub_req_limit = v->query(); });
 
   // Throttling-related variables
 
