@@ -585,7 +585,10 @@
 
 <test>
   <rxml><set variable="var.i" expr="1 - 1"/><if variable="var.i is 0">a</if><else>b</else></rxml>
-  <result>a</result>
+  <result>b</result>
+  <!-- The result is arguably bogus, but this behavior cannot be
+       fixed in 2.2 due to compatibility with earlier releases. It's
+       fixed in 2.1 compatibility mode, though. -->
 </test>
 
 <test>
@@ -595,7 +598,10 @@
 
 <test>
   <rxml><set variable="var.i" expr="1 - 1"/><if variable="var.i = ?*">a</if><else>b</else></rxml>
-  <result>a</result>
+  <result>b</result>
+  <!-- The result is arguably bogus, but this behavior cannot be
+       fixed in 2.2 due to compatibility with earlier releases. It's
+       fixed in 2.1 compatibility mode, though. -->
 </test>
 
 <test>
