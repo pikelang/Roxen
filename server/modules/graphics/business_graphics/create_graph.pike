@@ -56,7 +56,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 	if (diagram_data["type"]=="bars")
 	  for(int i; i<j; i++)
 	    {
-	      float k;
+	      float k; 
 	      if (yminvalue>(k=d[i]))
 		yminvalue=k;
 	      if (ymaxvalue<(k=d[i]))
