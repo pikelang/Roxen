@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.13 2001/07/25 09:46:09 jhs Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.14 2001/08/17 20:05:23 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -266,7 +266,10 @@ format='%4d%2d%2d'>19771003</sscanf>
 <attr name='scope' value='name' required='required'><p>
  The name of the fallback scope to be used when no scope is given.</p>
 <ex type='vert'>
-<sscanf variables='form.year,month,day' scope='var'
+<sscanf variables='year,month,day' scope='var'
+ format='%4d%2d%2d'>19801228</sscanf>
+&var.year;-&var.month;-&var.day;<br />
+<sscanf variables='form.year,var.month,var.day'
  format='%4d%2d%2d'>19801228</sscanf>
 &form.year;-&var.month;-&var.day;
 </ex>
