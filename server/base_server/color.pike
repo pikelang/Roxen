@@ -1,6 +1,6 @@
 // Color support for roxen. 
 
-string cvs_version = "$Id: color.pike,v 1.10 1997/08/04 12:54:27 grubba Exp $";
+string cvs_version = "$Id: color.pike,v 1.11 1997/10/10 13:00:07 grubba Exp $";
 
 #include <stdio.h>
 
@@ -177,7 +177,11 @@ string color_name(array (int) from)
   if(equal(parse_color("grey"+(((int)from[0]*100)/255)),from))
     return "grey"+(((int)from[0]*100)/255);
   return sprintf("#%02x%02x%02x", @from);
+}
 
+array(string) list_colors()
+{
+  return indices(colors);
 }
 
 void create()
