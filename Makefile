@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.15 1997/10/15 14:45:24 grubba Exp $
+# $Id: Makefile,v 1.16 1997/10/15 23:19:57 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -126,7 +126,11 @@ verbose_verify:
 
 check : verify
 
-censor : censor_crypto censor_dbapi censor_tetris
+dist_clean :
+	@echo Clearing the build-tree
+	-@rm -rf build || true
+
+censor : censor_crypto censor_dbapi censor_tetris dist_clean
 	@echo Censoring complete.
 
 censor_crypto :
