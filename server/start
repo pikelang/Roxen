@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.34 1998/05/11 16:16:04 mast Exp $
+# $Id: start,v 1.35 1998/05/11 19:40:14 grubba Exp $
 
 VERSION=201; BETA=.a;
 
@@ -37,6 +37,7 @@ if [ "x$PIKE_MASTER" = "x" ]; then
       DEFINES="$DEFINES -m../pike/src/lib/master.pike -I../pike/src/lib/include"
       PIKE_MODULE_PATH="$PIKE_MODULE_PATH:../pike/src/lib/modules"
       if [ -d ../pike/src/share/modules/. ]; then
+        DEFINES="$DEFINES -I../pike/src/share/include"
         PIKE_MODULE_PATH="$PIKE_MODULE_PATH:../pike/src/share/modules"
       fi
     fi
