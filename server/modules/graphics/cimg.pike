@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.35 2000/12/30 07:21:14 per Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.36 2001/01/26 02:41:08 per Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -234,14 +234,18 @@ class TagCimgplugin
     mapping res = ([ ]);
     mapping a = get_my_args( check_args( args ), id );
     string data;
-
-    res->src = (query_absolute_internal_location(id)+the_cache->store( a,id ));
-    data = the_cache->data( a, id , 0 );
-    res["file-size"] = strlen(data);
-    res["file-size-kb"] = strlen(data)/1024;
-    res["data"] = data;
-    res |= the_cache->metadata( a, id, 0 ); // enforce generation
-    return ({ res });
+    catch // This code will fail if the image does not exist.
+    {
+      res->src=(query_absolute_internal_location(id)+the_cache->store( a,id ));
+      data = the_cache->data( a, id , 0 );
+      res["file-size"] = strlen(data);
+      res["file-size-kb"] = strlen(data)/1024;
+      res["data"] = data;
+      res |= the_cache->metadata( a, id, 0 ); // enforce generation
+      return ({ res });
+    };
+    RXML.parse_error( "Illegal arguments or image" );
+    return ({});
   }
 }
 

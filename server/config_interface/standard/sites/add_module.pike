@@ -567,6 +567,13 @@ mixed do_it_pass_2( array modules, Configuration conf,
     if( !has_value(mod, "!") || !conf->find_module( replace(mod,"!","#") ) )
     {
       RoxenModule mm = conf->enable_module( mod,0,0,1 );
+      if( !mm || !conf->otomod[mm] )
+      {
+	report_error("Failed to enable "+mod+"\n" );
+	// This will (hopefully) show the event log, with the message
+	// above at the top.
+	return Roxen.http_redirect( site_url(id,conf->name), id );
+      }      
       conf->call_low_start_callbacks( mm, 
                                       roxen.find_module( (mod/"!")[0] ), 
                                       conf->modules[ mod ] );
