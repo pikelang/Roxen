@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.387 2002/12/11 21:13:21 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.388 2002/12/18 15:04:38 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -76,7 +76,6 @@ mapping(string:mixed)|FakedVariables variables = FakedVariables( real_variables 
 
 mapping (string:mixed)  misc            =
 ([
-#if 0
 #ifdef REQUEST_DEBUG
   "trace_enter":lambda(mixed ...args) {
 		  REQUEST_WERR(sprintf("TRACE_ENTER(%{%O,%})", args));
@@ -85,7 +84,6 @@ mapping (string:mixed)  misc            =
 		  REQUEST_WERR(sprintf("TRACE_LEAVE(%{%O,%})", args));
 		}
 #endif // REQUEST_DEBUG
-#endif
 ]);
 mapping (string:string) cookies         = ([ ]);
 mapping (string:string) request_headers = ([ ]);
@@ -596,7 +594,7 @@ int things_to_do_when_not_sending_from_cache( )
   }
   if ( client_var->charset && client_var->charset  != "iso-8859-1" )
   {
-    misc->cacheable = 0;
+    misc->no_proto_cache = 1;
     set_output_charset( client_var->charset );
     input_charset = client_var->charset;
     decode_charset_encoding( client_var->charset );
@@ -713,7 +711,7 @@ private final int parse_got_2( )
       }
       s = data = ""; // no headers or extra data...
       sscanf( f, "%s%*[\r\n]", f );
-      misc->cacheable = 0;
+      misc->no_proto_cache = 1;
       break;
 
     case 0:
@@ -1198,7 +1196,7 @@ array get_error(string eid, string md5)
 
 void internal_error(array _err)
 {
-  misc->cacheable = 0;
+  misc->no_proto_cache = 1;
   mixed err = _err;
   _err = 0; // hide in backtrace, they are bad enough anyway...
   array err2;
@@ -1532,17 +1530,17 @@ void send_result(mapping|void result)
   if(elapsed > p[2]) p[2]=elapsed;
 #endif
 
-  REQUEST_WERR(sprintf("HTTP: response: prot %O, method %O, file %O",
-		       prot, method, file));
+  REQUEST_WERR(sprintf("HTTP: response: prot %O, method %O, file %O, misc: %O",
+		       prot, method, file, misc));
 
-  if( prot == "HTTP/0.9" )  misc->cacheable = 0;
+  if( prot == "HTTP/0.9" )  misc->no_proto_cache = 1;
 
   if(!leftovers) 
     leftovers = data||"";
 
   if(!mappingp(file))
   {
-    misc->cacheable = 0;
+    misc->no_proto_cache = 1;
     if(misc->error_code)
       file = Roxen.http_low_answer(misc->error_code, errors[misc->error]);
     else if(err = catch {
@@ -1589,7 +1587,8 @@ void send_result(mapping|void result)
 	  misc->last_modified = fstat[ST_MTIME];
       }	
 
-      if( misc->cacheable < INITIAL_CACHEABLE ) {
+      if( !zero_type(misc->cacheable) &&
+	  (misc->cacheable < INITIAL_CACHEABLE) ) {
 	if (misc->cacheable == 0)
 	  heads["Expires"] = Roxen.http_date( 0 );
 	else
@@ -1623,7 +1622,8 @@ void send_result(mapping|void result)
 	if ( ((since_info[0] >= misc->last_modified) && 
 	      ((since_info[1] == -1) || (since_info[1] == file->len)))
 	     // never say 'not modified' if cacheable has been lowered.
-	     && (misc->cacheable >= INITIAL_CACHEABLE)
+	     && (zero_type(misc->cacheable) ||
+		 (misc->cacheable >= INITIAL_CACHEABLE))
 	     // actually ok, or...
 //	       || ((misc->cacheable>0) 
 //		   && (since_info[0] + misc->cacheable<= predef::time(1))
@@ -1687,7 +1687,7 @@ void send_result(mapping|void result)
           array ranges = parse_range_header(file->len);
           if(ranges) // No incorrect syntax...
           {
-            misc->cacheable = 0;
+            misc->no_proto_cache = 1;
             if(sizeof(ranges)) // And we have valid ranges as well.
             {
               file->error = 206; // 206 Partial Content
@@ -2068,7 +2068,7 @@ void got_data(mixed fooid, string s)
     if (rawauth)
     {
       /* Need to authenticate with the configuration */
-      misc->cacheable = 0;
+      misc->no_proto_cache = 1;
       array(string) y = rawauth / " ";
       realauth = 0;
       auth = 0;
@@ -2083,7 +2083,7 @@ void got_data(mixed fooid, string s)
     if( misc->proxyauth )
     {
       /* Need to authenticate with the configuration */
-      misc->cacheable = 0;
+      misc->no_proto_cache = 1;
       if (sizeof(misc->proxyauth) >= 2)
       {
 	//    misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
@@ -2192,7 +2192,7 @@ void got_data(mixed fooid, string s)
 		       st ? "mtime " + st->mtime : "gone", file->mtime));
 #endif
 	} else
-	  misc->cacheable = 0; // Never cache in this case.
+	  misc->no_proto_cache = 1; // Never cache in this case.
 	file = 0;
       }
     }
