@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.49 1998/09/18 14:02:53 per Exp $
+# $Id: start,v 1.50 1998/09/19 13:19:58 grubba Exp $
 
 VERSION=202; BETA=.b;
 
@@ -152,88 +152,88 @@ the default arguments.
 
    .BArguments:B.
 
-      .B--version:B.                   Output version information.
+      .B--versionB.:                  Output version information.
 
-      .B--help -?:B.                   This information
+      .B--help -?B.:                  This information
 
-      .B--log-dir=DIR:B.              Set the log directory. Defaults to .B../logsB..
+      .B--log-dir=DIRB.:              Set the log directory. Defaults to .B../logsB..
 
-      .B--config-dir=DIR:B.           Use an alternate configuration directory
-				   Defaults to .B../configurationB..
+      .B--config-dir=DIRB.:           Use an alternate configuration directory
+				  Defaults to .B../configurationB..
 
-      .B--with-threads:B.             If threads are available, use them.
+      .B--with-threadsB.:             If threads are available, use them.
 
-      .B--without-threads:B.          Even if threads are enabled per default, 
-                                   disable them.
+      .B--without-threadsB.:          Even if threads are enabled by default, 
+                                  disable them.
 
-      .B--with-profile:B.             Store runtime profiling information on
-				   a directory basis. This information is
- 				   not saved on permanent storage, it is only
-				   available until the next server restart
-				   This will enable a new 'action' in the
-				   configuration interface
+      .B--with-profileB.:             Store runtime profiling information on
+				  a directory basis. This information is
+ 				  not saved on permanent storage, it is only
+				  available until the next server restart
+				  This will enable a new 'action' in the
+				  configuration interface
 
-      .B--with-file-profile:B.         Like .B--with-profileB., but save information 
-                                   for each and every file.
+      .B--with-file-profileB.:        Like .B--with-profileB., but save information 
+                                  for each and every file.
 
-      .B--with-keep-alive:B.           Enable keep alive in the HTTP 
-			           protocol module. This will soon be 
-                                   the default. Some clients might have 
-				   problems with keepalive.
+      .B--with-keep-aliveB.:          Enable keep alive in the HTTP 
+			          protocol module. This will soon be 
+                                  the default. Some clients might have 
+				  problems with keepalive.
 
-      .B--once:B.                      Run the server only once, in the foreground.
-				   This is very useful when debugging.
+      .B--onceB.:                     Run the server only once, in the foreground.
+			   	  This is very useful when debugging.
 
-      .B--gdb:B.                       Run the server in gdb. Implies .B--onceB..
+      .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..
 
-      .B--program:B.                   Start a different program with the roxen
-				   pike. As an example, 
-                                   ./start --program bin/install.pike will 
-				   start the installation program normally 
-                                   started with ./install
+      .B--programB.:                  Start a different program with the roxen
+				  pike. As an example, 
+                                  .B./start --program bin/install.pikeB. will 
+				  start the installation program normally 
+                                  started with .B./installB.
 
-      .B--with-debug:B.                Enable debug
+      .B--with-debugB.:               Enable debug
 
-      .B--without-debug:B.             Disable all debug
+      .B--without-debugB.:            Disable all debug
 	
-      .B--with-fd-debug:B.             Enable FD debug.
+      .B--with-fd-debugB.:            Enable FD debug.
 
-      .B--truss:B.                     Run the server under truss, shows .BallB. 
-				   system calls (Solaris only). This is 
-				   extremely noisy, and is not intented for 
-				   anything but debug.
+      .B--trussB.:                    (Solaris only). Run the server under
+				  truss, shows .BallB. system calls. This is 
+				  extremely noisy, and is not intented for 
+				  anything but debug.
 
-      .B--pid-file=<file>:B.           Store the roxen and startscript pids in this
-				   file. Defaults to .B/tmp/roxen_$UIDB.
+      .B--pid-file=<file>B.:          Store the roxen and startscript pids in this
+				  file. Defaults to .B/tmp/roxen_$UIDB.
          
   .BArguments passed to pike:B.
 
-       .B-DDEFINE:B.                   Define the symbol DEFINE
+       .B-DDEFINEB.:                  Define the symbol .BDEFINEB..
 
-       .B-d<level>:B.                  Set the runtime pike debug to level.
-				   This only works if pike is compiled 
-				   with debug.
+       .B-d<level>B.:                 Set the runtime pike debug to level.
+				  This only works if pike is compiled 
+				  with debug.
 
-       .B-s<size>:B.                   Set the stack size.
+       .B-s<size>B.:                  Set the stack size.
 
-       .B-M <path>:B.                  Add the path to the pike module path
+       .B-M <path>B.:                 Add the path to the pike module path.
 
-       .B-I <path>:B.                  Add the path to the pike include path
+       .B-I <path>B.:                 Add the path to the pike include path.
 
-       .B-dt:B.                        Turn of tail recursion optimization
+       .B-dtB.:                       Turn of tail recursion optimization.
 
-       .B-t:B.                         Turn on pike level tracing
+       .B-tB.:                        Turn on pike level tracing.
 
-       .B-t<level>:B.                  Turn on more pike tracing. This only 
-				   works if pike is compiled with debug.
+       .B-t<level>B.:                 Turn on more pike tracing. This only 
+				  works if pike is compiled with debug.
 
 
   .BEnvironment variables:B.
 
-     ROXEN_CONFIGDIR:B.              Same as .B--config-dir=...
-     ROXEN_PID_FILE:B.               Same as .B--pid-file=...
-     ROXEN_LANG:B.                   The default language for all language
-				   related tags. Defaults to 'en' for english.
+     .BROXEN_CONFIGDIRB.:             Same as .B--config-dir=... B.
+     .BROXEN_PID_FILEB.:              Same as .B--pid-file=... B.
+     .BROXEN_LANGB.:                  The default language for all language
+				  related tags. Defaults to 'en' for english.
 
 EOF
     tput 'rmso' 2>/dev/null
