@@ -66,16 +66,24 @@ void run(object env)
   }
   write(" JREHOME="+jrehome+"\n");
   env->set("JREHOME", jrehome);
-  arch = (Process.popen("(/usr/bin/uname -p||uname -p) 2>/dev/null | sed -e 's/^i[4-9]86/i386/'")||"")-"\n";
-  if(arch=="unknown")
-    arch = (Process.popen("uname -m | sed -e 's/^i[4-9]86/i386/'")||"")-"\n";
-  if(arch == "")
-    arch = "_";
-  foreach(({arch+"/"+threads_type, arch+"/classic", arch}), string dir) {
-    mixed s = file_stat(jrehome+"/lib/"+dir);
-    if(s && s[1]==-2)
-      env->append("LD_LIBRARY_PATH", jrehome+"/lib/"+dir);
+
+  array archs = ({ 
+    (Process.popen("(/usr/bin/uname -p||uname -p) 2>/dev/null | sed -e 's/^i[4-9]86/i386/'")||"")-"\n",
+    (Process.popen("(/usr/bin/uname -m||uname -m) 2>/dev/null | sed -e 's/^i[4-9]86/i386/'")||"")-"\n"
+  });
+  
+  foreach(Array.uniq(archs), string arch)
+  {
+    if(arch == "")
+      arch = "_";
+  
+    foreach(({arch+"/"+threads_type, arch+"/classic", arch}), string dir) {
+      mixed s = file_stat(jrehome+"/lib/"+dir);
+      if(s && s[1]==-2)
+	env->append("LD_LIBRARY_PATH", jrehome+"/lib/"+dir);
+    }
   }
+  
   /* AIX */
   if(file_stat(jrehome+"/bin/libjava.a"))
     env->append("LIBPATH", jrehome+"/bin/:"+jrehome+"/bin/classic/" );
