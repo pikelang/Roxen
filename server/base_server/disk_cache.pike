@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.20 1997/05/16 17:37:18 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.21 1997/05/22 23:26:10 per Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -59,8 +59,10 @@ class CacheStream
   {
     string line, name, value;
     int ret;
-
-    if((ret=file->seek(ROXEN_HEAD_SIZE))!=ROXEN_HEAD_SIZE)
+    object my_file = FILE();
+    my_file->assign(file);
+    
+    if((ret=my_file->seek(ROXEN_HEAD_SIZE))!=ROXEN_HEAD_SIZE)
     {
 #ifdef CACHE_DEBUG
       perror("parse_headers seek failed("+ret+")\n");
@@ -69,21 +71,34 @@ class CacheStream
     }
 
     headers->head_vers = ROXEN_HEAD_VERS;
-    headers->headers_size = headers->head_size = ROXEN_HEAD_SIZE;
+    headers->head_size = ROXEN_HEAD_SIZE;
     
-    line = ((file->gets()||"")-"\r")-"\n";
-    if(!(headers[" returncode"] = get_code(line)))
+    int s, pos;
+    line = my_file->gets()||"";
+    pos += strlen(line)+1;
+    if(!(headers[" returncode"] = get_code(line-"\r")))
       return 0;
 
-    while(strlen( (line = ((file->gets()||"")-"\r")-"\n")))
+    while(s=strlen(line = my_file->gets()||""))
     {
+      pos+=s+1; line-="\r";
       if(sscanf(line, "%s:%s", name, value) == 2)
       {
-	sscanf(value, "%*[ \t]%s", value);
-	headers[lower_case(name-" ")] = value;
+        sscanf(value, "%*[ \t]%s", value);
+#ifdef PER_DEBUG
+//      perror("header:  "+name+"="+value+"\n");
+#endif
+        headers[lower_case(name-" ")] = value;
+      } else {
+#ifdef PER_DEBUG
+//      perror("NO HEADER FOUND IN:  '"+line+"'\n");
+#endif
+        if(strlen(line)) pos -= s+1;
+        break;
       }
     }
-    headers->headers_size += file->tell();
+//    perror("headsize = "+(pos+ROXEN_HEAD_SIZE)+"\n");
+    headers->headers_size = pos+ROXEN_HEAD_SIZE;
     return 1;
   }
   
@@ -160,7 +175,7 @@ class CacheStream
   {
     if(headers->head_vers != ROXEN_HEAD_VERS)
     {
-      headers->headers_size += ROXEN_HEAD_SIZE;
+//      headers->headers_size += ROXEN_HEAD_SIZE;
       headers->head_vers = ROXEN_HEAD_VERS;
       headers->head_size = ROXEN_HEAD_SIZE;
     }
@@ -568,7 +583,7 @@ object create_cache_file(string cl, string entry)
   string name = cl+"/"+file_name(entry);
   string rfile = QUERY(cachedir)+name;
   string rfiledone = rfile+".done";
-  object cf = FILE();
+  object cf = File();
   int i;
 
   // to reduce IO-load try open before making directories
