@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.67 2004/06/30 16:59:03 mast Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.68 2004/09/21 15:35:27 mast Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -159,6 +159,16 @@ string status() {
 		 s[0], Roxen.sizetostring(s[1]));
 }
 
+void image_error (string fmt, mixed... args)
+{
+  if (RXML_CONTEXT)
+    // generate_image can be called from within the cimg tag if
+    // id->misc->generate_images is set.
+    RXML.run_error (fmt, @args);
+  else
+    error (fmt, @args);
+}
+
 array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
 {
   array layers;
@@ -205,13 +215,13 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
   if(!layers)
   {
     if( args->data )
-      error("Failed to decode specified data\n");
+      image_error("Failed to decode specified data\n");
     else
-      error("Failed to load specified image [%O]\n", args->src);
+      image_error("Failed to load specified image [%O]\n", args->src);
   }
 
   if (!sizeof(filter(layers->image(), objectp)))
-    error("Failed to decode layers in specified image [%O]\n", args->src);
+    image_error("Failed to decode layers in specified image [%O]\n", args->src);
 
   layers->set_misc_value( "visible",1 );
   foreach( layers, Image.Layer lay )
