@@ -709,9 +709,11 @@ mapping|string parse( RequestID id )
     })});
   };
 
-  foreach( DBManager.db_tables( id->variables->db )-({0}), string tb )
-    add_table_info(tb,
-		   DBManager.db_table_information(id->variables->db, tb));
+  if (db) {
+    foreach( DBManager.db_tables( id->variables->db )-({0}), string tb )
+      add_table_info(tb,
+		     DBManager.db_table_information(id->variables->db, tb));
+  }
 
   switch( id->variables->sort )
   {
