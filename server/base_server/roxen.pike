@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.844 2003/11/05 11:10:30 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.845 2003/11/05 13:16:37 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -5111,20 +5111,27 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     int shorted = sscanf( line, "%s return", line );
 
 
-    // Notes on the state variable:
+    // Notes on the variables @[state] and @[short_fail]:
     //
-    // It has several potential entries (currently "ip", "user", "group",
-    // "time", "date", "referer", "language" and "luck").
+    // The variable @[state] has several potential entries
+    // (currently "ip", "user", "group", "time", "date",
+    //  "referer", "language" and "luck").
     // An entry exists in the mapping if a corresponding accept directive
     // has been executed.
-    // @mixed
+    //
+    // The variable @[short_fail] contains a non-zero entry if
+    // a potentially acceptable accept with return has been
+    // encountered.
+    //
+    // Valid values in @[state] and @[short_fail] are:
+    // @int
     //   @value 0
     //     Successful match.
     //   @value 1
     //     Plain failure.
     //   @value 2
     //     Fail with authenticate.
-    // @endmixed
+    // @endint
     //
     // Shorted directives will only be regarded if all unshorted directives
     // encountered at that point have succeeded.
