@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.27 2000/08/29 18:54:48 kuntri Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.28 2000/09/05 16:29:49 nilsson Exp $";
 constant module_type = MODULE_PARSER;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -18,7 +18,7 @@ mapping tagdocumentation() {
   Stdio.File file=Stdio.File();
   if(!file->open(__FILE__,"r")) return 0;
   mapping doc=compile_string("#define manual\n"+file->read())->tagdoc;
-  string imagecache=the_cache->documentation("cimg src='internal-roxen-robodog'");
+  string imagecache=the_cache->documentation("cimg src='internal-roxen-testimage'");
 
   doc->cimg+=imagecache;
   doc["cimg-url"]=imagecache;
@@ -34,7 +34,7 @@ resize, crop and in other ways transform images.</desc>
 <attr name='src' value='uri' required>
  The path to the indata file.
 
-<ex><cimg src='internal-roxen-robodog'/></ex>
+<ex><cimg src='internal-roxen-testimage'/></ex>
 </attr>
 
 <attr name='data' value='imagedata'>
@@ -56,7 +56,7 @@ tag is to insert image-URI's into various places, e.g. a submit-box.
 <attr name='src' value='uri' required>
  The path to the indata file.
 
-<ex><cimg-url src='internal-roxen-robodog'/></ex>
+<ex><cimg-url src='internal-roxen-testimage'/></ex>
 </attr>
 
 <attr name='data' value='imagedata'>
