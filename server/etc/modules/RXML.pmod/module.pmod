@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.174 2001/06/26 01:34:29 mast Exp $
+// $Id: module.pmod,v 1.175 2001/06/26 20:13:10 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -62,6 +62,7 @@ class RequestID { };
 #define MAGIC_HELP_ARG
 // #define OBJ_COUNT_DEBUG
 // #define RXML_VERBOSE
+// #define RXML_COMPILE_DEBUG
 
 
 #ifdef RXML_OBJ_DEBUG
@@ -330,9 +331,20 @@ class Tag
   eval_frame: do {							\
     EVAL_ARGS_FUNC argfunc = 0;						\
 									\
-    mixed err = catch {							\
-      if (!_frame->args)						\
-	argfunc = _frame->_prepare (_ctx, _type, _args);		\
+    mixed err = 0;							\
+    if (!_frame->args) {						\
+      frame->up = ctx->frame;						\
+      ctx->frame = frame;						\
+      ctx->frame_depth++;						\
+      err = catch {							\
+	argfunc = _frame->_prepare (					\
+	  _ctx, _type, _args, _parser->p_code);				\
+      };								\
+      ctx->frame = frame->up, frame->up = 0;				\
+      ctx->frame_depth--;						\
+    }									\
+									\
+    if (!err) err = catch {						\
       _res = _frame->_eval (_ctx, _parser, _type, 0, _content || "");	\
       if (PCode p_code = _parser->p_code) {				\
 	p_code->add (_frame);						\
@@ -347,7 +359,6 @@ class Tag
        * fails. */							\
       _frame->flags |= FLAG_UNPARSED;					\
       _frame->args = _args, _frame->content = _content || "";		\
-      werror ("err %O %O %O\n", _frame, _frame->args, _frame->content);	\
       p_code->add (_frame);						\
       p_code->add (0);							\
       p_code->add (0);							\
@@ -1777,7 +1788,7 @@ class Backtrace
   string type;			// Currently "run" or "parse".
   string msg;
   Context context;
-  Frame frame;
+  array(Frame) frames;
   string current_var;
   array backtrace;
 
@@ -1786,8 +1797,13 @@ class Backtrace
   {
     type = _type;
     msg = _msg;
-    if (context = _context || RXML_CONTEXT)
-      frame = context->frame;
+    if (context = _context || RXML_CONTEXT) {
+      frames = allocate (context->frame_depth);
+      Frame frame = context->frame;
+      int i = 0;
+      for (; frame; i++, frame = frame->up) frames[i] = frame;
+      frames = frames[..i - 1];
+    }
     if (_backtrace) backtrace = _backtrace;
     else {
       backtrace = predef::backtrace();
@@ -1804,10 +1820,10 @@ class Backtrace
     if (context) {
       if (!no_msg) add (": ", msg || "(no error message)\n");
       if (current_var) add (" | &", current_var, ";\n");
-      for (Frame f = frame; f; f = f->up) {
+      foreach (frames, Frame f) {
 	string name;
 	if (f->tag) name = f->tag->name;
-	else if (!f->up) break;
+	//else if (!f->up) break;
 	else name = "(unknown)";
 	if (f->flags & FLAG_PROC_INSTR)
 	  add (" | <?", name, "?>\n");
@@ -2823,8 +2839,9 @@ class Frame
     return raw_args;
   }
 
-  EVAL_ARGS_FUNC _prepare (Context ctx, Type type,
-			   mapping(string:string) raw_args)
+  EVAL_ARGS_FUNC|string _prepare (Context ctx, Type type,
+				  mapping(string:string) raw_args,
+				  PCode p_code)
   // Evaluates raw_args simultaneously as generating the
   // EVAL_ARGS_FUNC function. The result of the evaluations is stored
   // in args. Might be destructive on raw_args.
@@ -2832,16 +2849,11 @@ class Frame
     Frame this = this_object();
 
     mixed err = catch {
-#ifdef DEBUG
-      if (up) fatal_error ("up frame already set.\n");
-#endif
-      up = ctx->frame;
-      ctx->frame = this;	// Push the frame to get proper backtraces.
-      if (ctx->frame_depth++ >= ctx->max_frame_depth)
+      if (ctx->frame_depth >= ctx->max_frame_depth)
 	_run_error ("Too deep recursion -- exceeding %d nested tags.\n",
 		    ctx->max_frame_depth);
 
-      EVAL_ARGS_FUNC func;
+      EVAL_ARGS_FUNC|string func;
 
       if (raw_args) {
 #ifdef MODULE_DEBUG
@@ -2877,12 +2889,11 @@ class Frame
 	      }
 	    atypes += raw_args & tag->opt_arg_types;
 
-	    PikeCompile comp = PikeCompile();
-	    String.Buffer fn_text = String.Buffer();
+	    String.Buffer fn_text = p_code && String.Buffer();
 
 	    if (splice_arg) {
 	      // Note: This assumes an XML-like parser.
-	      Parser p = splice_arg_type->get_parser (ctx, 0, 0, 1);
+	      Parser p = splice_arg_type->get_parser (ctx, 0, 0, p_code);
 	      THIS_TAG_DEBUG ("Evaluating splice argument %s\n",
 			      utils->format_short (splice_arg));
 #ifdef MODULE_DEBUG
@@ -2898,43 +2909,64 @@ class Frame
 		throw_fatal (err);
 	      }
 #endif
-	      fn_text->add (
-		"return ", comp->bind (_eval_args), " (context, "
-		"RXML.xml_tag_parser->parse_tag_args ((",
-		p->p_code->_compile_text (comp), ") || \"\"), ",
-		comp->bind (splice_req_types), ") + ([\n");
+	      if (p_code)
+		fn_text->add (
+		  "return ", p_code->bind (_eval_args), " (context, "
+		  "RXML.xml_tag_parser->parse_tag_args ((",
+		  p->p_code->_compile_text(), ") || \"\"), ",
+		  p_code->bind (splice_req_types), ") + ([\n");
 	      splice_arg_type->give_back (p);
 	      args = _eval_args (ctx, xml_tag_parser->parse_tag_args (splice_arg || ""),
 				 splice_req_types);
 	    }
 	    else {
 	      args = raw_args;
-	      fn_text->add ("return ([\n");
+	      if (p_code) fn_text->add ("return ([\n");
 	    }
 
 #ifdef MODULE_DEBUG
 	    if (mixed err = catch {
 #endif
-	      foreach (indices (raw_args), string arg) {
-		Type t = atypes[arg] || tag->def_arg_type;
-		if (t->parser_prog != PNone) {
-		  Parser parser = t->get_parser (ctx, 0, 0, 1);
-		  THIS_TAG_DEBUG ("Evaluating argument value %s with %O\n",
-				  utils->format_short (raw_args[arg]), parser);
-		  parser->finish (raw_args[arg]); // Should not unwind.
-		  args[arg] = parser->eval(); // Should not unwind.
-		  THIS_TAG_DEBUG ("Setting argument %s to %s\n",
-				  utils->format_short (arg),
-				  utils->format_short (args[arg]));
-		  fn_text->add (sprintf ("%O: %s,\n", arg,
-					 parser->p_code->_compile_text (comp)));
-		  t->give_back (parser);
+	      if (p_code)
+		foreach (indices (raw_args), string arg) {
+		  Type t = atypes[arg] || tag->def_arg_type;
+		  if (t->parser_prog != PNone) {
+		    Parser parser = t->get_parser (ctx, 0, 0, p_code);
+		    THIS_TAG_DEBUG ("Evaluating and compiling "
+				    "argument value %s with %O\n",
+				    utils->format_short (raw_args[arg]), parser);
+		    parser->finish (raw_args[arg]); // Should not unwind.
+		    args[arg] = parser->eval(); // Should not unwind.
+		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
+				    utils->format_short (arg),
+				    utils->format_short (args[arg]));
+		    fn_text->add (sprintf ("%O: %s,\n", arg,
+					   parser->p_code->_compile_text()));
+		    t->give_back (parser);
+		  }
+		  else {
+		    args[arg] = raw_args[arg];
+		    fn_text->add (sprintf ("%O: %s,\n", arg,
+					   p_code->bind (raw_args[arg])));
+		  }
 		}
-		else {
-		  args[arg] = raw_args[arg];
-		  fn_text->add (sprintf ("%O: %s,\n", arg, comp->bind (raw_args[arg])));
+	      else
+		foreach (indices (raw_args), string arg) {
+		  Type t = atypes[arg] || tag->def_arg_type;
+		  if (t->parser_prog != PNone) {
+		    Parser parser = t->get_parser (ctx, 0, 0, 0);
+		    THIS_TAG_DEBUG ("Evaluating argument value %s with %O\n",
+				    utils->format_short (raw_args[arg]), parser);
+		    parser->finish (raw_args[arg]); // Should not unwind.
+		    args[arg] = parser->eval(); // Should not unwind.
+		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
+				    utils->format_short (arg),
+				    utils->format_short (args[arg]));
+		    t->give_back (parser);
+		  }
+		  else
+		    args[arg] = raw_args[arg];
 		}
-	      }
 #ifdef MODULE_DEBUG
 	    }) {
 	      if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -2943,10 +2975,11 @@ class Frame
 	    }
 #endif
 
-	    fn_text->add ("]);\n");
-	    string fn = comp->decl_func (
-	      "mapping(string:mixed)", "RXML.Context context", fn_text->get());
-	    func = comp->compile()()[fn];
+	    if (p_code) {
+	      fn_text->add ("]);\n");
+	      func = p_code->add_func (
+		"mapping(string:mixed)", "RXML.Context context", fn_text->get());
+	    }
 	  }
 	  else {
 	    func = utils->return_empty_mapping;
@@ -3023,20 +3056,15 @@ class Frame
       }
       else THIS_TAG_DEBUG ("Keeping content_type %O\n", content_type);
 
-      ctx->frame = up, up = 0;
-      ctx->frame_depth--;
       return func;
     };
-
-    ctx->frame = up, up = 0;
-    ctx->frame_depth--;
     throw (err);
   }
 
   mixed _eval (Context ctx, TagSetParser|PCode evaler, Type type,
 	       void|EVAL_ARGS_FUNC in_args, void|string|PCode in_content)
   // Note: It might be somewhat tricky to override this function,
-  // since it handles unwinding through exceptions.
+  // since it handles unwinding and rewinding.
   {
     Frame this = this_object();
     RequestID id = ctx->id;
@@ -3068,7 +3096,6 @@ class Frame
       PRE_INIT_ERROR ("Calling _eval() with non-tag set parser.\n");
     if (up)
       PRE_INIT_ERROR ("up frame already set.\n");
-    Frame prev_ctx_frame = ctx->frame;
 #endif
 #ifdef MODULE_DEBUG
     if (ctx->new_runtime_tags)
@@ -3077,9 +3104,8 @@ class Frame
 #endif
 #undef PRE_INIT_ERROR
 
-    // Known punt: Sometimes _prepare is run below, which increases
-    // this too. So frame_depth might be off by one sometimes, but
-    // it's not worth the bother.
+    up = ctx->frame;
+    ctx->frame = this;
     ctx->frame_depth++;
 
     mixed conv_result = nil;	// Result converted to the expected type.
@@ -3093,8 +3119,6 @@ class Frame
 	  if (in_args || in_content)
 	    fatal_error ("in_args or in_content set when resuming parse.\n");
 #endif
-	  up = ctx->frame;
-	  ctx->frame = this;
 	  object ignored;
 	  [ignored, eval_state, in_args, in_content, iter,
 	   subevaler, piece, exec, orig_tag_set, ctx->new_runtime_tags
@@ -3120,7 +3144,12 @@ class Frame
 #endif
 	  }
 
-	  if (flags & FLAG_UNPARSED) {
+	  if (in_args) {
+	    THIS_TAG_TOP_DEBUG ("Evaluating with compiled arguments\n");
+	    args = in_args (ctx);
+	    content = nil;
+	  }
+	  else if (flags & FLAG_UNPARSED) {
 #ifdef DEBUG
 	    if (args && !mappingp (args))
 	      fatal_error ("args is not a mapping in unparsed frame.\n");
@@ -3128,25 +3157,14 @@ class Frame
 	      fatal_error ("content is not a string in unparsed frame.\n");
 #endif
 	    THIS_TAG_TOP_DEBUG ("Evaluating unparsed\n");
-	    in_args = _prepare (ctx, type, args);
-	    ctx->frame = this;
+	    in_args = _prepare (ctx, type, args,
+				evaler->is_RXML_PCode ? evaler : evaler->p_code);
 	    in_content = content;
 	    content = nil;
 	    flags &= ~FLAG_UNPARSED;
 	  }
-	  else if (in_content) {
-	    THIS_TAG_TOP_DEBUG ("Evaluating\n");
-	    up = ctx->frame;
-	    ctx->frame = this;
-	    if (in_args) {
-	      THIS_TAG_DEBUG ("Evaluating compiled arguments\n");
-	      args = in_args (ctx);
-	    }
-	    content = nil;
-	  }
 	  else {
-	    _prepare (ctx, type, 0);
-	    ctx->frame = this;
+	    _prepare (ctx, type, 0, 0);
 	    THIS_TAG_TOP_DEBUG ("Evaluating with constant arguments and content.\n");
 	  }
 
@@ -3217,6 +3235,7 @@ class Frame
 	    array|function(RequestID:array) do_process =
 	      [array|function(RequestID:array)] this->do_process;
 
+	    int compile = 0;
 	    do {
 	      if (eval_state != EVSTAT_LAST_ITER) {
 		if (intp (do_iterate)) {
@@ -3241,42 +3260,50 @@ class Frame
 	      }
 
 	      for (; iter > 0; iter-- DO_IF_DEBUG (, debug_iter++)) {
+	      eval_content:
 		if (in_content) { // Got nested parsing to do.
 		  int finished = 1;
 		  if (subevaler)
 		    finished = 0; // Continuing an unwound subevaler.
 		  else if (stringp (in_content)) {
-		    if (in_content == "")
-		      subevaler = PCode (
-			content_type, 0,
-			evaler->recover_errors && !(flags & FLAG_DONT_RECOVER));
+		    if (in_content == "") {
+		      in_content = 0;
+		      break eval_content;
+		    }
 		    else if (flags & FLAG_EMPTY_ELEMENT)
 		      parse_error ("This tag doesn't handle content.\n");
 		    else {	// The nested content is not yet parsed.
+		      object(PCode)|int p_code =
+			(evaler->is_RXML_PCode ? evaler : evaler->p_code) || compile;
 		      if (this->local_tags) {
 			subevaler = content_type->get_parser (
-			  ctx, [object(TagSet)] this->local_tags, evaler, 1);
+			  ctx, [object(TagSet)] this->local_tags, evaler, p_code);
 			subevaler->_local_tag_set = 1;
-			THIS_TAG_DEBUG ("Iter[%d]: Parsing and evaluating content %s "
+			THIS_TAG_DEBUG ("Iter[%d]: Parsing and %s content %s "
 					"with %O from local_tags\n", debug_iter,
+					p_code ? "compiling" : "evaluating",
 					utils->format_short (in_content), subevaler);
 		      }
 		      else {
-			subevaler = content_type->get_parser (ctx, 0, evaler, 1);
+			subevaler = content_type->get_parser (ctx, 0, evaler, p_code);
 #ifdef DEBUG
 			if (content_type->parser_prog != PNone)
-			  THIS_TAG_DEBUG ("Iter[%d]: Parsing and evaluating content %s "
+			  THIS_TAG_DEBUG ("Iter[%d]: Parsing and %s content %s "
 					  "with %O\n", debug_iter,
+					  p_code ? "compiling" : "evaluating",
 					  utils->format_short (in_content), subevaler);
 #endif
 		      }
+		      p_code = subevaler->p_code;
 		      if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
 			subevaler->recover_errors = 1;
-			subevaler->p_code->recover_errors = 1;
+			if (p_code) p_code->recover_errors = 1;
 		      }
 		      subevaler->finish (in_content); // Might unwind.
-		      (in_content = subevaler->p_code)->finish();
+		      if (p_code) (in_content = p_code)->finish();
 		      finished = 1;
+		      // Always compile if the contents are parsed a second time.
+		      compile = 1;
 		    }
 		  }
 		  else {
@@ -3867,6 +3894,7 @@ class Parser
   //! Writes some source data to the parser. Returns nonzero if there
   //! might be data available in eval().
   {
+    //werror ("%O write %s\n", this_object(), utils->format_short (in));
     int res;
     ENTER_CONTEXT (context);
     if (mixed err = catch {
@@ -3905,6 +3933,7 @@ class Parser
   //! Closes the source data stream, optionally with a last bit of
   //! data.
   {
+    //werror ("%O write_end %s\n", this_object(), utils->format_short (in));
     int res;
     ENTER_CONTEXT (context);
     if (mixed err = catch {
@@ -4388,13 +4417,19 @@ class Type
   }
 
   inline final Parser get_parser (Context ctx, void|TagSet tag_set,
-				  void|Parser parent, void|int make_p_code)
+				  void|Parser parent, void|int|PCode make_p_code)
   //! Returns a parser instance initialized with the given context. If
   //! @[make_p_code] is nonzero, the parser will be initialized with a
-  //! new @[PCode] object.
+  //! new @[PCode] object. If it's a @[PCode] object, the new one will
+  //! share the same @[PikeCompile] object, which is useful to achieve
+  //! larger compilation units.
   {
+    PCode p_code =
+      objectp (make_p_code) ? make_p_code->_sub_p_code (this_object(), tag_set) :
+      make_p_code ? PCode (this_object(), tag_set) :
+      0;
+
     Parser p;
-    PCode p_code = make_p_code && PCode (this_object(), tag_set);
     if (_p_cache) {		// It's a tag set parser.
       TagSet tset = tag_set || ctx->tag_set;
 
@@ -5552,50 +5587,75 @@ class CompiledError
   string _sprintf() {return "RXML.CompiledError" + OBJ_COUNT;}
 }
 
-class PikeCompile
+#ifdef RXML_COMPILE_DEBUG
+#  define COMP_MSG(X...) do werror (X); while (0)
+#else
+#  define COMP_MSG(X...) do {} while (0)
+#endif
+
+static class PikeCompile
 //! Helper class to paste together a Pike program from strings.
 {
   private int idnr = 0;
-  /*private*/ String.Buffer code = String.Buffer();
-  /*private*/ mapping(string:mixed) bindings = ([]);
+  private String.Buffer code = String.Buffer();
+  private mapping(string:mixed) bindings = ([]);
+  private mapping(string:int) cur_ids = ([]);
 
   string bind (mixed val)
   {
     string id = "b" + idnr++;
+    COMP_MSG ("%O bind %O to %s\n", this_object(), val, id);
     bindings[id] = val;
+    cur_ids[id] = 1;
     return id;
   }
 
-  string decl_const (string init)
-  {
-    string id = "c" + idnr++;
-    code->add (sprintf ("constant %s = %s;\n", id, init));
-    return id;
-  }
-
-  string decl_var (string type, void|string init)
+  string add_var (string type, void|string init)
   {
     string id = "v" + idnr++;
-    if (init)
+    if (init) {
+      COMP_MSG ("%O add var: %s %s = %O\n", this_object(), type, id, init);
       code->add (sprintf ("%s %s = %s;\n", type, id, init));
-    else
-      code->add (sprintf ("%s %s;\n", type, init));
+    }
+    else {
+      COMP_MSG ("%O add var: %s %s\n", this_object(), type, id);
+      code->add (sprintf ("%s %s;\n", type, id));
+    }
+    cur_ids[id] = 1;
     return id;
   }
 
-  string decl_func (string rettype, string arglist, string def)
+  string add_func (string rettype, string arglist, string def)
   {
     string id = "f" + idnr++;
-    code->add (sprintf ("%s %s (%s)\n{%s}\n\n", rettype, id, arglist, def));
+    COMP_MSG ("%O add func: %s %s (%s)\n{%s}\n",
+	      this_object(), rettype, id, arglist, def);
+    code->add (sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def));
+    cur_ids[id] = 1;
     return id;
   }
 
-  program compile()
+  mixed resolve (string id)
   {
-    program res;
+    COMP_MSG ("%O resolve %s\n", this_object(), id);
+    if (zero_type (bindings[id])) {
+#ifdef DEBUG
+      if (!cur_ids[id]) error ("Unknown id %O.\n", id);
+#endif
+      object compiled = compile();
+      foreach (indices (cur_ids), string i)
+	bindings[i] = compiled[i];
+      cur_ids = ([]);
+    }
+    return bindings[id];
+  }
 
+  object compile()
+  {
+    COMP_MSG ("%O compile\n", this_object());
     code->add("mixed _encode() { } void _decode(mixed v) { }\n");
 
+    program res;
     string txt = code->get();
 #ifdef DEBUG
     if (mixed err = catch {
@@ -5616,14 +5676,16 @@ class PikeCompile
 	} (master()));
 #ifdef DEBUG
     }) {
-      code = 0;
       werror ("Failed program: %s\n", txt);
       throw (err);
     }
 #endif
-    code = 0;
-    return res;
+    return res();
   }
+
+  MARK_OBJECT;
+
+  string _sprintf() {return "RXML.PikeCompile" + OBJ_COUNT;}
 }
 
 class PCode
@@ -5707,9 +5769,9 @@ class PCode
   // Returns a compiled function for doing the evaluation. The
   // function will receive a context to do the evaluation in.
 
-  static void create (Type _type, void|TagSet _tag_set)
+  static void create (Type _type, void|TagSet _tag_set, void|PikeCompile _comp)
   {
-    type = _type, tag_set = _tag_set;
+    type = _type, tag_set = _tag_set, comp = _comp;
   }
 
 
@@ -5718,11 +5780,14 @@ class PCode
   static array p_code = allocate (16);
   static int length = 0;
   static string errmsgs;
+  static PikeCompile comp;
 
   void add (mixed entry)
   {
-    if (sizeof (p_code) == length) p_code += allocate (sizeof (p_code));
-    p_code[length++] = entry;
+    if (entry != nil && entry != type->empty_value) {
+      if (sizeof (p_code) == length) p_code += allocate (sizeof (p_code));
+      p_code[length++] = entry;
+    }
   }
 
   void finish()
@@ -5757,8 +5822,11 @@ class PCode
 		frame->args = 0;
 	      else
 		frame = frame->clone();
+	      string|EVAL_ARGS_FUNC argfunc = p_code[++pos];
+	      if (stringp (argfunc))
+		argfunc = p_code[pos] = comp->resolve (argfunc);
 	      item = frame->_eval ( // Might unwind.
-		context, this_object(), type, p_code[++pos], p_code[++pos]);
+		context, this_object(), type, argfunc, p_code[++pos]);
 	    }
 	    else if (item->is_RXML_p_code_entry) {
 	      item = item->get (context, type); // Might unwind.
@@ -5803,7 +5871,25 @@ class PCode
     error ("Should not get here.\n");
   }
 
-  string _compile_text (PikeCompile comp)
+  PCode _sub_p_code (Type _type, void|TagSet _tag_set)
+  //! Returns a new p-code object which shares the same @[PikeCompile]
+  //! instance as this one.
+  {
+    return PCode (_type, _tag_set, (comp || (comp = PikeCompile())));
+  }
+
+  //! Accessors for the corresponding functions in the embedded
+  //! @[PikeCompile] object.
+  string bind (mixed val)
+    {return (comp || (comp = PikeCompile()))->bind (val);}
+  string add_var (string type, void|string init)
+    {return (comp || (comp = PikeCompile()))->add_var (type, init);}
+  string add_func (string rettype, string arglist, string def)
+    {return (comp || (comp = PikeCompile()))->add_func (rettype, arglist, def);}
+  mixed resolve (string id)
+    {return comp->resolve (id);}
+
+  string _compile_text()
   //! Returns a string containing a Pike expression that evaluates the
   //! value of this @[PCode] object, assuming the current context is
   //! in a variable named @tt{context@}. No code to handle exception
@@ -5819,13 +5905,13 @@ class PCode
       mixed item = p_code[pos];
       if (objectp (item))
 	if (item->is_RXML_Frame) {
+	  string|EVAL_ARGS_FUNC argfunc = p_code[++pos];
+	  if (!stringp (argfunc))
+	    argfunc = comp->bind (argfunc);
 	  parts[pos] = sprintf (
 	    "(%s->args == 1 ? %[0]s->args = 0, %[0]s : %[0]s->clone())"
 	    "->_eval (context, 0, %s, %s, %s)",
-	    comp->bind (p_code[pos]),
-	    typevar,
-	    comp->bind (p_code[++pos]),
-	    comp->bind (p_code[++pos]));
+	    comp->bind (p_code[pos]), typevar, argfunc, comp->bind (p_code[++pos]));
 	  continue;
 	}
 	else if (item->is_RXML_VarRef) {
@@ -5856,6 +5942,18 @@ class PCode
 
   mixed _encode()
   {
+    // Resolve all argument functions to their actual definitions
+    // before encoding, so that we don't need to encode the comp
+    // object.
+    for (int pos = 0; pos < length; pos++) {
+      mixed item = p_code[pos];
+      if (objectp (item) && item->is_RXML_Frame) {
+	string|EVAL_ARGS_FUNC argfunc = p_code[++pos];
+	if (stringp (argfunc)) p_code[pos] = comp->resolve (argfunc);
+	pos++;
+      }
+    }
+
     return (["tag_set":tag_set&&tag_set->id_string, "type":type,
 	     "recover_errors":recover_errors,
 	     "error_count":error_count, "p_code":p_code, "length":length,
@@ -5874,7 +5972,7 @@ class PCode
   }
 }
 
-class PCodec
+static class PCodec
 {
   static private final nomask constant master_codec = master()->MyCodec;
   inherit master_codec;
