@@ -49,7 +49,7 @@ string tag_cimg( string t, mapping args, object id )
 
   args -= a;
 
-  args->src = query_internal_location()+the_cache->store( a );
+  args->src = query_internal_location()+the_cache->store( a,id );
 
   if( mapping size = the_cache->metadata( a, id, 1 ) ) 
   {
@@ -73,7 +73,7 @@ string tag_cimg_url( string t, mapping args, object id )
   foreach( glob( "*-*", indices(args)), string n )
     a[n] = args[n];
 
-  return query_internal_location()+the_cache->store( a );
+  return query_internal_location()+the_cache->store( a,id );
 }
 
 mapping query_tag_callers()

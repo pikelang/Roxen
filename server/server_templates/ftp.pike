@@ -1,12 +1,12 @@
 /*
- * $Id: ftp.pike,v 1.3 1997/08/19 05:42:57 per Exp $
+ * $Id: ftp.pike,v 1.4 2001/04/07 11:45:31 per Exp $
  */
 
 #include <module.h>
 
 constant name = "FTP server";
 constant desc = "An FTP server, with a preconfigured FTP port.";
-constant modules = ({ "filesystem#0", "userdb#0", "htaccess#0", });
+array modules = ({ "filesystem#0", "userdb#0", "htaccess#0", });
 
 void enable(object config)
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.94 2000/12/10 18:54:12 nilsson Exp $
+ * $Id: roxenloader.pike,v 1.95 2001/04/07 11:45:27 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,21 +15,21 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.94 2000/12/10 18:54:12 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.95 2001/04/07 11:45:27 per Exp $";
 
 // Macro to throw errors
+#if __REAL_VERSION__ < 7.0
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
+#endif
 
 #include <roxen.h>
 
 // The privs.pike program
 program Privs;
-
-#define perror roxen_perror
-private static int perror_status_reported=0;
-
-int pid = getpid();
+int       pid = getpid();
 object stderr = Stdio.File("stderr");
+
+int _status_reported=0;
 
 mapping pwn=([]);
 string pw_name(int uid)
@@ -95,7 +95,7 @@ void roxen_perror(string format,mixed ... args)
 {
   int t = time();
 
-  if (perror_status_reported < t) {
+  if (_status_reported < t) {
     stderr->write("[1mRoxen is alive!\n"
 		  "   Time: "+ctime(t)+
 		  "   pid: "+pid+"   ppid: "+getppid()+
@@ -103,7 +103,7 @@ void roxen_perror(string format,mixed ... args)
 		  (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
 #endif
 		  "   uid: "+pw_name(getuid())+"[0m\n");
-    perror_status_reported = t + 60;	// 60s delay.
+    _status_reported = t + 60;	// 60s delay.
   }
 
   string s;
@@ -501,6 +501,7 @@ class restricted_cd
 
 // Place holder.
 class empty_class {
+  void create( mixed ... f ){}
 };
 
 // Fallback efuns.
@@ -538,6 +539,24 @@ void trace_destruct(mixed x)
 // Set up efuns and load Roxen.
 void load_roxen()
 {
+#if constant(Stdio.Stat)
+  add_constant( "file_stat", lambda( string f,int|void q ) {
+			       mixed r = file_stat( f, q );
+			       return r ? (array)r : 0;
+			     } );
+#endif
+#if constant(Colors)
+  add_constant( "hsv_to_rgb",  Colors.hsv_to_rgb  );
+  add_constant( "rgb_to_hsv",  Colors.rgb_to_hsv  );
+  add_constant( "parse_color", Colors.parse_color );
+  add_constant( "color_name",  Colors.color_name  );
+  add_constant( "colors",      Colors             );
+#endif
+
+#if constant(_Roxen)
+  add_constant( "http_decode_string", _Roxen.http_decode_string );
+#endif
+  
   add_constant("cd", restricted_cd());
 #ifdef TRACE_DESTRUCT
   add_constant("destruct", trace_destruct);
@@ -579,6 +598,16 @@ void load_roxen()
     );
   nwrite = roxen->nwrite;
 }
+
+#if !constant(mark_fd)
+static local mapping fd_marks = ([]);
+mixed mark_fd( int fd, string|void with )
+{
+  if(!with)
+    return fd_marks[ fd ];
+  fd_marks[fd] = with;
+}
+#endif
 
 // Code to trace fd usage.
 #ifdef FD_DEBUG
@@ -654,6 +683,17 @@ string make_path(string ... from)
   }, getcwd())*":";
 }
 
+#if __REAL_VERSION__ > 0.6
+class FakeImage
+{
+  mixed `[]( string what )
+  {
+    return Image[what] || Image[ String.capitalize( what ) ];
+  }
+  function `-> = `[];
+}
+#endif
+
 // Roxen bootstrap code.
 int main(mixed ... args)
 {
@@ -674,7 +714,17 @@ int main(mixed ... args)
   add_constant("do_destruct", lambda(object o) {
 				if(o&&objectp(o))  destruct(o);
 			      });				
-  add_constant("error", lambda(string s){error(s);});
+
+#if __REAL_VERSION__ > 0.6
+  add_constant( "Image", FakeImage() );
+  add_constant( "mark_fd", mark_fd );
+#else
+  add_constant("error", lambda(string f, mixed ... a){
+			  if( sizeof( a ) )
+			    f = sprintf( f, @a );
+			  error(f);
+			});
+#endif
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
   add_constant("perror",perror);
@@ -694,7 +744,7 @@ int main(mixed ... args)
   initiate_cache();
   load_roxen();
   int retval = roxen->main(@args);
-  perror_status_reported = 0;
+  _status_reported = 0;
   roxen_perror("\n-- Total boot time %4.3f seconds ---------------------------\n\n",
 	       (gethrtime()-start_time)/1000000.0);
   return(retval);

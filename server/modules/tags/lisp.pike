@@ -1,6 +1,7 @@
+#if __REAL_VERSION__ < 7.0
 #if constant(Languages)
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.12 1998/09/29 22:46:46 peter Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.13 2001/04/07 11:45:30 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -431,3 +432,4 @@ void init_roxen_functions(object environment, object conf)
 }
 
 #endif  // constant(Languages)
+#endif // __REAL_VERSION__ < 7.0

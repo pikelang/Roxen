@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.58 1999/08/11 06:26:54 peter Exp $
+# $Id: start,v 1.59 2001/04/07 11:45:26 per Exp $
 
 # Can be set with '--config-dir=DIR'
 DIR=../configurations/
@@ -89,6 +89,22 @@ if [ -x bin/roxen ] ; then  pike=bin/roxen; fi
 if [ "x$PIKE" = "x" ]; then :; else
   if [ -x "$PIKE" ]; then pike="$PIKE"; fi
 fi
+
+
+# Check pike version.
+# This is new to support Pike 7.2 and Pike 7.3.
+PIKE_VERSION=`"$pike" --version 2>&1|head -1|awk '{print $2}'`
+
+case $PIKE_VERSION in
+  v0.6)
+     ;;
+  v7.0)
+     ;;
+  *)
+   echo "Pike $PIKE_VERSION uses, using -V0.6"
+   DEFINES="-V0.6 $DEFINES"
+  ;;
+esac
 
 gdb=no
 

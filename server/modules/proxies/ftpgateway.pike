@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.25 1998/06/27 13:20:06 grubba Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.26 2001/04/07 11:45:28 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -480,7 +480,8 @@ class Request {
 
   string parse_directory()
   {
-    string res,s,r,t;
+    mixed res;
+    string s,r,t;
     string *path;
     /* check if known format */
     if (effect=="raw"||buffer=="")

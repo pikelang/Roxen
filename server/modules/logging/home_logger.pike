@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.18 1998/09/11 22:19:59 per Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.19 2001/04/07 11:45:28 per Exp $";
 constant thread_safe=1;
 
 
@@ -269,7 +269,7 @@ class CacheFile {
     d = delay;
     master = m;
     if(num > 1)
-      next = object_program(this_object())( --num, delay, m );
+      next = object_program(this_object())( --num, delay, m, mu );
   }
 
   void destroy()
@@ -386,7 +386,7 @@ mapping cached_homes = ([]);
 
 string home(string of, object id)
 {
-  string l, f;
+  mixed l, f;
   foreach(QUERY(Logs), l)
   {
     if(!search(of, l))

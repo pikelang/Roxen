@@ -1,11 +1,11 @@
 /*
- * $Id: basic.pike,v 1.1 1997/12/15 02:13:06 peter Exp $
+ * $Id: basic.pike,v 1.2 2001/04/07 11:45:30 per Exp $
  */
 
 constant name = "Basic Server";
 constant desc = "A virtual server with the most basic modules";
 
-constant modules = ({
+array modules = ({
   "contenttypes#0",
   "ismap#0",
   "htmlparse#0",

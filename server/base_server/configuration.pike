@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.182 1999/06/28 01:42:48 mast Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.183 2001/04/07 11:45:26 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1785,7 +1785,7 @@ public array open_file(string fname, string mode, object id)
   object oc = id->conf;
   string oq = id->not_query;
   function funp;
-  mapping file;
+  mixed file;
 
   id->not_query = fname;
   foreach(oc->first_modules(), funp)
@@ -1989,7 +1989,7 @@ public array access(string file, object id)
   {
     loc = tmp[0];
     if((file+"/")==loc)
-      return file+="/";
+      return access( file+"/", id );
     if(!search(file, loc)) 
     {
 #ifdef MODULE_LEVEL_SECURITY

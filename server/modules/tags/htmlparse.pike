@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.195 2000/06/18 16:53:50 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.196 2001/04/07 11:45:29 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -3484,7 +3484,7 @@ mapping query_container_callers()
 		     return r;
 		   },
 	   "throw":lambda(string t, mapping m, string c) {
-		     if(c[-1] != "\n") c+="\n";
+		     if(c[-1] != '\n') c+="\n";
 		     throw( ({ c, backtrace() }) );
 		   },
 	   "nooutput":tag_nooutput,
@@ -3640,8 +3640,8 @@ string api_html_quote(object id, string what)
   return replace(what, ({ "<", ">", "&" }),({"&lt;", "&gt;", "&amp;" }));
 }
 
-constant replace_from = indices( iso88591 )+ ({"&lt;","&gt;", "&amp;","&#022;"});
-constant replace_to   = values( iso88591 )+ ({"<",">", "&","\""});
+array replace_from = indices( iso88591 )+ ({"&lt;","&gt;", "&amp;","&#022;"});
+array replace_to   = values( iso88591 )+ ({"<",">", "&","\""});
 
 string api_html_dequote(object id, string what)
 {

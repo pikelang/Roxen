@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.31 1999/03/23 22:24:56 mast Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.32 2001/04/07 11:45:29 per Exp $";
 
 constant thread_safe=1;
 // MAST: Blatant lie; we're using fork() here. Disabling this wouldn't
@@ -287,7 +287,7 @@ mapping handle_file_extension(object f, string e, object got)
     else
       file = cpp(file);
 #endif
-    array (function) ban = allocate(6, "function");
+    array (function) ban = allocate(6);
 #ifndef __NT__
 #if efun(setegid)
     ban[0] = setegid;

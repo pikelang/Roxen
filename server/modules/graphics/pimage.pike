@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.11 1998/08/26 17:47:20 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.12 2001/04/07 11:45:28 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -148,7 +148,7 @@ class Constructors
     class FunctionCall
     {
       function f; object img;
-      void `()(mixed ... args)
+      mixed `()(mixed ... args)
       {
 	mixed res=f(@args);
 	return (objectp(res)&&(img->image=res))?img:res;
@@ -311,7 +311,7 @@ class Constructors
   object Text(string font, string text, mixed fg, mixed bg)
   {
     object m = get_font(font, 32, 0, 0, 0, 0, 0, 0)->write(text);
-    return myimage(bg(),image(m->xsize(),m->ysize(),@bg)
+    return myimage(bg(),Image.image(m->xsize(),m->ysize(),@bg)
 		   ->paste_alpha_color(m,@to_color(fg)));
   }
 
@@ -326,7 +326,11 @@ class Constructors
 	q = g->inflate()->inflate(q);
       };
     }
-    return myimage(bg(),image()->fromppm(q));
+#if __REAL_VERSION__ > 0.6
+    return myimage(bg(),Image.PNM.decode( q ));
+#else
+    return myimage(bg(),Image.image()->fromppm(q));
+#endif
   }
 
   object Roxen( )
@@ -341,7 +345,7 @@ class Constructors
   
   object PImage(int xs, int ys, mixed bgc)
   {
-    return myimage(bg(),image(xs,ys,@to_color(bgc)));
+    return myimage(bg(),Image.image(xs,ys,@to_color(bgc)));
   }
   
 }
@@ -410,8 +414,8 @@ string tag_pimage(string t, mapping m, string contents, object rid)
   return do_replace((compiled[id]=compile(contents, rid))->tag(m), id);
 }
 
-constant DANGEROUS_FROM = ({ "\"", "\\" });
-constant DANGEROUS_TO   = ({  "", "" });
+array DANGEROUS_FROM = ({ "\"", "\\" });
+array DANGEROUS_TO   = ({  "", "" });
 
 string tag_glock(string t, mapping m, object rid)
 {

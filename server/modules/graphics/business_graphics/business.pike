@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.111 1999/03/11 01:27:47 mast Exp $";
+constant cvs_version = "$Id: business.pike,v 1.112 2001/04/07 11:45:28 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -18,7 +18,7 @@ constant thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 import Array;
-import Image;
+// import Image;
 
 function create_pie, create_bars, create_graph;
 
@@ -555,7 +555,7 @@ string quote(mapping in)
   return out;
 }
 
-constant _diagram_args =
+array _diagram_args =
 ({ "xgridspace", "ygridspace", "horgrid", "size", "type", "3d",
    "templatefontsize", "fontsize", "tone", "background","colorbg", "subtype",
    "dimensions", "dimensionsdepth", "xsize", "ysize", "fg", "bg",
@@ -566,13 +566,13 @@ constant _diagram_args =
    "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
    "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn", "notrans",
    "colortable_cache"});
-constant diagram_args = mkmapping(_diagram_args,_diagram_args);
+mapping diagram_args = mkmapping(_diagram_args,_diagram_args);
 
-constant _shuffle_args = 
+array _shuffle_args = 
 ({ "dimensions", "dimensionsdepth", "ygridspace", "xgridspace",
    "xstart", "xstop", "ystart", "ystop", "colors", "xvalues", "yvalues",
    "axwidth", "xstor", "ystor", "xunit", "yunit", "fg", "bg", "voidsep" });
-constant shuffle_args = mkmapping( _shuffle_args, _shuffle_args );
+mapping shuffle_args = mkmapping( _shuffle_args, _shuffle_args );
 
 string tag_diagram(string tag, mapping m, string contents,
 		   object id, object f, mapping defines)
@@ -959,14 +959,14 @@ mapping find_file(string f, object id)
     }
   } else if(res->tonedbox) {
     m_delete( res, "bgcolor" );
-    res->image = image(res->xsize, res->ysize)->
+    res->image = Image.image(res->xsize, res->ysize)->
       tuned_box(0, 0, res->xsize, res->ysize, res->tonedbox);
   }
   else if (res->colorbg)
   {
     back=0; //res->bgcolor;
     m_delete( res, "bgcolor" );
-    res->image = image(res->xsize, res->ysize, @res->colorbg);
+    res->image = Image.image(res->xsize, res->ysize, @res->colorbg);
   } 
   /*else if (res->notrans)
     {

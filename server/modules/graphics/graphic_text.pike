@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.168 1999/07/19 22:05:03 neotron Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.169 2001/04/07 11:45:27 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -99,11 +99,11 @@ object  outline(object  on, object  with,
   return on;
 }
 
-constant white = ({ 255,255,255 });
-constant lgrey = ({ 200,200,200 });
-constant grey = ({ 128,128,128 });
-constant black = ({ 0,0,0 });
-constant wwwb = ({ lgrey,lgrey,grey,black });
+array white = ({ 255,255,255 });
+array lgrey = ({ 200,200,200 });
+array grey = ({ 128,128,128 });
+array black = ({ 0,0,0 });
+array wwwb = ({ lgrey,lgrey,grey,black });
 
 object  bevel(object  in, int width, int|void invert)
 {
@@ -405,8 +405,10 @@ object make_text_image(mapping args, object font, string text,object id)
     foreach((args->turbulence/";"),  string s)
     {
       array q= s/",";
-      if(sizeof(q)<2) args+=({ ((float)s)||0.2, ({ 255,255,255 }) });
-      arg+=({ ((float)q[0])||0.2, parse_color(q[1]) });
+      if(sizeof(q)<2)
+	arg+=({ ((float)s)||0.2, ({ 255,255,255 }) });
+      else
+	arg+=({ ((float)q[0])||0.2, parse_color(q[1]) });
     }
     background=background->turbulence(arg);
   }
@@ -555,8 +557,8 @@ void start(int|void val, object|void conf)
 }
 
 constant nbsp = iso88591["&nbsp;"];
-constant replace_from = indices( iso88591 )+ ({"&ss;","&lt;","&gt;","&amp;",});
-constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", }); 
+array replace_from = indices( iso88591 )+ ({"&ss;","&lt;","&gt;","&amp;",});
+array replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", }); 
 
 #define simplify_text( from ) replace(from,replace_from,replace_to)
 

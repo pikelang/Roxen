@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.10 1998/08/10 21:38:39 per Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.11 2001/04/07 11:45:29 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -182,7 +182,7 @@ string describe_example(array a)
 
 #define E(X,Y) ({ X, Y })
 
-constant examples = 
+array examples = 
 ({
   E("The age of something", "Per Hedbor is <countdown iso=1973-01-16 since years type=string> years old"),
 

@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.50 1999/06/17 02:23:09 peter Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.51 2001/04/07 11:45:27 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -53,6 +53,7 @@ array persistent_variables(program p, object o)
 
 array|string low_nameof(object|program|function fo)
 {
+#if 0
   //fo might be of several types, so DON'T return if one search failes.
   if(objectp(fo))
     if(mixed x=search(objects,fo)) return x;
@@ -78,6 +79,7 @@ array|string low_nameof(object|program|function fo)
   throw(({"nameof: unknown thingie.\n",backtrace()}));
 #else
   return 0;
+#endif
 #endif
 }
 
@@ -187,7 +189,10 @@ void create()
 string errors = "";
 void set_inhibit_compile_errors(mixed f)
 {
-  ::set_inhibit_compile_errors(f);
+#if __REAL_VERSION__ > 0.6
+  if( !stringp( f ) )
+#endif
+    ::set_inhibit_compile_errors(f);
   errors="";
 }
 

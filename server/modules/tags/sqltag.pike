@@ -1,5 +1,5 @@
 /* 
- * $Id: sqltag.pike,v 1.36 2000/04/05 10:45:53 grubba Exp $
+ * $Id: sqltag.pike,v 1.37 2001/04/07 11:45:30 per Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.36 2000/04/05 10:45:53 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.37 2001/04/07 11:45:30 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -537,21 +537,12 @@ void stop()
 
 string status()
 {
-  if (catch {
-    object o;
-    if (conf->sql_connect) {
-      o = conf->sql_connect(QUERY(hostname));
-    } else {
-      o = Sql.sql(QUERY(hostname)
-#ifdef SQL_TAG_COMPAT
-		  , QUERY(database), QUERY(user), QUERY(password)
-#endif /* SQL_TAG_COMPAT */
-		  );
-    }
+  object o;
+  if (!catch {
+    o = conf->sql_connect(QUERY(hostname));
+  } )
     return(sprintf("Connected to %s-server on %s<br>\n",
 		   o->server_info(), o->host_info()));
-  }) {
-    return("<font color=red>Not connected.</font><br>\n");
-  }
+  return("<font color=red>Not connected.</font><br>\n");
 }
 

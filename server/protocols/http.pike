@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.135 2000/11/14 05:25:38 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.136 2001/04/07 11:45:30 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -441,7 +441,7 @@ private int parse_got(string s)
 	  case "authorization":
 	    string *y;
 	    rawauth = contents;
-	    y = contents /= " ";
+	    y = contents / " ";
 	    if(sizeof(y) < 2)
 	      break;
 	    y[1] = decode(y[1]);
@@ -453,7 +453,7 @@ private int parse_got(string s)
 	  
 	  case "proxy-authorization":
 	    string *y;
-	    y = contents /= " ";
+	    y = contents / " ";
 	    if(sizeof(y) < 2)
 	      break;
 	    y[1] = decode(y[1]);
@@ -1411,7 +1411,7 @@ void send_result(mapping|void result)
 // Execute the request
 void handle_request( )
 {
-  mixed *err;
+  mixed err;
   function funp;
   object thiso=this_object();
 
@@ -1566,7 +1566,7 @@ void got_data(mixed fooid, string s)
 object clone_me()
 {
   object c,t;
-  c=object_program(t=this_object())();
+  c=object_program(t=this_object())(0,0);
 
 // c->first = first;
   c->conf = conf;

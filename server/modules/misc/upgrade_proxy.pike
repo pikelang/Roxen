@@ -2,7 +2,7 @@
 inherit "module";
 object proxy;
 constant thread_safe = 1;
-constant cvs_version = "$Id: upgrade_proxy.pike,v 1.6 1998/03/11 19:42:39 neotron Exp $";
+constant cvs_version = "$Id: upgrade_proxy.pike,v 1.7 2001/04/07 11:45:28 per Exp $";
 
 array register_module()
 {
@@ -21,7 +21,7 @@ class Proxy
     if(client) destruct(client);
   }
   
-  void `->(string ident)
+  mixed `->(string ident)
   {
     remove_call_out(close_client);
     call_out(close_client, 20);

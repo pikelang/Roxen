@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.373 2000/12/10 18:53:57 nilsson Exp $
+ * $Id: roxen.pike,v 1.374 2001/04/07 11:45:26 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.373 2000/12/10 18:53:57 nilsson Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.374 2001/04/07 11:45:26 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1258,8 +1258,9 @@ void create()
   add_constant("roxen", this_object());
   add_constant("spinner", this_object());
   add_constant("load",    load);
-  (object)"color.pike";
-  (object)"fonts.pike";
+
+  ((program)"base_server/color.pike")();
+  ((program)"base_server/fonts.pike")();
   Configuration = (program)"configuration";
   call_out(post_create,1); //we just want to delay some things a little
 }

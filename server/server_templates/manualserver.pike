@@ -1,5 +1,5 @@
 /*
- * $Id: manualserver.pike,v 1.5 1999/11/05 07:44:15 peter Exp $
+ * $Id: manualserver.pike,v 1.6 2001/04/07 11:45:31 per Exp $
  */
 
 #include <module.h>
@@ -7,7 +7,7 @@
 constant selected = 0;
 constant name = "Manual viewing server";
 constant desc = "A virtual server with the modules needed for a manuals viewing server.";
-constant modules = ({
+array modules = ({
   "obox#0",
   "flik#0",
   "tablify#0",

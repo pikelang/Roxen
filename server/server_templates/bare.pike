@@ -1,10 +1,10 @@
 /*
- * $Id: bare.pike,v 1.2 1997/08/13 21:51:06 grubba Exp $
+ * $Id: bare.pike,v 1.3 2001/04/07 11:45:30 per Exp $
  */
 
 string name = "Bare bones";
 string desc = "A virtual server with _no_ modules";
-constant modules = ({ });
+array modules = ({ });
 
 void enable(object config)
 {

@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.136 2000/05/25 17:27:54 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.137 2001/04/07 11:45:29 per Exp $";
 
 class Shuffle
 {
@@ -85,7 +85,7 @@ Stdio.File open_log_file( string logfile )
     }
     return lf;
   }
-  return Stdio.stderr;
+  return Stdio.File( "stderr" );
 }
 
 string trim( string what )
@@ -698,8 +698,8 @@ class CGIScript
   }
 
   // HUP, PIPE, INT, TERM, KILL
-  static constant kill_signals = ({ 1, 13, 2, 15, 9 });
-  static constant kill_interval = 3;
+  static array kill_signals = ({ 1, 13, 2, 15, 9 });
+  static int kill_interval = 3;
   static int next_kill;
 
   void kill_script()
@@ -731,7 +731,7 @@ class CGIScript
     switch( QUERY(stderr) )
     {
      case "main log file":
-       stderr = Stdio.stderr;
+       stderr = Stdio.File( "stderr" );
        break;
      case "custom log file":
        stderr = open_log_file( query( "cgilog" ) );
