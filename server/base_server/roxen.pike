@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.145 1997/10/15 02:50:47 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.146 1997/10/25 07:58:56 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2246,6 +2246,7 @@ object neighborhood;
 // Roxen :) It has not changed all that much since Spider 2.0.
 varargs int main(int argc, array (string) argv)
 {
+  initiate_languages();
   mixed tmp;
 
   start_time=time(1);
@@ -2292,7 +2293,6 @@ varargs int main(int argc, array (string) argv)
 
   init_garber();
   initiate_supports();
-  initiate_languages();
   
   initiate_configuration_port( 1 );
   enable_configurations();

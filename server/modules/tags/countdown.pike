@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.1 1997/10/25 07:50:11 per Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.2 1997/10/25 07:58:57 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -112,8 +112,8 @@ object event = class
 
 array register_module()
 {
-  return ({ MODULE_PARSER, "Countdown module. Adds the &lt;countdown&gt; tag.",
-	    "This module adds a new tag, when enables, see "
+  return ({ MODULE_PARSER, "Countdown",
+	    "This module adds a new tag, when enabled, see "
 	    "&lt;countdown help&gt; for usage information.",0,1 });
 }
 
@@ -221,7 +221,7 @@ string usage()
 	  "<tr valign=top><td>hour=int</td><td><i>sets the hour. Might be useful, perhaps..</i></td></tr>\n"
 	  "<tr valign=top><td>min=int</td><td><i>sets the minute.</i></td></tr>\n"
 	  "<tr valign=top><td>sec=int</td><td><i>sets the second.</i></td></tr>\n"
-	  "<tr valign=top><td>iso=year-month-day></td><td><i>Set the year, month and day at once</i></td></tr>\n"
+	  "<tr valign=top><td>iso=year-month-day</td><td><i>Set the year, month and day at once</i></td></tr>\n"
 	  +describe_events()+
 	  "<tr valign=top><td><br><b>Presentation:</b></tr></tr>"
 	  "<tr valign=top><td>when</td><td><i>Show when the time will occur. All arguments that are valid in a &lt;date&gt; tag can be used to modify the display</i></td></tr>\n"

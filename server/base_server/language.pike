@@ -3,7 +3,7 @@ import String;
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.10 1997/08/12 19:45:37 per Exp $
+ * $Id: language.pike,v 1.11 1997/10/25 07:58:55 per Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -14,7 +14,7 @@ import String;
 
 #include <roxen.h>
 
-private mapping languages = ([ ]);
+mapping languages = ([ ]);
 
 import String;
 
