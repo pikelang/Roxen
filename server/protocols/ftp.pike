@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.11 1999/10/08 18:23:54 grubba Exp $
+ * $Id: ftp.pike,v 2.12 1999/10/08 19:11:48 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -3365,9 +3365,11 @@ class FTPSession
     // FIXME: Only supports one configuration!
     conf = port_obj->urls[port_obj->sorted_urls[0]]->conf;
 
+#if 0
     werror("FTP: conf:%O\n"
 	   "FTP:urls:%O\n",
 	   mkmapping(indices(conf), values(conf)), port_obj->urls);
+#endif /* 0 */
 
     master_session = RequestID2();
     master_session->remoteaddr = (fd->query_address()/" ")[0];
