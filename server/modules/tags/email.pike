@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.22 2003/01/13 18:40:29 mast Exp $";
+constant cvs_version = "$Id: email.pike,v 1.23 2003/01/24 17:01:56 anders Exp $";
 
 constant thread_safe=1;
 
@@ -87,7 +87,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.22 $"/" ")[1];
+string revision = ("$Revision: 1.23 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -276,17 +276,21 @@ class TagEmail {
 
       foreach(from/" ", string el)
         if(search(el, "@") > 0)
-        addr = el;
-      if(addr)
-        from = "\""+((from/" ")-({addr}))*" "+"\" <"+addr+">";
-
+	  addr = el;
+      if(addr && search(addr, "<") == -1) {
+	string name = ((from/" ")-({addr}))*" ";
+	if (sizeof(name-" "))
+	  from = "\""+name+"\" <"+addr+">";
+	else
+	  from = addr;
+      }
       return from;
     }
 
     string only_from_addr(string fromx) {
       foreach(Array.map(fromx/" ", String.trim_all_whites), string from1)
         if(search(from1, "@") > 0)
-        return from1;
+	  return from1;
       return String.trim_all_whites(fromx);
     }
 
@@ -517,7 +521,9 @@ value=''><p>
 </attr>
 
 <attr name='from' value='' default='(empty)'><p>
- The email address of sender.
+ The email address of sender. Values on the form <tt>John Doe foo@bar.com</tt>
+ renders a From: header like <tt>From: \"John Doe\" &lt;foo@bar.com&gt;</tt>.
+ If the value contains a '&lt;' the value is left unaltered.
 </p>
 </attr>
 
