@@ -131,14 +131,14 @@ string selected_item( string q, Configuration c, RequestID id,
     "\n";
 
   if (!sizeof(module_groups))
-    pre += LOCALE(513,"No modules");
+    pre += "No modules";
   
   foreach( module_groups, array gd )
   {
     int onlysel,fin;
     string real_group_name = gd[0];
     string r_module_group = module_group;
-    string group_name = (real_group_name == "zz_misc" ? LOCALE(525,"Other") :
+    string group_name = (real_group_name == "zz_misc" ? "Other" :
 			 real_group_name);
     // Step 1: Is the selected module in this group?
     //         If so, force-select this group.
