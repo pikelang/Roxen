@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.391 2002/11/14 23:31:48 mani Exp $";
+constant cvs_version = "$Id: http.pike,v 1.392 2003/01/14 22:53:37 zino Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1249,7 +1249,7 @@ string handle_error_file_request (string msg, array(string) rxml_bt, array(array
 }
 
 // The wrapper for multiple ranges (send a multipart/byteranges reply).
-#define BOUND "Byte_Me_Now_Roxen"
+#define BOUND "Byte_Me_Now_Chily"
 
 class MultiRangeWrapper
 {
@@ -1884,12 +1884,16 @@ void got_data(mixed fooid, string s)
       // versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
       // form in requests, even though HTTP/1.1 clients will only generate
       // them in requests to proxies. 
+#ifdef RFC2068
       if (has_prefix(raw_url, port_obj->name+"://") &&
 	  (conf = port_obj->find_configuration_for_url(raw_url,
 						       this_object(), 1))) {
 	sscanf(raw_url[sizeof(port_obj->name+"://")..],
 	       "%[^/]%s", misc->host, raw_url);
-      } else {
+      } 
+      else
+#endif
+      {
 	if (misc->host) {
 	  conf =
 	    port_obj->find_configuration_for_url(port_obj->name + "://" +
