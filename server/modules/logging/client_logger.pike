@@ -2,7 +2,7 @@
 
 // Logs the User-agent fields in a separate log.
 
-constant cvs_version = "$Id: client_logger.pike,v 1.14 2001/09/03 18:18:32 nilsson Exp $";
+constant cvs_version = "$Id: client_logger.pike,v 1.15 2002/03/14 16:00:48 anders Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -39,5 +39,5 @@ void start()
 
 void log(RequestID id, mapping file)
 {
-  logf && logf(id->client*" " + "\n");
+  logf && logf(id->client ? id->client*" " + "\n" : "unknown\n");
 }
