@@ -1,5 +1,5 @@
 #!/bin/sh
-# init.d script for Roxen. Set the variables below to something fitting..
+# init.d script for Roxen WebServer. Set the variables below to something fitting..
 # This is only an example script.
 #############
 
@@ -42,22 +42,22 @@ trap "" 1
 
 case $1 in
         'start_msg')
-	  echo 'Start Roxen 2.1'
+	  echo 'Start Roxen WebServer 2.1'
 	  exit 0
 	;;
 	'stop_msg')
-	  echo 'Stop Roxen 2.1'
+	  echo 'Stop Roxen WebServer 2.1'
 	  exit 0
 	;;
 
 	'start')
-          echo Starting Roxen in $roxenhome...
+          echo Starting Roxen WebServer in $roxenhome...
 	  if [ -z "$pidfile" ]; then
 	    echo Warning: No pid file set - cannot stop or reload.
 	  elif [ -f $pidfile ]; then
 	    read pid < $pidfile
 	    if kill -0 $pid ; then
-	      echo Roxen is already running.
+	      echo Roxen WebServer is already running.
 	      exit 0
 	    fi
 	    rm $pidfile
@@ -71,7 +71,7 @@ case $1 in
 	    ./start $flags 2>/dev/null
             echo Done.
           else
-            echo I cannot find the Roxen dir '('$roxenhome')'
+            echo I cannot find the Roxen WebServer dir '('$roxenhome')'
 	  fi
 	;;
 
@@ -86,7 +86,7 @@ case $1 in
 	    kill -HUP $pid || kill 1 $pid
 	    exit 0
 	  fi
-	  echo "Roxen doesn't seem to be running."
+	  echo "Roxen WebServer doesn't seem to be running."
 	  ;;
 
 	'restart')
@@ -94,7 +94,7 @@ case $1 in
 	    echo "No pid file set."
 	    exit 1
 	  fi
-	  echo Restarting Roxen...
+	  echo Restarting Roxen WebServer...
 	  if [ -f $pidfile ] ; then
 	    read pid < $pidfile
 	    kill -TERM $pid || kill $pid
@@ -102,13 +102,13 @@ case $1 in
 	    echo Done.
 	    exit 0
 	  fi
-	  echo "Roxen doesn't seem to be running."
-	  echo Starting a new Roxen in $roxenhome...
+	  echo "Roxen WebServer doesn't seem to be running."
+	  echo Starting a new Roxen WebServer in $roxenhome...
 	  if [ -x $roxenhome/start ]; then
  	    cd $roxenhome
 	    ./start $flags 2>/dev/null
           else
-            echo I cannot find the Roxen dir '('$roxenhome')'
+            echo I cannot find the Roxen WebServer dir '('$roxenhome')'
 	  fi
           echo Done.
 	;;
@@ -118,14 +118,14 @@ case $1 in
 	     echo "No pid file set."
 	     exit 1
 	   fi
-           echo Stopping Roxen...
+           echo Stopping Roxen WebServer...
 	   if [ -f $pidfile ] ; then
 	     if kill -INT `cat $pidfile` || kill 2 `cat $pidfile` ; then
-               echo Roxen stopped.
+               echo Roxen WebServer stopped.
 	     fi
 	     rm $pidfile
 	   else
-	     echo "Roxen doesn't seem to be running."
+	     echo "Roxen WebServer doesn't seem to be running."
            fi
            # Get all the CGI scripts... :-)
            if [ x$killallwww = xyes ] ; then
