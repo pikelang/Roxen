@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.542 2002/10/24 03:58:36 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.543 2002/10/26 14:30:29 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3589,45 +3589,29 @@ also set 'URLs'.</p>");
   
   defvar("ZNoSuchFile", NoSuchFileOverride() );
 
-  defvar("404-message", #"<html><head>
-<title>404 - Page not found</title>
-</head>
-<body alink=\"#000000\" bgcolor=\"#ffffff\" bottommargin=\"0\" leftmargin=\"0\" link=\"#ce5c00\" marginheight=\"2\" marginwidth=\"0\" rightmargin=\"0\" text=\"#333333\" topmargin=\"2\" vlink=\"#ce5c00\">
+  defvar("404-message", #"<html><head><title>404 - Page not Found</title>
+<style type='text/css'>
+td {font: 12px Helvetica, Arial; font-weight: bold}
+</style>
+</head><body bgcolor='black' text='#505050'
+ link='#bf2626' vlink='#bf2626' alink='#ff2626'>
 
-<if nserious=''><set variable='var.404' value='-sorry' /></if>
-
-<table width=\"100%\"  border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
-  <tr>
-    <td><img src=\"/internal-roxen-page-not-found&var.404;\" border=\"0\" alt=\"Page not found\" width=\"404\" hspace=\"2\" /></td>
-    <td>&nbsp;</td>
-    <td align=\"right\"><font face=\"lucida,helvetica,arial\">
-        <b>ChiliMoon &roxen.base-version;&nbsp;</b>
-    </font></td>
-  </tr>
-  <tr>
-    <td width=\"100%\" height=\"21\" colspan=\"3\" background=\"/internal-roxen-tile\"><img src=\"/internal-roxen-unit\" alt=\"\" /></td>
-  </tr>
+<table width='99%' height='99%'>
+<tr height='10%'></tr>
+<tr height='65%'><td align='center'>
+<img src='/%01/chili-large-black' width='151' height='169' alt='ChiliMoon' title='ChiliMoon' />
+<table><tr><td><h1>Requested file not found</h1>
+<emit source='path'>
+<if exists='&_.path;/'><a href='&_.path;'>&_.name;</a> </if>
+<else>&_.name;</else>
+<delimiter>/</delimiter>
+</emit>
+</td></tr></table>
+</td></tr>
+<tr height='25%'><td valign='bottom' align='right'>&roxen.version;</td></tr>
 </table>
 
-<font face=\"lucida,helvetica,arial\">
-<h2>&nbsp;Unable to retrieve &page.virtfile;.</h2>
-<br /><br />
-<blockquote>
-
-If you feel that this is a configuration error,
-please contact the administrators of this
-webserver or the author of the
-<if referrer=''>
-<a href=\"&client.referrer;\">referring</a>
-</if><else>
-referring
-</else>
-page.
-
-</blockquote>
-</font>
-</body>
-</html>
+</body></html>
 ",
 	 "No such file message",
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
