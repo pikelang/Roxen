@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.310 2001/05/04 16:19:16 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.311 2001/05/08 04:03:13 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -815,12 +815,14 @@ private int parse_got( string new_data )
   }
 
   foreach( (array)request_headers, [string linename, array|string contents] )
+  {
+    if( arrayp(contents) ) contents = contents[0];
     switch (linename) 
     {
      case "pragma": pragma|=(multiset)((contents-" ")/",");  break;
      case "content-length": misc->len = (int)contents;       break;
      case "authorization":  rawauth = contents;              break;
-     case "referer": referer = arrayp(contents)?contents:({contents}); break;
+     case "referer": referer = ({contents}); break;
      case "if-modified-since": since=contents; break;
 
      case "proxy-authorization":
@@ -864,13 +866,6 @@ private int parse_got( string new_data )
      case "content-type":
        misc[linename] = lower_case(contents);
        break;
-
-       //        case "accept-encoding":
-       //          foreach((contents-" ")/",", string e) {
-       //            if (lower_case(e) == "gzip") {
-       //              supports["autogunzip"] = 1;
-       //            }
-       //          }
     }
   if(misc->len && method == "POST")
   {
