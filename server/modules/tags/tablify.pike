@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.72 2002/01/07 10:39:48 mast Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.73 2002/01/24 01:14:10 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -342,10 +342,23 @@ string encode_url(int col, int state, object stateobj, RequestID id){
     state=col;
 
   string global_not_query=id->raw_url;
-  sscanf(global_not_query, "%s?", global_not_query);
+  sscanf(global_not_query, "%s?%s", global_not_query, string vars);
+
+  // Keep other variables as they were when the request was received.
+  // This won't keep variables that are submitted with a POST method,
+  // but that's a feature.
+  if (vars) {
+    vars = "&" + vars;
+    int i = search (vars, "&__state=");
+    if (i >= 0) {
+      int j = search (vars, "&", i + 1);
+      vars = vars[..i - 1] + (j > 0 ? vars[j..] : "");
+    }
+  }
+  else vars = "";
 
   return global_not_query+"?__state="+
-    stateobj->uri_encode(state);
+    stateobj->uri_encode(state) + vars;
 }
 
 string make_table(array subtitles, array table, mapping opt, RequestID id)

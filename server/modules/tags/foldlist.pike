@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.33 2001/12/06 23:00:38 mast Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.34 2002/01/24 01:14:10 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -96,11 +96,24 @@ string encode_url(array states, RequestID id){
   //    return id->not_query+"?"+id->query+"&__state="+
   //      state->uri_encode(value);
 
-  string global_not_query=id->raw_url;
-  sscanf(global_not_query, "%s?", global_not_query);
+  string global_not_query = id->raw_url;
+  sscanf(global_not_query, "%s?%s", global_not_query, string vars);
+
+  // Keep other variables as they were when the request was received.
+  // This won't keep variables that are submitted with a POST method,
+  // but that's a feature.
+  if (vars) {
+    vars = "&" + vars;
+    int i = search (vars, "&__state=");
+    if (i >= 0) {
+      int j = search (vars, "&", i + 1);
+      vars = vars[..i - 1] + (j > 0 ? vars[j..] : "");
+    }
+  }
+  else vars = "";
 
   return global_not_query+"?__state="+
-    state->uri_encode(value);
+    state->uri_encode(value) + vars;
 }
 
 class TagFoldlist {
