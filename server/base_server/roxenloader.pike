@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.108 1999/11/11 05:25:06 mast Exp $
+ * $Id: roxenloader.pike,v 1.109 1999/11/11 08:15:10 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.108 1999/11/11 05:25:06 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.109 1999/11/11 08:15:10 mast Exp $";
 
 #define perror roxen_perror
 
@@ -469,6 +469,10 @@ class ErrorContainer
   void compile_warning(string file, int line, string err)
   {
     got_error(file, line, "Warning: " + err);
+  }
+  void `() (string file, int line, string err)
+  {
+    got_error (file, line, err);
   }
   void create()
   {
