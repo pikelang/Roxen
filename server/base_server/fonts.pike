@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.66 2000/12/11 05:13:29 nilsson Exp $
+// $Id: fonts.pike,v 1.67 2000/12/31 23:53:36 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -8,7 +8,7 @@
 class Font
 {
   static int j_right, j_center;
-  static float x_spacing=1.0, y_spacing=1.0;
+  static float|int x_spacing=1.0, y_spacing=1.0;
 
   Image.Image write( string ... what );
   //! non-breakable spaces in any of the strings in 'what' is to be
@@ -42,13 +42,13 @@ class Font
     j_right = 0;
   }
   
-  void set_x_spacing( float delta )
+  void set_x_spacing( float|int delta )
   //! Multiply real char spacing with this value for each character.
   {
     x_spacing = delta;
   }
 
-  void set_y_spacing( float delta )
+  void set_y_spacing( float|int delta )
   //! Multiply real row spacing with this value.
   {
     y_spacing = delta;
@@ -151,7 +151,7 @@ string describe_font_type(string n)
 }
 
 object get_font(string f, int size, int bold, int italic,
-                string justification, float xspace, float yspace)
+                string justification, float|int xspace, float|int yspace)
 {
   object fnt;
 
@@ -160,8 +160,14 @@ object get_font(string f, int size, int bold, int italic,
     {
       if(justification=="right") fnt->right();
       if(justification=="center") fnt->center();
-      fnt->set_x_spacing((100.0+(float)xspace)/100.0);
-      fnt->set_y_spacing((100.0+(float)yspace)/100.0);
+      if(floatp(xspace))
+	fnt->set_x_spacing((100.0+xspace)/100.0);
+      else
+	fnt->set_x_spacing(xspace);
+      if(floatp(yspace))
+	fnt->set_y_spacing((100.0+yspace)/100.0);
+      else
+	fnt->set_y_spacing(yspace);
       return fnt;
     }
 
