@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.23 2000/01/23 06:37:24 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.24 2000/02/15 14:15:17 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -111,14 +111,15 @@ void start( int num, Configuration conf )
 // month->number code that did not depend on a static mapping.
 // Currently, this means that you can enter the name of the month or day in
 // your native language, if it is supported by roxen.
-constant languages = roxen->languages;
+array languages = roxen->list_languages();
+constant language_low = roxen->language_low;
 int find_a_month(string which)
 {
   which = lower_case(which);
-  foreach(indices(languages), string lang)
+  foreach(languages, string lang)
     for(int i=1; i<13; i++)
       catch {
-      if(which == lower_case(languages[lang]->month(i))[..strlen(which)])
+      if(which == lower_case(languages_low(lang)->month(i))[..strlen(which)])
 	return i-1;
     };
   return 1;
@@ -129,7 +130,7 @@ int find_a_day(string which)
   which = lower_case(which);
   foreach(indices(languages), string lang)
     for(int i=1; i<8; i++)
-      if(which == lower_case(languages[lang]->day(i))[..strlen(which)])
+      if(which == lower_case(language_low(lang)->day(i))[..strlen(which)])
 	return i;
   return 1;
 }
