@@ -1,4 +1,4 @@
-/* $Id: persistent.pike,v 1.30 1997/09/01 00:58:30 peter Exp $ */
+/* $Id: persistent.pike,v 1.31 1997/09/15 21:47:03 peter Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -23,7 +23,7 @@ void really_save()
     else __id = i;
   }
 
-  perror("really save (%s)\n", __id*":");
+//  perror("really save (%s)\n", __id*":");
   
   string a;
   foreach(persistent_variables(object_program(this_object()),this_object()),a)
