@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.165 1999/10/12 13:19:18 per Exp $
+// $Id: http.pike,v 1.166 1999/10/25 18:02:18 grubba Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.165 1999/10/12 13:19:18 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.166 1999/10/25 18:02:18 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1577,15 +1577,21 @@ void got_data(mixed fooid, string s)
     return;
   }
 
-  // FIXME: port_obj->name & port_obj->default_port are constant
-  // consider caching them?
-  conf =
-    port_obj->find_configuration_for_url(port_obj->name + "://" +
-					 misc->host +
-					 (search(misc->host, ":")<0?
-					  (":"+port_obj->default_port):"") +
-					 not_query,
-					 this_object());
+  if (misc->host) {
+    // FIXME: port_obj->name & port_obj->default_port are constant
+    // consider caching them?
+    conf =
+      port_obj->find_configuration_for_url(port_obj->name + "://" +
+					   misc->host +
+					   (search(misc->host, ":")<0?
+					    (":"+port_obj->default_port):"") +
+					   not_query,
+					   this_object());
+  } else {
+    // No host header.
+    // Fallback to using the first configuration bound to this port.
+    conf = port_obj->urls[port_obj->sorted_urls[0]]->conf;
+  }
 
   if (rawauth) 
   {
