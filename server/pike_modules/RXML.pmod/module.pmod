@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.299 2004/04/22 15:50:14 mani Exp $
+// $Id: module.pmod,v 1.300 2004/05/16 22:18:19 mani Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7996,7 +7996,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 3.1;
+  constant P_CODE_VERSION = 4.0;
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
@@ -8215,19 +8215,22 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	  error ("Cannot find module %O in configuration %O.\n", what, config);
 	}
 
-	case "conf":
+	case "conf": {
+	  Configuration config;
 	  if (!what[1]) {
 #ifdef DEBUG
 	    if (!default_config)
 	      error ("No default configuration given to string_to_p_code.\n");
 #endif
-	    ENCODE_DEBUG_RETURN (default_config);
+	    config = default_config;
 	  }
-	  else {
-	    if (Configuration config = roxen->get_configuration (what[1]))
-	      ENCODE_DEBUG_RETURN (config);
+	  else if (!(config = roxen->get_configuration (what[1])))
 	    error ("Cannot find configuration %O.\n", what[1]);
-	  }
+	  if (config->compat_level() != what[2])
+	    error ("P-code is stale; the compatibility level has changed "
+		   "since it was encoded.\n");
+	  ENCODE_DEBUG_RETURN (config);
+	}
 
 #ifdef RXML_OBJ_DEBUG
 	case "ObjectMarker":
@@ -8346,7 +8349,9 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 			       what->module_local_id()}));
 
       else if (what->is_configuration)
-	ENCODE_DEBUG_RETURN (({"conf", what != default_config && what->name}));
+	ENCODE_DEBUG_RETURN (({"conf",
+			       what != default_config && what->name,
+			       what->compat_level()}));
 
       else if(what == nil)
 	ENCODE_DEBUG_RETURN ("nil");
