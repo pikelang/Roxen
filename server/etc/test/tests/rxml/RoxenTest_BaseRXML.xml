@@ -778,6 +778,11 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER">&_.c;:</emit></rxml>
+<result>1:2:3:4:</result>
+</test>
+
+<test>
 <rxml><emit source="values" values="a&#0;b">&_.value;:</emit></rxml>
 <result>a:b:</result>
 </test>
@@ -790,8 +795,19 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER">&_.c;<emit source="OTESTER">&_.c;<delimiter>:</delimiter
+ ></emit><delimiter>-</delimiter></emit></rxml>
+<result>11:2:3:4-21:2:3:4-31:2:3:4-41:2:3:4</result>
+</test>
+
+<test>
 <rxml><emit source="values" values="a.b.c" split=".">&_.value;&_.counter;</emit></rxml>
 <result>a1b2c3</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER">&_.c;&_.counter;</emit></rxml>
+<result>11223344</result>
 </test>
 
 <test>
@@ -800,8 +816,18 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER">&_.c;:</emit></rxml>
+<result>1:2:3:4:</result>
+</test>
+
+<test>
 <rxml><emit source="values" values="abcdefgh" split="" maxrows="4">&_.value; </emit></rxml>
 <result>a b c d </result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" test="2" maxrows="4">&_.data; </emit></rxml>
+<result>aa a aa a </result>
 </test>
 
 <test>
@@ -810,7 +836,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" maxrows="100">&_.c; </emit></rxml>
+<result>1 2 3 4 </result>
+</test>
+
+<test>
 <rxml><emit source="values" values="a,b,c" split="," skiprows="100">&_.value;:</emit></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" skiprows="100">&_.c;:</emit></rxml>
 <result></result>
 </test>
 
@@ -820,12 +856,27 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" skiprows="100" do-once="1">&_.c;:</emit></rxml>
+<result>:</result>
+</test>
+
+<test>
 <rxml><emit source="values" values="a,b,c" split="," skiprows="0">&_.value;</emit></rxml>
 <result>abc</result>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" skiprows="0">&_.c;</emit></rxml>
+<result>1234</result>
+</test>
+
+<test>
 <rxml><emit source="values" values="a,b,c" split="," skiprows="-0">&_.value;</emit></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" skiprows="-0">&_.c;</emit></rxml>
 <result></result>
 </test>
 
@@ -835,8 +886,8 @@ b</strlen></rxml>
 </test>
 
 <test>
-<rxml><emit source="values" values="x,a,b,c" split="," skiprows="-2">&_.value;</emit></rxml>
-<result>bc</result>
+<rxml><emit source="OTESTER" skiprows="-3">&_.c;</emit></rxml>
+<result>234</result>
 </test>
 
 <test>
@@ -845,9 +896,20 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" skiprows="2">&_.c; </emit></rxml>
+<result>3 4 </result>
+</test>
+
+<test>
 <rxml><emit source="values" values="a.b.c.d.e.f.g" split="." skiprows="2"
  maxrows="2" remainderinfo="var.rem">&_.value; </emit>&var.rem;</rxml>
 <result>c d 3</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" test="2" skiprows="3" maxrows="2"
+ remainderinfo="var.rem">&_.data; </emit>&var.rem;</rxml>
+<result>a bb 14</result>
 </test>
 
 <test>
@@ -865,7 +927,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" sort="d">&_.c;:</emit></rxml>
+<result>4:3:1:2:</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" sort="+d">&_.c;:</emit></rxml>
+<result>4:3:1:2:</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" sort="+d">&_.c;:</emit></rxml>
 <result>4:3:1:2:</result>
 </test>
 
@@ -875,7 +947,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" sort="-d">&_.c;:</emit></rxml>
+<result>2:1:3:4:</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" sort="a,d">&_.c;:</emit></rxml>
+<result>1:2:4:3:</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" sort="a,d">&_.c;:</emit></rxml>
 <result>1:2:4:3:</result>
 </test>
 
@@ -885,7 +967,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" sort="a,-d">&_.c;:</emit></rxml>
+<result>2:1:4:3:</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" sort="b">&_.c;:</emit></rxml>
+<result>4:2:1:3:</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" sort="b">&_.c;:</emit></rxml>
 <result>4:2:1:3:</result>
 </test>
 
@@ -895,7 +987,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" sort="c" filter="a=??x">&_.c;:</emit></rxml>
+<result>1:2:4:</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" sort="c" filter="a=??x, b=**o">&_.c;:</emit></rxml>
+<result>1:2:</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" sort="c" filter="a=??x, b=**o">&_.c;:</emit></rxml>
 <result>1:2:</result>
 </test>
 
@@ -905,7 +1007,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" sort="c" filter="a=??x,b=*">&_.c;:</emit></rxml>
+<result>1:2:4:</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" sort="c" filter="a=??x" do-once="1">&_.c;:</emit></rxml>
+<result>1:2:4:</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" sort="c" filter="a=??x" do-once="1">&_.c;:</emit></rxml>
 <result>1:2:4:</result>
 </test>
 
@@ -915,7 +1027,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" sort="c" filter="a=??y" do-once="1">&_.c;:</emit></rxml>
+<result>:</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" sort="-b" filter="a=??x" skiprows="1">&_.c;:</emit></rxml>
+<result>2:4:</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" sort="-b" filter="a=??x" skiprows="1">&_.c;:</emit></rxml>
 <result>2:4:</result>
 </test>
 
@@ -925,7 +1047,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" sort="c" filter="a=??x" maxrows="2">&_.c;:</emit></rxml>
+<result>1:2:</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" sort="c" filter="a=??x" maxrows="2" remainderinfo="var.rem">&_.c;:</emit>&var.rem;</rxml>
+<result>1:2:1</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" sort="c" filter="a=??x" maxrows="2" remainderinfo="var.rem">&_.c;:</emit>&var.rem;</rxml>
 <result>1:2:1</result>
 </test>
 
@@ -935,7 +1067,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" sort="-b" filter="a=??x" skiprows="100">&_.c;:</emit></rxml>
+<result></result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" sort="c" filter="a=??x" maxrows="100">&_.c;:</emit></rxml>
+<result>1:2:4:</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" sort="c" filter="a=??x" maxrows="100">&_.c;:</emit></rxml>
 <result>1:2:4:</result>
 </test>
 
@@ -945,7 +1087,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" sort="c" filter="a=??x" rowinfo="var.row">&_.c;:</emit>&var.row;</rxml>
+<result>1:2:4:3</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" sort="c" filter="a=basun" rowinfo="var.row" do-once="1">&_.c;:</emit>&var.row;</rxml>
+<result>:0</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" sort="c" filter="a=basun" rowinfo="var.row" do-once="1">&_.c;:</emit>&var.row;</rxml>
 <result>:0</result>
 </test>
 
@@ -955,7 +1107,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" test="2" filter="data=?">&_.data;:</emit></rxml>
+<result>a:a:b:c:a:d:e:a:a:a:</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" test="2" filter="data=?" skiprows="3" maxrows="5">&_.data;:</emit></rxml>
+<result>c:a:d:e:a:</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" test="2" filter="data=?" skiprows="3" maxrows="5">&_.data;:</emit></rxml>
 <result>c:a:d:e:a:</result>
 </test>
 
@@ -965,7 +1127,17 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" test="2" filter="data=?">&_.data;<delimiter>:</delimiter></emit></rxml>
+<result>a:a:b:c:a:d:e:a:a:a</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" test="2" filter="data=?" skiprows="3">&_.data;<delimiter>:</delimiter></emit></rxml>
+<result>c:a:d:e:a:a:a</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" test="2" filter="data=?" skiprows="3">&_.data;<delimiter>:</delimiter></emit></rxml>
 <result>c:a:d:e:a:a:a</result>
 </test>
 
@@ -975,7 +1147,18 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="OTESTER" test="2" filter="data=?" skiprows="3" maxrows="5">&_.data;<delimiter>:</delimiter></emit></rxml>
+<result>c:a:d:e:a</result>
+</test>
+
+<test>
 <rxml><true/><emit source="values" values="a" filter="value=c">.</emit><then>a</then><else>b</else></rxml>
+<result>b</result>
+</test>
+
+<test>
+<rxml><true/><emit source="OTESTER" test="2" filter="data=x"
+  >.</emit><then>a</then><else>b</else></rxml>
 <result>b</result>
 </test>
 
@@ -983,6 +1166,13 @@ b</strlen></rxml>
 <rxml><true/><emit source="values" values="a">.</emit><then>a</then><else>b</else></rxml>
 <result>.a</result>
 </test>
+
+<test>
+<rxml><true/><emit source="OTESTER" test="2" filter="data=e"
+  >.</emit><then>a</then><else>b</else></rxml>
+<result>.a</result>
+</test>
+
 
 <comment>Missing test: values emit plugin</comment>
 
@@ -1048,7 +1238,7 @@ b</strlen></rxml>
 
 <comment>Missing test: load package from file</comment>
 
-<comment>Missing tets: <help> tag</comment>
+<comment>Missing test: <help> tag</comment>
 
 <comment>Number tests</comment>
 <test>
