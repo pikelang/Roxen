@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.113 1998/08/20 18:04:52 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.114 1998/08/21 23:02:02 js Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -409,7 +409,10 @@ private int parse_got(string s)
 		    else
 		      misc->files += ({ part->disp_params->name });
 		  } else {
-		    variables[part->disp_params->name]=part->getdata();
+		    if(variables[part->disp_params->name])
+		      variables[part->disp_params->name] += "\0" + part->getdata();
+		    else
+		      variables[part->disp_params->name] = part->getdata();
 		  }
 		}
 		break;
