@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.353 1999/11/19 18:07:05 per Exp $
+ * $Id: roxen.pike,v 1.354 1999/11/19 22:44:08 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.353 1999/11/19 18:07:05 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.354 1999/11/19 22:44:08 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -100,7 +100,7 @@ string filename( program|object o )
   string fname = search( master()->programs, o );
   if( !fname )
     if( old_programs[ o ] )
-      fname="OLD: "+old_programs[ o ];
+      fname = old_programs[ o ];
   if( !fname )
     fname = "Unknown Program";
   return fname-(getcwd()+"/");
