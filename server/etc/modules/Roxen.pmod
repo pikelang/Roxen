@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.110 2001/08/13 18:24:33 per Exp $
+// $Id: Roxen.pmod,v 1.111 2001/08/16 14:37:59 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -15,6 +15,100 @@
 #else
 # define HTTP_WERR(X)
 #endif
+
+object|array(object) parse_xml_tmpl( string ttag, string itag,
+				     string xml_file,
+				     string|void ident )
+{
+  string tmpl;
+  array(mapping) data = ({});
+
+  Parser.HTML p = Parser.HTML();
+
+  object apply_template( mapping data )
+  {
+    Parser.HTML p = Parser.HTML();
+    p->ignore_tags( 1 );
+    p->_set_entity_callback( lambda( Parser.HTML p, string ent )
+			     {
+			       string enc = "none";
+			       sscanf( ent, "&%s;", ent );
+			       sscanf( ent, "%s:%s", ent, enc );
+			       sscanf( ent, "_.%s", ent );
+			       switch( enc )
+			       {
+				 case "none":
+				   return data[ ent ];
+				 case "int":
+				   return (string)(int)data[ ent ];
+				 case "float":
+				   return (string)(float)data[ ent ];
+				 case "string":
+				 default:
+				   return sprintf("%O", data[ent] );
+			       }
+			     } );
+    string code = p->feed( tmpl )->finish()->read();
+    return compile_string( code, xml_file )();
+  };
+
+  
+  p->xml_tag_syntax( 2 );
+  p->add_quote_tag ("!--", "", "--");
+  p->add_container( ttag,
+		    lambda( Parser.HTML p, mapping m, string c )
+		    {
+		      tmpl = c;
+		    } );
+  p->add_container( itag,
+		    lambda( Parser.HTML p, mapping m, string c )
+		    {
+		      string current_tag;
+		      mapping row = m;
+		      void got_tag( Parser.HTML p, string c )
+		      {
+			sscanf( c, "<%s>", c );
+			if( c[0] == '/' )
+			  current_tag = 0;
+			else
+			  current_tag = c;
+		      };
+
+		      void got_data( Parser.HTML p, string c )
+		      {
+			if( current_tag )
+			  if( row[current_tag] )
+			    row[current_tag] += html_decode_string(c);
+			  else
+			    row[current_tag] = html_decode_string(c);
+		      };
+		       
+		      p = Parser.HTML( );
+		      p->xml_tag_syntax( 2 );
+		      p->add_quote_tag ("!--", "", "--")
+			->_set_tag_callback( got_tag )
+			->_set_data_callback( got_data )
+			->feed( c )
+			->finish();
+		      data += ({ row });
+		    } )
+    ->feed( Stdio.read_file( xml_file ) )
+    ->finish();
+
+  if( ident )
+  {
+    foreach( data, mapping m )
+      if( m->ident == ident )
+	return apply_template( m );
+    return 0;
+  }
+  return map( data, apply_template );
+}
+
+object|array(object) parse_box_xml( string xml_file, string|void ident )
+{
+  return parse_xml_tmpl( "template", "box", xml_file, ident );
+}
 
 int ip_to_int(string ip)
 {

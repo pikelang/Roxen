@@ -8,36 +8,48 @@ mapping cache =  ([]);
 
 class RDF
 {
-  constant host = "";
-  constant port = 80;
-  constant file = "";
+  constant url = "";
 
   string parse( RequestID id )
   {
     string data;
     string contents;
-    if( !(data = get_http_data( host, port,"GET "+file+" HTTP/1.0" ) ) )
+
+    string host, file;
+    int port;
+
+    Standards.URI uri = Standards.URI( url );
+    host = uri->host;
+    port = uri->port;
+    file = uri->path+(uri->query?"?"+uri->query:"");
+    
+    if( !(data = get_http_data( host, port, "GET "+file+" HTTP/1.0" ) ) )
       contents = sprintf((string)_(0,"Fetching data from %s..."), host);
     else
     {
       contents = "";
-      string title,link;
+      string title,link,description;
       Parser.HTML itemparser = Parser.HTML() ->
 	add_containers( ([ "title": lambda(Parser.HTML p, mapping m, string c)
 				      { title = c; },
+			   "description":lambda(Parser.HTML p, mapping m,
+						string c)
+				      { description = c; },
 			   "link": lambda(Parser.HTML p, mapping m, string c)
 				     { link = c; } ]) );
       Parser.HTML() -> add_container("item",
 				     lambda(Parser.HTML p, mapping m, string c)
 				     {
 				       title = link = 0;
+				       description="";
 				       itemparser->finish(c);
 				       if(title && link)
 					 contents +=
 					   sprintf("<font size=-1>"
 						   "<a href=\"%s\">%s</a>"
-						   "</font><br />\n",
-						   link, title);
+						   "<br />%s<br />"
+						   "</font>\n",
+						   link, title, description);
 				     } )->
 	finish(data);
     }

@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.155 2001/08/13 18:17:06 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.156 2001/08/16 14:38:00 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -629,7 +629,12 @@ class TagCFBoxes
         master()->refresh( object_program( boxes[box] ), 1 );
         destruct( boxes[box] );
       }
-      if( boxes[box]=(object)("config_interface/boxes/"+box+".pike") )
+
+      string id;
+      if( sscanf( box, "%s:%s", box, id ) )
+	boxes[box] = Roxen.parse_box_xml( "config_interface/boxes/"
+					  +box+".xml", id );
+      else if(!catch(boxes[box]=(object)("config_interface/boxes/"+box+".pike")))
 	roxen.dump("config_interface/boxes/"+box+".pike");
       return boxes[box];
     }
@@ -637,9 +642,8 @@ class TagCFBoxes
     static object get_box( string box, RequestID id )
     {
       object bx = boxes[ box ];
-      if( !bx  ||
-	  (!id->pragma["no-cache"] &&
-	   master()->refresh_inherit( object_program( bx ) ) > 0 ) )
+      if( !bx  || (!id->pragma["no-cache"] &&
+		   master()->refresh_inherit( object_program( bx ) ) > 0 ) )
         return compile_box( box );
       return bx;
     }
@@ -664,6 +668,7 @@ class TagCFBoxes
       string left="";
       string right="";
       foreach( sort_boxes(config_setting( "left_boxes" ),id), string f )
+	
         left+=get_box( f,id )->parse( id )+"<br />";
       foreach( sort_boxes(config_setting( "right_boxes" ),id), string f )
         right+=get_box( f,id )->parse( id )+"<br />";

@@ -225,6 +225,19 @@ class ConfigurationSettings
                                      "initial":box->box_initial ]);
         };
       }
+      foreach( glob("*.xml", get_dir( BDIR ) ), string f )
+      {
+	foreach( Roxen.parse_box_xml( BDIR+f ), Box box )
+	{
+          if( box->box && box->box == box_type )
+            bdata[ (f/".")[0]+":"+box->ident ] =
+	      ([
+		"name":box->box_name,
+		"doc":box->box_doc,
+		"initial":box->box_initial
+	      ]);
+        }
+      }
       array i = indices( bdata );
       array b = map( i, lambda( string q ){ return (string)bdata[q]->name; } );
       sort( b, i );
