@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 #if constant(Servlet.servlet)
-string cvs_version = "$Id: servlet.pike,v 2.12 2000/08/28 05:31:55 per Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.13 2000/09/10 18:16:09 js Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -107,40 +107,6 @@ class ClassPathList
   }
 }
 
-void create()
-{
-  defvar("ex", 0, "File extension servlet", TYPE_FLAG,
-	 "Use a servlet mapping based on file extension rather than "
-	 "path location.");
-
-  defvar("location", "/servlet/NONE", "Servlet location", TYPE_LOCATION,
-	 "This is where the servlet will be inserted in the "
-	 "namespace of your server.", 0,
-	 lambda() { return query("ex"); });
-
-  defvar("ext", ({}), "Servlet extensions", TYPE_STRING_LIST,
-         "All files ending with these extensions, will be handled by "+
-	 "this servlet.", 0,
-	 lambda() { return !query("ex"); });
-  
-  defvar("codebase", ClassPathList( ({"servlets"}), 0, "Class path",
-				    "Any number of directories and/or JAR "
-				    "files from which to load the servlet "
-				    "and its support classes.") );
-  
-  defvar("classname", "NONE", "Class name", TYPE_STRING,
-	 "The name of the servlet class to use.");
-
-  defvar("parameters", "", "Parameters", TYPE_TEXT,
-	 "Parameters for the servlet on the form "
-	 "<tt><i>name</i>=<i>value</i></tt>, one per line.");
-
-  defvar("rxml", 0, "Parse RXML in servlet output", TYPE_FLAG|VAR_MORE,
-	 "If this is set, the output from the servlet handled by this "
-         "module will be RXML parsed. NOTE: No data will be returned to the "
-         "client until the output is fully parsed.");
-}
-
 class RXMLParseWrapper
 {
   static object _file;
@@ -214,8 +180,54 @@ array(string) query_file_extensions()
 
 #else
 
-void create() {
-  report_error("No servlet support found in pike.\n");
+// Do not dump to a .o file if no Java is available, since it will then
+// not be possible to get it later on without removal of the .o file.
+constant dont_dump_program = 1; 
+
+string status()
+{
+  return 
+#"<font color='&usr.warncolor;'>Java 2 is not available in this roxen.<p>
+  To get Java 2:
+  <ol>
+    <li> Download and install Java
+    <li> Restart roxen
+  </ol></font>";
 }
 
 #endif
+
+void create()
+{
+  defvar("ex", 0, "File extension servlet", TYPE_FLAG,
+	 "Use a servlet mapping based on file extension rather than "
+	 "path location.");
+
+  defvar("location", "/servlet/NONE", "Servlet location", TYPE_LOCATION,
+	 "This is where the servlet will be inserted in the "
+	 "namespace of your server.", 0,
+	 lambda() { return query("ex"); });
+
+  defvar("ext", ({}), "Servlet extensions", TYPE_STRING_LIST,
+         "All files ending with these extensions, will be handled by "+
+	 "this servlet.", 0,
+	 lambda() { return !query("ex"); });
+  
+  defvar("codebase", ClassPathList( ({"servlets"}), 0, "Class path",
+				    "Any number of directories and/or JAR "
+				    "files from which to load the servlet "
+				    "and its support classes.") );
+  
+  defvar("classname", "NONE", "Class name", TYPE_STRING,
+	 "The name of the servlet class to use.");
+
+  defvar("parameters", "", "Parameters", TYPE_TEXT,
+	 "Parameters for the servlet on the form "
+	 "<tt><i>name</i>=<i>value</i></tt>, one per line.");
+
+  defvar("rxml", 0, "Parse RXML in servlet output", TYPE_FLAG|VAR_MORE,
+	 "If this is set, the output from the servlet handled by this "
+         "module will be RXML parsed. NOTE: No data will be returned to the "
+         "client until the output is fully parsed.");
+}
+
