@@ -165,7 +165,7 @@ class Connection
       error("Cannot change from threaded operation to non-threaded.\n");
     if(to)
 #if !efun(thread_create)
-      error("Cannot use threades, there is none in pike\n");
+      error("Cannot use threads, there are none in pike\n");
 #else
     {
       client->set_nonblocking();

@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.2 1997/09/03 05:19:29 per Exp $
+ * $Id: proc.pike,v 1.3 1997/09/03 07:51:35 grubba Exp $
  */
 
 inherit "wizard";
@@ -11,7 +11,9 @@ constant more=1;
 
 void create()
 {
-  if(!file_stat("/usr/proc/bin/")) throw("Only available under Solaris 2.4 and newer\n");
+  if(!file_stat("/usr/proc/bin/")) {
+    throw("Only available under Solaris 2.5 and newer\n");
+  }
 }
 
 string proc(string prog, int pid )
