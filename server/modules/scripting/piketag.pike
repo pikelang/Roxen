@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.18 2000/08/16 03:00:40 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.19 2000/08/29 18:51:09 kuntri Exp $";
 constant thread_safe=1;
 
 
@@ -502,3 +502,39 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
 
   return res;
 }
+
+// --------------------- Documentation -----------------------
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+"pike":#"<desc tag><short hide>
+ Pike processing instruction tag.</short>This processing intruction
+ tag allows for evaluating Pike code directly in the document.
+
+ <p>Note: With this tag, users are able to run programs with the same
+ right as the server. This is a serious security hasard.</p>
+
+ <p>When the pike tag returns, the contents of the output buffer is
+ inserted into the page. It is not reparsed with the RXML parser.
+</desc>
+
+<attr name='write' value='(string fmt, mixed ... args)'>
+ write() is a helper function. It formats a string in the same way as
+ printf and appends it to the output buffer. If given only one string
+ argument, it's written directly to the output buffer without being
+ interpreted as a format specifier.
+</attr>
+
+<attr name='flush' value='()'>
+ flush() is a helper function. It returns the contents of the output
+ buffer and resets it.
+</attr>
+
+<attr name='rxml' value='(string rxmlcode)'>
+ rxml() is a helper function. It parses the string with the RXML parser.
+</attr>
+
+",
+    ]);
+#endif
