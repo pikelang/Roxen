@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.22 1996/12/05 16:01:58 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.23 1996/12/06 15:57:24 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -26,7 +26,7 @@ class Node {
   inherit "struct/node";
 
   mixed original;
-  int changed;
+  int changed, moredocs;
 
   int bar=previous_object()->bar;
   function saver = lambda(object o) { if(o->changed) o->change(-o->changed); };
@@ -66,19 +66,20 @@ class Node {
       tmp = describer(this_object());
 #ifdef NODE_DEBUG
     else
+    {
       perror("No describer in node "+path(1)+"\n");
+      return 0;
+    }
 #endif
     if(arrayp(tmp) && sizeof(tmp))
-      PUSH(tmp[0] +  (!i?"<dt>"+show_me(tmp[1]):tmp[1]) + "\n");
+      PUSH(tmp[0] +  "<dt>" + (i?tmp[i]:show_me(tmp[1])) + "\n");
     else if(stringp(tmp) && strlen(tmp))
-      PUSH((i?tmp:"<dt>"+show_me(tmp)) + "\n");
+      PUSH("<dt>"+(i?tmp:show_me(tmp)) + "\n");
     else if(!tmp)
       return "";
 
     if(!folded)
     {
-      int sdl = 0; /* Add slash-dl to the end.. */
-
       PUSH("<dl><dd>\n");
       node = down;
       while(node)
@@ -93,7 +94,6 @@ class Node {
 	prevnode = node;
 	node = node->next;
 	PUSH(prevnode->describe());
-//	PUSH("<br>");
       }
       PUSH("</dl>\n\n");
     }
@@ -921,8 +921,11 @@ mapping auto_image(string in, object id)
     i=draw_unselected_button(value,button_font);
     break;
   }
-  i->map_closest(i->select_colors(64)+({trans}));
-  if(i) r = http_string_answer(i->togif(@trans),"image/gif");
+  if(i)
+  {
+    i->map_closest(i->select_colors(64)+({trans}));
+    r = http_string_answer(i->togif(@trans),"image/gif");
+  }
   i=0;
   cache_set("config_images", in, r);
   return r;
@@ -1023,6 +1026,9 @@ mapping configuration_parse(object id)
       // supporting code was writte.
     case "fold":     o->folded=1;      break;
     case "unfold":   o->folded=0;      break;
+
+    case "moredocs":   o->moredocs=1;      break;
+    case "lessdocs":   o->moredocs=0;      break;
 
     case "foldall":
       o->map(lambda(object o) {	o->folded=1; });
@@ -1350,14 +1356,10 @@ mapping configuration_parse(object id)
   }
   
   PUSH(default_head("Roxen server configuration", root->changed?o->path(1):0));
-  PUSH("<blockquote>\n");
-//  PUSH("<table width=\"100%\" cellpadding=0 cellspacing=0>\n");
-//  PUSH("<tr><td>\n");
+  PUSH("<dl>\n");
   PUSH("\n"+display_tabular_header( o )+"\n");
-  PUSH("<br>");
-//  PUSH("</td></tr><tr><td width=\"100%\" bgcolor=#000000><br>");
-
-   if(o->up != root && o->up)
+  PUSH("<p>");
+  if(o->up != root && o->up)
     PUSH("<a href=\""+ o->up->path(1)+"?"+(bar++)+"\">"
 	 "<img src=/auto/back alt='[Up]' align=left hspace=0 border=0></a>\n");
 
@@ -1368,8 +1370,7 @@ mapping configuration_parse(object id)
   PUSH(tmp);
   o->folded=i;
   
-//  PUSH("</td></tr></table>\n");
-//  PUSH("<br clear=all>\n");
+  PUSH("</dl><p><br clear=all><p>\n");
 
   int lm=1;
   
@@ -1417,9 +1418,8 @@ mapping configuration_parse(object id)
   
   PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
   PUSH("</nobr><br clear=all>");
-//  PUSH("<a href=$docurl>"+roxen->real_version +"</a>"
+  PUSH("<p align=right><font size=-1 color=blue><a href=$docurl><font color=blue>"+roxen->real_version +"</font></a></font></p>");
   PUSH("</body>\n");
-  PUSH("</blockquote>\n");
   return stores(res*"");
 }
 

@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.13 1996/12/06 04:19:13 neotron Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.14 1996/12/06 15:57:26 per Exp $";
 
 
 object (Image) load_image(string f)
@@ -135,11 +135,12 @@ object (Image) draw_config_button(string name, object font, int lm, int rm)
   {
     object s=ruta->select_from(0,0);
     ruta->paste_mask(Image(25,20, dR,dG,dB), s, 0,0);
-  } else if(rm) {
+  }
+  if(rm)
+  {
     object s=ruta->select_from(20,18);
     ruta->paste_mask(Image(200,20, dR,dG,dB), s, 0,0);
   }
-  
   txt=linje=0;
   return ruta->scale(0,15);
 }

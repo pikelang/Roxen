@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.4 1996/12/06 10:55:43 neotron Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.5 1996/12/06 15:57:27 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -8,11 +8,11 @@ array register_module()
 {
   return ({ MODULE_LOCATION | MODULE_PARSER,
 	      "Graphics text",
-	      "Makes a few new tags:"
-	      "&lt;gh1&gt; to &lt;gh6&gt;: Headers<br>\n"
-	      "&lt;gh&gt;: Header<br>\n"
-	      "&lt;gtext&gt;: Graphical text<br>\n"
-	      "&lt;anfang&gt;: Make the first character to a graphical one<br>\n"
+	      "Makes a few new tags:<p>"
+	      "<b>&lt;gh1&gt;</b> to <b>&lt;gh6&gt;:</b> Headers<br>\n"
+	      "<b>&lt;gh&gt;:</b> Header<br>\n"
+	      "<b>&lt;gtext&gt;:</b> Graphical text<br>\n"
+	      "<b>&lt;anfang&gt;:</b> Make the first character to a graphical one. Not all that usefull, really.<br>\n"
 	      "\n"
 	      "Common arguments:\n <pre>"
 	      " bg=#rrggbb      Use this background, default taken from the\n"

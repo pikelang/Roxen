@@ -119,6 +119,24 @@ string describe_module_copy_variables(object node)
   return link("Variables");
 }  
 
+
+#define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/...More></a>")
+#define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/Less%20Documentation></a>")
+
+string shorten(string in, object node)
+{
+  if(sizeof(in/"<hr>")<3 && sizeof(in/"<p>")<2) return in;
+  if(strlen(in)<250) return in;
+  if((search(in,"\n")<0) || (search(in,"\n")==strlen(in)-1)) return in;
+  if(node->moredocs)
+    return in+"<br>"+NODOTDOT(node);
+//  for(int i=100;i<strlen(in);i++)
+//    if(in[i]=='>' || in[i]=='\n')
+//      break;
+  return "<table><tr><td>"+replace((in/"\n")[0],({"<br>","<p>"}),({" "," "}))+
+    DOTDOT(node)+"</td></tr></table>";
+}
+
 string describe_module_copy(object node)
 {
   string name, com;
@@ -148,7 +166,7 @@ string describe_module_copy(object node)
 	 (node->data->query("_comment")||""));
 
   return ("<font size=+1>" + link( name ) + "</font><dd>" 
-	  + (roxen->QUERY(DOC)?node->data->info():"")
+	  + shorten((roxen->QUERY(DOC)?node->data->info():""), node)
 	  + (strlen(com)?"<p><i>"+com+"</i></p>":"")
 	  +"<dd>");
 }
@@ -170,10 +188,9 @@ string describe_module(object node)
   if(node->folded)
     return ("<font size=+1>" + link(name) + "</font>");
 
-  return ("<font size=+1>" + link(name) +  "</font><dd>"
-	  +  "<font size=+0>"  + node->data->master->info() 
-	  + (strlen(com)?"<p><i>"+com+"</i></p>":"")
-	  + "</font>");
+  return ("<font size=+1>" + link(name) +  "</font><dd>" +
+          shorten(node->data->master->info(),node) 
+	  + (strlen(com)?"<p><i>"+com+"</i></p>":""));
 
 }
 
@@ -310,9 +327,9 @@ string describe_string_status(object node)
   if(node->folded)
     return link("<font size=+1>Shared string status</font>");
   return (link("<font size=+1>Shared string status</font><dd>")
-	  + "<font size=+0><pre>"
+	  + "<pre>"
 	  + _string_debug(1)
-	  + "</pre></font>\n");
+	  + "</pre>\n");
 #endif
 }
 
