@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.283 2000/03/20 03:40:48 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.284 2000/03/20 03:47:08 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2065,6 +2065,8 @@ int|string try_get_file(string s, RequestID id,
 
   fake_id->misc->common = id->misc->common;
 
+  s = Roxen.fix_relative (s, id);
+
   if(!id->pragma["no-cache"] && !nocache && (!id->auth || !id->auth[0])) {
     cache_key =
       s + "\0" +
@@ -2080,8 +2082,6 @@ int|string try_get_file(string s, RequestID id,
     // returns a vanilla (i.e. http) id instead when this function is
     // used.
     s = fake_id->scan_for_query (s);
-
-  s = Roxen.fix_relative (s, id);
   fake_id->raw_url=s;
   fake_id->not_query=s;
 
