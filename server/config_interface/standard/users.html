@@ -48,7 +48,7 @@ string parse( RequestID id )
   foreach( sort( id->misc->list_config_users() ), string uid )
   {
     object u  = id->misc->get_config_user( uid );
-    res += "<table width=100%><tr><td bgcolor='"+config_setting("bgcolor")+
+    res += "<table width=100%><tr><td bgcolor='"+config_setting2("bgcolor")+
            "'><font size=+2>&nbsp;&nbsp;<b>"+uid+"</b></font></td></tr></table>";
     res += u->form( id );
   }
