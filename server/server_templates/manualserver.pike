@@ -1,5 +1,5 @@
 /*
- * $Id: manualserver.pike,v 1.1 1999/01/26 05:48:37 peter Exp $
+ * $Id: manualserver.pike,v 1.2 1999/01/26 06:21:40 peter Exp $
  */
 
 #include <module.h>
@@ -54,7 +54,7 @@ void post(object node)
     if(o = o->descend( "0", 1))
       if(o2 = o->descend( "searchpath", 1))
       {
-	o2->data[VAR_VALUE] = "../manual/unparsed/";
+	o2->data[VAR_VALUE] = "manual/unparsed/";
 	o2->change(1);
       }
   }
