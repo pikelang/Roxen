@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.27 1998/09/22 20:03:55 wellhard Exp $
+ * $Id: webadm.pike,v 1.28 1998/09/26 21:31:48 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.27 1998/09/22 20:03:55 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.28 1998/09/26 21:31:48 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -82,13 +82,17 @@ string|int get_variable_value(object db, string scheme_id, string variable)
   return query_result[0]->value;
 }
 
-string tag_include(string tag, mapping args, string base, mapping opts)
+string tag_include(string tag, mapping args, string base, mapping flags)
 {
   args->file -= "../";
   if(sizeof(args->file)) {
     string s = Stdio.read_bytes(base+args->file);
+    args -= (["file":1]);
     if(s) {
-      opts->include = 1;
+      flags->include = 1;
+      foreach(indices(args), string var) {
+	s = replace(s, "&"+var+";", args[var]);
+      }
       return s;
     }
     else werror("Can not open file (include tag)"+base+args->file);
@@ -151,14 +155,14 @@ string update_template(string tag_name, mapping args, object id)
 				  vars->bg_image_color);
   }
 
-  if(vars["bg_text_image"]&&sizeof(vars["bg_text_image"])) {
-    vars["bg_text_image_color_2"] = vars["bg_text_color"];
-    vars["bg_text_color"] = mean_color(vars->bg_text_color,
-				       vars->bg_text_image_color);
+  if(vars["text_bg_image"]&&sizeof(vars["text_bg_image"])) {
+    vars["text_bg_image_color_2"] = vars["text_bg_color"];
+    vars["text_bg_color"] = mean_color(vars->text_bg_color,
+				       vars->text_bg_image_color);
   }
   
-  mapping opts = ([ "include":1 ]);
-  while(opts->include) {
+  mapping flags = ([ "include":1 ]);
+  while(flags->include) {
     // Replace placeholders with customer spesific preferences  
     foreach(indices(vars), string variable) {
       string from = "$$"+variable+"$$";
@@ -168,10 +172,10 @@ string update_template(string tag_name, mapping args, object id)
       template = replace(template, from, to);
     }
     // Insert files (eg navigation template)
-    opts->include = 0;
+    flags->include = 0;
     template =
       parse_html(template, ([ "include": tag_include ]), ([ ]),
-		 templatesdir, opts);
+		 templatesdir, flags);
   }
   
   // Save new template
@@ -312,8 +316,10 @@ mixed find_file(string f, object id)
 
   sscanf(f, "%s/%s", tab, sub);
   string tabnum = 0, tabname = "";
-  sscanf(f, "%d:%s", tabnum, tabname);
-  id->variables->activetab = tabname;
+  if(tab) {
+    sscanf(tab, "%d:%s", tabnum, tabname);
+    id->variables->activetab = tabname;
+  }
   string res = "<template base=/"+(query("location")-"/")+">\n";
 
   res += "<tablist>"+make_tablist(tablist, tabs[tab], id)+"</tablist>";
