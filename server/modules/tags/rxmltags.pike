@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.428 2003/04/23 12:28:25 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.429 2003/05/09 12:32:39 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -8551,7 +8551,7 @@ just got zapped?
  Reads <i>tag definitions</i>, user defined <i>if plugins</i> and 
  <i>variables</i> from a file or package and includes into the 
  current page.</short></p>
- <note>The file itself is not inserted into the page. This only 
+ <note><p>The file itself is not inserted into the page. This only 
  affects the environment in which the page is parsed. The benefit is 
  that the package file needs only be parsed once, and the compiled 
  versions of the user defined tags can then be used, thus saving time. 
@@ -8562,7 +8562,7 @@ just got zapped?
  such as form variables or client settings, at the compile time. Also 
  note that the use tag only lets you define variables in the form 
  and var scope in advance. Variables with the same name will be 
- overwritten when the use tag is parsed.</note>
+ overwritten when the use tag is parsed.</p></note>
 </desc>
 
 <attr name='packageinfo'><p>
