@@ -7,6 +7,12 @@ o The CGI module now uses the PATH_INFO module to do PATH_INFO handling.
 
 o Added option to disable the user listing in the userfs module.
 
+o New config action: Thread backtrace.
+
+o Usefull comments added to some files in base_server  :-)
+
+o Updated Pike 0.6
+
 
 Changes since Roxen Challenger 1.2.35 Yellow
 -----------------------------------------------
