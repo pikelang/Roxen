@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.104 2003/01/26 02:10:46 mani Exp $
+// $Id: global_variables.pike,v 1.105 2004/04/03 16:04:17 mani Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -518,7 +518,7 @@ The start script attempts to fix this for the standard file locations.</p>");
 			      get_core()->set_locale();
 			    } );
 
-  string secret=Crypto.md5()->update(""+time(1)+random(100000))->digest();
+  string secret=Crypto.Random.random_string(16);
   secret = MIME.encode_base64(secret,1);
   defvar("server_salt", secret[..sizeof(secret)-3], "Server secret",
 	 TYPE_STRING|VAR_MORE|VAR_NO_DEFAULT,
@@ -529,8 +529,7 @@ The start script attempts to fix this for the standard file locations.</p>");
 	  "you are satisfied with what your computers random "
 	  "generator has produced.") );
 
-  secret = Crypto.md5()->update(""+time(1)+random(100000)+"x"+gethrtime())
-    ->digest();
+  secret = Crypto.Random.random_string(16);
 
   definvisvar("argcache_secret","",TYPE_STRING|VAR_NO_DEFAULT);
   set( "argcache_secret", secret );
