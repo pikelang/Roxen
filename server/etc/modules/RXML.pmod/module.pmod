@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.263 2002/02/15 17:11:29 mast Exp $
+// $Id: module.pmod,v 1.264 2002/03/15 16:43:24 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6864,7 +6864,11 @@ class PCode
 	error ("Invalid args %s in frame about to be added to p-code.\n",
 	       format_short (frame->args));
 #endif
-      exec[length + 1] = frame;	// Cached for reuse.
+      if (!p_code)
+	// Cached the frame for reuse, but not if add_frame is called
+	// below. That since the frame can be cached there, and it
+	// should not end up in two different p-code arrays.
+	exec[length + 1] = frame;
 
       if (frame_state)
 	exec[length + 2] = frame_state;
@@ -7015,13 +7019,16 @@ class PCode
 		  flags |= UPDATED;					\
 		  update_count = ctx->state_updated;			\
 		}							\
-		if (!exec[pos + 1]) {					\
+		if (p_code) p_code->add_frame (ctx, frame, item);	\
+		else if (!exec[pos + 1]) {				\
+		  /* Only cache the frame for reuse in this p-code */	\
+		  /* array if we don't call add_frame, since it */	\
+		  /* can cache the frame in another one. */		\
 		  RESET_FRAME (frame);					\
 		  /* Race here, but it doesn't matter much. */		\
 		  exec[pos + 1] = frame;				\
 		}							\
 		pos += 2;						\
-		if (p_code) p_code->add_frame (ctx, frame, item);	\
 		break chained_p_code_add;				\
 	      }								\
 	      else if (item->is_RXML_p_code_entry)			\
