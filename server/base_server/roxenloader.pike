@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.101 1999/10/04 15:11:55 per Exp $
+ * $Id: roxenloader.pike,v 1.102 1999/10/04 18:54:34 marcus Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.101 1999/10/04 15:11:55 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.102 1999/10/04 18:54:34 marcus Exp $";
 
 #define perror roxen_perror
 
@@ -140,7 +140,7 @@ void roxen_perror(string format, mixed ... args)
 
   string s;
 
-  if (format=="") 
+  if (format=="" || !stringp(format)) 
     return;
 
 #if efun(syslog)
