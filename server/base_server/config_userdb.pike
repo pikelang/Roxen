@@ -272,18 +272,18 @@ class ConfigurationSettings
     defvar( "addmodulemethod", "normal", 
 	    LOCALE(189, "Add/Delete module page type"),
             TYPE_STRING_LIST, 
-	    ("<dl>\n<dt>"+LOCALE(280, "normal")+"</dt><dd>"+
-	     LOCALE(281,"Show module name and documentation with images.")+
-	     "</dd>\n<dt>"+LOCALE(282, "fast")+"</dt><dd>"+
-	     LOCALE(283,"Like normal, but no type images.")+
-	     "</dd>\n<dt>"+LOCALE(284,"faster")+"</dt><dd>"+
-	     LOCALE(285, "Like normal, but allows selecting multiple modules "
-		    "at once.")+
-	     "</dd>\n<dt>"+LOCALE(286,"compact")+"</dt><dd>"+
-	     LOCALE(287,"Only show the names of modules, and allow "
-		    "addition/deletion of multiple modules at once.")+
-	     "</dd>\n<dt>"+LOCALE(288,"really compact")+"</dt><dd>"+
-	     LOCALE(289,"Like compact, but no module classes.")+"</dd>\n</dl>"),
+	    LOCALE(153, "<dl>\n<dt>normal</dt><dd>"
+		   "Show module name and documentation with images."
+		   "</dd>\n<dt>fast</dt><dd>"
+		   "Like normal, but no type images."
+		   "</dd>\n<dt>faster</dt><dd>"
+		   "Like normal, but allows selecting multiple modules "
+		    "at once."
+		   "</dd>\n<dt>compact</dt><dd>"
+		   "Only show the names of modules, and allow "
+		   "addition/deletion of multiple modules at once."
+		   "</dd>\n<dt>really compact</dt><dd>"
+		   "Like compact, but no module classes.</dd>\n</dl>"),
 	    ([ "normal":LOCALE(280, "normal"), "fast":LOCALE(282, "fast"),
 	       "faster":LOCALE(284, "faster"), "compact":LOCALE(286, "compact"),
 	       "really compact":LOCALE(288, "really compact")  ]));
