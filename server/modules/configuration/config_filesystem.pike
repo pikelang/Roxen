@@ -10,6 +10,7 @@ constant module_name = "Configration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
 
+static object charset_encoder, charset_decoder;
 
 string template_for( string f, object id )
 {
@@ -21,10 +22,17 @@ string template_for( string f, object id )
       return cd[..i]*"/"+"/template";
 }
 
+static string revert_browser_encoding( string s )
+{
+  return charset_decoder?
+    charset_decoder->clear( )->feed( s )->drain( ) :
+    utf8_to_string( s );
+}
+
 mixed stat_file( string f, object id )
 {
   mixed ret;
-  f = utf8_to_string( f );
+  f = revert_browser_encoding( f );
   ret = ::stat_file( f, id );
   if( !ret )
   {
@@ -45,7 +53,7 @@ string idi_netscape( string what )
 
 mixed find_dir( string f, object id )
 {
-  f = utf8_to_string( f );
+  f = revert_browser_encoding( f );
   return ::find_dir( f, id );
 }
 
@@ -184,7 +192,7 @@ mixed find_file( string f, object id )
   id->misc->more_mode = 1;
 
   if( !id->misc->path_decoded )
-    id->not_query = f = utf8_to_string( f );
+    id->not_query = f = revert_browser_encoding( f );
 
   if( (f == "") && !id->misc->pathinfo )
     return http_redirect(fix_relative( "/standard/", id ), id );
@@ -231,10 +239,15 @@ mixed find_file( string f, object id )
        id->misc->defines = ([]);
      id->misc->defines[" _stat"] = id->misc->stat;
      retval = http_rxml_answer( data, id );
-     retval->data = string_to_utf8( retval->data );
-     retval->extra_heads["Content-type"]
-       = "text/html; charset=utf-8";
-
+     if(charset_encoder) {
+       retval->data = charset_encoder->clear()->feed( retval->data )->drain();
+       retval->extra_heads["Content-type"]
+	 = "text/html; charset="+QUERY(encoding);
+     } else {
+       retval->data = string_to_utf8( retval->data );
+       retval->extra_heads["Content-type"]
+	 = "text/html; charset=utf-8";
+     }
      if( locale != "standard" )
        roxen.set_locale( "standard" );
   }
@@ -244,4 +257,22 @@ mixed find_file( string f, object id )
       return http_redirect( fix_relative( q, id ), id );
 
   return retval;
+}
+
+void start()
+{
+  ::start();
+  charset_encoder = charset_decoder = 0;
+  catch {
+    charset_encoder = Locale.Charset.encoder(QUERY(encoding), "?");
+    charset_decoder = Locale.Charset.decoder(QUERY(encoding));
+  };
+}
+
+void create()
+{
+  ::create();
+
+  defvar("encoding", "UTF-8", "Character encoding", TYPE_STRING,
+	 "Send pages to client in this character encoding.");
 }
