@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.47 1998/09/18 20:19:10 grubba Exp $
+ * $Id: smtp.pike,v 1.48 1998/09/19 18:20:33 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.47 1998/09/18 20:19:10 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.48 1998/09/19 18:20:33 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -66,6 +66,7 @@ static class Mail {
   multiset(string) recipients = (<>);
   string contents;
   mapping extensions;
+  int limit;
 
 
   void set_from(string f)
@@ -86,6 +87,11 @@ static class Mail {
   void set_extensions(mapping e)
   {
     extensions = e;
+  }
+
+  void set_limit(int l)
+  {
+    limit = l;
   }
 
   void save()
@@ -591,20 +597,68 @@ static class Smtp_Connection {
 		// The message will be approx this size.
 		// We can reply with 452 (temporary limit, try later)
 		// or 552 (hard limit).
+
 		if (stringp(extensions->SIZE)) {
 		  // FIXME: 32bit wraparound.
 		  int sz = (int)extensions->SIZE;
+
+		  mapping fss = filesystem_stat(parent->query_spooldir());
+
+		  if (!fss) {
+		    send(452, "Spooldirectory not available. Try later.");
+		    return;
+		  }
+
+		  if (fss->favail < 10) {
+		    send(452, "Out of inodes. Try later.");
+		    return;
+		  }
+
+		  if (fss->bfree <= (sz / (fss->blocksize || 512))) {
+		    if (fss->blocks <= (sz / (fss->blocksize || 512))) {
+		      send(552, "Mail too large.");
+		    } else {
+		      send(452, "Spooldirectory full. Try later.");
+		    }
+		    return;
+		  }
 		  
-		  foreach(conf->get_providers("automail_clientlayer")||({}),
+		  int limit = 0x7fffffff;	// MAXINT
+		  int hard = 1;			// hard limit initially.
+
+		  foreach(conf->get_providers("smtp_filter")||({}),
 			  object o) {
 		    if (o->check_size) {
-		      int r = o->check_size(sz);
-		      if (r) {
-			send(r);
-			return;
+		      int l = o->check_size(sz, current_mail);
+		      if (l) {
+			if (l < 0) {
+			  // Negative: Soft limit.
+			  l = -l;
+			  if (l < limit) {
+			    hard = 0;
+			    limit = l;
+			  }
+			} else {
+			  // Positive: Hard limit.
+			  if (l < limit) {
+			    hard = 1;
+			    limit = l;
+			  }
+			}
 		      }
 		    }
 		  }
+		  if (sz > limit) {
+		    if (hard) {
+		      send(552, sprintf("Size %d exceeds hard limit %d.\n",
+					sz, limit));
+		    } else {
+		      send(452, sprintf("Size %d exceeds soft limit %d.\n",
+					sz, limit));
+		    }
+		    return;
+		  }
+		  current_mail->set_limit(limit);
 		}
 
 		break;
@@ -769,7 +823,7 @@ static class Smtp_Connection {
 
   void handle_DATA(string data)
   {
-    roxen_perror(sprintf("SMTP: %O\n", data));
+    // roxen_perror(sprintf("SMTP: %O\n", data));
 
     // Unquote the lines...
     // ie delete any initial period ('.') signs.
@@ -777,6 +831,13 @@ static class Smtp_Connection {
     data = replace(data, "\n.", "\n");
     if (data[0] == '.') {
       data = data[1..];
+    }
+
+    // Check that the mail doesn't exceed the size limit.
+    if (sizeof(data) > current_mail->limit) {
+      send(552);
+      do_RSET();
+      return;
     }
 
     // Add received-headers here.
@@ -1234,6 +1295,11 @@ array register_module()
   return({ MODULE_PROVIDER,
 	   "SMTP protocol",
 	   "Experimental module for receiving mail." });
+}
+
+string query_spooldir()
+{
+  return(QUERY(spooldir));
 }
 
 array(string)|multiset(string)|string query_provides()
