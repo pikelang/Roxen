@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.72 2001/11/12 21:32:05 mast Exp $
+// $Id: module.pmod,v 1.73 2001/11/21 15:47:57 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1603,19 +1603,19 @@ class PortList
     }
     res += "IP#: <input size=15 type=text name='"+prefix+"ip' value='"+
       Roxen.html_encode_string(opts->ip||"")+"' /> ";
-    res += LOCALE(0,"Bind this port: ");
+    res += LOCALE(510,"Bind this port: ");
     res += "<select name='"+prefix+"bind'>";
     if( (int)opts->nobind )
     {
       res +=
-	("<option value='1'>"+LOCALE(0,"Yes")+"</option>"
-	 "<option selected='t' value='0'>"+LOCALE(0,"No")+"</option>");
+	("<option value='1'>"+LOCALE("yes","Yes")+"</option>"
+	 "<option selected='t' value='0'>"+LOCALE("no","No")+"</option>");
     }
     else
     {
       res +=
-	("<option selected='t' value='1'>"+LOCALE(0,"Yes")+"</option>"
-	 "<option value='0'>"+LOCALE(0,"No")+"</option>");
+	("<option selected='t' value='1'>"+LOCALE("yes","Yes")+"</option>"
+	 "<option value='0'>"+LOCALE("no","No")+"</option>");
     }
     res += "</select>";
     return res;

@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.2 2001/10/04 13:46:15 per Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.3 2001/11/21 15:47:57 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -18,44 +18,44 @@ constant thread_safe=1;
 constant module_type = MODULE_LOCATION;
 constant module_unique = 0;
 
-LocaleString module_name = _(0,"File systems: SQL File system");
-LocaleString module_doc = _(0,"Access files stored in a SQL database");
+LocaleString module_name = _(57,"File systems: SQL File system");
+LocaleString module_doc = _(58,"Access files stored in a SQL database");
 
 string table, charset, path_encoding;
 
 
 void create()
 {
-  defvar("location", "/", _(0,"Mount point"),
+  defvar("location", "/", _(15,"Mount point"),
 	 TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
-	 _(0,"Where the module will be mounted in the site's virtual "
+	 _(16,"Where the module will be mounted in the site's virtual "
 	   "file system."));
 
   defvar("db", Variable.DatabaseChoice( "docs", 0,
-				      _(0,"Filesystem database"),
-				      _(0,"The database to use")) )
+				      _(59,"Filesystem database"),
+				      _(60,"The database to use")) )
     ->set_configuration_pointer( my_configuration );
   
   defvar("table", Variable.TableChoice( "docs", 0,
-				 _(0,"Filesystem table"),
-				 _(0,"The table that cotains the files."
+				 _(61,"Filesystem table"),
+				 _(62,"The table that cotains the files."
 				  " The table should contain at least the "
 				  "columns 'name' and 'contents'. Optionally "
 				  "you can also have the fields 'mtime', "
 				   "'uid' and 'gid'."),
 					 getvar("db") ) );
 
-  defvar("charset", "iso-8859-1", _(0,"File contents charset"),
+  defvar("charset", "iso-8859-1", _(39,"File contents charset"),
 	 TYPE_STRING,
-	 _(0,"The charset of the contents of the files on this file "
+	 _(40,"The charset of the contents of the files on this file "
 	   "system. This variable makes it possible for Roxen to use "
 	   "any text file, no matter what charset it is written in. If"
 	   " necessary, Roxen will convert the file to Unicode before "
 	   "processing the file."));
 
-  defvar("path_encoding", "iso-8859-1", _(0,"Filename charset"),
+  defvar("path_encoding", "iso-8859-1", _(41,"Filename charset"),
 	 TYPE_STRING,
-	 _(0,"The charset of the file names of the files on this file "
+	 _(42,"The charset of the file names of the files on this file "
 	   "system. Unlike the <i>File contents charset</i> variable, "
 	   "this might not work for all charsets simply because not "
 	   "all browsers support anything except ISO-8859-1 "
