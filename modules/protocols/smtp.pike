@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.36 1998/09/17 15:00:24 grubba Exp $
+ * $Id: smtp.pike,v 1.37 1998/09/17 15:16:41 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.36 1998/09/17 15:00:24 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.37 1998/09/17 15:16:41 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -271,7 +271,7 @@ static class Smtp_Connection {
       }
       a[i] *= "";
     }
-    return(lower_case(a));
+    return(Array.map(a, lower_case));
   }
 
   void smtp_NOOP(string noop, string args)
