@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.150 2000/03/08 01:04:26 nilsson Exp $
+ * $Id: roxenloader.pike,v 1.151 2000/03/09 03:48:38 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -18,7 +18,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.150 2000/03/08 01:04:26 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.151 2000/03/09 03:48:38 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -927,8 +927,25 @@ void do_main( int argc, array(string) argv )
   array hider = argv;
   argv = 0;
 
+  if( (-1&0xffffffff) < 0 )
+  {
+    report_debug(
+#"
+
+
+******************* FATAL **********************
+Roxen 2.0 requires bignum support in pike.
+Please recompile pike with gmp / bignum support
+to run Roxen.
+************************************************
+
+
+");
+    _exit( 0 );
+  }
+
 #ifdef NOT_INSTALLED
-  report_debug(
+    report_debug(
 #"
 
 

@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.450 2000/03/08 01:14:21 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.451 2000/03/09 03:48:38 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2615,32 +2615,36 @@ void create()
   dump( "base_server/fonts.pike" );
 
   /* Delayed loading. */
-//   int s = gethrtime();
-  master()->resolv ("RXML.refs");
-  foreach( glob("*.pike",get_dir( "etc/modules/RXML.pmod/")), string q )
-  {
-    if( q != "PXml.pike" )
-      dump( "etc/modules/RXML.pmod/"+ q );
-  }
-  foreach( glob("*.pmod",get_dir( "etc/modules/RXML.pmod/")), string q )
-    dump( "etc/modules/RXML.pmod/"+ q );
-
+  int s = gethrtime();
+  dump( "etc/modules/RXML.pmod/module.pmod" );
   /* Used in all 'new style' tag modules */
+  add_constant( "RXML",         master()->resolv("RXML") );
+  add_constant( "RXML.t_text",  master()->resolv("RXML.t_text") );
+  add_constant( "RXML.t_same",  master()->resolv("RXML.t_same") );
+  add_constant( "RXML.t_none",  master()->resolv("RXML.t_none") );
+  add_constant( "RXML.t_any",   master()->resolv("RXML.t_any") );
+  add_constant( "RXML.t_html",  master()->resolv("RXML.t_html") );
+  add_constant( "RXML.t_xml",   master()->resolv("RXML.t_xml") );
   add_constant( "RXML.Context", master()->resolv("RXML.Context") );
-  add_constant( "RXML.Tag", master()->resolv("RXML.Tag") );
-  add_constant( "RXML.TagSet", master()->resolv("RXML.Tag") );
-  add_constant( "RXML.Frame", master()->resolv("RXML.Frame") );
-  add_constant( "RXML.Void", master()->resolv("RXML.Void") );
+  add_constant( "RXML.Tag",     master()->resolv("RXML.Tag") );
+  add_constant( "RXML.TagSet",  master()->resolv("RXML.Tag") );
+  add_constant( "RXML.Frame",   master()->resolv("RXML.Frame") );
+  add_constant( "RXML.Void",    master()->resolv("RXML.Void") );
   add_constant( "RXML.get_context", master()->resolv("RXML.get_context") );
 
-  add_constant( "RXML.t_text", master()->resolv("RXML.t_text") );
-  add_constant( "RXML.t_same", master()->resolv("RXML.t_same") );
-  add_constant( "RXML.t_none", master()->resolv("RXML.t_none") );
-  add_constant( "RXML.t_any", master()->resolv("RXML.t_any") );
-  add_constant( "RXML.t_html", master()->resolv("RXML.t_html") );
-  add_constant( "RXML.t_xml", master()->resolv("RXML.t_xml") );
+  master()->resolv ("RXML.refs");
 
-//   report_debug( "[RXML: %.2fms] ", (gethrtime()-s)/1000.0);
+  foreach( glob("*.p???",get_dir( "etc/modules/RXML.pmod/")), string q )
+//     if( q != "PXml.pike" )
+    dump( "etc/modules/RXML.pmod/"+ q );
+
+  add_constant( "Roxen",        master()->resolv("Roxen") );
+
+  add_constant( "Roxen.entities_tag_set",
+                master()->resolv("Roxen.entities_tag_set") );
+  dump( "etc/modules/Roxen.pmod" );
+
+  report_debug( "[RXML: %.2fms] ", (gethrtime()-s)/1000.0);
 
 //   int s = gethrtime();
   Configuration = (program)"configuration";
