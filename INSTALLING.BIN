@@ -1,0 +1,47 @@
+          Installing Roxen Challenger 1.1 - the Binary distribution
+          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  1. Get the binary server package appropriate for your architeture.
+
+  2. Issue the command to unpack the archive:
+
+          .tar.gz:
+               If you have GNU tar; "tar xzf Roxen-archive-name"
+               If you don't have GNU tar: 
+               "gunzip < Roxen-archive-name| tar xf -" 
+          .tar.Z
+               If you have GNU tar; "tar xzf Roxen-archive-name"
+               If you don't have GNU tar: 
+               "uncompress < Roxen-archive-name| tar xf -"
+          .tar
+               "tar xf Roxen-archive-name"
+
+     (where "Roxen-archive-name" is the name of the Roxen archive
+     file.).
+
+  3. Type "cd Roxen_1.1/server" to change to the server directory.
+
+  4. Start the install script by typing ./install.
+
+  5. Answer the simple questions and wait for your client.
+
+  6. If everything worked, configure the server, otherwise move on to the
+     troubleshooting section on the roxen WWW-pages. 
+
+ Once you have installed the server, consider joining the Roxen
+ mailinglist (by sending a mail to roxen-request@infovav.se, with
+ the Subject: subscribe).
+
+ For more information about Roxen, read the online documentation at
+ http://roxen.com/
+
+----------------------------------------------------------------------------
+Example installation session:
+
+bash$ tar xzf Roxen_1.1.tar.gz
+bash$ cd Roxen_1.1/server
+bash$ ./install
+<answer a few questions>
+
+
+
