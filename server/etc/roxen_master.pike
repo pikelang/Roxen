@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.48 1998/11/02 06:56:33 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.49 1999/06/25 03:34:32 peter Exp $";
 
 /*
  * name = "Roxen Master";
@@ -99,10 +99,10 @@ array persistent_variables(program p, object o)
 array|string low_nameof(object|program|function fo)
 {
   if(objectp(fo))
-    if(mixed x=search(objects,fo)) return x; else return 0;  
+    if(mixed x=search(objects,fo)) return x;
 
   if(programp(fo))
-    if(mixed x=search(programs,fo)) return x; else return 0;  
+    if(mixed x=search(programs,fo)) return x;
   string p,post="";
   object foo ;
 
