@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.303 2004/05/31 23:01:52 _cvs_stephen Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.304 2004/06/03 23:15:05 mani Exp $";
 
 #include <module.h>
 inherit "module";
@@ -561,7 +561,6 @@ function alter_image(label)
 // -------------------- Image cache functions --------------------
 
 private core.ImageCache image_cache;
-private string compat_level;
 
 string status() {
   array s=image_cache->status();
@@ -583,7 +582,6 @@ void start(int num, Configuration conf)
   image_cache = core.ImageCache( "gtext", draw_callback );
   core.dump( "etc/modules/GText.pmod" );
   if(query("colorparse")) module_dependencies(conf, ({ "wiretap" }) );
-  compat_level = conf->query("compat_level");
 }
 
 private constant nbsp = Roxen.iso88591["&nbsp;"];
@@ -845,13 +843,6 @@ private mapping mk_gtext_arg(mapping arg, RequestID id)
 {
   mapping p=([]); //Picture rendering arguments.
 
-#if ROXEN_COMPAT < 2.2
-  if(compat_level < "2.2") {
-    p->compat = compat_level;
-    p->font = m_delete(arg, "nfont");
-  }
-#endif
-
   m_delete(arg,"src");
   m_delete(arg,"width");
   m_delete(arg,"height");
@@ -900,10 +891,6 @@ private mapping mk_gtext_arg(mapping arg, RequestID id)
   if(!p->fgcolor) p->fgcolor="#000000";
   if(!p->bgcolor) p->bgcolor="#ffffff";
 
-#if ROXEN_COMPAT < 2.2
-  if(id->misc->defines->nfont && !p->nfont && !p->font && !p->afont && compat_level<"2.2")
-    p->font=id->misc->gtext_nfont;
-#endif
   if(id->misc->defines->afont && !p->nfont && !p->font && !p->afont)
     p->afont=id->misc->gtext_afont;
   if(id->misc->defines->bold && !p->bold)     p->bold=id->misc->gtext_bold;

@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.104 2004/05/24 19:56:19 mani Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.105 2004/06/03 23:21:18 mani Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -67,12 +67,6 @@ constant tagdoc=([
  The actual SQL-statement.</p>
 </attr>
 
-<attr name='parse'><p>
- If specified, the query will be parsed by the RXML parser. Useful if
- you wish to dynamically build the query. This attribute is deprecated
- and will have no effect if the servers compatibility level is above 2.1.</p>
-</attr>
-
 <attr name='bindings' value='\"name=variable,name=variable,...\"'><p>
 Specifies binding variables to use with this query. This is comma separated
 list of binding variable names and RXML variables to assign to those
@@ -131,12 +125,6 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 
 string default_db;
 
-//  Cached copy of conf->query("compat_level"). This setting is defined
-//  to require a module reload to take effect so we only query it when
-//  start() is called.
-string compat_level;
-
-
 array|object do_sql_query(mapping args, RequestID id,
 			  void|int(0..1) big_query,
 			  void|int(0..1) ret_con)
@@ -147,10 +135,6 @@ array|object do_sql_query(mapping args, RequestID id,
     host=args->host;
     args->host="SECRET";
   }
-#if ROXEN_COMPAT <= 2.1
-  if (args->parse && compat_level < "2.2")
-    args->query = Roxen.parse_rxml(args->query, id);
-#endif
 
   Sql.Sql con;
   array(mapping(string:mixed))|object result;
@@ -416,8 +400,7 @@ void create()
 
 void start()
 {
-  default_db          = query("db");
-  compat_level = my_configuration()->query("compat_level");
+  default_db = query("db");
 }
 
 string status()
@@ -435,7 +418,7 @@ string status()
     })
     {
       return
-        "<font color=\"red\">"
+        "<font color='red'>"
         "The default database is not connected:</font><br />\n" +
         replace( Roxen.html_encode_string( describe_error(err) ),
                  "\n", "<br />\n") +
