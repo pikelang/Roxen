@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.18 1997/04/05 01:25:36 per Exp $ */
+/* $Id: persistent.pike,v 1.19 1997/04/11 14:17:58 peter Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -62,6 +62,26 @@ void destroy()
   remove_call_out(really_save);
 }
 
+static void compat_persist()
+{
+  string _id;
+  _id=(__id[0]+".class/"+__id[1]);
+
+#define COMPAT_DIR "dbm_dir.perdbm/"
+ object file = files.file();
+  array var;
+//  perror("compat persist "+COMPAT_DIR+"/"+_id+"\n");
+  catch {
+    if(!file->open(COMPAT_DIR+_id, "r")) return 0;
+    perror("compat restore ("+ _id +")\n");
+    var=decode_value(file->read(0x7ffffff));
+  };
+  if(var) foreach(var, var) catch {
+    this_object()[var[0]] = var[1];
+  };
+  really_save();
+  rm(COMPAT_DIR+_id);
+}
 
 nomask public void persist(mixed id)
 {
@@ -70,19 +90,25 @@ nomask public void persist(mixed id)
   if(!id)  error("No known id in persist.\n");
   __id = id;
 
+//  perror("restore ("+ id*";  " +")\n");
 // Restore
   array var;
-  catch {
+  if(!catch {
     var=decode_value(open_db(id[..0])->get(id[1..]));
-  };
-  if(var) foreach(var, var) catch {
-    this_object()[var[0]] = var[1];
-  };
-  
+//    perror("decode_value ok\n");
+  })
+    if(var && sizeof(var)) foreach(var, var) catch {
+      this_object()[var[0]] = var[1];
+    };
+    else
+      compat_persist();
+  else
+    compat_persist();
   if(functionp(this_object()->persisted))
     this_object()->persisted();
 }
   
+
 public void save()
 {
   if(!___destructed)
@@ -91,4 +117,3 @@ public void save()
     call_out(really_save,2);
   }
 }
-
