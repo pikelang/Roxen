@@ -1,0 +1,20 @@
+<b>Syntax:</b><br>
+<pre>
+{define name=define-to-remove}
+{define tag=tag-to-remove}
+{define container=container-to-remove}
+</pre>
+<p>
+<b>Attributes</b>
+<p>
+<dl compact>
+<dt><kbd>name=...</kbd>
+<dd>Undefine a previously defined define</dd>
+<dt><kbd>tag=..</kbd>
+<dd>Undefine a previously defined RXML tag</dd>
+<dt><kbd>containers=..</kbd>
+<dd>Undefine a previously defined RXML container</dd>
+</dl>
+<p> 
+
+<b>See also:</b> {define help} {set help} {insert help} {use help}

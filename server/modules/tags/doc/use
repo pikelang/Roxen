@@ -32,3 +32,6 @@ The primary use of this tag is for site-wide tags and containers. It
 is much faster to use {use} than {include} when defining tags and
 macros, since the parsed definitions is cached rather than the
 contents of the file
+
+<p>
+<b>See also:</b> {define help} {undefine help} {use help}

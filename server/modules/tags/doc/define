@@ -51,4 +51,4 @@ previous definition of 'argument'. Useful in tags that use other
 userdefined tags.
 </dl>
 <p>
-<b>See also:</b> {set help} {insert help} {use help}
+<b>See also:</b> {undefine help} {set help} {insert help} {use help}
