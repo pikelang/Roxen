@@ -1,5 +1,5 @@
 #include <config.h>
-constant cvs_version = "$Id: builtin.pike,v 1.1 2000/09/04 13:53:29 per Exp $";
+constant cvs_version = "$Id: builtin.pike,v 1.2 2000/09/19 10:30:45 nilsson Exp $";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";
@@ -18,7 +18,7 @@ array(mapping) font_information( string fnt )
    case "pikebuiltin":
      return ({
               ([
-                "name":"pike bultin",
+                "name":"pike builtin",
                 "family":"Pike builtin font",
                 "path":"-",
                 "style":"normal",
@@ -28,7 +28,7 @@ array(mapping) font_information( string fnt )
    case "roxenbuiltin":
      return ({
               ([
-                "name":"roxen bultin",
+                "name":"roxen builtin",
                 "family":"Roxen builtin font",
                 "path":"-",
                 "style":"normal",
