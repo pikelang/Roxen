@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.90 2000/01/30 22:28:44 per Exp $
+ * $Id: rxml.pike,v 1.91 2000/01/31 03:43:45 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -478,6 +478,33 @@ void build_if_callers()
   }
 }
 
+class GenericTag {
+  inherit RXML.Tag;
+  string name;
+  int flags;
+  function _do_return;
+
+  void create(string _name, int _flags,
+	      function __do_return) {
+    name=_name;
+    flags=_flags;
+    _do_return=__do_return;
+    if(flags&RXML.FLAG_DONT_PREPARSE)
+      content_type = RXML.t_text;
+    if(flags&RXML.FLAG_POSTPARSE)
+      result_types = ({ RXML.t_text(RXML.PHtml) });
+  }
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(_do_return)
+	result=_do_return(name, args, content, id, this_object());
+    }
+  }
+}
+
 void add_parse_module (RoxenModule mod)
 {
   RXML.TagSet tag_set =
@@ -499,6 +526,12 @@ void add_parse_module (RoxenModule mod)
       mkmapping (indices (defs),
 		 Array.transpose (({({call_container}) * sizeof (defs),
 				    values (defs)})));
+
+  if (mod->query_simple_tag_callers &&
+      mappingp (defs = mod->query_simple_tag_callers()) &&
+      sizeof (defs))
+    tag_set->add_tags(Array.map(indices(defs),
+				lambda(string tag){ return GenericTag(tag, @defs[tag]); }));
 
   if (search (rxml_tag_set->imported, tag_set) < 0) {
     rxml_tag_set->set_modules (rxml_tag_set->modules + ({mod}));
