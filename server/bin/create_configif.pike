@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.23 2000/08/28 21:48:18 marcus Exp $
+ * $Id: create_configif.pike,v 1.24 2000/08/29 12:01:05 noring Exp $
  *
  * Create an initial administration interface server.
  */
@@ -19,7 +19,62 @@ int mkdirhier(string from)
   }
 }
 
-string read_string(Stdio.Readline rl, string prompt, string|void def,
+class Readline
+{
+  inherit Stdio.Readline;
+
+  void trap_signal(int n)
+  {
+    werror("Interrupted, exit.\r\n");
+    destruct(this_object());
+    exit(1);
+  }
+
+  void destroy()
+  {
+    get_input_controller()->dumb = 0;
+    ::destroy();
+    signal(signum("SIGINT"));
+  }
+
+  string read(mixed ... args)
+  {
+    string r = ::read(@args);
+    
+    if(!r)
+    {
+      /* C-d? */
+      werror("\nTerminal closed, exit.\n");
+      destruct(this_object());
+      exit(0);
+    }
+    
+    return r;
+  }
+
+  string edit(mixed ... args)
+  {
+    string r = ::edit(@args);
+    
+    if(!r)
+    {
+      /* C-d? */
+      werror("\nTerminal closed, exit.\n");
+      destruct(this_object());
+      exit(0);
+    }
+    
+    return r;
+  }
+  
+  void create(mixed ... args)
+  {
+    signal(signum("SIGINT"), trap_signal);
+    ::create(@args);
+  }
+}
+
+string read_string(Readline rl, string prompt, string|void def,
 		   string|void batch)
 {
   string res = batch || rl->read( prompt+(def? " ["+def+"]":"")+": " );
@@ -30,20 +85,16 @@ string read_string(Stdio.Readline rl, string prompt, string|void def,
 
 int main(int argc, array argv)
 {
-  Stdio.Readline rl = Stdio.Readline();
+  Readline rl = Readline();
   string name, user, password, configdir, port;
   string passwd2;
   mapping(string:string) batch = ([]);
-
-  rl->redisplay( 1 );
 
 #if constant( SSL3 )
   string def_port = "https://*:"+(random(20000)+10000)+"/";
 #else
   string def_port = "http://*:"+(random(20000)+10000)+"/";
 #endif
-
-  write( "Roxen 2.0 administration interface installation script\n");
 
   configdir =
    Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
@@ -62,25 +113,26 @@ int main(int argc, array argv)
 	  search( Stdio.read_file( configdir+"/"+cf ), 
                   "'config_filesystem#0'" ) != -1 )
       {
-        werror("There is already an administration interface present in "
-               "this server.\nNo new will be created\n");
+        werror("   There is already an administration interface present in "
+               "this\n   server. A new one will not be created.\n");
         if(!admin++) exit( 0 );
       }
     };
   if(admin==1)
-    werror("No administration interface was found.\n"
-	   "A new one will be created.");
+    werror("   No administration interface was found. A new one will be created.\n");
   if(configdir[-1] != '/')
     configdir+="/";
   if(admin)
-    write( "Creating an administrator user.\n" );
+    write( "   Creating an administrator user.\n\n" );
   else
-    write( "Creating an administration interface server in "+configdir+"\n");
+    write( "   Creating an administration interface server in "+
+	   configdir+"\n");
 
   do
   {
     if(!admin) 
     {
+      write("\n");
       name = read_string(rl, "Server name", "Administration Interface",
 			 batch->server_name);
 
@@ -108,8 +160,8 @@ int main(int argc, array argv)
                ok=1;
                break;
              default:
-               write("Only http and https are supported for the "
-                     "configuration interface\n");
+               write("\n   Only http and https are supported for the "
+                     "configuration interface.\n");
                break;
             }
           }
@@ -128,15 +180,15 @@ int main(int argc, array argv)
              port_ok = 1;
              break;
            default:
-             write("Only http and https are supported for the "
-                   "configuration interface\n");
+             write("\n   Only http and https are supported for the "
+                   "configuration interface.\n\n");
              break;
           }
         }
       }
     }
 
-    do 
+    do
     {
       user = read_string(rl, "Administrator user name", "administrator",
 			 batch->user);
@@ -147,16 +199,16 @@ int main(int argc, array argv)
     do
     {
       rl->get_input_controller()->dumb=1;
-      password = read_string(rl, "Administrator Password", 0, batch->password);
-      passwd2 = read_string(rl, "Administrator Password (again)", 0, batch->password);
+      password = read_string(rl, "Administrator password", 0, batch->password);
+      passwd2 = read_string(rl, "Administrator password (again)", 0, batch->password);
       rl->get_input_controller()->dumb=0;
       if(batch->password)
 	m_delete(batch, "password");
       else
 	write("\n");
     } while(!strlen(password) || (password != passwd2));
+    write("\n");
   } while( strlen( passwd2 = read_string(rl, "Ok?", "y", batch->ok ) ) && passwd2[0]=='n' );
-
 
   if( !admin )
   {
@@ -165,29 +217,29 @@ int main(int argc, array argv)
     int use_update_system=0;
   
     if(!batch->update) {
-      write("Roxen 2.0 has a built-in update system. If enabled it will periodically\n");
-      write("contact update servers at Roxen Internet Software over the Internet.\n");
-      write("Do you want to enable this?\n");
+      write("\n   Roxen has a built-in update system. If enabled it will periodically\n");
+      write("   contact update servers at Roxen Internet Software over the Internet.\n\n");
+      write("   Do you want to enable this?\n\n");
     }
     if(!(strlen( passwd2 = read_string(rl, "Ok?", "y", batch->update ) ) && passwd2[0]=='n' ))
     {
       use_update_system=1;
       if(!batch->community_user) {
-	write("If you have a registered user identity at Roxen Community\n");
-	write("(http://community.roxen.com), you may be able to access\n");
-	write("additional material through the update system.\n");
-	write("Press enter to skip this.\n");
+	write("\n   If you have a registered user identity at Roxen Community\n");
+	write("   (http://community.roxen.com), you may be able to access additional\n");
+	write("   material through the update system.\n\n");
+	write("   Press enter to skip this.\n\n");
       }
-      community_user=read_string(rl, "Roxen Community Identity (your e-mail)",
+      community_user=read_string(rl, "Roxen Community identity (your e-mail)",
 				 0, batch->community_user);
       if(sizeof(community_user))
       {
         do
         {
           rl->get_input_controller()->dumb=1;
-          community_password = read_string(rl, "Roxen Community Password", 0,
+          community_password = read_string(rl, "Roxen Community password", 0,
 					   batch->community_password);
-          passwd2 = read_string(rl, "Roxen Community Password (again)", 0,
+          passwd2 = read_string(rl, "Roxen Community password (again)", 0,
 				batch->community_password);
           rl->get_input_controller()->dumb=0;
 	  if(batch->community_password)
@@ -265,7 +317,7 @@ ent text/html
     "$PROXY_HOST", "$COMMUNITY_USERPASSWORD$" }),
  ({ name, port, (string)use_update_system, proxy_port,
     proxy_host, community_userpassword }) ));
-    write("Administration interface created\n");
+    write("\n   Administration interface created.\n");
   }
 
   string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
@@ -278,5 +330,5 @@ string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
   <str>password</str>    : <str>" + crypt(password) + #"</str>
   <str>name</str>        : <str>" + user + "</str>\n</map>" ));
 
-  write("Administrator user \"" + user + "\" created.\n");
+  write("\n   Administrator user \"" + user + "\" created.\n");
 }
