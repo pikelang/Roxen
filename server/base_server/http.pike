@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.27 1999/10/08 13:39:33 grubba Exp $";
+string cvs_version = "$Id: http.pike,v 1.28 1999/10/08 16:12:12 nilsson Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -308,4 +308,14 @@ mapping http_proxy_auth_required(string realm, void|string message)
     + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
  
+static string add_http_header(mapping to, string name, string value)
+{
+  if(to[name])
+    if(arrayp(to[name]))
+      to[name] += ({ value });
+    else
+      to[name] = ({ to[name], value });
+  else
+    to[name] = value;
+}
 
