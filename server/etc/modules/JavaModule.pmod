@@ -68,21 +68,17 @@ static object fileext_ifc = FINDCLASS("com/roxen/roxen/FileExtensionModule");
 static object provider_ifc = FINDCLASS("com/roxen/roxen/ProviderModule");
 static object simpletagcaller_ifc = FINDCLASS("com/roxen/roxen/SimpleTagCaller");
 static object lastresort_ifc = FINDCLASS("com/roxen/roxen/LastResortModule");
-static object filter_ifc = FINDCLASS("com/roxen/roxen/FilterModule");
 static object frame_class = FINDCLASS("com/roxen/roxen/Frame");
 static object response_class = FINDCLASS("com/roxen/roxen/RoxenResponse");
 static object response2_class = FINDCLASS("com/roxen/roxen/RoxenStringResponse");
-static object response2_init = response2_class->get_method("<init>", "(ILjava/lang/String;JLjava/lang/String;)V");
 static object response3_class = FINDCLASS("com/roxen/roxen/RoxenFileResponse");
-static object response3_init = response3_class->get_method("<init>", "(Ljava/lang/String;JLjava/io/Reader;)V");
 static object response4_class = FINDCLASS("com/roxen/roxen/RoxenRXMLResponse");
-static object response4_init = response4_class->get_method("<init>", "(ILjava/lang/String;Ljava/lang/String;)V");
 static object rxml_class = FINDCLASS("com/roxen/roxen/RXML");
 static object backtrace_class = FINDCLASS("com/roxen/roxen/RXML$Backtrace");
 static object reqid_init = reqid_class->get_method("<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
 static object conf_init = conf_class->get_method("<init>", "()V");
 static object frame_init = frame_class->get_method("<init>", "()V");
-static object _create = module_class->get_method("create", "(Lcom/roxen/roxen/RoxenConfiguration;)V");
+static object _configuration = module_class->get_field("configuration", "Lcom/roxen/roxen/RoxenConfiguration;");
 static object query_type = module_class->get_method("queryType", "()I");
 static object query_unique = module_class->get_method("queryUnique", "()Z");
 static object _query_name = module_class->get_method("queryName", "()Ljava/lang/String;");
@@ -103,7 +99,6 @@ static object _query_file_extensions = fileext_ifc->get_method("queryFileExtensi
 static object _handle_file_extension = fileext_ifc->get_method("handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
 static object _query_tag_callers = parser_ifc->get_method("querySimpleTagCallers", "()[Lcom/roxen/roxen/SimpleTagCaller;");
 static object _last_resort = lastresort_ifc->get_method("last_resort", "(Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
-static object _filter = filter_ifc->get_method("filter", "(Lcom/roxen/roxen/RoxenResponse;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
 static object simpletagcaller_query_name = simpletagcaller_ifc->get_method("queryTagName", "()Ljava/lang/String;");
 static object simpletagcaller_query_flags = simpletagcaller_ifc->get_method("queryTagFlags", "()I");
 static object _tag_called = simpletagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;Lcom/roxen/roxen/Frame;)Ljava/lang/String;");
@@ -127,7 +122,6 @@ static mapping(object:object) jotomod = set_weak_flag( ([]), 1 );
 static mapping(object:object) jotoconf = set_weak_flag( ([]), 1 );
 static mapping(object:object) conftojo = set_weak_flag( ([]), 1 );
 static mapping(object:object) jotoid = set_weak_flag( ([]), 1 );
-static mapping(object:object) idtojo = set_weak_flag( ([]), 1 );
 
 #if constant(thread_create)
 #define LOCK() object _key=mutex->lock()
@@ -352,41 +346,13 @@ class ModuleWrapper
 
   static object make_reqid(RequestID id)
   {
-    if(idtojo[id]) {
-      return idtojo[id];
-    } else {
-      object r = reqid_class->alloc();
-      reqid_init->call_nonvirtual(r, make_conf(id->conf), id->raw_url, id->prot,
-	  			id->clientprot, id->method, id->realfile,
+    object r = reqid_class->alloc();
+    reqid_init->call_nonvirtual(r, make_conf(id->conf), id->raw_url, id->prot,
+				id->clientprot, id->method, id->realfile,
 				id->virtfile, id->raw, id->query,
 				id->not_query, id->remoteaddr, id->time);
-      check_exception();
-      jotoid[r] = id;
-      idtojo[id] = r;
-      return r;
-    }
-  }
-
-  static object make_javaresponse(mapping res, RequestID id)
-  {
-    if(!res)
-      return 0;
-    object r;
-    if(res->file) {
-      //FIXME: cheat for now...
-      res->data = "";
-      catch {
-	res->data = res->file->read();
-	res->file->close();
-      };
-      m_delete(res, "file");
-      r = response2_class->alloc();
-      response2_init->call_nonvirtual(r, res->error, res->type || "", sizeof(res->data||""), res->data || "");
-    } else {
-      r = response2_class->alloc();
-      response2_init->call_nonvirtual(r, res->error, res->type || "", sizeof(res->data||""), res->data || "");
-    }
     check_exception();
+    jotoid[r] = id;
     return r;
   }
 
@@ -437,16 +403,6 @@ class ModuleWrapper
       rr->file = ReaderFile(s);
     check_exception();
     return rr;
-  }
-
-  static mapping merge_response(object r, mapping res, RequestID id)
-  {
-    mapping res2 = make_response(r, id);
-    if(!res2 || !res)
-      return res2;
-    foreach(indices(res) - ({ "error", "file", "data", "type" }), mixed m)
-      res2[m] = res[m];
-    return res2;
   }
 
   array register_module()
@@ -590,21 +546,12 @@ class ModuleWrapper
     check_exception();
     return make_response(r, id);
   }
-
   mixed last_resort(RequestID id)
   {
     object r = _last_resort(modobj, make_reqid(id));
     check_exception();
     return make_response(r, id);
   }
-
-  mixed filter(mapping res, RequestID id)
-  {
-    object r = _filter(modobj, make_javaresponse(res, id) ,  make_reqid(id));
-    check_exception();
-    return merge_response(r, res, id);
-  }
-
 
   string extension( string from )
   {
@@ -613,7 +560,7 @@ class ModuleWrapper
     return ext ? reverse(ext) : "";
   }
 
-  static void load(string filename, object configuration)
+  static void load(string filename)
   {
     string path = combine_path(getcwd(), filename);
     array(string) dcomp = path/"/";
@@ -659,13 +606,10 @@ class ModuleWrapper
       return;
     modobj = new_instance(modcls);
     check_exception();
-    if(!modobj->is_instance_of(module_class)) {
+    if(!modobj->is_instance_of(module_class))
       error("class does not implement com.roxen.roxen.Module\n");
-    } else {
+    else
       jotomod[modobj] = this_object();
-      _create(modobj, make_conf(configuration));
-      check_exception();
-    }
   }
 
   static array(array) getdefvars()
@@ -688,8 +632,12 @@ class ModuleWrapper
 			  });
   }
 
-  static void init()
+  static void init(object conf)
   {
+    if(conf) {
+      _configuration->set(modobj, confobj = make_conf(conf));
+     check_exception();
+    }
     modtype = query_type(modobj);
     check_exception();
     modname = stringify(_query_name(modobj));
@@ -813,15 +761,6 @@ static object native_get_providers(object conf, object provides)
     return 0;
 }
 
-static void native_module_dependencies(object mod, object conf, object modids)
-{
-  conf = jotoconf[conf];
-  mod = jotomod[mod];
-  if(mod && conf && modids) {
-    mod->module_dependencies(conf, valify(modids));
-  }
-}
-
 static object native_get_var(object var, object scope)
 {
   mixed x;
@@ -877,11 +816,10 @@ static void native_tag_debug(object msg)
   RXML.tag_debug((string)msg);
 }
 
-void create( object conf )
+void create()
 {
   natives_bind1 = module_class->register_natives(({
     ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_query}),
-    ({"native_module_dependencies", "(Lcom/roxen/roxen/RoxenConfiguration;[Ljava/lang/String;)V", native_module_dependencies}),
     ({"set", "(Ljava/lang/String;Ljava/lang/Object;)V", native_set}),
   }));
   natives_bind2 = conf_class->register_natives(({
