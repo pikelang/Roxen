@@ -1,18 +1,19 @@
 /*
- * $Id: webadm.pike,v 1.14 1998/08/04 19:11:07 wellhard Exp $
+ * $Id: webadm.pike,v 1.15 1998/08/05 19:06:51 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.14 1998/08/04 19:11:07 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.15 1998/08/05 19:06:51 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
 
 inherit "module";
 inherit "roxenlib";
+import .AutoWeb;
 
 string tabsdir, templatesdir;
 mapping tabs;
@@ -160,7 +161,7 @@ string tag_as_meta(string tag_name, mapping args, object id)
   if(!args->var)
     return "";
 
-  mapping md = get_md(id, id->not_query);
+  mapping md = MetaData(id, id->not_query)->get();
   if(!md)
     return "";
 
@@ -296,7 +297,6 @@ mixed find_file(string f, object id)
 
 void start(int q, object conf)
 {
-  init_content_types();
   templatesdir = combine_path(roxen->filename(this)+"/", "../")+"templates/";
   tabsdir = combine_path(roxen->filename(this)+"/", "../")+"tabs/";
   tabs = mkmapping(get_dir(tabsdir)-({".", "..", ".no_modules", "CVS"}),
@@ -331,7 +331,7 @@ void create()
   add_module_path(combine_path(__FILE__,"../"));
 }
 
-
+#if 0
 // Wizard functions
 
 string real_path(object id, string filename)
@@ -501,6 +501,15 @@ mapping get_md_from_html(string f, string html)
   return md;
 }
 
+// Misc
+
+string html_safe_encode(string s)
+{
+  return replace(s, ({ "<", ">" }), ({ "&lt;", "&gt;" }));
+}
+
+#endif
+
 // State
 
 mapping saved_state = ([ ]);
@@ -533,9 +542,3 @@ mapping state_for(object id)
 }
 
 
-// Misc
-
-string html_safe_encode(string s)
-{
-  return replace(s, ({ "<", ">" }), ({ "&lt;", "&gt;" }));
-}

@@ -1,11 +1,12 @@
 inherit "wizard";
+import AutoWeb;
 
 constant name = "Upload File";
 
 string page_0( object id )
 {
   return "<b>Upload to "+id->variables->path+"</b>"
-    +AutoWeb.Error(id)->get() + 
+    +Error(id)->get() + 
     "<p><b>Select local file:</b> <input type=file name=the_file>";
 }
 
@@ -24,7 +25,7 @@ int verify_0( object id )
      !sizeof(id->variables["the_file.filename"])||
      !sizeof(id->variables["the_file"]))
   {
-    AutoWeb.Error(id)->set("No such file "+id->variables["the_file.filename"]);
+    Error(id)->set("No such file "+id->variables["the_file.filename"]);
     return 1;
   }
   id->variables->filename=id->variables["the_file.filename"];
@@ -34,7 +35,7 @@ int verify_0( object id )
   //id->misc->state->upload_co =
   //	    call_out( cleanup_the_file, 3600, id->misc->state);
   m_delete(id->variables, "the_file");
-  AutoWeb.Error(id)->reset();
+  Error(id)->reset();
 }
 
 string page_1( object id )
@@ -52,7 +53,7 @@ string page_1( object id )
   filename = arr[-1];
   id->variables->path = path;
   id->variables->filename = filename;
-  result += AutoWeb.Error(id)->get()+"<b>Enter remote filename:</b>";
+  result += Error(id)->get()+"<b>Enter remote filename:</b>";
   result += "<var size=20 name=filename default=" + filename + ">";
   return result;
 }
@@ -65,27 +66,36 @@ mixed verify_1( object id)
   else
     path=combine_path( id->variables->path, id->variables->filename );
 
-  if(AutoWeb.AutoFile(id, path)->type()=="File")
+  if(AutoFile(id, path)->type()=="File")
   {
-    AutoWeb.Error(id)->set("File "+path+" exists.");
+    Error(id)->set("File <b>"+html_encode_string(path)+"</b> exists.");
     return -1;
   }
-  AutoWeb.Error(id)->reset();
+  
+  if(AutoFile(id, path)->type()=="Directory")
+  {
+    Error(id)->set("Directory <b>"+html_encode_string(path)+"</b> exists.");
+    return -1;
+  }
+  
+  Error(id)->reset();
 }
 
 string page_2(object id)
 {
-  return AutoWeb.Error(id)->get()
-    + AutoWeb.EditMetaData()->page(id, id->variables->path+
-				   id->variables->filename,
-             AutoWeb.MetaData(id, id->variables->filename)->
-             get_from_html(id->misc->state->upload));
+  return Error(id)->get()
+    + EditMetaData()->page(id, combine_path( id->variables->path,
+					     id->variables->filename),
+			   MetaData(id, id->variables->filename)->
+			   get_from_html(id->misc->state->upload));
 }
 
 mixed wizard_done(object id)
 {
-
-  AutoWeb.EditMetaData()->done(id);
+  EditMetaData()->done(id, combine_path( id->variables->path,
+					 id->variables->filename));
+  AutoFile(id, combine_path( id->variables->path, id->variables->filename))->
+    save(id->misc->state->upload);
   if(id->misc->state->upload_co)
     remove_call_out(id->misc->state->upload_co);
   m_delete( id->misc->state, "upload" );

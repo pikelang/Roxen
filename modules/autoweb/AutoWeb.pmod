@@ -52,6 +52,15 @@ class AutoFile {
     return predef::get_dir(real_path(filename));
   }
   
+  int visiblep()
+  {
+    array filters = ({ "CVS", "templates", "*.md", "*.menu" });
+    foreach(filters, string filter)
+      if(glob(filter, filename))
+	return 0;
+    return 1;
+  }
+  
   int move(string dest)
   {
     return mv(real_path(filename), real_path(dest));
@@ -89,6 +98,14 @@ class ContentTypes {
   {
     return name_to_type[name];
   }
+
+  string img_from_type(string type)
+  {
+    mapping ct =  content_types[type||"autosite/unknown"];
+    if(ct)
+      return ct->img;
+    return content_types["autosite/unknown"]->img;
+  }
   
   string name_from_type(string type)
   {
@@ -124,6 +141,8 @@ class ContentTypes {
   void create()
   {
     default_content_type = "autosite/unknown";
+    string image_base = "/webadmimg/";
+    string image_ext = ".gif";
     content_types =
     ([ "text/html" :
        ([ "name" : "HTML",
@@ -131,35 +150,35 @@ class ContentTypes {
 	  "downloadp" : 1,
 	  "parsep" : 1,
 	  "extensions" : (< "html", "htm" >),
-	  "img" : "internal-gopher-text" ]),
+	  "img" : image_base+"text"+image_ext ]),
        
        "text/plain" :
        ([ "name" : "Raw text",
 	  "handler" : "text",
 	  "downloadp" : 1,
 	  "extensions" : (< "txt" >),
-	  "img" : "internal-gopher-text" ]),
+	  "img" : image_base+"text"+image_ext ]),
        
        "image/gif" :
        ([ "name" : "GIF Image",
 	  "handler" : "image",
 	  "downloadp" : 1,
 	  "extensions" : (< "gif" >),
-	  "img" : "internal-gopher-image" ]),
+	  "img" : image_base+"image"+image_ext ]),
        
        "image/jpeg" :
        ([ "name" : "JPEG Image",
 	  "handler" : "image",
 	  "downloadp" : 1,
 	  "extensions" : (< "jpg", "jpeg" >),
-	  "img" : "internal-gopher-image" ]),
+	  "img" : image_base+"image"+image_ext ]),
        
        "autosite/unknown" :
        ([ "name" : "Unknown",
 	  "handler" : "default",
 	  "downloadp" : 1,
 	  "extensions" : (< >),
-	  "img" : "internal-gopher-unknown" ]),
+	  "img" : image_base+"unknown"+image_ext ]),
        
        "autosite/menu" :
        ([ "name" : "Menu",
@@ -167,7 +186,7 @@ class ContentTypes {
 	  "downloadp" : 0,
 	  "extensions" : (< "menu" >),
 	  "internalp" : 1,
-	  "img" : "internal-gopher-unknown" ]),
+	  "img" : image_base+"unknown"+image_ext ]),
        
        "autosite/template" :
        ([ "name" : "Template",
@@ -175,7 +194,7 @@ class ContentTypes {
 	  "downloadp" : 1,
 	  "extensions" : (< "tmpl" >),
 	  "internalp" : 1,
-	  "img" : "internal-gopher-unknown" ])
+	  "img" : image_base+"unknown"+image_ext ])
        
     ]);
     name_to_type = ([ ]);
@@ -267,10 +286,8 @@ class EditMetaData {
 
   string page( object id, string f, mapping|void m)
   {
-    object wa = id->misc->wa;
-
     if(!m && f)
-      m = wa->get_md(id, f);
+      m = MetaData(id, f)->get();
   
     array (string) templates = ({ "No template", "default.tmpl" });
   
@@ -306,27 +323,17 @@ class EditMetaData {
 		 Array.map(rows, describe_metadata_var));
   }
   
-  mixed done( object id )
+  mixed done( object id, string f)
   {
-    object wa = id->misc->wa;
-    string f = id->variables->filename;
     mapping md = ([ ]);
-    object autofile = AutoFile(id, f);
-    
-    if (autofile->stat())
-      {
-	id->variables->error = "File exists.";
-	return -1;
-      }
-    
+    werror("EditMetaData()->done() f: %O\n", f);
     foreach (glob( "meta_*", indices( id->variables )), string s)
       md[ s-"meta_" ] = id->variables[ s ];
-    md[ "content_type" ] = wa->name_to_type[ md[ "content_type" ] ];
+    md[ "content_type" ] = ContentTypes()->type_from_name(md[ "content_type" ]);
     if (md[ "template" ] == "No template")
       m_delete( md, "template" );
     
     MetaData(id, f)->set(md);
-    autofile->save("");
   }
   
   void create()
@@ -362,10 +369,10 @@ class Error {
   }
 }
 
-
-#if 0
 class MenuFile {
-  static private string parse_item(string tag, mapping args,
+  inherit "roxenlib";
+
+  string parse_item(string tag, mapping args,
 				   string contents, mapping items)
   {
     function parseit=lambda(string tag, mapping args,
@@ -387,7 +394,7 @@ class MenuFile {
     return 0;
   }
   
-  string encode(object id, array items)
+  string encode(array items)
   {
     string res="";
     foreach(items, mapping item)
@@ -404,10 +411,11 @@ class MenuFile {
 
   array decode(string s)
   {
+    if(!s) return ({});
     mapping items = ([ "items":({ }) ]);
     parse_html(s, ([]), (["mi":parse_item]),
 	       items);
     return items->items;
   }
 }
-#endif
+
