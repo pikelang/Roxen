@@ -1,8 +1,14 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.14 1997/10/03 18:56:13 grubba Exp $";
-/* Is threadsafe. Probably. */
+string cvs_version = "$Id: language.pike,v 1.15 1997/10/05 01:23:52 peter Exp $";
+/* Is threadsafe. */
+
+#if DEBUG_LEVEL > 20
+# ifndef LANGUAGE_DEBUG
+#  define LANGUAGE_DEBUG
+# endif
+#endif
 
 
 array register_module()
@@ -230,13 +236,13 @@ mixed remap_url( object id, string url )
     else
       accept_language = ({ });
 
-#ifdef MODULE_DEBUG  
+#ifdef LANGUAGE_DEBUG  
   perror("Wish:%O", accept_language);
 #endif
   // This looks funny, but it's nessesary to keep the order of the languages.
   accept_language = accept_language -
     ( accept_language - indices(language_list) );
-#ifdef MODULE_DEBUG  
+#ifdef LANGUAGE_DEBUG  
   perror("Negotiated:%O\n", accept_language);
 #endif
 
@@ -245,7 +251,7 @@ mixed remap_url( object id, string url )
   else
     lang_tmp = language_list & id->prestate;
 
-#ifdef MODULE_DEBUG
+#ifdef LANGUAGE_DEBUG
   if( sizeof(accept_language) )
     perror("Header-choosen language: %O\n", accept_language[0]);
 #endif
@@ -257,7 +263,7 @@ mixed remap_url( object id, string url )
   else
     chosen_language = default_language;
 
-#ifdef MODULE_DEBUG
+#ifdef LANGUAGE_DEBUG
   perror("Presented language: %O\n", chosen_language);
 #endif
   
