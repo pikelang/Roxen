@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.417 2003/01/14 16:57:07 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.418 2003/01/29 16:31:08 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1305,7 +1305,6 @@ class TagCache {
 		    RXML.FLAG_DONT_CACHE_RESULT |
 		    RXML.FLAG_CUSTOM_TRACE);
   constant cache_tag_location = "tag_cache";
-  constant disable_protocol_cache = 1;
 
   static class TimeOutEntry (
     TimeOutEntry next,
@@ -1383,8 +1382,18 @@ class TagCache {
       }
     }
 
-    static void make_key_from_keymap()
+    static void make_key_from_keymap(RequestID id)
     {
+      // Cacheing is not allowed if there are keys except '1' and
+      // none of them are page.path.
+      array(string|int) keys = indices(keymap) - ({1});
+      if (sizeof(keys) && search(keys, "page.path") == -1) {
+	if (!args["enable-client-cache"])
+	  NOCACHE();
+	else if(!args["enable-protocol-cache"])
+	  NO_PROTO_CACHE();
+      }
+
       key = encode_value_canonic (keymap);
       if (!args["disable-key-hash"])
 	// Initialize with a 32 char string to make sure MD5 goes
@@ -1412,14 +1421,6 @@ class TagCache {
 
       RXML.Context ctx = RXML_CONTEXT;
       int default_key = compat_level < 2.2;
-
-      // Disable the protocol cache, under the assumption that our
-      // cache key will depend on things it disregards. Could be
-      // avoided if the cache key is on e.g. page.path, but it's so
-      // unlikely it's not worth the effort to check that.
-      if (disable_protocol_cache) {
-	NOCACHE();
-      }
 
       overridden_keymap = 0;
       if (!args->propagate ||
@@ -1511,7 +1512,7 @@ class TagCache {
 	}
       }
 
-      make_key_from_keymap();
+      make_key_from_keymap(id);
 
       timeout = Roxen.time_dequantifier (args);
 
@@ -1584,7 +1585,7 @@ class TagCache {
 	  // subvariables is part of the persistent state, but we'll
 	  // come to state_update later anyway if it should be called.
 	  add_subvariables_to_keymap();
-	  make_key_from_keymap();
+	  make_key_from_keymap(id);
 	}
 
 	if (args->shared) {
@@ -5256,12 +5257,6 @@ class TagIWCache {
   //  Place all cache data in a specific cache which we can clear when
   //  the layout files are updated.
   constant cache_tag_location = "iwcache";
-
-  //  Don't disable protocol caching since our key is shared and thus
-  //  in essence only dependent on &page.path;. Aside from that the
-  //  user ID is part of the key, but all authenticated users will
-  //  fall through the protocol cache anyway.
-  constant disable_protocol_cache = 0;
   
   class Frame {
     inherit TagCache::Frame;
@@ -5272,11 +5267,18 @@ class TagIWCache {
       //  turn gets initialized in find_file(). This ID will be 0 for
       //  all users (even when authenticated in IW) as long as they
       //  haven't logged in into Platform.
+      //  Enable protocol caching since our key is shared and thus
+      //  in essence only dependent on &page.path;. Aside from that the
+      //  user ID is part of the key, but all authenticated users will
+      //  fall through the protocol cache anyway.
       object sbobj = id->misc->sbobj;
       int userid = sbobj && sbobj->get_userid();
       args = ([ "shared" : "yes-please",
 		"key"    : ("userid:" + userid +
-			    "|tmpl:" + (id->misc->iw_template_set || "")) ]);
+			    "|tmpl:" + (id->misc->iw_template_set || "")),
+		"enable-client-cache"   : "yes-please",
+		"enable-protocol-cache" : "yes-please",
+      ]);
       if(id->supports->robot||id->variables->__print)
 	args += ([ "nocache" : "yes" ]);
       
@@ -6019,6 +6021,13 @@ using the pre tag.
  sends a pragma no-cache header to the server. These are e.g. sent when
  shift+reload is pressed in Netscape Navigator.</p>
 </attr>
+
+<attr name='enable-client-cache'>
+</attr>
+
+<attr name='enable-protocol-cache'>
+</attr>
+
 
 <attr name='years' value='number'>
  <p>Add this number of years to the time this entry is valid.</p>
