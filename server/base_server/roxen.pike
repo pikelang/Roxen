@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.119 1997/09/01 14:20:19 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.120 1997/09/03 02:27:33 peter Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -700,17 +700,17 @@ public string full_status()
       foo[tmp] = sprintf("%.2f GB", foo[tmp]/1024.0);
   }
 
-  res = ("<table><tr align=right><td><b>Sent data:</b></td><td>"+ foo[1] 
-	 + sprintf("</td><td>%.2f Kbit</td>", foo[0] * 8192.0));
+  res = ("<table><tr><td><b>Sent data:</b></td><td>"+ foo[1] 
+	 + sprintf("</td><td>%.2f Kbit</td></tr><tr>", foo[0] * 8192.0));
   
-  res += "<td><b>Sent headers:</b></td><td>"+ foo[2] +"</td>\n";
+  res += "<td><b>Sent headers:</b></td><td>"+ foo[2] +"</td></tr>\n";
 	    
-  tmp=(foo[4]*600)/((time(1)-start_time)+1);
+  tmp=(int)(foo[4]*600.0)/((time(1)-start_time)+1);
 
-  res += ("<tr align=right><td><b>Number of requests:</b></td><td>" 
+  res += ("<tr><td><b>Number of requests:</b></td><td>" 
 	  + sprintf("%8d", foo[4])
 	  + sprintf("</td><td>%.2f/min</td>", (float)tmp/(float)10)+
-	  "<td><b>Recieved data:</b></td><td>"
+	  "</tr><tr><td><b>Recieved data:</b></td><td>"
 	  + foo[3] +"</td>");
   
   return res +"</table>";
