@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.572 2004/05/10 17:16:06 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.573 2004/05/14 16:30:42 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1462,6 +1462,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 					int(0..1) recursive,
 					string lockscope,
 					string locktype,
+					int(0..) expiry_delta,
 					array(Parser.XML.Tree.Node) owner,
 					RequestID id)
 {
@@ -1490,7 +1491,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 
   string locktoken = "opaquelocktoken:" + roxen->new_uuid_string();
   DAVLock lock = DAVLock(locktoken, path, recursive, lockscope, locktype,
-			 owner);
+			 expiry_delta, owner);
   foreach(location_module_cache||location_modules(),
 	  [string loc, function func])
   {
@@ -4137,7 +4138,6 @@ also set 'URLs'."));
     } else
       report_error("SNMPagent: something gets wrong! The main agent is disabled!\n");  }
 #endif
-
 
   definvisvar( "no_delayed_load", 0, TYPE_FLAG|VAR_PUBLIC );
 
