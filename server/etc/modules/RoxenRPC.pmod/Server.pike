@@ -243,6 +243,6 @@ void create(string|object host, int|void p )
   } else if(host) {
     if(!port->bind(p, got_connection, host))
       error("Failed to bind to port\n");
-  } else if(!!port->bind(p, got_connection))
+  } else if(!port->bind(p, got_connection))
     error("Failed to bind to port\n");
 }
