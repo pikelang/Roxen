@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.122 2001/08/17 19:46:34 per Exp $
+// $Id: site_content.pike,v 1.123 2001/08/23 22:21:16 per Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -117,7 +117,6 @@ do                                                                      \
   return res;
 }
 
-mapping current_compile_errors = ([]);
 string buttons( Configuration c, string mn, RequestID id )
 {
   RoxenModule mod = c->find_module( replace( mn,"!","#" ) );
@@ -138,13 +137,12 @@ string buttons( Configuration c, string mn, RequestID id )
 
       if( strlen( ec->get() ) )
       {
-        current_compile_errors[ mn ] = Roxen.html_encode_string(ec->get());
-        report_error("While reloading:\n"+ec->get()+"\n");
+	.State->current_compile_errors[ c->name+"!"+mn ] = ec->get();
+	report_debug( ec->get() ); // Do not add to module log.
       }
-      else if( mod != nm )
+      else if( nm != mod )
       {
-        mod = nm;
-        m_delete(current_compile_errors, mn );
+	m_delete( .State->current_compile_errors, c->name+"!"+mn );
       }
       mod = c->find_module( replace( mn,"!","#" ) );
     }
@@ -160,7 +158,7 @@ string buttons( Configuration c, string mn, RequestID id )
 	      log_msg = sprintf("2,%s," +
 				LOCALE(290,"Module event log for '%s' "
 				"cleared by %s (%s) from %s") + "\n",
-				mod_name, Roxen.get_modfullname(mod),
+				mod_name||mod, Roxen.get_modfullname(mod)||"",
 				realname, name, host);
       foreach(indices(mod->error_log), string error)
       {
@@ -203,11 +201,6 @@ string buttons( Configuration c, string mn, RequestID id )
   string buttons = 
          "<input type=hidden name=section value='" +
          (section||LOCALE(299,"Information")) + "'>";
-  if( current_compile_errors[ mn ] )
-    buttons += 
-            "<font color='&usr.warncolor;'><pre>"+
-            current_compile_errors[ mn ]+
-            "</pre></font>";
 
   // Do not allow reloading of modules _in_ the configuration interface.
   // It's not really all that good an idea, I promise.
@@ -288,11 +281,9 @@ string find_module_doc( string cn, string mn, RequestID id )
   if(!c)
     return "";
 
-  string dbuttons;
+  string dbuttons="";
   if( config_perm( "Add Module" ) )
-    dbuttons = "<h2>"+LOCALE(196, "Tasks")+"</h2>"+buttons( c, mn, id );
-  else
-    dbuttons = "";
+    dbuttons += "<h2>"+LOCALE(196, "Tasks")+"</h2>"+buttons( c, mn, id );
   RoxenModule m = c->find_module( replace(mn,"!","#") );
 
   if(!m)
@@ -333,6 +324,10 @@ string find_module_doc( string cn, string mn, RequestID id )
   int my_accesses = accesses[m];
 #endif
 
+  if( .State->current_compile_errors[ cn+"!"+mn ] )
+    dbuttons += "<font color='&usr.warncolor;'><pre>"+
+      .State->current_compile_errors[ cn+"!"+mn ]+
+      "</pre></font>";
   return
     replace( "<br /><b><font size='+2'>" +
 	     Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
