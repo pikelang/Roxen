@@ -4,7 +4,7 @@ import Array;
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.9 1997/04/05 01:25:38 per Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.10 1997/05/30 12:30:02 grubba Exp $";
 
 #else
 import spider;
@@ -106,7 +106,10 @@ array fix_array(array c)
 void fix_config(mixed c)
 {
   mixed l;
-  if(arrayp(c)) return (void)fix_array((array)c);
+  if(arrayp(c)) {
+    fix_array((array)c);
+    return;
+  }
   if(!mappingp(c)) return;
   foreach(indices(c), l)
   {
