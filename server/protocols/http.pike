@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.366 2002/04/05 14:29:27 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.367 2002/04/05 14:35:37 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2361,11 +2361,11 @@ void chain(object f, object c, string le)
 
 string _sprintf( )
 {
+  return "RequestID(" + (raw_url||"") + ")"
 #ifdef ID_OBJ_DEBUG
-  return "RequestID()" + (__marker ? "[" + __marker->count + "]" : "");
-#else
-  return "RequestID()";
+    + (__marker ? "[" + __marker->count + "]" : "")
 #endif
+    ;
 }
 
 Stdio.File connection( )
