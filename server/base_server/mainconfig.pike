@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.113 1998/10/19 00:22:50 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.114 1998/11/02 06:53:24 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -770,9 +770,7 @@ string new_module_form(object id, object node)
   if(!roxen->allmodules || sizeof(id->pragma))
   {
     roxen_perror("CONFIG: Rescanning modules.\n");
-    // roxen->current_configuration = node->config();
     roxen->rescan_modules();
-    // roxen->current_configuration = 0;
     roxen_perror("CONFIG: Done.\n");
   }
   
