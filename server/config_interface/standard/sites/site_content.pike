@@ -1,4 +1,3 @@
-inherit "roxenlib";
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
 #include <module.h>
