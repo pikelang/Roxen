@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.256 2000/02/04 01:35:40 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.257 2000/02/06 12:04:34 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -3243,7 +3243,7 @@ multiplicera detta värde med den här faktorn.");
 	 "<p><hr noshade>"
 	 "\n<i>Sorry</i></h2>\n"
 	 "<br clear>\n<font size=\"+2\">The resource requested "
-	 "<i>&request.file;</i>\n"
+	 "<i>&page.self;</i>\n"
          "cannot be found.<p>\n\nIf you feel that this is a "
 	 "configuration error, please contact "
 	 "the administrators or the author of the\n"
