@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.310 2001/05/03 17:28:19 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.311 2001/07/31 07:39:22 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1157,6 +1157,21 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 #ifdef THREADS
   object key;
 #endif
+
+
+  if( strlen(id->not_query ) )
+  {
+    int ss = (<'/','\\'>)[ id->not_query[0] ];
+    id->not_query = combine_path("/",
+#if defined(__NT__) || defined(STRIP_BSLASH)
+				 replace(id->not_query,"\\","/")
+#else
+				 id->not_query
+#endif
+				);
+    if( !ss )  id->not_query = id->not_query[1..];
+  }
+
   TRACE_ENTER(LOCALE->request_for(id->not_query), 0);
 
   string file=id->not_query;
