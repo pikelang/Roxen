@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.62 1997/10/09 04:34:05 grubba Exp $
+ * $Id: ftp.pike,v 1.63 1997/10/09 15:06:46 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -750,13 +750,18 @@ void connected_to_send(object fd,mapping file)
 #ifdef ENABLE_ASCII_MODE
   if(mode == "A")
   {
-    if(!file->data) file->data="";
     if(objectp(file->file) && file->file->read)
     {
+      // The list_stream object doesn't have a read method,
+      // but converts to ASCII anyway, so we don't have to do
+      // anything about it.
+      if(!file->data) file->data="";
       file->data += file->file->read();
       file->file=0;
     }
-    file->data = replace(file->data, "\n", "\r\n");
+    if (file->data) {
+      file->data = replace(file->data, "\n", "\r\n");
+    }
   }
 #endif /* ENABLE_ASCII_MODE */
   if(stringp(file->data))  pipe->write(file->data);
