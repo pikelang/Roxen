@@ -3,7 +3,7 @@
 //
 // The ChiliMoon RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.337 2004/07/12 02:13:10 _cvs_stephen Exp $
+// $Id: rxml.pike,v 1.338 2004/07/17 20:56:56 _cvs_stephen Exp $
 
 
 inherit "rxmlhelp";
@@ -117,7 +117,7 @@ RXML.TagSet rxml_tag_set = class
     if(id->misc->stat) misc[" _stat"] = id->misc->stat;
   }
 
-  static void eval_finish (RXML.Context ctx)
+  void eval_finish (RXML.Context ctx)
   {
     RequestID id = ctx->id;
     mapping misc = ctx->misc;
