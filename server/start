@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.90 2000/02/04 04:55:39 per Exp $
+# $Id: start,v 1.91 2000/02/08 07:57:12 mast Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -304,7 +304,7 @@ the default arguments.
 
        .B-P<path>B.:                  Add the path to the Pike program path.
 
-       .B-dtB.:                       Turn of tail recursion optimization.
+       .B-dtB.:                       Turn off tail recursion optimization.
 
        .B-tB.:                        Turn on Pike level tracing.
 
@@ -434,7 +434,7 @@ case "x$debug" in
     DEBUG=""
     ;;
   "x1")
-    DEBUG="-DDEBUG -DMODULE_DEBUG -rt"
+    DEBUG="-DDEBUG -DMODULE_DEBUG"
     ARGS="$ARGS -w"
     ;;
 esac
