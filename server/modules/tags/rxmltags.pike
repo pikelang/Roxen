@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.88 2000/03/05 19:46:48 js Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.89 2000/03/07 03:13:19 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -2321,7 +2321,7 @@ Sets a variable.</short> The variable attribute is required.
 </attr>
 
 <attr name=path value=string>
-Adds a cookie named \"name\" with the value \"value\".
+ The path in which the cookie should be available.
 </attr>
 
  If persistent is specified; the cookie will be persistent until year
