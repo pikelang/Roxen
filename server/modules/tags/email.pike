@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.26 2004/05/24 22:06:15 _cvs_dirix Exp $";
+constant cvs_version = "$Id: email.pike,v 1.27 2004/05/24 22:39:56 mani Exp $";
 
 constant thread_safe=1;
 
@@ -88,7 +88,7 @@ void create()
 object notasciicharset = Regexp("[^\1-\177]");
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.26 $"/" ")[1];
+string revision = ("$Revision: 1.27 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -281,7 +281,7 @@ class TagEmail {
       string addr;
 
       foreach(from/" ", string el)
-        if(has_value(el, "@"))
+        if(search(el, "@", 1) > 0)
 	  addr = el;
       if(addr && !has_value(addr, "<")) {
 	string name = ((from/" ")-({addr}))*" ";
@@ -295,7 +295,7 @@ class TagEmail {
 
     string only_from_addr(string fromx) {
       foreach(Array.map(fromx/" ", String.trim_all_whites), string from1)
-        if(has_value(from1, "@"))
+        if(search(from1, "@", 1) > 0)
 	  return from1;
       return String.trim_all_whites(fromx);
     }
