@@ -1,36 +1,11 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.43 2000/03/06 23:45:22 nilsson Exp $
+// $Id: cache.pike,v 1.44 2000/03/07 02:37:59 nilsson Exp $
 
 #pragma strict_types
 
 #include <roxen.h>
 #include <config.h>
-
-constant svalsize = 4*4; // if pointers are 4 bytes..
-int get_size(mixed x)
-{
-  if(mappingp(x))
-    return svalsize + 64 + get_size(indices([mapping]x)) + get_size(values([mapping]x));
-  else if(stringp(x))
-    return strlen([string]x)+svalsize;
-  else if(arrayp(x))
-  {
-    int i;
-    foreach([array]x, mixed f)
-      i += get_size(f);
-    return svalsize + 4 + i;    // (base) + arraysize
-  } else if(multisetp(x)) {
-    int i;
-    foreach(indices([multiset]x), mixed f)
-      i += get_size(f);
-    return svalsize + i;    // (base) + arraysize
-  } else if(objectp(x) || functionp(x)) {
-    return svalsize + 128; // (base) + object struct + some extra.
-    // _Should_ consider size of global variables / refcount
-  }
-  return svalsize; // base
-}
 
 #define TIMESTAMP 0
 #define DATA 1
@@ -61,6 +36,36 @@ int get_size(mixed x)
 
 mapping(string:mapping(string:array)) cache;
 mapping(string:int) hits=([]), all=([]);
+
+constant svalsize = 4*4; // if pointers are 4 bytes..
+int get_size(mixed x, void|int iter)
+{
+  if(iter++>50) {
+    CACHE_WERR("Too deep recursion when examining entry size.\n");
+    return 0;
+  }
+  if(mappingp(x))
+    return svalsize + 64 + get_size(indices([mapping]x), iter) +
+      get_size(values([mapping]x), iter);
+  else if(stringp(x))
+    return strlen([string]x)+svalsize;
+  else if(arrayp(x))
+  {
+    int i;
+    foreach([array]x, mixed f)
+      i += get_size(f,iter);
+    return svalsize + 4 + i;    // (base) + arraysize
+  } else if(multisetp(x)) {
+    int i;
+    foreach(indices([multiset]x), mixed f)
+      i += get_size(f,iter);
+    return svalsize + i;    // (base) + arraysize
+  } else if(objectp(x) || functionp(x)) {
+    return svalsize + 128; // (base) + object struct + some extra.
+    // _Should_ consider size of global variables / refcount
+  }
+  return svalsize; // base
+}
 
 #ifdef THREADS
 Thread.Mutex cleaning_lock = Thread.Mutex();
@@ -114,7 +119,7 @@ string status()
     int h = hits[b[i]];
     int t = all[b[i]];
     sscanf(b[i], "%s:", b[i]);
-    b[i] = ([function(void:object(RoxenLocale.standard))]([object]roxenp()->locale)->get)()
+    b[i] = ([function(void:object(RoxenLocale.standard))]roxenp()->locale->get)()
       ->config_interface
       ->translate_cache_class( b[i] );
     ca[b[i]]+=c[i]; cb[b[i]]+=s; ch[b[i]]+=h; ct[b[i]]+=t;
@@ -194,7 +199,7 @@ void cache_clear(string in)
 void cache_clean()
 {
   remove_call_out(cache_clean);
-  int gc_time=([function(string:int)]roxenp()->query)("mem_cache_gc");
+  int gc_time=[int]roxenp()->query("mem_cache_gc");
   string a, b;
   array c;
   int t=[int]time(1);
@@ -216,7 +221,7 @@ void cache_clean()
       }
       else {
 	if(!c[SIZE]) {
-	  c[SIZE]=(get_size(c[DATA])+4*svalsize)/100;
+	  c[SIZE]=(get_size(c[DATA])+5*svalsize+4)/100;
 	  // (Entry size + cache overhead) / arbitrary factor
           CACHE40_WERR("     Cache entry size percieved as "+(c[SIZE]*100)+" bytes\n");
 	}
