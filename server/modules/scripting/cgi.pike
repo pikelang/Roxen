@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.2 1999/04/22 13:57:35 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.3 1999/04/28 14:35:37 grubba Exp $";
 
 
 array register_module()
@@ -62,7 +62,7 @@ array lookup_user( string what )
 array init_groups( int uid, int gid )
 {
   if(!QUERY(setgroups))
-    return 0;
+    return ({});
   return get_cached_groups_for_user( uid )-({ gid });
 }
 
