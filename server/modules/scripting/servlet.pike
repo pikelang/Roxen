@@ -1,11 +1,10 @@
-#if constant(Servlet.servlet)
-
 #include <module.h>
+inherit "module";
 
-string cvs_version = "$Id: servlet.pike,v 2.4 2000/01/25 01:15:36 marcus Exp $";
+#if constant(Servlet.servlet)
+string cvs_version = "$Id: servlet.pike,v 2.5 2000/02/12 15:55:56 nilsson Exp $";
 int thread_safe=1;
 
-inherit "module";
 inherit "roxenlib";
 static inherit "http";
 
