@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.41 1997/09/05 22:34:14 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.42 1997/09/07 16:43:01 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -441,7 +441,7 @@ private int parse_got(string s)
 	  case "ua-color":	/* Color scheme */
 	  case "ua-os":		/* OS-name */
 	  case "ua-cpu":	/* CPU-type */
-	    /* None of the above are interresting or usefull */
+	    /* None of the above are interresting or useful */
 	    /* IGNORED */
 	    break;
 

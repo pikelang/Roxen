@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.6 1997/09/05 16:57:07 grubba Exp $
+ * $Id: sqltag.pike,v 1.7 1997/09/07 16:42:59 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.6 1997/09/05 16:57:07 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.7 1997/09/07 16:42:59 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -37,7 +37,7 @@ array register_module()
 	       "result.</td></tr>\n"
 	       "<tr><td valign=top><b>&lt;sqlquery&gt;</b></td>\n"
 	       "<td>Executes an SQL-query, but "
-	       "doesn't do anything with the result. This is usefull if "
+	       "doesn't do anything with the result. This is useful if "
 	       "you do queries like INSERT and CREATE.</td></tr>\n"
 	       "<tr><td valign=top><b>&lt;sqltable&gt;</td>"
 	       "<td>Executes an SQL-query, and makes "

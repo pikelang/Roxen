@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.68 1997/09/05 22:33:01 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.69 1997/09/07 16:42:58 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -22,7 +22,7 @@ array register_module()
 	      "<b>&lt;gh&gt;:</b> Header<br>\n"
 	      "<b>&lt;gtext&gt;:</b> Graphical text<br>\n"
 	      "<b>&lt;anfang&gt;:</b> Make the first character a "
-	      "graphical one. Not all that usefull, really.<br>\n"
+	      "graphical one. Not all that useful, really.<br>\n"
 	      "<br>\n"
 	      "<b>Common arguments:</b>\n <pre>"
 	      " bg=color        Use this background, default taken from the\n"

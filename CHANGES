@@ -217,7 +217,7 @@ o Got rid of "Calling function in a destructed object" when SSL3 connections
   are broken.
 
 o Restricted filesystem added. This filesystem restrictes access to
-  directories prefixed by the users home-directory. This is usefull for eg
+  directories prefixed by the users home-directory. This is useful for eg
   an FTP-server. Thanks to Zsolt Varga <redax@agria.hu> for the idea.
 
 o SSL3 ports now work without restarting the server.

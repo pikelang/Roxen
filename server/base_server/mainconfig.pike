@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.77 1997/08/24 02:26:01 peter Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.78 1997/09/07 16:40:13 grubba Exp $";
 //inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -1332,7 +1332,7 @@ mapping configuration_parse(object id)
       o->save();
       cache_remove("modules", modname);
 
-      // Not usefull since load_module() also does it.
+      // Not useful since load_module() also does it.
       // _master->set_inhibit_compile_errors("");
       
       if(!o->config()->load_module(modname))
