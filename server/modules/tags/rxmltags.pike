@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.25 1999/10/17 14:14:13 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.26 1999/10/17 22:54:52 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -25,17 +25,22 @@ void create(object c)
          "Should the usage of &lt;insert href&gt; be allowed?");
 }
 
+void start(int q, object c)
+{
+  add_api_function("query_modified", api_query_modified, ({ "string", }));
+}
+
 array register_module()
 {
-  return ({ MODULE_PARSER, 
-	    "RXML 1.4 tags", 
+  return ({ MODULE_PARSER,
+	    "RXML 1.4 tags",
 	    ("This module adds a lot of RXML tags."), 0, 1 });
 }
 
 constant permitted = ({ "1", "2", "3", "4", "5", "6", "7", "8", "9",
                         "x", "a", "b", "c,", "d", "e", "f", "n", "t", "\""
                         "X", "A", "B", "C,", "D", "E", "F", "l", "o",
-                        "<", ">", "=", "0", "-", "*", "+","/", "%", 
+                        "<", ">", "=", "0", "-", "*", "+","/", "%",
                         "&", "|", "(", ")" });
 
 string sexpr_eval(string what)
@@ -86,8 +91,11 @@ string tag_auth_required (string tagname, mapping args, RequestID id)
 {
   mapping hdrs = http_auth_required (args->realm, args->message);
   if (hdrs->error) _error = hdrs->error;
-  //FIXME: add_http_header
-  if (hdrs->extra_heads) _extra_heads += hdrs->extra_heads;
+  if (hdrs->extra_heads)
+     _extra_heads += hdrs->extra_heads;
+    // We do not need this as long as hdrs only contains strings and numbers
+    //    foreach(indices(hdrs->extra_heads), string tmp)
+    //      add_http_header(_extra_heads, tmp, hdrs->extra_heads[tmp]);
   if (hdrs->text) _rettext = hdrs->text;
   return "";
 }
@@ -110,7 +118,7 @@ string tag_expire_time(string tag, mapping m, RequestID id)
   int t=time();
   if(!m->now)
   {
-    t+=id->conf->api_functions()->time_quantifier[0](id, m);
+    t+=time_dequantifier(m);
     CACHE(max(t-time(),0));
   } else {
     NOCACHE();
@@ -141,12 +149,12 @@ string tag_header(string tag, mapping m, RequestID id)
     {
       if(!sscanf(m->value, "Realm=%s", r))
 	r=m->value;
-    } else 
+    } else
       r="Users";
     m->value="basic realm=\""+r+"\"";
   } else if(m->name=="URI")
     m->value = "<" + m->value + ">";
-  
+
   if(!(m->value && m->name))
     return rxml_error(tag, "Requires both a name and a value.", id);
 
@@ -187,9 +195,10 @@ string tag_redirect(string tag, mapping m, RequestID id)
   if (r->error)
     _error = r->error;
   if (r->extra_heads)
-    foreach(indices(r->extra_heads), string tmp)
-      add_http_header(_extra_heads, tmp, r->extra_heads[tmp]);
-  //    _extra_heads += r->extra_heads;
+    _extra_heads += r->extra_heads;
+  // We do not need this as long as r only contains strings and numbers
+  //    foreach(indices(r->extra_heads), string tmp)
+  //      add_http_header(_extra_heads, tmp, r->extra_heads[tmp]);
   if (m->text)
     _rettext = m->text;
 
@@ -206,7 +215,7 @@ string|array(string) tag_referrer(string tag, mapping m, RequestID id)
     return ({ "Shows from which page the client linked to this one." });
 
   return({ sizeof(id->referer) ?
-	   html_encode_string(id->referer*"") :
+	   m->quote=="none"?id->referer:(html_encode_string(id->referer)): 
 	   m->alt || "" });
 }
 
@@ -218,7 +227,7 @@ string tag_unset(string tag, mapping m, RequestID id) {
 
 string tag_set( string tag, mapping m, RequestID id )
 {
-  if(m->help) 
+  if(m->help)
     return ("<b>&lt;set variable=...&gt;</b>: Sets the variable specified "
       "by the 'variable' argument");
 
@@ -313,12 +322,12 @@ string|array(string) tag_imgs(string tag, mapping m, RequestID id)
       {
 	m->width=(string)xysize[0];
 	m->height=(string)xysize[1];
-      }else{
-	tmp+=" Dimensions quering failed.";
       }
-    }else{
-      tmp+=" Virtual path failed";
+      else
+	tmp+=" Dimensions quering failed.";
     }
+    else
+      tmp+=" Virtual path failed";
     if(!m->alt) {
       array src=m->src/"/";
       string src=src[sizeof(src)-1];
@@ -402,17 +411,13 @@ array(string) tag_configimage(string f, mapping m, RequestID id)
 string tag_date(string q, mapping m, RequestID id)
 {
   int t=(int)m["unix-time"] || time(1);
-  if(m->day)    t += (int)m->day * 86400;
-  if(m->hour)   t += (int)m->hour * 3600;
-  if(m->minute) t += (int)m->minute * 60;
-  if(m->second) t += (int)m->second;
+  t+=time_dequantifier(m);
 
   if(!(m->brief || m->time || m->date))
     m->full=1;
 
-  if(!m->date)
-    if(!m->unix_time || m->second)
-      NOCACHE();
+  if(m->part=="second" || m->part=="beat")
+    NOCACHE();
   else
     CACHE(60); // One minute is good enough.
 
@@ -503,20 +508,18 @@ string tag_return(string tag, mapping m, RequestID id)
 
 string tag_set_cookie(string tag, mapping m, RequestID id)
 {
-  string cookies;
-  int t;     //time
-
-  if(m->name)
-    cookies = m->name+"="+http_encode_cookie(m->value||"");
-  else
+  if(!m->name)
     return rxml_error(tag, "Requires a name attribute.", id);
+
+  string cookies = m->name+"="+http_encode_cookie(m->value||"");
+  int t;     //time
 
   if(m->persistent)
     t=(3600*(24*365*2));
   else
-    t=id->conf->api_functions()->time_quantifier[0](id, m);
+    t=time_dequantifier(m);
 
-  if(t) cookies += "; expires="+http_date(t+time());
+  cookies += "; expires="+http_date(t+time(1));
 
   //FIXME: Check the parameter's usability
   cookies += "; path=" +(m->path||"/");
@@ -537,25 +540,117 @@ string tag_remove_cookie(string tag, mapping m, RequestID id)
   return "";
 }
 
-array(string) tag_user(string tag, mapping m, RequestID id, object file)
+string tag_modified(string tag, mapping m, object id, object file)
 {
-  return ({ id->conf->api_functions()->tag_user_wrapper[0](id, tag, m, file) });
+  array (int) s;
+  object f;
+
+  if(m->by && !m->file && !m->realfile)
+  {
+    // FIXME: The auth module should probably not be used in this case.
+    if(!id->conf->auth_module)
+      return rxml_error(tag, "Modified by requires a user database.", id);
+    // FIXME: The next row is defunct. last_modified_by does not exists.
+    m->name = id->conf->last_modified_by(file, id);
+    CACHE(10);
+    return tag_user(tag, m, id, file);
+  }
+
+  if(m->file)
+  {
+    m->realfile = id->conf->real_file(fix_relative(m->file,id), id);
+    m_delete(m, "file");
+  }
+
+  if(m->by && m->realfile)
+  {
+    if(!id->conf->auth_module)
+      return rxml_error(tag, "Modified by requires a user database.", id);
+
+    if(f = open(m->realfile, "r"))
+    {
+      m->name = id->conf->last_modified_by(f, id);
+      destruct(f);
+      CACHE(10);
+      return tag_user(tag, m, id, file);
+    }
+    return "A. Nonymous.";
+  }
+
+  if(m->realfile)
+    s = file_stat(m->realfile);
+
+  if(!(_stat || s) && !m->realfile && id->realfile)
+  {
+    m->realfile = id->realfile;
+    return tag_modified(tag, m, id, file);
+  }
+  CACHE(10);
+  if(!s) s = _stat;
+  if(!s) s = id->conf->stat_file( id->not_query, id );
+  if(s)
+    if(m->ssi)
+      return strftime(id->misc->defines->timefmt || "%c", s[3]);
+    else
+      return tagtime(s[3], m, id, language);
+
+  return rxml_error(tag, "Couldn't stat file.", id);
 }
 
-array(string) tag_modified(string tag, mapping m, RequestID id, object file)
+string|array(string) tag_user(string tag, mapping m, object id, object file)
 {
-  return ({ id->conf->api_functions()->tag_user_wrapper[0](id, tag, m, file) });
+  string *u;
+  string b, dom;
+
+  if(!id->conf->auth_module)
+    return rxml_error(tag, "Requires a user database.", id);
+
+  if (!(b=m->name)) {
+    return(tag_modified("modified", m | ([ "by":"by" ]), id, file));
+  }
+
+  b=m->name;
+
+  dom=id->conf->query("Domain");
+  if(dom[-1]=='.')
+    dom=dom[0..strlen(dom)-2];
+  if(!b) return "";
+  u=id->conf->userinfo(b, id);
+  if(!u) return "";
+
+  if(m->realname && !m->email)
+  {
+    if(m->link && !m->nolink)
+      return ({ "<a href=\"/~"+b+"/\">"+u[4]+"</a>" });
+    return ({ u[4] });
+  }
+  if(m->email && !m->realname)
+  {
+    if(m->link && !m->nolink)
+      return ({ sprintf("<a href=\"mailto:%s@%s@\">%s@%s</a>",
+			b, dom, b, dom)
+	      });
+    return ({ b + "@" + dom });
+  }
+  if(m->nolink && !m->link)
+    return ({ sprintf("%s &lt;%s@%s&gt;",
+		      u[4], b, dom)
+	    });
+  return ({ sprintf("<a href=\"/~%s/\">%s</a> "
+		    "<a href=\"mailto:%s@%s\">&lt;%s@%s&gt;</a>",
+		    b, u[4], b, dom, b, dom)
+	  });
 }
 
 array(string) tag_set_max_cache( string tag, mapping m, RequestID id )
 {
-  id->misc->cacheable = (int)m->time; 
+  id->misc->cacheable = (int)m->time;
   return ({ "" });
 }
 
 // ------------------- Containers ----------------
 
-array(string) container_scope(string tag, mapping m, 
+array(string) container_scope(string tag, mapping m,
                               string contents, RequestID id)
 {
   mapping old_variables = copy_value(id->variables);
@@ -569,7 +664,6 @@ array(string) container_scope(string tag, mapping m,
   return ({ contents });
 }
 
-
 array(string) container_catch( string tag, mapping m, string c, RequestID id )
 {
   string r;
@@ -579,12 +673,12 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
     id->misc->catcher_is_ready++;
   array e = catch(r=parse_rxml(c, id));
   id->misc->catcher_is_ready--;
-  if(e) 
+  if(e)
     return e[0];
   return ({r});
 }
 
-array(string) container_cache(string tag, mapping args, 
+array(string) container_cache(string tag, mapping args,
                               string contents, RequestID id)
 {
 #define HASH(x) (x+id->not_query+id->query+id->realauth +id->conf->query("MyWorldLocation"))
@@ -606,7 +700,7 @@ array(string) container_cache(string tag, mapping args,
 #undef HASH
 }
 
-string|array(string) container_crypt( string s, mapping m, 
+string|array(string) container_crypt( string s, mapping m,
                                       string c, RequestID id )
 {
   if(m->compare)
@@ -625,7 +719,7 @@ string container_for(string t, mapping args, string c, RequestID id)
   if((to<from && step>0)||(to>from && step<0)) to=from+step;
 
   string res="";
-  if(to<from) 
+  if(to<from)
   {
     if(v)
       for(int i=from; i>=to; i+=step)
@@ -635,7 +729,7 @@ string container_for(string t, mapping args, string c, RequestID id)
         res+=c;
     return res;
   }
-  else if(to>from) 
+  else if(to>from)
   {
     if(v)
       for(int i=from; i<=to; i+=step)
@@ -668,14 +762,14 @@ string container_foreach(string t, mapping args, string c, RequestID id)
 		       sscanf(var, "%*[ \t\n\r]%s", var);
 		       return reverse(var);
 		     });
-  
+
   string res="";
-  foreach(what, string w) 
+  foreach(what, string w)
     res += "<set variable="+v+" value="+w+">"+c;
   return res;
 }
 
-string container_aprestate(string tag, mapping m, string q, RequestID id)
+string container_apre(string tag, mapping m, string q, RequestID id)
 {
   string href, s, *foo;
 
@@ -688,7 +782,7 @@ string container_aprestate(string tag, mapping m, string q, RequestID id)
     href=strip_prestate(fix_relative(href, id));
     m_delete(m, "href");
   }
-  
+
   if(!strlen(href))
     href="";
 
@@ -708,17 +802,17 @@ string container_aprestate(string tag, mapping m, string q, RequestID id)
   return make_container("a", m, q);
 }
 
-string|array(string) container_aconf(string tag, mapping m, 
+string|array(string) container_aconf(string tag, mapping m,
                                      string q, RequestID id)
 {
   string href,s;
   mapping cookies = ([]);
-  
+
   if(m->help) return ({ "Adds or removes config options." });
 
   if(!m->href)
     href=strip_prestate(strip_config(id->raw_url));
-  else 
+  else
   {
     href=m->href;
     if (search(href, ":") == search(href, "//")-1)
@@ -742,7 +836,7 @@ string|array(string) container_aconf(string tag, mapping m,
   return make_container("a", m, q);
 }
 
-string container_maketag(string tag, mapping m, string cont, RequestID id) 
+string container_maketag(string tag, mapping m, string cont, RequestID id)
 {
   NOCACHE();
   mapping args=(!m->noxml&&m->type=="tag"?(["/":"/"]):([]));
@@ -767,7 +861,7 @@ string container_doc(string tag, mapping m, string s)
     }
     else
       return replace(s, ({ "{", "}", "& " }), ({ "&lt;", "&gt;", "&amp; " }));
-  else 
+  else
     if(m["pre"]) {
       m_delete(m,"pre");
       m_delete(m,"quote");
@@ -809,7 +903,7 @@ string container_autoformat(string tag, mapping m, string s, RequestID id)
       else
         return s+"</p>";
     }
-  
+
   return s;
 }
 
@@ -866,7 +960,7 @@ class smallcapsstr {
 
   string value() {
     if(last!=UNDEF) flush_part();
-    return text;  
+    return text;
   }
 }
 
@@ -926,7 +1020,7 @@ string container_random(string tag, mapping m, string s)
     return (q=s/q)[random(sizeof(q))];
 }
 
-array(string) container_formoutput(string tag_name, mapping args, 
+array(string) container_formoutput(string tag_name, mapping args,
                                    string contents, RequestID id)
 {
   return ({ do_output_tag( args, ({ id->variables }), contents, id ) });
@@ -947,21 +1041,21 @@ mixed container_gauge(string t, mapping args, string contents, RequestID id)
   return ({ "<br><font size=\"-1\"><b>Time: "+
 	   sprintf("%3.6f", t/1000000.0)+
 	   " seconds</b></font><br>"+contents });
-} 
+}
 
 // Removes empty lines
-mixed container_trimlines( string tag_name, mapping args, 
+mixed container_trimlines( string tag_name, mapping args,
                            string contents, RequestID id )
 {
   contents = replace(parse_rxml(contents,id), ({"\r\n","\r" }), ({"\n","\n"}));
   return ({ (contents / "\n" - ({ "" })) * "\n" });
 }
 
-void container_throw( string t, mapping m, string c, RequestID id) 
-{ 
-  if(!id->misc->catcher_is_ready && c[-1]!="\n") 
+void container_throw( string t, mapping m, string c, RequestID id)
+{
+  if(!id->misc->catcher_is_ready && c[-1]!="\n")
     c+="\n";
-  throw( ({ c, backtrace() }) ); 
+  throw( ({ c, backtrace() }) );
 }
 
 // Internal method for the default tag
@@ -999,7 +1093,7 @@ private mixed internal_tag_input( string tag_name, mapping args, string name,
 }
 
 // Internal method for the default tag
-private mixed internal_tag_option( string tag_name, mapping args, 
+private mixed internal_tag_option( string tag_name, mapping args,
                                    string contents, multiset(string) value )
 {
   if (args->value)
@@ -1023,12 +1117,12 @@ private mixed internal_tag_option( string tag_name, mapping args,
 
 // Internal method for the default tag
 private mixed internal_tag_select( string tag_name, mapping args, 
-                                   string contents, string name, 
+                                   string contents, string name,
                                    multiset (string) value )
 {
   array (string) tmp;
   int c;
-  
+
   if (name && args->name != name)
     return 0;
   tmp = contents / "<option";
@@ -1043,7 +1137,7 @@ private mixed internal_tag_select( string tag_name, mapping args,
 
 // The default tag is used to give default values to forms elements,
 // without any fuss.
-array(string) container_default( string tag_name, mapping args, 
+array(string) container_default( string tag_name, mapping args,
                                  string contents, RequestID id)
 {
   string separator = args->separator || "\000";
@@ -1060,7 +1154,7 @@ array(string) container_default( string tag_name, mapping args,
 			 args->name,
 			 mkmultiset( id->variables[ args->variable ]
 				     / separator ) )});
-  else    
+  else
     return ({ contents });
 }
 
@@ -1089,17 +1183,17 @@ string container_sort(string t, mapping m, string c, RequestID id)
   return pre + (m->reverse?reverse(lines):lines)*m->separator + post;
 }
 
-mixed container_recursive_output (string tagname, mapping args, 
+mixed container_recursive_output (string tagname, mapping args,
                                   string contents, RequestID id)
 {
   int limit;
   array(string) inside, outside;
-  if (id->misc->recout_limit) 
+  if (id->misc->recout_limit)
   {
     limit = id->misc->recout_limit - 1;
     inside = id->misc->recout_outside, outside = id->misc->recout_inside;
   }
-  else 
+  else
   {
     limit = (int) args->limit || 100;
     inside = args->inside ? args->inside / (args->separator || ",") : ({});
@@ -1121,9 +1215,9 @@ mixed container_recursive_output (string tagname, mapping args,
   string res = parse_rxml (
     parse_html (
       contents,
-      (["recurse": lambda (string t, mapping a, string c) {return ({c});}]), 
+      (["recurse": lambda (string t, mapping a, string c) {return ({c});}]),
       ([]),
-      "<" + tagname + ">" + replace (contents, inside, outside) + 
+      "<" + tagname + ">" + replace (contents, inside, outside) +
       "</" + tagname + ">"),
     id);
 
@@ -1136,7 +1230,7 @@ mixed container_recursive_output (string tagname, mapping args,
 
 string tag_leave(string tag, mapping m, RequestID id)
 {
-  if(id->misc->leave_repeat) 
+  if(id->misc->leave_repeat)
   {
     id->misc->leave_repeat--;
     throw(3141);
@@ -1165,9 +1259,9 @@ string container_repeat(string tag, mapping m, string c, RequestID id)
   return ret;
 }
 
-string container_replace( string tag, mapping m, string cont, RequestID id) 
+string container_replace( string tag, mapping m, string cont, RequestID id)
 {
-  switch(m->type) 
+  switch(m->type)
   {
   case "word":
   default:
@@ -1204,4 +1298,12 @@ mapping query_if_callers()
   return ([
     "expr":lambda( string q){ return (int)sexpr_eval(q); },
   ]);
+}
+
+// ---------------- API registration stuff ---------------
+
+string api_query_modified(object id, string f, int|void by)
+{
+  mapping m = ([ "by":by, "file":f ]);
+  return tag_modified("modified", m, id, id);
 }
