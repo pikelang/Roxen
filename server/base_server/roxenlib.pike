@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.35 1997/08/13 23:25:51 neotron Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.36 1997/08/25 13:51:31 per Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -21,7 +21,7 @@ string gif_size(object gif)
   return "width="+x+" height="+y;
 }
 
-static inline string extract_query(string from)
+static string extract_query(string from)
 {
   if(!from) return "";
   if(sscanf(from, "%*s?%s%*[ \t\n]", from))
@@ -266,10 +266,10 @@ static string decode_mode(int m)
   return s;
 }
 
-#define MONTHS (["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,\
-	         "Jul":6, "Aug":7, "Sep":8, "Oct":9, "Nov":10, "Dec":11,\
-		 "jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,\
-	         "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,])
+constant MONTHS=(["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,
+	         "Jul":6, "Aug":7, "Sep":8, "Oct":9, "Nov":10, "Dec":11,
+		 "jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,
+	         "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,]);
 
 static int _match(string w, array (string) a)
 {
@@ -379,16 +379,12 @@ static string parse_rxml(string what, object id,
   return what;
 }
 
-constant safe_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789Â‰ˆ≈ƒ÷"/"";
+constant safe_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"/"";
 constant empty_strings = ({
   "","","","","","","","","","","","","","","","","","","","","","","","","",
   "","","","","","","","","","","","","","","","","","","","","","","","","",
-  "","","","","","","","","","","","","","","","","",""
+  "","","","","","","","","","","","",
 });
-#if 0
-/* constant */array (string) empty_strings =
-   map(safe_characters,lambda(){return "";});
-#endif /* 0 */
 
 static int is_safe_string(string in)
 {
@@ -403,10 +399,7 @@ static string make_tag_attributes(mapping in)
       if(is_safe_string(b[i]))
 	a[i]+="="+b[i];
       else
-	if(search(b,"\"")==-1)
-	  a[i]+="=\""+b[i]+"\"";
-	else
-	  a[i]+="='"+b[i]+"'";
+	a[i]+="=\""+replace(b[i],"\"","&quote;")+"\"";
   return a*" ";
 }
 
@@ -549,7 +542,7 @@ int get_size(mixed x)
 }
 
 
-static inline int ipow(int what, int how)
+static int ipow(int what, int how)
 {
   int r=what;
   if(!how) return 1;
@@ -561,7 +554,7 @@ static inline int ipow(int what, int how)
 /* This one will remove .././ etc. in the path. Might be useful :) */
 /* ================================================= */
 
-static inline string simplify_path(string file)
+static string simplify_path(string file)
 {
   string tmp;
   int t2,t1;
