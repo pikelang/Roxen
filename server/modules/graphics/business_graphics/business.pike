@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.88 1998/03/07 16:44:45 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.89 1998/03/07 16:53:55 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -19,8 +19,13 @@ import Image;
 
 function create_pie, create_bars, create_graph;
 
+//#define BG_DEBUG 1
 #define SEP "\t"
 #define VOIDSYMBOL "\n"
+
+#ifdef BG_DEBUG
+  mapping bg_timers = ([]);
+#endif
 
 //FIXME (Inte alltid VOID!
 #define VOIDCODE if(m->voidseparator) \
@@ -192,6 +197,9 @@ void create()
 
 string itag_xaxis(string tag, mapping m, mapping res)
 {
+#ifdef BG_DEBUG
+  bg_timers->xaxis = gauge {
+#endif
   if(m->name) res->xname = m->name;  
   if(m->start) 
     if (lower_case(m->start[0..2])=="min")
@@ -201,12 +209,18 @@ string itag_xaxis(string tag, mapping m, mapping res)
   if(m->stop) res->xstop = (float)m->stop;
   if(m->quantity) res->xstor = m->quantity;
   if(m->unit) res->xunit = m->unit;
+#ifdef BG_DEBUG
+  };
+#endif
 
   return "";
 }
 
 string itag_yaxis(string tag, mapping m, mapping res)
 {
+#ifdef BG_DEBUG
+  bg_timers->yaxis = gauge {
+#endif
   int l=query("maxstringlength")-1;
   if(m->name) res->yname = m->name[..l];
   if(m->start) 
@@ -217,6 +231,9 @@ string itag_yaxis(string tag, mapping m, mapping res)
   if(m->stop) res->ystop = (float)m->stop;
   if(m->quantity) res->ystor = m->quantity[..l];
   if(m->unit) res->yunit = m->unit[..l];
+#ifdef BG_DEBUG
+  };
+#endif
 
   return "";
 }
@@ -225,6 +242,9 @@ string itag_yaxis(string tag, mapping m, mapping res)
 string itag_names(string tag, mapping m, string contents,
 		      mapping res, object id)
 {
+#ifdef BG_DEBUG
+  bg_timers->names += gauge {
+#endif
   int l=query("maxstringlength")-1;
   string sep=SEP;
   if(!m->noparse)
@@ -257,6 +277,10 @@ string itag_names(string tag, mapping m, string contents,
       foo[i]=" ";
     else
       foo[i]=foo[i][..l];
+#ifdef BG_DEBUG
+  };
+#endif
+
   return "";
 }
 
@@ -272,6 +296,9 @@ float|string floatify( string in , string voidsep )
 string itag_values(string tag, mapping m, string contents,
 		   mapping res, object id)
 {
+#ifdef BG_DEBUG
+  bg_timers->values += gauge {
+#endif
   string sep=SEP;
   string voidsep;
 
@@ -290,6 +317,9 @@ string itag_values(string tag, mapping m, string contents,
     else
       res->yvalues = Array.map( contents/sep, floatify, voidsep );
   }
+#ifdef BG_DEBUG
+  };
+#endif
 
   return "";
 }
@@ -297,6 +327,9 @@ string itag_values(string tag, mapping m, string contents,
 string itag_data(mapping tag, mapping m, string contents,
 		 mapping res, object id)
 {
+#ifdef BG_DEBUG
+  bg_timers->data += gauge {
+#endif
   string sep=SEP;
   string voidsep;
 
@@ -336,6 +369,9 @@ string itag_data(mapping tag, mapping m, string contents,
     return 0;
   }
 
+#ifdef BG_DEBUG
+  bg_timers->data_foo = gauge {
+#endif
   foreach( lines, string entries )
   {
     foo=entries/sep - ({""});
@@ -347,13 +383,19 @@ string itag_data(mapping tag, mapping m, string contents,
     bar += ({ foo });
     foo = ({});
   }
-  
+#ifdef BG_DEBUG
+  };
+#endif
+
   if (sizeof(bar[0])==0)
   {
     res->data=({});
     return 0;
   }
 
+#ifdef BG_DEBUG
+  bg_timers->data_bar = gauge {
+#endif
   if (m->form)
     if (m->form[0..2] == "col")
       {
@@ -370,18 +412,32 @@ string itag_data(mapping tag, mapping m, string contents,
       res->data=bar;
   else
     res->data=bar;
+#ifdef BG_DEBUG
+  };
+#endif
 
   if ((m->xnames)&&(sizeof(res->data)>0))
-    {
-      res->xnames=res->data[0];
-      res->data=res->data[1..];
-    }
+  {
+    res->xnames=res->data[0];
+    res->data=res->data[1..];
+  }
+
+#ifdef BG_DEBUG
+  bg_timers->data_gaz = gauge {
+#endif
   bar=res->data;
   for(int i=0; i<sizeof(bar); i++)
     for(int j=0; j<sizeof(bar[i]); j++)
       if (bar[i][j]!=VOIDSYMBOL)
 	bar[i][j]=(float)((string)bar[i][j]-space);
   res->data=bar;
+#ifdef BG_DEBUG
+  };
+#endif
+#ifdef BG_DEBUG
+  };
+#endif
+
   return 0;
 }
 
@@ -423,7 +479,6 @@ string itag_legendtext(mapping tag, mapping m, string contents,
       foo[i]=" ";
     else
       foo[i]=foo[i][..l];
-
 
   return "";
 }
@@ -473,7 +528,17 @@ string tag_diagram(string tag, mapping m, string contents,
   contents=replace(contents, "\r\n", "\n");
   contents=replace(contents, "\r", "\n");
 
+#ifdef BG_DEBUG
+  bg_timers->names = 0;
+  bg_timers->values = 0;
+  bg_timers->data = 0;
+#endif
+
   mapping(string:mixed) res=([]);
+
+#ifdef BG_DEBUG
+  bg_timers->all = gauge {
+#endif
 
   res->datacounter=0;  // Lets see.. What was this for?!
   if(m->help) return register_module()[2];
@@ -562,7 +627,9 @@ string tag_diagram(string tag, mapping m, string contents,
       res->dimensionsdepth = 20;
   }
 
-  parse_html(contents, (["xaxis":itag_xaxis,"yaxis":itag_yaxis]),
+  parse_html(contents,
+	     ([ "xaxis":itag_xaxis,
+	        "yaxis":itag_yaxis ]),
 	     ([ "data":itag_data,
 		"xnames":itag_names,
 		"ynames":itag_names,
@@ -677,12 +744,21 @@ string tag_diagram(string tag, mapping m, string contents,
   m->src = query("location") + quote(res) + ".gif";
 
   if (res->turn)
-    {
-      int t;
-      t=m->width;
-      m->width=m->height;
-      m->height=t;
-    }
+  {
+    int t;
+    t=m->width;
+    m->width=m->height;
+    m->height=t;
+  }
+#ifdef BG_DEBUG
+  };
+#endif
+
+
+#ifdef BG_DEBUG
+  if(id->prestate->debug)
+    return(sprintf("<pre>Timers: %O\n</pre>", bg_timers) + make_tag("img", m));
+#endif
 
   return make_tag("img", m);
 }
@@ -755,6 +831,10 @@ mapping unquote( string f )
 
 mapping find_file(string f, object id)
 {
+#ifdef BG_DEBUG
+  return 0;
+#endif
+
   if (f[sizeof(f)-4..] == ".gif")
     f = f[..sizeof(f)-5];
 
@@ -801,11 +881,11 @@ mapping find_file(string f, object id)
       tuned_box(0, 0, res->xsize, res->ysize, res->tonedbox);
   }
   else if (res->colorbg)
-    {
-      m_delete( res, "bgcolor" );
-      res->image = image(res->xsize, res->ysize, @res->colorbg);
-    }
-
+  {
+    m_delete( res, "bgcolor" );
+    res->image = image(res->xsize, res->ysize, @res->colorbg);
+  }
+  
   diagram_data = res;
 
   object(Image.image) img;
@@ -827,23 +907,28 @@ mapping find_file(string f, object id)
   }
 
   if (res->image)
-    {
-      if (res->turn)
-	img=img->rotate_ccw();
+  {
+    if (res->turn)
+      img=img->rotate_ccw();
 	
-      if (back)
-	return http_string_answer(Image.GIF.encode( img,
-				     Image.colortable( 6,6,6,
-						       ({0,0,0}),
-						       ({255,255,255}), 39)->floyd_steinberg(), 
-						       @back), "image/gif");  
-      else
-	return http_string_answer(Image.GIF.encode( img,
-				     Image.colortable( 6,6,6,
-						       ({0,0,0}),
-						       ({255,255,255}), 39)->floyd_steinberg()
-						       ), "image/gif");  
-    }
+    if (back)
+      return http_string_answer(
+	       Image.GIF.encode( img,
+				 Image.colortable( 6,6,6,
+						   ({0,0,0}),
+						   ({255,255,255}),
+						   39)->floyd_steinberg(), 
+						   @back ),
+	       "image/gif");  
+    else
+      return http_string_answer(
+               Image.GIF.encode( img,
+				 Image.colortable( 6,6,6,
+						   ({0,0,0}),
+						   ({255,255,255}),
+						   39)->floyd_steinberg() ),
+	       "image/gif");
+  }
   else
     return http_string_answer(Image.GIF.encode(img, @back), "image/gif");      
 }
