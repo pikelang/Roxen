@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.77 2000/01/24 19:16:50 nilsson Exp $
+ * $Id: rxml.pike,v 1.78 2000/01/25 04:05:30 per Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -65,22 +65,48 @@ void old_rxml_warning(RequestID id, string no, string yes) {
 
 class Scope_roxen {
   inherit RXML.Scope;
-  string ver=roxen.version();
 
   string|int `[] (string var, void|RXML.Context c, void|string scope) {
-    switch(var) {
-    case "version":
-      return ver;
-    case "time":
-      return time(1);
-    case "server":
-      return c->id->conf->query("MyWorldLocation");
+    switch(var)
+    {
+     case "uptime":
+       return (time(1)-roxen->start_time);
+     case "uptime-days":
+       return (time(1)-roxen->start_time)/3600/24;
+     case "uptime-hours":
+       return (time(1)-roxen->start_time)/3600 % 24;
+     case "uptime-minutes":
+       return (time(1)-roxen->start_time)/60 % 60;
+     case "hits-per-minute":
+       return c->id->conf->requests / (time(1)-roxen->start_time);
+     case "hits":
+       return c->id->conf->requests;
+     case "sent-mb":
+       return sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0));
+     case "sent":
+       return c->id->conf->sent;
+     case "sent-per-minute":
+       return c->id->conf->sent / ((time(1)-roxen->start_time)/60);
+     case "sent-kbit-per-second":
+       return sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
+                               (time(1)-roxen->start_time)));
+     case "pike-version":
+       return predef::version();
+     case "version":
+       return roxen.version();
+     case "time":
+       return time(1);
+     case "server":
+       return c->id->conf->query("MyWorldLocation");
     }
     :: `[] (var, c, scope);
   }
 
   array(string) _indices() {
-    return ({"version", "time", "server"});
+    return ({"uptime", "hits_per_minite", "hits",
+             "sent_mb", "sent", "pike_version",
+             "sent_per_minute", "sent_kbit_per_minute",
+             "version", "time", "server"});
   }
 
   string _sprintf() { return "RXML.Scope(roxen)"; }
