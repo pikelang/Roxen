@@ -3,7 +3,7 @@
 
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.3 2000/09/04 05:09:44 per Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.4 2000/09/04 06:49:35 per Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader.";
@@ -165,8 +165,15 @@ class TTFWrapper
   }
 }
 
+#ifdef THREADS
+Thread.Mutex lock = Thread.Mutex();
+#endif
+
 array available_fonts()
 {
+#ifdef THREADS
+  object key = lock->lock();
+#endif
   if( !ttf_font_names_cache  ) build_font_names_cache( );
   return indices( ttf_font_names_cache );
 }
@@ -193,6 +200,9 @@ array(mapping) font_information( string font )
 
 array(string) has_font( string name, int size )
 {
+#ifdef THREADS
+  object key = lock->lock();
+#endif
   if( !ttf_font_names_cache  )
     build_font_names_cache( );
   if( ttf_font_names_cache[ name ] )

@@ -1,13 +1,18 @@
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.2 2000/09/04 05:22:01 per Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.3 2000/09/04 06:49:34 per Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
-                "named after the character they will represent (encoded with "
-                "UTF8, and . replaced with 0x2e and / replaced with 0x2f)");
+                "named after the character they will represent. Characters "
+                "with codes larger than 127 or less than 48 are encoded like "
+                "0xHEX where HEX is the code in hexadecimal");
 
 inherit FontHandler;
+
+#ifdef THREADS
+Thread.Mutex lock = Thread.Mutex();
+#endif
 
 static mapping nullchar = ([ "image":Image.Image(1,1),
                              "alpha":Image.Image(1,1) ]);
@@ -30,9 +35,9 @@ class myFont
   
   static string encode_char( string c )
   {
-    return replace( string_to_utf8( c ), 
-                    ({ ".", "/" }),
-                    ({ "0x2e", "0x2f" }) );
+    int cc = c[0];
+    if( (cc < 48) || (cc > 127) ) return sprintf( "0x%x", cc );
+    return c;
   }
 
   static mapping(string:Image.Image) load_char( string c )
@@ -41,7 +46,9 @@ class myFont
     if(!files)
       files = get_dir( path ) - ({ "fontname" });
 
-    array possible = glob(encode_char( c )+"*", files);
+    array possible = ({ encode_char(c) })+
+          glob(encode_char( c )+".*", files);
+    sort( map(possible,strlen), possible );
     foreach( possible, string pf )
       if( mapping r = Image._load( path+pf ) )
         return r;
@@ -133,6 +140,9 @@ void update_font_list()
 
 array available_fonts()
 {
+#ifdef THREADS
+  object key = lock->lock();
+#endif
   array res = ({});
   if( !font_list ) update_font_list();
   return indices( font_list );
@@ -140,6 +150,9 @@ array available_fonts()
 
 array(mapping) font_information( string fnt )
 {
+#ifdef THREADS
+  object key = lock->lock();
+#endif
   if( !font_list ) update_font_list();
   if( font_list[ fnt ] )
     return ({ ([
@@ -154,6 +167,9 @@ array(mapping) font_information( string fnt )
 
 array has_font( string name, int size )
 {
+#ifdef THREADS
+  object key = lock->lock();
+#endif
   if( !font_list ) update_font_list();
   if( font_list[ name ] )
     return ({ "nn" });
@@ -161,6 +177,9 @@ array has_font( string name, int size )
 
 Font open( string name, int size, int bold, int italic )
 {
+#ifdef THREADS
+  object key = lock->lock();
+#endif
   if( !font_list ) update_font_list();
   if( font_list[ name ] )
     return myFont( font_list[name], size );
