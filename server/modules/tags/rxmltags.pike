@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.312 2001/09/27 12:39:25 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.313 2001/09/27 13:30:25 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3179,7 +3179,7 @@ class TagCond
       array do_enter (RequestID id)
       {
 	do_iterate = -1;
-	if (up->result != RXML.Void) return 0;
+	if (up->matched) return 0;
 	content_type = up->result_type (RXML.PXml);
 	return ::do_enter (id);
       }
@@ -3187,9 +3187,9 @@ class TagCond
       array do_return (RequestID id)
       {
 	::do_return (id);
-	if (up->result != RXML.Void) return 0; // Does this ever happen?
-	//      	if( _ok && result == RXML.nil ) result = class { inherit RXML.Nil; }();
+	if (up->matched) return 0; // Does this ever happen?
 	up->result = result;
+	if(_ok) up->matched = 1;
 	result = RXML.Void;
 	return 0;
       }
@@ -3213,7 +3213,7 @@ class TagCond
 
       array do_enter()
       {
-	if (up->result != RXML.Void) {
+	if (up->matched) {
 	  do_iterate = -1;
 	  return 0;
 	}
@@ -3238,10 +3238,18 @@ class TagCond
     inherit RXML.Frame;
     RXML.TagSet local_tags = cond_tags;
     string default_data;
+    int(0..1) matched;
+
+    array do_enter (RequestID id) {
+      matched = 0;
+      return 0;
+    }
 
     array do_return (RequestID id)
     {
-      if (result == RXML.Void && default_data) {
+      if(matched)
+	_ok = 1;
+      else if (default_data) {
 	_ok = 0;
 	return ({RXML.parse_frame (result_type (RXML.PXml), default_data)});
       }
