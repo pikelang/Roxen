@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.45 1997/07/19 22:22:14 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.46 1997/08/04 07:52:30 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -426,9 +426,9 @@ string configuration_list()
 
 string new_configuration_form()
 {
-  return replace(default_head("")+ read_bytes("etc/newconfig.html"),
-		 ({"$COPIES","$configurl"}), 
-		 ({configuration_list(),CONFIG_URL})) +
+  return replace(default_head("") + read_bytes("etc/newconfig.html"),
+		 ({"$COPIES", "$configurl"}), 
+		 ({configuration_list(), CONFIG_URL})) +
     "\n\n</body>";
 }
 
@@ -544,7 +544,7 @@ string new_module_form(object id, object node)
 		  "\">Disable that module</a> if you want this one instead</i>"
 		  "\n<p><br><p></blockquote>")});
     } else {
-      res += ({"<p><a href=/(newmodule)"+node->path(1)+"?"+q+"=1>"+
+      res += ({"<p><a href=/(addmodule)"+node->path(1)+"?"+q+"=1>"+
 		 (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
 		  "<img border=0 alt=\""+a[q][0]+"\" src=/auto/module/"
                   +a[q][2]+"/"+q+" height=24 width=500>")+
@@ -593,8 +593,9 @@ int low_enable_configuration(string name, string type)
     
   default:
     object o, o2, confnode;
+    array(string) arr = type/" ";
     
-    switch(type = lower_case((type/" ")[0])) {
+    switch(type = lower_case(arr[0])) {
     default: /* Minimal configuration */
     case "bare":
       o=roxen->enable_configuration(name);
@@ -641,12 +642,17 @@ int low_enable_configuration(string name, string type)
     case "copy":
       string from;
       mapping tmp;
-      sscanf(type, "%*s'%s'", from);
-      tmp = roxen->copy_configuration(from, name);
-      if(!tmp) error("No configuration to copy from!\n");
-      tmp["spider#0"]->LogFile = "../logs/"+roxenp()->short_name(name)+"/Log";
-      roxenp()->save_it(name);
-      roxen->enable_configuration(name);
+      if ((sizeof(arr) > 1) &&
+	  (sscanf(arr[1..]*" ", "%*s'%s'", from) == 2) &&
+	  (tmp = roxen->copy_configuration(from, name))) {
+	tmp["spider#0"]->LogFile =
+	  "../logs/" + roxenp()->short_name(name) + "/Log";
+	roxenp()->save_it(name);
+	roxen->enable_configuration(name);
+      } else {
+	error("No configuration to copy from!\n");
+      }
+      break;
     }    
     confnode = root->descend("Configurations");
     node=confnode->descend(name);
@@ -1385,7 +1391,8 @@ mapping configuration_parse(object id)
       break;
 
       // Add a new module to the current configuration.
-    case "newmodule":
+    case "newmodule": // For backward compatibility
+    case "addmodule":
       id->referer = ({ CONFIG_URL + o->path(1) });
       return new_module(id,o);
 
@@ -1451,7 +1458,7 @@ mapping configuration_parse(object id)
     BUTTON(newconfig, "New virtual server", left);
   
   if(o->type == NODE_CONFIGURATION)
-    BUTTON(newmodule, "New module", left);
+    BUTTON(addmodule, "Add module", left);
   
   if(o->type == NODE_MODULE)
   {
