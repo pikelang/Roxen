@@ -1,4 +1,4 @@
-/* $Id: builders.pike,v 1.14 1997/08/24 02:26:40 peter Exp $ */
+/* $Id: builders.pike,v 1.15 1998/03/05 03:15:39 mast Exp $ */
 
 #include <module.h>
 #include <confignode.h>
@@ -41,7 +41,7 @@ void low_build_variables(object node, mapping from)
 	string base, name;
 	if(m[i][VAR_SHORTNAME][0] == '_')
 	{
-	  o=node->descend("Builtins")->descend(m[i][VAR_NAME]);
+	  o=node->descend("Builtins")->descend(m[i][VAR_SHORTNAME]);
 	  o->changed = 0;
 	  o->folded = 1;
 	}
@@ -57,7 +57,7 @@ void low_build_variables(object node, mapping from)
 	  o->changed = 0;
 	  o->folded = 1;
 	} else {
-	  o=node->descend(m[i][VAR_NAME]);
+	  o=node->descend(m[i][VAR_SHORTNAME]);
 	  o->changed = 0;
 	  o->folded = 1;
 	}
