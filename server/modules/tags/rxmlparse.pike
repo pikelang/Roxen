@@ -18,7 +18,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.13 1999/08/11 01:01:56 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.14 1999/08/11 21:38:23 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -189,7 +189,6 @@ string tagtime(int t,mapping m,object id)
 		     eris->mon+1, eris->mday);
 
      case "discordian":
-       //     case "disc":
 #if efun(discdate)
       eris=discdate(t);
       res=eris[0];
@@ -202,16 +201,21 @@ string tagtime(int t,mapping m,object id)
       return "Discordian date support disabled";
 #endif
      case "stardate":
-       //     case "star":
 #if efun(stardate)
       return (string)stardate(t, (int)m->prec||1);
 #else
       return "Stardate support disabled";
 #endif
-     default:
     }
   }
   s=language(m->lang, "date")(t,m);
+
+  if(m["case"])
+    switch(lower_case(m["case"])) {
+    case "upper": return upper_case(s);
+    case "lower": return lower_case(s);
+    case "capitalize": return capitalize(s);
+    }
 
 #if old_rxml_compat
   // Not part of RXML 1.4
@@ -227,16 +231,8 @@ string tagtime(int t,mapping m,object id)
     s=capitalize(s);
     api_old_rxml_warning(id,"captialize or cap attribute in a tag.","case=\"capitalize\"");
   }
-#endif
-
-  if(m["case"])
-    switch(lower_case(m["case"])) {
-    case "upper": s=upper_case(s); break;
-    case "lower": s=lower_case(s); break;
-    case "capitalize": s=capitalize(s);
-    }
-
   return s;
+#endif
 }
 
 string tag_date(string q, mapping m, object id)
@@ -251,18 +247,15 @@ string tag_date(string q, mapping m, object id)
   if(m->day)    t += (int)m->day * 86400;
   if(m->hour)   t += (int)m->hour * 3600;
   if(m->minute) t += (int)m->minute * 60;
-  //  if(m->min)    t += (int)m->min * 60;
-  //  if(m->sec)    t += (int)m->sec;
   if(m->second) t += (int)m->second;
 
   if(!(m->brief || m->time || m->date))
     m->full=1;
 
   if(!m->date)
-  {
     if(!m->unix_time || m->second)
       NOCACHE();
-  } else
+  else
     CACHE(60); // One minute is good enough.
 
   return tagtime(t,m,id);
@@ -284,12 +277,14 @@ string sexpr_eval(string what)
 
 array(string) tag_scope(string tag, mapping m, string contents, object id)
 {
-  mapping old_variables = id->variables;
-  id->variables = ([]);
-  if (m->extend)
-    id->variables += old_variables;
+  mapping old_variables = copy_value(id->variables);
+  int truth=_ok;
+  if (!m->extend)
+    id->variables = ([]);
   contents = parse_rxml(contents, id);
   id->variables = old_variables;
+  if (m->truth)
+    _ok=truth;
   return ({ contents });
 }
 
@@ -383,17 +378,12 @@ string tag_append( string tag, mapping m, object id )
   return rxml_error(tag, "Nothing to append from.", id);
 }
 
-inline string do_replace(string s, mapping (string:string) m) {
-  return replace(s, indices(m), values(m));
-}
-
 string tag_insert(string tag,mapping m,object id)
 {
   if(m->help)
     return "Inserts a file, variable or other object into a webpage";
 
   string n;
-  mapping fake_id=([]);
 
 #if old_rxml_compat
   // Not part of RXML 1.4
@@ -406,14 +396,17 @@ string tag_insert(string tag,mapping m,object id)
   if (n=m->variable)
     return id->variables[n]||rxml_error(tag, "No such variable ("+n+").",id);
 
-  if (n=m->variables) 
-  {
-    if(n!="variables")
+#if old_rxml_compat
+  if(m->variables && m->variables!="variables") {
+    api_old_rxml_warning(id, "insert attribute variables set to an value","&lt;debug showid=\"id->variables\"&gt;");
       return Array.map(indices(id->variables), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
       }, id->variables)*"\n";
-    return String.implode_nicely(indices(id->variables));
   }
+#endif
+
+  if (n=m->variables)
+    return String.implode_nicely(indices(id->variables));
 
   if (n=m->cookies) 
   {
@@ -653,12 +646,12 @@ string tag_aprestate(string tag, mapping m, string q, object id)
 #endif
 
   if(m->add) {
-    foreach(m->add/",", s)
+    foreach((m->add-" ")/",", s)
       prestate[s]=1;
     m_delete(m,"add");
   }
   if(m->drop) {
-    foreach(m->drop/",", s)
+    foreach((m->drop-" ")/",", s)
       prestate[s]=0;
     m_delete(m,"drop");
   }
@@ -708,12 +701,12 @@ string tag_aconf(string tag, mapping m, string q, object id)
 #endif
 
   if(m->add) {
-    foreach(m->add/",", s)
+    foreach((m->add-" ")/",", s)
       cookies[s]=s;
     m_delete(m,"add");
   }
   if(m->drop) {
-    foreach(m->drop/",", s)
+    foreach((m->drop-" ")/",", s)
       cookies["-"+s]="-"+s;
     m_delete(m,"drop");
   }
@@ -796,9 +789,8 @@ string tag_referrer(string tag, mapping m, object id)
 
   if(m->help) 
     return ("Shows from which page the client linked to this one.");
-  if(id->referer)
-    return sizeof(id->referer)?id->referer*"":m->alt?m->alt:"..";
-  return m->alt?m->alt:"..";
+
+  return sizeof(id->referer)?id->referer*"":m->alt?m->alt:"";
 }
 
 string tag_header(string tag, mapping m, object id)
@@ -810,13 +802,11 @@ string tag_header(string tag, mapping m, object id)
     {
       if(!sscanf(m->value, "Realm=%s", r))
 	r=m->value;
-    } else {
+    } else 
       r="Users";
-    }
     m->value="basic realm=\""+r+"\"";
-  } else if(m->name=="URI") {
+  } else if(m->name=="URI")
     m->value = "<" + m->value + ">";
-  }
   
   if(!(m->value && m->name))
     return rxml_error(tag, "Requires both a name and a value.", id);
@@ -827,31 +817,43 @@ string tag_header(string tag, mapping m, object id)
 
 string tag_redirect(string tag, mapping m, object id)
 {
-  if (!m->to) {
+  if (!m->to)
     return rxml_error(tag, "Requires attribute \"to\".", id);
-  }
 
   multiset(string) orig_prestate = id->prestate;
   multiset(string) prestate = (< @indices(orig_prestate) >);
+
+#if old_rxml_compat
   foreach(indices(m), string s)
     if(m[s]==s && sizeof(s))
       switch (s[0]) {
 	case '+': prestate[s[1..]] = 1; break;
 	case '-': prestate[s[1..]] = 0; break;
       }
+#endif
+
+  if(m->add) {
+    foreach((m->add-" ")/",", string s)
+      prestate[s]=1;
+    m_delete(m,"add");
+  }
+  if(m->drop) {
+    foreach((m->drop-" ")/",", string s)
+      prestate[s]=0;
+    m_delete(m,"drop");
+  }
+
   id->prestate = prestate;
   mapping r = http_redirect(m->to, id);
   id->prestate = orig_prestate;
 
-  if (r->error) {
+  if (r->error)
     _error = r->error;
-  }
-  if (r->extra_heads) {
+  if (r->extra_heads)
     _extra_heads += r->extra_heads;
-  }
-  if (m->text) {
+  if (m->text)
     _rettext = m->text;
-  }
+
   return "";
 }
 
@@ -931,14 +933,20 @@ string tag_quote(string tagname, mapping m)
 
 string tag_inc(string tag, mapping m, object id)
 {
-  id->variables[m->variable]=(string)((int)id->variables[m->variable]+1);
-  return "";
+  if(m->variable && id->variable[m->variable]) {
+    id->variables[m->variable]=(string)((int)id->variables[m->variable]+1);
+    return "";
+  }
+  return rxml_error(tag, "No variable to increment.", id);
 }
 
 string tag_dec(string tag, mapping m, object id)
 {
-  id->variables[m->variable]=(string)((int)id->variables[m->variable]-1);
-  return "";
+  if(m->variable && id->variable[m->variable]) {
+    id->variables[m->variable]=(string)((int)id->variables[m->variable]-1);
+    return "";
+  }
+  return rxml_error(tag, "No variable to decrement.", id);
 }
 
 string tag_imgs(string tag, mapping m, object id)
@@ -989,6 +997,16 @@ string tag_roxen(string tagname, mapping m, object id)
 
 string tag_debug( string tag_name, mapping args, object id )
 {
+  if (args->showid){
+    array path=lower_case(args->showid)/"->";
+    if(path[0]!="id" || sizeof(path)==1) return "Can only show parts of the id object.";
+    mixed obj=id;
+    foreach(path[1..], string tmp) {
+      if(search(indices(obj),tmp)==-1) return "Could only reach "+tmp+".";
+      obj=obj[tmp];
+    }
+    return sprintf("<pre>%O</pre>",obj);
+  }
   if (args->off)
     id->misc->debug = 0;
   else if (args->toggle)
@@ -1029,6 +1047,7 @@ string tag_fsize(string tag, mapping args, object id)
   };
   if(string s=id->conf->try_get_file(fix_relative(args->file, id), id ) )
     return (string)strlen(s);
+  return rxml_error(tag, "Failed to find file", id);
 }
 
 #if old_rxml_compat
