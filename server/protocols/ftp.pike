@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.15 1997/04/29 00:25:10 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.16 1997/05/07 19:07:15 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -264,6 +264,7 @@ void done_callback(object fd)
 void connected_to_send(object fd,mapping file)
 {
   object pipe=Pipe.pipe();
+
   if(!file->len)
     file->len = file->data?(stringp(file->data)?strlen(file->data):0):0;
 
@@ -279,7 +280,10 @@ void connected_to_send(object fd,mapping file)
   }
 
   if(stringp(file->data))  pipe->write(file->data);
-  if(file->file)  pipe->input(file->file);
+  if(file->file) {
+    file->file->set_blocking();
+    pipe->input(file->file);
+  }
 
   pipe->set_done_callback(done_callback, fd);
   pipe->output(fd);
@@ -443,7 +447,7 @@ void connect_and_receive(string arg)
 }
 
 varargs int|string list_file(string arg, int srt, int short, int column, 
-			     int F, int directory, int all_mode)
+			     int F, int directory, int all_mode, int r_mode)
 {
   string filename;
   array (int) st;
@@ -517,6 +521,10 @@ varargs int|string list_file(string arg, int srt, int short, int column,
     if (srt) {
       sort(tsort, parsed);
     }
+    if (r_mode) {
+      parsed = reverse(parsed);
+      tsort = reverse(parsed);
+    }
     if(!short) {
       tmp=parsed*"";
     } else {
@@ -546,7 +554,8 @@ int open_file(string arg)
     this_object()->not_query = simplify_path(arg);
   else 
     this_object()->not_query = combine_path(cwd, arg);
-      
+
+
   if(1 || !file || (file->full_path != not_query))
   {
     if(file && file->file)
@@ -561,6 +570,7 @@ int open_file(string arg)
 	file = 1;
     }
   }
+
   if(!file)
   {
     switch(misc->error_code) {
@@ -703,6 +713,7 @@ void got_data(mixed fooid, string s)
       else 
 	ncwd = combine_path(cwd, arg);
       
+
       // Restore auth-info
       auth = session_auth;
 
@@ -717,8 +728,9 @@ void got_data(mixed fooid, string s)
 	break;
       }
       cwd = ncwd;
-      if((cwd == "") || (cwd[-1] != '/'))
+      if((cwd == "") || (cwd[-1] != '/')) {
 	cwd += "/";
+      }
       not_query = cwd;
       if(dir = roxen->find_dir(cwd, this_object()))
       {
@@ -767,7 +779,7 @@ void got_data(mixed fooid, string s)
       break;
       
      case "nlst": 
-      int short=0, tsort=0, F=0, C=0, d=0, a=0;
+      int short=0, tsort=0, F=0, C=0, d=0, a=0, r=0;
       short = 1;
 
      case "list": 
@@ -823,6 +835,9 @@ void got_data(mixed fooid, string s)
 
 	if(search(args, "a") != -1)
 	  a = 2;
+
+	if(search(args, "r") != -1)
+	  r = 1;
       }
 
       // This is needed to get .htaccess to be read from the correct directory
@@ -839,7 +854,7 @@ void got_data(mixed fooid, string s)
 	if(f = funp( this_object())) break;
       if(!f)
       {
-	f = ([ "data":list_file(arg, tsort, short, C, F, d, a) ]);
+	f = ([ "data":list_file(arg, tsort, short, C, F, d, a, r) ]);
 	if(f->data == 0)
 	  reply("550 "+arg+": No such file or directory.\n");
 	else if(f->data == -1)
@@ -885,7 +900,7 @@ void got_data(mixed fooid, string s)
       foreach(conf->first_modules(), function funp)
 	if(f = funp( this_object())) break;
       if(f) dirlist = -1;
-      else dirlist = list_file(arg, 0, 0, 0);
+      else dirlist = list_file(arg, 0, 0, 0, 0);
       
       if(!dirlist)
       {
@@ -932,6 +947,18 @@ void got_data(mixed fooid, string s)
       int port=(int)((pasv_port->query_address()/" ")[1]);
       reply("227 Entering Passive Mode. "+replace(controlport_addr, ".", ",")+
 	    ","+(port>>8)+","+(port&0xff)+"\n");
+      break;
+
+      // Extended commands
+    case "pres":
+      if (!arg || !strlen(arg)) {
+	reply("220 Prestate cleared\n");
+	prestate = (<>);
+	break;
+      }
+      
+      prestate = aggregate_multiset(@(arg/","-({""})));
+      reply("220 Prestate set\n");
       break;
 
      default:
