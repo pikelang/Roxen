@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.267 2000/12/12 06:18:20 nilsson Exp $
+// $Id: rxml.pike,v 1.268 2000/12/15 17:14:36 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -3129,7 +3129,7 @@ Available variables are:",
  Returns the path to the most recently traversed directory.
 </desc>"
 	       ])
-	    })
+}),
 
 "emit#sources":({ #"<desc plugin>
  Provides a list of all available emit sources.
