@@ -75,7 +75,7 @@ private string attr_vals(string v)
 }
 
 private string noex_cont(string t, mapping m, string c) {
-  return parse_html(c, ([]), (["ex":""]));
+  return Parser.HTML()->add_container("ex","")->feed(c)->read();
 }
 
 private string ex_cont(string t, mapping m, string c, string rt, void|object id)
@@ -123,15 +123,20 @@ private string format_doc(string|mapping doc, string name, void|object id) {
       doc=doc->standard;
   }
 
-  return parse_html(doc, (["lang":lambda() { return available_languages(id); } ]), ([
-    "desc":desc_cont,
-    "attr":attr_cont,
-    "ex":ex_cont,
-    "noex":noex_cont,
-    "tag":lambda(string tag, mapping m, string c) { return "&lt;"+c+"&gt;"; },
-    "ref":lambda(string tag, mapping m, string c) { return c; },
-    "short":lambda(string tag, mapping m, string c) { m->hide?"":c; }
-  ]), name, id);
+  return Parser.HTML()->
+    add_tag( "lang",
+	     lambda() { return available_languages(id); }
+	     )->
+    add_containers( ([
+      "desc":desc_cont,
+      "attr":attr_cont,
+      "ex":ex_cont,
+      "noex":noex_cont,
+      "tag":lambda(string tag, mapping m, string c) { return "&lt;"+c+"&gt;"; },
+      "ref":lambda(string tag, mapping m, string c) { return c; },
+      "short":lambda(string tag, mapping m, string c) { m->hide?"":c; }
+    ]) )->
+    set_extra(name, id)->feed(doc)->read();
 }
 
 
