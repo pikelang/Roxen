@@ -3,7 +3,7 @@
 #include <module.h>
 #include <stat.h>
 inherit "module";
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG|MODULE_LOCATION;
 constant module_name = "Tags: Dir emit source";
 constant module_doc = "This module provies the 'dir' emit source. It "
   "or anoter compatible module is required by the Directory Listings module";
@@ -231,6 +231,24 @@ class TagDirectoryplugin
   }
 }
 
+// Some clients do not handle the magic 'internal-gopher-...'.
+// So, lets do it here instead.
+int|object|mapping(string:mixed) find_file(string from, RequestID id)
+{
+  if(!has_value(from,"/"))
+  {
+    Stdio.File f = lopen("data/images/dir/"+from+".gif","r");
+    if (f) 
+      return (["file":f, "type":"image/gif", "stat":f->stat(),]);
+  }
+  return 0;	   // File not found.
+}
+
+string query_location()
+{
+  return "/internal-gopher-";
+}
+
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
@@ -279,7 +297,7 @@ constant tagdoc=([
  Sort the files and directories by this method.</p>
 <xtable>
 <row><c><p>alpha</p></c><c><p>Sort files and directories alphabetically.</p></c></row>
-<row><c><p>dwim</p></c><c><p>Sort files and directories by \"Do What I (want) Method\". In many methods numeriacal sorts fail as the number '10' often appears before '2'. This method sorts numerical characters first then alphabetically, e.g. 1foo.html, 2foo.html, 10foo.html, foo1.html, foo2.html, foo10.html.</p></c></row>
+<row><c><p>dwim</p></c><c><p>Sort files and directories by \"Do What I Mean\". In many methods numerical sorts fail as the number '10' often appears before '2'. This method sorts numerical characters first then alphabetically, e.g. 1foo.html, 2foo.html, 10foo.html, foo1.html, foo2.html, foo10.html.</p></c></row>
 <row><c><p>modified</p></c><c><p>Sort files by modification date.</p></c></row>
 <row><c><p>size</p></c><c><p>Sort files by size.</p></c></row>
 <row><c><p>type</p></c><c><p>Sort files by content-type.</p></c></row>

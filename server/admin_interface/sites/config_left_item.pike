@@ -219,7 +219,7 @@ string selected_item( string q, Configuration c, RequestID id,
         pre +=
           "<tr>"
           "<td valign='top' width='0%'>"
-          "<imgs src='&usr." + sel + ";' vspace='1' hspace='4' "
+          "<img src='&usr." + sel + ";' vspace='1' hspace='4' "
           "alt='' /></td>"
           "<td width='100%' "
 	  "    class='module-list-item' "
@@ -259,7 +259,7 @@ string selected_item( string q, Configuration c, RequestID id,
           "<tr><td>"
 	  "<img src='/*/unit' width=1 height=3 /></td></tr>\n"
           "<tr><td valign='top' width='0%'>"
-          "<imgs src='&usr." + (unfolded&&fold ? "unfolded" : sel) + ";' "
+          "<img src='&usr." + (unfolded&&fold ? "unfolded" : sel) + ";' "
 	  "      vspace='1' hspace='4' alt='' /></td>"
           "<td width='100%'>" +
 	  Roxen.html_encode_string(group_name) + "\n"
@@ -293,7 +293,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	    pre +=
 	      "<tr>"
 	      "<td valign='top' width='0%'>"
-	      "<imgs src='&usr.item-indicator;' vspace='1' hspace='4' alt=''/>"
+	      "<img src='&usr.item-indicator;' vspace='1' hspace='4' alt=''/>"
 	      "</td>"
 	      "<td width='100%' class='module-sub-list-item' "
 	      "onMouseOver='p_on_sub(this);' onMouseOut='p_off_sub(this);' "
@@ -321,7 +321,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	    pre +=
 	      "<tr>"
 	      "<td valign='top' width='0%'>"
-	      "<imgs src='&usr.selected-indicator;' vspace='1' hspace='4' "
+	      "<img src='&usr.selected-indicator;' vspace='1' hspace='4' "
 	      "      alt='' />"
 	      "</td>"
 	      "<td width='100%' class='selected-indicator'>"
