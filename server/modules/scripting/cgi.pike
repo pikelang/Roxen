@@ -5,13 +5,15 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.83 1998/04/22 15:08:57 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.84 1998/05/08 17:35:39 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
 
 inherit "module";
 inherit "roxenlib";
+
+#define CGI_DEBUG
 
 import Simulate;
 
@@ -410,7 +412,12 @@ class spawn_cgi
   void do_cgi()
   {
     int pid;
+#ifdef CGI_DEBUG
+    roxen_perror("do_cgi()\n");
+#endif /* CGI_DEBUG */
+
 #if constant(Process.create_process)
+
     if(wrapper) {
       array us;
       wrapper = combine_path(getcwd(), wrapper);
@@ -433,8 +440,11 @@ class spawn_cgi
 			 "stdin":pipe3,
 			 "stdout":pipe1,
 			 "env":env,
-			 "uid":uid || 65534,
     ]);
+
+    if (!getuid()) {
+      options["uid"] = uid || 65534;
+    }
 
     if (dup_err) {
       options["stderr"] = pipe1;
@@ -446,6 +456,10 @@ class spawn_cgi
       options["setgroups"] = ({});
 #endif /* constant(cleargroups) */
     }
+
+#ifdef CGI_DEBUG
+    roxen_perror(sprintf("create_process(%O, %O)...\n", args, options));
+#endif /* CGI_DEBUG */
 
     object proc;
     mixed err = catch {
@@ -592,6 +606,13 @@ class spawn_cgi
 	      object pipe3_, object pipe4_, int dup_err_, int kill_call_out_,
 	      int setgroups_)
   {
+#ifdef CGI_DEBUG
+    roxen_perror(sprintf("spawn_cgi(%O, %O, %O, %O, "
+			 "%O, %O, X, X, "
+			 "X, X, %O, %O, %O)\n",
+			 wrapper_, f_, args_, env_,
+			 wd_, uid_, dup_err_, kill_call_out_, setgroups_));
+#endif /* CGI_DEBUG */
     wrapper = wrapper_;
     f = f_;
     args = args_;
