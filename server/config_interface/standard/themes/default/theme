@@ -21,5 +21,5 @@
     vlink=&usr.linkcolor; 
     alink=&usr.fade2; 
     bgcolor=&usr.bgcolor; 
-    text=&usr.fgcolor 
+    text=&usr.fgcolor;
     background=&usr.background;' />
