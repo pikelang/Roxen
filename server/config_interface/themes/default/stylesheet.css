@@ -74,7 +74,7 @@ table.module-list
 	/*margin-top: 5px;*/
 	/*margin-bottom: 5px;*/
 	/*padding: 0;*/
-	cursor: default;
+	/*cursor: default;*/
 }
 
 ul.module-sub-list
@@ -96,7 +96,7 @@ table.module-sub-list
 	color: #ffffff;
 	background-color: #5f89d3;
 	text-decoration: none;
-	cursor: default;
+	cursor: pointer;
 }
 
 .module-sub-list-item-hover,
@@ -107,7 +107,7 @@ table.module-sub-list
 	color: #ffffff;
 	background-color: #5f89d3;
 	text-decoration: none;
-	cursor: default;
+	cursor: pointer;
 }
 
 
