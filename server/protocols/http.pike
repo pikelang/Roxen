@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.290 2001/02/24 21:27:43 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.291 2001/02/26 21:38:17 marcus Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -565,7 +565,7 @@ void things_to_do_when_not_sending_from_cache( )
   array mod_config;
   int config_in_url;
 #endif
-  string contents;
+  string|array(string) contents;
   misc->pref_languages=PrefLanguages();
 
   misc->cachekey = CacheKey();
@@ -576,7 +576,7 @@ void things_to_do_when_not_sending_from_cache( )
       contents = (contents-" ")/",";
     else
       contents =
-	Array.flatten( map( map( contents, `-, " " ), `/, "," ))-({""});
+	map( map( contents, `-, " " ), `/, "," )*({})-({""});
     misc->pref_languages->languages=contents;
     misc["accept-language"] = contents;
   }
