@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.111 1998/10/16 21:13:30 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.112 1998/10/18 18:32:43 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -14,8 +14,11 @@ object get_template(string t);
 /* Work-around for Simulate.perror */
 #define perror roxen_perror
 
+#include <roxen.h>
 #include <confignode.h>
 #include <module.h>
+
+#define LOCALE	LOW_LOCALE->config_interface
 
 #define dR "ff"
 #define dG "ff"
@@ -238,7 +241,7 @@ mapping stores( string s )
       "type":"text/html",
       "extra_heads":
       ([
-	"Title":"Roxen Challenger maintenance",
+	"Title":LOCALE->roxen_challenger_maintenance(),
 //      "Expires":http_date(time(1)+2),
 //	"Pragma":"no-cache",
 	"Last-Modified":http_date(time(1)),
@@ -257,13 +260,9 @@ static private constant default_ports = ([
 
 mapping verify_changed_ports(object id, object o)
 {
-  string res = default_head("Roxen Config: Setting Server URL") +
-    ("<h1>Set the correct server URL</h1>"
-     "As you have changed the open ports in one or more servers "
-     "you might have to adjust the default server URL(s). Check the "
-     "correct URL(s) below and modify it as needed. The server URLs are among "
-     "other things used for redirects. "
-     "<form action=\"/(modify_server_url)"+o->path(1)+"\">");
+  string res = default_head(LOCALE->setting_server_url()) +
+    LOCALE->setting_server_url_text() +
+    "<form action=\"/(modify_server_url)"+o->path(1)+"\">";
   foreach(indices(changed_port_servers), object server)
   {
     int glob;
@@ -290,11 +289,10 @@ mapping verify_changed_ports(object id, object o)
     string def;
     if(glob) {
       def = GLOBVAR(ConfigurationURL);
-      res += "<h3>Select Configuration Interface URL: </h3>\n<pre>";
+      res += "<h3>" + LOCALE->select_config_interface_url() + "</h3>\n<pre>";
     } else {
       def = server->query("MyWorldLocation");
-      res += sprintf("<h3>Select server URL for for %s: </h3>\n"
-		     "<pre>", name);
+      res += "<h3>" + LOCALE->select_server_url(name) + "</h3>\n<pre>";
     }
     
     foreach((glob ? GLOBVAR(ConfigPorts) : server->query("Ports")),
@@ -346,7 +344,8 @@ mapping verify_changed_ports(object id, object o)
 		     name, name, def);
   }
   changed_port_servers = (<>);
-  return stores(res+"<input type=submit value=\"Continue...\"></form>");
+  return stores(res + "<input type=submit value=\"" +
+		LOCALE->continue_elipsis() + "\"></form>");
 }
 
 mapping save_it(object id, object o)
@@ -471,10 +470,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     foo=Array.map((var-" ")/",", lambda(string var, object node) {
       if (!strlen( var ) || Stdio.file_size( var ) != -2)
       {
-	if(node->error)	
-	  node->error += ", " +var + " is not a directory";
-	else
-	  node->error = var + " is not a directory";
+	node->error = LOCALE->error_not_directory(var, node->error);
 	return 0;
       }
       if(var[-1] != '/')
@@ -490,7 +486,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     array st;
     if (!strlen( var ) || !(st = file_stat( var )) || (st[1] != -2))
     {
-      node->error = var + " is not a directory";
+      node->error = LOCALE->error_not_directory(var);
       return 0;
     }
     if(var[-1] != '/')
@@ -516,7 +512,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     
     if (!sscanf( var, "%d", tmp ))
     {
-      node->error= var + " is not an integer";
+      node->error = LOCALE->error_not_int(var);
       return 0;
     }
     return tmp;
@@ -526,7 +522,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     
     if (!sscanf( var, "%f", tmp ))
     {
-      node->error= var + " is not a arbitary precision floating point number";
+      node->error = LOCALE->error_not_float(var);
       return 0;
     }
     return tmp;
@@ -553,7 +549,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
 	|| red < 0 || red > 255 || green < 0 || green > 255
 	|| blue < 0 || blue > 255)
     {
-      node->error = var + " is not a valid color specification";
+      node->error = LOCALE->error_not_color(var);
       return 0;
     }
     return (red << 16) + (green << 8) + blue;
@@ -603,14 +599,17 @@ string configuration_types()
     if (err = catch {
       if(c[-1]=='e' && c[0]!='#') {
 	object o = get_template(c);
+
+	// FIXME: LOCALIZE!
+
 	if (o) {
 	  res += sprintf("<option value=\"%s\"%s>%s\n",
 			 c, (o->selected?" selected":""), o->name);
 	}
       }
     }) {
-      report_error(sprintf("Error initializing server template \"%s\"\n"
-			   "%s\n", c, describe_backtrace(err)));
+      report_error(LOCALE->
+		   error_initializing_template(c, describe_backtrace(err)));
     }
   }
   return res;
@@ -618,9 +617,10 @@ string configuration_types()
 
 string describe_config_modules(array mods)
 {
-  string res = "This configuration template adds the following modules:<p><ul>";
-  if(!mods||!sizeof(mods)) return "This configuration template adds no modules";
+  if(!mods||!sizeof(mods))
+    return(LOCALE->template_adds_none());
   
+  string res = LOCALE->template_adds_following() + "<p><ul>";
   foreach(mods, string mod)
   {
     sscanf(mod, "%s#", mod);
@@ -630,8 +630,12 @@ string describe_config_modules(array mods)
       roxen->rescan_modules();
       roxen_perror("CONFIG: Done.\n");
     }
-    if(!roxen->allmodules[mod]) res += "<li>The unknown module '"+mod+"'\n";
-    else res += "<li>"+roxen->allmodules[mod][0]+"\n";
+    res += "<li>";
+    if(!roxen->allmodules[mod])
+      res += LOCALE->unknown_module(mod);
+    else
+      res += roxen->allmodules[mod][0];	// FIXME: LOCALIZE!
+    res += "\n";
   }
   return res+"</ul>";
 }
@@ -651,6 +655,7 @@ string configuration_docs()
 
 string new_configuration_form()
 {
+  // FIXME: LOCALIZE!
   return (default_head("") + status_row(root) +
 	  "<h2>Add a new virtual server</h2>\n"
 	  "<table bgcolor=#000000><tr><td >\n"
@@ -720,7 +725,8 @@ mixed new_module_copy(object node, string name, object id)
   if(module) if(module->copies) while(module->copies[i])  i++;
   orig = node->config()->enable_module(name+"#"+i);
 
-  if(!orig) return http_string_answer("This module could not be enabled.\n");
+  if(!orig)
+    return http_string_answer(LOCALE->could_not_enable_module());
     
   module = node->config()->modules[name];
   node = node->descend(module->name);
@@ -775,12 +781,13 @@ string new_module_form(object id, object node)
     return m[a][0] > m[b][0];
   }, a);
   
-  res = ({default_head("Add a module")+"\n\n"+
+  res = ({default_head(LOCALE->add_module())+"\n\n"+
 	  status_row(node)+
 //	  display_tabular_header(node)+
-	  "<table><tr><td>&nbsp;<td><h2>Select a module to add"
-	  " from the list below, click on it's header to add it.</h2>" });
+	  "<table><tr><td>&nbsp;<td>"
+	  "<h2>" + LOCALE->select_module() + "</h2>" });
   
+  // FIXME: Localize the module name, and description.
   foreach(mods, q)
   {
     if(b = module_nomore(q, a[q][2], node->config()))
@@ -788,11 +795,10 @@ string new_module_form(object id, object node)
       if(b->sname != q)
 	res += ({("<p><img alt=\""+a[q][0]+"\" src=\"/auto/module/" + a[q][2] +
 		  "/"+ q+"\" height=24 width=500><br><blockquote>" + a[q][1] +
-		  "<p><i>A module of the same type is already enabled (" +
-		  b->name + "). <a href=\"/(delete)" +
+		  "<p><i>" + LOCALE->module_type_enabled(b->name) +
+		  LOCALE->disable_that_module("<a href=\"/(delete)" +
 		  node->descend(b->name, 1)->path(1) + "?" + (bar++) +
-		  "\">Disable that module</a> if you want this one instead</i>"
-		  "\n<p><br><p></blockquote>")});
+		  "\">", "</a>") + "</i>\n<p><br><p></blockquote>")});
     } else {
       res += ({"<p><a href=\"/(addmodule)"+node->path(1)+"?"+q+"=1\">"
 		 "<img border=0 alt=\""+a[q][0]+"\" src=\"/auto/module/" +
@@ -833,9 +839,9 @@ int check_config_name(string name)
     if(lower_case(c->name) == lower_case(name))
       return 1;
 
-  switch(name) {
-   case " ": case "\t": case "CVS":
-   case "Global Variables": case "global variables": case "Global variables":
+  switch(lower_case(name)) {
+   case " ": case "\t": case "cvs":
+   case "global variables":
     return 1;
   }
   return !strlen(name);
@@ -1075,16 +1081,6 @@ array tabs = ({
 #endif /* ENABLE_MANUAL */
 });
 
-array tab_names = ({
- "Virtual Servers",
- "Global Variables",
- "Event Log",
- "Actions",
-#ifdef ENABLE_MANUAL
- "Manual",
-#endif /* ENABLE_MANUAL */
-});
-		
 
 string display_tabular_header(object node)
 {
@@ -1101,7 +1097,7 @@ string display_tabular_header(object node)
 
     links[search(tabs,s)]="/"+s+"/"+"?"+(bar++);
   }
-  return tablist(tab_names, links, search(tabs,s));
+  return tablist(LOCALE->tab_names, links, search(tabs,s));
 }
 
 // Return the number of unfolded nodes on the level directly below the passed
@@ -1228,15 +1224,20 @@ string dn(object node)
   if(!node) return "???";
   string s = sizeof(node->_path)?node->_path[-1]:" ";
   if(((string)((int)s))==s)
-    return "Instance "+s;
+    return "Instance "+s;	// FIXME: LOCALIZE!
+
+  werror(sprintf("tab_names: %O\n", LOCALE->tab_names));
+
   switch(s)
   {
-   case "Globals":
-    return "Global Variables";
    case "Configurations":
-    return "Servers";
+    return LOCALE->tab_names[0];
+   case "Globals":
+    return LOCALE->tab_names[1];
    case "Errors":
-    return "Event Log";
+    return LOCALE->tab_names[2];
+   case "Actions":
+    return LOCALE->tab_names[3];
   }
   return s;
 }
@@ -1263,21 +1264,21 @@ string describe_node_path(object node)
 
 string status_row(object node)
 {
-   return ("<table width=\"100%\" border=0 cellpadding=0"
-	   " cellspacing=0>\n"
-	   "<tr><td valign=bottom align=left><a href=\"$docurl"+
-	   node->path(1)+"\">"
-	   "<img border=0 src=\"/image/roxen-icon-gray.gif\" alt=\"\"></a>"
-	   "</td>\n<td>&nbsp;</td><td  width=100% height=39>"
-	   "<table cellpadding=0 cellspacing=0 width=100% border=0>\n"
-	   "<tr width=\"100%\">\n"
-	   "<td width=\"100%\" align=right valigh=center height=28>"
-	   +describe_node_path(node)+"</td>"
-	   "</tr><tr width=\"100%\">"
-	   "<td bgcolor=\"#003366\" align=right height=12 width=\"100%\">"
-	   "<font color=white size=-2>Administration Interface"
-	   "&nbsp;&nbsp;</font></td></tr></table></td>"
-	   "\n</tr>\n</table><br>");
+  return ("<table width=\"100%\" border=0 cellpadding=0"
+	  " cellspacing=0>\n"
+	  "<tr><td valign=bottom align=left><a href=\"$docurl"+
+	  node->path(1)+"\">"
+	  "<img border=0 src=\"/image/roxen-icon-gray.gif\" alt=\"\"></a>"
+	  "</td>\n<td>&nbsp;</td><td  width=100% height=39>"
+	  "<table cellpadding=0 cellspacing=0 width=100% border=0>\n"
+	  "<tr width=\"100%\">\n"
+	  "<td width=\"100%\" align=right valigh=center height=28>"
+	  +describe_node_path(node)+"</td>"
+	  "</tr><tr width=\"100%\">"
+	  "<td bgcolor=\"#003366\" align=right height=12 width=\"100%\">"
+	  "<font color=white size=-2>" + LOCALE->administration_interface() +
+	  "&nbsp;&nbsp;</font></td></tr></table></td>"
+	  "\n</tr>\n</table><br>");
 }
 
 mapping logged = ([ ]);
@@ -1285,8 +1286,8 @@ mapping logged = ([ ]);
 void check_login(object id)
 {
   if(logged[id->remoteaddr] + 1000 < time()) {
-    report_notice("Administrator logged on from " +
-		  roxen->blocking_ip_to_host(id->remoteaddr) + ".\n");
+    report_notice(LOCALE->
+		  admin_logged_on(roxen->blocking_ip_to_host(id->remoteaddr)));
   }
   logged[id->remoteaddr] = time(1);
 }
@@ -1294,10 +1295,17 @@ void check_login(object id)
 mapping configuration_parse(object id)
 {
   array (string) res=({});
-  string tmp;
+  string tmp, tmp2;
+
+  if (sscanf(id->not_query, "/%s/%s", tmp, tmp2) &&
+      Locale.Roxen[tmp]) {
+    SET_LOCALE(Locale.Roxen[tmp]);
+    id->not_query = "/" + tmp2;
+  }
+
   // Is it an image?
   if(sscanf(id->not_query, "/image/%s", tmp))
-    return file_image(tmp) || (["data":"No such image"]);
+    return file_image(tmp) || (["data":LOCALE->no_image()]);
   
   object o;
   int i;
