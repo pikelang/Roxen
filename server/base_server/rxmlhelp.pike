@@ -85,7 +85,7 @@ static string attr_cont(TagdocParser parser, mapping m, string c)
 			 m->default?" ("+m->default+")":""
 			 );
   if(m->required) p+="<i>This attribute is required.</i><br />";
-  p = sprintf("<p><dl><dt><b>%s</b></dt><dd>%s%s</p></dl>",m->name,p,c);
+  p = sprintf("<p><dl><dt><b>%s</b></dt><dd>%s%s</dd></dl></p>",m->name,p,c);
 
   if (!parser->misc->got_attrs) {
     parser->misc->got_attrs = 1;
