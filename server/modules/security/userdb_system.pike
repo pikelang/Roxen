@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: userdb_system.pike,v 1.11 2004/04/04 01:45:43 mani Exp $";
+  "$Id: userdb_system.pike,v 1.12 2004/05/23 02:35:25 _cvs_stephen Exp $";
 #ifndef __NT__
 inherit UserDB;
 #endif
@@ -169,7 +169,7 @@ array(string) list_groups( )
     group_cache[ res[-1]->gid() ] = res[-1];
   }
   full_group_list = res;
-  call_out( lambda(){ full_group_list = 0; cached_groups=0; }, 60 );
+  call_out( lambda(){ full_group_list = 0; cached_groups=([]); }, 60 );
   return res->name();
 }
 #else

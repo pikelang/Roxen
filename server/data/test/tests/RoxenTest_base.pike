@@ -226,7 +226,7 @@ void run_tests( Configuration c )
     mapping misc      = ([]);
   };
 
-  FakeID http_id = FakeID(([ "RoxenUserID":"iieff1934"]),
+  FakeID http_id = FakeID(([ "ChiliMoonUserID":"iieff1934"]),
 			  ({ "http://foo.bar/"  }),
 			  ({ "Internal", "1.0" }),
 			  "/the/requested/file?foo%20bar=hi%20there");

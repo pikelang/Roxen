@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.397 2004/05/20 22:09:19 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.398 2004/05/23 02:35:26 _cvs_stephen Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -581,7 +581,7 @@ int things_to_do_when_not_sending_from_cache( )
     config = prestate;
   else
     if( port_obj->set_cookie
-       && !cookies->RoxenUserID && strlen(not_query)
+       && !cookies->ChiliMoonUserID && strlen(not_query)
        && not_query[0]=='/' && method!="PUT")
     {
       if (!(port_obj->set_cookie_only_once &&

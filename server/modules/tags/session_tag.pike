@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.19 2004/05/23 02:30:08 _cvs_stephen Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.20 2004/05/23 02:35:25 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -24,18 +24,18 @@ class EntityClientSession {
     c->id->misc->cacheable = 0;
     multiset prestates = filter(c->id->prestate,
 				lambda(string in) {
-				  return has_prefix(in, "RoxenUserID="); } );
+				  return has_prefix(in, "ChiliMoonUserID="); } );
 
     // If there is both a cookie and a prestate, then we're in the process of
     // deciding session variable vehicle, and should thus return nothing.
-    if(c->id->cookies->RoxenUserID && sizeof(prestates))
+    if(c->id->cookies->ChiliMoonUserID && sizeof(prestates))
       return RXML.nil;
 
     // If there is a UserID cookie, use that as our session identifier.
-    if(c->id->cookies->RoxenUserID)
-      return ENCODE_RXML_TEXT(c->id->cookies->RoxenUserID, type);
+    if(c->id->cookies->ChiliMoonUserID)
+      return ENCODE_RXML_TEXT(c->id->cookies->ChiliMoonUserID, type);
 
-    // If there is a RoxenUserID-prefixed prestate, use the first such
+    // If there is a ChiliMoonUserID-prefixed prestate, use the first such
     // prestate as session identifier.
     if(sizeof(prestates)) {
       string session = indices(prestates)[0][12..];
@@ -113,16 +113,16 @@ class TagForceSessionID {
     array do_enter(RequestID id) {
       int prestate = sizeof(filter(id->prestate,
 				   lambda(string in) {
-				     return has_prefix(in, "RoxenUserID");
+				     return has_prefix(in, "ChiliMoonUserID");
 				   } ));
 
       string path_info = id->misc->path_info || "";
 
       // If there is no ID cooke nor prestate, redirect to the same page
       // but with a session id prestate set.
-      if(!id->cookies->RoxenUserID && !prestate) {
+      if(!id->cookies->ChiliMoonUserID && !prestate) {
 	multiset orig_prestate = id->prestate;
-	id->prestate += (< "RoxenUserID=" + roxen.create_unique_id() >);
+	id->prestate += (< "ChiliMoonUserID=" + roxen.create_unique_id() >);
 
 	mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
 					id->real_variables);
@@ -132,7 +132,7 @@ class TagForceSessionID {
 	  RXML_CONTEXT->extend_scope ("header", r->extra_heads);
 
 	// Don't trust that the user cookie setting is turned on. The effect
-	// might be that the RoxenUserID cookie is set twice, but that is
+	// might be that the ChiliMoonUserID cookie is set twice, but that is
 	// not a problem for us.
 	id->add_response_header( "Set-Cookie", Roxen.http_roxen_id_cookie() );
 	id->prestate = orig_prestate;
@@ -143,11 +143,11 @@ class TagForceSessionID {
       // user do accept cookies, and there is no need for the session
       // prestate. Redirect back to the page, but without the session
       // prestate. 
-      if(id->cookies->RoxenUserID && prestate) {
+      if(id->cookies->ChiliMoonUserID && prestate) {
 	multiset orig_prestate = id->prestate;
 	id->prestate = filter(id->prestate,
 			      lambda(string in) {
-				return !has_prefix(in, "RoxenUserID");
+				return !has_prefix(in, "ChiliMoonUserID");
 			      } );
 	mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
 					id->real_variables);
@@ -209,8 +209,8 @@ the session tag.</p></attr>
 
   "&client.session;":#"<desc type='entity'>
 <p><short>Contains a session key for the user or nothing.</short>
-The session key is primary taken from the RoxenUserID cookie. If there is no such cookie it
-will return the value in the prestate that begins with \"RoxenUserID=\". However, if both
+The session key is primary taken from the ChiliMoonUserID cookie. If there is no such cookie it
+will return the value in the prestate that begins with \"ChiliMoonUserID=\". However, if both
 the cookie and such a prestate exists the client.session variable will be empty. This allows
 the client.session variable to be used together with <tag>force-session-id</tag>. Note that
 the Session tag module must be loaded for this entity to exist.</p></desc>",
@@ -218,11 +218,11 @@ the Session tag module must be loaded for this entity to exist.</p></desc>",
   // ------------------------------------------------------------
 
   "force-session-id":#"<desc tag='tag'><p>Forces a session id to be set in the variable
-client.session. The heuristics is as follows: If the RoxenUserID
+client.session. The heuristics is as follows: If the ChiliMoonUserID
 cookie is set, use its value. Otherwise redirect to the same page but
 with a prestate containing a newly generated session key. If now both
-the RoxenUserID cookie and the session prestate is set, redirect back
-to the same page without any session prestate set. The RoxenUserID
+the ChiliMoonUserID cookie and the session prestate is set, redirect back
+to the same page without any session prestate set. The ChiliMoonUserID
 cookie should be set automatically by the HTTP protocol module. Look
 at the option to enable unique browser id cookies under the server
 ports tab.</p>

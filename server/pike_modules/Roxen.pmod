@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.181 2004/05/20 22:39:38 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.182 2004/05/23 02:35:26 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -125,7 +125,7 @@ string http_roxen_config_cookie(string from)
 
 string http_roxen_id_cookie()
 {
-  return "RoxenUserID=" + get_core()->create_unique_id() + "; expires=" +
+  return "ChiliMoonUserID=" + get_core()->create_unique_id() + "; expires=" +
     http_date(3600*24*365*2 + time (1)) + "; path=/";
 }
 
@@ -971,8 +971,8 @@ mapping build_roxen_env_vars(RequestID id)
   mapping(string:string) new = ([]);
   string tmp;
 
-  if(id->cookies->RoxenUserID)
-    new["ROXEN_USER_ID"]=id->cookies->RoxenUserID;
+  if(id->cookies->ChiliMoonUserID)
+    new["ROXEN_USER_ID"]=id->cookies->ChiliMoonUserID;
 
   new["COOKIES"] = "";
   foreach(indices(id->cookies), tmp)
