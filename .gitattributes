@@ -258,6 +258,7 @@ urw_itc_avant_garde-demi-r binary
 /server/unfinishedmodules/deepthought.pike foreign_ident
 /server/unfinishedmodules/hedbor.pike foreign_ident
 /server/unfinishedmodules/mountserver.pike foreign_ident
+/server/unfinishedmodules/newpikescript.pike foreign_ident
 /server/unfinishedmodules/whois++.pike foreign_ident
 /tools/Makefile.in foreign_ident
 /tools/addfp98.pike foreign_ident
