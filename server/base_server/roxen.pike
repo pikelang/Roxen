@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.422 2000/02/10 09:18:11 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.423 2000/02/12 21:31:07 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1433,7 +1433,7 @@ mapping protocols = ([
   "http":HTTP,
   "ftp":FTP,
 
-//   "https":HTTPS,
+  "https":HTTPS,
   "ftps":FTPS,
 
   "gopher":GOPHER,
