@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.28 2001/07/16 14:13:00 mast Exp $
+//! $Id: utils.pmod,v 1.29 2002/04/03 12:02:01 mast Exp $
 
 constant is_RXML_encodable = 1;
 
@@ -103,7 +103,8 @@ final int(1..1)|string|array unknown_tag_error (object/*(RMXL.PXml)*/ p, string 
   p->context->handle_exception (
     catch (RXML.parse_error (
 	     "Unknown tag %s is not allowed in context of type %s.\n",
-	     format_short (p->tag_name()), p->type->name)), p, 1);
+	     format_short (p->tag_name()), p->type->name)),
+    p, p->p_code);
   return ({});
 }
 
@@ -113,7 +114,8 @@ final int(1..1)|string|array unknown_pi_tag_error (object/*(RMXL.PXml)*/ p, stri
   p->context->handle_exception (
     catch (RXML.parse_error (
 	     "Unknown processing instruction %s not allowed in context of type %s.\n",
-	     format_short ("<" + p->tag_name() + str), p->type->name)), p, 1);
+	     format_short ("<" + p->tag_name() + str), p->type->name)),
+    p, p->p_code);
   return ({});
 }
 
@@ -122,7 +124,8 @@ final int(1..1)|string|array invalid_cdata_error (object/*(RXML.PXml)*/ p, strin
   p->context->handle_exception (
     catch (RXML.parse_error (
 	     "CDATA text %O is not allowed in context of type %s.\n",
-	     format_short (str), p->type->name)), p, 1);
+	     format_short (str), p->type->name)),
+    p, p->p_code);
   return ({});
 }
 
@@ -154,7 +157,8 @@ final int(1..1)|string|array p_xml_comment_cb (object/*(RXML.PXml)*/ p, string s
       p->context->handle_exception (
 	catch (RXML.parse_error (
 		 "Sorry, can't handle containers beginning with %s.\n",
-		 p->tag_name())), p, 1);
+		 p->tag_name())),
+	p, p->p_code);
   }
   return p->type->free_text ? 0 : ({});
 }
@@ -185,7 +189,6 @@ final int(1..1)|string|array p_xml_entity_cb (object/*(RXML.PXml)*/ p, string st
       else if (has_value (entity, ".")) {
 	p->drain_output();
 	mixed value = p->handle_var (
-	  p,
 	  entity,
 	  // No quoting of splice args. FIXME: Add some sort of
 	  // safeguard against splicing in things like "nice><evil
@@ -206,7 +209,6 @@ final int(1..1)|string|array p_xml_compat_entity_cb (object/*(RMXL.PXml)*/ p, st
     else if (has_value (entity, ".")) {
       p->drain_output();
       mixed value = p->handle_var (
-	p,
 	entity,
 	// No quoting of splice args. FIXME: Add some sort of
 	// safeguard against splicing in things like "nice><evil
