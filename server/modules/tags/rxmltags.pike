@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.339 2002/02/04 12:09:16 stewa Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.340 2002/02/04 16:10:36 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2579,6 +2579,23 @@ class UserTag {
   string _sprintf() {return sprintf ("UserTag(%O)", name);}
 }
 
+// A helper Scope class used when preparsing in TagDefine: Every
+// variable in it has its own entity string as value, so that e.g.
+// &_.contents; goes through the preparse step.
+class IdentityVars
+{
+  inherit RXML.Scope;
+  mixed `[] (string var, void|RXML.Context ctx,
+	     void|string scope_name, void|RXML.Type type)
+  {
+    // Note: The fallback for scope_name here is not necessarily
+    // correct, but this is typically only called from the rxml
+    // parser, which always sets it.
+    return ENCODE_RXML_XML ("&" + (scope_name || "_") + "." + var + ";", type);
+  }
+};
+IdentityVars identity_vars = IdentityVars();
+
 class TagDefine {
   inherit RXML.Tag;
   constant name = "define";
@@ -2592,14 +2609,21 @@ class TagDefine {
     mapping defaults;
     int do_iterate;
 
+    // Used when we preparse.
+    RXML.Scope vars;
+    string scope_name;
+
     array do_enter(RequestID id) {
       if (def)
 	// A previously evaluated tag was restored.
 	do_iterate = -1;
       else {
 	do_iterate = 1;
-	if(args->preparse)
+	if(args->preparse) {
 	  m_delete(args, "preparse");
+	  vars = identity_vars;
+	  scope_name = args->scope;
+	}
 	else
 	  content_type = RXML.t_xml;
       }
