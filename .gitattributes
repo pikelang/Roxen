@@ -85,6 +85,7 @@ nn binary
 /server/config_interface/standard/actions/requeststatus.pike foreign_ident
 /server/config_interface/standard/actions/resolv.pike foreign_ident
 /server/config_interface/standard/actions/restart.pike foreign_ident
+/server/config_interface/standard/user_form.pike foreign_ident
 /server/etc/extensions foreign_ident
 /server/etc/include/config.h foreign_ident
 /server/etc/include/module.h foreign_ident
@@ -163,6 +164,7 @@ nn binary
 /server/modules/compat/ximg.pike foreign_ident
 /server/modules/configuration/config_filesystem.pike foreign_ident
 /server/modules/configuration/config_tags.pike foreign_ident
+/server/modules/configuration/config_userdb.pike foreign_ident
 /server/modules/configuration/update.pike foreign_ident
 /server/modules/database/SQLuserdb.pike foreign_ident
 /server/modules/database/sqldb.pike foreign_ident

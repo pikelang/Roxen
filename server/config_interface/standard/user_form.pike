@@ -1,3 +1,5 @@
+// $Id: user_form.pike,v 1.5 2000/08/28 12:21:56 mast Exp $
+
 #include <config_interface.h>
 #include <roxen.h>
 //<locale-token project="roxen_config"> LOCALE </locale-token>

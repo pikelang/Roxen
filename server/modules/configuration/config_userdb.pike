@@ -1,5 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
+// $Id: config_userdb.pike,v 1.51 2000/08/28 12:22:01 mast Exp $
 
 inherit "module";
 #include <config_interface.h>
