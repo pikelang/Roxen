@@ -1,0 +1,13 @@
+<kbd><b>{strlen}string{/strlen}</b></kbd><p>
+returns the length of the enclosed string.
+<p>
+<b>Examples:</b>
+<br>
+
+{strlen}foo{/strlen}: <strlen>foo</strlen><br>
+{strlen}{/strlen}: <strlen></strlen><br>
+<p>
+<b>What is it good for?</b><br>
+Strlen can be used with {if eval=...} to test the length of variables.
+
+

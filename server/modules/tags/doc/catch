@@ -1,0 +1,7 @@
+<kbd><b>{catch}rxml-code-to-eval-with-catch{/catch}</b></kbd>:
+
+Evaluates the RXML code, and, if nothing goes wrong, returns the
+parsed contents.  If something does go wrong, the error message is
+returned instead.  
+
+<p> See also: {throw help}

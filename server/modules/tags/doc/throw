@@ -1,0 +1,4 @@
+<kbd><b>{throw}text-to-throw{/throw}</b></kbd>:
+
+Throws an exception, with the text-to-throw as the error message.
+<p> See also: {throw help}

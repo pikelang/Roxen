@@ -1,0 +1,8 @@
+<b><kbd>{case [upper] [lower] [capitalize]}text-to-case{/case}</kbd></b><br>
+Examples:
+<dt>
+<dt><b>{case upper}Example TeXt{/case}</b><dd> <case upper>Example TeXt</case>
+<dt><b>{case lower}Example TeXt{/case}</b><dd> <case lower>Example TeXt</case>
+<dt><b>{case capitalize}eXaMpLe TeXt{/case}</b><dd> <case capitalize>eXaMpLe TeXt</case>
+<dt><b>{case lower capitalize}eXaMpLe TeXt{/case}</b><dd> <case lower capitalize>eXaMpLe TeXt</case>
+</dl>

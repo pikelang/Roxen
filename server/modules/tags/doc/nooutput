@@ -1,0 +1,7 @@
+<kbd><b>{nooutput}rxml-code{/nooutput}</b></kbd>: Evaluate the
+contents and throw away the result. Useful for rxml code with
+side-effects.
+
+
+<p> Equivalent to {comment preparse}rxml-code{/comment} or
+{catch}rxml-code{throw}{/throw}{/catch}
