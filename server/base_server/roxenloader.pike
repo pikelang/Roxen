@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.297 2001/09/06 14:21:31 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.298 2001/09/27 17:07:27 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1199,13 +1199,7 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
-//! @appears clear_connect_to_my_mysql_cache
-void clear_connect_to_my_mysql_cache( )
-{
-  sql_free_list = ([]);
-}
-
-mapping sql_free_list = ([ ]);
+mapping(string:array(Sql.Sql)) sql_free_list = ([ ]);
 mapping sql_active_list = ([ ]);
 
 #ifdef DB_DEBUG
@@ -1213,6 +1207,67 @@ static int sql_keynum;
 mapping(int:string) my_mysql_last_user = ([]);
 multiset all_sql_wrappers = set_weak_flag( (<>), 1 );
 #endif /* DB_DEBUG */
+
+
+//! @appears clear_connect_to_my_mysql_cache
+void clear_connect_to_my_mysql_cache( )
+{
+  sql_free_list = ([]);
+}
+
+
+class MySQLResKey(static object real, static MySQLKey key)
+{
+  // Proxy functions:
+  static int num_rows()
+  {
+    return real->num_rows();
+  }
+  static int num_fields()
+  {
+    return real->num_fields();
+  }
+  static int eof()
+  {
+    return real->eof();
+  }
+  static array(mapping(string:mixed)) fetch_fields()
+  {
+    return real->fetch_fields();
+  }
+  static void seek(int skip)
+  {
+    real->seek(skip);
+  }
+  static int|array(string|int) fetch_row()
+  {
+    return real->fetch_row();
+  }
+
+  static mixed `[]( string what )
+  {
+    return `->( what );
+  }
+  static mixed `->(string what )
+  {
+    switch( what )
+    {
+    case "real":         return real;
+    case "num_rows":     return num_rows;
+    case "num_fields":   return num_fields;
+    case "eof":          return eof;
+    case "fetch_fields": return fetch_fields;
+    case "seek":         return seek;
+    case "fetch_row":    return fetch_row;
+    }
+    return real[what];
+  }
+
+  static string _sprintf(int type)
+  {
+    return sprintf( "MySQLRes( X, %O )", key );
+  }
+}
 
 class MySQLKey
 {
@@ -1228,7 +1283,7 @@ class MySQLKey
   
   object big_query( string f, mixed ... args )
   {
-    return real->big_query( f, @args );
+    return MySQLResKey(real->big_query( f, @args ), this_object());
   }
   
 #ifdef DB_DEBUG
@@ -1258,12 +1313,17 @@ class MySQLKey
   
   static void destroy()
   {
+    // FIXME: Ought to be abstracted to an sq_cache_free().
 #ifdef DB_DEBUG
     all_sql_wrappers[this_object()]=0;
 #endif
-    
+
 #ifndef NO_DB_REUSE
-    mixed key = sq_cache_lock();
+    mixed key;
+    catch {
+      key = sq_cache_lock();
+    };
+    
 #ifdef DB_DEBUG
     werror("%O:%d added to free list\n", name, num );
     m_delete(my_mysql_last_user, num);
