@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.287 2000/03/21 07:58:21 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.288 2000/03/22 17:28:11 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2273,9 +2273,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 
   if (!moduleinfo)
   {
-#ifdef MODULE_DEBUG
-    report_warning("Failed to load %s\n", modname);
-#endif
+    report_warning("Failed to load %s. The module probably "
+		   "doesn't exist in the module path.\n", modname);
     return 0;
   }
 
