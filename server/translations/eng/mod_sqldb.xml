@@ -2,19 +2,15 @@
 <locale version="1.0"/>
 <project>mod_sqldb</project>
 <language>eng</language>
-<file>../modules/database/sqldb.pike</file>
+<file>../modules/compat/sqldb.pike</file>
 
 <str id="1">
-<o>SQL databases</o>
+<o>DEPRECATED: SQL databases</o>
 <t></t>
 </str>
 
 <str id="2">
-<o>SQL databases provides symbolic names to any number of database URLs. The
-symbolic names can later be used instead of the database URL. This makes
-it unnecessary to store full database URLs in RXML pages, which enhances
-security. It also becomes possible to change database without having to
-change any RXML pages.</o>
+<o>Use the DBs tab in the configuration interface instead. This module is only kept for compatibility with old configurations.</o>
 <t></t>
 </str>
 
