@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.88 2000/07/12 18:58:37 mast Exp $
+//! $Id: module.pmod,v 1.89 2000/08/09 13:25:38 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -2044,6 +2044,7 @@ class Frame
       }
       else {
 	ctx->handle_exception (err, parser); // Will rethrow unknown errors.
+	result = Void;
 	action = "return";
       }
 
