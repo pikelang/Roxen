@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.375 2000/09/19 12:24:37 wing Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.376 2000/09/19 13:17:25 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -816,14 +816,21 @@ private mapping internal_roxen_image(string from)
 
   Stdio.File f;
 
-  if(f = lopen("roxen-images/"+from+".gif", "r"))
-    return (["file":f, "type":"image/gif", "stat":f->stat()]);
-  if(f = lopen("roxen-images/"+from+".jpg", "r"))
-    return (["file":f, "type":"image/jpeg", "stat":f->stat()]);
+  if( !id->misc->internal_get )
+    if(f = lopen("roxen-images/"+from+".gif", "r"))
+      return (["file":f, "type":"image/gif", "stat":f->stat()]);
+
   if(f = lopen("roxen-images/"+from+".png", "r"))
     return (["file":f, "type":"image/png", "stat":f->stat()]);
+
+  if(f = lopen("roxen-images/"+from+".jpg", "r"))
+    return (["file":f, "type":"image/jpeg", "stat":f->stat()]);
+
   if(f = lopen("roxen-images/"+from+".xcf", "r"))
     return (["file":f, "type":"image/x-gimp-image", "stat":f->stat()]);
+
+  if(f = lopen("roxen-images/"+from+".gif", "r"))
+    return (["file":f, "type":"image/gif", "stat":f->stat()]);
   // File not found.
   return 0;
 }
