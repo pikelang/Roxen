@@ -1,7 +1,7 @@
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
-string cvs_version = "$Id: url_rectifier.pike,v 1.3 1999/09/17 20:33:59 nilsson Exp $";
+string cvs_version = "$Id: url_rectifier.pike,v 1.4 1999/09/23 10:52:55 jhs Exp $";
 #include <module.h>
 inherit "module";
 
@@ -49,10 +49,12 @@ mapping last_resort(object id)
       //id2->raw_url = DECODE(id2->raw_url, encoding);
       // Perhaps we should fix this too (%NN-quoted characters as
       // well), but it really isn't right IMHO.              /jhs
-      id2->prestate = mkmultiset(Array.map( (array)id2->prestate, decode ));
-      id2->variables = (mapping)(Array.map( (array)id2->variables,
-					    lambda(array p)
-					    { return Array.map(p, decode); } ));
+      if(sizeof(id2->prestate))
+	id2->prestate = mkmultiset(Array.map( (array)id2->prestate, decode ));
+      if(sizeof(id2->variables))
+	id2->variables = (mapping)(Array.map( (array)id2->variables,
+					      lambda(array p)
+					      { return Array.map(p, decode); } ));
       mapping q = id->conf->get_file( id2 );
 
       if( q )
