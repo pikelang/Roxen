@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.294 2002/11/11 01:53:34 mani Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.295 2002/11/16 10:41:32 agehall Exp $";
 
 #include <module.h>
 inherit "module";
@@ -745,7 +745,7 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
     ([
       "xsize":data[1][0],
       "ysize":data[1][1],
-      "type":(args->format?id->conf->type_from_filename("x."+args->format):"image/gif"),
+      "type":(args->format?id->conf->type_from_filename("x."+args->format):"image/png"),
     ])
   ]);
 }
@@ -856,33 +856,32 @@ private mapping mk_gtext_arg(mapping arg, RequestID id)
   m_delete(arg,"width");
   m_delete(arg,"height");
 
+  //  Make format selection explicit since fallback may vary depending on
+  //  encoders present in this installation.
+  if (!arg->format)
+    arg->format = "png";
+
 #if !constant(Image.GIF) || !constant(Image.GIF.encode)
   //  fadein or scroll not supported without GIF
   m_delete(arg, "fadein");
   m_delete(arg, "scroll");
-#endif
-
-  //  Make format selection explicit since fallback may vary depending on
-  //  encoders present in this installation.
-  if (!arg->format)
-#if constant(Image.GIF) && constant(Image.GIF.encode)
-    arg->format = "gif";
 #else
-    arg->format = "jpg";
+  // These features requires the format to be GIF.
+  if (arg->format != "gif") {
+    m_delete(arg, "fadein");
+    m_delete(arg, "scroll");
+  }
 #endif
 
-   foreach(filearg, string tmp)
-     if(arg[tmp]) 
-     {
-       p[tmp]=Roxen.fix_relative(arg[tmp],id);
-       m_delete(arg,tmp);
-     }
+  if ( arg->format == "png" && !arg["true-alpha"] ) {
+    // Everyone wants truealpha if using PNG!
+    arg["true-alpha"]=1;
+  }
 
-//   if(arg->border && has_value(arg->border,","))
-//   {
-//     p->border=arg->border;
-//     m_delete(arg,"border");
-//   }
+  foreach(arg & filearg; string index; string value) {
+    p[index]=Roxen.fix_relative(value,id);
+    m_delete(arg,tmp);
+  }
 
   array i = indices( arg );
   foreach(textarg, string tmp)
