@@ -224,7 +224,7 @@
  Keep n pixels from the beginning of the Y scale.</p>
 </attr>
 
-<attr name=crop value='x1,y1-x2,y2|auto|guides-cross|guides-region'><p>
+<attr name='crop' value='x1,y1-x2,y2|auto|guides-cross|guides-region'><p>
  Crops the image by using several differen methods. The simplest is to only
  specify the area to be cropped with x,y-x,y coordinates. By instead
  selecting "auto" the image will be cropped so that as many pixels as possible
@@ -251,7 +251,6 @@
 <### crop='50,28-150,92'/>
 </ex>
 
- <p>
 </attr>
 
 <h3>Format specific attributes</h3>
