@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.413 2003/11/04 17:18:36 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.414 2003/11/17 17:38:26 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -364,7 +364,13 @@ private void really_set_config(array mod_config)
                   "\r\nContent-Type: text/html\r\n"
                   "Content-Length: 1\r\n\r\nx" );
     my_fd->close();
+#if constant (SSL.sslfile.PACKET_MAX_SIZE)
+    // Necessary since the old SSL.sslfile implementation contains
+    // cyclic refs.
+    destruct (my_fd);
+#else
     my_fd = 0;
+#endif
     end();
   };
 
@@ -843,10 +849,20 @@ void disconnect()
 {
   file = 0;
   conf && conf->connection_drop( this_object() );
-#ifdef REQUEST_DEBUG
-  if (my_fd) 
-    MARK_FD("HTTP my_fd in HTTP disconnected?");
+
+  if (my_fd) {
+    MARK_FD("HTTP closed");
+    CHECK_FD_SAFE_USE;
+    my_fd->close();
+#if constant (SSL.sslfile.PACKET_MAX_SIZE)
+    // Necessary since the old SSL.sslfile implementation contains
+    // cyclic refs.
+    destruct (my_fd);
+#else
+    my_fd = 0;
 #endif
+  }
+
   MERGE_TIMERS(conf);
   if(do_not_disconnect) return;
   destruct();
@@ -893,7 +909,6 @@ void end(int|void keepit)
     o->pipe = pipe;
     o->connection_misc = connection_misc;
     o->kept_alive = kept_alive+1;
-    MARK_FD("HTTP kept alive");
     object fd = my_fd;
     my_fd=0;
     o->chain(fd,port_obj,leftovers);
@@ -904,30 +919,6 @@ void end(int|void keepit)
 
   data_buffer = 0;
   pipe = 0;
-  if(objectp(my_fd))
-  {
-    MARK_FD("HTTP closed");
-    mixed err = catch
-    {
-#if 0
-      // Don't set to blocking mode if SSL.
-      if (!my_fd->CipherSpec)
-	// This causes connections to be closed prematurely, at least on NT.
-#endif
-	my_fd->set_blocking();
-      my_fd->close();
-      destruct(my_fd);
-    };
-#ifdef DEBUG
-    if (err) report_debug ("Close failure (1): %s", describe_backtrace (err));
-#endif
-    err = catch {
-      my_fd = 0;
-    };
-#ifdef DEBUG
-    if (err) report_debug ("Close failure (2): %s", describe_backtrace (err));
-#endif
-  }
   disconnect();
 }
 
@@ -1234,15 +1225,7 @@ void do_log( int|void fsent )
     MERGE_TIMERS(conf);
     if( conf )
       conf->connection_drop( this_object() );
-    mixed err = catch  // paranoia
-    {
-      my_fd->close();
-      destruct( my_fd );
-      destruct( );
-    };
-#ifdef DEBUG
-    if (err) report_debug ("Close failure (3): %s", describe_backtrace (err));
-#endif
+    call_out (disconnect, 0);
     return;
   }
   TIMER_END(do_log);
@@ -1982,16 +1965,8 @@ void got_data(mixed fooid, string s)
     {
       if( conf )
 	conf->connection_drop( this_object() );
-      mixed err = catch  // paranoia
-      {
-	my_fd->set_blocking();
-	my_fd->close();
-	destruct( my_fd );
-	destruct( );
-      };
-#ifdef DEBUG
-      if (err) report_debug ("Close failure (4): %s", describe_backtrace (err));
-#endif
+      MARK_FD ("HTTP: Port closed.");
+      call_out (disconnect, 0);
       return;
     }
 
@@ -2098,7 +2073,6 @@ void got_data(mixed fooid, string s)
     CHECK_FD_SAFE_USE;
     my_fd->set_close_callback(0);
     my_fd->set_read_callback(0);
-    if (my_fd->set_accept_callback) my_fd->set_accept_callback (0);
     processed=1;
 
     remove_call_out(do_timeout);
@@ -2215,6 +2189,13 @@ void got_data(mixed fooid, string s)
     report_error("Internal server error: " + describe_backtrace(err));
     my_fd->set_blocking();
     my_fd->close();
+#if constant (SSL.sslfile.PACKET_MAX_SIZE)
+    // Necessary since the old SSL.sslfile implementation contains
+    // cyclic refs.
+    destruct (my_fd);
+#else
+    my_fd = 0;
+#endif
     disconnect();
   }
 }
@@ -2310,7 +2291,6 @@ static void create(object f, object c, object cc)
 void chain(object f, object c, string le)
 {
   my_fd = f;
-  f->set_nonblocking(0, f->query_write_callback(), end);
   port_obj = c;
   processed = 0;
   do_not_disconnect=-1;		// Block destruction until we return.
@@ -2338,10 +2318,7 @@ void chain(object f, object c, string le)
   {
     if(do_not_disconnect == -1)
       do_not_disconnect = 0;
-    if(!processed)
-    {
-      f->set_nonblocking(got_data, f->query_write_callback(), end);
-    }
+    f->set_nonblocking(!processed && got_data, f->query_write_callback(), end);
   }
 }
 
