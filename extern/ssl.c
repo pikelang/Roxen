@@ -222,7 +222,7 @@ void got_connection(int s, int server_fd)
     if(FD_ISSET(server_fd, &fds)) /* Data from server to client.. */
     {
       amount = read(server_fd, read_buffer, BUFFER);
-      if(amount <= 0)
+      if(amount < 0)
       {
 	switch(errno)
 	{
@@ -232,6 +232,9 @@ void got_connection(int s, int server_fd)
 	  break;
 	}
 	break; /* Exit loop and die */
+      } else if (!amount) {
+	/* End of file */
+	exit(0);
       }
       while((written = SSL_write(con, read_buffer, amount)) == -1)
       {
