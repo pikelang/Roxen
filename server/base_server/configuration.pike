@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.259 2000/02/08 22:12:13 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.260 2000/02/16 07:10:15 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -54,6 +54,7 @@ string name;
 
 mapping variables = ([]);
 
+int inited;
 
 string get_doc_for( string region, string variable )
 {
@@ -2835,8 +2836,10 @@ private string get_my_url()
 
 void enable_all_modules()
 {
-  enabled_modules = retrieve("EnabledModules", this_object());
+  inited = 1;
 
+  add_parse_module( (object)this_object() );
+  enabled_modules = retrieve("EnabledModules", this_object());
   object ec = roxenloader.LowErrorContainer();
   roxenloader.push_compile_error_handler( ec );
 
@@ -2874,7 +2877,6 @@ void enable_all_modules()
 
 void create(string config)
 {
-  add_parse_module( (object)this_object() );
   name=config;
 
   defvar("comment", "", "Virtual server comment",
@@ -3227,8 +3229,6 @@ multiplicera detta värde med den här faktorn.");
 
 
   setvars(retrieve("spider#0", this_object()));
-
-  report_notice("Creating virtual server '"+query_name()+"'\n");
 
   if (query("throttle"))
   {

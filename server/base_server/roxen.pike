@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.429 2000/02/15 14:13:47 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.430 2000/02/16 07:10:15 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -594,113 +594,8 @@ void stop_handler_threads()
     }
     sleep(0.1);
   }
-
 }
-#endif /* THREADS */
 
-class fallback_redirect_request
-{
-  string in = "";
-  string out;
-  string default_prefix;
-  int port;
-  Stdio.File f;
-
-  void die()
-  {
-    SSL3_WERR(sprintf("fallback_redirect_request::die()"));
-#if 0
-    /* Close the file, DAMMIT */
-    Stdio.File dummy = Stdio.File();
-    if (dummy->open("/dev/null", "rw"))
-      dummy->dup2(f);
-#endif
-    f->close();
-    destruct(f);
-    destruct(this_object());
-  }
-
-  void write_callback(object id)
-  {
-    SSL3_WERR(sprintf("fallback_redirect_request::write_callback()"));
-    int written = id->write(out);
-    if (written <= 0)
-      die();
-    out = out[written..];
-    if (!strlen(out))
-      die();
-  }
-
-  void read_callback(object id, string s)
-  {
-    SSL3_WERR(sprintf("fallback_redirect_request::read_callback(X, \"%s\")\n", s));
-    in += s;
-    string name;
-    string prefix;
-
-    if (search(in, "\r\n\r\n") >= 0)
-    {
-//      werror("request = '%s'\n", in);
-      array(string) lines = in / "\r\n";
-      array(string) req = replace(lines[0], "\t", " ") / " ";
-      if (sizeof(req) < 2)
-      {
-	out = "HTTP/1.0 400 Bad Request\r\n\r\n";
-      }
-      else
-      {
-	if (sizeof(req) == 2)
-	{
-	  name = req[1];
-	}
-	else
-	{
-	  name = req[1..sizeof(req)-2] * " ";
-	  foreach(map(lines[1..], `/, ":"), array header)
-	  {
-	    if ( (sizeof(header) >= 2) &&
-		 (lower_case(header[0]) == "host") )
-	      prefix = "https://" + header[1] - " ";
-	  }
-	}
-	if (prefix) {
-	  if (prefix[-1] == '/')
-	    prefix = prefix[..strlen(prefix)-2];
-	  prefix = prefix + ":" + port;
-	} else {
-	  /* default_prefix (aka MyWorldLocation) already contains the
-	   * portnumber.
-	   */
-	  if (!(prefix = default_prefix)) {
-	    /* This case is most unlikely to occur,
-	     * but better safe than sorry...
-	     */
-	    string ip = (f->query_address(1)/" ")[0];
-	    prefix = "https://" + ip + ":" + port;
-	  } else if (prefix[..4] == "http:") {
-	    /* Broken MyWorldLocation -- fix. */
-	    prefix = "https:" + prefix[5..];
-	  }
-	}
-	out = sprintf("HTTP/1.0 301 Redirect to secure server\r\n"
-		      "Location: %s%s\r\n\r\n", prefix, name);
-      }
-      f->set_read_callback(0);
-      f->set_write_callback(write_callback);
-    }
-  }
-
-  void create(object socket, string s, string l, int p)
-  {
-    SSL3_WERR(sprintf("fallback_redirect_request(X, \"%s\", \"%s\", %d)", s, l||"CONFIG PORT", p));
-    f = socket;
-    default_prefix = l;
-    port = p;
-    f->set_nonblocking(read_callback, 0, die);
-    f->set_id(f);
-    read_callback(f, s);
-  }
-}
 
 mapping get_port_options( string key )
 {
@@ -715,6 +610,7 @@ void set_port_options( string key, mapping value )
   save( );
 }
 
+#endif /* THREADS */
 class Protocol
 {
   inherit Stdio.Port: port;
@@ -768,7 +664,8 @@ class Protocol
 
   object find_configuration_for_url( string url, RequestID id )
   {
-//     werror("find configuration for '"+url+"'\n");
+//  werror("find configuration for '"+url+"'\n");
+    object c;
     foreach( sorted_urls, string in )
     {
       if( glob( in+"*", url ) )
@@ -778,12 +675,14 @@ class Protocol
 	  id->not_query = id->not_query[strlen(urls[in]->path)..];
           id->misc->site_prefix_path = urls[in]->path;
         }
-	return urls[ in ]->conf;
+        if(!(c=urls[ in ]->conf)->inited) c->enable_all_modules();
+	return c;
       }
     }
     // Ouch.
     id->misc->defaulted=1;
-    return values( urls )[0]->conf;
+    if(!(c=values(urls)[0]->conf)->inited) c->enable_all_modules();
+    return c;
   }
 
   mixed query_option( string x )
@@ -1272,6 +1171,111 @@ class HTTPS
   constant requesthandlerfile = "protocols/http.pike";
   constant default_port = 443;
 
+
+  class fallback_redirect_request
+  {
+    string in = "";
+    string out;
+    string default_prefix;
+    int port;
+    Stdio.File f;
+
+    void die()
+    {
+      SSL3_WERR(sprintf("fallback_redirect_request::die()"));
+#if 0
+      /* Close the file, DAMMIT */
+      Stdio.File dummy = Stdio.File();
+      if (dummy->open("/dev/null", "rw"))
+        dummy->dup2(f);
+#endif
+      f->close();
+      destruct(f);
+      destruct(this_object());
+    }
+
+    void write_callback(object id)
+    {
+      SSL3_WERR(sprintf("fallback_redirect_request::write_callback()"));
+      int written = id->write(out);
+      if (written <= 0)
+        die();
+      out = out[written..];
+      if (!strlen(out))
+        die();
+    }
+
+    void read_callback(object id, string s)
+    {
+      SSL3_WERR(sprintf("fallback_redirect_request::read_callback(X, \"%s\")\n", s));
+      in += s;
+      string name;
+      string prefix;
+
+      if (search(in, "\r\n\r\n") >= 0)
+      {
+        //      werror("request = '%s'\n", in);
+        array(string) lines = in / "\r\n";
+        array(string) req = replace(lines[0], "\t", " ") / " ";
+        if (sizeof(req) < 2)
+        {
+          out = "HTTP/1.0 400 Bad Request\r\n\r\n";
+        }
+        else
+        {
+          if (sizeof(req) == 2)
+          {
+            name = req[1];
+          }
+          else
+          {
+            name = req[1..sizeof(req)-2] * " ";
+            foreach(map(lines[1..], `/, ":"), array header)
+            {
+              if ( (sizeof(header) >= 2) &&
+                   (lower_case(header[0]) == "host") )
+                prefix = "https://" + header[1] - " ";
+            }
+          }
+          if (prefix) {
+            if (prefix[-1] == '/')
+              prefix = prefix[..strlen(prefix)-2];
+            prefix = prefix + ":" + port;
+          } else {
+            /* default_prefix (aka MyWorldLocation) already contains the
+             * portnumber.
+             */
+            if (!(prefix = default_prefix)) {
+              /* This case is most unlikely to occur,
+               * but better safe than sorry...
+               */
+              string ip = (f->query_address(1)/" ")[0];
+              prefix = "https://" + ip + ":" + port;
+            } else if (prefix[..4] == "http:") {
+              /* Broken MyWorldLocation -- fix. */
+              prefix = "https:" + prefix[5..];
+            }
+          }
+          out = sprintf("HTTP/1.0 301 Redirect to secure server\r\n"
+                        "Location: %s%s\r\n\r\n", prefix, name);
+        }
+        f->set_read_callback(0);
+        f->set_write_callback(write_callback);
+      }
+    }
+
+    void create(object socket, string s, string l, int p)
+    {
+      SSL3_WERR(sprintf("fallback_redirect_request(X, \"%s\", \"%s\", %d)", s, l||"CONFIG PORT", p));
+      f = socket;
+      default_prefix = l;
+      port = p;
+      f->set_nonblocking(read_callback, 0, die);
+      f->set_id(f);
+      read_callback(f, s);
+    }
+  }
+
 #if constant(SSL.sslfile)
   class http_fallback {
     object my_fd;
@@ -1315,7 +1319,6 @@ class HTTPS
     void create(object fd)
     {
       my_fd = fd;
-
       fd->set_alert_callback(ssl_alert_callback);
       fd->set_accept_callback(ssl_accept_callback);
     }
@@ -1497,7 +1500,6 @@ void sort_urls()
 int register_url( string url, object conf )
 {
   if (!sizeof (url - " " - "\t")) return 1;
-  report_notice("Register "+url+" for "+conf->query_name()+"\n");
   string protocol;
   string host;
   int port;
@@ -1606,6 +1608,7 @@ int register_url( string url, object conf )
     return 0;
   }
   sort_urls();
+  report_notice("Registered "+url+" for "+conf->query_name()+"\n");
   return 1;
 }
 
@@ -2797,7 +2800,6 @@ object enable_configuration(string name)
 {
   object cf = Configuration( name );
   configurations += ({ cf });
-  report_notice( LOCALE->enabled_server(name) );
   return cf;
 }
 
@@ -2808,16 +2810,21 @@ void enable_configurations()
   configurations = ({});
 
   foreach(list_all_configurations(), string config)
+  {
+    int t = gethrtime();
+    report_debug("\nEnabling the configuration "+config+" ...\n");
     if(err=catch( enable_configuration(config)->start() ))
-      report_error("Error while loading configuration "+config+":\n"+
+      report_error("\nError while loading configuration "+config+":\n"+
                    describe_backtrace(err)+"\n");
+    report_debug("Enabled "+config+" in %.1fms\n", (gethrtime()-t)/1000.0 );
+  }
 }
 
-
+int all_modules_loaded;
 void enable_configurations_modules()
 {
   mixed err;
-
+  all_modules_loaded = 1;
   foreach(configurations, object config)
     if(err=catch( config->enable_all_modules() ))
       report_error("Error while loading modules in configuration "+
@@ -3053,6 +3060,30 @@ void dump( string file )
 
 program slowpipe, fastpipe;
 
+void initiate_argcache()
+{
+  int t = gethrtime();
+  report_debug( "Initiating argument cache ... ");
+  int id;
+  string cp = QUERY(argument_cache_dir), na = "args";
+  if( QUERY(argument_cache_in_db) )
+  {
+    id = 1;
+    cp = QUERY(argument_cache_db_path);
+    na = "argumentcache";
+  }
+  mixed e;
+  e = catch( argcache = ArgCache(na,cp,id) );
+  if( e )
+  {
+    report_error( "Failed to initialize the global argument cache:\n"
+                  + (describe_backtrace( e )/"\n")[0]+"\n");
+    report_debug( describe_backtrace( e ) );
+  }
+  add_constant( "roxen.argcache", argcache );
+  report_debug("Done [%.2fms]\n", (gethrtime()-t)/1000.0);
+}
+
 int main(int argc, array tmp)
 {
   array argv = tmp;
@@ -3125,6 +3156,8 @@ int main(int argc, array tmp)
 #endif
   init_garber();
   initiate_supports();
+  initiate_argcache();
+
   enable_configurations();
 
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
@@ -3132,28 +3165,7 @@ int main(int argc, array tmp)
   create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE")
 		  || QUERY(pidfile));
 
-  report_debug("Initiating argument cache ... ");
-
-  int id;
-  string cp = QUERY(argument_cache_dir), na = "args";
-  if( QUERY(argument_cache_in_db) )
-  {
-    id = 1;
-    cp = QUERY(argument_cache_db_path);
-    na = "argumentcache";
-  }
-  mixed e;
-  e = catch( argcache = ArgCache(na,cp,id) );
-  if( e )
-  {
-    report_error( "Failed to initialize the global argument cache:\n"
-                  + (describe_backtrace( e )/"\n")[0]+"\n");
-    report_debug( describe_backtrace( e ) );
-  }
-  report_debug( "\n" );
-  add_constant( "roxen.argcache", argcache );
-
-  enable_configurations_modules();
+//   enable_configurations_modules();
 
   call_out(update_supports_from_roxen_com,
 	   QUERY(next_supports_update)-time());
