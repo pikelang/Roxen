@@ -1,9 +1,12 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+/* This is a roxen module. (c) Informationsvävarna AB 1996.
+ *
+ * Index files only module, a directory module that will not try to
+ * generate any directory listings, instead only using index files.
+ */
 
-// Index files only module, a directory module that will not try to
-// generate any directory listings, instead only using index files.
+constant cvs_version = "$Id: indexfiles.pike,v 1.5 1997/08/31 03:47:17 peter Exp $";
+constant thread_safe=1;
 
-string cvs_version = "$Id: indexfiles.pike,v 1.4 1996/12/02 04:32:38 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -54,5 +57,3 @@ mapping parse_directory(object id)
   id->not_query = oq;
   return 0;
 }
-
-

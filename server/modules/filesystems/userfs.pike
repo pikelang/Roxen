@@ -8,7 +8,9 @@
 // / is quite useful for IPPs, enabling them to have URLs like
 // http://www.hostname.of.provider/customer/.
 
-string cvs_version = "$Id: userfs.pike,v 1.15 1997/08/23 16:56:39 grubba Exp $";
+string cvs_version = "$Id: userfs.pike,v 1.16 1997/08/31 03:47:21 peter Exp $";
+ 
+
 #include <module.h>
 
 inherit "filesystem";
@@ -62,6 +64,7 @@ void create()
 
 void start()
 {
+  path="";
   // This is needed to override the inherited filesystem module start().
 }
 
@@ -111,25 +114,25 @@ mixed find_file(string f, object got)
       return 0;
 
     if(us[5][-1] != '/')
-	path = us[ 5 ] + "/" + QUERY(pdir);
+	f = us[ 5 ] + "/" + QUERY(pdir) + f;
     else	
-      path = us[ 5 ] + QUERY(pdir);
+      f = us[ 5 ] + QUERY(pdir) + f;
 
     //  if public dir is not a directory 
     if(!strlen(f)) {
-      st = file_stat(path + f);
+      st = file_stat(f);
       if(!st || st[1] != -2)
 	return 0;
     }
 
     if(QUERY(own))
     {
-      st = file_stat(path + f);
+      st = file_stat(f);
       if(!st || (st[-2] != (int)us[2])) 
         return 0;
     }
     if(QUERY(useuserid))
-      got->misc->is_user = path;
+      got->misc->is_user = f;
     return ::find_file( f, got );
   }
   return 0;
@@ -156,14 +159,14 @@ string real_file( mixed f, mixed id )
     if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
     if(search(QUERY(banish_list), u) != -1)             return 0;
     if(us[5][-1] != '/')
-      path = us[ 5 ] + "/" + QUERY(pdir);
+      f = us[ 5 ] + "/" + QUERY(pdir) + f;
     else
-      path = us[ 5 ] + QUERY(pdir);
+      f = us[ 5 ] + QUERY(pdir) + f;
 
-    fs = file_stat(path + f);
+    fs = file_stat( f );
     // FIXME: Should probably have a look at this code.
     if (fs && ((fs[1] >= 0) || (fs[1] == -2)))
-      return path+f;
+      return f;
   }
   return 0;
 }
@@ -193,9 +196,9 @@ array find_dir(string f, object got)
     if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
     if(search(QUERY(banish_list), u) != -1)             return 0;
     if(us[5][-1] != '/')
-      path = us[ 5 ] + "/" + QUERY(pdir);
+      f = us[ 5 ] + "/" + QUERY(pdir) + f;
     else
-      path = us[ 5 ] + QUERY(pdir);
+      f = us[ 5 ] + QUERY(pdir) + f;
     return ::find_dir(f, got);
   }
   return (roxen->userlist(got) - QUERY(banish_list));
@@ -222,10 +225,10 @@ mixed stat_file( mixed f, mixed id )
     if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
     if(search(QUERY(banish_list), u) != -1)             return 0;
     if(us[5][-1] != '/')
-      path = us[ 5 ] + "/" + QUERY(pdir);
+      f = us[ 5 ] + "/" + QUERY(pdir) + f;
     else
-      path = us[ 5 ] + QUERY(pdir);
-    st = file_stat(path + f);
+      f = us[ 5 ] + QUERY(pdir) + f;
+    st = file_stat( f );
     if(!st) return st;
     if(QUERY(own) && (int)us[2] != st[-2]) return 0;
     return st;

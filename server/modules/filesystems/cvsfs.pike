@@ -5,7 +5,8 @@
  * Written by Niels Möller 1997
  */
 
-string cvs_version = "$Id: cvsfs.pike,v 1.11 1997/08/19 07:03:31 per Exp $";
+constant cvs_version = "$Id: cvsfs.pike,v 1.12 1997/08/31 03:47:18 peter Exp $";
+constant thread_safe=1;
 
 #include <module.h>
 #include <roxen.h>

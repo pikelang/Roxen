@@ -1,7 +1,7 @@
 /*
- * $Id: restrictedfs.pike,v 1.5 1997/08/12 14:44:32 grubba Exp $
+ * $Id: restrictedfs.pike,v 1.6 1997/08/31 03:47:20 peter Exp $
  *
- * $Author: grubba $
+ * $Author: peter $
  *
  * Implements a restricted filesystem.
  * This filesystem only allows accesses to files that are a prefix of
@@ -11,14 +11,14 @@
  * Thanks to Zsolt Varga <redax@agria.hu> for the idea.
  */
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.5 1997/08/12 14:44:32 grubba Exp $";
+inherit "filesystem";
+
+string cvs_version = "$Id: restrictedfs.pike,v 1.6 1997/08/31 03:47:20 peter Exp $";
 
 #include <module.h>
 #include <roxen.h>
 
 import Array;
-
-inherit "filesystem";
 
 mixed *register_module()
 {
@@ -120,4 +120,3 @@ mixed find_file(string f, object id)
     return(::find_file(f, id));
   }
 }
-

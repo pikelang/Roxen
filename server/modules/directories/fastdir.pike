@@ -1,8 +1,12 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+/* This is a roxen module. (c) Informationsvävarna AB 1996.
+ *
+ * A fast directory module, without support for the fold/unfold stuff
+ * in the normal one.
+ */
 
-// A fast directory module, without support for the fold/unfold stuff
-// in the normal one.
-constant cvs_version = "$Id: fastdir.pike,v 1.9 1997/08/14 22:18:51 grubba Exp $";
+constant cvs_version = "$Id: fastdir.pike,v 1.10 1997/08/31 03:47:17 peter Exp $";
+int thread_safe=1;
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

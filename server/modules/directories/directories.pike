@@ -1,19 +1,22 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+/* This is a roxen module. (c) Informationsvävarna AB 1996.
+ * A quite complex directory module. Generates macintosh like listings.
+ */
 
-// A quite complex directory module. Generates macintosh like listings.
-string cvs_version = "$Id: directories.pike,v 1.16 1997/08/31 02:45:39 per Exp $";
+string cvs_version = "$Id: directories.pike,v 1.17 1997/08/31 03:47:15 peter Exp $";
+int thread_safe=1;   /* Probably. Check _root */
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 /************** Generic module stuff ***************/
-int idi;
+int nocache;
 
 
 class Dirnode
 {
   string prefix;
-  int finished, idi=time();
+  int finished, nocache=time();
   array stat;
   inherit "base_server/struct/node";
 
@@ -43,7 +46,7 @@ class Dirnode
 
   inline string blink(string a,string b) 
   { 
-    return ("<a href="+(b+"?"+(idi++))+">"+(a)); 
+    return ("<a href="+(b+"?"+(nocache++))+">"+(a)); 
   }
 
   // string path(int i)
@@ -70,10 +73,10 @@ class Dirnode
     if(stat[1]<0) lname+="/";
     if(folded)
       return linkname(link(configimage("unfold"), "/(diract,unfold)" +
-			   name+"?"+(idi++)) + blink(s, lname), name);
+			   name+"?"+(nocache++)) + blink(s, lname), name);
     else
       return linkname(link(configimage("fold"), "/(diract,fold)"+name+"?"
-			    +(idi++))
+			    +(nocache++))
 		      + blink(s, name), name);
   }
 
@@ -383,7 +386,7 @@ mapping standard_redirect(object o, object id)
     loc=((((((id->referer*" ")/"#")[0])/"?")[0])+"#"+o->path(1));
   else
     if(o->up)
-      loc = o->up->path(1) + ".?" + (idi++) + "#" + o->path(1);
+      loc = o->up->path(1) + ".?" + (nocache++) + "#" + o->path(1);
     else
       return http_redirect("/.", id);
   return http_redirect(loc,id);

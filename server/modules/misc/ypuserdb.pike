@@ -3,7 +3,8 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: ypuserdb.pike,v 1.5 1997/06/09 18:55:03 grubba Exp $";
+constant cvs_version = "$Id: ypuserdb.pike,v 1.6 1997/08/31 03:47:24 peter Exp $";
+constant thread_safe=1;
 
 #include <module.h>
 inherit "module";

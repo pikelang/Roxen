@@ -1,6 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
  
-string cvs_version = "$Id: ip-less_hosts.pike,v 1.5 1997/08/31 02:45:41 per Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.6 1997/08/31 03:47:22 peter Exp $";
+constant thread_safe=1;
 
 #include <module.h>
 inherit "module";

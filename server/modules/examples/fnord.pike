@@ -1,7 +1,13 @@
 // This is a small sample module.  It is intended to show a simple example
 // of a container.
  
-string cvs_version = "$Id: fnord.pike,v 1.3 1996/12/02 04:32:39 per Exp $";
+// This variable is shown in the configinterface as the varion of the module.
+string cvs_version = "$Id: fnord.pike,v 1.4 1997/08/31 03:47:18 peter Exp $";
+
+// Tell Roxen that this module is threadsafe. That is there is no
+// request specific data in global variables.
+int thread_safe=1;
+
 #include <module.h>
 inherit "module";
  
@@ -90,7 +96,5 @@ array register_module()
 }
  
 // This is nessesary functions for all MODULE_PARSER modules.
-
-mapping query_tag_callers() { return ([]); }
 mapping query_container_callers() { return (["fnord":tag_fnord,]); }
  

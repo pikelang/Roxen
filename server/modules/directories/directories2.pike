@@ -1,12 +1,14 @@
 /*
- * $Id: directories2.pike,v 1.4 1997/08/14 22:18:50 grubba Exp $
+ * $Id: directories2.pike,v 1.5 1997/08/31 03:47:16 peter Exp $
  *
  * Directory listings mark 2
  *
  * Henrik Grubbström 1997-02-13
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.4 1997/08/14 22:18:50 grubba Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.5 1997/08/31 03:47:16 peter Exp $";
+constant thread_safe=1;
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -175,7 +177,7 @@ string describe_directory(string d, object id)
     string type = "Unknown";
     string icon;
     int len = stats?stats[1]:0;
-	
+
     // werror(sprintf("stat_file(\"%s\")=>%O\n", d+file, stats));
 
     switch(-len) {

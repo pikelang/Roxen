@@ -14,8 +14,8 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.40 1997/08/31 02:49:24 peter Exp $";
-constant constant thread_safe=1;
+constant cvs_version = "$Id: htmlparse.pike,v 1.41 1997/08/31 03:47:25 peter Exp $";
+constant thread_safe=1;
 
 #include <config.h>
 #include <module.h>

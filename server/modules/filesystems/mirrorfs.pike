@@ -1,3 +1,6 @@
+constant cvs_version="$Id: mirrorfs.pike,v 1.7 1997/08/31 03:47:20 peter Exp $";
+constant thread_safe=1;
+
 import RoxenRPC;
 #include <roxen.h>
 #include <module.h>
@@ -44,7 +47,7 @@ object rpc(int|void force)
       s = ({ s[0], "80" });
     }
     if (catch {
-      _rpc = Client(s[0],(int)s[1],"mirror");
+      _rpc = Client(s[0],(int)s[1],"mirror",1);
     }) {
       _rpc = 0;
       perror("mirrorfs:Failed to connect to server %s:%s\n",

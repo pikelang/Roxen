@@ -4,7 +4,9 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.20 1997/08/12 19:47:54 grubba Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.21 1997/08/31 03:47:19 peter Exp $";
+int thread_safe=1;
+
 
 #include <module.h>
 #include <roxen.h>
@@ -436,4 +438,3 @@ string query_name()
   return sprintf("<i>%s</i> mounted on <i>%s</i>", query("searchpath"),
 		 query("mountpoint"));
 }
-

@@ -3,7 +3,9 @@
 // A somewhat more secure version of the normal filesystem. This
 // module user regular expressions to regulate the access of files.
 
-string cvs_version = "$Id: secure_fs.pike,v 1.6 1997/02/13 13:01:07 per Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.7 1997/08/31 03:47:21 peter Exp $";
+constant thread_safe=1;
+
 #include <module.h>
 inherit "filesystem";
 

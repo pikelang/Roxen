@@ -1,7 +1,9 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.11 1997/08/19 07:05:14 peter Exp $";
+string cvs_version = "$Id: language.pike,v 1.12 1997/08/31 03:47:23 peter Exp $";
+/* Is threadsafe. Probably. */
+
 
 array register_module()
 {
@@ -141,7 +143,7 @@ void start()
       tmpl = tmp / " " - ({ "" });
       if (sizeof( tmpl ) >= 2)
       {
-	language_data[ tmpl[0] ] = ({ tmpl[1], tmpl[2..17000] });
+	language_data[ tmpl[0] ] = ({ tmpl[1], tmpl[2..] });
 	language_order += ({ tmpl[0] });
       }
     }
