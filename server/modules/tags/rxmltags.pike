@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.305 2001/09/20 21:11:14 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.306 2001/09/21 09:25:11 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1722,7 +1722,7 @@ class TagMaketag {
 	result = "<!--" + content + "-->";
 	break;
       case "cdata":
-	result = "<![CDATA[" + content + "]]>";
+	result = "<![CDATA[" + content/"]]>"*"]]]]><![CDATA[>" + "]]>";
 	break;
       }
       id->misc->makeargs = old_args;
