@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pike,v 1.7 1999/09/20 20:33:20 nilsson Exp $
+ * $Id: standard.pike,v 1.8 1999/10/04 11:16:42 nilsson Exp $
  */
 
 constant selected = 1;
@@ -12,6 +12,8 @@ constant modules = ({
   "htaccess#0",
   "rxmlparse#0",
   "rxmltags#0",
+  "ssi#0",
+  "accessed#0",
   "directories#0",
   "userdb#0",
   "userfs#0",
