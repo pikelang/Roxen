@@ -23,12 +23,17 @@ array(string) verify_set( string new_value ) {
   sscanf(domain,
 	 "%*[abcdefghijklmnopqrstuvwxyz0123456789.-_]%s", tmp); // More characters?
   if(sizeof(tmp))
-    return ({ "The email address domain contains forbidden characters", new_value });
+    return ({ "The email address domain contains forbidden characters.", new_value });
 
   sscanf(lower_case(user),
 	 "%*[abcdefghijklmnopqrstuvwxyz0123456789.-_]%s", tmp); // More characters?
   if(sizeof(tmp))
-    return ({ "The email address user contains forbidden characters", new_value });
+    return ({ "The email address user contains forbidden characters.", new_value });
+
+  if( !sizeof( user ))
+    return({ "The email address does not contain a user.", new_value });
+  if( !sizeof( domain ))
+    return({ "The email address does not contain a domain.", new_value });
 
   if(user[0]=='.')
     return ({ "The email address begins with an character that is not legal in that position.",
@@ -39,11 +44,8 @@ array(string) verify_set( string new_value ) {
     return ({ "Du ska inte ha något!", "krukon@pugo.org" });
 #endif
 
-  if(check_domain) {
-    string dns=Protocols.DNS.client()->get_primary_mx(domain);
-    if(!dns)
-      return ({ "The domain "+domain+" could not be found.", new_value });
-  }
+  if(check_domain && !Protocols.DNS.client()->get_primary_mx(domain))
+    return ({ "The domain "+domain+" could not be found.", new_value });
   // We could perhaps take this a step further and ask the mailserver if the account is present.
 
   return ({ 0, new_value });
