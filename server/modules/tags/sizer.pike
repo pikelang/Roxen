@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.2 2000/12/08 03:02:37 per Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.3 2000/12/13 06:42:06 per Exp $";
 #include <module.h>
 inherit "module";
 
@@ -10,7 +10,7 @@ inherit "module";
   
 
 constant module_type = MODULE_TAG;
-LocaleString module_name_locale = _(0,"Page sizer");
+LocaleString module_name_locale = _(1,"Page sizer");
 
 LocaleString module_doc_locale  =
   _(2,"This module provides the <tt>&lt;page-size&gt;</tt> tag that "

@@ -8,7 +8,7 @@
 
 array selections =
 ({
-  ({ LOCALE(0, "Home"),      "hype",      "",                 0 }),
+  ({ LOCALE(358, "Home"),      "hype",      "",                 0 }),
   ({ LOCALE(212, "Admin"),   "home",     "settings.html",   0 }),
   ({ LOCALE(213, "Sites"),   "sites",     "sites/", "View Settings" }),
   ({ LOCALE(214, "Globals"), "globals",   "global_settings/","View Settings"}),

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_sizer</project>
+<language>eng</language>
+<file>../modules/tags/sizer.pike</file>
+
+<str id="1">
+<o>Page sizer</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>This module provides the &lt;tt&gt;&amp;lt;page-size&amp;gt;&lt;/tt&gt; tag that calculates the size of a page, including inline images, and gives estimates of the time it will take to download the page.</o>
+<t></t>
+</str>

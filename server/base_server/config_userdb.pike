@@ -200,7 +200,7 @@ class ConfigurationSettings
     {
       if( !bdata[box] )  possible();
       if( !bdata[box] )
-        return sprintf((string)LOCALE(0,"Unknown box %s"),box);
+        return sprintf((string)LOCALE(283,"Unknown box %s"),box);
       return (string)bdata[box]->name;
     }
 
@@ -259,18 +259,18 @@ class ConfigurationSettings
     };
 
     defvar( "left_boxes",
-            BoxVariable( LOCALE(0,"Large Content Boxes"),
-                         LOCALE(0,"Content boxes on the Startpage"),
+            BoxVariable( LOCALE(285,"Large Content Boxes"),
+                         LOCALE(287,"Content boxes on the Startpage"),
                          "large" ) );
 
     defvar( "right_boxes",
-            BoxVariable( LOCALE(0,"Small Content Boxes"),
-                         LOCALE(0,"Content boxes on the Startpage"),
+            BoxVariable( LOCALE(289,"Small Content Boxes"),
+                         LOCALE(287,"Content boxes on the Startpage"),
                          "small" ) );
 
     defvar( "theme", ThemeVariable( "default", 0,
-                                    LOCALE(0,"Theme"),
-                                    LOCALE(0,"The theme to use") ) );
+                                    LOCALE(327,"Theme"),
+                                    LOCALE(343,"The theme to use") ) );
     defvar( "configlistmode", 0,
             LOCALE(278, "Compact site list" ),
             TYPE_FLAG,
