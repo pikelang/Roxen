@@ -1,5 +1,5 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
-// $Id: flik.pike,v 1.3 1997/01/20 05:08:15 law Exp $
+// $Id: flik.pike,v 1.4 1997/03/08 18:15:56 peter Exp $
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -16,7 +16,7 @@
 
 // made by Pontus Hagland <law@infovav.se> december -96
 
-string cvs_version = "$Id: flik.pike,v 1.3 1997/01/20 05:08:15 law Exp $";
+string cvs_version = "$Id: flik.pike,v 1.4 1997/03/08 18:15:56 peter Exp $";
 #include <module.h>
 
 inherit "module";
@@ -114,13 +114,13 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
    if (flcache[id->not_query][id->variables->fl][m->id]==1)
    {
       return "<!--"+m->id+"-->"
-	     "<a href="+encode_url(id,m->id,2)+">"
+	     "<a href='"+encode_url(id,m->id,2)+"'>"
 	     "<img width=20 height=20 src=internal-roxen-unfold border=0></a>"+cont;
    }
    else
    {
       return "<!--"+m->id+"-->"
-	     "<a href="+encode_url(id,m->id,1)+">"
+	     "<a href='"+encode_url(id,m->id,1)+"'>"
 	     "<img width=20 height=20 src=internal-roxen-fold border=0></a>"
              +cont;
    }
