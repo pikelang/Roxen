@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.49 1998/01/17 02:57:33 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.50 1998/01/20 02:15:06 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -30,7 +30,11 @@ int kept_alive;
 #undef SPEED_MAX
 
 #undef QUERY
-#define QUERY(X) _query("X")
+#if constant(cpp)
+#define QUERY(X)	_query( #X )
+#else /* !constant(cpp) */
+#define QUERY(X) 	_query("X")
+#endif /* constant(cpp) */
 
 int time;
 string raw_url;
