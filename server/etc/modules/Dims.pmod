@@ -1,4 +1,4 @@
-//   $Id: Dims.pmod,v 1.2 1998/02/04 13:58:55 js Exp $
+//   $Id: Dims.pmod,v 1.3 1998/02/04 14:01:51 js Exp $
 //
 //   Imagedimensionreadermodule for Pike.
 //   Created by Johan Schön, <js@idonex.se>.
@@ -192,8 +192,8 @@ class dims
     return ({ image_width, image_height });
   }
 
-  // Read dimensions from a JPEG or GIF file and either return an array with
-  // width and height or 0.
+  // Read dimensions from a JPEG, GIF or PNG file and return an array with
+  // width and height, or if the file isn't a valid image, 0.
   array get(string|object fn)
   {
     if(stringp(fn))
