@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.119 1999/03/22 19:48:51 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.120 1999/03/22 19:50:12 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -571,7 +571,7 @@ class imap_mail
 
 	/* Section should be HEADER.FIELDS or HEADER.FIELDS.NOT.
 	 * Options should be a list of atoms corresponding to header names. */
-	if (attr->section[1] != "fields")
+	if (lower_case(attr->section[1]) != "fields")
 	  throw("Invalid section");
 	  
 	if (sizeof(attr->options) != 1)
