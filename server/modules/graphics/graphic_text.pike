@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.105 1998/02/22 18:19:05 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.106 1998/02/22 20:10:15 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1004,6 +1004,10 @@ array(int)|string write_text(int _args, string text, int size, object id)
   cache_set(key, text, 0);
   throw(err);
 }
+
+mapping find_file(string f, object rid); // Pike 0.5...
+void restore_cached_args(); // Pike 0.5...
+
 
 array stat_file(string f, object rid)
 {
