@@ -44,11 +44,6 @@ string describe_location( RoxenModule m, RequestID id )
 		   : mp || "";
 }
 
-// string make_if( string q )
-// {
-//   return "<if "+q+"=?></if>";
-// }
-
 string simplified_make_container( string tagname, mapping args, string c )
 {
   return Roxen.make_tag(tagname, args)+Roxen.make_tag("/",([]));
@@ -358,39 +353,6 @@ string find_module_doc( string cn, string mn, RequestID id )
                   ({ "/image/", }), ({ "/internal-roxen-" }));
 }
 
-string initial_vars( RequestID id, string conf, array(string) modules )
-{
-  while( id->misc->orig )
-    id = id->misc->orig;
-
-  Configuration c = roxen->find_configuration( conf );
-
-  array(string) rets=({});
-  foreach(modules, string module) {
-    RoxenModule m = c->find_module( replace(module, "!", "#") );
-    rets+=({ "Initial variables for "+ EC(TRANSLATE(m->register_module()[1])) + ":<br /><br />" +
- #"<nooutput>
-  This is necessary to update all the variables before showing them.
-  <emit source=module-variables configuration=\""+
-   conf+"\" section=\"&form.section;\" module=\""+module+#"\">
-   </emit>
-</nooutput>
-<table>
-  <emit source=module-variables configuration=\""+
-   conf+"\" section=\"&form.section;\" module=\""+module+#"\">
-    <tr><td width=20%><b>&_.name;</b></td><td>&_.form:none;</td></tr>
-    <tr><td colspan=2>&_.doc:none;<p>&_.type_hint;</td></tr>
-  </emit>
-</table>" });
-  }
-
-  return "<input type=\"hidden\" name=\"initial\" value=\"1\" />"
-    "<input type=\"hidden\" name=\"mod\" value=\""+modules*","+"\" >"
-    "<cf-save what='Module'/><br clear=\"all\" />"+
-    rets*"\n<hr noshadow=\"\" size=\"1\" width=\"90%\" />\n"+
-    "<cf-save what='Module'/>";
-}
-
 string module_page( RequestID id, string conf, string module )
 {
   while( id->misc->orig )
@@ -538,8 +500,6 @@ string parse( RequestID id )
        break;
 
      default:
-       if(id->variables->initial) 
-         return initial_vars( id, path[0], id->variables->mod/"," );
        return module_page( id, path[0], path[1] );
     }
   }

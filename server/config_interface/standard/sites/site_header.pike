@@ -11,10 +11,13 @@ string module_global_page( RequestID id, Configuration conf )
 
 string module_page( RequestID id, string conf, string module )
 {
-  /* return tabs for module ... */
-  return replace( #string "module_variables.html",
-                 ({"¤_url¤","¤_config¤", "¤module¤" }),
-                 ({ "", conf, module }) );
+  return 
+#"<emit source='module-variables-sections'
+  configuration='"+conf+#"'
+  module='"+module+#"'>
+   <tab ::='&_.first; &_.last; &_.selected;'
+        href='?section=&_.section;'>&_.sectionname;</tab>
+</emit>";
 }
 
 
@@ -74,9 +77,12 @@ string parse( RequestID id )
     switch( path[ 1 ] )
     {
      case "settings":
-       return replace( #string "module_variables.html",
-       ({"¤_url¤","¤_config¤", "module=\"¤module¤\"", "module-variables" }),
-       ({ "", path[0], "", "config-variables" }) );
+       return 
+#"<emit source='config-variables-sections'
+  configuration='"+path[0]+#"'>
+   <tab ::='&_.first; &_.last; &_.selected;'
+        href='?section=&_.section;'>&_.sectionname;</tab>
+</emit>";
        break;
 
      default:
