@@ -11,17 +11,12 @@ inherit "roxenlib";
 constant thread_safe=1;
 constant language = roxen->language;
 
-array register_module()
-{
-  return ({
-    MODULE_PARSER | MODULE_PROVIDER,
-    "Old RXML Compatibility Module",
-    "Adds support for old (deprecated) RXML tags and attributes.",
-    0,1
-  });
-}
+constant module_type   = MODULE_PARSER | MODULE_PROVIDER;
+constant module_name   = "Old RXML Compatibility Module";
+constant module_doc    = "Adds support for old (deprecated) RXML tags and attributes.";
+constant module_unique = 1;
 
-void create(object c)
+void create()
 {
   defvar("logold", 0, "Log all old RXML calls in the event log.",
          TYPE_FLAG,
@@ -37,7 +32,7 @@ void old_rxml_warning(RequestID id, string problem, string solution)
 {
   if(query("logold"))
     report_warning("Old RXML in "+(id->query||id->not_query)+
-    ", contains "+problem+". Use "+solution+" instead.");
+    ", contains "+problem+". Use "+solution+" instead.\n");
 }
 
 // Changes the parsing order by first parsing it's contents and then
@@ -50,20 +45,20 @@ string container_preparse( string tag_name, mapping args, string contents,
 			 parse_rxml( contents, id ) );
 }
 
-string|int tag_append(string tag, mapping m, RequestID id)
+array tag_append(string tag, mapping m, RequestID id)
 {
   if(m->variable && m->define) {
     // Set variable to the value of a define
     id->variables[ m->variable ] += id->misc->defines[ m->define ]||"";
     old_rxml_warning(id, "define attribute in append tag","only variables");
-    return "";
+    return ({""});
   }
-  return 0;
+  return ({1});
 }
 
-string|int tag_redirect(string tag, mapping m, RequestID id)
+string|array tag_redirect(string tag, mapping m, RequestID id)
 {
-  if(m->add || m->drop) return 0;
+  if(m->add || m->drop) return ({1});
 
   if (!(m->to && sizeof (m->to)))
     return rxml_error(tag, "Requires attribute \"to\".", id);
@@ -94,32 +89,32 @@ string|int tag_redirect(string tag, mapping m, RequestID id)
   if (m->text)
     _rettext = m->text;
 
-  return "";
+  return ({""});
 }
 
-string tag_refferrer(string tag, mapping m, RequestID id)
+array tag_refferrer(string tag, mapping m, RequestID id)
 {
   if(tag=="refferrer") old_rxml_warning(id, "refferrer tag","referrer tag");
-  return make_tag("referrer",m);
+  return ({1, "referrer"});
 }
 
-string tag_set(string tag, mapping m, RequestID id)
+array tag_set(string tag, mapping m, RequestID id)
 {
   if(m->define && m->variable) {
     // Set variable to the value of a define
     id->variables[ m->variable ] = id->misc->defines[ m->define ];
     old_rxml_warning(id, "define attribute in set tag","only variables");
   }
-  return 0;
+  return ({1});
 }
 
-string tag_pr(string tag, mapping m, RequestID id)
+array tag_pr(string tag, mapping m, RequestID id)
 {
   if(tag=="pr") old_rxml_warning(id,"pr tag","roxen tag");
-  return make_tag("roxen",m);
+  return ({1, "roxen"});
 }
 
-string tag_date(string q, mapping m, RequestID id)
+array(string) tag_date(string q, mapping m, RequestID id)
 {
   // unix_time is not part of RXML 1.4
   int t=(int)m["unix-time"] || (int)m->unix_time || time(1);
@@ -138,7 +133,7 @@ string tag_date(string q, mapping m, RequestID id)
   else
     CACHE(60); // One minute is good enough.
 
-  return tagtime(t, m, id, language);
+  return ({tagtime(t, m, id, language)});
 }
 
 inline string do_replace(string s, mapping m, RequestID id)
@@ -147,7 +142,7 @@ inline string do_replace(string s, mapping m, RequestID id)
   old_rxml_warning(id, "replace (A=B) in in insert tag","the replace tag");
 }
 
-string|array(string)|int tag_insert(string tag,mapping m,RequestID id)
+string|array tag_insert(string tag,mapping m,RequestID id)
 {
   string n;
 
@@ -203,12 +198,12 @@ string|array(string)|int tag_insert(string tag,mapping m,RequestID id)
     return n?do_replace(n, m-(["file":""]), id):rxml_error("insert", "No such file ("+m->file+").", id);
   }
 
-  return 0;
+  return ({1});
 }
 
-string|int container_apre(string tag, mapping m, string q, RequestID id)
+string|array container_apre(string tag, mapping m, string q, RequestID id)
 {
-  if(m->add || m->drop) return 0;
+  if(m->add || m->drop) return ({1});
   old_rxml_warning(id, "prestates as atomic attributs in apre tag","add and drop");
 
   string href, s, *foo;
@@ -244,15 +239,13 @@ string|int container_apre(string tag, mapping m, string q, RequestID id)
   return make_container("a", m, q);
 }
 
-string|array(string)|int container_aconf(string tag, mapping m, string q, RequestID id)
+string|array container_aconf(string tag, mapping m, string q, RequestID id)
 {
-  if(m->add || m->drop) return 0;
+  if(m->add || m->drop) return ({1});
   old_rxml_warning(id, "config items as atomic attributes in aconf tag","add and drop");
 
   string href,s;
   mapping cookies = ([]);
-  
-  if(m->help) return ({ "Adds or removes config options." });
 
   if(!m->href)
     href=strip_prestate(strip_config(id->raw_url));
@@ -287,31 +280,31 @@ string|array(string)|int container_aconf(string tag, mapping m, string q, Reques
   return make_container("a", m, q);
 }
 
-string|int container_autoformat(string tag, mapping m, string c, RequestID id)
+array container_autoformat(string tag, mapping m, string c, RequestID id)
 {
-  if(!m->pre) return 0;
+  if(!m->pre) return ({1});
   old_rxml_warning(id, "pre attribute in autoformat tag","p attribute");
   m+=(["p":1]);
   m_delete(m, "pre");
-  return make_container("autoformat", m, c);
+  return ({1, tag, m});
 }
 
-string|int container_default(string tag, mapping m, string c, RequestID id)
+array container_default(string tag, mapping m, string c, RequestID id)
 {
-  if(!m->multi_separator) return 0;
+  if(!m->multi_separator) return ({1});
   old_rxml_warning(id, "multiseparator attribute in default tag","separator attribute");
   m+=(["separator":m->multi_separator]);
   m_delete(m, "multi_separator");
-  return make_container("default", m, c);
+  return ({1, tag, m});
 }
 
-string|int container_recursive_output(string tag, mapping m, string c, RequestID id)
+array container_recursive_output(string tag, mapping m, string c, RequestID id)
 {
-  if(!m->multisep) return 0;
+  if(!m->multisep) return ({1});
   old_rxml_warning(id, "multisep attribute in recursive-output tag","separator attribute");
   m+=(["separator":m->multisep]);
   m_delete(m, "multisep");
-  return make_container("recursive-output", m, c);
+  return ({1, tag, m, c});
 }
 
 string container_source(string tag, mapping m, string s, RequestID id)
@@ -321,18 +314,12 @@ string container_source(string tag, mapping m, string s, RequestID id)
   sep=m["separator"]||"";
   if(!m->nohr)
     sep="<hr><h2>"+sep+"</h2><hr>";
-  return ("<pre>"+replace(s, ({"<",">","&"}),({"&lt;","&gt;","&amp;"}))
-    +"</pre>"+sep+s);
+  return "<pre>"+replace(s, ({"<",">","&"}),({"&lt;","&gt;","&amp;"}))
+    +"</pre>"+sep+s;
 }
 
-string|int tag_countdown(string tag, mapping m, string c, RequestID id)
+array tag_countdown(string tag, mapping m, string c, RequestID id)
 {
-  if(!m->min && !m->sec && !m->age && m->prec!="min" &&
-     !m->christmas_eve && !m->christmas_day && !m->christmas && !m->year2000 &&
-     !m->easter && !m->nowp && !m->seconds && !m->minutes && !m->hours &&
-     !m->days && !m->weeks && !m->months && !m->years && !m->dogyears &&
-     !m->combined && !m->when) return 0;
-
   foreach( ({ 
     ({"min","minute"}),
     ({"sec","second"}),
@@ -372,13 +359,12 @@ string|int tag_countdown(string tag, mapping m, string c, RequestID id)
       old_rxml_warning(id, "countdown attribute "+tmp,"display="+tmp);
     }
   }
+
+  return ({1, tag, m});
 }
 
-string|int container_tablify(string tag, mapping m, string q, RequestID id)
+array container_tablify(string tag, mapping m, string q, RequestID id)
 {
-  if(!m->fgcolor0 && !m->fgcolor1 && !m->fgcolor && !m->rowalign &&
-     !m->bgcolor && !m->preprocess && !m->parse) return 0;
-
   if(m->fgcolor0) {
     m->oddbgcolor=m->fgcolor0;
     m_delete(m, "fgcolor0");
@@ -411,72 +397,65 @@ string|int container_tablify(string tag, mapping m, string q, RequestID id)
     m_delete(m, "parse");
     m_delete(m, "preprocess");
   }
-  return make_container("tablify",m,q);
+  return ({1, tag, m, q});
 }
 
-string tag_echo(string t, mapping m, RequestID id) {
+array tag_echo(string t, mapping m, RequestID id) {
   old_rxml_warning(id, "echo tag","insert tag");
-  return make_tag("!--#echo",m);  
+  return ({1,"!--#echo",m});
 }
 
-string|int container_gtext(string t, mapping|int m, string c, RequestID id) {
-  m=gtext_compat(m,id);
-  if(!m) return 0;
-  return make_container(t,m,c);
+array container_gtext(string t, mapping|int m, string c, RequestID id) {
+  return ({1, t, gtext_compat(m,id)});
 }
 
-string|int tag_gtext_id(string t, int|mapping m, RequestID id) {
-  m=gtext_compat(m,id);
-  if(!m) return 0;
-  return make_tag(t,m);
+array tag_gtext_id(string t, int|mapping m, RequestID id) {
+  return ({1, t, gtext_compat(m,id)});
 }
 
-mapping|int gtext_compat(mapping m, RequestID id) {
-  int ch=0;
+mapping gtext_compat(mapping m, RequestID id) {
   foreach(glob("magic_*", indices(m)), string q) {
     m["magic-"+q[6..]]=m[q];
     m_delete(m, q);
     old_rxml_warning(id, "gtext attribute "+q,"magic-"+q[6..]);
-    ch++;
   }
   for(int i=2; i<10; i++)
     if(m[(string)i])
     {
       m->scale = (string)(1.0 / ((float)i*0.6));
       m_delete(m,(string)i);
-      ch++;
-      break;
     }
   if(m->fg) {
     m->fgcolor=m->fg;
     m_delete(m, "fg");
     old_rxml_warning(id, "gtext attribute fg","fgcolor");
-    ch++;
   }
   if(m->bg) {
     m->bgcolor=m->bg;
     m_delete(m, "bg");
     old_rxml_warning(id, "gtext attribute bg","bgcolor");
-    ch++;
   }
   if(m->fuzz) {
     m["magic-glow"]=m->fuzz=="fuzz"?m->fgcolor+",1":m->fuzz;
     m_delete(m, "fuzz");
     old_rxml_warning(id, "gtext attribute fuzz","magic-glow");
-    ch++;
   }
   if(m->magicbg) {
     m["magic-background"]=m->magicbg;
     m_delete(m, "magicbg");
     old_rxml_warning(id, "gtext attribute magicbg","magic-background");
-    ch++;
   }
-  if(!ch) return 0;
+  if(m->turbulence) {
+    m->bgturbulence=m->turbulence;
+    m_delete(m, "turbulence");
+    old_rxml_warning(id ,"gtext attribute turbulence","bgturbulence");
+  }
+
   return m;
 }
 
-string|int tag_counter(string t, mapping m, RequestID id) {
-  if(!m->fg && !m->bg) return 0;
+array tag_counter(string t, mapping m, RequestID id) {
+  if(!m->fg && !m->bg) return ({1});
   if(m->fg) {
     m->fgcolor=m->fg;
     m_delete(m,"fg");
@@ -485,15 +464,7 @@ string|int tag_counter(string t, mapping m, RequestID id) {
     m->bgcolor=m->bg;
     m_delete(m,"bg");
   }
-  return make_tag(t,m);
-}
-
-string tag_available_languages(string t, mapping m) {
-  return make_tag("available-languages",m);
-}
-
-string tag_unavailable_languages(string t, mapping m) {
-  return make_tag("unavailable-languages",m);
+  return ({1, t, m});
 }
 
 mapping query_tag_callers() {
@@ -507,10 +478,7 @@ mapping query_tag_callers() {
 	   "set":tag_set,
 	   "redirect":tag_redirect,
 	   "append":tag_append,
-	   "gtext-id":tag_gtext_id,
-           "available_language" : tag_available_languages,
-           "available_languages" : tag_available_languages,
-           "unavailable_languages" : tag_available_languages
+	   "gtext-id":tag_gtext_id
   ]);
 }
 
