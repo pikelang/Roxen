@@ -1,4 +1,4 @@
-// "$Id: hosts.pike,v 1.18 1997/12/15 01:40:37 per Exp $";
+// "$Id: hosts.pike,v 1.19 1997/12/15 01:45:51 per Exp $";
 #include <roxen.h>
 
 public mapping (string:array(mixed)) do_when_found=([]);
@@ -32,8 +32,8 @@ string blocking_host_to_ip(string host)
   if(!stringp(host) || !strlen(host)) return host;
   if(mixed foo = cache_lookup("hosts", host)) return foo;
   ISIP(host,return host);
-  addr = gethostbyname( host );
-  if(do_when_found[host]) notify(do_when_found[host], addr&&addr[0]);
+  array addr = gethostbyname( host );
+  got_one_result(host, addr&&addr[0]);
   m_delete(do_when_found, host);
   return addr?addr[0]:host;
 }
