@@ -26,6 +26,7 @@ string type;
 string subtype;
 //Är alltid "line" för graph-er. Tänkbara för bars är "line", "dot", "box"  
 //Är "pie" för tårtor?
+//Sumbars: "norm" ger alla staplar lika höga.
 
 //Följande gäller för bars-line och graph-diagram
 string drawtype;
