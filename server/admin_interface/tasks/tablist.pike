@@ -8,7 +8,7 @@ array pages =
   ({ ({"SSL"}),       "Tasks", 0, "SSL"               }),
 #endif
 /*({ "developer",     "Tasks", "devel_mode"  }),*/
-  ({ "debug_info",    "Tasks", 0, "Debug information" }),
+  ({ "debug_info",    "Tasks", 0, "Debug Information" }),
 });
 
 string parse( RequestID id )

@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.13 2002/06/27 18:14:47 nilsson Exp $
+ * $Id: openfiles.pike,v 1.14 2004/05/29 00:32:05 _cvs_stephen Exp $
  */
 inherit "wizard";
 
@@ -26,7 +26,7 @@ string fix_port(string p)
 string parse( RequestID id )
 {
   return
-    ("<h1>Active filedescriptors</h1>\n"+
+    ("<font size='+1'><b>Active filedescriptors</b></font>\n"+
      sprintf("<pre><b>%-5s  %-9s  %-10s   %-10s</b>\n\n",
 	     "fd", "type", "mode", "details")+
 

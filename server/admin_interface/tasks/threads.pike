@@ -73,7 +73,9 @@ mixed parse( RequestID id )
 	 });
   sort (thread_ids, threads);
 
-  string res = "<p><cf-refresh/></p>\n";
+  string res =
+    "<font size='+1'><b>" + name + "</b></font>\n"
+    "<p><cf-refresh/></p>\n";
   for (int i = 0; i < sizeof (threads); i++)
     res +=
       "<h3>Thread " + thread_ids[i] +

@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.12 2002/11/07 12:47:01 agehall Exp $
+ * $Id: locks.pike,v 1.13 2004/05/29 00:32:05 _cvs_stephen Exp $
  */
 
 #include <config.h>
@@ -44,9 +44,9 @@ string parse( RequestID id )
     }
   }
   mapping res=([]);
-  string data=("<font size='+2'>"
+  string data=("<font size='+1'><b>"
 	       "Module lock status : Accesses to all modules"
-	       "</font><p>"
+	       "</b></font><p>"
 	       "Locked means that the access was done using a "
 	       "serializing lock since the module was not thread-safe, "
 	       "unlocked means that there was no need for a lock."
@@ -71,13 +71,17 @@ string parse( RequestID id )
   foreach(sort(indices(res)), string q)
     rows += ({ ({q,(string)(res[q]||""),(string)(locks[q]||"") }) });
 
-  data += "<table bgcolor='&usr.fade1;'>";
-  data += "<th>Module</th><th>File</th><th>Locked</th><th>Unlocked</th>";
-  foreach(rows, array row) {
-    data += sprintf("<tr><td>%s</td><td>%s</td><td>%s</td></tr>",
-		    @row);
-  }
-
-  return data + "</table><p><cf-ok/></p>";
+  return data +
+      html_table( ({ 
+        "Module", "File", "Locked", 
+        "Unlocked" }), rows,
+		  ([ "titlebgcolor":"&usr.obox-titlebg;",
+		     "bordercolor":"&usr.obox-border;",
+		     "titlecolor":"&usr.obox-titlefg;",
+		     "oddbgcolor":"&usr.obox-bodybg;",
+		     "evenbgcolor":"&usr.fade1;",
+		  ])
+		  ) +
+      "<p><cf-ok/></p>";
 }
 #endif /* THREADS */

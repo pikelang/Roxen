@@ -1,22 +1,23 @@
 /*
- * $Id: restart.pike,v 1.17 2002/11/14 22:57:25 agehall Exp $
+ * $Id: restart.pike,v 1.18 2004/05/29 00:32:05 _cvs_stephen Exp $
  */
 
 #include <admin_interface.h>
 
 constant task = "maintenance";
-constant name = "Restart or shutdown";
+constant name = "Restart or shutdown...";
 constant doc  = "";
 
 mixed parse( RequestID id )
 {
+  string res = "<font size='+1'><b>Restart or shutdown</b></font><p />";
   switch( id->variables->what )
   {
   case "restart":
      if( config_perm( "Restart" ) )
      {
        roxen->restart(0.5);
-       return
+       return res +
 	 "<input type='hidden' name='action' value='restart.pike' />"
 	 "<font color='&usr.warncolor;'><h1>Restart</h1></font>"
 	 "ChiliMoon will restart automatically.\n\n<p><i>"
@@ -25,13 +26,13 @@ mixed parse( RequestID id )
 	 "while for all connections to finish, the process will go away after "
 	 "at most 15 minutes.</i></p>";
      }
-     return "Permission denied";
+     return res + "Permission denied";
 
    case "shutdown":
      if( config_perm( "Shutdown" ) )
      {
        roxen->shutdown(0.5);
-       return
+       return res +
 	 "<font color='&usr.warncolor;'><h1>Shutdown</h1></font>"
 	 "ChiliMoon will <b>not</b> restart automatically.\n\n<p><i>"
 	 "You might see the old process for a while in the process table "
@@ -39,31 +40,35 @@ mixed parse( RequestID id )
 	 "while for all connections to finish, the process will go away after "
 	 "at most 15 minutes.</i></p>";
      }
-     return "Permission denied";
+     return res + "Permission denied";
 
   default:
-    return Roxen.http_string_answer(
+    return Roxen.http_string_answer(res +
 #"<blockquote><br />
 
  <cf-perm perm='Restart'>
    <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
-            width=300 icon_src=&usr.err-2;> Restart </gbutton>
+            width=250 icon_src=&usr.err-2;> Restart </gbutton>
  </cf-perm>
 
 <cf-perm not perm='Restart'>
-  <gbutton dim width=300 icon_src=&usr.err-2;> Restart </gbutton>
+  <gbutton dim width=250 icon_src=&usr.err-2;> Restart </gbutton>
 </cf-perm>
+
+<br /><br />
 
 <cf-perm perm='Shutdown'>
   <gbutton href='?what=shutdown&action=restart.pike&class=maintenance' 
-           width=300  icon_src=&usr.err-3;> Shutdown </gbutton>
+           width=250  icon_src=&usr.err-3;> Shutdown </gbutton>
 </cf-perm>
 
 <cf-perm not perm='Shutdown'>
-  <gbutton dim width=300 icon_src=&usr.err-3;> Shutdown </gbutton>
+  <gbutton dim width=250 icon_src=&usr.err-3;> Shutdown </gbutton>
 </cf-perm>
 
 </blockquote>
+
+<br />
 
 <p><cf-cancel href='?class=&form.class;'/></p>" );
      }

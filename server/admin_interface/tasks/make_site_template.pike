@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.9 2002/06/15 20:24:02 nilsson Exp $
+ * $Id: make_site_template.pike,v 1.10 2004/05/29 00:32:05 _cvs_stephen Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -26,7 +26,7 @@ string parse(RequestID id)
   if( !config_perm( "Create Site" ) )
     error("No permission, dude!\n"); // This should not happen, really.
 
-  string res = "<gtext>"+name+"</gtext>";
+  string res = "<font size='+1'><b>Create site template</b></font>";
 
   string conf_name;
   Configuration conf;
@@ -51,18 +51,18 @@ string parse(RequestID id)
     //
     // Select a configuration.
     if (conf_name) {
-      res += sprintf("<p><font color='&usr.warncolor'>Coundn't find configuration: %s</font></p>\n",
+      res += sprintf("<p><font color='&usr.warncolor'>Couldn't find configuration: %s</font></p>\n",
 		     conf_name);
     }
     res += sprintf("<p>Select configuration to base the template on.</p>\n"
-		   "<p>%{<submit-gbutton2 name='conf-%s'>%s</submit-gbutton2><br\>\n%}</p>\n",
+		   "<p>%{<submit-gbutton2 name='conf-%s' width='200'>%s</submit-gbutton2><br\>\n%}</p>\n",
 		   map(roxen.configurations->name,
 		       lambda(string n) {
 			 return ({ Roxen.http_encode_string(n),
 				   Roxen.html_encode_string(n) });
 		       }));
   } else {
-    res += sprintf("<input type='hidden' name='conf' value='%s' />\n",
+    res += sprintf("<input type=hidden name='conf' value='%s' />\n",
 		   conf_name);
     if (!id->variables->fname || !sizeof(id->variables->fname)) {
       // Page 2
@@ -72,17 +72,17 @@ string parse(RequestID id)
 		     "Selected configuration",
 		     Roxen.html_encode_string(conf_name));
 
-      res += sprintf("<p>Filename (.pike will be added):"
+      res += sprintf("<p>Filename (.pike will be added): "
 		     "<input type='text' name='fname' value='%s'></p>\n",
 		     Roxen.http_encode_string(lower_case(replace(conf_name,
 								 " ", "_"))));
 
-      res += "<p><center><submit-gbutton>Ok</submit-gbutton></center></p>\n";
+      res += "<cf-ok/> <cf-cancel href='./?class="+action+"'/>";
     } else {
       // Page 3
       //
       // Create the site template.
-      res += sprintf("<input type='hidden' name='fname' value='%s' />\n",
+      res += sprintf("<input type=hidden name='fname' value='%s' />\n",
 		     Roxen.http_encode_string(id->variables->fname));
 
       conf->enable_all_modules();
@@ -179,7 +179,7 @@ string parse(RequestID id)
       object st;
       if (!(st = file_stat("../local/" SITE_TEMPLATES))) {
 	if (!mkdir("../local/" SITE_TEMPLATES, 0755)) {
-	  res += sprintf("<p><font color='&usr.warncolor'>Coundn't create directory: %O</font></p>\n",
+	  res += sprintf("<p><font color='&usr.warncolor'>Couldn't create directory: %O</font></p>\n",
 			 "../local/" SITE_TEMPLATES);
 	}
       }
@@ -198,7 +198,7 @@ string parse(RequestID id)
 			 Roxen.html_encode_string(fname));
 	} else {
 	  res += "<p>Site template created successfully.</p>\n"
-	    "<p><center><submit-gbutton>Ok</submit-gbutton></center></p>\n";
+	    "<cf-ok/>";
 
 	  done = 1;
 	}
@@ -207,7 +207,13 @@ string parse(RequestID id)
   }
   if (!done) {
     res +=
-      "<input type='hidden' name='task' value='make_site_template.pike' />";
+      "<input type=hidden name='task' value='make_site_template.pike' />";
+  }
+
+  if (!conf) {
+    // Only on first page.
+    res += "<br clear='all'>"
+      "<cf-cancel href='./?class="+action+"'/>";
   }
 
   return res;

@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.29 2004/05/27 23:18:50 _cvs_stephen Exp $
+ * $Id: resolv.pike,v 1.30 2004/05/29 00:32:05 _cvs_stephen Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -209,8 +209,9 @@ string parse( RequestID id )
 {
 
   string res = "";  //"<nobr>Allow Cache <input type=checkbox></nobr>\n";
-  res += "<input type='hidden' name='action' value='resolv.pike' />\n"
-    "<font size='+2'>"+ name + "</font><br />\n"
+  res +=
+    "<input type='hidden' name='task' value='resolv.pike' />\n"
+    "<font size='+1'><b>"+ name + "</b></font><p />\n"
     "<table cellpadding='0' cellspacing='10' border='0'>\n"
     "<tr><td align='left'>URL: </td><td align='left'>"
     "<input name='path' value='&form.path;' size='60' /></td></tr>\n"
@@ -221,18 +222,21 @@ string parse( RequestID id )
     "size='12' /></td></tr></table>\n"
     "<cf-ok/><cf-cancel href='?class=&form.class;'/>\n";
 
-  roxen.InternalRequestID nid = roxen.InternalRequestID();
+  core.InternalRequestID nid = core.InternalRequestID();
+  nid->client = id->client;
+  nid->client_var = id->client_var + ([]);
+  nid->supports = id->supports;
 
   if( id->variables->path )
   {
     nid->set_url (id->variables->path);
-    id->variables->path = nid->url_base() + nid->raw_url[1..];
-
     if(!nid->conf) {
       res += "<p><font color='red'>There is no configuration "
 	"available that matches this URL.</font></p>";
       return res;
     }
+
+    string canonic_url = nid->url_base() + nid->raw_url[1..];
 
     if(!(int)id->variables->cache)
       nid->pragma = (<"no-cache">);
@@ -240,8 +244,10 @@ string parse( RequestID id )
       nid->pragma = (<>);
 
     resolv =
-      "<hr noshade size='1' width='100%'/>\nResolving " +
-      link(id->variables->path, Roxen.html_encode_string (nid->not_query)) +
+      "<hr noshade size='1' width='100%'/>\nCanonic URL: " +
+      Roxen.html_encode_string(canonic_url) + "<br />\n"
+      "Resolving " +
+      link(canonic_url, Roxen.html_encode_string (nid->not_query)) +
       " in " +
       link_configuration(nid->conf, id->misc->cf_locale) + "<br />\n"
       "<ol>";
@@ -269,7 +275,5 @@ string parse( RequestID id )
       nid->misc->trace_leave("");
     res += resolv + "</ol>\n" + format_time (hrstart, hrvstart);
   }
-  else
-    id->variables->path || "";
   return res;
 }

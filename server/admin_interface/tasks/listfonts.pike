@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.25 2002/11/17 04:29:54 mani Exp $
+ * $Id: listfonts.pike,v 1.26 2004/05/29 00:32:05 _cvs_stephen Exp $
  */
 
 constant task = "status";
@@ -27,7 +27,7 @@ string list_font(string font)
   
   if( mapping m = info[ fn ] )
   {
-    string res = "<p><font size='+1'><b>"+
+    string res = "<p><font><b>"+
            (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",
                                          capitalize)*" ")+
                   "</b></font> <font size='-1'>"+versions(font)+"</font><br />"
@@ -38,7 +38,7 @@ string list_font(string font)
     res += "</table>";
     return res;
   }
-  return "<p><font size=+1><b>"+
+  return "<p><font><b>"+
          (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",capitalize)*" ")+
           "</b></font> <font size='-1'>"+versions(font)+"</font><br />");
 }
@@ -49,7 +49,7 @@ string font_loaders( )
   foreach( roxen.fonts.font_handlers, FontHandler fl )
   {
     int nf =  sizeof( fl->available_fonts() );
-    res += "<b><dt><font size='+1'>"+fl->name+" ("+nf
+    res += "<b><dt><font>"+fl->name+" ("+nf
         +" font"+(nf==1?"":"s")+")</font></b></dt>"
         "<dd>"+fl->doc+"</dd><p />";
   }
@@ -63,10 +63,11 @@ string page_0(RequestID id)
   string res=("<input type='hidden' name='action' value='listfonts.pike'/>"
               "<input type='hidden' name='doit' value='indeed'/>\n"
               "<font size='+1'><b>Available font loaders</b></font><p>"+
-              font_loaders()+"<font size='+1'><b>All available fonts</b></font><p>");
+              font_loaders()+"<font size='+1'><b>"
+	      "<br />All available fonts</b></font><p>");
   foreach(sort(roxen.fonts.available_fonts(1)), string font)
     res+=list_font(font);
-  res += ("</p><p>Example text"
+  res += ("</p><p>Example text "
 	  "<font size='-1'><input name='text' size='46' value='"
 	  "Jackdaws love my big sphinx of quartz."
 	  "'></p><p><table width='70%'><tr><td align='left'>"
