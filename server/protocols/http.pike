@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.199 2000/02/10 10:10:54 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.200 2000/02/10 10:38:47 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -596,6 +596,8 @@ private int parse_got()
 
   request_headers = ([]);	// FIXME: KEEP-ALIVE?
 
+  misc->pref_languages=PrefLanguages();
+
   if(sizeof(s)) {
     //    sscanf(s, "%s\r\n\r\n%s", s, data);
     //     s = replace(s, "\n\t", ", ") - "\r";
@@ -757,10 +759,8 @@ private int parse_got()
 	    array alang=(contents-" ") / ",";
 	    if(misc["accept-language"])
 	      misc["accept-language"] += alang;
-	    else {
+	    else
 	      misc["accept-language"] = alang;
-	      if(!misc->pref_languages) misc->pref_languages=PrefLanguages();
-	    }
 	    misc->pref_languages->languages=misc["accept-language"];
 	    break;
 
