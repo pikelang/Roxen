@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.43 1997/06/12 02:41:40 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.44 1997/07/06 15:21:08 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -580,28 +580,27 @@ int low_enable_configuration(string name, string type)
     if(node->name == name) 
       return 0;
 
-  switch(name)
-  {
-   case "":
-   case " ":
-   case "\t":
-   case "CVS":
-   case "Global Variables":
-   case "global variables":
-   case "Global variables":
+  switch(name) {
+  case "":
+  case " ":
+  case "\t":
+  case "CVS":
+  case "Global Variables":
+  case "global variables":
+  case "Global variables":
     return 0;
     break;
     
-   default:
-    object o, confnode;
+  default:
+    object o, o2, confnode;
     
-    switch(lower_case((type/" ")[0]))
-    {
-     default: /* Minimal configuration */
-       o=roxen->enable_configuration(name);
+    switch(type = lower_case((type/" ")[0])) {
+    default: /* Minimal configuration */
+    case "bare":
+      o=roxen->enable_configuration(name);
       break;
       
-     case "standard":
+    case "standard":
       o = roxen->enable_configuration(name);
       o->enable_module("cgi#0");
       o->enable_module("contenttypes#0");
@@ -614,7 +613,7 @@ int low_enable_configuration(string name, string type)
       o->enable_module("filesystem#0");
       break;
       
-     case "ipp":
+    case "ipp":
       o=roxen->enable_configuration(name);
       o->enable_module("contenttypes#0");
       o->enable_module("ismap#0");
@@ -622,8 +621,15 @@ int low_enable_configuration(string name, string type)
       o->enable_module("directories#0");
       o->enable_module("filesystem#0");
       break;
-      
-     case "proxy":
+
+    case "ftp":
+      o=roxen->enable_configuration(name);
+      o->enable_module("filesystem#0");
+      o->enable_module("userdb#0");
+      o->enable_module("htaccess#0");
+      break;
+
+    case "proxy":
       o=roxen->enable_configuration(name);
       o->enable_module("proxy#0");
       o->enable_module("gopher#0");
@@ -632,7 +638,7 @@ int low_enable_configuration(string name, string type)
       o->enable_module("wais#0");
       break;
       
-     case "copy":
+    case "copy":
       string from;
       mapping tmp;
       sscanf(type, "%*s'%s'", from);
@@ -653,38 +659,73 @@ int low_enable_configuration(string name, string type)
     node->folded=0;
     node->change(1);
     
-    if(o = node)
-    {
-      if(o=o->descend( "Global", 1 ))
-      {
-	o->folded = 0;
-	if(o->descend( "Server URL", 1 ))
-	{
-	  o->descend( "Server URL"  )->folded = 0;
-	  o->descend( "Server URL"  )->change(1);
-	}
-	if(o->descend( "Listen ports", 1  ))
-	{
-	  o->descend( "Listen ports"  )->folded = 0;
-	  o->descend( "Listen ports"  )->change(1);
+    if(o = node->descend( "Global", 1 )) {
+      o->folded = 0;
+      if (type != "ftp") {
+	if(o2 = o->descend( "Server URL", 1 )) {
+	  o2->folded = 0;
+	  o2->change(1);
 	}
       }
+      if(o2 = o->descend( "Listen ports", 1 )) {
+	o2->folded = 0;
+	o2->change(1);
+      }
     }
-    if(lower_case((type/" ")[0])=="standard" && (o=node))
-    {
-      if(o=o->descend( "Filesystem", 1 ))
-      {
+
+    switch(type) {
+    case "ftp":
+      if (o = node->descend("Global", 1)) {
+	if (o2 = o->descend("Listen ports", 1)) {
+	  o2->data[VAR_VALUE] = ({ ({ 21, "ftp", "ANY", "" }) });
+	}
+	if (o2 = o->descend("Allow named FTP", 1)) {
+	  o2->folded = 0;
+	  o2->change(1);
+	}
+	if (o2 = o->descend("Messages", 1)) {
+	  o2->folded = 0;
+	  o2->change(1);
+	  if (o2 = o2->descend("FTP Welcome", 1)) {
+	    o2->folded = 0;
+	    o2->change(1);
+	  }
+	}
+	if (o2 = o->descend("Shell database", 1)) {
+	  o2->folded = 0;
+	  o2->change(1);
+	}
+      }
+      if (o = node->descend("User database and security", 1)) {
+	object o2;
+	if (o2 = o->descend("Password database request method", 1)) {
+	  o2->folded = 0;
+	  o2->change(1);
+	}
+	if (o2 = o->descend("Password database file", 1)) {
+	  o2->folded = 0;
+	  o2->change(1);
+	}
+      }
+      /* FALL_THROUGH */
+    case "standard":
+      if(o = node->descend( "Filesystem", 1 )) {
 	o->folded=0;
-	if(o=o->descend( "0", 1))
-	{
+	if(o = o->descend( "0", 1)) {
 	  o->folded=0;
-	  if(o=o->descend( "Search path", 1))
-	  {
-	    o->folded=0;
-	    o->change(1);
+	  if(o2 = o->descend( "Search path", 1)) {
+	    o2->folded=0;
+	    o2->change(1);
+	  }
+	  if (o2 = o->descend("Handle the PUT method", 1)) {
+	    o2->folded = 0;
+	    o2->change(1);
 	  }
 	}
       }
+      break;
+    default:
+      break;
     }
   }
   return 1;
