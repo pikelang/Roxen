@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.138 2000/07/05 22:10:20 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.139 2000/07/10 17:57:43 jhs Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1882,7 +1882,7 @@ Pike-script or Roxen module.
 <tr><td><i>part=minute</i></td><td>Display the numbers of minutes since the last full hour. <ex ><date part='minute' type='number'/></ex></td></tr>
 <tr><td><i>part=second</i></td><td>Display the numbers of seconds since the last full minute. <ex ><date part='second' type='string'/></ex></td></tr>
 <tr><td><i>part=yday</i></td><td>Display the number of days since the first of January. <ex ><date part='yday' type='ordered'/></ex></td></tr>
-<tr><td><i>part=beat</i></td><td>Display the number of beats since midnight Central European Time(CET). There is a total of 1000 beats per day. The beats system was designed by <a href://www.swatch.com>Swatch</a> as a means for a universal time, without time zones and day/night changes. <ex ><date part='beat' type='number'/></ex></td></tr>
+<tr><td><i>part=beat</i></td><td>Display the number of beats since midnight Central European Time(CET). There is a total of 1000 beats per day. The beats system was designed by <a href='http://www.swatch.com'>Swatch</a> as a means for a universal time, without time zones and day/night changes. <ex ><date part='beat' type='number'/></ex></td></tr>
 <tr><td><i>part=week</i></td><td>Display the number of the current week.<ex ><date part='week' type='number'/></ex></td></tr>
 <tr><td><i>part=seconds</i></td><td>Display the total number of seconds this year. <ex ><date part='seconds' type='number'/></ex></td></tr>
 </table>
