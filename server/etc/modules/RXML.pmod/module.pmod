@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.12 2000/01/11 02:00:38 mast Exp $
+//! $Id: module.pmod,v 1.13 2000/01/12 14:26:39 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -151,18 +151,24 @@ class TagSet
   //! A number that is increased every time something changes in this
   //! object or in some tag set it imports.
 
-  mapping(string:string|array|
-	  function(:int(1..1)|string|array)|
-	  function(object,mapping(string:string):int(1..1)|string|array)
-	 ) low_tags;
-  mapping(string:string|array|
-	  function(:int(1..1)|string|array)|
-	  function(object,mapping(string:string),string:int(1..1)|string|array)
-	 ) low_containers;
-  mapping(string:string|array|
-	  function(:int(1..1)|string|array)|
-	  function(object:int(1..1)|string|array)
-	 ) low_entities;
+#define LOW_TAG_TYPE							\
+  string|array|								\
+  function(:int(1..1)|string|array)|					\
+  function(object,mapping(string:string):int(1..1)|string|array)
+
+#define LOW_CONTAINER_TYPE						\
+  string|array|								\
+  function(:int(1..1)|string|array)|					\
+  function(object,mapping(string:string),string:int(1..1)|string|array)
+
+#define LOW_ENTITY_TYPE							\
+  string|array|								\
+  function(:int(1..1)|string|array)|					\
+  function(object:int(1..1)|string|array)
+
+  mapping(string:LOW_TAG_TYPE) low_tags;
+  mapping(string:LOW_CONTAINER_TYPE) low_containers;
+  mapping(string:LOW_ENTITY_TYPE) low_entities;
   //! Passed directly to Parser.HTML when that parser is used. This is
   //! intended for compatibility only and might eventually be removed.
   //! Note: Changes in these aren't tracked; changed() must be called.
@@ -198,57 +204,89 @@ class TagSet
     changed();
   }
 
-  Tag get_tag (string name)
-  //!
+  local Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) get_local_tag (string name)
+  //! Returns the tag definition for the given name in this tag set.
+  //! The return value is either a Tag object or an array ({low_tag,
+  //! low_container}), where one element always is zero.
   {
-    Tag tag;
-    if ((tag = tags[name])) return tag;
-    foreach (imported, TagSet tag_set)
-      if ((tag = tag_set->get_tag (name))) return tag;
-    return 0;
-  }
-
-  Tag get_local_tag (string name)
-  //!
-  {
-    return tags[name];
+    if (Tag tag = tags[name]) return tag;
+    else if (LOW_CONTAINER_TYPE cdef = low_containers && low_containers[name])
+      return ({0, cdef});
+    else if (LOW_TAG_TYPE tdef = low_tags && low_tags[name])
+      return ({tdef, 0});
+    else return 0;
   }
 
   array(Tag) get_local_tags()
-  //!
+  //! Doesn't return the low tag/container definitions.
   {
     return values (tags);
   }
 
-  array(Tag) get_all_tags (void|string name)
-  //! Returns all tags, even those who get overridden. A tag to the
-  //! left overrides one to the right. If a name is given, only tags
-  //! with that name are returned.
+  Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) get_tag (string name)
+  //! Returns the active tag definition for the given name. The return
+  //! value is the same as for get_local_tag().
   {
-    if (name)
-      if (tags[name]) return ({tags[name]}) + imported->get_all_tags (name) * ({});
-      else return imported->get_all_tags() * ({});
-    else return values (tags) + imported->get_all_tags() * ({});
+    if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) def = get_local_tag (name))
+      return def;
+    foreach (imported, TagSet tag_set)
+      if (object(Tag) tag = [object(Tag)] tag_set->get_tag (name)) return tag;
+    return 0;
   }
 
-  Tag get_overridden_tag (Tag tag)
-  //! Returns the tag that the given tag overrides, if any.
+  Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) get_overridden_tag (
+    Tag|LOW_TAG_TYPE|LOW_CONTAINER_TYPE tagdef, void|string name)
+  //! Returns the tag definition that the given one overrides, or zero
+  //! if none. tag is a Tag object or a low tag/container definition.
+  //! In the latter case, the tag name must be given as the second
+  //! argument. The return value is the same as for get_local_tag().
   {
-    if (tags[tag->name] == tag) {
+    if (objectp (tagdef) && ([object] tagdef)->is_RXML_Tag)
+      name = [string] ([object] tagdef)->name;
+#ifdef MODULE_DEBUG
+    if (!name) error ("Need tag name.\n");
+#endif
+    if (tags[name] == tagdef ||
+	(low_containers && low_containers[name] == tagdef) ||
+	(low_tags && low_tags[name] == tagdef)) {
       foreach (imported, TagSet tag_set)
-	if ((tag = tag_set->get_tag (name))) return tag;
+	if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tagdef =
+	    tag_set->get_tag (name)) return tagdef;
     }
     else {
       int found = 0;
       foreach (imported, TagSet tag_set)
-	if (Tag subtag = tag_set->get_tag (name))
+	if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) subtag =
+	    tag_set->get_tag (name))
 	  if (found) return subtag;
-	  else if (subtag == tag) {
-	    if ((subtag = tag_set->get_overridden_tag (tag))) return subtag;
-	    found = 1;
-	  }
+	  else if (arrayp (subtag) ?
+		   subtag[0] == tagdef || subtag[1] == tagdef :
+		   subtag == tagdef)
+	    if ((subtag = tag_set->get_overridden_tag (tagdef, name)))
+	      return subtag;
+	    else found = 1;
     }
     return 0;
+  }
+
+  array(Tag|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE)) get_overridden_tags (string name)
+  //! Returns all tag definitions for the given name, i.e. including
+  //! the overridden ones. A tag to the left overrides one to the
+  //! right. The elements in the returned array are the same as for
+  //! get_local_tag().
+  {
+    if (object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) def = get_local_tag (name))
+      return ({def}) + imported->get_all_tags (name) * ({});
+    else return imported->get_all_tags (name) * ({});
+  }
+
+  multiset(string) get_tag_names()
+  //!
+  {
+    multiset(string) res = (multiset) indices (tags);
+    if (low_tags) res |= (multiset) indices (low_tags);
+    if (low_containers) res |= (multiset) indices (low_containers);
+    return `| (res, @imported->get_tag_names());
   }
 
   mixed `->= (string var, mixed val)
