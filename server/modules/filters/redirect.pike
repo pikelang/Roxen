@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.13 1998/03/11 19:42:37 neotron Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.14 2000/04/05 20:05:26 neotron Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -19,23 +19,34 @@ void create()
 	 "Redirect one file to another. The syntax is 'regexp to_URL',"
 	 "or 'prefix to_URL', or 'exact file_name to_URL<p>Some examples:'"
 	 "<pre>"
-         "/from/.*      http://to.idonex.se/to/%f\n"
-         ".*\\.cgi       http://cgi.foo.bar/cgi-bin/%p\n"
-	 "/thb/.*       %u/thb_gone.html\n"
-	 "/roxen/     http://www.roxen.com/\n"
-	 "exact / /main/index.html\n"
+         "	/from/.*      http://to.idonex.se/to/%f\n"
+         "	.*\\.cgi       http://cgi.foo.bar/cgi-bin/%p\n"
+	 "	/thb/.*       %u/thb_gone.html\n"
+	 "	/roxen/     http://www.roxen.com/\n"
+	 "	exact / /main/index.html\n"
 	 "</pre>"
 
-	 "A %f in the 'to' field will be replaced with the filename of "
-	 "the matched file, %p will be replaced with the full path, and %u"
-	 "will be replaced with this server's URL (useful if you want to send "
-	 "a redirect instead of doing an internal one). The last two "
-	 "examples are special cases. <p>"
+	 "<p><b>Special Substitutions (in the 'to' field):</b><dl compact>"
+	 "<dt>%f"
+	 "<dd>The file name of the matched URL without the path.\n"
+	 "<dt>%p"
+	 "<dd>The full virtual path of the matched URL.\n"
+	 "<dt>%u"
+	 "<dd>The manually configured Server URL. This is useful if you want "
+	 "your redirect to be external instead of an internal rewrite and "
+	 "don't want to hardcode the URL in the patterns.\n"
+	 "<dt>%h"
+	 "<dd>The accessed Server URL, using the HTTP host header. If "
+	 "the host header is missing, the configured Server URL will be "
+	 "used instead. This is useful if you want your external redirect to "
+	 "to the same host as the user accessed (ie if they access the site "
+	 "as http://www/ they won't get a redirect to http://www.domain.com/)."
+	 "\n</dl>\n\n<p>\n"
 
-	 "If the first string on the line is 'exact', the filename following "
+	 "The two last lines from the examples above are special cases. "
+	 "If the first word on the line is 'exact', the filename following "
 	 "must match _exactly_. This is equivalent to entering ^FILE$, but "
 	 "faster. "
-
 
 	 "<p>You can use '(' and ')' in the regular expression to "
 	 "separate parts of the from-pattern when using regular expressions." 
@@ -95,6 +106,26 @@ string comment()
 		 redirs);
 }
 
+string get_host_url(object id)
+{
+  string url;
+  if(id->misc->host) {
+    string p = ":80", prot = "http://";
+    array h;
+    if(id->ssl_accept_callback) {
+      // This is an SSL port. Not a great check, but what is one to do?
+      p = ":443";
+      prot = "https://";
+    }
+    h = id->misc->host / p  - ({""});
+    if(sizeof(h) == 1)
+      // Remove redundant port number.
+      url=prot+h[0];
+    else
+      url=prot+id->misc->host;
+  }
+  return url;
+}
 
 mixed first_try(object id)
 {
@@ -154,11 +185,16 @@ mixed first_try(object id)
 
   if(!to)
     return 0;
+  string url,hurl;
+  url = id->conf->query("MyWorldLocation");
+  url = url[..strlen(url)-2];
+  hurl = get_host_url(id)||url;
   
-  string url = id->conf->query("MyWorldLocation");
-  url=url[..strlen(url)-2];
-  to = replace(to, "%u", url);
-  if(to == url + id->not_query || url == id->not_query)
+  to = replace(to, ({"%u", "%h"}), ({ url, hurl}));
+  if(to == url + id->not_query ||
+     url == id->not_query ||
+     to == hurl + id->not_query)
+    // Prevent eternal redirects.
     return 0;
 
   id->misc->is_redirected = 1; // Prevent recursive internal redirects
