@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.22 2002/07/04 16:21:23 wellhard Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.23 2002/07/05 13:21:56 wellhard Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -1597,7 +1597,7 @@ class TagServlet
                          id, uri, hdrs);
           }
 
-          if (hdrs->error)
+          if (hdrs->error && hdrs->error != 200)
             RXML_CONTEXT->set_misc (" _error", hdrs->error);
           if (hdrs->extra_heads)
             RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
