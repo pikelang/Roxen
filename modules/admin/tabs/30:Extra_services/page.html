@@ -1,34 +1,73 @@
-Nothing here yet...
+      <pike>
+	 id->misc->defines=([]);
+	 return "";
+      </pike>
 
-<comment>
-<define tag=uservar><b>&title;</b> /// <input size=&size; type=&type; name=&name; value='#&name;#'>\\\
-</define>
+<comment> <autosite-intraseek-create id=6 host=www.ultraviking.se name=Ultraviking>
+<autosite-intraseek-launch id=6>
+</comment>
 
 <formoutput quote='¤'>
-  <if variable=save>
-    <b>Information saved.</b><p>
-    <sqlquery query="replace into customers
-                     values('¤client:quote=mysql¤',
-		            '¤user_id:quote=mysql¤',
-		            '¤name:quote=mysql¤',
-			    NULL,1,1,
-		            '¤sms:quote=mysql¤',
-		            '¤fax:quote=mysql¤',NULL)">
-
+  <if variable=enable>
+    <sqlquery query="replace into features values('¤customer:quote=mysql¤','¤enable:quote=mysql¤')">
   </if>
-  <preparse tag=sqloutput query="select name,fax,sms,user_id from customers
-                    where id='¤customer:quote=mysql¤'">
-    <preparse tag=tablify cellseparator=/// rowseparator=\\\
-              cellpadding=0 cellspacing=0>
-      <form method=get>
-        <uservar title='Customer name:' type=text size=40 name=name>
-        <uservar title='Login name:' type=text size=20 name=user_id>
-        <uservar title='Password:' type=password size=20 name=password>
-        <uservar title='Fax number:' type=text size=20 name=fax>
-        <uservar title='SMS number:' type=text size=20 name=sms>
-	<input type=submit name=save value='Save'>
-      </form>
-    </preparse>
-  </preparse>
+  <if variable=disable>
+    <sqlquery query="delete from  features where customer_id='¤customer:quote=mysql¤' and feature='¤disable:quote=mysql¤'">
+  </if>
+  <sqloutput quote='#' query="select feature from features where customer_id='¤customer:quote=mysql¤'">
+    <cset variable=#feature#>1</cset>
+  </sqloutput>
+
+  <sqloutput quote='£' query="select feature from features_list order by feature">
+    <obox title='£feature£'>
+    Status:
+    <if variable=£feature£>
+      <b>Enabled</b>
+    </if>
+    <else>
+      <b>Disabled</b>
+    </else>
+    <table width=400>
+    <tr valign=center>
+    <td>
+    <if variable=£feature£>
+      <img src=/img/green.gif>
+    </if>
+    <else>
+      <img src=/img/red.gif>
+    </else>
+    </td>
+    <td>
+    <if variable=£feature£>
+      <pike>
+         return "";//sprintf("<pre>%O</pre>",id->misc->defines);
+      </pike>
+      <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
+    	xsize=200 bevel=5 talign=center fg=#606060 bg=#a0a0a0>Enable</gtext>
+      <pike>
+         return "";//sprintf("<pre>%O</pre>",id->defines);
+      </pike>
+       <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
+        xsize=200 bevel=5 talign=center fg=#ffffff bg=#113377
+	magic_fg=#000000 magic_bg=#88ccaa magic href='./?disable=£feature£'>Disable</gtext>
+      <pike>
+         return "";//sprintf("<pre>%O</pre>",id->defines);
+      </pike>
+    </if>
+    <else>
+      <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
+        xsize=200 bevel=5 talign=center fg=#ffffff bg=#113377
+	magic_fg=#000000 magic_bg=#88ccaa magic href='./?enable=£feature£'>Enable</gtext>
+      <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
+    	xsize=200 bevel=5 talign=center fg=#606060 bg=#a0a0a0>Disable</gtext>
+    </else>
+    </td></tr></table>
+    </obox>
+  </sqloutput>
+
+<form method=get>
+
+
+</form>
+
 </formoutput>
-</comment>

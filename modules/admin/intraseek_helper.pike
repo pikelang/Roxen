@@ -1,12 +1,12 @@
 /*
- * $Id: intraseek_helper.pike,v 1.2 1998/09/14 06:18:46 js Exp $
+ * $Id: intraseek_helper.pike,v 1.3 1998/09/15 12:50:53 js Exp $
  *
  * AutoSeek, Intraseek helper module
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: intraseek_helper.pike,v 1.2 1998/09/14 06:18:46 js Exp $";
+constant cvs_version = "$Id: intraseek_helper.pike,v 1.3 1998/09/15 12:50:53 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -38,11 +38,11 @@ string tag_create(string tag_name, mapping args, object id)
   if(!o)
     return "Intraseek not present.";
 
-  array data = allocate(28);
+  array data = allocate(29);
   string storage_dir;
 
   data[0]=args->name;
-  mkdir(storage_dir = combine_path(o->query("workdir"),args->id));
+  mkdir(storage_dir = combine_path(query("workdir"),args->id));
   data[1]=storage_dir+"/";
   data[3]=({ "http://"+args->host+"/*" });
   data[5]=({ "http://"+args->host+"/" });
