@@ -6,17 +6,17 @@ prefix=@prefix@
 @SET_MAKE@
 
 all:	extern pike
-	@(cd extern;$(MAKE) all;cd ..)
-	@(cd pike/src;$(MAKE);cd ..)
+	@(cd extern;$(MAKE) all)
+	@(cd pike/src;$(MAKE))
 
 depend:
 	@(cd pike/src;$(MAKE) depend)
 	echo "You need to run configure once again."
 
-verify:
+verify: all
 	@(cd pike/src;$(MAKE) verify)
 
-verbose_verify:
+verbose_verify: all
 	@(cd pike/src;$(MAKE) verbose_verify)
 
 check: verify
