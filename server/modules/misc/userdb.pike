@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.38 2000/02/17 12:45:43 nilsson Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.39 2000/02/22 03:25:26 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -192,7 +192,8 @@ void slow_update()
 
 void read_data()
 {
-  string data, *entry, u, *tmp, *tmp2;
+  string data, u;
+  array(string) entry, tmp, tmp2;
   int foo, i;
   int original_data = 1; // Did we inherit this user list from another
                         //  user-database module?
