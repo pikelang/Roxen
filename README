@@ -1,0 +1,296 @@
+			Advert Module v0.1
+
+The Advert Module is a Roxen module for ad serving.  It has the basic
+features of ad serving software (displaying ads, measuring impressions
+and clickthroughs) as well as some powerful features. 
+
+
+FEATURES:
+
+The supported features are:
+
+  * Measures impressions.
+  * Measures clickthroughs.
+  * Image ads.
+  * Ad groups (regions where to place ads).
+  * Ad campaigns (groups of related ad runs).
+  * Ad scheduling (start and stop dates; ad runs).
+  * Distributes impressions over the ad running time.
+  * Recalculates ad's remaining hourly impressions once per hour.
+  * Default ads (displayed when no other ads are available).
+  * Ad targeting by user impressions
+    (limit the number of times a user sees an ad).
+  * Ad targeting by domain name.
+  * Ad targeting by previewsly seen ad
+    (do not display the same ad twice in a row).
+  * Ad targeting by other ads in the same page
+    (do not display the an ad on the same page more than once).
+  * Display the same ad multiple times in the same page
+    while counting them as a single impression.
+  * Ad targeting by browser.
+  * Ad targeting by OS.
+  * Ad targeting by competitors
+    (do not display competing campaigns on the same page).
+  * Can tell proxies not to cache the page.
+  * Can tell clients not to cache the page.
+
+
+REQUIREMENTS:
+
+The module requires Roxen with the Config Tab-list module, as well
+as MySQL 3.23.X. You cannot use MySQL 3.22.X or earlier as  they do not
+support the "COUNT(DISTINCT X)" construct. This may be fixed in the
+future. No other database servers have been tested.
+
+
+CONFIGURATION:
+
+Unpack the advert-X.X.tgz file in your roxen/local/modules directory.
+This will create a directory called "advert" under which all module files
+will be stored.
+
+Go to the Roxen configuration interface, click on "Virtual Servers", click
+on the server to which you wish to add the module, and click on "Add Module".
+Look for the "Advert Module". If you don't see it you may need to click
+on your browser's Reload button while holding down the shift key to tell
+the server to scan the filesystem for new modules. Then click on 
+"Advert Module". Now that the module has been added to the server you
+must configure it.
+
+Click on "Database". You must enter the URL to the database where the
+module will store its information. The URL should be of the form
+"mysql://username:password@hostname/database". If you haven't created
+the database do so now. Click in OK.
+
+You must assign the administration interface a password. Click on
+"Module administrator password". Enter the desired password and click OK.
+You can also change the administrator user name if desired. Otherwise it
+defaults to "advert".
+
+You can also change the mount point the module uses for the configuration
+interface and clickthroughs. It defaults to "/advert/".
+
+Finally, you enable two module wide targeting dimensions: Last Ad targeting
+and Page Ads targeting. Last Ad targeting if enabled will stop the
+module from serving the same ad twice in a row to a user. Page Ads targeting
+if enabled will stop the server from serving the same ad more than once
+in a page with multiple ads (unless overridden by the "pagead" attribute
+of the <ad> tag). Neither of this targeting dimension are recommended if
+you have a small number of active ads in rotation.
+
+Once you are done configuring the module click on "Save".
+
+
+ADMINISTRATION:
+
+Assuming you have not changed the default module mount point you can
+reach the module administration interface at http://hostname/advert/conf.
+You should be prompted to enter the administration interface username
+and password.
+
+You will be presented with a set of tabs. From here you can create
+new ad campaigns and ad groups, add ads, and schedule ad runs.
+
+Ad Campaigns:
+-------------
+
+An ad campaign is a collection of ad runs from a single advertiser. Its
+little more than a name used to aggregate statistics from multiple runs
+from the same advertiser. In the future an advertiser will be able to
+login remotely and look at the statistics for their campaign.
+
+Clicking on the Campaign tab lists four wizards that allow you to
+add, edit, delete and view the statistics of a campaign. When adding
+a campaign you are asked to enter a name and a password for it.
+
+Ad Groups:
+----------
+
+An ad group represents a collection of related areas of a web site where
+ads can be displayed. For example you may set up an ad group for the
+homepage, and once ad group for each major section of your web site.
+Or you could set up an ad group for banners ad the top of your web pages,
+while you set up another one for a smaller button ad in the same page.
+
+Clicking on the Groups tab lists four wizards that allow you to add, edit,
+delete and view the statistics of an ad group. When adding an ad group
+you are asked to enter its name.
+
+Ads:
+----
+
+Ads represent the advertisement to be displayed. Currently only image
+ads with an anchor are supported.
+
+Clicking on the Ads tab lists four wizards that allow you to add, edit,
+delete and view the statistics of an ad. When adding an ad you are
+asked to select its type. For graphical ads you are asked to enter
+the image source URL, the image's width and height, the clickthrough
+URL, the target window/frame for the clickthrough URL, an alternative
+text, and to select whether to use Javascript to display the alternative
+text in the status bar when the user moves the mouse over the image.
+
+Ad Runs:
+--------
+
+An ad run represent a time window in which to display an ad as well as
+a set of targeting dimensions to take into consideration when deciding
+whether to display an ad.
+
+Clicking on the Runs tab lists four wizards that allow you to add, edit,
+delete and view the statistics of an ad run. When adding an ad run you
+are asked to select the ad campaign this run belongs to, the start and
+end date of the run, the desired impressions for the ad, what ad groups
+to display the ad in, whether the ad can can used as a default ad for
+some ad groups, the desired maximum number of times a user sees the ad,
+what domains, browsers, and operating systems the ad should be restricted to, 
+what campaigns are competitors of this one, and finally what ad to display.
+
+
+HOW ARE ADS SCHEDULED
+
+When an ad from an ad group is requested the module follows the following
+algorithm to determine what ad to display:
+
+  * if a page ad is being requested check whether an ad in the same
+    page has been requested and display the same result if it has,
+    otherwise:
+
+  * the module obtains a list of all currently active ads
+
+    + an active ad is one with:
+      - a start date before now
+      - an end date after now
+      - a number of impression during this hour that is less than
+        the desired hourly impression for this ad
+
+  * the module applies a number of targeting dimension to the ads
+    to filter out inappropriate ones
+
+    + if last ad targeting is enabled the module will determine what
+      was the last ad served to this client and remove it from the
+      list of candidate ads
+
+    + if page ads targeting is enabled the module will determine what
+      other ads have already been displayed in this page request and
+      remove them from the list of candidate ads
+
+    + the module will remove any ads from the candidates list which are
+      part of a competing campaign whose are have already been displayed
+      on this page request.
+
+    + the module will remove any ads from the candidates list that are
+      targeted to specific domains that do not match the domain of the client
+
+    + the module will remove any ads from the candidate list that are
+      targeted for specific browsers or operating systems that do not
+      match the browser or operating system of the client
+
+    + the module will remove any ads from the candidate list that the user
+      has seen more times than the ad's desired max user impression.
+
+  * if the are ads left in the candidate list the module will randomly
+    select one ad from the group weighted by the ads remaining hourly
+    impressions (ads with more remaining hourly impression are more likely
+    to be select than ads will less remaining hourly impression).
+
+  * if the are no ads in the candidate list the module will:
+
+    - obtain a list of "default" ads for the ad group
+    - randomly select once of them
+
+  * if an ad was select the module will display it and log the impression
+
+  * if no ad was selected the module will display nothing
+
+
+DESIGN CHOICES:
+
+Clickthroughs:
+--------------
+
+Clickthroughs are associated with specific impressions and are logged
+in the impression's database record. Logging the clickthrough in the
+impressions table means that for one particular impressions there will
+always be at most a single clickthrough recorded regarless of how many
+clickthroughs actually occur.
+
+This can be an issue with web proxy caches as a single impression (the
+request by the proxy) can generate multiple clickthroughs (and impressions)
+from clients behind the proxy.
+
+We could records clickthroughs in some other table but that would skew
+the clickthrough ration since we would fail to record the real number
+of impression from clients behind the proxy.
+
+If you are worried about this issue the solution is to enable cache
+busting by using the "nocache=proxy" argument to the <ad> tag. The
+"nocache=proxy" argument many not work with all proxies (for sure it
+won't work with HTTP 1.0 proxies) in which case you may with to try
+using "nocache=client" instead which is more likely to be work with
+all proxies but will also tell the client no to cache the page.
+
+Performance:
+------------
+
+A design desition was made to use a single SQL SELECT and GROUP BY statement 
+where it would otherwise have required multiple tables to maintain statistics
+that the GROUP BY part computes on the fly (e.g. COUNT()). Using multiple
+tables to maintain the statistics would have required they be updated
+during each impressions. I am not sure whether the single select plus
+on the fly computation is faster than using a simpler select with multiple
+table joins to retrive the precomputed values that get updated on each
+impressions. I am particularly worried about performance when the number
+of impressions is very high. I'd gladly talk with anyone that has feedback
+on this issues or can test the system with large data sets.
+
+User ID:
+--------
+
+Currently User ID's are stored in the database as an INT. This does not
+represent a problem if we are using Roxen's cookie id but someone may
+want to expand the system in the future and use an ID that can't be
+represented as an INT.
+
+
+TODO:
+
+These are some things I'd like to add to the module in the near future:
+
+  * Support advertiser account which allows them to review their
+    campaign statistics.
+  * Better statistics (graphs).
+  * Support for HTML and Rich Media ads.
+  * Support for ad targeting by (search) keywords.
+  * Log whether an impression is the result of a default ad.
+
+
+FUTURE DEVELOPMENT:
+
+These are some things I'd like to add to the module some time:
+
+  * Ad targeting by time of day.
+  * Ad targeting by day of week.
+  * Ad scheduling by clickthroughs (instead of impressions).
+  * Ad targeting by user clickthroughs 
+    (filter ads which users have already clicked X number of times)
+  * Study historical data and predict availability.
+  * Ad targeting plug-in API for custom targeting dimensions
+    (e.g. age, gender, income, zip code, country, etc).
+  * Ad run over delivery: assign a percentage to over deliver a run
+    to ensure guarantees.
+  * Group Ganging: coordinate delivery of ads from the same campaign
+    into multiple ad groups in the same page.
+  * Export statistics to Excel spreadsheets.
+
+CREDIT:
+
+The module was written by Elias Levy <aleph1@underground.org>.
+
+Ideas for this module came from the Apache DAD ad server module
+written in Perl.
+http://www.sklar.com/dad/
+
+LICENSE:
+
+This module and associated files are placed under the GPL.
