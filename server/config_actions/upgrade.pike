@@ -1,0 +1,235 @@
+
+inherit "roxenlib";
+
+constant name= "Upgrade modules from roxen.com...";
+constant doc = "Search for new releases of all installed (or all used) modules.";
+
+mapping modules;
+
+
+mapping extract_module_info(array from)
+{
+  string fname, version;
+  mapping m = ([]);
+  sscanf(from[1], "%*s<b>Loaded from:</b> %s<", fname);
+  sscanf(from[1], "%*s<b>CVS Version: </b>%s<", version);
+  m->fname = fname;
+  if(version) sscanf(version, "%s ", version);
+  m->version = version;
+  m->name = from[0];
+  m->type = from[2];
+  return m;
+}
+
+void find_modules(int mode)
+{
+  if(mode)
+  {
+    roxen->rescan_modules();
+    modules = copy_value(roxen->allmodules);
+  } else {
+    modules = ([]);
+    foreach(roxen->configurations, object c)
+    {
+      mapping tmpm = c->modules;
+      foreach(indices(tmpm), string mod)
+	modules[mod] =
+	  ({  tmpm[mod]->name, 
+	      (tmpm[mod]->master?tmpm[mod]->master->file_name_and_stuff():
+	       tmpm[mod]["program"]()->file_name_and_stuff()),
+	      tmpm[mod]->type });
+    }
+  }
+
+  mapping rm = ([]);
+  foreach(indices(modules), string mod)
+  {
+    mapping m = extract_module_info(modules[mod]);
+    if(m->version) rm[mod] = m;
+  }
+  modules = rm;
+}
+
+
+string initial_form(object id)
+{
+  return
+    ("<table bgcolor=black cellpadding=1><tr><td>\n"
+     "<table cellpadding=10 width=100% height=100% cellspacing=0 border=0 bgcolor=#eeeeff>\n"
+     "<tr><td align=center valign=center colspan=2>"
+     "<h1>Upgrade Roxen modules</h1>"
+     "<form>\n"
+     "<font size=+1>What modules do you want to upgrade?</font><br>\n"
+     "</tr><tr><td  colspan=2>\n"
+     "<input type=hidden name=action value="+id->variables->action+">\n"
+     "<input type=radio name=how value=1> All installed modules<br>\n"
+     "<input type=radio name=how checked value=0> All used modules<br>\n"
+     "<input type=radio name=how value=2)> Check for new (previously "
+     "uninstalled) modules<br>\n"
+     "</tr><tr><td>"
+     "<input type=submit name=ok value=\" Ok \"></form>\n"
+     "</td><td align=right>"
+     "<td><form><input type=submit name=cancel value=\" Cancel \">\n"
+     "</form></table></td></tr></table></table>\n");
+}
+
+string upgrade_module(string m, object rpc)
+{
+  array rm = rpc->get_module(m);
+  string res="";
+  object privs = ((program)"privs")("root","Upgrading modules");
+  if(!rm) return "Failed to fetch the module '"+m+"'.";
+  if(!modules) find_modules(1);
+  if(modules[m])
+  {
+    mkdir("old_modules");
+    if(mv(modules[m]->fname, "old_modules/"+m+":"+modules[m]->version))
+      res+="Moved "+modules[m]->fname+" to old_modules/"+m+":"+
+	modules[m]->version+"<br>";
+    else
+      res+="Failed to move "+modules[m]->fname+"<br>";
+  }
+
+  if(Stdio.file_size("modules/"+rm[0])>0)
+  {
+    mkdir("old_modules");
+    if(mv("modules/"+rm[0], "old_modules/"+m+".pike"))
+      res+="Moved modules/"+rm[0]+" to old_modules/"+m+".pike<br>\n";
+    else
+      res+="Failed to move modules/"+rm[0]+" to old_modules/"+m+".pike<br>\n";
+  }
+  mkdirhier("modules/"+rm[0]);
+  object o = open("modules/"+rm[0], "wct");
+  if(!o) res += "Failed to open "+"modules/"+rm[0]+" for writing.<br>";
+  else {
+    o->write(rm[1]);
+    res+="Fetched modules/"+rm[0]+", "+strlen(rm[1])+" bytes.<br>";
+  }
+  m_delete(roxen->allmodules, m);
+  return res+"<p>\n\n\n";
+}
+
+string handle_upgrade(object id, object rpc)
+{
+  string res = "<h1>Retrieving new modules...</h1><br>";
+  int num;
+  int st = time();
+  foreach(indices(id->variables), string m)
+    if(sscanf(m,"M_%s",m))
+    {
+      res += upgrade_module(m,rpc);
+      num++;
+    }
+
+  if(num) roxen->rescan_modules();
+  return (res+"<p><br><b><a href=/Actions/>Done in "+
+	  (time()-st)+" seconds.</a></b><form><input type=hidden name=action value=upgrade.pike><input type=submit value=\" Ok \"></form>");
+}
+
+
+string new_form(object id, object rpc)
+{
+  string res=""
+    "<form>\n"
+    "<input type=hidden name=action value="+id->variables->action+">\n"
+    "<table cellpadding=2 cellspacing=0 border=0><tr bgcolor=lightblue><td colspan=3><b>"
+    "Modules that have a newer version available. "
+    "Select the box to add the module to the list of modules to "
+    "be updated</b></td></tr>\n"
+    "<tr bgcolor=lightblue>"
+    "<td>Module name</td><td>Filename</td>"
+    "<td>Version</td></tr>\n";
+
+  find_modules(1);
+
+  mapping rm = rpc->all_modules();
+  int num;
+  foreach(sort(indices(rm)), string s)
+    if(!modules[s])
+    {
+      if(Stdio.file_size(rm[s]->filename) > 0)
+	werror("Module "+s+" present, but won't load.\n");
+      else {
+	num++;
+	res += ("<tr bgcolor=#f0f0ff><td><b><font size=+1><input type=checkbox name=M_"+s+"> "+
+		rm[s]->name+"</font></b></td><td><b><font size=+1>"+rm[s]->filename+"</font></b></td><td><b><font size=+1>"+
+		rm[s]->version+"</font></b></td><td></tr><tr><td colspan=3><font size=-1>"+
+		rm[s]->doc+"</font><br><p><br></td></tr>\n");
+      }
+    }
+  if(num)
+    res += "</table>";
+  else
+    return "<a href=/Actions/?action=upgrade.pike>There are no new modules available.</a><form><input type=hidden name=action value=upgrade.pike><input type=submit value=\" Ok \"></form>";
+
+  res += "<table width=100%><tr><td><input type=submit name=go value=\" Install \">"
+    "</form>\n</td><td align=right>"
+    "<form><input type=hidden name=action value="+
+    id->variables->action+">"
+    "<td><input type=submit name=cancel value=\" Cancel \"></table></form>\n";
+  return res;
+}
+
+
+string handle(object id)
+{
+
+  string res=""
+    "<form>\n"
+    "<input type=hidden name=action value="+id->variables->action+">\n"
+    "<table cellpadding=2 cellspacing=0 border=0><tr bgcolor=lightblue><td colspan=4><b>"
+    "Modules that have a newer version available. "
+    "Select the box to add the module to the list of modules to "
+    "be updated</b></td></tr>\n"
+    "<tr bgcolor=lightblue>"
+    "<td>Module name</td><td>Filename</td><td>Your version</td>"
+    "<td>Available version</td></tr>\n";
+  int num;
+
+  
+  if(id->variables->how || id->variables->go)
+  {
+    object rpc;
+    catch {
+      rpc=RoxenRPC.Client("skuld.infovav.se",23,"upgrade");
+    };
+    if(!rpc)
+      return "Failed to connect to update server at skuld.infovav.se:23.\n";
+
+    if(id->variables->go) return handle_upgrade(id,rpc);
+
+    if((int)id->variables->how==2)
+    {
+      return new_form(id,rpc);
+    }
+
+    find_modules((int)id->variables->how);
+    mapping mv = rpc->module_versions( modules );
+
+    foreach(sort(indices(modules)), string m)
+      if(mv[m] && (modules[m]->version != mv[m]))
+      {
+	num++;
+	res += ("<tr><td><input type=checkbox name=M_"+m+"> "+
+		modules[m]->name+"</td><td>"+
+		modules[m]->fname+"</td><td>"+
+		modules[m]->version+"</td><td>"+
+		(mv[m]?mv[m]:"?")+"</tr>"
+		"\n");
+      }
+    if(num)
+      res += "</table>";
+    else
+      return "<a href=/Actions/?action=upgrade.pike>There are no upgrades available.</a><form><input type=hidden name=action value=upgrade.pike><input type=submit value=\" Ok \"></form>";
+
+    res += "<table width=100%><tr><td><input type=submit name=go value=\" Upgrade \">"
+      "</form>\n</td><td align=right>"
+      "<form><input type=hidden name=action value="+
+      id->variables->action+">"
+      "<td><input type=submit name=cancel value=\" Cancel \"></table></form>\n";
+    return res;
+  }
+
+  return initial_form(id);
+}
+
