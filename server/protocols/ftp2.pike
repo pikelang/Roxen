@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.44 1998/05/20 10:49:08 grubba Exp $
+ * $Id: ftp2.pike,v 1.45 1998/05/20 23:02:45 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -31,6 +31,9 @@
  * RFC 775	DIRECTORY ORIENTED FTP COMMANDS
  * RFC 949	FTP unique-named store command
  * RFC 1639	FTP Operation Over Big Address Records (FOOBAR)
+ *
+ * IETF draft 4	Extended Directory Listing, TVFS,
+ *		and Restart Mechanism for FTP
  *
  * RFC's with recomendations and discussions:
  *
