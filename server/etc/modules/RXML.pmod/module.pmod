@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.313 2003/05/22 11:44:11 mast Exp $
+// $Id: module.pmod,v 1.314 2003/05/27 11:33:06 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7201,11 +7201,14 @@ static class PikeCompile
 #ifdef DEBUG
   static string pcid = "pc" + ++p_comp_count;
 #endif
-  static inherit String.Buffer: code;
   static inherit Thread.Mutex: mutex;
-  static mapping(string:mixed) bindings = ([]);
+
+  // These are covered by the mutex.
+  static inherit String.Buffer: code;
   static mapping(string:int) cur_ids = ([]);
   static mapping(mixed:mixed) delayed_resolve_places = ([]);
+
+  static mapping(string:mixed) bindings = ([]);
 
   string bind (mixed val)
   {
@@ -7237,8 +7240,8 @@ static class PikeCompile
       txt = sprintf ("%s %s;\n", type, id);
     }
 
+    Thread.MutexKey lock = mutex::lock();
     code::add (txt);
-    // Relying on the interpreter lock here.
     cur_ids[id] = 1;
 
     return id;
@@ -7255,8 +7258,8 @@ static class PikeCompile
 	      this_object(), rettype, id, arglist, def);
     string txt = sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
 
+    Thread.MutexKey lock = mutex::lock();
     code::add (txt);
-    // Relying on the interpreter lock here.
     cur_ids[id] = 1;
 
     return id;
@@ -7280,6 +7283,7 @@ static class PikeCompile
 
   void delayed_resolve (mixed what, mixed index)
   {
+    Thread.MutexKey lock = mutex::lock();
 #ifdef DEBUG
     if (!zero_type (delayed_resolve_places[what]))
       error ("Multiple indices per thing to delay resolve not handled.\n");
@@ -7322,11 +7326,7 @@ static class PikeCompile
     Thread.MutexKey lock = mutex::lock();
     object compiled = 0;
 
-    // vvv Relying on the interpreter lock from here.
     string txt = code::get();
-    mapping(string:int) loc_cur_ids = cur_ids;
-    cur_ids = ([]);
-    // ^^^ Relying on the interpreter lock to here.
 
     if (txt != "") {
       COMP_MSG ("%O compile\n", this_object());
@@ -7365,9 +7365,22 @@ static class PikeCompile
 
       compiled = res();
 
-      foreach (indices (loc_cur_ids), string i)
+      foreach (indices (cur_ids), string i) {
+#ifdef DEBUG
+	if (zero_type (compiled[i]))
+	  error ("Identifier %O doesn't exist in compiled code.\n", i);
+#endif
 	bindings[i] = compiled[i];
+      }
+
+      cur_ids = ([]);
     }
+
+#ifdef DEBUG
+    else
+      if (sizeof (cur_ids))
+	error ("Empty code got bound identifiers: %O\n", indices (cur_ids));
+#endif
 
     foreach (indices (delayed_resolve_places), mixed what) {
       mixed index = m_delete (delayed_resolve_places, what);
