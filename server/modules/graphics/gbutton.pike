@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.63 2000/10/17 21:01:40 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.64 2000/10/17 22:15:55 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -305,12 +305,22 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   //  otherwise load default images
   if ( !frame )
   {
-    catch {
-      set_image(Image.XCF.decode_layers(Stdio.read_file("roxen-images/gbutton.xcf")));
+    string data = Stdio.read_file("roxen-images/gbutton.xcf");
+    if (!data)
+      error ("Failed to load default frame image "
+	     "(roxen-images/gbutton.xcf): " + strerror (errno()));
+    mixed err = catch {
+      set_image(Image.XCF.decode_layers(data));
     };
     if( !frame )
-      error("Failed to load default frame image (roxen-images/gbutton.xcf)."
-            " Aborting\n");
+      if (err) {
+	catch (err[0] = "Failed to decode default frame image "
+	       "(roxen-images/gbutton.xcf): " + err[0]);
+	throw (err);
+      }
+      else
+	error("Failed to decode default frame image "
+	      "(roxen-images/gbutton.xcf).\n");
   }
 
 
