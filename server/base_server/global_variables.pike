@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.48 2000/10/19 12:24:02 per Exp $
+// $Id: global_variables.pike,v 1.49 2000/11/17 23:23:19 nilsson Exp $
 
 /*
 #pragma strict_types
@@ -429,12 +429,16 @@ void define_global_variables(  )
 		"directory you started Roxen. "
 		"The directories are searched in order for modules."));
 
-  defvar("Supports", "#include <etc/supports>\n",
-	 LOCALE(134, "Client supports regexps"), 
-	 TYPE_TEXT_FIELD|VAR_MORE,
-	 LOCALE(135, "What do the different clients support?\n<br />"
-	  "The default information is normally fetched from the file "
-	  "server/etc/supports in your Roxen directory."));
+  defvar("Supports",
+         Variable.Text( "#include <etc/supports>\n",
+                        VAR_MORE, LOCALE(134, "Client supports regexps"),
+                        LOCALE(135, "What do the different clients support?\n<br />"
+                               "The default information is normally fetched from the file "
+                               "server/etc/supports in your Roxen directory.") ) )
+    -> add_changed_callback( lambda(Variable.Text s) {
+                               roxenp()->initiate_supports();
+                               cache.cache_expire("supports");
+                             } );
 
   defvar("audit", 0, LOCALE(136, "Logging: Audit trail"), 
 	 TYPE_FLAG,
@@ -487,7 +491,7 @@ void define_global_variables(  )
 		"of the Roxen daemon. The entered value will be appended to "
 		"all logs."),
 	 0, syslog_disabled);
-#endif
+#endif // efun(syslog)
 
 #ifdef THREADS
   defvar("numthreads", 5, LOCALE(150, "Number of threads to run"), 
@@ -498,19 +502,7 @@ void define_global_variables(  )
 	  "system.\n"
 	  "<i>This is quite useful if you have more than one CPU in "
 	  "your machine, or if you have a lot of slow NFS accesses.</i></p>"));
-#endif
-
-#if 0
-  defvar("AutoUpdate", 1, 
-	 LOCALE(152, "Update the supports database automatically"),
-	 TYPE_FLAG,
-	 LOCALE(153, "If set to Yes, the etc/supports file will be updated "
-		"automatically from www.roxen.com now and then. This is "
-		"recomended, since you will then automatically get supports "
-		"information for new clients, and new versions of old ones."));
-
-  defvar("next_supports_update", time(1)+3600, "", TYPE_INT,"",0,1);
-#endif
+#endif // THREADS
 
 #ifndef __NT__
   defvar("abs_engage", 0, LOCALE(154, "ABS: Enable Anti-Block-System"), 
@@ -531,7 +523,7 @@ void define_global_variables(  )
 		"get a long downtime if the server for some reason locks up."),
 	 ({1,2,3,4,5,10,15}),
 	 lambda() {return !QUERY(abs_engage);});
-#endif
+#endif // __NT__
 
   defvar("locale",
 	 Variable.Language("Standard", ({ "Standard" }) +
