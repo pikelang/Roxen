@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.54 2000/01/07 05:11:40 mast Exp $
+ * $Id: rxml.pike,v 1.55 2000/01/08 03:53:09 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -41,10 +41,16 @@ string handle_help(string file, string tag, mapping args)
 // propagate their results to the tags they have overridden. This is
 // done by an extension to the return value:
 //
-// If an array is returned with a 1 as the first element, the rest of
-// the array is concatenated as a string and propagated to the
-// overridden tag (if any). If the array is only one element, the
-// unparsed text of the tag is propagated.
+// If an array of the form
+//
+// ({int 1, string name, mapping(string:string) args, void|string content})
+//
+// is returned, the tag function with the given name is called with
+// these arguments. If the name is the same as the current tag, the
+// overridden tag function is called. If there's no overridden
+// function, the tag is generated in the output. Any argument may be
+// left out to default to its value in the current tag. ({1, 0, 0})
+// may be shortened to ({1}).
 //
 // Note that there's no other way to handle tag overriding -- the page
 // is no longer parsed multiple times.
@@ -65,6 +71,55 @@ RXML.TagSet rxml_last_tag_set = class
     // FIXME: More...
   ]);
 } ("rxml_last_tag_set");
+
+array|string call_overridden (array call_to, RXML.PHtml parser,
+			      string name, mapping(string:string) args,
+			      string content, RequestID id, mixed... extra)
+{
+  mixed tdef, cdef;
+
+  if (sizeof (call_to) > 1 && call_to[1] && call_to[1] != name) // Another tag.
+    if (sizeof (call_to) == 3) tdef = parser->tags()[call_to[1]];
+    else cdef = parser->containers()[call_to[1]];
+  else {			// Same tag.
+    mixed curdef = id->misc->__tag_overrider_def || // Yep, ugly..
+      (content ? parser->containers()[name] : parser->tags()[name]);
+#ifdef DEBUG
+    if (!curdef) error ("Can't find tag definition for %s.\n", name);
+#endif
+    if (array tagdef = parser->get_overridden_low_tag (name, curdef)) {
+      [tdef, cdef] = tagdef;
+      id->misc->__tag_overrider_def = tdef || cdef;
+      if (sizeof (call_to) == 1) call_to = ({1, 0, args, content});
+    }
+  }
+
+  array|string result;
+  if (tdef)			// Call an overridden tag.
+    if (stringp (tdef))
+      result = ({tdef});
+    else if (arrayp (tdef))
+      result = tdef[0] (parser, call_to[2] || args, @tdef[1..], id, @extra);
+    else
+      result = tdef (parser, call_to[2] || args, id, @extra);
+  else if (cdef)		// Call an overridden container.
+    if (stringp (cdef))
+      result = ({cdef});
+    else if (arrayp (cdef))
+      result = cdef[0] (parser, call_to[2] || args, call_to[3] || content,
+			@cdef[1..], id, @extra);
+    else
+      result = cdef (parser, call_to[2] || args, call_to[3] || content, id, @extra);
+  else				// Nothing is overridden.
+    if (sizeof (call_to) == 3)
+      result = make_tag (call_to[1] || name, call_to[2] || args);
+    else if (sizeof (call_to) == 4)
+      result = make_container (call_to[1] || name, call_to[2] || args,
+			       call_to[3] || content);
+
+  m_delete (id->misc, "__tag_overrider_def");
+  return result;
+}
 
 array|string call_tag(RXML.PHtml parser, mapping args, string|function rf,
 		      RequestID id, Stdio.File file, mapping defines,
@@ -91,10 +146,9 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf,
   mixed result=rf(tag,args,id,file,defines,client);
   TRACE_LEAVE("");
   if(args->noparse && stringp(result)) return ({ result });
-  if (arrayp (result) && sizeof (result) && result[0] == 1) {
-    parser->ignore_tag();
-    return sizeof (result) > 1 && result[1..] * "";
-  }
+  if (arrayp (result) && sizeof (result) && result[0] == 1)
+    return call_overridden (result, parser, tag, args, 0,
+			    id, file, defines, client);
   return result;
 }
 
@@ -131,10 +185,9 @@ call_container(RXML.PHtml parser, mapping args, string contents, string|function
   mixed result=rf(tag,args,contents,id,file,defines,client);
   TRACE_LEAVE("");
   if(args->noparse && stringp(result)) return ({ result });
-  if (arrayp (result) && sizeof (result) && result[0] == 1) {
-    parser->ignore_tag();
-    return sizeof (result) > 1 && result[1..] * "";
-  }
+  if (arrayp (result) && sizeof (result) && result[0] == 1)
+    return call_overridden (result, parser, tag, args, contents,
+			    id, file, defines, client);
   return result;
 }
 
