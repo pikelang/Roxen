@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.71 1998/02/05 02:02:24 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.72 1998/02/27 05:39:29 neotron Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -446,18 +446,19 @@ class spawn_cgi
     }
 
     if(proc && kill_call_out) {
-      call_out(lambda (int pid) {
+      call_out(lambda (object proc) {
 	object privs;
 	catch(privs = Privs("Killing CGI script."));
 	int killed;
+	
 	killed = kill(pid, signum("SIGINTR"));
 	if(!killed)
 	  killed = kill(pid, signum("SIGHUP"));
 	if(!killed)
 	  killed = kill(pid, signum("SIGKILL"));
 	if(killed)
-	  roxen_perror("Killed CGI pid "+pid+"\n");
-      }, kill_call_out * 60 , proc->pid);
+	  roxen_perror("Killed CGI pid "+proc->pid+"\n");
+      }, kill_call_out * 60 , proc);
     }
 #else /* !constant(Process.create_process) */
     if (!(pid = fork())) {

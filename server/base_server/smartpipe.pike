@@ -94,9 +94,9 @@ void next_input()
   {
     outfd->set_blocking();
     sent +=
-      outfd->write(objectp(current_input)
+      outfd->write((objectp(current_input)
 		   ?current_input->read(current_input_len)
-		   :current_input);
+		   :current_input) || "");
     next_input();
     return;
   }

@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.21 1998/02/19 05:21:05 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.22 1998/02/27 05:39:30 neotron Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -152,7 +152,7 @@ array|mapping call_script(function fun, object got, object file)
 #ifndef THREADS
     if(got->misc->is_user && (us = file_stat(got->misc->is_user)))
       privs = Privs("Executing pikescript as non-www user", @us[5..6]);
-#else
+#elif defined(DEBUG)
     if(!getuid())
       report_debug("Not executing pike-script as owner, "
 		   "since we are using threads. UID is not thread "
