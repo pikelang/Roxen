@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.202 1998/05/15 07:50:03 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.203 1998/05/18 21:04:30 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1376,7 +1376,7 @@ object enable_configuration(string name)
   object cf = Configuration(name);
   configurations += ({ cf });
   current_configuration = cf;
-  report_notice("Enabled the virtual server \""+name+"\".");
+  report_notice("Enabled the virtual server \""+name+"\".\n");
   
   return cf;
 }
