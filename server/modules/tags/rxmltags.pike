@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.366 2002/04/17 13:41:43 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.367 2002/04/17 15:22:23 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2676,7 +2676,7 @@ class UserTagContents
       mixed content;
 
       // Do the work in _eval, do_enter and do_return. Can't use the
-      // do_* functions here since the frame isn't thread local here.
+      // do_* functions since the frame isn't thread local here.
 
       if (!upframe->got_content_result || args->eval) {
 	// Switch to the set of scopes that were defined at entry of
@@ -4306,10 +4306,7 @@ class TagIfDate {
     }
 
     t = localtime(time(1));
-    m_delete(t, "hour");
-    m_delete(t, "min");
-    m_delete(t, "sec");
-    b = mktime(t);
+    b = mktime(t - (["hour": 1, "min": 1, "sec": 1, "isdst": 1, "timezone": 1]));
 
     // Catch funny guys
     if(m->before && m->after) {
