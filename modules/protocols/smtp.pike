@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.2 1998/07/07 22:33:30 grubba Exp $
+ * $Id: smtp.pike,v 1.3 1998/07/08 18:01:32 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.2 1998/07/07 22:33:30 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.3 1998/07/08 18:01:32 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -60,6 +60,7 @@ class Server {
       "QUIT":"",
     ]);
 
+    object conf;
     int ehlo_mode;
 
     static void handle_command(string data)
@@ -143,14 +144,59 @@ class Server {
       Protocols.Ident->lookup_async(con, ident_HELO, args);
     }
 
+    static multiset(string) expand_recipient(string recipient)
+    {
+      multiset(string) expanded = (<>);
+      multiset(string) seen = (<>);
+      multiset(string) to_expand = (< recipient >);
+
+      while(sizeof(to_expand)) {
+	foreach(indices(to_expand), string r) {
+	  if (seen[r]) {
+	    // Shouldn't happen, but...
+	    expanded[r] = 1;
+	    continue;
+	  }
+	  to_expand[r] = 0;
+	  seen[r] = 1;
+	  foreach(conf->get_providers("smtp_recipient"), object o) {
+	    if (functionp(o->expand_recipient)) {
+	      multiset(string) nr = o->expand_recipient(r);
+	      if (nr) {
+		if (nr[r]) {
+		  // Loop means keep me.
+		  expanded[r] = 1;
+		}
+		to_expand |= nr - seen;
+		break;
+	      }
+	    }
+	  }
+	  expanded[r] = 1;
+	}
+      }
+      return(expanded);
+    }
+
+    void smtp_EXPN(string mail, string args)
+    {
+      if (!sizeof(args)) {
+	send(501, "Expected argument");
+	return;
+      }
+
+      multiset m = expand_recipient(args);
+
+      send(250, sort(indices(m)));
+    }
 
     string sender = "";
-    array(string) recipients = ({});
+    multiset(string) recipients = (<>);
 
     void smtp_MAIL(string mail, string args)
     {
       sender = "";
-      recipients = ({});
+      recipients = (<>);
 
       int i = search(args, ":");
       if (i >= 0) {
@@ -160,6 +206,20 @@ class Server {
 	  sender = args[i+1..];
 	  sscanf("%*[ ]%s", sender, sender);
 	  if (sizeof(sender)) {
+
+	    foreach(conf->get_providers("smtp_filter"), object o) {
+	      // roxen_perror("Got SMTP filter\n");
+	      if (functionp(o->verify_sender) &&
+		  o->verify_sender(sender)) {
+		// Refuse connection.
+#ifdef SMTP_DEBUG
+		roxen_perror("Refuse sender.\n");
+#endif /* SMTP_DEBUG */
+		send(550);
+		return;
+	      }
+	    }
+
 	    send(250);
 	    return;
 	  }
@@ -182,7 +242,20 @@ class Server {
 	  string recipient = args[i+1..];
 	  sscanf("%*[ ]%s", recipient, recipient);
 	  if (sizeof(recipient)) {
-	    recipients += ({ recipient });
+	    foreach(conf->get_providers("smtp_filter"), object o) {
+	      // roxen_perror("Got SMTP filter\n");
+	      if (functionp(o->verify_recipient) &&
+		  o->verify_recipient(sender, recipient, this_object())) {
+		// Refuse recipient.
+#ifdef SMTP_DEBUG
+		roxen_perror("Refuse recipient.\n");
+#endif /* SMTP_DEBUG */
+		send(550);
+		return;
+	      }
+	    }
+
+	    recipients += expand_recipient(recipient);
 	    send(250);
 	    return;
 	  }
@@ -216,8 +289,23 @@ class Server {
     constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 
-    void create(object con_)
+    void create(object con_, object conf_)
     {
+      conf = conf_;
+
+      foreach(conf->get_providers("smtp_filter"), object o) {
+	// roxen_perror("Got SMTP filter\n");
+	if (functionp(o->verify_connection) &&
+	    o->verify_connection(con_)) {
+	  // Refuse connection.
+#ifdef SMTP_DEBUG
+	  roxen_perror("Refuse connection.\n");
+#endif /* SMTP_DEBUG */
+	  con->close();
+	  return;
+	}
+      }
+
       ::create(con_);
 
       mapping lt = localtime(time());
@@ -228,20 +316,21 @@ class Server {
     }
   }
 
+  object conf;
+
   object port = Stdio.Port();
   void got_connection()
   {
     object con = port->accept();
-#if 0
-    if (callbacks->verify_connection) {
-      callbacks->verify_connection(con);
-    }
-#endif /* 0 */
-    Smtp_Connection(con);	// Start a new session.
+
+    Smtp_Connection(con, conf);	// Start a new session.
   }
 
-  void create(object|mapping callbacks, int|void portno, string|void host)
+  void create(object c, object|mapping callbacks,
+	      int|void portno, string|void host)
   {
+    conf = c;
+
     portno = portno || Protocols.Ports.tcp.smtp;
 
     object privs;
@@ -296,12 +385,12 @@ void create()
 
 object smtp_server;
 
-void start(int i)
+void start(int i, object c)
 {
-  if (!smtp_server) {
+  if (c && !smtp_server) {
     mixed err;
     err = catch {
-      smtp_server = Server(([]), QUERY(port));
+      smtp_server = Server(c, ([]), QUERY(port));
     };
     if (err) {
       report_error(sprintf("SMTP: Failed to initialize the server:\n"
