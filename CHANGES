@@ -1,3 +1,19 @@
+Changes since Roxen Challenger 1.1.1 alpha 5
+-----------------------------------------------
+
+o Now uses Pike 0.5b4
+
+o Shrunk the roxen-master.
+
+o The FTP-protocol module now supports named FTP. This is implemented by
+  mounting / on / and having "allow user=any" in "Security: Patterns".
+  One interesting feature is that users using named FTP can still see
+  the anonymous tree.
+
+o Install-script updated.
+
+o Now sets --prefix to . for the Pike-tree.
+
 Changes since Roxen Challenger 1.1.1 alpha 2
 -----------------------------------------------
 
