@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.134 2000/06/29 21:05:15 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.135 2000/07/02 16:58:56 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -199,6 +199,15 @@ class EntityClientLanguages {
   }
 }
 
+class EntityClientHost {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    if(c->id->host) return c->id->host;
+    return c->id->host=roxen->quick_ip_to_host(c->id->remoteaddr);
+  }
+}
+
 mapping client_scope=([
   "ip":EntityClientIP(),
   "name":EntityClientName(),
@@ -207,6 +216,7 @@ mapping client_scope=([
   "accept-languages":EntityClientAcceptLanguages(),
   "language":EntityClientLanguage(),
   "languages":EntityClientLanguages(),
+  "host":EntityClientHost(),
 ]);
 
 void set_entities(RXML.Context c) {
@@ -699,6 +709,7 @@ class TagDate {
 
     array do_return(RequestID id) {
       int t=(int)args["unix-time"] || time(1);
+      if(args->timezone=="GMT") t += localtime(t)->timezone;
       t+=Roxen.time_dequantifier(args);
 
       if(!(args->brief || args->time || args->date))
@@ -1649,6 +1660,7 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 "&client.ip;":"<desc ent>The client is located on this IP-address.</desc>",
+"&client.host;":"<desc ent>The host name of the client, if possible to resolve.</desc>",
 "&client.name;":"<desc ent>The name of the client, i.e. \"Mozilla/4.7\". </desc>",
 "&client.full-name;":#"<desc ent>The full user agent string, i.e. name of the client
  and additional info like; operating system, type of computer, etc.
@@ -1917,6 +1929,10 @@ Pike-script or Roxen module.
 <ex ><date unix-time='1'/></ex>
 <ex ><date unix-time='60'/></ex>
 <ex ><date unix-time='120'/></ex>
+</attr>
+
+<attr name=timezone value=local|GMT default=local>
+Display the time from another timezone.
 </attr>
 
 <attr name=years value=number>
