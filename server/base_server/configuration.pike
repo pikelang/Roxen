@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.241 1999/12/12 23:23:16 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.242 1999/12/21 23:51:33 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2852,6 +2852,10 @@ private string get_my_url()
 void enable_all_modules()
 {
   enabled_modules = retrieve("EnabledModules", this_object());
+
+  object ec = roxenloader.LowErrorContainer();
+  roxenloader.push_compile_error_handler( ec );
+
   array modules_to_process = indices( enabled_modules );
   string tmp_string;
 
@@ -2875,7 +2879,9 @@ void enable_all_modules()
         report_error(LOCALE->enable_module_failed(tmp_string, 
                                                   describe_backtrace(err)));
   }
-
+  roxenloader.pop_compile_error_handler();
+  if( strlen( ec->get() ) )
+    report_error( "While enabling modules in "+name+":\n"+ec->get() );
   report_notice("All modules for %s enabled in %3.1f seconds\n\n", 
                 query_name(),(gethrtime()-start_time)/1000000.0);
 }
