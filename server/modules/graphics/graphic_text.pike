@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.30 1997/02/25 16:05:30 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.31 1997/02/25 22:06:19 neotron Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -131,6 +131,7 @@ object(font) load_font(string name, string justification, int xs, int ys)
 {
   object fnt = font();
 
+  if(!name) name="";
   if(sscanf(name, "%*s/%*s") != 2)
     name=QUERY(default_size)+"/"+name;
 
