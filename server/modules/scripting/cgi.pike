@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.16 1999/05/23 23:59:58 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.17 1999/05/24 02:30:16 peter Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -837,7 +837,12 @@ void create(object conf)
 	 "of the Apache server (the extensions to handle can be set in the "
 	 "CGI-script extensions variable).");
 
-  defvar("ext", ({"cgi"}), "CGI-script extensions", TYPE_STRING_LIST,
+  defvar("ext",
+	 ({"cgi",
+#ifdef __NT__
+	   "exe",
+#endif	   
+	 }), "CGI-script extensions", TYPE_STRING_LIST,
          "All files ending with these extensions, will be parsed as "+
 	 "CGI-scripts.");
 
