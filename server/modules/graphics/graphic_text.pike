@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.48 1997/07/10 16:28:37 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.49 1997/07/11 06:00:06 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -88,7 +88,7 @@ array register_module()
 	      "                 &lt;gh1&gt;&lt;/gh&gt;, which would otherwise\n"
 	      "                 parse the whole document.\n"
 	      " help            Display this text\n"
-	      " scroll=width,steps,delay  Make a scrolltext\n"
+	      " scroll=width,steps,delay  Make a horrible scrolltext\n"
 	      "\n"
 	      "<b>Arguments passed on the the &lt;a&gt; tag (if href is specified):</b>\n "
 	      " target=...\n"

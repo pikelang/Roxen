@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.37 1997/07/06 23:03:27 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.38 1997/07/11 06:00:01 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2168,7 +2168,10 @@ int load_module(string module_file)
   }
 
   err = "";
-      
+  roxen->somemodules[module_file]=
+    ({ module_data[1], module_data[2]+"<p><i>"+
+       replace(obj->file_name_and_stuff(),"0<br>", module_file+"<br>")
+       +"</i>", module_data[0] });
   if (!arrayp( module_data ))
     err = "Register_module didn't return an array.\n";
   else

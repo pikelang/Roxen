@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.81 1997/07/10 16:28:30 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.82 1997/07/11 06:00:05 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -44,7 +44,7 @@ private program Configuration;	/*set in create*/
 
 array configurations = ({});
 object main_configuration_port;
-mapping allmodules;
+mapping allmodules, somemodules=([]);
 
 #if efun(send_fd)
 int shuffle_fd;
@@ -60,67 +60,7 @@ string real_version = "Roxen Challenger/1.2alpha7";
 // in the future.
 mapping portno=([]);
 
-// The code below was formely in decode.pike, but that object is 
-// cloned for each request.    Not exactly good for the performance..
-// It is a base64 decoder for the Authentification header (the Basic method)
-#define DEC(c) pr2six[(int)c]
-#define MAXVAL 63
-
-int *six2pr=({
-  'A','B','C','D','E','F','G','H','I','J','K','L','M',
-  'N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
-  'a','b','c','d','e','f','g','h','i','j','k','l','m',
-  'n','o','p','q','r','s','t','u','v','w','x','y','z',
-  '0','1','2','3','4','5','6','7','8','9','+','/', 
-  });
-
-int *pr2six = lambda() {
-    int j;
-    int *p=allocate(256);
-    for(j=0; j<256; j++) p[ j ] = MAXVAL+ 1;
-    for(j=0; j<64; j++) p[ six2pr[ j ] ] = j;
-    return p;
-}();
-
-public string decode(string bufcoded)
-{
-  string bufplain; 
-  int nbytesdecoded;
-  int in=0;
-  int out=0;
-  int nprbytes;
-
-  bufplain="";
-
-  // Strip leading whitespace. 
-  if(!strlen(bufcoded))
-    return "";
-  while(bufcoded[in]==' ' || bufcoded[in] == '\t') in++;
-
-  // Figure out how many characters are in the input buffer. 
-  out=in;
-  while((pr2six[bufcoded[in++]] <= MAXVAL) && (strlen(bufcoded)>in));
-  nprbytes = in - out - 1;
-  in=out;
-  out=0;
-  while (nprbytes > 0) {
-    bufplain+=sprintf("%c", (DEC(bufcoded[in])<<2   | DEC(bufcoded[in+1])>>4));
-    bufplain+=sprintf("%c", (DEC(bufcoded[in+1])<<4 | DEC(bufcoded[in+2])>>2));
-    bufplain+=sprintf("%c", (DEC(bufcoded[in+2])<<6 | DEC(bufcoded[in+3])));
-    in += 4;
-    nbytesdecoded += 3;
-    nprbytes -= 4;
-   }
-
-  if(pr2six[bufcoded[in-2]] == 64)
-    nbytesdecoded --;
-
-  if(pr2six[bufcoded[in-1]] == 64)
-    nbytesdecoded --;
-  nbytesdecoded --;
-
-  return bufplain[0..nbytesdecoded];
-}
+function decode = MIME.decode_base64;
 // End of what was formely known as decode.pike, the base64 decoder
 
 // Function pointer and the root of the to the configuration interface
@@ -965,13 +905,15 @@ string filename(object o)
   return my_loaded[object_program(o)]||last_module_name;
 }
 
+mapping module_stat_cache = ([]);
 object load(string s)   // Should perhaps be renamed to 'reload'. 
 {
   string cvs;
+  array st;
   sscanf(s, "/cvs:%s", cvs);
 
 //  perror("Module is "+s+"?");
-  if(file_stat(s+".pike"))
+  if(st=file_stat(s+".pike"))
   {
 //    perror("Yes, compile "+s+"?");
     if((cvs?(__p=master()->cvs_load_file( cvs+".pike" ))
@@ -979,22 +921,25 @@ object load(string s)   // Should perhaps be renamed to 'reload'.
     {
 //      perror("Yes.");
       my_loaded[__p]=s+".pike";
+      module_stat_cache[s-dirname(s)]=st;
       return __p();
     } else
       perror(s+".pike exists, but compilation failed.\n");
   }
-  if(file_stat(s+".lpc"))
+  if(st=file_stat(s+".lpc"))
     if(cvs?(__p=master()->cvs_load_file( cvs+".lpc" )):
        (__p=compile_file(s+".lpc")))
     {
       my_loaded[__p]=s+".lpc";
+      module_stat_cache[s-dirname(s)]=st;
       return __p();
     } else
       perror(s+".lpc exists, but compilation failed.\n");
-  if(file_stat(s+".module"))
+  if(st=file_stat(s+".module"))
     if(__p=load_module(s+".so"))
     {
       my_loaded[__p]=s+".so";
+      module_stat_cache[s-dirname(s)]=st;
       return __p();
     } else
       perror(s+".so exists, but compilation failed.\n");
@@ -1762,41 +1707,54 @@ void initiate_configuration_port( int|void first )
 	   "./configvar ConfigurationPort=22202\n");
   }
 }
-
+#include <stat.h>
 // Find all modules, so a list of them can be presented to the
 // user. This is not needed when the server is started.
 void scan_module_dir(string d)
 {
+  MD_PERROR(("\n\nLooking for modules in "+d+" "));
+
   string file,path=d;
   mixed err;
+  array q  = get_dir( d )||({}) - ({".","..","CVS","RCS" });
+  if(!sizeof(q)) return;
+  MD_PERROR(("There are "+language("en","number")(sizeof(q))+" files.\n"));
 
-  foreach( get_dir( d )||({}), file)
+  foreach( q, file )
   {
     _master->set_inhibit_compile_errors("");
     if ( file[0]!='.' && !backup_extension(file) && (file[-1]!='z'))
     {
-      if(Stdio.file_size(path+file) == -2)
+      array stat = file_stat(path+file);
+      if(!stat || (stat[ST_SIZE] < 0))
       {
-	if ((file!="CVS") && (file!="RCS")) {
-	  scan_module_dir(path+file+"/");
-	}
+	if(err = catch ( scan_module_dir(path+file+"/") ))
+	  MD_PERROR((sprintf("Error in module rescanning directory code:"
+			     " %s\n",describe_backtrace(err))));
       } else {
-	MD_PERROR(("Loading module: "+(file-("."+extension(file)))+" - "));
-
+	MD_PERROR(("Considering "+file+" - "));
+	if((module_stat_cache[path+file] &&
+	    module_stat_cache[path+file][ST_MTIME])==stat[ST_MTIME])
+	{
+	  MD_PERROR(("Already tried this one.\n"));
+	  continue;
+	}
+	module_stat_cache[path+file]=stat;
+	
 	switch(extension(file))
 	{
 	case "pike":
 	case "lpc":
 	  if(catch{
 	    if((open(path+file,"r")->read(4))=="#!NO") {
-	      MD_PERROR(("Not a module\n"));
-	      break;
+	      MD_PERROR(("Not a module"));
+	      file=0;
 	    }
 	  }) {
 	    MD_PERROR(("Couldn't open file\n"));
-	    break;
+	    file=0;
 	  }
-	  
+	  if(!file) break;
 	case "mod":
 	case "so":
 	  string *module_info;
@@ -1864,7 +1822,7 @@ void scan_module_dir(string d)
       }
     }
     if(strlen(_master->errors)) {
-      nwrite("While rescanning module list:\n" + _master->errors);
+      nwrite("Errors found in "+d+":\n" + _master->errors+"\n");
     }
     _master->set_inhibit_compile_errors(0);
   }
@@ -1875,7 +1833,7 @@ void rescan_modules()
   string file, path;
   mixed err;
   
-  allmodules=([]);
+  allmodules=copy_value(somemodules);
 
   foreach(QUERY(ModuleDirs), path)
   {

@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.16 1997/06/12 20:46:59 grubba Exp $ */
+/* $Id: module.pike,v 1.17 1997/07/11 06:00:03 per Exp $ */
 
 #include <module.h>
 
@@ -393,4 +393,21 @@ mixed stat_file(string f, object id){}
 mixed find_dir(string f, object id){}
 mixed real_file(string f, object id){}
 
-
+object get_font_from_var(string base)
+{
+  int weight, slant;
+  switch(query(base+"_weight"))
+  {
+   case "light": weight=-1; break;
+   default: weight=0; break;
+   case "bold": weight=1; break;
+   case "black": weight=2; break;
+  }
+  switch(query(base+"_slant"))
+  {
+   case "obligue": slant=-1; break;
+   default: slant=0; break;
+   case "italic": slant=1; break;
+  }
+  return get_font(query(base+"_font"), 32, weight, slant, "left", 0, 0);
+}
