@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.409 2002/12/03 11:38:18 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.410 2002/12/10 18:43:36 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3448,6 +3448,35 @@ class TagStrLen {
 	return 0;
       }
       result = (string)strlen(content);
+    }
+  }
+}
+
+class TagElements
+{
+  inherit RXML.Tag;
+  constant name = "elements";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = (["variable": RXML.t_text (RXML.PEnt)]);
+  array(RXML.Type) result_types = ({RXML.t_int}) + ::result_types;
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_enter()
+    {
+      mixed var;
+      if (zero_type (var = RXML.user_get_var (args->variable, args->scope)))
+	parse_error ("Variable %O doesn't exist.\n", args->variable);
+      if (objectp (var) && var->_sizeof)
+	result = var->_sizeof();
+      else if (arrayp (var) || mappingp (var))
+	result = sizeof (var);
+      else
+	result = 1;
+      if (result_type != RXML.t_int)
+	result = result_type->encode (result, RXML.t_int);
+      return 0;
     }
   }
 }
@@ -8354,6 +8383,23 @@ just got zapped?
  <ex>There are <strlen>foo bar gazonk</strlen> characters
  inside the tag.</ex>
 </desc>",
+
+//----------------------------------------------------------------------
+
+"elements": #"<desc type='tag'><p><short>
+ Returns the number of elements in a variable.</short> If the variable
+ isn't of a type which contains several elements (includes strings), 1
+ is returned. That makes it consistent with variable indexing, e.g.
+ var.foo.1 takes the first element in var.foo if it's an array, and if
+ it isn't then it's the same as var.foo.</p></desc>
+
+<attr name='variable' value='string'>
+ <p>The name of the variable.</p>
+</attr>
+
+<attr name='scope' value='string'>
+ <p>The name of the scope, unless given in the variable attribute.</p<
+</attr>",
 
 //----------------------------------------------------------------------
 
