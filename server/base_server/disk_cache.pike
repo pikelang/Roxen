@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: disk_cache.pike,v 1.41 1999/04/24 20:56:09 mast Exp $";
+// string cvs_version = "$Id: disk_cache.pike,v 1.42 1999/06/08 16:33:49 grubba Exp $";
 #include <module.h>
 #include <stat.h>
 
@@ -291,6 +291,7 @@ class Cache {
     // FIXME: Should use spawn_pike() here.
     object proc = Process.create_process(({
       "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
+      "-I", "lib/pike/include",
       "-M", "etc/modules", "bin/garbagecollector.pike"
       }), ([
 	"stdin":lcs,
