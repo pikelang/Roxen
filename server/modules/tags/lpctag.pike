@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.19 1999/02/01 00:36:47 peter Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.20 1999/07/04 12:40:21 grubba Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -55,6 +55,9 @@ void create()
     "<li><i>HTML text</i> - Include in the generated page as normal text.\n"
     "</ul>\n",
     ({"Off", "Log", "HTML comment", "HTML text"}));
+
+  defvar("program_cache_limit", 256, "Program cache limit", TYPE_INT|VAR_MORE,
+	 "Maximum size of the cache for compiled programs.");
 }
 
 string reporterr (string header, string dump)
@@ -128,6 +131,8 @@ private nomask inline string post(string what)
     return "}";
 }
 
+private static mapping(string:program) program_cache = ([]);
+
 // Compile and run the contents of the tag (in s) as a pike
 // program. 
 string tag_pike(string tag, mapping m, string s, object request_id,
@@ -148,7 +153,25 @@ string tag_pike(string tag, mapping m, string s, object request_id,
     _master->set_inhibit_compile_errors("");
     if(err=catch {
       s=pre(s)+s+post(s);
-      p = compile_string(s, "Pike-tag");
+      p = program_cache[s];
+
+      if (!p) {
+	// Not in the program cache.
+
+	p = compile_string(s, "Pike-tag");
+
+	if (sizeof(program_cache) > QUERY(program_cache_limit)) {
+	  array a = indices(program_cache);
+	  int i;
+
+	  // Zap somewhere between 25 & 50% of the cache.
+	  for(i = QUERY(program_cache_limit)/2; i > 0; i--) {
+	    m_delete(program_cache, a[random(sizeof(a))]);
+	  }
+	}
+
+	program_cache[s] = p;
+      }
     })
     {
       return reporterr(sprintf("Error compiling <pike> tag in %O:\n"
