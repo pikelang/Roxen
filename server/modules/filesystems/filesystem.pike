@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.92 2000/12/29 15:09:18 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.93 2001/01/04 06:02:50 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -19,12 +19,6 @@ constant thread_safe=1;
 //<locale-token project="mod_filesystem">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_filesystem",X,Y)
 // end of the locale related stuff
-
-#if DEBUG_LEVEL > 20
-# ifndef FILESYSTEM_DEBUG
-#  define FILESYSTEM_DEBUG
-# endif
-#endif
 
 #ifdef FILESYSTEM_DEBUG
 # define FILESYSTEM_WERR(X) werror("Filesystem: "+X+"\n")

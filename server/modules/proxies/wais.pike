@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.22 2000/11/21 19:01:31 per Exp $";
+string cvs_version = "$Id: wais.pike,v 1.23 2001/01/04 06:03:29 nilsson Exp $";
 
 #include <config.h>
 #include <module.h>
@@ -15,12 +15,6 @@ string cvs_version = "$Id: wais.pike,v 1.22 2000/11/21 19:01:31 per Exp $";
 
 // #define WAIS_DEBUG    //define this to have lot of debug
 // #define WAIS_DEBUG_2  //define this to have an insane level of debug
-
-#if DEBUG_LEVEL > 22
-# ifndef WAIS_DEBUG
-#  define WAIS_DEBUG
-# endif
-#endif
 
 #ifdef WAIS_DEBUG_2
 # define WAIS_DEBUG

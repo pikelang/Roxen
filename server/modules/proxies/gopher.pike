@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.24 2000/08/19 08:52:42 per Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.25 2001/01/04 06:03:28 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -12,12 +12,6 @@ constant thread_safe = 1;
 "refused </title>\n<h1>Proxy request failed</h1><hr /><font "		\
 "size=\"+2\"><i>Connection refused by remote host</i></font><hr><font "	\
 "size=\"-2\"><a href=http://www.roxen.com/>Roxen</a></font>"
-
-#if DEBUG_LEVEL > 22
-# ifndef GOPHER_DEBUG
-#  define GOPHER_DEBUG
-# endif
-#endif
 
 #ifdef GOPHER_DEBUG
 # define GOPHER_WERR(X) werror("GOPHER: "+X+"\n")

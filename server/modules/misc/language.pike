@@ -2,15 +2,9 @@
 //
 inherit "module";
 
-constant cvs_version = "$Id: language.pike,v 1.31 2000/09/10 16:50:30 nilsson Exp $";
+constant cvs_version = "$Id: language.pike,v 1.32 2001/01/04 06:03:08 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
-
-#if DEBUG_LEVEL > 20
-# ifndef LANGUAGE_DEBUG
-#  define LANGUAGE_DEBUG
-# endif
-#endif
 
 #ifdef LANGUAGE_DEBUG
 # define LANGUAGE_WERR(X) werror("Language: "+X+"\n")

@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.57 2000/09/21 03:57:39 per Exp $
+// $Id: cache.pike,v 1.58 2001/01/04 06:02:14 nilsson Exp $
 
 #pragma strict_types
 
@@ -19,12 +19,6 @@
 // The size of the entry, in byts.
 #define SIZE 3
 
-#if DEBUG_LEVEL > 8
-# ifndef CACHE_DEBUG
-#  define CACHE_DEBUG
-# endif
-#endif
-
 #undef CACHE_WERR
 #ifdef CACHE_DEBUG
 # define CACHE_WERR(X) werror("CACHE: "+X+"\n");
@@ -32,11 +26,11 @@
 # define CACHE_WERR(X)
 #endif
 
-#undef CACHE40_WERR
-#if DEBUG_LEVEL > 40
-# define CACHE40_WERR(X) werror("CACHE: "+X+"\n");
+#undef MORE_CACHE_WERR
+#ifdef MORE_CACHE_DEBUG
+# define MORE_CACHE_WERR(X) werror("CACHE: "+X+"\n");
 #else
-# define CACHE40_WERR(X)
+# define MORE_CACHE_WERR(X)
 #endif
 
 // The actual cache along with some statistics mappings.
@@ -156,7 +150,7 @@ void cache_remove(string in, string what)
 // Add an entry to a cache
 mixed cache_set(string in, string what, mixed to, int|void tm)
 {
-#if DEBUG_LEVEL > 40
+#if MORE_CACHE_DEBUG
   CACHE_WERR(sprintf("cache_set(\"%s\", \"%s\", %O)\n",
 		     in, what, to));
 #else
@@ -184,42 +178,40 @@ void cache_clean()
   CACHE_WERR("cache_clean()");
   foreach(indices(cache), a)
   {
-    CACHE40_WERR("  Class  " + a);
+    MORE_CACHE_WERR("  Class  " + a);
     foreach(indices(cache[a]), b)
     {
-      CACHE40_WERR("     " + b + " ");
+      MORE_CACHE_WERR("     " + b + " ");
       c = cache[a][b];
 #ifdef DEBUG
       if(!intp(c[TIMESTAMP]))
 	error("     Illegal timestamp in cache ("+a+":"+b+")\n");
 #endif
       if(c[TIMEOUT] && c[TIMEOUT] < t) {
-	CACHE40_WERR("     DELETED (explicit timeout)");
+	MORE_CACHE_WERR("     DELETED (explicit timeout)");
 	m_delete(cache[a], b);
       }
       else {
 	if(!c[SIZE]) {
 	  c[SIZE]=(get_size(b) + get_size(c[DATA]) + 5*svalsize + 4)/100;
 	  // (Entry size + cache overhead) / arbitrary factor
-          CACHE40_WERR("     Cache entry size percieved as " +
-		       ([int]c[SIZE]*100) + " bytes\n");
+          MORE_CACHE_WERR("     Cache entry size percieved as " +
+			  ([int]c[SIZE]*100) + " bytes\n");
 	}
 	if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + gc_time -
 	   c[SIZE] < t)
 	  {
-	    CACHE40_WERR("     DELETED");
+	    MORE_CACHE_WERR("     DELETED");
 	    m_delete(cache[a], b);
 	  }
-#ifdef CACHE_DEBUG
-#if DEBUG_LEVEL > 40
+#ifdef MORE_CACHE_DEBUG
 	else
 	  CACHE_WERR("Ok");
-#endif
 #endif
       }
       if(!sizeof(cache[a]))
       {
-	CACHE40_WERR("  Class DELETED.");
+	MORE_CACHE_WERR("  Class DELETED.");
 	m_delete(cache, a);
       }
     }
