@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.102 1999/05/29 13:32:24 wing Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.103 1999/05/29 14:05:41 wing Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1032,6 +1032,26 @@ private string remove_leading_trailing_ws( string str )
   return str;
 }
 
+// This method needs lot of work... but so do the rest of the system too
+// RXML needs types
+private int compare( string a, string b )
+{
+  if ((string)(int)a == a && (string)(int)b == b)
+    if ((int )a > (int )b)
+      return 1;
+    else if ((int )a < (int )b)
+      return -1;
+    else
+      return 0;
+  else
+    if (a > b)
+      return 1;
+    else if (a < b)
+      return -1;
+    else
+      return 0;
+}
+
 // method for use by tags that replace variables in their content, like
 // formoutput, sqloutput and others
 string do_output_tag( mapping args, array (mapping) var_arr, string contents,
@@ -1068,44 +1088,32 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
     array order;
 
     order = args->sort / "," - ({ "" });
+    werror( sprintf( "var_arr: %O\n", var_arr ) );
     var_arr = Array.sort_array( var_arr,
 				lambda (mapping m1, mapping m2, array order)
 				{
 				  int tmp;
 
-				  function compare = lambda (string a,
-							     string b)
-						     {
-						       if (a < b)
-							 return -1;
-						       else if (a > b)
-							 return 1;
-						       else
-							 return 0;
-						     };
 				  foreach (order, string field)
 				  {
+				    int tmp;
+				    
 				    if (field[0] == '-')
-				    {
-				      if (tmp = compare( m2[field[1..]],
-							 m1[field[1..]] ))
-					return tmp;
-				    }
+				      tmp = compare( m2[field[1..]],
+						     m1[field[1..]] );
 				    else if (field[0] == '+')
-				    {
-				      if (tmp = compare( m1[field[1..]],
-							 m2[field[1..]] ))
-					return tmp;
-				    }
+				      tmp = compare( m1[field[1..]],
+						     m2[field[1..]] );
 				    else
-				    {
-				      if (tmp = compare( m1[field],
-							 m2[field] ))
-					return tmp;
-				    }
+				      tmp = compare( m1[field], m2[field] );
+				    if (tmp == 1)
+				      return 1;
+				    else if (tmp == -1)
+				      return 0;
 				  }
 				  return 0;
 				}, order );
+    werror( sprintf( "sorted var_arr: %O\n", var_arr ) );
   }
 
   if (args->range)
