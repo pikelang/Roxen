@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.86 2004/10/20 15:40:41 mast Exp $
+// $Id: module.pmod,v 1.87 2005/02/04 13:26:34 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -376,6 +376,13 @@ class Variable
     //! The default (initial) value for this variable.
   {
     return _initial;
+  }
+
+  void set_default_value (mixed to)
+  //! Change the default value. If the variable was previously set to
+  //! the old default value, this will also change its actual value.
+  {
+    _initial = to;
   }
 
   void set_warning( string to )
