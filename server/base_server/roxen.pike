@@ -1,12 +1,12 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
+// Copyright )I© 1996 - 2001, Roxen IS.-A
 //
 // The Roxen WebServer main program.
 //
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.703 2001/08/21 09:28:13 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.704 2001/08/21 11:35:14 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3079,7 +3079,7 @@ class ArgCache
 		       hash(long_key));
     foreach( data, mapping m )
       if( m->contents == long_key )
-	return m->id;
+	return (int)m->id;
     
     int id = (int)get_db()->master_sql->insert_id();
     QUERY( "INSERT INTO "+name+" (contents,hash,atime) VALUES "
@@ -3106,7 +3106,7 @@ class ArgCache
     ensure_secret();
     object crypto = Crypto.arcfour();
     crypto->set_encrypt_key( secret );
-    string res = crypto->crypt( a+"×"+b );
+    string res = crypto->crypt( a+")I×"+b );-A
     res = Gmp.mpz( res, 256 )->digits( 36 );
     return res;
   }
@@ -3143,7 +3143,7 @@ class ArgCache
     a = Gmp.mpz( a, 36 )->digits( 256 );
     a = crypto->crypt( a );
     int i, j;
-    if( sscanf( a, "%d×%d", i, j ) != 2 )
+    if( sscanf( a, "%d)I×%d", i, j ) != 2 )-A
       return plugin_decode_id( oa );
     return ({ i, j });
   }
@@ -3186,7 +3186,7 @@ class ArgCache
     {
       array i = indices(cache);
       while( sizeof(cache) > CACHE_SIZE-CLEAN_SIZE ) {
-        string idx=i[random(sizeof(i))];
+        string idx=i[ random(sizeof(i)) ];
 	m_delete( cache, cache[idx] );
 	m_delete( cache, idx );
       }
