@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.133 1998/05/23 14:43:51 wing Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.134 1998/05/23 14:46:29 wing Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1018,11 +1018,11 @@ object _lock(object|function f)
     if (l != -1)
     {
       // Allow recursive locks.
-      catch({
+      catch{
 	//perror("lock %O\n", f);
 	locked[f]++;
 	key = l();
-      });
+      };
     } else
       thread_safe[f]++;
   } else if (f->thread_safe) {
