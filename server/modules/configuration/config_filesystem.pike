@@ -12,7 +12,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.28 2000/03/03 22:00:33 grubba Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.29 2000/03/13 06:20:47 per Exp $";
 
 constant path = "config_interface/";
 
@@ -32,28 +32,32 @@ string template_for( string f, object id )
 // Returns ({ realfile, statinfo }).
 array(string|array) low_stat_file(string locale, string f, object id)
 {
-  array ret;
-  if (!f) {
-    ret = low_stat_file(locale, "", id);
+  foreach( ({ "../local/"+path, path }), string path )
+  {
+    array ret;
+    if (!f) 
+    {
+      ret = low_stat_file(locale, "", id);
 
-    if (ret) {
-      return ret;
+      if (ret) 
+        return ret;
+
+      // Support stuff like /template  =>  /standard/template
+      f = locale;
+      locale = "standard";
     }
-
-    // Support stuff like /template  =>  /standard/template
-    f = locale;
-    locale = "standard";
-  }
-  if (locale == "standard") {
-    locale = roxen->default_locale->latin1_name;
-  }
-  string p;
-  ret = file_stat(p = path+locale+"/"+f);
-  if (!ret && (locale != "standard")) {
-    locale = "standard";
+    if (locale == "standard")
+      locale = roxen->default_locale->latin1_name;
+    string p;
     ret = file_stat(p = path+locale+"/"+f);
+    if (!ret && (locale != "standard")) 
+    {
+      locale = "standard";
+      ret = file_stat(p = path+locale+"/"+f);
+    }
+    if( ret )
+      return ({ p, ret });
   }
-  return ret && ({ p, ret });
 }
 
 string real_file( mixed f, mixed id )
