@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.541 2003/09/18 17:17:26 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.542 2003/10/07 10:45:08 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2172,7 +2172,10 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
     {
       /* file == loc + subpath */
 #ifdef MODULE_LEVEL_SECURITY
-      if(check_security(tmp[1], id)) continue;
+      if(check_security(tmp[1], id)) {
+	TRACE_LEAVE("Security check failed.");
+	continue;
+      }
 #endif
       RoxenModule c = function_object(tmp[1]);
       string f = file[strlen(loc)..];
