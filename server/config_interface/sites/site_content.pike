@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.131 2001/11/07 14:00:58 grubba Exp $
+// $Id: site_content.pike,v 1.132 2002/01/11 11:01:32 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -413,6 +413,7 @@ string module_page( RequestID id, string conf, string module )
 string port_for( string url, int settings )
 {
   url = (url/"#")[0];
+  url = roxen->normalize_url(url);
   if(!roxen->urls[url] ) return "";
   Protocol p = roxen->urls[url]->port;
   if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
