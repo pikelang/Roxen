@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.288 1999/05/25 09:49:02 per Exp $
+ * $Id: roxen.pike,v 1.289 1999/05/25 10:53:05 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.288 1999/05/25 09:49:02 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.289 1999/05/25 10:53:05 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -1969,7 +1969,7 @@ class ImageCache
       if( quant || (format=="gif") )
       {
         int ncols = quant||id->misc->defquant||16;
-        if( ncols > 200 )
+        if( ncols > 250 )
           ncols = 250;
         ct = Image.Colortable( reply, ncols );
         if( dither )
