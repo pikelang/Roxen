@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.26 1998/09/18 00:54:47 js Exp $
+ * $Id: webadm.pike,v 1.27 1998/09/22 20:03:55 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.26 1998/09/18 00:54:47 js Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.27 1998/09/22 20:03:55 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -84,16 +84,26 @@ string|int get_variable_value(object db, string scheme_id, string variable)
 
 string tag_include(string tag, mapping args, string base, mapping opts)
 {
-  if(args->file) {
-    args->file-= "../";
+  args->file -= "../";
+  if(sizeof(args->file)) {
     string s = Stdio.read_bytes(base+args->file);
     if(s) {
-      opts->include=1;
+      opts->include = 1;
       return s;
     }
-    else werror("Can not open file "+base+args->file);
+    else werror("Can not open file (include tag)"+base+args->file);
   }
   return "";
+}
+
+string mean_color(string c1, string c2)
+{
+  array a_c1 = parse_color(c1);
+  array a_c2 = parse_color(c2);
+  if(!a_c1||!a_c2)
+    return c1;
+  return sprintf("#%02x%02x%02x",
+		 @((array)Image->colortable(0,0,0, a_c1, a_c2, 3))[1]);
 }
 
 string update_template(string tag_name, mapping args, object id)
@@ -130,21 +140,38 @@ string update_template(string tag_name, mapping args, object id)
     db->query("select * from customers_schemes_vars,template_vars where "
 	      "customers_schemes_vars.scheme_id='"+scheme_id+"' and "
 	      "customers_schemes_vars.variable_id=template_vars.id");
+  
+  mapping vars=([]);
+  foreach(variables, mapping variable) {
+    vars[variable->name] = variable->value;
+  }
+  if(vars["bg_image"]&&sizeof(vars["bg_image"])) {
+    vars["bg_image_color_2"] = vars["bg_color"];
+    vars["bg_color"] = mean_color(vars->bg_color,
+				  vars->bg_image_color);
+  }
 
+  if(vars["bg_text_image"]&&sizeof(vars["bg_text_image"])) {
+    vars["bg_text_image_color_2"] = vars["bg_text_color"];
+    vars["bg_text_color"] = mean_color(vars->bg_text_color,
+				       vars->bg_text_image_color);
+  }
+  
   mapping opts = ([ "include":1 ]);
   while(opts->include) {
     // Replace placeholders with customer spesific preferences  
-    foreach(variables, mapping variable) {
-      string from = "$$"+variable->name+"$$";
-      string to = variable->value;
-      if(variable->type == "font")
-	to = replace(to, " ", "_");
+    foreach(indices(vars), string variable) {
+      string from = "$$"+variable+"$$";
+      string to = vars[variable];
+      //      if(variable->type == "font")
+      //	to = replace(to, " ", "_");
       template = replace(template, from, to);
     }
     // Insert files (eg navigation template)
     opts->include = 0;
     template =
-      parse_html(template, ([ "include": tag_include ]), ([ ]), templatesdir, opts);
+      parse_html(template, ([ "include": tag_include ]), ([ ]),
+		 templatesdir, opts);
   }
   
   // Save new template
@@ -284,6 +311,9 @@ mixed find_file(string f, object id)
   }
 
   sscanf(f, "%s/%s", tab, sub);
+  string tabnum = 0, tabname = "";
+  sscanf(f, "%d:%s", tabnum, tabname);
+  id->variables->activetab = tabname;
   string res = "<template base=/"+(query("location")-"/")+">\n";
 
   res += "<tablist>"+make_tablist(tablist, tabs[tab], id)+"</tablist>";
