@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.127 1998/05/21 18:24:03 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.128 1998/06/02 16:37:33 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -707,7 +707,7 @@ array to_clean = ({});
 void clean_cache_dir()
 {
   if(!sizeof(to_clean))
-    to_clean = get_dir(query("cache_dir"));
+    to_clean = get_dir(query("cache_dir"))||({});
   if(!sizeof(to_clean)) return;
   array st = file_stat(query("cache_dir")+to_clean[0]);
   int md;
