@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.27 1998/09/14 06:19:28 js Exp $
+# $Id: db.spec,v 1.28 1998/09/15 20:25:32 grubba Exp $
 
 drop table messages;
 drop table mail;
@@ -66,6 +66,7 @@ create table send_q (
 	     user		     varchar(255),
 	     domain		     varchar(255),
 	     mailid		     varchar(32),
+	     received_at	     int,
 	     send_at		     int,
 	     times		     int
      );
