@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.216 2004/06/30 16:58:38 mast Exp $
+// $Id: module.pike,v 1.217 2004/09/19 18:07:22 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -253,7 +253,7 @@ array(string) location_urls()
 }
 
 /* By default, provide nothing. */
-string query_provides() { return 0; }
+multiset(string) query_provides() { return 0; }
 
 
 function(RequestID:int|mapping) query_seclevels()
@@ -388,6 +388,9 @@ class DefaultPropertySet
 //!   the properties.
 //!
 //!   Otherwise returns a @[PropertySet] object.
+//!
+//! @seealso
+//!   @[query_property()]
 PropertySet|mapping(string:mixed) query_property_set(string path, RequestID id)
 {
   SIMPLE_TRACE_ENTER (this, "Querying properties on %O", path);
@@ -409,6 +412,9 @@ PropertySet|mapping(string:mixed) query_property_set(string path, RequestID id)
 //! @note
 //!   Returning a string is shorthand for returning an array
 //!   with a single text node.
+//!
+//! @seealso
+//!   @[query_property_set()]
 string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
   query_property(string path, string prop_name, RequestID id)
 {
@@ -424,7 +430,10 @@ string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
 }
 
 //! RFC 2518 PROPFIND implementation with recursion according to
-//! @[depth]. See @[find_properties] for details.
+//! @[depth]. See @[PropertySet()->find_properties()] for details.
+//!
+//! @seealso
+//!   @[query_property_set()]
 mapping(string:mixed) recurse_find_properties(string path, string mode,
 					      int depth, RequestID id,
 					      multiset(string)|void filt)
