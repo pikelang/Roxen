@@ -2,8 +2,8 @@ import files;
 import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
-// Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.30 1997/08/12 21:41:04 grubba Exp $";
+// Set up the roxen environment. Including custom functions like spawne().
+string cvs_version="$Id: roxenloader.pike,v 1.31 1997/08/15 09:47:52 grubba Exp $";
 
 #define perror roxen_perror
 
