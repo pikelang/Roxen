@@ -5,7 +5,7 @@
 //
 // made by Mattias Wingstedt
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.20 2000/05/05 15:29:31 kuntri Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.21 2000/05/05 15:31:11 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -92,7 +92,7 @@ constant tagdoc=([
  Which link to fetch from the database. There is a special case,
  <att>name='random'</att> that will choose a random link from the
  database.
- <ex><ai name=roxen>Roxen Platform</ai></ex>
+ <ex><ai name='roxen'>Roxen Platform</ai></ex>
  </attr>",
     ]);
 #endif
