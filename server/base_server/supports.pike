@@ -115,39 +115,37 @@ public void initiate_supports()
 
 private array(multiset|mapping) lookup_supports(string from)
 {
-  array ret;
+  if(array q = cache_lookup("supports", from))
+    return q;
 
-  if(!(ret = cache_lookup("supports", from)) ) {
-    multiset (string) sup=(<>);
-    mapping (string:string) m=([]);
-    multiset (string) nsup = (< >);
-    foreach(indices(supports), string v)
+  multiset (string) sup = (<>);
+  mapping (string:string) m = ([]);
+  multiset (string) nsup = (< >);
+
+  foreach(indices(supports), string v)
+  {
+    if(!v || !search(from, v))
     {
-      if(!v || !search(from, v))
-      {
-	//  werror("Section "+v+" match "+from+"\n");
-	foreach(supports[v], array(function|multiset) s)
-	  if(s[0](from))
-	  {
-	    sup |= s[1];
-	    nsup |= s[2];
-            m += s[3];
-	  }
-      }
+      //  werror("Section "+v+" match "+from+"\n");
+      foreach(supports[v], array(function|multiset) s)
+        if(s[0](from))
+        {
+          sup |= s[1];
+          nsup |= s[2];
+          m |= s[3];
+        }
     }
-    if(!sizeof(sup))
-    {
-      sup = default_supports;
-#ifdef DEBUG
-      werror("Unknown client: \""+from+"\"\n");
-#endif
-    }
-    sup -= nsup;
-    ret=({ sup, m});
-    cache_set("supports", from, ret);
   }
-
-  return ret;
+  if(!sizeof(sup))
+  {
+    sup = default_supports;
+#ifdef DEBUG
+    werror("Unknown client: \""+from+"\"\n");
+#endif
+  }
+  sup -= nsup;
+  cache_set("supports", from, ({sup,m}));
+  return ({ sup, m });
 }
 
 
@@ -156,7 +154,7 @@ private array(multiset|mapping) lookup_supports(string from)
 // Return a list of 'supports' flags for the current connection.
 multiset(string) find_supports(string from, void|multiset existing_sup)
 {
-  if(!existing_sup) existing_sup=(<>);
+  if(!multisetp(existing_sup)) existing_sup=(<>);
   if(!strlen(from) || from == "unknown")
     return default_supports|existing_sup;
 
@@ -166,11 +164,11 @@ multiset(string) find_supports(string from, void|multiset existing_sup)
 // Return a list of 'supports' variables for the current connection.
 mapping(string:string) find_client_var(string from, void|mapping existing_cv)
 {
-  if(!existing_cv) existing_cv=([]);
+  if(!mappingp(existing_cv)) existing_cv=([]);
   if(!strlen(from) || from == "unknown")
-    return default_client_var+existing_cv;
+    return default_client_var|existing_cv;
 
-  return lookup_supports(from)[1]+existing_cv;
+  return lookup_supports(from)[1]|existing_cv;
 }
 
 
