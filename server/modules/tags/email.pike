@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.6 2001/03/08 14:35:46 per Exp $";
+constant cvs_version = "$Id: email.pike,v 1.7 2001/03/09 10:15:01 kuntri Exp $";
 
 constant thread_safe=1;
 
@@ -450,15 +450,14 @@ The <tag>email</tag> sends MIME compliant mail to a mail server
 using the (E)SMTP protocol. The content is sent as raw text
 
 Attribute default values can be changed within the <i>E-mail
-module's</> administration interface.</p>
-
+module's</i> administration interface.</p>
 </desc>
 
 <attr name='server' value='URL' default='localhost'><p> The hostname
 of the machine that operates the mail server.  </p>
 </attr>
 
-<attr name='subject default=''[ * No Subject * ]''
+<attr name='subject' default='\"[ * No Subject * ]\"'
 value=''><p>
  The subject line.
 </p>
@@ -520,7 +519,7 @@ split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
 </attr>
 
 
-<ex type='box>
+<ex type='box'>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
 split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
@@ -535,7 +534,7 @@ split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
  </short>This container is designed for adding a signature to the
  mail.</p></desc>
 
-<ex type='box>
+<ex type='box'>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
 split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
@@ -555,7 +554,66 @@ Roxen Administrator
 "attachment":#"<desc tag='tag' cont='cont''><p><short hide='hide'>
  Adds attachments to the mail.</short>This tag/subcontainer is
  designed for adding attachments to the mail. </p>
+
+ <p>There are two different kinds of attachments; file and inline.
+ File attachments require the <i>file</i> attribute while inline
+ attachments are written inline. Inline attachments can for instance
+ be a text or a binary (e.g. output from a database). </p>
+
+<ex type='box'>
+<email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
+split=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
+
+<header name=\"X-foo-header\" value=\"one two three\" />
+<header name=\"Importance\">Normal</header>
+<header name=\"X-MSMail-Priority\" value=\"Normal\" />
+ This is the contents.
+
+<attachment file=\"/images/hello.gif\" />
+<attachment file=\"/excel/p_123.xls\" name=\"partners.xls\" />
+
+<attachment name=\"partners.txt\" >
+      company1        1.2345  abc
+      company2        2.345   ix
+      company8        3.4567  az
+</attachment>
+</email>
+</ex>
+
 </desc>
+
+<attr name='file' value='path'><p>
+ The path to the file in the virtual filesystem. If this attribute is
+ omitted it is assumed that the attachment is a text attachment.</p>
+</attr>
+
+<!--
+ Not implemented yet.
+<attr name='href' value='URL'>
+ Similar to <i>file</i> but used when the attachment is located
+ elsewhere, i.e. \"somewhere on the Net\".
+</attr>
+-->
+
+<attr name='name' value='filename'><p>
+ The filename. When sending a file attachment this name is what the
+ reciever will see in his/hers list of attachment, not the original
+ filename. If omitted, the original name will be used. This attribute
+ is required when sending inline text or binary attachments.</p>
+</attr>
+
+<attr name='mimetype' value='MIME type'><p>
+ Sets the MIME type of the file. Since MIME type is set by the
+ <i>Content types</i> module this setting seldom needs to be
+ used. Only applicable for <i>file</i> attachments.</p>
+</attr>
+
+<attr name='mimeencoding' value='MIME encoding' default='base64'><p>
+ Sets the MIME encoding of the file. If omitted the <i>E-mail
+ module's</i> default setting within the <webserver /> Administration
+ interface will be used. Only applicable for <i>file</i>
+ attachments.</p>
+</attr>
 
 
 "])
