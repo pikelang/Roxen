@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.28 1997/12/15 20:05:14 peter Exp $";
+string cvs_version = "$Id: install.pike,v 1.29 1998/02/22 14:06:16 mirar Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -87,7 +87,7 @@ void setglobvar(string var, mixed value)
 }
 
 
-varargs int run(string file,string ... foo)
+int run(string file,string ... foo)
 {
   string path;
   if(search(file,"/") != -1)
