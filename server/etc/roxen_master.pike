@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.123 2002/04/18 11:53:15 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.124 2002/04/18 11:55:35 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -323,10 +323,10 @@ class MyCodec
 	return "efun:"+tmp;
 
       if((tmp=search(values(__builtin), x))!=-1)
-	return "__builtin."+(indices(__builtin)[tmp]);
+	return "resolv:__builtin."+(indices(__builtin)[tmp]);
 
       if((tmp=search(values(_static_modules), x))!=-1)
-	return "_static_modules."+(indices(_static_modules)[tmp]);
+	return "resolv:_static_modules."+(indices(_static_modules)[tmp]);
 
       if ( programp (x) )
       {
