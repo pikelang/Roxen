@@ -1,6 +1,6 @@
 // This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.54 2004/05/21 23:52:54 mani Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.55 2004/05/23 12:56:02 _cvs_stephen Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -54,20 +54,21 @@ mapping find_internal(string f, RequestID id)
   
   //  Cache the files
   string file = combine_path(__FILE__, "../scripts", (f-".."));
-  int|string data;
+  int|array data;
   if (!(data = file_cache[file])) {
     //  Put entry in cache. Missing files are stored as -1.
-    if (!file_stat(file)) {
+    Stdio.Stat st;
+    if (!(st = file_stat(file))) {
       file_cache[file] = -1;
       return 0;
     }
-    data = file_cache[file] = Stdio.read_bytes(file);
+    data = file_cache[file] = ({ Stdio.read_bytes(file), (array(int))st });
   }
   id->misc->cacheable = INITIAL_CACHEABLE;
   return
-    stringp(data) &&
-    (Roxen.http_string_answer(data, "application/x-javascript" ) +
-     ([ "stat" : ({0, 0, 0, 900000000, 0, 0, 0}) ]) );
+    arrayp(data) && stringp(data[0]) &&
+    (Roxen.http_string_answer(data[0], "application/x-javascript" ) +
+     ([ "stat" : data[1] ]) );
 }
 
 // Provider function
@@ -175,7 +176,7 @@ string container_js_write(string name, mapping args, string contents, object id)
   contents = parse_html("<"INT_TAG">"+contents+"</"INT_TAG">",
 			([]), ([ INT_TAG: c_js_quote ]), args);
   return ("<script language='"+(args->language||"javascript")+
-	  "'><!--\n"+contents+"//--></script>");
+	  "' type='text/javascript'><!--\n"+contents+"//--></script>");
 }
 
 static private
@@ -240,7 +241,8 @@ static private
 string container_js_popup(string name, mapping args, string contents, object id)
 {
   // Link arguments.
-  mapping largs = copy_value(args - (< "args-variable", "label", "props", "event",
+  mapping largs = copy_value(args - (< "args-variable", "label", "props",
+				       "event", "name-variable",
 				       "ox", "oy", "op" >));
   // Compatibility. The arguments 'ox', 'oy' and 'op' are depricated.
   if(!args->props && (args->ox || args->oy || args->op))
@@ -289,6 +291,11 @@ string container_js_popup(string name, mapping args, string contents, object id)
   
   if(args["args-variable"])
     id->variables[args["args-variable"]] = make_args_unquoted(largs);
+  if(args["name-variable"])
+    id->variables[args["name-variable"]] = popupname;
+
+  if(args["event-variable"])
+    id->variables[args["event-variable"]] = largs[event];
 
   if(!args->label)
     return "";
@@ -310,8 +317,10 @@ class TagJSInclude {
       else
 	result = "<script charset=\"" + 
      	  (args->charset || id->misc->input_charset || query("charset")) +
-	  "\" language=\"javascript\" src=\"" +
-	  query_absolute_internal_location(id) + args->file + "\"></script>";
+	  "\" type=\"text/javascript\" language=\"javascript\" " +
+	  (args->defer ? "defer='defer' " : "") +
+	  "src=\"" + query_absolute_internal_location(id) + args->file + "\">"
+          "</script>";
       return 0;
     }
   }
@@ -345,7 +354,8 @@ class TagJSExternal
       string key = Crypto.MD5.hash(string_to_utf8(content));
       if(!externals[key])
 	externals[key] = c_js_quote("", ([]), content);
-      return ({ "<script language=\"javascript\" src=\""+
+      return ({ "<script language=\"javascript\" type=\"text/javascript\" "
+		"src=\""+
 		query_absolute_internal_location(id)+"__ex/"+
 		MIME.encode_base64(key)+"\"></script>" });
     }
@@ -372,7 +382,7 @@ class TagJSDynamicPopupDiv
 		  " visibility=\"hidden\" z-index:"+(args->zindex||"1")+"></layer>");
       else
 	result = ("<div id=\""+args->name+"\""
-		  " style=\"position:absolute; z-index:"+(args->zindex||"1")+
+		  " style=\"position:absolute; z-index:"+(args->zindex||"1")+";"
 		  " left:0; top:0; visibility:hidden;\"></div>");
     }
   }
@@ -410,7 +420,7 @@ static mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
     
   SIMPLE_TRACE_LEAVE ("");
   if(args->name == "javascript1.2")
-    return ({ "<script language='javascript1.2'><!--\n"+
+    return ({ "<script type=\"text/javascript\" language='javascript1.2'><!--\n"+
 	      js_insert->get()+"//--></script>" });
 
   if(args->jswrite)
@@ -507,6 +517,12 @@ javascript support.</p></desc>
  <p>The component to include. May be one of <tt>CrossPlatform.js</tt>,
  <tt>DragDrop.js</tt>, <tt>DynamicLoading.js</tt>, <tt>Popup.js</tt>
  or <tt>Scroll.js</tt>.</p>
+</attr>
+<attr name='defer'>
+ <p>Set to add the <tt>defer</tt> flag to the generated <tag>script</tag>
+    tag. It's used to tell browsers that the referenced script doesn't
+    call <tt>document.write()</tt> or similar functions while the page
+    is rendered.</p>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -574,7 +590,7 @@ props_arg+
 </js-popup></ex-box>
 </attr>
 
-<attr name='args-variable' value='RXML variable name'>
+<attr name='args-variable' value='RXML form variable name'>
   <p>Arguments to the generated anchor tag will be stored in this variable.
   This argument is useful if the target to the popup should be an image,
   see the example below.</p>
@@ -590,6 +606,34 @@ props_arg+
 </js-popup>
 
 <gtext ::='&form.popup-args;'>popup</gtext>
+</ex-box>
+</attr>
+
+<attr name='name-variable' value='RXML form variable name'>
+  <p>The name of the created popup item menu will be stored in this
+     variable. This is useful if you want to write custom JavaScript
+     code to refer to the popup menu.</p>
+</attr>
+
+<attr name='event-variable' value='RXML form variable name'>
+  <p>Javascript trigger code will be stored in this variable.
+  This argument is useful if multiple actions should be perormed
+  in the same event. For example rase the popup and change the
+  css-class of the link.</p>
+  <ex-box>
+<js-include file='CrossPlatform.js'/>
+<js-include file='Popup.js'/>
+
+<style><js-insert name='style'/></style>
+<js-insert name='div'/>
+
+<js-popup event-variable='popup-event'>
+  <h1>This is a popup!</h1>
+</js-popup>
+
+<a href=\"#\" class=\"link\"
+   onMouseOver=\"this.className='hover-link'; &form.popup-event;\"
+   onMouseOut=\"this.className='link'\">popup</a>
 </ex-box>
 </attr>
 
