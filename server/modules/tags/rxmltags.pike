@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.469 2004/12/01 17:00:01 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.470 2004/12/01 17:20:39 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2779,7 +2779,7 @@ class UserTagContents
 	string value;
 	if (sscanf (expr, "%*[ \t\n\r]@%*[ \t\n\r]%s", expr) == 3) {
 	  // Special treatment to select attributes at the top level.
-	  sscanf (expr, "%[^][ \t\n\r/@(){}:.,]%*[ \t\n\r]%s", expr, string rest);
+	  sscanf (expr, "%[^][ \t\n\r/@(){},]%*[ \t\n\r]%s", expr, string rest);
 	  if (!sizeof (expr))
 	    parse_error ("Error in %s attribute: No attribute name after @.\n",
 			 insert_type);
