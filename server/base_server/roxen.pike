@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.401 2000/02/02 00:19:52 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.402 2000/02/02 04:15:19 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -766,6 +766,7 @@ class Protocol
       }
     }
     // Ouch.
+    id->misc->defaulted=1;
     return values( urls )[0]->conf;
   }
 
@@ -1698,7 +1699,6 @@ public string full_status()
   for(tmp = 1; tmp < 4; tmp ++)
   {
     // FIXME: LOCALE?
-
     if(foo[tmp] < 1024.0)
       foo[tmp] = sprintf("%.2f MB", foo[tmp]);
     else
@@ -1713,7 +1713,7 @@ public string full_status()
 
   tmp=(int)((foo[4]*600.0)/(uptime+1));
 
-  return(LOCALE->full_status(real_version, boot_time, start_time-boot_time,
+  return(LOCALE->full_status(real_version, start_time,
 			     days, hrs, min, uptime%60,
 			     foo[1], foo[0] * 8192.0, foo[2],
 			     foo[4], (float)tmp/(float)10, foo[3]));
