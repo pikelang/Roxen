@@ -1,5 +1,5 @@
 /*
- * $Id: testrcpt.pike,v 1.6 1998/09/11 07:03:34 js Exp $
+ * $Id: testrcpt.pike,v 1.7 1998/09/12 21:30:43 grubba Exp $
  *
  * A skeleton test RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: testrcpt.pike,v 1.6 1998/09/11 07:03:34 js Exp $";
+constant cvs_version = "$Id: testrcpt.pike,v 1.7 1998/09/12 21:30:43 grubba Exp $";
 
 /*
  * Roxen glue
@@ -79,13 +79,14 @@ static mapping(string:multiset(string)|string) expn_tab = ([
 ]);
 
 static mapping(string:string) desc_tab = ([
-  "grubba@grubba.org":"Henrik Grubbström",
-  "peter@bortas.org":"Peter Bortas",
-  "js@idonex.se":"Johan Schön",
+  "grubba@idonex.se":"Henrik Grubbström (Idonex)",
+  "grubba":"Henrik Grubbström",
+  "peter":"Peter Bortas",
+  "js":"Johan Schön",
 ]);
 
 static multiset(string) handled_domains = (<
-  "grubba.org", "bortas.org", "idonex.se",
+  "foobar.se", "grubba.org", "bortas.org", "idonex.se",
 >);
 
 /*
@@ -105,12 +106,7 @@ string desc(string addr, object o)
 {
   roxen_perror("RCPT: desc(%O)\n", addr);
 
-  string n = desc_tab[addr];
-
-  if (n) {
-    return(sprintf("%O <%s>", n, addr));
-  }
-  return(0);
+  return(desc_tab[addr]);
 }
 
 int put(string sender, string user, string domain, string mailid, object o)
