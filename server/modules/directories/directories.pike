@@ -11,8 +11,8 @@
 //
 // Make sure links work _inside_ unfolded dokuments.
 
-string cvs_version = "$Id: directories.pike,v 1.35 1999/12/28 11:28:44 nilsson Exp $";
-int thread_safe=1;
+string cvs_version = "$Id: directories.pike,v 1.36 1999/12/28 15:19:45 grubba Exp $";
+constant thread_safe=1;
 
 #include <module.h>
 inherit "module";

@@ -1,8 +1,8 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.22 1999/12/28 03:59:46 nilsson Exp $";
-int thread_safe=1;
+string cvs_version = "$Id: language.pike,v 1.23 1999/12/28 15:20:17 grubba Exp $";
+constant thread_safe=1;
 
 #if DEBUG_LEVEL > 20
 # ifndef LANGUAGE_DEBUG
