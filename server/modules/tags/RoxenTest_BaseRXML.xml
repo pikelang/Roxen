@@ -57,3 +57,117 @@
 <rxml><set variable='var.x' value='2'/><false/><then>x<set variable='var.x' value='3'/></then>&var.x;</rxml>
 <result>2</result>
 </test>
+
+
+<comment>Config image</comment>
+<test>
+<rxml><configimage src="unit"/></rxml>
+<result><img alt="unit" border="0" src="/internal-roxen-unit" /></result>
+</test>
+
+<test>
+<rxml><configimage src="unit" noxml=''/></rxml>
+<result><img alt="unit" border="0" src="/internal-roxen-unit"></result>
+</test>
+
+<test>
+<rxml><configimage alt=x border=1 src=fold class=a /></rxml>
+<result><img alt="x" border="1" class="a" src="/internal-roxen-fold" /></result>
+</test>
+
+
+<comment>Imgs</comment>
+<test>
+<rxml><imgs src="/internal-roxen-unit"/></rxml>
+<result><img alt="Unit" height="1" src="/internal-roxen-unit" width="1" /></result>
+</test>
+
+<test>
+<rxml><imgs src="/internal-roxen-unit" noxml=''/></rxml>
+<result><img alt="Unit" height="1" src="/internal-roxen-unit" width="1"></result>
+</test>
+
+
+<comment>Insert</comment>
+<test>
+<rxml><set variable='var.foo' value='a,b,c,d,e,f,g,h'/><insert variable='var.foo' index='1' split=','/></rxml>
+<result>a</result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='a,b,c,d,e,f,g,h'/><insert variable='var.foo' index='-1' split=','/></rxml>
+<result>h</result>
+</test>
+
+<!test>
+<rxml><set variable='var.a' value="x"/>&var.a;<insert file="test1.html"/>&var.a;</rxml>
+<result>xayx</result>
+</!test>
+
+
+<comment>Autoformat</comment>
+<test>
+<rxml><autoformat>abc
+abc
+
+
+c</autoformat></rxml>
+<result>abc<br />
+abc<br />
+<br />
+<br />
+c</result>
+</test>
+
+<test>
+<rxml><autoformat p>abc
+abc
+
+
+c</autoformat></rxml>
+<result><p>abc<br />
+abc
+</p><p>
+<br />
+c</p></result>
+</test>
+
+<test>
+<rxml><autoformat p nobr>abc
+abc
+
+
+c</autoformat></rxml>
+<result><p>abc
+abc
+</p><p>
+
+c</p></result>
+</test>
+
+<test>
+<rxml><autoformat p class=x>abc
+abc
+
+
+c</autoformat></rxml>
+<result><p class="x">abc<br />
+abc
+</p><p class="x">
+<br />
+c</p></result>
+</test>
+
+<test>
+<rxml><autoformat p nobr class=x>abc
+abc
+
+
+c</autoformat></rxml>
+<result><p class="x">abc
+abc
+</p><p class="x">
+
+c</p></result>
+</test>
+
