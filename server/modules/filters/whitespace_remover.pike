@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_remover.pike,v 1.2 2002/06/24 15:02:01 nilsson Exp $";
+constant cvs_version = "$Id: whitespace_remover.pike,v 1.3 2004/05/21 02:38:23 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Sucker";
@@ -14,7 +14,8 @@ void create() {
 	 Variable.Flag(0, 0, "Strip HTML comments",
 		       "Removes all &lt;!-- --&gt; type of comments") );
   defvar("verbatim",
-	 Variable.StringList( ({ "pre", "textarea", "script", "style" }),
+	 Variable.StringList( ({ "pre", "textarea", "script", "style",
+				 "code" }),
 			      0, "Verbatim tags",
 			      "Whitespace stripping is not performed on the "
 			      "contents of these tags." ) );
@@ -55,6 +56,8 @@ mapping filter(mapping result, RequestID id)
 {
   if(!result
   || !has_prefix(result->type||"", "text/html")
+  || (id->misc->moreheads && id->misc->moreheads["Content-Type"] &&
+      id->misc->moreheads["Content-Type"] != "text/html")
   || !stringp(result->data)
   || id->prestate->keepws
   || id->misc->ws_filtered++)
