@@ -163,8 +163,8 @@ static array(int) server_secret_decode( string a, string secret )
     if( off == -1 )							\
       if( !catch( get_sdb() ) )						\
       {									\
-	init_replicate_db();						\
 	off = 0;							\
+	init_replicate_db();						\
       }									\
     if( off )								\
       return X;								\
