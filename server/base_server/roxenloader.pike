@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.180 2000/07/04 03:47:17 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.181 2000/07/09 14:13:38 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -238,6 +238,105 @@ mapping make_mapping(array(string) f)
   return foo;
 }
 
+class RequestID
+{
+  object conf; // Really Configuration, but that's sort of recursive.
+  int time;
+  string raw_url;
+  int do_not_disconnect;
+  mapping (string:string) variables;
+  mapping (string:mixed) misc;
+  mapping (string:string) cookies;
+  mapping (string:string) request_headers;
+  mapping (string:mixed) throttle;
+  mapping (string:string) client_var;
+  multiset(string) prestate;
+  multiset(string) config;
+  multiset(string) supports;
+  multiset(string) pragma;
+  array(string) client;
+  array(string) referer;
+
+  Stdio.File my_fd;
+  string prot;
+  string clientprot;
+  string method;
+
+  string realfile;
+  string virtfile;
+  string rest_query;
+  string raw;
+  string query;
+  string not_query;
+  string extra_extension;
+  string data;
+  string leftovers;
+  array (int|string) auth;
+  string rawauth;
+  string realauth;
+  string since;
+  string remoteaddr;
+  string host;
+
+  void create(object|void master_request_id);
+  void send(string|object what, int|void len);
+  string scan_for_query( string in );
+  void end(string|void s, int|void keepit);
+  void ready_to_receive();
+  void send_result(mapping|void result);
+  RequestID clone_me();
+
+  Stdio.File connection( );
+  object     configuration(); // really Configuration
+}
+
+
+class RoxenModule
+{
+  constant is_module=1;
+  constant module_type = 0;
+  constant module_unique = 1;
+  string|mapping(string:string) module_name;
+  string|mapping(string:string) module_doc;
+
+  array(int|string|mapping) register_module();
+  string file_name_and_stuff();
+
+  void start(void|int num, void|object conf);
+
+  void defvar(string var, mixed value, string name,
+              int type, string|void doc_str, mixed|void misc,
+              int|function|void not_in_config);
+  void definvisvar(string name, int value, int type, array|void misc);
+
+  void deflocaledoc( string locale, string variable,
+                     string name, string doc,
+                     mapping|void translate );
+  int killvar(string var);
+  string check_variable( string s, mixed value );
+  mixed query(string|void var, int|void ok);
+
+  void set(string var, mixed value);
+  int setvars( mapping (string:mixed) vars );
+
+
+  string query_internal_location();
+  string query_location();
+  string query_provides();
+  array query_seclevels();
+  array(int) stat_file(string f, RequestID id);
+  array(String) find_dir(string f, RequestID id);
+  mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
+  string real_file(string f, RequestID id);
+  void save();
+  mapping api_functions();
+  mapping query_tag_callers();
+  mapping query_container_callers();
+
+  string info(object conf);
+  string comment();
+}
+
 class _roxen {
 
   mapping(string:object) variables;
@@ -272,11 +371,7 @@ mixed query(string arg)
 {
   if(!roxen)
     error("No roxen object!\n");
-  if(!roxen->variables)
-    error("No roxen variables!\n");
-  if(!roxen->variables[arg])
-    error("Unknown variable: "+arg+"\n");
-  return roxen->variables[arg]->query();
+  return roxen->query( arg );
 }
 
 // used for debug messages. Sent to the administration interface and STDERR.
@@ -838,8 +933,10 @@ string roxen_path( string filename )
   filename = replace( filename, ({"$VVARDIR","$LOCALDIR"}),
                       ({"$VARDIR/"+roxen_version(),
                         getenv ("LOCALDIR") || "../local"}) );
-  if( roxen && roxen->variables->logdirprefix )
-    filename = replace( filename, "$LOGDIR", [string]roxen->query("logdirprefix") );
+  if( roxen )
+    filename = replace( filename, 
+                        "$LOGDIR", 
+                        [string]roxen->query("logdirprefix") );
   else
     if( search( filename, "$LOGDIR" ) != -1 )
       roxen_perror("Warning: mkdirhier with $LOGDIR before variable is available\n");
@@ -1195,6 +1292,11 @@ Please install a newer pike version
                 nm_resolv("RoxenLocale.Modules") );
 //    add_constant( "Image._decode", Image._decode );
 //    add_constant( "Image.decode_layers", Image.decode_layers );
+
+
+  add_constant("RequestID", RequestID );
+  add_constant("RoxenModule", RoxenModule );
+
   report_debug("Done [%.1fms]\n", (gethrtime()-t)/1000.0);
 
   initiate_cache();
