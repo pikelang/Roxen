@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.49 2004/06/04 08:29:16 _cvs_stephen Exp $
+ * $Id: create_configif.pike,v 1.50 2004/09/11 21:07:49 _cvs_stenitzer Exp $
  *
  * Create an initial administration interface server.
  */
@@ -120,7 +120,7 @@ Arguments:
 
 Example of a batch installation:
 
- ./create_configinterface --help server_name Admin server_url
+ ./create_configinterface --batch server_name Admin server_url
  http://*:8080/ ok y user admin
 
 ");
