@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.99 2000/10/06 15:13:25 mast Exp $
+// $Id: module.pike,v 1.100 2000/11/02 08:48:45 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -159,9 +159,17 @@ string info(Configuration conf)
  return (this_object()->register_module()[2]);
 }
 
+ModuleInfo my_moduleinfo( )
+//! Returns the associated @ref{ModuleInfo} object
+{
+  string f = my_configuration()->otomod[ this_object() ];
+  if( f ) return roxen.find_module( (f/"#")[0] );
+}
+
 void save_me()
 {
   my_configuration()->save_one( this_object() );
+  my_configuration()->module_changed( my_moduleinfo(), this_object() );
 }
 
 void save()
