@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1998 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1998 - 2001, Roxen IS.
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.19 2004/05/22 21:28:00 _cvs_dirix Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.20 2004/05/23 00:23:18 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG
@@ -25,11 +25,11 @@ In this case <tt>/index.html</tt> will be fetched, and the rest,
 mapping|int last_resort(object id)
 {
   PATHINFO_WERR(sprintf("Checking %O...", id->not_query));
+
 #if 0
   // This kind of recursion detection doesn't work with internal
   // redirects. We leave it to the generic loop prevention in
   // handle_request et al.
-
   if (id->misc->path_info) {
     // Already been here...
     PATHINFO_WERR(sprintf("Been here, done that."));
@@ -76,7 +76,7 @@ mapping|int last_resort(object id)
 #else /* PATHINFO_LINEAR */
   string pi = "";
   while( (search( query[1..], "/" ) != -1) && strlen( query ) > 0 )
-   {
+  {
     query = reverse(query);
     string add_path_info;
     sscanf( query, "%[^/]/%s", add_path_info, query );
