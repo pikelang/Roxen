@@ -1,9 +1,9 @@
 // This is a roxen pike module. Copyright © 2001, Roxen IS.
 //
-// $Id: HTML.pmod,v 1.2 2001/09/17 18:04:04 nilsson Exp $
+// $Id: HTML.pmod,v 1.3 2001/09/24 15:04:01 jhs Exp $
 
 //! Functions that helps generating HTML. All functions generates
-//! HTML that is XHTML complient as well as backwards compatible
+//! HTML that is XHTML compliant as well as backwards compatible
 //! with old HTML standards in what extent is possible.
 
 //! Creates an HTML select list.
