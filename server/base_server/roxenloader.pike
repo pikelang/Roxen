@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.89 1999/08/09 19:47:52 grubba Exp $
+ * $Id: roxenloader.pike,v 1.90 1999/08/09 22:22:44 grubba Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.89 1999/08/09 19:47:52 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.90 1999/08/09 22:22:44 grubba Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -140,7 +140,7 @@ void roxen_perror(string format, mixed ... args)
     }
   }
 
-  if (perror_status_reported < t) 
+  if ((perror_status_reported < t) && last_was_nl)
   {
     stderr->write(short_time()+"   pid: "+pid+"   ppid: "+getppid()+
 #if efun(geteuid)
