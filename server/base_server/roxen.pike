@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.29 1996/12/19 10:17:00 neotron Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.30 1997/01/06 18:42:49 kg Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -2202,7 +2202,7 @@ int log_is_not_enabled()
 // the global variable 'current_configuration', and also speed up some
 // of the functions below.
 
-void enable_configuration(string config)
+object enable_configuration(string config)
 {
   array modules_to_process;
   string tmp_string;
@@ -2369,6 +2369,7 @@ void enable_configuration(string config)
 	     +describe_backtrace(err)+"\n"
 #endif
 	);
+  return current_configuration;
 }
 
 // Enable all configurations
