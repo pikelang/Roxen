@@ -2,9 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.7 2000/10/04 15:20:20 leif Exp $
-
-#define THREADS 1
+// $Id: ExtScript.pmod,v 1.8 2000/11/27 20:57:28 leif Exp $
 
 mapping scripthandlers = ([ ]);
 
@@ -20,13 +18,13 @@ class Handler
   mapping settings;
   int     runcount = 0;
   int     timeout;
-#ifdef THREADS
+#if constant(Thread.Mutex)
   object  mutex = Thread.Mutex();
 #endif
 
   void terminate()
   {
-#ifdef THREADS
+#if constant(Thread.Mutex)
     object lock = mutex ? mutex->lock() : 0;
 #endif
     if (proc && !proc->status() && pipe)
@@ -38,7 +36,7 @@ class Handler
 
   int busy()
   {
-#ifdef THREADS
+#if constant(Thread.Mutex)
     if (mutex)
     { if (mutex->trylock()) return 0;
       return 1;
@@ -89,7 +87,7 @@ class Handler
 
   static array do_helper(string how, string arg, object id, void|mapping opts)
   {
-#ifdef THREADS
+#if constant(Thread.Mutex)
     object lock = mutex ? mutex->lock() : 0;
 #endif
     timeout = time(0) + 190;
@@ -200,7 +198,10 @@ class Handler
       pipe->write("QP");
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) != 4 || res[0] != '=' || res[3] != 0)
-      { pipe = 0; proc = 0; diag("@"); lock = 0;
+      { pipe = 0; proc = 0; diag("@");
+#if constant(Thread.Mutex)
+        lock = 0;
+#endif
         if (!opts || !opts->retry)
           return do_helper(how, arg, id,
                              (opts ? opts : ([ ])) + ([ "retry": 1 ]) );
@@ -271,7 +272,7 @@ class Handler
   }
 }
 
-#ifdef THREADS
+#if constant(Thread.Mutex)
 object dispatchmutex = Thread.Mutex();
 #endif
 
@@ -302,7 +303,7 @@ void periodic_cleanup()
     { mapping m = scripthandlers[binpath];
       if (m->expire < now)
       {
-#ifdef THREADS
+#if constant(Thread.Mutex)
         object lock = m->mutex->lock();
 #endif
   	diag("(Z)");
@@ -319,7 +320,9 @@ void periodic_cleanup()
   	   m->handlers = ({ 0 });
   	now = time(0);
   	m->expire   = now+600/(2+sizeof(m->handlers));
+#if constant(Thread.Mutex)
   	lock = 0;
+#endif
       }
     }
   }
@@ -339,20 +342,20 @@ object getscripthandler(string binpath, void|int multi, void|mapping settings)
 
   if (!(m = scripthandlers[binpath])) 
   {
-#ifdef THREADS
+#if constant(Thread.Mutex)
     lock = dispatchmutex->lock();
 #endif
     scripthandlers[binpath] = m =
        ([ "handlers": ({ Handler(binpath) }),
           "expire": time(0) + 600,  
-#ifdef THREADS
+#if constant(Thread.Mutex)
           "mutex": Thread.Mutex(),
 #endif
           "binpath": binpath
         ]);
   }
 
-#if THREADS
+#if constant(Thread.Mutex)
   lock = m->mutex->lock();
 #endif
   for(i = 0; i < multi && i < sizeof(m->handlers); ++i)
