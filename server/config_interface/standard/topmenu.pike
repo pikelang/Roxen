@@ -4,7 +4,7 @@
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
-constant tablist = "<tablist preparse ::=&usr.toptabs-args;>";
+#define  tablist ("<tablist preparse "+config_setting2("toptabs-args")+">")
 
 array selections =
 ({
