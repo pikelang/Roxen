@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.26 2003/11/25 16:00:13 anders Exp $
+// $Id: roxen.h,v 1.27 2003/11/25 17:02:04 anders Exp $
 
 #ifndef _ROXEN_H_
 
@@ -68,11 +68,16 @@ mixed get_locale();
   ([mapping(string:mixed)]id->misc)->no_proto_cache = 1;                      \
   report_debug("%s:%d disabled proto cache\n", __FILE__, __LINE__);           \
 } while(0)
+#  define PROTO_CACHE() do {                                               \
+  ([mapping(string:mixed)]id->misc)->no_proto_cache = 0;                      \
+  report_debug("%s:%d enabled proto cache\n", __FILE__, __LINE__);            \
+} while(0)
 #else
 #  define CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,seconds)
 #  define RAISE_CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=max(([mapping(string:mixed)]id->misc)->cacheable,seconds)
 #  define NOCACHE() ([mapping(string:mixed)]id->misc)->cacheable=0
 #  define NO_PROTO_CACHE() ([mapping(string:mixed)]id->misc)->no_proto_cache=1
+#  define PROTO_CACHE() ([mapping(string:mixed)]id->misc)->no_proto_cache=0
 #endif /* DEBUG_CACHEABLE */
 
 #endif  /* !_ROXEN_H_ */
