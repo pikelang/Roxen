@@ -1,5 +1,5 @@
 /*
- * $Id: requeststatus.pike,v 1.4 2000/08/24 19:58:37 lange Exp $
+ * $Id: requeststatus.pike,v 1.5 2000/08/25 15:57:27 lange Exp $
  */
 
 inherit "../statusinfo.pike";
@@ -24,13 +24,18 @@ string status_total() {
     total->hsent += conf->hsent;
     total->received += conf->received;
     total->requests += conf->requests;
+    if (conf->misc && !zero_type(conf->misc->ftp_users)) {
+      if(!total->misc) total->misc = ([]);
+      total->misc->ftp_users +=  conf->misc->ftp_users;
+      total->misc->ftp_users_now +=  conf->misc->ftp_users_now;
+    }
   }
 
   int uptime = time(1)-roxen->start_time;
   int days = uptime/(24*60*60);
   int hrs = uptime/(60*60);
-  hrs -= days*24;
   int min = uptime/60 - hrs*60;
+  hrs -= days*24;
 
   return 
     "<table>"
@@ -41,7 +46,9 @@ string status_total() {
     roxen->language(roxen->locale->get(), "date")(roxen->start_time)+
     "</td></tr>\n"
     "<tr><th>"+ LOCALE(42,"Uptime:") +"</th>"
-    "<td colspan='2'>Will fix later //lange "/*%d day%s, %02d:%02d:%02d*/"</td></tr>\n"
+    "<td colspan='2'>"+
+    (days? days+" "+((days<2)?LOCALE(47,"day"):LOCALE(48,"days"))+", " : "")+
+    sprintf("%02d:%02d:%02d",hrs,min,uptime%60) +"</td></tr>\n"
     "<tr><td colspan='3'>&nbsp;</td></tr>\n"
     "</table>"+    
     status(total);
