@@ -40,7 +40,7 @@ void create(object c) {
 	 "commands with.");
 }
 
-string tag_echo(string tag, mapping m, object id)
+string|array tag_echo(string tag, mapping m, object id)
 {
   if(m->help) 
     return ("This tag outputs the value of different configuration and "
@@ -66,17 +66,17 @@ string tag_echo(string tag, mapping m, object id)
   {
    case "sizefmt":
    case "errmsg":
-    return id->misc->defines[m->var] || "";
+    return ({ id->misc->defines[m->var] || "" });
    case "timefmt":
-    return id->misc->defines[m->var] || "%c";
+    return ({ id->misc->defines[m->var] || "%c" });
     
    case "date_local":
     NOCACHE();
-    return strftime(id->misc->defines->timefmt || "%c", time(1));
+    return ({ strftime(id->misc->defines->timefmt || "%c", time(1)) });
 
    case "date_gmt":
     NOCACHE();
-    return strftime(id->misc->defines->timefmt || "%c", time(1) + localtime(time(1))->timezone);
+    return ({ strftime(id->misc->defines->timefmt || "%c", time(1) + localtime(time(1))->timezone) });
       
    case "query_string_unescaped":
     return id->query || "";
@@ -86,7 +86,7 @@ string tag_echo(string tag, mapping m, object id)
      return make_tag("modified", m+(["ssi":1])); //FIXME: Performance
       
    case "server_software":
-    return roxen->version();
+    return ({ roxen->version() });
       
    case "server_name":
     string tmp;
@@ -94,38 +94,38 @@ string tag_echo(string tag, mapping m, object id)
     sscanf(tmp, "%*s//%s", tmp);
     sscanf(tmp, "%s:", tmp);
     sscanf(tmp, "%s/", tmp);
-    return tmp;
+    return ({ tmp });
       
    case "gateway_interface":
-    return "CGI/1.1";
+    return ({ "CGI/1.1" });
       
    case "server_protocol":
-    return "HTTP/1.0";
+    return ({ "HTTP/1.0" });
       
    case "request_method":
-    return id->method;
+    return ({ id->method });
 
    case "auth_type":
-    return "Basic";
+    return ({ "Basic" });
       
    case "http_cookie": case "cookie":
     NOCACHE();
-    return (id->misc->cookies || "");
+    return ({ id->misc->cookies || "" });
 
    case "http_accept":
     NOCACHE();
-    return (id->misc->accept && sizeof(id->misc->accept)? 
-	    id->misc->accept*", ": "None");
+    return ({ id->misc->accept && sizeof(id->misc->accept)? 
+	    id->misc->accept*", ": "None" });
       
    case "http_user_agent":
     NOCACHE();
-    return id->client && sizeof(id->client)? 
-      id->client*" " : "Unknown";
+    return ({ id->client && sizeof(id->client)? 
+      id->client*" " : "Unknown" });
       
    case "http_referer":
     NOCACHE();
-    return id->referer && sizeof(id->referer) ? 
-      id->referer*", ": "Unknown";
+    return ({ id->referer && sizeof(id->referer) ? 
+      id->referer*", ": "Unknown" });
       
    default:
     m->var = upper_case(m->var);
