@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.12 1998/09/15 19:17:38 grubba Exp $
+ * $Id: smtprelay.pike,v 1.13 1998/09/15 20:38:48 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.12 1998/09/15 19:17:38 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.13 1998/09/15 20:38:48 grubba Exp $";
 
 /*
  * Some globals
@@ -509,6 +509,9 @@ class MailSender
 			 servers[server]));
 #endif /* RELAY_DEBUG */
 
+    message->remote_mta = servers[server];
+    message->last_attempt_at = time();
+
     roxen->async_connect(servers[server], 25, got_connection);
   }
 
@@ -708,6 +711,24 @@ void bounce(mapping msg, string code, array(string) text)
       f->close();
     }
 
+    string statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
+				   "Received-From-MTA: DNS; %s\r\n"
+				   "Arrival-Date: %s\r\n"
+				   "\r\n"
+				   "Final-Recipient: RFC822; %s@%s\r\n"
+				   "Action: failed\r\n"
+				   "Status: 5.1.1\r\n"
+				   "Remote-MTA: DNS; %s\r\n"
+				   "Diagnostic-Code: SMTP; %s %s\r\n"
+				   "Last-Attempt-Date: %s\r\n",
+				   gethostname(),
+				   "Somewhere",
+				   mktimestamp(msg->received_at),
+				   msg->user, msg->domain,
+				   msg->remote_mta,
+				   code, sizeof(text)?text[-1]:"",
+				   mktimestamp(msg->last_attempt_at));
+
     string body = sprintf("Message to %s@%s from %s bounced (code %s):\r\n"
 			  "Mailid:%s\r\n"
 			  "Description:\r\n"
@@ -732,6 +753,12 @@ void bounce(mapping msg, string code, array(string) text)
 				  ([ "MIME-Version":"1.0",
 				     "Content-Type":
 				     "text/plain; "
+				     "charset=iso-8859-1",
+				     "Content-Transfer-Encoding":"8bit"
+				  ])),
+		     MIME.Message(statusmessage,
+				  ([ "MIME-Version":"1.0",
+				     "Content-Type":"message/delivery-status; "
 				     "charset=iso-8859-1",
 				     "Content-Transfer-Encoding":"8bit"
 				  ])),
@@ -820,10 +847,11 @@ int relay(string from, string user, string domain,
     spoolfile->close();
   }
   
-  sql->query(sprintf("INSERT INTO send_q (sender, user, domain, mailid, send_at) "
-		     "VALUES('%s', '%s', '%s', '%s', 0)",
+  sql->query(sprintf("INSERT INTO send_q "
+		     "(sender, user, domain, mailid, received_at, send_at) "
+		     "VALUES('%s', '%s', '%s', '%s', %d, 0)",
 		     sql->quote(from), sql->quote(user),
-		     sql->quote(domain), sql->quote(csum)));
+		     sql->quote(domain), sql->quote(csum), time()));
 
 #ifdef THREADS
   if (key) {
