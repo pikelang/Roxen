@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.690 2001/08/09 09:21:43 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.691 2001/08/09 12:49:59 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -521,12 +521,17 @@ class Queue
   }
 }
 
-// This is easier than when there are no threads.
-// See the discussion below. :-)
-function async_sig_start( function f, int really )
-{
-  return lambda( mixed ... args ) { thread_create( f, @args ); };
-}
+// // This is easier than when there are no threads.
+// // See the discussion below. :-)
+//
+//  // But there is extra functionality below we really want, though,
+//  // so let's use that one instead...
+// function async_sig_start( function f, int really )
+// {
+//   return lambda( mixed ... args ) {
+// 	   thread_create( f, @args );
+//  };
+// }
 local static Queue handle_queue = Queue();
 //! Queue of things to handle.
 //! An entry consists of an array(function fp, array args)
@@ -773,6 +778,8 @@ void stop_handler_threads()
 
 // function handle = unthreaded_handle;
 
+#endif /* THREADS */
+
 function async_sig_start( function f, int really )
 {
   class SignalAsyncVerifier( function f )
@@ -787,6 +794,7 @@ function async_sig_start( function f, int really )
 
     void call( mixed ... args )
     {
+      werror("Received signal %O\n", signame( args[0] ) );
       if( async_called && async_called-time() )
       {
         report_debug("\n\n"
@@ -842,7 +850,6 @@ function async_sig_start( function f, int really )
     return f;
   return SignalAsyncVerifier( f )->call;
 }
-#endif /* THREADS */
 
 #ifdef THREADS
 static Queue bg_queue = Queue();
@@ -3891,7 +3898,7 @@ int main(int argc, array tmp)
   catch(signal(signum("SIGHUP"),async_sig_start(reload_all_configurations,1)));
 
   // Signals which cause Roxen to dump the thread state
-  foreach( ({ "SIGQUIT", "SIGUSR1", "SIGUSR2", "SIGTRAP" }), string sig)
+  foreach( ({ "SIGQUIT", "SIGUSR1", "SIGUSR2",  }), string sig)
     catch( signal(signum(sig),async_sig_start(describe_all_threads,-1)));
 
   start_time=time();		// Used by the "uptime" info later on.
