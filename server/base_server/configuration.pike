@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.232 1999/11/24 19:10:52 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.233 1999/11/25 11:32:07 jonasw Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -966,7 +966,7 @@ string draw_saturation_bar(int hue,int brightness, int where)
   where = 255-where;
   bar->line(0,where,29,where, 255,255,255);
 
-  return bar->togif(255,255,255);
+  return Image.GIF.encode(bar);
 }
 
 
