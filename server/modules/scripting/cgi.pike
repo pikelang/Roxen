@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.5 1999/04/30 07:56:05 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.6 1999/04/30 21:36:25 neotron Exp $";
 
 
 array register_module()
@@ -163,7 +163,8 @@ class Wrapper
     if(!strlen(buffer)) 
       return;
     int nelems = tofd->write( buffer ); 
-    if( nelems <= 0 )
+    if( nelems < 0 )
+      // if nelems == 0, network buffer is full. We still want to continue.
     {
       buffer="";
       done(); 
