@@ -30,13 +30,15 @@ string mymktime(string from)
 array ofiles = ({});
 void output_changelog_entry_header(array from)
 {
-  if(!users[from[1]]) 
-    find_user(from[1]);
+  string u = (from[1] == "law"?"mirar":from[1]);
   if(rxml)
-    write("</ul>\n<h3>"+mymktime(from[0])+" <user name="+
-	  (from[1] == "law"?"mirar":from[1])+"></h3>\n<ul>\n");
+    write("</ul></if>\n<if or prestate="+u+" variable=all><h3>"+
+	  mymktime(from[0])+" <user name="+u+"></h3>\n<ul>\n");
   else
-    write("\n"+mymktime(from[0])+" "+users[from[1]]+"\n");
+  {
+    if(!users[u]) find_user(u);
+    write("\n"+mymktime(from[0])+" "+users[u]+"\n");
+  }
   ofiles = ({});
 }
 
@@ -152,6 +154,7 @@ void main(int argc, array (string) argv)
   {
     array foo = file/"----------------------------\nrevision ";
     string fname;
+    if(!sizeof(foo)) continue;
     sscanf(foo[0], "%*sWorking file: %s\n", fname);
     foreach(foo[1..], string entry)
     {
@@ -171,7 +174,9 @@ void main(int argc, array (string) argv)
       }
     }
   }
-  array order = Array.map(entries, lambda(array e) { return e[0][..sizeof(e[0])-4]+e[5]; });
+  array order = Array.map(entries,lambda(array e) {
+    return e[0][..sizeof(e[0])-4]+e[5];
+  });
   sort(order,entries);
   entries = reverse(entries);
   werror("Done. "+sizeof(entries)+" entries\n");
@@ -183,18 +188,14 @@ void main(int argc, array (string) argv)
   {
     string date = (e[0]/" ")[0];
     string time = (e[0]/" ")[1];
-//   werror(">>> %O %O\n", date, "<"+time);
-    if(date != od || e[1] != ou)
+//    werror(">>> %s\n", e[0]);
+    if((date != od) || (e[1] != ou))
     {
-//       if(date != od)
-// 	werror(date+" != "+od+"\n");
-//       else
-// 	werror(e[1]+" != "+ou+"\n");
       if(oc && sizeof(collected_files))
 	output_entry( collected_files, oc );
       collected_files = ({});
       oc = e[5];
-      output_changelog_entry_header( e );
+      output_changelog_entry_header( copy_value(e) );
       od = date;
       ou = e[1];
     }
