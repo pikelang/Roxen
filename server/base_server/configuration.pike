@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.586 2005/01/05 11:11:16 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.587 2005/01/12 14:37:27 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3167,7 +3167,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 	me->defvar("_priority", 5, DLOCALE(12, "Priority"), TYPE_INT_LIST,
 		   DLOCALE(13, "The priority of the module. 9 is highest and 0 is lowest."
 		   " Modules with the same priority can be assumed to be "
-		   "called in random order"),
+		   "called in random order."),
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
       }) {
 	roxen->bootstrap_info->set (0);
