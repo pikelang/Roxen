@@ -14,11 +14,11 @@
 #define _error defines[" _error"]
 #define _extra_heads defines[" _extra_heads"]
 #define _rettext defines[" _rettext"]
-#define _ok     defines[" _ok"]
+#define _ok defines[" _ok"]
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.6 1999/07/23 04:12:33 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.7 1999/07/25 01:24:56 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -616,9 +616,20 @@ string tag_user(string tag, mapping m, object id, object file,mapping defines)
 
 string tag_configurl(string f, mapping m) { return roxen->config_url(); }
 
-string tag_configimage(string f, mapping m)
+string tag_configimage(string f, mapping m, object id)
 {
   if (m->src) {
+
+    // This should really be fixed the other way around; renaming the files to err1, err2 & err3
+#if old_rxml_compat
+    if(m->src=="err_1") api_old_rxml_warning(id, "err_1 argument in configimage tag","err1");
+    if(m->src=="err_2") api_old_rxml_warning(id, "err_2 argument in configimage tag","err2");
+    if(m->src=="err_3") api_old_rxml_warning(id, "err_3 argument in configimage tag","err3");
+#endif
+    if(m->src=="err1") m->src="err_1";
+    if(m->src=="err2") m->src="err_2";
+    if(m->src=="err3") m->src="err_3";
+
     if (m->src[sizeof(m->src)-4..] == ".gif") {
       m->src = m->src[..sizeof(m->src)-5];
     }
@@ -1647,7 +1658,7 @@ string api_html_quote_attr(object id, string value)
 void api_old_rxml_warning(object id, string problem, string solution)
 {
   if(query("logold"))
-    report_warning("Old RXML in "+(id->query||id->not_query)+" contains "+problem+". Use "+solution+" instead.");
+    report_warning("Old RXML in "+(id->query||id->not_query)+", contains "+problem+". Use "+solution+" instead.");
 }
 
 void add_api_function( string name, function f, void|array(string) types)
