@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.72 1998/07/30 13:42:02 js Exp $
+/* $Id: wizard.pike,v 1.73 1998/08/31 13:29:20 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -28,8 +28,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     current = current +"";
   switch(m->type)
   {
-   default: // String or password field....
-    if(m->type != "password")
+   default: // String or password field or hidden value....
+    if((m->type != "password") && (m->type != "hidden"))
       m->type = "string";
     m_delete(m,"default");
     m->value = current||m->value||"";
