@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.288 2002/06/28 23:27:10 nilsson Exp $
+// $Id: module.pmod,v 1.289 2002/07/17 18:05:05 nilsson Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2291,11 +2291,13 @@ class Context
 #endif
 }
 
-static class CacheStaticFrame (string scope_name)
+/*static*/ class CacheStaticFrame (string scope_name)
 // This class is used when tracking local scopes in frames that have
 // been optimized away by FLAG_IS_CACHE_STATIC. It contains the scope
 // name and is used as the key for Context.enter_scope and
 // Context.leave_scope.
+//
+// Can't be static since encode_value must be able to index it.
 {
   constant is_RXML_CacheStaticFrame = 1;
   constant is_RXML_encodable = 1;
@@ -6829,6 +6831,7 @@ class VariableChange (/*static*/ mapping settings)
   string _sprintf()
   {
     string ind = "";
+    if (!mappingp (settings)) return "RXML.VariableChange()";
     foreach (indices (settings), mixed encoded_var) {
       mixed var;
       if (stringp (encoded_var)) {
