@@ -3,12 +3,14 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.221 1999/11/15 03:27:43 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.222 1999/11/17 15:14:20 per Exp $";
+constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
 
 mapping enabled_modules = ([]);
+mapping(string:array(int)) error_log=([]);
 
 #ifdef PROFILE
 mapping profile_map = ([]);
@@ -93,25 +95,7 @@ void killvar(string name)
   m_delete(variables, name);
 }
 
-static class ConfigurableWrapper
-{
-  int mode;
-  function f;
-  int check( int|void more, int|void expert )
-  {
-    if ((mode & VAR_EXPERT) && !expert)
-      return 1;
-    if ((mode & VAR_MORE) && !more)
-      return 1;
-    return f();
-  }
-
-  void create(int mode_, function f_)
-  {
-    mode = mode_;
-    f = f_;
-  }
-};
+constant ConfigurableWrapper = roxen.ConfigurableWrapper;
 
 int defvar(string var, mixed value, string name, int type,
 	   string|void doc_str, mixed|void misc,
@@ -3132,7 +3116,7 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 
   // throttling-related variables
   defvar("throttle",0,
-         "Server Bandwidth Throttling: Enabled",TYPE_FLAG,
+         "Bandwidth Throttling: Server: Enabled",TYPE_FLAG,
 #"If set, per-server bandwidth throttling will be enabled. 
 It will allow you to limit the total available bandwidth for 
 this Virtual Server.<BR>Bandwidth is assigned using a Token Bucket.
@@ -3141,30 +3125,64 @@ Tokens are added to a repository at a constant rate. When there's not enough,
 we can't transmit. When there's too many, they \"spill\" and are lost.");
   //TODO: move this explanation somewhere on the website and just put a link.
 
+  deflocaledoc( "svenska", "throttle", "Bandviddsbegränsning: Servernivå: På",
+               #"Om den här variablen är på så kommer bandvisddsbegränsning 
+på servernivå att ske. Det gör det möjligt för dig att begränsa den totala
+bandvidden som den här virtuella servern använder.
+<p>
+Bandvidden räknas ut genom att använda en poletthink. Principen som den 
+arbetar efter är: För varje byte som sänds så används en polett, poletter
+stoppas i hinken i en konstant hastighet. När det inte finns några poletter
+så avstännar dataskickande tills en polett blir tillgänglig. När det är för
+många poletter i hinken så kommer de nya som kommer in att \"ramla ut\".");
+
+
   defvar("throttle_fill_rate",102400,
-         "Server Bandwidth Throttling: Average available bandwidth",
+         "Bandwidth Throttling: Server: Average available bandwidth",
          TYPE_INT,
 #"This is the average bandwidth available to this Virtual Server in 
 bytes/sec (the bucket \"fill rate\").",
          0,arent_we_throttling_server);
 
+  deflocaledoc( "svenska", "throttle_fill_rate",
+                "Bandviddsbegränsning: Servernivå:"
+                " Genomsnittlig tillgänglig bandvidd",
+                "Det här är den genomsnittliga bandvidden som är tillgänglig "
+                "för servern (hastigheten med vilken hinken fylls)");
+
   defvar("throttle_bucket_depth",1024000,
-         "Server Bandwidth Throttling: Bucket Depth", TYPE_INT,
+         "Bandwidth Throttling: Server: Bucket Depth", TYPE_INT,
 #"This is the maximum depth of the bucket. After a long enough period
 of inactivity, a request will get this many unthrottled bytes of data, before
 throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow
 any data bursts. This value determines the length of the time over which the
 bandwidth is averaged",0,arent_we_throttling_server);
+
+  deflocaledoc( "svenska", "throttle_bucket_depth",
+                "Bandviddsbegränsning: Servernivå:"
+                " Hinkstorlek",
+                "Det här är det maximala antalet poletter som får plats "
+                "i hinken. Om det här värdet är lika stort som den "
+                "genomsnittliga tillgängliga bandvidden så tillåts inga "
+                "tillfälliga datapulser när servern har varit inaktiv ett tag"
+                " utan data skickas alltid med max den bandvidden");
   
   defvar("throttle_min_grant",1300,
-         "Server Bandwidth Throttling: Minimum Grant", TYPE_INT,
+         "Bandwidth Throttling: Server: Minimum Grant", TYPE_INT,
 #"When the bandwidth availability is below this value, connections will
 be delayed rather than granted minimal amounts of bandwidth. The purpose
 is to avoid sending too small packets (which would increase the IP overhead)",
          0,arent_we_throttling_server);
 
+  deflocaledoc( "svenska", "throttle_min_grant",
+                "Bandviddsbegränsning: Servernivå:"
+                " Minimalt antal bytes",
+#"När det tillgängliga antalet poletter (alltså bytes) är mindre än det här 
+värdet så fördröjs förbindelser, alternativet är att skicka små paket, vilket
+öker overheaden som kommer till från IP och TCP paketheadrar." );
+
   defvar("throttle_max_grant",14900,
-         "Server Bandwidth Throttling: Maximum Grant", TYPE_INT,
+         "Bandwidth Throttling: Server: Maximum Grant", TYPE_INT,
 #"This is the maximum number of bytes assigned in a single request
 to a connection. Keeping this number low will share bandwidth more evenly
 among the pending connections, but keeping it too low will increase IP
@@ -3172,14 +3190,30 @@ overhead and (marginally) CPU usage. You'll want to set it just a tiny
 bit lower than any integer multiple of your network's MTU (typically 1500
 for ethernet)",0,arent_we_throttling_server);
          
+  deflocaledoc( "svenska", "throttle_max_grant",
+                "Bandviddsbegränsning: Servernivå:"
+                " Maximalt antal bytes",
+#"Det här är det maximala antalet bytes som en förbindelse kan få.
+Om det här värdet är lågt så fördelas bandvidden mer jämnt mellan olika
+förbindelser, men om det är för lågt så ökar overeden från IP och TCP.
+<p>
+
+Sätt det till ett värde som är aningens lägre än en jämn multipel av
+ditt nätverks MTU (normala ethernetförbindelser har en MTU på 1500)
+" );
 
   defvar("req_throttle", 0,
-         "Request Bandwidth Throttling: Enabled", TYPE_FLAG,
+         "Bandwidth Throttling: Request: Enabled", TYPE_FLAG,
 #"If set, per-request bandwidth throttling will be enabled."
          );
+
+  deflocaledoc( "svenska", "req_throttle",
+                "Bandviddsbegränsning: Förbindelsenivå: På",
+                "Om på så begränsas bandvidden individuellt på förbindelser"
+                );
          
   defvar("req_throttle_min", 1024,
-         "Request Bandwidth Throttling: Minimum guarranteed bandwidth",
+         "Bandwidth Throttling: Request: Minimum guarranteed bandwidth",
          TYPE_INT,
 #"The maximum bandwidth each connection (in bytes/sec) can use is determined
 combining a number of modules. But doing so can lead to too small 
@@ -3187,13 +3221,30 @@ or even negative bandwidths for particularly unlucky requests. This variable
 guarantees a minimum bandwidth for each request",
          0,arent_we_throttling_request);
   
+
+  deflocaledoc( "svenska", "req_throttle_min",
+                "Bandviddsbegränsning: Förbindelsenivå: Minimal bandvidd",
+#"Den maximala bandvidden som varje förbindelse får bestäms av en kombination 
+av de bandviddsbegränsningsmoduler som är adderade i servern. Men ibland
+så blir det framräknade värdet väldigt lågt, och en del riktigt otursamma 
+förbindelser kan råka hamna på 0 eller mindre bytes per sekund.  <p>Den
+här variablen garanterar en vis minimal bandvidd för alla requests"
+                );
+
   defvar("req_throttle_depth_mult", 60.0,
-         "Request Bandwidth Throttling: Bucket Depth Multiplier",
+         "Bandwidth Throttling: Request: Bucket Depth Multiplier",
          TYPE_FLOAT,
 #"The average bandwidth available for each request will be determined by 
 the modules combination. The bucket depth will be determined multiplying
 the rate by this factor.",
          0,arent_we_throttling_request);
+
+  deflocaledoc( "svenska", "req_throttle_depth_mult",
+                "Bandviddsbegränsning: Förbindelsenivå: Hinkstorlek",
+#"Den genomsnittliga bandvidden som varje förbindelse bestäms av 
+de adderade bandvidsbegränsningsmodulerna. Hinkstorleken bestäms genom att
+multiplicera detta värde med den här faktorn.");
+
 
   setvars(retrieve("spider#0", this_object()));
 
