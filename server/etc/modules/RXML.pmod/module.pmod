@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.265 2002/01/30 00:10:29 mast Exp $
+// $Id: module.pmod,v 1.266 2002/01/30 00:32:03 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7268,7 +7268,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 3;
+  constant P_CODE_VERSION = 4;
   // Version spec encoded with the p-code, so that we can detect and
   // reject incompatible p-code dumps even when the encoded format
   // hasn't changed in an obvious way.
