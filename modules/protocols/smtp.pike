@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.86 1999/09/14 22:12:04 grubba Exp $
+ * $Id: smtp.pike,v 1.87 1999/09/15 00:21:23 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.86 1999/09/14 22:12:04 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.87 1999/09/15 00:21:23 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -912,7 +912,7 @@ static class Smtp_Connection {
 		    lambda(string d,
 			   array(mapping(string:mixed)) mx_info) {
 		      // Got MX info for the domain d.
-		      foreach(mx_info, mapping(string:mixed) mx) {
+		      foreach(mx_info || ({}), mapping(string:mixed) mx) {
 			mx->name = mx->name || d;
 		      }
 		      cb(mx_info);
@@ -921,12 +921,12 @@ static class Smtp_Connection {
 
   // Find the IP's for an MX record.
   void async_mx_to_ip(mapping(string:mixed) mx,
-		      function(array(string):void) cb)
+		      function(array(array(string)):void) cb)
   {
     // FIXME: Ought to use host_to_ip_all() when it exists.
     dns->host_to_ip(mx->mx,
 		    lambda(string host, string ip) {
-		      cb(({ ip, mx->name }));
+		      cb(({ ({ ip, mx->name }) }));
 		    });
   }
 
