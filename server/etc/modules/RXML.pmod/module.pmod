@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.312 2003/05/06 12:09:07 anders Exp $
+// $Id: module.pmod,v 1.313 2003/05/22 11:44:11 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1251,7 +1251,7 @@ class TagSet
       proc_instrs && mkmultiset (indices (proc_instrs)),
       string_entities,
     }) + imported->get_hash_data() +
-      ({0}) + indices (dep_tag_sets)->get_hash_data();
+      ({0}) + (indices (dep_tag_sets) - ({0}))->get_hash_data();
   }
 
   /*static*/ string tag_set_component_names()
