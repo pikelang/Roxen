@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.342 2002/02/08 08:36:13 stewa Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.343 2002/02/15 16:30:49 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1320,6 +1320,12 @@ class TagCache {
 
       RXML.Context ctx = RXML_CONTEXT;
       int default_key = compat_level < 2.2;
+
+      // Disable the protocol cache, under the assumption that our
+      // cache key will depend on things it disregards. Could be
+      // avoided if the cache key is on e.g. page.path, but it's so
+      // unlikely it's not worth the effort to check that.
+      NOCACHE();
 
       overridden_keymap = 0;
       if (!args->propagate ||
