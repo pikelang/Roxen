@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.289 2002/02/05 15:08:40 anders Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.290 2002/02/05 15:13:02 anders Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1124,7 +1124,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
     }
 
     arg->name=sn;
-    string res="<script language='javascript'>\n";
+    string res="<script type='text/javascript'>\n";
     if(!id->root_id->misc->gtext_magic_java) {
       res += "function gtext_mo(ri,hi,txt)\n"
         "{\n"
