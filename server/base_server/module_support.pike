@@ -1,10 +1,10 @@
-// string cvs_version = "$Id: module_support.pike,v 1.50 1999/12/30 00:44:17 mast Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.51 2000/01/31 02:11:27 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
 
 /* Set later on to something better in roxen.pike::main() */
-mapping (string:array) variables=([]); 
+mapping (string:array) variables=([]);
 
 string get_doc_for( string region, string variable )
 {
@@ -62,7 +62,7 @@ int globvar(string var, mixed value, string name, int type,
   variables[var][ VAR_DOC_STR ]      = doc_str;
   variables[var][ VAR_NAME ]         = name;
   variables[var][ VAR_MISC ]         = misc;
-  
+
   type &= ~VAR_TYPE_MASK;		// Probably not needed, but...
   type &= (VAR_EXPERT | VAR_MORE);
   if (functionp(not_in_config)) {
@@ -86,7 +86,7 @@ int globvar(string var, mixed value, string name, int type,
 }
 
 mapping locs = ([]);
-void deflocaledoc( string locale, string variable, 
+void deflocaledoc( string locale, string variable,
 		   string name, string doc, mapping|void translate)
 {
   if(!locs[locale] )
@@ -150,7 +150,7 @@ program my_compile_file(string file)
   {
     if( strlen( q ) )
       report_error("Failed to compile module %s:\n%s", file, q);
-    throw( "" ); 
+    throw( "" );
   }
   if ( strlen(q) )
   {
@@ -182,7 +182,7 @@ function|program load( string what )
 // Module load and finding system.
 //
 // Cache for module data.
-// 
+//
 // We need to store:
 //   sname       (short name, such as 'gtext')
 //   filename    (full file name)
@@ -191,7 +191,7 @@ function|program load( string what )
 //   module information constants:
 //     type
 //     multiple_copies
-//     name    
+//     name
 //     description
 //
 //  This is stored in a ConfigurationIFCache instance.
@@ -228,7 +228,7 @@ class ModuleInfo
   string get_description()
   {
     if( stringp( description ) )
-      return name;
+      return description;
     if( mappingp( description ) )
     {
       if( description[ roxenp()->locale->get()->name ] )
@@ -250,7 +250,7 @@ class ModuleInfo
   void save()
   {
     module_cache
-      ->set( sname, 
+      ->set( sname,
              ([ "filename":filename,
                 "sname":sname,
                 "last_checked":last_checked,
@@ -264,7 +264,7 @@ class ModuleInfo
   int init_module( string what )
   {
     filename = what;
-    mixed q =catch 
+    mixed q =catch
     {
       object mod = instance( 0 );
       if(!mod)
@@ -313,7 +313,7 @@ class ModuleInfo
     foreach( dirlist, string file )
       catch
       {
-        if( file_stat( dir+file )[ ST_SIZE ] == -2 
+        if( file_stat( dir+file )[ ST_SIZE ] == -2
             && file != "." && file != ".." )
           if( rec_find_module( what, dir+file+"/" ) )
             return 1;
@@ -324,9 +324,9 @@ class ModuleInfo
           continue;
         if( file[-1] == '~' )
           continue;
-        if( file[-1] == 'o' && file[-2] == '.') 
+        if( file[-1] == 'o' && file[-2] == '.')
           continue;
-        
+
         if( !search( file, what ) )
         {
           if( (search( file, ".pike" ) == strlen(file)-5 ) ||
@@ -396,7 +396,7 @@ class ModuleInfo
       exit( 1 );
     }
     sname = sn;
-    if( fname ) 
+    if( fname )
       filename = fname;
   }
 }
@@ -429,7 +429,7 @@ array rec_find_all_modules( string dir )
       return ({});
 
     foreach( dirlist, string file )
-      catch 
+      catch
       {
         if( file[0] == '.' ) continue;
         if( file[-1] == '~' ) continue;
@@ -438,7 +438,7 @@ array rec_find_all_modules( string dir )
           Stdio.File f = Stdio.File( dir+file, "r" );
           if( (f->read( 4 ) != "#!NO" ) )
             modules |= ({ strip_extention( file ) });
-        } 
+        }
         else if( file_stat( dir+file )[ ST_SIZE ] == -2 )
           modules |= rec_find_all_modules( dir+file+"/" );
       };
@@ -459,7 +459,7 @@ array(ModuleInfo) all_modules()
   sort( tmp->get_name(), tmp );
   return tmp;
 }
-  
+
 ModuleInfo find_module( string name )
 {
   if( !modules )

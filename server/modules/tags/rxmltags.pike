@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.54 2000/01/28 13:50:07 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.55 2000/01/31 02:11:46 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1099,11 +1099,11 @@ void set_entities(RXML.Context c) {
 
 // ------------------- Tags ------------------------
 
-string tag_roxen_automatic_charset_variable( string t, mapping m, 
+string tag_roxen_automatic_charset_variable( string t, mapping m,
                                              RequestID id )
 {
-  return make_tag( "input", 
-                   ([ 
+  return make_tag( "input",
+                   ([
                      "type":"hidden",
                      "name":"magic_roxen_automatic_charset_variable",
                      "value":"едц",
@@ -1278,7 +1278,7 @@ string tag_set( string tag, mapping m, RequestID id )
       context->user_set_var(m->variable, from, m->scope);
       return "";
     }
-	
+
     // FIXME: Kill these?
     if (m->other) {
       if (id->misc->variables && id->misc->variables[ m->other ]) {
@@ -1690,8 +1690,8 @@ class TagScope {
   constant flags = RXML.FLAG_CONTAINER;
   constant opt_arg_types = ([ "extend" : RXML.t_text ]);
 
-  class Frame {
-
+  class Frame
+  {
     inherit RXML.Frame;
 
     constant scope_name = "form";
