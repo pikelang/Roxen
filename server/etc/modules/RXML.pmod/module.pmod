@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.179 2001/06/28 00:24:40 mast Exp $
+// $Id: module.pmod,v 1.180 2001/06/28 19:32:37 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -63,6 +63,7 @@ class RequestID { };
 // #define OBJ_COUNT_DEBUG
 // #define RXML_VERBOSE
 // #define RXML_COMPILE_DEBUG
+// #define RXML_ENCODE_DEBUG
 
 
 #ifdef RXML_OBJ_DEBUG
@@ -475,7 +476,8 @@ class TagSet
 //! set at the same time.
 {
   string name;
-  //! Used for identification only.
+  //! Unique identification string. Must be stable across server
+  //! restarts since it's used to identify tag sets in dumped p-code.
 
   string prefix;
   //! A namespace prefix that may precede the tags. If it's zero, it's
@@ -515,26 +517,17 @@ class TagSet
   int id_number;
   //! Unique number identifying this tag set.
 
-  string id_string;
-  //! Unique string identifying this tag set across server restarts.
-
   static void create (string _name, void|array(Tag) _tags)
   //!
   {
     id_number = ++tag_set_count;
-    set_name (_name);
+    if (all_tagsets[_name])
+      error ("The tag set name %O is not unique.\n", _name);
+    all_tagsets[name = _name] = this_object();
     if (_tags) add_tags (_tags);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
 #endif
-  }
-
-  static void set_name (string _name)
-  //!
-  {
-    name = _name;
-    id_string = _name; // FIXME: should be made more unique
-    all_tagsets[id_string] = this_object();
   }
 
   void add_tag (Tag tag)
@@ -748,6 +741,10 @@ class TagSet
   local mixed `->= (string var, mixed val)
   {
     switch (var) {
+      case "name":
+	m_delete (all_tagsets, name);
+	all_tagsets[name = val] = this_object();
+	break;
       case "imported":
 	if (!val) return val;	// Pike can call us with 0 as part of an optimization.
 	filter (imported, "dont_notify", changed);
@@ -1162,7 +1159,11 @@ class Context
   //! Whether to do type checking.
 
   int error_count;
-  //! Number of RXML errors that has occurred.
+  //! Number of RXML errors that has occurred. If this is nonzero, the
+  //! result of the evaluation shouldn't be trusted, but it might be
+  //! wise to return it to the user anyway, as it can contain error
+  //! reports (see @[Parser.recover_errors] and @[FLAG_DONT_RECOVER]
+  //! for further details about error reporting).
 
   TagSet tag_set;
   //! The current tag set that will be inherited by subparsers.
@@ -1544,11 +1545,10 @@ class Context
   {
     error_count++;
     if (objectp (err) && err->is_RXML_Backtrace) {
-      evaluator->error_count++;
       if (evaluator->report_error && evaluator->recover_errors &&
 	  evaluator->type->free_text) {
 	string msg;
-	if (id && id->conf) {
+	if (tag_set && id && id->conf) {
 	  msg = err->type == "help" ? err->msg :
 	    (err->type == "run" ?
 	     ([function(Backtrace,Type:string)]
@@ -1573,28 +1573,24 @@ class Context
   }
 
   final array(mixed|PCode) eval_and_compile (Type type, string to_parse)
-  //! Parses and evaluates @[to_parse] with @[type]. At the same time,
-  //! p-code is collected to reevaluate it later. An array is returned
-  //! which contains the result in the first element and the generated
-  //! @[RXML.PCode] object in the second.
-  //!
-  //! @note
-  //! The frame stack is broken so that the p-code can be reevaluated
-  //! in another part of the page.
+  //! Parses and evaluates @[to_parse] with @[type] in this context.
+  //! At the same time, p-code is collected to reevaluate it later. An
+  //! array is returned which contains the result in the first element
+  //! and the generated @[RXML.PCode] object in the second.
   {
     mixed res;
     PCode p_code;
-    Frame prev_top_frame = frame;
-    frame = 0;
-    mixed err = catch {
+//      Frame prev_top_frame = frame;
+//      frame = 0;
+//      mixed err = catch {
       Parser parser = type->get_parser (this_object(), tag_set, 0, 1);
       parser->write_end (to_parse);
       res = parser->eval();
       p_code = parser->p_code;
       parser->p_code = 0;
-    };
-    frame = prev_top_frame;
-    if (err) throw (err);
+//      };
+//      frame = prev_top_frame;
+//      if (err) throw (err);
     return ({res, p_code});
   }
 
@@ -2787,9 +2783,9 @@ class Frame
     }									\
   } while (0)
 
-  private mapping(string:mixed) _eval_args (Context ctx,
-					    mapping(string:string) raw_args,
-					    mapping(string:Type) my_req_args)
+  /*private*/ mapping(string:mixed) _eval_args (Context ctx,
+						mapping(string:string) raw_args,
+						mapping(string:Type) my_req_args)
   // Used for evaluating the dynamic arguments in the splice argument.
   // Destructive on raw_args.
   {
@@ -3250,7 +3246,7 @@ class Frame
 		  ENTER_SCOPE (ctx, this);
 		  if (ctx->new_runtime_tags)
 		    _handle_runtime_tags (ctx, evaler);
-		  if (!iter) eval_state = EVSTAT_LAST_ITER;
+		  if (iter <= 0) eval_state = EVSTAT_LAST_ITER;
 		}
 	      }
 
@@ -3878,10 +3874,6 @@ class Parser
 
   // Services:
 
-  int error_count;
-  //! Number of RXML errors that occurred during evaluation. If this
-  //! is nonzero, the value from eval() shouldn't be trusted.
-
   function(Parser:void) data_callback;
   //! A function to be called when data is likely to be available from
   //! eval(). It's always called when the source stream closes.
@@ -4074,12 +4066,12 @@ class Parser
 
   optional int report_error (string msg);
   //! Used to report errors to the end user through the output. This
-  //! is only called when type->free_text is nonzero and
-  //! recover_errors is nonzero. msg should be stored in the output
-  //! queue to be returned by eval(). If the context is bad for an
-  //! error message, do nothing and return zero. The parser will then
-  //! be aborted and the error will be propagated instead. Return
-  //! nonzero if a message was written.
+  //! is only called when @[type->free_text] is nonzero and
+  //! @[recover_errors] is nonzero. @[msg] should be stored in the
+  //! output queue to be returned by @[eval]. If the context is bad
+  //! for an error message, do nothing and return zero. The parser
+  //! will then be aborted and the error will be propagated instead.
+  //! Return nonzero if a message was written.
 
   optional mixed read();
   //! Define to allow streaming operation. Returns the evaluated
@@ -5560,9 +5552,11 @@ class CompiledError
 
   void create (Backtrace rxml_bt)
   {
-    type = rxml_bt->type;
-    msg = rxml_bt->msg;
-    current_var = rxml_bt->current_var;
+    if (rxml_bt) {		// Might be zero if we're created by decode().
+      type = rxml_bt->type;
+      msg = rxml_bt->msg;
+      current_var = rxml_bt->current_var;
+    }
   }
 
   mixed get (Context ctx, void|Type want_type)
@@ -5708,10 +5702,6 @@ class PCode
   //! Nonzero if error recovery is allowed. Should be the same as the
   //! setting in the parser used to create this object.
 
-  int error_count;
-  //! Number of RXML errors that occurred during evaluation. If this
-  //! is nonzero, the value from eval() shouldn't be trusted.
-
   Context new_context (void|RequestID id)
   //! Creates a new context for evaluating the p-code in this object.
   //! @[id] is put into the context if given.
@@ -5779,7 +5769,6 @@ class PCode
 
   static array p_code = allocate (16);
   static int length = 0;
-  static string errmsgs;
   static PikeCompile comp;
 
   void add (mixed entry)
@@ -5810,10 +5799,11 @@ class PCode
     int pos = 0;
     array parts;
     int ppos = 0;
+    PCode this = this_object();
 
     if (context && context->unwind_state) {
       object ignored;
-      [ignored, pos, parts, ppos] = m_delete (context->unwind_state, this_object());
+      [ignored, pos, parts, ppos] = m_delete (context->unwind_state, this);
     }
     else parts = allocate (length);
 
@@ -5833,15 +5823,15 @@ class PCode
 	      if (stringp (argfunc))
 		argfunc = p_code[pos] = comp->resolve (argfunc);
 	      item = frame->_eval ( // Might unwind.
-		context, this_object(), type, argfunc, p_code[++pos]);
+		context, this, type, argfunc, p_code[++pos]);
 	    }
 	    else if (item->is_RXML_p_code_entry) {
 	      item = item->get (context, type); // Might unwind.
 	    }
 	  if (item != nil)
 	    parts[ppos++] = item;
-	  if (errmsgs)
-	    parts[ppos++] = errmsgs, errmsgs = 0;
+	  if (string errmsgs = m_delete (context->misc, this))
+	    parts[ppos++] = errmsgs;
 	}
 
 	context->eval_finish();
@@ -5857,13 +5847,12 @@ class PCode
 
       })
 	if (objectp (err) && ([object] err)->thrown_at_unwind) {
-	  context->unwind_state[this_object()] = ({err, pos, parts, ppos});
-	  throw (this_object());
+	  context->unwind_state[this] = ({err, pos, parts, ppos});
+	  throw (this);
 	}
 	else {
-	  context->handle_exception (err, this_object()); // May throw.
-	  string msgs = errmsgs;
-	  errmsgs = 0;
+	  context->handle_exception (err, this); // May throw.
+	  string msgs = m_delete (context->misc, this);
 	  if (pos >= length)
 	    return msgs || nil;
 	  else {
@@ -5938,8 +5927,9 @@ class PCode
 
   int report_error (string msg)
   {
-    if (errmsgs) errmsgs += msg;
-    else errmsgs = msg;
+    mapping misc = RXML_CONTEXT->misc;
+    if (misc[this_object()]) misc[this_object()] += msg;
+    else misc[this_object()] = msg;
     return 1;
   }
 
@@ -5947,7 +5937,9 @@ class PCode
 
   string _sprintf()
   {
-    return sprintf ("RXML.PCode(%O)%s", type, OBJ_COUNT);
+    return tag_set ?
+      sprintf ("RXML.PCode(%O,%O)%s", type, tag_set, OBJ_COUNT) :
+      sprintf ("RXML.PCode(%O)%s", type, OBJ_COUNT);
   }
 
   mixed _encode()
@@ -5965,14 +5957,17 @@ class PCode
     }
     finish();
 
-    return (["tag_set":tag_set&&tag_set->id_string, "type":type,
+    return (["tag_set":tag_set&&tag_set->name, "type":type,
 	     "recover_errors":recover_errors,
 	     "p_code":p_code]);
   }
 
   void _decode(mapping v)
   {
-    tag_set = all_tagsets[v->tag_set];
+    if (v->tag_set) {
+      tag_set = all_tagsets[v->tag_set];
+      if (!tag_set) error ("Cannot find tag set %O.\n", v->tag_set);
+    }
     type = v->type;
     recover_errors = v->recover_errors;
     p_code = v->p_code;
@@ -5987,18 +5982,27 @@ static class PCodec
 
   object objectof(string what)
   {
-    if (!what)
-      return 0;
-    if(what[..1] == "t:")
-      return reg_types[what[2..]];
-    else if(what[..3] == "mod:")
-      return Roxen->get_module(what[4..]);
-    else if(what == "nil")
-      return nil;
-    else if(what == "utils")
-      return utils;
-    else if (what == "xml_tag_parser")
-      return xml_tag_parser;
+#ifdef RXML_ENCODE_DEBUG
+    report_debug("objectof(%O)\n", what);
+#endif
+
+    if(sscanf (what, "t:%s", what)) {
+      if (Type t = reg_types[what])
+	return t;
+      error ("Cannot find type %O.\n", what);
+    }
+    else if(sscanf (what, "mod:%s", what)) {
+      if (object/*(RoxenModule)*/ mod = Roxen->get_module(what))
+	return mod;
+      error ("Cannot find module %O.\n", what);
+    }
+
+    switch (what) {
+      case "nil": return nil;
+      case "utils": return utils;
+      case "xml_tag_parser": return xml_tag_parser;
+    }
+
 #ifdef RXML_ENCODE_DEBUG
     report_debug("objectof(%O) failed.\n", what);
 #endif
@@ -6007,21 +6011,24 @@ static class PCodec
 
   function functionof(string what)
   {
+#ifdef RXML_ENCODE_DEBUG
+    report_debug("functionof(%O)\n", what);
+#endif
+
+    switch (what) {
+      case "PCode": return PCode;
+      case "VarRef": return VarRef;
+      case "CompiledError": return CompiledError;
+    }
+
     string t, ts;
     TagSet tagset;
     Tag tag;
-    if (!what)
-      return 0;
-    if(what == "PCode")
-      return PCode;
-    else if(what == "VarRef")
-      return VarRef;
-    else if (what == "CompiledError")
-      return CompiledError;
-    else if(what[..1]=="f:" && 2 == sscanf(what[3..], "%s\n%s", t, ts) &&
-	    (tagset = all_tagsets[ts]) &&
-	    (tag = tagset->get_local_tag(t, what[2]=='p')))
+    if(what[..1]=="f:" && 2 == sscanf(what[3..], "%s\n%s", t, ts) &&
+       (tagset = all_tagsets[ts]) &&
+       (tag = tagset->get_local_tag(t, what[2]=='p')))
       return tag->`();
+
 #ifdef RXML_ENCODE_DEBUG
     report_debug("functionof(%O) failed.\n", what);
 #endif
@@ -6033,6 +6040,10 @@ static class PCodec
 
   string nameof(mixed what)
   {
+#ifdef RXML_ENCODE_DEBUG
+    werror("nameof(%O)\n", what);
+#endif
+
     if(objectp(what)) {
       TagSet tagset;
       Tag tag;
@@ -6040,12 +6051,12 @@ static class PCodec
 	saved_id[object_program(what)] =
 	  ((tag->flags & FLAG_PROC_INSTR)? "p":"t") + tag->name +
 	  (tag->plugin_name? "#"+tag->plugin_name : "") +
-	  "\n" + what->tag->tagset->id_string;
+	  "\n" + what->tag->tagset->name;
 	return ([])[0];
       } else if(what->is_RXML_Type)
 	return "t:"+what->name;
-      else if(what->is_module && what->my_configuration())
-	return "mod:"+Roxen->get_modname(what);
+      else if(string modname = what->is_module && what->module_identifier())
+	return "mod:"+modname;
       else if(what == nil)
 	return "nil";
       else if(what == utils)
@@ -6074,6 +6085,7 @@ static class PCodec
 #endif
 	return ([ ])[0];
     }
+
 #ifdef RXML_ENCODE_DEBUG
     werror("nameof(%O) failed.\n", what);
 #endif
