@@ -32,6 +32,8 @@ o Fixed typo that prevented SSL-certificate handling from
 
 o Fixed RSAREF-support.
 
+o Fixed compatibility with the newly released gmp3.
+
 
 Changes since Roxen 2.0.44
 -----------------------------------------------
