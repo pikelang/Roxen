@@ -35,19 +35,22 @@ void check_fpath( string d )
 
 void run(object env)
 {
-  write("   Searching for fonts...\n");
-  string data = Process.popen( "xset q 2>/dev/null" );
-  sscanf( data, "%*sFont%*s\n%*[ \t]%s\n", data );
+  if( getenv( "DISPLAY" ) && ((getenv("DISPLAY")/":")[0]=="" ))
+  {
+    write("   Searching for fonts...\n");
+    string data = Process.popen( "xset q 2>/dev/null" );
+    sscanf( data, "%*sFont%*s\n%*[ \t]%s\n", data );
 
-  // avoid most of the open-windows locale specific fonts, and the
-  // XFree bitmap ones (we will not be able to load them anyway)
-  foreach( data / "," - ({""}), string path )
-    if( search( path, ":unscaled" ) == -1 
-        && (search( path, "locale/" ) == -1 ||
-            search( path, "UTF-8" ) != -1 ) )
-      check_fpath( path );
-  write("  Done. %d directories found.\n", sizeof( font_dirs ) );
-  env->append( "RX_FONTPATH", (font_dirs*",") );
+    // avoid most of the open-windows locale specific fonts, and the
+    // XFree bitmap ones (we will not be able to load them anyway)
+    foreach( data / "," - ({""}), string path )
+      if( search( path, ":unscaled" ) == -1 
+          && (search( path, "locale/" ) == -1 ||
+              search( path, "UTF-8" ) != -1 ) )
+        check_fpath( path );
+    write("  Done. %d directories found.\n", sizeof( font_dirs ) );
+    env->append( "RX_FONTPATH", (font_dirs*",") );
+  }
 }
 #endif
 
