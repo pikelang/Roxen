@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.58 1998/09/20 18:20:21 grubba Exp $
+ * $Id: smtp.pike,v 1.59 1998/09/21 16:09:07 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.58 1998/09/20 18:20:21 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.59 1998/09/21 16:09:07 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -261,7 +261,7 @@ static class Smtp_Connection {
     if (!remotename && parent->query_polite() &&
 	(!(< "EHLO", "HELO" >)[cmd])) {
       // Client is required to be polite.
-      report_warning(sprintf("Got command %O %O before EHLO or HELO "
+      report_warning(sprintf("SMTP: Got command %O %O before EHLO or HELO "
 			     "from %s@%s [%s]\n",
 			     cmd, arg, remoteident, remotehost, remoteip));
       send(503, ({ "Expected EHLO or HELO command." }));
@@ -277,10 +277,10 @@ static class Smtp_Connection {
       //   HELO, MAIL, RCPT, DATA, RSET, NOOP, QUIT
       // But RFC 821 4.5.1 requires them to be implemented, so
       // they won't show up here anyway.
-      roxen_perror(sprintf("SMTP: Command not implemented: %O\n", cmd));
+      report_notice(sprintf("SMTP: Command not implemented: %O\n", cmd));
       send(502, ({ sprintf("'%s': Command not implemented.", cmd) }));
     } else {
-      roxen_perror(sprintf("SMTP: Unknown command: %O\n", cmd));
+      report_warning(sprintf("SMTP: Unknown command: %O\n", cmd));
       send(500, ({ sprintf("'%s': Unknown command.", cmd) }));
     }
   }
@@ -454,11 +454,12 @@ static class Smtp_Connection {
 
   static string low_desc(string addr)
   {
+#ifdef SMTP_DEBUG
+    roxen_perror("SMTP: low_desc(%O)\n", addr);
+#endif /* SMTP_DEBUG */
+
     string user;
     string domain;
-
-    roxen_perror("SMTP: low_desc(%O)\n", addr);
-
     array arr = addr/"@";
     if (sizeof(arr) > 1) {
       user = arr[..sizeof(arr)-2]*"@";
@@ -611,8 +612,11 @@ static class Smtp_Connection {
     array a = (args[i+1..]/" ") - ({ "" });
 	
     if (!sizeof(a)) {
-      send(501);
-      do_RSET();
+      // Empty return address == bounce message.
+      if (connection_class > 0) {
+	connection_class = 0;
+      }
+      send(250, ({ "Message accepted for local delivery." }));
       return;
     }
 
@@ -745,7 +749,7 @@ static class Smtp_Connection {
 	  o->verify_sender(current_mail->from)) {
 	// Refuse connection.
 #ifdef SMTP_DEBUG
-	roxen_perror("Refuse sender.\n");
+	report_notice(sprintf("Sender %O refused.\n", current_mail->from));
 #endif /* SMTP_DEBUG */
 	do_RSET();
 	send(550);
@@ -761,7 +765,9 @@ static class Smtp_Connection {
 			     }) - ({ 0 }),
 		   ({ current_mail->from }),
 		   lambda(array res) {
-		     roxen_perror("do_multi_async_cb()\n");
+#ifdef SMTP_DEBUG
+		     roxen_perror("SMTP: async_verify_sender_cb()\n");
+#endif /* SMTP_DEBUG */
 		     if (sizeof(res)) {
 		       do_RSET();
 		       send(550, res);
@@ -773,7 +779,7 @@ static class Smtp_Connection {
 
   void smtp_RCPT(string rcpt, string args)
   {
-    if (!current_mail || !sizeof(current_mail->from || "")) {
+    if (!current_mail) {
       send(503);
       return;
     }
@@ -797,7 +803,7 @@ static class Smtp_Connection {
 				    this_object())) {
 	      // Refuse recipient.
 #ifdef SMTP_DEBUG
-	      roxen_perror("Refuse recipient.\n");
+	      report_notice(sprintf("Recipient %O refused.\n", recipient));
 #endif /* SMTP_DEBUG */
 	      send(550, sprintf("%s... Recipient refused", recipient));
 	      return;
@@ -853,8 +859,7 @@ static class Smtp_Connection {
 	  } else {
 	    // Remote address.
 
-	    // FIXME: Some relay tests are necessary here.
-	    // FIXME: Check if we allow relaying.
+	    // Check if we allow relaying.
 
 	    int address_class = 0x7fffffff;		// MAXINT
 
@@ -869,8 +874,8 @@ static class Smtp_Connection {
 
 	    if (connection_class < address_class) {
 #ifdef SMTP_DEBUG
-	      roxen_perror("SMTP: Relaying to address %s denied.\n",
-			   recipient);
+	      report_notice(sprintf("SMTP: Relaying to address %s denied.\n",
+				    recipient));
 #endif /* SMTP_DEBUG */
 	      send(550, ({ "Relaying denied." }));
 	      return;
@@ -881,11 +886,14 @@ static class Smtp_Connection {
 
 	  if (!recipient_ok) {
 #ifdef SMTP_DEBUG
-	    roxen_perror("SMTP: Unhandled recipient.\n");
+	    report_notice(sprintf("SMTP: Unhandled recipient %O.\n",
+				  recipient));
 #endif /* SMTP_DEBUG */
 	    send(550, sprintf("%s... Unhandled recipient.", recipient));
 	    return;
 	  }
+
+	  // Relaying is allowed, so add the recipient.
 
 	  current_mail->add_recipients((< recipient >));
 	  send(250, sprintf("%s... Recipient ok.", recipient));
@@ -926,8 +934,10 @@ static class Smtp_Connection {
 			      remoteip,
 			      localhost, roxen->version(), prot,
 			      mktimestamp(current_mail->timestamp));
-  
+
+#ifdef SMTP_DEBUG  
     roxen_perror(sprintf("Received: %O\n", received));
+#endif /* SMTP_DEBUG */
 
     data = "Received: " + received + "\r\n" + data;
 
@@ -942,7 +952,7 @@ static class Smtp_Connection {
 
   void smtp_DATA(string data, string args)
   {
-    if (!current_mail || !sizeof(current_mail->from)) {
+    if (!current_mail) {
       send(503, ({ "Need sender (MAIL FROM)" }));
       return;
     }
@@ -988,7 +998,8 @@ static class Smtp_Connection {
 	if (c < 0) {
 	  // Refuse connection.
 #ifdef SMTP_DEBUG
-	  roxen_perror("Refuse connection.\n");
+	  report_notice(sprintf("Connection from %s [%s:%d] refused.\n",
+				remotehost, remoteip, remoteport));
 #endif /* SMTP_DEBUG */
 	  reason += ({ "Connection Refused" });
 	  break;
@@ -1337,22 +1348,19 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
       if (domain) {
 	// Primary delivery.
 	foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	  handled |= o->put(mail->from, user, domain,
-			    spool, csum, this_object());
+	  handled |= o->put(mail->from, user, domain, spool, csum, smtp);
 	}
       }
       if (!handled) {
 	// Fallback delivery.
 	foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	  handled |= o->put(mail->from, user, 0,
-			    spool, csum, this_object());
+	  handled |= o->put(mail->from, user, 0, spool, csum, smtp);
 	}
       }
     } else {
       // Remote delivery.
       foreach(conf->get_providers("smtp_relay")||({}), object o) {
-	handled |= o->relay(mail->from, user, domain,
-			    spool, csum, this_object());
+	handled |= o->relay(mail->from, user, domain, spool, csum, smtp);
       }
     }
     if (handled) {
@@ -1379,7 +1387,9 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
     return(({ 250, "Partial failure. See bounce for details." }));
   } else {
     // Message received successfully.
+#ifdef SMTP_DEBUG
     report_notice("SMTP: Mail spooled OK.\n");
+#endif /* SMTP_DEBUG */
     return(({ 250 }));
   }
 }
