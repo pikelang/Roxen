@@ -10,7 +10,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.30 1999/11/15 16:10:31 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.31 1999/11/23 07:45:33 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -65,15 +65,18 @@ array register_module()
 	    "This module handles rxml parsing of HTML pages. It is recommended to also "
             "add the \"RXML 1.4 tags\" module so that this modules gets some tags to parse. "
             "Some bare bones logic tags are already provided by this module (case, cond, "
-            "comment, define, elif, else, elseif, false, for, foreach, help, if, "
-            "line, list-tags, nooutput, noparse, number, strlen, then, "
-            "trace, true, undefine and use)."
+            "comment, define, elif, else, elseif, false, help, if, line, list-tags, "
+            "nooutput, noparse, number, strlen, then, trace, true, undefine and use)."
             , 0, 1 });
 }
 
 array(string) query_file_extensions()
 {
   return query("toparse");
+}
+
+mapping tagdocumentation() {
+  return (["version":"<desc tag>Shows the version number of the Roxen Challenger web server you are using.</desc>"]);
 }
 
 // ------------------- RXML Parsing -------------------
@@ -95,7 +98,7 @@ mapping handle_file_extension(object file, string e, object id)
 
   bytes += strlen(to_parse = file->read());
 
-  return http_rxml_answer( to_parse, id, file, id->conf->type_from_filename(id->realfile) );
+  return http_rxml_answer( to_parse, id, file, id->conf->type_from_filename(id->realfile||id->no_query||"index.html") );
 }
 
 array(string) tag_version() { return ({ roxen.version() }); }
