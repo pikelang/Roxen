@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.18 2002/04/24 10:54:40 anders Exp $";
+constant cvs_version = "$Id: email.pike,v 1.19 2002/07/05 15:44:26 anders Exp $";
 
 constant thread_safe=1;
 
@@ -87,7 +87,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.18 $"/" ")[1];
+string revision = ("$Revision: 1.19 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -179,10 +179,11 @@ class TagEmail {
 	mixed error;
 	string aname = args->name, body = content;
 
+	string ftype, fenc, content_type, content_disp, content_id;
+
 	// ------- file=filename type=application/octet-stream
-	if(args->file) {
-	  string ftype;
-	  string fenc;
+	if(args->file)
+	{
 	  array s;
 	  mapping got;
 
@@ -190,60 +191,65 @@ class TagEmail {
 	    id->not_query = args->file;
 	    got = id->conf->get_file(id);
 	    if (!got)
-	      RXML.run_error(EMAIL_LABEL+"Attachment:  file "+Roxen.html_encode_string(args->file)+" not exists.");
+	      RXML.run_error(EMAIL_LABEL + "Attachment:  file " +
+			     Roxen.html_encode_string(args->file) +
+			     " not exists.");
 	  } else
-	    RXML.run_error(EMAIL_LABEL+"Attachment:  file "+Roxen.html_encode_string(args->file)+" not exists or is empty.");
+	    RXML.run_error(EMAIL_LABEL + "Attachment:  file " +
+			   Roxen.html_encode_string(args->file) +
+			   " not exists or is empty.");
 
 	  ftype = args->mimetype || got->type;
-	  body = got->file->read();
+	  fenc  = args->mimeencoding || guess_file_encoding(aname, ftype);
+	  body  = got->file->read();
+
 	  got->file->close();
 
 	  if(!stringp(aname) || !sizeof(aname))
 	    aname=(args->file/"/")[-1];
-
-	  fenc = args->mimeencoding || guess_file_encoding(aname, ftype);
-
-	  error = catch(
-	  m=MIME.Message(body, ([ 
-			       "content-type":(ftype + (sizeof(aname) ? ";name=\"" + aname + "\"": "")),
-			       "content-transfer-encoding":fenc,
-			       "content-disposition":"attachment",
-			       //"content-disposition":(sizeof(aname)? "attachment; filename=\"" + aname + "\"": "attachment"),
-			       "content-id":args->cid||"nocid"
-			     ]))
-	  );
-	  if (error)
-	    RXML.run_error(EMAIL_LABEL+"Attachment: MIME message processing error: "+Roxen.html_encode_string(error[0]));
-
-	  id->misc["_email_atts_"] += ({ m });
-
-	  return 0;
-	} //file
-
-	if(args->href) { // href=url
-
+	}
+	else if(args->href)
+	{
 	  //Protocols.HTTP.get_url_data( f, 0, hd );
 	  return 0;
+
+	}
+	else
+	{
+	  // We assume container with text (and default type "text/plain")
+
+	  ftype = args->mimetype     || "text/plain";
+	  fenc  = args->mimeencoding || "8bit";
+
+	  // Converting bare LFs (QMail specials:)
+	  if(query("CI_qmail_spec") && ftype == "test/plain")
+	    body = (Array.map(body / "\r\n",
+			      lambda(string el1) {
+				return (replace(el1, "\n", "\r\n"));
+			      })
+		    )*"\r\n";
 	}
 
-	// ------ we assume container with text (and default type "text/plain")
-	// converting bare LFs (QMail specials:)
+	content_type = ftype + (aname ? "; name=\""+aname+"\"" : "");
+	content_disp = ("attachment" +
+			(aname ? "; filename=\""+aname+"\"" : ""));
+	content_id   = args->cid || "nocid";
 
-	if(query("CI_qmail_spec"))
-	  body = (Array.map(body / "\r\n", lambda(string el1) { return (replace(el1, "\n", "\r\n")); }))*"\r\n";
-
-	error = catch(
-	m=MIME.Message(body, ([ 
-			     "content-type":(sizeof(aname) ? (args->mimetype||"text/plain")+"; name=\"" + aname + "\"": (args->mimetype||"text/plain")),
-			     "content-transfer-encoding":"8bit",
-			     "content-disposition":(sizeof(aname)? "attachment; filename=\"" + aname + "\"": "attachment")
-			   ]))
-	);
+	error = catch {
+	  m = MIME.Message(body,
+			   ([ 
+			     "content-type"              : content_type,
+			     "content-transfer-encoding" : fenc,
+			     "content-disposition"       : content_disp,
+			     "content-id"                : content_id,
+			   ]));
+	    };
 	if (error)
-	  RXML.run_error(EMAIL_LABEL+"Attachment: MIME message processing error: "+Roxen.html_encode_string(error[0]));
+	  RXML.run_error(EMAIL_LABEL +
+			 "Attachment: MIME message processing error: " +
+			 Roxen.html_encode_string(error[0]));
 
 	id->misc["_email_atts_"] += ({ m });
-//werror(sprintf("D: attachms: %O\n", id->misc["_email_atts_"]));
 	
 	return 0;
       }
@@ -624,14 +630,13 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 <attr name='mimetype' value='MIME type'><p>
  Sets the MIME type of the file. Since MIME type is set by the
  <i>Content types</i> module this setting seldom needs to be
- used. Only applicable for <i>file</i> attachments.</p>
+ used.</p>
 </attr>
 
-<attr name='mimeencoding' value='MIME encoding' default='base64'><p>
+<attr name='mimeencoding' value='MIME encoding'><p>
  Sets the MIME encoding of the file. If omitted the <i>E-mail
  module's</i> default setting within the <webserver /> Administration
- interface will be used. Only applicable for <i>file</i>
- attachments.</p>
+ interface might be used if it's a <i>file</i> attachment.</p>
 </attr>"
 
    ])
