@@ -1,6 +1,6 @@
 // Color support for roxen. 
 
-//string cvs_version = "$Id: color.pike,v 1.14 1999/01/15 12:34:56 neotron Exp $";
+//string cvs_version = "$Id: color.pike,v 1.15 1999/02/15 23:17:54 per Exp $";
 
 #include <stdio.h>
 
@@ -128,8 +128,7 @@ array(int) parse_color(string from)
   }
 
   // No luck. It might be a color on the form rrggbb (that is, no leading '#')
-  sscanf(from, "%x", c);
-  if(c)
+  if(sscanf(from, "%x", c))
   {
     if(strlen(from)>5)
       return ({ c>>16, (c>>8)&255, c&255 });
