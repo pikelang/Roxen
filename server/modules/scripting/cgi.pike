@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.41 2000/08/22 19:19:39 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.42 2000/08/22 19:25:36 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -555,9 +555,11 @@ class NTOpenCommand
 	if(i>=0 && sscanf(cmd[i+1..], "%d", t)==1 && t>n)
 	  n=t;
       } while(i>=0);
+      for( int i = 0; i<n; i++ )
+        cmd = replace( cmd, "\"%"+i+"\"", "%"+i );
       repsrc = map(indices(allocate(n)), lambda(int a) {
                                            return sprintf("%%%d", a+1);
-                                         });
+                                         }); 
     }
     expiry = time(1)+600;
     nt_opencommands[ext]=this_object();
