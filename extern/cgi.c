@@ -325,6 +325,8 @@ void send_data(char *bar, int re)
 
 int is_end_of_headers(char *s, int len)
 {
+  char *end_of_header;
+
   if(!headers) 
   {
     hsize = (len/1024+1)*1024;
@@ -344,7 +346,14 @@ int is_end_of_headers(char *s, int len)
   hpointer += len;
   headers[hpointer] = 0;
 
-  return (strstr(headers, "\n\n")||strstr(headers, "\r\n\r\n")||strstr(headers, "\n\r\n\r"));
+  if ((end_of_header = strstr(headers, "\n\n")) ||
+      (end_of_header = strstr(headers, "\r\n\r\n")) ||
+      (end_of_header = strstr(headers, "\n\r\n\r"))) {
+    end_of_header[1] = 0;	/* Always a legal address */
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 
