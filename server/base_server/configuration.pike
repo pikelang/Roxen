@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.235 1999/11/27 07:56:14 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.236 1999/11/28 04:32:11 jhs Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2210,9 +2210,9 @@ object enable_module( string modname, object|void me )
 
 #ifdef MODULE_DEBUG
   if( id )
-    report_debug(" %-30s ... ", moduleinfo->get_name()+" copy "+(id+1));
+    report_debug(" %-33s ... ", moduleinfo->get_name()+" copy "+(id+1));
   else
-    report_debug(" %-30s ... ", moduleinfo->get_name() );
+    report_debug(" %-33s ... ", moduleinfo->get_name() );
 #endif
 
   module = modules[ module ];
