@@ -487,6 +487,30 @@ string parse( RequestID id )
        res +="<h1>"+LOCALE(260, "Request status")+"</h1>";
        res += conf->status();
 
+       res += "<h1>"+LOCALE("", "Cache status")+"</h1><table cellpading='0' cellspacing='0' width='50'%>\n";
+       
+       int total = conf->datacache->hits+conf->datacache->misses;
+
+       if( !total )
+         total = 1;
+
+       res += 
+           sprintf("<tr><td><b>Hits: </b></td><td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
+                   conf->datacache->hits,
+                   conf->datacache->hits*100 / total );
+       res += 
+           sprintf("<tr><td><b>Misses: </b></td><td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
+                   conf->datacache->misses,
+                   conf->datacache->misses*100 / total );
+
+       res += 
+           sprintf("<tr><td><b>Entries: </b></td><td align='right'>%d</td><td align='right'>%dKb</td></tr>\n",
+                   sizeof( conf->datacache->cache ),
+                   (conf->datacache->current_size / 1024 ) );
+       
+       res += "</table>\n";
+                   
+
        if( id->misc->config_settings->query( "devel_mode" ) )
        {
          res += "<h1>"+LOCALE(261, "Inherit tree")+"</h1>";

@@ -2,9 +2,11 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.240 2000/08/13 04:03:30 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.241 2000/08/13 13:54:22 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
+#define RAM_CACHE
+
 
 #undef OLD_RXML_COMPAT
 
@@ -325,53 +327,49 @@ private void setup_pipe()
     end();
     return;
   }
-  if (!conf || !conf->query("req_throttle"))
-    throttle->doit=0;
-  if(!pipe) {
-    if (throttle->doit || (conf && conf->throttler)) {
-      pipe=roxen->slowpipe();
-    } else {
-      pipe=roxen->fastpipe();
-    }
-  }
-  if (throttle->doit) { //we are sure that pipe is really a slowpipe.
-    throttle->rate=max(throttle->rate,
-             conf->query("req_throttle_min")); //if conf=0 => throttle=0
+  if ( throttle->doit && conf->query("req_throttle") )
+    throttle->doit = 0;
+  if( throttle->doit || conf->throttler )
+    pipe=roxen.slowpipe();
+  else
+    pipe=roxen.fastpipe();
+
+  if (throttle->doit) 
+  { 
+    //we are sure that pipe is really a slowpipe.
+    throttle->rate=max(throttle->rate, conf->query("req_throttle_min"));
     pipe->throttle(throttle->rate,
                    (int)(throttle->rate*conf->query("req_throttle_depth_mult")),
                    0);
     THROTTLING_DEBUG("throtting request at "+throttle->rate);
   }
-  if (conf && conf->throttler) {
+  if ( conf->throttler )
     pipe->assign_throttler(conf->throttler);
-  }
 }
 
 
 void send (string|object what, int|void len)
 {
   REQUEST_WERR(sprintf("send(%O, %O)\n", what, len));
-
   if(!what) return;
   if(!pipe) setup_pipe();
-  if(!pipe) return;
   if(stringp(what))  pipe->write(what);
   else               pipe->input(what,len);
 }
 
-void start_sender (function callback, mixed ... args)
+void start_sender( )
 {
-  if (pipe) {
+  if (pipe) 
+  {
     MARK_FD("HTTP really handled, piping "+not_query);
 #ifdef FD_DEBUG
     call_out(timer, 30, _time(1)); // Update FD with time...
 #endif
-    // FIXME: What about args?
-    pipe->set_done_callback( callback );
-    pipe->output(my_fd);
+    pipe->set_done_callback( do_log );
+    pipe->output( my_fd );
   } else {
     MARK_FD("HTTP really handled, pipe done");
-    callback(@args);
+    do_log();
   }
 }
 
@@ -771,13 +769,14 @@ private int parse_got( string new_data )
 
   REQUEST_WERR(sprintf("After simplify_path == not_query:%O", not_query));
 
-  request_headers = ([]);	// FIXME: KEEP-ALIVE?
 
   misc->pref_languages=PrefLanguages();
 
 #if constant(Roxen.HeaderParser)
+  request_headers = header_mapping;
   foreach( (array)header_mapping, [string linename,contents] )
 #else
+  request_headers = ([]);
   if(sizeof(s)) {
     //    sscanf(s, "%s\r\n\r\n%s", s, data);
     //     s = replace(s, "\n\t", ", ") - "\r";
@@ -794,10 +793,8 @@ private int parse_got( string new_data )
 #if !constant(Roxen.HeaderParser)
       	linename=lower_case(linename);
       	REQUEST_WERR(sprintf("lower-case :%s", linename));
-#endif
-
       	request_headers[linename] = contents;
-        if( arrayp( contents ) ) contents *= ", ";
+#endif
         switch (linename) 
         {
          case "content-length":
@@ -1012,21 +1009,25 @@ private int parse_got( string new_data )
 #endif
   REQUEST_WERR("HTTP: parse_got(): after header scan");
 #ifndef DISABLE_SUPPORTS
-  if(!client) {
-    client = ({ "unknown" });
-    array s_and_v = find_supports_and_vars("", supports);
-    supports = s_and_v[0];
-    client_var = s_and_v[1];
+  if( !sizeof( supports ) )
+  {
+    if( !client ) 
+    {
+      client = ({ "unknown" });
+      array s_and_v = find_supports_and_vars("", supports);
+      supports = s_and_v[0];
+      client_var = s_and_v[1];
+    }
+    else 
+    {
+      if( !client_var->Fullname )
+        client_var->Fullname = "unknown";
+      client_var->fullname=lower_case(client_var->Fullname);
+      array s_and_v=find_supports_and_vars(client_var->fullname, supports, client_var);
+      supports = s_and_v[0];
+      client_var = s_and_v[1];
+    }
   }
-  else {
-    if( !client_var->Fullname )
-      client_var->Fullname = "unknown";
-    client_var->fullname=lower_case(client_var->Fullname);
-    array s_and_v = find_supports_and_vars(client_var->fullname, supports, client_var);
-    supports = s_and_v[0];
-    client_var = s_and_v[1];
-  }
-
   if ( client_var->charset && client_var->charset  != "iso-8859-1" )
   {
     set_output_charset( client_var->charset );
@@ -1076,74 +1077,64 @@ void disconnect()
 #ifdef REQUEST_DEBUG
   if (my_fd) MARK_FD("my_fd in HTTP disconnected?");
 #endif
-  if(do_not_disconnect)return;
+  if(do_not_disconnect)
+    return;
   destruct();
 }
 
 void end(string|void s, int|void keepit)
 {
-  pipe = 0;
 #ifdef PROFILE
-  if(conf)
-  {
-    float elapsed = SECHR(HRTIME()-req_time);
-    string nid =
+  float elapsed = SECHR(HRTIME()-req_time);
+  string nid =
 #ifdef FILE_PROFILE
-      not_query
+         not_query
 #else
-      dirname(not_query)
+         dirname(not_query)
 #endif
-      ;
-    array p;
-    if(!(p=conf->profile_map[nid]))
-      p = conf->profile_map[nid] = ({0,0.0,0.0});
-    p[0]++;
-    p[1] += elapsed;
-    if(elapsed > p[2]) p[2]=elapsed;
-  }
+         ;
+  array p;
+  if(!(p=conf->profile_map[nid]))
+    p = conf->profile_map[nid] = ({0,0.0,0.0});
+  p[0]++;
+  p[1] += elapsed;
+  if(elapsed > p[2]) p[2]=elapsed;
 #endif
 
-  TIMER("end[1]");
-
-#ifdef KEEP_ALIVE
-  if(keepit && !file->raw
+  if(keepit 
+     && !file->raw  
      && (misc->connection == "keep-alive" ||
-	 (prot == "HTTP/1.1" && misc->connection != "close"))
+         (prot == "HTTP/1.1" && misc->connection != "close"))
      && my_fd)
   {
     // Now.. Transfer control to a new http-object. Reset all variables etc..
     object o = object_program(this_object())(0, 0, 0);
     o->remoteaddr = remoteaddr;
     o->supports = supports;
+    o->client_var = client_var;
     o->host = host;
-    o->client = client;
     o->conf = conf;
+    o->pipe = pipe;
     MARK_FD("HTTP kept alive");
-    object fd = my_fd;
-    my_fd=0;
-    if(s) leftovers += s;
-    o->chain(fd,port_obj,leftovers);
-    TIMER("end[2]");
-    disconnect();
+    o->chain( my_fd, port_obj, leftovers );
+    my_fd = 0;
+    pipe = 0;
+    destruct();
     return;
   }
-#endif
 
+  pipe = 0;
   if(objectp(my_fd))
   {
     MARK_FD("HTTP closed");
-    catch {
-      my_fd->set_close_callback(0);
-      my_fd->set_read_callback(0);
-      my_fd->set_blocking();
-      if(s) my_fd->write(s);
+    catch 
+    {
       my_fd->close();
       destruct(my_fd);
     };
     my_fd = 0;
   }
-  TIMER("end[3]");
-  disconnect();
+  destruct();
 }
 
 static void do_timeout()
@@ -1157,7 +1148,7 @@ static void do_timeout()
     // This is an easy reason why: It breaks keep-alive totaly.
     // It is not a very good idea to do that, since it might be enabled
     // per deafult any century now..
-    end("");
+    end();
   } else {
     // premature call_out... *¤#!"
     call_out(do_timeout, 10);
@@ -1402,7 +1393,8 @@ void do_log()
   if(conf)
   {
     int len;
-    if(pipe) file->len = pipe->bytes_sent();
+    if(pipe)
+      file->len = pipe->bytes_sent();
     if(conf)
     {
       if(file->len > 0) conf->sent+=file->len;
@@ -1647,240 +1639,263 @@ void send_result(mapping|void result)
   array err;
   int tmp;
   mapping heads;
-  string head_string;
+  string head_string="";
   if (result)
     file = result;
 
   REQUEST_WERR(sprintf("HTTP: send_result(%O)", file));
 
-  if(!mappingp(file))
+
+  if(!leftovers) 
+    leftovers = data||"";
+
+  if( !file->from_cache )
   {
-    if(misc->error_code)
-      file = Roxen.http_low_answer(misc->error_code, errors[misc->error]);
-    else if(err = catch {
-      file = Roxen.http_low_answer(404,
-				   Roxen.parse_rxml(
+    if(!mappingp(file))
+    {
+      misc->cacheable = 0;
+      if(misc->error_code)
+        file = Roxen.http_low_answer(misc->error_code, errors[misc->error]);
+      else if(err = catch {
+        file = Roxen.http_low_answer(404,
+                                     Roxen.parse_rxml(
 #ifdef OLD_RXML_COMPAT
-						    replace(conf->query("ZNoSuchFile"),
-							    ({"$File", "$Me"}),
-							    ({ "&page.virtfile;",
-							       conf->query("MyWorldLocation")
-							    })),
+                                                      replace(conf->query("ZNoSuchFile"),
+                                                              ({"$File", "$Me"}),
+                                                              ({ "&page.virtfile;",
+                                                                 conf->query("MyWorldLocation")
+                                                              })),
 #else
-						    conf->query("ZNoSuchFile"),
+                                                      conf->query("ZNoSuchFile"),
 #endif
-						    this_object()));
-    }) {
+                                                      this_object()));
+      })
       INTERNAL_ERROR(err);
-    }
-  } else {
-    if((file->file == -1) || file->leave_me)
+    } 
+    else 
     {
-      if(do_not_disconnect) {
-	file = 0;
-	pipe = 0;
-	return;
-      }
-      my_fd = 0;
-      file = 0;
-      return;
-    }
-
-    if(file->type == "raw")  file->raw = 1;
-    else if(!file->type)     file->type="text/plain";
-  }
-
-  if(!file->raw)
-  {
-    heads = ([]);
-    if( !file->len )
-    {
-      if(objectp(file->file))
-	if(!file->stat && !(file->stat=misc->stat))
-	  file->stat = file->file->stat();
-      array fstat;
-      if(arrayp(fstat = file->stat))
+      if((file->file == -1) || file->leave_me)
       {
-	if(file->file && !file->len)
-	  file->len = fstat[1];
-
-	if (fstat[3] > misc->last_modified) {
-	  misc->last_modified = fstat[3];
-	}
-
-	if(prot != "HTTP/0.9" && !misc->is_dynamic) 
-        {
-          heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
-
-	  if(since)
-	  {
-	    /* ({ time, len }) */
-	    array(int) since_info = Roxen.parse_since( since );
-            if ( ((since_info[0] >= misc->last_modified) && 
-                  ((since_info[1] == -1) || (since_info[1] == file->len)))
-                 // actually ok, or...
-                 || ((misc->cacheable>0) 
-                     && (since_info[0] + misc->cacheable<= predef::time(1)))
-                 // cacheable, and not enough time has passed.
-                 )
-	    {
-	      file->error = 304;
-	      file->file = 0;
-	      file->data="";
-	    }
-	  }
-	}
+        if(do_not_disconnect) {
+          file = 0;
+          pipe = 0;
+          return;
+        }
+        my_fd = 0;
+        file = 0;
+        return;
       }
-    }
-    if(prot != "HTTP/0.9") 
-    {
-      string h, charset="";
 
-      if( stringp(file->data) )
+      if(file->type == "raw")  file->raw = 1;
+      else if(!file->type)     file->type="text/plain";
+    }
+
+    if(!file->raw)
+    {
+      heads = ([]);
+      if( !file->len )
       {
-	if (file["type"][0..4] == "text/") 
+        if(objectp(file->file))
+          if(!file->stat && !(file->stat=misc->stat))
+            file->stat = file->file->stat();
+        array fstat;
+        if(arrayp(fstat = file->stat))
         {
-	  [charset,file->data] = output_encode( file->data );
-	  if( charset )
-	    charset = "; charset="+charset;
-	  else
-	    charset = "";
-	}
-        if(stringp(file->data))
+          if(file->file && !file->len)
+            file->len = fstat[1];
+
+          if (fstat[3] > misc->last_modified) {
+            misc->last_modified = fstat[3];
+          }
+
+          if(prot != "HTTP/0.9" && !misc->is_dynamic) 
+          {
+            heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
+
+            if(since)
+            {
+              /* ({ time, len }) */
+              array(int) since_info = Roxen.parse_since( since );
+              if ( ((since_info[0] >= misc->last_modified) && 
+                    ((since_info[1] == -1) || (since_info[1] == file->len)))
+                   // actually ok, or...
+                   || ((misc->cacheable>0) 
+                       && (since_info[0] + misc->cacheable<= predef::time(1)))
+                   // cacheable, and not enough time has passed.
+                   )
+              {
+                file->error = 304;
+                file->file = 0;
+                file->data="";
+              }
+            }
+          }
+        }
+      }
+      if(prot != "HTTP/0.9") 
+      {
+        string h, charset="";
+
+        if( stringp(file->data) )
+        {
+          if (file["type"][0..4] == "text/") 
+          {
+            [charset,file->data] = output_encode( file->data );
+            if( charset )
+              charset = "; charset="+charset;
+            else
+              charset = "";
+          }
           file->len = strlen(file->data);
-      }
-      heads["Content-type"] = file["type"]+charset;
-      heads["Accept-Ranges"] = "bytes";
-      heads["Server"] = replace(version(), " ", "·");
-      heads["Connection"] = (misc->connection=="close" ? "close": "keep-alive");
-//       heads["Date"] = Roxen.http_date(time),
+        }
+        heads["Content-Type"] = file["type"]+charset;
+        heads["Accept-Ranges"] = "bytes";
+        heads["Server"] = replace(version(), " ", "·");
+        heads["Connection"] = (misc->connection=="close" ? "close": "keep-alive");
 
-      if(file->encoding)
-	heads["Content-Encoding"] = file->encoding;
+        if(file->encoding) heads["Content-Encoding"] = file->encoding;
 
-      if(!file->error)
-	file->error=200;
+        if(!file->error)
+          file->error=200;
 
-      if(file->expires)
-	heads->Expires = Roxen.http_date(file->expires);
+        if(file->expires)
+          heads->Expires = Roxen.http_date(file->expires);
 
-      if(mappingp(file->extra_heads))
-	heads |= file->extra_heads;
+        if(mappingp(file->extra_heads))
+          heads |= file->extra_heads;
 
-      if(mappingp(misc->moreheads))
-	heads |= misc->moreheads;
+        if(mappingp(misc->moreheads))
+          heads |= misc->moreheads;
 
-      if(misc->range && file->len && objectp(file->file) && !file->data &&
-	 file->error == 200 && (method == "GET" || method == "HEAD"))
-	// Plain and simple file and a Range header. Let's play.
-	// Also we only bother with 200-requests. Anything else should be
-	// nicely and completely ignored. Also this is only used for GET and
-	// HEAD requests.
-      {
-	// split the range header. If no valid ranges are found, ignore it.
-	// If one is found, send that range. If many are found we need to
-	// use a wrapper and send a multi-part message.
-	array ranges = parse_range_header(file->len);
-	if(ranges) // No incorrect syntax...
-	{
-	  if(sizeof(ranges)) // And we have valid ranges as well.
-	  {
-	    file->error = 206; // 206 Partial Content
-	    if(sizeof(ranges) == 1)
-	    {
-	      heads["Content-Range"] = sprintf("bytes %d-%d/%d",
-					       @ranges[0], file->len);
-	      file->file->seek(ranges[0][0]);
-	      if(ranges[0][1] == (file->len - 1) &&
-		 GLOBVAR(RestoreConnLogFull))
-		// Log continuations (ie REST in FTP), 'range XXX-'
-		// using the entire length of the file, not just the
-		// "sent" part. Ie add the "start" byte location when logging
-		misc->_log_cheat_addition = ranges[0][0];
-	      file->len = ranges[0][1] - ranges[0][0]+1;
-	    } else {
-	      // Multiple ranges. Multipart reply and stuff needed.
-	      // We do this by replacing the file object with a wrapper.
-	      // Nice and handy.
-	      file->file = MultiRangeWrapper(file, heads, ranges, this_object());
-	    }
-	  } else {
-	    // Got the header, but the specified ranges was out of bounds.
-	    // Reply with a 416 Requested Range not satisfiable.
-	    file->error = 416;
-	    heads["Content-Range"] = "*/"+file->len;
-	    if(method == "GET") {
-	      file->data = "The requested byte range is out-of-bounds. Sorry.";
-	      file->len = strlen(file->data);
-	      file->file = 0;
-	    }
-	  }
-	}
-      }
-      head_string = prot+" "+(file->rettext||errors[file->error])+"\r\n";
-      if( file->len > 0 )  heads["Content-Length"] = (string)file->len;
-      if( file->len <= 0 ) misc->connection = "close";
+        if(misc->range && file->len && objectp(file->file) && !file->data &&
+           file->error == 200 && (method == "GET" || method == "HEAD"))
+          // Plain and simple file and a Range header. Let's play.
+          // Also we only bother with 200-requests. Anything else should be
+          // nicely and completely ignored. Also this is only used for GET and
+          // HEAD requests.
+        {
+          // split the range header. If no valid ranges are found, ignore it.
+          // If one is found, send that range. If many are found we need to
+          // use a wrapper and send a multi-part message.
+          array ranges = parse_range_header(file->len);
+          if(ranges) // No incorrect syntax...
+          {
+            misc->cacheable = 0;
+            if(sizeof(ranges)) // And we have valid ranges as well.
+            {
+              file->error = 206; // 206 Partial Content
+              if(sizeof(ranges) == 1)
+              {
+                heads["Content-Range"] = sprintf("bytes %d-%d/%d",
+                                                 @ranges[0], file->len);
+                file->file->seek(ranges[0][0]);
+                if(ranges[0][1] == (file->len - 1) &&
+                   GLOBVAR(RestoreConnLogFull))
+                  // Log continuations (ie REST in FTP), 'range XXX-'
+                  // using the entire length of the file, not just the
+                  // "sent" part. Ie add the "start" byte location when logging
+                  misc->_log_cheat_addition = ranges[0][0];
+                file->len = ranges[0][1] - ranges[0][0]+1;
+              } else {
+                // Multiple ranges. Multipart reply and stuff needed.
+                // We do this by replacing the file object with a wrapper.
+                // Nice and handy.
+                file->file = MultiRangeWrapper(file, heads, ranges, this_object());
+              }
+            } else {
+              // Got the header, but the specified ranges was out of bounds.
+              // Reply with a 416 Requested Range not satisfiable.
+              file->error = 416;
+              heads["Content-Range"] = "*/"+file->len;
+              if(method == "GET") {
+                file->data = "The requested byte range is out-of-bounds. Sorry.";
+                file->len = strlen(file->data);
+                file->file = 0;
+              }
+            }
+          }
+        }
+        head_string = prot+" "+(file->rettext||errors[file->error])+"\r\n";
+        if( file->len > 0 )  heads["Content-Length"] = (string)file->len;
+        if( file->len <= 0 ) misc->connection = "close";
 #if constant( Roxen.make_http_headers )
-      head_string += Roxen.make_http_headers( heads );
+        head_string += Roxen.make_http_headers( heads );
 #else
-      foreach(indices(heads), h)
-	if(arrayp(heads[h]))
-	  foreach(heads[h], tmp)
-	    head_string += h+": "+tmp+"\r\n";
-	else
-          head_string += h+": "+heads[h]+"\r\n";
-      head_string += "\r\n";
+        foreach(indices(heads), h)
+          if(arrayp(heads[h]))
+            foreach(heads[h], tmp)
+              head_string += h+": "+tmp+"\r\n";
+          else
+            head_string += h+": "+heads[h]+"\r\n";
+        head_string += "\r\n";
 #endif
-      if(conf) conf->hsent += strlen(head_string);
+        conf->hsent += strlen(head_string);
+      }
     }
-  }
-  REQUEST_WERR(sprintf("Sending result for prot:%O, method:%O file:%O\n",
-		       prot, method, file));
-
-  MARK_FD("HTTP handled");
-
-#ifdef KEEP_ALIVE
-  if(!leftovers) leftovers = data||"";
-#endif
-
-  TIMER("send_result");
-  if(method != "HEAD" && file->error != 304)
-    // No data for these two...
-  {
-    if(my_fd->query_fd && my_fd->query_fd() >= 0 &&
-       file->len > 0 && file->len < 4000)
+    REQUEST_WERR(sprintf("Sending result for prot:%O, method:%O file:%O\n",
+                         prot, method, file));
+    MARK_FD("HTTP handled");
+  
+    TIMER("send_result");
+    if( (method!="HEAD") && (file->error!=304) )
+      // No data for these two...
     {
-      // Ordinary connection, and a short file.
-      // Just do a blocking write().
-      my_fd->write(head_string + 
-                   (file->file?file->file->read(file->len):
-                    (file->data[..file->len-1])));
-      do_log();
-      return;
-    }
-    if(head_string)
-      send(head_string);
-    if(file->data && strlen(file->data))
-      send(file->data, file->len);
-    if(file->file)
-      send(file->file, file->len);
-  } else {
-    if(head_string)
-    {
-      if(my_fd->query_fd && my_fd->query_fd() >= 0 &&
-         file->len > 0 && file->len < 2000)
+#ifdef RAM_CACHE
+      if( (misc->cacheable > 0) )
       {
-        // Ordinary connection, and a short file.
+        if( (file->len + strlen( head_string )) < conf->datacache->max_file_size )
+        {
+          string data = head_string + (file->file?file->file->read(file->len):
+                         (file->data[..file->len-1]));
+          conf->datacache->set( raw_url, data, 
+                                (["hs":strlen(head_string)]), 
+                                misc->cacheable );
+          file = ([ "data":data ]);
+          head_string = "";
+        }
+      }
+#endif
+      if( file->len > 0 && file->len < 4000 )
+      {
         // Just do a blocking write().
+        my_fd->write(head_string + 
+                     (file->file?file->file->read(file->len):
+                      (file->data[..file->len-1])));
+        do_log();
+        return;
+      }
+      if(strlen(head_string))                 send(head_string);
+      if(file->data && strlen(file->data))    send(file->data, file->len);
+      if(file->file)                          send(file->file, file->len);
+    }
+    else 
+    {
+      if( strlen( head_string ) < 4000)
+      {
         my_fd->write( head_string );
         do_log( );
         return;
       }
       send(head_string);
+      file->len = 1; // Keep those alive, please...
     }
-    file->len = 1; // Keep those alive, please...
   }
-  start_sender(do_log);
+  else 
+  {
+    if( strlen( file->data ) < 4000 )
+    {
+      conf->hsent += file->hsize;
+      my_fd->write( file->data );
+      do_log();
+      return;
+    } 
+    else 
+    {
+      conf->hsent += file->hsize;
+      send( file->data );
+    }
+  }
+  start_sender();
 }
 
 
@@ -1995,6 +2010,8 @@ void got_data(mixed fooid, string s)
     end();
     return;
   }
+  misc->cacheable = 30; // FIXME: Make configurable.
+
 
   mixed q;
   if( q = variables->magic_roxen_automatic_charset_variable )
@@ -2006,30 +2023,27 @@ void got_data(mixed fooid, string s)
 
   if( !conf )
   {
-    if (misc->host)
-    {
-      // FIXME: port_obj->name & port_obj->default_port are constant
-      // consider caching them?
-      conf = 
-           port_obj->find_configuration_for_url(port_obj->name + "://" +
-                                                misc->host +
-                                                (search(misc->host, ":")<0?
-                                                 (":"+port_obj->default_port):"") +
-                                                not_query,
-                                                this_object());
-    }
-    else
-    {
-      // No host header.
-      // Fallback to using the first configuration bound to this port.
-      conf = port_obj->mu || 
-           (port_obj->mu = port_obj->urls[port_obj->sorted_urls[0]]->conf);
-      misc->defaulted = 1;
-      // Support delayed loading in this case too.
-      if (!conf->inited) {
-        conf->enable_all_modules();
-      }
-    }
+    // FIXME: port_obj->name & port_obj->default_port are constant
+    // consider caching them?
+    conf = 
+         port_obj->find_configuration_for_url(port_obj->name + "://" +
+                                              misc->host +
+                                              (search(misc->host, ":")<0?
+                                               (":"+port_obj->default_port):"") +
+                                              not_query,
+                                              this_object());
+    //     else
+    //     {
+    //       // No host header.
+    //       // Fallback to using the first configuration bound to this port.
+    //       conf = port_obj->mu || 
+    //            (port_obj->mu = port_obj->urls[port_obj->sorted_urls[0]]->conf);
+    //       misc->defaulted = 1;
+    //       // Support delayed loading in this case too.
+    //       if (!conf->inited) {
+    //         conf->enable_all_modules();
+    //       }
+    //     }
   }
 
   TIMER("conf");
@@ -2048,6 +2062,7 @@ void got_data(mixed fooid, string s)
         y = conf->auth_module->auth(y, this_object());
       auth = y;
     }
+    misc->cacheable = 0;
   }
 
 
@@ -2061,6 +2076,7 @@ void got_data(mixed fooid, string s)
         misc->proxyauth
           = conf->auth_module->auth(misc->proxyauth,this_object() );
     }
+    misc->cacheable = 0;
   }
 
   conf->received += strlen(s);
@@ -2071,13 +2087,29 @@ void got_data(mixed fooid, string s)
   my_fd->set_close_callback(0);
   my_fd->set_read_callback(0);
   processed=1;
+
+#ifdef RAM_CACHE
+  array cv;
+  if( misc->cacheable && (cv = conf->datacache->get( raw_url )) )
+  {
+    string d = cv[ 0 ];
+    file = ([ "from_cache":1,"len":strlen(d),"hsize":cv[1]->hs,"data":d,  ]);
+    send_result();
+    return;
+  }
+#endif
+
   TIMER("pre_handle");
+#ifdef THREADS
   roxen.handle(handle_request);
+#else
+  handle_request();
+#endif
   })
   {
     report_error("Internal server error: " + describe_backtrace(err));
     my_fd->close();
-    destruct (my_fd);
+    destruct( my_fd );
     disconnect();
   }
 }
@@ -2145,8 +2177,10 @@ void clean()
 
 static void create(object f, object c, object cc)
 {
+// trace(1);
   if(f)
   {
+//     f->set_blocking();
     MARK_FD("HTTP connection");
     f->set_read_callback(got_data);
     f->set_close_callback(end);
@@ -2164,39 +2198,23 @@ void chain(object f, object c, string le)
 {
   my_fd = f;
   port_obj = c;
-  do_not_disconnect=-1;
-
+  processed = 0;
   MARK_FD("Kept alive");
-  if(strlen(le))
-    // More to handle already.
-    got_data(0,le);
+  time = _time(1);
+
+  if( strlen( le ) ) 
+    got_data( 0,le );
   else
   {
     // If no pipelined data is available, call out...
     remove_call_out(do_timeout);
     call_out(do_timeout, 150);
-    time = _time(1);
-//     string q = f->read( 8192, 1 );
-//     if( q ) got_data( 0, q );
   }
 
-  if(!my_fd)
+  if( !processed )
   {
-    if(do_not_disconnect == -1)
-    {
-      do_not_disconnect=0;
-      disconnect();
-    }
-  }
-  else
-  {
-    if(do_not_disconnect == -1)
-      do_not_disconnect = 0;
-    if(!processed)
-    {
-      f->set_close_callback(end);
-      f->set_read_callback(got_data);
-    }
+    f->set_close_callback( end );
+    f->set_read_callback( got_data );
   }
 }
 

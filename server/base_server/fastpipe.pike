@@ -2,7 +2,7 @@
 // by Francesco Chemolli, based upon work by Per Hedbor and others.
 // Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version="$Id: fastpipe.pike,v 1.5 2000/08/12 06:12:45 per Exp $";
+constant cvs_version="$Id: fastpipe.pike,v 1.6 2000/08/13 13:54:21 per Exp $";
 
 private array(string) headers=({});
 private Stdio.File file;
@@ -12,25 +12,26 @@ private function done_callback;
 private array(mixed) callback_args;
 
 //API functions
-int bytes_sent() {
+int bytes_sent() 
+{
   return sent;
 }
 
-private void sendfile_done(int written, function callback, array(mixed) args) {
+private void sendfile_done(int written, function callback, array(mixed) args) 
+{
   sent=written;
-  headers=({}); //otherwise it all goes to hell with keep-alive..
+  headers=({});
   file=0;
   flen=-1;
-  callback(@args);
-  done_callback=0;
-  callback_args=0;
+  if( done_callback ) done_callback(@callback_args);
+  done_callback=0; callback_args=0;
 }
 
 void output (Stdio.File fd)
 {
   // FIXME: timeout handling!
-  Stdio.sendfile(headers,file,-1,flen,0,fd,sendfile_done,
-                 done_callback, callback_args);
+//   werror( "%O\n", ({strlen(headers[0]),file,-1,flen,0,fd,sendfile_done}) );
+  Stdio.sendfile(headers,file,-1,flen,0,fd,sendfile_done);
 }
 
 void input (Stdio.File what, int len)
