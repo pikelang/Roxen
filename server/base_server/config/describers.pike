@@ -210,15 +210,18 @@ mapping last_usage = ([]);
 string describe_global_debug(object node)
 {
   string res;
+  mixed foo;
   if(node->folded)
     return link("<font size=+1>Debug information for developers</font>");
   else
-    res = link("<font size=+1>Debug information for developers</font><dd>");
+    res = link("<font size=+1>Debug information for developers</font><ul>");
 #if efun(_memory_usage)
-  res += ("Memory usage:<br>");
-  mapping foo = _memory_usage();
+  foo = _memory_usage();
   string f;
-  res+="<table border=0 cellspacing=0 cellpadding=2 width=50%><tr bgcolor=darkblue><th align=left>Entry<th align=right>Current (KB)<th align=right>Change (KB)</tr>";
+  res+="<table border=0 cellspacing=0 cellpadding=2 width=50%>"
+    "<tr align=left bgcolor=#000060><th colspan=3>Memory Usage:</th></tr>"
+    "<tr bgcolor=darkblue><th align=left>Entry<th align=right>"
+    "Current (KB)<th align=right>Change (KB)</tr>";
   foreach(sort(indices(foo)), f)
     if(search(f, "num_"))
       res += "<tr bgcolor=black><td><b>"+f+"</b></td><td align=right><b>"+(foo[f]/1024)+
@@ -233,10 +236,36 @@ string describe_global_debug(object node)
   last_usage=foo;
   res+="</table>";
 #endif
+#if efun(_dump_obj_table)
+  res += ("<table  border=0 cellspacing=0 cellpadding=2 width=50%>"
+	  "<tr align=left bgcolor=#000060><th  colspan=2>List of all "
+	  "programs:</th></tr>"
+	  "<tr align=left bgcolor=darkblue>"
+	  "<th>Program name</th><th align=right>Clones</th></tr>");
+  foo = _dump_obj_table();
+  mapping allobj = ([]);
+  string a = getcwd(), s;
+  if(a[-1] != '/')
+    a += "/";
+  int i;
+  for(i = 0; i < sizeof(foo); i++) {
+    allobj[foo[i][0]]++;
+  }
+  foreach(sort_array(indices(allobj), 
+		     lambda(string a, string b, mapping allobj) {
+    return allobj[a] < allobj[b];
+  }, allobj), s) {
+    if(search(s, "Destructed?") == -1)
+      res += sprintf("<tr bgcolor=black><td><b>%s</b></td>"
+		     "<td align=right><b>%d</b></td></tr>\n",
+		     s - a, allobj[s]);
+  }
+  res += "</table>";
+#endif
 #if efun(_num_objects)
   res += ("Number of destructed objects: " + _num_dest_objects() +"<br>\n");
 #endif  
-  return res;
+  return res +"</ul>";
 }
 
 #define MB (1024*1024)
