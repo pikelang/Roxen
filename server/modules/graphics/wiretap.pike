@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000-2001, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.35 2004/05/27 23:31:17 mani Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.36 2004/06/03 23:05:35 mani Exp $";
 
 #include <module.h>
 inherit "module";
@@ -23,6 +23,7 @@ constant thread_safe   = 1;
 
 void create()
 {
+  // FIXME: This variable need a callback to start().
   defvar("colorparsing", ({ "td", "table" }),
 	 "Tags to parse for color",
 	 TYPE_STRING_LIST|VAR_NOT_CFIF,
@@ -31,6 +32,7 @@ void create()
 	 "with it, the parsing time is relative to the number of parsed "
 	 "tags in a document.");
 
+  // FIXME: This variable need a callback to start().
   defvar("colormode", 0, "Normalize colors in parsed tags",
          TYPE_FLAG|VAR_NOT_CFIF, #"\
 If set, replace 'roxen' colors (@c,m,y,k etc) with 'netscape'
@@ -61,14 +63,10 @@ adding <tt>wiretap='no'</tt> to the document's <tag>body</tag> tag.</p>
 // -------------------- The actual wiretap code  --------------------------
 
 
-//  When < 2.2 compatibility is requested we tap all tags all the time
-//  unlike the newer design where we require a <body> tag to enable
-//  the wiretap. In that case this is the tag set for the runtime
-//  tags.
 RXML.TagSet runtime_wiretap_tags = RXML.TagSet (this_module(), "runtime");
 
 // The currently implemented settings.
-int compat_mode, colormode;
+int colormode;
 array(string) colorparsing;
 
 array(RXML.Tag) get_tag_variants(string tag_name, mixed tag)
@@ -80,14 +78,9 @@ array(RXML.Tag) get_tag_variants(string tag_name, mixed tag)
 	     tag);
 }
 
-void init_tag_set (int new_compat_mode,
-		   array(string) new_colorparsing,
+void init_tag_set (array(string) new_colorparsing,
 		   int new_colormode)
 {
-  //  Register start and end tags individually so we can handle the
-  //  <body> container properly. If compatibility with 2.1 or earlier
-  //  is needed we register all tags at once.
-
   array(RXML.Tag) body_tags =
     get_tag_variants ("body", TagBody) +
     get_tag_variants ("body", TagEndBody);
@@ -103,14 +96,9 @@ void init_tag_set (int new_compat_mode,
   module_tag_set->clear();
   runtime_wiretap_tags->clear();
 
-  if (new_compat_mode)
-    module_tag_set->add_tags (body_tags + non_body_tags);
-  else {
-    module_tag_set->add_tags (body_tags);
-    runtime_wiretap_tags->add_tags (non_body_tags);
-  }
+  module_tag_set->add_tags (body_tags);
+  runtime_wiretap_tags->add_tags (non_body_tags);
 
-  compat_mode = new_compat_mode;
   colorparsing = new_colorparsing;
   colormode = new_colormode;
 }
@@ -126,7 +114,7 @@ class TagBody
 		    RXML.FLAG_NO_PREFIX);
 
   // Cached settings.
-  int body_compat_mode = compat_mode, body_colormode = colormode;
+  int body_colormode = colormode;
   RXML.TagSet body_runtime_wiretap_tags =runtime_wiretap_tags;
   
   void create(string _name)
@@ -143,14 +131,11 @@ class TagBody
     {
       //  Check if <body> attribute disables wiretap
       if (args["wiretap"] != "no") {
-	//  Register temporary tags unless we're running in compatibility
-	//  mode.
-	if (!body_compat_mode) {
-	  RXML.Context ctx = RXML_CONTEXT;
-	  foreach(body_runtime_wiretap_tags->get_local_tags(), RXML.Tag tag)
-	    ctx->add_runtime_tag(tag);
-	}
-	
+	//  Register temporary tags.
+	RXML.Context ctx = RXML_CONTEXT;
+	foreach(body_runtime_wiretap_tags->get_local_tags(), RXML.Tag tag)
+	  ctx->add_runtime_tag(tag);
+
 	args =
 	  mkmapping(map(indices(args), lower_case), values(args)) -
 	  ({ "wiretap" });
@@ -176,8 +161,7 @@ class TagEndBody
 		    RXML.FLAG_NO_PREFIX);
   
   // Cached settings.
-  int body_compat_mode = compat_mode;
-  RXML.TagSet body_runtime_wiretap_tags =runtime_wiretap_tags;
+  RXML.TagSet body_runtime_wiretap_tags = runtime_wiretap_tags;
   
   void create(string _name)
   {
@@ -192,12 +176,10 @@ class TagEndBody
     
     array do_return(RequestID id)
     {
-      //  Unregister our temporary tags unless we're in compatibility mode
-      if (!body_compat_mode) {
-	RXML.Context ctx = RXML_CONTEXT;
-	foreach(body_runtime_wiretap_tags->get_local_tags(), RXML.Tag tag)
-	  ctx->remove_runtime_tag(tag);
-      }
+      //  Unregister our temporary tags.
+      RXML.Context ctx = RXML_CONTEXT;
+      foreach(body_runtime_wiretap_tags->get_local_tags(), RXML.Tag tag)
+	ctx->remove_runtime_tag(tag);
       return ({ propagate_tag() });
     }
   }
@@ -271,13 +253,11 @@ class TagPopColor
 void start()
 {
   if (module_tag_set) {
-    int new_compat_mode = my_configuration()->query("compat_level") < "2.2";
     array(string) new_colorparsing = query ("colorparsing");
     int new_colormode = query ("colormode");
-    if (compat_mode != new_compat_mode ||
-	!equal (colorparsing, new_colorparsing) ||
+    if (!equal (colorparsing, new_colorparsing) ||
 	colormode != new_colormode)
-      init_tag_set (new_compat_mode, new_colorparsing, new_colormode);
+      init_tag_set (new_colorparsing, new_colormode);
   }
 }
 
@@ -287,8 +267,7 @@ RXML.TagSet query_tag_set()
     module_tag_set = RXML.TagSet (this_module(), "");
     module_tag_set->add_tag_set_dependency (runtime_wiretap_tags);
   }
-  init_tag_set (my_configuration()->query("compat_level") < "2.2",
-		query ("colorparsing"),
+  init_tag_set (query ("colorparsing"),
 		query ("colormode"));
   return module_tag_set;
 }
