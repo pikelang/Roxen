@@ -111,7 +111,7 @@ string parse( RequestID id )
       res += "</dt>\n";
     }
   else
-    res += _(0,"(none)");
+    res += _(312,"(none)");
   res += "</dl>\n";
 
   if (!view_mode)
@@ -119,11 +119,11 @@ string parse( RequestID id )
     string button;
     if ( sizeof(DBManager.group_dbs(id->variables->group)) )
       button = sprintf("<gbutton textcolor='#BEC2CB'>%s</gbutton>",
-		       _(0, "Delete group"));
+		       _(352, "Delete group"));
     else
       button = sprintf("<a href='%s?group=%s&action=%s'><gbutton>%s</gbutton></a>",
 		       id->not_query, id->variables->group, "delete",
-		       _(0, "Delete group"));
+		       _(352, "Delete group"));
     res += "<br />"+button;
   }
 
@@ -134,8 +134,8 @@ string parse( RequestID id )
 mixed delete_group( string group, RequestID id )
 {
   if( sizeof(DBManager.group_dbs( group )) )
-    return (string)_(0, "You can not delete this group because it is not empty.");
-  string msg = (string)_(0, "Are you sure you want to delete the group %s?");
+    return (string)_(353, "You can not delete this group because it is not empty.");
+  string msg = (string)_(354, "Are you sure you want to delete the group %s?");
   VERIFY(msg);
 
   DBManager.delete_group( group );

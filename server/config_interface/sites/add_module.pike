@@ -709,7 +709,7 @@ mixed do_it( RequestID id )
   }
 
   if (!conf) {
-    return sprintf(LOCALE(0, "Configuration %O not found."),
+    return sprintf(LOCALE(356, "Configuration %O not found."),
 		   id->variables->config);
   }
 

@@ -875,7 +875,8 @@ change the currently running version.</o>
 </str>
 
 <str id="47">
-<o>Changing roxen version</o>
+<changed from="Changing roxen version"/>
+<o>Shutting down and changing roxen version</o>
 <t>Mìním verzi</t>
 </str>
 
@@ -1008,7 +1009,7 @@ change the currently running version.</o>
 
 <str id="154">
 <new/>
-<o>Note that the server will be automatically restarted with the new version.</o>
+<o>Note that you will have to start the new server manually because you may have to answer a few questions for the new environment file.</o>
 <t></t>
 </str>
 

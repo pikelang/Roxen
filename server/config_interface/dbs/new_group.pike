@@ -93,7 +93,7 @@ mapping|string parse( RequestID id )
     if(!strlen(error))
       if (!sizeof(id->variables->lname))
 	error="<font color='&usr.warncolor;'>"+
-	  _(0,"Please give a name for the group.")+
+	  _(355,"Please give a name for the group.")+
 	  "</font>";
     if(!strlen(error))
       if( DBManager.get_group( c_name(id->variables->name,id) ) )
