@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.464 2000/03/24 17:34:26 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.465 2000/03/24 20:55:25 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -511,9 +511,47 @@ object do_thread_create(string id, function f, mixed ... args)
   return t;
 }
 
+// Shamelessly uses facts about pikes preemting algorithm.
+// Might have to be fixed in the future.
+class Queue 
+{
+#if 0
+  inherit Thread.Queue;
+#else
+  inherit Thread.Condition : r_cond;
+  array buffer=allocate(8);
+  int r_ptr, w_ptr;
+  
+  int size() 
+  { 
+    return w_ptr - r_ptr;  
+  }
+  
+  mixed read()
+  {
+    while(!(w_ptr - r_ptr)) r_cond::wait();
+    mixed tmp = buffer[r_ptr];
+    buffer[r_ptr++] = 0;	// Throw away any references.
+    return tmp;
+  }
+  
+  void write(mixed v)
+  {
+    if(w_ptr >= sizeof(buffer))
+    {
+      buffer=buffer[r_ptr..]+allocate(8);
+      w_ptr-=r_ptr;
+      r_ptr=0;
+    }
+    buffer[w_ptr++]=v;
+    r_cond::signal();
+  }
+#endif
+}
+
 // Queue of things to handle.
 // An entry consists of an array(function fp, array args)
-static object (Thread.Queue) handle_queue = Thread.Queue();
+static Queue handle_queue = Queue();
 
 // Number of handler threads that are alive.
 static int thread_reap_cnt;
