@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.70 1999/08/06 16:40:57 grubba Exp $
+# $Id: start,v 1.71 1999/08/19 23:43:49 per Exp $
 
 cd `dirname $0`
 
@@ -35,6 +35,9 @@ if [ "x$PIKE" = "x" ]; then :; else
 fi
 
 ####### BEGIN ARGUMENT PARSING
+
+
+DEFINES="$DEFINES -DKEEP_ALIVE"
 
 # Enable threads (if available) on Solaris.
 # Most other OS's have thread bugs that cause them or Roxen to crash.
@@ -91,6 +94,9 @@ parse_args() {
   ;;
   '--no-threads'|'--without-threads'|'--disable-threads')
     DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//'`"
+  ;;
+  '--no-keep-alive'|'--without-keep-alive'|'--disable-keep-alive')
+    DEFINES="`echo $DEFINES | sed -e 's/-DKEEP_ALIVE//'`"
   ;;
   '--with-profile'|'--profile')
     DEFINES="-DPROFILE $DEFINES"
@@ -185,9 +191,13 @@ the default arguments.
                                   for each and every file.
 
       .B--with-keep-aliveB.:          Enable keep alive in the HTTP 
-			          protocol module. This will soon be 
-                                  the default. Some clients might have 
-				  problems with keepalive.
+			          protocol module. This is the default. 
+                                  Some clients might have problems 
+                                  with keep-alive.
+
+      .B--without-keep-aliveB.:       Disable keep alive in the HTTP 
+			          protocol module. Some clients might have 
+				  problems with keep-alive.
 
       .B--onceB.:                     Run the server only once, in the foreground.
 			   	  This is very useful when debugging.
