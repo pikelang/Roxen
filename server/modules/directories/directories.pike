@@ -15,7 +15,7 @@
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_directories",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: directories.pike,v 1.89 2000/12/01 17:15:39 js Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.90 2000/12/04 22:40:02 nilsson Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -29,7 +29,7 @@ constant default_template= #"
      <roxen align='right' size='small' />
     <font size='+3'>
    <emit source='path'>
-     <a href='&_.path:url;'> &_.name; <font color='black'>/</font></a>
+     <a href='&roxen.path;&_.path:http;'> &_.name; <font color='black'>/</font></a>
    </emit> </font><br /><br />
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>
@@ -79,8 +79,8 @@ constant default_template= #"
             sort-order='&form.sort;'
             ::='&var.doreverse;'>
         <tr bgcolor='#eeeeee'>
-          <td align='left'><a href='&_.path:http;'><img src='&_.type-img;' border='0' /></a></td>
-          <td align='left'><a href='&_.path:http;'>&_.name;</a> &nbsp;</td>
+          <td align='left'><a href='&_.name:url;'><img src='&_.type-img;' border='0' /></a></td>
+          <td align='left'><a href='&_.name:url;'>&_.name;</a> &nbsp;</td>
           <td align='right'>&_.size; &nbsp;</td>
           <td align='right'>&_.type; &nbsp;</td>
           <td align='right'>&_.mtime; &nbsp;</td>
@@ -180,14 +180,12 @@ void start(int n, Configuration c)
 mapping parse_directory(RequestID id)
 {
   string f = id->not_query;
+
   // First fix the URL
   //
   // It must end with "/" or "/."
 
-  if(f == "" )
-    return Roxen.http_redirect(id->not_query + "/", id);
-
-  if(f[-1]!='/' && f[-1]!='.')
+  if(f=="" || (f[-1]!='/' && f[-1]!='.'))
     return Roxen.http_redirect(f+"/", id);
 
   if(f[-1]=='.' && !override)
