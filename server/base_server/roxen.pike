@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.169 1998/02/20 11:16:35 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.170 1998/02/28 21:15:05 js Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1637,7 +1637,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  ". See the file etc/supports for examples.");
   
   globvar("audit", 0, "Audit trail", TYPE_FLAG,
-	  "If Audit trail is set to Yes, all changes of uid will be"
+	  "If Audit trail is set to Yes, all changes of uid will be "
 	  "logged in the Event log.");
   
 #if efun(syslog)
