@@ -3,7 +3,7 @@ inherit "pike_test_common.pike";
 
 array run_tests( Configuration c  )
 {
-  string key = test( roxen.argcache.store,
+  string key2,key = test( roxen.argcache.store,
 		     ([ "foo":"\4711",
 			"gazonk":1,
 			"teleledningsanka":42.0
@@ -20,13 +20,28 @@ array run_tests( Configuration c  )
 		 "teleledningsanka":42.0
 	      ]) );
 
+
+  test_equal( ([ "foo":"\4711","gazonk":1,"teleledningsanka":42.0 ]),
+	      roxen.argcache.lookup, key );
+
+  key2 = test_not_equal( key,
+	      roxen.argcache.store,
+	      ([ "foo":"\4711",
+		 "gazonk":2,
+		 "teleledningsanka":42.0
+	      ]) );
+
+  test_equal( ([ "foo":"\4711","gazonk":2,"teleledningsanka":42.0 ]),
+	      roxen.argcache.lookup, key2 );
   test_equal( ([ "foo":"\4711","gazonk":1,"teleledningsanka":42.0 ]),
 	      roxen.argcache.lookup, key );
 
   test_true( pass, (int)key );
 
   test( roxen.argcache.delete, key );
+  test( roxen.argcache.delete, key2 );
   
+  test_error( roxen.argcache.lookup, key );
   test_error( roxen.argcache.lookup, key );
   
   
