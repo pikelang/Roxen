@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.143 2002/07/03 12:38:48 nilsson Exp $
+// $Id: wizard.pike,v 1.144 2002/07/03 20:20:33 nilsson Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -129,8 +129,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     m->type = "text";
     if(!m->size)m->size="60,1";
     m_delete(m,"default");
-    foreach((current||"")/"\0"-({""}), string v)
+    foreach( String.SplitIterator( (current||""), 0 ); int num; string v)
     {
+      if(v=="") continue;
       res+="<tr><td>"+loc_encode(v, m, "html")+"</td><td><font size=\"-2\">";
       m->name="_delete_"+n+":"+v;
       m->value = " " + LOCALE(16, "Remove") + " ";
@@ -600,8 +601,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 			  @(id->conf?({id}):({})));
 
   mapping å = id->real_variables;
-  foreach(indices(s), string q)
-     å[q] = å[q]||s[q];
+  foreach(s; string q; string p)
+     å[q] = å[q]||p;
 
   FakedVariables v=id->variables;
 
@@ -1120,8 +1121,8 @@ string html_border(string what, int|void width, int|void ww,
 
 void filter_checkbox_variables(mapping v)
 {
-  foreach(indices(v), string s) {
-    if(!v[s] || (v[s]=="0"))
+  foreach(v; string s; string c) {
+    if(!c || (c=="0"))
       m_delete(v,s);
     else
       v[s]-="\00";

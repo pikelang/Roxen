@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: html.pike,v 1.16 2002/06/14 16:05:03 jhs Exp $
+// $Id: html.pike,v 1.17 2002/07/03 20:20:32 nilsson Exp $
 
 #pragma strict_types
 
@@ -19,11 +19,11 @@ string input(string name, string value, void|int size,
 
   string render="<input";
 
-  foreach(indices(args), string attr) {
+  foreach(args; string attr; string arg) {
     render+=" "+attr+"=";
-    if(!has_value(args[attr], "\"")) render+="\""+args[attr]+"\"";
-    else if(!has_value(args[attr], "'")) render+="'"+args[attr]+"'";
-    else render+="\""+replace(args[attr], "'", "&#39;")+"\"";
+    if(!has_value(arg, "\"")) render+="\""+arg+"\"";
+    else if(!has_value(arg, "'")) render+="'"+arg+"'";
+    else render+="\""+replace(arg, "'", "&#39;")+"\"";
   }
 
   if(xml) return render+" />";

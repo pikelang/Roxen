@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 2000 - 2001, Roxen IS.
-// $Id: basic_defvar.pike,v 1.31 2002/06/14 16:05:03 jhs Exp $
+// $Id: basic_defvar.pike,v 1.32 2002/07/03 20:20:32 nilsson Exp $
 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -53,11 +53,10 @@ void setvars( mapping (string:mixed) vars )
 //! Used by roxen internals, not all that useful for the module
 //! programmer.
 {
-  string v;
   Variable.Variable q;
-  foreach( indices( vars ), v )
-    if(q = variables[v])
-      q->set( vars[v] );
+  foreach( vars; string i; mixed v )
+    if(q = variables[i])
+      q->set( v );
 }
 
 //! @decl Variable.Variable defvar( string sname, Variable.Variable variable )

@@ -190,7 +190,7 @@ class ConfigurationSettings
   mapping trim_variables( mapping m )
   {
     mapping q = (config_settings2->get( name ) || ([]));
-    foreach( indices( m ), string v )  q[v] = m[v]->query( );
+    foreach(m; string i; mixed v )  q[i] = v->query( );
     return q;
   }
 
@@ -208,9 +208,9 @@ class ConfigurationSettings
   {
     mapping vv = config_settings2->get( name );
     if( vv ) 
-      foreach( indices( vv ), string i )
+      foreach( vv; string i; mixed v )
         if( variables[ i ] )
-          variables[ i ]->set( vv[i] );
+          variables[ i ]->set( v );
   }
 
   class BoxVariable

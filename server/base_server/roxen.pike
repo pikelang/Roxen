@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.815 2002/07/03 19:25:26 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.816 2002/07/03 20:20:32 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1078,9 +1078,8 @@ class InternalRequestID
   this_program set_url( string url )
   {
     Configuration c;
-    foreach( indices(urls), string u )
+    foreach( urls; string u; mapping q )
     {
-      mixed q = urls[u];
       if( glob( u+"*", url ) )
 	if( (c = q->port->find_configuration_for_url(url, this_object(), 1 )) )
 	{
@@ -1106,9 +1105,8 @@ class InternalRequestID
     if(!c)
     {
       // pass 3: No such luck. Let's allow default fallbacks.
-      foreach( indices(urls), string u )
+      foreach( urls; string u; mapping q )
       {
-	mixed q = urls[u];
 	if( (c = q->port->find_configuration_for_url( url,this_object(), 1 )) )
 	{
 	  conf = c;
@@ -1511,7 +1509,8 @@ class SSLProtocol
     string f, f2;
     ctx->certificates = ({});
 
-    foreach( query_option("ssl_cert_file")/",", string cert_file )
+    foreach( String.SplitIterator(query_option("ssl_cert_file"), ',');
+	     int num; string cert_file )
     {
       if( catch{ f = lopen(cert_file, "r")->read(); } )
       {
@@ -1823,7 +1822,7 @@ int register_url( string url, Configuration conf )
   Standards.URI ui = Standards.URI(url);
   mapping opts = ([]);
   string a, b;
-  foreach( (ui->fragment||"")/";", string x )
+  foreach( String.SplitIterator( (ui->fragment||""), ';'); int num; string x )
   {
     sscanf( x, "%s=%s", a, b );
     opts[a]=b;
@@ -3063,7 +3062,7 @@ class ImageCache
 #ifndef NO_ARG_CACHE_SB_REPLICATE
     if(id->misc->persistent_cache_crawler) {
       // Force an update of atime for the requested arg cache id.
-      foreach(ci/"$", string key) {
+      foreach( String.SplitIterator(ci, '$'); int num; string key) {
 #if REPLICATE_DEBUG
 	werror("Request for id %O from prefetch crawler.\n", key);
 #endif /* REPLICATE_DEBUG */
@@ -4737,7 +4736,8 @@ array security_checks = ({
   "day=%s",1,({
     lambda( string q ) {
       multiset res = (<>);
-      foreach( q/",", string w ) if( (int)w )
+      foreach( String.SplitIterator(q, ','); int num; string w )
+	if( (int)w )
 	  res[((int)w % 7)] = 1;
 	else
 	  res[ (["monday":1,"thuesday":2,"wednesday":3,"thursday":4,"friday":5,
@@ -4839,7 +4839,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 		       "  int|mapping fail" });
   int shorted, patterns, cmd;
 
-  foreach( pattern / "\n", string line )
+  foreach( String.SplitIterator(pattern, '\n'); int row; string line )
   {
     line = String.trim_all_whites( line );
     if( !strlen(line) || line[0] == '#' )

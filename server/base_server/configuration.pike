@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.530 2002/07/03 14:51:52 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.531 2002/07/03 20:20:32 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -497,8 +497,8 @@ array (RoxenModule) get_providers(string provides)
     provider_module_cache[provides]  = ({ });
     for(i = 9; i >= 0; i--)
     {
-      foreach(indices(pri[i]->provider_modules), RoxenModule d)
-	if(pri[i]->provider_modules[ d ][ provides ])
+      foreach(pri[i]->provider_modules; RoxenModule d; multiset(string) p)
+	if( p[ provides ] )
 	  provider_module_cache[provides] += ({ d });
     }
   }
@@ -790,9 +790,7 @@ private inline string fix_logging(string s)
 
 private void parse_log_formats()
 {
-  string b;
-  array foo=query("LogFormat")/"\n";
-  foreach(foo, b)
+  foreach(String.SplitIterator(query("LogFormat"), '\n'); int x; string b)
     if(strlen(b) && b[0] != '#' && sizeof(b/":")>1)
       log_format[(int)(b/":")[0]] = fix_logging((b/":")[1..]*":");
 }
@@ -2456,11 +2454,10 @@ void save(int|void all)
   store( "EnabledModules", enabled_modules, 1, this_object());
   foreach(modules; string modname; ModuleCopies mc)
   {
-    foreach(indices(mc->copies), int i)
+    foreach(mc->copies; int i; mixed mod)
     {
-      store(modname+"#"+i, mc->copies[i]->query(), 0, this_object());
-      if (mixed err = catch(mc->copies[i]->
-			    start(2, this_object())))
+      store(modname+"#"+i, mod->query(), 0, this_object());
+      if (mixed err = catch(mod->start(2, this_object())))
 	report_error("Error calling start in module.\n%s",
 		     describe_backtrace (err));
     }

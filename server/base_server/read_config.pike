@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.65 2002/06/26 14:20:43 nilsson Exp $
+// $Id: read_config.pike,v 1.66 2002/07/03 20:20:32 nilsson Exp $
 
 #include <module.h>
 #include <module_constants.h>
@@ -201,6 +201,7 @@ mapping read_it(string cl)
     };
   };
 
+  // FIXME: Buggy code?
   string base = configuration_dir + replace(cl, " ", "_");
   foreach( ({ base }), string attempt )
     if( string data = try_read( attempt ) )
@@ -283,14 +284,13 @@ void store( string reg, mapping vars, int q,
     data[ reg ] = m = vars;
   else
   {
-    mixed var;
     m = ([ ]);
-    foreach(indices(vars), var) {
-      if (vars[var]->save) {
+    foreach(vars; mixed var; mixed val) {
+      if (val->save) {
 	// Support for special save callbacks.
-	savers[vars[var]->save] = 1;
+	savers[val->save] = 1;
       } else {
-	m[ var ] = vars[ var ]->query();
+	m[ var ] = val->query();
       }
     }
     data[ reg ] = m;

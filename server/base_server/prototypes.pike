@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.57 2002/07/03 12:38:47 nilsson Exp $
+// $Id: prototypes.pike,v 1.58 2002/07/03 20:20:32 nilsson Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -396,19 +396,19 @@ class FakedVariables( mapping real_variables )
 
   static this_program `|( mapping what )
   {
-    foreach( indices(what), string q )`[]=( q,what[q] );
+    foreach( what; string q; mixed v ) `[]=( q,v );
     return this_object();
   }
 
   static this_program `+=( mapping what )
   {
-    foreach( indices(what), string q )`[]=( q,what[q] );
+    foreach( what; string q; mixed v ) `[]=( q,v );
     return this_object();
   }
 
   static this_program `+( mapping what )
   {
-    foreach( indices(what), string q )`[]=( q,what[q] );
+    foreach( what; string q; mixed v ) `[]=( q,v );
     return this_object();
   }
 

@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.115 2002/06/28 23:12:33 nilsson Exp $
+// $Id: module_support.pike,v 1.116 2002/07/03 20:20:32 nilsson Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -559,9 +559,9 @@ void clear_all_modules_cache()
   all_modules_cache = 0;
   all_pike_module_cache = 0;
   master()->clear_compilation_failures();
-  foreach( values( modules ), RoxenModule o )
+  foreach( modules; string m; RoxenModule o )
     if( !o || !o->check() )
-      m_delete( modules, search( modules, o ) );
+      m_delete( modules, m );
 }
 
 array(ModuleInfo) all_modules()

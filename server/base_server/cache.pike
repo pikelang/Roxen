@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.82 2002/06/19 23:42:53 nilsson Exp $
+// $Id: cache.pike,v 1.83 2002/07/03 20:20:32 nilsson Exp $
 
 // #pragma strict_types
 
@@ -228,9 +228,14 @@ void nongarbing_cache_flush(string cache_id) {
 mapping(string:array(int)) ngc_status() {
   mapping(string:array(int)) res = ([]);
 
-  foreach(indices(nongc_cache), string cache)
-    res[cache] = ({ sizeof(nongc_cache[cache]),
-		    sizeof(encode_value(nongc_cache[cache])) });
+  foreach(nongc_cache; string name; mapping entry) {
+    mixed err = catch {
+      res[name] = ({ sizeof(entry),
+		     sizeof(encode_value(entry)) });
+    };
+    if(err)
+      res[name] = ({ sizeof(entry), -1 });
+  }
 
   return res;
 }

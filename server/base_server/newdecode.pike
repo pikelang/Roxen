@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: newdecode.pike,v 1.31 2002/06/14 16:05:03 jhs Exp $
+// $Id: newdecode.pike,v 1.32 2002/07/03 20:20:32 nilsson Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -86,7 +86,7 @@ string decode_config_region(Parser.HTML p, mapping mr, string s, mapping res2)
 string trim_comments( string from )
 {
   string res = "";
-  foreach( from /"\n", string l )
+  foreach( String.SplitIterator(from, '\n'); int r; string l )
   {
     if( strlen(l) && l[0] == '#' )
       // Just defeat any tags on the line. This won't clobber any
@@ -188,14 +188,9 @@ string trim_ws( string indata )
 
   indata = trim_tags( indata );
 
-  foreach(indata/"\n", string line)
-  {
-    sscanf(line, "%*[ \t]%s", line);
-    line = reverse(line);
-    sscanf(line, "%*[ \t]%s", line);
-    line = reverse(line);
-    res += line+"\n";
-   }
+  foreach(String.SplitIterator(indata, '\n'); int row; string line)
+    res += String.trim_whites(line) + "\n";
+
   return res;
 }
 

@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.339 2002/07/03 12:38:48 nilsson Exp $
+// $Id: roxenloader.pike,v 1.340 2002/07/03 20:20:33 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.339 2002/07/03 12:38:48 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.340 2002/07/03 20:20:33 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -236,8 +236,10 @@ void roxen_perror(string format, mixed ... args)
   if (sizeof(format)) {
 #if efun(syslog)
     if(use_syslog && (loggingfield&LOG_DEBUG))
-      foreach(format/"\n"-({""}), string message)
+      foreach( String.SplitIterator(format,'\n'); int row; string message) {
+	if(message=="") continue;
 	syslog(LOG_DEBUG, replace(message+"\n", "%", "%%"));
+      }
 #endif
 
     if (last_was_nl == -1) stderr->write("\n");
@@ -271,7 +273,6 @@ int mkdirhier(string from, int|void mode)
   from = roxen_path( from + "x" ); // "x" keeps roxen_path from stripping trailing '/'.
   array(string) f=(from/"/");
   string b="";
-
 
   foreach(f[0..sizeof(f)-2], string a)
   {
@@ -408,8 +409,8 @@ void report_warning(LocaleString message, mixed ... foo)
   nwrite([string]message,0,2,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_WARNING))
-    foreach([string]message/"\n", message)
-      syslog(LOG_WARNING, replace([string]message+"\n", "%", "%%"));
+    foreach( String.SplitIterator(message,'\n'); int row; message )
+      syslog(LOG_WARNING, replace(message+"\n", "%", "%%"));
 #endif
 }
 
@@ -423,8 +424,8 @@ void report_notice(LocaleString message, mixed ... foo)
   nwrite([string]message,0,1,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_NOTICE))
-    foreach([string]message/"\n", message)
-      syslog(LOG_NOTICE, replace([string]message+"\n", "%", "%%"));
+    foreach( String.SplitIterator(message,'\n'); int row; message )
+      syslog(LOG_NOTICE, replace(message+"\n", "%", "%%"));
 #endif
 }
 
@@ -438,8 +439,8 @@ void report_error(LocaleString message, mixed ... foo)
   nwrite([string]message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_ERR))
-    foreach([string]message/"\n", message)
-      syslog(LOG_ERR, replace([string]message+"\n", "%", "%%"));
+    foreach( String.SplitIterator(message,'\n'); int row; message )
+      syslog(LOG_ERR, replace(message+"\n", "%", "%%"));
 #endif
 }
 
@@ -451,7 +452,7 @@ void report_fatal(string message, mixed ... foo)
   nwrite(message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_EMERG))
-    foreach(message/"\n", message)
+    foreach( String.SplitIterator(message,'\n'); int row; message )
       syslog(LOG_EMERG, replace(message+"\n", "%", "%%"));
 #endif
 }
@@ -462,8 +463,8 @@ static void garb_sparsely_dont_log()
 {
   if (sparsely_dont_log && sizeof (sparsely_dont_log)) {
     int now = time (1);
-    foreach (indices (sparsely_dont_log), string msg)
-      if (sparsely_dont_log[msg] < now) m_delete (sparsely_dont_log, msg);
+    foreach (sparsely_dont_log; string msg; int t)
+      if (t < now) m_delete (sparsely_dont_log, msg);
   }
   call_out (garb_sparsely_dont_log, 10*60);
 }
@@ -481,8 +482,8 @@ void report_warning_sparsely (LocaleString message, mixed ... args)
   nwrite([string]message,0,2,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_WARNING))
-    foreach([string]message/"\n", message)
-      syslog(LOG_WARNING, replace([string]message+"\n", "%", "%%"));
+    foreach( String.SplitIterator(message, '\n'); int row; message )
+      syslog(LOG_WARNING, replace(message+"\n", "%", "%%"));
 #endif
 }
 
@@ -499,8 +500,8 @@ void report_error_sparsely (LocaleString message, mixed... args)
   nwrite([string]message,0,3,MC);
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_ERR))
-    foreach([string]message/"\n", message)
-      syslog(LOG_ERR, replace([string]message+"\n", "%", "%%"));
+    foreach( String.SplitIterator(message, '\n'); int row; message )
+      syslog(LOG_ERR, replace(message+"\n", "%", "%%"));
 #endif
 }
 
@@ -1544,7 +1545,7 @@ static void do_tailf( int loop, string f )
   string mysqlify( string what )
   {
     string res = "";
-    foreach( (what/"\n"), string line )
+    foreach( String.SplitIterator(what,'\n'); int row; string line )
     {
       if( sscanf( line, "%*sAborted connection%*s" ) == 2 )
 	continue;

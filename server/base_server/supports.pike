@@ -2,7 +2,7 @@
 // Copyright © 1999 - 2001, Roxen IS.
 //
 // Handles supports
-// $Id: supports.pike,v 1.26 2002/06/14 16:05:04 jhs Exp $
+// $Id: supports.pike,v 1.27 2002/07/03 20:20:33 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -58,10 +58,10 @@ private void parse_supports_string(string what, string current_section,
 	name -= "\t";
 	defines[name] = replace(to, ({"\t",","}), ({" "," "}) )/" "-({""});
 	array add=({});
-	foreach(defines[name], string sup)
-	  if(defines[sup]) {
+	foreach(defines; string sup; array(string) define)
+	  if(define) {
 	    defines[name]-=({sup});
-	    add+=defines[sup];
+	    add+=define;
 	  }
 	defines[name]+=add;
 //	report_debug("#defining '"+name+"' to "+to+"\n");
