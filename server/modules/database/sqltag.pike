@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.112 2004/06/19 23:13:42 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.113 2004/06/20 16:10:45 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -144,8 +144,8 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 string default_db;
 
 array|object do_sql_query(mapping args, RequestID id,
-			  void|int(0..1) big_query,
-			  void|int(0..1) ret_con)
+			  void|int(0..2) querytype)
+			   // 0 query, 1 big_query, 2 query with last-insert-id
 {
   string host;
   if(args->db)
@@ -183,7 +183,7 @@ array|object do_sql_query(mapping args, RequestID id,
       
     if( catch
     {
-      string f=(big_query?"big_query":"query")+(ro?"_ro":"");
+      string f=(querytype==1?"big_query":"query")+(ro?"_ro":"");
       result = bindings ?  
 	module["sql_"+f]( args->query, bindings ) :
 	module["sql_"+f]( args->query );
@@ -202,7 +202,7 @@ array|object do_sql_query(mapping args, RequestID id,
       RXML.run_error( "Couldn't connect to SQL server"+
 		      (error?": "+ describe_error (error) :"")+"\n" );
 
-    function query_fn = (big_query ? con->big_query : con->query); 
+    function query_fn = (querytype==1 ? con->big_query : con->query); 
     if( catch(result = (bindings ? query_fn(args->query, bindings) : query_fn(args->query))) ) {
       error = con->error();
       if (error) error = ": " + error;
@@ -211,10 +211,6 @@ array|object do_sql_query(mapping args, RequestID id,
     }
   }
 
-  if (ret_con) {
-    // NOTE: Use of this feature may lead to circularities...
-    args->dbobj=con;
-  }
   if(result && args->rowinfo) {
     int rows;
     if(arrayp(result)) rows=sizeof(result);
@@ -222,7 +218,7 @@ array|object do_sql_query(mapping args, RequestID id,
     RXML.user_set_var(args->rowinfo, rows);
     if(objectp(result)) m_delete(args, "rowinfo");
   }
-  return result;
+  return querytype==2 ? con : result;
 }
 
 
@@ -307,20 +303,16 @@ class TagSQLQuery {
     array do_return(RequestID id) {
       NOCACHE();
 
-      array res;
-
       if(args["mysql-insert-id"]) {
-        res=do_sql_query(args, id, 0, 1);
-	object con = args->dbobj;
-	m_delete(args, "dbobj");
-	if(con && con->master_sql)
+        object con = do_sql_query(args, id, 0, 2);
+	if(con && con->master_sql->insert_id)
 	  RXML.user_set_var(args["mysql-insert-id"],
 			    con->master_sql->insert_id());
 	else
 	  RXML.parse_error("No insert_id present.\n");
       }
       else
-         res=do_sql_query(args, id, 0);
+         do_sql_query(args, id, 0);
       id->misc->defines[" _ok"] = 1;
       return 0;
     }
