@@ -24,20 +24,36 @@ void create()
          "logged in the event log, enabeling you to upgrade those RXML tags.");
 }
 
+constant relevant=(<"rxmltags","graphic_text","tablify","countdown","counter">);
+multiset enabled;
 void start (int when, Configuration conf)
 {
   conf->parse_html_compat = 1;
+  enabled=(<>);
+  foreach(indices(conf->enabled_modules), string name)
+    enabled+=(<name[0..sizeof(name)-3]>);
+  enabled-=(enabled-relevant);
 }
 
 string query_provides() {
   return "oldRXMLwarning";
 }
 
+int warnings=0;
 void old_rxml_warning(RequestID id, string problem, string solution)
 {
+  warnings++;
   if(query("logold"))
     report_warning("Old RXML in "+id->not_query+
     ": contains "+problem+". Use "+solution+" instead.\n");
+}
+
+string status() {
+  string ret="";
+  ret+="<b>RXML Warnings:</b> "+warnings+"<br>\n"
+    "<b>Support enabled for:</b> "+
+    String.implode_nicely(indices(enabled), ",")+"<br>\n";
+  return ret;
 }
 
 // Changes the parsing order by first parsing it's contents and then
@@ -480,41 +496,48 @@ array tag_list_tags(string t, mapping m, RequestID id) {
 }
 
 mapping query_tag_callers() {
-  return (["echo":tag_echo,
-	   "countdown":tag_countdown,
-	   "counter":tag_counter,
-	   "insert":tag_insert,
-	   "date":tag_date,
-	   "pr":tag_pr,
-	   "refferrer":tag_refferrer,
-	   "set":tag_set,
-	   "redirect":tag_redirect,
-	   "append":tag_append,
-	   "gtext-id":tag_gtext_id,
-	   "list-tags":tag_list_tags
+  mapping active=(["list-tags":tag_list_tags]);
+  if(enabled->countdown) active->countdown=tag_countdown;
+  if(enabled->counter) active->counter=tag_counter;
+  if(enabled->graphic_text) active["gtext-id"]=tag_gtext_id;
+  if(enabled->rxmltags) active+=([
+    "echo":tag_echo,
+    "insert":tag_insert,
+    "date":tag_date,
+    "pr":tag_pr,
+    "refferrer":tag_refferrer,
+    "set":tag_set,
+    "redirect":tag_redirect,
+    "append":tag_append,
   ]);
+  return active;
 }
 
 mapping query_container_callers() {
-  return (["tablify":container_tablify,
-	   "source":container_source,
-	   "recursive-output":container_recursive_output,
-	   "default":container_default,
-	   "autoformat":container_autoformat,
-	   "aconf":container_aconf,
-	   "apre":container_apre,
-	   "preparse":container_preparse,
-	   "gtext":container_gtext,
-	   "gh":container_gtext,
-	   "gh1":container_gtext,
-	   "gh2":container_gtext,
-	   "gh3":container_gtext,
-	   "gh4":container_gtext,
-	   "gh5":container_gtext,
-	   "gh6":container_gtext,
-	   "anfang":container_gtext,
-	   "gtext-url":container_gtext
+  mapping active=([]);
+  if(enabled->tablify) active->tablify=container_tablify;
+  if(enabled->graphic_text) active+=([
+    "gtext":container_gtext,
+    "gh":container_gtext,
+    "gh1":container_gtext,
+    "gh2":container_gtext,
+    "gh3":container_gtext,
+    "gh4":container_gtext,
+    "gh5":container_gtext,
+    "gh6":container_gtext,
+    "anfang":container_gtext,
+    "gtext-url":container_gtext
   ]);
+  if(enabled->rxmltags) active+=([
+    "source":container_source,
+    "recursive-output":container_recursive_output,
+    "default":container_default,
+    "autoformat":container_autoformat,
+    "aconf":container_aconf,
+    "apre":container_apre,
+    "preparse":container_preparse
+  ]);
+  return active;
 }
 
 mapping query_if_callers()
