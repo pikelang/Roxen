@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id";
+constant cvs_version = "$Id: gbutton.pike,v 1.2 1999/11/15 15:02:06 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
