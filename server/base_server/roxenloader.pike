@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.293 2001/09/06 13:42:31 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.294 2001/09/06 13:46:52 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1975,6 +1975,7 @@ library should be enough.
   DC("Thread.Thread");
   DC("Thread.Local");
   DC("Thread.Mutex");
+  DC("Thread.MutexKey");
   DC("Thread.Condition");
   DC("thread_create");
   
