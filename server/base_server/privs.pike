@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.14 1997/08/04 12:57:16 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.15 1997/08/10 00:41:20 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -53,8 +53,9 @@ void create(string reason, int|string|void uid, int|void gid)
   }
 
   if(LOGP)
-    perror("Change to %s privs wanted (%s), from %s",
-	   (string)u[0], (string)reason,
+    perror("Change to %s(%d):%d privs wanted (%s), from %s",
+	   (string)u[0], (int)uid, (int)gid,
+	   (string)reason,
 	   (string)dbt(backtrace()[-2]));
 
   if(getuid()) return;
@@ -66,7 +67,45 @@ void create(string reason, int|string|void uid, int|void gid)
   cleargroups();
 #endif /* cleargroups */
   initgroups(u[0], u[3]);
-  setegid(gid||getgid());
+  gid = gid || getgid();
+  int err = setegid(gid);
+  if (err < 0) {
+    perror("privs.pike: WARNING: Failed to set the effective group id to %d!\n"
+	   "Check that your password database is correct for user %s(%d),\n"
+	   "and that your group database is correct.\n",
+	   gid, (string)u[0], (int)uid);
+    int gid2 = gid;
+#ifdef HPUX_KLUDGE
+    if (gid >= 60000) {
+      /* HPUX has doesn't like groups higher than 60000,
+       * but has assigned nobody to group 60001 (which isn't even
+       * in /etc/group!).
+       *
+       * HPUX's libc also insists on filling numeric fields it doesn't like
+       * with the value 60001!
+       */
+      perror("privs.pike: WARNING: Assuming nobody-group.\n"
+	     "Trying some alternatives...\n");
+      // Assume we want the nobody group, and try a couple of alternatives
+      foreach(({ 60001, 65534, -2 }), gid2) {
+	perror("%d... ", gid2);
+	if (initgroups(u[0], gid2) >= 0) {
+	  if ((err = setegid(gid2)) >= 0) {
+	    perror("Success!\n");
+	    break;
+	  }
+	}
+      }
+    }
+#endif /* HPUX_KLUDGE */
+    if (err < 0) {
+      perror("privs.pike: Failed\n");
+      throw(({ sprintf("Failed to set EGID to %d\n", gid), backtrace() }));
+    }
+    perror("privs.pike: WARNING: Set egid to %d instead of %d.\n",
+	   gid2, gid);
+    gid = gid2;
+  }
   if(getgid()!=gid) setgid(gid||getgid());
   seteuid(uid);
 #endif /* HAVE_EFFECTIVE_USER */
