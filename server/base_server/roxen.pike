@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.774 2002/01/29 21:19:03 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.775 2002/01/31 12:05:06 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1561,10 +1561,14 @@ class SSLProtocol
 	  report_error(LOC_M(13,"SSL3: Certificate not valid (DER).")+"\n");
 	  return;
 	}
-	if (tbs->public_key->rsa->public_key_equal (rsa))
+	if (tbs->public_key->rsa->public_key_equal (rsa)) {
 	  key_matches++;
-	else
+	  // DWIM: Make sure the main cert comes first in the cert list.
+	  ctx->certificates = ({ cert }) + ctx->certificates;
+	} else {
+	  ctx->certificates += ctx->certificates;
 	  continue;
+	}
       }
       else if (part = msg->parts["DSA PRIVATE KEY"])
       {
@@ -1593,6 +1597,8 @@ class SSLProtocol
 	ctx->dhe_dss_mode();
 
 	// FIXME: Add cert <-> private key check.
+
+	ctx->certificates = ({ cert }) + ctx->certificates;
       }
       else 
       {
@@ -1600,7 +1606,6 @@ class SSLProtocol
 	return;
       }
 
-      ctx->certificates = ({ cert }) + ctx->certificates;
       ctx->random = r;
     }
     if( !key_matches )
