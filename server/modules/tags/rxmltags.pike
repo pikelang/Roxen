@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.460 2004/04/28 15:07:59 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.461 2004/06/08 13:08:30 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5785,6 +5785,14 @@ constant tagdoc=([
  form variables, i.e. the answers to HTML forms sent by the client.
  Both variables resulting from POST operations and GET operations gets
  into this scope. There are no predefined entities for this scope.
+</p></desc>",
+
+//----------------------------------------------------------------------
+
+"&request-header;":#"<desc type='scope'><p><short hide='hide'>
+ This scope contains request header variables.</short> This scope contains the
+ request header variables, i.e. the request headers sent by the client.
+ There are no predefined entities for this scope.
 </p></desc>",
 
 //----------------------------------------------------------------------
