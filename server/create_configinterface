@@ -1,0 +1,2 @@
+#!/bin/sh
+./start --program bin/create_configif.pike
