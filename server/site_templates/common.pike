@@ -88,6 +88,12 @@ mixed parse( RequestID id, mapping|void opt )
   Configuration conf = id->misc->new_configuration;
   id->misc->do_not_goto = 1;  
 
+#ifdef THREADS
+  Thread.MutexKey enable_modules_lock = conf->enable_modules_mutex->lock();
+#endif
+  // The stuff below ought to be in configuration.pike and not here;
+  // we have to meddle with locks and stuff that should be internal.
+
   foreach( modules, string mod )
   {
     RoxenModule module;
