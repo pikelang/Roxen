@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.24 2000/09/28 03:40:33 per Exp $
+// $Id: module.pmod,v 1.25 2000/09/28 03:43:35 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -209,10 +209,7 @@ class Variable
   void add_warning( string to )
   //! Like set_warning, but adds to the current warning, if any.
   {
-    if(!to)
-      set_warning( 0 );
-    else
-      set_warning( (get_warnings()||"") + to );
+    if(to) set_warning( (get_warnings()||"") + to );
   }
 
   int set( mixed to )
@@ -346,8 +343,9 @@ class Variable
                        "from verify_set_from_form\n" );
         return;
       }
-      if( b ) {
-	if ( b[0] ) set_warning( b[0] );
+      if( b ) 
+      {
+        set_warning( b[0] );
 	set( b[1] );
       }
     }
