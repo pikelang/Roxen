@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.164 2000/03/30 20:08:39 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.165 2000/04/03 03:48:37 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -944,8 +944,8 @@ void do_main_wrapper(int argc, array(string) argv)
   };
   catch {
     if (err) {
-      report_error(sprintf("Roxen loader failed:\n"
-			   "%s\n", describe_backtrace(err)));
+      werror(sprintf("Roxen loader failed:\n"
+                     "%s\n", describe_backtrace(err)));
     }
   };
   exit(1);
@@ -1041,6 +1041,7 @@ Please install a newer pike version
   add_constant( "ST_MTIME", ST_MTIME );
   add_constant( "ST_CTIME", ST_CTIME );
   add_constant( "ST_SIZE",  ST_SIZE );
+  add_constant("mkdirhier", mkdirhier);
 
   if (err = catch {
     replace_master(new_master=[object(__builtin.__master)](((program)"etc/roxen_master.pike")()));
@@ -1062,7 +1063,6 @@ Please install a newer pike version
   add_constant("popen",popen);
   add_constant("roxen_popen",popen);
   add_constant("init_logger", init_logger);
-  add_constant("mkdirhier", mkdirhier);
   add_constant("capitalize",
                lambda(string s){return upper_case(s[0..0])+s[1..];});
 
@@ -1086,12 +1086,12 @@ Please install a newer pike version
 
   // These are here to allow dumping of roxen.pike to a .o file.
   report_debug("Loading pike modules ... ");
-  function(string, string|void:function) nm_resolv =
-    [function(string, string|void:function)]new_master->resolv;
 
+  function  nm_resolv = new_master->resolv;
   int t = gethrtime();
+  
   add_constant( "Regexp", nm_resolv("Regexp") );
-  add_constant( "Stdio.File", nm_resolv("Stdio.File") );
+//   add_constant( "Stdio.File", nm_resolv("Stdio.File") );
   add_constant( "Stdio.UDP", nm_resolv("Stdio.UDP") );
   add_constant( "Stdio.Port", nm_resolv("Stdio.Port") );
   add_constant( "Stdio.read_bytes", nm_resolv("Stdio.read_bytes") );
