@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.12 2002/04/12 08:54:25 tomas Exp $
+// $Id: startdll.cpp,v 1.13 2002/09/26 08:47:48 tomas Exp $
 //
 
 
@@ -710,7 +710,10 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
     CRegKey key;
     lRes = key.Open(keyAppID, _T("{EE755A27-6EEA-4AD7-AB21-BCE00C6CFF1A}"), KEY_READ);
     if (lRes != ERROR_SUCCESS)
-        return lRes;
+    {
+      printf("Required registry information missing. Run 'ntstart --register' and retry.\n");
+      return lRes;
+    }
 
     TCHAR szValue[_MAX_PATH];
     DWORD dwLen = _MAX_PATH;
