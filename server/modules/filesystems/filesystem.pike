@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.100 2001/05/20 13:03:34 nilsson Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.101 2001/06/27 19:00:56 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -206,12 +206,12 @@ mixed stat_file( string f, RequestID id )
   FILESYSTEM_WERR("stat_file for \""+f+"\"" +
 		  (id->misc->internal_get ? " (internal)" : ""));
 
-  if (FILTER_INTERNAL_FILE (f, id)) return 0;
+  if (FILTER_INTERNAL_FILE (f, id))
+    return 0;
 
   if(stat_cache && !id->pragma["no-cache"] &&
      (fs=cache_lookup("stat_cache",path+f)))
     return fs[0];
-
   object privs;
   if (access_as_user && ((int)id->misc->uid) && ((int)id->misc->gid))
     // NB: Root-access is prevented.
@@ -227,7 +227,7 @@ mixed stat_file( string f, RequestID id )
 
 string real_file( string f, RequestID id )
 {
-  if(local::stat_file( f, id ))
+  if(stat_file( f, id ))
     return path + f;
 }
 
