@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.62 1999/02/18 17:41:07 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.63 1999/02/18 19:50:19 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -89,7 +89,40 @@ class imap_mail
 
   void set_flags(multiset(string) new_flags)
   {
-    /********************************************************* NOT IMPLEMENTED YET!!!!!!!!!!!!!!!!!!!!! */
+    foreach(indices(new_flags), string f) {
+      string cl_flag = ([
+	"\\Seen" : "read",
+	"\\Answered" : "answered",
+	"\\Deleted" : "deleted",
+	"\\Draft" : "draft",
+      ])[f] || (sizeof(f) && (f[0] != '/') && ("IMAP:" + f));
+
+      if (f) {
+	mail->set_flag(cl_flag);
+	flags[f] = 1;
+      } else {
+	// FIXME: Should report an error here.
+      }
+    }
+  }
+
+  void clear_flags(multiset(string) old_flags)
+  {
+    foreach(indices(old_flags), string f) {
+      string cl_flag = ([
+	"\\Seen" : "read",
+	"\\Answered" : "answered",
+	"\\Deleted" : "deleted",
+	"\\Draft" : "draft",
+      ])[f] || (sizeof(f) && (f[0] != '/') && ("IMAP:" + f));
+
+      if (f) {
+	mail->clear_flag(cl_flag);
+	flags[f] = 0;
+      } else {
+	// FIXME: Should report an error here.
+      }
+    }
   }
 
   array(string|object) update()
@@ -244,7 +277,7 @@ class imap_mail
   array(string|object) store(multiset(string) new_flags, int mode, int silent, int uid_mode)
   {
     if (mode) {
-      // We care about what the flage were before.
+      // We care about what the flags were before.
       multiset old_flags = flags;
       flags = get_flags();
 
@@ -252,16 +285,16 @@ class imap_mail
     }
     switch(mode) {
     case -1:
-      flags -= new_flags;
+      clear_flags(new_flags);
       break;
     case 0:
-      flags = new_flags;
+      clear_flags(flags);
+      set_flags(new_flags);
       break;
     case 1:
-      flags |= new_flags;
+      set_flags(new_flags);
       break;
     }
-    set_flags(flags);
 
     if (!silent) {
       if (uid_mode) {
