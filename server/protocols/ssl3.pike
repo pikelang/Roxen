@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.40 1998/07/22 19:21:30 grubba Exp $
+/* $Id: ssl3.pike,v 1.41 1998/08/11 18:55:07 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -308,50 +308,17 @@ static void write_more_file()
   }
 }
 
-
-void handle_request( )
+#if 1
+void send_result(mapping|void result)
 {
-#ifdef SSL3_DEBUG
-  roxen_perror(sprintf("SSL3:handle_request()\n"));
-#endif /* SSL3_DEBUG */
-  mixed *err;
+  array err;
   int tmp;
-#ifdef KEEP_CONNECTION_ALIVE
-  int keep_alive;
-#endif
-  function funp;
   mapping heads;
   string head_string;
-  object thiso=this_object();
+  object thiso = this_object();
 
-#ifndef SPEED_MAX
-  remove_call_out(do_timeout);
-  remove_call_out(do_timeout);
-#endif
-
-  my_fd->set_read_callback(0);
-  my_fd->set_close_callback(0); 
-  my_fd->set_write_callback(0); 
-
-  if(conf)
-  {
-//  perror("Handle request, got conf.\n");
-    object oc = conf;
-    foreach(conf->first_modules(), funp) {
-      if(file = funp( thiso)) break;
-      if(conf != oc) {handle_request();return;}
-    }
-
-    
-    if(!file) err=catch(file = conf->get_file(thiso));
-
-    if(err) internal_error(err);
-    
-    if(!mappingp(file))
-      foreach(conf->last_modules(), funp) if(file = funp(thiso)) break;
-  } else if(err=catch(file = roxen->configuration_parse( thiso ))) {
-    if(err==-1) return;
-    internal_error(err);
+  if (result) {
+    file = result;
   }
 
   if(!mappingp(file))
@@ -487,6 +454,7 @@ void handle_request( )
 
   if(thiso && conf) conf->log(file, thiso);
 }
+#endif /* 1 */
 
 class fallback_redirect_request {
   string in = "";
