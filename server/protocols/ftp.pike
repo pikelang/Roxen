@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.59 1997/10/05 03:17:38 per Exp $
+ * $Id: ftp.pike,v 1.60 1997/10/07 04:28:15 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -747,17 +747,18 @@ void connected_to_send(object fd,mapping file)
     reply("425 Can't build data connect: Connection refused.\n"); 
     return;
   }
+#ifdef ENABLE_ASCII_MODE
   if(mode == "A")
   {
-    if(file->data)
-      file->data = replace(file->data, "\n", "\r\n");
-    if(file->file)
+    if(!file->data) file->data="";
+    if(objectp(file->file) && file->file->read)
     {
-      if(!file->data) file->data="";
-      file->data += replace(file->file->read(), "\n", "\r\n");
+      file->data += file->file->read();
       file->file=0;
     }
+    file->data = replace(file->data, "\n", "\r\n");
   }
+#endif /* ENABLE_ASCII_MODE */
   if(stringp(file->data))  pipe->write(file->data);
   if(file->file) {
     file->file->set_blocking();
