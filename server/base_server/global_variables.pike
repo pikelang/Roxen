@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.47 2000/11/17 23:19:05 nilsson Exp $
+// $Id: global_variables.pike,v 1.48 2000/12/01 23:02:56 nilsson Exp $
 
 /*
 #pragma strict_types
@@ -585,13 +585,15 @@ void define_global_variables(  )
          " (such as gtext, diagram etc) unless you use a mysql database to "
          "store the argument cache meta data."));
 
-  defvar("mem_cache_gc", 300,
-	 LOCALE(170, "Cache: Memory Cache Garbage Collect Interval"),
-	 TYPE_INT,
-	 LOCALE(171, "The number of seconds between every garbage collect "
-	 "(removal of old content) from the memory cache. The "
-	 "memory cache is used for various tasks like remebering "
-	 "what supports flags matches what client."));
+  defvar("mem_cache_gc",
+	 Variable.Int(300, 0, 
+		      LOCALE(170, "Cache: Memory Cache Garbage Collect Interval"),
+		      LOCALE(171, "The number of seconds between every garbage collect "
+			     "(removal of old content) from the memory cache. The "
+			     "memory cache is used for various tasks like remebering "
+			     "what supports flags matches what client.")))
+    ->set_range(1, 60*60*24);
+  // Note that the upper limit is arbitrary.
 
   defvar("config_file_comments", 0,
 	 LOCALE(172, "Commented config files"),
