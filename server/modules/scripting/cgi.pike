@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.42 1997/09/26 22:05:25 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.43 1997/09/26 22:07:48 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -457,6 +457,7 @@ class spawn_cgi
       pipe2->write(data);
       my_fd->set_id( pipe2 );                  // for put..
       my_fd->set_read_callback(got_some_data); // lets try, atleast..
+      my_fd->set_nonblocking();
     }
   }
   
