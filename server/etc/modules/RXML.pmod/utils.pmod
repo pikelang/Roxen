@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.13 2000/08/15 01:20:05 mast Exp $
+//! $Id: utils.pmod,v 1.14 2000/09/05 21:01:00 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
@@ -80,10 +80,10 @@ int(1..1)|string|array p_xml_entity_cb (Parser.HTML p, string str)
       if (!p->type->free_text) return ({});
       string out;
       if ((<"#x", "#X">)[entity[..1]]) {
-	if (sscanf (entity, "%*2s%x%*c", int c) == 2) out = (string) ({c});
+	if (sscanf (entity, "%*2s%x%*c", int c) == 2) out = sprintf ("%c", c);
       }
       else
-	if (sscanf (entity, "%*c%d%*c", int c) == 2) out = (string) ({c});
+	if (sscanf (entity, "%*c%d%*c", int c) == 2) out = sprintf ("%c", c);
       return out && ({out});
     }
   }
