@@ -128,20 +128,21 @@ static object mutex=Thread.Mutex();
 #endif
 
 
-static void check_exception()
+static void check_exception(object|void e)
 {
-  object e = jvm->exception_occurred();
-  if(e) {
-    object sw = stringwriter_class->alloc();
-    stringwriter_init->call_nonvirtual(sw);
-    object pw = printwriter_class->alloc();
-    printwriter_init->call_nonvirtual(pw, sw);
-    throwable_printstacktrace(e, pw);
-    printwriter_flush(pw);
+  if(!e) {
+    if(!(e = jvm->exception_occurred()))
+      return;
     jvm->exception_clear();
-    array bt = backtrace();
-    throw(({(string)sw, bt[..sizeof(bt)-2]}));
   }
+  object sw = stringwriter_class->alloc();
+  stringwriter_init->call_nonvirtual(sw);
+  object pw = printwriter_class->alloc();
+  printwriter_init->call_nonvirtual(pw, sw);
+  throwable_printstacktrace(e, pw);
+  printwriter_flush(pw);
+  array bt = backtrace();
+  throw(({(string)sw, bt[..sizeof(bt)-2]}));
 }
 
 class ClassLoader
@@ -266,6 +267,11 @@ class ReaderFile
     string_init->call_nonvirtual(s, a, 0, r);
     check_exception();
     return (string)s;
+  }
+
+  Stat stat()
+  {
+    return 0;
   }
 
   void create(object r)
@@ -561,14 +567,13 @@ class ModuleWrapper
         string modname = get_module_name(path);
         object e = jvm->exception_occurred();
         if (e) {
+	  jvm->exception_clear();
           if (e->is_instance_of(filenotfound_class)) {
-            jvm->exception_clear();
             error("Unable to find JAR file");
           } else if (e->is_instance_of(ioexception_class)) {
-            jvm->exception_clear();
             error("Unable to read JAR file");
           } else {
-            check_exception();
+            check_exception(e);
           }
         } else if (!modname) {
           error("Unable to find class name within JAR");
