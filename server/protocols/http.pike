@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.45 1997/10/05 03:18:01 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.46 1997/10/05 03:37:49 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -362,7 +362,8 @@ private int parse_got(string s)
 	      }
 	      data = data[..l];
 	      switch(lower_case(((misc["content-type"]||"")/";")[0]-" "))
-	      {	       default: // Normal form data.
+	      {
+	      default: // Normal form data.
 		string v;
 		if(l < 200000)
 		{
@@ -915,11 +916,13 @@ void handle_request( )
     }
 #endif
 
-    if(mappingp(file->extra_heads)) 
+    if(mappingp(file->extra_heads)) {
       heads |= file->extra_heads;
+    }
 
-    if(mappingp(misc->moreheads))
+    if(mappingp(misc->moreheads)) {
       heads |= misc->moreheads;
+    }
     
     array myheads = ({prot+" "+(file->rettext||errors[file->error])});
     foreach(indices(heads), h)
