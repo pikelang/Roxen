@@ -1,3 +1,7 @@
+/.ttffontcache
+/.bgcache
+/.pike-script-servers
+/disabled_modules
 /.HSResource
 /.purify
 /sqlnet.log
