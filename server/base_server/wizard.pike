@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.58 1998/03/13 16:51:23 grubba Exp $
+/* $Id: wizard.pike,v 1.59 1998/03/21 14:01:51 js Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -613,7 +613,7 @@ string html_table(array(string) subtitles, array(array(string)) table,
     for(int j = 0; j < sizeof(table[i]); j++) {
       mixed s = table[i][j];
       if(arrayp(s))
-	r += "</tr>"+tr+"><td colspan="+cols+">"+s[0]+" &nbsp;</td>";
+	r += "</tr>"+tr+"<td colspan="+cols+">"+s[0]+" &nbsp;</td>";
       else {
 	string type = "text";
 	if(arrayp(opt->fields) && j < sizeof(opt->fields))
