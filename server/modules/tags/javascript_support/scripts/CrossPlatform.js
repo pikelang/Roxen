@@ -359,3 +359,72 @@ function setStatus(text)
 {
   setTimeout("status=\""+text+"\"", 1);
 }
+
+
+//  Internal help function used by getFirstNode()
+function _getOffsetArray(n)
+{
+  var offsets = new Array();
+  while (n && n.nodeName != "HTML") {
+    var pos = 0;
+    var ch = n;
+    do { ch = ch.previousSibling; pos++; } while(ch);
+    offsets[offsets.length] = pos;
+    n = n.parentNode;
+  }
+  return offsets;
+}
+
+//  Returns n1 or n2 depending on which node comes first in document order
+function getFirstNode(n1, n2)
+{
+  if (n1 == n2) return n1;
+  if (n1 == null) return n2;
+  if (n2 == null) return n1;
+
+  //  Since nodes don't have global offsets we will generate arrays
+  //  containing child offsets from the root (HTML) node. These arrays
+  //  will look like { 4, 2 } if the node is the 4th child of the 2nd
+  //  child of the <HTML> element. By comparing these arrays backwards
+  //  we can compute the relative position between the two nodes.
+  var n1ofs = _getOffsetArray(n1);
+  var n2ofs = _getOffsetArray(n2);
+  
+  i1 = n1ofs.length - 1;
+  i2 = n2ofs.length - 1;
+  while (i1 >= 0 && i2 >= 0) {
+    if (n1ofs[i1] != n2ofs[i2]) {
+      return n1ofs[i1] < n2ofs[i2] ? n1 : n2;
+    }
+    i1--; i2--;
+  }
+  return i1 < i2 ? n1 : n2;
+}
+
+//  Selects all text in the first text input field in the current page
+function selectFirstInputField()
+{
+  if (document.getElementsByTagName) {
+    //  Locate all <input type="text"> elements and pick the first one
+    var inputs = document.getElementsByTagName("input");
+    var first_input = null;
+    for (var i = 0; i < inputs.length; i++) {
+      if (inputs[i].type == "text") {
+	first_input = inputs[i];
+	break;
+      }
+    }
+
+    //  Locate all <textarea> elements and pick the first one
+    var textareas = document.getElementsByTagName("textarea");
+    var first_textarea = textareas.length > 0 ? textareas[0] : null;
+
+    //  Given both <input> and <textarea> elements, select the one which
+    //  comes first in the document
+    var first = getFirstNode(first_input, first_textarea);
+    if (first) {
+      first.focus();
+      first.select();
+    }
+  }
+}
