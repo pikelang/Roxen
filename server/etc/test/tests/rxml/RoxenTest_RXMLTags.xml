@@ -1100,6 +1100,35 @@ hej</result>
   <result>barbar</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      <if false>
+      </if>
+      <else>
+	foo
+	<nocache>bar</nocache>
+      </else>
+    </cache>
+  </rxml>
+  <result>foobar</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <false/>
+      <if true>
+      </if>
+      <else>
+	foo
+	<nocache>bar</nocache>
+      </else>
+    </cache>
+  </rxml>
+  <result>foobar</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
