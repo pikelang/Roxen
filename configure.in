@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.9 1997/08/21 23:48:49 grubba Exp $
+# $Id: configure.in,v 1.10 1997/08/30 21:57:40 grubba Exp $
 #
 
 prefix=$PWD
@@ -219,6 +219,10 @@ if test $cflags_is_set = no; then
   AC_SYS_COMPILER_FLAG(+Odataprefetch,odataprefetch)
   AC_SYS_COMPILER_FLAG(+Ofailsafe,ofailsafe)
   AC_SYS_COMPILER_FLAG(+O4,o4)
+  AC_SYS_OS_COMPILER_FLAG(OSF1,-g3,g3)
+  AC_SYS_OS_COMPILER_FLAG(OSF1,-std,std)
+  AC_SYS_OS_COMPILER_FLAG(OSF1,-host,host)
+  AC_SYS_OS_COMPILER_FLAG(OSF1,-warnprotos,warnprotos)
 dnl
 dnl This does not work with Digital UNIX cc/ld (cc thinks it is ok, ld does not)
 dnl  
