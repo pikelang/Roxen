@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.133 2000/02/07 16:42:31 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.134 2000/07/21 23:14:58 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -139,7 +139,6 @@ string scan_for_query( string f )
       {
 	a = http_decode_string(replace(a, "+", " "));
 	b = http_decode_string(replace(b, "+", " "));
-	
 	if(variables[ a ])
 	  variables[ a ] +=  "\0" + b;
 	else
@@ -331,6 +330,9 @@ private int parse_got(string s)
   DPERROR(sprintf("After query scan:%O", f));
 
   f = http_decode_string( f );
+
+  if( search( f, "\0" ) != -1 )
+    sscanf( f, "%s\0", f );
 
   if (sscanf(f, "/<%s>/%s", a, f)==2)
   {
