@@ -3,14 +3,15 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.2 1998/09/18 15:35:12 nisse Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.3 1998/09/23 04:59:01 nisse Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
 
 inherit "module";
 
-import "/home/nisse/hack/AutoSite/pike-modules";
+import Protocols.IMAP;
+import types;
 
 #define IMAP_DEBUG
 
@@ -35,19 +36,29 @@ import "/home/nisse/hack/AutoSite/pike-modules";
  * the client. */
 
 class imap_mail
-{
+{  
   object mail;     // Clientlayer object
   int serial;      // To poll for changes */
+
+  // FIXME: Recent status should be recorded in the database. Idea:
+  // Associate each live selection of a mailbox with a number (for
+  // instance the time of the select command). For each mail, store a
+  // timestamp corresponding to the selection for which the mail is
+  // recent. In this way, we don't have to set and clear flags in the
+  // database.
 
   int is_recent;
   multiset flags;
 
   int uid;
   
-  void create(object m, int r)
+  int index;  /* Index in the mailbox */
+  
+  void create(object m, int r, int i)
     {
       mail = m;
       is_recent = r;
+      index = i;
       flags = get_flags();
       uid = mail->get(UID);
     }
@@ -69,7 +80,7 @@ class imap_mail
 	  res[imap_flag] = 1;
 	else
 	{
-	  if ((strlen(flag) > 5) && (flag[..4] = "IMAP:"))
+	  if ((strlen(flag) > 5) && (flag[..4] == "IMAP:"))
 	    res[flag[5..]] = 1;
 	}
       }
@@ -83,7 +94,9 @@ class imap_mail
       {
 	serial = current;
 	flags = get_flags();
-	return ({ imap_number(uid), imap_list( ({ "FLAGS", imap_list(flags) }) ) });
+	return ({ "FETCH", imap_number(index),
+		  imap_list( ({ "FLAGS",
+				imap_list(indices(flags)) }) ) });
       }
       return 0;
     }
@@ -132,6 +145,7 @@ class imap_mailbox
   array get_contents(int make_new_uids)
     {
       array a = mailbox->mail();
+      int n = sizeof(a);
 
       sort(a->get(UID), a);
 
@@ -144,19 +158,28 @@ class imap_mailbox
 
       /* Extract the new mails */
       array new = a[..i-1];
-      a = a[i..];
+      array old = a[i..];
       
       if (make_new_uids)
       {
 	/* Assign new uids to all mails */
-	foreach(a + new, mail)
+	foreach(old, object mail)
 	  mail->set(UID, alloc_uid());
-      } else {
-	/* Assign uids to new mails */
-	foreach(new, object mail)
-	  mail->set(UID, alloc_uid());
-      }
-      return Array.map(a, mail, 0) + Array.map(imap_new, mail, 1);
+      } 
+      /* Assign uids to new mails */
+      foreach(new, object mail)
+	mail->set(UID, alloc_uid());
+
+      /* Create imap_mail objects */
+      int index = 1;
+
+      for(i = 0; i<sizeof(old); i++)
+	old[i] = imap_mail(old[i], 0, index++);
+
+      for(i = 0; i<sizeof(new); i++)
+	new[i] = imap_mail(new[i], 0, index++);
+
+      return old + new;
     }
   
   array update()
@@ -209,7 +232,7 @@ class imap_mailbox
   array get_uidvalidity()
     {
       return ({ "OK", imap_prefix( ({ "UIDVALIDITY",
-				      imap_number(uidvalidity) }) ) });
+				      imap_number(uid_validity) }) ) });
     }
 
   array get_exists()
@@ -225,7 +248,7 @@ class imap_mailbox
 
   array get_unseen()
     {
-      int unseen = sizeof(contents->flags["\Seen"] - ({ 1 }) );
+      int unseen = sizeof(contents->flags["\\Seen"] - ({ 1 }) );
       return ({ "OK", imap_prefix( ({ "UNSEEN", imap_number(unseen) }) ) });
     }
 
@@ -254,6 +277,9 @@ class imap_mailbox
 // The IMAP protocol uses this object to operate on the mailboxes */
 class backend
 {
+  // import "/home/nisse/hack/AutoSite/pike-modules";
+  // import IMAP.types;
+  
   object clientlayer;
 
   void create(object conf)
@@ -301,8 +327,8 @@ class backend
 
       array res = ({ });
 
-      foreach(names, string n)
-	if (sscanf(name, glob))
+      foreach(name, string n)
+	if (sscanf(n, glob))
 	  res += ({ n });
 
       return res;
@@ -313,7 +339,7 @@ class backend
       if ( (reference != "") )
 	return ({ });
 
-      return Array.map(imap_glob(glob, session->user->mailboxes->query_name()),
+      return Array.map(imap_glob(glob, session->user->mailboxes()->query_name()),
 		       lambda (string name)
 			 { return ({ imap_list( ({}) ), "nil", name }); } );
     }
@@ -339,7 +365,7 @@ class backend
 	session->mailbox = 0;
 	return 0;
       }
-      m = imap_mail(m);
+      m = imap_mailbox(m);
       session->mailbox = m;
 
       return ({ m->get_uidvalidity(),
@@ -362,22 +388,51 @@ array register_module()
 
 void create()
 {
+  werror("imap->create\n");
   defvar("port", Protocols.Ports.tcp.imap2, "SMTP port number", TYPE_INT,
 	 "Portnumber to listen to. "
 	 "Usually " + Protocols.Ports.tcp.imap2 + ".\n");
+  defvar("debug", 0, "Debug", TYPE_INT, "Enable IMAP debug output.\n");
 }
 
-void start(int i, object c)
+object server;
+
+void start(int i, object conf)
 {
-  mixed e = catch {
-    imap_server(Stdio.Port, QUERY(port), backend(conf), 1);
-  };
-
-  if (e)
-    report_error(sprintf("SMTP: Failed to initialize the server:\n"
-			 "%s\n", describe_backtrace(err)));
+  werror("imap->start\n");
+  if (server)
+  {
+    server->close();
+    server = 0;
+  }
+  if (conf)
+    {
+      mixed e = catch {
+	server = Protocols.IMAP.imap_server(Stdio.Port(),
+					    QUERY(port), backend(conf), QUERY(debug));
+      };
+      
+      if (e)
+	report_error(sprintf("IMAP: Failed to initialize the server:\n"
+			     "%s\n", describe_backtrace(e)));
+    }
 }
 
-void stop() {}
+void stop()
+{
+  if (server)
+  {
+    server->close();
+    server = 0;
+  }
+}
 
-  
+/* Remove needed pike modules, to make reloading easier. */
+void destroy()
+{
+  mapping m = master()->programs;
+
+  foreach(glob("IMAP*", indices(m)), string name)
+    m_delete(m, name);
+}
+	  
