@@ -334,7 +334,7 @@ epostadresser, samt för att generera skönsvärdet för serverurl-variablen.</t>
 <str id="36">
 <changed from="Primary Server URL"/>
 <o>Ports: Primary Server URL</o>
-<t>Serverns URL</t>
+<t>Portar: Serverns URL</t>
 </str>
 
 <str id="37">
@@ -352,9 +352,9 @@ moduler för att bygga upp absoluta URLer från en relativ URL.</t>
 </str>
 
 <str id="38">
-<changed from="URLs"/>
+e<changed from="URLs"/>
 <o>Ports: URLs</o>
-<t>URLer</t>
+<t>Portar: URLer</t>
 </str>
 
 <str id="39">
