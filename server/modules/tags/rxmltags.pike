@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.307 2001/09/21 12:33:01 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.308 2001/09/21 13:56:04 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4467,51 +4467,51 @@ static int format_support(Parser.HTML p, mapping m, string c, mapping doc) {
 
 #ifdef manual
 constant tagdoc=([
-"&roxen;":#"<desc scope='scope'><p><short>
+"&roxen;":#"<desc type='scope'><p><short>
  This scope contains information specific to this Roxen
  WebServer.</short> It is not possible to write any information to
  this scope.
 </p></desc>",
 
-"&roxen.domain;":#"<desc ent='ent'><p>
+"&roxen.domain;":#"<desc type='entity'><p>
  The domain name of this site. The information is taken from the
  client request, so a request to \"http://community.roxen.com/\" would
  give this entity the value \"community.roxen.com\", while a request
  for \"http://community/\" would give the entity value \"community\".
 </p></desc>",
 
-"&roxen.hits;":#"<desc ent='ent'><p>
+"&roxen.hits;":#"<desc type='entity'><p>
  The number of hits, i.e. requests the webserver has accumulated since
  it was last started.
 </p></desc>",
 
-"&roxen.hits-per-minute;":#"<desc ent='ent'><p>
+"&roxen.hits-per-minute;":#"<desc type='entity'><p>
  The average number of requests per minute since the webserver last
  started.
 </p></desc>",
 
-"&roxen.pike-version;":#"<desc ent='ent'><p>
+"&roxen.pike-version;":#"<desc type='entity'><p>
  The version of Pike the webserver is using, e.g. \"Pike v7.2 release 140\".
 </p></desc>",
 
-"&roxen.sent;":#"<desc ent='ent'><p>
+"&roxen.sent;":#"<desc type='entity'><p>
  The total amount of data the webserver has sent since it last started.
 </p></desc>",
 
-"&roxen.sent-kbit-per-second;":#"<desc ent='ent'><p>
+"&roxen.sent-kbit-per-second;":#"<desc type='entity'><p>
  The average amount of data the webserver has sent, in Kibibits.
 </p></desc>",
 
-"&roxen.sent-mb;":#"<desc ent='ent'><p>
+"&roxen.sent-mb;":#"<desc type='entity'><p>
  The total amount of data the webserver has sent, in Mebibits.
 </p></desc>",
 
-"&roxen.sent-per-minute;":#"<desc ent='ent'><p>
+"&roxen.sent-per-minute;":#"<desc type='entity'><p>
  The average number of bytes that the webserver sends during a
  minute. Based on the sent amount of data and uptime since last server start.
 </p></desc>",
 
-"&roxen.server;":#"<desc ent='ent'><p>
+"&roxen.server;":#"<desc type='entity'><p>
  The URL of the webserver. The information is taken from the client request,
  so a request to \"http://community.roxen.com/index.html\" would give this
  entity the value \"http://community.roxen.com/\", while a request for
@@ -4519,17 +4519,17 @@ constant tagdoc=([
  \"http://community/\".
 </p></desc>",
 
-"&roxen.ssl-strength;":#"<desc ent='ent'><p>
+"&roxen.ssl-strength;":#"<desc type='entity'><p>
  Contains the maximum number of bits encryption strength that the SSL is capable of.
  Note that this is the server side capability, not the client capability.
  Possible values are 0, 40, 128 or 168.
 </p></desc>",
 
-"&roxen.time;":#"<desc ent='ent'><p>
+"&roxen.time;":#"<desc type='entity'><p>
  The current posix time. An example output: \"244742740\".
 </p></desc>",
 
-"&roxen.unique-id;":#"<desc ent='ent'><p>
+"&roxen.unique-id;":#"<desc type='entity'><p>
  Returns a unique id that can be used for e.g. session
  identification. An example output: \"7fcda35e1f9c3f7092db331780db9392\".
  Note that a new id will be generated every time this entity is used,
@@ -4537,74 +4537,74 @@ constant tagdoc=([
  to use it more than once.
 </p></desc>",
 
-"&roxen.uptime;":#"<desc ent='ent'><p>
+"&roxen.uptime;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in seconds.
 </p></desc>",
 
-"&roxen.uptime-days;":#"<desc ent='ent'><p>
+"&roxen.uptime-days;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in days.
 </p></desc>",
 
-"&roxen.uptime-hours;":#"<desc ent='ent'><p>
+"&roxen.uptime-hours;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in hours.
 </p></desc>",
 
-"&roxen.uptime-minutes;":#"<desc ent='ent'><p>
+"&roxen.uptime-minutes;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in minutes.
 </p></desc>",
 
 //----------------------------------------------------------------------
 
-"&client;":#"<desc scope='scope'><p><short>
+"&client;":#"<desc type='scope'><p><short>
  This scope contains information specific to the client/browser that
  is accessing the page. All support variables defined in the support
  file is added to this scope.</short>
 </p></desc>",
 
-"&client.ip;":#"<desc ent='ent'><p>
+"&client.ip;":#"<desc type='entity'><p>
  The client is located on this IP-address. An example output: \"194.52.182.15\".
 </p></desc>",
 
-"&client.host;":#"<desc ent='ent'><p>
+"&client.host;":#"<desc type='entity'><p>
  The host name of the client, if possible to resolve.
  An example output: \"www.roxen.com\".
 </p></desc>",
 
-"&client.name;":#"<desc ent='ent'><p>
+"&client.name;":#"<desc type='entity'><p>
  The name of the client, i.e. the sent user agent string up until the
  first space character. An example output: \"Mozilla/4.7\".
 </p></desc>",
 
-"&client.Fullname;":#"<desc ent='ent'><p>
+"&client.Fullname;":#"<desc type='entity'><p>
  The full user agent string, i.e. name of the client and additional
  info like; operating system, type of computer, etc. An example output:
  \"Mozilla/4.7 [en] (X11; I; SunOS 5.7 i86pc)\".
 </p></desc>",
 
-"&client.fullname;":#"<desc ent='ent'><p>
+"&client.fullname;":#"<desc type='entity'><p>
  The full user agent string, i.e. name of the client and additional
  info like; operating system, type of computer, etc. Unlike <ent>client.fullname</ent>
  this value is lowercased. An example output:
  \"mozilla/4.7 [en] (x11; i; sunos 5.7 i86pc)\".
 </p></desc>",
 
-"&client.referrer;":#"<desc ent='ent'><p>
+"&client.referrer;":#"<desc type='entity'><p>
  Prints the URL of the page on which the user followed a link that
  brought her to this page. The information comes from the referrer
  header sent by the browser. An example output: \"http://www.roxen.com/index.xml\".
 </p></desc>",
 
-"&client.accept-language;":#"<desc ent='ent'><p>
+"&client.accept-language;":#"<desc type='entity'><p>
  The client prefers to have the page contents presented in this
  language, according to the accept-language header. An example output: \"en\".
 </p></desc>",
 
-"&client.accept-languages;":#"<desc ent='ent'><p>
+"&client.accept-languages;":#"<desc type='entity'><p>
  The client prefers to have the page contents presented in these
  languages, according to the accept-language header. An example output: \"en, sv\".
 </p></desc>",
 
-"&client.language;":#"<desc ent='ent'><p>
+"&client.language;":#"<desc type='entity'><p>
  The clients most preferred language. Usually the same value as
  <ent>client.accept-language</ent>, but is possibly altered by
  a customization module like the Preferred language analyzer.
@@ -4612,7 +4612,7 @@ constant tagdoc=([
  when selecting languages. An example output: \"en\".
 </p></desc>",
 
-"&client.languages;":#"<desc ent='ent'><p>
+"&client.languages;":#"<desc type='entity'><p>
  An ordered list of the clients most preferred languages. Usually the
  same value as <ent>client.accept-language</ent>, but is possibly altered
  by a customization module like the Preferred language analyzer, or
@@ -4620,29 +4620,29 @@ constant tagdoc=([
  specification. An example output: \"en, sv\".
 </p></desc>",
 
-"&client.authenticated;":#"<desc ent='ent'><p>
+"&client.authenticated;":#"<desc type='entity'><p>
  Returns the name of the user logged on to the site, i.e. the login
  name, if any exists.
 </p></desc>",
 
-"&client.user;":#"<desc ent='ent'><p>
+"&client.user;":#"<desc type='entity'><p>
  Returns the name the user used when he/she tried to log on the site,
  i.e. the login name, if any exists.
 </p></desc>",
 
-"&client.password;":#"<desc ent='ent'><p>
+"&client.password;":#"<desc type='entity'><p>
  Returns the password the user used when he/she tried to log on the site.
 </p></desc>",
 
-"&client.height;":#"<desc ent='ent'><p>
+"&client.height;":#"<desc type='entity'><p>
  The presentation area height in pixels. For WAP-phones.
 </p></desc>",
 
-"&client.width;":#"<desc ent='ent'><p>
+"&client.width;":#"<desc type='entity'><p>
  The presentation area width in pixels. For WAP-phones.
 </p></desc>",
 
-"&client.robot;":#"<desc ent='ent'><p>
+"&client.robot;":#"<desc type='entity'><p>
 
  Returns the name of the webrobot. Useful if the robot requesting
  pages is to be served other contents than most visitors. Use
@@ -4656,11 +4656,11 @@ constant tagdoc=([
  yahoo.</p>
 </desc>",
 
-"&client.javascript;":#"<desc ent='ent'><p>
+"&client.javascript;":#"<desc type='entity'><p>
  Returns the highest version of javascript supported.
 </p></desc>",
 
-"&client.tm;":#"<desc ent='ent'><p><short>
+"&client.tm;":#"<desc type='entity'><p><short>
  Generates a trademark sign in a way that the client can
  render.</short> Possible outcomes are \"&amp;trade;\",
  \"&lt;sup&gt;TM&lt;/sup&gt;\", and \"&amp;gt;TM&amp;lt;\".</p>
@@ -4668,22 +4668,22 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
-"&page;":#"<desc scope='scope'><p><short>
+"&page;":#"<desc type='scope'><p><short>
  This scope contains information specific to this page.</short></p>
 </desc>",
 
-"&page.realfile;":#"<desc ent='ent'><p>
+"&page.realfile;":#"<desc type='entity'><p>
  Path to this file in the file system. An example output:
  \"/home/joe/html/index.html\".
 </p></desc>",
 
-"&page.virtroot;":#"<desc ent='ent'><p>
+"&page.virtroot;":#"<desc type='entity'><p>
  The root of the present virtual filesystem, usually \"/\".
 </p></desc>",
 
 //  &page.virtfile; is same as &page.path; but deprecated since we want to
 //  harmonize with SiteBuilder entities.
-"&page.path;":#"<desc ent='ent'><p>
+"&page.path;":#"<desc type='entity'><p>
  Absolute path to this file in the virtual filesystem. E.g. with the
  URL \"http://www.roxen.com/partners/../products/index.xml\", as well
  as \"http://www.roxen.com/products/index.xml\", the value will be
@@ -4691,55 +4691,55 @@ constant tagdoc=([
  on \"/\".
 </p></desc>",
 
-"&page.pathinfo;":#"<desc ent='ent'><p>
+"&page.pathinfo;":#"<desc type='entity'><p>
  The \"path info\" part of the URL, if any. Can only get set if the
  \"Path info support\" module is installed. For details see the
  documentation for that module.
 </p></desc>",
 
-"&page.query;":#"<desc ent='ent'><p>
+"&page.query;":#"<desc type='entity'><p>
  The query part of the page URL. If the page URL is
  \"http://www.server.com/index.html?a=1&amp;b=2\"
  the value of this entity is \"a=1&amp;b=2\".
 </p></desc>",
 
-"&page.url;":#"<desc ent='ent'><p>
+"&page.url;":#"<desc type='entity'><p>
  The absolute path for this file from the web server's root
  view including query variables.
 </p></desc>",
 
-"&page.last-true;":#"<desc ent='ent'><p>
+"&page.last-true;":#"<desc type='entity'><p>
  Is \"1\" if the last <tag>if</tag>-statement succeeded, otherwise 0.
  (<xref href='../if/true.tag' /> and <xref href='../if/false.tag' />
  is considered as <tag>if</tag>-statements here) See also: <xref
  href='../if/' />.</p>
 </desc>",
 
-"&page.language;":#"<desc ent='ent'><p>
+"&page.language;":#"<desc type='entity'><p>
  What language the contents of this file is written in. The language
  must be given as metadata to be found.
 </p></desc>",
 
-"&page.scope;":#"<desc ent='ent'><p>
+"&page.scope;":#"<desc type='entity'><p>
  The name of the current scope, i.e. the scope accessible through the
  name \"_\".
 </p></desc>",
 
-"&page.filesize;":#"<desc ent='ent'><p>
+"&page.filesize;":#"<desc type='entity'><p>
  This file's size, in bytes.
 </p></desc>",
 
-"&page.ssl-strength;":#"<desc ent='ent'><p>
+"&page.ssl-strength;":#"<desc type='entity'><p>
  The number of bits used in the key of the current SSL connection.
 </p></desc>",
 
-"&page.self;":#"<desc ent='ent'><p>
+"&page.self;":#"<desc type='entity'><p>
  The name of this file, derived from the URL. If the URL is
  \"http://community.roxen.com/articles/index.html\", then the
  value of this entity is \"index.html\".
 </p></desc>",
 
-"&page.dir;":#"<desc ent='ent'><p>
+"&page.dir;":#"<desc type='entity'><p>
  The name of the directory in the virtual filesystem where the file resides,
  as derived from the URL. If the URL is
  \"http://community.roxen.com/articles/index.html\", then the
@@ -4748,7 +4748,7 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
-"&form;":#"<desc scope='scope'><p><short hide='hide'>
+"&form;":#"<desc type='scope'><p><short hide='hide'>
  This scope contains form variables.</short> This scope contains the
  form variables, i.e. the answers to HTML forms sent by the client.
  Both variables resulting from POST operations and GET operations gets
@@ -4757,7 +4757,7 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
-"&cookie;":#"<desc scope='scope'><p><short>
+"&cookie;":#"<desc type='scope'><p><short>
  This scope contains the cookies sent by the client.</short> Adding,
  deleting or changing in this scope updates the clients cookies. There
  are no predefined entities for this scope. When adding cookies to
@@ -4766,7 +4766,7 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
-"&var;":#"<desc scope='scope'><p><short>
+"&var;":#"<desc type='scope'><p><short>
  General variable scope.</short> This scope is always empty when the
  page parsing begins and is therefore suitable to use as storage for
  all variables used during parsing.
@@ -4774,7 +4774,7 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
-"roxen_automatic_charset_variable":#"<desc tag='tag'><p>
+"roxen_automatic_charset_variable":#"<desc type='tag'><p>
  If put inside a form, the right character encoding of the submitted
  form can be guessed by Roxen WebServer. The tag will insert another
  tag that forces the client to submit the string \"едц\". Since the
@@ -4792,7 +4792,7 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
-"colorscope":#"<desc cont='cont'><p><short>
+"colorscope":#"<desc type='cont'><p><short>
  Makes it possible to change the autodetected colors within the tag.</short>
  Useful when out-of-order parsing occurs, e.g.</p>
 
@@ -4834,7 +4834,7 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
-"aconf":#"<desc cont='cont'><p><short>
+"aconf":#"<desc type='cont'><p><short>
  Creates a link that can modify the config states in the cookie
  RoxenConfig.</short> In practice it will add &lt;keyword&gt;/ right
  after the server in the URL. E.g. if you want to remove the config
@@ -4871,7 +4871,7 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
-"append":#"<desc tag='tag' cont='cont'><p><short>
+"append":#"<desc type='both'><p><short>
  Appends a value to a variable. The variable attribute and one more is
  required.</short>
 </p></desc>
@@ -4897,7 +4897,7 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
-"apre":#"<desc cont='cont'><p><short>
+"apre":#"<desc type='cont'><p><short>
 
  Creates a link that can modify prestates.</short> Prestates can be
  seen as valueless cookies or toggles that are easily modified by the
@@ -4933,7 +4933,7 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
-"auth-required":#"<desc tag='tag'><p><short>
+"auth-required":#"<desc type='tag'><p><short>
  Adds an HTTP auth required header and return code (401), that will
  force the user to supply a login name and password.</short> This tag
  is needed when using access control in RXML in order for the user to
@@ -4950,7 +4950,7 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
-"autoformat":#"<desc cont='cont'><p><short hide='hide'>
+"autoformat":#"<desc type='cont'><p><short hide='hide'>
  Replaces newlines with <tag>br/</tag>:s'.</short>Replaces newlines with
  <tag>br /</tag>:s'.</p>
 
@@ -4988,7 +4988,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"cache":#"<desc cont='cont'><p><short>
+"cache":#"<desc type='cont'><p><short>
  This tag caches the evaluated result of its contents.</short> When
  the tag is encountered again in a later request, it can thus look up
  and return that result without evaluating the content again.</p>
@@ -5142,7 +5142,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"nocache": #"<desc cont='nocache'><p><short>
+"nocache": #"<desc type='cont'><p><short>
  Avoid caching of a part inside a <tag>cache</tag> tag.</short> This
  is the same as using the <tag>cache</tag> tag with the nocache
  argument.</p>
@@ -5154,7 +5154,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"catch":#"<desc cont='cont'><p><short>
+"catch":#"<desc type='cont'><p><short>
  Evaluates the RXML code, and, if nothing goes wrong, returns the
  parsed contents.</short> If something does go wrong, the error
  message is returned instead. See also <xref
@@ -5164,7 +5164,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"charset":#"<desc cont='cont' tag='tag'><p>
+"charset":#"<desc type='both'><p>
  <short>Converts between character sets.</short> The tag can be used both
  to decode texts encoded in strange character encoding schemas, but also
  to decide upon the final encoding of the resulting page. All character
@@ -5186,7 +5186,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"configimage":#"<desc tag='tag'><p><short>
+"configimage":#"<desc type='tag'><p><short>
  Returns one of the internal Roxen configuration images.</short> The
  src attribute is required.
 </p></desc>
@@ -5212,13 +5212,13 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"configurl":#"<desc tag='tag'><p><short>
+"configurl":#"<desc type='tag'><p><short>
  Returns a URL to the administration interface.</short>
 </p></desc>",
 
 //----------------------------------------------------------------------
 
-"cset":#"<desc cont='cont'><p>
+"cset":#"<desc type='cont'><p>
  Sets a variable with its content. This is deprecated in favor of
  using the &lt;set&gt;&lt;/set&gt; construction.</p>
 </desc>
@@ -5234,7 +5234,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"crypt":#"<desc cont='cont'><p><short>
+"crypt":#"<desc type='cont'><p><short>
  Encrypts the contents as a Unix style password.</short> Useful when
  combined with services that use such passwords.</p>
 
@@ -5255,7 +5255,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"date":#"<desc tag='tag'><p><short>
+"date":#"<desc type='tag'><p><short>
  Inserts the time and date.</short> Does not require attributes.
 </p>
 
@@ -5355,28 +5355,58 @@ using the pre tag.
  year. Seconds is unix time type. Only the types string, number and
  ordered applies when the part attribute is used.</p>
 
-<xtable>
-<row><c><p><i>part=year</i></p></c><c><p>Display the year.<ex><date part='year' type='number'/></ex></p></c></row>
-<row><c><p><i>part=month</i></p></c><c><p>Display the month. <ex><date part='month' type='ordered'/></ex></p></c></row>
-<row><c><p><i>part=day</i></p></c><c><p>Display the weekday, starting with Sunday. <ex><date part='day' type='ordered'/></ex></p></c></row>
-<row><c><p><i>part=wday</i></p></c><c><p>Display the weekday. Same as 'day'. <ex><date part='wday' type='string'/></ex></p></c></row>
-<row><c><p><i>part=date</i></p></c><c><p>Display the day of this month. <ex><date part='date' type='ordered'/></ex></p></c></row>
-<row><c><p><i>part=mday</i></p></c><c><p>Display the number of days since the last full month. <ex><date part='mday' type='number'/></ex></p></c></row>
-<row><c><p><i>part=hour</i></p></c><c><p>Display the numbers of hours since midnight. <ex><date part='hour' type='ordered'/></ex></p></c></row>
-<row><c><p><i>part=minute</i></p></c><c><p>Display the numbers of minutes since the last full hour. <ex><date part='minute' type='number'/></ex></p></c></row>
-<row><c><p><i>part=second</i></p></c><c><p>Display the numbers of seconds since the last full minute. <ex><date part='second' type='string'/></ex></p></c></row>
-<row><c><p><i>part=yday</i></p></c><c><p>Display the number of days since the first of January. <ex><date part='yday' type='ordered'/></ex></p></c></row>
-<row><c><p><i>part=beat</i></p></c><c><p>Display the number of beats since midnight Central European Time(CET). There is a total of 1000 beats per day. The beats system was designed by <a href='http://www.swatch.com'>Swatch</a> as a means for a universal time, without time zones and day/night changes. <ex><date part='beat' type='number'/></ex></p></c></row>
-<row><c><p><i>part=week</i></p></c><c><p>Display the number of the current week.<ex><date part='week' type='number'/></ex></p></c></row>
-<row><c><p><i>part=seconds</i></p></c><c><p>Display the total number of seconds this year. <ex><date part='seconds' type='number'/></ex></p></c></row>
-</xtable>
-</attr>
+<xtable><row><h>Part</h><h>Meaning</h></row>
+<row><c><p>year</p></c>
+  <c><p>Display the year.</p>
+     <ex><date part='year' type='number'/></ex></c></row>
+<row><c><p>month</p></c>
+  <c><p>Display the month.</p>
+     <ex><date part='month' type='ordered'/></ex></c></row>
+<row><c><p>day</p></c>
+  <c><p>Display the weekday, starting with Sunday.</p>
+     <ex><date part='day' type='ordered'/></ex></c></row>
+<row><c><p>wday</p></c>
+  <c><p>Display the weekday. Same as 'day'.</p>
+     <ex><date part='wday' type='string'/></ex></c></row>
+<row><c><p>date</p></c>
+  <c><p>Display the day of this month.</p>
+     <ex><date part='date' type='ordered'/></ex></c></row>
+<row><c><p>mday</p></c>
+  <c><p>Display the number of days since the last full month.</p>
+     <ex><date part='mday' type='number'/></ex></c></row>
+<row><c><p>hour</p></c>
+  <c><p>Display the numbers of hours since midnight.</p>
+     <ex><date part='hour' type='ordered'/></ex></c></row>
+<row><c><p>minute</p></c>
+  <c><p>Display the numbers of minutes since the last full hour.</p>
+     <ex><date part='minute' type='number'/></ex></c></row>
+<row><c><p>second</p></c>
+  <c><p>Display the numbers of seconds since the last full minute.</p>
+     <ex><date part='second' type='string'/></ex></c></row>
+<row><c><p>yday</p></c>
+  <c><p>Display the number of days since the first of January.</p>
+     <ex><date part='yday' type='ordered'/></ex></c></row>
+<row><c><p>beat</p></c>
+  <c><p>Display the number of beats since midnight Central European
+  Time(CET). There is a total of 1000 beats per day. The beats system
+  was designed by <a href='http://www.swatch.com'>Swatch</a> as a
+  means for a universal time, without time zones and day/night
+  changes.</p>
+     <ex><date part='beat' type='number'/></ex></c></row>
+<row><c><p>week</p></c>
+  <c><p>Display the number of the current week.</p>
+     <ex><date part='week' type='number'/></ex></c></row>
+<row><c><p>seconds</p></c>
+  <c><p>Display the total number of seconds this year.</p>
+     <ex><date part='seconds' type='number'/></ex></c></row>
+</xtable></attr>
 
 <attr name='strftime' value='string'>
  <p>If this attribute is given to date, it will format the result
  according to the argument string.</p>
 
- <xtable>
+<xtable>
+ <row><h>Format</h><h>Meaning</h></row>
  <row><c><p>%%</p></c><c><p>Percent character</p></c></row>
  <row><c><p>%a</p></c><c><p>Abbreviated weekday name, e.g. \"Mon\"</p></c></row>
  <row><c><p>%A</p></c><c><p>Weekday name</p></c></row>
@@ -5413,9 +5443,9 @@ using the pre tag.
  <row><c><p>%X</p></c><c><p>See %T</p></c></row>
  <row><c><p>%y</p></c><c><p>Year (0-99), zero padded to two characters.</p></c></row>
  <row><c><p>%Y</p></c><c><p>Year (0-9999), zero padded to four characters.</p></c></row>
- </xtable>
+</xtable>
 
-<ex><date strftime=\"%Y%m%d\"/></ex>
+<ex><date strftime=\"%B %e %Y, %A %T\"/></ex>
 </attr>
 
 <attr name='lang' value='langcode'>
@@ -5423,12 +5453,12 @@ using the pre tag.
  with <att>type=string</att> and the <att>part</att> attribute to get
  written dates in the specified language.</p>
 
-<ex><date part='day' type='string' lang='de'></ex>
+<ex><date part='day' type='string' lang='de'/></ex>
 </attr>
 
 <attr name='case' value='upper|lower|capitalize'>
  <p>Changes the case of the output to upper, lower or capitalize.</p>
-<ex><date date='' lang='&client.language;' case='upper'/></ex>
+ <ex><date date='' lang='&client.language;' case='upper'/></ex>
 </attr>
 
 <attr name='prec' value='number'>
@@ -5437,7 +5467,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"debug":#"<desc tag='tag'><p><short>
+"debug":#"<desc type='tag'><p><short>
  Helps debugging RXML-pages as well as modules.</short> When debugging mode is
  turned on, all error messages will be displayed in the HTML code.
 </p></desc>
@@ -5472,7 +5502,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"dec":#"<desc tag='tag'><p><short>
+"dec":#"<desc type='tag'><p><short>
  Subtracts 1 from a variable.</short>
 </p></desc>
 
@@ -5486,7 +5516,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"default":#"<desc cont='cont'><p><short hide='hide'>
+"default":#"<desc type='cont'><p><short hide='hide'>
  Used to set default values for form elements.</short> This tag makes it easier
  to give default values to \"<tag>select</tag>\" and \"<tag>input</tag>\" form elements.
  Simply put the <tag>default</tag> tag around the form elements to which it should give
@@ -5527,7 +5557,7 @@ using the pre tag.
 </default>
 </form></ex-box>",
 
-"doc":#"<desc cont='cont'><p><short hide='hide'>
+"doc":#"<desc type='cont'><p><short hide='hide'>
  Eases code documentation by reformatting it.</short>Eases
  documentation by replacing \"{\", \"}\" and \"&amp;\" with
  \"&amp;lt;\", \"&amp;gt;\" and \"&amp;amp;\". No attributes required.
@@ -5566,7 +5596,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"expire-time":#"<desc tag='tag'><p><short hide='hide'>
+"expire-time":#"<desc type='tag'><p><short hide='hide'>
  Sets client cache expire time for the document.</short>
  Sets client cache expire time for the document by sending the HTTP header
  \"Expires\". Note that on most systems the time can only be set to dates
@@ -5618,7 +5648,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"for":#"<desc cont='cont'><p><short>
+"for":#"<desc type='cont'><p><short>
  Makes it possible to create loops in RXML.</short>
 </p></desc>
 
@@ -5640,7 +5670,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"fsize":#"<desc tag='tag'><p><short>
+"fsize":#"<desc type='tag'><p><short>
  Prints the size of the specified file.</short>
 </p></desc>
 
@@ -5650,7 +5680,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"gauge":#"<desc cont='cont'><p><short>
+"gauge":#"<desc type='cont'><p><short>
  Measures how much CPU time it takes to run its contents through the
  RXML parser.</short> Returns the number of seconds it took to parse
  the contents.
@@ -5676,7 +5706,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"header":#"<desc tag='tag'><p><short>
+"header":#"<desc type='tag'><p><short>
  Adds a HTTP header to the page sent back to the client.</short> For
  more information about HTTP headers please steer your browser to
  chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'>RFC 2616</a>, available at Roxen Community.
@@ -5692,7 +5722,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"imgs":#"<desc tag='tag'><p><short>
+"imgs":#"<desc type='tag'><p><short>
  Generates a image tag with the correct dimensions in the width and height
  attributes. These dimensions are read from the image itself, so the image
  must exist when the tag is generated. The image must also be in GIF, JPEG/JFIF
@@ -5713,7 +5743,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"inc":#"<desc tag='tag'><p><short>
+"inc":#"<desc type='tag'><p><short>
  Adds 1 to a variable.</short>
 </p></desc>
 
@@ -5727,7 +5757,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"insert":#"<desc tag='tag'><p><short>
+"insert":#"<desc type='tag'><p><short>
  Inserts a file, variable or other object into a webpage.</short>
 </p></desc>
 
@@ -5738,7 +5768,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"insert#variable":#"<desc plugin='plugin'><p><short>
+"insert#variable":#"<desc type='plugin'><p><short>
  Inserts the value of a variable.</short>
 </p></desc>
 
@@ -5763,7 +5793,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"insert#variables":#"<desc plugin='plugin'><p><short>
+"insert#variables":#"<desc type='plugin'><p><short>
  Inserts a listing of all variables in a scope.</short> Note that it is
  possible to create a scope with an infinite number of variables set.
  In this case the programme of that scope decides which variables that
@@ -5786,7 +5816,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"insert#scopes":#"<desc plugin='plugin'><p><short>
+"insert#scopes":#"<desc type='plugin'><p><short>
  Inserts a listing of all present variable scopes.</short>
 </p></desc>
 
@@ -5798,7 +5828,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"insert#file":#"<desc plugin='plugin'><p><short>
+"insert#file":#"<desc type='plugin'><p><short>
  Inserts the contents of a file.</short> It reads files in a way
  similar to if you fetched the file with a browser, so the file may be
  parsed before it is inserted, depending on settings in the RXML
@@ -5821,7 +5851,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"insert#realfile":#"<desc plugin='plugin'><p><short>
+"insert#realfile":#"<desc type='plugin'><p><short>
  Inserts a raw, unparsed file.</short> The disadvantage with the
  realfile plugin compared to the file plugin is that the realfile
  plugin needs the inserted file to exist, and can't fetch files from e.g.
@@ -5835,7 +5865,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"maketag":({ #"<desc cont='cont'><p><short hide='hide'>
+"maketag":({ #"<desc type='cont'><p><short hide='hide'>
  Makes it possible to create tags.</short>This tag creates tags.
  The contents of the container will be put into the contents of the produced container.
 </p></desc>
@@ -5861,7 +5891,7 @@ using the pre tag.
 </attr>",
 
  ([
-   "attrib":#"<desc cont='cont'><p>
+   "attrib":#"<desc type='cont'><p>
    Inside the maketag container the container
    <tag>attrib</tag> is defined. It is used to add attributes to the produced
    tag. The contents of the attribute container will be the
@@ -5885,7 +5915,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"modified":#"<desc tag='tag'><p><short hide='hide'>
+"modified":#"<desc type='tag'><p><short hide='hide'>
  Prints when or by whom a page was last modified.</short> Prints when
  or by whom a page was last modified, by default the current page.
 </p></desc>
@@ -5917,7 +5947,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"random":#"<desc cont='cont'><p><short>
+"random":#"<desc type='cont'><p><short>
  Randomly chooses a message from its contents.</short>
 </p></desc>
 
@@ -5937,7 +5967,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"redirect":#"<desc tag='tag'><p><short hide='hide'>
+"redirect":#"<desc type='tag'><p><short hide='hide'>
  Redirects the user to another page.</short> Redirects the user to
  another page by sending a HTTP redirect header to the client. If the
  redirect is local, i.e. within the server, all prestates are preserved.
@@ -5977,7 +6007,7 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"remove-cookie":#"<desc tag='tag'><p><short>
+"remove-cookie":#"<desc type='tag'><p><short>
  Sets the expire-time of a cookie to a date that has already occured.
  This forces the browser to remove it.</short>
  This tag won't remove the cookie, only set it to the empty string, or
@@ -6004,7 +6034,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"replace":#"<desc cont='cont'><p><short>
+"replace":#"<desc type='cont'><p><short>
  Replaces strings in the contents with other strings.</short>
 </p></desc>
 
@@ -6029,7 +6059,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"return":#"<desc tag='tag'><p><short>
+"return":#"<desc type='tag'><p><short>
  Changes the HTTP return code for this page. </short>
  <!-- See the Appendix for a list of HTTP return codes. (We have no appendix) -->
 </p></desc>
@@ -6046,7 +6076,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"roxen":#"<desc tag='tag'><p><short>
+"roxen":#"<desc type='tag'><p><short>
  Returns a nice Roxen logo.</short>
 </p></desc>
 
@@ -6082,7 +6112,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"scope":#"<desc cont='cont'><p><short>
+"scope":#"<desc type='cont'><p><short>
  Creates a new variable scope.</short> Variable changes inside the scope
  container will not affect variables in the rest of the page.
 </p></desc>
@@ -6101,7 +6131,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"set":#"<desc tag='tag' cont='cont'><p><short>
+"set":#"<desc type='both'><p><short>
  Sets a variable in any scope that isn't read-only.</short>
 </p>
 <ex-box><set variable='var.language'>Pike</set></ex-box>
@@ -6134,7 +6164,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"copy-scope":#"<desc tag='tag'><p><short>
+"copy-scope":#"<desc type='tag'><p><short>
  Copies the content of one scope into another scope</short></p></desc>
 
 <attr name='from' value='scope name' required='1'>
@@ -6147,7 +6177,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"set-cookie":#"<desc tag='tag'><p><short>
+"set-cookie":#"<desc type='tag'><p><short>
  Sets a cookie that will be stored by the user's browser.</short> This
  is a simple and effective way of storing data that is local to the
  user. If no arguments specifying the time the cookie should survive
@@ -6212,7 +6242,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"set-max-cache":#"<desc tag='tag'><p><short>
+"set-max-cache":#"<desc type='tag'><p><short>
  Sets the maximum time this document can be cached in any ram
  caches.</short></p>
 
@@ -6251,7 +6281,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"smallcaps":#"<desc cont='cont'><p><short>
+"smallcaps":#"<desc type='cont'><p><short>
  Prints the contents in smallcaps.</short> If the size attribute is
  given, font tags will be used, otherwise big and small tags will be
  used.</p>
@@ -6288,7 +6318,7 @@ load.</p>
 
 //----------------------------------------------------------------------
 
-"sort":#"<desc cont='cont'><p><short>
+"sort":#"<desc type='cont'><p><short>
  Sorts the contents.</short></p>
 
  <ex><sort>Understand!
@@ -6315,7 +6345,7 @@ maybe</sort></ex>
 
 //----------------------------------------------------------------------
 
-"throw":#"<desc cont='cont'><p><short>
+"throw":#"<desc type='cont'><p><short>
  Throws a text to be caught by <xref href='catch.tag' />.</short>
  Throws an exception, with the enclosed text as the error message.
  This tag has a close relation to <xref href='catch.tag' />. The
@@ -6324,7 +6354,7 @@ maybe</sort></ex>
 
 //----------------------------------------------------------------------
 
-"trimlines":#"<desc cont='cont'><p><short>
+"trimlines":#"<desc type='cont'><p><short>
  Removes all empty lines from the contents.</short></p>
 
   <ex><pre><trimlines>
@@ -6338,7 +6368,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"unset":#"<desc tag='tag'><p><short>
+"unset":#"<desc type='tag'><p><short>
  Unsets a variable, i.e. removes it.</short>
 </p></desc>
 
@@ -6353,7 +6383,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"user":#"<desc tag='tag'><p><short>
+"user":#"<desc type='tag'><p><short>
  Prints information about the specified user.</short> By default, the
  full name of the user and her e-mail address will be printed, with a
  mailto link and link to the home page of that user.</p>
@@ -6391,7 +6421,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#expr":#"<desc plugin='plugin'><p><short>
+"if#expr":#"<desc type='plugin'><p><short>
  This plugin evaluates a string as a pike expressions.</short>
  Available arithmetic operators are +, -, *, / and % (modulo).
  Available relational operators are &lt;, &gt;, ==, !=, &lt;= and
@@ -6423,7 +6453,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"emit#fonts":({ #"<desc plugin='plugin'><p><short>
+"emit#fonts":({ #"<desc type='plugin'><p><short>
  Prints available fonts.</short> This plugin makes it easy to list all
  available fonts in Roxen WebServer.
 </p></desc>
@@ -6433,7 +6463,7 @@ just got zapped?
  means all available fonts.</p>
 </attr>",
 		([
-"&_.name;":#"<desc ent='ent'><p>
+"&_.name;":#"<desc type='entity'><p>
  Returns a font identification name.</p>
 
 <p>This example will print all available ttf fonts in gtext-style.</p>
@@ -6441,34 +6471,34 @@ just got zapped?
   <gtext font='&_.name;'>&_.expose;</gtext><br />
 </emit></ex-box>
 </desc>",
-"&_.copyright;":#"<desc ent='ent'><p>
+"&_.copyright;":#"<desc type='entity'><p>
  Font copyright notice. Only available for true type fonts.
 </p></desc>",
-"&_.expose;":#"<desc ent='ent'><p>
+"&_.expose;":#"<desc type='entity'><p>
  The preferred list name. Only available for true type fonts.
 </p></desc>",
-"&_.family;":#"<desc ent='ent'><p>
+"&_.family;":#"<desc type='entity'><p>
  The font family name. Only available for true type fonts.
 </p></desc>",
-"&_.full;":#"<desc ent='ent'><p>
+"&_.full;":#"<desc type='entity'><p>
  The full name of the font. Only available for true type fonts.
 </p></desc>",
-"&_.path;":#"<desc ent='ent'><p>
+"&_.path;":#"<desc type='entity'><p>
  The location of the font file.
 </p></desc>",
-"&_.postscript;":#"<desc ent='ent'><p>
+"&_.postscript;":#"<desc type='entity'><p>
  The fonts postscript identification. Only available for true type fonts.
 </p></desc>",
-"&_.style;":#"<desc ent='ent'><p>
+"&_.style;":#"<desc type='entity'><p>
  Font style type. Only available for true type fonts.
 </p></desc>",
-"&_.format;":#"<desc ent='ent'><p>
+"&_.format;":#"<desc type='entity'><p>
  The format of the font file, e.g. ttf.
 </p></desc>",
-"&_.version;":#"<desc ent='ent'><p>
+"&_.version;":#"<desc type='entity'><p>
  The version of the font. Only available for true type fonts.
 </p></desc>",
-"&_.trademark;":#"<desc ent='ent'><p>
+"&_.trademark;":#"<desc type='entity'><p>
  Font trademark notice. Only available for true type fonts.
 </p></desc>",
 		])
@@ -6476,7 +6506,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"case":#"<desc cont='cont'><p><short>
+"case":#"<desc type='cont'><p><short>
  Alters the case of the contents.</short>
 </p></desc>
 
@@ -6491,7 +6521,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"cond":({ #"<desc cont='cont'><p><short>
+"cond":({ #"<desc type='cont'><p><short>
  This tag makes a boolean test on a specified list of cases.</short>
  This tag is almost eqvivalent to the <xref href='../if/if.tag'
  />/<xref href='../if/else.tag' /> combination. The main difference is
@@ -6500,7 +6530,7 @@ just got zapped?
  the content is parsed. The <tag>case</tag> tag is required.</p>
 </desc>",
 
-	  (["case":#"<desc cont='cont'><p>
+	  (["case":#"<desc type='cont'><p>
  This tag takes the argument that is to be tested and if it's true,
  it's content is executed before exiting the <tag>cond</tag>. If the
  argument is false the content is skipped and the next <tag>case</tag>
@@ -6518,7 +6548,7 @@ just got zapped?
  </default>
 </cond></ex-box>",
 
-	    "default":#"<desc cont='cont'><p>
+	    "default":#"<desc type='cont'><p>
  The <tag>default</tag> tag is eqvivalent to the <tag>else</tag> tag
  in an <tag>if</tag> statement. The difference between the two is that
  the <tag>default</tag> may be put anywhere in the <tag>cond</tag>
@@ -6531,7 +6561,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"comment":#"<desc cont='cont'><p><short>
+"comment":#"<desc type='cont'><p><short>
  The enclosed text will be removed from the document.</short> The
  difference from a normal SGML (HTML/XML) comment is that the text is
  removed from the document, and can not be seen even with <i>view
@@ -6560,7 +6590,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"?comment":#"<desc pi='pi'><p><short>
+"?comment":#"<desc type='pi'><p><short>
  Processing instruction tag for comments.</short> This tag is similar
  to the RXML <tag>comment</tag> tag but should be used
  when commenting arbitrary text that doesn't contain '?&gt;'.</p>
@@ -6572,7 +6602,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"define":({ #"<desc cont='cont'><p><short>
+"define":({ #"<desc type='cont'><p><short>
  Defines variables, tags, containers and if-callers.</short></p>
 <p>The values of the attributes given to the defined tag are
  available in the scope created within the define tag.</p></desc>
@@ -6608,7 +6638,7 @@ just got zapped?
 </attr>",
 
 	    ([
-"attrib":#"<desc cont='cont'><p>
+"attrib":#"<desc type='cont'><p>
  When defining a tag or a container the tag <tag>attrib</tag>
  can be used to define default values of the attributes that the
  tag/container can have. The attrib tag must be the first tag(s)
@@ -6619,21 +6649,21 @@ just got zapped?
   The name of the attribute which default value is to be set.</p>
  </attr>",
 
-"&_.args;":#"<desc ent='ent'><p>
+"&_.args;":#"<desc type='entity'><p>
  The full list of the attributes, and their arguments, given to the
  tag.
 </p></desc>",
 
-"&_.rest-args;":#"<desc ent='ent'><p>
+"&_.rest-args;":#"<desc type='entity'><p>
  A list of the attributes, and their arguments, given to the tag,
  excluding attributes with default values defined.
 </p></desc>",
 
-"&_.contents;":#"<desc ent='ent'><p>
+"&_.contents;":#"<desc type='entity'><p>
  The containers contents.
 </p></desc>",
 
-"contents":#"<desc tag='tag'><p>
+"contents":#"<desc type='tag'><p>
  As the contents entity, but unquoted.
 </p></desc>"
 	    ])
@@ -6642,7 +6672,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"else":#"<desc cont='cont'><p><short>
+"else":#"<desc type='cont'><p><short>
 
  Show the contents if the previous <xref href='if.tag' /> tag didn't,
  or if there was a <xref href='false.tag' /> tag above.</short> This
@@ -6658,14 +6688,14 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"elseif":#"<desc cont='cont'><p><short>
+"elseif":#"<desc type='cont'><p><short>
  Same as the <xref href='if.tag' />, but it will only evaluate if the
  previous <tag>if</tag> returned false.</short></p>
 </desc>",
 
 //----------------------------------------------------------------------
 
-"false":#"<desc tag='tag'><p><short>
+"false":#"<desc type='tag'><p><short>
  Internal tag used to set the return value of <xref href='../if/'
  />.</short> It will ensure that the next <xref href='else.tag' /> tag
  will show its contents. It can be useful if you are writing your own
@@ -6674,7 +6704,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"help":#"<desc tag='tag'><p><short>
+"help":#"<desc type='tag'><p><short>
  Gives help texts for tags.</short> If given no arguments, it will
  list all available tags. By inserting <tag>help/</tag> in a page, a
  full index of the tags available in that particular Roxen WebServer
@@ -6692,7 +6722,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if":#"<desc cont='cont'><p><short>
+"if":#"<desc type='cont'><p><short>
  <tag>if</tag> is used to conditionally show its contents.</short>The
  <tag>if</tag> tag is used to conditionally show its contents. <xref
  href='else.tag'/> or <xref href='elseif.tag' /> can be used to
@@ -6790,7 +6820,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#true":#"<desc plugin='plugin'><p><short>
+"if#true":#"<desc type='plugin'><p><short>
  This will always be true if the truth value is set to be
  true.</short> Equivalent with <xref href='then.tag' />.
  True is a <i>State</i> plugin.
@@ -6802,7 +6832,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#false":#"<desc plugin='plugin'><p><short>
+"if#false":#"<desc type='plugin'><p><short>
  This will always be true if the truth value is set to be
  false.</short> Equivalent with <xref href='else.tag' />.
  False is a <i>State</i> plugin.</p>
@@ -6814,7 +6844,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#module":#"<desc plugin='plugin'><p><short>
+"if#module":#"<desc type='plugin'><p><short>
  Returns true if the selected module is enabled in the current
  server. This is useful when you are developing RXML applications
  that you plan to move to other servers, to ensure that all required
@@ -6828,7 +6858,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#accept":#"<desc plugin='plugin'><p><short>
+"if#accept":#"<desc type='plugin'><p><short>
  Returns true if the browser accepts certain content types as specified
  by it's Accept-header, for example image/jpeg or text/html.</short> If
  browser states that it accepts */* that is not taken in to account as
@@ -6840,7 +6870,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#config":#"<desc plugin='plugin'><p><short>
+"if#config":#"<desc type='plugin'><p><short>
  Has the config been set by use of the <xref href='../http/aconf.tag'
  /> tag?</short> Config is a <i>State</i> plugin.</p>
 </desc>
@@ -6850,7 +6880,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#cookie":#"<desc plugin='plugin'><p><short>
+"if#cookie":#"<desc type='plugin'><p><short>
  Does the cookie exist and if a value is given, does it contain that
  value?</short> Cookie is an <i>Eval</i> plugin.
 </p></desc>
@@ -6859,7 +6889,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#client":#"<desc plugin='plugin'><p><short>
+"if#client":#"<desc type='plugin'><p><short>
  Compares the user agent string with a pattern.</short> Client is an
  <i>Match</i> plugin.
 </p></desc>
@@ -6868,7 +6898,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#date":#"<desc plugin='plugin'><p><short>
+"if#date":#"<desc type='plugin'><p><short>
  Is the date yyyymmdd?</short> The attributes before, after and
  inclusive modifies the behavior. Date is a <i>Utils</i> plugin.
 </p></desc>
@@ -6899,7 +6929,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#defined":#"<desc plugin='plugin'><p><short>
+"if#defined":#"<desc type='plugin'><p><short>
  Tests if a certain RXML define is defined by use of the <xref
  href='../variable/define.tag' /> tag.</short> Defined is a
  <i>State</i> plugin. </p>
@@ -6911,7 +6941,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#domain":#"<desc plugin='plugin'><p><short>
+"if#domain":#"<desc type='plugin'><p><short>
  Does the user's computer's DNS name match any of the
  patterns?</short> Note that domain names are resolved asynchronously,
  and that the first time someone accesses a page, the domain name will
@@ -6929,7 +6959,7 @@ just got zapped?
 // 'deprecated' chapter in the manual, due to many persons asking
 // about its whereabouts.
 
-"if#eval":#"<desc plugin='plugin'><p><short>
+"if#eval":#"<desc type='plugin'><p><short>
  Deprecated due to non-XML compliancy.</short> The XML standard says
  that attribute-values are not allowed to contain any markup. The
  <tag>if eval</tag> tag was deprecated in Roxen 2.0.</p>
@@ -6945,7 +6975,7 @@ just got zapped?
  <tag>define variable</tag> and an apropriate <tag>if</tag> plugin.
 </p></desc>",
 
-"if#exists":#"<desc plugin='1'><p><short>
+"if#exists":#"<desc type='plugin'><p><short>
  Returns true if the named page is viewable.</short> A non viewable page
  is e.g. a file that matches the internal files patterns in the filesystem module.
  If the path does not begin with /, it is assumed to be a URL relative to the directory
@@ -6958,7 +6988,7 @@ just got zapped?
 </attr>
 ",
 
-"if#internal-exists":#"<desc plugin='1'><p><short>
+"if#internal-exists":#"<desc type='plugin'><p><short>
  Returns true if the named page exists.</short> If the page at the given path
  is non-viewable, e.g. matches the internal files patterns in the filesystem module,
  it will still be detected by this if plugin. If the path does not begin with /, it
@@ -6971,7 +7001,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#group":#"<desc plugin='plugin'><p><short>
+"if#group":#"<desc type='plugin'><p><short>
  Checks if the current user is a member of the group according
  the groupfile.</short> Group is a <i>Utils</i> plugin.
 </p></desc>
@@ -6985,7 +7015,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#ip":#"<desc plugin='plugin'><p><short>
+"if#ip":#"<desc type='plugin'><p><short>
 
  Does the users computers IP address match any of the
  patterns?</short> This plugin replaces the Host plugin of earlier
@@ -6998,7 +7028,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#language":#"<desc plugin='plugin'><p><short>
+"if#language":#"<desc type='plugin'><p><short>
  Does the client prefer one of the languages listed, as specified by the
  Accept-Language header?</short> Language is a <i>Match</i> plugin.
 </p></desc>
@@ -7010,7 +7040,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#match":#"<desc plugin='plugin'><p><short>
+"if#match":#"<desc type='plugin'><p><short>
  Evaluates patterns.</short> More information can be found in the
  <xref href='../../tutorial/if_tags/plugins.xml'>If tags
  tutorial</xref>. Match is an <i>Eval</i> plugin. </p></desc>
@@ -7053,13 +7083,13 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#Match":#"<desc plugin='plugin'><p><short>
+"if#Match":#"<desc type='plugin'><p><short>
  Case sensitive version of the match plugin</short></p>
 </desc>",
 
 //----------------------------------------------------------------------
 
-"if#pragma":#"<desc plugin='plugin'><p><short>
+"if#pragma":#"<desc type='plugin'><p><short>
  Compares the HTTP header pragma with a string.</short> Pragma is a
  <i>State</i> plugin.
 </p></desc>
@@ -7076,7 +7106,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#prestate":#"<desc plugin='plugin'><p><short>
+"if#prestate":#"<desc type='plugin'><p><short>
  Are all of the specified prestate options present in the URL?</short>
  Prestate is a <i>State</i> plugin.
 </p></desc>
@@ -7087,7 +7117,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#referrer":#"<desc plugin='plugin'><p><short>
+"if#referrer":#"<desc type='plugin'><p><short>
  Does the referrer header match any of the patterns?</short> Referrer
  is a <i>Match</i> plugin.
 </p></desc>
@@ -7100,7 +7130,7 @@ just got zapped?
 
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
-"if#supports":#"<desc plugin='plugin'><p><short>
+"if#supports":#"<desc type='plugin'><p><short>
  Does the browser support this feature?</short> Supports is a
  <i>State</i> plugin.
 </p></desc>
@@ -7113,7 +7143,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#time":#"<desc plugin='plugin'><p><short>
+"if#time":#"<desc type='plugin'><p><short>
  Is the time hhmm?</short> The attributes before, after and inclusive modifies
  the behavior. Time is a <i>Utils</i> plugin.
 </p></desc>
@@ -7144,7 +7174,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#user":#"<desc plugin='plugin'><p><short>
+"if#user":#"<desc type='plugin'><p><short>
  Has the user been authenticated as one of these users?</short> If any
  is given as argument, any authenticated user will do. User is a
  <i>Utils</i> plugin.
@@ -7157,7 +7187,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#variable":#"<desc plugin='plugn'><p><short>
+"if#variable":#"<desc type='plugin'><p><short>
  Does the variable exist and, optionally, does it's content match the
  pattern?</short> Variable is an <i>Eval</i> plugin.
 </p></desc>
@@ -7169,7 +7199,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#Variable":#"<desc plugin='plugin'><p><short>
+"if#Variable":#"<desc type='plugin'><p><short>
  Case sensitive version of the variable plugin</short></p>
 </desc>",
 
@@ -7177,7 +7207,7 @@ just got zapped?
 
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
-"if#clientvar":#"<desc plugin='plugin'><p><short>
+"if#clientvar":#"<desc type='plugin'><p><short>
  Evaluates expressions with client specific values.</short> Clientvar
  is an <i>Eval</i> plugin.
 </p></desc>
@@ -7191,7 +7221,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"if#sizeof":#"<desc plugin='plugin'><p><short>
+"if#sizeof":#"<desc type='plugin'><p><short>
  Compares the size of a variable with a number.</short></p>
 
 <ex>
@@ -7204,20 +7234,20 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"nooutput":#"<desc cont='cont'><p><short>
+"nooutput":#"<desc type='cont'><p><short>
  The contents will not be sent through to the page.</short> Side
  effects, for example sending queries to databases, will take effect.
 </p></desc>",
 
 //----------------------------------------------------------------------
 
-"noparse":#"<desc cont='cont'><p><short>
+"noparse":#"<desc type='cont'><p><short>
  The contents of this container tag won't be RXML parsed.</short>
 </p></desc>",
 
 //----------------------------------------------------------------------
 
-"?noparse": #"<desc pi='pi'><p><short>
+"?noparse": #"<desc type='pi'><p><short>
  The content is inserted as-is, without any parsing or
  quoting.</short> The first whitespace character (i.e. the one
  directly after the \"noparse\" name) is discarded.</p>
@@ -7225,7 +7255,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"?cdata": #"<desc pi='pi'><p><short>
+"?cdata": #"<desc type='pi'><p><short>
  The content is inserted as a literal.</short> I.e. any XML markup
  characters are encoded with character references. The first
  whitespace character (i.e. the one directly after the \"cdata\" name)
@@ -7238,7 +7268,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"number":#"<desc tag='tag'><p><short>
+"number":#"<desc type='tag'><p><short>
  Prints a number as a word.</short>
 </p></desc>
 
@@ -7264,7 +7294,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"strlen":#"<desc cont='cont'><p><short>
+"strlen":#"<desc type='cont'><p><short>
  Returns the length of the contents.</short></p>
 
  <ex>There are <strlen>foo bar gazonk</strlen> characters
@@ -7273,20 +7303,20 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"then":#"<desc cont='cont'><p><short>
+"then":#"<desc type='cont'><p><short>
  Shows its content if the truth value is true.</short></p>
 </desc>",
 
 //----------------------------------------------------------------------
 
-"trace":#"<desc cont='cont'><p><short>
+"trace":#"<desc type='cont'><p><short>
  Executes the contained RXML code and makes a trace report about how
  the contents are parsed by the RXML parser.</short>
 </p></desc>",
 
 //----------------------------------------------------------------------
 
-"true":#"<desc tag='tag'><p><short>
+"true":#"<desc type='tag'><p><short>
  An internal tag used to set the return value of <xref href='../if/'
  />.</short> It will ensure that the next <xref href='else.tag'
  /> tag will not show its contents. It can be useful if you are
@@ -7295,7 +7325,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"undefine":#"<desc tag='tag'><p><short>
+"undefine":#"<desc type='tag'><p><short>
  Removes a definition made by the define container.</short> One
  attribute is required.
 </p></desc>
@@ -7325,7 +7355,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"use":#"<desc cont='cont'><p><short>
+"use":#"<desc type='cont'><p><short>
  Reads tag definitions, user defined if plugins and variables from a
  file or package and includes into the current page.</short> Note that the
  file itself is not inserted into the page. This only affects the
@@ -7369,7 +7399,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"eval":#"<desc cont='cont'><p><short>
+"eval":#"<desc type='cont'><p><short>
  Postparses its content.</short> Useful when an entity contains
  RXML-code. <tag>eval</tag> is then placed around the entity to get
  its content parsed.</p>
@@ -7377,7 +7407,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"emit#path":({ #"<desc plugin='plugin'><p><short>
+"emit#path":({ #"<desc type='plugin'><p><short>
  Prints paths.</short> This plugin traverses over all directories in
  the path from the root up to the current one.</p>
 </desc>
@@ -7401,11 +7431,11 @@ just got zapped?
  the end.</p>
 </attr>",
 	       ([
-"&_.name;":#"<desc ent='ent'><p>
+"&_.name;":#"<desc type='entity'><p>
  Returns the name of the most recently traversed directory.</p>
 </desc>",
 
-"&_.path;":#"<desc ent='ent'><p>
+"&_.path;":#"<desc type='entity'><p>
  Returns the path to the most recently traversed directory.</p>
 </desc>"
 	       ])
@@ -7413,15 +7443,15 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"emit#sources":({ #"<desc plugin='plugin'><p><short>
+"emit#sources":({ #"<desc type='plugin'><p><short>
  Provides a list of all available emit sources.</short>
 </p></desc>",
-  ([ "&_.source;":#"<desc ent='ent'><p>
+  ([ "&_.source;":#"<desc type='entity'><p>
   The name of the source.</p></desc>" ]) }),
 
 //----------------------------------------------------------------------
 
-"emit#values":({ #"<desc plugin='plugin'><p><short>
+"emit#values":({ #"<desc type='plugin'><p><short>
  Splits the string provided in the values attribute and outputs the
  parts in a loop.</short> The value in the values attribute may also
  be an array or mapping.
@@ -7456,11 +7486,11 @@ just got zapped?
 ",
 
 ([
-"&_.value;":#"<desc ent='ent'><p>
+"&_.value;":#"<desc type='entity'><p>
  The value of one part of the splitted string</p>
 </desc>",
 
-"&_.index;":#"<desc ent='ent'><p>
+"&_.index;":#"<desc type='entity'><p>
  The index of this mapping entry, if input was a mapping</p>
 </desc>"
 ])
@@ -7468,7 +7498,7 @@ just got zapped?
 
 //----------------------------------------------------------------------
 
-"emit":({ #"<desc cont='cont'><p><short hide='hide'>
+"emit":({ #"<desc type='cont'><p><short hide='hide'>
 
  Provides data, fetched from different sources, as entities. </short>
 
@@ -7548,10 +7578,10 @@ just got zapped?
 </attr>
 
 <attr name='sort' value='list'><p>
-  The emit result can be sorted by the emit tag befor outputted.
+  The emit result can be sorted by the emit tag before being output.
   Just list the variable names in the scope that the result should
   be sorted on, in prioritized order, e.g. \"lastname,firstname\".
-  By adding a \"-\" sign in front of a name that entry will be
+  By adding a \"-\" sign in front of a name, that entry will be
   sorted in the reversed order. The sort algorithm will treat numbers
   as complete numbers and not digits in a string, hence \"foo8bar\"
   will be sorted before \"foo11bar\".</p>
@@ -7559,7 +7589,7 @@ just got zapped?
 
 	  ([
 
-"&_.counter;":#"<desc ent='ent'><p>
+"&_.counter;":#"<desc type='entity'><p>
  Gives the current number of loops inside the <tag>emit</tag> tag.
 </p>
 </desc>"
