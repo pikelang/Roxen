@@ -1,3 +1,22 @@
+Changes since Roxen 2.0.72
+-----------------------------------------------
+
+o New manual.
+
+o A few fixes to get DNS to work on more Windows configurations.
+
+o Windows specific Java-fixes.
+
+o Pike will not print errors during the dumping phase to avoid
+  worrying the user unnecessary.
+
+o Progress bars for the Pike installation. :-)
+
+o vtable bug fixed.
+
+o Plugged leak in Pipe.pipe.
+
+
 Changes since Roxen 2.0.54 
 -----------------------------------------------
 
