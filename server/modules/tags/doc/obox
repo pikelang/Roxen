@@ -1,0 +1,42 @@
+<h3>Obox options</h3>
+
+<blockquote><dl>
+<dt><b>help</b><dd>
+         Display this text.
+<dt><b>left</b>=<tt>size</tt><dd>
+         Length of line on the left side of the title.
+<dt><b>right</b>=<tt>size</tt><dd>
+         Length of line on the right side of to the title. Notice that left
+         and right arguments are constrained by the width argument,
+         if specified.
+<dt><b>spacing</b>=<tt>size</tt><dd>
+         Width of the space inside the box.
+<dt><b>titlecolor</b>=<tt>color</tt><dd>
+         Color of the title of the box.
+<dt><b>outlinecolor</b>=<tt>color</tt><dd>
+         Color of the outline.
+<dt><b>outlinewidth</b>=<tt>size</tt><dd>
+         Width (in pixels) of the outline.
+<dt><b>bgcolor</b>=<tt>color</tt><dd>
+         Color of the background and title label
+<dt><b>textcolor</b>=<tt>color</tt><dd>
+         Color of the text inside the box
+<dt><b>align</b>=<tt>[left|right]</tt><dd>
+         How to align the box.
+<dt><b>width</b>=<tt>size</tt><dd>
+         Width of the generated box.
+<dt><b>style</b>=<tt>[caption|groupbox]</tt><dd>
+         Style of the generated box. Default is <tt>groupbox</tt>.
+</dl></blockquote>
+<p>
+If the title is not specified in the argument list,
+you can put it inside the box text, in a <tt>{title}</tt> HTML container,
+should it be needed for HTML clarity.
+
+<h3>Obox example</h3>
+
+<blockquote><pre>
+ {obox title="Sample title"}
+ Anything, html, text, ...
+ {/obox}
+</pre></blockquote>
