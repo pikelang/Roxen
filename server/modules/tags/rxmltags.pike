@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.63 2000/02/10 06:48:03 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.64 2000/02/11 06:32:36 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -130,6 +130,15 @@ class EntityClientName {
   }
 }
 
+class EntityClientFullName {
+  inherit RXML.Value;
+  string rxml_const_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    array client=c->id->client;
+    return client && client*" ";
+  }
+}
+
 class EntityClientIP {
   inherit RXML.Value;
   string rxml_const_eval(RXML.Context c) {
@@ -176,6 +185,7 @@ class EntityClientLanguages {
 
 mapping client_scope=([ "ip":EntityClientIP(),
 			"name":EntityClientName(),
+			"full-name":EntityClientFullName(),
 			"referrer":EntityClientReferrer(),
 			"accept-language":EntityClientAcceptLanguage(),
 			"accept-languages":EntityClientAcceptLanguages(),
