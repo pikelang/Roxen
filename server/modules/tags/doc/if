@@ -62,6 +62,9 @@ Shows the enclosed section if the macro <i>macro</i> is defined. Wild cards work
 domain=pattern[,pattern...]<br>
 Shows the enclosed section only to hosts whose DNS name match these pattern(s). Note that domain names are resolved asynchronously. This means that the first time someone accesses this page, the host name will be the same as the IP number. 
 <p>
+exists=/path/in/virtual/filesystem
+<br>True if the specified path exists. 
+<p>
 host=pattern[,pattern...]<br>
 Shows the enclosed section only to hosts whose IP numbers match one of these pattern(s). 
 <p>
