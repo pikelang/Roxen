@@ -3,23 +3,26 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.1 2001/06/12 13:45:55 jhs Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.2 2002/05/02 11:00:50 jhs Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Timerange Emit Source";
-constant module_doc  = "This module provides the emit source 'timerange'."
-" NOTE! The exact look and workings of the TimeRange objects is subject to"
-" change without notice - indeed, the look <i>will</i> change before it is"
-" fully finished, without any backwards compatibility built-in; this code"
-" is just the development version. When the TimeRange object has matured,"
-" this disclaimer will of course be removed.";
+constant module_doc  = "This module provides the emit source \"timerange\" and"
+" the scope \"calendar\". <b>Note</b> that the exact look and workings of both"
+" are still subject to change.";
 
 #ifdef TIMERANGE_VALUE_DEBUG
 #define DEBUG(X ...) report_debug( X )
 #else
 #define DEBUG(X ...)
 #endif
+
+// <emit source="timerange"
+//   {from|to}-{date|time|{year/month/week/day/hour/minute/second}}="date/time specifier"
+//   unit="{year/month/week/day/hour/minute/second}"
+//   [calendar="{ISO/...}"]
+// > &_.week.day.name; and so on from the look of the below scope_layout </emit>
 
 static constant units = ({ "Year", "Month", "Week", "Day",
 			   "Hour", "Minute", "Second" }),
@@ -133,7 +136,88 @@ void create(Configuration conf)
       j++;
     }
   }
+
+  defvar("calendar", Variable.StringChoice("ISO", calendars-({"unknown"}), 0,
+	 "Default calendar type", "When no other calendar type is given, the "
+	 "rules of this calendar will be used. This also defines the calendar "
+	 "used for the calendar scope.\n"));
+
+  // Could perhaps be done as a two-level widget for continent/region too using
+  // sort(Array.uniq(column(map(Calendar.TZnames.zonenames(),`/,"/"),0))), but
+  // where does UTC fit in that scheme? Nah, let's keep it simple instead:
+  defvar("timezone", TZVariable("UTC", 0, "Default time zone",
+	 "When no other time zone is given, this time zone will be used. "
+	 "This also defines the time zone for the calendar scope.\n"));
+
+  array known_languages = filter(indices(Calendar.Language), is_supported);
+  known_languages = sort(map(known_languages, wash_language_name));
+  defvar("language", Variable.StringChoice("English", known_languages, 0,
+					   "Default calendar language",
+	 "When no other language is given, this language will be used. "
+	 "This also defines the language for the calendar scope.\n"));
+
   DEBUG("\b => layout: %O.\n", layout);
+}
+
+int is_supported(string class_name)
+{ return sizeof(array_sscanf(class_name, "c%[^_]") * "") > 3; }
+
+string wash_language_name(string class_name)
+{ return String.capitalize(lower_case(class_name[1..])); }
+
+function use_what = query; // kludge to see the module's query() method below
+class TZVariable
+{
+  inherit Variable.String;
+
+  array(string) verify_set_from_form( mixed new )
+  {
+    if(catch(Calendar[ use_what("calendar") ]->set_timezone( [string]new )))
+      return ({ "Unknown timezone " + [string]new, query() });
+    return ({ 0, [string]new - "\r" - "\n" });
+  }
+}
+
+Calendar calendar; // the default calendar
+
+void start()
+{
+  calendar = Calendar[query("calendar")]
+	   ->set_timezone(query("timezone"))
+	   ->set_language(query("language"));
+  query_tag_set()->prepare_context = set_entities;
+}
+
+void set_entities(RXML.Context c)
+{
+  c->extend_scope("calendar",
+		  ScopeCalendar(TimeRangeValue(calendar->Second(c->id->time),
+					       "second")));
+}
+
+class ScopeCalendar(static TimeRangeValue range)
+{
+  inherit RXML.Scope;
+
+  mixed `[](string var, void|RXML.Context c,
+	    void|string scope, void|RXML.Type type)
+  {
+    RequestID id = c->id; CACHE(1);
+    if(var == "language")
+      return ENCODE_RXML_TEXT(query("language"), type);
+    return range->`[](var, c, scope, type);
+  }
+
+  array(string) _indices(void|RXML.Context c)
+  {
+    return ({ "language" }) + range->_indices(c);
+  }
+
+  mixed rxml_var_eval(RXML.Context c, string var,
+		      string scope, void|RXML.Type want_type)
+  {
+    return range->rxml_var_eval(c, var, scope, want_type);
+  }
 }
 
 //! Plays the role as both an RXML.Scope (for multi-indexable data
@@ -186,8 +270,8 @@ class TimeRangeValue(Calendar.TimeRange time, string type)
 	    void|string scope, void|RXML.Type want_type)
   {
     DEBUG("%O->`[](%O, %O, %O, %O)\b", this_object(), var, ctx, scope, want_type);
-    mixed what;;
-    if(!(what  = dig_out(scope, var)))
+    mixed what;
+    if(!(what = dig_out(scope, var)))
       return ([])[0]; // conserve zero_type
     if(!mappingp( what )) // if it's not a mapping, it's a calendar method name
       return fetch_and_quote_value([string]what, want_type);
@@ -211,6 +295,11 @@ class TimeRangeValue(Calendar.TimeRange time, string type)
       return ([])[0];
     }
     return fetch_and_quote_value(result || what, want_type);
+  }
+
+  array(string) _indices()
+  {
+    return indices(scope_layout);
   }
 
   //! called with 'O' and ([ "indent":2 ]) for <insert variables=full/>, which is
@@ -238,13 +327,17 @@ class TagEmitTimeRange
   array get_dataset(mapping args, RequestID id)
   {
     // DEBUG("get_dataset(%O, %O)\b", args, id);
-    string what = upper_case(m_delete(args, "calendar") || "ISO");
-    string calendar = calendars[search(map(calendars, upper_case), what)];
-    if(calendar == "unknown")
-      RXML.parse_error(sprintf("Unknown calendar.\n"));
-    Calendar cal = Calendar[ calendar ];
-
-    what = m_delete(args, "unit"); // || "day"; (throw an error instead)
+    Calendar cal = calendar;
+    string what;
+    if(what = m_delete(args, "calendar"))
+    {
+      string calendar = calendars[search(map(calendars, upper_case),
+					 upper_case(what))];
+      if(calendar == "unknown")
+	RXML.parse_error(sprintf("Unknown calendar %O.\n", what));
+      cal = Calendar[calendar];
+    }
+    what = m_delete(args, "unit");
     string output_unit = output_units[search(output_units, what)];
     if(output_unit == "unknown")
       RXML.parse_error(what ? sprintf("Unknown unit %O.\n", what)
@@ -304,9 +397,9 @@ Calendar.TimeRange get_date(string name, mapping args, Calendar calendar)
     cal = cal->set_language( what );
 
   if(what = m_delete(args, name + "-time"))
-    date = calendar->dwim_time( what );
+    date = cal->dwim_time( what );
   else if(what = m_delete(args, name + "-date"))
-    date = calendar->dwim_day( what );
+    date = cal->dwim_day( what );
   else
   {
     what = name + "-year";
@@ -327,5 +420,6 @@ Calendar.TimeRange get_date(string name, mapping args, Calendar calendar)
       DEBUG("unit: %O => %O (%d)\n", unit, what, (int)what);
     }
   }
-  return date;
+  return date->set_timezone(calendar->timezone())
+	     ->set_language(calendar->language());
 }
