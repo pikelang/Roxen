@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.77 2001/08/14 01:47:17 hop Exp $
+// $Id: global_variables.pike,v 1.78 2001/08/20 15:11:25 per Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -114,10 +114,10 @@ void set_up_http_variables( Protocol o )
 
   defvar( "minimum_bitrate", 0, LOCALE(205, "Minimum allowed bitrate" ),
 	  TYPE_INT,
-	  LOCALE(215, "The minimum allowed bitrate, in Kbits/second. If the  "
+	  LOCALE(215, "The minimum allowed bitrate, in bits/second. If the  "
 		 "client is slower than this set bitrate, it will be "
 		 "disconnected (after a timeout). Setting this higher than "
-		 "14 is not recommended if you have modem users."));
+		 "14000 is not recommended if you have modem users."));
 
   defvar("show_internals", 1, LOCALE(72, "Show internal errors"), 
 	 TYPE_FLAG,
