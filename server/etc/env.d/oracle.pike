@@ -4,7 +4,7 @@ void run(object env)
   object f = Stdio.File();
   array(string) oracles = ({});
   string sid, home, bootstart;
-  write("Checking for Oracle...");
+  write("   Checking for Oracle...");
   if((sid = getenv("ORACLE_SID")) && (home = getenv("ORACLE_HOME")))
     oracles += ({ ({ sid, home }) });
   foreach(({"/var/opt/oracle/oratab", "/etc/oratab"}), string oratab)

@@ -8,7 +8,7 @@
  *    various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.4 2000/08/30 22:26:16 noring Exp $";
+string cvs_version = "$Id: buildenv.pike,v 1.5 2000/08/31 12:20:14 noring Exp $";
 
 class Environment
 {
@@ -152,34 +152,34 @@ void config_env(object(Environment) env)
   string dir = "etc/env.d"; program p; object eo;
 
   foreach(glob("*.pike", get_dir(dir)||({})), string e)
-  { write("   %10s: ", (e/".")[0]);
+  { string name = (e/".")[0];
     if (!catch (p = compile_file(dir+"/"+e)))
     { if (eo = p())
         eo->run(env);
       else
-        write("  Skipping.\n");
+        write("   Skipping %O.\n", name);
     }
     else
-        write("  Test script failed to compile.\n");
+        write("   Test script %O failed to compile.\n", name);
   }
 }
 
 void main(int argc, array argv)
 {
-  write("   Setting up environment.\n");
+  write("   Setting up environment in %s.\n",
+	combine_path(getcwd(), "../local"));
 
   if (Stdio.file_size("../local") != -2)
   { if (Stdio.file_size("bin") != -2 || Stdio.file_size("modules") != -2)
-    { write(argv[0] + ": should be run in the Roxen 'server' directory.\n");
+    { write("   "+argv[0]+": "
+	    "should be run in the Roxen 'server' directory.\n");
       exit(1);
     }
-    write("   Creating directory \"../local\"... ");
     if (!mkdir("../local", 0775))
     {
-      write("failed!\n");
+      write("   Failed to create ../local!\n");
       exit(1);
     }
-    write("done\n");
   }
 
   object envobj = Environment("../local/environment");
