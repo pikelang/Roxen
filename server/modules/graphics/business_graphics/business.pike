@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.60 1998/01/12 12:17:10 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.61 1998/01/12 21:47:25 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -694,9 +694,11 @@ mapping find_file(string f, object id)
       tuned_box(0, 0, res->xsize, res->ysize, res->tonedbox);
   }
 
+  if (res->xstop)
+    if(res->xstart > res->xstop) m_delete( res, "xstart" );
 
-  if(res->xstart > res->xstop) m_delete( res, "xstart" );
-  if(res->ystart > res->ystop) m_delete( res, "ystart" );
+  if (res->ystop)
+    if(res->ystart > res->ystop) m_delete( res, "ystart" );
 
 
   diagram_data=(["type":      res->type,
