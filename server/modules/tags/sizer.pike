@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.24 2002/06/14 10:34:33 nilsson Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.25 2004/05/23 02:55:03 mani Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -235,7 +235,7 @@ string simpletag_page_size( string name,
 
       if( sscanf( f, internal + "cimg%*[^/]/%s", f ) == 2 )
       {
-	if( mapping ar = roxen.argcache->lookup( f ) )
+	if( mapping ar = core.argcache->lookup( f ) )
 	{
 	  string sz = "";
 	  if( ar["max-width"] )  sz = " (xs:"+((string)ar["max-width"]);
@@ -250,7 +250,7 @@ string simpletag_page_size( string name,
       }
       else if(sscanf( f, internal + "graphic_text%*[^$]$%s", f ) == 2 )
       {
-	mapping ar = roxen.argcache->lookup( f );
+	mapping ar = core.argcache->lookup( f );
 	if( ar[""] ) return "Gtext (\""+ar[""]+"\")";
 	return "Gtext";
       }
