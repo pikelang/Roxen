@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.199 2000/09/12 14:20:21 per Exp $
+// $Id: roxenlib.pike,v 1.200 2000/09/24 16:28:35 nilsson Exp $
 
 //#pragma strict_types
 
@@ -1059,13 +1059,7 @@ string strftime(string fmt, int t)
       res += sprintf("%02d", ((lt->yday-1+lt->wday)/7));
       break;
     case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
-#if constant(Calendar.ISO)
-#if constant(Calendar.II)
       res += sprintf("%02d", Calendar.ISO.Second(t)->week_no());
-#else
-      res += sprintf("%02d", Calendar.ISO.Second(t)->minute()->hour()->day()->week()->number());
-#endif
-#endif
       break;
     case 'W':	// Week number of year as a decimal number [00,53],
 		// with Monday as the first day of week 1; 0-prefix
@@ -1559,16 +1553,9 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
      case "month":
       return number2string(localtime(t)->mon+1,m,
 			   language(lang, sp||"month",id));
-#if constant(Calendar.ISO)
      case "week":
-      return number2string(
-#if constant(Calendar.II)
-			   Calendar.ISO.Second(t)->week_no(),
-#else
-			   Calendar.ISO.Second(t)->minute()->hour()->day()->week()->number(),
-#endif
+      return number2string(Calendar.ISO.Second(t)->week_no(),
 			   m, language(lang, sp||"number",id));
-#endif
      case "beat":
        //FIXME This should be done inside Calendar.
        mapping lt=gmtime(t);
