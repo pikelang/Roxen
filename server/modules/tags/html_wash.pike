@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.24 2001/09/27 15:22:06 mast Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.25 2001/11/27 10:42:00 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -215,7 +215,7 @@ constant tagdoc=([
   Some text, <i>italic</i>, <b>bold</b>,
   <i><b>bold italic</b></i>.
 
-  <hr />A litle image:<img src='/internal-roxen-next'>.
+  <hr />A litle image:<img src='/internal-roxen-next' />.
 </wash-html></ex>
 </attr>
 
@@ -229,7 +229,7 @@ constant tagdoc=([
   Some text, <i>italic</i>, <b>bold</b>,
   <i><b>bold italic</b></i>.
 
-  <hr>A little image:<img src='/internal-roxen-next'>.
+  <hr />A little image:<img src='/internal-roxen-next' />.
 </wash-html>
 </ex>
 </attr>

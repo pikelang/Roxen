@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.34 2001/11/26 11:08:47 jens Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.35 2001/11/27 10:42:00 anders Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -536,15 +536,15 @@ constant tagdoc=([
 </p></desc>",
 
 "verify-ok":#"<desc tag='tag'><p><short>
-
  If put in a vform tag, the vform will always be verified.</short>This
  tag is probably only useful when the name-attribute inside the tag is
  set. If it is it will force that specific vform-variable as verified
  ok even if the &lt;vinput&gt;-tag that tested the variable failed.
+</p></desc>
 
 <attr name='name' value='string'><p>
- The name of the vform variable to force as verified ok.
-</p></desc>",
+ The name of the vform variable to force as verified ok.</p>
+</attr>",
 
 // It's a tagdoc bug that these, locally defined if-plugins does not show up
 // in the online manual.
