@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.87 2003/02/05 16:24:03 jonasw Exp $
+ * $Id: ftp.pike,v 2.88 2003/05/19 08:49:52 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -183,7 +183,7 @@ class RequestID2
 	if (!(< "create", "connection", "configuration",
                 "__INIT", "clone_me", "end", "ready_to_receive",
 		"send", "scan_for_query", "send_result", "misc",
-		"url_base", "set_response_header",
+		"url_base", "set_response_header", "get_xml_data",
 		"add_response_header", "set_output_charset",
 		"charset_name", "charset_function", "join_charset", 
 		"output_encode", "adjust_for_config_path",
@@ -1169,6 +1169,10 @@ class TelnetSession {
 
   static private mapping(string:function) default_cb = ([
     "BRK":lambda() {
+	    if (fd) {
+	      fd->close();
+	      fd = 0;
+	    }
 	    destruct();
 	    throw(0);
 	  },
