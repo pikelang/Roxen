@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.38 2000/07/11 02:09:29 nilsson Exp $
+// $Id: read_config.pike,v 1.39 2000/07/28 19:05:27 lange Exp $
 
 #include <module.h>
 
@@ -92,7 +92,7 @@ void save_it(string cl, mapping data)
     if( file_stat(f+"~") && !mv(f+"~", f+"~2~") )
       error("Failed to move backup config file to backup2 file\n");
 
-    if( !mv(f, f+"~") )
+    if( file_stat(f) && !mv(f, f+"~") )
       error("Failed to move current config file to backup file\n");
 
     if( !mv(f+".new", f) )
@@ -154,6 +154,8 @@ mapping read_it(string cl)
                  "%s\n", cl, describe_backtrace(err));
   else
     report_error( "Failed to read configuration file for %O\n", cl );
+
+  return ([]);
 }
 
 
@@ -212,7 +214,7 @@ void store( string reg, mapping vars, int q, object current_configuration )
         vars[ var ] = vars[ var ]->query();
     if(!sizeof( vars ))
       m_delete( data, reg );
-    else
+    else 
       data[reg] = m;
   }
   save_it(cl, data);
