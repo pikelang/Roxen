@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.72 1997/12/11 23:46:43 grubba Exp $
+ * $Id: ftp.pike,v 1.73 1997/12/19 15:13:34 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -842,7 +842,7 @@ void ftp_async_connect(function(object,mixed:void) fun, mixed arg)
   
   object(files.file) f = files.file();
 
-  string|int local_addr = cmd_fd->query_address(1);
+  string|int local_addr = (cmd_fd->query_address(1)/" ")[0];
 
   object privs = Privs("FTP: Opening the data connection on " + local_addr +
 		       ":" + (controlport_port-1) + ".");
