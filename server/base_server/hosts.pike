@@ -1,4 +1,7 @@
-// "$Id: hosts.pike,v 1.27 1999/12/28 00:04:54 nilsson Exp $";
+// This file is part of Roxen Webserver.
+// Copyright © 1996 - 2000, Roxen IS.
+// $Id: hosts.pike,v 1.28 2000/02/20 17:41:33 nilsson Exp $
+
 #include <roxen.h>
 
 #ifdef NO_DNS
@@ -40,7 +43,7 @@ string blocking_ip_to_host(string ip)
 {
   if(!stringp(ip))
     return ip;
-  ISIP(ip, 
+  ISIP(ip,
        if(mixed foo = cache_lookup("hosts", ip)) return foo;
        catch { return gethostbyaddr( ip )[0] || ip; };
        );
@@ -87,7 +90,7 @@ void ip_to_host(string ipnumber, function callback, mixed ... args)
   return callback(ipnumber, @args);
 #endif
   if(!((int)ipnumber)) return callback(ipnumber, @args);
-  if(string entry=cache_lookup("hosts", ipnumber)) 
+  if(string entry=cache_lookup("hosts", ipnumber))
   {
     callback(entry, @args);
     return;
@@ -107,5 +110,5 @@ void host_to_ip(string host, function callback, mixed ... args)
   }
   LOOKUP(HOST_TO_IP,host,callback,args);
 }
- 
+
 #endif

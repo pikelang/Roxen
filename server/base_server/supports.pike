@@ -1,6 +1,6 @@
 // Handles supports
-// Copyright (c) 1999-2000 Idonex AB
-//
+// Copyright © 1999 - 2000, Roxen IS.
+// $Id: supports.pike,v 1.13 2000/02/20 17:41:34 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>

@@ -31,14 +31,18 @@ nn binary
 /mkdir foreign_ident
 /rxml_packages/gtext_headers foreign_ident
 /rxml_packages/roxenlogo foreign_ident
+/server/base_server/basic_defvar.pike foreign_ident
 /server/base_server/cache.pike foreign_ident
 /server/base_server/configuration.pike foreign_ident
 /server/base_server/disk_cache.pike foreign_ident
 /server/base_server/fastpipe.pike foreign_ident
 /server/base_server/fonts.pike foreign_ident
+/server/base_server/global_variables.pike foreign_ident
+/server/base_server/highlight_pike.pike foreign_ident
 /server/base_server/hosts.pike foreign_ident
 /server/base_server/html.pike foreign_ident
 /server/base_server/http.pike foreign_ident
+/server/base_server/javamodule.pike foreign_ident
 /server/base_server/language.pike foreign_ident
 /server/base_server/module.pike foreign_ident
 /server/base_server/module_support.pike foreign_ident
@@ -53,6 +57,7 @@ nn binary
 /server/base_server/smartpipe.pike foreign_ident
 /server/base_server/socket.pike foreign_ident
 /server/base_server/state.pike foreign_ident
+/server/base_server/supports.pike foreign_ident
 /server/base_server/throttler.pike foreign_ident
 /server/base_server/wizard.pike foreign_ident
 /server/bin/fixquota.pike foreign_ident

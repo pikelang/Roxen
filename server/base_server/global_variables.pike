@@ -1,3 +1,7 @@
+// This file is part of Roxen Webserver.
+// Copyright © 1996 - 2000, Roxen IS.
+// $Id: global_variables.pike,v 1.21 2000/02/20 17:41:33 nilsson Exp $
+
 #include <module.h>
 #include <roxen.h>
 #include <config.h>

@@ -1,5 +1,6 @@
-// This code has to work both in 'roxen.pike' and all modules
-// string _cvs_version = "$Id: socket.pike,v 1.18 1999/12/28 01:29:16 nilsson Exp $";
+// This file is part of Roxen Webserver.
+// Copyright © 1996 - 2000, Roxen IS.
+// $Id: socket.pike,v 1.19 2000/02/20 17:41:34 nilsson Exp $
 
 #if !efun(roxen)
 #define roxen roxenp()

@@ -1,4 +1,6 @@
-//string cvs_version = "$Id: cache.pike,v 1.41 2000/02/20 05:37:17 mast Exp $";
+// This file is part of Roxen Webserver.
+// Copyright © 1996 - 2000, Roxen IS.
+// $Id: cache.pike,v 1.42 2000/02/20 17:41:32 nilsson Exp $
 
 #define LOCALE	roxenp()->locale->get()->config_interface
 #include <roxen.h>

@@ -1,8 +1,6 @@
-/*
- * $Id: smartpipe.pike,v 1.31 1999/12/28 01:27:38 nilsson Exp $
- *
- * A somewhat more optimized Pipe.pipe...
- */
+// A somewhat more optimized Pipe.pipe...
+// Copyright © 1998 - 2000, Roxen IS.
+// $Id: smartpipe.pike,v 1.32 2000/02/20 17:41:34 nilsson Exp $
 
 #if !constant(spider.shuffle)
 # error This should not happend...

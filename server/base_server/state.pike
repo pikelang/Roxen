@@ -1,6 +1,7 @@
-// This is Roxen state mechanism. Copyright © 1999, Idonex AB.
+// This is Roxen state mechanism.
+// Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: state.pike,v 1.11 2000/01/28 16:31:06 wellhard Exp $
+// $Id: state.pike,v 1.12 2000/02/20 17:41:34 nilsson Exp $
 
 #define CHKSPACE "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/"
 
@@ -74,7 +75,7 @@ class Page_state {
     }
     return 1;
   }
-  
+
   // List all registered state consumers
   array list_consumers() {
     return indices(id->misc->state->keys);

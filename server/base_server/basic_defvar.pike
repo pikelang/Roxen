@@ -1,3 +1,7 @@
+// This file is part of Roxen Webserver.
+// Copyright © 2000, Roxen IS.
+// $Id: basic_defvar.pike,v 1.5 2000/02/20 17:41:32 nilsson Exp $
+
 #include <module_constants.h>
 mapping variables = ([ ]);
 local mapping locs = ([]);

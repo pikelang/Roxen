@@ -1,7 +1,7 @@
-/* $Id: wizard.pike,v 1.113 2000/02/13 14:37:20 grubba Exp $
- *  name="Wizard generator";
- *  doc="This file generats all the nice wizards";
- */
+// Wizard generator
+// This file generats all the nice wizards
+// Copyright © 1997 - 2000, Roxen IS.
+// $Id: wizard.pike,v 1.114 2000/02/20 17:41:35 nilsson Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -923,7 +923,7 @@ string html_table(array(string) subtitles, array(array(string)) table,
 
   if(!opt) opt = ([]);
 
-  // RXML <1.4 compatibility stuff
+  // RXML <2.0 compatibility stuff
   if(opt->fgcolor0) {
     opt->oddbgcolor=opt->fgcolor0;
     m_delete(opt, "fgcolor0");

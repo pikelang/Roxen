@@ -2,9 +2,9 @@
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.24 2000/02/16 11:05:12 per Exp $
- * This file is included by roxen.pike. Not very nice to have a
- * cvs_version variable here.
+ * Copyright © 1996 - 2000, Roxen IS.
+ *
+ * $Id: language.pike,v 1.25 2000/02/20 17:41:33 nilsson Exp $
  *
  * WARNING:
  * If the environment variable 'ROXEN_LANG' is set, it is used as the default

@@ -1,10 +1,11 @@
-/*
- * $Id: rxml.pike,v 1.142 2000/02/20 09:04:12 mast Exp $
- *
- * The Roxen RXML Parser. See also the RXML Pike module.
- *
- * Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
- */
+// The Roxen RXML Parser. See also the RXML Pike modules.
+// Copyright © 1996 - 2000, Roxen IS.
+//
+// Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
+// New parser by Martin Stjernholm
+// New RXML, scopes and entities by Martin Nilsson
+//
+// $Id: rxml.pike,v 1.143 2000/02/20 17:41:34 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";

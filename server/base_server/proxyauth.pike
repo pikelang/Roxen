@@ -1,4 +1,6 @@
-/* $Id: proxyauth.pike,v 1.5 1999/11/29 22:09:41 per Exp $ */
+// This file is part of Roxen Webserver.
+// Copyright © 1996 - 2000, Roxen IS.
+// $Id: proxyauth.pike,v 1.6 2000/02/20 17:41:33 nilsson Exp $
 
 inherit "http";
 

@@ -1,4 +1,6 @@
-// $Id: roxenlib.pike,v 1.154 2000/02/17 18:10:22 nilsson Exp $
+// This file is part of Roxen Webserver.
+// Copyright © 1996 - 2000, Roxen IS.
+// $Id: roxenlib.pike,v 1.155 2000/02/20 17:41:34 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -1520,11 +1522,11 @@ string|int tagtime(int t, mapping m, RequestID id, function language)
       return number2string(localtime(t)->hour,m,
 			   language(lang, sp||"number",id));
 
-     case "min":  // Not part of RXML 1.4
+     case "min":  // Not part of RXML 2.0
      case "minute":
       return number2string(localtime(t)->min,m,
 			   language(lang, sp||"number",id));
-     case "sec":  // Not part of RXML 1.4
+     case "sec":  // Not part of RXML 2.0
      case "second":
       return number2string(localtime(t)->sec,m,
 			   language(lang, sp||"number",id));
@@ -1586,7 +1588,7 @@ string|int tagtime(int t, mapping m, RequestID id, function language)
     }
 
 #ifdef old_rxml_compat
-  // Not part of RXML 1.4
+  // Not part of RXML 2.0
   if (m->upper) {
     res=upper_case(res);
     report_warning("Old RXML in "+(id->query||id->not_query)+

@@ -1,7 +1,7 @@
 /*
  * A throttling co-ordinator. Will share bandiwdth among many pending requests.
  * By Francesco Chemolli
- * (C) 1999 Idonex AB
+ * Copyright © 1999 - 2000, Roxen IS.
  *
  * Notice: this works under the hypothesis that there's only one thread
  * shuffling data (so no locking is done). This might be a wrong
@@ -9,7 +9,7 @@
  *
  */
 
-constant cvs_version="$Id: throttler.pike,v 1.4 1999/12/28 01:36:14 nilsson Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.5 2000/02/20 17:41:35 nilsson Exp $";
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000

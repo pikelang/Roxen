@@ -1,4 +1,6 @@
-// string cvs_version = "$Id: read_config.pike,v 1.31 2000/02/16 07:08:16 per Exp $";
+// This file is part of Roxen Webserver.
+// Copyright © 1996 - 2000, Roxen IS.
+// $Id: read_config.pike,v 1.32 2000/02/20 17:41:34 nilsson Exp $
 
 #include <module.h>
 

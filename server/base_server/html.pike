@@ -1,4 +1,6 @@
-//string cvs_version = "$Id: html.pike,v 1.8 1999/12/30 00:31:25 nilsson Exp $";
+// This file is part of Roxen Webserver.
+// Copyright © 1996 - 2000, Roxen IS.
+// $Id: html.pike,v 1.9 2000/02/20 17:41:33 nilsson Exp $
 
 string input(string name, string|void val, int|void t)
 {

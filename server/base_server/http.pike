@@ -1,8 +1,7 @@
-/*
- * http.pike: HTTP convenience functions.
- * inherited by roxenlib, and thus by all files inheriting roxenlib.
- * $Id: http.pike,v 1.35 2000/02/17 05:28:12 per Exp $
- */
+// HTTP convenience functions.
+// inherited by roxenlib, and thus by all files inheriting roxenlib.
+// Copyright © 1996 - 2000, Roxen IS.
+// $Id: http.pike,v 1.36 2000/02/20 17:41:33 nilsson Exp $
 
 #include <config.h>
 #include <variables.h>

@@ -1,3 +1,7 @@
+// This file is part of Roxen Webserver.
+// Copyright © 1996 - 2000, Roxen IS.
+// $Id: highlight_pike.pike,v 1.3 2000/02/20 17:41:33 nilsson Exp $
+
 string quote(string s)
 {
   return replace(s,({ "<", ">", "&", }),({"&lt;", "&gt;", "&amp;" }));
@@ -219,7 +223,7 @@ array highlight_patterns =
   ({ find_keyword,  ({ 0, highlight_keyword }),}),
   ({ find_case,     ({ 0, highlight_case, 0, highlight_case, }),}),
 });
-    
+
 #define push(X) res += X
 
 string highlight_line(string l, mapping m)

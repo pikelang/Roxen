@@ -1,4 +1,6 @@
-// string cvs_version = "$Id: newdecode.pike,v 1.20 2000/02/06 20:41:55 nilsson Exp $";
+// This file is part of Roxen Webserver.
+// Copyright © 1996 - 2000, Roxen IS.
+// $Id: newdecode.pike,v 1.21 2000/02/20 17:41:33 nilsson Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp

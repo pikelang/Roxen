@@ -1,9 +1,7 @@
-/*
- * A vitual server's main configuration
- * (C) 1996 - 2000 Idonex AB.
- */
+// A vitual server's main configuration
+// Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.264 2000/02/17 05:28:00 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.265 2000/02/20 17:41:32 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>

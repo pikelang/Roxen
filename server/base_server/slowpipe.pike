@@ -1,15 +1,15 @@
 /*
  * A throttling pipe connection
  * by Francesco Chemolli
- * (C) 1999 Idonex AB.
+ * Copyright © 1999 - 2000, Roxen IS.
  *
- * Hm... storing the stuff to send in a string might lead to problems on 
- * ftp-servers. Will have to be changed. Also, reading stuff from disk 
- * on demand might be very interesting to save memory and increase 
+ * Hm... storing the stuff to send in a string might lead to problems on
+ * ftp-servers. Will have to be changed. Also, reading stuff from disk
+ * on demand might be very interesting to save memory and increase
  * performance. We'll see.
  */
 
-constant cvs_version="$Id: slowpipe.pike,v 1.6 1999/12/28 01:24:45 nilsson Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.7 2000/02/20 17:41:34 nilsson Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG

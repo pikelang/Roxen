@@ -1,5 +1,5 @@
 // RXML Help
-// Copyright (c) 2000 Idonex AB
+// Copyright © 2000, Roxen IS.
 // Martin Nilsson
 //
 
