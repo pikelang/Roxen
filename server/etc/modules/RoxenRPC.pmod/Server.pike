@@ -207,15 +207,28 @@ function ip_security, security;
 void set_ip_security(function f) { ip_security = f; }
 void set_security(function f)    {  security = f;   }
 
-void low_got_connection(object c)
+string pass_key;
+
+int low_got_connection(object c)
 {
+  object con;
   if(c
      && (!ip_security || ip_security(c->query_address()))
      && (!security || security(c)))
-    connections += ({ Connection( c, this_object() ) });
+    connections += ({ con = Connection( c, this_object() ) });
   else {
     catch(destruct(c));
   }
+  if(pass_key && (c->read(strlen(pass_key)) != pass_key))
+  {
+    connections -= ({ con });
+    catch {
+      destruct(con);
+      destruct(c);
+    };
+    return 0;
+  }
+  return 1;
 }
 
 int num_connections()
@@ -223,11 +236,16 @@ int num_connections()
   return sizeof(connections);
 }
 
+
 void got_connection(object on)
 {
   object c = on->accept();
-  low_got_connection(c);
-  c->write("!");
+  string addr = c->query_address();
+  if(low_got_connection(c))
+    c->write("!");
+  else {
+    werror("Got refused connection from "+addr+"\n");
+  }
 }
 
 string query_address()
@@ -235,8 +253,9 @@ string query_address()
   return port->query_address();
 }
 
-void create(string|object host, int|void p )
+void create(string|object host, int|void p, string|void key)
 {
+  pass_key = key;
   if(objectp(host))
   {
     low_got_connection(host);

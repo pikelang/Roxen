@@ -70,8 +70,14 @@ mixed `->(string id)
   return RemoteFunctionCall(id, myclass, server, lock->lock, this_object())->call;
 }
 
-void create(string|object ip, int port, string cl, int|void lck)
+void create(string|object ip, int port, string cl,
+	    int|string|void lck, void|string key)
 {
+  if(stringp(lck)) {
+    key = lck;
+    lck = 0;
+  }
+
   if(objectp(ip))
   {
     /* Server in ip... */
@@ -80,10 +86,17 @@ void create(string|object ip, int port, string cl, int|void lck)
     if(!server->connect(ip, port)) error("Failed to connect to RPC server\n");
     if(server->read(1) != "!") error("Server there, but refused connection.\n");
   }
+
   myclass = cl;
+
   if(!lck) { nolock=1; lock = class{ void lock(){}}(); }
+
   string v = encode_value(([ "add_refs":myclass ]));
+
   server->write(sprintf("%4c%s", strlen(v), v));
+
+  if(key) server->write(key);
+
   if(server->read(1) != "!")
     error("server->add_refs("+myclass+") failed\n");
 }
