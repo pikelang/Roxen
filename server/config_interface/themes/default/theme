@@ -13,7 +13,6 @@
 <theme-set what="fade4"     to="#222222" />
 
 <theme-set what="tab-frame-image" to="tabframe.xcf" themefile="1" />
-<theme-set what="tabs-font"       to="franklin_gothic_demi" />
 
 <theme-set what="gbutton-frame-image" to="gbutton.xcf"  themefile="1" />
 
