@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.170 2001/06/21 02:43:46 mast Exp $
+// $Id: module.pmod,v 1.171 2001/06/22 01:06:19 marcus Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -146,6 +146,9 @@ class Tag
   //! @decl string name;
   //!
   //! The name of the tag. Required and considered constant.
+
+  TagSet tagset;
+  //! The tag set that this tag belongs to, if any.
 
   /*extern*/ int flags;
   //! Various bit flags that affect parsing; see the FLAG_* constants.
@@ -508,15 +511,26 @@ class TagSet
   int id_number;
   //! Unique number identifying this tag set.
 
+  string id_string;
+  //! Unique string identifying this tag set across server restarts.
+
   static void create (string _name, void|array(Tag) _tags)
   //!
   {
     id_number = ++tag_set_count;
-    name = _name;
+    set_name (_name);
     if (_tags) add_tags (_tags);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
 #endif
+  }
+
+  static void set_name (string _name)
+  //!
+  {
+    name = _name;
+    id_string = _name; // FIXME: should be made more unique
+    all_tagsets[id_string] = this_object();
   }
 
   void add_tag (Tag tag)
@@ -563,6 +577,7 @@ class TagSet
       else
 	if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
 	else tags[tag->name] = tag;
+      tag->tagset = this_object();
     }
     changed();
   }
@@ -3466,6 +3481,27 @@ class Frame
   {
     return "RXML.Frame(" + (tag && [string] tag->name) + ")" + OBJ_COUNT;
   }
+
+  mixed _encode()
+  {
+    return (["_content_type":content_type, "_content":content,
+	     "_result_type":result_type, "_result":result, "_args":args,
+	     "_vars":this_object()->vars,
+	     "_raw_tag_text":this_object()->raw_tag_text]);
+  }
+
+  void _decode(mixed cookie)
+  {
+    content_type = cookie->_content_type;
+    content = cookie->_content;
+    result_type = cookie->_result_type;
+    result = cookie->_result;
+    args = cookie->_args;
+    if(cookie->_vars)
+      this_object()->vars = cookie->_vars;
+    if(cookie->_raw_tag_text)
+      this_object()->raw_tag_text = cookie->_raw_tag_text;
+  }
 }
 
 
@@ -5431,6 +5467,17 @@ class VarRef (string scope, string|array(string|int) var, void|string encoding)
 
   MARK_OBJECT;
   string _sprintf() {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
+
+  mixed _encode()
+  {
+    return ({ scope, var, encoding });
+  }
+
+  void _decode(mixed v)
+  {
+    [scope, var, encoding] = v;
+  }
+
 }
 
 class CompiledError
@@ -5500,6 +5547,9 @@ class PikeCompile
   program compile()
   {
     program res;
+
+    code->add("mixed _encode() { } void _decode(mixed v) { }\n");
+
     string txt = code->get();
 #ifdef DEBUG
     if (mixed err = catch {
@@ -5747,8 +5797,114 @@ class PCode
   MARK_OBJECT;
 
   string _sprintf() {return "RXML.PCode" + OBJ_COUNT;}
+
+  mixed _encode()
+  {
+    return (["tag_set":tag_set&&tag_set->id_string, "type":type,
+	     "recover_errors":recover_errors,
+	     "error_count":error_count, "p_code":p_code, "length":length,
+	     "errmsgs":errmsgs]);
+  }
+
+  void _decode(mapping v)
+  {
+    tag_set = all_tagsets[v->tag_set];
+    type = v->type;
+    recover_errors = v->recover_errors;
+    error_count = v->error_count;
+    p_code = v->p_code;
+    length = v->length;
+    errmsgs = v->errmsgs;
+  }
 }
 
+class PCodec
+{
+  static private final nomask constant master_codec = master()->MyCodec;
+  inherit master_codec;
+
+  object objectof(string what)
+  {
+    if(what[..1] == "t:")
+      return reg_types[what[2..]];
+    else if(what[..3] == "mod:")
+      return Roxen->get_module(what[4..]);
+    else if(what == "nil")
+      return nil;
+    else if(what == "utils")
+      return utils;
+#ifdef RXML_ENCODE_DEBUG
+    report_debug("objectof(%O) failed.\n", what);
+#endif
+    return ::objectof(what);
+  }
+
+  function functionof(string what)
+  {
+    string t, ts;
+    TagSet tagset;
+    Tag tag;
+    if(what == "PCode")
+      return PCode;
+    else if(what == "VarRef")
+      return VarRef;
+    else if(what[..1]=="f:" && 2 == sscanf(what[3..], "%s\n%s", t, ts) &&
+	    (tagset = all_tagsets[ts]) &&
+	    (tag = tagset->get_local_tag(t, what[2]=='p')))
+      return tag->`();
+#ifdef RXML_ENCODE_DEBUG
+    report_debug("functionof(%O) failed.\n", what);
+#endif
+    return ::functionof(what);
+  }
+
+
+  static mapping(program:string) saved_id = ([]); // XXX
+
+  string nameof(mixed what)
+  {
+    if(objectp(what)) {
+      TagSet tagset;
+      Tag tag;
+      if(what->is_RXML_Frame && (tag = what->tag) && (tagset = tag->tagset)) {
+	saved_id[object_program(what)] =
+	  ((tag->flags & FLAG_PROC_INSTR)? "p":"t") + tag->name +
+	  (tag->plugin_name? "#"+tag->plugin_name : "") +
+	  "\n" + what->tag->tagset->id_string;
+	return ([])[0];
+      } else if(what->is_RXML_Type)
+	return "t:"+what->name;
+      else if(what->is_module && what->my_configuration())
+	return "mod:"+Roxen->get_modname(what);
+      else if(what == nil)
+	return "nil";
+      else if(what == utils)
+	return "utils";
+    } else if(programp(what)) {
+      string id;
+      if(what == PCode)
+	return "PCode";
+      else if(what == VarRef)
+	return "VarRef";
+      else if(what->is_RXML_Frame && saved_id[what])
+	return "f:"+saved_id[what];
+    }
+#ifdef RXML_ENCODE_DEBUG
+    werror("nameof(%O) failed.\n", what);
+#endif
+    return ::nameof(what);
+  }
+}
+
+string p_code_to_string(PCode p_code)
+{
+  return encode_value(p_code, PCodec());
+}
+
+PCode string_to_p_code(string str)
+{
+  return [object(PCode)]decode_value(str, PCodec());
+}
 
 //(!) Some parser tools:
 
@@ -5933,6 +6089,8 @@ mapping(int|string:TagSet) garb_local_tag_set_cache()
 }
 
 mapping(int|string:TagSet) local_tag_set_cache = garb_local_tag_set_cache();
+
+static mapping(string:TagSet) all_tagsets = set_weak_flag(([]), 1);
 
 //(!) Various internal kludges:
 
