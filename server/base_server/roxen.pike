@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.178 1998/03/26 07:51:42 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.179 1998/03/26 11:37:30 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2345,4 +2345,9 @@ int main(int|void argc, array (string)|void argv)
 #endif
 //  start_time=time();		// Used by the "uptime" info later on.
   return -1;
+}
+
+string diagnose_error(array from)
+{
+
 }

@@ -676,6 +676,8 @@ string format_backtrace(array bt)
   // second is the actual function, 
   // rest is backtrace.
 
+  string reason = roxen->ai_diagnose_error( bt );
+
   string res = ("<title>Internal Server Error</title>"
 		"<body bgcolor=white text=black link=darkblue vlink=darkblue>"
 		"<table width=\"100%\" border=0 cellpadding=0 cellspacing=0>"
@@ -695,7 +697,8 @@ string format_backtrace(array bt)
 	  "<img alt=\"\" hspace=10 align=left src=/internal-roxen-manual-warning>"
 	  +bt[0]+"</font><br>\n"
 	  "The error occured while calling <b>"+bt[1]+"</b><p>\n"
-	  "<br><h3><br>Complete Backtrace:</h3>\n\n<ol>");
+	  +(reason?reason+"<p>":"")
+	  +"<br><h3><br>Complete Backtrace:</h3>\n\n<ol>");
   int q = sizeof(bt)-1;
   foreach(bt[1..], string line)
   {
@@ -1138,3 +1141,4 @@ void chain(object f, object c, string le)
 // {
 //   call_out(real_chain,0,fd,conf,leftovers);
 // }
+                                                                                                                                                                                                                  

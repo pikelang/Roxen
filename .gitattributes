@@ -4,6 +4,7 @@
 *.gz binary
 *.jpg binary
 /server/modules/proxies/gopher.pike -text -crlf
+/server/protocols/http.pike binary
 *.ppm binary
 bi binary
 bn binary
@@ -218,7 +219,6 @@ urw_itc_avant_garde-demi-r binary
 /server/more_modules/lysator.pike foreign_ident
 /server/protocols/ftp.pike foreign_ident
 /server/protocols/gopher.pike foreign_ident
-/server/protocols/http.pike foreign_ident
 /server/protocols/ssl3.pike foreign_ident
 /server/protocols/tetris.pike foreign_ident
 /server/roxen-images/auto/README foreign_ident
