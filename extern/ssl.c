@@ -231,6 +231,7 @@ void got_connection(int s, int server_fd)
 	 default:
 	  break;
 	}
+	break; /* Exit loop and die */
       }
       while((written = SSL_write(con, read_buffer, amount)) == -1)
       {
