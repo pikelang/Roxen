@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.183 2004/05/18 17:07:17 grubba Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.184 2004/06/09 14:23:40 grubba Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -449,7 +449,14 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     //
     // Perhaps add caching as well (section -> visible variables)
     // That would invite problems, though.
-    res->rname = (string)var->name();
+    string old_locale;
+    if ((old_locale = roxen.get_locale()) != "eng") {
+      roxen.set_locale("eng");
+      res->rname = (string)var->name();
+      roxen.set_locale(old_locale);
+    } else {
+      res->rname = (string)var->name();
+    }
     res["no-default"] = var->get_flags() & VAR_NO_DEFAULT;
     res->path = var->path();
     res["diff-txt"] = var->diff( 0 );
@@ -464,7 +471,7 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     res->id = var->_id;
     res->changed = !var->is_defaulted();
     res->cid = res->changed*-10000000+res->id;
-    res->name = (res->rname/":")[-1];
+    res->name = (((string)var->name())/":")[-1];
     res->cname = (!res->changed)+res->name;
     res->doc = config_setting2("docs")?(string)var->doc():"";
     res->value = var->query();
@@ -484,15 +491,24 @@ mapping get_variable_section( string s, object mod, RequestID id )
 {
   Variable.Variable var = mod->getvar( s );
   string section = RXML.get_var( "section", "form" );
-
-  s = (string)var->name();
-  if( !s ) return 0;
-  if( sscanf( s, "%s:%*s", s ) ) 
+  LocaleString localized_name = var->name();
+  s = (string)localized_name;
+  if( sscanf( s, "%s:%*s", s ) ) {
+    string s2 = s;
+    string old_loc;
+    if (objectp(localized_name) &&
+	(old_loc = roxen.get_locale()) != "eng") {
+      roxen.set_locale("eng");	// Standard.
+      s2 = (string)localized_name;
+      roxen.set_locale(old_loc);
+      sscanf(s2, "%s:", s2);
+    }
     return ([
-      "section":s,
-      "sectionname":s,
-      "selected":(section==s?"selected":"")
+      "section":s2,	// Must not be localized.
+      "sectionname":s,	// Localized.
+      "selected":(section==s2?"selected":"")
     ]);
+  }
   else
     return ([
       "section":"Settings",
