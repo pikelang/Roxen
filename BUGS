@@ -1,2 +1,7 @@
 If you find any, please mail roxen-bugs@idonex.se, or
 fill in the form at http://www.roxen.com/bug.html
+
+Known issues:
+
+There has been a report Roxen stopping just after startup on AIX/4.1.5.
+We haven't been able to reproduce the bug yet, so there is no fix for now.
