@@ -93,7 +93,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 		     "<td><a href=\""+qurl+data->sname+
                      "/\">"+html_encode_string(data->name)+"</a></td></tr>\n");
            else
-             pre += ("\n<tr><td><img src=\"&usr.selected-indicator;\" width=12 height=12></td>"
+             pre += ("\n<tr><td valign=top><img src=\"&usr.selected-indicator;\" width=12 height=12></td>"
 		     "<td><b>" + html_encode_string(data->name) + "</b></td></tr>\n");
          }
 
