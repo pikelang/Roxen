@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.20 2004/06/08 13:35:37 grubba Exp $
+// $Id: startdll.cpp,v 1.21 2004/10/01 11:37:14 stewa Exp $
 //
 
 
@@ -696,15 +696,21 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 
     CCmdLine & cmdline = _Module.GetCmdLine(FALSE);
     
-    char inifile[2048];
+    char inifile1[2048];
+    char inifile2[2048];
     char iniArgs[2048];
     int iLen;
     iniArgs[0] = 'x'; // Fake som dummy program name
     iniArgs[1] = ' ';
 
-    GetCurrentDirectory(sizeof(inifile), inifile);
-    strcat(inifile, "/../local/environment.ini");
-    iLen = GetPrivateProfileString("Parameters", "default", "", iniArgs+2, sizeof(iniArgs)-2, inifile);
+    GetCurrentDirectory(sizeof(inifile1), inifile1);
+    strcat(inifile1, "/../local/environment.ini");
+    iLen = GetPrivateProfileString("Parameters", "default", "", iniArgs+2, sizeof(iniArgs)-2, inifile1);
+    if (iLen > 0 && iLen < sizeof(iniArgs)-2)
+      cmdline.Parse(iniArgs);
+    GetCurrentDirectory(sizeof(inifile2), inifile2);
+    strcat(inifile2, "/../local/environment2.ini");
+    iLen = GetPrivateProfileString("Parameters", "default", "", iniArgs+2, sizeof(iniArgs)-2, inifile2);
     if (iLen > 0 && iLen < sizeof(iniArgs)-2)
       cmdline.Parse(iniArgs);
 
