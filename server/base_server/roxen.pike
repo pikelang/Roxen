@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.531 2000/08/22 22:57:44 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.532 2000/08/22 23:30:18 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1570,6 +1570,7 @@ array(string) find_ips_for( string what )
 
 void unregister_url( string url )
 {
+  string ourl = url;
   url = lower_case( url );
   string host, path, protocol;
   int port;
@@ -1596,6 +1597,7 @@ void unregister_url( string url )
   {
     urls[ url ]->port->unref(url);
     m_delete( urls, url );
+    m_delete( urls, ourl );
     sort_urls();
   }
 }
@@ -1620,6 +1622,7 @@ void sort_urls()
 
 int register_url( string url, object/*(Configuration)*/ conf )
 {
+  string ourl = url;
   url = lower_case( url );
   if (!sizeof (url - " " - "\t")) return 1;
   string protocol;
@@ -1710,6 +1713,7 @@ int register_url( string url, object/*(Configuration)*/ conf )
 
 
   urls[ url ] = ([ "conf":conf, "path":path ]);
+  urls[ ourl ] = ([ "conf":conf, "path":path ]);
   sorted_urls += ({ url });
 
   int failures;
@@ -1752,20 +1756,16 @@ int register_url( string url, object/*(Configuration)*/ conf )
     }
 
 
-    if( !m[ required_host ][ port ]->bound )
-    {
-      failures++;
-      continue;
-    }
-
     urls[ url ]->port = m[ required_host ][ port ];
+    urls[ ourl ]->port = m[ required_host ][ port ];
     m[ required_host ][ port ]->ref(url, urls[url]);
+ 
+    if( !m[ required_host ][ port ]->bound )
+      failures++;
   }
   if (failures == sizeof(required_hosts)) 
   {
-    m_delete( urls, url );
     report_error(LOC_M(23, "Cannot register URL %s!\n"), url);
-    sort_urls();
     return 0;
   }
   sort_urls();
