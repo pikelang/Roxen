@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.91 1998/04/02 23:43:00 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.92 1998/04/03 19:14:16 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -51,14 +51,13 @@ object conf;
 int time = predef::time(1);
 string raw_url;
 int do_not_disconnect;
-
 mapping (string:string) variables = ([ ]);
-mapping (string:mixed) misc = ([ ]);
+mapping (string:mixed)  misc = ([ ]);
 mapping (string:string) cookies = ([ ]);
 
-multiset   (string) prestate     = (< >);
-multiset   (string) config       = (< >);
-multiset   (string) supports     = (< >);
+multiset (string) prestate  = (< >);
+multiset (string) config    = (< >);
+multiset (string) supports  = (< >);
 multiset (string) pragma    = (< >);
 
 string remoteaddr, host;
@@ -237,23 +236,16 @@ private int parse_got(string s)
       int end = search(reverse(line[start+1..]), " ");
       if (end != -1) {
 	f = line[start+1..sizeof(line)-(end+2)];
-	clientprot = line[sizeof(line)-end..];
-	if (clientprot != "HTTP/0.9") {
-	  prot = "HTTP/1.0";
+	prot = clientprot = line[sizeof(line)-end..];
 
-	  // Check that the request is complete
-	  int end;
-	  if ((end = search(s, "\r\n\r\n")) == -1) {
-	    // No, we need more data.
-	    return 0;
-	  }
-	  data = s[end+4..];
-	  s = s[sizeof(line)+2..end-1];
-	} else {
-	  prot = clientprot;
-	  data = s[sizeof(line)+2..];
-	  s = "";	// No headers.
+	// Check that the request is complete
+	int end;
+	if ((end = search(s, "\r\n\r\n")) == -1) {
+	  // No, we need more data.
+	  return 0;
 	}
+	data = s[end+4..];
+	s = s[sizeof(line)+2..end-1];
       } else {
 	f = line[start+1..];
 	prot = clientprot = "HTTP/0.9";
@@ -1180,4 +1172,3 @@ void chain(object f, object c, string le)
 // {
 //   call_out(real_chain,0,fd,conf,leftovers);
 // }
-
