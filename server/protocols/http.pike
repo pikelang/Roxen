@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.50 1998/01/20 02:15:06 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.51 1998/02/04 05:26:00 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -651,6 +651,7 @@ void no_more_keep_connection_alive(mapping foo)
 
 void end(string|void s)
 {
+//   trace(9);
 #if _DEBUG_HTTP_OBJECTS
   if(my_fd) catch{mark_fd(my_fd->query_fd(), "");};
   my_state = 1;
@@ -667,8 +668,11 @@ void end(string|void s)
 #endif
     if(objectp(my_fd))
     {
+      my_fd->set_blocking();
       if(s) my_fd->write(s);
-      if (!my_fd->no_destruct) {
+      if (!my_fd->no_destruct) 
+      {
+	my_fd->close();
 	destruct(my_fd);
       }
       my_fd = 0;
@@ -676,7 +680,8 @@ void end(string|void s)
 //  };
 //  if(err)
 //    roxen_perror("END: %O\n", describe_backtrace(err));
-  disconnect();  
+    disconnect();  
+//   trace(0);
 }
 
 static void do_timeout(mapping foo)
@@ -688,7 +693,7 @@ static void do_timeout(mapping foo)
 #if _DEBUG_HTTP_OBJECTS
   roxen->httpobjects[my_id] += " - timed out";  
 #endif
-  end((prot||"HTTP/1.0")+" 408 Timeout\n");
+  end((prot||"HTTP/1.0")+" 408 Timeout\r\n\r\n");
 }
 
 
@@ -834,12 +839,14 @@ void handle_request( )
     else if(method != "GET" && method != "HEAD" && method != "POST")
       file = http_low_answer(501, "Not implemented.");
     else
-      file=http_low_answer(404,
-			   replace(parse_rxml(conf->query("ZNoSuchFile"),
-					      thiso),
-				   ({"$File", "$Me"}), 
-				   ({not_query,
-				       conf->query("MyWorldLocation")})));
+      if(catch {
+	file=http_low_answer(404,
+			     replace(parse_rxml(conf->query("ZNoSuchFile"),
+						thiso),
+				     ({"$File", "$Me"}), 
+				     ({not_query,
+				       conf->query("MyWorldLocation")})));})
+	internal_error(err);
   } else {
     if((file->file == -1) || file->leave_me) 
     {
@@ -961,7 +968,7 @@ void handle_request( )
 
 #ifdef USE_SHUFFLE
     if(!file->data &&
-       (file->len<=0 || (file->len > 30000))
+       (file->len<=0 || (file->len > 300000))
 #ifdef KEEP_CONNECTION_ALIVE
        && !keep_alive
 #endif
@@ -975,7 +982,13 @@ void handle_request( )
     }
 #endif
     
-    if(file->len < 3000 &&
+    if(file->len < 
+#ifdef THREADS
+       65535
+#else
+       3000
+#endif
+&&
 #ifdef KEEP_CONNECTION_ALIVE
        !keep_alive &&
 #endif
@@ -984,7 +997,7 @@ void handle_request( )
       if(file->data) head_string += file->data;
       if(file->file) 
       {
-	head_string += file->file->read(file->len);
+	head_string += file->file->read();
 	destruct(file->file);
       }
       
@@ -1084,10 +1097,17 @@ void got_data(mixed fooid, string s)
   my_fd->set_read_callback(0); 
   my_fd->set_blocking();
 #ifdef THREADS
+#if 0
   if(conf)
+#endif
     roxen->handle(this_object()->handle_request);
+#if 0
   else // config interface requests get their own threads..
-    thread_create(handle_request);
+  {
+    object t = thread_create(handle_request);
+    catch(t->set_name("Config IF"));
+  }
+#endif
 #else
   this_object()->handle_request();
 #endif
