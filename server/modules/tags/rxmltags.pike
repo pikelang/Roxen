@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.22 1999/10/10 00:58:51 noring Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.23 1999/10/10 10:37:15 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -48,7 +48,7 @@ string sexpr_eval(string what)
 
 // ------------------- Tags ------------------------
 
-string tag_append( string tag, mapping m, object id )
+string tag_append( string tag, mapping m, RequestID id )
 {
   if (m->variable)
   {
@@ -82,7 +82,7 @@ string tag_append( string tag, mapping m, object id )
   return rxml_error(tag, "Nothing to append from.", id);
 }
 
-string tag_auth_required (string tagname, mapping args, object id)
+string tag_auth_required (string tagname, mapping args, RequestID id)
 {
   mapping hdrs = http_auth_required (args->realm, args->message);
   if (hdrs->error) _error = hdrs->error;
@@ -92,7 +92,7 @@ string tag_auth_required (string tagname, mapping args, object id)
   return "";
 }
 
-string|array(string) tag_clientname(string tag, mapping m, object id)
+string|array(string) tag_clientname(string tag, mapping m, RequestID id)
 {
   NOCACHE();
   string client="";
@@ -105,7 +105,7 @@ string|array(string) tag_clientname(string tag, mapping m, object id)
   return m->quote=="none"?client:({ html_encode_string(client) });
 }
 
-string tag_expire_time(string tag, mapping m, object id)
+string tag_expire_time(string tag, mapping m, RequestID id)
 {
   int t=time();
   if(!m->now)
@@ -122,7 +122,7 @@ string tag_expire_time(string tag, mapping m, object id)
   return "";
 }
 
-array(string) tag_file(string tag, mapping m, object id)
+array(string) tag_file(string tag, mapping m, RequestID id)
 {
   string file;
   if(m->raw)
@@ -132,7 +132,7 @@ array(string) tag_file(string tag, mapping m, object id)
   return m->quote=="none"?file:({ html_encode_string(file) });
 }
 
-string tag_header(string tag, mapping m, object id)
+string tag_header(string tag, mapping m, RequestID id)
 {
   if(m->name == "WWW-Authenticate")
   {
@@ -154,14 +154,14 @@ string tag_header(string tag, mapping m, object id)
   return "";
 }
 
-string|array(string) tag_realfile(string tag, mapping m, object id)
+string|array(string) tag_realfile(string tag, mapping m, RequestID id)
 {
   if(id->realfile)
     return ({ id->realfile });
   return rxml_error(tag, "Real file unknown", id);
 }
 
-string tag_redirect(string tag, mapping m, object id)
+string tag_redirect(string tag, mapping m, RequestID id)
 {
   if (!(m->to && sizeof (m->to)))
     return rxml_error(tag, "Requires attribute \"to\".", id);
@@ -198,7 +198,7 @@ string tag_redirect(string tag, mapping m, object id)
 
 // It is spelled referer according to the http spec,
 // but it is spelt referrer in the dictionary...
-string|array(string) tag_referrer(string tag, mapping m, object id)
+string|array(string) tag_referrer(string tag, mapping m, RequestID id)
 {
   NOCACHE();
 
@@ -210,20 +210,7 @@ string|array(string) tag_referrer(string tag, mapping m, object id)
 	   m->alt || "" });
 }
 
-array(string) tag_scope(string tag, mapping m, string contents, object id)
-{
-  mapping old_variables = copy_value(id->variables);
-  int truth=_ok;
-  if (!m->extend)
-    id->variables = ([]);
-  contents = parse_rxml(contents, id);
-  id->variables = old_variables;
-  if (m->truth)
-    _ok=truth;
-  return ({ contents });
-}
-
-string tag_set( string tag, mapping m, object id )
+string tag_set( string tag, mapping m, RequestID id )
 {
   if(m->help) 
     return ("<b>&lt;"+tag+" variable=...&gt;</b>: "+String.capitalize(tag)+" the variable specified "
@@ -261,14 +248,14 @@ string tag_set( string tag, mapping m, object id )
   return rxml_error(tag, "Variable not specified.", id);
 }
 
-string|array(string) tag_vfs(string tag, mapping m, object id)
+string|array(string) tag_vfs(string tag, mapping m, RequestID id)
 {
   if(id->virtfile)
     return ({ id->virtfile });
   return rxml_error(tag, "Virtual file unknown.", id);
 }
 
-array(string) tag_language(string tag, mapping m, object id)
+array(string) tag_accept_language(string tag, mapping m, RequestID id)
 {
   NOCACHE();
 
@@ -292,7 +279,7 @@ string tag_quote(string tagname, mapping m)
   return "";
 }
 
-string tag_inc(string tag, mapping m, object id)
+string tag_inc(string tag, mapping m, RequestID id)
 {
   if(m->variable && id->variables[m->variable]) {
     id->variables[m->variable]=(string)((int)id->variables[m->variable]+1);
@@ -301,7 +288,7 @@ string tag_inc(string tag, mapping m, object id)
   return rxml_error(tag, "No variable to increment.", id);
 }
 
-string tag_dec(string tag, mapping m, object id)
+string tag_dec(string tag, mapping m, RequestID id)
 {
   if(m->variable && id->variables[m->variable]) {
     id->variables[m->variable]=(string)((int)id->variables[m->variable]-1);
@@ -310,7 +297,7 @@ string tag_dec(string tag, mapping m, object id)
   return rxml_error(tag, "No variable to decrement.", id);
 }
 
-string|array(string) tag_imgs(string tag, mapping m, object id)
+string|array(string) tag_imgs(string tag, mapping m, RequestID id)
 {
   string tmp="";
   if(m->src)
@@ -339,7 +326,7 @@ string|array(string) tag_imgs(string tag, mapping m, object id)
   return rxml_error(tag, "No src given.", id);
 }
 
-array(string) tag_roxen(string tagname, mapping m, object id)
+array(string) tag_roxen(string tagname, mapping m, RequestID id)
 {
   string size = m->size || "small";
   string color = m->color || "blue";
@@ -353,9 +340,10 @@ array(string) tag_roxen(string tagname, mapping m, object id)
   return ({ "<a href=\"http://www.roxen.com/\">"+make_tag("img", m)+"</a>" });
 }
 
-string|array(string) tag_debug( string tag_name, mapping args, object id )
+string|array(string) tag_debug( string tag_name, mapping args, RequestID id )
 {
-  if (args->showid){
+  if (args->showid)
+  {
     array path=lower_case(args->showid)/"->";
     if(path[0]!="id" || sizeof(path)==1) return "Can only show parts of the id object.";
     mixed obj=id;
@@ -363,7 +351,7 @@ string|array(string) tag_debug( string tag_name, mapping args, object id )
       if(search(indices(obj),tmp)==-1) return "Could only reach "+tmp+".";
       obj=obj[tmp];
     }
-    return ({ sprintf("<pre>%O</pre>",obj) });
+    return ({ "<pre>"+html_encode_string(sprintf("%O",obj))+"</pre>" });
   }
   if (args->off)
     id->misc->debug = 0;
@@ -374,28 +362,7 @@ string|array(string) tag_debug( string tag_name, mapping args, object id )
   return "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
 }
 
-array(string) tag_cache(string tag, mapping args, string contents, object id)
-{
-#define HASH(x) (x+id->not_query+id->query+id->realauth +id->conf->query("MyWorldLocation"))
-#if constant(Crypto.md5)
-  object md5 = Crypto.md5();
-  md5->update(HASH(contents));
-  string key=md5->digest();
-#else
-  string key = (string)hash(HASH(contents));
-#endif
-  if(args->key)
-    key += args->key;
-  string parsed = cache_lookup("tag_cache", key);
-  if(!parsed) {
-    parsed = parse_rxml(contents, id);
-    cache_set("tag_cache", key, parsed);
-  }
-  return ({parsed});
-#undef HASH
-}
-
-string tag_fsize(string tag, mapping args, object id)
+string tag_fsize(string tag, mapping args, RequestID id)
 {
   catch {
     array s = id->conf->stat_file( fix_relative( args->file, id ), id );
@@ -408,7 +375,7 @@ string tag_fsize(string tag, mapping args, object id)
   return rxml_error(tag, "Failed to find file", id);
 }
 
-array(string) tag_configimage(string f, mapping m, object id)
+array(string) tag_configimage(string f, mapping m, RequestID id)
 {
   if (m->src) {
 
@@ -429,7 +396,7 @@ array(string) tag_configimage(string f, mapping m, object id)
   return ({ make_tag("img", m) });
 }
 
-string tag_date(string q, mapping m, object id)
+string tag_date(string q, mapping m, RequestID id)
 {
   int t=(int)m["unix-time"] || time(1);
   if(m->day)    t += (int)m->day * 86400;
@@ -449,7 +416,7 @@ string tag_date(string q, mapping m, object id)
   return tagtime(t, m, id, language);
 }
 
-string|array(string) tag_insert(string tag,mapping m,object id)
+string|array(string) tag_insert( string tag, mapping m, RequestID id )
 {
   if(m->help)
     return ({ "Inserts a file, variable or other object into a webpage" });
@@ -517,12 +484,12 @@ string|array(string) tag_insert(string tag,mapping m,object id)
   return rxml_error(tag, ret, id);
 }
 
-string|array(string) tag_configurl(string tag, mapping m, object id)
+string|array(string) tag_configurl(string tag, mapping m, RequestID id)
 {
   return ({ roxen->config_url() });
 }
 
-string tag_return(string tag, mapping m, object id)
+string tag_return(string tag, mapping m, RequestID id)
 {
   int c=(int)m->code;
   if(c) _error=c;
@@ -531,7 +498,7 @@ string tag_return(string tag, mapping m, object id)
   return "";
 }
 
-string tag_set_cookie(string tag, mapping m, object id)
+string tag_set_cookie(string tag, mapping m, RequestID id)
 {
   string cookies;
   int t;     //time
@@ -556,7 +523,7 @@ string tag_set_cookie(string tag, mapping m, object id)
   return "";
 }
 
-string tag_remove_cookie(string tag, mapping m, object id)
+string tag_remove_cookie(string tag, mapping m, RequestID id)
 {
   if(!m->name || !id->cookies[m->name]) return rxml_error(tag, "That cookie does not exists.", id);
 
@@ -567,20 +534,85 @@ string tag_remove_cookie(string tag, mapping m, object id)
   return "";
 }
 
-array(string) tag_user(string tag, mapping m, object id, object file)
+array(string) tag_user(string tag, mapping m, RequestID id, object file)
 {
   return ({ id->conf->api_functions()->tag_user_wrapper[0](id, tag, m, file) });
 }
 
-array(string) tag_modified(string tag, mapping m, object id, object file)
+array(string) tag_modified(string tag, mapping m, RequestID id, object file)
 {
   return ({ id->conf->api_functions()->tag_user_wrapper[0](id, tag, m, file) });
 }
 
+array(string) tag_set_max_cache( string tag, mapping m, RequestID id )
+{
+  id->misc->cacheable = (int)m->time; 
+  return ({ "" });
+}
 
 // ------------------- Containers ----------------
 
-string tag_for(string t, mapping args, string c, RequestID id)
+array(string) container_scope(string tag, mapping m, 
+                              string contents, RequestID id)
+{
+  mapping old_variables = copy_value(id->variables);
+  int truth=_ok;
+  if (!m->extend)
+    id->variables = ([]);
+  contents = parse_rxml(contents, id);
+  id->variables = old_variables;
+  if (m->truth)
+    _ok=truth;
+  return ({ contents });
+}
+
+
+array(string) container_catch( string tag, mapping m, string c, RequestID id )
+{
+  string r;
+  if(!id->misc->catcher_is_ready)
+    id->misc+=(["catcher_is_ready":1]);
+  else
+    id->misc->catcher_is_ready++;
+  array e = catch(r=parse_rxml(c, id));
+  id->misc->catcher_is_ready--;
+  if(e) 
+    return e[0];
+  return ({r});
+}
+
+array(string) container_cache(string tag, mapping args, 
+                              string contents, RequestID id)
+{
+#define HASH(x) (x+id->not_query+id->query+id->realauth +id->conf->query("MyWorldLocation"))
+#if constant(Crypto.md5)
+  object md5 = Crypto.md5();
+  md5->update(HASH(contents));
+  string key=md5->digest();
+#else
+  string key = (string)hash(HASH(contents));
+#endif
+  if(args->key)
+    key += args->key;
+  string parsed = cache_lookup("tag_cache", key);
+  if(!parsed) {
+    parsed = parse_rxml(contents, id);
+    cache_set("tag_cache", key, parsed);
+  }
+  return ({parsed});
+#undef HASH
+}
+
+string|array(string) container_crypt( string s, mapping m, 
+                                      string c, RequestID id )
+{
+  if(m->compare)
+    return crypt(c,m->compare)?"<true>":"<false>";
+  else
+    return ({ crypt(c) });
+}
+
+string container_for(string t, mapping args, string c, RequestID id)
 {
   string v = args->variable;
   int from = (int)args->from;
@@ -590,7 +622,8 @@ string tag_for(string t, mapping args, string c, RequestID id)
   if((to<from && step>0)||(to>from && step<0)) to=from+step;
 
   string res="";
-  if(to<from) {
+  if(to<from) 
+  {
     if(v)
       for(int i=from; i>=to; i+=step)
         res += "<set variable="+v+" value="+i+">"+c;
@@ -599,7 +632,8 @@ string tag_for(string t, mapping args, string c, RequestID id)
         res+=c;
     return res;
   }
-  else if(to>from) {
+  else if(to>from) 
+  {
     if(v)
       for(int i=from; i<=to; i+=step)
         res += "<set variable="+v+" value="+i+">"+c;
@@ -612,7 +646,7 @@ string tag_for(string t, mapping args, string c, RequestID id)
   return "<set variable="+v+" value="+to+">"+c;
 }
 
-string tag_foreach(string t, mapping args, string c, RequestID id)
+string container_foreach(string t, mapping args, string c, RequestID id)
 {
   string v = args->variable;
   array what;
@@ -638,7 +672,7 @@ string tag_foreach(string t, mapping args, string c, RequestID id)
   return res;
 }
 
-string tag_aprestate(string tag, mapping m, string q, object id)
+string container_aprestate(string tag, mapping m, string q, RequestID id)
 {
   string href, s, *foo;
 
@@ -671,7 +705,8 @@ string tag_aprestate(string tag, mapping m, string q, object id)
   return make_container("a", m, q);
 }
 
-string|array(string) tag_aconf(string tag, mapping m, string q, object id)
+string|array(string) container_aconf(string tag, mapping m, 
+                                     string q, RequestID id)
 {
   string href,s;
   mapping cookies = ([]);
@@ -704,11 +739,12 @@ string|array(string) tag_aconf(string tag, mapping m, string q, object id)
   return make_container("a", m, q);
 }
 
-string tag_maketag(string tag, mapping m, string cont, object id) {
+string container_maketag(string tag, mapping m, string cont, RequestID id) 
+{
   NOCACHE();
   mapping args=(!m->noxml&&m->type=="tag"?(["/":"/"]):([]));
   cont=parse_html(parse_rxml(cont,id), ([]), (["attrib":
-    lambda(string tag, mapping m, string cont, mapping c, object id, mapping args) {
+    lambda(string tag, mapping m, string cont, mapping c, RequestID id, mapping args) {
       args[m->name]=parse_rxml(cont, id);
       return "";
     }
@@ -718,7 +754,7 @@ string tag_maketag(string tag, mapping m, string cont, object id) {
   return make_tag(m->name, args);
 }
 
-string tag_doc(string tag, mapping m, string s)
+string container_doc(string tag, mapping m, string s)
 {
   if(!m["quote"])
     if(m["pre"]) {
@@ -739,7 +775,7 @@ string tag_doc(string tag, mapping m, string s)
       return replace(s, ({ "<", ">", "& " }), ({ "&lt;", "&gt;", "&amp; " }));
 }
 
-string tag_autoformat(string tag, mapping m, string s, object id)
+string container_autoformat(string tag, mapping m, string s, RequestID id)
 {
   s-="\r";
 
@@ -831,7 +867,7 @@ class smallcapsstr {
   }
 }
 
-string tag_smallcaps(string t, mapping m, string s)
+string container_smallcaps(string t, mapping m, string s)
 {
   object ret;
   string spc=m->space?"&nbsp;":"";
@@ -878,7 +914,7 @@ string tag_smallcaps(string t, mapping m, string s)
   return ret->value();
 }
 
-string tag_random(string tag, mapping m, string s)
+string container_random(string tag, mapping m, string s)
 {
   mixed q;
   if(!(q=m->separator || m->sep))
@@ -887,28 +923,20 @@ string tag_random(string tag, mapping m, string s)
     return (q=s/q)[random(sizeof(q))];
 }
 
-array(string) tag_formoutput(string tag_name, mapping args, string contents, object id)
+array(string) container_formoutput(string tag_name, mapping args, 
+                                   string contents, RequestID id)
 {
   return ({ do_output_tag( args, ({ id->variables }), contents, id ) });
 }
 
-mixed tag_gauge(string t, mapping args, string contents, object id)
+mixed container_gauge(string t, mapping args, string contents, RequestID id)
 {
   NOCACHE();
 
-#if constant(gethrtime)
   int t = gethrtime();
   contents = parse_rxml( contents, id );
   t = gethrtime()-t;
-#else
-  int t = (int) (gauge {
-    contents = parse_rxml( contents, id );
-  } * 1000000);
-#endif
   string define = args->define?args->define:"gauge";
-
-  id->misc->defines[define+"_time"] = sprintf("%3.6f", t/1000000.0);
-  id->misc->defines[define+"_result"] = contents;
 
   if(args->silent) return "";
   if(args->timeonly) return sprintf("%3.6f", t/1000000.0);
@@ -919,17 +947,23 @@ mixed tag_gauge(string t, mapping args, string contents, object id)
 } 
 
 // Removes empty lines
-mixed tag_trimlines( string tag_name, mapping args, string contents,
-		      object id )
+mixed container_trimlines( string tag_name, mapping args, 
+                           string contents, RequestID id )
 {
-  contents = replace(parse_rxml( contents, id ),
-		     ({ "\r\n","\r" }), ({"\n", "\n"}));
+  contents = replace(parse_rxml(contents,id), ({"\r\n","\r" }), ({"\n","\n"}));
   return ({ (contents / "\n" - ({ "" })) * "\n" });
 }
 
+void container_throw( string t, mapping m, string c, RequestID id) 
+{ 
+  if(!id->misc->catcher_is_ready && c[-1]!="\n") 
+    c+="\n";
+  throw( ({ c, backtrace() }) ); 
+}
+
 // Internal method for the default tag
-private mixed tag_input( string tag_name, mapping args, string name,
-			  multiset (string) value )
+private mixed internal_tag_input( string tag_name, mapping args, string name,
+                                  multiset (string) value )
 {
   if (name && args->name != name)
     return 0;
@@ -962,8 +996,8 @@ private mixed tag_input( string tag_name, mapping args, string name,
 }
 
 // Internal method for the default tag
-private mixed tag_option( string tag_name, mapping args, string contents,
-				  multiset (string) value )
+private mixed internal_tag_option( string tag_name, mapping args, 
+                                   string contents, multiset(string) value )
 {
   if (args->value)
     if (value[ args->value ])
@@ -985,8 +1019,9 @@ private mixed tag_option( string tag_name, mapping args, string contents,
 }
 
 // Internal method for the default tag
-private mixed tag_select( string tag_name, mapping args, string contents,
-			   string name, multiset (string) value )
+private mixed internal_tag_select( string tag_name, mapping args, 
+                                   string contents, string name, 
+                                   multiset (string) value )
 {
   array (string) tmp;
   int c;
@@ -998,26 +1033,27 @@ private mixed tag_select( string tag_name, mapping args, string contents,
     if (sizeof( tmp[c] / "</option>" ) == 1)
       tmp[c] += "</option>";
   contents = tmp * "<option";
-  mapping m = ([ "option" : tag_option ]);
+  mapping m = ([ "option" : internal_tag_option ]);
   contents = parse_html( contents, ([ ]), m, value );
   return ({ make_container( tag_name, args, contents ) });
 }
 
 // The default tag is used to give default values to forms elements,
 // without any fuss.
-array(string) tag_default( string tag_name, mapping args, string contents, object id)
+array(string) container_default( string tag_name, mapping args, 
+                                 string contents, RequestID id)
 {
   string separator = args->separator || "\000";
 
   contents = parse_rxml( contents, id );
   if (args->value)
-    return ({parse_html( contents, ([ "input" : tag_input ]),
-			 ([ "select" : tag_select ]),
+    return ({parse_html( contents, ([ "input" : internal_tag_input ]),
+			 ([ "select" : internal_tag_select ]),
 			 args->name, mkmultiset( args->value
 						 / separator ) )});
   else if (args->variable && id->variables[ args->variable ])
-    return ({parse_html( contents, ([ "input" : tag_input ]),
-			 ([ "select" : tag_select ]),
+    return ({parse_html( contents, ([ "input" : internal_tag_input ]),
+			 ([ "select" : internal_tag_select ]),
 			 args->name,
 			 mkmultiset( id->variables[ args->variable ]
 				     / separator ) )});
@@ -1025,7 +1061,7 @@ array(string) tag_default( string tag_name, mapping args, string contents, objec
     return ({ contents });
 }
 
-string tag_sort(string t, mapping m, string c, object id)
+string container_sort(string t, mapping m, string c, RequestID id)
 {
   if(!m->separator)
     m->separator = "\n";
@@ -1050,15 +1086,18 @@ string tag_sort(string t, mapping m, string c, object id)
   return pre + (m->reverse?reverse(lines):lines)*m->separator + post;
 }
 
-mixed tag_recursive_output (string tagname, mapping args, string contents, object id)
+mixed container_recursive_output (string tagname, mapping args, 
+                                  string contents, RequestID id)
 {
   int limit;
   array(string) inside, outside;
-  if (id->misc->recout_limit) {
+  if (id->misc->recout_limit) 
+  {
     limit = id->misc->recout_limit - 1;
     inside = id->misc->recout_outside, outside = id->misc->recout_inside;
   }
-  else {
+  else 
+  {
     limit = (int) args->limit || 100;
     inside = args->inside ? args->inside / (args->separator || ",") : ({});
     outside = args->outside ? args->outside / (args->separator || ",") : ({});
@@ -1079,8 +1118,10 @@ mixed tag_recursive_output (string tagname, mapping args, string contents, objec
   string res = parse_rxml (
     parse_html (
       contents,
-      (["recurse": lambda (string t, mapping a, string c) {return ({c});}]), ([]),
-      "<" + tagname + ">" + replace (contents, inside, outside) + "</" + tagname + ">"),
+      (["recurse": lambda (string t, mapping a, string c) {return ({c});}]), 
+      ([]),
+      "<" + tagname + ">" + replace (contents, inside, outside) + 
+      "</" + tagname + ">"),
     id);
 
   id->misc->recout_limit = save_limit;
@@ -1090,16 +1131,17 @@ mixed tag_recursive_output (string tagname, mapping args, string contents, objec
   return ({res});
 }
 
-string tag_leave(string tag, mapping m, object id)
+string tag_leave(string tag, mapping m, RequestID id)
 {
-  if(id->misc->leave_repeat) {
+  if(id->misc->leave_repeat) 
+  {
     id->misc->leave_repeat--;
     throw(3141);
   }
   return rxml_error(tag, "Must be contained by &lt;repeat&gt;.", id);
 }
 
-string tag_repeat(string tag, mapping m, string c, object id)
+string container_repeat(string tag, mapping m, string c, RequestID id)
 {
   if(!id->misc->leave_repeat)
     id->misc->leave_repeat=0;
@@ -1120,13 +1162,14 @@ string tag_repeat(string tag, mapping m, string c, object id)
   return ret;
 }
 
-string tag_replace(string tag,mapping m,string cont,object id) {
-  switch(m->type) {
-
+string container_replace( string tag, mapping m, string cont, RequestID id) 
+{
+  switch(m->type) 
+  {
   case "word":
   default:
     if(!m->from) return cont;
-    return replace(cont,m->from,(m->to?m->to:""));
+   return replace(cont,m->from,(m->to?m->to:""));
 
   case "words":
     if(!m->from) return cont;
@@ -1141,94 +1184,17 @@ string tag_replace(string tag,mapping m,string cont,object id) {
   }
 }
 
+array(string) container_cset( string t, mapping m, string c, RequestID id )
+{
+  if( m->quote!="none" )
+    c = html_encode_string( c );
+  if( !m->variable )
+    return ({rxml_error(t, "Variable not specified.", id)});
+  id->variables[ m->variable ] = c;
+  return ({ "" });
+}
 
 // ----------------- Tag registration stuff --------------
-
-mapping query_tag_callers()
-{
-   return (["accept-language":tag_language,
-	    "append":tag_append,
-	    "auth-required":tag_auth_required,
-	    "clientname":tag_clientname,
-	    "configimage":tag_configimage,
-	    "configurl":tag_configurl,
-	    "date":tag_date,
-	    "debug":tag_debug,
-            "dec":tag_dec,
-	    "expire-time":tag_expire_time,
-	    "file":tag_file,
-	    "fsize":tag_fsize,           
-	    "header":tag_header,
-	    "imgs":tag_imgs,
-            "insert":tag_insert,
-            "inc":tag_inc,
-            "leave":tag_leave,
-            "modified":tag_modified,
- 	    "quote":tag_quote,
-	    "realfile":tag_realfile,
-	    "redirect":tag_redirect,
-	    "referer":tag_referrer,
-	    "referrer":tag_referrer,
-	    "remove-cookie":tag_remove_cookie,
-	    "return":tag_return,
-	    "roxen":tag_roxen,
-	    "set":tag_set,
-	    "set-cookie":tag_set_cookie,
-	    "set-max-cache":
-	    lambda(string t, mapping m, object id) { 
-	      id->misc->cacheable = (int)m->time; 
-	    },
-	    "unset":tag_set,
-	    "user":tag_user,
-	    "vfs":tag_vfs
-   ]);
-}
-
-mapping query_container_callers()
-{
-  return ([
-	   "aconf":tag_aconf,
-	   "apre":tag_aprestate,
-	   "autoformat":tag_autoformat,
-	   "cache":tag_cache,
-	   "catch":lambda(string t, mapping m, string c, object id) {
-		     string r;
-		     if(!id->misc->catcher_is_ready)
-  		       id->misc+=(["catcher_is_ready":1]);
-		     else
-		       id->misc->catcher_is_ready++;
-		     array e = catch(r=parse_rxml(c, id));
-                     id->misc->catcher_is_ready--;
-		     if(e) return e[0];
-		     return ({r});
-		   },
-	   "crypt":lambda(string t, mapping m, string c){
-		     if(m->compare)
-		       return crypt(c,m->compare)?"<true>":"<false>";
-		     else
-		       return ({ crypt(c) });
-		   },
-	   "doc":tag_doc,
-	   "default":tag_default,
-           "for":tag_for,
-           "foreach":tag_foreach,
-	   "formoutput":tag_formoutput,
-	   "gauge":tag_gauge,
-           "maketag":tag_maketag,
-	   "random":tag_random,
-	   "recursive-output": tag_recursive_output,
-           "repeat":tag_repeat,
-           "replace":tag_replace,
-	   "scope":tag_scope,
-	   "smallcaps":tag_smallcaps,
-	   "sort":tag_sort,
-	   "throw":lambda(string t, mapping m, string c, object id) { 
-		     if(!id->misc->catcher_is_ready && c[-1]!="\n") c+="\n";
-                     throw( ({ c, backtrace() }) ); 
-           },
-	   "trimlines":tag_trimlines
-   ]);
-}
 
 mapping query_if_callers()
 {
