@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.96 2004/05/17 16:38:23 mani Exp $
+ * $Id: ftp.pike,v 2.97 2004/05/20 23:31:10 _cvs_stephen Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -111,6 +111,7 @@ class RequestID2
   inherit RequestID;
 
   mapping file;
+  mapping mastermisc;
 
 #ifdef FTP2_DEBUG
   static void trace_enter(mixed a, mixed b)
@@ -163,6 +164,7 @@ class RequestID2
 
   void destroy()
   {
+    mastermisc = 0;
 #ifdef FTP_REQUESTID_DEBUG
     report_debug("REQUESTID: Destroy request id #%d.\n", _num);
 #endif
@@ -211,6 +213,7 @@ class RequestID2
 	}
       }
       o["misc"] = m_rid["misc"] + ([ ]);
+      mastermisc = m_rid->misc;
     } else {
       // Defaults...
       client = ({ "ftp" });
