@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.839 2002/11/04 20:27:10 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.840 2002/11/05 04:01:22 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -390,7 +390,7 @@ private void stop_all_configurations()
   configurations->stop(1);
 }
 
-// Function that actually shuts down Roxen. (see low_shutdown).
+// Function that actually shuts down ChiliMoon. (see low_shutdown).
 private void really_low_shutdown(int exit_code)
 {
   // Die nicely. Catch for paranoia reasons
@@ -403,7 +403,7 @@ private void really_low_shutdown(int exit_code)
 
 private int _recurse;
 
-// Shutdown Roxen
+// Shutdown ChiliMoon
 //  exit_code = 0	True shutdown
 //  exit_code = -1	Restart
 private void low_shutdown(int exit_code)
@@ -588,7 +588,7 @@ local static void handler_thread(int id)
 	  h=0;
 	  busy_threads--;
 	} else if(!h) {
-	  // Roxen is shutting down.
+	  // ChiliMoon is shutting down.
 	  report_debug("Handle thread ["+id+"] stopped.\n");
 	  thread_reap_cnt--;
 #ifdef NSERIOUS
@@ -620,11 +620,11 @@ local static void handler_thread(int id)
     }) {
       if (h = catch {
 	report_error(/* "Uncaught error in handler thread: %s"
-		       "Client will not get any response from Roxen.\n",*/
+		       "Client will not get any response from ChiliMoon.\n",*/
 		     describe_backtrace(q));
 	if (q = catch {h = 0;}) {
 	  report_error("Uncaught error in handler thread: %sClient "
-		       "will not get any response from Roxen.\n",
+		       "will not get any response from ChiliMoon.\n",
 		       describe_backtrace(q));
 	  catch (q = 0);
 	}
@@ -1216,7 +1216,7 @@ class InternalRequestID
 
   static void create()
   {
-    client = ({ "Roxen" });
+    client = ({ "ChiliMoon" });
     prot = "INTERNAL";
     method = "GET";
     real_variables = ([]);
@@ -2136,7 +2136,7 @@ void nwrite(string s, int|void perr, int|void errtype,
     report_debug( s );
 }
 
-// When was Roxen started?
+// When was ChiliMoon started?
 int boot_time  =time();
 int start_time =time();
 
@@ -4153,7 +4153,7 @@ private void fix_root(string to)
 
   if(!chroot(to))
   {
-    report_debug("Roxen: Cannot chroot to "+to+": ");
+    report_debug("Cannot chroot to "+to+": ");
 #if efun(real_perror)
     real_perror();
 #endif
@@ -4417,7 +4417,7 @@ int main(array(string) tmp)
 
   catch(signal(signum("SIGHUP"),async_sig_start(reload_all_configurations,1)));
 
-  // Signals which cause Roxen to dump the thread state
+  // Signals which cause ChiliMoon to dump the thread state
   foreach( ({ "SIGBREAK", "SIGQUIT" }), string sig)
     catch( signal(signum(sig),async_sig_start(describe_all_threads,-1)));
 
