@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.37 1998/07/22 19:07:16 grubba Exp $
+/* $Id: ssl3.pike,v 1.38 1998/07/22 19:12:03 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -652,12 +652,9 @@ class roxen_sslfile {
   }
 #endif
 
-  int close(string|void how)
+  void close()
   {
-    if (how)
-      ssl::close(how);
-    else
-      ssl:close();
+    ssl::close();
 #ifdef SSL3_CLOSE_DEBUG
     is_closed = backtrace();
 #else
