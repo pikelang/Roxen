@@ -1,12 +1,12 @@
 /*
- * $Id: directories2.pike,v 1.6 1997/10/10 17:21:08 grubba Exp $
+ * $Id: directories2.pike,v 1.7 1997/12/19 02:11:21 peter Exp $
  *
  * Directory listings mark 2
  *
  * Henrik Grubbström 1997-02-13
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.6 1997/10/10 17:21:08 grubba Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.7 1997/12/19 02:11:21 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -14,6 +14,11 @@ inherit "module";
 inherit "roxenlib";
 
 import Array;
+
+void start( int num, object conf )
+{
+  module_dependencies (conf, ({ "flik", "htmlparse" }));
+}
 
 array register_module()
 {
@@ -233,7 +238,7 @@ string describe_directory(string d, object id)
       }
       break;
     case "image":
-      extras = "<img src=\""+d+file+"\" border=0>";
+      extras = "<img src=\""+ replace( d, "//", "/" ) + file +"\" border=0>";
       break;
     case "   Directory":
     case "   Module location":
