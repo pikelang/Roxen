@@ -1,4 +1,5 @@
 #charset iso-8859-5
+constant required_charset = "iso-8859-5";
 /* Bugs by: Per */
 /*
  * name = "Russian language plugin ";
@@ -7,7 +8,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: russian.pike,v 1.6 2000/01/26 00:29:54 nilsson Exp $";
+constant cvs_version = "$Id: russian.pike,v 1.7 2000/02/14 09:22:08 per Exp $";
 constant _id = ({ "ru", "russian", "" });
 constant _aliases = ({ "ru", "rus", "russian", "русский" });
 
@@ -38,22 +39,22 @@ string date(int timestamp, mapping m)
   {
     if(t1["yday"] == t2["yday"] && t1["year"] == t2["year"])
       return "сегодня, в " + ctime(timestamp)[11..15];
-  
+
     if(t1["yday"] == t2["yday"]-1 && t1["year"] == t2["year"])
       return "вчера, v " + ctime(timestamp)[11..15];
-  
+
     if(t1["yday"] == t2["yday"]+1 && t1["year"] == t2["year"])
       return "завтра, okolo "  + ctime(timestamp)[11..15];
-  
+
     if(t1["year"] != t2["year"])
       return month(t1["mon"]+1) + " " + (t1["year"]+1900);
     else
       return "" + t1["mday"] + " " + month(t1["mon"]+1);
   }
   if(m["full"])
-    return sprintf("%s, %s %s %d", 
+    return sprintf("%s, %s %s %d",
 		   ctime(timestamp)[11..15],
-		   ordered(t1["mday"]), 
+		   ordered(t1["mday"]),
 		   month(t1["mon"]+1), t1["year"]+1900);
   if(m["date"])
     return sprintf("%s %s %d", ordered(t1["mday"]),
@@ -151,7 +152,7 @@ string _number_1000000(int num)
      return pre + " миллионов";
   }
 }
-  
+
 string _number(int num, string gender)
 {
   if (!gender)   /* Solitary numbers are inflected as masculine */

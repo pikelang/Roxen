@@ -1,5 +1,6 @@
 /* Bugs by: Mak */
 #charset iso-8859-2
+constant required_charset = "iso-8859-2";
 /*
  * name = "Polish language plugin ";
  * doc = "Handles the conversion of numbers and dates to polish. You have to restart the server for updates to take effect.";
@@ -11,7 +12,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: polish.pike,v 1.4 2000/01/26 00:29:54 nilsson Exp $";
+constant cvs_version = "$Id: polish.pike,v 1.5 2000/02/14 09:22:08 per Exp $";
 constant _id = ({ "pl", "polish", "" });
 constant _aliases = ({ "pl", "po", "pol", "polish" });
 
@@ -46,20 +47,20 @@ string date(int timestamp, mapping|void m)
   {
     if(t1["yday"] == t2["yday"] && t1["year"] == t2["year"])
       return "dzi¶, "+ ctime(timestamp)[11..15];
-  
+
     if(t1["yday"]+1 == t2["yday"] && t1["year"] == t2["year"])
       return "wczoraj, "+ ctime(timestamp)[11..15];
-  
+
     if(t1["yday"]-1 == t2["yday"] && t1["year"] == t2["year"])
       return "jutro, "+ ctime(timestamp)[11..15];
-  
+
     if(t1["year"] != t2["year"])
       return (month(t1["mon"]+1) + " " + (t1["year"]+1900));
     return (ordered(t1["mday"]) + " " + month(t1["mon"]+1));
   }
   if(m["full"])
     return ctime(timestamp)[11..15]+", "+
-	   ordered(t1["mday"]) + " " + 
+	   ordered(t1["mday"]) + " " +
            month(t1["mon"]+1) + " " +
            (t2["year"]+1900);
   if(m["date"])
@@ -103,9 +104,9 @@ string number(int num)
    case 40: return "czterdzie¶ci";
    case 60: case 70: case 80: case 90:
      return number(num/10)+"dziesi±t";
-   case 21..29: case 31..39: 
-   case 51..59: case 61..69: case 71..79: 
-   case 81..89: case 91..99: case 41..49: 
+   case 21..29: case 31..39:
+   case 51..59: case 61..69: case 71..79:
+   case 81..89: case 91..99: case 41..49:
      return number((num/10)*10)+" "+number(num%10);
    case 100: return "sto";
    case 200: return "dwie¶cie";

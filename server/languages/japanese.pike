@@ -5,25 +5,22 @@
  * Some more bugs by Henrik Grubbstr,Avm <grubba@idonex.se>
  */
 
-/* Tip: put <header name="Content-type" value="text/html; charset=iso-2022-jp">
- *      on the page since Netscape caches charsets.
- */
-
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: japanese.pike,v 1.13 2000/01/26 00:29:54 nilsson Exp $";
+constant cvs_version = "$Id: japanese.pike,v 1.14 2000/02/14 09:22:08 per Exp $";
 constant _id = ({ "kj", "japanese", "" });
 constant _aliases =  ({ "kj", "kanji", /* For backward compatibility */
 			"jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
 			"日本語" });
 
+constant required_charset = "iso-2022";
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */
 
 string mknumber(int n)
 {
   array(string) digit;
   string r;
-  digit = ({ "", "一", "二", "三", "四", "五", "六", "七", "八", "九" }); 
+  digit = ({ "", "一", "二", "三", "四", "五", "六", "七", "八", "九" });
 
   if(!n) return "ゼロ";
 
@@ -82,15 +79,15 @@ string date(int timestamp, mapping|void m)
   {
     if(t1["yday"] == t2["yday"] && t1["year"] == t2["year"])
       return "今日" + ctime(timestamp)[11..15];
-  
+
     if(t1["yday"]+1 == t2["yday"] && t1["year"] == t2["year"])
       return "昨日" + ctime(timestamp)[11..15];
-  
+
     if(t1["yday"]-1 == t2["yday"] && t1["year"] == t2["year"])
       return "明日" + ctime(timestamp)[11..15];
 
     if(t1["year"] == t2["year"])
-      return mknumber(t1["mon"]+1)+"月" + mknumber(t1["mday"])+"日";      
+      return mknumber(t1["mon"]+1)+"月" + mknumber(t1["mday"])+"日";
     if(t1["year"]+1 == t2["year"])
       return "旧年" + mknumber(t1["mon"]+1)+"月" + mknumber(t1["mday"])+"日";
     if(t1["year"]-1 == t2["year"])
@@ -125,4 +122,3 @@ string day(int num)
   return ({ "日", "月", "火", "水", "木", "金", "土" })[ num - 1 ]+
 	    "曜日";
 }
-

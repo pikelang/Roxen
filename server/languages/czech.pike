@@ -1,4 +1,5 @@
 #charset iso-8859-2
+constant required_charset = "iso-8859-2";
 
 /* name="Czech language support for Roxen";
    doc="Author: Jan Petrous 16.10.1997<br>"
@@ -17,7 +18,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: czech.pike,v 1.11 2000/01/26 00:29:54 nilsson Exp $";
+constant cvs_version = "$Id: czech.pike,v 1.12 2000/02/14 09:22:07 per Exp $";
 constant _id = ({ "cs", "czech", "" });
 constant _aliases = ({ "cs", "cz", "cze", "czech" });
 
@@ -52,20 +53,20 @@ string date(int timestamp, mapping|void m)
   {
     if(t1["yday"] == t2["yday"] && t1["year"] == t2["year"])
       return ("dnes, "+ ctime(timestamp)[11..15]);
-  
+
     if(t1["yday"]+1 == t2["yday"] && t1["year"] == t2["year"])
       return ("vèera, "+ ctime(timestamp)[11..15]);
-  
+
     if((t1["yday"]-1) == t2["yday"] && t1["year"] == t2["year"])
       return ("zítra, "+ ctime(timestamp)[11..15]);
-  
+
     if(t1["year"] != t2["year"])
       return (month(t1["mon"]+1) + " " + (t1["year"]+1900));
     return (ordered(t1["mday"]) + " " + month(t1["mon"]+1));
   }
   if(m["full"])
     return (ctime(timestamp)[11..15]+", "+
-	   ordered(t1["mday"]) + " " + 
+	   ordered(t1["mday"]) + " " +
            month(t1["mon"]+1) + " " +
            (t1["year"]+1900));
   if(m["date"])
@@ -107,9 +108,9 @@ string number(int num)
    case 70: return ("sedmdesát");
    case 80: return ("osmdesát");
    case 90: return ("devadesát");
-   case 21..29: case 31..39: 
-   case 51..59: case 61..69: case 71..79: 
-   case 81..89: case 91..99: case 41..49: 
+   case 21..29: case 31..39:
+   case 51..59: case 61..69: case 71..79:
+   case 81..89: case 91..99: case 41..49:
      return (number((num/10)*10)+number(num%10));
    case 100..199: return ("sto"+number(num%100));
    case 200..299: return ("dvìstì "+number(num%100));
@@ -118,7 +119,7 @@ string number(int num)
    case 1000..1999: return ("tisíc "+number(num%1000));
    case 2000..2999: return ("dva tisíce "+number(num%1000));
    case 3000..999999: return (number(num/1000)+" tisíc "+number(num%1000));
-   case 1000000..999999999: 
+   case 1000000..999999999:
      return (number(num/1000000)+" milion "+number(num%1000000));
    default:
     return ("hodnì");
