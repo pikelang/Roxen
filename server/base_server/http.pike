@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.48 2000/09/11 14:15:19 nilsson Exp $
+// $Id: http.pike,v 1.49 2000/09/19 09:53:50 jhs Exp $
 
 //#pragma strict_types
 
@@ -227,7 +227,9 @@ string add_pre_state( string url, multiset state )
 }
 
 mapping http_redirect( string url, RequestID|void id )
-//! Simply returns a http-redirect message to the specified URL.
+//! Simply returns a http-redirect message to the specified URL. If
+//! the url parameter is just a virtual (possibly relative) path, the
+//! current id object must be supplied to resolve the destination URL.
 {
   if(strlen(url) && url[0] == '/')
   {
