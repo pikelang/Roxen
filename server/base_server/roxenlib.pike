@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.86 1999/01/10 18:00:46 js Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.87 1999/01/16 10:28:50 neotron Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -32,6 +32,7 @@ static mapping build_env_vars(string f, object id, string path_info)
 {
   string addr=id->remoteaddr || "Internal";
   mixed tmp;
+  object tmpid;
   mapping new = ([]);
   
   
@@ -75,6 +76,22 @@ static mapping build_env_vars(string f, object id, string path_info)
   } else
     new["SCRIPT_NAME"]=id->not_query;
 
+  tmpid = id;
+  while(tmpid->misc->orig)
+    // internal get
+    tmpid = tmpid->misc->orig;
+  
+  // Begin "SSI" vars.
+  if(sizeof(tmp = tmpid->not_query/"/" - ({""})))
+    new["DOCUMENT_NAME"]=tmp[-1];
+  
+  new["DOCUMENT_URI"]= tmpid->not_query;
+  
+  if((tmp = file_stat(tmpid->conf->real_file(tmpid->not_query||"", tmpid)))
+     && sizeof(tmp))
+    new["LAST_MODIFIED"]=http_date(tmp[3]);
+
+  // End SSI vars.
     
   if(tmp = roxen->real_file(new["SCRIPT_NAME"], id))
     new["SCRIPT_FILENAME"] = tmp;
@@ -172,23 +189,6 @@ static mapping build_env_vars(string f, object id, string path_info)
     
   return new;
 }
-
-static mapping build_ssi_env_vars(object id)
-{
-  mapping new = ([]);
-  array tmp;
-  
-  if(sizeof(tmp = id->not_query/"/" - ({""})))
-    new->DOCUMENT_NAME=tmp[-1];
-  new->DOCUMENT_URI=id->not_query;
-  if(id->query)
-    new->QUERY_STRING_UNESCAPED=id->query;
-  if((tmp = file_stat(roxen->real_file(id->not_query||"", id))) && sizeof(tmp))
-    new->LAST_MODIFIED=http_date(tmp[3]);
-  
-  return new;
-}
-
 
 static mapping build_roxen_env_vars(object id)
 {

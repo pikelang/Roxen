@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.158 1998/12/21 10:51:21 js Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.159 1999/01/16 10:28:51 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1256,22 +1256,21 @@ string tag_echo(string tag,mapping m,object id,object file,
       return "<!-- Que? -->";
   } else if(tag == "insert")
     return "";
-      
-  string addr=id->remoteaddr || "Internal";
-  switch(lower_case(replace(m->var, " ", "_")))
+  if(tag == "!--#echo" && id->misc->ssi_variables &&
+     id->misc->ssi_variables[m->var])
+    // Variables set with !--#set.
+    return id->misc->ssi_variables[m->var];
+
+  mapping myenv =  build_env_vars(0,  id, 0);
+  m->var = lower_case(replace(m->var, " ", "_"));
+  switch(m->var)
   {
    case "sizefmt":
-    return defines->sizefmt;
+   case "errmsg":
+    return defines[m->var] || "";
+   case "timefmt":
+    return defines[m->var] || "%c";
     
-   case "timefmt": case "errmsg":
-    return "&lt;unimplemented&gt;";
-      
-   case "document_name": case "path_translated":
-    return id->conf->real_file(id->not_query, id);
-
-   case "document_uri":
-    return id->not_query;
-
    case "date_local":
     NOCACHE();
     return strftime(defines->timefmt || "%c", time(1));
@@ -1304,31 +1303,11 @@ string tag_echo(string tag,mapping m,object id,object file,
    case "server_protocol":
     return "HTTP/1.0";
       
-   case "server_port":
-    tmp = objectp(id->my_fd) && id->my_fd->query_address(1);
-    if(tmp)
-      return (tmp/" ")[1];
-    return "Internal";
-
    case "request_method":
     return id->method;
-      
-   case "remote_host":
-    NOCACHE();
-    return roxen->quick_ip_to_host(addr);
-
-   case "remote_addr":
-    NOCACHE();
-    return addr;
 
    case "auth_type":
     return "Basic";
-      
-   case "remote_user":
-    NOCACHE();
-    if(id->auth && id->auth[0])
-      return id->auth[1];
-    return "Unknown";
       
    case "http_cookie": case "cookie":
     NOCACHE();
@@ -1350,6 +1329,11 @@ string tag_echo(string tag,mapping m,object id,object file,
       id->referer*", ": "Unknown";
       
    default:
+    m->var = upper_case(m->var);
+    if(myenv[m->var]) {
+      NOCACHE();
+      return myenv[m->var];
+    }
     if(tag == "insert")
       return "";
     return "<i>Unknown variable</i>: '"+m->var+"'";
@@ -1575,6 +1559,20 @@ string tag_compat_echo(string tag,mapping m,object id,object file,
   if(!QUERY(ssi))
     return "SSI support disabled. Use &lt;echo var=name&gt; instead.";
   return tag_echo(tag, m, id, file, defines);
+}
+
+string tag_compat_set(string tag,mapping m,object id,object file,
+			  mapping defines)
+{
+  if(!QUERY(ssi))
+    return "SSI support disabled. Use &lt;set variable=name value=value&gt; instead.";
+  if(m->var && m->value)
+  {
+    if(!id->misc->ssi_variables)
+      id->misc->ssi_variables = ([]);
+    id->misc->ssi_variables[m->var] = m->value;
+  }
+  return "";
 }
 
 string tag_compat_fsize(string tag,mapping m,object id,object file,
@@ -2834,6 +2832,7 @@ mapping query_tag_callers()
 	    "!--#echo":tag_compat_echo,           /* These commands are */
 	    "!--#exec":tag_compat_exec,           /* NCSA/Apache Server */
 	    "!--#flastmod":tag_compat_fsize,      /* Side includes.     */
+	    "!--#set":tag_compat_set, 
 	    "!--#fsize":tag_compat_fsize, 
 	    "!--#include":tag_compat_include, 
 	    "!--#config":tag_compat_config,
