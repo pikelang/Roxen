@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.117 2003/11/17 16:01:24 anders Exp $ -->
+<!-- $Id: template,v 1.118 2003/12/29 10:09:55 grubba Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -112,7 +112,15 @@
 <define container="link-gbutton" scope="link-gbutton">
 <attrib name="align">center</attrib>
   <define variable="var.url" preparse="1"><gbutton-url preparse="">&link-gbutton.contents;</gbutton-url></define>
-   <a href='&_.href;'><img align="&_.align;" src="&var.url;" border="0" /></a>
+  <if variable='_.href'>
+    <if variable='_.target'>
+      <a href='&_.href;' target='&_.target:none;'><img align="&_.align;" src="&var.url;" border="0" /></a>
+    </if><else>
+      <a href='&_.href;'><img align="&_.align;" src="&var.url;" border="0" /></a>
+    </else>
+  </if><else>
+    <img align="&_.align;" src="&var.url;" border="0" />
+  </else>
 </define>
 
 <define container="disabled-gbutton" scope="disabled-gbutton">
