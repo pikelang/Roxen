@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.624 2001/02/02 12:04:48 noring Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.625 2001/02/02 13:04:46 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2384,11 +2384,15 @@ class ArgCache
   //! argument cache. The string returned is your key to retrieve the
   //! data later.
   {
+    array q;
+#if 1
     array b = values(args), a = sort(indices(args),b);
     string data = encode_value(({a,b}));
-
-    if( cache[ data ] )
-      return cache[ data ][ CACHE_SKEY ];
+#else
+    string data = encode_value_canonic( args );
+#endif
+    if( q = cache[ data ] )
+      return q[ CACHE_SKEY ];
 
     if( sizeof( cache ) >= CACHE_SIZE )
     {
@@ -2428,8 +2432,11 @@ class ArgCache
     if(!q) error("Requesting unknown key\n");
 
     mixed data = decode_value(q);
-    data = mkmapping( data[0],data[1] );
-
+#if 1
+    if( arrayp( data ) )
+      data = mkmapping( data[0],data[1] );
+#endif
+     
     cache[ q ] = ({0,0});
     cache[ q ][ CACHE_VALUE ] = data;
     cache[ q ][ CACHE_SKEY ] = id;
