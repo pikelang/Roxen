@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.4.2.2 1997/03/03 11:42:23 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.4.2.3 1997/03/03 20:52:02 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -51,7 +51,7 @@ void end(string|void);
 
 void disconnect()
 {
-  if(objectp(pipe) && pipe != previous_object()) 
+  if(objectp(pipe) && pipe != Simulate.previous_object()) 
     destruct(pipe);
   --roxen->num_connections;
   my_fd = 0;
@@ -202,7 +202,7 @@ int connect_and_send(mapping file)
   
   mark_fd(fd->query_fd(), GRUK+" file");
   mark_fd(my_fd->query_fd(), GRUK+" cmd channel sending data");
-  pipe=files.pipe();
+  pipe=Pipe.pipe();
   if(stringp(file->data))  pipe->write(file->data);
   if(file->file)  pipe->input(file->file);
 
@@ -626,7 +626,7 @@ void got_data(mixed fooid, string s)
       method = "PUT";
       object fd;
 
-      fd = new( File );
+      fd = files.file();
       if(catch {
 	if(!fd->connect(dataport_addr, dataport_port))
 	  throw("noconnect");
