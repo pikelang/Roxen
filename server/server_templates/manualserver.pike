@@ -1,5 +1,5 @@
 /*
- * $Id: manualserver.pike,v 1.4 1999/09/28 13:52:00 peter Exp $
+ * $Id: manualserver.pike,v 1.5 1999/11/05 07:44:15 peter Exp $
  */
 
 #include <module.h>
@@ -51,18 +51,26 @@ void post(object node)
   {
     o->folded = 1;
     if(o = o->descend( "0", 1))
+    {
       if(o2 = o->descend( "searchpath", 1))
       {
 	o2->data[VAR_VALUE] = "manual/unparsed/";
 	o2->change(1);
       }
+    }
+    o->save();
+  }
+
+  if(o = node->descend( "Filesystem", 1 ))
+  {
     if(o = o->descend( "1", 1))
+    {
       if(o2 = o->descend( "searchpath", 1))
       {
 	o2->data[VAR_VALUE] = "manual/pdf/";
 	o2->change(1);
       }
+    }
+    o->save();
   }
-  
-  o->save();
 }
