@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.10 2000/06/29 21:58:01 mast Exp $
+ * $Id: resolv.pike,v 1.11 2000/07/20 17:41:24 jhs Exp $
  */
 
 inherit "wizard";
@@ -10,8 +10,8 @@ constant name= "Resolve path...";
 constant doc = ("Check which modules handles the path you enter in the form");
 
 string link(string to, string name)
-{ 
-  return sprintf("<a href=\"%s\">%s</a>", to, name); 
+{
+  return sprintf("<a href=\"%s\">%s</a>", to, name);
 }
 
 string link_configuration(Configuration c)
@@ -71,7 +71,21 @@ string module_name(function|RoxenModule|RXML.Tag m)
 }
 
 string resolv;
-int level;
+int level, prev_level;
+
+string anchor(string title)
+{
+  while(level < prev_level)
+    m_delete(et, (string)prev_level--);
+  prev_level = level;
+  et[(string)level]++;
+
+  array(string) anchor = allocate(level);
+  for(int i=0; i<level; )
+    anchor[i] = (string)et[(string)++i];
+  return sprintf("<a name=\"%s\" href=\"#%s\">%s</a>", anchor*".", anchor*".", title);
+}
+
 
 mapping et = ([]);
 #if efun(gethrvtime)
@@ -84,7 +98,7 @@ void trace_enter_ol(string type, function|object module)
 
   string efont="", font="";
   if(level>2) {efont="</font>";font="<font size=-1>";}
-  resolv += (font+"<b><li></b> "+type+" "+module_name(module)+"<ol>"+efont);
+  resolv += (font+anchor("<b><li></b> ")+type+" "+module_name(module)+"<ol>"+efont);
 #if efun(gethrvtime)
   et2[level] = gethrvtime();
 #endif
@@ -171,7 +185,6 @@ void resolv_handle_request(object c, object nid)
     }
   } while(again);
 
-
   if(!c->get_file(nid))
   {
     foreach(c->last_modules(), funp)
@@ -224,7 +237,7 @@ string parse(object id)
     }
 
     if(!c)
-      return "There is no configuration available that match this URL\n";
+      return "There is no configuration available that matches this URL.\n";
 
     id->variables->path = nid->not_query;
     nid->variables = ([]);
