@@ -102,6 +102,8 @@ function loadLayer(e, layer_name, src, properties, parent)
   if(isNav4)
   {
     var l = getObject(layer_name);
+    if(!l)
+      alert("Unknown layer '"+layer_name+"'.");
     l.name = layer_name;
     l.onload = layerLoadHandler;
     l.src = src;
