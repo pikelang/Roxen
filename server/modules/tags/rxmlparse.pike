@@ -10,15 +10,15 @@
 // 
 // the only thing that should be in this file is the main parser.  
 
-#define _stat defines[" _stat"]
-#define _error defines[" _error"]
-#define _extra_heads defines[" _extra_heads"]
-#define _rettext defines[" _rettext"]
-#define _ok defines[" _ok"]
+#define _stat id->misc->defines[" _stat"]
+#define _error id->misc->defines[" _error"]
+#define _extra_heads id->misc->defines[" _extra_heads"]
+#define _rettext id->misc->defines[" _rettext"]
+#define _ok id->misc->defines[" _ok"]
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.11 1999/08/07 12:06:54 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.12 1999/08/07 16:35:15 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -113,14 +113,18 @@ array(string) query_file_extensions()
 mapping handle_file_extension(object file, string e, object id)
 {
   string to_parse;
-  mapping defines = id->misc->defines || ([]);
-  array stat = defines[" _stat"] || id->misc->stat || file->stat();
-  id->misc->defines = defines;
-  
+
+  array stat;
+  if(id->misc->defines)
+    stat=_stat;
+  else {
+    id->misc+=(["defines":([" _ok":1])]);
+    stat=_stat=id->misc->stat || file->stat();
+  }
+
   if(QUERY(parse_exec) &&   !(stat[0] & 07111)) return 0;
   if(QUERY(no_parse_exec) && (stat[0] & 07111)) return 0;
 
-  id->misc->defines[" _stat"] = stat;
   bytes += strlen(to_parse = file->read());
   return http_rxml_answer( to_parse, id, file, "text/html" );
 }
@@ -294,9 +298,9 @@ string tag_set( string tag, mapping m, object id )
   if(m->help) 
     return ("<b>&lt;"+tag+" variable=...&gt;</b>: "+String.capitalize(tag)+" the variable specified "
       "by the 'variable' argument");
+
   if (m->variable)
   {
-
     if (m->value)
       // Set variable to value.
       id->variables[ m->variable ] = m->value;
@@ -307,14 +311,14 @@ string tag_set( string tag, mapping m, object id )
       if (id->variables[ m->from ])
 	id->variables[ m->variable ] = id->variables[ m->from ];
       else
-	return m->debug||id->misc->debug?"(Set: from variable doesn't exist)<false>":"<false>";
+	return rxml_error(tag, "from variable doesn't exist.", id);
 
     else if (m->other)
       // Set variable to the value of a misc variable
       if (id->misc->variables && id->misc->variables[ m->other ])
 	id->variables[ m->variable ] = id->misc->variables[ m->other ];
       else
-	return m->debug||id->misc->debug?"(Set: other variable doesn't exist)<false>":"<false>";
+	return rxml_error(tag, "other variable doesn't exist.", id);
 
 #if old_rxml_compat
     // Not part of RXML 1.4
@@ -333,7 +337,7 @@ string tag_set( string tag, mapping m, object id )
     return "";
   }
 
-  return m->debug||id->misc->debug?"(Set: variable not specified.)<false>":"<false>";
+  return rxml_error(tag, "variable not specified.", id);
 }
 
 string tag_append( string tag, mapping m, object id )
@@ -354,7 +358,7 @@ string tag_append( string tag, mapping m, object id )
 	else
 	  id->variables[ m->variable ] = id->variables[ m->from ];
       else
-        return m->debug||id->misc->debug?"(Append: from variable doesn't exist.)<false>":"<false>";
+        return rxml_error(tag, "from variable doesn't exist.", id);
 
     else if (m->other)
       // Set variable to the value of a misc variable
@@ -364,7 +368,7 @@ string tag_append( string tag, mapping m, object id )
 	else
 	  id->variables[ m->variable ] = id->misc->variables[ m->other ];
       else
-        return m->debug||id->misc->debug?"(Append: other variable doesn't exist.)<false>":"<false>";
+        return rxml_error(tag, "other variable doesn't exist.", id);
 
 #if old_rxml_compat
     // Not part of RXML 1.4
@@ -376,14 +380,14 @@ string tag_append( string tag, mapping m, object id )
 #endif
   }
 
-  return m->debug||id->misc->debug?"(Append: Nothing to append from.)<false>":"<false>";
+  return rxml_error(tag, "Nothing to append from.", id);
 }
 
 inline string do_replace(string s, mapping (string:string) m) {
   return replace(s, indices(m), values(m));
 }
 
-string tag_insert(string tag,mapping m,object id,object file,mapping defines)
+string tag_insert(string tag,mapping m,object id)
 {
   if(m->help)
     return "Inserts a file, variable or other object into a webpage";
@@ -395,12 +399,12 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
   // Not part of RXML 1.4
   if(n=m->define || m->name) {
     api_old_rxml_warning(id, "define or name attribute in insert tag","only variables");
-    return defines[n]||(id->misc->debug?"(Insert: No such define ("+n+").)<false>":"<false>");
+    return id->misc->defines[n]||rxml_error(tag, "No such define ("+n+").",id);
   }
 #endif
 
   if (n=m->variable)
-    return id->variables[n]||(id->misc->debug?"(Insert: No such variable ("+n+").)<false>":"<false>");
+    return id->variables[n]||rxml_error(tag, "No such variable ("+n+").",id);
 
   if (n=m->variables) 
   {
@@ -423,20 +427,13 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
 
   if (n=m->cookie) {
     NOCACHE();
-    return id->cookies[n]||(id->misc->debug?"(Insert: No such cookie ("+n+").)<false>":"<false>");
+    return id->cookies[n]||rxml_error(tag, "No such cookie ("+n+").", id);
   }
 
   if (m->file) 
   {
-    string s;
-    string f;
-    f = fix_relative(m->file, id);
+    string s, f = fix_relative(m->file, id);
     id = id->clone_me();
-
-    if(m->nocache) id->pragma["no-cache"] = 1;
-    if(id->scan_for_query)
-      f = id->scan_for_query( f );
-    s = id->conf->try_get_file(f, id);
 
     if (!s) {
 
@@ -452,8 +449,10 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
 	    sscanf(s, "%*s\n%s", s);
 	}
       }
-      if(!s)
-        return id->misc->debug?"(Insert: No such file ("+f+").)<false>":"<false>";
+      if(!s && id->misc->debug==-1) 
+        return "";
+      else if (!s)
+	return rxml_error(tag, "No such file ("+f+").", id);
     }
 
     return s;
@@ -464,35 +463,30 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
     mixed error=catch {
       n=(string)Protocols.HTTP.get_url_data(m->href);
     };
-    if(arrayp(error)) return id->misc->debug?"(Insert: "+error[0]+")<false>\n":"<false>";
-    if(n=="0") return id->misc->debug?"(Insert: Page could not be fetched.)<false>\n":"<false>";
-    return n+"<true>";
+    if(arrayp(error)) return rxml_error(tag, error[0], id);
+    if(n=="0") return rxml_error(tag, "Page could not be fetched.", id);
+    return n;
   }
 
-  if(id->misc->debug) {
-    string ret="(Insert: Could not fullfill your request.<br>\nArguments:<br>\n";
-    foreach(indices(m), string tmp)
-      ret+=tmp+" : "+m[tmp]+"<br />\n";
-    return ret+")<br />\n<false>";
-  }
-
-  return "";
+  string ret="Could not fullfill your request.<br>\nArguments:";
+  foreach(indices(m), string tmp)
+    ret+="<br />\n"+tmp+" : "+m[tmp];
+ 
+  return rxml_error(tag, ret, id);
 }
 
-string tag_modified(string tag, mapping m, object id, object file,
-		    mapping defines)
+string tag_modified(string tag, mapping m, object id, object file)
 {
   array (int) s;
   object f;
   
-
   if(m->by && !m->file && !m->realfile)
   {
     if(!id->conf->auth_module)
-      return id->misc->debug?"(Modified: Modified by requires a user database.)<false>":"<false>";
+      return rxml_error(tag, "Modified by requires a user database.", id);
     m->name = id->conf->last_modified_by(file, id);
     CACHE(10);
-    return tag_user(tag, m, id, file, defines);
+    return tag_user(tag, m, id, file);
   }
 
   if(m->file)
@@ -504,14 +498,14 @@ string tag_modified(string tag, mapping m, object id, object file,
   if(m->by && m->realfile)
   {
     if(!id->conf->auth_module)
-      return id->misc->debug?"(Modified: Modified by requires a user database.)<false>":"<false>";
+      return rxml_error(tag, "Modified by requires a user database.", id);
 
     if(f = open(m->realfile, "r"))
     {
       m->name = id->conf->last_modified_by(f, id);
       destruct(f);
       CACHE(10);
-      return tag_user(tag, m, id, file,defines);
+      return tag_user(tag, m, id, file);
     }
     return "A. Nonymous.";
   }
@@ -522,18 +516,18 @@ string tag_modified(string tag, mapping m, object id, object file,
   if(!(_stat || s) && !m->realfile && id->realfile)
   {
     m->realfile = id->realfile;
-    return tag_modified(tag, m, id, file, defines);
+    return tag_modified(tag, m, id, file);
   }
   CACHE(10);
   if(!s) s = _stat;
   if(!s) s = id->conf->stat_file( id->not_query, id );
   if(s)
     if(m->ssi)
-      return strftime(defines->timefmt || "%c", s[3]);
+      return strftime(id->misc->defines->timefmt || "%c", s[3]);
     else
       return tagtime(s[3], m, id);
 
-  return id->misc->debug?"(Modified: Couldn't stat file.)<false>":"<false>";
+  return rxml_error(tag, "Couldn't stat file.", id);
 }
 
 function tag_version = roxen.version;
@@ -550,16 +544,16 @@ string tag_clientname(string tag, mapping m, object id)
   return ""; 
 }
 
-string tag_user(string tag, mapping m, object id, object file,mapping defines)
+string tag_user(string tag, mapping m, object id, object file)
 {
   string *u;
   string b, dom;
 
   if(!id->conf->auth_module)
-    return id->misc->debug?"(User: Requires a user database.)<false>":"<false>";
+    return rxml_error(tag, "Requires a user database.", id);
 
   if (!(b=m->name)) {
-    return(tag_modified("modified", m | ([ "by":"by" ]), id, file,defines));
+    return(tag_modified("modified", m | ([ "by":"by" ]), id, file));
   }
 
   b=m->name;
@@ -682,7 +676,7 @@ string tag_aconf(string tag, mapping m, string q, object id)
   {
     href=m->href;
     if (search(href, ":") == search(href, "//")-1)
-      return id->misc->debug?"(Aconf: It is not possible to add configs to absolute URLs .)<false>":"<false>";
+      return rxml_error(tag, "It is not possible to add configs to absolute URLs.", id);
     href=fix_relative(href, id);
     m_delete(m, "href");
   }
@@ -736,8 +730,7 @@ string add_header(mapping to, string name, string value)
     to[name] = value;
 }
 
-string tag_add_cookie(string tag, mapping m, object id, object file,
-		      mapping defines)
+string tag_add_cookie(string tag, mapping m, object id)
 {
   string cookies;
   int t;     //time
@@ -745,7 +738,7 @@ string tag_add_cookie(string tag, mapping m, object id, object file,
   if(m->name)
     cookies = m->name+"="+http_encode_cookie(m->value||"");
   else
-    return id->misc->debug?"(Set-cookie: Requires a name attribute.)<false>":"<false>";
+    return rxml_error(tag, "Requires a name attribute.", id);
 
   if(m->persistent)
     t=(3600*(24*365*2));
@@ -770,30 +763,27 @@ string tag_add_cookie(string tag, mapping m, object id, object file,
   return "";
 }
 
-string tag_remove_cookie(string tag, mapping m, object id, object file,
-			 mapping defines)
+string tag_remove_cookie(string tag, mapping m, object id)
 {
   string cookies;
   if(m->name)
     cookies = m->name+"="+http_encode_cookie(m->value||"")+
       "; expires="+http_date(0)+"; path=/";
   else
-    return id->misc->debug?"(Remove-cookie: Requires a name attribute.)<false>":"<false>";
+    return rxml_error(tag, "Requires a name attribute.", id);
 
   add_header(_extra_heads, "Set-Cookie", cookies);
   return "";
 }
 
-string tag_return(string tag, mapping m, object id, object file,
-		  mapping defines)
+string tag_return(string tag, mapping m, object id)
 {
-  if(m->code)_error=(int)m->code || 200;
-  if(m->text)_rettext=m->text;
+  if(m->code) _error=(int)m->code || 200;
+  if(m->text) _rettext=m->text;
   return "";
 }
 
-string tag_referrer(string tag, mapping m, object id, object file,
-		   mapping defines)
+string tag_referrer(string tag, mapping m, object id)
 {
   NOCACHE();
 
@@ -808,8 +798,7 @@ string tag_referrer(string tag, mapping m, object id, object file,
   return m->alt?m->alt:"..";
 }
 
-string tag_header(string tag, mapping m, object id, object file,
-		  mapping defines)
+string tag_header(string tag, mapping m, object id)
 {
   if(m->name == "WWW-Authenticate")
   {
@@ -827,17 +816,16 @@ string tag_header(string tag, mapping m, object id, object file,
   }
   
   if(!(m->value && m->name))
-    return id->misc->debug?"(Header: Requires both a name and a value.)<false>":"<false>";
+    return rxml_error(tag, "Requires both a name and a value.", id);
 
   add_header(_extra_heads, m->name, m->value);
   return "";
 }
 
-string tag_redirect(string tag, mapping m, object id, object file,
-		    mapping defines)
+string tag_redirect(string tag, mapping m, object id)
 {
   if (!m->to) {
-    return(id->misc->debug?"(Redirect: Requires attribute \"to\".)<false>":"<false>");
+    return rxml_error(tag, "Requires attribute \"to\".", id);
   }
 
   multiset(string) orig_prestate = id->prestate;
@@ -864,8 +852,7 @@ string tag_redirect(string tag, mapping m, object id, object file,
   return "";
 }
 
-string tag_auth_required (string tagname, mapping args, object id,
-			  object file, mapping defines)
+string tag_auth_required (string tagname, mapping args, object id)
 {
   mapping hdrs = http_auth_required (args->realm, args->message);
   if (hdrs->error) _error = hdrs->error;
@@ -874,8 +861,7 @@ string tag_auth_required (string tagname, mapping args, object id,
   return "";
 }
 
-string tag_expire_time(string tag, mapping m, object id, object file,
-		       mapping defines)
+string tag_expire_time(string tag, mapping m, object id)
 {
   int t=time();
   if(!m->now)
@@ -952,7 +938,7 @@ string tag_dec(string tag, mapping m, object id)
   return "";
 }
 
-string tag_imgs(string tagname, mapping m, object id)
+string tag_imgs(string tag, mapping m, object id)
 {
   string tmp="";
   if(m->src)
@@ -976,9 +962,9 @@ string tag_imgs(string tagname, mapping m, object id)
       string src=src[sizeof(src)-1];
       m->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
     }
-    return make_tag("img", m)+(id->misc->debug?"(Imgs: "+tmp+")<false>":"<false>");
+    return make_tag("img", m)+(tmp?rxml_error(tag, tmp, id):"");
   }
-  return id->misc->debug?"(Imgs: No src given.)<false>":"<false>";
+  return rxml_error(tag, "No src given.", id);
 }
 
 string tag_roxen(string tagname, mapping m, object id)
@@ -1045,7 +1031,7 @@ string tag_fsize(string tag, mapping args, object id)
 #if old_rxml_compat
 // Not part of RXML 1.4
 
-string tag_source(string tag, mapping m, string s, object id,object file)
+string tag_source(string tag, mapping m, string s, object id)
 {
   api_old_rxml_warning(id, "source tag","a template");
   string sep;
@@ -1076,6 +1062,7 @@ mapping query_tag_callers()
 	    "imgs":tag_imgs,
 	    "insert":tag_insert,
             "inc":tag_inc,
+            "leave":tag_leave,
 	    "modified":tag_modified,
  	    "quote":tag_quote,
 	    "realfile":tag_realfile,
@@ -1110,7 +1097,7 @@ mapping query_tag_callers()
    ]);
 }
 
-string tag_doc(string tag, mapping m, string s, object id,object file)
+string tag_doc(string tag, mapping m, string s)
 {
   if(!m["quote"])
     if(m["pre"])
@@ -1126,7 +1113,7 @@ string tag_doc(string tag, mapping m, string s, object id,object file)
       return replace(s, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" }));
 }
 
-string tag_autoformat(string tag, mapping m, string s, object id,object file)
+string tag_autoformat(string tag, mapping m, string s, object id)
 {
   s-="\r";
   if(!m->nobr) {
@@ -1394,8 +1381,7 @@ string tag_sort(string t, mapping m, string c, object id)
   return pre + sort(lines)*m->separator + post;
 }
 
-mixed tag_recursive_output (string tagname, mapping args, string contents,
-			    object id, object file, mapping defines)
+mixed tag_recursive_output (string tagname, mapping args, string contents, object id)
 {
   int limit;
   array(string) inside, outside;
@@ -1435,28 +1421,26 @@ mixed tag_recursive_output (string tagname, mapping args, string contents,
   return ({res});
 }
 
-string tag_while(string tag, mapping m, string c, object id)
+string tag_leave(string tag, mapping m, object id)
 {
-  int old_truth=id->misc->defines[" _ok"],loop,maxloop=(int)m->maxloops||10000;
+  id->misc->leave_repeat--;
+  return "";
+}
+
+string tag_repeat(string tag, mapping m, string c, object id)
+{
+  if(!id->misc->leave_repeat)
+    id->misc->leave_repeat=0;
+  int exit=id->misc->leave_repeat++,loop,maxloop=(int)m->maxloops||10000;
   string ret="",iter;
-  id->misc->defines[" _ok"]=0;
-  while(loop<maxloop && !id->misc->defines[" _ok"]) {
+  while(loop<maxloop && id->misc->leave_repeat!=exit) {
     loop++;
-    id->misc->defines[" _ok"]=0;
-    iter=parse_html(c,([]),(["endwhile":lambda(string tag, mapping m, string c, object id) {
-					  parse_rxml(c,id);
-                                          return "";
-					} ]), id);
-    if(!id->misc->defines[" _ok"])
-      ret+=parse_rxml(iter,id);
-    if(iter==c) {
-      id->misc->defines[" _ok"]=old_truth;
-      return ret+id->misc->debug?"(While: No end condition.)<false>":"<false>";
-    }
+    iter=parse_rxml(c,id);
+    if(id->misc->leave_repeat!=exit)
+      ret+=iter;
   }
-  id->misc->defines[" _ok"]=old_truth;
   if(loop==maxloop)
-    return ret+(id->misc->debug?"(While: Too many iterations ("+maxloop+").)<false>":"<false>");
+    return ret+rxml_error(tag, "Too many iterations ("+maxloop+").", id);
   return ret;
 }
 
@@ -1522,6 +1506,7 @@ mapping query_container_callers()
            "maketag":tag_maketag,
 	   "random":tag_random,
 	   "recursive-output": tag_recursive_output,
+           "repeat":tag_repeat,
            "replace":tag_replace,
 	   "scope":tag_scope,
 	   "smallcaps":tag_smallcaps,
@@ -1531,7 +1516,6 @@ mapping query_container_callers()
 		     throw( ({ c, backtrace() }) );
 		   },
 	   "trimlines":tag_trimlines,
-           "while":tag_while,
 #if old_rxml_compat
            // Not part of RXML 1.4
 	   "cset":lambda(string t, mapping m, string c, object id) {
@@ -1598,20 +1582,22 @@ string api_query_variable(object id, string what)
 
 string api_read_file(object id, string f)
 {
-  mapping m = ([ "file":f ]);
-  return tag_insert("insert", m, id, id, id->misc->defines);
+  int debug=id->misc->debug;
+  id->misc->debug=-1;
+  string ret=tag_insert("insert",(["file":f]),id);
+  id->misc->debug=debug;
+  return ret;
 }
 
 string api_query_cookie(object id, string f)
 {
-  mapping m = ([ "cookie":f ]);
-  return tag_insert("insert", m, id, id, id->misc->defines);
+  return tag_insert("insert", (["cookie":f]), id);
 }
 
 string api_query_modified(object id, string f, int|void by)
 {
   mapping m = ([ "by":by, "file":f ]);
-  return tag_modified("modified", m, id, id, id->misc->defines);
+  return tag_modified("modified", m, id, id);
 }
 
 void api_add_header(object id, string h, string v)
@@ -1621,14 +1607,12 @@ void api_add_header(object id, string h, string v)
 
 void api_set_cookie(object id, string c, string v)
 {
-  tag_add_cookie( "add_cookie", (["name":c,"persistent":1,"value":v]),
-		  id, id, id->misc->defines);
+  tag_add_cookie( "add_cookie", (["name":c,"persistent":1,"value":v]), id);
 }
 
 void api_remove_cookie(object id, string c, string v)
 {
-  tag_remove_cookie( "remove_cookie", (["name":c,"value":v]),
-		     id, id, id->misc->defines);
+  tag_remove_cookie( "remove_cookie", (["name":c,"value":v]), id);
 }
 
 int api_prestate(object id, string p)
@@ -1656,7 +1640,7 @@ int api_set_supports(object id, string p)
 
 int api_set_return_code(object id, int c, string p)
 {
-  tag_return("return", ([ "code":c, "text":p ]), id,id,id->misc->defines);
+  tag_return("return", ([ "code":c, "text":p ]), id);
   return ([])[0];
 }
 
