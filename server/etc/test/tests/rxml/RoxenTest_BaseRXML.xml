@@ -916,6 +916,11 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><set variable="var.basun" split=",">1,2</set><if sizeof="var.basun = 2">x</if></rxml>
+<result>x</result>
+</test>
+
+<test>
 <rxml><set variable="var.basun">abc</set><if sizeof="var.basun == 3">7</if></rxml>
 <result>7</result>
 </test>
@@ -2311,6 +2316,16 @@ cd</rxml>
 </test>
 
 <test>
+<rxml>&roxen.time; <testsleep time="3"/>&roxen.time;</rxml>
+<pike>
+  array x=array_sscanf(res, "%d %d");
+  if(sizeof(x)!=2) return "\""+res+"\" doesn't match \"%d %d\".";
+  if(x[0]==x[1]) return "First time equals second.";
+  return 0;
+</pike>
+</test>
+
+<test>
 <rxml>&roxen.uptime;</rxml>
 <regexp>[0-9]+</regexp>
 </test>
@@ -2338,4 +2353,26 @@ cd</rxml>
 <test>
 <rxml>&roxen.unique-id;</rxml>
 <regexp>[0-9A-F]+</regexp>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Array variables</comment>
+
+<test>
+<rxml><if variable="var.foo">1</if><set variable="var.foo" split=","
+ >a,b</set><if variable="var.foo">2</if></rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable="var.foo" split=",">hej,san</set><if variable="var.foo = hej"
+ >1</if><if variable="var.foo = san">2</if><if variable="var.foo = sa">3</if></rxml>
+<result>12</result>
+</test>
+
+<test>
+<rxml><set variable="var.foo" split=",">hej,san</set><if variable="var.foo = h*"
+ >1</if><if variable="var.foo = t*">2</if><if variable="var.foo = s??">3</if></rxml>
+<result>13</result>
 </test>
