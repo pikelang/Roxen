@@ -8,11 +8,11 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.13 2001/04/22 09:48:11 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.14 2001/07/02 23:57:38 nilsson Exp $";
 constant module_type = MODULE_TAG;
 
-LocaleString module_name = _(0,"Graphics: GXML tag");
-LocaleString module_doc  = _(0,"Provides the tag <tt>&lt;gxml&gt;</tt>.");
+LocaleString module_name = _(1,"Graphics: GXML tag");
+LocaleString module_doc  = _(2,"Provides the tag <tt>&lt;gxml&gt;</tt>.");
 
 roxen.ImageCache the_cache;
 
@@ -27,12 +27,12 @@ void flush_cache() {
 
 mapping(string:function) query_action_buttons()
 {
-  return ([ _(0,"Clear cache"):flush_cache ]);
+  return ([ _(3,"Clear cache"):flush_cache ]);
 }
 
 string status() {
   array s=the_cache->status();
-  return sprintf(_(0,"<b>Images in cache:</b> %d images<br />\n"
+  return sprintf(_(4,"<b>Images in cache:</b> %d images<br />\n"
                    "<b>Cache size:</b> %s"),
 		 s[0]/2, Roxen.sizetostring(s[1]));
 }
