@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.176 2000/05/28 00:22:58 nilsson Exp $
+// $Id: roxenlib.pike,v 1.177 2000/05/28 01:36:02 nilsson Exp $
 
 //#pragma strict_types
 
@@ -908,16 +908,16 @@ string html_encode_tag_value(string str)
 }
 
 string strftime(string fmt, int t)
+  //! Encodes the time t according to the format string fmt.
 {
+  if(!sizeof(fmt)) return "";
   mapping lt = localtime(t);
+  fmt=replace(fmt, "%%", "\0");
   array(string) a = fmt/"%";
   string res = "";
 
   foreach(a, string key) {
-    if (key=="") {
-      key = "%";
-      continue;
-    }
+    if(key=="") continue;
     switch(key[0]) {
     case 'a':	// Abbreviated weekday name
       res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
@@ -984,46 +984,44 @@ string strftime(string fmt, int t)
     case 'R':	// Time as %H:%M
       res += sprintf("%02d:%02d", lt->hour, lt->min);
       break;
-    case 'S':	// Seconds [00,61]
+    case 'S':	// Seconds [00,61]; 0-prefix
       res += sprintf("%02", lt->sec);
       break;
     case 't':	// Tab
       res += "\t";
       break;
     case 'T':	// Time as %H:%M:%S
+    case 'X':
       res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
       break;
-    case 'u':	// Weekday as a decimal number [1,7], Sunday == 1
+    case 'u':	// Weekday as a decimal number [1,7], Sunday == 1; 0-prefix
       res += sprintf("%d", lt->wday + 1);
       break;
-    case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
+    case 'w':	// Weekday as a decimal number [0,6], Sunday == 0; 0-prefix
       res += sprintf("%d", lt->wday);
       break;
     case 'x':	// Date
       res += strftime("%a %b %d %Y", t);
       break;
-    case 'X':	// Time
-      res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
-      break;
-    case 'y':	// Year [00,99]
+    case 'y':	// Year [00,99]; 0-prefix
       res += sprintf("%02d", lt->year % 100);
       break;
-    case 'Y':	// Year [0000.9999]
+    case 'Y':	// Year [0000.9999]; 0-prefix
       res += sprintf("%04d", 1900 + lt->year);
       break;
 
     case 'U':	// Week number of year as a decimal number [00,53],
-		// with Sunday as the first day of week 1
-      res += (string)((lt->yday-1+lt->wday)/7);
+		// with Sunday as the first day of week 1; 0-prefix
+      res += sprintf("%02d", ((lt->yday-1+lt->wday)/7));
       break;
-    case 'V':	// ISO week number of the year as a decimal number [01,53].
+    case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
 #if constant(Calendar.ISO)
-      res +=  (string)Calendar.ISO.Second(t)->minute()->hour()->day()->week()->number();
+      res += sprintf("%02d", Calendar.ISO.Second(t)->minute()->hour()->day()->week()->number());
 #endif
       break;
     case 'W':	// Week number of year as a decimal number [00,53],
-		// with Monday as the first day of week 1
-      res += (string)((lt->yday+(5+lt->wday)%7)/7);
+		// with Monday as the first day of week 1; 0-prefix
+      res += sprintf("%02d", ((lt->yday+(5+lt->wday)%7)/7));
       break;
     case 'Z':	/* FIXME: Time zone name or abbreviation, or no bytes if
 		 * no time zone information exists
@@ -1031,7 +1029,7 @@ string strftime(string fmt, int t)
     }
     res+=key[1..];
   }
-  return res;
+  return replace(res, "\0", "%");
 }
 
 RoxenModule get_module (string modname)
