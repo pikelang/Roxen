@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.483 2000/04/17 16:54:22 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.484 2000/05/08 05:57:56 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -700,19 +700,24 @@ class Protocol
   void got_connection()
   {
     object q = accept( );
-    if( !q )
-      ;// .. errno stuff here ..
-    else {
-      // FIXME: Add support for ANY => specific IP here.
-
+    if( q )
       requesthandler( q, this_object() );
-    }
   }
+
+  local function sp_fcfu;
+
 
   object find_configuration_for_url( string url, RequestID id, 
                                      int|void no_default )
+  //. Given a url and requestid, try to locate a suitable configuration
+  //. (virtual site) for the request. 
+  //. This interface is not at all set in stone, and might change at 
+  //. any time.
   {
     object c;
+    // The URLs are sorted from longest to shortest, so that short
+    // urls (such as http://*/) will not match before more complete
+    // ones (such as http://*.roxen.com/)
     foreach( sorted_urls, string in )
     {
       if( glob( in+"*", url ) )
@@ -726,24 +731,53 @@ class Protocol
 	return c;
       }
     }
-
-    // Ouch. Default to '*' first...
+    
+    if( no_default )
+      return 0;
+    
+    // No host matched, or no host header was included in the request.
+    // Is the port in the '*' ports?
     mixed i;
-    if( ip 
-        && ( i=open_ports[ name ][ 0 ] ) 
-        && ( i=i[ port ] ) 
-        && ( i != this_object())
-        && (i = i->find_configuration_for_url( url, id, 1 )))
+    if( !functionp(sp_fcfu)
+	&& ( i=open_ports[ name ][ 0 ] ) && ( i=i[ port ] ) )
+      sp_fcfu = i->find_configuration_for_url;
+    
+    if( sp_fcfu
+	&& (sp_fcfu != find_configuration_for_url)
+	&& (i = sp_fcfu( url, id, 1 )))
       return i;
-
-    if( !no_default )
+    
+    // No. We have to default to one of the other ports.
+    // It might be that one of the servers is tagged as a default server.
+    multiset choices = (< >);
+    foreach( configurations, object c )
+      if( c->query( "default_server" ) )
+	choices |= (< c >);
+    
+    if( sizeof( choices ) )
     {
-      // .. then grab the first configuration that is available at all.
-      if(!(c = urls[sorted_urls[0]]->conf)->inited) c->enable_all_modules();
-      id->misc->defaulted=1;
-      return c;
+      // First pick default servers bound to this port
+      foreach( values(urls), mapping c )
+	if( choices[ c->conf ] )
+	{
+	  id->not_query = id->not_query[strlen(c->path)..];
+	  id->misc->site_prefix_path = c->path;
+	  if(c->conf->inited) 
+	    c->conf->enable_all_modules();
+	  return c->conf;
+	}
+      // if there is no such servers, pick the first default server
+      // available.
+      return ((array)choices)[0];
     }
-    return 0;
+
+
+    // if we end up here, there is no default port at all available
+    // so grab the first configuration that is available at all.
+    if(!(c = urls[sorted_urls[0]]->conf)->inited)
+      c->enable_all_modules();
+    id->misc->defaulted=1;
+    return c;
   }
 
   mixed query_option( string x )
@@ -783,7 +817,6 @@ class Protocol
     {
       report_error("Failed to bind %s://%s:%d/ (%s)\n", (string)name,
                    (ip||"*"), (int)port, strerror( errno() ));
-      destruct();
     }
   }
 
@@ -861,7 +894,6 @@ class SSLProtocol
     if( catch{ f = lopen(query_option("ssl_cert_file"), "r")->read(); } )
     {
       report_error("SSL3: Reading cert-file failed!\n");
-      destruct();
       return;
     }
 
@@ -869,7 +901,6 @@ class SSLProtocol
         catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
     {
       report_error("SSL3: Reading key-file failed!\n");
-      destruct();
       return;
     }
 
@@ -883,7 +914,6 @@ class SSLProtocol
     if (!part || !(cert = part->decoded_body())) 
     {
       report_error("ssl3: No certificate found.\n");
-      destruct();
       return;
     }
 
@@ -901,7 +931,6 @@ class SSLProtocol
       if (!(key = part->decoded_body())) 
       {
 	report_error("SSL3: Private rsa key not valid (PEM).\n");
-	destruct();
 	return;
       }
 
@@ -909,7 +938,6 @@ class SSLProtocol
       if (!rsa) 
       {
 	report_error("SSL3: Private rsa key not valid (DER).\n");
-	destruct();
 	return;
       }
 
@@ -930,13 +958,11 @@ class SSLProtocol
       if (!tbs) 
       {
 	report_error("ssl3: Certificate not valid (DER).\n");
-	destruct();
 	return;
       }
       if (!tbs->public_key->rsa->public_key_equal (rsa)) 
       {
 	report_error("ssl3: Certificate and private key do not match.\n");
-	destruct();
 	return;
       }
     }
@@ -947,7 +973,6 @@ class SSLProtocol
       if (!(key = part->decoded_body())) 
       {
 	report_error("ssl3: Private dsa key not valid (PEM).\n");
-	destruct();
 	return;
       }
 
@@ -955,7 +980,6 @@ class SSLProtocol
       if (!dsa) 
       {
 	report_error("ssl3: Private dsa key not valid (DER).\n");
-	destruct();
 	return;
       }
 
@@ -973,7 +997,6 @@ class SSLProtocol
     else 
     {
       report_error("ssl3: No private key found.\n");
-      destruct();
       return;
     }
 
@@ -989,7 +1012,6 @@ class SSLProtocol
   void create(int pn, string i) 
   {
     report_error("No SSL support available\n");
-    destruct();
   }
 #endif /* constant(SSL.sslfile) */
   string _sprintf( )
@@ -1196,7 +1218,6 @@ class FHTTP
       report_error("Failed to bind %s://%s:%d/ (%s)\n",
                    name,ip||"*",(int)port, strerror(errno()));
       destruct(portobj);
-      destruct();
       return;
     }
 
