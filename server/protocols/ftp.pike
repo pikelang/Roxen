@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.71 2001/10/18 12:24:40 mast Exp $
+ * $Id: ftp.pike,v 2.72 2002/02/04 17:22:40 jonasw Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -168,7 +168,8 @@ class RequestID2
 	if (!(< "create", "connection", "configuration",
                 "__INIT", "clone_me", "end", "ready_to_receive",
 		"send", "scan_for_query", "send_result", "misc",
-		"url_base" >)[var]) {
+		"url_base", "set_response_header",
+		"add_response_header" >)[var]) {
 #ifdef FTP2_DEBUG
 	  if (catch {
 #endif /* FTP2_DEBUG */
@@ -183,6 +184,10 @@ class RequestID2
 	}
       }
       o["misc"] = m_rid["misc"] + ([ ]);
+
+      //  Response header functions may get called but shouldn't do anything
+      o["add_response_header"] = o["set_response_header"] =
+	lambda(string name, string value) { };
     } else {
       // Defaults...
       client = ({ "ftp" });
