@@ -1,0 +1,9 @@
+<standard>
+  <name>Filesystem modules</name>
+  <doc>Extends the virtual filesystem in roxen</doc>
+</standard>
+
+<svenska>
+  <name>Filsystemsmoduler</name>
+  <doc>Bygger upp roxens virtuella filsystem</doc>
+</standard>

@@ -1,0 +1,9 @@
+<standard>
+ <name>Configuration interface modules</name>
+ <doc>These modules are only useful for the configuration interface</doc>
+</standard>
+
+<svenska>
+ <name>Konfigurationsinterfacemoduler</name>
+ <doc>De här modulerna är enbart användbara för konfigurationsinterfacet</doc>
+</svenska>

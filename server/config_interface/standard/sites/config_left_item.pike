@@ -64,7 +64,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 	   sprintf("<br><gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-buttonbg; preparse href='"+tmp+
 		   "drop_module.pike?config=%s'> "
 		   "<cf-locale get=drop_module> </gbutton><br>",
-		   http_encode_string( c->name ) );
+		   http_encode_string( c->name ));
          string qurl = url;
          if( search( qurl, "!" ) != -1 )
            qurl += "../";

@@ -1,0 +1,13 @@
+<standard>
+  <name>Directory modules</name>
+  <doc>Handles index files and the generation
+       of directory lists. You can only have one directory module
+       enabled in each virtual server</doc>
+</standard>
+
+<svenska>
+  <name>Directorymoduler</name>
+  <doc>Moduler som parsar fillistningar och hittar indexfiler (så som
+       index.html). Du kan bara ha en directorymodul i varje virtuell
+       server.</doc>
+</svenska>

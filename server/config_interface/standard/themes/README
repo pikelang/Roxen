@@ -110,6 +110,8 @@ Overriding these is not really recommended, but possible.
 
 setting		   default value
 --------------------------------------------------------------------------
+logo-html          <img border=0 src=&usr.logo;>
+
 toptabs-args       frame-image=&usr.toptabs-frame; &usr.toptab-extraargs;
 
 subtabs-args       frame-image=&usr.subtabs-frame; &usr.subtabs-extraargs;

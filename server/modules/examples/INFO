@@ -1,0 +1,10 @@
+<standard>
+  <name>Example modules</name>
+  <doc>Here to aid module writers with simple example
+       modules. Not normally very useful for production servers.</doc>
+</standard>
+
+<svenska>
+  <name>Exempelmoduler</name>
+  <doc>De här modulerna är här för att hjälpa modulskrivare.</doc>
+</standard>

@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.200 2000/02/10 10:38:47 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.201 2000/02/11 08:53:32 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -50,9 +50,6 @@ object port_obj;
 #include <roxen.h>
 #include <module.h>
 #include <variables.h>
-
-#undef QUERY
-#define QUERY(X)	_query( #X )
 
 int time;
 string raw_url;
@@ -871,15 +868,15 @@ private int parse_got()
     config = prestate;
   else
     if(conf
-       && QUERY(set_cookie)
+       && port_obj->query("set_cookie")
        && !cookies->RoxenUserID && strlen(not_query)
        && not_query[0]=='/' && method!="PUT")
     {
-      if (!(QUERY(set_cookie_only_once) &&
+      if (!(port_obj->query("set_cookie_only_once") &&
 	    cache_lookup("hosts_for_cookie",remoteaddr))) {
 	misc->moreheads = ([ "Set-Cookie":http_roxen_id_cookie(), ]);
       }
-      if (QUERY(set_cookie_only_once))
+      if (port_obj->query("set_cookie_only_once"))
 	cache_set("hosts_for_cookie",remoteaddr,1);
     }
   return 3;	// Done.
@@ -1123,7 +1120,7 @@ array get_error(string eid)
 void internal_error(array err)
 {
   array err2;
-  if(QUERY(show_internals))
+  if(port_obj->query("show_internals"))
   {
     err2 = catch {
       array(string) bt = (describe_backtrace(err)/"\n") - ({""});

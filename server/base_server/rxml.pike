@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.118 2000/02/11 01:10:34 mast Exp $
+ * $Id: rxml.pike,v 1.119 2000/02/11 08:53:30 per Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -572,8 +572,8 @@ void remove_parse_module (RoxenModule mod)
   int i = search (rxml_tag_set->modules, mod);
   if (i >= 0) {
     RXML.TagSet tag_set = rxml_tag_set->imported[i];
-    rxml_tag_set->set_modules (
-      rxml_tag_set->modules[..i - 1] + rxml_tag_set->modules[i + 1..]);
+//     rxml_tag_set->set_modules (
+//       rxml_tag_set->modules[..i - 1] + rxml_tag_set->modules[i + 1..] );
     rxml_tag_set->imported =
       rxml_tag_set->imported[..i - 1] + rxml_tag_set->imported[i + 1..];
     if (tag_set) destruct (tag_set);
@@ -2098,7 +2098,7 @@ it, jp, mi, no, pt, ru, sr, si, es, sv>
 </attr>",
 
 "strlen":#"<desc cont>
- Returns the length of the contents. Strlen can be used with 
+ Returns the length of the contents. Strlen can be used with
  <tag><ref type=tag>if eval=...</ref></tag> to test the length
  of variables.
 </desc>",

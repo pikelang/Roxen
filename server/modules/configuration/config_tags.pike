@@ -184,6 +184,9 @@ class Scope_usr
         c1 = Image.Color.black;
     }
 
+#undef ALIAS
+#undef QALIAS
+
     switch( var )
     {
      case "fade1":
@@ -233,7 +236,6 @@ class Scope_usr
 
   string _sprintf() { return "RXML.Scope(usr)"; }
 }
-#undef ALIAS
 
 RXML.Scope usr_scope=Scope_usr();
 

@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.71 2000/01/30 21:16:23 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.72 2000/02/11 08:53:30 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -46,7 +46,6 @@ class MyCodec
 	}
 	break;
     }
-
     return ([])[0];
   }
 
@@ -74,15 +73,15 @@ class MyCodec
   program programof(string x)
   {
     if(sscanf(x,"efun:%s",x))
-      return all_constants()[x];
+      return (program)all_constants()[x];
 
     if(sscanf(x,"_static_modules.%s",x))
     {
       return (program)_static_modules[x];
     }
 
-    if(program tmp=(program)x) return tmp;
-    werror("Failed to decode %s\n",x);
+    if(program tmp=(program)x)
+      return tmp;
     return 0;
   }
 
@@ -93,7 +92,7 @@ class MyCodec
 
   mixed decode_object(object x)
   {
-    error("Cannot encode objects yet.\n");
+    error("Cannot decode objects yet.\n");
   }
 
   void create( program q )
