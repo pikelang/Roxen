@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.212 2003/12/03 12:16:31 grubba Exp $
+# $Id: start,v 1.213 2004/02/04 15:39:29 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -793,10 +793,8 @@ start_roxen() {
 trap signal_exit 2 15
 trap "" 1
 
-if [ -z "$once" ]; then
-  # Fix the pid file. We don't do this if once is set, since that
-  # often signifies that it's not the real server starting up, but
-  # instead some other process, e.g. one given with --program.
+if [ "$program" = "base_server/roxenloader.pike" ] ; then
+  # Starting a Roxen server. Fix the pid file.
   [ -z "$pidfile" ] && pidfile="${ROXEN_PID_FILE:-$DIR/_roxen_pid}"
   pass="$pass --pid-file='`echo \"$pidfile\" | sed -e \"s/'/'\\\"'\\\"'/g\"`'"
   # Avoid duplicate start scripts if we got a pid file.
