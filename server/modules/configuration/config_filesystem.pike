@@ -10,7 +10,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.19 2000/01/07 08:44:04 jhs Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.20 2000/01/31 03:47:29 per Exp $";
 
 constant path = "config_interface/";
 
@@ -28,7 +28,7 @@ string template_for( string f, object id )
 
 string real_file( mixed f, mixed id )
 {
-  if(stat_file( f, id )) 
+  if(stat_file( f, id ))
     return path + f;
 }
 
@@ -59,7 +59,7 @@ mixed find_file( string f, object id )
   id->since = 0;
   if( !id->misc->request_charset_decoded )
   {
-    // We only need to decode f (and id->not_query)  here, 
+    // We only need to decode f (and id->not_query)  here,
     // since there is no variables (if there were, the
     // request would have been automatically decoded).
     id->misc->request_charset_decoded = 1;
@@ -84,7 +84,7 @@ mixed find_file( string f, object id )
 
   while( strlen( f ) && (f[0] == '/' ))
     f = f[1..];
-  
+
   sscanf( f, "%[^/]/%*s", locale );
 
   id->misc->cf_locale = locale;
@@ -105,7 +105,7 @@ mixed find_file( string f, object id )
        return 0;	/* Let the PATH_INFO module handle it */
   }
   id->realfile = path+replace(f,locale,"standard");
-  
+
   mixed retval = Stdio.File( id->realfile, "r" );
 
   if( id->variables["content-type"] )
@@ -115,6 +115,9 @@ mixed find_file( string f, object id )
   string type = id->conf->type_from_filename( id->not_query );
 
 //   werror( f + " is " + type + "\n");
+
+  if( locale != "standard" )
+    roxen.set_locale( locale );
 
   switch( type )
   {
@@ -129,7 +132,6 @@ mixed find_file( string f, object id )
 
      data = sprintf(base,tmpl,title,data);
 
-     if( locale != "standard" )    roxen.set_locale( locale );
      if( !id->misc->stat )
        id->misc->stat = allocate(10);
      id->misc->stat[ ST_MTIME ] = time();
@@ -137,7 +139,7 @@ mixed find_file( string f, object id )
        id->misc->defines = ([]);
      id->misc->defines[" _stat"] = id->misc->stat;
      retval = http_rxml_answer( data, id );
-     if(charset_encoder) 
+     if(charset_encoder)
      {
        retval->data = charset_encoder->clear()->feed( retval->data )->drain();
        retval->extra_heads["Content-type"]
