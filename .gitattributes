@@ -274,7 +274,6 @@ worldmap binary
 /server/perl/bin/perlhelper foreign_ident
 /server/perl/bin/perlrun foreign_ident
 /server/pike_modules/DBManager.pmod foreign_ident
-/server/pike_modules/Dims.pmod foreign_ident
 /server/pike_modules/ExtScript.pmod foreign_ident
 /server/pike_modules/HTML.pmod foreign_ident
 /server/pike_modules/RXML.pmod/PEnt.pike foreign_ident

@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.384 2004/05/31 23:02:03 _cvs_stephen Exp $
+// $Id: loader.pike,v 1.385 2004/06/01 01:14:36 _cvs_stephen Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.384 2004/05/31 23:02:03 _cvs_stephen Exp $";
+constant cvs_version="$Id: loader.pike,v 1.385 2004/06/01 01:14:36 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -805,6 +805,7 @@ void load_core()
 }
 
 
+// NGSERVER: remove these
 #ifndef OLD_PARSE_HTML
 
 static int|string|array(string) compat_call_tag (

@@ -20,7 +20,7 @@ class Imagesize(mapping m, RequestID id) {
       case "png":
 	catch {
 	  object fd = id->conf->open_file( m->path, "r", id )[0];
-	  array xy = Dims.dims()->get( fd );
+	  array xy = Image.Dims.get( fd );
 	  x = (int)xy[0];
 	  y = (int)xy[1];
 	};
