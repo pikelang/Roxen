@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.435 2004/04/27 15:32:16 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.436 2004/04/27 16:50:01 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -285,7 +285,9 @@ void send (string|object what, int|void len)
 #ifdef CONNECTION_DEBUG
     werror ("HTTP: Send =====================================================\n"
 	    "%s\n",
-	    replace (sprintf ("%O", what), "\\r\\n", "\n"));
+	    replace (sprintf ("%O", what),
+		     ({"\\r\\n", "\\n", "\\t"}),
+		     ({"\n",     "\n",  "\t"})));
 #else
     REQUEST_WERR(sprintf("HTTP: Pipe string %O", what));
 #endif
@@ -1266,7 +1268,7 @@ int wants_more()
 void do_log( int|void fsent )
 {
 #ifdef CONNECTION_DEBUG
-    werror ("HTTP: Send done ================================================\n");
+  werror ("HTTP: Send done ================================================\n");
 #endif
   MARK_FD("HTTP logging"); // fd can be closed here
   TIMER_START(do_log);
@@ -1817,9 +1819,10 @@ void send_result(mapping|void result)
 	  data += file->file->read(file->len);
 #ifdef CONNECTION_DEBUG
 	werror ("HTTP: Send =====================================================\n"
-		"%s\n"
-		"HTTP: Send done ================================================\n",
-		replace (sprintf ("%O", data), "\\r\\n", "\n"));
+		"%s\n",
+		replace (sprintf ("%O", data),
+			 ({"\\r\\n", "\\n", "\\t"}),
+			 ({"\n",     "\n",  "\t"})));
 #else
 	REQUEST_WERR (sprintf ("HTTP: Send blocking %O", data));
 #endif
@@ -1839,7 +1842,9 @@ void send_result(mapping|void result)
 #ifdef CONNECTION_DEBUG
 	werror ("HTTP: Send =====================================================\n"
 		"%s\n",
-		replace (sprintf ("%O", data), "\\r\\n", "\n"));
+		replace (sprintf ("%O", data),
+			 ({"\\r\\n", "\\n", "\\t"}),
+			 ({"\n",     "\n",  "\t"})));
 #else
 	REQUEST_WERR (sprintf ("HTTP: Send headers blocking %O", head_string));
 #endif
@@ -1974,9 +1979,11 @@ int processed;
 void got_data(mixed fooid, string s)
 {
 #ifdef CONNECTION_DEBUG
-  werror ("HTTP: Got ======================================================\n"
+  werror ("HTTP: Got ------------------------------------------------------\n"
 	  "%s\n",
-	  replace (sprintf ("%O", s), "\\r\\n", "\n"));
+	  replace (sprintf ("%O", s),
+		   ({"\\r\\n", "\\n", "\\t"}),
+		   ({"\n",     "\n",  "\t"})));
 #else
   REQUEST_WERR(sprintf("HTTP: Got %O", s));
 #endif
@@ -2048,7 +2055,7 @@ void got_data(mixed fooid, string s)
     }
 
 #ifdef CONNECTION_DEBUG
-    werror ("HTTP: Got request ==============================================\n");
+    werror ("HTTP: Got request ----------------------------------------------\n");
 #endif
 
     if( method == "GET" || method == "HEAD" ) {
