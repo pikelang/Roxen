@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.89 1997/08/05 03:32:25 mast Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.90 1997/08/06 16:39:03 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -908,7 +908,7 @@ string filename(object o)
 
 // ([ filename:stat_array ])
 mapping(string:array) module_stat_cache = ([]);
-object load(string s)   // Should perhaps be renamed to 'reload'. 
+object load(string s, object conf)   // Should perhaps be renamed to 'reload'. 
 {
   string cvs;
   array st;
@@ -924,7 +924,7 @@ object load(string s)   // Should perhaps be renamed to 'reload'.
 //      perror("Yes.");
       my_loaded[__p]=s+".pike";
       module_stat_cache[s-dirname(s)]=st;
-      return __p();
+      return __p(conf);
     } else
       perror(s+".pike exists, but compilation failed.\n");
   }
@@ -934,7 +934,7 @@ object load(string s)   // Should perhaps be renamed to 'reload'.
     {
       my_loaded[__p]=s+".lpc";
       module_stat_cache[s-dirname(s)]=st;
-      return __p();
+      return __p(conf);
     } else
       perror(s+".lpc exists, but compilation failed.\n");
   if(st=file_stat(s+".module"))
@@ -942,7 +942,7 @@ object load(string s)   // Should perhaps be renamed to 'reload'.
     {
       my_loaded[__p]=s+".so";
       module_stat_cache[s-dirname(s)]=st;
-      return __p();
+      return __p(conf);
     } else
       perror(s+".so exists, but compilation failed.\n");
   return 0; // FAILED..
@@ -965,7 +965,7 @@ array(string) expand_dir(string d)
 array(string) last_dirs=0,last_dirs_expand;
 
 
-object load_from_dirs(array dirs, string f)
+object load_from_dirs(array dirs, string f, object conf)
 {
   string dir;
   object o;
@@ -978,7 +978,7 @@ object load_from_dirs(array dirs, string f)
   }
 
   foreach (last_dirs_expand,dir)
-     if ( (o=load(dir+f)) ) return o;
+     if ( (o=load(dir+f, conf)) ) return o;
 
   return 0;
 }

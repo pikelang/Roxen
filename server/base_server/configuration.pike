@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.44 1997/08/06 15:00:39 marcus Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.45 1997/08/06 16:39:06 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2116,6 +2116,7 @@ int load_module(string module_file)
   object obj;
   program prog;
 
+  // It is not thread-safe to use this.
   roxen->current_configuration = this_object();
 #ifdef MODULE_DEBUG
   perror("Modules: Loading " + module_file + "... ");
@@ -2123,7 +2124,7 @@ int load_module(string module_file)
 
   if(prog=cache_lookup("modules", module_file)) {
     err = catch {
-      obj = prog();
+      obj = prog(thist_object());
     };
   } else {
     string dir;
@@ -2131,7 +2132,8 @@ int load_module(string module_file)
    _master->set_inhibit_compile_errors("");
 
     err = catch {
-      obj = roxen->load_from_dirs(roxen->QUERY(ModuleDirs), module_file);
+      obj = roxen->load_from_dirs(roxen->QUERY(ModuleDirs), module_file,
+				  this_object());
     };
 
     string errors = _master->errors;
