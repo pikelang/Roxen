@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.23 1997/05/01 02:15:03 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.24 1997/05/15 12:32:45 grubba Exp $";
 
 #include <module.h>
 
@@ -390,7 +390,11 @@ mixed find_file(string f, object id)
       pipe1->dup2(files.file("stdout"));
       if(QUERY(err))
 	pipe1->dup2(files.file("stderr"));
-      catch(((program)"privs")("CGI script", uid));
+      if (arrayp(uid)) {
+	uid = uid[0];
+      }
+      object privs;
+      catch(privs = ((program)"privs")("CGI script", uid));
       if(QUERY(use_wrapper))
 	exece(combine_path(oldwd, (QUERY(wrapper)||"bin/cgi")),
 	      ({f})+make_args(id->rest_query),
