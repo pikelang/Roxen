@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.165 1999/03/08 15:06:36 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.166 1999/03/30 23:41:13 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2662,7 +2662,7 @@ string tag_quote(string tagname, mapping m)
 
 string tag_ximage(string tagname, mapping m, object id)
 {
-  string img = id->conf->real_file(fix_relative(m->src||"", id));
+  string img = id->conf->real_file(fix_relative(m->src||"", id), id);
   if(img && search(img, ".gif")!=-1) {
     object fd = open(img, "r");
     if(fd) {
