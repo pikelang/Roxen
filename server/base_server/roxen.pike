@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.351 1999/11/17 23:24:00 per Exp $
+ * $Id: roxen.pike,v 1.352 1999/11/19 10:08:55 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.351 1999/11/17 23:24:00 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.352 1999/11/19 10:08:55 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1296,6 +1296,15 @@ int add_new_configuration(string name, string type)
 
 mapping(string:array(int)) error_log=([]);
 
+string possibly_encode( string what )
+{
+  if( String.width( what ) > 8 )
+    return Locale.Charset.encoder( "utf-8" )
+           ->feed( what )
+           ->drain();
+  return what;
+}
+
 // Write a string to the configuration interface error log and to stderr.
 void nwrite(string s, int|void perr, int|void type, 
             int|void mod, int|void conf)
@@ -1321,7 +1330,7 @@ void nwrite(string s, int|void perr, int|void type,
   }
 
   if(type >= 1) 
-    roxen_perror(s);
+    werror( s );
 }
 
 // When was Roxen started?
