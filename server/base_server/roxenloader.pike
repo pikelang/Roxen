@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.106 1999/11/04 18:50:16 grubba Exp $
+ * $Id: roxenloader.pike,v 1.107 1999/11/06 08:25:51 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.106 1999/11/04 18:50:16 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.107 1999/11/06 08:25:51 per Exp $";
 
 #define perror roxen_perror
 
@@ -194,26 +194,26 @@ int mkdirhier(string from, int|void mode)
 /*
  * PDB support
  */
-object db;
-mapping dbs = ([ ]);
+// object db;
+// mapping dbs = ([ ]);
 
-#if constant(thread_create)
-static private inherit Thread.Mutex:db_lock;
-#endif
+// #if constant(thread_create)
+// static private inherit Thread.Mutex:db_lock;
+// #endif
 
-object open_db(string id)
-{
-#if constant(thread_create)
-  object key = db_lock::lock();
-#endif
-#if constant(myPDB)
-  if(!db) db = myPDB.PDB()->db("pdb_dir", "wcCr"); //myPDB ignores 2nd arg.
-#else
-  if(!db) db = PDB->db("pdb_dir", "wcCr");
-#endif
-  if(dbs[id]) return dbs[id];
-  return dbs[id]=db[id];
-}
+// object open_db(string id)
+// {
+// #if constant(thread_create)
+//   object key = db_lock::lock();
+// #endif
+// #if constant(myPDB)
+//   if(!db) db = myPDB.PDB()->db("pdb_dir", "wcCr"); //myPDB ignores 2nd arg.
+// #else
+//   if(!db) db = PDB->db("pdb_dir", "wcCr");
+// #endif
+//   if(dbs[id]) return dbs[id];
+//   return dbs[id]=db[id];
+// }
 
 
 // Help function used by low_spawne()
@@ -943,7 +943,7 @@ int main(int argc, array argv)
 
   replace_master(new_master=(((program)"etc/roxen_master.pike")()));
 
-  add_constant("open_db", open_db);
+//   add_constant("open_db", open_db);
   add_constant("ErrorContainer", ErrorContainer);
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
