@@ -9,16 +9,16 @@
  *
  */
 
-constant cvs_version="$Id: throttler.pike,v 1.3 1999/11/29 22:11:31 per Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.4 1999/12/28 01:36:14 nilsson Exp $";
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000
 
 #ifdef THROTTLING_DEBUG
-#undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) perror("throttler: "+X+"\n")
+# undef THROTTLING_DEBUG
+# define THROTTLING_DEBUG(X) werror("throttler: "+X+"\n")
 #else
-#define THROTTLING_DEBUG(X)
+# define THROTTLING_DEBUG(X)
 #endif
 
 private int bucket=0;
@@ -36,7 +36,7 @@ ADT.Queue requests_queue; //lazily instantiated.
 //start throttling, given rate, depth, initial fillup, and min grant
 //if not supplied, mingrant is set to DEFAULT_MINGRANT by default
 //same for maxgrant
-void throttle (int r, int d, int|void initial, 
+void throttle (int r, int d, int|void initial,
                int|void mingrant, int|void maxgrant) {
   THROTTLING_DEBUG("throttle(rate="+r+", depth="+d+
                    ",\n\tinitial="+initial+", mingrant="+mingrant+
@@ -104,20 +104,20 @@ void request (int howmuch, function(int,mixed ...:void) callback,
     callback(howmuch,@cb_args);
     return;
   }
-  
+
   if (howmuch > max_grant) {
     THROTTLING_DEBUG("request too big, limiting");
     howmuch=max_grant;
   }
-  
+
   fill_bucket(); //maybe we can squeeze some more bandwidth.
-  
+
   if (bucket <= min_grant ) { //bad luck. Nothing to allow. Enqueue
     THROTTLING_DEBUG("no tokens, enqueueing");
     requests_queue->put( ({howmuch,callback,cb_args}) );
     return;
   }
-  
+
   THROTTLING_DEBUG("granting");
   grant (howmuch, callback, cb_args);
 }

@@ -1,9 +1,9 @@
 /*
- * A vitual server's main configuration 
+ * A vitual server's main configuration
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.246 1999/12/28 00:00:17 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.247 1999/12/28 01:23:44 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -23,9 +23,15 @@ mapping profile_map = ([]);
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) perror("Throttling: "+X+"\n")
+#define THROTTLING_DEBUG(X) werror("Throttling: "+X+"\n")
 #else
 #define THROTTLING_DEBUG(X)
+#endif
+
+#ifdef REQUEST_DEBUG
+# define REQUEST_WERR(X) werror("CONFIG: "+X+"\n")
+#else
+# define REQUEST_WERR(X)
 #endif
 
 /* A configuration.. */
@@ -44,7 +50,7 @@ function    auth_fun;
 
 string name;
 
-mapping variables = ([]); 
+mapping variables = ([]);
 
 
 string get_doc_for( string region, string variable )
@@ -106,7 +112,7 @@ int defvar(string var, mixed value, string name, int type,
   variables[var][ VAR_DOC_STR ]      = doc_str;
   variables[var][ VAR_NAME ]         = name;
   variables[var][ VAR_MISC ]         = misc;
-  
+
   Locale.Roxen.standard
     ->register_module_doc( this_object(), var, name, doc_str );
 
@@ -116,14 +122,14 @@ int defvar(string var, mixed value, string name, int type,
       variables[var][ VAR_CONFIGURABLE ] = ConfigurableWrapper(type, not_in_config)->check;
     else
       variables[var][ VAR_CONFIGURABLE ] = not_in_config;
-  else if (type) 
+  else if (type)
     variables[var][ VAR_CONFIGURABLE ] = type;
   else if(intp(not_in_config))
     variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
   variables[var][ VAR_SHORTNAME ] = var;
 }
 
-void deflocaledoc( string locale, string variable, 
+void deflocaledoc( string locale, string variable,
 		   string name, string doc, mapping|void translate )
 {
   if( !Locale.Roxen[locale] )
@@ -145,7 +151,7 @@ string query_internal_location(RoxenModule|void mod)
 
 string query_name()
 {
-  if(strlen(QUERY(name))) 
+  if(strlen(QUERY(name)))
     return QUERY(name);
   return name;
 }
@@ -155,7 +161,7 @@ string comment()
   return QUERY(comment);
 }
 
-class Priority 
+class Priority
 {
   string _sprintf()
   {
@@ -173,19 +179,19 @@ class Priority
 
   void stop()
   {
-    foreach(url_modules, RoxenModule m)      	 
+    foreach(url_modules, RoxenModule m)      	
       CATCH("stopping url modules",m->stop && m->stop());
-    foreach(logger_modules, RoxenModule m)   	 
+    foreach(logger_modules, RoxenModule m)   	
       CATCH("stopping logging modules",m->stop && m->stop());
-    foreach(filter_modules, RoxenModule m)  		 
+    foreach(filter_modules, RoxenModule m)  		
       CATCH("stopping filter modules",m->stop && m->stop());
-    foreach(location_modules, RoxenModule m)		 
+    foreach(location_modules, RoxenModule m)		
       CATCH("stopping location modules",m->stop && m->stop());
-    foreach(last_modules, RoxenModule m)    		 
+    foreach(last_modules, RoxenModule m)    		
       CATCH("stopping last modules",m->stop && m->stop());
-    foreach(first_modules, RoxenModule m)    	 
+    foreach(first_modules, RoxenModule m)    	
       CATCH("stopping first modules",m->stop && m->stop());
-    foreach(indices(provider_modules), RoxenModule m) 
+    foreach(indices(provider_modules), RoxenModule m)
       CATCH("stopping provider modules",m->stop && m->stop());
   }
 }
@@ -253,7 +259,7 @@ void stop()
         auth_module && auth_module->stop && auth_module->stop());
   CATCH("stopping directory module",
         dir_module && dir_module->stop && dir_module->stop());
-  for(int i=0; i<10; i++) 
+  for(int i=0; i<10; i++)
     CATCH("stopping priority group",
           (pri[i],pri[i]->stop,pri[i]->stop()));
 }
@@ -294,13 +300,13 @@ array (RoxenModule) get_providers(string provides)
   // /grubba 1998-05-28
   // - Yes, it is zapped together with the rest in invalidate_cache().
   if(!provider_module_cache[provides])
-  { 
+  {
     int i;
     provider_module_cache[provides]  = ({ });
     for(i = 9; i >= 0; i--)
     {
-      foreach(indices(pri[i]->provider_modules), RoxenModule d) 
-	if(pri[i]->provider_modules[ d ][ provides ]) 
+      foreach(indices(pri[i]->provider_modules), RoxenModule d)
+	if(pri[i]->provider_modules[ d ][ provides ])
 	  provider_module_cache[provides] += ({ d });
     }
   }
@@ -323,15 +329,15 @@ array(mixed) map_providers(string provides, string fun, mixed ... args)
   array error;
   array a=({ });
   mixed m;
-  foreach(prov, RoxenModule mod) 
+  foreach(prov, RoxenModule mod)
   {
     if(!objectp(mod))
       continue;
-    if(functionp(mod[fun])) 
+    if(functionp(mod[fun]))
       error = catch(m=mod[fun](@args));
     if(arrayp(error)) {
       error[0] = "Error in map_providers(): "+error[0];
-      roxen_perror(describe_backtrace(error));
+      report_debug(describe_backtrace(error));
     }
     else
       a += ({ m });
@@ -344,7 +350,7 @@ array(mixed) map_providers(string provides, string fun, mixed ... args)
 // return the first positive response.
 mixed call_provider(string provides, string fun, mixed ... args)
 {
-  foreach(get_providers(provides), RoxenModule mod) 
+  foreach(get_providers(provides), RoxenModule mod)
   {
     function f;
     if(objectp(mod) && functionp(f = mod[fun])) {
@@ -365,7 +371,7 @@ mixed call_provider(string provides, string fun, mixed ... args)
 array (function) file_extension_modules(string ext, RequestID id)
 {
   if(!file_extension_module_cache[ext])
-  { 
+  {
     int i;
     file_extension_module_cache[ext]  = ({ });
     for(i=9; i>=0; i--)
@@ -487,7 +493,7 @@ array location_modules(RequestID id)
     array new_location_module_cache=({ });
     for(i=9; i>=0; i--)
     {
-      array(RoxenModule) d; 
+      array(RoxenModule) d;
       RoxenModule p;
       if(d=pri[i]->location_modules) {
 	array level_find_files = ({});
@@ -522,7 +528,7 @@ array filter_modules(RequestID id)
     filter_module_cache=({ });
     for(i=9; i>=0; i--)
     {
-      array(RoxenModule) d; 
+      array(RoxenModule) d;
       RoxenModule p;
       if(d=pri[i]->filter_modules)
 	foreach(d, p)
@@ -539,9 +545,9 @@ void init_log_file()
   remove_call_out(init_log_file);
 
   if(log_function)
-    destruct(function_object(log_function)); 
+    destruct(function_object(log_function));
     // Free the old one.
-  
+
   if(query("Log")) // Only try to open the log file if logging is enabled!!
   {
     mapping m = localtime(time());
@@ -648,7 +654,7 @@ nomask private inline string extract_user(string from)
   array tmp;
   if (!from || sizeof(tmp = from/":")<2)
     return "-";
-  
+
   return tmp[0];      // username only, no password
 }
 
@@ -667,20 +673,20 @@ public void log(mapping file, RequestID request_id)
 
   if(QUERY(NoLog) && _match(request_id->remoteaddr, QUERY(NoLog)))
     return;
-  
+
   if(!(form=log_format[(string)file->error]))
     form = log_format["*"];
-  
+
   if(!form) return;
-  
-  form=replace(form, 
-	       ({ 
+
+  form=replace(form,
+	       ({
 		 "$ip_number", "$bin-ip_number", "$cern_date",
 		 "$bin-date", "$method", "$resource", "$full_resource", "$protocol",
 		 "$response", "$bin-response", "$length", "$bin-length",
 		 "$referer", "$user_agent", "$user", "$user_id",
 		 "$request-time"
-	       }), 
+	       }),
                ({
 		 (string)request_id->remoteaddr,
 		 host_ip_to_int(request_id->remoteaddr),
@@ -701,7 +707,7 @@ public void log(mapping file, RequestID request_id)
 		 request_id->cookies->RoxenUserID||"0",
 		 (string)(time(1)-request_id->time)
 	       }));
-  
+
   if(search(form, "host") != -1)
     roxen->ip_to_host(request_id->remoteaddr, write_to_log, form,
 		      request_id->remoteaddr, log_function);
@@ -718,11 +724,11 @@ public string status()
   float dt = (float)(time(1) - roxen->start_time + 1);
 
   res = "<table>";
-  res += LOCALE->config_status(((float)sent/(1024.0*1024.0)), 
+  res += LOCALE->config_status(((float)sent/(1024.0*1024.0)),
                                (((float)sent)/(1024.0*1024.0)/dt) * 8192.0,
-			       ((float)hsent)/(1024.0*1024.0), 
+			       ((float)hsent)/(1024.0*1024.0),
                                 requests,
-                                (((float)requests * 60.0)/dt), 
+                                (((float)requests * 60.0)/dt),
                                 ((float)received)/(1024.0*1024.0));
 
   if (!zero_type(misc->ftp_users)) {
@@ -742,7 +748,7 @@ public string status()
     }
     res += "</table></ul>\n";
   }
-  
+
   return res;
 }
 
@@ -779,7 +785,7 @@ public string last_modified_by(Stdio.File file, RequestID id)
   int *s;
   int uid;
   mixed *u;
-  
+
   if(objectp(file)) s=file->stat();
   if(!s || sizeof(s)<5) return "A. Nonymous";
   uid=s[5];
@@ -811,7 +817,7 @@ private mapping internal_gopher_image(string from)
 }
 
 private static int nest = 0;
-  
+
 #ifdef MODULE_LEVEL_SECURITY
 private mapping misc_cache=([]);
 
@@ -840,7 +846,7 @@ int|mapping check_security(function a, RequestID id, void|int slevel)
 
   if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
     return 1;
-  
+
   if(!sizeof(seclevels[0]))
     return 0; // Ok if there are no patterns.
 
@@ -874,7 +880,7 @@ int|mapping check_security(function a, RequestID id, void|int slevel)
       case MOD_PROXY_USER: // allow user=...
 	if (ip_ok != 1) {
 	  // IP is OK as of yet.
-	  if(id->misc->proxyauth && id->misc->proxyauth[0] && 
+	  if(id->misc->proxyauth && id->misc->proxyauth[0] &&
 	     level[1](id->misc->proxyauth[1])) return 0;
 	  return http_proxy_auth_required(seclevels[2]);
 	} else {
@@ -953,9 +959,9 @@ void invalidate_cache()
 void clear_memory_caches()
 {
   invalidate_cache();
-  foreach(indices(otomod), RoxenModule m) 
-    if (m && m->clear_memory_caches) 
-      if (mixed err = catch( m->clear_memory_caches() )) 
+  foreach(indices(otomod), RoxenModule m)
+    if (m && m->clear_memory_caches)
+      if (mixed err = catch( m->clear_memory_caches() ))
 	report_error(LOCALE->
 		     clear_memory_cache_error(otomod[m],
 					      describe_backtrace(err)));
@@ -1031,7 +1037,7 @@ mixed _lock(object|function f)
     {
       // Allow recursive locks.
       catch{
-	//perror("lock %O\n", f);
+	//werror("lock %O\n", f);
 	locked[f]++;
 	key = l();
       };
@@ -1049,7 +1055,7 @@ mixed _lock(object|function f)
 	locks[f]=l;
       }
     }
-    //perror("lock %O\n", f);
+    //werror("lock %O\n", f);
     locked[f]++;
     key = l();
   }
@@ -1077,7 +1083,7 @@ string examine_return_mapping(mapping m)
    switch (m->error||200)
    {
       case 302: // redirect
-	 if (m->extra_heads && 
+	 if (m->extra_heads &&
 	     (m->extra_heads->location))
 	   res = LOCALE->returned_redirect_to(m->extra_heads->location);
 	 else
@@ -1095,7 +1101,7 @@ string examine_return_mapping(mapping m)
       case 200:
 	 res = LOCALE->returned_ok();
 	 break;
-	 
+	
       default:
 	 res = LOCALE->returned_error(m->error);
    }
@@ -1151,7 +1157,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
   {
 #ifndef NO_INTERNAL_HACK
     string type;
-    // No, this is not beautiful... :) 
+    // No, this is not beautiful... :)
     // min length == 17 (/internal-roxen-?..)
     // This will save some time indeed.
     if(sizeof(file) > 17 && (file[0] == '/') &&
@@ -1168,14 +1174,14 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
       }
     }
 #endif
-  
+
     if(id->prestate->diract && dir_module)
     {
       LOCK(dir_module);
       TRACE_ENTER(LOCALE->directory_module(), dir_module);
       tmp = dir_module->parse_directory(id);
       UNLOCK();
-      if(mappingp(tmp)) 
+      if(mappingp(tmp))
       {
 	TRACE_LEAVE("");
 	TRACE_LEAVE(LOCALE->returning_data());
@@ -1184,7 +1190,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
       TRACE_LEAVE("");
     }
 
-    if(!search(file, QUERY(InternalLoc))) 
+    if(!search(file, QUERY(InternalLoc)))
     {
       TRACE_ENTER(LOCALE->magic_internal_module_location(), 0);
       RoxenModule module;
@@ -1255,7 +1261,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
   }
 
   // Well, this just _might_ be somewhat over-optimized, since it is
-  // quite unreadable, but, you cannot win them all.. 
+  // quite unreadable, but, you cannot win them all..
   if(!fid)
   {
 #ifdef URL_MODULES
@@ -1266,8 +1272,8 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
       TRACE_ENTER(LOCALE->url_module(), funp);
       tmp=funp( id, file );
       UNLOCK();
-    
-      if(mappingp(tmp)) 
+
+      if(mappingp(tmp))
       {
 	TRACE_LEAVE("");
 	TRACE_LEAVE(LOCALE->returning_data());
@@ -1324,7 +1330,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 	if(fid)
 	{
 	  id->virtfile = loc;
-	  
+	
 	  if(mappingp(fid))
 	  {
 	    TRACE_LEAVE("");
@@ -1346,7 +1352,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 			  +(slevel != oslevel?
 			    LOCALE->seclevel_is_now(slevel):"")
 #endif
-			  
+			
 			  +".");
 	    else
 	      TRACE_LEAVE(LOCALE->returned_directory_indicator()
@@ -1360,11 +1366,11 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 	} else
 	  TRACE_LEAVE("");
       } else if(strlen(loc)-1==strlen(file) && file+"/" == loc) {
-	// This one is here to allow accesses to /local, even if 
+	// This one is here to allow accesses to /local, even if
 	// the mountpoint is /local/. It will slow things down, but...
 	TRACE_ENTER(LOCALE->automatic_redirect_to_location(), tmp[1]);
 	TRACE_LEAVE(LOCALE->returning_data());
-	  
+	
 	// Keep query (if any).
 	/* FIXME: Should probably keep prestate etc.
 	 *	/grubba 1999-01-14
@@ -1376,7 +1382,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
       }
     }
   }
-  
+
   if(fid == -1)
   {
     if(no_magic)
@@ -1396,13 +1402,13 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
       TRACE_LEAVE(LOCALE->no_directory_module());
       return 0;
     }
-    if(mappingp(fid)) 
+    if(mappingp(fid))
     {
       TRACE_LEAVE(LOCALE->returning_data());
       return (mapping)fid;
     }
   }
-  
+
   // Map the file extensions, but only if there is a file...
   if(objectp(fid) &&
      (tmp = file_extension_modules(loc = extension(id->not_query, id), id))) {
@@ -1457,7 +1463,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
     {
       TRACE_LEAVE("");
       return ([ "file":fid, "type":tmp[0], "encoding":tmp[1] ]);
-    }    
+    }
     TRACE_LEAVE("");
     return ([ "file":fid, ]);
   }
@@ -1476,17 +1482,13 @@ mixed handle_request( RequestID id  )
   function funp;
   mixed file;
 
-#ifdef REQUEST_DEBUG
-  werror("CONFIG: handle_request()\n");
-#endif /* REQUEST_DEBUG */
+  REQUEST_WERR("handle_request()");
   foreach(first_modules(id), funp)
   {
-    if(file = funp( id )) 
+    if(file = funp( id ))
       break;
     if(id->conf != this_object()) {
-#ifdef REQUEST_DEBUG
-      werror("CONFIG: handle_request(): Redirected (2)\n");
-#endif /* REQUEST_DEBUG */
+      REQUEST_WERR("handle_request(): Redirected (2)");
       return id->conf->handle_request(id);
     }
   }
@@ -1495,16 +1497,12 @@ mixed handle_request( RequestID id  )
     mixed ret;
     foreach(last_modules(id), funp) if(ret = funp(id)) break;
     if (ret == 1) {
-#ifdef REQUEST_DEBUG
-      werror("CONFIG: handle_request(): Recurse\n");
-#endif /* REQUEST_DEBUG */
+      REQUEST_WERR("handle_request(): Recurse");
       return handle_request(id);
     }
     file = ret;
   }
-#ifdef REQUEST_DEBUG
-  werror("CONFIG: handle_request(): Done\n");
-#endif /* REQUEST_DEBUG */
+  REQUEST_WERR("handle_request(): Done");
   return file;
 }
 
@@ -1538,7 +1536,7 @@ public array find_dir(string file, RequestID id)
   array | mapping d;
   TRACE_ENTER(LOCALE->list_directory(file), 0);
 //   file=replace(file, "//", "/");
-  
+
   if(file[0] != '/')
     file = "/" + file;
 
@@ -1567,7 +1565,7 @@ public array find_dir(string file, RequestID id)
     {
       array err;
       nest ++;
-      
+
       TRACE_LEAVE(LOCALE->recursing());
       file = id->not_query;
       err = catch {
@@ -1603,7 +1601,7 @@ public array find_dir(string file, RequestID id)
       {
 	if(mappingp(d))
 	{
-	  if(d->files) { 
+	  if(d->files) {
 	    dir |= d->files;
 	    TRACE_LEAVE(LOCALE->got_exclusive_dir());
 	    TRACE_LEAVE(LOCALE->returning_file_list(sizeof(dir)));
@@ -1633,11 +1631,11 @@ public array find_dir(string file, RequestID id)
   {
     TRACE_LEAVE(LOCALE->returning_file_list(sizeof(dir)));
     return dir;
-  } 
+  }
   TRACE_LEAVE(LOCALE->returning_no_dir());
 }
 
-// Stat a virtual file. 
+// Stat a virtual file.
 
 public array(int) stat_file(string file, RequestID id)
 {
@@ -1647,7 +1645,7 @@ public array(int) stat_file(string file, RequestID id)
   object key;
 #endif
   TRACE_ENTER(LOCALE->stat_file(file), 0);
-  
+
   file=replace(file, "//", "/"); // "//" is really "/" here...
 
 #ifdef URL_MODULES
@@ -1693,7 +1691,7 @@ public array(int) stat_file(string file, RequestID id)
     id->not_query = of;
   }
 #endif
-    
+
   // Map location-modules.
   foreach(location_modules(id), tmp)
   {
@@ -1705,7 +1703,7 @@ public array(int) stat_file(string file, RequestID id)
       TRACE_LEAVE("");
       return ({ 0775, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
     }
-    if(!search(file, loc)) 
+    if(!search(file, loc))
     {
       TRACE_ENTER(LOCALE->location_module(loc), tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
@@ -1778,9 +1776,9 @@ public array open_file(string fname, string mode, RequestID id)
   id->not_query = fname;
 
   foreach(oc->first_modules(), funp)
-    if(file = funp( id )) 
+    if(file = funp( id ))
       break;
-    else if(id->conf != oc) 
+    else if(id->conf != oc)
     {
       return open_file(fname, mode,id);
     }
@@ -1821,19 +1819,19 @@ public array open_file(string fname, string mode, RequestID id)
 	file = http_low_answer(501, "Not implemented.");
       else
 	file=http_low_answer(404,replace(parse_rxml(query("ZNoSuchFile"),id),
-					 ({"$File", "$Me"}), 
+					 ({"$File", "$Me"}),
 					 ({fname,query("MyWorldLocation")})));
 
       id->not_query = oq;
-  
+
       return ({ 0, file });
     }
 
-    if( file->data ) 
+    if( file->data )
     {
       file->file = StringFile(file->data);
       m_delete(file, "data");
-    } 
+    }
     id->not_query = oq;
     return ({ file->file, file });
   }
@@ -1850,7 +1848,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
 
 
   file=replace(file, "//", "/");
-  
+
   if(file[0] != '/')
     file = "/" + file;
 
@@ -1876,8 +1874,8 @@ public mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
     {
       id->not_query=of;
 #ifdef MODULE_DEBUG
-      roxen_perror(sprintf("conf->find_dir_stat(\"%s\"): url_module returned mapping:%O\n", 
-			   file, tmp));
+      werror("conf->find_dir_stat(\"%s\"): url_module returned mapping:%O\n",
+	     file, tmp);
 #endif /* MODULE_DEBUG */
       TRACE_LEAVE(LOCALE->returned_mapping()+sprintf("%O", tmp));
       TRACE_LEAVE("");
@@ -1887,7 +1885,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
     {
       array err;
       nest ++;
-      
+
       file = id->not_query;
       err = catch {
 	if( nest < 20 )
@@ -1902,8 +1900,8 @@ public mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
       if(err)
 	throw(err);
 #ifdef MODULE_DEBUG
-      roxen_perror(sprintf("conf->find_dir_stat(\"%s\"): url_module returned object:\n", 
-			   file));
+      werror("conf->find_dir_stat(\"%s\"): url_module returned object:\n",
+	     file);
 #endif /* MODULE_DEBUG */
       TRACE_LEAVE(LOCALE->returned_object());
       TRACE_LEAVE(LOCALE->returning_it());
@@ -1938,7 +1936,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
 	TRACE_LEAVE("");
       } else if(d = c->find_dir(f, id)) {
 	TRACE_ENTER(LOCALE->returned_array(), 0);
-	dir = mkmapping(d, Array.map(d, lambda(string fn) 
+	dir = mkmapping(d, Array.map(d, lambda(string fn)
                                         {
                                           return c->stat_file(f + fn, id);
                                         })) | dir;
@@ -1971,9 +1969,9 @@ public array access(string file, RequestID id)
 {
   string loc;
   array s, tmp;
-  
+
   file=replace(file, "//", "/"); // "//" is really "/" here...
-    
+
   // Map location-modules.
   foreach(location_modules(id), tmp)
   {
@@ -2003,14 +2001,14 @@ public string real_file(string file, RequestID id)
   string s;
   array tmp;
   file=replace(file, "//", "/"); // "//" is really "/" here...
-    
+
   if(!id) error("No id passed to real_file");
 
   // Map location-modules.
   foreach(location_modules(id), tmp)
   {
     loc = tmp[0];
-    if(!search(file, loc)) 
+    if(!search(file, loc))
     {
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
@@ -2026,14 +2024,14 @@ public string real_file(string file, RequestID id)
 
 // NOTE: A 'file' can be a cgi script, which will be executed, resulting in
 // a horrible delay.
-int|string try_get_file(string s, RequestID id, 
+int|string try_get_file(string s, RequestID id,
                         int|void status, int|void nocache)
 {
   string res, q;
   RequestID fake_id;
   mapping m;
 
-  if(!objectp(id)) 
+  if(!objectp(id))
     error("No ID passed to 'try_get_file'\n");
 
   // id->misc->common makes it possible to pass information to
@@ -2042,9 +2040,9 @@ int|string try_get_file(string s, RequestID id,
     id->misc = ([]);
   if ( !id->misc->common )
     id->misc->common = ([]);
-  
+
   fake_id = id->clone_me();
-  
+
   fake_id->misc->common = id->misc->common;
 
   if(!id->pragma["no-cache"] && !nocache && (!id->auth || !id->auth[0]))
@@ -2069,29 +2067,29 @@ int|string try_get_file(string s, RequestID id,
     return 0;
 
   if (!(< 0, 200, 201, 202, 203 >)[m->error]) return 0;
-  
+
   if(status) return 1;
 
-  if(m->data) 
+  if(m->data)
     res = m->data;
-  else 
+  else
     res="";
   m->data = 0;
-  
+
   if(m->file)
   {
     res += m->file->read();
     destruct(m->file);
     m->file = 0;
   }
-  
+
   if(m->raw)
   {
     res -= "\r";
     if(!sscanf(res, "%*s\n\n%s", res))
       sscanf(res, "%*s\n%s", res);
   }
-  if (!id->auth || !id->auth[0]) 
+  if (!id->auth || !id->auth[0])
     cache_set("file:"+id->conf->name, s, res);
   return res;
 }
@@ -2132,7 +2130,7 @@ void save(int|void all)
     store("spider#0", variables, 0, this_object());
     start(2);
   }
-  
+
   foreach(indices(modules), string modname)
   {
     foreach(indices(modules[modname]->copies), int i)
@@ -2148,7 +2146,7 @@ void save(int|void all)
 int save_one( RoxenModule o )
 {
   mapping mod;
-  if(!o) 
+  if(!o)
   {
     store("spider#0", variables, 0, this_object());
     start(2);
@@ -2157,7 +2155,7 @@ int save_one( RoxenModule o )
   string q = otomod[ o ];
   if( !q )
     error("Invalid module");
-  
+
   store(q, o->query(), 0, this_object());
   invalidate_cache();
   o->start(2, this_object());
@@ -2280,7 +2278,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 	me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
 		   "The priority of the module. 9 is highest and 0 is lowest."
 		   " Modules with the same priority can be assumed to be "
-		   "called in random order", 
+		   "called in random order",
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
 	me->deflocaledoc("svenska", "_priority", "Prioritet",
 			 "Modulens prioritet, 9 är högst och 0 är"
@@ -2290,7 +2288,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 	throw(err);
       }
     }
-      
+
     if(module_type != MODULE_LOGGER && module_type != MODULE_PROVIDER)
     {
       if(!(module_type & MODULE_PROXY))
@@ -2307,7 +2305,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 			 " lösenordsdialogen.");
 
 
-	me->defvar("_seclvl",  0, "Security: Security level", TYPE_INT, 
+	me->defvar("_seclvl",  0, "Security: Security level", TYPE_INT,
 		   "The modules security level is used to determine if a "
 		   " request should be handled by the module."
 		   "\n<p><h2>Security level vs Trust level</h2>"
@@ -2399,7 +2397,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 		   "entries are present) is 'allow ip=*', allowing"
 		   " everyone to access the module");
 
-	me->deflocaledoc("svenska", "_seclevels", 
+	me->deflocaledoc("svenska", "_seclevels",
 			 "Säkerhet: Behörighetsregler",
 			 "Det här är en lista av behörighetsregler.<p>"
 			 "Varje behörighetsregler måste följa någon av de "
@@ -2421,7 +2419,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 			 " kunna få använda modulen.");
       } else {
 	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
-	  
+	
 	me->defvar("_sec_group", "user", "Proxy Security: Realm", TYPE_STRING,
 		   "The realm to use when requesting password from the "
 		   "client. Usually used as an informative message to the "
@@ -2450,7 +2448,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 		   " (from .htaccess"
 		   " or an auth module. The default is 'deny ip=*'");
 
-	me->deflocaledoc("svenska", "_seclevels", 
+	me->deflocaledoc("svenska", "_seclevels",
 			 "Säkerhet: Behörighetsregler",
 			 "Det här är en lista av behörighetsregler.<p>"
 			 "Varje behörighetsregler måste följa någon av de "
@@ -2483,7 +2481,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 	     "is only a text field for comments that the administrator "
 	     "might have (why the module are here, etc.)");
 
-  me->deflocaledoc("svenska", "_comment", 
+  me->deflocaledoc("svenska", "_comment",
 		   "Kommentar",
 		   "En kommentar. Den här kommentaren påverkar inte "
 		   " funktionaliteten hos modulen på något sätt, den "
@@ -2505,7 +2503,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 
   module[ id ] = me;
   otomod[ me ] = modname+"#"+id;
-      
+
   mixed err;
   if((me->start) && (err = catch( me->start(0, this_object()) ) ) )
   {
@@ -2523,8 +2521,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
     destruct(me);
     return 0;
   }
-    
-  if (err = catch(pr = me->query("_priority"))) 
+
+  if (err = catch(pr = me->query("_priority")))
   {
 #ifdef MODULE_DEBUG
     report_debug("\b ERROR\n");
@@ -2537,7 +2535,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 
   api_module_cache |= me->api_functions();
 
-  if(module_type & MODULE_EXTENSION) 
+  if(module_type & MODULE_EXTENSION)
   {
     report_error( moduleinfo->get_name()+
                   " is an MODULE_EXTENSION, that type is no "
@@ -2549,11 +2547,11 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
   if(module_type & MODULE_FILE_EXTENSION)
     if (err = catch {
       array arr = me->query_file_extensions();
-      if (arrayp(arr)) 
+      if (arrayp(arr))
       {
 	string foo;
 	foreach( me->query_file_extensions(), foo )
-	  if(pri[pr]->file_extension_modules[foo] ) 
+	  if(pri[pr]->file_extension_modules[foo] )
 	    pri[pr]->file_extension_modules[foo]+=({me});
 	  else
 	    pri[pr]->file_extension_modules[foo]=({me});
@@ -2567,8 +2565,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 						  describe_backtrace(err)));
     }
 
-  if(module_type & MODULE_PROVIDER) 
-    if (err = catch 
+  if(module_type & MODULE_PROVIDER)
+    if (err = catch
     {
       mixed provs = me->query_provides();
       if(stringp(provs))
@@ -2586,13 +2584,13 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 		   error_initializing_module_copy(moduleinfo->get_name(),
                                                   describe_backtrace(err)));
     }
-      
+
   if(module_type & MODULE_TYPES)
   {
     types_module = me;
     types_fun = me->type_from_extension;
   }
-  
+
   if(module_type & MODULE_PARSER)
     add_parse_module( me );
 
@@ -2621,7 +2619,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
   if(module_type & MODULE_FILTER)
     pri[pr]->filter_modules += ({ me });
 
-  if(module_type & MODULE_FIRST) 
+  if(module_type & MODULE_FIRST)
     pri[pr]->first_modules += ({ me });
 
   if(!enabled_modules[ modname+"#"+id ])
@@ -2683,7 +2681,7 @@ int disable_module( string modname )
   ModuleInfo moduleinfo =  roxen->find_module( modname );
   mapping module = modules[ modname ];
 
-  if(!module) 
+  if(!module)
   {
     report_error(LOCALE->disable_nonexistant_module(modname));
     return 0;
@@ -2691,7 +2689,7 @@ int disable_module( string modname )
 
   me = module[id];
   m_delete(module->copies, id);
-  
+
   if(!sizeof(module->copies))
     m_delete( modules, modname );
 
@@ -2728,7 +2726,7 @@ int disable_module( string modname )
     for(pr=0; pr<10; pr++)
       m_delete(pri[pr]->provider_modules, me);
   }
-  
+
   if(moduleinfo->type & MODULE_TYPES)
   {
     types_module = 0;
@@ -2801,7 +2799,7 @@ int add_modules( array(string) mods, int|void now )
   foreach (mods, string mod)
   {
     sscanf( mod, "%s#", mod );
-    if( ((now && !modules[ mod ]) || 
+    if( ((now && !modules[ mod ]) ||
          !enabled_modules[ mod+"#0" ] )
         && !forcibly_added[ mod+"#0" ])
     {
@@ -2892,13 +2890,13 @@ void enable_all_modules()
   {
     if( !forcibly_added[ tmp_string ] )
       if(err = catch( enable_module( tmp_string )))
-        report_error(LOCALE->enable_module_failed(tmp_string, 
+        report_error(LOCALE->enable_module_failed(tmp_string,
                                                   describe_backtrace(err)));
   }
   roxenloader.pop_compile_error_handler();
   if( strlen( ec->get() ) )
     report_error( "While enabling modules in "+name+":\n"+ec->get() );
-  report_notice("All modules for %s enabled in %3.1f seconds\n\n", 
+  report_notice("All modules for %s enabled in %3.1f seconds\n\n",
                 query_name(),(gethrtime()-start_time)/1000000.0);
 }
 
@@ -2925,7 +2923,7 @@ void create(string config)
 	 "<p>\n</font>\n"
 	 "<hr noshade>"
 	 "<version>, at <a href=\"$Me\">$Me</a>.\n"
-	 "</body>\n", 
+	 "</body>\n",
 
 	 "Messages: No such file", TYPE_TEXT_FIELD,
 	 "What to return when there is no resource or file available "
@@ -2936,7 +2934,7 @@ void create(string config)
 #"Det här meddelandet returneras om en användare frågar efter en
   resurs som inte finns. '$File' byts ut mot den efterfrågade
   resursen, och '$Me' med serverns URL");
-  
+
   defvar("comment", "", "Virtual server comment",
 	 TYPE_TEXT_FIELD|VAR_MORE,
 	 "This text will be visible in the configuration interface, it "
@@ -2956,16 +2954,16 @@ void create(string config)
   konfigurationsgränssnittet. Om du lämnar det här fältet tomt kommer
   serverns ursprungliga namn (det du skrev in när du skapade servern)
   att användas.");
-  
-  defvar("LogFormat", 
+
+  defvar("LogFormat",
  "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
  "500: $host $referer ERROR [$cern_date] \"$method $resource $protocol\" 500 -\n"
  "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length"
 	 ,
 
-	 "Logging: Format", 
+	 "Logging: Format",
 	 TYPE_TEXT_FIELD|VAR_MORE,
-	 
+	
 	 "What format to use for logging. The syntax is:\n"
 	 "<pre>"
 	 "response-code or *: Log format for that response acode\n\n"
@@ -3002,26 +3000,26 @@ void create(string config)
   deflocaledoc("svenska", "LogFormat", "Loggning: Loggningsformat",
 #"Vilket format som ska användas för att logga
 <pre>
-svarskod eller *: Loggformat för svarskoden (eller alla koder som inte 
+svarskod eller *: Loggformat för svarskoden (eller alla koder som inte
                   har något annat format specifierat om du använder '*')
 
 loggformatet är normala tecken, och en eller flera av koderna nedan.
 
 \\n \\t \\r    -- Precis som i C, ny rad, tab och carriage return
 $char(int)     -- Stoppa in det tecken vars teckenkod är det angivna nummret.
-$wchar(int)    -- Stoppa in det tvåocktetstecken vars teckenkod är det 
+$wchar(int)    -- Stoppa in det tvåocktetstecken vars teckenkod är det
                   angivna nummret.
-$int(int)      -- Stoppa in det fyraocktetstecken vars teckenkod är det 
+$int(int)      -- Stoppa in det fyraocktetstecken vars teckenkod är det
                   angivna nummret.
 $^             -- Stoppa <b>inte</b> in en vagnretur på slutet av
                   varje loggrad
 $host          -- DNS namnet för datorn som gjorde förfrågan
 $ip_number     -- IP-nummret för datorn som gjorde förfrågan
 $bin-ip_number -- IP-nummret för datorn som gjorde förfrågan som
-                  binärdata i nätverksoktettordning 
+                  binärdata i nätverksoktettordning
 
 $cern_date     -- Ett datum som det ska vara enligt Cern Common Log
-                  file specifikationen 
+                  file specifikationen
 $bin-date      -- Tiden för requesten som sekunder sedan 1970, binärt
                   i nätverksoktettordning.
 
@@ -3033,24 +3031,24 @@ $bin-response  -- Den skickade svarskoden som ett binärt ord (2
                   oktetter) i nätverksoktettordning
 $length        -- Längden av datan som skickades som svar till klienten
 $bin-length    -- Samma sak, men som ett 4 oktetters ord i
-                  nätverksoktettordning. 
+                  nätverksoktettordning.
 $request-time  -- Tiden som requeten tog i sekunder
 $referer       -- Headern 'referer' från förfrågan eller '-'.
 $user_agent    -- Headern 'User-Agent' från förfrågan eller '-'.
 $user          -- Den autentifierade användarens namn, eller '-'
-$user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du 
+$user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
                   måste slå på kaksättningsfunktionaliteten i de
                   globala inställningarna. '0' används för de
                   förfrågningar som inte har kakan.
 </pre>");
-	       
-  
+	
+
   defvar("Log", 1, "Logging: Enabled", TYPE_FLAG, "Log requests");
   deflocaledoc("svenska", "Log", "Loggning: På",
 	       "Ska roxen logga alla förfrågningar till en logfil?");
 
   defvar("LogFile", roxen->QUERY(logdirprefix)+
-	 short_name(name)+"/Log", 
+	 short_name(name)+"/Log",
 
 	 "Logging: Log file", TYPE_FILE, "The log file. "
 	 ""
@@ -3062,7 +3060,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
 	 "%d    Date  (e.g. '10' for the tenth)\n"
 	 "%h    Hour  (e.g. '00')\n</pre>"
 	 ,0, lambda(){ return !query("Log");});
-  deflocaledoc("svenska", "LogFile", 
+  deflocaledoc("svenska", "LogFile",
 	       "Loggning: Loggfil",
 	       "Filen som roxen loggar i. Filnamnet kan vara relativt "
 	       +getcwd()+
@@ -3075,22 +3073,22 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
 %h    Timme  (t.ex. '00')
 </pre>");
 
-  
-  defvar("NoLog", ({ }), 
+
+  defvar("NoLog", ({ }),
 	 "Logging: No Logging for", TYPE_STRING_LIST|VAR_MORE,
          "Don't log requests from hosts with an IP number which matches any "
 	 "of the patterns in this list. This also affects the access counter "
 	 "log.\n",0, lambda(){ return !query("Log");});
-  deflocaledoc("svenska", "NoLog", 
+  deflocaledoc("svenska", "NoLog",
 	       "Loggning: Logga inte för",
 #"Logga inte några förfrågningar vars IP-nummer matchar
   något av de mönster som står i den här listan.  Den här variabeln
   påverkar även &lt;accessed&gt; RXML-styrkoden.");
-  
+
   defvar("Domain", roxen->get_domain(), "Domain", TYPE_STRING,
 	 "The domainname of the server. The domainname is used "
 	 " to generate default URLs, and to gererate email addresses");
-  deflocaledoc( "svenska", "Domain", 
+  deflocaledoc( "svenska", "Domain",
 		"DNS Domän",
 #"Serverns domännamn. Det av en del RXML styrkoder för att generara
 epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
@@ -3100,21 +3098,21 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 	 "This is the main server URL, where your start page is located.");
   deflocaledoc( "svenska", "MyWorldLocation",
 		"Serverns URL",
-#"Det här är huvudURLen till din startsida. Den används av många 
+#"Det här är huvudURLen till din startsida. Den används av många
   moduler för att bygga upp absoluta URLer från en relativ URL.");
 
   defvar("URLs", ({"http://*:80/"}), "URLs", TYPE_STRING_LIST|VAR_INITIAL,
          "Bind to these URLs" );
 
   defvar("InternalLoc", "/_internal/",
-	 "Internal module resource mountpoint", 
+	 "Internal module resource mountpoint",
          TYPE_LOCATION|VAR_MORE|VAR_DEVELOPER,
          "Some modules may want to create links to internal resources.  "
 	 "This setting configures an internally handled location that can "
 	 "be used for such purposes.  Simply select a location that you are "
 	 "not likely to use for regular resources.");
 
-  deflocaledoc("svenska", "InternalLoc", 
+  deflocaledoc("svenska", "InternalLoc",
 	       "Intern modulresursmountpoint",
 #"Somliga moduler kan vilja skapa länkar till interna resurser.
   Denna inställning konfigurerar en internt hanterad location som kan användas
@@ -3124,8 +3122,8 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
   // throttling-related variables
   defvar("throttle",0,
          "Bandwidth Throttling: Server: Enabled",TYPE_FLAG,
-#"If set, per-server bandwidth throttling will be enabled. 
-It will allow you to limit the total available bandwidth for 
+#"If set, per-server bandwidth throttling will be enabled.
+It will allow you to limit the total available bandwidth for
 this Virtual Server.<BR>Bandwidth is assigned using a Token Bucket.
 The principle under which it works is: for each byte we send we use a token.
 Tokens are added to a repository at a constant rate. When there's not enough,
@@ -3133,11 +3131,11 @@ we can't transmit. When there's too many, they \"spill\" and are lost.");
   //TODO: move this explanation somewhere on the website and just put a link.
 
   deflocaledoc( "svenska", "throttle", "Bandviddsbegränsning: Servernivå: På",
-               #"Om den här variablen är på så kommer bandvisddsbegränsning 
+               #"Om den här variablen är på så kommer bandvisddsbegränsning
 på servernivå att ske. Det gör det möjligt för dig att begränsa den totala
 bandvidden som den här virtuella servern använder.
 <p>
-Bandvidden räknas ut genom att använda en poletthink. Principen som den 
+Bandvidden räknas ut genom att använda en poletthink. Principen som den
 arbetar efter är: För varje byte som sänds så används en polett, poletter
 stoppas i hinken i en konstant hastighet. När det inte finns några poletter
 så avstännar dataskickande tills en polett blir tillgänglig. När det är för
@@ -3147,7 +3145,7 @@ många poletter i hinken så kommer de nya som kommer in att \"ramla ut\".");
   defvar("throttle_fill_rate",102400,
          "Bandwidth Throttling: Server: Average available bandwidth",
          TYPE_INT,
-#"This is the average bandwidth available to this Virtual Server in 
+#"This is the average bandwidth available to this Virtual Server in
 bytes/sec (the bucket \"fill rate\").",
          0,arent_we_throttling_server);
 
@@ -3173,7 +3171,7 @@ bandwidth is averaged",0,arent_we_throttling_server);
                 "genomsnittliga tillgängliga bandvidden så tillåts inga "
                 "tillfälliga datapulser när servern har varit inaktiv ett tag"
                 " utan data skickas alltid med max den bandvidden");
-  
+
   defvar("throttle_min_grant",1300,
          "Bandwidth Throttling: Server: Minimum Grant", TYPE_INT,
 #"When the bandwidth availability is below this value, connections will
@@ -3184,7 +3182,7 @@ is to avoid sending too small packets (which would increase the IP overhead)",
   deflocaledoc( "svenska", "throttle_min_grant",
                 "Bandviddsbegränsning: Servernivå:"
                 " Minimalt antal bytes",
-#"När det tillgängliga antalet poletter (alltså bytes) är mindre än det här 
+#"När det tillgängliga antalet poletter (alltså bytes) är mindre än det här
 värdet så fördröjs förbindelser, alternativet är att skicka små paket, vilket
 öker overheaden som kommer till från IP och TCP paketheadrar." );
 
@@ -3196,7 +3194,7 @@ among the pending connections, but keeping it too low will increase IP
 overhead and (marginally) CPU usage. You'll want to set it just a tiny
 bit lower than any integer multiple of your network's MTU (typically 1500
 for ethernet)",0,arent_we_throttling_server);
-         
+
   deflocaledoc( "svenska", "throttle_max_grant",
                 "Bandviddsbegränsning: Servernivå:"
                 " Maximalt antal bytes",
@@ -3218,22 +3216,22 @@ ditt nätverks MTU (normala ethernetförbindelser har en MTU på 1500)
                 "Bandviddsbegränsning: Förbindelsenivå: På",
                 "Om på så begränsas bandvidden individuellt på förbindelser"
                 );
-         
+
   defvar("req_throttle_min", 1024,
          "Bandwidth Throttling: Request: Minimum guarranteed bandwidth",
          TYPE_INT,
 #"The maximum bandwidth each connection (in bytes/sec) can use is determined
-combining a number of modules. But doing so can lead to too small 
+combining a number of modules. But doing so can lead to too small
 or even negative bandwidths for particularly unlucky requests. This variable
 guarantees a minimum bandwidth for each request",
          0,arent_we_throttling_request);
-  
+
 
   deflocaledoc( "svenska", "req_throttle_min",
                 "Bandviddsbegränsning: Förbindelsenivå: Minimal bandvidd",
-#"Den maximala bandvidden som varje förbindelse får bestäms av en kombination 
+#"Den maximala bandvidden som varje förbindelse får bestäms av en kombination
 av de bandviddsbegränsningsmoduler som är adderade i servern. Men ibland
-så blir det framräknade värdet väldigt lågt, och en del riktigt otursamma 
+så blir det framräknade värdet väldigt lågt, och en del riktigt otursamma
 förbindelser kan råka hamna på 0 eller mindre bytes per sekund.  <p>Den
 här variablen garanterar en vis minimal bandvidd för alla requests"
                 );
@@ -3241,14 +3239,14 @@ här variablen garanterar en vis minimal bandvidd för alla requests"
   defvar("req_throttle_depth_mult", 60.0,
          "Bandwidth Throttling: Request: Bucket Depth Multiplier",
          TYPE_FLOAT,
-#"The average bandwidth available for each request will be determined by 
+#"The average bandwidth available for each request will be determined by
 the modules combination. The bucket depth will be determined multiplying
 the rate by this factor.",
          0,arent_we_throttling_request);
 
   deflocaledoc( "svenska", "req_throttle_depth_mult",
                 "Bandviddsbegränsning: Förbindelsenivå: Hinkstorlek",
-#"Den genomsnittliga bandvidden som varje förbindelse bestäms av 
+#"Den genomsnittliga bandvidden som varje förbindelse bestäms av
 de adderade bandvidsbegränsningsmodulerna. Hinkstorleken bestäms genom att
 multiplicera detta värde med den här faktorn.");
 

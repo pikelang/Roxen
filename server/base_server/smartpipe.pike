@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.30 1999/11/29 22:07:20 per Exp $
+ * $Id: smartpipe.pike,v 1.31 1999/12/28 01:27:38 nilsson Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -30,7 +30,7 @@ void check_for_closing()
 {
   if(!outfd || !outfd->query_address()) {
 #ifdef FD_DEBUG
-    write("Detected closed FD. Self-Destructing.\n");
+    werror("Detected closed FD. Self-Destructing.\n");
 #endif
     finish();
   } else
@@ -63,7 +63,7 @@ void write_more()
   if(len <= 0)
   {
 #ifdef FD_DEBUG
-    write("Write failed. Self-Destructing.\n");
+    werror("Write failed. Self-Destructing.\n");
 #endif
     finish();
     return;
@@ -127,13 +127,13 @@ void next_input()
   if(current_input_len < 8192)
   {
     outfd->set_blocking();
-    int written = 
+    int written =
       outfd->write((objectp(current_input)
 		    ?current_input->read(current_input_len, 1)
 		    :current_input) || "");
     if(written == -1) {
 #ifdef FD_DEBUG
-      write("Short write failed. Self-Destructing.\n");
+      werror("Short write failed. Self-Destructing.\n");
 #endif
       finish();
     } else {
@@ -191,5 +191,5 @@ void set_done_callback(function|void f, void|mixed ... args)
 }
 
 void create() {
-  perror("using smartpipe\n");
+  report_debug("using smartpipe\n");
 }

@@ -85,7 +85,7 @@ private void parse_supports_string(string what)
       foo=q;
 
       if(!rec)
-	werror("Too deep recursion while replacing defines.\n");
+	report_debug("Too deep recursion while replacing defines.\n");
 
 //    werror("Parsing supports line '"+foo+"'\n");
       bar = replace(foo, ({"\t",","}), ({" "," "}))/" " -({ "" });
@@ -136,15 +136,15 @@ void done_with_roxen_com()
     return;
 
   if(old != new) {
-    werror("Got new supports data from www.roxen.com\n");
-    werror("Replacing old file with new data.\n");
+    report_debug("Got new supports data from www.roxen.com\n"
+		 "Replacing old file with new data.\n");
     mv("etc/supports", "etc/supports~");
     Stdio.write_file("etc/supports", new, 0660);
     old = Stdio.read_bytes( "etc/supports" );
 
     if(old != new)
     {
-      werror("FAILED to update the supports file.\n");
+      report_debug("FAILED to update the supports file.\n");
       mv("etc/supports~", "etc/supports");
     } else {
       initiate_supports();

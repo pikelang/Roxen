@@ -9,11 +9,11 @@
  * performance. We'll see.
  */
 
-constant cvs_version="$Id: slowpipe.pike,v 1.5 1999/11/29 22:07:20 per Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.6 1999/12/28 01:24:45 nilsson Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) perror("slowpipe: "+X+"\n")
+#define THROTTLING_DEBUG(X) werror("slowpipe: "+X+"\n")
 #else
 #define THROTTLING_DEBUG(X)
 #endif

@@ -1,8 +1,8 @@
-/* $Id: wizard.pike,v 1.106 1999/12/16 21:49:50 mast Exp $
+/* $Id: wizard.pike,v 1.107 1999/12/28 01:39:33 nilsson Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
-  
+
 /* wizard_automaton operation (old behavior if it isn't defined):
 
    mapping(string:array) wizard_automaton = ([
@@ -66,9 +66,9 @@
 inherit "roxenlib";
 
 #ifdef DEBUG_WIZARD
-#define DEBUGMSG(msg) report_debug (msg)
+# define DEBUGMSG(msg) werror(msg)
 #else
-#define DEBUGMSG(msg) do {} while (0)
+# define DEBUGMSG(msg)
 #endif
 
 
@@ -120,7 +120,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
    case "list": // String....
     string n = m->name, res="<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">";
     if(!id->variables[n]) id->variables[n]=current;
-    
+
     m->type = "string";
     if(!m->size)m->size="60,1";
     m_delete(m,"default");
@@ -182,13 +182,13 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 
    case "color":
      int h, s, v;
-     if(id->variables[m->name+".hsv"]) 
+     if(id->variables[m->name+".hsv"])
        sscanf(id->variables[m->name+".hsv"], "%d,%d,%d", h, s, v);
      else
      {
        array tmp = rgb_to_hsv(@parse_color(current||"black"));
        h = tmp[0]; s = tmp[1];  v = tmp[2];
-     } 
+     }
      if(id->variables[m->name+".foo.x"]) {
        h = (int)id->variables[m->name+".foo.x"];
        v = 255-(int)id->variables[m->name+".foo.y"];
@@ -208,9 +208,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      id->variables[m->name+".hsv"] = h+","+s+","+v;
 
      array a=hsv_to_rgb(h,s,v);
-     string bgcol=sprintf("#%02x%02x%02x",a[0],a[1],a[2]); 
+     string bgcol=sprintf("#%02x%02x%02x",a[0],a[1],a[2]);
      id->variables[m->name] = bgcol;
-     return 
+     return
      ("<table><tr>\n"
       "<td width=\"258\" rowspan=\"2\">\n"
       "  <table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"258\"><tr><td>\n"
@@ -248,13 +248,13 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 
    case "color-small":
      int h, s, v;
-     if(id->variables[m->name+".hsv"]) 
+     if(id->variables[m->name+".hsv"])
        sscanf(id->variables[m->name+".hsv"], "%d,%d,%d", h, s, v);
      else
      {
        array tmp = rgb_to_hsv(@parse_color(current||"black"));
        h = tmp[0]; s = tmp[1];  v = tmp[2];
-     } 
+     }
      if(id->variables[m->name+".foo.x"]) {
        h = ((int)id->variables[m->name+".foo.x"])*2;
        v = 255-((int)id->variables[m->name+".foo.y"])*2;
@@ -274,9 +274,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      id->variables[m->name+".hsv"] = h+","+s+","+v;
 
      array a=hsv_to_rgb(h,s,v);
-     string bgcol=sprintf("#%02x%02x%02x",a[0],a[1],a[2]); 
+     string bgcol=sprintf("#%02x%02x%02x",a[0],a[1],a[2]);
      id->variables[m->name] = bgcol;
-     return 
+     return
      ("<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n"
       "<td rowspan=\"2\">\n"
       "  <table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\"><tr><td>\n"
@@ -340,7 +340,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      m_delete(m2, "options");
      //escape the characters we need for internal purposes..
      m->choices=replace(m->choices,
-			({"\\,", "\\:"}), 
+			({"\\,", "\\:"}),
 			({"__CoMma__", "__CoLon__"}));
 
      return make_container("select", m2, map(m->choices/",",
@@ -348,9 +348,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
         string t;
         if(sscanf(s, "%s:%s", s, t) != 2)
 	  t = s;
-	s=replace(s,({"__CoMma__", 
+	s=replace(s,({"__CoMma__",
 		      "__CoLon__"}),({",",":"})); //can't be done before.
-	t=replace(t,({"__CoMma__", 
+	t=replace(t,({"__CoMma__",
 		      "__CoLon__"}),({",",":"}));
 
         return "<option value=\""+s+"\" "+(s==c?" selected=\"selected\"":"")+">"+loc_encode(t, m, "html")+"</option>\n";
@@ -368,7 +368,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     m2->multiple="1";
     //escape the characters we need for internal purposes..
     m->choices=replace(m->choices,
-		       ({"\\,", "\\:"}), 
+		       ({"\\,", "\\:"}),
 		       ({"__CoMma__", "__CoLon__"}));
 
     return make_container("select", m2, map(m->choices/",",
@@ -376,9 +376,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       string t;
       if(sscanf(s, "%s:%s", s, t) != 2)
         t = s;
-      s=replace(s,({"__CoMma__", 
+      s=replace(s,({"__CoMma__",
 		    "__CoLon__"}),({",",":"})); //can't be done before.
-      t=replace(t,({"__CoMma__", 
+      t=replace(t,({"__CoMma__",
 		    "__CoLon__"}),({",",":"}));
 
       return "<option value=\""+s+"\" "+(search(c,s)!=-1?"selected=\"selected\"":"")+">"+loc_encode(t, m, "html")+
@@ -391,7 +391,7 @@ mapping decompress_state(string from)
 {
   if(!from) return ([]);
   from = MIME.decode_base64(from);
-  catch 
+  catch
   {
     object gz = Gz;
     if(sizeof(indices(gz)))
@@ -399,7 +399,7 @@ mapping decompress_state(string from)
   };
   return decode_value(from);
 }
-  
+
 
 string compress_state(mapping state)
 {
@@ -473,7 +473,7 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   form = parse_html(form,(id->misc->extra_wizard_tags||([]))+
 		    ([ "var":wizard_tag_var, ]),
 		    (id->misc->extra_wizard_container||([]))+
-		    ([ "cvar":wizard_tag_var, 
+		    ([ "cvar":wizard_tag_var,
 		       "help":parse_wizard_help]), id, foo );
 
   // We commonly feed the action variable both from the URL with
@@ -483,7 +483,7 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   // both values are the same here; maybe it could be done better.)
   if (stringp (id->variables->action))
     id->variables->action = (id->variables->action/"\0")[0];
-  
+
   res = ("\n<!--Wizard-->\n"
          "<form method=\"get\">\n" +
 	 (stringp (id->variables->action) ?
@@ -555,7 +555,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 
   mapping s = decompress_state(v->_state);
 
-  if(v->cancel) 
+  if(v->cancel)
   {
      return http_redirect(s->cancel_url||cancel||id->not_query, @(id->conf?({id}):({})));
   }
@@ -631,7 +631,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	}
 	if(res != -1)
 	  return (res
-		  || http_redirect(s->cancel_url||cancel||id->not_query, 
+		  || http_redirect(s->cancel_url||cancel||id->not_query,
 				   @(id->conf?({id}):({}))));
 	DEBUGMSG ("Wizard: -1 from wizard_done; continuing\n");
       }
@@ -641,7 +641,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     m_delete(v, "help.x");
     m_delete(v, "help.y");
     v->help="1";
-  } 
+  }
   foreach(indices(id->variables), string n)
   {
     string q,on=n;
@@ -657,7 +657,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     } else if(sscanf(n, "_delete_%s:%s", n,q)==2) {
       if(v[n]) v[n]=replace(replace(v[n]/"\0",q,"")*"\0","\0\0","\0");
       m_delete(v, on);
-    } 
+    }
   }
 
   if (automaton) {
@@ -756,9 +756,9 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       if(functionp(c)) {
 	DEBUGMSG ("Wizard: Running wizard_done\n");
 	mixed res = c(id,@args);
-	if(res != -1) 
+	if(res != -1)
 	  return (res
-		  || http_redirect(cancel||id->not_query, 
+		  || http_redirect(cancel||id->not_query,
 				   @(id->conf?({id}):({}))));
       }
       if(!pg) return "Internal error in wizard code: Invalid page ("+v->_page+")!";
@@ -817,7 +817,7 @@ mapping get_actions(RequestID id, string base,string dir, array args)
     };
     if(strlen(e->get()))
       error("While compiling wizards:\n"+e->get());
-    
+
     if(err) report_error(describe_backtrace(err));
   }
   return acts;
@@ -840,12 +840,12 @@ mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
 {
   mapping acts;
   if(id->pragma["no-cache"]) wizards=([]);
-  
+
   if(!id->variables->sm)
     id->variables->sm = focused_wizard_menu;
   else
     focused_wizard_menu = id->variables->sm=="0"?0:id->variables->sm;
-  
+
   if(!id->variables->action)
   {
     mixed wizbug;
@@ -901,7 +901,7 @@ string format_numeric(string s, string|void sep)
       t += s;
     s = s[3..];
   }
-  return (({reverse(t)})+as[1..])*" "; 
+  return (({reverse(t)})+as[1..])*" ";
 }
 
 string html_table(array(string) subtitles, array(array(string)) table,
@@ -951,9 +951,9 @@ string html_table(array(string) subtitles, array(array(string)) table,
 	  "<font color=\""+(opt->titlecolor||"#ffffff")+"\">"+s[0]+
 	  " &nbsp; </font></th>");
     }
-  }      
+  }
   r += "</tr>";
-  
+
   for(int i = 0; i < sizeof(table); i++) {
     string tr;
     r += tr = "<tr bgcolor="+((i/m)%2?opt->evenbgcolor||"#ddeeff":
@@ -1046,7 +1046,7 @@ void filter_checkbox_variables(mapping v)
   foreach(indices(v), string s) {
     if(!v[s] || (v[s]=="0"))
       m_delete(v,s);
-    else 
+    else
       v[s]-="\00";
   }
 }
