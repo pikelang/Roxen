@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.40 2004/09/14 08:57:34 noring Exp $
+ * $Id: create_configif.pike,v 1.41 2005/02/25 15:24:57 grubba Exp $
  *
  * Create an initial administration interface server.
  */
@@ -139,6 +139,22 @@ Example of a batch installation:
   int batch_args = search(argv, "--batch");
   if(batch_args>=0)
     batch = mkmapping(@Array.transpose(argv[batch_args+1..]/2));
+
+  if (batch["__semicolon_separated__"]) {
+    // Used by Win32Installer.vbs:CreateConfigInterface().
+    array(string) sections = batch["__semicolon_separated__"]/";";
+    if (sizeof(sections) < 6) {
+      error("Too few sections in __semicolon_separated__: %O.\n",
+	    batch["__semicolon_separated__"]);
+    }
+    cd(sections[0]);				// SERVERDIR
+    batch->server_name = sections[1];		// SERVER_NAME
+    batch->server_url = sprintf("%s://*:%s/",
+				sections[2],	// SERVER_PROTOCOL
+				sections[3]);	// SERVER_PORT
+    batch->user = sections[4];			// ADM_USER
+    batch->password = sections[5..]*";";	// ADM_PASS1
+  }
 
   foreach( get_dir( configdir )||({}), string cf )
     catch 
