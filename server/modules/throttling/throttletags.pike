@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.7 2000/04/24 22:46:22 kuntri Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.8 2000/05/15 19:57:27 kinkie Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -20,6 +20,7 @@ constant module_type = MODULE_PARSER;
 constant module_name = "Throttling control tags";
 constant module_doc  = "This module provides a <tt>&lt;THROTTLE&gt;</tt> tag "
   "that you can use to determine a request's allocated bandwidth";
+constant module_unique = 1;
 
 TAGDOCUMENTATION;
 #ifdef manual
