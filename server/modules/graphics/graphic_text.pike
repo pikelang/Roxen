@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.20 1996/12/10 05:39:32 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.21 1996/12/10 13:19:40 neotron Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -542,7 +542,7 @@ string magic_image(string url, int xs, int ys, string sn,
   if(!id->supports->images) return alt;
   if(!id->supports->javascript)
     return (!input)?
-      ("<a "+extra_args+"href=\""+url+"\"><img src="+image_1+" name="+
+      ("<a "+extra_args+"href=\""+url+"\"><img _parsed=1 src="+image_1+" name="+
        sn+" border=0 alt=\""+alt+"\" ></a>\n"):
     ("<input type=image "+extra_args+" src="+image_1+" name="+input+">");
 
@@ -562,7 +562,7 @@ string magic_image(string url, int xs, int ys, string sn,
       +"onMouseover=\"img_act('"+sn+"','"
       +(mess||url)+"');return true;\"\n"
       "\n"
-      "onMouseout=\"img_inact('"+sn+"')\"><img \n"
+      "onMouseout=\"img_inact('"+sn+"')\"><img _parsed=1 \n"
       " src="+image_1+" name="+sn+" border=0 alt=\""+alt+"\" ></a>\n"));
 }
 
@@ -698,7 +698,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
     foreach(gt/" "-({""}), word)
     {
       array size = write_text(num,word,1,0);
-      res += ({ "<img border=0 alt=\""+replace(word,"\"","'")
+      res += ({ "<img _parsed=1 border=0 alt=\""+replace(word,"\"","'")
 		  +"\" src=\'"+pre+quote(word)+"\' width="+
 		  size[0]+" height="+size[1]+" "+moreargs+">\n"
 		  });
@@ -747,7 +747,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	    +" align="+(arg->align?arg->align:defalign)+
 	    " width="+size[0]+" height="+size[1]+">"+rest+post);
   return (pre+(lp?lp:"")+
-	  "<img border=0  alt=\""+replace(gt,"\"","'")+"\" src="+
+	  "<img _parsed=1 border=0  alt=\""+replace(gt,"\"","'")+"\" src="+
 	  query_location()+num+"/"+quote(gt)
 	  +" align="+(arg->align?arg->align:defalign)+
 	  " width="+size[0]+" height="+size[1]+">"+rest+(lp?"</a>":"")+post);
