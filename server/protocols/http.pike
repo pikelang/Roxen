@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.58 1998/02/27 04:51:52 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.59 1998/03/08 12:48:03 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -202,61 +202,76 @@ private int really_set_config(array mod_config)
   return -2;
 }
 
+private static mixed f, line;
+
 private int parse_got(string s)
 {
   multiset (string) sup;
   array mod_config;
-  mixed f, line;
   string a, b, linename, contents;
   int config_in_url;
 
-  
 //  roxen->httpobjects[my_id] = "Parsed data...";
   raw = s;
 
-  if(s[-1] != '\n' || search(s, "\r\n\r\n") == -1)
-    return 0;
-#if 0
-  /* This version is 8(!) times faster... */
-  if(sscanf(s,"%s %s %s\n%s", method, f, prot, s) < 4)
-  {
-    if(sscanf(s,"%s %s\n", method, f) < 2)
-      f="";
-    s="";
-    prot = "HTTP/0.9";
-  }
-  if(!method)
-    method = "GET";
-#else
-  {
-    // Defaults:
-    sscanf(s, "%s\r\n%s", line, s);
-    if(!line) return 0;
-    prot = clientprot = "HTTP/0.9";
-    f="/";
-    method = "GET";
-    if (sizeof(line)) 
-    {
-      array arr2 = line/" ";
-      switch(sizeof(arr2)) {
-      default:
-      case 3:
-	if ((clientprot = arr2[-1]) != "HTTP/0.9")
-	  prot = "HTTP/1.0";
-	f = arr2[1..sizeof(arr2)-2]*" ";
-	method = arr2[0];
-	break;
-      case 2:
-	f = arr2[1];
-	/* FALL-THROUGH */
-      case 1:
-	method = arr2[0];
-	break;
-      }
+  if (!line) {
+    int start = search(s, "\r\n");
+
+    if ((< -1, 0 >)[start]) {
+      // Not enough data, or malformed request.
+      return ([ -1:0, 0:2 ])[start];
     }
+    line = s[..start-1];
+
+    // Parse the command
+    start = search(line, " ");
+    if (start != -1) {
+      method = upper_case(line[..start-1]);
+
+      int end = search(reverse(line[start+1..]), " ");
+      if (end != -1) {
+	f = line[start+1..sizeof(line)-(end+2)];
+	clientprot = line[sizeof(line)-end..];
+	if (clientprot != "HTTP/0.9") {
+	  prot = "HTTP/1.0";
+
+	  // Check that the request is complete
+	  int end;
+	  if ((end = search(s, "\r\n\r\n")) == -1) {
+	    // No, we need more data.
+	    return 0;
+	  }
+	  data = s[end+4..];
+	  s = s[sizeof(line)+2..end-1];
+	} else {
+	  prot = clientprot;
+	  data = s[sizeof(line)+2..];
+	  s = "";	// No headers.
+	}
+      } else {
+	f = line[start+1..];
+	prot = clientprot = "HTTP/0.9";
+	data = s[sizeof(line)+2..];
+	s = "";		// No headers.
+      }
+    } else {
+      method = upper_case(line);
+      f = "/";
+      prot = clientprot = "HTTP/0.9";
+    }
+  } else {
+    // HTTP/1.0 or later
+    // Check that the request is complete
+    int end;
+    if ((end = search(s, "\r\n\r\n")) == -1) {
+      // No, we still need more data.
+      return 0;
+    }
+    data = s[end+4..];
+    s = s[sizeof(line)+2..end-1];
   }
-#endif /* 0 */
-  method = upper_case(method);
+
+
   if(method == "PING")
   { 
     my_fd->write("PONG\n"); 
@@ -294,9 +309,8 @@ private int parse_got(string s)
   
   not_query = simplify_path(http_decode_string(f));
 
-  if(strlen(s))
-  {
-    sscanf(s, "%s\r\n\r\n%s", s, data);
+  if(sizeof(s)) {
+//    sscanf(s, "%s\r\n\r\n%s", s, data);
 
 //     s = replace(s, "\n\t", ", ") - "\r"; 
 //     Handle rfc822 continuation lines and strip \r
@@ -855,8 +869,13 @@ void handle_request( )
     if(file->file)  
       send(file->file, file->len);
   }
-  pipe->set_done_callback( do_log );
-  pipe->output(my_fd);
+  if (pipe) {
+    pipe->set_done_callback( do_log );
+    pipe->output(my_fd);
+  } else {
+    my_fd->close();
+    do_log();
+  }
 }
 
 /* We got some data on a socket.
