@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.254 2001/07/10 02:43:43 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.255 2001/07/11 04:14:07 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -27,14 +27,14 @@ constant module_doc  = "This module provides the common RXML tags.";
 //  Cached copy of conf->query("compat_level"). This setting is defined
 //  to require a module reload to take effect so we only query it when
 //  start() is called.
-string compat_level;
+float compat_level;
 
 
 void start()
 {
   add_api_function("query_modified", api_query_modified, ({ "string" }));
   query_tag_set()->prepare_context=set_entities;
-  compat_level = my_configuration()->query("compat_level");
+  compat_level = (float) my_configuration()->query("compat_level");
 }
 
 string query_provides() {
@@ -2218,7 +2218,7 @@ class UserTag {
       vars["rest-args"] = Roxen.make_tag_attributes(args - defaults)[1..];
       vars->contents = content_text;
 
-      if (compat_level > "2.1") {
+      if (compat_level > 2.1) {
 	// Save the scope state so that we can switch back in
 	// <contents/>, thereby achieving static variable binding in
 	// the content. This is poking in the internals; there ought
@@ -2305,7 +2305,7 @@ class TagDefine {
 	    return "";
 	  };
 
-	  if( compat_level > "2.1" ) {
+	  if( compat_level > 2.1 ) {
 	    Parser.HTML p = Roxen.get_xml_parser();
 	    p->add_container ("attrib", add_default);
 	    array no_more_attrib (Parser.HTML p, void|string ignored)
