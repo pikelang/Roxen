@@ -1,9 +1,15 @@
 #include <config.h>
 #if constant(all_threads)
+#include <roxen.h>
+//<locale-token project="admin_tasks">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
-constant name= "Thread backtrace";
-constant doc = ("Shows a backtrace (stack) for each and every thread in roxen.");
 constant action="debug_info";
+
+string name= LOCALE(35, "Thread backtrace");
+string doc = LOCALE(36, 
+		    "Shows a backtrace (stack) for each and every "
+		    "thread in Roxen.");
 
 static string last_id, last_from;
 
@@ -16,7 +22,7 @@ string get_id(string from)
     string id;
     id = f->read(200);
     if(sscanf(id, "%*s$"+"Id: %*s,v %s ", id) == 3)
-      return last_id=" (version "+id+")";
+      return last_id=" ("+LOCALE(37, "version")+" "+id+")";
   };
   last_id = "";
   return "";
@@ -56,19 +62,17 @@ string format_backtrace(array bt, object id)
 }
 
 
-constant ok_label = " Refresh ";
-constant cancel_label = " Done ";
-
-mixed parse(object id)
+mixed parse( RequestID id )
 {
   string res="";
   int thr=1;
 
   foreach(all_threads(), object t)
-    res += (t==roxen->backend_thread?"<h3>Backend thread</h3>":
-            ("<h3>Thread "+(thr++)+"</h3>"))+"<ol> "+
+    res += (t==roxen->backend_thread?
+	    "<h3>"+LOCALE(38,"Backend thread")+"</h3>":
+            ("<h3>"+LOCALE(39,"Thread")+" "+(thr++)+"</h3>"))+"<ol> "+
       format_backtrace(describe_backtrace(t->backtrace())/"\n",id)+
-        "</ol>";
-  return res+"<p><cf-ok>";
+      "</ol>";
+  return res+"<p><cf-ok/></p>";
 }
-#endif
+#endif /* constant(all_threads) */

@@ -1,19 +1,20 @@
 /*
- * $Id: restart.pike,v 1.7 2000/07/21 04:57:10 lange Exp $
+ * $Id: restart.pike,v 1.8 2000/08/16 14:49:05 lange Exp $
  */
 
 #include <config_interface.h>
 #include <roxen.h>
 
-//<locale-token project="roxen_config"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("roxen_config",X,Y)
+//<locale-token project="admin_tasks"> LOCALE </locale-token>
+#define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
 
-constant name="Restart or shutdown";
-constant name_svenska = "Starta om eller stäng av roxen";
+constant action = "maintenance";
+
+string name= LOCALE(34, "Restart or shutdown");
 constant doc = "";
-constant action="maintenance";
 
-string parse(object id)
+
+string parse( RequestID id )
 {
   switch( id->variables->what )
   {
@@ -29,7 +30,7 @@ string parse(object id)
 LOCALE(234, #"You might see the old process for a while in the process table
 when doing 'ps' or running 'top'. This is normal. Roxen waits for a
 while for all connections to finish, the process will go away after at
-most 15 minutes.")+ "</i> </font>";
+most 15 minutes.")+ "</i></p>";
      }
      return LOCALE(226,"Permission denied");
 
@@ -38,13 +39,13 @@ most 15 minutes.")+ "</i> </font>";
      {
        roxen->shutdown(0.5);
        return
-"<font color=&usr.warncolor;><h1>"+LOCALE(198,"Shutdown")+"</h1></font>"+
+"<font color='&usr.warncolor;'><h1>"+LOCALE(198,"Shutdown")+"</h1></font>"+
 LOCALE(235,"Roxen will <b>not</b> restart automatically.")+
 "\n\n<p><i>"+
 LOCALE(234, #"You might see the old process for a while in the process table
 when doing 'ps' or running 'top'. This is normal. Roxen waits for a
 while for all connections to finish, the process will go away after at
-most 15 minutes.")+ "</i> </font>";
+most 15 minutes.")+ "</i></p>";
      }
      return LOCALE(226,"Permission denied");
 
@@ -76,6 +77,6 @@ most 15 minutes.")+ "</i> </font>";
 
 </blockquote>
 
-<p><cf-cancel href='?class=&form.class;'/>";
+<p><cf-cancel href='?class=&form.class;'/></p>";
      }
 }

@@ -1,19 +1,17 @@
 /*
- * $Id: debug_info.pike,v 1.6 2000/07/17 16:12:41 lange Exp $
+ * $Id: debug_info.pike,v 1.7 2000/08/16 14:48:03 lange Exp $
  */
 #include <stat.h>
+#include <roxen.h>
+//<locale-token project="admin_tasks">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "debug_info";
-constant name = "Pike memory usage information";
-constant name_svenska = "Pikeminnesanvändningsinformation";
 
-constant doc = "Show some information about how pike is using the memory "
-"it has allocated. Mostly useful for developers.";
-
-constant doc_svenska =
-"Visa lite information om hur pike använder minnet som den har allokerat. "
-"Mestadels användbart bara för utvecklare.";
-
+string name= LOCALE(1,"Pike memory usage information");
+string doc = LOCALE(2,
+		    "Show some information about how pike is using the "
+		    "memory it has allocated. Mostly useful for developers.");
 
 int creation_date = time();
 
@@ -128,7 +126,7 @@ mixed page_1(object id)
 		"All times are in seconds, and real-time. Times incude"
 		" time of child functions. No callgraph is available yet.<br />"
 		"Function glob: <input type=string name=subnode value='"+
-                html_encode_string(id->variables->subnode||"")
+                Roxen.html_encode_string(id->variables->subnode||"")
                 +"'><br />");
 
   object t = ADT.Table->table(get_prof_info("*"+
@@ -228,8 +226,11 @@ mixed page_0( object id )
   mapping bar = roxen->query_var( "__num_clones" )||([]);
 
   object t = ADT.Table->table(table,
-                              ({ "<font color='&usr.fgcolor;'  >Type", "Number",
-                                 "Change", "KB", "Change</font>"}),
+                              ({ "<font color='&usr.fgcolor;'  >"+
+				 LOCALE(3,"Type"), 
+				 LOCALE(4,"Number"),
+                                 LOCALE(5,"Change"), 
+				 "Kb", LOCALE(5,"Change") + "</font>"}),
                               ({
                                 0,
                                 ([ "type":"num" ]),
@@ -348,11 +349,11 @@ mixed page_0( object id )
   return res;
 }
 
-mixed parse(object id)
+mixed parse( RequestID id )
 {
   return page_0( id )
 #if constant( get_profiling_info )
          + page_1( id )
 #endif
-    + "<p><cf-ok>";
+    + "<p><cf-ok/></p>";
 }

@@ -1,15 +1,18 @@
 /*
- * $Id: openfiles.pike,v 1.3 2000/03/16 04:18:43 mast Exp $
+ * $Id: openfiles.pike,v 1.4 2000/08/16 14:48:43 lange Exp $
  */
-
 inherit "wizard";
+#include <stat.h>
+#include <roxen.h>
+//<locale-token project="admin_tasks">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
+
+
 constant action="debug_info";
 
-constant name= "Open files";
-
-constant doc = "Show a list of all open files and network connections.";
-
-#include <stat.h>
+string name= LOCALE(21, "Open files");
+string doc = LOCALE(22, 
+		    "Show a list of all open files and network connections.");
 
 // Debug functions.  List _all_ open filedescriptors
 array checkfd_fix_line(string l)
@@ -32,10 +35,10 @@ array checkfd_fix_line(string l)
   return l/",";
 }
 
-string parse(object id)
+string parse( RequestID id )
 {
   return
-    ("<h1>Active filedescriptors</h1>\n"+
+    ("<h1>" +LOCALE(23, "Active filedescriptors")+ "</h1>\n"+
      sprintf("<pre><b>%-5s  %-9s  %-10s   %-10s   %s</b>\n\n",
 	     "fd", "type", "mode", "size", "inode")+
 
@@ -47,8 +50,8 @@ string parse(object id)
 	      mark_fd(fd)||"?";
 #else
 	    "";
-
 #endif
+
 	    catch {
 	      array args = checkfd_fix_line(fd_info(fd));
 	      args = (args[0] / ", ") + args[1..];
@@ -63,5 +66,5 @@ string parse(object id)
 	    return "Error when making info list...\n";
 
 	  })*"\n")+
-     "</pre><p><cf-ok>");
+     "</pre><p><cf-ok/></p>");
 }

@@ -1,22 +1,27 @@
 /*
- * $Id: resolv.pike,v 1.14 2000/08/16 11:40:23 jhs Exp $
+ * $Id: resolv.pike,v 1.15 2000/08/16 14:49:05 lange Exp $
  */
-
 inherit "wizard";
 inherit "../logutil";
+#include <roxen.h>
+//<locale-token project="admin_tasks">LOCALE</locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
-constant action="maintenance";
-constant name= "Resolve path...";
-constant doc = ("Check which modules handles the path you enter in the form");
+constant action = "maintenance";
+
+string name= LOCALE(27, "Resolve path...");
+string doc = LOCALE(28, 
+		    "Check which modules handles the path you enter in "
+		    "the form");
 
 string link(string to, string name)
 {
   return sprintf("<a href=\"%s\">%s</a>", to, name);
 }
 
-string link_configuration(Configuration c)
+string link_configuration(Configuration c, void|string cf_locale)
 { 
-  return link(@get_conf_url_to_virtual_server(c,"standard")); 
+  return link(@get_conf_url_to_virtual_server(c, cf_locale)); 
 }
 
 string module_name(function|RoxenModule|RXML.Tag m)
@@ -26,7 +31,7 @@ string module_name(function|RoxenModule|RXML.Tag m)
 
   string name;
   catch (name = Roxen.get_modfullname (m));
-  if (!name) return "<font color=red>Unavailable</font>";
+  if (!name) return "<font color='red'>Unavailable</font>";
 
   Configuration c;
   if(functionp(m->my_configuration) && (c = m->my_configuration()))
@@ -51,7 +56,7 @@ string module_name(function|RoxenModule|RXML.Tag m)
     }
   }
 
-  return "<font color=darkgreen>"+name+"</font>";
+  return "<font color='darkgreen'>"+name+"</font>";
 }
 
 string resolv;
@@ -101,7 +106,7 @@ void trace_leave_ol(string desc)
 #endif
   level--;
   string efont="", font="";
-  if(level>1) {efont="</font>";font="<font size=-1>";}
+  if(level>1) {efont="</font>";font="<font size='-1'>";}
   resolv += (font+"</ol>"+
 #if efun(gethrtime)
 	     "Time: "+sprintf("%.5f",delay/1000000.0)+
@@ -109,7 +114,7 @@ void trace_leave_ol(string desc)
 #if efun(gethrvtime)
 	     " (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
 #endif /* efun(gethrvtime) */
-	     "<br />"+html_encode_string(desc)+efont)+"<p>";
+	     "<br />"+Roxen.html_encode_string(desc)+efont)+"<p>";
 
 }
 
@@ -117,11 +122,14 @@ void trace_enter_table(string type, function|object module)
 {
   level++;
   string efont="", font="";
-  if(level>2) {efont="</font>";font="<font size=-1>";}
+  if(level>2) {efont="</font>";font="<font size='-1'>";}
   resolv += ("<tr>"
-	     +(level>1?"<td width=1 bgcolor=blue><img src=/image/unit.gif alt=|></td>":"")
-	     +"<td width=100%>"+font+type+" "+module_name(module)+
-	     "<table width=100% border=0 cellspacing=10 border=0 cellpadding=0>");
+	     +(level>1?("<td width='1' bgcolor='blue'>"
+			"<img src=\"/image/unit.gif\" alt=\"|\"/></td>") :"")
+	     +"<td width='100%'>"+font+type+" "+module_name(module)+
+	     "<table width='100%' border='0' cellspacing='10' border='0' "
+	     "cellpadding='0'>");
+
 #if efun(gethrtime)
   et[level]= gethrtime();
 #endif
@@ -134,12 +142,12 @@ void trace_leave_table(string desc)
 #endif
   level--;
   string efont="", font="";
-  if(level>1) {font="<font size=-1>";}
+  if(level>1) {font="<font size='-1'>";}
   resolv += ("</td></tr></table><br />"+font+
 #if efun(gethrtime)
 	     "Time: "+sprintf("%.5f",delay/1000000.0)+
 #endif
-	     "<br />"+html_encode_string(desc)+efont)+"</td></tr>";
+	     "<br />"+Roxen.html_encode_string(desc)+efont)+"</td></tr>";
 }
 
 void resolv_handle_request(object c, object nid)
@@ -190,19 +198,21 @@ void resolv_handle_request(object c, object nid)
   }
 }
 
-string parse(object id)
+string parse( RequestID id )
 {
-  //"<nobr>Allow Cache <input type=checkbox></nobr>\n";
-  string res = #"
-<input type=hidden name=action value=resolv.pike /><br />
-URL: <input name=path value='&form.path;' size=60 />
-<table cellpadding=0 cellspacing=10 border=0><tr><td align=left>
-User: <input name=user value='&form.user;' size=12/></td>
-<td align=left>&nbsp;&nbsp;&nbsp;
-Password: <input name=password value='&form.password;' type=password size=12/>
-</td></tr></table>
-<cf-ok/> <cf-cancel href='?class=&form.class;'/>
-";
+
+  string res = "";  //"<nobr>Allow Cache <input type=checkbox></nobr>\n";
+  res += "<input type='hidden' name='action' value='resolv.pike' />\n"
+    "<font size='+2'>"+ name + "</font><br />\n"
+    "<table cellpadding='0' cellspacing='10' border='0'>\n"
+    "<tr><td align='left'>" +LOCALE(29, "URL")+ ": </td><td align='left'>"
+    "<input name='path' value='&form.path;' size='60' /></td></tr>\n"
+    "<tr><td align='left'>" +LOCALE(206, "User")+ ": </td><td align='left'>"
+    "<input name='user'  value='&form.user;' size='12' />"
+    "&nbsp;&nbsp;&nbsp;" +LOCALE(30,"Password")+ ": "
+    "<input name='password' value='&form.password;' type='password' "
+    "size='12' /></td></tr></table>\n"
+    "<cf-ok/><cf-cancel href='?class=&form.class;'/>\n";
 
   string p,a,b;
   object nid, c;
@@ -211,21 +221,26 @@ Password: <input name=password value='&form.password;' type=password size=12/>
   if( id->variables->path )
   {
     sscanf( id->variables->path, "%*s://%*[^/]/%s", file );
+
     file = "/"+file;
     foreach( values(roxen->urls), object q )
     {
       nid = id->clone_me();
       nid->raw_url = file;
       nid->not_query = (http_decode_string((file/"?")[0]));
-      if( (c=q->port->find_configuration_for_url( op, nid, 1 )) )
+      if( (c = q->port->find_configuration_for_url( op, nid, 1 )) )
       {
         nid->conf = c;
         break;
       }
     }
-
-    if(!c)
-      return "There is no configuration available that matches this URL.\n";
+    
+    if(!c) {
+      res += "<p><font color='red'>"+
+	LOCALE(31, "There is no configuration available that matches "
+	       "this URL.") + "</font></p>"; 
+      return res;
+    }
 
     id->variables->path = nid->not_query;
     nid->variables = ([]);
@@ -235,8 +250,10 @@ Password: <input name=password value='&form.password;' type=password size=12/>
     else
       nid->pragma = (<>);
 
-    resolv = "Resolving " + link(op, id->variables->path) + " in " + link_configuration(c) +
-           "<br /><hr noshade size=1 width=100%>";
+    resolv = LOCALE(32, "Resolving")+" " + 
+      link(op, id->variables->path) + " "+LOCALE(33, "in")+" " + 
+      link_configuration(c, id->misc->cf_locale) +  
+      "<br /><hr noshade size='1' width='100%'/>";
 
     nid->misc->trace_enter = trace_enter_ol;
     nid->misc->trace_leave = trace_leave_ol;
@@ -296,8 +313,8 @@ Password: <input name=password value='&form.password;' type=password size=12/>
     resolv_handle_request(c, nid);
     while(level>0)
       nid->misc->trace_leave("");
-    resolv += "</ol>";
-    res += "<p><blockquote>"+resolv+"</blockquote>";
+    resolv += "</ol></p>";
+    res += "<p><blockquote>"+resolv+"</blockquote></p>";
   }
   id->variables->path = op || "";
   return res;

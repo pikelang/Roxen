@@ -1,19 +1,14 @@
-#include <roxen.h>
 inherit "wizard";
+#include <roxen.h>
+//<locale-token project="admin_tasks"> LOCALE </locale-token>
+#define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
+
 constant action = "debug_info";
 
-constant name = "Pike module list";
-constant name_svenska = "Pikemodullista";
-
-constant doc =
-"Show information about which features and modules are "
-"available in the pike this roxen is using.";
-constant doc_svenska =
-"Visa information om vilka features och moduler som är tillgängliga "
-"i den pike som den här roxenservern använder.";
-
-//<locale-token project="roxen_config"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("roxen_config",X,Y)
+string name= LOCALE(6, "Pike module list");
+string doc = LOCALE(7,
+		    "Show information about which features and modules are "
+		    "available in the Pike this Roxen is using.");
 
 mapping(string:int) modules = ([]);
 
@@ -86,7 +81,7 @@ mixed page_0(object id, object mc)
   if (!sizeof(modules)) {
     find_modules();
   }
-  string res = "<font size=+1>"+ LOCALE(238, "Features") +"</font><ul>\n";
+  string res = "<font size='+1'>"+ LOCALE(238, "Features") +"</font><ul>\n";
   foreach(({ "dynamic_modules", "threads",
              "_Crypto",
              "CommonLog",
@@ -105,7 +100,7 @@ mixed page_0(object id, object mc)
 				 return(m[s] != 1);
 			       }, modules));
   if (sizeof(disabled)) {
-    res += "<font size=+1>"+LOCALE("dM", "Disabled modules")+"</font><ul>\n";
+    res += "<font size='+1'>"+LOCALE("dM", "Disabled modules")+"</font><ul>\n";
     res += disabled * " ";
     res += "</ul><br />\n";
   }
@@ -145,17 +140,17 @@ mixed page_1(object id, object mc)
   mapping trans = mkmapping(map(indices(modules),fix_module_name),
                             indices(modules));
 
-  return("<font size=+1>"+LOCALE(239,"All modules")+"</font><ul>\n"
-         "<table cellpadding=2 cellspacing=0 border=0>"
-         "<tr><td><b>"+LOCALE(240,"Name")+"</b></td>"
-         "<td><b>"+LOCALE(241,"State")+"</b></td>"
+  return("<font size='+1'>"+LOCALE(239,"All modules")+"</font>\n"
+         "<ul><table cellpadding='2' cellspacing='0' border='0'>"
+         "<tr><td><b>" +LOCALE(240,"Name")+" </b></td>"
+         "<td><b>" +LOCALE(241,"State")+" </b></td>"
          +map(filter(sort(indices(trans)),no_double_),
              lambda(string s, mapping r) {
                return
                  "<tr><td>"+s+"</td><td>"+
                  ({LOCALE(242,"Disabled")+":none;",
                    LOCALE(243,"N/A")+":none;",
-                   "<font color=&usr.fade4;>"+
+                   "<font color='&usr.fade4;'>"+
 		   LOCALE(244,"Enabled")+
 		   "</font>:none;" })[ r[trans[s]] + 1]+
                  "</td></tr>\n";
@@ -164,5 +159,5 @@ mixed page_1(object id, object mc)
 
 mixed parse( RequestID id )
 {
-  return page_0(id,0)+page_1(id,0) + "<p><cf-ok>";
+  return page_0(id,0)+page_1(id,0) + "<p><cf-ok/></p>";
 }
