@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.29 2000/11/02 11:41:03 per Exp $
+// $Id: module.pmod,v 1.30 2000/11/10 23:11:59 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -884,7 +884,7 @@ class FontChoice
 class List
 //! Many of one type types
 {
-  inherit String;
+  inherit Variable;
   constant type="List";
   constant width = 40;
 
@@ -964,7 +964,23 @@ class List
           id->misc->defines[ " _error" ] = 302;
       }
     }
-    set( l ); // We are done. :-)
+
+    array b;
+    mixed q = catch( b = verify_set_from_form( l ) );
+    if( q || sizeof( b ) != 2 )
+    {
+      if( q )
+	set_warning( q );
+      else
+	set_warning( "Internal error: Illegal sized array "
+		     "from verify_set_from_form\n" );
+      return;
+    }
+    if( b ) 
+    {
+      set_warning( b[0] );
+      set( b[1] );
+    }
   }
 
   string render_form( RequestID id, void|mapping additional_args )
