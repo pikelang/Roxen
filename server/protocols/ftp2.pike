@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.47 1998/05/23 23:48:49 grubba Exp $
+ * $Id: ftp2.pike,v 1.48 1998/05/24 00:03:26 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2985,7 +2985,7 @@ class FTPSession
   static private void timeout()
   {
     if (fd) {
-      int t = (time()- time_touch);
+      int t = (time() - time_touch);
       if (t > FTP2_TIMEOUT) {
 	// Recomended by RFC 1123 4.1.3.2
 	send(421, ({ "Connection timed out." }));
@@ -2995,7 +2995,7 @@ class FTPSession
 	master_session->conf->log(([ "error":408 ]), master_session);
       } else {
 	// Not time yet to sever the connection.
-	call_out(timeout, FTP2_TIMEOUT + 30 + t);
+	call_out(timeout, FTP2_TIMEOUT + 30 - t);
       }
     }
   }
