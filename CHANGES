@@ -1,5 +1,10 @@
-Changes since Roxen Challenger 1.2.21
+Changes since Roxen Challenger 1.2.21 Yellow
 -----------------------------------------------
+
+o All copyright notices should be updated to Idonex, as well as email
+  addresses and more.
+
+o Fixed a couple of bugs in the flush cache wizard.
 
 o Several tags have updated documentation (using the "help" option).
 
