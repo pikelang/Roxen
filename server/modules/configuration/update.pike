@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.17 2000/08/28 05:31:54 per Exp $
+ * $Id: update.pike,v 1.18 2000/08/30 09:23:50 nilsson Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -25,8 +25,6 @@
 #endif
 
 inherit "module";
-inherit "html";
-inherit "roxenlib";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -240,82 +238,122 @@ string tag_update_uninstall_package(string t, mapping m, RequestID id)
 // <update-package-output>...</>
 // Show information about one or several packages.
 // Arguments: package, reverse, type, limit
-string container_update_package_output(string t, mapping m, string c, RequestID id)
-{
-  if(init_error)
-    return "";
-  UPDATE_NOISES("<%s>: args = %O, contents = %O", ({ t, m, c }));
-  array res=({ });
-  int i=0;
+class TagUpdatePackage {
+  inherit RXML.Tag;
+  constant name = "update-package";
 
-  if(!m->package)
-  {
-    UPDATE_MSGS("pkginfo = %O", ({ pkginfo }));
-    array(string) packages = indices(pkginfo);
-    packages = sort(packages);
-    if(m->reverse)
-      packages=reverse(packages);
+  class Frame {
+    inherit RXML.Frame;
+    mapping vars=([]);
+    array res=({ });
+    int counter;
 
-    foreach(packages, string pkg)
-    {
-      mapping p=pkginfo[pkg];
-      if( !m->installed && !installed[pkg] && ((m->type && p["package-type"]==m->type) || !m->type))
-	res+=({ p });
-      if(m->installed && installed[pkg])
-	res+=({ p });
-      i++;
-      if(m->limit && i>=(int)m->limit)
-	break;
+    array do_enter(RequestID id) {
+      if(init_error)
+	return 0;
+
+      UPDATE_NOISES("<%s>: args = %O, contents = %O", ({ "update-package",
+							 args, content }));
+      int i=0;
+
+      if(!args->package)
+      {
+	UPDATE_MSGS("pkginfo = %O", ({ pkginfo }));
+	array(string) packages = indices(pkginfo);
+	packages = sort(packages);
+	if(args->reverse)
+	  packages=reverse(packages);
+
+	foreach(packages, string pkg)
+	{
+	  mapping p=pkginfo[pkg];
+	  if( !args->installed && !installed[pkg] &&
+	      ((args->type && p["package-type"]==args->type) || !args->type))
+	    res+=({ p });
+	  if(args->installed && installed[pkg])
+	    res+=({ p });
+	  i++;
+	  if(args->limit && i>=(int)args->limit)
+	    break;
+	}
+      }
+      else {
+	mapping p=pkginfo[args->package];
+	if(p) {
+	  mapping t=localtime((int)p["issued-date"]);
+	  p->date=sprintf("%04d-%02d-%02d",1900+t->year,t->mon+1, t->mday);;
+	  res=({ p });
+	}
+      }
+    }
+
+    int do_iterate(RequestID id) {
+      if(!sizeof(res) || counter>=sizeof(res)) return 0;
+      vars=res[counter++];
+      return 1;
     }
   }
-  else
-  {
-    mapping p=pkginfo[m->package];
-    if(p)
-    {
-      mapping t=localtime((int)p["issued-date"]);
-      p->date=sprintf("%04d-%02d-%02d",1900+t->year,t->mon+1, t->mday);;
-      res=({ p });
+}
+
+class TagUpdateStartDownload {
+  inherit RXML.Tag;
+  constant name = "update-start-download";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      mixed err=catch(start_package_download((int)args->package));
+      if(err) report_error("Upgrade: %s",err);
+      return 0;
     }
   }
-  return do_output_tag(m, res, c, id);
 }
 
-string tag_update_start_download(string t, mapping m, RequestID id)
-{
-  mixed err=catch(start_package_download((int)m->package));
-  if(err) report_error("Upgrade: %s",err);
-  return "";
-}
+class TagUpdatePackageIsDownloaded {
+  inherit RXML.Tag;
+  constant name = "update-package-is-downloaded";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([ "package" : RXML.t_text ]);
 
+  class Frame {
+    inherit RXML.Frame;
 
-string tag_update_package_is_downloaded(string t, mapping m, RequestID id)
-{
-  if(!m->package)
-    return "No package argument.";
-
-  if(completely_downloaded(((int)m->package)))
-    id->variables[m->variable]="1";
-  if(installed[m->package])
-    id->variables[m->installed_variable]="1";
-  return "";
-}
-
-string container_update_download_progress_output(string t, mapping m,
-					  string c, RequestID id)
-{
-  array(int) packages=sort(indices(package_downloads));
-  array res=({ });
-
-  foreach(packages, int package)
-  {
-    mapping pkg=pkginfo[(string)package];
-    pkg->size=sprintf("%.1f",pkg->size/1024.0);
-    pkg->progress=sprintf("%3.1f",100.0*package_downloads[package]->percent_done());
-    res+=({ pkg });
+    array do_return(RequestID id) {
+      if(completely_downloaded(((int)args->package)))
+	id->variables[args->variable]="1";
+      if(installed[args->package])
+	id->variables[args->installed_variable]="1";
+      return 0;
+    }
   }
+}
 
-  return do_output_tag(m, res, c, id);
+class TagDownloadProgress {
+  inherit RXML.Tag;
+  constant name = "download-progress";
+
+  class Frame {
+    inherit RXML.Frame;
+
+    mapping vars=([]);
+    array(int) packages;
+    int counter;
+
+    array do_enter(RequestID id) {
+      packages=sort(indices(package_downloads));
+      return 0;
+    }
+
+    int do_iterate(RequestID id) {
+      if(!sizeof(packages) || counter>=sizeof(packages)) return 0;
+      int package=packages[counter++];
+      vars=pkginfo[(string)package];
+      vars->size=Roxen.sizetostring(vars->size);
+      vars->progress=sprintf("%3.1f",100.0*package_downloads[package]->percent_done());
+    }
+  }
 }
 
 mapping get_package_info(string dir, int package)
@@ -332,45 +370,61 @@ mapping get_package_info(string dir, int package)
 
 // Find any new packages in the package dir that's not in the database,
 // and index them there.
-string tag_update_scan_local_packages(string t, mapping m,
-				      RequestID id)
-{
-  array(int) packages=sort((array(int))glob("*.tar",r_get_dir(QUERY(pkgdir))));
-  foreach(packages, int package)
-  {
-    mapping pkg=pkginfo[(string)package];
-    if(!pkg)
-    {
-      mapping tmp=get_package_info(roxen_path(QUERY(pkgdir)),package);
-      if(tmp && tmp->id)
-      {
-	pkginfo[tmp->id]=tmp;
-	pkginfo->sync();
-	report_notice("Update: Added information about package number "
-		      +tmp->id+".\n");
+class TagUpdateScanLocalPackages {
+  inherit RXML.Tag;
+  constant name = "update-scan-local-packages";
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      array(int) packages=sort((array(int))glob("*.tar",r_get_dir(QUERY(pkgdir))));
+      foreach(packages, int package) {
+	mapping pkg=pkginfo[(string)package];
+	if(!pkg) {
+	  mapping tmp=get_package_info(roxen_path(QUERY(pkgdir)),package);
+	  if(tmp && tmp->id) {
+	    pkginfo[tmp->id]=tmp;
+	    pkginfo->sync();
+	    report_notice("Update: Added information about package number "
+			  +tmp->id+".\n");
+	  }
+	}
       }
+      return 0;
     }
   }
-  return "";
 }
 
-string container_update_downloaded_packages_output(string t, mapping m,
-					    string c, RequestID id)
-{
-  array(int) packages=sort((array(int))glob("*.tar",r_get_dir(QUERY(pkgdir))));
-  array res=({ });
+class TagUpdateDownloadedPackages {
+  inherit RXML.Tag;
+  constant name = "update-downloaded-packages";
 
-  foreach(packages, int package)
-  {
-    mapping pkg=pkginfo[(string)package];
-    if(pkg && !installed[(string)package])
-    {
-      pkg->size=sprintf("%3.1f",(float)pkg->size/1024.0);
-      res+=({ pkg });
+  class Frame {
+    inherit RXML.Frame;
+
+    mapping(string:string) vars=([]);
+    array res=({ });
+    int counter;
+
+    array do_enter(RequestID id) {
+      array(int) packages=sort((array(int))glob("*.tar",r_get_dir(QUERY(pkgdir))));
+      foreach(packages, int package) {
+	mapping pkg=pkginfo[(string)package];
+	if(pkg && !installed[(string)package]) {
+	  pkg->size=Roxen.sizetostring((int)pkg->size);
+	  res+=({ pkg });
+	}
+      }
+      return 0;
+    }
+
+    int do_iterate(RequestID id) {
+      if(!sizeof(res) || counter>=sizeof(res)) return 0;
+      vars=res[counter++];
+      return 1;
     }
   }
-
-  return do_output_tag(m, res, c, id);
 }
 
 // Safely unpack a file
@@ -456,27 +510,34 @@ string unpack_tarfile(string tarfile)
 
 
 // Really unpack/install a package.
-string tag_update_install_package(string t, mapping m, RequestID id)
-{
-  if(!m->package)
-    return "No package argument";
+class TagUpdateInstallPackage {
+  inherit RXML.Tag;
+  constant name = "update-install-package";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  mapping(string:RXML.Type) req_arg_types = ([ "package" : RXML.t_text ]);
 
-  if(!completely_downloaded((int)m->package))
-    return "<b>Package not completely downloaded.</b>";
+  class Frame {
+    inherit RXML.Frame;
 
+    array do_return(RequestID id) {
+      if(!completely_downloaded((int)args->package))
+	return ({ "<b>Package not completely downloaded.</b>" });
 
-  mixed err;
-  string res;
-  if(err=catch(res=unpack_tarfile(roxen_path(QUERY(pkgdir))+(int)m->package+".tar")))
-    return err+"<br /><br /><b>Could not install package. Fix the problems above and try again.</b>";
+      mixed err;
+      string res;
+      if(err=catch(res=unpack_tarfile(roxen_path(QUERY(pkgdir))+(int)args->package+".tar")))
+	return ({ err+"<br /><br /><b>Could not install package. Fix the problems above and try again.</b>" });
 
-  id->variables[m->variable]="1";
-  installed[m->package]=1;
-  installed->sync();
+      id->variables[args->variable]="1";
+      installed[args->package]=1;
+      installed->sync();
 
-  catch(Stdio.recursive_rm(roxen_path("$VVARDIR/precompiled/")));
-  
-  return res+"<br /><br /><b>Package installed completely.</b>";
+      catch(Stdio.recursive_rm(roxen_path("$VVARDIR/precompiled/")));
+
+      result = res+"<br /><br /><b>Package installed completely.</b>";
+      return 0;
+    }
+  }
 }
 
 array(mapping) tarfile_contents(string|object tarfile, void|string dir)
@@ -501,30 +562,55 @@ array(mapping) tarfile_contents(string|object tarfile, void|string dir)
   return res;
 }
 
-string container_update_package_contents_output(string t, mapping m,
-						string c, RequestID id)
-{
-  if(!m->package)
-    return "No package argument.";
+class TagUpdatePackageContents {
+  inherit RXML.Tag;
+  constant name = "update-package-contents";
 
-  return do_output_tag(m, tarfile_contents(roxen_path(QUERY(pkgdir))+m->package+".tar"),
-		       c, id);
-}
+  class Frame {
+    inherit RXML.Frame;
+    mapping vars=([]);
+    array res=({});
+    int counter;
 
-string tag_update_update_list(string t, mapping m, RequestID id)
-{
-  if(QUERY(do_external_updates))
-  {
-    if(!updater)
-      updater=UpdateInfoFiles();
-    else
-    {
-      remove_call_out(updater->do_request);
-      updater->do_request();
+    array do_enter(RequestID id) {
+      if(!args->package)
+	return ({ "No package argument." });
+      res=tarfile_contents(roxen_path(QUERY(pkgdir))+args->package+".tar");
+      return 0;
+    }
+
+    int do_iterate(RequestID id) {
+      if(!sizeof(res) || counter>=sizeof(res)) return 0;
+      vars=res[counter++];
+      return 1;
     }
   }
-  return "";
 }
+
+class TagUpdateUpdateList {
+  inherit RXML.Tag;
+  constant name = "update-update-list";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(QUERY(do_external_updates))
+	{
+	  if(!updater)
+	    updater=UpdateInfoFiles();
+	  else
+	    {
+	      remove_call_out(updater->do_request);
+	      updater->do_request();
+	    }
+	}
+    }
+  }
+}
+
+// ------------------------------------------------
 
 string encode_ranges(array(int) a)
 {
