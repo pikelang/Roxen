@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.66 2001/01/19 12:41:39 per Exp $
+// $Id: Roxen.pmod,v 1.67 2001/01/19 16:40:52 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3031,7 +3031,6 @@ void set_cookie( RequestID id,
 //! The expire_time_delta, domain and path arguments are optional.
 //!
 //! If the expire_time_delta variable is -1, the cookie is set to
-//!
 //! expire five years in the future. If it is 0 or ommited, no expire
 //! information is sent to the client. This usualy results in the cookie
 //! being kept until the browser is exited. 
