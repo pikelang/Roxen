@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.30 1997/01/29 04:59:34 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.31 1997/02/07 21:11:20 nisse Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -1213,9 +1213,9 @@ mapping configuration_parse(object id)
 	object n;
 	
 	name = module_short_name(o->data, o->config());
-	o->conf()->disable_module(name);
+	o->config()->disable_module(name);
 	// Remove the suitable part of the configuration file.
-	roxen->remove(name, o->conf());
+	roxen->remove(name, o->config());
 	o->change(-o->changed);
 	n=o->up;
 	o->dest();
