@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.526 2002/11/05 17:11:21 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.527 2002/11/05 18:09:54 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2264,6 +2264,46 @@ string real_file(string file, RequestID id)
 	return s;
     }
   }
+}
+
+array(int)|Stat try_stat_file(string s, RequestID id, int|void not_internal)
+{
+  RequestID fake_id;
+  array(int)|Stat res;
+
+  if(!objectp(id))
+    error("No ID passed to 'try_stat_file'\n");
+
+  // id->misc->common is here for compatibility; it's better to use
+  // id->root_id->misc.
+  if ( !id->misc )
+    id->misc = ([]);
+  if ( !id->misc->common )
+    id->misc->common = ([]);
+
+  fake_id = id->clone_me();
+
+  fake_id->misc->common = id->misc->common;
+  fake_id->misc->internal_get = !not_internal;
+  fake_id->conf = this_object();
+
+  if (fake_id->scan_for_query)
+    // FIXME: If we're using e.g. ftp this doesn't exist. But the
+    // right solution might be that clone_me() in an ftp id object
+    // returns a vanilla (i.e. http) id instead when this function is
+    // used.
+    s = fake_id->scan_for_query (s);
+
+  s = Roxen.fix_relative (s, id);
+
+  fake_id->raw_url = s;
+  fake_id->not_query = s;
+  fake_id->method = "GET";
+
+  res = stat_file(fake_id->not_query, fake_id);
+
+  destruct (fake_id);
+  return res;
 }
 
 int|string try_get_file(string s, RequestID id,
