@@ -1,5 +1,5 @@
 /*
- * $Id: faxrcpt.pike,v 1.7 1999/01/29 01:12:21 js Exp $
+ * $Id: faxrcpt.pike,v 1.8 2000/09/27 11:36:16 grubba Exp $
  *
  * A FAX module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: faxrcpt.pike,v 1.7 1999/01/29 01:12:21 js Exp $";
+constant cvs_version = "$Id: faxrcpt.pike,v 1.8 2000/09/27 11:36:16 grubba Exp $";
 
 /*
  * Roxen glue
@@ -184,33 +184,37 @@ int put(string sender, string user, string domain,
 {
   roxen_perror("AutoMail Fax RCPT: put(%O, %O, %O, %O, %O, X)\n",
 	       sender, user, domain, mail, csum);
-  
-  object clientlayer=conf->get_provider("automail_clientlayer");
-  mail->seek(0);
-  string x=mail->read();
-  object msg=MIME.Message(x);
-  mapping headers=decoded_headers(msg->headers);
-//   werror("Fax: x: %O\n",x);
-//   werror("headers: %O\n",headers);
-//   werror("real_body: %O\n",get_real_body(msg));
-  int res;
-  object u = clientlayer->get_user_from_address(user+"@"+domain);
-  object a = conf->get_provider("automail_admin");
-  if(u && a->query_status(u->id,query_automail_name()))
-  {
-    string fn="/tmp/fax"+time()+random(1000000);
-    Stdio.File(fn,"rwct")->write( fontify_mail(headers,get_real_body(msg)) );
-    string faxnumber=a->query_variable(u->id,query_automail_name(),"fax_number");
-    if(faxnumber)
+  mixed err;
+  if (err = catch {
+    object clientlayer=conf->get_provider("automail_clientlayer");
+    mail->seek(0);
+    string x=mail->read();
+    object msg=MIME.Message(x);
+    mapping headers=decoded_headers(msg->headers);
+    //   werror("Fax: x: %O\n",x);
+    //   werror("headers: %O\n",headers);
+    //   werror("real_body: %O\n",get_real_body(msg));
+    object u = clientlayer->get_user_from_address(user+"@"+domain);
+    object a = conf->get_provider("automail_admin");
+    if(u && a->query_status(u->id,query_automail_name()))
     {
-      Process.popen("/usr/bin/faxlogon");
-      Process.popen("/usr/bin/faxsend '"+Process.sh_quote(faxnumber)+"' "+fn);
-      int customer_id=u->query_customer_id();
-      clientlayer->add_charge_to("fax",customer_id);
+      string fn="/tmp/fax"+time()+random(1000000);
+      Stdio.File(fn,"rwct")->write( fontify_mail(headers,get_real_body(msg)) );
+      string faxnumber=a->query_variable(u->id,query_automail_name(),"fax_number");
+      if(faxnumber)
+      {
+	Process.popen("/usr/bin/faxlogon");
+	Process.popen("/usr/bin/faxsend '"+Process.sh_quote(faxnumber)+"' "+fn);
+	int customer_id=u->query_customer_id();
+	clientlayer->add_charge_to("fax",customer_id);
+      }
+      rm(fn);
     }
-    rm(fn);
+  }) {
+    roxen_perror(sprintf("AutoMail FAX RCPT: Failure: %s\n",
+			 describe_backtrace(err)));
   }
-  return res;
+  return 0;
 }
 
 multiset(string) query_domain()
