@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.79 2001/03/15 23:31:24 per Exp $
+// $Id: Roxen.pmod,v 1.80 2001/03/22 15:23:11 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -304,12 +304,15 @@ string http_encode_cookie(string f)
 }
 
 string http_encode_url (string f)
-//! Like http_encode_string, but also quotes #, &, ?, =, / and :.
+//! Encodes any string to be used as a literal in a URL. This means
+//! that in addition to the characters encoded by
+//! @[http_encode_string], it encodes all URL special characters, i.e.
+//! /, #, ?, & etc.
 {
   return replace (f, ({"\000", " ", "\t", "\n", "\r", "%", "'", "\"", "#",
-		       "&", "?", "=", "/", ":"}),
+		       "&", "?", "=", "/", ":", "+"}),
 		  ({"%00", "%20", "%09", "%0a", "%0d", "%25", "%27", "%22", "%23",
-		    "%26", "%3f", "%3d", "%2f", "%3a"}));
+		    "%26", "%3f", "%3d", "%2f", "%3a", "%2b"}));
 }
 
 string add_pre_state( string url, multiset state )
