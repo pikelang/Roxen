@@ -4,7 +4,7 @@ import Array;
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.16 1998/01/17 02:57:17 grubba Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.17 1998/01/21 14:16:32 grubba Exp $";
 
 #else
 import spider;
@@ -195,8 +195,8 @@ void save_it(string cl)
   if(num != strlen(data))
   {
     error("Failed to write all data to configuration file ("+f+") "
-#if 0&&efun(strerror)
-	  " ("+strerror()+")"
+#if efun(strerror)
+	  " ("+strerror(fd->errno())+")"
 #endif
 	  "\n");
   }
