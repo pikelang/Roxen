@@ -14,6 +14,8 @@
 <dd>Undefine a previously defined RXML tag</dd>
 <dt><kbd>containers=..</kbd>
 <dd>Undefine a previously defined RXML container</dd>
+<dt><kbd>if=..</kbd>
+<dd>Undefine a previously defined if argument</dd>
 </dl>
 <p> 
 

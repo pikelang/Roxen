@@ -7,7 +7,8 @@
 <b>Attributes</b>
 <dl>
 <dt><kbd><b>file=path</b></kbd>
-<dd>Read all macros and tag/container definitions from the file 'file'.
+<dd>Read all macros, tags, containers and if argument definitions
+from the file 'file'.
 
 <p> This file will be fetched just as if someone had tried to fetch it
     with an HTTP request. This makes it possible to use Pike script
@@ -20,6 +21,9 @@
 
 <dd>Read all macros and tag/container definitions from the package
     'file'. Packages are files located in {roxen-dir}/rxml_packages/.
+
+<dt><b>info</b>
+<dd>Show a list of all defined tags/containers and if arguments in the file
 
 <p><b>Available packages:</b><p>
 <use packageinfo>

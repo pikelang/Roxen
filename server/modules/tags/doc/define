@@ -10,6 +10,8 @@
 <dl compact>
 <dt><kbd>name=...</kbd>
 <dd>Set the specified define to the value inside the container</dd>
+<dt><kbd>if=..</kbd>
+<dd>Defines a new if argument, or overrides the previous definition</dd>
 <dt><kbd>tag=..</kbd>
 <dd>Defines a new RXML tag, or overrides the previous definition</dd>
 <dt><kbd>containers=..</kbd>
@@ -36,10 +38,19 @@ new tags that are more or less only an alias for old ones:<br>
 <dd>In containers only: This inserts the contents of the container
 
 <dt><kbd>&amp;argument;</kbd>
-<dd>Inserts the value of the argument 'argument'. Example:<br>
-<pre>
-{define tag=test}
+<dd>Inserts the value of the argument 'argument'. This also works in
+'if's. Example:<br> 
+
+<pre> {define tag=test}
   The test tag: Testing testing. Value1 is &amp;value1;, value2 is &amp;value2;
+{/define}
+
+{define if=always-true}
+  {true}
+{/define}
+
+{define if=always-false}
+  {false}
 {/define}
 
 {test value1=foo value2=bar}
@@ -48,7 +59,7 @@ new tags that are more or less only an alias for old ones:<br>
 <dt><kbd>&amp;tagname::argument;</kbd> and <kbd>&amp;::argument;</kbd>
 <dd>The definition of 'argument' in the last called 'tagname', or the
 previous definition of 'argument'. Useful in tags that use other
-userdefined tags.
+userdefined tags. This can not be used in 'if' argument defenitions.
 </dl>
 <p>
 <b>See also:</b> {undefine help} {set help} {insert help} {use help}
