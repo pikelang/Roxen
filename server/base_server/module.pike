@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.175 2004/05/04 17:53:22 mast Exp $
+// $Id: module.pike,v 1.176 2004/05/05 13:54:32 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -924,6 +924,57 @@ mapping(string:mixed) unlock_file (string path,
   return 0;
 }
 
+//! Check if we may perform a write access to @[path].
+//!
+//! Checks if the current locks match the if-header.
+//!
+//! Usually called from @[find_file()].
+//!
+//! @note
+//!   Does not support checking against etags yet.
+//!
+//! @returns
+//!   Returns @expr{0@} (zero) on success and
+//!   a result mapping on failure.
+mapping(string:mixed) access_path(string path, RequestID id)
+{
+  if (!sizeof(path) || (path[-1] != '/')) path += "/";
+
+  int(0..3)|DAVLock lock = check_locks(path, 0, id);
+
+  if (lock && intp(lock)) return Roxen.http_status(423);
+
+  mapping(string:array(array(array(string)))) if_data = id->get_if_data();
+  array(array(array(string))) condition;
+  if (!if_data || !sizeof(condition = if_data[path] || if_data[0])) {
+    if (lock) return Roxen.http_status(423);
+    return 0;	// No condition and no lock -- Ok.
+  }
+ next_condition:
+  foreach(condition, array(array(string)) sub_cond) {
+    int negate;
+    foreach(sub_cond, array(string) token) {
+      switch(token[0]) {
+      case "not":
+	negate = !negate;
+	break;
+      case "etag":
+	// Not supported yet.
+	continue next_contition;	// Fail.
+      case "lock":
+	if ((lock && lock->locktoken == token[1]) != negate) {
+	  // Lock mismatch.
+	  continue next_contition;	// Fail.
+	}
+	negate = 0;
+	break;
+      }
+    }
+    return 0;	// Found matching sub-condition.
+  }
+  if (lock) return Roxen.http_status(423);
+  return Roxen.http_status(412);
+}
 
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 						      RequestID id);
