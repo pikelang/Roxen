@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.266 2001/06/29 09:31:11 jonasw Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.267 2001/07/08 17:03:39 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -566,6 +566,7 @@ function alter_image(label)
 // -------------------- Image cache functions --------------------
 
 roxen.ImageCache image_cache;
+string compat_level;
 
 string status() {
   array s=image_cache->status();
@@ -587,6 +588,7 @@ void start(int num, Configuration conf)
   image_cache = roxen.ImageCache( "gtext", draw_callback );
   roxen.dump( "etc/modules/GText.pmod" );
   if(query("colorparse")) module_dependencies(conf, ({ "wiretap" }) );
+  compat_level = conf->query("compat_level");
 }
 
 constant nbsp = Roxen.iso88591["&nbsp;"];
@@ -653,37 +655,37 @@ mixed draw_callback(mapping args, string text, RequestID id)
   }
 
   if( args->afont )
-    font = resolve_font(args->afont+" "+(args["fontsize"]||32));
+    font = resolve_font(args->afont+" "+args->fontsize);
   else
   {
     int bold=0, italic=0;
-    if(args->nfont) args->font = args->nfont;
     if(args->bold) bold=1;
     if(args->light) bold=-1;
     if(args->black) bold=2;
     if(args->italic) italic=1;
+
     int|float xpad=0.0;
     if(args->xpad)
       if(args->xpad[-1]=='%')
 	xpad = (float)args->xpad;
       else
 	xpad = (int)args->xpad;
+
     int|float ypad=0.0;
     if(args->ypad)
       if(args->ypad[-1]=='%')
 	ypad = (float)args->ypad;
       else
 	ypad = (int)args->ypad;
-    font = get_font(args->font||"default",
-                    (int)args["fontsize"]||32,
+
+    font = get_font(args->font,
+                    (int)args->fontsize||32,
                     bold,
                     italic,
                     lower_case(args->talign||"left"),
                     xpad,
                     ypad);
   }
-  if(!font)
-    font = resolve_font(0);
 
   if (!font)
     error("gtext: No font (tried "+
@@ -794,7 +796,6 @@ constant textarg=({"afont",
 		   "mirrortile",
 		   "move",
 		   "narrow",
-		   "nfont",
 		   "notrans",
 		   "opaque",
 		   "outline",
@@ -839,6 +840,13 @@ constant hreffilter=(["split":1,"magic":1,"noxml":1,"alt":1]);
 mapping mk_gtext_arg(mapping arg, RequestID id) 
 {
   mapping p=([]); //Picture rendering arguments.
+
+#if ROXEN_COMPAT < 2.2
+  if(compat_level < "2.2") {
+    p->compat = compat_level;
+    p->font = m_delete(arg, "nfont");
+  }
+#endif
 
   m_delete(arg,"src");
   m_delete(arg,"width");
@@ -889,12 +897,26 @@ mapping mk_gtext_arg(mapping arg, RequestID id)
   if(!p->fgcolor) p->fgcolor="#000000";
   if(!p->bgcolor) p->bgcolor="#ffffff";
 
-  if(id->misc->defines->nfont && !p->nfont)   p->nfont=id->misc->gtext_nfont;
-  if(id->misc->defines->afont && !p->afont)   p->afont=id->misc->gtext_afont;
+#if ROXEN_COMPAT < 2.2
+  if(id->misc->defines->nfont && !p->nfont && !p->font && !p->afont && compat_level<"2.2")
+    p->font=id->misc->gtext_nfont;
+#endif
+  if(id->misc->defines->afont && !p->nfont && !p->font && !p->afont)
+    p->afont=id->misc->gtext_afont;
   if(id->misc->defines->bold && !p->bold)     p->bold=id->misc->gtext_bold;
   if(id->misc->defines->italic && !p->italic) p->italic=id->misc->gtext_italic;
   if(id->misc->defines->black && !p->black)   p->black=id->misc->gtext_black;
   if(id->misc->defines->narrow && !p->narrow) p->narrow=id->misc->gtext_narrow;
+
+  if(p->afont) {
+    p->font = roxen->fonts->verify_font( p->afont+" "+p->fontsize );
+    if(!p->font) RXML.parse_error("Font "+p->afont+" could not be loaded.\n");
+  }
+  else {
+    string font = p->font;
+    p->font = roxen->fonts->verify_font(p->font, p->fontsize||32);
+    if(!p->font) RXML.parse_error("Font "+font+" could not be loaded.\n");
+  }
 
   return p;
 }
