@@ -1,9 +1,10 @@
 /* Kanji */
 
-string cvs_version = "$Id: japanese.pike,v 1.2 1996/12/01 19:18:44 per Exp $";
+string cvs_version = "$Id: japanese.pike,v 1.3 1996/12/02 17:33:00 peter Exp $";
 string month(int num);
 
-
+/* Tip: put <header name="Content-type" value="text/html; charset=iso-2022-jp">
+   on the page since Netscape caches charsets. */
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */
 
 string mknumber(int n)
