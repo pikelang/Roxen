@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.40 1998/05/20 07:43:03 neotron Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.41 1998/05/26 08:41:08 per Exp $";
 constant thread_safe=1;
 
 
@@ -632,8 +632,8 @@ mixed find_file( string f, object id )
 
     /* Clear the stat-cache for this file */
 #ifdef __NT__
-    if(movefrom[-1] == '/')
-      movefrom = move_from[..strlen(movefrom)-2];
+    //    if(movefrom[-1] == '/')
+    //      movefrom = move_from[..strlen(movefrom)-2];
 #endif
     if (stat_cache) {
       cache_set("stat_cache", movefrom, 0);
