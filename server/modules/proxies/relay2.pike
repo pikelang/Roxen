@@ -228,7 +228,7 @@ void start( int i, Configuration c )
       if( strlen(line) && line[0] == '#' )
         continue;
       sscanf( line, "%s#", line );
-      array tokens = replace( trim( line ), "\t", " ")/" " - ({ "" });
+      array tokens = replace( String.trim_whites( line ), "\t", " ")/" " - ({ "" });
       int last;
       if( sizeof( tokens ) > 2 )
       {
