@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.41 1998/08/11 18:55:07 grubba Exp $
+/* $Id: ssl3.pike,v 1.42 1998/08/26 12:00:06 nisse Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -119,10 +119,23 @@ array|void real_port(array port, object cfg)
   object rsa = Standards.PKCS.RSA.parse_private_key(key);
   if (!rsa)
     ({ report_error, throw }) ("ssl3: Private key not valid.\n");
-  
+
+  function r = Crypto.randomness.reasonably_random()->read;
+
+#ifdef SSL3_DEBUG
+  werror(sprintf("RSA key size: %d bits\n", rsa->rsa_size()));
+#endif
+
+  if (rsa->rsa_size() > 512)
+  {
+    /* Too large for export */
+    ctx->short_rsa = Crypto.rsa()->generate_key(512, r);
+    
+    // ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
+  }  
   ctx->certificates = ({ cert });
   ctx->rsa = rsa;
-  ctx->random = Crypto.randomness.reasonably_random()->read;
+  ctx->random = r;
 }
 
 #define CHUNK 16384
