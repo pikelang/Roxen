@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.123 2001/09/13 00:33:22 nilsson Exp $
+// $Id: Roxen.pmod,v 1.124 2001/09/13 00:45:07 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2019,16 +2019,28 @@ int time_dequantifier(mapping m, void|int t )
   if (m->days)    t+=(int)(m->days)*86400;
   if (m->weeks)   t+=(int)(m->weeks)*604800;
   if (m->months) {
-    if(initial)
-      t = (Calendar.ISO.Second("unix", t) +
-	   Calendar.ISO.Month()*(int)m->months)->unix_time();
+    int mon = (int)m->months;
+    if(initial) {
+      if(mon<0)
+	t = (Calendar.ISO.Second("unix", t) -
+	     Calendar.ISO.Month()*abs(mon))->unix_time();
+      else
+	t = (Calendar.ISO.Second("unix", t) +
+	     Calendar.ISO.Month()*mon)->unix_time();
+    }
     else
-      t+=(int)((float)(m->months)*24*3600*30.436849);
+      t+=(int)(mon*24*3600*30.436849);
   }
   if (m->years) {
-    if(initial)
-      t = (Calendar.ISO.Second("unix", t) +
-	   Calendar.ISO.Year()*(int)m->years)->unix_time();
+    int year = (int)m->years;
+    if(initial) {
+      if(year<0)
+	t = (Calendar.ISO.Second("unix", t) -
+	     Calendar.ISO.Year()*abs(year))->unix_time();
+      else
+	t = (Calendar.ISO.Second("unix", t) +
+	     Calendar.ISO.Year()*(int)m->years)->unix_time();
+    }
     else
       t+=(int)((float)(m->years)*3600*24*365.242190);
   }
