@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.129 2000/08/19 22:51:22 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.130 2000/08/20 00:27:21 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "Business graphics";
@@ -509,10 +509,12 @@ string container_diagram(string tag, mapping m, string contents,
       return syntax("tonedbox must have a comma separated list of 4 colors.");
     res->tonedbox = map(a, parse_color);
   }
-  else {
-    res->colorbg=parse_color(m->colorbg||id->misc->defines->bgcolor||"white");
-    if (m->notrans)
-      m_delete(m, "bgcolor");
+  else if (m->colorbg)
+    res->colorbg=parse_color(m->colorbg);
+
+  if (m->notrans) {
+    res->colorbg=parse_color(m->bgcolor||m->colorbg||id->misc->defines->bgcolor||"white");
+    m_delete(m, "bgcolor");
   }
 
   res->drawtype="linear";
