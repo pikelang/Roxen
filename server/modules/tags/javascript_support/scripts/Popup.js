@@ -91,7 +91,7 @@ function boundPopup(name)
     p_t = Math.max(0, c_h - p_h + s_t);
   
   shiftTo(name, p_l, p_t);
-  //alert(p_w+'×'+p_h+'@'+p_l+','+p_t+' '+c_w+'×'+c_h+'@'+s_l+','+s_t);
+  //alert(p_w+'×'+p_h+'(a)'+p_l+','+p_t+' '+c_w+'×'+c_h+'(a)'+s_l+','+s_t);
 }
 
 function TriggerCoord(e, parent_popup_pos, name)
