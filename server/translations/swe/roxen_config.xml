@@ -1624,7 +1624,12 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 <new/>
 <o>If no file match a given resource all directories above the wanted file is searched for one of the files in this list.&lt;p&gt;
 As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.</o>
-<t></t>
+<t>Om ingen fil matchar en given URL så letas alla mappar över den
+efterfrågade filen igenom efter en av de i den här listan listade
+filerna.&lt;p&gt;
+Som ett exempel, om filen '/foo/bar/inte_där.html' efterfrågas, och
+den här listan innehåller '404.inc', så kommer dessa filer att
+användas: /foo/bar/404.inc, /foo/404.inc eller /404.inc.</t></o>
 </str>
 
 <str id="309">
@@ -2069,151 +2074,157 @@ utifrån detta namn.</t>
 <str id="8">
 <new/>
 <o>Server secret</o>
-<t></t>
+<t>Serverhemlighet</t>
 </str>
 
 <str id="9">
 <new/>
 <o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced</o>
-<t></t>
+<t>Serverhemligheten är en sträng som används i kryptografiska
+funktioner, som t.ex. beräkningen av unika sessionsnycklar. Ändra det
+här värdet till något som är svårt att gissa om du inte är nöjd med
+det värde som din dators slumptalsfunktion har räknat fram åt dig.</t>
 </str>
 
 <str id="164">
 <new/>
 <o>Databases</o>
-<t></t>
+<t>Databaser</t>
 </str>
 
 <str id="165">
 <new/>
 <o>Configuration Filesystem</o>
-<t></t>
+<t>Konfigurationsfilsystem</t>
 </str>
 
 <str id="166">
 <new/>
 <o>This filesystem serves the administration interface</o>
-<t></t>
+<t>Det här filsystemet tillhandahåller konfigurationsinterfacets sidor</t>
 </str>
 
 <str id="168">
 <new/>
 <o>Hide</o>
-<t></t>
+<t>Gömm</t>
 </str>
 
 <str id="169">
 <new/>
 <o>Login attempt from %s</o>
-<t></t>
+<t>Inlåggningsförsök från %s</t>
 </str>
 
 <str id="167">
 <new/>
 <o>Form font size</o>
-<t></t>
+<t>Typsnittsstorlek för formulär</t>
 </str>
 
 <str id="178">
 <new/>
 <o>The fontsize of the variables in the configuration interface</o>
-<t></t>
+<t>Typsnittsstorleken för variabler i konfigurationsinterfacet</t>
 </str>
 
 <str id="179">
 <new/>
 <o>Documentation font size</o>
-<t></t>
+<t>Typsnittsstorlek för dokumentationen</t>
 </str>
 
 <str id="193">
 <new/>
 <o>The fontsize of the documentation in the configuration interface</o>
-<t></t>
+<t>Typsnittsstorleken för dokumentation i konfigurationsinterfacet</t>
 </str>
 
 <str id="205">
 <new/>
 <o>Minumum allowed bitrate</o>
-<t></t>
+<t>Minsta tillåtna datahastighet</t>
 </str>
 
 <str id="215">
 <new/>
 <o>The minimum allowed bitrate, in Kbits/second. If the  client is slower than this set bitrate, it will be disconnected (after a timeout). Setting this higher than 14 is not recommended if you have modem users.</o>
-<t></t>
+<t>Den lägsta tillåtna datahastigheten, i Kibit/sekund. Om klienten ä
+rlångsammare än den här inställda hastigheten så kommer den kopplas
+ner (efter en timeout). Det är inte rekommenderat att den här
+variabeln sätts till ett värde större än 14.</t>
 </str>
 
 <str id="233">
 <new/>
-<o>bytecode data</o>
-<t></t>
+<o>Binary data</o>
+<t>Binärdata</t>
 </str>
 
 <str id="373">
 <new/>
 <o>Key</o>
-<t></t>
+<t>Nyckel</t>
 </str>
 
 <str id="374">
 <new/>
 <o>rows</o>
-<t></t>
+<t>rader</t>
 </str>
 
 <str id="375">
 <new/>
 <o>KiB</o>
-<t></t>
+<t>KiB</t>
 </str>
 
 <str id="376">
 <new/>
 <o>Name</o>
-<t></t>
+<t>Namn</t>
 </str>
 
 <str id="377">
 <new/>
 <o>Size</o>
-<t></t>
+<t>Storlek</t>
 </str>
 
 <str id="378">
 <new/>
 <o>Clear query</o>
-<t></t>
+<t>Töm frågan</t>
 </str>
 
 <str id="379">
 <new/>
 <o>Run query</o>
-<t></t>
+<t>Kör fråga</t>
 </str>
 
 <str id="380">
 <new/>
 <o>While running %s: %s</o>
-<t></t>
+<t>Under tiden som %s kördes: %s</t>
 </str>
 
 <str id="381">
 <new/>
 <o>Failed to connect</o>
-<t></t>
+<t>Misslyckades koppla upp</t>
 </str>
 
 <str id="382">
 <new/>
 <o>Failed to enable %s</o>
-<t></t>
+<t>Misslyckades med att öppna %s</t>
 </str>
 
 <str id="383">
 <new/>
 <o>Documentation</o>
-<t></t>
+<t>Dokumentation</t>
 </str>
 
 <str id="245">
@@ -2256,95 +2267,104 @@ utifrån detta namn.</t>
 <str id="246">
 <new/>
 <o>Compatibility level</o>
-<t></t>
+<t>Kompabilitetsnivå</t>
 </str>
 
 <str id="257">
 <new/>
 <o>Passive port minimum</o>
-<t></t>
+<t>Minimal port för PASV</t>
 </str>
 
 <str id="320">
 <new/>
 <o>Minimum port number to use in the PASV/EPSV response.</o>
-<t></t>
+<t>Det lägsta portnummer som ska användas som svar till PASV/EPSV kommando</t>
 </str>
 
 <str id="321">
 <new/>
 <o>Passive port maximum</o>
-<t></t>
+<t>Maximal port för PASV</t>
 </str>
 
 <str id="322">
 <new/>
 <o>Maximum port number to use in the PASV/EPSV response.</o>
-<t></t>
+<t>Det högsta portnummret som ska användas som svar till ett
+PASV/EPSV kommando</t>
 </str>
 
 <str id="323">
 <new/>
 <o>Shared with </o>
-<t></t>
+<t>Delad med</t>
 </str>
 
 <str id="324">
 <new/>
 <o>Ports</o>
-<t></t>
+<t>Portar</t>
 </str>
 
 <str id="14">
 <new/>
 <o>Module list mode</o>
-<t></t>
+<t>Modullistningsläge</t>
 </str>
 
 <str id="15">
 <new/>
 <o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;</o>
-<t></t>
+<t>Modullistningsmodellen. En av
+&lt;dl&gt;&lt;dt&gt;Ihopfälld&lt;/dt&gt;
+&lt;dd&gt;Moduler i samma grupp är ihoppfälldad
+&lt;/dd&gt;&lt;dt&gt;Uppfälld&lt;/dt&gt;
+&lt;dd&gt;Samma stil som den 'gamla' listan i Roxen 2.1&lt;/dd&gt;
+&lt;dt&gt;JavaScript fönster&lt;/dt&gt;
+&lt;dd&gt;Som ihopfälld, men när musen dras över en grupp som dyker
+ett fönster med modulerna upp.&lt;/dd&gt;&lt;/dl&gt;</t>
 </str>
 
 <str id="17">
 <new/>
 <o>Folded with javascript popup</o>
-<t></t>
+<t>Ihoppfäld med Javascript fönster</t>
 </str>
 
 <str id="122">
 <new/>
 <o>Folded</o>
-<t></t>
+<t>Ihoppfäld</t>
 </str>
 
 <str id="123">
 <new/>
 <o>Unfolded (old stype)</o>
-<t></t>
+<t>Uppfälld (gamla stilen)</t>
 </str>
 
 <str id="219">
 <new/>
 <o>Authentication method</o>
-<t></t>
+<t>Authentifierings metod</t>
 </str>
 
 <str id="291">
 <new/>
 <o>The method to use to authenticate configuration interface users.</o>
-<t></t>
+<t>Metoden som ska användas för att authentifiera
+konfigurationsgränssnittsanvändare</t>
 </str>
 
 <str id="301">
 <new/>
 <o>HTTP Basic passwords</o>
-<t></t>
+<t>HTTP Basic lösenord</t>
 </str>
 
 <str id="325">
 <new/>
 <o>HTTP Cookies</o>
-<t></t>
+<t>HTTP Kakor</t>
 </str>

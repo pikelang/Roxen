@@ -260,104 +260,107 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <str id="16">
 <new/>
 <o>Remove</o>
-<t></t>
+<t>Ta bort</t>
 </str>
 
 <str id="18">
 <new/>
 <o>Add</o>
-<t></t>
+<t>Addera</t>
 </str>
 
 <str id="38">
 <new/>
 <o>Ok</o>
-<t></t>
+<t>OK</t>
 </str>
 
 <str id="47">
 <new/>
 <o>Example</o>
-<t></t>
+<t>Exempel</t>
 </str>
 
 <str id="48">
 <new/>
 <o>Example Text</o>
-<t></t>
+<t>Exempeltext</t>
 </str>
 
 <str id="49">
 <new/>
 <o>Yes</o>
-<t></t>
+<t>Ja</t>
 </str>
 
 <str id="50">
 <new/>
 <o>No</o>
-<t></t>
+<t>Nej</t>
 </str>
 
 <str id="51">
 <new/>
 <o>No name</o>
-<t></t>
+<t>Inget namn</t>
 </str>
 
 <str id="52">
 <new/>
 <o>Completed</o>
-<t></t>
+<t>Färdig</t>
 </str>
 
 <str id="53">
 <new/>
 <o>Page </o>
-<t></t>
+<t>Sida </t>
 </str>
 
 <str id="54">
 <new/>
 <o>&amp;lt;- Previous</o>
-<t></t>
+<t>&amp;lt;- Föregående</t>
 </str>
 
 <str id="55">
 <new/>
 <o>OK</o>
-<t></t>
+<t>OK</t>
 </str>
 
 <str id="56">
 <new/>
 <o>Cancel</o>
-<t></t>
+<t>Avbryt</t>
 </str>
 
 <str id="57">
 <new/>
 <o>Next -&amp;gt;</o>
-<t></t>
+<t>Nästa -&mp;gt;</t>
 </str>
 
 <str id="58">
 <new/>
-<o>Syntax error in security patterns: Cannot find the user database ''
+<o>Syntax error in security patterns: Cannot find the user database '%s'
 </o>
-<t></t>
+<t>Syntaxfel i säkerhetsmönstren: Kan inte hitta användardatabasen '%s'
+</t>
 </str>
 
 <str id="59">
 <new/>
-<o>Syntax error in security patterns: Cannot find the auth method ''
+<o>Syntax error in security patterns: Cannot find the auth method '%s'
 </o>
-<t></t>
+<t>Syntaxfel i säkerhetsmönstren: Kan inte hitta authentifieringsmetoden '%s'
+</t>
 </str>
 
 <str id="60">
 <new/>
 <o>Syntax error in security patterns: Expected 'allow' or 'deny'
 </o>
-<t></t>
+<t>Syntaxfel i säkerhetsmönstren: Letade efter 'allow' eller 'deny'
+</t>
 </str>
