@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.7 1997/04/05 01:26:24 per Exp $";
+string cvs_version = "$Id: wais.pike,v 1.8 1997/05/28 00:29:15 grubba Exp $";
 
 #include <config.h>
 
@@ -2268,8 +2268,8 @@ void connected(object ok, string file, object send_to, string key)
     /* Write out message. Read back header. */
     
     ok->write(header);
-    ok->set_nonblocking(got_search_data, lambda(){},done_search_data);
     ok->set_id(({ "", 0, 0, send_to, ok,database, key }));
+    ok->set_nonblocking(got_search_data, lambda(){},done_search_data);
 
     send_to->my_fd->write("HTTP/1.0 200 Yo! Wais data comming soon to a "
 			  "screen near you\nContent-Type: text/html\n\n"
@@ -2341,8 +2341,8 @@ void connected(object ok, string file, object send_to, string key)
     /* Write out message. Read back header. */
     
     ok->write(header);
-    ok->set_nonblocking(got_fetch_data, lambda(){},done_fetch_data);
     ok->set_id(({ "", 0, 0, send_to, ok,docname,bin,format }));
+    ok->set_nonblocking(got_fetch_data, lambda(){},done_fetch_data);
     return;
   }
 }

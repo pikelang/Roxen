@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-string cvs_version = "$Id: gopher.pike,v 1.8 1997/04/05 01:26:21 per Exp $";
+string cvs_version = "$Id: gopher.pike,v 1.9 1997/05/28 00:29:14 grubba Exp $";
 #include <config.h>
 
 #define CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote "	\
@@ -228,8 +228,8 @@ void connected(object ok, string file, object send_to, string query,
     perror("GOPHER: Is a menu\n");
 #endif
     ok->write(file + "\n");
-    ok->set_nonblocking(got_dir_data, lambda(){}, done_dir_data);
     ok->set_id(({ "", send_to, ok, key}));
+    ok->set_nonblocking(got_dir_data, lambda(){}, done_dir_data);
     send_to->my_fd->write("HTTP/1.0 200 Yo! Gopher dir comming soon to a "
 			  "screen near you\nContent-Type: text/html\n\n"
 			  "<h1>Gopher menu</h1><hr>");
@@ -291,8 +291,8 @@ void connected(object ok, string file, object send_to, string query,
 		   "<h1>Gopher Search</h1>"
 		   "<isindex prompt=\"Gopher search:  \">");
     ok->write(file + "	" + query + "\n");
-    ok->set_nonblocking(got_dir_data, lambda(){}, done_dir_data);
     ok->set_id(({ "", send_to, ok})); 
+    ok->set_nonblocking(got_dir_data, lambda(){}, done_dir_data);
     return;
 
    case "T": /* Tn 3270, shouldn't be here */

@@ -1,7 +1,7 @@
 //#include <stdio.h>
 #include <simulate.h>
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.6 1997/04/05 01:25:48 per Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.7 1997/05/28 00:29:13 grubba Exp $";
 
 //#define DEBUG
 
@@ -710,7 +710,7 @@ void create(string cdir, string logfiles, int cng, int mcs,
 int main() 
 {
   object st = File("stdin");
-  st->set_nonblocking( got_command, 0, cache_stream_closed );
   st->set_id(stdin);
+  st->set_nonblocking( got_command, 0, cache_stream_closed );
   return -1;
 }

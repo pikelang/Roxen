@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.21 1997/05/22 23:26:10 per Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.22 1997/05/28 00:29:11 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -287,8 +287,8 @@ class Cache {
       /* Master */ 
       destruct(lcs);
       reinit(basename);
-      command_stream->set_nonblocking(nil,really_send,do_create);
       command_stream->set_id(basename);
+      command_stream->set_nonblocking(nil,really_send,do_create);
       return;
     }
     /* Child */

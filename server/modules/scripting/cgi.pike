@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.25 1997/05/27 23:02:32 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.26 1997/05/28 00:29:17 grubba Exp $";
 
 #include <module.h>
 
@@ -436,8 +436,8 @@ mixed find_file(string f, object id)
     if(id->data || id->misc->len)
     {
       pipe2->write(id->data);
-      id->my_fd->set_nonblocking(got_some_data, 0, 0); // for put..
-      id->my_fd->set_id( pipe2 );                     // lets try, atleast..
+      id->my_fd->set_id( pipe2 );                      // for put..
+      id->my_fd->set_nonblocking(got_some_data, 0, 0); // lets try, atleast..
     }
   pipe2->set_id(pipe2);
   return http_stream(pipe2);
