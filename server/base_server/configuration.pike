@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.331 2000/08/08 12:12:31 jhs Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.332 2000/08/11 19:30:26 lange Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -528,7 +528,7 @@ class LogFile
     {
       remove_call_out( do_open );
       call_out( do_open, 120 ); 
-      report_error(LOC_M("", "Failed to open logfile")+" "+fname+" "
+      report_error(LOC_M(37, "Failed to open logfile")+" "+fname+" "
 #if constant(strerror)
                    "(" + strerror(errno()) + ")"
 #endif
@@ -758,7 +758,7 @@ public array(string) userinfo(string u, RequestID|void id)
   if(auth_module) return auth_module->userinfo(u);
   else report_warning(sprintf("userinfo(): %s\n"
 			      "%s\n",
-			      LOC_M("", "No authorization module"),
+			      LOC_M(38, "No authorization module"),
 			      describe_backtrace(backtrace())));
 }
 
@@ -767,7 +767,7 @@ public array(string) userlist(RequestID|void id)
   if(auth_module) return auth_module->userlist();
   else report_warning(sprintf("userlist(): %s\n"
 			      "%s\n",
-			      LOC_M("", "No authorization module"),
+			      LOC_M(38, "No authorization module"),
 			      describe_backtrace(backtrace())));
 }
 
@@ -777,7 +777,7 @@ public array(string) user_from_uid(int u, RequestID|void id)
     return auth_module->user_from_uid(u);
   else report_warning(sprintf("user_from_uid(): %s\n"
 			      "%s\n",
-			      LOC_M("", "No authorization module"),
+			      LOC_M(38, "No authorization module"),
 			      describe_backtrace(backtrace())));
 }
 
@@ -931,7 +931,7 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
 
   if (err) {
     report_error("check_security(): %s:\n%s\n",
-		 LOC_M("", "Error during module security check"),
+		 LOC_M(39, "Error during module security check"),
 		 describe_backtrace(err));
     return 1;
   }
@@ -977,7 +977,7 @@ void clear_memory_caches()
     if (m && m->clear_memory_caches)
       if (mixed err = catch( m->clear_memory_caches() ))
 	report_error("clear_memory_caches() "+
-		     LOC_M("", "failed for module %O:\n%s\n"),
+		     LOC_M(40, "failed for module %O:\n%s\n"),
 		     otomod[m], describe_backtrace(err));
 }
 
@@ -2345,7 +2345,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 #endif
 	string bt=describe_backtrace(err);
 	report_error("enable_module(): " +
-		     LOC_M("", "Error while initiating module copy of %s%s"),
+		     LOC_M(41, "Error while initiating module copy of %s%s"),
 		     moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
 #ifdef MODULE_DEBUG
       }
@@ -2501,7 +2501,7 @@ void call_start_callbacks( RoxenModule me,
       report_debug("\bERROR\n");
 #endif
     string bt=describe_backtrace(err);
-    report_error(LOC_M("", "Error while initiating module copy of %s%s"),
+    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
 			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     
     /* Clean up some broken references to this module. */
@@ -2525,7 +2525,7 @@ void call_start_callbacks( RoxenModule me,
     if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
     string bt=describe_backtrace(err);
-    report_error(LOC_M("", "Error while initiating module copy of %s%s"),
+    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
 			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     pr = 3;
   }
@@ -2557,7 +2557,7 @@ void call_start_callbacks( RoxenModule me,
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
     string bt=describe_backtrace(err);
-    report_error(LOC_M("", "Error while initiating module copy of %s%s"),
+    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
 			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     }
 
@@ -2577,7 +2577,7 @@ void call_start_callbacks( RoxenModule me,
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
     string bt=describe_backtrace(err);
-    report_error(LOC_M("", "Error while initiating module copy of %s%s"),
+    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
 			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     }
 
@@ -2675,7 +2675,7 @@ int disable_module( string modname, int|void nodest )
   if(!module)
   {
     report_error("disable_module(): " +
-		 LOC_M("", "Failed to disable module:\n"
+		 LOC_M(42, "Failed to disable module:\n"
 			"No module by that name: \"%s\".\n"), modname);
     return 0;
   }
@@ -2691,7 +2691,7 @@ int disable_module( string modname, int|void nodest )
   if(!me)
   {
     report_error("disable_module(): " +
-		 LOC_M("", "Failed to disable module \"%s\".\n"),
+		 LOC_M(43, "Failed to disable module \"%s\".\n"),
 		 descr);
     return 0;
   }
@@ -2700,7 +2700,7 @@ int disable_module( string modname, int|void nodest )
     if (mixed err = catch (me->stop())) {
       string bt=describe_backtrace(err);
       report_error("disable_module(): " +
-		   LOC_M("", "Error while disabling module %s%s"),
+		   LOC_M(44, "Error while disabling module %s%s"),
 		   descr, (bt ? ":\n"+bt : "\n"));
     }
 
@@ -2914,7 +2914,7 @@ void low_init()
   {
     if( !forcibly_added[ tmp_string ] )
       if(err = catch( enable_module( tmp_string )))
-	report_error(LOC_M("", "Failed to enable the module %s. Skipping.\n%s"),
+	report_error(LOC_M(45, "Failed to enable the module %s. Skipping.\n%s"),
 			    tmp_string, describe_backtrace(err));
   }
   enable_module_batch_msgs = 0;
