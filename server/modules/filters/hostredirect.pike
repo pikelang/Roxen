@@ -8,7 +8,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.13 1997/08/31 04:12:40 peter Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.14 1997/09/28 12:47:52 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -122,8 +122,8 @@ mixed first_try(object id)
   to = patterns[host];
   if(!to) {
     //    if(patterns["default"])
-    //since "default" can also have a HTTP
     //  id->not_query = patterns["default"];
+    //since "default" can also have a HTTP
     //redirect we don't get away that easy
     return 0;
   }
@@ -133,14 +133,15 @@ mixed first_try(object id)
     perror("thesearch: %d\n", 
 	   search(id->referer[0], 
 		  lower_case((id->prot / "/")[0])+"://"+id->misc->host));
-    perror(sprintf("referer: %O\nhost: %O\nraw: %O\nurl: %O\n", id->referer, 
-		   id->misc->host, id->raw, 
+    perror(sprintf("referer: %O\nhost: %O\nraw: %O\nurl: %O\n",
+		   id->referer, id->misc->host, id->raw, 
 		   lower_case((id->prot /"/")[0])+"://"+id->misc->host));  
-#endif     
-    if((!id->referrer) || (!sizeof(id->referrer)) ||
+#endif
+    if((id->referrer) && (sizeof(id->referrer)) &&
        search(id->referer[0],
-	      lower_case((id->prot /"/")[0])+"://"+id->misc->host) == 0)
+	      lower_case((id->prot /"/")[0])+"://"+id->misc->host) == 0) {
       return 0;
+    }
     // this is some magic here: in order to allow pictures in the defaultpage
     // they need to be referenced beginning with the same url
     // as the redirection: 
@@ -204,7 +205,9 @@ mixed first_try(object id)
         + ([ "extra_heads":([ "Location":to ]) ]);
   } else {
 #ifdef HOSTREDIRECT_DEBUG
-    //    perror("search: %d\n", search(id->referer[0],lower_case((id->prot / "/")[0])+"://"+id->misc->host));
+    // perror("search: %d\n",
+    // 	   search(id->referer[0],
+    // 		  lower_case((id->prot / "/")[0])+"://"+id->misc->host));
     perror(sprintf("referer: %O\nhost: %O\nprotokoll: %O\nurl: %O\n",
 		   id->referer, id->misc->host, id->prot, 
 		   lower_case((id->prot /"/")[0])+"://"+id->misc->host));  
