@@ -13,14 +13,14 @@ static Stat stat( string file, RequestID id )
 
 string|array(int|string) read( string file,
 			       RequestID id,
-			       string|void cache,
+			       int|void cache,
 			       int last_mtime )
 //! Read the contents of the specified file, if it exists. If it does
 //! not exist, 0 is returned.
 //!
-//! If @[cache] is specified, the result will be cached under the name
-//! specified. No stat(2) validation is done before returning a value
-//! from the cache unless you also specify the @[last_mtime] argument.
+//! If @[cache] is specified, the result will be cached. No stat(2)
+//! validation is done before returning a value from the cache unless
+//! you also specify the @[last_mtime] argument.
 //!
 //! If last_mtime is specified, ({ mtime, file_contents }) is
 //! returned, otherwise only the contents of the file.
@@ -30,7 +30,7 @@ string|array(int|string) read( string file,
   int mtime;
   if( cache )
   {
-    res = cache_lookup( (ck=cache+":"+c->name+":"+id->misc->host), file );
+    res = cache_lookup( (ck="files:"+c->name+":"+id->misc->host), file );
     if( res && last_mtime )
     {
       Stat s = stat( file, id );
@@ -59,7 +59,7 @@ array(string) find_above_read( string above,
 			       string name,
 			       RequestID id,
 			       string|void cache,
-			       int do_mtime )
+			       int|void do_mtime )
 //! Operates more or less like a combination of find_above and read. 
 //! The major difference from calling read( find_above( above, name,
 //! id, cache ), id, cache, last_mtime ) is that this function does
@@ -84,7 +84,7 @@ array(string) find_above_read( string above,
       last_mtime = cache_lookup( (ck=cache+":mtime:"+id->conf->name+
 				  ":"+id->misc->host), above )||-1;
 
-    if( string|array data = read( above, id, cache, last_mtime ) )
+    if( string|array data = read( above, id, !!cache, last_mtime ) )
     {
       if( arrayp( data ) )
       {
