@@ -3,7 +3,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.26 1997/06/11 22:28:40 marcus Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.27 1997/07/06 15:42:09 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -30,9 +30,9 @@ void pw_name(int uid)
 
 void report_status()
 {
-#ifdef DEBUG
+// #ifdef DEBUG
   call_out(report_status, 60);
-#endif /* DEBUG */
+// #endif /* DEBUG */
   if (!perror_status_reported) {
     stderr->write("[1mRoxen is alive! pid: "+pid+"   ppid: "+getppid()+
 #if efun(geteuid)
