@@ -1,10 +1,22 @@
 Changes since Roxen 2.0.28
 -----------------------------------------------
 
+o Made --without-rtldebug default for the binary dists again. Makes
+  for faster Roxen.
+
+o Added reconnect code by Zsolt Varga to the Postgres module. Thanks.
+
+o Added more paranioa in errorhandling in Pike and Roxen.
+
+
+Changes since Roxen 2.0.27
+-----------------------------------------------
+
 o Added the alternative poweruser module adder by Martin Baehr,
   thanks!
 
 o Some small bugfixes.
+
 
 Changes since Roxen 2.0.22
 -----------------------------------------------
