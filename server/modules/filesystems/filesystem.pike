@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.101 2001/06/27 19:00:56 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.102 2001/08/01 19:35:05 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -75,11 +75,13 @@ string status()
 
 void create()
 {
-  defvar("mountpoint", "/", LOCALE(15,"Mount point"), TYPE_LOCATION|VAR_INITIAL,
+  defvar("mountpoint", "/", LOCALE(15,"Mount point"),
+	 TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
 	 LOCALE(16,"Where the module will be mounted in the site's virtual "
 		"file system."));
 
-  defvar("searchpath", "NONE", LOCALE(17,"Search path"), TYPE_DIR|VAR_INITIAL,
+  defvar("searchpath", "NONE", LOCALE(17,"Search path"),
+	 TYPE_DIR|VAR_INITIAL|VAR_NO_DEFAULT,
 	 LOCALE(18,"The directory that contains the files."));
 
   defvar(".files", 0, LOCALE(19,"Show hidden files"), TYPE_FLAG|VAR_MORE,
