@@ -1,18 +1,13 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.64 2002/06/14 16:05:03 jhs Exp $
+// $Id: read_config.pike,v 1.65 2002/06/26 14:20:43 nilsson Exp $
 
 #include <module.h>
-
-#ifndef IN_INSTALL
-inherit "newdecode";
-#else
-import spider;
-# include "newdecode.pike"
-#endif
+#include <module_constants.h>
 
 // #define DEBUG_CONFIG
-#include <module_constants.h>
+
+inherit "newdecode";
 
 #define COPY( X ) ((X||([])) + ([]))
 
@@ -231,14 +226,10 @@ mapping read_it(string cl)
 void remove( string reg , Configuration current_configuration )
 {
   string cl;
-#ifndef IN_INSTALL
   if(!current_configuration)
-#endif
     cl="Global Variables";
-#ifndef IN_INSTALL
   else
     cl=current_configuration->name;
-#endif
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Remove "+reg+" in "+cl+"\n");
 #endif
@@ -271,14 +262,10 @@ void store( string reg, mapping vars, int q,
   string cl;
   mapping m;
 
-#ifndef IN_INSTALL
   if(!current_configuration)
-#endif
     cl="Global Variables";
-#ifndef IN_INSTALL
   else
     cl=current_configuration->name;
-#endif
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Store "+reg+" in "+cl+"\n");
 #endif
@@ -327,14 +314,10 @@ mapping(string:mixed) retrieve(string reg,
 			       Configuration current_configuration)
 {
   string cl;
-#ifndef IN_INSTALL
   if(!current_configuration)
-#endif
     cl="Global Variables";
-#ifndef IN_INSTALL
   else
     cl=current_configuration->name;
-#endif
 
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Retrieve "+reg+" in "+cl+"\n");
