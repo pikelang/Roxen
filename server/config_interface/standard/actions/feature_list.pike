@@ -151,9 +151,9 @@ mixed page_1(object id, object mc)
              lambda(string s, mapping r) {
                return
                  "<tr><td>"+s+"</td><td>"+
-                 ({"&locale.disabled;",
-                   "&locale.na;",
-                   "&locale.enabled;" })[ r[trans[s]] + 1]+
+                 ({"&locale.disabled:none;",
+                   "&locale.na:none;",
+                   "&locale.enabled:none;" })[ r[trans[s]] + 1]+
                  "</td></tr>\n";
              }, modules)*"")+"</table>";
 }
