@@ -1,7 +1,8 @@
-
 static constant jvm = Java.machine;
 
 static private inherit "roxenlib";
+
+#include <module.h>
 
 #define FINDCLASS(X) (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0))
 
@@ -33,15 +34,18 @@ static object string_init = string_class->get_method("<init>", "([CII)V");
 /* Class loading */
 static object class_class = FINDCLASS("java/lang/Class");
 static object classloader_class = FINDCLASS("java/lang/ClassLoader");
-static object classloader2_class = FINDCLASS("java/net/URLClassLoader");
+static object roxenclassloader_class = FINDCLASS("com/roxen/roxen/RoxenClassLoader");
 static object file_class = FINDCLASS("java/io/File");
 static object url_class = FINDCLASS("java/net/URL");
-static object load_class = classloader_class->get_method("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-static object cl_init = classloader2_class->get_method("<init>", "([Ljava/net/URL;)V");
+static object load_class = roxenclassloader_class->get_method("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+static object cl_init = roxenclassloader_class->get_method("<init>", "([Ljava/net/URL;)V");
 static object file_init = file_class->get_method("<init>", "(Ljava/lang/String;)V");
 static object file_tourl = file_class->get_method("toURL", "()Ljava/net/URL;");
-static object new_instance = class_class->get_method("newInstance",
-						     "()Ljava/lang/Object;");
+static object get_module_name = roxenclassloader_class->get_static_method("getModuleClassName", "(Ljava/lang/String;)Ljava/lang/String;");
+static object add_jar = roxenclassloader_class->get_method("addJarFile", "(Ljava/lang/String;)V");
+static object new_instance = class_class->get_method("newInstance", "()Ljava/lang/Object;");
+static object filenotfound_class = FINDCLASS("java/io/FileNotFoundException");
+static object ioexception_class = FINDCLASS("java/io/IOException");
 
 /* Error messages */
 static object throwable_class = FINDCLASS("java/lang/Throwable");
@@ -62,12 +66,13 @@ static object parser_ifc = FINDCLASS("com/roxen/roxen/ParserModule");
 static object fileext_ifc = FINDCLASS("com/roxen/roxen/FileExtensionModule");
 static object provider_ifc = FINDCLASS("com/roxen/roxen/ProviderModule");
 static object simpletagcaller_ifc = FINDCLASS("com/roxen/roxen/SimpleTagCaller");
+static object lastresort_ifc = FINDCLASS("com/roxen/roxen/LastResortModule");
 static object frame_class = FINDCLASS("com/roxen/roxen/Frame");
 static object response_class = FINDCLASS("com/roxen/roxen/RoxenResponse");
 static object response2_class = FINDCLASS("com/roxen/roxen/RoxenStringResponse");
 static object response3_class = FINDCLASS("com/roxen/roxen/RoxenFileResponse");
 static object response4_class = FINDCLASS("com/roxen/roxen/RoxenRXMLResponse");
-static object reqid_init = reqid_class->get_method("<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+static object reqid_init = reqid_class->get_method("<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
 static object conf_init = conf_class->get_method("<init>", "()V");
 static object frame_init = frame_class->get_method("<init>", "()V");
 static object _configuration = module_class->get_field("configuration", "Lcom/roxen/roxen/RoxenConfiguration;");
@@ -90,6 +95,7 @@ static object _stat_file = location_ifc->get_method("statFile", "(Ljava/lang/Str
 static object _query_file_extensions = fileext_ifc->get_method("queryFileExtensions", "()[Ljava/lang/String;");
 static object _handle_file_extension = fileext_ifc->get_method("handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
 static object _query_tag_callers = parser_ifc->get_method("querySimpleTagCallers", "()[Lcom/roxen/roxen/SimpleTagCaller;");
+static object _last_resort = lastresort_ifc->get_method("last_resort", "(Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
 static object simpletagcaller_query_name = simpletagcaller_ifc->get_method("queryTagName", "()Ljava/lang/String;");
 static object simpletagcaller_query_flags = simpletagcaller_ifc->get_method("queryTagFlags", "()I");
 static object _tag_called = simpletagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;Lcom/roxen/roxen/Frame;)Ljava/lang/String;");
@@ -141,12 +147,17 @@ static void check_exception()
 class ClassLoader
 {
   static private object cl;
-
   object load(string name)
   {
     object c = load_class(cl, name);
     check_exception();
     return c;
+  }
+  
+  void add_to_classpath(string file)
+  {
+    add_jar(cl, file);
+    check_exception();    
   }
 
   void create(string dir)
@@ -161,7 +172,7 @@ class ClassLoader
     check_exception();
     urls[0] = url;
     check_exception();
-    cl = classloader2_class->alloc();
+    cl = roxenclassloader_class->alloc();
     check_exception();
     cl_init->call_nonvirtual(cl, urls);
     check_exception();
@@ -229,6 +240,12 @@ static mixed valify(mixed o)
     return (string)o;
 }
 
+static object make_module(RoxenModule m)
+{
+  // Should perhaps handle Pike modules as well?
+  return functionp(m->_java_object) && m->_java_object();
+}
+
 class ReaderFile
 {
   static private object _reader;
@@ -281,11 +298,12 @@ class ModuleWrapper
     }
   }
 
-
   static object modobj, confobj;
   static int modtype;
   static string modname, moddesc;
   static int modunique;
+
+  object _java_object() { return modobj; }
 
   static object make_conf(object conf)
   {
@@ -314,7 +332,7 @@ class ModuleWrapper
     reqid_init->call_nonvirtual(r, make_conf(id->conf), id->raw_url, id->prot,
 				id->clientprot, id->method, id->realfile,
 				id->virtfile, id->raw, id->query,
-				id->not_query, id->remoteaddr);
+				id->not_query, id->remoteaddr, id->time);
     check_exception();
     jotoid[r] = id;
     return r;
@@ -351,16 +369,16 @@ class ModuleWrapper
        (s = _data->get(r))) {
       rr->data = (string)s;
       if(r->is_instance_of(response4_class)) {
-	rr->data = id->conf->parse_rxml(rr->data, id, 0);
-	rr->stat = id->misc->defines[" _stat"];
-	rr->error = id->misc->defines[" _error"] || rr->error;
-	rr->rettext = id->misc->defines[" _rettext"];
-	if(id->misc->defines[" _extra_heads"])
-	  if(rr->extra_heads)
-	    rr->extra_heads |= id->misc->defines[" _extra_heads"];	
-	  else
-	    rr->extra_heads = id->misc->defines[" _extra_heads"];	
-	m_delete(rr, "len");
+	      rr->data = id->conf->parse_rxml(rr->data, id, 0);
+	      rr->stat = id->misc->defines[" _stat"];
+	      rr->error = id->misc->defines[" _error"] || rr->error;
+	      rr->rettext = id->misc->defines[" _rettext"];
+	      if(id->misc->defines[" _extra_heads"])
+	        if(rr->extra_heads)
+	          rr->extra_heads |= id->misc->defines[" _extra_heads"];	
+	        else
+	          rr->extra_heads = id->misc->defines[" _extra_heads"];	
+	      m_delete(rr, "len");
       }
     } else if(r->is_instance_of(response3_class) &&
 	    (s = _file->get(r)))
@@ -510,13 +528,63 @@ class ModuleWrapper
     check_exception();
     return make_response(r, id);
   }
+  mixed last_resort(RequestID id)
+  {
+    object r = _last_resort(modobj, make_reqid(id));
+    check_exception();
+    return make_response(r, id);
+  }
+
+  string extension( string from )
+  {
+    string ext;
+    sscanf(reverse(from), "%[^.].", ext);
+    return ext ? reverse(ext) : "";
+  }
 
   static void load(string filename)
   {
-    array(string) dcomp = filename/"/";
+    string path = combine_path(getcwd(), filename);
+    array(string) dcomp = path/"/";
     string dir = dcomp[..sizeof(dcomp)-2]*"/";
     filename = dcomp[-1];
-    object modcls = ClassLoader(dir)->load(filename-".class");
+    object modcls;
+    ClassLoader myLoader = ClassLoader(dir);
+    string ext = extension(filename);
+    switch (ext) {
+      case "class":
+        modcls = myLoader->load(filename-".class");
+        check_exception();
+        break;
+      case "jar":
+        // Get the module name from the JAR
+        string modname = get_module_name(path);
+        object e = jvm->exception_occurred();
+        if (e) {
+          if (e->is_instance_of(filenotfound_class)) {
+            jvm->exception_clear();
+            error("Unable to find JAR file");
+          } else if (e->is_instance_of(ioexception_class)) {
+            jvm->exception_clear();
+            error("Unable to read JAR file");
+          } else {
+            check_exception();
+          }
+        } else if (!modname) {
+          error("Unable to find class name within JAR");
+        } else {
+          // Add the JAR to the class path and load the class
+          myLoader->add_to_classpath(path);
+          check_exception();
+          modcls = myLoader->load(modname);
+          check_exception();
+        }
+        break;
+      default:
+        error("Unknown extension: " + ext);
+        break;
+    }
+
     if(!modcls)
       return;
     modobj = new_instance(modcls);
@@ -612,6 +680,12 @@ static object native_get_request_headers(object id)
   return id && objify(id->request_headers);
 }
 
+static object native_get_cookies(object id)
+{
+  id = jotoid[id];
+  return id && objify(id->cookies);
+}
+
 static object native_get_supports(object id)
 {
   id = jotoid[id];
@@ -624,6 +698,52 @@ static object native_get_pragma(object id)
   return id && objify(id->pragma);
 }
 
+static object native_get_prestate(object id)
+{
+  id = jotoid[id];
+  return id && objify(id->prestate);
+}
+
+static void native_cache(object id, int n)
+{
+  id = jotoid[id];
+  CACHE(n);
+}
+
+static string native_real_file(object conf, object filename, object id)
+{
+  conf = jotoconf[conf];
+  return filename && conf && conf->real_file((string)filename, jotoid[id]);
+}
+
+static string native_try_get_file(object conf, object filename, object id)
+{
+  conf = jotoconf[conf];
+  return filename && conf && conf->try_get_file((string)filename, jotoid[id]);
+}
+
+static string native_type_from_filename(object conf, object filename)
+{
+  conf = jotoconf[conf];
+  return filename && conf && conf->type_from_filename((string)filename);
+}
+
+static object native_get_providers(object conf, object provides)
+{
+  array p;
+  conf = jotoconf[conf];
+  if(provides && conf && (p = conf->get_providers((string)provides))) {
+    p = map(p, make_module)-({0});
+    object a = module_class->new_array(sizeof(p), 0);
+    check_exception();
+    foreach(indices(p), int i)
+      a[i] = p[i];
+    check_exception();
+    return a;
+  } else
+    return 0;
+}
+
 void create()
 {
   natives_bind1 = module_class->register_natives(({
@@ -633,6 +753,10 @@ void create()
   natives_bind2 = conf_class->register_natives(({
     ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_queryconf}),
     ({"queryInternalLocation", "(Lcom/roxen/roxen/Module;)Ljava/lang/String;", native_queryconfinternal}),
+    ({"getRealPath", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_real_file}),
+    ({"getFileContents", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_try_get_file}),
+    ({"getMimeType", "(Ljava/lang/String;)Ljava/lang/String;", native_type_from_filename}),
+    ({"getProviders", "(Ljava/lang/String;)[Lcom/roxen/roxen/Module;", native_get_providers}),
   }));
   natives_bind3 = FINDCLASS("com/roxen/roxen/RoxenLib")->register_natives(({
     ({"doOutputTag", "(Ljava/util/Map;[Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_do_output_tag}),
@@ -641,7 +765,10 @@ void create()
   natives_bind4 = reqid_class->register_natives(({
     ({"getVariables", "()Ljava/util/Map;", native_get_variables}),
     ({"getRequestHeaders", "()Ljava/util/Map;", native_get_request_headers}),
+    ({"getCookies", "()Ljava/util/Map;", native_get_cookies}),
     ({"getSupports", "()Ljava/util/Set;", native_get_supports}),
     ({"getPragma", "()Ljava/util/Set;", native_get_pragma}),
+    ({"getPrestate", "()Ljava/util/Set;", native_get_prestate}),
+    ({"cache", "(I)V", native_cache}),
   }));
 }
