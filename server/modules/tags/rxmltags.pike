@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.126 2000/05/28 11:03:52 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.127 2000/06/01 12:04:45 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1845,15 +1845,13 @@ Pike-script or Roxen module.
 
 <attr name=case value=upper|lower|capitalize>
  Changes the case of the output to upper, lower or capitalize.
- <ex ><date part='day' type=string case='capitalize' lang='&client.accept-language;'></ex>
+ <ex ><date part='day' type=string case='capitalize' lang='&client.language;'></ex>
 <ex >Today is <date part='day' type=string case='lower'/>.</ex>
+<ex><date date='' lang='&client.language;' case='upper'/></ex>
 </attr>
 
 <attr name=prec value=number>
  The number of decimals in the stardate.
-
-<ex ><date date='' lang='&client.language;' case='upper'/></ex>
-
 </attr>",
 
 "debug":#"<desc tag><short>
@@ -2177,14 +2175,14 @@ This cascading style sheet (CSS) definition will be applied on the pre element.
 <attr name=by>
  Print by whom the page was modified. Takes the same attributes as the
  <tag><ref type='tag'>user</ref></tag> tag. This attribute requires a
- userdatabase.<ex type='vert'>This page was last modified by <modified by='' realname=''/>.</ex>
+ userdatabase.<ex type='box'>This page was last modified by <modified by='' realname=''/>.</ex>
 </attr>
 
 <attr name=date>
  Print the modification date. Takes all the date attributes in the
  <tag><ref type='tag'>date</ref></tag> tag.
 
-<ex type='vert'>This page was last modified <modified date='' case='lower' type='string'/>.</ex>
+<ex type='box'>This page was last modified <modified date='' case='lower' type='string'/>.</ex>
 </attr>
 
 <attr name=file value=path>
