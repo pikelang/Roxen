@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.139 2004/05/13 16:04:47 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.140 2004/05/13 17:39:33 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -32,8 +32,8 @@ constant thread_safe=1;
 # define QUOTA_WERR(X)
 #endif
 
-#if constant(system.normalize_path)
-#define NORMALIZE_PATH(X)	system.normalize_path(X)
+#if constant(System.normalize_path)
+#define NORMALIZE_PATH(X)	System.normalize_path(X)
 #else /* !constant(system.normalize_path) */
 #define NORMALIZE_PATH(X)	(X)
 #endif /* constant(system.normalize_path) */
@@ -58,6 +58,55 @@ static mapping http_low_answer(int errno, string data, string|void desc)
   }
 
   return res;
+}
+
+// Note: This does a TRACE_LEAVE.
+static mapping(string:mixed) errno_to_status (int err, int(0..1) create,
+					      RequestID id)
+{
+  switch (err) {
+    case System.ENOENT:
+      if (!create) {
+	SIMPLE_TRACE_LEAVE ("File not found");
+	id->misc->error_code = Protocols.HTTP.HTTP_NOT_FOUND;
+	return 0;
+      }
+      // Fall through.
+
+    case System.ENOTDIR:
+      TRACE_LEAVE(sprintf("%s: Missing intermediate.", id->method));
+      id->misc->error_code = Protocols.HTTP.HTTP_CONFLICT;
+      return 0;
+
+    case System.ENOSPC:
+      SIMPLE_TRACE_LEAVE("%s: Insufficient space", id->method);
+      return Roxen.http_status (Protocols.HTTP.DAV_STORAGE_FULL);
+
+    case System.EPERM:
+      TRACE_LEAVE(sprintf("%s: Permission denied", id->method));
+      return Roxen.http_status(Protocols.HTTP.HTTP_FORBIDDEN,
+			       "Permission denied.");
+
+    case System.EEXIST:
+      TRACE_LEAVE(sprintf("%s failed. Directory name already exists. ",
+			  id->method));
+      // FIXME: More methods are probably allowed, but what use is
+      // that header anyway?
+      return Roxen.http_method_not_allowed("GET, HEAD",
+					   "Collection already exists.");
+
+#if constant(System.ENAMETOOLONG)
+    case System.ENAMETOOLONG:
+      SIMPLE_TRACE_LEAVE ("Path too long");
+      return Roxen.http_status (Protocols.HTTP.HTTP_URI_TOO_LONG);
+#endif
+
+    default:
+      SIMPLE_TRACE_LEAVE ("Unexpected I/O error: %s", strerror (err));
+      return Roxen.http_status (Protocols.HTTP.HTTP_INTERNAL_ERR,
+				"Unexpected I/O error: %s",
+				strerror (err));
+  }
 }
 
 static int do_stat = 1;
@@ -549,8 +598,7 @@ void got_put_data( array(object|string|int) id_arr, string data )
     to->close();
     from->set_blocking();
     m_delete(putting, from);
-    // FIXME: Ought to be 507 when it's a WebDAV request?
-    id->send_result(Roxen.http_status(413, "Out of disk quota."));
+    id->send_result(Roxen.http_status(507, "Out of disk quota."));
     return;
   }
 
@@ -560,8 +608,7 @@ void got_put_data( array(object|string|int) id_arr, string data )
     to->close();
     from->set_blocking();
     m_delete(putting, from);
-    // FIXME: Ought to be 507 when it's a WebDAV request?
-    id->send_result(Roxen.http_status(413, "Disk full."));
+    id->send_result(Roxen.http_status(507, "Disk full."));
     return;
   } else {
     if (id->misc->quota_obj &&
@@ -569,8 +616,7 @@ void got_put_data( array(object|string|int) id_arr, string data )
       to->close();
       from->set_blocking();
       m_delete(putting, from);
-      // FIXME: Ought to be 507 when it's a WebDAV request?
-      id->send_result(Roxen.http_status(413, "Out of disk quota."));
+      id->send_result(Roxen.http_status(507, "Out of disk quota."));
       return;
     }
     if (putting[from] != 0x7fffffff) {
@@ -686,22 +732,7 @@ mapping make_collection(string coll, RequestID id)
   }
 
   TRACE_LEAVE(sprintf("%s: Failed", id->method));
-  id->misc->error_code = 507;
-  if (err_code ==
-#if constant(system.ENOENT)
-      system.ENOENT
-#elif constant(System.ENOENT)
-      System.ENOENT
-#else
-      2
-#endif
-      ) {
-    TRACE_LEAVE(sprintf("%s: Missing intermediate.", id->method));
-    return Roxen.http_status(409, "Missing intermediate.");
-  } else {
-    TRACE_LEAVE(sprintf("%s: Failed.", id->method));
-  }
-  return 0;
+  return errno_to_status (err_code, 1, id);
 }
 
 mixed find_file( string f, RequestID id )
@@ -958,8 +989,7 @@ mixed find_file( string f, RequestID id )
       errors++;
       report_warning(LOCALE(47,"Creation of %O failed. Out of quota.\n"),f);
       TRACE_LEAVE("PUT: Out of quota.");
-      // FIXME: Ought to be 507 when it's a WebDAV request?
-      return Roxen.http_status(413, "Out of disk quota.");
+      return Roxen.http_status(507, "Out of disk quota.");
     }
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
@@ -983,6 +1013,7 @@ mixed find_file( string f, RequestID id )
     }
 
     object to = open(f, "wct");
+    int err = errno();
     privs = 0;
 
     TRACE_ENTER("PUT: Accepted", 0);
@@ -994,10 +1025,8 @@ mixed find_file( string f, RequestID id )
 
     if(!to)
     {
-      id->misc->error_code = 403;
       TRACE_LEAVE("PUT: Open failed");
-      TRACE_LEAVE("Failure");
-      return 0;
+      return errno_to_status (err, 1, id);
     }
 
     // FIXME: Race-condition.
@@ -1016,8 +1045,7 @@ mixed find_file( string f, RequestID id )
 	if (!id->misc->quota_obj->allocate(f, bytes)) {
 	  TRACE_LEAVE("PUT: A string");
 	  TRACE_LEAVE("PUT: Out of quota");
-	  // FIXME: Ought to be 507 when it's a WebDAV request?
-	  return Roxen.http_status(413, "Out of disk quota.");
+	  return Roxen.http_status(507, "Out of disk quota.");
 	}
       }
     }
@@ -1042,7 +1070,7 @@ mixed find_file( string f, RequestID id )
     return Roxen.http_pipe_in_progress();
     break;
 
-  case "CHMOD":
+  case "CHMOD": {
     // Change permission of a file.
     // FIXME: !!
 
@@ -1074,6 +1102,7 @@ mixed find_file( string f, RequestID id )
     }
 
     array err = catch(chmod(f, id->misc->mode & 0777));
+    int err_code = errno();
     privs = 0;
 
     chmods++;
@@ -1086,16 +1115,15 @@ mixed find_file( string f, RequestID id )
 
     if(err)
     {
-      id->misc->error_code = 403;
       TRACE_LEAVE("CHMOD: Failure");
-      TRACE_LEAVE("Failure");
-      return 0;
+      return errno_to_status (err_code, 0, id);
     }
     TRACE_LEAVE("CHMOD: Success");
     TRACE_LEAVE("Success");
     return Roxen.http_string_answer("Ok");
+  }
 
-   case "MV":
+  case "MV": {
     // This little kluge is used by ftp2 to move files.
 
      // FIXME: Support for quota.
@@ -1157,6 +1185,7 @@ mixed find_file( string f, RequestID id )
     SETUID_TRACE("Moving file", 0);
 
     code = mv(movefrom, f);
+    int err_code = errno();
     privs = 0;
 
     moves++;
@@ -1171,16 +1200,15 @@ mixed find_file( string f, RequestID id )
 
     if(!code)
     {
-      id->misc->error_code = 403;
       TRACE_LEAVE("MV: Move failed");
-      TRACE_LEAVE("Failure");
-      return 0;
+      return errno_to_status (err_code, 1, id);
     }
     TRACE_LEAVE("MV: Success");
     TRACE_LEAVE("Success");
     return Roxen.http_string_answer("Ok");
+  }
 
-  case "MOVE":
+  case "MOVE": {
     // This little kluge is used by NETSCAPE 4.5 and RFC 2518.
 
     // FIXME: Support for quota.
@@ -1279,6 +1307,7 @@ mixed find_file( string f, RequestID id )
     }
 
     code = mv(f, decode_path(moveto));
+    int err_code = errno();
     privs = 0;
 
     TRACE_ENTER("MOVE: Accepted", 0);
@@ -1293,15 +1322,14 @@ mixed find_file( string f, RequestID id )
 
     if(!code)
     {
-      id->misc->error_code = 403;
-      SIMPLE_TRACE_LEAVE("MOVE: Move failed (errno: %d)", errno());
-      TRACE_LEAVE("Failure");
-      return 0;
+      SIMPLE_TRACE_LEAVE("MOVE: Move failed (errno: %d)", err_code);
+      return errno_to_status (err_code, 1, id);
     }
     TRACE_LEAVE("MOVE: Success");
     TRACE_LEAVE("Success");
     if (size != -1) return Roxen.http_status(204);
     return Roxen.http_status(201);
+  }
 
   case "DELETE":
     if (size==-1) {
@@ -1358,24 +1386,24 @@ mixed find_file( string f, RequestID id )
       int start_ms_size = id->multi_status_size();
       recursive_rm(f, query_location() + oldf, res, id);
 
-      if (!rm(f)) {
+      if (!rm(f) && errno() != System.ENOENT) {
 	if (id->multi_status_size() > start_ms_size) {
-#if constant(system.EEXIST)
-	  if (errno() != system.EEXIST)
+	  if (errno() != System.EEXIST
+#if constant (System.ENOTEMPTY)
+	      && errno() != System.ENOTEMPTY
 #endif
+	     )
 	  {
-	    return Roxen.http_status(403);
-	    //id->set_status_for_path(query_location() + oldf, 403);
+	    return errno_to_status (errno(), 0, id);
 	  }
 	} else {
-	  TRACE_LEAVE("DELETE: Failed to delete directory.");
-	  return Roxen.http_status(403, "Failed to delete directory.");
+	  return errno_to_status (errno(), 0, id);
 	}
-      }
 
-      if (id->multi_status_size() > start_ms_size) {
-	TRACE_LEAVE("DELETE: Partial failure.");
-	return ([]);
+	if (id->multi_status_size() > start_ms_size) {
+	  TRACE_LEAVE("DELETE: Partial failure.");
+	  return ([]);
+	}
       }
     } else {
       mapping|int(0..1) res;
@@ -1441,6 +1469,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
   if (mappingp(res)) return res;
   string dest_path = path + dest;
   catch { dest_path = decode_path(dest_path); };
+  dest_path = NORMALIZE_PATH (dest_path);
   if (query("no_symlinks") && (contains_symlinks(path, dest_path))) {
     errors++;
     report_error(LOCALE(46,"Copy to %O failed. Permission denied.\n"),
@@ -1450,49 +1479,63 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
   }
   Stat dest_st = stat_file(dest, id);
   if (dest_st) {
+    SIMPLE_TRACE_ENTER (this, "COPY: Destination exists");
     switch(overwrite) {
     case NEVER_OVERWRITE:
-      TRACE_LEAVE("COPY: Destination already exists.");
+      TRACE_LEAVE("");
+      TRACE_LEAVE("");
       return Roxen.http_status(412, "Destination already exists.");
     case DO_OVERWRITE:
       if (!query("delete")) {
 	TRACE_LEAVE("COPY: Deletion not allowed.");
+	TRACE_LEAVE("");
 	return Roxen.http_status(405, "Not allowed.");
       }
       object privs;
       SETUID_TRACE("Deleting destination", 0);
       if (dest_st->isdir) {
+	int start_ms_size = id->multi_status_size();
 	recursive_rm(dest_path, mountpoint + dest, 1, id);
-	if (source_st->isdir) {
+
+	werror ("dest_path %O\n", dest_path);
+	if (!rm(dest_path) && errno() != System.ENOENT) {
 	  privs = 0;
-	  SIMPLE_TRACE_LEAVE("COPY: Cleared directory %O", dest_path);
-	  SIMPLE_TRACE_LEAVE("Copy done.");
-	  return Roxen.http_status(204);
-	}
-	if (!rm(dest_path)) {
-	  privs = 0;
-	  SIMPLE_TRACE_LEAVE("COPY: Delete failed.");
-	  // Shouldn't this bail out? /mast
-#if constant(system.EEXIST)
-	  if (errno() != system.EEXIST)
+	  if (id->multi_status_size() > start_ms_size) {
+	    if (errno() != System.EEXIST
+#if constant (System.ENOTEMPTY)
+		&& errno() != System.ENOTEMPTY
 #endif
-	  {
-	    id->set_status_for_path(mountpoint + dest, 403);
+	       )
+	    {
+	      TRACE_LEAVE("");
+	      return errno_to_status (errno(), 0, id);
+	    }
+	  } else {
+	    TRACE_LEAVE("");
+	    return errno_to_status (errno(), 0, id);
 	  }
-	} else {
-	  SIMPLE_TRACE_LEAVE("COPY: Delete ok.");
+
+	  if (id->multi_status_size() > start_ms_size) {
+	    privs = 0;
+	    TRACE_LEAVE("COPY: Partial failure in destination directory delete.");
+	    TRACE_LEAVE("");
+	    return ([]);
+	  }
 	}
+	SIMPLE_TRACE_LEAVE("COPY: Delete ok.");
       } else if (source_st->isdir) {
 	if (!rm(dest_path)) {
-	  SIMPLE_TRACE_LEAVE("COPY: File deletion failed.");
 	  privs = 0;
-	  // Shouldn't this bail out? /mast
-#if constant(system.EEXIST)
-	  if (errno() != system.EEXIST)
-#endif
+	  if (errno() != System.ENOENT)
 	  {
-	    id->set_status_for_path(mountpoint + dest, 403);
+	    mapping(string:mixed) status = errno_to_status (errno(), 0, id);
+	    if (!status) status = (["error": id->misc->error_code]);
+	    id->set_status_for_path(mountpoint + dest,
+				    status->error, status->rettext);
+	    TRACE_LEAVE("");
+	    return ([]);
 	  }
+	  SIMPLE_TRACE_LEAVE("COPY: File deletion failed (destination disappeared).");
 	} else {
 	  SIMPLE_TRACE_LEAVE("COPY: File deletion ok.");
 	}
@@ -1505,14 +1548,23 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
       if ((source_st->isreg != dest_st->isreg) ||
 	  (source_st->isdir != dest_st->isdir)) {
 	TRACE_LEAVE("COPY: Resource types for source and destination differ.");
+	TRACE_LEAVE("");
 	return Roxen.http_status(412, "Destination and source are different resource types.");
       } else if (source_st->isdir) {
 	TRACE_LEAVE("Already done (both are directories).");
+	TRACE_LEAVE("");
 	return Roxen.http_status(204, "Destination already existed.");
       }
       break;
     }
   }
+  else {
+    if (res = write_access(dest, 0, id)) {
+      SIMPLE_TRACE_LEAVE("COPY: Write access to file %O denied.", dest);
+      return res;
+    }
+  }
+
   if (source_st->isdir) {
     mkdirs++;
     object privs;
@@ -1521,37 +1573,18 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     int code = mkdir(dest_path);
     int err_code = errno();
     privs = 0;
-    TRACE_ENTER("COPY: Accepted", this_object());
 
     if (code) {
       chmod(dest_path, 0777 & ~(id->misc->umask || 022));
-      TRACE_LEAVE("COPY: Success");
       TRACE_LEAVE("Success");
       return Roxen.http_status(dest_st?204:201, "Created");
     } else {
-      TRACE_LEAVE("COPY: Failed");
-      TRACE_LEAVE("Failure");
-      if (err_code ==
-#if constant(system.ENOENT)
-	  system.ENOENT
-#elif constant(System.ENOENT)
-	  System.ENOENT
-#else
-	  2
-#endif
-	  ) {
-	return Roxen.http_status(409, "Missing intermediate.");
-      } else {
-	return Roxen.http_status(507, "Failed.");
-      }
+      return errno_to_status (err_code, 1, id);
     }
   } else {
-    if (res = write_access(dest, 0, id)) {
-      SIMPLE_TRACE_LEAVE("COPY: Write access to file %O denied.", dest);
-      return res;
-    }
     string source_path = path + source;
     catch { source_path = decode_path(source_path); };
+    source_path = NORMALIZE_PATH (source_path);
     if (query("no_symlinks") && (contains_symlinks(path, source_path))) {
       errors++;
       report_error(LOCALE(46,"Copy to %O failed. Permission denied.\n"),
@@ -1569,8 +1602,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
       report_warning(LOCALE(47,"Creation of %O failed. Out of quota.\n"),
 		     dest_path);
       TRACE_LEAVE("PUT: Out of quota.");
-      // FIXME: Shouldn't this be 507?
-      return Roxen.http_status(413, "Out of disk quota.");
+      return Roxen.http_status(507, "Out of disk quota.");
     }
     object source_file = open(source_path, "r");
     if (!source_file) {
@@ -1582,8 +1614,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     object dest_file = open(dest_path, "cwt");
     privs = 0;
     if (!dest_file) {
-      TRACE_LEAVE("Failed to open destination file.");
-      return Roxen.http_status(403);
+      return errno_to_status (errno(), 1, id);
     }
     int len = source_st->size;
     while (len > 0) {
