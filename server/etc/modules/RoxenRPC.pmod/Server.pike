@@ -256,8 +256,8 @@ mixed do_call(object con, string in, string fun, mixed args)
     me = con->object_for(me, in);
     if(!me) error("Identifier "+in+" not valid\n");
   }
-  if(!functionp(me[fun])) error(fun+" is not a function in "+in+"\n");
-  return me[fun]( @args );
+  if(!functionp(`->(me,fun))) error(fun + " is not a function in "+in+"\n");
+  return `->(me,fun)( @args );
 }
 
 function ip_security, security;
