@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.76 1999/02/19 18:59:53 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.77 1999/02/19 21:13:36 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -413,7 +413,8 @@ class imap_mail
 
     array(object|string) `()(string|void s)
     {
-      return ({ item, get_body_range(range, s) });
+      s = get_body_range(range, s);
+      return ({ item, sprintf("{%d}\r\n", sizeof(s)), s });
     }
   }
 
@@ -517,7 +518,8 @@ class imap_mail
 			       & msg->headers ));
 	    
       case "header": {
-	mapping(string:string|array(string)) headers = msg->headers;
+	mapping(string:string|array(string)) headers = msg->headers +
+	  "\r\n\r\n";
 	
 	if (sizeof(attr->section) == 1)
 	  return body_response(format_headers(headers));
@@ -745,7 +747,7 @@ class imap_mailbox
 	}
 	else if (contents[i]->uid < new_contents[j]->uid)
 	{
-	  /* A mail has den deleted */
+	  /* A mail has been deleted */
 	  res += ({ ({ imap_number(i-expunged), "EXISTS" }) });
 	  expunged++;
 	}
@@ -918,7 +920,8 @@ class imap_mailbox
     object local_set = imap_set(({}));
 
 #ifdef IMAP_DEBUG
-    werror("uid_to_local(): all_uids:%O\n", all_uids);
+    werror("uid_to_local(): all_uids:%O\n"
+	   "uid_lookup:%O\n", all_uids, uid_lookup);
 #endif /* IMAP_DEBUG */
 
     foreach(uid_set->items, string|array(int|string)|int item) {
