@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.15 1997/08/26 16:22:33 peter Exp $
+ * $Id: upgrade.pike,v 1.16 1997/08/26 16:28:38 peter Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -154,9 +154,9 @@ string page_0(object id)
      "<var type=radio name=how default=1 value=0> Only currently "
      "enabled modules (from all virtual servers) <br>\n"
      "<var type=checkbox name=how2> Also search for new (previously "
-     "uninstalled) modules<br>\n"
+     "uninstalled) modules, actions and server templates<br>\n"
      "<var type=checkbox name=how3 default=1> Also search for actions "
-     "and server templates ");
+     "and server templates");
 }
 
 string upgrade_module(string m, object rpc)
