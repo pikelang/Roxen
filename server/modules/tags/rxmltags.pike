@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.304 2001/09/19 10:59:20 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.305 2001/09/20 21:11:14 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -245,11 +245,16 @@ class TagRoxenACV {
 
   class Frame {
     inherit RXML.Frame;
-    constant magic=
+    constant html_magic =
       "<input type=\"hidden\" name=\"magic_roxen_automatic_charset_variable\" value=\"едц\" />";
+    constant wml_magic =
+      "<postfield name='magic_roxen_automatic_charset_variable' value='едц' />";
 
     array do_return(RequestID id) {
-      result=magic;
+      if(result_type->name=="text/wml")
+	result = wml_magic;
+      else
+	result = html_magic;
     }
   }
 }
@@ -440,7 +445,7 @@ class TagUnset {
     inherit RXML.Frame;
     array do_return(RequestID id) {
       if(!args->variable && !args->scope)
-	parse_error("Variable nor scope not specified.\n");
+	parse_error("No variable nor scope specified.\n");
       if(!args->variable && args->scope!="roxen") {
 	RXML_CONTEXT->add_scope(args->scope, ([]) );
 	return 0;
@@ -3179,7 +3184,8 @@ class TagCond
       array do_return (RequestID id)
       {
 	::do_return (id);
-	if (up->result != RXML.Void) return 0;
+	if (up->result != RXML.Void) return 0; // Does this ever happen?
+	//      	if( _ok && result == RXML.nil ) result = class { inherit RXML.Nil; }();
 	up->result = result;
 	result = RXML.Void;
 	return 0;
