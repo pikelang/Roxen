@@ -1301,6 +1301,21 @@ hej</result>
   <result>[1][1]</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      <define tag="foo" scope="bar">
+	<set variable="bar.x">17</set>
+	<set variable="_.y">18</set>
+	<charset out="iso-8859-2"/>
+	&_.x;&bar.y;
+      </define>
+      <foo/>
+    </cache>
+  </rxml>
+  <result>1718</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
