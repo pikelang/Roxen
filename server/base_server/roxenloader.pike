@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.154 2000/03/12 23:58:13 nilsson Exp $
+ * $Id: roxenloader.pike,v 1.155 2000/03/13 06:18:02 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.154 2000/03/12 23:58:13 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.155 2000/03/13 06:18:02 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -193,8 +193,10 @@ void roxen_perror(string format, mixed ... args)
 int mkdirhier(string from, int|void mode)
 {
   int r = 1;
+  from = roxen_path( from );
   array(string) f=(from/"/");
   string b="";
+
 
   foreach(f[0..sizeof(f)-2], string a)
   {
@@ -618,26 +620,21 @@ object(_roxen) really_load_roxen()
   report_debug("Loading roxen ... ");
   ErrorContainer e = ErrorContainer();
   object(_roxen) res;
-  new_master->set_inhibit_compile_errors(e);
+//   new_master->set_inhibit_compile_errors(e);
   mixed err = catch {
     res =((program)"roxen")();
   };
-  new_master->set_inhibit_compile_errors(0);
-  string q = e->get();
+//   new_master->set_inhibit_compile_errors(0);
+//   string q = e->get();
   if (err) {
-    report_debug("ERROR\n" + (q||""));
-#ifdef DEBUG
+    report_debug("ERROR\n");
     // No idea what eats up the printout from the error thrown below.. /mast
     werror (describe_backtrace (err));
-#endif
     throw(err);
   }
   report_debug("Done [%.1fms]\n",
 	       (gethrtime()-start_time)/1000.0);
 
-  if (q && sizeof(q)) {
-    report_debug("Warnings compiling Roxen:\n" + q);
-  }
   res->start_time = start_time;
   res->boot_time = start_time;
   nwrite = res->nwrite;
@@ -836,11 +833,53 @@ class mf
 constant mf = Stdio.File;
 #endif
 
-// open() efun.
+#include "../etc/include/version.h"
+string roxen_version()
+{
+  return __roxen_version__+"."+__roxen_build__;
+}
+
+string roxen_path( string filename )
+{
+  filename = replace( filename, ({"$VVARDIR","$LOCALDIR"}),
+                      ({"$VARDIR/"+roxen_version(), 
+                        "../local"}) );
+  if( roxen && roxen->variables->logdirprefix ) 
+    filename = replace( filename, "$LOGDIR", roxen->query("logdirprefix") );
+  else
+    if( search( filename, "$LOGDIR" ) != -1 )
+      roxen_perror("Warning: mkdirhier with $LOGDIR before variable is available\n");
+  filename = replace( filename, "$VARDIR", "../var" );
+  return filename;
+}
+
+int rm( string filename )
+{
+  return predef::rm( roxen_path(filename) );
+}
+
+array(string) r_get_dir( string path )
+{
+  return predef::get_dir( roxen_path( path ) );
+}
+
+int mv( string f1, string f2 )
+{
+  return predef::mv( roxen_path(f1), roxen_path( f2 ) );
+}
+
+array(int) file_stat( string filename, int|void slinks )
+{
+  if( slinks )
+    return predef::file_stat( roxen_path(filename), slinks );
+  return predef::file_stat( roxen_path(filename) );
+}
+
 object|void open(string filename, string mode, int|void perm)
 {
   object o;
   o=mf();
+  filename = roxen_path( filename );
   if(!(o->open(filename, mode, perm||0666))) {
     // EAGAIN, ENOMEM, ENFILE, EMFILE, EAGAIN(FreeBSD)
     if ((< 11, 12, 23, 24, 35 >)[o->errno()]) {
@@ -859,6 +898,16 @@ object|void open(string filename, string mode, int|void perm)
 
   // FIXME: Might want to stat() here to check that we don't open
   // devices...
+  return o;
+}
+
+object|void lopen(string filename, string mode, int|void perm)
+{
+  object o;
+  if( filename[0] != '/' )
+    o = open( "../local/"+filename, mode, perm );
+  if( !o )
+    o = open( filename, mode, perm );
   return o;
 }
 
@@ -1001,6 +1050,23 @@ Please install a newer pike version
 
   mixed err;
 
+  add_constant("open", open);
+  add_constant("roxen_path", roxen_path);
+  add_constant("roxen_version", roxen_version);
+  add_constant("lopen", lopen);
+  add_constant("report_notice", report_notice);
+  add_constant("report_debug", report_debug);
+  add_constant("report_warning", report_warning);
+  add_constant("report_error", report_error);
+  add_constant("report_fatal", report_fatal);
+  add_constant("perror",roxen_perror);
+  add_constant("werror",roxen_perror);
+  add_constant("roxen_perror",roxen_perror);
+  add_constant("roxenp", lambda() { return roxen; });
+  add_constant( "ST_MTIME", ST_MTIME );
+  add_constant( "ST_CTIME", ST_CTIME );
+  add_constant( "ST_SIZE",  ST_SIZE );
+
   if (err = catch {
     replace_master(new_master=(((program)"etc/roxen_master.pike")()));
   }) {
@@ -1010,29 +1076,20 @@ Please install a newer pike version
   }
 
 //   add_constant("open_db", open_db);
+  add_constant("r_rm", rm);
+  add_constant("r_mv", mv);
+  add_constant("r_get_dir", get_dir);
+  add_constant("r_file_stat", file_stat);
   add_constant("roxenloader", this_object());
   add_constant("ErrorContainer", ErrorContainer);
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
-  add_constant("perror",roxen_perror);
-  add_constant("werror",roxen_perror);
-  add_constant("roxen_perror",roxen_perror);
   add_constant("popen",popen);
   add_constant("roxen_popen",popen);
-  add_constant("roxenp", lambda() { return roxen; });
-  add_constant("report_notice", report_notice);
-  add_constant("report_debug", report_debug);
-  add_constant("report_warning", report_warning);
-  add_constant("report_error", report_error);
-  add_constant("report_fatal", report_fatal);
   add_constant("init_logger", init_logger);
-  add_constant("open", open);
   add_constant("mkdirhier", mkdirhier);
   add_constant("capitalize",
                lambda(string s){return upper_case(s[0..0])+s[1..];});
-  add_constant( "ST_MTIME", ST_MTIME );
-  add_constant( "ST_CTIME", ST_CTIME );
-  add_constant( "ST_SIZE",  ST_SIZE );
 
   // It's currently tricky to test for Image.TTF correctly with a
   // preprocessor directive, so let's add a constant for it.
