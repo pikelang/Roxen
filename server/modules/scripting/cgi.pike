@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.51 1997/10/14 14:54:22 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.52 1997/10/14 21:04:18 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -348,7 +348,8 @@ class spawn_cgi
   mapping env;
   string wd;
   int|string uid;
-  object pipe1, pipe2;
+  object pipe1, pipe2;	// Stdout/Stderr for the CGI
+  object pipe3, pipe4;	// Stdin for the CGI
   int kill_call_out;
   int dup_err;
 
@@ -387,7 +388,10 @@ class spawn_cgi
 	 */
 	string oldwd = getcwd() + "/";
 	destruct(pipe2);
-	pipe1->dup2(files.file("stdin"));
+	if (pipe4)
+	  destruct(pipe4);
+	
+	pipe3->dup2(files.file("stdin"));
 	pipe1->dup2(files.file("stdout"));
 	if(dup_err)
 	  pipe1->dup2(files.file("stderr"));
@@ -452,6 +456,7 @@ class spawn_cgi
       exit(0);
     }
     destruct(pipe1);
+    destruct(pipe3);
     if(kill_call_out) {
       call_out(lambda (int pid) {
 	object privs;
@@ -471,7 +476,7 @@ class spawn_cgi
   
   void create(string wrapper_, string f_, array(string) args_, mapping env_,
 	      string wd_, int|string uid_, object pipe1_, object pipe2_,
-	      int dup_err_, int kill_call_out_)
+	      object pipe3_, object pipe4_, int dup_err_, int kill_call_out_)
   {
     wrapper = wrapper_;
     f = f_;
@@ -481,9 +486,26 @@ class spawn_cgi
     uid = uid_;
     pipe1 = pipe1_;
     pipe2 = pipe2_;
+    pipe3 = pipe3_;
+    pipe4 = pipe4_;
     dup_err = dup_err_;
     kill_call_out = kill_call_out_;
     call_out(do_cgi, 0);
+  }
+};
+
+// Used to close the stdin of the CGI-script.
+class closer
+{
+  object fd;
+  void close_cb()
+  {
+    fd->close();
+  }
+  void create(object fd_)
+  {
+    fd = fd_;
+    fd->set_nonblocking(close_cb, close_cb, close_cb);
   }
 };
 
@@ -495,12 +517,16 @@ class sender
 
   void write_cb()
   {
+    trace(100);
     if (sizeof(to_send)) {
       int len = fd->write(to_send);
-      to_send = to_send[len..];
+      if ((to_send = to_send[len..]) == "") {
+	fd->close();
+      }
     } else {
       fd->close();
     }
+    trace(0);
   }
   void close_cb()
   {
@@ -509,7 +535,7 @@ class sender
   void create(object fd_, string to_send_)
   {
     fd = fd_;
-    //fd->close("r");	// We aren't interrested in reading from the fd.
+    // fd->close("r");	// We aren't interrested in reading from the fd.
     to_send = to_send_;
     fd->set_nonblocking(0, write_cb, close_cb);
   }
@@ -519,6 +545,7 @@ mixed find_file(string f, object id)
 {
   array tmp2;
   object pipe1, pipe2;
+  object pipe3, pipe4;
   string path_info, wd;
   int pid;
   if(id->misc->path_info && strlen(id->misc->path_info))
@@ -549,6 +576,14 @@ mixed find_file(string f, object id)
   pipe2->set_blocking(); pipe1->set_blocking();
   pipe2->set_id(pipe2);
 
+  if ((!(pipe3=files.file())) || (!(pipe4=pipe3->pipe()))) {
+    report_error(sprintf("cgi->find_file(\"%s\"): Can't open input pipe "
+			 "-- Out of fd's?\n", f));
+    return(0);
+  }
+  pipe4->set_blocking(); pipe3->set_blocking();
+  pipe4->set_id(pipe4);
+
   mixed uid;
   array us;
   if(query("noexec"))
@@ -575,16 +610,17 @@ mixed find_file(string f, object id)
   object cgi = spawn_cgi(QUERY(use_wrapper) && (QUERY(wrapper) || "/bin/cgi"),
 			 f, make_args(id->rest_query),
 			 my_build_env_vars(f, id, path_info),
-			 wd, uid, pipe1, pipe2, QUERY(err),
+			 wd, uid, pipe1, pipe2, pipe3, pipe4, QUERY(err),
 			 QUERY(kill_call_out));
   
   if(id->my_fd && id->data) {
-    // A real dup() would be nice here.
-    sender(pipe2->dup(), id->data);
-    //pipe2->close("w");		// Don't let anybody else write to the pipe.
-    id->my_fd->set_id( pipe2 );                       // for put.. post?
+    sender(pipe4, id->data);
+
+    id->my_fd->set_id( pipe4 );                       // for put.. post?
     id->my_fd->set_read_callback(cgi->got_some_data); // lets try, atleast..
     id->my_fd->set_nonblocking();
+  } else {
+    closer(pipe4);
   }
   return http_stream(pipe2);
 }
