@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
 // Support for user Pike-scripts, like CGI, but handled internally in
 // the server, and thus much faster, but blocking, and somewhat less
@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.57 2000/02/10 06:59:23 nilsson Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.58 2000/03/16 18:34:42 nilsson Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);

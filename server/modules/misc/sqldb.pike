@@ -1,15 +1,10 @@
-/*
- * $Id: sqldb.pike,v 1.3 2000/02/10 06:44:08 nilsson Exp $
- *
- * Associates a name with an SQL-database.
- *
- * $Author: nilsson $
- */
+// Associates a name with an SQL-database. Copyright © 1997 - 2000, Roxen IS.
 
 #include <module.h>
 
 inherit "module";
 
+constant cvs_version = "$Id: sqldb.pike,v 1.4 2000/03/16 18:57:14 nilsson Exp $";
 constant module_type = MODULE_ZERO;
 constant module_name = "SQL Databases";
 constant module_doc  = "Associates names with SQL Database URLs.";

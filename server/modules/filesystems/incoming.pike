@@ -1,7 +1,9 @@
+// This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
+
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.7 2000/02/16 07:16:02 per Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.8 2000/03/16 18:44:38 nilsson Exp $";
 
 
 constant module_name = "Incoming filesystem";

@@ -1,12 +1,11 @@
-// $Id: demo.pike,v 1.12 2000/02/16 07:15:33 per Exp $
-//
-// (c) 1998 Idonex AB
+// This is a roxen module. Copyright © 1998 - 2000, Roxen IS.
+
 inherit "module";
 inherit "roxenlib";
 
 // import Array;
 
-constant cvs_version = "$Id: demo.pike,v 1.12 2000/02/16 07:15:33 per Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.13 2000/03/16 18:57:13 nilsson Exp $";
 
 void create()
 {

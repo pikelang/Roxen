@@ -1,12 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1998 - 2000, Roxen IS.
 //
 // This module is basically the CGI module with some different
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-constant cvs_version = "$Id: fpscript.pike,v 1.8 2000/02/10 06:59:23 nilsson Exp $";
-
-// #define FPSCRIPT_DEBUG
+constant cvs_version = "$Id: fpscript.pike,v 1.9 2000/03/16 18:34:41 nilsson Exp $";
 
 #include <module.h>
 inherit "modules/scripting/oldcgi.pike";

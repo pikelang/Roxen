@@ -1,4 +1,6 @@
-constant cvs_version="$Id: mirrorfs.pike,v 1.17 2000/03/16 17:22:30 nilsson Exp $";
+// This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
+
+cvconstant cvs_version="$Id: mirrorfs.pike,v 1.18 2000/03/16 18:44:38 nilsson Exp $";
 constant thread_safe=1;
 
 #include <roxen.h>

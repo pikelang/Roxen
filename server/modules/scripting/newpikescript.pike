@@ -1,4 +1,6 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.16 2000/03/13 06:23:54 per Exp $";
+// This is a roxen module. Copyright © 1998 - 2000, Roxen IS.
+
+constant cvs_version="$Id: newpikescript.pike,v 1.17 2000/03/16 18:34:42 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>

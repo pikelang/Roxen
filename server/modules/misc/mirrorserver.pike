@@ -1,10 +1,12 @@
+// This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
+
 inherit "module";
 
 #ifndef MIRRORSERVER_DEBUG
 #define MIRRORSERVER_DEBUG
 #endif /* MIRRORSERVER_DEBUG */
 
-constant cvs_version = "$Id: mirrorserver.pike,v 1.19 2000/02/16 07:15:51 per Exp $";
+constant cvs_version = "$Id: mirrorserver.pike,v 1.20 2000/03/16 18:57:14 nilsson Exp $";
 
 class MirrorServer {
   import Stdio;

@@ -1,8 +1,10 @@
+// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+
 #include <module.h>
 inherit "module";
 
 #if constant(Servlet.servlet)
-string cvs_version = "$Id: servlet.pike,v 2.6 2000/03/13 02:17:15 nilsson Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.7 2000/03/16 18:34:42 nilsson Exp $";
 int thread_safe=1;
 
 inherit "roxenlib";

@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: language.pike,v 1.27 2000/03/08 15:08:47 nilsson Exp $";
+constant cvs_version = "$Id: language.pike,v 1.28 2000/03/16 18:57:13 nilsson Exp $";
 constant thread_safe=1;
 
 #if DEBUG_LEVEL > 20

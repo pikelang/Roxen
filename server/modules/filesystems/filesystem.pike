@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
 // This is a virtual "file-system".
 // It will be located somewhere in the name-space of the server.
@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.72 2000/03/08 01:36:19 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.73 2000/03/16 18:44:38 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>

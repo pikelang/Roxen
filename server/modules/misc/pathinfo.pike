@@ -1,14 +1,9 @@
-/*
- * PATH_INFO support for Roxen.
- *
- * Henrik Grubbström 1998-10-01
- */
+// This is a roxen module. Copyright © 1998 - 2000, Roxen IS.
+
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.10 2000/02/16 07:15:51 per Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.11 2000/03/16 18:57:14 nilsson Exp $";
 constant thread_safe = 1;
-
-// #define PATHINFO_DEBUG
 
 #ifdef PATHINFO_DEBUG
 # define PATHINFO_WERR(X) werror("PATHINFO: "+X+"\n");
