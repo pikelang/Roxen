@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.453 2004/03/30 20:13:24 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.454 2004/04/06 11:47:12 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2256,7 +2256,8 @@ class TagReplace
   inherit RXML.Tag;
   constant name = "replace";
 
-  RXML.Type content_type = RXML.t_text (RXML.PXml);
+  RXML.Type content_type =
+    compat_level >= 4.0 ? RXML.t_text (RXML.PXml) : RXML.t_xml (RXML.PXml);
 
   class Frame
   {
@@ -2264,7 +2265,7 @@ class TagReplace
 
     array do_return (RequestID id)
     {
-      result_type = RXML.t_text;
+      result_type = compat_level >= 4.0 ? RXML.t_text : RXML.t_xml;
 
       if (!args->from)
 	result = content;
