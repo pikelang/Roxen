@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.89 1999/09/27 00:41:19 grubba Exp $
+ * $Id: smtp.pike,v 1.90 1999/09/27 22:46:56 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.89 1999/09/27 00:41:19 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.90 1999/09/27 22:46:56 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -934,6 +934,7 @@ static class Smtp_Connection {
 		    });
   }
 
+  // Lookup the IP's that are MX for the domain.
   void async_domain_to_ip(string domain,
 			  function(array(string):void) cb)
   {
@@ -945,12 +946,11 @@ static class Smtp_Connection {
 			    });
   }
 
+  // Check that the sender is ok. (Async)
   void do_async_verify_sender(mapping id)
   {
-    do_multi_async(Array.map(conf->get_providers("smtp_filter")||({}),
-			     lambda(object o) {
-			       return(o->async_verify_sender);
-			     }) - ({ 0 }),
+    do_multi_async(((conf->get_providers("smtp_filter")||({}))->
+		    async_verify_sender) - ({ 0 }),
 		   ({ current_mail->from }),
 		   lambda(array res, mapping id) {
 #ifdef SMTP_DEBUG
@@ -967,6 +967,7 @@ static class Smtp_Connection {
 		   }, id);
   }
 
+  // Check that the recipient is ok. (Async)
   void do_async_verify_recipient(string recipient, mapping id,
 				 function(string, mapping, mixed ...:void) cb,
 				 mixed ... args)
@@ -1014,6 +1015,7 @@ static class Smtp_Connection {
 		   });
   }
 
+  // Check if the recipient is valid for local delivery.
   int check_recipient(string recipient)
   {
     foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
@@ -1029,6 +1031,7 @@ static class Smtp_Connection {
     return 0;
   }
 
+  // Check if the recipient is valid for local delivery. (Async)
   void do_async_check_recipient(string recipient, mapping id,
 				function(mixed ...:void) cb,
 				mixed ... args)
@@ -1047,6 +1050,7 @@ static class Smtp_Connection {
     }
   }
 
+  // Find the first domain in domains for which user@domain is valid. (Async)
   void do_async_find_domain(string user, array(string) domains,
 			    function(string, mixed ...:void) cb,
 			    mixed ... args)
@@ -1060,6 +1064,7 @@ static class Smtp_Connection {
     cb(0, @args);
   }
 
+  // Find a domain from localip for which user@domain is valid. (Async)
   void do_async_domain_from_ip(string user, string localip,
 			       function(string, mixed ...:void) cb,
 			       mixed ... args)
@@ -1099,6 +1104,7 @@ static class Smtp_Connection {
     }
   }
 
+  // Add a recipient to the list of recipients, and give ok to the client.
   void add_recipient(string recipient, mapping id)
   {
     conf->log(([ "error":200 ]), id);
@@ -1139,11 +1145,6 @@ static class Smtp_Connection {
 
 	  id->not_query = recipient;
 
-	  // Handle %-quoted source-routing.
-	  // eg:
-	  //	<orbs-relaytest%manawatu.co.nz@tifa.idonex.se>
-	  recipient = replace(recipient, "%", "@");
-
 	  array a = recipient/"@";
 	  string domain;
 	  string user;
@@ -1156,17 +1157,53 @@ static class Smtp_Connection {
 	  }
 
 	  if ((!domain) || (parent->handled_domains[domain])) {
-	    // Local address.
 
-	    if (!domain) {
-	      // Try to get a domain from the local IP.
+	    // Probably a local address.
 
-	      do_async_domain_from_ip(user, localip,
-				      lambda(string domain) {
-		if (domain) {
-		  recipient = user + "@" + domain;
-		}
+	    // Handle %-quoted source-routing.
+	    // eg:
+	    //	<orbs-relaytest%manawatu.co.nz@tifa.idonex.se>
+	    i = 0;
+	    if (search(user, "%") != -1) {
+	      a = user/"%";
+	      i = sizeof(a)-1;
+	      while(i && parent->handled_domains[a[i]]) {
+		i--;
+	      }
+	      if (i) {
+		// Remote address.
+		user = a[..i-1]*"%";
+		domain = a[i];
+	      } else {
+		// Local address.
+		user = a[0];
+		domain = a[1];
+	      }
+	      recipient = user + "@" + domain;
+	    }
 
+	    if (!i) {
+
+	      // Local address.
+
+	      if (!domain) {
+		// Try to get a domain from the local IP.
+
+		do_async_domain_from_ip(user, localip,
+					lambda(string domain) {
+		  if (domain) {
+		    recipient = user + "@" + domain;
+		  }
+
+		  // Perform recipient filtering,
+		  // check validity for local delivery,
+		  // and add to the recipient list.
+		  do_async_verify_recipient(recipient,
+					    id,
+					    do_async_check_recipient,
+					    add_recipient);
+		});
+	      } else {
 		// Perform recipient filtering,
 		// check validity for local delivery,
 		// and add to the recipient list.
@@ -1174,63 +1211,56 @@ static class Smtp_Connection {
 					  id,
 					  do_async_check_recipient,
 					  add_recipient);
-	      });
-	    } else {
-	      // Perform recipient filtering,
-	      // check validity for local delivery,
-	      // and add to the recipient list.
-	      do_async_verify_recipient(recipient,
-					id,
-					do_async_check_recipient,
-					add_recipient);
-	    }
+	      }
 
-	  } else {
-	    // Remote address.
-
-	    if (!sizeof(conf->get_providers("smtp_relay") || ({}))) {
-	      // No relay module.
-#ifdef SMTP_DEBUG
-	      report_notice(sprintf("SMTP: Relaying to address %s denied: "
-				    "No relay module.\n",
-				    recipient));
-#endif /* SMTP_DEBUG */
-	      conf->log(([ "error":405 ]), id);
-	      send(550, ({ "Relaying denied." }));
 	      return;
 	    }
+	  }
 
-	    // Check if we allow relaying.
+	  // Remote address.
 
-	    int address_class = 0x7fffffff;		// MAXINT
+	  if (!sizeof(conf->get_providers("smtp_relay") || ({}))) {
+	    // No relay module.
+#ifdef SMTP_DEBUG
+	    report_notice(sprintf("SMTP: Relaying to address %s denied: "
+				  "No relay module.\n",
+				  recipient));
+#endif /* SMTP_DEBUG */
+	    conf->log(([ "error":405 ]), id);
+	    send(550, ({ "Relaying denied." }));
+	    return;
+	  }
 
-	    foreach(conf->get_providers("smtp_filter")||({}), object o) {
-	      if (o->classify_address) {
-		int ac = o->classify_address(user, domain);
-		if (ac < address_class) {
-		  address_class = ac;
-		}
+	  // Check if we allow relaying.
+
+	  int address_class = 0x7fffffff;		// MAXINT
+
+	  foreach(conf->get_providers("smtp_filter")||({}), object o) {
+	    if (o->classify_address) {
+	      int ac = o->classify_address(user, domain);
+	      if (ac < address_class) {
+		address_class = ac;
 	      }
 	    }
+	  }
 
-	    if (connection_class < address_class) {
+	  if (connection_class < address_class) {
 #ifdef SMTP_DEBUG
-	      report_notice(sprintf("SMTP: Relaying to address %s denied.\n",
-				    recipient));
+	    report_notice(sprintf("SMTP: Relaying to address %s denied.\n",
+				  recipient));
 #endif /* SMTP_DEBUG */
-	      conf->log(([ "error":405 ]), id);
-	      send(550, ({ "Relaying denied." }));
-	      return;
-	    }
+	    conf->log(([ "error":405 ]), id);
+	    send(550, ({ "Relaying denied." }));
+	    return;
+	  }
 
-	    // Perform recipient filtering,
-	    // and add the recipient.
-	    do_async_verify_recipient(recipient, id, add_recipient);
-     	  }
-
-	  // Continue asynchronously.
-	  return;
+	  // Perform recipient filtering,
+	  // and add the recipient.
+	  do_async_verify_recipient(recipient, id, add_recipient);
 	}
+
+	// Continue asynchronously.
+	return;
       }
     }
 
