@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.125 2000/05/12 21:03:08 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.126 2000/05/28 11:03:52 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -2381,10 +2381,6 @@ Sets a variable.</short>
 
 <attr name=other value=string>
  The name of a id->misc->variables that the value should be copied from.
-</attr>
-
-<attr name=eval value=string>
- An RXML expression whose evaluated value the variable should have.
 </attr>
 
  If none of the above attributes are specified, the variable is unset.
