@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.816 2002/07/03 20:20:32 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.817 2002/07/04 09:20:57 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -632,10 +632,10 @@ static array(Shuffler.Shuffler) shufflers = ({ Shuffler.Shuffler() });
 
 void backend_thread_func( Pike.Backend backend )
 {
-  while( 1 )
+  while( backend )
   {
     mixed err = catch {
-      while(1)
+      while(backend)
 	backend( 3600.0 );
     };
     werror("Error in backend thread: %s\n", describe_backtrace( err ) );
