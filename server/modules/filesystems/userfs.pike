@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.25 1998/03/16 19:21:19 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.26 1998/03/17 14:03:33 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -154,7 +154,7 @@ mixed find_file(string f, object got)
       dir = replace(dir, "//", "/");
 
       // If public dir does not exist, or is not a directory 
-      st = stat_file(dir, got);
+      st = ::stat_file(dir, got);
       if(!st || st[1] != -2) {
 	return 0;	// File not found.
       }
@@ -167,7 +167,7 @@ mixed find_file(string f, object got)
 	us = got->conf->userinfo( u, got );
       }
 
-      st = stat_file(f, got);
+      st = ::stat_file(f, got);
 
       if(!st || (st[5] != (int)(us[2])))
         return 0;
