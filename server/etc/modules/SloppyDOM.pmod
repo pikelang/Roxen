@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.3 2002/02/15 13:06:10 mast Exp $
+// $Id: SloppyDOM.pmod,v 1.4 2002/03/06 16:38:47 mast Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -1039,7 +1039,7 @@ static SloppyParser sloppy_parser_template =
     p->add_quote_tag ("![CDATA[", return_zero, "]]");
     p->add_quote_tag ("?", return_zero, "?");
     p->_set_tag_callback (sloppy_parser_tag_callback);
-    p->_set_entity_callback ([function] return_zero); // Type cast due to bug.
+    p->_set_entity_callback ((mixed) return_zero); // Cast due to type inference bug.
     return p;
   }();
 
