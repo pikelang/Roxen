@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.13 2000/08/16 11:20:58 jhs Exp $
+ * $Id: resolv.pike,v 1.14 2000/08/16 11:40:23 jhs Exp $
  */
 
 inherit "wizard";
@@ -212,7 +212,7 @@ Password: <input name=password value='&form.password;' type=password size=12/>
   {
     sscanf( id->variables->path, "%*s://%*[^/]/%s", file );
     file = "/"+file;
-    foreach( values(roxen->urls), mapping q )
+    foreach( values(roxen->urls), object q )
     {
       nid = id->clone_me();
       nid->raw_url = file;
