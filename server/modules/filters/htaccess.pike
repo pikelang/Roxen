@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.66 2000/11/23 05:04:34 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.67 2001/01/31 01:14:39 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -67,6 +67,8 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
 
     if(!strlen(line))
       continue;
+
+    line = lower_case(line);
 
     if(line[0] == ' ') /* There can be only one /Connor MacLeod */
       line = line[1..];
