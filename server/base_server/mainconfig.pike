@@ -1,10 +1,12 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.48 1997/08/12 08:59:55 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.49 1997/08/12 09:04:33 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
 import Array;
 import Stdio;
+string status_row(object node);
+string display_tabular_header(object node);
 
 /* Work-around for Simulate.perror */
 #define perror roxen_perror
@@ -528,7 +530,7 @@ string new_module_form(object id, object node)
   
   res = ({default_head("Add a module")+"\n\n"+
 	  status_row(node)+
-	  display_tabular_header(node)+
+//	  display_tabular_header(node)+
 	  "<table><tr><td>&nbsp<td><h2>Select a module to add"
 	  " from the list below, click on it's header to add it.</h2>" });
   
@@ -1256,10 +1258,9 @@ mapping configuration_parse(object id)
 
     case "delete":	
      PUSH(default_head("Roxen Configuration")+
-	  status_row(o)+
-	  display_tabular_header(o))
+	  status_row(o));
 //     PUSH("<hr noshade>");
-      
+       
       switch(o->type)
       {
        case NODE_CONFIGURATION:
