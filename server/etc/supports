@@ -1,4 +1,4 @@
-## $Id: supports,v 1.61 1999/09/01 13:49:01 wellhard Exp $
+## $Id: supports,v 1.62 1999/10/26 17:50:20 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -15,49 +15,107 @@
 ## -+*								*+- ##
 ######################################################################
 
-# The syntax is quite straightforward:
-# regular_expression  value,value,value...
-# \ can be used to escape newlines.
-# If a line starts with '#', it is skipped, unless it is
-#
-# '#include <file>'
-# (include the file 'file' here)
-#
-# '#define <from> <to>'
-# (replace all 'from' with 'to' below this point in the file)
-#
-#  or
-#
-# '#section name {'
-# '# }'
-#
-# (The section stuff is used to speed up the matching of the
-#  clientname from the patterns, the 'name' _must_ be first in the
-#  clientname for the patterns in the 'section' to be checked).
+# Documentation
 
-#define basic	        images, forms, gifinline, mailto
+#! The file syntax is quite straightforward:
+#! regular_expression  value,value,value...
+#! -value can be used to remove a value
+#! \ can be used to escape newlines.
+#!
+#! If a line starts with '#', it is skipped, unless it is
+#!
+#! '#include <file>'
+#! (include the file 'file' here)
+#!
+#! '#define <from> <to>'
+#! (replace all 'from' with 'to' below this point in the file)
+#!
+#!  or
+#!
+#! '#section name {'
+#! '# }'
+#!
+#! (The section stuff is used to speed up the matching of the
+#!  clientname from the patterns, the 'name' _must_ be first in the
+#!  clientname for the patterns in the 'section' to be checked).
+#!
+#! Supports Classes
+#!
+#! activex - The browser handles active-X contents.
+#! align - The browser supports the align attribute in its tags.
+#! autogunzip - The browser can decode a gunzipped file on the fly.
+#! backgrounds - The browser supports backgrounds according to the HTML3 specifications.
+#! bigsmall - The browser supports the <big> and <small> tags.
+#! center - The browser supports the <center> tag.
+#! cookies - The browser can receive cookies.
+#! divisions - The browser supports <div> tags.
+#! div - Same as divisions.
+#! epsinline - The browser can show encapsulated postscript files inline.
+#! font - The browser supports <font size=num>.
+#! fontcolor - The browser can change color of individual characters.
+#! fonttype - The browser supports <fonttype> tag.
+#! forms - The browser supports forms according to the HTML 2.0 and 3.0 specifications.
+#! frames - The browser supports frames.
+#! gifinline - The browser can show GIF images inlined.
+#! html - This is a HTML browser (as opposed to e.g. a WAP browser).
+#! imagealign - The browser supports align=left and align=right in images.
+#! images - The browser can display images.
+#! java - The browser supports Java applets.
+#! javascript - The browser supports javascripts.
+#! javascript1.2 - The browser supports javascript 1.2.
+#! jpeginline - The browser can show JPEG images inlined.
+#! mailto - The browser supports mailto URLs.
+#! math - The <math> tag is correctly displayed by the browser.
+#! msie - This is a Microsoft Internet Explorer browser.
+#! netscape_javascript - The browser needs netscape styled javascript
+#! openstep - ??
+#! pemauth - ??
+#! perl - The browser supports Perl applets.
+#! phone - The client is a phone.
+#! pjpeginline - The browser can handle progressive JPEG images, .pjpeg, inline.
+#! pnginline - The browser can handle PNG images inlined.
+#! pull - The browser handles Client Pull.
+#! push - The browser handles Server Push.
+#! python - The browser supports Python applets.
+#! robot - The request really comes from a search robot, not an actual browser.
+#! ssl - The browser handles secure sockets layer.
+#! stylesheets - The browser supports stylesheets.
+#! supsub - The browser handles <sup> and <sub> tags correctly.
+#! tables - The browser handles tables according to the HTML3.0 specification.
+#! tablecolor - It is possible to set the background color in the browser.
+#! tableimages - It is possible to set a backgroud image in a table in the browser.
+#! tcl - The browser supports TCL applets.
+#! unknown - The browser is not known, hence the supports classes can not be trusted.
+#! vrml - The browser supports VRML.
+#! wbmp0 - The browser supports Wireless Bitmap Picture Format, type 0.
+#! wml1.0 - The browser supports Wireless Markup Language 1.0
+#! wml1.1 - The browser supports Wireless Markup Language 1.1
+
+
+#define basic		images, forms, gifinline, mailto, html
 #define some_html3	divisions, div, supsub, bigsmall, align
 
 
 ## Netscape is named "mozilla/major.minor system ..."
 
-
 #section mozilla {
 
-.*               basic, tables, jpeginline, font, imagealign,\
-			cookies, push, pull, backgrounds, ssl,\
-			java, frames, backgrounds, autogunzip,\
-			netscape_javascript
+.*		basic, tables, jpeginline, font, imagealign,\
+		cookies, push, pull, backgrounds, ssl,\
+		java, frames, autogunzip, netscape_javascript, javascript, align,\
+		center, font, imagealign
 
-mozilla/0\..*	-tables, -backgrounds, -ssl, -frames, -java, -javascript -netscape_javascript
-mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript, -netscape_javascript
-mozilla/1\..*	-ssl, -frames, -java, -javascript, -netscape_javascript
-
-mozilla.[2-9].[0-9].*	some_html3, fontcolor, pjpeginline
+mozilla/0\..*		-tables, -backgrounds, -ssl, -frames, -java, -javascript,\
+			-netscape_javascript, -align, -center, -font, -imagealign
+mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript,\
+			-netscape_javascript
+mozilla/1\..*		-ssl, -frames, -java, -javascript, -netscape_javascript,\
+			bigsmall, supsub
+mozilla.[2-9].[0-9].*	some_html3, fontcolor, pjpeginline, fontcolor
 mozilla.2.0b[2-9].*	-java
 
 #Old versions on Mac crash the entire machine if you use javascript.
-mozilla/2.*	        -netscape_javascript
+mozilla/2.*		-netscape_javascript
 mozilla/2.*X11		javascript
 mozilla/2.*OS/2		javascript, tcl
 mozilla/2.*Win16	-java, javascript
@@ -73,16 +131,21 @@ mozilla/[5-9].*		pnginline
 
 # Opera
 
-.*compatible.*opera.3.*		-java, javascript
+.*compatible.*opera.1.*		-align, -backgrounds, -bigsmall, -center, -div,\
+				-divisions, -font, -forms, -frames, -imagealign,\
+				-supsub
+.*compatible.*opera.2.*		align, fontcolor, tablecolor
+.*compatible.*opera.[3-9].*	-java, javascript, fontcolor, tablecolor
 
 # BLAM BLAM BLAM BLAM
 .*compatible.*			-push
 .*compatible.*msie		msie
-.*compatible.*msie.1		-javascript
-.*compatible.*msie.[1-2]	-java
+.*compatible.*msie.1		-javascript, -tables
+.*compatible.*msie.[1-2]	-java, -bigsmall, -div, -divisions, fontcolor,\
+				-frames, -supsub
 .*compatible.*msie.[1-3]	-netscape_javascript
 
-.*compatible.*msie.[2-9]	tablecolor, javascript
+.*compatible.*msie.[2-9]	tablecolor, javascript, fontcolor
 .*compatible.*msie.[3-9]	activex, tableimages
 # MSIE3 stylesheets are broken
 .*compatible.*msie.[4-9]	stylesheets, javascript1.2
@@ -92,95 +155,86 @@ mozilla/[5-9].*		pnginline
 #section netsurfer {
 # Netsurfer is a popular commercial Web browser for NEXTSTEP. for more
 # info, contact info@netsurfer.com
-.*               basic, jpeginline, center
-netsurfer.1\.[1-9].*      backgrounds, fontcolor, pnginline, videoinline
-netsurfer.2\.[0-9].*      align, pjpeginline, tables, frames, java, font,\
-                          bigsmall, supsub, perl, tcl, openstep, python
+.*			basic, jpeginline, center
+netsurfer.1\.[1-9].*	backgrounds, fontcolor, pnginline, videoinline
+netsurfer.2\.[0-9].*	align, pjpeginline, tables, frames, java, font,\
+			bigsmall, supsub, perl, tcl, openstep, python
 # }
 
 #section omniweb {
 # OmniWeb is another popular commercial Web browser for NEXTSTEP
 # for more info, contact info@omnigroup.com
-.*               	basic, center, jpeginline
-omniweb.2\.[0-9].*      backgrounds, font, frames, tables, align, bigsmall,\
-                        fontcolor, imagealign, pjpeginline, pnginline,\
- 		        supsub, ssl, epsinline, cookies
+.*			basic, center, jpeginline
+omniweb.2\.[0-9].*	backgrounds, font, frames, tables, align, bigsmall,\
+			fontcolor, imagealign, pjpeginline, pnginline,\
+			supsub, ssl, epsinline, cookies
 # }
 
 #section arena {
 # Arena is the free WWW browser from CERN/W3O. It is not all that nice yet,
 # but it just might get there in the future, if they get some X-programmers..
 
-.*                  some_html3, basic, stylesheets
+.*			some_html3, basic, stylesheets
 
 # }
 
-.*mosaic.*   	            basic
+.*mosaic.*		basic
 
 #section ncsa {
 # Old Mosaic is not all that interresting..  Even though NCSA claims
 # to have table support, it does in fact not work at all, so, I do not
 # add that here.
-ncsa.mosaic.*[2-9].[5-9]*.* supsub, pemauth
-ncsa.mosaic.*[2-9].[6-9]*.* jpeginline
-ncsa.mosaic.*[2-9].[7-9]*.* pnginline
+ncsa.mosaic.*[2-9].[5-9]*.*	supsub, pemauth
+ncsa.mosaic.*[2-9].[6-9]*.*	jpeginline
+ncsa.mosaic.*[2-9].[7-9]*.*	pnginline
 
 # Mosaic "The Comet" final beta
 
-.*mosaic.*final.beta.*  tables, jpeginline, backgrounds, mailto
+.*mosaic.*final.beta.*		tables, jpeginline, backgrounds, mailto
 # }
 
 # Spyglass mosaic is distributed together with Oracle 7
-# Not very interresting, but for completeness:
-#
 # Tested version: "Spyglass_Mosaic/2.11 Spyglass/11"
 #section spyglass {
-.*	basic
-.*	backgrounds, center, font, fontcolor, forms, imagealign, images
-.*	jpeginline, mailto, pjpeginline, tables
+.*	basic, backgrounds, center, font, fontcolor, imagealign,\
+	jpeginline, pjpeginline, tables
 # }
 
-# Old trusty character based and buggy lynx..  But it _does_ know
-# about forms!
-
-# Newer versions can handle tables and frames in a fashion, but it is
-# probably better not to add them below.
+# Newer versions of lynx can handle tables and frames in a fashion, but
+# it is probably better not to add them below.
 
 #section lynx {
-.*        forms 
+.*	forms, html
 # }
 
 #section emacs {
 # Emacs w3 is quite slow, but a very impressive hack...
-.*                    basic, jpeginline, fonts, imagealign
+.*	basic, jpeginline, fonts, imagealign
 # }
 
-# Does not support anything at all, really, but that cannot be written
-# with the syntax used in this file, so lets pretend they support
-# 'nothing'..
-w3.*linemode.*		   nothing
-cern.*linemode.*           nothing
+# Does not support anything at all, really.
+w3.*linemode.*		html
+cern.*linemode.*	html
 
 #section hotjava {
 # HotJava, SUNs little WWW browser with support for java aplets.
-.*      		    basic, java, center
-.*/1\.0/j.*1\.1\.[1-9]	    frames, pjpeginline, supsub, fontcolor,\
-			    backgrounds, bigsmall, divisions, font,\
-			    imagealign, jpeginline, tables, tablecolor
+.*			basic, java, center
+.*/1\.0/j.*1\.1\.[1-9]	frames, pjpeginline, supsub, fontcolor,\
+			backgrounds, bigsmall, divisions, font,\
+			imagealign, jpeginline, tables, tablecolor
 # }
 
 #section udiwww {
-# . . .
-.*	  basic, tables, imagealign, backgrounds, font
+.*	basic, tables, imagealign, backgrounds, font
 # }
 
 #section ibrowse {
 # Amiga MUIbrowser
 .*			basic, center, pnginline, imageinline,\
-                        backgrounds, bigsmall, center, divisions,\
-                        font, fontcolor, imagealign, images,\
-                        jpeginline, pjpeginline, pnginline,\
-                        tables
+			backgrounds, bigsmall, center, divisions,\
+			font, fontcolor, imagealign, tables,\
+			jpeginline, pjpeginline, pnginline
+
 .*1.1.*			frames, pull
 .*1.1[2-9].*		ssl
 # }
@@ -188,40 +242,30 @@ cern.*linemode.*           nothing
 #section amiga-aweb {
 # Amigabrowser <http://www.xs4all.nl/~yrozijn/aweb/>
 .*			basic, center, pnginline, imageinline,\
-                        backgrounds, bigsmall, center, divisions,\
-                        font, fontcolor, imagealign, images,\
-                        jpeginline, pjpeginline, pnginline,\
-                        supsub
+			backgrounds, bigsmall, center, divisions,\
+			font, fontcolor, imagealign, supsub,\
+			jpeginline, pjpeginline, pnginline
 
 .*1\.[5-9].*		tables
 .*[2-9]\.[0-9].*	tables
 .*[3-9]\.[0-9].*	cookies, frames, pull, push
 # }
 
-# section tiber {  --- I have not seen one for quite a while
-# TIBer = Teknema Internet Browser = VOL browser VOL = Video On Line;
-#   <URL:http://www.vol.it/>  - lack of configuration possibilities 
-#   - transparent GIF not supported
-#
-#.*           images, gifinline, forms, backgrounds, align, mailto, center
-#
-#  }
-
 # A couple more for IBM's Webexplorer (OS/2) Contributed by Jason
 #  Rumney <jasonr@pec.co.nz>
 # section ibm {
-.*webexplorer.*           basic, jpeginline, font, center 
-.*webexplorer.*1\.0[3-9]  tables, backgrounds, imagealign, mailto
-.*webexplorer.*1.1        tables, backgrounds, imagealign, mailto
-.*webexplorer.*9603.*beta java, javascript, livescript, tables,\
-                          backgrounds, imagealign, mailto
-# } 
+.*webexplorer.*			basic, jpeginline, font, center 
+.*webexplorer.*1\.0[3-9]	tables, backgrounds, imagealign
+.*webexplorer.*1.1		tables, backgrounds, imagealign
+.*webexplorer.*9603.*beta	java, javascript, livescript, tables,\
+				backgrounds, imagealign
+# }
 
 #section micr {
 # Micro$oft Browser.  I have only tested this on an exhibition
 # (ComNET '95/Sweden), so this is probably _very_ incomplete by now.
 #								/Per
-.*exp.*	basic, ms, font, center, fonttype, imagealign, frames, activex
+.*exp.*		basic, ms, font, center, fonttype, imagealign, frames, activex
 # }
 
 #section microsoft {
@@ -233,107 +277,165 @@ cern.*linemode.*           nothing
 .*	basic, -mailto
 # }
 
-#section architext {
+#
+#  --------- WAP ---------
+#
+
+# Hot hype stuff contributed by E|HAND
+
+#section nokia {
+nokia7110.*	phone, wml1.1, wbmp0
+nokia.7110.*	wml1.1, wbmp0
+.*		wml1.1, wbmp0
+# }
+
+#section wapide-sdk {
+.*		wml1.1, wbmp0
+# }
+
+#section up.broswer {
+.*si25.*	phone, wml1.0, wbmp0
+.*		wml1.1, wbmp0
+# }
+
+#section mc218 {
+.*		phone, wml1.1, wbmp0
+# }
+
+#section jigsaw {
+.*		wml1.1, wbmp0
+# }
+
+#
+#  --------- ROBOTS ----------
+#
+
 # How nice it would have been if all robots had 'robot' in their name..
-.*		robot   architex
+
+#section architext {
+.*		html, robot	architex
 # }
 
 #section yahoo {
-.*			robot	yahoo
-# }
-#section infoseek {
-.*		robot	infoseek
-# }
-#section url {
-.*minder.*		robot   url-minder
-# }
-#section scoutget {
-.*		robot   scout
-# }
-#section momspider {
-.*/.*		robot   webinfo
-# }
-#section lycos {
-.*			robot	lycos
+.*		html, robot	yahoo
 # }
 
+#section infoseek {
+.*		html, robot	infoseek
+# }
+
+#section url {
+.*minder.*	html, robot	url-minder
+# }
+
+#section scoutget {
+.*		html, robot	scout
+# }
+
+#section momspider {
+.*		html, robot	webinfo
+# }
+
+#section lycos {
+.*		html, robot	lycos
+# }
 
 #section scooter {
-.*		robot	altavista
+.*		html, robot	altavista
 # }
 
 #section backrub {
-.*		robot	backrub
+.*		html, robot	backrub
 # }
 
 #section freecrawl {
-.*		robot	freecrawl
+.*		html, robot	freecrawl
 # }
 
 #section slurp {
-.*		robot	hotbot
+.*		html, robot	hotbot
 # }
 
 #section freeseek {
-.*		robot	passagen
+.*		html, robot	passagen
 # }
 
 #section webcrawler {
-.*		robot	webcrawler
+.*		html, robot	webcrawler
 # }
 
 #section intraseek {
-.*		robot	intraseek idonex infovav
+.*		html, robot	intraseek idonex infovav
 # }
 
 #section harvest {
-.*              robot   harvest
+.*		html, robot	harvest
 # }
 
 #section checkbot {
-.*              robot   checkbot
+.*		html, robot	checkbot
 # }
 
 #section gcreep {
-.*		robot	gcreep
+.*		html, robot	gcreep
 # }
 
 #section wget {
-.*		robot	wget	mirror_script
+.*		html, robot	wget mirror_script
+# }
+
+#section ia_archiver {
+.*		html, robot	alexa
+# }
+
+#section fast-webcrawler {
+.*		html, robot	fast
 # }
 
 #section roxen {
-.*		roxen	rxml
+.*		html, roxen	rxml
 # }
 
-# Unknown clients:
-
-#section fly {
-.*	basic
-# }
-
-#section prodigy-wb {
-.*	basic
-# }
-
-#section infolink {
-.*	robot
-# }
-
-
-
-
-.*robot.*		robot   
-
-
+.*robot.*	html, robot
 
 # Somewhat dubious, but one does probably not write a client in perl,
 # unless you have more than 200Mb of memory, so something announcing
 # itself as 'libwww-perl' is probably a robot.
 
-.*libwww-perl.*		robot
+.*libwww-perl.*		html, robot
 
+# Although not a browser I don't think you would call this a robot.
+#section w3c_validator {
+.*		basic, some_html3, backgrounds, center, fontcolor,\
+		forms, imagealign, tables, -robot
+# }
+
+#
+# --------- Unknown clients ---------
+#
+
+# We are just guessing capabilities here...
+
+#section fly {
+.*	unknown, basic
+# }
+
+#section prodigy-wb {
+.*	unknown, basic
+# }
+
+#section getright {
+.*	unknown, basic
+# }
+
+#section infolink {
+.*	unknown, html, robot
+# }
+
+#section gulliver {
+.*	unknown, html, robot
+}
 
 # The default. If nothing else matches this is used to determine the
 # supports values.
-default      images, gifinline, forms, mailto
+default		uknown, tables, center, basic
