@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.256 2000/10/19 01:52:31 mast Exp $
+// $Id: rxml.pike,v 1.257 2000/11/06 22:11:29 per Exp $
 
 
 inherit "rxmlhelp";
@@ -1569,7 +1569,10 @@ class TagEmitValues {
 	  lambda(string var){ m->values[var]=context->get_var(var, m["from-scope"]);
 	  return ""; });
     }
-    if(!m->values) return ({});
+    if( m->variable )
+      m->values = RXML.get_context()->user_get_var( m->variable );
+    if(!m->values)
+      return ({});
     if(stringp(m->values)) m->values=m->values / (m->split || "\000");
     if(mappingp(m->values))
       return map( indices(m->values),
