@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.113 1999/03/30 23:40:31 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.114 1999/04/16 20:46:02 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -902,7 +902,7 @@ object spawn_cgi(string wrapper, string f, array(string) args, mapping env,
     {
       report_error(sprintf("Wrapper \"%s\" doesn't exist, or "
 			   "is not executable\n", wrapper));
-      return;
+      return 0;
     }
     args = ({ wrapper, f }) + args;
   } 
