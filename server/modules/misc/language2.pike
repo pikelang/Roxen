@@ -1,12 +1,13 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
+//#pragma strict_types
+
 #include <module.h>
 
 inherit "module";
-inherit "roxenlib";
 
-constant cvs_version = "$Id: language2.pike,v 1.7 2000/04/24 15:28:05 nilsson Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.8 2000/04/24 19:00:05 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_PARSER;
 constant module_name = "Language module II";
@@ -30,14 +31,14 @@ void create() {
 }
 
 string default_language;
-array languages;
-array rxml;
+array(string) languages;
+array(string) rxml;
 string cache_id;
 
 void start(int n, Configuration c) {
-  default_language=query("default_language");
-  languages=query("languages");
-  rxml=query("rxml");
+  default_language=[string]query("default_language");
+  languages=[array(string)]query("languages");
+  rxml=[array(string)]query("rxml");
   cache_id="lang_mod"+c->get_config_id();
 }
 
@@ -45,8 +46,8 @@ void start(int n, Configuration c) {
 // ------------- Find the best language file -------------
 
 array(string) find_language(RequestID id) {
-  array langs=id->misc->pref_languages->get_languages()+({default_language});
-  return langs-(langs-languages);
+  array(string) langs=id->misc->pref_languages->get_languages()+({default_language});
+  return langs & languages;
 }
 
 object remap_url(RequestID id, string url) {
@@ -60,8 +61,8 @@ object remap_url(RequestID id, string url) {
 
   multiset(string) found;
   mapping(string:string) files;
-  array split=cache_lookup(cache_id,url);
-  if(!found) {
+  array split=[array]cache_lookup(cache_id,url);
+  if(!split) {
     found=(<>);
     files=([]);
 
@@ -97,7 +98,7 @@ object remap_url(RequestID id, string url) {
 
   foreach(find_language(id), string lang) {
     if(found[lang]) {
-      url=fix_relative(url, id);
+      url=Roxen.fix_relative(url, id);
       string type=id->conf->type_from_filename(url);
 
       if(!id->misc->defines) id->misc->defines=([]);
@@ -114,7 +115,7 @@ object remap_url(RequestID id, string url) {
 
 // ---------------- Tag definitions --------------
 
-function translator(array(string) client, RequestID id) {
+function(string:string) translator(array(string) client, RequestID id) {
   client=({ id->misc->defines->language })+client+({ default_language });
   array(string) _lang=roxen->list_languages();
   foreach(client, string lang)
@@ -132,7 +133,7 @@ class TagLanguage {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      string lang=id->misc->defines->language;
+      string lang=([mapping(string:mixed)]id->misc->defines)->language;
       if(args->type=="code") {
 	result=lang;
 	return 0;
@@ -153,7 +154,7 @@ class TagUnavailableLanguage {
 
     array do_return(RequestID id) {
       string lang=id->misc->pref_languages->get_languages()[0];
-      if(lang==id->misc->defines->language) return 0;
+      if(lang==([mapping(string:mixed)]id->misc->defines)->language) return 0;
       if(args->type=="code") {
 	result=lang;
 	return 0;
