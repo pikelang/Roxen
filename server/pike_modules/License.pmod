@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.17 2002/05/31 11:53:48 wellhard Exp $
+// $Id: License.pmod,v 1.18 2002/06/05 10:18:07 nilsson Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -79,6 +79,7 @@ array(Key|mapping) get_licenses(string license_dir)
 
 static int key_count;  // How many licenses has been created, used for debug.
 
+//! A License key
 class Key
 {
   static mapping content;
@@ -250,8 +251,8 @@ class Key
   
 #ifdef INSIDE_ROXEN
   Configuration used_in(Configuration|void configuration)
-  // Returns the first configuration the license key is used in. If a
-  // configuration is supplied that one is not checked.
+  //! Returns the first configuration the license key is used in. If a
+  //! configuration is supplied that one is not checked.
   {
     array(string) configurations = roxen.list_all_configurations();
     if(configuration)
