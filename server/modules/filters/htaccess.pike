@@ -5,7 +5,7 @@
 
 import Stdio;
 
-string cvs_version = "$Id: htaccess.pike,v 1.16 1997/08/12 06:32:21 per Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.17 1997/08/15 02:06:49 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 inherit "module";
@@ -16,7 +16,7 @@ inherit "roxenlib";
 
 array *register_module()
 {
-  return ({ MODULE_SECURITY|MODULE_LAST|MODULE_FIRST, ".htaccess support", 
+  return ({ MODULE_SECURITY|MODULE_LAST|MODULE_URL, ".htaccess support", 
 	      "Almost complete support for NCSA/Apache .htaccess files. See "
 	      "<a href=http://hoohoo.ncsa.uiuc.edu/docs/setup/access/Overview.html>http://hoohoo.ncsa.uiuc.edu/docs/setup/access/Overview.html</a> for more information.",
 	      ({}), 1 });
@@ -471,11 +471,23 @@ mapping|string|int htaccess(mapping access, object id)
       method = "all";
     else switch(method)
     {
-     case "get": case "post": case "head":
-      return 1;
-      
-     case "put": case "delete":
+    case "list":
+    case "head":
+    case "post":
+      if (access->get) {
+	method = "get";
+	break;
+      }
+    case "get":
+      if (access->head) {
+	method = "head";
+	break;
+      }
       return 0;
+      
+    case "put": case "delete":
+    default:
+      return 1;
     }
   }
   
@@ -741,6 +753,9 @@ mapping last_resort(object id)
 mapping remap_url(object id)
 {
   mapping access_violation;
+
+  perror("htaccess: remap_url(\"%s\")\n"
+	 "%s\n", id->not_query, describe_backtrace(backtrace()));
 
   if(strlen(id->not_query)&&id->not_query[0]=='/')
   {
