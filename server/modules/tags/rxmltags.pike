@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.227 2001/05/16 12:56:54 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.228 2001/05/16 20:53:27 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -356,8 +356,7 @@ class TagRedirect {
       if ( !args->to )
 	RXML.parse_error("Requires attribute \"to\".\n");
 
-      multiset(string) orig_prestate = id->prestate;
-      multiset(string) prestate = (< @indices(orig_prestate) >);
+      multiset(string) prestate = (<>) + id->prestate;
 
       if(args->add)
 	foreach((m_delete(args,"add") - " ")/",", string s)
@@ -367,9 +366,7 @@ class TagRedirect {
 	foreach((m_delete(args,"drop") - " ")/",", string s)
 	  prestate[s]=0;
 
-      id->prestate = prestate;
-      mapping r = Roxen.http_redirect(args->to, id);
-      id->prestate = orig_prestate;
+      mapping r = Roxen.http_redirect(args->to, id, prestate);
 
       if (r->error)
 	_error = r->error;
