@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.504 2000/07/11 14:29:05 lange Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.505 2000/07/11 17:26:27 lange Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -361,15 +361,10 @@ private constant languages = ([
   "nederlands":"nld",
 ]);
 
-void set_locale(void|string lang)
-  //! Changes the locale of the current thread. If no
-  //! argument is given, the default locale if used.
-  //! Valid arguments are ISO-639-2 codes, ISO-639-1
-  //! codes and the old symbolic names.
-{
-  string set;
-  if(!lang)
+private string verify_locale(string lang) {
+  if(!lang || lang=="standard")
     lang = default_locale;
+  string set;
   if(
 #if constant(Standards.ISO639_2)
      Standards.ISO639_2.get_language(lang)
@@ -386,16 +381,25 @@ void set_locale(void|string lang)
 #endif
 	  )
     ;
-  else if(set=languages[lang])
-    ;
-  
-  if(!set) {
+  else
+    set=languages[lang];
+  return set;
+}
+
+void set_locale(void|string lang)
+  //! Changes the locale of the current thread. If no
+  //! argument is given, the default locale if used.
+  //! Valid arguments are ISO-639-2 codes, ISO-639-1
+  //! codes and the old symbolic names.
+{
+  string set;
+  if(!(set=verify_locale(lang))) {
     if(lang!=default_locale)
       // lang not ok, try default_locale
       set_locale(default_locale);
     return;
   }
-
+  
   mapping objects;
 #if constant(Locale.get_objects)
   objects=Locale.get_objects( set );
@@ -2731,12 +2735,14 @@ string decode_charset( string charset, string data )
 
 void create()
 {
-  define_global_variables();
 #if constant(Locale.register_project)
   Locale.register_project("base_server","translations/%L/base_server.xml");
+  Locale.register_project("config_interface","translations/%L/base_server.xml");
 #else
   RoxenLocale.register_project("base_server","translations/%L/base_server.xml");
+  RoxenLocale.register_project("config_interface","translations/%L/base_server.xml");
 #endif
+  define_global_variables();
 
   // Dump some programs (for speed)
   master()->resolv ("RXML.refs");
@@ -3445,14 +3451,7 @@ string check_variable(string name, mixed value)
       remove_call_out(restart);
     break;
    case "locale":
-     if(sizeof(
-#if constant(Locale.get_objects)
-	       Locale.get_objects(value)
-#else
-	       RoxenLocale.get_objects(value)
-#endif
-	       ))
-     {
+     if(verify_locale(value)) {
        default_locale = value;
        set_locale();
      } else {
