@@ -256,16 +256,16 @@ array query_seclevels()
       switch(type)
       {
       case "allowip":
-	patterns += ({ ({ MOD_ALLOW, new(Regexp, value)->match, }) });
+	patterns += ({ ({ MOD_ALLOW, Regexp(value)->match, }) });
 	break;
 
       case "denyip":
-	patterns += ({ ({ MOD_DENY, new(Regexp,value)->match, }) });
+	patterns += ({ ({ MOD_DENY, Regexp(value)->match, }) });
 	break;
 
       case "allowuser":
 	value = replace("("+(value/",")*")|("+")","(any)","(.*)");
-	patterns += ({ ({ MOD_USER, new(Regexp, value)->match, }) });
+	patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
 	break;
       }
     }

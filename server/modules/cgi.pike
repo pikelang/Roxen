@@ -94,7 +94,7 @@ void create()
 	 "If set, the variable REMOTE_PASSWORD will be set to the decoded "
 	 "password value.");
 
-  defvar("use_wrapper", (cwd()==""?0:1), "Use cgi wrapper", 
+  defvar("use_wrapper", (getcwd()==""?0:1), "Use cgi wrapper", 
 	 TYPE_FLAG|VAR_EXPERT,
 	 "If set, an external wrapper will be used to start the CGI script.\n"
 	 "<br>This will:<ul>\n"
@@ -270,7 +270,7 @@ mixed find_file(string f, object id)
 #endif
   
   wd = dirname(f);
-  pipe1=clone(File);
+  pipe1=File();
   pipe2=pipe1->pipe();
     
   array (int) uid;
@@ -288,7 +288,7 @@ mixed find_file(string f, object id)
     
   if(QUERY(use_wrapper))
   {
-    spawne(cwd()+"/bin/cgi", ({ f }) +  make_args(id->rest_query), 
+    spawne(getcwd()+"/bin/cgi", ({ f }) +  make_args(id->rest_query), 
            build_env_vars(f, id, path_info), 
            pipe1, pipe1, QUERY(err)?pipe1:stderr, wd, uid);
   } else {

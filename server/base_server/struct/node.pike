@@ -47,7 +47,7 @@ object descend(string what, int nook)
     return below[what];
   if(nook) return 0;
 
-  o=clone(object_program(this_object()));
+  o=object_program(this_object())();
 
   if(!down)  // The new node is the first node below this one in the tree.
     down=o;

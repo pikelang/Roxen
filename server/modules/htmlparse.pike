@@ -85,7 +85,7 @@ int _match(string w, array (string) a)
   string q;
   foreach(a, q)
   {
-    if(stringp(w) && stringp(q) && do_match(w, q))
+    if(stringp(w) && stringp(q) && glob(q, w))
       return 1;
   }
 }
@@ -177,7 +177,7 @@ void start()
     //
     // Locking between different computers is not really possible,
     // but it should work most of the time anyway..
-    lock = clone((program)"lock", hash(olf)); 
+    lock = ((program)"lock")(hash(olf)); 
 
 
     database2=open(olf+".main", "wrc");
@@ -1150,7 +1150,7 @@ string tag_allow(string a, mapping (string:string) m,
       if(!m->or)
 	return "";
     } else {
-      TEST(do_match(got->misc->accept*" ", "*"+m->accept+"*"));
+      TEST(glob("*"+m->accept+"*",got->misc->accept*" "));
     }
 
   if(m->referer)
