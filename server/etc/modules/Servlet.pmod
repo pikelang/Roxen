@@ -17,6 +17,7 @@ static object response_class = FINDCLASS("com/roxen/servlet/ServletResponse");
 static object stream_class = FINDCLASS("com/roxen/servlet/HTTPOutputStream");
 static object session_context_class = FINDCLASS("com/roxen/servlet/RoxenSessionContext");
 static object dictionary_class = FINDCLASS("java/util/Dictionary");
+static object set_ifc = FINDCLASS("java/util/Set");
 static object hashtable_class = FINDCLASS("java/util/Hashtable");
 static object throwable_class = FINDCLASS("java/lang/Throwable");
 static object stringwriter_class = FINDCLASS("java/io/StringWriter");
@@ -44,9 +45,11 @@ static object dic_field = config_class->get_field("dic", "Ljava/util/Dictionary;
 static object params_field = request_class->get_field("parameters", "Ljava/util/Dictionary;");
 static object attrs_field = request_class->get_field("attributes", "Ljava/util/Dictionary;");
 static object headers_field = request_class->get_field("headers", "Ljava/util/Dictionary;");
+static object files_field = request_class->get_field("files", "Ljava/util/Set;");
 static object set_response_method = request_class->get_method("setResponse", "(Lcom/roxen/servlet/ServletResponse;)V");
 static object dic_put = dictionary_class->get_method("put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 static object hash_clear = hashtable_class->get_method("clear", "()V");
+static object set_put = set_ifc->get_method("add", "(Ljava/lang/Object;)Z");
 static object stream_id_field = stream_class->get_field("id", "I");
 static object stream_init = stream_class->get_method("<init>", "(I)V");
 static object throwable_printstacktrace = throwable_class->get_method("printStackTrace", "(Ljava/io/PrintWriter;)V");
@@ -332,7 +335,8 @@ object conf_context(object conf)
 
 object request(object context, mapping(string:string)|object id,
 	       mapping(string:string|object)|void attrs,
-	       mapping(string:array(string)|string)|void headers, mixed ... rest)
+	       mapping(string:array(string)|string)|void headers,
+	       array(string)|void files, mixed ... rest)
 {
   if(objectp(id)) {
     string tmp = id->conf->query("MyWorldLocation");
@@ -379,6 +383,7 @@ object request(object context, mapping(string:string)|object id,
 
     return request(context||conf_context(id->conf), id->variables, attrs,
 		   id->raw && MIME.parse_headers(id->raw)[0],
+		   id->misc->files,
 		   (zero_type(id->misc->len)? -1:id->misc->len),
 		   id->misc["content-type"], id->prot,
 		   lower_case((id->prot/"/")[0]), tmp,		   
@@ -395,6 +400,11 @@ object request(object context, mapping(string:string)|object id,
   object pa = params_field->get(r);
   foreach(indices(id), string v)
     dic_put(pa, v, id[v]);
+  if(files && sizeof(files)) {
+    object fi = files_field->get(r);
+    foreach(files, string f)
+      set_put(fi, f);
+  }
   if(attrs) {
     object at = attrs_field->get(r);
     foreach(indices(attrs), string a)

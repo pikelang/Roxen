@@ -7,6 +7,8 @@ import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Enumeration;
@@ -34,6 +36,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
   Dictionary parameters = new Hashtable();
   Dictionary attributes = new Hashtable();
   Dictionary headers = new Hashtable();
+  Set files = new HashSet();
   BufferedReader reader = null;
   ServletInputStream inputStream = null;
 
@@ -109,6 +112,8 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     String s = (String)parameters.get(name);
     if(s == null)
       return null;
+    if(files.contains(name))
+      return new String[] { s };
     int a=0, p=0, i = s.length(), cnt = 1;
     while(--i>=0)
       if(s.charAt(i)=='\0')
