@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.105 1999/12/08 13:31:20 jonasw Exp $
+/* $Id: wizard.pike,v 1.106 1999/12/16 21:49:50 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -481,11 +481,14 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   // page. Netscape ignores one of them, but IE sends both. Thus we
   // have to discard the extra value in the IE case. (We simply assume
   // both values are the same here; maybe it could be done better.)
-  id->variables->action = (id->variables->action/"\0")[0];
+  if (stringp (id->variables->action))
+    id->variables->action = (id->variables->action/"\0")[0];
   
   res = ("\n<!--Wizard-->\n"
-         "<form method=\"get\">\n"
-	 "<input type=\"hidden\" name=\"action\" value=\""+id->variables->action+"\" />\n"
+         "<form method=\"get\">\n" +
+	 (stringp (id->variables->action) ?
+	  "<input type=\"hidden\" name=\"action\" value=\""+id->variables->action+"\" />\n" :
+	  "") +
 	 "<input type=\"hidden\" name=\"_page\" value=\""+page+"\" />\n"
 	 "<input type=\"hidden\" name=\"_state\" value=\""+compress_state(id->variables)+"\" />\n"
 	 "<table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"80%\">\n"
