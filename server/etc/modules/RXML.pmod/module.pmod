@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.246 2001/09/18 18:57:45 mast Exp $
+// $Id: module.pmod,v 1.247 2001/09/19 18:06:07 nilsson Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -5578,7 +5578,7 @@ TAny t_any = TAny();
 //! remains @tt{"<foo>"@}, which then carries a totally different
 //! meaning.
 
-static class TAny
+class TAny
 {
   inherit Type;
   constant name = "any";
@@ -5742,7 +5742,7 @@ TScalar t_scalar = TScalar();
 //!
 //! Supertype: @[RXML.t_any]
 
-static class TScalar
+class TScalar
 {
   inherit Type;
   constant name = "scalar";
@@ -5780,7 +5780,7 @@ TNum t_num = TNum();
 //!
 //! Supertype: @[RXML.t_scalar]
 
-static class TNum
+class TNum
 {
   inherit Type;
   constant name = "number";
@@ -5824,7 +5824,7 @@ TInt t_int = TInt();
 //!
 //! Supertype: @[RXML.t_num]
 
-static class TInt
+class TInt
 {
   inherit Type;
   constant name = "int";
@@ -5865,7 +5865,7 @@ TFloat t_float = TFloat();
 //!
 //! Supertype: @[RXML.t_num]
 
-static class TFloat
+class TFloat
 {
   inherit Type;
   constant name = "float";
@@ -5915,7 +5915,7 @@ TString t_string = TString();
 //! details.
 
 //!
-static class TString
+class TString
 {
   inherit Type;
   constant name = "string";
@@ -5981,7 +5981,7 @@ TAnyText t_any_text = TAnyText();
 //! @[RXML.t_text] and not this type, so that they get correctly
 //! encoded when inserted into e.g. XML markup.
 
-static class TAnyText
+class TAnyText
 {
   inherit TString;
   constant name = "text/*";
@@ -6000,7 +6000,7 @@ TText t_text = TText();
 //! type of text; @[RXML.t_any_text] represents that. Is sequential
 //! and allows free text.
 
-static class TText
+class TText
 {
   inherit TAnyText;
   constant name = "text/plain";
@@ -6027,7 +6027,7 @@ TXml t_xml = TXml();
 //! The type for XML and similar markup.
 
 //!
-static class TXml
+class TXml
 {
   inherit TText;
   constant name = "text/xml";
@@ -6177,7 +6177,7 @@ static class TXml
 THtml t_html = THtml();
 //! (Currently) identical to t_xml, but tags it as "text/html".
 
-static class THtml
+class THtml
 {
   inherit TXml;
   constant name = "text/html";
