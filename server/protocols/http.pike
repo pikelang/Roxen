@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.219 2000/03/16 18:24:37 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.220 2000/03/18 02:55:08 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -19,6 +19,10 @@ private inherit "roxenlib";
 #define HRSEC(X) ((int)((X)*1000000))
 #define SECHR(X) ((X)/(float)1000000)
 int req_time = HRTIME();
+#endif
+
+#ifdef ID_OBJ_DEBUG
+Debug.ObjectMarker __marker = Debug.ObjectMarker (this_object());
 #endif
 
 #ifdef REQUEST_DEBUG
@@ -1910,6 +1914,9 @@ object clone_me()
 {
   object c,t;
   c=object_program(t=this_object())(0, port_obj);
+#ifdef ID_OBJ_DEBUG
+  werror ("clone %O[%d] -> %O[%d]\n", t, t->__marker->count, c, c->__marker->count);
+#endif
 
 // c->first = first;
   c->port_obj = port_obj;
