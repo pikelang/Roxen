@@ -60,8 +60,6 @@ hard: all
 
 depend:
 	-@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" depend)
-	@echo "You need to run configure once again."
-	@exit 1
 
 verify: all verify_other
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify)
