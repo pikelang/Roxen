@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.88 2000/08/28 09:54:35 jhs Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.89 2000/09/05 15:06:41 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -615,7 +615,6 @@ mixed find_file( string f, RequestID id )
 			     "413 Out of disk quota");
     }
 
-    object privs;
 
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
@@ -723,7 +722,6 @@ mixed find_file( string f, RequestID id )
 				"<h1>Permission to 'CHMOD' files denied</h1>");
     }
 
-    object privs;
 
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
@@ -805,8 +803,6 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    object privs;
-
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
       privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
@@ -821,7 +817,7 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    int code = mv(decode_path(movefrom), decode_path(f));
+    code = mv(decode_path(movefrom), decode_path(f));
     privs = 0;
 
     moves++;
@@ -908,7 +904,6 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    object privs;
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
       privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
@@ -923,7 +918,7 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    int code = mv(decode_path(f), decode_path(moveto));
+    code = mv(decode_path(f), decode_path(moveto));
     privs = 0;
 
     TRACE_ENTER("MOVE: Accepted", 0);

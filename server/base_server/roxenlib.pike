@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.196 2000/08/28 05:31:51 per Exp $
+// $Id: roxenlib.pike,v 1.197 2000/09/05 15:06:31 per Exp $
 
 //#pragma strict_types
 
@@ -20,9 +20,12 @@ class Protocol {
   mapping(string:mapping) urls = ([]);
 };
 class Configuration {
-  string parse_rxml(string,RequestID,void|Stdio.File,void|mapping(string:mixed));
-  int|mapping check_security(function, RequestID);
-  string real_file(string, RequestID);
+  string parse_rxml(string data,
+                    RequestID id,
+                    void|Stdio.File fd,
+                    void|mapping(string:mixed) defines);
+  int|mapping check_security(function a, RequestID b);
+  string real_file(string a, RequestID b);
   string name;
   mapping modules;
   mapping(object:string) otomod;
@@ -36,7 +39,7 @@ class RequestID {
   mapping(string:mixed) misc;
   mapping(string:string) variables;
 
-  void set_output_charset(string|function);
+  void set_output_charset(string|function charset);
 };
 class RoxenModule {
   string query_name();
@@ -1624,12 +1627,12 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
 
      case "discordian":
 #if efun(discdate)
-      array(string) eris=discdate(t);
-      res=eris[0];
+      array(string) not=discdate(t);
+      res=not[0];
       if(m->year)
-	res += " in the YOLD of "+eris[1];
-      if(m->holiday && eris[2])
-	res += ". Celebrate "+eris[2];
+	res += " in the YOLD of "+not[1];
+      if(m->holiday && not[2])
+	res += ". Celebrate "+not[2];
       return res;
 #else
       return "Discordian date support disabled";

@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.122 2000/08/17 01:16:31 per Exp $
+// $Id: wizard.pike,v 1.123 2000/09/05 15:06:36 per Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -158,7 +158,6 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     return make_tag("input",m);
 
    case "checkbox":
-    string res;
     m_delete(m,"default");
     if (!m->value) m->value="on";
     if (current && current != "0" &&
@@ -250,7 +249,6 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       color_name(a)+"\"> <input type=\"submit\" value=\"Ok\"></font></td></table>\n");
 
    case "color-small":
-     int h, s, v;
      if(id->variables[m->name+".hsv"])
        sscanf(id->variables[m->name+".hsv"], "%d,%d,%d", h, s, v);
      else
@@ -276,8 +274,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      m_delete(id->variables, m->name+".bar.y");
      id->variables[m->name+".hsv"] = h+","+s+","+v;
 
-     array a=hsv_to_rgb(h,s,v);
-     string bgcol=sprintf("#%02x%02x%02x",a[0],a[1],a[2]);
+     a=hsv_to_rgb(h,s,v);
+     bgcol=sprintf("#%02x%02x%02x",a[0],a[1],a[2]);
      id->variables[m->name] = bgcol;
      return
      ("<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n"
@@ -313,7 +311,6 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "</table>\n");
 
    case "font":
-     string res="";
      m->type = "select";
      m->lines = "20";
      m->choices = roxen.fonts->available_fonts() * ",";

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.36 2000/08/09 14:45:39 kuntri Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.37 2000/09/05 15:06:45 per Exp $";
 #include <module.h>
 inherit "module";
 
@@ -403,7 +403,7 @@ string countdown(mapping m, RequestID id)
 
     case "easter":
     case "gregorian-easter":
-      mapping easter=set_to_gregorian_easter(time_args->year+1900);
+      easter=set_to_gregorian_easter(time_args->year+1900);
       if(easter->mon-1 < time_args->mon ||
                (easter->mon-1 == time_args->mon && easter->day < time_args->day))
         easter=set_to_gregorian_easter(++(time_args->year)+1900);

@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.53 2000/08/15 23:08:50 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.54 2000/09/05 15:06:46 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -298,7 +298,6 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
 
       case "economic-int":
       case "int":
-        string font="",nofont="";
         if(opt->nicer || type=="economic-int"){
           font="<font color=\""+
             (type=="economic-int"?((int)s<0?(opt->negativecolor||"#ff0000"):(opt->textcolor||"#000000")):

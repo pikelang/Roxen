@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.5 2000/08/22 15:07:10 leif Exp $
+// $Id: ExtScript.pmod,v 1.6 2000/09/05 15:06:40 per Exp $
 
 #define THREADS 1
 
@@ -192,7 +192,7 @@ class Handler
       len = strlen(arg);
       pipe->write(sprintf("%c%c%c%c%s", how == "eval" ? 'C' : 'S',
                    len/65536, len/256, len&255, arg));
-      string res, output = "";
+      string output = "";
 
       while (sizeof(res = pipe->read(1)) > 0)
       { diag("."+res);

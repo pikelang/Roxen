@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.6 2000/08/25 11:07:58 wellhard Exp $";
+constant cvs_version="$Id: vform.pike,v 1.7 2000/09/05 15:06:47 per Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_PARSER;
@@ -223,9 +223,9 @@ class TagVForm {
 	    result = error + RXML.t_xml->format_tag("select", args, content);
 	  case "after":
 	  default:
-	    string error = parse_html(content, ([]),
-				      ([ "error-message":lambda(string t, mapping m, string c) { return c; },
-					 "option":"" ]) );
+	    error = parse_html(content, ([]),
+                               ([ "error-message":lambda(string t, mapping m, string c) { return c; },
+                                  "option":"" ]) );
 	    result = RXML.t_xml->format_tag("select", args, content) + error;
 	  }
 	}

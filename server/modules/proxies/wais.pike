@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.20 2000/08/19 08:52:42 per Exp $";
+string cvs_version = "$Id: wais.pike,v 1.21 2000/09/05 15:06:45 per Exp $";
 
 #include <config.h>
 #include <module.h>
@@ -1161,9 +1161,6 @@ mapping readSearchResponseInfo(string buf)
 			 "originCity" : originCity ]) });
       break;
     case DT_DocumentShortHeaderGroup:
-      string docID,buf1;
-      int versionNumber,score,bestMatch,docLength,lines;
-
       WAIS_WERR("got DT_DocumentShortHeaderGroup");
 
       versionNumber = UNUSED;
@@ -1246,9 +1243,7 @@ mapping readSearchResponseInfo(string buf)
 
       break;
     case DT_DocumentLongHeaderGroup:
-      int versionNumber,score,bestMatch,docLength,lines;
-      string docID,types,source,date,headline,originCity,stockCodes,
-      companyCodes,industryCodes,buf1;
+      string stockCodes, companyCodes,industryCodes;
 
       /* readWAISDocumentHeader */
 
@@ -1416,8 +1411,7 @@ mapping readSearchResponseInfo(string buf)
 			  "industryCodes" : industryCodes ]) });
       break;
     case DT_DocumentTextGroup:
-      int versionNumber;
-      string docID, documentText, buf1;
+      string documentText;
 
       /* readUserInfoHeader */
 
@@ -1467,9 +1461,6 @@ mapping readSearchResponseInfo(string buf)
 		   "documentText" : documentText ]) });
       break;
     case DT_DocumentHeadlineGroup:
-      int versionNumber;
-      string docID,source,date,headline,originCity,buf1;
-
       /* readWAISDocumentHeader */
 
       WAIS_WERR("got DT_DocumentHeadlineGroup");
@@ -1548,9 +1539,6 @@ mapping readSearchResponseInfo(string buf)
 			"originCity" : originCity ]) });
       break;
     case DT_DocumentCodeGroup:
-      int versionNumber;
-      string docID,stockCodes,companyCodes,industryCodes,buf1;
-
       /* readWAISDocumentHeader */
 
       WAIS_WERR("got DT_DocumentCodeGroup");

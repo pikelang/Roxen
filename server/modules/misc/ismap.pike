@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-constant cvs_version = "$Id: ismap.pike,v 1.16 2000/03/16 18:57:13 nilsson Exp $";
+constant cvs_version = "$Id: ismap.pike,v 1.17 2000/09/05 15:06:44 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -43,7 +43,7 @@ mapping find_colors(array lines, int color)
   string s, url;
   int col1, col2;
   int sr, sg, sb, er, eg, eb, r, g, b;
-  string b,c;
+  string bc, c;
   mapping res=([ "ranges":({}), ]);
 
   for(i=0; i<sizeof(lines); i++)
@@ -53,9 +53,9 @@ mapping find_colors(array lines, int color)
     {
       
       sscanf(lines[i], "%*s:%s", s);
-      if(sscanf(s, "%s-%s:%s", b, c, url)==3)
+      if(sscanf(s, "%s-%s:%s", bc, c, url)==3)
       {
-	col1=parse_color(b, color);
+	col1=parse_color(bc, color);
 	col2=parse_color(c, color);
 
 	if(color)
@@ -98,8 +98,8 @@ mapping find_colors(array lines, int color)
 	  eb=sw;
 	}
 	res["ranges"] += ({ ({ ({ sr, sg, sb }), ({ er, eg, eb }), url }) });
-      } else if(sscanf(s, "%s:%s", b, url)) {
-	res[parse_color(b, color)]=url;
+      } else if(sscanf(s, "%s:%s", bc, url)) {
+	res[parse_color(bc, color)]=url;
       }
     }
   }

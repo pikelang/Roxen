@@ -1,7 +1,7 @@
 // This is Roxen state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: state.pike,v 1.16 2000/08/21 11:34:30 jhs Exp $
+// $Id: state.pike,v 1.17 2000/09/05 15:06:35 per Exp $
 
 #define CHKSPACE "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/"
 
@@ -63,7 +63,7 @@ class Page_state {
     if(!intp(error) || error!=0) return 0;
 
     mapping map;
-    mixed error=catch {
+    error=catch {
       map=decode_value(from);
     };
     if(!intp(error) || error!=0) return 0;

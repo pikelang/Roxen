@@ -19,6 +19,27 @@
  easy for module developers to develop their own type of variables.
 </new-feature>
 
+<new-feature name='Fonts'>
+  The fonts are now loaded by plugins, it's relatively easy to add new
+  font formats to roxen.
+<p>
+  The currently supported formats are:
+</p>
+<dl>
+  <dt> Compatibility bitmap fonts </dt>
+  <dd> The old font format, one file per font, uncompressed 8bpl bitmaps </dd>
+  <dt> TTF fonts </dt>
+  <dd> TrueType fonts, using freetype </dd> 
+  <dt> Image directory </dt>
+  <dd> A directory with a file 'fontname' and one image per character.
+       The images can use any format Roxen knows. </dd>
+  <dt> Image TAR file </dt>  
+  <dd> Just like an image directory, but in a TAR file </dd>
+  <dt> Compact Image File </dt>
+  <dd> Basically just like the image tar format, but more optimal.
+       There is 8 bytes overhead per character, and 68 bytes header. </dd>
+</dl>
+</new-feature>
 
 <new-feature name='Pike tag module'>
 <ul>

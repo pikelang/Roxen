@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.362 2000/09/05 11:50:14 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.363 2000/09/05 15:06:28 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2113,7 +2113,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       id++;
 
   int start_time = gethrtime();
-  mixed err;
 
   if( !moduleinfo )
   {
@@ -2271,7 +2270,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   module[ id ] = me;
   otomod[ me ] = modname+"#"+id;
 
-  mixed err;
   if(!nostart) call_start_callbacks( me, moduleinfo, module );
 
 #ifdef MODULE_DEBUG

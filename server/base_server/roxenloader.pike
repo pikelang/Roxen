@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.194 2000/09/04 12:16:45 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.195 2000/09/05 15:06:33 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -467,14 +467,14 @@ class _roxen {
   int start_time;
   array configurations;
 
-  mixed  query(string);
-  void   store(string, mapping, int, object);
-  mapping(string:mixed) retrieve(string, object);
-  void   remove(string, object);
+  mixed  query(string a);
+  void   store(string a, mapping b, int c, object d);
+  mapping(string:mixed) retrieve(string a, object b);
+  void   remove(string a, object b);
   string version();
-  void   dump(string);
-  void   nwrite(string, int|void, int|void, void|mixed ...);
-  int    main(int, array(string));
+  void   dump(string a);
+  void   nwrite(string a, int|void b, int|void c, void|mixed ... d);
+  int    main(int a, array(string) b);
 }
 
 
@@ -735,8 +735,8 @@ static private void initiate_cache()
 }
 
 class _error_handler {
-  void compile_error(string,int,string);
-  void compile_warning(string,int,string);
+  void compile_error(string a,int b,string c);
+  void compile_warning(string a,int b,string c);
 }
 
 array(_error_handler) compile_error_handlers = ({});

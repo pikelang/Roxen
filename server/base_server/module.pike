@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.96 2000/08/28 12:05:45 jhs Exp $
+// $Id: module.pike,v 1.97 2000/09/05 15:06:30 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -259,10 +259,10 @@ array query_seclevels()
     string type, value;
     if(sscanf(sl, "%s=%s", type, value)==2)
     {
+      array(string|int) arr;
       switch(lower_case(type))
       {
       case "allowip":
-	array(string|int) arr;
 	if (sizeof(arr = (value/"/")) == 2) {
 	  // IP/bits
 	  arr[1] = (int)arr[1];
@@ -280,7 +280,6 @@ array query_seclevels()
 
       case "acceptip":
 	// Short-circuit version of allow ip.
-	array(string|int) arr;
 	if (sizeof(arr = (value/"/")) == 2) {
 	  // IP/bits
 	  arr[1] = (int)arr[1];
@@ -297,7 +296,6 @@ array query_seclevels()
 	break;
 
       case "denyip":
-	array(string|int) arr;
 	if (sizeof(arr = (value/"/")) == 2) {
 	  // IP/bits
 	  arr[1] = (int)arr[1];
@@ -351,8 +349,7 @@ array query_seclevels()
 	// Short-circuit version of allow user.
 	// NOTE: MOD_PROXY_USER is already short-circuit.
 	value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
-	array(string) users = (value/"," - ({""}));
-	int i;
+        users = (value/"," - ({""}));
 
 	for(i=0; i < sizeof(users); i++) {
 	  if (lower_case(users[i]) == "any") {
