@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.114 2001/11/26 15:18:38 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.115 2001/12/21 12:31:38 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -254,6 +254,20 @@ string query_location()
     User uid = id->conf->authenticate( id,access_as_user_db );		\
     if( access_as_user_throw && !uid )                                  \
        return id->conf->authenticate_throw( id, "User",access_as_user_db);\
+    if( uid && uid->uid() )						\
+      privs=Privs(X, uid->uid(), uid->gid() );		\
+  }
+
+#define SETUID_TRACE(X,LEVELS)						\
+  if( access_as_user )                                                  \
+  {									\
+    User uid = id->conf->authenticate( id,access_as_user_db );		\
+    if( access_as_user_throw && !uid ) {                                 \
+       int levels = (LEVELS);						\
+       while(levels--) TRACE_LEAVE("");					\
+       TRACE_LEAVE(X ": Auth required.");				\
+       return id->conf->authenticate_throw( id, "User",access_as_user_db);\
+    }									\
     if( uid && uid->uid() )						\
       privs=Privs(X, uid->uid(), uid->gid() );		\
   }
@@ -600,7 +614,7 @@ mixed find_file( string f, RequestID id )
       TRACE_ENTER("Opening file \"" + f + "\"", 0);
 
       object privs;
-      SETUID("Open file");
+      SETUID_TRACE("Open file", 1);
 
       o = Stdio.File( );
       if(!o->open(norm_f, "r" )) o = 0;
@@ -657,7 +671,7 @@ mixed find_file( string f, RequestID id )
     }
     mkdirs++;
     object privs;
-    SETUID("Creating file");
+    SETUID_TRACE("Creating file", 0);
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
@@ -719,7 +733,7 @@ mixed find_file( string f, RequestID id )
     }
 
 
-    SETUID("Saving file");
+    SETUID_TRACE("Saving file", 0);
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
@@ -819,7 +833,7 @@ mixed find_file( string f, RequestID id )
     }
 
 
-    SETUID("CHMODing file");
+    SETUID_TRACE("CHMODing file", 0);
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
@@ -896,7 +910,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    SETUID("Moving file");
+    SETUID_TRACE("Moving file", 0);
 
     if (query("no_symlinks") &&
 	((contains_symlinks(path, oldf)) ||
@@ -995,7 +1009,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    SETUID("Moving file");
+    SETUID_TRACE("Moving file", 0);
 
     if (query("no_symlinks") &&
         ((contains_symlinks(path, f)) ||
@@ -1060,7 +1074,7 @@ mixed find_file( string f, RequestID id )
     report_notice(LOCALE(49,"DELETING the file %s.\n"),f);
     accesses++;
 
-    SETUID("Deleting file");
+    SETUID_TRACE("Deleting file", 0);
 
     /* Clear the stat-cache for this file */
     if (stat_cache) {
