@@ -51,23 +51,24 @@ string describe_location( object m, int q )
 
 string make_if( string q )
 {
-  return "<if "+q+"=?></if>";
+  return "<if "+q+"=?></if>";
 }
 
 string describe_tags( object m, int q )
 {
-  return html_encode_string(String.implode_nicely( map(indices(m->query_tag_callers()),make_tag,([]))+
-                            map(indices(m->query_container_callers()),
-                                make_container,([]),"")+
-                            map(indices(m->query_if_callers()),make_if)));
+  return html_encode_string(String.implode_nicely(map(sort(indices(m->query_tag_callers())),
+						      make_tag, ([])) +
+						  map(sort(indices(m->query_container_callers())),
+						      make_container, ([]), "") +
+						  map(sort(indices(m->query_if_callers())),
+						      make_if)));
 }
 
 string describe_provides( object m, int q )
 {
   array(string)|multiset(string)|string provides = m->query_provides();
-  if (multisetp(provides)) {
-    provides = (array(string))provides;
-  }
+  if (multisetp(provides))
+    provides = sort((array(string))provides);
   if( arrayp(provides) )
     return String.implode_nicely(provides);
   return provides;
