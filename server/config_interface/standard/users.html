@@ -16,7 +16,6 @@ string parse( RequestID id )
 
 <topmenu  selected=home>
 
-
 <content>
 <cv-startpage>
 <awizard>
@@ -46,7 +45,7 @@ string parse( RequestID id )
   foreach( sort( id->misc->list_config_users() ), string uid )
   {
     object u  = id->misc->get_config_user( uid );
-    res += "<table width=100%><tr><td bgcolor=white><font size=+2>"+uid
+    res += "<table width=100%><tr><td bgcolor=&usr.bgcolor;><font size=+2>"+uid
             +"</font></td></tr></table>";
     res += u->form( id );
   }
@@ -60,7 +59,7 @@ string parse( RequestID id )
 <table><tr><td>User ID:</td><td><input name=user_name></td><td><dbutton page=top gbutton_title=" Create User "></td></tr></table>
 <!-- */ -->
 <pike>
-  if( !strlen(id->variables->user_name) ) 
+  if( !strlen(id->variables->user_name) )
     return "<error>Too short user name</error>";
   id->misc->create_new_config_user(   id->variables->user_name );
 </pike>
@@ -83,7 +82,7 @@ string parse( RequestID id )
     else
        res += ("<dbutton gbutton-width=300 gbutton-preparse "
                "gbutton_title='<cf-locale get=delete> "
-               +u->real_name+" ("+uid+")'>" 
+               +u->real_name+" ("+uid+")'>"
                " <pike> id->misc->delete_old_config_user( \""+uid+"\");"
                "</pike></dbutton><br>");
   }
