@@ -1,7 +1,7 @@
 // This is a roxen protocol module.
 // Copyright © 2001, Roxen IS.
 
-// $Id: prot_https.pike,v 2.4 2001/08/23 05:33:44 nilsson Exp $
+// $Id: prot_https.pike,v 2.5 2002/06/14 00:38:39 nilsson Exp $
 
 // --- Debug defines ---
 
@@ -16,7 +16,7 @@ inherit SSLProtocol;
 constant supports_ipless = 0;
 constant name = "https";
 constant prot_name = "https";
-constant requesthandlerfile = "protocols/http.pike";
+constant requesthandlerfile = "plugins/protocols/http.pike";
 constant default_port = 443;
 
 

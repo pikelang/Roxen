@@ -5,7 +5,7 @@ inherit Protocol;
 constant supports_ipless = 0;
 constant name = "ftp";
 constant prot_name = "ftp";
-constant requesthandlerfile = "protocols/ftp.pike";
+constant requesthandlerfile = "plugins/protocols/ftp.pike";
 constant default_port = 21;
 
 // Some statistics

@@ -1,4 +1,4 @@
-/* $Id: ftpstatus.pike,v 1.5 2002/06/13 00:18:09 nilsson Exp $ */
+/* $Id: ftpstatus.pike,v 1.6 2002/06/14 00:39:13 nilsson Exp $ */
 
 /* Disabled for now. (Was originally written for ftp mk I). */
 #if 0
@@ -50,7 +50,7 @@ static string describe_ftp(object ftp)
 
 string parse( RequestID id )
 {
-  program p = ((program)"protocols/ftp");
+  program p = ((program)"plugins/protocols/ftp");
   multiset(object) ftps = (< >);
   object o = next_object();
   for(;;) {

@@ -5,7 +5,7 @@ inherit Protocol;
 constant supports_ipless = 1;
 constant name = "http";
 constant prot_name = "http";
-constant requesthandlerfile = "protocols/http.pike";
+constant requesthandlerfile = "plugins/protocols/http.pike";
 constant default_port = 80;
 
 int set_cookie, set_cookie_only_once;
