@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.11 2004/03/24 13:28:12 anders Exp $
+// $Id: webdav.pike,v 1.12 2004/04/29 14:54:32 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.11 2004/03/24 13:28:12 anders Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.12 2004/04/29 14:54:32 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -30,7 +30,7 @@ void start(int q, Configuration c)
   conf = c;
 }
 
-mapping|int(-1..0) first_try(RequestID id)
+mapping(string:mixed)|int(-1..0) first_try(RequestID id)
 {
   switch(id->method) {
   case "OPTIONS":
@@ -45,6 +45,10 @@ mapping|int(-1..0) first_try(RequestID id)
 		"DAV":"1",
 	      ]),
     ]);
+#if 0
+  case "LOCK":
+  case "UNLOCK":
+#endif /* 0 */
   case "COPY":
   case "DELETE":
   case "PROPFIND":
@@ -111,7 +115,7 @@ class PatchPropertyRemoveCmd(string property_name)
 }
 
 //! Handle WEBDAV requests.
-mapping|int(-1..0) handle_webdav(RequestID id)
+mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 {
   Parser.XML.Tree.Node xml_data;
   TRACE_ENTER("Handle WEBDAV request...", 0);
@@ -122,7 +126,8 @@ mapping|int(-1..0) handle_webdav(RequestID id)
     TRACE_LEAVE("Malformed XML.");
     return Roxen.http_status(400, "Malformed XML data.");
   }
-  if (!(<"COPY", "DELETE", "PROPFIND", "PROPPATCH">)[id->method]) {
+  if (!(< "LOCK", "UNLOCK", "COPY", "DELETE",
+	  "PROPFIND", "PROPPATCH">)[id->method]) {
     TRACE_LEAVE("Not implemented.");
     return Roxen.http_status(501, "Not implemented.");
   }
@@ -159,6 +164,49 @@ mapping|int(-1..0) handle_webdav(RequestID id)
   mapping(string:mixed) empty_result;
 
   switch(id->method) {
+  case "LOCK":
+    if (!xml_data) {
+      // Refresh.
+    } else {
+      // New lock.
+      Parser.XML.Tree.Node lock_info_node =
+	xml_data->get_first_element("DAV:lockinfo", 1);
+      if (!lock_info_node) {
+	return Roxen.http_status(400, "Missing DAV:lockinfo.");
+      }
+      Parser.XML.Tree.Node lock_scope_node =
+	lock_info_node->get_first_element("DAV:lockscope", 1);
+      if (!lock_scope_node) {
+	return Roxen.http_status(400, "Missing DAV:lockscope.");
+      }
+      string lockscope;
+      if (lock_scope_node->get_first_element("DAV:exclusive", 1)) {
+	lockscope = "DAV:exclusive";
+      }
+      if (lock_scope_node->get_first_element("DAV:shared", 1)) {
+	if (lockscope) {
+	  return Roxen.http_status(400, "Both DAV:exclusive and DAV:shared.");
+	}
+	lockscope = "DAV:shared";
+      }
+      if (!lockscope) {
+	return Roxen.http_status(400, "Unsupported DAV:lockscope.");
+      }
+      Parser.XML.Tree.Node lock_type_node =
+	  lock_info_node->get_first_element("DAV:locktype", 1);
+      if (!lock_type_node) {
+	return Roxen.http_status(400, "Missing DAV:locktype.");
+      }
+      if (!lock_type_node->get_first_element("DAV:write", 1)) {
+	// We only support DAV:write locks.
+	return Roxen.http_status(400, "Missing DAV:write.");
+      }
+      string locktype = "DAV:write";
+      Parser.XML.Tree.Node owner_node =
+	lock_info_node->get_first_element("DAV:owner");
+    }
+  case "UNLOCK":
+    break;
   case "COPY":
     if (!id->request_headers->destination) {
       return Roxen.http_status(400, "COPY: Missing destination header.");
