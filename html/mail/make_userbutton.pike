@@ -19,8 +19,9 @@ constant mail_actions = ({
 constant mbox_actions = ({
   ({ "show_unread", "Show unread mail only", 0 }),
   ({ "show_all", "Show all mail", 0 }),
-  ({ "select_unread", "Select all unread mail", 0 }),
-  ({ "select_all", "Select all mail", 0 }),
+  ({ "select_matching", "Select all mail", 0 }),
+  ({ "select_none", "Clear selection", 0 }),
+  ({ "select_mail", "Select all mail matching <font size=-1><var size=30 name=match></font>", 1 }),
 });
 
 
@@ -110,6 +111,9 @@ mapping wizard_done( object id )
        break;
      case "a_bounce_mail": 
        actions[ "bounce_mail_to_"+id->variables->email ]=1;
+       break;
+     case "a_select_mail": 
+       actions[ "select_mail_like_"+id->variables->match ]=1;
        break;
     default:
       actions[v[2..]]=1;

@@ -44,6 +44,6 @@
         <td valign=bottom><font color=##550000><font size=-1>#date#</font></td>
       </tr>
     </table></td></tr></table>
-    <mail-body-parts mail=$mail_id$>#body:quote=none#</mail-body-parts>
+    <parse-smileys noparse preparse><mail-body-parts mail=$mail_id$>#body:quote=none#</mail-body-parts></parse-smileys>
   </get-mail>
 </formoutput>

@@ -5,6 +5,7 @@
    <amail-user-variable variable=realname set="#firstname:quote=dtag# #lastname:quote=dtag#">
    <amail-user-variable variable=signature set="#signature:quote=dtag#">
    <amail-user-variable variable=email set="#email:quote=dtag#">
+   <amail-user-variable variable=org set="#org:quote=dtag#">
 </formoutput>
 </nooutput>
 </define>
@@ -33,7 +34,7 @@
 <cset variable=firstname preparse><mail-userinfo firstname></cset>
 <cset variable=lastname preparse><mail-userinfo lastname></cset>
 <cset variable=email preparse><mail-userinfo email></cset>
-<cset variable=organization preparse><mail-userinfo organization></cset>
+<cset variable=org preparse><mail-userinfo org></cset>
 
 <gauge resultonly>
   <form action="edit_options.html">

@@ -7,12 +7,12 @@
 </table></tr></td>
 </table>
 
-<glinkbutton value="Create a new mailbox" href=new_mailbox.pike>
-<glinkbutton value="Delete a mailbox"     href=delete_mailbox.pike>
 
 <gh2>Actions</gh2>
 <blockquote>
- <gtext scale=0.5 href=edit.html magic="Send a new mail">Send a new mail</gtext>
+ <gtext scale=0.5 href=edit.html>Send an email</gtext><br>
+ <gtext scale=0.5 href=new_mailbox.pike>Create a new mailbox</gtext><br>
+ <gtext scale=0.5 href=delete_mailbox.pike>Delete a mailbox</gtext><br>
 </blockquote>
 
 <gh2>Preferences</gh2>

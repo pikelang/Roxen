@@ -27,15 +27,15 @@ string quote(string in)
 constant forbidden = ({ ",", "&", "<", ">" });
 int verify_0(object id)
 {
-//   id->variables->mbox=replace(id->variables->mbox,
-// 			      " ",
-// 				sprintf("%c",148));
+// id->variables->mbox=replace(id->variables->mbox,
+// 		               " ",sprintf("%c",148));
+//
   if(sizeof(id->variables->mbox/"" - forbidden) !=
      sizeof(id->variables->mbox))
   {
     error=("Mailbox names may not contain "+
-	   html_encode_string(String.implode_nicely(Array.map(forbidden,quote), "or"
-						     ))
+	   html_encode_string(String.
+			      implode_nicely(Array.map(forbidden,quote), "or"))
 	   +"<br>");
     return 1;
   }
@@ -54,7 +54,7 @@ void wizard_done( object id )
     array button = 
     ({
       "Move to "+v->mbox,
-      (< "mail" >),
+      (< "mail", "mailbox" >),
       (< "move_mail_to_"+v->mbox >),
     });
     array b = UID->get( "html_buttons" );

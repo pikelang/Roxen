@@ -5,10 +5,20 @@
 <input type=hidden name=mailbox_id value=<insert variable=mailbox_id>>
 <gbutton name=list_boxes value=" All mailboxes ">
 <if not variable=listall
-><gbutton selected name=list_unread value="Unread"
-><gbutton name=list_all value="All"></if><else
-><gbutton name=list_unread value="Unread"
-><gbutton selected name=list_all value="All"></else></td>
+   ><gbutton selected name=list_unread value="Unread"
+   ><gbutton name=list_all value="All"
+   ><gbutton name=list_selected value="Selected"><
+/if><else
+   ><gbutton name=list_unread value="Unread"
+   ><if not variable=listselected
+     ><gbutton selected name=list_all value="All"
+     ><gbutton name=list_selected value="Selected"
+     ></if
+   ><else
+     ><gbutton name=list_all value="All"
+     ><gbutton selected name=list_selected value="Selected"
+   ></else
+></else></td>
 <td>matching</td>
 <formoutput>
  <td><input name=mail_match value="#mail_match:quote=dtag#"></td>

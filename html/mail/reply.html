@@ -1,0 +1,123 @@
+<mail-verify-login>
+<formoutput quote=$>
+<set variable=reply_id value=$mail_id$>
+<get-mail mail=$mail_id$ set></get-mail>
+</formoutput>
+
+<pike>
+  string reply;
+  string followup;
+  if(id->variables["reply-to"])
+    reply = id->variables["reply-to"];
+  else
+    reply = id->variables["from"];
+
+  if(id->variables["mail-follow-up-to"])
+    followup = id->variables["mail-follow-up-to"];
+  else if(id->variables["follow-up-to"])
+    followup = id->variables["follow-up-to"];
+  else
+  {
+    if(id->variables["cc"])
+      followup = id->variables["cc"];
+    if(id->variables->to)
+       if(followup)
+         followup += ", "+id->variables->to;
+       else
+         followup = id->variables->to;
+  }
+  id->variables->followup_to = followup + ", " + reply;
+  id->variables->reply_to = reply;
+  return "";
+</pike>
+
+<mail-trim-address-list reply_to followup_to>
+
+<formoutput>
+<pre>
+    Reply to is '#reply_to#'
+Follow up to is '#followup_to#'
+</pre>
+
+<cset variable=mail_id preparse><new-outgoing-mail></cset>
+<cset variable=references>#message-id:quote=none#</cset>
+<if not match="#subject:quote=dtag# is Re:*">
+  <cset variable=subject>Re: #subject:quote=none#</cset>
+</if>
+
+<if variable="followup is 1">
+   <set variable=to value='#followup_to:quote=stag#'>
+</if>
+<else>
+   <set variable=to value='#reply_to:quote=stag#'>
+</else>
+</formoutput>
+
+<pike>
+  object m = MIME.Message(id->variables->body);
+  id->variables->body="";
+  string first = id->variables->from+" wrote:\n";
+  string body;
+  if(m->body_parts)
+  {
+    if(m->body_parts[0]->type == "text" &&
+       m->body_parts[0]->subtype  == "plain")
+      body=m->body_parts[0]->getdata();
+  } else {
+     body = m->getdata();
+  }
+  if(!body)
+     body="";
+  else
+  {
+     string res="";
+     foreach(replace(body,"\r","")/"\n", string line)
+     {
+        string ol = replace(line, ({" ", "\t" }), ({"",""}));
+        if(sscanf(line, "%*swrote:"))
+         continue;
+        if(sscanf(line, "%*swrites:"))
+         continue;
+        if(ol == "--") break;
+        if(strlen(ol) && ((ol[0] != '>') && (ol[0] != '|')))
+          res += "> "+line+"\n";
+        if(!strlen(ol))
+          res += "\n";
+     }
+     res = reverse(res);
+     sscanf(res, "%*[\n]%s", res);
+     res = reverse(res);
+     sscanf(res, "%*[\n]%s", res);
+     body=first+res;
+  }
+  id->variables->body = body;
+  return "";
+</pike>
+
+<unset variable=cc>
+<unset variable=bcc>
+<unset variable=content-type>
+<unset variable=content-disposition>
+<unset variable=content-charset>
+
+<formoutput>
+<pre>
+   Mail id is '#mail_id#'
+Reply mail is '#reply_id#'
+        To is '#to#'
+   Subject is '#subject#'
+References is '#references#'
+
+     Body is
+#body#
+</pre>
+
+
+
+<-compose-mail>
+
+<mail-set-flag name=reply>
+
+<redirect to='edit.html?mail_id=#mail_id#'>
+
+</formoutput>

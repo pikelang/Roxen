@@ -78,14 +78,8 @@
   <tr><td align=right><b>To:</td><td>
 <input size=64 name=to value='#to:quote=html#'></td></tr>
   <tr><td align=right><b>Subject:</td><td><input size=64 name=subject value='#subject:quote=html#'></tr>
-<if prestate=more>
   <tr><td align=right><b>Cc:</td><td><input size=64 name=cc value='#cc:quote=html#'></tr>
   <tr><td align=right><b>Bcc:</td><td><input size=64 name=bcc value='#bcc:quote=html#'></tr>
-  <tr><td><a href=<file>?mail_id=#mail_id#>Less headers</a></td></tr>
-</if>
-<else>
-  <tr><td><a href=/(more)<file>?mail_id=#mail_id#>More headers</a></td></tr>
-</else>
 </table>
 </obox>
 <obox title=Attachments><mail-show-attachments show></obox>
