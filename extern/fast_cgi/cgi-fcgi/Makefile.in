@@ -3,7 +3,7 @@
 #
 #  Open Market, Inc.
 #
-#  $Id: Makefile.in,v 1.1.1.1 1996/11/11 23:31:40 per Exp $
+#  $Id: Makefile.in,v 1.2 1997/10/05 03:33:09 grubba Exp $
 #
 
 SRCDIR=@srcdir@
@@ -14,7 +14,7 @@ SHELL	= /bin/sh
 CC	= @CC@
 CC_PURE	= @CC_PURE@
 INCLUDEDIR  = $(SRCDIR)/../include -I../include -I. -I..
-CFLAGS	= @CCDEFS@ @PROFILE@ -I$(INCLUDEDIR)
+CFLAGS	= @CFLAGS@ @CCDEFS@ @PROFILE@ -I$(INCLUDEDIR)
 LIBS	= @LIBS@ -lm
 RANLIB	= @RANLIB@
 

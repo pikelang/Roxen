@@ -13,8 +13,10 @@ HAVE_SHUFFLE=@shuffle@
 
 OTHERFLAGS=@CFLAGS@
 
-CFLAGS=-g @DEFS@ $(PREFLAGS) $(OTHERFLAGS)
+CFLAGS=-g @DEFS@ @CFLAGS@ $(PREFLAGS) $(OTHERFLAGS)
 PREFLAGS=-I. -I$(SRCDIR) -I$(SRCDIR)/../.. -I../..
+
+LDFLAGS=@LDFLAGS@
 
 all: roxen_hostname cgi fcgi
 
@@ -35,21 +37,21 @@ fcgi:
 	@(strip fcgi || echo)
 
 roxen_hostname: roxen_hostname.o Makefile
-	$(CC) $(ARGS) -o roxen_hostname roxen_hostname.o $(LIBS)
+	$(CC) $(LDFLAGS) -o roxen_hostname roxen_hostname.o $(LIBS)
 
 cgi: cgi.o Makefile
-	$(CC) $(ARGS) -o cgi cgi.o $(LIBS)
+	$(CC) $(LDFLAGS) -o cgi cgi.o $(LIBS)
 
 purecgi: cgi.o Makefile
-	purify $(CC) $(ARGS) -o cgi cgi.o $(LIBS)
+	purify $(CC) $(LDFLAGS) -o cgi cgi.o $(LIBS)
 
 shuffle:	shuffle.o
-	$(CC) -O $(ARGS) -o shuffle shuffle.o -lthread -lsocket
+	$(CC) -O $(LDFLAGS) -o shuffle shuffle.o -lthread -lsocket $(LIBS)
 	@(strip shuffle || echo)
 
 
 pureshuffle:	shuffle.o
-	purify $(CC) -O $(ARGS) -o shuffle shuffle.o -lthread -lsocket
+	purify $(CC) -O $(LDFLAGS) -o shuffle shuffle.o -lthread -lsocket $(LIBS)
 
 shuffle-install: shuffle
 	-/bin/rm -f $(prefix)/roxen/server/bin/shuffle

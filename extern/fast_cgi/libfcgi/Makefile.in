@@ -3,7 +3,7 @@
 #
 #  Open Market, Inc.
 #
-#  $Id: Makefile.in,v 1.1.1.1 1996/11/11 23:31:41 per Exp $
+#  $Id: Makefile.in,v 1.2 1997/10/05 03:33:10 grubba Exp $
 #
 SRCDIR=@srcdir@
 prefix=@prefix@
@@ -12,7 +12,7 @@ VPATH=@srcdir@
 SHELL	= /bin/sh
 CC	= @CC@
 INCLUDEDIR  = -I$(SRCDIR)/../include -I../include -I. -I..
-CFLAGS	= @CCDEFS@ @PROFILE@ $(INCLUDEDIR) 
+CFLAGS	= @CFLAGS@ @CCDEFS@ @PROFILE@ $(INCLUDEDIR) 
 RANLIB	= @RANLIB@
 LIBOBJS	= @LIBOBJS@
 
@@ -36,3 +36,4 @@ clean:
 fcgiapp.o: fcgiapp.c 
 
 fcgi_stdio.o: fcgi_stdio.c 
+
