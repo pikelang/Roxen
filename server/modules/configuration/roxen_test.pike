@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.58 2004/02/20 20:02:12 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.59 2004/03/30 20:15:33 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -830,7 +830,10 @@ class TagEmitTESTER {
       });
 
     case "3":
-      return ({ (["data":"a"]), (["data":RXML.nil]), (["data":EntityDyn()]) });
+      return ({ (["data":"a"]),
+		(["data":RXML.nil]),
+		(["data":RXML.empty]),
+		(["data":EntityDyn()]) });
 
     case "2":
       return map( "aa,a,aa,a,bb,b,cc,c,aa,a,dd,d,ee,e,aa,a,a,a,aa"/",",
