@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.74 1998/02/04 16:10:50 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.75 1998/02/05 00:59:26 js Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -853,7 +853,12 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
 		   getenv()
 		   | build_roxen_env_vars(got)
 		   | build_env_vars(got->not_query, got, 0),
-		   getpwnam("nobody")[2],getpwnam("nobody")[3]);
+#if efun(getpwnam)
+		   getpwnam("nobody")[2],getpwnam("nobody")[3]
+#else
+		   0,0
+#endif
+	);
 
     }
     else

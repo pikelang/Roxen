@@ -4,7 +4,7 @@ import Array;
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.18 1998/02/04 16:10:39 per Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.19 1998/02/05 00:59:17 js Exp $";
 
 #else
 import spider;
@@ -182,7 +182,9 @@ void save_it(string cl)
   mv(f, f+"~");
   fd = open(f, "wc");
 #if efun(chmod)
+#if efun(geteuid)
   if(geteuid() != getuid()) chmod(f,0660);
+#endif
 #endif
 #ifndef THREADS
   privs=0;

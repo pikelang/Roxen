@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.92 1998/02/04 16:10:37 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.93 1998/02/05 00:59:14 js Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -509,7 +509,9 @@ void init_log_file()
 #endif
 	object lf=open( logfile, "wac");
 #if efun(chmod)
+#if efun(geteuid)
 	if(geteuid() != getuid()) chmod(logfile,0666);
+#endif
 #endif
 	if(!lf) {
 	  mkdirhier(logfile);
@@ -2098,7 +2100,8 @@ private string get_domain(int|void l)
       }
     }
   }
-#if efun(gethostbyname) && efun(gethostname)
+#if efun(gethostbyname)
+#if efun(gethostname)
   if(!s) {
     f = gethostbyname(gethostname()); // First try..
     if(f)
@@ -2118,6 +2121,7 @@ private string get_domain(int|void l)
 	}
       }
   }
+#endif
 #endif
   if(!s) {
     t = Stdio.read_bytes("/etc/resolv.conf");
@@ -2523,7 +2527,11 @@ string desc()
     if(port[2] && port[2]!="ANY")
       prt += port[2];
     else
+#if efun(gethostname)
       prt += (gethostname()/".")[0] + "." + QUERY(Domain);
+#else
+    ;
+#endif
     prt += ":"+port[0]+"/";
     if(port_open( port ))
       res += "<font color=darkblue><b>Open:</b></font> <a target=server_view href=\""+prt+"\">"+prt+"</a> \n<br>";
@@ -2556,8 +2564,12 @@ object sql_connect(string db)
 private string get_my_url()
 {
   string s;
+#if efun(gethostname)
   s = (gethostname()/".")[0] + "." + query("Domain");
   s -= "\n";
+#else
+  s = "localhost";
+#endif
   return "http://" + s + "/";
 }
 

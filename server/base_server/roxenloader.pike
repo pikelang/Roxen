@@ -4,7 +4,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.55 1998/02/04 16:10:41 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.56 1998/02/05 00:59:18 js Exp $";
 
 #define perror roxen_perror
 
@@ -25,9 +25,20 @@ object stderr = Stdio.File("stderr");
 mapping pwn=([]);
 string pw_name(int uid)
 {
+#if !constant(getpwuid)
+  return "uid #"+uid;
+#else
   if(pwn[uid]) return pwn[uid];
   return pwn[uid]=(getpwuid(uid)||((""+uid)/":"))[0];
+#endif
 }
+
+#if !constant(getppid)
+int getppid()
+{
+  return -1;
+}
+#endif
 
 void roxen_perror(string format,mixed ... args)
 {
@@ -261,7 +272,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   mapping opts = ([
     "uid":uid,
     "gid":gid,
-    "env": env || getenv(),
+    "env": (env || getenv()),
     "stdout":p
   ]);
 
@@ -270,8 +281,8 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 // 		       ({ "/bin/sh", "-c", s }), opts));
 #endif /* MODULE_DEBUG */
   object proc;
+#ifndef __NT__
   proc = Process.create_process(({ "/bin/sh", "-c", s }), opts);
-
   if (proc) {
     p->close();
     destruct(p);
@@ -280,6 +291,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
     destruct(p2);
     return t;
   }
+#endif
   return 0;
   
 #else /* !constant(Process.create_process) */
@@ -367,7 +379,12 @@ int spawne(string s,string *args, mapping|array env, object stdin,
 		       ])));
 #endif /* MODULE_DEBUG */
   int u, g;
-  if(uid) { u = uid[0]; g = uid[1]; } else { u=geteuid(); g=getegid(); }
+  if(uid) { u = uid[0]; g = uid[1]; } else
+#if efun(geteuid)
+{ u=geteuid(); g=getegid(); }
+#else
+  ;
+#endif
   object proc = Process.create_process(({ s }) + (args || ({})), ([
     "toggle_uid":1,
     "stdin":stdin,
@@ -489,6 +506,7 @@ class myprivs
   object `()(mixed ... args)
   {
     if(!privs) privs = master->Privs;
+    if(!privs) return 0;
     return privs(@args);
   }
 }
@@ -508,13 +526,31 @@ class restricted_cd
 class empty_class {
 };
 
+#if !constant(getuid)
+int getuid(){ return 17; }
+int getgid(){ return 42; }
+#endif
+
 void load_roxen()
 {
   add_constant("cd", restricted_cd());
-
+#if !constant(getppid)
+  add_constant("getppid", getppid);
+#endif
+#if !constant(getuid)
+  add_constant("getuid", getuid);
+  add_constant("getgid", getgid);
+#endif
+#if !constant(gethostname)
+  add_constant("gethostname", lambda() { return "localhost"; });
+#endif
+  
   // Attempt to resolv cross-references...
+#ifndef __NT__
   if(!getuid())
+#endif
     add_constant("Privs", myprivs(this_object()));
+#ifndef __NT__
   else  // No need, we are not running as root.
     add_constant("Privs", (Privs=empty_class));
   roxen = ((program)"roxen")();
@@ -524,8 +560,15 @@ void load_roxen()
     Privs = ((program)"privs");
     add_constant("Privs", Privs);
   }
+#else
+  roxen = ((program)"roxen")();
+#endif
   perror("Roxen version "+roxen->cvs_version+"\n"
-	 "Roxen release "+roxen->real_version+"\n");
+	 "Roxen release "+roxen->real_version+"\n"
+#ifdef __NT__
+	 "Running on NT\n"
+#endif
+    );
   nwrite = roxen->nwrite;
 }
 

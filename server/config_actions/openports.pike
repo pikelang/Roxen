@@ -1,5 +1,6 @@
+#ifndef __NT__
 /*
- * $Id: openports.pike,v 1.8 1998/01/26 16:35:59 grubba Exp $
+ * $Id: openports.pike,v 1.9 1998/02/05 00:59:22 js Exp $
  */
 
 inherit "wizard";
@@ -232,3 +233,6 @@ mixed handle(object id, object mc)
 {
   return wizard_for(id,0);
 }
+#else
+constant action_disabled = 1;
+#endif

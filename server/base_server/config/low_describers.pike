@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.19 1998/01/19 19:19:16 mirar Exp $ */
+/* $Id: low_describers.pike,v 1.20 1998/02/05 00:59:21 js Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -207,6 +207,9 @@ string find_one(string ... of)
 
 void init_ip_list()
 {
+#ifdef __NT__
+  ip_number_list = ({ "ANY" });
+#else
   string ifconfig = find_one("/usr/sbin/ifconfig", "/etc/ifconfig",
                              "/sbin/ifconfig", "/bin/ifconfig",
                              "/usr/bin/ifconfig");  
@@ -251,6 +254,7 @@ void init_ip_list()
     ip_number_list = 0;
   else
     ip_number_list = new_ip_number_list;
+#endif
 }
  
 

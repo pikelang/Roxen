@@ -1,9 +1,12 @@
 /* Dummy host_lookup, used when NO_DNS is defined. */
 
-string cvs_version = "$Id: dummy_hosts.pike,v 1.3 1998/01/21 21:34:18 grubba Exp $";
+string cvs_version = "$Id: dummy_hosts.pike,v 1.4 1998/02/05 00:59:15 js Exp $";
 void create_host_name_lookup_processes() {}
 
 string quick_host_to_ip(string h) { return h; }
+string quick_ip_to_host(string h) { return h; }
+string blocking_ip_to_host(string h) { return h; }
+string blocking_host_to_ip(string h) { return h; }
 
 void host_to_ip(string|void host, function|void callback, mixed ... args)
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.10 1998/02/05 00:11:11 grubba Exp $
+ * $Id: problems.pike,v 1.11 1998/02/05 00:59:23 js Exp $
  */
 
 inherit "wizard";
@@ -203,6 +203,7 @@ string page_3(object id)
     }
     sscanf(user, "%s:%s", u, g);
 
+#if constant(getpwnam)
     array pw;
     if(!(pw = getpwnam(u+"")) && (int)u)
       pw = getpwuid((int)u);
@@ -215,6 +216,7 @@ string page_3(object id)
 			  "variable.<br>"
 			  "<var name=mod_cvar_G/User size=20,1 default='"+user+
 			  "'>",id);
+#endif
   }
 
 

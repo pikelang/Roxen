@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.91 1998/01/20 16:20:50 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.92 1998/02/05 00:59:16 js Exp $";
 //inherit "roxenlib";
 import Image;
 
@@ -289,9 +289,12 @@ mapping verify_changed_ports(object id, object o)
       }
       if(port[2] && port[2]!="ANY")
 	prt += port[2];
+#if efun(gethostname)
       else
 	prt += (gethostname()/".")[0] + "." +
 	  (glob ? roxen->get_domain() : server->query("Domain"));
+#endif
+      
       prt += ":"+port[0]+"/";
       if(prt != def)
 	res += sprintf("     <input type=radio name=\"%s\" value=\"%s\">     %s\n",

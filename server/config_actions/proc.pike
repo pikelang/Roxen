@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.6 1997/09/10 12:36:17 grubba Exp $
+ * $Id: proc.pike,v 1.7 1998/02/05 00:59:24 js Exp $
  */
 
 inherit "wizard";
@@ -80,6 +80,10 @@ string format_proc_line(string in, int ipid)
 	    "</a>\n");
   return "";
 }
+
+#if !constant(getpwuid)
+array(string) getpwuid(int uid) { return ({ (string)uid }); }
+#endif
 
 string cred(object id)
 {

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.163 1998/02/04 16:10:40 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.164 1998/02/05 00:59:18 js Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -9,7 +9,9 @@ constant cvs_version = "$Id: roxen.pike,v 1.163 1998/02/04 16:10:40 per Exp $";
 #include <variables.h>
 
 inherit "read_config";
-
+#ifdef __NT__
+#define NO_DNS
+#endif
 #ifdef NO_DNS
 inherit "dummy_hosts";
 #else
@@ -298,7 +300,7 @@ object create_listen_socket(mixed port_no, object conf,
   if(!port_no)
   {
     port = Stdio.Port( "stdin", accept_callback );
-
+    port->set_id(port);
     if(port->errno())
     {
       report_error("Cannot listen to stdin.\n"
@@ -306,6 +308,7 @@ object create_listen_socket(mixed port_no, object conf,
     }
   } else {
     port = Stdio.Port();
+    port->set_id(port);
     if(!stringp(ether) || (lower_case(ether) == "any"))
       ether=0;
     if(ether)
@@ -363,8 +366,7 @@ object configuration_interface()
     };
     loading_config_interface = 0;
     if(!configuration_interface_obj) {
-      report_error(sprintf("Failed to load the configuration interface!\n"
-			   "%s\n", describe_backtrace(err)));
+      report_error(sprintf("Failed to load the configuration interface!\n"));
     }
   }
   return configuration_interface_obj;
@@ -560,7 +562,9 @@ void done_with_roxen_com()
     Stdio.write_file("etc/supports", new);
     old = Stdio.read_bytes( "etc/supports" );
 #if efun(chmod)
+#if efun(geteuid)
     if(geteuid() != getuid()) chmod("etc/supports",0660);
+#endif
 #endif
     if(old != new)
     {
@@ -937,10 +941,13 @@ int startpid, roxenpid;
 void kill_me()
 {
   // Change to root user if possible ( to kill the start script... )
+#if efun(seteuid)
   seteuid(getuid());
   setegid(getgid());
+#endif
+#if efun(setuid)
   setuid(0);
-  
+#endif
   stop_all_modules();
   
   if(main_configuration_port && objectp(main_configuration_port))
@@ -1101,7 +1108,8 @@ private string get_domain(int|void l)
 //  ConfigurationURL is set by the 'install' script.
   if(!(!l && sscanf(QUERY(ConfigurationURL), "http://%s:%*s", s)))
   {
-#if efun(gethostbyname) && efun(gethostname)
+#if efun(gethostbyname)
+#if efun(gethostname)
     f = gethostbyname(gethostname()); // First try..
     if(f)
       foreach(f, f) if (arrayp(f)) { 
@@ -1109,6 +1117,7 @@ private string get_domain(int|void l)
 	  if(!s || strlen(s) < strlen(t))
 	    s=t;
       }
+#endif
 #endif
     if(!s)
     {
@@ -1143,7 +1152,11 @@ private string get_domain(int|void l)
 private string get_my_url()
 {
   string s;
+#if efun(gethostname)
   s = (gethostname()/".")[0] + "." + query("Domain");
+#else
+  s = "localhost";
+#endif
   s -= "\n";
   return "http://" + s + "/";
 }
@@ -1156,6 +1169,7 @@ private string get_my_url()
 
 int set_u_and_gid()
 {
+#ifndef __NT__
   string u, g;
   array pw;
   
@@ -1195,6 +1209,7 @@ int set_u_and_gid()
       return 1;
     }
   }
+#endif
 }
 
 static mapping __vars = ([ ]);
@@ -2111,6 +2126,7 @@ private string find_arg(array argv, array|string shortform,
 
 private void fix_root(string to)
 {
+#ifndef __NT__
   if(getuid())
   {
     perror("It is impossible to chroot() if the server is not run as root.\n");
@@ -2126,10 +2142,12 @@ private void fix_root(string to)
     return;
   }
   perror("Root is now "+to+".\n");
+#endif
 }
 
 void create_pid_file(string where)
 {
+#ifndef __NT__
   if(!where) return;
   where = replace(where, ({ "$pid", "$uid" }), 
 		  ({ (string)getpid(), (string)getuid() }));
@@ -2137,6 +2155,7 @@ void create_pid_file(string where)
   rm(where);
   if(catch(Stdio.write_file(where, sprintf("%d\n%d", getpid(), getppid()))))
     perror("I cannot create the pid file ("+where+").\n");
+#endif
 }
 
 void init_shuffler();

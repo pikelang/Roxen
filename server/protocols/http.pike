@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.52 1998/02/04 16:10:52 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.53 1998/02/05 00:59:26 js Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -10,7 +10,7 @@ int first;
 # define HRSEC(X) ((int)((X)*1000000))
 # define SECHR(X) ((X)/(float)1000000)
 #else
-# define HRTIME() (time())
+# define HRTIME() (predef::time())
 # define HRSEC(X) (X)
 # define SECHR(X) ((float)(X))
 #endif
@@ -101,6 +101,7 @@ void end(string|void);
 
 private void setup_pipe(int noend)
 {
+#ifndef __NT__
 #if _DEBUG_HTTP_OBJECTS
   my_state = 6;
 #endif
@@ -114,10 +115,12 @@ private void setup_pipe(int noend)
   perror("REQUEST: Pipe setup.\n");
 #endif
 //  pipe->output(my_fd);
+#endif
 }
 
 void send(string|object what, int|void noend)
 {
+#ifndef __NT__
 #if _DEBUG_HTTP_OBJECTS
   my_state = 7;
 #endif
@@ -129,6 +132,9 @@ void send(string|object what, int|void noend)
 #endif
   if(stringp(what))  pipe->write(what);
   else               pipe->input(what);
+#else
+#endif
+  my_fd->write(objectp(what)?what->read():what);
 }
 
 string scan_for_query( string f )
@@ -1050,9 +1056,10 @@ void handle_request( )
   if(head_string) send(head_string);
   if(file->data)  send(file->data);
   if(file->file)  send(file->file);
+#ifndef __NT__
   pipe->output(my_fd);
-
   pipe->set_done_callback( do_log, ({ pipe, file }) );
+#endif
 
 #ifdef KEEP_CONNECTION_ALIVE
   if(keep_alive)

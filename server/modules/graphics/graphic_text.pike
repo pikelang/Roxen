@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.99 1998/02/04 16:10:44 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.100 1998/02/05 00:59:25 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -614,8 +614,10 @@ void start(int|void val, object|void conf)
   if(conf)
   {
     mkdirhier( query( "cache_dir" )+".foo" );
+#ifndef __NT__
 #if efun(chmod)
     chmod( query( "cache_dir" ), 0777 );
+#endif
 #endif
     mc = conf;
     base_key = "gtext:"+(conf?conf->name:roxen->current_configuration->name);
@@ -688,8 +690,10 @@ array get_cache_file(string a, string b)
 void store_cache_file(string a, string b, array data)
 {
   object fd = open(FNAME(a,b), "wct");
+#ifndef __NT__
 #if efun(chmod)
   chmod( FNAME(a,b), 0666 );
+#endif
 #endif
   if(!fd) return;
   fd->write(encode_value(({a,b,data})));
@@ -985,8 +989,10 @@ void save_cached_args()
   restore_cached_args();
   if(on > number) number=on;
   object o = open(ARGHASH, "wct");
+#ifndef __NT__
 #if efun(chmod)
   chmod( ARGHASH, 0666 );
+#endif
 #endif
   string data=encode_value(cached_args);
   catch {
