@@ -108,8 +108,12 @@ void codec_vars(function defvar)
   defvar("decoder", "null", _(0,"Decoder"), TYPE_STRING_LIST,
 	 _(0,"The decoder program to use to decode MPEG"),
 	 ({ "null", "mpg123", "amp" }) );
-  defvar("bitrate", 128, _(0,"Bitrate"), TYPE_INT,
-	 _(0,"The bitrate to use when recoding") );
+  defvar("bitrate", 128, _(0,"Bitrate"), TYPE_INT_LIST,
+	 _(0,"The bitrate to use when recoding"),
+	({
+	  320,  256,  224,  192,   160,   128,   112,
+	  96,   80,   64,    56,   48,    40,    32
+	}));
 };
 
 void call_md_callbacks( )
