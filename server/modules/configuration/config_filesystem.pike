@@ -16,7 +16,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.41 2000/07/21 17:37:36 lange Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.42 2000/07/21 17:46:01 lange Exp $";
 
 constant path = "config_interface/";
 
@@ -275,8 +275,8 @@ void start(int n, Configuration cfg)
 
 void create()
 {
-  defvar("encoding", "UTF-8", LOCALE("du","Character encoding"), TYPE_STRING,
-	 LOCALE("dv","Send pages to client in this character encoding."));
-  defvar( "location", "/", LOCALE("dw","Mountpoint"), TYPE_LOCATION,
-          LOCALE("dx","Usually / is a good idea") );
+  defvar("encoding", "UTF-8", LOCALE(262,"Character encoding"), TYPE_STRING,
+	 LOCALE(263,"Send pages to client in this character encoding."));
+  defvar( "location", "/", LOCALE(264,"Mountpoint"), TYPE_LOCATION,
+          LOCALE(265,"Usually / is a good idea") );
 }
