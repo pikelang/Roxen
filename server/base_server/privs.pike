@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.9 1997/04/27 21:27:01 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.10 1997/05/13 15:53:58 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -8,6 +8,10 @@ int saved_gid;
 #define LOGP (roxen && roxen->variables && roxen->variables->audit && GLOBVAR(audit))
 
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
+
+#if constant(geteuid) && constant(getegid) && constant(seteuid) && constant(setegid)
+#define HAVE_EFFECTIVE_USER
+#endif
 
 static private string dbt(array t)
 {
@@ -18,6 +22,7 @@ static private string dbt(array t)
 
 void create(string reason, int|string|void uid, int|void gid)
 {
+#ifdef HAVE_EFFECTIVE_USER
   array u;
 
   if(getuid()) return;
@@ -47,10 +52,12 @@ void create(string reason, int|string|void uid, int|void gid)
   setegid(gid||getgid());
   if(getgid()!=gid) setgid(gid||getgid());
   seteuid(uid);
+#endif /* HAVE_EFFECTIVE_USER */
 }
 
 void destroy()
 {
+#ifdef HAVE_EFFECTIVE_USER
   if(LOGP)
     perror("Change back to uid#%d, from %s",saved_uid, dbt(backtrace()[-2]));
 
@@ -61,5 +68,6 @@ void destroy()
   if(u) initgroups(u[0], u[3]);
   setegid(saved_gid);
   seteuid(saved_uid);
+#endif /* HAVE_EFFECTIVE_USER */
 }
 #endif
