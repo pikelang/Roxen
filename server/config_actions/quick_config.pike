@@ -1,5 +1,5 @@
 /*
- * $Id: quick_config.pike,v 1.6 1998/06/04 12:20:22 grubba Exp $
+ * $Id: quick_config.pike,v 1.7 1998/06/04 12:46:53 grubba Exp $
  */
 
 inherit "wizard";
@@ -160,7 +160,7 @@ string page_2(object id)
 void wizard_done(object id)
 {
   foreach(actions, array action) action[1](@action[2..]);
-  if (roxen->->unload_configuration_interface) {
+  if (roxen->unload_configuration_interface) {
     /* Fool the type-checker of in old Roxen's */
     mixed foo = roxen->unload_configuration_interface;
     foo();
