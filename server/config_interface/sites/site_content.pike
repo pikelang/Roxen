@@ -235,7 +235,7 @@ string buttons( Configuration c, string mn, RequestID id )
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
   if( c != id->conf )
 #endif
-    buttons += "<a href='../../../drop_module.pike?config="+
+    buttons += "<a href='../../../../drop_module.pike?config="+
             path[0]+"&drop="+mn+"'><gbutton>"+
             LOCALE(252, "Drop Module")+"</gbutton></a>";
   return buttons;
