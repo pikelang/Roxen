@@ -28,7 +28,9 @@ setup_environment() {
 dp() {
   if [ "x$SILENT_START" = "xy" ] ; then 
      :
-  else 
+  elif [ "x$self_test" = "xy" ]; then
+    echo "$@" >&2
+  else
     echo "          :" "$@" >&2
   fi
 }
