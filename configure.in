@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.38 1997/10/25 16:42:25 grubba Exp $
+# $Id: configure.in,v 1.39 1997/10/26 23:50:32 grubba Exp $
 #
 
 prefix=$PWD
@@ -239,11 +239,12 @@ OPTIMIZE=""
 if test $cflags_is_set = no; then
  if test "x${GCC-}" = xyes ; then
   WARN="-W -Wall -Wpointer-arith -Wno-unused -Wstrict-prototypes"
+  AC_SYS_COMPILER_FLAG(-O2,o2)
+# This option might cause gcc to build incorrect shared objects on AIX.
+#  AC_SYS_COMPILER_FLAG(-ffast-math,ffast_math)
+  AC_SYS_OS_COMPILER_FLAG(AIX,-mprototype,mprototype)
 ### Optimize for different SUN machines. If there is no working 'uname'
 ### no extra optimization will be done, but nothing should break either.
-  AC_SYS_COMPILER_FLAG(-ffast-math,ffast_math)
-  AC_SYS_COMPILER_FLAG(-O2,o2)
-  AC_SYS_OS_COMPILER_FLAG(AIX,-mprototype,mprototype)
   AC_SYS_CPU_COMPILER_FLAG(sun4c,-msparclite,sparclite)
   AC_SYS_CPU_COMPILER_FLAG(sun4m,-mv8,microsparc)
   AC_SYS_CPU_COMPILER_FLAG(sun4d,-msupersparc,supersparc)
