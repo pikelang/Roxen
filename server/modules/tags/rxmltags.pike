@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.288 2001/08/29 23:08:34 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.289 2001/08/30 12:03:21 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4702,14 +4702,12 @@ constant tagdoc=([
  select the proper character decoder for the requests variables.
 </p>
 
-<ex type='box'>
-<form>
+<ex-box><form>
   <roxen_automatic_charset_variable/>
   Name: <input name='name'/><br />
   Mail: <input name='mail'/><br />
   <input type='submit'/>
-</form>
-</ex>
+</form></ex-box>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -4718,8 +4716,7 @@ constant tagdoc=([
  Makes it possible to change the autodetected colors within the tag.</short>
  Useful when out-of-order parsing occurs, e.g.</p>
 
-<ex type=box>
-<define tag=\"hello\">
+<ex-box><define tag=\"hello\">
   <colorscope bgcolor=\"red\">
     <gtext>Hello</gtext>
   </colorscope>
@@ -4729,8 +4726,7 @@ constant tagdoc=([
   <td bgcolor=\"red\">
     <hello/>
   </td>
-</tr></table>
-</ex>
+</tr></table></ex-box>
 
  <p>It can also successfully be used when the wiretap module is turned off
  for e.g. performance reasons.</p>
@@ -4810,7 +4806,7 @@ constant tagdoc=([
  <ex>
  <set variable='var.ris' value='Roxen'/>
  <append variable='var.ris' value=' Internet Software'/>
- <ent>var.ris</ent>
+ &var.ris;
  </ex>
 </attr>
 
@@ -5184,7 +5180,7 @@ using the pre tag.
  This is mostly useful when the <tag>date</tag> tag is used from a
  Pike-script or Roxen module.</p>
 
-<ex ><date unix-time='120'/></ex>
+<ex><date unix-time='120'/></ex>
 </attr>
 
 <attr name=timezone value=local|GMT default=local>
@@ -5381,9 +5377,8 @@ using the pre tag.
   <p>This can be used on the error page, for instance, if you'd want
      such errors to end up in the debug log:</p>
 
-  <ex type=box>
-<debug werror='File &page.url; not found!
-(linked from &client.referrer;)'/></ex>
+  <ex-box><debug werror='File &page.url; not found!
+(linked from &client.referrer;)'/></ex-box>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -5426,26 +5421,22 @@ using the pre tag.
  <p>If used, the default tag will only affect form element with this name.</p>
 </attr>
 
-<ex type='box'>
- <default name='my-select' value='&form.preset;'>
-    <select name='my-select'>
-      <option value='1'>First</option>
-      <option value='2'>Second</option>
-      <option value='3'>Third</option>
-    </select>
- </default>
-</ex>
+<ex-box><default name='my-select' value='&form.preset;'>
+  <select name='my-select'>
+    <option value='1'>First</option>
+    <option value='2'>Second</option>
+    <option value='3'>Third</option>
+  </select>
+</default></ex-box>
 
-<ex type='box'>
-<form>
+<ex-box><form>
 <default value=\"&form.opt1;,&form.opt2;,&form.opt3;\">
   <input name=\"opt1\" value=\"yes1\" type=\"checkbox\" /> Option #1
   <input name=\"opt2\" value=\"yes2\" type=\"checkbox\" /> Option #2
   <input name=\"opt3\" value=\"yes3\" type=\"checkbox\" /> Option #3
   <input type=\"submit\" />
 </default>
-</form>
-",
+</form></ex-box>",
 
 "doc":#"<desc cont='cont'><p><short hide='hide'>
  Eases code documentation by reformatting it.</short>Eases
@@ -5457,30 +5448,27 @@ using the pre tag.
  <p>Instead of replacing with \"{\" and \"}\", \"&lt;\" and \"&gt;\"
  is replaced with \"&amp;lt;\" and \"&amp;gt;\".</p>
 
-<ex type='vert'>
-<doc quote=''>
+<ex><doc quote=''>
 <table>
  <tr>
     <td> First cell </td>
     <td> Second cell </td>
  </tr>
 </table>
-</doc>
-</ex>
+</doc></ex>
 </attr>
 
 <attr name='pre'><p>
  The result is encapsulated within a <tag>pre</tag> container.</p>
 
-<ex type='vert'><doc pre=''>
+<ex><doc pre=''>
 {table}
  {tr}
     {td} First cell {/td}
     {td} Second cell {/td}
  {/tr}
 {/table}
-</doc>
-</ex>
+</doc></ex>
 </attr>
 
 <attr name='class' value='string'>
@@ -5693,11 +5681,9 @@ using the pre tag.
 <attr name=variables value=full|plain>
  <p>Sets how the output should be formatted.</p>
 
- <ex type='vert'>
-<pre>
+ <ex><pre>
 <insert variables='full' scope='roxen'/>
-</pre>
- </ex>
+</pre></ex>
 </attr>
 
 <attr name=scope>
@@ -5713,9 +5699,7 @@ using the pre tag.
 <attr name=scopes value=full|plain>
  <p>Sets how the output should be formatted.</p>
 
- <ex type='vert'>
-   <insert scopes='plain'/>
- </ex>
+ <ex><insert scopes='plain'/></ex>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -5738,9 +5722,7 @@ using the pre tag.
 <attr name=file value=string>
  <p>The virtual path to the file to be inserted.</p>
 
- <ex type='box'>
-  <eval><insert file='html_header.inc'/></eval>
- </ex>
+ <ex-box><eval><insert file='html_header.inc'/></eval></ex-box>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -5767,10 +5749,8 @@ using the pre tag.
 <attr name='name' value='string'>
  <p>The name of the tag that should be produced. This attribute is required for tags,
  containers and processing instructions, i.e. for the types 'tag', 'container' and 'pi'.</p>
-<ex type='shor'>
-<maketag name='one' type='tag'></maketag>
-<maketag name='one' type='tag' noxml='noxml'></maketag>
-</ex>
+<ex-src><maketag name='one' type='tag'></maketag>
+<maketag name='one' type='tag' noxml='noxml'></maketag></ex-src>
 </attr>
 
 <attr name='noxml'>
@@ -5780,18 +5760,10 @@ using the pre tag.
 
 <attr name='type' value='tag|container|pi|comment|cdata'>
  <p>What kind of tag should be produced. The argument 'Pi' will produce a processing instruction tag.</p>
-<ex type='svert'>
-<maketag type='pi' name='PICS'>l gen true r (n 0 s 0 v 0 l 2)</maketag>
-</ex>
-<ex type='shor'>
-<maketag type='comment'>Menu starts here</maketag>
-</ex>
-<ex type='box'>
-<maketag type='comment'>Debug: &form.res; &var.sql;</maketag>
-</ex>
-<ex type='shor'>
-<maketag type='cdata'>Exact   words</maketag>
-</ex>
+<ex-src><maketag type='pi' name='PICS'>l gen true r (n 0 s 0 v 0 l 2)</maketag></ex-src>
+<ex-src><maketag type='comment'>Menu starts here</maketag></ex-src>
+<ex-box><maketag type='comment'>Debug: &form.res; &var.sql;</maketag></ex-box>
+<ex-src><maketag type='cdata'>Exact   words</maketag></ex-src>
 </attr>",
 
  ([
@@ -5829,15 +5801,15 @@ using the pre tag.
  <xref href='user.tag' />. This attribute requires a userdatabase.
  </p>
 
- <ex type='box'>This page was last modified by <modified by=''
- realname=''/>.</ex>
+ <ex-box>This page was last modified by <modified by=''
+ realname=''/>.</ex-box>
 </attr>
 
 <attr name=date>
     <p>Print the modification date. Takes all the date attributes in <xref href='date.tag' />.</p>
 
- <ex type='box'>This page was last modified <modified date=''
- case='lower' type='string'/>.</ex>
+ <ex-box>This page was last modified on
+<modified date='' case='lower' type='string'/>.</ex-box>
 </attr>
 
 <attr name=file value=path>
@@ -5858,22 +5830,16 @@ using the pre tag.
 <attr name='separator' value='string'>
  <p>The separator used to separate the messages, by default newline.</p>
 
-<ex><random separator='#'>
-Roxen#Pike#Foo#Bar#roxen.com
-</random>
-</ex>
+<ex><random separator='#'>Foo#Bar#Baz</random></ex>
 </attr>
 
 <attr name='seed' value='string'>
  <p>Enables you to use a seed that determines which message to choose.</p>
 
-<ex type='box'>
-Tip of the day:
+<ex-box>Tip of the day:
 <set variable='var.day'><date type='iso' date=''/></set>
-<random seed='var.day'><insert file='tips.txt'/></random>
-</ex>
-</attr>
-",
+<random seed='var.day'><insert file='tips.txt'/></random></ex-box>
+</attr>",
 
 //----------------------------------------------------------------------
 
@@ -5992,12 +5958,14 @@ load.</p>
 
 <attr name=size value=small|medium|large default=medium>
  <p>Defines the size of the image.</p>
-<ex type='vert'><roxen size='small'/> <roxen/> <roxen size='large'/></ex>
+<ex><roxen size='small'/>
+<roxen/>
+<roxen size='large'/></ex>
 </attr>
 
 <attr name=color value=black|white default=white>
  <p>Defines the color of the image.</p>
-<ex type='vert'><roxen color='black'/></ex>
+<ex><roxen color='black'/></ex>
 </attr>
 
 <attr name=alt value=string default='\"Powered by Roxen\"'>
@@ -6045,9 +6013,7 @@ load.</p>
 
 <attr name=variable value=string required='required'>
  <p>The name of the variable.</p>
-<ex type='box'>
-<set variable='var.foo' value='bar'/>
-</ex>
+<ex-box><set variable='var.foo' value='bar'/></ex-box>
 </attr>
 
 <attr name=value value=string>
@@ -6195,18 +6161,14 @@ load.</p>
  used.
 </p>
 
-<ex>
-  <smallcaps>Roxen WebServer</smallcaps>
-</ex>
+<ex><smallcaps>Roxen WebServer</smallcaps></ex>
 
 
   </desc>
 
 <attr name=space>
  <p>Put a space between every character.</p>
-<ex type='vert'>
-<smallcaps space=''>Roxen WebServer</smallcaps>
-</ex>
+<ex><smallcaps space=''>Roxen WebServer</smallcaps></ex>
 </attr>
 
 <attr name=class value=string>
@@ -6228,9 +6190,7 @@ load.</p>
 <attr name=small value=number default=size-1>
  <p>Size of the small tags. Only applies when size is specified.</p>
 
- <ex>
-  <smallcaps size='6' small='2'>Roxen WebServer</smallcaps>
- </ex>
+ <ex><smallcaps size='6' small='2'>Roxen WebServer</smallcaps></ex>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -6238,48 +6198,26 @@ load.</p>
 "sort":#"<desc cont='cont'><p><short>
  Sorts the contents.</short></p>
 
- <ex>
-  <sort>
-   1
-   Hello
-   3
-   World
-   Are
-   2
-   We
-   4
-   Communicating?
-  </sort>
- </ex>
+ <ex><sort>Understand!
+I
+Wee!
+Ah,</sort></ex>
 </desc>
 
 <attr name=separator value=string>
  <p>Defines what the strings to be sorted are separated with. The sorted
  string will be separated by the string.</p>
 
- <ex type='vert'>
-  <sort separator='#'>
-   1#Hello#3#World#Are#2#We#4#Communicating?
-  </sort>
- </ex>
+ <ex><sort separator='#'>way?#perhaps#this</sort></ex>
 </attr>
 
 <attr name=reverse>
  <p>Reversed order sort.</p>
 
- <ex>
-  <sort reverse=''>
-   1
-   Hello
-   3
-   World
-   Are
-   2
-   We
-   4
-   Communicating?
-  </sort>
- </ex>
+ <ex><sort reverse=''>backwards?
+or
+:-)
+maybe</sort></ex>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -6296,20 +6234,13 @@ load.</p>
 "trimlines":#"<desc cont='cont'><p><short>
  Removes all empty lines from the contents.</short></p>
 
-  <ex>
-  <trimlines>
+  <ex><pre><trimlines>
+See how all this junk
 
 
-   Are
+just got zapped?
 
-
-   We
-
-   Communicating?
-
-
-  </trimlines>
- </ex>
+</trimlines></pre></ex>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -6321,12 +6252,10 @@ load.</p>
 <attr name=variable value=string required='required'>
  <p>The name of the variable.</p>
 
- <ex>
-  <set variable='var.jump' value='do it'/>
-  <ent>var.jump</ent>
-  <unset variable='var.jump'/>
-  <ent>var.jump</ent>
- </ex>
+ <ex><set variable='var.jump' value='do it'/>
+&var.jump;
+<unset variable='var.jump'/>
+&var.jump;</ex>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -6341,7 +6270,7 @@ load.</p>
 
 <attr name=email>
  <p>Only print the e-mail address of the user, with no link.</p>
- <ex type='box'>Email: <user name='foo' email=''/></ex>
+ <ex-box>Email: <user name='foo' email=''/></ex-box>
 </attr>
 
 <attr name=link>
@@ -6351,7 +6280,7 @@ load.</p>
 <attr name=name>
  <p>The login name of the user. If no other attributes are specified, the
  user's realname and email including links will be inserted.</p>
-<ex type='box'><user name='foo'/></ex>
+<ex-box><user name='foo'/></ex-box>
 </attr>
 
 <attr name=nolink>
@@ -6364,7 +6293,7 @@ load.</p>
 
 <attr name=realname>
  <p>Only print the full name of the user, with no link.</p>
-<ex type='box'><user name='foo' realname=''/></ex>
+<ex-box><user name='foo' realname=''/></ex-box>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -6385,9 +6314,7 @@ load.</p>
  e.g. \"1.45\" or \"1.6E5\". Numbers can be converted between floats
  and integers by using the cast operators \"(float)\" and \"(int)\".</p>
 
- <ex type='box'>
-   (int)3.14
- </ex>
+ <ex-box>(int)3.14</ex-box>
 
  <p>A common problem when dealing with variables from forms is that
  a variable might be a number or be empty. To ensure that a value is
@@ -6417,11 +6344,9 @@ load.</p>
  Returns a font identification name.</p>
 
 <p>This example will print all available ttf fonts in gtext-style.</p>
-<ex type='box'>
- <emit source='fonts' type='ttf'>
-   <gtext font='&_.name;'><ent>_.expose</ent></gtext><br />
- </emit>
-</ex>
+<ex-box><emit source='fonts' type='ttf'>
+  <gtext font='&_.name;'>&_.expose;</gtext><br />
+</emit></ex-box>
 </desc>",
 "&_.copyright;":#"<desc ent='ent'><p>
  Font copyright notice. Only available for true type fonts.
@@ -6488,19 +6413,17 @@ load.</p>
  argument is false the content is skipped and the next <tag>case</tag>
  tag is parsed.</p></desc>
 
-<ex type='box'>
-<cond>
+<ex-box><cond>
  <case variable='form.action = edit'>
-   some database edit code
+  some database edit code
  </case>
  <case variable='form.action = delete'>
-   some database delete code
+  some database delete code
  </case>
  <default>
-   view something from the database
+  view something from the database
  </default>
-</cond>
-</ex>",
+</cond></ex-box>",
 
 	    "default":#"<desc cont='cont'><p>
  The <tag>default</tag> tag is eqvivalent to the <tag>else</tag> tag
@@ -6529,9 +6452,7 @@ load.</p>
  <p>Just like any normal tag, the <tag>comment</tag> tag nests inside
  other <tag>comment</tag> tags. E.g:</p>
 
- <ex type='box'>
-   <comment> a <comment> b </comment> c </comment>
- </ex>
+ <ex-box><comment> a <comment> b </comment> c </comment></ex-box>
 
  <p>Here 'c' is not output since the comment starter before 'a'
  matches the ender after 'c' and not the one before it.</p>
@@ -6551,11 +6472,9 @@ load.</p>
  to the RXML <tag>comment</tag> tag but should be used
  when commenting arbitrary text that doesn't contain '?&gt;'.</p>
 
-<ex type='box'>
-<?comment
-  This comment will not be shown.
-?>
-</ex>
+<ex-box><?comment
+  This comment will not ever be shown.
+?></ex-box>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -6582,7 +6501,7 @@ load.</p>
 <attr name='tag' value='name'><p>
  Defines a tag that outputs the contents of the container.</p>
 
-<ex><define tag=\"hi\">Hello <ent>_.name</ent>!</define>
+<ex><define tag=\"hi\">Hello &_.name;!</define>
 <hi name=\"Martin\"/></ex>
 </attr>
 
@@ -6685,7 +6604,7 @@ load.</p>
 
 <attr name='for' value='tag'><p>
  Gives the help text for that tag.</p>
-<ex type='vert'><help for='roxen'/></ex>
+<ex><help for='roxen'/></ex>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -6710,20 +6629,15 @@ load.</p>
  attributes provided are and, or and not, used for combining plugins
  or logical negation.</p>
 
- <ex type='box'>
-  <if variable='var.foo > 0' and='' match='var.bar is No'>
+ <ex-box><if variable='var.foo > 0' and='' match='var.bar is No'>
     ...
-  </if>
- </ex>
+  </if></ex-box>
 
- <ex type='box'>
-  <if variable='var.foo > 0' not=''>
-    <ent>var.foo</ent> is lesser than 0
-  </if>
-  <else>
-    <ent>var.foo</ent> is greater than 0
-  </else>
- </ex>
+ <ex-box><if variable='var.foo > 0' not=''>
+  &var.foo; is less than 0
+</if><else>
+  &var.foo; is greater than 0
+</else></ex-box>
 
  <p>Operators valid in attribute expressions are: '=', '==', 'is', '!=',
  '&lt;' and '&gt;'.</p>
@@ -6737,19 +6651,15 @@ load.</p>
  of multi-use plugins. All If-tag operators and global patterns are
  allowed.</p>
 
- <ex>
-  <set variable='var.x' value='6'/>
-  <if variable='var.x > 5'>More than one hand</if>
- </ex>
+ <ex><set variable='var.x' value='6'/>
+<if variable='var.x > 5'>More than one hand</if></ex>
 
  <p>The Match category contains plugins that match contents of
  something, e.g. an IP package header, with arguments given to the
  plugin as a string or a list of strings.</p>
 
- <ex>
-  Your domain <if ip='130.236.*'> is </if>
-  <else> isn't </else> liu.se.
- </ex>
+ <ex>Your domain <if ip='130.236.*'> is </if>
+<else> isn't </else> liu.se.</ex>
 
  <p>State plugins check which of the possible states something is in,
  e.g. if a flag is set or not, if something is supported or not, if
@@ -6758,7 +6668,7 @@ load.</p>
  <ex>
    Your browser
   <if supports='javascript'>
-   supports Javascript version <ent>client.javascript</ent>
+   supports Javascript version &client.javascript;
   </if>
   <else>doesn't support Javascript</else>.
  </ex>
@@ -6766,7 +6676,7 @@ load.</p>
  <p>Utils are additonal plugins specialized for certain tests, e.g.
  date and time tests.</p>
 
- <ex>
+ <ex-box>
   <if time='1700' after=''>
     Are you still at work?
   </if>
@@ -6776,7 +6686,7 @@ load.</p>
   <else>
    Somewhere between 9 to 5.
   </else>
- </ex>
+ </ex-box>
 
  <p>SiteBuilder plugins requires a Roxen Platform SiteBuilder
  installed to work. They are adding test capabilities to web pages
@@ -6941,15 +6851,13 @@ load.</p>
  that attribute-values are not allowed to contain any markup. The
  <tag>if eval</tag> tag was deprecated in Roxen 2.0.</p>
 
- <ex typ='box'>
+<ex-box><!-- If eval statement -->
+<if eval=\"<foo>\">x</if>
 
- <!-- If eval statement -->
- <if eval=\"<foo>\">x</if>
+<!-- Compatible statement -->
+<define variable=\"var.foo\" preparse=\"preparse\"><foo/></define>
+<if sizeof=\"var.foo\">x</if></ex-box>
 
- <!-- Compatible statement -->
- <define variable=\"var.foo\" preparse=\"preparse\"><foo/></define>
- <if sizeof=\"var.foo\">x</if>
- </ex>
  <p>A similar but more XML compliant construct is a combination of
  <tag>define variable</tag> and an apropriate <tag>if</tag> plugin.
 </p></desc>",
@@ -7014,7 +6922,7 @@ load.</p>
  Choose what pattern to test. The pattern could be any expression.
  Note!: The pattern content is treated as strings:</p>
 
-<ex type='vert'>
+<ex>
  <set variable='var.hepp' value='10' />
 
  <if match='var.hepp is 10'>
@@ -7030,7 +6938,7 @@ load.</p>
  the entity associated with the variable should be used, i.e.
  <ent>var.hepp</ent> instead of var.hepp. A correct example would be:</p>
 
-<ex type='vert'>
+<ex>
 <set variable='var.hepp' value='10' />
 
  <if match='&var.hepp; is 10'>
@@ -7041,7 +6949,7 @@ load.</p>
  </else>
 </ex>
 
- <p>Here, <ent>var.hepp</ent> is treated as an entity and parsed
+ <p>Here, &var.hepp; is treated as an entity and parsed
  correctly, letting the plugin test the contents of the entity.</p>
 </attr>
 ",
@@ -7127,14 +7035,14 @@ load.</p>
 <attr name='inclusive'><p>
  Adds present time to after and before.</p>
 
- <ex>
+<ex-box>
   <if time='1200' before='' inclusive=''>
     ante meridiem
   </if>
   <else>
     post meridiem
   </else>
- </ex>
+</ex-box>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -7246,15 +7154,15 @@ load.</p>
  The language to use.</p>
  <lang/>
  <ex type='vert'>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
- <ex type='vert'>Il mio numero preferito <ent>egrave</ent> <number num='15' language='it'/>.</ex>
+ <ex type='vert'>Il mio numero preferito è <number num='15' language='it'/>.</ex>
 </attr>
 
 <attr name='type' value='number|ordered|roman|memory' default='number'><p>
  Sets output format.</p>
 
- <ex type='vert'>It was his <number num='15' type='ordered'/> birthday yesterday.</ex>
- <ex type='vert'>Only <number num='274589226' type='memory'/> left on the Internet.</ex>
- <ex type='vert'>Spock Garfield <number num='17' type='roman'/> rests here.</ex>
+ <ex>It was his <number num='15' type='ordered'/> birthday yesterday.</ex>
+ <ex>Only <number num='274589226' type='memory'/> left on the Internet.</ex>
+ <ex>Spock Garfield <number num='17' type='roman'/> rests here.</ex>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -7262,7 +7170,7 @@ load.</p>
 "strlen":#"<desc cont='cont'><p><short>
  Returns the length of the contents.</short></p>
 
- <ex type='vert'>There are <strlen>foo bar gazonk</strlen> characters
+ <ex>There are <strlen>foo bar gazonk</strlen> characters
  inside the tag.</ex>
 </desc>",
 
@@ -7300,9 +7208,9 @@ load.</p>
 
  <ex>
   <define variable='var.hepp'>hopp</define>
-  <ent>var.hepp</ent>
+  &var.hepp;
   <undefine variable='var.hepp'/>
-  <ent>var.hepp</ent>
+  &var.hepp;
  </ex>
 </attr>
 
@@ -7534,12 +7442,11 @@ load.</p>
  modifying its arguments, if possible. E.g. when querying an SQL
  database the use of where statements is recommended, e.g.
  \"WHERE name LIKE 'a%' AND id LIKE '__3_45'\" will perform the
- same filtering as above.
-<ex>
-<emit source='values' values='foo,bar,baz' split=',' filter='value=b*'>
+ same filtering as above.</p>
+
+<ex><emit source='values' values='foo,bar,baz' split=',' filter='value=b*'>
 &_.value;
-</emit>
-</ex></p>
+</emit></ex>
 </attr>
 
 <attr name='sort' value='list'><p>
