@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.44 2000/01/23 03:01:41 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.45 2000/01/23 07:52:45 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -144,14 +144,16 @@ mapping page_scope=(["realfile":Entity_page_realfile(),
 class Entity_client_referrer {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
-    return c->id->referer?c->id->referer[0]:"";
+    array referrer=c->id->referrer;
+    return referrer && sizeof(referrer)?referrer[0]:"";
   }
 }
 
 class Entity_client_name {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
-    return c->id->client?c->id->client[0]:"";
+    array client=c->id->client;
+    return client && sizeof(client)?client[0]:"";
   }
 }
 
@@ -174,7 +176,25 @@ class Entity_client_accept_languages {
   string rxml_var_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
     if(!c->id->misc["accept-language"]) return "";
-    return c->id->misc["accept-language"]*",";
+    return c->id->misc["accept-language"]*", ";
+  }
+}
+
+class Entity_client_language {
+  string rxml_var_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    array languages=c->id->misc->pref_languages;
+    if(!languages || !sizeof(languages)) return "";
+    return languages[0];
+  }
+}
+
+class Entity_client_languages {
+  string rxml_var_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
+    array languages=c->id->misc->pref_languages;
+    if(!languages || !sizeof(languages)) return "";
+    return languages*", ";
   }
 }
 
@@ -182,7 +202,9 @@ mapping client_scope=([ "ip":Entity_client_ip(),
 			"name":Entity_client_name(),
 			"referrer":Entity_client_referrer(),
 			"accept_language":Entity_client_accept_language(),
-			"accept_languages":Entity_client_accept_languages()]);
+			"accept_languages":Entity_client_accept_languages(),
+			"language":Entity_client_language(),
+			"languages":Entity_client_languages()]);
 
 void set_entities(RXML.Context c) {
   c->extend_scope("page", page_scope);
