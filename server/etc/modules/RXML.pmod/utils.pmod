@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.31 2002/07/17 14:17:08 mast Exp $
+//! $Id: utils.pmod,v 1.32 2004/05/21 13:33:39 grubba Exp $
 
 constant is_RXML_encodable = 1;
 
@@ -174,7 +174,9 @@ final int(1..1)|string|array p_xml_entity_cb (object/*(RXML.PXml)*/ p, string st
   RXML.Type type = p->type;
   string entity = p->tag_name();
   if (sizeof (entity))
-    if (entity[0] == '#') {
+    switch(entity[0]) {
+    case ':': return ({"&", entity[1..], ";"});
+    case '#':
       if (!p->type->entity_syntax) {
 	// Don't decode normal entities if we're outputting xml-like stuff.
 	if (sscanf (entity,
@@ -184,10 +186,9 @@ final int(1..1)|string|array p_xml_entity_cb (object/*(RXML.PXml)*/ p, string st
 	// Lax error handling: Just let it through if it can't be
 	// converted. Not really good, though.
       }
-    }
-    else
-      if (entity[0] == ':') return ({"&", entity[1..], ";"});
-      else if (has_value (entity, ".")) {
+      break;
+    default:
+      if (has_value (entity, ".")) {
 	p->drain_output();
 	mixed value = p->handle_var (
 	  entity,
@@ -198,6 +199,7 @@ final int(1..1)|string|array p_xml_entity_cb (object/*(RXML.PXml)*/ p, string st
 	if (value != RXML.nil) p->add_value (value);
 	return ({});
       }
+    }
   return ({str});
 }
 
