@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.65 2000/02/16 23:28:05 mast Exp $
+//! $Id: module.pmod,v 1.66 2000/02/19 23:45:38 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -594,6 +594,12 @@ class Context
   Frame frame;
   //! The currently evaluating frame.
 
+  int frame_depth;
+  //! Number of frames currently on the frame stack.
+
+  int max_frame_depth = 100;
+  //! Maximum number of frames allowed on the frame stack.
+
   RequestID id;
   //!
 
@@ -1169,7 +1175,7 @@ constant FLAG_NONCONTAINER	= 0x00000001;
 constant FLAG_NO_PREFIX		= 0x00000002;
 //! Never apply any prefix to this tag.
 
-constant FLAG_SOCKET_TAG	= 0x0000004;
+constant FLAG_SOCKET_TAG	= 0x00000004;
 //! Declare the tag to be a socket tag, which accepts plugin tags (see
 //! Tag.plugin_name for details).
 
@@ -1409,20 +1415,32 @@ class Frame
 
   //! Services.
 
+  local mixed get_var (string var, void|string scope_name, void|Type want_type)
+  //! A wrapper for easy access to RXML.Context.get_var().
+  {
+    return get_context()->get_var (var, scope_name, want_type);
+  }
+
+  local mixed set_var (string var, mixed val, void|string scope_name)
+  //! A wrapper for easy access to RXML.Context.set_var().
+  {
+    return get_context()->set_var (var, val, scope_name);
+  }
+
+  local void delete_var (string var, void|string scope_name)
+  //! A wrapper for easy access to RXML.Context.delete_var().
+  {
+    get_context()->delete_var (var, scope_name);
+  }
+
   void run_error (string msg, mixed... args)
-  //! Throws an RXML run error with a dump of the parser stack in the
-  //! current context. This is intended to be used by tags for errors
-  //! that can occur during normal operation, such as when the
-  //! connection to an SQL server fails.
+  //! A wrapper for easy access to RXML.run_error().
   {
     _run_error (msg, @args);
   }
 
   void parse_error (string msg, mixed... args)
-  //! Throws an RXML parse error with a dump of the parser stack in
-  //! the current context. This is intended to be used for programming
-  //! errors in the RXML code, such as lookups in nonexisting scopes
-  //! and invalid arguments to a tag.
+  //! A wrapper for easy access to RXML.parse_error().
   {
     _parse_error (msg, @args);
   }
@@ -1647,6 +1665,12 @@ class Frame
 #endif
       up = ctx->frame;
       piece = Void;
+      if (++ctx->frame_depth >= ctx->max_frame_depth) {
+	ctx->frame = this;
+	ctx->frame_depth--;
+	_run_error ("Too deep recursion -- exceeding %d nested tags.\n",
+		    ctx->max_frame_depth);
+      }
     }
 
 #undef PRE_INIT_ERROR
@@ -1912,6 +1936,8 @@ class Frame
       if (ctx->new_runtime_tags)
 	_handle_runtime_tags (ctx, parser);
     };
+
+    ctx->frame_depth--;
 
     if (err) {
       LEAVE_SCOPE (ctx, this);
@@ -2314,6 +2340,7 @@ class TagSetParser
 {
   inherit Parser;
 
+  constant is_RXML_TagSetParser = 1;
   constant tag_set_eval = 1;
 
   // Services.
@@ -2535,8 +2562,8 @@ class Type
     if (_p_cache) {		// It's a tag set parser.
       TagSet tset = tag_set || ctx->tag_set;
 
-      if (parent && parent->is_RXML_Parser &&
-	  tset == ctx->tag_set && sizeof (ctx->runtime_tags) &&
+      if (parent && parent->is_RXML_TagSetParser &&
+	  tset == parent->tag_set && sizeof (ctx->runtime_tags) &&
 	  parent->clone && parent->type == this_object()) {
 	// There are runtime tags. Try to clone the parent parser if
 	// all conditions are met.
