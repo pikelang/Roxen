@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.18 1997/05/07 19:37:16 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.19 1997/05/26 01:21:12 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -571,17 +571,7 @@ int open_file(string arg)
     }
   }
 
-  if(!file)
-  {
-    switch(misc->error_code) {
-    case 405:
-      reply("553 "+arg+": Method not allowed.\n");
-      break;
-    default:
-      reply("550 "+arg+": No such file or directory.\n");
-    }
-    return 0;
-  } else if(file == -1) {
+  if(file == -1) {
     reply("550 "+arg+": not a plain file.\n");
     file = 0;
     return 0;
@@ -589,7 +579,21 @@ int open_file(string arg)
     file = 0;
     reply("550 "+arg+": Error, can't open file.\n");
     return 0;
-  } else
+  } else if(!file || (file->error && (file->error/100 != 2))) {
+    switch(misc->error_code) {
+    case 401:
+    case 403:
+      reply("550 "+args+": Access denied.\n");
+      break;
+    case 405:
+      reply("553 "+arg+": Method not allowed.\n");
+      break;
+    default:
+      reply("550 "+arg+": No such file or directory.\n");
+      break;
+    }
+    return 0;
+  } else 
     file->full_path = not_query;
   
   if(!file->len)
