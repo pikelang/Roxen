@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: newdecode.pike,v 1.25 2000/03/06 14:16:04 mast Exp $
+// $Id: newdecode.pike,v 1.26 2000/03/21 09:47:00 mast Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -114,7 +114,7 @@ mapping decode_config_file(string s)
   return res;
 }
 
-string encode_mixed(mixed from, object c)
+string encode_mixed(mixed from, object c, int indent)
 {
   switch(sprintf("%t", from))
   {
@@ -127,20 +127,27 @@ string encode_mixed(mixed from, object c)
    case "float":
      return "<flt>"+from+"</flt>";
    case "array":
-    return "\n      <a>\n      "+Array.map(from, encode_mixed, c)*"\n      "
-          +"\n    </a>";
+     if (!sizeof (from)) return "<a></a>";
+     string res = "<a>\n";
+     foreach (from, mixed i)
+       res += "  "*indent + "  " + encode_mixed (i, c, indent + 1) + "\n";
+     return res + "  "*indent + "</a>";
    case "multiset":
-    return "<lst>\n    "
-      +Array.map(indices(from),encode_mixed, c)*"\n    "+"\n  </lst>\n";
-   case "object":
-    return "<mod>"+name_of_module(from,c)+"</mod>";
+     if (!sizeof (from)) return "<lst></lst>";
+     string res = "<lst>\n";
+     foreach (sort (indices (from)), mixed i)
+       res += "  "*indent + "  " + encode_mixed (i, c, indent + 1) + "\n";
+     return res + "  "*indent + "</lst>";
    case "mapping":
-    string res="<map>\n";
-    mixed i;
-    foreach(indices(from), i)
-      res += "    " + encode_mixed(i, c) + " : " + encode_mixed(from[i],c)+"\n";
-    return res + "</map>\n";
+     if (!sizeof (from)) return "<map></map>";
+     string res="<map>\n";
+     foreach(sort (indices (from)), mixed i)
+       res += "  "*indent + "  " + encode_mixed(i, c, indent + 1) + " : " +
+	 encode_mixed(from[i],c, indent + 1)+"\n";
+     return res + "  "*indent + "</map>";
    default:
+     if (objectp (from))
+       return "<mod>"+name_of_module(from,c)+"</mod>";
      report_debug("I do not know how to encode "+
 		  sprintf("%t (%O)\n", from, from)+"\n");
      return "<int>0</int>";
@@ -189,22 +196,25 @@ string trim_ws( string indata )
   return res;
 }
 
-string encode_config_region(mapping m, string reg, object c)
+string encode_config_region(mapping m, string reg, object c, int comments)
 {
   string res = "";
   string v;
 
   if( reg == "EnabledModules" )
   {
-    foreach( sort(indices( m )), string q )
-      if( catch {
-	string|mapping name=roxenp()->find_module( (q/"#")[0] )->name;
-	if(mappingp(name)) name=name->standard;
-        res += "<var name='"+q+"'> <int>1</int>  </var> <!-- "+
-            replace(name, "'", "`" )
-            +" -->\n";
-      })
-        res += "<var name='"+q+"'>  <int>1</int>  </var> <!-- Error? -->\n";
+    foreach( sort(indices( m )), string q ) {
+      string cmt;
+      if (comments)
+	if( catch {
+	  string|mapping name=roxenp()->find_module( (q/"#")[0] )->name;
+	  if(mappingp(name)) name=name->standard;
+	  cmt = " <!-- " + replace(replace(name, "--", "- -" ), "--", "- -" ) + " -->";
+	})
+	  cmt = " <!-- Error? -->";
+      res += sprintf ("  %-30s <int>1</int> </var>%s\n",
+		      "<var name='"+q+"'>", cmt || "");
+    }
 
     return res;
   }
@@ -234,17 +244,19 @@ string encode_config_region(mapping m, string reg, object c)
        break;
     }
 
-    if(c && c->get_doc_for)
+    if(comments && c && c->get_doc_for)
       doc = c->get_doc_for( reg, v );
     if(doc)
-      doc=("\n  <!--\n    "+
-           replace(replace(sprintf("%*-=s",74,trim_ws(doc)),
-			   ({"\n","--"}), ({"\n    ","- -"})),
-		   "--", "- -")
-	   +"\n   -->\n");
+      res += ("\n  <!--\n    "+
+	      replace(replace(sprintf("%*-=s",74,trim_ws(doc)),
+			      ({"\n","--"}), ({"\n    ","- -"})),
+		      "--", "- -")
+	      +"\n   -->\n");
+    string enc = encode_mixed(m[v],c,1);
+    if (has_value (enc, "\n"))
+      res += "  <var name='" + v + "'>" + enc + "</var>\n";
     else
-      doc = "";
-    res += doc+"  <var name='"+v+"'>\n  "+encode_mixed(m[v],c)+"\n</var>\n\n";
+      res += sprintf ("  %-30s %s </var>\n", "<var name='"+v+"'>", enc);
   }
   return res;
 }
@@ -253,9 +265,12 @@ string encode_regions(mapping r, object c)
 {
   string v;
   string res = (xml_header + "\n\n");
-  foreach(sort(indices(r)), v)
+  int comments = all_constants()->roxen->query ("config_file_comments");
+  foreach(r->EnabledModules ?
+	  ({"EnabledModules"}) + sort(indices(r) - ({"EnabledModules"})) :
+	  sort(indices(r)), v)
     res += "<region name='"+v+"'>\n" +
-             encode_config_region(r[v],v,c)
+             encode_config_region(r[v],v,c,comments)
            + "</region>\n\n";
   return string_to_utf8( res );
 }
