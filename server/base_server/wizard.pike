@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.115 2000/03/01 16:32:38 wellhard Exp $
+// $Id: wizard.pike,v 1.116 2000/03/30 20:08:39 per Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -823,6 +823,8 @@ mapping get_actions(RequestID id, string base,string dir, array args)
 	      name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
       }
     };
+    if( strlen( e->get_warnings() ) )
+      report_warning( e->get_warnings() );
     if(strlen(e->get()))
       error("While compiling wizards:\n"+e->get());
 

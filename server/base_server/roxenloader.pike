@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.163 2000/03/28 20:58:43 jhs Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.164 2000/03/30 20:08:39 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -502,17 +502,24 @@ void pop_compile_error_handler()
 class LowErrorContainer
 {
   string d;
-  string errors="";
+  string errors="", warnings="";
   string get()
   {
     return errors;
   }
-  void got_error(string file, int line, string err)
+  string get_warnings()
+  {
+    return warnings;
+  }
+  void got_error(string file, int line, string err, int|void is_warning)
   {
     if (file[..sizeof(d)-1] == d) {
       file = file[sizeof(d)..];
     }
-    errors += sprintf("%s:%s\t%s\n", file, line ? (string) line : "-", err);
+    if( is_warning)
+      warnings+= sprintf("%s:%s\t%s\n", file, line ? (string) line : "-", err);
+    else
+      errors += sprintf("%s:%s\t%s\n", file, line ? (string) line : "-", err);
   }
   void compile_error(string file, int line, string err)
   {
@@ -520,7 +527,7 @@ class LowErrorContainer
   }
   void compile_warning(string file, int line, string err)
   {
-    got_error(file, line, "Warning: " + err);
+    got_error(file, line, "Warning: " + err, 1);
   }
   void create()
   {
@@ -580,7 +587,7 @@ object(_roxen) really_load_roxen()
 {
   int start_time = gethrtime();
   report_debug("Loading roxen ... ");
-  ErrorContainer e = ErrorContainer();
+//   ErrorContainer e = ErrorContainer();
   object(_roxen) res;
 //   new_master->set_inhibit_compile_errors(e);
   mixed err = catch {

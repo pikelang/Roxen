@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.292 2000/03/28 20:58:42 jhs Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.293 2000/03/30 20:08:38 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -3099,7 +3099,9 @@ void low_init()
   roxenloader.pop_compile_error_handler();
   if( strlen( ec->get() ) )
     report_error( "While enabling modules in "+name+":\n"+ec->get() );
-
+  if( strlen( ec->get_warnings() ) )
+    report_warning( "While enabling modules in "+name+":\n"+ec->get_warnings());
+    
   foreach( ({this_object()})+indices( otomod ), object mod )
     if( mod->ready_to_receive_requests )
       if( mixed q = catch( mod->ready_to_receive_requests( this_object() ) ) )

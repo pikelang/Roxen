@@ -121,6 +121,8 @@ array(string) get_module_list( function describe_module,
       res += r[1];
   }
   master()->set_inhibit_compile_errors( 0 );
+  if( ec->get_warnings() )
+    report_warning( ec->get_warnings() );
   return ({ res, ec->get() });
 }
 

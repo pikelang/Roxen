@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.64 2000/03/27 01:17:01 per Exp $
+// $Id: module_support.pike,v 1.65 2000/03/30 20:08:38 per Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -195,13 +195,17 @@ program my_compile_file(string file, void|int silent)
   if( !p )
   {
     if( strlen( q ) )
+    {
       report_error("Failed to compile module %s:\n%s", file, q);
+      if( strlen( e->get_warnings() ) )
+        report_warning( e->get_warnings() );
+    }
     throw( "" );
   }
-  if ( strlen(q) )
+  if ( strlen(q = e->get_warnings() ) )
   {
-    report_debug(sprintf("Warnings during compilation of module %s:\n"
-			 "%s", file, q));
+    report_warning(sprintf("Warnings during compilation of %s:\n"
+                           "%s", file, q));
   }
 
   string ofile = master()->make_ofilename( file );
