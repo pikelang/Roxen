@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.15 2004/05/04 13:55:10 grubba Exp $
+// $Id: webdav.pike,v 1.16 2004/05/04 14:24:17 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.15 2004/05/04 13:55:10 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.16 2004/05/04 14:24:17 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -171,12 +171,14 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     DAVLock lock;
     if (!xml_data) {
       // Refresh.
-      int(-2..1)|DAVLock state =
+      int(0..3)|DAVLock state =
 	id->conf->check_locks(id->not_query, 0, id);
       if (intp(state)) {
 	if (state) {
+	  TRACE_LEAVE("LOCK: Refresh: locked by other user.");
 	  return Roxen.http_status(423, "Locked by other user");
 	} else {
+	  TRACE_LEAVE("LOCK: Refresh: Lock not found.");
 	  return Roxen.http_status(424, "Couldn't refresh missing lock.");
 	}
       }
@@ -186,11 +188,13 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       Node lock_info_node =
 	xml_data->get_first_element("DAV:lockinfo", 1);
       if (!lock_info_node) {
+	TRACE_LEAVE("LOCK: No DAV:lockinfo.");
 	return Roxen.http_status(422, "Missing DAV:lockinfo.");
       }
       Node lock_scope_node =
 	lock_info_node->get_first_element("DAV:lockscope", 1);
       if (!lock_scope_node) {
+	TRACE_LEAVE("LOCK: No DAV:lockscope.");
 	return Roxen.http_status(422, "Missing DAV:lockscope.");
       }
       string lockscope;
@@ -199,20 +203,24 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       }
       if (lock_scope_node->get_first_element("DAV:shared", 1)) {
 	if (lockscope) {
+	  TRACE_LEAVE("LOCK: Both DAV:exclusive and DAV:shared.");
 	  return Roxen.http_status(422, "Both DAV:exclusive and DAV:shared.");
 	}
 	lockscope = "DAV:shared";
       }
       if (!lockscope) {
+	TRACE_LEAVE("LOCK: Both DAV:lockscope.");
 	return Roxen.http_status(422, "Unsupported DAV:lockscope.");
       }
       Node lock_type_node =
 	  lock_info_node->get_first_element("DAV:locktype", 1);
       if (!lock_type_node) {
+	TRACE_LEAVE("LOCK: Both DAV:locktype.");
 	return Roxen.http_status(422, "Missing DAV:locktype.");
       }
       if (!lock_type_node->get_first_element("DAV:write", 1)) {
 	// We only support DAV:write locks.
+	TRACE_LEAVE("LOCK: No DAV:write.");
 	return Roxen.http_status(422, "Missing DAV:write.");
       }
       string locktype = "DAV:write";
@@ -220,6 +228,9 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 
       // Parameters OK, try to create a lock.
 
+      TRACE_ENTER(sprintf("LOCK: Creating a %s%s lock on %O.",
+			  depth?"recursive ":"", lockscope, id->not_query),
+		  this);
       mapping(string:mixed)|DAVLock new_lock =
 	id->conf->lock_file(id->not_query,
 			    depth != 0,
@@ -231,8 +242,11 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	// Error
 	// FIXME: Should probably generate a MultiStatus response.
 	//        cf RFC 2518 8.10.10.
+	TRACE_LEAVE("Failed.");
+	TRACE_LEAVE("Returning failure code.");
 	return new_lock;
       }
+      TRACE_LEAVE("Ok.");
       lock = new_lock;
     }
     Node root = RootNode();
@@ -246,6 +260,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     prop_node->add_child(lock_discovery_node);
     lock_discovery_node->add_child(lock->get_xml());
     string xml = root->render_xml();
+    TRACE_LEAVE("Returning XML.");
     return ([
       "error":200,
       "data":xml,
@@ -255,17 +270,26 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
   case "UNLOCK":
     string locktoken;
     if (!(locktoken = id->request_headers["lock-token"])) {
+      TRACE_LEAVE("UNLOCK: No lock-token.");
       return Roxen.http_status(400, "UNLOCK: Missing lock-token header.");
     }
     // The lock-token header is a Coded-URL.
     sscanf(locktoken, "<%s>", locktoken);
     if (!objectp(lock = id->conf->check_locks(id->not_query, 0, id))) {
+      TRACE_LEAVE(sprintf("UNLOCK: Lock-token %O not found.", locktoken));
       return Roxen.http_status(403, "UNLOCK: Lock not found.");
     }
-    return id->conf->unlock_file(id->not_query, lock, id) ||
-      Roxen.http_status(204, "Ok.");
+    mapping res = id->conf->unlock_file(id->not_query, lock, id);
+    if (res) {
+      TRACE_LEAVE(sprintf("UNLOCK: Unlocking of %O failed.", locktoken));
+      return res;
+    }
+    TRACE_LEAVE(sprintf("UNLOCK: Unlocked %O successfully.", locktoken));
+    return Roxen.http_status(204, "Ok.");
+
   case "COPY":
     if (!id->request_headers->destination) {
+      TRACE_LEAVE("COPY: No destination header.");
       return Roxen.http_status(400, "COPY: Missing destination header.");
     }
     // Check that destination is on this virtual server.
@@ -273,6 +297,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     if (catch {
 	dest_uri = Standards.URI(id->request_headers->destination);
       }) {
+      TRACE_LEAVE("COPY: Bad destination header.");
       return Roxen.http_status(400,
 			       sprintf("COPY: Bad destination header:%O.",
 				       id->request_headers->destination));
@@ -280,6 +305,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     if ((dest_uri->scheme != id->port_obj->prot_name) ||
 	!(<id->misc->host, id->port_obj->ip, gethostname()>)[dest_uri->host] ||
 	dest_uri->port != id->port_obj->port) {
+      TRACE_LEAVE("COPY: Destination on other server.");
       return Roxen.http_status(400,
 			       sprintf("COPY: Bad destination:%O != %s://%s:%d/.",
 				       id->request_headers->destination,
@@ -303,6 +329,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       Node prop_behav_node =
 	xml_data->get_first_element("DAV:propertybehavior", 1);
       if (!prop_behav_node) {
+	TRACE_LEAVE("COPY: No DAV:propertybehavior.");
 	return Roxen.http_status(400, "Missing DAV:propertybehavior.");
       }
       /* Valid children of <DAV:propertybehavior> are
@@ -324,9 +351,11 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	      propertybehavior[href->value_of_node()] = 1;
 	    } else if (href->mNodeType == Parser.XML.Tree.XML_TEXT) {
 	      if (href->get_text() != "*"){
+		TRACE_LEAVE("COPY: Syntax error in DAV:keepalive.");
 		return Roxen.http_status(400, "Syntax error in DAV:keepalive.");
 	      }
 	      if (propertybehavior[0] < 0) {
+		TRACE_LEAVE("COPY: Conflicting DAV:propertybehaviour.");
 		return Roxen.http_status(400, "Conflicting DAV:propertybehavior.");
 	      }
 	      propertybehavior[0] = 1;
@@ -361,6 +390,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     if (xml_data) {
       Node propfind = xml_data->get_first_element("DAV:propfind", 1);
       if (!propfind) {
+	TRACE_LEAVE("COPY: No DAV:propfind.");
 	return Roxen.http_status(400, "Missing DAV:propfind.");
       }
       /* Valid children of <DAV:propfind> are
@@ -373,8 +403,10 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       foreach(propfind->get_children(), Node prop) {
 	switch(prop->get_full_name()) {
 	case "DAV:propname":
-	  if (recur_func)
+	  if (recur_func) {
+	    TRACE_LEAVE("PROPFIND: Conflicting DAV:propfind.");
 	    return Roxen.http_status(400, "Bad DAV request (23.3.2.1).");
+	  }
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module,
 			      MultiStatus stat, RequestID id) {
@@ -385,8 +417,10 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		       };
 	  break;
 	case "DAV:allprop":
-	  if (recur_func)
+	  if (recur_func) {
+	    TRACE_LEAVE("PROPFIND: Conflicting DAV:propfind.");
 	    return Roxen.http_status(400, "Bad DAV request (23.3.2.1).");
+	  }
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module,
 			      MultiStatus stat, RequestID id,
@@ -399,8 +433,10 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		       };
 	  break;
 	case "DAV:prop":
-	  if (recur_func)
+	  if (recur_func) {
+	    TRACE_LEAVE("PROPFIND: Conflicting DAV:propfind.");
 	    return Roxen.http_status(400, "Bad DAV request (23.3.2.1).");
+	  }
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module,
 			      MultiStatus stat, RequestID id,
@@ -448,6 +484,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
   case "PROPPATCH":	// Set/delete meta data.
     Node propupdate = xml_data->get_first_element("DAV:propertyupdate", 1);
     if (!propupdate) {
+      TRACE_LEAVE("PROPPATCH: No DAV:propertyupdate.");
       return Roxen.http_status(400, "Missing DAV:propertyupdate.");
     }
     /* Valid children of <DAV:propertyupdate> are any combinations of
@@ -467,7 +504,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	Parser.XML.Tree.Node prop =
 	  cmd->get_first_element("DAV:prop", 1);
 	if (!prop) {
-	  TRACE_LEAVE("Bad DAV request.");
+	  TRACE_LEAVE("PROPPATCH: No DAV:prop.");
 	  return Roxen.http_status(400, "Bad DAV request (no properties specified).");
 	}
 	if (cmd->get_full_name() == "DAV:set") {
@@ -484,7 +521,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       }
     }
     if (!sizeof(instructions)) {
-      TRACE_LEAVE("Bad DAV request.");
+      TRACE_LEAVE("PROPPATCH: No instructions.");
       return Roxen.http_status(400, "Bad DAV request (23.3.2.2).");
     }
     recur_func = lambda(string path, string ignored, int d, RoxenModule module,
