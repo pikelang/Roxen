@@ -14,22 +14,9 @@ string parse( RequestID id )
     {
       if( (q = ((program)f)()) &&
           (q->action == (id->variables->class||"status") ))
-      {
-        string name, doc;
-        if( q[ "name_"+id->misc->cf_locale ] )
-          name = q[ "name_"+id->misc->cf_locale ];
-        else
-          name = q->name;
-
-        if( q[ "doc_"+id->misc->cf_locale ] )
-          doc = q[ "doc_"+id->misc->cf_locale ];
-        else
-          doc = q->doc;
-
-        res += ({("<action name='"+replace(name,"'","&quote;")+"' fname="+f+" >"+
-                  doc+
-                  "</action>")});
-      }
+        res += ({("<action name='" + 
+		  replace(q->name, ({"\"", "'"}), ({"&#34;", "&#39;"})) + 
+		  "' fname="+f+" >" + q->doc + "</action>")});
     };
   }
   roxenloader.pop_compile_error_handler( );
