@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.320 2001/11/23 21:02:03 mast Exp $
+// $Id: rxml.pike,v 1.321 2001/11/27 17:32:44 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -75,21 +75,22 @@ RXML.TagSet rxml_tag_set = class
 
     // The id->misc->defines mapping is handled in a fairly ugly way:
     // If this is a nested parse, it's temporarily overridden with
-    // ctx->misc (to get parse local scope), otherwise it's the other
-    // way around. The latter is to be compatible with top level code
-    // that initializes id->misc->defines before a parse and/or uses
-    // it afterwards.
+    // ctx->misc (to get parse local scope), otherwise it's replaced
+    // permanently. The latter is to be compatible with top level code
+    // that uses id->misc->defines after the rxml evaluation.
     if (mapping defines = id->misc->defines) {
-      if (defines != ctx->misc)
-	if (defines->rxml_nested) {
-	  ctx->id_defines = defines;
-	  ctx->misc->rxml_nested = 1;
-	  // These settings ought to be in id->misc but are in this
-	  // mapping for historical reasons.
-	  ctx->misc->language = defines->language;
-	  ctx->misc->present_languages = defines->present_languages;
-	}
-	else ctx->misc = defines;
+      mapping misc = ctx->misc;
+      if (defines != misc) {
+	if (defines->rxml_misc) ctx->id_defines = defines;
+	misc->rxml_misc = 1;
+
+	// These settings ought to be in id->misc but are in this
+	// mapping for historical reasons.
+	misc->language = defines->language;
+	misc->present_languages = defines->present_languages;
+
+	id->misc->defines = misc;
+      }
     }
     else id->misc->defines = ctx->misc;
 
