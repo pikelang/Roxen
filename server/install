@@ -1,5 +1,0 @@
-#!/bin/sh
-#
-# $Id: install,v 1.8 1998/08/20 07:42:40 per Exp $
-#
-./start $@ --once --program bin/install.pike
