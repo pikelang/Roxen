@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.21 2000/04/04 08:28:56 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.22 2000/11/03 15:36:31 jhs Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -14,17 +14,48 @@ constant module_name = "Javascript Support";
 constant module_doc  = "This module provides some tags to support javascript development "
   "(i.e. Javascript popup menus).";
 
+
+
+//  Mapping of known callback functions. A callback is defined as
+//
+//    string my_callback(string token, string path, RequestID id)
+//
+//  where token is the token used when registering the callback and path
+//  is the remaining part of the URL. The function should return the
+//  JavaScript code which gets sent to the browser.
+mapping(string:function(string,string,object:string)) callbacks = ([ ]);
+
+
 string|array(string) query_provides()
 {
   return "javascript_support";
 }
 
+
 mapping find_internal(string f, object id)
 {
+  //  On-the-fly generation using callback function
+  if (sscanf(f, "__cb/%s/%s", string token, string path) == 2) {
+    function cb = callbacks[token];
+    return http_string_answer((cb && cb(token, path, id)) || "",
+			      "application/x-javascript");
+  }
+  
   string file = combine_path(__FILE__, "../scripts", (f-".."));
   return ([ "data":Stdio.read_bytes(file),
 	    "type":"application/x-javascript" ]);
 }
+
+string get_callback_url(string token)
+{
+  return "__cb/" + token + "/";
+}
+
+void register_callback(string token, function(string,string,object:string) cb)
+{
+  callbacks[token] = cb;
+}
+
 
 class JSInsert
 {
