@@ -61,7 +61,12 @@
 <define tag=item>
   <tr valign=top>
     <td align="right"><b>&title;:</b></td>
-    <td>#&name;#</td>
+    <if match="&type; is pre">
+      <td><pre>#&name;#</pre></td>
+    </if>
+    <else>
+      <td>#&name;#</td>
+    </else>
   </tr>
 </define>
 
@@ -91,7 +96,7 @@
 </update-package-output>
 <update-package-output preparse package="&form.details;">
 <table>
-  <item title="Description" name="description">
+  <item title="Description" name="description" type="pre">
   <item title="Size" name="size">
   <item title="Organization" name="organization">
   <item title="Author" name="author-name">
