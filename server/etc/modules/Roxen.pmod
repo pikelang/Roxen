@@ -1435,7 +1435,7 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
   HTTP_WERR("Redirect -> "+url);
 
   return http_status( http_code || Protocols.HTTP.HTTP_FOUND,
-		      "Redirect to " + url)
+		      "Redirect to " + html_encode_string(url))
     + ([ "extra_heads":([ "Location":url ]) ]);
 }
 
