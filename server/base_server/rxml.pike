@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.250 2000/09/19 23:33:43 kuntri Exp $
+// $Id: rxml.pike,v 1.251 2000/09/20 01:28:40 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2179,8 +2179,8 @@ constant tagdoc=([
 <ex type='vert'>
 <set variable='var.foo' value='17'/>
 <cond>
-  <case true=''><ent>var.foo</ent><set variable='var.foo' expr='<ent>var.foo</ent>+1'/></case>
-  <default><ent>var.foo</ent><set variable='var.foo' expr='<ent>var.foo</ent>+2'/></default>
+  <case true=''><ent>var.foo</ent><set variable='var.foo' expr='&var.foo;+1'/></case>
+  <default><ent>var.foo</ent><set variable='var.foo' expr='&var.foo;+2'/></default>
 </cond>
 <ent>var.foo</ent>
 </ex>",
@@ -2197,8 +2197,8 @@ constant tagdoc=([
 <ex type='vert'>
 <set variable=\"var.foo\" value=\"17\"/>
 <cond>
-  <default><ent>var.foo</ent><set variable=\"var.foo\" expr=\"<ent>var.foo</ent>+2\"/></default>
-  <case true=''><ent>var.foo</ent><set variable=\"var.foo\" expr=\"<ent>var.foo</ent>+1\"/></case>
+  <default><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
+  <case true=''><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
 </cond>
 <ent>var.foo</ent>
 </ex>
@@ -2206,8 +2206,8 @@ constant tagdoc=([
 <ex type='vert'>
 <set variable=\"var.foo\" value=\"17\"/>
 <cond>
-  <case false=''><ent>var.foo</ent><set variable=\"var.foo\" expr=\"<ent>var.foo</ent>+1\"/></case>
-  <default><ent>var.foo</ent><set variable=\"var.foo\" expr=\"<ent>var.foo</ent>+2\"/></default>
+  <case false=''><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
+  <default><ent>var.foo</ent><set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
 </cond>
 <ent>var.foo</ent>
 </ex>"
