@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.208 1998/06/04 11:54:14 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.209 1998/06/08 18:02:44 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -32,7 +32,7 @@ constant __roxen_version__ = "1.2";
 #else /* PIKE_VERSION >= 0.6 */
 constant __roxen_version__ = "1.3";
 #endif /* PIKE_VERSION */
-constant __roxen_build__ = "27";
+constant __roxen_build__ = "28";
 
 #ifdef __NT__
 constant real_version = "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__+" NT";
