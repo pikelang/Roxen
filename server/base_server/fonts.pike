@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.21 1998/07/30 13:44:39 js Exp $ */
+/* $Id: fonts.pike,v 1.22 1998/08/20 07:34:27 per Exp $ */
 
 #include <module.h>
 
@@ -105,18 +105,18 @@ object get_font(string f, int size, int bold, int italic,
   object fnt;
   string key, name;
   mixed err;
+  
+  key = f+size+bold+italic+justification+xspace+yspace;
+  if(fnt=cache_lookup("fonts", key))
+    return fnt;
 
   err = catch {
     name=make_font_name(f,size,bold,italic);
-    key=name+"/"+justification+"/"+xspace+"/"+yspace;
-
-    if(fnt=cache_lookup("fonts", key))
-      return fnt;
-    else
-      fnt = Font();
+    fnt = Font();
     if(!fnt->load( name ))
     {
-      report_debug("Failed to load the font "+name+", using the default font.\n");
+      report_debug("Failed to load the font "+
+		   name+", using the default font.\n");
       if(!fnt->load(make_font_name(roxen->QUERY(default_font),
 				   roxen->QUERY(default_font_size),
 				   bold, italic)))
@@ -124,6 +124,7 @@ object get_font(string f, int size, int bold, int italic,
 	report_error("Failed to load the default font.\n");
 	return 0;
       }
+      return fnt; /* Do not cache default fonts.. */
     }
     if(justification=="right") fnt->right();
     if(justification=="center") fnt->center();
