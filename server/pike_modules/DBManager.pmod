@@ -1,6 +1,6 @@
 // Symbolic DB handling.
 //
-// $Id: DBManager.pmod,v 1.65 2004/05/16 02:11:44 mani Exp $
+// $Id: DBManager.pmod,v 1.66 2004/05/16 02:56:08 mani Exp $
 
 //! Manages database aliases and permissions
 
@@ -279,12 +279,12 @@ array(string) list( void|Configuration c )
                    " AND db_permissions.config=%s"
                    " AND db_permissions.permission!='none'",
                    CN(c->name))->name
-#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+#ifndef DEVELOPER
       -({"roxen","mysql"})
 #endif
       ;
   return query( "SELECT name from dbs" )->name
-#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+#ifndef DEVELOPER
       -({"roxen","mysql"})
 #endif
     ;
@@ -801,7 +801,7 @@ array(string) group_dbs( string group )
 {
   return query( "SELECT db FROM db_groups WHERE groupn=%s", group )
     ->db
-#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+#ifndef DEVELOPER
       -({"roxen","mysql"})
 #endif
     ;

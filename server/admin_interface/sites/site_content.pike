@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.140 2002/11/07 18:07:33 mani Exp $
+// $Id: site_content.pike,v 1.141 2004/05/16 02:53:19 mani Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -204,7 +204,7 @@ string buttons( Configuration c, string mn, RequestID id )
 
   // Do not allow reloading of modules _in_ the administration interface.
   // It's not really all that good an idea, I promise.
-#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+#ifndef DEVELOPER
   if( c != id->conf )
 #endif
     buttons += "<submit-gbutton>Reload</submit-gbutton>";
@@ -219,7 +219,7 @@ string buttons( Configuration c, string mn, RequestID id )
 
   // Nor is it a good idea to drop administration interface modules.
   // It tends to make things rather unstable.
-#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+#ifndef DEVELOPER
   if( c != id->conf )
 #endif
     buttons += "<link-gbutton href='../../../../drop_module.pike?config="+

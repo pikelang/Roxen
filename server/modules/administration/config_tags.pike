@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.189 2004/01/25 18:28:01 norrby Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.190 2004/05/16 02:54:20 mani Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -939,7 +939,7 @@ class TagConfigurationsplugin
   array get_dataset(mapping m, RequestID id)
   {
     array confs = roxen->configurations;
-#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+#ifndef DEVELOPER
     if(m->self && lower_case(m->self) == "no")
       confs -= ({ id->conf });
 #endif

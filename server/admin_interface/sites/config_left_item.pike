@@ -206,7 +206,7 @@ string selected_item( string q, Configuration c, RequestID id,
   // from the administration interface server. Most of the time
   // it's a really bad idea.  Basically, protect the user. :-)
   if(
-#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+#ifndef DEVELOPER
     (c != id->conf) &&
 #endif
     config_perm( "Add Module" ) )
