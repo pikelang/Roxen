@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.467 2005/02/07 18:58:51 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.468 2005/03/01 19:12:16 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2438,10 +2438,12 @@ static void create(object f, object c, object cc)
 {
   if(f)
   {
+#if 0
     if (f->query_accept_callback)
       f->set_nonblocking(got_data, f->query_write_callback(), close_cb, 0, 0,
 			 f->query_accept_callback());
     else
+#endif /* 0 */
       f->set_nonblocking(got_data, f->query_write_callback(), close_cb);
     my_fd = f;
     CHECK_FD_SAFE_USE;
