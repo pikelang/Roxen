@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.107 2002/04/09 11:57:37 wellhard Exp $ -->
+<!-- $Id: template,v 1.108 2002/05/06 14:10:49 jonasw Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -176,6 +176,7 @@
      &var.content:none;
    </else>
 </gauge>
+    <if not="" variable="roxen.product-name is Roxen CMS">
     <div align="right">
      <font size="-1"><b>&roxen.version; / &roxen.pike-version;</b><br />
 <if debug=yes >
@@ -186,6 +187,7 @@
 </if>
 </font>
      </div>
+     </if>
   </body>
 </html>
 </define>
