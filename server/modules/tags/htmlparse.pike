@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.172 1999/05/08 06:22:59 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.173 1999/05/09 07:06:59 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -663,8 +663,9 @@ mapping handle_file_extension( object file, string e, object id)
     defines->counted = "1";
     if(search(QUERY(toparse),e)==-1)  /* Parse anyway */
       return 0;
+
   }
-  werror("PARSING: %O\n", id->not_query);
+
   if(!defines->sizefmt)
   {
 #if efun(set_start_quote)
@@ -2790,6 +2791,27 @@ string tag_help(string t, mapping args, object id)
   }
 }
 
+string tag_cache(string tag, mapping args, string contents, object id)
+{
+#define HASH(x) (x+id->not_query+id->query +id->conf->query("MyWorldLocation"))
+#if constant(Crypto.md5)
+  object md5 = Crypto.md5();
+  md5->update(HASH(contents));
+  string key=md5->digest();
+#else
+  string key = (string)hash(HASH(contents));
+#endif
+  if(args->key)
+    key += args->key;
+  string parsed = cache_lookup("tag_cache", key);
+  if(!parsed) {
+    parsed = parse_rxml(contents, id);
+    cache_set("tag_cache", key, contents);
+  }
+  return parsed;
+#undef HASH
+}
+
 mapping query_tag_callers()
 {
    return (["accessed":tag_accessed,
@@ -3365,6 +3387,7 @@ mapping query_container_callers()
 		     else
 		       return crypt(c);
 		   },
+	   "cache":tag_cache,
 	   "for":tag_for,
 	   "trace":tag_trace,
 	   "cset":lambda(string t, mapping m, string c, object id)
