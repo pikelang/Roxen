@@ -5,7 +5,7 @@
  *      on the page since Netscape caches charsets.
  */
 
-string cvs_version = "$Id: japanese.pike,v 1.4 1996/12/05 23:12:42 grubba Exp $";
+string cvs_version = "$Id: japanese.pike,v 1.5 1996/12/05 23:28:57 grubba Exp $";
 string month(int num);
 
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */
@@ -116,6 +116,6 @@ string day(int num)
 array aliases()
 {
   return ({ "kj", "kanji", /* For backward compatibility */
-	    "jp", "japanese", "nihon-go" /* To keep Peter Evans happy */});
+	    "jp", "japanese", "nihongo" /* To keep Peter Evans happy */});
 }
 
