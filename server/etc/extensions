@@ -1,9 +1,11 @@
-# $Id: extensions,v 1.38 1999/11/07 17:21:29 nilsson Exp $
+# $Id: extensions,v 1.39 1999/11/15 14:05:49 nilsson Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
 # Lines are commented with ## to resolve name conflicts (same extension mapping to several
-# MIME-types).
+# MIME-types). Up to date with IANA MIME-type listing 03-SEP-1999. Chemical/* is not included
+# since they collide with quite a few other mime types. They can be found in the file
+# more_extensions/chemical.
 
 
 # -------------------- Audio ---------------------
@@ -251,23 +253,270 @@ vcs	text/x-vcal
 
 # -------------------- Application ---------------------
 
+# IANA registered
+
+arj	application/octet-stream
+bin	application/octet-stream
+com	application/octet-stream
+dll	application/octet-stream
+drv	application/octet-stream
+exe	application/octet-stream
+so	application/octet-stream
+ai	application/postscript
+eps	application/postscript
+ps	application/postscript
+oda	application/oda
+# application/atomicmail
+# application/andrew-inset
+# application/slate
+# application/wita
+# application/dec-dx
+# application/dca-rft
+# application/activemessage
+##rtf	application/rtf
+# application/applefile
+hqx	application/mac-binhex40
+# application/news-message-id
+# application/news-transmission
+wpd	application/wordperfect5.1
+wp6	application/wordperfect5.1
+pdf	application/pdf
+zip	application/zip
+# application/macwriteii
+doc	application/msword
+dot	application/msword
+# application/remote-printing
+# application/mathematica
+# application/cybercash
+# application/commonground
+# application/iges
+# application/riscos
+# application/eshop
+# application/x400-bp
+# application/sgml
+# application/cals-1840
+# application/pgp-encrypted
+# application/pgp-signature
+# application/pgp-keys
+# application/vnd.framemaker
+# application/vnd.mif
+xla	application/vnd.ms-excel
+xlb	application/vnd.ms-excel
+xlc	application/vnd.ms-excel
+xld	application/vnd.ms-excel
+xll	application/vnd.ms-excel
+xlm	application/vnd.ms-excel
+xls	application/vnd.ms-excel
+xlt	application/vnd.ms-excel
+xlw	application/vnd.ms-excel
+ppa	application/vnd.ms-powerpoint
+pot	application/vnd.ms-powerpoint
+ppt	application/vnd.ms-powerpoint
+pps	application/vnd.ms-powerpoint
+pwz	application/vnd.ms-powerpoint
+# application/vnd.ms-project
+# application/vnd.ms-works
+# application/vnd.ms-tnef
+# application/vnd.svd
+# application/vnd.music-niff
+# application/vnd.ms-artgalry
+# application/vnd.truedoc
+# application/vnd.koan
+# application/vnd.street-stream
+fdf     application/vnd.fdf
+# application/set-payment-initiation
+# application/set-payment
+# application/set-registration-initiation
+# application/set-registration
+# application/vnd.seemail
+# application/vnd.businessobjects
+# application/vnd.meridian-slingshot
+# application/vnd.xara
+# application/sgml-open-catalog
+# application/vnd.rapid
+vnd.enliven
+# application/vnd.japannet-registration-wakeup
+# application/vnd.japannet-verification-wakeup
+# application/vnd.japannet-payment-wakeup
+# application/vnd.japannet-directory-service
+# application/vnd.intertrust.digibox
+# application/vnd.intertrust.nncp
+# application/prs.alvestrand.titrax-sheet
+# application/vnd.noblenet-web
+# application/vnd.noblenet-sealer
+# application/vnd.noblenet-directory
+# application/prs.nprend
+# application/vnd.webturbo
+# application/hyperstudio
+# application/vnd.shana.informed.formtemplate
+# application/vnd.shana.informed.formdata
+# application/vnd.shana.informed.package
+# application/vnd.shana.informed.interchange
+# application/vnd.$commerce_battelle
+# application/vnd.osa.netdeploy
+# application/vnd.ibm.MiniPay
+# application/vnd.japannet-jpnstore-wakeup
+# application/vnd.japannet-setstore-wakeup
+# application/vnd.japannet-verification
+# application/vnd.japannet-registration
+# application/vnd.hp-HPGL
+# application/vnd.hp-PCL
+# application/vnd.hp-PCLXL
+# application/vnd.musician
+# application/vnd.FloGraphIt
+# application/vnd.intercon.formnet
+# application/vemmi
+# application/vnd.ms-asf
+# application/vnd.ecdis-update
+pdb	application/vnd.powerbuilder6
+# application/vnd.powerbuilder6-s
+lwp	application/vnd.lotus-wordpro
+sam	application/vnd.lotus-wordpro
+apr	application/vnd.lotus-approach
+vew	application/vnd.lotus-approach
 123	application/vnd.lotus-1-2-3
+wk1	application/vnd.lotus-1-2-3
+wk3	application/vnd.lotus-1-2-3
+wk4	application/vnd.lotus-1-2-3
+or2	application/vnd.lotus-organizer
+or3	application/vnd.lotus-organizer
+org	application/vnd.lotus-organizer
+scm	application/vnd.lotus-screencam
+pre	application/vnd.lotus-freelance
+prz	application/vnd.lotus-freelance
+# application/vnd.fujitsu.oasys
+# application/vnd.fujitsu.oasys2
+# application/vnd.swiftview-ics
+# application/vnd.dna
+# application/prs.cww
+# application/vnd.wt.stf
+# application/vnd.dxr
+# application/vnd.mitsubishi.misty-guard.trustweb
+# application/vnd.ibm.modcap
+# application/vnd.acucobol
+# application/vnd.fujitsu.oasys3
+# application/marc
+# application/vnd.fujitsu.oasysprs
+# application/vnd.fujitsu.oasysgp
+# application/vnd.visio
+# application/vnd.netfpx
+# application/vnd.audiograph
+# application/vnd.epson.salt
+# application/vnd.3M.Post-it-Notes
+# application/vnd.novadigm.EDX
+# application/vnd.novadigm.EXT
+# application/vnd.novadigm.EDM
+# application/vnd.claymore
+# application/vnd.comsocaller
+p7c	application/x-pkcs7-mime
+p7m	application/x-pkcs7-mime
+p7s	application/x-pkcs7-signature
+# application/pkcs10
+# application/vnd.yellowriver-custom-menu
+# application/vnd.ecowin.chart
+# application/vnd.ecowin.series
+# application/vnd.ecowin.filerequest
+# application/vnd.ecowin.fileupdate
+# application/vnd.ecowin.seriesrequest
+# application/vnd.ecowin.seriesupdate
+# application/EDIFACT
+# application/EDI-X12
+# application/EDI-Consent
+# application/vnd.wrq-hp3000-labelled
+# application/vnd.minisoft-hp3000-save
+# application/vnd.ffsns
+# application/vnd.hp-hps
+# application/vnd.fujixerox.docuworks
+##xml	application/xml
+# application/vnd.anser-web-funds-transfer-initiation
+# application/vnd.anser-web-certificate-issue-initiation
+# application/vnd.is-xpr
+# application/vnd.intu.qbo
+# application/vnd.publishare-delta-tree
+# application/vnd.cybank
+# application/batch-SMTP
+# application/vnd.uplanet.alert
+# application/vnd.uplanet.cacheop
+# application/vnd.uplanet.list
+# application/vnd.uplanet.listcmd
+# application/vnd.uplanet.channel
+# application/vnd.uplanet.bearer-choice
+# application/vnd.uplanet.signal
+# application/vnd.uplanet.alert-wbxml
+# application/vnd.uplanet.cacheop-wbmxl
+# application/vnd.uplanet.list-wbxml
+# application/vnd.uplanet.listcmd-wbxml
+# application/vnd.uplanet.channel-wbxml
+# application/vnd.uplanet.bearer-choice-wbxml
+# application/vnd.epson.quickanime
+# application/vnd.commonspace
+# application/vnd.fut-misnet
+# application/vnd.xfdl
+# application/vnd.intu.qfx
+# application/vnd.epson.ssf
+# application/vnd.epson.msf
+# application/vnd.powerbuilder7
+# application/vnd.powerbuilder7-s
+# application/vnd.lotus-notes
+# application/pkixcmp
+wmlc	application/vnd.wap.wmlc
+wmlsc	application/vnd.wap.wmlscriptc
+# application/vnd.motorola.flexsuite
+wbxml	application/vnd.wap.wbxml
+# application/vnd.motorola.flexsuite.wem
+# application/vnd.motorola.flexsuite.kmr
+# application/vnd.motorola.flexsuite.adsi
+# application/vnd.motorola.flexsuite.fis
+# application/vnd.motorola.flexsuite.gotap
+# application/vnd.motorola.flexsuite.ttc
+# application/vnd.ufdl
+# application/vnd.accpac.simply.imp
+# application/vnd.accpac.simply.aso
+# application/vnd.vcx
+# application/ipp
+# application/ocsp-request
+# application/ocsp-response
+# application/vnd.previewsystems.box
+# application/vnd.mediastation.cdkey
+# application/vnd.pg.format
+# application/vnd.pg.osasli
+# application/vnd.hp-hpid
+# application/pkix-cert
+# application/pkix-crl
+# application/vnd.Mobius.TXF
+# application/vnd.Mobius.PLC
+# application/vnd.Mobius.DIS
+# application/vnd.Mobius.DAF
+# application/vnd.Mobius.MSL
+# application/vnd.cups-raster
+# application/vnd.cups-postscript
+# application/vnd.cups-raw
+# application/index
+# application/index.cmd
+# application/index.response
+# application/index.obj
+# application/index.vnd
+# application/vnd.triscape.mxs
+# application/vnd.powerbuilder75
+# application/vnd.powerbuilder75-s
+# application/vnd.dpgraph
+# application/http
+sdp	application/sdp
+
+# Other
+
 aab	application/x-authorware-bin
 aam	application/x-authorware-map
 aas	application/x-authorware-seg
 adr	application/x-msaddr
-ai	application/postscript
 alt	application/x-up-alert
 aos	application/x-nokia-9000-communicator-add-on-software
-apr	application/vnd.lotus-approach
-arj	application/octet-stream
 asd	application/astound
 asn	application/astound
 asp	application/x-asap
 asz	application/astound
 axs	application/olescript
 bcpio	application/x-bcpio
-bin	application/octet-stream
 cairn	application/x-cairn
 ca_cert application/x-x509-ca-cert
 cert	application/x-x509-ca-cert
@@ -282,7 +531,6 @@ ckl	application/x-fortezza-ckl
 class	application/x-java-vm
 cnc	application/x-cnc
 coda	application/x-coda
-com	application/octet-stream
 con	application/x-connector
 cpio	application/x-cpio
 crl	application/x-pkcs7-crl
@@ -293,22 +541,15 @@ cu	application/x-cu-seeme
 dcr	application/x-director
 der	application/x-x509-ca-cert
 dir	application/x-director
-dll	application/octet-stream
 dms	application/x-diskmasher
 dnt	application/donut
-doc	application/msword
 donut	application/donut
-dot	application/msword
-drv	application/octet-stream
 dst	application/tajima
 dvi	application/x-dvi
 dxr	application/x-director
 enc	application/pre-encrypted
-eps	application/postscript
 erf	application/x-hsp-erf
 evy	application/x-envoy
-exe	application/octet-stream
-fdf     application/vnd.fdf
 ##fif	application/fractals
 fml	application/fml
 frl	application/freeloader
@@ -316,7 +557,6 @@ fs	application/X-FSRecipe
 gtar	application/x-gtar
 hdf	application/x-hdf
 hpf	application/x-icq
-hqx	application/mac-binhex40
 ica	application/x-ica
 ins	application/x-internet-signup
 #ins	application/x-NET-install
@@ -331,7 +571,6 @@ jsc	application/x-javascript-config
 latex	application/x-latex
 lha	application/lha
 ltx	application/x-latex
-lwp	application/vnd.lotus-wordpro
 lzh	application/lha
 mad	application/vnd.ms-access
 maf	application/vnd.ms-access
@@ -364,34 +603,17 @@ nc	application/x-netcdf
 npx	application/x-netfpx
 nsc	application/x-nschat
 nspc	application/x-ns-proxy-autoconfig
-oda	application/oda
 ofml	application/ofml
-or2	application/vnd.lotus-organizer
-or3	application/vnd.lotus-organizer
-org	application/vnd.lotus-organizer
-p7c	application/x-pkcs7-mime
-p7m	application/x-pkcs7-mime
-p7s	application/x-pkcs7-signature
 pac	application/x-ns-proxy-autoconfig
 page	application/x-coda
-pdb	application/vnd.powerbuilder6
-pdf	application/pdf
 pfr	application/font-tdpfr
 pics	application/pics-service
 pl	application/x-perl
 po	application/x-form
-ppa	application/vnd.ms-powerpoint
-pot	application/vnd.ms-powerpoint
-ppt	application/vnd.ms-powerpoint
-pps	application/vnd.ms-powerpoint
 pqf     application/x-cprplayer
 pqi	application/cprplayer
-pre	application/vnd.lotus-freelance
-prz	application/vnd.lotus-freelance
-ps	application/postscript
 psr	application/datawindow
 ptlk	application/listenup
-pwz	application/vnd.ms-powerpoint
 qrt	application/quest
 quake	application/x-qplug-plugin
 rm	application/vnd.rn-realmedia
@@ -400,15 +622,11 @@ roff	application/x-troff
 ##rp	application/x-pn-realmedia
 rrf	application/x-InstallFromTheWeb
 rtc	application/rtc
-#rtf	application/rtf
-sam	application/vnd.lotus-wordpro
 sca	application/x-supercard
 sc2	application/vnd.ms-schedule
 scd	application/vnd.ms-schedule
 sch	application/vnd.ms-schedule
-scm	application/vnd.lotus-screencam
 #scm	application/x-icq
-sdp	application/sdp
 sh	application/x-sh
 shar	application/x-shar
 shw	application/presentations
@@ -421,7 +639,6 @@ smi	application/smil
 smil	application/smil
 sml	application/smil
 smp	application/studiom
-so	application/octet-stream
 spl	application/futuresplash
 spr	application/x-sprite
 sprite	application/x-sprite
@@ -451,33 +668,14 @@ usr	application/x-x509-user-cert
 ustar	application/x-ustar
 vbd	application/activexdocument
 vcd	application/x-cdlink
-vew	application/vnd.lotus-approach
 vmd	application/vocaltec-media-desc
 vmf	application/vocaltec-media-file
-wbxml	application/vnd.wap.wbxml
-wmlc	application/vnd.wap.wmlc
-wmlsc	application/vnd.wap.wmlscriptc
 wid	application/x-DemoShield
 wis	application/x-InstallShield
-wk1	application/vnd.lotus-1-2-3
-wk3	application/vnd.lotus-1-2-3
-wk4	application/vnd.lotus-1-2-3
 wlt	application/x-mswallet
 wpc	application/wpc
-wpd	application/wordperfect5.1
-wp6	application/wordperfect5.1
 wri	application/x-write
 xcf	application/x-gimp
-xla	application/vnd.ms-excel
-xlb	application/vnd.ms-excel
-xlc	application/vnd.ms-excel
-xld	application/vnd.ms-excel
-xll	application/vnd.ms-excel
-xlm	application/vnd.ms-excel
-xls	application/vnd.ms-excel
-xlt	application/vnd.ms-excel
-xlw	application/vnd.ms-excel
-zip	application/zip
 zpa	application/pcphoto
 
 
@@ -495,87 +693,27 @@ wrml    model/vrml
 # model/vnd.flatland.3dml
 
 
-# ------------------ Chemistry -------------------
+# ------------------ Multipart -------------------
 
-# Some mad scientists in the dark has made their own MIME class...
-# http://www.ch.ic.ac.uk/chemime/
+# IANA registered
 
-alc	chemical/x-alchemy
-cdx	chemical/x-cdx
-cif	chemical/x-cif
-mcif	chemical/x-mmcif
-c3d	chemical/x-chem3d
-cmdf	chemical/x-cmdf
-cml	chemical/x-cml
-csml	chemical/x-csml
-##csm	chemical/x-csml
-spc	chemical/x-galactic-spc
-inp	chemical/x-gamess-input
-gam	chemical/x-gamess-input
-gau	chemical/x-gaussian-input
-fch	chemical/x-gaussian-checkpoint
-fchk	chemical/x-gaussian-checkpoint
-cub	chemical/x-gaussian-cube
-istr	chemical/x-isostar
-ist	chemical/x-isostar
-jdx	chemical/x-jcamp-dx
-dx	chemical/x-jcamp-dx
-rv3	chemical/x-jjc-review-surface
-xyb	chemical/x-jjc-review-xyz
-rv2	chemical/x-jjc-review-vib
-vib	chemical/x-jjc-review-vib
-kin	chemical/x-kinemage
-mol	chemical/x-mdl-molfile
-rxn	chemical/x-mdl-rxnfile
-tgf	chemical/x-mdl-tgf
-mcm	chemical/x-macmolecule
-mmd	chemical/x-macromodel-input
-mmod	chemical/x-macromodel-input
-mop	chemical/x-mopac-input
-gpt	chemical/x-mopac-graph
-##pdb	chemical/x-pdb
-xyz	chemical/x-xyz
-##vmd	chemical/x-vmd
-vms	chemical/x-vamas-iso14976
-mm2	chemical/x-macmolecule2
+dig	multipart/mixed
+# multipart/alternative
+# multipart/digest
+# multipart/parallel
+# multipart/appledouble
+# multipart/header-set
+# multipart/form-data
+# multipart/related
+# multipart/report
+# multipart/voice-message
+# multipart/signed
+# multipart/encrypted
+# multipart/byteranges
 
-# Types from National Center for Biotechnology Information
-# http://www.ncbi.nlm.nih.gov/Structure/mimetype.html
+# Other
 
-aa	chemical/seq-aa-fasta
-na	chemical/seq-na-fasta
-gb	chemical/seq-na-genbank
-gp	chemical/seq-aa-genpept
-##asn	chemical/ncbi-asn1-spec
-prt	chemical/ncbi-asn1-ascii
-ent	chemical/ncbi-asn1-ascii
-val	chemical/ncbi-asn1-binary
-aso	chemical/ncbi-asn1-binary
-
-# draft-rzepa-chemical-mime-01.txt
-# http://www.ch.ic.ac.uk/chemime2.html
-
-#cxf	chemical/cxf
-#mif	chemical/mif
-#pdb	chemical/pdb
-#cif	chemical/cif
-#mol	chemical/mdl-molfile
-#sdf	chemical/mdl-sdf
-#rdf	chemical/mdl-rdf
-#rxn	chemical/mdl-rxn
-#emb	chemical/embl-dl-nucleotide
-#embl	chemical/embl-dl-nucleotide
-#gen	chemical/genbank
-#asn	chemical/ncbi-asn1
-#gcg	chemical/gcg8-sequence
-#smi	chemical/daylight-smiles
-#ros	chemical/rosdal
-#mmd	chemical/macromodel-input
-#mmod	chemical/macromodel-input
-#mop	chemical/mopac-input
-#gau	chemical/gaussian-input
-#jdx	chemical/jcamp-dx
-#kin	chemical/kinemage
+push	multipart/x-mixed-replace
 
 
 # -------------------- Other ---------------------
@@ -594,7 +732,7 @@ svr	x-world/x-svr
 vrt	x-world/x-vrt
 wrz	x-world/x-vrml
 
-##talk    plugin/talker 
+##talk	plugin/talker 
 wan	plugin/wanimate
 waf	plugin/wanimate
 
@@ -602,9 +740,6 @@ vts	workbook/formulaone
 vtts	workbook/formulaone
 
 u98     urdu/urdu98
-
-dig	multipart/mixed
-push	multipart/x-mixed-replace
 
 ice     x-conference/x-cooltalk
 
