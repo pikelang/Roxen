@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.15 1999/06/08 15:10:54 grubba Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.16 1999/06/08 15:15:31 grubba Exp $";
 
 //#define DEBUG
 
@@ -28,7 +28,9 @@ string _order(int from)
 
 int _num(string from)
 {
-  return (int)("0x"+from[strlen(from)-8..]);
+  int c;
+  sscanf(from[strlen(from)-8..], "%x", c);
+  return c;
 }
 
 
@@ -182,8 +184,8 @@ int read_cache_status()
   lastgc = status->lastgc;
 
   if((last_log < first_log) ||
-     (cache_size <= 0)||
-     (num_files <= 0)||
+     (max_cache_size>0&&cache_size <= 0)||
+     (max_num_files>0&&num_files <= 0)||
      (first_log <= 0)) {
     werror("read_cache_status: "+file+" contains rubbish\n");
     rm(file);
@@ -435,7 +437,7 @@ int check(int howmuch)
     num_files--;
 
   //  len is in units of BLOCK_SIZE bytes. 
-  if(((int)((float)cache_size)) > max_cache_size)
+  if((max_cache_size>0) && ((int)((float)cache_size)) > max_cache_size)
     gc(cache_size);
   else if((max_num_files>0) && (num_files > max_num_files))
     gc(cache_normal_garb);
@@ -481,8 +483,8 @@ static void got_command(object o, string cmd)
     
     if(strlen(cmd) < 8)  break; // More needed.
 
-    l = (int)("0x"+(cmd[..7]-" "));
-    
+    sscanf(cmd[..7]-" ", "%x", l);
+
     if(strlen(cmd) < l+8) break; // More needed
 
     cmd=cmd[8..]; // Remove the 'length' field of this command.
@@ -590,7 +592,8 @@ string statistics()
 			   sprintf(" (%1.2f%%)",
 				   (float)cache_size*100/max_cache_size):"",
 			   ((float)BLOCK_TO_KB(cache_size))/(1024.0),
-			   (float)cache_size*100/max_cache_size,
+			   max_cache_size>0?
+			   (float)cache_size*100/max_cache_size:0.0,
 			   gc_info, disk_info()));
 }
 
