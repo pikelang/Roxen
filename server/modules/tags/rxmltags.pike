@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.317 2001/10/03 01:32:28 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.318 2001/10/04 11:58:58 sara Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6734,9 +6734,9 @@ just got zapped?
  list all available tags. By inserting <tag>help/</tag> in a page, a
  full index of the tags available in that particular Roxen WebServer
  will be presented. If a particular tag is missing from that index, it
- is not available at that moment. All tags are available through
- modules, hence that particular tags' module hasn't been added to the
- Roxen WebServer. Ask an administrator to add the module.
+ is not available at that moment. Since all tags are available through
+ modules, that particular tag's module hasn't been added to the
+ Roxen WebServer yet. Ask an administrator to add the module.
 </p>
 </desc>
 
