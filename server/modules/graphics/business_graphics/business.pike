@@ -13,7 +13,7 @@
  * 
  */
 
-constant cvs_version = "$Id: business.pike,v 1.25 1997/10/15 21:29:32 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.26 1997/10/15 22:34:01 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -444,9 +444,9 @@ object PPM(string fname, object id)
 
 mapping find_file(string f, object id)
 {
-  program Bars  = (program)"create_bars";
-  program Graph = (program)"create_graph";
-  program Pie   = (program)"create_pie";
+  program Bars  = (program)"../create_bars";
+  program Graph = (program)"../create_graph";
+  program Pie   = (program)"../create_pie";
   object pie    = Pie();
   object bars   = Bars();
   object graph  = Graph();
