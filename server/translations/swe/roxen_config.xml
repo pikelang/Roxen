@@ -1,0 +1,1171 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>config_interface</project>
+<language>Swedish</language>
+<added id="1"/>
+
+<t id="yes">Ja</t>
+<t id="no">Nej</t>
+
+<!-- [1] "No virtual servers enabled" -->
+<t id="1">Inga aktiva virtuella servrar</t>
+
+<!-- [2] "Sent data" -->
+<t id="2">Skickad data</t>
+
+<!-- [3] "sec" -->
+<t id="3">sek</t>
+
+<!-- [4] "Sent headers" -->
+<t id="4">Skickade headers</t>
+
+<!-- [5] "Number of requests" -->
+<t id="5">Antal anrop</t>
+
+<!-- [6] "min" -->
+<t id="6">min</t>
+
+<!-- [7] "Received data" -->
+<t id="7">Mottagen data</t>
+
+<!-- [8] "FTP users (total)" -->
+<t id="8">FTP-användare (totalt)</t>
+
+<!-- [9] "FTP users (now)" -->
+<t id="9">FTP-användare (nu)</t>
+
+<!-- [10] "FTP statistics" -->
+<t id="10">FTP-statistik</t>
+
+<!-- [11] "Reloaded %s.
+" -->
+<t id="11">Laddade om %s.
+</t>
+
+<!-- [60] "Welcome text" -->
+<t id="60">Välkomstmeddelande</t>
+
+<!-- [61] "The text shown the the user on connect" -->
+<t id="61">Texten som visas för användaren vid uppkoppling</t>
+
+<!-- [62] "User session limit" -->
+<t id="62">Användarsessioner</t>
+
+<!-- [63] "The maximum number of times a user can connect at once. 0 means unlimited." -->
+<t id="63">Max antal uppkopplingar som en användare kan ha samtidigt. 0 innebär obegränsat.</t>
+
+<!-- [64] "Allow named ftp" -->
+<t id="64">Tillåt användarftp</t>
+
+<!-- [65] "If yes, non-anonymous users can connect" -->
+<t id="65">Om ja så tillåts icke-anonyma användare</t>
+
+<!-- [66] "Allow login with incorrect password/user" -->
+<t id="66">Tillåt inloggning med felaktigt lösenord/användare</t>
+
+<!-- [67] "If yes, users can connect with the wrong password and/or username. This is useful since things like .htaccess files can later on authenticate the user." -->
+<t id="67">Om ja så kan användare ansluta med fel lösenord och/eller användarnamn. Det kan vara användbart om tex .htaccess-filer senare kan verifiera användaren.</t>
+
+<!-- [68] "Allow anonymous ftp" -->
+<t id="68">Tillåt anonym ftp</t>
+
+<!-- [69] "If yes, anonymous users is allowed to connect." -->
+<t id="69">Om ja så tillåts anonyma användare</t>
+
+<!-- [70] "Shell database" -->
+<t id="70">Inloggninsskal</t>
+
+<!-- [71] "If this string is set to anything but the empty string, it should point to a file containing a list of valid shells. Users with shells that does not figure in this list will not be allowed to log in." -->
+<t id="71">Denna inställning bör vara tom, eller peka på en fil innehållande en lista över giltiga inloggningsskal. Användare vars inloggningsskal inte finns med i denna listan tillåts inte heller logga in.</t>
+
+<!-- [72] "Show internal errors" -->
+<t id="72">Visa interna fel</t>
+
+<!-- [73] "Show 'Internal server error' messages to the user. This is very useful if you are debugging your own modules or writing Pike scripts." -->
+<t id="73">Visa interna server fel för användaren av servern. Det kan vara användbart när du utvecklar egna moduler eller Pikeskript.</t>
+
+<!-- [74] "Logging: Set unique user id cookies" -->
+<t id="74">Loggning: Sätt en unik cookie för alla användare</t>
+
+<!-- [75] "If set to Yes, all users of your server whose clients support cookies will get a unique 'user-id-cookie', this can then be used in the log and in scripts to track individual users." -->
+<t id="75">Om du sätter den här variabeln till 'ja', så kommer alla användare att få en unik kaka (cookie) med namnet 'RoxenUserID' satt. Den här kakan kan användas i skript för att spåra individuella användare.  Det är inte rekommenderat att använda den här variabeln, en del användare tycker illa om cookies</t>
+
+<!-- [76] "Logging: Set ID cookies only once" -->
+<t id="76">Loggning: Sätt bara kakan en gång per användare</t>
+
+<!-- [77] "If set to Yes, Roxen will attempt to set unique user ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests." -->
+<t id="77">Om den här variablen är satt till 'ja' så kommer Roxen bara försöka sätta den unika användarkakan en gång. Det gör att om användaren inte tillåter att kakan sätts, så slipper hon eller han iallafall nya frågor under några minuter</t>
+
+<!-- [78] "Logging method" -->
+<t id="78">Loggmetod</t>
+
+<!-- [79] "None - No log&lt;br /&gt;CommonLog - A common log in a file&lt;br /&gt;Compat - Log through roxen's normal logging format.&lt;br /&gt;&lt;p&gt;Please note that compat limits roxen to less than 1k requests/second.&lt;/p&gt;" -->
+<t id="79">Ingen - Logga inte alls<br />
+Commonlog - Logga i en commonlogfil<br />
+Kompatibelt - Logga som vanligt. Notera att det inte går
+speciellt fort att logga med den här metoden, det begränsar
+Roxens hastighet till strax under 1000 requests/sekund på
+en normalsnabb dator år 1999.</t>
+
+<!-- [80] "Log file" -->
+<t id="80">Loggfil</t>
+
+<!-- [81] "This file is used if logging is done using the CommonLog method." -->
+<t id="81">Den här filen används om loggning sker med commonlog-metoden.</t>
+
+<!-- [82] "Ram cache" -->
+<t id="82">Minnescache</t>
+
+<!-- [83] "The size of the ram cache, in MegaBytes" -->
+<t id="83">Storleken på minnescachen, i megabyte</t>
+
+<!-- [84] "Client timeout" -->
+<t id="84">Klienttimeout</t>
+
+<!-- [85] "The maximum time roxen will wait for a client before giving up, and close the connection, in seconds" -->
+<t id="85">Maxtiden som Roxen väntar innan en klients förbindelse stängs, i sekunder</t>
+
+<!-- [86] "SSL certificate file" -->
+<t id="86">SSL-certifikatsfil</t>
+
+<!-- [87] "The SSL certificate file to use. The path is relative to %s" -->
+<t id="87">SSL-certifikatfilen som den här porten ska använda. Filnamnet är relativt %s</t>
+
+<!-- [88] "SSL key file" -->
+<t id="88">SSL-nyckelfil</t>
+
+<!-- [89] "The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only" -->
+<t id="89">SSLnyckelfilen som den här porten ska använda. Filnamnet är relativt %s. Du behöver inte ange en nyckelfil, lämna det här fältet tomt om du bara har en certifikatfil</t>
+
+<!-- [90] "Logging: Log entire file length in restored connections" -->
+<t id="90">Loggning: Logga hela fillängden vid återstartad nerladdning</t>
+
+<!-- [91] "If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will continue being correct." -->
+<t id="91">När den här flaggan är satt så loggar Roxen hela längden på
+en fil vars nerladdning återstartas. Om en användare först
+laddar hem 100 bytes av en fil och sedan laddar hem de 
+återstående 900 bytes av filen med en Range-request så 
+kommer Roxen logga det som alla 1000 bytes hade laddats hem.
+<p>Detta kan vara användbart om du vill se om en användare
+har lyckats ladda hem hela filen. I normalfallet vill du
+ha denna flagga avslagen.</t>
+
+<!-- [92] "Default font" -->
+<t id="92">Normaltypsnitt</t>
+
+<!-- [93] "The default font to use when modules request a font." -->
+<t id="93">När moduler ber om en typsnitt som inte finns, eller skriver
+grafisk text utan att ange ett typsnitt, så används det här typsnittet.</t>
+
+<!-- [94] "Font directories" -->
+<t id="94">Typsnittssökväg</t>
+
+<!-- [95] "This is where the fonts are located." -->
+<t id="95">Sökväg till där typsnitten finns.</t>
+
+<!-- [96] "Logging: Log directory prefix" -->
+<t id="96">Loggning: Loggningsbibliotekprefix</t>
+
+<!-- [97] "This is the default file path that will be prepended to the log file path in all the default modules and the virtual server." -->
+<t id="97">Alla nya loggar som skapas får det här prefixet.</t>
+
+<!-- [98] "Cache: Proxy Disk Cache Enabled" -->
+<t id="98">Cache: Proxydiskcachen aktiverad</t>
+
+<!-- [99] "If set to Yes, caching will be enabled." -->
+<t id="99">Om ja så används cache i alla proxymoduler som hanterar det.</t>
+
+<!-- [100] "Cache: Proxy Disk Cache Clean size" -->
+<t id="100">Cache: Proxydiskcache, minsta rensningsmängd</t>
+
+<!-- [101] "Minimum number of Megabytes removed when a garbage collect is done." -->
+<t id="101">Det minsta antalet Mb som tas bort vid en cacherensning.</t>
+
+<!-- [102] "Cache: Proxy Disk Cache Minimum available free space and inodes (in %)" -->
+<t id="102">Cache: Proxydiskcache, minsta lediga utrymme</t>
+
+<!-- [103] "If less than this amount of disk space or inodes (in %) is left, the cache will remove a few files. This check may work half-hearted if the diskcache is spread over several filesystems." -->
+<t id="103">Om det är mindre plats (i %) ledigt på disken än vad som anges i den här variabeln så kommer en cacherensning ske.</t>
+
+<!-- [104] "Cache: Proxy Disk Cache Size" -->
+<t id="104">Cache: Proxydiskcachens storlek</t>
+
+<!-- [105] "How many MB may the cache grow to before a garbage collect is done?" -->
+<t id="105">Cachens maximala storlek, i Mb.</t>
+
+<!-- [106] "Cache: Proxy Disk Cache Maximum number of files" -->
+<t id="106">Cache: Proxydiskcache maximalt antal filer</t>
+
+<!-- [107] "How many cache files (inodes) may be on disk before a garbage collect is done ? May be left zero to disable this check." -->
+<t id="107">Om det finns fler än så här många filer i cachen kommer en cacherensning ske. Sätt den här variabeln till noll för att hoppa över detta test.</t>
+
+<!-- [108] "Cache: Proxy Disk Cache bytes per second" -->
+<t id="108">Cache: Proxydiskcache byte per sekund</t>
+
+<!-- [109] "How file size should be treated during garbage collect. Each X bytes counts as a second, so that larger files will be removed first." -->
+<t id="109">Normalt sätt så rensas äldst filerna bort först. Den här variabeln anger hur många bytes som ska motsvara en sekund, för att på så sätt rensa större filer tidigare</t>
+
+<!-- [110] "Cache: Proxy Disk Cache Base Cache Dir" -->
+<t id="110">Cache: Proxydiskcachebibliotek</t>
+
+<!-- [111] "This is the base directory where cached files will reside. To avoid mishaps, 'roxen_cache/' is always prepended to this variable." -->
+<t id="111">Den här variabeln anger vad cachen ska sparas. För att undvika fatala misstag så adderas alltid
+'roxen_cache/' först till den här variabeln när den sätts om.</t>
+
+<!-- [112] "Cache: Proxy Disk Cache Number of hash directories" -->
+<t id="112">Cache: Proxydiskcache antalet cachesubdirectoryn</t>
+
+<!-- [113] "This is the number of directories to hash the contents of the disk cache into.  Changing this value currently invalidates the whole cache, since the cache cannot find the old files.  In the future, the cache will be recalculated when this value is changed." -->
+<t id="113">Diskcachen lagrar datan i flera bibliotek, den här
+variabeln anger i hur många olika bibliotek som datan ska
+lagras. Om du ändrar på den här variabeln så blir hela den
+gamla cachen invaliderad.</t>
+
+<!-- [114] "Cache: Proxy Disk Cache Keep without Content-Length" -->
+<t id="114">Cache: Proxydiskcachen behåller filer utan angiven fillängd</t>
+
+<!-- [115] "Keep files without Content-Length header information in the cache?" -->
+<t id="115">Spara filer även om de inte har någon angiven fillängd. 
+Cachen kan innehålla trasiga filer om den här
+variabeln är satt, men fler filer kan sparas</t>
+
+<!-- [116] "Cache: Proxy Disk Cache Refreshes on Last-Modified" -->
+<t id="116">Cache: Proxydiskcachen kontrollerar värdet av Last-Modifed headern</t>
+
+<!-- [117] "If set, refreshes files without Expire header information when they have reached double the age they had when they got cached. This may be useful for some regularly updated docs as online newspapers." -->
+<t id="117">Om den här variabeln är satt så kommer även filer utan Expire header att tas
+bort ur cachen när de blir dubbelt så gamla som de var när de hämtades från
+källservern, om de har en Last-Modified header som anger när de senast ändrades</t>
+
+<!-- [118] "Cache: Proxy Disk Cache Last resort (in days)" -->
+<t id="118">Cache: Proxydiskcachen sparar filer utan datum</t>
+
+<!-- [119] "How many days shall files without Expires and without Last-Modified header information be kept?" -->
+<t id="119">Hur många dagar ska en fil utan både Expire och
+Last-Modified behållas i cachen? Om du sätter den
+här variabeln till noll kommer de inte att sparas alls.</t>
+
+<!-- [120] "Cache: Proxy Disk Cache Garbage collector logfile" -->
+<t id="120">Cache: Proxydiskcacheloggfil</t>
+
+<!-- [121] "Information about garbage collector runs, removed and refreshed files, cache and disk status goes here." -->
+<t id="121">Information om cacherensningskörningar sparas i den här filen.</t>
+
+<!-- [122] "PID file" -->
+<t id="122">ProcessIDfil</t>
+
+<!-- [123] "In this file, the server will write out it's PID, and the PID of the start script. $pid will be replaced with the pid, and $uid with the uid of the user running the process.
+&lt;p&gt;Note: It will be overridden by the command line option.&lt;/p&gt;" -->
+<t id="123">I den här filen sparas Roxens processid och processidt
+för Roxens start-skript. $pid byts ut mot processid och $uid byts ut mot användarid't för "
+den användare som kör Roxen.</t>
+
+<!-- [124] "Identify, Use default identification string" -->
+<t id="124">Identifiera Roxen med normala identitetssträngen</t>
+
+<!-- [125] "Setting this variable to No will display the "Identify as" node where you can state what Roxen should call itself when talking to clients.&lt;br /&gt;It is possible to disable this so that you can enter an identification-string that does not include the actual version of Roxen, as recommended by the HTTP/1.0 draft 03:&lt;p&gt;&lt;blockquote&gt;&lt;i&gt;Note: Revealing the specific software version of the server may allow the server machine to become more vulnerable to attacks against software that is known to contain security holes. Server implementors are encouraged to make this field a configurable option.&lt;/i&gt;&lt;/blockquote&gt;&lt;/p&gt;" -->
+<t id="125">"Ska Roxen använda sin verkliga identifikationssträng?
+Om du sätter den här variabeln till 'nej' så kommer du att
+få välja vad Roxen ska identifiera sig som.</t>
+
+<!-- [126] "Identify, Identify as" -->
+<t id="126">Identifiera Roxen som</t>
+
+<!-- [127] "Enter the name that Roxen should use when talking to clients. " -->
+<t id="127">Det här är det namn som Roxen kommer att använda sig av gentemot omvärlden.</t>
+
+<!-- [128] "Change uid and gid to" -->
+<t id="128">Byt användarID/gruppID till</t>
+
+<!-- [129] "When Roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group]." -->
+<t id="129">När Roxen startas som root (för att kunna öppna port 80 och köra CGI-/pike-skript 
+som den användare som äger dem) så kan du om du vill
+specifiera ett användarnamn här. Roxen kommer då att byta till den
+användaren när så fort den har öppnat sina portar. Roxen kan dock fortfarande
+byta tillbaka till root för att köra skript som rätt användare om du inte
+sätter variabeln 'Byt användarID/gruppID permanent' till ja.  Användaren kan
+specifieras antingen som ett symbolisk användarnamn (t.ex. 'www') eller som ett
+numeriskt användarID.  Om du vill kan du specifera vilken grupp som ska
+användas genom att skriva användare:grupp. Normalt sätt så används användarens
+normal grupper.</t>
+
+<!-- [130] "Change uid and gid permanently" -->
+<t id="130">Byt användarID/gruppID permanent</t>
+
+<!-- [131] "If this variable is set, Roxen will set it's uid and gid permanently. This disables the 'exec script as user' fetures for CGI, and also access files as user in the filesystems, but it gives better security." -->
+<t id="131">Om Roxen byter användarID och gruppID permanent kommer det inte gå att konfigurera nya
+portar under 1024, det kommer inte heller gå att köra CGI- och pike-skript som
+den användare som äger skriptet. Däremot så kommer säkerheten att vara högre,
+eftersom ingen kan få Roxen att göra något som administratörsanvändaren root.</t>
+
+<!-- [132] "Module directories" -->
+<t id="132">Modulsökväg</t>
+
+<!-- [133] "This is a list of directories where Roxen should look for modules. Can be relative paths, from the directory you started roxen. The directories are searched in order for modules." -->
+<t id="133">En lista av bibliotek som kommer att sökas igenom när en
+modul ska laddas. Directorynamnen kan vara relativa från biblioteket där Roxen startades, 
+och de kommer att sökas igenom i den ordning som de står i listan.</t>
+
+<!-- [134] "Client supports regexps" -->
+<t id="134">Bläddrarfunktionalitetsdatabas</t>
+
+<!-- [135] "What do the different clients support?
+&lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your roxen directory." -->
+<t id="135">En databas över vilka funktioner de olika bläddrarna som används klarar av.
+  Normalt sett hämtas den här databasen från filen server/etc/supports, men
+  du kan om du vill specifiera fler mönster i den här variabeln. Formatet ser
+  ur så här:
+ <pre>
+  reguljärt uttryck 	funktion, funktion
+  reguljärt uttryck 	funktion, funktion
+  ...
+ </pre>Se filen server/etc/supports för en mer utförlig dokumentation
+</t>
+
+<!-- [136] "Logging: Audit trail" -->
+<t id="136">Loggning: Logga alla användaridväxlingar</t>
+
+<!-- [137] "If Audit trail is set to Yes, all changes of uid will be logged in the Event log." -->
+<t id="137">Om du slår på den är funktionen så kommer Roxen logga i debugloggen (eller
+systemloggen om den funktionen används) så fort användaridt byts av någon
+anledning.</t>
+
+<!-- [138] "Logging: Logging method" -->
+<t id="138">Loggning: Loggningsmetod</t>
+
+<!-- [139] "What method to use for logging, default is file, but syslog is also available. When using file, the output is really sent to stdout and stderr, but this is handled by the start script." -->
+<t id="139">Hur ska Roxens debug (fel-, informations- och varnings-meddelanden) loggas?
+Normalt sett så loggas de till debugloggen (logs/debug/default.1 etc), men de
+kan även skickas till systemloggen om du vill.</t>
+
+<!-- [140] "Logging: Log PID" -->
+<t id="140">Loggning: Logga Roxens processid</t>
+
+<!-- [141] "If set, the PID will be included in the syslog." -->
+<t id="142">Ska roxens processid loggas i systemloggen?</t>
+
+<!-- [142] "Logging: Log to system console" -->
+<t id="142">Loggning: Logga till konsolen</t>
+
+<!-- [143] "If set and syslog is used, the error/debug message will be printed to the system console as well as to the system log." -->
+<t id="143">Ska roxen logga till konsolen? Om den här variabeln är satt
+kommer alla meddelanden som går till systemloggen att även
+skickas till systemets konsol.</t>
+
+<!-- [144] "Logging: Syslog type" -->
+<t id="144">Loggning: Systemloggningstyp</t>
+
+<!-- [145] "When using SYSLOG, which log type should be used." -->
+<t id="145">När systemloggen används, vilken loggningstyp ska
+Roxen använda?</t>
+
+<!-- [146] "Logging: Log what to syslog" -->
+<t id="146">Loggning: Logga vad till systemloggen</t>
+
+<!-- [147] "When syslog is used, how much should be sent to it?&lt;br /&gt;&lt;hr /&gt;Fatal:    Only messages about fatal errors&lt;br /&gt;Errors:   Only error or fatal messages&lt;br /&gt;Warning:  Warning messages as well&lt;br /&gt;Debug:    Debug messager as well&lt;br /&gt;All:      Everything&lt;br /&gt;" -->
+<t id="147">När systemlogen används, vad ska skickas till den?<br /><hr />
+          "Fatala:    Bara felmeddelenaden som är uppmärkta som fatala<br />
+	  "Fel:       Bara felmeddelanden och fatala fel<br />
+	  "Varningar: Samma som ovan, men även alla varningsmeddelanden<br />
+	  "Debug:     Samma som ovan, men även alla felmeddelanden<br />
+          "Allt:     Allt<br /></t>
+
+<!-- [148] "Logging: Log as" -->
+<t id="148">Loggning: Logga som</t>
+
+<!-- [149] "When syslog is used, this will be the identification of the Roxen daemon. The entered value will be appended to all logs." -->
+<t id="149">När systemloggen används så kommer värdet av den här variabeln användas
+  för att identifiera den här Roxenservern i loggarna.</t>
+
+<!-- [150] "Number of threads to run" -->
+<t id="150">Antal trådar</t>
+
+<!-- [151] "The number of simultaneous threads roxen will use.
+&lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
+&lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;" -->
+<t id="151">Roxen har en så kallad trådpool. Varje förfrågan som kommer in till Roxen
+hanteras av en tråd, om alla trådar är upptagna så ställs frågan i en kö.
+Det är bara själva framtagandet av rätt fil att skicka som använder de här
+trådarna, skickandet av svaret till klienten sker i bakgrunden, så du behöver
+bara ta hänsyn till eventuella processorintensiva saker (som &amp;lt;gtext&amp;gt;)
+när du ställer in den här variabeln. Skönsvärdet 5 räcker för de allra
+flesta servrar</t>
+
+<!-- [152] "Update the supports database automatically" -->
+<t id="152">Uppdatera bläddrarfunktionalitetsdatabasen automatiskt</t>
+
+<!-- [153] "If set to Yes, the etc/supports file will be updated automatically from www.roxen.com now and then. This is recomended, since you will then automatically get supports information for new clients, and new versions of old ones." -->
+<t id="153">Ska supportsdatabasen uppdateras automatiskt från www.roxen.com en gång per
+ vecka? Om den här funktionen är påslagen så kommer roxen att försöka ladda ner
+  en ny version av filen etc/supports från http://www.roxen.com/supports en
+  gång per vecka. Det är rekommenderat att du låter den vara på, eftersom det
+  kommer nya versioner av bläddrare hela tiden, som kan hantera nya saker.</t>
+
+<!-- [154] "ABS: Enable Anti-Block-System" -->
+<t id="154">ABS: Slå på AntiBlockSystemet</t>
+
+<!-- [155] "If set, the anti-block-system will be enabled. This will restart the server after a configurable number of minutes if it locks up. If you are running in a single threaded environment heavy calculations will also halt the server. In multi-threaded mode bugs such as eternal loops will not cause the server to reboot, since only one thread is blocked. In general there is no harm in having this option enabled. " -->
+<t id="155">Ska antilåssystemet vara igång? Om det är det så kommer Roxen automatiskt
+  att starta om om den har hängt sig mer än några minuter. Oftast så beror
+  hängningar på buggar i antingen operativsystemet eller i en modul. Den
+  senare typen av hängningar påverkar inte en trådad roxen, medans den första
+  typen gör det.</t>
+
+<!-- [156] "ABS: Timeout" -->
+<t id="156">ABS: Tidsbegränsning</t>
+
+<!-- [157] "If the server is unable to accept connection for this many minutes, it will be restarted. You need to find a balance: if set too low, the server will be restarted even if it's doing legal things (like generating many images), if set too high you might get a long downtime if the server for some reason locks up." -->
+<t id="157">Om servern inte svarar på några anrop under så här många
+minuter så kommer Roxen startas om automatiskt.  Om du
+har en väldigt långsam dator kan en minut vara för
+kort tid för en del saker, t.ex. diagramritning kan ta
+ett bra tag.</t>
+
+<!-- [158] "Default language" -->
+<t id="158">Språk</t>
+
+<!-- [159] "Locale, used to localize all messages in Roxen.
+Standard means using the default locale, which varies according to the value of the 'LANG' environment variable." -->
+<t id="159">Den här variablen anger vilket språk Roxen ska använda.
+'standard' betyder att språket sätts automatiskt från
+värdet av omgivningsvariabeln LANG.</t>
+
+<!-- [160] "Auto Restart: Enable Automatic Restart" -->
+<t id="160">Automatomstart: Starta om automatiskt</t>
+
+<!-- [161] "If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but also because of memory leaks." -->
+<t id="161">Roxen har stöd för att starta om automatiskt då och då. Eftersom Roxen är en
+monolitisk icke-forkande server (en enda långlivad process) så tenderar
+processen att växa med tiden.  Det beror mest på minnesfragmentation, men även
+på att en del minnesläckor fortfarande kan finns kvar. Ett sätt att återvinna minne
+är att starta om servern lite då och då, vilket Roxen kommer att göra om du
+slår på den här funktionen. Notera att det tar ett litet tag att starta om
+servern.</t>
+
+<!-- [162] "Auto Restart: Timeout" -->
+<t id="162">Automatomstart: Tidsbegränsning (i dagar)</t>
+
+<!-- [163] "Automatically restart the server after this many days." -->
+<t id="163">Om Roxen är inställd till att starta om automatiskt, starta om
+så här ofta. Tiden anges i dagar.</t>
+
+<!-- [164] "Cache: Store the argument cache in a mysql database" -->
+<t id="164">Cache: Spara argumentcachen i en databas</t>
+
+<!-- [165] "If set, store the argument cache in a mysql database. This is very useful for load balancing using multiple Roxen servers, since the mysql database will handle  synchronization" -->
+<t id="165">Om den här variabeln är satt så sparas argumentcachen i en "
+databas istället för filer. Det gör det möjligt att använda "
+multipla frontends, dvs, flera separata roxenservrar som "
+levererar samma site.</t>
+
+<!-- [166] "Cache: Argument Cache Database URL to use" -->
+<t id="166">Cache: ArgumentcachedatabasURL</t>
+
+<!-- [167] "The database to use to store the argument cache" -->
+<t id="167">Databasen i vilken argumentcachen kommer att sparas.</t>
+
+<!-- [168] "Cache: Argument Cache Directory" -->
+<t id="168">Cache: Argumentcacheebibliotek</t>
+
+<!-- [169] "The cache directory to use to store the argument cache. Please note that load balancing is not available for most modules  (such as gtext, diagram etc) unless you use a mysql database to store the argument cache meta data" -->
+<t id="169">Det bibliotek i vilket cachen kommer att sparas.
+Notera att lastbalansering inte fungerar om du inte sparar
+cachen i en databas, och även om du sparar cachen i en
+databas så kommer det fortfarande skrivas saker i det
+här biblioteket.</t>
+
+<!-- [170] "Cache: Memory Cache Garbage Collect Interval" -->
+<t id="170">Cache: Minnescachens rensningsintervall</t>
+
+<!-- [171] "The number of seconds between every garbage collect (removal of old content) from the memory cache. The memory cache is used for various tasks like remebering what supports flags matches what client." -->
+<t id="171">Hur många sekunder som ska gå mellan varje gång som
+allt gammalt innehåll i cachen städas bort. Minnescachen
+används till många olika saker som till exempel att komma
+ihåg vilka supportsflaggor som hör till vilken klient.</t>
+
+<!-- [172] "Commented config files" -->
+<t id="172">Kommenterade konfigurationsfiler</t>
+
+<!-- [173] "Save the variable documentation strings as comments in the configuration files. Only useful if you read or edit the config files directly." -->
+<t id="173">Spara variabeldokumentationen som kommentarer i konfigurationsfiler. Endast användbart om du läser eller editerar i konfigurationsfilerna direkt.</t>
+
+<!-- [bA] "Save" -->
+<t id="bA">Spara</t>
+
+<!-- [bB] "Ok" -->
+<t id="bB">Ok</t>
+
+<!-- [bC] "Cancel" -->
+<t id="bC">Avbryt</t>
+
+<!-- [bD] "Next" -->
+<t id="bD">Nästa</t>
+
+<!-- [bE] "Administration Interface" -->
+<t id="bE">Admingränssnittet</t>
+
+<!-- [bF] "Language" -->
+<t id="bF">Språk</t>
+
+<!-- [bG] "User" -->
+<t id="bG">Användare</t>
+
+<!-- [12] "Priority" -->
+<t id="12">Prioritet</t>
+
+<!-- [13] "The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order" -->
+<t id="bI">Modulens prioritet, 9 är högst och 0 är
+lägst. Moduler med samma prioritet anropas i
+mer eller mindre slumpmässig ordning.</t>
+
+<!-- [14] "Security: Realm" -->
+<t id="14">Säkerhet: Grupp</t>
+
+<!-- [15] "The realm to use when requesting password from the client. Usually used as an informative message to the user." -->
+<t id="15">Gruppnamnet som används när klienten ombeds
+ange lösenord. I de flesta klienter visas den
+här informationen för användaren i
+lösenordsdialogen.</t>
+
+<!-- [18] "Security: Security level" -->
+<t id="18">Säkerhet: Säkerhetsnivå</t>
+
+<!-- [19] "The modules security level is used to determine if a  request should be handled by the module.
+&lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
+&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
+&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;" -->
+<t id="19">Modulens säkerhetsnivå används för att avgöra om 
+en specifik request ska få hanteras av  modulen. 
+<p><h2>Säkerhetsnivå och pålitlighetsnivå</h2>
+Varje modul har en konfigurerbar 
+<i>säkerhtesnivå</i>. 
+Varje request har en <i>pålitlighetsnivå</i>.<p>
+Högre <i>pålitlighetsnivåer</i> ger 
+requesten tillgång till moduler med högre
+<i>säkerhetsnivå</i>. <p>
+<p><h2>Definitioner</h2><ul>
+<li>En requests initialpålitlighetsnivå är
+oändligt hög.
+<li> En request hanteras bara av moduler om 
+dess <i>pålitlighetsnivå</i> är högre eller
+lika hög som modulens <i>säkerhetsnivå</i>
+<li> Varje gång en request hanteras av en
+modul så sätts dess <i>pålitlighetsnivå</i>
+till modulens <i>säkerhetsnivå</i> om 
+modulen har en <i>säkerhetsnivå</i> som är skiljd från noll. 
+</ul>
+<p><h2>Ett exempel</h2>
+Moduler:<ul>
+ <li>  Användarfilsystem, <i>säkerhetsnivå</i> 1
+ <li>  Filesystem, <i>säkerhetsnivå</i> 3
+ <li>  CGI modul, <i>säkerhetsnivå</i> 2
+</ul>
+ <p>En request hanterad av 
+ <i>Användarfilsystemet</i> får ett 
+som <i>pålitlighetsnivå</i>. Den här
+requesten kan därför inte skickas vidare 
+till <i>CGI modulen</i> eftersom den har
+en <i>säkerhetsnivå</i> som är högre än
+requestens <i>pålitlighetsnivå</i>.<p>
+Å andra sidan så kan en request som 
+hanteras av <i>Filsystem</i> modulen 
+skickas vidare till <i>CGI modulen</i>.</t>
+
+<!-- [16] "Security: Patterns" -->
+<t id="16">Säkerhet: Behörighetsregler</t>
+
+<!-- [17] "This is the 'security level=value' list.&lt;br /&gt;Each security level can be any or more from this list:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;" -->
+<t id="17">Det här är en lista av behörighetsregler.<p>
+Varje behörighetsregler måste följa någon av de
+här mönstren: 
+<hr noshade>
+allow ip=<i>IP-nummer</i>/<i>antal nätmaskbittar</i><br>
+allow ip=<i>IP-nummer</i>:<i>nätmask</i><br>
+allow ip=<i>globmönster</i><br>
+allow user=<i>användarnamn</i>,...<br>
+deny ip=<i>IP-nummer</i>/<i>antal nätmaskbittar</i><br>
+deny ip=<i>IP-nummer</i>:<i>nätmask</i><br>
+deny ip=<i>globmönster</i><br>
+<hr noshade>
+I mönstrena betyder '*' ett eller flera 
+godtyckliga tecken, och '?' betyder exakt 
+ett godtyckligt tecken.<p> 
+Användnamnet 'any' kan användas för att ange 
+att vilken giltig användare som helst ska 
+kunna få använda modulen.</t>
+
+<!-- [20] "Default site" -->
+<t id="20">Standardsite</t>
+
+<!-- [21] "If true, this site will be selected in preference of other sites when virtual hosting is used and no host header is supplied, or the supplied host header does not match the address of any of the other servers." -->
+<t id="21">Om ja så kommer den här siten att väljas före andra när det finns flera virtuella servrar och
+klienten inte anger / anger en okänd host-header.</t>
+
+<!-- [22] "Virtual server comment" -->
+<t id="22">Serverkommentar</t>
+
+<!-- [23] "This text will be visible in the administration interface, it can be quite useful to use as a memory helper." -->
+<t id="23">Denna text kommer att visas i admingränssnittet.</t>
+
+<!-- [24] "Virtual server name" -->
+<t id="24">Serverns namn</t>
+
+<!-- [25] "This is the name that will be used in the configuration interface. If this is left empty, the actual name of the virtual server will be used." -->
+<t id="25">Det här är namnet som kommer att synas i
+admingränssnittet. Om du lämnar det här fältet tomt kommer
+serverns ursprungliga namn (det du skrev in när du skapade servern)
+att användas.</t>
+
+<!-- [26] "Logging: Format" -->
+<t id="26">Loggning: Loggningsformat</t>
+
+<!-- [27] "What format to use for logging. The syntax is:
+&lt;pre&gt;response-code or *: Log format for that response code
+
+Log format is normal characters, or one or more of the variables below:
+
+\n \t \r       -- As in C, newline, tab and linefeed
+$char(int)     -- Insert the (1 byte) character specified by the integer.
+$wchar(int)    -- Insert the (2 byte) word specified by the integer.
+$int(int)      -- Insert the (4 byte) word specified by the integer.
+$^             -- Supress newline at the end of the logentry
+$host          -- The remote host name, or ip number.
+$ip_number     -- The remote ip number.
+$bin-ip_number -- The remote host id as a binary integer number.
+
+$cern_date     -- Cern Common Log file format date.
+$bin-date      -- Time, but as an 32 bit integer in network byteorder
+
+$method        -- Request method
+$resource      -- Resource identifier
+$full_resource -- Full requested resource, including any query fields
+$protocol      -- The protocol used (normally HTTP/1.0)
+$response      -- The response code sent
+$bin-response  -- The response code sent as a binary short number
+$length        -- The length of the data section of the reply
+$bin-length    -- Same, but as an 32 bit integer in network byteorder
+$request-time  -- The time the request took (seconds)
+$referer       -- the header 'referer' from the request, or '-'.
+$user_agent    -- the header 'User-Agent' from the request, or '-'.
+
+$user          -- the name of the auth user used, if any
+$user_id       -- A unique user ID, if cookies are supported,
+                  by the client, otherwise '0'
+&lt;/pre&gt;" -->
+<t id="27">Vilket format som ska användas för att logga
+<pre>
+svarskod eller *: Loggformat för svarskoden (eller alla koder som inte
+                  har något annat format specifierat om du använder '*')
+
+loggformatet är normala tecken, och en eller flera av koderna nedan.
+
+\\n \\t \\r    -- Precis som i C, ny rad, tab och carriage return
+$char(int)     -- Stoppa in det tecken vars teckenkod är det angivna nummret.
+$wchar(int)    -- Stoppa in det tvåocktetstecken vars teckenkod är det
+                  angivna nummret.
+$int(int)      -- Stoppa in det fyraocktetstecken vars teckenkod är det
+                  angivna nummret.
+$^             -- Stoppa <b>inte</b> in en vagnretur på slutet av
+                  varje loggrad
+$host          -- DNS namnet för datorn som gjorde förfrågan
+$ip_number     -- IP-nummret för datorn som gjorde förfrågan
+$bin-ip_number -- IP-nummret för datorn som gjorde förfrågan som
+                  binärdata i nätverksoktettordning
+
+$cern_date     -- Ett datum som det ska vara enligt Cern Common Log
+                  file specifikationen
+$bin-date      -- Tiden för requesten som sekunder sedan 1970, binärt
+                  i nätverksoktettordning.
+
+$method        -- Förfrågningsmetoden (GET, POST etc)
+$resource      -- Resursidentifieraren (filnamnet)
+$protocol      -- Protokollet som användes för att fråga efter filen
+$response      -- Den skickade svarskoden
+$bin-response  -- Den skickade svarskoden som ett binärt ord (2
+                  oktetter) i nätverksoktettordning
+$length        -- Längden av datan som skickades som svar till klienten
+$bin-length    -- Samma sak, men som ett 4 oktetters ord i
+                  nätverksoktettordning.
+$request-time  -- Tiden som requesten tog i sekunder
+$referer       -- Headern 'referer' från förfrågan eller '-'.
+$user_agent    -- Headern 'User-Agent' från förfrågan eller '-'.
+$user          -- Den autentifierade användarens namn, eller '-'
+$user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID; du
+                  måste slå på kaksättningsfunktionaliteten i de
+                  globala inställningarna. '0' används för de
+                  förfrågningar som inte har kakan.
+</pre></t>
+
+<!-- [28] "Logging: Enabled" -->
+<t id="28">Loggning: Aktiverad</t>
+
+<!-- [29] "Log requests" -->
+<t id="2">Ska roxen logga alla förfrågningar till en logfil?</t>
+
+<!-- [30] "Logging: Log file" -->
+<t id="30">Loggning: Loggfil</t>
+
+<!-- [31] "The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
+%m    Month (e.g. '08')
+%d    Date  (e.g. '10' for the tenth)
+%h    Hour  (e.g. '00')
+%H    Hostname
+&lt;/pre&gt;" -->
+<t id="31">Filen som Roxen loggar i. 
+Du kan använda några kontrollkoder för att få flera loggfiler och automatisk loggrotation:
+<pre>
+%y    År     (t.ex. '1997')
+%m    Månad  (t.ex. '08')
+%d    Datum  (t.ex. '10')
+%h    Timme  (t.ex. '00')
+</pre></t>
+
+<!-- [32] "Logging: No Logging for" -->
+<t id="32">Loggning: Logga inte för</t>
+
+<!-- [33] "Don't log requests from hosts with an IP number which matches any of the patterns in this list. This also affects the access counter log." -->
+<t id="33">Logga inte några förfrågningar vars IP-nummer matchar
+något av de mönster som står i den här listan.  Den här variabeln
+påverkar även &lt;accessed&gt; RXML-styrkoden.</t>
+
+<!-- [34] "Domain" -->
+<t id="34">DNS-domän</t>
+
+<!-- [35] "The domainname of the server. The domainname is used to generate default URLs, and to generate email addresses." -->
+<t id="35">Serverns domännamn. Används av en del RXML styrkoder för att generera
+epostadresser, samt för att generera skönsvärdet för serverurl-variablen.</t>
+
+<!-- [36] "Primary Server URL" -->
+<t id="36">Serverns URL</t>
+
+<!-- [37] "This is the main server URL, where your start page is located. Please note that you also have to configure the 'URLs' variable." -->
+<t id="37">Det här är huvudURLen till din startsida. Den används av många
+moduler för att bygga upp absoluta URLer från en relativ URL.</t>
+
+<!-- [b9] "URLs" -->
+<t id="b9">URLer</t>
+
+<!-- [ca] "Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris." -->
+<t id="ca">Bind till de här URLerna. Det går att använda '*' eller '?' för att binda till alla IP-nummer.
+De möjliga protokollen är http, https, fhttp (snabbare version av det vanliga HTTP-protokollet, men inte 100% 
+kompatibel med alla moduler), ftp, ftps, gopher och tetris.</t>
+
+<!-- [40] "Internal module resource mountpoint" -->
+<t id="40">Intern modulresursmonteringspunkt</t>
+
+<!-- [41] "Some modules may want to create links to internal resources. This setting configures an internally handled location that can be used for such purposes.  Simply select a location that you are not likely to use for regular resources." -->
+<t id="41">Vissa moduler kan vilja skapa länkar till interna resurser.
+Denna inställning konfigurerar en internt hanterad placering som kan användas
+för sådana ändamål.  Välj bara en placering som du förmodligen inte kommer
+behöva för vanliga resurser.</t>
+
+<!-- [42] "Bandwidth Throttling: Server: Enabled" -->
+<t id="42">Bandviddsbegränsning: Servernivå: Aktiverad</t>
+
+<!-- [43] "If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this Virtual Server.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost." -->
+<t id="43">Om den här variablen är på så kommer bandvisddsbegränsning
+på servernivå att ske. Det gör det möjligt för dig att begränsa den totala
+bandvidden som den här virtuella servern använder.
+<p>
+Bandvidden räknas ut genom att använda en poletthink. Principen som den
+arbetar efter är: För varje byte som sänds så används en polett, poletter
+stoppas i hinken i en konstant hastighet. När det inte finns några poletter
+så avstännar dataskickande tills en polett blir tillgänglig. När det är för
+många poletter i hinken så kommer de nya som kommer in att "ramla brevid".</t>
+
+<!-- [44] "Bandwidth Throttling: Server: Average available bandwidth" -->
+<t id="44">Bandviddsbegränsning: Servernivå: Genomsnittlig tillgänglig bandbredd</t>
+
+<!-- [45] "This is the average bandwidth available to this Virtual Server in bytes/sec (the bucket "fill rate")." -->
+<t id="45">Det här är den genomsnittliga bandvidden som är tillgänglig för servern (hastigheten med vilken hinken fylls).</t>
+
+<!-- [46] "Bandwidth Throttling: Server: Bucket Depth" -->
+<t id="46">Bandviddsbegränsning: Servernivå: Hinkstorlek</t>
+
+<!-- [47] "This is the maximum depth of the bucket. After a long enough period of inactivity, a request will get this many unthrottled bytes of data, before throttling kicks back in.&lt;br&gt;Set equal to the Fill Rate in order not to allow any data bursts. This value determines the length of the time over which the bandwidth is averaged." -->
+<t id="47">Det här är det maximala antalet poletter som får plats i hinken.
+Om det här värdet är lika stort som den
+genomsnittliga tillgängliga bandvidden så tillåts inga 
+tillfälliga datapulser när servern har varit inaktiv ett tag
+utan data skickas alltid med max den bandbredden.</t>
+
+<!-- [48] "Bandwidth Throttling: Server: Minimum Grant" -->
+<t id="48">Bandviddsbegränsning: Servernivå: Minimalt antal bytes</t>
+
+<!-- [49] "When the bandwidth availability is below this value, connections will be delayed rather than granted minimal amounts of bandwidth. The purpose is to avoid sending too small packets (which would increase the IP overhead)." -->
+<t id="49">När det tillgängliga antalet poletter (alltså bytes) är mindre än det här
+värdet så fördröjs förbindelser. Detta för att undvika att skicka för små paket, vilket
+öker andelen data som bara består av paketheaders.</t>
+
+<!-- [50] "Bandwidth Throttling: Server: Maximum Grant" -->
+<t id="50">Bandviddsbegränsning: Servernivå: Maximalt antal bytes</t>
+
+<!-- [51] "This is the maximum number of bytes assigned in a single request to a connection. Keeping this number low will share bandwidth more evenly among the pending connections, but keeping it too low will increase IP overhead and (marginally) CPU usage. You'll want to set it just a tiny bit lower than any integer multiple of your network's MTU (typically 1500 for ethernet)." -->
+<t id="51">Det här är det maximala antalet bytes som en förbindelse kan få.
+Om det här värdet är lågt så fördelas bandvidden mer jämnt mellan olika
+förbindelser, men om det är för lågt så ökar overheaden från IP och TCP.
+<br /><br />
+Sätt det till ett värde som är aningens lägre än en jämn multipel av
+ditt nätverks MTU (normala ethernetförbindelser har en MTU på 1500).</t>
+
+<!-- [52] "Bandwidth Throttling: Request: Enabled" -->
+<t id="52">Bandviddsbegränsning: Förbindelsenivå: Aktiverad</t>
+
+<!-- [53] "If set, per-request bandwidth throttling will be enabled." -->
+<t id="53">Om aktiverad så begränsas bandbredden individuellt per förbindelse.</t>
+
+<!-- [54] "Bandwidth Throttling: Request: Minimum guarranteed bandwidth" -->
+<t id="54">Bandviddsbegränsning: Förbindelsenivå: Minimal bandbredd</t>
+
+<!-- [55] "The maximum bandwidth each connection (in bytes/sec) can use is determined combining a number of modules. But doing so can lead to too small or even negative bandwidths for particularly unlucky requests. This variable guarantees a minimum bandwidth for each request." -->
+<t id="55">Den maximala bandvidden som varje förbindelse får bestäms av en kombination
+av de bandviddsbegränsningsmoduler som är adderade i servern. Men ibland
+så blir det framräknade värdet väldigt lågt, och en del riktigt otursamma
+förbindelser kan råka hamna på 0 eller mindre bytes per sekund.  <br /><br />
+Den här variablen garanterar en viss minimal bandvidd för alla requests</t>
+
+<!-- [56] "Bandwidth Throttling: Request: Bucket Depth Multiplier" -->
+<t id="56">Bandviddsbegränsning: Förbindelsenivå: Hinkstorlek</t>
+
+<!-- [57] "The average bandwidth available for each request will be determined by the modules combination. The bucket depth will be determined multiplying the rate by this factor." -->
+<t id="57">Den genomsnittliga bandvidden som varje förbindelse bestäms av
+de adderade bandbreddsbegränsningsmodulerna. Hinkstorleken bestäms genom att
+multiplicera detta värde med den här faktorn.</t>
+
+<!-- [58] "Messages: No such file" -->
+<t id="58">Meddelanden: Filen finns inte</t>
+
+<!-- [59] "What to return when there is no resource or file available at a certain location." -->
+<t id="59">Det här meddelandet returneras om en användare frågar efter en
+  resurs som inte finns.</t>
+
+<!-- [cw] "and" -->
+<t id="cw">och</t>
+
+<!-- [cx] "every" -->
+<t id="cx">var</t>
+
+<!-- [cy] "since" -->
+<t id="cy">sedan</t>
+
+<!-- [cz] "Notice" -->
+<t id="cz">Notis</t>
+
+<!-- [cA] "Warning" -->
+<t id="cA">Varning</t>
+
+<!-- [cB] "Error" -->
+<t id="cB">Fel</t>
+
+<!-- [cC] "Admin" -->
+<t id="cC">Admin</t>
+
+<!-- [cD] "Sites" -->
+<t id="cD">Sajter</t>
+
+<!-- [cE] "Globals" -->
+<t id="cE">Globala</t>
+
+<!-- [cF] "Ports" -->
+<t id="cF">Portar</t>
+
+<!-- [cG] "Events" -->
+<t id="cG">Loggbok</t>
+
+<!-- [196] "Tasks" -->
+<t id="196">Funktioner</t>
+
+<!-- [cI] "Docs" -->
+<t id="cI">Manual</t>
+
+<!-- [cJ] "Startpage" -->
+<t id="cJ">Startsida</t>
+
+<!-- [cK] "Update" -->
+<t id="cK">Uppdatera</t>
+
+<!-- [cL] "Your Settings" -->
+<t id="cL">Inställningar</t>
+
+<!-- [cM] "Users" -->
+<t id="cM">Användare</t>
+
+<!-- [cN] "Add Module" -->
+<t id="cN">Addera modul</t>
+
+<!-- [cP] "Drop Module" -->
+<t id="cP">Ta bort modul</t>
+
+<!-- [cQ] "Reload" -->
+<t id="cQ">Ladda om</t>
+
+<!-- [cR] "Clear Log" -->
+<t id="cR">Töm loggbok</t>
+
+<!-- [cT] "Request status" -->
+<t id="cT">Trafikstatus</t>
+
+<!-- [cU] "Inherit tree" -->
+<t id="cU">Arvsträd</t>
+
+<!-- [cV] "Settings" -->
+<t id="cV">Inställningar</t>
+
+<!-- [cW] "Modules" -->
+<t id="cW">Moduler</t>
+
+<!-- [cX] "Add module" -->
+<t id="cX">Addera modul</t>
+
+<!-- [cY] "Drop module" -->
+<t id="cY">Ta bort modul</t>
+
+<!-- [cZ] "Create new site" -->
+<t id="cZ">Skapa ny sajt</t>
+
+<!-- [c0] "Drop old site" -->
+<t id="c0">Radera sajt</t>
+
+<!-- [174] "Show documentation" -->
+<t id="174">Visa dokumentationen</t>
+
+<!-- [175] "Show the variable documentation." -->
+<t id="175">Visa variabeldokumentationen</t>
+
+<!-- [176] "Show advanced configuration options" -->
+<t id="176">Visa avancerade inställningar</t>
+
+<!-- [177] "Show all possible configuration options, not only the ones that are most often changed." -->
+<t id="177">Visa alla tillgängliga inställningar, inte bara de som oftast brukar ställas in.</t>
+
+<!-- [178] "Show the incomplete translations" -->
+<t id="178">Visa översättningarna</t>
+
+<!-- [179] "Show the language selection flags. The translation of the configuration interface is not done yet, so this is mostly useful for the curious or the translator." -->
+<t id="179">Visa språkvalsflaggorna. Allt är ännu inte översatt.</t>
+
+<!-- [180] "Show developer options and actions" -->
+<t id="180">Visa utvecklar-alternativ och funktioner</t>
+
+<!-- [181] "Show settings and actions that are not normaly useful for non-developer users. If you develop your own Roxen modules, this option is for you." -->
+<t id="181">Visa inställningar och funktioner som normalt inte är användbara för icke-utvecklare. Om du utvecklar egna Roxenmoduler bör du aktivera detta val.</t>
+
+<!-- [182] "Background color" -->
+<t id="182">Bakgrundsfärg</t>
+
+<!-- [183] "Administration interface background color." -->
+<t id="183">Admingränssnittets bakgrundsfärg</t>
+
+<!-- [184] "Text color" -->
+<t id="184">Textfärg</t>
+
+<!-- [185] "Administration interface text color." -->
+<t id="185">Admingränssnittets textfärg</t>
+
+<!-- [186] "Link color" -->
+<t id="186">Länkfärg</t>
+
+<!-- [187] "Font" -->
+<t id="187">Typsnitt</t>
+
+<!-- [188] "Administration interface font." -->
+<t id="188">Typsnittet som används i admingränssnittet.</t>
+
+<!-- [189] "Add/Delete module page type" -->
+<t id="189">Listtyp vid moduladdering</t>
+
+<!-- [190] "&lt;dl&gt;
+&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
+&lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like verbose, but no type images.&lt;/dd&gt;
+&lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like verbose, but allows to select multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
+&lt;/dl&gt;" -->
+<t id="190">
+<dl>
+<dt>normal</dt><dd>Visa modulnamnet, dokumentationen och typbilder.</dd>
+<dt>snabb</dt><dd>Som normal, men inga typbilder.</dd>
+<dt>kompakt</dt><dd>Visa bara namnet, och tillåt adderande av flera
+moduler på samma gång.</dd>
+<dt>kompaktare</dt><dd>Som kompakt, men utan modulkategorier.</dd>
+</dl>
+</t>
+
+<!-- [191] "All Permissions" -->
+<t id="191">Alla rättigheter</t>
+
+<!-- [192] "View Settings" -->
+<t id="192">Visa inställningar</t>
+
+<!-- [193] "Edit Users" -->
+<t id="193">Editera användare</t>
+
+<!-- [194] "Edit Global Variables" -->
+<t id="194">Editera globala inställningar</t>
+
+<!-- [195] "Edit Module Variables" -->
+<t id="195">Editera modulinställningar</t>
+
+<!-- [197] "Restart" -->
+<t id="197">Starta om</t>
+
+<!-- [198] "Shutdown" -->
+<t id="198">Stänga ner</t>
+
+<!-- [199] "Create Sites" -->
+<t id="199">Skapa ny sajt</t>
+
+<!-- [200] "Add Modules" -->
+<t id="200">Addera moduler</t>
+
+<!-- [dt] "Administrator logged on as %s from %s.
+" -->
+<t id="dt">Administratör inloggad som %s från %s.</t>
+
+<!-- [du] "Character encoding" -->
+<t id="du">Teckenkodning</t>
+
+<!-- [dv] "Send pages to client in this character encoding." -->
+<t id="dv">Sänd sidor till klienter i den här teckenuppsättningen.</t>
+
+<!-- [dw] "Mountpoint" -->
+<t id="dw">Monteringspunkt</t>
+
+<!-- [dx] "Usually / is a good idea" -->
+<t id="dx">Vanligtvis /</t>
+
+<!-- [dy] "Permission denied" -->
+<t id="dy">Tillträde nekas</t>
+
+<!-- [dz] "Empty" -->
+<t id="dz">Tom</t>
+
+<!-- [dA] "Create new user" -->
+<t id="dA">Skapa ny användare</t>
+
+<!-- [dB] "Delete old user" -->
+<t id="dB">Radera användare</t>
+
+<!-- [dC] "Create User" -->
+<t id="dC">Skapa användare</t>
+
+<!-- [dD] "User ID" -->
+<t id="dD">Användar ID</t>
+
+<!-- [dE] "Delete" -->
+<t id="dE">Ta bort</t>
+
+<!-- [dF] "Normal" -->
+<t id="dF">Normal</t>
+
+<!-- [dG] "Reversed" -->
+<t id="dG">Reverserad</t>
+
+<!-- [dH] "Not available." -->
+<t id="dH">Ej tillgänglig.</t>
+
+<!-- [dI] "All available fonts" -->
+<t id="dI">Alla tillgängliga typsnitt</t>
+
+<!-- [dJ] "Example text" -->
+<t id="dJ">Exempeltext</t>
+
+<!-- [dK] "Jackdaws love my big sphinx of quartz." -->
+<t id="dK"></t>
+
+<!-- [dL] "Features" -->
+<t id="dL"></t>
+
+<!-- [dM] "Disabled modules" -->
+<t id="dM">Icke tillgängliga moduler</t>
+
+<!-- [dN] "All modules" -->
+<t id="dN">Alla moduler</t>
+
+<!-- [dP] "Name" -->
+<t id="dP">Namn</t>
+
+<!-- [dQ] "State" -->
+<t id="dQ">Status</t>
+
+<!-- [dR] "Disabled" -->
+<t id="dR">Inaktiv</t>
+
+<!-- [dS] "N/A" -->
+<t id="dS"></t>
+
+<!-- [dT] "Enabled" -->
+<t id="dT">Aktiv</t>
+
+<!-- [dU] "Status" -->
+<t id="dU">Status</t>
+
+<!-- [dV] "Maintenance" -->
+<t id="dV">Underhåll</t>
+
+<!-- [dW] "SSL" -->
+<t id="dW">SSL</t>
+
+<!-- [dX] "Debug information" -->
+<t id="dX">Debuginformation</t>
+
+<!-- [dY] "All memory caches have been flushed." -->
+<t id="dY">Alla minnescachar har rensats.</t>
+
+<!-- [dZ] "Roxen will restart automatically." -->
+<t id="dZ">Roxen kommer starta om automatiskt</t>
+
+<!-- [d0] "You might see the old process for a while in the process table
+when doing 'ps' or running 'top'. This is normal. Roxen waits for a
+while for all connections to finish, the process will go away after at
+most 15 minutes." -->
+<t id="d0">Det är möjligt att den gamla processen ligger kvar ett tag.
+Detta är normalt. Roxen väntar ett tag på att alla anslutningar ska avslutas,
+processen försvinner efter senast 15 minuter.</t>
+
+<!-- [d1] "Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically." -->
+<t id="d1">Roxen kommer &lt;b&gt;inte&lt;/b&gt; starta om automatiskt." --></t>
+
+<!-- [d2] "Urls" -->
+<t id="d2">URL:er</t>
+
+
+
+<pike>
+
+  string full_status(string real_version, int boot_time, int time_to_boot,
+		     int days, int hrs, int min, int sec, string sent_data,
+		     float kbps, string sent_headers, int num_requests,
+		     float rpm, string received_data) {
+    return(sprintf("<table>"
+		   "<tr><td><b>Version:</b></td><td colspan=2>%s</td></tr>\n"
+		   "<tr><td><b>Startad:</b></td><td colspan=2>%s</td></tr>\n"
+		   "<tr><td><b>Upstarttid:</b></td>"
+		   "<td>%d s</td></tr>\n"
+		   "<tr><td><b>Upptid:</b></td>"
+		   "<td colspan=2>%d dag%s, %02d:%02d:%02d</td></tr>\n"
+		   "<tr><td colspan=3>&nbsp;</td></tr>\n"
+		   "<tr><td><b>Sänd data:</b></td><td>%s"
+		   "</td><td>%.2f Kbit/s</td></tr><tr>\n"
+		   "<td><b>Sända headrar:</b></td><td>%s</td></tr>\n"
+		   "<tr><td><b>Antal förfrågningar:</b></td>"
+		   "<td>%8d</td><td>%.2f/min</td></tr>\n"
+		   "<tr><td><b>Emottagen data:</b></td>"
+		   "<td>%s</td></tr>\n"
+		   "</table>",
+		   real_version, ctime(boot_time), time_to_boot,
+		   days, (days==1?"":"ar"), hrs, min, sec,
+		   sent_data, kbps, sent_headers,
+		   num_requests, rpm, received_data));
+  }
+
+  string ftp_stat_line(string cmd, int times) {
+    return(sprintf("<tr align=right><td><b>%s</b></td>"
+		   "<td align=right>%d</td><td> gång%s</td></tr>\n",
+		   cmd, times, (times == 1)?"":"er"));
+  }
+
+</pike>
+
