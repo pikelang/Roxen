@@ -5,7 +5,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.47 1997/12/04 20:59:48 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.48 1997/12/04 21:12:28 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -429,6 +429,7 @@ object|void open(string filename, string mode, int|void perm)
 	return;
       }
     } else {
+      destruct(o);
       return;
     }
   }
