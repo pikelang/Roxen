@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.83 1999/12/06 22:53:00 mast Exp $
+# $Id: start,v 1.84 1999/12/13 05:01:23 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -161,7 +161,7 @@ parse_args() {
     once=1
     shift
   ;;
-  -d*|-t*|-l*|-w*)
+  -r*|-d*|-t*|-l*|-w*)
     # Argument passed along to Pike.
     ARGS="$ARGS $1"
   ;;
@@ -268,6 +268,29 @@ the default arguments.
        .B-d<level>B.:                 Set the runtime Pike debug to level.
 				  This only works if Pike is compiled 
 				  with debug.
+
+       .B-rtB.:                       Enable runtime typechecking.
+				  Things will run more slowly, but it is very
+                                  useful while developing code.
+
+				  Enabled when starting roxen with --debug
+
+       .B-rTB.:                       Enable strict types.
+				  Same as adding #pragma strict-types 
+				  to all files.
+
+				  This enables more strict
+				  type-checking, things that are
+				  normally permitted (such as calling
+				  a mixed value, or assigning a typed
+				  object variable with an untyped
+				  object) will generate warnings.
+
+				  Useful for module and roxen core
+				  developers, but not so useful for
+				  the occasional pike-script-writer.
+
+				  Enabled when starting roxen with --debug
 
        .B-s<size>B.:                  Set the stack size.
 
@@ -400,13 +423,14 @@ fi
 
 case "x$debug" in
   "x")
-    DEBUG="-DMODULE_DEBUG"
+    DEBUG="-DMODULE_DEBUG -rt"
+    ARGS="$ARGS -w"
     ;;
   "x-1")
     DEBUG=""
     ;;
   "x1")
-    DEBUG="-DDEBUG -DMODULE_DEBUG"
+    DEBUG="-DDEBUG -DMODULE_DEBUG -rt"
     ARGS="$ARGS -w"
     ;;
 esac
