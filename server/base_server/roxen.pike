@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.176 1998/03/20 12:18:52 js Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.177 1998/03/26 07:21:51 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2342,47 +2342,4 @@ int main(int|void argc, array (string)|void argv)
 #endif
 //  start_time=time();		// Used by the "uptime" info later on.
   return -1;
-}
-
-
-
-// Debug functions.  List _all_ open filedescriptors
-inline static private string checkfd_fix_line(string l)
-{
-  string *s;
-  s=l/",";
-  if (sizeof(s) > 1) {
-    s[0]=decode_mode((int)("0"+s[0]));
-    if((int)s[1])
-      s[1]=sizetostring((int)s[1]);
-    else
-      s[1]="-";
-    
-    s[2]=(int)s[3]?s[3]:"-";
-    return s[0..2]*",";
-  }
-  return l;
-}
-
-
-string checkfd(object|void id)
-{
-//  perror(sprintf("%O\n", get_all_active_fd()));
-  
-  return
-    ("<h1>Active filedescriptors</h1>\n"+
-     "<br clear=left><hr>\n"+
-     "<table width=100% cellspacing=0 cellpadding=0>\n"+
-     "<tr align=right><td>fd</td><td>type</td><td>mode</td>"+
-     "<td>size</td><td>inode</td></tr>\n"+
-     (Array.map(get_all_active_fd(),
-	  lambda(int fd) 
-	  {
-	    return ("<tr align=right><th>"+fd+"</th><td>"+
- 		    replace(checkfd_fix_line(fd_info(fd)),",",
-			    "</td><td>")
-		    +"</td><td align=left>"
-		    +(mark_fd(fd)||"?")+"<br></td></tr>"); 
-	  })*"\n")+
-     "</table>");
 }
