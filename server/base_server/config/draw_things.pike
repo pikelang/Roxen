@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.36 1999/04/22 09:21:10 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.37 1999/04/22 09:22:12 per Exp $";
 
 Image.image load_image(string f)
 {
