@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.52 2002/09/03 15:51:24 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.53 2002/10/25 18:19:35 mast Exp $";
 
 class Variable
 {
@@ -424,6 +424,80 @@ class FakedVariables( mapping real_variables )
     }	  
 	  
     error("can't cast to %O\n",to);
+  }
+}
+
+class PrefLanguages
+//! @appears PrefLanguages
+//! Support for language preferences. This object is typically
+//! accessed through @tt{id->misc->pref_languages@}.
+{
+  int decoded=0;
+  int sorted=0;
+  array(string) subtags=({});
+  array(string) languages=({});
+  array(float) qualities=({});
+
+  array(string) get_languages() {
+    sort_lang();
+    return languages;
+  }
+
+  string get_language() {
+    if(!languages || !sizeof(languages)) return 0;
+    sort_lang();
+    return languages[0];
+  }
+
+  array(float) get_qualities() {
+    sort_lang();
+    return qualities;
+  }
+
+  float get_quality() {
+    if(!qualities || !sizeof(qualities)) return 0.0;
+    sort_lang();
+    return qualities[0];
+  }
+
+  void set_sorted(array(string) lang, void|array(float) q) {
+    languages=lang;
+    if(q && sizeof(q)==sizeof(lang))
+      qualities=q;
+    else
+      qualities=({1.0})*sizeof(lang);
+    sorted=1;
+    decoded=1;
+  }
+
+  void sort_lang() {
+    if(sorted && decoded) return;
+    array(float) q;
+    array(string) s=reverse(languages)-({""}), u=({});
+
+    if(!decoded) {
+      q=({});
+      s=Array.map(s, lambda(string x) {
+		       float n=1.0;
+		       string sub="";
+		       sscanf(lower_case(x), "%s;q=%f", x, n);
+		       if(n==0.0) return "";
+		       sscanf(x, "%s-%s", x, sub);
+		       q+=({n});
+		       u+=({sub});
+		       return x;
+		     });
+      s-=({""});
+      decoded=1;
+    }
+    else
+      q=reverse(qualities);
+
+    sort(q,s,u);
+    languages=reverse(s);
+    qualities=reverse(q);
+    subtags=reverse(u);
+    sorted=1;
   }
 }
 

@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.379 2002/10/11 14:35:54 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.380 2002/10/25 18:19:40 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -461,77 +461,6 @@ private void really_set_config(array mod_config)
 
 private static mixed f, line;
 private static int hstart;
-
-class PrefLanguages {
-
-  int decoded=0;
-  int sorted=0;
-  array(string) subtags=({});
-  array(string) languages=({});
-  array(float) qualities=({});
-
-  array(string) get_languages() {
-    sort_lang();
-    return languages;
-  }
-
-  string get_language() {
-    if(!languages || !sizeof(languages)) return 0;
-    sort_lang();
-    return languages[0];
-  }
-
-  array(float) get_qualities() {
-    sort_lang();
-    return qualities;
-  }
-
-  float get_quality() {
-    if(!qualities || !sizeof(qualities)) return 0.0;
-    sort_lang();
-    return qualities[0];
-  }
-
-  void set_sorted(array(string) lang, void|array(float) q) {
-    languages=lang;
-    if(q && sizeof(q)==sizeof(lang))
-      qualities=q;
-    else
-      qualities=({1.0})*sizeof(lang);
-    sorted=1;
-    decoded=1;
-  }
-
-  void sort_lang() {
-    if(sorted && decoded) return;
-    array(float) q;
-    array(string) s=reverse(languages)-({""}), u=({});
-
-    if(!decoded) {
-      q=({});
-      s=Array.map(s, lambda(string x) {
-		       float n=1.0;
-		       string sub="";
-		       sscanf(lower_case(x), "%s;q=%f", x, n);
-		       if(n==0.0) return "";
-		       sscanf(x, "%s-%s", x, sub);
-		       q+=({n});
-		       u+=({sub});
-		       return x;
-		     });
-      s-=({""});
-      decoded=1;
-    }
-    else
-      q=reverse(qualities);
-
-    sort(q,s,u);
-    languages=reverse(s);
-    qualities=reverse(q);
-    subtags=reverse(u);
-    sorted=1;
-  }
-}
 
 class CacheKey {
 #if ID_CACHEKEY_DEBUG
