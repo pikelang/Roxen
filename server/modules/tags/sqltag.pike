@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.43 2000/02/02 20:42:30 per Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.44 2000/02/05 04:29:04 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -15,21 +15,15 @@ constant thread_safe=1;
 inherit "module";
 inherit "roxenlib";
 
-import Sql;
-
 Configuration conf;
 
 
 // Module interface functions
 
-array register_module()
-{
-  return ({ MODULE_PARSER|MODULE_PROVIDER,
-	    "SQL module",
-	    "This module gives the three tags &lt;SQLQUERY&gt;, "
-	    "&lt;SQLOUTPUT&gt;, and &lt;SQLTABLE&gt;.<br>\n",
-	    0, 1 });
-}
+constant module_type=MODULE_PARSER|MODULE_PROVIDER;
+constant module_name="SQL tag module";
+constant module_desc="This module gives the three tags &lt;SQLQUERY&gt;, "
+  "&lt;SQLOUTPUT&gt;, and &lt;SQLTABLE&gt;.<br>\n";
 
 TAGDOCUMENTATION
 #ifdef manual
@@ -98,7 +92,7 @@ array|string|object do_sql_query(string tag, mapping args, RequestID id)
     args->query = parse_rxml(args->query, id);
 
   string host = query("hostname");
-  object(sql) con;
+  Sql.sql con;
   array(mapping(string:mixed)) result;
   function sql_connect = id->conf->sql_connect;
   mixed error;
@@ -132,7 +126,7 @@ array|string|object do_sql_query(string tag, mapping args, RequestID id)
     error = catch(con = sql_connect(host));
   else {
     host = (lower_case(host) == "localhost")?"":host;
-    error = catch(con = sql(host, database, user, password));
+    error = catch(con = Sql.sql(host, database, user, password));
   }
 #else
   if (args->host)
@@ -141,7 +135,7 @@ array|string|object do_sql_query(string tag, mapping args, RequestID id)
   if(sql_connect)
     error = catch(con = sql_connect(host));
   else
-    error = catch(con = sql(lower_case(host)=="localhost"?"":host));
+    error = catch(con = Sql.sql(lower_case(host)=="localhost"?"":host));
 #endif
 
   if (error) {
@@ -180,7 +174,6 @@ array|string|object do_sql_query(string tag, mapping args, RequestID id)
 array|string container_sqloutput(string tag, mapping args, string contents,
 		    RequestID id)
 {
-  if(args->help) return register_module()[2]; // FIXME
   NOCACHE();
 
   string|array res=do_sql_query(tag, args, id);
@@ -202,9 +195,24 @@ array|string container_sqloutput(string tag, mapping args, string contents,
   return rxml_error(tag, "No SQL return values.", id);
 }
 
+class TagSqlplugin {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "sql";
+
+  array get_dataset(mapping m, RequestID id) {
+    array|string res=do_sql_query("sqloutput", m, id);
+    if(stringp(res)) {
+      //      rxml_error(res);
+      return ({});
+    }
+    if(m->rowinfo) id->variables[m->rowinfo] = sizeof(res);
+    return res;
+  }
+}
+
 string tag_sqlquery(string tag, mapping args, RequestID id)
 {
-  if(args->help) return register_module()[2]; // FIXME
   NOCACHE();
 
   string|array res=do_sql_query(tag, args, id);
@@ -221,7 +229,6 @@ string tag_sqlquery(string tag, mapping args, RequestID id)
 
 string tag_sqltable(string tag, mapping args, RequestID id)
 {
-  if(args->help) return register_module()[2]; // FIXME
   NOCACHE();
 
   string|object res=do_sql_query(tag, args, id);
@@ -270,10 +277,10 @@ string tag_sqltable(string tag, mapping args, RequestID id)
 
 // ------------------- Callback functions -------------------------
 
-object(sql) sql_object(void|string host)
+Sql.sql sql_object(void|string host)
 {
   string host = stringp(host)?host:query("hostname");
-  object(sql) con;
+  Sql.sql con;
   function sql_connect = conf->sql_connect;
   mixed error;
   /* Is this really a good idea? /mast
