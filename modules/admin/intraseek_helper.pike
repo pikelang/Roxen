@@ -1,12 +1,12 @@
 /*
- * $Id: intraseek_helper.pike,v 1.1 1998/09/14 02:56:29 js Exp $
+ * $Id: intraseek_helper.pike,v 1.2 1998/09/14 06:18:46 js Exp $
  *
  * AutoSeek, Intraseek helper module
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: intraseek_helper.pike,v 1.1 1998/09/14 02:56:29 js Exp $";
+constant cvs_version = "$Id: intraseek_helper.pike,v 1.2 1998/09/14 06:18:46 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -20,6 +20,14 @@ array register_module()
   return ({ MODULE_PARSER, "AutoSite Intraseek helper module",
 	    "",0,1 });
 }
+
+void create(object conf)
+{
+  defvar("workdir", "/usr/local/AutoSite/intraseek_databases/",
+	 "Intraseek database directory", TYPE_DIR,
+	 "");
+}
+
 
 string tag_create(string tag_name, mapping args, object id)
 {

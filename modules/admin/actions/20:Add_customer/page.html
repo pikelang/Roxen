@@ -13,10 +13,7 @@
               values(NULL,
 	             '¤user_id:quote=mysql¤',
 	             '¤password:quote=mysql¤',
-		     '¤name:quote=mysql¤',
-		     1,1,
-	             '¤sms:quote=mysql¤',
-	             '¤fax:quote=mysql¤',NULL,1)">
+		     '¤name:quote=mysql¤',NULL,1)">
 
      <comment><--  Randomize default scheme  --></comment>
      <cset preparse variable=scheme_id><random preparse separator=','><pike>
@@ -78,8 +75,6 @@
         <uservar title='Login name:' type=text size=20 name=user_id>
         <uservar title='Password:' type=password size=20 name=password>
         <uservar title='Domain name:' type=text size=20 name=domain>
-        <uservar title='Fax number:' type=text size=20 name=fax>
-        <uservar title='SMS number:' type=text size=20 name=sms>
 	<input type=submit name=save value='Save'>
       </form>
     </preparse>

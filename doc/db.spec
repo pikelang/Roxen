@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.26 1998/09/13 23:30:58 grubba Exp $
+# $Id: db.spec,v 1.27 1998/09/14 06:19:28 js Exp $
 
 drop table messages;
 drop table mail;
@@ -99,9 +99,6 @@ create table admin_variables (
 	     PRIMARY KEY(user_id,rcpt_name,name)
      );
 	     
-	     
-// Domäner? Koppling till den andra databasen?
-
 # AutoAdmin         
 
 create table customers (
@@ -109,10 +106,6 @@ create table customers (
              user_id                 varchar(64) not null,
 	     password		     varchar(64) not null,
 	     name		     varchar(255) not null,
-	     intraseek		     int,
-	     logview		     int,
-	     sms		     int,
-	     fax		     int,
              registration_date       timestamp,
              template_scheme_id      int not null default 1,
      );
