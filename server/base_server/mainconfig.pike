@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.75 1997/08/21 10:50:24 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.76 1997/08/21 14:10:26 grubba Exp $";
 //inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -725,20 +725,17 @@ string new_module_form(object id, object node)
     if(b = module_nomore(q, a[q][2], node->config()))
     {
       if(b->sname != q)
-	res += ({("<p>"+
-		  (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
-		  "<img alt=\""+a[q][0]+"\" src=\"/auto/module/" +a[q][2]+"/"+
-		   q+"\" height=24 width=500>")+ "<br><blockquote>" + a[q][1] +
+	res += ({("<p><img alt=\""+a[q][0]+"\" src=\"/auto/module/" + a[q][2] +
+		  "/"+ q+"\" height=24 width=500><br><blockquote>" + a[q][1] +
 		  "<p><i>A module of the same type is already enabled (" +
 		  b->name + "). <a href=\"/(delete)" +
 		  node->descend(b->name, 1)->path(1) + "?" + (bar++) +
 		  "\">Disable that module</a> if you want this one instead</i>"
 		  "\n<p><br><p></blockquote>")});
     } else {
-      res += ({"<p><a href=\"/(addmodule)"+node->path(1)+"?"+q+"=1\">"+
-		 (roxen->QUERY(BS)?"<h2>"+a[q][0]+"</h2>":
-		  "<img border=0 alt=\""+a[q][0]+"\" src=\"/auto/module/"
-                  +a[q][2]+"/"+q+"\" height=24 width=500>")+
+      res += ({"<p><a href=\"/(addmodule)"+node->path(1)+"?"+q+"=1\">"
+		 "<img border=0 alt=\""+a[q][0]+"\" src=\"/auto/module/" +
+		 a[q][2]+"/"+q+"\" height=24 width=500>"
 		 "</a><blockquote><br>"+a[q][1]+"<p><br><p></blockquote>"});
     }
   }
