@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.70 2001/02/20 00:45:30 nilsson Exp $
+// $Id: Roxen.pmod,v 1.71 2001/03/01 03:14:46 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2486,11 +2486,10 @@ string decode_charref (string chref)
 {
   if (sizeof (chref) <= 2 || chref[0] != '&' || chref[-1] != ';') return 0;
   if (chref[1] != '#') return parser_charref_table[chref[1..sizeof (chref) - 2]];
-  if ((<'x', 'X'>)[chref[2]]) {
-    if (sscanf (chref, "&%*2s%x;%*c", int c) == 2) return sprintf ("%c", c);
-  }
-  else
-    if (sscanf (chref, "&%*c%d;%*c", int c) == 2) return sprintf ("%c", c);
+  if (sscanf (chref,
+	      (<'x', 'X'>)[chref[2]] ? "&%*2s%x;%*c" : "&%*c%d;%*c",
+	      int c) == 2)
+    catch {return (string) ({c});};
   return 0;
 }
 
@@ -2518,6 +2517,9 @@ string encode_charref (string char)
 
 // RXML complementary stuff shared between configurations.
 
+#define ENCODE(value, is_type, type) \
+  (type && type != RXML.is_type ? type->encode ((value), RXML.is_type) : (value))
+
 class ScopeRoxen {
   inherit RXML.Scope;
 
@@ -2536,70 +2538,76 @@ class ScopeRoxen {
   }
 #endif
 
-  mixed `[] (string var, void|RXML.Context c, void|string scope) {
+  mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     switch(var)
     {
      case "uptime":
        CACHE(c->id,1);
-       return (time(1)-roxenp()->start_time);
+       return ENCODE(time(1)-roxenp()->start_time, t_int, type);
      case "uptime-days":
        CACHE(c->id,3600*2);
-       return (time(1)-roxenp()->start_time)/3600/24;
+       return ENCODE((time(1)-roxenp()->start_time)/3600/24, t_int, type);
      case "uptime-hours":
        CACHE(c->id,1800);
-       return (time(1)-roxenp()->start_time)/3600;
+       return ENCODE((time(1)-roxenp()->start_time)/3600, t_int, type);
      case "uptime-minutes":
        CACHE(c->id,60);
-       return (time(1)-roxenp()->start_time)/60;
+       return ENCODE((time(1)-roxenp()->start_time)/60, t_int, type);
      case "hits-per-minute":
        CACHE(c->id,2);
-       return c->id->conf->requests / ((time(1)-roxenp()->start_time)/60 + 1);
+       // FIXME: Use float here instead?
+       return ENCODE(c->id->conf->requests / ((time(1)-roxenp()->start_time)/60 + 1),
+		     t_int, type);
      case "hits":
        NOCACHE(c->id);
-       return c->id->conf->requests;
+       return ENCODE(c->id->conf->requests, t_int, type);
      case "sent-mb":
        CACHE(c->id,10);
-       return sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0));
+       // FIXME: Use float here instead?
+       return ENCODE(sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0)), t_text, type);
      case "sent":
        NOCACHE(c->id);
-       return c->id->conf->sent;
+       return ENCODE(c->id->conf->sent, t_int, type);
      case "sent-per-minute":
        CACHE(c->id,2);
-       return c->id->conf->sent / ((time(1)-roxenp()->start_time)/60 || 1);
+       return ENCODE(c->id->conf->sent / ((time(1)-roxenp()->start_time)/60 || 1),
+		     t_int, type);
      case "sent-kbit-per-second":
        CACHE(c->id,2);
-       return sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
-                               (time(1)-roxenp()->start_time || 1)));
+       // FIXME: Use float here instead?
+       return ENCODE(sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
+				      (time(1)-roxenp()->start_time || 1))),
+		     t_text, type);
      case "ssl-strength":
-       return ssl_strength;
+       return ENCODE(ssl_strength, t_int, type);
      case "pike-version":
-       return pike_version;
+       return ENCODE(pike_version, t_text, type);
      case "version":
-       return roxenp()->version();
+       return ENCODE(roxenp()->version(), t_text, type);
      case "base-version":
-       return __roxen_version__;
+       return ENCODE(__roxen_version__, t_text, type);
      case "build":
-       return __roxen_build__;
+       return ENCODE(__roxen_build__, t_text, type);
      case "time":
        CACHE(c->id,1);
-       return time(1);
+       return ENCODE(time(1), t_int, type);
      case "server":
        if( c->id->misc->host )
-         return c->id->port_obj->name+"://"+c->id->misc->host+"/";
-       return c->id->conf->query("MyWorldLocation");
+         return ENCODE(c->id->port_obj->name+"://"+c->id->misc->host+"/", t_text, type);
+       return ENCODE(c->id->conf->query("MyWorldLocation") || "", t_text, type);
      case "domain":
        if( c->id->misc->host )
-         return (c->id->misc->host/":")[0];
+         return ENCODE((c->id->misc->host/":")[0], t_text, type);
        string tmp=c->id->conf->query("MyWorldLocation");
        sscanf(tmp, "%*s//%s", tmp);
        sscanf(tmp, "%s:", tmp);
        sscanf(tmp, "%s/", tmp);
-       return tmp;
+       return ENCODE(tmp, t_text, type);
      case "locale":
        NOCACHE(c->id);
-       return roxenp()->locale->get();
+       return ENCODE(roxenp()->locale->get(), t_text, type);
      case "path":
-       return c->id->misc->site_prefix_path || "";
+       return ENCODE(c->id->misc->site_prefix_path || "", t_text, type);
      default:
        return RXML.nil;
     }
@@ -2624,15 +2632,17 @@ class ScopePage {
 		       "theme-language":"theme_language"]);
   constant in_defines=aggregate_multiset(@indices(converter));
 
-  mixed `[] (string var, void|RXML.Context c, void|string scope) {
+  mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     NOCACHE(c->id);
     switch (var) {
-      case "pathinfo": return c->id->misc->path_info;
+      case "pathinfo": return ENCODE(c->id->misc->path_info, t_text, type);
     }
+    mixed val;
     if(in_defines[var])
-      return c->id->misc->defines[converter[var]];
-    if(objectp(c->id->misc->scope_page[var])) return c->id->misc->scope_page[var]->rxml_var_eval(c, var, "page");
-    return c->id->misc->scope_page[var];
+      val = c->id->misc->defines[converter[var]];
+    else
+      val = c->id->misc->scope_page[var];
+    return type ? type->encode (val) : val;
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
@@ -2653,7 +2663,7 @@ class ScopePage {
     return ind + ({"pathinfo"});
   }
 
-  void m_delete (string var, void|RXML.Context c, void|string scope_name) {
+  void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
     if(!c) return;
     switch (var) {
       case "pathinfo":
@@ -2664,7 +2674,7 @@ class ScopePage {
       if(var[0..4]=="theme")
 	predef::m_delete(c->id->misc->defines, converter[var]);
       else
-	::m_delete(var, c, scope_name);
+	::_m_delete(var, c, scope_name);
       return;
     }
     predef::m_delete(c->id->misc->scope_page, var);
@@ -2676,20 +2686,22 @@ class ScopePage {
 class ScopeCookie {
   inherit RXML.Scope;
 
-  mixed `[] (string var, void|RXML.Context c, void|string scope) {
+  mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if(!c) return RXML.nil;
     NOCACHE(c->id);
-    return c->id->cookies[var];
+    return ENCODE(c->id->cookies[var], t_text, type);
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
+    if (mixed err = catch (val = (string) val || ""))
+      RXML.parse_error ("Cannot set cookies of type %t.\n", val);
     if(c && c->id->cookies[var]!=val) {
       c->id->cookies[var]=val;
       add_http_header(c->id->misc->defines[" _extra_heads"], "Set-Cookie", http_encode_cookie(var)+
-		      "="+http_encode_cookie( (string)(val||"") )+
+		      "="+http_encode_cookie( val )+
 		      "; expires="+http_date(time(1)+(3600*24*365*2))+"; path=/");
     }
-    return RXML.nil;
+    return val;
   }
 
   array(string) _indices(void|RXML.Context c) {
@@ -2698,7 +2710,7 @@ class ScopeCookie {
     return indices(c->id->cookies);
   }
 
-  void m_delete (string var, void|RXML.Context c, void|string scope_name) {
+  void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
     if(!c || !c->id->cookies[var]) return;
     predef::m_delete(c->id->cookies, var);
     add_http_header(c->id->misc->defines[" _extra_heads"], "Set-Cookie",
@@ -2842,77 +2854,29 @@ class ScopeModVar
 class FormScope( mapping variables )
 {
   inherit RXML.Scope;
-  class AVal( array var, string name )
-  {
-    mixed cast( string type )
-    {
-      switch( type )
-      {
-	case "string":
-	  return var*"\0";
-      }
-    }
-
-    array _indices()
-    {
-      return indices( variables );
-    }
-    
-    array _values()
-    {
-      return map( _indices(), `[] );
-    }
-
-    mixed `[]=( string index, mixed newval )
-    {
-      mixed res;
-      if( int ind = (int)index )
-        if( (ind > sizeof( var ))
-	    || ((ind < 0) && (-ind > sizeof( var ) )) )
-	  RXML.parse_error( "Array not big enough for index %d.\n", ind );
-	else if( ind < 0 )
-          var[ind] = newval;
-	else
-	  var[ind-1] = newval;
-      else
-	RXML.parse_error( "Cannot index array with %O\n", ind );
-      RXML.get_context()->id->variables[name] = ((array(string))var)*"\0";
-      return newval;
-    }
-
-    mixed `[]( string index )
-    {
-      if( int ind = (int)index )
-	if( (ind > sizeof( var ))
-	    || ((ind < 0) && (-ind > sizeof( var ) )) )
-	  RXML.parse_error( "Array not big enough for index %d.\n", ind );
-	else if( ind < 0 )
-	  return var[ind];
-	else
-	  return var[ind-1];
-      else
-	RXML.parse_error( "Cannot index array with %O\n", ind );
-    }
-  }
 
   mixed `[]=( string index, mixed newval )
   {
-    variables[ index ] = newval;
+    return variables[ index ] = newval;
   }
 
-  mixed `[]( string what )
+  mixed `[] (string what, void|RXML.Context ctx,
+	     void|string scope_name, void|RXML.Type type)
   {
     mixed q = variables[ what ];
-    if( !arrayp(q) )
-      return q;
-    if( sizeof( q ) == 1 )
-      return q[0];
-    return AVal( q, what );
+    if( arrayp(q) && sizeof( q ) == 1 )
+      q = q[0];
+    if (type) {
+      if (arrayp(q) && type->subtype_of (RXML.t_text))
+	q *= "\0";
+      return type->encode (q);
+    }
+    else return q;
   }
 
   array _values(  )
   {
-    return map( _indices(), `[] );
+    return values( variables );
   }
 
   array _indices()
