@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.76 2000/02/08 00:37:46 mast Exp $ */
+/* $Id: module.pike,v 1.77 2000/02/09 20:18:04 nilsson Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -38,6 +38,8 @@ array register_module()
     module_unique,
   });
 }
+
+mapping tagdocumentation() { return ([]); }
 
 string fix_cvs(string from)
 {
