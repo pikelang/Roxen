@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.12 1998/09/28 01:03:40 grubba Exp $
+ * $Id: pop3.pike,v 1.13 1998/09/28 12:30:26 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.12 1998/09/28 01:03:40 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.13 1998/09/28 12:30:26 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -104,9 +104,29 @@ static class Pop_Session
     send_ok(sprintf("%d %d", num, sz));
   }
 
-  void pop_LIST()
+  void pop_LIST(array(string) args)
   {
+    if (sizeof(args) > 1) {
+      send_error("Bad number of arguments to LIST.");
+      return;
+    }
     object mbox = user->get_incoming();
+    if (sizeof(args)) {
+      object mail = mbox->get_mail_by_id(args[0]);
+
+      if (!mail) {
+	send_error(sprintf("No such mail %s.", args[0]));
+	return;
+      }
+      
+      if (deleted[mail]) {
+	send_error(sprintf("Mail %s is deleted.", args[0]));
+	return;
+      }
+
+      send_ok(sprintf("%s %s", mail->id, mail->get_size()));
+      return;
+    }
     array(object) mail = mbox->mail() - indices(deleted);
     int num = sizeof(mail);
     
@@ -393,7 +413,7 @@ array(string)|multiset(string)|string query_provides()
 
 void create()
 {
-  defvar("port", Protocols.Ports.tcp.pop3, "SMTP port number",
+  defvar("port", Protocols.Ports.tcp.pop3, "POP3 port number",
 	 TYPE_INT | VAR_MORE,
 	 "Portnumber to listen to.<br>\n"
 	 "Usually " + Protocols.Ports.tcp.pop3 + ".\n");
