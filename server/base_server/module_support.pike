@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.75 2000/08/15 12:51:45 jhs Exp $
+// $Id: module_support.pike,v 1.76 2000/08/28 05:31:50 per Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -259,7 +259,7 @@ class ModuleInfo
       else
       {
         filename = data->filename;
-        array stat;
+        Stat stat;
         if(!(stat = r_file_stat( filename ) ))
           filename=0;
         else

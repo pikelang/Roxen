@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-constant cvs_version = "$Id: cvsfs.pike,v 1.22 2000/02/16 07:16:02 per Exp $";
+constant cvs_version = "$Id: cvsfs.pike,v 1.23 2000/08/28 05:31:56 per Exp $";
 constant thread_safe=1;
 
 #include <roxen.h>
@@ -147,7 +147,7 @@ string lookup_cvs_module(string prog, string root, string module)
 string locate_binary(array path, string name)
 {
   string dir;
-  array info;
+  Stat info;
   foreach(path, dir)
     {
       string fname = dir + "/" + name;
@@ -287,7 +287,7 @@ string status()
     (dirlists ? ("<b>Directories</b>: " + (string) dirlists + "<br>") : "");
 }
 
-mixed stat_file(string name, object id)
+Stat stat_file(string name, object id)
 {
   // werror(sprintf("file_stat: Looking for '%s'\n", name));
   // Strip .. and .
@@ -361,7 +361,7 @@ object|mapping|int find_file(string name, object id)
       return is_text ? http_file_answer(f, "text/plain") : f;
     }
     else {
-      array arr = file_stat(fname + "/.");
+      Stat arr = file_stat(fname + "/.");
       if (arr && (arr[1] < 0)) {
 	CVSFS_WERR("\"" + fname + "\" is a directory.");
 	return -1;

@@ -1,7 +1,8 @@
+#include <module.h>
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: location.pike,v 1.1 2000/07/19 16:21:23 jhs Exp $";
+constant cvs_version = "$Id: location.pike,v 1.2 2000/08/28 05:31:54 per Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "RefDoc for MODULE_LOCATION";
 constant module_doc = "This module does nothing, but its inlined "
@@ -70,7 +71,7 @@ string query_location()
   return query( "mountpoint" );
 }
 
-array(int) stat_file( string path, RequestID id )
+array(int)|Stat stat_file( string path, RequestID id )
 //! The stat_file() method emulates Pike's <pi>file_stat()</pi>
 //! method, returning information about a file or directory. path
 //! is the path to the file or directory in the module's name space,
@@ -80,8 +81,8 @@ array(int) stat_file( string path, RequestID id )
 //! provide informative directory listings, or by the ftp protocol
 //! module to create directory listings.
 //!
-//! The return value it is expected to be an array of integers in the
-//! following format:
+//! The return value it is expected to be either a Stat object, or an
+//! array of integers in the following format:
 //!
 //! ({ mode, size, atime, mtime, ctime, uid, gid })
 //!

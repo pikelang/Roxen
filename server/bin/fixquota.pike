@@ -10,7 +10,7 @@ int du(string dir)
   foreach((files || ({})) - ({ ".", ".." }), string file) {
     string path = dir + "/" + file;
 
-    array(mixed) st = file_stat(path);
+    mixed st = file_stat(path);
     if (st) {
       if (st[1] == -2) {
 	// Recurse
@@ -65,7 +65,7 @@ int main(int argc, array(string) argv)
       exit(0);
       break;
     case "version":
-      werror("$Id: fixquota.pike,v 1.1 1999/06/20 15:42:10 grubba Exp $\n");
+      werror("$Id: fixquota.pike,v 1.2 2000/08/28 05:31:52 per Exp $\n");
       exit(0);
       break;
     }

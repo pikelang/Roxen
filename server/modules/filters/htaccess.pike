@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.63 2000/07/03 05:14:21 nilsson Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.64 2000/08/28 05:31:54 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -327,7 +327,7 @@ int validate_user(int|multiset users, array auth, string userfile, RequestID id)
     return 0;
   }
 
-  array st;
+  Stat st;
 
   if((!(st = file_stat(userfile))) || (st[1] == -4) || (!(passwd = Stdio.read_bytes(userfile))))
   {
@@ -401,7 +401,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
     return 0;
   }
 
-  array st;
+  Stat st;
 
   f = Stdio.File();
 
@@ -681,7 +681,7 @@ array rec_find_htaccess_file(RequestID id, string vpath)
     if((path = cache_path_of_htaccess(vpath,id)) != 0)
     {
       Stdio.File o;
-      array st;
+      Stat st;
 
       if (stringp(path) && (st = file_stat(path)) && (st[1] != -4))
       {
@@ -702,7 +702,7 @@ array rec_find_htaccess_file(RequestID id, string vpath)
   if(path = id->conf->real_file(vpath, id))
   {
     Stdio.File f;
-    array st;
+    Stat st;
 
     if((st = file_stat(path + query("file"))) && (st[1] != -4) &&
        (f = open(path + query("file"), "r")))
@@ -743,7 +743,7 @@ array new_find_htaccess_file(RequestID id, string vpath)
     if (path = cache_path_of_htaccess(vpath, id)) {
       HT_WERR(sprintf("Cached: path = %O\n", path));
 
-      array st;
+      Stat st;
 
       if (stringp(path) && (st = file_stat(path)) && (st[1] != -4)) {
 	Stdio.File f = open(path, "r");
@@ -792,7 +792,7 @@ array new_find_htaccess_file(RequestID id, string vpath)
       break;
     }
     string fname = p + query("file");
-    array st;
+    Stat st;
     if(st = file_stat(fname)) {
       HT_WERR(sprintf("Found htaccess-file: %O\n", fname));
       if (st[1] >= 0) {
@@ -813,7 +813,7 @@ array new_find_htaccess_file(RequestID id, string vpath)
   if (stringp(path)) {
     HT_WERR(sprintf("Result htaccess-file: %O\n", path));
 
-    array st;
+    Stat st;
     if ((st = file_stat(path)) && (st[1] >= 0)) {
       Stdio.File f = open(path, "r");
       if (f)
@@ -857,7 +857,7 @@ mapping htaccess_no_file(RequestID id)
 
   if(access && (access->nofile || (access->nofile=access->errorfile)))
   {
-    array st;
+    Stat st;
 
     if ((st = file_stat(access->nofile)) && (st[1] != -4) &&
 	(file = Stdio.read_bytes(access->nofile)))
@@ -900,7 +900,7 @@ mapping try_htaccess(RequestID id)
       {
 	if(access->errorfile)
 	{
-	  array st;
+	  Stat st;
 
 	  if ((st = file_stat(access->errorfile)) && (st[1] != -4) &&
 	      (file = Stdio.read_bytes(access->errorfile))) {
@@ -941,7 +941,7 @@ mapping try_htaccess(RequestID id)
       {
 	if(access->errorfile)
 	{
-	  array st;
+	  Stat st;
 
 	  if ((st = file_stat(access->errorfile)) && (st[1] != -4) &&
 	      (file = Stdio.read_bytes(access->errorfile))) {

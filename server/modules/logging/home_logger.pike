@@ -4,7 +4,7 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-constant cvs_version="$Id: home_logger.pike,v 1.28 2000/08/19 01:53:46 per Exp $";
+constant cvs_version="$Id: home_logger.pike,v 1.29 2000/08/28 05:31:55 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -125,7 +125,7 @@ class CacheFile {
     int res;
     mode = "wa";
     set_file = s;
-    if( array a = file_stat( s ) )
+    if( Stat a = file_stat( s ) )
     {
       if( a[ 1 ] < 0 )
       {

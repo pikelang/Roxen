@@ -55,7 +55,7 @@ void run(object env)
   if(arch == "")
     arch = "_";
   foreach(({arch+"/"+threads_type, arch+"/classic", arch}), string dir) {
-    array(int) s = file_stat(jrehome+"/lib/"+dir);
+    mixed s = file_stat(jrehome+"/lib/"+dir);
     if(s && s[1]==-2)
       env->append("LD_LIBRARY_PATH", jrehome+"/lib/"+dir);
   }

@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.18 2000/08/17 01:16:31 per Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.19 2000/08/28 05:31:52 per Exp $";
 
 //#define DEBUG
 
@@ -335,7 +335,7 @@ void find_all_files_in(string dir, function|void cb)
   string path;
   foreach(get_dir(dir)||({}), path)
   {
-    array st = file_stat(dir+path);
+    mixed st = file_stat(dir+path);
     if(st)
     {
       if(st[1] == -2)
@@ -504,7 +504,7 @@ static void got_command(object o, string cmd)
 
 int remove_one_file(string fname, int last_access)
 {
-  array s;
+  mixed s;
 #ifdef DEBUG
 //  werror("remove one file? "+fname+" --- ");
 #endif

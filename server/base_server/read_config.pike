@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.47 2000/08/24 22:45:19 per Exp $
+// $Id: read_config.pike,v 1.48 2000/08/28 05:31:50 per Exp $
 
 #include <module.h>
 
@@ -121,10 +121,9 @@ void really_save_it( string cl, mapping data )
   throw( err );
 }
 
-array config_is_modified(string cl)
+Stat config_is_modified(string cl)
 {
-  array st = file_stat(configuration_dir + replace(cl, " ", "_"));
-
+  Stat st = file_stat(configuration_dir + replace(cl, " ", "_"));
   if(st)
     if( !config_stat_cache[ cl ] )
       return st;

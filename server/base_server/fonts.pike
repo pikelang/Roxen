@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.55 2000/08/22 19:34:30 per Exp $
+// $Id: fonts.pike,v 1.56 2000/08/28 05:31:50 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -402,7 +402,7 @@ array available_fonts( )
       foreach(d,string f)
       {
 	if(f=="CVS") continue;
-	array a;
+	Stat a;
 	if((a=r_file_stat(dir+f)) && (a[1]==-2))
 	  res |= ({ replace(f,"_"," ") });
       }

@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.350 2000/08/24 19:54:17 lange Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.351 2000/08/28 05:31:49 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -580,7 +580,7 @@ public array(string) user_from_uid(int u, RequestID|void id)
 
 public string last_modified_by(Stdio.File file, RequestID id)
 {
-  array(int) s;
+  Stat s;
   int uid;
   array u;
 
@@ -915,7 +915,7 @@ string examine_return_mapping(mapping m)
      res += sprintf("%d bytes ", strlen(m->data));
    else if (objectp(m->file))
       if (catch {
-	 array a=m->file->stat();
+	 Stat a=m->file->stat();
 	 res += sprintf("%d bytes ", a[1]-m->file->tell());
       })
 	res += "? bytes ";
@@ -1453,10 +1453,10 @@ public array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 
 // Stat a virtual file.
 
-public array(int) stat_file(string file, RequestID id)
+public array(int)|Stat stat_file(string file, RequestID id)
 {
   string loc;
-  array s, tmp;
+  mixed s, tmp;
 #ifdef THREADS
   object key;
 #endif

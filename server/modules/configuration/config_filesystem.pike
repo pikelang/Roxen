@@ -16,7 +16,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.48 2000/08/21 12:59:23 lange Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.49 2000/08/28 05:31:53 per Exp $";
 
 constant path = "config_interface/";
 string encoding = "iso-8859-1";         // charset for pages
@@ -34,16 +34,16 @@ string template_for( string f, object id )
 
 // Try finding the locale-specific file first.
 // Returns ({ realfile, statinfo }).
-array(string|array) low_stat_file(string locale, string f, object id)
+array(string|Stat) low_stat_file(string locale, string f, object id)
 {
   foreach( ({ "../local/"+path, path }), string path )
   {
-    array ret;
+    Stat ret;
     if (!f) 
     {
-      ret = low_stat_file(locale, "", id);
+      mixed r2 = low_stat_file(locale, "", id);
 
-      if (ret) return ret;
+      if (r2) return r2;
       // Support stuff like /template  =>  /standard/template
       f = locale;
       locale = "standard";
@@ -77,7 +77,7 @@ string real_file( mixed f, mixed id )
   return stat_info && stat_info[0];
 }
 
-array stat_file( string f, object id )
+Stat stat_file( string f, object id )
 {
   while( strlen( f ) && (f[0] == '/' ))
     f = f[1..];
@@ -89,8 +89,8 @@ array stat_file( string f, object id )
 
   sscanf(f, "%[^/]/%s", locale, rest);
 
-  array(string|array) ret = low_stat_file(locale, rest, id);
-  return ret && ret[1];
+  array(string|Stat) ret = low_stat_file(locale, rest, id);
+  return ret && (ret[1]);
 }
 
 constant base ="<use file='%s' /><tmpl title='%s'>%s</tmpl>";
@@ -220,13 +220,13 @@ mixed find_file( string f, object id )
 
      if(tmpl)
        data = sprintf(base,tmpl,title,data);
-
      if( !id->misc->stat )
        id->misc->stat = allocate(10);
      id->misc->stat[ ST_MTIME ] = time(1);
      if(!id->misc->defines)
        id->misc->defines = ([]);
      id->misc->defines[" _stat"] = id->misc->stat;
+     
      retval = http_rxml_answer( data, id );
      NOCACHE();
      retval->stat = 0;

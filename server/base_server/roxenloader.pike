@@ -5,6 +5,7 @@
 // Sets up the roxen environment. Including custom functions like spawne().
 
 #include <stat.h>
+#include <config.h>
 //
 // NOTE:
 //	This file uses replace_master(). This implies that the
@@ -15,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.192 2000/08/25 12:27:50 jhs Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.193 2000/08/28 05:31:51 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -211,7 +212,7 @@ int mkdirhier(string from, int|void mode)
     if (query_num_arg() > 1) {
       mkdir(b+a, mode);
 #if constant(chmod)
-      array(int) stat = file_stat (b + a, 1);
+      Stat stat = file_stat (b + a, 1);
       if (stat && stat[0] & ~mode)
 	// Race here. Not much we can do about it at this point. :\
 	catch (chmod (b+a, stat[0] & mode));
@@ -445,7 +446,7 @@ class RoxenModule
   string query_location();
   string query_provides();
   array query_seclevels();
-  array(int) stat_file(string f, RequestID id);
+  array(int)|Stat stat_file(string f, RequestID id);
   array(String) find_dir(string f, RequestID id);
   mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
   string real_file(string f, RequestID id);
@@ -723,6 +724,7 @@ static private void initiate_cache()
 
 #if constant(_Roxen)
   add_constant("http_decode_string", _Roxen.http_decode_string );
+  add_constant( "Stat", Stat );
 #endif
   add_constant("cache_set", cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
@@ -1095,11 +1097,14 @@ int mv( string f1, string f2 )
   return predef::mv( roxen_path(f1), roxen_path( f2 ) );
 }
 
-array(int) file_stat( string filename, int|void slinks )
+Stat file_stat( string filename, int|void slinks )
 {
+  mixed k;
   if( slinks )
     return predef::file_stat( roxen_path(filename), slinks );
-  return predef::file_stat( roxen_path(filename) );
+  else
+    return predef::file_stat( roxen_path(filename) );
+  return 0;
 }
 
 object|void open(string filename, string mode, int|void perm)

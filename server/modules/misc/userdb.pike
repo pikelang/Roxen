@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.47 2000/08/23 18:44:34 per Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.48 2000/08/28 05:31:55 per Exp $";
 
 inherit "module";
 #include <module.h>
@@ -14,7 +14,7 @@ inherit "module";
    search ((cryptwd), "*") < 0 && search ((cryptwd), "!") < 0)
 
 mapping users, uid2user;
-array fstat;
+Stat fstat;
 void read_data();
 
 void report_io_error (string f, mixed... args)
@@ -357,10 +357,10 @@ void read_data_if_not_current()
   if (query("method") == "file" || query("method") == "shadow")
   {
     string filename=query("file");
-    array|int status=file_stat(filename);
+    Stat status=file_stat(filename);
     int mtime;
 
-    if (arrayp(status))
+    if (status)
       mtime = status[3];
     else
       return;

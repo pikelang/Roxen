@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.43 2000/08/23 14:13:18 jhs Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.44 2000/08/28 05:31:55 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -99,7 +99,7 @@ array init_groups( int uid, int gid )
 
 array verify_access( RequestID id )
 {
-  array us;
+  mixed us;
   if(!getuid())
   {
     if(query("user") && id->misc->is_user &&
@@ -108,7 +108,8 @@ array verify_access( RequestID id )
     {
       // Scan for symlinks
       string fname = "";
-      array a, b;
+      Stat a;
+      Stat b;
       foreach(id->misc->is_user/"/", string part)
       {
         fname += part;
@@ -143,10 +144,10 @@ array verify_access( RequestID id )
 	}
         fname += "/";
       }
-      us = us[5..6];
+      us = ({ us[5], us[6] }); // Yes, there is a reason for not having [5..6]
     }
     else if(us)
-      us = us[5..6];
+      us = ({ us[5], us[6] }); // Yes, there is a reason for not having [5..6]
     else
       us = lookup_user( query("runuser") );
   } else
@@ -873,7 +874,7 @@ void start(int n, Configuration conf)
   }
 }
 
-array stat_file( string f, RequestID id )
+Stat stat_file( string f, RequestID id )
 {
   DWERR("stat_file()");
   return file_stat( real_file( f, id ) );
@@ -918,7 +919,7 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
 {
   DWERR("find_file()");
 
-  array stat=stat_file(f,id);
+  Stat stat=stat_file(f,id);
   if(!stat) return 0;
 
   NOCACHE();

@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.535 2000/08/27 14:52:14 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.536 2000/08/28 05:31:50 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -682,10 +682,10 @@ class Protocol
         if(!mu) 
         {
           mu = urls[sorted_urls[0]];
-          if(!mu->conf->inited )
-            mu->conf->enable_all_modules();
-        }
-        c = mu->conf;
+          if(!(c=mu->conf)->inited )
+            c->enable_all_modules();
+        } else
+          c = mu->conf;
       }
       requesthandler( q, this_object(), c );
     }
@@ -710,7 +710,8 @@ class Protocol
         mu = urls[sorted_urls[0]];
         if(!(c=mu->conf)->inited) 
           c->enable_all_modules();
-      }
+      } else
+        c = mu->conf;
       if( mu->path )
       {
         id->not_query = id->not_query[strlen(mu->path)..];
@@ -1266,11 +1267,25 @@ class HTTP
   constant requesthandlerfile = "protocols/http.pike";
   constant default_port = 80;
 
+  int set_cookie, set_cookie_only_once;
+
+  void fix_cvars( Variable.Variable a )
+  {
+    set_cookie = query( "set_cookie" );
+    set_cookie_only_once = query( "set_cookie_only_once" );
+  }
+
   void create( mixed ... args )
   {
     set_up_http_variables( this_object() );
+    if( variables[ "set_cookie" ] )
+      variables[ "set_cookie" ]->set_changed_callback( fix_cvars );
+    if( variables[ "set_cookie_only_once" ] )
+      variables[ "set_cookie_only_once" ]->set_changed_callback( fix_cvars );
+    fix_cvars(0);
     ::create( @args );
   }
+
 }
 
 class HTTPS
@@ -1434,9 +1449,21 @@ class HTTPS
   }
 #endif /* constant(SSL.sslfile) */
 
+  int set_cookie, set_cookie_only_once;
+  void fix_cvars( Variable.Variable a )
+  {
+    set_cookie = query( "set_cookie" );
+    set_cookie_only_once = query( "set_cookie_only_once" );
+  }
+
   void create( mixed ... args )
   {
     set_up_http_variables( this_object() );
+    if( variables[ "set_cookie" ] )
+      variables[ "set_cookie" ]->set_changed_callback( fix_cvars );
+    if( variables[ "set_cookie_only_once" ] )
+      variables[ "set_cookie_only_once" ]->set_changed_callback( fix_cvars );
+    fix_cvars(0);
     ::create( @args );
   }
 }
@@ -2389,7 +2416,7 @@ class ImageCache
   //! parameter was given.)
   {
     int files=0, size=0, aged=0;
-    array stat;
+    Stat stat;
     foreach(r_get_dir(dir), string f)
       if(f[-2]=='.' && (f[-1]=='i' || f[-1]=='d')) {
 	files++;
@@ -3003,7 +3030,8 @@ void reload_all_configurations()
 
   foreach(list_all_configurations(), string config)
   {
-    array err, st;
+    mixed err;
+    Stat st;
     conf = find_configuration( config );
     if(!(st = config_is_modified(config))) {
       if(conf) {

@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.86 2000/08/23 18:53:09 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.87 2000/08/28 05:31:54 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -195,7 +195,7 @@ string query_location()
 
 mixed stat_file( string f, RequestID id )
 {
-  array fs;
+  Stat fs;
 
   FILESYSTEM_WERR("stat_file for \""+f+"\"" +
 		  (id->misc->internal_get ? " (internal)" : ""));
@@ -386,7 +386,7 @@ string decode_path( string p )
 
 int _file_size(string X,object id)
 {
-  array fs;
+  Stat fs;
   if( stat_cache )
   {
     if(!id->pragma["no-cache"]&&(fs=cache_lookup("stat_cache",(X))))
@@ -408,11 +408,12 @@ int _file_size(string X,object id)
 int contains_symlinks(string root, string path)
 {
   array arr = path/"/";
+  Stat rr;
 
   foreach(arr - ({ "" }), path) {
     root += "/" + path;
-    if (arr = file_stat(decode_path(root), 1)) {
-      if (arr[1] == -3) {
+    if (rr = file_stat(decode_path(root), 1)) {
+      if (rr[1] == -3) {
 	return(1);
       }
     } else {

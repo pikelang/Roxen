@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.25 2000/08/22 19:00:25 nilsson Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.26 2000/08/28 05:31:54 per Exp $";
 constant module_type = MODULE_PARSER;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -123,7 +123,7 @@ mapping get_my_args( mapping args, RequestID id )
   if( a->src )
     catch 
     {
-      array st = id->conf->stat_file(a->src, id) || file_stat(a->src);
+      Stat st = id->conf->stat_file(a->src, id) || file_stat(a->src);
       if (st) {
 	a->mtime = (string) (a->stat = st[ST_MTIME]);
 	a->filesize = (string) st[ST_SIZE];

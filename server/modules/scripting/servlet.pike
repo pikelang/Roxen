@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 #if constant(Servlet.servlet)
-string cvs_version = "$Id: servlet.pike,v 2.11 2000/08/02 15:22:42 marcus Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.12 2000/08/28 05:31:55 per Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -87,7 +87,7 @@ class ClassPathList
       value = ({ value });
     string warn = "";
     foreach( value-({""}), string value ) {
-      array s = r_file_stat( value );
+      Stat s = r_file_stat( value );
       Stdio.File f = Stdio.File();
       if( !s )
         warn += value+" does not exist\n";

@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.162 2000/08/23 12:26:23 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.163 2000/08/28 05:31:56 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -670,7 +670,7 @@ class TagFSize {
 
     array do_return(RequestID id) {
       catch {
-	array s = id->conf->stat_file(Roxen.fix_relative( args->file, id ), id);
+	Stat s=id->conf->stat_file(Roxen.fix_relative( args->file, id ), id);
 	if (s && (s[1]>= 0)) {
 	  result = Roxen.sizetostring(s[1]);
 	  return 0;
@@ -1038,7 +1038,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
     return "A. Nonymous.";
   }
 
-  array(int) s;
+  Stat s;
   if(m->realfile)
     s = file_stat(m->realfile);
   else if (_stat)

@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.46 2000/08/21 10:02:59 jhs Exp $
+// $Id: http.pike,v 1.47 2000/08/28 05:31:50 per Exp $
 
 //#pragma strict_types
 
@@ -111,7 +111,9 @@ mapping http_rxml_answer( string rxml, RequestID id,
 //! easiest way to do it if you don't want to worry about the internal
 //! roxen structures.
 {
-  rxml = ([function(string, RequestID, Stdio.File:string)]id->conf->parse_rxml)(rxml, id, file);
+  rxml = 
+       ([function(string,RequestID,Stdio.File:string)]id->conf->parse_rxml)
+       (rxml, id, file);
   HTTP_WERR("RXML answer ("+(type||"text/html")+")");
   return (["data":rxml,
 	   "type":(type||"text/html"),
@@ -123,6 +125,7 @@ mapping http_rxml_answer( string rxml, RequestID id,
 }
 
 mapping http_try_again( float delay )
+//! Causes the request to be retried in delay seconds.
 {
   return ([ "try_again_later":delay ]);
 }

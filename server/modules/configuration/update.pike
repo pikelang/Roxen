@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.16 2000/08/17 01:16:32 per Exp $
+ * $Id: update.pike,v 1.17 2000/08/28 05:31:54 per Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -326,7 +326,7 @@ mapping get_package_info(string dir, int package)
     return 0;
   string s=fd->read();
   fd->close();
-  array stat=file_stat(roxen_path(QUERY(pkgdir))+package+".tar");
+  Stat stat=file_stat(roxen_path(QUERY(pkgdir))+package+".tar");
   return parse_info_file(s) | ([ "size":stat[1] ]);    
 }
 
@@ -587,8 +587,7 @@ mapping get_headers()
 
 int completely_downloaded(int num)
 {
-  array stat=r_file_stat(roxen_path(QUERY(pkgdir))+num+".tar");
-
+  Stat stat=r_file_stat(roxen_path(QUERY(pkgdir))+num+".tar");
   return (stat && (stat[1]==pkginfo[(string)num]->size));
 }
 

@@ -1,3 +1,4 @@
+#include <config.h>
 
 string get_id(string from)
 {
@@ -34,7 +35,7 @@ string program_name_version( program what )
   string file = roxen.filename( what );
   string ofile;
   string name = file, warning="";
-  array(int) ofs, fs;
+  Stat ofs, fs;
 
   catch
   {

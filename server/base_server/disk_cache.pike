@@ -1,7 +1,8 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.53 2000/08/17 14:38:21 per Exp $
+// $Id: disk_cache.pike,v 1.54 2000/08/28 05:31:50 per Exp $
 
+#include <config.h>
 #include <module_constants.h>
 #include <stat.h>
 
@@ -701,7 +702,7 @@ void http_check_cache_file(object cachef)
     DELETE_AND_RETURN();
 
   if(cachef->headers[" returncode"] == 304) {
-    array fstat = file_stat(cachef->rfiledone);
+    Stat fstat = file_stat(cachef->rfiledone);
     if(fstat && cachef->headers["last-modified"]) {
       if(Roxen.is_modified(cachef->headers["last-modified"], fstat[ST_CTIME])) {
         rmold(cachef->rfiledone);

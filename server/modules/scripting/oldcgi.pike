@@ -373,7 +373,7 @@ static inline array make_args( string rest_query )
     return (array (string))({});  return replace(rest_query,"\000", " ")/" ";
 }
 
-array stat_file(string f, object id) 
+Stat stat_file(string f, object id) 
 {
 #ifdef CGI_DEBUG
   werror("CGI: stat_file(\"" + f + "\")\n");
@@ -882,7 +882,7 @@ class spawn_cgi
 
     if(wrapper) 
     {
-      array us;
+      Stat us;
       wrapper = combine_path(getcwd(), wrapper);
       if(!(us = file_stat(wrapper)) ||
 	 !(us[0]&0111)) 
@@ -1164,7 +1164,7 @@ mixed low_find_file(string f, object id, string path)
   }
   
   mixed uid;
-  array us;
+  Stat us;
   if(query("noexec"))
   {
     us = file_stat(f);
@@ -1179,7 +1179,7 @@ mixed low_find_file(string f, object id, string path)
        (us[5] >= 10)) {
       // Scan for symlinks
       string fname = "";
-      array a,b;
+      Stat a,b;
       foreach(id->misc->is_user/"/", string part) {
 	fname += part;
 	if ((fname != "") &&

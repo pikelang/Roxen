@@ -571,7 +571,7 @@ class File
     return Stdio.read_bytes( query() );
   }
 
-  array stat()
+  Stat stat()
   //! Stat the file
   {
     return file_stat( query() );
@@ -628,7 +628,7 @@ class Directory
     return ::verify_set( value );
   }
 
-  array stat()
+  Stat stat()
   //! Stat the directory
   {
     return file_stat( query() );

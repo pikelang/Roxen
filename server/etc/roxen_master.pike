@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.96 2000/08/15 01:15:33 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.97 2000/08/28 05:31:52 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -211,11 +211,9 @@ array(string) query_precompiled_names(string fname)
 array master_file_stat(string x) 
 { 
   lambda(){}(); // avoid some optimizations
-  return file_stat( x ); 
+  mixed y = file_stat( x );
+  return y?(array(int))y:0;
 }
-
-#define master_file_stat( x ) file_stat( x )
-
 
 #if constant(_static_modules.Builtin.mutex)
 #define THREADED
@@ -342,7 +340,7 @@ int refresh( program p, int|void force )
     return 1;
   }
 
-  array s=file_stat( fname );
+  array s=master_file_stat( fname );
 
   if( s && s[1]>=0 )
   {
