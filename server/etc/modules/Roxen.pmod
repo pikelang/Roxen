@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.163 2004/11/23 10:06:21 grubba Exp $
+// $Id: Roxen.pmod,v 1.164 2005/02/08 14:25:31 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -282,7 +282,7 @@ string short_name(string|Configuration long_name)
     return "x"+id[..19];
 
   while( strlen(string_to_utf8( id )) > 20 )
-    id = id[..strlen(id)-1];
+    id = id[..strlen(id)-2];
 
   return string_to_utf8( id );
 }
@@ -3441,7 +3441,7 @@ class FormScope
 	q *= "\0";
       return type->encode (q);
     }
-    else return q;
+    return q;
   }
 
   void _m_delete (string var, void|RXML.Context ctx, void|string scope_name)
