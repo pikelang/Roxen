@@ -30,7 +30,7 @@
 #define S_IXGRP 0010
 
 #define S_IRWXO 0007
-#define S_IROTH 0006
+#define S_IROTH 0004
 #define S_IWOTH 0002
 #define S_IXOTH 0001
 
