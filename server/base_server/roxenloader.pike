@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.87 1999/08/06 03:13:55 per Exp $
+ * $Id: roxenloader.pike,v 1.88 1999/08/06 04:00:40 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.87 1999/08/06 03:13:55 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.88 1999/08/06 04:00:40 per Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -87,13 +87,30 @@ int use_syslog, loggingfield;
  * Some efuns used by Roxen
  */
 
-string oct = "                                  ";
+string oct;
+int last_was_change;
+int roxen_started = time();
 string short_time()
 {
-  mapping l = localtime( time() );
-  string ct =  sprintf("%02d:%02d:%02d", l->hour, l->min, l->sec );
+  time();
+  time(1);
+  time(time());
+  mapping l = localtime( time( ) );
+  string ct =  sprintf("%2d:%02d:%02d : ", l->hour, l->min, l->sec );
   int i;
-  if( ct == oct ) return "        ";
+  if( (last_was_change>0) || (ct==oct))
+    switch( last_was_change-- )
+    {
+     default:
+       return "         : ";
+     case 1:
+      return sprintf( "%7.2fh : ",(time()-roxen_started)/3600.0 );
+     case 2:
+      return sprintf( "%7.2fm : ",(time()-roxen_started)/60.0 );
+     case 3:
+      return sprintf( "%7.1fs : ",((time()-roxen_started+time(time())) ));
+    }
+  last_was_change=3;
   oct = ct;
   return ct;
 }
@@ -106,7 +123,7 @@ void roxen_perror(string format,mixed ... args)
 
   if (perror_status_reported < t) 
   {
-    stderr->write(short_time()+":   pid: "+pid+"   ppid: "+getppid()+
+    stderr->write(short_time()+"   pid: "+pid+"   ppid: "+getppid()+
 #if efun(geteuid)
 		  (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
 #endif
@@ -128,11 +145,17 @@ void roxen_perror(string format,mixed ... args)
       syslog(LOG_DEBUG, replace(message+"\n", "%", "%%"));
 #endif
 
-  string t = short_time()+": ";
-  stderr->write( (last_was_nl?t:"") + 
-                 replace(format[..strlen(format)-2], "\n", 
-                         "\n"+(last_was_nl?t:short_time()+": ") ));
-  stderr->write( format[strlen(format)-1..strlen(format)-1] );
+  if( search( format, "\n" ) == -1 )
+    stderr->write( (last_was_nl?short_time():"") + format ); 
+  else if( search( format, "\n" ) == strlen(format)-1 )
+    stderr->write( (last_was_nl?short_time():"") + format ); 
+  else 
+  {
+    stderr->write( (last_was_nl?short_time():"") + 
+                   replace(format[..strlen(format)-2], "\n", 
+                           "\n"+("         : ") ));
+    stderr->write( format[strlen(format)-1..strlen(format)-1] );
+  }
   last_was_nl = format[-1] == '\n';
 }
 
@@ -491,7 +514,7 @@ void load_roxen()
   
   roxen = really_load_roxen();
 
-  perror("Roxen version "+roxen->cvs_version+"\n"
+  perror("roxen.pike version "+(roxen->cvs_version/ " ")[2]+"\n"
 	 "Roxen release "+roxen->real_version+"\n"
 #ifdef __NT__
 	 "Running on NT\n"
@@ -754,8 +777,9 @@ int main(mixed ... args)
 {
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
-  roxen_perror("\n\n"+version()+"\n");
-  roxen_perror("Roxen loader version "+cvs_version+"\n");
+  last_was_nl = 1;
+  roxen_perror("\n\n\n"+version()+"\n");
+  roxen_perror("Roxen loader version "+(cvs_version/" ")[2]+"\n");
   roxen_perror("Roxen started on "+ctime(time()));	// ctime has an lf.
   master()->putenv("PIKE_INCLUDE_PATH", path);
   foreach(path/":", string p) {

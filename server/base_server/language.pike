@@ -4,7 +4,7 @@
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.13 1998/04/24 08:39:36 per Exp $
+ * $Id: language.pike,v 1.14 1999/08/06 04:00:45 per Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -28,7 +28,7 @@ void initiate_languages()
 		 "Most RXML tags will not work as expected!\n");
     return 0;
   }
-  p = "Adding languages: ";
+  report_debug( "Adding languages:\n");
   foreach(langs, lang)
   {
     if(lang[-1] == 'e')
@@ -37,11 +37,14 @@ void initiate_languages()
       string alias;
       object l;
       mixed err;
-      p += String.capitalize(lang[0..search(lang, ".")-1])+" ";
+      report_debug("     "+
+                    String.capitalize(lang[0..search(lang, ".")-1])+": ");
       if (err = catch {
 	l = compile_file("languages/"+lang)();
 	if(tmp=l->aliases()) {
-	  foreach(tmp, alias) {
+	  foreach(tmp, alias) 
+          {
+            report_debug( alias+" " );
 	    languages[alias] = ([ "month":l->month,
 				  "ordered":l->ordered,
 				   "date":l->date,
@@ -51,6 +54,8 @@ void initiate_languages()
 					      * 96-04-15. Probably fixed. */
 			       ]);
 	  }
+          report_debug( "\n" );
+
 	} 
       }) {
 	report_error(sprintf("Initialization of language %s failed:%s\n",
@@ -58,7 +63,7 @@ void initiate_languages()
       }
     }
   }
-  report_notice(p+"\n");
+  report_debug( "Done\n" );
 }
 
 private string nil()
