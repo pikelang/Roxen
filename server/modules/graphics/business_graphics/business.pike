@@ -12,9 +12,9 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.129 2000/05/26 18:07:21 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.130 2000/08/20 00:28:10 nilsson Exp $";
 constant thread_safe = 1;
-constant module_type = MODULE_PARSER|MODULE_LOCATION;
+constant module_type = MODULE_PARSER;
 constant module_name = "Business graphics";
 constant module_doc  = 
 #"Provides the <tt>&lt;diagram&gt;</tt> tag that draws bar charts, line charts,
@@ -477,10 +477,7 @@ string container_diagram(string tag, mapping m, string contents,
     res->name=m->name[..l];
     if (m->namesize)
       res->namesize=(int)m->namesize;
-    if (m->namecolor)
-      res->namecolor=parse_color(m->namecolor);
-    else
-      res->namecolor=parse_color(id->misc->defines->fg);
+    res->namecolor=parse_color(m->namecolor||id->misc->defines->fgcolor);
   }
 
   res->voidsep = m->voidseparator || m->voidsep;
@@ -501,14 +498,10 @@ string container_diagram(string tag, mapping m, string contents,
   else if (m->colorbg)
     res->colorbg=parse_color(m->colorbg);
 
-  if ((m->bgcolor)&&(m->notrans))
-  {
-    res->colorbg=parse_color(m->bgcolor);
+  if (m->notrans) {
+    res->colorbg=parse_color(m->bgcolor||m->colorbg||id->misc->defines->bgcolor||"white");
     m_delete(m, "bgcolor");
   }
-  else
-    if (m->notrans)
-      res->colorbg=parse_color("white");
 
   res->drawtype="linear";
 
@@ -570,8 +563,8 @@ string container_diagram(string tag, mapping m, string contents,
   if ( !res->data || !sizeof(res->data))
     return syntax("No data for the diagram");
 
-  res->bg = parse_color(m->bgcolor || id->misc->defines->bg || "white");
-  res->fg = parse_color(m->textcolor || id->misc->defines->fg || "black");
+  res->bg = parse_color(m->bgcolor || id->misc->defines->bgcolor || "white");
+  res->fg = parse_color(m->textcolor || id->misc->defines->fgcolor || "black");
 
   if(m->center) res->center = (int)m->center;
   if(m->eng) res->eng=1;
@@ -584,9 +577,9 @@ string container_diagram(string tag, mapping m, string contents,
   res->legendfontsize = (int)m->legendfontsize || res->fontsize;
   res->labelsize      = (int)m->labelsize || res->fontsize;
 
-  if(m->labelcolor) res->labelcolor=parse_color(m->labelcolor || id->misc->defines->fg);
-  res->axcolor   = parse_color(m->axcolor || id->misc->defines->fg);
-  res->gridcolor = parse_color(m->gridcolor || id->misc->defines->fg);
+  if(m->labelcolor) res->labelcolor=parse_color(m->labelcolor || id->misc->defines->fgcolor || "black");
+  res->axcolor   = parse_color(m->axcolor || id->misc->defines->fgcolor || "black");
+  res->gridcolor = parse_color(m->gridcolor || id->misc->defines->fgcolor || "black");
   res->linewidth = m->linewidth || "2.2";
   res->axwidth   = m->axwidth || "2.2";
 
@@ -715,6 +708,7 @@ int|object PPM(string fname, object id)
 {
   return roxen->load_image( fname, id );
 }
+
 
 mapping find_internal(string f, object id)
 {
