@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.118 2000/10/19 01:51:10 mast Exp $
+//! $Id: module.pmod,v 1.119 2000/11/02 16:52:08 per Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -951,14 +951,59 @@ class Context
     if(scope_name) return get_var(var, scope_name, want_type);
     array(string) splitted = Array.map( replace(var, "..", ";") / ".",
 					lambda(string in) { return replace(in, ";", "."); });
-    if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
-    if(sizeof(splitted)==2)
-      scope_name=splitted[0];
+
+    //     if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
+
+    if(sizeof(splitted)>1)
+      scope_name = splitted[0];
 #ifdef OLD_RXML_COMPAT
     else if (compatible_scope)
       scope_name = scope_name || "form";
 #endif
-    return get_var(splitted[-1], scope_name, want_type);
+    mixed var = get_var( splitted[1], scope_name,
+			 (sizeof( splitted )<3 ? want_type : 0) );
+    foreach( splitted[2..], string index )
+    {
+      // This should be at the top, so it's not done for the last index.
+      scope_name = (scope_name||"_")+"."+index;
+      if( objectp(var) && ([object]var)->rxml_var_eval )
+	var = var->rxml_var_eval( this_object(), var, scope_name, 0);
+
+ // stringp was not really a good idea.
+      if( arrayp( var ) /*|| stringp( var )*/ )
+	if( int ind = (int)index )
+	  if( (ind > sizeof( var ))
+	      || ((ind < 0) && (-ind > sizeof( var ) )) )
+	    parse_error( "Array not big enough for index %d.\n", ind );
+	  else if( ind < 0 )
+	    var = var[ind];
+	  else
+	    var = var[ind-1];
+	else
+	  parse_error( "Cannot index array with %O\n", ind );
+      else if( objectp( var ) && var->`[] )
+	var=var->`[](index, this_object(), scope_name);
+      else if( mappingp( var ) || multisetp( var ) )
+	var = var[ index ];
+      else 
+	if( index == splitted[-1] )
+	  // one level of illegal index is OK with this code. 
+	  // basically: <if variable='form.foo.1'> There is really no
+	  // other way to check if the variable 'foo' in the form
+	  // scope is an array or only has a single value.
+	  var = nil;
+    }
+
+    if (sizeof( splitted ) > 2 && want_type )
+    {
+      if( objectp(var) && ([object]var)->rxml_var_eval )
+	return var->rxml_var_eval( this_object(), var, scope_name, want_type );
+      return
+	// FIXME: Some system to find out the source type?
+	zero_type (var = want_type->encode (var)) ||
+	var == nil ? ([])[0] : var;
+    }
+    return var;
   }
 
   local mixed set_var (string var, mixed val, void|string scope_name)
@@ -986,7 +1031,7 @@ class Context
     if(scope_name) return set_var(var, val, scope_name);
     array(string) splitted = Array.map( replace(var, "..", ";") / ".",
 					lambda(string in) { return replace(in, ";", "."); });
-    if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
+//     if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
 #ifdef OLD_RXML_COMPAT
@@ -3056,28 +3101,36 @@ class Parser
   {
     // We're always evaluating here, so context is always set.
     if(varref[0]==':') return ({ "&"+varref[1..]+";" });
-    array(string) split = Array.map( replace(varref, "..", ";") / ".",
-				     lambda(string in) { return replace(in, ";", "."); });
-    if (sizeof (split) == 2)
-      if (mixed err = catch {
-	sscanf (split[1], "%[^:]:%s", split[1], string encoding);
-	context->current_var = varref;
-	mixed val;
-	if (zero_type (val = context->get_var ( // May throw.
-			 split[1], split[0], encoding ? t_text : surrounding_type))) {
-	  context->current_var = 0;
-	  return ({});
-	}
+//     array(string) split = Array.map( replace(varref, "..", ";") / ".",
+// 				     lambda(string in) { return replace(in, ";", "."); });
+//     if (sizeof (split) == 2)
+    if (mixed err = catch {
+      string encoding;
+      if( (sscanf (reverse(varref), "%[^:]:%s", encoding, varref) == 2)
+	  && strlen(encoding) )
+      {
+	encoding = reverse( encoding );
+	varref = reverse( varref );
+      }
+      else
+	encoding = 0;
+      context->current_var = varref;
+      mixed val;
+      if (zero_type (val = context->user_get_var ( // May throw.
+		       varref,0,encoding?t_text:surrounding_type))) {
 	context->current_var = 0;
-	return encoding ? ({Roxen->roxen_encode (val, encoding)}) : ({val});
-      }) {
-	context->current_var = 0;
-	context->handle_exception (err, this_object()); // May throw.
 	return ({});
       }
+      context->current_var = 0;
+      return encoding ? ({Roxen->roxen_encode (val, encoding)}) : ({val});
+    }) {
+      context->current_var = 0;
+      context->handle_exception (err, this_object()); // May throw.
+      return ({});
+    }
     if (!surrounding_type->free_text)
-      parse_error ("Unknown variable reference &%s; not allowed in this context.\n",
-		   varref);
+      parse_error ("Unknown variable reference &%s; not allowed in this "
+		   "context.\n", varref);
     return 0;
   }
 
