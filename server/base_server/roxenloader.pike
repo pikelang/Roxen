@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.75 1998/07/12 22:02:27 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.76 1998/07/12 22:40:32 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -742,6 +742,7 @@ int main(mixed ... args)
   add_constant("perror",perror);
   add_constant("roxen_perror",perror);
   add_constant("popen",popen);
+  add_constant("roxen_popen",popen);
 
   add_constant("roxenp", lambda() { return roxen; });
   add_constant("report_notice", report_notice);
