@@ -402,7 +402,7 @@ string set_variable( string v, object in, mixed to, object id )
        else if( var[ VAR_TYPE ] == TYPE_DIR_LIST )
          foreach( val, string d )
            if( !(file_stat( d ) && (file_stat( d )[ ST_SIZE ] == -2 )))
-             warning += "<font color=darkred>"+val+
+             warning += "<font color=darkred>"+d+
                      " is not a directory</font><br>";
      } else {
        if( var[VAR_TYPE]  == TYPE_INT_LIST )

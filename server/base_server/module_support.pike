@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.26 1999/10/04 15:11:55 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.27 1999/10/06 23:07:52 grubba Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -346,7 +346,7 @@ class Module
 
   int rec_find_module( string what, string dir )
   {
-    array dirlist = get_dir( dir ) - ({"CVS"});
+    array dirlist = (get_dir(dir) || ({})) - ({"CVS"});
     if( search( dirlist, ".nomodules" ) != -1)
       return 0;
     foreach( dirlist, string file )
