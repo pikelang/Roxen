@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.560 2004/04/28 16:30:11 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.561 2004/04/28 17:48:35 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1328,6 +1328,7 @@ string examine_return_mapping(mapping m)
    return res;
 }
 
+#if 0
 //! Attempt to lock @[path].
 //!
 //! @param path
@@ -1429,6 +1430,7 @@ mapping(string:mixed)|string lock_file(string path,
   // Success.
   return locktoken;
 }
+#endif
 
 mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 //! The function that actually tries to find the data requested. All

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.165 2004/04/28 16:30:55 grubba Exp $
+// $Id: module.pike,v 1.166 2004/04/28 17:52:43 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -307,7 +307,7 @@ class DefaultPropertySet
       sub_id->raw_url = replace (id->raw_url, id->not_query, sub_id->not_query);
       sub_id->method = "HEAD";
 
-      mapping(string:mixed)|int(-1..-1)|object res = find_file (path, sub_id);
+      mapping(string:mixed)|int(-1..0)|object res = find_file (path, sub_id);
       if (res == -1) res = ([]);
       else if (objectp (res)) {
 	string ext;
@@ -355,11 +355,6 @@ PropertySet|mapping(string:mixed) query_properties(string path, RequestID id)
 
 //! Returns the value of the specified property, or an error code
 //! mapping.
-//!
-//! @param st
-//!   If set, this should be the stat that corresponds to @[path]. Its
-//!   only purpose is to save a call to @[stat_file] when the stat
-//!   already has been retrieved.
 //!
 //! @note
 //!   Returning a string is shorthand for returning an array
@@ -553,6 +548,7 @@ mapping(string:mixed) remove_property (string path, string prop_name,
   return 0;
 }
 
+#if 0
 //! Mapping from canonical path to a mapping from username to
 //! the locks that apply to the path.
 //!
@@ -755,6 +751,7 @@ DAVLock|mapping(string:mixed) lock_file(string path,
 {
   return 0;
 }
+#endif
 
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 						      RequestID id);
