@@ -134,15 +134,17 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       //      if (diagram_data["labels"][2] && sizeof(diagram_data["labels"][2]))
       //label=diagram_data["labels"][0]+" ["+diagram_data["labels"][2]+"]"; //Xstorhet
       //else
-	label=diagram_data["labels"][0];
-
-      labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
-	write(label)->scale(0,diagram_data["labelsize"]);
+      label=diagram_data["labels"][0];
+      if ((label!="")&&(label!=0))
+	labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
+	  write(label)->scale(0,diagram_data["labelsize"]);
+      else
+	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
       labely=diagram_data["labelsize"];
       labelx=labelimg->xsize();
     }
 
-  //Bar fixat hit FIXME!
+
 
   int ypos_for_xaxis; //avstånd NERIFRÅN!
   int xpos_for_yaxis; //avstånd från höger
@@ -292,6 +294,50 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   write("xstart:"+diagram_data["xstart"]+"\nystart"+diagram_data["ystart"]+"\n");
   write("xstop:"+diagram_data["xstop"]+"\nystop"+diagram_data["ystop"]+"\n");
 
+  if (diagram_data["type"]=="sumbars")
+    {
+      int s=sizeof(diagram_data["data"][0]);
+      float barw=diagram_data["xspace"]*xmore/3.0;
+      for(int i=0; i<s; i++)
+	{
+	  int j=0;
+	  float x,y;
+	  x=xstart+(diagram_data["xspace"]/2.0+diagram_data["xspace"]*i)*
+	    xmore;
+	  
+	  y=-(-diagram_data["yminvalue"])*ymore+
+	    diagram_data["ysize"]-ystart;	 
+	  float start=y;
+
+	  foreach(column(diagram_data["data"], i), float d)
+	    {
+	      y-=d*ymore;
+	      
+	      
+	      barsdiagram->setcolor(@(diagram_data["datacolors"][j++]));
+	      
+	      barsdiagram->polygone(
+				    ({x-barw+0.01, y //FIXME
+				      , x+barw+0.01, y, //FIXME
+				      x+barw, start
+				      , x-barw, start
+				    }));  
+	      barsdiagram->setcolor(0,0,0);
+	      draw(barsdiagram, 0.5, 
+		   ({
+		     x-barw, start,
+		     x-barw+0.01, y //FIXME
+		     , x+barw+0.01, y, //FIXME
+		     x+barw, start
+
+		   })
+		   );
+
+	      start=y;
+	    }
+	}
+    }
+  else
   if (diagram_data["subtype"]=="line")
     if (diagram_data["drawtype"]=="linear")
       foreach(diagram_data["data"], array(float) d)
@@ -694,13 +740,15 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       int x;
       int y;
 
-      if (diagram_data["labels"][3] || sizeof(diagram_data["labels"][3]))
+      if (diagram_data["labels"][3] && sizeof(diagram_data["labels"][3]))
 	label=diagram_data["labels"][1]+" ["+diagram_data["labels"][3]+"]"; //Ystorhet
       else
 	label=diagram_data["labels"][1];
-
-      labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
-	write(label)->scale(0,diagram_data["labelsize"]);
+      if ((label!="")&&(label!=0))
+	labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
+	  write(label)->scale(0,diagram_data["labelsize"]);
+      else
+	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
       
       
 	//if (labelimg->xsize()> barsdiagram->xsize())
@@ -737,15 +785,15 @@ int main(int argc, string *argv)
   write("\nRitar axlarna. Filen sparad som test.ppm\n");
 
   mapping(string:mixed) diagram_data;
-  diagram_data=(["type":"bars",
+  diagram_data=(["type":"sumbars",
 		 "textcolor":({0,0,0}),
-		 "subtype":"box",
+		 "subtype":"norm",
 		 "orient":"vert",
 		 "data": 
-		 ({ ({91.2, 102.3, -94.01, 100.0, 94.3, 102.0 })/*,
-		     ({91.2, 101.3, 91.5, 101.7,  -91.0, 101.5}),
-		    ({91.2, 103.3, -91.5, 100.1, 94.3, 95.2 }),
-		    ({93.2, -103.3, 93.5, 103.7, 94.3, -91.2 }) */}),
+		 ({ ({91.2, 102.3, 94.01, 100.0, 94.3, 102.0 }),
+		     ({91.2, 101.3, 91.5, 101.7,  41.0, 101.5}),
+		    ({91.2, 103.3, 41.5, 100.1, 94.3, 95.2 }),
+		    ({93.2, 13.3, 93.5, 103.7, 94.3, 41.2 }) }),
 		 "fontsize":32,
 		 "axcolor":({0,0,0}),
 		 "bgcolor":({255,255,255}),
@@ -756,7 +804,7 @@ int main(int argc, string *argv)
 		 "ysize":200,
 		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun"}),
 		 "fontsize":16,
-		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
+		 "labels":0,//({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":12,
 		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" }),
 		 "labelsize":12,
