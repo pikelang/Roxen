@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.568 2004/05/06 16:51:16 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.569 2004/05/06 18:40:33 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1456,7 +1456,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 					int(0..1) recursive,
 					string lockscope,
 					string locktype,
-					string owner,
+					array(Parser.XML.Tree.Node) owner,
 					RequestID id)
 {
   // Canonicalize path.
@@ -1739,7 +1739,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     foreach(location_module_cache||location_modules(), tmp)
     {
       loc = tmp[0];
-      if(!search(file, loc))
+      if(has_prefix(file, loc))
       {
 	TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
