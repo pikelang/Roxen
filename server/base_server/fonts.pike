@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.30 1999/08/09 09:35:49 per Exp $ */
+/* $Id: fonts.pike,v 1.31 1999/11/23 06:38:36 per Exp $ */
 
 #include <module.h>
 
@@ -197,6 +197,11 @@ class TTFWrapper
     return size;
   }
 
+  string _sprintf()
+  {
+    return sprintf( "TTF(%O,%d)", real, size );
+  }
+
   array text_extents( string what )
   {
     object o = real->write( what );
@@ -236,7 +241,7 @@ object get_font(string f, int size, int bold, int italic,
       f = lower_case(f);
       if( ttf_font_names_cache[ lower_case(f) ][ (name/"/")[1] ] )
       {
-	object f = Image.TTF( ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]]);
+	object f = Image.TTF( ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]] );
 	f = TTFWrapper( f(), size );
 	cache_set("fonts", key, f); 
 	return f;
