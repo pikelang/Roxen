@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.861 2004/02/09 16:51:40 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.862 2004/02/09 18:22:46 wellhard Exp $";
 
 //! @appears roxen
 //!
@@ -3639,35 +3639,50 @@ class ArgCache
   // entries created after from_time to a file. Returns 0 if faled, 1
   // otherwise.
   {
-    array(int) ids;
-    if(!sizeof(plugins)) {
-      if(from_time)
-	ids = (array(int))
-          QUERY( "SELECT id from "+name+
-		 " WHERE atime >= %d "
-		 "   AND index_id IS NOT NULL", from_time )->id;
-      else
-	ids = (array(int))
-          QUERY( "SELECT id from "+name )->id;
-    }
-    else
-      ids = ((plugins->get_local_ids-({0}))(from_time)) * ({});
+    constant FETCH_ROWS = 10000;
     
     if(sizeof(secret+"\n") != file->write(secret+"\n"))
       return 0;
 
-    foreach(ids, int id) {
-      int index_id = read_index_id(id);
+    // The server does only need to use file based argcache
+    // replication if the server don't participate in a replicate
+    // setup with a shared database.
+    if( !has_value((plugins->is_functional-({0}))(), 1) )
+    {
+      int cursor;
+      array(int) ids;
+      do {
+	if(from_time)
+	  // Only replicate entries accessed during the prefetch crawling.
+	  ids = 
+	    (array(int))
+	    QUERY( "SELECT id from "+name+
+		   " WHERE atime >= %d "
+		   "   AND index_id IS NOT NULL"
+		   " LIMIT %d, %d", from_time, cursor, FETCH_ROWS)->id;
+	else
+	  // Make sure _every_ entry is replicated when a dump is created.
+	  ids = 
+	    (array(int))
+	    QUERY( "SELECT id from "+name+
+		   " LIMIT %d, %d", cursor, FETCH_ROWS)->id;
+	
+	cursor += FETCH_ROWS;
+	
+	foreach(ids, int id) {
+	  int index_id = read_index_id(id);
 #ifdef REPLICATE_DEBUG
-      werror("write_dump: argcache id: %d, index_id: %d.\n", id, index_id);
+	  werror("write_dump: argcache id: %d, index_id: %d.\n", id, index_id);
 #endif
-
-      string s = 
-	MIME.encode_base64(encode_value(({ id, read_args(id),
-					   index_id, read_args(index_id) })),
-			   1)+"\n";
-      if(sizeof(s) != file->write(s))
-	return 0;
+	  
+	  string s = 
+	    MIME.encode_base64(encode_value(({ id, read_args(id),
+					       index_id, read_args(index_id) })),
+			       1)+"\n";
+	  if(sizeof(s) != file->write(s))
+	    return 0;
+	}
+      } while(sizeof(ids) == FETCH_ROWS);
     }
     return file->write("EOF\n") == 4;
   }
