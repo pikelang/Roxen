@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.149 1999/08/05 11:57:15 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.150 1999/08/06 03:15:10 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -334,18 +334,19 @@ private int parse_got()
     case 4:
       // Got extra spaces in the URI.
       // All the extra stuff is now in the trailer.
-	
-      int end;
-	
+
+      // Get rid of the extra space from the sscanf above.
+      trailer = trailer[..sizeof(trailer) - 2];
       f += " " + clientprot;
-	
+
       // Find the last space delimiter.
+      int end;
       if (!(end = (search(reverse(trailer), " ") + 1))) {
-	// Just one space in the URI.
-	clientprot = trailer;
+        // Just one space in the URI.
+        clientprot = trailer;
       } else {
-	f += " " + trailer[..sizeof(trailer) - (end + 1)];
-	clientprot = trailer[sizeof(trailer) - end ..];
+        f += " " + trailer[..sizeof(trailer) - (end + 1)];
+        clientprot = trailer[sizeof(trailer) - end ..];
       }
       /* FALL_THROUGH */
     case 3:
@@ -940,6 +941,8 @@ string generate_bugreport(array from, string u, string rd)
 string censor(string what)
 {
   string a, b, c;
+  if(!what)
+    return "No backtrace";
   if(sscanf(what, "%shorization:%s\n%s", a, b, c)==3)
     return a+" ################ (censored)\n"+c;
   return what;
