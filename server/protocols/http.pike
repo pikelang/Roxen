@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.433 2004/04/21 11:10:34 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.434 2004/04/25 15:49:03 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1094,8 +1094,8 @@ string format_backtrace(int eid, string|void md5)
 string generate_bugreport(string msg, array(string) rxml_bt, array(string) bt,
 			  string raw_bt_descr, string raw_url, string raw)
 {
-  return ("Roxen version: "+version()+
-	  (roxen.real_version != version()?
+  return ("Roxen version: "+roxen.version()+
+	  (roxen.real_version != roxen.version()?
 	   " ("+roxen.real_version+")":"")+
 	  "\nPike version: " + predef::version() +
 	  "\nRequested URL: "+raw_url+"\n"
