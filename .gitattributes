@@ -171,6 +171,8 @@ worldmap binary
 /server/languages/slovenian.pike foreign_ident
 /server/languages/spanish.pike foreign_ident
 /server/languages/swedish.pike foreign_ident
+/server/modules/administration/config_filesystem.pike foreign_ident
+/server/modules/administration/config_tags.pike foreign_ident
 /server/modules/administration/roxen_test.pike foreign_ident
 /server/modules/compat/configtablist.pike foreign_ident
 /server/modules/compat/flik.pike foreign_ident
@@ -180,8 +182,6 @@ worldmap binary
 /server/modules/compat/ssi.pike foreign_ident
 /server/modules/compat/update.pike foreign_ident
 /server/modules/compat/ximg.pike foreign_ident
-/server/modules/configuration/config_filesystem.pike foreign_ident
-/server/modules/configuration/config_tags.pike foreign_ident
 /server/modules/database/sqltag.pike foreign_ident
 /server/modules/directories/directories.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
