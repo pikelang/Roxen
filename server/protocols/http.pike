@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.241 2000/08/13 13:54:22 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.242 2000/08/14 02:01:46 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 #define RAM_CACHE
@@ -1649,29 +1649,27 @@ void send_result(mapping|void result)
   if(!leftovers) 
     leftovers = data||"";
 
-  if( !file->from_cache )
+  if(!mappingp(file))
   {
-    if(!mappingp(file))
-    {
-      misc->cacheable = 0;
-      if(misc->error_code)
-        file = Roxen.http_low_answer(misc->error_code, errors[misc->error]);
-      else if(err = catch {
-        file = Roxen.http_low_answer(404,
-                                     Roxen.parse_rxml(
+    misc->cacheable = 0;
+    if(misc->error_code)
+      file = Roxen.http_low_answer(misc->error_code, errors[misc->error]);
+    else if(err = catch {
+      file = Roxen.http_low_answer(404,
+                                   Roxen.parse_rxml(
 #ifdef OLD_RXML_COMPAT
-                                                      replace(conf->query("ZNoSuchFile"),
-                                                              ({"$File", "$Me"}),
-                                                              ({ "&page.virtfile;",
-                                                                 conf->query("MyWorldLocation")
-                                                              })),
+                                                    replace(conf->query("ZNoSuchFile"),
+                                                            ({"$File", "$Me"}),
+                                                            ({ "&page.virtfile;",
+                                                               conf->query("MyWorldLocation")
+                                                            })),
 #else
-                                                      conf->query("ZNoSuchFile"),
+                                                    conf->query("ZNoSuchFile"),
 #endif
-                                                      this_object()));
-      })
+                                                    this_object()));
+    })
       INTERNAL_ERROR(err);
-    } 
+  } 
     else 
     {
       if((file->file == -1) || file->leave_me)
@@ -1848,7 +1846,11 @@ void send_result(mapping|void result)
           string data = head_string + (file->file?file->file->read(file->len):
                          (file->data[..file->len-1]));
           conf->datacache->set( raw_url, data, 
-                                (["hs":strlen(head_string)]), 
+                                ([
+                                  "hs":strlen(head_string),
+                                  "len":file->len,
+                                  "error":file->error,
+                                ]), 
                                 misc->cacheable );
           file = ([ "data":data ]);
           head_string = "";
@@ -1879,22 +1881,6 @@ void send_result(mapping|void result)
       send(head_string);
       file->len = 1; // Keep those alive, please...
     }
-  }
-  else 
-  {
-    if( strlen( file->data ) < 4000 )
-    {
-      conf->hsent += file->hsize;
-      my_fd->write( file->data );
-      do_log();
-      return;
-    } 
-    else 
-    {
-      conf->hsent += file->hsize;
-      send( file->data );
-    }
-  }
   start_sender();
 }
 
@@ -2092,9 +2078,21 @@ void got_data(mixed fooid, string s)
   array cv;
   if( misc->cacheable && (cv = conf->datacache->get( raw_url )) )
   {
+    if(!leftovers) 
+      leftovers = data||"";
     string d = cv[ 0 ];
-    file = ([ "from_cache":1,"len":strlen(d),"hsize":cv[1]->hs,"data":d,  ]);
-    send_result();
+    file = cv[1];
+    conf->hsent += file->hs;
+    if( strlen( d ) < 4000 )
+    {
+      my_fd->write( d );
+      do_log();
+    } 
+    else 
+    {
+      send( d );
+      send_result();
+    }
     return;
   }
 #endif
