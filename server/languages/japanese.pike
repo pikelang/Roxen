@@ -8,8 +8,8 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: japanese.pike,v 1.16 2000/09/16 19:52:21 nilsson Exp $";
-constant _id = ({ "kj", "japanese", "" });
+constant cvs_version = "$Id: japanese.pike,v 1.17 2000/12/18 17:10:04 jhs Exp $";
+constant _id = ({ "kj", "japanese", "日本語" });
 constant _aliases =  ({ "kj", "kanji", /* For backward compatibility */
 			"jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
 			"日本語" });

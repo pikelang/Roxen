@@ -1,6 +1,6 @@
 #charset iso-8859-5
 constant required_charset = "iso-8859-5";
-/* Bugs by: Per */
+/* Bugs by: Per, jhs */
 /*
  * name = "Russian language plugin ";
  * doc = "Handles the conversion of numbers and dates to Russian. You have to restart the server for updates to take effect.";
@@ -8,8 +8,8 @@ constant required_charset = "iso-8859-5";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: russian.pike,v 1.7 2000/02/14 09:22:08 per Exp $";
-constant _id = ({ "ru", "russian", "" });
+constant cvs_version = "$Id: russian.pike,v 1.8 2000/12/18 17:10:04 jhs Exp $";
+constant _id = ({ "ru", "russian", "-LÀãááÚØÙ" });
 constant _aliases = ({ "ru", "rus", "russian", "ÒÕÓÓËÉÊ" });
 
 #define error(x) throw( ({ x, backtrace() }) )

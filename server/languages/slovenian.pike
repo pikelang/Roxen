@@ -10,7 +10,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: slovenian.pike,v 1.14 2000/09/16 19:52:23 nilsson Exp $";
+constant cvs_version = "$Id: slovenian.pike,v 1.15 2000/12/18 17:10:04 jhs Exp $";
 constant _id = ({ "si", "slovenian", "" });
 constant _aliases = ({ "si", "svn", "slovenian" });
 
@@ -25,6 +25,8 @@ constant days = ({
 
 string number(int num)
 {
+  if(!num)
+    return ""; //FIXME!
   if(num<0)
     return "minus "+number(-num);
   switch(num)
@@ -63,7 +65,8 @@ string number(int num)
    case 5000000..999999999:
      return number(num/1000000)+" milijonov"+number(num%1000000);
      if ( ((num%10000000)/1000000)==1 ) return number(num/1000000)+" milijon "+number(num%1000000);
-   return "veliko";
+   default:
+     return "veliko";
   }
 }
 
