@@ -6,7 +6,7 @@
   </table>
   <rul>
   <update-package type="&_.name;" limit="5">
-    <rli>&_.title; <a href="update.html?page=details&details=&_.id;">[Details...]</a></rli>
+    <eval><rli>&_.title; <a href="update.html?page=details&details=&_.id;">[Details...]</a></rli></eval>
     <set variable="var._&cat.name;" value='foo'/>
   </update-package>
   </rul>
@@ -56,7 +56,7 @@ This information was last synchronized with the main server &update.last_updated
      </tr>
      <update-download-progress>
      <tr>
-       <td nowrap="nowrap">&_.title:
+       <td nowrap="nowrap">&_.title;
          <a href="update.html?details=&_.id;">[Details...]</a></td>
        <td nowrap="nowrap">&_.size;</td>
        <td nowrap="nowrap">&_.progress;%</td>
