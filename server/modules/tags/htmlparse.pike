@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.183 1999/08/13 19:11:12 nilsson Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.184 1999/08/25 20:50:53 leif Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -440,6 +440,27 @@ string tagtime(int t,mapping m)
      default:
     }
   }
+  else if (m->dayssince)
+  {
+    int diffyear, diffmonth = 0, diffday;
+
+    if (sscanf(m->dayssince, "%d-%d-%d", diffyear, diffmonth, diffday) != 3 &&
+        sscanf(m->dayssince, "%d-%s-%d", diffyear, diffmonth, diffday) == 3)
+    { diffmonth = ([ "jan":  1, "feb":  2, "mar":  3, "apr":  4,
+                     "may":  5, "jun":  6, "jul":  7, "aug":  8,
+                     "sep":  9, "oct": 10, "nov": 11, "dec": 12 ])
+            [lower_case(sprintf("%s", diffmonth))[0..2]];
+    }
+    if (diffmonth >= 1 && diffmonth <= 12)
+    { return sprintf("%d",
+         Calendar.ISO.Year(localtime(t)->year+1900)->
+                          month(localtime(t)->mon+1)->
+                          day(localtime(t)->mday) -
+         Calendar.ISO.Year(diffyear)->month(diffmonth)->day(diffday));
+    }
+    return "<b>(bad date format for `dayssince' attribute)</b>";
+  }
+
   s=language(m->lang, "date")(t,m);
   if (m->upper) s=upper_case(s);
   if (m->lower) s=lower_case(s);
