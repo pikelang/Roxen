@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.146 2004/03/07 00:09:53 jonasw Exp $
+// $Id: wizard.pike,v 1.147 2004/03/07 08:54:14 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -357,20 +357,21 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "    <tr>"
        "      <td style='border-right: 1px solid #888888'"
        "        ><img src='/internal-roxen-colsel-small'"
-       "             width='128' height='128'"
+       "             width='128' height='128' style='cursor: pointer'"
        "             onClick='PREFIX_colsel_click(event, 0); return false;'"
        "        /></td>"
        "      <td><img id='PREFIX_colorbar' width='16' height='128'"
        "               src='/internal-roxen-colorbar:" +h+ "," +v+ "," +s+ "'"
+       "               style='cursor: pointer'"
        "               onClick='PREFIX_colsel_click(event, 1); return false;'"
        "        /></td>"
        "    </tr><tr>"
        "      <td colspan='2' style='border-top: 1px solid #888888'"
        "        ><img src='/internal-roxen-pixel-000000'"
-       "              width='76' height='10'"
+       "              width='76' height='10' style='cursor: pointer'"
        "              onClick='PREFIX_colsel_type(\"#000000\", 1);' "
        "        /><img src='/internal-roxen-pixel-ffffff'"
-       "               width='76' height='10'"
+       "               width='76' height='10' style='cursor: pointer'"
        "               onClick='PREFIX_colsel_type(\"#FFFFFF\", 1);' "
        "        /></td>"
        "    </tr>"
