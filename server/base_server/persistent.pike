@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.14 1997/03/01 07:35:39 per Exp $ */
+/* $Id: persistent.pike,v 1.15 1997/03/01 12:42:36 per Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -21,7 +21,7 @@
 private static string __id;
 #define DIR "dbm_dir.perdbm/"
 
-PRIVATE void really_save()
+void really_save()
 {
   object file = files.file();
   array res = ({ });
