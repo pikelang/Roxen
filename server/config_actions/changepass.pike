@@ -1,5 +1,5 @@
 inherit "roxenlib";
-constant name= "Change password and/or username";
+constant name= "Change password and/or username...";
 
 constant doc = ("Change the configuration interface username and/or password. "
 		"This is a shortcut to the initial configuration page of "
