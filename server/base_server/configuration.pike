@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.210 1999/10/04 18:49:47 marcus Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.211 1999/10/04 19:09:07 per Exp $";
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
@@ -2066,12 +2066,8 @@ int|string try_get_file(string s, object id, int|void status, int|void nocache)
   fake_id->misc->internal_get=1;
 
   if(!(m = get_file(fake_id)))
-  {
-    destruct(fake_id);
     return 0;
-  }
-  destruct(fake_id);
-  
+
   if (!(< 0, 200, 201, 202, 203 >)[m->error]) return 0;
   
   if(status) return 1;
