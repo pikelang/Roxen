@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.81 1998/12/11 22:33:48 noring Exp $
+ * $Id: roxenloader.pike,v 1.82 1999/02/15 23:22:12 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.81 1998/12/11 22:33:48 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.82 1999/02/15 23:22:12 per Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -322,6 +322,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
       break;
     }
   }
+  opts->noinitgroups = 1;
   object proc;
   proc = Process.create_process( ({s}), opts );
   p->close();
