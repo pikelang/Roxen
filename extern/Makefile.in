@@ -1,35 +1,12 @@
-PROFIL=
-#PROFIL=-pg
-
-LIBS=@LIBS@ $(EXTRALIBS)
-CC=@CC@
-SRCDIR=@srcdir@
-prefix=@prefix@
 VPATH=@srcdir@
+
+CC=@CC@
+CFLAGS=@CFLAGS@
+LDFLAGS=@LDFLAGS@
 
 @SET_MAKE@
 
-HAVE_SHUFFLE=@shuffle@
-
-OTHERFLAGS=@CFLAGS@
-
-CFLAGS=@DEFS@ @CFLAGS@ $(PREFLAGS) $(OTHERFLAGS)
-PREFLAGS=-I. -I$(SRCDIR) -I$(SRCDIR)/../.. -I../..
-
-LDFLAGS=@LDFLAGS@
-
-all: cgi fcgi
-
-pure: purecgi
-
-no: 
-none:
-no-install: 
-none-install:
-no-localinstall: 
-none-localinstall:
--localinstall:
--install:
+all: fcgi
 
 fcgi: force
 	(cd fast_cgi; $(MAKE) "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
@@ -43,68 +20,19 @@ fcgi: force
 	@(strip fcgi || echo)
 
 force:
+	@:
 
-cgi: cgi.o config.h
-	$(CC) $(LDFLAGS) -o cgi cgi.o $(LIBS)
-
-purecgi: cgi.o
-	purify $(CC) $(LDFLAGS) -o cgi cgi.o $(LIBS)
-
-shuffle:	shuffle.o
-	$(CC) -O $(LDFLAGS) -o shuffle shuffle.o -lthread -lsocket $(LIBS)
-	@(strip shuffle || echo)
-
-pureshuffle:	shuffle.o
-	purify $(CC) -O $(LDFLAGS) -o shuffle shuffle.o -lthread -lsocket $(LIBS)
-
-check: verify
-
-verify: verbose_verify
-
-# NOTE: No /. in the directory test below!
-verbose_verify: cgi
-	@test -d cgi.testsuite || mkdir cgi.testsuite
-	if test "x`id -u 2>/dev/null || /usr/bin/id -u 2>/dev/null || /usr/xpg4/bin/id -u 2>/dev/null || (test -w / && echo 0) || :`" = "x0"; then \
-	  echo Running as root. Will attempt to run as nobody instead; \
-	  echo Chowning directory cgi.testsuite to nobody...; \
-	  chown -R nobody cgi.testsuite; \
-	  chmod u+rw cgi.testsuite; \
-	  echo Attempting to run as nobody...; \
-	  su nobody -c '$(MAKE) verbose_verify' || exit 1; \
-	else \
-	  for t in `cd $(SRCDIR)/cgi.testsuite; find . -name '*.in' -print`; \
-	  do \
-	    base="`echo $$t|sed -e 's/\.in$$//'`"; \
-	    echo CGI Test: $$base; \
-	    INPUT="$(SRCDIR)/cgi.testsuite/$$t"; export INPUT; \
-	    ./cgi "$(SRCDIR)/testsuite.cgi" >cgi.testsuite/$$base.output || exit 1; \
-	    if cmp "$(SRCDIR)/cgi.testsuite/$$base.out" \
-		cgi.testsuite/$$base.output ; then :; else \
-	      echo "Failed."; exit 1; \
-	    fi; \
-	  done; \
-	fi
-
-shuffle-install: shuffle
-	-/bin/rm -f $(prefix)/roxen/server/bin/shuffle
-	/bin/cp shuffle $(prefix)/roxen/server/bin
-
-shuffle-localinstall: shuffle
-	-/bin/rm -f $(SRCDIR)/../server/bin/shuffle
-	/bin/cp shuffle $(SRCDIR)/../server/bin
-
-install: fcgi cgi
-	@for f in fcgi cgi; do \
+install: fcgi
+	@for f in fcgi; do \
 		echo Installing $$f...; \
 		/bin/rm -f $(prefix)/roxen/server/bin/$$f; \
 		if /bin/cp $$f $(prefix)/roxen/server/bin/; then :; \
 		else exit 1; fi; \
 	done
-	-@ln -s cgi $(prefix)/roxen/server/bin/cgi-bin
 	@echo Done.
 
-localinstall: fcgi cgi
-	@for f in fcgi cgi; do \
+localinstall: fcgi 
+	@for f in fcgi; do \
 		echo Installing $$f...; \
 		/bin/rm -f $(SRCDIR)/../server/bin/$$f; \
 		if /bin/cp $$f $(SRCDIR)/../server/bin/; then :; \
@@ -112,11 +40,8 @@ localinstall: fcgi cgi
 	done
 	@echo Done.
 
-.c.o:
-	$(CC) -c -I. -I$(SRCDIR) $(CFLAGS) $<
-
 clean: 
-	@rm -f cgi shuffle fcgi *.o  core
+	@rm -f fcgi *.o core
 	@(cd fast_cgi; $(MAKE) clean "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
 
 spotless: clean
@@ -124,27 +49,3 @@ spotless: clean
 
 distribute: spotless
 	@rm -f Makefile
-
-cgi.o : config.h
-
-shuffle.o : config.h
-
-config.h : stamp-h
-
-stamp-h: $(SRCDIR)/config.h.in config.status
-	CONFIG_FILES="" CONFIG_HEADERS=config.h ./config.status
-
-$(SRCDIR)/config.h.in : $(SRCDIR)/stamp-h.in
-	@if test -f "$(SRCDIR)/config.h.in"; then :; else \
-	  rm "$(SRCDIR)/stamp-h.in"; \
-	  $(MAKE) "$(SRCDIR)/stamp-h.in"; \
-	fi
-
-$(SRCDIR)/stamp-h.in : $(SRCDIR)/configure.in $(SRCDIR)/acconfig.h
-	cd $(SRCDIR) && autoheader
-	echo foo > $(SRCDIR)/stamp-h.in
-
-Makefile: $(SRCDIR)/Makefile.in config.status
-	CONFIG_FILES=Makefile CONFIG_HEADERS="" ./config.status
-	@echo "Run make again"
-	@exit 1
