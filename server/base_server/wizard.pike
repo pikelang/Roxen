@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.49 1998/02/19 16:45:30 mirar Exp $
+/* $Id: wizard.pike,v 1.50 1998/02/20 00:58:14 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -367,8 +367,15 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
     function c;
 
     if(!functionp(c=this_object()["verify_"+v->_page]) || (!c( id, @args )))
-      return (((c=this_object()->wizard_done)?c(id,@args):0)
-	      || http_redirect(cancel||id->not_query, @(id->conf?({id}):({}))));
+    {
+      mixed res;
+      if(c=this_object()->wizard_done)
+	res = c(id,@args);
+      if(res != -1) 
+	return (res
+		|| http_redirect(cancel||id->not_query, 
+				 @(id->conf?({id}):({}))));
+    }
   }
   else if(v["help.x"])
   {

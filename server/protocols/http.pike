@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.55 1998/02/19 05:21:06 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.56 1998/02/20 00:58:15 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -63,7 +63,7 @@ multiset (string) pragma      = (< >);
 
 mapping (string:string) cookies = ([ ]);
 
-mixed file;
+mapping file;
 
 object my_fd; /* The client. */
 object pipe;
@@ -700,14 +700,13 @@ constant errors =
   ]);
 
 
-void do_log(array|void id)
+void do_log()
 {
   if(conf)
   {
     int len;
-    pipe = id[0];
-    file = id[1];
-    if(len = pipe->bytes_sent()) file->len = len;
+    if(pipe && (len = pipe->bytes_sent())) 
+      file->len = len;
     if(conf)
     {
       if(file->len > 0) conf->sent+=file->len;
@@ -769,7 +768,7 @@ void handle_request( )
       if(do_not_disconnect) return;
 //    perror("Leave me...\n");
 //      if(!file->stay) { destruct(thiso); }
-      my_fd = file = 0;
+      my_fd = 0; file = 0;
       return;
     }
 
@@ -849,13 +848,19 @@ void handle_request( )
     
     if(conf) conf->hsent+=strlen(head_string||"");
   }
+  if((method != "HEAD") && (file->len > 0 && file->len < 2000))
+  {
+    my_fd->write(head_string + (file->file?file->file->read():file->data));
+    do_log();
+    return;
+  }
   if(head_string) send(head_string);
   if(method != "HEAD")
   {
     if(file->data)  send(file->data, file->len);
     if(file->file)  send(file->file, file->len);
   }
-  pipe->set_done_callback( do_log, ({ pipe, file }) );
+  pipe->set_done_callback( do_log,0 );
   pipe->output(my_fd);
 }
 
@@ -981,11 +986,10 @@ void create(object f, object c)
   if(f)
   {
     my_fd = f;
-    my_fd->set_read_callback(got_data);
-    my_fd->set_close_callback(end);
     conf = c;
     mark_fd(my_fd->query_fd(), "HTTP connection");
-    
+    my_fd->set_close_callback(end);
+    my_fd->set_read_callback(got_data);
     // No need to wait more than 30 seconds to get more data.
     call_out(do_timeout, 30);
   }

@@ -96,6 +96,7 @@ urw_itc_avant_garde-demi-r binary
 /server/config_actions/reloadconfiginterface.pike foreign_ident
 /server/config_actions/reloadconfigurations.pike foreign_ident
 /server/config_actions/requeststatus.pike foreign_ident
+/server/config_actions/resolv.pike foreign_ident
 /server/config_actions/shutdown.pike foreign_ident
 /server/config_actions/upgrade.pike foreign_ident
 /server/etc/config.html foreign_ident

@@ -1,8 +1,11 @@
 /* A somewhat more optimized Pipe.pipe... */
 
+#if !constant(spider.shuffle)
+# error This should not happend...
+#endif
+
 array to_send = ({});
 function done_callback;
-mixed id;
 object outfd;
 function write_out;
 int sent;
@@ -25,9 +28,8 @@ void finish()
     outfd = 0;
     write_out = 0;
   }
-  if(done_callback) done_callback(id);
+  if(done_callback) done_callback();
   current_input = 0;
-  id = 0;
   write_out = done_callback = 0;
   to_send = 0;
 }
@@ -49,45 +51,6 @@ void write_more()
     current_input = current_input[len..];
 }
 
-string buffer="";
-
-#if !constant(min)
-#define min(a,b) ((a)>(b)?(b):(a))
-#endif
-
-void next_buffer()
-{
-  if(current_input_len < 0) 
-  {
-    buffer=0;
-    return;
-  }
-  int toread;
-  toread = min(current_input_len, 8192);
-  buffer = current_input->read(toread,1); // WARNING! BLOCKING!
-  current_input_len -= strlen(buffer);
-  if(current_input_len < 0) current_input_len = -1;
-}
-
-void write_more_from_file()
-{
-  if(!strlen(buffer)) next_buffer();
-  if(!buffer || !strlen(buffer)) {
-    next_input();
-    return;
-  }
-  int len;
-  len = write_out(buffer);
-  sent += len;
-  if(sent <= 0)
-  {
-    finish();
-    return;
-  }
-  sent += len;
-  buffer = buffer[len..];
-}
-
 void closed()
 {
   finish();
@@ -99,7 +62,6 @@ void _pipe_done(int s)
   next_input();
 }
 
-#if efun(thread_create)
 void shuffle()
 {
   outfd->set_blocking();
@@ -115,7 +77,6 @@ void shuffle()
   }
   next_input();
 }
-#endif
 
 void next_input()
 {
@@ -124,7 +85,7 @@ void next_input()
     finish();
     return;
   }
-  
+
   current_input = to_send[0][0];
   current_input_len = to_send[0][1] || 0x7fffffff;
   to_send = to_send[1..];
@@ -144,24 +105,18 @@ void next_input()
     outfd->set_nonblocking(0,write_more,0);
     return;
   }
-#if constant(spider.shuffle)
   if(outfd->query_fd()>0 && current_input->query_fd()>0)
   {
     outfd->set_blocking();
     spider.shuffle(current_input,outfd,_pipe_done,0,current_input_len);
     return;
   }
-#endif
-#if efun(thread_create)
   shuffle( );
   return;
-#else
-      /* Do something smarter here... */
-  outfd->set_nonblocking(0,write_more_from_file,0);
-  return;
-#endif
-  finish();
 }
+
+
+/// API functions.
 
 void write(string what)
 {
@@ -180,8 +135,7 @@ void output(object to)
   next_input();
 }
 
-void set_done_callback(function f, mixed i)
+void set_done_callback(function f)
 {
   done_callback = f;
-  id = i;
 }

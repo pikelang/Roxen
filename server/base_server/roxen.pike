@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.167 1998/02/17 05:00:11 mast Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.168 1998/02/20 00:58:13 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -23,11 +23,7 @@ inherit "disk_cache";
 inherit "language";
 
 #if constant(spider.shuffle)
-#ifdef THREADS
-program pipe = Pipe.pipe;
-#else
 program pipe = (program)"smartpipe";
-#endif
 #else
 program pipe = Pipe.pipe;
 #endif
@@ -35,7 +31,7 @@ program pipe = Pipe.pipe;
 // This is the real Roxen version. It should be changed before each
 // release
 #ifdef __NT__
-constant real_version = "Roxen Challenger/1.2beta2 NT alpha 1";
+constant real_version = "Roxen Challenger/1.2beta2 NT";
 #else
 constant real_version = "Roxen Challenger/1.2beta2";
 #endif
@@ -53,7 +49,6 @@ int new_id(){ return idcount++; }
 #endif /* MODULE_DEBUG */
 
 object roxen=this_object(), current_configuration;
-// int num_connections;
 
 private program Configuration;	/*set in create*/
 
@@ -61,20 +56,14 @@ array configurations = ({});
 object main_configuration_port;
 mapping allmodules, somemodules=([]);
 
-#if efun(send_fd)
-int shuffle_fd;
-#endif
-
 // A mapping from ports (objects, that is) to an array of information
 // about that port.  This will hopefully be moved to objects cloned
 // from the configuration object in the future.
 mapping portno=([]);
 
-// decode.pike used to be here.
 constant decode = MIME.decode_base64;
-// End of what was formely known as decode.pike, the base64 decoder
 
-// Function pointer and the root of the to the configuration interface
+// Function pointer and the root of the configuration interface
 // object.
 private function build_root;
 private object root;
@@ -125,15 +114,10 @@ private static void fork_or_quit()
   // FIXME:
   // Should probably attempt something similar to the above,
   // but this should be sufficient for the time being.
-
   exit(-1);	// Restart
 
 #endif /* constant(fork) */
 }
-
-// Keep a count of how many times in a row there has been an error
-// while 'accept'ing.
-private int failed_connections = 0;
 
 // This is called for each incoming connection.
 private static void accept_callback( object port )
@@ -233,7 +217,7 @@ void handler_thread(int id)
 	 } while(1);
        })
       perror("Uncaught error in handler thread: "+describe_backtrace(q)+
-	     "Client will not respond.\n");
+	     "Client will not get any response from Roxen.\n");
   }
 }
 
@@ -1696,13 +1680,6 @@ private void define_global_variables( int argc, array (string) argv )
 #endif
 
 #ifdef THREADS
-  globvar("numshufflethreads", 1,
-	  "Number of shuffler threads to run", TYPE_INT|VAR_EXPERT,
-	  "The number of simultaneous threads roxen will use "
-	  "to shuffle data, using a select loop based system.\n"
-	  "<i>This is quite useful if you have more than one CPU in "
-	  "your machine, or if you have a quite a lot of proxy requests.</i>");
-
   globvar("numthreads", 5, "Number of threads to run", TYPE_INT,
 	  "The number of simultaneous threads roxen will use.\n"
 	  "<p>Please note that even if this is one, Roxen will still "
@@ -2167,102 +2144,32 @@ void create_pid_file(string where)
 #endif
 }
 
-void init_shuffler();
 // External multi-threaded data shuffler. This leaves roxen free to
 // serve new requests. The file descriptors of the open files and the
 // clients are sent to the program, then the shuffler just shuffles 
 // the data to the client.
-void _shuffle(object from, object to,
+void shuffle(object from, object to,
 	      object|void to2, function(:void)|void callback)
 {
-#if efun(send_fd)
-  if(shuffle_fd && !to2)
+#if efun(spider.shuffle)
+  if(!to2)
   {
-    from->set_blocking();
-    to->set_blocking();
-    if(send_fd(shuffle_fd,from->query_fd())&&
-       send_fd(shuffle_fd,to->query_fd())) {
-      if (callback) {
-	callback();
-      }
-      return;
-    }
-    init_shuffler();
-  }
-#endif /* send_fd */
-  // Fallback, when there is no external shuffler.
-  object p = pipe();
-  // p->input(from);
-  p->output(to);
-  if (to2) {
-    p->output(to2);
-  }
-  if (callback) {
+    object p = pipe();
+    p->input(from);
     p->set_done_callback(callback);
-  }
-  p->input(from);
-}
-
-
-#ifdef THREADS
-object shuffle_queue = Queue();
-
-void shuffle_thread(int id)
-{
-#ifdef THREAD_DEBUG
-//  perror("shuffle_thread "+id+" started.\n");
-#endif
-  while(mixed s=shuffle_queue->read())
-    _shuffle(@s);
-}
-void shuffle(object a, object b, object|void c, function(:void)|void d)
-{
-  shuffle_queue->write(({a, b, c, d}));
-}
-#else /* THREADS */
-function shuffle = _shuffle;
-#endif /* THREADS */
-
-#ifdef THREADS
-int number_of_shuffler_threads;
-void start_shuffler_threads()
-{
-  report_notice("Using threads");
-  if (QUERY(numshufflethreads) <= 1) {
-    QUERY(numshufflethreads) = 1;
-//  perror("Starting 1 thread to shuffle data.\n");
+    p->output(to);
   } else {
-//  perror("Starting "+QUERY(numshufflethreads)+" threads to shuffle data.\n");
+#endif
+    // 'smartpipe' does not support multiple outputs.
+    object p = Pipe.pipe();
+    if (callback) p->set_done_callback(callback);
+    p->output(to);
+    p->output(to2);
+    p->input(from);
+#if efun(spider.shuffle)
   }
-  int i;
-  for(i = number_of_shuffler_threads; i < QUERY(numshufflethreads); i++)
-    do_thread_create( "Shuffle thread ["+i+"]", shuffle_thread, i );
-  number_of_shuffler_threads = i;
+#endif
 }
-
-#if efun(send_fd)
-object shuffler;
-void init_shuffler()
-{
-  object out;
-  object out2;
-  if(file_stat("bin/shuffle"))
-  {
-    if(shuffler)
-      destruct(shuffler);
-    out=Stdio.File();
-    out2=out->pipe();
-    mark_fd(out->query_fd(), "Data shuffler local end of pipe.\n");
-    spawne("bin/shuffle", ({}), ({}), out2, Stdio.stderr, Stdio.stderr, 0, 0);
-    perror("Spawning data mover. (bin/shuffle)\n"); 
-    destruct(out2);
-    shuffler = out;
-    shuffle_fd = out->query_fd();
-    start_shuffler_threads();
-  }
-}
-#endif /* efun(send_fd) */
-#endif /* THREADS */
 
 
 static private int _recurse;
@@ -2316,12 +2223,7 @@ void exit_it()
 {
   perror("Recursive signals.\n");
   exit(-1);	// Restart.
-  // kill(getpid(), 9);
-  // kill(0, -9);
 }
-
-// REMOVE ME
-array fork_it(){}
 
 #ifdef ENABLE_NEIGHBOURHOOD
 object neighborhood;
@@ -2409,9 +2311,6 @@ int main(int|void argc, array (string)|void argv)
   thread_set_concurrency(QUERY(numthreads)+QUERY(numshufflethreads)+1);
 #endif
 
-#if efun(send_fd)
-  init_shuffler(); 
-#endif
 #endif /* THREADS */
 
   // Signals which cause a restart (exitcode != 0)

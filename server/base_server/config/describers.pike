@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.53 1998/02/05 00:59:20 js Exp $ */
+/* $Id: describers.pike,v 1.54 1998/02/20 00:58:14 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -179,14 +179,14 @@ string act_describe_submenues(array menues, string base,string sel)
 string focused_action_menu="Maintenance";
 mixed describe_actions(object node, object id)
 {
-//   if(id->pragma["no-cache"] && !id->variables->render) {
-//     foreach(indices(actions), string w)
-//     {
-//       destruct(actions[w]);
-//       m_delete(actions,w);
-//     }
-//     actions=([]);
-//   }
+  if(id->pragma["no-cache"] && !id->variables->render) {
+    foreach(indices(actions), string w)
+    {
+      destruct(actions[w]);
+      m_delete(actions,w);
+    }
+    actions=([]);
+  }
   if(!id->variables->sm)
     id->variables->sm = focused_action_menu;
   else
