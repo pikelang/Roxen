@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.178 2004/05/17 00:42:16 mani Exp $
+// $Id: Roxen.pmod,v 1.179 2004/05/20 22:32:04 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -324,7 +324,7 @@ mapping(string:mixed) http_status (int status_code,
 //! raw text which can be included in more types of responses, e.g.
 //! inside multistatus responses in WebDAV. The message may contain
 //! line feeds ('\n') and ISO-8859-1 characters in the ranges 32..126
-//! and 128..255. Line feeds is converted to space if the response
+//! and 128..255. Line feeds are converted to spaces if the response
 //! format doesn't allow them.
 //!
 //! If @[args] is given, @[message] is taken as an @[sprintf] style
@@ -631,7 +631,6 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
     url += "?magic_roxen_automatic_charset_variable="+
       magic_charset_variable_value;
 
-  url = http_encode_string (url);
   if (variables) {
     string concat_char = has_value (url, "?") ? "&" : "?";
     foreach (indices (variables), string var) {
@@ -652,7 +651,7 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
 
   HTTP_WERR("Redirect -> "+url);
 
-  return http_low_answer( 302, "Redirect to "+url)
+  return http_status( 302, "Redirect to "+html_encode_string(url))
     + ([ "extra_heads":([ "Location":url ]) ]);
 }
 
