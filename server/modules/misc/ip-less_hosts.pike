@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.22 1998/08/28 01:04:51 neotron Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.23 1998/09/06 07:26:30 hubbe Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -148,6 +148,8 @@ object find_server_for(object id, string host)
 	hn = h;
       }
     }
+    // Minmatch should be counted in percent
+    best=best*100/strlen(host);
     if(best >= QUERY(minmatch))
       id->conf = config_cache[host] = (c || id->conf);
     else
