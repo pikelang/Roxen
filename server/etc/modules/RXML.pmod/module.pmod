@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.176 2001/06/26 22:23:34 mast Exp $
+// $Id: module.pmod,v 1.177 2001/06/27 17:10:46 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -346,11 +346,8 @@ class Tag
 									\
     if (!err) err = catch {						\
       _res = _frame->_eval (_ctx, _parser, _type, 0, _content || "");	\
-      if (PCode p_code = _parser->p_code) {				\
-	p_code->add (_frame);						\
-	p_code->add (argfunc);						\
-	p_code->add (_frame->content);					\
-      }									\
+      if (PCode p_code = _parser->p_code)				\
+	p_code->add_frame (_frame, argfunc, _frame->content);		\
       break eval_frame;							\
     };									\
 									\
@@ -359,9 +356,7 @@ class Tag
        * fails. */							\
       _frame->flags |= FLAG_UNPARSED;					\
       _frame->args = _args, _frame->content = _content || "";		\
-      p_code->add (_frame);						\
-      p_code->add (0);							\
-      p_code->add (0);							\
+      p_code->add_frame (_frame, 0, 0);					\
     }									\
 									\
     if (objectp (err) && ([object] err)->thrown_at_unwind) {		\
@@ -3163,7 +3158,7 @@ class Frame
 	    content = nil;
 	    flags &= ~FLAG_UNPARSED;
 	  }
-	  else {
+	  else if (!in_content) {
 	    _prepare (ctx, type, 0, 0);
 	    THIS_TAG_TOP_DEBUG ("Evaluating with constant arguments and content.\n");
 	  }
@@ -3483,6 +3478,7 @@ class Frame
 	      piece = ustate->stream_piece;
 	      m_delete (ustate, "stream_piece");
 	      action = "continue";
+	      THIS_TAG_TOP_DEBUG ("Continuing with stream piece.\n");
 	    }
 	    else {
 	      action = "break";	// Some other reason - back up to the top.
@@ -5784,10 +5780,17 @@ class PCode
 
   void add (mixed entry)
   {
-    if (entry != nil && entry != type->empty_value) {
-      if (sizeof (p_code) == length) p_code += allocate (sizeof (p_code));
-      p_code[length++] = entry;
-    }
+    if (sizeof (p_code) == length) p_code += allocate (sizeof (p_code));
+    p_code[length++] = entry;
+  }
+
+  void add_frame (Frame frame, EVAL_ARGS_FUNC|string argfunc, PCode content)
+  {
+    if (sizeof (p_code) + 3 > length) p_code += allocate (sizeof (p_code));
+    p_code[length] = frame;
+    p_code[length + 1] = argfunc;
+    p_code[length + 2] = content;
+    length += 3;
   }
 
   void finish()
@@ -5938,7 +5941,10 @@ class PCode
 
   MARK_OBJECT;
 
-  string _sprintf() {return "RXML.PCode" + OBJ_COUNT;}
+  string _sprintf()
+  {
+    return sprintf ("RXML.PCode(%O)%s", type, OBJ_COUNT);
+  }
 
   mixed _encode()
   {
@@ -5956,8 +5962,7 @@ class PCode
 
     return (["tag_set":tag_set&&tag_set->id_string, "type":type,
 	     "recover_errors":recover_errors,
-	     "error_count":error_count, "p_code":p_code, "length":length,
-	     "errmsgs":errmsgs]);
+	     "p_code":p_code[..length - 1]]);
   }
 
   void _decode(mapping v)
@@ -5965,10 +5970,8 @@ class PCode
     tag_set = all_tagsets[v->tag_set];
     type = v->type;
     recover_errors = v->recover_errors;
-    error_count = v->error_count;
     p_code = v->p_code;
-    length = v->length;
-    errmsgs = v->errmsgs;
+    length = sizeof (p_code);
   }
 }
 
