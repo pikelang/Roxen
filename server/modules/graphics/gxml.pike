@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.21 2001/10/29 06:12:17 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.22 2004/02/04 18:12:56 wellhard Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -34,18 +34,16 @@ string status() {
   array s=the_cache->status();
   return sprintf(_(4,"<b>Images in cache:</b> %d images<br />\n"
                    "<b>Cache size:</b> %s"),
-		 s[0]/2, Roxen.sizetostring(s[1]));
+		 s[0], Roxen.sizetostring(s[1]));
 }
 
-mapping(string:LazyImage.LazyImage) images = ([]);
-Image.Layer generate_image( mapping a, string hash, RequestID id )
+Image.Layer generate_image( mapping a, mapping node_tree, RequestID id )
 {
-  array ll;
-  if( !images[ hash ] )
-    error( "Oops! This was not what we expected.\n" );
-
-  ll = m_delete(images,hash)->run( );
-
+  LazyImage.clear_cache();
+  LazyImage image = LazyImage.decode(node_tree);
+  array ll = image->run();
+  LazyImage.clear_cache();
+  
   mapping e;
   if( a->size )
   {
@@ -481,21 +479,19 @@ class TagGXML
       m_delete( a2, "align" );
       m_delete( a2, "border" );
       aa->src = query_internal_location()+
-	(ind=the_cache->store(({a2,i->hash()}),id));
+	(ind=the_cache->store(({a2,i->encode()}),id));
 
       a2 = ([]);
       a2->src = aa->src;
       if( aa->align )  a2->align = aa->align;
       if( aa->border ) a2->border = aa->border;
 
-      images[ i->hash() ] = i;
       the_cache->http_file_answer( ind, id );
       if( mapping size = the_cache->metadata( ind, id ) )
       {
 	aa->width = size->xsize;
 	aa->height = size->ysize;
       }
-      m_delete(images,i->hash()); 
 
       if( !args->url )
 	result = Roxen.make_tag( "img", a2, 1 );
