@@ -1,4 +1,4 @@
-constant cvs_version="$Id: mirrorfs.pike,v 1.14 1999/12/29 23:52:58 nilsson Exp $";
+constant cvs_version="$Id: mirrorfs.pike,v 1.15 2000/02/12 15:52:40 nilsson Exp $";
 constant thread_safe=1;
 
 #include <roxen.h>
@@ -12,20 +12,18 @@ inherit "filesystem";
 # define MIRROR_WERR(X)
 #endif
 
-array register_module()
-{
-  return ({MODULE_LOCATION,"Mirror Filesystem",
-	     "This is a mirror filesystem, it mirrors the virtual file-tree "
-	     "of another Roxen server.\n<p>The filesystem connects to a "
-	     "Mirror Server using Roxen RPC.<p>\n"
-	     "The searchpath of the Mirror Filesystem is used as a "
-	     "cache.  It is not a good idea to use the same cache-directory "
-	     "in multiple mirror filesystems, and never store other files in it"
-	     ". There is a mirror for www.roxen.com at skuld.idonex.se:2000, "
-	     "if you want to test this module.<p><b>Do not under any "
-	     "circumstances let this module connect to a mirror server in the "
-	     "same Roxen server. It will not work. At all.</b>"});
-}
+constant module_type = MODULE_LOCATION;
+constant module_name = "Mirror Filesystem";
+constant module_doc  = "This is a mirror filesystem, it mirrors the virtual file-tree "
+  "of another Roxen server.\n<p>The filesystem connects to a "
+  "Mirror Server using Roxen RPC.</p>\n"
+  "<p>The searchpath of the Mirror Filesystem is used as a "
+  "cache.  It is not a good idea to use the same cache-directory "
+  "in multiple mirror filesystems, and never store other files in it"
+  ". There is a mirror for www.roxen.com at skuld.idonex.se:2000, "
+  "if you want to test this module.</p><b>Do not under any "
+  "circumstances let this module connect to a mirror server in the "
+  "same Roxen server. It will not work. At all.</b>";
 
 void create()
 {

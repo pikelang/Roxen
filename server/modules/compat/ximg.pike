@@ -1,15 +1,12 @@
-constant cvs_version="$Id: ximg.pike,v 1.4 1999/12/14 02:22:22 nilsson Exp $";
+constant cvs_version="$Id: ximg.pike,v 1.5 2000/02/12 15:44:39 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-constant thread_safe=1;
-
-array register_module()
-{
-  return ({ MODULE_PARSER, "Ximg",
-	    "This module is obsolete. It does the same thing as the imgs tag.",0,1 });
-}
+constant thread_safe = 1;
+constant module_type = MODULE_PARSER;
+constant module_name = "Ximg";
+constant module_doc  = "<h2>Deprecated</h2> It does the same thing as the imgs tag.";
 
 RoxenModule rxml_warning_cache;
 void old_rxml_warning(RequestID id, string no, string yes) {

@@ -15,7 +15,7 @@
 
 // made by Pontus Hagland <law@idonex.se> december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.3 2000/01/23 03:03:57 nilsson Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.4 2000/02/12 15:44:26 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -55,21 +55,19 @@ void gc()
    if (k) call_out(gc,GC_LOOP_TIME);
 }
 
-array (mixed) register_module()
-{
-  return ({ MODULE_PARSER, "Old Folding List Tag",
-              "This is the older version of \"Folding list tag\". " 
-	      "Adds the &lt;fl&gt;, &lt;ft&gt; and &lt;fd&gt; tags."
-	       " This makes it easy to build a folder list or an outline. "
-	       "Example:<pre>"
-	       "&lt;fl unfolded&gt;\n"
-	       "  &lt;ft folded&gt;ho\n"
-	       "   &lt;fd&gt;heyhepp\n"
-	       "  &lt;ft&gt;alakazot\n"
-	       "   &lt;fd&gt;no more\n"
-	       "&lt;/fl&gt;</pre>",
-	       ({}),1 });
-}
+constant module_type = MODULE_PARSER;
+constant module_name = "Old Folding List Tag";
+constant module_doc  = "<h2>Deprecated</h2>"
+  "This is the older version of \"Folding list tag\". " 
+  "Adds the &lt;fl&gt;, &lt;ft&gt; and &lt;fd&gt; tags."
+  " This makes it easy to build a folder list or an outline. "
+  "Example:<pre>"
+  "&lt;fl unfolded&gt;\n"
+  "  &lt;ft folded&gt;ho\n"
+  "   &lt;fd&gt;heyhepp\n"
+  "  &lt;ft&gt;alakazot\n"
+  "   &lt;fd&gt;no more\n"
+  "&lt;/fl&gt;</pre>";
 
 string encode_url(object id, 
 		  int flno,

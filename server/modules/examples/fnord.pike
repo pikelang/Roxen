@@ -2,7 +2,7 @@
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-string cvs_version = "$Id: fnord.pike,v 1.6 1999/12/14 01:47:21 nilsson Exp $";
+string cvs_version = "$Id: fnord.pike,v 1.7 2000/02/12 15:52:04 nilsson Exp $";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.
@@ -77,25 +77,14 @@ string container_fnord(string tag_name, mapping arguments, string contents,
 }
 
 
-// This function is needed in _all_ modules. The first index in the
-// resulting array is the type of the module, the second is the 'short name',
-// the third is a documentation string, the next is reserved, and the last one
-// indiceates wheter or not there can be more than one of this module
-// active in any virtual server at any time. If it is 0, there can be more
-// than one, othervise not.    This is a 'one of a kind' module, only one
-// copy of this module can be included in any virtual server at any time.
+// Some constants that are needed to register the module in the RXML parser.
 
-array register_module()
-{
-  return ({ MODULE_PARSER,
-            "Fnord!",
-            ("Adds an extra container tag, &lt;fnord&gt; that's supposed to make "
-	     "things invisible unless the \"fnord\" prestate is present."
-	     "<p>This module is here as an example of how to write a "
-	     "very simple RXML-parsing module.</p>"),
-            0, 1
-            });
-}
+constant module_type = MODULE_PARSER;
+constant module_name = "Fnord!";
+constant module_doc  = "Adds an extra container tag, &lt;fnord&gt; that's supposed to make "
+  "things invisible unless the \"fnord\" prestate is present."
+  "<p>This module is here as an example of how to write a "
+  "very simple RXML-parsing module.</p>";
 
 
 // Last, but not least, we want a documentation that can be integrated in the
