@@ -117,7 +117,7 @@ array(string) get_conf_url_to_module(string|object(RoxenModule) m, string|void l
 
 // Returns ({ URL to virtual server config page, virtual server name })
 array(string) get_conf_url_to_virtual_server(string|object(Configuration) conf,
-					     string lang)
+					     string|void lang)
 { // conf is either a conf object or the configuration's real name, eg "ConfigInterface"
   string url_confname;
   if(stringp(conf))
