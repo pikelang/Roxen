@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.544 2002/10/27 20:19:37 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.545 2002/10/28 01:36:50 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3435,7 +3435,7 @@ $cache-status   -- A comma separated list of words (containing no
 	  "to generate default URLs, and to generate email addresses."));
 
   defvar("MyWorldLocation", "",
-         "Ports: Primary Server URL", TYPE_URL|VAR_PUBLIC,
+         "Ports: Primary Server URL", TYPE_URL|VAR_PUBLIC|VAR_NO_DEFAULT,
 	 #"\
 <p>This is the main server URL, where your start page is located. This
 setting is for instance used as fallback to generate absolute URLs to
