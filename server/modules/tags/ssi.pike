@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.12 1999/12/08 19:28:45 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.13 1999/12/14 01:40:49 nilsson Exp $";
 
 array register_module()
 {
@@ -18,7 +18,7 @@ array register_module()
   });
 }
 
-void create(object c) {
+void create() {
 
   defvar("exec", 0, "Execute command", 
 	 TYPE_FLAG,
@@ -44,13 +44,26 @@ void create(object c) {
 	 "commands with.");
 }
 
-string|array tag_echo(string tag, mapping m, object id)
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=(["!--#echo":"<desc tag></desc>",
+    "!--#exec":"<desc tag></desc>",
+    "!--#flastmod":"<desc tag></desc>",
+    "!--#fsize":"<desc tag></desc>",
+    "!--#set":"<desc tag></desc>",
+    "!--#include":"<desc tag></desc>",
+    "!--#config":"<desc tag></desc>"
+]);
+#endif
+
+string trimvar(string var) {
+  int s;
+  if(s=sizeof(var)>2 && var[s-2..]=="--") var=var[..s-3];
+  return var;
+}
+
+string|array(string) tag_echo(string tag, mapping m, RequestID id)
 {
-  if(m->help) 
-    return ("This tag outputs the value of different configuration and "
-            "request local variables. They are not really used by Roxen."
-            " This tag is included only to provide compatibility "
-            "with \"normal\" WWW-servers");
   if(!m->var)
   {
     if(sizeof(m) == 1)
@@ -65,7 +78,7 @@ string|array tag_echo(string tag, mapping m, object id)
 
   mapping myenv =  build_env_vars(0,  id, 0);
   m->var = lower_case(replace(m->var, " ", "_"));
-  if(sizeof(m->var)>2 && m->var[sizeof(m->var)-2..]=="--") m->var=m->var[..sizeof(m->var)-3];
+  m->var=trimvar(m->var);
   switch(m->var)
   {
    case "sizefmt":
@@ -141,11 +154,8 @@ string|array tag_echo(string tag, mapping m, object id)
   }
 }
 
-string tag_config(string tag, mapping m, object id)
+string tag_config(string tag, mapping m, RequestID id)
 {
-  if(m->help) 
-    return ("See the Apache documentation.");
-
   if (m->sizefmt) {
     if ((< "abbrev", "bytes" >)[lower_case(m->sizefmt||"")]) {
       id->misc->defines->sizefmt = lower_case(m->sizefmt);
@@ -164,21 +174,14 @@ string tag_config(string tag, mapping m, object id)
   return "";
 }
 
-string tag_include(string tag, mapping m, object id)
+string tag_include(string tag, mapping m, RequestID id)
 {
-  if(m->help) 
-    return ("This tag is more or less equivalent to the "
-            "RXML command \"insert\", so why not use that one instead.");
-
   if(m->virtual) {
     int debug=id->misc->debug;
     id->misc->debug=-1;
+    m->virtual=trimvar(m->virtual);
     string ret=API_read_file(id, m->virtual)||"";
     id->misc->debug=debug;
-    
-    if(ret=="" && sizeof(m->virtual)>2 && m->virtual[sizeof(m->virtual)-2..]=="--") {
-      ret=API_read_file(id, m->virtual[..sizeof(m->virtual)-3])||"";
-    }
 
     if(ret=="")
       return rxml_error(tag,"No such file ("+m->virtual+")",id);
@@ -188,7 +191,7 @@ string tag_include(string tag, mapping m, object id)
 
   if(m->file)
   {
-    mixed tmp;
+    array tmp;
     string fname1 = m->file;
     string fname2;
     if(m->file[0] != '/')
@@ -198,6 +201,7 @@ string tag_include(string tag, mapping m, object id)
       else
 	m->file = ((tmp = id->not_query / "/")[0..sizeof(tmp)-2] +
 		   ({ m->file }))*"/";
+      m->file=trimvar(m->file);
       fname1 = id->conf->real_file(m->file, id);
       if ((sizeof(m->file) > 2) && (m->file[sizeof(m->file)-2..] == "--")) {
 	fname2 = id->conf->real_file(m->file[..sizeof(m->file)-3], id);
@@ -216,12 +220,12 @@ string tag_include(string tag, mapping m, object id)
   return rxml_error(tag, "Hm? #include what, my dear?", id);
 }
 
-string tag_set(string tag, mapping m, object id)
+string tag_set(string tag, mapping m, RequestID id)
 {
   if(m->var && m->value)
   {
-    if(sizeof(m->var)>2 && m->var[sizeof(m->var)-2..]=="--") m->var=m->var[..sizeof(m->var)-3];
-    if(sizeof(m->value)>2 && m->value[sizeof(m->value)-2..]=="--") m->value=m->value[..sizeof(m->value)-3];
+    m->var=trimvar(m->var);
+    m->value=trimvar(m->value);
     if(!id->misc->ssi_variables)
       id->misc->ssi_variables = ([]);
     id->misc->ssi_variables[m->var] = m->value;
@@ -229,11 +233,8 @@ string tag_set(string tag, mapping m, object id)
   return "";
 }
 
-string tag_fsize(string tag, mapping m, object id)
+string tag_fsize(string tag, mapping m, RequestID id)
 {
-  if(m->help) 
-    return ("Returns the size of the file specified (as virtual=... or file=...)");
-
   if(m->virtual && sizeof(m->virtual))
   {
     m->virtual = http_decode_string(m->virtual);
@@ -258,25 +259,17 @@ string tag_fsize(string tag, mapping m, object id)
       {
 	if(id->misc->defines->sizefmt=="bytes")
 	  return (string)s[1];
-	else
-	  return sizetostring(s[1]);
-      } else {
-	return strftime(id->misc->defines->timefmt || "%c", s[3]);
+        return sizetostring(s[1]);
       }
+      return strftime(id->misc->defines->timefmt || "%c", s[3]);
     }
     return rxml_error(tag, "Couldn't stat file.", id);
   }
   return rxml_error(tag, "No such file.", id);
 }
 
-string tag_exec(string tag, mapping m, object id)
+string tag_exec(string tag, mapping m, RequestID id)
 {
-  if(m->help) 
-    return ("See the Apache documentation. This tag is more or less "
-            "equivalent to &lt;insert file=...&gt;, but you can run "
-            "any command. Please note that this can present a severe "
-            " security hole when allowed.");
-
   if(m->cgi) {
     if(m->cache)
       CACHE((int)m->cache);
