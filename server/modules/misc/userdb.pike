@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.24 1998/02/10 18:36:19 per Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.25 1998/03/01 02:49:54 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -192,7 +192,7 @@ void read_data()
   case "ypcat":
     object privs;
 //  if(getuid() != geteuid()) privs = Privs("Reading password database");
-    data=popen("ypcat "+query("args")+" passwd");
+    data=Process.popen("ypcat "+query("args")+" passwd");
     if (objectp(privs)) {
       destruct(privs);
     }
@@ -259,7 +259,7 @@ void read_data()
 
   case "niscat":
     if(getuid() != geteuid()) privs=Privs("Reading password database");
-    data=popen("niscat "+query("args")+" passwd.org_dir");
+    data=Process.popen("niscat "+query("args")+" passwd.org_dir");
     if (objectp(privs)) {
       destruct(privs);
     }

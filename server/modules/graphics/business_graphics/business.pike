@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.78 1998/02/25 19:47:21 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.79 1998/03/01 02:49:53 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -722,9 +722,11 @@ mapping find_file(string f, object id)
     return http_string_answer( sprintf("<pre>%O\n", res) );
   
   mapping(string:mixed) diagram_data;
+
+  array back;
   
   if(res->bgcolor)
-    array back = res->bgcolor;
+    back = res->bgcolor;
 
   if(res->image)
   {

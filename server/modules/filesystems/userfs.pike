@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.18 1998/02/10 18:36:14 per Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.19 1998/03/01 02:49:53 per Exp $";
 
 // import Array;
 // import Stdio;
@@ -24,11 +24,25 @@ int uid_was_zero()
   return !(getuid() == 0); // Somewhat misnamed function.. :-)
 }
 
+int hide_searchpath()
+{
+  return QUERY(homedir);
+}
+
+int hide_pdir()
+{
+  return !QUERY(homedir);
+}
+
 void create()
 {
   ::create();
   killvar("searchpath");
-  
+  defvar("searchpath", "NONE", "Search path", TYPE_DIR,
+	 "This is where the module will find the files in the real "+
+	 "file system",
+	 0, hide_searchpath);
+
   set("mountpoint", "/~");
   
   defvar("only_password", 1, "Password users only",
@@ -60,12 +74,26 @@ void create()
 	 TYPE_STRING, "This is where the public directory is located. "
 	 "If the module is mounted on /~, and the file /~per/foo is "
 	 "accessed, and the home-dir of per is /home/per, the module "
-	 "will try to file /home/per/&lt;Public dir&gt;/foo.");
+	 "will try to file /home/per/&lt;Public dir&gt;/foo.",
+	 0, hide_pdir);
+
+  defvar("homedir" ,1, "Look in users homedir", TYPE_FLAG,
+	 "If set, the user's files are looked for in the home directory "
+	 "of the user, according to the <em>Public directory</em> variable. "
+	 "Otherwise, the <em>Search path</em> is used to find a directory "
+	 "with the same name as the user.");
 }
 
+multiset bl;
+mapping dude_ok;
 void start()
 {
+  ::start();
+  // We fix all file names to be absolute before passing them to
+  // filesystem.pike
   path="";
+  bl = mkmultiset(QUERY(banish_list));
+  dude_ok = ([]);
   // This is needed to override the inherited filesystem module start().
 }
 
@@ -88,9 +116,6 @@ mixed find_file(string f, object got)
   string u, of;
   of=f;
 
-  if(!roxen->userlist(got))
-    return http_string_answer("There is no user database module activated.\n");
-  
   if(f=="/" || !strlen(f)) return -1;
   
   if(sscanf(f, "%s/%s", u, f) != 2)
@@ -107,31 +132,36 @@ mixed find_file(string f, object got)
       redirects++;
       return http_redirect(got->not_query+"/",got);
     }
-    us = roxen->userinfo( u, got );
-    // No user, or access denied.
-    if(!us
-       || (QUERY(only_password) && (<"","*">)[us[ 1 ]])
-       || (search( QUERY(banish_list), u ) != -1))
-      return 0;
-
-    if(us[5][-1] != '/')
-	f = us[ 5 ] + "/" + QUERY(pdir) + f;
-    else	
-      f = us[ 5 ] + QUERY(pdir) + f;
-
-    //  if public dir is not a directory 
-    if(!strlen(f)) {
-      st = file_stat(f);
-      if(!st || st[1] != -2)
+    if(!dude_ok[ u ])
+    {
+      us = got->conf->userinfo( u, got );
+      // No user, or access denied.
+      if(!us
+	 || (QUERY(only_password) && (<"","*">)[us[ 1 ]]) || bl[u])
+      {
+	werror("user %s banished (%O)...\n", u, us);
 	return 0;
-    }
+      }
 
+      //  if public dir is not a directory 
+      if(!strlen(f)) {
+	st = stat_file(f,got);
+	if(!st || st[1] != -2)
+	  return 0;
+      }
+
+      if (QUERY(homedir))
+	dude_ok[ u ] =  replace(us[ 5 ] + "/" + QUERY(pdir), "//", "/");
+      else
+	dude_ok[ u ] = QUERY(searchpath) + u + "/";
+    }
     if(QUERY(own))
     {
-      st = file_stat(f);
-      if(!st || (st[-2] != (int)us[2])) 
+      st = stat_file(f,got);
+      if(!st || (st[-2] != (int)us[2]))
         return 0;
     }
+    f = dude_ok[u]+f;
     if(QUERY(useuserid))
       got->misc->is_user = f;
     return ::find_file( f, got );
@@ -142,7 +172,7 @@ mixed find_file(string f, object got)
 string real_file( mixed f, mixed id )
 {
   string u, of;
-  if(!strlen(f) || f=='/')
+  if(!strlen(f) || f=="/")
     return 0;
 
   if(sscanf(f, "%s/%s", u, f) != 2)
@@ -153,18 +183,23 @@ string real_file( mixed f, mixed id )
   
   if(u)
   {
-    string *us;
     array(int) fs;
-    us = roxen->userinfo( u, id );
-    if(!us) return 0;
-    if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
-    if(search(QUERY(banish_list), u) != -1)             return 0;
-    if(us[5][-1] != '/')
-      f = us[ 5 ] + "/" + QUERY(pdir) + f;
-    else
-      f = us[ 5 ] + QUERY(pdir) + f;
+    if(query("homedir"))
+    {
+      string *us;
+      us = id->conf->userinfo( u, id );
+      if(!us) return 0;
+      if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
+      if(search(QUERY(banish_list), u) != -1)             return 0;
+      if(us[5][-1] != '/')
+	f = us[ 5 ] + "/" + QUERY(pdir) + f;
+      else
+	f = us[ 5 ] + QUERY(pdir) + f;
+    } else
+      f = QUERY(searchpath) + u + "/" + f;
 
-    fs = file_stat( f );
+    // Use the inherited stat_file
+    fs = ::stat_file( f,id );
     // FIXME: Should probably have a look at this code.
     if (fs && ((fs[1] >= 0) || (fs[1] == -2)))
       return f;
@@ -177,9 +212,9 @@ array find_dir(string f, object got)
   string u, of;
   array l;
 
-  if(!strlen(f) || f=='/')
+  if(!strlen(f) || f=="/")
   {
-    l=roxen->userlist(got);
+    l=got->conf->userlist(got);
     if(l) return (l - QUERY(banish_list));
     return 0;
   }
@@ -191,25 +226,30 @@ array find_dir(string f, object got)
 
   if(u)
   {
-    string *us;
-    us = roxen->userinfo( u, got );
-    if(!us) return 0;
-    if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
-    if(search(QUERY(banish_list), u) != -1)             return 0;
-    if(us[5][-1] != '/')
-      f = us[ 5 ] + "/" + QUERY(pdir) + f;
+    if(query("homedir"))
+    {
+      array(string) us;
+      us = got->conf->userinfo( u, got );
+      if(!us) return 0;
+      if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
+      if(search(QUERY(banish_list), u) != -1)             return 0;
+      if(us[5][-1] != '/')
+	f = us[ 5 ] + "/" + QUERY(pdir) + f;
+      else
+	f = us[ 5 ] + QUERY(pdir) + f;
+    }
     else
-      f = us[ 5 ] + QUERY(pdir) + f;
+      f = QUERY(searchpath) + u + "/" + f;
     return ::find_dir(f, got);
   }
-  return (roxen->userlist(got) - QUERY(banish_list));
+  return (got->conf->userlist(got) - QUERY(banish_list));
 }
 
 mixed stat_file( mixed f, mixed id )
 {
   string u, of;
 
-  if(!strlen(f) || f=='/')
+  if(!strlen(f) || f=="/")
     return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
 
   if(sscanf(f, "%s/%s", u, f) != 2)
@@ -221,15 +261,19 @@ mixed stat_file( mixed f, mixed id )
   if(u)
   {
     array us, st;
-    us = roxen->userinfo( u, id );
-    if(!us) return 0;
-    if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
-    if(search(QUERY(banish_list), u) != -1)             return 0;
-    if(us[5][-1] != '/')
-      f = us[ 5 ] + "/" + QUERY(pdir) + f;
-    else
-      f = us[ 5 ] + QUERY(pdir) + f;
-    st = file_stat( f );
+    us = id->conf->userinfo( u, id );
+    if(query("homedir"))
+    {
+      if(!us) return 0;
+      if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
+      if(search(QUERY(banish_list), u) != -1)             return 0;
+      if(us[5][-1] != '/')
+	f = us[ 5 ] + "/" + QUERY(pdir) + f;
+      else
+	f = us[ 5 ] + QUERY(pdir) + f;
+    } else
+      f = QUERY(searchpath) + u + "/" + f;
+    st = ::stat_file( f,id );
     if(!st) return st;
     if(QUERY(own) && (int)us[2] != st[-2]) return 0;
     return st;
@@ -241,6 +285,8 @@ mixed stat_file( mixed f, mixed id )
 
 string query_name()
 {
-  return ("Location: <i>" + QUERY(mountpoint) + "</i>, "
-	  "Pubdir: <i>" + QUERY(pdir) +"</i>");
+  return ("Location: <i>" + QUERY(mountpoint) + "</i>, " +
+	  (QUERY(homedir)
+	   ? "Pubdir: <i>" + QUERY(pdir) +"</i>"
+	   : "mounted from: <i>" + QUERY(searchpath) + "</i>"));
 }

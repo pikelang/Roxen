@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.14 1998/01/16 17:14:50 grubba Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.15 1998/03/01 02:49:54 per Exp $";
 constant thread_safe=1;
 
 
@@ -182,20 +182,26 @@ class CacheFile {
     move_this_to_tail();
   }
 
+  void wait()
+  {
+    remove_call_out(timeout);
+  }
+  
   int open(string s, string|void mode)
   {
     int st;
     st = file::open(s, "wa");
     file = s;
     ready = !st;
-    call_out(timeout, d);
+    // call_out(timeout, d);     Removed by davidk
     return st;
   }
   
   string status()
   {
-    return ((ready?"Free (closed) cache file ("+n+").\n":"Open: "+file+"\n") +
-	    (next?next->status():"")+"("+n+")");
+    return ((ready?"Free (closed) cache file ("+n+").\n"
+	     :"Open: "+file+" ("+n+")"+"\n") +
+	    (next?next->status():""));
   }
 
   void move_this_to_head()
@@ -248,7 +254,10 @@ class CacheFile {
     move_this_to_head();
     remove_call_out(timeout);
     call_out(timeout, d);
-    ::write(s);
+    if(ready)
+      werror("home_logger: Trying to write to a closed file "+file+"\n");
+    else
+      ::write(s);
   }
 
   void create(int num, int delay, object m, object mu)
@@ -265,6 +274,7 @@ class CacheFile {
 
   void destroy()
   {
+    remove_call_out(timeout);
     if(next) destruct(next);
   }
 };
@@ -423,7 +433,10 @@ mixed log(object id, mapping file)
 
   if((s = home(id->not_query, id)) && 
      (fnord=find_cache_file(s)))
+  {
+    fnord->wait(); // Tell it not to die
     do_log(file,id,fnord->write);
+  }
   if(QUERY(block) && fnord)
     return 1;
 }

@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.60 1998/02/23 07:49:31 neotron Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.61 1998/03/01 02:49:52 per Exp $";
 
 #define perror roxen_perror
 
@@ -494,6 +494,7 @@ static private void initiate_cache()
   add_constant("cache_set", cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
+  add_constant("cache_clear", cache->cache_clear);
   add_constant("cache_expire", cache->cache_expire);
   add_constant("cache", cache);
   add_constant("capitalize", lambda(string s){return upper_case(s[0..0])+s[1..];});
