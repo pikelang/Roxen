@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.7 2000/09/19 08:02:28 per Exp $
+ * $Id: locks.pike,v 1.8 2000/09/19 09:49:37 lange Exp $
  */
 
 #include <config.h>
@@ -12,7 +12,7 @@ inherit "../logutil";
 //<locale-token project="admin_tasks">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
-constant action="debug";
+constant action="debug_info";
 
 string name= LOCALE(280, "Module lock status");
 string doc = LOCALE(281, 

@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.17 2000/09/19 08:02:28 per Exp $
+ * $Id: resolv.pike,v 1.18 2000/09/19 09:49:38 lange Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -7,7 +7,7 @@ inherit "../logutil";
 //<locale-token project="admin_tasks">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
-constant action = "debug";
+constant action = "debug_info";
 
 string name= LOCALE(27, "Resolve path...");
 string doc = LOCALE(28, 
