@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.180 1999/05/25 11:40:57 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.181 1999/06/10 03:37:45 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -231,11 +231,14 @@ void create()
 
   defvar("noparse", ({  }), "Extensions to access count",
           TYPE_STRING_LIST,
-         "Always access count all files ending with these extensions.");
- 
-  
+         "Always access count all files ending with these extensions. "
+	 "Note: This module must be reloaded for a change here to take "
+	 "effect.");
+
   defvar("toparse", ({ "rxml","spml", "html", "htm" }), "Extensions to parse", 
-	 TYPE_STRING_LIST, "Parse all files ending with these extensions.");
+	 TYPE_STRING_LIST, "Parse all files ending with these extensions. "
+	 "Note: This module must be reloaded for a change here to take "
+	 "effect.");
 
   defvar("parse_exec", 0, "Require exec bit on files for parsing",
 	 TYPE_FLAG|VAR_MORE,
