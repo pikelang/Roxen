@@ -209,6 +209,11 @@ string language(string code)
   return languages[code];
 }
 
+mapping list_languages()
+{
+  return languages;
+}
+
 string number(int i)
 {
   return (string)i;
