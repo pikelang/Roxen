@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.1 2000/02/02 04:14:17 per Exp $
+ * $Id: locks.pike,v 1.2 2000/02/03 15:39:27 jhs Exp $
  */
 #include <config.h>
 
@@ -7,6 +7,7 @@
 constant action_disabled = 1;
 #else /* THREADS */
 inherit "wizard";
+inherit "../logutil";
 
 constant action="status";
 constant name= "Module lock status";
@@ -21,10 +22,12 @@ string describe_module(object q)
 	int w;
 	mapping mod = c->modules[m];
 	if(mod->enabled == q)
-	  return c->name+"/"+m+"</td><td>"+roxen->filename(q);
+	  return sprintf("<a href=\"%s\">%s</a></td><td>%s",
+			 @get_conf_url_to_module(c->name+"/"+m), roxen->filename(q));
 	else if(mod->copies && !zero_type(search(mod->copies,q)))
-	  return (c->name+"/"+m+"#"+search(mod->copies,q)+
-		  "</td><td>"+roxen->filename(q));
+	  return sprintf("<a href=\"%s\">%s</a></td><td>%s",
+			 @get_conf_url_to_module(c->name+"/"+m+"#"+search(mod->copies,q)),
+			 roxen->filename(q));
     }
   }
   return "Unknown module</td><td>"+roxen->filename(q)+"";
