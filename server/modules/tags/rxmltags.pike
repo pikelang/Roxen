@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.116 2000/04/15 00:44:43 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.117 2000/04/15 02:20:38 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -81,7 +81,7 @@ class EntityPageVirtfile {
 
 class EntityPageQuery {
   inherit RXML.Value;
-  string rxml_const_eval(RXML.Context c) { return c->id->query; }
+  string rxml_const_eval(RXML.Context c) { return c->id->query||""; }
 }
 
 class EntityPageURL {
@@ -101,7 +101,7 @@ class EntityPageLanguage {
 
 class EntityPageScope {
   inherit RXML.Value;
-  string rxml_var_eval(RXML.Context c) { return c->current_scope(); }
+  string rxml_var_eval(RXML.Context c) { return c->current_scope()||""; }
 }
 
 class EntityPageFileSize {
@@ -1485,12 +1485,13 @@ constant tagdoc=([
 <desc ent>The \"path info\" part of the URL, if any. Can only get set
 if the \"Path info support\" module is installed. For details see the
 documentation for that module.</desc>",
-"&page.query;":"<desc ent></desc>",
+"&page.query;":"<desc ent>The query part of the page URI.</desc>",
 "&page.url;":"<desc ent>The URL to this file, from the web server's root or point of view.</desc>",
-"&page.last-true;":"<desc ent></desc>",
+"&page.last-true;":#"<desc ent>Is 1 if the last <tag>if</tag>-statement succeeded, otherwise 0.
+(<tag>true/</tag> and <tag>false/</tag> is considered as <tag>if</tag>-statements here)</desc>",
 "&page.language;":#"<desc ent>What language the contens of this file is written in.
  The language must be given as metadata to be found.</desc>",
-"&page.scope;":"<desc ent></desc>",
+"&page.scope;":"<desc ent>The name of the current scope, i.e. the scope accessible through the name \"_\".</desc>",
 "&page.filesize;":"<desc ent>This file's size, in bytes.</desc>",
 "&page.ssl-strength;":"<desc ent>The strength in bits of the current SSL connection.</desc>",
 "&page.self;":"<desc ent>The name of this file.</desc>",
