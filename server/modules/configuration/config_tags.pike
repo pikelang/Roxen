@@ -436,6 +436,10 @@ string set_variable( string v, object in, mixed to, object id )
    case TYPE_INT_LIST:
      if( !var[ VAR_MISC ] )
      {
+       if (sscanf (val, "%*[ \t\n\r]%*c") < 2) {
+	 val = ({});
+	 break;
+       }
        val /= ",";
        int i;
        for( i = 0; i<sizeof( val ); i++ )
