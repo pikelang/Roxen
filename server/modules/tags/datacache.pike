@@ -9,7 +9,7 @@
 //
 
 constant cvs_version =
- "$Id: datacache.pike,v 1.1 2004/06/07 02:04:14 _cvs_stephen Exp $";
+ "$Id: datacache.pike,v 1.2 2004/06/07 08:41:37 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -19,8 +19,8 @@ inherit "module";
 // ---------------- Module registration stuff ----------------
 
 constant module_type = MODULE_TAG;
-LocaleString module_name = "Tags: Datacache";
-LocaleString module_doc  = 
+constant module_name = "Tags: Datacache";
+constant module_doc  = 
  "This module provides the datacache RXML tag.<br />"
  "<p>Copyright &copy; 2004-2005, by "
  "<a href='mailto:srb@cuci.nl'>Stephen R. van den Berg</a>, "
@@ -48,11 +48,29 @@ void create() {
    "Entries older than this many seconds, will be expired.");
 }
 
+/*
+ * A generic memory-based cache implementation
+ * by Stephen R. van den Berg <srb@cuci.nl>
+ *
+ * $Id: datacache.pike,v 1.2 2004/06/07 08:41:37 _cvs_stephen Exp $
+ *
+ */
+
+//! This module implements a generic memory-based cache implementation
+//! which allows tight control over the memory footprint of the cache.
+//! The expiration policy is parameterised, but uses a standard LRU
+//! ordering to decide which elements are due for removal.
+//! The underlying technique used is a native Pike mapping augmented
+//! by a LRU linked list.
+
 class MemCache {
   static int smaxmem;
+//! The total amount of memory in use as accounted by the @[size] parameter
+//! to the @[store] method.
   int usedmem;
   static int smaxage;
   static int smaxcount;
+//! The total number of cache entries in use.
   int entrycount;
   static int smaxsize;
   static int(0..1) spurge;
@@ -61,6 +79,10 @@ class MemCache {
   static mapping(string|int:array(mixed)) thestore=([0:root]);
   private Thread.Mutex listorder=Thread.Mutex();
 
+//! Adjust the constraints for the cache, can be called while the cache
+//! is already operational.
+//! @seealso
+//!  @[create]
   void setparameters(int maxmem,void|int maxage, void|int maxcount,
    void|int maxsize, void|int(0..1) purge) {
     if(entrycount)
@@ -69,6 +91,23 @@ class MemCache {
     smaxsize=maxsize; spurge=purge;
   }
 
+//! Initialise the @[MemCache] object.
+//! @param maxmem
+//!  Maximum amount of memory (in bytes) to be used by the cache,
+//!  if this is exceeded, the oldest entries will be expired.
+//! @param maxage
+//!  Maximum age (in seconds) for the oldest entries in the cache,
+//!  anything older will be expired.
+//! @param maxcount
+//!  Maximum number of entries to be used by the cache,
+//!  if this is exceeded, the oldest entries will be expired.
+//! @param maxsize
+//!  The maximum size (in bytes) of any element stored in the cache,
+//!  anything above this will not get cached.
+//! @param purge
+//!  If set to one, expiring cache elements will use an explicit @[destruct].
+//! @seealso
+//!  @[setparameters]
   static void create(int maxmem, void|int maxage, void|int maxcount,
    void|int maxsize, void|int(0..1) purge) {
     setparameters(maxmem, maxage, maxcount, maxsize, purge);
@@ -81,6 +120,12 @@ class MemCache {
       drop(root[inext], purge);
   }
 
+//! Expire cache items using different constraints than the defaults.
+//! There is no need to call this function if the constraints match
+//! the defaults, because cache expiry is done inline every time an
+//! element is added.
+//! @seealso
+//!  @[create], @[setparameters]
   void expire(int maxmem, void|int maxage, void|int maxcount, void|int maxsize,
    void|int purge) {
     if(maxsize && (!smaxsize || maxsize<smaxsize)) {
@@ -99,21 +144,29 @@ class MemCache {
   }
 
   static void hit(string|int key, array match) {
-    thestore[match[inext]][iprev]=match[iprev];
+    thestore[match[inext]][iprev]=match[iprev];	     // Take it out of the list
     thestore[match[iprev]][inext]=match[inext];
-    match[inext]=0;
+    match[inext]=0;				     // Move to the rear
     root[iprev]=thestore[match[iprev]=root[iprev]][inext]=key;
   }
 
+//! Explicitly drop an element from the cache.
+//! @param key
+//!  The unique key referencing the element to be deleted.
+//! @param purge
+//!  If set to one, expiring cache elements will use an explicit @[destruct],
+//!  if omitted or set to zero, the default setting will be used instead.
+//! @seealso
+//!  @[create], @[setparameters]
   void drop(string|int key, void|int(0..1) purge) {
     array match;
     { Thread.MutexKey k=listorder->lock();
       if(!key || !(match=thestore[key]))
         return;
-      thestore[match[inext]][iprev]=match[iprev];
+      thestore[match[inext]][iprev]=match[iprev];    // Take it out of the list
       thestore[match[iprev]][inext]=match[inext];
       m_delete(thestore,key);
-      destruct(k);
+      destruct(k);			     // These locks won't die otherwise
     }
     mixed op=match[ivalue];
     usedmem-=match[isize];
@@ -122,6 +175,12 @@ class MemCache {
     entrycount--;
   }
 
+//! Retrieve an element from the cache.  Returns 0 if the element could not
+//! be found.
+//! @param key
+//!  The unique key referencing the element to be retrieved.
+//! @seealso
+//!  @[store], @[create]
   mixed get(string|int key) {
     array match;
     if(key && (match=thestore[key])) {
@@ -141,12 +200,32 @@ class MemCache {
     return match && match[ivalue];
   }
 
+//! Store an element into the cache.  Returns the element it is storing,
+//! even if it is not going to be stored.
+//! @param key
+//!  The unique key referencing the element to be stored.
+//! @param value
+//!  The element to be stored (can truely be of any type and any size).
+//! @param expires
+//!  Unix timestamp when this entry must expire, zero when no specific
+//!  time is known.
+//! @param size
+//!  The size of the element @[value].  This is used to do the memory
+//!  usage accounting.  If this is not specified, a @[sizeof(value)] will
+//!  be done instead, but this is far from ideal and most likely incorrect
+//!  for all but the @[string] datatype.
+//! @param autorefresh
+//!  If non-zero, it specifies the additional amount of seconds this
+//!  entry's lifetime should be extended everytime it is accessed.
+//!  The usefulness of this parameter is yet to be determined.
+//! @seealso
+//!  @[get], @[create]
   mixed store(string|int key, mixed value, void|int expires, void|int size,
    void|int autorefresh) {
     if(key) {
       int t=time(1);
       if(!size)
-        size=sizeof(value);	 // This is far from ideal, FIXME
+        size=sizeof(value);		       // This is far from ideal, FIXME
       if(smaxsize && size>smaxsize)
         return value;
       if(!expires) {
@@ -188,15 +267,27 @@ class MemCache {
     }
 #ifdef DEBUG
     else
-      throw(0);	     // empty keys should not be stored in the cache
+      throw(0);	     // empty keys should not and cannot be stored in the cache
 #endif
     return value;
   }
 
+//! Retrieve an element from the cache.  Returns 0 if the element could not
+//! be found.
+//! @param key
+//!  The unique key referencing the element to be retrieved.
+//! @seealso
+//!  @[get]
   mixed `[](string|int key) {
     return get(key);
   }
 
+//! Store an element into the cache.  Returns the element it is storing,
+//! even if it is not going to be stored.
+//! @param key
+//!  The unique key referencing the element to be stored.
+//! @seealso
+//!  @[store]
   mixed `[]= (string|int key, mixed value) {
     return store(key, value);
   }
