@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.291 2002/02/06 22:31:02 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.292 2002/10/22 00:26:05 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -878,7 +878,7 @@ private mapping mk_gtext_arg(mapping arg, RequestID id)
        m_delete(arg,tmp);
      }
 
-//   if(arg->border && (search(arg->border,",")!=-1))
+//   if(arg->border && has_value(arg->border,","))
 //   {
 //     p->border=arg->border;
 //     m_delete(arg,"border");

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: dir_playlist.pike,v 1.6 2002/07/10 15:38:49 nilsson Exp $";
+constant cvs_version="$Id: dir_playlist.pike,v 1.7 2002/10/22 00:25:24 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -61,7 +61,7 @@ void start()
 	if( s->isdir )
 	  recursively_add( d+"/"+f );
 	else
-	  if(search(query("exts")/"," || ({}), (f/".")[-1]) > -1)
+	  if(has_value(query("exts")/"," || ({}), (f/".")[-1]))
 	      list += ({ combine_path( d+"/",f) });
   };
   recursively_add( query("dir") );

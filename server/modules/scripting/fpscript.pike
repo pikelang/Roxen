@@ -4,7 +4,7 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-constant cvs_version = "$Id: fpscript.pike,v 1.13 2001/09/03 18:38:37 nilsson Exp $";
+constant cvs_version = "$Id: fpscript.pike,v 1.14 2002/10/22 00:21:06 nilsson Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi.pike";
@@ -63,7 +63,7 @@ int|object(Stdio.File)|mapping find_file(string f, RequestID id)
 #ifdef FPSCRIPT_DEBUG
   werror("FPScript: find_file(%O)\n", f);
 #endif
-  if(search(f, "_vti_bin/") == -1)
+  if(!has_value(f, "_vti_bin/"))
     return 0;
   return ::find_file(f, id);
 }
@@ -73,7 +73,7 @@ array(string) find_dir(string f, RequestID id)
 #ifdef FPSCRIPT_DEBUG
   werror("FPScript: find_dir(%O)\n", f);
 #endif
-  if(search(f, "_vti_bin/") == -1)
+  if(!has_value(f, "_vti_bin/"))
     return 0;
   return ::find_dir(f, id);
 }

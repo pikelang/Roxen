@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.381 2002/10/01 22:58:35 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.382 2002/10/22 00:20:29 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1844,7 +1844,7 @@ string simpletag_autoformat(string tag, mapping m, string s, RequestID id)
   if(!m->nobr) {
     s = replace(s, "\n", "<br />\n");
     if(m->p) {
-      if(search(s, "<br />\n<br />\n")!=-1) s=p+s;
+      if(has_value(s, "<br />\n<br />\n")) s=p+s;
       s = replace(s, "<br />\n<br />\n", "\n</p>"+p+"\n");
       if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
         s=p+s;
@@ -1857,7 +1857,7 @@ string simpletag_autoformat(string tag, mapping m, string s, RequestID id)
   }
 
   if(m->p) {
-    if(search(s, "\n\n")!=-1) s=p+s;
+    if(has_value(s, "\n\n")) s=p+s;
       s = replace(s, "\n\n", "\n</p>"+p+"\n");
       if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
         s=p+s;

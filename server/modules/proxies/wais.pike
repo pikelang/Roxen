@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.26 2002/07/03 12:41:47 nilsson Exp $";
+string cvs_version = "$Id: wais.pike,v 1.27 2002/10/22 00:23:29 nilsson Exp $";
 
 #include <config.h>
 #include <module.h>
@@ -281,7 +281,7 @@ string debug_print_string(string str)
   out="";
   for(i=0;i<sizeof(str); i++) {
     t=str[i..i];
-    if(search("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./-_$:;,\"",t)==-1) {
+    if(!has_value("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./-_$:;,\"",t)) {
       out += sprintf("<%d>",t[0]);
     } else
       out += t;

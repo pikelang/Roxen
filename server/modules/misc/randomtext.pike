@@ -60,7 +60,7 @@ inherit "module";
 
 #include <module.h>
 
-string version = "$Id: randomtext.pike,v 1.8 2002/06/05 10:13:17 nilsson Exp $";
+string version = "$Id: randomtext.pike,v 1.9 2002/10/22 00:24:20 nilsson Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Random Text";
@@ -483,7 +483,7 @@ mixed simpletag_make_random_text(string tag, mapping attr, string contents,
 
     if (!file || !stringp(file))
       file = "default";
-    if (search(file, "/") != -1)
+    if (has_value(file, "/"))
       return "<b>make-random-text: `/' not allowed in rules name</b>";
 
     if (query("searchcwd") && stringp(id->realfile))

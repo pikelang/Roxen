@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.29 2001/11/12 17:51:56 mast Exp $";
+string cvs_version="$Id: pimage.pike,v 1.30 2002/10/22 00:26:22 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -430,7 +430,7 @@ object compile(string c, object id)
     "inherit __PRIVATE_TO_PIMAGE_Constructors;\n"
     "void create(object i){ id=i; }\n"
     "\n";
-  if(search(c, "draw")!=-1) pre += "#0 tag_contents\n" + c;
+  if(has_value(c, "draw")) pre += "#0 tag_contents\n" + c;
   else pre += "#0 tag_contents\nobject draw() { "+c+" };";
   return compile_string(pre, "whatever")(id)->draw();
 }

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.40 2001/09/03 18:35:37 nilsson Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.41 2002/10/22 00:22:13 nilsson Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -36,7 +36,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.40 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.41 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -277,7 +277,7 @@ class Request {
 
     if((sscanf(dir[0], "l%*s "+file+" -> %s", f) == 2) && (f != "."))
     {
-      if(search(f, "../") == 0)
+      if(has_prefix(f, "../"))
 	f = "../" +f;
       file = combine_path(file, f) + (f[-1] == '/' ? "" : "/");
       buffer="";
@@ -1036,8 +1036,8 @@ class Request {
     else effect=0;
 
     file="/"+rfile;
-    if (search(file,"*")!=-1||
-	search(file,"?")!=-1) trystat=1; else trystat=0;
+    if (has_value(file,"*")||
+	has_value(file,"?")) trystat=1; else trystat=0;
 
     port=rport;
     if ((m=master->ftp_connection((user||"")+"@"+host+":"+port)) && m[0])
@@ -1316,7 +1316,7 @@ mixed|mapping find_file( string f, object id )
   while(sizeof(f) && f[0]=='/')
     f=f[1..];
 
-  if(search(f, "/") == -1)
+  if(!has_value(f, "/"))
     return http_redirect(f+"/");
 
   if(sscanf(f, "%[^/]/%s", host, file) < 2)

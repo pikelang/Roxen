@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.17 2001/09/03 18:31:05 nilsson Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.18 2002/10/22 00:24:05 nilsson Exp $";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG
@@ -69,7 +69,7 @@ mapping|int last_resort(object id)
   }
 #else /* PATHINFO_LINEAR */
   string pi = "";
-  while( (search( query[1..], "/" ) != -1) && strlen( query ) > 0 )
+  while( has_value( query[1..], "/" ) ) && strlen( query ) > 0 )
   {
     query = reverse(query);
     string add_path_info;

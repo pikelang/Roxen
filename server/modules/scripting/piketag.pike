@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.36 2001/09/21 15:58:13 jhs Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.37 2002/10/22 00:21:29 nilsson Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -456,9 +456,9 @@ string functions(string page, int line)
 // Preamble
 string pre(string what, object id)
 {
-  if(search(what, "parse(") != -1)
+  if(has_value(what, "parse("))
     return functions(id->not_query, id->misc->line);
-  if(search(what, "return") != -1)
+  if(has_value(what, "return"))
     return functions(id->not_query, id->misc->line) + 
     "string|int parse(RequestID id, mapping defines, object file, mapping args) { ";
   else
@@ -469,7 +469,7 @@ string pre(string what, object id)
 // Will be added at the end...
 string post(string what) 
 {
-  if(search(what, "parse(") != -1)
+  if(has_value(what, "parse("))
     return "";
   if (!strlen(what) || what[-1] != ';')
     return ";}";

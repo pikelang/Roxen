@@ -1,7 +1,7 @@
 // This is a roxen protocol module.
 // Copyright © 2001, Roxen IS.
 
-// $Id: prot_https.pike,v 2.5 2002/06/14 00:38:39 nilsson Exp $
+// $Id: prot_https.pike,v 2.6 2002/10/22 00:13:34 nilsson Exp $
 
 // --- Debug defines ---
 
@@ -54,7 +54,7 @@ class fallback_redirect_request
     string name;
     string prefix;
 
-    if (search(in, "\r\n\r\n") >= 0)
+    if (has_value(in, "\r\n\r\n"))
     {
       //      werror("request = '%s'\n", in);
       array(string) lines = in / "\r\n";
@@ -127,7 +127,7 @@ class http_fallback
     SSL3_WERR(sprintf("http_fallback(X, %O, \"%s\")", n, data));
     //  trace(1);
     if ( (my_fd->current_write_state->seq_num == 0)
-	 && search(lower_case(data), "http"))
+	 && has_value(lower_case(data), "http"))
     {
       object raw_fd = my_fd->socket;
       my_fd->socket = 0;
