@@ -9,7 +9,7 @@ inherit "module";
 inherit "roxenlib";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wml.pike,v 1.6 2000/02/24 05:20:11 nilsson Exp $";
+constant cvs_version = "$Id: wml.pike,v 1.7 2000/03/14 06:55:11 nilsson Exp $";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "WAP WML module.";
@@ -312,7 +312,7 @@ mapping wap=(["1.0":wap_1_0(),"1.1":wap_1_1()]);
 
 //---------------- Stuff that really do something ----------------------
 
-array(string) container_wml(string tag, mapping m, mixed c, RequestID id) {
+string simpletag_wml(string tag, mapping m, string|array(string) c, RequestID id) {
 
   //What do we have and where should we go?
   string from=m->from||"1.1";
@@ -350,7 +350,7 @@ array(string) container_wml(string tag, mapping m, mixed c, RequestID id) {
 
   if(!m->noheader) c=wap[to]->header+c;
 
-  return ({c});
+  return c;
 }
 
 //Here I had a nice OO model, but I gave it up for speed and efficency.
