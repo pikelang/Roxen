@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.262 2001/03/13 11:52:04 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.263 2001/03/14 11:36:01 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -507,32 +507,26 @@ constant tagdoc=([
 </attr>"+gtextargs,
 
 "gtext-id":#"<desc tag='tag'><p><short>
-
- Returns an internal URL to an image
-
-get dig en URL som som get dig en bild med de argument du
-specificerat om du också lägger på en sträng med den text du vill ha
-efter den URLen. Den här tagen är ett DOS-hål och bör avrådas ifrån om 
-man inte använder den under okntrollerade former som tex ett intranät.
-
- </short></p>
-
-</desc>
-
-<attr name='href' value='URL'><p>
- Link the image to the specified URL. The link color of the document
- will be used as the default foreground rather than the foreground
- color.</p>
-</attr>
-
-<attr name='short'><p></p>
-
-</attr>"+gtextargs,
-
-"gtext-url":#"<desc cont='cont'><p><short>
  Returns an internal URL to an image with the specified attributes
- applied.</short> <tag>gtext-url</tag> takes the same attributes as
- <xref href='gtext.tag' />.</p>
+ applied.</short> To use this tag a string with the wanted text needs
+ to be put after the URL. Warning: This tag is a serious security
+ problem since it is possible to supply very long strings to it,
+ turning it into a DOS hole. Hence, this tag should only be used where
+ its use can be controlled, e.g. Intranets.</p>
+
+<ex type='box'>
+<define variable='var.image' preparse='yes'><gtext-id/></define>
+<a href='&var.bild;'>Click me!</a>
+</ex>
+
+ <p>This link would lead to an empty page. However, if some text would
+ be put after the URL the page would instead have some graphical text
+ in its upper left corner .</p>
+
+<ex type='vert'>
+<define variable='var.image' preparse='yes'><gtext-id/></define>
+<img src='<ent>var.image</ent>\"My text\"' />
+</ex>
 </desc>
 
 <attr name='href' value='URL'><p>
@@ -542,6 +536,23 @@ man inte använder den under okntrollerade former som tex ett intranät.
 </attr>
 
 <attr name='short'><p>
+ Returns a relative path to the image, i.e. a shorter one.
+</p>
+</attr>"+gtextargs,
+
+"gtext-url":#"<desc cont='cont'><p><short>
+ Returns an internal URL to an image with the specified attributes
+ applied.</short></p>
+</desc>
+
+<attr name='href' value='URL'><p>
+ Link the image to the specified URL. The link color of the document
+ will be used as the default foreground rather than the foreground
+ color.</p>
+</attr>
+
+<attr name='short'><p>
+ Returns a relative path to the image, i.e. a shorter one.
 </p>
 </attr>
 <noex>"+gtextargs+"</noex>",]);
