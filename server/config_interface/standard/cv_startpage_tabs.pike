@@ -1,9 +1,13 @@
+#include <roxen.h>
+LOCALE_PROJECT(config_interface);
+#define LOCALE(X,Y)	_DEF_LOCALE(X,Y)
+
 array pages =
 ({
-  ({ "home",     "",                0,               0             }),
-  ({ "update",     "update.html",    0,               0             }),
-  ({ "usersettings","settings.html",   0,               0             }),
-  ({ "users",       "users.html",      "Edit Users",    0             }),
+  ({ LOCALE("", "Startpage"),     "",                0,               0             }),
+  ({ LOCALE("", "Update"),        "update.html",     0,               0             }),
+  ({ LOCALE("", "Your Settings"), "settings.html",   0,               0             }),
+  ({ LOCALE("", "Users"),         "users.html",      "Edit Users",    0             }),
 });
 
 string parse(object id)
@@ -34,10 +38,8 @@ string parse(object id)
     if( page == pages[0] )       ea = "first ";
     if( page == pages[-1] )      ea = "last=30 ";
 
-    res += "<tab "+ea+"href='"+page[1]+"'"+((page[1] == q)?" selected='1'":"")+">";
-    res += "&locale."+page[0]+";";
-    res += "</tab>";
-    res += tpost;
+    res += "<tab "+ea+"href='"+page[1]+"'"+((page[1] == q)?" selected='1'":"")+">" +
+      page[0]+"</tab>" + tpost;
   }
 
   return res;
