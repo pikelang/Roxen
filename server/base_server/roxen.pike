@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.212 1998/06/13 19:11:27 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.213 1998/06/13 19:18:56 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -802,6 +802,7 @@ public string full_status()
   hrs -= days*24;
 
   res = sprintf("<table>"
+		"<tr><td><b>Version:</b></td><td colspan=2>%s</td></tr>\n"
 		"<tr><td><b>Booted on:</b></td><td colspan=2>%s</td></tr>\n"
 		"<tr><td><b>Time to boot:</b></td>"
 		"<td>%d sec</td></tr>\n"
@@ -810,7 +811,7 @@ public string full_status()
 		"<tr><td colspan=3>&nbsp;</td></tr>\n"
 		"<tr><td><b>Sent data:</b></td><td>%s"
 		"</td><td>%.2f Kbit/sec</td></tr><tr>\n",
-		ctime(boot_time), start_time-boot_time,
+		real_version, ctime(boot_time), start_time-boot_time,
 		days, (days==1?"":"s"), hrs, min, uptime%60,
 		foo[1], foo[0] * 8192.0);
   
