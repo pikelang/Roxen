@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.30 1998/03/12 16:20:23 mast Exp $
+# $Id: Makefile,v 1.31 1998/03/12 19:48:44 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -147,6 +147,16 @@ check : verify
 dist_clean :
 	@echo "Clearing the build-tree..."
 	-@rm -rf build || true
+
+keep_dbapi:
+	@echo "Keeping DBAPI..."
+	@dirs=`find pike -type d -print|egrep 'Oracle|Odbc'`; \
+	if test "x$dirs" = "x"; then \
+	  echo "DBAPI already censored.";
+	  exit 1;
+	else \
+	  tar cf dbapi.tar $dirs; \
+	fi
 
 censor : censor_crypto censor_dbapi dist_clean
 	@echo "Censoring complete."
