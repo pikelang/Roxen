@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.156 1999/10/04 15:11:55 per Exp $
+// $Id: http.pike,v 1.157 1999/10/04 18:53:22 marcus Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.156 1999/10/04 15:11:55 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.157 1999/10/04 18:53:22 marcus Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -40,12 +40,12 @@ constant find_supports = roxen.find_supports;
 constant version       = roxen.version;
 constant _query        = roxen.query;
 constant _time         = predef::time;
-constant find_configuration_for_url = roxen.find_configuration_for_url;
 
 private static array(string) cache;
 private static int wanted_data, have_data;
 
 object conf;
+object port_obj;
 
 #include <roxen.h>
 #include <module.h>
@@ -1569,7 +1569,7 @@ void got_data(mixed fooid, string s)
     return;
   }
 
-  conf = find_configuration_for_url( "http://"+misc->host+not_query,
+  conf = port_obj->find_configuration_for_url( "http://"+misc->host+(search(misc->host, ":")<0? ":80":"")+not_query,
                                      this_object() );
 
   if (rawauth) 
@@ -1676,7 +1676,7 @@ void create(object f, object c)
     f->set_nonblocking(got_data, 0, end);
     my_fd = f;
     if( c )
-      conf = c;
+      port_obj = c;
     call_out(do_timeout, 30);
     time = _time(1);
   }

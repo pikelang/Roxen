@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.327 1999/10/04 15:11:55 per Exp $
+ * $Id: roxen.pike,v 1.328 1999/10/04 18:53:21 marcus Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.327 1999/10/04 15:11:55 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.328 1999/10/04 18:53:21 marcus Exp $";
 
 object backend_thread;
 object argcache;
@@ -614,14 +614,26 @@ class Protocol
   int refs;
   string ip;
   program requesthandler;
+  array(string) sorted_urls = ({});
+  mapping(string:mapping) urls = ([]);
 
-  void ref()
+  void ref(string name, mapping data)
   {
+    if(urls[name])
+      return;
     refs++;
+    urls[name] = data;
+    sorted_urls = Array.sort_array(indices(urls), lambda(string a, string b) {
+						    return sizeof(a)<sizeof(b);
+						  });
   }
 
-  void unref()
+  void unref(string name)
   {
+    if(!urls[name])
+      return;
+    m_delete(urls, name);
+    sorted_urls -= ({name});
     if( !--refs )
       destruct( ); // Close the port.
   }
@@ -632,7 +644,23 @@ class Protocol
     if( !q )
       ;// .. errno stuff here ..
     else
-      requesthandler( q );
+      requesthandler( q, this_object() );
+  }
+
+  object find_configuration_for_url( string url, RequestID id )
+  {
+    werror("find configuration for '"+url+"'\n");
+    foreach( sorted_urls, string in )
+    {
+      if( glob( in+"*", url ) )
+      {
+	if( urls[in]->path )
+	  id->not_query = id->not_query[strlen(urls[in]->path)..];
+	return urls[ in ]->conf;
+      }
+    }
+    // Ouch.
+    return values( urls )[0]->conf;
   }
 
   void create( int pn, string i )
@@ -685,7 +713,7 @@ void unregister_url( string url )
 {
   if( urls[ url ] && urls[ url ]->port )
   {
-    urls[ url ]->port->unref();
+    urls[ url ]->port->unref(url);
     m_delete( urls, url );
     sort_urls();
   }
@@ -729,7 +757,7 @@ int register_url( string url, object conf )
                     urls[ url ]->conf->name + "!\n" );
       return 0;
     }
-    urls[ url ]->port->ref();
+    urls[ url ]->port->ref(url, urls[url]);
     return 1;
   }
 
@@ -755,7 +783,7 @@ int register_url( string url, object conf )
   sorted_urls += ({ url });
   if( m[ required_host ] && m[ required_host ][ port ] )
   {
-    m[ required_host ][ port ]->ref();
+    m[ required_host ][ port ]->ref(url, urls[url]);
     urls[ url ]->port = prot;
     sort_urls();
     return 1;    /* No need to open a new port */
@@ -773,27 +801,11 @@ int register_url( string url, object conf )
     return 0;
   }
   urls[ url ]->port = m[ required_host ][ port ];
-  m[ required_host ][ port ]->ref();
+  m[ required_host ][ port ]->ref(url, urls[url]);
   sort_urls();
   return 1;
 }
 
-
-object find_configuration_for_url( string url, RequestID id )
-{
-  werror("find configuration for '"+url+"'\n");
-  foreach( sorted_urls, string in )
-  {
-    if( glob( in+"*", url ) )
-    {
-      if( urls[in]->path )
-        id->not_query = id->not_query[strlen(urls[in]->path)..];
-      return urls[ in ]->conf;
-    }
-  }
-  // Ouch.
-  return values( urls )[0]->conf;
-}
 
 #endif
 
