@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.364 2002/03/27 17:49:10 per-bash Exp $";
+constant cvs_version = "$Id: http.pike,v 1.365 2002/03/28 03:08:28 per-bash Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1007,11 +1007,14 @@ void disconnect()
 
 void end(int|void keepit)
 {
+  if( conf )
+    conf->connection_drop( this_object() );
   if(keepit
      && !file->raw
      && (misc->connection == "keep-alive" ||
          (prot == "HTTP/1.1" && misc->connection != "close"))
-     && my_fd)
+     && my_fd
+     && !catch(my_fd->query_address()) )
   {
     // Now.. Transfer control to a new http-object. Reset all variables etc..
     object o = object_program(this_object())(0, 0, 0);
