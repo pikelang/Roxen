@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.17 2000/12/29 23:18:16 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.18 2001/07/03 01:02:46 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -28,17 +28,79 @@ class PrefLang {
   void set_sorted(array(string));
 }
 
+constant alias = ({
+  "ca",
+  "catala",
+  "es_CA",
+  "cs",
+  "cz",
+  "cze",
+  "czech",
+  "de",
+  "deutsch",
+  "german",
+  "en",
+  "english",
+  "fi",
+  "finnish",
+  "fr",
+  "français",
+  "french",
+  "hr",
+  "cro",
+  "croatian",
+  "hu",
+  "magyar",
+  "hungarian",
+  "it",
+  "italiano",
+  "italian",
+  "kj",
+  "kanji",
+  "jp",
+  "japanese",
+  "nihongo",
+  "\62745\63454\105236",
+  "mi",
+  "maori",
+  "maaori",
+  "du",
+  "nl",
+  "ned",
+  "dutch",
+  "no",
+  "norwegian",
+  "norsk",
+  "pl",
+  "po",
+  "polish",
+  "pt",
+  "port",
+  "portuguese",
+  "ru",
+  "russian",
+  "\2062\2065\2063\2063\2053\2051\2052",
+  "si",
+  "svn",
+  "slovenian",
+  "es",
+  "esp",
+  "spanish",
+  "sr",
+  "ser",
+  "serbian",
+  "sv",
+  "se",
+  "sve",
+  "swedish",
+  "svenska"
+});
+
 constant language_low=roxen->language_low;
 array(string) languages;
 array(string) defaults;
 void start() {
-  // First get the available languages in ISO-639-2
-  array(string) proper_codes = roxen->list_languages();  
-  languages = proper_codes;
-  foreach(proper_codes, string lang) {
-    // Add all the old aliases too
-    languages += (array(string))language_low(lang)->_aliases;
-  }
+  languages = roxen->list_languages() + alias;
   defaults=[array(string)]query("defaults")&languages;
 }
 
