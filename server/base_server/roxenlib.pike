@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.90 1999/02/12 00:09:16 js Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.91 1999/02/18 13:13:18 wing Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -951,7 +951,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		      object id )
 {
   string quote = args->quote || "#";
-  object my_id = id->clone_me();
+  mapping other_vars;
   string new_contents = "", unparsed_contents = "";
 
   // multi_separator must default to \000 since one sometimes need to
@@ -992,10 +992,8 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	id->variables[var] = val;
       }
 
-    if (my_id->misc->variables)
-      my_id->misc->variables += vars;
-    else
-      my_id->misc->variables = vars;
+    other_vars = id->misc->variables;
+    id->misc->variables = vars;
 
     if (!args->replace || lower_case( args->replace ) != "no")
     {
@@ -1169,7 +1167,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	}
 
       new_contents += args->preprocess ? exploded * "" :
-	parse_rxml (exploded * "", my_id);
+	parse_rxml (exploded * "", id);
       if (args["debug-output"]) unparsed_contents += exploded * "";
     }
     else {
@@ -1191,6 +1189,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	"</pre><b>]</b>\n";
   }
 
+  id->misc->variables = other_vars;
   return new_contents;
 }
 
