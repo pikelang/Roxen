@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.113 1999/03/12 23:21:14 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.114 1999/03/12 23:34:59 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -204,7 +204,7 @@ class imap_mail
   
   object mapping_to_list(mapping m)
   {
-    return imap_list( ((array) m) * ({ }));
+    return imap_list(Array.map( ((array) m) * ({ })), imap_string);
   }
 
   object make_bodystructure(object(MIME.Message) msg, int extension_data)
@@ -228,18 +228,19 @@ class imap_mail
     } else {
       string data = msg->getdata() || "";
 
-      a = ({ msg->type, msg->subtype,
+      a = ({ imap_string(msg->type), imap_string(msg->subtype),
 	     mapping_to_list(msg->params),
-	     // FIXME: Content id (rfc 2045)
-	     // FIXME: Body description
+	     "NIL", // FIXME: Content id (rfc 2045)
+	     "NIL", // FIXME: Body description
 	       
 	     // NOTE: The MIME module decodes any transfer encoding
-	     "binary",  // msg->transfer_encoding, 
+	     imap_string("binary"),  // msg->transfer_encoding, 
 	     imap_number(strlen(data)) });
 	
       // FIXME: Type specific fields, for text/* and message/rfc822 messages
       if (extension_data)
-	a += ({ MIME.encode_base64(Crypto.md5()->update(data)->digest()),
+	a += ({ imap_string(MIME.encode_base64(Crypto.md5()->
+					       update(data)->digest())),
 		// Disposition,
 		// Language
 	});
