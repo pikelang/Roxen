@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.114 1997/08/25 17:22:53 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.115 1997/08/25 17:49:17 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1596,7 +1596,7 @@ private void define_global_variables( int argc, array (string) argv )
 
   globvar("next_supports_update", time()+3600, "", TYPE_INT,"",0,1);
   
-  globvar("neighborhood", 1,
+  globvar("neighborhood", 0,
 	  "Neighborhood: Register with other Roxen servers on the local network"
 	  ,TYPE_FLAG|VAR_MORE,
 	  "If this option is set, Roxen will automatically broadcast it's "
