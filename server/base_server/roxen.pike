@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.151 1997/11/27 19:56:45 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.152 1997/11/28 05:28:37 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -526,6 +526,7 @@ void done_with_roxen_com()
 {
   string new, old;
   new = _new_supports * "";
+  new = (new/"\r\n\r\n")[1..]*"\r\n\r\n";
   old = Stdio.read_bytes( "etc/supports" );
   
   if(strlen(new) < strlen(old)-200) // Error in transfer?
