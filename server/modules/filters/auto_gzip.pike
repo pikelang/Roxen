@@ -1,12 +1,12 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 inherit "module";
 #include <module.h>
 
-constant cvs_version="$Id: auto_gzip.pike,v 1.5 1998/11/18 04:54:13 per Exp $";
+constant cvs_version="$Id: auto_gzip.pike,v 1.6 1999/12/14 01:58:28 nilsson Exp $";
 constant thread_safe=1;
 
-mixed *register_module()
+array register_module()
 {
   return ({ 
     MODULE_FIRST,
@@ -29,7 +29,7 @@ mixed *register_module()
 }
 
 
-mapping first_try(object id)
+mapping first_try(RequestID id)
 {
   NOCACHE();
   if(id->supports->autogunzip &&

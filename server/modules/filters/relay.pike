@@ -7,7 +7,7 @@
 // caching. This module is therefore quite obsolete, really.  But
 // since it is so small, I have left it here.
 
-constant cvs_version = "$Id: relay.pike,v 1.13 1999/09/24 17:16:07 nilsson Exp $";
+constant cvs_version = "$Id: relay.pike,v 1.14 1999/12/14 02:01:34 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -30,7 +30,7 @@ Content-type: text/html\r\n\
 
 /* Simply relay a request to another server if the data was not found. */
 
-mixed *register_module()
+array register_module()
 {
   return ({ 
     MODULE_LAST | MODULE_FIRST,
@@ -41,7 +41,7 @@ mixed *register_module()
       "then return the new data to the user.  The same results can be "
       "achieved using the proxy and the redirect module.  With "
       "caching. This module is therefore quite obsolete, really.  But "
-      "since it is so small, I have left it here. "
+      "since it is so small, I have left it here.</p>"
       });
 }
 
@@ -103,7 +103,7 @@ int is_in_always_list(string s)
     if(glob(always_list[i], s)) return 1;
 }
 
-mapping relay(object fid)
+mapping relay(RequestID fid)
 {
   if(!is_in_always_list(fid["not_query"]) &&
      is_in_anti_list(fid["not_query"]))
@@ -115,14 +115,14 @@ mapping relay(object fid)
   return http_pipe_in_progress();
 }
 
-mapping last_resort(object fid)
+mapping last_resort(RequestID fid)
 {
   if(QUERY(pri) != "Last")  return 0;
   fid->misc->cacheable = 0;
   return relay(fid);
 }
 
-mapping first_try(object fid)
+mapping first_try(RequestID fid)
 {
   if(QUERY(pri) == "Last") return 0;
   fid->misc->cacheable = 0;
