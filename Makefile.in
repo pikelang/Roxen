@@ -141,17 +141,17 @@ install_only:
 	  do \
 	    test -d $(prefix)/roxen/$$d/. || mkdir $(prefix)/roxen/$$d; \
 	done
-	@for d in `cd pike/$(PIKEVERSION)/src/lib; find . -type d -print`; do \
+	@for d in `cd pike/$(PIKEVERSION)/src/lib >/dev/null; find . -type d -print`; do \
 	  if test -d $(prefix)/roxen/server/lib/pike/$$d; then :; else \
 	    mkdir $(prefix)/roxen/server/lib/pike/$$d || exit 1;\
 	  fi; \
 	done
-	@for d in `cd $(SRCDIR)/pike/$(PIKEVERSION)/lib; find . -type d -print`; do \
+	@for d in `cd $(SRCDIR)/pike/$(PIKEVERSION)/lib >/dev/null; find . -type d -print`; do \
 	  if test -d $(prefix)/roxen/server/lib/pike/$$d; then :; else \
 	    mkdir $(prefix)/roxen/server/lib/pike/$$d || exit 1;\
 	  fi; \
 	done
-	@for f in `cd $(SRCDIR)/pike/$(PIKEVERSION)/lib; find . -type f -print`; do \
+	@for f in `cd $(SRCDIR)/pike/$(PIKEVERSION)/lib >/dev/null; find . -type f -print`; do \
 	  if cmp $(SRCDIR)/pike/$(PIKEVERSION)/lib/$$f $(prefix)/roxen/server/lib/pike/$$f >/dev/null 2>&1; then :; else \
 	    if test -f $(prefix)/roxen/server/lib/pike/$$f; then \
 	      mv -f $(prefix)/roxen/server/lib/pike/$$f $(prefix)/roxen/server/lib/pike/$$f.old; \
@@ -162,7 +162,7 @@ install_only:
 	    fi; \
 	  fi; \
 	done
-	@for f in `cd pike/$(PIKEVERSION)/src/lib; find . -type f -print`; do \
+	@for f in `cd pike/$(PIKEVERSION)/src/lib >/dev/null; find . -type f -print`; do \
 	  if cmp pike/$(PIKEVERSION)/src/lib/$$f $(prefix)/roxen/server/lib/pike/$$f >/dev/null 2>&1; then :; else \
 	    if test -f $(prefix)/roxen/server/lib/pike/$$f; then \
 	      mv -f $(prefix)/roxen/server/lib/pike/$$f $(prefix)/roxen/server/lib/pike/$$f.old; \
