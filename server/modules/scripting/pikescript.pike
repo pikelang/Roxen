@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.38 1999/11/02 01:38:46 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.39 1999/11/10 04:53:38 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -82,13 +82,11 @@ void create()
 	 "If set, the decoded password value will be sent to the script. "
 	 "This is not recommended !", 0, fork_exec_p);
 
-  defvar("exec-mask", "0777", 
-	 "Exec mask: Needed", 
+  defvar("exec-mask", "0777", "Exec mask: Needed", 
 	 TYPE_STRING|VAR_MORE,
 	 "Only run scripts matching this permission mask");
 
-  defvar("noexec-mask", "0000", 
-	 "Exec mask: Forbidden", 
+  defvar("noexec-mask", "0000", "Exec mask: Forbidden", 
 	 TYPE_STRING|VAR_MORE,
 	 "Never run scripts matching this permission mask");
 
