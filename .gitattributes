@@ -198,6 +198,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/misc/ismap.pike foreign_ident
 /server/modules/misc/language.pike foreign_ident
 /server/modules/misc/mirrorserver.pike foreign_ident
+/server/modules/misc/pathinfo.pike foreign_ident
 /server/modules/misc/sqldb.pike foreign_ident
 /server/modules/misc/upgrade_proxy.pike foreign_ident
 /server/modules/misc/userdb.pike foreign_ident
