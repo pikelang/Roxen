@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.599 2000/12/31 21:51:27 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.600 2001/01/01 05:17:12 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1955,8 +1955,8 @@ class ImageCache
 
     db->query( "INSERT INTO "+name+"_data VALUES ('"+id+"', '"+
                db->quote(data)+"')" );
-    db->query( "INSERT INTO "+name+" VALUES ('"+id+"', "+strlen(data)+", "
-               +time()+","+time()+")" );
+    db->query( "INSERT INTO "+name+" VALUES ('"+id+"', "+strlen(data)+
+	       ", UNIX_TIMESTAMP(), UNIX_TIMESTAMP())" );
   }
 
   static mapping restore_meta( string id )
@@ -1964,12 +1964,11 @@ class ImageCache
     Stdio.File f;
     if( meta_cache[ id ] )
       return meta_cache[ id ];
-    
-    db->query( "select GET_LOCK('"+name+"',10)" );
-    array q = db->query(sprintf("select data from %s_meta where id='%s'",
-                                name, id ));
-    db->query("UPDATE "+name+" SET atime="+time()+" WHERE id='"+id+"'" );
-    db->query( "select RELEASE_LOCK('"+name+"')" );
+
+    array(mapping(string:string)) q = db->query("SELECT data FROM %s_meta WHERE id='%s'",
+					       name, id);
+    db->query("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id='"+id+"'" );
+
     if(!sizeof(q))
       return 0;
     string s = q[0]->data;
@@ -1977,6 +1976,9 @@ class ImageCache
     if (catch (m = decode_value (s)))
     {
       report_error( "Corrupt data in cache-entry "+id+".\n" );
+      db->query( "DELETE FROM "+name+" WHERE id='"+id+"'" );
+      db->query( "DELETE FROM "+name+"_data WHERE id='"+id+"'" );
+      db->query( "DELETE FROM "+name+"_meta WHERE id='"+id+"'" );
       return 0;
     }
     return meta_cache_insert( id, m );
@@ -1987,15 +1989,13 @@ class ImageCache
   //! <pi>time()</pi>) is provided, only images with their latest access before
   //! that time are flushed.
   {
-    db->query( "LOCK TABLES "+name+" WRITE, "+name+"_data WRITE, "+name+"_meta WRITE" );
 
     report_debug("Flushing "+name+" image cache.\n");
     if( !age )
     {
+      db->query( "DELETE FROM "+name );
       db->query( "DELETE FROM "+name+"_data" );
       db->query( "DELETE FROM "+name+"_meta" );
-      db->query( "DELETE FROM "+name );
-      db->query( "UNLOCK TABLES" );
       return;
     }
 
@@ -2006,13 +2006,11 @@ class ImageCache
       string list = ids[q..q+100] * "','";
       q+=100;
 
+      db->query( "DELETE FROM "+name+     " WHERE id in ('"+list+"')" );
       db->query( "DELETE FROM "+name+"_data WHERE id in ('"+list+"')" );
       db->query( "DELETE FROM "+name+"_meta WHERE id in ('"+list+"')" );
-      db->query( "DELETE FROM "+name+     " WHERE id in ('"+list+"')" );
     }
 
-    // OPTIMIZE TABLE has a lock of its own.
-    db->query( "UNLOCK TABLES" );
     catch
     {
       // Old versions of Mysql lacks OPTIMIZE. Not that we support
@@ -2034,42 +2032,38 @@ class ImageCache
     int imgs=0, size=0, aged=0;
     array(mapping(string:string)) q;
 
-    q=db->query("select SUM(size) as size,COUNT(*) as num from "+name);
-    imgs = (int)q[0]->num;
-    size = (int)q[0]->size;
+    q=db->query("SHOW TABLE STATUS");
+    foreach(q, mapping qq)
+      if(has_prefix(qq->Name, name)) {
+	imgs = (int)qq->Rows;
+	size += (int)qq->Data_length;
+      }
 
-    q=db->query("select SUM(LENGTH(data)) as size from "+name+"_meta");
-    size += (int)q[0]->size;
-
-    // Add, for each image, the size of three ids, one int, two bigints
-    // and the overhead of two mediumblobs.
-    size += imgs * ( 64 + 64 + 64 + 4 + 8 + 8 + 3 + 3 );
-
-    q=db->query("select SUM(1) as num from "+name+" where atime < "+age);
-    aged = (int)q[0]->num;
+    if(age) {
+      q=db->query("select SUM(1) as num from "+name+" where atime < "+age);
+      aged = (int)q[0]->num;
+    }
     return ({ imgs, size, aged });
   }
 
   static mapping restore( string id )
   {
     mixed f;
-    mapping m;
 
     if( data_cache[ id ] )
       f = data_cache[ id ];
     else
     {
-      db->query( "select GET_LOCK('"+name+"',10)" );
-      array q = db->query( sprintf("select data from %s_data where id='%s'",
-                                   name, id ));
-      db->query( "select RELEASE_LOCK('"+name+"')" );
+      array(mapping(string:string)) q =
+	db->query( "SELECT data FROM %s_data WHERE id='%s'",
+		   name, id );
       if( sizeof(q) )
         f = q[0]->data;
       else
         return 0;
     }
 
-    m = restore_meta( id );
+    mapping m = restore_meta( id );
 
     if(!m)
       return 0;
@@ -2190,19 +2184,19 @@ class ImageCache
   {
     if(catch(db->query("select id from "+name+" where id=-1")))
     {
-      db->query("create table "+name+" ("
-                "id char(64) not null primary key, "
-                "size  int not null default 0, "
-                "ctime bigint not null default 0, "
-                "atime bigint not null default 0)");
+      db->query("CREATE TABLE "+name+" ("
+                "id CHAR(64) NOT NULL PRIMARY KEY, "
+                "size INT UNSIGNED NOT NULL DEFAULT 0, "
+                "ctime INT UNSIGNED NOT NULL DEFAULT 0, "
+                "atime INT UNSIGNED NOT NULL DEFAULT 0)");
 
-      db->query("create table "+name+"_data ("
-                "id char(64) not null primary key, "
-                "data mediumblob not null default '')");
+      db->query("CREATE TABLE "+name+"_data ("
+                "id CHAR(64) NOT NULL PRIMARY KEY, "
+                "data MEDIUMBLOB NOT NULL DEFAULT '')");
 
-      db->query("create table "+name+"_meta ("
-                "id char(64) not null primary key, "
-                "data mediumblob not null default '')");
+      db->query("CREATE TABLE "+name+"_meta ("
+                "id CHAR(64) NOT NULL PRIMARY KEY, "
+                "data MEDIUMBLOB NOT NULL DEFAULT '')");
     }
   }
 
@@ -2245,8 +2239,8 @@ class ArgCache
     {
       if(!lq)
       {
-        lq = "select GET_LOCK('"+name+"',4)";
-        ulq = "select RELEASE_LOCK('"+name+"')";
+	lq = "select GET_LOCK ('"+name+"', 4)";
+	ulq = "select RELEASE_LOCK ('"+name+"')";
       }
       db->query( lq );
     }
@@ -2262,12 +2256,12 @@ class ArgCache
 
   static void setup_table()
   {
-    if(catch(db->query("select id from "+name+" where id=-1")))
-      db->query("create table "+name+" ("
-                "id int auto_increment primary key, "
-                "lkey char(10) not null default '', "
-                "atime bigint not null default 0, "
-                "contents blob not null default '' "
+    if(catch(db->query("SELECT id FROM "+name+" WHERE id=-1")))
+      db->query("CREATE TABLE "+name+" ("
+                "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, "
+                "lkey CHAR(10) NOT NULL DEFAULT '', "
+                "atime INT UNSIGNED NOT NULL DEFAULT 0, "
+                "contents BLOB NOT NULL DEFAULT '' "
                 ")");
   }
 
@@ -2281,10 +2275,10 @@ class ArgCache
 
   static string read_args( string id )
   {
-    array res = db->query("select contents from "+name+" where id="+id);
+    array res = db->query("SELECT contents FROM "+name+" WHERE id="+id);
     if( sizeof(res) )
     {
-      db->query("update "+name+" set atime='"+time(1)+"' where id="+id);
+      db->query("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+id);
       return res[0]->contents;
     }
     return 0;
@@ -2292,16 +2286,15 @@ class ArgCache
 
   static string create_key( string long_key )
   {
-    array data = db->query(sprintf("select id,contents from %s where lkey='%s'",
-                                   name,db->quote(long_key[5..14])));
+    array data = db->query("SELECT id,contents FROM %s WHERE lkey='%s'",
+			   name,long_key[5..14]);
     foreach( data, mapping m )
       if( m->contents == long_key )
         return m->id;
 
-    db->query( sprintf("insert into %s (contents,lkey,atime) values "
-                       "('%s','%s',%d)",
-                       name, db->quote(long_key),
-                       db->quote(long_key[5..14]), time() ));
+    db->query( "INSERT INTO %s (contents,lkey,atime) VALUES "
+	       "('%s','%s',%d)",
+	       name, long_key, long_key[5..14], time(1) );
     return (string)db->master_sql->insert_id();
   }
 
@@ -2310,8 +2303,7 @@ class ArgCache
   //! Does the key 'key' exist in the cache? Returns 1 if it does, 0
   //! if it was not present.
   {
-    LOCK();
-    return sizeof( db->query( "select id from "+name+" where id="+(int)key));
+    return sizeof( db->query( "SELECT id FROM "+name+" WHERE id="+(int)key));
   }
 
   string store( mapping args )
@@ -2358,7 +2350,6 @@ class ArgCache
     if(cache[id] && cache[ cache[id] ] )
       return cache[cache[id]][CACHE_VALUE];
 
-    LOCK();
     string q = read_args( id );
 
     if(!q) error("Requesting unknown key\n");
@@ -2376,13 +2367,12 @@ class ArgCache
   void delete( string id )
   //! Remove the data element stored under the key 'id'.
   {
-    LOCK();
     if(cache[id])
     {
       m_delete( cache, cache[id] );
       m_delete( cache, id );
     }
-    db->query( "delete from "+name+" where id='"+id+"'" );
+    db->query( "DELETE FROM "+name+" WHERE id='"+id+"'" );
   }
 }
 
