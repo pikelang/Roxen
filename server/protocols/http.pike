@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.87 1998/03/29 00:46:17 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.88 1998/03/29 01:16:03 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -816,12 +816,12 @@ void do_log()
 #ifdef FD_DEBUG
 void timer(int start)
 {
-  if(pipe)
+  if(pipe) 
     MARK_FD(sprintf("HTTP_piping_%d_%d_%d_%d_(%s)",
 		    pipe->sent,
-		    pipe->current_input_len,
 		    stringp(pipe->current_input) ?
-		    strlen(pipe->current_input) : -4711,
+		    strlen(pipe->current_input) : -1,
+		    pike->last_called,
 		    _time(1) - start, 
 		    not_query));
   else

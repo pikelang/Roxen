@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.15 1998/03/29 00:34:02 neotron Exp $
+ * $Id: smartpipe.pike,v 1.16 1998/03/29 01:16:04 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -13,7 +13,7 @@ function done_callback;
 object outfd;
 function write_out;
 int sent;
-
+int last_called;
 mixed current_input;
 int current_input_len;
 
@@ -43,6 +43,7 @@ void finish()
 void write_more()
 {
   int len;
+  last_called = time(1);
   len = write_out(current_input);
   if(len <= 0)
   {
