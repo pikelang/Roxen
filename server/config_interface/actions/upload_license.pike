@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.7 2002/11/12 10:50:22 wellhard Exp $
+ * $Id: upload_license.pike,v 1.8 2002/12/05 12:59:20 stewa Exp $
  */
 
 #include <roxen.h>
@@ -44,7 +44,7 @@ mixed parse( RequestID id )
     </else>
     <if variable='var.ok'>
       <upload-license filename='&var.filename;' from='form.file'/>
-      License uploaded successfuly. <cf-ok/>
+      License uploaded successfully. <cf-ok/>
     </if>
   </if>
   <else>
