@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.22 2004/05/08 14:37:37 grubba Exp $
+// $Id: webdav.pike,v 1.23 2004/05/10 11:44:11 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.22 2004/05/08 14:37:37 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.23 2004/05/10 11:44:11 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -358,9 +358,16 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		   }
 		   // Convert destination to module location relative.
 		   destination = destination[sizeof(loc)..];
-		   return module->recurse_copy_files(source, destination, d,
-						     behavior, stat, id);
+		   mapping res =
+		     module->recurse_copy_files(source, destination, d,
+						behavior, stat, id);
+		   if (res && ((res->error == 201) || (res->error == 204))) {
+		     empty_result = res;
+		     return 0;
+		   }
+		   return res;
 		 };
+    empty_result = Roxen.http_status(404);
     break;
   case "DELETE":
     recur_func = lambda(string path, string ignored, int d, RoxenModule module,
