@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.119 2002/07/23 18:09:50 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.120 2003/02/25 13:05:29 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -956,7 +956,7 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE("MOVE disallowed (since PUT is disallowed)");
       return 0;
     }
-    if(size != -1)
+    if(size == -1)
     {
       id->misc->error_code = 404;
       TRACE_LEAVE("MOVE failed (no such file)");
