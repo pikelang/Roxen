@@ -2,7 +2,7 @@
  *
  * Based on the service example code from Microsoft.
  *
- * $Id: roxen.c,v 1.5 2000/06/28 20:47:49 mast Exp $
+ * $Id: roxen.c,v 1.6 2000/07/04 15:50:18 mast Exp $
  */
 
 // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
@@ -35,7 +35,7 @@ int console_mode = 0;
 VOID WINAPI service_ctrl(DWORD dwCtrlCode);
 VOID WINAPI service_main(DWORD dwArgc, LPTSTR *lpszArgv);
 VOID CmdInstallService();
-VOID CmdRemoveService();
+VOID CmdRemoveService (int ignore_missing);
 VOID CmdConsoleService();
 BOOL WINAPI ControlHandler ( DWORD dwCtrlType );
 LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize );
@@ -71,11 +71,12 @@ void _CRTAPI1 main(int argc, char **argv)
     {
 	if ( _stricmp( "install", argv[1]+1 ) == 0 )
 	{
+	    CmdRemoveService (1);
 	    CmdInstallService();
 	}
 	else if ( _stricmp( "remove", argv[1]+1 ) == 0 )
 	{
-	    CmdRemoveService();
+	    CmdRemoveService (0);
 	}
 	else if ( _stricmp( "console", argv[1]+1 ) == 0 )
 	{
@@ -398,14 +399,14 @@ void CmdInstallService()
 //  PURPOSE: Stops and removes the service
 //
 //  PARAMETERS:
-//    none
+//    ignore_missing - set to nonzero to ignore errors due to missing service.
 //
 //  RETURN VALUE:
 //    none
 //
 //  COMMENTS:
 //
-void CmdRemoveService()
+void CmdRemoveService (int ignore_missing)
 {
     SC_HANDLE   schService;
     SC_HANDLE   schSCManager;
@@ -454,12 +455,12 @@ void CmdRemoveService()
 
 	    CloseServiceHandle(schService);
 	}
-	else
+	else if (!ignore_missing)
 	    _tprintf(TEXT("OpenService failed - %s\n"), GetLastErrorText(szErr,256));
 
 	CloseServiceHandle(schSCManager);
     }
-    else
+    else if (!ignore_missing)
 	_tprintf(TEXT("OpenSCManager failed - %s\n"), GetLastErrorText(szErr,256));
 }
 
