@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.137 2001/02/15 14:20:58 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.138 2001/02/23 02:24:20 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -601,24 +601,28 @@ class TagCFBoxes
         master()->refresh( object_program( boxes[box] ), 1 );
         destruct( boxes[box] );
       }
-      return boxes[box]=(object)("config_interface/boxes/"+box);
+      if( boxes[box]=(object)("config_interface/boxes/"+box+".pike") )
+	roxen.dump("config_interface/boxes/"+box+".pike");
+      return boxes[box];
     }
 
-    static object get_box( string box )
+    static object get_box( string box, RequestID id )
     {
       object bx = boxes[ box ];
-      if( !bx  || (master()->refresh_inherit( object_program( bx ) ) > 0 ) )
+      if( !bx  ||
+	  (!id->pragma["no-cache"] &&
+	   master()->refresh_inherit( object_program( bx ) ) > 0 ) )
         return compile_box( box );
       return bx;
     }
 
-    array sort_boxes( array what )
+    array sort_boxes( array what, RequestID id )
     {
       mapping pos = ([]);
       array res = ({});
       foreach( what, string q )
       {
-        object box = get_box( q );
+        object box = get_box( q, id );
         if( box )
           pos[ box->box_position ] += ({ q });
       }
@@ -631,10 +635,10 @@ class TagCFBoxes
     {
       string left="";
       string right="";
-      foreach( sort_boxes(config_setting( "left_boxes" )), string f )
-        left+=get_box( f )->parse( id )+"<br />";
-      foreach( sort_boxes(config_setting( "right_boxes" )), string f )
-        right+=get_box( f )->parse( id )+"<br />";
+      foreach( sort_boxes(config_setting( "left_boxes" ),id), string f )
+        left+=get_box( f,id )->parse( id )+"<br />";
+      foreach( sort_boxes(config_setting( "right_boxes" ),id), string f )
+        right+=get_box( f,id )->parse( id )+"<br />";
       result="<table><tr valign=top><td>"+left+"</td><td>"+
                          right+"</td></tr></table>";
     }
