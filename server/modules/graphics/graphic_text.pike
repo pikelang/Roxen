@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.67 1997/09/05 11:42:54 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.68 1997/09/05 22:33:01 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -606,22 +606,11 @@ mapping find_cached_args(int num);
 
 constant nbsp = sprintf("%c",160);
 
-array gif_size(string d)
-{
-  int x,y;
-  d=d[6..12];
-  x = (d[1]<<8) + d[0]; y = (d[3]<<8) + d[2];
-  return ({x,y});
-}
-
 array(int)|string write_text(int _args, string text, int size,
 			     object id)
 {
   string key = base_key+_args;
   array err;
-  text = replace(text, ({ "\0","&ss;","&lt;","&gt;","&amp;"}),({"/",nbsp,"<", ">", "&" }));
-
-  
   err = catch
   {
     object img;
@@ -631,8 +620,12 @@ array(int)|string write_text(int _args, string text, int size,
       args=(["fg":"black","bg":"white"]);
       text="Please reload this page";
     }
+
     if(!args->verbatim)
     {
+      text = replace(text, nbsp, "&nbsp;");
+      text = replace(text,({ "&nbsp;","&ss;","&lt;","&gt;","&amp;"}),
+		     ({" ",nbsp,"<", ">", "&" }));
       string res="",nspace="",cspace="";
       foreach(text/"\n", string line)
       {
@@ -778,11 +771,15 @@ mapping find_file(string f, object rid)
 {
   int id;
   sscanf(f,"%d/%s", id, f);
+  catch(f = Gz.inflate()->inflate(MIME.decode_base64(f)));
   return http_string_answer(write_text(id,f,0,rid), "image/gif");
 }
-
+mapping url_cache = ([]);
 string quote(string in)
 {
+  if(url_cache[in]) return url_cache[in];
+  string option=MIME.encode_base64(Gz.deflate()->deflate(in));
+  if((search(in,"/")!=-1) || (search(in,"/.")!=-1)) return url_cache[in]=option;
   string res="";
   for(int i=0; i<strlen(in); i++)
     switch(in[i])
@@ -797,7 +794,8 @@ string quote(string in)
      default:
       res += sprintf("%%%02x", in[i]);
     }
-  return res;
+  if(strlen(res) < strlen(option)) return url_cache[in]=res;
+  return url_cache[in]=option;
 }
 
 int args_restored = 0;
