@@ -96,6 +96,14 @@ string selected_item( string q, Configuration c, RequestID id,
   sort( module_groups );
   pre += "<table cellspacing='0' cellpadding='0'>\n";
 
+  int do_js;
+  string hide_popup = "";
+  if( id->supports->javascript )
+  {
+    do_js = 1;
+    hide_popup = "onMouseOver='if( last_popup != false ) hide( last_popup );'";
+  }
+  
   foreach( module_groups, array gd )
   {
     int onlysel,fin;
@@ -121,7 +129,8 @@ string selected_item( string q, Configuration c, RequestID id,
       }
       if( onlysel )
 	pre += ("\n<tr><td valign='top'><img src=\"&usr."+sel+"-indicator;\" width='12' height='12' alt='' /></td>"
-		"<td><a href=\""+quoted_url+Roxen.http_encode_string(group_name)+
+		"<td><a "+hide_popup+
+		" href=\""+quoted_url+Roxen.http_encode_string(group_name)+
 		"!0/"+module+"/\">"+Roxen.html_encode_string(group_name)+
 		":</a>\n");
       else
@@ -143,7 +152,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	  pre += ("\n<tr><td valign='top'>"
 		  "<img src=\"&usr.item-indicator;\" width='12' "
 		  "height='12' alt='' /></td>"
-		  "<td><a href=\""+quoted_url+
+		  "<td><a "+hide_popup+" href=\""+quoted_url+
 		  Roxen.http_encode_string(group_name)+"!0/"+data->sname+
 		  "/\">"+Roxen.html_encode_string(data->name)+
 		  "</a></td></tr>\n");
@@ -156,46 +165,51 @@ string selected_item( string q, Configuration c, RequestID id,
       }
     else
     {
-      pre += "<a href='javascript:null()' onMouseOver='return popup_"+group_name+"(event);'>";
+      if( do_js )
+	pre += "<a href=\""+quoted_url+Roxen.http_encode_string(group_name)+"\" "
+	  "onMouseOver='return popup_"+group_name+"(event);'>";
       pre += "<font size=-1>("+sizeof(gd[1])+")</font>...";
-      pre += "</a>";
-
-      if( id->supports->layers )
-	pre += "<layer id='ly_"+group_name+"' visibility='hidden'>";
-      else
-	pre += "<div id='ly_"+group_name+"' "
-	  "style='position:absolute; z-index:1; visibility:hidden;'>";
-      pre += "<table border=0 bgcolor='&usr.bgcolor;' cellspacing='0' cellpadding='0'><tr><td valign=top>";
-      pre += "<img src=\"&usr.selected-indicator;\" width='12' height='12' "
-	"alt='&gt;' /></td><td>";
-      foreach( gd[1], mapping data )
+      if( do_js )
       {
-	pre += ("<img src=\"&usr.item-indicator;\" width='12' "
-		"height='12' alt='' />"
-		"<nobr><a href=\""+quoted_url+
-		Roxen.http_encode_string(group_name)+"!0/"+data->sname+
-		"/\">"+Roxen.html_encode_string(data->name)+
-		"</a></nobr><br />");
+	pre += "</a>";
+	if( id->supports->layers )
+	  pre += "<layer id='ly_"+group_name+"' visibility='hidden'>";
+	else
+	  pre += "<div id='ly_"+group_name+"' "
+	    "style='position:absolute; z-index:1; visibility:hidden;'>";
+	pre += "<table border=0 bgcolor='&usr.bgcolor;' cellspacing='0' "
+	  "cellpadding='0'>\n"
+	  "<tr><td valign=top>";
+	pre += "<img src=\"&usr.selected-indicator;\" width='12' height='12' "
+	  "alt='&gt;' /></td><td>";
+	foreach( gd[1], mapping data )
+	  pre += ("<img src=\"&usr.item-indicator;\" width='12' "
+		  "height='12' alt='' />"
+		  "<nobr><a href=\""+quoted_url+
+		  Roxen.http_encode_string(group_name)+"!0/"+data->sname+
+		  "/\">"+Roxen.html_encode_string(data->name)+
+		  "</a></nobr><br />");
+	pre += "</td></tr></table>";
+	if( id->supports->layers )
+	  pre += "</layer>";
+	else
+	  pre += "</div>";
+	pre += "<script language=javascript><!--\n";
+
+	if( !first_js++ )
+	  pre += #string "support.js";
+	pre +=
+	  "function popup_"+group_name+"(event)\n"
+	  "{\n"
+	  "  shiftTo( \"ly_"+group_name+"\","
+	  "           getEventX(event)-30, getEventY(event)-8 );\n"
+	  "  if( last_popup != false ) hide( last_popup );\n"
+	  "  last_popup = \"ly_"+group_name+"\";\n"
+	  "  show( \"ly_"+group_name+"\" );\n"
+	  "}\n";
+	pre += "\n// --></script>";
       }
-      pre += "</td></tr></table>";
-      if( id->supports->layers )
-	pre += "</layer>";
-      else
-	pre += "</div>";
-      pre += "<script language=javascript><!--\n";
 
-      if( !first_js++ )
-	pre += #string "support.js";
-
-      pre +=
-"function popup_"+group_name+"(event)\n"
-"{\n"
-"  shiftTo( \"ly_"+group_name+"\", getEventX(event)-30, getEventY(event)-8 );\n"
-"  if( last_popup != false ) hide( last_popup );\n"
-"  last_popup = \"ly_"+group_name+"\";\n"
-"  show( \"ly_"+group_name+"\" );\n"
-"}\n";
-      pre += "\n// --></script>";
     }
     if( fin )
       pre += "</table></td></tr>";
