@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.80 1998/03/28 22:06:27 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.81 1998/03/28 23:13:32 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -813,12 +813,13 @@ void do_log()
   return;
 }
 
+#ifdef FD_DEBUG
 void timer(int start)
 {
   MARK_FD("HTTP really handled, piping "+not_query +" ("+(_time(1) - start)+")");
   call_out(timer, 30, start);
 }
-
+#endif
 void handle_request( )
 {
   mixed *err;
@@ -991,7 +992,9 @@ void handle_request( )
     file->len = 1; // Keep those alive, please...
   if (pipe) {
     MARK_FD("HTTP really handled, piping "+not_query);
+#ifdef FD_DEBUG
     call_out(timer, 30, _time(1)); // Update FD with time...
+#endif
     pipe->set_done_callback( do_log );
     pipe->output(my_fd);
   } else {
