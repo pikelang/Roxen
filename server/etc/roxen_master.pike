@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.44 1998/04/03 19:11:13 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.45 1998/04/29 02:53:34 grubba Exp $";
 
 /*
  * name = "Roxen Master";
@@ -251,17 +251,31 @@ array r_get_dir(string f)
 
 void create()
 {
+  object o = this_object();
   /* Copy variables from the original master */
   foreach(indices(mm), string varname) {
-    catch(this_object()[varname] = mm[varname]);
+    catch(o[varname] = mm[varname]);
     /* Ignore errors when copying functions */
   }
-  programs["/master"] = object_program(this_object());
-  objects[object_program(this_object())] = this_object();
+  programs["/master"] = object_program(o());
+  objects[object_program(o())] = o();
   /* make ourselves known */
-  add_constant("_master",this_object());
+  add_constant("_master",o());
   add_constant("version",lambda() { return version() + " Roxen Challenger master"; } );
 
+  /* Move the old efuns to the new object. */
+  if (o->master_efuns) {
+    foreach(o->master_efuns, string e) {
+      if (o[e]) {
+	add_constant(e, o[e]);
+      } else {
+	throw(({ sprintf("Function %O is missing from roxen_master.pike.\n",
+			 e), backtrace() }));
+      }
+    }
+  } else {
+    ::create();
+  }
 
   add_constant("get_dir", r_get_dir);
   add_constant("file_stat", r_file_stat);
