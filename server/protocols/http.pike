@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.187 2000/01/20 21:02:25 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.188 2000/01/20 22:38:28 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -632,7 +632,7 @@ private int parse_got()
 	    break;
 
 	  case "user-agent":
-	    if(!client)
+	    if(!client || !client_var->Fullname)
 	    {
 	      sscanf(contents, "%s via", contents);
 	      client_var->Fullname=contents;
