@@ -90,7 +90,7 @@
 <define container="submit-gbutton2">
 <attrib name="img-align">baseline</attrib>
 <define variable="var.url" preparse="1"><gbutton-url ::='&_.args;' font="&usr.gbutton-font;"><contents/></gbutton-url></define>
-   <set variable="contents"><eval>&_.contents:none;</eval></set>
+   <set variable="contents" type="text/xml"><eval>&_.contents:none;</eval></set>
    <input align="&_.img-align;" type="image" name="&_.name;" value="&_.contents;" src="&var.url;" border="0" />
 </define>
 
