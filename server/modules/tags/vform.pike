@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.47 2004/06/30 16:59:27 mast Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.48 2004/10/20 15:44:23 mast Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -91,11 +91,15 @@ class VInputFrame {
     switch(args->type) {
     case "int":
       if(!var) var=Variable.Int(args->value||"");
-      var->set_range((int)args->min, (int)args->max);
+      // FIXME: Should check invalid integer formats in min and max.
+      var->set_range(args->min ? (int)args->min : Variable.no_limit,
+		     args->max ? (int)args->max : Variable.no_limit);
       break;
     case "float":
       if(!var) var=Variable.Float(args->value||"");
-      var->set_range((float)args->min, (float)args->max);
+      // FIXME: Should check invalid float formats in min and max.
+      var->set_range(args->min ? (float)args->min : Variable.no_limit,
+		     args->max ? (float)args->max : Variable.no_limit);
       break;
     case "email":
       if(!var) var=Variable.Email(args->value||"");
