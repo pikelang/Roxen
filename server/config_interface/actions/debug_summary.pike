@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.9 2003/11/17 16:01:26 anders Exp $
+ * $Id: debug_summary.pike,v 1.10 2004/05/25 11:12:24 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -8,7 +8,7 @@
 
 constant action = "debug_info";
 
-LocaleString name= LOCALE(163,"Debug Summary");
+LocaleString name= LOCALE(163,"Debug summary");
 LocaleString doc = LOCALE(164,
 		    "Shows a text file containing a configuration summary, suitable "
 		    "for support purposes.");
@@ -167,7 +167,7 @@ mixed parse( RequestID id )
 
   if (id->variables->download &&
       id->variables->download == "summary") {
-    res = make_headline("Debug summary")+"\n";
+    res = make_headline(LOCALE(0,"Debug summary"))+"\n";
     res += make_summary();
     mapping ret = Roxen.http_string_answer(res, "application/octet-stream");
     ret["extra_heads"] = ([]);
@@ -188,12 +188,12 @@ mixed parse( RequestID id )
     return ret;
   }
   
-  res = "<font size='+1'><b>Debug summary</b></font>\n<p />";
-  res += "<link-gbutton href='debug_summary.pike?download=summary'>Download"
+  res = "<font size='+1'><b>"+LOCALE(0,"Debug summary")+"</b></font>\n<p />";
+  res += "<link-gbutton href='debug_summary.pike?download=summary'>"+LOCALE(0,"Download")+
     "</link-gbutton>";
   if (file_stat(debuglog))
-    res += "<link-gbutton href='debug_summary.pike?download=debuglog'>"
-      "Download debug log"
+    res += "<link-gbutton href='debug_summary.pike?download=debuglog'>"+
+      LOCALE(0,"Download Debug Log")+
     "</link-gbutton>";
 
   res += "<pre>"+Roxen.html_encode_string(make_summary())+"</pre>"

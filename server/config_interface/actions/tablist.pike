@@ -12,7 +12,7 @@ array pages =
   ({ ({"SSL"}),       "Tasks", 0, LOCALE(230,"SSL")               }),
 #endif
 /*({ "developer",     "Tasks", "devel_mode"  }),*/
-  ({ "debug_info",    "Tasks", 0, LOCALE(231,"Debug information") }),
+  ({ "debug_info",    "Tasks", 0, LOCALE(231,"Debug Information") }),
 });
 
 string parse( RequestID id )
