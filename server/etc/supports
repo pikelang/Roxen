@@ -1,4 +1,4 @@
-## $Id: supports,v 1.30 1997/05/31 13:11:43 peter Exp $
+## $Id: supports,v 1.31 1997/06/01 01:24:06 grubba Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -51,8 +51,8 @@ mozilla/0\..*	-tables, -backgrounds, -ssl, -frames, -java, -javascript
 mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript, -netscape_javascript
 mozilla/1\..*	-ssl, -frames, -java, -javascript, -netscape_javascript
 
-mozilla.[2-9].[0-9].*  some_html3, fontcolor, pjpeginline
-mozilla.[2-9].[0-9]b[2-9].*           -java
+mozilla.[2-9].[0-9].*	some_html3, fontcolor, pjpeginline
+mozilla.2.0b[2-9].*	-java
 
 #Old versions on Mac crash the entire mashine if you use javascript.
 mozilla/2.*	        -javascript, -netscape_javascript
