@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 2.4 1999/10/21 14:37:30 grubba Exp $
+ * $Id: smtprelay.pike,v 2.5 1999/10/26 14:55:10 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 2.4 1999/10/21 14:37:30 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 2.5 1999/10/26 14:55:10 grubba Exp $";
 
 /*
  * Some globals
@@ -417,6 +417,12 @@ class MailSender
   {
     message->sent += sent_bytes;
     sent_bytes = 0;
+
+    if (!code) {
+      code = "221";
+      text = ({ "Connection closed unexpectedly by foreign host." });
+    }
+
     bounce(message, code, text, last_command);
 
     send_command("QUIT", got_quit_reply_fail);
