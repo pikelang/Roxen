@@ -12,7 +12,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.22 1999/09/24 16:56:59 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.23 1999/09/26 02:44:03 mast Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -478,7 +478,7 @@ int api_set_supports(object id, string p)
 int api_set_return_code(object id, int c, void|string p)
 {
   if(c) _error=c;
-  if(p) _rettext=p||"";
+  if(p) _rettext=p;
   return 1;
 }
 

@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.8 1999/09/24 18:17:33 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.9 1999/09/26 02:44:04 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -599,7 +599,7 @@ string tag_configurl(string tag, mapping m, object id) {
 
 string tag_return(string tag, mapping m, object id)
 {
-  id->conf->api_functions()->set_return_code[0]( (int)m->code || 200, m->text || "" );
+  id->conf->api_functions()->set_return_code[0]( id, (int)m->code || 200, m->text );
   return "";
 }
 
