@@ -460,6 +460,11 @@ tar_dist:
 	  fi ; \
 	fi; \
 	echo Type $$type.; \
+	echo "Storing away manuals..."; \
+	mv $$version/server/manual/*parsed*.tar . || exit 1; \
+	echo "Restoring Pro manual..."
+	mv unparsed_pro.tar $$version/server/manual/unparsed.tar || exit 1; \
+	mv parsed_pro.tar $$version/server/manual/parsed.tar || exit 1; \
 	echo "Building full Pro distribution..."; \
 	tar cf - $$version | gzip -9 >$$version-$$type-pro-full.tar.gz; \
 	if (cd $$version; make keep_dbapi || exit 1); then \
@@ -470,15 +475,25 @@ tar_dist:
 	else :; fi; \
 	(cd $$version; make censor_dbapi || exit 1); \
 	(cd $$version; make censor_pro || exit 1); \
-	echo "Building full ordinary distribution..."; \
+	echo "Removing Pro manual and restoring Challenger manual..."; \
+	mv $$version/server/manual/*parsed*.tar . || exit 1; \
+	mv unparsed_challenger.tar $$version/server/manual/unparsed.tar \
+	 || exit 1; \
+	mv parsed_challenger.tar $$version/server/manual/parsed.tar \
+	 || exit 1; \
+	echo "Building full Challenger distribution..."; \
 	tar cf - $$version | gzip -9 >$$version-$$type.tar.gz; \
 	(cd $$version; make censor_crypto || exit 1); \
-	echo "Building lobotomized ordinary distribution..."; \
+	echo "Building lobotomized Challenger distribution..."; \
 	tar cf - $$version | gzip -9 >$$version-$$type-int.tar.gz; \
 	echo "Restoring DBAPI..."; \
 	(cd $$version; tar xf ../dbapi.tar || exit 1); \
 	echo "Restoring Challenger Pro parts..."; \
 	(cd $$version; tar xf ../pro.tar || exit 1); \
+	echo "Removing Challenger manual and restoring Pro manual..."; \
+	mv $$version/server/manual/*parsed*.tar . || exit 1; \
+	mv unparsed_pro.tar $$version/server/manual/unparsed.tar || exit 1; \
+	mv parsed_pro.tar $$version/server/manual/parsed.tar || exit 1; \
 	echo "Building lobotomized Pro distribution..."; \
 	tar cf - $$version | gzip -9 >$$version-$$type-pro-int.tar.gz; \
 	(mkdir 40bit-nda; cd 40bit-nda; gzip -cd < ../$$version-$$type-pro-full.tar.gz | tar xf -; cd $$version; make censor_strong_crypto || exit 1); \
@@ -486,6 +501,12 @@ tar_dist:
 	(cd 40bit-nda; tar cf - $$version | gzip -9 >../$$version-$$type-pro-40bit.tar.gz || exit 1); \
 	rm -rf 40bit-nda; \
 	(mkdir 40bit; cd 40bit; gzip -cd < ../$$version-$$type.tar.gz | tar xf -; cd $$version; make censor_strong_crypto || exit 1; make censor_pro || exit 1); \
+	echo "Removing Pro manual and restoring Challenger manual..."; \
+	mv $$version/server/manual/*parsed*.tar . || exit 1; \
+	mv unparsed_challenger.tar $$version/server/manual/unparsed.tar \
+	 || exit 1; \
+	mv parsed_challenger.tar $$version/server/manual/parsed.tar \
+	 || exit 1; \
 	echo "Building 40bit ordinary distribution..."; \
 	(cd 40bit; tar cf - $$version | gzip -9 >../$$version-$$type-40bit.tar.gz || exit 1); \
 	rm -rf 40bit;
