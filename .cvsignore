@@ -14,3 +14,4 @@ build
 local
 VERSION
 commercial_modules
+make_vpath
