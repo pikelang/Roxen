@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.239 2000/09/13 18:17:17 jonasw Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.240 2000/09/15 22:29:11 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -294,7 +294,8 @@ opaque=70</gtext>
  Place the text centered in a box of the given color below the image
  area. Useful together with background to make captions for images.
  <ex type=vert>
-<gtext scale=\"0.5\" background=\"internal-roxen-roxen\" textbelow=\"#c0c0c0\">Roxen</gtext>
+<img src=\"/internal-roxen-roxen\" /> &nbsp;
+<gtext scale=\"0.5\" background=\"/internal-roxen-roxen\" textbelow=\"#c0c0c0\">Roxen</gtext>
  </ex>
 </attr>
 
@@ -314,6 +315,9 @@ opaque=70</gtext>
 
 <attr name=texture value=path>
  Uses the specified images as a field texture.
+<ex type=hor>
+<gtext font=\"yikes\" fontsize=\"100\" texture=\"/internal-roxen-squares\">A</gtext>
+</ex>
 </attr>
 
 <attr name=tile>
