@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.88 2001/03/15 23:30:37 per Exp $
+// $Id: module_support.pike,v 1.89 2001/03/16 01:43:00 per Exp $
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
@@ -365,9 +365,10 @@ class ModuleInfo( string sname, string filename )
     foreach( dirlist, string file )
       catch
       {
+	Stdio.Stat s;
         if( file[0] != '.' &&
-	    file_stat( dir+file )->isdir &&
-	    !nomods[file] )
+	    (s=file_stat( dir+file )) && s->isdir
+	    && !nomods[file] )
           if( rec_find_module( what, dir+file+"/" ) )
             return 1;
 	  else
@@ -462,6 +463,7 @@ array rec_find_all_modules( string dir )
   array modules = ({});
   catch
   {
+    Stdio.Stat s;
     array dirlist = r_get_dir( dir ) - ({"CVS"});
 
     if( (search( dirlist, ".nomodules" ) != -1) ||
@@ -483,7 +485,8 @@ array rec_find_all_modules( string dir )
           if( (f->read( 4 ) != "#!NO" ) )
             modules |= ({ strip_extention( file ) });
         }
-        else if( file_stat( dir+file )->isdir &&
+        else if( (s = file_stat( dir+file )) &&
+		 s->isdir &&
 		 (file != "pike-modules") &&
 		 (file != "CVS") )
           modules |= rec_find_all_modules( dir+file+"/" );
@@ -544,9 +547,10 @@ array(string) find_all_pike_module_directories()
 
   array(string) recurse( string dir )
   {
+    Stdio.Stat st;
     array res = ({});
     foreach( get_dir( dir ), string s )
-      if( file_stat( combine_path( dir, s ) )->isdir )
+      if( (st = file_stat( combine_path( dir, s ) )) && st->isdir )
 	if( s == "pike-modules" )
 	  res += ({ dir });
 	else if( s != "CVS" )
