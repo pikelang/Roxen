@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.491 2000/06/12 16:50:27 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.492 2000/06/26 17:46:19 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2636,6 +2636,11 @@ class ArgCache
     return 0;
   }
 
+  string tohex( string what ) 
+  {
+    return sprintf( "%x", Gmp.mpz( what, 256 ) );
+  }
+
   static string create_key( string long_key )
   {
     if( is_db )
@@ -2651,7 +2656,7 @@ class ArgCache
                          name, long_key, long_key[..79], time() ));
       return create_key( long_key );
     } else {
-      string _key=MIME.encode_base64(Crypto.md5()->update(long_key)->digest(),1);
+      string _key=tohex(Crypto.md5()->update(long_key)->digest());
       _key = replace(_key-"=","/","=");
       string short_key = _key[0..1];
 
