@@ -40,7 +40,7 @@ start_roxen() {
   PIKE=pike
   if [ -x bin/pike ] ; then PIKE=bin/pike; fi
   export PIKE
-  args="-DROXEN $DEFINES $DEBUG base_server/roxenloader.pike --config-dir=$DIR"
+  args="-DROXEN $DEBUG $DEFINES base_server/roxenloader.pike --config-dir=$DIR"
 tput 'bold' 2>/dev/null
   echo $$: Executing $PIKE $args $@
 tput 'rmso' 2>/dev/null
