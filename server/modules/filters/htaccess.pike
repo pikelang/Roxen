@@ -3,14 +3,15 @@
 // .htaccess compability by David Hedbor, neotron@infovav.se 
 //   Changed into module by Per Hedbor, per@infovav.se
 
-string cvs_version = "$Id: htaccess.pike,v 1.7.2.1 1997/03/02 19:23:33 grubba Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.7.2.2 1997/03/13 00:18:49 grubba Exp $";
 #include <module.h>
+#include <roxen.h>
 inherit "module";
 inherit "roxenlib";
 
 import Stdio;
 
-/*#define HTACCESS_DEBUG*/
+//#define HTACCESS_DEBUG
 
 
 array *register_module()
