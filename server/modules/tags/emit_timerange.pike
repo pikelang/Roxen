@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.14 2004/06/30 16:59:24 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.15 2004/07/08 22:08:42 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -254,7 +254,7 @@ string wash_language_name(string class_name)
 { return String.capitalize(lower_case(class_name[1..])); }
 
 int is_valid_timezone(string tzname)
-{ return !catch(Calendar[ query("calendar") ]->set_timezone( tzname )); }
+{ return (Calendar.Timezone[tzname])? 1 : 0; }
 
 class TZVariable
 {
@@ -552,6 +552,26 @@ class TagEmitTimeRange
   array get_dataset(mapping args, RequestID id)
   {
     // DEBUG("get_dataset(%O, %O)\b", args, id);
+    // Start Eriks stuff, july 8 2004
+    string plugin;
+    RoxenModule provider;
+    if(plugin = m_delete(args, "plugin")) {
+      array(RoxenModule) data_providers = id->conf->get_providers("timerange-plugin");
+      foreach(data_providers, RoxenModule prov) {
+	if(prov->supplies_plugin_name && prov->supplies_plugin_name(plugin)) {
+	  provider = prov;
+	  break;
+	}
+      }
+      if(provider) {
+	werror(sprintf("We have a provider: %O\n", provider));
+
+
+      } else {
+	RXML.run_error(sprintf("Timerange %s plugin does not exist", plugin));
+      }
+    }
+    // End Eriks stuff, july 8 2004
     string cal_type = args["calendar"];
     Calendar cal = get_calendar(m_delete(args, "calendar"));
     Calendar.TimeRange from, to, range;
