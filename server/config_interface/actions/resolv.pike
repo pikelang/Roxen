@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.29 2004/02/03 12:04:31 anders Exp $
+ * $Id: resolv.pike,v 1.30 2004/06/10 16:25:50 anders Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -235,13 +235,17 @@ string parse( RequestID id )
 
   if( id->variables->path )
   {
-    nid->set_url (id->variables->path);
-    if(!nid->conf) {
-      res += "<p><font color='red'>"+
-	LOCALE(31, "There is no configuration available that matches "
-	       "this URL.") + "</font></p>"; 
-      return res;
+    string err_msg;
+    if (mixed err = catch( nid->set_url (id->variables->path) )) {
+      err_msg = LOCALE(188, "Unable to parse URL.");
+      report_debug(describe_backtrace(err));
     }
+    else if(!nid->conf) {
+      err_msg = LOCALE(31, "There is no configuration available that matches "
+		       "this URL.");
+    }
+    if (err_msg)
+      return "<p><font color='red'>" + err_msg + "</font></p>" + res; 
 
     string canonic_url = nid->url_base() + nid->raw_url[1..];
 
