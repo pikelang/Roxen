@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.73 1998/07/17 22:55:41 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.74 1998/07/18 03:14:55 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -802,7 +802,7 @@ static string image_from_type( string t )
   return "internal-gopher-unknown";
 }
 
-#define  prefix ({ "bytes", "kB", "MB", "GB", "TB", "HB" })
+#define  PREFIX ({ "bytes", "kB", "MB", "GB", "TB", "HB" })
 static string sizetostring( int size )
 {
   float s = (float)size;
@@ -815,7 +815,7 @@ static string sizetostring( int size )
     s /= 1024.0;
     size ++;
   }
-  return sprintf("%.1f %s", s, prefix[ size ]);
+  return sprintf("%.1f %s", s, PREFIX[ size ]);
 }
 
 mapping proxy_auth_needed(object id)
@@ -969,6 +969,20 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 
   if (args->preprocess)
     contents = parse_rxml( contents, id );
+
+  string prefix = "";
+  switch (args["debug-input"]) {
+    case 0: break;
+    case "log":
+      report_debug ("tag input: " + contents + "\n");
+      break;
+    case "comment":
+      prefix = "<!--\n" + html_encode_string (contents) + "\n-->";
+      break;
+    default:
+      prefix = "\n<br><b>[</b><pre>" + html_encode_string (contents) + "</pre><b>]</b>\n";
+  }
+
   foreach (var_arr, mapping vars)
   {
     if (args->set)
@@ -1093,10 +1107,23 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
     }
   }
 
+  switch (args["debug-output"]) {
+    case 0: break;
+    case "log":
+      report_debug ("tag output: " + new_contents + "\n");
+      break;
+    case "comment":
+      new_contents += "<!--\n" + html_encode_string (new_contents) + "\n-->";
+      break;
+    default:
+      new_contents = "\n<br><b>[</b><pre>" + html_encode_string (new_contents) +
+	"</pre><b>]</b>\n";
+  }
+
   if (!args->preprocess)
-    return parse_rxml( new_contents, my_id );
+    return parse_rxml( prefix + new_contents, my_id );
   else
-    return new_contents;
+    return prefix + new_contents;
 }
 
 string fix_relative(string file, object id)
