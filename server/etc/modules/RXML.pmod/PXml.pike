@@ -1,11 +1,14 @@
-//! The standard HTML content parser.
+//! The standard RXML content parser.
 //!
-//! Parses tags and entities. Entities on the form &scope.variable;
-//! are replaced by variable references.
+//! Parses entities and tags according to XML syntax. Entities on the
+//! form &scope.variable; are expanded with variables.
+//!
+//! Note: This is not a real XML parser according to the spec in any
+//! way; it just understands the non-DTD syntax of XML.
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.28 2000/02/13 11:09:22 mast Exp $
+//! $Id: PXml.pike,v 1.29 2000/02/13 18:06:32 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -103,8 +106,8 @@ static void create (
       foreach (tlist, RXML.Tag tag)
 	if (!(tag->plugin_name || tag->flag & RXML.FLAG_NO_PREFIX))
 	  new_tagdefs[prefix + ":" + [string] tag->name] =
-	    tag->flags & RXML.FLAG_CONTAINER ?
-	    ({0, tag->_handle_tag}) : ({tag->_handle_tag, 0});
+	    tag->flags & RXML.FLAG_NONCONTAINER ?
+	    ({tag->_handle_tag, 0}) : ({0, tag->_handle_tag});
     }
 
     if (!tset->prefix_req) {
@@ -116,8 +119,8 @@ static void create (
     foreach (tlist, RXML.Tag tag)
       if (!tag->plugin_name && (!tset->prefix_req || tag->flag & RXML.FLAG_NO_PREFIX))
 	new_tagdefs[[string] tag->name] =
-	  tag->flags & RXML.FLAG_CONTAINER ?
-	  ({0, tag->_handle_tag}) : ({tag->_handle_tag, 0});
+	  tag->flags & RXML.FLAG_NONCONTAINER ?
+	  ({tag->_handle_tag, 0}) : ({0, tag->_handle_tag});
 
     foreach (indices (new_tagdefs), string name) {
       if (array(TAG_TYPE|CONTAINER_TYPE) tagdef = tagdefs[name])
@@ -138,7 +141,7 @@ static void create (
   lazy_entity_end (1);
   match_tag (0);
   splice_arg ("::");
-  _set_entity_callback (.utils.p_html_entity_cb);
+  _set_entity_callback (.utils.p_xml_entity_cb);
   if (!type->free_text) {
     _set_data_callback (.utils.free_text_error);
     _set_tag_callback (.utils.unknown_tag_error);
@@ -169,10 +172,25 @@ mixed read()
   // Not reached.
 }
 
-void report_error (string msg) {low_parser::write_out (msg);}
+/*static*/ string errmsgs;
+
+int report_error (string msg)
+{
+  if (errmsgs) errmsgs += msg;
+  else errmsgs = msg;
+  if (low_parser::context() != "data")
+    _set_data_callback (.utils.output_error_cb);
+  else
+    low_parser::write_out (errmsgs), errmsgs = 0;
+  return 1;
+}
 
 mixed feed (string in) {return low_parser::feed (in);}
-void finish (void|string in) {low_parser::finish (in);}
+void finish (void|string in)
+{
+  low_parser::finish (in);
+  if (errmsgs) low_parser::write_out (errmsgs), errmsgs = 0;
+}
 
 
 // Runtime tags.
@@ -186,13 +204,13 @@ local static void rt_replace_tag (string name, RXML.Tag tag)
     array(TAG_TYPE|CONTAINER_TYPE) tag_def =
       rt_replacements[name] = ({tags()[name], containers()[name]});
   if (tag)
-    if (tag->flags & RXML.FLAG_CONTAINER) {
-      add_tag (name, 0);
-      add_container (name, tag->_handle_tag);
-    }
-    else {
+    if (tag->flags & RXML.FLAG_NONCONTAINER) {
       add_container (name, 0);
       add_tag (name, tag->_handle_tag);
+    }
+    else {
+      add_tag (name, 0);
+      add_container (name, tag->_handle_tag);
     }
   else {
     add_tag (name, 0);
@@ -237,7 +255,7 @@ local void remove_runtime_tag (string|RXML.Tag tag)
     if (sizeof (parts)) {
 #ifdef MODULE_DEBUG
       if (sizeof (parts) > 2)
-	error ("Whoa! I didn't expect a tag name containing \\0: %O\n", name);
+	RXML.fatal_error ("Whoa! I didn't expect a tag name containing \\0: %O\n", name);
 #endif
       rt_restore_tag (parts * "");
       rt_restore_tag (parts[-1]);
@@ -278,7 +296,7 @@ array(TAG_TYPE|CONTAINER_TYPE) get_overridden_low_tag (
 }
 
 #ifdef OBJ_COUNT_DEBUG
-string _sprintf() {return "RXML.PHtml(" + __count + ")";}
+string _sprintf() {return "RXML.PXml(" + __count + ")";}
 #else
-string _sprintf() {return "RXML.PHtml";}
+string _sprintf() {return "RXML.PXml";}
 #endif
