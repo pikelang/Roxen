@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.21 1998/03/29 02:34:52 neotron Exp $
+ * $Id: smartpipe.pike,v 1.22 1998/04/02 23:23:41 grubba Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -10,6 +10,7 @@
 
 array to_send = ({});
 function done_callback;
+array(mixed) done_cb_args;
 object outfd;
 function write_out;
 int sent;
@@ -45,9 +46,10 @@ void finish()
     write_out = 0;
   }
   if(done_callback)
-    done_callback();
+    done_callback(@done_cb_args);
   current_input = 0;
   write_out = done_callback = 0;
+  done_cb_args = 0;
   to_send = 0;
   remove_call_out(check_for_closing);
   destruct(this_object());
@@ -171,7 +173,8 @@ void output(object to)
   next_input();
 }
 
-void set_done_callback(function f)
+void set_done_callback(function f, mixed ... args)
 {
   done_callback = f;
+  done_cb_args = args;
 }
