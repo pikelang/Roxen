@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.330 2000/08/01 16:27:12 jhs Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.331 2000/08/08 12:12:31 jhs Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2027,9 +2027,8 @@ public array access(string file, RequestID id)
   return 0;
 }
 
-// Return the _real_ filename of a virtual file, if any.
-
 public string real_file(string file, RequestID id)
+//! Return the _real_ filename of a virtual file, if any.
 {
   string loc;
   string s;
@@ -2158,10 +2157,10 @@ int|string try_get_file(string s, RequestID id,
   return res;
 }
 
-// Is 'what' a file in our virtual filesystem?
-int(0..1) is_file(string what, RequestID id)
+int(0..1) is_file(string virt_path, RequestID id)
+//! Is `virt_path' a file in our virtual filesystem?
 {
-  return !!stat_file(what, id);
+  return !!stat_file(virt_path, id);
 }
 
 array registered_urls = ({});
@@ -2779,6 +2778,9 @@ int disable_module( string modname, int|void nodest )
 }
 
 RoxenModule|string find_module(string name)
+//! Return the module corresponding to the name (eg "rxmlparse",
+//! "rxmlparse#0" or "filesystem#1") or zero, if there was no such
+//! module.
 {
   int id;
   sscanf(name, "%s#%d", name, id);
