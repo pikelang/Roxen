@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.587 2005/01/12 14:37:27 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.588 2005/02/08 13:20:18 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3764,7 +3764,7 @@ void low_init(void|int modules_already_enabled)
 	}
     }
     enable_module_batch_msgs = 0;
-    roxenloader.pop_compile_error_handler();
+//      roxenloader.pop_compile_error_handler();
     forcibly_added = ([]);
   }
     
