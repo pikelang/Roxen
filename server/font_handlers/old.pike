@@ -2,7 +2,7 @@
 // Copyright © 1996 - 2000, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.8 2001/03/23 03:13:18 per Exp $";
+constant cvs_version = "$Id: old.pike,v 1.9 2001/05/04 14:30:42 jonasw Exp $";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = 
@@ -84,18 +84,21 @@ string fix_name( string what )
 array has_font( string name, int size )
 {
   string base_dir;
-  array available;
+  array available, fallback_available;
   if( String.width( name ) > 8 )
     return 0;
   foreach(roxen->query("font_dirs"), string dir)
   {
     base_dir = dir+size+"/"+fix_name(name);
-    if((available = r_get_dir(base_dir))) break;
-    base_dir=dir+"/32/"+fix_name(name);
-    available = r_get_dir(base_dir);
+    if (available = r_get_dir(base_dir))
+      break;
+    if (!fallback_available) {
+      base_dir=dir+"/32/"+fix_name(name);
+      fallback_available = r_get_dir(base_dir);
+    }
   }
-  if(!available) return 0;
-  return available - ({ "CVS" });
+  if(!available && !fallback_available) return 0;
+  return (available ? available : fallback_available) - ({ "CVS" });
 }
 
 Font open( string name, int size, int bold, int italic )
