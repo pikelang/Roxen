@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.39 2000/02/04 16:47:55 mast Exp $
+//! $Id: module.pmod,v 1.40 2000/02/04 18:18:28 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -460,7 +460,7 @@ class TagSet
   {
     generation++;
     prepare_funs = 0;
-    plugins = 0;
+    plugins = ([]);
     (notify_funcs -= ({0}))();
     set_weak_flag (notify_funcs, 1);
   }
