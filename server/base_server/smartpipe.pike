@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.12 1998/03/28 23:54:08 neotron Exp $
+ * $Id: smartpipe.pike,v 1.13 1998/03/29 00:27:14 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -36,6 +36,7 @@ void finish()
   current_input = 0;
   write_out = done_callback = 0;
   to_send = 0;
+  destruct(this_object());
 }
 
 void write_more()
@@ -44,6 +45,7 @@ void write_more()
   len = write_out(current_input);
   if(len <= 0)
   {
+    write("Write failed. Self-Destructing.\n");
     finish();
     return;
   }

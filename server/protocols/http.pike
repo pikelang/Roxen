@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.83 1998/03/28 23:34:21 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.84 1998/03/29 00:27:14 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -576,6 +576,8 @@ void disconnect()
 
 void end(string|void s, int|void keepit)
 {
+  if(pipe)
+    destruct(pipe); // Safety first...
   pipe = 0;
 #ifdef PROFILE
   if(conf)
