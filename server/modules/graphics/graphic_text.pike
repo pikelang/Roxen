@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.163 1999/05/19 09:11:46 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.164 1999/05/25 11:38:27 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -376,12 +376,22 @@ object make_text_image(mapping args, object font, string text,object id)
   
   background->setcolor(@bgcolor);
 
-  if(args->size || args->xsize || args->ysize)
+  int xs=background->xsize(), ys=background->ysize();
+
+  if( args->rescale )
   {
-    int xs=background->xsize(), ys=background->ysize();
-    if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
-    if(args->xsize) xs=(int)args->xsize; 
-    if(args->ysize) ys=(int)args->ysize;
+    xs = txsize;
+    ys = tysize;
+  }
+
+  if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
+  if(args->xsize) xs=(int)args->xsize; 
+  if(args->ysize) ys=(int)args->ysize;
+
+
+  if( xs != background->xsize() &&
+      ys != background->ysize() )
+  {
     if(!args->rescale)
       background = background->copy(0,0,xs-1,ys-1);
     else
@@ -408,7 +418,8 @@ object make_text_image(mapping args, object font, string text,object id)
   {
     int alpha,border;
     string bg;
-    sscanf(args->textbox, "%d,%s", alpha, bg);
+    alpha = (int)args->textbox;
+    sscanf(args->textbox, "%*[^,],%s", bg);
     sscanf(bg,"%s,%d", bg,border);
     background->paste_alpha(Image.image(txsize+border*2,tysize+border*2,
 				  @parse_color(bg)),
@@ -558,16 +569,6 @@ mixed draw_callback(mapping args, object id)
   string orig_text = text;
   object img;
 
-  m_delete( args, "text" );
-
-  if(!sizeof(args))
-  {
-    args=(["fg":"black","bg":"white","notrans":"1"]);
-    text="Please reload this page";
-  }
-  //werror("Not cached: %O -> %O\n", key, text);
-  //werror("In cache: %O\n", sort(indices(cache->cache)));
-
   if(!args->verbatim) // typographically correct...
   {
     text = replace(text, nbsp, " ");
@@ -636,7 +637,7 @@ mixed draw_callback(mapping args, object id)
       object alpha;
       alpha = img->distancesq( @bgcolor );
       alpha->gamma( 8 );
-       return ([ "img":img, "alpha":alpha ]);
+      return ([ "img":img, "alpha":alpha ]);
     }
     return img;
   }
@@ -681,7 +682,7 @@ mixed draw_callback(mapping args, object id)
   return 
   ([ 
     "data":data[0], 
-    "metadata":
+    "meta":
     ([
       "xsize":data[1][0],
       "ysize":data[1][1],
@@ -837,7 +838,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   int i;
   string split;
 
-  contents = contents[..((int)arg->maxlen||QUERY(deflen))];
+  contents = contents[..(((int)arg->maxlen||QUERY(deflen))-1)];
   m_delete(arg, "maxlen");
 
   if(arg->magic)
@@ -877,7 +878,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   if(arg->split)
   {
-    if (sizeof(split=arg->split) != 1)
+    if ((split=arg->split) == "split")
       split = " ";
     m_delete(arg,"split");
   }
@@ -929,7 +930,6 @@ string tag_graphicstext(string t, mapping arg, string contents,
       arg->text = word;
       string fn = image_cache->store( arg );
       mapping size = image_cache->metadata( fn, id, 1 );
-
       mapping tag = 
       ([ 
         "alt":(arg->alt||word),
@@ -937,8 +937,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
       ]);
       if( size )
       {
-        tag->width = size->xsize;
-        tag->height = size->ysize;
+        tag->width  = (string)size->xsize;
+        tag->height = (string)size->ysize;
       }
       res += ({ make_tag( "img", tag )+" " });
     }
