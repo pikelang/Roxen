@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.73 2001/06/28 12:11:56 nilsson Exp $
+// $Id: global_variables.pike,v 1.74 2001/07/09 11:02:50 lange Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -592,7 +592,7 @@ void define_global_variables(  )
 		      LOCALE(170, "Cache: Memory Cache Garbage Collect Interval"),
 		      LOCALE(171, "The number of seconds between every garbage collect "
 			     "(removal of old content) from the memory cache. The "
-			     "memory cache is used for various tasks like remebering "
+			     "memory cache is used for various tasks like remembering "
 			     "what supports flags matches what client.")))
 	 ->set_range(1, 60*60*24);
 	 // Note that the upper limit is arbitrary.
