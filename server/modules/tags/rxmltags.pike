@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.336 2002/01/07 18:27:59 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.337 2002/01/08 17:42:31 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3784,7 +3784,7 @@ class IfIs
 
   constant cache = 0;
   constant case_sensitive = 0;
-  function source;
+  string|array source (RequestID id, string s);
 
   int(0..1) eval( string value, RequestID id )
   {
@@ -3810,17 +3810,20 @@ class IfIs
 
   int(0..1) do_check( string var, array arr, RequestID id) {
     if(sizeof(arr)<2) return !!var;
-    if(!var) var="";
+    if(!var)
+      // Compatibility kludge to work with the string-only approach
+      // below.
+      return do_check ("", arr, id) || do_check ("0", arr, id);
 
     string is;
 
+    // FIXME: This code should be adapted to compare arbitrary values.
+
     if(case_sensitive) {
-      if(sizeof(arr)==1) return !!var;
       is=arr[2..]*" ";
     }
     else {
       var = lower_case( var );
-      if(sizeof(arr)==1) return !!var;
       is=lower_case(arr[2..]*" ");
     }
 
