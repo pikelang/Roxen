@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.827 2002/10/23 19:49:19 nilsson Exp $";
+constant cvs_version="$Id: core.pike,v 1.828 2002/10/23 21:07:32 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -470,9 +470,19 @@ class Queue
 //! Thread.Queue lookalike, which uses some archaic and less
 //! known features of the preempting algorithm in pike to optimize the
 //! read function.
+//
+// If those archaic and less known features are to depend on the
+// interpreter lock in the while loop that waits on the condition
+// variable then it doesn't work since Pike always might yield before
+// a function call (specifically, the wait() call in the condition
+// variable). Thus a handler thread might wait even though there is a
+// request to process. However, the only effect is that that specific
+// request isn't serviced timely; when the next request comes in the
+// thread will be woken up and both requests will be handled.
+// Furthermore it's extremely rare in the first place since there
+// normally are several handler threads.
 {
   inherit Thread.Condition : r_cond;
-  static Thread.Mutex mutex = Thread.Mutex();
   array buffer=allocate(8);
   int r_ptr, w_ptr;
   
@@ -483,17 +493,19 @@ class Queue
   
   mixed read()
   {
-    object key = mutex->lock();
-    while(!(w_ptr - r_ptr)) r_cond::wait(key);
+    while(!(w_ptr - r_ptr))
+      // Make a MutexKey for wait() to please 7.3. This will of course
+      // not fix the race, but we ignore that. See the discussion
+      // above.
+      r_cond::wait (Thread.Mutex()->lock());
     mixed tmp = buffer[r_ptr];
     buffer[r_ptr++] = 0;	// Throw away any references.
-    key = 0;
     return tmp;
   }
 
   mixed tryread()
   {
-    if (!(w_ptr - r_ptr)) return UNDEFINED;
+    if (!(w_ptr - r_ptr)) return ([])[0];
     mixed tmp = buffer[r_ptr];
     buffer[r_ptr++] = 0;	// Throw away any references.
     return tmp;
@@ -582,12 +594,11 @@ local static void handler_thread(int id)
 	  num_hold_messages--;
 	  THREAD_WERR("Handle thread [" + id + "] put on hold");
 	  threads_on_hold++;
-	  if (Thread.Condition cond = hold_wakeup_cond){
-	    object mutex = Thread.Mutex();
-	    object silly = mutex->lock();
-	    cond->wait(silly);
-	    silly = 0;
-	  }
+	  if (Thread.Condition cond = hold_wakeup_cond)
+	    // Make a MutexKey for wait() to please 7.3. This will of
+	    // course not fix the race, but we ignore that. See the
+	    // comment at the declaration of hold_wakeup_cond.
+	    cond->wait (Thread.Mutex()->lock());
 	  threads_on_hold--;
 	  THREAD_WERR("Handle thread [" + id + "] released");
 	}
@@ -674,6 +685,12 @@ void start_handler_threads()
 
 static int num_hold_messages;
 static Thread.Condition hold_wakeup_cond = Thread.Condition();
+// Note: There are races in the use of this condition variable, but
+// the only effect of that is that some handler thread might be
+// considered hung when it's actually waiting on hold_wakeup_cond, and
+// the hold/release handler threads function deal with hung threads
+// anyway. The outcome would only be that release_handler_threads
+// starts some extra handler thread unnecessarily.
 
 void hold_handler_threads()
 //! Tries to put all handler threads on hold, but gives up if it takes
@@ -1045,6 +1062,54 @@ void set_port_options( string key, mapping value )
   save( );
 }
 
+Configuration find_configuration_for_url(object url, void|string url_base)
+//! Tries to to determine if a request for the given url would end up
+//! in this server, and if so returns the corresponding configuration.
+{
+  Configuration c;
+  string url_with_port = sprintf("%s://%s:%d%s", url->scheme, url->host,
+				 url->port,
+				 (sizeof(url->path)?url->path:"/"));
+  foreach( indices(urls), string u )
+  {
+    mixed q = urls[u];
+    if( glob( u+"*", url_with_port ) )
+    {
+      if( (c = q->port->find_configuration_for_url(url, 0, 1 )) )
+      {
+	if (search(u, "*") != -1 ||
+	    search(u, "?") != -1)
+	{
+	  // Something like "http://*:80/"
+
+	  // Base url
+	  if (url_base)
+	  {
+	    Standards.URI base = Standards.URI(url_base);
+	    if (url->host == base->host &&
+		url->port == base->port &&
+		url->scheme == base->scheme)
+	      break;
+	  }
+
+	  // Confguration location
+	  Standards.URI config = Standards.URI(c->get_url());
+	  if (url->host == config->host &&
+	      url->port == config->port &&
+	      url->scheme == config->scheme)
+  	    break;
+
+	  // Do not match
+	  c = 0;
+	}
+	else
+	  break;
+      }
+    }
+  }
+  return c;
+}
+
 class InternalRequestID
 //! ID for internal requests that are not linked to any real request.
 {
@@ -1053,6 +1118,7 @@ class InternalRequestID
   this_program set_path( string f )
   {
     raw_url = Roxen.http_encode_string( f );
+
     if( strlen( f ) > 5 )
     {
       string a;
@@ -1079,6 +1145,12 @@ class InternalRequestID
 
   this_program set_url( string url )
   {
+    sscanf( url, "%s://%s/%s", prot, misc->host, string path );
+    prot = upper_case( prot );
+    method = "GET";
+    raw = "GET /" + url + " HTTP/1.1\r\n\r\n";
+    raw_url = "/" + path;
+
     Configuration c;
     foreach( urls; string u; mapping q )
     {
@@ -1118,12 +1190,7 @@ class InternalRequestID
       }
     }
 
-    string host;
-    sscanf( url, "%s://%s/%s", prot, host, url );
-    prot = upper_case( prot );
-    method = "GET";
-    misc->host = host;
-    return set_path( "/"+url );
+    return set_path( raw_url );
   }
 
   static string _sprintf()
@@ -3948,7 +4015,7 @@ void enable_configurations()
       return;
   }
   report_fatal("No configurations could open any ports. Will shutdown.\n");
-  shutdown();
+  restart(0.0, 50);	/* Actually a shutdown, but... */
 }
 
 int all_modules_loaded;
@@ -4123,7 +4190,8 @@ void describe_all_threads()
   threads = 0;
   threads_disabled = 0;
 #else
-  report_debug("Describing single thread:\n%s\n", backtrace());
+  report_debug("Describing single thread:\n%s\n",
+	       describe_backtrace (backtrace()));
 #endif
 }
 
