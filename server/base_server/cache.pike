@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.73 2001/07/20 00:06:33 mast Exp $
+// $Id: cache.pike,v 1.74 2001/07/25 22:47:57 mast Exp $
 
 #pragma strict_types
 
@@ -148,7 +148,6 @@ mixed cache_set(string in, string what, mixed to, int|void tm)
 // Clean the cache.
 void cache_clean()
 {
-  remove_call_out(cache_clean);
   int gc_time=[int](([function(string:mixed)]roxenp()->query)("mem_cache_gc"));
   string a, b;
   array c;
@@ -195,7 +194,7 @@ void cache_clean()
       }
     }
   }
-  call_out(cache_clean, gc_time);
+  roxenp()->background_run (gc_time, cache_clean);
 }
 
 
@@ -270,7 +269,6 @@ private void store_session(string id, mixed data, int t) {
 // GC that, depending on the sessions session_persistence either
 // throw the session away or store it in a database.
 private void session_cache_handler() {
-  remove_call_out(session_cache_handler);
   int t=time(1);
   if(max_persistence>t) {
 
@@ -297,13 +295,12 @@ private void session_cache_handler() {
   }
 
   session_buckets = ({ ([]) }) + session_buckets[..SESSION_BUCKETS-2];
-  call_out(session_cache_handler, SESSION_SHIFT_TIME);
+  roxenp()->background_run(SESSION_SHIFT_TIME, session_cache_handler);
 }
 
 // Stores all sessions that should be persistent in the database.
 // This function is called upon exit.
 private void session_cache_destruct() {
-  remove_call_out(session_cache_handler);
   int t=time(1);
   if(max_persistence>t) {
     report_notice("Synchronizing session cache");
@@ -379,17 +376,23 @@ void init_session_cache() {
     setup_tables();
 }
 
+void init_call_outs()
+{
+  roxenp()->background_run(60, cache_clean);
+  roxenp()->background_run(SESSION_SHIFT_TIME, session_cache_handler);
+
+  CACHE_WERR("Cache garb call outs installed.\n");
+}
+
 void create()
 {
   add_constant( "cache", this_object() );
   cache = ([ ]);
-  call_out(cache_clean, 60);
 
   nongc_cache = ([ ]);
 
   session_buckets = ({ ([]) }) * SESSION_BUCKETS;
   session_persistence = ([]);
-  call_out(session_cache_handler, SESSION_SHIFT_TIME);
 
   CACHE_WERR("Now online.");
 }

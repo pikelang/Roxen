@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.264 2001/06/30 13:43:05 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.265 2001/07/25 22:47:58 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -535,7 +535,7 @@ Process.Process spawn_pike(array(string) args, void|string wd,
 
 
 // Add a few cache control related efuns
-static private void initiate_cache()
+static private object initiate_cache()
 {
   object cache;
   cache=((program)"base_server/cache")();
@@ -547,6 +547,8 @@ static private void initiate_cache()
   add_constant("cache_expire", cache->cache_expire);
   add_constant("cache_clear",  cache->cache_expire);
   add_constant("cache_indices",cache->cache_indices);
+
+  return cache;
 }
 
 class _error_handler {
@@ -1820,11 +1822,11 @@ library should be enough.
   add_constant("User",       prototypes->User );
   add_constant("Group",      prototypes->Group );
   
-
-  initiate_cache();
+  object cache = initiate_cache();
   load_roxen();
-
   int retval = roxen->main(argc,hider);
+  cache->init_call_outs();
+
   report_debug("-- Total boot time %2.1f seconds ---------------------------\n",
 	       (gethrtime()-start_time)/1000000.0);
   write_current_time();
