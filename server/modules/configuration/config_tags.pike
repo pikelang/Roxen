@@ -486,7 +486,38 @@ string set_variable( string v, object in, mixed to, object id )
   if( v=="MyWorldLocation" && in->is_configuration && val=="" )
     return "";
 
-  if( v=="URLs" && in->is_configuration ) {
+  if( v=="URLs" && in->is_configuration ) 
+  {
+    foreach( val, string port )
+    {
+      string op = port;
+      if( (int)port )
+      {
+        warning += "<font color=darkred>Asuming http://*:"+
+                port+"/ for "+port+"</font><br>";
+        port = "http://*:"+port+"/";
+      }
+      string protocol, host, path;
+      if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
+        warning += "<font color=darkred>"+port+" is not a URL</font><br>";
+      else if( path == "" )
+      {
+        warning += "<font color=darkred>Added / to the end of "+port+
+                "</font><br>";
+        port += "/";
+      }
+      if( protocol != lower_case( protocol ) )
+      {
+        warning += "<font color=darkred>Changed "+protocol+" to "+
+                lower_case( protocol )+"</font><br>";  
+        port = lower_case( protocol )+"://"+host+path;
+      }
+      if( !roxen->protocols[ lower_case( protocol ) ] )
+        warning += "<font color=darkred>Warning: The protocol "+
+                lower_case(protocol)+" is unknown</font><br>";
+      if( op != port )
+        val = replace( val, op, port );
+    }
     string world = in->variables->MyWorldLocation[ VAR_VALUE ];
     if( !world || !sizeof(world) )
       in->set( "MyWorldLocation", Roxen.get_world(val)||"" );

@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.16 2000/04/03 13:48:04 per Exp $
+ * $Id: create_configif.pike,v 1.17 2000/04/03 14:57:50 per Exp $
  *
  * Create an initial administration interface server.
  */
@@ -102,6 +102,8 @@ int main(int argc, array argv)
 
         if( sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) == 3)
         {
+          if( path == "" )
+            path = "/";
           switch( lower_case(protocol) )
           {
            case "http":
