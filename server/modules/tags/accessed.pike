@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.41 2000/11/09 18:19:12 kuntri Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.42 2000/12/15 20:34:39 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Accessed counter";
@@ -96,7 +96,7 @@ constant tagdoc=([
 <attr name='cheat' value='number'><p>
  Adds this number of accesses to the actual number of accesses before
  printing the result. If your page has been accessed 72 times and you
- add &lt;accessed cheat=100&gt; the result will be 172.</p></attr>
+ add <tag>accessed cheat='100'</tag> the result will be 172.</p></attr>
 
 <attr name='database'><p>
  Works like the since attribute, but counts from the day the first
@@ -120,8 +120,8 @@ constant tagdoc=([
  virtual filesystem.</p>
 
  <p>One limitation is that you cannot reference a file that does not
- have its own &lt;accessed&gt; tag. You can use &lt;accessed
- silent&gt; on a page if you want it to be possible to count accesses
+ have its own <tag>accessed</tag> tag. You can use <tag>accessed
+ silent='1'</tag> on a page if you want it to be possible to count accesses
  to it, but don't want an access counter to show on the page itself.</p>
 </attr>
 
@@ -146,17 +146,16 @@ constant tagdoc=([
 
 <attr name='reset'><p>
  Resets the counter. This should probably only be done under very
- special conditions, maybe within an &lt;if&gt; statement.</p>
-
- <p>This can be used together with the file argument, but it is
+ special conditions, maybe within an <tag>if</tag> statement.
+ This can be used together with the file argument, but it is
  limited to files in the current- and sub-directories.</p>
 </attr>
 
 <attr name='silent'><p>
  Print nothing. The access count will be updated but not printed. This
  option is useful because the access count is normally only kept for
- pages with actual &lt;access&gt; on them. &lt;accessed
- file=filename&gt; can then be used to get the access count for the
+ pages with actual <tag>access</tag> on them. <tag>accessed
+ file='filename'</tag> can then be used to get the access count for the
  page with the silent counter.</p>
 </attr>
 
