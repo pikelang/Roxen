@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.432 2001/05/16 12:56:39 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.433 2001/06/06 21:04:49 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1221,6 +1221,18 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 #ifdef THREADS
   Thread.MutexKey key;
 #endif
+  
+#if defined(__NT__) || defined(STRIP_BSLASH)
+  if( strlen(id->not_query ) )
+  {
+    werror("a: "+id->not_query+"\n");
+    int ss = (<'/','\\'>)[ id->not_query[0] ];
+    id->not_query = combine_path("/",replace(X,"\\","/"));
+    if( !ss )  id->not_query = id->not_query[1..];
+    werror("b: "+id->not_query+"\n");
+  }
+#endif
+
   TRACE_ENTER(sprintf("Request for %s", id->not_query), 0);
 
   string file=id->not_query;
