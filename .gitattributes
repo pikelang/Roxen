@@ -2,6 +2,7 @@
 * text ident
 *.gif binary
 /sites/1/index.html eol=crlf
+*.pnm binary
 
 # Handling of foreign (ie CVS) identifiers.
 #
