@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.28 1999/08/06 03:40:39 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.29 1999/08/08 19:18:13 neotron Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -184,6 +184,9 @@ string tag_tablify(string tag, mapping m, string q, object id)
 
   if(m->help) return register_module()[2];
 
+  if (m->preprocess || m->parse) {
+    q = parse_rxml(q, request_id, file, defines);
+  }
   mapping arg_list = ([]);
   q = parse_html(q, ([]), (["fields":container_fields]), m, arg_list);
 
