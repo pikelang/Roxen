@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.182 2001/09/20 20:00:47 nilsson Exp $
+# $Id: start,v 1.183 2001/09/25 15:27:18 wellhard Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -143,7 +143,6 @@ setup_for_tests() {
     self_test=y
     DEFINES="-DRUN_SELF_TEST -DSELF_TEST_DIR=\"$SELF_TEST_DIR\" $DEFINES"
     rm -rf $VARDIR/test_config*
-    cp -R $SELF_TEST_DIR/config $VARDIR/test_config
     DIR=$VARDIR/test_config
     if [ -f $SELF_TEST_DIR/scripts/setup.pike ] ; then
       $PIKE $SELF_TEST_DIR/scripts/setup.pike $SELF_TEST_DIR $VARDIR
