@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.5 2000/08/25 06:17:12 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.6 2000/08/25 11:07:58 wellhard Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_PARSER;
@@ -61,7 +61,7 @@ class TagVForm {
 	    args->regexp="^[A-Z0-9]*$";
 	    break;
 	  case "lower-alpha-num":
-	    args->regexp="^[A-Z0-9]*$";
+	    args->regexp="^[a-z0-9]*$";
 	    break;
 	  }
 	  m_delete(args, "is");
@@ -94,8 +94,8 @@ class TagVForm {
 	  if(!var) var=Variable.VerifiedString(args->value||"");
 	  if(args->regexp) var->add_regexp(args->regexp);
 	  if(args->glob) var->add_glob(args->glob);
-	  if(args->minlength) var->add_minlength(args->minlength);
-	  if(args->maxlength) var->add_maxlength(args->maxlength);
+	  if(args->minlength) var->add_minlength((int)args->minlength);
+	  if(args->maxlength) var->add_maxlength((int)args->maxlength);
 	  if(args->case=="upper") var->add_upper();
 	  if(args->case=="lower") var->add_lower();
 
