@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: html.pike,v 1.12 2000/08/30 17:36:38 nilsson Exp $
+// $Id: html.pike,v 1.13 2001/02/17 15:31:58 nilsson Exp $
 
 #pragma strict_types
 
@@ -103,4 +103,23 @@ string h2(string h)
 string h3(string h)
 {
   return "<h3>"+h+"</h3>\n\n";
+}
+
+string select(string name, array(string)|array(array(string)) choices,
+		  void|string selected) {
+  string ret = "<select name=\"" + name + "\">\n";
+
+  if(arrayp(choices[0])) {
+    foreach([array(array(string))]choices, array(string) value)
+      ret += "<option value=\"" + value[0] + "\"" +
+	(value[0]==selected?" selected=\"selected\"":"") +
+	">" + value[1] + "</option>\n";
+  } else {
+    foreach([array(string)]choices, string value)
+      ret += "<option value=\"" + value + "\"" +
+	(value==selected?" selected=\"selected\"":"") +
+	">" + value + "</option>\n";
+  }
+
+  return ret + "</select>";
 }
