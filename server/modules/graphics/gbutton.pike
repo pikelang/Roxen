@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.2 1999/11/15 15:02:06 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.3 1999/11/15 16:30:33 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -37,6 +37,10 @@ roxen.ImageCache  button_cache;
 object button_font = resolve_font("haru 32");
 object button_border;
 object button_mask;
+
+
+//  Distance between icon image and text
+#define IMAGE_SPC  5
 
 
 array register_module()
@@ -131,10 +135,10 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     icon = roxen.low_load_image(args->icn, id);
   else if (args->icd)
     icon = roxen.low_decode_image(args->icd);
-  i_width = icon && (icon->img->xsize() + 4);
+  i_width = icon && (icon->img->xsize() + IMAGE_SPC);
   
   //  Generate text
-  text_img = button_font->write(text)->scale(0, b_height - 4);
+  text_img = button_font->write(text)->scale(0, b_height - IMAGE_SPC);
   if (args->cnd)
     text_img = text_img->scale((int) round(text_img->xsize() * 0.8),
 			       text_img->ysize());
@@ -155,7 +159,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     default:
     case "right":
       txt_x = b_width / 2;
-      icn_x = req_width - b_width / 2 - i_width + 4;
+      icn_x = req_width - b_width / 2 - i_width + IMAGE_SPC;
       break;
     }
     break;
@@ -178,11 +182,11 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
       break;
     case "center_after":
       txt_x = (req_width - i_width - t_width) / 2;
-      icn_x = txt_x + t_width + 4;
+      icn_x = txt_x + t_width + IMAGE_SPC;
       break;
     case "right":
-      icn_x = req_width - b_width / 2 - i_width + 4;
-      txt_x = b_width / 2 + (icn_x - 4 - b_width / 2 - t_width) / 2;
+      icn_x = req_width - b_width / 2 - i_width + IMAGE_SPC;
+      txt_x = b_width / 2 + (icn_x - IMAGE_SPC - b_width / 2 - t_width) / 2;
       break;
     }
     break;
@@ -196,8 +200,8 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
       txt_x = req_width - b_width / 2 - t_width;
       break;
     case "right":
-      icn_x = req_width - b_width / 2 - i_width + 4;
-      txt_x = icn_x - 4 - t_width;
+      icn_x = req_width - b_width / 2 - i_width + IMAGE_SPC;
+      txt_x = icn_x - IMAGE_SPC - t_width;
       break;
     }
     break;
@@ -266,16 +270,19 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     "ica" : args->align_icon || "left"                   //  Icon alignment
   ]);
   
+  new_args->quant = args->quant || 128;
   foreach(glob("*-*", indices(args)), string n)
     new_args[n] = args[n];
-  
+
   string img_src =
     query_internal_location() +
     button_cache->store( ({ new_args, contents }), id);
 
   mapping img_attrs = ([ "src"    : img_src,
 			 "alt"    : args->alt || contents,
-			 "border" : args->border ]);
+			 "border" : args->border,
+			 "hspace" : args->hspace,
+			 "vspace" : args->vspace ]);
   
   if (mapping size = button_cache->metadata(new_args, id, 1)) {
     //  Image in cache (1 above prevents generation on-the-fly, i.e.
