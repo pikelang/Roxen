@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.21 2000/02/08 22:13:52 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.22 2000/02/08 22:40:56 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -146,12 +146,14 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   int left, right, top, bottom; /* offsets */
   int req_width;
 
+  mapping ll = ([]);
+
   if( args->border_image )
   {
     array layers = roxen.load_layers(args->border_image, id);
-
     foreach( layers, object l )
     {
+      ll[l->get_misc_value( "name" )] = l;
       switch( lower_case((l->get_misc_value( "name" )/" ")[0]) )
       {
        case "background": background = l; break;
@@ -167,6 +169,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     array layers = roxen.load_layers("roxen-images/gbutton.xcf", id);
     foreach( layers, object l )
     {
+      ll[l->get_misc_value( "name" )] = l;
       switch( lower_case((l->get_misc_value( "name" )/" ")[0]) )
       {
        case "background": background = l; break;
@@ -295,6 +298,18 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   if (mask != frame)
     mask = stretch_layer( mask, left, right, req_width );
 
+  if( args->extra_layers )
+  {
+    array l = ({ });
+    if( background )
+      l = ({ background });
+    foreach( args->extra_layers/",", string q )
+      l += ({ ll[q] });
+    l-=({ 0 });
+    background = Image.lay( l );
+  }
+
+
   if( background )
   {
     if( !background->alpha() )
@@ -400,6 +415,7 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     "font": (args->font||id->misc->defines->font||
              roxen->query("default_font")),
     "border_image":fi,
+    "extra_layers":args["extra-layers"],
   ]);
 
 //   array hsv = Image.Color( @new_args->bg )->hsv( );
