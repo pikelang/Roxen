@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_sucker.pike,v 1.1 2000/11/18 18:47:28 jhs Exp $";
+constant cvs_version = "$Id: whitespace_sucker.pike,v 1.2 2000/12/11 02:35:03 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Sucker";
@@ -15,7 +15,7 @@ string status()
   return sprintf("<b>%d bytes</b> of useless whitespace have been dropped.", gain);
 }
 
-string most_significant_whitespace(string ws)
+static string most_significant_whitespace(string ws)
 {
   int size = sizeof( ws );
   if( size )
@@ -24,7 +24,7 @@ string most_significant_whitespace(string ws)
 		    : has_value(ws, "\t") ? "\t" : " ";
 }
 
-array(string) remove_consecutive_whitespace(Parser.HTML p, string in)
+static array(string) remove_consecutive_whitespace(Parser.HTML p, string in)
 {
   sscanf(in, "%{%[ \t\r\n]%[^ \t\r\n]%}", array ws_nws);
   if(sizeof(ws_nws))
@@ -45,6 +45,10 @@ mapping filter(mapping result, RequestID id)
     return 0;
 
   result->data = Parser.HTML()
+    ->add_container("pre", lambda(Parser.HTML p, mapping(string:string) args, string c) {
+			     if(!sizeof(args)) return ({ "<pre>"+c+"</pre>" });
+			     return ({ Roxen.make_container("pre", args, c) });
+			   })
     ->_set_data_callback( remove_consecutive_whitespace )
     ->finish( result->data )
     ->read();
