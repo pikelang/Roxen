@@ -10,7 +10,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.31 1999/11/23 07:45:33 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.32 1999/12/09 20:46:56 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -21,6 +21,7 @@ inherit "module";
 inherit "roxenlib";
 
 int bytes;  // Holds the number of bytes parsed
+function file2type;
 
 // ------------- Module registration and configuration. ---------------
 
@@ -55,6 +56,7 @@ void create(object c)
 
 void start(int q, object c)
 {
+  file2type=my_configuration()->type_from_filename;
   define_API_functions();
 }
 
@@ -98,7 +100,7 @@ mapping handle_file_extension(object file, string e, object id)
 
   bytes += strlen(to_parse = file->read());
 
-  return http_rxml_answer( to_parse, id, file, id->conf->type_from_filename(id->realfile||id->no_query||"index.html") );
+  return http_rxml_answer( to_parse, id, file, file2type(id->realfile||id->no_query||"index.html") );
 }
 
 array(string) tag_version() { return ({ roxen.version() }); }
