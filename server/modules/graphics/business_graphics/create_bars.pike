@@ -11,10 +11,10 @@ import Stdio;
 inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
-
+//#define BG_DEBUG 1
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.64 1998/03/06 21:57:42 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.65 1998/03/08 16:23:55 hedda Exp $";
 
 /*
  * name = "BG: Create bars";
@@ -27,9 +27,13 @@ Create_bars can draw normal bars, sumbars and normalized sumbars.
 */ 
 
 
-
 mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 {
+
+#ifdef BG_DEBUG
+  mapping bg_timers = ([]);
+#endif
+
   //Supports only xsize>=100
 
   int si=diagram_data["fontsize"];
@@ -42,19 +46,42 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 
   object(image) barsdiagram;
 
+#ifdef BG_DEBUG
+  bg_timers->init_bg = gauge {
+#endif
   init_bg(diagram_data);
+#ifdef BG_DEBUG
+  };
+#endif
   barsdiagram=diagram_data["image"];
-  set_legend_size(diagram_data);
 
+#ifdef BG_DEBUG
+  bg_timers->set_legend_size = gauge {
+#endif
+  set_legend_size(diagram_data);
+#ifdef BG_DEBUG
+  };
+#endif
   //write("ysize:"+diagram_data["ysize"]+"\n");
   diagram_data["ysize"]-=diagram_data["legend_size"];
   //write("ysize:"+diagram_data["ysize"]+"\n");
   
+#ifdef BG_DEBUG
+  bg_timers->init = gauge {
+#endif
 
   //Bestäm största och minsta datavärden.
   init(diagram_data);
-
+#ifdef BG_DEBUG
+  };
+#endif
   //Ta reda hur många och hur stora textmassor vi ska skriva ut
+
+
+#ifdef BG_DEBUG
+  bg_timers->space = gauge {
+#endif
+
   if (!(diagram_data["xspace"]))
     {
       //Initera hur långt det ska vara emellan.
@@ -99,6 +126,14 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       diagram_data["yspace"]=space;      
     }
  
+#ifdef BG_DEBUG
+  };
+#endif
+
+
+#ifdef BG_DEBUG
+  bg_timers->text = gauge {
+#endif
 
 
   {  
@@ -169,6 +204,12 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   //ta ut xmaxynames, ymaxynames xmaxxnames ymaxxnames
   create_text(diagram_data);
   si=diagram_data["fontsize"];
+
+
+#ifdef BG_DEBUG
+  };
+#endif
+
 
   //Skapa labelstexten för xaxlen
   object labelimg;
@@ -345,16 +386,28 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   float ymore=(-ystart+diagram_data["ystop"])/
     (diagram_data["ymaxvalue"]-diagram_data["yminvalue"]);
   
-  
+#ifdef BG_DEBUG
+  bg_timers->draw_grid = gauge {
+#endif
+
   draw_grid(diagram_data, xpos_for_yaxis, ypos_for_xaxis, 
 	     xmore, ymore, xstart, ystart, (float) si);
   
+#ifdef BG_DEBUG
+  };
+#endif
 
 
   //Rita ut bars datan
   int farg=0;
   //write("xstart:"+diagram_data["xstart"]+"\nystart"+diagram_data["ystart"]+"\n");
   //write("xstop:"+diagram_data["xstop"]+"\nystop"+diagram_data["ystop"]+"\n");
+
+
+ 
+#ifdef BG_DEBUG
+  bg_timers->draw_values = gauge {
+#endif
 
   if (diagram_data["type"]=="sumbars")
     {
@@ -385,7 +438,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 				      x+barw, start
 				      , x-barw, start
 				    }));  
-	      barsdiagram->setcolor(0,0,0);
+	      /*   barsdiagram->setcolor(0,0,0);
 	      draw(barsdiagram, 0.5, 
 		   ({
 		     x-barw, start,
@@ -395,7 +448,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 
 		   })
 		   );
-
+	      */
 	      start=y;
 	    }
 	}
@@ -446,6 +499,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	  barw/=s;
 	  barw/=2.0;
 	  farg=-1;
+	  float yfoo=(float)(diagram_data["ysize"]-ypos_for_xaxis);
+	  //"draw_values":3580,
 	  foreach(diagram_data["data"], array(float|string) d)
 	    {
 	      farg++;
@@ -467,17 +522,17 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 		    barsdiagram->polygone(
 					  ({x-barw+dnr, y 
 					    , x+barw+dnr, y, 
-					    x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
-					    , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis
+					    x+barw+dnr, yfoo
+					    , x-barw+dnr, yfoo
 					  })); 
-		    barsdiagram->setcolor(0,0,0);		  
+		    /*  barsdiagram->setcolor(0,0,0);		  
 		    draw(barsdiagram, 0.5, 
 			 ({x-barw+dnr, y 
 			   , x+barw+dnr, y, 
 			   x+barw+dnr, diagram_data["ysize"]-ypos_for_xaxis
 			   , x-barw+dnr,diagram_data["ysize"]- ypos_for_xaxis,
 			   x-barw+dnr, y 
-			 }));
+			   }));*/
 		  }
 	      dnr+=barw*2.0;
 	    }   
@@ -489,6 +544,10 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       throw( ({"\""+diagram_data["subtype"]+"\" is an unknown bars-diagram subtype!\n",
 	       backtrace()}));
 
+
+#ifdef BG_DEBUG
+  };
+#endif
 
   
   //Rita ut axlarna
@@ -718,6 +777,13 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 
   //Placera ut texten på X-axeln
   int s=sizeof(diagram_data["xnamesimg"]);
+
+
+ 
+#ifdef BG_DEBUG
+  bg_timers->text_on_axis = gauge {
+#endif
+
   for(int i=0; i<s; i++)
     if ((diagram_data["values_for_xnames"][i]<diagram_data["xmaxvalue"])&&
 	(diagram_data["values_for_xnames"][i]>diagram_data["xminvalue"]))
@@ -824,11 +890,17 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 
     }
 
+ 
+#ifdef BG_DEBUG
+  };
+#endif
+
 
   diagram_data["ysize"]-=diagram_data["legend_size"];
   diagram_data["image"]=barsdiagram;
+
+#ifdef BG_DEBUG
+  diagram_data->bg_timers=bg_timers;
+#endif
   return diagram_data;
-
-
-
 }

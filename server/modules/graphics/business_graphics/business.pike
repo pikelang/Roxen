@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.91 1998/03/07 18:22:41 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.92 1998/03/08 16:23:47 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -19,7 +19,7 @@ import Image;
 
 function create_pie, create_bars, create_graph;
 
-#define BG_DEBUG 1
+//#define BG_DEBUG 1
 #define SEP "\t"
 #define VOIDSYMBOL "\n"
 
@@ -908,7 +908,7 @@ mapping find_file(string f, object id)
   object(Image.image) img;
 
   if(res->image)
-    diagram_data["image"] = res->image;
+    diagram_data["image"] = res->image; //FIXME: Why is this here?
 
 #ifdef BG_DEBUG
   bg_timers->drawing = gauge {
@@ -928,6 +928,8 @@ mapping find_file(string f, object id)
   }
 #ifdef BG_DEBUG
   };
+  if (diagram_data->bg_timers)
+    bg_timers+=diagram_data->bg_timers;
 #endif
 
 
