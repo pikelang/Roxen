@@ -200,7 +200,6 @@ map binary
 /server/modules/scripting/fastcgi.pike foreign_ident
 /server/modules/scripting/fpscript.pike foreign_ident
 /server/modules/scripting/newpikescript.pike foreign_ident
-/server/modules/scripting/oldcgi.pike foreign_ident
 /server/modules/scripting/pikescript.pike foreign_ident
 /server/modules/scripting/piketag.pike foreign_ident
 /server/modules/scripting/servlet.pike foreign_ident

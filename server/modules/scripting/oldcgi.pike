@@ -3,18 +3,6 @@
 // OLD DEPRECTATED VERSION OF THE CGI MODULE.
 // USED BY THE FAST-CGI MODULE, NOTHING MORE.
 
-
-
-
-
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-
-// Support for the <a
-// href="http://hoohoo.ncsa.uiuc.edu/docs/cgi/interface.html">CGI/1.1
-// interface</a> (and more, the documented interface does _not_ cover
-// the current implementation in NCSA/Apache)
-
-string cvs_version = "$Id: oldcgi.pike,v 2.2 1999/12/18 14:25:20 nilsson Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -303,19 +291,6 @@ void create(object c)
 	 "NAME=value\n"
 	 "NAME=value\n"
 	 "</pre>Please note that normal CGI variables will override these.");
-}
-
-
-mixed *register_module()
-{
-  return ({ 
-    MODULE_LOCATION | MODULE_FILE_EXTENSION,
-    "CGI executable support", 
-    "Support for the <a href=\"http://hoohoo.ncsa.uiuc.edu/docs/cgi/"
-      "interface.html\">CGI/1.1 interface</a>, and more. It is too bad "
-      "that the CGI specification is a moving target, it is hard to "
-      "implement a fully compatible copy of it."
-    });
 }
 
 string check_variable(string name, string value)
