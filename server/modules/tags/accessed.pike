@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.6 1999/08/20 15:48:06 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.7 1999/09/24 18:27:56 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -330,9 +330,9 @@ string tag_accessed(string tag, mapping m, object id)
 
   if(prec=(int)m->prec)
   {
-    n=ipow(10, prec);
+    n=(int)pow(10, prec);
     while(counts>n) { counts=(counts+5)/10; q++; }
-    counts*=ipow(10, q);
+    counts*=(int)pow(10, q);
   }
 
   switch(m->type)
@@ -340,7 +340,7 @@ string tag_accessed(string tag, mapping m, object id)
    case "mcdonalds":
     q=0;
     while(counts>10) { counts/=10; q++; }
-    res="More than "+roxen->language("eng", "number")(counts*ipow(10, q))
+    res="More than "+roxen->language("eng", "number")(counts*(int)pow(10, q))
         + " served.";
     break;
     
