@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.49 2001/02/20 00:44:59 nilsson Exp $
+ * $Id: Roxen.pmod,v 1.50 2001/03/13 01:23:36 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -883,7 +883,6 @@ class ScopePage {
   constant in_defines=aggregate_multiset(@indices(converter));
 
   mixed `[] (string var, void|RXML.Context c, void|string scope) {
-    NOCACHE(c->id);
     switch (var) {
       case "pathinfo": return c->id->misc->path_info;
     }
@@ -904,7 +903,6 @@ class ScopePage {
 
   array(string) _indices(void|RXML.Context c) {
     if(!c) return ({});
-    NOCACHE(c->id);
     array ind=indices(c->id->misc->scope_page);
     foreach(indices(in_defines), string def)
       if(c->id->misc->defines[converter[def]]) ind+=({def});
