@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.333 2002/01/04 09:38:01 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.334 2002/01/07 10:28:40 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -321,7 +321,7 @@ class TagAuthRequired {
       // omitting the 'database' arg is OK, find_user_datbase will
       // return 0. 
       mapping hdrs = 
-        id->conf->authenticate_throw(id, 
+        id->conf->authenticate_throw(id, args->realm || "document access",
 	      id->conf->find_user_database(args->database)) ||
 	Roxen.http_auth_required(args->realm || "document access",
 				 args->message);
