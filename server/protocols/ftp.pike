@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.37 2000/08/04 15:59:53 mast Exp $
+ * $Id: ftp.pike,v 2.38 2000/09/13 19:17:05 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -683,13 +683,13 @@ class LSFile
   static int output_pos;
   static string output_mode = "A";
 
-  static mapping(string:array) stat_cache = ([]);
+  static mapping(string:array|object) stat_cache = ([]);
 
   static object conv;
 
-  static array stat_file(string long, object|void session)
+  static array|object stat_file(string long, object|void session)
   {
-    array st = stat_cache[long];
+    array|object st = stat_cache[long];
     if (zero_type(st)) {
       if (!session) {
 	session = RequestID2(master_session);
@@ -743,7 +743,7 @@ class LSFile
 	array(int) sizes = allocate(sizeof(files));
 	int i;
 	for (i=0; i < sizeof(files); i++) {
-	  array st = stat_file(combine_path(dir, files[i]));
+	  array|object st = stat_file(combine_path(dir, files[i]));
 	  if (st) {
 	    sizes[i] = st[1];
 	  } else {
@@ -756,7 +756,7 @@ class LSFile
 	array(int) times = allocate(sizeof(files));
 	int i;
 	for (i=0; i < sizeof(files); i++) {
-	  array st = stat_file(combine_path(dir, files[i]));
+	  array|object st = stat_file(combine_path(dir, files[i]));
 	  if (st) {
 	    times[i] = -st[-4];	// Note: Negative time.
 	  } else {
@@ -777,7 +777,7 @@ class LSFile
     int total;
     foreach(files, string short) {
       string long = combine_path(dir, short);
-      array st = stat_file(long);
+      array|object st = stat_file(long);
       if (st) {
 	if (flags & LS_FLAG_Q) {
 	  // Enclose in quotes.
@@ -1012,7 +1012,7 @@ class LSFile
       object session = RequestID2(master_session);
       session->method = "LIST";
       string long = fix_path(short);
-      array st = stat_file(long, session);
+      array|object st = stat_file(long, session);
       if (st) {
 	if ((< -2, -3 >)[st[1]] &&
 	    (!(flags & LS_FLAG_d))) {
@@ -1735,7 +1735,8 @@ class FTPSession
     send(226, ({ "Transfer complete." }));
   }
 
-  static private mapping|array stat_file(string fname, object|void session)
+  static private mapping|array|object stat_file(string fname,
+						object|void session)
   {
     mapping file;
 
@@ -1806,12 +1807,12 @@ class FTPSession
 
   static private int open_file(string fname, object session, string cmd)
   {
-    array|mapping file;
+    object|array|mapping file;
 
     file = stat_file(fname, session);
 
-    if (arrayp(file)) {
-      array st = file;
+    if (objectp(file) || arrayp(file)) {
+      array|object st = file;
       file = 0;
       if (st && (st[1] < 0) && !((<"RMD", "CHMOD">)[cmd])) {
 	send(550, ({ sprintf("%s: not a plain file.", fname) }));
@@ -2637,8 +2638,8 @@ class FTPSession
       // NOTE: roxen->stat_file() might change master_session->auth.
       array auth = master_session->auth;
 
-      array(int) st = conf->stat_file(master_session->misc->home,
-				      master_session);
+      array(int)|object st = conf->stat_file(master_session->misc->home,
+					     master_session);
 
       master_session->auth = auth;
 
@@ -2667,7 +2668,7 @@ class FTPSession
     session->method = "CWD";
     session->not_query = ncwd;
 
-    array st = conf->stat_file(ncwd, session);
+    array|object st = conf->stat_file(ncwd, session);
     ncwd = session->not_query; // Makes internal redirects to work.
     if (!st) {
       send(550, ({ sprintf("%s: No such file or directory, or access denied.",
@@ -2696,7 +2697,7 @@ class FTPSession
 						 return(s[..5] == "README");
 					       })));
       foreach(files, string f) {
-	array st = conf->stat_file(cwd + f, session);
+	array|object st = conf->stat_file(cwd + f, session);
 
 	if (st && (st[1] >= 0)) {
 	  reply = ({ sprintf("Please read the file %s.", f),
@@ -2968,7 +2969,7 @@ class FTPSession
 
     session->method = "DIR";
 
-    array st = stat_file(args, session);
+    array|object st = stat_file(args, session);
 
     if (st) {
       session->file = ([]);
@@ -2987,7 +2988,7 @@ class FTPSession
 
     session->method = "DIR";
 
-    array st = stat_file(args, session);
+    array|object st = stat_file(args, session);
 
     if (st && (st[1] < 0)) {
       if (args[-1] != '/') {
@@ -3040,7 +3041,7 @@ class FTPSession
     session->misc->len = 0;
     session->method = "DELETE";
 
-    array st = stat_file(args, session);
+    array|object st = stat_file(args, session);
 
     if (!st) {
       send_error("RMD", args, session->file, session);
@@ -3135,9 +3136,9 @@ class FTPSession
     args = fix_path(args);
     object session = RequestID2(master_session);
     session->method = "STAT";
-    mapping|array st = stat_file(args, session);
+    mapping|array|object st = stat_file(args, session);
 
-    if (!arrayp(st)) {
+    if (!arrayp(st) && !objectp(st)) {
       send_error("MDTM", args, st, session);
       return;
     }
@@ -3153,9 +3154,9 @@ class FTPSession
 
     object session = RequestID2(master_session);
     session->method = "STAT";
-    mapping|array st = stat_file(args, session);
+    mapping|array|object st = stat_file(args, session);
 
-    if (!arrayp(st)) {
+    if (!arrayp(st) && !objectp(st)) {
       send_error("SIZE", args, st, session);
       return;
     }
@@ -3180,9 +3181,9 @@ class FTPSession
     string long = fix_path(args);
     object session = RequestID2(master_session);
     session->method = "STAT";
-    mapping|array st = stat_file(long);
+    mapping|array|object st = stat_file(long);
 
-    if (!arrayp(st)) {
+    if (!arrayp(st) && !objectp(st)) {
       send_error("STAT", long, st, session);
       return;
     }
