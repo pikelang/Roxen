@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.102 2001/08/31 00:10:13 per Exp $
+// $Id: module_support.pike,v 1.103 2001/08/31 06:22:37 per Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -68,7 +68,7 @@ program my_compile_file(string file, void|int silent)
 
 function|program load( string what, void|int silent )
 {
-  werror("Load "+what+"\n");
+//   werror("Load "+what+"\n");
   return my_compile_file( what, silent );
 }
 
