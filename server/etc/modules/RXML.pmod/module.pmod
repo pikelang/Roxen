@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.275 2002/03/25 16:52:21 mast Exp $
+// $Id: module.pmod,v 1.276 2002/03/27 20:45:01 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1336,6 +1336,19 @@ class Value
   //! If the variable value is the same throughout the life of the
   //! context, this method should be used instead of @[rxml_var_eval].
 
+  optional string format_rxml_backtrace_frame (
+    Context ctx, string var, string scope_name);
+  //! Define this to control how the variable reference is formatted
+  //! in RXML backtraces. The returned string should be one line,
+  //! without a trailing newline. It should not contain the " | "
+  //! prefix.
+  //!
+  //! The empty string may be returned to suppress the backtrace frame
+  //! altogether. That might be useful for some types of internally
+  //! used variables, but it should be used only if there are very
+  //! good reasons; the backtrace easily just becomes confusing
+  //! instead.
+
   string _sprintf() {return "RXML.Value";}
 }
 
@@ -1406,6 +1419,19 @@ class Scope
   void m_delete (string var, void|Context ctx, void|string scope_name)
   // For compatibility with 2.1.
     {_m_delete (var, ctx, scope_name, 1);}
+
+  optional string format_rxml_backtrace_frame (
+    Context ctx, string var, string scope_name);
+  //! Define this to control how the variable reference is formatted
+  //! in RXML backtraces. The returned string should be one line,
+  //! without a trailing newline. It should not contain the " | "
+  //! prefix.
+  //!
+  //! The empty string may be returned to suppress the backtrace frame
+  //! altogether. That might be useful for some types of internally
+  //! used variables, but it should be used only if there are very
+  //! good reasons; the backtrace easily just becomes confusing
+  //! instead.
 
   private string _in_the_scope (string scope_name)
   {
@@ -1733,10 +1759,14 @@ class Context
     else parse_error ("Unknown scope %O.\n", scope_name);
   }
 
-  array(string) list_scopes()
-  //! Returns the names of all defined scopes.
+  array(string) list_scopes (void|int list_hidden)
+  //! Returns the names of all defined scopes. If @[list_hidden] is
+  //! nonzero then internal scopes are also returned.
   {
-    return indices (scopes) - ({"_"});
+    if (list_hidden)
+      return indices (scopes) - ({"_"});
+    else
+      return indices (scopes) - ({"_", "_internal_"});
   }
 
   int exist_scope (void|string scope_name)
@@ -1899,6 +1929,27 @@ class Context
     }
   }
 
+  static int last_internal_var_id = 0;
+
+  string alloc_internal_var()
+  //! Allocates and returns a unique variable name in the special
+  //! scope "_internal_", creating that scope if necessary. After this
+  //! it's safe to use that variable for internal purposes in tags
+  //! with the normal variable functions. No other variables in the
+  //! "_internal_" scope should be accessed.
+  //!
+  //! @note
+  //! The "_internal_" scope is currently hidden by default by
+  //! @[list_scope] but otherwise there's no access restriction on it.
+  //! Therefore an end user can get at the variables in that scope
+  //! directly. On the other hand there's no guarantee that that will
+  //! remain possible in the future, so no end user RXML code should
+  //! use the "_internal_" scope.
+  {
+    if (!scopes->_internal_) add_scope ("_internal_", ([]));
+    return (string) ++last_internal_var_id;
+  }
+
   void signal_var_change (string var, void|string scope_name)
   //! Call this when the variable @[var] in the specified scope has
   //! changed in some other way than by calling a function in this
@@ -2022,22 +2073,25 @@ class Context
   }
 
   final array(mixed|PCode) eval_and_compile (Type type, string to_parse,
-					     void|int stale_safe)
+					     void|int stale_safe,
+					     void|TagSet tag_set_override)
   //! Parses and evaluates @[to_parse] with @[type] in this context.
   //! At the same time, p-code is collected to reevaluate it later. An
   //! array is returned which contains the result in the first element
   //! and the generated @[RXML.PCode] object in the second. If
   //! @[stale_safe] is nonzero, the p-code object will be an instance
   //! of @[RXML.RenewablePCode] instead, which never fails due to
-  //! being stale.
+  //! being stale. The tag set defaults to @[tag_set], but it may be
+  //! overridden with @[tag_set_override].
   {
     int orig_make_p_code = make_p_code, orig_state_updated = state_updated;
     int orig_top_frame_flags = frame && frame->flags;
     PCODE_UPDATE_MSG ("%O: Saved p-code update count %d before eval_and_compile\n",
 		      this_object(), orig_state_updated);
+    if (!tag_set_override) tag_set_override = tag_set;
     make_p_code = 1;
     Parser parser = type->get_parser (
-      this_object(), tag_set, 0, stale_safe ? RenewablePCode (0) : PCode (0));
+      this_object(), tag_set_override, 0, stale_safe ? RenewablePCode (0) : PCode (0));
 
     mixed res;
     PCode p_code;
@@ -2047,7 +2101,7 @@ class Context
       p_code = parser->p_code;
     };
 
-    type->give_back (parser, tag_set);
+    type->give_back (parser, tag_set_override);
     PCODE_UPDATE_MSG ("%O: Restoring p-code update count from %d to %d "
 		      "after eval_and_compile\n",
 		      this_object(), state_updated, orig_state_updated);
@@ -2336,27 +2390,33 @@ class Backtrace
     if (!no_msg) add ("RXML", type ? " " + type : "", " error");
     if (context) {
       if (!no_msg) add (": ", msg || "(no error message)\n");
-      if (current_var) add (" | &", current_var, ";\n");
+      if (current_var && current_var != "") add (" | ", current_var, "\n");
       for (int i = 0; i < sizeof (frames); i++) {
 	Frame f = frames[i];
 	string name;
-	if (f->tag) name = f->tag->name;
-	//else if (!f->up) break;
-	else name = "(unknown)";
-	if (f->flags & FLAG_PROC_INSTR)
-	  add (" | <?", name, "?>\n");
+	if (f->format_rxml_backtrace_frame) {
+	  string res = f->format_rxml_backtrace_frame();
+	  if (res != "") add (" | ", res, "\n");
+	}
 	else {
-	  add (" | <", name);
-	  mapping(string:mixed) argmap = args[i];
-	  if (mappingp (argmap))
-	    foreach (sort (indices (argmap)), string arg) {
-	      mixed val = argmap[arg];
-	      add (" ", arg, "=");
-	      if (arrayp (val)) add (map (val, error_print_val) * ",");
-	      else add (error_print_val (val));
-	    }
-	  else add (" (no argmap)");
-	  add (">\n");
+	  if (f->tag) name = f->tag->name;
+	  //else if (!f->up) break;
+	  else name = "(unknown)";
+	  if (f->flags & FLAG_PROC_INSTR)
+	    add (" | <?", name, "?>\n");
+	  else {
+	    add (" | <", name);
+	    mapping(string:mixed) argmap = args[i];
+	    if (mappingp (argmap))
+	      foreach (sort (indices (argmap)), string arg) {
+		mixed val = argmap[arg];
+		add (" ", arg, "=");
+		if (arrayp (val)) add (map (val, error_print_val) * ",");
+		else add (error_print_val (val));
+	      }
+	    else add (" (no argmap)");
+	    add (">\n");
+	  }
 	}
       }
     }
@@ -2932,6 +2992,16 @@ class Frame
   //! to a p-code object containing the (mostly) evaluated content (in
   //! each iteration). This variable is not automatically saved and
   //! restored (see @[save] and @[restore]).
+
+  optional string format_rxml_backtrace_frame();
+  //! Define this to control how the frame is formatted in RXML
+  //! backtraces. The returned string should be one line, without a
+  //! trailing newline. It should not contain the " | " prefix.
+  //!
+  //! The empty string may be returned to suppress the backtrace frame
+  //! altogether. That might be useful for some types of internally
+  //! used frames, but it should be used only if there are very good
+  //! reasons; the backtrace easily just becomes confusing instead.
 
   // Services:
 
@@ -3828,7 +3898,6 @@ class Frame
 	    }
 	    if (flags & FLAG_UNPARSED) content = nil;
 	    eval_state = EVSTAT_ENTERED;
-	    // Fall through.
 
 	    if (TagSet add_tags = [object(TagSet)] this_object()->additional_tags) {
 	      TagSet tset = ctx->tag_set;
@@ -3843,6 +3912,7 @@ class Frame
 		THIS_TAG_DEBUG ("Not installing additional_tags %O "
 				"since they're already in the tag set\n", add_tags);
 	    }
+	    // Fall through.
 
 	  case EVSTAT_ENTERED:
 	  case EVSTAT_LAST_ITER:
@@ -4377,118 +4447,132 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
   if (arrayp (index)) idxpath = index, index = index[0];
   else idxpath = ({0});
 
-  for (int i = 1;; i++) {
-    // stringp was not really a good idea.
-    if( arrayp( val ) /*|| stringp( val )*/ )
-      if (intp (index) && index)
-	if( (index > sizeof( val ))
-	    || ((index < 0) && (-index > sizeof( val ) )) )
-	  parse_error( "Index %d out of range for array of size %d in %s.\n",
-		       index, sizeof (val), scope_name );
-	else if( index < 0 )
-	  val = val[index];
+  object val_obj;
+  if (mixed err = catch {
+    for (int i = 1;; i++) {
+      // stringp was not really a good idea.
+      if( arrayp( val ) /*|| stringp( val )*/ )
+	if (intp (index) && index)
+	  if( (index > sizeof( val ))
+	      || ((index < 0) && (-index > sizeof( val ) )) )
+	    parse_error( "Index %d out of range for array of size %d in %s.\n",
+			 index, sizeof (val), scope_name );
+	  else if( index < 0 )
+	    val = val[index];
+	  else
+	    val = val[index-1];
 	else
-	  val = val[index-1];
-      else
-	parse_error( "Cannot index the array in %s with %s.\n",
-		     scope_name, format_short (index) );
-    else if (val == nil) {
-      if (!(<1, -1>)[index])
-	parse_error ("%s produced no value to index with %s.\n",
-		     scope_name, format_short (index));
-    }
-    else if( objectp( val ) && val->`[] ) {
+	  parse_error( "Cannot index the array in %s with %s.\n",
+		       scope_name, format_short (index) );
+      else if (val == nil) {
+	if (!(<1, -1>)[index])
+	  parse_error ("%s produced no value to index with %s.\n",
+		       scope_name, format_short (index));
+      }
+      else if( objectp( val ) && val->`[] ) {
+	val_obj = val;
+	if (zero_type (
+	      val = ([object(Scope)] val)->`[](
+		index, ctx, scope_name,
+		i == sizeof (idxpath) && (scope_got_type = 1, want_type))))
+	  val = nil;
 #ifdef MODULE_DEBUG
-      Scope scope = [object(Scope)] val;
+	else if (mixed err = scope_got_type && want_type && val != nil &&
+		 !(objectp (val) && ([object] val)->rxml_var_eval) &&
+		 catch (want_type->type_check (val)))
+	  if (objectp (err) && ([object] err)->is_RXML_Backtrace)
+	    fatal_error ("%O->`[] didn't return a value of the correct type:\n%s",
+			 val_obj, err->msg);
+	  else throw (err);
 #endif
-      if (zero_type (
-	    val = ([object(Scope)] val)->`[](
-	      index, ctx, scope_name,
-	      i == sizeof (idxpath) && (scope_got_type = 1, want_type))))
-	val = nil;
-#ifdef MODULE_DEBUG
-      else if (mixed err = scope_got_type && want_type && val != nil &&
-	       !(objectp (val) && ([object] val)->rxml_var_eval) &&
-	       catch (want_type->type_check (val)))
-	if (objectp (err) && ([object] err)->is_RXML_Backtrace)
-	  fatal_error ("%O->`[] didn't return a value of the correct type:\n%s",
-		       scope, err->msg);
-	else throw (err);
-#endif
-    }
-    else if( mappingp( val ) || objectp (val) ) {
-      if (zero_type (val = val[ index ])) val = nil;
-    }
-    else if (multisetp (val)) {
-      if (!val[index]) val = nil;
-    }
-    else if (!(<1, -1>)[index])
-      parse_error ("%s is %s which cannot be indexed with %s.\n",
-		   scope_name, format_short (val), format_short (index));
+	val_obj = 0;
+      }
+      else if( mappingp( val ) || objectp (val) ) {
+	if (zero_type (val = val[ index ])) val = nil;
+      }
+      else if (multisetp (val)) {
+	if (!val[index]) val = nil;
+      }
+      else if (!(<1, -1>)[index])
+	parse_error ("%s is %s which cannot be indexed with %s.\n",
+		     scope_name, format_short (val), format_short (index));
 
-    if (i == sizeof (idxpath)) break;
-    scope_name += "." + index;
-    index = idxpath[i];
+      if (i == sizeof (idxpath)) break;
+      scope_name += "." + index;
+      index = idxpath[i];
+
+#ifdef MODULE_DEBUG
+      mapping(object:int) called = ([]);
+#endif
+      while (objectp (val) && ([object] val)->rxml_var_eval && !([object] val)->`[]) {
+#ifdef MODULE_DEBUG
+	// Detect infinite loops. This check is slightly too strong;
+	// it's theoretically possible that a couple of Value objects
+	// return each other a few rounds and then something different,
+	// but we'll live with that. Besides, that situation ought to be
+	// solved internally in them anyway.
+	if (called[val])
+	  fatal_error ("Cyclic rxml_var_eval chain detected in %s.\n"
+		       "All called objects:%{ %O%}\n",
+		       format_short (val), indices (called));
+	called[val] = 1;
+#endif
+	val_obj = val;
+	if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
+			 ctx, index, scope_name, 0))) {
+	  val = nil;
+	  val_obj = 0;
+	  break;
+	}
+	val_obj = 0;
+      }
+    }
+
+    if (val == nil)
+      return ([])[0];
+    else if (!objectp (val) || !([object] val)->rxml_var_eval)
+      if (want_type && !scope_got_type)
+	return
+	  // FIXME: Some system to find out the source type?
+	  zero_type (val = want_type->encode (val)) || val == nil ? ([])[0] : val;
+      else
+	return val;
 
 #ifdef MODULE_DEBUG
     mapping(object:int) called = ([]);
 #endif
-    while (objectp (val) && ([object] val)->rxml_var_eval && !([object] val)->`[]) {
+    do {
 #ifdef MODULE_DEBUG
-      // Detect infinite loops. This check is slightly too strong;
-      // it's theoretically possible that a couple of Value objects
-      // return each other a few rounds and then something different,
-      // but we'll live with that. Besides, that situation ought to be
-      // solved internally in them anyway.
       if (called[val])
 	fatal_error ("Cyclic rxml_var_eval chain detected in %s.\n"
 		     "All called objects:%{ %O%}\n",
 		     format_short (val), indices (called));
       called[val] = 1;
 #endif
+      val_obj = val;
       if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
-		       ctx, index, scope_name, 0))) {
-	val = nil;
-	break;
-      }
-    }
+		       ctx, index, scope_name, want_type)) ||
+	  val == nil)
+	return ([])[0];
+#ifdef MODULE_DEBUG
+      else if (mixed err = want_type && catch (want_type->type_check (val)))
+	if (objectp (err) && ([object] err)->is_RXML_Backtrace)
+	  fatal_error ("%O->rxml_var_eval didn't return a value of the correct type:\n%s",
+		       val_obj, err->msg);
+	else throw (err);
+#endif
+    } while (objectp (val) && ([object] val)->rxml_var_eval);
+    return val;
+
+  }) {
+    if (objectp (err) && ([object] err)->is_RXML_Backtrace &&
+	val_obj && val_obj->format_rxml_backtrace_frame)
+      if (mixed err2 = catch {
+	err->current_var = val_obj->format_rxml_backtrace_frame (ctx, index, scope_name);
+      })
+	master()->handle_error (err2);
+    throw (err);
   }
-
-  if (val == nil)
-    return ([])[0];
-  else if (!objectp (val) || !([object] val)->rxml_var_eval)
-    if (want_type && !scope_got_type)
-      return
-	// FIXME: Some system to find out the source type?
-	zero_type (val = want_type->encode (val)) || val == nil ? ([])[0] : val;
-    else
-      return val;
-
-#ifdef MODULE_DEBUG
-  mapping(object:int) called = ([]);
-#endif
-  do {
-#ifdef MODULE_DEBUG
-    if (called[val])
-      fatal_error ("Cyclic rxml_var_eval chain detected in %s.\n"
-		   "All called objects:%{ %O%}\n",
-		   format_short (val), indices (called));
-    called[val] = 1;
-    Value val_obj = [object(Value)] val;
-#endif
-    if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
-		     ctx, index, scope_name, want_type)) ||
-	val == nil)
-      return ([])[0];
-#ifdef MODULE_DEBUG
-    else if (mixed err = want_type && catch (want_type->type_check (val)))
-      if (objectp (err) && ([object] err)->is_RXML_Backtrace)
-	fatal_error ("%O->rxml_var_eval didn't return a value of the correct type:\n%s",
-		     val_obj, err->msg);
-      else throw (err);
-#endif
-  } while (objectp (val) && ([object] val)->rxml_var_eval);
-  return val;
 }
 
 final void tag_debug (string msg, mixed... args)
@@ -4545,7 +4629,6 @@ final Frame make_unparsed_tag (string name, mapping(string:string) args,
 final class parse_frame
 {
   inherit Frame;
-  constant name = "(parse_frame)"; // Only for debug output, like rxml backtraces.
   int flags = FLAG_UNPARSED|FLAG_PROC_INSTR; // Make it a PI so we avoid the argmap.
 
   static void create (Type type, string to_parse)
@@ -4701,7 +4784,7 @@ class Parser
 	catch (parse_error ("No scope in variable reference.\n"
 			    "(Use ':' in front to quote a "
 			    "character reference containing dots.)\n"));
-      err->current_var = varref;
+      err->current_var = "&" + varref + ";";
       context->handle_exception (err, this_object(), 1);
       val = nil;
     }
@@ -4737,7 +4820,8 @@ class Parser
 #endif
 
       }) {
-	if (objectp (err) && err->is_RXML_Backtrace) err->current_var = varref;
+	if (objectp (err) && err->is_RXML_Backtrace && !err->current_var)
+	  err->current_var = "&" + varref + ";";
 	if ((err = catch {
 	  context->handle_exception (err, this_object()); // May throw.
 	})) {
@@ -6373,7 +6457,8 @@ class VarRef (string scope, string|array(string|int) var,
       return val;
     };
 
-    if (objectp (err) && err->is_RXML_Backtrace) err->current_var = VAR_STRING;
+    if (objectp (err) && err->is_RXML_Backtrace)
+      err->current_var = "&" + VAR_STRING + ";";
     FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",
 		     ctx->frame_depth, "", this_object(), __LINE__);
     ctx->frame_depth--;
