@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.165 1999/04/22 09:31:52 per Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.166 1999/05/09 07:03:15 neotron Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1586,6 +1586,26 @@ string tag_debug( string tag_name, mapping args, object id )
   return "";
 }
 
+string tag_cache(string tag, mapping args, string contents, object id)
+{
+#define HASH(x) (x+id->not_query+id->query +id->conf->query("MyWorldLocation"))
+#if constant(Crypto.md5)
+  object md5 = Crypto.md5();
+  md5->update(HASH(contents));
+  string key=md5->digest();
+#else
+  string key = (string)hash(HASH(contents));
+#endif
+  if(args->key)
+    key += args->key;
+  string parsed = cache_lookup("tag_cache", key);
+  if(!parsed) {
+    parsed = parse_rxml(contents, id);
+    cache_set("tag_cache", key, contents);
+  }
+  return parsed;
+}
+
 mapping query_tag_callers()
 {
    return (["accessed":tag_accessed,
@@ -1973,6 +1993,7 @@ mapping query_container_callers()
 		     if(c[-1] != "\n") c+="\n";
 		     throw( ({ c, backtrace() }) );
 		   },
+	   "cache":tag_cache,
 	   "sort":tag_sort,
 	   "doc":tag_source2,
 	   "autoformat":tag_autoformat,
