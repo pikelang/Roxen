@@ -1,6 +1,6 @@
 // Roxen Locale Support
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: language.pike,v 1.38 2001/06/24 14:13:02 nilsson Exp $
+// $Id: language.pike,v 1.39 2001/06/30 13:43:04 mast Exp $
 
 #pragma strict_types
 
@@ -119,7 +119,7 @@ void set_default_locale(string def_loc)
 
 void initiate_languages(string def_loc)
 {
-  report_debug( "Adding languages ... ");
+  report_debug( "Adding languages ... \b");
   int start = gethrtime();
 
   set_default_locale(def_loc);
@@ -133,7 +133,7 @@ void initiate_languages(string def_loc)
 		 "* Several RXML tags might not work as expected!\n",
 		 default_locale);
 
-  report_debug( "Done [%4.2fms]\n", (gethrtime()-start)/1000.0 );
+  report_debug( "\bDone [%4.2fms]\n", (gethrtime()-start)/1000.0 );
 }
 
 

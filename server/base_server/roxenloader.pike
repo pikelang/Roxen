@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.263 2001/06/30 13:09:45 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.264 2001/06/30 13:43:05 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -656,18 +656,18 @@ int getgid(){ return 42; }
 Roxen really_load_roxen()
 {
   int start_time = gethrtime();
-  report_debug("Loading roxen ... ");
+  report_debug("Loading roxen ... \b");
   Roxen res;
   mixed err = catch {
     res = ((program)"base_server/roxen.pike")();
   };
   if (err) 
   {
-    report_debug("ERROR\n");
+    report_debug("\bERROR\n");
     werror (describe_backtrace (err));
     throw(err);
   }
-  report_debug("Done [%.1fms]\n",
+  report_debug("\bDone [%.1fms]\n",
 	       (gethrtime()-start_time)/1000.0);
 
   res->start_time = start_time;
@@ -1343,7 +1343,7 @@ void start_mysql()
   void connected_ok(int was)
   {
     string version = db->query( "SELECT VERSION() AS v" )[0]->v;
-    report_debug("%s %s [%.1fms]\n",
+    report_debug("\b%s %s [%.1fms]\n",
                  (was?"Was running":"Done"),
                   version, (gethrtime()-st)/1000.0);
     if( (float)version < 3.23 )
@@ -1353,7 +1353,7 @@ void start_mysql()
     assure_that_base_tables_exists();
   };
 
-  report_debug( "Starting mysql ... ");
+  report_debug( "Starting mysql ... \b");
   
   if( mixed err = catch( db = connect_to_my_mysql( 0, "mysql" ) ) ) {
 #ifdef MYSQL_CONNECT_DEBUG
@@ -1716,7 +1716,7 @@ library should be enough.
   }
 
   // These are here to allow dumping of roxen.pike to a .o file.
-  report_debug("Loading pike modules ... ");
+  report_debug("Loading pike modules ... \b");
 
 #define DC(X) add_dump_constant( X,nm_resolv(X) )
   mixed nm_resolv(string x )
@@ -1792,7 +1792,7 @@ library should be enough.
 
   DC( "Image" );  DC( "Locale" );  DC( "Locale.Charset" );
 
-  report_debug("Done [%.1fms]\n", (gethrtime()-t)/1000.0);
+  report_debug("\bDone [%.1fms]\n", (gethrtime()-t)/1000.0);
 
   add_constant( "hsv_to_rgb",  nm_resolv("Colors.hsv_to_rgb")  );
   add_constant( "rgb_to_hsv",  nm_resolv("Colors.rgb_to_hsv")  );

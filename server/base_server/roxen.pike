@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.680 2001/06/28 20:04:24 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.681 2001/06/30 13:43:05 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1466,7 +1466,7 @@ mapping(string:Protocol) build_protocols_mapping()
 {
   mapping protocols = ([]);
   int st = gethrtime();
-  report_debug("Protocol handlers ... ");
+  report_debug("Protocol handlers ... \b");
 #ifndef DEBUG
   class lazy_load( string prog, string name )
   {
@@ -1507,7 +1507,7 @@ mapping(string:Protocol) build_protocols_mapping()
 #if !constant(HTTPLoop.prog)
     if( s == "fhttp" ) continue;
 #endif
-    report_debug( s+" " );
+    report_debug( "\b%s \b", s );
 
     catch
     {
@@ -1529,7 +1529,7 @@ mapping(string:Protocol) build_protocols_mapping()
 	continue;
     }
 #endif
-    report_debug( s+" " );
+    report_debug( "\b%s \b", s );
     catch {
 #ifdef DEBUG
       protocols[ s ] = (program)("../local/protocols/prot_"+s+".pike");
@@ -1538,7 +1538,7 @@ mapping(string:Protocol) build_protocols_mapping()
 #endif
     };
   }
-  report_debug(" [%.1fms]\n", (gethrtime()-st)/1000.0 );
+  report_debug("\bDone [%.1fms]\n", (gethrtime()-st)/1000.0 );
   return protocols;
 }
 
@@ -3663,7 +3663,7 @@ program slowpipe, fastpipe;
 void initiate_argcache()
 {
   int t = gethrtime();
-  report_debug( "Initiating argument cache ... ");
+  report_debug( "Initiating argument cache ... \b");
   if( mixed e = catch( argcache = ArgCache("arguments") ) )
   {
     report_fatal( "Failed to initialize the global argument cache:\n"
@@ -3671,7 +3671,7 @@ void initiate_argcache()
     exit(1);
   }
   add_constant( "roxen.argcache", argcache );
-  report_debug("Done [%.2fms]\n", (gethrtime()-t)/1000.0);
+  report_debug("\bDone [%.2fms]\n", (gethrtime()-t)/1000.0);
 }
 
 #ifdef TIMERS
@@ -3777,10 +3777,10 @@ int main(int argc, array tmp)
   protocols = build_protocols_mapping();  
 
   int t = gethrtime();
-  werror("Searching for pike-modules directories ... ");
+  report_debug("Searching for pike-modules directories ... \b");
   foreach( find_all_pike_module_directories( ), string d )
     master()->add_module_path( d );
-  werror(" Done [%dms]\n", (gethrtime()-t)/1000 );
+  report_debug("\bDone [%dms]\n", (gethrtime()-t)/1000 );
 
   enable_configurations();
 
@@ -3807,15 +3807,15 @@ int main(int argc, array tmp)
 
 #ifdef SNMP_AGENT
   //SNMPagent start
-  report_notice("SNMPagent configuration checking ... ");
+  report_debug("SNMPagent configuration checking ... \b");
   if(query("snmp_agent")) {
     // enabling SNMP agent
     snmpagent = SNMPagent();
     snmpagent->enable();
-    report_notice("enabled.\n");
+    report_debug("\benabled.\n");
 
   } else
-    report_notice("disabled.\n");
+    report_debug("\bdisabled.\n");
 #endif // SNMP_AGENT
 
   // Signals which cause a restart (exitcode != 0)
