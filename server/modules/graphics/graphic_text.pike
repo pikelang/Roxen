@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.261 2001/03/13 10:19:15 kuntri Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.262 2001/03/13 11:52:04 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -546,14 +546,6 @@ man inte använder den under okntrollerade former som tex ett intranät.
 </attr>
 <noex>"+gtextargs+"</noex>",]);
 #endif
-
-<gtext-id/> get dig en URL som som get dig en bild med de argument du
-specificerat om du också lägger på en sträng med den text du vill ha
-efter den URLen. Den här tagen är ett DOS-hål och bör avrådas ifrån om 
-man inte använder den under okntrollerade former som tex ett intranät.
-
-Eg borde <gtext-id/> gå att stänga av i admininterfacet. *ticketar mig
-själv*
 
 
 // -------------------- Image cache functions --------------------
