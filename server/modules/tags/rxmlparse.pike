@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 //
 // The main RXML parser. If this module is not added to a configuration,
-// no RXML parsing will be done at all for .html files. 
+// no RXML parsing will be done at all for .html files.
 //
 
 #define _stat id->misc->defines[" _stat"]
@@ -10,9 +10,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-#define old_rxml_compat 1
-
-constant cvs_version="$Id: rxmlparse.pike,v 1.27 1999/10/10 18:20:06 grubba Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.28 1999/10/17 22:52:01 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -33,7 +31,7 @@ string status()
 
 void create(object c)
 {
-  defvar("toparse", ({ "rxml","spml", "html", "htm" }), "Extensions to parse", 
+  defvar("toparse", ({ "rxml","spml", "html", "htm" }), "Extensions to parse",
 	 TYPE_STRING_LIST, "Parse all files ending with these extensions. "
 	 "Note: This module must be reloaded for a change here to take "
 	 "effect.");
@@ -43,22 +41,15 @@ void create(object c)
 	 "If set, files has to have the execute bit (any of them) set "
 	 "in order for them to be parsed by this module. The exec bit "
 	 "is the one that is set by 'chmod +x filename'");
-	 
+
   defvar("no_parse_exec", 0, "Don't Parse files with exec bit",
 	 TYPE_FLAG|VAR_MORE,
 	 "If set, no files with the exec bit set will be parsed. This is the "
 	 "reverse of the 'Require exec bit on files for parsing' flag. "
 	 "It is not very useful to set both variables.");
-	 
+
   defvar("max_parse", 100, "Maximum file size", TYPE_INT|VAR_MORE,
 	 "Maximum file size to parse, in Kilo Bytes.");
-
-#if old_rxml_compat
-  defvar("logold", 0, "Log all old RXML calls in the event log.",
-         TYPE_FLAG|VAR_MORE,
-         "If set, all calls though the backward compatibility code will be"
-         "logged in the event log, enabeling you to upgrade those RXML tags.");
-#endif
 }
 
 
@@ -69,7 +60,7 @@ void start(int q, object c)
 
 array register_module()
 {
-  return ({ MODULE_FILE_EXTENSION|MODULE_PARSER, 
+  return ({ MODULE_FILE_EXTENSION|MODULE_PARSER,
 	    "RXML 1.4 parser",
 	    "This module handles rxml parsing of HTML pages. It is recommended to also "
             "add the \"RXML 1.4 tags\" module so that this modules gets some tags to parse. "
@@ -80,12 +71,7 @@ array register_module()
             , 0, 1 });
 }
 
-mapping query_tag_callers()
-{
-  return (["version":tag_version]);
-}
-
-array(string) query_file_extensions() 
+array(string) query_file_extensions()
 {
   return query("toparse");
 }
@@ -108,113 +94,11 @@ mapping handle_file_extension(object file, string e, object id)
   if(QUERY(no_parse_exec) && (stat[0] & 07111)) return 0;
 
   bytes += strlen(to_parse = file->read());
+
   return http_rxml_answer( to_parse, id, file, "text/html" );
 }
 
-// ------- Stuff to connect to the API function -------
-
-string tag_modified(string tag, mapping m, object id, object file)
-{
-  array (int) s;
-  object f;
-  
-  if(m->by && !m->file && !m->realfile)
-  {
-    // FIXME: The auth module should probably not be used in this case.
-    if(!id->conf->auth_module)
-      return rxml_error(tag, "Modified by requires a user database.", id);
-    m->name = id->conf->last_modified_by(file, id);
-    CACHE(10);
-    return tag_user(tag, m, id, file);
-  }
-
-  if(m->file)
-  {
-    m->realfile = id->conf->real_file(fix_relative(m->file,id), id);
-    m_delete(m, "file");
-  }
-
-  if(m->by && m->realfile)
-  {
-    if(!id->conf->auth_module)
-      return rxml_error(tag, "Modified by requires a user database.", id);
-
-    if(f = open(m->realfile, "r"))
-    {
-      m->name = id->conf->last_modified_by(f, id);
-      destruct(f);
-      CACHE(10);
-      return tag_user(tag, m, id, file);
-    }
-    return "A. Nonymous.";
-  }
-  
-  if(m->realfile)
-    s = file_stat(m->realfile);
-
-  if(!(_stat || s) && !m->realfile && id->realfile)
-  {
-    m->realfile = id->realfile;
-    return tag_modified(tag, m, id, file);
-  }
-  CACHE(10);
-  if(!s) s = _stat;
-  if(!s) s = id->conf->stat_file( id->not_query, id );
-  if(s)
-    if(m->ssi)
-      return strftime(id->misc->defines->timefmt || "%c", s[3]);
-    else
-      return tagtime(s[3], m, id, language);
-
-  return rxml_error(tag, "Couldn't stat file.", id);
-}
-
 array(string) tag_version() { return ({ roxen.version() }); }
-
-string|array(string) tag_user(string tag, mapping m, object id, object file)
-{
-  string *u;
-  string b, dom;
-
-  if(!id->conf->auth_module)
-    return rxml_error(tag, "Requires a user database.", id);
-
-  if (!(b=m->name)) {
-    return(tag_modified("modified", m | ([ "by":"by" ]), id, file));
-  }
-
-  b=m->name;
-
-  dom=id->conf->query("Domain");
-  if(dom[-1]=='.')
-    dom=dom[0..strlen(dom)-2];
-  if(!b) return "";
-  u=id->conf->userinfo(b, id);
-  if(!u) return "";
-  
-  if(m->realname && !m->email)
-  {
-    if(m->link && !m->nolink)
-      return ({ "<a href=\"/~"+b+"/\">"+u[4]+"</a>" });
-    return ({ u[4] });
-  }
-  if(m->email && !m->realname)
-  {
-    if(m->link && !m->nolink)
-      return ({ sprintf("<a href=\"mailto:%s@%s@\">%s@%s</a>",
-			b, dom, b, dom)
-	      });
-    return ({ b + "@" + dom });
-  }
-  if(m->nolink && !m->link)
-    return ({ sprintf("%s &lt;%s@%s&gt;",
-		      u[4], b, dom)
-	    });
-  return ({ sprintf("<a href=\"/~%s/\">%s</a> "
-		    "<a href=\"mailto:%s@%s\">&lt;%s@%s&gt;</a>",
-		    b, u[4], b, dom, b, dom)
-	  });
-}
 
 
 // ------------- Define the API functions --------------
@@ -266,12 +150,6 @@ string api_query_variable(object id, string what)
 string api_query_cookie(object id, string f)
 {
   return id->cookies[f];
-}
-
-string api_query_modified(object id, string f, int|void by)
-{
-  mapping m = ([ "by":by, "file":f ]);
-  return tag_modified("modified", m, id, id);
 }
 
 void api_add_header(object id, string h, string v)
@@ -343,26 +221,17 @@ string api_get_referer(object id)
 
 string api_html_quote(object id, string what)
 {
-  return replace(what, ({ "<", ">", "& " }),({"&lt;", "&gt;", "&amp; " }));
+  return html_encode_string(what);
 }
-
-constant replace_from=indices( iso88591 )+({"&lt;","&gt;","&amp;","&#022;"});
-constant replace_to =values( iso88591 )+ ({"<",">", "&","\""});
 
 string api_html_dequote(object id, string what)
 {
-  return replace(what, replace_from, replace_to);
+  return html_decode_string(what);
 }
 
 string api_html_quote_attr(object id, string value)
 {
   return sprintf("\"%s\"", replace(value, "\"", "&quot;"));
-}
-
-void api_old_rxml_warning(object id, string problem, string solution)
-{
-  if(query("logold"))
-    report_warning("Old RXML in "+(id->query||id->not_query)+", contains "+problem+". Use "+solution+" instead.");
 }
 
 void add_api_function( string name, function f, void|array(string) types)
@@ -375,37 +244,12 @@ string api_read_file(object id, string file) {
   return API_read_file(id,file)||rxml_error("insert", "No such file ("+file+").", id);
 }
 
-string tag_modified_wrapper(object id, string tag, mapping m, object file)
-{
-  return tag_modified(tag, m, id, file);
-}
-
-string tag_user_wrapper(object id, string tag, mapping m, object file)
-{
-  return tag_user(tag, m, id, file);
-}
-
-int time_quantifier(object id, mapping m)
-{
-  float t = 0.0;
-  if (m->seconds) t+=((float)(m->seconds));
-  if (m->minutes) t+=((float)(m->minutes))*60;
-  if (m->beats)   t+=((float)(m->beats))*86.4;
-  if (m->hours)   t+=((float)(m->hours))*3600;
-  if (m->days)    t+=((float)(m->days))*86400;
-  if (m->weeks)   t+=((float)(m->weeks))*604800;
-  if (m->months)  t+=((float)(m->months))*(24*3600*30.46);
-  if (m->years)   t+=((float)(m->years))*(3600*(24*365.242190));
-  return (int)round(t);
-}
 
 // Variables after 0 are optional.
 void define_API_functions()
 {
   add_api_function("parse_rxml", api_parse_rxml, ({ "string" }));
   add_api_function("tag_time", api_tagtime, ({ "int", 0,"string", "string" }));
-  add_api_function("tag_modified_wrapper", tag_modified_wrapper, ({ "string", "mapping", "object", "object" }));
-  add_api_function("tag_user_wrapper", tag_user_wrapper, ({ "string", "mapping", "object", "object" }));
   add_api_function("fix_relative", api_relative, ({ "string" }));
   add_api_function("set_variable", api_set, ({ "string", "string" }));
   add_api_function("define", api_define, ({ "string", "string" }));
@@ -413,7 +257,6 @@ void define_API_functions()
   add_api_function("query_define", api_query_define, ({ "string", }));
   add_api_function("query_variable", api_query_variable, ({ "string", }));
   add_api_function("query_cookie", api_query_cookie, ({ "string", }));
-  add_api_function("query_modified", api_query_modified, ({ "string", }));
 
   add_api_function("read_file", api_read_file, ({ "string"}));
   add_api_function("add_header", api_add_header, ({"string", "string"}));
@@ -435,6 +278,4 @@ void define_API_functions()
 
   add_api_function("roxen_version", tag_version, ({}));
   add_api_function("config_url", api_configurl, ({}));
-  add_api_function("old_rxml_warning", api_old_rxml_warning, ({ "string", "string" }));
-  add_api_function("time_quantifier", time_quantifier, ({ "mapping" }));
 }
