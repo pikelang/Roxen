@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.378 2004/05/02 14:06:38 mani Exp $
+// $Id: loader.pike,v 1.379 2004/05/16 02:51:21 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -27,7 +27,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.378 2004/05/02 14:06:38 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.379 2004/05/16 02:51:21 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1948,7 +1948,9 @@ int dump( string file, program|void p )
 #else
       array parts = replace(file, "//", "/") / "/";
       if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
+#ifdef DEVELOPER
       report_debug("Notice: Dumping failed for " + parts*"/"+" (not a bug)\n");
+#endif
 #endif
       return -1;
     }
