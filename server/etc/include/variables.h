@@ -1,5 +1,5 @@
 // -*- Pike -*-
-// $Id: variables.h,v 1.13 2004/03/02 20:01:01 mast Exp $
+// $Id: variables.h,v 1.14 2004/03/02 20:32:48 mast Exp $
 // Fallback-resources, don't change here.
 
 private static constant errors =
@@ -59,7 +59,7 @@ private static constant errors =
   503:"Service unavailable",
   504:"Gateway Time-out",
   505:"HTTP Version not supported",
-  506:"Variant aldo negotiates",
+  506:"Variant also negotiates",
   507:"Insufficient Storage",
 ]);
 
