@@ -127,12 +127,12 @@ array(mapping) get_events(array where, string sort, string sort_dir, string grou
 
   string select =
     "calls, "
-    "real_ns/1000 as real_us, real_ns/calls/1000 as real_us_average, "
-    "cpu_ns/1000 as cpu_us, cpu_ns/calls/1000 as cpu_us_average";
+    "real_ns/1000 as real_us, round(real_ns/calls/1000, 2) as real_us_average, "
+    "cpu_ns/1000 as cpu_us, round(cpu_ns/calls/1000, 2) as cpu_us_average";
   string group_select =
     "SUM(calls) as calls, "
-    "SUM(real_ns/1000) as real_us, SUM(real_ns/calls/1000) as real_us_average, "
-    "SUM(cpu_ns/1000) as cpu_us, SUM(cpu_ns/calls/1000) as cpu_us_average";
+    "SUM(real_ns/1000) as real_us, round(SUM(real_ns/calls/1000), 2) as real_us_average, "
+    "SUM(cpu_ns/1000) as cpu_us, round(SUM(cpu_ns/calls/1000), 2) as cpu_us_average";
   string q = "SELECT session, config, file, event_name, event_class, "+
 	     (group_by? group_select: select)+" "
 	     "  FROM average_profiling "+
@@ -161,7 +161,10 @@ class TagEmitAPEvents
   {
     string query(Sql.Sql db)
     {
-      return sprintf("%s like '%s'", column, db->quote(value));
+      return sprintf("%s like '%s'", column,
+		     replace(db->quote(value),
+			     ({ "*", "?", "%", "_" }),
+			     ({ "%", "_", "\\%", "\\_" }) ));
     }
   }
   
@@ -226,143 +229,169 @@ mapping find_file (string f, RequestID id)
 </head>
 
 <define tag='pager'>
-  <for from='1' to='&var.pages;' step='1' variable='var.page'>
-    <if variable='var.page == &form.page;'>
-      <b>[&var.page;]</b>
-    </if><else>
-      <a href='&page.path;?session=&form.session;&amp;config=&form.config;&amp;file=&form.file;&amp;event-class=&form.event-class;&amp;event-name=&form.event-name;&amp;order-by=&form.order-by;&amp;sort-dir=&form.sort-dir;&amp;page=&var.page;'>[&var.page;]</a>
-    </else>&nbsp;
-  </for>
+  <if variable='var.pages > 1'>
+    <for from='1' to='&var.pages;' step='1' variable='var.page'>
+      <if variable='var.page == &form.page;'>
+  	<b>[&var.page;]</b>
+      </if><else>
+  	<a href='&page.path;?session=&form.session;&amp;config=&form.config;&amp;file=&form.file;&amp;event-class=&form.event-class;&amp;event-name=&form.event-name;&amp;order-by=&form.order-by;&amp;sort-dir=&form.sort-dir;&amp;page=&var.page;'>[&var.page;]</a>
+      </else>&nbsp;
+    </for>
+  </if>
+</define>
+
+<define container='box' scope='args'>
+  <table border='0' cellpadding='1' cellspacing='0' width='100%' bgcolor='#dee2eb'>
+      <tr nowrap='nowrap'>
+        <td bgcolor='#dee2eb' nowrap='nowrap' valign='bottom'>
+	  &nbsp;<gtext fontsize='12' font='franklin gothic demi'
+	               bgcolor='dee2eb'>&args.title;</gtext></td>
+      </tr>
+      <tr>
+        <td>
+ 	  <table bgcolor='#ffffff' cellspacing='0' cellpadding='3'
+	         border='0' width='100%'>
+            <tr>
+	      <td><contents/></td>
+	    </tr>
+	  </table>
+	</td>
+      </tr>
+    </table>
 </define>
 
 <body bgcolor='white'>
 
-<form>
-  <table cellspacing='0' cellpadding='0' border='0'>
-    <tr>
-      <td><b>Session:</b></td>
-      <td>
-        <default name='session' value='&form.session;'>
-  	  <select name='session'>
-  	    <option value=''>-- All --</option>
-  	    <emit source='ap-names' column='session'>
-  	      <option value='&_.name;'>&_.name;</option>
-  	    </emit>
-  	  </select>
-        </default>
-      </td>
-
-      <td><b>Config:</b></td>
-      <td>
-        <default name='config' value='&form.config;'>
-          <select name='config'>
-            <option value=''>-- All --</option>
-            <emit source='ap-names' column='config'>
-              <option value='&_.name;'>&_.name;</option>
-            </emit>
-          </select>
-        </default>
-      </td>
-    </tr>
-
-    <tr>
-      <!--
-      <td><b>File:</b></td>
-      <td>
-        <default name='file' value='&form.file;'>
-          <select name='file'>
-            <option value=''>-- All --</option>
-            <emit source='ap-names' column='file'>
-              <option value='&_.name;'>&_.name;</option>
-            </emit>
-          </select>
-        </default>
-      </td>
-      -->
-      <td><b>File glob:</b></td>
-      <td colspan='3'>
-        <input type='text' name='file-glob' value='&form.file-glob;' size='80'/>
-      </td>
-    </tr>
-
-    <tr>
-      <td><b>Event Class:</b></td>
-      <td>
-        <default name='event-class' value='&form.event-class;'>
-          <select name='event-class'>
-            <option value=''>-- All --</option>
-            <emit source='ap-names' column='event_class'>
-              <option value='&_.name;'>&_.name;</option>
-            </emit>
-          </select>
-        </default>
-      </td>
-
-      <td><b>Event Name:</b></td>
-      <td>
-        <default name='event-name' value='&form.event-name;'>
-          <select name='event-name'>
-            <option value=''>-- All --</option>
-            <if sizeof='form.event-class == 0'>
-              <emit source='ap-names' column='event_name'>
-                <option value='&_.name;'>&_.name;</option>
-              </emit>
-            </if>
-            <else>
-              <emit source='ap-names' column='event_name'
-                    where=\"event_class = '&form.event-class;'\">
-                <option value='&_.name;'>&_.name;</option>
-              </emit>
-            </else>
-          </select>
-        </default>
-      </td>
-    </tr>
-
-    <tr>
-      <td><b>Sort by:</b></td>
-      <td>
-        <default name='order-by' value='&form.order-by;'>
-          <select name='order-by'>
-            <option value='real-us'>Real</option>
-            <option value='cpu-us'>CPU</option>
-            <option value='calls'>Calls</option>
-            <option value='session'>Session</option>
-            <option value='config'>Config</option>
-            <option value='file'>File</option>
-            <option value='event-class'>Event Class</option>
-            <option value='event-name'>Event Name</option>
-          </select>
-        </default>
-      </td>
-      <td><b>Direction:</b></td>
-      <td>
-        <default name='sort-dir' value='&form.sort-dir;'>
-          <select name='sort-dir'>
-            <option value='DESC'>Descending</option>
-            <option value='ASC'>Ascending</option>
-          </select>
-        </default>
-      </td>
-    </tr>
-
-    <tr>
-      <td><b>Broup by:</b></td>
-      <td>
-        <default name='group-by' value='&form.group-by;'>
-          <select name='group-by'>
-            <option value=''>-- None --</option>
-            <option value='file'>File</option>
-            <option value='event-class'>Event Class</option>
-            <option value='event-name'>Event Name</option>
-          </select>
-        </default>
-      </td>
-    </tr>
-
-  </table>
-  <table><tr><td><input type='submit' name='update' value=' Update ' /></td></tr></table>
-</form>
+<box title='Selection'>
+  <form>
+    <table cellspacing='0' cellpadding='0' border='0'>
+      <tr>
+  	<td><b>Session:</b></td>
+  	<td>
+  	  <default name='session' value='&form.session;'>
+  	    <select name='session'>
+  	      <option value=''>-- All --</option>
+  	      <emit source='ap-names' column='session'>
+  		<option value='&_.name;'>&_.name;</option>
+  	      </emit>
+  	    </select>
+  	  </default>
+  	</td>
+  
+  	<td><b>Configuration:</b></td>
+  	<td>
+  	  <default name='config' value='&form.config;'>
+  	    <select name='config'>
+  	      <option value=''>-- All --</option>
+  	      <emit source='ap-names' column='config'>
+  		<option value='&_.name;'>&_.name;</option>
+  	      </emit>
+  	    </select>
+  	  </default>
+  	</td>
+      </tr>
+  
+      <tr>
+  	<!--
+  	<td><b>File:</b></td>
+  	<td>
+  	  <default name='file' value='&form.file;'>
+  	    <select name='file'>
+  	      <option value=''>-- All --</option>
+  	      <emit source='ap-names' column='file'>
+  		<option value='&_.name;'>&_.name;</option>
+  	      </emit>
+  	    </select>
+  	  </default>
+  	</td>
+  	-->
+  	<td><b>File glob:</b></td>
+  	<td colspan='3'>
+  	  <input type='text' name='file-glob' value='&form.file-glob;' size='80'/>
+  	</td>
+      </tr>
+  
+      <tr>
+  	<td><b>Event Class:</b></td>
+  	<td>
+  	  <default name='event-class' value='&form.event-class;'>
+  	    <select name='event-class'>
+  	      <option value=''>-- All --</option>
+  	      <emit source='ap-names' column='event_class'>
+  		<option value='&_.name;'>&_.name;</option>
+  	      </emit>
+  	    </select>
+  	  </default>
+  	</td>
+  
+  	<td><b>Event Name:</b></td>
+  	<td>
+  	  <default name='event-name' value='&form.event-name;'>
+  	    <select name='event-name'>
+  	      <option value=''>-- All --</option>
+  	      <if sizeof='form.event-class == 0'>
+  		<emit source='ap-names' column='event_name'>
+  		  <option value='&_.name;'>&_.name;</option>
+  		</emit>
+  	      </if>
+  	      <else>
+  		<emit source='ap-names' column='event_name'
+  		      where=\"event_class = '&form.event-class;'\">
+  		  <option value='&_.name;'>&_.name;</option>
+  		</emit>
+  	      </else>
+  	    </select>
+  	  </default>
+  	</td>
+      </tr>
+  
+      <tr>
+  	<td><b>Sort by:</b></td>
+  	<td>
+  	  <default name='order-by' value='&form.order-by;'>
+  	    <select name='order-by'>
+  	      <option value='real-us'>Real</option>
+  	      <option value='cpu-us'>CPU</option>
+  	      <option value='calls'>Calls</option>
+  	      <option value='session'>Session</option>
+  	      <option value='config'>Configuration</option>
+  	      <option value='file'>File</option>
+  	      <option value='event-class'>Event Class</option>
+  	      <option value='event-name'>Event Name</option>
+  	    </select>
+  	  </default>
+  	</td>
+  	<td><b>Direction:</b></td>
+  	<td>
+  	  <default name='sort-dir' value='&form.sort-dir;'>
+  	    <select name='sort-dir'>
+  	      <option value='DESC'>Descending</option>
+  	      <option value='ASC'>Ascending</option>
+  	    </select>
+  	  </default>
+  	</td>
+      </tr>
+  
+      <tr>
+  	<td><b>Group by:</b></td>
+  	<td>
+  	  <default name='group-by' value='&form.group-by;'>
+  	    <select name='group-by'>
+  	      <option value=''>-- None --</option>
+  	      <option value='file'>File</option>
+  	      <option value='event-class'>Event Class</option>
+  	      <option value='event-name'>Event Name</option>
+  	    </select>
+  	  </default>
+  	</td>
+      </tr>
+  
+    </table>
+    <table>
+      <tr><td><input type='submit' name='update' value=' Update ' /></td></tr>
+    </table>
+  </form>
+</box>
 
 <if match='x&form.page; is x'>
   <set variable='form.page' value='1'/>
@@ -415,72 +444,74 @@ mapping find_file (string f, RequestID id)
   <unset variable='var.show-event-class'/>
 </if>
 
-<if variable='var.rows > 0'>
+<box title='Result'>
   Found &var.rows; hits.<br />
-  <pager/>
-  <table cellspacing='0'>
-    <tr bgcolor='#dee2eb'>
-      <if variable='var.show-session'>
-  	<td><b>Session</b>&nbsp;</td>
-      </if>
-      <if variable='var.show-config'>
-  	<td><b>Config</b>&nbsp;</td>
-      </if>
-      <if variable='var.show-file'>
-  	<td><b>File</b>&nbsp;</td>
-      </if>
-      <if variable='var.show-event-class'>
-  	<td><b>Event&nbsp;Class</b>&nbsp;</td>
-      </if>
-      <if variable='var.show-event-name'>
-  	<td><b>Event&nbsp;Name</b>&nbsp;</td>
-      </if>
-      <td><b>Calls</b>&nbsp;</td>
-      <td><b>Real&nbsp;(탎)</b>&nbsp;</td>
-      <td><b>Av.&nbsp;Real&nbsp;(탎)</b>&nbsp;</td>
-      <td><b>CPU&nbsp;(탎)</b>&nbsp;</td>
-      <td><b>Av.&nbsp;CPU&nbsp;(탎)</b></td>
-    </tr>
-  
-    <set variable='var.bgcolor' value='#dee2eb'/>
-    <emit source='ap-events' ::='&var.emit-args;'
-  	  maxrows='50'
-  	  rowinfo='var.rows'
-  	  maxrows='&var.maxrows;'
-  	  skiprows='&var.skiprows;'
-  	  remainderinfo='var.remainder'>
-      <if variable='var.bgcolor == white'>
-  	<set variable='var.bgcolor' value='#dee2eb'/>
-      </if><else>
-  	<set variable='var.bgcolor' value='white'/>
-      </else>
-      <tr bgcolor='&var.bgcolor;'>
-        <if variable='var.show-session'>
-  	  <td>&_.session;</td>
+  <if variable='var.rows > 0'>
+    <pager/>
+    <table cellspacing='0'>
+      <tr bgcolor='#dee2eb'>
+  	<if variable='var.show-session'>
+  	  <td><b>Session</b>&nbsp;</td>
   	</if>
-        <if variable='var.show-config'>
-  	  <td>&_.config;</td>
+  	<if variable='var.show-config'>
+  	  <td><b>Configuration</b>&nbsp;</td>
   	</if>
-        <if variable='var.show-file'>
-  	  <td>&_.file;</td>
+  	<if variable='var.show-file'>
+  	  <td><b>File</b>&nbsp;</td>
   	</if>
-        <if variable='var.show-event-class'>
-  	  <td>&_.event-class;</td>
+  	<if variable='var.show-event-class'>
+  	  <td><b>Event&nbsp;Class</b>&nbsp;</td>
   	</if>
-        <if variable='var.show-event-name'>
-  	  <td>&_.event-name;</td>
+  	<if variable='var.show-event-name'>
+  	  <td><b>Event&nbsp;Name</b>&nbsp;</td>
   	</if>
-  	<td align='right'>&_.calls;</td>
-  	<td align='right'>&_.real-us;</td>
-  	<td align='right'>&_.real-us-average;</td>
-  	<td align='right'>&_.cpu-us;</td>
-  	<td align='right'>&_.cpu-us-average;</td>
+  	<td><b>Calls</b>&nbsp;</td>
+  	<td><b>Real&nbsp;(탎)</b>&nbsp;</td>
+  	<td><b>Av.&nbsp;Real&nbsp;(탎)</b>&nbsp;</td>
+  	<td><b>CPU&nbsp;(탎)</b>&nbsp;</td>
+  	<td><b>Av.&nbsp;CPU&nbsp;(탎)</b></td>
       </tr>
-    </emit>
-  </table>
-  
-  <pager/>
-</if>
+    
+      <set variable='var.bgcolor' value='#dee2eb'/>
+      <emit source='ap-events' ::='&var.emit-args;'
+  	    maxrows='50'
+  	    rowinfo='var.rows'
+  	    maxrows='&var.maxrows;'
+  	    skiprows='&var.skiprows;'
+  	    remainderinfo='var.remainder'>
+  	<if variable='var.bgcolor == white'>
+  	  <set variable='var.bgcolor' value='#dee2eb'/>
+  	</if><else>
+  	  <set variable='var.bgcolor' value='white'/>
+  	</else>
+  	<tr bgcolor='&var.bgcolor;'>
+  	  <if variable='var.show-session'>
+  	    <td>&_.session;</td>
+  	  </if>
+  	  <if variable='var.show-config'>
+  	    <td>&_.config;</td>
+  	  </if>
+  	  <if variable='var.show-file'>
+  	    <td>&_.file;</td>
+  	  </if>
+  	  <if variable='var.show-event-class'>
+  	    <td>&_.event-class;</td>
+  	  </if>
+  	  <if variable='var.show-event-name'>
+  	    <td>&_.event-name;</td>
+  	  </if>
+  	  <td align='right'>&_.calls;</td>
+  	  <td align='right'>&_.real-us;</td>
+  	  <td align='right'>&_.real-us-average;</td>
+  	  <td align='right'>&_.cpu-us;</td>
+  	  <td align='right'>&_.cpu-us-average;</td>
+  	</tr>
+      </emit>
+    </table>
+    
+    <pager/>
+  </if>
+</box>
 
 </body>
 </html>
