@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.299 2001/04/24 00:47:04 nilsson Exp $
+// $Id: rxml.pike,v 1.300 2001/05/16 12:56:40 per Exp $
 
 
 inherit "rxmlhelp";
@@ -111,6 +111,7 @@ string parse_rxml(string what, RequestID id,
 // rxml parse session. The RXML module provides several different ways
 // to accomplish that.
 {
+  PROF_ENTER( "rxml", "overhead" );
   id->misc->_rxml_recurse++;
 #ifdef RXML_DEBUG
   report_debug("parse_rxml( "+strlen(what)+" ) -> ");
@@ -191,6 +192,7 @@ string parse_rxml(string what, RequestID id,
   report_debug("%d (%3.3fs)\n%s", strlen(what),(gethrtime()-time)/1000000.0,
 	      ("  "*id->misc->_rxml_recurse));
 #endif
+  PROF_LEAVE( "rxml", "overhead" );
   return what;
 }
 

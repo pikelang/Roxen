@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.431 2001/05/16 01:15:41 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.432 2001/05/16 12:56:39 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -50,7 +50,7 @@ class ProfStack
 
     if( !sizeof(current_stack ) )
     {
-      report_error("Popping out of profiling stack\n");
+//       report_error("Popping out of profiling stack\n");
       return;
     }
       
@@ -59,21 +59,29 @@ class ProfStack
 
     if(i < 0 )
     {
-      report_error("Popping out of profiling stack, cannot find %O in %O\n",
-		  k, current_stack);
       return;
     }
-      
-    int tt = t0-current_stack[i][1];
-    int ttv = t1-current_stack[i][2];
-
-    if( i > 0 ) // Do not count child time in parent.
+    void low_leave( int i )
     {
-      current_stack[i-1][1]+=tt+gethrtime()-t0;
-      current_stack[i-1][2]+=ttv+gethrvtime()-t1;
+      int tt = t0-current_stack[i][1];
+      int ttv = t1-current_stack[i][2];
+
+      if( i > 0 ) // Do not count child time in parent.
+      {
+	current_stack[i-1][1]+=tt+gethrtime()-t0;
+	current_stack[i-1][2]+=ttv+gethrvtime()-t1;
+      }
+      current_stack = current_stack[..i-1];
+      add_prof_entry( id, k, tt, ttv );
+    };
+
+    if( i != sizeof( current_stack )-1 )
+    {
+      for( int j = sizeof( current_stack )-1; j>=i; j-- )
+	low_leave( j );
+      return;
     }
-    current_stack = current_stack[..i-1];
-    add_prof_entry( id, k, tt, ttv );
+    low_leave( i );
   }
 }
 
@@ -131,8 +139,13 @@ void debug_write_prof( )
 void add_prof_entry( RequestID id, string k, int hr, int hrv )
 {
   string l = id->not_query;
-  if( has_prefix( k, "find_internal" ) ) l = dirname(l);
-  if( !profiling_info[l] ) profiling_info[l] = ProfInfo(l);
+//   if( has_prefix( k, "find_internal" ) ) l = dirname(l);
+  if( has_prefix( l, query_internal_location() ) )
+    l = dirname( l ); // enough, really. 
+
+  if( !profiling_info[l] )
+    profiling_info[l] = ProfInfo(l);
+
   profiling_info[l]->add( k, hr, hrv );
 }
 
@@ -1407,13 +1420,13 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	    return tmp2;
 	  }
 #endif
-	PROF_ENTER(Roxen.get_owning_module(tmp[1])->module_name,"location module");
+	PROF_ENTER(Roxen.get_owning_module(tmp[1])->module_name,"location");
 	TRACE_ENTER("Calling find_file()...", 0);
 	LOCK(tmp[1]);
 	fid=tmp[1]( file[ strlen(loc) .. ] + id->extra_extension, id);
 	UNLOCK();
 	TRACE_LEAVE("");
-	PROF_LEAVE(Roxen.get_owning_module(tmp[1])->module_name,"location module");
+	PROF_LEAVE(Roxen.get_owning_module(tmp[1])->module_name,"location");
 	if(fid)
 	{
 	  id->virtfile = loc;
@@ -1483,12 +1496,12 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     TIMER_START(directory_module);
     if(dir_module)
     {
-      PROF_ENTER(dir_module->module_name,"directory module");
+      PROF_ENTER(dir_module->module_name,"directory");
       LOCK(dir_module);
       TRACE_ENTER("Directory module", dir_module);
       fid = dir_module->parse_directory(id);
       UNLOCK();
-      PROF_LEAVE(dir_module->module_name,"directory module");
+      PROF_LEAVE(dir_module->module_name,"directory");
     }
     else
     {
@@ -1526,11 +1539,11 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  return tmp;
 	}
 #endif
-      PROF_ENTER(Roxen.get_owning_module(funp)->module_name,"ext module");
+      PROF_ENTER(Roxen.get_owning_module(funp)->module_name,"ext");
       LOCK(funp);
       tmp=funp(fid, loc, id);
       UNLOCK();
-      PROF_LEAVE(Roxen.get_owning_module(funp)->module_name,"ext module");
+      PROF_LEAVE(Roxen.get_owning_module(funp)->module_name,"ext");
       if(tmp)
       {
 	if(!objectp(tmp))

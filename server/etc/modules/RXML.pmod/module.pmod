@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.153 2001/05/14 04:30:30 per Exp $
+// $Id: module.pmod,v 1.154 2001/05/16 12:57:49 per Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -263,7 +263,7 @@ class Tag
   //! occurs. @[ctx] specifies the context to use; it defaults to the
   //! current context.
   {
-    // Note: Code duplication in Frame._eval().
+      // Note: Code duplication in Frame._eval().
     mapping(string:Type) atypes = args & req_arg_types;
     if (sizeof (atypes) < sizeof (req_arg_types))
       if (dont_throw) return 0;
@@ -2509,6 +2509,7 @@ class Frame
   // Note: It might be somewhat tricky to override this function.
   // Note: Might be destructive on raw_args.
   {
+
     Frame this = this_object();
     Context ctx = parser->context;
     RequestID id = ctx->id;
@@ -2620,7 +2621,6 @@ class Frame
 	    break process_tag;
 	  }
 #endif
-	  PROF_ENTER(tag->name,"tag");
 	}
 
 	if (raw_args) {
@@ -2775,7 +2775,9 @@ class Frame
 		else {
 		  THIS_TAG_DEBUG ("Calling do_enter\n");
 		  PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);
+		  COND_PROF_ENTER(tag,tag->name,"tag");
 		  exec = ([function(RequestID:array)] do_enter) (id); // Might unwind.
+		  COND_PROF_LEAVE(tag,tag->name,"tag");
 		  PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");
 		  THIS_TAG_DEBUG ((exec ? "Exec array" : "Zero") +
 				  " returned from do_enter\n");
@@ -2837,8 +2839,10 @@ class Frame
 		else {
 		  THIS_TAG_DEBUG ("Calling do_iterate\n");
 		  PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);
+		  COND_PROF_ENTER(tag,tag->name,"tag");
 		  iter = (/*[function(RequestID:int)]HMM*/ do_iterate) (
 		    id); // Might unwind.
+		  COND_PROF_LEAVE(tag,tag->name,"tag");
 		  PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");
 		  THIS_TAG_DEBUG (sprintf ("%O returned from do_iterate\n", iter));
 		  if (ctx->new_runtime_tags)
@@ -2907,7 +2911,9 @@ class Frame
 			      THIS_TAG_DEBUG (sprintf ("Iter[%d]: Calling do_process in "
 						       "streaming mode\n", debug_iter));
 			      PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);
+			      COND_PROF_ENTER(tag,tag->name,"tag");
 			      exec = do_process (id, piece); // Might unwind.
+			      COND_PROF_LEAVE(tag,tag->name,"tag");
 			      PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");
 			      THIS_TAG_DEBUG (sprintf ("Iter[%d]: %s returned from "
 						       "do_process\n", debug_iter,
@@ -2997,8 +3003,10 @@ class Frame
 		      THIS_TAG_DEBUG (sprintf ("Iter[%d]: Calling do_process\n",
 					       debug_iter));
 		      PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);
+		      COND_PROF_ENTER(tag,tag->name,"tag");
 		      exec = ([function(RequestID,void|mixed:array)] do_process) (
 			id); // Might unwind.
+		      COND_PROF_LEAVE(tag,tag->name,"tag");
 		      PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");
 		      THIS_TAG_DEBUG (sprintf ("Iter[%d]: %s returned from do_process\n",
 					       debug_iter, exec ? "Exec array" : "Zero"));
@@ -3056,7 +3064,9 @@ class Frame
 		else {
 		  THIS_TAG_DEBUG ("Calling do_return\n");
 		  PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);
+		  COND_PROF_ENTER(tag,tag->name,"tag");
 		  exec = ([function(RequestID:array)] do_return) (id); // Might unwind.
+		  COND_PROF_LEAVE(tag,tag->name,"tag");
 		  PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");
 		  THIS_TAG_DEBUG ((exec ? "Exec array" : "Zero") +
 				  " returned from do_return\n");
@@ -3168,11 +3178,9 @@ class Frame
 #endif
 			 });
 	  TRACE_LEAVE (action);
-	  COND_PROF_LEAVE(tag,tag->name,"tag");
 	}
 	else {
 	  THIS_TAG_TOP_DEBUG ("Exception\n");
-	  COND_PROF_LEAVE(tag,tag->name,"tag");
 	  TRACE_LEAVE ("exception");
 	  ctx->handle_exception (err2, parser); // Will rethrow unknown errors.
 	  result = nil;
@@ -3198,7 +3206,6 @@ class Frame
 
       else {
 	THIS_TAG_TOP_DEBUG ("Done\n");
-	COND_PROF_LEAVE(tag,tag->name,"tag");
 	TRACE_LEAVE ("");
       }
     }
@@ -3628,10 +3635,12 @@ class Parser
 	  "(Use ':' in front to quote a character reference containing dots.)\n");
       mixed val;
       PROFILE_SWITCH (context, "rxml internal", "var:" + varref);
+      COND_PROF_ENTER(mixed id=context->id,varref,"entity");
       if (zero_type (val = context->get_var ( // May throw.
 		       splitted[1..], splitted[0],
 		       encoding ? t_string : surrounding_type)))
 	val = nil;
+      COND_PROF_LEAVE(mixed id=context->id,varref,"entity");
       PROFILE_SWITCH (context, "var:" + varref, "rxml internal");
       if (encoding && !(val = Roxen->roxen_encode (val + "", encoding)))
 	parse_error ("Unknown encoding %O.\n", encoding);
