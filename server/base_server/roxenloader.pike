@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.197 2000/09/21 03:57:40 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.198 2000/09/23 00:53:43 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1332,7 +1332,17 @@ Please install a newer pike version
   add_constant("r_file_stat", file_stat);
   add_constant("roxenloader", this_object());
   add_constant("ErrorContainer", ErrorContainer);
+#if constant( Gz.inflate )
   add_constant("grbf",lambda(string d){return Gz.inflate()->inflate(d);});
+#else
+  add_constant("grbf",lambda(string d){return d;});
+  report_notice("Warning: The Gz (zlib) module is not available.\n"
+               "The default builtin font will not be available.\n"
+               "To get zlib support, install zlib from\n"
+               "ftp://ftp.freesoftware.com/pub/infozip/zlib/zlib.html\n"
+               "and recompile pike, after removing the file 'config.cache'\n");
+#endif
+
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
   add_constant("popen",popen);
@@ -1351,6 +1361,17 @@ Please install a newer pike version
     // We can load the builtin font.
     add_constant("__rbf", "font_handlers/rbf" );
   }
+#else
+  report_notice(
+#"Warning: The Image.TTF (freeetype) module is not available.
+True Type fonts and the default font  will not be available.
+To get TTF support, download a Freetype 1 package from
+http://freetype.sourceforge.net/download.html#freetype1
+Install it, and then remove config.cache in pike and recompile.
+If this was a binary release of Roxen, there should be no need
+to recompile the pike binary, since the one included should already
+have the FreeType interface module, installing the library should be
+enough." );
 #endif
 
   if( search( hider, "--long-error-file-names" ) != -1 )
