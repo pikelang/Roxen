@@ -244,15 +244,13 @@ constant tagdoc=([
  set in proportion to the image's longest side, e.g. if the height of
  the image is longer than it's width, then the thumbnail will be 60
  pixels high. The shortest side will be shown in proportion to the
- longest side. This attribute can only be used together with the
- <att>option=\"thumbnail\"</att> attribute.</p>
+ longest side.</p>
 </attr>
 
 <attr name='thumbnail-format' value='imageformat'><p>
  Set the output format for the thumbnail. Default is <ext>png</ext>.
  All imageformats that <xref href='../graphics/cimg.tag' /> handles can
- be used to produce thumbnails. This attribute can only be used
- together with the <att>option=\"thumbnail\"</att> attribute.</p>
+ be used to produce thumbnails.</p>
 </attr>
 
 <attr name='strftime' value='strftime string' default='%Y-%m-%d'><p>
@@ -366,8 +364,7 @@ constant tagdoc=([
 
 "&_.thumbnail;":#"<desc type='entity'><p>
  Returns the image associated with the file's content-type or
- directory. Only available when <att>option=\"thumbnail\"</att> is
- used.
+ directory.
 </p></desc>",
 
 "&_.vfs;":#"<desc type='entity'><p>
@@ -379,13 +376,11 @@ constant tagdoc=([
 </p></desc>",
 
 "&_.x-size;":#"<desc type='entity'><p>
- Returns the width of the image. Only available when
- <att>option=\"imagesize\"</att> is used.
+ Returns the width of the image.
 </p></desc>",
 
 "&_.y-size;":#"<desc type='entity'><p>
- Returns the height of the image. Only available when
- <att>option=\"imagesize\"</att> is used.
+ Returns the height of the image.
 </p></desc>",
 ])
 		 })
