@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.24 2002/06/13 00:18:09 nilsson Exp $
+ * $Id: debug_info.pike,v 1.25 2002/08/05 13:21:03 nilsson Exp $
  */
 #include <stat.h>
 
@@ -247,23 +247,35 @@ mixed page_0( object id )
       TCELL ("align='right'", entry[0], entry[5]) + "</tr>\n";
   res += "</table></p>\n";
 
-  mapping(string|program:array(string)) allobj = ([]);
+  mapping(string|program:array) allobj = ([]);
   mapping(string|program:int) numobjs = ([]);
 
+  // Go through all objects. Disable threads to avoid changes in the
+  // object linked list. Note that a gc call in here will mess things
+  // up, and we can't protect against that. It's however unlikely
+  // since it's done explicitly above.
   object threads_disabled = _disable_threads();
   object start = this_object();
-  for (object o = start; o; o = _prev (o))
+  for (object o = start;
+       objectp (o) ||		// It's a normal object.
+       (intp (o) && o) ||	// It's a bignum object.
+       zero_type (o);		// It's a destructed object.
+       o = _prev (o))
     if (string|program p = object_program (o)) {
       p = Program.defined (p) || p;
-      if (++numobjs[p] <= 50) allobj[p] += ({sprintf ("%O", o)});
+      if (++numobjs[p] <= 50) allobj[p] += ({o});
     }
   start = _next (start);
-  for (object o = start; o; o = _next (o))
+  for (object o = start; objectp (o) || (intp (o) && o) || zero_type (o); o = _next (o))
     if (string|program p = object_program (o)) {
       p = Program.defined (p) || p;
-      if (++numobjs[p] <= 50) allobj[p] += ({sprintf ("%O", o)});
+      if (++numobjs[p] <= 50) allobj[p] += ({o});
     }
   threads_disabled = 0;
+
+  foreach (values (allobj), array objs)
+    for (int i = 0; i < sizeof (objs); i++)
+      objs[i] = sprintf ("%O", objs[i]);
 
   table = (array) allobj;
 
