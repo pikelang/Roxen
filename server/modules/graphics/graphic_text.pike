@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.7 1996/12/10 00:15:42 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.8 1996/12/10 01:59:35 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -514,14 +514,14 @@ string magic_javascript_header(object id)
 
 string magic_image(string url, int xs, int ys, string sn,
 		   string image_1, string image_2, string alt,
-		   string mess,object id,string input)
+		   string mess,object id,string input,string extra_args)
 {
   if(!id->supports->images) return alt;
   if(!id->supports->javascript)
     return (!input)?
-      ("<a href=\""+url+"\"><img src="+image_1+" name="+
+      ("<a "+extra_args+"href=\""+url+"\"><img src="+image_1+" name="+
        sn+" border=0 alt=\""+alt+"\" ></a>\n"):
-    ("<input type=image src="+image_1+" name="+input+">");
+    ("<input type=image "+extra_args+" src="+image_1+" name="+input+">");
 
   return
     ("<script>\n"
@@ -535,12 +535,30 @@ string magic_image(string url, int xs, int ys, string sn,
      "}\n"
      "// -->\n"
      "</script>\n"+
-     ("<a href=\""+url+"\" "+(input?"onClick='document.forms[0].submit();' ":"")
+     ("<a "+extra_args+"href=\""+url+"\" "+(input?"onClick='document.forms[0].submit();' ":"")
       +"onMouseover=\"img_act('"+sn+"','"
       +(mess||url)+"');return true;\"\n"
       "\n"
       "onMouseout=\"img_inact('"+sn+"')\"><img \n"
       " src="+image_1+" name="+sn+" border=0 alt=\""+alt+"\" ></a>\n"));
+}
+
+
+string extra_args(mapping in)
+{
+  string s="";
+  foreach(indices(in), string i)
+  {
+    switch(i)
+    {
+     case "target":
+     case "onClick":
+      s+=i+"='"+in[s]+"' ";
+      m_delete(in, i);
+      break;
+    }
+  }
+  return s;
 }
 
 string tag_graphicstext(string t, mapping arg, string contents,
@@ -593,7 +611,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(arg->href)
   {
     url = arg->href;
-    lp = "<a href=\""+arg->href+"\">";
+    lp = "<a href=\""+arg->href+"\" "+extra_args(arg)+">";
     if(!arg->fg) arg->fg=defines->link||"#0000ff";
     m_delete(arg,"href");
   }
@@ -697,7 +715,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
 			     query_location()+num+"/"+quote(gt),
 			     query_location()+num2+"/"+quote(gt),
 			     replace(gt, "\"","'"),(magic=="magic"?0:magic),
-			     id,input?(arg->name||"submit"):0);
+			     id,input?(arg->name||"submit"):0,
+			     extra_args(arg));
   }
   if(input && id->supports->images)
     return (pre+"<input type=image name=\""+arg->name+"\" border=0 alt=\""+
