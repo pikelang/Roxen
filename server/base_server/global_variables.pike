@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.28 2000/03/21 09:46:24 mast Exp $
+// $Id: global_variables.pike,v 1.29 2000/04/13 19:01:55 per Exp $
 
 #pragma strict_types
 #define DEFVAR string,int|string,string|mapping,int,string|mapping(string:string),void|array(string),void|function:void
@@ -875,6 +875,7 @@ Dadurch erhält man immer die aktuelle Liste aller bekannten Features.");
 
   globvar("next_supports_update", time()+3600, "", TYPE_INT,"",0,1);
 
+#ifndef __NT__
   globvar("abs_engage", 0, "ABS: Enable Anti-Block-System", TYPE_FLAG|VAR_MORE,
 #"If set, the anti-block-system will be enabled.
   This will restart the server after a configurable number of minutes if it
@@ -921,6 +922,7 @@ Nachteile.");
 zu beantworten, wird er neu gestartet.  Zu beachten ist, daß
 bei komplexen Berechnungen es durchaus normal ist, wenn eine
 Anfrage eine Weile benötigt.");
+#endif
 
   globvar("locale", "standard", "Language", TYPE_STRING_LIST,
 	  "Locale, used to localise all messages in roxen.\n"
