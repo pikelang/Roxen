@@ -37,7 +37,7 @@
 // 1.6   nov 23 law
 //       new directory format (used by ftp.uwp.edu) 
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.9.2.1 1997/03/03 12:21:16 grubba Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.9.2.2 1997/03/20 16:11:54 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -554,7 +554,7 @@ class Request {
       return;
     }
 
-    pipe=Pipe();
+    pipe=Pipe.pipe();
     pipe->write("HTTP/1.0 200 Yeah, it's a FTP directory\r\n"
 		"Content-type: text/html\r\n"
 		"Content-length: "+strlen(res)+"\r\n");

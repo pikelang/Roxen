@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.5.2.1 1997/03/02 19:27:09 grubba Exp $";
+string cvs_version = "$Id: wais.pike,v 1.5.2.2 1997/03/20 16:11:59 grubba Exp $";
 #include <config.h>
 
 #define DEF_CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote host\r\nContent-type: text/html\r\n\r\n<title>Roxen error: Connection refused</title>\n<h1>Proxy request failed</h1><hr><font size=+2><i>Connection refused by remote host</i></font><hr><font size=-2><a href=http://roxen.com/>Roxen</a></font>"
@@ -906,7 +906,7 @@ void write_to_client_and_cache(object client, string data, string key)
     if(key)
       cache = roxen->create_cache_file("wais", key);
 
-  pipe=Pipe( );
+  pipe=Pipe.pipe();
   if(cache)
   {
     pipe->set_done_callback(my_pipe_done, ({ cache, client }));
