@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.12 1999/05/23 20:09:59 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.13 1999/05/23 22:50:36 grubba Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -169,9 +169,16 @@ class Wrapper
 
     if(!strlen(buffer)) 
       return;
-    int nelems = tofd->write( buffer ); 
-    if( nelems < 0 )
+    int nelems = tofd->write( buffer );
+
+    DWERROR(sprintf("CGI:Wrapper::write_callback(): write(%O) => %d\n",
+		    buffer, nelems));
+
+    if( nelems <= 0 )
       // if nelems == 0, network buffer is full. We still want to continue.
+      // -- Are you sure about this? The usual reason write() returns 0
+      //    is that the client has closed the connection...
+      //    /grubba 1999-05-23
     {
       buffer="";
       done(); 
@@ -239,8 +246,25 @@ class Wrapper
     done_cb = _done_cb;
     tofdremote = Stdio.File( );
     tofd = tofdremote->pipe( );// Stdio.PROP_NONBLOCK );
-    fromfd->set_nonblocking( read_callback, lambda(){}, close_callback );
-    tofd->set_nonblocking( lambda(){}, write_callback, destroy );
+    fromfd->set_nonblocking( read_callback, 0, close_callback );
+    
+#ifdef CGI_DEBUG
+    function read_cb = class
+    {
+      void read_cb(mixed id, string s)
+      {
+	DWERROR(sprintf("CGI:Wrapper::tofd->read_cb(%O, %O)\n", id, s));
+      }
+      void destroy()
+      {
+	DWERROR(sprintf("CGI:Wrapper::tofd->read_cb Zapped from:\n"
+			"%s\n", describe_backtrace(backtrace())));
+      }
+    }()->read_cb;
+#else /* !CGI_DEBUG */
+    function read_cb = lambda(){};
+#endif /* CGI_DEBUG */
+    tofd->set_nonblocking( read_cb, write_callback, destroy );
   }
 
 
@@ -463,6 +487,7 @@ class CGIScript
     {
       remove_call_out(kill_script);
       destruct();
+      return;
     }
     call_out( check_pid, 0.1 );
   }
@@ -517,7 +542,7 @@ class CGIScript
       if(pid->kill)  // Pike 0.7, for roxen 1.4 and later 
         pid->kill( -9 );
       else
-        kill( pid, -9 ); // Pike 0.6, for roxen 1.3 
+        kill( pid->pid(), -9 ); // Pike 0.6, for roxen 1.3 
     }
   }
 
