@@ -1,5 +1,5 @@
 /*
- * $Id: svenska.pmod,v 1.3 2000/03/20 16:21:03 per Exp $
+ * $Id: svenska.pmod,v 1.4 2000/04/03 15:12:39 mast Exp $
  *
  * Roxen locale support -- Svenska (Swedish)
  *
@@ -326,40 +326,43 @@ class _config_interface
   constant font_test_string = "Gud hjälpe W Zorns mö qvickt få byxa!";
 
   string module_hint() {
-    return "(Modul)";
+    return "(Modul.)";
   }
   string font_hint() {
-    return "(Typsnitt)";
+    return "(Typsnitt.)";
   }
   string location_hint() {
-    return "(Filnamn i roxens virtuella filsystem)";
+    return "(Filnamn i Roxens virtuella filsystem.)";
   }
   string file_hint() {
-    return "(Filnamn i det riktiga filsystemet)";
+    return "(Filnamn i det riktiga filsystemet. "
+      "Använd '/' som namnseparator i sökvägen.)";
   }
   string dir_hint() {
-    return "(Directory i det riktiga filsystemet)";
+    return "(Katalog i det riktiga filsystemet. "
+      "Använd '/' som namnseparator i sökvägen.)";
   }
   string float_hint() {
-    return "(Ett decimaltal)";
+    return "(Ett decimaltal.)";
   }
   string int_hint() {
-    return "(Ett heltal)";
+    return "(Ett heltal.)";
   }
   string stringlist_hint() {
-    return "(En kommaseparerad lista)";
+    return "(En kommaseparerad lista.)";
   }
   string intlist_hint() {
-    return "(En kommaseparerad lista av heltal)";
+    return "(En kommaseparerad lista av heltal.)";
   }
   string floatlist_hint() {
-    return "(En kommaseparerad lista av flyttal)";
+    return "(En kommaseparerad lista av flyttal.)";
   }
   string dirlist_hint() {
-    return "(En kommaseparerad lista av kataloger)";
+    return "(En kommaseparerad lista av kataloger. "
+      "Använd '/' som namnseparator i sökvägen.)";
   }
   string password_hint() {
-    return "(Ett lösenord, tecken du skriver kommer inte att synas)";
+    return "(Ett lösenord. Tecknen du skriver kommer inte att synas.)";
   }
   string unkown_variable_type() {
     return "Okänd variabeltyp";

@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.9 2000/03/27 15:13:42 wing Exp $
+ * $Id: standard.pmod,v 1.10 2000/04/03 15:12:39 mast Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -339,40 +339,43 @@ class _config_interface
 
   // config/low_describers.pike
   string module_hint() {
-    return "(Module)";
+    return "(Module.)";
   }
   string font_hint() {
-    return "(Font)";
+    return "(Font.)";
   }
   string location_hint() {
-    return "(A location in the virtual filesystem)";
+    return "(A location in the virtual filesystem.)";
   }
   string file_hint() {
-    return "(A filename in the real filesystem)";
+    return "(A filename in the real filesystem. "
+      "Always use '/' as directory separator.)";
   }
   string dir_hint() {
-    return "(A directory in the real filesystem)";
+    return "(A directory in the real filesystem. "
+      "Always use '/' as directory separator.)";
   }
   string float_hint() {
-    return "(A number)";
+    return "(A number.)";
   }
   string int_hint() {
-    return "(An integer number)";
+    return "(An integer number.)";
   }
   string stringlist_hint() {
-    return "(Comma separated list)";
+    return "(Comma separated list.)";
   }
   string intlist_hint() {
-    return "(Comma separated list of inters)";
+    return "(Comma separated list of integers.)";
   }
   string floatlist_hint() {
-    return "(Comma separated list of floats)";
+    return "(Comma separated list of floats.)";
   }
   string dirlist_hint() {
-    return "(Comma separated list of directories)";
+    return "(Comma separated list of directories. "
+      "Always use '/' as directory separator.)";
   }
   string password_hint() {
-    return "(A password, your input will not be visible)";
+    return "(A password. Your input will not be visible.)";
   }
   string ports_configured( int n )
   {
