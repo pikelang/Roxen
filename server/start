@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.186 2001/10/19 11:00:46 grubba Exp $
+# $Id: start,v 1.187 2001/11/09 14:28:07 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -835,6 +835,8 @@ if [ -z "$once" ] ; then
 	if [ "$exitcode" -eq "0" ] ; then
 	  # Clean shutdown.
 	  dp "Roxen WebServer shutdown."
+	  signal_exit
+	  # Note reached, but...
 	  exit 0
 	fi
 	if [ "$exitcode" -lt "0" ] ; then
