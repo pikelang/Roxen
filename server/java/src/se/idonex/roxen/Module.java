@@ -1,5 +1,5 @@
 /*
- * $Id: Module.java,v 1.4 2000/01/10 20:32:09 marcus Exp $
+ * $Id: Module.java,v 1.5 2000/02/01 00:08:21 marcus Exp $
  *
  */
 
@@ -41,6 +41,11 @@ public abstract class Module {
 
   public static final int TYPE_CUSTOM = 20;
   public static final int TYPE_NODE = 21;
+
+  public static final int VAR_EXPERT = 256;
+  public static final int VAR_MORE = 512;
+  public static final int VAR_DEVELOPER = 1024;
+  public static final int VAR_INITIAL = 2048;
 
   static final int MODULE_EXTENSION       =  (1 << 0);
   static final int MODULE_LOCATION        =  (1 << 1);
