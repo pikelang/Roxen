@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.35 1997/06/20 15:05:36 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.36 1997/06/23 03:28:13 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -687,7 +687,8 @@ int|mapping check_security(function a, object id, void|int slevel)
   if(!(seclevels = misc_cache[ a ]))
     misc_cache[ a ] = seclevels = ({
       function_object(a)->query_seclevels(),
-      function_object(a)->query("_seclvl")
+      function_object(a)->query("_seclvl"),
+      function_object(a)->query("_sec_group")
     });
 
   if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
@@ -718,13 +719,13 @@ int|mapping check_security(function a, object id, void|int slevel)
        case MOD_PROXY_USER: // allow user=...
 	if(id->misc->proxyauth && id->misc->proxyauth[0] && 
 	   level[1](id->misc->proxyauth[1])) return 0;
-	return http_proxy_auth_required("user");
+	return http_proxy_auth_required(seclevels[2]);
       }
   };
   // If auth is needed (access might be allowed if you are the right user),
   // request authentification from the user. Otherwise this is a lost case,
   // the user will never be allowed access unless the patterns change.
-  return need_auth ? http_auth_failed("user") : 1; 
+  return need_auth ? http_auth_failed(seclevels[2]) : 1; 
 }
 #endif
 // Empty all the caches above.
@@ -1436,6 +1437,10 @@ object enable_module( string modname )
       {
         if(!(module->type & MODULE_PROXY))
         {
+	  me->defvar("_sec_group", "user", "Security: Realm", TYPE_STRING,
+		     "The realm to use when requesting password from the "
+		     "client. Usually used as an informative message to the "
+		     "user.");
 	  me->defvar("_seclvl",  0, "Security: Trust level", TYPE_INT, 
 		   "When a location module find a file, that file will get "
 		   "a 'Trust level' that equals the level of the module."
@@ -1465,6 +1470,10 @@ object enable_module( string modname )
 	} else {
 	  me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
 	  
+	  me->defvar("_sec_group", "user", "Proxy Security: Realm", TYPE_STRING,
+		     "The realm to use when requesting password from the "
+		     "client. Usually used as an informative message to the "
+		     "user.");
 	  me->defvar("_seclevels", "", "Proxy security: Patterns",
 		     TYPE_TEXT_FIELD,
 		     "This is the 'security level=value' list.<br>"

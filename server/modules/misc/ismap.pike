@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-string cvs_version = "$Id: ismap.pike,v 1.9 1997/05/15 23:39:57 neotron Exp $";
+string cvs_version = "$Id: ismap.pike,v 1.10 1997/06/23 03:28:20 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -463,7 +463,8 @@ int polygon(mixed points, int tx, int ty)
 #undef X
 
 /* Find the URL for the coordinate (x,y) in the file (map_file_name) */
-string map_get_filename( int x, int y, string map_file_name, object o ,object conf)
+string map_get_filename( int x, int y, string map_file_name, object o,
+			 object conf)
 {
   int c, *s;
   string cache_key;

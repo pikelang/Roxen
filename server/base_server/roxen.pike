@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.77 1997/06/14 15:11:14 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.78 1997/06/23 03:28:16 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1336,7 +1336,10 @@ private void define_global_variables( int argc, array (string) argv )
   globvar("default_font", "lucida", "Fonts: Default font", TYPE_FONT,
 	  "The default font to use when modules request a font.");
 
-  globvar("font_dir", "nfonts/", "Fonts: Font directory", TYPE_DIR,
+//  globvar("font_dir", "nfonts/", "Fonts: Font directory", TYPE_DIR,
+//	  "This is where the fonts are located.");
+  globvar("font_dirs", ({"../nfonts/", "nfonts/" }),
+	  "Fonts: Font directories", TYPE_DIR_LIST,
 	  "This is where the fonts are located.");
 
   globvar("logdirprefix", "../logs/", "Log directory prefix", TYPE_DIR,

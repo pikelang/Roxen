@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.45 1997/06/12 02:41:46 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.46 1997/06/23 03:28:19 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -87,6 +87,7 @@ array register_module()
 	      "                 &lt;gh1&gt;&lt;/gh&gt;, which would otherwise\n"
 	      "                 parse the whole document.\n"
 	      " help            Display this text\n"
+	      " scroll=width,steps,delay  Make a scrolltext\n"
 	      "\n"
 	      "<b>Arguments passed on the the &lt;a&gt; tag (if href is specified):</b>\n "
 	      " target=...\n"
@@ -643,14 +644,31 @@ array(int)|string write_text(int _args, string text, int size,
   }
 
 // place in cache, as a gif image. 
-  if(args->fs)
-    data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
-	    ({img->xsize(),img->ysize()})});
-  else
-    data=({ img->togif(@(args->notrans?({}):parse_color(args->bg))),
-	    ({img->xsize(),img->ysize()})});
-  img=0;
 
+  if(!args->scroll)
+  {
+    if(args->fs)
+      data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
+	      ({img->xsize(),img->ysize()})});
+    else
+      data=({ img->togif(@(args->notrans?({}):parse_color(args->bg))),
+	      ({img->xsize(),img->ysize()})});
+    img=0;
+  } else {
+    int len=100, steps=30, delay=5, ox;
+    string res = img->gif_begin() + img->gif_netscape_loop();
+    sscanf(args->scroll, "%d,%d,%d", len, steps, delay);
+    img=img->copy(0,0,(ox=img->xsize())+len-1,img->ysize()-1);
+    img->paste(img, ox, 0);
+    for(int i = 0; i<steps; i++)
+    {
+      int xp = i*ox/steps;
+      res += img->copy(xp, 0, xp+len, img->ysize(),
+		       @parse_color(args->bg))->gif_add(0,0,delay);
+    }
+    res += img->gif_end();
+    data = ({ res, ({ len, img->ysize() }) });
+  }
   cache_set(key, text, data);
   if(size) return data[1];
   return data[0];

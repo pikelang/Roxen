@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.37 1997/06/11 00:00:35 marcus Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.38 1997/06/23 03:28:17 per Exp $";
 
 object stdout, stdin;
 mapping names=([]);
@@ -279,25 +279,21 @@ string cvs_read_file(string name)
 
 #endif /* CVS_FILESYSTEM */
 
+#ifdef CVS_FILESYSTEM
+
 string handle_include(string f, string current_file, int local_include)
 {
   string rfile;
   if(f[0]=='/') rfile = f;
   else rfile=combine_path(current_file+"/","../"+f);
 
-#ifdef CVS_FILESYSTEM
-
   if(sscanf(rfile, "/cvs:%s", rfile)|| sscanf(rfile, "/cvs;%s", rfile))
   {
     rfile=cvs_read_file(rfile);
     if(rfile && strlen(rfile)) return rfile;
   }
-#endif /* CVS_FILESYSTEM */
-
   return ::handle_include(f,current_file,local_include);
 }
-
-#ifdef CVS_FILESYSTEM
 
 program cvs_load_file(string name)
 {

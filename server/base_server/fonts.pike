@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.8 1997/06/12 02:41:39 per Exp $ */
+/* $Id: fonts.pike,v 1.9 1997/06/23 03:28:14 per Exp $ */
 
 #include <module.h>
 
@@ -10,24 +10,24 @@ string fix_name(string in)
   return replace(lower_case(in), ({"-"," "}), ({ "_", "_" }));
 }
 
-
-
 string make_font_name(string name, int size, int bold, int italic)
 {
-  string base_dir;
+  string base_dir, dir;
   mixed available;
   if(file_stat(name)) return name;
-  base_dir = roxen->QUERY(font_dir)+"/"+size+"/"+fix_name(name);
-  if(!(available = get_dir(base_dir)))
+  foreach(roxen->QUERY(font_dirs), dir)
   {
-    base_dir=roxen->QUERY(font_dir)+"/"+roxen->QUERY(default_font_size)+"/"+fix_name(name);
-    if(!(available = get_dir(base_dir)))
-    {
-      base_dir=roxen->QUERY(font_dir)+"/"+roxen->QUERY(default_font_size)+"/"+roxen->QUERY(default_font);
-      if(!(available = get_dir(base_dir)))
-	return 0;
-    }
+    base_dir = dir+size+"/"+fix_name(name);
+    if((available = get_dir(base_dir)))
+      break;
+    base_dir=dir+"/"+roxen->QUERY(default_font_size)+"/"+fix_name(name);
+    if((available = get_dir(base_dir)))
+      break;
+    base_dir=dir+"/"+roxen->QUERY(default_font_size)+"/"+roxen->QUERY(default_font);
+    if((available = get_dir(base_dir)))
+      break;
   }
+  if(!available) return 0;
 
   string bc=(bold>=0?(bold==2?"B":(bold==1?"b":"n")):"l"), ic=(italic?"i":"n");
   
