@@ -42,12 +42,6 @@ string parse( RequestID id )
     add_doc_link(rpath + "content_editor_manual/index.xml",
 		 _(524, "Content Editor"));
 
-    add_doc_link(rpath + "content_editor_manual_(i)/index.xml",
-		 _(512, "Content Editor (Instant Edition)"));
-
-    add_doc_link(rpath + "content_editor_manual_(i_m)/index.xml",
-		 _(357, "Content Editor (Instant Edition for Mac)"));
-
     add_doc_link(rpath + "web_developer_manual/index.xml",
 		 _(514, "Web Developer"));
 
@@ -62,9 +56,6 @@ string parse( RequestID id )
 
     add_doc_link(rpath + "forms_and_response_module/index.xml",
 		 _(517, "Forms And Response Module"));
-
-    add_doc_link(rpath + "categorization_module/index.xml",
-		 _(518, "Categorization Module"));
 
     add_doc_link(rpath + "forum_manual/index.xml",
 		 _(523, "Forum Module"));
