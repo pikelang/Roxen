@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.319 2001/10/04 13:03:19 sara Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.320 2001/10/04 13:19:19 sara Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6593,7 +6593,7 @@ just got zapped?
  source</i> in the browser.</p>
 
  <p>Note that since this is a normal tag, it requires that the content
- is properly formatted. Therefore it's ofter better to use the
+ is properly formatted. Therefore it's often better to use the
  &lt;?comment&nbsp;...&nbsp;?&gt; processing instruction tag to
  comment out arbitrary text (which doesn't contain '?&gt;').</p>
 
