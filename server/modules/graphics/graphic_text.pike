@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.54 1997/08/19 02:31:58 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.55 1997/08/22 22:40:50 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -113,6 +113,13 @@ array (string) list_fonts()
 
 void create()
 {
+  defvar("speedy", 0, "Avoid automatic detection of document colors",
+	 TYPE_FLAG|VAR_MORE,
+	 "If this flag is set, the tags 'body', 'tr', 'td', 'font' and 'th' "
+	 " will <b>not</b> be parsed to automatically detect the colors of "
+	 " a document. You will then have to specify all colors in all calls "
+	 " to &lt;gtext&gt;");
+  
   defvar("deflen", 300, "Default maximum text-length", TYPE_INT|VAR_MORE,
 	 "The module will, per default, not try to render texts "
 	 "longer than this. This is a safeguard for things like "
@@ -1135,9 +1142,10 @@ string pop_color(string tagname,mapping args,object id,object file,
 mapping query_tag_callers()
 {
   return ([
-    "body":tag_body,
     "gtext-id":tag_gtext_id,
-    "font":tag_fix_color,
+  ]) | (query("speedy")?
+	(["font":tag_fix_color,
+    "body":tag_body,
     "table":tag_fix_color,
     "tr":tag_fix_color,
     "td":tag_fix_color,
@@ -1150,8 +1158,7 @@ mapping query_tag_callers()
     "/body":pop_color,
     "/table":pop_color,
     "/layer":pop_color,
-    "/ilayer":pop_color,
-  ]);
+    "/ilayer":pop_color, ]):([]));
 }
 
 
@@ -1162,9 +1169,6 @@ mapping query_container_callers()
 	    "gh1":tag_graphicstext, "gh2":tag_graphicstext,
 	    "gh3":tag_graphicstext, "gh4":tag_graphicstext,
 	    "gh5":tag_graphicstext, "gh6":tag_graphicstext,
-	    "gh7":tag_graphicstext, "gh8":tag_graphicstext,
-	    "gh9":tag_graphicstext, "gh10":tag_graphicstext,
-	    "gh11":tag_graphicstext,"gh12":tag_graphicstext,
 	    "gtext":tag_graphicstext, ]);
 }
 
