@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.42 2000/02/05 04:09:14 mast Exp $
+//! $Id: module.pmod,v 1.43 2000/02/05 05:18:21 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -52,16 +52,16 @@ class Tag
   //! req_arg_types nor opt_arg_types. This default is a parser that
   //! only parses HTML-style entities.
 
-  Type content_type = t_xml (PHtml);
-  //! The handled type of the content, if the tag is used as a
-  //! container. It's taken from the actual result type if set to
-  //! zero.
+  Type content_type = t_same (PHtml);
+  //! The handled type of the content, if the tag gets any.
   //!
-  //! This default says it's text, but the HTML parser is used to read
-  //! it, which means that the content is preparsed with HTML syntax.
-  //! Use t_text directly with no parser to get the raw text.
+  //! This default is the special type t_same, which means the type is
+  //! taken from the effective type of the result. The PHtml argument
+  //! causes the HTML parser to be used to read it, which means that
+  //! the content is preparsed with HTML syntax. Use no parser to get
+  //! the raw text.
 
-  array(Type) result_types = ({t_text});
+  array(Type) result_types = ({t_xml, t_html, t_text});
   //! The possible types of the result, in order of precedence. If a
   //! result type has a parser, it'll be used to parse any strings
   //! gotten from Frame.do_return (see that function for details).
@@ -192,7 +192,11 @@ class Tag
 
     mixed err = catch {
       frame->_eval (parser, args, content);
-      return frame->result == Void ? ({}) : ({frame->result});
+      mixed res;
+      if ((res = frame->result) == Void) return ({});
+      if (frame->result_type->quoting_scheme != parser->type->quoting_scheme)
+	res = parser->type->quote (res);
+      return ({res});
     };
 
     if (objectp (err) && ([object] err)->thrown_at_unwind) {
@@ -1502,6 +1506,8 @@ class Frame
       mapping(string:mixed)|mapping(object:array) ustate;
       if ((ustate = ctx->unwind_state) && !zero_type (ustate->stream_piece))
 	// Subframe wants to stream. Update stream_piece and send it on.
+	if (result_type->quoting_scheme != parser->type->quoting_scheme)
+	  res = parser->type->quote (res);
 	if (result_type->sequential)
 	  ustate->stream_piece = res + ustate->stream_piece;
 	else if (ustate->stream_piece == Void)
@@ -1666,7 +1672,11 @@ class Frame
 	  String.implode_nicely ([array(string)] tag->result_types->name, "or") +
 	  " but " + [string] parser->type->name + " is expected.\n");
     }
-    if (!content_type) content_type = tag->content_type || result_type;
+    if (!content_type) {
+      content_type = tag->content_type;
+      if (content_type == t_same)
+	content_type = result_type (content_type->_parser_prog);
+    }
 
     mixed err = catch {
       if (eval_state == ESTATE_BEGIN)
@@ -1683,6 +1693,8 @@ class Frame
 		error ("Internal error: Thanks, we think about how nice it must "
 		       "be to play the harmonica...\n");
 #endif
+	      if (result_type->quoting_scheme != parser->type->quoting_scheme)
+		res = parser->type->quote (res);
 	      ctx->unwind_state = (["stream_piece": res]);
 	      throw (this);
 	    }
@@ -1744,6 +1756,8 @@ class Frame
 			  error ("Internal error: "
 				 "Clobbering unwind_state->stream_piece.\n");
 #endif
+			if (result_type->quoting_scheme != parser->type->quoting_scheme)
+			  res = parser->type->quote (res);
 			ctx->unwind_state->stream_piece = res;
 			throw (this);
 		      }
@@ -1793,6 +1807,8 @@ class Frame
 		  error ("Internal error: Thanks, we think about how nice it must "
 			 "be to play the harmonica...\n");
 #endif
+		if (result_type->quoting_scheme != parser->type->quoting_scheme)
+		  res = parser->type->quote (res);
 		ctx->unwind_state = (["stream_piece": res]);
 		throw (this);
 	      }
@@ -2004,10 +2020,12 @@ class Parser
 	context->current_var = 0;
 	if (encoding) {
 	  if (mixed err = catch (val = (string) val))
-	    rxml_error ("Couldn't convert value to text: " + describe_error (err) + "\n");
+	    rxml_fatal ("Couldn't convert value to text: " + describe_error (err) + "\n");
 	  val = roxen->roxen_encode (val, encoding);
 	}
-	else val = type->encode (val);
+	else
+	  // FIXME: Somehow propagate the type from get_var().
+	  val = type->convert (val, t_text);
 	return val == Void ? ({}) : ({val});
       }) {
 	context->current_var = 0;
@@ -2251,16 +2269,28 @@ class Type
   //! Checks whether the given value is a valid one of this type. Type
   //! errors are thrown with RXML.rxml_fatal().
 
-  mixed encode (mixed val, void|Type from);
-  //! Encodes the given value as appropriate for this type. If the
-  //! from type is given, it's the type of the value. That's often not
-  //! known, however, so this function should try to do something
-  //! sensible based on the primitive pike type. If the type can't be
-  //! reasonably converted, an RXML error should be thrown.
+  //!string quoting_scheme;
+  //! An identifier for the quoting scheme this type uses, if any. The
+  //! quoting scheme specifies how literals needs to be quoted for the
+  //! type. Values converted between types with the same quoting
+  //! scheme are not quoted.
+
+  mixed quote (mixed val)
+  //! Quotes the given value according to the quoting scheme for this
+  //! type.
+  {
+    return val;
+  }
+
+  mixed convert (mixed val, void|Type from);
+  //! Converts the given value to this type. If the from type is
+  //! given, it's the type of the value. Since it's not always known,
+  //! this function should try to do something sensible based on the
+  //! primitive pike type. If the type can't be reasonably converted,
+  //! an RXML fatal should be thrown.
   //!
-  //! For types that are typically evaluated in some way, such as
-  //! markup or programming languages, this function should ensure
-  //! that the result is interpreted as a pure literal.
+  //! Quoting should be done if the from type is missing or has a
+  //! different quoting scheme.
 
   Type clone()
   //! Returns a copy of the type.
@@ -2433,12 +2463,22 @@ static class TAny
 {
   inherit Type;
   constant name = "*";
+  constant quoting_scheme = "none";
 
-  mixed encode (mixed val) {return val;}
+  mixed convert (mixed val) {return val;}
 
   string _sprintf() {return "RXML.t_any" + PAREN_CNT (__count);}
 }
 TAny t_any = TAny();
+
+static class TSame
+//! A magic type used in Tag.content_type.
+{
+  inherit Type;
+  constant name = "same";
+  string _sprintf() {return "RXML.t_same" + PAREN_CNT (__count);}
+}
+TSame t_same = TSame();
 
 static class TText
 //! The standard type for generic document text.
@@ -2448,11 +2488,12 @@ static class TText
   constant sequential = 1;
   constant empty_value = "";
   constant free_text = 1;
+  constant quoting_scheme = "none";
 
-  string encode (mixed val)
+  string convert (mixed val)
   {
     if (mixed err = catch {return (string) val;})
-      rxml_error ("Couldn't convert value to text: " + describe_error (err));
+      rxml_fatal ("Couldn't convert value to text: " + describe_error (err));
   }
 
   string _sprintf() {return "RXML.t_text" + PAREN_CNT (__count);}
@@ -2464,14 +2505,12 @@ static class TXml
 {
   inherit TText;
   constant name = "text/xml";
+  constant quoting_scheme = "xml";
 
-  string encode (mixed val)
+  string quote (string val)
   {
-    string txt;
-    if (mixed err = catch {txt = (string) val;})
-      rxml_error ("Couldn't convert value to text: " + describe_error (err));
     return replace (
-      txt,
+      val,
       // FIXME: This ignores the invalid Unicode character blocks.
       ({"&", "<", ">", "\"", "\'",
 	"\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
@@ -2485,6 +2524,15 @@ static class TXml
 	"&#16;", "&#17;", "&#18;", "&#19;", "&#20;", "&#21;", "&#22;", "&#23;",
 	"&#24;", "&#25;", "&#26;", "&#27;", "&#28;", "&#29;", "&#30;", "&#31;",
       }));
+  }
+
+  string convert (mixed val, void|Type from)
+  {
+    if (mixed err = catch {val = (string) val;})
+      rxml_fatal ("Couldn't convert value to text: " + describe_error (err));
+    if (from && from->quoting_scheme != quoting_scheme)
+      val = quote (val);
+    return val;
   }
 
   string _sprintf() {return "RXML.t_xml" + PAREN_CNT (__count);}
