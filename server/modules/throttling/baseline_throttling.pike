@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: baseline_throttling.pike,v 1.1 1999/09/04 22:40:45 kinkie Exp $";
+constant cvs_version="$Id: baseline_throttling.pike,v 1.2 1999/09/29 20:28:42 kinkie Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -26,6 +26,6 @@ void create() {
 
 mixed first_try (object id) {
   THROTTLING_DEBUG("baseline_throttling: setting rate to "+QUERY(rate));
-  id->throttle=1;
-  id->rate=QUERY(rate);
+  id->throttle->doit=1;
+  id->throttle->rate=QUERY(rate);
 }
