@@ -10,7 +10,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.33 1999/12/09 21:41:46 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.34 1999/12/18 13:23:06 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -74,10 +74,6 @@ array(string) query_file_extensions()
   return query("toparse");
 }
 
-mapping tagdocumentation() {
-  return (["version":"<desc tag>Shows the version number of the Roxen Challenger web server you are using.</desc>"]);
-}
-
 
 // ------------------- RXML Parsing -------------------
 
@@ -101,12 +97,8 @@ mapping handle_file_extension(object file, string e, RequestID id)
   return http_rxml_answer( file->read(), id, file, file2type(id->realfile||id->no_query||"index.html") );
 }
 
-array(string) tag_version() { return ({ roxen.version() }); }
-
 
 // ------------- Define the API functions --------------
-
-string api_configurl(string f, mapping m) { return roxen->config_url(); }
 
 string api_parse_rxml(RequestID id, string r)
 {
@@ -279,6 +271,6 @@ void define_API_functions()
   add_api_function("set_return_code", api_set_return_code, ({ "int", 0, "string" }));
   add_api_function("query_referer", api_get_referer, ({}));
 
-  add_api_function("roxen_version", tag_version, ({}));
-  add_api_function("config_url", api_configurl, ({}));
+  add_api_function("roxen_version", lambda(){return roxen.version();}, ({}));
+  add_api_function("config_url", lambda(){return roxen->config_url();}, ({}));
 }
