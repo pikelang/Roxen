@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.137 1998/08/02 01:23:05 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.138 1998/08/02 01:31:57 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1542,8 +1542,7 @@ string|void pop_color(string tagname,mapping args,object id,object file,
 mapping query_tag_callers()
 {
   return ([ "gtext-id":tag_gtext_id, ])
-    | (query("nobody")?([]):
-       (["body":tag_body])
+    | (query("nobody")?([]):(["body":tag_body]))
        // No reson to pop the end of body	 "/body":pop_color]))
     | (query("speedy")?([]):
        (["font":tag_fix_color,
