@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.15 1997/10/09 05:08:35 grubba Exp $";
+string cvs_version = "$Id: cache.pike,v 1.16 1997/10/30 10:29:16 per Exp $";
 
 #include <config.h>
 
@@ -9,7 +9,7 @@ inherit "roxenlib";
 
 #define ENTRY_SIZE 2
 
-#define CACHE_TIME_OUT 3000
+#define CACHE_TIME_OUT 300
 
 #if DEBUG_LEVEL > 8
 #ifndef CACHE_DEBUG
@@ -164,6 +164,11 @@ void cache_clear(string in)
 
 void cache_clean()
 {
+  remove_call_out(cache_clean);
+  remove_call_out(cache_clean);
+  call_out(cache_clean, CACHE_TIME_OUT);
+  call_out(cache_clean, CACHE_TIME_OUT);
+  gc();
 #ifdef THREADS
   mixed key;
   catch { key = cleaning_lock->lock(); };
@@ -218,7 +223,7 @@ void cache_clean()
       }
     }
   }
-  call_out(cache_clean, cache_time_out/4);
+  gc();
 }
 
 void create()
