@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.99 1998/05/13 06:42:25 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.100 1998/05/14 04:37:49 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -420,7 +420,7 @@ string do_parse(string to_parse, object id, object file, mapping defines,
 
 
 
-void call_user_tag(string tag, mapping args, int line, mixed foo, object id)
+string call_user_tag(string tag, mapping args, int line, mixed foo, object id)
 {
   id->misc->line = line;
   if(!id->misc->up_args) id->misc->up_args = ([]);
@@ -437,7 +437,7 @@ void call_user_tag(string tag, mapping args, int line, mixed foo, object id)
   return replace(id->misc->tags[ tag ], replace_from, replace_to);
 }
 
-void call_user_container(string tag, mapping args, string contents, int line,
+string call_user_container(string tag, mapping args, string contents, int line,
 			 mixed foo, object id)
 {
   id->misc->line = line;
