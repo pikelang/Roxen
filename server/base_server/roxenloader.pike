@@ -5,7 +5,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.42 1997/09/17 19:52:09 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.43 1997/09/18 23:39:38 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -424,12 +424,17 @@ object|void open(string filename, string mode, int|void perm)
 {
   object o;
   o=file();
-  if(o->open(filename, mode, perm||0666))
-  {
-    mark_fd(o->query_fd(), filename+" (mode: "+mode+")");
-    return o;
+  if(!(o->open(filename, mode, perm||0666))) {
+    // Let's see if the garbage-collector can free some fd's
+    gc();
+    // Retry...
+    if(!(o->open(filename, mode, perm||0666))) {
+      destruct o;
+      return;
+    }
   }
-  destruct(o);
+  mark_fd(o->query_fd(), filename+" (mode: "+mode+")");
+  return o;
 }
 
 string make_path(string ... from)
