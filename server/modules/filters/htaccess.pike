@@ -5,7 +5,7 @@
 
 import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.26 1998/01/15 18:20:10 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.27 1998/01/28 01:52:10 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -350,10 +350,11 @@ int validate_user(int|multiset users, array auth, string userfile, object id)
   }
   foreach(passwd/"\n", line)
   {
-    string user, pass;
-    if(sscanf(line, "%s:%s", user, pass) == 2)
+    array(string) arr = line/":";
+    if(sizeof(arr) >= 2)
     {
-      pass = (pass/":")[0];
+      string user = arr[0];
+      string pass = arr[1];
       if((users == 1 || users[user]) && (user == auth[0]) &&
 	 match_passwd(pass, auth[1]))
       {
@@ -363,19 +364,6 @@ int validate_user(int|multiset users, array auth, string userfile, object id)
 	return 1;
       }
     }
-#ifdef HTACCESS_DEBUG
-    else {
-      if(user && pass)
-      {
-	werror("HTACCESS: Failed auth\n");
-	if(user == auth[0])
-	{
-	  werror(sprintf("HTACCESS: %s:%s != ", user, pass));
-	  werror(sprintf("%s:%s\n", auth[0], crypt(auth[1])));
-	}
-      }
-    }
-#endif      
   }
   return 0;
 }
