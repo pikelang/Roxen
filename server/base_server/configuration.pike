@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.131 1998/05/18 21:24:48 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.132 1998/05/23 13:55:41 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1543,7 +1543,7 @@ public array stat_file(string file, object id)
 {
   string loc;
   array s, tmp;
-  TRACE_ENTER("Stat file"+file, 0);
+  TRACE_ENTER("Stat file "+file, 0);
   
   file=replace(file, "//", "/"); // "//" is really "/" here...
 
@@ -1735,6 +1735,10 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
   if(file[0] != '/')
     file = "/" + file;
 
+  // FIXME: Should I append a "/" to file if missing?
+
+  TRACE_ENTER("Request for directory and stat's \""+file+"\"", 0);
+
 #ifdef URL_MODULES
 #ifdef THREADS
   object key;
@@ -1745,6 +1749,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
     string of = id->not_query;
     id->not_query = file;
     LOCK(funp);
+    TRACE_ENTER("URL Module", funp);
     tmp=funp( id, file );
     UNLOCK();
 
@@ -1755,6 +1760,8 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       roxen_perror(sprintf("conf->find_dir_stat(\"%s\"): url_module returned mapping:%O\n", 
 			   file, tmp));
 #endif /* MODULE_DEBUG */
+      TRACE_LEAVE("URL Module returned mapping");
+      TRACE_LEAVE("Empty directory");
       return 0;
     }
     if(objectp( tmp ))
@@ -1766,9 +1773,11 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       err = catch {
 	if( nest < 20 )
 	  tmp = (id->conf || this_object())->find_dir_stat( file, id );
-	else
+	else {
+	  TRACE_LEAVE("Too deep recursion");
 	  error("Too deep recursion in roxen::find_dir_stat() while mapping "
 		+file+".\n");
+	}
       };
       nest = 0;
       if(err)
@@ -1777,9 +1786,12 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       roxen_perror(sprintf("conf->find_dir_stat(\"%s\"): url_module returned object:\n", 
 			   file));
 #endif /* MODULE_DEBUG */
-      return tmp;
+      TRACE_LEAVE("URL Module returned object");
+      TRACE_LEAVE("Returning it");
+      return tmp;	// FIXME: Return 0 instead?
     }
     id->not_query=of;
+    TRACE_LEAVE("");
   }
 #endif /* URL_MODULES */
 
@@ -1787,6 +1799,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
   {
     loc = tmp[0];
 
+    TRACE_ENTER("Trying location module mounted on "+loc, 0);
     /* Note that only new entries are added. */
     if(!search(file, loc))
     {
@@ -1797,14 +1810,20 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       object c = function_object(tmp[1]);
       string f = file[strlen(loc)..];
       if (c->find_dir_stat) {
+	TRACE_ENTER("Has find_dir_stat()", 0);
 	if (d = c->find_dir_stat(f, id)) {
+	  TRACE_ENTER("find_dir_stat() returned mapping", 0);
 	  dir = d | dir;
+	  TRACE_LEAVE("");
 	}
+	TRACE_LEAVE("");
       } else if(d = c->find_dir(f, id)) {
+	TRACE_ENTER("find_dir() returned array", 0);
 	dir = mkmapping(d, Array.map(d, lambda(string f, string base,
 					 object c, object id) {
 				    return(c->stat_file(base + f, id));
 				  }, f, c, id)) | dir;
+	TRACE_LEAVE("");
       }
     } else if(search(loc, file)==0 && loc[strlen(file)-1]=='/' &&
 	      (loc[0]==loc[-1]) && loc[-1]=='/' &&
@@ -1812,12 +1831,15 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       /* loc == file + "/" + subpath + "/"
        * and stat_file(".") returns non-zero.
        */
+      TRACE_ENTER("file is on the path to the mountpoint", 0);
       loc=loc[strlen(file)..];
       sscanf(loc, "%s/", loc);
       if (!dir[loc]) {
 	dir[loc] = ({ 0775, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
       }
+      TRACE_LEAVE("");
     }
+    TRACE_LEAVE("");
   }
   if(sizeof(dir))
     return dir;
