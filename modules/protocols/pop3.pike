@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.4 1998/09/28 00:26:30 grubba Exp $
+ * $Id: pop3.pike,v 1.5 1998/09/28 00:30:00 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.4 1998/09/28 00:26:30 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.5 1998/09/28 00:30:00 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -288,6 +288,8 @@ static class Pop_Session
       if (objectp(u)) {
 	user = u;
 	break;
+      } else if (u) {
+	roxen_perror(sprintf("POP3: Unexpected result: %O\n", u));
       }
     }
     if (user) {
