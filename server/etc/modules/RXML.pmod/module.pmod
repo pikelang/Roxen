@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.34 2000/01/25 18:06:51 nilsson Exp $
+//! $Id: module.pmod,v 1.35 2000/01/25 20:46:33 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -420,16 +420,16 @@ class Scope
 //! Interface for objects that emulates a scope mapping.
 {
   mixed `[] (string var, void|Context ctx, void|string scope_name)
-    {rxml_error ("Cannot query variable" + _in_the_scope (scope_name) + ".\n");}
+    {rxml_fatal ("Cannot query variable" + _in_the_scope (scope_name) + ".\n");}
 
   mixed `[]= (string var, mixed val, void|Context ctx, void|string scope_name)
-    {rxml_error ("Cannot set variable" + _in_the_scope (scope_name) + ".\n");}
+    {rxml_fatal ("Cannot set variable" + _in_the_scope (scope_name) + ".\n");}
 
   array(string) _indices (void|Context ctx, void|string scope_name)
-    {rxml_error ("Cannot list variables" + _in_the_scope (scope_name) + ".\n");}
+    {rxml_fatal ("Cannot list variables" + _in_the_scope (scope_name) + ".\n");}
 
   void m_delete (string var, void|Context ctx, void|string scope_name)
-    {rxml_error ("Cannot delete variable" + _in_the_scope (scope_name) + ".\n");}
+    {rxml_fatal ("Cannot delete variable" + _in_the_scope (scope_name) + ".\n");}
 
   private string _in_the_scope (string scope_name)
   {
@@ -474,12 +474,11 @@ class Context
   //! set that imports the old tag set is created whenever need be.
 
   array parse_user_var (string var, void|string scope_name)
-  //! Tries to decide what variable and scope to use. Handles
-  //! cases where the variable also containes the scope,
-  //! e.g. "scope.var".
+  //! Tries to decide what variable and scope to use. Handles cases
+  //! where the variable also contains the scope, e.g. "scope.var".
   {
     if(!var || !sizeof(var)) return ([])[0];
-    array splitted=var/".";
+    array(string) splitted=var/".";
     if(sizeof(splitted)>2) return ([])[0];
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
@@ -488,7 +487,7 @@ class Context
     return ({ scope_name, splitted[-1] });
   }
 
-  mixed get_var (string var, void|string scope_name)
+  local mixed get_var (string var, void|string scope_name)
   //! Returns the value a variable in the specified scope, or the
   //! current scope if none is given. Returns zero with zero_type 1 if
   //! there's no such variable.
@@ -505,16 +504,16 @@ class Context
 	  rxml_var_eval (this_object(), var, scope_name || "_");
       else return val;
     }
-    else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
-    else rxml_error ("No current scope.\n");
+    else if (scope_name) rxml_fatal ("Unknown scope %O.\n", scope_name);
+    else rxml_fatal ("No current scope.\n");
   }
 
   mixed user_get_var (string var, void|string scope_name)
-  //! As get_var, but can handle cases where the variable
-  //! also containes the scope, e.g. "scope.var".
+  //! As get_var, but can handle cases where the variable also
+  //! contains the scope, e.g. "scope.var".
   {
     if(!var || !sizeof(var)) return ([])[0];
-    array splitted=var/".";
+    array(string) splitted=var/".";
     if(sizeof(splitted)>2) return ([])[0];
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
@@ -523,7 +522,7 @@ class Context
     return get_var(splitted[-1], scope_name);
   }
 
-  mixed set_var (string var, mixed val, void|string scope_name)
+  local mixed set_var (string var, mixed val, void|string scope_name)
   //! Sets the value of a variable in the specified scope, or the
   //! current scope if none is given. Returns val.
   {
@@ -532,17 +531,17 @@ class Context
 	return ([object(Scope)] vars)->`[]= (var, val, this_object(), scope_name || "_");
       else
 	return vars[var] = val;
-    else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
-    else rxml_error ("No current scope.\n");
+    else if (scope_name) rxml_fatal ("Unknown scope %O.\n", scope_name);
+    else rxml_fatal ("No current scope.\n");
   }
 
   mixed user_set_var (string var, mixed val, void|string scope_name)
-  //! As set_var, but can handle cases where the variable
-  //! also containes the scope, e.g. "scope.var".
+  //! As set_var, but can handle cases where the variable also
+  //! contains the scope, e.g. "scope.var".
   {
-    if(!var || !sizeof(var)) return ([])[0];
-    array splitted=var/".";
-    if(sizeof(splitted)>2) return ([])[0];
+    if(!var || !sizeof(var)) return val;
+    array(string) splitted=var/".";
+    if(sizeof(splitted)>2) return val;
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
     else
@@ -550,7 +549,7 @@ class Context
     return set_var(splitted[-1], val, scope_name);
   }
 
-  void delete_var (string var, void|string scope_name)
+  local void delete_var (string var, void|string scope_name)
   //! Removes a variable in the specified scope, or the current scope
   //! if none is given.
   {
@@ -559,22 +558,22 @@ class Context
 	([object(Scope)] vars)->m_delete (var, this_object(), scope_name || "_");
       else
 	m_delete ([mapping(string:mixed)] vars, var);
-    else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
-    else rxml_error ("No current scope.\n");
+    else if (scope_name) rxml_fatal ("Unknown scope %O.\n", scope_name);
+    else rxml_fatal ("No current scope.\n");
   }
 
-  mixed user_delete_var (string var, void|string scope_name)
-  //! As delete_var, but can handle cases where the variable
-  //! also containes the scope, e.g. "scope.var".
+  void user_delete_var (string var, void|string scope_name)
+  //! As delete_var, but can handle cases where the variable also
+  //! contains the scope, e.g. "scope.var".
   {
-    if(!var || !sizeof(var)) return ([])[0];
-    array splitted=var/".";
-    if(sizeof(splitted)>2) return ([])[0];
+    if(!var || !sizeof(var)) return;
+    array(string) splitted=var/".";
+    if(sizeof(splitted)>2) return;
     if(sizeof(splitted)==2)
       scope_name=splitted[0];
     else
       scope_name = scope_name || "_";
-    return delete_var(splitted[-1], scope_name);
+    delete_var(splitted[-1], scope_name);
   }
 
   array(string) list_var (void|string scope_name)
@@ -586,8 +585,8 @@ class Context
 	return ([object(Scope)] vars)->_indices (this_object(), scope_name || "_");
       else
 	return indices ([mapping(string:mixed)] vars);
-    else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
-    else rxml_error ("No current scope.\n");
+    else if (scope_name) rxml_fatal ("Unknown scope %O.\n", scope_name);
+    else rxml_fatal ("No current scope.\n");
   }
 
   array(string) list_scopes()
@@ -604,38 +603,57 @@ class Context
 
   void add_scope (string scope_name, SCOPE_TYPE vars)
   //! Adds or replaces the specified scope at the global level. A
-  //! scope can be an object. It must implement the methods `[],
-  //! _indices(), and m_delete().
+  //! scope can be a mapping or a Scope object. A global "_" scope may
+  //! also be defined this way.
   {
     if (scopes[scope_name])
       if (scope_name == "_") {
-	SCOPE_TYPE inner = scopes["_"];
-	while (SCOPE_TYPE outer = hidden[inner]) inner = outer;
-	hidden[inner] = vars;
+	array(SCOPE_TYPE) hid;
+	for (Frame f = frame; f; f = f->up)
+	  if (array(SCOPE_TYPE) h = hidden[f]) hid = h;
+	if (hid) hid[0] = vars;
+	else scopes["_"] = vars;
       }
       else {
 	Frame outermost;
 	for (Frame f = frame; f; f = f->up)
 	  if (f->scope_name == scope_name) outermost = f;
-	if (outermost) hidden[outermost] = vars;
+	if (outermost) hidden[outermost][1] = vars;
 	else scopes[scope_name] = vars;
       }
     else scopes[scope_name] = vars;
   }
 
   int extend_scope (string scope_name, SCOPE_TYPE vars)
-  //! Adds or extends the specified scope at a global level.
+  //! Adds or extends the specified scope at the global level.
   //! Returns 1 on success and 0 on failure.
   {
-    if (!exist_scope(scope_name)) {
-      add_scope (scope_name, vars);
-      return 1;
+    if (scopes[scope_name]) {
+      SCOPE_TYPE oldvars;
+      if (scope_name == "_") {
+	array(SCOPE_TYPE) hid;
+	for (Frame f = frame; f; f = f->up)
+	  if (array(SCOPE_TYPE) h = hidden[f]) hid = h;
+	if (hid) oldvars = hid[0];
+	else oldvars = scopes["_"];
+      }
+      else {
+	Frame outermost;
+	for (Frame f = frame; f; f = f->up)
+	  if (f->scope_name == scope_name) outermost = f;
+	if (outermost) oldvars = hidden[outermost][1];
+	else oldvars = scopes[scope_name];
+      }
+#ifdef DEBUG
+      if (!oldvars) error ("Internal error: I before e except after c.\n");
+#endif
+      if (!mappingp(vars)) {
+	return 0;
+      }
+      foreach (indices(vars), string var)
+	set_var(var, vars[var], scope_name);
     }
-    if (!mappingp(vars)) {
-      return 0;
-    }
-    foreach (indices(vars), string var)
-      set_var(var, vars[var], scope_name);
+    else scopes[scope_name] = vars;
     return 1;
   }
 
@@ -684,13 +702,13 @@ class Context
     new_runtime_tags->remove_tags[tag] = 1;
   }
 
-  void rxml_error (string msg, mixed... args)
-  //! Throws an RXML error with a dump of the parser stack.
+  string describe_rxml_backtrace (Frame f, void|string current_var)
+  //! Returns a formatted backtrace from the given frame. If
+  //! current_var is specified, it's taken to be the a variable entity
+  //! being parsed on top of the frame.
   {
-    if (sizeof (args)) msg = sprintf (msg, @args);
-    msg = rxml_errmsg_prefix + ": " + msg;
-    if (current_var) msg += " | &" + current_var + ";\n";
-    for (Frame f = frame; f; f = f->up) {
+    string msg = current_var ? " | &" + current_var + ";\n" : "";
+    for (; f; f = f->up) {
       if (f->tag) msg += " | <" + f->tag->name;
       else if (!f->up) break;
       else msg += " | <(unknown tag)";
@@ -704,6 +722,31 @@ class Context
       else msg += " (no argmap)";
       msg += ">\n";
     }
+    return msg;
+  }
+
+  void rxml_error (string msg, mixed... args)
+  //! Throws an RXML error with a dump of the parser stack. This is
+  //! intended to be used by tags for errors that can occur during
+  //! normal operation, such as when the connection to an SQL server
+  //! fails.
+  {
+    if (sizeof (args)) msg = sprintf (msg, @args);
+    msg = rxml_error_prefix + ": " + msg +
+      describe_rxml_backtrace (frame, current_var);
+    array b = backtrace();
+    throw (({msg, b[..sizeof (b) - 2]}));
+  }
+
+  void rxml_fatal (string msg, mixed... args)
+  //! Throws an RXML fatal error with a dump of the parser stack. This
+  //! is intended to be used for programming errors in the RXML code,
+  //! such as lookups in nonexisting scopes and invalid arguments to a
+  //! tag.
+  {
+    if (sizeof (args)) msg = sprintf (msg, @args);
+    msg = rxml_fatal_prefix + ": " + msg +
+      describe_rxml_backtrace (frame, current_var);
     array b = backtrace();
     throw (({msg, b[..sizeof (b) - 2]}));
   }
@@ -714,15 +757,20 @@ class Context
   {
     error_count++;
     string msg = describe_error (err);
-    if (msg[..sizeof (rxml_errmsg_prefix) - 1] == rxml_errmsg_prefix) {
+    int error = msg[..sizeof (rxml_error_prefix) - 1] == rxml_error_prefix;
+    if (error || msg[..sizeof (rxml_fatal_prefix) - 1] == rxml_fatal_prefix) {
       // An RXML error.
       while (evaluator->_parent) {
 	evaluator->error_count++;
 	evaluator = evaluator->_parent;
       }
       if (id && id->conf)
-	msg = ([function(mixed,Type:string)]
-	       ([object] id->conf)->handle_rxml_error) (err, evaluator->type);
+	msg = (error ?
+	       ([function(mixed,Type:string)]
+		([object] id->conf)->handle_rxml_error) :
+	       ([function(mixed,Type:string)]
+		([object] id->conf)->handle_rxml_fatal)
+	      ) (err, evaluator->type);
       else {
 #ifdef MODULE_DEBUG
 	report_notice (describe_backtrace (err));
@@ -730,7 +778,7 @@ class Context
 	report_notice (msg);
 #endif
       }
-      if (evaluator->type->free_text && evaluator->report_error)
+      if (msg && evaluator->type->free_text && evaluator->report_error)
 	evaluator->report_error (msg);
     }
     else throw (err);
@@ -738,7 +786,8 @@ class Context
 
   // Internals.
 
-  constant rxml_errmsg_prefix = "RXML parser error";
+  constant rxml_error_prefix = "RXML error";
+  constant rxml_fatal_prefix = "RXML fatal";
 
   private string error_print_val (mixed val)
   {
@@ -765,41 +814,41 @@ class Context
   // The variable mappings for every currently visible scope. A
   // special entry "_" points to the current local scope.
 
-  mapping(SCOPE_TYPE|Frame:SCOPE_TYPE) hidden = ([]);
-  // The currently hidden variable mappings in scopes. The old "_"
-  // entries are indexed by the replacing variable mapping. The old
-  // named scope entries are indexed by the frame object which
-  // replaced them.
+  mapping(Frame:array(SCOPE_TYPE)) hidden = ([]);
+  // The currently hidden scopes. The indices are frame objects which
+  // introduce scopes. The values are tuples of the current scope and
+  // the named scope they hide.
 
   void enter_scope (Frame frame)
   {
-    SCOPE_TYPE vars;
 #ifdef DEBUG
     if (!frame->vars) error ("Internal error: Frame has no variables.\n");
 #endif
-    if ((vars = [SCOPE_TYPE] frame->vars) != scopes["_"]) {
-      hidden[vars] = scopes["_"];
-      scopes["_"] = vars;
+    if (!hidden[frame])
       if (string scope_name = [string] frame->scope_name) {
-	hidden[frame] = scopes[scope_name];
-	scopes[scope_name] = vars;
+	hidden[frame] = ({scopes["_"], scopes[scope_name]});
+	scopes["_"] = scopes[scope_name] = [SCOPE_TYPE] frame->vars;
       }
-    }
+      else {
+	hidden[frame] = ({scopes["_"], 0});
+	scopes["_"] = [SCOPE_TYPE] frame->vars;
+      }
   }
 
   void leave_scope (Frame frame)
   {
-    if (string scope_name = [string] frame->scope_name)
-      if (has_index (hidden, frame)) {
-	if (!(scopes[scope_name] = hidden[frame]))
-	  m_delete (scopes, scope_name);
-	m_delete (hidden, frame);
+    if (array(SCOPE_TYPE) back = hidden[frame]) {
+      if (SCOPE_TYPE cur = back[0]) scopes["_"] = cur;
+      else m_delete (scopes, "_");
+      if (SCOPE_TYPE named = back[1]) {
+#ifdef MODULE_DEBUG
+	if (!stringp (frame->scope_name))
+	  error ("Scope named changed to %O during parsing.\n", frame->scope_name);
+#endif
+	scopes[[string] frame->scope_name] = named;
       }
-    SCOPE_TYPE vars;
-    if (has_index (hidden, vars = [SCOPE_TYPE] frame->vars)) {
-      if (!(scopes["_"] = hidden[vars]))
-	m_delete (scopes, "_");
-      m_delete (hidden, vars);
+      else m_delete (scopes, [string] frame->scope_name);
+      m_delete (hidden, frame);
     }
   }
 
@@ -906,10 +955,30 @@ void rxml_error (string msg, mixed... args)
     ctx->rxml_error (msg, @args);
   else {
     if (sizeof (args)) msg = sprintf (msg, @args);
-    msg = Context.rxml_errmsg_prefix + " (no context): " + msg;
+    msg = Context.rxml_error_prefix + " (no context): " + msg;
     array b = backtrace();
     throw (({msg, b[..sizeof (b) - 2]}));
   }
+}
+
+void rxml_fatal (string msg, mixed... args)
+//! Tries to throw a fatal error with rxml_fatal() in the current
+//! context.
+{
+  Context ctx = get_context();
+  if (ctx && ctx->rxml_fatal)
+    ctx->rxml_fatal (msg, @args);
+  else {
+    if (sizeof (args)) msg = sprintf (msg, @args);
+    msg = Context.rxml_fatal_prefix + " (no context): " + msg;
+    array b = backtrace();
+    throw (({msg, b[..sizeof (b) - 2]}));
+  }
+}
+
+Frame get_tag (string name, mapping(string:mixed) args, void|mixed|PCode content)
+{
+  // FIXME
 }
 
 
@@ -1021,10 +1090,11 @@ class Frame
   //!mapping(string:mixed) vars;
   //! Set this to introduce a new variable scope that will be active
   //! during parsing of the content and return values (but see also
-  //! FLAG_PARENT_SCOPE). Don't replace or remove the mapping later.
+  //! FLAG_PARENT_SCOPE). It must be set in do_iterate() or earlier.
 
   //!string scope_name;
-  //! The scope name for the variables. Don't change this later.
+  //! The scope name for the variables. Must be set before the scope
+  //! is used for the first time, and can't be changed after that.
 
   //!TagSet additional_tags;
   //! If set, the tags in this tag set will be used in addition to the
@@ -1036,30 +1106,27 @@ class Frame
   //! the content, instead of the one inherited from the surrounding
   //! parser. The tags are not inherited by subparsers.
 
-  optional int|function(RequestID:int|function) do_enter (RequestID id);
-  //! Called before the content (if any) is processed. This function
-  //! typically only initializes vars. Return values:
-  //!
-  //! int -	Do this many passes through the content. do_return()
-  //!		will be called after each pass.
-  //! function(RequestID:int|function) - A function that is handled
-  //!		just like do_enter(), only repeatedly until it returns
-  //!		0 or another function.
-  //!
-  //! If this function is missing, one pass is done.
-
+  //!array do_enter (RequestID id);
   //!array do_return (RequestID id, void|mixed piece);
-  //! Called after the content (if any) has been processed.
+  //! do_enter() is called first thing when processing the tag.
+  //! do_return() is called after the content (if any) is processed.
+  //!
+  //! For tags that loops more than one time (see do_iterate):
+  //! do_enter() is only called initially before the first call to
+  //! do_iterate(). do_return() is called after each iteration.
   //!
   //! The result_type variable is set to the type of result the parser
   //! wants. It's any type that is valid by tag->result_type. If the
   //! result type is sequential, it's spliced into the surrounding
   //! content, otherwise it replaces the previous value of the
-  //! content, if any.
+  //! content, if any. If the result is Void, it does not affect the
+  //! surrounding content at all.
   //!
   //! Return values:
   //!
-  //! array -	A so-called execution array to be handled by the parser:
+  //! array -	A so-called execution array to be handled by the
+  //!		parser. The elements are processed in order, and have
+  //!		the following usage:
   //!
   //!	string - Added or put into the result. If the result type has
   //!		a parser, the string will be parsed with it before
@@ -1077,13 +1144,29 @@ class Frame
   //!		added or put into the result. Normally not necessary;
   //!		assign it directly to the result variable instead.
   //!
-  //! 0 -	Do nothing special. Ends the stream when
-  //!		FLAG_STREAM_RESULT is set.
+  //! 0 -	Do nothing special. Exits the tag when used from
+  //!		do_return() and FLAG_STREAM_RESULT is set.
   //!
-  //! Note that the intended use is not to postparse by returning
-  //! strings, but instead to return an array with literal strings and
-  //! RXML.Frame objects where parsing (or, more accurately,
-  //! evaluation) needs to be done.
+  //! Note that the intended use is not to postparse by setting a
+  //! parser on the result type, but instead to return an array with
+  //! literal strings and RXML.Frame objects where parsing (or, more
+  //! accurately, evaluation) needs to be done.
+  //!
+  //! If an array instead of a function is given, the array is handled
+  //! as above. If do_return is zero, the value in the result variable
+  //! is simply used. If the result variable is Void, content is used
+  //! as result if it's of a compatible type.
+  //!
+  //! Regarding do_return only:
+  //!
+  //! Normally the content variable is set to the parsed content of
+  //! the tag before do_return() is called. This may be Void if the
+  //! content parsing didn't produce any result.
+  //!
+  //! If the result from parsing the content is not Void, it's
+  //! assigned to or added to the content variable. Assignment is used
+  //! if the content type is nonsequential, addition otherwise. Thus
+  //! earlier values are simply overridden for nonsequential types.
   //!
   //! piece is used when the tag is operating in streaming mode (i.e.
   //! FLAG_STREAM_CONTENT is set). It's then set to each successive
@@ -1097,13 +1180,28 @@ class Frame
   //! repeatedly until it returns 0. It's only the result piece from
   //! the execution array that is propagated after each turn; the
   //! result variable only accumulates all these pieces.
-  //!
-  //! If this function is an array, it's executed as above. If it's
-  //! zero, the value in the result variable is simply used. If the
-  //! result variable is Void, content is used as result if it's of a
-  //! compatible type.
 
-  //!int|function(:int) is_valid;
+  //!int do_iterate (RequestID id);
+  //! Controls the number of passes in the tag done by the parser. In
+  //! every pass, the content of the tag (if any) is processed, then
+  //! do_return() is called.
+  //!
+  //! Before doing any pass, do_iterate() is called. If the return
+  //! value is nonzero, that many passes is done, then do_iterate() is
+  //! called again and the process repeats. If the return value is
+  //! zero, the tag exits and the value in result is used in the
+  //! surrounding content as described above.
+  //!
+  //! The most common way to iterate is to do the setup before every
+  //! pass (e.g. setup the variable scope) and return 1 to do one pass
+  //! through the content. This will repeat until 0 is returned.
+  //!
+  //! If do_iterate is a positive integer, that many passes is done
+  //! and then the tag exits. If do_iterate is zero or missing, one
+  //! pass is done. If do_iterate is a negative integer, no pass is
+  //! done, and the tag exits right away.
+
+  //!int|function(RequestID:int) is_valid;
   //! When defined, the frame may be cached. First the name of the tag
   //! must be the same. Then the conditions specified by the cache
   //! bits in flag are checked. Then, if this is a function, it's
@@ -1120,9 +1218,20 @@ class Frame
   //! Services.
 
   void rxml_error (string msg, mixed... args)
-  //! Throws an RXML error from the current context.
+  //! Throws an RXML error from the current context. This is intended
+  //! to be used by tags for errors that can occur during normal
+  //! operation, such as when the connection to an SQL server fails.
   {
     get_context()/*HMM*/->rxml_error (msg, @args);
+  }
+
+  void rxml_fatal (string msg, mixed... args)
+  //! Throws an RXML fatal error from the current context. This is
+  //! intended to be used for programming errors in the RXML code,
+  //! such as lookups in nonexisting scopes and invalid arguments to a
+  //! tag.
+  {
+    get_context()/*HMM*/->rxml_fatal (msg, @args);
   }
 
   void terminate()
@@ -1262,7 +1371,11 @@ class Frame
 
     // Unwind state data:
     //raw_content
-    int|function(RequestID:int|function) fn, iter;
+#define ESTATE_BEGIN 0
+#define ESTATE_ENTERED 1
+#define ESTATE_LAST_ITER 2
+    int eval_state = ESTATE_BEGIN;
+    int iter;
     Parser subparser;
     mixed piece;
     array exec;
@@ -1292,7 +1405,7 @@ class Frame
 			"when resuming parse.\n");
 #endif
       object ignored;
-      [ignored, fn, iter, raw_content, subparser, piece, exec, tags_added,
+      [ignored, eval_state, iter, raw_content, subparser, piece, exec, tags_added,
        ctx->new_runtime_tags] = state;
       m_delete (ctx->unwind_state, this);
       if (!sizeof (ctx->unwind_state)) ctx->unwind_state = 0;
@@ -1316,7 +1429,7 @@ class Frame
 	atypes = raw_args & tag->req_arg_types;
 	if (sizeof (atypes) < sizeof (tag->req_arg_types)) {
 	  array(string) missing = sort (indices (tag->req_arg_types - atypes));
-	  rxml_error ("Required " +
+	  rxml_fatal ("Required " +
 		      (sizeof (missing) > 1 ?
 		       "arguments " + String.implode_nicely (missing) + " are" :
 		       "argument " + missing[0] + " is") + " missing.\n");
@@ -1353,7 +1466,7 @@ class Frame
       foreach (tag->result_types, Type rtype)
 	if (ptype->subtype_of (rtype)) {result_type = rtype; break;}
       if (!result_type)		// Sigh..
-	rxml_error (
+	rxml_fatal (
 	  "Tag returns " +
 	  String.implode_nicely ([array(string)] tag->result_types->name, "or") +
 	  " but " + [string] parser->type->name + " is expected.\n");
@@ -1361,17 +1474,39 @@ class Frame
     if (!content_type) content_type = tag->content_type || result_type;
 
     mixed err = catch {
-      if (!fn) fn = this->do_enter ? this->do_enter (ctx->id) : 1; // Might unwind.
+      if (eval_state == ESTATE_BEGIN)
+	if (array|function(RequestID,void|mixed:array) do_enter =
+	    [array|function(RequestID,void|mixed:array)] this->do_enter) {
+	  if (!exec) exec = do_enter (ctx->id);	// Might unwind.
+	  if (exec) {
+	    mixed res = _exec_array (parser, exec); // Might unwind.
+	    if (flags & FLAG_STREAM_RESULT) {
+#ifdef DEBUG
+	      if (ctx->unwind_state)
+		error ("Internal error: Clobbering unwind_state to do streaming.\n");
+	      if (piece != Void)
+		error ("Internal error: Thanks, we think about how nice it must "
+		       "be to play the harmonica...\n");
+#endif
+	      ctx->unwind_state = (["stream_piece": res]);
+	      throw (this);
+	    }
+	  }
+	}
+      eval_state = ESTATE_ENTERED;
 
       do {
-	if (!iter) {
-	  iter = fn, fn = 0;
-	  while (functionp (iter)) { // Got a function from do_enter.
-	    int|function(RequestID:int|function) newiter =
-	      [int|function(RequestID:int|function)] iter (ctx->id); // Might unwind.
-	    if (newiter) fn = iter;
-	    iter = newiter;
+	if (eval_state != ESTATE_LAST_ITER) {
+	  int|function(RequestID:int) do_iterate =
+	    [int|function(RequestID:int)] this->do_iterate;
+	  if (intp (do_iterate)) {
+	    iter = [int] do_iterate || 1;
+	    eval_state = ESTATE_LAST_ITER;
 	  }
+	  else
+	    if (!(iter = (/*[function(RequestID:int)]HMM*/ do_iterate
+			 ) (ctx->id))) // Might unwind.
+	      eval_state = ESTATE_LAST_ITER;
 	}
 	ENTER_SCOPE (ctx, this);
 	for (; iter > 0; iter--) {
@@ -1400,9 +1535,9 @@ class Frame
 		if (content_type->sequential) piece = res + piece;
 		else if (piece == Void) piece = res;
 		if (piece != Void) {
-		  int|array|function(RequestID,void|mixed:array) do_return;
+		  array|function(RequestID,void|mixed:array) do_return;
 		  if ((do_return =
-		       [int|array|function(RequestID,void|mixed:array)]
+		       [array|function(RequestID,void|mixed:array)]
 		       this->do_return) &&
 		      functionp (do_return)) {
 		    if (!exec) exec = do_return (ctx->id, piece); // Might unwind.
@@ -1446,8 +1581,8 @@ class Frame
 	    subparser = 0;
 	  }
 
-	  if (int|array|function(RequestID,void|mixed:array) do_return =
-	      [int|array|function(RequestID,void|mixed:array)] this->do_return) {
+	  if (array|function(RequestID,void|mixed:array) do_return =
+	      [array|function(RequestID,void|mixed:array)] this->do_return) {
 	    if (!exec)
 	      exec = functionp (do_return) ?
 		([function(RequestID,void|mixed:array)] do_return) (
@@ -1470,7 +1605,8 @@ class Frame
 	  }
 
 	}
-      } while (fn);
+	LEAVE_SCOPE (ctx, this);
+      } while (eval_state != ESTATE_LAST_ITER);
 
       if (!this->do_return && result == Void && content_type->subtype_of (result_type))
 	result = content;
@@ -1481,9 +1617,8 @@ class Frame
       }
     };
 
-    LEAVE_SCOPE (ctx, this);
-
     if (err) {
+      LEAVE_SCOPE (ctx, this);
       string action;
       if (objectp (err) && ([object] err)->thrown_at_unwind) {
 	mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state;
@@ -1526,8 +1661,8 @@ class Frame
 	}
 	else action = "break";	// Some other reason - back up to the top.
 
-	ustate[this] = ({err, fn, iter, raw_content, subparser, piece, exec, tags_added,
-			 ctx->new_runtime_tags});
+	ustate[this] = ({err, eval_state, iter, raw_content, subparser, piece,
+			 exec, tags_added, ctx->new_runtime_tags});
       }
       else {
 	ctx->handle_exception (err, parser); // May throw.
@@ -1912,7 +2047,7 @@ class Type
 
   void type_check (mixed val);
   //! Checks whether the given value is a valid one of this type. Type
-  //! errors are thrown with RXML.rxml_error().
+  //! errors are thrown with RXML.rxml_fatal().
 
   Type clone()
   //! Returns a copy of the type.
