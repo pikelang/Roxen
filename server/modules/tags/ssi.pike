@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.29 2000/04/30 02:58:03 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.30 2000/06/23 16:58:40 mast Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -302,7 +302,7 @@ string modified(mapping m, RequestID id) {
   return _modified("modified", m, id);
 }
 
-array(string) tag_echo(string tag, mapping m, RequestID id)
+array(string) simpletag_echo(string tag, mapping m, string c, RequestID id)
 {
   if(!m->var)
   {
@@ -393,7 +393,7 @@ string get_var(string var, RequestID id)
   return 0;
 }
 
-array(string) tag_printenv(string t, mapping m, RequestID id) {
+array(string) simpletag_printenv(string t, mapping m, string c, RequestID id) {
   string res="";
   NOCACHE();
   if(id->misc->ssi_variables)
@@ -423,7 +423,7 @@ string fix_var(string s, RequestID id) {
   return s; //FIXME: No in-string-substitution yet.
 }
 
-array(string) tag_config(string tag, mapping m, RequestID id)
+array(string) simpletag_config(string tag, mapping m, string c, RequestID id)
 {
   if (m->sizefmt) {
     m->sizefmt=fix_var(m->sizefmt, id);
@@ -443,7 +443,7 @@ array(string) tag_config(string tag, mapping m, RequestID id)
   return ({ "" });
 }
 
-string|array(string) tag_include(string tag, mapping m, RequestID id)
+string|array(string) simpletag_include(string tag, mapping m, string c, RequestID id)
 {
   if(!m->virtual && !m->file)
     return ({ id->misc->ssi_errmsg||"Hm? #include what, my dear?" });
@@ -456,7 +456,7 @@ string|array(string) tag_include(string tag, mapping m, RequestID id)
   return ret;
 }
 
-string tag_set(string tag, mapping m, RequestID id)
+string simpletag_set(string tag, mapping m, string c, RequestID id)
 {
   if(m->var && m->value)
   {
@@ -469,7 +469,7 @@ string tag_set(string tag, mapping m, RequestID id)
   return "";
 }
 
-array(string) tag_fsize(string tag, mapping m, RequestID id)
+array(string) simpletag_fsize(string tag, mapping m, string c, RequestID id)
 {
   if(!m->virtual && !m->file)
     return ({ id->misc->ssi_errmsg||"No file given." });
@@ -491,7 +491,7 @@ array(string) tag_fsize(string tag, mapping m, RequestID id)
   return ({ Roxen.strftime(id->misc->ssi_timefmt || "%c", s[3]) });
 }
 
-string|array(string) tag_exec(string tag, mapping m, RequestID id)
+string|array(string) simpletag_exec(string tag, mapping m, string c, RequestID id)
 {
   if(m->cgi) {
     if(m->cache)
@@ -523,16 +523,18 @@ string|array(string) tag_exec(string tag, mapping m, RequestID id)
   return ({ id->misc->ssi_errmsg||"No arguments given." });
 }
 
-mapping query_tag_callers() {
+mapping query_simpletag_callers()
+{
+  int flags = RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_COMPAT_PARSE;
   return ([
-    "!--#echo":tag_echo,
-    "!--#exec":tag_exec,
-    "!--#flastmod":tag_fsize,
-    "!--#fsize":tag_fsize,
-    "!--#set":tag_set,
-    "!--#include":tag_include,
-    "!--#config":tag_config,
-    "!--#printenv":tag_printenv,
-    "!--#printenv--":tag_printenv
+    "!--#echo": ({flags, simpletag_echo}),
+    "!--#exec": ({flags, simpletag_exec}),
+    "!--#flastmod": ({flags, simpletag_fsize}),
+    "!--#fsize": ({flags, simpletag_fsize}),
+    "!--#set": ({flags, simpletag_set}),
+    "!--#include": ({flags, simpletag_include}),
+    "!--#config": ({flags, simpletag_config}),
+    "!--#printenv": ({flags, simpletag_printenv}),
+    "!--#printenv--": ({flags, simpletag_printenv})
   ]);
 }

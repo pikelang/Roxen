@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.15 2000/05/01 06:25:19 nilsson Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.16 2000/06/23 16:58:39 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -46,10 +46,10 @@ inline string ns_color(array (int) col)
   return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
 }
 
-array(int|string) tag_body(string t, mapping args, RequestID id)
+static int init_wiretap_stack (mapping(string:string) args, RequestID id)
 {
   int changed=0;
-  int cols=(args->bgcolor||args->text||args->link||args->alink||args->vlink);
+  mixed cols=(args->bgcolor||args->text||args->link||args->alink||args->vlink);
 
 #define FIX(Y,Z,X) do{ \
   if(!args->Y || args->Y==""){ \
@@ -84,18 +84,17 @@ array(int|string) tag_body(string t, mapping args, RequestID id)
 
   id->misc->wiretap_stack = ({});
 
-  if(changed && QUERY(colormode))
-    return ({1, "body", args });
-  return ({1});
+  return changed;
 }
 
-array(int|string) push_color(string tagname, mapping args, RequestID id)
+static int push_color (string tagname, mapping(string:string) args, RequestID id)
 {
   int changed;
   if(!id->misc->wiretap_stack)
-    tag_body("body", ([]), id);
+    init_wiretap_stack (([]), id);
 
-  id->misc->wiretap_stack += ({ ({ tagname, id->misc->defines->fgcolor, id->misc->defines->bgcolor }) });
+  id->misc->wiretap_stack +=
+    ({ ({ tagname, id->misc->defines->fgcolor, id->misc->defines->bgcolor }) });
 
 #undef FIX
 #define FIX(X,Y) if(args->X && args->X!=""){ \
@@ -111,17 +110,14 @@ array(int|string) push_color(string tagname, mapping args, RequestID id)
   FIX(text,fgcolor);
 #undef FIX
 
-  if(changed && QUERY(colormode))
-    return ({1, tagname, args });
-  return ({1});
+  return changed;
 }
 
-array(int) pop_color(string tagname, mapping args, RequestID id)
+static void pop_color (string tagname, RequestID id)
 {
   array c = id->misc->wiretap_stack;
   if(c && sizeof(c)) {
     int i;
-    tagname = tagname[1..];
 
     for(i=0; i<sizeof(c); i++)
       if(c[-i-1][0]==tagname)
@@ -133,28 +129,103 @@ array(int) pop_color(string tagname, mapping args, RequestID id)
 
     id->misc->wiretap_stack = c[..sizeof(c)-i-2];
   }
-  return ({1});
+}
+
+class TagBody
+{
+  inherit RXML.Tag;
+  string name;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_COMPAT_PARSE|RXML.FLAG_NO_PREFIX;
+
+  void create (string _name) {name = _name;}
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    string raw_tag_text;
+
+    array do_return (RequestID id)
+    {
+      args = mkmapping (map (indices (args), lower_case), values (args));
+//       werror ("body " + name + " %O\n", args);
+//       werror ("raw_tag_text: %O\n", raw_tag_text);
+      if(init_wiretap_stack (args, id) && QUERY(colormode))
+	return ({propagate_tag (args)});
+      return ({propagate_tag()});
+    }
+  }
+}
+
+class TagPushColor
+{
+  inherit RXML.Tag;
+  string name;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_COMPAT_PARSE|RXML.FLAG_NO_PREFIX;
+
+  void create (string _name) {name = _name;}
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    string raw_tag_text;
+
+    array do_return (RequestID id)
+    {
+      args = mkmapping (map (indices (args), lower_case), values (args));
+//       werror ("push " + name + " %O\n", args);
+//       werror ("raw_tag_text: %O\n", raw_tag_text);
+      if(push_color (name, args, id) && QUERY(colormode))
+	return ({propagate_tag (args)});
+      return ({propagate_tag()});
+    }
+  }
+}
+
+class TagPopColor
+{
+  inherit RXML.Tag;
+  string name;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_COMPAT_PARSE|RXML.FLAG_NO_PREFIX;
+
+  void create (string _name) {name = "/" + _name;}
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    string raw_tag_text;
+
+    array do_return (RequestID id)
+    {
+//       werror ("pop " + name + "\n");
+//       werror ("raw_tag_text: %O\n", raw_tag_text);
+      return ({propagate_tag()});
+    }
+  }
 }
 
 
 // --------------- Tag and container registration ----------------------
 
-mapping query_tag_callers()
+RXML.TagSet query_tag_set()
 {
-  mapping tags=([]);
-  foreach(query("colorparsing"), string t)
-  {
-    switch(t)
+  if (!module_tag_set) {
+    array(RXML.Tag) tags = ({TagColorScope()});
+    foreach(query("colorparsing"), string t)
     {
-    case "body":
-      tags[t] = tag_body;
-      break;
-    default:
-      tags[t] = push_color;
-      tags["/"+t]=pop_color;
+      array(string) variants =
+	Array.uniq (({t, t = lower_case (t), upper_case (t), String.capitalize (t)}));
+      switch(t)
+      {
+	case "body":
+	  tags += map (variants, TagBody);
+	  break;
+	default:
+	  tags += map (variants, TagPopColor) + map (variants, TagPushColor);
+      }
     }
+    module_tag_set = RXML.TagSet (module_identifier(), tags);
   }
-  return tags;
+  return module_tag_set;
 }
 
 
@@ -179,7 +250,7 @@ class TagColorScope {
 
 #define LOCAL_POP(X) if(X) id->misc->defines->X=X
     array do_return(RequestID id) {
-      pop_color("/colorscope",0,id);
+      pop_color("colorscope",id);
       LOCAL_POP(link);
       LOCAL_POP(alink);
       LOCAL_POP(vlink);
