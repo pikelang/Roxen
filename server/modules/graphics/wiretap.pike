@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.21 2000/09/16 20:23:48 per Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.22 2000/11/09 23:15:59 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -283,8 +283,10 @@ class TagColorScope {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "colorscope":#"<desc cont>Makes it possible to change the autodetected
-colors within the tag. Useful when out-of-order parsing occurs, e.g.
+  "colorscope":#"<desc cont='cont'><p><short>
+
+ Makes it possible to change the autodetected colors within the
+ tag.</short> Useful when out-of-order parsing occurs, e.g.</p>
 <ex type=box>
 <define tag=\"hello\">
   <colorscope bgcolor=\"red\">
@@ -300,24 +302,24 @@ colors within the tag. Useful when out-of-order parsing occurs, e.g.
 </ex>
 </desc>
 
-<attr name=text value=color>
- Set the text color within the scope.
+<attr name='text' value='color'><p>
+ Set the text color within the scope.</p>
 </attr>
 
-<attr name=bgcolor value=color>
- Set the background color within the scope.
+<attr name='bgcolor' value='color'><p>
+ Set the background color within the scope.</p>
 </attr>
 
-<attr name=link value=color>
- Set the link color within the scope.
+<attr name='link' value='color'><p>
+ Set the link color within the scope.</p>
 </attr>
 
-<attr name=alink value=color>
- Set the active link color within the scope.
+<attr name='alink' value='color'><p>
+ Set the active link color within the scope.</p>
 </attr>
 
-<attr name=vlink value=color>
- Set the visited link color within the scope.
+<attr name='vlink' value='color'><p>
+ Set the visited link color within the scope.</p>
 </attr>"
 ]);
 #endif

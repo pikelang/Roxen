@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.86 2000/11/03 01:23:34 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.87 2000/11/09 23:15:56 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -256,27 +256,27 @@ class TagPathplugin
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"emit#path":({ #"<desc plugin><short>
+"emit#path":({ #"<desc plugin='plugin'><p><short>
  Prints paths.</short> This plugin traverses over all directories in
- the path from the root up to the current one.
+ the path from the root up to the current one.</p>
 </desc>
 
-<attr name='trim' value='string'>
+<attr name='trim' value='string'><p>
  Removes all of the remaining path after and including the specified
- string.
+ string.</p>
 </attr>
 
-<attr name='skip' value='number'>
+<attr name='skip' value='number'><p>
  Skips the 'number' of slashes ('/') specified, with beginning from
- the root.
+ the root.</p>
 </attr>",
 	       ([
-"&_.name;":#"<desc ent>
- Returns the name of the most recently traversed directory.
+"&_.name;":#"<desc ent><p>
+ Returns the name of the most recently traversed directory.</p>
 </desc>",
 
-"&_.path;":#"<desc ent>
- Returns the path to the most recently traversed directory.
+"&_.path;":#"<desc ent><p>
+ Returns the path to the most recently traversed directory.</p>
 </desc>"
 	       ])
 	    }) ]);

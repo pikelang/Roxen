@@ -5,7 +5,7 @@
  */
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: atlas.pike,v 1.7 2000/09/10 16:39:15 nilsson Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.8 2000/11/09 23:15:59 kuntri Exp $";
 
 #include <module.h>
 
@@ -146,3 +146,46 @@ mixed generate_image(mapping state, RequestID id)
 
   return img;
 }
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+
+"atlas":#"<desc cont='cont'><p><short>
+
+Creates a world map.</short></p>
+
+</desc>
+",
+
+"atlas-country":#"<desc cont='cont'><p><short>
+
+</short></p>
+
+</desc>
+
+<attr name='domain'>
+
+</attr>
+
+<attr name='name'>
+
+</attr>",
+
+"emit#atlas":#"<desc plugin='plugin'><p><short>
+
+</short></p>
+
+</desc>
+
+<attr name='countries'>
+
+</attr>
+
+<attr name='regions'>
+
+</attr>",
+
+
+]);
+#endif

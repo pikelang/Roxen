@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.135 2000/10/13 13:30:27 kuntri Exp $";
+constant cvs_version = "$Id: business.pike,v 1.136 2000/11/09 23:15:59 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Business graphics";
@@ -808,222 +808,256 @@ mixed draw_callback(mapping args, object id)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"diagram":({ #"<desc cont><short>
+"diagram":({ #"<desc cont='cont'><p><short>
  The <tag>diagram</tag> tag is used to draw pie, bar, or line charts
- as well as graphs. </short> It is quite complex with six internal
- tags.
+ as well as graphs.</short> It is quite complex with six internal
+ tags.</p>
 </desc>
 
-<attr name='3d' value='number'>
+<attr name='3d' value='number'><p>
  Draws a pie-chart on top of a cylinder, takes the height in pixels of the
- cylinder as argument.
+ cylinder as argument.</p>
  </attr>
 
- <attr name='background' value='path'>
- Use an image as background. Valid types are gif-, jpeg- or pnm-images.
+ <attr name='background' value='path'><p>
+ Use an image as background. Valid types are gif-, jpeg- or pnm-images.</p>
  </attr>
 
- <attr name='bgcolor' value='color'>
- Set the background color to use for anti-aliasing.
+ <attr name='bgcolor' value='color'><p>
+ Set the background color to use for anti-aliasing.</p>
  </attr>
 
- <attr name='center' value='number'>
- Centers a pie chart around the <i>n</i>th slice.
+ <attr name='center' value='number'><p>
+ Centers a pie chart around the <i>n</i>th slice.</p>
  </attr>
 
- <attr name='eng'>
- Write numbers in engineering fashion, i.e like 1.2M.
+ <attr name='eng'><p>
+ Write numbers in engineering fashion, i.e like 1.2M.</p>
  </attr>
 
- <attr name='font' value='font'>
+ <attr name='font' value='font'><p>
  Use this font. Can be overridden in the <tag>legend</tag>,
- <tag>xaxis</tag>, <tag>yaxis</tag> and <tag>names</tag> tags.
+ <tag>xaxis</tag>, <tag>yaxis</tag> and <tag>names</tag> tags.</p>
  </attr>
 
- <attr name='fontsize' value='number'>
- Height of the text in pixels.
+ <attr name='fontsize' value='number'><p>
+ Height of the text in pixels.</p>
  </attr>
 
- <attr name='height' value='number'>
- Height of the diagram in pixels. Will not have effect below 100.
+ <attr name='height' value='number'><p>
+ Height of the diagram in pixels. Will not have effect below 100.</p>
  </attr>
 
- <attr name='horgrid'>
- Draw a horizontal grid.
+ <attr name='horgrid'><p>
+ Draw a horizontal grid.</p>
  </attr>
 
- <attr name='labelcolor' value='color'>
- Sets the color for the labels of the axis.
+ <attr name='labelcolor' value='color'><p>
+ Sets the color for the labels of the axis.</p>
  </attr>
 
- <attr name='legendfontsize' value='number'>
- Height of the legend text. <att>fontsize</att> is used if this is undefined.
+ <attr name='legendfontsize' value='number'><p>
+ Height of the legend text. <att>fontsize</att> is used if this is
+ undefined.</p>
  </attr>
 
- <attr name='name' value='string'>
- Write a name at the top of the diagram.
+ <attr name='name' value='string'><p>
+ Write a name at the top of the diagram.</p>
  </attr>
 
- <attr name='namecolor' value='color'>
- Set the color of the name, by default <att>textcolor</att>.
+ <attr name='namecolor' value='color' default='textcolor'><p>
+ Set the color of the name, by default set by the <att>textcolor</att>
+ attribute.</p>
  </attr>
 
- <attr name='namefont' value='font'>
- Set the font for the diagram name.
+ <attr name='namefont' value='font'><p>
+ Set the font for the diagram name.</p>
  </attr>
 
- <attr name='namesize' value='number'>
- Sets the height of the name, by default <att>fontsize</att>.
+ <attr name='namesize' value='number'><p>
+ Sets the height of the name, by default <att>fontsize</att>.</p>
  </attr>
 
- <attr name='neng'>
- As eng, but 0.1-1.0 is written as 0.xxx.
+ <attr name='neng'><p>
+ As eng, but 0.1-1.0 is written as 0.xxx.</p>
  </attr>
 
- <attr name='notrans'>
- Make bgcolor opaque.
+ <attr name='notrans'><p>
+ Make bgcolor opaque.</p>
  </attr>
 
- <attr name='rotate' value='degree'>
- Rotate a pie chart this much.
+ <attr name='rotate' value='degree'><p>
+ Rotate a pie chart this much.</p>
  </attr>
 
- <attr name='textcolor'>
- Set the color for all text.
+ <attr name='textcolor'><p>
+ Set the color for all text.</p>
  </attr>
 
- <attr name='tonedbox' value='color1,color2,color3,color4'>
+ <attr name='tonedbox' value='color1,color2,color3,color4'><p>
  Create a background shading between the colors assigned to each of the
- four corners.
+ four corners.</p>
  </attr>
 
- <attr name='quant' value='number'>
+ <attr name='quant' value='number'><p>
  The number of colors that the result image should have. Default is 128 if
- tonedbox is used and 32 otherwise.
+ tonedbox is used and 32 otherwise.</p>
  </attr>
 
- <attr name='turn'>
- Turn the diagram 90 degrees. Useful when printing large diagrams.
+ <attr name='turn'><p>
+ Turn the diagram 90 degrees. Useful when printing large diagrams.</p>
  </attr>
 
- <attr name='type' value='sumbars|normsum|line|bar|pie|graph'>
-  The type of diagram. This attribute is required.
+ <attr name='type' value='sumbars|normsum|line|bar|pie|graph' required='required'><p>
+  The type of diagram. This attribute is required.</p>
  </attr>
 
- <attr name='vertgrid'>
- Draw vertical grid lines.
+ <attr name='vertgrid'><p>
+ Draw vertical grid lines.</p>
  </attr>
 
- <attr name='voidsep' value='string'>
- Change the string that means no such value, by default 'VOID'.
+ <attr name='voidsep' value='string'><p>
+ Change the string that means no such value, by default 'VOID'.</p>
  </attr>
 
- <attr name='width' value='number'>
- Set the width of the diagram in pixels. Values below 100 will not take effect.  This attribute is required.
+ <attr name='width' value='number' required='required'><p>
+ Set the width of the diagram in pixels. Values below 100 will not take effect.  This attribute is required.</p>
  </attr>
 
- <attr name='xgridspace' value='number'>
+ <attr name='xgridspace' value='number'><p>
  Set the space between two vertical grid lines. The unit is the same as
- for the data.
+ for the data.</p>
  </attr>
 
- <attr name='ygridspace'>
+ <attr name='ygridspace'><p>
  Set the space between two horizontal grid lines. The unit is the same
- as for the data.
+ as for the data.</p>
  </attr>
 
  <p>Regular <tag>img</tag> arguments will be passed on to the generated
  <tag>img</tag> tag.</p>",
 
+//-------------------------------------------------------------------------
+
+	     ([
 
 
-	     (["data":#"<desc cont><short>This tag contains the data the diagram is to visualize </short> It is required that the data is presented to the tag in a tabular or newline separated form.</desc>
+"data":#"<desc cont='cont'><p><short>
+ This tag contains the data the diagram is to visualize </short> It is
+ required that the data is presented to the tag in a tabular or
+ newline separated form.</p>
+</desc>
 
- <attr name='form' value='column|row'>
-  How to interpret the tabular data, by default row.
+ <attr name='form' value='column|row'><p>
+  How to interpret the tabular data, by default row.</p>
   </attr>
 
- <attr name='lineseparator' value='string'>
- Use the specified string as lineseparator instead of newline.
+ <attr name='lineseparator' value='string'><p>
+ Use the specified string as lineseparator instead of newline.</p>
  </attr>
 
- <attr name='noparse'>
- Do not parse the contents by the RXML parser, before data extraction is done.
+ <attr name='noparse'><p>
+ Do not parse the contents by the RXML parser, before data extraction is done.</p>
  </attr>
 
- <attr name='separator' value='string'>
- Set the separator between elements, by default tab.
+ <attr name='separator' value='string'><p>
+ Set the separator between elements, by default tab.</p>
  </attr>
 
- <attr name='xnames' value='number'>
+ <attr name='xnames' value='number'><p>
  If given, treat the first row or column as names for the data to
  come. If <att>xnames</att> is set to a number N, N lines or columns
  are used. The name will be written along the pie slice or under the
- bar.
+ bar.</p>
  </attr>
 
- <attr name='xnamesvert'>
- Write the <att>xnames</att> vertically.
+ <attr name='xnamesvert'><p>
+ Write the <att>xnames</att> vertically.</p>
  </attr>",
 
+//-----------------------------------------------------------------------
 
-	       "colors":#"<desc cont><short>This tag sets the colors for different pie slices, bars or lines.</short> The colors are presented to the tag in a tab separated list.</desc>
+	       "colors":#"<desc cont='cont'><p><short>
+ This tag sets the colors for different pie slices, bars or
+ lines.</short> The colors are presented to the tag in a tab separated
+ list.</p>
+</desc>
 
- <attr name='separator' value='string'>
- Set the separator between colors, by default tab.
+ <attr name='separator' value='string'><p>
+ Set the separator between colors, by default tab.</p>
  </attr>",
 
-	       "legend":#"<desc cont><short>A separate legend with description of the different pie slices, bars or lines.</short>The titles are presented to the tag in a tab separated list.</desc>
+//------------------------------------------------------------------------
 
- <attr name='separator' value='string'>
- Set the separator between legends, by default tab.
+	       "legend":#"<desc cont='cont'><p><short>
+ A separate legend with description of the different pie slices, bars
+ or lines.</short>The titles are presented to the tag in a tab
+ separated list.</p>
+</desc>
+
+ <attr name='separator' value='string'><p>
+ Set the separator between legends, by default tab.</p>
  </attr>",
 
-	       "xaxis":#"<desc tag><short>Used for specifying the quantity and unit of the x-axis, as well as its scale, in a graph.</short> The <tag>yaxis</tag> tag uses the same attributes.</desc>
+//-------------------------------------------------------------------------
 
- <attr name='start' value='float'>
+	       "xaxis":#"<desc tag='tag'><p><short>
+ Used for specifying the quantity and unit of the x-axis, as well as
+ its scale, in a graph.</short> The <tag>yaxis</tag> tag uses the same
+ attributes.</p>
+</desc>
+
+ <attr name='start' value='float'><p>
  Limit the start of the diagram at this value. If set to <i>min</i> the
- axis starts at the lowest value in the data.
+ axis starts at the lowest value in the data.</p>
  </attr>
 
- <attr name='stop' value='float'>
- Limit the end of the diagram at this value.
+ <attr name='stop' value='float'><p>
+ Limit the end of the diagram at this value.</p>
  </attr>
 
- <attr name='quantity' value='string'>
- Set the name of the quantity of this axis.
+ <attr name='quantity' value='string'><p>
+ Set the name of the quantity of this axis.</p>
  </attr>
 
- <attr name='unit' value='string'>
- Set the name of the unit of this axis.
+ <attr name='unit' value='string'><p>
+ Set the name of the unit of this axis.</p>
  </attr>",
 
-	       "yaxis":#"<desc tag><short>
+//------------------------------------------------------------------------
+
+	       "yaxis":#"<desc tag='tag'><p><short>
  Used for specifying the quantity and unit of the y-axis, as well as
  its scale, in a graph or line chart.</short>Se the <tag>xaxis</tag>
- tag for a complete list of attributes.</desc>",
+ tag for a complete list of attributes.</p>
+</desc>",
 
-	       "xnames":#"<desc cont><short>
+//------------------------------------------------------------------------
+
+	       "xnames":#"<desc cont='cont'><p><short>
  Separate tag that can be used to give names to put along the pie
  slices or under the bars.</short> The datanames are presented to the
  tag as a tab separated list. This tag is useful when the diagram is
  dynamically created. The <tag>ynames</tag> tag uses the same
- attributes.</desc>
+ attributes.</p>
+</desc>
 
- <attr name='separator' value='string'>
- Set the separator between names, by default tab.
+ <attr name='separator' value='string' default='tab'><p>
+ Set the separator between names, by default tab.</p>
  </attr>
 
- <attr name='orient' value='vert|horiz'>
- How to write names, vertically or horizontally.
+ <attr name='orient' value='vert|horiz'><p>
+ How to write names, vertically or horizontally.</p>
  </attr>",
 
-"ynames":#"<desc cont><short>
+//-------------------------------------------------------------------------
+
+"ynames":#"<desc cont='cont'><p><short>
  Separate tag that can be used to give names to put along the pie
  slices or under the bars.</short> The datanames are presented to the
  tag as a tab separated list. This tag is useful when the diagram is
- dynamically created. See the <tag>xnames</tag> tag for a complete list of
- attributes.
+ dynamically created. See the <tag>xnames</tag> tag for a complete
+ list of attributes.</p>
 
 <p>Some examples:</p>
 

@@ -16,7 +16,7 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed", "graphic_text" }));
 }
 
-constant cvs_version = "$Id: counter.pike,v 1.38 2000/09/10 16:37:49 nilsson Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.39 2000/11/09 23:15:57 kuntri Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphical Counter";
 constant thread_safe = 1;
@@ -37,8 +37,8 @@ void create()
 }
 
 mapping tagdocumentation() {
-  string args=" This tag relays the following attributes to gtext; "+String.implode_nicely(g_args)+
-    ", and the following to accessed; "+String.implode_nicely(a_args)+". Refer to these tags documentation "
+  string args=" This tag relays the following attributes to <xref href='gtext.tag' />; "+String.implode_nicely(g_args)+
+    ", and the following to <xref href='../information/accessed.tag' />; "+String.implode_nicely(a_args)+". Refer to these tags documentation "
     "for more information.";
   return ([ "counter":"<desc tag>"+module_doc+args+"</desc>",
 	    "counter":"<desc tag>"+replace(module_doc, "gtext", "gtext-url")+args+"</desc>"
