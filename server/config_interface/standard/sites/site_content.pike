@@ -156,7 +156,6 @@ do                                                                      \
 mapping current_compile_errors = ([]);
 string buttons( Configuration c, string mn, RequestID id )
 {
-  werror ("foo\n");
   RoxenModule mod = c->find_module( replace( mn,"!","#" ) );
   if( sizeof( glob( "*.x", indices( id->variables ) ) ) )
   {
