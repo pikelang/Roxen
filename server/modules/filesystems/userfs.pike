@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.59 2000/07/03 15:26:43 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.60 2000/07/31 22:34:36 jhs Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User file system";
 constant module_doc  = 
@@ -396,4 +396,25 @@ string query_name()
 	 (QUERY(homedir)
 	  ? "Pubdir: <i>" + QUERY(pdir) +"</i>"
 	  : "mounted from: <i>" + QUERY(searchpath) + "</i>");
+}
+
+string status()
+{
+  if(!my_configuration()->auth_module)
+    return "<font color='red'>You need an <i>authentication / user "
+	   "database</i> module in this virtual server to resolve "
+	   "your users' homedirectories.</font>";
+}
+
+mapping query_action_buttons()
+{
+  if(!my_configuration()->auth_module)
+    return ([ "Add standard user database module to server"
+	      : add_standard_userdb ]);
+  return ([]);
+}
+
+void add_standard_userdb()
+{
+  module_dependencies(my_configuration(), ({ "userdb" }) );
 }
