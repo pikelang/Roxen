@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.64 2000/01/07 05:05:26 mast Exp $ */
+/* $Id: module.pike,v 1.65 2000/01/10 09:05:55 nilsson Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -7,7 +7,7 @@ RoxenModule this = this_object();
 mapping(string:array(int)) error_log=([]);
 
 constant is_module = 1;
-constant module_type   = MODULE_PARSER;
+constant module_type   = MODULE_ZERO;
 constant module_name   = "Unnamed module";
 constant module_doc    = "Undocumented";
 constant module_unique = 1;
@@ -356,7 +356,6 @@ int setvars( mapping (string:mixed) vars )
 {
   string v;
   int err;
-
   foreach( indices( vars ), v )
     if(variables[v])
       set( v, vars[v] );
