@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.61 1998/05/22 09:08:06 per Exp $
+/* $Id: wizard.pike,v 1.62 1998/05/28 10:43:26 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -263,7 +263,7 @@ string compress_state(mapping state)
   if(sizeof(indices(gz)))
   {
     string from2 = gz->deflate()->deflate(from);
-    if(strlen(from2)<strlen(from)) from=from2;
+    /*if(strlen(from2)<strlen(from))*/ from=from2;
   }
   return MIME.encode_base64( from );
 }
