@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.58 1998/10/16 20:27:07 grubba Exp $
+# $Id: configure.in,v 1.59 1998/10/16 20:28:25 grubba Exp $
 #
 
 prefix=$PWD
@@ -43,7 +43,7 @@ AC_ARG_WITH(profiling,            [  --with-profiling                 Add code u
 AC_ARG_WITH(readline,             [  --without-readline               No support for command line editing])
 AC_ARG_WITH(rtldebug,             [  --with-rtldebug                  Enable run-time level debug],[],[with_rtldebug=no])
 AC_ARG_WITH(ssleay,               [  --with-ssleay                    Enable the ssleay-module])
-AC_ARG_WITH(streamed_parser,      [ --with-streamed-parser            Enable the streamed-parser module])
+AC_ARG_WITH(streamed_parser,      [  --with-streamed-parser           Enable the streamed-parser module])
 AC_ARG_WITH(thread-trace,         [  --with-trace-threads             Enable individual tracing of threads])
 AC_ARG_WITH(threads,              [  --without-threads                No threads support])
 AC_ARG_WITH(zlib,                 [  --with(out)-zlib                 Support gzip compression],[],[with_zlib=yes])
