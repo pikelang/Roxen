@@ -24,6 +24,7 @@
 *.raw binary
 *.rc eol=crlf
 /server/tools/nt_service/roxen.rc !eol
+*.rgs eol=crlf
 *.tar binary
 *.ttf binary
 /server/nfonts/Andover.txt eol=crlf
