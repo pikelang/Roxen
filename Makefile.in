@@ -26,7 +26,7 @@ gdbm: force
 	-@(cd gdbm;$(MAKE) all)
 
 zlib: force
-	-@(cd zlib;$(MAKE) all)
+	-@(cd zlib;$(MAKE) libz.a)
 
 force:
 
@@ -48,9 +48,15 @@ verify_other:
 	@if test "@MAKE_ZLIB@" = "zlib"; then \
 	  $(MAKE) verify_zlib; \
 	fi
+	@if test "@MAKE_GMP@" = "gmp"; then \
+	  $(MAKE) verify_gmp; \
+	fi
 
 verify_zlib:
 	@(cd zlib;$(MAKE) test)
+
+verify_gmp:
+	@(cd gmp;$(MAKE) check)
 
 new_peep_engine:
 	@(cd pike/src;$(MAKE) new_peep_engine)
