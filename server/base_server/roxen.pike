@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.86 1997/07/20 03:40:20 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.87 1997/07/22 03:41:17 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2194,10 +2194,11 @@ varargs int main(int argc, array (string) argv)
   init_shuffler(); // No locking here.. Each process need one on it's own.
 #endif
   create_host_name_lookup_processes();
-  signal(signum("SIGUSR1"), exit_when_done);
-  signal(signum("SIGUSR2"), exit_when_done);
-  signal(signum("SIGHUP"), exit_when_done);
-  signal(signum("SIGINT"), exit_when_done);
+  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGHUP", "SIGINT" }), string sig) {
+    catch {
+      signal(signum(sig), exit_when_done);
+    };
+  }
 
   initiate_configuration_port( 1 );
   perror("Time to boot: "+(time()-start_time)+" seconds.\n");
