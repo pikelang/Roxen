@@ -1,10 +1,10 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.56 1998/02/20 00:58:15 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.57 1998/02/24 22:23:52 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
-int first;
+// int first;
 #if efun(gethrtime)
 # define HRTIME() gethrtime()
 # define HRSEC(X) ((int)((X)*1000000))
@@ -15,7 +15,9 @@ int first;
 # define SECHR(X) ((float)(X))
 #endif
 
+#ifdef PROFILE
 int req_time = HRTIME();
+#endif
 
 constant decode=roxen->decode;
 constant find_supports=roxen->find_supports;
@@ -23,15 +25,12 @@ constant version=roxen->version;
 constant handle=roxen->handle;
 constant _query=roxen->query;
 constant thepipe = roxen->pipe;
-import Simulate;
+constant _time=predef::time;
 
-
-function _time=predef::time;
 private static array(string) cache;
 private static int wanted_data, have_data;
 
 object conf;
-
 
 #include <roxen.h>
 #include <module.h>
@@ -48,20 +47,18 @@ string raw_url;
 int do_not_disconnect;
 
 mapping (string:string) variables = ([ ]);
-
 mapping (string:mixed) misc = ([ ]);
+mapping (string:string) cookies = ([ ]);
 
 multiset   (string) prestate     = (< >);
 multiset   (string) config       = (< >);
-multiset   (string) supports     = (< >);
+multiset   (string) supports;
+multiset (string) pragma    = (< >);
 
 string remoteaddr, host;
 
-array  (string) client      = ({ });
-array  (string) referer     = ({ });
-multiset (string) pragma      = (< >);
-
-mapping (string:string) cookies = ([ ]);
+array  (string) client;
+array  (string) referer;
 
 mapping file;
 
@@ -79,7 +76,7 @@ string raw;
 string query;
 string not_query;
 string extra_extension = ""; // special hack for the language module
-string data;
+string data, leftovers;
 array (int|string) auth;
 string rawauth, realauth;
 string since;
@@ -88,7 +85,7 @@ string since;
 // state variables.  Return 0 if more is expected, 1 if done, and -1
 // if fatal error.
 
-void end(string|void);
+void end(string|void a,int|void b);
 
 private void setup_pipe()
 {
@@ -98,10 +95,6 @@ private void setup_pipe()
     return;
   }
   if(!pipe) pipe=thepipe();
-#ifdef REQUEST_DEBUG
-  perror("REQUEST: Pipe setup.\n");
-#endif
-//  pipe->output(my_fd);
 }
 
 void send(string|object what, int|void len)
@@ -109,9 +102,6 @@ void send(string|object what, int|void len)
   if(!what) return;
   if(!pipe) setup_pipe();
   if(!pipe) return;
-#ifdef REQUEST_DEBUG
-  perror("REQUEST: Sending some data\n");
-#endif
   if(stringp(what))  pipe->write(what);
   else               pipe->input(what,len);
 }
@@ -137,8 +127,8 @@ string scan_for_query( string f )
 	  rest_query += "&" + http_decode_string( v );
 	else
 	  rest_query = http_decode_string( v );
+    rest_query=replace(rest_query, "+", "\000"); /* IDIOTIC STUPID STANDARD */
   } 
-  rest_query=replace(rest_query, "+", "\000"); /* IDIOTIC STUPID STANDARD */
   return f;
 }
 
@@ -217,21 +207,17 @@ private int parse_got(string s)
   multiset (string) sup;
   array mod_config;
   mixed f, line;
-  string a, b, linename, contents, real_raw;
+  string a, b, linename, contents;
   int config_in_url;
+
   
 //  roxen->httpobjects[my_id] = "Parsed data...";
-  real_raw = s;
-  s -= "\r"; // I just hate all thoose CR LF.
-  
-  if((s[-1] != '\n') || (search(s, "HTTP/") >= 0))
-    if(search(s, "\n\n") == -1)
-      return 0;
   raw = s;
-  
-  s = replace(s, "\t", " ");
-  
+
+  if(s[-1] != '\n' || search(s, "\r\n\r\n") == -1)
+    return 0;
 #if 0
+  /* This version is 8(!) times faster... */
   if(sscanf(s,"%s %s %s\n%s", method, f, prot, s) < 4)
   {
     if(sscanf(s,"%s %s\n", method, f) < 2)
@@ -243,23 +229,20 @@ private int parse_got(string s)
     method = "GET";
 #else
   {
-    array arr = s/"\n";
     // Defaults:
+    sscanf(s, "%s\r\n%s", line, s);
+    if(!line) return 0;
     prot = clientprot = "HTTP/0.9";
-    s="";
     f="/";
     method = "GET";
-    if (sizeof(arr[0])) {
-      array arr2 = arr[0]/" ";
+    if (sizeof(line)) 
+    {
+      array arr2 = line/" ";
       switch(sizeof(arr2)) {
       default:
       case 3:
-	if ((clientprot = arr2[-1]) != "HTTP/0.9") {
+	if ((clientprot = arr2[-1]) != "HTTP/0.9")
 	  prot = "HTTP/1.0";
-	  if (sizeof(arr)>1) {
-	    s = arr[1..]*"\n";
-	  }
-	}
 	f = arr2[1..sizeof(arr2)-2]*" ";
 	method = arr2[0];
 	break;
@@ -313,15 +296,12 @@ private int parse_got(string s)
 
   if(strlen(s))
   {
-    sscanf(real_raw, "%s\r\n\r\n%s", s, data);
+    sscanf(s, "%s\r\n\r\n%s", s, data);
 
-  /* We do _not_ want to parse the 'GET ...\n' line. /Per */
-    sscanf(s, "%*s\n%s", s); 
-
-    s = replace(s, "\n\t", ", ") - "\r"; 
-    // Handle rfc822 continuation lines and strip \r
+//     s = replace(s, "\n\t", ", ") - "\r"; 
+//     Handle rfc822 continuation lines and strip \r
   
-    foreach(s/"\n" - ({ "" }), line)
+    foreach(s/"\r\n" - ({ "" }), line)
     {
       linename=contents=0;
       sscanf(line, "%s:%s", linename, contents);
@@ -333,13 +313,13 @@ private int parse_got(string s)
 	if(strlen(contents))
 	{
 	  switch (linename) {
-	  case "content-length":	
+	  case "content-length":
 	    misc->len = (int)(contents-" ");
-	    
+	    if(!misc->len) continue;
 	    if(method == "POST")
 	    {
 	      if(!data) data="";
-	      int l = (int)(contents-" ")-1; /* Length - 1 */
+	      int l = misc->len-1; /* Length - 1 */
 	      wanted_data=l;
 	      have_data=strlen(data);
 
@@ -347,6 +327,7 @@ private int parse_got(string s)
 	      {
 		return 0;
 	      }
+	      leftovers = data[l+1..];
 	      data = data[..l];
 	      switch(lower_case(((misc["content-type"]||"")/";")[0]-" "))
 	      {
@@ -418,8 +399,11 @@ private int parse_got(string s)
 	    break;
 
 	  case "user-agent":
-	    sscanf(contents, "%s via", contents);
-	    client = contents/" " - ({ "" });
+	    if(!client)
+	    {
+	      sscanf(contents, "%s via", contents);
+	      client = contents/" " - ({ "" });
+	    }
 	    break;
 
 	    /* Some of M$'s non-standard user-agent info */
@@ -427,7 +411,7 @@ private int parse_got(string s)
 	  case "ua-color":	/* Color scheme */
 	  case "ua-os":		/* OS-name */
 	  case "ua-cpu":	/* CPU-type */
-	    /* None of the above are interresting or useful */
+	    /* None of the above are interresting or useful for us */
 	    /* IGNORED */
 	    break;
 
@@ -435,16 +419,15 @@ private int parse_got(string s)
 	    referer = contents/" ";
 	    break;
 	    
-	  case "extension":
+	   case "extension":
 #ifdef DEBUG
 	    perror("Client extension: "+contents+"\n");
 #endif
-	    linename="extension";
 	    
-	  case "connection":
+	   case "connection":
 	    contents = lower_case(contents);
 	    
-	  case "content-type":
+	   case "content-type":
 	    misc[linename] = lower_case(contents);
 	    break;
 
@@ -506,26 +489,16 @@ private int parse_got(string s)
 	    break;
 	    
 	  case "if-modified-since":
-//	    if(QUERY(IfModified))
-	      since=contents;
+	    since=contents;
 	    break;
 	    
-	  case "negotiate":
-	    misc["negotiate"]=contents;
-	    break;
-
 	  case "via":
-	    misc["via"]=contents;
-	    break;
-
 	  case "cache-control":
-	    misc["cache-control"]=contents;
-	    break;
-
-
+	  case "negotiate":
 	  case "forwarded":
-	    misc["forwarded"]=contents;
+	    misc[linename]=contents;
 	    break;
+
 #ifdef DEBUG
 	  default:
 	    /*   x-* headers are experimental.    */
@@ -537,8 +510,10 @@ private int parse_got(string s)
       }
     } 
   }
-  supports = find_supports(lower_case(client*" "));
-  
+  if(!client) client = ({ "unknown" });
+  if(!supports)
+    supports = find_supports(lower_case(client*" "));
+  if(!referer) referer = ({ });
   if(misc->proxyauth) {
     // The Proxy-authorization header should be removed... So there.
     mixed tmp1,tmp2;
@@ -557,9 +532,9 @@ private int parse_got(string s)
     config = prestate;
   else
     if(conf
+       && QUERY(set_cookie)
        && !cookies->RoxenUserID && strlen(not_query)
-       && not_query[0]=='/' && method!="PUT"
-       && QUERY(set_cookie))
+       && not_query[0]=='/' && method!="PUT")
     {
       if (!(QUERY(set_cookie_only_once) &&
 	    cache_lookup("hosts_for_cookie",remoteaddr))) {
@@ -573,32 +548,14 @@ private int parse_got(string s)
 
 void disconnect()
 {
-  if(do_not_disconnect)
-  {
-#ifdef REQUEST_DEBUG
-    perror("REQUEST: Not disconnecting...\n");
-#endif
-    return;
-  } 
-#ifdef REQUEST_DEBUG
-  perror("REQUEST: Disconnecting...\n");
-#endif
-  if(mappingp(file) && objectp(file->file)) 
-    if (file->file->no_destruct) 
-      file->file = 0;
-      // sslfile, or similar. object will be closed on return.
-    else
-      destruct(file->file);
-
+  if(do_not_disconnect)  return;
+  file = 0;
   my_fd = 0;
   destruct();
 }
 
-void end(string|void s)
+void end(string|void s, int|void keepit)
 {
-#ifdef REQUEST_DEBUG
-    perror("REQUEST: End...\n");
-#endif
 #ifdef PROFILE
   if(conf)
   {
@@ -611,15 +568,37 @@ void end(string|void s)
     if(elapsed > p[2]) p[2]=elapsed;
   }
 #endif
+
+#ifdef KEEP_ALIVE
+  if(keepit &&
+     (!(file->raw || file->len<=0))
+     && (misc->connection || (prot == "HTTP/1.1"))
+     && my_fd)
+  {
+    // Now.. Transfer control to a new http-object. Reset all variables etc..
+    object o = object_program(this_object())();
+    o->remoteaddr = remoteaddr;
+    o->supports = supports;
+    o->host = host;
+    o->client = client;
+    object fd = my_fd;
+    my_fd=0;
+    o->chain(fd,conf,leftovers);
+    disconnect();
+    return;
+  }
+#endif
+
   if(objectp(my_fd))
   {
-    my_fd->set_blocking();
-    if(s) my_fd->write(s);
-    if (!my_fd->no_destruct) 
-    {
+    catch {
+      my_fd->set_close_callback(0);
+      my_fd->set_read_callback(0);
+      my_fd->set_blocking();
+      if(s) my_fd->write(s);
       my_fd->close();
       destruct(my_fd);
-    }
+    };
     my_fd = 0;
   }
   disconnect();  
@@ -627,12 +606,9 @@ void end(string|void s)
 
 static void do_timeout(mapping foo)
 {
-  int elapsed = HRTIME()-req_time;
-  if(elapsed > HRSEC(30))
+  int elapsed = _time()-time;
+  if(elapsed > 30)
   {
-#ifdef REQUEST_DEBUG
-    perror("Timeout. Closing down...\n");
-#endif
     end("HTTP/1.0 408 Timeout\r\n"
 	"Content-type: text/plain\r\n"
 	"Server: Roxen Challenger\r\n"
@@ -640,7 +616,7 @@ static void do_timeout(mapping foo)
 	"Your connection timed out.\n"
 	"Please try again.\n");
   } else {
-    // premature call_out...
+    // premature call_out... *¤#!"
     call_out(do_timeout, 10);
   }
 }
@@ -705,15 +681,15 @@ void do_log()
   if(conf)
   {
     int len;
-    if(pipe && (len = pipe->bytes_sent())) 
-      file->len = len;
+    if(pipe) file->len = pipe->bytes_sent();
+//     werror("Managed to send "+file->len+" bytes\n");
     if(conf)
     {
       if(file->len > 0) conf->sent+=file->len;
       conf->log(file, this_object());
     }
   }
-  end();
+  end("",1);
   return;
 }
 
@@ -732,14 +708,18 @@ void handle_request( )
   {
 //  perror("Handle request, got conf.\n");
     object oc = conf;
-    foreach(conf->first_modules(), funp) {
+    foreach(conf->first_modules(), funp) 
+    {
       if(file = funp( thiso)) break;
-      if(conf != oc) {handle_request();return;}
+      if(conf != oc) {
+	handle_request();
+	return;
+      }
     }    
     if(!file) err=catch(file = conf->get_file(thiso));
 
     if(err) internal_error(err);
-    
+
     if(!mappingp(file))
       foreach(conf->last_modules(), funp) if(file = funp(thiso)) break;
   } else if(err=catch(file = roxen->configuration_parse( thiso ))) {
@@ -766,29 +746,23 @@ void handle_request( )
     if((file->file == -1) || file->leave_me) 
     {
       if(do_not_disconnect) return;
-//    perror("Leave me...\n");
-//      if(!file->stay) { destruct(thiso); }
       my_fd = 0; file = 0;
       return;
     }
 
-    if(file->type == "raw")
-      file->raw = 1;
-    else if(!file->type)
-      file->type="text/plain";
+    if(file->type == "raw")  file->raw = 1;
+    else if(!file->type)     file->type="text/plain";
   }
   
   if(!file->raw && prot != "HTTP/0.9")
   {
     string h;
     heads=
-      ([
-	"MIME-Version":(file["mime-version"] || "1.0"),
+      (["MIME-Version":(file["mime-version"] || "1.0"),
 	"Content-type":file["type"],
 	"Server":replace(version(), " ", "·"),
-	"Date":http_date(time)
-	 ]);
-    
+	"Date":http_date(time) ]);    
+
     if(file->encoding)
       heads["Content-Encoding"] = file->encoding;
     
@@ -817,7 +791,9 @@ void handle_request( )
 	  if(is_modified(since, fstat[3], fstat[1]))
 	  {
 	    file->error = 304;
-	    method="HEAD";
+	    file->file = 0;
+	    file->data="";
+// 	    method="";
 	  }
 	}
       }
@@ -848,30 +824,47 @@ void handle_request( )
     
     if(conf) conf->hsent+=strlen(head_string||"");
   }
-  if((method != "HEAD") && (file->len > 0 && file->len < 2000))
+
+  if(method == "HEAD")
+  {
+    file->file = 0;
+    file->data="";
+  }
+
+
+  if(!leftovers) leftovers = data||"";
+
+  if(file->len > 0 && file->len < 2000)
   {
     my_fd->write(head_string + (file->file?file->file->read():file->data));
     do_log();
     return;
   }
+
   if(head_string) send(head_string);
+
+  
+
   if(method != "HEAD")
   {
-    if(file->data)  send(file->data, file->len);
-    if(file->file)  send(file->file, file->len);
+    if(file->data && strlen(file->data))
+      send(file->data, file->len);
+    if(file->file)  
+      send(file->file, file->len);
   }
-  pipe->set_done_callback( do_log,0 );
+  pipe->set_done_callback( do_log );
   pipe->output(my_fd);
 }
 
 /* We got some data on a socket.
  * ================================================= 
  */
-
+int processed;
 void got_data(mixed fooid, string s)
 {
+//   werror("got_data: '"+s+"'\n");
+
   int tmp;
-//  perror("Got data.\n");
   remove_call_out(do_timeout);
   call_out(do_timeout, 30); // Close down if we don't get more data 
                          // within 30 seconds. Should be more than enough.
@@ -887,11 +880,12 @@ void got_data(mixed fooid, string s)
   
   if(cache) 
   {
-    cache += ({ s });
-    s = cache*""; 
+    s = cache*""+s; 
     cache = 0;
   }
-  tmp = parse_got(s);
+  sscanf(s, "%*[\n\r]%s", s);
+  if(strlen(s)) tmp = parse_got(s);
+
   switch(-tmp)
   { 
    case 0:
@@ -906,6 +900,7 @@ void got_data(mixed fooid, string s)
     end();
     return;
   }
+
   if(conf)
   {
     conf->received += strlen(s);
@@ -915,6 +910,7 @@ void got_data(mixed fooid, string s)
   my_fd->set_close_callback(0); 
   my_fd->set_read_callback(0); 
   my_fd->set_blocking();
+  processed=1;
 #ifdef THREADS
   roxen->handle(this_object()->handle_request);
 #else
@@ -930,8 +926,7 @@ object clone_me()
   object c,t;
   c=object_program(t=this_object())();
 
-  c->first = first;
-  
+// c->first = first;
   c->conf = conf;
   c->time = time;
   c->raw_url = raw_url;
@@ -955,7 +950,7 @@ object clone_me()
 // file..
   c->my_fd = 0;
 // pipe..
-  
+
   c->prot = prot;
   c->clientprot = clientprot;
   c->method = method;
@@ -995,3 +990,26 @@ void create(object f, object c)
   }
 }
 
+void chain(object f, object c, string le)
+{
+  my_fd = f;
+  conf = c;
+  do_not_disconnect=-1;
+  if(strlen(le)) got_data(0,le);
+  if(!my_fd)
+  {
+    if(do_not_disconnect == -1)
+    {
+      do_not_disconnect=0;
+      disconnect();
+    }
+  } else if(!processed) {
+    f->set_close_callback(end);
+    f->set_read_callback(got_data);
+  }
+}
+
+// void chain(object fd, object conf, string leftovers)
+// {
+//   call_out(real_chain,0,fd,conf,leftovers);
+// }
