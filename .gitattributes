@@ -68,8 +68,12 @@ nn binary
 /server/config_interface/standard/actions/debug_info.pike foreign_ident
 /server/config_interface/standard/actions/flush.pike foreign_ident
 /server/config_interface/standard/actions/ftpstatus.pike foreign_ident
+/server/config_interface/standard/actions/generate_rsa.pike foreign_ident
 /server/config_interface/standard/actions/listfonts.pike foreign_ident
 /server/config_interface/standard/actions/locks.pike foreign_ident
+/server/config_interface/standard/actions/make_rsa_csr.pike foreign_ident
+/server/config_interface/standard/actions/make_selfsigned_dsa.pike foreign_ident
+/server/config_interface/standard/actions/make_selfsigned_rsa.pike foreign_ident
 /server/config_interface/standard/actions/openfiles.pike foreign_ident
 /server/config_interface/standard/actions/proc.pike foreign_ident
 /server/config_interface/standard/actions/processstatus.pike foreign_ident
