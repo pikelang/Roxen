@@ -1,4 +1,4 @@
-## $Id: supports,v 1.33 1997/06/21 14:18:59 marcus Exp $
+## $Id: supports,v 1.34 1997/06/24 09:30:58 per Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -68,8 +68,8 @@ mozilla/4.*		stylesheets, tablecolor
 # BLAM BLAM BLAM BLAM
 .*compatible.*			-netscape_javascript
 .*compatible.*msie              -push, -javascript
-.*compatible.*msie.2            -java
-.*compatible.*msie.3            stylesheets
+.*compatible.*msie.2            -java, tablecolor
+.*compatible.*msie.3            stylesheets, tablecolor
 # }
 
 
