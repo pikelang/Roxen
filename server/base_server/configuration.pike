@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.582 2004/06/30 16:58:36 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.583 2004/08/18 16:57:42 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2441,7 +2441,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
       report_debug("conf->find_dir_stat(\"%s\"): url_module returned mapping:%O\n",
 		  file, tmp);
 #endif /* MODULE_DEBUG */
-      TRACE_LEAVE("Returned mapping."+sprintf("%O", tmp));
+      TRACE_LEAVE("Returned mapping.");
       TRACE_LEAVE("");
       return 0;
     }
@@ -2494,20 +2494,24 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
       RoxenModule c = function_object(tmp[1]);
       string f = file[strlen(loc)..];
       if (c->find_dir_stat) {
-	TRACE_ENTER("Has find_dir_stat().", 0);
+	SIMPLE_TRACE_ENTER(c, "Calling find_dir_stat().");
 	if (d = c->find_dir_stat(f, id)) {
-          TRACE_ENTER("Returned mapping."+sprintf("%O", d), c);
+	  SIMPLE_TRACE_LEAVE("Returned mapping with %d entries.", sizeof (d));
 	  dir = d | dir;
-	  TRACE_LEAVE("");
 	}
-	TRACE_LEAVE("");
-      } else if(d = c->find_dir(f, id)) {
-	TRACE_ENTER("Returned array.", 0);
-	dir = mkmapping(d, Array.map(d, lambda(string fn)
-                                        {
-                                          return c->stat_file(f + fn, id);
-                                        })) | dir;
-	TRACE_LEAVE("");
+	else
+	  SIMPLE_TRACE_LEAVE("Returned zero.");
+      } else {
+	SIMPLE_TRACE_ENTER(c, "Calling find_dir().");
+	if(d = c->find_dir(f, id)) {
+	  SIMPLE_TRACE_LEAVE("Returned array with %d entries.", sizeof (d));
+	  dir = mkmapping(d, Array.map(d, lambda(string fn)
+					  {
+					    return c->stat_file(f + fn, id);
+					  })) | dir;
+	}
+	else
+	  SIMPLE_TRACE_LEAVE("Returned zero.");
       }
     } else if(search(loc, file)==0 && loc[strlen(file)-1]=='/' &&
 	      (loc[0]==loc[-1]) && loc[-1]=='/' &&
