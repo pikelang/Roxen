@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.172 2000/09/11 18:31:29 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.173 2000/09/12 12:42:05 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1495,9 +1495,10 @@ string simpletag_smallcaps(string t, mapping m, string s)
   return ret->value();
 }
 
-string simpletag_random(string tag, mapping m, string s)
+string simpletag_random(string tag, mapping m, string s, RequestID id)
 {
   string|array q;
+  NOCACHE();
   if(!(q=m->separator || m->sep)) return (q=s/"\n")[random(sizeof(q))];
   return (q=s/q)[random(sizeof(q))];
 }
