@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.19 2000/02/10 05:29:54 nilsson Exp $";
+string cvs_version="$Id: pimage.pike,v 1.20 2000/02/12 15:53:29 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -406,7 +406,6 @@ object compile(string c, object id)
 string tag_pimage(string t, mapping m, string contents, object rid)
 {
   // Hohum. Here we go.
-  if(m->help) return register_module()[2];
   int id = hash(contents);
   if(!m->nocache && compiled[id]) return do_replace(compiled[id]->tag(m), id);
   return do_replace((compiled[id]=compile(contents, rid))->tag(m), id);

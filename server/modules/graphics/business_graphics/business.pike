@@ -9,7 +9,7 @@
 #include <module.h>
 #include <roxen.h>
 
-constant cvs_version = "$Id: business.pike,v 1.120 2000/02/10 05:29:54 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.121 2000/02/12 15:53:46 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER|MODULE_LOCATION;
 constant module_name = "Business Graphics";
@@ -566,8 +566,6 @@ string container_diagram(string tag, mapping m, string contents,
 #ifdef BG_DEBUG
   bg_timers->all = gauge {
 #endif
-
-  if(m->help) return register_module()[2];
 
   if(m->colortable_cache) res->colortable_cache=m->colortable_cache;
   if(m->type) res->type = m->type;
