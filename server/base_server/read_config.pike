@@ -4,12 +4,13 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.25 1999/02/15 23:20:49 per Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.26 1999/03/27 22:16:37 grubba Exp $";
 #else
 import spider;
-# define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 # include "newdecode.pike"
 #endif
+
+static class Privs {};
 
 // import Array;
 // import Stdio;
@@ -178,6 +179,9 @@ private static void read_it(string cl)
       destruct(fd);
     }
   };
+#ifndef THREADS
+  if (privs) destruct(privs);
+#endif /* THREADS */
   if (err) {
     report_error(sprintf("Failed to read configuration file for %O\n"
 			 "%s\n", cl, describe_backtrace(err)));
