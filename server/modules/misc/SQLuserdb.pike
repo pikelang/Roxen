@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.10 1999/12/18 14:44:31 nilsson Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.11 1999/12/28 03:17:15 nilsson Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -149,14 +149,14 @@ void open_db() {
     db=Sql.sql(QUERY(sqlserver));
   };
   if (err) {
-    werror ("SQLauth: Couldn't open authentication database!\n");
+    report_debug("SQLauth: Couldn't open authentication database!\n");
     if (db)
-      werror("SQLauth: database interface replies: "+db->error()+"\n");
+      report_debug("SQLauth: database interface replies: "+db->error()+"\n");
     else
-      werror("SQLauth: unknown reason\n");
-    werror ("SQLauth: check the values in the configuration interface, and "
-	    "that the user\n\trunning the server has adequate permissions "
-	    "to the server\n");
+      report_debug("SQLauth: unknown reason\n");
+    report_debug("SQLauth: check the values in the configuration interface, and "
+		 "that the user\n\trunning the server has adequate permissions "
+		 "to the server\n");
     db=0;
     return;
   }
@@ -182,7 +182,7 @@ string *userinfo (string u) {
 	open_db();
 
 	if (!db) {
-		werror ("SQLauth: Returning 'user unknown'.\n");
+		report_debug("SQLauth: Returning 'user unknown'.\n");
 		return 0;
 	}
 	sql_results=db->query("select username,passwd,uid,gid,homedir,shell "
@@ -218,7 +218,7 @@ string *userlist() {
 	DEBUGLOG ("userlist()");
 	open_db();
 	if (!db) {
-		werror ("SQLauth: returning empty user index!\n");
+		report_debug("SQLauth: returning empty user index!\n");
 		return ({});
 	}
 	data=db->query("select username from "+QUERY(table));
@@ -234,7 +234,7 @@ string user_from_uid (int u)
 		return 0;
 	open_db(); //it's not easy to cache in this case.
 	if (!db) {
-		werror("SQLauth: returning no_such_user\n");
+		report_debug("SQLauth: returning no_such_user\n");
 		return 0;
 	}
 	data=db->query("select username from " + QUERY(table) +

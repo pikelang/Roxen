@@ -1,11 +1,16 @@
-constant cvs_version="$Id: mirrorfs.pike,v 1.12 1999/12/18 14:42:09 nilsson Exp $";
+constant cvs_version="$Id: mirrorfs.pike,v 1.13 1999/12/28 02:58:43 nilsson Exp $";
 constant thread_safe=1;
 
-import RoxenRPC;
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
 inherit "filesystem";
+
+#ifdef MODULE_DEBUG
+# define MIRROR_WERR(X) werror("MIRRORFS: "+X+"\n")
+#else
+# define MIRROR_WERR(X)
+#endif
 
 array register_module()
 {
@@ -47,10 +52,10 @@ object rpc(int|void force)
       s = ({ s[0], "80" });
     }
     if (catch {
-      _rpc = Client(s[0],(int)s[1],"mirror",1);
+      _rpc = RoxenRPC.Client(s[0],(int)s[1],"mirror",1);
     }) {
       _rpc = 0;
-      werror("mirrorfs:Failed to connect to server %s:%s\n",
+      report_debug("mirrorfs:Failed to connect to server %s:%s\n",
 	     s[0], s[1]);
     }
   }
@@ -126,9 +131,7 @@ void start(int arg, object conf)
 
 void get_remote_dir(string dir)
 {
-#ifdef MODULE_DEBUG
-  werror("get_remote_dir(\""+dir+"\")\n");
-#endif /* MODULE_DEBOG */
+  MIRROR_WERR("get_remote_dir(\""+dir+"\")");
   string l = combine_path(path,combine_path("/",dir+"/")[1..]);
   array d ;
   if(rpc() && (d=rpc()->get_dir(dir)))
@@ -141,9 +144,7 @@ void get_remote_dir(string dir)
 
 void get_remote_file(string f)
 {
-#ifdef MODULE_DEBUG
-  werror("get_remote_file(\""+f+"\")\n");
-#endif /* MODULE_DEBOG */
+  MIRROR_WERR("get_remote_file(\""+f+"\")");
   if(!strlen(f) || f[-1]=='/') f+="index.html";
   string l = combine_path(path,combine_path("/",f)[1..]);
   catch {
@@ -233,9 +234,7 @@ class RemoteFile {
 
 object(RemoteFile) open_remote_file(string f)
 {
-#ifdef MODULE_DEBUG
-  werror("open_remote_file(\""+f+"\")\n");
-#endif /* MODULE_DEBOG */
+  MIRROR_WERR("open_remote_file(\""+f+"\")");
   if(!strlen(f) || f[-1]=='/') f+="index.html";
   string l = combine_path(path,combine_path("/",f)[1..]);
   object o = rpc()->open_file( f );
@@ -271,9 +270,7 @@ array stat_file(string s, object id)
 {
   array res;
   if(res=::stat_file(s,id)) return res;
-#ifdef MODULE_DEBUG
-  werror("remote_stat_file(\""+s+"\")\n");
-#endif /* MODULE_DEBOG */
+  MIRROR_WERR("remote_stat_file(\""+s+"\")");
   return rpc() && rpc()->stat_file(s);
 }
 
@@ -281,9 +278,7 @@ array stat_file(string s, object id)
 mixed find_file(string s, object id)
 {
   mixed res;
-#ifdef MODULE_DEBUG
-  werror("find_file(\""+s+"\")\n");
-#endif /* MODULE_DEBOG */
+  MIRROR_WERR("find_file(\""+s+"\")");
   if(res=::find_file(s,id)) return res;
   if((res=stat_file(s,id)) && res[ST_SIZE]<-1) return -1;
   if(!res) return 0;

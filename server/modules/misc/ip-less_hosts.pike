@@ -1,12 +1,19 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.26 1999/12/18 14:45:38 nilsson Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.27 1999/12/28 03:28:52 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
+inherit "http";
 
 //#define IP_LESS_DEBUG
+
+#ifdef IP_LESS_DEBUG
+# define IP_LESS_WERR(X) werror("IPLESS: "+X+"\n")
+#else
+# define IP_LESS_WERR(X)
+#endif
 
 array register_module()
 {
@@ -66,9 +73,7 @@ object find_server_for(object id, string host)
     int best;
     object c;
     string hn;
-#ifdef IP_LESS_DEBUG
-    werror("IPLESS: find_server_for(object, \""+host+"\")...\n");
-#endif /* IP_LESS_DEBUG */
+    IP_LESS_WERR("find_server_for(object, \""+host+"\")...");
     foreach(roxen->configurations, object s) {
       string h = lower_case(s->query("MyWorldLocation"));
 
@@ -77,21 +82,17 @@ object find_server_for(object id, string host)
       sscanf(h, "%*s://%s/", h);
 
       int corr = String.fuzzymatch(host, h);
-#ifdef IP_LESS_DEBUG
-      werror(sprintf("IPLESS: host: \"%s\"\n"
+      IP_LESS_WERR(sprintf("host: \"%s\"\n"
 			   "IPLESS: server: \"%s\"\n"
-			   "IPLESS: corr: %d\n",
+			   "IPLESS: corr: %d",
 			   host, h, corr));
-#endif /* IP_LESS_DEBUG */
       if ((corr > best) ||
 	  ((corr == best) && hn && (sizeof(hn) > sizeof(h)))) {
 	/* Either better correlation,
 	 * or the same, but a shorter hostname.
 	 */
-#ifdef IP_LESS_DEBUG
-	werror(sprintf("IPLESS: \"%s\" is a better match for \"%s\" than \"%s\"\n",
+	IP_LESS_WERR(sprintf("\"%s\" is a better match for \"%s\" than \"%s\"",
 			     h, host, hn||""));
-#endif /* IP_LESS_DEBUG */
 	best = corr;
 	c = s;
 	hn = h;
@@ -114,9 +115,7 @@ object find_server_for(object id, string host)
     array a = host/"";
     string hn;
     object c;
-#ifdef IP_LESS_DEBUG
-    werror("IPLESS: find_server_for(object, \""+host+"\")...\n");
-#endif /* IP_LESS_DEBUG */
+    IP_LESS_WERR("find_server_for(object, \""+host+"\")...");
     foreach(roxen->configurations, object s) {
       string h = lower_case(s->query("MyWorldLocation"));
 
@@ -129,22 +128,17 @@ object find_server_for(object id, string host)
 
       array common = Array.diff_longest_sequence(a, h/"");
       int corr = sizeof(common);
-#ifdef IP_LESS_DEBUG
-      string common_s = rows(h/"", common)*"";
-      werror(sprintf("IPLESS: h: \"%s\"\n"
+      IP_LESS_WERR(sprintf("h: \"%s\"\n"
 			   "IPLESS: common: %O (\"%s\")\n"
-			   "IPLESS: corr: %d\n",
-			   h, common, common_s, corr));
-#endif /* IP_LESS_DEBUG */
+			   "IPLESS: corr: %d",
+			   h, common, rows(h/"", common)*"", corr));
       if ((corr > best) ||
 	  ((corr == best) && hn && (sizeof(hn) > sizeof(h)))) {
 	/* Either better correlation,
 	 * or the same, but a shorter hostname.
 	 */
-#ifdef IP_LESS_DEBUG
-	werror(sprintf("IPLESS: \"%s\" is a better match for \"%s\" than \"%s\"\n",
+	IP_LESS_WERR(sprintf("\"%s\" is a better match for \"%s\" than \"%s\"\n",
 			     h, host, hn||""));
-#endif /* IP_LESS_DEBUG */
 	best = corr;
 	c = s;
 	hn = h;
@@ -209,11 +203,10 @@ void start()
 {
   clear_memory_cache();
 }
-inherit "http";
+
 string status()
 {
-  //  return "Blaha";
-  string res="<table><tr bgcolor=lightblue><td>Host</td><td>Server</td><td>Match %</td></tr>";
+  string res="<table><tr bgcolor=\"lightblue\"><td>Host</td><td>Server</td><td>Match %</td></tr>";
   foreach(sort(indices(config_cache)), string s) {
     string match;
     if(zero_type(host_accuracy_cache[s]))
@@ -222,8 +215,8 @@ string status()
       match = "less than minimum acceptable";
     } else 
       match = host_accuracy_cache[s];
-    res+="<tr><td>"+s+"</td><td><a href=/Configurations/"+
-      http_encode_string(config_cache[s]->name)+">"+
+    res+="<tr><td>"+s+"</td><td><a href=\"/Configurations/"+
+      http_encode_string(config_cache[s]->name)+"\">"+
       (config_cache[s]->name)+"</a></td><td>"+match+"</td></tr>";
   }
   return res+"</table>";

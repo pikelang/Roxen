@@ -699,12 +699,10 @@ class User
     mapping current_type = types[type];
     string res="";
 
-    werror("vars is now: %O\n", id->variables);
     process_form( id->variables, current_type, 1 );
     id->variables = current_type|id->variables;;
     res += parse_mform( make_type_form( current_type, id ), id );
     process_form( id->variables, current_type );
-    werror("vars is now: %O\n", id->variables);
     save();
     string body;
     if(!current_type->notrans)
@@ -790,7 +788,7 @@ mapping|string find_file( string file, object id )
   }
   else
   {
-    werror("create new user for '"+id->realauth+"'\n");
+    report_debug("create new user for '"+id->realauth+"'\n");
     users[id->realauth] = User( id->realauth );
     return find_file(file, id);
   }

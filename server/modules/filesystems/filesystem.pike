@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // This is a virtual "file-system".
 // It will be located somewhere in the name-space of the server.
@@ -8,9 +8,8 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.60 1999/12/22 16:59:50 jhs Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.61 1999/12/28 03:12:21 nilsson Exp $";
 constant thread_safe=1;
-
 
 #include <module.h>
 #include <roxen.h>
@@ -23,6 +22,18 @@ constant thread_safe=1;
 # endif
 #endif
 
+#ifdef FILESYSTEM_DEBUG
+# define FILESYSTEM_WERR(X) werror("Filesystem: "+X+"\n")
+#else
+# define FILESYSTEM_WERR(X)
+#endif
+
+#ifdef QUOTA_DEBUG
+# define QUOTA_WERR(X) werror("QUOTA: "+X+"\n")
+#else
+# define QUOTA_WERR(X)
+#endif
+
 constant module_type = MODULE_LOCATION;
 constant module_name = "Filesystem";
 constant module_doc = 
@@ -30,8 +41,6 @@ constant module_doc =
  "the users of your WWW-server. If you want to serve any 'normal' "
  "files from your server, you will have to have atleast one filesystem.") ;
 constant module_unique = 0;
-
-
 
 int redirects, accesses, errors, dirlists;
 int puts, deletes, mkdirs, moves, chmods;
@@ -51,19 +60,19 @@ static int do_stat = 1;
 
 string status()
 {
-  return ("<h2>Accesses to this filesystem</h2>"+
-	  (redirects?"<b>Redirects</b>: "+redirects+"<br>":"")+
-	  (accesses?"<b>Normal files</b>: "+accesses+"<br>"
-	   :"No file accesses<br>")+
-	  (QUERY(put)&&puts?"<b>Puts</b>: "+puts+"<br>":"")+
-	  (QUERY(put)&&mkdirs?"<b>Mkdirs</b>: "+mkdirs+"<br>":"")+
-	  (QUERY(put)&&QUERY(delete)&&moves?
-	   "<b>Moved files</b>: "+moves+"<br>":"")+
-	  (QUERY(put)&&chmods?"<b>CHMODs</b>: "+chmods+"<br>":"")+
-	  (QUERY(delete)&&deletes?"<b>Deletes</b>: "+deletes+"<br>":"")+
-	  (errors?"<b>Permission denied</b>: "+errors
-	   +" (not counting .htaccess)<br>":"")+
-	  (dirlists?"<b>Directories</b>:"+dirlists+"<br>":""));
+  return "<h2>Accesses to this filesystem</h2>"+
+    (redirects?"<b>Redirects</b>: "+redirects+"<br>":"")+
+    (accesses?"<b>Normal files</b>: "+accesses+"<br>"
+     :"No file accesses<br>")+
+    (QUERY(put)&&puts?"<b>Puts</b>: "+puts+"<br>":"")+
+    (QUERY(put)&&mkdirs?"<b>Mkdirs</b>: "+mkdirs+"<br>":"")+
+    (QUERY(put)&&QUERY(delete)&&moves?
+     "<b>Moved files</b>: "+moves+"<br>":"")+
+    (QUERY(put)&&chmods?"<b>CHMODs</b>: "+chmods+"<br>":"")+
+    (QUERY(delete)&&deletes?"<b>Deletes</b>: "+deletes+"<br>":"")+
+    (errors?"<b>Permission denied</b>: "+errors
+     +" (not counting .htaccess)<br>":"")+
+    (dirlists?"<b>Directories</b>:"+dirlists+"<br>":"");
 }
 
 void create()
@@ -141,9 +150,7 @@ void start()
      
   path = QUERY(searchpath);
   stat_cache = QUERY(stat_cache);
-#ifdef FILESYSTEM_DEBUG
-  werror("FILESYSTEM: Online at "+QUERY(mountpoint)+" (path="+path+")\n");
-#endif
+  FILESYSTEM_WERR("Online at "+QUERY(mountpoint)+" (path="+path+")");
 }
 
 string query_location()
@@ -251,11 +258,9 @@ void done_with_put( array(object|string) id_arr )
 
   [to, from, id, oldf] = id_arr;
 
-#ifdef FILESYSTEM_DEBUG
-  werror(sprintf("done_with_put(%O)\n"
-		 "from: %O\n",
-		 id_arr, mkmapping(indices(from), values(from))));
-#endif /* FILESYSTEM_DEBUG */
+  FILESYSTEM_WERR(sprintf("done_with_put(%O)\n"
+			  "from: %O\n",
+			  id_arr, mkmapping(indices(from), values(from))));
 
   to->close();
   from->set_blocking();
@@ -368,9 +373,7 @@ mixed find_file( string f, object id )
   string tmp;
   string oldf = f;
 
-#ifdef FILESYSTEM_DEBUG
-  werror("FILESYSTEM: Request for \""+f+"\"\n");
-#endif /* FILESYSTEM_DEBUG */
+  FILESYSTEM_WERR("Request for \""+f+"\"");
 
   string mountpoint = QUERY(mountpoint);
 
@@ -549,9 +552,7 @@ mixed find_file( string f, object id )
 
     puts++;
 
-#ifdef QUOTA_DEBUG
-    report_debug("Checking quota.\n");
-#endif /* QUOTA_DEBUG */
+    QUOTA_WERR("Checking quota.\n");
     if (id->misc->quota_obj && (id->misc->len > 0) &&
 	!id->misc->quota_obj->check_quota(uri, id->misc->len)) {
       errors++;
@@ -584,19 +585,13 @@ mixed find_file( string f, object id )
     mkdirhier( f );
 
     if (id->misc->quota_obj) {
-#ifdef QUOTA_DEBUG
-      report_debug("Checking if the file already exists.\n");
-#endif /* QUOTA_DEBUG */
+      QUOTA_WERR("Checking if the file already exists.");
       if (size > 0) {
-#ifdef QUOTA_DEBUG
-	report_debug("Deallocating " + size + "bytes.\n");
-#endif /* QUOTA_DEBUG */
+	QUOTA_WERR("Deallocating " + size + "bytes.");
 	id->misc->quota_obj->deallocate(uri, size);
       }
       if (size) {
-#ifdef QUOTA_DEBUG
-	report_debug("Deleting old file.\n");
-#endif /* QUOTA_DEBUG */
+	QUOTA_WERR("Deleting old file.");
 	rm(f);
       }
     }
@@ -630,9 +625,7 @@ mixed find_file( string f, object id )
       }
       int bytes = to->write( id->data );
       if (id->misc->quota_obj) {
-#ifdef QUOTA_DEBUG
-	report_debug("Allocating " + bytes + "bytes.\n");
-#endif /* QUOTA_DEBUG */
+	QUOTA_WERR("Allocating " + bytes + "bytes.");
 	if (!id->misc->quota_obj->allocate(f, bytes)) {
 	  TRACE_LEAVE("PUT: A string");
 	  TRACE_LEAVE("PUT: Out of quota");
@@ -698,7 +691,7 @@ mixed find_file( string f, object id )
       cache_set("stat_cache", f, 0);
     }
 #ifdef DEBUG
-    report_notice(sprintf("CHMODing file "+f+" to 0%o\n", id->misc->mode));
+    werror(sprintf("CHMODing file "+f+" to 0%o\n", id->misc->mode));
 #endif
     array err = catch(chmod(f, id->misc->mode & 0777));
     privs = 0;
@@ -784,8 +777,8 @@ mixed find_file( string f, object id )
       cache_set("stat_cache", f, 0);
     }
 #ifdef DEBUG
-    report_notice("Moving file "+movefrom+" to "+ f+"\n");
-#endif /* DEBUG */
+    werror("Moving file "+movefrom+" to "+ f+"\n");
+#endif
 
     int code = mv(movefrom, f);
     privs = 0;
@@ -889,8 +882,8 @@ mixed find_file( string f, object id )
       cache_set("stat_cache", f, 0);
     }
 #ifdef DEBUG
-    report_notice("Moving file " + f + " to " + moveto + "\n");
-#endif /* DEBUG */
+    werror("Moving file " + f + " to " + moveto + "\n");
+#endif
 
     int code = mv(f, moveto);
     privs = 0;
