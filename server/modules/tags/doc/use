@@ -1,0 +1,26 @@
+<b>Syntax:</b><br>
+<kbd>
+{use file=file-to-use-macros-from}
+</kbd>
+<p>
+<b>Attributes</b>
+<dl>
+<dt><kbd><b>file=path</b></kbd>
+<dd>Read all macros and tag/container definitions from the file 'file'.
+
+<p> This file will be fetched just as if someone had tried to fetch it
+    with an HTTP request. This makes it possible to use Pike script
+
+<p> results and other dynamic documents. <b>But:</b> beware: The
+    results of the parsing is heavily cached for performance reasons,
+    if you do not want this cache use <nobr><kbd>{insert
+    file=... nocache}</kbd></nobr> insead of <nobr><kbd>{use
+    file=...}</kbd></nobr>.  
+</dl>
+
+<p>
+
+The primary use of this tag is for site-wide tags and containers. It
+is much faster to use {use} than {include} when defining tags and
+macros, since the parsed definitions is cached rather than the
+contents of the file

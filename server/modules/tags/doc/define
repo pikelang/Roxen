@@ -1,13 +1,51 @@
-<b>Syntax:</b>
-<kbd>
+<b>Syntax:</b><br>
+<pre>
 {define name=define-to-set}value{/define}
-</kbd>
+{define tag=tag-to-create}value{/define}
+{define container=container-to-create}value{/define}
+</pre>
 <p>
 <b>Attributes</b>
 <p>
 <dl compact>
-<dt><kbd>name=..</kbd>
+<dt><kbd>name=...</kbd>
+<dd>Set the specified define to the value inside the container</dd>
+<dt><kbd>tag=..</kbd>
+<dd>Defines a new RXML tag, or overrides the previous definition</dd>
+<dt><kbd>containers=..</kbd>
+<dd>Defines a new RXML container, or overrides the previous definition</dd>
 </dl>
-Set the specified define to the value inside the container
 <p> 
-<b>See also:</b> {set help} {insert help}
+
+For tags and containers you can use a few special tokens in the definition:
+
+<dl compact>
+<dt><kbd>#args#</kbd>
+
+<dd>All arguments sent to the tag, as a string. Useful when defining
+new tags that are more or less only an alias for old ones:<br>
+<pre>
+{define container=h1}
+  {gtext 1 #args#}{contents}{/gtext}
+{/define}
+</pre>
+<p>
+<dt><kbd>&lt;contents&gt;</kbd>
+<dd>In containers only: This inserts the contents of the container
+
+<dt><kbd>&amp;argument;</kbd>
+<dd>Inserts the value of the argument 'argument'. Example:<br>
+<pre>
+{define tag=test}
+  The test tag: Testing testing. Value1 is &amp;value1;, value2 is &amp;value2;
+{/define}
+
+{test value1=foo value2=bar}
+</pre>
+
+<dt><kbd>&amp;tagname::argument;</kbd> and <kbd>&amp;::argument;</kbd>
+<dd>The definition of 'argument' in the last called 'tagname', or the
+previous definition of 'argument'. Useful in tags that use other
+userdefined tags.
+<p>
+<b>See also:</b> {set help} {insert help} {use help}
