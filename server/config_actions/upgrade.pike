@@ -1,8 +1,8 @@
 /*
- * $Id: upgrade.pike,v 1.35 1998/06/05 19:35:59 grubba Exp $
+ * $Id: upgrade.pike,v 1.36 1998/06/07 21:35:05 peter Exp $
  */
-constant name= "Maintenance//Upgrade components from roxen.com...";
-constant doc = "Selectively upgrade Roxen components from roxen.com.";
+constant name= "Maintenance//Upgrade components...";
+constant doc = "Selectively upgrade Roxen components from an upgrade server of your choice.";
 
 inherit "wizard";
 
@@ -245,7 +245,7 @@ string page_0(object id)
      
      "<var type=checkbox name=new> Also search for new components\n<br>"
      "<p>Use this upgrade server: <var type=select name=rpc_host default='skuld.idonex.se:23' "
-     "choices='"+upgrade_server_list()*","+"'><help><p>"+upgrade_server_help+"</help>");
+     "choices='"+upgrade_server_list()*","+"'><p>"+upgrade_server_help );
 }
 
 string upgrade_module(string m, object rpc)
@@ -309,6 +309,80 @@ string upgrade_module(string m, object rpc)
   return res+"<p>\n\n\n";
 }
 
+/* Check for new versions of installed modules */
+string page_1(object id)
+{
+  int num;
+#if constant(thread_create)
+  mixed key;
+  catch { key = rpc_lock->lock(); };
+#endif /* constant(thread_create) */
+  object rpc;
+  string res=
+    ("<font size=+2>Modules that have a newer version available.</font><p>"
+     "Select the box to add the module to the list of modules to "
+     "be updated<p></b>\n");
+  object rpc = connect_to_rpc(id);
+  if(!rpc) return "Failed to connect to update server.\n";
+
+  find_modules((int)id->variables->how);
+  mapping mv = rpc->module_versions( modules, roxen->real_version );
+  array tbl = ({});
+  foreach(sort(indices(modules)), string m)
+  {
+    if(mv[m] && (is_older(modules[m]->version, mv[m])))
+    {
+      num++;
+      tbl += ({({"<var type=checkbox name=M_"+m+">",
+		 modules[m]->name,
+		   modules[m]->fname,		   
+		   (mv[m]?mv[m]:"?"),
+		   modules[m]->version})});
+    }
+  }
+  if(num)
+    return res + html_table ( ({ "", "Module", "File", "Available Version",
+				   "Your Version"}), tbl );
+  else
+    return "There are no new versions of any of your installed modules "
+           "available on this server.";
+}
+
+/* Check for uninstalled modules */
+string page_2(object id)
+{
+  if(id->variables["new"]=="0" || !id->variables["new"])
+    return 0;
+#if constant(thread_create)
+  mixed key;
+  catch { key = rpc_lock->lock(); };
+#endif /* constant(thread_create) */
+  object rpc = connect_to_rpc(id);
+  if(!rpc) return "Failed to connect to update server.\n";
+
+  string res=""
+    "New modules that are available<br> "
+    "Select the box to add the module to the list of modules to "
+    "be updated</b><p>";
+
+  find_modules(1);
+
+  mapping rm = rpc->all_modules(roxen->real_version);
+  int num;
+  array tbl = ({});
+  foreach(sort(indices(rm)), string s)
+    if(!modules[s])
+      tbl += ({({ "<font size=+1><var type=checkbox name=M_"+s+"> "+
+	      rm[s]->name+"</font>",
+		 "<font size=+1>"+rm[s]->filename+"</font>",
+		    "<font size=+1>"+rm[s]->version+"</font>",
+		    ({"<font size=-1>"+rm[s]->doc+"</font>"})})});
+  if(sizeof(tbl))
+    return res + html_table( ({"Name", "File", "Available Version",
+				 ({ "Doc" })}), tbl );
+  return "There are no new modules available";
+}
+
 /* Check for uninstalled components */
 string page_3(object id)
 {
@@ -355,79 +429,6 @@ string page_3(object id)
   return "There are no new components available.";
 }
 
-/* Check for uninstalled modules */
-string page_2(object id)
-{
-  if(id->variables["new"]=="0" || !id->variables["new"])
-    return 0;
-#if constant(thread_create)
-  mixed key;
-  catch { key = rpc_lock->lock(); };
-#endif /* constant(thread_create) */
-  object rpc = connect_to_rpc(id);
-  if(!rpc) return "Failed to connect to update server.\n";
-
-  string res=""
-    "New modules that are available<br> "
-    "Select the box to add the module to the list of modules to "
-    "be updated</b><p>";
-
-  find_modules(1);
-
-  mapping rm = rpc->all_modules(roxen->real_version);
-  int num;
-  array tbl = ({});
-  foreach(sort(indices(rm)), string s)
-    if(!modules[s])
-      tbl += ({({ "<font size=+1><var type=checkbox name=M_"+s+"> "+
-	      rm[s]->name+"</font>",
-		 "<font size=+1>"+rm[s]->filename+"</font>",
-		    "<font size=+1>"+rm[s]->version+"</font>",
-		    ({"<font size=-1>"+rm[s]->doc+"</font>"})})});
-  if(sizeof(tbl))
-    return res + html_table( ({"Name", "File", "Available Version",
-				 ({ "Doc" })}), tbl );
-  return "There are no new modules available";
-}
-
-/* Check for new versions of installed modules */
-string page_1(object id)
-{
-  int num;
-#if constant(thread_create)
-  mixed key;
-  catch { key = rpc_lock->lock(); };
-#endif /* constant(thread_create) */
-  object rpc;
-  string res=
-    ("<font size=+2>Modules that have a newer version available.</font><p>"
-     "Select the box to add the module to the list of modules to "
-     "be updated<p></b>\n");
-  object rpc = connect_to_rpc(id);
-  if(!rpc) return "Failed to connect to update server.\n";
-
-  find_modules((int)id->variables->how);
-  mapping mv = rpc->module_versions( modules, roxen->real_version );
-  array tbl = ({});
-  foreach(sort(indices(modules)), string m)
-  {
-    if(mv[m] && (is_older(modules[m]->version, mv[m])))
-    {
-      num++;
-      tbl += ({({"<var type=checkbox name=M_"+m+">",
-		 modules[m]->name,
-		   modules[m]->fname,		   
-		   (mv[m]?mv[m]:"?"),
-		   modules[m]->version})});
-    }
-  }
-  if(num)
-    return res + html_table ( ({ "", "Module", "File", "Available Version",
-				   "Your Version"}), tbl );
-  else
-    return "There are no new versions of any of your installed modules "
-           "available";
-}
 
 string upgrade_component(string m, object rpc)
 {
