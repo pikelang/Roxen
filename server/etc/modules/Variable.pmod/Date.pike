@@ -20,33 +20,33 @@ array(string) verify_set( string new_value ) {
   string x, err="";
   if( sscanf(new_value,"%4d-%2d-%2d%s",y,m,d,x)<3 &&
       sscanf(new_value,"%4d%2d%2d%s",y,m,d,x)<3 )
-    return ({ LOCALE(0, "Could not interpret the date"), new_value });
+    return ({ LOCALE(312, "Could not interpret the date"), new_value });
 
   if(x && sizeof(x))
-    err += LOCALE(0, "Found trailing data after the date. ");
+    err += LOCALE(352, "Found trailing data after the date. ");
 
   if(m<1) {
     m=1;
-    err += LOCALE(0, "Month must be at least 1. ");
+    err += LOCALE(353, "Month must be at least 1. ");
   }
   if(m>12) {
     m=12;
-    err += LOCALE(0, "Month must be 12 or less. ");
+    err += LOCALE(354, "Month must be 12 or less. ");
   }
   if(d<1) {
     d=1;
-    err += LOCALE(0, "Day must be at least 1.");
+    err += LOCALE(355, "Day must be at least 1.");
   }
   if(sizeof(err))
     return ({ err, sprintf("%04d-%02d-%02d", y,m,d) });
 
   int days;
   if(catch(days=Calendar.ISO.Year(y)->month(m)->number_of_days()))
-    return ({ sprintf(LOCALE(0, "%s does not appear to be a valid date."), new_value),
+    return ({ sprintf(LOCALE(356, "%s does not appear to be a valid date."), new_value),
 	      new_value });
   if(d > days) {
     d = days;
-    return ({ sprintf((string)LOCALE(0, "Day must be %d or less."), d),
+    return ({ sprintf((string)LOCALE(357, "Day must be %d or less."), d),
 	      sprintf("%04d-%02d-%02d", y,m,d) });
   }
   return ({ 0, sprintf("%04d-%02d-%02d", y,m,d) });

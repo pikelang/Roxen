@@ -234,8 +234,8 @@ class ConfigurationSettings
   defvar("locale",
 	 Variable.Language("Standard", ({ "Standard" }) +
 			   Locale.list_languages("roxen_config"),
-			   0, LOCALE(0, "Interface language"), 
-			   LOCALE(0, "Select the Administration interface "
+			   0, LOCALE(5, "Interface language"), 
+			   LOCALE(19, "Select the Administration interface "
 				  "language.")))
     ->set_changed_callback( lambda(Variable.Variable s) {
 			      roxenp()->set_locale();
