@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.142 2004/06/04 08:29:32 _cvs_stephen Exp $
+// $Id: module.pike,v 1.143 2004/06/09 00:17:43 _cvs_stephen Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -426,14 +426,14 @@ string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
 
 //! RFC 2518 PROPFIND implementation with recursion according to
 //! @[depth]. See @[find_properties] for details.
-void recurse_find_properties(string path, string mode,
+mapping(string:mixed) recurse_find_properties(string path, string mode,
 			     int depth, RequestID id,
 			     multiset(string)|void filt)
 {
   MultiStatus.Prefixed result =
     id->get_multi_status()->prefix (id->url_base() + query_location()[1..]);
 
-  void recurse (string path, int depth) {
+  mapping(string:mixed) recurse (string path, int depth) {
     SIMPLE_TRACE_ENTER (this, "%s for %O, depth %d",
 			mode == "DAV:propname" ? "Listing property names" :
 			mode == "DAV:allprop" ? "Retrieving all properties" :
@@ -444,7 +444,7 @@ void recurse_find_properties(string path, string mode,
 
     if (!properties) {
       SIMPLE_TRACE_LEAVE ("No such file or dir");
-      return;
+      return 0;
     }
 
     {
@@ -452,27 +452,30 @@ void recurse_find_properties(string path, string mode,
 	properties : properties->find_properties(mode, result, filt);
 
       if (ret) {
-	result->add_status (path, ret->error, ret->rettext);
 	SIMPLE_TRACE_LEAVE ("Got status %d: %O", ret->error, ret->rettext);
-	return;
+	return ret;
       }
     }
 
     if (properties->get_stat()->isdir) {
       if (depth <= 0) {
 	SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
-	return;
+	return 0;
       }
       depth--;
       foreach(find_dir(path, id) || ({}), string filename) {
-	recurse(combine_path_unix(path, filename), depth);
+	filename = combine_path_unix(path, filename);
+	if (mapping(string:mixed) sub_res = recurse(filename, depth))
+	  if (sizeof (sub_res))
+	    result->add_status (filename, sub_res->error, sub_res->rettext);
       }
     }
 
     SIMPLE_TRACE_LEAVE ("");
+    return ([]);
   };
 
-  recurse (path, depth);
+  return recurse (path, depth);
 }
 
 mapping(string:mixed) patch_properties(string path,

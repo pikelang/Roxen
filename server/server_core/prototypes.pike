@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.76 2004/06/04 08:29:32 _cvs_stephen Exp $
+// $Id: prototypes.pike,v 1.77 2004/06/09 00:17:43 _cvs_stephen Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -746,9 +746,9 @@ class CacheKey
       cb (this, @args);
   }
 
-  void activate()
+  int activate()
   //! Activate the cache key. This must be called when the key is
-  //! stored in a cache.
+  //! stored in a cache. Return nonzero if any callbacks got called.
   {
     // Relying on the interpreter lock here.
     if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
@@ -756,7 +756,9 @@ class CacheKey
       activation_cbs = 0;
       foreach (cbs, [CacheActivationCB cb, array args])
 	cb (this, @args);
+      return sizeof (cbs);
     }
+    return 0;
   }
 
   int activated()
@@ -766,21 +768,26 @@ class CacheKey
     return !activation_cbs;
   }
 
-  void call_activation_cbs_only()
-  // Call the collected activation callbacks without activating the
-  // key. This is a kludge to play safe in situations early in the
-  // request path where we don't want to activate the key and where
-  // there aren't any outstanding callbacks in the common case with a
-  // direct request but might still be in the recursive case. Ignore
-  // if you can.
+  int activate_if_necessary()
+  // Activate the key only if any activation cbs are installed. This
+  // is a kludge to play safe in situations early in the request path
+  // where we don't want to activate the key and where there aren't
+  // any outstanding callbacks in the common case with a direct
+  // request but might still be in the recursive case. Ignore if you
+  // can.
   {
     // Relying on the interpreter lock here.
     if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
-      // Relying on the interpreter lock here too.
-      activation_cbs = ({});
+      if (sizeof (cbs)) {
+	if (this)
+	  // Relying on the interpreter lock here.
+	  activation_cbs = 0;
       foreach (cbs, [CacheActivationCB cb, array args])
 	cb (this, @args);
+	return 1;
     }
+  }
+    return 0;
   }
 
   string _sprintf (int flag)
@@ -2112,8 +2119,9 @@ class RoxenModule
   PropertySet|mapping(string:mixed) query_property_set(string path, RequestID id);
   string|array(SimpleNode)|mapping(string:mixed)
     query_property(string path, string prop_name, RequestID id);
-  void recurse_find_properties(string path, string mode, int depth,
-			       RequestID id, multiset(string)|void filt);
+  mapping(string:mixed) recurse_find_properties(string path, string mode, int depth,
+						RequestID id,
+						multiset(string)|void filt);
   mapping(string:mixed) patch_properties(string path,
 					 array(PatchPropertyCommand) instructions,
 					 RequestID id);

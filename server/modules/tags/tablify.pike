@@ -1,6 +1,6 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.77 2004/06/07 11:00:03 _cvs_stephen Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.78 2004/06/09 00:17:41 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -528,6 +528,7 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
 				   return String.trim_all_whites(q)+"\t";
 				 }
     ]), m);
+    q = replace(q, "\t\n", "\n");
     q = replace(q, "\t\n", "\n");
   }
 

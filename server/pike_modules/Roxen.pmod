@@ -1,6 +1,6 @@
 // This is a ChiliMoon pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.197 2004/06/05 15:19:50 _cvs_dirix Exp $
+// $Id: Roxen.pmod,v 1.198 2004/06/09 00:17:42 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2937,6 +2937,33 @@ string encode_charref (string char)
 
 // RXML complementary stuff shared between configurations.
 
+class ScopeRequestHeader {
+  inherit RXML.Scope;
+
+  mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
+    string|array(string) val = (c || RXML_CONTEXT)->id->request_headers[var];
+    if(!val)
+      return RXML.nil;
+    if(type)
+    {
+      if(arrayp(val) && type->subtype_of (RXML.t_any_text))
+	val *= "\0";
+      return type->encode(val);
+    }
+    return val;
+  }
+
+  array(string) _indices(void|RXML.Context c) {
+    return indices((c || RXML_CONTEXT)->id->request_headers);
+  }
+
+  array(string) _values(void|RXML.Context c) {
+    return values((c || RXML_CONTEXT)->id->request_headers);
+  }
+
+  string _sprintf(int t) { return "RXML.Scope(request-header)"; }
+}
+
 class ScopeRoxen {
   inherit RXML.Scope;
 
@@ -3225,6 +3252,7 @@ class ScopeCookie {
   string _sprintf(int t) { return "RXML.Scope(Cookie)"; }
 }
 
+RXML.Scope scope_request_header=ScopeRequestHeader();
 RXML.Scope scope_roxen=ScopeRoxen();
 RXML.Scope scope_page=ScopePage();
 RXML.Scope scope_cookie=ScopeCookie();
@@ -3396,6 +3424,7 @@ RXML.TagSet entities_tag_set = class
   inherit RXML.TagSet;
 
   static void entities_prepare_context (RXML.Context c) {
+    c->add_scope("request-header", scope_request_header);
     c->misc->scope_roxen=([]);
     c->add_scope("server",scope_roxen);
     c->misc->scope_page=([]);

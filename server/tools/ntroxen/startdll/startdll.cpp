@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.17 2004/05/29 15:28:02 _cvs_dirix Exp $
+// $Id: startdll.cpp,v 1.18 2004/06/09 00:17:44 _cvs_stephen Exp $
 //
 
 
@@ -69,9 +69,10 @@ inline HRESULT CServiceModule::RegisterServer(BOOL bRegTypeLib, BOOL bService)
     if (FAILED(hr))
         return hr;
 
-    // Remove any previous service since it may point to
-    // the incorrect file
+    if (!bService) {
+      // Uninstall any previous service, since we won't run in service mode.
     Uninstall();
+    }
 
     // Add service entries
     UpdateRegistryFromResource(IDR_Startdll, TRUE);
@@ -168,9 +169,6 @@ BOOL CServiceModule::IsInstalled()
 
 inline BOOL CServiceModule::Install()
 {
-    if (IsInstalled())
-        return TRUE;
-
     SC_HANDLE hSCM = ::OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     if (hSCM == NULL)
     {
@@ -182,17 +180,56 @@ inline BOOL CServiceModule::Install()
     TCHAR szFilePath[_MAX_PATH];
     ::GetModuleFileName(NULL, szFilePath, _MAX_PATH);
 
-    SC_HANDLE hService = ::CreateService(
+    SC_HANDLE hService = ::OpenService(hSCM, m_szServiceName, SERVICE_QUERY_CONFIG|SERVICE_CHANGE_CONFIG);
+    if (hService) {
+      // Update a previously installed entry.
+      if (!::ChangeServiceConfig(hService, SERVICE_WIN32_OWN_PROCESS,
+          SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
+          szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL,
+          m_szServiceName)) {
+	long err = GetLastError();
+	::CloseServiceHandle(hService);
+	::CloseServiceHandle(hSCM);
+	switch(err) {
+	case ERROR_ACCESS_DENIED:
+	  MessageBox(NULL, _T("Couldn't change service (Access Denied)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_CIRCULAR_DEPENDENCY:
+	  MessageBox(NULL, _T("Couldn't change service (Circular Dependency)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_DUPLICATE_SERVICE_NAME:
+	  MessageBox(NULL, _T("Couldn't change service (Duplicate Service Name)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_INVALID_HANDLE:
+	  MessageBox(NULL, _T("Couldn't change service (Invalid Handle)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_INVALID_PARAMETER:
+	  MessageBox(NULL, _T("Couldn't change service (Invalid Parameter)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_INVALID_SERVICE_ACCOUNT:
+	  MessageBox(NULL, _T("Couldn't change service (Invalid Service Account)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_SERVICE_MARKED_FOR_DELETE:
+	  MessageBox(NULL, _T("Couldn't change service (Service Marked For Delete)"), m_szServiceName, MB_OK);
+	  break;
+	default:
+	  MessageBox(NULL, _T("Couldn't change service"), m_szServiceName, MB_OK);
+	  break;
+	}
+        return FALSE;
+      }
+    } else {
+      hService = ::CreateService(
         hSCM, m_szServiceName, m_szServiceName,
         SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
         SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
         szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL);
-
     if (hService == NULL)
     {
         ::CloseServiceHandle(hSCM);
         MessageBox(NULL, _T("Couldn't create service"), m_szServiceName, MB_OK);
         return FALSE;
+    }
     }
 
     SERVICE_DESCRIPTION desc;
@@ -750,6 +787,11 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
     // When we get here, the service has been stopped
     return _Module.m_status.dwWin32ExitCode;
 }
+
+#if 0 // Balancing...
+}
+}
+#endif /* 0 */
 
 #ifdef BUILD_DLL
 ///////////////

@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.161 2004/06/06 11:04:04 _cvs_stephen Exp $
+// $Id: wizard.pike,v 1.162 2004/06/09 00:17:43 _cvs_stephen Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -338,6 +338,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      current = upper_case(sprintf("#%02x%02x%02x", a[0], a[1], a[2]));
      id->variables[m->name] = current;
      
+     int mark_x_left = 5 + (int) (h / 2);
+     int mark_y_top = 5 + (int) ((255 - v) / 2);
+     int mark_y_small_top = 5 + (int) ((255 - s) / 2);
      string output =
        "<script language='javascript'>\n"
        "  var PREFIX_h = " + h + ";\n"
@@ -364,22 +367,16 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "       onClick='PREFIX_colsel_click(event, 0, \"x\"); return false;'"
        "       style='position: absolute;"
        "              cursor:   crosshair;"
-       "              left:     " + (5 + (int) (h / 2)) + ";"
-       "              top:      5;"
        "              z-index:  2'>"
        "  <imgs src='/$/colsel-mark-y' id='PREFIX_mark_y'"
        "       onClick='PREFIX_colsel_click(event, 0, \"y\"); return false;'"
        "       style='position: absolute;"
        "              cursor:   crosshair;"
-       "              left:     5;"
-       "              top:      " + (5 + (int) ((255 - v) / 2)) + ";"
        "              z-index:  2'>"
        "  <imgs src='/$/colsel-mark-y-small'"
        "       id='PREFIX_mark_y_small'"
        "       style='position: absolute;"
        "              cursor:   pointer;"
-       "              left:     143;"
-       "              top:      " + (5 + (int) ((255 - s) / 2)) + ";"
        "              z-index:  2'>"
        "  <table border='0' cellspacing='0' cellpadding='4' bgcolor='#ffffff'"
        "         style='border-top:    1px solid #888888;"
@@ -409,6 +406,19 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "    </tr>"
        "  </table>"
        "</js-popup>"
+
+       //  These initializations used to be in the style attributes above
+       //  but MSIE 6.0 failed to recognize them so we execute them explicitly
+       //  instead.
+       "<script language='javascript'>"
+       "getObject('PREFIX_mark_x').style.top = 5;"
+       "getObject('PREFIX_mark_x').style.left = " + mark_x_left + ";"
+       "getObject('PREFIX_mark_y').style.top = " + mark_y_top + ";"
+       "getObject('PREFIX_mark_y').style.left = 5;"
+       "getObject('PREFIX_mark_y_small').style.top = " + mark_y_small_top + ";"
+       "getObject('PREFIX_mark_y_small').style.left = 143;"
+       "</script>"
+
        "<table border='0' cellspacing='0' cellpadding='2'>"
        "<tr>"
        "  <td>"
