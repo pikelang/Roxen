@@ -51,7 +51,8 @@ string|mapping parse( RequestID id )
 	dead += ({ db });
     }
 
-    dead -= ({ "roxen", "mysql", "local" });     // Never ever drop these.
+    // Never ever drop these.
+    dead -= ({ "roxen", "mysql", "local", "replicate" });
 
     res += "<b>"+
       LOCALE(468,"This site listens to the following ports:")+"</b><br />\n";
