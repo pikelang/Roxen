@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.845 2002/11/19 21:37:01 agehall Exp $";
+constant cvs_version="$Id: core.pike,v 1.846 2002/11/25 10:40:42 agehall Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1608,7 +1608,7 @@ class SSLProtocol
     foreach( String.SplitIterator(query_option("ssl_cert_file"), ',');
 	     int num; string cert_file )
     {
-      if( catch{ f = lopen(cert_file, "r")->read(); } )
+      if( catch{ f = lopen(String.trim_whites(cert_file), "r")->read(); } )
       {
 	report_error("SSL3: Reading cert-file failed!\n");
 	return;
