@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.138 2000/07/17 12:22:15 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.139 2000/07/17 15:38:03 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1736,7 +1736,7 @@ documentation for that module.</desc>",
 <attr name=class value=string>
 This cascading style sheet (CSS) class definition will apply to the a-element.
 </attr>
- <p>All other attributes will be inherited by the generated a tag.</p>",
+ All other attributes will be inherited by the generated a tag.",
 
 "append":#"<desc tag><short>
  Appends a value to a variable. The variable attribute and one more is
@@ -1927,6 +1927,7 @@ using the pre tag.
  password from being stored anywhere. When a login attempt is made,
  the password supplied is also encrypted and then compared to the
  stored encrypted password.</p>
+</desc>
 
 <attr name=compare value=string>
  Compares the encrypted string with the contents of the tag. The tag
@@ -1935,8 +1936,7 @@ using the pre tag.
 <then>Yepp!</then>
 <else>Nope!</else>
 </ex>
-</attr>
-</desc>",
+</attr>",
 
 "date":#"<desc tag><short>
  Inserts the time and date.</short> Does not require attributes.
