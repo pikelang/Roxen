@@ -2,18 +2,23 @@
 
 The theme tags:
 
-<theme-set what=setting-name to=value [int] [themefile] />
+<theme-set what='setting-name' to='value' [int=''] [themefile=''] />
 
   Set the setting 'what' to the specified value.
   If themefile is specified, the path to the theme is prepended
   to the value, if 'int' is specified, the value is considered to
-   be an integer.
+  be an integer.
+
+  The configuration variables for background, foreground and link
+  colors are only shown if the theme sets the variable
+  can-change-colors to 1
 
 <theme-path match='glob'>
 </theme-path>
 
-   Only parse the contents if the current administration interface path
-   matches the specified glob pattern.
+  Only parse the contents if the current administration interface path
+  matches the specified glob pattern.
+
 
 
 Stand alone settings (no other settings are based on these):

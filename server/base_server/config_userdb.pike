@@ -147,6 +147,14 @@ class ConfigurationSettings
     name = _name;
     variables = ([]);
     mapping vv = settings->get( name );
+
+    int theme_can_change_colors( RequestID i, Variable v )
+    {
+      if( !RXML.get_context() ) return 0;
+      if( config_setting2( "can-change-colors" ) ) return 0;
+      return 1;
+    };
+
     defvar( "theme", ThemeVariable( "default", 0,
                                     "Theme",
                                     "The theme to use" ) );
@@ -177,13 +185,16 @@ class ConfigurationSettings
 
     defvar( "bgcolor", "white", LOCALE(182, "Background color"),
 	    TYPE_STRING, 
-	    LOCALE(183, "Administration interface background color."));
+	    LOCALE(183, "Administration interface background color."))
+            ->set_invisibility_check_callback( theme_can_change_colors );
 
     defvar( "fgcolor", "black", LOCALE(184, "Text color"),
-	    TYPE_STRING, LOCALE(185, "Administration interface text color."));
+	    TYPE_STRING, LOCALE(185, "Administration interface text color."))
+            ->set_invisibility_check_callback( theme_can_change_colors );
 
     defvar( "linkcolor", "darkblue", LOCALE(186, "Link color"),
-	    TYPE_STRING, LOCALE(185, "Administration interface text color."));
+	    TYPE_STRING, LOCALE(185, "Administration interface text color."))
+            ->set_invisibility_check_callback( theme_can_change_colors );
 
     defvar( "font", "franklin gothic demi", LOCALE(187, "Font"),
 	    TYPE_FONT, LOCALE(188, "Administration interface font."));
