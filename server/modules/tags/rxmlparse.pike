@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.62 2001/06/27 00:06:14 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.63 2001/07/12 18:35:49 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -60,11 +60,10 @@ void create()
 	 "and the <i>Require exec bit to parse</i> option is set, no "
 	 "parsing will occur.");
 
-  defvar ("ram_cache_pages", 500, "Number of RXML pages to RAM cache",
-	  TYPE_INT, #"\
-The RXML parser will cache the parse trees for this many RXML pages in
-RAM, which speeds up the evaluation of them. Set to zero to disable
-the cache. Set to a negative value to have no limit.");
+  defvar ("ram_cache_pages", 1, "RAM cache RXML pages",
+	  TYPE_FLAG, #"\
+The RXML parser will cache the parse trees for the RXML pages in RAM
+when this is enabled, which speeds up the evaluation of them.");
 
   defvar("logerrorsp", 0, "RXML Errors:Log RXML parse errors", TYPE_FLAG,
 	 "If set, all RXML parse errors will be logged in the debug log.");
@@ -90,7 +89,7 @@ void start(int q, Configuration c)
   define_API_functions();
   require_exec=[int]query("require_exec");
   parse_exec=[int]query("parse_exec");
-  ram_cache_pages = [int] query ("ram_cache_pages");
+  ram_cache_name = query ("ram_cache_pages") && "p-code:" + c->name;
   c->rxml_tag_set->handle_run_error = rxml_run_error;
   c->rxml_tag_set->handle_parse_error = rxml_parse_error;
 }
@@ -106,9 +105,8 @@ array(string) query_file_extensions()
 int require_exec, parse_exec;
 int bytes;  // Holds the number of bytes parsed
 int ram_cache_pages;
+string ram_cache_name;
 function(string,int|void,string|void:string) file2type;
-
-mapping(string:array(int|RXML.PCode)) p_code_cache = ([]);
 
 mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 {
@@ -144,32 +142,33 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
     rxml = data;
   else
 #endif
-  if (ram_cache_pages) {
-    array cache_ent;
-    if ((cache_ent = p_code_cache[id->not_query]) &&
-	cache_ent[0] == stat[ST_MTIME]) {
-      TRACE_ENTER (sprintf ("Evaluating RXML page %O from p-code",
-			    id->not_query), this_object());
-      rxml = Roxen.eval_p_code (cache_ent[1], id);
-    }
-    else {
-      if (ram_cache_pages > 0 && ram_cache_pages <= sizeof (p_code_cache)) {
-	array(string) ind = indices(p_code_cache);
-	for (int i = 0; i < 99; i++)
-	  m_delete (p_code_cache, ind[random (sizeof (ind))]);
+  {
+  eval_rxml:
+    if (ram_cache_name) {
+      array cache_ent;
+      if ((cache_ent = cache_lookup (ram_cache_name, id->not_query)) &&
+	  cache_ent[0] == stat[ST_MTIME]) {
+	TRACE_ENTER (sprintf ("Evaluating RXML page %O from RAM cache",
+			      id->not_query), this_object());
+	rxml = Roxen.eval_p_code (cache_ent[1], id);
+	if (objectp (rxml)) {
+	  cache_remove (ram_cache_name, id->not_query);
+	  TRACE_LEAVE ("RAM cache entry was stale");
+	}
+	else break eval_rxml;
       }
       TRACE_ENTER (sprintf ("Evaluating and compiling RXML page %O",
 			    id->not_query), this_object());
       [rxml, RXML.PCode p_code] = Roxen.compile_rxml (data, id);
-      p_code_cache[id->not_query] = ({stat[ST_MTIME], p_code});
+      cache_set (ram_cache_name, id->not_query, ({stat[ST_MTIME], p_code}));
     }
-  }
-  else {
-    TRACE_ENTER (sprintf ("Evaluating RXML page %O",
-			  id->not_query), this_object());
-    RXML.Parser parser = Roxen.get_rxml_parser (id);
-    parser->write_end (data);
-    rxml = parser->eval();
+    else {
+      TRACE_ENTER (sprintf ("Evaluating RXML page %O",
+			    id->not_query), this_object());
+      RXML.Parser parser = Roxen.get_rxml_parser (id);
+      parser->write_end (data);
+      rxml = parser->eval();
+    }
   }
   TRACE_LEAVE ("");
 
