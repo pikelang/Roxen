@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
-// $Id: flik.pike,v 1.15 1999/08/05 01:33:37 nilsson Exp $
+// $Id: flik.pike,v 1.16 1999/11/27 07:50:49 per Exp $
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -16,7 +16,7 @@
 
 // made by Pontus Hagland <law@idonex.se> december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.15 1999/08/05 01:33:37 nilsson Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.16 1999/11/27 07:50:49 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -31,7 +31,7 @@ int flno=1;
 #define GC_LOOP_TIME QUERY(gc_time)
 void create()
 {
-   defvar("gc_time", 300, "GC time", TYPE_INT,
+   defvar("gc_time", 300, "GC time", TYPE_INT|VAR_DEVELOPER,
 	 "Time between gc loop. (It doesn't run when nothing to garb, anyway.)");
 
 }
