@@ -25,6 +25,10 @@ void abort_cif( )
 
 string font_name( string what )
 {
+  Parser.HTML()->
+    add_container("name", lambda(string t, mapping m, string c) {
+			    what=c; return "";
+			  } )->finish(what);
   return (lower_case( replace(what," ","_") )/"\n")[0]-"\r";
 }
 
