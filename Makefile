@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.4 1997/08/18 14:11:47 grubba Exp $
+# $Id: Makefile,v 1.5 1997/08/19 00:33:36 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -57,9 +57,15 @@ install : all
 	cd build/$$os && \
 	$(MAKE) install;
 
-install_all : install_pike install
+install_all :
+	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'`; \
+	srcdir=`pwd`; \
+	echo Installing Roxen 1.2 and Pike 0.5 from build/$$os...; \
+	echo; \
+	cd build/$$os && \
+	$(MAKE) install_all;
 
-install_pike : all
+install_pike :
 	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'`; \
 	srcdir=`pwd`; \
 	echo Installing Pike 0.5 from build/$$os...; \
