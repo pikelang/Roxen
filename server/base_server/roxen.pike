@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.54 1997/05/08 15:06:06 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.55 1997/05/08 21:34:33 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -1898,9 +1898,9 @@ void init_shuffler();
 // serve new requests. The file descriptors of the open files and the
 // clients are sent to the program, then the shuffler just shuffles 
 // the data to the client.
-#if efun(send_fd)
 void _shuffle(object from, object to)
 {
+#if efun(send_fd)
   if(shuffle_fd)
   {
     from->set_blocking();
@@ -1910,12 +1910,13 @@ void _shuffle(object from, object to)
       return;
     init_shuffler();
   }
+#endif
   // Fallback, when there is no external shuffler.
   object p = Pipe.pipe();
   p->input(from);
   p->output(to);
 }
-#endif
+
 
 #ifdef THREADS
 object shuffle_queue = Queue();

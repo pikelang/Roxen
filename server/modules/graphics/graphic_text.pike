@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.42 1997/05/07 23:07:43 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.43 1997/05/08 21:34:35 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -820,7 +820,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   if(arg->magic)
   {
-    magic=arg->magic;
+    magic=replace(arg->magic,"'","`");
     m_delete(arg,"magic");
   }
 
