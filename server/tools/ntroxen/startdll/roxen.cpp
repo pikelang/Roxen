@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.7 2001/09/28 12:02:49 tomas Exp $
+// $Id: roxen.cpp,v 1.8 2001/10/19 10:07:55 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -356,7 +356,7 @@ int CRoxen::Start(int first_time)
   // Create the pike command line
   CreatePikeCmd(cmd, pikeloc, cmdline, key);
 
-  if (cmdline.GetVerbose() > 0)
+  if (cmdline.GetVerbose() > 1)
     ErrorMsg(0, TEXT("Executing '%s'"), cmd);
   
   TCHAR cwd[_MAX_PATH];
