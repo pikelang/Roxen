@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.478 2005/02/15 14:49:33 erikd Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.479 2005/02/15 15:08:20 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3742,7 +3742,6 @@ class TagCase {
     array do_process(RequestID id) {
       if(args->case) {
 	string op;
-	if (!content) return ({ RXML.nil });
 	switch(lower_case(args->case)) {
 	  case "lower":
 	    if (content_type->lower_case)
@@ -3764,7 +3763,8 @@ class TagCase {
 	    break;
 	  default:
 	    if (compat_level > 2.1)
-	      parse_error ("Invalid value %O to the case argument.\n", args->case);
+	      parse_error ("Invalid value %O to the case argument.\n",
+			   args->case);
 	}
 	if (compat_level > 2.1)
 	  parse_error ("Content of type %s doesn't handle being %s.\n",
@@ -3773,10 +3773,10 @@ class TagCase {
       else {
 	if (compat_level > 2.1)
 	  parse_error ("Argument \"case\" is required.\n");
-	if (!content) return ({ RXML.nil });
       }
 
 #if ROXEN_COMPAT <= 1.3
+      if (!content) return ({ RXML.nil });
       if(args->lower) {
 	content = lower_case(content);
 	old_rxml_warning(id, "attribute lower","case=lower");
