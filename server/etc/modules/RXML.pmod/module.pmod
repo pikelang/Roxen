@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.319 2003/12/17 13:14:22 grubba Exp $
+// $Id: module.pmod,v 1.320 2004/01/27 18:26:42 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2140,7 +2140,10 @@ class Context
 
     if (objectp (err)) {
       if (err->is_RXML_break_eval) {
-	if (err->action == "continue") return;
+	if (err->action == "continue") {
+	  TAG_DEBUG (RXML_CONTEXT->frame, "Continuing after RXML break exception\n");
+	  return;
+	}
 	Context ctx = RXML_CONTEXT;
 	if (ctx->frame) {
 	  if (stringp (err->target) ? err->target == ctx->frame->scope_name :
@@ -2157,6 +2160,7 @@ class Context
 	    ctx->frame = 0;
 	    handle_exception (err, evaluator, p_code_error);
 	  }
+	TAG_DEBUG (RXML_CONTEXT->frame, "Rethrowing RXML break exception\n");
 	throw (err);
       }
 
@@ -2182,9 +2186,13 @@ class Context
 	      CompiledError comp_err = CompiledError (err);
 	      p_code_error->add (RXML_CONTEXT, comp_err, comp_err);
 	    }
+	    TAG_DEBUG (RXML_CONTEXT->frame,
+		       "RXML exception %O reported - continuing\n", err);
 	    return;
 	  }
 	}
+	TAG_DEBUG (RXML_CONTEXT->frame,
+		   "Rethrowing RXML exception %O\n", err);
 	throw (err);
       }
     }
@@ -2606,7 +2614,7 @@ class Backtrace
     error ("Cannot set index %O to %O.\n", i, val);
   }
 
-  string _sprintf() {return "RXML.Backtrace(" + (type || "") + ")";}
+  string _sprintf() {return sprintf ("RXML.Backtrace(%s: %O)", type || "", msg);}
 }
 
 
@@ -4763,6 +4771,7 @@ final void run_error (string msg, mixed... args)
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
   array bt = backtrace();
+  TAG_DEBUG (RXML_CONTEXT->frame, "Throwing run error: %s", msg);
   throw (Backtrace ("run", msg, RXML_CONTEXT, bt[..sizeof (bt) - 2]));
 }
 
@@ -4774,6 +4783,7 @@ final void parse_error (string msg, mixed... args)
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
   array bt = backtrace();
+  TAG_DEBUG (RXML_CONTEXT->frame, "Throwing parse error: %s", msg);
   throw (Backtrace ("parse", msg, RXML_CONTEXT, bt[..sizeof (bt) - 2]));
 }
 
@@ -6998,7 +7008,7 @@ class VariableChange (/*static*/ mapping settings)
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
-			   "    Installing cached scope %s with %d variables\n",
+			   "    Installing cached scope %O with %d variables\n",
 			   replace (var[0], ".", ".."), sizeof (settings[encoded_var]));
 #endif
 	      if (SCOPE_TYPE vars = settings[encoded_var])
@@ -7010,7 +7020,7 @@ class VariableChange (/*static*/ mapping settings)
 	    else {
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
-		TAG_DEBUG (ctx->frame, "    Installing cached value for %s: %s\n",
+		TAG_DEBUG (ctx->frame, "    Installing cached value for %O: %s\n",
 			   map ((array(string)) var, replace, ".", "..") * ".",
 			   format_short (settings[encoded_var]));
 #endif
@@ -7028,7 +7038,7 @@ class VariableChange (/*static*/ mapping settings)
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
-			   "    Installing cached runtime tag definition for %s: %O\n",
+			   "    Installing cached runtime tag definition for %O: %O\n",
 			   var[1], settings[encoded_var]);
 #endif
 	      if (Tag tag = settings[encoded_var])
@@ -7042,7 +7052,7 @@ class VariableChange (/*static*/ mapping settings)
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
-			   "    Installing cached id->misc entry: %s: %s\n",
+			   "    Installing cached id->misc entry %O: %s\n",
 			   format_short (var), format_short (settings[encoded_var]));
 #endif
 	      ctx->set_id_misc (var[1], settings[encoded_var]);
@@ -7053,7 +7063,7 @@ class VariableChange (/*static*/ mapping settings)
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
-			   "    Installing cached id->root_id->misc entry: %s: %s\n",
+			   "    Installing cached id->root_id->misc entry %O: %s\n",
 			   format_short (var), format_short (settings[encoded_var]));
 #endif
 	      ctx->set_root_id_misc (var[1], settings[encoded_var]);
@@ -7085,7 +7095,7 @@ class VariableChange (/*static*/ mapping settings)
 
 #ifdef DEBUG
       if (TAG_DEBUG_TEST (ctx->frame))
-	TAG_DEBUG (ctx->frame, "    Installing cached misc entry: %s: %s\n",
+	TAG_DEBUG (ctx->frame, "    Installing cached misc entry %O: %s\n",
 		   format_short (var), format_short (settings[encoded_var]));
 #endif
       ctx->set_misc (var, settings[encoded_var]);
@@ -7513,7 +7523,8 @@ static class PikeCompile
   Frame _frame_ = _ctx_ && _ctx_->frame;				\
   if (TAG_DEBUG_TEST (!_frame_ || _frame_->flags & FLAG_DEBUG)) {	\
     if (_frame_) report_debug ("%O:   ", _frame_);			\
-    report_debug ("PCode" + OBJ_COUNT + ": " + X);			\
+    report_debug ("PCode(" + (flags & COLLECT_RESULTS ?			\
+			      "res" : "cont") + ")" + OBJ_COUNT + ": " + X); \
   }									\
 } while (0)
 #else
@@ -7654,12 +7665,8 @@ class PCode
       flags |= UPDATED;
       protocol_cache_time = -1;
       p_code_comp = _p_code_comp || PikeCompile();
-      if (flags & COLLECT_RESULTS)
-	PCODE_MSG ("create or reset for result collection (with %s %O)\n",
-		   _p_code_comp ? "old" : "new", p_code_comp);
-      else
-	PCODE_MSG ("create or reset for content collection (with %s %O)\n",
-		   _p_code_comp ? "old" : "new", p_code_comp);
+      PCODE_MSG ("create or reset (with %s %O)\n",
+		 _p_code_comp ? "old" : "new", p_code_comp);
     }
   }
 
