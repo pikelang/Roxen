@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.315 2003/08/26 15:43:53 mast Exp $
+// $Id: module.pmod,v 1.316 2004/01/27 18:42:39 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1669,7 +1669,7 @@ class Context
 	      else
 		rec_chgs[-1][encode_value_canonic (({scope_name}) + var)] = val;
 
-	    array(string|int) path = var[..sizeof (var) - 1];
+	    array(string|int) path = var[..sizeof (var) - 2];
 	    vars = rxml_index (vars, path, scope_name, this_object());
 	    scope_name += "." + (array(string)) path * ".";
 	    index = var[-1];
@@ -1761,7 +1761,7 @@ class Context
 	      else
 		rec_chgs[-1][encode_value_canonic (({scope_name}) + var)] = nil;
 
-	    array(string|int) path = var[..sizeof (var) - 1];
+	    array(string|int) path = var[..sizeof (var) - 2];
 	    vars = rxml_index (vars, path, scope_name, this_object());
 	    scope_name += "." + (array(string)) path * ".";
 	    var = var[-1];
