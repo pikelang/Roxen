@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.77 2004/03/16 12:44:59 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.78 2004/03/16 13:58:10 grubba Exp $";
 
 class Variable
 {
@@ -1330,8 +1330,7 @@ class PatchPropertyCommand
 {
   constant command = "";
   string property_name;
-  mapping(string:mixed) execute(string path, RoxenModule module,
-				RequestID id, PropertySet context);
+  mapping(string:mixed) execute(PropertySet context);
 }
 
 class _roxen

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.159 2004/03/16 10:54:02 grubba Exp $
+// $Id: module.pike,v 1.160 2004/03/16 13:58:10 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -376,7 +376,7 @@ mapping(string:mixed) patch_properties(string path,
   array(mapping(string:mixed)) results;
 
   mixed err = catch {
-      results = instructions->execute(path, this_object(), id, properties);
+      results = instructions->execute(properties);
     };
   if (err) {
     properties->unroll();
