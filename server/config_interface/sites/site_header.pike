@@ -11,6 +11,15 @@ string module_global_page( RequestID id, Configuration conf )
 
 string module_page( RequestID id, string conf, string module )
 {
+  string section = RXML.get_var( "section", "form" );
+  if( !section )
+    section =
+      RXML.get_var( "lastmlmode", "usr" ) ||
+      RXML.get_var( "moduletab", "usr" );
+
+  RXML.set_var( "lastmlmode", section, "usr" );
+  RXML.set_var( "section", section, "form" );
+
   return 
 #"<emit source='module-variables-sections'
   configuration='"+conf+#"'

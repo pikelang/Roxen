@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.158 2001/08/24 14:45:51 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.159 2001/08/28 14:50:57 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -53,6 +53,19 @@ class Scope_usr
 
 #define ALIAS( X ) `[](X,c,scope)
 #define QALIAS( X ) (`[](X,c,scope)?"\""+roxen_encode(`[](X,c,scope),"html")+"\"":0)
+
+  mixed `[]=( string var, mixed value, void|RXML.Context c,
+	      void|string scope, void|RXML.Type type)
+  {
+    object s = c->id->misc->config_settings;
+    Variable.Variable v;
+    if( v = s->getvar( var ) )
+      v->set( value );
+    else
+      s->definvisvar( var, value, TYPE_STRING );
+    s->save();
+  }
+
   mixed `[]  (string var, void|RXML.Context c, void|string scope, void|RXML.Type type)
   {
     RequestID id = c->id;
@@ -855,19 +868,19 @@ class TagModuleVariablesSectionsplugin
 
     if( !section )
       id->variables->info_section_is_it = "1";
-      foreach( variables, mapping m )
-	if(m->section == "Settings" )
-	  m_delete( id->variables, "info_section_is_it" );
-
+    foreach( variables, mapping m )
+      if(m->section == "Settings" )
+	m_delete( id->variables, "info_section_is_it" );
+    
     if( id->variables->info_section_is_it )
       variables[-1]->selected = "selected";
 
     if( mod->module_full_doc || (mod->module_type & MODULE_TAG ) )
-      variables +=({ ([
+      variables = ({ ([
        "section":"Docs",
        "sectionname":LOCALE(383,"Documentation"),
        "selected":((section=="Docs")?"selected":""),
-     ])});
+     ]) }) + variables;
     
      int hassel;
 
@@ -879,10 +892,15 @@ class TagModuleVariablesSectionsplugin
        else
          hassel = strlen(q->selected);
      }
-//      variables[0]->selected="selected";
      variables = reverse(variables);
      variables[0]->first = " first ";
      variables[-1]->last = " last=30 ";
+     if( !hassel )
+     {
+       // No selected tab.
+       variables[0]->selected="selected";
+       RXML.set_var( "section", variables[0]->section, "form" );
+     }
      return variables;
   }
 }
@@ -1035,6 +1053,8 @@ string simpletag_cf_render_variable( string t, mapping m,
 				     string c, RequestID id )
 {
   string extra = "";
+
+
 #define   _(X) RXML.get_var( X, 0 )
 #define usr(X) RXML.get_var( X, "usr" )
 #define var(X) RXML.get_var( X, "var" )
@@ -1065,7 +1085,7 @@ string simpletag_cf_render_variable( string t, mapping m,
 	"<td valign='top'>"+_("form")+"<br />"+def+"</td></tr>\n"
 	"<tr><td colspan='2'>"+dfs+_("doc")+dfe+"</td></tr>\n";
 
-    case "color":
+    default:
       if( chng )
 	extra = "bgcolor='"+usr("fade2")+"'";
       return "<tr>\n"

@@ -378,6 +378,16 @@ class ConfigurationSettings
 	      "uf": LOCALE(123,"Unfolded (old style)"),
 	    ]) );
 
+    defvar( "moduletab", "Information",
+	    LOCALE(0,"Default module tab"),
+	    TYPE_STRING_LIST,
+	    LOCALE(0,"The tab that will be selected by default when you "
+		   "select a module."),
+	    ([
+	      "Information":LOCALE(0,"Information"),
+	      "Settings":LOCALE(0,"Settings"),
+	    ]) );
+
     defvar( "configlistmode", 0,
             LOCALE(278, "Compact site list" ),
             TYPE_FLAG,
