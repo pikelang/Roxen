@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.18 2000/02/07 17:01:45 kuntri Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.19 2000/02/07 17:26:48 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -14,8 +14,8 @@ inherit "roxenlib";
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["obox": ([
-  "standard":"<desc cont>Outlined box</desc>
+constant tagdoc=(["obox":#([
+  "standard":#"<desc cont>Outlined box</desc>
 
 <attr name=align value=left,right>
  Vertical alignment of the box.
@@ -75,7 +75,7 @@ constant tagdoc=(["obox": ([
  argument. If the title is not specified in the argument list, you can
  put it in a <tag>title</tag> container in the obox contents.",
 
-  "svenska":"<desc cont>Ramlåda</desc>"]) ]);
+  "svenska":#"<desc cont>Ramlåda</desc>"]) ]);
 #endif
 
 constant unit_gif = "/internal-roxen-unit";
