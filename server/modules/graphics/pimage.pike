@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.5 1997/10/16 12:16:30 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.6 1997/10/25 05:28:42 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -19,12 +19,24 @@ class Constructors
       img = 0; buffer = 0; my_fd = 0;
     }
 
+    int first;
     void draw_image()
     {
       if(!img) return;
       if(strlen(buffer))
       {
+	werror(strlen(buffer)+" bytes in buffer.\n");
 	buffer = buffer[my_fd->write(buffer)..];
+	return;
+      }
+      if(!first)
+      {
+	werror("first frame...\n");
+	buffer=img->first_frame();
+	werror(strlen(buffer)+" bytes in buffer.\n");
+	if(buffer) buffer = buffer[my_fd->write(buffer)..];
+	oi = buffer;
+	first++;
 	return;
       }
       if(toggle == 1)
@@ -33,6 +45,7 @@ class Constructors
 	my_fd->set_blocking();
 	call_out(my_fd->set_nonblocking,img->anim_delay,lambda(){},draw_image,done);
       } else {
+	werror("new frame..\n");
 	toggle = 1;
 	buffer=img->do_gif_add();
 	if(buffer == oi) buffer=0;
@@ -53,7 +66,8 @@ class Constructors
       my_fd = id->my_fd;
       id->do_not_disconnect = 1;
       img = image;
-      buffer="HTTP/1.0 200 Ok\r\nContent-Type: image/gif\r\n\r\n"+img->do_gif_begin();
+      buffer="HTTP/1.0 200 Ok\r\nContent-Type: image/gif\r\n\r\n"+
+	img->do_gif_begin();
       my_fd->set_nonblocking(lambda(){}, draw_image, done);
     }
   }
@@ -104,6 +118,14 @@ class Constructors
       return m_gif_begin=draw(1)->gif_begin();
     }
     
+    string first_frame()
+    {
+      mixed ff = draw(2);
+      if(stringp(ff)) return ff;
+      if(!ff) return "";
+      return ff->gif_add();
+    }
+
     string tag(mapping m)
     {
       if(m->notrans) bg=0;
@@ -370,9 +392,9 @@ object compile(string c, object id)
     "inherit __PRIVATE_TO_PIMAGE_Constructors;\n"
     "void create(object i){ id=i; }\n"
     "\n";
-  if(search(c, "draw")) pre += c;
-  else pre += "object draw() { "+c+" };";
-  return compile_string(pre, roxen->real_file(id->not_query,id))(id)->draw();
+  if(search(c, "draw")!=-1) pre += "#0 tag_contents\n" + c;
+  else pre += "#0 tag_contents\nobject draw() { "+c+" };";
+  return compile_string(pre, "whatever")(id)->draw();
 }
 
 string tag_pimage(string t, mapping m, string contents, object rid)

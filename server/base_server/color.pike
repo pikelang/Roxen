@@ -1,6 +1,6 @@
 // Color support for roxen. 
 
-string cvs_version = "$Id: color.pike,v 1.11 1997/10/10 13:00:07 grubba Exp $";
+string cvs_version = "$Id: color.pike,v 1.12 1997/10/25 05:28:37 per Exp $";
 
 #include <stdio.h>
 
@@ -82,7 +82,8 @@ array hsv_to_rgb(array|int hv, int|void sv, int|void vv)
 #undef p
 #undef q
 #undef t
-#define FOO(X) ((int)((X)<0.0?0:(X)>1.0?255:(int)((X)*255.0)))
+
+#define FOO(X) (int)(X*255)
   return ({FOO(r), FOO(g), FOO(b) });
 }
 
@@ -167,12 +168,16 @@ array(int) parse_color(string from)
   return ({ 0,0,0 });
 }
 
+inline nomask static int ABS(int y) { return y<0?-y:y; }
+
 // Mostly used for debug. Not really all that perfect..
 string color_name(array (int) from)
 {
   if(!arrayp(from) || sizeof(from)!=3) return "-";
   foreach(values(colors), mixed c)
-    if(equal(c,from))
+    if(ABS(c[0]-from[0]) < 6 &&
+       ABS(c[1]-from[1]) < 6 &&
+       ABS(c[2]-from[2]) < 6)
       return search(colors,c);
   if(equal(parse_color("grey"+(((int)from[0]*100)/255)),from))
     return "grey"+(((int)from[0]*100)/255);
@@ -187,7 +192,10 @@ array(string) list_colors()
 void create()
 {
   catch(colors = decode_value(read_bytes("etc/rgb.dat")));
+  add_constant("hsv_to_rgb", hsv_to_rgb);
+  add_constant("rgb_to_hsv", rgb_to_hsv);
   add_constant("parse_color", parse_color);
   add_constant("color_name", color_name);
+  add_constant("list_colors", list_colors);
   add_constant("color", this_object());
 }

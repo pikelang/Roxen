@@ -1,11 +1,19 @@
-/* $Id: wizard.pike,v 1.40 1997/10/24 20:26:03 noring Exp $
+/* $Id: wizard.pike,v 1.41 1997/10/25 05:28:41 per Exp $
  *  name="Wizard generator";
- *  doc="This plugin generats all the nice wizards";
+ *  doc="This file generats all the nice wizards";
  */
 
 inherit "roxenlib";
-string wizard_tag_var(string n, mapping m, object id)
+string wizard_tag_var(string n, mapping m, mixed a, mixed b)
 {
+  object id;
+  if(n=="cvar") // Container. Default value in 'a', id in 'b'.
+  {
+    id = b;
+    m["default"] = a;
+  } else // tag. No contents, id in 'b'.
+    id = a;
+
   string current = id->variables[m->name] || m["default"];
 
   switch(m->type)
@@ -81,6 +89,79 @@ string wizard_tag_var(string n, mapping m, object id)
     if(!m->size)m->size="14,1";
     return make_tag("input", m);
 
+   case "color":
+     int h, s, v;
+     if(id->variables[m->name+".hsv"]) 
+       sscanf(id->variables[m->name+".hsv"], "%d,%d,%d", h, s, v);
+     else
+     {
+       array tmp = rgb_to_hsv(@parse_color(current||"black"));
+       h = tmp[0]; s = tmp[1];  v = tmp[2];
+     }
+     if(id->variables[m->name+".entered"] &&
+	strlen(current=id->variables[m->name+".entered"]))
+     {
+       array tmp = rgb_to_hsv(@parse_color(current||"black"));
+       h = tmp[0]; s = tmp[1];  v = tmp[2];
+     }
+     if(id->variables["foo.x"]) h=(int)id->variables["foo.x"];
+     if(id->variables["bar.y"]) s=255-(int)id->variables["bar.y"];
+     if(id->variables["foo.y"]) v=255-(int)id->variables["foo.y"];
+     m_delete(id->variables, "foo.x");
+     m_delete(id->variables, "foo.y");
+     m_delete(id->variables, "bar.x");
+     m_delete(id->variables, "bar.y");
+     id->variables[m->name+".hsv"] = h+","+s+","+v;
+
+     array a=hsv_to_rgb(h,s,v);
+     string bgcol=sprintf("#%02x%02x%02x",a[0],a[1],a[2]); 
+     id->variables[m->name] = bgcol;
+     return 
+     ("<table><tr>\n"
+      "<td width=258 rowspan=2>\n"
+      "  <table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=258><tr><td>\n"
+      "  <input type=image name=foo src=/internal-roxen-colsel width=256 height=256 border=0></a>\n"
+      "  </td></table>\n"
+      "</td>\n"
+      "<td width=30 rowspan=2></td>\n"
+      "<td width=32 rowspan=2>\n"
+      "  <table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=32><tr><td>\n"
+      "<input type=image src=\"/internal-roxen-colorbar:"+
+      (string)h+","+(string)v+","+(string)s+"\" "
+      "name=bar width=30 height=256 border=0></a>"
+      "</td></table>\n"
+      "</td>\n"
+      "<td width=32 rowspan=2></td>\n"
+      "<td width=120>\n"
+      "  <table bgcolor=black cellpadding=1 border=3 cellspacing=0 width=90>\n"
+      "  <tr><td height=90 width=90 bgcolor="+bgcol+">&nbsp;"+
+      (m->tt?"<font color='"+m->tc+"'>"+m->tt+"</font>":"")
+      +"</td></table>\n"
+      "</td><tr>\n"
+      "<td width=120>\n"
+      "<b>R:</b> "+(string)a[0]+"<br>\n"
+      "<b>G:</b> "+(string)a[1]+"<br>\n"
+      "<b>B:</b> "+(string)a[2]+"<br>\n"
+      "<hr size=2 align=left noshade width=70>\n"
+      "<b>H:</b> "+(string)h+"<br>\n"
+      "<b>S:</b> "+(string)s+"<br>\n"
+      "<b>V:</b> "+(string)v+"<br>\n"
+      "<hr size=2 align=left noshade width=70>\n"+
+      "<font size=-1><input type=string name="+
+      m->name+".entered size=8 value='"+
+      color_name(a)+"'></font></td></table>\n");
+
+   case "font":
+     string res="";
+     m->type = "select";
+     m->choices = roxen->available_fonts(1)*",";
+     if(id->conf && id->conf->modules["graphic_text"])
+       res = ("<input type=submit value='Example'><br>"+
+	      ((current&&strlen(current))?
+	       "<gtext nfont='"+current+"'>Example Text</gtext><br>"
+	       :""));
+     return make_tag("var", m)+res;
+
    case "toggle":
     m_delete(m,"default");
     return make_container("select", m,
@@ -88,22 +169,32 @@ string wizard_tag_var(string n, mapping m, object id)
 			  "<option"+(!(int)current?" selected":"")+" value=0>No");
 
    case "select":
-    m_delete(m,"default");
-    m_delete(m,"type");
-    return make_container("select", m, Array.map(m->choices/",",
-						 lambda(string s, string c) {
-      return "<option"+(s==c?" selected":"")+">"+html_encode_string(s)+"\n";
-    },current)*"");
+     if(!m->choices && m->options)
+       m->choices = m->options;
+     m_delete(m,"default");
+     m_delete(m,"type");
+     mapping m2 = copy_value(m);
+     m_delete(m2, "choices");
+     m_delete(m2, "options");
+     return make_container("select", m2, Array.map(m->choices/",",
+						   lambda(string s, string c) {
+        return "<option"+(s==c?" selected":"")+">"+html_encode_string(s)+"\n";
+     },current)*"");
 
 
    case "select_multiple":
+     if(!m->choices && m->options)
+       m->choices = m->options;
     m_delete(m,"default");
     m_delete(m,"type");
-    m->multiple="1";
-    return make_container("select", m, Array.map(m->choices/",",
+    m2 = copy_value(m);
+    m_delete(m2, "choices");
+    m_delete(m2, "options");
+    m2->multiple="1";
+    return make_container("select", m2, Array.map(m->choices/",",
 						 lambda(string s, array c) {
       return "<option"+(search(c,s)!=-1?" selected":"")+">"+s+"\n";
-    },current/"\0")*"");
+    },(current||"")/"\0")*"");
   }
 }
 
@@ -179,7 +270,8 @@ string parse_wizard_page(string form, object id, string wiz_name)
   mapping foo = ([]);
   // Cannot easily be inlined below, believe me... Side-effects.
   form = parse_html(form,([ "var":wizard_tag_var, ]),
-		    ([ "help":parse_wizard_help]), id, foo );
+		    ([ "cvar":wizard_tag_var, 
+		       "help":parse_wizard_help]), id, foo );
   
   res = ("<!--Wizard-->\n"
          "<form method=get>\n"

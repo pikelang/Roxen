@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.83 1997/10/20 15:16:59 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.84 1997/10/25 05:28:39 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -825,20 +825,46 @@ void invalidate_cache()
 #endif
 }
 
+
+string draw_saturation_bar(int hue,int brightness, int where)
+{
+  object bar=Image.image(30,256);
+
+  for(int i=0;i<128;i++)
+  {
+    int j = i*2;
+    bar->line(0,j,29,j,@hsv_to_rgb(hue,255-j,brightness));
+    bar->line(0,j+1,29,j+1,@hsv_to_rgb(hue,255-j,brightness));
+  }
+
+  where = 255-where;
+  bar->line(0,where,29,where, 255,255,255);
+
+  return bar->togif(255,255,255);
+}
+
+
 // Inspired by the internal-gopher-... thingie, this is the images
 // from the configuration interface. :-)
 private mapping internal_roxen_image(string from)
 {
   sscanf(from, "%s.gif", from);
   sscanf(from, "%s.jpg", from);
-  from -= ".";
+
   // Disallow "internal-roxen-..", it won't really do much harm, but a list of
   // all files in '..' might be retrieved (that is, the actual directory
   // file was sent to the browser)
   // /internal-roxen-../.. was never possible, since that would be remapped to
   // /..
+  from -= ".";
 
   // changed 970820 by js to allow for jpeg images
+
+  // New idea: Automatically generated colorbar. Used by wizard code...
+  int hue,bright,w;
+  if(sscanf(from, "%*s:%d,%d,%d", hue, bright,w)==4)
+    return http_string_answer(draw_saturation_bar(hue,bright,w),"image/gif");
+
   if(object f=open("roxen-images/"+from+".gif", "r"))
     return (["file":f,"type":"image/gif"]);
   else
