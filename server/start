@@ -1,50 +1,14 @@
 #!/bin/sh
 #
-# $Id: start,v 1.139 2000/12/11 04:11:16 per Exp $
+# $Id: start,v 1.140 2000/12/30 05:19:55 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
 
-if [ "x$1" = "x--silent-start" ]
-then
-    SILENT_START="y"
-    shift
+if [ "x$1" = "x--silent-start" ] ; then
+ SILENT_START="y"
+ shift
 fi
-
-pre="`echo \"                   \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
-
-dp() {
-  if [ "x$SILENT_START" = "xy" ]
-  then :; else
-    echo "$pre" "$@" 2>&1
-  fi
-}
-
-
-change_owner( ) {
- uid="$1";  shift
- gid="$1";  shift
-
- for a in "$@" ; do 
-    ok=`ls -lgd $a 2>/dev/null | grep $uid | grep $gid | wc -l`
-    ok=`echo $ok`
-    if [ x$ok = x1 ] ; then 
-      dp "$a already has the correct ownership"
-    else
-      dp "Changing ownership of $a to $uid:$gid"
-      if chown -R "$uid" "$a" 2>/dev/null ; then
-        if  chgrp -R "$gid" "$a" 2>/dev/null ; then
-	  :
-        else
-          dp "Group change failed"
-        fi
-       else
-        dp "Ownership change failed"
-       fi
-     fi
- done
-}
-
 
 check_owner() {
    uid=`$pike -e 'write("%d",getuid())'`
@@ -82,11 +46,15 @@ case "$dn" in
  ""|".")
   ;;
  *)
-  dp "Changing current directory to '$dn' (now `pwd`)"
+  # dp is not used here since we cannot source bin/functions before we
+  # are in the correct directory, for quite obvious reasons...
+  echo "          : Changing current directory to '$dn' (now `pwd`)" >&2
   cd $dn
-  dp "Got new directory as `pwd`"
+  echo "          : Got new directory as `pwd`" >&2
   ;;
 esac
+
+. bin/functions
 
 # Can be set with '--config-dir=DIR'
 DIR=../configurations/
@@ -107,24 +75,6 @@ if test -d $VARDIR/.; then :; else
   mkdir $VARDIR || exit 1
 fi
 
-roxen_version() {
-   VERSION="`sed <etc/include/version.h -e '/__roxen_version__/s/[^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
-   BUILD="`sed <etc/include/version.h -e '/__roxen_build__/s/[^0-9]*\([0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
-   echo $VERSION.$BUILD
-}
-
-fullpath() {
-  (
-    IFS=:
-    for path in $PATH ; do
-      if [ -x "$path/$1" ] ; then
-	full="$path/$1"
-	break
-      fi
-    done
-    test "x$full" != "x" && echo $full
-  )
-}
 
 pcdir="$VARDIR/`roxen_version`/precompiled/`uname -m | tr ' ' '_' `.`uname -r`"
 old_roxen_defines="$pcdir/old_roxen_defines"
@@ -138,50 +88,10 @@ verbose=1
 roxendir="`pwd`"
 
 # Locate Pike binary.
-pike=`fullpath pike`
-if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
-if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
-if [ -x $LOCALDIR/bin/pike ] ; then pike=$LOCALDIR/bin/pike; fi
-if [ -x $LOCALDIR/bin/roxen ] ; then pike=$LOCALDIR/bin/roxen; fi
-if [ "x$PIKE" = "x" ]; then :; else
-  if [ -x "$PIKE" ]; then pike="$PIKE";
-  else
-    pikepath=`fullpath "$PIKE"`
-    if [ "x$pikepath" != "x" ]; then pike="$pikepath";
-    else dp "$PIKE is not executable - ignored."; fi
-  fi
-fi
+find_pike
 
-
-if [ x"$pike" = "x" ] ; then
-  dp "No pike binary found. Aborting."
-  exit 1
-fi
-
-if [ ! -f "$pike" ] ; then
-  dp "No pike binary found. Aborting."
-  exit 1
-fi
-
-# If environment file doesn't exist, try to create it.
-if
-  test ! -f $LOCALDIR/environment && test -f bin/buildenv.pike
-then
-  $pike bin/buildenv.pike
-  touch $LOCALDIR/environment
-fi
-
-# Set up environment
-if test -f $LOCALDIR/environment; then
-  . $LOCALDIR/environment
-fi
-
-# Make sure $CLASSPATH contains the servlet stuff
-CLASSPATH=java/classes${CLASSPATH:+:}$CLASSPATH
-for jar in java/classes/*.jar; do
-  CLASSPATH="$jar:$CLASSPATH"
-done
-export CLASSPATH
+# Source environment
+setup_environment
 
 
 ####### BEGIN ARGUMENT PARSING
@@ -634,24 +544,7 @@ signal_exit() {
 
 start_roxen() {
   check_owner
-
-  if ulimit -n unlimited 2>/dev/null ; then 
-   :
-  else
-    nfds=1073741824
-    while [ $nfds -gt "`ulimit -n`" ] ; do 
-      nfds=`expr $nfds / 2`
-      ulimit -n $nfds 2>/dev/null
-    done
-  fi
-  if [ x`ulimit -n` = xunlimited ] ; then
-    dp "Maximum number of open FDs: unlimited (2147483648)"
-  else
-    dp "Maximum number of open FDs: `ulimit -n`"
-    if [ "`ulimit -n`" -lt 1024 ] 2>/dev/null; then
-      dp "Warning: This is dangerously low"
-    fi
-  fi
+  raise_limit
 
   if [ x$remove_dumped = x1 ] ; then
     remove_old_dot_o_files "user request"
