@@ -12,10 +12,13 @@ class TCPNeigh {
 
   void send(string s)
   {
+    if(me)
+    {
 #ifdef NEIGH_DEBUG
       werror("Neighbourhood: TCP Send to "+me->query_address()+"\n");
 #endif
-    return me->write(s);
+      return me->write(s);
+    }
   }
 
   void done()
@@ -40,6 +43,7 @@ class TCPNeigh {
 #ifdef NEIGH_DEBUG
 	werror("Connection failed.\n");
 #endif
+	me=0;
 	call_out(m->remove_neighbour, 0, this_object());
 	return;
       }
@@ -60,10 +64,12 @@ class UDPNeigh
 
   static void read()
   {
-#ifdef NEIGH_DEBUG
-    werror("Neighbourhood: Got UDP\n");
-#endif
-    return master->low_got_info(master->udp_sock->read()->data, this_object());
+    mapping r = master->udp_sock->read();
+    if(r) return master->low_got_info(r->data, this_object());
+    else {
+      master->udp_sock->set_read_callback(0);
+      call_out(master->udp_sock->set_read_callback, 2, read);
+    }
   }
 
   void send(string s)
@@ -89,7 +95,7 @@ class UDPNeigh
 #endif
       if(!master->udp_sock->bind( p ))
 	werror("Bind failed.\n");
-      master->udp_sock->set_read_callback(read);
+      master->udp_sock->set_nonblocking(read);
     } else
       nobr=0;
     port = p; net = f;
@@ -122,21 +128,21 @@ void add_neighbour(object neigh)
 
 object master;
 
+mapping sent_to = ([]);
+
 void send_to_all(string f, object from)
 {
-  mapping sent_to = ([]);
   if(from)
   {
     string ip = from->me?(((from->me->query_address()||"")/" ")[0]):from->net;
     sent_to[ip]++;
   }
   foreach(indices(low_neighbours), object o)
-    if(objectp(o) && (o!=from)) {
+    if(objectp(o) && (o!=from))
+    {
       string ip = o->me ? (((o->me->query_address()||"")/" ")[0]) : o->net;
-      if(ip=="")
-	this_object()->remove_neighbour(o);
-      else
-	if(!sent_to[ip]++) o->send(f);
+      if(ip=="") this_object()->remove_neighbour(o);
+      if(!sent_to[ip]++) o->send(f);
     }
 }
 
@@ -153,19 +159,17 @@ mapping neigh_data()
   mapping m = (["last_reboot":lr]);
   m->configurl=roxen->config_url();
   m->seq=seq++;
-  switch(seq & 3)
+  switch(seq & 1)
   {
    case 0:
     m->comment=roxen->query("neigh_com");
+    m->host=gethostname();
+    m->uid=getuid();
     break;
    case 1:
     m->server_urls=Array.map(roxen->configurations, config_info);
-    break;
-   case 2:
-    m->host=gethostname();
-    m->version=roxen->real_version;
     m->pid=getpid();
-    m->uid=getuid();
+    m->version=roxen->real_version;
     m->ppid=getppid();
   }
   return m;
@@ -176,8 +180,8 @@ void broadcast()
 {
   string data = encode_value(neigh_data());
 #ifdef NEIGH_DEBUG
- werror("Neighbourhood: Sending broadcast to "+
-        sizeof(low_neighbours)+" neighbour connections\n");
+// werror("Neighbourhood: Sending broadcast to "+
+//        sizeof(low_neighbours)+" neighbour connections\n");
 #endif
   remove_call_out(broadcast);
   if(seq) call_out(broadcast,DELAY); else call_out(broadcast,1);
@@ -190,10 +194,12 @@ void low_got_info(string data, object from)
   mapping ns, m;
   m = decode_value(data);
   if(m->sequence) m->seq = m->sequence;
-  ns = neighborhood[m->configurl]||([]);
+  if(!neighborhood[m->configurl]) neighborhood[m->configurl]=([]);
+  ns = neighborhood[m->configurl];
   if(!ns->ok || (m->seq != ns->seq))
   {
     ns->ok=1;
+    ns->seq = m->seq;
 #ifdef NEIGH_DEBUG
     werror("Neighbourhood: Got info for "+m->configurl+"\n");
 #endif
@@ -204,12 +210,9 @@ void low_got_info(string data, object from)
     } else {
       m->seq_reboots=0;
     }
-    neighborhood[m->configurl] = ns | m;
     send_to_all(data, from);
   }
-#ifdef NEIGH_DEBUG
-  else werror("Neighbourhood: Rejecting already received info for "+m->configurl+"\n");
-#endif
+  neighborhood[m->configurl] = ns | m;
 }
 
 void got_connection(object port)
@@ -228,7 +231,7 @@ void create();
 void remove_neighbour(object neigh)
 {
   remove_call_out(create);
-  call_out(create, 20);
+  call_out(create, 60);
   m_delete(low_neighbours,neigh);
 }
 
@@ -259,7 +262,7 @@ void create()
   foreach(tcp_numbers(), string s)
     add_neighbour(TCPNeigh(s,51521,this_object()));
   foreach(network_numbers(), string s)
-    add_neighbour(UDPNeigh(s,51521,this_object()));
+   add_neighbour(UDPNeigh(s,51521,this_object()));
   if(roxen->query("neighborhood")) broadcast();else remove_call_out(broadcast);
   remove_call_out(create);
   add_constant("neighborhood", neighborhood);
