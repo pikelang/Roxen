@@ -1,5 +1,5 @@
 // This code has to work both in 'roxen.pike' and all modules
-// string _cvs_version = "$Id: socket.pike,v 1.14 1999/04/01 15:48:37 grubba Exp $";
+// string _cvs_version = "$Id: socket.pike,v 1.15 1999/04/09 16:00:44 marcus Exp $";
 
 #if !efun(roxen)
 #define roxen roxenp()
@@ -86,7 +86,7 @@ private void got_host_name(string host, string oh, int port,
 //#ifdef SOCKET_DEBUG
     perror("SOCKETS: Illegal internet address (" + host + ":" +port + ")"
 	   " in connect in async comm.\n");
-    if(err&&err[1])
+    if(err&&arrayp(err)&&err[1])
       perror("SOCKETS: " + err[0] - "\n" + " (" + host + ":" + port + ")"
 	     " in connect in async comm.\n");
 //#endif
