@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.35 2000/02/08 01:24:07 nilsson Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.36 2000/02/08 02:36:23 nilsson Exp $";
 
 #define LOCALE	roxenp()->locale->get()->config_interface
 #include <roxen.h>
@@ -77,6 +77,7 @@ mixed cache_lookup(string in, string what)
     else {
       CACHE_WERR("Hit");
       hits[in]++;
+      cache[in][what][TIMESTAMP]=time(1);
       return entry[DATA];
     }
   else CACHE_WERR("Miss");
@@ -183,33 +184,35 @@ void cache_clean()
   remove_call_out(cache_clean);
   call_out(cache_clean, CACHE_TIME_OUT);
   string a, b;
+  array c;
   int cache_time_out=CACHE_TIME_OUT;
   CACHE_WERR("cache_clean()");
   foreach(indices(cache), a)
   {
-#ifdef CACHE_DEBUG
 #if DEBUG_LEVEL > 40
     CACHE_WERR("  Class  " + a);
 #endif
-#endif
     foreach(indices(cache[a]), b)
     {
-#ifdef CACHE_DEBUG
 #if DEBUG_LEVEL > 40
       CACHE_WERR("     " + b + " ");
 #endif
-#endif
+      c = cache[a][b];
 #ifdef DEBUG
-      if(!intp(cache[a][b][TIMESTAMP]))
+      if(!intp(c[TIMESTAMP]))
 	error("Illegal timestamp in cache ("+a+":"+b+")\n");
 #endif
-      if(cache[a][b][TIMEOUT] <
-	 (time(1) - (cache_time_out - get_size(cache[a][b][DATA])/100)))
+      if(c[TIMEOUT] && c[TIMEOUT] < time(1)) {
+#if DEBUG_LEVEL > 40
+	CACHE_WERR("DELETED (explicit timeout)");
+#endif
+	m_delete(cache[a], b);
+      }
+      else if(c[TIMESTAMP] + cache_time_out -
+	      get_size(c[DATA])/100 < time(1))
       {
-#ifdef CACHE_DEBUG
 #if DEBUG_LEVEL > 40
 	CACHE_WERR("DELETED");
-#endif
 #endif
 	m_delete(cache[a], b);
       }
@@ -221,10 +224,8 @@ void cache_clean()
 #endif
       if(!sizeof(cache[a]))
       {
-#ifdef CACHE_DEBUG
 #if DEBUG_LEVEL > 40
 	CACHE_WERR("   Class DELETED.");
-#endif
 #endif
 	m_delete(cache, a);
       }
