@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.44 2000/12/30 16:51:15 nilsson Exp $
+// $Id: module.pmod,v 1.45 2001/01/29 05:44:37 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -969,21 +969,6 @@ class List
         m_delete( id->variables, path()+vv );
         l = l[..rn-1] + l[rn+1..];
       }
-    if( do_goto )
-    {
-      if( !id->misc->do_not_goto )
-      {
-        id->misc->moreheads = ([
-          "Location":Roxen.http_encode_string(id->raw_url+"?random="+
-                                              random(4949494)+
-                                              "&section="+
-                                              id->variables->section+
-                                              "#"+path()),
-        ]);
-        if( id->misc->defines )
-          id->misc->defines[ " _error" ] = 302;
-      }
-    }
 
     array b;
     mixed q = catch( b = verify_set_from_form( l ) );
@@ -1000,6 +985,30 @@ class List
     {
       set_warning( b[0] );
       set( b[1] );
+    }
+    if( do_goto && !id->misc->do_not_goto )
+    {
+      RequestID nid = id;
+      while( nid->misc->orig )
+	nid = id->misc->orig;
+
+      string section = RXML.get_var("section", "var");
+      string query = nid->query;
+      if( !query )
+	query = "";
+      else
+	query += "&";
+      query += "random="+random(4949494)+(section?"&section="+section:"");
+
+      nid->misc->moreheads =
+	([
+	  "Location":nid->not_query+(nid->misc->path_info||"")+
+	  "?"+query+"#"+path(),
+	]);
+      if( nid->misc->defines )
+	nid->misc->defines[ " _error" ] = 302;
+      else if( id->misc->defines )
+	id->misc->defines[ " _error" ] = 302;
     }
   }
 
