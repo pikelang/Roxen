@@ -24,6 +24,8 @@ void start()
 mapping generate_image( mapping args, RequestID id )
 {
   return roxen.low_load_image( args->src, id );
+// if( i->img && args->gamma )
+//   i->img = i->img->gamma( (float)args->gamma );
 }
 
 mapping find_internal( string f, RequestID id )
@@ -42,6 +44,7 @@ string tag_cimg( string t, mapping args, RequestID id )
     "maxheight":args->maxheight,
     "scale":args->scale,
     "dither":args->dither,
+    "gamma":args->gamma,
   ]);
 
   foreach( glob( "*-*", indices(args)), string n )
@@ -67,7 +70,7 @@ string tag_cimg_url( string t, mapping args, RequestID id )
     "src":fix_relative( args->src, id ),  "quant":args->quant,
     "format":args->format, "maxwidth":args->maxwidth,
     "maxheight":args->maxheight, "scale":args->scale,
-    "dither":args->dither,
+    "dither":args->dither, "gamma":args->gamma,
   ]);
 
   foreach( glob( "*-*", indices(args)), string n )
