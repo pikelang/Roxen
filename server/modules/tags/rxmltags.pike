@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.136 2000/06/20 15:39:55 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.137 2000/06/20 15:44:33 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -2394,9 +2394,7 @@ Sets a variable.</short>
 
  If none of the above attributes are specified, the variable is unset.
  If debug is currently on, more specific debug information is provided
- if the operation failed. See also: <ref type='tag'>append</ref>/home/per/src/.luke/clients/import.pike /home/musik/storage/2/live/the.distance.to.here/*
-
-																		       
+ if the operation failed. See also: <ref type='tag'>append</ref>
  and <ref type='tag'>debug</ref>",
 
 "set-cookie":#"<desc tag><short>
