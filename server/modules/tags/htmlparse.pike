@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.127 1998/07/22 00:06:44 js Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.128 1998/08/01 09:25:24 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2397,6 +2397,41 @@ string tag_line( string t, mapping args, object id)
   return id->misc->defines->line;
 }
 
+string tag_help(string t, mapping args, object id)
+{
+  array tags = sort(Array.filter(get_dir("modules/tags/doc/"),
+			     lambda(string tag) {
+			       if(tag[0] != '#' &&
+				  tag[-1] != '~' &&
+				  tag[0] != '.' &&
+				  tag != "CVS")
+				 return 1;
+			     }));
+  string help_for = args["for"] || id->variables->_r_t_h;
+
+  TRACE_ENTER("tag &lt;hhelp&gt", t);
+  if(!help_for)
+  {
+    string out = "<h3>Roxen Interactive RXML Help</h3>"
+      "<b>Here is a list of all documented tags. Click on the name to "
+      "receive more detailed information.</b><p>";
+    array tag_links = ({});
+    foreach(tags, string tag)
+    {
+      tag_links += ({ sprintf("<a href=?_r_t_h=%s>%s</a>", tag, tag) });
+    }
+    TRACE_LEAVE("");
+    return out + String.implode_nicely(tag_links);
+  } else if(Stdio.file_size("modules/tags/doc/"+help_for) > 0) {
+    string h = handle_help("modules/tags/doc/"+help_for, help_for, args);
+    TRACE_LEAVE("");
+    return h;
+  } else {
+    TRACE_LEAVE("");
+    return "<h3>No help available for "+help_for+".</h3>";
+  }
+}
+
 mapping query_tag_callers()
 {
    return (["accessed":tag_accessed,
@@ -2442,7 +2477,8 @@ mapping query_tag_callers()
 	    "!--#include":tag_compat_include, 
 	    "!--#config":tag_compat_config,
 	    "debug" : tag_debug,
-	    ]);
+	    "help": tag_help
+   ]);
 }
 
 string tag_source(string tag, mapping m, string s, object got,object file)
