@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.302 2002/11/12 18:32:52 mast Exp $
+// $Id: module.pmod,v 1.303 2002/12/17 15:35:59 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2973,49 +2973,51 @@ class Frame
   //! content has a value already. If the result is @[RXML.nil], it
   //! does not affect the surrounding content at all.
   //!
+  //! @returns
   //! Return values:
-  //! @dl
-  //!  @item array
+  //! @mixed
+  //!  @type array
   //!   A so-called exec array to be handled by the parser. The
   //!	elements are processed in order, and have the following usage:
-  //!   @dl
-  //!    @item string
+  //!   @mixed
+  //!    @type string
   //!	  Added or put into the result. If the result type has a
   //!	  parser, the string will be parsed with it before it's
   //!	  assigned to the result variable and passed on.
-  //!    @item @[RXML.Frame]
+  //!    @type RXML.Frame
   //!	  Already initialized frame to process. It's result is added
   //!	  or put into the result of this tag. The functions
   //!	  @[RXML.make_tag], @[RXML.make_unparsed_tag] are useful to
   //!	  create frames.
-  //!	 @item @[RXML.PCode]
+  //!	 @type RXML.PCode
   //!	  A p-code object to evaluate. It's not necessary that the
   //!	  type it evaluates to is the same as @[result_type]; it will
   //!	  be converted if it isn't.
-  //!	 @item function(RequestID:mixed)
+  //!	 @type function(RequestID:mixed)
   //!	  Run the function and add its return value to the result.
   //!	  It's assumed to be a valid value of @[result_type].
-  //!    @item object
+  //!    @type object
   //!	  Treated as a file object to read in blocking or nonblocking
   //!	  mode. FIXME: Not yet implemented, details not decided.
-  //!    @item multiset(mixed)
+  //!    @type multiset(mixed)
   //!	  Should only contain one element that'll be added or put into
   //!	  the result. Normally not necessary; assign it directly to
   //!	  the result variable instead.
-  //!    @item propagate_tag()
+  //!    @type propagate_tag
   //!	  Use a call to this function to propagate the tag to be
   //!	  handled by an overridden tag definition, if any exists. If
   //!	  this is used, it's probably necessary to define the
   //!	  @[raw_tag_text] variable. For further details see the doc
   //!	  for @[propagate_tag] in this class.
-  //!	 @item @[RXML.nil]
+  //!	 @type RXML.nil
   //!	  Ignored.
-  //!   @enddl
-  //!  @item 0
+  //!   @endmixed
+  //!  @type int(0..0)
   //!   Do nothing special. Exits the tag when used from
   //!   @[do_process] and @[FLAG_STREAM_RESULT] is set.
-  //! @enddl
+  //! @endmixed
   //!
+  //! @note
   //! Note that the intended use is not to postparse by setting a
   //! parser on the result type, but instead to return an array with
   //! literal strings and @[RXML.Frame] objects where parsing (or,
