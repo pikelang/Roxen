@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.115 2004/06/21 11:44:02 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.116 2004/06/21 11:55:26 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -91,7 +91,7 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 
 <attr name='rowinfo' value='variable'><p>
  Set the given variable to the number of rows processed.</p>
-</attr>"
+</attr>
 
 <attr name='mysql-insert-id' value='variable'><p>
  Set the given variable to the insert id used by Mysql for
