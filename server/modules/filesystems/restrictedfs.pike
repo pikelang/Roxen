@@ -1,5 +1,5 @@
 /*
- * $Id: restrictedfs.pike,v 1.2 1997/08/08 15:06:59 grubba Exp $
+ * $Id: restrictedfs.pike,v 1.3 1997/08/08 16:26:23 grubba Exp $
  *
  * $Author: grubba $
  *
@@ -11,7 +11,7 @@
  * Thanks to Zsolt Varga <redax@agria.hu> for the idea.
  */
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.2 1997/08/08 15:06:59 grubba Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.3 1997/08/08 16:26:23 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -38,7 +38,11 @@ mixed stat_file(string f, object id)
   }
   if (search("/" + f, home)) {
     // Not a prefix, or short.
-    return(0);
+    if ((home[1..sizeof(f)] != f) ||
+	((home[sizeof(f)] != '/') && (home[sizeof(f)+1] != '/'))) {
+      return(0);
+    }
+    // Short.
   }
   return(::stat_file(f, id));
 }
