@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.37 1997/10/03 17:16:49 grubba Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.38 1997/10/05 02:44:58 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -714,4 +714,52 @@ string html_encode_tag_value(string str)
 // Encodes str for use as a value in an html tag.
 {
   return "\"" + replace(str, ({"&", "\""}), ({"&amp;", "&quot;"})) + "\"";
+}
+
+object get_module (string modname)
+// Resolves a string as returned by get_modname to a module object if
+// one exists.
+{
+  string cname, mname;
+  int mid = -1;
+
+  if (sscanf (modname, "%s/%s", cname, mname) != 2 ||
+      !sizeof (cname) || !sizeof(mname)) return 0;
+  sscanf (mname, "%s#%d", mname, mid);
+
+  foreach (roxen->configurations, object conf) {
+    object moddata;
+    if (conf->name == cname && (moddata = conf->modules[mname])) {
+      if (mid >= 0) {
+	if (moddata->copies && sizeof (moddata->copies) > mid)
+	  return moddata->copies[mid];
+      }
+      else if (moddata->enabled) return moddata->enabled;
+      if (moddata->master) return moddata->master;
+    }
+  }
+
+  return 0;
+}
+
+string get_modname (object module)
+// Returns a string uniquely identifying the given module on the form
+// `<config name>/<module short name>#<copy>', where `#<copy>' only is
+// added for modules with copies.
+{
+  if (!module) return "/";
+
+  foreach (roxen->configurations, object conf)
+    foreach (indices (conf->modules), string mname) {
+      object moddata = conf->modules[mname];
+      if (moddata->copies)
+	for (int i = 0; i < sizeof (moddata->copies); i++) {
+	  if (moddata->copies[i] == module)
+	    return conf->name + "/" + mname + "#" + i;
+	}
+      else if (moddata->master == module || moddata->enabled == module)
+	return conf->name + "/" + mname;
+    }
+
+  return "/";
 }
