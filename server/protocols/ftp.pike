@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.30 2000/03/10 17:14:53 grubba Exp $
+ * $Id: ftp.pike,v 2.31 2000/03/10 17:57:24 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -3462,7 +3462,6 @@ class FTPSession
 
     // FIXME: Only supports one configuration!
     conf = port_obj->urls[port_obj->sorted_urls[0]]->conf;
-    id->misc->defaulted = 1;
 
     // Support delayed loading.
     if (!conf->inited) {
@@ -3478,6 +3477,7 @@ class FTPSession
     master_session->remoteaddr = (fd->query_address()/" ")[0];
     master_session->conf = conf;
     master_session->my_fd = fd;
+    master_session->misc->defaulted = 1;
     ::create(fd, got_command, 0, con_closed, ([]));
 
     array a = fd->query_address(1)/" ";
