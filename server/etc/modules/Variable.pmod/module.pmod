@@ -705,7 +705,7 @@ class MultipleChoice
     {
       mapping m = ([]);
       m->value = _name( elem );
-      if( m->value == query() )
+      if( equal( m->value, _name( query() ) ) )
         m->selected="selected";
       res += "  "+Roxen.make_container( "option", m, _title( elem ) )+"\n";
     }
