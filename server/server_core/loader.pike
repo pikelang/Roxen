@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.359 2002/11/02 17:47:11 mani Exp $
+// $Id: loader.pike,v 1.360 2002/11/02 17:54:21 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.359 2002/11/02 17:47:11 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.360 2002/11/02 17:54:21 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1193,14 +1193,11 @@ int main(int argc, array(string) argv)
 			    ({ "config-dir", "configuration-directory" }),
 			    ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
 			    "../configurations");
-  if(configuration_dir[-1] != '/')
-    configuration_dir += "/";
+  if( configuration_dir[-1] != '/' ) configuration_dir+="/";
 
   remove_dumped =
     [int(0..1)]Getopt.find_option(av, "remove-dumped",
 				  ({ "remove-dumped" }), 0 );
-
-  if( configuration_dir[-1] != '/' ) configuration_dir+="/";
 
   // Get the release version.
   if (release = Stdio.read_bytes("RELEASE")) {
