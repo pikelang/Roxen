@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.153 2001/03/06 11:43:34 peter Exp $
+# $Id: start,v 1.154 2001/03/17 02:27:20 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -56,13 +56,12 @@ esac
 . bin/functions
 
 # Can be set with '--config-dir=DIR'
-DIR=../configurations/
-LOGDIR=../logs/
+DIR=../configurations
+LOGDIR=../logs
 FILES="default"
 program=base_server/roxenloader.pike
-extra_args=""
-VARDIR=../var/
-LOCALDIR=../local/
+VARDIR=../var
+LOCALDIR=../local
 
 # Make LOCALDIR an absolute path
 if test -d $LOCALDIR/.; then
@@ -71,7 +70,7 @@ else :; fi
 
 if test -d $VARDIR/.; then :; else
   dp "Creating directory $VARDIR"
-  mkdir $VARDIR || exit 1
+  ./mkdir -p $VARDIR/ || exit 1
 fi
 
 
@@ -125,13 +124,13 @@ ARGS=""
 setup_for_tests() {
     DEFINES="-DRUN_SELF_TEST $DEFINES"
     # Kill roxen mysql if it's running...
-    if [ -f ${VARDIR}test_config/_mysql/mysql_pid ] ; then
-      kill `cat ${VARDIR}test_config/_mysql/mysql_pid`
+    if [ -f $VARDIR/test_config/_mysql/mysql_pid ] ; then
+      kill `cat $VARDIR/test_config/_mysql/mysql_pid`
     fi
-    rm -rf "$VARDIR""test_config"*
+    rm -rf $VARDIR/test_config*
     cp -R etc/roxen_test/test_config $VARDIR
     cp etc/roxen_test/filesystem/test_rxml_package rxml_packages/test_rxml_package
-    DIR="$VARDIR""test_config"
+    DIR=$VARDIR/test_config
     once=1
     remove_dumped=1
 }
@@ -159,7 +158,7 @@ parse_args() {
    FILES=`echo $1 | sed -e's/--config-dir=//' -e's/\.//g' -e's./..g' -e 's.-..g'`
   ;;
   --pid-file=*)
-   extra_args="$extra_args $1"
+   pidfile=`echo $1 | sed -e 's/--pid-file=//'`
   ;;
   '--with-security'|'--enable-security')
     DEFINES="$DEFINES -DSECURITY"
@@ -290,7 +289,10 @@ the default arguments.
       .B--log-dir=DIRB.:              Set the log directory. Defaults to .B../logsB..
 
       .B--config-dir=DIRB.:           Use an alternate configuration directory.
-				  Defaults to .B../configurationB..
+				  Defaults to .B../configurationsB..
+
+      .B--pid-file=FILEB.:            Store the roxen and startscript pids in this
+				  file. Defaults to .B../configurations/_roxen_pidB..
 
       .B--silent-startB.:             Inhibits output to stdout. If used,
                                   this argument must be the first one.
@@ -300,9 +302,9 @@ the default arguments.
 
       .B--without-ram-cache-statB.:   Disable the stat that is usualy done
                                   for files in the ram cache to ensure that
-				  they are not  changed before they are sent.
+				  they are not changed before they are sent.
                                   Improves performance at the cost of constant
-                                  aggrevation if the site is edited. Useful for
+                                  aggravation if the site is edited. Useful for
 				  truly static sites.
 
       .B--with-threadsB.:             If threads are available, use them.
@@ -320,9 +322,9 @@ the default arguments.
       .B--with-file-profileB.:        Like .B--with-profileB., but save information
                                   for each and every file.
 
-      .B--self-testB.:                 Runs a testsuite.
-      .B--self-test-verboseB.:         Runs a testsuite, report all tests.
-      .B--self-test-quiet.:            Runs a testsuite, only report errors.
+      .B--self-testB.:                Runs a testsuite.
+      .B--self-test-verboseB.:        Runs a testsuite, report all tests.
+      .B--self-test-quietB.:          Runs a testsuite, only report errors.
 
       .B--onceB.:                     Run the server only once, in the foreground.
 			   	  This is very useful when debugging.
@@ -352,9 +354,6 @@ the default arguments.
 				  truss -c, shows times for all system calls
                                   on exit. This is not intented for anything
                                   but debug. Slows the server down.
-
-      .B--pid-file=<file>B.:          Store the roxen and startscript pids in this
-				  file. Defaults to .B/tmp/roxen_$UIDB.
 
   .BArguments passed to pike:B.
 
@@ -487,7 +486,7 @@ fi
   DEFINES="$DEFINES -I$roxendir/etc/include"
 #fi
 
-if [ -d $LOCALDIR/include ]; then
+if [ -d $LOCALDIR/include/. ]; then
   DEFINES="$DEFINES -I$LOCALDIR/include"
 fi
 
@@ -496,7 +495,7 @@ fi
   DEFINES="$DEFINES -I$roxendir/base_server"
 #fi
 
-if [ -d $LOCALDIR/base_server ]; then
+if [ -d $LOCALDIR/base_server/. ]; then
   DEFINES="$DEFINES -I$LOCALDIR/base_server -P$LOCALDIR/base_server"
 fi
 
@@ -511,7 +510,7 @@ if [ -d $LOCALDIR/etc/. ]; then
   fi
 
   # Extra include-path
-  if [ -d $LOCALDIR/etc/include ]; then
+  if [ -d $LOCALDIR/etc/include/. ]; then
     DEFINES="$DEFINES -I$LOCALDIR/etc/include"
   fi
 
@@ -552,15 +551,16 @@ DEFINES="$DEBUG $DEFINES"
 # Some useful functions
 #
 
+cleanup_pid_file() {
+  [ -z "$pidfile" ] || rm $pidfile
+}
+
 signal_exit() {
   dp "Start script terminated."
   if [ "x$ROXEN_PID" != "x" ]; then
-    kill $ROXEN_PID 2>/dev/null
-    while kill -0 $ROXEN_PID 2>/dev/null; do
-      sleep 1
-    done
+    kill $ROXEN_PID 2>/dev/null && wait $ROXEN_PID 2>/dev/null
+    dp "Roxen WebServer shutdown."
   fi
-  dp "Roxen WebServer shutdown."
   exit 0
 }
 
@@ -575,7 +575,7 @@ start_roxen() {
   if [ x$remove_dumped = x1 ] ; then
     remove_old_dot_o_files "user request"
   fi
-  if [ "x$DIR" != "x../configurations/" ] ; then
+  if [ x$DIR != x../configurations ] ; then
     args="$DEFINES $ARGS $program --config-dir=$DIR $pass"
   else
     args="$DEFINES $ARGS $program $pass"
@@ -586,29 +586,26 @@ start_roxen() {
   if [ "x$gdb" = "xno" ]; then
     if [ $verbose -gt 0 ]; then
       if [ $verbose -gt 1 -o -z "$once" ] ; then
-        dp "Executing $pike $args $@"|sed -e "s!`pwd`!.!g"
+        dp Executing $pike $args|sed -e "s!`pwd`!.!g"
       else
         dp "Using the '$pike' pike binary"|sed -e "s!`pwd`!.!g"
       fi
     fi
 
-    trap signal_exit 2 15
-    trap "" 1
     if [ "x$once" = "x" ]; then
-      $pike $args "$@" 2>>$LOGDIR/debug/$FILES.1 1>&2 &
+      $pike $args 2>>$LOGDIR/debug/$FILES.1 1>&2 &
       ROXEN_PID=$!
       dp "Roxen WebServer server pid $ROXEN_PID."
       wait $! 2>/dev/null 1>&2
       exitcode="$?"
-echo "Exitcode = $exitcode"
       ROXEN_PID=""
     else
       if [ "x$do_pipe" = "x" ] ; then
-        $pike $args "$@" 2>&1
+        $pike $args 2>&1
         exitcode="$?"
       else
         trap exit_fail 1
-        eval "($pike $args \"$@\" || kill -1 $$) 2>&1  $do_pipe"
+        eval "($pike $args || kill -1 $$) 2>&1  $do_pipe"
         exit $exitcode
       fi
     fi
@@ -623,11 +620,11 @@ echo "Exitcode = $exitcode"
       # --gdb to it instead (which works in the special case of the
       # bin/pike script that is built by the top level Makefile in the
       # Pike source tree).
-      dp "Executing $pike --gdb $args $@"
-      $pike --gdb $args "$@"
+      dp "Executing $pike --gdb $args"
+      $pike --gdb $args
     else
-      dp "Executing gdb $pike $args $@"
-      echo >>.gdbinit run $args $@
+      dp "Executing gdb $pike $args"
+      echo >>.gdbinit run $args
       gdb $pike
     fi
     rm .gdbinit
@@ -638,6 +635,40 @@ echo "Exitcode = $exitcode"
 #
 # Now do the stuff
 #
+
+trap signal_exit 2 15
+trap "" 1
+
+if [ -z "$once" ]; then
+  # Fix the pid file. We don't do this if once is set, since that
+  # often signifies that it's not the real server starting up, but
+  # instead some other process, e.g. one given with --program.
+  [ -z "$pidfile" ] && pidfile=${ROXEN_PID_FILE:-$DIR/_roxen_pid}
+  pass="$pass --pid-file=$pidfile"
+  # Avoid duplicate start scripts if we got a pid file.
+  mypid=$$
+  test -f $pidfile && {
+    if read roxenpid && read scriptpid; then
+      if kill -0 $scriptpid 2>/dev/null; then
+	dp "According to the pid file $pidfile,"
+	dp "there is already a start script running with pid $scriptpid. Specify "
+	dp "another pid file with --pid-file if this is a different server."
+	dp "Server not started."
+	:
+      elif kill -0 $roxenpid 2>/dev/null; then
+	dp "According to the pid file $pidfile,"
+	dp "there is already a server running with pid $roxenpid, but its start "
+	dp "script seems to have died. You should shut it down and restart "
+	dp "it, since it won't restart automatically. Server not started."
+	:
+      else false; fi
+    else false; fi
+  } < $pidfile && exit 1
+  # Minor race here.
+  { echo "x" && echo $mypid; } > $pidfile
+  trap cleanup_pid_file 0
+fi
+
 PIKEVERSION="`$pike --version 2>&1|head -1`"
 LS="`ls -lL $pike 2>/dev/null`"
 LS="$LS `find etc/modules -ls 2>/dev/null`"
@@ -659,19 +690,18 @@ if [ -z "$once" ] ; then
   ./mkdir -p $LOGDIR/debug/
 
   if [ $verbose -gt 0 ]; then
-    dp "Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1."
-    dp "You can use the administration interface in the server to get debug info."
+    dp "Using configuration from $DIR"
+    dp "Storing the debug log in $LOGDIR/debug/$FILES.1"
+    dp "You can use the administration interface in the server to see debug info."
   else :; fi
 
   if (
     (
-      # Do not use the prefix since it contains the pid of the script
-      # we were forked from and not the one of this fork, which is
-      # confusing. Can't rebuild $pre from $$ here, since some sh's
-      # seems to cache it, causing it to be wrong here.
-      pre=""
-
+      # Minor race here wrt pid file cleanup.
       exec 3>&-
+      trap signal_exit 2 15
+      trap "" 1
+      trap cleanup_pid_file 0
 
       while : ; do
 	if test -d "$LOGDIR/debug/."; then :; else
@@ -686,7 +716,7 @@ if [ -z "$once" ] ; then
 	dp "Server start at `date`"
 	dp "Debug log in $LOGDIR/debug/$FILES.1"
 	rotate $LOGDIR/debug/$FILES
-	start_roxen $extra_args
+	start_roxen
 
 	if [ "$exitcode" -eq "0" ] ; then
 	  # Clean shutdown.
@@ -711,8 +741,14 @@ if [ -z "$once" ] ; then
 	fi
       done
     ) &
-    dp "Forked start script, pid $!." >&3
-  ) 3>&1 </dev/null >$LOGDIR/debug/start_$FILES.output 2>&1; then
+    # Minor race here wrt pid file contents.
+    pid=$!
+    trap "" 0
+    [ -z "$pidfile" ] || { echo "x" && echo $pid; } > $pidfile
+    dp "Forked start script, pid $pid." 2>&3
+    dp "Start script pid $pid."
+  ) 3>&2 </dev/null >"$LOGDIR/debug/start_$FILES.output" 2>&1; then
+    trap "" 0
     :
   else
     dp 'Failed to spawn subshell. -- Permission problem?'
@@ -725,5 +761,5 @@ if [ -z "$once" ] ; then
   exec >/dev/null
   exec </dev/null
 else
-  start_roxen $extra_args
+  start_roxen
 fi

@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.654 2001/03/17 01:00:39 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.655 2001/03/17 02:27:22 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -3489,8 +3489,8 @@ void create_pid_file(string where)
 {
 #ifndef __NT__
   if(!where) return;
-  where = replace(where, ({ "$pid", "$uid" }),
-		  ({ (string)getpid(), (string)getuid() }));
+//   where = replace(where, ({ "$pid", "$uid" }),
+// 		  ({ (string)getpid(), (string)getuid() }));
 
   r_rm(where);
   if(catch(Stdio.write_file(where, sprintf("%d\n%d\n", getpid(), getppid()))))
@@ -3659,8 +3659,7 @@ int main(int argc, array tmp)
 
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
 
-  create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE")
-		  || query("pidfile"));
+  create_pid_file(Getopt.find_option(argv, "p", "pid-file"));
 
 #ifdef RUN_SELF_TEST
   enable_configurations_modules();

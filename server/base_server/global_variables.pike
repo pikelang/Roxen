@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.66 2001/03/16 00:07:04 per Exp $
+// $Id: global_variables.pike,v 1.67 2001/03/17 02:27:22 mast Exp $
 
 /*
 #pragma strict_types
@@ -383,13 +383,6 @@ void define_global_variables(  )
 
   /// End of cache variables..
 
-  defvar("pidfile", "/tmp/roxen_pid_$uid", LOCALE(122, "PID file"),
-	 TYPE_FILE|VAR_MORE,
-	 LOCALE(123, "In this file, the server will write out it's PID, and "
-		"the PID of the start script. $pid will be replaced with the "
-		"pid, and $uid with the uid of the user running the process.\n"
-		"<br />Note: It can be overridden by the command line option."));
-  
   // FIXME: Should mention real_version.
   defvar("default_ident", 1, 
 	 LOCALE(124, "Identify, Use default identification string"),
