@@ -1,6 +1,6 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.58 2002/07/03 20:20:32 nilsson Exp $
+// $Id: prototypes.pike,v 1.59 2002/10/22 00:06:12 nilsson Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -1149,7 +1149,7 @@ class UserDB
 
   User create_user( string s )
   //! Not necessarily implemented, as an example, it's not possible to
-  //! create users in the system user database from Internet Server.
+  //! create users in the system user database from ChiliMoon.
   //! The default implementation returns 0.
   {
     return 0;
@@ -1157,7 +1157,7 @@ class UserDB
 
   Group create_group( string s )
   //! Not necessarily implemented, as an example, it's not possible to
-  //! create groups in the system user database from Internet Server.
+  //! create groups in the system user database from ChiliMoon.
   //! The default implementation returns 0.
   {
     return 0;

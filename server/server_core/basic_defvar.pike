@@ -1,6 +1,6 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 2000 - 2001, Roxen IS.
-// $Id: basic_defvar.pike,v 1.33 2002/10/01 22:43:38 nilsson Exp $
+// $Id: basic_defvar.pike,v 1.34 2002/10/22 00:06:12 nilsson Exp $
 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 

@@ -1,5 +1,5 @@
 // -*- java -*-
-// This file is part of Internet Server. Copyright (c) 1999 - 2001, Roxen IS.
+// This file is part of ChiliMoon. Copyright (c) 1999 - 2001, Roxen IS.
 
 // Global variables
 var isNav4 = false, isIE4 = false, isNav5 = false, isMac = false,

@@ -1,6 +1,6 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.95 2002/09/26 22:12:24 nilsson Exp $
+// $Id: global_variables.pike,v 1.96 2002/10/22 00:06:12 nilsson Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 

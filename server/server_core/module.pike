@@ -1,6 +1,6 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.133 2002/07/03 20:20:32 nilsson Exp $
+// $Id: module.pike,v 1.134 2002/10/22 00:06:12 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>

@@ -1,8 +1,8 @@
-// This is a roxen protocol module.
+// This is a ChiliMoon protocol module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.382 2002/10/01 23:55:49 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.383 2002/10/22 00:12:52 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1045,7 +1045,7 @@ static string error_page_header (string title)
 <table width='100%'><tr>
 <td><a href='http://www.roxen.com/'><img border='0' src='/internal-roxen-roxen-small'></a></td>
 <td><b><font size='+1'>" + title + #"</font></b></td>
-<td align='right'><font size='+1'>Internet Server " + Roxen.html_encode_string (roxen_version()) + #"</font></td>
+<td align='right'><font size='+1'>ChiliMoon " + Roxen.html_encode_string (roxen_version()) + #"</font></td>
 </tr></table>
 
 ";

@@ -1,4 +1,4 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1999 - 2001, Roxen IS.
 //
 // A throttling co-ordinator. Will share bandiwdth among
@@ -11,7 +11,7 @@
 // assumption. Per? Grubba?
 //
 
-constant cvs_version="$Id: throttler.pike,v 1.12 2002/07/03 14:51:26 per Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.13 2002/10/22 00:06:13 nilsson Exp $";
 this_program parent;
 
 #define DEFAULT_MINGRANT 1300

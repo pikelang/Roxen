@@ -1,9 +1,9 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.344 2002/10/01 23:39:06 nilsson Exp $
+// $Id: roxenloader.pike,v 1.345 2002/10/22 00:06:12 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.344 2002/10/01 23:39:06 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.345 2002/10/22 00:06:12 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1168,12 +1168,7 @@ int main(int argc, array(string) argv)
   else
     dist_version = "unknown";
 
-  roxen_is_cms = !!file_stat("modules/sitebuilder");
-
-  if(roxen_is_cms)
-    roxen_product_name="Roxen CMS";
-  else
-    roxen_product_name="Internet Server";
+    roxen_product_name="ChiliMoon";
 
   // The default (internally managed) mysql path
   string defpath =
@@ -1944,7 +1939,7 @@ void do_main( int argc, array(string) argv )
   // Set start time and report server version info.
   int start_time = gethrtime();
   last_was_nl = 1;
-  report_debug("-"*58+"\n"+version()+", Internet Server "+roxen_version()+"\n");
+  report_debug("-"*58+"\n"+version()+", ChiliMoon "+roxen_version()+"\n");
 
 
   //
@@ -1996,7 +1991,7 @@ void do_main( int argc, array(string) argv )
 #if !constant( Gz.inflate )
   feature_warn("FATAL", ({
     "The Gz (zlib) module is not available. "
-    "Various parts for Internet Server will not function correctly "
+    "Various parts of ChiliMoon will not function correctly "
     "without Gz support, e.g. the state handler and the built in font.",
     "To get zlib support, install zlib from "
     "ftp://ftp.freesoftware.com/pub/infozip/zlib/zlib.html "

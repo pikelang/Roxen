@@ -1,9 +1,9 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.327 2002/10/01 23:39:06 nilsson Exp $
+// $Id: rxml.pike,v 1.328 2002/10/22 00:06:12 nilsson Exp $
 
 
 inherit "rxmlhelp";

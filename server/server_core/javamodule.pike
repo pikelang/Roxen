@@ -1,6 +1,6 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1999 - 2001, Roxen IS.
-// $Id: javamodule.pike,v 1.6 2002/06/14 16:05:03 jhs Exp $
+// $Id: javamodule.pike,v 1.7 2002/10/22 00:06:12 nilsson Exp $
 
 #include <module.h>
 inherit "module";

@@ -1,10 +1,10 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1996 - 2000, Roxen IS.
 
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.16 2002/10/01 23:54:27 nilsson Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.17 2002/10/22 00:15:25 nilsson Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";

@@ -1,6 +1,6 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: newdecode.pike,v 1.32 2002/07/03 20:20:32 nilsson Exp $
+// $Id: newdecode.pike,v 1.33 2002/10/22 00:06:12 nilsson Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp

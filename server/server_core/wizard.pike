@@ -1,8 +1,8 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.144 2002/07/03 20:20:33 nilsson Exp $
+// $Id: wizard.pike,v 1.145 2002/10/22 00:06:13 nilsson Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 

@@ -1,5 +1,5 @@
 // Version information
-// $Id: version.h,v 1.539 2002/06/14 16:31:51 nilsson Exp $
+// $Id: version.h,v 1.540 2002/10/22 00:12:08 nilsson Exp $
 // 
 // Note that version information (major and minor) is also
 // present in module.h.
@@ -11,7 +11,7 @@ constant roxen_release = "-cvs";
 #endif /* !constant(roxen_release) */
 
 #ifdef __NT__
-constant real_version= "IS/"+__roxen_version__+"."+__roxen_build__+" NT"+roxen_release;
+constant real_version= "ChiliMoon/"+__roxen_version__+"."+__roxen_build__+" NT"+roxen_release;
 #else
-constant real_version= "IS/"+__roxen_version__+"."+__roxen_build__+roxen_release;
+constant real_version= "ChiliMoon/"+__roxen_version__+"."+__roxen_build__+roxen_release;
 #endif

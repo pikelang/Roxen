@@ -1,4 +1,4 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 2000 - 2001, Roxen IS.
 
 #include <config.h>

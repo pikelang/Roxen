@@ -1,4 +1,4 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 2000 - 2001, Roxen IS.
 
 #include <config.h>
@@ -7,7 +7,7 @@ inherit "freetype";
 #else
 inherit "ttf";
 #endif
-constant cvs_version = "$Id: builtin.pike,v 1.14 2002/06/14 16:05:05 jhs Exp $";
+constant cvs_version = "$Id: builtin.pike,v 1.15 2002/10/22 00:15:24 nilsson Exp $";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";

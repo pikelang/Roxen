@@ -1,6 +1,6 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: roxenlib.pike,v 1.216 2002/06/14 16:05:03 jhs Exp $
+// $Id: roxenlib.pike,v 1.217 2002/10/22 00:06:12 nilsson Exp $
 
 //#pragma strict_types
 

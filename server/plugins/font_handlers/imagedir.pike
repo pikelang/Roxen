@@ -1,9 +1,9 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 2000 - 2001, Roxen IS.
 
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.13 2002/06/14 16:05:05 jhs Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.14 2002/10/22 00:15:24 nilsson Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "

@@ -1,12 +1,12 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
 //
-// The Internet Server main program.
+// The ChiliMoon main program.
 //
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.822 2002/10/01 23:18:57 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.823 2002/10/22 00:06:12 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;

@@ -1,8 +1,8 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1996 - 2000, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.12 2002/06/14 16:05:05 jhs Exp $";
+constant cvs_version = "$Id: old.pike,v 1.13 2002/10/22 00:15:25 nilsson Exp $";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = 
