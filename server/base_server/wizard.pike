@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.90 1999/12/16 21:47:26 mast Exp $
+ * $Id: wizard.pike,v 1.91 2000/01/19 08:07:51 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generates all the nice wizards";
  * 
@@ -408,8 +408,9 @@ mapping decompress_state(string from)
     object gz = Gz;
     if(sizeof(indices(gz)))
       from = gz->inflate()->inflate(from);
+    return decode_value(from);
   };
-  return decode_value(from);
+  return ([]);
 }
   
 
