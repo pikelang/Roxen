@@ -7,12 +7,27 @@ static int check_jre_dir(string dir)
     return 0;
   if(!file_stat(dir+"/lib/flavormap.properties"))
     return 0;
-  return 1;
+  string v = Process.popen(dir+"/bin/java -version 2>&1");
+  if(2 <= sscanf(v, "java version \"%d.%d.%d", int maj, int min, int bld)) {
+    if(maj < 1)
+      return 0;
+    if(maj > 1 || min > 2)
+      return 1;
+    if(min < 2)
+      return 0;
+    return bld >= 2;
+  } else
+    return 1;
 }
 
 static string findjre()
 {
-  string dir =
+  string dir = combine_path(combine_path(getcwd(), __FILE__),
+			    "../../../java/jre");
+  if(check_jre_dir(dir))
+    return dir;
+
+  dir =
     (Process.popen("java -verbose 2>&1 | sed -n -e 's/^[^/]*//' -e "
 		   "'s:/lib/rt\.jar.*$::' -e p -e q")||"")-"\n";  
   if(check_jre_dir(dir))
