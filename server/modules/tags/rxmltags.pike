@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.430 2003/05/20 18:21:13 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.431 2003/05/21 09:30:04 stewa Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2121,12 +2121,14 @@ private int|array internal_tag_input(string t, mapping m, string name, multiset(
 }
 array split_on_option( string what, Regexp r )
 {
-  array a = r->split( what );
+  string whatwhatwhat = string_to_utf8(what);
+  array a = r->split( whatwhatwhat );
   if( !a )
-     return ({ what });
-  return split_on_option( a[0], r ) + a[1..];
+    return ({ what });
+  return split_on_option( utf8_to_string(a[0]), r ) + map(a[1..],utf8_to_string);
 }
-private int|array internal_tag_select(string t, mapping m, string c, string name, multiset(string) value)
+private int|array internal_tag_select(string t, mapping m, string c, string name
+, multiset(string) value)
 {
   if(name && m->name!=name) return ({ RXML.t_xml->format_tag(t, m, c) });
 
@@ -2148,11 +2150,11 @@ private int|array internal_tag_select(string t, mapping m, string c, string name
       nvalue=tmp[2][..stop==-1?sizeof(tmp[2]):stop];
     else if(!sscanf(nvalue, "\"%s\"", nvalue) && !sscanf(nvalue, "'%s'", nvalue))
       sscanf(nvalue, "%s%*[ >]", nvalue);
-    selected=Regexp(".*[Ss][Ee][Ll][Ee][Cc][Tt][Ee][Dd].*")->match(tmp[1]);
+    selected=Regexp(".*[Ss][Ee][Ll][Ee][Cc][Tt][Ee][Dd].*")->match(string_to_utf8(tmp[1]));
     ret+="<"+tmp[0]+tmp[1];
     if(value[nvalue] && !selected) ret+=" selected=\"selected\"";
     ret+=">"+tmp[2];
-    if(!Regexp(".*</[Oo][Pp][Tt][Ii][Oo][Nn]")->match(tmp[2])) ret+="</"+tmp[0]+">";
+    if(!Regexp(".*</[Oo][Pp][Tt][Ii][Oo][Nn]")->match(string_to_utf8(tmp[2]))) ret+="</"+tmp[0]+">";
     tmp=tmp[3..];
   }
   return ({ RXML.t_xml->format_tag(t, m, ret) });
