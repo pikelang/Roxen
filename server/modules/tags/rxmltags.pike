@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.118 2000/05/02 20:15:36 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.119 2000/05/02 20:21:00 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -2533,9 +2533,6 @@ Sets a variable.</short>
 
     ]);
 #endif
-
-
-
 
 
 
