@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.202 2000/01/30 21:18:46 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.203 2000/02/10 05:29:05 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -13,7 +13,6 @@ inherit "roxenlib";
 constant module_type   = MODULE_PARSER;
 constant module_name   = "Graphics text";
 constant module_doc    = "Generates graphical texts.";
-constant module_unique = 1;
 constant thread_safe   = 1;
 
 void create()
