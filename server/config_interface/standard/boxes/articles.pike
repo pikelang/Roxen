@@ -17,8 +17,12 @@ class Fetcher
 
   void done( Protocols.HTTP.Query q )
   {
-    data = replace( query->data(), "/articles/",
-		    "http://community.roxen.com/articles/");
+    data = replace( query->data(), ({ "/articles/",
+				      "cellspacing=\"0\"",
+				      "cellpadding=\"0\"",
+				      "size=2",
+				   }),
+		    ({"http://community.roxen.com/articles/","","",""}));
     cache_set( "articles_data", "data", data );
     destruct();
   }
