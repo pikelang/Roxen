@@ -29,11 +29,14 @@ void write_status_file()
   object fd = Stdio.File();
   if(fd->open(log_dir+"\\status", "wct"))
   {
-    fd->write(roxen()->config_url()+"\r\n");
-    foreach(roxen()->configurations, object c)
-      fd->write(c->query_name()+"\r\n"+
-		c->query("MyWorldLocation")+"\r\n");
-    fd->close();
+    if( roxen() )
+    {
+//       fd->write(roxen()->config_url()+"\r\n");
+      foreach(roxen()->configurations, object c)
+	fd->write(c->query_name()+"\r\n"+
+		  c->query("MyWorldLocation")+"\r\n");
+      fd->close();
+    }
   } else
     werror("Failed to open status file.\n");
 }
