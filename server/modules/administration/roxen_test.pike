@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.57 2002/10/23 22:43:38 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.58 2002/11/06 19:42:54 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "ChiliMoon self test module";
@@ -82,77 +82,6 @@ void start(int n, Configuration c)
   }
 }
 
-class FakePrefLang() {
-
-  int decoded=0;
-  int sorted=0;
-  array(string) subtags=({});
-  array(string) languages=({});
-  array(float) qualities=({});
-
-  array(string) get_languages() {
-    sort_lang();
-    return languages;
-  }
-
-  string get_language() {
-    if(!languages || !sizeof(languages)) return 0;
-    sort_lang();
-    return languages[0];
-  }
-
-  array(float) get_qualities() {
-    sort_lang();
-    return qualities;
-  }
-
-  float get_quality() {
-    if(!qualities || !sizeof(qualities)) return 0.0;
-    sort_lang();
-    return qualities[0];
-  }
-
-  void set_sorted(array(string) lang, void|array(float) q) {
-    languages=lang;
-    if(q && sizeof(q)==sizeof(lang))
-      qualities=q;
-    else
-      qualities=({1.0})*sizeof(lang);
-    sorted=1;
-    decoded=1;
-  }
-
-  void sort_lang() {
-    if(sorted && decoded) return;
-    array(float) q;
-    array(string) s=reverse(languages)-({""}), u=({});
-
-    if(!decoded) {
-      q=({});
-      s=Array.map(s, lambda(string x) {
-		       float n=1.0;
-		       string sub="";
-		       sscanf(lower_case(x), "%s;q=%f", x, n);
-		       if(n==0.0) return "";
-		       sscanf(x, "%s-%s", x, sub);
-		       q+=({n});
-		       u+=({sub});
-		       return x;
-		     });
-      s-=({""});
-      decoded=1;
-    }
-    else
-      q=reverse(qualities);
-
-    sort(q,s,u);
-    languages=reverse(s);
-    qualities=reverse(q);
-    subtags=reverse(u);
-    sorted=1;
-  }
-}
-
 RequestID get_id()
 {
   object id = roxen.InternalRequestID();
@@ -162,7 +91,6 @@ RequestID get_id()
 
   id->realfile = combine_path_unix(query("selftestdir"), "filesystem/index.html");
   id->misc->stat = conf->stat_file("/index.html", id);
-  id->misc->pref_languages = FakePrefLang();
   id->misc->pref_languages->set_sorted( ({"sv","en","bräk"}) );
   NOCACHE();
 
