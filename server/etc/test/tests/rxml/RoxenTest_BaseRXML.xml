@@ -1837,6 +1837,16 @@ cd</rxml>
 <result>&</result>
 </test>
 
+<test>
+  <rxml><set variable="var.x" type="int">10</set>&var.x;</rxml>
+  <result>10</result>
+</test>
+
+<test>
+  <rxml><set variable="var.x" type="int" value="10"/>&var.x;</rxml>
+  <result>10</result>
+</test>
+
 <comment>Quoting tests missing</comment>
 
 
