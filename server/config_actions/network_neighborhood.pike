@@ -1,4 +1,4 @@
-/* $Id: network_neighborhood.pike,v 1.16 1997/08/30 16:13:15 peter Exp $ */
+/* $Id: network_neighborhood.pike,v 1.17 1997/09/06 13:07:20 per Exp $ */
 
 inherit "wizard";
 
@@ -78,7 +78,7 @@ string page_0()
 	       RE+sv(ns->pid)+ER,
 	       RE+sv(ns->ppid)+ER,
 	       RE+sv(ns->version)+ER}) +
-       (strlen(ns->comment)?
+       (ns->comment && strlen(ns->comment)?
 		 ({({"<img src=/image/unit.gif height=1 width=20>"
 		     "<font size=-1>"+ns->comment
 		       +"</font>"})}):({}));
