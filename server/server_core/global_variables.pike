@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.99 2002/10/26 00:08:21 nilsson Exp $
+// $Id: global_variables.pike,v 1.100 2002/11/25 10:41:15 agehall Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -142,13 +142,13 @@ void set_up_ssl_variables( Protocol o )
 
   defvar( "ssl_cert_file", "demo_certificate.pem", "SSL certificate file",
 	  TYPE_STRING,
-	  "The SSL certificate file to use. The path is relative to "+getcwd()+".\n" );
+	  "The SSL certificate file to use. The path is relative to "+combine_path(getcwd(), "../local/")+".\n" );
 
 
   defvar( "ssl_key_file", "", "SSL key file",
 	  TYPE_STRING,
 	  ("The SSL key file to use. The path is "
-	   "relative to "+getcwd()+", you do not have to specify a key "
+	   "relative to "+combine_path(getcwd(),"../local/")+", you do not have to specify a key "
 	   "file, leave this field empty to use the certificate "
 	   "file only.\n") );
 }
