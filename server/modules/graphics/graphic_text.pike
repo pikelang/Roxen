@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.89 1997/10/16 23:46:06 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.90 1997/10/27 08:31:58 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1275,6 +1275,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	arg->glow = arg->fg;
     }
     arg->fg = defines->alink||"#ff0000";
+    if(arg->magicbg) arg->background = arg->magicbg;
     if(arg->bevel) arg->pressed=1;
 
     int num2 = find_or_insert(arg);
