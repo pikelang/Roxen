@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.35 1998/05/01 01:05:56 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.36 1998/05/14 08:22:52 neotron Exp $";
 constant thread_safe=1;
 
 
@@ -29,7 +29,7 @@ constant thread_safe=1;
 
 
 int redirects, accesses, errors, dirlists;
-int puts, deletes, mkdirs;
+int puts, deletes, mkdirs, moves;
 
 static int do_stat = 1;
 
@@ -41,6 +41,7 @@ string status()
 	   :"No file accesses<br>")+
 	  (QUERY(put)&&puts?"<b>Puts</b>: "+puts+"<br>":"")+
 	  (QUERY(put)&&mkdirs?"<b>Mkdirs</b>: "+mkdirs+"<br>":"")+
+	  (QUERY(put)&&moves?"<b>Moved files</b>: "+moves+"<br>":"")+
 	  (QUERY(delete)&&deletes?"<b>Deletes</b>: "+deletes+"<br>":"")+
 	  (errors?"<b>Permission denied</b>: "+errors
 	   +" (not counting .htaccess)<br>":"")+
@@ -513,6 +514,87 @@ mixed find_file( string f, object id )
     return http_pipe_in_progress();
     break;
 
+   case "MV":
+    // This little kludge is used by ftp2 to move files. 
+    
+    if(!QUERY(put))
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MV disallowed (since PUT is disallowed)");
+      return 0;
+    }    
+    if(!QUERY(delete) && size != -1)
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MV disallowed (DELE disabled, can't overwrite file)");
+      return 0;
+    }
+
+    if(size == -2)
+    {
+      id->misc->error_code = 405;
+      TRACE_LEAVE("MV: Cannot overwrite directory");
+      return 0;
+    }
+
+    if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
+      TRACE_LEAVE("MV: Permission denied");
+      return http_auth_required("foo",
+				"<h1>Permission to 'MV' files denied</h1>");
+    }
+    string movefrom;
+    if(!id->misc->move_from ||
+       !(movefrom = id->conf->real_file(id->misc->move_from, id))) {
+      id->misc->error_code = 405;
+      errors++;
+      TRACE_LEAVE("MV: No source file");
+      return 0;
+    }
+    moves++;
+    
+    object privs;
+    
+// #ifndef THREADS // Ouch. This is is _needed_. Well well...
+    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
+      // NB: Root-access is prevented.
+      privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
+    }
+    // #endif
+    
+    if (QUERY(no_symlinks) && (contains_symlinks(path, oldf)) &&
+	(contains_symlinks(path, id->misc->move_from))) {
+      privs = 0;
+      errors++;
+      TRACE_LEAVE("MV: Contains symlinks. Permission denied");
+      return http_low_answer(403, "<h2>Permission denied.</h2>");
+    }
+
+    TRACE_ENTER("MV: Accepted", 0);
+
+
+    /* Clear the stat-cache for this file */
+#ifdef __NT__
+    if(movefrom[-1] == '/')
+      movefrom = move_from[..strlen(movefrom)-2];
+#endif
+    if (stat_cache) {
+      cache_set("stat_cache", movefrom, 0);
+      cache_set("stat_cache", f, 0);
+    }
+    werror("Moving file "+movefrom+" to "+ f+"\n");
+    int code = mv(movefrom, f);
+    privs = 0;
+
+    if(!code)
+    {
+      id->misc->error_code = 403;
+      TRACE_LEAVE("MV: Move failed");
+      TRACE_LEAVE("Failure");
+      return 0;
+    }
+    TRACE_LEAVE("MV: Success");
+    return http_string_answer("Ok");
+   
   case "DELETE":
     if(!QUERY(delete) || size==-1)
     {

@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.24 1998/05/13 09:33:37 neotron Exp $
+ * $Id: ftp2.pike,v 1.25 1998/05/14 08:22:50 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -79,7 +79,7 @@
 #include <module.h>
 #include <stat.h>
 
-// #define FTP2_DEBUG
+//  #define FTP2_DEBUG
 
 #define FTP2_XTRA_HELP ({ "Report any bugs to roxen-bugs@roxen.com." })
 
@@ -1482,7 +1482,7 @@ class FTPSession
 	send(550, ({ sprintf("%s: Error, can't open file.", fname) }));
 	return 0;
       }
-    } else if ((< "STOR", "MKD" >)[cmd]) {
+    } else if ((< "STOR", "MKD", "MOVE" >)[cmd]) {
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
 	DWRITE(sprintf("FTP: Error opening file \"%s\"\n"
@@ -2334,7 +2334,7 @@ class FTPSession
     restart_point = (int)args;
     send(350, ({ "'REST' ok" }));
   }
-
+  
   void ftp_ABOR(string args)
   {
     if (curr_pipe) {
@@ -2357,6 +2357,55 @@ class FTPSession
     ftp_PWD(args);
   }
 
+  /*
+   * Handling of file moving
+   */
+  
+  static private string rename_from; // rename from
+  
+  void ftp_RNFR(string args)
+  {
+    if (!expect_argument("RNFR", args)) {
+      return;
+    }
+    args = fix_path(args);
+    
+    object session = RequestID(master_session);
+    
+    session->method = "STAT";
+
+    if (stat_file(args, session)) {
+      send(350, ({ sprintf("%s ok, waiting for destination name.", args) }) );
+      rename_from = args;
+    } else {
+      send(550, ({ sprintf("%s: no such file or permission denied.",args) }) );
+    }
+  }
+
+  void ftp_RNTO(string args)
+  {
+    if(!rename_from) {
+      send(503, ({ "RNFR needed before RNTO." }));
+      return;
+    }
+    if (!expect_argument("RNTO", args)) {
+      return;
+    }
+    args = fix_path(args);
+    
+    object session = RequestID(master_session);
+    
+    session->method = "MV";
+    session->misc->move_from = rename_from;
+    session->not_query = args;
+    if (open_file(args, session, "MOVE")) {
+      send(250, ({ sprintf("%s moved to %s.", rename_from, args) }));
+      session->conf->log(([ "error":200 ]), session);
+    }
+    rename_from = 0;
+  }
+
+    
   void ftp_NLST(string args)
   {
     array(string) argv = glob_expand_command_line("/usr/bin/ls " + (args||""));
