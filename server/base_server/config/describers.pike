@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.46 1997/08/25 16:50:47 grubba Exp $ */
+/* $Id: describers.pike,v 1.47 1997/08/26 17:04:51 peter Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -111,10 +111,13 @@ int last_time;
 string describe_error(string err, array (int) times)
 {
   int code, nt;
+  array(string) codetext=({ "Notice:", "Warning:", "Error:" });
+  
   if(sizeof(times)==1 && times[0]/60==last_time) nt=1;
   last_time=times[0]/60;
   sscanf(err, "%d,%s", code, err);
-  return ("<table><tr><td valign=top><img src=/image/err_"+code+".gif>"
+  return ("<table><tr><td valign=top><img src=/image/err_"+code+".gif \n"
+	  "alt="+codetext[code-1]+">"
 	  "</td><td>"+(nt?"":describe_times(times)+"<br>")+
 	  replace(fix_err(err),"\n","<br>\n")+"</table>");
 }

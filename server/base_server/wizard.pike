@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.35 1997/08/24 03:57:36 per Exp $
+/* $Id: wizard.pike,v 1.36 1997/08/26 17:03:44 peter Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -416,21 +416,21 @@ string html_table(array(string) subtitles, array(array(string)) table)
 
 string html_notice(string notice, object id)
 {
-  return ("<table><tr><td valign=top><img src=\""+
+  return ("<table><tr><td valign=top><img \nalt=Notice: src=\""+
         (id->conf?"/internal-roxen-":"/image/")
         +"err_1.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
 }
 
 string html_warning(string notice, object id)
 {
-  return ("<table><tr><td valign=top><img src=\""+
+  return ("<table><tr><td valign=top><img \nalt=Warning: src=\""+
         (id->conf?"/internal-roxen-":"/image/")
         +"err_2.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
 }
 
 string html_error(string notice, object id)
 {
-  return ("<table><tr><td valign=top><img src=\""+
+  return ("<table><tr><td valign=top><img \nalt=Error: src=\""+
         (id->conf?"/internal-roxen-":"/image/")
         +"err_3.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
 }
