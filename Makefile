@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.17 1997/10/25 15:30:05 grubba Exp $
+# $Id: Makefile,v 1.18 1997/10/25 17:07:19 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -55,6 +55,13 @@ configure : configure.in
 	@echo
 
 install : all
+	@make "MAKE=$(MAKE)" "prefix=$(prefix)" "OS=$(OS)" "BUILDDIR=$(BUILDDIR)" install_low
+	@echo
+	@echo Starting the install program...
+	@echo
+	@cd $(prefix)/roxen/server; ./install
+
+install_low :
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
 	echo "Installing Roxen 1.2 from $$builddir ..."; \
@@ -64,9 +71,6 @@ install : all
 	@echo
 	@echo Roxen successfully installed.
 	@echo
-	@echo Starting the install program...
-	@echo
-	@cd $(prefix)/roxen/server; ./install
 
 localinstall : all
 	@builddir="$(BUILDDIR)"; \
