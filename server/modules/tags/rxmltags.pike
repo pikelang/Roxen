@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.84 2000/03/01 11:33:42 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.85 2000/03/01 15:36:07 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -766,7 +766,7 @@ string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File fi
     return ({ sprintf("%s &lt;%s@%s&gt;",
 		      u[4], b, dom)
 	    });
-  return ({ sprintf("<a href=\"/~%s/\">%s</a> "
+  return ({ sprintf( (m->nohomepage?"":"<a href=\"/~%s/\">%s</a> ")+
 		    "<a href=\"mailto:%s@%s\">&lt;%s@%s&gt;</a>",
 		    b, u[4], b, dom, b, dom)
 	  });
@@ -1455,36 +1455,32 @@ string api_query_modified(RequestID id, string f, int|void by)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"&client;":({ #"<desc scope>
- This scope contains information specific to the client/browser that
- is accessing this page.
-</desc>",
-	      (["ip":#"<desc ent>The client is located on this IP-address.</desc>",
-		"name":#"<desc ent>The name of the client, i.e. Mozilla/4.7. </desc>",
-		"full-name":#"<desc ent>The full name of the client and additional info like; operating system, type of computer, etc. I.e. Mozilla/4.7 [en] (X11; I; SunOS 5.7 i86pc). </desc>",
-		"referrer":#"<desc ent>Prints the URL of the page on which the user followed a link that brought her to this page. The information comes from the referrer header sent by the browser.
-</desc>",
-		"accept-language":#"<desc ent>The client prefers to have the page contents presented in this language.</desc>",
-		"accept-languages":#"<desc ent>The client prefers to have the page contents presented in this language but these additional languages are accepted as well.</desc>",
-		"language":#"<desc ent></desc>",
-		"languages":#"<desc ent></desc>"])
-	   }),
+"&client.ip;":"<desc ent>The client is located on this IP-address.</desc>",
+"&client.name;":"<desc ent>The name of the client, i.e. \"Mozilla/4.7\". </desc>",
+"&client.full-name;":#"<desc ent>The full user agent string, i.e. name of the client
+ and additional info like; operating system, type of computer, etc.
+ E.g. \"Mozilla/4.7 [en] (X11; I; SunOS 5.7 i86pc)\". </desc>",
+"&client.referrer;":#"<desc ent>Prints the URL of the page on which the user followed
+ a link that brought her to this page. The information comes from the referrer header
+ sent by the browser.</desc>",
+"&client.accept-language;":#"<desc ent>The client prefers to have the page contents
+ presented in this language.</desc>",
+"&client.accept-languages;":#"<desc ent>The client prefers to have the page contents
+ presented in this language but these additional languages are accepted as well.</desc>",
+"&client.language;":"<desc ent>The clients most preferred language.</desc>",
+"&client.languages;":"<desc ent>An ordered list of the clients most preferred</desc>",
 
-"&page;":({ #"<desc scope>
- This scope contains information specific to this page.
-</desc>",
-
-	    (["realfile":#"<desc ent>Path to this file in the file system.</desc>",
-	      "virtroot":#"<desc ent></desc>",
-	      "virtfile":#"<desc ent>Path to this file in the virtual file systme.</desc>",
-	      "query":#"<desc ent></desc>",
-	      "url":#"<desc ent>The URL to this file, from the web server's root or point of view.</desc>",
-	      "last-true":#"<desc ent></desc>",
-	      "language":#"<desc ent>What language the contens of this file is written in. The language must be given as metadata to be found.</desc>",
-	      "scope":#"<desc ent></desc>",
-	      "filesize":#"<desc ent>This file's size, in bytes.</desc>",
-	      "self":#"<desc ent>The name of this file.</desc>"])
-	 }),
+"&page.realfile;":"<desc ent>Path to this file in the file system.</desc>",
+"&page.virtroot;":"<desc ent>The root of the present virtual filesystem.</desc>",
+"&page.virtfile;":"<desc ent>Path to this file in the virtual file systme.</desc>",
+"&page.query;":"<desc ent></desc>",
+"&page.url;":"<desc ent>The URL to this file, from the web server's root or point of view.</desc>",
+"&page.last-true;":"<desc ent></desc>",
+"&page.language;":#"<desc ent>What language the contens of this file is written in.
+ The language must be given as metadata to be found.</desc>",
+"&page.scope;":"<desc ent></desc>",
+"&page.filesize;":"<desc ent>This file's size, in bytes.</desc>",
+"&page.self;":"<desc ent>The name of this file.</desc>"
 
 "roxen_automatic_charset_variable":#"<desc tag>
  Internal Roxen tag. Not yet documented.
@@ -2437,6 +2433,10 @@ Adds a cookie named \"name\" with the value \"value\".
 
 <attr name=nolink>
  Don't include the links.
+</attr>
+
+<attr name=nohomepage>
+ Don't include homepage links.
 </attr>
 
 <attr name=realname>
