@@ -16,9 +16,9 @@ OTHERFLAGS=@CFLAGS@
 CFLAGS=-g @DEFS@ $(PREFLAGS) $(OTHERFLAGS)
 PREFLAGS=-I. -I$(SRCDIR) -I$(SRCDIR)/../.. -I../..
 
-all: roxen_hostname cgi $(HAVE_SHUFFLE) fcgi
+all: roxen_hostname cgi fcgi
 
-pure: purerecgi pureshuffle roxen_hostname
+pure: purerecgi roxen_hostname
 
 no: 
 none:
@@ -59,7 +59,7 @@ shuffle-localinstall: shuffle
 	-/bin/rm -f $(SRCDIR)/../server/bin/shuffle
 	/bin/cp shuffle $(SRCDIR)/../server/bin
 
-install: roxen_hostname fcgi cgi $(HAVE_SHUFFLE)-install
+install: roxen_hostname fcgi cgi
 	@for f in roxen_hostname fcgi cgi; do \
 		echo Installing $$f...; \
 		/bin/rm -f $(prefix)/roxen/server/bin/$$f; \
@@ -69,7 +69,7 @@ install: roxen_hostname fcgi cgi $(HAVE_SHUFFLE)-install
 	-@ln -s $(prefix)/roxen/server/bin/cgi $(prefix)/roxen/server/bin/cgi-bin
 	@echo Done.
 
-localinstall: fcgi roxen_hostname cgi $(HAVE_SHUFFLE)-localinstall
+localinstall: fcgi roxen_hostname cgi
 	@for f in fcgi roxen_hostname cgi; do \
 		echo Installing $$f...; \
 		/bin/rm -f $(SRCDIR)/../server/bin/$$f; \

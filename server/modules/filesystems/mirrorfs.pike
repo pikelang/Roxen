@@ -1,4 +1,4 @@
-constant cvs_version="$Id: mirrorfs.pike,v 1.7 1997/08/31 03:47:20 peter Exp $";
+constant cvs_version="$Id: mirrorfs.pike,v 1.8 1997/09/01 01:35:35 per Exp $";
 constant thread_safe=1;
 
 import RoxenRPC;
@@ -151,6 +151,97 @@ void get_remote_file(string f)
   };
 }
 
+class RemoteFile {
+  object outbuffer, remote_file;
+  function read_cb, close_cb;
+  int query_fd(){ return -1;}
+
+  int done;
+  string data = "";
+  mixed id;
+
+  void set_id(mixed t){ id=t; };
+  
+  void set_nonblocking(function rc, function wc, function cc)
+  {
+    read_cb = rc;
+    close_cb = cc;
+    if(strlen(data)) rc(id,data);
+    if(done) cc(id);
+  }
+
+  void set_blocking(function rc, function wc, function cc)
+  {
+    read_cb = close_cb = 0;
+  }
+
+  string read(int len)
+  {
+    if(strlen(data))
+    {
+      string q = data[..len-1];
+      data = data[len .. ];
+      return data;
+    }
+    return "";
+  }
+  
+  void close()
+  {
+    /* NOOP */
+  }
+
+  void get_data()
+  {
+    string q = remote_file->read(1024);
+    if(strlen(q) != 1024)
+    {
+      destruct(remote_file);
+      done=1;
+    }
+    data += q;
+    outbuffer->write( q );
+    if(!done) call_out(get_data, 0);
+    if(read_cb)
+    {
+      read_cb(id, data);
+      data = "";
+    }
+    if(done)
+    {
+      outbuffer->close();
+      if(close_cb) close_cb( id );
+      outbuffer=remote_file=0;
+    }
+  }
+  
+  void create(object in, object out)
+  {
+    trace(1);
+    remote_file = in;
+    outbuffer = out;
+    call_out(get_data, 0);
+  }
+  
+};
+
+
+object(RemoteFile) open_remote_file(string f)
+{
+#ifdef MODULE_DEBUG
+  roxen_perror("open_remote_file(\""+f+"\")\n");
+#endif /* MODULE_DEBOG */
+  if(!strlen(f) || f[-1]=='/') f+="index.html";
+  string l = combine_path(path,combine_path("/",f)[1..]);
+  object o = rpc()->open_file( f );
+  if(o)
+  {
+    mkdirhier(l); rm(l);
+    object out = open(l, "wct");
+    return RemoteFile( o, out );
+  }
+}
+
 mixed find_local_file(string f, object id)
 {
   string old_method = id->method;
@@ -163,9 +254,6 @@ mixed find_local_file(string f, object id)
 array find_dir(string s, object id)
 {
   mixed res;
-#ifdef MODULE_DEBUG
-  roxen_perror("find_dir(\""+s+"\")\n");
-#endif /* MODULE_DEBOG */
   if(objectp(res=find_local_file(s+".dirents",id)))
     if(res = decode_value(res->read(0x7ffffff)))
       if(res[0]==path) return res[1];
@@ -177,10 +265,10 @@ array find_dir(string s, object id)
 array stat_file(string s, object id)
 {
   array res;
-#ifdef MODULE_DEBUG
-  roxen_perror("stat_file(\""+s+"\")\n");
-#endif /* MODULE_DEBOG */
   if(res=::stat_file(s,id)) return res;
+#ifdef MODULE_DEBUG
+  roxen_perror("remote_stat_file(\""+s+"\")\n");
+#endif /* MODULE_DEBOG */
   return rpc() && rpc()->stat_file(s);
 }
 
@@ -191,11 +279,14 @@ mixed find_file(string s, object id)
 #ifdef MODULE_DEBUG
   roxen_perror("find_file(\""+s+"\")\n");
 #endif /* MODULE_DEBOG */
-  if(res=::find_file(s,id))
-    return res;
-  get_remote_file(s);
   if(res=::find_file(s,id)) return res;
-  if(stat_file(s,id)) return -1;
+  if((res=stat_file(s,id)) && res[ST_SIZE]<-1) return -1;
+  if(!res) return 0;
+//catch{
+//  return open_remote_file(s);
+//};
+  get_remote_file(s);
+  return ::find_file(s,id);
 }
 
 string status()

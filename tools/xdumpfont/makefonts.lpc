@@ -1,10 +1,10 @@
 #include <simulate.h>
-array sizes=({ 64,16 });
+array sizes=({ 32,64 });
 
 
 array get_font_list()
 {
-  array fonts =  popen("xlsfonts | grep '.*-0-0-.-0-iso8859-1'")/"\n";
+  array fonts =  popen("xlsfonts | grep '.*-0-0-.-0-iso8859-2'")/"\n";
   string font;
   array res = ({ });
   foreach(fonts, font)

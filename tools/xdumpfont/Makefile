@@ -1,11 +1,11 @@
 all: xdumpfont readfont
 
 CC=gcc
-CFLAGS=-fast
+CFLAGS=-O
 
 
 xdumpfont:  xdumpfont.o
-	$(CC) $(CFLAGS) -o xdumpfont xdumpfont.o -lX11
+	$(CC) $(CFLAGS) -o xdumpfont xdumpfont.o -lX11 -lsocket -lnsl
 
 readfont:  readfont.o fontdemo.o
 	$(CC) $(CFLAGS) -o readfont readfont.o fontdemo.o

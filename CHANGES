@@ -1,6 +1,21 @@
 Changes since Roxen Challenger 1.2 alpha 10
 -----------------------------------------------
 
+o Threads are enabled per default, and actually works.
+
+o The HTTP protocol now does it's very best to log the ACTUAL number
+  of sent bytes, even for CGI scripts. It will not work for
+  modules (or pike-scripts) that use the http_pipe_in_progress()
+  function, though, but to my knowledge there are no such modules in
+  the Roxen distribution, with the exception of the Proxy module,
+  which will not be logged in the normal log anyway.
+
+  I had to remove support for the external shuffle program for this to
+  work. This program was not very helpful anyway, unless you run
+  Solaris 2.4 it only slows things down, if you do not have a multi
+  CPU machine, in which case the internal thread support in Roxen is
+  better anyway.
+
 o Added some more directories to search by default for nfonts and modules.
   "../local/modules" and "../local/nfonts". Roxen will by default not install
   anything in these directories.

@@ -10,6 +10,47 @@ class MirrorServer {
 
   int open(){ return 1; }
 
+
+  static class MyFile {
+    object q;
+
+    string read(int len)
+    {
+      return q->read(len);
+    }
+    
+    void create(string fn)
+    {
+      q = open(fn,"r");
+    }
+  };
+
+
+  static class MyStringFile {
+    string b;
+
+    string read(int len)
+    {
+      string q = b[..len-1];
+      b = b[len..];
+      return q;
+    }
+    
+    void create(string fn)
+    {
+      b=fn;
+    }
+  };
+
+  
+  object open_file(string url)
+  {
+    url = replace(base+url,"//","/");
+    string foo = roxen->real_file(url, fid);
+    if(foo) return MyFile(foo);
+    return MyStringFile(fid->conf->try_get_file(url, fid));
+  }
+  
   string get_file(string url)
   {
     url = replace(base+url,"//","/");

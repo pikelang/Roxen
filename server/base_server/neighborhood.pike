@@ -35,7 +35,7 @@ void broadcast()
   remove_call_out(broadcast);
   if(seq) call_out(broadcast,2*60); else call_out(broadcast,1);
   if(catch {
-    foreach(network_number(), string nn)
+    foreach(network_numbers(), string nn)
       udp_broad->send(nn,51521,
 	   encode_value((["configurl":roxen->config_url(),
 			  "host":gethostname(),
