@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.229 2001/08/21 22:31:27 mast Exp $
+// $Id: module.pmod,v 1.230 2001/08/22 13:01:40 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2421,6 +2421,11 @@ constant FLAG_DONT_CACHE_RESULT	= 0x00080000;
 //! surrounding frames. The flag is tested after the first evaluation
 //! of the frame has finished.
 
+constant FLAG_CUSTOM_TRACE	= 0x00000100;
+//! Normally the parser runs TRACE_ENTER and TRACE_LEAVE for every tag
+//! for the sake of the request trace. This flag disables that, so
+//! that the tag can have its own custom TRACE_* calls.
+
 // constant FLAG_PARENT_SCOPE	= 0x00000100;
 //
 // If set, exec arrays will be interpreted in the scope of the parent
@@ -3486,7 +3491,7 @@ class Frame
     object(Parser)|object(PCode) subevaler;
     mixed piece;
     array exec = 0;
-    TagSet orig_tag_set;	// Flags that we added additional_tags to ctx->tag_set.
+    TagSet orig_tag_set; // Flags that additional_tags has been added to ctx->tag_set.
     //ctx->new_runtime_tags
     int orig_make_p_code;
 
@@ -3536,9 +3541,12 @@ class Frame
 
 	else {			// Initialize a new evaluation.
 	  if (tag) {
-	    TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
+	    if (!(flags & FLAG_CUSTOM_TRACE))
+	      TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
 #ifdef MODULE_LEVEL_SECURITY
 	    if (id->conf->check_security (tag, id, id->misc->seclevel)) {
+	      if (flags & FLAG_CUSTOM_TRACE)
+		TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
 	      THIS_TAG_TOP_DEBUG ("Access denied - exiting\n");
 	      TRACE_LEAVE("access denied");
 	      return result = nil;
@@ -3904,7 +3912,8 @@ class Frame
 	THIS_TAG_TOP_DEBUG ("Done%s\n",
 			    flags & FLAG_DONT_CACHE_RESULT ?
 			    " (don't cache result)" : "");
-	TRACE_LEAVE ("");
+	if (!(flags & FLAG_CUSTOM_TRACE))
+	  TRACE_LEAVE ("");
 	return conv_result;
 
       }) {			// Exception handling.
