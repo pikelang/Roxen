@@ -2,11 +2,7 @@
 inherit "module";
 inherit "roxenlib";
 
-string cvsid = "$Id: language.pike,v 1.6 1997/05/31 22:01:25 grubba Exp $";
-
-#define WATCH(b,a) (perror( sprintf( b + ":%O\n", (a) ) ), (a))
-
-/************** Generic module stuff ***************/
+string cvsid = "$Id: language.pike,v 1.7 1997/08/15 17:50:25 peter Exp $";
 
 array register_module()
 {
@@ -115,8 +111,7 @@ void create()
 	 "backups.");
 
 */  
-  defvar("indexfiles", ({ "index.html", "Main.html", "welcome.html", 
-			  "Welcome.html" }), 
+  defvar("indexfiles", ({ "index.html", "Main.html", "welcome.html" }), 
 	 "Directory index files", 
 	 TYPE_STRING_LIST,
 	 "If any of these files are present in a directory, they will be "+
@@ -235,10 +230,10 @@ mixed remap_url( object id, string url )
     redirect_url = reverse( (reverse( url ) / ".")[1..17000] * "." );
     if (id->query)
       redirect_url += "?" + id->query;
-    redirect_url = add_pre_state( redirect_url, (id->prestate - language_list) + (< extension >) );
+    redirect_url = add_pre_state( redirect_url, (id->prestate - language_list)+
+				  (< extension >) );
     redirect_url = id->conf->query( "MyWorldLocation" ) +
       redirect_url[1..17000000];
-    WATCH( 1, redirect_url );
     
     return http_redirect( redirect_url );
   }		    
@@ -255,13 +250,27 @@ mixed remap_url( object id, string url )
   // language
 
   // fill the accept_language list
-  accept_language = ({ });
-  accept_language &= indices( language_list );
+  if ( accept_language = id->misc["accept-language"] )
+    ;
+    else
+      accept_language = ({ });
+  perror("1:%O", accept_language);  
+  /*  accept_language &= indices( language_list ); //remove later */
+  // This looks funny, but it's nessesary to keep the order of the languages.
+  accept_language = accept_language -
+    ( accept_language - indices(language_list) );
+  perror("2:%O\n", accept_language);
 
   if (query( "configp" ))
     lang_tmp = language_list & id->config;
   else
     lang_tmp = language_list & id->prestate;
+
+#ifdef MODULE_DEBUG  
+  if( sizeof(accept_language) )
+    perror("Header-choosen language: %O\n", accept_language[0]);
+#endif
+  
   if (sizeof( lang_tmp ))
     chosen_language = prestate_language = indices( lang_tmp )[0];
   else if (sizeof( accept_language ))
