@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.501 2000/07/10 17:40:03 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.502 2000/07/10 20:44:34 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -355,6 +355,10 @@ private constant languages = ([
   "english":"eng",
   "svenska":"swe",
   "nihongo":"jpn",
+  "cestina":"ces",
+  "deutsch":"deu",
+  "magyar":"hun",
+  "nederlands":"nld",
 ]);
 
 void set_locale(void|string lang)
@@ -384,8 +388,11 @@ void set_locale(void|string lang)
     ;
   else if(set=languages[lang])
     ;
-  else
+  else {
+    if(lang!=lower_case(lang)) set_locale(lower_case(lang));
+    // Default to default?
     return;
+  }
 #if constant(Locale.get_objects)
   locale->set(Locale.get_objects( set ));
 #else
