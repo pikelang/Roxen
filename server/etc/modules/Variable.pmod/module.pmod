@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.56 2001/06/19 21:30:31 nilsson Exp $
+// $Id: module.pmod,v 1.57 2001/06/27 20:58:35 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -303,7 +303,7 @@ class Variable
     return res;
   }
 
-  mixed transform_from_form( string what,mapping|void v )
+  mixed transform_from_form( string what, mapping|void v )
     //! Given a form value, return what should be set.
     //! Used by the default set_from_form implementation.
   {
@@ -326,7 +326,7 @@ class Variable
     mixed val;
     if( sizeof( val = get_form_vars(id)) && val[""])
     {
-      val = transform_from_form( val[""] );
+      val = transform_from_form( val[""], val );
       if( !force && val == query() )
 	return 0;
       array b;
