@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.587 2000/12/13 02:47:34 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.588 2000/12/13 02:49:21 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3165,8 +3165,8 @@ int main(int argc, array tmp)
   catch(signal(signum("SIGHUP"),async_sig_start(reload_all_configurations,1)));
 
   // Signals which cause Roxen to dump the thread state
-  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGTRAP" }), string sig)
-    catch( signal(signum(sig),async_sig_start(describe_all_threads,0)) );
+  foreach( ({ "SIGQUIT", "SIGUSR1", "SIGUSR2", "SIGTRAP" }), string sig)
+    catch( signal(signum(sig),async_sig_start(describe_all_threads,-1)));
 
 #ifdef __RUN_TRACE
   trace(1);
