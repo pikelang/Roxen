@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.23.2.2 1997/02/15 15:46:58 grubba Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.23.2.3 1997/02/22 20:03:58 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -130,8 +130,11 @@ object(Font) load_font(string name, string justification, int xs, int ys)
 {
   object fnt = Font();
 
-  if(sscanf(name, "%*s/%*s") != 2)
+  if ((!name)||(name == "")) {
+    name = QUERY(default_size)+"/"+QUERY(default_font);
+  } else if(sscanf(name, "%*s/%*s") != 2) {
     name=QUERY(default_size)+"/"+name;
+  }
 
   name = "fonts/" + name;
 
