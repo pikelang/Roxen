@@ -15,7 +15,7 @@ constant STORT = 1.0e40;
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.37 1998/03/05 18:04:03 hedda Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.38 1998/03/07 14:24:36 hedda Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -265,9 +265,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 			 ({100,100,100}),
 			 ({255,255,255})
 		       }));
-      skugg->polyfill(({0,0,xc,0})
-		      +
-		      arr2[200..401]);
+      skugg->polyfill(arr2[600..801]+({xc,0,0,0}));
       skugg->polyfill(
 		      arr2[..201]
 		      +
