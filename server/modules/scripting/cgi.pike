@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.107 1999/02/15 23:27:30 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.108 1999/03/25 20:09:07 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -573,8 +573,8 @@ class spawn_cgi
       werror("CGI wrapper: set_nonblocking(%O,%O,%O)\n", r,w,c);
 #endif
       set_read_callback( r );
-      set_read_callback( w );
-      set_read_callback( c );
+      set_write_callback( w );
+      set_close_callback( c );
     }
 
     void set_blocking()
@@ -584,8 +584,8 @@ class spawn_cgi
 #endif
       nonblocking = 0;
       set_read_callback( 0 );
-      set_read_callback( 0 );
-      set_read_callback( 0 );
+      set_write_callback( 0 );
+      set_close_callback( 0 );
     }
 
 
