@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.17 1998/09/07 19:05:19 grubba Exp $
+ * $Id: smtp.pike,v 1.18 1998/09/10 17:10:40 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.17 1998/09/07 19:05:19 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.18 1998/09/10 17:10:40 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -14,6 +14,72 @@ constant thread_safe = 1;
 inherit "module";
 
 #define SMTP_DEBUG
+
+/*
+ * Provider module interface:
+ *
+ * automail_clientlayer:
+ *	int check_size(int sz);
+ * 	string get_unique_body_id();
+ *
+ * smtp_rcpt:
+ *	string|multiset(string) expn(string addr, object o);
+ * 	string desc(string addr, object o);
+ *	multiset(string) query_domain();
+ *	int put(string sender, string user, string domain,
+ * 	        string spooler_id, object o);
+ *
+ * smtp_filter:
+ *	int verify_sender(string sender);
+ * 	int verify_recipient(string sender, string recipient, object o);
+ * 	int classify_connection(string remoteip, int remoteport,
+ * 	                        string remotehost);
+ *
+ * smtp_relay:
+ * 	int relay(string sender, string user, string domain,
+ * 	          string spooler_id, object o);
+ */
+
+class Mail {
+  string id;
+  int timestamp;
+  object connection;
+
+  string from;
+  multiset(string) recipients = (<>);
+  string contents;
+  mapping extensions;
+
+
+  void set_from(string f)
+  {
+    from = f;
+  }
+
+  void add_recipients(multiset(string) rcpts)
+  {
+    recipients |= rcpts;
+  }
+
+  void set_contents(string c)
+  {
+    contents = c;
+  }
+
+  void set_extensions(mapping e)
+  {
+    extensions = e;
+  }
+
+  void save()
+  {
+  }
+
+  void create()
+  {
+    timestamp = time();
+  }
+};
 
 class Server {
   class Smtp_Connection {
@@ -64,7 +130,7 @@ class Server {
       "QUIT":"(Quit)",
       // Added in RFC 822:
       "TURN":"(Turn into client mode)",
-      // Added in RFC 1651 (obsoleted by RFC 1869):
+      // Added in RFC 1651:
       "EHLO":"<sp> <host> (Extended hello)",
     ]);
 
@@ -159,7 +225,7 @@ class Server {
     static multiset do_expn(multiset in)
     {
 #ifdef SMTP_DEBUG
-      roxen_perror(sprintf("SMTP: Expanding %O\n", recipients));
+      roxen_perror(sprintf("SMTP: Expanding %O\n", in));
 #endif /* SMTP_DEBUG */
 
       multiset expanded = (<>);		// Addresses expanded ok.
@@ -316,7 +382,7 @@ class Server {
       foreach(indices(m), string a) {
 	int handled = 0;
 	foreach(rcpts, object o) {
-	  string l = o->desc(a);
+	  string l = o->desc(a, this_object());
 	  if (l) {
 	    result += ({ l });
 	    handled = 1;
@@ -350,18 +416,18 @@ class Server {
       for(i=0; i < sizeof(a); i++) {
 	string s = 0;
 	foreach(descs, object o) {
-	  if (s = o->desc(a[i])) {
+	  if (s = o->desc(a[i], this_object())) {
 	    break;
 	  }
 	}
 	if (!s) {
 	  foreach(expns, object o) {
 	    string|multiset m;
-	    if (m = o->expn(a[i])) {
+	    if (m = o->expn(a[i], this_object())) {
 	      if (stringp(m)) {
 		a[i] = m;
 		foreach(descs, object o) {
-		  if (s = o->desc(a[i])) {
+		  if (s = o->desc(a[i], this_object())) {
 		    break;
 		  }
 		}
@@ -383,13 +449,14 @@ class Server {
       send(250, sort(a));
     }
 
-    string sender = "";
-    multiset(string) recipients = (<>);
+    multiset(string) handled_domains = (<>);
+    object(Mail) current_mail;
 
     static void do_RSET()
     {
-      sender = "";
-      recipients = (<>);
+      if (current_mail) {
+	destruct(current_mail);
+      }
     }
 
     void smtp_RSET(string rset, string args)
@@ -402,6 +469,8 @@ class Server {
     {
       do_RSET();
 
+      current_mail = Mail();
+
       int i = search(args, ":");
       if (i >= 0) {
 	string from_colon = args[..i];
@@ -410,7 +479,7 @@ class Server {
 	  array a = (args[i+1..]/" ") - ({ "" });
 
 	  if (sizeof(a)) {
-	    sender = a[0];
+	    current_mail->set_from(a[0]);
 
 	    a = a[1..];
 
@@ -424,6 +493,8 @@ class Server {
 		  extensions[upper_case(ext)] = 1;
 		}
 	      }
+
+	      current_mail->set_extensions(extensions);
 
 	      // Check extensions here.
 
@@ -469,15 +540,26 @@ class Server {
 	    foreach(conf->get_providers("smtp_filter")||({}), object o) {
 	      // roxen_perror("Got SMTP filter\n");
 	      if (functionp(o->verify_sender) &&
-		  o->verify_sender(sender)) {
+		  o->verify_sender(current_mail->sender)) {
 		// Refuse connection.
 #ifdef SMTP_DEBUG
 		roxen_perror("Refuse sender.\n");
 #endif /* SMTP_DEBUG */
+		do_RSET();
 		send(550);
 		return;
 	      }
 	    }
+
+	    // Update the table of locally handled domains.
+	    multiset(string) domains = (<>);
+	    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+	      if (o->query_domain) {
+		domains |= o->query_domain();
+	      }
+	    }
+
+	    handled_domains = domains;
 
 	    send(250);
 	    return;
@@ -489,10 +571,11 @@ class Server {
 
     void smtp_RCPT(string rcpt, string args)
     {
-      if (!sizeof(sender)) {
+      if (!current_mail || !sizeof(current_mail->from)) {
 	send(503);
 	return;
       }
+
       int i = search(args, ":");
       if (i >= 0) {
 	string to_colon = args[..i];
@@ -507,7 +590,8 @@ class Server {
 	    foreach(conf->get_providers("smtp_filter")||({}), object o) {
 	      // roxen_perror("Got SMTP filter\n");
 	      if (functionp(o->verify_recipient) &&
-		  o->verify_recipient(sender, recipient, this_object())) {
+		  o->verify_recipient(current_mail->from, recipient,
+				      this_object())) {
 		// Refuse recipient.
 #ifdef SMTP_DEBUG
 		roxen_perror("Refuse recipient.\n");
@@ -526,7 +610,7 @@ class Server {
 		break;
 	      }
 	      if (functionp(o->desc) &&
-		  o->desc(recipient)) {
+		  o->desc(recipient, this_object())) {
 		recipient_ok = 1;
 		break;
 	      }
@@ -540,7 +624,7 @@ class Server {
 	      return;
 	    }
 
-	    recipients += (< recipient >);
+	    current_mail->add_recipients((< recipient >));
 	    send(250, sprintf("%s... Recipient ok.", recipient));
 	    return;
 	  }
@@ -562,6 +646,8 @@ class Server {
       if (data[0] == '.') {
 	data = data[1..];
       }
+
+      current_mail->set_contents(data);
 
       array spooler;
 
@@ -600,6 +686,8 @@ class Server {
 	return;
       }
 
+      current_mail->save();
+
       send(250);
       report_notice("SMTP: Mail spooled OK.\n");
 
@@ -607,23 +695,68 @@ class Server {
       // NOTE: After this point error-messages must be sent by mail.
 
       // Expand.
-      multiset expanded = do_expn(recipients);
+      multiset expanded = do_expn(current_mail->recipients);
 
       /* Do the delivery */
-      foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
-	o->put(expanded, spooler[1]);
+      foreach(indices(expanded), string addr) {
+	array a = addr/"@";
+	string domain;
+	string user;
+
+	if (sizeof(a) > 1) {
+	  domain = a[-1];
+	  user = a[..sizeof(a)-2]*"@";
+	} else {
+	  user = addr;
+	}
+
+	int handled;
+
+	if ((!domain) || (handled_domains[domain])) {
+	  // Local delivery.
+	  if (domain) {
+	    // Primary delivery.
+	    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+	      handled |= o->put(current_mail->from, user, domain,
+				spooler[1], this_object());
+	    }
+	  }
+	  if (!handled) {
+	    // Fallback delivery.
+	    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+	      handled |= o->put(current_mail->from, user, 0,
+				spooler[1], this_object());
+	    }
+	  }
+	} else {
+	  // Remote delivery.
+	  foreach(conf->get_providers("smtp_relay")||({}), object o) {
+	    handled |= o->relay(current_mail->from, user, domain,
+				spooler[1], this_object());
+	  }
+	}
+	if (handled) {
+	  expanded[addr] = 0;
+	}
       }
+
+      if (sizeof(expanded)) {
+	// SMTP_ERROR(sprintf("The following recipients were unavailable:\n"
+	// 		   "%s\n", String.implode_nicely(indices(expanded))));
+      }
+
+      current_mail->done();
 
       do_RSET();
     }
 
     void smtp_DATA(string data, string args)
     {
-      if (!sizeof(sender)) {
+      if (!current_mail || !sizeof(current_mail->from)) {
 	send(503, ({ "Need sender (MAIL FROM)" }));
 	return;
       }
-      if (!sizeof(recipients)) {
+      if (!sizeof(current_mail->recipients)) {
 	send(503, ({ "Need recipient list (RCPT TO)" }));
 	return;
       }
@@ -655,7 +788,6 @@ class Server {
 
       ::create(con_);
 
-      mapping lt = localtime(time());
       send(220, ({ sprintf("%s ESMTP %s; %s",
 			   gethostname(), roxen->version(), mktimestamp()) }));
     }
@@ -674,6 +806,7 @@ class Server {
 
       Protocols.Ident->lookup_async(con_, got_remoteident,
 				    check_delayed_answer);
+
     }
   }
 
