@@ -819,7 +819,19 @@ string container_configif_output(string t, mapping m, string c, object id)
      object mod = conf->find_module( replace( m->module, "!", "#" ) );
      if( !mod )
        error("Unknown module "+ m->module +"\n");
-     variables = get_variable_sections( mod, m, id );
+     variables = get_variable_sections( mod, m, id ) |
+     ({ ([
+       "section":"Information",
+       "selected":
+       (id->variables->section=="Information"?"selected":""),
+     ]) });
+     if( sizeof( variables ) == 1 )
+     {
+       while( id->misc->orig )
+         id = id->misc->orig;
+       id->variables->info_section_is_it = "1";
+       variables[0]->selected="selected";
+     }
      break;
 
    case "global-variables-sections":
@@ -854,8 +866,7 @@ string container_configif_output(string t, mapping m, string c, object id)
 string tag_cf_num_dotdots( string t, mapping m, object id )
 {
   while( id->misc->orig ) id = id->misc->orig;
-  //+ (id->misc->path_info||"")
-  int depth = sizeof( (id->not_query )/"/" )-3;
+  int depth = sizeof( (id->not_query+(id->misc->path_info||"") )/"/" )-3;
   string dotodots = depth>0?(({ "../" })*depth)*"":"./";
   return dotodots;
 }
@@ -892,4 +903,11 @@ string container_cf_perm( string t, mapping m, string c, RequestID id )
   if( !id->misc->config_user )
     return "";
   return CU_AUTH( m->perm ) ? c : "";
+}
+
+string container_cf_userwants( string t, mapping m, string c, RequestID id )
+{
+  if( !id->misc->config_settings )
+    return "";
+  return id->misc->config_settings->query( m->option ) ? c : "";
 }
