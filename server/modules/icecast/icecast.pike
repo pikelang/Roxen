@@ -1,5 +1,5 @@
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.6 2001/04/11 14:05:46 per Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.7 2001/04/17 04:34:09 per Exp $";
 constant thread_safe=1;
 
 #define BSIZE 8192
@@ -352,7 +352,7 @@ class Location( string location,
 			   stream,
 			   lambda( Connection c ){
 			     int pt = time()-c->connected;
-			     conn-=({c});
+			     conn -= ({ c });
 			     total_time += pt;
 			     if( pt > max_time )
 			       max_time = pt;
@@ -401,7 +401,9 @@ class Location( string location,
       "<tr><td>Longest listen time:</td><td>"+longest_listen_time()+"</td></tr>"
       "<tr><td>Current connections:</td><td>";
     foreach( conn, Connection c )
-      res += "  "+c->status()+"\n";
+      catch {
+	res += "  "+c->status()+"\n";
+      };
     return res+"</td></tr></table>";
   }
   
@@ -429,6 +431,8 @@ class Connection
   
   string status()
   {
+    if(!fd)
+      return "Closed stream\n";
     return sprintf( "%d. %s Time: %ds  Remote: %s  "
 		    "%d sent, %d skipped<br />",id,protocol,
 		    time()-connected,
@@ -486,14 +490,14 @@ class Connection
       sent++;
     }
     int n = fd->write( current_block );
-//     if( n < 0 && fd->errno() )
-//       closed();
     if( n > 0 )
     {
       if( headers_done )
 	sent_bytes += n;
       current_block = current_block[n..];
     }
+    else if( n < 0 )
+      closed();
   }
 
   static void md_callback( mapping metadata )
@@ -522,7 +526,7 @@ class Connection
     stream = _stream;
     _ccb = _closed;
     current_block = buffer;
-    fd->set_nonblocking( 0, send_more, closed );
+    fd->set_nonblocking( lambda(){}, send_more, closed );
     if( stream ) 
       stream->add_callback( callback );
     if( stream->playlist )
