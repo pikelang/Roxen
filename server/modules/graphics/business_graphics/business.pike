@@ -13,7 +13,7 @@
  * 
  */
 
-constant cvs_version = "$Id: business.pike,v 1.29 1997/10/17 20:01:31 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.30 1997/10/17 22:50:34 hedda Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -30,7 +30,7 @@ mixed *register_module()
   return ({ 
     MODULE_PARSER|MODULE_LOCATION,
     "Business Graphics",
-      ("Draws graphs that is pleasing to the eye."
+      ("Draws graphs that are pleasing to the eye."
        "<br>This module defines some tags,"
        "<pre>"
        "\n&lt;diagram&gt; (container): \n"
@@ -49,7 +49,7 @@ mixed *register_module()
        /* " tone         Do nasty stuff to the background.\n"
 	  " Requires dark background to be visable.\n" */
        " You can also use regular &lt;img&gt; arguments. They will be passed\n"
-       " on to the resulting &lt;img&gt; tag."
+       " on to the resulting &lt;img&gt; tag. "
        "Defines the following tags: \n"
        "\n&lt;xaxis&gt; and &lt;yaxis&gt; (tags)\n"
        "Attributes for the x and y axis.\n"
