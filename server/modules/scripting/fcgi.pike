@@ -3,7 +3,7 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.19 1999/03/17 23:36:07 grubba Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.20 1999/03/17 23:47:16 grubba Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi";
@@ -78,14 +78,13 @@ mixed low_find_file(string f, object id, string path)
   string path_info;
   NOCACHE();
   
-  if(!id->misc->path_info)
-  {
-    array st2;
-    if((st2=file_stat( path + f )) && (st2[1]==-2))
-      return -1; // It's a directory...
-    return 0;
-  } else
-    path_info = id->misc->path_info;
+  array st2;
+  if(!(st2=file_stat( path + f )))
+    return 0; // File not found.
+  if (st2[1]==-2)
+    return -1; // It's a directory...
+
+  path_info = id->misc->path_info;
 
 #ifdef CGI_DEBUG
   roxen_perror("FCGI: Starting '"+f+"'...\n");
