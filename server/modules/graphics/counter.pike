@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.11 1998/02/23 01:00:33 neotron Exp $
+// $Id: counter.pike,v 1.12 1998/03/17 23:11:33 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,9 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.11  1998/02/23 01:00:33  neotron
+// Some minor fixes, which makes it possible to compile the module...
+//
 // Revision  1.10 1998/02/22 02:38:01 neotron
 // Optimized using new Image.GIF / Image.colortable code. Also did
 // other optimizations, resulting int a very slight speed
@@ -63,7 +66,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.11 1998/02/23 01:00:33 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.12 1998/03/17 23:11:33 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -79,7 +82,7 @@ inherit "module";
 inherit "roxenlib";
 
 import Image;
-
+constant thread_safe = 1;
 
 #define MAX( a, b )	( (a>b)?a:b )
 
@@ -438,7 +441,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.11 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.12 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
