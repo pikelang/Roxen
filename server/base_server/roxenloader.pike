@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.268 2001/08/09 12:50:50 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.269 2001/08/09 13:30:35 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1120,55 +1120,74 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
+void clear_connect_to_my_mysql_cache( )
+{
+#ifdef THREADS
+  foreach( values( my_mysql_cache ), mapping q )
+    foreach( values( q ), Sql.Sql s )
+#else
+  foreach( values( my_mysql_cache ), Sql.Sql s )
+#endif
+    {
+      if( s->master_sql )
+	destruct( s->master_sql );
+      destruct( s );
+    }
+  my_mysql_cache = ([]);
+}
+
+
 Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
 {
   object res;
-#ifdef THREADS
-  Thread.Local tl;
-#else
-  string i = ro+db;
-#endif
-  
+  mapping m = my_mysql_cache;
   if( !db )
     db = "mysql";
   
 #ifdef THREADS
-  if( !( tl = my_mysql_cache[ ro + db ] ) )
-    tl = my_mysql_cache[ ro + db ] = Thread.Local();
-
-  if( res = tl->get() )
-#else
-  if( res = my_mysql_cache[ i ] )
+  {
+    object t = this_thread();
+    if( !m[ t ] )
+      m = (m[ t ] = ([]));
+    else
+      m = m[ t ];
+  }
 #endif
-    catch { // catch in case of lost connection.
-      res->query("USE `"+db+"`");
+  string i = db +":"+ (intp(ro)?(ro&&"ro")||"rw":ro);
+  if( res = m[ i ] )
+    if( mixed err = catch
+    { // catch in case of lost connection.
+      res->query("USE "+ db );
       return res;
-    };
-
+    } )
+#ifdef MYSQL_CONNECT_DEBUG
+      werror ("Couldn't connect to mysql as %s: %s", ro, describe_backtrace (err));
+#else
+      ;
+#endif
+  
   if( mixed err = catch
   {
     if( intp( ro ) )
       ro = ro?"ro":"rw";
-    Sql.Sql sql = Sql.Sql( replace( my_mysql_path,
-				    ({"%user%", "%db%" }),
-				    ({ ro, db })) );
-    sql->query( "USE `"+db+"`" );
-#ifdef THREADS
-    return tl->set( sql );
-#else
-    return my_mysql_cache[ i ] = sql;
-#endif
+    res = Sql.Sql( replace( my_mysql_path,
+			    ({"%user%", "%db%" }),
+			    ({ ro, db })) );
+    res->query( "USE "+ db );
+    return m[ i ] = res;
   } )
     if( db == "mysql" )
       throw( err );
 #ifdef MYSQL_CONNECT_DEBUG
-    else werror ("Couldn't connect to mysql as %s: %s", ro, describe_error (err));
+    else
+      werror ("Couldn't connect to mysql as %s: %s", ro, describe_error (err));
 #endif
-
-  connect_to_my_mysql( 0, "mysql" )
-    ->query( "CREATE DATABASE `"+db+"`" );
+  if( db != "mysql" )
+    connect_to_my_mysql( 0, "mysql" )
+      ->query( "CREATE DATABASE "+ db );
   return connect_to_my_mysql( ro, db );
 }
+
 
 static mapping tailf_info = ([]);
 static void do_tailf( int loop, string f )
@@ -1522,7 +1541,8 @@ void do_main( int argc, array(string) argv )
   argv = 0;
 
   add_constant( "connect_to_my_mysql", connect_to_my_mysql );
-  
+  add_constant( "clear_connect_to_my_mysql_cache",
+		clear_connect_to_my_mysql_cache );  
 #ifdef SECURITY
 #if !constant(__builtin.security.Creds)
   report_debug(

@@ -1,3 +1,10 @@
+#include <config_interface.h>
+#include <config.h>
+#include <roxen.h>
+//<locale-token project="roxen_config">_</locale-token>
+#define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+
+
 #define q(X) Roxen.html_encode_string(X)
 
 string parse( RequestID id )
@@ -31,5 +38,34 @@ string parse( RequestID id )
 //   res += "<tr><td><b>Connection:</b></td><td>"+
 //       sql->master_sql->host_info()+"</td></tr>\n";
   
-  return res+"</table>";
+  res += "</table>";
+  mapping connections = ([]);
+#ifdef THREADS
+  foreach( indices( roxenloader->my_mysql_cache ),  object t )
+    foreach( indices( roxenloader->my_mysql_cache[t] ), string name )
+#else
+    foreach( indices( roxenloader->my_mysql_cache ), string name )
+#endif
+      connections[name]++;
+
+  res += "<h2>Active connections</h2>";
+  
+  res +=
+    "<table>"
+    "<tr><td><b>"+_(0,"Database")+"</b></td><td><b>"+
+    _(0,"User")+"</b></td><td><b>"+_(0,"Connections")+
+    "</b></td></tr>\n";
+
+  int total;
+  foreach( sort(indices( connections ) ), string c )
+  {
+    array(string) t = c/":";
+    res += "<tr><td>"+t[0]+"</td><td>"+t[1]+"</td><td align=right>"+
+      connections[c]+"</td></tr>\n";
+    total += connections[c];
+  }
+  res += "<tr><td></td><td></td><td align=right>"+total+"</td></tr>";
+  res += "</table>";
+
+  return res;
 }

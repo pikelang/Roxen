@@ -1,12 +1,19 @@
 object mm=(object)"/master";
 inherit "/master": master;
-object sql = connect_to_my_mysql( 0, "local" );
+object sql;
+
+mixed sql_query( string q, mixed ... e )
+{
+  if(!sql )
+    sql = connect_to_my_mysql( 0, "local" );
+  return sql->query( q, @e );
+}
 
 /*
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.113 2001/03/29 02:49:04 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.114 2001/08/09 13:30:36 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -480,11 +487,9 @@ void dump_program( string pname, program what )
   data = encode_value( what, MyCodec( what ) );
 #endif
   {
-    sql->query( "DELETE FROM precompiled_files WHERE id='"+sql->quote(index)+"'" );
-    sql->query( "INSERT INTO precompiled_files values ("
-                "'"+sql->quote(index)+"', "
-                "'"+sql->quote(data)+"',"
-                +time()+")" );
+    sql_query( "DELETE FROM precompiled_files WHERE id=%s",index );
+    sql_query( "INSERT INTO precompiled_files values (%s,%s,%d)",
+	       index, data, time );
   }
 #ifdef DUMP_DEBUG
   else
@@ -587,8 +592,8 @@ program low_findprog(string pname, string ext, object|void handler)
           return ret;                                                        \
         }; DUMP_WARNING(fname,err)                                           \
       } while(0)
-      if(sizeof(q=sql->query( "SELECT data,mtime FROM precompiled_files WHERE id='"+
-                              sql->quote( make_ofilename( fname ) )+"'")))
+      if(sizeof(q=sql_query( "SELECT data,mtime FROM precompiled_files WHERE id=%s",
+			     make_ofilename( fname ))))
         if( (int)q[0]->mtime > s[3] )
           LOAD_DATA( q[0]->data );
 
@@ -670,8 +675,8 @@ int refresh( program p, int|void force )
   {
     m_delete( programs, fname );
     m_delete( load_time, fname );
-    sql->query( "DELETE FROM precompiled_files WHERE id='"+
-                sql->quote(make_ofilename(fname))+"'" );
+    sql_query( "DELETE FROM precompiled_files WHERE id=%s",
+	       make_ofilename(fname) );
     return 1;
   }
 
@@ -687,8 +692,8 @@ int refresh( program p, int|void force )
 
   m_delete( programs, fname );
   m_delete( load_time, fname );
-  sql->query( "DELETE FROM precompiled_files WHERE id='"+
-              sql->quote(make_ofilename(fname))+"'" );
+  sql_query( "DELETE FROM precompiled_files WHERE id=%s",
+	     make_ofilename(fname));
   return 1;
 }
 

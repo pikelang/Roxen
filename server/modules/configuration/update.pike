@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.30 2001/06/11 13:22:45 js Exp $
+ * $Id: update.pike,v 1.31 2001/08/09 13:30:36 per Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -46,7 +46,7 @@ constant module_doc = "This is the update client. "
                       "website, feel free to enter your username and password in "
                       "the settings tab.";
 
-Sql.sql db;
+function(void:Sql.sql) db;
 object updater;
 SqlMapping pkginfo, misc, installed;
 
@@ -57,19 +57,19 @@ int inited;
 class SqlMapping
 {
   string table;
-  Sql.sql db;
-  void create(Sql.sql _db, string _table)
+  function(void:Sql.sql) db;
+  void create(function(void:Sql.sql) _db, string _table)
   {
     db=_db;
     table=_table;
-    catch(db->query("create table "+table+
+    catch(db()->query("create table "+table+
 		    " ( name varchar(255) primary key ,"
 		    "  value mediumblob)"));
   }
 
   mixed get(string handle)
   {
-    array a=db->query("select value from "+table+" where name=%s",handle);
+    array a=db()->query("select value from "+table+" where name=%s",handle);
     if(!sizeof(a))
       return 0;
     else
@@ -78,18 +78,18 @@ class SqlMapping
 
   mixed set(string handle, mixed x)
   {
-    db->query("replace into "+table+" (name,value) values (%s,%s)",
+    db()->query("replace into "+table+" (name,value) values (%s,%s)",
 	      handle,encode_value(x));
   }
 
   void delete(string handle)
   {
-    db->query("delete from "+table+" where name=%s",handle);
+    db()->query("delete from "+table+" where name=%s",handle);
   }
   
   array list_keys()
   {
-    return db->query("select name from "+table)->name;
+    return db()->query("select name from "+table)->name;
   }
   
   mixed `[]=(string handle, mixed x){ return set(handle, x); }
@@ -101,7 +101,7 @@ class SqlMapping
 
 void post_start()
 {
-  db=DBManager.get("local");
+  db=lambda(){ return DBManager.cached_get( "local" ); };
 
   pkginfo=SqlMapping(db,"update_pkginfo");
   misc=SqlMapping(db,"update_misc");
@@ -130,7 +130,6 @@ void start(int num, Configuration conf)
 void stop()
 {
   UPDATE_NOISE("Shutting down...");
-  catch(db->close());
   catch(destruct(updater));
   UPDATE_NOISE("Shutdown complete.");
 }

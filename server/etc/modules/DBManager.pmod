@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.17 2001/08/09 12:51:17 per Exp $
+// $Id: DBManager.pmod,v 1.18 2001/08/09 13:30:36 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -30,10 +30,13 @@ private
     return res;
   }
 
-  function query = db_query;
 #else
-  function query = db->query;
+  mixed db_query( mixed ... args )
+  {
+    return db->query( @args );
+  }
 #endif
+  function query = db_query;
 
   string short( string n )
   {
@@ -53,7 +56,7 @@ private
       }
     sql_cache_size = 0;
 #else
-    foreach( values( sql_cache ), Sql.Sql s )
+    foreach( values( sql_cache ), object s )
     {
       if( s->master_sql )
 	destruct( s->master_sql );
@@ -67,6 +70,9 @@ private
 #ifdef THREADS
     connection_cache_size = 0;
 #endif
+    clear_connect_to_my_mysql_cache();
+    gc( );
+    db = connect_to_my_mysql( 0, "roxen" );
     gc( );
   }
   
@@ -196,7 +202,11 @@ private
     return sql_cache_get( d[0]->path );
   }
 
+#ifdef THREADS
   mapping(Thread.Thread:mapping(string:Sql.Sql)) sql_cache = ([]);
+#else
+  mapping(string:Sql.Sql) sql_cache = ([]);
+#endif
 };
 
 
@@ -214,7 +224,7 @@ Sql.Sql sql_cache_get(string what)
   mapping m = sql_cache[ this_thread() ] || ([]);
   if(m[ what ] )
     return m[ what ];
-  if( sql_cache_size > 20 )
+  if( sql_cache_size > 80 )
   {
     clear_sql_caches();
     sql_cache[ this_thread() ] = m = ([]);
@@ -229,7 +239,7 @@ Sql.Sql sql_cache_get(string what)
 {
   if(sql_cache[ what ] )
     return sql_cache[ what ];
-  if( sizeof( sql_cache ) > 20 )
+  if( sizeof( sql_cache ) > 40 )
     clear_sql_caches();
   return sql_cache[ what ] =  Sql.Sql( what );
 }
@@ -430,8 +440,8 @@ static mapping connection_cache  = ([]);
 Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 {
   string key = name+"|"+(c&&c->name)+"|"+ro;
-  if( sizeof( connection_cache ) > 10 )
-    connection_cache = ([]);
+  if( sizeof( connection_cache ) > 40 )
+    clear_sql_caches();
   return connection_cache[key] || (connection_cache[key]=get( name, c, ro ));
 }
 #endif
