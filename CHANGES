@@ -1,6 +1,8 @@
 Changes since Roxen Challenger 1.1 
 -----------------------------------------------
 
+o The host redirect module has been improved by Martin Baehr.
+
 o Support for shadow passwords added to userdb (method shadow). The
   default method is always set to file. If getpwent is used on a system
   with thousands of users, it takes a VERY long time to read all the
