@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.106 2003/12/29 09:53:28 grubba Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.107 2004/02/16 13:43:29 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -384,11 +384,19 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
   }
 
   //  Get icon
-  if (args->icn)
-    icon = roxen.low_load_image(args->icn, id);
-  else if (args->icd)
-    icon = roxen.low_decode_image(args->icd);
+  if (args->icn) {
+    //  Pass error mapping to find out possible errors when loading icon
+    mapping err = ([ ]);
+    icon = roxen.low_load_image(args->icn, id, err);
 
+    //  If icon loading fails due to missing authentication we reject the
+    //  gbutton request so that the browser can re-request it with proper
+    //  authentication headers.
+    if (!icon && err->error == 401)
+      return err;
+  } else if (args->icd)
+    icon = roxen.low_decode_image(args->icd);
+  
   int i_width = icon && icon->img->xsize();
   int i_height = icon && icon->img->ysize();
   int i_spc = i_width && sizeof(text) && 5;
