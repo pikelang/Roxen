@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.40 1997/11/06 18:26:33 grubba Exp $
+# $Id: configure.in,v 1.41 1997/12/16 22:19:41 grubba Exp $
 #
 
 prefix=$PWD
@@ -411,6 +411,13 @@ CFLAGS="$CFLAGS $WARN $OPTIMIZE"
 
 export CC CFLAGS REALCFLAGS WARN OPTIMIZE
 
+###################################################################
+## Libraries that are used by Pike
+###################################################################
+
+roxen_lib_subdirs=""
+
+
 # GMP -- Gnu Multi-Precision library
 #------------------------------------
 
@@ -427,6 +434,7 @@ if test -d $srcdir/gmp/.; then
     else
       echo Enabling supplied gmp...
       MAKE_GMP=gmp
+      roxen_lib_subdirs="$roxen_lib_subdirs gmp"
       # Fool Pike into believing Gmp is installed.
       # It will be when Pike is being built.
       ac_cv_header_gmp_h=yes
@@ -479,6 +487,7 @@ int foo = (int)(Z_NO_COMPRESSION | Z_VERSION_ERROR);
     if test "$ac_cv_header_zlib_h" != "yes"; then
       echo Enabling supplied zlib...
       MAKE_ZLIB=zlib
+      roxen_lib_subdirs="$roxen_lib_subdirs zlib"
       # Fool Pike into believing Zlib is installed.
       # It will be when Pike is being built.
       ac_cv_header_zlib_h=yes
@@ -506,6 +515,7 @@ if test -d gdbm/.; then
     else
       echo Enabling supplied gdbm...
       MAKE_GDBM=gdbm
+      roxen_lib_subdirs="$roxen_lib_subdirs gdbm"
       # Fool Pike into believing Gdbm is installed.
       # It will be when Pike is being built.
       ac_cv_header_gdbm_h=yes
@@ -519,6 +529,6 @@ fi
 
 export CPPFLAGS LDFLAGS
 
-AC_CONFIG_SUBDIRS(gmp zlib gdbm extern pike)
+AC_CONFIG_SUBDIRS($roxen_lib_subdirs extern pike)
 AC_OUTPUT(Makefile, echo foo >stamp-h)
 
