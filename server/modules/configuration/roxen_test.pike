@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.7 2000/12/12 06:15:38 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.8 2000/12/30 10:11:30 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -27,6 +27,7 @@ RequestID get_id() {
   id->misc = ([ "defines":([ " _ok":1 ]) ]);
   id->cookies=([]);
   id->config=(<>);
+  id->real_variables=([]);
   id->variables=([]);
   id->prestate=(<>);
   id->supports=(< "images" >);
@@ -85,60 +86,87 @@ void xml_remove_module(string t, mapping m, string c) {
 
 int tests, ltests;
 int fails, lfails;
-void xml_test(string t, mapping m, string c) {
+void xml_test(string t, mapping args, string c) {
 
   ltests++;
   tests++;
 
-  string rxml,w_res,a_res;
+  string rxml, res;
   RequestID id = get_id();
-  Parser.HTML()->add_containers( ([ "rxml" : lambda(string t, mapping m, string c) { rxml=c; },
-				    "result" : lambda(string t, mapping m, string c) { w_res=c; },
-  ]) )->add_tags( ([ "add" : lambda(string t, mapping m, string c) {
-			     switch(m->what) {
-			     default:
-			       report_error("Could not <add> %O; unknown variable.\n", m->what);
-			       break;
-			     case "prestate":
-			       id->prestate[m->name] = 1;
-			       break;
-			     case "variable":
-			       id->variables[m->name] = m->value || m->name;
-			       break;
-			     case "cookies":
-			       id->cookies[m->name] = m->value || "";
-			       break;
-			     case "supports":
-			       id->supports[m->name] = 1;
-			       break;
-			     case "config":
-			       id->config[m->name] = 1;
-			       break;
-			     case "client_var":
-			       id->client_var[m->name] = m->value || "";
-			       break;
-			     }
-			   },
-  ]) )->finish(c);
+  Parser.HTML parser =
+    Parser.HTML()->
+    add_containers( ([ "rxml" :
+		       lambda(string t, mapping m, string c) {
+			 rxml=c;
+			 mixed err = catch( res = Roxen.parse_rxml( rxml, id ));
+			 if(err) {
+			   report_error(" Test \"%s\"\nFailed (backtrace)\n",rxml);
+			   report_error("%s\n",describe_backtrace(err));
+			   throw(1);
+			 }
 
-  mixed err = catch( a_res = Roxen.parse_rxml( rxml, id ));
-  if(err) {
+			 if(!args["no-canon"])
+			   res = canon_html(res);
+		       },
+		       "result" :
+		       lambda(string t, mapping m, string c) {
+			 if(res != c) {
+			   if(m->not) return;
+			   report_error(" Test \"%s\"\n Failed (%O != %O)\n", rxml, res, c);
+			   throw(1);
+			 }
+		       },
+		       "glob" :
+		       lambda(string t, mapping m, string c) {
+			 if( !glob(c, res) ) {
+			   if(m->not) return;
+			   report_error(" Test \"%s\"\n Failed (%O does not match %O)\n",
+					rxml, res, c);
+			   throw(1);
+			 }
+		       },
+		       "has-value" :
+		       lambda(string t, mapping m, string c) {
+			 if( !has_value(res, c) ) {
+			   if(m->not) return;
+			   report_error(" Test \"%s\"\n Failed (%O does not contain %O)\n",
+					rxml, res, c);
+			   throw(1);
+			 }
+		       },
+    ]) )->add_tags( ([ "add" : lambda(string t, mapping m, string c) {
+				 switch(m->what) {
+				 default:
+				   report_error("Could not <add> %O; unknown variable.\n", m->what);
+				   break;
+				 case "prestate":
+				   id->prestate[m->name] = 1;
+				   break;
+				 case "variable":
+				   id->variables[m->name] = m->value || m->name;
+				   break;
+				 case "cookies":
+				   id->cookies[m->name] = m->value || "";
+				   break;
+				 case "supports":
+				   id->supports[m->name] = 1;
+				   break;
+				 case "config":
+				   id->config[m->name] = 1;
+				   break;
+				 case "client_var":
+				   id->client_var[m->name] = m->value || "";
+				   break;
+				 }
+			       },
+    ]) );
+
+  if( catch(parser->finish(c)) ) {
     fails++;
     lfails++;
-    report_error(" Test \"%s\"\nFailed (backtrace)\n",rxml);
-    report_error("%s\n",describe_backtrace(err));
-    return;
   }
 
-  if(!m["no-canon"])
-    a_res = canon_html(a_res);
-
-  if(w_res && a_res != w_res) {
-    fails++;
-    lfails++;
-    report_error(" Test \"%s\"\n Failed (%O != %O)\n", rxml, a_res, w_res);
-    return;
-  }
+  return;
 }
 
 void xml_comment(string t, mapping m, string c) {
