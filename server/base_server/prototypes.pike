@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.39 2001/08/30 19:04:39 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.40 2001/09/04 22:31:57 nilsson Exp $";
 
 class Variable
 {
@@ -861,7 +861,7 @@ class Group( UserDB database )
 }
 
 #ifdef THREADS
-static Thread.Mutex mutex;
+static Thread.Mutex mutex = Thread.Mutex();
 #endif
 
 //! @appears User
