@@ -248,6 +248,8 @@ function getTarget(e)
 
 function getRecursiveLeft(o)
 {
+  if(o == null)
+    return 0;
   if(o.tagName == "BODY")
     return o.offsetLeft;
   return o.offsetLeft + getRecursiveLeft(o.offsetParent);
@@ -255,6 +257,8 @@ function getRecursiveLeft(o)
 
 function getRecursiveTop(o)
 {
+  if(o == null)
+    return 0;
   if(o.tagName == "BODY")
     return o.offsetTop;
   return o.offsetTop + getRecursiveTop(o.offsetParent);
