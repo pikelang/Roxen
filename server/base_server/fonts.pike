@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.50 2000/04/06 17:47:37 mast Exp $
+// $Id: fonts.pike,v 1.51 2000/05/26 22:20:02 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -245,9 +245,10 @@ object get_font(string f, int size, int bold, int italic,
 		string justification, float xspace, float yspace)
 {
   object fnt;
-  string key, name;
+  string key, name, of;
   mixed err;
-
+  f = replace( f, " ", "_" );
+  of = f;
   key = f+size+bold+italic+justification+xspace+yspace;
 
   if(fnt=cache_lookup("fonts", key))
@@ -291,13 +292,17 @@ object get_font(string f, int size, int bold, int italic,
     }
     if(!fnt->load( roxen_path( name ) ))
     {
-      if(f == roxen->query("default_font"))
+      if(of == replace(roxen->query("default_font")," ","_"))
       {
 	report_error("Failed to load the default font ("+f+") in size " + size + ".\n");
 	return 0;
       }
-      return get_font(roxen->query("default_font"),
-		      size,bold,italic,justification,xspace,yspace);
+      if( search( of, "_" ) != -1 )
+        return get_font(of-"_",
+                        size,bold,italic,justification,xspace,yspace);
+      else
+        return get_font(roxen->query("default_font"),
+                        size,bold,italic,justification,xspace,yspace);
     }
     if(justification=="right") fnt->right();
     if(justification=="center") fnt->center();
@@ -319,6 +324,7 @@ object resolve_font(string f, string|void justification)
   string a,b;
   if( !f )
     f = roxen->query("default_font");
+  f = lower_case( f );
   if(sscanf(f, "%sbold%s", a,b)==2)
   {
     bold=1;
