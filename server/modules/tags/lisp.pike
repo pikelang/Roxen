@@ -1,18 +1,23 @@
+#if constant(Languages)
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.11 1998/09/11 22:20:19 per Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.12 1998/09/29 22:46:46 peter Exp $";
 
 #include <module.h>
 inherit "module";
 
 constant thread_safe=1;
+#endif // constant(Languages)
 
 array register_module()
 {
+#if constant(Languages)
   return ({ MODULE_PARSER, "Lisp tag module", 
 	    "This module defines a new tag, "
 	    "&lt;lisp [context=foo]&gt;&lt;/lisp&gt;", 0, ({}) });
+#endif // constant(Languages)
 }
 
+#if constant(Languages)
 void create()
 {
   defvar("max-eval-time", 10000, "Max eval time", TYPE_INT);
@@ -286,7 +291,7 @@ object f_get_id(object arglist, object env, object globals)
   }
   return Nil;
 }
-#endif
+#endif // 0
 
 /* Returns a string, instead of outputting it directly.
  * Usually, you want to html-quote it before output. */
@@ -394,7 +399,7 @@ object f_line_break(object arglist, object env, object globals)
   }
   return String( res );
 }
-#endif
+#endif // 0
 
 void init_roxen_functions(object environment, object conf)
 {
@@ -425,4 +430,4 @@ void init_roxen_functions(object environment, object conf)
 			API_Function( m[f] ));
 }
 
-
+#endif  // constant(Languages)

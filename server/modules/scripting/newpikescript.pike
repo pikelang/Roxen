@@ -1,8 +1,14 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.8 1998/09/11 22:20:04 per Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.9 1998/09/29 22:46:57 peter Exp $";
 constant thread_safe=1;
 
 #if !constant(Remote)
-# error The remote module was not present
+#if constant(roxen)
+// This is a Roxen without Remote, but I don't want to throw an error.
+mixed *register_module()
+{
+  return 0;
+}
+#endif // constant(roxen)
 #else /* constant(Remote) */
 #define SERVERDIR ".pike-script-servers/"
 
