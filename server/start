@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.71 1999/08/19 23:43:49 per Exp $
+# $Id: start,v 1.72 1999/08/30 09:36:58 per Exp $
 
 cd `dirname $0`
 
@@ -69,6 +69,9 @@ parse_args() {
 # Used by the 'install' script
   --truss)
      pike="truss $pike"
+   ;;
+  --truss-c)
+     pike="truss -c $pike"
    ;;
   --log-dir=*)
    LOGDIR=`echo $1 | sed -e 's/--log-dir=//'`
