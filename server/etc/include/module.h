@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.18 1998/08/10 21:36:18 per Exp $
+// $Id: module.h,v 1.19 1998/08/20 07:37:17 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 
@@ -66,33 +66,33 @@
 #define GLOBVAR(x) roxen->variables["x"][VAR_VALUE]
 #endif /* constant(cpp) */
 
-#define MODULE_EXTENSION         (2<<0)
-#define MODULE_LOCATION          (2<<1)
-#define MODULE_URL	         (2<<2)
-#define MODULE_FILE_EXTENSION    (2<<3)
-#define MODULE_PARSER            (2<<4)
-#define MODULE_LAST              (2<<5)
-#define MODULE_FIRST             (2<<6)
+#define MODULE_EXTENSION         (1<<0)
+#define MODULE_LOCATION          (1<<1)
+#define MODULE_URL	         (1<<2)
+#define MODULE_FILE_EXTENSION    (1<<3)
+#define MODULE_PARSER            (1<<4)
+#define MODULE_LAST              (1<<5)
+#define MODULE_FIRST             (1<<6)
 
-#define MODULE_AUTH              (2<<7)
-#define MODULE_MAIN_PARSER       (2<<8)
-#define MODULE_TYPES             (2<<9)
-#define MODULE_DIRECTORIES       (2<<10)
+#define MODULE_AUTH              (1<<7)
+#define MODULE_MAIN_PARSER       (1<<8)
+#define MODULE_TYPES             (1<<9)
+#define MODULE_DIRECTORIES       (1<<10)
 
-#define MODULE_PROXY             (2<<11)
-#define MODULE_LOGGER            (2<<12)
-#define MODULE_FILTER            (2<<13)
+#define MODULE_PROXY             (1<<11)
+#define MODULE_LOGGER            (1<<12)
+#define MODULE_FILTER            (1<<13)
 
 
 // A module which can be called from other modules, protocols, scripts etc.
-#define MODULE_PROVIDER		 (2<<15)
+#define MODULE_PROVIDER		 (1<<15)
 // The module implements a protocol.
-#define MODULE_PROTOCOL          (2<<16)
+#define MODULE_PROTOCOL          (1<<16)
 
 
 // Flags.
-#define MODULE_SECURITY          (2<<30)
-#define MODULE_EXPERIMENTAL      (2<<31)
+#define MODULE_SECURITY          (1<<29)
+#define MODULE_EXPERIMENTAL      (1<<30)
 
 #define MOD_ALLOW	1
 #define MOD_USER	2
