@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.52 2001/10/29 10:51:25 grubba Exp $
+// $Id: DBManager.pmod,v 1.53 2002/02/07 12:56:21 wellhard Exp $
 
 //! Manages database aliases and permissions
 
@@ -66,48 +66,98 @@ private
     gc( );
   }
 
-  void ensure_has_users( Sql.Sql db, Configuration c )
+  static void low_ensure_has_users( Sql.Sql db, Configuration c, string host,
+				    string|void password )
   {
-    array q = db->query( "SELECT User FROM user WHERE User=%s",
-                         short(c->name)+"_rw" );
-    if( !sizeof( q ) )
+    if(password)
     {
-      db->query( "INSERT INTO user (Host,User,Password) "
-                 "VALUES ('localhost',%s,'')",
-                 short(c->name)+"_rw" ); 
-      db->query( "INSERT INTO user (Host,User,Password) "
-                 "VALUES ('localhost',%s,'')",
-                 short(c->name)+"_ro" ); 
+      array q = db->query( "SELECT User FROM user "
+			   "  WHERE User=%s"
+			   "    AND Host=%s"
+			   "    AND Password=PASSWORD(%s)",
+			   short(c->name)+"_rw", host, password );
+      if( !sizeof( q ) )
+      {
+	db->query( "INSERT INTO user (Host,User,Password) "
+		   "VALUES (%s, %s, PASSWORD(%s))",
+		   host, short(c->name)+"_rw", password ); 
+	db->query( "INSERT INTO user (Host,User,Password) "
+		   "VALUES (%s, %s, PASSWORD(%s))",
+		   host, short(c->name)+"_ro", password );
+      }
+    }
+    else
+    {
+      array q = db->query( "SELECT User FROM user "
+			   "  WHERE User=%s"
+			   "    AND Host=%s"
+			   "    AND Password=''",
+			   short(c->name)+"_rw", host );
+      if( !sizeof( q ) )
+      {
+	db->query( "INSERT INTO user (Host,User,Password) "
+		   "VALUES (%s, %s, '')",
+		   host, short(c->name)+"_rw" ); 
+	db->query( "INSERT INTO user (Host,User,Password) "
+		   "VALUES (%s, %s, '')",
+		   host, short(c->name)+"_ro" );
+      }
     }
   }
+  
+  void ensure_has_users( Sql.Sql db, Configuration c )
+  {
+    low_ensure_has_users( db, c, "localhost" );
+  }
 
-  void set_user_permissions( Configuration c, string name, int level )
+  void ensure_has_external_users( Sql.Sql db, Configuration c,
+				  string password )
+  {
+    low_ensure_has_users( db, c, "127.0.0.1", password );
+  }
+
+  static void low_set_user_permissions( Configuration c, string name,
+					int level, string host,
+					string|void password )
   {
     Sql.Sql db = connect_to_my_mysql( 0, "mysql" );
 
-    ensure_has_users( db, c );
+    low_ensure_has_users( db, c, host, password );
 
-    db->query("DELETE FROM db WHERE User LIKE '"+
-              short(c->name)+"%%' AND Db=%s", name );
+    db->query("DELETE FROM db "
+	      "  WHERE User LIKE '"+short(c->name)+"%%' "
+	      "    AND Db=%s"
+	      "    AND Host=%s", name, host);
 
     if( level > 0 )
     {
       db->query("INSERT INTO db (Host,Db,User,Select_priv) "
-                "VALUES ('localhost',%s,%s,'Y')",
-                name, short(c->name)+"_ro");
+                "VALUES (%s, %s, %s, 'Y')",
+                host, name, short(c->name)+"_ro");
       if( level > 1 )
-        db->query("INSERT INTO db VALUES ('localhost',%s,%s,"
+        db->query("INSERT INTO db VALUES (%s, %s, %s,"
                   "'Y','Y','Y','Y','Y','Y','N','Y','Y','Y')",
-                  name, short(c->name)+"_rw");
+                  host, name, short(c->name)+"_rw");
       else 
         db->query("INSERT INTO db  (Host,Db,User,Select_priv) "
-                  "VALUES ('localhost',%s,%s,'Y')",
-                  name, short(c->name)+"_rw");
+                  "VALUES (%s, %s, %s, 'Y')",
+                  host, name, short(c->name)+"_rw");
     }
     db->query( "FLUSH PRIVILEGES" );
   }
+  
+  void set_user_permissions( Configuration c, string name, int level )
+  {
+    low_set_user_permissions( c, name, level, "localhost" );
+  }
+  
+  void set_external_user_permissions( Configuration c, string name, int level,
+				      string password )
+  {
+    low_set_user_permissions( c, name, level, "127.0.0.1", password );
+  }
 
-
+  
   class ROWrapper( static Sql.Sql sql )
   {
     static int pe;
@@ -802,15 +852,57 @@ void create_db( string name, string path, int is_internal,
   changed();
 }
 
+int set_external_permission( string name, Configuration c, int level,
+			     string password )
+//! Set the permission for the configuration @[c] on the database
+//! @[name] to @[level] for an external tcp connection from 127.0.0.1
+//! authenticated via password @[password].
+//!
+//! Levels:
+//!  @int
+//!    @value DBManager.NONE
+//!      No access
+//!    @value DBManager.READ
+//!      Read access
+//!    @value DBManager.WRITE
+//!      Write access
+//!  @endint
+//!
+//! @returns
+//!  This function returns 0 if it fails. The only reason for it to
+//!  fail is if there is no database with the specified @[name].
+//!
+//! @note
+//!  This function is only valid for local databases.
+//!
+//! @seealso
+//!  @[set_permission()], @[get_db_user()]
+{
+  array(mapping(string:mixed)) d =
+           query("SELECT path,local FROM dbs WHERE name=%s", name );
+
+  if( !sizeof( d ) )
+      return 0;
+
+  if( (int)d[0]["local"] )
+    set_external_user_permissions( c, name, level, password );
+  
+  return 1;
+}
 
 int set_permission( string name, Configuration c, int level )
 //! Set the permission for the configuration @[c] on the database
 //! @[name] to @[level].
 //!
 //! Levels:
-//!  DBManager.NONE:  No access
-//!  DBManager.READ:  Read access
-//!  DBManager.WRITE: Write access
+//!  @int
+//!    @value DBManager.NONE
+//!      No access
+//!    @value DBManager.READ
+//!      Read access
+//!    @value DBManager.WRITE
+//!      Write access
+//!  @endint
 //!
 //!  Please note that for non-local databases, it's not really
 //!  possible to differentiate between read and write permissions,
@@ -823,6 +915,7 @@ int set_permission( string name, Configuration c, int level )
 //!  secure as long as the permission system in mysql is not modified
 //!  directly by the administrator.
 //!
+//! @returns
 //!  This function returns 0 if it fails. The only reason for it to
 //!  fail is if there is no database with the specified @[name].
 {
