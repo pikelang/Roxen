@@ -96,6 +96,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/tags/flik.pike foreign_ident
 /server/modules/tags/htmlparse.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
+/server/modules/tags/killframe.pike foreign_ident
 /server/modules/tags/lpctag.pike foreign_ident
 /server/modules/tags/tablify.pike foreign_ident
 /server/more_modules/bofh.pike foreign_ident

@@ -1,4 +1,5 @@
 /* This is a roxen module. (c) Informationsvävarna AB 1997.
+ * $Id: killframe.pike,v 1.2 1997/01/25 11:58:41 peter Exp $
  *
  * Adds some java script that will prevent others from putting
  * your page in a frame.
