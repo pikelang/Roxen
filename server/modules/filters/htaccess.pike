@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.40 1998/06/26 15:13:26 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.41 1998/06/27 09:39:41 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -478,7 +478,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
     }
     cache_set(cache_key, groupfile, ({s[3], g}));
   }
-  f->close;
+  f->close();
   destruct(f);
   foreach(indices(grps), grp)
   {
