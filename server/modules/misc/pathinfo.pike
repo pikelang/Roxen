@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.15 2000/06/19 16:33:06 grubba Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.16 2001/05/16 07:51:00 per Exp $";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG
@@ -12,7 +12,7 @@ constant thread_safe = 1;
 #endif
 
 constant module_type = MODULE_LAST;
-constant module_name = "Path info support";
+constant module_name = "Scripting: Path info support";
 constant module_doc  = #"\
 Support for \"path info\" style URLs, e.g. URLs that got a path like
 <tt>/index.html/a/b</tt>, where <tt>/index.html</tt> is an existing

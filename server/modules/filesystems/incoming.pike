@@ -3,13 +3,13 @@
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.15 2001/01/29 05:54:41 per Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.16 2001/05/16 07:50:59 per Exp $";
 
 //<locale-token project="mod_incoming">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_incoming",X,Y)
 // end of the locale related stuff
 
-LocaleString module_name = _(1,"Incoming filesystem");
+LocaleString module_name = _(1,"File systems: Incoming filesystem");
 LocaleString module_doc = 
 _(2,"This file system is used only for uploads, the files that are uploaded\n"
 "can either not be downloaded, or they will be scrambled during the download.\n"

@@ -24,9 +24,9 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.64 2001/01/29 05:54:42 per Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.65 2001/05/16 07:50:59 per Exp $";
 constant module_type = MODULE_LOCATION;
-LocaleString module_name = _(1,"User file system");
+LocaleString module_name = _(1,"File systems: User file system");
 LocaleString module_doc  = 
 _(2,"A file system that gives access to files in the users' home\n"
 "directories.  The users and home directories are found through the\n"
@@ -398,20 +398,19 @@ array(int) stat_file(string f, RequestID id)
   return 0;
 }
 
-// string query_name()
-// {
-//   return "Location: <i>" + query("mountpoint") + "</i>, " +
-// 	 (query("homedir")
-// 	  ? "Pubdir: <i>" + query("pdir") +"</i>"
-// 	  : "mounted from: <i>" + query("searchpath") + "</i>");
-// }
+
+string query_name()
+{
+  return "UserFS "+query("mountpoint")+" from "+
+    (query("homedir")?"~*/"+query("pdir"):query("searchpath"));
+}
 
 string status()
 {
   if(sizeof(my_configuration()->user_databases()) == 0)
     return "<font color='&usr.warncolor;'>"+
-      _(20,"You need a user database module in this virtual server to resolve "
-	"your users' homedirectories.")+
+      _(20,"You need at least one user database module in this virtual server "
+	"to resolve your users' homedirectories.")+
       "</font>";
 }
 

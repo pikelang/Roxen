@@ -10,7 +10,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.19 2001/01/29 05:54:42 per Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.20 2001/05/16 07:50:59 per Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -22,10 +22,10 @@ constant cvs_version = "$Id: restrictedfs.pike,v 1.19 2001/01/29 05:54:42 per Ex
 // end of the locale related stuff
 
 constant module_type = MODULE_LOCATION;
-LocaleString module_name = _(1,"Restricted file system");
+LocaleString module_name = _(1,"File systems: Restricted file system");
 LocaleString module_doc  =
-  _(2,"The restricted file system makes a users home "
-    "directory available to her. Very usable for FTP sites.");
+  _(2,"The restricted file system makes a users real home "
+    "directory available to her. Useful for FTP sites.");
 constant module_unique = 0;
 
 void create()

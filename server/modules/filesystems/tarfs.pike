@@ -1,6 +1,6 @@
 inherit "module";
 
-constant cvs_version= "$Id: tarfs.pike,v 1.5 2001/01/29 05:40:30 per Exp $";
+constant cvs_version= "$Id: tarfs.pike,v 1.6 2001/05/16 07:50:59 per Exp $";
 
 // The Filesystem.Tar module is not threadsafe.
 constant thread_safe=0;
@@ -11,7 +11,7 @@ constant thread_safe=0;
 #include <module.h>
 
 constant module_type = MODULE_LOCATION;
-LocaleString module_name = _(0,"Tarfile system");
+LocaleString module_name = _(0,"File systems: Tar File");
 LocaleString module_doc =
 _(0,"This is a file system module that makes it possible to mount a "
  "directory structure from a tar-file directly on the site. gzip compressed "
@@ -25,7 +25,7 @@ void create()
           _(0,"Where the module will be mounted in the site's virtual file "
           "system.") );
 
-  defvar("tarfile", "config_interface/docs.tar", 
+  defvar("tarfile", "docs.tar", 
          _(0,"Tar file and root path"), TYPE_FILE|VAR_INITIAL,
 	 _(0,"The tarfile, and an optional root path (syntax: /tar/file.tar:/"
 	   "root/dir/)") );
@@ -34,6 +34,11 @@ void create()
 string mp, error_msg;
 
 Filesystem.Tar tar;
+
+string query_name()
+{
+  return query("mountpoint")+" from "+query("tarfile");
+}
 
 void start()
 {

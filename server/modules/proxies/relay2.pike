@@ -1,12 +1,13 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.22 2001/05/16 01:14:02 per Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.23 2001/05/16 07:51:00 per Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
 
+
 constant module_name =
-"HTTP Relay module, take 2";
+"Proxies: HTTP Relay module";
 
 constant module_doc =
 "Smart HTTP relay module. Can relay according to "

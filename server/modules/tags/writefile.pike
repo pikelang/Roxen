@@ -10,7 +10,7 @@
 
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: writefile.pike,v 1.1 2001/05/08 22:19:29 srb%cuci.nl Exp $";
+constant cvs_version = "$Id: writefile.pike,v 1.2 2001/05/16 07:51:00 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -103,7 +103,7 @@ class TagWritefile {
 	} else
 	  towrite=content;
 	object privs;
-	;{ array(int) st;
+	;{ Stat st;
 	   string diro,dirn;
 	   int domkdir=0;
 	   for(dirn=filename;

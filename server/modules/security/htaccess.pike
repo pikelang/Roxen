@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.75 2001/05/08 03:58:39 per Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.76 2001/05/16 07:51:00 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,7 +20,7 @@ inherit "module";
 #endif
 
 constant module_type = MODULE_SECURITY|MODULE_LAST|MODULE_URL|MODULE_USERDB;
-constant module_name = ".htaccess support";
+constant module_name = "Authentication: .htaccess support";
 constant module_doc  = "Almost complete support for NCSA/Apache "
   ".htaccess files. See "
   "<a href=\"http://hoohoo.ncsa.uiuc.edu/docs/setup/access/Overview.html\">"

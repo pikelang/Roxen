@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.14 2001/03/07 13:42:13 kuntri Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.15 2001/05/16 07:51:00 per Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -11,12 +11,14 @@ inherit "module";
 
 
 constant module_type = MODULE_TAG | MODULE_FILTER;
-LocaleString module_name = _(1,"Page sizer");
+LocaleString module_name = _(1,"Tags: Page sizer");
 
 LocaleString module_doc  =
   _(2,"This module provides the <tt>&lt;page-size&gt;</tt> tag that "
     "calculates the size of a page, including inline images, and gives"
-    " estimates of the time it will take to download the page.");
+    " estimates of the time it will take to download the page.<p>"
+    "You can also use the <i>size</i> prestate to trigger the sizing "
+    "process</p>");
 
 #include <variables.h>
 
@@ -484,10 +486,10 @@ string simpletag_page_size( string name,
 mapping filter(mapping result, RequestID id)
 {
   if(!result				// nobody had anything to say
-  || !stringp(result->data)		// got a file object
-  || !(id->prestate->size)		// only bother when we're being hailed
-  || !glob("text/html*", result->type)
-  || id->misc->sizer_in_progress	// already sized file?
+     || !stringp(result->data)		// got a file object
+     || !(id->prestate->size)		// only bother when we're being hailed
+     || !glob("text/html*", result->type)
+     || id->misc->sizer_in_progress	// already sized file?
      || id->misc->orig			// not for internal requests
     )
     return 0; // signal that we didn't rewrite the result for good measure
@@ -522,8 +524,8 @@ constant tagdoc=([
 </attr>
 
 <attr name=speeds value=28.8,56.0,64.0,256.0,384.0,1024.0>
- The time it will take to download a page using the specified speed(s)
- in kb/s.</p>
+ Show the time it will take to download a page using the specified
+ speed(s) in kbit/s.</p>
 </attr>
 
 <ex type='vert'>
@@ -533,9 +535,6 @@ constant tagdoc=([
   speeds='28.8,56.0,64.0,256.0,384.0,1024.0'
  />
 </ex>",
-
-
     ]);
-
 #endif
 
