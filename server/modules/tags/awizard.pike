@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 //
 
 inherit "module";
@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.27 2002/10/01 22:48:18 nilsson Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.28 2004/05/23 01:54:05 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";
@@ -21,7 +21,7 @@ int nid=1;
 
 string store( mapping what )
 {
-  call_out( m_delete, 3600*1, cache, (string)nid );
+  call_out( m_delete, 60*query("cache_timeout"), cache, (string)nid );
   cache[ (string)nid ] = what;
 //   werror("store -> "+nid+"\n");
   return (string)nid++;
@@ -465,6 +465,9 @@ class AWizard
 
 void create()
 {
+  defvar("cache_timeout", 60, "Cache timeout", TYPE_INT|VAR_MORE,
+	 "Timeout in minutes for the internal state and data cache.");
+
   defvar("debug", 0, "Debug mode", TYPE_FLAG|VAR_DEVELOPER, "");
 }
 
