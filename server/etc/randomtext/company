@@ -1,0 +1,212 @@
+/// Random Text Generator module rule file for generating a nonsense
+/// "About us" text for a company in the computer business.
+///
+/// $Id: company,v 1.1 2000/02/01 18:21:51 leif Exp $
+
+***syll1***trim-spaces
+$SELECT:|b|c|d|f|g|h|j|k|l|m|n|p|qu|r|s|t|v|w|x|z|y|t|n|m|d|ph|th|ch|sh$
+---
+$SELECT:|b|c|d|f|g|h|j|k|l|m|n|p|qu|r|s|t|v|w|x|z|y|t|n|m|d|ph|th|ch|sh$
+---
+$SELECT:t|d|b|p|g|k|g|th|st|sp|sk|sc|ch|ph|t|d|b|p|g|t|d$$SELECT:r|l|r|$
+
+***syll2***trim-spaces
+$SELECT:a|e|i|o|u|ai|ou|a|i|u$
+
+***syll3***trim-spaces
+$SELECT:||n|d|nt|st|rd|b|g|ng|m|n|t|d|r|s|t|l|rt|rc|rk|r|t|d||$
+
+***randomsyllable***trim-spaces
+$RULE:syll1$$GLUE$$RULE:syll2$$GLUE$$RULE:syll3$
+---
+$RULE:syll1$$GLUE$$RULE:syll2$$GLUE$$RULE:syll3$
+---
+$SELECT:tr|d|n|c|ph|g|h|l$$SELECT:ant|or|en|is|ac|um|a|i|o|e$
+---
+$SELECT:car|den|val|e|o|a|i|ta|ma|mi|ro|che|res|par|num|gil$
+
+***randomname***trim-spaces
+$RULE:randomsyllable$$GLUE$$RULE:randomsyllable$
+---
+$RULE:randomsyllable$$GLUE$$RULE:randomsyllable$
+---
+$RULE:randomsyllable$$GLUE$$RULE:randomsyllable$$GLUE$$RULE:randomsyllable$
+
+***companyname0***trim-spaces
+$RULE:syll1$$GLUE$$RULE:syll2$$GLUE$$RULE:syll1$$GLUE$$RULE:syll2$
+$GLUE$$RULE:syll3$
+---
+$SELECT:ba|ta|ge|ri|ho|la|me|do$$GLUE$$RULE:randomsyllable$
+---
+$RULE:randomsyllable$$GLUE$$SELECT:|ax|ics|ox|$
+---
+$SELECT:trans|transi|meta|macro|hyper|gyro|net|epi|retro|cyclo|mega$$GLUE$
+$SELECT:soft|form|core|works|trax|nics|tex|labs|sard$
+
+***companyname***single-shot trim-space
+$CAPITALIZE$$GLUE$$RULE:companyname0$
+
+***fullcompanyname***single-shot trim-spaces
+$RULE:companyname$$SELECT:| Industries| Inc.| Ltd.| GmbH| Corporation$
+
+***adjective
+$SELECT:long-term|main|fundamental|essential|constant$
+---
+$SELECT:innovative|leading-edge|reliable|great$
+
+***abstractnoun
+$SELECT:innovation|inventiveness|creativity$
+---
+$SELECT:high quality|leading-edge development|new solutions$
+
+***adj-important
+$SELECT:important|key|central|most important|significant|vital|critical$
+
+***ourproducttype***single-shot
+$SELECT:software|firmware|hardware|network|Internet$
+
+***our
+$RULE:companyname$$GLUE$'s
+---
+our
+
+***heading***avoid-repeat
+$SELECT:Products|Customers|Partners|Values|Objectives$
+---
+$SELECT:Marketing|Innovation|Integrity|People$
+---
+$SELECT:Projects|Entrepreneurial Culture|Diversity|Community|What We Do$
+
+***predescription***avoid-repeat
+---
+as $SELECT:a|every$ $SELECT:leading|prominent|advanced|innovative$
+$RULE:ourproducttype$$SELECT:||-focused|-oriented||$$SELECT:|| solution| interface| service||$
+$SELECT:company|company|provider|developers|experts$, 
+
+***phrase1
+the $SELECT:current|various|rapidly changing$
+$SELECT:state of affairs|possibilities|market opportunities|developments$
+
+***simplesentence***avoid-repeat trim-spaces
+$SELECT:help|make$$SELECT:|| our$
+$SELECT:customers|partners$
+$SELECT:reach|achieve|attain$
+$SELECT:their goals|new levels|new opportunities$
+---
+$SELECT:build|create|develop$ $SELECT:new|table|successful$
+$SELECT:products|developments|relations|relationships$
+---
+$SELECT:respond|react$ $SELECT:rapidly|reliably|regularly$
+$SELECT:||to all demands|in every way||$
+by $SELECT:delivering|developing|examining$
+$SELECT:new|great|suitable|appropriate$
+$SELECT:solutions|products|performance$
+---
+$SELECT:act|proceed|go forth|lead the way$
+$SELECT:|boldly|with the utmost integrity|to reach new heights$
+
+***simplesentences***avoid-repeat
+$RULE:simplesentence$
+---
+$RULE:simplesentence$ and $RULE:simplesentence$
+---
+$RULE:simplesentence$$GLUE$, $RULE:simplesentence$$GLUE$,
+and $RULE:simplesentence$
+
+***r-and-d***avoid-repeat
+$SELECT:research and development|new areas|the future|numerous fields of interest$
+---
+$SELECT:research and development|new areas|the future|numerous fields of interest$,
+$SELECT:combined with|together with|as well as|and$
+our
+$SELECT:constant|continuous|persistant|determined$
+$SELECT:efforts to anticipate|predictions of|work concerning$
+$SELECT:customer|people's|each customer's$
+$SELECT:goals|plans|intensions|needs|requirements$
+
+***paragraph***avoid-repeat trim-spaces
+$RULE:companyname$ $SELECT:is planning to|has decided to|means to|will$
+$RULE:simplesentences$$SELECT:|| in order$
+to $SELECT:ensure|inspire$
+$SELECT:continued success|mutual trust|full satisfaction$.
+---
+To $RULE:simplesentences$
+$SELECT:is the key to|is what makes possible|lays the foundation of$
+$RULE:our$ $RULE:adjective$ $SELECT:success|goals|intensions|strategies$.
+---
+$RULE:companyname$$GLUE$'s $SELECT:long-term|main|fundamental$
+$SELECT:approach to|involvement in|strategies for$
+$RULE:r-and-d$
+is $SELECT:central|key|fundamental|of the utmost importance|highly significant$
+$SELECT:for|to|in relation to|with respect to|considering$
+$RULE:phrase1$
+$SELECT:| in the modern world| today| of the future$$GLUE$.
+---
+$SELECT:In|Living in|Considering|Since we act in$
+$SELECT:a world|an industry|a field|an area$
+$SELECT:that|which$
+$SELECT:moves at lightning speed|constantly changes|has endless opportunities$,
+$RULE:abstractnoun$ is
+$RULE:adj-important$ to
+our$SELECT:|| market| business| continuous||$
+$SELECT:success|competetiveness|strategies|planning$.
+---
+$RULE:companyname$$GLUE$'s $SELECT:long-term|central|traditional|general$
+$SELECT:approach to|efforts concerning$
+$SELECT:customer satisfaction|user needs|marketing$
+$SELECT:enables us|help us$
+to $SELECT:solve|anticipate|predict|prevent$
+$SELECT:every|each|any$ $SELECT:problems|complications$.
+---
+$RULE:companyname$ is$SELECT:| now| still| constantly$
+$SELECT:committed to|pursuing|continuing|maintaining$ 
+$SELECT:its|our$ $SELECT:original|common|current|primary$
+$SELECT:mission|plans|intensions$ to $RULE:simplesentence$$GLUE$.
+
+
+***paragraphs
+$RULE:paragraph$
+$RULE:paragraph$
+---
+$RULE:paragraph$
+$RULE:paragraph$
+$RULE:paragraph$
+
+***the_mission
+$SELECT:Since its inception in|From the start in|Ever since$
+19$SELECT:7|8|9$$SELECT:0|1|2|3|4|5|6|7|8|9$,
+$RULE:companyname$$GLUE$'s
+$SELECT:mission|intension|aim|amibition|plan$
+has been to
+$SELECT:create|provide|make|enhance$
+$SELECT:software|solutions|opportunities|the means$
+$SELECT:that|which$
+$SELECT:empowers$ and $SELECT:enriches$
+$SELECT:people|our customers|every person|mankind$.
+
+***section***avoid-repeat
+<H3>$RULE:heading$</H3>
+$RULE:paragraphs$ $RULE:paragraph$
+---
+<H3>$RULE:heading$</H3>
+$RULE:paragraphs$ $RULE:paragraph$
+---
+<H3>$SELECT:Mission Statement|Our Mission$</H3>
+$RULE:the_mission$
+
+***sections
+$RULE:section$<BR>$RULE:section$
+---
+<BR>$RULE:section$<BR>$RULE:section$<BR>$RULE:section$
+
+***main
+<H2>$RULE:fullcompanyname$</H2>
+$RULE:paragraphs$
+<BR>
+$RULE:sections$
+<BR>
+<H3>$SELECT:Summary|The Future$</H3>
+$RULE:paragraphs$
+
+
+

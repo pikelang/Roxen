@@ -1,0 +1,19 @@
+/// The <roxendir>/server/etc/randomtext directory contains rule files
+/// for the Random Text Generator module. Using the module is a matter
+/// module 
+///
+/// Note: if you mean to make use of many rules files, perhaps it's
+/// better to use a different directory to store them, and leave the
+/// files in this directory unchanged, for reference and as a source
+/// of examples of what can be done. The Random Text Generator module
+/// has a configuration field selecting what directory to search for
+/// rule files.
+///
+/// $Id: README,v 1.1 2000/02/01 18:21:50 leif Exp $
+///
+/// Below follows a minimal rule file, in case somebody tries to use
+/// this README file as rules:
+
+***main
+There's no point in using this file as a random text generator rule file.
+

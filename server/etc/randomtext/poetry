@@ -1,0 +1,184 @@
+/// A Random Text Generator module rule file for silly English poetry.
+///
+/// $Id: poetry,v 1.1 2000/02/01 18:21:51 leif Exp $
+
+***animal***avoid-repeat
+fox
+---
+owl
+---
+butterfly
+---
+wolf
+---
+raven
+---
+turtledove
+---
+fish
+---
+skylark
+
+***place
+$SELECT:forest|valley|meadow$
+---
+$SELECT:sea|ocean|lake|river$
+---
+$SELECT:hidden place|sky|shore$
+
+***intangible
+$SELECT:flame|flare|rainbow|shadow$
+---
+$SELECT:light|fading light|dawn|twilight|daylight|moonlight$
+---
+$SELECT:winter|summer|spring$
+
+***abstracts
+$SELECT:love|hope|despair$
+
+***substance
+$SELECT:gold|silver|wood|ice$
+
+
+***noun0
+$RULE:place$
+---
+$RULE:animal$
+---
+$RULE:intangible$
+---
+$RULE:intangible$
+
+***topicnoun***single-shot
+$RULE:noun0$
+
+***noun
+$RULE:noun0$
+---
+$RULE:noun0$
+---
+$RULE:noun0$
+---
+$RULE:topicnoun$
+
+***title***single-shot
+$SELECT:The|By the|Of the|The first|The last|The$ $RULE:topicnoun$
+---
+$SELECT:The|With the|Last|The$ $RULE:topicnoun$
+$SELECT:by the|from the$ $RULE:place$
+---
+The $RULE:noun$ and the $RULE:topicnoun$
+
+***adjective
+$SELECT:large|slow|fine|rare|delicate|old|young$
+
+***state
+$SELECT:silent|frozen|becalmed$
+
+***adverb
+$SELECT:swiftly|slowly|gently|hastily|gainly|sadly$
+---
+$SELECT:secretly|splendidly|gracefully|wonderously$
+
+***maybe-adverb
+---
+$RULE:adverb$
+---
+$RULE:adverb$
+---
+$RULE:adverb$
+---
+$SELECT:in wonder|in spendour|on light feet$
+
+***p-runs
+$SELECT:runs|floats|goes|flies|swims$
+
+***p-laughs
+$SELECT:laughs|smiles|grows|sings|chants|speaks$
+
+***simpleverbphrase
+$RULE:p-runs$
+---
+$RULE:p-laughs$
+---
+$SELECT:relents|trembles|stays|passes$
+---
+is $SELECT:quiet|frozen|here again$
+---
+is $RULE:state$
+---
+$SELECT:gives chase|stands still$
+---
+$SELECT:haunts|passes|finds solace in|approaches$ the $RULE:place$
+
+***p-by-night
+by $SELECT:night|moonlight|candle light|the ocean shore$
+---
+where $SELECT:zephyrs|butterflies|winds|summers$ $SELECT:dance|sing|play$
+---
+on the $SELECT:winter night|ocean shore|mountain path$
+
+***query
+Do $SELECT:mountains|meadows|people|the years|our dreams$
+$SELECT:indeed|ever|truly|fondly|sweetly|sadly$
+$SELECT:meet|befriend|entertain|find|mirror|reflect|follow$
+$SELECT:the truth|themselves|each other|the light$?
+---
+$SELECT:How|When$ $SELECT:can|must|may$
+$SELECT:we|the world$  $SELECT:||not|ever||$
+$SELECT:see|know|hear$
+$SELECT:thee|thy truth|thy song$?
+
+***line2
+$SELECT:every|the$ $RULE:noun$ $RULE:simpleverbphrase$
+---
+it $SELECT:also|ever|slowly|sadly|$
+$SELECT:wails|rejoices|mourns|mocks itself|bears its burden$
+
+***line
+The $RULE:noun$ $RULE:simpleverbphrase$ and $RULE:simpleverbphrase$ $GLUE$.
+---
+$SELECT:Oh, this|This|Each|One|The|The$ $RULE:noun$ $RULE:simpleverbphrase$
+$RULE:p-by-night$ $GLUE$.
+---
+$SELECT:How|And|But$ $RULE:adverb$
+$SELECT:sings|fades|glows|plays|hunts|chants$ $SELECT:||not|ever||$
+the $RULE:noun$ $GLUE$$SELECT:.|?|!$
+---
+$SELECT:As|When|See!$ $SELECT:the|each$ $RULE:noun$
+$SELECT:grieves|trembles|fades|is hidden|watches$, $RULE:line2$ $GLUE$.
+---
+$SELECT:Alas!|Indeed!|Ah!|Oh!||$
+$SELECT:Is it true?|Can it be?|Indeed!|Such sorrow!||$
+Do $SELECT:mountains|meadows|people|the years|our dreams$
+$SELECT:indeed|ever|truly|fondly|sweetly|sadly$
+$SELECT:meet|befriend|entertain|find|mirror|reflect|follow$
+$SELECT:the truth|themselves|each other|the light$?
+---
+$SELECT:Gentle |Precious |Glorious |Wonder-$$RULE:noun$$GLUE$!
+$RULE:query$
+
+
+***body
+$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
+<br>
+$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
+---
+$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
+<br>
+$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
+---
+$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
+<br>
+$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
+<br>
+$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
+
+***main
+<b>$RULE:title$</b>
+<p>
+$RULE:body$
+
+
+
+

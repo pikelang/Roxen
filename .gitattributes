@@ -79,6 +79,9 @@ nn binary
 /server/etc/more_extensions/apache foreign_ident
 /server/etc/more_extensions/chemical foreign_ident
 /server/etc/more_extensions/inlinetypes foreign_ident
+/server/etc/randomtext/README foreign_ident
+/server/etc/randomtext/company foreign_ident
+/server/etc/randomtext/poetry foreign_ident
 /server/etc/roxen_hilfe.pike foreign_ident
 /server/etc/roxen_master.pike foreign_ident
 /server/etc/supports foreign_ident
