@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.100 2000/03/20 02:00:48 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.101 2000/03/21 00:40:00 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1512,7 +1512,11 @@ constant tagdoc=([
 
 "&page.realfile;":"<desc ent>Path to this file in the file system.</desc>",
 "&page.virtroot;":"<desc ent>The root of the present virtual filesystem.</desc>",
-"&page.virtfile;":"<desc ent>Path to this file in the virtual file systme.</desc>",
+"&page.virtfile;":"<desc ent>Path to this file in the virtual filesystem.</desc>",
+"&page.pathinfo;":#"\
+<desc ent>The \"path info\" part of the URL, if any. Can only get set
+if the \"Path info support\" module is installed. For details see the
+documentation for that module.</desc>",
 "&page.query;":"<desc ent></desc>",
 "&page.url;":"<desc ent>The URL to this file, from the web server's root or point of view.</desc>",
 "&page.last-true;":"<desc ent></desc>",
