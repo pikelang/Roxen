@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.506 2002/04/10 09:46:01 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.507 2002/04/12 14:14:21 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2602,6 +2602,12 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     }
   }
 
+  // Check if the module is part of the license.
+  License.Key key = getvar("license")->get_key();
+  if(moduleinfo->locked && (!key || !moduleinfo->unlocked(key)) )
+    key->report_warning("Module", "Loaded module "+modname+
+			" is not part of the license.");
+  
   string descr = moduleinfo->get_name() + (id ? " copy " + (id + 1) : "");
   //  sscanf(descr, "%*s: %s", descr);
 
