@@ -58,4 +58,5 @@ o From: Bernhard Reiter <breiter@mathematik.Uni-Osnabrueck.DE>
 
 o Allow multiple 'tags' with the same name
   
-
+o Fix a better page for "Illegal configuration name". It should at least offer
+  a "back"-button
