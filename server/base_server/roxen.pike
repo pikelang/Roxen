@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.433 2000/02/16 14:21:31 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.434 2000/02/16 15:37:29 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1183,12 +1183,6 @@ class HTTPS
     void die()
     {
       SSL3_WERR(sprintf("fallback_redirect_request::die()"));
-#if 0
-      /* Close the file, DAMMIT */
-      Stdio.File dummy = Stdio.File();
-      if (dummy->open("/dev/null", "rw"))
-        dummy->dup2(f);
-#endif
       f->close();
       destruct(f);
       destruct(this_object());
@@ -1284,12 +1278,6 @@ class HTTPS
     {
       SSL3_WERR(sprintf("http_fallback(X, %O, \"%s\")", n, data));
       //  trace(1);
-#if 0
-      werror(sprintf("ssl3->http_fallback: alert(%d, %d)\n"
-		     "seq_num = %s\n"
-		     "data = '%s'", alert->level, alert->description,
-		     (string) n, data));
-#endif
       if ( (my_fd->current_write_state->seq_num == 0)
 	   && search(lower_case(data), "http"))
       {
@@ -1623,15 +1611,8 @@ object find_configuration( string name )
         (lower_case( replace( replace(o->query_name(), "-", " ") - " " ,
 			      "/", "-" ) ) == name) )
       return o;
-//     werror(" is not '"+o->name+"'\n" );
   }
   return 0;
-}
-
-// Create a new configuration from scratch.
-// 'type' is as in the form. 'none' for a empty configuration.
-int add_new_configuration(string name, string type)
-{
 }
 
 mapping(string:array(int)) error_log=([]);
@@ -1794,15 +1775,6 @@ void restart_if_stuck (int force)
 	 });
   alarm (60*QUERY(abs_timeout)+10);
 }
-
-void post_create ()
-{
-  if (QUERY(abs_engage))
-    call_out (restart_if_stuck,10);
-  if (QUERY(suicide_engage))
-    call_out (restart,60*60*24*QUERY(suicide_timeout));
-}
-
 
 // Cache used by the various configuration interface modules etc.
 // It should be OK to delete this cache at any time.
@@ -2520,7 +2492,8 @@ void create()
 
   dump( "base_server/disk_cache.pike" );
   foreach( glob("*.pmod",get_dir( "etc/modules/RoxenLocale.pmod/")), string q )
-    dump( "etc/modules/RoxenLocale.pmod/"+ q );
+    if( q != "Modules.pmod" ) dump( "etc/modules/RoxenLocale.pmod/"+ q );
+
   dump( "base_server/roxen.pike" );
   dump( "base_server/roxenlib.pike" );
   dump( "base_server/basic_defvar.pike" );
@@ -2608,7 +2581,7 @@ void create()
   // This is currently needed to resolve the circular references in
   // RXML.pmod correctly. :P
 
-  call_out(post_create,1); //we just want to delay some things a little
+
 }
 
 // Set the uid and gid to the ones requested by the user. If the sete*
@@ -2735,14 +2708,7 @@ void reload_all_configurations()
   foreach(list_all_configurations(), string config)
   {
     array err, st;
-    foreach(configurations, conf)
-    {
-      if(lower_case(conf->name) == lower_case(config))
-      {
-	break;
-      } else
-	conf = 0;
-    }
+    conf = find_configuration( config );
     if(!(st = config_is_modified(config))) {
       if(conf) {
 	config_cache[config] = config_stat_cache[config];
@@ -2752,19 +2718,10 @@ void reload_all_configurations()
     }
     modified = 1;
     config_cache[config] = st;
-    if(conf) {
-      // Closing ports...
-      if (conf->server_ports) {
-	// Roxen 1.2.26 or later
-	Array.map(values(conf->server_ports),
-		  lambda(object o) { destruct(o); });
-      } else {
-	Array.map(indices(conf->open_ports),
-		  lambda(object o) { destruct(o); });
-      }
+    if(conf)
+    {
       conf->stop();
       conf->invalidate_cache();
-      conf->modules = ([]);
       conf->create(conf->name);
     } else {
       if(err = catch
@@ -2831,10 +2788,9 @@ void enable_configurations()
 int all_modules_loaded;
 void enable_configurations_modules()
 {
-  mixed err;
-  all_modules_loaded = 1;
+  if( all_modules_loaded++ ) return;
   foreach(configurations, object config)
-    if(err=catch( config->enable_all_modules() ))
+    if(mixed err=catch( config->enable_all_modules() ))
       report_error("Error while loading modules in configuration "+
                    config->name+":\n"+describe_backtrace(err)+"\n");
 }
@@ -3104,6 +3060,7 @@ int main(int argc, array tmp)
               foreach(glob("*.pmod",get_dir( "etc/modules/RoxenLocale.pmod/")),
                       string q )
                 dump( "etc/modules/RoxenLocale.pmod/"+ q );
+              (program)"module";
               dump( "protocols/http.pike");
               dump( "protocols/ftp.pike");
               dump( "protocols/https.pike");
@@ -3199,6 +3156,12 @@ int main(int argc, array tmp)
   trace(1);
 #endif
   start_time=time();		// Used by the "uptime" info later on.
+
+  if (QUERY(suicide_engage))
+    call_out (restart,60*60*24*QUERY(suicide_timeout));
+
+  restart_if_stuck( 0 );
+
   return -1;
 }
 
@@ -3346,8 +3309,7 @@ array(object) get_config_users( string uname )
 }
 
 
-array(string|object)
-  list_config_users( string uname, string|void required_auth )
+array(string|object) list_config_users(string uname, string|void required_auth)
 {
   array users = `+( ({}), configuration_auth->list_admin_users( ) );
   if( !required_auth )
