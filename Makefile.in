@@ -19,6 +19,7 @@ all:	make_vpath @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
 
 # NOTE: The _ is significant!
 make_vpath: make_vpath.in
+	@echo
 	@echo "Warning: $(MAKE) doesn't seem to understand VPATH"
 	@echo
 	@echo "Fixing..."
@@ -28,7 +29,7 @@ make_vpath: make_vpath.in
 	  test -d $$d || mkdir $$d; \
 	done
 	@echo "Creating symlinks for all the files..."
-	for d in `cd $(SRCDIR);find @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern -depth -type d -print` .; do \
+	@for d in `cd $(SRCDIR);find @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern -depth -type d -print` .; do \
 	  for f in `cd $(SRCDIR)/$$d; echo *`; do \
 	    if test "`ls -d $$d/$$f 2>/dev/null||:`" = ""; then \
 	      (cd $$d; ln -s $(SRCDIR)/$$f $$f); \
