@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.256 2000/10/19 01:52:09 mast Exp $
+// $Id: rxml.pike,v 1.257 2000/10/30 14:15:57 jhs Exp $
 
 
 inherit "rxmlhelp";
@@ -2463,7 +2463,7 @@ scope created within the define tag.
   </elseif>
   <else>
    Somewhere between 9 to 5.
-  </else
+  </else>
  </ex>
 
  <p>SiteBuilder plugins requires a Roxen Platform SiteBuilder
