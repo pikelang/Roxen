@@ -68,6 +68,15 @@ class ConfigurationSettings
                "oftast ändras."
 	    ]), 0, 0 );
 
+    defvar( "translations", 0,
+            ([
+              "english":"Show the incomplete translations",
+            ]), TYPE_FLAG,
+            ([ "english":"Show the language selection flags. The translation "
+               "of the configuration interface is not done yet, so this is "
+               "mostly useful for the curious or the translator." 
+	    ]), 0, 0 );
+
     defvar( "devel_mode", 1,
             ([
               "english":"Show developer options and actions",

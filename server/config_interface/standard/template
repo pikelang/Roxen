@@ -119,7 +119,9 @@
       <tr>
       <td><a href="http://www.roxen.com/">&usr.logo-html:none;</a></td>
       <td align="right" valign="top">
-        <table><tr><td align="right">
+        <table>
+         <cf-userwants option=translations>
+          <tr><td align="right">
            <gtext preparse="1"  font="&usr.font;"
                   fgcolor="&usr.top-fgcolor;" scale="0.45"
                   hspace="3">&locale.language;:</gtext>
@@ -134,7 +136,8 @@
               </configif-output>
              </font>
            </td>
-         </tr>
+          </tr>
+         </cf-userwants>
          <tr>
            <td align="right">
              <font color="&usr.top-fgcolor;">
