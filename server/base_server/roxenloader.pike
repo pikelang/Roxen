@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.171 2000/04/19 15:33:09 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.172 2000/05/08 14:03:34 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -433,7 +433,11 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   }
   opts->noinitgroups = 1;
   object proc;
-  proc = Process.create_process( ({s}), opts );
+#if defined(__NT__) || defined(__amigaos__)
+  proc = Process.create_process(Process.split_quoted_string(s), opts);
+#else /* !__NT||__amigaos__ */
+  proc = Process.create_process( ({"/bin/sh", "-c", s}), opts );
+#endif /* __NT__ || __amigaos__ */
   p->close();
   destruct(p);
 
