@@ -1,4 +1,4 @@
-{if lots-o-arguments}<p>
+<b>{if lots-o-arguments}:</b><p>
 {IF}, {ELSE}
 
 {if} can be used to show the enclosed section when certain
