@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.142 2002/05/07 14:03:09 jonasw Exp $
+// $Id: Roxen.pmod,v 1.143 2002/06/24 16:15:12 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3134,11 +3134,15 @@ class ScopeCookie {
       RXML.parse_error ("Cannot set cookies of type %t.\n", val);
     if (!c) c = RXML_CONTEXT;
     if(c->id->cookies[var]!=val) {
+      // Note: We should not use c->set_var here to propagate the
+      // change event, since this code is called by it. It's also
+      // called dynamically to install the p-coded changes in the
+      // cookie scope, so we don't use c->id->add_response_header
+      // below.
       c->id->cookies[var]=val;
-      c->id->add_response_header (
-	"Set-Cookie", http_encode_cookie(var)+
-	"="+http_encode_cookie( val )+
-	"; expires="+http_date(time(1)+(3600*24*365*2))+"; path=/");
+      add_http_header(c->misc[" _extra_heads"], "Set-Cookie", http_encode_cookie(var)+
+		      "="+http_encode_cookie( val )+
+		      "; expires="+http_date(time(1)+(3600*24*365*2))+"; path=/");
     }
     return val;
   }
@@ -3152,10 +3156,10 @@ class ScopeCookie {
   void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
     if (!c) c = RXML_CONTEXT;
     if(!c->id->cookies[var]) return;
+    // Note: The same applies here as in `[]= above.
     predef::m_delete(c->id->cookies, var);
-    c->id->add_response_header (
-      "Set-Cookie",
-      http_encode_cookie(var)+"=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
+    add_http_header(c->misc[" _extra_heads"], "Set-Cookie",
+		    http_encode_cookie(var)+"=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
   }
 
   string _sprintf() { return "RXML.Scope(Cookie)"; }
