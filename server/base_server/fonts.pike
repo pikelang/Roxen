@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.80 2001/11/14 13:18:20 grubba Exp $
+// $Id: fonts.pike,v 1.81 2002/05/15 15:23:55 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -344,6 +344,7 @@ static void create()
   add_constant("describe_font_type", describe_font_type);
   add_constant("resolve_font", resolve_font);
   add_constant("available_fonts", available_fonts);
+  add_constant("roxen.fonts", this_object());
   report_debug("Loading font handlers ...\n" );
   foreach( r_get_dir( "font_handlers" ), string fh )
   {
