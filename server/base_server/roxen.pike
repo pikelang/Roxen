@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.721 2001/08/31 00:10:37 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.722 2001/08/31 11:18:29 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4674,8 +4674,18 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   if( !patterns )  return 0;
   code = ("#include <module.h>\n"
 	  "int|mapping f( RequestID id )\n"
-	  "{\n" +variables *";\n" + ";\n"
-	  "" +  code + "  return fail;\n}\n" );
+	  "{\n" +variables *";\n" + ";\n" +
+#if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
+	  sprintf("  report_debug(\"Verifying against pattern:\\n\""
+		  "%{               \"  \" %O \"\\n\"\n%}"
+		  "               \"...\\n\");\n"
+		  "%s"
+		  "  report_debug(sprintf(\"  Result: %%O\\n\", fail));\n",
+		  pattern/"\n", code) +
+#else /* !SECURITY_PATTERN_DEBUG && !HTACCESS_DEBUG */
+	  code +
+#endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
+	  "  return fail;\n}\n" );
 #if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
    report_debug(sprintf("Compiling security pattern:\n"
 			"%{    %s\n%}\n"
