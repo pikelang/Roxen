@@ -84,9 +84,6 @@ worldmap binary
 /server/data/include/udp.h foreign_ident
 /server/data/include/variables.h foreign_ident
 /server/data/include/version.h foreign_ident
-/server/data/more_extensions/apache foreign_ident
-/server/data/more_extensions/chemical foreign_ident
-/server/data/more_extensions/inlinetypes foreign_ident
 /server/data/randomtext/README foreign_ident
 /server/data/randomtext/company foreign_ident
 /server/data/randomtext/poetry foreign_ident
