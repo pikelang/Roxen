@@ -12,7 +12,7 @@ inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.74 1997/10/28 12:30:58 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.75 1997/10/28 12:32:22 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -610,9 +610,11 @@ mapping set_legend_size(mapping diagram_data)
 	diagram_data["legend_texts"]=diagram_data["legend_texts"]
 	  [..sizeof(diagram_data["datacolors"])-1];
       
+      int r=0;
       while(tobig)
 	{
-	  if (tobig>3)
+	  r++;
+	  if (r>3)
 	    throw( ({"Very bad error while trying to resize the legendfonts!\n",
 		     backtrace()}));
 	  {
