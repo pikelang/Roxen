@@ -64,7 +64,7 @@ verify: verbose_verify
 # NOTE: No /. in the directory test below!
 verbose_verify: cgi
 	@test -d cgi.testsuite || mkdir cgi.testsuite
-	if test "x`id -u 2>/dev/null || /usr/bin/id -u 2>/dev/null || /usr/xpg4/bin/id -u 2>/dev/null || :`" = "x0"; then \
+	if test "x`id -u 2>/dev/null || /usr/bin/id -u 2>/dev/null || /usr/xpg4/bin/id -u 2>/dev/null || (test -w / && echo 0) || :`" = "x0"; then \
 	  echo Running as root. Will attempt to run as nobody instead; \
 	  echo Chowning directory cgi.testsuite to nobody...; \
 	  chown -R nobody cgi.testsuite; \
