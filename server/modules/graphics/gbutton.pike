@@ -24,7 +24,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.52 2000/07/21 12:42:28 kuntri Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.53 2000/07/24 00:58:37 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -212,6 +212,20 @@ function TIMER( function f )
 void start()
 {
   button_cache = roxen.ImageCache("gbutton", TIMER(draw_button));
+}
+
+string status() {
+  array s=button_cache->status();
+  return sprintf("<b>Images in cache:</b> %d images<br />\n<b>Cache size:</b> %s",
+		 s[0]/2, Roxen.sizetostring(s[1]));
+}
+
+mapping(string:function) query_action_buttons() {
+  return ([ "Clear cache":flush_cache ]);
+}
+
+void flush_cache() {
+  button_cache->flush();
 }
 
 Image.Layer layer_slice( Image.Layer l, int from, int to )
