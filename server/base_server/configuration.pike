@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.346 2000/08/22 08:34:45 lange Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.347 2000/08/22 22:48:53 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2007,15 +2007,15 @@ array do_not_log_patterns = 0;
 void start(int num)
 {
   // Note: This is run as root if roxen is started as root
-  foreach( query( "URLs" )-registered_urls, string url )
-  {
-    registered_urls += ({ url });
-    roxenp()->register_url( url, this_object() );
-  }
   foreach( registered_urls-query("URLs"), string url )
   {
     registered_urls -= ({ url });
     roxenp()->unregister_url( url );
+  }
+  foreach( query( "URLs" )-registered_urls, string url )
+  {
+    registered_urls += ({ url });
+    roxenp()->register_url( url, this_object() );
   }
   if( !datacache )
     datacache = DataCache( );
