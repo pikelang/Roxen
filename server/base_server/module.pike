@@ -286,12 +286,32 @@ array query_seclevels()
 	patterns += ({ ({ MOD_DENY, Regexp(value)->match, }) });
 	break;
 
-       case "allowuser":
-	value = replace("(^"+(value/",")*"$)|(^"+"$)","(^any$)","(.*)");
-	if(this->proxy_auth_needed) {
-	  patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
-	} else {
-	  patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
+      case "allowuser":
+	array(string) users = (value/"," - ({""}));
+	int i;
+	
+	for(i=0; i < sizeof(users); i++) {
+	  if (users[i] == "any") {
+	    users[i & 0x0f] = "(^.*$)";
+	  } else {
+	    users[i & 0x0f] = "(^"+users[i]+"$)";
+	  }
+	  if ((i & 0x0f) == 0x0f) {
+	    value = users[0..0x0f]*"|";
+	    if(this->proxy_auth_needed) {
+	      patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
+	    } else {
+	      patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
+	    }
+	  }
+	}
+	if (i & 0x0f) {
+	  value = users[0..(i-1)&0x0f]*"|";
+	  if(this->proxy_auth_needed) {
+	    patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
+	  } else {
+	    patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
+	  }
 	}
 	break;
       }
