@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.16 1998/09/16 18:52:46 per Exp $
+ * $Id: clientlayer.pike,v 1.17 1998/09/18 14:08:10 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.16 1998/09/16 18:52:46 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.17 1998/09/18 14:08:10 per Exp $";
 constant thread_safe=1;
 
 
@@ -77,7 +77,6 @@ mapping filter_headers( mapping from )
   if(from->from) res->from = from->from;
   if(from->to) res->to = from->to;
   if(from->date) res->date = from->date;
-//   werror("Filtered headers are %O\n", res);
   return res;
 }
 
@@ -167,7 +166,6 @@ void delete_body(string body_id)
 object(Stdio.File) new_body( string body_id )
 {
   string f = query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id;
-  werror("Path: %s",f);
   mkdirhier(f);
   return Stdio.File(f, "rwct");
 }
@@ -365,16 +363,19 @@ class Mailbox
     return _unread = (sizeof(mail()->flags()->read-({1})));
   }
 
+  void force_remove_mail(Mail mm)
+  {
+    _mail = 0; // No optimization, for safety...
+    _unread = -1;
+    modify( );
+    remove_mailbox_from_mail( mm->id, mm->message_id );
+    destruct( mm );
+  }
+
   void remove_mail(Mail mm)
   {
     if(search(mail()->message_id, mm->message_id) != -1)
-    {
-      _mail = 0; // No optimization, for safety...
-      _unread = -1;
-      modify( );
-      remove_mailbox_from_mail( mm->message_id, id );
-      destruct( mm );
-    }
+      force_remove_mail( mm );
   }
 
   Mail add_mail(Mail mm, int|void nocopy)
@@ -406,10 +407,10 @@ class Mailbox
     
   void delete()
   {
-    foreach(mail, object m)
-      remove_mail( m );
+    foreach(mail(), object m)
+      force_remove_mail( m );
     modify();
-    user->_mailboxes = 0;
+    user->_mboxes = 0;
     delete_mailbox( id );
     destruct(this_object());
   }
@@ -426,7 +427,6 @@ class Mailbox
       return _mail;
     mapping q = list_mail( id );
     _mail = ({ });
-//     werror("mail=%O\n", q);
     foreach(indices(q), string w)
       _mail += ({ get_any_obj( (string)w, Mail, 
 			       (string)q[w], this_object()) });
@@ -482,7 +482,6 @@ class Mailbox
   {
     string foo = read_headers_from_fd( fd );
     mapping headers = parse_headers( foo )[0];
-//     werror("Parsed headers are %O\n", headers);
     string bodyid = get_unique_body_id();
     fd->seek( 0 );
     Stdio.File f = new_body( bodyid );
@@ -547,7 +546,7 @@ class User
 
   string query_name(int|void force)
   {
-    return 0;
+    return get_user_realname( id );
   }
 
   array(Mailbox) mailboxes(int|void force)
@@ -645,7 +644,7 @@ multiset(string) list_domains()
 
 string get_user_realname(int user_id)
 {
-  array a = squery("select realname from users where user_id='%d'",
+  array a = squery("select realname from users where id='%d'",
 		   user_id);
   if(!sizeof(a))
     return 0;
@@ -718,7 +717,7 @@ mapping(string:mixed) get_mail_headers(string message_id)
 
 int update_message_refcount(string message_id, int deltacount)
 {
-  array a=squery("select refcount from messages where id='%s'", message_id);
+  array a=squery("select refcount,body_id from messages where id='%s'", message_id);
   if(!a||!sizeof(a))
     return 0;
   int refcount=(int)a[0]->refcount + deltacount;
@@ -741,7 +740,6 @@ int delete_mail(string mail_id)
   string message_id = a[0]->message_id;
   squery("delete from mail where id='%s'",mail_id);
   a=squery("select refcount,body_id from messages where id='%s'",message_id);
-  werror("%O",a);
   if(!a||!sizeof(a))
     return 0;
   if(!update_message_refcount(message_id,-1))
@@ -758,7 +756,6 @@ int create_user_mailbox(int user, string mailbox)
 
 string create_message(mapping mess)
 {
-  werror(sql_insert_mapping( mess ));
   get_sql()->query("insert into messages "+sql_insert_mapping( mess ));
   return (string)get_sql()->master_sql->insert_id();
 }
@@ -773,7 +770,7 @@ string get_mailbox_name(int mailbox_id)
 int delete_mailbox(int mailbox_id)
 {
   squery("delete from mailboxes where id='%d'", mailbox_id);
-  foreach(list_mail(mailbox_id), string mail_id)
+  foreach(indices(list_mail(mailbox_id)), string mail_id)
     delete_mail(mail_id);
   return 1;
 }
@@ -784,11 +781,11 @@ int rename_mailbox(int mailbox_id, string newname)
   return 1;
 }
 
-int remove_mailbox_from_mail(string message_id, int mailbox_id)
+int remove_mailbox_from_mail(string mail_id, string message_id)
 {
-  squery("delete from mail where mailbox_id='%d' and message_id='%s'",
-	 mailbox_id, message_id);
-  // we must also remove all flags.
+  squery("delete from mail_misc where id='%s'", mail_id);
+  squery("delete from flags where mail_id='%s'", mail_id);
+  squery("delete from mail where id='%s'", mail_id);
   update_message_refcount( message_id, -1 );
 }
 
