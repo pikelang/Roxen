@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.125 1999/11/22 12:58:10 per Exp $
+// $Id: roxenlib.pike,v 1.126 1999/11/22 16:14:00 wellhard Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1503,8 +1503,17 @@ string|int tagtime(int t, mapping m, object id, object language)
     {
      case "iso":
       eris=localtime(t);
-      return sprintf("%d-%02d-%02d", (eris->year+1900),
-		     eris->mon+1, eris->mday);
+      if(!(m->date && m->time))
+      {
+	if(m->date)
+	  return sprintf("%d-%02d-%02d",
+			 (eris->year+1900), eris->mon+1, eris->mday);
+	if(m->time)
+	  return sprintf("%02d:%02d:%02d", eris->hour, eris->min, eris->sec);
+      }
+      return sprintf("%d-%02d-%02dT%02d:%02d:%02d",
+		     (eris->year+1900), eris->mon+1, eris->mday,
+		     eris->hour, eris->min, eris->sec);
 
      case "discordian":
 #if efun(discdate)
