@@ -6,7 +6,7 @@ inherit "roxenlib";
 import Thread;
 
 // AutoSite DNS Update 
-// $Id: AutoDNS.pike,v 1.15 1998/09/27 16:33:02 grubba Exp $
+// $Id: AutoDNS.pike,v 1.16 1999/09/17 22:53:59 grubba Exp $
 // Leif Stensson & Johan Schön, July 1998.
 
 string host_ip_no;
@@ -24,7 +24,7 @@ void create()
          ZONEDIR, TYPE_STRING,
          "The name of the directory where to put the zone subfiles.");
 
-  defvar(DBURL, "mysql://auto:site@tifa.idonex.se/autosite",
+  defvar(DBURL, "mysql://user:pass@dbserver/database",
          DBURL, TYPE_STRING,
          "The SQL database URL.");
 
@@ -255,7 +255,10 @@ void start()
      host_ip_no = gethostbyname(gethostname())[1][0];
   
   if (! database)
-  { database = Sql.sql(query(DBURL));
+  {
+    catch {
+      database = Sql.sql(query(DBURL));
+    };
 
     if (database)
     { database_status = "connected (" + database->host_info() + ")";
