@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.143 2001/09/21 15:58:09 jhs Exp $";
+constant cvs_version = "$Id: business.pike,v 1.144 2001/09/22 03:23:18 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -34,11 +34,13 @@ int loaded;
 
 
 roxen.ImageCache image_cache;
+function verify_font;
 
 void start(int num, object configuration)
 {
   if (!loaded) loaded = 1; 
   image_cache = roxen.ImageCache( "diagram", draw_callback );
+  verify_font = roxen->fonts->verify_font;
 }
 
 void stop()
@@ -88,7 +90,8 @@ string itag_xaxis(string tag, mapping m, mapping res)
 #endif
   int l=query("maxstringlength")-1;
 
-  res->xaxisfont = m->font || m->nfont || res->xaxisfont;
+  res->xaxisfont = verify_font( m->font || m->nfont || res->xaxisfont,
+				res->labelsize );
 
   if(m->name) res->xname = m->name[..l];
   if(m->start)
@@ -113,7 +116,8 @@ string itag_yaxis(string tag, mapping m, mapping res)
 #endif
   int l=query("maxstringlength")-1;
 
-  res->yaxisfont = m->font || m->nfont || res->yaxisfont;
+  res->yaxisfont = verify_font( m->font || m->nfont || res->yaxisfont,
+				res->labelsize );
 
   if(m->name) res->yname = m->name[..l];
   if(m->start)
@@ -154,7 +158,8 @@ string itag_names(string tag, mapping m, string contents,
   {
     if(tag=="xnames")
     {
-      res->xnamesfont = m->font || m->nfont || res->xnamesfont;
+      res->xnamesfont = verify_font( m->font || m->nfont || res->xnamesfont,
+				     res->fontsize );
 
       foo=res->xnames = contents/sep;
       if(m->orient)
@@ -167,7 +172,8 @@ string itag_names(string tag, mapping m, string contents,
     {
       foo=res->ynames = contents/sep;
 
-      res->ynamesfont = m->font || m->nfont || res->ynamesfont;
+      res->ynamesfont = verify_font( m->font || m->nfont || res->ynamesfont,
+				     res->fontsize );
     }
   }
   else
@@ -381,7 +387,8 @@ string itag_legendtext(mapping tag, mapping m, string contents,
 
   string sep = m->separator || SEP;
 
-  res->legendfont = m->font || m->nfont || res->legendfont;
+  res->legendfont = verify_font( m->font || m->nfont || res->legendfont,
+				 res->legendfontsize );
 
   res->legend_texts = contents/sep;
 
@@ -478,14 +485,17 @@ string container_diagram(string tag, mapping m, string contents,
     if (m->namesize)
       res->namesize=(int)m->namesize;
     res->namecolor=parse_color(m->namecolor||id->misc->defines->fgcolor);
+    if(m->namefont)
+      res->namefont = verify_font( m->namefont, res->namesize );
   }
 
   res->voidsep = m->voidseparator || m->voidsep;
 
-  res->font = m->font || m->nfont;
+  res->fontsize       = (int)m->fontsize || 16;
+  res->legendfontsize = (int)m->legendfontsize || res->fontsize;
+  res->labelsize      = (int)m->labelsize || res->fontsize;
 
-  if(m->namefont)
-    res->namefont=m->namefont;
+  res->font = verify_font( m->font || m->nfont, res->fontsize );
 
   if (m->tunedbox)
     m->tonedbox=m->tunedbox;
@@ -562,6 +572,9 @@ string container_diagram(string tag, mapping m, string contents,
   if ( !res->data || !sizeof(res->data))
     return syntax("No data for the diagram");
 
+  if(res->fontsize == res->labelsize)
+    m_delete(res, "labelsize");
+
   res->bg = parse_color(m->bgcolor || id->misc->defines->bgcolor || "white");
   res->fg = parse_color(m->textcolor || id->misc->defines->fgcolor || "black");
 
@@ -576,9 +589,6 @@ string container_diagram(string tag, mapping m, string contents,
   res->format         = m->format || "jpg";
 #endif
   res->encoding       = m->encoding || "iso-8859-1";
-  res->fontsize       = (int)m->fontsize || 16;
-  res->legendfontsize = (int)m->legendfontsize || res->fontsize;
-  res->labelsize      = (int)m->labelsize || res->fontsize;
 
   if(m->labelcolor) res->labelcolor=parse_color(m->labelcolor || id->misc->defines->fgcolor || "black");
   res->axcolor   = parse_color(m->axcolor || id->misc->defines->fgcolor || "black");
@@ -737,7 +747,7 @@ mixed draw_callback(mapping args, object id)
     /* Image was not found or broken */
     if(args->image == 1)
     {
-      args->image=get_font(0, 24, 0, 0,"left", 0, 0);
+      args->image=get_font(0, 24, 0, 0,"left", 0.0, 0.0);
       if (!(args->image))
 	throw(({"Missing font or similar error!\n", backtrace() }));
       args->image=args->image->
@@ -756,8 +766,9 @@ mixed draw_callback(mapping args, object id)
     args->image = Image.Image(args->xsize, args->ysize, @args->colorbg);
   }
 
-  if(args->font)
-    args->font = resolve_font(args->font);
+  foreach( ({ "font", "namefont", "legendfont", "xaxisfont", "yaxisfont",
+	      "xnamesfont", "ynamesfont" }), string font)
+    if(args[font]) args[font] = get_font(args[font], 32, 0, 0, "left", 0.0, 0.0);
 
   Image.Image img;
   
@@ -795,7 +806,7 @@ mixed draw_callback(mapping args, object id)
 	
 #ifdef BG_DEBUG
   if(id->prestate->debug)
-    werror("Timers: %O\n", bg_timers);
+    report_debug("Timers: %O\n", bg_timers);
 #endif
 
   if (!args->notrans)
