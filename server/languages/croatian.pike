@@ -1,14 +1,16 @@
-/* Croatian language support for Roxen
-   Author: Klara Makovac 1997/07/02
-   E-mail: makovac@istria.nexus.com.hr
-   SDC-CIP Co. Ernesta Milosa 25, 52470 Umag, Croatia
-   tel. +385 52 741 967
+/* name="Croatian language support for Roxen";
+   doc="Author: Klara Makovac 1997/07/02<br>"
+   "E-mail: makovac@istria.nexus.com.hr<br>"
+   "SDC-CIP Co. Ernesta Milosa 25, 52470 Umag, Croatia<br>";
+   "tel. +385 52 741 967<br>";
    You can do anything you want with this code.
    Don't change the name of the author !!!
    Please consult me before upgrading croatian.pike.
 */
 
-string cvs_version = "$Id: croatian.pike,v 1.2 1997/07/10 09:06:24 grubba Exp $";
+
+
+string cvs_version = "$Id: croatian.pike,v 1.3 1997/08/19 06:38:08 per Exp $";
 inline string month(int num)
 {
   return ({ "Sijecanj", "Veljaca", "Ozujak", "Travanj", "Svibanj",

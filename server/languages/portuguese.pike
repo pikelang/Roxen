@@ -1,7 +1,12 @@
 /* Bugs by: Per */
 /* Trans by: cjsawaia@8415.com.br */
 
-string cvs_version = "$Id: portuguese.pike,v 1.4 1997/01/09 14:39:09 grubba Exp $";
+/*
+ * name = "Portuguese language plugin ";
+ * doc = "Handles the conversion of numbers and dates to Portuguese. You have to restart the server for updates to take effect. Translation by cjsawaia@8415.com.br";
+ */
+
+string cvs_version = "$Id: portuguese.pike,v 1.5 1997/08/19 06:38:17 per Exp $";
  
 inline string month(int num)
 {

@@ -1,5 +1,5 @@
 /* From: Tvns B|ker <bueker@bidnix.bid.fh-hannover.de> 
-string cvs_version = "$Id: german.pike,v 1.4 1997/04/05 01:26:00 per Exp $";
+string cvs_version = "$Id: german.pike,v 1.5 1997/08/19 06:38:13 per Exp $";
    Subject: New 'german.lpc' ...
  
    Hi,
@@ -9,6 +9,11 @@ string cvs_version = "$Id: german.pike,v 1.4 1997/04/05 01:26:00 per Exp $";
    by e. g. <modified since lang=de> to e. g. 'am 22. Septemper'
    which is more frequently used than 'Septemper 22ter' in
    Germany.
+ */
+
+/*
+ * name = "German language plugin ";
+ * doc = "Handles the conversion of numbers and dates to German. You have to restart the server for updates to take effect. Translation by Tvns Böker (bueker@bidnix.bid.fh-hannover.de)";
  */
 
 inline string month(int num)

@@ -1,6 +1,6 @@
 /*
 
-string cvs_version = "$Id: french.pike,v 1.4 1997/08/12 06:32:15 per Exp $";
+string cvs_version = "$Id: french.pike,v 1.5 1997/08/19 06:38:12 per Exp $";
 Created by:
 
 ---------------------+--------------------------------------------------
@@ -10,8 +10,13 @@ fax:++32-10/472877   | Pl. Pasteur,3   B-1348 Louvain-la-Neuve   Belgium
 ---------------------+--------------------------------------------------
 http://ftp.geog.ucl.ac.be/~patrick/
 
+
 */
 
+/*
+ * name = "French language plugin ";
+ * doc = "Handles the conversion of numbers and dates to French. You have to restart the server for updates to take effect. Translation by Patrick Kremer.";
+ */
 
 
 inline string month(int num)

@@ -1,7 +1,14 @@
 /* Maaori (New Zealand) */
 /* any bugs in this file were inserted by Jason Rumney <jasonr@pec.co.nz> */
+/*
+ * name = "Maaori (New Zealand) language plugin ";
+ * doc = "Handles the conversion of numbers and dates to Maaori. You have "
+"to restart the server for updates to take effect. Translation by Jason "
+"Rumney (jasonr@pec.co.nz)";
+ */
 
-string cvs_version = "$Id: maori.pike,v 1.3 1997/01/09 14:39:07 grubba Exp $";
+
+string cvs_version = "$Id: maori.pike,v 1.4 1997/08/19 06:38:15 per Exp $";
 
 inline string month( int num )
      {

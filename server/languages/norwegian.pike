@@ -1,7 +1,9 @@
 /*
-string cvs_version = "$Id: norwegian.pike,v 1.3 1997/01/09 14:39:08 grubba Exp $";
+string cvs_version = "$Id: norwegian.pike,v 1.4 1997/08/19 06:38:16 per Exp $";
   norwegian.lpc         morten@nvg.unit.no
   Støtte for norsk på www-serveren..
+  name="Norwegian language plugin";
+  doc="Støtte for norsk på www-serveren.. morten@nvg.unit.no";
 */
 
 inline string month(int num)

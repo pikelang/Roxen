@@ -1,7 +1,11 @@
 /* Created by Janne Edelman, Turku Unix Users Group ry, Turku, Finland
-string cvs_version = "$Id: finnish.pike,v 1.3 1997/01/09 14:39:04 grubba Exp $";
+string cvs_version = "$Id: finnish.pike,v 1.4 1997/08/19 06:38:11 per Exp $";
    http://www.tuug.utu.fi/~edelman/ or http://website.tuug.utu.fi/ 
    */
+/*
+ * name = "Finnish language plugin ";
+ * doc = "Handles the conversion of numbers and dates to finnish. You have to restart the server for updates to take effect. Translation by Janne Edelman, Turku Unix Users Group ry, Turku, Finland";
+ */
 
 inline string month(int num)
 {

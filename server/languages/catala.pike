@@ -1,7 +1,11 @@
 /* Bugs by: Per */
-string cvs_version = "$Id: catala.pike,v 1.4 1997/01/09 14:39:02 grubba Exp $";
+string cvs_version = "$Id: catala.pike,v 1.5 1997/08/19 06:38:08 per Exp $";
 /* Trans by: jordi@lleida.net 
  * This version revised by a catalan linguist. 
+ */
+/*
+ * name = "Catalan language plugin ";
+ * doc = "Handles the conversion of numbers and dates to Catalan. You have to restart the server for updates to take effect. Translation by jordi@lleida.net, revised by a catalan linguist.";
  */
 
 

@@ -1,14 +1,14 @@
-/* Serbian language support for Roxen 
-   Author: Goran Opacic 1996/12/11
-   E-mail: goran@sdc.co.yu
-   SDC-CIP Co. Kneza Milosa 12, 11000 Belgrade, Yugoslavia
-   tel. +381 11 643 466
+/*name=" Serbian language support for Roxen ";
+   doc="Author: Goran Opacic 1996/12/11<br>"
+   "E-mail: goran@sdc.co.yu<br>"
+   "SDC-CIP Co. Kneza Milosa 12, 11000 Belgrade, Yugoslavia<br>"
+   "tel. +381 11 643 466<br>";
    You can do anything you want with this code.
    Don't change the name of the author !!!
    Please consult me before upgrading serbian.pike.
 */
 
-string cvs_version = "$Id: serbian.pike,v 1.2 1997/01/09 14:39:10 grubba Exp $";
+string cvs_version = "$Id: serbian.pike,v 1.3 1997/08/19 06:38:18 per Exp $";
 inline string month(int num)
 {
   return ({ "Januar", "Februar", "Mart", "April", "Maj",

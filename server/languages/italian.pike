@@ -9,7 +9,12 @@
  *	would be rude, wouldn't it? ^_^
  */
 
-string cvs_version = "$Id: italian.pike,v 1.4 1997/05/19 18:58:32 grubba Exp $";
+/*
+ * name = "Italian language plugin ";
+ * doc = "Handles the conversion of numbers and dates to Italian. You have to restart the server for updates to take effect. Translation by Francesco Chemolli (kinkie@comedia.it)";
+ */
+
+string cvs_version = "$Id: italian.pike,v 1.5 1997/08/19 06:38:14 per Exp $";
 
 inline string month(int num)
 {

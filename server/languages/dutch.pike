@@ -1,6 +1,11 @@
 /* */
 
-constant cvs_version="$Id: dutch.pike,v 1.4 1997/08/08 15:15:45 grubba Exp $";
+/*
+ * name = "Dutch language plugin ";
+ * doc = "Handles the conversion of numbers and dates to Dutch. You have to restart the server for updates to take effect.";
+ */
+
+constant cvs_version="$Id: dutch.pike,v 1.5 1997/08/19 06:38:10 per Exp $";
 
 inline string month(int num)
 {

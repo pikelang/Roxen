@@ -1,6 +1,10 @@
 /* Bugs by: Per */
+/*
+ * name = "English language plugin ";
+ * doc = "Handles the conversion of numbers and dates to English. You have to restart the server for updates to take effect.";
+ */
 
-string cvs_version = "$Id: english.pike,v 1.3 1997/01/09 14:39:04 grubba Exp $";
+string cvs_version = "$Id: english.pike,v 1.4 1997/08/19 06:38:11 per Exp $";
 inline string month(int num)
 {
   return ({ "January", "February", "March", "April", "May",

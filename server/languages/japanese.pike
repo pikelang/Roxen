@@ -1,11 +1,12 @@
-/* Japanese (Was Kanji) */
-/* Bugs by Marcus Comstedt <marcus@infovav.se> */
+/* name="Japanese (Was Kanji) language plugin"; */
+/* doc="Adds support for japanese";
+ * Bugs by Marcus Comstedt <marcus@infovav.se> */
 
 /* Tip: put <header name="Content-type" value="text/html; charset=iso-2022-jp">
  *      on the page since Netscape caches charsets.
  */
 
-string cvs_version = "$Id: japanese.pike,v 1.6 1997/06/12 02:41:43 per Exp $";
+string cvs_version = "$Id: japanese.pike,v 1.7 1997/08/19 06:38:15 per Exp $";
 string month(int num);
 
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */

@@ -1,12 +1,12 @@
-/* Slovenian language support for Roxen 
-   Author: Iztok Umek 7. 8. 1997
-   Help by: Henrik Grubbstr-m <grubba@infovav.se> tnx! 
-   E-mail: iztok.umek@snet.fri.uni-lj.si
+/* name="Slovenian language support for Roxen ";
+   doc="Author: Iztok Umek 7. 8. 1997<br>"
+   "Help by: Henrik Grubbström <grubba@infovav.se> tnx!<br>"
+   "E-mail: iztok.umek@snet.fri.uni-lj.si<br>";
    You can do anything you want with this code.
-   Please consult me before upgrading slovenian.pike.
+   Please consult me before modifying slovenian.pike.
 */
 
-string cvs_version = "$Id: slovenian.pike,v 1.2 1997/08/07 16:26:15 grubba Exp $";
+string cvs_version = "$Id: slovenian.pike,v 1.3 1997/08/19 06:38:19 per Exp $";
 inline string month(int num)
 {
   return ({ "Januar", "Februar", "Marec", "April", "Maj",

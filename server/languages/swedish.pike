@@ -1,6 +1,10 @@
 /* Bugs by: Per */
+/*
+ * name = "Swedish language plugin ";
+ * doc = "Handles the conversion of numbers and dates to Swedish. You have to restart the server for updates to take effect.";
+ */
 
-string cvs_version = "$Id: swedish.pike,v 1.7 1997/08/12 06:32:16 per Exp $";
+string cvs_version = "$Id: swedish.pike,v 1.8 1997/08/19 06:38:20 per Exp $";
 string month(int num)
 {
   return ({ "januari", "februari", "mars", "april", "maj",

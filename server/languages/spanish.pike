@@ -1,5 +1,9 @@
 /* Bugs by: Per */
-string cvs_version = "$Id: spanish.pike,v 1.3 1997/01/09 14:39:10 grubba Exp $";
+string cvs_version = "$Id: spanish.pike,v 1.4 1997/08/19 06:38:19 per Exp $";
+/*
+ * name = "Spanish language plugin ";
+ * doc = "Handles the conversion of numbers and dates to spanish. Translated by jordi@lleida.net. You have to restart the server for updates to take effect.";
+ */
 /* Trans by: jordi@lleida.net */
 
 inline string month(int num)
