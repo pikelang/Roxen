@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.47 2000/03/20 00:45:43 grubba Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.48 2000/03/30 18:41:49 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -30,7 +30,7 @@ mapping stats = ([ "http": ([ "cache":([]), "new":([]) ]),
 object stats_mutex = Thread.Mutex();
 #endif
 
-object logfile;
+function(string:int) log_function;
 
 string|void init_proxies();
 
@@ -44,7 +44,7 @@ int browser_socket_keepalive, browser_socket_buffersize;
 int server_timeout, server_idle_timeout;
 int server_continue, server_socket_keepalive;
 
-void start()
+void start(int level, Configuration conf)
 {
   string pos;
   pos=QUERY(mountpoint);
@@ -74,24 +74,18 @@ void start()
 
   if(!no_cache_for) no_cache_for = lambda(string i){return 0;};
 
-  if(logfile) 
-    destruct(logfile);
-
-  if(!strlen(QUERY(logfile)))
-    return;
-
 #ifdef PROXY_DEBUG
-  werror("Proxy online.\n");
+  werror("PROXY: Proxy online.\n");
 #endif
 
-  if(QUERY(logfile) == "stdout")
+  if(log_function)
   {
-    logfile=Stdio.stdout;
-  } else if(QUERY(logfile) == "stderr"){
-    logfile=Stdio.stderr;
-  } else {
-    logfile=open(QUERY(logfile), "wac");
+    destruct(function_object(log_function));
+    log_function = 0;
   }
+  if (!strlen(QUERY(logfile)))
+    return;
+  log_function = conf->LogFile( QUERY(logfile) )->write;
 }
 
 mixed log(object id, mapping file)
@@ -108,7 +102,7 @@ mixed log(object id, mapping file)
 
 void do_write(string host, string oh, string more)
 {
-  logfile->write(more + (host?host:oh) + "\n");
+  log_function(more + (host?host:oh) + "\n");
 }
 
 #define MY_TIME(X) sprintf("%s%d:%d", (X)>(60*60)?(X)/(60*60)+":":"",\
@@ -124,10 +118,10 @@ void log_client(string host, string oh, string id, string more, string client,
     roxen->ip_to_host(client, do_write, client, more);
     break;
   case "IfCached":
-    logfile->write(more + roxen->quick_ip_to_host(client) + "\n");
+    log_function(more + roxen->quick_ip_to_host(client) + "\n");
     break;
   default:
-    logfile->write(more + client + "\n");
+    log_function(more + client + "\n");
   }
 }
 #undef MY_TIME
@@ -273,7 +267,9 @@ string check_variable(string name, mixed value)
 void create()
 {         
   defvar("logfile", "", "Logfile", TYPE_FILE,
-	 "Empty the field for no log at all");
+	 "Empty the field for no log at all. "
+	 "For filename substitution patterns "
+	 "see the description of the main logfile.");
   
   defvar("log_resolve_client", "Resolved", "Log client hostnames",
          TYPE_STRING_LIST|VAR_MORE,
@@ -490,7 +486,7 @@ void destroy()
   proxies = 0;
   filters = 0;
   http_codes_to_cache = 0;
-  logfile = 0;
+  log_function = 0;
   stats = 0;
 #ifdef THREADS
   stats_mutex = 0;
@@ -557,9 +553,7 @@ mapping find_file( string f, object id )
 
   // http_pipe_in_progress MUST reach id->pipe before send_result comes there
   // otherwise id->pipe and id->file will be messed up
-  call_out(Request, 0, id, this_object(), host, port, file);
-
-  id->do_not_disconnect = 1;
+  Request(id, this_object(), host, port, file);
   return http_pipe_in_progress();
 }
 
@@ -570,6 +564,7 @@ mapping find_file( string f, object id )
 #define SERVER_DEBUG(X)
 #endif
 
+program pipe;
 class Server 
 {
   object conf, proxy, client, to_disk, to_disk_pipe, from_server;
@@ -842,7 +837,9 @@ class Server
       {
 	 //SERVER_DEBUG("server_got(" + len + ") - setup and write to_disk_pipe")
 
-	 to_disk_pipe = roxen->pipe();
+	 if (!pipe)
+	   pipe = (program)"smartpipe";
+	 to_disk_pipe = pipe();
 	 to_disk_pipe->write(d);
 	 to_disk_pipe->set_done_callback(lambda(){to_disk_pipe=0;});
 	 to_disk_pipe->output(to_disk->file);
@@ -929,7 +926,9 @@ class Server
     {
       //SERVER_DEBUG("finish - write memory cache to_disk_pipe")
 
-      to_disk_pipe = roxen->pipe();
+      if (!pipe)
+	pipe = (program)"smartpipe";
+      to_disk_pipe = pipe();
       to_disk_pipe->write(_data);
       to_disk_pipe->set_done_callback(lambda(){to_disk_pipe=0;finish();});
       to_disk_pipe->output(to_disk->file);
@@ -1112,17 +1111,13 @@ class Server
     mode("Connecting");
 
     object from_server = Stdio.File();
-    if(from_server->async_connect(host, port, connected_to_server, from_server))
-    {
-      //SERVER_DEBUG("got_hostname - async_connect ok")
-    } else {
-      //SERVER_DEBUG("got_hostname - async_connect failed")
-      connected_to_server(0);
-    }
+    from_server->async_connect(host, port, connected_to_server, from_server);
   }
 
   static private void connected_to_server(int connected, object|void _from_server)
   {
+    //SERVER_DEBUG("connected_to_server("+connected+")")
+
     if(!connected || !_from_server || !_from_server->query_address())
     {
       // remote timeout callback may come here
@@ -1252,7 +1247,6 @@ class Server
   }
 }
 
-#define PROXY_DEBUG
 #ifdef PROXY_DEBUG
 #define REQUEST_DEBUG(X) report_debug("PROXY: Request("+_remoteaddr+") " +\
   (X) + " for " + name+".\n");
@@ -1271,13 +1265,15 @@ class Request
 
   void log(object|void r)
   {
+    //REQUEST_DEBUG("log")
+
     if(!proxy)
       return;
 
     string _mode = mode();
     mode(_mode + "*");
 
-    if(logfile){
+    if(log_function){
       string more = sent + " " + _mode + " " + _http_code + " ";
       mode(_mode + "-");
       string host, rest;
@@ -1361,20 +1357,12 @@ class Request
   {
     //REQUEST_DEBUG("send_pipe_done - sent=" + sent)
 
-#if constant(Stdio.sendfile)
-    sent += id->file->len;
-#else /* !constant(Stdio.sendfile) */
-    sent += id->pipe->bytes_sent();
-    id->pipe = 0;
-#endif /* constant(Stdio.sendfile) */
-
     if(!server)
     {
       //REQUEST_DEBUG("send_pipe_done - server finished")
       id->do_log();
       return;
     }
-    id->file = 0;
   }
 
   void send_now(string s)
@@ -1385,12 +1373,6 @@ class Request
       REQUEST_DEBUG("send_now(" + strlen(s) + ") - id vanished")
       destruct();
       return;
-    }
-
-    if(!id->file)
-    {
-      id->file = ([ "raw":1, "type":"raw" ]);
-      id->start_sender(send_pipe_done);
     }
   }
 
@@ -1613,6 +1595,7 @@ class Request
     server = Server(this_object(), proxy, host, port, name);
   }
 
+  int done_done;
   void finish(int|string|void http_or_last_message, string|void s)
   {
     if(!this_object())
@@ -1647,8 +1630,12 @@ class Request
     if(id->pipe)
     {
       //REQUEST_DEBUG("finish - pipe is running")
+      if (!done_done)
+	id->start_sender(send_pipe_done);
+      done_done = 1;
       return;
     }
+    REQUEST_DEBUG("finish - last send")
     send("");
   }
 
@@ -1662,9 +1649,6 @@ class Request
     server = 0;
     proxy = 0;
     id = 0;
-
-    // NO! NO!! /wk
-    //id->do_not_disconnect = 0;
   }
 
   string mode(string|void m)
