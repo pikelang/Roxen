@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.54 2005/03/24 12:19:48 grubba Exp $
+# $Id: extensions,v 1.55 2005/04/04 14:00:22 noring Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -553,6 +553,19 @@ sdp	application/sdp
 # vnd.ms-lrm
 # vnd.contact.cmsg
 # vnd.epson.esf
+
+# Open Office
+
+sxw	application/vnd.sun.xml.writer
+stw	application/vnd.sun.xml.writer.template
+sxc	application/vnd.sun.xml.calc
+stc	application/vnd.sun.xml.calc.template
+sxd	application/vnd.sun.xml.draw
+std	application/vnd.sun.xml.draw.template
+sxi	application/vnd.sun.xml.impress
+sti	application/vnd.sun.xml.impress.template
+sxg	application/vnd.sun.xml.writer.global
+sxm	application/vnd.sun.xml.math
 
 # Other
 
