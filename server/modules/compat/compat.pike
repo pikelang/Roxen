@@ -713,6 +713,7 @@ array tag_remove_cookie(string t, mapping m, RequestID id) {
 // --------------- Register tags, containers and if-callers ---------------
 
 mapping query_tag_callers() {
+  if(!enabled) start(1, my_configuration());
   mapping active=(["list-tags":tag_list_tags,
 		   "version":tag_version,
 		   "line":tag_line
