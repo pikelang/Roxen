@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.47 2001/11/23 21:07:38 mast Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.48 2001/11/26 15:47:40 anders Exp $";
 
 #include <module.h>
 inherit "module";
@@ -475,6 +475,10 @@ constant props_arg =
     The time in ms it takes before the popup is hidden when the mouse
     leaves the popup (default is 300 ms).</p></item>
 
+    <item name=\"setHide2ndClick\"><p>
+    If the popups parent is clicked a second time, the popup will be
+    hidden if this method was called.</p></item>
+
     <item name=\"setParentRightOffset\"><p>
     The x offset from the parent popups right border. This offset
     will only be used if the popup has a parent popup i.e. not at the top
@@ -484,6 +488,14 @@ constant props_arg =
     The y offset from the parent popups bottom border. This offset
     will only be used if the popup has a parent popup i.e. not at the top
     level. This offset overrides the y_offset.</p></item>
+
+    <item name=\"setPageX\"><p>
+    Sets the popup to this absolute x coordinate.
+    </p></item>
+
+    <item name=\"setPageY\"><p>
+    Sets the popup to this absolute y coordinate.
+    </p></item>
   </list>";
 
 constant tagdoc = ([
@@ -553,6 +565,7 @@ props_arg+
 
 <script language='javascript'>
   popup_props = new PopupProperties(15, 0);
+  popup_props.setHide2ndClick();
   popup_props.setHideDelay(500);
 </script>
 

@@ -151,30 +151,39 @@ function showPopup(e, name, parent, properties)
 
 function LayerPosition(trigger_pos, parent_popup_pos, properties)
 {
-  this.x = trigger_pos.x;
-  this.y = trigger_pos.y;
-  if(parent_popup_pos && properties.pox)
-    this.x += parent_popup_pos.w - properties.pox;
-  else if(trigger_pos.w && properties.pox)
-    this.x += trigger_pos.w - properties.pox;
-  else
-    this.x += properties.ox;
-  
-  if(parent_popup_pos && properties.poy)
-    this.y += parent_popup_pos.h - properties.poy;
-  else if(trigger_pos.h && properties.poy)
-    this.y += trigger_pos.h - properties.poy;
-  else
-    this.y += properties.oy;
+  if (properties.absx) {
+    this.x = properties.ox;
+  } else {
+    this.x = trigger_pos.x;
+    if(parent_popup_pos && properties.pox)
+      this.x += parent_popup_pos.w - properties.pox;
+    else if(trigger_pos.w && properties.pox)
+      this.x += trigger_pos.w - properties.pox;
+    else
+      this.x += properties.ox;
+  }
+  if (properties.absy) {
+    this.y = properties.oy;
+  } else {
+    this.y = trigger_pos.y;
+    if(parent_popup_pos && properties.poy)
+      this.y += parent_popup_pos.h - properties.poy;
+    else if(trigger_pos.h && properties.poy)
+      this.y += trigger_pos.h - properties.poy;
+    else
+      this.y += properties.oy;
+  }
 }
 
-function PopupProperties(ox, oy)
+function PopupProperties(ox, oy, absx, absy)
 {
   this.hide_delay = 300;
   this.ox = ox;
   this.oy = oy;
   this.pox = false;
   this.poy = false;
+  this.absx = absx;
+  this.absy = absy;
   this.hide_2nd_click = false;
   this.LayerPosition = LayerPosition;
   
@@ -186,6 +195,10 @@ function PopupProperties(ox, oy)
     function(pox) { this.pox = pox; return this;};
   this.setParentBottomOffset =
     function(poy) { this.poy = poy; return this;};
+  this.setPageX =
+    function(x) { this.ox = x; this.absx = true; return this; };
+  this.setPageY =
+    function(y) { this.oy = y; this.absy = true; return this; };
 
   // Modify the offsets
     if(isNav5) {
