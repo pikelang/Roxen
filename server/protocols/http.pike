@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.114 1998/08/21 23:02:02 js Exp $";
+constant cvs_version = "$Id: http.pike,v 1.115 1998/08/25 22:50:49 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -309,6 +309,7 @@ private int parse_got(string s)
   raw_url    = f;
   time       = _time(1);
   
+  DPERROR(sprintf("RAW_URL:%O", raw_url));
 
   if(!remoteaddr)
   {
@@ -320,6 +321,9 @@ private int parse_got(string s)
   }
 
   f = scan_for_query( f );
+
+  DPERROR(sprintf("After query scan:%O", f));
+
 //  f = http_decode_string( f );
 
   if (sscanf(f, "/<%s>/%s", a, f)==2)
@@ -328,14 +332,20 @@ private int parse_got(string s)
     mod_config = (a/",");
     f = "/"+f;
   }
+
+  DPERROR(sprintf("After cookie scan:%O", f));
   
   if ((sscanf(f, "/(%s)/%s", a, f)==2) && strlen(a))
   {
     prestate = aggregate_multiset(@(a/","-({""})));
     f = "/"+f;
   }
+
+  DPERROR(sprintf("After prestate scan:%O", f));
   
   not_query = simplify_path(http_decode_string(f));
+
+  DPERROR(sprintf("After simplify_path == not_query:%O", not_query));
 
   request_headers = ([]);	// FIXME: KEEP-ALIVE?
 
