@@ -16,8 +16,8 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed", "graphic_text" }));
 }
 
-constant cvs_version = "$Id: counter.pike,v 1.37 2000/09/05 16:30:10 nilsson Exp $";
-constant module_type = MODULE_PARSER;
+constant cvs_version = "$Id: counter.pike,v 1.38 2000/09/10 16:37:49 nilsson Exp $";
+constant module_type = MODULE_TAG;
 constant module_name = "Graphical Counter";
 constant thread_safe = 1;
 constant module_doc  = "Generates graphical counters. This module is really only "

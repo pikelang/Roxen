@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.45 2000/09/05 09:10:21 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.46 2000/09/10 16:47:48 nilsson Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -48,7 +48,7 @@ problem.\n"
 #endif /* CGI_DEBUG */
 
 constant module_unique = 0;
-constant module_type = MODULE_LOCATION | MODULE_FILE_EXTENSION | MODULE_PARSER;
+constant module_type = MODULE_LOCATION | MODULE_FILE_EXTENSION | MODULE_TAG;
 constant module_name = "CGI scripting support";
 constant module_doc  = "Support for the <a href=\"http://hoohoo.ncsa.uiuc.edu/docs/cgi/"
   "interface.html\">CGI/1.1 interface</a>, and more.";
@@ -1089,7 +1089,7 @@ void create(Configuration conf)
 	 "only happend if the 'Run scripts as' variable is set to root (or 0)",
 	 0, getuid);
 
-  defvar("runuser", "", "Run scripts as", TYPE_STRING,
+  defvar("runuser", "nobody", "Run scripts as", TYPE_STRING,
 	 "If you start roxen as root, and this variable is set, CGI scripts "
 	 "will be run as this user. You can use either the user name or the "
 	 "UID. Note however, that if you don't have a working user database "

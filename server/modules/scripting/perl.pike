@@ -6,10 +6,10 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.6 2000/08/22 22:38:30 leif Exp $";
+       "$Id: perl.pike,v 2.7 2000/09/10 16:47:49 nilsson Exp $";
 
 constant module_type = MODULE_EXPERIMENTAL |
-            MODULE_FILE_EXTENSION | MODULE_PARSER;
+            MODULE_FILE_EXTENSION | MODULE_TAG;
 
 constant module_name = "Perl support";
 constant module_doc =

@@ -7,9 +7,9 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.9 2000/07/28 08:44:14 hop Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.10 2000/09/10 16:50:30 nilsson Exp $";
 constant thread_safe = 1;
-constant module_type = MODULE_URL | MODULE_PARSER;
+constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
 constant module_doc  = "Handles documents in different languages. "
             "What language a file is in is specified with the "

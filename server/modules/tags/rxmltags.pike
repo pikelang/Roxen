@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.170 2000/09/08 15:15:01 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.171 2000/09/10 16:35:07 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -19,7 +19,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant module_type = MODULE_PARSER | MODULE_PROVIDER;
+constant module_type = MODULE_TAG | MODULE_PROVIDER;
 constant module_name = "RXML 2.0 tags";
 constant module_doc  = "This module provides the common RXML tags.";
 
@@ -642,9 +642,7 @@ class TagDebug {
 	return 0;
       }
       if (args->werror) {
-	report_debug(map (replace(args->werror,"\\n","\n") / "\n",
-			  lambda (string s) {return "<debug>: " + s;}) * "\n" +
-		     "\n");
+	report_debug("%^s%#-1s\n", "<debug>: ", replace(args->werror,"\\n","\n") );
       }
       if (args->off)
 	id->misc->debug = 0;

@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.30 2000/04/15 01:18:19 per Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.31 2000/09/10 16:35:07 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -26,7 +26,7 @@ void create()
 	  "definition is taken from the active directory module." );
 }
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Kill frame";
 constant module_doc  = "This module defines a the tag &lt;killframe&gt; that "
   "adds some JavaScript that will prevent others "

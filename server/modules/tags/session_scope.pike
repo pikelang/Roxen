@@ -4,9 +4,9 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_scope.pike,v 1.1 2000/05/16 16:32:42 nilsson Exp $";
+constant cvs_version = "$Id: session_scope.pike,v 1.2 2000/09/10 16:35:08 nilsson Exp $";
 constant thread_safe = 1;
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Session scope module";
 constant module_doc  = "This module provides a session persistent variable scope.";
 constant module_unique = 1;

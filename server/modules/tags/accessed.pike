@@ -5,9 +5,9 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.35 2000/09/04 22:20:11 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.36 2000/09/10 16:35:04 nilsson Exp $";
 constant thread_safe = 1;
-constant module_type = MODULE_PARSER | MODULE_LOGGER;
+constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Accessed counter";
 constant module_doc  = "This module provides access counters, through the "
 "<tt>&lt;accessed&gt;</tt> tag and the <tt>&amp;page.accessed;</tt> entity.";

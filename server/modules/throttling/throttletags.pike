@@ -4,7 +4,7 @@
 inherit "module";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.9 2000/07/03 06:17:25 nilsson Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.10 2000/09/10 16:51:58 nilsson Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -15,7 +15,7 @@ constant cvs_version="$Id: throttletags.pike,v 1.9 2000/07/03 06:17:25 nilsson E
 
 #define THROW(X) throw( X+"\n" )
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Throttling control tags";
 constant module_doc  = "This module provides a <tt>&lt;THROTTLE&gt;</tt> tag "
   "that you can use to determine a request's allocated bandwidth";

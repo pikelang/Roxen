@@ -7,7 +7,7 @@
 
 #pragma strict_types
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.23 2000/09/01 23:41:06 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.24 2000/09/10 16:35:07 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -25,7 +25,7 @@ void create()
   */
 }
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Indirect href";
 //constant module_unique = 0;
 constant module_doc  =

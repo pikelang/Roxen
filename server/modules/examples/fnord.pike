@@ -4,7 +4,7 @@
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: fnord.pike,v 1.10 2000/07/02 16:46:08 nilsson Exp $";
+constant cvs_version = "$Id: fnord.pike,v 1.11 2000/09/10 16:42:10 nilsson Exp $";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.
@@ -80,7 +80,7 @@ string simpletag_fnord(string tag_name, mapping arguments, string contents,
 
 // Some constants that are needed to register the module in the RXML parser.
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Fnord!";
 constant module_doc  = "Adds an extra container tag, &lt;fnord&gt; that's supposed to make "
   "things invisible unless the \"fnord\" prestate is present."

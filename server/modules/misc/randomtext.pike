@@ -57,7 +57,7 @@
 
 inherit "module";
 
-string version = "$Id: randomtext.pike,v 1.4 2000/07/03 05:35:41 nilsson Exp $";
+string version = "$Id: randomtext.pike,v 1.5 2000/09/10 16:50:31 nilsson Exp $";
 
 #if __ROXEN_VERSION__ < 2.0
 #include <module.h>
@@ -73,7 +73,7 @@ array register_module()
        1 });
 }
 #else
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Random Text Generator Module"; 
 constant module_doc  =
    "This module provides a simple way of generating texts on a "

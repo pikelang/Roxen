@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.20 2000/08/29 23:23:34 nilsson Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.21 2000/09/10 16:47:49 nilsson Exp $";
 constant thread_safe=1;
 
 
@@ -21,7 +21,7 @@ constant thread_safe=1;
 inherit "module";
 #include <module.h>
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Pike tag";
 constant module_doc =  #"
 This module adds a processing instruction tag, <code>&lt;?pike ...

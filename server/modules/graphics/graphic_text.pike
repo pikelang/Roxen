@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.234 2000/09/02 23:37:54 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.235 2000/09/10 16:37:49 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -9,7 +9,7 @@ inherit "module";
 
 // ------------------- Module registration ---------------------
 
-constant module_type   = MODULE_PARSER;
+constant module_type   = MODULE_TAG;
 constant module_name   = "Graphic text";
 constant module_doc    = 
 #"Provides the <tt>&lt;gtext&gt;&lt;/gtext&gt;</tt> tag that is used

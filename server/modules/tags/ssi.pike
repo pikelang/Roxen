@@ -5,10 +5,10 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.32 2000/07/23 15:22:17 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.33 2000/09/10 16:35:08 nilsson Exp $";
 
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "SSI support";
 constant module_doc  = 
 #"Provides support for the SSI standard tags.";

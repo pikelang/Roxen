@@ -4,10 +4,10 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.8 2000/09/05 16:13:08 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.9 2000/09/10 16:35:08 nilsson Exp $";
 constant thread_safe=1;
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Verified form";
 constant module_doc  = "Creates a self verifying form.";
 

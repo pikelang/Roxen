@@ -6,9 +6,9 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.19 2000/04/06 06:37:00 wing Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.20 2000/09/10 16:35:06 nilsson Exp $";
 constant thread_safe = 1;
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Advanced wizards";
 constant module_doc  = 
 #"Provides the <tt>&lt;awizard&gt;</tt> tag that is used to

@@ -7,9 +7,9 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.12 2000/05/12 13:09:07 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.13 2000/09/10 16:50:31 nilsson Exp $";
 constant thread_safe = 1;
-constant module_type = MODULE_FIRST | MODULE_PARSER;
+constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
 constant module_doc  = "Determine the clients preferred language based on \"accept-language\", prestates and cookies.";
 

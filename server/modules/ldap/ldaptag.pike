@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.1 2000/08/23 12:09:32 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.2 2000/09/10 16:55:16 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -21,8 +21,8 @@ Configuration conf;
 
 // Module interface functions
 
-//constant module_type=MODULE_PARSER|MODULE_PROVIDER;
-constant module_type=MODULE_PARSER;
+//constant module_type=MODULE_TAG|MODULE_PROVIDER;
+constant module_type=MODULE_TAG;
 constant module_name="LDAP tags";
 constant module_doc  = "This module gives the tag <tt>&lt;ldap&gt;</tt> and "
   "<tt>&lt;emit&gt;</tt> plugin (<tt>&lt;emit source=\"ldap\" ... &gt;</tt>).\n";

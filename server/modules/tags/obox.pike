@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.29 2000/08/09 14:45:39 kuntri Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.30 2000/09/10 16:35:07 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -322,7 +322,7 @@ string simpletag_obox(string name, mapping args, string contents)
   return s;
 }
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name =
     ([
       "standard":"Outlined box",

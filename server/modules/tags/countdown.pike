@@ -1,12 +1,12 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.37 2000/09/05 15:06:45 per Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.38 2000/09/10 16:35:07 nilsson Exp $";
 #include <module.h>
 inherit "module";
 
 constant thread_safe=1;
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Countdown";
 constant module_doc  = "Provides the <tt>&lt;countdown&gt;</tt> tag, that "
 "shows the time remaining until a certain date.";

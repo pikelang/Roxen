@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.78 2000/09/04 17:25:35 jhs Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.79 2000/09/10 16:56:20 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -21,7 +21,7 @@ array(string) readme, indexfiles;
 string template;
 int override;
 
-constant module_type = MODULE_DIRECTORIES | MODULE_PARSER;
+constant module_type = MODULE_DIRECTORIES | MODULE_TAG;
 constant module_name = "Directory Listings";
 constant module_doc = "This module pretty prints a list of files.";
 

@@ -5,13 +5,13 @@
  */
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: atlas.pike,v 1.6 2000/09/10 13:53:43 nilsson Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.7 2000/09/10 16:39:15 nilsson Exp $";
 
 #include <module.h>
 
 inherit "module";
 
-constant module_type = MODULE_PARSER | MODULE_EXPERIMENTAL;
+constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Atlas";
 constant module_doc  = 
 #"Provides the <tt>&lt;atlas&gt;</tt> tag that creates a world map. It is

@@ -2,7 +2,7 @@
 //
 inherit "module";
 
-constant cvs_version = "$Id: language.pike,v 1.30 2000/08/19 08:52:41 per Exp $";
+constant cvs_version = "$Id: language.pike,v 1.31 2000/09/10 16:50:30 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -18,7 +18,7 @@ constant thread_safe = 1;
 # define LANGUAGE_WERR(X)
 #endif
 
-constant module_type = MODULE_URL | MODULE_PARSER;
+constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module";
 constant module_doc  = "Handles documents in different languages. "
 	      "What language a file is in is specified with an "
@@ -37,10 +37,12 @@ constant module_unique = 1;
 
 void create()
 {
-  defvar( "default_language", "en", "Default language", TYPE_STRING,
-	  "The default language for this server. Is used when trying to "
-	  "decide which language to send when the user hasn't selected any. "
-	  "Also the language for the files with no language-extension." );
+  defvar( "default_language",
+	  Variable.String( "en", 0, "Default language",
+			   "The default language for this server. Is used when trying to "
+			   "decide which language to send when the user hasn't selected any. "
+			   "Also the language for the files with no language-extension.")
+	  );
 
   defvar( "languages", "en	English\nde	Deutch		en\n"
 	  "sv	Svenska		en", "Languages", TYPE_TEXT_FIELD,

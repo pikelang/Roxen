@@ -7,8 +7,8 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.28 2000/09/05 16:29:49 nilsson Exp $";
-constant module_type = MODULE_PARSER;
+constant cvs_version = "$Id: cimg.pike,v 1.29 2000/09/10 16:37:48 nilsson Exp $";
+constant module_type = MODULE_TAG;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
 "to convert images between different image formats.";

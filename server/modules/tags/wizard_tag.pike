@@ -2,13 +2,13 @@
 // Released under GPL
 // made by Per Hedbor
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.27 2000/04/06 06:37:00 wing Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.28 2000/09/10 16:35:08 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
 inherit "wizard";
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Wizard generator";
 constant module_doc  = 
 #"Provides the <tt>&lt;wizard&gt;</tt> tag that is used to create wizard

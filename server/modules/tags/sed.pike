@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.9 2000/04/30 02:58:03 nilsson Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.10 2000/09/10 16:35:08 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -49,7 +49,7 @@ int flno=1;
 
 #define GC_LOOP_TIME QUERY(gc_time)
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "SED";
 constant module_doc =
 #"This module provides the <tt>&lt;sed&gt;</tt> tag, that works like the 

@@ -12,8 +12,8 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.110 2000/09/05 21:04:44 mast Exp $";
-constant module_type = MODULE_PARSER|MODULE_CONFIG;
+constant cvs_version = "$Id: config_tags.pike,v 1.111 2000/09/10 16:40:26 nilsson Exp $";
+constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
 /* Not exactly true, but the config filesystem forbids parallell

@@ -1,13 +1,13 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.46 2000/05/12 14:32:57 mast Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.47 2000/09/10 16:37:50 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Tab list";
 constant module_doc = 
 #"Provides the <tt>&lt;tablist&gt;</tt> tag that is used to draw tab lists.

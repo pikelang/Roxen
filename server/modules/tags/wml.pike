@@ -8,9 +8,9 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wml.pike,v 1.10 2000/08/22 20:08:08 nilsson Exp $";
+constant cvs_version = "$Id: wml.pike,v 1.11 2000/09/10 16:35:09 nilsson Exp $";
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "WAP WML helper";
 constant module_doc  = 
 #"This module processes the <tag>&lt;wml&gt;</tag> tag in order to help

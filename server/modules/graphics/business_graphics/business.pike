@@ -12,9 +12,9 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.132 2000/08/29 18:54:49 kuntri Exp $";
+constant cvs_version = "$Id: business.pike,v 1.133 2000/09/10 16:39:16 nilsson Exp $";
 constant thread_safe = 1;
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "Business graphics";
 constant module_doc  = 
 #"Provides the <tt>&lt;diagram&gt;</tt> tag that draws bar charts, line charts,

@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.22 2000/09/09 15:25:25 js Exp $
+ * $Id: update.pike,v 1.23 2000/09/10 16:40:28 nilsson Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -40,7 +40,7 @@ USE_DEFERRED_LOCALE;
 #define LOC_M(X,Y)	_STR_LOCALE("roxen_message",X,Y)
 
 
-constant module_type = MODULE_PARSER|MODULE_CONFIG;
+constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Update client";
 constant module_doc = "This is the update client. "
                       "If you have a Roxen user identity at the Roxen Community "

@@ -4,9 +4,9 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.6 2000/08/29 18:50:21 kuntri Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.7 2000/09/10 16:35:07 nilsson Exp $";
 constant thread_safe = 1;
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_TAG;
 constant module_name = "HTML washer";
 constant module_doc  = ("This module provides a tag for washing HTML.");
 constant module_unique = 1;
