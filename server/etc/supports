@@ -1,4 +1,4 @@
-## $Id: supports,v 1.43 1997/09/19 20:29:49 grubba Exp $
+## $Id: supports,v 1.44 1997/09/19 20:36:32 grubba Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -60,7 +60,7 @@ mozilla.2.0b[2-9].*	-java
 mozilla/2.*	        -netscape_javascript
 mozilla/2.*X11		javascript
 mozilla/2.*OS/2		javascript, tcl
-mozilla/2.*Win16	-java
+mozilla/2.*Win16	-java, javascript
 mozilla/2.*Macintosh	-java
 
 mozilla/[3-9].*		javascript, tablecolor
