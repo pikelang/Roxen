@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.36 2001/08/28 15:47:59 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.37 2001/08/30 18:47:58 grubba Exp $";
 
 class Variable
 {
@@ -875,11 +875,12 @@ class User( UserDB database )
   string real_name();
   //! The real name of the user
 
-  int password_authenticate( string password )
+  int password_authenticate(string password)
   //! Return 1 if the password is correct, 0 otherwise. The default
   //! implementation uses the crypted_password() method.
   {
-    return crypt( password, crypted_password() );
+    string c = crypted_password();
+    return !sizeof(c) || crypt(password, c);
   }
 
   int uid();
