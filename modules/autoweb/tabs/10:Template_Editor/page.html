@@ -95,9 +95,11 @@
 	      <sqlquery query="delete from customers_schemes_vars where
 	                       scheme_id='$current_scheme$'
 			       and variable_id=£variable_id£">
-              <sqlquery query="insert into  customers_schemes_vars
+              <sqlquery query="insert into customers_schemes_vars
 	                       (scheme_id,variable_id,value) values
-			       ('$current_scheme$','£variable_id£','£value£')">
+			       ('$current_scheme$',
+			        '£variable_id:quote=none£',
+				'£value:quote=none£')">
             </sqloutput>
 	  </formoutput>
 	</done></noparse></noparse>
@@ -206,39 +208,49 @@
 
     
     <if variable="edit is template">
-      <sqloutput quote='¥' query="select * from template_wizards
-				  where id='¤wizard¤'">
-        <wizard preparse name="¥title:quote=mysql¥">
-	  <sqloutput quote='$' query="select * from template_wizards_pages where
-	  		              wizard_id='¤wizard¤'">
+      <sqloutput quote='¥' query="SELECT *
+                                    FROM template_wizards
+				    WHERE id='¤wizard¤'">
+        <wizard preparse name="¥name:quote=mysql¥">
+	  <sqloutput quote='$' query="SELECT *
+	                                FROM template_wizards_pages
+					WHERE wizard_id='¤wizard¤'">
 	    <page>
 	      <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	      <input type=hidden name=wizard value='¤wizard:quote=mysql¤'>
-              <table>
-	        <tr><td collspan=2><h3>$title$</h3></td></tr>
-	        <sqloutput quote='#' query="select * from template_vars where
-					    page_id='$id$'">
-		  <cset preparse variable=options><pike>
-		    string query=
-		      "<sqloutput quote='£' query="
-		      "\"select o.value,o.name from template_options as o,"
-                      "           template_option_groups as g where"
-		      " g.id='#option_group_id#' and"
-		      " g.id=o.option_group_id\">"
-		      "£value£:£name£,</sqloutput>";
-		    return ((parse_rxml(query, id)/",")-({ "" }))*",";
-		    </pike></cset>
-		  <cset preparse variable=default><sqloutput quote='£'
-		      query="select * from customers_schemes_vars
-		      where scheme_id='¤current_scheme:quote=mysql¤' and
-		      variable_id='#id:quote=mysql#'">£value£</sqloutput></cset>
-                  <if match='#type# is string'><cset variable=size>size=40</cset></if>
+              <table border=0>
+	        <tr><td colspan=2><h3>$title$</h3></td></tr>
+	        <sqloutput quote='#' query="SELECT *
+		                              FROM template_vars
+					      WHERE page_id='$id$'">
+		  <cset preparse variable=options><sqloutput quote='£' query="
+		      SELECT o.value, o.name
+		        FROM template_options AS o,
+                             template_option_groups as g
+			WHERE g.id='#option_group_id#'
+			  AND g.id=o.option_group_id"
+	            >£value£:£name£,</sqloutput></cset>
+		  <pike>
+		    id->variables->options =
+		      ((id->variables->options/",")-({ "" }))*",";
+		    return "";
+		  </pike>
+		  <cset preparse variable=default><sqloutput quote='£' query="
+		      SELECT *
+		        FROM customers_schemes_vars
+		        WHERE scheme_id='¤current_scheme:quote=mysql¤'
+			  AND variable_id='#id:quote=mysql#'"
+		    >£value£</sqloutput></cset>
+                  <if match='#type# is string'>
+		    <cset variable=size>size=40</cset></if>
 		  <else><cset variable=size></cset></else>
 		  <formoutput quote='£'>
 		    <tr>
 		      <td><b>#title#:</b></td>
-		      <td><var name="variable_#id#" type="#type#" noexample
-			       options="£options£" default="£default£" £size£></td>
+		      <td><var name="variable_#id#" type="#type#"
+			       options="£options:quote=none£"
+			       default="£default:quote=none£"
+			       noexample £size£></td>
 		    </tr>
 		    <if not match='#help# is '>
 		      <tr><td></td><td>#help#</td></tr>
