@@ -2,6 +2,8 @@
 //!
 //! Parses tags and entities. Entities on the form &scope.variable;
 //! are replaced by variable references.
+//!
+//! $Id: PXml.pike,v 1.8 2000/01/07 04:54:33 mast Exp $
 
 #pragma strict_types
 
@@ -211,8 +213,9 @@ static void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
 		  [function(Parser.HTML,mapping(string:string),string:array)]
 		  tag->_handle_tag,
 		  tag) :
-	  TagDef ([function(Parser.HTML,mapping(string:string):array)]
-		  tag->_handle_tag,
+	  TagDef (({[function(Parser.HTML,mapping(string:string):array)]
+		    tag->_handle_tag,
+		    0}),	// Necessary as long as we use set_extra().
 		  0,
 		  tag);
     }
@@ -229,8 +232,9 @@ static void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
 		  [function(Parser.HTML,mapping(string:string),string:array)]
 		  tag->_handle_tag,
 		  tag) :
-	  TagDef ([function(Parser.HTML,mapping(string:string):array)]
-		  tag->_handle_tag,
+	  TagDef (({[function(Parser.HTML,mapping(string:string):array)]
+		    tag->_handle_tag,
+		    0}),	// Necessary as long as we use set_extra().
 		  0,
 		  tag);
     }
@@ -270,6 +274,9 @@ mixed read()
   }
   // Not reached.
 }
+
+// mixed feed (string in) {return low_parser::feed (in);}
+// void finish (void|string in) {low_parser::finish (in);}
 
 
 // Misc services.
