@@ -1,8 +1,7 @@
-/* $Id: wizard.pike,v 1.27 1997/08/22 19:16:40 per Exp $
+/* $Id: wizard.pike,v 1.28 1997/08/22 19:25:41 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
-
 
 inherit "roxenlib";
 string wizard_tag_var(string n, mapping m, object id)
@@ -238,26 +237,22 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
   if(v->next_page)
   {
     function c;
-    if(functionp(c=this_object()["verify_"+v->_page]))
-      if(!c( id, @args ))
+    if(!functionp(c=this_object()["verify_"+v->_page]) || (!c( id, @args )))
 	v->_page = PAGE(1);
   }
   else if(v->prev_page)
   {
     function c;
-    if(functionp(c=this_object()["verify_"+v->_page]))
-      if(!c( id, @args ))
-	v->_page = PAGE(-1);
+    if(!functionp(c=this_object()["verify_"+v->_page]) || (!c( id, @args )))
+      v->_page = PAGE(-1);
     offset=-1;
   }
   else if(v->ok)
   {
     function c;
-    if(functionp(c=this_object()["verify_"+v->_page]))
-      if(!c( id, @args ))
-	v->_page = PAGE(-1);
-    return (((c=this_object()->wizard_done)?c(id,@args):0)
-	    || http_redirect(cancel||id->not_query, @(id->conf?({id}):({}))));
+    if(!functionp(c=this_object()["verify_"+v->_page]) || (!c( id, @args )))
+      return (((c=this_object()->wizard_done)?c(id,@args):0)
+	      || http_redirect(cancel||id->not_query, @(id->conf?({id}):({}))));
   }
   else if(v["help.x"])
   {
