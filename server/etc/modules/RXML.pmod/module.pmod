@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.215 2001/07/26 01:51:45 mast Exp $
+// $Id: module.pmod,v 1.216 2001/08/09 18:42:02 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2059,6 +2059,10 @@ class Backtrace
       Frame frame = context->frame;
       int i = 0;
       for (; frame; i++, frame = frame->up) {
+	if (i >= sizeof (frames)) {
+	  frames += allocate (sizeof (frames) + 1);
+	  args += allocate (sizeof (args) + 1);
+	}
 	frames[i] = frame;
 	args[i] = frame->args;
       }
@@ -3395,6 +3399,8 @@ class Frame
       PRE_INIT_ERROR ("Calling _eval() with non-tag set parser.\n");
     if (up)
       PRE_INIT_ERROR ("Up frame already set. Frame reused in different context?\n");
+    if (id && ctx->misc != ctx->id->misc->defines)
+      PRE_INIT_ERROR ("ctx->misc != ctx->id->misc->defines\n");
 #endif
 #ifdef MODULE_DEBUG
     if (ctx->new_runtime_tags)
