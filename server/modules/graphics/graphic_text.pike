@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.69 1997/09/07 16:42:58 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.70 1997/09/11 21:15:17 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -788,7 +788,6 @@ string quote(string in)
      case 'A'..'Z':
      case '0'..'9':
      case '.': case ',': case '!':
-     case ':':
       res += in[i..i];
       break;
      default:
