@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.159 1998/10/10 23:10:08 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.160 1998/10/11 21:32:21 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1503,12 +1503,12 @@ mixed get_file(object id, int|void no_magic)
   // for _all_ files.
   foreach(filter_modules(id), tmp)
   {
-    TRACE_ENTER("Filter module", tmp);
+    TRACE_ENTER(LOCALE->filter_module(), tmp);
     if(res2=tmp(res,id))
     {
       if(res && res->file && (res2->file != res->file))
 	destruct(res->file);
-      TRACE_LEAVE("Rewrote result");
+      TRACE_LEAVE(LOCALE->rewrote_result());
       res=res2;
     } else
       TRACE_LEAVE("");
@@ -1521,7 +1521,7 @@ public array find_dir(string file, object id)
   string loc;
   array dir = ({ }), tmp;
   array | mapping d;
-  TRACE_ENTER("List directory "+file, 0);
+  TRACE_ENTER(LOCALE->list_directory(file), 0);
   file=replace(file, "//", "/");
   
   if(file[0] != '/')
@@ -1537,14 +1537,14 @@ public array find_dir(string file, object id)
     string of = id->not_query;
     id->not_query = file;
     LOCK(funp);
-    TRACE_ENTER("URL module", funp);
+    TRACE_ENTER(LOCALE->url_module(), funp);
     tmp=funp( id, file );
     UNLOCK();
 
     if(mappingp( tmp ))
     {
       id->not_query=of;
-      TRACE_LEAVE("Returned 'no thanks'");
+      TRACE_LEAVE(LOCALE->returned_no_thanks());
       TRACE_LEAVE("");
       return 0;
     }
@@ -1553,7 +1553,7 @@ public array find_dir(string file, object id)
       array err;
       nest ++;
       
-      TRACE_LEAVE("Recursing");
+      TRACE_LEAVE(LOCALE->recursing());
       file = id->not_query;
       err = catch {
 	if( nest < 20 )
@@ -1577,10 +1577,10 @@ public array find_dir(string file, object id)
     loc = tmp[0];
     if(!search(file, loc)) {
       /* file == loc + subpath */
-      TRACE_ENTER("Location module", tmp[1]);
+      TRACE_ENTER(LOCALE->location_module(loc), tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) {
-	TRACE_LEAVE("Permission denied");
+	TRACE_LEAVE(LOCALE->permission_denied());
 	continue;
       }
 #endif
@@ -1590,13 +1590,13 @@ public array find_dir(string file, object id)
 	{
 	  if(d->files) { 
 	    dir |= d->files;
-	    TRACE_LEAVE("Got exclusive directory.");
-	    TRACE_LEAVE("Returning list of "+sizeof(dir)+" files");
+	    TRACE_LEAVE(LOCALE->got_exclusive_dir());
+	    TRACE_LEAVE(LOCALE->returning_file_list(sizeof(dir)));
 	    return dir;
 	  } else
 	    TRACE_LEAVE("");
 	} else {
-	  TRACE_LEAVE("Got files");
+	  TRACE_LEAVE(LOCALE->got_files());
 	  dir |= d;
 	}
       } else
@@ -1607,19 +1607,19 @@ public array find_dir(string file, object id)
       /* loc == file + "/" + subpath + "/"
        * and stat_file(".") returns non-zero.
        */
-      TRACE_ENTER("Location module", tmp[1]);
+      TRACE_ENTER(LOCALE->location_module(loc), tmp[1]);
       loc=loc[strlen(file)..];
       sscanf(loc, "%s/", loc);
       dir += ({ loc });
-      TRACE_LEAVE("Added module mountpoint");
+      TRACE_LEAVE(LOCALE->added_module_mountpoint());
     }
   }
   if(sizeof(dir))
   {
-    TRACE_LEAVE("Returning list of "+sizeof(dir)+" files");
+    TRACE_LEAVE(LOCALE->returning_list_files(sizeof(dir)));
     return dir;
   } 
-  TRACE_LEAVE("Returning 'no such directory'");
+  TRACE_LEAVE(LOCALE->returning_no_dir());
 }
 
 // Stat a virtual file. 
@@ -1628,7 +1628,7 @@ public array stat_file(string file, object id)
 {
   string loc;
   array s, tmp;
-  TRACE_ENTER("Stat file "+file, 0);
+  TRACE_ENTER(LOCALE->stat_file(file), 0);
   
   file=replace(file, "//", "/"); // "//" is really "/" here...
 
@@ -1642,7 +1642,7 @@ public array stat_file(string file, object id)
     string of = id->not_query;
     id->not_query = file;
 
-    TRACE_ENTER("URL module", funp);
+    TRACE_ENTER(LOCALE->url_module(), funp);
     LOCK(funp);
     tmp=funp( id, file );
     UNLOCK();
@@ -1650,7 +1650,7 @@ public array stat_file(string file, object id)
     if(mappingp( tmp )) {
       id->not_query = of;
       TRACE_LEAVE("");
-      TRACE_LEAVE("said 'No thanks'");
+      TRACE_LEAVE(LOCALE->returned_no_thanks());
       return 0;
     }
     if(objectp( tmp ))
@@ -1659,7 +1659,7 @@ public array stat_file(string file, object id)
 
       array err;
       nest ++;
-      TRACE_LEAVE("Recursing");
+      TRACE_LEAVE(LOCALE->recursing());
       err = catch {
 	if( nest < 20 )
 	  tmp = (id->conf || this_object())->stat_file( file, id );
@@ -1671,7 +1671,7 @@ public array stat_file(string file, object id)
       if(err)
 	throw(err);
       TRACE_LEAVE("");
-      TRACE_LEAVE("Returning data");
+      TRACE_LEAVE(LOCALE->returning_data());
       return tmp;
     }
     TRACE_LEAVE("");
@@ -1685,31 +1685,31 @@ public array stat_file(string file, object id)
     loc = tmp[0];
     if((file == loc) || ((file+"/")==loc))
     {
-      TRACE_ENTER("Location module", tmp[1]);
-      TRACE_LEAVE("Exact match");
+      TRACE_ENTER(LOCALE->location_module(loc), tmp[1]);
+      TRACE_LEAVE(LOCALE->exact_match());
       TRACE_LEAVE("");
       return ({ 0775, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
     }
     if(!search(file, loc)) 
     {
-      TRACE_ENTER("Location module", tmp[1]);
+      TRACE_ENTER(LOCALE->location_module(loc), tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) {
 	TRACE_LEAVE("");
-	TRACE_LEAVE("Permission denied");
+	TRACE_LEAVE(LOCALE->permission_denied());
 	continue;
       }
 #endif
       if(s=function_object(tmp[1])->stat_file(file[strlen(loc)..], id))
       {
 	TRACE_LEAVE("");
-	TRACE_LEAVE("Stat ok");
+	TRACE_LEAVE(LOCALE->stat_ok());
 	return s;
       }
       TRACE_LEAVE("");
     }
   }
-  TRACE_LEAVE("Returning 'no such file'");
+  TRACE_LEAVE(LOCALE->returned_not_found());
 }
 
 class StringFile
@@ -1791,7 +1791,7 @@ public array open_file(string fname, string mode, object id)
     if(!mappingp(file))
     {
       if(id->misc->error_code)
-	file = http_low_answer(id->misc->error_code,"Failed" );
+	file = http_low_answer(id->misc->error_code, "Failed" );
       else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
 	file = http_low_answer(501, "Not implemented.");
       else
@@ -1812,7 +1812,7 @@ public array open_file(string fname, string mode, object id)
     return ({ file->file, file });
   }
   id->not_query = oq;
-  return ({ 0,(["error":501,"data":"Not implemented"]) });
+  return ({ 0, (["error":501, "data":"Not implemented"]) });
 }
 
 
@@ -1829,7 +1829,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
 
   // FIXME: Should I append a "/" to file if missing?
 
-  TRACE_ENTER("Request for directory and stat's \""+file+"\"", 0);
+  TRACE_ENTER(LOCALE->find_dir_stat(file), 0);
 
 #ifdef URL_MODULES
 #ifdef THREADS
@@ -1841,7 +1841,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
     string of = id->not_query;
     id->not_query = file;
     LOCK(funp);
-    TRACE_ENTER("URL Module", funp);
+    TRACE_ENTER(LOCALE->url_module(), funp);
     tmp=funp( id, file );
     UNLOCK();
 
@@ -1852,8 +1852,8 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       roxen_perror(sprintf("conf->find_dir_stat(\"%s\"): url_module returned mapping:%O\n", 
 			   file, tmp));
 #endif /* MODULE_DEBUG */
-      TRACE_LEAVE("URL Module returned mapping");
-      TRACE_LEAVE("Empty directory");
+      TRACE_LEAVE(LOCALE->returned_mapping());
+      TRACE_LEAVE(LOCALE->empty_dir());
       return 0;
     }
     if(objectp( tmp ))
@@ -1866,7 +1866,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
 	if( nest < 20 )
 	  tmp = (id->conf || this_object())->find_dir_stat( file, id );
 	else {
-	  TRACE_LEAVE("Too deep recursion");
+	  TRACE_LEAVE(LOCALE->too_deep_recursion());
 	  error("Too deep recursion in roxen::find_dir_stat() while mapping "
 		+file+".\n");
 	}
@@ -1878,8 +1878,8 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       roxen_perror(sprintf("conf->find_dir_stat(\"%s\"): url_module returned object:\n", 
 			   file));
 #endif /* MODULE_DEBUG */
-      TRACE_LEAVE("URL Module returned object");
-      TRACE_LEAVE("Returning it");
+      TRACE_LEAVE(LOCALE->returned_object());
+      TRACE_LEAVE(LOCALE->returning_it());
       return tmp;	// FIXME: Return 0 instead?
     }
     id->not_query=of;
@@ -1891,7 +1891,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
   {
     loc = tmp[0];
 
-    TRACE_ENTER("Trying location module mounted on "+loc, 0);
+    TRACE_ENTER(LOCALE->location_module(loc), 0);
     /* Note that only new entries are added. */
     if(!search(file, loc))
     {
@@ -1902,15 +1902,15 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       object c = function_object(tmp[1]);
       string f = file[strlen(loc)..];
       if (c->find_dir_stat) {
-	TRACE_ENTER("Has find_dir_stat()", 0);
+	TRACE_ENTER(LOCALE->has_find_dir_stat(), 0);
 	if (d = c->find_dir_stat(f, id)) {
-	  TRACE_ENTER("find_dir_stat() returned mapping", 0);
+	  TRACE_ENTER(LOCALE->returned_mapping(), 0);
 	  dir = d | dir;
 	  TRACE_LEAVE("");
 	}
 	TRACE_LEAVE("");
       } else if(d = c->find_dir(f, id)) {
-	TRACE_ENTER("find_dir() returned array", 0);
+	TRACE_ENTER(LOCALE->returned_array(), 0);
 	dir = mkmapping(d, Array.map(d, lambda(string f, string base,
 					 object c, object id) {
 				    return(c->stat_file(base + f, id));
@@ -1923,7 +1923,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       /* loc == file + "/" + subpath + "/"
        * and stat_file(".") returns non-zero.
        */
-      TRACE_ENTER("file is on the path to the mountpoint", 0);
+      TRACE_ENTER(LOCALE->file_on_mountpoint_path(file, loc), 0);
       loc=loc[strlen(file)..];
       sscanf(loc, "%s/", loc);
       if (!dir[loc]) {
@@ -2119,16 +2119,14 @@ void start(int num)
   foreach(query("Ports"), port) {
     if ((< "ssl", "ssleay" >)[port[1]]) {
       // Obsolete versions of the SSL protocol.
-      report_warning(sprintf("%s: Obsolete SSL protocol-module \"%s\".\n"
-			     "Converted to SSL3.\n",
-			     server_name, port[1]));
+      report_warning(server_name + ": " + LOCALE->obsolete_ssl(port[1]));
       // Note: Change in-place.
       port[1] = "ssl3";
       // FIXME: Should probably mark node as changed.
     }
     string key = MKPORTKEY(port);
     if (!server_ports[key]) {
-      report_notice(sprintf("%s: New port: %s\n", server_name, key));
+      report_notice(LOCALE->new_port(server_name, key));
       new_ports[key] = port;
     } else {
       // This is needed not to delete old unchanged ports.
@@ -2139,23 +2137,22 @@ void start(int num)
   // Then disable the old ones that are no more.
   foreach(indices(server_ports), string key) {
     if (zero_type(new_ports[key])) {
-      report_notice(sprintf("%s: Disabling port: %s...\n", server_name, key));
+      report_notice(LOCALE->disabling_port(server_name, key));
       object o = server_ports[key];
       m_delete(server_ports, key);
       mixed err;
       if (err = catch{
         destruct(o);
       }) {
-        report_warning(sprintf("%s: Error disabling port: %s:\n"
-                               "%s\n",
-			       server_name, key, describe_backtrace(err)));
+        report_warning(LOCALE->error_disabling_port(server_name, key,
+						    describe_backtrace(err)));
       }
       o = 0;    // Be sure that there are no references left...
     }
   }
 
   // Now we can create the new ports.
-  roxen_perror(sprintf("Opening ports for %s... \n", server_name));
+  roxen_perror(LOCALE->opening_ports(server_name));
   foreach(indices(new_ports), string key) {
     port = new_ports[key];
     if (port) {
@@ -2166,8 +2163,8 @@ void start(int num)
         function rp;
         array tmp;
         if(!requestprogram) {
-          report_error(sprintf("%s: No request program for %s\n",
-			       server_name, port[1]));
+          report_error(server_name + ": " +
+		       LOCALE->no_request_program(port[1]));
           continue;
         }
         if(rp = requestprogram()->real_port)
@@ -2178,37 +2175,33 @@ void start(int num)
         // secret files.
         object privs;
         if(port[0] < 1024)
-          privs = Privs("Opening listen port below 1024");
+          privs = Privs(LOCALE->opening_low_port());
 
 	object o;
         if(o=create_listen_socket(port[0], this_object(), port[2],
 				  requestprogram, port)) {
-          report_notice(sprintf("%s: Opening port: %s\n", server_name, key));
+          report_notice(LOCALE->opening_port(server_name, key));
           server_ports[key] = o;
         } else {
-          report_error(sprintf("%s: The port %s could not be opened\n",
-			       server_name, key));
+          report_error(LOCALE->could_not_open_port(server_name, key));
         }
 	if (privs) {
 	  destruct(privs);	// Paranoia.
 	}
       };
       if (erro) {
-        report_error(sprintf("%s: Failed to open port %s:\n"
-                             "%s\n", server_name, key,
-                             (stringp(erro)?erro:describe_backtrace(erro))));
+        report_error(LOCALE->failed_to_open_port(server_name, key,
+						 (stringp(erro)?erro:
+						  describe_backtrace(erro))));
       }
     }
   }
   if (sizeof(query("Ports")) && !sizeof(server_ports)) {
-    report_error("No ports available for "+name+"\n"
-		 "Tried:\n"
-		 "Port  Protocol   IP-Number \n"
-		 "---------------------------\n"
-		 + Array.map(query("Ports"),
-			     lambda(array p) {
-			       return sprintf("%5d %-10s %-20s\n", @p);
-			     })*"");
+    string port_list = Array.map(query("Ports"),
+				 lambda(array p) {
+				   return sprintf("%5d %-10s %-20s\n", @p);
+				 })*"";
+    report_error(LOCALE->no_ports_available_tried(name, port_list));
   }
 }
 
@@ -2333,8 +2326,8 @@ object enable_module( string modname )
   if(module->copies)
   {
     if (err = catch(me = module["program"]())) {
-      report_error("Couldn't clone module \"" + module->name + "\"\n" +
-		   describe_backtrace(err));
+      report_error(LOCALE->could_not_clone_module(module->name,
+						  describe_backtrace(err)));
       if (module->copies[id]) {
 #ifdef MODULE_DEBUG
 	perror("Keeping old copy\n");
@@ -2349,8 +2342,8 @@ object enable_module( string modname )
       if (err = catch{
 	module->copies[id]->stop();
       }) {
-	report_error("Error during disabling of module \"" + module->name +
-		     "\"\n" + describe_backtrace(err));
+	report_error(LOCALE->error_disabling_module(module->name,
+						    describe_backtrace(err)));
       }
       destruct(module->copies[id]);
     }
@@ -2359,8 +2352,8 @@ object enable_module( string modname )
       me = module->master;
     } else {
       if (err = catch(me = module["program"]())) {
-	report_error("Couldn't clone module \"" + module->name + "\"\n" +
-		     describe_backtrace(err));
+	report_error(LOCALE->could_not_clone_module(module->name,
+						    describe_backtrace(err)));
 	return(0);
       }
     }
@@ -2374,6 +2367,8 @@ object enable_module( string modname )
 		      MODULE_URL | MODULE_LAST | MODULE_PROVIDER |
 		      MODULE_FILTER | MODULE_PARSER | MODULE_FIRST))
   {
+    // FIXME: LOCALIZE!
+
     me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
 	       "The priority of the module. 9 is highest and 0 is lowest."
 	       " Modules with the same priority can be assumed to be "
@@ -2493,8 +2488,9 @@ object enable_module( string modname )
   if((me->start) && (err = catch{
     me->start(0, this);
   })) {
-    report_error("Error while initiating module copy of " +
-		 module->name + "\n" + describe_backtrace(err));
+    report_error(LOCALE->
+		 error_initializing_module_copy(module->name,
+						describe_backtrace(err)));
 
     /* Clean up some broken references to this module. */
     m_delete(otomod, me);
@@ -2510,8 +2506,9 @@ object enable_module( string modname )
   }
     
   if (err = catch(pr = me->query("_priority"))) {
-    report_error("Error while initiating module copy of " +
-		 module->name + "\n" + describe_backtrace(err));
+    report_error(LOCALE->
+		 error_initializing_module_copy(module->name,
+						describe_backtrace(err)));
     pr = 3;
   }
 
@@ -2529,8 +2526,9 @@ object enable_module( string modname )
 	    pri[pr]->extension_modules[foo] = ({ me });
       }
     }) {
-      report_error("Error while initiating module copy of " +
-		   module->name + "\n" + describe_backtrace(err));
+      report_error(LOCALE->
+		   error_initializing_module_copy(module->name,
+						  describe_backtrace(err)));
     }
   }	  
 
@@ -2546,8 +2544,9 @@ object enable_module( string modname )
 	    pri[pr]->file_extension_modules[foo]=({me});
       }
     }) {
-      report_error("Error while initiating module copy of " +
-		   module->name + "\n" + describe_backtrace(err));
+      report_error(LOCALE->
+		   error_initializing_module_copy(module->name,
+						  describe_backtrace(err)));
     }
   }
 
@@ -2562,8 +2561,9 @@ object enable_module( string modname )
 	pri[pr]->provider_modules [ me ] = provs;
       }
     }) {
-      report_error("Error while initiating module copy of " +
-		   module->name + "\n" + describe_backtrace(err));
+      report_error(LOCALE->
+		   error_initializing_module_copy(module->name,
+						  describe_backtrace(err)));
     }
   }
     
@@ -2584,9 +2584,9 @@ object enable_module( string modname )
 		  if (err = catch {
 		    me->add_parse_module(o);
 		  }) {
-		    report_error("Error while initiating module copy of " +
-				 module->name + "\n" +
-				 describe_backtrace(err));
+		    report_error(LOCALE->
+				 error_initializing_module_copy(module->name,
+								describe_backtrace(err)));
 		  }
 		}, me, module);
     }
@@ -2598,8 +2598,9 @@ object enable_module( string modname )
       if (err = catch {
 	parse_module->add_parse_module( me );
       }) {
-	report_error("Error while initiating module copy of " +
-		     module->name + "\n" + describe_backtrace(err));
+	report_error(LOCALE->
+		     error_initializing_module_copy(module->name,
+						    describe_backtrace(err)));
       }
     }
     _toparse_modules += ({ me });
@@ -2667,7 +2668,7 @@ string check_variable(string name, string value)
    case "MyWorldLocation":
     if(strlen(value)<7 || value[-1] != '/' ||
        !(sscanf(value,"%*s://%*s/")==2))
-      return "The URL should follow this format: protocol://computer[:port]/";
+      return LOCALE->url_format();
     return 0;
   }
 }
@@ -2767,8 +2768,7 @@ int disable_module( string modname )
 
   if(!module) 
   {
-    report_error("Failed to disable module\n"
-		 "No module by that name: \""+modname+"\".\n");
+    report_error(LOCALE->disable_nonexistant_module(modname));
     return 0;
   }
 
@@ -2788,7 +2788,7 @@ int disable_module( string modname )
 
   if(!me)
   {
-    report_error("Failed to Disable "+module->name+" # "+id+"\n");
+    report_error(LOCALE->disable_module_failed(module->name+" # "+id));
     return 0;
   }
 
@@ -2956,8 +2956,7 @@ int load_module(string module_file)
     _master->set_inhibit_compile_errors(0);
 
     if (sizeof(errors)) {
-      report_error(sprintf("While compiling module (\"%s\"):\n%s\n",
-			   module_file, errors));
+      report_error(LOCALE->module_compilation_errors(module_file, errors));
       return(0);
     }
 
@@ -2965,14 +2964,14 @@ int load_module(string module_file)
   }
 
   if (err) {
-    report_error("While enabling module (" + module_file + "):\n" +
-		 describe_backtrace(err) + "\n");
+    report_error(LOCALE->error_enabling_module(module_file,
+					       describe_backtrace(err)));
     return(0);
   }
 
   if(!obj)
   {
-    report_error("Module load failed (" + module_file + ") (not found).\n");
+    report_error(LOCALE->module_load_failed(module_file));
     return 0;
   }
 
@@ -2980,9 +2979,9 @@ int load_module(string module_file)
 #ifdef MODULE_DEBUG
     perror("FAILED\n" + describe_backtrace( err ));
 #endif
-    report_error("Module loaded, but register_module() failed (" 
-		 + module_file + ").\n"  +
-		 describe_backtrace( err ));
+    report_error(LOCALE->
+		 module_loaded_register_module_failed(module_file,
+						      describe_backtrace(err)));
     return 0;
   }
 
@@ -2992,7 +2991,7 @@ int load_module(string module_file)
        replace(obj->file_name_and_stuff(),"0<br>", module_file+"<br>")
        +"</i>", module_data[0] });
   if (!arrayp( module_data ))
-    err = "Register_module didn't return an array.\n";
+    err = LOCALE->bad_register_module_result();
   else
     switch (sizeof( module_data ))
     {
@@ -3001,31 +3000,25 @@ int load_module(string module_file)
       module_data=module_data[0..3];
      case 4:
       if (module_data[3] && !arrayp( module_data[3] ))
-	err = "The fourth element of the array register_module returned "
-	  "(extra_buttons) wasn't an array.\n" + err;
+	err = LOCALE->bad_register_module4() + err;
      case 3:
       if (!stringp( module_data[2] ))
-	err = "The third element of the array register_module returned "
-	  "(documentation) wasn't a string.\n" + err;
+	err = LOCALE->bad_register_module3() + err;
       if (!stringp( module_data[1] ))
-	err = "The second element of the array register_module returned "
-	  "(name) wasn't a string.\n" + err;
+	err = LOCALE->bad_register_module2() + err;
       if (!intp( module_data[0] ))
-	err = "The first element of the array register_module returned "
-	  "(type) wasn't an integer.\n" + err;
+	err = LOCALE->bad_register_module1() + err;
       break;
 
-     default:
-      err = "The array register_module returned was too small/large. "
-	"It should have been three or four elements (type, name, "
-	"documentation and extra buttons (optional))\n";
+    default:
+      err = LOCALE->bad_register_module_other();
     }
   if (err != "")
   {
 #ifdef MODULE_DEBUG
     perror("FAILED\n"+err);
 #endif
-    report_error( "Tried to load module " + module_file + ", but:\n" + err );
+    report_error(LOCALE->tried_moding_module(module_file, err));
     if(obj)
       destruct( obj );
     return 0;
@@ -3118,15 +3111,17 @@ string desc()
     
     if(sizeof(handlers)==1)
     {
-      res = "This server is handled by the ports in <a href=\""+handlers[0][0]+
-	"\">"+handlers[0][1]+"</a><br>\n";
+      res = LOCALE->server_ports_handled_by_one(handlers[0][0],
+						handlers[0][1]);
     } else if(sizeof(handlers)) {
-      res = "This server is handled by the ports in any of the following servers:<br>";
+      string serverlist = "";
+      
       foreach(handlers, array h)
-	res += "<a href=\""+h[0]+"\">"+h[1]+"</a><br>\n";
+	serverlist += "<a href=\""+h[0]+"\">"+h[1]+"</a><br>\n";
+
+      res = LOCALE->server_ports_handled_by_multiple(serverlist);
     } else
-      res=("There are no ports configured, and no virtual server seems "
-	   "to have support for ip-less virtual hosting enabled<br>\n");
+      res = LOCALE->server_ports_handled_by_none();
   }
   
   foreach(QUERY(Ports), port)
@@ -3155,13 +3150,11 @@ string desc()
 #endif
     prt += ":"+port[0]+"/";
     if(port_open( port ))
-      res += "<font color=darkblue><b>Open:</b></font> <a target=server_view href=\""+prt+"\">"+prt+"</a> \n<br>";
+      res += LOCALE->server_port_open(prt);
     else
-      res += "<font color=red><b>Not open:</b> <a target=server_view href=\""+
-	prt+"\">"+prt+"</a></font> <br>\n";
+      res += LOCALE->server_port_not_open(prt);
   }
-  return (res+"<font color=darkgreen>Server URL:</font> <a target=server_view "
-	  "href=\""+query("MyWorldLocation")+"\">"+query("MyWorldLocation")+"</a><p>");
+  return (res + LOCALE->server_url(query("MyWorldLocation")) + "<p>");
 }
 
 
@@ -3238,11 +3231,8 @@ void enable_all_modules()
   array err;
   foreach( modules_to_process, tmp_string )
     if(err = catch( enable_module( tmp_string ) ))
-      report_error("Failed to enable the module "+tmp_string+". Skipping\n"
-#ifdef MODULE_DEBUG
-                    +describe_backtrace(err)+"\n"
-#endif
-	);
+      report_error(LOCALE->enable_module_failed(tmp_string, 
+						describe_backtrace(err)));
   roxen->current_configuration = 0;
 #if efun(gethrtime)
   perror("\nAll modules for %s enabled in %4.3f seconds\n\n", query_name(),
@@ -3256,6 +3246,8 @@ void create(string config)
   name=config;
 
   perror("Creating virtual server '"+config+"'\n");
+
+  // FIXME: LOCALIZE!
 
   defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>\n"
 	 "<body bgcolor='#ffffff' text='#000000' alink='#ff0000' "
