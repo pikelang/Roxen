@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.14 1998/08/03 16:27:59 wellhard Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.15 1998/08/04 19:14:43 wellhard Exp $";
 
 mapping host_to_id;
 
@@ -91,7 +91,7 @@ mixed find_file(string f, object id)
 
   mixed res = filesystem::find_file(file, id);
   if(objectp(res)) {
-    mapping md = .AutoWeb.MetaData(id)->get(f);
+    mapping md = .AutoWeb.MetaData(id, f)->get();
     if(md->content_type=="text/html") {
       string d = res->read( );
       if(md->template!="No template")

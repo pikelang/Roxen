@@ -1,25 +1,26 @@
 class AutoFile {
 
   object id;
+  string filename;
   
-  string real_path(string filename)
+  string real_path(string path)
   {
-    filename = replace(filename, "../", "");
+    path = replace(path, "../", "");
     return id->misc->wa->query("searchpath")+id->misc->customer_id+
-      (sizeof(filename)?(filename[0]=='/'?filename:"/"+filename):"/");
+      (sizeof(path)?(path[0]=='/'?path:"/"+path):"/");
   }
   
-  string read(string f)
+  string read()
   {
-    return Stdio.read_bytes(real_path(f));
+    return Stdio.read_bytes(real_path(filename));
   }
   
-  int save(string f, string s)
+  int save(string s)
   {
-    werror("Saving file '%s' in %s\n", f, real_path(f));
-    object file = Stdio.File(real_path(f), "cwt");
+    werror("Saving file '%s' in %s\n", filename, real_path(filename));
+    object file = Stdio.File(real_path(filename), "cwt");
     if(!objectp(file)) {
-      werror("Can not save file %s", f);
+      werror("Can not save file %s", filename);
       return 0;
     }
     file->write(s);
@@ -27,19 +28,154 @@ class AutoFile {
     return 1;
   }
 
-  int|array stat(string f)
+  int|array stat()
   {
-    file_stat(real_path(f));
+    return file_stat(real_path(filename));
   }
 
-  string mv(string src, string dest)
+  string type()
   {
-    mv(real_path(src), real_path(dest));
+    array f_stat = stat();
+    if(!f_stat)
+      return "";
+    if(f_stat[1]==-2)
+      return "Directory";
+    if(f_stat[1]==-3)
+      return "Link";
+    if(f_stat[1]>=0)
+      return "File";
+    return "";
   }
 
-  void create(object _id)
+  int move(string dest)
+  {
+    return mv(real_path(filename), real_path(dest));
+  }
+
+  int mkdir()
+  {
+    return predef::mkdir(real_path(filename));
+  }
+
+  int rm()
+  {
+    return predef::rm(real_path(filename));
+  }
+  
+  void create(object _id, string _filename)
   {
     id = _id;
+    filename = _filename;
+  }
+}
+
+
+class ContentTypes {
+  static private string default_content_type;
+  static private mapping content_types;
+  static private mapping name_to_type;
+
+  mapping content_type(string ct) 
+  {
+    return content_types[ct];
+  }
+  
+  string type_from_name(string name)
+  {
+    return name_to_type[name];
+  }
+  
+  string name_from_type(string type)
+  {
+    string ct = content_types[type];
+    if(ct)
+      return content_types[type]->name;
+    return content_types[default_content_type]->name;
+  }
+  
+  array names()
+  {
+    return indices(name_to_type);
+  }
+  
+  string content_type_from_extension( string filename )
+  {
+    string extension = (filename / ".")[-1];
+    
+    foreach (indices( content_types ), string i)
+      if (content_types[i]->extensions[ extension ])
+	return i;
+    if (sizeof( filename / "." ) >= 2)
+      {
+	extension = (filename / ".")[-2];
+	
+	foreach (indices( content_types ), string i)
+	  if (content_types[i]->extensions[ extension ])
+	    return i;
+      }
+    return "application/octet-stream";
+  }
+  
+  void create()
+  {
+    default_content_type = "autosite/unknown";
+    content_types =
+    ([ "text/html" :
+       ([ "name" : "HTML",
+	  "handler" : "html",
+	  "downloadp" : 1,
+	  "parsep" : 1,
+	  "extensions" : (< "html", "htm" >),
+	  "img" : "internal-gopher-text" ]),
+       
+       "text/plain" :
+       ([ "name" : "Raw text",
+	  "handler" : "text",
+	  "downloadp" : 1,
+	  "extensions" : (< "txt" >),
+	  "img" : "internal-gopher-text" ]),
+       
+       "image/gif" :
+       ([ "name" : "GIF Image",
+	  "handler" : "image",
+	  "downloadp" : 1,
+	  "extensions" : (< "gif" >),
+	  "img" : "internal-gopher-image" ]),
+       
+       "image/jpeg" :
+       ([ "name" : "JPEG Image",
+	  "handler" : "image",
+	  "downloadp" : 1,
+	  "extensions" : (< "jpg", "jpeg" >),
+	  "img" : "internal-gopher-image" ]),
+       
+       "autosite/unknown" :
+       ([ "name" : "Unknown",
+	  "handler" : "default",
+	  "downloadp" : 1,
+	  "extensions" : (< >),
+	  "img" : "internal-gopher-unknown" ]),
+       
+       "autosite/menu" :
+       ([ "name" : "Menu",
+	  "handler" : "menu",
+	  "downloadp" : 0,
+	  "extensions" : (< "menu" >),
+	  "internalp" : 1,
+	  "img" : "internal-gopher-unknown" ]),
+       
+       "autosite/template" :
+       ([ "name" : "Template",
+	  "handler" : "template",
+	  "downloadp" : 1,
+	  "extensions" : (< "tmpl" >),
+	  "internalp" : 1,
+	  "img" : "internal-gopher-unknown" ])
+       
+    ]);
+    name_to_type = ([ ]);
+    foreach (indices( content_types ), string ct)
+      name_to_type[ content_types[ ct ]->name ] = ct;
   }
 }
 
@@ -47,14 +183,16 @@ class AutoFile {
 class MetaData {
 
   object id;
+  string f;
 
-  string container_md(string tag, mapping args, string contents, mapping md)
+  static private string container_md(string tag, mapping args,
+				     string contents, mapping md)
   {
     if(args->variable)
       md[args->variable] = contents;
   }
   
-  mapping get(string f)
+  mapping get()
   {
     mapping md_default =  ([ "content_type":"autosite/unknown",
 			     "title":"Unknown",
@@ -63,7 +201,7 @@ class MetaData {
 			     "description":""]);
     
     string s = "";
-    string s = AutoFile(id)->read(f+".md");
+    string s = AutoFile(id, f+".md")->read();
     if(!s)
       return md_default;
     mapping md = ([]);
@@ -71,14 +209,146 @@ class MetaData {
     return ([ "content_type": md_default->content_type ]) + md;
   }
   
-  int set(string f, mapping md)
+  int set(mapping md)
   {
     string s = "";
     foreach(sort(indices(md)), string variable)
       s += "<md variable=\""+variable+"\">"+md[variable]+"</md>\n";
-    if(!AutoFile(id)->save(f+".md", s))
+    if(!AutoFile(id, f+".md")->save(s))
       return 0;
     return 1;
+  }
+  
+  static private string container_title(string tag, mapping args,
+					string contents, mapping md)
+  {
+    if(tag="title")
+      md["title"] = contents;
+  }
+  
+  mapping get_from_html(string html)
+  {
+    mapping md = ([]);
+    md->content_type = ContentTypes()->content_type_from_extension(f);
+    if((md->content_type == "text/html")&&(sizeof(html))) 
+      parse_html(html, ([ ]), ([ "title":container_title ]), md);
+    return md;
+  }
+  
+  void create(object _id, string _f)
+  {
+    id = _id;
+    f = _f;
+  }
+}
+
+class EditMetaData {
+  
+  inherit "wizard";
+  object contenttypes;
+  
+  static private array describe_metadata_var(array in)
+  {
+    return ({ "<font size=+1><b>"+in[0]+"</b></font>", 
+	      "<var name='"+in[1]+"' default='"+in[2]+"' "+
+	      (in[3]==3?"choices='"+in[5]+"' ":" ")+
+	      " type='"+
+	      ((in[3]==0)?"string":"")+
+	      (in[3]==1?"text":"")+
+	      (in[3]==3?"select":"")+
+	      "'>",
+	      ({ "<font size=-1><i>"+in[4]+"</i></font>" }) });
+  }
+
+  string page( object id, string f, mapping|void m)
+  {
+    object wa = id->misc->wa;
+
+    if(!m && f)
+      m = wa->get_md(id, f);
+  
+    array (string) templates = ({ "No template", "default.tmpl" });
+  
+    array rows = ({
+      ({ "Type", "meta_content_type", 
+	 contenttypes->name_from_type(m->content_type), 3,
+	 " This is the type of the file. "
+	 /* Normal for text-files is text/html,"
+	    " most images are image/gif or image/jpeg."*/,
+	 contenttypes->names() * ","
+      }),
+      ({ "Template", "meta_template", m->template||"No template", 3,
+	 " This is the template used on this page. You can see all templates "
+	 "available under the 'templates' tab.", templates * ","
+      }),
+      ({ "Title", "meta_title", m->title||"No title", 0,
+	 " This is the title of the page. Make sure that it accurately "
+	 "describes it"
+      }),
+      ({ "Keywords", "meta_keywords", m->keywords||"", 0,
+	 " Document keywords. These are primarily used when search-engines "
+	 "are indexing the site."
+      }),
+      ({ "Description<p><br><br><br>", "meta_description", 
+	 m->description||"\n", 1,
+	 " Document description. this is also primarily used when "
+	 "search-engines are indexing the site."
+      }),
+    });
+  
+    return "<b>Metadata for file "+html_encode_string(f)+":</b><p>\n" + 
+      html_table(({ "Data", "Value", ({ "Description" }) }),
+		 Array.map(rows, describe_metadata_var));
+  }
+  
+  mixed done( object id )
+  {
+    object wa = id->misc->wa;
+    string f = id->variables->filename;
+    mapping md = ([ ]);
+    object autofile = AutoFile(id, f);
+    
+    if (autofile->stat())
+      {
+	id->variables->error = "File exists.";
+	return -1;
+      }
+    
+    foreach (glob( "meta_*", indices( id->variables )), string s)
+      md[ s-"meta_" ] = id->variables[ s ];
+    md[ "content_type" ] = wa->name_to_type[ md[ "content_type" ] ];
+    if (md[ "template" ] == "No template")
+      m_delete( md, "template" );
+    
+    MetaData(id, f)->set(md);
+    autofile->save("");
+  }
+  
+  void create()
+  {
+    contenttypes = ContentTypes();
+  }
+}
+
+
+class Error {
+
+  object id;
+  
+  string set(string error)
+  {
+    return id->variables->error = error;
+  }
+
+  string reset()
+  {
+    m_delete(id->variables, "error");
+  }
+
+  string get()
+  {
+    return (id->variables->error?"<error>"+
+	    id->variables->error+"</error>":"");
   }
   
   void create(object _id)
@@ -87,8 +357,9 @@ class MetaData {
   }
 }
 
+
 #if 0
-class menufile {
+class MenuFile {
   static private string parse_item(string tag, mapping args,
 				   string contents, mapping items)
   {
