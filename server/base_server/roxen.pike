@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.857 2004/01/21 15:19:36 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.858 2004/02/03 10:52:24 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1753,7 +1753,7 @@ class SSLProtocol
 #if constant(SSL.Cipher)
 	ctx->dh_params = SSL.Cipher.DHParameters();
 #else
-	ctx->dh_params = SSL.cipher.dh_parameters();
+	ctx->dh_params = SSL.cipher()->dh_parameters();
 #endif
 
 	ctx->dhe_dss_mode();
