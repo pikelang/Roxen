@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.30 2000/07/04 03:45:26 per Exp $
+// $Id: global_variables.pike,v 1.31 2000/07/09 14:11:42 per Exp $
 
 /*
 #pragma strict_types
@@ -12,8 +12,13 @@
 #include <roxen.h>
 #include <config.h>
 inherit "read_config";
-inherit "module_support";
+inherit "basic_defvar";
 #include <version.h>
+
+mixed save()
+{
+  store( "Variables", variables, 0, 0 );
+}
 
 // The following three functions are used to hide variables when they
 // are not used. This makes the user-interface clearer and quite a lot
@@ -300,7 +305,7 @@ class PortOptions
   }
 };
 
-void define_global_variables( int argc, array (string) argv )
+void define_global_variables(  )
 {
   int p;
 
@@ -1066,9 +1071,13 @@ Save the variable documentation strings as comments in the
 configuration files. Only useful if you read or edit the config files
 directly.");
 
-  setvars(retrieve("Variables", 0));
 }
 
+
+void restore_global_variables()
+{
+  setvars(retrieve("Variables", 0));
+}
 
 static mapping(string:mixed) __vars = ([ ]);
 
