@@ -270,11 +270,11 @@ string tag_exec(string tag, mapping m, object id)
             " security hole when allowed.");
 
   if(m->cgi)
-  {
-    m->file = http_decode_string(m->cgi);
-    m_delete(m, "cgi");
-    return make_tag("insert", m); //FIXME: Performance
-  }
+    if(m->cache)
+      CACHE((int)m->cache);
+    else
+      NOCACHE();
+    return id->conf->api_functions()->read_file[0](id, http_decode_string(m->cgi));
 
   if(m->cmd)
   {
