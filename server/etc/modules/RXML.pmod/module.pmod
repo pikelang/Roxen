@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.263 2001/12/04 16:09:52 mast Exp $
+// $Id: module.pmod,v 1.264 2002/01/07 17:15:46 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2116,6 +2116,11 @@ class Context
   void leave_scope (Frame frame)
   {
     if (array(SCOPE_TYPE) back = hidden[frame]) {
+      if (mapping var_chg = misc->variable_changes) {
+	CLEANUP_VAR_CHG_SCOPE (var_chg, "_");
+	if (string scope_name = frame->scope_name)
+	  CLEANUP_VAR_CHG_SCOPE (var_chg, scope_name);
+      }
       if (SCOPE_TYPE cur = back[0]) scopes["_"] = cur;
       else m_delete (scopes, "_");
       if (SCOPE_TYPE named = back[1]) {
@@ -7249,7 +7254,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 2;
+  constant P_CODE_VERSION = 3;
   // Version spec encoded with the p-code, so that we can detect and
   // reject incompatible p-code dumps even when the encoded format
   // hasn't changed in an obvious way.
