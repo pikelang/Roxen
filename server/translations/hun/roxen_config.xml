@@ -586,6 +586,21 @@ also set 'URLs'.</o>
 <t></t>
 </str>
 
+<str id="514">
+<new/>
+<o>Font oversampling</o>
+<t></t>
+</str>
+
+<str id="515">
+<new/>
+<o>If set to Yes, fonts will be oversampled resulting
+   in higher quality but more fuzz. This will require clearing
+   of various graphics caches like the Graphic text and
+   GButton caches to take full effect.</o>
+<t></t>
+</str>
+
 <str id="96">
 <new/>
 <o>Logging: Log directory prefix</o>
