@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.94 1998/03/08 20:17:01 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.95 1998/03/08 20:35:17 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -929,7 +929,7 @@ mapping find_file(string f, object id)
   }
   else if (res->colorbg)
   {
-    back=res->bgcolor;
+    back=0; //res->bgcolor;
     m_delete( res, "bgcolor" );
     res->image = image(res->xsize, res->ysize, @res->colorbg);
   } 
