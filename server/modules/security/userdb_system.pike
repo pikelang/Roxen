@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: userdb_system.pike,v 1.4 2001/01/29 22:39:56 per Exp $";
+  "$Id: userdb_system.pike,v 1.5 2001/01/30 00:48:42 per Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -21,17 +21,50 @@ LocaleString module_doc =
 Thread.Mutex mt = Thread.Mutex();
 
 /* Unix version. Uses the get[gr,pw]ent interface */
-static mapping pwuid_cache = ([]);
 static mapping cached_groups = ([]);
-static array get_cached_groups_for_user( int uid )
+static array(SysGroup) full_group_list;
+
+static array(string) get_cached_groups_for_user( int uid )
 {
-  mixed key = mt->lock();
-  if(cached_groups[ uid ] && cached_groups[ uid ][1]+200>time(1))
-    return cached_groups[ uid ][0];
-  array grps = get_groups_for_user( uid );
-  key = 0;
-  return (cached_groups[uid] = ({ (map(grps,find_group_from_gid)-({0}))
-				  ->name(), time(1) }))[0];
+  if(cached_groups[ uid ] )
+    return cached_groups[ uid ];
+
+  if( sizeof( cached_groups ) )
+    return ({});
+
+  array res = ({});
+  if( !full_group_list )
+    list_groups();
+
+  cached_groups=([]);
+
+  foreach( full_group_list, Group g )
+  {
+    foreach( g->members(), string user )
+    {
+      User u = find_user( user );
+      if( u )
+      {
+	int uid = u->uid();
+	if( !cached_groups[ uid ] )
+	  cached_groups[ uid ] = ({});
+	cached_groups[ uid ] += ({ g->name() });
+      }
+    }
+  }
+
+  foreach( list_users(), string un )
+  {
+    int uid;
+    if( User uu = find_user( un ) )
+    {
+      uid = uu->uid();
+      if( Group g = find_group_from_gid( uu->gid() ) )
+	cached_groups[ uid ] = ({ g->name() })|(cached_groups[ uid ]||({}));
+    }
+  }
+
+  return cached_groups[uid] || ({});
 }
 
 class SysUser
@@ -51,7 +84,6 @@ class SysUser
 
   array(string) groups()
   {
-//  find_group_from_gid(gid())->name()
     return /*({  })|*/ get_cached_groups_for_user( uid() );
   }
   
@@ -66,6 +98,7 @@ class SysGroup
 {
   inherit Group;
   array grent;
+  int gid()                { return grent[2]; }
   string name()            { return grent[0]; }
   array(string) members()  { return grent[3]; }
 
@@ -96,34 +129,61 @@ array(string) list_users( )
   array a;
   mixed key = mt->lock();
   endpwent();
-  while( a = getpwent() ) res += ({ a[0] });
+  while( a = getpwent() )
+    res += ({ a[0] });
   endpwent();
   return res;
 }
 
+static mapping(string|int:Group) group_cache = ([]);
+
 Group find_group( string group )
 {
+  if( group_cache[ group ] )
+    return group_cache[ group ];
+  
   mixed key = mt->lock();
   array a = getgrnam( group );
-  if( a ) return SysGroup( this_object(), a );
+  if( a )
+  {
+    call_out( m_delete, 60, group_cache, group );
+    return group_cache[ group ] = SysGroup( this_object(), a );
+  }
 }
 
 Group find_group_from_gid( int id  )
 {
+  if( group_cache[ id ] )
+    return group_cache[ id ];
+
   mixed key = mt->lock();
   array a = getgrgid( id );
-  if( a ) return SysGroup( this_object(), a );
+  if( a )
+  {
+    call_out( m_delete, 60, cached_groups, id );
+    return group_cache[ id ] = SysGroup( this_object(), a );
+  }
 }
 
 array(string) list_groups( )
 {
+  if( full_group_list )
+    return full_group_list->name();
+
   array res = ({});
   array a;
   mixed key = mt->lock();
   endgrent();
-  while( a = getgrent() ) res += ({ a[0] });
+  while( a = getgrent() )
+  {
+    res += ({ SysGroup( this_object(), a ) });
+    group_cache[ res[-1]->name() ] = res[-1];
+    group_cache[ res[-1]->gid() ] = res[-1];
+  }
   endgrent();
-  return res;
+  full_group_list = res;
+  call_out( lambda(){ full_group_list = 0; cached_groups=0; }, 60 );
+  return res->name();
 }
 #else
 /* TBD: NT version */
