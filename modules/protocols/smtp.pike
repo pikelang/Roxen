@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.79 1999/09/09 11:38:24 grubba Exp $
+ * $Id: smtp.pike,v 1.80 1999/09/09 16:02:13 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.79 1999/09/09 11:38:24 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.80 1999/09/09 16:02:13 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -36,6 +36,9 @@ inherit "module";
  *	multiset(string) query_domain();
  *	int put(string sender, string user, string domain,
  * 	        object spoolfile, string csum, object o);
+ *
+ * smtp_rewrite:
+ *	string|array(int|string) rewrite_message(string message);
  *
  * smtp_filter:
  *	int check_size(object|mapping mail);
@@ -1074,6 +1077,22 @@ static class Smtp_Connection {
 #endif /* SMTP_DEBUG */
 
     data = "Received: " + received + "\r\n" + data;
+
+    foreach(conf->get_providers("smtp_rewrite") || ({}), object o) {
+      // roxen_perror("Got SMTP rewrite\n");
+      if (functionp(o->rewrite_message)) {
+        string|array(string|int) res =
+	  o->rewrite_message(data, current_mail, this_object());
+	if (stringp(res)) {
+	  data = res;
+	} else if (arrayp(res)) {
+	  // Error.
+	  send(@res);
+	  do_RSET();
+	  return;
+	}
+      }
+    }
 
     array res = parent->send_mail(data, current_mail, this_object());
 
