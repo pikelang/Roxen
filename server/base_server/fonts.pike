@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.18 1998/03/24 02:31:00 per Exp $ */
+/* $Id: fonts.pike,v 1.19 1998/05/07 22:03:09 grubba Exp $ */
 
 #include <module.h>
 
@@ -104,8 +104,9 @@ object get_font(string f, int size, int bold, int italic,
 {
   object fnt;
   string key, name;
+  mixed err;
 
-  catch {
+  err = catch {
     name=make_font_name(f,size,bold,italic);
     key=name+"/"+justification+"/"+xspace+"/"+yspace;
 
@@ -131,6 +132,8 @@ object get_font(string f, int size, int bold, int italic,
     cache_set("fonts", key, fnt);
     return fnt;
   };
+  report_error(sprintf("get_font(): Error opening font %O:\n"
+		       "%s\n", f, describe_backtrace(err)));
   // Error if the font-file is not really a font-file...
   return 0;
 }
