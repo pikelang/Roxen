@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.93 1997/12/17 00:51:51 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.94 1997/12/19 17:41:37 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1367,7 +1367,7 @@ string tag_fix_color(string tagname, mapping args, object id, object file,
   else
     id->misc->colors += ({ ({ defines->fg, defines->bg, tagname }) });
 #undef FIX
-#define FIX(X,Y) if(args->X){defines->Y=args->X;if(args->X[0]!='#'){args->X=ns_color(parse_color(args->X));changed = 1;}}
+#define FIX(X,Y) if(args->X && args->X!=""){defines->Y=args->X;if(args->X[0]!='#'){args->X=ns_color(parse_color(args->X));changed = 1;}}
 
   FIX(bgcolor,bg);
   FIX(text,fg);
