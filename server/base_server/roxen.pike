@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.675 2001/06/24 03:52:16 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.676 2001/06/24 03:55:28 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -788,8 +788,11 @@ function async_sig_start( function f, int really )
         f( @args );
         return;
       }
-      async_called=time();
-      call_out( really_call, 0, args );
+      if( !async_called ) // Do not queue more than one call at a time.
+      {
+        async_called=time();
+        call_out( really_call, 0, args );
+      }
     }
   };
   // call_out is not really useful here, since we probably want to run
