@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.34 1997/10/24 01:49:31 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.35 1997/10/24 02:28:41 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -49,8 +49,8 @@ mixed *register_module()
        /* " tone         Do nasty stuff to the background.\n"
 	  " Requires dark background to be visable.\n" */
        " You can also use regular &lt;img&gt; arguments. They will be passed\n"
-       " on to the resulting &lt;img&gt; tag. "
-       "Defines the following tags: \n"
+       " on to the resulting &lt;img&gt; tag. \n\n"
+       "Defines the following internal tags: \n"
        "\n&lt;xaxis&gt; and &lt;yaxis&gt; (tags)\n"
        "Attributes for the x and y axis.\n"
        /* " name=        Dunno what this does.\n" */
@@ -589,8 +589,6 @@ mapping find_file(string f, object id)
   if(!res->bg)      m_delete( diagram_data, "bgcolor" );
   if(!res->rotate)  m_delete( diagram_data, "rotate" );
 
-  perror("f-data: %O\n", res->data);
-  
   object(Image.image) img;
 
   /* Check this */
