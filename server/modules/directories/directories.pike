@@ -15,7 +15,7 @@
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_directories",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: directories.pike,v 1.87 2000/11/27 06:17:10 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.88 2000/12/01 17:14:31 js Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -202,7 +202,7 @@ mapping parse_directory(RequestID id)
     foreach(indexfiles, string file)
     {
       array s;
-      if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] > 0))
+      if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] != 0))
       {
 	id->not_query = f + file;
 	mapping got = id->conf->get_file(id);
