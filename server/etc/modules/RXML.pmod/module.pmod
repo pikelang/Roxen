@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.11 2000/01/08 12:12:01 mast Exp $
+//! $Id: module.pmod,v 1.12 2000/01/11 02:00:38 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -16,6 +16,8 @@
 class Tag
 //! Interface class for the static information about a tag.
 {
+  constant is_RXML_Tag = 1;
+
   //! Interface.
 
   //!string name;
@@ -351,8 +353,8 @@ class Context
     if (mapping(string:mixed) vars = scopes[scope_name || ""]) {
       mixed val;
       if (zero_type (val = vars[var])) return ([])[0];
-      else if (objectp (val) && ([object] val)->eval)
-	return ([function(Context,string,string:mixed)] ([object] val)->eval) (
+      else if (objectp (val) && ([object] val)->rxml_var_eval)
+	return ([function(Context,string,string:mixed)] ([object] val)->rxml_var_eval) (
 	  this_object(), var, scope_name);
       else return val;
     }
@@ -686,6 +688,9 @@ void parse_error (string msg, mixed... args)
 constant FLAG_CONTAINER = 0x00000001;
 //! If set, the tag accepts non-empty content. E.g. with the standard
 //! HTML parser this defines whether the tag is a container or not.
+
+constant FLAG_NO_PREFIX = 0x00000002;
+//! Never apply any prefix to this tag.
 
 //! The rest of the flags are dynamic (i.e. tested in the Frame object).
 
