@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.42 2000/09/13 11:36:05 lange Exp $
+// $Id: global_variables.pike,v 1.43 2000/09/19 09:26:28 per Exp $
 
 /*
 #pragma strict_types
@@ -217,6 +217,25 @@ class LanguageList {
 
   static string _title( string lang ) {
     return roxenp()->language(roxenp()->locale->get(), "language")(lang);
+  }
+}
+
+array(string) old_module_dirs;
+void zap_all_module_caches( Variable.Variable v ) 
+{
+  if( !equal( v->query(), old_module_dirs ) )
+  {
+    report_notice( "Module path changed - clearing all module caches\n" );
+    catch(this_object()->clear_all_modules_cache());
+    catch(map( this_object()->module_cache->list(),
+               this_object()->module_cache->delete ));
+    catch
+    {
+      string f = dirname( master()->make_ofilename( "tmp" ) );
+      foreach( glob("*.o",get_dir( f )), string ofile )
+        catch(rm( ofile ));
+    };
+    old_module_dirs = v->query();
   }
 }
 
@@ -589,6 +608,8 @@ void define_global_variables(  )
 void restore_global_variables()
 {
   setvars(retrieve("Variables", 0));
+  old_module_dirs = query( "ModuleDirs" );
+  getvar( "ModuleDirs" )->add_changed_callback( zap_all_module_caches );
 }
 
 static mapping(string:mixed) __vars = ([ ]);
