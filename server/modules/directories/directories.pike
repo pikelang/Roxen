@@ -7,11 +7,11 @@
 //
 // TODO:
 // Filter out body statements and replace them with tables to simulate
-// the correct background and fontcolors.
+// the correct background and font colors.
 //
-// Make sure links work _inside_ unfolded dokuments.
+// Make sure links work _inside_ unfolded documents.
 
-string cvs_version = "$Id: directories.pike,v 1.42 2000/01/19 16:04:25 jonasw Exp $";
+string cvs_version = "$Id: directories.pike,v 1.43 2000/01/27 08:22:39 jhs Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -26,17 +26,29 @@ inherit "module";
 inherit "roxenlib";
 
 array readme, indexfiles, nobrowse;
-string out_form;
+int filename_width;
+
+string output_format(array(string) filenames)
+{
+  int w = filename_width, i;
+  if(!w)
+    foreach(map(filenames, sizeof), i)
+      if(i>w)
+	w = i;
+
+  return sprintf("<img border=\"0\" src=\"%%s\" alt=\"\"> "
+		 "<a href=\"%%s\">%%%s-%ds</a>%s%s   %%s\n",
+		 (query("truncate")?":":""), w,
+		 (query("size") ? "   %11s" : "%.0s" ),
+		 (query("date")!="Don't show dates" ? "   %s" : "%.0s"));
+}
+
 void start()
 {
-  readme=query("Readme")-({""});
-  indexfiles=query("indexfiles")-({""});
-  nobrowse=query("nobrowse")-({""});
-  out_form="<img border=\"0\" src=\"%s\" alt=\"\"> "
-    "<a href=\"%s\">%-40s</a>"+
-    (query("size")?"   %11s":"%.0s")+
-    (query("date")!="Don't show dates"?"   %s":"%.0s")+
-    "   %s\n";
+  readme = query("Readme")-({""});
+  indexfiles = query("indexfiles")-({""});
+  nobrowse = query("nobrowse")-({""});
+  filename_width = query("fieldwidth");
 }
 
 constant module_type = MODULE_DIRECTORIES | MODULE_PARSER;
@@ -79,6 +91,16 @@ void create()
          "like 1999-11-26, while `Text dates' gives dates like `Fri Nov 26, "
          "1999'.",
          ({ "Don't show dates", "Show ISO dates", "Show CTIME dates" }));
+
+  defvar("fieldwidth", 40, "Filename field width", TYPE_INT,
+	 "This sets the filename field width (in characters). The value 0 will "
+	 "make the field width match the longest filename in the directory.");
+
+  defvar("truncate", 0, "Filename truncation", TYPE_FLAG,
+	 "If filenames are longer than the filename field width, enabling this "
+	 "option truncate the name rather than making extra room on the "
+	 "particular row.", 0,
+	 lambda() { return !query("fieldwidth"); });
 }
 
 string tag_directory_insert(string t, mapping m, RequestID id)
@@ -167,6 +189,7 @@ string describe_directory(string d, RequestID id)
 
   if(id->misc->foldlist_exists) result += "<foldlist folded>\n";
 
+  string out_form = output_format(dir);
   foreach(sort(dir), string file) {
     string tmp=id->not_query;
     array stats = id->conf->stat_file(d + file, id);
