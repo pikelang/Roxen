@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.78 1998/11/22 00:19:34 marcus Exp $
+/* $Id: wizard.pike,v 1.79 1998/11/22 01:09:33 marcus Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -571,7 +571,7 @@ mapping get_actions(object id, string base,string dir, array args)
 	      name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
       }
     };
-    if(e->get())
+    if(e->get() && strlen(e->get()))
       error("While compiling wizards:\n"+e->get());
     if(err) report_error(describe_backtrace(err));
   }
