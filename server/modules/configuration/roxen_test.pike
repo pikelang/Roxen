@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.45 2001/09/04 22:13:16 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.46 2001/09/12 23:39:23 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -197,9 +197,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
     if( verbose )
     {
       report_debug( "%4d %-69s %s  ",
-		    ltests, replace(test[..68],
-				    ({"\t","\n", "\r"}),
-				    ({"\\t","\\n", "\\r"}) ),
+		    ltests, sprintf("%O", test)[..68],
 		    p_code ? "(pass 2)" : "(pass 1)");
     }
   };
@@ -425,10 +423,7 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
     if( verbose )
     {
       report_debug( "%4d %-69s  ",
-		    ltests, replace(sprintf("%O", test)[..68],
-				    ({"\t","\n", "\r"}),
-				    ({"\\t","\\n", "\\r"}) ),
-		    );
+		    ltests, sprintf("%O", test)[..68] );
     }
   };
 
