@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.108 1998/02/27 05:20:51 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.109 1998/02/27 05:31:30 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1145,7 +1145,7 @@ int find_or_insert(mapping find)
 {
   mapping f2 = copy_value(find);
   foreach(glob("magic_*", indices(f2)), string q) m_delete(f2,q);
-  if(!args_restored) 
+  if(!args_restored)   restore_cached_args();
   array a = indices(cached_args);
   array b = values(cached_args);
   int i;

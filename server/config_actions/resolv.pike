@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.7 1998/02/27 05:19:19 per Exp $
+ * $Id: resolv.pike,v 1.8 1998/02/27 05:31:28 per Exp $
  */
 
 inherit "wizard";
@@ -20,6 +20,9 @@ string resolv;
 int level;
 
 mapping et = ([]);
+#if efun(gethrvtime)
+mapping et2 = ([]);
+#endif
 
 void trace_enter_ol(string type, function|object module)
 {
@@ -28,17 +31,24 @@ void trace_enter_ol(string type, function|object module)
   string efont="", font="";
   if(level>2) {efont="</font>";font="<font size=-1>";} 
   resolv += (font+"<b><li></b> "+type+" "+module_name(module)+"<ol>"+efont);
+#if efun(gethrvtime)
+  et2[level] = gethrvtime();
+#endif
   et[level] = gethrtime();
 }
 
 void trace_leave_ol(string desc)
 {
   int delay = gethrtime()-et[level];
+#if efun(gethrvtime)
+  int delay2 = gethrvtime()-et2[level];
+#endif
   level--;
   string efont="", font="";
   if(level>1) {efont="</font>";font="<font size=-1>";} 
   resolv += (font+"</ol>"+"Time: "+sprintf("%.5f",delay/1000000.0)
-	     +"<br>"+desc+efont)+"<p>";
+	     +" (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
+	     "<br>"+desc+efont)+"<p>";
 
 }
 
