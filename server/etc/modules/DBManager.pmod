@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.15 2001/08/09 12:07:54 per Exp $
+// $Id: DBManager.pmod,v 1.16 2001/08/09 12:43:04 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -20,20 +20,20 @@ private
 {
   Sql.Sql db = connect_to_my_mysql( 0, "roxen" );
 #ifdef THREADS
-  Thread.Mutex lock;
-#endif
-  function(string,mixed...:array(mapping(string:string))) query =
-#ifdef THREADS
-    lambda( mixed ... args )
-    {
-      object key = lock->lock();
-      mixed res = db->query( @args );
-      return res;
-    }
+  Thread.Mutex lock = Thread.Mutex();
+ 
+  mixed db_query( mixed ... args )
+  {
+    object key = lock->lock();
+    mixed res= db->query( @args );
+    key = 0;
+    return res;
+  }
+
+  function query = db_query;
 #else
-  db->query
+  function query = db->query;
 #endif
-    ;
 
   string short( string n )
   {
@@ -41,23 +41,44 @@ private
   }
 
 
-  array changed_callbacks = ({});
-  void changed()
+  void clear_sql_caches()
   {
-    changed_callbacks-=({0});
-    gc( );
-    sql_cache = ([]);
-    gc( );
 #ifdef THREADS
+    foreach( values( sql_cache ), mapping q )
+      foreach( values( q ), Sql.Sql s )
+      {
+	if( s->master_sql )
+	  destruct( s->master_sql );
+	destruct( s );
+      }
     sql_cache_size = 0;
+#else
+    foreach( values( sql_cache ), Sql.Sql s )
+    {
+      if( s->master_sql )
+	destruct( s->master_sql );
+      destruct( s );
+    }
 #endif
+    sql_cache = ([]);
+    // No need to forcefully close the connection cache entries,
+    // since they are the same as the sql_cache entries.
     connection_cache = ([]);
-    gc( );
 #ifdef THREADS
     connection_cache_size = 0;
 #endif
     gc( );
-    foreach( changed_callbacks, function cb ) catch( cb() );
+  }
+  
+  array changed_callbacks = ({});
+  void changed()
+  {
+    changed_callbacks-=({0});
+
+    clear_sql_caches();
+    
+    foreach( changed_callbacks, function cb )
+      catch( cb() );
     gc( );
   }
 
@@ -182,11 +203,11 @@ private
 
   
 
-  // Note: we cannot use Thread.Local here, since we want to reset
-  // this when the list of databases or the permissions is changed,
-  // and using Thread.Local would cause the old connections to leak.
-  //
-  // Bad luck. :-)
+// Note: we cannot use Thread.Local here, since we want to reset
+// this when the list of databases or the permissions is changed,
+// and using Thread.Local would cause the old connections to leak.
+//
+// Bad luck. :-)
 #ifdef THREADS
 static int sql_cache_size = 0;
 Sql.Sql sql_cache_get(string what)
@@ -196,8 +217,8 @@ Sql.Sql sql_cache_get(string what)
     return m[ what ];
   if( sql_cache_size > 20 )
   {
-    sql_cache = ([]);
-    m = ([]);
+    clear_sql_caches();
+    sql_cache[ this_thread() ] = m = ([]);
   }
   sql_cache_size++;
   m[ what ] =  Sql.Sql( what );
@@ -210,7 +231,7 @@ Sql.Sql sql_cache_get(string what)
   if(sql_cache[ what ] )
     return sql_cache[ what ];
   if( sizeof( sql_cache ) > 20 )
-    sql_cache = ([]);
+    clear_sql_caches();
   return sql_cache[ what ] =  Sql.Sql( what );
 }
 #endif
