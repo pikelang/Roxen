@@ -360,15 +360,18 @@ void delete_admin_user( string s )
 
 array(string) list_admin_users()
 {
-  return map( glob( "*_uid", settings->list() ),
+  return map( glob( "*_uid", settings->list()||({}) ),
               lambda( string q ) {
                 sscanf( q, "%s_uid", q );
                 return q;
               } );
 }
 
-array auth( array auth, RequestID id )
+array auth( array auth_, RequestID id )
 {
+  array auth = auth_;
+  auth_ = ({ auth[0], "CENSORED:PASSWORD" });
+
   array arr = auth[1]/":";
   if( sizeof(arr) < 2 )
     return ({ 0, auth[1], -1 });
