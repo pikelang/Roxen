@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.7 1996/12/05 03:01:02 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.8 1996/12/05 14:20:12 per Exp $";
 #include <module.h>
 /* A configuration.. */
 
@@ -64,15 +64,14 @@ void create(string n) { name=n; }
 
 class Bignum {
 //  object this = this_object();
-  program This = object_program(this_object());
-#if 0&&efun(Mpz)
+#if efun(Mpz)
   inherit Mpz;
   float mb()
   {
     return (float)this_object()/(1024.0*1024.0);
   }
 #else
-  
+  program This = object_program(this_object());
   int msb;
   int lsb=-0x7ffffffe;
 

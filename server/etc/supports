@@ -44,12 +44,12 @@
 			cookies, push, pull, backgrounds, ssl,\
 			javascript, java, frames, backgrounds
 
-/0\..*		-tables, -backgrounds, -ssl, -frames, -java, -javascript
-/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript
-/1\..*		-ssl, -frames, -java, -javascript
+mozilla/0\..*	-tables, -backgrounds, -ssl, -frames, -java, -javascript
+mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript
+mozilla/1\..*	-ssl, -frames, -java, -javascript
 
-.*[2-9].[0-9].*  some_html3, fontcolor, pjpeginline
-.*[2-9].[0-9]b[2-9].*           -java
+mozilla.[2-9].[0-9].*  some_html3, fontcolor, pjpeginline
+mozilla.[2-9].[0-9]b[2-9].*           -java
 
 #Old versions on Mac craches the entire mashine if you use javascript.
 .*2	        -javascript
@@ -66,16 +66,16 @@
 # Netsurfer is a popular commercial Web browser for NEXTSTEP. for more
 # info, contact info@netsurfer.com
 .*               basic, jpeginline, center
-.1\.[1-9].*      backgrounds, fontcolor, pnginline, videoinline
-.2\.[0-9].*      align, pjpeginline, tables, frames, java, font,\
+netsurfer.1\.[1-9].*      backgrounds, fontcolor, pnginline, videoinline
+netsurfer.2\.[0-9].*      align, pjpeginline, tables, frames, java, font,\
                           bigsmall, supsub, perl, tcl, openstep, python
 # }
 
 #section omniweb {
 # OmniWeb is another popular commercial Web browser for NEXTSTEP
 # for more info, contact info@omnigroup.com
-.*               basic, center, jpeginline
-.2\.[0-9].*      backgrounds, font, frames, tables, align, bigsmall,\
+.*               	basic, center, jpeginline
+omniweb.2\.[0-9].*      backgrounds, font, frames, tables, align, bigsmall,\
                         fontcolor, imagealign, pjpeginline, pnginline,\
  		        supsub, ssl
 # }

@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.20 1996/12/05 01:54:44 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.21 1996/12/05 14:20:13 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -15,7 +15,7 @@ inherit "config/draw_things";
 #define bdB "90"
 
 
-#define BODY "<body bgcolor=#"+dR+dG+dB+" text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
+#define BODY "<body "+(roxen->QUERY(BG)?"background=image/background.gif ":"")+"bgcolor=#"+dR+dG+dB+" text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
 
 #define TABLEP(x, y) (id->supports->tables ? x : y)
 #define PUSH(X) do{res+=({(X)});}while(0)

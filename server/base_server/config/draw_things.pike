@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.10 1996/12/05 01:54:45 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.11 1996/12/05 14:20:16 per Exp $";
 
 object (Image) bevel(object (Image) in, int width)
 {
@@ -180,7 +180,7 @@ object (Image) draw_unselected_button(string name, object font)
   txt=linje=0;
   ruta = ruta->line(0,ruta->ysize()-2,ruta->xsize(),ruta->ysize()-2,R,G,B);
   ruta = ruta->line(0,ruta->ysize()-1,ruta->xsize(),ruta->ysize()-1,0x0,0x0,0xff);
-  return ruta->scale(0,15);
+  return ruta->scale(0,20);
 }
 
 object (Image) draw_selected_button(string name, object font)
@@ -199,7 +199,7 @@ object (Image) draw_selected_button(string name, object font)
   linje_mask = linje_mask->mirrory()->color(128,128,128);
   ruta->paste_mask(Image(20,20,0,0,10), linje_mask,txt->xsize()+27,0);
   txt=linje=0;
-  return ruta->scale(0,15);
+  return ruta->scale(0,20);
 }
 
 
@@ -224,7 +224,7 @@ object draw_fold(int c)
 
 object draw_back(int c)
 {
-  object f=pil(c);
+  object f=pil(1);
   for(int i=0; i<10; i++){
     f=f->line(25-i,24,25-i,50);
     f=f->line(25+i,24,25+i,50);

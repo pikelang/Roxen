@@ -216,38 +216,62 @@ string describe_global_debug(object node)
   else
     res = link("<font size=+1>Debug information for developers</font><ul>");
 #if efun(_memory_usage)
-  foo = _memory_usage();
-  int total;
+  mixed foo = _memory_usage();
+  foo->total_usage = 0;
+  foo->num_total = 0;
+  array (string) ind = sort(indices(foo));
   string f;
-  res+="<table border=0 cellspacing=0 cellpadding=2 width=50%>"
-    "<tr align=left bgcolor=#000060><th colspan=3>Memory Usage:</th></tr>"
-    "<tr bgcolor=darkblue><th align=left>Entry<th align=right>"
-    "Current (KB)<th align=right>Change (KB)</tr>";
-  foreach(sort(indices(foo)), f)
-    if(search(f, "num_")) {
-      foo->total_usage += foo[f];
-      res += "<tr bgcolor=black><td><b>"+f+"</b></td><td align=right><b>"+(foo[f]/1024)+
-	"</b></td><td align=right><b>"+((foo[f]-last_usage[f])/1024)+"</b><br></td>";
-    }
-  res += "<tr bgcolor=black><td><b><font color=yellow>Total Usage"
-    "</font></b></td><td align=right><b><font color=yellow>"+
-    (foo->total_usage/1024)+
-    "</font></b></td><td align=right><b><font color=yellow>"+
-    ((foo->total_usage-last_usage->total_usage)/1024)+"</font></b><br></td>";
-
-  res+="</table>";
-  res+="<table border=0 cellspacing=0 cellpadding=2 width=50%><tr bgcolor=darkblue><th align=left>Entry<th align=right>Current<th align=right>Change</tr>";
-  foreach(sort(indices(foo)), f)
+  res+=("<table cellpadding=0 cellspacing=0 border=0>"
+	"<tr valign=top><td valign=top>");
+  res+=("<table border=0 cellspacing=0 cellpadding=2>"
+	"<tr bgcolor=000060><td colspan=3><b>Memory Usage</b></td></tr>"
+	"<tr bgcolor=darkblue><th align=left>Entry</th><th align"
+	"=right>Current</th><th align=right>Change</th></tr>");
+  foreach(ind, f)
     if(!search(f, "num_"))
-      res += "<tr bgcolor=black><td><b>"+f[4..]+"</b></td><td align=right><b>"+(foo[f])+"</b>"
-	"</td><td align=right><b>"+((foo[f]-last_usage[f]))+"</b><br></td>";
+    {
+      foo->num_total += foo[f];
+      string col="#ff6666";
+      if((foo[f]-last_usage[f]) < foo[f]/60)
+	col="yellow";
+      if((foo[f]-last_usage[f]) == 0)
+	col="white";
+      if((foo[f]-last_usage[f]) < 0)
+	col="#44ff55";
+      
+      res += "<tr bgcolor=black><td><b><font color="+col+">"+f[4..]+"</font></b></td><td align=right><b><font color="+col+">"+
+	(foo[f])+"</font></b></td><td align=right><b><font color="+col+">"+
+	((foo[f]-last_usage[f]))+"</font></b><br></td>";
+    }
+  res+="</table></td><td>";
+
+  res+=("<table border=0 cellspacing=0 cellpadding=2>"
+	"<tr bgcolor=000060><td colspan=3>&nbsp;<br></td></tr>"
+	"<tr bgcolor=darkblue><th align=right>Current (KB)</th><th align=right>"
+	"Change (KB)</th></tr>");
+
+  foreach(ind, f)
+    if(search(f, "num_"))
+    {
+      foo->total_usage += foo[f];
+      string col="#ff6666";
+      if((foo[f]-last_usage[f]) < foo[f]/60)
+	col="yellow";
+      if((foo[f]-last_usage[f]) == 0)
+	col="white";
+      if((foo[f]-last_usage[f]) < 0)
+	col="#44ff55";
+      res += "<tr bgcolor=black><td align=right><b><font color="+col+">"
+	+(foo[f]/1024)+"</font></b></td><td align=right><b><font color="+col+">"+((foo[f]-last_usage[f])/1024)+"</font></b><br></td>";
+    }
   last_usage=foo;
-  res+="</table>";
+  res+="</table></td></tr></table>";
 #endif
 #if efun(_dump_obj_table)
+  res+="<p>";
   res += ("<table  border=0 cellspacing=0 cellpadding=2 width=50%>"
 	  "<tr align=left bgcolor=#000060><th  colspan=2>List of all "
-	  "programs:</th></tr>"
+	  "programs with more than one clone:</th></tr>"
 	  "<tr align=left bgcolor=darkblue>"
 	  "<th>Program name</th><th align=right>Clones</th></tr>");
   foo = _dump_obj_table();
@@ -259,11 +283,10 @@ string describe_global_debug(object node)
   for(i = 0; i < sizeof(foo); i++) {
     allobj[foo[i][0]]++;
   }
-  foreach(sort_array(indices(allobj), 
-		     lambda(string a, string b, mapping allobj) {
+  foreach(sort_array(indices(allobj),lambda(string a, string b, mapping allobj) {
     return allobj[a] < allobj[b];
   }, allobj), s) {
-    if(search(s, "Destructed?") == -1)
+    if((search(s, "Destructed?") == -1) && allobj[s]>1)
       res += sprintf("<tr bgcolor=black><td><b>%s</b></td>"
 		     "<td align=right><b>%d</b></td></tr>\n",
 		     s - a, allobj[s]);
