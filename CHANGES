@@ -3,6 +3,8 @@ Changes since Roxen 2.0.44
 
 o Dump and decode fixes
 
+o Fixed disabling of Java if no Java is found.  (No backtraces)
+
 
 Changes since Roxen 2.0.43
 -----------------------------------------------
