@@ -8,7 +8,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-string cvs_version = "$Id: hostredirect.pike,v 1.11 1997/08/15 15:28:11 grubba Exp $";
+string cvs_version = "$Id: hostredirect.pike,v 1.12 1997/08/16 23:00:47 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -108,7 +108,7 @@ mixed first_try(object id)
 
   id->misc->host_redirected = 1;
   if(!((id->misc->host && (host = lower_case(id->misc->host))) ||
-       (host = replace(id->my_fd->query_address(1)," ",":"))))
+       (id->my_fd && (host = replace(id->my_fd->query_address(1)," ",":")))))
     return 0;
   
   host = (host / ":")[0]; // Remove port number
