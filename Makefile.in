@@ -19,6 +19,7 @@ install: all
 	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
 		$(prefix)/roxen/server/*/*/CVS
 	cp pike/src/pike $(prefix)/roxen/server/bin
+	cp -r pike/src/lib $(prefix)/roxen/server/
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/configurations
 	@(cd extern;$(MAKE) install;cd ../)
