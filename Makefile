@@ -71,10 +71,8 @@ install_dirs:
 install_data:
 	${INSTALL_DATA_R} server 	${PREFIX}/${PROGNAME}/;
 	${INSTALL_DATA_R} local 	${PREFIX}/${PROGNAME}/;
-	${INSTALL_DATA}   GPL   	${PREFIX}/${PROGNAME}/;
-	${INSTALL_DATA}   COPYING   	${PREFIX}/${PROGNAME}/;
-	${INSTALL_DATA}   README   	${PREFIX}/${PROGNAME}/;
-	${INSTALL_DATA}   Manifest   	${PREFIX}/${PROGNAME}/;
+	#${INSTALL_DATA}   GPL   	${PREFIX}/${PROGNAME}/;
+	#${INSTALL_DATA}   COPYING   	${PREFIX}/${PROGNAME}/;
 	${INSTALL_DATA}   start  	${PREFIX}/${PROGNAME}/;
 	${INSTALL_DATA}   server/tools/init.d_chilimoon ${STARTSCRIPTS}/chilimoon
 config_test: 
