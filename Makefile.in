@@ -5,9 +5,24 @@ prefix=@prefix@
 
 @SET_MAKE@
 
-all:	pike extern
+all:	MAKE_GMP MAKE_GDBM MAKE_ZLIB pike extern
+
+pike: force
 	@(cd pike/src;$(MAKE))
+
+exterm: force
 	@(cd extern;$(MAKE) all)
+
+gmp: force
+	-@(cd gmp;$(MAKE) all && $(MAKE) install)
+
+gdbm: force
+	-@(cd gdbm;$(MAKE) all && $(MAKE) install)
+
+zlib: force
+	-@(cd zlib;$(MAKE) all && $(MAKE) install)
+
+force:
 
 # These are here for compatibility with the easy-start makefile
 easy: all
