@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.335 1999/10/10 17:25:33 grubba Exp $
+ * $Id: roxen.pike,v 1.336 1999/10/10 17:29:18 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.335 1999/10/10 17:25:33 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.336 1999/10/10 17:29:18 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -27,7 +27,7 @@ inherit "disk_cache";
 inherit "language";
 inherit "supports";
 
-#define SSL3_DEBUG
+// #define SSL3_DEBUG
 
 /*
  * Version information
