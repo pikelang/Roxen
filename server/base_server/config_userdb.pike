@@ -460,9 +460,9 @@ class ConfigurationSettings
 			    } );
 
 
-    defvar( "devel_mode", 1, LOCALE(180, "Show developer options and actions"),
+    defvar( "devel_mode", 1, LOCALE(180, "Show developer options and tasks"),
 	    TYPE_FLAG, 
-	    LOCALE(181, "Show settings and actions that are not normaly "
+	    LOCALE(181, "Show settings and tasks that are not normaly "
 		   "useful for non-developer users. If you develop your own "
 		   "Roxen modules, this option is for you."));
 
