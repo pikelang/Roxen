@@ -947,6 +947,26 @@ a&auml; &amp; b  &gt;
 <result>1</result>
 </test>
 
+<test>
+  <rxml><set variable="var.i" expr="1 - 1"/><if variable="var.i is 0">a</if><else>b</else></rxml>
+  <result>a</result>
+</test>
+
+<test>
+  <rxml><if variable="var.i is 0">a</if><else>b</else></rxml>
+  <result>b</result>
+</test>
+
+<test>
+  <rxml><set variable="var.i" expr="1 - 1"/><if variable="var.i = ?*">a</if><else>b</else></rxml>
+  <result>a</result>
+</test>
+
+<test>
+  <rxml><if variable="var.i = ?*">a</if><else>b</else></rxml>
+  <result>b</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Sort</comment>
