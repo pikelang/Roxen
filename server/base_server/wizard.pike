@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.12 1997/08/20 08:52:58 per Exp $
+/* $Id: wizard.pike,v 1.13 1997/08/20 10:08:06 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -209,7 +209,44 @@ mapping|string wizard_for(object id, string|void cancel, string|void wiz_name)
   {
     function pg=this_object()[wiz_name+((int)v->_page)];
     if(!pg) return "Error: Invalid page ("+v->_page+")!";
-    if(data = pg()) break;
+    if(data = pg(id)) break;
   }
   return parse_wizard_page(data,id,wiz_name);
+}
+
+mapping wizards = ([]);
+
+object get_wizard(string act, string dir)
+{
+  if(!wizards[dir+act]) wizards[dir+act]=compile_file(dir+act)();
+  return wizards[dir+act];
+}
+
+int zonk;
+mapping|string wizard_menu(object id, string dir, string base)
+{
+  if(id->pragma["no-cache"]) wizards=([]);
+  if(!id->variables->action)
+  {
+    string res="<dl>";
+    array acts = ({});
+    foreach(get_dir(dir), string act)
+    {
+      mixed err;
+      err = catch {
+	if(act[0]!='#' && act[-1]=='e')
+	{
+	  string rn = get_wizard(act,dir)->name, name;
+	  sscanf(rn, "%*s:%s", name);
+	  acts+=({"<!-- "+rn+" --><dt><font size=\"+2\">"
+		    "<a href=\""+base+"?action="+act+"&unique="+(zonk++)+"\">"+
+		    name+"</a></font><dd>"+(get_wizard(act,dir)->doc||"") });
+	}
+      };
+      if(err)
+	report_error(describe_backtrace(err));
+    }
+    return res+(sort(acts)*"\n")+"</dl>";
+  }
+  return get_wizard(id->variables->action,dir)->wizard_for(id,base);
 }
