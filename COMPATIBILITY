@@ -1,5 +1,7 @@
 This file lists the known compatibility issues between ChiliMoon 2004
-and ChiliMoon 2003.
+and Roxen 4.0.
+
+ - You need Pike 7.7, from the CVS, or from the supplied snapshot.
 
  - The hashing of the seed for the <random> tag has changed so a
    certain seed no longer corresponds to the same random value.
@@ -8,3 +10,17 @@ and ChiliMoon 2003.
    "rxmltags".
 
  - The entity &client.tm; is removed.
+
+ - All compatibility modules with Roxen 1.4 have been removed.
+   This does not mean that they are removed permanently, but if someone
+   wants to have them, be sure to support them.
+   Also, in the existing server core, only minor, preferably no patches
+   should be required to use the module(s).
+   If someone wants Roxen 1.4 compatibility, you're best served with
+   Caudium or Roxen 1.4 itself.
+
+ - All subtle Roxen 2.0 till 3.3 changes in RXML variable expansion
+   have been scrapped.  We only support 4.0 compatible behaviour.
+
+ - Locales in the admininterface have been dropped.  All interactions with
+   the administrator are in English.
