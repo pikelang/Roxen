@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.255 2000/12/31 23:57:05 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.256 2001/01/02 18:28:09 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -331,20 +331,18 @@ opaque=70</gtext>
  Allows the gtext parser to not be typographically correct.
 </attr>
 
-"
-//  <attr name=xpad value=percentage>
-//  Sets the padding between characters.
-//  <ex type=vert>
-//  <gtext xpad=\"-30%\" scale=\"0.6\">&lt;gtext xpad=-30%&gt;</gtext><br />
-//  <gtext xpad=\"-10%\" scale=\"0.6\">&lt;gtext xpad=-10%&gt;</gtext><br />
-//  <gtext scale=\"0.6\">&lt;gtext&gt;</gtext><br />
-//  <gtext xpad=\"10%\" scale=\"0.6\">&lt;gtext xpad=10%&gt;</gtext><br />
-//  <gtext xpad=\"30%\" scale=\"0.6\">&lt;gtext xpad=30%&gt;</gtext><br />
-//  </ex>
-//  </attr>
-//  At least temporarily removed from the documentation
-
-+#"
+<attr name=xpad value=percentage|integer>
+ Sets the padding between characters. The value can either be an relative change, in percent, or
+ an absolute value. Not that different fonts reacts differently on these values and for some it
+ will not have any effect at all. This depends on the type of the font and the fonts implementation.
+<ex type=vert>
+<gtext xpad=\"-30%\" scale=\"0.6\">&lt;gtext xpad=-30%&gt;</gtext><br />
+<gtext xpad=\"-10%\" scale=\"0.6\">&lt;gtext xpad=-10%&gt;</gtext><br />
+<gtext scale=\"0.6\">&lt;gtext&gt;</gtext><br />
+<gtext xpad=\"10%\" scale=\"0.6\">&lt;gtext xpad=10%&gt;</gtext><br />
+<gtext xpad=\"30%\" scale=\"0.6\">&lt;gtext xpad=30%&gt;</gtext><br />
+</ex>
+</attr>
 
 <attr name=xsize value=number>
  Sets the width.
@@ -592,13 +590,13 @@ mixed draw_callback(mapping args, string text, RequestID id)
     if(args->light) bold=-1;
     if(args->black) bold=2;
     if(args->italic) italic=1;
-    int|float xpad=1.0;
+    int|float xpad=0.0;
     if(args->xpad)
       if(args->xpad[-1]=='%')
 	xpad = (float)args->xpad;
       else
 	xpad = (int)args->xpad;
-    int|float ypad=1.0;
+    int|float ypad=0.0;
     if(args->ypad)
       if(args->ypad[-1]=='%')
 	ypad = (float)args->ypad;
