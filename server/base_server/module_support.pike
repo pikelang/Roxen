@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.62 2000/03/21 04:35:41 mast Exp $
+// $Id: module_support.pike,v 1.63 2000/03/25 03:58:29 mast Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -176,7 +176,7 @@ mixed set(string var, mixed val)
   error("set("+var+"). Unknown variable.\n");
 }
 
-program my_compile_file(string file)
+program my_compile_file(string file, void|int silent)
 {
   if( file[0] != '/' )
     file = replace(getcwd()+"/"+file, "//", "/");
@@ -207,7 +207,7 @@ program my_compile_file(string file)
 
   if (p->dont_dump_program) {
 #ifdef MODULE_DEBUG
-    report_debug("\b[dontdump] \b");
+    if (!silent) report_debug("\b[dontdump] \b");
 #endif
   }
   else if( !file_stat( ofile ) ||
@@ -215,20 +215,20 @@ program my_compile_file(string file)
     if( catch ( master()->dump_program( file, p ) ) )
     {
 #ifdef MODULE_DEBUG
-      report_debug("\b[nodump] \b");
+      if (!silent) report_debug("\b[nodump] \b");
 #endif
       catch( Stdio.File( ofile, "wct" ) );
     } else {
 #ifdef MODULE_DEBUG
-      report_debug("\b[dump] \b");
+      if (!silent) report_debug("\b[dump] \b");
 #endif
     }
   return p;
 }
 
-function|program load( string what )
+function|program load( string what, void|int silent )
 {
-  return my_compile_file( what );
+  return my_compile_file( what, silent );
 }
 
 //
@@ -290,14 +290,14 @@ class ModuleInfo
     }
   }
 
-  object instance( object conf )
+  object instance( object conf, void|int silent )
   {
 //     werror("Instantiate %O for %O.\n", this_object(), conf );
 #if constant(Java.jvm)
     if( filename[sizeof(filename)-6..]==".class" )
       return ((program)"javamodule.pike")(conf, filename);
 #endif
-    return load( filename )( conf );
+    return load( filename, silent )( conf );
   }
 
   void save()
@@ -319,7 +319,7 @@ class ModuleInfo
     filename = what;
     mixed q =catch
     {
-      object mod = instance( 0 );
+      object mod = instance( 0, 1 );
       if(!mod)
         throw(sprintf("Failed to instance %s (%s)\n", sname,what));
       if(!mod->register_module)
