@@ -772,3 +772,29 @@ These only tests that the tags does not produce a backtrace, for now.
 <rxml><apre add="a,b">x</apre></rxml>
 <result><a href="/(a,b,x)/index.html">x</a></result>
 </test>
+
+<test>
+<rxml><cache><append variable="var.foo" value="x"/></cache>
+<cache><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
+<result>
+x</result>
+</test>
+
+<test>
+<rxml><cache key="a"><append variable="var.foo" value="x"/></cache>
+<cache key="a"><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
+<result>
+x</result>
+</test>
+
+<test>
+<rxml><cache key="a"><append variable="var.foo" value="y"/></cache>
+<cache key="b"><append variable="var.foo" value="y"/></cache>&var.foo;</rxml>
+<result>
+yy</result>
+</test>
+
+<test>
+<rxml><cache nohash="1" key="a">hej</cache><cache nohash="1" key="a">hopp</cache></rxml>
+<result>hejhej</result>
+</test>
