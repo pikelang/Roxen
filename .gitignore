@@ -31,7 +31,6 @@ _$*
 *.ln
 core
 /configurations
-/local
 /logs
 /var
 /*.sb
