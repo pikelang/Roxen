@@ -124,12 +124,11 @@ public void initiate_supports()
 
 private array(multiset|mapping) lookup_supports(string from)
 {
-  multiset (string) sup;
-  mapping (string:string) m;
+  array ret;
 
-  if(!(sup = cache_lookup("supports", from)) || !(m = cache_lookup("supports", from))) {
-    sup = (<>);
-    m = ([]);
+  if(!(ret = cache_lookup("supports", from)) ) {
+    multiset (string) sup=(<>);
+    mapping (string:string) m=([]);
     multiset (string) nsup = (< >);
     foreach(indices(supports), string v)
     {
@@ -153,10 +152,11 @@ private array(multiset|mapping) lookup_supports(string from)
 #endif
     }
     sup -= nsup;
-    cache_set("supports", from, sup);
+    ret=({ sup, m});
+    cache_set("supports", from, ret);
   }
 
-  return ({ sup, m });
+  return ret;
 }
 
 multiset(string) find_supports(string from, void|multiset existing_sup)
