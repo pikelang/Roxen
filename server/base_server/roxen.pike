@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.311 1999/07/31 18:43:37 js Exp $
+ * $Id: roxen.pike,v 1.312 1999/08/04 21:24:27 neotron Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.311 1999/07/31 18:43:37 js Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.312 1999/08/04 21:24:27 neotron Exp $";
 
 object backend_thread;
 object argcache;
@@ -1115,6 +1115,8 @@ public multiset find_supports(string from, void|multiset existing_sup)
   array (function|multiset) s;
   string v;
   array f;
+
+  if(!existing_sup) existing_sup = (<>);
   
   if(!strlen(from) || from == "unknown")
     return default_supports|existing_sup;
