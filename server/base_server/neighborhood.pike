@@ -6,7 +6,7 @@ object udp_broad=spider.dumUDP();
 void got_info()
 {
   mapping m = decode_value(udp_broad->read()->data);
-  if(m->seq<(neighborhood[m->configurl]?neighborhood[m->configurl]->seq:0))
+  if(m->seq<=(neighborhood[m->configurl]?neighborhood[m->configurl]->seq:0))
     m->last_reboot = time();
   neighborhood[m->configurl] |= m;
 }
