@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.3 1997/12/17 00:58:12 grubba Exp $
+ * $Id: generate_rsa.pike,v 1.4 1997/12/20 00:18:55 grubba Exp $
  */
 
 inherit "wizard";
@@ -22,11 +22,11 @@ constant doc = ("In order to use the SSL on your server, "
 		"Note that it is possible to have more than one "
 		"certificate for the same key.");
 
-#if !constant(Crypto.rsa)
+#if !constant(_Crypto) || !constant(Crypto.rsa)
 
 constant action_disabled = 1;
 
-#else /* constant(Crypto.rsa) */
+#else /* constant(_Crypto) && constant(Crypto.rsa) */
 
 mixed page_0(object id, object mc)
 {
@@ -118,4 +118,5 @@ mixed wizard_done(object id, object mc)
 }
 
 mixed handle(object id) { return wizard_for(id,0); }
-#endif /* constant(Crypto.rsa) */
+
+#endif /* constant(_Crypto) && constant(Crypto.rsa) */
