@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.140 1999/03/29 01:57:44 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.141 1999/03/29 02:29:28 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1231,7 +1231,7 @@ class backend
        * delimiter is returned. This permits a client to get the hierarchy
        * delimiter even when no mailboxes by that name currently exist.
        */
-      return ({ ({ imap_list( ({ "\\Noselect" })), "nil", "\"\"" }) });
+      return ({ ({ imap_list( ({ "\\Noselect" })), "\"/\"", "\"\"" }) });
     }
     
     return Array.map(imap_glob(glob,
@@ -1241,8 +1241,12 @@ class backend
 					   // Remap incoming => INBOX.
 					   return (n=="incoming")?"INBOX":n;
 					 })),
-		     lambda (string name)
-		     { return ({ imap_list( ({}) ), "nil", name }); } );
+		     lambda (string name) {
+		       return ({
+			 imap_list( ({ "\\Noinferiors" }) ),
+			 "NIL", name
+		       });
+		     } );
   }
 
   array(array(object|string)) lsub(object|mapping(string:mixed) session,
