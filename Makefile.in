@@ -32,6 +32,15 @@ install_all: install_pike install
 
 install: all
 	$(SRCDIR)/mkdir -p $(prefix)/roxen/
+	-@if test -d $(prefix)/roxen/server.old/.; then \
+	  if test -d $(prefix)/roxen/server.older/.; then \
+	    echo \
+	    echo "Warning, deleting old server \"$(prefix)/roxen/server.older\"" \
+	    echo \
+	    rm -rf $(prefix)/roxen/server.older \
+	  fi; \
+	  mv -f $(prefix)/roxen/server.old $(prefix)/roxen/server.older \
+	fi
 	-@mv -f $(prefix)/roxen/server $(prefix)/roxen/server.old
 	cp -r $(SRCDIR)/server $(prefix)/roxen/
 	@rm -rf	$(prefix)/roxen/server/CVS $(prefix)/roxen/server/*/CVS\
