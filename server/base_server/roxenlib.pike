@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.78 1998/07/20 07:04:32 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.79 1998/07/31 02:02:34 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -990,9 +990,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	  array(string) options =  exploded[c] / ":";
 	  string var = remove_leading_trailing_ws (options[0]);
 	  mixed val = vars[var];
-	  array(string) encodings =
-	    args->encode ? Array.map (lower_case (args->encode) / ",",
-				      remove_leading_trailing_ws) : ({});
+	  array(string) encodings = ({});
 	  string multisep = multi_separator;
 	  string zero = args->zero || "";
 	  string empty = args->empty || "";
@@ -1046,7 +1044,10 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	    if (!sizeof (val)) val = empty;
 	  }
 
-	  if (!sizeof (encodings)) encodings = ({"html"});
+	  if (!sizeof (encodings))
+	    encodings = args->encode ?
+	      Array.map (lower_case (args->encode) / ",",
+			 remove_leading_trailing_ws) : ({"html"});
 	  foreach (encodings, string encoding)
 	    switch (encoding) {
 	      case "none":
