@@ -10,15 +10,13 @@
 
 
 inherit UserDB;
-//! A user database module should inherit @[UserDB].
-//! However, you can inherit module and implement all the functions 
-//! that have stub defenitions in the UserDB module on your own.
+inherit "module";
+//! A user database module should inherit @[UserDB]. 
 //!
 //! Which those are will be indicated in the documentation for those
 //! functions below. Also, please note that a userdb module has to
 //! have the thread_safe flag set to 1.
 
-inherit "module";
 
 constant name = "example";
 //! The name of the userdatbase, used to identify it from modules or
@@ -30,7 +28,7 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version="$Id: userdb_ex.pike,v 1.1 2001/10/09 15:01:44 per Exp $";
+constant cvs_version="$Id: userdb_ex.pike,v 1.2 2001/10/09 15:03:43 per Exp $";
 
 LocaleString module_name = LOCALE(1,"RefDoc for MODULE_USERDB");
 
