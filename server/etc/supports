@@ -1,4 +1,4 @@
-## $Id: supports,v 1.26 1997/04/27 12:34:47 grubba Exp $
+## $Id: supports,v 1.27 1997/05/06 15:32:31 peter Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -148,6 +148,9 @@ cern.*linemode.*           nothing
 # HotJava, SUNs little WWW browser with support for java aplets.  Nice
 # idea, but the client in itself is not all that impressive.
 .*      		    basic, java, center
+.*/1\.0/jdk1\.1\.1	    frames, pjpeginline, supsub, fontcolor,\
+			    backgrounds, bigsmall, divisions, font,\
+			    imagealign, jpeginline, tables
 # }
 
 #section udiwww {
