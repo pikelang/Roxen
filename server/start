@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.37 1998/06/18 01:13:09 grubba Exp $
+# $Id: start,v 1.38 1998/07/02 13:01:06 grubba Exp $
 
 VERSION=202; BETA=.b;
 
@@ -200,6 +200,18 @@ else
 fi
 
 if [ -z "$once" ] ; then
+  cat << oo
+Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
+You can use the configuration interface in the server to get debug info.
+oo
+
+  # Try to get rid of some fd's.
+  # Some /bin/sh's have problems detaching otherwise.
+
+  exec >/dev/null
+  exec 2>/dev/null
+  exec </dev/null
+
   (while : ; do
     echo $$: "Server restart at `date`"
     echo $$: "Debug log in $LOGDIR/debug/$FILES.1"
@@ -227,10 +239,6 @@ if [ -z "$once" ] ; then
   echo $$: Not Reached "famous last words"
 
   ) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1 &
-  cat << oo
-Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
-You can use the configuration interface in the server to get debug info.
-oo
 
 else
   echo $$: "Server restart at `date`"
