@@ -330,5 +330,6 @@ worldmap binary
 /server/tools/ntroxen/startdll/startdll.cpp foreign_ident
 /server/tools/ntroxen/startdll/startdll.idl foreign_ident
 /server/tools/ntroxen/version.h foreign_ident
+/server/tools/roxenis.mib foreign_ident
 /server/tools/roxenstarter/roxenstarter.cpp foreign_ident
 /start foreign_ident
