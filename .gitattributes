@@ -250,7 +250,6 @@ urw_itc_avant_garde-demi-r binary
 /server/protocols/gopher.pike foreign_ident
 /server/protocols/http.pike foreign_ident
 /server/protocols/tetris.pike foreign_ident
-/server/roxen-images/auto/README foreign_ident
 /server/start foreign_ident
 /server/tools/Makefile.in foreign_ident
 /server/tools/addfp98.pike foreign_ident
