@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.116 2002/11/05 02:33:06 mani Exp $ -->
+<!-- $Id: template,v 1.117 2002/11/06 00:49:03 mani Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -118,7 +118,7 @@
 <define container="tmpl">
 <html><head>
 <title>&roxen.version; Administration Interface<eval>&_.title:none;</eval></title>
-<link rel="shortcut icon" href="/themes/&usr.theme;/favicon.gif" />
+<link rel="shortcut icon" href="&usr.favicon;" />
 </head>
 <gauge variable='var.time-spent' resultonly='yes'>
 <nooutput>
