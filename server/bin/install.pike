@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.23 1997/10/15 13:57:47 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.24 1997/10/15 14:28:38 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -381,7 +381,7 @@ void main(int argc, string *argv)
   int have_gmp = 0;
   catch(have_gmp = sizeof(indices(master()->resolv("Gmp"))));
   int have_crypto = 0;
-  catch(have_crypto = !!master()->resolv("Crypto"));
+  catch(have_crypto = sizeof(indices(master()->resolv("_Crypto"))));
 
   string prot_prog = "http";
   string prot_spec = "http://";
