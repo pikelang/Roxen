@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.298 2004/04/04 14:52:54 mani Exp $
+// $Id: module.pmod,v 1.299 2004/04/22 15:50:14 mani Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1328,7 +1328,17 @@ class Value
   //! implementor is free to ignore it.
   {
     mixed val = rxml_const_eval (ctx, var, scope_name);
+    // We replace the variable object with the evaluated value when
+    // rxml_const_eval is used. However, we hide
+    // ctx->misc->recorded_changes so that the setting isn't cached.
+    // That since rxml_const_eval should work for values that only are
+    // constant in the current request. Note that we can still
+    // overcache the returned result; it's up to the user to avoid
+    // that with suitable cache tags.
+    array var_chg = ctx->misc->variable_changes;
+    ctx->misc->variable_changes = 0;
     ctx->set_var(var, val, scope_name);
+    ctx->misc->variable_changes = var_chg;
     return type ? type->encode (val) : val;
   }
 
@@ -7068,11 +7078,14 @@ static class PikeCompile
 #ifdef DEBUG
   static string pcid = "pc" + ++p_comp_count;
 #endif
-  static inherit String.Buffer: code;
   static inherit Thread.Mutex: mutex;
-  static mapping(string:mixed) bindings = ([]);
+
+  // These are covered by the mutex.
+  static inherit String.Buffer: code;
   static mapping(string:int) cur_ids = ([]);
   static mapping(mixed:mixed) delayed_resolve_places = ([]);
+
+  static mapping(string:mixed) bindings = ([]);
 
   string bind (mixed val)
   {
@@ -7104,8 +7117,8 @@ static class PikeCompile
       txt = sprintf ("%s %s;\n", type, id);
     }
 
+    Thread.MutexKey lock = mutex::lock();
     code::add (txt);
-    // Relying on the interpreter lock here.
     cur_ids[id] = 1;
 
     return id;
@@ -7122,8 +7135,8 @@ static class PikeCompile
 	      this, rettype, id, arglist, def);
     string txt = sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
 
+    Thread.MutexKey lock = mutex::lock();
     code::add (txt);
-    // Relying on the interpreter lock here.
     cur_ids[id] = 1;
 
     return id;
@@ -7147,6 +7160,7 @@ static class PikeCompile
 
   void delayed_resolve (mixed what, mixed index)
   {
+    Thread.MutexKey lock = mutex::lock();
 #ifdef DEBUG
     if (!zero_type (delayed_resolve_places[what]))
       error ("Multiple indices per thing to delay resolve not handled.\n");
@@ -7189,11 +7203,7 @@ static class PikeCompile
     Thread.MutexKey lock = mutex::lock();
     object compiled = 0;
 
-    // vvv Relying on the interpreter lock from here.
     string txt = code::get();
-    mapping(string:int) loc_cur_ids = cur_ids;
-    cur_ids = ([]);
-    // ^^^ Relying on the interpreter lock to here.
 
     if (txt != "") {
       COMP_MSG ("%O compile\n", this);
@@ -7232,9 +7242,22 @@ static class PikeCompile
 
       compiled = res();
 
-      foreach (indices (loc_cur_ids), string i)
+      foreach (indices (cur_ids), string i) {
+#ifdef DEBUG
+	if (zero_type (compiled[i]))
+	  error ("Identifier %O doesn't exist in compiled code.\n", i);
+#endif
 	bindings[i] = compiled[i];
+      }
+
+      cur_ids = ([]);
     }
+#ifdef DEBUG
+    else
+      if (sizeof (cur_ids))
+	error ("Empty code got bound identifiers: %O\n", indices (cur_ids));
+#endif
+
 
     foreach (indices (delayed_resolve_places), mixed what) {
       mixed index = m_delete (delayed_resolve_places, what);
@@ -7973,7 +7996,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 3.0;
+  constant P_CODE_VERSION = 3.1;
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
