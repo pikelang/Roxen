@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.7 2000/08/16 14:48:03 lange Exp $
+ * $Id: debug_info.pike,v 1.8 2000/09/12 20:54:45 per Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -241,8 +241,7 @@ mixed page_0( object id )
   res += "<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
 
 #if efun(_dump_obj_table)
-  array table = ({
-  });
+  table = ({ });
 
   foo = _dump_obj_table();
   mapping allobj = ([]);
@@ -336,7 +335,7 @@ mixed page_0( object id )
     }
 
   roxen->set_var("__num_clones", bar);
-  object t = ADT.Table->table(table, ({ "<font color='&usr.fgcolor;'  >File",  "Clones", "Change</font>"}),
+  t = ADT.Table->table(table, ({ "<font color='&usr.fgcolor;'  >File",  "Clones", "Change</font>"}),
                               ({ 0, ([ "type":"num" ]),([ "type":"num" ])}));
   res += "<pre>"+ADT.Table.ASCII.encode( t ) + "</pre>";
 
