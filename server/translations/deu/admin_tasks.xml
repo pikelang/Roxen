@@ -545,8 +545,6 @@
 <t>Aktuelles Arbeitsverzeichnis:</t>
 </str>
 
-
-
 <str id="88">
 <o>The other part should be submitted to a certificate authority, such as Thawte or VeriSign. The certificate authority will return the signed certificate that need to run a secure server.</o>
 <t>Der andere Teil sollte an eine Certificate Authority, wie Thawte oder VeriSign, eingesendet werden. Diese Authority sendet das unterzeichnete Zertifikat zurück, das für den sicheren Server benötigt wird.</t>

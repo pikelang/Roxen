@@ -254,3 +254,8 @@
 </o>
 <t></t>
 </str>
+
+<str id="50">
+<o>%s from %s</o>
+<t></t>
+</str>

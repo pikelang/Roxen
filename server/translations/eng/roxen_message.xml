@@ -33,7 +33,7 @@ Check that your password database is correct for user %s(%d),
 </str>
 
 <str id="5">
-<o>Uncaught error in handler thread: %s Clientwill not get any response from Roxen.</o>
+<o>Uncaught error in handler thread: %sClient will not get any response from Roxen.</o>
 <t></t>
 </str>
 
@@ -220,7 +220,6 @@ No module by that name: "%s".
 <t></t>
 </str>
 
-
 <pike>
 
 string setting_uid_gid_permanently(int uid, int gid, string uname, string gname) {
@@ -317,5 +316,23 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 
 <str id="57">
 <o>Next -&amp;gt;</o>
+<t></t>
+</str>
+
+<str id="58">
+<o>Syntax error in security patterns: Cannot find the user database ''
+</o>
+<t></t>
+</str>
+
+<str id="59">
+<o>Syntax error in security patterns: Cannot find the auth method ''
+</o>
+<t></t>
+</str>
+
+<str id="60">
+<o>Syntax error in security patterns: Expected 'allow' or 'deny'
+</o>
 <t></t>
 </str>

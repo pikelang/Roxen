@@ -6,7 +6,6 @@
 <file>../base_server/roxen.pike</file>
 <file>../modules/configuration/update.pike</file>
 
-
 <str id="1">
 <o>Starting one thread to handle requests.</o>
 <t>Starte einen Thread zur Behandlung von Requests.</t>

@@ -33,7 +33,6 @@
 <file>../config_interface/sites/new_site.html</file>
 <file>../config_interface/sites/site_content.pike</file>
 <file>../config_interface/sites/site_header.pike</file>
-<file>../config_interface/sites/site_templates/common.pike</file>
 <file>../config_interface/statusinfo.pike</file>
 <file>../config_interface/template</file>
 <file>../config_interface/topmenu.pike</file>
@@ -43,10 +42,11 @@
 <file>../etc/modules/Variable.pmod/Date.pike</file>
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
-<file>../etc/modules/Variable.pmod/Upload.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
+<file>../etc/modules/Variable.pmod/Upload.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
+<file>../site_templates/common.pike</file>
 
 <str id="2">
 <o>Sent data</o>
@@ -93,24 +93,9 @@
 <t>De prioriteit van de module. 9 is het hoogst, 0 is het laagst. Modules met dezelfde prioriteit worden in willekeurige volgorde geladen.</t>
 </str>
 
-<str id="14">
-<o>Security: Realm</o>
-<t>Beveiling: locatie</t>
-</str>
-
-<str id="15">
-<o>The realm to use when requesting password from the client. Usually used as an informative message to the user.</o>
-<t>De locatienaam die wordt getoond als de server om een wachtwoord van de gebruiker vraagt. Alleen informatief.</t>
-</str>
-
 <str id="16">
 <o>Security: Patterns</o>
 <t>Beveiliging: patronen</t>
-</str>
-
-<str id="17">
-<o>This is the 'security level=value' list.&lt;br /&gt;Each security level can be any or more from this list:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;</o>
-<t>Dit is de 'security level=waarde' lijst. &lt;br /&gt;Elk beveiligingniveau kan &amp;eacute;&amp;eacute;n van de waarden uit de volgende lijst zijn:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;</t>
 </str>
 
 <str id="18">
@@ -154,6 +139,39 @@
 </str>
 
 <str id="27">
+<changed from="What format to use for logging. The syntax is:
+&lt;pre&gt;response-code or *: Log format for that response code
+
+Log format is normal characters, or one or more of the variables below:
+
+\n \t \r       -- As in C, newline, tab and linefeed
+$char(int)     -- Insert the (1 byte) character specified by the integer.
+$wchar(int)    -- Insert the (2 byte) word specified by the integer.
+$int(int)      -- Insert the (4 byte) word specified by the integer.
+$^             -- Supress newline at the end of the logentry
+$host          -- The remote host name, or ip number.
+$ip_number     -- The remote ip number.
+$bin-ip_number -- The remote host id as a binary integer number.
+
+$cern_date     -- Cern Common Log file format date.
+$bin-date      -- Time, but as an 32 bit integer in network byteorder
+
+$method        -- Request method
+$resource      -- Resource identifier
+$full_resource -- Full requested resource, including any query fields
+$protocol      -- The protocol used (normally HTTP/1.0)
+$response      -- The response code sent
+$bin-response  -- The response code sent as a binary short number
+$length        -- The length of the data section of the reply
+$bin-length    -- Same, but as an 32 bit integer in network byteorder
+$request-time  -- The time the request took (seconds)
+$referer       -- the header 'referer' from the request, or '-'.
+$user_agent    -- the header 'User-Agent' from the request, or '-'.
+
+$user          -- the name of the auth user used, if any
+$user_id       -- A unique user ID, if cookies are supported,
+                  by the client, otherwise '0'
+&lt;/pre&gt;"/>
 <o>What format to use for logging. The syntax is:
 &lt;pre&gt;response-code or *: Log format for that response code
 
@@ -165,6 +183,7 @@ $wchar(int)    -- Insert the (2 byte) word specified by the integer.
 $int(int)      -- Insert the (4 byte) word specified by the integer.
 $^             -- Supress newline at the end of the logentry
 $host          -- The remote host name, or ip number.
+$vhost         -- The Host request-header sent by the client, or - if none
 $ip_number     -- The remote ip number.
 $bin-ip_number -- The remote host id as a binary integer number.
 
@@ -785,19 +804,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <t></t>
 </str>
 
-<str id="122">
-<new/>
-<o>PID file</o>
-<t></t>
-</str>
-
-<str id="123">
-<new/>
-<o>In this file, the server will write out it's PID, and the PID of the start script. $pid will be replaced with the pid, and $uid with the uid of the user running the process.
-&lt;br /&gt;Note: It can be overridden by the command line option.</o>
-<t></t>
-</str>
-
 <str id="124">
 <new/>
 <o>Identify, Use default identification string</o>
@@ -1268,12 +1274,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <t></t>
 </str>
 
-<str id="219">
-<new/>
-<o>Update</o>
-<t></t>
-</str>
-
 <str id="220">
 <o>Your Settings</o>
 <t>Gebruikersprofiel</t>
@@ -1326,8 +1326,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <o>Settings</o>
 <t>Instellingen</t>
 </str>
-
-
 
 <str id="258">
 <new/>
@@ -1488,12 +1486,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <t></t>
 </str>
 
-<str id="291">
-<new/>
-<o>handled by</o>
-<t></t>
-</str>
-
 <str id="292">
 <new/>
 <o>Cache status</o>
@@ -1551,12 +1543,6 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <str id="300">
 <new/>
 <o>This port was requested, but binding it failed.</o>
-<t></t>
-</str>
-
-<str id="301">
-<new/>
-<o>Not open</o>
 <t></t>
 </str>
 
@@ -1769,8 +1755,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <o>The domain %s could not be found.</o>
 <t></t>
 </str>
-
-
 
 <str id="326">
 <new/>
@@ -2005,10 +1989,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <o>User ID</o>
 <t></t>
 </str>
-
-
-
-
 
 <str id="248">
 <new/>
@@ -2254,18 +2234,6 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-
-
-
-
-
-
-
-
-
-
-
-
 <str id="169">
 <new/>
 <o>Login attempt from %s</o>
@@ -2377,5 +2345,84 @@ as the name of its log file directory.
 <str id="383">
 <new/>
 <o>Documentation</o>
+<t></t>
+</str>
+
+<str id="245">
+<new/>
+<o>The syntax is:
+ 
+&lt;dl&gt;  &lt;dt&gt;&lt;b&gt;userdb&lt;/b&gt; &lt;i&gt;userdatabase module&lt;/i&gt;&lt;/dt&gt;
+  &lt;dd&gt; Select a non-default userdatabase module. The default is to  search all modules. The userdatabase module config_userdb is always  present, and contains the configuration users&lt;/dd&gt;
+&lt;dt&gt;&lt;b&gt;authmethod&lt;/b&gt; &lt;i&gt;authentication module&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;Select a non-default authentication method.&lt;/dd&gt;&lt;dt&gt;&lt;b&gt;realm&lt;/b&gt; &lt;i&gt;realm name&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;The realm is used when user authentication info is requested&lt;/dd&gt;&lt;/dl&gt;
+  Below, CMD is one of 'allow' and 'deny'
+ &lt;dl&gt;
+  &lt;dt&gt;CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip/bits&lt;/i&gt;  [return]&lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip:mask&lt;/i&gt;  [return] &lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;  [return] &lt;br /&gt;&lt;/dt&gt;
+  &lt;dd&gt;Match the remote IP-address.&lt;/dd&gt;
+ 
+  &lt;dt&gt;CMD &lt;b&gt;user&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt;  [return]&lt;/dt&gt;
+  &lt;dd&gt;Requires a authenticated user. If the user name 'any' is used, any valid user will be OK. Otherwise, one of the listed users are required.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Requires a authenticated user with a group. If the group name  'any' is used, any valid group will be OK. Otherwise, one of the listed groups are required.&lt;/dd&gt;
+ 
+&lt;dt&gt;CMD &lt;b&gt;dns&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;           [return]&lt;/dt&gt;
+&lt;dd&gt;Require one of the specified DNS domain-names&lt;/dd&gt; 
+&lt;dt&gt;CMD &lt;b&gt;time&lt;/b&gt;=&lt;i&gt;HH:mm-HH:mm&lt;/i&gt;   [return]&lt;/dt&gt;
+&lt;dd&gt;Only allow access to the module from the first time to the  second each day. Both times should be specified in 24-hour  HH:mm format.&lt;/dd&gt;
+&lt;dt&gt;CMD &lt;b&gt;day&lt;/b&gt;=&lt;i&gt;day[,day,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Only allow access during certain days. Day is either a numerical     value (monday=1, sunday=7) or a string (monday, thuesday etc)&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
+  pattern is always a glob pattern (* = any characters, ? = any character).
+&lt;/p&gt;&lt;p&gt;
+  return means that reaching this command results in immediate
+  return, only useful for 'allow'.&lt;/p&gt;
+ 
+ &lt;p&gt;'deny' always implies a return, no futher testing is done if a
+ 'deny' match.&lt;/p&gt;
+</o>
+<t></t>
+</str>
+
+<str id="246">
+<new/>
+<o>Compatibility level</o>
+<t></t>
+</str>
+
+<str id="257">
+<new/>
+<o>Passive port minimum</o>
+<t></t>
+</str>
+
+<str id="320">
+<new/>
+<o>Minimum port number to use in the PASV/EPSV response.</o>
+<t></t>
+</str>
+
+<str id="321">
+<new/>
+<o>Passive port maximum</o>
+<t></t>
+</str>
+
+<str id="322">
+<new/>
+<o>Maximum port number to use in the PASV/EPSV response.</o>
+<t></t>
+</str>
+
+<str id="323">
+<new/>
+<o>Shared with </o>
+<t></t>
+</str>
+
+<str id="324">
+<new/>
+<o>Ports</o>
 <t></t>
 </str>

@@ -641,8 +641,6 @@
 <t></t>
 </str>
 
-
-
 <str id="88">
 <new/>
 <o>The other part should be submitted to a certificate authority, such as Thawte or VeriSign. The certificate authority will return the signed certificate that need to run a secure server.</o>

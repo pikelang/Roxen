@@ -33,7 +33,6 @@
 <file>../config_interface/sites/new_site.html</file>
 <file>../config_interface/sites/site_content.pike</file>
 <file>../config_interface/sites/site_header.pike</file>
-<file>../config_interface/sites/site_templates/common.pike</file>
 <file>../config_interface/statusinfo.pike</file>
 <file>../config_interface/template</file>
 <file>../config_interface/topmenu.pike</file>
@@ -43,10 +42,11 @@
 <file>../etc/modules/Variable.pmod/Date.pike</file>
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
-<file>../etc/modules/Variable.pmod/Upload.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
+<file>../etc/modules/Variable.pmod/Upload.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
+<file>../site_templates/common.pike</file>
 
 <str id="2">
 <o>Sent data</o>
@@ -93,23 +93,8 @@
 <t></t>
 </str>
 
-<str id="14">
-<o>Security: Realm</o>
-<t></t>
-</str>
-
-<str id="15">
-<o>The realm to use when requesting password from the client. Usually used as an informative message to the user.</o>
-<t></t>
-</str>
-
 <str id="16">
 <o>Security: Patterns</o>
-<t></t>
-</str>
-
-<str id="17">
-<o>This is the 'security level=value' list.&lt;br /&gt;Each security level can be any or more from this list:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;</o>
 <t></t>
 </str>
 
@@ -165,6 +150,7 @@ $wchar(int)    -- Insert the (2 byte) word specified by the integer.
 $int(int)      -- Insert the (4 byte) word specified by the integer.
 $^             -- Supress newline at the end of the logentry
 $host          -- The remote host name, or ip number.
+$vhost         -- The Host request-header sent by the client, or - if none
 $ip_number     -- The remote ip number.
 $bin-ip_number -- The remote host id as a binary integer number.
 
@@ -665,17 +651,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="122">
-<o>PID file</o>
-<t></t>
-</str>
-
-<str id="123">
-<o>In this file, the server will write out it's PID, and the PID of the start script. $pid will be replaced with the pid, and $uid with the uid of the user running the process.
-&lt;br /&gt;Note: It can be overridden by the command line option.</o>
-<t></t>
-</str>
-
 <str id="124">
 <o>Identify, Use default identification string</o>
 <t></t>
@@ -1084,11 +1059,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="219">
-<o>Update</o>
-<t></t>
-</str>
-
 <str id="220">
 <o>Your Settings</o>
 <t></t>
@@ -1138,8 +1108,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <o>Settings</o>
 <t></t>
 </str>
-
-
 
 <str id="258">
 <o>Add module</o>
@@ -1276,11 +1244,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="291">
-<o>handled by</o>
-<t></t>
-</str>
-
 <str id="292">
 <o>Cache status</o>
 <t></t>
@@ -1328,11 +1291,6 @@ $user_id       -- A unique user ID, if cookies are supported,
 
 <str id="300">
 <o>This port was requested, but binding it failed.</o>
-<t></t>
-</str>
-
-<str id="301">
-<o>Not open</o>
 <t></t>
 </str>
 
@@ -1511,8 +1469,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <o>The domain %s could not be found.</o>
 <t></t>
 </str>
-
-
 
 <str id="326">
 <o>unnamed</o>
@@ -1709,10 +1665,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <o>User ID</o>
 <t></t>
 </str>
-
-
-
-
 
 <str id="248">
 <o>Create new site</o>
@@ -1919,18 +1871,6 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-
-
-
-
-
-
-
-
-
-
-
-
 <str id="169">
 <o>Login attempt from %s</o>
 <t></t>
@@ -2023,5 +1963,76 @@ as the name of its log file directory.
 
 <str id="383">
 <o>Documentation</o>
+<t></t>
+</str>
+
+<str id="245">
+<o>The syntax is:
+ 
+&lt;dl&gt;  &lt;dt&gt;&lt;b&gt;userdb&lt;/b&gt; &lt;i&gt;userdatabase module&lt;/i&gt;&lt;/dt&gt;
+  &lt;dd&gt; Select a non-default userdatabase module. The default is to  search all modules. The userdatabase module config_userdb is always  present, and contains the configuration users&lt;/dd&gt;
+&lt;dt&gt;&lt;b&gt;authmethod&lt;/b&gt; &lt;i&gt;authentication module&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;Select a non-default authentication method.&lt;/dd&gt;&lt;dt&gt;&lt;b&gt;realm&lt;/b&gt; &lt;i&gt;realm name&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;The realm is used when user authentication info is requested&lt;/dd&gt;&lt;/dl&gt;
+  Below, CMD is one of 'allow' and 'deny'
+ &lt;dl&gt;
+  &lt;dt&gt;CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip/bits&lt;/i&gt;  [return]&lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip:mask&lt;/i&gt;  [return] &lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;  [return] &lt;br /&gt;&lt;/dt&gt;
+  &lt;dd&gt;Match the remote IP-address.&lt;/dd&gt;
+ 
+  &lt;dt&gt;CMD &lt;b&gt;user&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt;  [return]&lt;/dt&gt;
+  &lt;dd&gt;Requires a authenticated user. If the user name 'any' is used, any valid user will be OK. Otherwise, one of the listed users are required.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Requires a authenticated user with a group. If the group name  'any' is used, any valid group will be OK. Otherwise, one of the listed groups are required.&lt;/dd&gt;
+ 
+&lt;dt&gt;CMD &lt;b&gt;dns&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;           [return]&lt;/dt&gt;
+&lt;dd&gt;Require one of the specified DNS domain-names&lt;/dd&gt; 
+&lt;dt&gt;CMD &lt;b&gt;time&lt;/b&gt;=&lt;i&gt;HH:mm-HH:mm&lt;/i&gt;   [return]&lt;/dt&gt;
+&lt;dd&gt;Only allow access to the module from the first time to the  second each day. Both times should be specified in 24-hour  HH:mm format.&lt;/dd&gt;
+&lt;dt&gt;CMD &lt;b&gt;day&lt;/b&gt;=&lt;i&gt;day[,day,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Only allow access during certain days. Day is either a numerical     value (monday=1, sunday=7) or a string (monday, thuesday etc)&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
+  pattern is always a glob pattern (* = any characters, ? = any character).
+&lt;/p&gt;&lt;p&gt;
+  return means that reaching this command results in immediate
+  return, only useful for 'allow'.&lt;/p&gt;
+ 
+ &lt;p&gt;'deny' always implies a return, no futher testing is done if a
+ 'deny' match.&lt;/p&gt;
+</o>
+<t></t>
+</str>
+
+<str id="246">
+<o>Compatibility level</o>
+<t></t>
+</str>
+
+<str id="257">
+<o>Passive port minimum</o>
+<t></t>
+</str>
+
+<str id="320">
+<o>Minimum port number to use in the PASV/EPSV response.</o>
+<t></t>
+</str>
+
+<str id="321">
+<o>Passive port maximum</o>
+<t></t>
+</str>
+
+<str id="322">
+<o>Maximum port number to use in the PASV/EPSV response.</o>
+<t></t>
+</str>
+
+<str id="323">
+<o>Shared with </o>
+<t></t>
+</str>
+
+<str id="324">
+<o>Ports</o>
 <t></t>
 </str>
