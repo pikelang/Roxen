@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.181 2001/06/28 20:06:59 mast Exp $
+// $Id: module.pmod,v 1.182 2001/06/28 20:24:59 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -851,9 +851,10 @@ class TagSet
     set_weak_flag (notify_funcs, 1);
   }
 
-  void destroy()
+  static void destroy()
   {
     catch (changed());
+    if (name) m_delete (all_tagsets, name);
   }
 
   static mapping(string:Tag) tags = ([]), proc_instrs;
