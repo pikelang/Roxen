@@ -126,7 +126,7 @@ class Variable
     void set_warning( string to )
     { 
       if( to && strlen(to) )
-        all_warnings[_id] = to; 
+        all_warnings[ _id ] = to; 
       else
         m_delete( all_warnings, _id );
     };
@@ -135,8 +135,8 @@ class Variable
       set_warning( e2 );
       return e2;
     }
-    low_set( to );
     set_warning( err );
+    low_set( to );
     return err;
   }
 
@@ -520,6 +520,11 @@ class URL
   inherit String;
   constant type = "URL";
   constant width = 50;
+
+  array verify_set( string new_value )
+  {
+    return verify_port( new_value, 1 );
+  } 
 }
 
 class Directory
@@ -528,6 +533,13 @@ class Directory
   inherit String;
   constant type = "Directory";
   constant width = 50;
+
+  array verify_set( string value )
+  {
+    if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
+       return ({value+" is not a directory", value });
+    return ::verify_set( value );
+  }
 }
 // =====================================================================
 // MultipleChoice (one of many) baseclass
@@ -714,13 +726,13 @@ class List
     return what;
   }
 
-  static int _current_count = time()*10+(gethrtime()/100000);
+  static int _current_count = time()*100+(gethrtime()/10000);
   void set_from_form(RequestID id)
   {
     int rn;
     array l = query();
     mapping vl = get_form_vars(id);
-    // first do the assign...
+// first do the assign...
 
     if( (int)vl[".count"] != _current_count )
       return;
@@ -771,7 +783,7 @@ class List
     _current_count++;
 
     string res = "<table>\n"
-   "<input type=hidden name='"+prefix+"count' value='"+_current_count+"' />";
+    "<input type=hidden name='"+prefix+"count' value='"+_current_count+"' />";
 
     foreach( map(query(), transform_to_form), string val )
     {
@@ -814,6 +826,17 @@ class DirectoryList
 {
   inherit List;
   constant type="DirectoryList";
+
+  array verify_set( array(string) value )
+  {
+    string warn = "";
+    foreach( value, string value )
+      if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
+        warn += value+" is not a directory\n";
+    if( strlen( warn ) )
+      return ({ warn, value });
+    return ::verify_set( value );
+  }
 }
 
 class StringList
@@ -863,6 +886,45 @@ class URLList
 {
   inherit List;
   constant type="UrlList";
+
+  array verify_set( array(string) new_value )
+  {
+    string warn  = "";
+    array res = ({});
+    foreach( new_value, string vv )
+    {
+      string tmp1, tmp2;
+      [tmp1,tmp2] = verify_port( vv, 1 );
+      warn += tmp1;
+      res += ({ tmp2 });
+    }
+    if( !strlen( warn ) )
+      warn = 0;
+    return ({ warn, res });
+  }
+}
+
+class PortList
+//. A list of Port URLs
+{
+  inherit List;
+  constant type="PortList";
+
+  array verify_set( array(string) new_value )
+  {
+    string warn  = "";
+    array res = ({});
+    foreach( new_value, string vv )
+    {
+      string tmp1, tmp2;
+      [tmp1,tmp2] = verify_port( vv, 0 );
+      warn += tmp1;
+      res += ({ tmp2 });
+    }
+    if( !strlen( warn ) )
+      warn = "";
+    return ({ warn, res });
+  } 
 }
 
 
@@ -900,4 +962,59 @@ class Flag
                 "<option value=0 selected>"+LOW_LOCALE->no)+"</option>\n";
     return res+"</select>";
   }
+}
+
+
+
+
+// =================================================================
+// Utility functions
+// =================================================================
+
+array(string) verify_port( string port, int nofhttp )
+{
+  string warning="";
+  if( (int)port )
+  {
+    warning += "Asuming http://*:"+port+"/ for "+port+"\n";
+    port = "http://*:"+port+"/";
+  }
+  string protocol, host, path;
+
+  if(!strlen( port ) )
+    return ({ port, "Empty URL field" });
+
+  if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
+    return ({port,""+port+" does not conform to URL syntax\n" });
+  
+  if( path == "" )
+  {
+    warning += "Added / to the end of "+port+"\n";
+    host += "/";
+  }
+  int pno;
+  if( sscanf( host, "%s:%d", host, pno ) == 2)
+  {
+    if( roxenp()->protocols[ lower_case( protocol ) ] 
+        && (pno == roxenp()->protocols[ lower_case( protocol ) ]->default_port ))
+        warning += "Removed the "
+                "default port number ("+pno+") from "+port+"\n";
+    else
+      host = host+":"+pno;
+  }
+  if( nofhttp && protocol == "fhttp" )
+  {
+    warning += "Changed " + protocol + " to http\n";
+    protocol = "http";
+  }
+  if( protocol != lower_case( protocol ) )
+  {
+    warning += "Changed "+protocol+" to "+ lower_case( protocol )+"\n";  
+  }
+
+  port = lower_case( protocol )+"://"+host+path;
+
+  if( !roxenp()->protocols[ lower_case( protocol ) ] )
+    warning += "Warning: The protocol "+lower_case(protocol)+" is unknown\n";
+  return ({ warning, port });
 }
