@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.243 2000/08/14 19:50:00 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.244 2000/08/14 19:54:19 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 #define RAM_CACHE
@@ -1839,12 +1839,13 @@ void send_result(mapping|void result)
       // No data for these two...
     {
 #ifdef RAM_CACHE
-      if( (misc->cacheable > 0) )
+      if( (misc->cacheable > 0) && (file->data || file->file) )
       {
         if( (file->len + strlen( head_string )) < conf->datacache->max_file_size )
         {
-          string data = head_string + (file->file?file->file->read(file->len):
-                         (file->data[..file->len-1]));
+          string data = head_string;
+          if( file->file )   data += file->file->read();
+          if( file->data )   data += file->data;
           conf->datacache->set( raw_url, data, 
                                 ([
                                   "hs":strlen(head_string),
