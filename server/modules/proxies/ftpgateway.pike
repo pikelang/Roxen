@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.18 1997/10/03 17:16:52 grubba Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.19 1997/12/11 01:16:37 neotron Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -95,7 +95,7 @@ class Request {
 #define CONNECTION_TIMEOUT (master->query("connection_timeout"))
 #define ACTIVE_CONNECT_TIMEOUT (master->query("data_connection_timeout"))
 #define SERVER_INFO (master->query("server_info")=="Yes")
-#define MAX_PARSE_DIR 50000
+#define MAX_PARSE_DIR 500000
 
   object id,master;
   object server,datacon,dataport;
