@@ -19,7 +19,7 @@ void start_roxen(void);
 void check_registry(void);
 
 TCHAR *log_location = NULL, *pike_location, *server_location;
-TCHAR *key="aaaaaaaa";
+TCHAR *key;
 
 int stopping = 0;
 
@@ -181,9 +181,10 @@ void check_registry(void)
 		       buffer,
 		       &len)==ERROR_SUCCESS)
     {
-      pike_location=strdup((char*)buffer);
+	  pike_location=strdup("\"");
+      strcat(pike_location,(char*)buffer);
       pike_location[strlen(pike_location)-20]=0;
-      strcat(pike_location,"bin/pike.exe");
+      strcat(pike_location,"bin/pike.exe\"");
     }
     RegCloseKey(k);
   }
@@ -232,9 +233,11 @@ void start_roxen(void)
     return;
   }
 
+  key=malloc(8);
+
   srand(time(0));
   for(i=0;i<8;i++)
-    key[i]=65+32+((unsigned int)rand())%24;
+    key[i]=65+32+((unsigned char)rand())%24;
   strcpy(cmd, pike_location);
   strcat(cmd, filename);
   strcat(cmd," +");
@@ -243,8 +246,8 @@ void start_roxen(void)
   GetStartupInfo(&info);
 /*   info.wShowWindow=SW_HIDE; */
   info.dwFlags|=STARTF_USESHOWWINDOW;
-  ret=CreateProcess(pike_location,
-		    cmd,
+  ret=CreateProcess(NULL,
+					cmd,
                     NULL,  /* process security attribute */
                     NULL,  /* thread security attribute */
                     1,     /* inherithandles */
@@ -253,6 +256,19 @@ void start_roxen(void)
                     server_location,   /* current dir */
                     &info,
                     &proc);
+  if(!ret)
+  {
+	    FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		       NULL,
+		       GetLastError(),
+		       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
+		       (LPTSTR) &lpMsgBuf,
+		       0,
+		       NULL );
+	    MessageBox( NULL, lpMsgBuf, "GetLastError", MB_OK|MB_ICONINFORMATION );
+        LocalFree( lpMsgBuf );
+  }
+
   hProcess=proc.hProcess;
 }
 
