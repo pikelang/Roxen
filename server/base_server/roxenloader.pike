@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.267 2001/08/08 14:57:29 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.268 2001/08/09 12:50:50 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1218,7 +1218,8 @@ static void do_tailf( int loop, string f )
 	report_debug( mysqlify( f->read( si ) ) );
       os = tailf_info[ f ] = si;
     }
-    if( loop ) sleep(1);
+    if( loop )
+      sleep( 1 );
   } while( loop );
 }
 
@@ -1386,7 +1387,7 @@ void start_mysql()
 
   string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
   rm( mysqldir+"/mysql_pid" );
-#if constant( thread_create )
+#ifdef THREADS
   thread_create( do_tailf, 1, mysqldir+"/error_log" );
   sleep(0.1);
 #else
@@ -1434,10 +1435,10 @@ void start_mysql()
   int repeat;
   while( 1 )
   {
-    sleep( 0.2 );
+    sleep( 0.1 );
     if( repeat++ > 100 )
     {
-#if !constant( thread_create )
+#ifndef THREADS
       do_tailf(0, mysqldir+"/error_log" );
 #endif
       report_fatal("\nFailed to start mysql. Aborting\n");
@@ -1448,7 +1449,8 @@ void start_mysql()
       werror ("Error connecting to local mysql: %s", describe_error (err));
 #endif
     }
-    else {
+    else
+    {
       connected_ok(0);
       return;
     }
