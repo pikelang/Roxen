@@ -7,7 +7,7 @@ inherit "roxenlib";
 constant thread_safe=1;
 
 roxen.ImageCache the_cache;
-constant cvs_version="$Id: cimg.pike,v 1.14 2000/04/06 07:34:41 wing Exp $";
+constant cvs_version="$Id: cimg.pike,v 1.15 2000/04/11 04:51:23 per Exp $";
 constant tagdesc="Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
 "to convert images between different image formats.";
 
@@ -48,6 +48,7 @@ mapping get_my_args( mapping args, object id )
   ([
     "src":(args->src?fix_relative( args->src, id ):0),
     "quant":args->quant,
+    "crop":args->crop,
     "format":args->format,
     "maxwidth":args->maxwidth,
     "maxheight":args->maxheight,
@@ -56,8 +57,13 @@ mapping get_my_args( mapping args, object id )
     "gamma":args->gamma,
     "data":args->data,
   ]);
+
+  a["background-color"] = id->misc->defines->bgcolor 
+                          || "#eeeeee";
+
   foreach( glob( "*-*", indices(args)), string n )
     a[n] = args[n];
+
   return a;
 }
 
