@@ -2,7 +2,7 @@
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: location.pike,v 1.2 2000/08/28 05:31:54 per Exp $";
+constant cvs_version = "$Id: location.pike,v 1.3 2000/08/28 12:28:52 jhs Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "RefDoc for MODULE_LOCATION";
 constant module_doc = "This module does nothing, but its inlined "
@@ -124,7 +124,21 @@ array(int)|Stat stat_file( string path, RequestID id )
 	    0 /* gid */ });
 } // Of course, it's typically silly to return something like this.
 
-string|void real_file( string path, RequestID id )
+mapping(string:array(int)|Stat) find_dir_stat( string path, RequestID id );
+//! Need not be implemented. The parameter `path' is the path to a
+//! directory, `id' is the request information object and the returned
+//! mapping contains all filenames in the directory mapped to Stat
+//! objects (or arrays for pike 7.0) for the same files respectively.
+//!
+//! If this method is not implemented, the find_dir_stat function
+//! inherited from <tt>module.pike</tt> maps the result of
+//! <ref>find_dir()</ref> over <ref>stat_file()</ref> to produce the
+//! same result. Providing your own find_dir_stat might be useful if
+//! your module maps its files from a database, in which case you
+//! would gain performance by using just one big query instead of
+//! hordes of single-file queries.
+
+string|void real_file( string path, RequestID id );
 //! This method translates the path of a file in the module's name
 //! space to the path to the file in the real file system. path
 //! is the path to the file in the module's name space, id is the
@@ -134,7 +148,6 @@ string|void real_file( string path, RequestID id )
 //! real file system, zero should be returned. Only location modules
 //! that access server files from a real file system need implement
 //! this method. See also the <ref>stat_file()</ref> method.
-{}
 
 array(string)|void find_dir( string path, RequestID id )
 //! The find_dir() returns a directory listing; an array of strings
