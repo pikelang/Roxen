@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.6 1997/05/31 22:01:12 grubba Exp $ */
+/* $Id: fonts.pike,v 1.7 1997/06/12 00:28:19 grubba Exp $ */
 
 #include <module.h>
 
@@ -52,26 +52,29 @@ object get_font(string f, int size, int bold, int italic,
   object fnt;
   string key, name;
 
-  name=make_font_name(f,size,bold,italic);
-  key=name+"/"+justification+"/"+xspace+"/"+yspace;
+  catch {
+    name=make_font_name(f,size,bold,italic);
+    key=name+"/"+justification+"/"+xspace+"/"+yspace;
 
-  if(fnt=cache_lookup("fonts", key))
+    if(fnt=cache_lookup("fonts", key))
+      return fnt;
+    else
+      fnt = Font();
+    if(!fnt->load( name )) {
+      perror("Failed to load the font "+name+", using the default font.\n");
+      if(!fnt->load("fonts/"+roxen->QUERY(default_font_size) +"/"+
+		    roxen->QUERY(default_font)))
+	return 0;
+    }
+    if(justification=="right") fnt->right();
+    if(justification=="center") fnt->center();
+    fnt->set_x_spacing((100.0+(float)xspace)/100.0);
+    fnt->set_y_spacing((100.0+(float)yspace)/100.0);
+    cache_set("fonts", key, fnt);
     return fnt;
-  else
-    fnt = Font();
-  if(!fnt->load( name ))
-  {
-    perror("Failed to load the font "+name+", using the default font.\n");
-    if(!fnt->load("fonts/"+roxen->QUERY(default_font_size) +"/"+
-		  roxen->QUERY(default_font)))
-      return 0;
-  }
-  if(justification=="right") fnt->right();
-  if(justification=="center") fnt->center();
-  fnt->set_x_spacing((100.0+(float)xspace)/100.0);
-  fnt->set_y_spacing((100.0+(float)yspace)/100.0);
-  cache_set("fonts", key, fnt);
-  return fnt;
+  };
+  // Error if the font-file is not really a font-file...
+  return 0;
 }
 
 void create()
