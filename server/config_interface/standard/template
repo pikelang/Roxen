@@ -99,8 +99,7 @@
 <define tag="cf-cancel"> <gbutton preparse="1" href="&_.href;"> <translate id="202">Cancel</translate> </gbutton> </define>
 
 <define tag="cf-next">
-   <comment> FIXME: gbutton should handle HTML entities </comment>
-   <submit-gbutton2 preparse="1" name="next"> <translate id="203">Next</translate> > </submit-gbutton2>
+   <submit-gbutton2 preparse="1" name="next" icon_src="&usr.next;" align_icon="right"> <translate id="203">Next</translate> </submit-gbutton2>
 </define>
 
 <define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
