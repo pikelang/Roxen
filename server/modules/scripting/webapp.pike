@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.17 2002/06/25 15:47:26 tomas Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.18 2002/06/25 16:19:19 tomas Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -763,28 +763,24 @@ class BaseWrapper
         array(string) line = (headers[0]/" ");
         retcode = line[1];
         rettext = (sizeof(line)>2) ? (line[2..])*" " : 0;
-        if (retcode != "200") {
-          WRAP_WERR(sprintf("status: '%s'", retcode ));
-        }
-        else {
-          string name, value;
-          foreach(headers[1..], string h) {
-            WRAP_WERR(sprintf("header=%s", h || "null"));
-            if (sscanf(h, "%s:%s", name, value) == 2) {
-              WRAP_WERR(sprintf("name=%s, value=%s", name || "null", value || "null"));
-              if ( !ignore_heads[lower_case(name)] )
-                Roxen.add_http_header(headermap, name,
-                                      String.trim_all_whites(value));
-              if (lower_case(name) == "content-type") {
-                content_type = String.trim_all_whites((value/";")[0]);
-                WRAP_WERR(sprintf("content-type: '%s'", content_type));
-                if (check(content_type)) {
-                  WRAP_WERR("check returned true");
-                  set_collect(1);
-                }
-                else
-                  WRAP_WERR("check returned false");
+
+        string name, value;
+        foreach(headers[1..], string h) {
+          WRAP_WERR(sprintf("header=%s", h || "null"));
+          if (sscanf(h, "%s:%s", name, value) == 2) {
+            WRAP_WERR(sprintf("name=%s, value=%s", name || "null", value || "null"));
+            if ( !ignore_heads[lower_case(name)] )
+              Roxen.add_http_header(headermap, name,
+                                    String.trim_all_whites(value));
+            if (lower_case(name) == "content-type") {
+              content_type = String.trim_all_whites((value/";")[0]);
+              WRAP_WERR(sprintf("content-type: '%s'", content_type));
+              if (retcode == "200" && check(content_type)) {
+                WRAP_WERR("check returned true");
+                set_collect(1);
               }
+              else
+                WRAP_WERR("check returned false");
             }
           }
         }
