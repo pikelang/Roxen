@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.292 2000/12/11 03:07:47 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.293 2000/12/30 09:12:17 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -88,7 +88,6 @@ string raw_url;
 int do_not_disconnect;
 
 mapping(string:mixed) real_variables = ([]);
-// mapping (string:string) variables       = ([ ]);
 mapping(string:string) variables = ([]);
 
 mapping (string:mixed)  misc            =
@@ -2136,6 +2135,7 @@ object clone_me()
   c->time = time;
   c->raw_url = raw_url;
   c->variables = copy_value(variables);
+  c->real_variables = copy_value(real_variables);
   c->misc = copy_value( misc );
   c->misc->orig = t;
 
