@@ -642,6 +642,7 @@ mixed do_it_pass_2( array modules, Configuration conf,
                                  conf->modules[ mod ] );
     already_added = ([ ]);
     conf->save( ); // save it all in one go
+    conf->forcibly_added = ([]);
     return Roxen.http_redirect(
       site_url(id,conf->name)+"-!-/"+modules[-1]+"/" ,
       id);
