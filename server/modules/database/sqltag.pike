@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1997-2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.101 2003/01/23 16:47:49 mani Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.102 2004/05/22 18:11:34 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
