@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: tableborder.pike,v 1.8 2000/07/20 14:50:53 jhs Exp $";
+constant cvs_version = "$Id: tableborder.pike,v 1.9 2001/03/02 18:04:28 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Table Unveiler";
@@ -47,10 +47,12 @@ string recursive_parse(string contents)
 
 mapping filter(mapping result, RequestID id)
 {
-  if(!result                   // If nobody had anything to say, neither do we.
-  || !stringp(result->data)    // Got a file object. Hardly ever happens anyway.
-  || !id->prestate->tables     // No prestate, no action.
-  || result->type!="text/html" // Only parse html.
+  if(!result			// If nobody had anything to say, neither do we.
+  || !stringp(result->data)	// Got a file object. Hardly ever happens anyway.
+  || !id->prestate->tables	// No prestate, no action.
+  || !glob(result->type,	// Only parse html.
+	   "text/html*")
+  || id->misc->tables_unveiled++// Already unveiled all tables!
     )
     return 0; // Signal that we didn't rewrite the result for good measure.
 
