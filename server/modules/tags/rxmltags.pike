@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.363 2002/04/15 14:21:49 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.364 2002/04/15 14:49:20 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4890,6 +4890,25 @@ class TagEmitFonts
   }
 }
 
+
+class TagEmitLicenseWarnings {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "license-warnings";
+  array get_dataset(mapping args, RequestID id)
+  {
+    // This emit plugin can be used to list warnings in the loaded
+    // license for a configuration. It can also be used within
+    // <license> or emit#licenses.
+    License.Key key = RXML.get_context()->get_var("key")||
+		      id->conf->getvar("license")->get_key();
+    if(!key) {
+      RXML.parse_run("No license key defined in the configuration\n");
+      return ({});
+    }
+    return key->get_warnings();
+  }
+}
 
 // ---------------- API registration stuff ---------------
 
