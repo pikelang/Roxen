@@ -13,6 +13,13 @@ o Several memory-leaks in Pike have been fixed.
 
 o The CGI-wrapper is now somewhat more paranoid.
 
+o The CGI-wrapper now kills the script and returns an error message if
+  it hasn't found the end of the headers (\r\n\r\n) after receiving
+  20KB of data. 
+
+o Added the align attribute to the <pr> tag. Same functionality as
+  <img align=...>.
+
 o Fixed several obscure bugs that gcc-2.8.0 detected.
 
 o Added version-information to lots of files.
