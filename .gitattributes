@@ -163,6 +163,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/misc/ip-less_hosts.pike foreign_ident
 /server/modules/misc/ismap.pike foreign_ident
 /server/modules/misc/language.pike foreign_ident
+/server/modules/misc/mirrorserver.pike foreign_ident
 /server/modules/misc/sqldb.pike foreign_ident
 /server/modules/misc/upgrade_proxy.pike foreign_ident
 /server/modules/misc/userdb.pike foreign_ident
@@ -175,6 +176,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/scripting/cgi.pike foreign_ident
 /server/modules/scripting/fcgi.pike foreign_ident
 /server/modules/scripting/pikescript.pike foreign_ident
+/server/modules/tags/check_spelling.pike foreign_ident
 /server/modules/tags/configtablist.pike foreign_ident
 /server/modules/tags/countdown.pike foreign_ident
 /server/modules/tags/flik.pike foreign_ident

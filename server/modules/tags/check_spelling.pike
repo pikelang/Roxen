@@ -1,6 +1,8 @@
 #include <module.h>
 inherit "module";
 
+constant cvs_version = "$Id: check_spelling.pike,v 1.2 1998/01/21 18:55:34 grubba Exp $";
+
 #define FILE "etc/errordata"
 
 /* no need to make this very big, it will seldom be used anyway */

@@ -9,6 +9,8 @@ constant Privs=((program)"privs");
 #define MIRRORSERVER_DEBUG
 #endif /* MIRRORSERVER_DEBUG */
 
+constant cvs_version = "$Id: mirrorserver.pike,v 1.12 1998/01/21 18:56:39 grubba Exp $";
+
 class MirrorServer {
   import Stdio;
   string base;
