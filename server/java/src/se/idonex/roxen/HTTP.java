@@ -1,5 +1,5 @@
 /*
- * $Id: HTTP.java,v 1.2 1999/12/21 00:05:45 marcus Exp $
+ * $Id: HTTP.java,v 1.3 2000/01/05 18:14:46 marcus Exp $
  *
  */
 
@@ -32,6 +32,16 @@ public class HTTP {
   public static RoxenResponse httpStringAnswer(String text)
   {
     return httpStringAnswer(text, "text/html");
+  }
+
+  public static RoxenResponse httpRXMLAnswer(String text, String type)
+  {
+    return new RoxenRXMLResponse(0, type, text);
+  }
+
+  public static RoxenResponse httpRXMLAnswer(String text)
+  {
+    return httpRXMLAnswer(text, "text/html");
   }
 
   public static RoxenResponse httpFileAnswer(Reader text, String type, long len)
