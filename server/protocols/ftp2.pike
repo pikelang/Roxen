@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.56 1998/06/26 15:14:03 grubba Exp $
+ * $Id: ftp2.pike,v 1.57 1998/06/26 15:42:17 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2178,6 +2178,7 @@ class FTPSession
   {
     if (user && Query("ftp_user_session_limit") > 0) {
       // Logging out...
+      DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
       conf->misc->ftp_sessions[user]--;
     }
 
@@ -2201,6 +2202,7 @@ class FTPSession
   {
     if (user && Query("ftp_user_session_limit") > 0) {
       // Logging out...
+      DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
       conf->misc->ftp_sessions[user]--;
     }
     auth = 0;
@@ -2210,8 +2212,8 @@ class FTPSession
     master_session->method = "LOGIN";
     if ((< 0, "ftp", "anonymous" >)[user]) {
       master_session->not_query = "Anonymous";
+      user = 0;
       if (Query("anonymous_ftp")) {
-	user = 0;
 	logged_in = -1;
 #if 0
 	send(200, ({ "Anonymous ftp, at your service" }));
@@ -2230,6 +2232,7 @@ class FTPSession
 	if (!conf->misc->ftp_sessions) {
 	  conf->misc->ftp_sessions = ([]);
 	}
+	DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n", user));
 	if (conf->misc->ftp_sessions[user]++ >=
 	    Query("ftp_user_session_limit")) {
 	  // Session limit exceeded.
@@ -2238,6 +2241,11 @@ class FTPSession
 		    Query("ftp_user_session_limit"), user)
 	  }));
 	  conf->log(([ "error":403 ]), master_session);
+
+	  DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n",user));
+	  conf->misc->ftp_sessions[user]--;
+
+	  user = 0;	  
 	  return;
 	}
 	
@@ -3130,9 +3138,14 @@ class FTPSession
 
   void destroy()
   {
-    if (user && Query("ftp_user_session_limit") > 0) {
-      // Logging out...
-      conf->misc->ftp_sessions[user]--;
+    if (Query("ftp_user_session_limit") > 0) {
+      if (user) {
+	// Logging out...
+	DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
+	conf->misc->ftp_sessions[user]--;
+      } else {
+	DWRITE("Exiting with no user.\n");
+      }
     }
 
     conf->extra_statistics->ftp->sessions--;
