@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.188 1999/10/05 10:13:52 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.189 1999/10/09 23:57:20 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1275,13 +1275,13 @@ string tag_echo(string tag,mapping m,object id,object file,
     if(sizeof(m) == 1)
       m->var = m[indices(m)[0]];
     else 
-      return "<!-- Que? -->";
+      return "<!-- ¿Que? -->";
   } else if(tag == "insert")
     return "";
   if(tag == "!--#echo" && id->misc->ssi_variables &&
      id->misc->ssi_variables[m->var])
     // Variables set with !--#set.
-    return id->misc->ssi_variables[m->var];
+    return html_encode_string(id->misc->ssi_variables[m->var]);
 
   mapping myenv =  build_env_vars(0,  id, 0);
   m->var = lower_case(replace(m->var, " ", "_"));
@@ -1326,35 +1326,35 @@ string tag_echo(string tag,mapping m,object id,object file,
     return "HTTP/1.0";
       
    case "request_method":
-    return id->method;
+    return html_encode_string(id->method);
 
    case "auth_type":
     return "Basic";
       
    case "http_cookie": case "cookie":
     NOCACHE();
-    return (id->misc->cookies || "");
+    return ( id->misc->cookies?html_encode_string(id->misc->cookies):"" );
 
    case "http_accept":
     NOCACHE();
     return (id->misc->accept && sizeof(id->misc->accept)? 
-	    id->misc->accept*", ": "None");
+	    html_encode_string(id->misc->accept*", "): "None");
       
    case "http_user_agent":
     NOCACHE();
     return id->client && sizeof(id->client)? 
-      id->client*" " : "Unknown";
+      html_encode_string(id->client*" ") : "Unknown";
       
    case "http_referer":
     NOCACHE();
     return id->referer && sizeof(id->referer) ? 
-      id->referer*", ": "Unknown";
+      html_encode_string(id->referer*", "): "Unknown";
       
    default:
     m->var = upper_case(m->var);
     if(myenv[m->var]) {
       NOCACHE();
-      return myenv[m->var];
+      return html_encode_string(myenv[m->var]);
     }
     if(tag == "insert")
       return "";
@@ -1396,7 +1396,8 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
       return Array.map(indices(id->variables), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
       }, id->variables)*"\n";
-    return String.implode_nicely(indices(id->variables));
+    return do_safe_replace(String.implode_nicely(indices(id->variables)),
+			   m, encodings);
   }
 
   if (n=m->cookies) 
@@ -1406,7 +1407,8 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
       return Array.map(indices(id->cookies), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
       }, id->cookies)*"\n";
-    return String.implode_nicely(indices(id->cookies));
+    return do_safe_replace(String.implode_nicely(indices(id->cookies)),
+			   m, encodings);
   }
 
   if (n=m->cookie) 
@@ -1861,9 +1863,9 @@ string tag_clientname(string tag, mapping m, object id)
   NOCACHE();
   if (sizeof(id->client)) {
     if(m->full) 
-      return id->client * " ";
+      return html_encode_string(id->client * " ");
     else 
-      return id->client[0];
+      return html_encode_string(id->client[0]);
   } else {
     return "";
   } 
@@ -2548,7 +2550,8 @@ string tag_referer(string tag, mapping m, object id, object file,
   if(m->help) 
     return ("Compatibility alias for referrer");
   if(id->referer)
-    return sizeof(id->referer)?({ id->referer*"" }):m->alt?m->alt:"..";
+    return sizeof(id->referer)?html_encode_string(id->referer*"")
+      :m->alt?m->alt:"..";
   return m->alt?m->alt:"..";
 }
 
@@ -2670,9 +2673,9 @@ string tag_language(string tag, mapping m, object id)
     return "None";
 
   if(m->full)
-    return id->misc["accept-language"]*",";
+    return html_encode_string(id->misc["accept-language"]*",");
   else
-    return (id->misc["accept-language"][0]/";")[0];
+    return html_encode_string((id->misc["accept-language"][0]/";")[0]);
 }
 
 string tag_quote(string tagname, mapping m)
