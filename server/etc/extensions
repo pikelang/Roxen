@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.23 1997/11/14 01:01:49 peter Exp $
+# $Id: extensions,v 1.24 1997/11/21 14:18:35 grubba Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -133,6 +133,8 @@ nc	application/x-netcdf
 oda	application/oda
 pdf	application/pdf
 pl	application/x-perl
+# Oracle plug-ins
+po	application/x-form
 pot	application/mspowerpoint
 ppt	application/mspowerpoint
 ppz	application/mspowerpoint
