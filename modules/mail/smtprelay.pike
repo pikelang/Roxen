@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.18 1998/09/16 18:50:54 grubba Exp $
+ * $Id: smtprelay.pike,v 1.19 1998/09/17 00:42:04 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.18 1998/09/16 18:50:54 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.19 1998/09/17 00:42:04 grubba Exp $";
 
 /*
  * Some globals
@@ -48,8 +48,13 @@ void create()
   defvar("sqlurl", "mysql://auto:site@kopparorm/autosite", "Database URL",
 	 TYPE_STRING, "");
 
-  defvar("postmaster", "postmaster@"+gethostname(), "Postmaster address",
-	 TYPE_STRING, "Email address of the postmaster.");
+  defvar("postmaster", "Postmaster <postmaster@"+gethostname()+">",
+	 "Postmaster address", TYPE_STRING,
+	 "Email address of the postmaster.");
+
+  defvar("mailerdaemon", "Mail Delivery Subsystem <MAILER-DAEMON@" +
+	 gethostname()+">", "Mailer daemon address", TYPE_STRING,
+	 "Email address of the mailer daemon.");
 }
 
 array(string)|multiset(string)|string query_provides()
@@ -477,7 +482,7 @@ class MailSender
 
   static void got_connection(object c)
   {
-    if (intp(c) {
+    if (intp(c)) {
       switch(c) {
       case 0:
 #ifdef RELAY_DEBUG
@@ -778,13 +783,15 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
     string message = (string)
       MIME.Message(body, ([
 	"Subject":"Delivery failure",
+	"Message-Id":sprintf("<%08x%sfull@%s>",
+			     time(), msg->mailid, gethostname()),
 	"X-Mailer":roxen->version(),
 	"MIME-Version":"1.0",
-	"From":QUERY(postmaster),
+	"From":QUERY(mailerdaemon),
 	"To":msg->sender,
-	"Date":mktimestamp(time()),
-	"Content-Type":"multipart/report; "
-	"Report-Type=delivery-status",
+	"Date":mktimestamp(time(1)),
+	"Auto-Submitted":"auto-generated (failure)",
+	"Content-Type":"multipart/report; Report-Type=delivery-status",
 	"Content-Transfer-Encoding":"8bit",
       ]), ({
 	MIME.Message(body, ([
@@ -808,13 +815,15 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
     message = (string)
       MIME.Message(body, ([
 	"Subject":"Delivery failure",
+	"Message-Id":sprintf("<%08x%shead@%s>",
+			     time(1), msg->mailid, gethostname()),
 	"X-Mailer":roxen->version(),
 	"MIME-Version":"1.0",
-	"From":QUERY(postmaster),
+	"From":QUERY(mailerdaemon),
 	"To":QUERY(postmaster),
 	"Date":mktimestamp(time()),
-	"Content-Type":"multipart/report; "
-	"Report-Type=delivery-status",
+	"Auto-Submitted":"auto-generated (failure)",
+	"Content-Type":"multipart/report; Report-Type=delivery-status",
 	"Content-Transfer-Encoding":"8bit",
       ]), ({
 	MIME.Message(body, ([
