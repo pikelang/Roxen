@@ -96,6 +96,16 @@ object  bevel(object  in, int width, int|void invert)
   return in;
 }
 
+#if !constant(open)
+object open(string file, string mode)
+{
+  object f = Stdio.File();
+  if(f->open(file, mode))
+    return f;
+  return 0;
+}
+#endif
+
 object last_image;      // Cache the last image for a while.
 string last_image_name;
 object load_image(string f,string bd, object|void id)
@@ -226,8 +236,8 @@ object make_text_image(mapping args, object font, string text,string basedir,
   }
 
   
-  array (int) bgcolor = parse_color(args->bg);
-  array (int) fgcolor = parse_color(args->fg);
+  array (int) bgcolor = Colors.parse_color(args->bg);
+  array (int) fgcolor = Colors.parse_color(args->fg);
 
   object background,foreground;
 
@@ -296,26 +306,13 @@ object make_text_image(mapping args, object font, string text,string basedir,
       }
       background = b2;
     }
-
-    xsize = background->xsize();
-    ysize = background->ysize();
-    switch(lower_case(args->talign||"left")) {
-    case "center":
-      xoffset = (xsize/2 - txsize/2);
-      yoffset = (ysize/2 - tysize/2);
-      break;
-    case "right":
-      xoffset = (xsize - txsize);
-      break;
-    case "left":
-    }
   } else
     background = Image.image(xsize, ysize, @bgcolor);
 
   if(args->border)
   {
     int b = (int)args->border;
-    background->setcolor(@parse_color((args->border/",")[-1]));
+    background->setcolor(@Colors.parse_color((args->border/",")[-1]));
 
     for(--b;b>=0;b--)
     {
@@ -343,6 +340,21 @@ object make_text_image(mapping args, object font, string text,string basedir,
     background = background->copy(0,0,xs,ys);
   }
 
+
+  xsize = background->xsize();
+  ysize = background->ysize();
+  switch(lower_case(args->talign||"left")) 
+  {
+   case "center":
+     xoffset = (xsize/2 - txsize/2);
+     yoffset = (ysize/2 - tysize/2);
+     break;
+   case "right":
+     xoffset = (xsize - txsize);
+     break;
+   case "left":
+  }
+
   
   if(args->turbulence)
   {
@@ -351,7 +363,7 @@ object make_text_image(mapping args, object font, string text,string basedir,
     {
       array q= s/",";
       if(sizeof(q)<2) args+=({ ((float)s)||0.2, ({ 255,255,255 }) });
-      arg+=({ ((float)q[0])||0.2, parse_color(q[1]) });
+      arg+=({ ((float)q[0])||0.2, Colors.parse_color(q[1]) });
     }
     background=background->turbulence(arg);
   }
@@ -367,7 +379,7 @@ object make_text_image(mapping args, object font, string text,string basedir,
     sscanf(args->textbox, "%d,%s", alpha, bg);
     sscanf(bg,"%s,%d", bg,border);
     background->paste_alpha(Image.image(txsize+border*2,tysize+border*2,
-				  @parse_color(bg)),
+				  @Colors.parse_color(bg)),
 			    255-(alpha*255/100),xoffset-border,yoffset-border);
   }
 
@@ -375,7 +387,7 @@ object make_text_image(mapping args, object font, string text,string basedir,
   { // Francesco..
     int sdist = (int)args->ghost;
     int bl=(int)(args->ghost/",")[1];
-    array(int)clr=parse_color((args->ghost/",")[-1]);
+    array(int)clr=Colors.parse_color((args->ghost/",")[-1]);
     int j;
     object ta = text_alpha->copy();
     for (j=0;j<bl;j++)
@@ -393,7 +405,7 @@ object make_text_image(mapping args, object font, string text,string basedir,
     int sdist = ((int)(args->shadow/",")[-1])+2;
     object ta = text_alpha->copy();
     ta = ta->color(256-sd,256-sd,256-sd);
-    array sc = parse_color(args->scolor||"black");
+    array sc = Colors.parse_color(args->scolor||"black");
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
   }
@@ -407,7 +419,7 @@ object make_text_image(mapping args, object font, string text,string basedir,
     xs = text_alpha->xsize()+sdist*2+4;
     ys = text_alpha->ysize()+sdist*2+4;
     object ta = Image.image(xs+sdist*2,ys+sdist*2);
-    array sc = parse_color(args->scolor||"black");
+    array sc = Colors.parse_color(args->scolor||"black");
 
     ta->paste_alpha_color(text_alpha,255,255,255,sdist,sdist);
     ta = blur(ta, MIN((sdist/2),1))->color(256,256,256);
@@ -419,7 +431,7 @@ object make_text_image(mapping args, object font, string text,string basedir,
   if(args->glow)
   {
     int amnt = (int)(args->glow/",")[-1]+2;
-    array (int) blurc = parse_color((args->glow/",")[0]);
+    array (int) blurc = Colors.parse_color((args->glow/",")[0]);
     background->paste_alpha_color(blur(text_alpha, amnt),@blurc,
 				  xoffset-amnt, yoffset-amnt);
   }
@@ -438,11 +450,11 @@ object make_text_image(mapping args, object font, string text,string basedir,
     string c1="black",c2="black",c3="black",c4="black";
     sscanf(args->textscale, "%s,%s,%s,%s", c1, c2, c3, c4);
     foreground->tuned_box(0,0, txsize,tysize,
-			  ({parse_color(c1),parse_color(c2),parse_color(c3),
-			      parse_color(c4)}));
+			  ({Colors.parse_color(c1),Colors.parse_color(c2),Colors.parse_color(c3),
+			      Colors.parse_color(c4)}));
   }
   if(args->outline)
-    outline(background, text_alpha, parse_color((args->outline/",")[0]),
+    outline(background, text_alpha, Colors.parse_color((args->outline/",")[0]),
 	    ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
 
   background->paste_mask(foreground, text_alpha, xoffset, yoffset);
@@ -459,7 +471,7 @@ object make_text_image(mapping args, object font, string text,string basedir,
   {
     string c;
     if(sscanf(args->rotate, "%*d,%s", c)==2)
-       background->setcolor(@parse_color(c));
+       background->setcolor(@Colors.parse_color(c));
     else
        background->setcolor(@bgcolor);
     background = background->rotate((float)args->rotate);
