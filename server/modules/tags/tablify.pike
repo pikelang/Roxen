@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.33 1999/08/10 13:51:35 wellhard Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.34 1999/08/11 00:51:18 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -50,7 +50,7 @@ string html_nice_table(array subtitles, array table, mapping opt, object id)
       if(opt->nicer)
         r+="<gtext nfont=\""+(opt->font||"lucida")+"\" scale=\""+
 	   (opt->scale||"0.36")+"\" fg=\""+(opt->titlecolor||"white")+"\" bg=\""+
-	   (opt->titlebgcolor||"#27215b")+"\""+(opt->noxml?" noxml":"")+">"+s+"</gtext>";
+	   (opt->titlebgcolor||"#112266")+"\""+(opt->noxml?" noxml":"")+">"+s+"</gtext>";
       else
         r+="<font color=\""+(opt->titlecolor||"#ffffff")+"\">"+s+"</font>";
       r+=(opt["interactive-sort"]?(abs(opt->is)==col?"<img hspace=\"5\" src=\"internal-roxen-sort-"+
@@ -63,9 +63,10 @@ string html_nice_table(array subtitles, array table, mapping opt, object id)
 
   for(int i = 0; i < sizeof(table); i++) {
     if(opt->nice || opt->nicer)
-      r+="<tr bgcolor=\""+((i/m)%2?opt->evenbgcolor||"#ddeeff":opt->oddbgcolor||"#ffffff")+"\">";
+      r+="<tr bgcolor=\""+((i/m)%2?opt->evenbgcolor||"#ddeeff":opt->oddbgcolor||"#ffffff")+"\"";
     else
-      r+="<tr>";
+      r+="<tr";
+    r+=opt->cellvalign?" valign=\""+opt->cellvalign+"\">":">";
 
     for(int j = 0; j < sizeof(table[i]); j++) {
       mixed s = table[i][j];
@@ -78,7 +79,8 @@ string html_nice_table(array subtitles, array table, mapping opt, object id)
         string font="",nofont="";
         if(opt->nicer || type=="economic-float"){
           font="<font color=\""+
-            (type=="economic-float"?((int)a[0]<0?"#ff0000":"#000000"):(opt->textcolor||"#000000"))+
+            (type=="economic-float"?((int)a[0]<0?(opt->negativecolor||"#ff0000"):(opt->textcolor||"#000000")):
+              (opt->textcolor||"#000000"))+
             "\""+(opt->nicer?(" size=\""+(opt->size||"2")+
             "\" face=\""+(opt->face||"helvetica,arial")+"\">"):">");
           nofont="</font>";
@@ -99,7 +101,8 @@ string html_nice_table(array subtitles, array table, mapping opt, object id)
         string font="",nofont="";
         if(opt->nicer || type=="economic-int"){
           font="<font color=\""+
-            (type=="economic-int"?((int)s<0?"#ff0000":"#000000"):(opt->textcolor||"#000000"))+
+            (type=="economic-int"?((int)s<0?(opt->negativecolor||"#ff0000"):(opt->textcolor||"#000000")):
+              (opt->textcolor||"#000000"))+
             "\""+(opt->nicer?(" size=\""+(opt->size||"2")+
             "\" face=\""+(opt->face||"helvetica,arial")+"\">"):">");
           nofont="</font>";
@@ -117,7 +120,7 @@ string html_nice_table(array subtitles, array table, mapping opt, object id)
       case "right":
       case "center":
       default:
-        r += "<td align=\""+(type!="text"?type:(opt->cellalign||"left"))+"\" valign=\""+(opt->cellvalign||"top")+"\">";
+        r += "<td align=\""+(type!="text"?type:(opt->cellalign||"left"))+"\">";
 	if(opt->nicer) r += "<font color=\""+(opt->textcolor||"#000000")+"\" size=\""+(opt->size||"2")+
           "\" face=\""+(opt->face||"helvetica,arial")+"\">";
         r += s+(opt->nice||opt->nicer?"&nbsp;&nbsp;":"");
@@ -198,6 +201,7 @@ string tag_tablify(string tag, mapping m, string q, object id)
   rows = (q / sep) - ({""});
 
   sep = m->cellseparator||"\t";
+  m_delete(m,"cellseparator");
 
   array title;
   if((m->nice||m->nicer) && (!m->notitle) && sizeof(rows)) {
@@ -211,14 +215,6 @@ string tag_tablify(string tag, mapping m, string q, object id)
 			  if(sizeof(t)>id->misc->tmp_colmax) id->misc->tmp_colmax=sizeof(t);
 			  return t;
 			}, sep);
-
-  if(m->min || m->max) {
-    m->min=m->min?(int)m->min-1:0;
-    m->max=m->max?(int)m->max-1:sizeof(rows)-1;
-    rows = rows[m->min..m->max];
-    m_delete(m,"min");
-    m_delete(m,"max");
-  }
 
   arg_list+=(["is":(int)m->sortcol]);
   if((int)m->sortcol>0) sort(column(rows,(int)m->sortcol-1),rows);
@@ -236,6 +232,15 @@ string tag_tablify(string tag, mapping m, string q, object id)
     sort(column(rows,abs(arg_list->is)-1),rows);
     if(arg_list->is<0)
       rows=reverse(rows);
+  }
+
+  if(m->min || m->max) {
+    m->min=m->min?(int)m->min-1:0;
+    m->max=m->max?(int)m->max-1:sizeof(rows)-1;
+    if(m->max < m->min) return rxml_error(tag, "Min attribute greater than the max attribute.", id);
+    rows = rows[m->min..m->max];
+    m_delete(m,"min");
+    m_delete(m,"max");
   }
 
   return html_nice_table(title, rows, arg_list + m, id);
