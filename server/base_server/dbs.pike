@@ -255,7 +255,7 @@ int set_permission( string name, Configuration c, int level )
 //!  possible to differentiate between read and write permissions,
 //!  roxen does try to do that anyway by checking the requests and
 //!  disallowing anything but 'select' and 'show' from read only
-//!  databses. Please not that this is not really all that secure.
+//!  databses. Please note that this is not really all that secure.
 //!
 //!  From local (in the mysql used by roxen) databases, the
 //!  permissions are enforced by using different users, and should be
