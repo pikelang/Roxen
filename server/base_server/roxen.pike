@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.650 2001/03/15 23:45:51 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.651 2001/03/16 00:07:34 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -1959,13 +1959,17 @@ class ImageCache
 
   static mixed frommapp( mapping what )
   {
+    if( !what )
+      error( "Got invalid argcache-entry\n" );
     if( !zero_type(what[""]) ) return what[""];
     return what;
   }
 
   static void draw( string name, RequestID id )
   {
-    mixed args = Array.map( Array.map( name/"$", argcache->lookup, id->client ), frommapp);
+    mixed args = Array.map( Array.map( name/"$",
+				       argcache->lookup,
+				       id->client ), frommapp);
     mapping meta;
     string data;
     array guides;
@@ -2133,7 +2137,8 @@ class ImageCache
 
 #define SCALEI 1
 #define SCALEF 2
-#define CROP   4
+#define SCALEA 4
+#define CROP   8
 
       void do_scale_and_crop( int x0, int y0,
 			      int x1, int y1,
@@ -2191,17 +2196,26 @@ class ImageCache
 	}
 
 
-	if( type & SCALEF )
+	if( (type & SCALEF) && (w != 1.0) )
 	{
 	  reply = reply->scale( w );
 	  if( alpha )
 	    alpha = alpha->scale( w );
 	}
-	if( (type & SCALEI) &&
-	    ((reply->xsize() != w)  || (reply->ysize() != h)) )
+	else if( (type & SCALEA) &&
+		 ((reply->xsize() != w)  || (reply->ysize() != h)) )
 	{
-	  if( !(w && reply->xsize() > w) ) { if( h ) w = 0; } else h=0;
-	  if( !(h && reply->ysize() > h) ) { if( w ) h = 0; } else w=0;
+	  reply = reply->scale( w,h );
+	  if( alpha )
+	    alpha = alpha->scale( w,h );
+	}
+	else if( (type & SCALEI) &&
+		 ((reply->xsize() != w)  || (reply->ysize() != h)) )
+	{
+	  if( w / (float)reply->xsize() < h / (float)reply->ysize() )
+	    h = 0;
+	  else
+	    w = 0;
 	  reply = reply->scale( w,h );
 	  if( alpha )
 	    alpha = alpha->scale( w,h );
@@ -2212,7 +2226,7 @@ class ImageCache
       {
         int x, y;
         if( sscanf( args->scale, "%d,%d", x, y ) == 2)
-	  do_scale_and_crop( x0, y0, x1, y1, x, y, SCALEI|CROP );
+	  do_scale_and_crop( x0, y0, x1, y1, x, y, SCALEA|CROP );
         else if( (float)args->scale < 3.0)
 	  do_scale_and_crop( x0, y0, x1, y1,
 			     ((float)args->scale), ((float)args->scale),
