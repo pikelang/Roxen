@@ -23,7 +23,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.218 2000/12/30 10:30:02 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.219 2000/12/30 10:43:45 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1579,8 +1579,9 @@ void paranoia_throw(mixed err)
 // Roxen bootstrap code.
 int main(int argc, array(string) argv)
 {
+  // (. Note: Optimal implementation. .)
   configuration_dir =
-    Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
+    Getopt.find_option(copy_value(argv), "d",({"config-dir","configuration-directory" }),
 	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
   remove_dumped =
     Getopt.find_option(argv, "remove-dumped",({"remove-dumped", }), 0 );
