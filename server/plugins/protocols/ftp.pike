@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.89 2004/04/04 14:24:52 mani Exp $
+ * $Id: ftp.pike,v 2.90 2004/05/17 13:15:07 mani Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -182,9 +182,11 @@ class RequestID2
 	if (!(< "create", "connection", "configuration",
                 "__INIT", "clone_me", "end", "ready_to_receive",
 		"send", "scan_for_query", "send_result", "misc",
-		"url_base", "set_response_header",
+		"url_base", "set_response_header", "get_xml_data",
 		"add_response_header", "set_output_charset",
 		"adjust_for_config_path", "PrefLanguages",
+		"charset_name", "charset_function", "join_charset",
+		"output_encode",
 		"destroy", "_num", "__num">)[var]) {
 #ifdef FTP2_DEBUG
 	  if (catch {
@@ -1166,6 +1168,10 @@ class TelnetSession {
 
   static private mapping(string:function) default_cb = ([
     "BRK":lambda() {
+	    if(fd) {
+	      fd->close();
+	      fd = 0;
+	    }
 	    destruct();
 	    throw(0);
 	  },
@@ -1873,6 +1879,11 @@ class FTPSession
       send_error(cmd, fname, file, session);
       return 0;
     }
+
+    //  If data is a wide string we flatten it according to the charset
+    //  preferences in the current ID object.
+    if (file->data && String.width(file->data) > 8)
+      file->data = session->output_encode(file->data, 0)[1];
 
     file->full_path = fname;
     file->request_start = time(1);
