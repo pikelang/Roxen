@@ -1,5 +1,4 @@
 <!-- -*- html -*- -->
-<trans-reg project="roxen_config"/>
 <define tag='cfg-variables'>
   <if not variable='_.nosave'><cf-save/></if>
   <if variable='form.section'>
