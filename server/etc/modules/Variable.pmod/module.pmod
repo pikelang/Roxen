@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.67 2001/09/21 09:53:01 per Exp $
+// $Id: module.pmod,v 1.68 2001/10/04 13:57:10 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1190,6 +1190,29 @@ class FontChoice
     ::create( default_value, 0, flags,std_name, std_doc );
   }
 }
+
+class TableChoice
+{
+  inherit StringChoice;
+  constant type = "TableChoice";
+  Variable db;
+
+  array(string) get_choice_list( )
+  {
+    return sort(DBManager.db_tables( db->query() ));
+  }
+    
+  void create( string default_value,
+	       void|int flags,
+	       void|LocaleString std_name,
+	       void|LocaleString std_doc,
+	       Variable _dbchoice )
+  {
+    ::create( default_value, ({}), flags, std_name, std_doc );
+    db = _dbchoice;
+  }
+}
+  
 
 class DatabaseChoice
 //! Select a database from all available databases.
