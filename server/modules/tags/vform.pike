@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.37 2002/03/12 13:47:33 anders Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.38 2002/05/23 14:14:27 wellhard Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -410,8 +410,8 @@ class TagVForm {
     constant plugin_name = "vform-failed";
 
     int eval(string ind, RequestID id) {
-      if(!id->real_variables[ind]) return 0;
       if(!ind || !sizeof(ind)) return !id->misc->vform_ok;
+      if(!id->real_variables[ind]) return 0;
       return id->misc->vform_failed[ind];
     }
   }
