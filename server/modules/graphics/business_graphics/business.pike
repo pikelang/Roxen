@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.45 1997/11/29 22:58:10 noring Exp $";
+constant cvs_version = "$Id: business.pike,v 1.46 1997/11/30 04:56:12 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -23,6 +23,13 @@ inherit "module";
 inherit "roxenlib";
 import Array;
 import Image;
+
+program Bars  = (program)"create_bars";
+program Graph = (program)"create_graph";
+program Pie   = (program)"create_pie";
+object pie    = Pie();
+object bars   = Bars();
+object graph  = Graph();
 
 #define SEP "\t"
 
@@ -35,9 +42,11 @@ mixed *register_module()
   return ({ 
     MODULE_PARSER|MODULE_LOCATION,
     "Business Graphics",
-    (  !loaded?"The Business Graphics tag. This module draws\n"
+    (  !loaded?
+       "The Business Graphics tag. This module draws\n"
        "line charts, pie charts, graphs and bar charts.<p>\n"
-       "&lt;diagram help&gt;&lt;/diagram&gt; gives help.\n":"<hr noshade>"
+       "&lt;diagram help&gt;&lt;/diagram&gt; gives help.\n"
+       :
        "<font size=+1><b>The Business Graphics tag</b></font>\n<br>"
        "Draws different kinds of diagrams.<br>"
        "<p><pre>"
@@ -559,13 +568,6 @@ array strange( array in )
 
 mapping find_file(string f, object id)
 {
-  program Bars  = (program)"create_bars";
-  program Graph = (program)"create_graph";
-  program Pie   = (program)"create_pie";
-  object pie    = Pie();
-  object bars   = Bars();
-  object graph  = Graph();
-
   if (f[sizeof(f)-4..] == ".gif")
     f = f[..sizeof(f)-5];
 
