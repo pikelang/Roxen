@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.112 2000/04/12 14:16:35 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.113 2000/04/13 21:55:11 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1041,25 +1041,38 @@ string simpletag_maketag(string tag, mapping m, string cont, RequestID id)
   return Roxen.make_tag(m->name, args);
 }
 
-string simpletag_doc(string tag, mapping m, string s)
-{
-  if(!m["quote"])
-    if(m["pre"]) {
-      m_delete(m,"pre");
-      return "\n"+Roxen.make_container("pre",m,
-	replace(s, ({"{","}","& "}),({"&lt;","&gt;","&amp; "})))+"\n";
+class TagDoc {
+  inherit RXML.Tag;
+  constant name="doc";
+  RXML.Type content_type = RXML.t_same;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_enter(RequestID id) {
+      if(args->quote) content_type = RXML.t_same;
+      return 0;
     }
-    else
-      return replace(s, ({ "{", "}", "& " }), ({ "&lt;", "&gt;", "&amp; " }));
-  else
-    if(m["pre"]) {
-      m_delete(m,"pre");
-      m_delete(m,"quote");
-      return "\n"+Roxen.make_container("pre",m,
-	replace(s, ({"<",">","& "}),({"&lt;","&gt;","&amp; "})))+"\n";
+
+    array do_return(RequestID id) {
+      array from;
+      if(args->quote) {
+	m_delete(args, "quote");
+	from=({ "<", ">", "&" });
+      }
+      else
+	from=({ "{", "}", "&" });
+
+      result=replace(content, from, ({ "&lt;", "&gt;", "&amp;"}) );
+
+      if(args->pre) {
+	m_delete(args, "pre");
+	result="\n"+Roxen.make_container("pre", args, result)+"\n";
+      }
+
+      return 0;
     }
-    else
-      return replace(s, ({ "<", ">", "& " }), ({ "&lt;", "&gt;", "&amp; " }));
+  }
 }
 
 string simpletag_autoformat(string tag, mapping m, string s, RequestID id)
