@@ -7,8 +7,8 @@
 <file>../base_server/global_variables.pike</file>
 <file>../base_server/module_support.pike</file>
 <file>../config_interface/actions/index.html</file>
-<file>../config_interface/boxes/articles.pike</file>
 <file>../config_interface/boxes/Box.pmod</file>
+<file>../config_interface/boxes/articles.pike</file>
 <file>../config_interface/boxes/crunch.pike</file>
 <file>../config_interface/boxes/doclinks.pike</file>
 <file>../config_interface/boxes/megatokyo.pike</file>
@@ -52,10 +52,10 @@
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
 <file>../etc/modules/Variable.pmod/Mapping.pike</file>
-<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../etc/modules/Variable.pmod/Schedule.pike</file>
 <file>../etc/modules/Variable.pmod/Upload.pike</file>
 <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
+<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../site_templates/common.pike</file>
@@ -458,8 +458,6 @@ also set 'URLs'.</o>
 <t></t>
 </str>
 
-
-
 <str id="86">
 <o>SSL certificate file</o>
 <t></t>
@@ -666,7 +664,15 @@ also set 'URLs'.</o>
 </str>
 
 <str id="129">
-<o>When Roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group].</o>
+<o>When Roxen is run as root, to be able to open port 80 for listening,
+change to this user-id and group-id when the port has been opened. If
+you specify a symbolic username, the default group of that user will
+be used. The syntax is user[:group].
+
+&lt;p&gt;A server restart is necessary for a change of this variable to take
+effect. Note that it also can lead to file permission errors if the
+Roxen process no longer can read files it previously has written,
+although the start script fixes this for the standard file locations.</o>
 <t></t>
 </str>
 
@@ -2668,5 +2674,40 @@ server must be a MySQL server, nothing else will work.
 
 <str id="78">
 <o>All database backups currently available</o>
+<t></t>
+</str>
+
+<str id="79">
+<o>&lt;p&gt;No backups are currently available. To make a backup of a database, focus on it in the Databases tab, and click on the make backup button. Please note that you can only make backups of databases managed by Roxen.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="80">
+<o>No data entered.
+</o>
+<t></t>
+</str>
+
+<str id="81">
+<o>Data is not a float.
+</o>
+<t></t>
+</str>
+
+<str id="82">
+<o>Found the string %O trailing after the float.
+</o>
+<t></t>
+</str>
+
+<str id="83">
+<o>Data is not an integer
+</o>
+<t></t>
+</str>
+
+<str id="84">
+<o>Found the string %O trailing after the integer.
+</o>
 <t></t>
 </str>
