@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: loader.pike,v 1.348 2002/10/23 16:28:15 nilsson Exp $
+// $Id: loader.pike,v 1.349 2002/10/23 21:09:39 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.348 2002/10/23 16:28:15 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.349 2002/10/23 21:09:39 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1742,6 +1742,9 @@ void start_mysql()
       {
 	db->query( "DELETE FROM local.precompiled_files" );
 	db->query( "DELETE FROM local.compiled_formats" );
+	// Clear the modules cache too since it currently doesn't
+	// depend on the module path properly.
+	db->query( "DELETE FROM local.modules" );
       }) {
 #ifdef MYSQL_CONNECT_DEBUG
 	werror ("Error removing dumped files: %s", describe_error (err));
