@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.32 1997/05/31 19:15:53 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.33 1997/05/31 21:44:22 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2084,9 +2084,6 @@ int load_module(string module_file)
 
   if(!obj)
   {
-#ifdef MODULE_DEBUG
-    perror("FAILED (the module was not found)\n");
-#endif
     report_error( "Module load failed ("+module_file+") (not found).\n" );
     return 0;
   }
