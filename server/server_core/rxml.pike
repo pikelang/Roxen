@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.326 2002/06/14 16:05:03 jhs Exp $
+// $Id: rxml.pike,v 1.327 2002/10/01 23:39:06 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -422,7 +422,7 @@ void add_parse_module (RoxenModule mod)
 			      return GenericPITag (name, @defs[name]);
 			    }));
 
-  if (search (rxml_tag_set->imported, tag_set) < 0) {
+  if ( !has_value(rxml_tag_set->imported, tag_set) ) {
 #ifdef THREADS
     Thread.MutexKey lock = rxml_tag_set->lists_mutex->lock();
 #endif

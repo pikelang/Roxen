@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.343 2002/10/01 23:18:57 nilsson Exp $
+// $Id: roxenloader.pike,v 1.344 2002/10/01 23:39:06 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.343 2002/10/01 23:18:57 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.344 2002/10/01 23:39:06 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1012,7 +1012,7 @@ string roxen_path( string filename )
                         "$LOGDIR", 
                         [string]roxen->query("logdirprefix") );
   else
-    if( search( filename, "$LOGDIR" ) != -1 )
+    if( has_value( filename, "$LOGDIR" ) )
       roxen_perror("Warning: mkdirhier with $LOGDIR before variable is available\n");
   filename = replace( filename, "$VARDIR", getenv ("VARDIR") || "../var" );
 #ifdef __NT__
@@ -2118,7 +2118,7 @@ void do_main( int argc, array(string) argv )
 #endif
 #endif
 
-  if( search( hider, "--long-error-file-names" ) != -1 )
+  if( has_value( hider, "--long-error-file-names" ) )
   {
     hider -= ({ "--long-error-file-names" });
     argc = sizeof(hider);

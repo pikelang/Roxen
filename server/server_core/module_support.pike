@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.120 2002/09/26 22:17:41 nilsson Exp $
+// $Id: module_support.pike,v 1.121 2002/10/01 23:39:06 nilsson Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -510,8 +510,8 @@ array(string) rec_find_all_modules( string dir )
     Stdio.Stat s;
     array(string) dirlist = r_get_dir( dir ) - ({"CVS"});
 
-    if( (search( dirlist, ".nomodules" ) != -1) ||
-        (search( dirlist, ".no_modules" ) != -1) )
+    if( has_value( dirlist, ".nomodules" ) ||
+        has_value( dirlist, ".no_modules" ) )
       return ({});
 
     foreach( dirlist, string file )

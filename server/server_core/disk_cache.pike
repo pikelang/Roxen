@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: disk_cache.pike,v 1.63 2002/07/03 12:38:47 nilsson Exp $
+// $Id: disk_cache.pike,v 1.64 2002/10/01 23:39:06 nilsson Exp $
 
 #include <config.h>
 #include <module_constants.h>
@@ -729,9 +729,9 @@ void http_check_cache_file(CacheStream cachef)
 
       string tocheck = lower_case(cachef->file->read(500000));
 
-      if((search(tocheck, "<html>") == -1) ||
-	 ((search(tocheck, "</html>") == -1) &&
-	  (search(tocheck, "</body>") == -1)))
+      if( !has_value(tocheck, "<html>") ||
+	  (!has_value(tocheck, "</html>") &&
+	   (!has_value(tocheck, "</body>") )))
 	DELETE_AND_RETURN();
     }
   }
@@ -747,7 +747,7 @@ void http_check_cache_file(CacheStream cachef)
   }
 
   if(cachef->headers["pragma"] &&
-     (search(cachef->headers["pragma"], "no-cache") != -1))
+     !has_value(cachef->headers["pragma"], "no-cache"))
     DELETE_AND_RETURN();
 
   if(cachef->headers["set-cookie"])

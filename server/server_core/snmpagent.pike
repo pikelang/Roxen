@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.22 2002/07/03 12:38:48 nilsson Exp $
+ * $Id: snmpagent.pike,v 1.23 2002/10/01 23:39:07 nilsson Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
@@ -232,8 +232,8 @@ class SNMPagent {
   int chk_access(string level /*, string attrname*/, mapping pkt) {
 
     return
-      (search(query("snmp_community"), pkt->community+":"+level) > -1) ||
-      (search(query("snmp_community"), pkt->community+":"+"rw") > -1);
+      has_value(query("snmp_community"), pkt->community+":"+level) ||
+      has_value(query("snmp_community"), pkt->community+":"+"rw");
   }
 
 
@@ -778,7 +778,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.22 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.23 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'

@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.536 2002/10/01 22:43:38 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.537 2002/10/01 23:39:06 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1359,7 +1359,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 #endif
 
     // Locate internal location resources.
-    if(!search(file, query("InternalLoc")))
+    if(has_prefix(file, query("InternalLoc")))
     {
       TRACE_ENTER("Magic internal module location", 0);
       RoxenModule module;
@@ -1489,7 +1489,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     foreach(location_module_cache||location_modules(), tmp)
     {
       loc = tmp[0];
-      if(!search(file, loc))
+      if(has_prefix(file, loc))
       {
 	TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
@@ -1822,7 +1822,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
   foreach(location_modules(), array tmp)
   {
     loc = tmp[0];
-    if(!search(file, loc)) {
+    if(has_prefix(file, loc)) {
       /* file == loc + subpath */
       TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
@@ -1853,7 +1853,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 	  locks |= mod->list_lock_files();
 	TRACE_LEAVE("");
       }
-    } else if((search(loc, file)==0) && (loc[strlen(file)-1]=='/') &&
+    } else if(has_prefix(loc, file) && (loc[strlen(file)-1]=='/') &&
 	      (loc[0]==loc[-1]) && (loc[-1]=='/') &&
 	      (function_object(tmp[1])->stat_file(".", id))) {
       /* loc == file + "/" + subpath + "/"
@@ -1948,7 +1948,7 @@ array(int)|Stat stat_file(string file, RequestID id)
       TRACE_LEAVE("");
       return ({ 0775, -3, 0, 0, 0, 0, 0 });
     }
-    if(!search(file, loc))
+    if(has_prefix(file, loc))
     {
       TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
@@ -2005,7 +2005,7 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get)
     }
   fname = id->not_query;
 
-  if(search(mode, "R")!=-1) //  raw (as in not parsed..)
+  if(has_value(mode, "R")) //  raw (as in not parsed..)
   {
     string f;
     mode -= "R";
@@ -2137,7 +2137,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
 
     TRACE_ENTER(sprintf("Location module [%s] ", loc), 0);
     /* Note that only new entries are added. */
-    if(!search(file, loc))
+    if(has_prefix(file, loc))
     {
       /* file == loc + subpath */
 #ifdef MODULE_LEVEL_SECURITY
@@ -2161,7 +2161,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
                                         })) | dir;
 	TRACE_LEAVE("");
       }
-    } else if(search(loc, file)==0 && loc[strlen(file)-1]=='/' &&
+    } else if(has_prefix(loc, file) && loc[strlen(file)-1]=='/' &&
 	      (loc[0]==loc[-1]) && loc[-1]=='/' &&
 	      (function_object(tmp[1])->stat_file(".", id))) {
       /* loc == file + "/" + subpath + "/"
@@ -2202,7 +2202,7 @@ array access(string file, RequestID id)
 #endif
       if(s=function_object(tmp[1])->access("", id))
 	return s;
-    } else if(!search(file, loc)) {
+    } else if(has_prefix(file, loc)) {
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
 #endif
@@ -2227,7 +2227,7 @@ string real_file(string file, RequestID id)
   foreach(location_modules(), tmp)
   {
     loc = tmp[0];
-    if(!search(file, loc))
+    if(has_prefix(file, loc))
     {
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
@@ -3564,7 +3564,7 @@ also set 'URLs'.</p>");
 
     void set( string newval )
     {
-      if( search(newval,"emit source=values") == -1 )
+      if( !has_value(newval,"emit source=values") )
 	variables[ "404-message" ]->set( newval );
     }
 
