@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.71 2000/01/31 03:40:13 nilsson Exp $ */
+/* $Id: module.pike,v 1.72 2000/01/31 03:45:36 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -46,7 +46,7 @@ string fix_cvs(string from)
   return replace(from,"/","-");
 }
 
-int module_dependencies(Configuration configuration, 
+int module_dependencies(Configuration configuration,
                         array (string) modules,
                         int|void now)
 {
@@ -112,7 +112,7 @@ string status() {}
 
 
 string info(Configuration conf)
-{ 
+{
   return (this->register_module()[2]);
 }
 
@@ -132,10 +132,10 @@ void defvar(string var, mixed value, string name,
 //	    " internal usage.\n");
   if (!stringp(name))
     report_error("The variable "+var+"has no name.\n");
-   
+
   if((search(name, "\"") != -1))
     report_error("Please do not use \" in variable names");
-  
+
   if (!stringp(doc_str))
     doc_str = "No documentation";
 
@@ -169,7 +169,7 @@ void defvar(string var, mixed value, string name,
 		   roxen->filename(this), value, value);
     }
     break;
-    
+
   case TYPE_FLOAT:
     if(!floatp(value))
       report_error("%s:\nPassing illegal value (%t:%O) "
@@ -183,11 +183,11 @@ void defvar(string var, mixed value, string name,
 		   "(not int) to integer number variable.\n",
 		   roxen->filename(this), value, value);
     break;
-     
+
   case TYPE_MODULE_LIST:
     value = ({});
     break;
-    
+
   case TYPE_MODULE:
     /* No default possible */
     value = 0;
@@ -217,11 +217,11 @@ void defvar(string var, mixed value, string name,
       report_error("%s:\nPassing illegal value (%t:%O) (not string) "
 		   "to directory variable.\n",
 		   roxen->filename(this), value, value);
-    
+
     if(value && strlen(value) && ((string)value)[-1] != '/')
       value+="/";
     break;
-    
+
   case TYPE_INT_LIST:
   case TYPE_STRING_LIST:
     if(!misc && value && !arrayp(value)) {
@@ -241,11 +241,11 @@ void defvar(string var, mixed value, string name,
       }
     }
     break;
-    
+
   case TYPE_FLAG:
     value=!!value;
     break;
-    
+
   case TYPE_ERROR:
     break;
 
@@ -255,7 +255,7 @@ void defvar(string var, mixed value, string name,
 		   "to color variable.\n",
 		   roxen->filename(this), value, value);
     break;
-    
+
   case TYPE_FILE_LIST:
   case TYPE_PORTS:
   case TYPE_FONT:
@@ -278,7 +278,6 @@ void defvar(string var, mixed value, string name,
   variables[var][ VAR_NAME ]=name;
 
   type &= ~VAR_TYPE_MASK;		// Probably not needed, but...
-  type &= (VAR_EXPERT | VAR_MORE);
   if (functionp(not_in_config)) {
     if (type) {
       variables[var][ VAR_CONFIGURABLE ] = ConfigurableWrapper(type, not_in_config)->check;
@@ -296,7 +295,7 @@ void defvar(string var, mixed value, string name,
 }
 
 static mapping locs = ([]);
-void deflocaledoc( string locale, string variable, 
+void deflocaledoc( string locale, string variable,
 		   string name, string doc, mapping|void translate )
 {
   if(!locs[locale] )
@@ -384,7 +383,7 @@ string query_location()
 }
 
 /* By default, provide nothing. */
-string query_provides() { return 0; } 
+string query_provides() { return 0; }
 
 /*
  * Parse and return a parsed version of the security levels for this module
@@ -434,7 +433,7 @@ array query_seclevels()
   if(catch(query("_seclevels"))) {
     return patterns;
   }
-  
+
   foreach(replace(query("_seclevels"),
 		  ({" ","\t","\\\n"}),
 		  ({"","",""}))/"\n", string sl) {
@@ -502,10 +501,10 @@ array query_seclevels()
 	value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
 	array(string) users = (value/"," - ({""}));
 	int i;
-	
+
 	for(i=0; i < sizeof(users); i++) {
 	  if (lower_case(users[i]) == "any") {
-	    if(this->register_module()[0] & MODULE_PROXY) 
+	    if(this->register_module()[0] & MODULE_PROXY)
 	      patterns += ({ ({ MOD_PROXY_USER, lambda(){ return 1; } }) });
 	    else
 	      patterns += ({ ({ MOD_USER, lambda(){ return 1; } }) });
@@ -538,10 +537,10 @@ array query_seclevels()
 	value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
 	array(string) users = (value/"," - ({""}));
 	int i;
-	
+
 	for(i=0; i < sizeof(users); i++) {
 	  if (lower_case(users[i]) == "any") {
-	    if(this->register_module()[0] & MODULE_PROXY) 
+	    if(this->register_module()[0] & MODULE_PROXY)
 	      patterns += ({ ({ MOD_PROXY_USER, lambda(){ return 1; } }) });
 	    else
 	      patterns += ({ ({ MOD_ACCEPT_USER, lambda(){ return 1; } }) });
