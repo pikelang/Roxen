@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.440 2003/11/13 17:17:50 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.441 2004/01/27 10:53:33 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4585,8 +4585,8 @@ class IfMatch
     if(!value) return 0;
     if(arrayp(value)) value=value*" ";
     value = lower_case( value );
-    is = lower_case( "*"+is+"*" );
-    return glob(is,value) || sizeof(filter( is/",", glob, value ));
+    string in = lower_case( "*"+is+"*" );
+    return glob(in,value) || sizeof(filter( in/",", glob, value ));
   }
 }
 
