@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.19 2000/02/02 20:42:30 per Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.20 2000/02/05 04:16:20 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -210,11 +210,10 @@ inline mixed open_db_file()
   return key;
 }
 
-void start(int q, Configuration c)
+void start()
 {
-  mixed tmp;
-
   define_API_functions();
+  query_tag_set()->prepare_context=set_entities;
 
   if(olf != QUERY(Accesslog))
   {
@@ -223,12 +222,29 @@ void start(int q, Configuration c)
     if(names_file=open(olf+".names", "wrca"))
     {
       cnum=0;
-      tmp=parse_accessed_database(names_file->read(0x7ffffff));
+      array tmp=parse_accessed_database(names_file->read(0x7ffffff));
       fton=tmp[0];
       cnum=tmp[1];
       names_file = 0;
     }
   }
+}
+
+class Entity_page_accessed {
+  int rxml_var_eval(RXML.Context c) {
+    int count;
+    if(c->id->misc->accessed)
+      count=query_num(c->id->not_query, 0);
+    else {
+      count=query_num(c->id->not_query, 1);
+      c->id->misc->accessed=1;
+    }
+    return count;
+  }
+}
+
+void set_entities(RXML.Context c) {
+  c->set_var("accessed", Entity_page_accessed(), "page");
 }
 
 static int mdc;
