@@ -6,14 +6,11 @@ inherit "roxenlib";
 #include <stat.h>
 #include <config_interface.h>
 #include <config.h>
-#include <roxen.h>
 #include <module.h>
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.177 2002/06/05 19:33:41 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.178 2002/06/15 18:30:25 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -437,8 +434,7 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     if( !res["diff-txt"] && var->diff( 1 ) )
       res->diff = 
 	"<a target=rxdiff_"+var->path()+
-	" href='"+diff_url( id, mod, var )+"'><gbutton>"+
-	LOCALE(502,"Diff")+"</gbutton></a>";
+	" href='"+diff_url( id, mod, var )+"'><gbutton>Diff</gbutton></a>";
     if(!res["diff-txt"])
       res["diff-txt"]="";
     res->id = var->_id;
@@ -476,7 +472,7 @@ mapping get_variable_section( string s, object mod, RequestID id )
   else
     return ([
       "section":"Settings",
-      "sectionname":LOCALE(256,"Settings"),
+      "sectionname":"Settings",
       "selected":
       ((section=="Settings" || !section)?"selected":""),
     ]);
@@ -601,7 +597,7 @@ object(Configuration) find_config_or_error(string config)
 
 string not_bound_warning()
 {
-  return LOCALE(300,"This port was requested, but binding it failed."); 
+  return "This port was requested, but binding it failed.";
 }
 mapping get_port_map( object p )
 {
@@ -806,12 +802,12 @@ class TagConfigVariablesSectionsplugin
       v = ({ 
         ([
           "section":"Status",
-          "sectionname":LOCALE(228,"Status"),
+          "sectionname":"Status",
           "selected":(!section||(section=="Status")?"selected":""),
         ]),
 //         ([
 //           "section":"Ports",
-//           "sectionname":LOCALE(324,"Ports"),
+//           "sectionname":"Ports",
 //           "selected":((section=="Ports")?"selected":""),
 //         ]),
       }) + v;
@@ -860,7 +856,7 @@ class TagModuleVariablesSectionsplugin
 
     variables = get_variable_sections( mod, m, id ) +  ({ ([
        "section":"Status",
-       "sectionname":LOCALE(228,"Status"),
+       "sectionname":"Status",
        "selected":((section=="Status" )?"selected":""),
      ]) });
 
@@ -876,7 +872,7 @@ class TagModuleVariablesSectionsplugin
     if( mod->module_full_doc || (mod->module_type & MODULE_TAG ) )
       variables = ({ ([
        "section":"Docs",
-       "sectionname":LOCALE(383,"Documentation"),
+       "sectionname":"Documentation",
        "selected":((section=="Docs")?"selected":""),
      ]) }) + variables;
     
@@ -1057,8 +1053,8 @@ string simpletag_cf_render_variable( string t, mapping m,
   }
   if( chng = ((int)_("changed") == 1) )
     if( !(int)_("no-default") )
-      def = "<submit-gbutton2 name='"+_("path")+"do_default'> "+
-	LOCALE(475,"Restore default value")+" "+_("diff-txt")+
+      def = "<submit-gbutton2 name='"+_("path")+"do_default'> "
+	"Restore default value "+_("diff-txt")+
 	" </submit-gbutton2> "+_("diff")+"<br />\n";
   
   switch( usr( "changemark" ) )
@@ -1091,16 +1087,14 @@ string simpletag_cf_render_variable( string t, mapping m,
 	  extra = 
 	    "<tr bgcolor='"+usr("content-titlebg")+"'>\n"
 	    "<td colspan='2' width='100%'>\n"
-	    "<font size='+1' color='"+usr("content-titlefg")+"'>"+
-	    LOCALE(358,"Changed")+"</font>\n"
+	    "<font size='+1' color='"+usr("content-titlefg")+"'>Changed</font>\n"
 	    "</td>\n"
             "</tr>\n";
 	else
 	  extra = 
 	    "<tr bgcolor='"+usr("content-titlebg")+"'>\n"
 	    "<td colspan='2' width='100%'>\n"
-	    "<font size='+1' color='"+usr("content-titlefg")+"'>"+
-	    LOCALE(359,"Unchanged")+"</font>\n"
+	    "<font size='+1' color='"+usr("content-titlefg")+"'>Unchanged</font>\n"
 	    "</td>\n"
             "</tr>\n";
 

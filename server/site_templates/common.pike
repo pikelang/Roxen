@@ -1,7 +1,4 @@
 #include <module.h>
-#include <roxen.h>
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 constant modules = ({});
 
@@ -65,9 +62,8 @@ string initial_form( Configuration conf, RequestID id, int setonly )
       if(moo->getvar( v )->check_visibility(id, 1, 0, 0, 1, 1))
       {
         num++;
-        res += "<tr><td colspan='3'><h2>"
-        +LOCALE(1,"Initial variables for ")+
-            Roxen.html_encode_string(mi->get_name())+"</h2></td></tr>"
+        res += "<tr><td colspan='3'><h2>Initial variables for "+
+	  Roxen.html_encode_string(mi->get_name())+"</h2></td></tr>"
         "<emit source='module-variables' "
 	  " configuration=\""+conf->name+"\""
 	  " module=\""+mod+#"\"/>";
@@ -172,7 +168,7 @@ mixed parse( RequestID id, mapping|void opt )
     return "<done/>";
   }
   return
-    "<h2>"+LOCALE(190,"Initial variables for the site")+"</h2>"
+    "<h2>Initial variables for the site</h2>"
     "<table>" + cf_form + initial_form( conf, id, 0 ) + 
          ((opt||([]))->no_end_table?"":"</table><p>")+
          ((opt||([]))->no_ok?"":"<p align=right><cf-ok /></p>");

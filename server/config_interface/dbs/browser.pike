@@ -1,16 +1,13 @@
 #include <config_interface.h>
 #include <config.h>
-#include <roxen.h>
-//<locale-token project="roxen_config">_</locale-token>
-#define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 mapping actions = ([
   // name         title                      function   must be internal
-  "move":   ({  _(401,"Copy or move database"),move_db,   0 }),
-  "delete": ({  _(402,"Delete this database"), delete_db, 0 }),
-  "group":  ({  _(324,"Change group for this database"), change_group, 0 }),
-  "clear":  ({  _(403,"Delete all tables"),    clear_db,  0 }),
-  "backup": ({  _(404,"Make a backup"),        backup_db, 1 }),
+  "move":   ({  "Copy or move database",move_db,   0 }),
+  "delete": ({  "Delete this database", delete_db, 0 }),
+  "group":  ({  "Change group for this database", change_group, 0 }),
+  "clear":  ({  "Delete all tables",    clear_db,  0 }),
+  "backup": ({  "Make a backup",        backup_db, 1 }),
 ]);
 
 
@@ -21,11 +18,11 @@ mapping actions = ([
       ("<table><tr><td colspan='2'>\n"+				\
        sprintf((string)(X), db)+				\
        "</td><tr><td><input type=hidden name=action value='&form.action;' />"\
-       "<submit-gbutton2 name='yes'>"+_(0,"Yes")+"</submit-gbutton2></td>\n"\
+       "<submit-gbutton2 name='yes'>Yes</submit-gbutton2></td>\n"\
        "<td align=right><a href="+Roxen.html_encode_string(id->not_query)+\
-      "?db="+\
+       "?db="+\
        Roxen.html_encode_string(id->variables->db)+"><gbutton> "+\
-       _(0,"No")+" </gbutton></a></td>\n</table>\n");			\
+       "No </gbutton></a></td>\n</table>\n");			\
   }									\
 } while(0)
 
@@ -36,10 +33,10 @@ mixed change_group( string db, RequestID id )
   {
     string res ="<br /><blockquote>"
     "<input type=hidden name=action value='&form.action;' />"
-      "<h2>"+sprintf(_(423,"Changing group for %s"), db )+"</h2>"
-      "<b>"+_(445,"Old group")+":</b> " +
+      "<h2>Changing group for "+ db +"</h2>"
+      "<b>Old group:</b> " +
       DBManager.get_group(DBManager.db_group(db))->lname+"<br />"
-      "<b>"+_(504,"New group")+":</b> <select name='group'>";
+      "<b>New group:</b> <select name='group'>";
     foreach( DBManager.list_groups(), string g )
       if( g == DBManager.db_group( db ) )
 	res += "<option selected value='"+g+"'>"+DBManager.get_group( g )->lname;
@@ -62,16 +59,16 @@ mixed backup_db( string db, RequestID id )
     return 0;
   }
   return
-    "<b>"+_(405,"Directory")+":</b> <input name='dir' size='80' value='auto' /><br />"
+    "<b>Directory:</b> <input name='dir' size='80' value='auto' /><br />"
     "<i>The directory the backup will be saved in. If you chose auto, Roxen will generate a directory name that includes the database name and todays date.</i>"
     "<table width='100%'><tr><td valign=top>"
     "<input type=hidden name=action value='&form.action;' />"
-    "<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
+    "<submit-gbutton2 name='ok'>Ok</submit-gbutton2></td>\n"
     "<td valign=top align=right><a href='"+
     Roxen.html_encode_string(id->not_query)+
-      "?db="+
-       Roxen.html_encode_string(id->variables->db)+"'><gbutton> "+
-    _(202,"Cancel")+" </gbutton></a></td>\n</table>\n";
+    "?db="+
+    Roxen.html_encode_string(id->variables->db)+"'><gbutton> "
+    "Cancel </gbutton></a></td>\n</table>\n";
 }
 
 mixed move_db( string db, RequestID id )
@@ -83,11 +80,11 @@ mixed move_db( string db, RequestID id )
     {
       if( !strlen(id->variables->url) )
         warning= "<font color='&usr.warncolor;'>"
-	  +_(406,"Please specify an URL to define an external database")+
+	  "Please specify an URL to define an external database"
 	  "</font>";
       else if( catch( Sql.Sql( id->variables->url ) ) )
-        warning = sprintf("<font color='&usr.warncolor;'>"+
-			  _(407,"It is not possible to connect to %s")+
+        warning = sprintf("<font color='&usr.warncolor;'>"
+			  "It is not possible to connect to %s"
 			  "</font>",
 			  id->variables->url );
     }
@@ -95,22 +92,22 @@ mixed move_db( string db, RequestID id )
       switch( id->variables->name )
       {
        case "":
-         warning =  "<font color='&usr.warncolor;'>"+
-	   _(408,"Please specify a name for the database")+
+         warning =  "<font color='&usr.warncolor;'>"
+	   "Please specify a name for the database"
 	   "</font>";
          break;
        case "mysql":
        case "roxen":
-         warning = sprintf("<font color='&usr.warncolor;'>"+
-                         _(409,"%s is an internal database, used by roxen."
-			   "Please select another name")+
-                         "</font>", id->variables->name );
+         warning = sprintf("<font color='&usr.warncolor;'>"
+			   "%s is an internal database, used by roxen."
+			   "Please select another name"
+			   "</font>", id->variables->name );
          break;
 	default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
-	   warning = sprintf("<font color='&usr.warncolor;'>"+
-			     _(410,"%s is a mysql keyword, used by mysql."
-			       "Please select another name")+
+	   warning = sprintf("<font color='&usr.warncolor;'>"
+			     "%s is a mysql keyword, used by mysql."
+			     "Please select another name"
 			     "</font>", id->variables->name );
 	 break;
       }
@@ -160,10 +157,10 @@ mixed move_db( string db, RequestID id )
 		       ["Create Table"] ) )
 	    {
 	      array res = odb->query( "DESCRIBE "+table );
-	      report_warning( _(411,"While copying %s.%s: "
-				"The source database does not "
-				"support %s.\nThe copy will not "
-				"contain all metadata")+"\n",
+	      report_warning( "While copying %s.%s: "
+			      "The source database does not "
+			      "support %s.\nThe copy will not "
+			      "contain all metadata.\n",
 			      db,table,"SHOW CREATE TABLE" );
 	      def = "CREATE TABLE "+table+ "(";
 	      array defs = ({});
@@ -175,10 +172,10 @@ mixed move_db( string db, RequestID id )
 		// FIXME: A real keyword list with alternatives here.
 		if( m->Field == "when" )
 		{
-		  report_warning( _(412,"The source database used the string "
-				    "%s as a fieldname.\nThis is reserved in "
-				    "newer MySQL versions.\nSubstituting "
-				    "with %s")+"\n",
+		  report_warning( "The source database used the string "
+				  "%s as a fieldname.\nThis is reserved in "
+				  "newer MySQL versions.\nSubstituting "
+				  "with %s.\n",
 				  m->Field, "whn" );
 		  m->Field = "whn";
 		}
@@ -211,7 +208,7 @@ mixed move_db( string db, RequestID id )
 	    }
 	  })
 	  {
-	    report_error( _(413,"Failed to copy data from source table.\n")+
+	    report_error( "Failed to copy data from source table.\n" +
 			  describe_error( err )+"\n" );
 	    break;
 	  }
@@ -251,21 +248,21 @@ mixed move_db( string db, RequestID id )
     id->variables->url  = DBManager.db_url( db ) || "";
 
   return
-    "<gtext scale=0.6>"+_(414,"Move or copy this database")+"</gtext><br />\n"
+    "<gtext scale=0.6>Move or copy this database</gtext><br />\n"
     +warning+
     "<table>\n"
-    "<tr><td><b>"+_(415,"Action")+":</b></td>"
+    "<tr><td><b>Action:</b></td>"
     "<td><default variable='form.what'><select name=what>\n"
-//     "   <option value='copy'>"+_(0,"Move but do not delete old data")+
+//     "   <option value='copy'>Move but do not delete old data"
 //     "</option>\n"
-    "   <option value='dup'>"+_(416,"Copy the data to a new database")+
+    "   <option value='dup'>Copy the data to a new database"
     "</option>\n"
-    "   <option value='move'>"+_(417,"Move database")+"</option>\n"
+    "   <option value='move'>Move database</option>\n"
     "  </select></default>\n"
     "  <tr>\n"
-    "    <td><b>"+ _(418,"New name")+
+    "    <td><b>New name"
     ":</b></td> <td><input name='name' value='&form.name;'/></td>\n"
-    "<td><b>"+_(419,"Type")+":</b></td> <td width='100%'>\n"
+    "<td><b>Type:</b></td> <td width='100%'>\n"
 #"   <default variable=form.type><select name=type>
        <option value='internal'>  Internal  </option>
        <option value='external'>  External  </option>
@@ -274,55 +271,54 @@ mixed move_db( string db, RequestID id )
   </tr>
   <tr>
   <td valign=top colspan='2'>
-    <i>"+
-    _(420,"The new name of the database. You do not have to change the "
-      "name if you change the database type from internal to external, "
-      "or change the URL of an external database. To make it easy on "
-      "your users, use all lowercaps characters, and avoid hard to type "
-      "characters")+
-    "</i>\n"
+    <i>
+    The new name of the database. You do not have to change the
+    name if you change the database type from internal to external,
+    or change the URL of an external database. To make it easy on
+    your users, use all lowercaps characters, and avoid hard to type
+    characters.</i>
 
-    "</td>\n"
-    "<td valign=top colspan='2' width='100%'>\n"
+    </td>
+    <td valign=top colspan='2' width='100%'>
 
-    "<i>"+
-    _(421,"The database type. Internal means that it will be stored"
-      " in the Roxen MySQL database, and the permissions of the"
-      " database will be automatically manged by Roxen. External"
-      " means that the database resides in another database.")+"</i>\n"
-    "</td>\n"
-    "</tr>\n"
-    "<tr>\n"
-    "<td><nbsp><b>URL:</b></nbsp></td>\n"
-    "<td colspan='3'><input name='url' size=50 value='&form.url;'/></td>\n"
-    "</tr>\n"
-    "<tr><td colspan='4'><i>\n"+
-    _(422,"This URL is only used for </i>External<i> databases, it is "
-      "totally ignored for databases defined internally in Roxen ")+
-    "\n</i>\n"
-    "</td></tr>\n"
-    "</table>\n"+
-    "<table width='100%'><tr><td>"
-    "<input type=hidden name=action value='&form.action;' />"
-    "<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
-    "<td align=right><a href='"+Roxen.html_encode_string(id->not_query)+
-      "?db="+
-       Roxen.html_encode_string(id->variables->db)+"'><gbutton> "+
-    _(202,"Cancel")+" </gbutton></a></td>\n</table>\n";
+    <i>
+    The database type. Internal means that it will be stored
+    in the Roxen MySQL database, and the permissions of the
+    database will be automatically manged by Roxen. External
+    means that the database resides in another database.</i>
+  </td>
+  </tr>
+  <tr>
+  <td><nbsp><b>URL:</b></nbsp></td>
+  <td colspan='3'><input name='url' size=50 value='&form.url;'/></td>
+  </tr>
+  <tr><td colspan='4'><i>
+    This URL is only used for </i>External<i> databases, it is
+    totally ignored for databases defined internally in Roxen.
+    </i>
+  </td></tr>
+</table>
+<table width='100%'><tr><td>
+ <input type=hidden name=action value='&form.action;' />
+ <submit-gbutton2 name='ok'>Ok</submit-gbutton2></td>
+ <td align=right><a href='"+Roxen.html_encode_string(id->not_query)+
+    "?db="+
+    Roxen.html_encode_string(id->variables->db)+"'><gbutton> "
+    "Cancel </gbutton></a></td>\n</table>\n";
 }
 
 mixed delete_db( string db, RequestID id )
 {
   string msg;
   if( DBManager.is_internal( db ) )
-    msg = (string)_(361, "Are you sure you want to delete the database %s "
-		    "and the data?");
+    msg = "Are you sure you want to delete the database %s "
+      "and the data?";
   else
-    msg = (string)_(362,"Are you sure you want to delete the database %s?"
-		    " No data will be deleted from the remote datbase.");
+    msg = "Are you sure you want to delete the database %s?"
+      " No data will be deleted from the remote datbase.";
     
   VERIFY(msg);
-  report_notice( _(424,"The database %s was deleted by %s")+"\n",
+  report_notice( "The database %s was deleted by %s\n",
 		 db, id->misc->authenticated_user->name() );
   DBManager.drop_db( db );
   return Roxen.http_redirect( "/dbs/", id );
@@ -330,7 +326,7 @@ mixed delete_db( string db, RequestID id )
 
 mixed clear_db( string db, RequestID id )
 {
-  VERIFY(_(425,"Are you sure you want to delete all tables in %s?"));
+  VERIFY("Are you sure you want to delete all tables in %s?");
 
   Sql.Sql sq = DBManager.get( db );
 
@@ -376,8 +372,7 @@ string format_decode_value( string what )
   // Type is program or object?
   if( (what[4] & 15) == 5 || (what[4] & 15) == 3 )
     return Roxen.html_encode_string(
-      sprintf("<"+_(233,"bytecode data")+" ("+
-	      _(505,"%d bytes")+")>", strlen(what)));
+      sprintf("<bytecode data (%d bytes)>", strlen(what)));
   
   catch
   {
@@ -573,12 +568,11 @@ mapping|string parse( RequestID id )
       };
       if( e )
 	qres += "<tr><td> <font color='&usr.warncolor;'>"+
-	  sprintf((string)_(380,"While running %s: %s"), q,
+	  sprintf("While running %s: %s", q,
 		  describe_error(e) )+
 	  "</td></tr>\n";
       qres += "</table>"+
-	sprintf( _(426,"Query took %[0].3fs, %[1]d rows in the reply")+
-		 "\n<br />", qtime, qrows);
+	sprintf( "Query took %[0].3fs, %[1]d rows in the reply\n<br />", qtime, qrows);
     }
   }
 
@@ -604,19 +598,19 @@ mapping|string parse( RequestID id )
 	  replace(mi->module,"#","!")+"/"+
 	  "'>"+i->get_name()+"</a> in "+c->query_name();
       else if( i )
-	mn =  sprintf((string)_(427,"the deleted module %s from %s"),
+	mn =  sprintf("the deleted module %s from %s",
 		      i->get_name(), mi->conf );
-      res=sprintf((string)_(428,"Defined by %s"),mn)+"<br />";
+      res=sprintf("Defined by %s", mn)+"<br />";
     }
 
     sscanf( mi->comment, "%s\0%s", mi->tbl, mi->comment );
     if( mi->tbl && mi->tbl != table)
       if( mi->tbl != (string)0 )
-	return sprintf(_(429,"The table is known as '%s' in the module"),
+	return sprintf("The table is known as '%s' in the module",
 		       mi->tbl )+"<br />"+res+mi->comment;
       else
-	return sprintf(_(430,"The table is an anymous table defined by "
-			 "the module"), mi->tbl )+
+	return sprintf("The table is an anymous table defined by "
+		       "the module", mi->tbl )+
 	  "<br />"+res+mi->comment;
 
     return res+mi->comment;
@@ -647,8 +641,7 @@ mapping|string parse( RequestID id )
   
   res +="<br /><a href='edit_group.pike?group="+
     Roxen.http_encode_string(DBManager.db_group( id->variables->db ))+"'>"+
-    sprintf( (string)
-	     _(506,"Member of the %s database group"),
+    sprintf( "Member of the %s database group",
 	     DBManager.get_group( DBManager.db_group( id->variables->db ) )
 	     ->lname )
     + "</a>";
@@ -661,7 +654,7 @@ mapping|string parse( RequestID id )
   {
     array data = DBManager.db_table_fields( id->variables->db, table );
     if( !data )
-      return sprintf((string)_(507,"Cannot list fields in %s databases"), 
+      return sprintf("Cannot list fields in %s databases",
 		     DBManager.db_driver(id->variables->db) );
     string res = "<tr><td></td><td colspan='3'><table>";
     foreach( data, mapping r )
@@ -686,10 +679,10 @@ mapping|string parse( RequestID id )
     
     if( tbi )
       res += "<td align=right> <font size=-1>"+
-	tbi->rows+" "+_(374,"rows")+"</font></td><td align=right>"
+	tbi->rows+" rows</font></td><td align=right>"
 	"<font size=-1>"+
 	(( (int)tbi->data_length+(int)tbi->index_length) ? 	
-	 ( (int)tbi->data_length+(int)tbi->index_length)/1024+_(375,"KiB"):
+	 ( (int)tbi->data_length+(int)tbi->index_length)/1024+"KiB":
 	 "")+
 	"</font></td>";
 
@@ -740,17 +733,14 @@ mapping|string parse( RequestID id )
       "<tr><td align=right>"+
 
       SEL("name",1)+"</td>"
-      "<td><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=name'>"+
-      _(376,"Name")+
-      "</a></b></td>\n"
+      "<td><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=name'>"
+      "Name</a></b></td>\n"
       "<td align=right><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=rows'>"+
 
-      SEL("rows",0)+String.capitalize(_(374,"rows"))+
-      "</a></b></td>\n"
+      SEL("rows",0)+"Rows</a></b></td>\n"
       "<td align=right><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=size'>"+
 
-      SEL("size",0)+_(377,"Size")+
-      "</a></b></td>\n"
+      SEL("size",0)+"Size</a></b></td>\n"
       "</tr>";
   }
 
@@ -763,9 +753,9 @@ mapping|string parse( RequestID id )
     "<table><tr><td valign=top><font size=-1>"
     "<textarea rows=8 cols=50 wrap=soft name='query'>&form.query:html;</textarea>"
     "</font></td><td valign=top>"
-    "<submit-gbutton2 name=clear_q> "+_(378,"Clear query")+" </submit-gbutton2>"
+    "<submit-gbutton2 name=clear_q> Clear query </submit-gbutton2>"
     "<br />"
-    "<submit-gbutton2 name=run_q> "+_(379,"Run query")+" </submit-gbutton2>"
+    "<submit-gbutton2 name=run_q> Run query </submit-gbutton2>"
     "<br /></td></tr></table>";
 
 

@@ -1,22 +1,18 @@
 #include <config_interface.h>
-#include <roxen.h>
-
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 #define  tablist ("<tablist "+config_setting2("toptabs-args")+">")
 
 array selections =
 ({
-  ({ LOCALE(360, "Home"),    "hype",      ".",                0 }),
-  ({ LOCALE(212, "Admin"),   "home",      "settings.html",   0 }),
-  ({ LOCALE(213, "Sites"),   "sites",     "sites/",          "View Settings"}),
-  ({ LOCALE(214, "Globals"), "globals",   "global_settings/","View Settings"}),
-//({ LOCALE(215, "Ports"),   "ports",     "ports/",          "View Settings"}),
-//({ LOCALE(216, "Events"),  "event_log", "event_log/",      "View Settings"}),
-  ({ LOCALE(196, "Tasks"),   "tasks",     "tasks/",          "Tasks" }),
-  ({ LOCALE(218, "DBs"),     "dbs",       "dbs/",            "View Settings"}),
-  ({ LOCALE(217, "Docs"),    "docs",      "docs/",           0 }),
+  ({ "Home",    "hype",      ".",               0 }),
+  ({ "Admin",   "home",      "settings.html",   0 }),
+  ({ "Sites",   "sites",     "sites/",          "View Settings"}),
+  ({ "Globals", "globals",   "global_settings/","View Settings"}),
+//({ "Ports",   "ports",     "ports/",          "View Settings"}),
+//({ "Events",  "event_log", "event_log/",      "View Settings"}),
+  ({ "Tasks",   "tasks",     "tasks/",          "Tasks" }),
+  ({ "DBs",     "dbs",       "dbs/",            "View Settings"}),
+  ({ "Docs",    "docs",      "docs/",           0 }),
 });
 
 // Reloading this program zaps the last-visited info, which is rather

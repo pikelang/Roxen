@@ -1,10 +1,5 @@
 #include <config_interface.h>
 #include <config.h>
-#include <roxen.h>
-//<locale-token project="roxen_config">_</locale-token>
-#define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
-
-
 
 string get_conf_name( string c )
 {
@@ -135,9 +130,9 @@ string|mapping parse( RequestID id )
 		     "</a>", Roxen.http_encode_string(conf),\
 		     Roxen.http_encode_string(db))
 
-      PERM(NONE,_(431,"N"),"none");
-      PERM(READ,_(432,"R"),"read");
-      PERM(WRITE,_(433,"W"),"write");
+      PERM(NONE,"N","none");
+      PERM(READ,"R","read");
+      PERM(WRITE,"W","write");
       rres[DBManager.db_group(db)] += "</nobr></td>";
     }
     string format_stats( mapping s, string url )
@@ -148,9 +143,8 @@ string|mapping parse( RequestID id )
       {
 	mixed err;
 	if( err = catch( DBManager.cached_get( db ) ) )
-	  url="<font color='&usr.warncolor;'>"+
-	    _(381,"Failed to connect")+": "+
-	    describe_error(err)+"</font>";
+	  url="<font color='&usr.warncolor;'>"
+	    "Failed to connect: "+describe_error(err)+"</font>";
 	else
 	  url = "remote";
       }

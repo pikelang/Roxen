@@ -1,6 +1,3 @@
-#include <roxen.h>
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 string decode_site_name( string what )
 {
@@ -12,7 +9,7 @@ string decode_site_name( string what )
 string parse( RequestID id )
 {
   if( !id->misc->config_user->auth( "Create New Site" ) )
-    return LOCALE(226, "Permission denied");
+    return "Permission denied";
 
   string name = decode_site_name(id->variables->name);
   object conf = roxen.enable_configuration( name );

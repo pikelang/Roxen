@@ -1,9 +1,4 @@
 #include <config_interface.h>
-#include <roxen.h>
-
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
-
 
 void get_dead( string cfg, int del )
 {
@@ -12,7 +7,7 @@ void get_dead( string cfg, int del )
 string|mapping parse( RequestID id )
 {
   if( !config_perm( "Create Site" ) )
-    return LOCALE(226, "Permission denied");
+    return "Permission denied";
 
   Configuration cf = roxen->find_configuration( id->variables->site );
   if( !cf )
@@ -22,13 +17,13 @@ string|mapping parse( RequestID id )
   {
     string res = 
       "<use file='/template' />\n"
-      "<tmpl title=' "+ LOCALE(249,"Drop old site") +"'>"
+      "<tmpl title=' Drop old site'>"
       "<topmenu base='&cf.num-dotdots;' selected='sites'/>\n"
       "<content><cv-split>"
       "<subtablist width='100%'>"
       "<st-tabs></st-tabs>"
       "<st-page><b><font size=+1>"+
-      sprintf((string)(LOCALE(235,"Are you sure you want to disable the site %s?")+"\n"),
+      sprintf("Are you sure you want to disable the site %s?\n",
                (cf->query_name()||""))+
       "</font></b><br />";
     // 1: Find databases that will be "dead" when this site is gone.
@@ -54,8 +49,7 @@ string|mapping parse( RequestID id )
     // Never ever drop these.
     dead -= ({ "roxen", "mysql", "local", "replicate" });
 
-    res += "<b>"+
-      LOCALE(468,"This site listens to the following ports:")+"</b><br />\n";
+    res += "<b>This site listens to the following ports:</b><br />\n";
 
     res += "<ul>\n";
     foreach( cf->query( "URLs" ), string url )
@@ -71,19 +65,18 @@ string|mapping parse( RequestID id )
     
     if( sizeof( dead ) )
     {
-      res += "<b>"+LOCALE(469,"Databases that will no longer be used")+
-	"</b><br />";
+      res += "<b>Databases that will no longer be used</b><br />";
 
       res += "<blockquote>";
       
       if( sizeof( dead ) == 1 )
 	
-	res += LOCALE(470,"If you do not want to delete this database, "
-		      "uncheck the checkmark in front of it");
+	res += ("If you do not want to delete this database, "
+		"uncheck the checkmark in front of it");
       else
-	res += LOCALE(471,"If you do not want to delete one or more of these "
-		      "databases, uncheck the checkmark in front of the ones"
-		      " you want to keep");
+	res += ("If you do not want to delete one or more of these "
+		"databases, uncheck the checkmark in front of the ones"
+		" you want to keep");
       res += "<table>";
       int n;
       foreach( dead, string d )
@@ -110,7 +103,7 @@ string|mapping parse( RequestID id )
     res += 
       "<table width='100%'><tr width='100%'>"
       "<td align='left'><submit-gbutton2 name='really'> "+
-      LOCALE(249,"Drop old site") +
+      "Drop old site"
       " </submit-gbutton2></td><td align='right'>"
       "<cf-cancel href='./'/></td></tr></table>";
     
@@ -120,8 +113,7 @@ string|mapping parse( RequestID id )
   }
 
 
-  report_notice(LOCALE(255, "Disabling old configuration %s")+"\n", 
-		cf->name);
+  report_notice("Disabling old configuration %s\n", cf->name);
 
   foreach( glob("del_db_*", indices(id->variables)), string d ) {
     d = d[7..];

@@ -1,8 +1,5 @@
 #include <config_interface.h>
 #include <config.h>
-#include <roxen.h>
-//<locale-token project="roxen_config">_</locale-token>
-#define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 mapping|string parse( RequestID id )
 {
@@ -31,9 +28,8 @@ mapping|string parse( RequestID id )
   Sql.Sql sql = Sql.Sql( c->pattern+"mysql" );
   array q = sql->query( "SHOW databases" )->Database;
 
-  res += "<b><font size=+1>"+
-    _(435,"When the group is created, the checked databases will "
-      "be imported as well")+"</b></font>";
+  res += "<b><font size='+1'>When the group is created, the checked databases will "
+    "be imported as well</b></font>";
   
   res += "<table>";
   

@@ -1,9 +1,4 @@
 #include <config.h>
-#include <roxen.h>
-
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
-#define CALL(X,Y)	_LOCALE_FUN("roxen_config",X,Y)
 
 int __lt;
 string describe_time(int t)
@@ -21,7 +16,7 @@ string describe_time(int t)
     return sprintf("%02d:%02d",localtime(t)->hour,localtime(t)->min);
 }
 
-string _units(string unit, int num)
+string units(string unit, int num)
 {
   if(num==1) return "one "+unit;
   return num+" "+unit+"s";
@@ -31,11 +26,11 @@ string describe_interval(int i)
 {
   switch(i) {
   case 0..50:
-    return CALL("units", _units)("second", i);
+    return units("second", i);
   case 51..3560:
-    return CALL("units", _units)("minute", ((i+20)/60));
+    return units("minute", ((i+20)/60));
   default:
-    return CALL("units", _units)("hour", ((i+300)/3600));
+    return units("hour", ((i+300)/3600));
   }
 }
 
@@ -43,8 +38,7 @@ string describe_times(array (int) times)
 {
   __lt=0;
   if(sizeof(times) < 6)
-    return String.implode_nicely(map(times, describe_time),
-				 LOCALE("cw", "and"));
+    return String.implode_nicely(map(times, describe_time));
 
   int d, every=1;
   int ot = times[0];
@@ -60,12 +54,11 @@ string describe_times(array (int) times)
     } else
       d = t-ot;
   if(every && (times[-1]+d) >= time(1)-10)
-    return (LOCALE(207, "every") +" "
-	    +describe_interval(d)+" "+LOCALE(208, "since")+" "+
+    return ("every "
+	    +describe_interval(d)+" since "+
 	    describe_time(times[0]));
   return String.implode_nicely(map(times[..4], describe_time)+({"..."})+
-			map(times[sizeof(times)-3..], describe_time),
-			LOCALE("cw", "and"));
+			map(times[sizeof(times)-3..], describe_time));
 }
 
 string fix_err(string s)
@@ -84,9 +77,9 @@ string describe_error(string err, array (int) times,
 {
   int code, nt;
   string links = "", reference, server;
-  array(string) codetext=({ LOCALE(209, "Notice"),
-			    LOCALE(210, "Warning"),
-			    LOCALE(211, "Error") });
+  array(string) codetext = ({ "Notice",
+			      "Warning",
+			      "Error" });
 
   if(sizeof(times)==1 && times[0]/60==last_time) nt=1;
   last_time=times[0]/60;

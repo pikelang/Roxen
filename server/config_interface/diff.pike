@@ -1,10 +1,3 @@
-#include <config_interface.h>
-#include <module.h>
-#include <module_constants.h>
-#include <roxen.h>
-
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 string parse( RequestID id )
 {
@@ -16,6 +9,6 @@ string parse( RequestID id )
   
   return sprintf( "<use file='/template' />\n"
                   "<tmpl title=' %s '>"
-                  "<content>%s</content></tmpl>",
-		  LOCALE(466,"Difference"), (v->diff(2)||"") );
+                  "<content>Difference</content></tmpl>",
+		  (v->diff(2)||"") );
 }

@@ -4,21 +4,16 @@
 #include <module.h>
 #include <stat.h>
 #include <config_interface.h>
-#include <roxen.h>
 
 inherit "module";
 
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
-
 constant module_type = MODULE_LOCATION;
-LocaleString module_name = LOCALE(165,"Configuration Filesystem");
-LocaleString module_doc =
-  LOCALE(166,"This filesystem serves the administration interface");
+constant module_name = "Configuration Filesystem";
+constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.111 2002/06/10 15:15:37 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.112 2002/06/15 18:30:25 nilsson Exp $";
 
 constant path = "config_interface/";
 
@@ -147,14 +142,14 @@ mixed find_file( string f, RequestID id )
       id->misc->remote_config_host = host;
       id->misc->config_user = user->ruser;
       if( (time(1) - logged_in[ user->name()+host ]) > 1800 )
-	report_notice(LOCALE("dt", "Administrator logged on as %s from %s.")
-		      +"\n", user->name(), host+" ("+id->remoteaddr+")" );
+	report_notice("Administrator logged on as %s from %s.\n",
+		      user->name(), host+" ("+id->remoteaddr+")" );
       logged_in[ user->name()+host ] = time(1);
       roxen.adminrequest_get_context( user->name(), host, id );
     }
     else
     {
-      report_notice(LOCALE(169,"Login attempt from %s")+"\n",host);
+      report_notice("Login attempt from %s\n",host);
       return id->conf->authenticate_throw( id, "Roxen Administration Interface",
 					   roxen.config_userdb_module );
     }
@@ -456,25 +451,23 @@ void zap_old_modules()
 
 void create()
 {
-  defvar( "location", "/", LOCALE(264,"Mountpoint"), TYPE_LOCATION,
-          LOCALE(265,"Usually / is a good idea") );
+  defvar( "location", "/", "Mountpoint", TYPE_LOCATION,
+          "Usually / is a good idea" );
 
   defvar( "auth_method", "auth_httpbasic",
-	  LOCALE(219,"Authentication method"),
+	  "Authentication method",
 	  TYPE_STRING_LIST,
-	  LOCALE(291,"The method to use to authenticate configuration interface "
-		 "users." ),
+	  "The method to use to authenticate configuration interface users.",
 	  ([
-	    "auth_httpbasic":LOCALE(301,"HTTP Basic passwords" ),
-	    "auth_httpcookie":LOCALE(325,"HTTP Cookies" ),
+	    "auth_httpbasic":"HTTP Basic passwords",
+	    "auth_httpcookie":"HTTP Cookies",
 	  ]) );
 
-  roxen.add_permission( "View Settings", LOCALE(192, "View Settings"));
-  roxen.add_permission( "Edit Global Variables",
-			LOCALE(194, "Edit Global Variables"));
-  roxen.add_permission( "Tasks", LOCALE(196, "Tasks"));
-  roxen.add_permission( "Restart", LOCALE(197, "Restart"));
-  roxen.add_permission( "Shutdown", LOCALE(198, "Shutdown"));
-  roxen.add_permission( "Create Site", LOCALE(199, "Create Sites"));
-  roxen.add_permission( "Add Module", LOCALE(200, "Add Modules"));
+  roxen.add_permission( "View Settings", "View Settings");
+  roxen.add_permission( "Edit Global Variables", "Edit Global Variables");
+  roxen.add_permission( "Tasks", "Tasks");
+  roxen.add_permission( "Restart", "Restart");
+  roxen.add_permission( "Shutdown", "Shutdown");
+  roxen.add_permission( "Create Site", "Create Sites");
+  roxen.add_permission( "Add Module", "Add Modules");
 }

@@ -1,16 +1,12 @@
 #include <config_interface.h>
 #include <module.h>
 #include <module_constants.h>
-#include <roxen.h>
 
 int no_reload()
 {
   if( sizeof( already_added ) )
     return 1; // Reloading this script now would destroy state.
 }
-
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 // Class is the name of the directory.
 array(string) class_description( string d, RequestID id )
@@ -83,10 +79,10 @@ string page_base( RequestID id, string content, int|void noform )
                   "<p>\n</if>%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
-		  LOCALE(258,"Add module"),
+		  "Add module",
 		  noform?" noform='noform'":"",
-                  LOCALE(272,"Reload module list"),
-		  LOCALE(202,"Cancel"), content );
+                  "Reload module list",
+		  "Cancel", content );
 }
 
 
@@ -178,7 +174,7 @@ string pafeaw( string errors, string warnings, array(ModuleInfo) locked_modules)
                           "errors_and_warnings'> %s </gbutton>",                \
                           random(4711111),                                      \
                           (X),                                                  \
-                          LOCALE(253, "Reload"))
+                          "Reload")
 
       if( !header_added++ )
         da_string += 
@@ -349,9 +345,9 @@ function describe_module_normal( int image )
 	Roxen.html_encode_string (module->sname),
 	(image?module_image(module->type):""),
      module->sname,
-   LOCALE(251, "Add Module"),
+   "Add Module",
    module->get_description(),
-     LOCALE(266, "Will be loaded from: ")+module->filename
+     "Will be loaded from: "+module->filename
 );
     } else {
       if( block == module )
@@ -372,8 +368,7 @@ array(int|string) class_visible_normal( string c, string d, RequestID id )
     header+=("<a name="+Roxen.http_encode_string(c)+
 	     "></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
-	     "#"+Roxen.http_encode_string(c)+"' > "+
-	     LOCALE(168, "Hide")+" </gbutton>");
+	     "#"+Roxen.http_encode_string(c)+"' > Hide </gbutton>");
     x=1;
   }
   else
@@ -381,8 +376,7 @@ array(int|string) class_visible_normal( string c, string d, RequestID id )
 	     "></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
 	     "&unfolded="+Roxen.http_encode_string(c)+
-	     "#"+Roxen.http_encode_string(c)+"' > "+
-	     LOCALE(267, "View")+" </gbutton>");
+	     "#"+Roxen.http_encode_string(c)+"' > View </gbutton>");
 
   header+=("</td><td width='100%'>"
 	   "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
@@ -429,7 +423,7 @@ return sprintf(
    //Roxen.html_encode_string(strip_leading(module->get_name())),
    Roxen.html_encode_string(module->get_name()),
    module->get_description(),
-   LOCALE(266, "Will be loaded from: ")+module->filename
+   "Will be loaded from: "+module->filename
   );
   } else {
     if( block == module )
@@ -447,8 +441,8 @@ array(int|string) class_visible_faster( string c, string d, RequestID id )
 
   if( id->variables->unfolded == c ) {
     header+=("<a name="+Roxen.http_encode_string(c)+
-	     "></a><gbutton dim='1'> "+LOCALE(267, "View")+" </gbutton>"
-	     "<tr><td><submit-gbutton> "+LOCALE(251, "Add Module")+
+	     "></a><gbutton dim='1'> View </gbutton>"
+	     "<tr><td><submit-gbutton> Add Module"
 	     " </submit-gbutton></td></tr>");
     x=1;
   }
@@ -457,8 +451,7 @@ array(int|string) class_visible_faster( string c, string d, RequestID id )
 	     "></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
 	     "&unfolded="+Roxen.http_encode_string(c)+
-	     "#"+Roxen.http_encode_string(c)+"' > "+
-	     LOCALE(267, "View")+" </gbutton>");
+	     "#"+Roxen.http_encode_string(c)+"' > View </gbutton>");
 
   header+=("</td><td width='100%'>"
 	   "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
@@ -486,7 +479,7 @@ array(int|string) class_visible_compact( string c, string d, RequestID id )
 {
   string res="";
   if(first++)
-    res = "</select><br /><submit-gbutton> "+LOCALE(251, "Add Module")+" </submit-gbutton> ";
+    res = "</select><br /><submit-gbutton> Add Module </submit-gbutton> ";
   res += "<p><a name="+Roxen.http_encode_string(c)+
     "></a><font size='+2'>"+c+"</font><br />"+d+"<p><select multiple name='module_to_add'>";
   return ({ 1, res });
@@ -516,7 +509,7 @@ string page_compact( RequestID id )
                    "<form action='add_module.pike' method='POST'>"
                    "<input type='hidden' name='config' value='&form.config;'>"+
                    desc+"</select><br /><submit-gbutton> "
-                   +LOCALE(251, "Add Module")+" </submit-gbutton><p>"
+                   "Add Module </submit-gbutton><p>"
                    +err+"</form>",
                    );
 }
@@ -557,8 +550,8 @@ string page_really_compact( RequestID id )
   License.Key license_key = conf->getvar("license")->get_key();
   array(RoxenModule) locked_modules = ({});
   
-  if( (r = class_visible_compact( LOCALE(258,"Add module"), 
-				  LOCALE(273,"Select one or several modules to add.")
+  if( (r = class_visible_compact( "Add module",
+				  "Select one or several modules to add."
 				  , id )) && r[0] ) {
     res += r[1];
     foreach(mods, object q) {
@@ -583,7 +576,7 @@ string page_really_compact( RequestID id )
                    "<form action=\"add_module.pike\" method=\"post\">"
                    "<input type=\"hidden\" name=\"config\" value=\"&form.config;\" />"+
                    res+"</select><br /><submit-gbutton> "
-                   +LOCALE(251, "Add Module")+" </submit-gbutton><br />"
+                   "Add Module </submit-gbutton><br />"
                    +pafeaw(ec->get(),ec->get_warnings(),
 			   locked_modules)+"</form>",
                    );
@@ -617,7 +610,7 @@ array initial_form( RequestID id, Configuration conf, array modules )
       {
         num++;
         res += "<tr><td colspan='3'><h2>"
-        +LOCALE(1,"Initial variables for ")+
+        "Initial variables for "+
 	  //Roxen.html_encode_string(strip_leading(mi->get_name()))
 	  Roxen.html_encode_string(mi->get_name())
 	  +"</h2></td></tr>"
@@ -656,7 +649,7 @@ mixed do_it_pass_2( array modules, Configuration conf,
       RoxenModule mm = conf->enable_module( mod,0,0,1 );
       if( !mm || !conf->otomod[mm] )
       {
-	report_error(LOCALE(382,"Failed to enable %s")+"\n");
+	report_error("Failed to enable %s\n", mod);
 	return Roxen.http_redirect( site_url(id,conf->name), id );
       }      
       conf->call_low_start_callbacks( mm, 
@@ -720,7 +713,7 @@ mixed do_it( RequestID id )
 mixed parse( RequestID id )
 {
   if( !config_perm( "Add Module" ) )
-    return LOCALE(226, "Permission denied");
+    return "Permission denied";
 
   if( id->variables->module_to_add )
     return do_it( id );
@@ -734,7 +727,7 @@ mixed parse( RequestID id )
   }
 
   if( !config_perm( "Site:"+conf->name ) )
-    return LOCALE(226,"Permission denied");
+    return "Permission denied";
 
   if( !conf->inited )
     conf->enable_all_modules();

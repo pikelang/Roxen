@@ -1,9 +1,5 @@
 #include <config_interface.h>
 #include <config.h>
-#include <roxen.h>
-//<locale-token project="roxen_config">_</locale-token>
-#define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
-
 
 #define q(X) Roxen.html_encode_string(X)
 
@@ -43,8 +39,8 @@ string parse( RequestID id )
   
   res +=
     "<table>"
-    "<tr><td><b>"+_(463,"Database")+"</b></td><td><b>"+
-    _(206,"User")+"</b></td><td><b>"+_(464,"Connections")+
+    "<tr><td><b>Database</b></td><td><b>"
+    "User</b></td><td><b>Connections"
     "</b></td></tr>\n";
 
   int total;
@@ -72,8 +68,8 @@ string parse( RequestID id )
   
   res +=
     "<table>"
-    "<tr><td><b>"+_(463,"Database")+"</b></td><td><b>"+
-    _(206,"User")+"</b></td><td><b>"+_(464,"Connections")+
+    "<tr><td><b>Database</b></td><td><b>"
+    "User</b></td><td><b>Connections"
     "</b></td></tr>\n";
 
   total = 0;

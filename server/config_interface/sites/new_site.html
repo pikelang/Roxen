@@ -1,4 +1,3 @@
-<trans-reg project="roxen_config"/>
 <topmenu base="../" selected='sites'/>
 
 <content>
@@ -10,10 +9,9 @@
 
 <define variable='var.common'>
 <font color='&usr.warncolor;'>&var.error;<br /></font>
-  <b><translate id="269">Site name:</translate></b> 
+  <b>Site name:</b>
    <input name="name" value="&form.name;" /><br />
   <blockquote>
-    <translate id="270">
 The name of the configuration must contain characters
 other than space and tab, it should not end with
 ~, and it must not be 'CVS', 'Global Variables' or
@@ -23,11 +21,10 @@ used. This name will show up in the sites menu, a
 lowercased, filesystem-friendly version will become
 the virtual server's configuration file name as well
 as the name of its log file directory.
-</translate>
 </blockquote>
 
-<translate id="248" variable="var.create_txt">Create new site</translate>
-<translate id="271" variable="var.template_txt">with template</translate>
+<set variable="var.create_txt">Create new site</set>
+<set variable="var.template_txt">with template</set>
 
 <submit-gbutton2 width='230' align_icon='right' icon_src='&usr.next;'
 name="new_with_template">&var.create_txt; &var.template_txt;</submit-gbutton2>
@@ -55,7 +52,7 @@ name="new">&var.create_txt;</submit-gbutton2>
      <true/>
    </if>
 </if>
-<if variable='var.error is error'><define variable="var.error" preparse="1"><translate id="296">Illegal site name</translate></define><set variable="var.go" value='1' /></if>
+<if variable='var.error is error'><define variable="var.error" preparse="1">Illegal site name</define><set variable="var.go" value='1' /></if>
 <if not="1" variable='form.name'><set variable="var.go" value='1' /></if>
 <if variable='var.go'>
    <eval>&var.common:none;</eval>

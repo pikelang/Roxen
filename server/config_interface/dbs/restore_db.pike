@@ -1,8 +1,5 @@
 #include <config_interface.h>
 #include <config.h>
-#include <roxen.h>
-//<locale-token project="roxen_config">_</locale-token>
-#define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 mapping|string parse( RequestID id )
 {
@@ -18,10 +15,10 @@ mapping|string parse( RequestID id )
 
   if( !sizeof( bks ) )
   {
-    res += _(79,"<p>No backups are currently available. To make a backup of a "
-	     "database, focus on it in the Databases tab, and click on the "
-	     "make backup button. Please note that you can only make backups "
-	     "of databases managed by Roxen.</p>");
+    res += ("<p>No backups are currently available. To make a backup of a "
+	    "database, focus on it in the Databases tab, and click on the "
+	    "make backup button. Please note that you can only make backups "
+	    "of databases managed by Roxen.</p>");
   }
   
   if( !id->variables->db )
@@ -31,8 +28,8 @@ mapping|string parse( RequestID id )
       mapping done = ([ ]);
       res += "<gtext scale='0.6'>"+bk+"</gtext>";
       res += "<table>";
-      res += "<tr><td></td><td><b>"+_(405,"Directory")+"</b></td><td><b>"+
-	_(459,"Date")+"</b></td></tr>\n";
+      res += "<tr><td></td><td><b>Directory</b></td><td><b>"
+	"Date</b></td></tr>\n";
 
       foreach( bks[bk], mapping b )
       {
@@ -43,10 +40,10 @@ mapping|string parse( RequestID id )
 	    ({ b->tbl }),
 	    "<a href='restore_db.pike?db="+Roxen.html_encode_string(bk)
 	    +"&dir="+Roxen.html_encode_string( b->directory )+"'>"+
-	    "<gbutton>"+_(460,"Restore")+"</gbutton></a>"
+	    "<gbutton>Restore</gbutton></a>"
 	    "<a href='restore_db.pike?db="+Roxen.html_encode_string(bk)
 	    +"&dir="+Roxen.html_encode_string( b->directory )+"&drop=1'>"+
-	    "<gbutton>"+_(227,"Delete")+"</gbutton></a>"
+	    "<gbutton>Delete</gbutton></a>"
 	  });
 	}
 	else
@@ -89,11 +86,11 @@ mapping|string parse( RequestID id )
 	if( bk->directory == id->variables->dir )
 	  possible += ({ bk->tbl });
 
-      res += "<gtext scale=0.5>"+
-	_(461,"Restore the following tables from the backup")+
+      res += "<gtext scale='0.5'>"
+	"Restore the following tables from the backup"
 	"</gtext> <br />"
-	"<input type=hidden name=db value='&form.db:http;' />"
-	"<input type=hidden name=dir value='&form.dir:http;' />";
+	"<input type='hidden' name='db' value='&form.db:http;' />"
+	"<input type='hidden' name='dir' value='&form.dir:http;' />";
       
       res += "<blockquote><table>";
       int n;
@@ -113,9 +110,9 @@ mapping|string parse( RequestID id )
       res += "</td></tr></table>";
 
       res +=
-	"</blockquote><gtext scale='0.5'>"+
-	_(462,"Restore the tables to the following database")
-	+"</gtext><blockquote>";
+	"</blockquote><gtext scale='0.5'>"
+	"Restore the tables to the following database"
+	"</gtext><blockquote>";
 
       res += "<select name='todb'>";
       foreach( sort(DBManager.list()), string db )
@@ -131,9 +128,9 @@ mapping|string parse( RequestID id )
       res += "</select>";
       
       res += "</blockquote><table width='100%'><tr><td>"
-	"<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
-	"<td align=right><a href=''><gbutton> "+
-	_(202,"Cancel")+" </gbutton></a></td>\n</table>\n";
+	"<submit-gbutton2 name='ok'>Ok</submit-gbutton2></td>\n"
+	"<td align=right><a href=''><gbutton> "
+	"Cancel </gbutton></a></td>\n</table>\n";
     }
   }
   if( !id->variables->db )

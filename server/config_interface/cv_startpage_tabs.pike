@@ -1,12 +1,8 @@
-#include <roxen.h>
-
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 array pages =
 ({
-  ({ "usersettings", "settings.html", 0,            0, LOCALE(220, "Your Settings") }),
-  ({ "users",        "users.html",    "Edit Users", 0, LOCALE(221, "Users")}),
+  ({ "usersettings", "settings.html", 0,            0, "Your Settings" }),
+  ({ "users",        "users.html",    "Edit Users", 0, "Users"         }),
 });
 
 string parse( RequestID id )

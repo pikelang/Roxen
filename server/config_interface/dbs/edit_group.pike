@@ -1,8 +1,6 @@
 #include <config_interface.h>
 #include <config.h>
-#include <roxen.h>
-//<locale-token project="roxen_config">_</locale-token>
-#define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+
 string trim_sl( string x )
 {
   while( strlen(x) && x[-1] == '/' )
@@ -52,8 +50,7 @@ string parse( RequestID id )
   res += "<tr><td></td><td align=right><cf-save /></td></tr>";
   res += "</table>";
 
-  res += sprintf("<font size=+1><b>"+_(434,"Databases in the group %s")+
-		 "</b></font><br />", c->lname );
+  res += sprintf("<font size=+1><b>Databases in the group %s</b></font><br />", c->lname );
 
   res += "<dl>";
   foreach( DBManager.group_dbs( id->variables->group ), string d )

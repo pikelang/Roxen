@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.111 2002/06/13 00:18:09 nilsson Exp $ -->
+<!-- $Id: template,v 1.112 2002/06/15 18:31:11 nilsson Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -104,21 +104,20 @@
    <input align="&_.img-align;" type="image" name="&_.name;" value="&_.contents;" src="&var.url;" border="0" />
 </define>
 
-<define tag="cf-save"> <submit-gbutton2 name='save' img-align="right"> <translate id="bA">Save</translate> </submit-gbutton2> </define>
-<define tag="cf-ok"> <submit-gbutton2 name='ok'> <translate id="201">Ok</translate> </submit-gbutton2> </define>
-<define tag="cf-cancel"> <gbutton href="&_.href;"> <translate id="202">Cancel</translate> </gbutton> </define>
-<define tag="cf-refresh"> <gbutton href="&page.url;"> <translate>Refresh</translate> </gbutton> </define>
+<define tag="cf-save"> <submit-gbutton2 name='save' img-align="right"> Save </submit-gbutton2> </define>
+<define tag="cf-ok"> <submit-gbutton2 name='ok'> Ok </submit-gbutton2> </define>
+<define tag="cf-cancel"> <gbutton href="&_.href;"> Cancel </gbutton> </define>
+<define tag="cf-refresh"> <gbutton href="&page.url;"> Refresh </gbutton> </define>
 
 <define tag="cf-next">
-   <submit-gbutton2 preparse="1" name="next" icon_src="&usr.next;" align_icon="right"> <translate id="203">Next</translate> </submit-gbutton2>
+   <submit-gbutton2 preparse="1" name="next" icon_src="&usr.next;" align_icon="right"> Next </submit-gbutton2>
 </define>
 
 <define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
 
 <define container="tmpl">
-  <trans-reg project="roxen_config" />
 <html><head>
-<title>&roxen.version; <translate id="204">Administration Interface</translate><eval>&_.title:none;</eval></title>
+<title>&roxen.version; Administration Interface<eval>&_.title:none;</eval></title>
 </head>
 <gauge variable='var.time-spent' resultonly='yes'>
 <nooutput>
@@ -145,7 +144,7 @@
              <font color="&usr.top-fgcolor;"><colorscope ::=&usr.top-tableargs;>
               <gbutton href="/change_user.pike?uid=&usr.user-uid;"
                   align="right" 
-                  width="70"> <translate id="206">User</translate>: </gbutton></colorscope>
+                  width="70"> User: </gbutton></colorscope>
 	     </font>
             </td>
             <td>

@@ -1,8 +1,3 @@
-#include <roxen.h>
-
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
-
 
 string module_global_page( RequestID id, Configuration conf )
 {

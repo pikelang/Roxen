@@ -1,8 +1,5 @@
 inherit "../logutil.pike";
 #include <config.h>
-#include <roxen.h>
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 string parse( RequestID id )
 {
@@ -19,7 +16,7 @@ string parse( RequestID id )
 				id->misc->cf_locale, 2);
   if( sizeof( report ) >= 1000 )
     report[1000] =
-      sprintf(LOCALE(467,"%d entries skipped. Present in log on disk"),
+      sprintf("%d entries skipped. Present in log on disk",
 	      sizeof( report )-999 );
-  return "</dl>"+(sizeof(report)?(report[..1000]*""):LOCALE(250, "Empty"))+"<dl>";
+  return "</dl>"+(sizeof(report)?(report[..1000]*""):"Empty")+"<dl>";
 }

@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.134 2002/06/13 00:18:09 nilsson Exp $
+// $Id: site_content.pike,v 1.135 2002/06/15 18:31:12 nilsson Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -9,8 +9,6 @@ inherit "../statusinfo.pike";
 #include <config.h>
 #include <roxen.h>
 
-//<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 #define TRANSLATE( X ) _translate( (X), id )
 
 string _translate( mixed what, RequestID id )
@@ -127,7 +125,7 @@ string buttons( Configuration c, string mn, RequestID id )
   if( sizeof( glob( "*.x", indices( id->variables ) ) ) )
   {
     string a = glob( "*.x", indices( id->variables ) )[0]-".x";
-    if( a == LOCALE(253, "Reload") )
+    if( a == "Reload" )
     {
       roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer(), nm;
 
@@ -148,7 +146,7 @@ string buttons( Configuration c, string mn, RequestID id )
       }
       mod = c->find_module( replace( mn,"!","#" ) );
     }
-    else if( a == LOCALE(247, "Clear Log") )
+    else if( a == "Clear Log" )
     {
       array(int) times, left;
       Configuration conf = mod->my_configuration();
@@ -158,8 +156,8 @@ string buttons( Configuration c, string mn, RequestID id )
 		 host = id->misc->config_settings->host,
 	     mod_name = Roxen.get_modname(mod),
 	      log_msg = sprintf("2,%s," +
-				LOCALE(290,"Module event log for '%s' "
-				"cleared by %s (%s) from %s") + "\n",
+				("Module event log for '%s' "
+				 "cleared by %s (%s) from %s\n"),
 				mod_name||mod, Roxen.get_modfullname(mod)||"",
 				realname, name, host);
       foreach(indices(mod->error_log), string error)
@@ -209,11 +207,11 @@ string buttons( Configuration c, string mn, RequestID id )
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
   if( c != id->conf )
 #endif
-    buttons += "<submit-gbutton>"+LOCALE(253, "Reload")+"</submit-gbutton>";
+    buttons += "<submit-gbutton>Reload</submit-gbutton>";
   if(!mod)
     return buttons;
   if( sizeof( mod->error_log ) )
-    buttons+="<submit-gbutton>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
+    buttons+="<submit-gbutton>Clear Log</submit-gbutton>";
 
   if(mod->query_action_buttons)
     foreach( indices(mod->query_action_buttons("standard")), string title )
@@ -225,8 +223,7 @@ string buttons( Configuration c, string mn, RequestID id )
   if( c != id->conf )
 #endif
     buttons += "<link-gbutton href='../../../../drop_module.pike?config="+
-            path[0]+"&drop="+mn+"'>"+
-            LOCALE(252, "Drop Module")+"</link-gbutton></a>";
+            path[0]+"&drop="+mn+"'>Drop Module</link-gbutton></a>";
   return buttons;
 }
 
@@ -247,10 +244,10 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
 
   if( sizeof( report ) >= 1000 )
     report[1000] =
-      sprintf(LOCALE(472,"%d entries skipped. Present in log on disk."),
+      sprintf("%d entries skipped. Present in log on disk.",
 	      sizeof( report )-999 );
 
-  return "<h2>"+LOCALE(216, "Events")+"</h2>" + (report[..1000]*"");
+  return "<h2>Events</h2>" + (report[..1000]*"");
 }
 
 #define EC(X) niceerror( lambda(){ return (X); } , #X)
@@ -285,7 +282,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 
   string dbuttons="";
   if( config_perm( "Add Module" ) )
-    dbuttons += "<h2>"+LOCALE(196, "Tasks")+"</h2>"+buttons( c, mn, id );
+    dbuttons += "<h2>Tasks</h2>"+buttons( c, mn, id );
   RoxenModule m = c->find_module( replace(mn,"!","#") );
 
   if(!m)
@@ -297,8 +294,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 
   string homepage = m->module_url;
   if(stringp(homepage) && sscanf(homepage, "%*[A-Za-z0-9+.-]:%*s")==2)
-    homepage = sprintf("<br /><b>" + LOCALE(254,"Module homepage") +
-		       ":</b> <a href=\"%s\">%s</a>",
+    homepage = sprintf("<br /><b>Module homepage:</b> <a href=\"%s\">%s</a>",
 		       homepage, homepage);
   else homepage = "";
 
@@ -343,7 +339,7 @@ string find_module_doc( string cn, string mn, RequestID id )
                     "<b>Identifier:</b> " + mi->sname + "<br />\n"
 		    "<b>Thread safe:</b> " + 
 		    (m->thread_safe ? 
-		     LOCALE("yes", "Yes") : LOCALE("no", "No")) +
+		     "Yes" : "No") +
 #ifdef THREADS
 		    " <small>(<a href='../../../../../tasks/?task"
 		    "=locks.pike&class=status'>more info</a>)</small><br />\n"
@@ -355,7 +351,7 @@ string find_module_doc( string cn, string mn, RequestID id )
                     "</td></tr></table><br />\n" +
                     EC(TRANSLATE(m->file_name_and_stuff())) +
 		    homepage + creators  
-		    + "<h2>"+LOCALE(261,"Inherit tree")+"</h2>"+
+		    + "<h2>Inherit tree</h2>"+
                     program_info( m ) +
                     "<dl>" + 
                     (m->faked?"(Not on disk, faked module)":inherit_tree( m ))
@@ -449,8 +445,8 @@ string port_for( string url, int settings )
         </if>
         <emit source='port-urls' port='&_.port;'>
           <if not variable='_.url is &var.url;'>
-          "+LOCALE(323,"Shared with ")+
-#"<a href='../&_.conf;/'>&_.confname;</a>
+          Shared with
+<a href='../&_.conf;/'>&_.confname;</a>
           </if>
         </emit>
       "+(settings?
@@ -518,8 +514,7 @@ string parse( RequestID id )
      case 0:
      case "":
      case "Status":
-       res = "<br />\n<blockquote><h1>" +
- 	 LOCALE(299,"URLs") + "</h1>";
+       res = "<br />\n<blockquote><h1>URLs</h1>";
        foreach( conf->query( "URLs" ), string url )
        {
 	 url = (url/"#")[0];
@@ -542,10 +537,10 @@ string parse( RequestID id )
        res += "<p>"+Roxen.html_encode_string(conf->variables->comment->query())+"</p>";
 
        res += "<br /><table><tr><td valign=\"top\">"
-	 "<h2>"+LOCALE(260, "Request status")+"</h2>";
+	 "<h2>Request status</h2>";
        res += status(conf);
        res += "</td><td valign=top>"
-	 "<h2>"+LOCALE(292, "Cache status")+"</h2><table cellpading='0' cellspacing='0' width='50'%>\n";
+	 "<h2>Cache status</h2><table cellpading='0' cellspacing='0' width='50'%>\n";
 
        int total = conf->datacache->hits+conf->datacache->misses;
 
@@ -553,18 +548,18 @@ string parse( RequestID id )
          total = 1;
 
        res += 
-           sprintf("<tr><td><b>" + LOCALE(293, "Hits") + ": </b></td>"
+           sprintf("<tr><td><b>Hits: </b></td>"
 		   "<td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
                    conf->datacache->hits,
                    conf->datacache->hits*100 / total );
        res += 
-           sprintf("<tr><td><b>" + LOCALE(294, "Misses") + ": </b></td>"
+           sprintf("<tr><td><b>Misses: </b></td>"
 		   "<td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
                    conf->datacache->misses,
                    conf->datacache->misses*100 / total );
 
        res += 
-           sprintf("<tr><td><b>" + LOCALE(295, "Entries") + ": </b></td>"
+           sprintf("<tr><td><b>Entries: </b></td>"
 		   "<td align='right'>%d</td><td align='right'>%dKb</td></tr>\n",
                    sizeof( conf->datacache->cache ),
                    (conf->datacache->current_size / 1024 ) );
@@ -574,7 +569,7 @@ string parse( RequestID id )
        res += "</td></tr></table><br />";
 
 
-       if( id->variables[ LOCALE(247, "Clear Log")+".x" ] )
+       if( id->variables[ "Clear Log.x" ] )
        {
 	 foreach( values(conf->modules), ModuleCopies m )
 	   foreach( values( m ), RoxenModule md )
@@ -592,17 +587,17 @@ string parse( RequestID id )
 	 }
 	 conf->error_log = ([]);
 	 roxen->nwrite( 
-	   sprintf(LOCALE(311,"Site event log for '%s' "
-			  "cleared by %s (%s) from %s") + "\n",
+	   sprintf("Site event log for '%s' "
+		   "cleared by %s (%s) from %s\n",
 		   conf->query_name(),
 		   id->misc->config_user->real_name,
 		   id->misc->config_user->name,
 		   id->misc->config_settings->host),
 	   0, 2, 0, conf);
        }
-       res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='1' />";
+       res+="<h1>Events</h1><insert file='log.pike' nocache='1' />";
        if( sizeof( conf->error_log ) )
-	 res+="<submit-gbutton>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
+	 res+="<submit-gbutton>Clear Log</submit-gbutton>";
        return res+"<br />\n";
     }
   } else

@@ -1,9 +1,6 @@
-// $Id: user_form.pike,v 1.6 2001/01/28 05:45:48 per Exp $
+// $Id: user_form.pike,v 1.7 2002/06/15 18:31:11 nilsson Exp $
 
 #include <config_interface.h>
-#include <roxen.h>
-//<locale-token project="roxen_config"> LOCALE </locale-token>
-#define LOCALE(X,Y)  _STR_LOCALE("roxen_config",X,Y)
 
 mapping parse( RequestID id )
 {
@@ -15,7 +12,7 @@ mapping parse( RequestID id )
     nid = nid->misc->orig;
 
   if( !nid->misc->config_user->auth( "Edit Users" ) )
-    return Roxen.http_string_answer(LOCALE(226, "Permission denied"),
+    return Roxen.http_string_answer("Permission denied",
 				    "text/html");
 
   foreach( sort( roxen.list_admin_users() ), string uid )

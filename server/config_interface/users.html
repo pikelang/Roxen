@@ -1,12 +1,11 @@
-<trans-reg project="roxen_config"/>
 <topmenu selected="home" />
 <content>
 <cv-startpage>
 
 <if not variable='form.page'>
   <cf-perm perm="Edit Users">
-    <translate id="222" variable="var.create_txt">Create new user</translate>
-    <translate id="223" variable="var.delete_txt">Delete old user</translate>
+    <set variable="var.create_txt">Create new user</set>
+    <set variable="var.delete_txt">Delete old user</set>
     <table border="0" cellpadding="5" cellspacing="0"><tr><td>
 
     <gbutton href='users.html?page=create_user'
@@ -28,12 +27,12 @@
  <cf-perm perm="Edit Users">
   <if not variable='form.create_user_name'>
     <input type='hidden' name='page' value='create_user' />
-    <translate id="224" variable="var.create_txt">Create User</translate>
-    <translate id="225" variable="var.id_txt">User ID</translate>
+    <set variable="var.create_txt">Create User</set>
+    <set variable="var.id_txt">User ID</set>
     <table><tr><td>&var.id_txt;:</td><td><input name="create_user_name" /></td>
     <td><submit-gbutton2> &var.create_txt; </submit-gbutton2></td></tr></table>
     <p>
-    <translate id="202" variable="var.cancel_txt">Cancel</translate>
+    <set variable="var.cancel_txt">Cancel</set>
     <gbutton href='users.html' font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>
     </p>
   </if>
@@ -47,7 +46,7 @@
   <cf-perm perm="Edit Users">
   <eval><insert file=user_delete.pike nocache="1"/></eval>
   <p>
-  <translate id="202" variable="var.cancel_txt">Cancel</translate>
+  <set variable="var.cancel_txt">Cancel</set>
   <gbutton href=users.html font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>
   </p>
   </cf-perm>

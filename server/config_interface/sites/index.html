@@ -1,4 +1,3 @@
-<trans-reg project="roxen_config"/>
 <topmenu base="../" selected='sites' />
 
 <content>
@@ -10,7 +9,7 @@
          bgcolor='&usr.left-selbuttonbg;' 
          icon_src='&usr.selected-indicator;' 
          icon_align='left' 
-         href=''><translate id="213">Sites</translate></gbutton>
+         href=''>Sites</gbutton>
 <br />
 <if variable="usr.configlistmode is 1">
 <if variable='form.goto_site'>
@@ -18,7 +17,7 @@
   <redirect to='site.html/&form.goto_site;/' />
 </if>
 </if>
-<translate id="509">Select site</translate><br />
+Select site<br />
 <select name='goto_site' onChange='form.submit();'>
    <option value=''> -- </option>
  <emit source='configurations'>
@@ -51,11 +50,11 @@
      <gbutton href='new_site.html'
               icon_src='&usr.next;' 
               align_icon='right' 
-              hspace='5' vspace='5'><translate id="248">Create new site</translate></gbutton>
+              hspace='5' vspace='5'>Create new site</gbutton>
      <gbutton href='drop_site.html' 
               icon_src='&usr.next;' 
               align_icon='right' 
-              hspace='5' vspace='5'><translate id="249">Drop old site</translate></gbutton>
+              hspace='5' vspace='5'>Drop old site</gbutton>
    </cf-perm>
   </st-page></subtablist>
 </cv-split>
