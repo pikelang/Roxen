@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.48 1999/01/13 23:25:25 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.49 1999/01/14 03:16:59 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -359,7 +359,8 @@ mixed find_file( string f, object id )
 	/* FIXME: Should probably keep prestates etc too.
 	 *	/grubba 1999-01-14
 	 */
-	string new_query = id->not_query[..sizeof(id->not_query)-2] +
+	string new_query =
+	  http_encode_string(id->not_query[..sizeof(id->not_query)-2]) +
 	  (id->query?("?" + id->query):"");
 	TRACE_LEAVE("Redirecting to \"" + new_query + "\"");
 	return http_redirect(new_query, id);
