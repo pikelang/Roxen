@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.231 2000/07/21 22:58:30 js Exp $";
+constant cvs_version = "$Id: http.pike,v 1.232 2000/07/21 23:22:21 js Exp $";
 
 #define MAGIC_ERROR
 
@@ -670,9 +670,8 @@ private int parse_got()
   f = http_decode_string( f );
 
   // f is sent to Unix API's that take NUL-terminated strings...
-  int i;
-  if((i = search(f, "\0")) != -1)
-    f = f[..i-1];
+  if(search(f, "\0") != -1)
+     sscanf(f, "%s\0", f);
   
   string prf = f[1..1];
   if (prf == "<" && sscanf(f, "/<%s>/%s", a, f)==2)
