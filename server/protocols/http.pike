@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.224 2000/03/24 19:15:06 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.225 2000/03/24 19:31:47 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -931,6 +931,8 @@ private int parse_got()
     client_var = s_and_v[1];
   }
   else {
+    if( !client_var->Fullname )
+      client_var->Fullname = "unknown";
     client_var->fullname=lower_case(client_var->Fullname);
     array s_and_v = find_supports_and_vars(client_var->fullname, supports, client_var);
     supports = s_and_v[0];
@@ -1634,7 +1636,8 @@ void send_result(mapping|void result)
 
       if( stringp(file->data) )
       {
-	if (file["type"][0..4] == "text/") {
+	if (file["type"][0..4] == "text/") 
+        {
 	  [charset,file->data] = output_encode( file->data );
 	  if( charset )
 	    charset = "; charset="+charset;
@@ -1770,9 +1773,22 @@ void send_result(mapping|void result)
       send(file->data, file->len);
     if(file->file)
       send(file->file, file->len);
-  } else
+  } else {
+    if(head_string)
+    {
+      if(my_fd->query_fd && my_fd->query_fd() >= 0 &&
+         file->len > 0 && file->len < 2000)
+      {
+        // Ordinary connection, and a short file.
+        // Just do a blocking write().
+        my_fd->write( head_string );
+        do_log( );
+        return;
+      }
+      send(head_string);
+    }
     file->len = 1; // Keep those alive, please...
-
+  }
   start_sender(do_log);
 }
 
