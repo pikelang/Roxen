@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.93 2001/10/09 16:58:44 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.94 2002/04/15 08:53:48 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -388,7 +388,8 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     if (args->cnd)
       text_img = text_img->scale((int) round(text_img->xsize() * 0.8),
 				 text_img->ysize());
-  }
+  } else
+    text_height = 0;
 
   int t_width = text_img && text_img->xsize();
 
@@ -410,9 +411,9 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     //  horizontally centered
     icn_x = left + (req_width - right - left - i_width) / 2;
     txt_x = left + (req_width - right - left - t_width) / 2;
-    if (args->icva == "above") {
+    if (args->icva == "above" || !text_height) {
       txt_y = middle;
-      icn_y = top + (middle - top - i_height) / 2;
+      icn_y = top + ((text_height ? middle : bottom) - top - i_height) / 2;
     } else {
       txt_y = top;
       icn_y = middle + (bottom - middle - i_height) / 2;
