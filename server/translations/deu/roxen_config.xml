@@ -2,36 +2,37 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>deu</language>
-<dumped>968472148</dumped>
+<dumped>969369619</dumped>
 <file>../base_server/configuration.pike</file>
+<file>../base_server/config_userdb.pike</file>
 <file>../base_server/global_variables.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../modules/configuration/config_userdb.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
-<file>../config_interface/standard/template</file>
+<file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/logutil.pike</file>
 <file>../config_interface/standard/statusinfo.pike</file>
+<file>../config_interface/standard/template</file>
 <file>../config_interface/standard/topmenu.pike</file>
-<file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/users.html</file>
-<file>../config_interface/standard/user_form.pike</file>
 <file>../config_interface/standard/user_delete.pike</file>
+<file>../config_interface/standard/user_form.pike</file>
 <file>../config_interface/standard/actions/index.html</file>
+<file>../config_interface/standard/event_log/clear_log.pike</file>
 <file>../config_interface/standard/event_log/index.html</file>
 <file>../config_interface/standard/event_log/log.pike</file>
-<file>../config_interface/standard/event_log/clear_log.pike</file>
+<file>../config_interface/standard/sites/add_module.pike</file>
+<file>../config_interface/standard/sites/config_left_item.pike</file>
+<file>../config_interface/standard/sites/create_site.pike</file>
+<file>../config_interface/standard/sites/drop_module.pike</file>
+<file>../config_interface/standard/sites/drop_site.html</file>
+<file>../config_interface/standard/sites/drop_site.pike</file>
 <file>../config_interface/standard/sites/index.html</file>
 <file>../config_interface/standard/sites/log.pike</file>
+<file>../config_interface/standard/sites/new_site.html</file>
 <file>../config_interface/standard/sites/site_content.pike</file>
 <file>../config_interface/standard/sites/site_header.pike</file>
-<file>../config_interface/standard/sites/new_site.html</file>
-<file>../config_interface/standard/sites/create_site.pike</file>
-<file>../config_interface/standard/sites/drop_site.pike</file>
-<file>../config_interface/standard/sites/drop_site.html</file>
-<file>../config_interface/standard/sites/add_module.pike</file>
-<file>../config_interface/standard/sites/drop_module.pike</file>
-<file>../config_interface/standard/sites/config_left_item.pike</file>
 <file>../config_interface/standard/sites/site_templates/common.pike</file>
 
 
@@ -91,8 +92,7 @@
 
 <str id="11">
 <new/>
-<o>Reloaded %s.
-</o>
+<o>Reloaded %s.</o>
 <t></t>
 </str>
 
@@ -161,7 +161,7 @@
 
 <str id="22">
 <new/>
-<o>Virtual server comment</o>
+<o>Site comment</o>
 <t></t>
 </str>
 
@@ -172,12 +172,12 @@
 
 <str id="24">
 <new/>
-<o>Virtual server name</o>
+<o>Site name</o>
 <t></t>
 </str>
 
 <str id="25">
-<o>This is the name that will be used in the configuration interface. If this is left empty, the actual name of the virtual server will be used.</o>
+<o>This is the name that will be used in the administration interface. If this is left empty, the actual name of the site will be used.</o>
 <t>Dies ist der Name, der im Konfigurations-Interface für den
   virtuellen Server benutzt wird.  Wird dieses Feld leer gelassen,
   wird der eigentliche Name des virtuellen Servers benutzt.</t>
@@ -309,7 +309,7 @@ Dies hat auch Einfluss auf den Access-Counter.</t>
 </str>
 
 <str id="35">
-<o>The domainname of the server. The domainname is used to generate default URLs, and to generate email addresses.</o>
+<o>The domain name of the server. The domain name is used to generate default URLs, and to generate email addresses.</o>
 <t>Der Domainname des Servers, der für die Generierung der
 Standard-URLs und Email-Adressen verwendet wird.</t>
 </str>
@@ -358,7 +358,7 @@ durch andere Ressourcen benutzt wird.</t>
 </str>
 
 <str id="43">
-<o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this Virtual Server.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
+<o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this site.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
 <t>Wenn gesetzt, wird pro Server eine Bandbreitenbegrenzung aktiviert.
 Dadurch kann man die zur Verfügung stehende Bandbreite für diesen
 virtuellen Server begrenzen.&lt;br&gt;</t>
@@ -371,7 +371,7 @@ virtuellen Server begrenzen.&lt;br&gt;</t>
 </str>
 
 <str id="45">
-<o>This is the average bandwidth available to this Virtual Server in bytes/sec (the bucket "fill rate").</o>
+<o>This is the average bandwidth available to this site in bytes/sec (the bucket "fill rate").</o>
 <t>Dies ist die durchschnittliche Bandbreite, die für diesen virtuellen Server zur Verfügung steht. (in Bytes/Sekunde).</t>
 </str>
 
@@ -645,7 +645,7 @@ anzunehmen.</t>
 </str>
 
 <str id="91">
-<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will continue being correct.</o>
+<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.</o>
 <t>Bei wiederaufgenommenen Verbindungen werden die übertragenen Daten sowie die bisher verschickten Daten verzeichnet.  Wenn ein Benutzer bereits 100 Bytes einer Datei geladen hat, und in einem späteren Download die fehlenden 900 Bytes überträgt, werden im Logfile die gesamten 1000 Bytes verzeichnet.&lt;p&gt;Dies ist nützlich, um erfolgreiche Downloads zu erkennen.</t>
 </str>
 
@@ -678,7 +678,7 @@ anzunehmen.</t>
 </str>
 
 <str id="97">
-<o>This is the default file path that will be prepended to the log file path in all the default modules and the virtual server.</o>
+<o>This is the default file path that will be prepended to the log file path in all the default modules and the site.</o>
 <t>Alle Logdateien werden unterhalb dieses Verzeichnisses abgelegt.</t>
 </str>
 
@@ -835,7 +835,7 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="125">
-<o>Setting this variable to No will display the "Identify as" node where you can state what Roxen should call itself when talking to clients.&lt;br /&gt;It is possible to disable this so that you can enter an identification-string that does not include the actual version of Roxen, as recommended by the HTTP/1.0 draft 03:&lt;p&gt;&lt;blockquote&gt;&lt;i&gt;Note: Revealing the specific software version of the server may allow the server machine to become more vulnerable to attacks against software that is known to contain security holes. Server implementors are encouraged to make this field a configurable option.&lt;/i&gt;&lt;/blockquote&gt;&lt;/p&gt;</o>
+<o>Setting this variable to No will display the "Identify as" node where you can state what Roxen should call itself when talking to clients.&lt;br /&gt;It is possible to disable this so that you can enter an identification-string that does not include the actual version of Roxen, as recommended by the HTTP/1.0 and HTTP/1.1 RFCs:&lt;p&gt;&lt;blockquote&gt;&lt;i&gt;Note: Revealing the specific software version of the server may allow the server machine to become more vulnerable to attacks against software that is known to contain security holes. Server implementors are encouraged to make this field a configurable option.&lt;/i&gt;&lt;/blockquote&gt;&lt;/p&gt;</o>
 <t>Bei Nein, kann eine andere Identität als der Standardwert eingetragen werden.</t>
 </str>
 
@@ -857,7 +857,7 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="129">
-<o>When roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group].</o>
+<o>When Roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group].</o>
 <t>Wenn Roxen unter der root-Kennung läuft, um den Port 80 
 öffnen zu können, wird die User-ID und die Group-ID auf diesen Wert
 gesetzt, nachdem der Port geöffnet wurde. Wenn ein Benutzername (z.B. 'www')
@@ -872,7 +872,7 @@ Die Syntax ist user[:group].</t>
 </str>
 
 <str id="131">
-<o>If this variable is set, roxen will set it's uid and gid permanently. This disables the 'exec script as user' fetures for CGI, and also access files as user in the filesystems, but it gives better security.</o>
+<o>If this variable is set, Roxen will set it's uid and gid permanently. This disables the 'exec script as user' features for CGI, and also 'access files as user' in the filesystems, but it gives better security.</o>
 <t>Wenn diese Variable gesetzt ist, wird Roxen seine UID und GID permanent
 auf die eingestellten Werte wechseln.  Dadurch können CGI-Scripte nicht
 mehr unter der Kennung anderer Benutzer ausgeführt werden. Allerdings
@@ -926,12 +926,12 @@ im Ereignis-Log verzeichnet.</t>
 
 <str id="138">
 <new/>
-<o>Logging: Logging method</o>
+<o>Logging: Debug log method</o>
 <t></t>
 </str>
 
 <str id="139">
-<o>What method to use for logging, default is file, but syslog is also available. When using file, the output is really sent to stdout and stderr, but this is handled by the start script.</o>
+<o>What method to use for the debug log, default is file, but syslog is also available. When using file, the output is really sent to stdout and stderr, but this is handled by the start script.</o>
 <t>Welche Methode soll für das Logging benutzt werden. Standard ist Datei,
 aber Syslog ist ebenfalls möglich.</t>
 </str>
@@ -1061,8 +1061,7 @@ Anfrage eine Weile benötigt.</t>
 </str>
 
 <str id="159">
-<o>Locale, used to localize all messages in Roxen.
-Standard means using the default locale, which varies according to the value of the 'LANG' environment variable.</o>
+<o>Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the value of the 'LANG' environment variable.</o>
 <t>Die Sprache, in der alle Roxen-Meldungen ausgeben werden.
 'standard' ist abhängig von der LANG Umgebungsvariable.</t>
 </str>
@@ -1496,8 +1495,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 
 <str id="255">
 <new/>
-<o>Disabling old configuration %s
-</o>
+<o>Disabling old configuration %s</o>
 <t></t>
 </str>
 
@@ -1558,8 +1556,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 
 <str id="dt">
 <new/>
-<o>Administrator logged on as %s from %s.
-</o>
+<o>Administrator logged on as %s from %s.</o>
 <t></t>
 </str>
 
@@ -1827,5 +1824,47 @@ as the name of its log file directory.
 <str id="190">
 <new/>
 <o>Initial variables for the site</o>
+<t></t>
+</str>
+
+<str id="229">
+<new/>
+<o>Page charset</o>
+<t></t>
+</str>
+
+<str id="230">
+<new/>
+<o>The charset to use when rendering configuration interface pages.</o>
+<t></t>
+</str>
+
+<str id="231">
+<new/>
+<o>Preferred language</o>
+<t></t>
+</str>
+
+<str id="232">
+<new/>
+<o>Which one of the completed translations of the administration interface to use.</o>
+<t></t>
+</str>
+
+<str id="233">
+<new/>
+<o>Failed login attempt %s from %s</o>
+<t></t>
+</str>
+
+<str id="234">
+<new/>
+<o>Requests:</o>
+<t></t>
+</str>
+
+<str id="235">
+<new/>
+<o>Are you sure you want to disable the site %s?</o>
 <t></t>
 </str>

@@ -2,36 +2,37 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>nld</language>
-<dumped>968472149</dumped>
+<dumped>969369621</dumped>
 <file>../base_server/configuration.pike</file>
+<file>../base_server/config_userdb.pike</file>
 <file>../base_server/global_variables.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../modules/configuration/config_userdb.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
-<file>../config_interface/standard/template</file>
+<file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/logutil.pike</file>
 <file>../config_interface/standard/statusinfo.pike</file>
+<file>../config_interface/standard/template</file>
 <file>../config_interface/standard/topmenu.pike</file>
-<file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/users.html</file>
-<file>../config_interface/standard/user_form.pike</file>
 <file>../config_interface/standard/user_delete.pike</file>
+<file>../config_interface/standard/user_form.pike</file>
 <file>../config_interface/standard/actions/index.html</file>
+<file>../config_interface/standard/event_log/clear_log.pike</file>
 <file>../config_interface/standard/event_log/index.html</file>
 <file>../config_interface/standard/event_log/log.pike</file>
-<file>../config_interface/standard/event_log/clear_log.pike</file>
+<file>../config_interface/standard/sites/add_module.pike</file>
+<file>../config_interface/standard/sites/config_left_item.pike</file>
+<file>../config_interface/standard/sites/create_site.pike</file>
+<file>../config_interface/standard/sites/drop_module.pike</file>
+<file>../config_interface/standard/sites/drop_site.html</file>
+<file>../config_interface/standard/sites/drop_site.pike</file>
 <file>../config_interface/standard/sites/index.html</file>
 <file>../config_interface/standard/sites/log.pike</file>
+<file>../config_interface/standard/sites/new_site.html</file>
 <file>../config_interface/standard/sites/site_content.pike</file>
 <file>../config_interface/standard/sites/site_header.pike</file>
-<file>../config_interface/standard/sites/new_site.html</file>
-<file>../config_interface/standard/sites/create_site.pike</file>
-<file>../config_interface/standard/sites/drop_site.pike</file>
-<file>../config_interface/standard/sites/drop_site.html</file>
-<file>../config_interface/standard/sites/add_module.pike</file>
-<file>../config_interface/standard/sites/drop_module.pike</file>
-<file>../config_interface/standard/sites/config_left_item.pike</file>
 <file>../config_interface/standard/sites/site_templates/common.pike</file>
 
 
@@ -82,10 +83,8 @@
 </str>
 
 <str id="11">
-<o>Reloaded %s.
-</o>
-<t>herlaad %s.
-</t>
+<o>Reloaded %s.</o>
+<t>herlaad %s.</t>
 </str>
 
 <str id="12">
@@ -105,7 +104,7 @@
 
 <str id="15">
 <o>The realm to use when requesting password from the client. Usually used as an informative message to the user.</o>
-<t>De locatienaam die wordt getoond als de server om een wachtwoord van de gebruiker vraagt. Alleen informatief. </t>
+<t>De locatienaam die wordt getoond als de server om een wachtwoord van de gebruiker vraagt. Alleen informatief.</t>
 </str>
 
 <str id="16">
@@ -115,7 +114,7 @@
 
 <str id="17">
 <o>This is the 'security level=value' list.&lt;br /&gt;Each security level can be any or more from this list:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;</o>
-<t>Dit is de 'security level=waarde' lijst. &lt;br /&gt;Elk beveiligingniveau kan &eacute;&eacute;n van de waarden uit de volgende lijst zijn:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;</t>
+<t>Dit is de 'security level=waarde' lijst. &lt;br /&gt;Elk beveiligingniveau kan &amp;eacute;&amp;eacute;n van de waarden uit de volgende lijst zijn:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;</t>
 </str>
 
 <str id="18">
@@ -145,7 +144,7 @@
 </str>
 
 <str id="22">
-<o>Virtual server comment</o>
+<o>Site comment</o>
 <t>Commentaar bij virtuele server</t>
 </str>
 
@@ -155,12 +154,12 @@
 </str>
 
 <str id="24">
-<o>Virtual server name</o>
+<o>Site name</o>
 <t>Naam van de virtuele server</t>
 </str>
 
 <str id="25">
-<o>This is the name that will be used in the configuration interface. If this is left empty, the actual name of the virtual server will be used.</o>
+<o>This is the name that will be used in the administration interface. If this is left empty, the actual name of the site will be used.</o>
 <t>De naam id gebruikt wordt in de configuratie-interface. Is dit veld leeg dan gebruikt Roxen de werkelijke naam van de virtueleserver.</t>
 </str>
 
@@ -207,7 +206,7 @@ $user_id       -- A unique user ID, if cookies are supported,
 &lt;pre&gt;response-code of *: formaat for deze respons-code
 
 Het logformaat bestaat uit normale karakters of bestaat uit
-&eacute;&eacute;n of meerder van de volgende variabelen:
+&amp;eacute;&amp;eacute;n of meerder van de volgende variabelen:
 
 \n \t \r       -- Zoals in  C, newline, tab en linefeed
 $char(int)     -- Insert the (1 byte) character specified by the integer.
@@ -276,7 +275,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 <str id="33">
 <o>Don't log requests from hosts with an IP number which matches any of the patterns in this list. This also affects the access counter log.</o>
 <t>Log geen verzoeken van hosts met een IP-nummber dat overeenkomt met
-&eacute;&eacute;n van de patronen uit deze lisjt. Dit be&iacute;nvloedt ook het access-counter log.</t>
+&amp;eacute;&amp;eacute;n van de patronen uit deze lisjt. Dit be&amp;iacute;nvloedt ook het access-counter log.</t>
 </str>
 
 <str id="34">
@@ -285,7 +284,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 </str>
 
 <str id="35">
-<o>The domainname of the server. The domainname is used to generate default URLs, and to generate email addresses.</o>
+<o>The domain name of the server. The domain name is used to generate default URLs, and to generate email addresses.</o>
 <t>De domeinnaam van de server. Deze wordt gebruikt om de standaard-URL's en -email adressen te genereren.</t>
 </str>
 
@@ -329,7 +328,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="43">
 <new/>
-<o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this Virtual Server.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
+<o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this site.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
 <t></t>
 </str>
 
@@ -341,7 +340,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="45">
 <new/>
-<o>This is the average bandwidth available to this Virtual Server in bytes/sec (the bucket "fill rate").</o>
+<o>This is the average bandwidth available to this site in bytes/sec (the bucket "fill rate").</o>
 <t></t>
 </str>
 
@@ -617,7 +616,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="91">
 <new/>
-<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will continue being correct.</o>
+<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.</o>
 <t></t>
 </str>
 
@@ -653,7 +652,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="97">
 <new/>
-<o>This is the default file path that will be prepended to the log file path in all the default modules and the virtual server.</o>
+<o>This is the default file path that will be prepended to the log file path in all the default modules and the site.</o>
 <t></t>
 </str>
 
@@ -822,7 +821,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="125">
 <new/>
-<o>Setting this variable to No will display the "Identify as" node where you can state what Roxen should call itself when talking to clients.&lt;br /&gt;It is possible to disable this so that you can enter an identification-string that does not include the actual version of Roxen, as recommended by the HTTP/1.0 draft 03:&lt;p&gt;&lt;blockquote&gt;&lt;i&gt;Note: Revealing the specific software version of the server may allow the server machine to become more vulnerable to attacks against software that is known to contain security holes. Server implementors are encouraged to make this field a configurable option.&lt;/i&gt;&lt;/blockquote&gt;&lt;/p&gt;</o>
+<o>Setting this variable to No will display the "Identify as" node where you can state what Roxen should call itself when talking to clients.&lt;br /&gt;It is possible to disable this so that you can enter an identification-string that does not include the actual version of Roxen, as recommended by the HTTP/1.0 and HTTP/1.1 RFCs:&lt;p&gt;&lt;blockquote&gt;&lt;i&gt;Note: Revealing the specific software version of the server may allow the server machine to become more vulnerable to attacks against software that is known to contain security holes. Server implementors are encouraged to make this field a configurable option.&lt;/i&gt;&lt;/blockquote&gt;&lt;/p&gt;</o>
 <t></t>
 </str>
 
@@ -846,7 +845,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="129">
 <new/>
-<o>When roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group].</o>
+<o>When Roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group].</o>
 <t></t>
 </str>
 
@@ -858,7 +857,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="131">
 <new/>
-<o>If this variable is set, roxen will set it's uid and gid permanently. This disables the 'exec script as user' fetures for CGI, and also access files as user in the filesystems, but it gives better security.</o>
+<o>If this variable is set, Roxen will set it's uid and gid permanently. This disables the 'exec script as user' features for CGI, and also 'access files as user' in the filesystems, but it gives better security.</o>
 <t></t>
 </str>
 
@@ -901,13 +900,13 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="138">
 <new/>
-<o>Logging: Logging method</o>
+<o>Logging: Debug log method</o>
 <t></t>
 </str>
 
 <str id="139">
 <new/>
-<o>What method to use for logging, default is file, but syslog is also available. When using file, the output is really sent to stdout and stderr, but this is handled by the start script.</o>
+<o>What method to use for the debug log, default is file, but syslog is also available. When using file, the output is really sent to stdout and stderr, but this is handled by the start script.</o>
 <t></t>
 </str>
 
@@ -1029,8 +1028,7 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 
 <str id="159">
 <new/>
-<o>Locale, used to localize all messages in Roxen.
-Standard means using the default locale, which varies according to the value of the 'LANG' environment variable.</o>
+<o>Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the value of the 'LANG' environment variable.</o>
 <t></t>
 </str>
 
@@ -1465,8 +1463,7 @@ Standard means using the default locale, which varies according to the value of 
 
 <str id="255">
 <new/>
-<o>Disabling old configuration %s
-</o>
+<o>Disabling old configuration %s</o>
 <t></t>
 </str>
 
@@ -1527,8 +1524,7 @@ Standard means using the default locale, which varies according to the value of 
 
 <str id="dt">
 <new/>
-<o>Administrator logged on as %s from %s.
-</o>
+<o>Administrator logged on as %s from %s.</o>
 <t></t>
 </str>
 
@@ -1796,5 +1792,47 @@ as the name of its log file directory.
 <str id="190">
 <new/>
 <o>Initial variables for the site</o>
+<t></t>
+</str>
+
+<str id="229">
+<new/>
+<o>Page charset</o>
+<t></t>
+</str>
+
+<str id="230">
+<new/>
+<o>The charset to use when rendering configuration interface pages.</o>
+<t></t>
+</str>
+
+<str id="231">
+<new/>
+<o>Preferred language</o>
+<t></t>
+</str>
+
+<str id="232">
+<new/>
+<o>Which one of the completed translations of the administration interface to use.</o>
+<t></t>
+</str>
+
+<str id="233">
+<new/>
+<o>Failed login attempt %s from %s</o>
+<t></t>
+</str>
+
+<str id="234">
+<new/>
+<o>Requests:</o>
+<t></t>
+</str>
+
+<str id="235">
+<new/>
+<o>Are you sure you want to disable the site %s?</o>
 <t></t>
 </str>

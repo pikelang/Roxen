@@ -2,36 +2,37 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>swe</language>
-<dumped>968472146</dumped>
+<dumped>969369616</dumped>
 <file>../base_server/configuration.pike</file>
+<file>../base_server/config_userdb.pike</file>
 <file>../base_server/global_variables.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../modules/configuration/config_userdb.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
-<file>../config_interface/standard/template</file>
+<file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/logutil.pike</file>
 <file>../config_interface/standard/statusinfo.pike</file>
+<file>../config_interface/standard/template</file>
 <file>../config_interface/standard/topmenu.pike</file>
-<file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/users.html</file>
-<file>../config_interface/standard/user_form.pike</file>
 <file>../config_interface/standard/user_delete.pike</file>
+<file>../config_interface/standard/user_form.pike</file>
 <file>../config_interface/standard/actions/index.html</file>
+<file>../config_interface/standard/event_log/clear_log.pike</file>
 <file>../config_interface/standard/event_log/index.html</file>
 <file>../config_interface/standard/event_log/log.pike</file>
-<file>../config_interface/standard/event_log/clear_log.pike</file>
+<file>../config_interface/standard/sites/add_module.pike</file>
+<file>../config_interface/standard/sites/config_left_item.pike</file>
+<file>../config_interface/standard/sites/create_site.pike</file>
+<file>../config_interface/standard/sites/drop_module.pike</file>
+<file>../config_interface/standard/sites/drop_site.html</file>
+<file>../config_interface/standard/sites/drop_site.pike</file>
 <file>../config_interface/standard/sites/index.html</file>
 <file>../config_interface/standard/sites/log.pike</file>
+<file>../config_interface/standard/sites/new_site.html</file>
 <file>../config_interface/standard/sites/site_content.pike</file>
 <file>../config_interface/standard/sites/site_header.pike</file>
-<file>../config_interface/standard/sites/new_site.html</file>
-<file>../config_interface/standard/sites/create_site.pike</file>
-<file>../config_interface/standard/sites/drop_site.pike</file>
-<file>../config_interface/standard/sites/drop_site.html</file>
-<file>../config_interface/standard/sites/add_module.pike</file>
-<file>../config_interface/standard/sites/drop_module.pike</file>
-<file>../config_interface/standard/sites/config_left_item.pike</file>
 <file>../config_interface/standard/sites/site_templates/common.pike</file>
 
 
@@ -82,10 +83,8 @@
 </str>
 
 <str id="11">
-<o>Reloaded %s.
-</o>
-<t>Laddade om %s.
-</t>
+<o>Reloaded %s.</o>
+<t>Laddade om %s.</t>
 </str>
 
 <str id="12">
@@ -200,8 +199,8 @@ klienten inte anger / anger en okänd host-header.</t>
 </str>
 
 <str id="22">
-<o>Virtual server comment</o>
-<t>Serverkommentar</t>
+<o>Site comment</o>
+<t>Sajtkommentar</t>
 </str>
 
 <str id="23">
@@ -210,15 +209,15 @@ klienten inte anger / anger en okänd host-header.</t>
 </str>
 
 <str id="24">
-<o>Virtual server name</o>
-<t>Serverns namn</t>
+<o>Site name</o>
+<t>Sajtens namn</t>
 </str>
 
 <str id="25">
-<o>This is the name that will be used in the configuration interface. If this is left empty, the actual name of the virtual server will be used.</o>
+<o>This is the name that will be used in the administration interface. If this is left empty, the actual name of the site will be used.</o>
 <t>Det här är namnet som kommer att synas i
 admingränssnittet. Om du lämnar det här fältet tomt kommer
-serverns ursprungliga namn (det du skrev in när du skapade servern)
+sajtens ursprungliga namn (det du skrev in när du skapade sajten)
 att användas.</t>
 </str>
 
@@ -356,7 +355,7 @@ påverkar även &lt;accessed&gt; RXML-styrkoden.</t>
 </str>
 
 <str id="35">
-<o>The domainname of the server. The domainname is used to generate default URLs, and to generate email addresses.</o>
+<o>The domain name of the server. The domain name is used to generate default URLs, and to generate email addresses.</o>
 <t>Serverns domännamn. Används av en del RXML styrkoder för att generera
 epostadresser, samt för att generera skönsvärdet för serverurl-variablen.</t>
 </str>
@@ -403,7 +402,7 @@ behöva för vanliga resurser.</t>
 </str>
 
 <str id="43">
-<o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this Virtual Server.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
+<o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this site.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
 <t>Om den här variablen är på så kommer bandvisddsbegränsning
 på servernivå att ske. Det gör det möjligt för dig att begränsa den totala
 bandvidden som den här virtuella servern använder.
@@ -421,7 +420,7 @@ många poletter i hinken så kommer de nya som kommer in att "ramla brevid".</t>
 </str>
 
 <str id="45">
-<o>This is the average bandwidth available to this Virtual Server in bytes/sec (the bucket "fill rate").</o>
+<o>This is the average bandwidth available to this site in bytes/sec (the bucket "fill rate").</o>
 <t>Det här är den genomsnittliga bandvidden som är tillgänglig för servern (hastigheten med vilken hinken fylls).</t>
 </str>
 
@@ -674,7 +673,7 @@ en normalsnabb dator år 1999.</t>
 </str>
 
 <str id="91">
-<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will continue being correct.</o>
+<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.</o>
 <t>När den här flaggan är satt så loggar Roxen hela längden på
 en fil vars nerladdning återstartas. Om en användare först
 laddar hem 100 bytes av en fil och sedan laddar hem de 
@@ -712,7 +711,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.</t>
 </str>
 
 <str id="97">
-<o>This is the default file path that will be prepended to the log file path in all the default modules and the virtual server.</o>
+<o>This is the default file path that will be prepended to the log file path in all the default modules and the site.</o>
 <t>Alla nya loggar som skapas får det här prefixet.</t>
 </str>
 
@@ -864,8 +863,8 @@ för Roxens start-skript. $pid byts ut mot processid och $uid byts ut mot använda
 </str>
 
 <str id="125">
-<o>Setting this variable to No will display the "Identify as" node where you can state what Roxen should call itself when talking to clients.&lt;br /&gt;It is possible to disable this so that you can enter an identification-string that does not include the actual version of Roxen, as recommended by the HTTP/1.0 draft 03:&lt;p&gt;&lt;blockquote&gt;&lt;i&gt;Note: Revealing the specific software version of the server may allow the server machine to become more vulnerable to attacks against software that is known to contain security holes. Server implementors are encouraged to make this field a configurable option.&lt;/i&gt;&lt;/blockquote&gt;&lt;/p&gt;</o>
-<t>"Ska Roxen använda sin verkliga identifikationssträng?
+<o>Setting this variable to No will display the "Identify as" node where you can state what Roxen should call itself when talking to clients.&lt;br /&gt;It is possible to disable this so that you can enter an identification-string that does not include the actual version of Roxen, as recommended by the HTTP/1.0 and HTTP/1.1 RFCs:&lt;p&gt;&lt;blockquote&gt;&lt;i&gt;Note: Revealing the specific software version of the server may allow the server machine to become more vulnerable to attacks against software that is known to contain security holes. Server implementors are encouraged to make this field a configurable option.&lt;/i&gt;&lt;/blockquote&gt;&lt;/p&gt;</o>
+<t>Ska Roxen använda sin verkliga identifikationssträng?
 Om du sätter den här variabeln till 'nej' så kommer du att
 få välja vad Roxen ska identifiera sig som.</t>
 </str>
@@ -886,7 +885,7 @@ få välja vad Roxen ska identifiera sig som.</t>
 </str>
 
 <str id="129">
-<o>When roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group].</o>
+<o>When Roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group].</o>
 <t>När Roxen startas som root (för att kunna öppna port 80 och köra CGI-/pike-skript 
 som den användare som äger dem) så kan du om du vill
 specifiera ett användarnamn här. Roxen kommer då att byta till den
@@ -905,7 +904,7 @@ normal grupper.</t>
 </str>
 
 <str id="131">
-<o>If this variable is set, roxen will set it's uid and gid permanently. This disables the 'exec script as user' fetures for CGI, and also access files as user in the filesystems, but it gives better security.</o>
+<o>If this variable is set, Roxen will set it's uid and gid permanently. This disables the 'exec script as user' features for CGI, and also 'access files as user' in the filesystems, but it gives better security.</o>
 <t>Om Roxen byter användarID och gruppID permanent kommer det inte gå att konfigurera nya
 portar under 1024, det kommer inte heller gå att köra CGI- och pike-skript som
 den användare som äger skriptet. Däremot så kommer säkerheten att vara högre,
@@ -958,12 +957,12 @@ anledning.</t>
 </str>
 
 <str id="138">
-<o>Logging: Logging method</o>
-<t>Loggning: Loggningsmetod</t>
+<o>Logging: Debug log method</o>
+<t>Loggning: Felloggens metod</t>
 </str>
 
 <str id="139">
-<o>What method to use for logging, default is file, but syslog is also available. When using file, the output is really sent to stdout and stderr, but this is handled by the start script.</o>
+<o>What method to use for the debug log, default is file, but syslog is also available. When using file, the output is really sent to stdout and stderr, but this is handled by the start script.</o>
 <t>Hur ska Roxens debug (fel-, informations- och varnings-meddelanden) loggas?
 Normalt sett så loggas de till debugloggen (logs/debug/default.1 etc), men de
 kan även skickas till systemloggen om du vill.</t>
@@ -1094,8 +1093,7 @@ ett bra tag.</t>
 </str>
 
 <str id="159">
-<o>Locale, used to localize all messages in Roxen.
-Standard means using the default locale, which varies according to the value of the 'LANG' environment variable.</o>
+<o>Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the value of the 'LANG' environment variable.</o>
 <t>Den här variablen anger vilket språk Roxen ska använda.
 'standard' betyder att språket sätts automatiskt från
 värdet av omgivningsvariabeln LANG.</t>
@@ -1504,10 +1502,8 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="255">
-<o>Disabling old configuration %s
-</o>
-<t>Tar bort server %s
-</t>
+<o>Disabling old configuration %s</o>
+<t>Tar bort server %s</t>
 </str>
 
 <str id="256">
@@ -1561,10 +1557,8 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="dt">
-<o>Administrator logged on as %s from %s.
-</o>
-<t>Administratör loggade in som %s från %s.
-</t>
+<o>Administrator logged on as %s from %s.</o>
+<t>Administratör loggade in som %s från %s.</t>
 </str>
 
 <str id="262">
@@ -1796,4 +1790,39 @@ tecknen / och \ får inte användas.
 <str id="190">
 <o>Initial variables for the site</o>
 <t>Begynnelseinställningar för sajten</t>
+</str>
+
+<str id="229">
+<o>Page charset</o>
+<t>Teckenuppsättning</t>
+</str>
+
+<str id="230">
+<o>The charset to use when rendering configuration interface pages.</o>
+<t>Den teckenuppsättning som används i admingränssnittet</t>
+</str>
+
+<str id="231">
+<o>Preferred language</o>
+<t>Vald översättning</t>
+</str>
+
+<str id="232">
+<o>Which one of the completed translations of the administration interface to use.</o>
+<t>Vilken av de färdiga översättningarna av admingränssnittet som ska användas</t>
+</str>
+
+<str id="233">
+<o>Failed login attempt %s from %s</o>
+<t>Misslyckad inloggning av %s från %s</t>
+</str>
+
+<str id="234">
+<o>Requests:</o>
+<t>Anrop:</t>
+</str>
+
+<str id="235">
+<o>Are you sure you want to disable the site %s?</o>
+<t>Är du säker på att du vill ta bort konfigurationen för %s?</t>
 </str>

@@ -2,7 +2,7 @@
 <locale version="1.0"/>
 <project>admin_tasks</project>
 <language>deu</language>
-<dumped>968472251</dumped>
+<dumped>969369742</dumped>
 <file>../config_interface/standard/actions/cachestatus.pike</file>
 <file>../config_interface/standard/actions/debug_info.pike</file>
 <file>../config_interface/standard/actions/feature_list.pike</file>
