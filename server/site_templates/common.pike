@@ -53,7 +53,7 @@ string initial_form( Configuration conf, RequestID id, int setonly )
     RoxenModule moo = conf->find_module( replace(mod,"!","#") );
     foreach( indices(moo->query()), string v )
     {
-      if( moo->getvar( v )->get_flags() & VAR_INITIAL )
+      if(moo->getvar( v )->check_visibility(id, 1, 0, 0, 1, 1))
       {
         num++;
         res += "<tr><td colspan='3'><h2>"
