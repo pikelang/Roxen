@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.434 2004/04/25 15:49:03 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.435 2004/04/27 15:32:16 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -282,11 +282,22 @@ void send (string|object what, int|void len)
   if(!what) return;
   if(!pipe) setup_pipe();
   if(stringp(what))  {
+#ifdef CONNECTION_DEBUG
+    werror ("HTTP: Send =====================================================\n"
+	    "%s\n",
+	    replace (sprintf ("%O", what), "\\r\\n", "\n"));
+#else
     REQUEST_WERR(sprintf("HTTP: Pipe string %O", what));
+#endif
     pipe->write(what);
   }
   else {
+#ifdef CONNECTION_DEBUG
+    werror ("HTTP: Send =====================================================\n"
+	    "Stream %O, length %O\n", what, len);
+#else
     REQUEST_WERR(sprintf("HTTP: Pipe stream %O, length %O", what, len));
+#endif
     pipe->input(what,len);
   }
 }
@@ -1254,6 +1265,9 @@ int wants_more()
 
 void do_log( int|void fsent )
 {
+#ifdef CONNECTION_DEBUG
+    werror ("HTTP: Send done ================================================\n");
+#endif
   MARK_FD("HTTP logging"); // fd can be closed here
   TIMER_START(do_log);
   if(conf)
@@ -1801,7 +1815,14 @@ void send_result(mapping|void result)
 	  data += file->data[..file->len-1];
 	if (file->file)
 	  data += file->file->read(file->len);
-	REQUEST_WERR (sprintf ("HTTP: Send %O", data));
+#ifdef CONNECTION_DEBUG
+	werror ("HTTP: Send =====================================================\n"
+		"%s\n"
+		"HTTP: Send done ================================================\n",
+		replace (sprintf ("%O", data), "\\r\\n", "\n"));
+#else
+	REQUEST_WERR (sprintf ("HTTP: Send blocking %O", data));
+#endif
 	s = my_fd->write(data);
 	TIMER_END(blocking_write);
         do_log( s );
@@ -1815,7 +1836,13 @@ void send_result(mapping|void result)
     {
       if( strlen( head_string ) < (HTTP_BLOCKING_SIZE_THRESHOLD))
       {
-	REQUEST_WERR (sprintf ("HTTP: Send %O", head_string));
+#ifdef CONNECTION_DEBUG
+	werror ("HTTP: Send =====================================================\n"
+		"%s\n",
+		replace (sprintf ("%O", data), "\\r\\n", "\n"));
+#else
+	REQUEST_WERR (sprintf ("HTTP: Send headers blocking %O", head_string));
+#endif
 	do_log( my_fd->write( head_string ) );
         return;
       }
@@ -1946,7 +1973,13 @@ int processed;
 // array ccd = ({});
 void got_data(mixed fooid, string s)
 {
+#ifdef CONNECTION_DEBUG
+  werror ("HTTP: Got ======================================================\n"
+	  "%s\n",
+	  replace (sprintf ("%O", s), "\\r\\n", "\n"));
+#else
   REQUEST_WERR(sprintf("HTTP: Got %O", s));
+#endif
 
   if(wanted_data)
   {
@@ -2013,6 +2046,10 @@ void got_data(mixed fooid, string s)
 	end();
 	return;
     }
+
+#ifdef CONNECTION_DEBUG
+    werror ("HTTP: Got request ==============================================\n");
+#endif
 
     if( method == "GET" || method == "HEAD" ) {
       misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
