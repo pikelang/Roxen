@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.68 2000/02/15 14:23:05 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.69 2000/02/15 16:20:17 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -547,20 +547,6 @@ class TagCoding {
   }
 }
 
-
-string container_charset( string t, mapping m, string c, RequestID id )
-{
-  if( m->in )
-    if( catch {
-      c = Locale.Charset.decoder( m->in )->feed( c )->drain();
-    })
-      RXML.run_error( "Illegal charset, or unable to decode data: "+
-                      m->in+"\n" );
-  if( m->out && id->set_output_charset)
-    id->set_output_charset( m->out );
-  return c;
-}
-
 array(string)|string tag_configimage(string t, mapping m, RequestID id)
 {
   if (!m->src) return rxml_error(t, "No src given", id);
@@ -809,15 +795,26 @@ array(string) tag_set_max_cache( string tag, mapping m, RequestID id )
 
 // ------------------- Containers ----------------
 
-class TagScope {
+string container_charset( string t, mapping m, string c, RequestID id )
+{
+  if( m->in )
+    if( catch {
+      c = Locale.Charset.decoder( m->in )->feed( c )->drain();
+    })
+      RXML.run_error( "Illegal charset, or unable to decode data: "+
+                      m->in+"\n" );
+  if( m->out && id->set_output_charset)
+    id->set_output_charset( m->out );
+  return c;
+}
 
+class TagScope {
   inherit RXML.Tag;
 
   constant name = "scope";
   mapping(string:RXML.Type) opt_arg_types = ([ "extend" : RXML.t_text ]);
 
-  class Frame
-  {
+  class Frame {
     inherit RXML.Frame;
 
     constant scope_name = "form";
