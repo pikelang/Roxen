@@ -397,11 +397,7 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
 	  plugindoc+=find_tag_doc(name+"#"+plugin, id,no_undoc,1);
 	plugindoc+="</dd></dl>";
       }
-      if(tag->is_compat_tag) {
-	RXMLHELP_WERR(sprintf("CompatTag %O", tag));
-	tag=tag->fn;
-      }
-      else if(tag->is_generic_tag) {
+      if(tag->is_generic_tag) {
 	RXMLHELP_WERR(sprintf("GenericTag %O", tag));
 	tag=tag->_do_return;
       }

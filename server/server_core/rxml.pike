@@ -3,7 +3,7 @@
 //
 // The ChiliMoon RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.335 2004/05/30 00:29:04 _cvs_stephen Exp $
+// $Id: rxml.pike,v 1.336 2004/06/01 00:54:04 _cvs_stephen Exp $
 
 
 inherit "rxmlhelp";
@@ -272,91 +272,6 @@ string parse_rxml(string what, RequestID id,
   return what;
 }
 
-#define COMPAT_TAG_TYPE \
-  function(string,mapping(string:string),RequestID,void|Stdio.File,void|mapping: \
-	   string|array(int|string))
-
-#define COMPAT_CONTAINER_TYPE \
-  function(string,mapping(string:string),string,RequestID,void|Stdio.File,void|mapping: \
-	   string|array(int|string))
-
-class CompatTag
-{
-  inherit RXML.Tag;
-  constant is_compat_tag=1;
-
-  string name;
-  int flags;
-  string|COMPAT_TAG_TYPE|COMPAT_CONTAINER_TYPE fn;
-
-  RXML.Type content_type = RXML.t_same; // No preparsing.
-
-  void create (string _name, int empty, string|COMPAT_TAG_TYPE|COMPAT_CONTAINER_TYPE _fn)
-  {
-    name = _name, fn = _fn;
-    flags = empty && RXML.FLAG_EMPTY_ELEMENT;
-    result_types = result_types(RXML.PXml); // Postparsing
-  }
-
-  class Frame
-  {
-    inherit RXML.Frame;
-    string raw_tag_text;
-
-    array do_enter (RequestID id)
-    {
-      if (args->preparse)
-	content_type = content_type (RXML.PXml);
-    }
-
-    array do_return (RequestID id)
-    {
-      id->misc->line = "0";	// No working system for this yet.
-
-      if (!content) content = "";
-      if (stringp (fn)) return ({fn});
-      if (!fn) {
-	result_type = result_type (RXML.PNone);
-	return ({propagate_tag()});
-      }
-
-      mapping defines = RXML_CONTEXT->misc;
-      Stdio.File source_file = defines["_source file"];
-
-      string|array(string) result;
-      if (flags & RXML.FLAG_EMPTY_ELEMENT)
-	result = fn (name, args, id, source_file, defines);
-      else {
-	if(args->trimwhites) content = String.trim_all_whites(content);
-	result = fn (name, args, content, id, source_file, defines);
-      }
-
-      if (arrayp (result)) {
-	result_type = result_type (RXML.PNone);
-	if (sizeof (result) && result[0] == 1) {
-	  [string pname, mapping(string:string) pargs, string pcontent] =
-	    (result[1..] + ({0, 0, 0}))[..2];
-	  if (!pname || pname == name)
-	    return ({!pargs && !pcontent ? propagate_tag () :
-		     propagate_tag (pargs || args, pcontent || content)});
-	  else
-	    return ({RXML.make_unparsed_tag (
-		       pname, pargs || args, pcontent || content)});
-	}
-	else return result;
-      }
-      else if (result) {
-	if (args->noparse) result_type = result_type (RXML.PNone);
-	return ({result});
-      }
-      else {
-	result_type = result_type (RXML.PNone);
-	return ({propagate_tag()});
-      }
-    }
-  }
-}
-
 class GenericTag {
   inherit RXML.Tag;
   constant is_generic_tag=1;
@@ -412,22 +327,6 @@ void add_parse_module (RoxenModule mod)
   RXML.TagSet tag_set =
     mod->query_tag_set ? mod->query_tag_set() : RXML.TagSet (mod, "");
   mapping(string:mixed) defs;
-
-  if (mod->query_tag_callers &&
-      mappingp (defs = mod->query_tag_callers()) &&
-      sizeof (defs))
-    tag_set->add_tags (map (indices (defs),
-			    lambda (string name) {
-			      return CompatTag (name, 1, defs[name]);
-			    }));
-
-  if (mod->query_container_callers &&
-      mappingp (defs = mod->query_container_callers()) &&
-      sizeof (defs))
-    tag_set->add_tags (map (indices (defs),
-			    lambda (string name) {
-			      return CompatTag (name, 0, defs[name]);
-			    }));
 
   if (mod->query_simpletag_callers &&
       mappingp (defs = mod->query_simpletag_callers()) &&

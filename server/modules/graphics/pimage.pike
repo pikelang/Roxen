@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.34 2004/05/31 23:01:52 _cvs_stephen Exp $";
+string cvs_version="$Id: pimage.pike,v 1.35 2004/06/01 00:54:03 _cvs_stephen Exp $";
 
 #include <module.h>
 inherit "module";
@@ -475,6 +475,7 @@ string tag_glock(string t, mapping m, object rid)
 			    (int)m->handoffset+50), rid);
 }
 
+#error NGSERVER: These are not supported anymore, please rewrite
 mapping query_container_callers()
 {
   return ([ "pimage":tag_pimage, ]);

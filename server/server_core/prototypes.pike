@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.74 2004/05/31 23:02:03 _cvs_stephen Exp $
+// $Id: prototypes.pike,v 1.75 2004/06/01 00:54:04 _cvs_stephen Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -2105,8 +2105,6 @@ class RoxenModule
   string real_file(string f, RequestID id);
   void save();
   mapping api_functions();
-  mapping query_tag_callers();
-  mapping query_container_callers();
 
   string info(object conf);
   string comment();

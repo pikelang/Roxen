@@ -2,7 +2,7 @@
 // Released under GPL
 // made by Per Hedbor
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.32 2002/01/30 00:19:44 mast Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.33 2004/06/01 00:54:03 _cvs_stephen Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -163,6 +163,7 @@ string tag_wizard_error(string t, mapping args, object id,
   return "";
 }
 
+#error NGSERVER: These are not supported anymore, please rewrite
 mapping query_tag_callers()
 {
   return ([ "__wizard_error__" : tag_wizard_error ]);

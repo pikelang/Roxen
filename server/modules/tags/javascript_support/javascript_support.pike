@@ -1,6 +1,9 @@
 // This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.56 2004/05/23 14:14:42 _cvs_dirix Exp $";
+constant cvs_version =
+ "$Id: javascript_support.pike,v 1.57 2004/06/01 00:54:04 _cvs_stephen Exp $";
+
+// NGSERVER: This module needs a complete rewrite to conform to RXML2
 
 #include <module.h>
 #include <request_trace.h>
@@ -460,12 +463,49 @@ mapping filter(mapping response, RequestID id)
   return response;
 }
 
-mapping query_container_callers()
-{
-  return ([ "js-popup"       : container_js_popup,
-	    "js-write"       : container_js_write,
-	    "js-link"        : container_js_link,
-  ]);
+class TagJsWrite {
+  inherit RXML.Tag;
+  constant name = "js-write";
+  constant flags = RXML.FLAG_DONT_RECOVER;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      result = container_js_write(name, args, content, id);
+      return 0;
+    }
+  }
+}
+
+class TagJsPopup {
+  inherit RXML.Tag;
+  constant name = "js-popup";
+  constant flags = RXML.FLAG_DONT_RECOVER;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      result = container_js_popup(name, args, content, id);
+      return 0;
+    }
+  }
+}
+
+class TagJsLink {
+  inherit RXML.Tag;
+  constant name = "js-link";
+  constant flags = RXML.FLAG_DONT_RECOVER;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      result = container_js_link(name, args, content, id);
+      return 0;
+    }
+  }
 }
 
 TAGDOCUMENTATION;
