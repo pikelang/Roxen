@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.103 1999/10/11 01:43:45 mast Exp $
+ * $Id: roxenloader.pike,v 1.104 1999/11/04 15:54:04 grubba Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.103 1999/10/11 01:43:45 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.104 1999/11/04 15:54:04 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -908,6 +908,14 @@ int main(int argc, array argv)
     {
        string e = sprintf("%s:%d\t%s\n", file-getcwd(), line, err);
       errors += e;
+    }
+    void handle_error(string file, int line, string err)
+    {
+      got_error(file, line, "Error: " + err);
+    }
+    void handle_warning(string file, int line, string err)
+    {
+      got_error(file, line, "Warning: " + err);
     }
   });
   add_constant("spawne",spawne);
