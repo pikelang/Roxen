@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.133 2003/02/04 14:36:14 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.134 2003/02/04 15:10:33 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -349,7 +349,7 @@ class MyCodec
 #if constant(function_program)
     program parent = function_program(prog);
 #else /* !constant(function_program) */
-    object parent_obj = function_object(prog);
+    object parent_obj = functionp(prog) && function_object(prog);
     program parent = parent_obj && object_program(parent_obj);
 #endif /* constant(function_program) */
     DUMP_DEBUG_ENTER("  parent:%O\n", parent);
