@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.55 2000/08/12 21:27:30 mast Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.56 2000/08/15 12:27:14 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -140,6 +140,14 @@ constant gbuttonattr=#"
 <gbutton width='150' align='center' align-icon='center-after'
   icon-src='internal-roxen-help'>Roxen 2.0</gbutton>
 </ex>
+</attr>
+
+<attr name='valign-icon' value='above|middle|below'>
+  Set icon vertical alignment. Requires three horizontal guidelines in the
+  frame image. If set to <att>above</att> the icon is placed between the first
+  and second guidelines and the text between the second and third ones. If
+  set to <att>below</att> the placement is reversed. Default value is
+  <att>middle</att>.
 </attr>
 
 <attr name='font' value=''>
