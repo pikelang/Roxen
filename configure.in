@@ -1,9 +1,11 @@
 #
-# $Id: configure.in,v 1.33 1997/10/05 06:17:11 grubba Exp $
+# $Id: configure.in,v 1.34 1997/10/05 19:40:41 grubba Exp $
 #
 
 prefix=$PWD
 AC_INIT(Makefile.in)
+
+AC_ARG_WITH(fullwarn, [  --with-fullwarn	enable as many warnings as possible],[],[with_fullwarn=no])
 
 AC_SET_MAKE
 
@@ -271,11 +273,13 @@ if test $cflags_is_set = no; then
   if test x$roxen_cv_option_n32 = xyes ; then
     echo Adding -n32 to LDFLAGS.
     LDFLAGS="$LDFLAGS -n32"
-  else
-    :
   fi
   AC_SYS_OS_COMPILER_FLAG(IRIX,-g3,g3)
-  AC_SYS_OS_COMPILER_FLAG(IRIX,-fullwarn,fullwarn)
+  if test x$ac_with_fullwarn = xyes ; then
+    # This warns about a lot of standard constructs, so it isn't enabled
+    # by default.
+    AC_SYS_OS_COMPILER_FLAG(IRIX,-fullwarn,fullwarn)
+  fi
   if test x$with_debug = xyes ; then
     AC_SYS_OS_COMPILER_FLAG(IRIX,-trapuw,trapuw)
   fi
