@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.276 2000/09/19 22:43:48 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.277 2000/09/19 22:45:57 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2120,18 +2120,22 @@ void got_data(mixed fooid, string s)
         if( mixed e = catch 
         {
           foreach( file->callbacks, function f )
-            if( !f() )
+            if( !f(this_object(), cv[1]->key ) )
             {
               can_cache = 0;
               break;
             }
         } )
         {
-          can_cache = 0;
           INTERNAL_ERROR( e );
           send_result();
           return;
         }
+      }
+      if( !cv[1]->key )
+      {
+        conf->datacache->expire_entry( raw_url );
+        can_cache = 0;
       }
       if( can_cache )
       {

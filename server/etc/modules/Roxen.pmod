@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.38 2000/09/16 21:45:13 per Exp $
+ * $Id: Roxen.pmod,v 1.39 2000/09/19 22:46:08 per Exp $
  *
  * Various helper functions.
  *
@@ -1092,9 +1092,11 @@ void remove_cookie( RequestID id,
   set_cookie( id, name, value, -time(1), domain, path );
 }
 
-void add_cache_callback( RequestID id, function(RequestID:int) callback )
+void add_cache_callback( RequestID id,function(RequestID,object:int) callback )
 //! The request id object is not yet fully initialized in this callback.
 //! The only valid fields are raw_url and request_headers.
+//! The second argument is the cache key. Destroying it will enforce
+//! exiration of the entry from the data cache.
 {
   while( id->misc->orig )
     id = id->misc->orig;
