@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.46 2001/02/02 07:30:35 per Exp $
+// $Id: module.pmod,v 1.47 2001/04/11 05:32:28 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1198,7 +1198,6 @@ class PortList
   {
     if( v == "" ) return "http://*/";
     
-    werror("%O %O %O\n", v, v[strlen(path())..],va );
     v = v[strlen(path())..];
     return va[v+"prot"]+"://"+va[v+"host"]+"/"+va[v+"path"];
   }
