@@ -87,7 +87,7 @@ string nice_relative_date( object t )
     else
       return sprintf( (string)_(44,"%d months"),
 		      t->how_many( Calendar.Month() ) );
-  if( t->how_many( Calendar.Day() ) == 1 )    return (string)_(0,"one day");
+  if( t->how_many( Calendar.Day() ) == 1 )    return (string)_(139,"one day");
 
   if( t->how_many( Calendar.Day() ) == 0 )    return "-";
   return sprintf( (string)_(45,"%d days"),

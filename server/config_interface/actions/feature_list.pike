@@ -30,13 +30,13 @@ mixed parse(object id)
 
   res = "<font size='+1'>"+ LOCALE(238, "Features") +"</font><ul>\n"+
     String.implode_nicely( sort(map(features,nice_name)-({0})),
-			   LOCALE(0,"and"))
+			   LOCALE(79,"and"))
     + "</ul><br />\n";
 
   if (sizeof(disabled))
-    res += "<font size='+1'>"+LOCALE(0,"Unavailable features")+"</font><ul>\n"
+    res += "<font size='+1'>"+LOCALE(140,"Unavailable features")+"</font><ul>\n"
       + String.implode_nicely( sort(map(disabled,nice_name)-({0})),
-			       LOCALE(0,"and"))
+			       LOCALE(79,"and"))
       + "</ul><br />\n";
 
   return res+ "<p><cf-ok/></p>";

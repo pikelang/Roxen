@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.711 2001/08/23 18:05:31 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.712 2001/08/23 23:00:25 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4396,8 +4396,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	code += "  userdb_module = 0;\n";
       else if( !m->my_configuration()->find_user_database( line ) )
 	m->report_notice( LOC_M( 58,"Syntax error in security patterns: "
-				 "Cannot find the user database '"+
-				 line+"'\n" ));
+				 "Cannot find the user database '%s'")+"'\n",
+			line);
       else
 	code +=
 	  sprintf("  userdb_module = id->conf->find_user_database( %O );\n",
@@ -4411,8 +4411,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	code += "  authmethod = id->conf;\n";
       else if( !m->my_configuration()->find_auth_module( line ) )
 	m->report_notice( LOC_M( 59,"Syntax error in security patterns: "
-				 "Cannot find the auth method '"+
-				 line+"'\n" ));
+				 "Cannot find the auth method '%s'")+"\n",
+			  line);
       else
 	code +=
 	  sprintf("  authmethod = id->conf->find_auth_module( %O );\n",

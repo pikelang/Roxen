@@ -161,7 +161,7 @@ class ConfigurationSettings
       // Support disappearing themes.
       if( has_value( all_themes(), nv ) )
 	return ::set( nv );
-      report_warning((string)LOCALE(0, "Warning: The theme %s "
+      report_warning((string)LOCALE(384, "Warning: The theme %s "
 			    " no longer exists, using default.\n"),nv);
       return ::set( "default" );
     }
