@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.6 2000/09/05 15:06:40 per Exp $
+// $Id: ExtScript.pmod,v 1.7 2000/10/04 15:21:46 leif Exp $
 
 #define THREADS 1
 
@@ -71,7 +71,7 @@ class Handler
     if (!proc || proc->status() != 0)
     {
       pipe = Stdio.File();
-      pipe_other = pipe->pipe();
+      pipe_other = pipe->pipe(Stdio.PROP_IPC);
 
       diag("(L1)");
 
@@ -103,7 +103,7 @@ class Handler
     }
 
     if (id)
-    { int len, returncode = 200;
+    { int len, returncode = 200; string headers;
 
       diag("{");
       // Reset script variables.
@@ -146,7 +146,7 @@ class Handler
           putvar("E", "AUTH_TYPE", id->auth[0]);
           array arr = id->auth[1] / ":";
           putvar("I", "auth_user", arr[0]);
-          putvar("E", "REMOTE_USER", id->arr[0]);
+          putvar("E", "REMOTE_USER", arr[0]);
           if (sizeof(arr) > 1) putvar("I", "auth_passwd", arr[1]);
         }
         else if (sizeof(id->auth) == 3 && intp(id->auth[0]))
@@ -208,8 +208,12 @@ class Handler
           { if (res == "=")
             { array arr = tmp / "=";
               if (arr[0] == "RETURNCODE")
-                if (sscanf(arr[1], "%d", returncode) != 1)
+              { if (sscanf(arr[1], "%d", returncode) != 1)
                   returncode = 200;
+              }
+              else if (arr[0] == "HEADERS")
+              { headers = arr[1..] * "=";
+              }
             }
             else if (res == "?")
             { return ({ -1, tmp });
@@ -228,7 +232,8 @@ class Handler
 
       diag("}");
 
-      return ({ returncode, output });
+      return headers ? ({ returncode, output, headers })
+                     : ({ returncode, output });
     }
     else return ({ -1, "[Internal error?]" });
   }
