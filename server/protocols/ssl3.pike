@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.33 1998/04/29 22:51:37 grubba Exp $
+/* $Id: ssl3.pike,v 1.34 1998/06/12 23:07:54 nisse Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -107,13 +107,13 @@ array|void real_port(array port, object cfg)
   
   if (!part || !(key = part->decoded_body()))
     ({ report_error, throw }) ("ssl3: Private key not found.\n");
-  
-  array rsa_parms = Standards.ASN1.decode(key)->get_asn1()[1];
+
+  object rsa = Standards.PKCS.RSA.parse_private_key(key);
+  if (!rsa)
+    ({ report_error, throw }) ("ssl3: Private key not valid.\n");
   
   ctx->certificates = ({ cert });
-  ctx->rsa = Crypto.rsa();
-  ctx->rsa->set_public_key(rsa_parms[1][1], rsa_parms[2][1]);
-  ctx->rsa->set_private_key(rsa_parms[3][1]);
+  ctx->rsa = rsa;
   ctx->random = Crypto.randomness.reasonably_random()->read;
 }
 
