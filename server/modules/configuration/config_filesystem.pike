@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.78 2001/02/06 22:42:53 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.79 2001/02/23 02:24:56 per Exp $";
 
 constant path = "config_interface/";
 
@@ -441,7 +441,7 @@ void start(int n, Configuration cfg)
         {
 	  report_notice( "Creating the 'docs' database\n");
           DBManager.create_db( "docs", "docs", 1 );
-	  foreach( roxen.configurations, Configuration c )
+	  foreach( roxen->configurations, Configuration c )
 	    DBManager.set_permission( "docs", c, DBManager.READ );
           DBManager.set_permission( "docs", cfg, DBManager.WRITE );
           docs = DBManager.get( "docs", cfg );
