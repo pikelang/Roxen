@@ -21,7 +21,9 @@
        <sqlquery query="insert into dns values(NULL,#id#,'#domain:quote=mysql#','','MX','10 #domain:quote=mysql#')">
        <autosite-fs-init-home-dir id=#id#>
      </formoutput>
-     <b>Information saved.</b><p>
+     <b>Information saved.<br>
+      <autosite-dns-update><br>
+      <autosite-fs-update></b><p>
    </if>
    <else>
      <b>Already saved.</b><p>

@@ -96,7 +96,6 @@ static string rr_entry(string owner, int ttl, string type, string value)
 void do_update()
 // Update the DNS master file from the DOMAINS table.
 {
-  werror("do_update()\n");
   if (!database)
   { // If the database is not available, leave the
     // update_schduled variable in its current state,

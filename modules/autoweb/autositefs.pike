@@ -5,21 +5,21 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.5 1998/07/18 03:28:03 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.6 1998/07/21 05:52:58 js Exp $";
 
 mapping host_to_id;
 
 array register_module()
 {
   return ({ MODULE_LOCATION|MODULE_PARSER,
-	    "AutoSite Filesystem",
+	    "AutoSite IP-less hosting Filesystem",
 	    "" });
 }
 
 string get_host(object id)
 {
   if(id->misc->host)
-    return (id->misc->host / ":")[0];
+    return lower_case((id->misc->host / ":")[0]);
   else
     return 0;
 }
@@ -27,13 +27,15 @@ string get_host(object id)
 void update_host_cache(object id)
 {
   object db=id->conf->call_provider("sql","sql_object",id);
-  array a=db->query("select distinct customer_id,domain from dns where rr_type='A'");
+  array a=db->query("select rr_owner,customer_id,domain from dns where rr_type='A'");
   mapping new_host_to_id=([]);
   if(!catch {
     Array.map(a,lambda(mapping entry, mapping m)
 		{
-		  m["www."+entry->domain]=entry->customer_id;
-		  m[entry->domain]=entry->customer_id;
+		  if(sizeof(entry->rr_owner))
+		    m[entry->rr_owner+"."+entry->domain]=entry->customer_id;
+		  else
+		    m[entry->domain]=entry->customer_id;
 		},new_host_to_id);
   })
     host_to_id=new_host_to_id;
@@ -42,7 +44,8 @@ void update_host_cache(object id)
 string file_from_host(object id, string file)
 {
   string prefix,dir;
-  if(prefix=host_to_id[get_host(id)])
+  string prefix=id->misc->customer_id=host_to_id[get_host(id)];
+  if(prefix)
     dir = "/" + prefix + "/";
   else
   {
@@ -58,7 +61,6 @@ string file_from_host(object id, string file)
       return 0; // No such host
   }
   dir = replace(dir, "//", "/");
-//  werror("file_from_host: %O\n",dir+file);
   return dir+file;
 }
 
@@ -67,7 +69,9 @@ mixed find_file(string f, object id)
   if(!host_to_id)
     update_host_cache(id);
   string file=file_from_host(id,f);
-  if(!file)
+
+  if(!file&& (f=="" ||
+	      host_to_id[(array_sscanf(f,"%s/")+({""}))[0]]))
   {
     string s="";
     s+=
