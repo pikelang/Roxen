@@ -2,7 +2,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: plis.pike,v 1.1 2002/11/06 02:38:48 mani Exp $";
+constant cvs_version = "$Id: plis.pike,v 1.2 2002/11/06 03:03:25 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tag: PLIS script module";
@@ -25,18 +25,13 @@ import Languages.PLIS;
 
 class RoxenEnv
 {
-  import Languages.PLIS;
-
   inherit Environment;
-
   int once_done;
 }
 
 /* This contains request specific data */
-class RoxenId (object lisp_env, RequestID roxen_id)
+class RoxenId (Environment lisp_env, RequestID roxen_id)
 {
-  import Languages.PLIS;
-
   int limit;
   string lisp_result = "";
     
@@ -48,14 +43,13 @@ class RoxenId (object lisp_env, RequestID roxen_id)
       return 0;
     }
 
-  object query_binding(object symbol) { return lisp_env->query_binding(symbol); }
+  object query_binding(Symbol symbol) { return lisp_env->query_binding(symbol); }
   
-  object copy() { return lisp_env->copy(); }
+  Environment copy() { return lisp_env->copy(); }
   
-  object extend(object symbol, object value)
-    {
-      return lisp_env->extend(symbol, value);
-    }
+  void extend(Symbol symbol, object value) {
+    lisp_env->extend(symbol, value);
+  }
 
   string print(int display)
     // { return "Global roxen environment"; }
@@ -64,8 +58,6 @@ class RoxenId (object lisp_env, RequestID roxen_id)
 
 class API_Function
 {
-  import Languages.PLIS;
-  
   inherit LObject;
   function fun;
   array types;
@@ -154,7 +146,6 @@ class API_Function
 }
 
 mapping environments;
-mapping(string:object) lisp_code;
 object boot_code;
 
 void start()
@@ -163,7 +154,6 @@ void start()
 //   werror("Read boot_code: %s\n",
 // 	    boot_code ? boot_code->print(1) : "<error>");
   environments = ([]);
-  lisp_code = ([]);
 }
 
 void init_environment(object e, object conf)
@@ -176,7 +166,7 @@ void init_environment(object e, object conf)
   boot_code->eval(e,e);
 }
 
-object find_environment(string f, object conf)
+Environment find_environment(string f, object conf)
 {
   if(environments[f]) 
   {
@@ -190,11 +180,10 @@ object find_environment(string f, object conf)
 
 object lisp_compile(string s)
 {
-  object o = lisp_code[s];
-  if (o)
-    return o;
+  object o = cache_lookup("plis_tag", s);
+  if (o) return o;
   o = Parser("(begin\n" + s + " )")->read();
-  lisp_code[s] = o;
+  return cache_set("plis_tag", s, o);
   return o;
 }
 
@@ -204,7 +193,7 @@ string container_lisp(string t, mapping m, string c, RequestID id)
   
   string context = (query("enable_context") && m->context)
     || id->not_query;
-  object e = find_environment(context, id->conf);
+  Environment e = find_environment(context, id->conf);
   // werror("Environment: %s\n", e->print(1));
   if(m->once && e->once_done) return "";
 
