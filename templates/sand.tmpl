@@ -1,39 +1,66 @@
-<include file=gtext_headers.inc bg_color=$$bg_color$$>
+<include file=gtext_headers.inc bg_color=$$text_bg_color$$>
 <include file=shadow.inc>
 <include file=bg_image.inc>
-
+<include file=supports.inc>
 <formoutput quote=£>
 
 <html>
-<head><title><as-meta var=title></title></head>
+<head>
+  <title><as-meta var=title></title>
+  <include file=metadata.inc>
+</head>
 <body bgcolor=$$bg_color$$ text=$$text_color$$ link=$$link_color$$
       vlink=$$vlink_color$$ alink=$$alink_color$$ £bg_image£>
-  <table cellpadding=0 cellspacing=0 border=0><!--  4 columns  -->
+
+  <table cellpadding=0 cellspacing=0 border=0 £hard_width£><!--  4 columns  -->
     <tr><!--  title  -->
       <td colspan=4 align=$$title_align$$>
         <gtext bg=$$bg_color$$ fg=$$title_color$$
 	       scale=$$title_size$$
 	       £title_shadow£ $$title_font_style$$
                nfont=$$title_font$$><as-meta var=title></gtext></td>
+      <td><img src="/internal-roxen-unit" width=1 height=1></td>
     </tr>
     <tr><!--  bar  -->
       <td colspan=4 bgcolor=$$page_head_bar_color$$><img
-        src="/internal-roxen-unit" width=100% height=8></td>
+        src="/internal-roxen-unit" width=1 height=8></td>
+      <td rowspan=7 bgcolor=$$page_head_bar_color$$>
+        <img src="/internal-roxen-unit" width=1 height=1></td>
     </tr>
     <tr><!--  image  -->
-      <td></td>
-      <td></td>
-      <td colspan=2>$$page_head_image$$</td>
+      <td>
+        <if not match='$$logo_position$$ is '>
+          <img src=/logo.gif alt=""></if><else>
+          <img src=/internal-roxen-unit width=1 height=1 alt=""></else></td>
+      <td colspan=3 valign=top bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <include file=page_head_image.inc></td>
     </tr>
     <tr>
-      <td height=10></td>
+      <td height=15 colspan=1>
+        <img src="/internal-roxen-unit" width=1 height=1></td>
+      <td height=15 colspan=3 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src="/internal-roxen-unit" width=1 height=1></td>
     </tr>
     <tr><!--  Navigation/Content -->
-      <td valign=top><img src="/internal-roxen-unit" height=80 width=1>
+      <td rowspan=4 valign=top><img src="/internal-roxen-unit" height=80 width=1>
         <include file='$$nav_name$$'></td>
-      <td width=20%></td>
-      <td><tmplinsert tag=content></td>
-      <td width=20%></td>
+      <td rowspan=4 width=15 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src="/internal-roxen-unit" width=15 height=1></td>
+      <td bgcolor=$$text_bg_color$$ £text_bg_image£><tmplinsert tag=content></td>
+      <td rowspan=4 width=15 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src="/internal-roxen-unit" width=15 height=1></td>
+    </tr>
+    <tr>
+      <td height=20 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src=/internal-roxen-unit width=1 height=1 alt=""></td> 
+    </tr>
+    <tr>
+      <td align=$$footer_align$$ bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <insert file=/footer.html></td> 
+    </tr>
+    <tr>
+      <td height=15 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src=/internal-roxen-unit width=1 height=1 alt=""></td> 
     </tr>
   </table>
 </body>

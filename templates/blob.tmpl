@@ -5,7 +5,10 @@
 <formoutput quote=£>
 
 <html>
-<head><title><as-meta var=title></title></head>
+<head>
+  <title><as-meta var=title></title>
+  <include file=metadata.inc>
+</head>
 <body bgcolor=$$bg_color$$ text=$$text_color$$ link=$$link_color$$
       vlink=$$vlink_color$$ alink=$$alink_color$$ £bg_image£>
 <div align=right>
@@ -24,16 +27,17 @@
         bg=$$bg_color$$ fg=$$text_bg_color$$></td>
   </tr>
   <tr>
-    <td bgcolor=$$text_bg_color$$ £text_bg_image£ align=left valign=bottom height=15>
+    <td bgcolor=$$text_bg_color$$ £text_bg_image£ align=left
+      valign=bottom height=15>
       <blob size=$$corner_2_size$$ corner=1 transparent=$$text_bg_color$$
         bg=$$bg_color$$ fg=$$text_bg_color$$></td>
-    <td rowspan=6 bgcolor=$$text_bg_color$$ £text_bg_image£>
+    <td rowspan=7 bgcolor=$$text_bg_color$$ £text_bg_image£>
       <img src=/internal-roxen-unit width=15 height=1 alt=""></td>
-    <td rowspan=6 bgcolor=$$text_bg_color$$ £text_bg_image£>
+    <td rowspan=5 bgcolor=$$text_bg_color$$ £text_bg_image£>
       <comment><--  Content  --></comment>
       <tmplinsert tag=content>
     </td>
-    <td rowspan=6 bgcolor=$$text_bg_color$$ £text_bg_image£>
+    <td rowspan=7 bgcolor=$$text_bg_color$$ £text_bg_image£>
       <img src=/internal-roxen-unit width=15 height=1 alt=""></td>
   </tr>
   <tr>
@@ -57,8 +61,14 @@
         bg=$$bg_color$$ fg=$$text_bg_color$$></td>
   </tr>
   <tr>
-    <td bgcolor=$$text_bg_color$$ £text_bg_image£>
+    <td rowspan=2 bgcolor=$$text_bg_color$$ £text_bg_image£>
       <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+    <td height=20 bgcolor=$$text_bg_color$$ £text_bg_image£>
+      <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+  </tr>
+  <tr>
+    <td bgcolor=$$text_bg_color$$ £text_bg_image£>
+      <insert file=/footer.html></td>
   </tr>
   <tr>
     <td bgcolor=$$text_bg_color$$ £text_bg_image£ align=left>

@@ -5,7 +5,10 @@
 <formoutput quote=£>
 
 <html>
-<head><title><as-meta var=title></title></head>
+<head>
+  <title><as-meta var=title></title>
+  <include file=metadata.inc>
+</head>
 <body bgcolor=$$bg_color$$ text=$$text_color$$ link=$$link_color$$
       vlink=$$vlink_color$$ alink=$$alink_color$$ £bg_image£>
 
@@ -29,19 +32,19 @@
 
 <table border=0 cellpadding=0 cellspacing=0>
   <tr>
-    <td rowspan=7 width=1 bgcolor=$$page_head_bar_color$$>
+    <td rowspan=7 width=1 bgcolor=$$border_color$$>
       <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
-    <td colspan=3 height=1 bgcolor=$$page_head_bar_color$$>
+    <td colspan=3 height=1 bgcolor=$$border_color$$>
       <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
-    <td rowspan=7 width=1 bgcolor=$$page_head_bar_color$$>
+    <td rowspan=7 width=1 bgcolor=$$border_color$$>
       <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
   </tr>
   <tr>
-    <td rowspan=5 width=40 bgcolor=$$text_bg_color$$ £text_bg_image£
+    <td rowspan=5 width=15 bgcolor=$$text_bg_color$$ £text_bg_image£
       leftpadding>
-      <img src=/internal-roxen-unit width=40 height=1 alt=""></td>
-    <td height=25 toppadding bgcolor=$$text_bg_color$$ £text_bg_image£>
-      <img src=/internal-roxen-unit height=25 width=1 alt=""></td>
+      <img src=/internal-roxen-unit width=15 height=1 alt=""></td>
+    <td height=15 toppadding bgcolor=$$text_bg_color$$ £text_bg_image£>
+      <img src=/internal-roxen-unit height=15 width=1 alt=""></td>
     <td rowspan=5 width=15 bgcolor=$$text_bg_color$$ £text_bg_image£
       rightpadding>
       <img src=/internal-roxen-unit width=15 height=1 alt=""></td>
@@ -58,11 +61,11 @@
       <insert file=/footer.html></td>
   </tr>
   <tr>
-    <td height=35 bgcolor=$$text_bg_color$$ £text_bg_image£ bottompadding>
-    <img src=/internal-roxen-unit height=35 width=1 alt=""></td>
+    <td height=15 bgcolor=$$text_bg_color$$ £text_bg_image£ bottompadding>
+    <img src=/internal-roxen-unit height=15 width=1 alt=""></td>
   </tr>
   <tr>
-    <td colspan=3 height=1 bgcolor=$$page_head_bar_color$$>
+    <td colspan=3 height=1 bgcolor=$$border_color$$>
       <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
   </tr>
 </table>
