@@ -342,8 +342,6 @@ also set 'URLs'.</o>
 <t>URL's</t>
 </str>
 
-
-
 <str id="40">
 <o>Internal module resource mountpoint</o>
 <t>Locatie binnen de virtuele directory voor resources van de module</t>
@@ -1768,8 +1766,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <o>%s does not conform to URL syntax</o>
 <t></t>
 </str>
-
-
 
 <str id="338">
 <new/>

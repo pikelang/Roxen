@@ -274,8 +274,6 @@ also set 'URLs'.</o>
 <t>URL</t>
 </str>
 
-
-
 <str id="40">
 <o>Internal module resource mountpoint</o>
 <t>Interní pøípojný bod pro zdroje modulu</t>
@@ -1666,8 +1664,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <o>%s does not conform to URL syntax</o>
 <t></t>
 </str>
-
-
 
 <str id="338">
 <new/>
