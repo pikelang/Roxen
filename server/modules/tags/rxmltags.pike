@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.427 2004/06/01 17:02:37 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.428 2004/06/03 23:56:36 mani Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -22,28 +22,9 @@ constant module_type = MODULE_TAG;
 constant module_name = "Tags: RXML 2 tags";
 constant module_doc  = "This module provides the common RXML tags.";
 
-
-//  Cached copy of conf->query("compat_level"). This setting is defined
-//  to require a module reload to take effect so we only query it when
-//  start() is called.
-float compat_level;
-
-void create()
-{
-}
-
 void start()
 {
   query_tag_set()->prepare_context=set_entities;
-  compat_level = (float) my_configuration()->query("compat_level");
-}
-
-int cache_static_in_2_5()
-{
-  if (compat_level == 0.0) {
-    compat_level = (float) my_configuration()->query("compat_level");
-  }
-  return RXML.FLAG_IS_CACHE_STATIC;
 }
 
 private mapping(string:mixed) sexpr_constants = ([
@@ -991,7 +972,7 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
 class TagFor {
   inherit RXML.Tag;
   constant name = "for";
-  int flags = cache_static_in_2_5();
+  int flags = RXML.FLAG_IS_CACHE_STATIC;
 
   class Frame {
     inherit RXML.Frame;
@@ -1350,7 +1331,7 @@ class FrameIf {
 class TagIf {
   inherit RXML.Tag;
   constant name = "if";
-  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_5();
+  int flags = RXML.FLAG_SOCKET_TAG | RXML.FLAG_IS_CACHE_STATIC;
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit FrameIf;
@@ -1360,7 +1341,7 @@ class TagIf {
 class TagElse {
   inherit RXML.Tag;
   constant name = "else";
-  int flags = cache_static_in_2_5();
+  int flags = RXML.FLAG_IS_CACHE_STATIC;
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit RXML.Frame;
@@ -1375,7 +1356,7 @@ class TagElse {
 class TagThen {
   inherit RXML.Tag;
   constant name = "then";
-  int flags = cache_static_in_2_5();
+  int flags = RXML.FLAG_IS_CACHE_STATIC;
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit FrameIf;
@@ -1389,7 +1370,7 @@ class TagThen {
 class TagElseif {
   inherit RXML.Tag;
   constant name = "elseif";
-  int flags = cache_static_in_2_5();
+  int flags = RXML.FLAG_IS_CACHE_STATIC;
   array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
@@ -1543,7 +1524,7 @@ class TagCond
 class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
-  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_5();
+  int flags = RXML.FLAG_SOCKET_TAG | RXML.FLAG_IS_CACHE_STATIC;
   mapping(string:RXML.Type) req_arg_types = ([ "source":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([ "scope":RXML.t_text(RXML.PEnt),
 					       "maxrows":RXML.t_int(RXML.PEnt),
@@ -2090,14 +2071,10 @@ class TagComment {
     inherit RXML.Frame;
     int do_iterate;
     array do_enter() {
-      if (args && args->preparse)
-	do_iterate = 1;
-      else {
-	do_iterate = -1;
-	// Argument existence can be assumed static, so we can set
-	// FLAG_MAY_CACHE_RESULT here.
-	flags |= RXML.FLAG_MAY_CACHE_RESULT;
-      }
+      do_iterate = -1;
+      // Argument existence can be assumed static, so we can set
+      // FLAG_MAY_CACHE_RESULT here.
+      flags |= RXML.FLAG_MAY_CACHE_RESULT;
       return 0;
     }
     array do_return = ({});
@@ -3939,14 +3916,7 @@ just got zapped?
 
  <p>Here 'c' is not output since the comment starter before 'a'
  matches the ender after 'c' and not the one before it.</p>
-</desc>
-
-<attr name='preparse'>
- <p>Parse and execute any RXML inside the comment tag. This can be used
- to do stuff without producing any output in the response. This is a
- compatibility argument; the recommended way is to use
- <tag>nooutput</tag> instead.</p>
-</attr>",
+</desc>",
 
 //----------------------------------------------------------------------
 
