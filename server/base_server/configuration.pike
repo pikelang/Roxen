@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.337 2000/08/14 22:50:53 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.338 2000/08/15 12:45:38 jhs Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -441,6 +441,8 @@ array (function) first_modules(RequestID id)
 
 
 array location_modules(RequestID id)
+//! Return an array of all location modules the request would be
+//! mapped through, by order of priority.
 {
   if(!location_module_cache)
   {
@@ -1141,10 +1143,16 @@ string examine_return_mapping(mapping m)
    return res;
 }
 
-// The function that actually tries to find the data requested.  All
-// modules are mapped, in order, and the first one that returns a
-// suitable responce is used.
-mapping|int low_get_file(RequestID id, int|void no_magic)
+mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
+//! The function that actually tries to find the data requested. All
+//! modules except last and filter type modules are mapped, in order,
+//! and the first one that returns a suitable response is used. If
+//! `no_magic' is set to one, the internal magic roxen images and the
+//! <ref>find_internal()</ref> callbacks will be ignored.
+//!
+//! The return values 0 (no such file) and -1 (the data is a
+//! directory) are only returned when `no_magic' was set to 1;
+//! otherwise a result mapping is always generated.
 {
 #ifdef MODULE_LEVEL_SECURITY
   int slevel;
@@ -1159,7 +1167,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
   string loc;
   function funp;
   mixed tmp, tmp2;
-  mapping|object fid;
+  mapping|object(Stdio.File)|int fid;
 
   if(!no_magic)
   {
@@ -1171,11 +1179,11 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
     if(sizeof(file) > 17 &&
 #ifdef OLD_RXML_COMPAT
        (file[0] == '/') &&
-       sscanf(file, "%*s/internal-%s-%[^/]", type, loc) == 3)
+       sscanf(file, "%*s/internal-%s-%[^/]", type, loc) == 3
 #else
-       sscanf(file, "/internal-%s-%[^/]", type, loc) == 2)
+       sscanf(file, "/internal-%s-%[^/]", type, loc) == 2
 #endif
-    {
+       ) {
       switch(type) {
        case "roxen":
 	TRACE_LEAVE("Magic internal gopher image");
@@ -1439,7 +1447,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 	  TRACE_LEAVE("Returning data");
 	  return tmp;
 	}
-	if(fid)
+	if(fid && tmp != fid)
 	  destruct(fid);
 	TRACE_LEAVE("Returned new open file");
 	fid = tmp;
@@ -1503,6 +1511,9 @@ mixed handle_request( RequestID id  )
 }
 
 mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
+//! Return a result mapping for the id object at hand, mapping all
+//! modules, including the filter modules. This function is mostly a
+//! wrapper for <ref>low_get_file()</ref>.
 {
   int orig_internal_get = id->misc->internal_get;
   id->misc->internal_get = internal_get;
@@ -1978,7 +1989,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
       loc=loc[strlen(file)..];
       sscanf(loc, "%s/", loc);
       if (!dir[loc]) {
-	dir[loc] = ({ 0775, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+	dir[loc] = ({ 0775, -3, 0, 0, 0, 0, 0 });
       }
       TRACE_LEAVE("");
     }
