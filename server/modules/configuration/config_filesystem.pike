@@ -10,11 +10,11 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.22 2000/02/10 04:20:43 nilsson Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.23 2000/02/14 09:25:05 per Exp $";
 
 constant path = "config_interface/";
 
-object charset_encoder, charset_decoder;
+object charset_decoder;
 
 string template_for( string f, object id )
 {
@@ -55,6 +55,8 @@ mixed find_dir( string f, object id )
 mixed find_file( string f, object id )
 {
   string locale;
+
+  id->set_output_charset( QUERY(encoding) );
 
   id->since = 0;
   if( !id->misc->request_charset_decoded )
@@ -139,16 +141,16 @@ mixed find_file( string f, object id )
        id->misc->defines = ([]);
      id->misc->defines[" _stat"] = id->misc->stat;
      retval = http_rxml_answer( data, id );
-     if(charset_encoder)
-     {
-       retval->data = charset_encoder->clear()->feed( retval->data )->drain();
-       retval->extra_heads["Content-type"]
-	 = "text/html; charset="+QUERY(encoding);
-     } else {
-       retval->data = string_to_utf8( retval->data );
-       retval->extra_heads["Content-type"]
-	 = "text/html; charset=utf-8";
-     }
+//      if(charset_encoder)
+//      {
+//        retval->data = charset_encoder->clear()->feed( retval->data )->drain();
+//        retval->extra_heads["Content-type"]
+// 	 = "text/html; charset="+QUERY(encoding);
+//      } else {
+//        retval->data = string_to_utf8( retval->data );
+//        retval->extra_heads["Content-type"]
+// 	 = "text/html; charset=utf-8";
+//      }
      NOCACHE();
      retval->stat = 0;
      retval->len = strlen( retval->data );
@@ -162,10 +164,10 @@ mixed find_file( string f, object id )
     {
       while( id->misc->orig ) id = id->misc->orig;
       q = fix_relative( q, id );
-      if( charset_encoder )
-        q = charset_encoder->clear()->feed( q )->drain();
-      else
-        q = string_to_utf8( q );
+//       if( charset_encoder )
+//         q = charset_encoder->clear()->feed( q )->drain();
+//       else
+//         q = string_to_utf8( q );
       return http_redirect( q, id );
     }
   return retval;
@@ -175,7 +177,7 @@ void start(int n, Configuration cfg)
 {
   if( cfg )
   {
-    charset_encoder = charset_decoder = 0;
+    charset_decoder = 0;
     cfg->add_modules(({
       "awizard",      "config_tags", "config_userdb","contenttypes",
       "indexfiles",  "gbutton",     "wiretap",      "graphic_text",
@@ -183,7 +185,7 @@ void start(int n, Configuration cfg)
       "rxmlparse",    "rxmltags",    "tablist"
     }));
     catch {
-      charset_encoder = Locale.Charset.encoder(QUERY(encoding), "?");
+//       charset_encoder = Locale.Charset.encoder(QUERY(encoding), "?");
       charset_decoder = Locale.Charset.decoder(QUERY(encoding));
     };
   }
