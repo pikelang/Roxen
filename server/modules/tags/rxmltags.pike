@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.173 2000/09/12 12:42:05 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.174 2000/09/15 02:01:07 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1118,22 +1118,31 @@ class TagScope {
   class Frame {
     inherit RXML.Frame;
 
-    constant scope_name = "form";
-    mapping vars;
+    string scope_name;
+    mapping|object vars;
     mapping oldvar;
 
     array do_enter(RequestID id) {
-      oldvar=id->variables;
+      scope_name=args->extend || "form";
+#ifdef OLD_RXML_COMPAT
+      if(scope_name=="form") oldvar=id->variables;
+#endif
       if(args->extend)
-	vars=copy_value(id->variables);
+	// This is not really good, since we are peeking on the
+	// RXML parser internals without any abstraction...
+	vars=copy_value(RXML.get_context()->scopes[scope_name]);
       else
 	vars=([]);
-      id->variables=vars;
+#ifdef OLD_RXML_COMPAT
+      if(oldvar) id->variables=vars;
+#endif
       return 0;
     }
 
     array do_return(RequestID id) {
-      id->variables=oldvar;
+#ifdef OLD_RXML_COMPAT
+      if(oldvar) id->variables=oldvar;
+#endif
       result=content;
       return 0;
     }
@@ -1149,12 +1158,11 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
   return ({r});
 }
 
-array(string) container_cache(string tag, mapping args,
-                              string contents, RequestID id)
+string container_cache(string tag, mapping args,
+		       string contents, RequestID id)
 {
 #define HASH(x) (x+id->not_query+id->query+id->realauth+id->conf->query("MyWorldLocation"))
   string key="";
-  contents=parse_html(contents, ([]), (["cache":container_cache]) );
   if(!args->nohash) {
     object md5 = Crypto.md5();
     md5->update(HASH(contents));
@@ -1167,7 +1175,7 @@ array(string) container_cache(string tag, mapping args,
     parsed = Roxen.parse_rxml(contents, id);
     cache_set("tag_cache", key, parsed, Roxen.time_dequantifier(args));
   }
-  return ({parsed});
+  return parsed;
 #undef HASH
 }
 
@@ -2714,14 +2722,20 @@ load.",
  All other attributes will be inherited by the generated img tag.",
 
 "scope":#"<desc cont><short>
- Creates a different variable scope.</short> Variable changes inside the scope
+ Creates a new variable scope.</short> Variable changes inside the scope
  container will not affect variables in the rest of the page.
- Variables set outside the scope is not available inside the scope
- unless the extend attribute is used. No attributes are required.
 </desc>
 
-<attr name=extend>
- If set, all variables will be copied into the scope.
+<attr name=extend value=name default=form>
+ If set, all variables in the selected scope will be copied into the new scope.
+ NOTE: if the source scope is \"magic\", as e.g. the roxen scope, the scope will
+ not be copied, but rather linked and will behave as the original scope. It can
+ be useful to create an alias or just for the convinience of refering to the
+ scope as \"_\".
+</attr>
+
+<attr name=scope value=name default=form>
+ The name of the new scope, besides \"_\".
 </attr>",
 
 "set":#"<desc tag><short>
