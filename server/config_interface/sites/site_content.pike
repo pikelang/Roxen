@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.137 2003/11/17 16:01:31 anders Exp $
+// $Id: site_content.pike,v 1.138 2003/11/25 15:35:07 anders Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -45,27 +45,27 @@ string describe_tags( RoxenModule m, int q )
     if(tags[name] || conts[name])
       continue;
     if(new->get_tag(name)->flags & RXML.FLAG_EMPTY_ELEMENT)
-      tags+=(< replace(name,"#"," ") >);
+      tags+=(< replace(Roxen.html_encode_string(name),"#","&nbsp;") >);
     else
-      conts+=(< replace(name,"#"," ") >);
+      conts+=(< replace(Roxen.html_encode_string(name),"#","&nbsp;") >);
   }
 
-  array pi=indices(new->get_proc_instr_names());
+  array pi=map(indices(new->get_proc_instr_names()), Roxen.html_encode_string);
 
   return 
-    Roxen.html_encode_string(String.implode_nicely(map(sort(indices(tags)-
-							    ({"\x266a"})),
-						       lambda(string tag) {
-							 return "<"+tag+(tag[0]=='/'?"":"/")+">";
-						       } ) +
-						   map(sort(indices(conts)),
-						       lambda(string tag) {
-							 return "<"+tag+"></>";
-						       } ) +
-						   map(sort(pi),
-						       lambda(string tag) {
-							 return "<?"+tag+" ?>";
-						       } )));
+      String.implode_nicely(map(sort(indices(tags)-({"\x266a"})),
+				lambda(string tag) {
+				  return "<nobr>&lt;"+tag+(tag[0]=='/'?"":"/")+"&gt;</nobr>";
+				} ) +
+			    map(sort(indices(conts)),
+				lambda(string tag) {
+				  return "<nobr>&lt;"+tag+"/&gt;&lt;/&gt;</nobr>";
+				} ) +
+			    map(sort(pi),
+				lambda(string tag) {
+				  return "<nobr>&lt;?"+tag+" ?&gt;</nobr>";
+				} ),
+			    LOCALE(0,"and"));
 }
 
 string describe_provides( RoxenModule m, int q )
@@ -250,7 +250,7 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
       sprintf(LOCALE(472,"%d entries skipped. Present in log on disk."),
 	      sizeof( report )-999 );
 
-  return "<h2>"+LOCALE(216, "Events")+"</h2>" + (report[..1000]*"");
+  return "<h3>"+LOCALE(216, "Events")+"</h3>" + (report[..1000]*"");
 }
 
 #define EC(X) niceerror( lambda(){ return (X); } , #X)
@@ -285,7 +285,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 
   string dbuttons="";
   if( config_perm( "Add Module" ) )
-    dbuttons += "<h2>"+LOCALE(196, "Tasks")+"</h2>"+buttons( c, mn, id );
+    dbuttons += "<h3>"+LOCALE(196, "Tasks")+"</h3>"+buttons( c, mn, id );
   RoxenModule m = c->find_module( replace(mn,"!","#") );
 
   if(!m)
@@ -336,15 +336,15 @@ string find_module_doc( string cn, string mn, RequestID id )
     ((fnas/":</b>")*":</b></td><td><img src='/internal-roxen-unit' width=10 height=1 /></td><td>") +
     "</td></tr>\n";
   return
-    replace( "<br /><b><font size='+2'>" +
+    replace( "<b><h2>" +
 	     Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
-	     + "</font></b><br />"
+	     + "</h2></b>"
                   + EC(TRANSLATE(m->info(id)||"")) + "</p><p>"
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
-                  + eventlog + dbuttons +
+                  + dbuttons + eventlog +
                   ( config_setting( "devel_mode" ) ?
 		    "<br clear='all' />\n"
-		    "<h2>Developer information</h2>"
+		    "<h3>Developer information</h3>"
 		    "<table border=0 cellpadding=0 cellspacing=0>"
                     "<tr nowrap=''><td><b>Identifier:</b></td>"
 		    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
@@ -368,7 +368,7 @@ string find_module_doc( string cn, string mn, RequestID id )
                     + fnas +
 		    "</table>\n" +		    
 		    homepage + creators  
-		    + "<h2>"+LOCALE(261,"Inherit tree")+"</h2>"+
+		    + "<h3>"+LOCALE(261,"Inherit tree")+"</h3>"+
                     program_info( m ) +
                     "<dl>" + 
                     (m->faked?"(Not on disk, faked module)":inherit_tree( m ))
