@@ -5,7 +5,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.44 1997/09/19 15:38:22 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.45 1997/11/26 22:08:56 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -23,15 +23,6 @@ private static int perror_status_reported=0;
 int pid = getpid();
 object stderr = files.file("stderr");
 
-void roxen_perror(string format,mixed ... args)
-{
-  string s;
-  if(sizeof(args)) format=sprintf(format,@args);
-  if (format=="") return;
-  stderr->write(format);
-  perror_status_reported=0;
-}
-
 mapping pwn=([]);
 string pw_name(int uid)
 {
@@ -39,22 +30,25 @@ string pw_name(int uid)
   return pwn[uid]=(getpwuid(uid)||((""+uid)/":"))[0];
 }
 
-void report_status()
+void roxen_perror(string format,mixed ... args)
 {
-// #ifdef DEBUG
-  call_out(report_status, 60);
-// #endif /* DEBUG */
-  if (!perror_status_reported) {
+  int t = time();
+
+  if (perror_status_reported < t) {
     stderr->write("[1mRoxen is alive! pid: "+pid+"   ppid: "+getppid()+
 #if efun(geteuid)
 		  (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
 #endif
 		  "   uid: "+pw_name(getuid())+
-		  "    Time: "+(ctime(time())/" ")[-2]+"[0m\n");
-    perror_status_reported=1;
+		  "    Time: "+(ctime(t)/" ")[-2]+"[0m\n");
+    perror_status_reported = t + 60;	// 60s delay.
   }
-}
 
+  string s;
+  if(sizeof(args)) format=sprintf(format,@args);
+  if (format=="") return;
+  stderr->write(format);
+}
 
 void mkdirhier(string from, int|void mode)
 {
@@ -445,11 +439,11 @@ string make_path(string ... from)
   }, getcwd())*":";
 }
 
-void main(mixed ... args)
+int main(mixed ... args)
 {
   string path = make_path("base_server", "etc/include", ".");
-  report_status();
-  perror("Roxen loader version "+cvs_version+"\n");
+  roxen_perror("Roxen loader version "+cvs_version+"\n");
+  roxen_perror("Roxen started on "+ctime(time()));	// ctime has an lf.
   master()->putenv("PIKE_INCLUDE_PATH", path);
   master()->pike_include_path = path/":";
 
@@ -481,5 +475,8 @@ void main(mixed ... args)
 
   initiate_cache();
   load_roxen();
-  return roxen->main(@args);
+  int retval = roxen->main(@args);
+  perror_status_reported = 0;
+  roxen_perror("-------------------------------------\n\n");
+  return(retval);
 }

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.148 1997/11/11 00:59:36 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.149 1997/11/26 22:08:55 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -696,20 +696,19 @@ public string full_status()
   if(!sizeof(configurations))
     return "<B>No virtual servers enabled</B>\n";
   
-#define conf configurations[tmp]
-  for(tmp = 0; tmp < sizeof(configurations); tmp++)
+  foreach(configurations, object conf)
   {
     if(!conf->sent
        ||!conf->received
        ||!conf->hsent)
       continue;
-    foo[0]+=conf->sent->mb()/(float)(time(1)-start_time+1);
-    foo[1]+=conf->sent->mb();
-    foo[2]+=conf->hsent->mb();
-    foo[3]+=conf->received->mb();
-    foo[4]+=conf->requests;
+    foo[0] += conf->sent->mb()/(float)(time(1)-start_time+1);
+    foo[1] += conf->sent->mb();
+    foo[2] += conf->hsent->mb();
+    foo[3] += conf->received->mb();
+    foo[4] += conf->requests;
   }
-#undef conf
+
   for(tmp = 1; tmp < 4; tmp ++)
   {
     if(foo[tmp] < 1024.0)     
@@ -718,18 +717,19 @@ public string full_status()
       foo[tmp] = sprintf("%.2f GB", foo[tmp]/1024.0);
   }
 
-  res = ("<table><tr><td><b>Sent data:</b></td><td>"+ foo[1] 
-	 + sprintf("</td><td>%.2f Kbit</td></tr><tr>", foo[0] * 8192.0));
+  res = sprintf("<table><tr><td><b>Sent data:</b></td><td>%s"
+		"</td><td>%.2f Kbit/sec</td></tr><tr>\n",
+		foo[1], foo[0] * 8192.0);
   
   res += "<td><b>Sent headers:</b></td><td>"+ foo[2] +"</td></tr>\n";
 	    
   tmp=(int)(foo[4]*600.0)/((time(1)-start_time)+1);
 
-  res += ("<tr><td><b>Number of requests:</b></td><td>" 
-	  + sprintf("%8d", foo[4])
-	  + sprintf("</td><td>%.2f/min</td>", (float)tmp/(float)10)+
-	  "</tr><tr><td><b>Received data:</b></td><td>"
-	  + foo[3] +"</td>");
+  res += (sprintf("<tr><td><b>Number of requests:</b></td>"
+		  "<td>%8d</td><td>%.2f/min</td></tr>\n"
+		  "<tr><td><b>Received data:</b></td>"
+		  "<td>%s</td></tr>\n",
+		  foo[4], (float)tmp/(float)10, foo[3]));
   
   return res +"</table>";
 }
@@ -2336,7 +2336,6 @@ varargs int main(int argc, array (string) argv)
 
 
   report_notice("Roxen started in "+(time()-start_time)+" seconds.\n");
-  perror("-------------------------------------\n\n");
 
 //  start_time=time();		// Used by the "uptime" info later on.
   return -1;
