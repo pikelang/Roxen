@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.62 2001/01/29 07:50:20 per Exp $
+// $Id: global_variables.pike,v 1.63 2001/02/27 02:54:34 per Exp $
 
 /*
 #pragma strict_types
@@ -98,6 +98,13 @@ void set_up_http_variables( Protocol o, int|void fhttp )
 	     return o->query("set_cookie") == 0;
 	   };
   };
+
+  defvar( "minimum_bitrate", 0, LOCALE(0, "Minumum allowed bitrate" ),
+	  TYPE_INT,
+	  LOCALE(0, "The minimum allowed bitrate, in Kbits/second. If the  "
+		 "client is slower than this set bitrate, it will be "
+		 "disconnected (after a timeout). Setting this higher than "
+		 "14 is not recommended if you have modem users."));
 
   defvar("show_internals", 1, LOCALE(72, "Show internal errors"), 
 	 TYPE_FLAG,

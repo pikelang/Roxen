@@ -1,11 +1,11 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.417 2001/02/23 03:58:24 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.418 2001/02/27 02:54:18 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
 #include <request_trace.h>
-
+#include <timers.h>
 
 #define CATCH(P,X) do{mixed e;if(e=catch{X;})report_error("While "+P+"\n"+describe_backtrace(e));}while(0)
 
@@ -182,11 +182,11 @@ private mapping (int:string) log_format = ([]);
 // A list of priority objects
 array (Priority) pri = allocate_pris();
 
-public mapping modules = ([]);
+mapping modules = ([]);
 //! All enabled modules in this site.
 //! The format is "module":{ "copies":([ num:instance, ... ]) }
 
-public mapping (RoxenModule:string) otomod = ([]);
+mapping (RoxenModule:string) otomod = ([]);
 //! A mapping from the module objects to module names
 
 
@@ -615,7 +615,7 @@ private void parse_log_formats()
       log_format[(int)(b/":")[0]] = fix_logging((b/":")[1..]*":");
 }
 
-public void log(mapping file, RequestID request_id)
+void log(mapping file, RequestID request_id)
 {
   function f;
 
@@ -639,7 +639,7 @@ public void log(mapping file, RequestID request_id)
   roxen.run_log_format( form, log_function, request_id, file );
 }
 
-public array(string) userinfo(string u, RequestID|void id)
+array(string) userinfo(string u, RequestID|void id)
 //! @note DEPRECATED COMPATIBILITY FUNCTION
 //! 
 //! Fetches user information from the authentication module by calling
@@ -651,7 +651,7 @@ public array(string) userinfo(string u, RequestID|void id)
       return uid->compat_userinfo();
 }
 
-public array(string) userlist(RequestID|void id)
+array(string) userlist(RequestID|void id)
 //! @note DEPRECATED COMPATIBILITY FUNCTION
 //! 
 //! Fetches the full list of valid usernames from the authentication
@@ -664,7 +664,7 @@ public array(string) userlist(RequestID|void id)
   return list;
 }
 
-public array(string) user_from_uid(int u, RequestID|void id)
+array(string) user_from_uid(int u, RequestID|void id)
 //! @note DEPRECATED COMPATIBILITY FUNCTION
 //! 
 //! Return the user data for id u from the authentication module. The
@@ -780,7 +780,7 @@ Group find_group( string group, RequestID|void id )
 }
 
 
-public string last_modified_by(Stdio.File file, RequestID id)
+string last_modified_by(Stdio.File file, RequestID id)
 {
   Stat s;
   int uid;
@@ -1049,7 +1049,7 @@ mixed _lock(object|function f)
 {
   Thread.MutexKey key;
   function|int l;
-
+  TIMER_START(module_lock);
   if (functionp(f)) {
     f = function_object(f);
   }
@@ -1081,6 +1081,7 @@ mixed _lock(object|function f)
     locked[f]++;
     key = l();
   }
+  TIMER_END(module_lock);
   return key;
 }
 
@@ -1183,6 +1184,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
   if(!no_magic)
   {
+    TIMER_START(internal_magic);
 #ifndef NO_INTERNAL_HACK
     // Find internal-foo-bar images
     // min length == 17 (/internal-roxen-?..)
@@ -1200,17 +1202,26 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
        case "roxen":
 	TRACE_LEAVE("Magic internal roxen image");
         if(loc=="unit" || loc=="pixel-of-destiny")
-	  return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,\0\0\0\0\1\0\1\0\0\1\1""2\0;",
+	{
+	  TIMER_END(internal_magic);
+	  return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,"
+		   "\0\0\0\0\1\0\1\0\0\1\1""2\0;",
 		   "type":"image/gif" ]);
+	}
 	if(has_prefix(loc, "pixel-"))
-	  return (["data":sprintf("GIF89a\1\0\1\0\200\0\0\0\0\0%c%c%c,\0\0\0\0\1\0\1\0\0\2\2L\1\0;",
+	{
+	  TIMER_END(internal_magic);
+	  return (["data":sprintf("GIF89a\1\0\1\0\200\0\0\0\0\0%c%c%c,\0\0\0"
+				  "\0\1\0\1\0\0\2\2L\1\0;",
 				  @parse_color(loc[6..])),
 		   "type":"image/gif" ]);
-
+	}
+	TIMER_END(internal_magic);
 	return internal_roxen_image(loc, id);
 
        case "gopher":
 	TRACE_LEAVE("Magic internal gopher image");
+	TIMER_END(internal_magic);
 	return internal_gopher_image(loc);
       }
     }
@@ -1236,6 +1247,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  } else {
 	    TRACE_LEAVE("");
 	    TRACE_LEAVE("Request denied.");
+	    TIMER_END(internal_magic);
 	    return tmp2;
 	  }
 #endif
@@ -1252,6 +1264,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	    {
 	      TRACE_LEAVE("");
 	      TRACE_LEAVE(examine_return_mapping(fid));
+	      TIMER_END(internal_magic);
 	      return fid;
 	    }
 	    else
@@ -1285,6 +1298,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       } else
 	TRACE_LEAVE("");
     }
+    TIMER_END(internal_magic);
   }
 
   // Well, this just _might_ be somewhat over-optimized, since it is
@@ -1293,6 +1307,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
   {
 #ifdef URL_MODULES
   // Map URL-modules
+    TIMER_START(url_modules);
     foreach(url_module_cache||url_modules(), funp)
     {
       LOCK(funp);
@@ -1304,6 +1319,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       {
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Returning data");
+	TIMER_END(url_modules);
 	return tmp;
       }
       if(objectp( tmp ))
@@ -1325,12 +1341,15 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	if(err) throw(err);
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Returning data");
+	TIMER_END(url_modules);
 	return tmp;
       }
       TRACE_LEAVE("");
+      TIMER_END(url_modules);
     }
 #endif
 
+    TIMER_START(location_modules);
     foreach(location_module_cache||location_modules(), tmp)
     {
       loc = tmp[0];
@@ -1346,6 +1365,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  } else {
 	    TRACE_LEAVE("");
 	    TRACE_LEAVE("Request denied.");
+	    TIMER_END(location_modules);
 	    return tmp2;
 	  }
 #endif
@@ -1362,6 +1382,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  {
 	    TRACE_LEAVE("");
 	    TRACE_LEAVE(examine_return_mapping(fid));
+	    TIMER_END(location_modules);
 	    return fid;
 	  }
 	  else
@@ -1405,9 +1426,11 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  (id->query?("?"+id->query):"");
 	new_query=Roxen.add_pre_state(new_query, id->prestate);
 
+	TIMER_END(location_modules);
 	return Roxen.http_redirect(new_query, id);
       }
     }
+    TIMER_END(location_modules);
   }
 
   if(fid == -1)
@@ -1417,6 +1440,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       TRACE_LEAVE("No magic requested. Returning -1.");
       return -1;
     }
+    TIMER_START(directory_module);
     if(dir_module)
     {
       LOCK(dir_module);
@@ -1429,6 +1453,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       TRACE_LEAVE("No directory module. Returning 'no such file'");
       return 0;
     }
+    TIMER_END(directory_module);
     if(mappingp(fid))
     {
       TRACE_LEAVE("Returning data");
@@ -1437,6 +1462,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
   }
 
   // Map the file extensions, but only if there is a file...
+  TIMER_START(extension_module);
   if(objectp(fid) &&
      (tmp = file_extension_modules(loc = Roxen.extension(id->not_query, id))))
   {
@@ -1454,6 +1480,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	{
 	  TRACE_LEAVE("");
 	  TRACE_LEAVE("Permission denied");
+	  TIMER_END(extension_module);
 	  return tmp;
 	}
 #endif
@@ -1466,6 +1493,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	{
 	  TRACE_LEAVE("");
 	  TRACE_LEAVE("Returning data");
+	  TIMER_END(extension_module);
 	  return tmp;
 	}
 	if(fid && tmp != fid)
@@ -1477,9 +1505,11 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	TRACE_LEAVE("");
     }
   }
+  TIMER_END(extension_module);
 
   if(objectp(fid))
   {
+    TIMER_START(content_type_module);
     if(stringp(id->extension)) {
       id->not_query += id->extension;
       loc = Roxen.extension(id->not_query, id);
@@ -1491,11 +1521,14 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     if(tmp)
     {
       TRACE_LEAVE("");
+      TIMER_END(content_type_module);
       return ([ "file":fid, "type":tmp[0], "encoding":tmp[1] ]);
     }
     TRACE_LEAVE("");
+    TIMER_END(content_type_module);
     return ([ "file":fid, ]);
   }
+
   if(!fid)
     TRACE_LEAVE("Returned 'no such file'.");
   else
@@ -1508,6 +1541,8 @@ mixed handle_request( RequestID id  )
   function funp;
   mixed file;
   REQUEST_WERR("handle_request()");
+  TIMER_START(handle_request);
+  TIMER_START(first_modules);
   foreach(first_module_cache||first_modules(), funp)
   {
     if(file = funp( id ))
@@ -1517,17 +1552,24 @@ mixed handle_request( RequestID id  )
       return id->conf->handle_request(id);
     }
   }
+  TIMER_END(first_modules);
   if(!mappingp(file) && !mappingp(file = get_file(id)))
   {
     mixed ret;
+    TIMER_START(last_modules);
     foreach(last_module_cache||last_modules(), funp) if(ret = funp(id)) break;
     if (ret == 1) {
       REQUEST_WERR("handle_request(): Recurse");
+      TIMER_END(last_modules);
+      TIMER_END(handle_request);
       return handle_request(id);
     }
     file = ret;
+    TIMER_END(last_modules);
   }
+  TIMER_END(handle_request);
   REQUEST_WERR("handle_request(): Done");
+  MERGE_TIMERS(roxen);
   return file;
 }
 
@@ -1536,6 +1578,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
 //! modules, including the filter modules. This function is mostly a
 //! wrapper for <ref>low_get_file()</ref>.
 {
+  TIMER_START(get_file);
   int orig_internal_get = id->misc->internal_get;
   id->misc->internal_get = internal_get;
 
@@ -1543,10 +1586,12 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   mapping res2;
   function tmp;
   res = low_get_file(id, no_magic);
+  TIMER_END(get_file);
 
   // finally map all filter type modules.
   // Filter modules are like TYPE_LAST modules, but they get called
   // for _all_ files.
+  TIMER_START(filter_modules);
   foreach(filter_module_cache||filter_modules(), tmp)
   {
     TRACE_ENTER("Filter module", tmp);
@@ -1559,6 +1604,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
     } else
       TRACE_LEAVE("");
   }
+  TIMER_END(filter_modules);
 
   id->misc->internal_get = orig_internal_get;
   return res;

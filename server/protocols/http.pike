@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.305 2001/02/24 21:27:35 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.306 2001/02/27 02:54:17 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -16,20 +16,8 @@ inherit "highlight_pike";
 
 // HTTP protocol module.
 #include <config.h>
-
-// #define DO_TIMER
-
-#ifdef DO_TIMER
-static int global_timer, global_total_timer;
-#  define ITIMER()  write("\n\n\n");global_total_timer = global_timer = gethrtime();
-#  define TIMER(X) do {int st=gethrtime();int x=st-global_timer; \
-                       int y=st-global_total_timer; \
-                       write( "%20s ... %1.1fms / %1.1fms\n",X,x/1000.0,y/1000.0 );\
-                       global_timer = gethrtime();global_total_timer+=gethrtime()-st; } while(0);
-#else
-#  define ITIMER()
-#  define TIMER(X)
-#endif
+#define TIMER_PREFIX "http:"
+#include <timers.h>
 
 #ifdef PROFILE
 #define HRTIME() gethrtime()
@@ -382,6 +370,9 @@ private void setup_pipe()
 void send (string|object what, int|void len)
 {
   REQUEST_WERR(sprintf("send(%O, %O)\n", what, len));
+  if( len && port_obj->minimum_bitrate )
+    call_out( end, len / port_obj->minimum_bitrate );
+
   if(!what) return;
   if(!pipe) setup_pipe();
   if(stringp(what))  pipe->write(what);
@@ -712,6 +703,7 @@ int last;
 
 private int parse_got( string new_data )
 {
+  TIMER_START(parse_got);
   multiset (string) sup;
   string a, b, s="", linename, contents;
 
@@ -736,8 +728,10 @@ private int parse_got( string new_data )
       }
     }
     if( !res )
+    {
+      TIMER_END(parse_got);
       return 0; // Not enough data;
-
+    }
     /* 
        now in res:
        leftovers/data
@@ -811,6 +805,7 @@ private int parse_got( string new_data )
     }
     if(!remoteaddr) {
       REQUEST_WERR("HTTP: parse_request(): No remote address.");
+      TIMER_END(parse_got);
       return 2;
     }
   }
@@ -883,6 +878,7 @@ private int parse_got( string new_data )
     if(strlen(data) < l)
     {
       REQUEST_WERR("HTTP: parse_request(): More data needed in POST.");
+      TIMER_END(parse_got);
       return 0;
     }
     leftovers = data[l+2..];
@@ -928,6 +924,7 @@ private int parse_got( string new_data )
        break;
     }
   }
+  TIMER_END(parse_got);
   return 3;	// Done.
 }
 
@@ -950,8 +947,8 @@ void disconnect()
   if (my_fd) 
     MARK_FD("my_fd in HTTP disconnected?");
 #endif
-  if(do_not_disconnect)
-    return;
+  MERGE_TIMERS(conf);
+  if(do_not_disconnect) return;
   destruct();
 }
 
@@ -1257,7 +1254,7 @@ int wants_more()
 void do_log( int|void fsent )
 {
   MARK_FD("HTTP logging"); // fd can be closed here
-  TIMER("data sent");
+  TIMER_START(do_log);
   if(conf)
   {
     int len;
@@ -1274,6 +1271,8 @@ void do_log( int|void fsent )
   }
   if( !port_obj ) 
   {
+    TIMER_END(do_log);
+    MERGE_TIMERS(conf);
     catch  // paranoia
     {
       my_fd->close();
@@ -1282,6 +1281,7 @@ void do_log( int|void fsent )
     };
     return;
   }
+  TIMER_END(do_log);
   end(1);
   return;
 }
@@ -1464,7 +1464,7 @@ class MultiRangeWrapper
 }
 
 
-// Parse the range header itno multiple ranges.
+// Parse the range header into multiple ranges.
 array parse_range_header(int len)
 {
   array ranges = ({});
@@ -1516,6 +1516,8 @@ void ready_to_receive()
 // Send the result.
 void send_result(mapping|void result)
 {
+  TIMER_START(send_result);
+
   array err;
   int tmp;
   mapping heads;
@@ -1560,13 +1562,12 @@ void send_result(mapping|void result)
     {
       if((file->file == -1) || file->leave_me)
       {
-        if(do_not_disconnect) {
-          file = 0;
-          pipe = 0;
+	TIMER_END(send_result);
+	file = 0;
+	pipe = 0;
+        if(do_not_disconnect) 
           return;
-        }
         my_fd = 0;
-        file = 0;
         return;
       }
 
@@ -1726,7 +1727,6 @@ void send_result(mapping|void result)
                          prot, method, file));
     MARK_FD("HTTP handled");
   
-    TIMER("send_result");
     if( (method!="HEAD") && (file->error!=304) )
       // No data for these two...
     {
@@ -1756,7 +1756,7 @@ void send_result(mapping|void result)
                                   "rf":realfile,
                                 ]), 
                                 misc->cacheable );
-          file = ([ "data":data, "raw":file->raw ]);
+          file = ([ "data":data, "raw":file->raw, "len":strlen(data) ]);
         }
       }
 #endif
@@ -1764,9 +1764,12 @@ void send_result(mapping|void result)
       {
         // Just do a blocking write().
         int s;
+	TIMER_END(send_result);
+	TIMER_START(blocking_write);
         s = my_fd->write(head_string + 
                          (file->file?file->file->read(file->len):
                           (file->data[..file->len-1])));
+	TIMER_END(blocking_write);
         do_log( s );
         return;
       }
@@ -1784,6 +1787,7 @@ void send_result(mapping|void result)
       send(head_string);
       file->len = 1; // Keep those alive, please...
     }
+  TIMER_END(send_result);
   start_sender();
 }
 
@@ -1792,8 +1796,7 @@ void send_result(mapping|void result)
 void handle_request( )
 {
   REQUEST_WERR("HTTP: handle_request()");
-  TIMER("enter_handle");
-
+  TIMER_START(handle_request);
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
   {
@@ -1806,6 +1809,7 @@ void handle_request( )
 	  "type":"text/plain",
 	  "data":generate_bugreport( @err ),
 	]);
+	TIMER_END(handle_request);
         send_result();
         return;
       } else {
@@ -1818,6 +1822,7 @@ void handle_request( )
 	      "type":"text/html",
 	      "data":handle_error_file_request( @err ),
 	    ]);
+	  TIMER_END(handle_request);
           send_result();
           return;
 	}
@@ -1832,7 +1837,6 @@ void handle_request( )
   if(e= catch(file = conf->handle_request( this_object() )))
     INTERNAL_ERROR( e );
   
-  TIMER("conf->handle_request");
   if( file )
     if( file->try_again_later )
     {
@@ -1844,6 +1848,7 @@ void handle_request( )
     }
     else if( file->pipe )
       return;
+  TIMER_END(handle_request);
   send_result();
 }
 
@@ -1861,9 +1866,6 @@ int processed;
 // array ccd = ({});
 void got_data(mixed fooid, string s)
 {
-  ITIMER();
-  TIMER("got_data");
-
   if(wanted_data)
   {
     data += s;
@@ -1899,8 +1901,6 @@ void got_data(mixed fooid, string s)
   if(strlen(raw)) 
     tmp = parse_got( s );
 
-  TIMER("parse");
-
   switch(tmp)
   {
    case 0:
@@ -1922,8 +1922,7 @@ void got_data(mixed fooid, string s)
   if( method == "GET"  )
     misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
 
-  TIMER("charset");
-
+  TIMER_START(find_conf);
   string path;
   if( !conf || !(path = port_obj->path ) 
       || (sizeof( path ) 
@@ -1943,7 +1942,7 @@ void got_data(mixed fooid, string s)
   else if( strlen(path) )
     adjust_for_config_path( path );
 
-  TIMER("conf");
+  TIMER_END(find_conf);
 
   if (rawauth)
   {
@@ -1981,6 +1980,7 @@ void got_data(mixed fooid, string s)
 
   remove_call_out(do_timeout);
 #ifdef RAM_CACHE
+  TIMER_START(cache_lookup);
   array cv;
   if( prot != "HTTP/0.9" &&
       misc->cacheable &&
@@ -2010,6 +2010,7 @@ void got_data(mixed fooid, string s)
         } )
         {
           INTERNAL_ERROR( e );
+	  TIMER_END(cache_lookup);
           send_result();
           return;
         }
@@ -2038,10 +2039,12 @@ void got_data(mixed fooid, string s)
           conf->hsent += strlen(file->hs);
           if( strlen( d ) < 4000 )
           {
-            do_log( my_fd->write( fix_date(file->hs)+d ) );
+	    TIMER_END(cache_lookup);
+	    do_log( my_fd->write( fix_date(file->hs)+d ) );
           } 
           else 
           {
+	    TIMER_END(cache_lookup);
             send( fix_date(file->hs)+d );
             start_sender( );
           }
@@ -2052,12 +2055,13 @@ void got_data(mixed fooid, string s)
       file = 0;
     }
   }
+  TIMER_END(cache_lookup);
 #endif
-
+  TIMER_START(parse_request);
   things_to_do_when_not_sending_from_cache( );
+  TIMER_END(parse_request);
   REQUEST_WERR("HTTP: Calling roxen.handle().");
 
-  TIMER("pre_handle");
 #ifdef THREADS
   roxen.handle(handle_request);
 #else

@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.636 2001/02/23 07:13:37 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.637 2001/02/27 02:54:28 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -19,6 +19,7 @@ ArgCache argcache;
 #include <module.h>
 #include <variables.h>
 #include <stat.h>
+#include <timers.h>
 
 // Inherits
 inherit "global_variables";
@@ -3432,6 +3433,22 @@ void initiate_argcache()
   report_debug("Done [%.2fms]\n", (gethrtime()-t)/1000.0);
 }
 
+#ifdef TIMERS
+void show_timers()
+{
+  call_out( show_timers, 30 );
+  array a = values(timers);
+  array b = indices( timers );
+  sort( a, b );
+  reverse(a);
+  reverse(b);
+  werror("Timers:\n");
+  for( int i = 0; i<sizeof(b); i++ )
+    werror( "  %-30s : %10.1fms\n", b[i], a[i]/1000.0 );
+  werror("\n\n");
+}
+#endif
+
 array argv;
 int main(int argc, array tmp)
 {
@@ -3444,6 +3461,10 @@ int main(int argc, array tmp)
   dump( "base_server/throttler.pike" );
 
   add_constant( "Protocol", Protocol );
+#ifdef TIMERS
+  call_out( show_timers, 30 );
+#endif
+
 #if constant(SSL.sslfile)
   add_constant( "SSLProtocol", SSLProtocol );
 #endif
