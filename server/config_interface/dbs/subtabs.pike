@@ -19,6 +19,8 @@ string parse( RequestID id )
   q = (id->not_query/"/")[-1];
   if( q == "index.html" || q == "browser.pike" || q == "edit_group.pike" )
     q = "";
+  if( q == "restore_db.pike" )
+    q = "backups.html";
   string res="";
   foreach( pages, array page )
   {

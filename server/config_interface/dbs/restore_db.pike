@@ -15,6 +15,14 @@ mapping|string parse( RequestID id )
       bks[m->db] = ({ m });
     else
       bks[m->db] += ({ m });
+
+  if( !sizeof( bks ) )
+  {
+    res += _(0,"<p>No backups are currently available. To make a backup of a "
+	     "database, focus on it in the Databases tab, and click on the "
+	     "make backup button. Please note that you can only make backups "
+	     "of databases managed by Roxen.</p>");
+  }
   
   if( !id->variables->db )
   {
@@ -112,10 +120,13 @@ mapping|string parse( RequestID id )
       res += "<select name='todb'>";
       foreach( sort(DBManager.list()), string db )
       {
-	if( db == id->variables->db )
-	  res += "<option selected=selected>"+db+"</option>";
-	else
-	  res += "<option>"+db+"</option>";
+	if( DBManager.is_internal( db ) )
+	{
+	  if( db == id->variables->db )
+	    res += "<option selected=selected>"+db+"</option>";
+	  else
+	    res += "<option>"+db+"</option>";
+	}
       }
       res += "</select>";
       
