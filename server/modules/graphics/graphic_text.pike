@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.233 2000/08/25 00:21:06 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.234 2000/09/02 23:37:54 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -814,26 +814,59 @@ string fix_text(string c, mapping m, RequestID id) {
 
 // ----------------- gtext tags and containers -------------------
 
-string simpletag_gtext_url(string t, mapping arg, string c, RequestID id) {
-  c=fix_text(c,arg,id);
-  mapping p=mk_gtext_arg(arg,id);
-  if(arg->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
-  string ext="";
-  if(query("ext")) ext="."+(p->format || "gif");
-  if(!arg->short)
-    return query_internal_location()+image_cache->store( ({p,c}), id )+ext;
-  return "+"+image_cache->store( ({p,c}), id )+ext;
+class TagGTextURL {
+  inherit RXML.Tag;
+  constant name = "gtext-url";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+
+  class Frame {
+    inherit RXML.Frame;
+    array do_return(RequestID id) {
+      content=fix_text(content,args,id);
+      mapping p=mk_gtext_arg(args,id);
+      if(args->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
+      string ext="";
+      if(query("ext")) ext="."+(p->format || "gif");
+      if(!args->short)
+	return ({ query_internal_location()+image_cache->store( ({p,content}), id )+ext });
+      return ({ "+"+image_cache->store( ({p,content}), id )+ext });
+    }
+  }
 }
 
-string simpletag_gtext_id(string t, mapping arg, string c, RequestID id) {
-  mapping p=mk_gtext_arg(arg,id);
-  if(arg->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
-  if(!arg->short)
-    return query_internal_location()+"$"+image_cache->store(p, id)+"/";
-  return "+"+image_cache->store(p, id )+"/foo";
+class TagGTextID {
+  inherit RXML.Tag;
+  constant name = "gtext-id";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      mapping p=mk_gtext_arg(args,id);
+      if(args->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
+      if(!args->short)
+	return ({ query_internal_location()+"$"+image_cache->store(p, id)+"/" });
+      return ({ "+"+image_cache->store(p, id )+"/foo" });
+    }
+  }
 }
 
-string simpletag_gtext(string t, mapping arg, string c, RequestID id)
+class TagGText {
+  inherit RXML.Tag;
+  constant name = "gtext";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      return ({ do_gtext(args, content, id) });
+    }
+  }
+}
+
+string do_gtext(mapping arg, string c, RequestID id)
 {
   if((c-" ")=="") return "";
 
@@ -978,27 +1011,33 @@ array(string) simpletag_gh(string t, mapping m, string c, RequestID id) {
   if(sscanf(t, "%s%d", t, i)==2 && i>1)
     m->scale = (string)(1.0 / ((float)i*0.6));
   if(!m->valign) m->valign="top";
- return ({ "<p>"+simpletag_gtext("",m,c,id)+"</p><br />" });
+ return ({ "<p>"+do_gtext(m,c,id)+"</p><br />" });
 }
 
-array(string) simpletag_anfang(string t, mapping m, string c, RequestID id) {
-  if(!m->align) m->align="left";
-  return ({ "<br clear=\"left\" />"+simpletag_gtext("",m,c[0..0],id)+c[1..] });
+class TagAnfang {
+  inherit RXML.Tag;
+  constant name = "anfang";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(!args->align) args->align="left";
+      return ({ "<br clear=\"left\" />"+do_gtext(args,content[0..0],id)+content[1..] });
+    }
+  }
 }
 
 
 // --------------- tag and container registration ----------------------
 
 mapping query_simpletag_callers() {
-  return ([ "gtext-id" : ({ RXML.FLAG_EMPTY_ELEMENT, simpletag_gtext_id }),
-	    "gtext-url" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gtext_url }),
-	    "anfang" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_anfang }),
-	    "gh1" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
+  return ([ "gh1" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
 	    "gh2" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
 	    "gh3" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
 	    "gh4" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
 	    "gh5" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
 	    "gh6" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
-	    "gtext" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gtext }),
   ]);
 }
