@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.407 2003/11/03 13:49:16 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.408 2003/11/17 18:00:15 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2285,7 +2285,6 @@ static void create(object f, object c, object cc)
 void chain(object f, object c, string le)
 {
   my_fd = f;
-  f->set_nonblocking(0, f->query_write_callback(), end);
   port_obj = c;
   processed = 0;
   do_not_disconnect=-1;		// Block destruction until we return.
@@ -2313,10 +2312,7 @@ void chain(object f, object c, string le)
   {
     if(do_not_disconnect == -1)
       do_not_disconnect = 0;
-    if(!processed)
-    {
-      f->set_nonblocking(got_data, f->query_write_callback(), end);
-    }
+    f->set_nonblocking(!processed && got_data, f->query_write_callback(), end);
   }
 }
 
