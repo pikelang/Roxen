@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.14 2000/02/22 13:05:17 js Exp $
+ * $Id: upgrade.pike,v 1.15 2000/02/22 22:56:13 js Exp $
  *
  * The Roxen Upgrade Client
  *
@@ -21,7 +21,7 @@ constant module_name = "Upgrade client";
 object db;
 
 object updater;
-
+Yabu.Table pkginfo, misc;
 
 mapping(int:GetPackage) package_downloads = ([ ]);
 
@@ -30,6 +30,8 @@ void start(int num, Configuration conf)
   if(!num)
   {
     catch(db=Yabu.db(QUERY(yabudir),"wcSQ"));
+    pkginfo=db["pkginfo"];
+    misc=misc;
     updater=UpdateInfoFiles();
   }
 }
@@ -77,7 +79,7 @@ class Scope_upgrade
     if(var=="last_updated")
     {
       int t;
-      if(catch(t=db["misc"]["last_updated"]) || t==0)
+      if(catch(t=misc["last_updated"]) || t==0)
 	return "infinitely long";
       return describe_time_period(time()-t);
     }
@@ -130,14 +132,14 @@ string container_upgrade_package_output(string t, mapping m, string c, RequestID
 
   if(!m->package)
   {
-    array(string) packages=indices(db["pkginfo"]);
+    array(string) packages=indices(pkginfo);
     packages=sort(packages);
     if(m->reverse)
       packages=reverse(packages);
     
     foreach(packages, string pkg)
     {
-      mapping p=db["pkginfo"][pkg];
+      mapping p=pkginfo[pkg];
       if( (m->type && p["package-type"]==m->type) || !m->type)
 	res+=({ p });
       i++;
@@ -147,21 +149,35 @@ string container_upgrade_package_output(string t, mapping m, string c, RequestID
   }
   else
   {
-    mixed err=catch(start_package_download((int)m->package));
-    if(err) report_error("Upgrade: %s",err);
-    
-    mapping p=db["pkginfo"][m->package];
+    mapping p=pkginfo[m->package];
     if(p)
     {
       mapping t=localtime((int)p["issued-date"]);
-      p->date=sprintf("%04d-%02d-%02d",1900+t->year,t->month, t->mday);;
+      p->date=sprintf("%04d-%02d-%02d",1900+t->year,t->month+1, t->mday);;
       res=({ p });
     }
   }
   return do_output_tag(m, res, c, id);
 }
 
+string tag_upgrade_start_download(string t, mapping m, RequestID id)
+{
+  werror("upgrade_start_download\n");
+  mixed err=catch(start_package_download((int)m->package));
+  if(err) report_error("Upgrade: %s",err);
+  return "";
+}
 
+
+string tag_upgrade_package_is_downloaded(string t, mapping m, RequestID id)
+{
+  if(!m->package)
+    return "No package argument.";
+
+  if(completely_downloaded(((int)m->package)))
+    id->variables[m->variable]="1";
+  return "";  
+}
 
 string container_upgrade_download_progress_output(string t, mapping m,
 					  string c, RequestID id)
@@ -171,7 +187,7 @@ string container_upgrade_download_progress_output(string t, mapping m,
   
   foreach(packages, int package)
   {
-    mapping pkg=db["pkginfo"][(string)package];
+    mapping pkg=pkginfo[(string)package];
     pkg->size=(string)round(pkg->size/1024.0);
     pkg->progress=sprintf("%3.1f",package_downloads[package]->percent_done());
     res+=({ pkg });
@@ -188,14 +204,70 @@ string container_upgrade_downloaded_packages_output(string t, mapping m,
 
   foreach(packages, int package)
   {
-    mapping pkg=db["pkginfo"][(string)package];
-    pkg->size=sprintf("%3.1f",pkg->size/1024.0);
-    res+=({ pkg });
+    mapping pkg=pkginfo[(string)package];
+    if(pkg)
+    {
+      pkg->size=sprintf("%3.1f",(float)pkg->size/1024.0);
+      res+=({ pkg });
+    }
   }
 
   return do_output_tag(m, res, c, id);
 }
 
+
+// void unpack_tarfile(string tarfile, string destination)
+// {
+//   void unpack_file(Stdio.File from, string to)
+//   {
+
+//   };      
+  
+//   void low_unpack_tarfile(Filesystem.Tar fs, string dir)
+//   {
+//     foreach(fs->get_dir(dir), string entry)
+//       if(fs->stat(entry)->isdir())
+// 	low_unpack_tarfile(fs, entry);
+//       else
+// 	copy_file(fs->open(entry,"r"), dir+entry);
+//   };
+
+//   Filesystem.Tar fs;
+//   mixed err;
+//   if(err=catch(fs=Filesystem.Tar(tarfile)))
+//     throw("Could not open tar file "+tarfile+".\n");
+//   if(err=catch(low_unpack_tarfile(fs, "")))
+//     throw(err);
+// }
+
+array(string) tarfile_contents(string|object tarfile, void|string dir)
+{
+  if(dir=="/info/")
+    return ({ });
+  if(!dir)
+    dir="";
+  if(stringp(tarfile))
+    tarfile=Filesystem.Tar(tarfile);
+
+  array res = ({ });
+
+  foreach(sort(tarfile->get_dir(dir)), string entry)
+  {
+    if(tarfile->stat(entry)->isdir())
+      res += tarfile_contents(tarfile,entry);
+    else
+      res += ({ tarfile->stat(entry)->lsprint(1) });
+  }
+  return res;
+}
+
+string tag_upgrade_package_contents(string t, mapping m, RequestID id)
+{
+  if(!m->package)
+    return "No package argument.";
+
+  return tarfile_contents(QUERY(pkgdir)+m->package+".tar")*"\n";
+}
 
 string encode_ranges(array(int) a)
 {
@@ -254,14 +326,20 @@ mapping get_headers()
 }
 
 
+int completely_downloaded(int num)
+{
+  array stat=file_stat(QUERY(pkgdir)+num+".tar");
+
+  return (stat && stat[1]==pkginfo[(string)num]->size);
+}
+
+
 void start_package_download(int num)
 {
   if(search(indices(package_downloads), num)!=-1)
     throw("Package download already in progress for package "+num+".\n");
 
-  array stat=file_stat(QUERY(pkgdir)+num+".tar");
-
-  if(stat && stat[1]==db["pkginfo"][(string)num]->size)
+  if(completely_downloaded(num))
     throw("Package "+num+" already completely downloaded.\n");
 
   package_downloads[num]=GetPackage(num);
@@ -364,8 +442,8 @@ class GetInfoFile
 		     res);
     res->size=(int)httpquery->headers->pkgsize;
     werror("%O\n",res);
-    db["pkginfo"][(string)num]=res;
-    db["pkginfo"]->sync();
+    pkginfo[(string)num]=res;
+    pkginfo->sync();
     report_notice("Upgrade: Added information about package number "
 		  +num+".\n");
   }
@@ -421,9 +499,9 @@ class UpdateInfoFiles
       GetInfoFile(i);
 
     foreach(delete_packages, int i)
-      catch(db["pkginfo"]->delete((string)i));
+      catch(pkginfo->delete((string)i));
 
-    catch(db["misc"]["last_updated"]=time());
+    catch(misc["last_updated"]=time());
   }
 
   void request_fail(object httpquery)
@@ -434,14 +512,14 @@ class UpdateInfoFiles
 
   void do_request()
   {
-//     werror("foo: %O\n",encode_ranges((array(int))indices(db["pkginfo"])));
+//     werror("foo: %O\n",encode_ranges((array(int))indices(pkginfo)));
     async_request(QUERY(server),QUERY(port),
 		  "POST /upgradeserver/get_packages HTTP/1.0",
 		  get_headers() |
 		  (["content-type":"application/x-www-form-urlencoded"]),
 		  "roxen_version=2.0001&"+
 		  "have_packages="+
-		  encode_ranges((array(int))indices(db["pkginfo"])));
+		  encode_ranges((array(int))indices(pkginfo)));
     call_out(do_request, 12*3600);
   }
 

@@ -40,7 +40,7 @@
   <br />
   <headline>&title;</headline>
   <rul>
-  <upgrade-package-output type="&name;" limit=5>
+  <upgrade-package-output type="&name;" limit="5">
     <rli>#title# <a href="upgrade.html?details=#id#">[Details...]</a></rli>
     <cset variable="_&name;">foo</cset>
   </upgrade-package-output>
@@ -72,29 +72,40 @@
 </define>
 
 
-<comment> ---------------- Show details page ------------------ </comment>
+<comment> ================ Show details page ================== </comment>
 
 <if variable=details>
-<formoutput quote=¤>
-<upgrade-package-output package="¤details¤">
+  <if variable="download">
+    <upgrade-start-download package="&form.details;" />
+    <redirect to="/standard/upgrade.html?bar" />
+  </if>
+
+<upgrade-package-output package="&form.details;">
 <headline>#title#</headline>
 </upgrade-package-output>
-<upgrade-package-output preparse package="¤details¤">
+<upgrade-package-output preparse package="&form.details;">
 <table>
   <item title="Description" name="description">
   <item title="Size" name="size">
   <item title="Organization" name="organization">
-  <item title="Author" name="author_name">
+  <item title="Author" name="author-name">
   <item title="License" name="license">
   <item title="Date" name="date">
 </table>
 </upgrade-package-output>
 
-Click <a href="upgrade.html?install=#id#">to install</a> this package.
-</formoutput>
+<upgrade-package-is-downloaded package="&form.details;" variable=downloaded>
+<if not variable="downloaded">
+  <input type="hidden" name="details" value="&form.details;" />
+  <input type="submit" name="download" value="Download this package" />
+</if>
+<else>
+  <input type="hidden" name="install" value="&form.details;" />
+  <input type="submit" name="do_install" value="Install this package" />
+</else>
 </if>
 
-<comment> ---------------- Show start page ------------------ </comment>
+<comment> ================ Show start page ================== </comment>
 
 <if variable="category is ">
 
@@ -155,15 +166,47 @@ This information was last synchronized with the main server &upgrade.last_update
 
 </if>
 
-<comment> ---------------- Show install page ------------------ </comment>
-
+<comment> ================ Show install page ================== </comment>
 
 <if variable="install">
- foo
+
+<if variable="no">
+foobar
+  <redirect to="/standard/upgrade.html?foo" />
+</if>
+<if variable="yes">
+
+ [Trying to install]
 
 </if>
+<else>
 
-<comment> ---------------- Show category ------------------ </comment>
+<h1>Install package</h1>
+
+<upgrade-package-output preparse package="&form.install;">
+<table>
+  <item title="Description" name="description">
+  <item title="Organization" name="organization">
+  <item title="Author" name="author-name">
+  <item title="License" name="license">
+  <item title="Date" name="date">
+</table>
+</upgrade-package-output>
+<br/>
+The following files will be installed:<br>
+
+<comment><textarea name=foo rows=12 cols=70></textarea></comment>
+<pre><upgrade-package-contents package="&form.install;" /></pre>
+<br>
+<b>Do you really want to install this package?</b>
+<br />
+<input type="hidden" name="install" value="&form.install;">
+<input type="submit" name="yes" value="   Yes   "/>&nbsp;&nbsp;&nbsp;
+<input type="submit" name="no" value="   No   "/>
+</if>
+</else>
+
+<comment> ================ Show category ==================== </comment>
 
 <if variable="category">
   <if not variable="category is ">
