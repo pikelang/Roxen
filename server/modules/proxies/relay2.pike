@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.28 2003/03/04 17:18:28 anders Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.29 2003/03/18 10:14:51 anders Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -128,7 +128,7 @@ class Relay
 
 
     
-    if( !options->cache ) NOCACHE();
+    if( !options->cache ) NO_PROTO_CACHE();
 
     if( sscanf( buffer, "%s\r\n\r\n%s", headers, data ) != 2 )
       sscanf( buffer, "%s\n\n%s", headers, data );
