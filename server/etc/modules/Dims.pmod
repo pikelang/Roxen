@@ -1,7 +1,7 @@
-//   $Id: Dims.pmod,v 1.7 1999/11/02 21:43:53 neotron Exp $
+//   $Id: Dims.pmod,v 1.8 2000/03/17 14:45:28 nilsson Exp $
 //
 //   Imagedimensionreadermodule for Pike.
-//   Created by Johan Schön, <js@idonex.se>.
+//   Created by Johan Schön, <js@roxen.com>.
 //
 //   This software is based in part on the work of the Independent JPEG Group.
 
