@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.50 2000/02/13 00:33:33 mast Exp $
+//! $Id: module.pmod,v 1.51 2000/02/13 02:24:45 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1505,7 +1505,7 @@ class Frame
 	      // Can't count on that sprintf ("%t", ...) on an object
 	      // returns "object".
 	      if (([object] elem)->is_RXML_Frame) {
-		([object(Frame)] elem)->_eval (0); // Might unwind.
+		([object(Frame)] elem)->_eval (parser); // Might unwind.
 		piece = ([object(Frame)] elem)->result;
 	      }
 	      else if (([object] elem)->is_RXML_Parser) {
@@ -1684,6 +1684,11 @@ class Frame
     }
 
     if (!result_type) {
+#ifdef MODULE_DEBUG
+      if (!tag) error ("result_type not set in Frame object %O, "
+		       "and it has no Tag object to use for inferring it.\n",
+		       this_object());
+#endif
       Type ptype = parser->type;
       foreach (tag->result_types, Type rtype)
 	if (ptype->subtype_of (rtype)) {result_type = rtype; break;}
@@ -1694,6 +1699,11 @@ class Frame
 	  " but " + [string] parser->type->name + " is expected.\n");
     }
     if (!content_type) {
+#ifdef MODULE_DEBUG
+      if (!tag) error ("content_type not set in Frame object %O, "
+		       "and it has no Tag object to use for inferring it.\n",
+		       this_object());
+#endif
       content_type = tag->content_type;
       if (content_type == t_same)
 	content_type = result_type (content_type->_parser_prog);
