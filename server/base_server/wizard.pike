@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.81 1999/05/07 04:34:07 mast Exp $
+ * $Id: wizard.pike,v 1.82 1999/05/12 01:20:02 js Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  * 
@@ -458,7 +458,8 @@ int num_pages(string wiz_name)
 #define PREVIOUS Q((this_object()->previous_label?this_object()->previous_label:"<- Previous"))
 #define COMPLETED Q((this_object()->completed_label?this_object()->completed_label:"Completed"))
 
-string parse_wizard_page(string form, object id, string wiz_name, void|string page_name)
+string parse_wizard_page(string form, object id, string wiz_name,
+			 void|string page_name, void|string base)
 {
   mapping(string:array) automaton = this_object()->wizard_automaton;
   int max_page = !automaton && num_pages(wiz_name)-1;
@@ -474,8 +475,9 @@ string parse_wizard_page(string form, object id, string wiz_name, void|string pa
 		       "help":parse_wizard_help]), id, foo );
   
   res = ("<!--Wizard-->\n"
-         "<form method=get>\n"
-	 " <input type=hidden name=action value=\""+id->variables->action+"\">\n"
+         "<form method=get "+
+	 (base?("action='"+base+"'"):"")+
+	 "> <input type=hidden name=action value=\""+id->variables->action+"\">\n"
 	 " <input type=hidden name=_page value=\""+page+"\">\n"
 	 " <input type=hidden name=_state value=\""+compress_state(id->variables)+"\">\n"
 	 "<table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=80%>\n"
@@ -758,7 +760,7 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
   if (mappingp(data))
     return data;
 
-  return parse_wizard_page(data,id,wiz_name,page_name);
+  return parse_wizard_page(data,id,wiz_name,page_name,cancel);
 }
 
 mapping wizards = ([]);
@@ -817,7 +819,7 @@ string act_describe_submenues(array menues, string base,string sel)
 }
 
 string focused_wizard_menu;
-mixed wizard_menu(object id, string dir, string base, mixed ... args)
+mixed wizard_menu(object id, string dir, string base, string|void action, mixed ... args)
 {
   mapping acts;
   if(id->pragma["no-cache"]) wizards=([]);
@@ -826,6 +828,9 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
     id->variables->sm = focused_wizard_menu;
   else
     focused_wizard_menu = id->variables->sm=="0"?0:id->variables->sm;
+
+  if(action && !id->variables->action)
+    id->variables->action=action;
   
   if(!id->variables->action)
   {
