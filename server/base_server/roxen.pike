@@ -1,10 +1,12 @@
-constant cvs_version = "$Id: roxen.pike,v 1.180 1998/04/02 23:42:59 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.181 1998/04/03 17:46:07 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
+#if 0
 #ifdef THREADS
 #include <fifo.h>
 #endif
+#endif /* 0 */
 #include <module.h>
 #include <variables.h>
 
@@ -201,7 +203,7 @@ object do_thread_create(string id, function f, mixed ... args)
   return t;
 }
 
-object (Queue) handle_queue = Queue();
+object (Thread.Queue) handle_queue = Thread.Queue();
 
 void handler_thread(int id)
 {
@@ -323,9 +325,20 @@ object create_listen_socket(mixed port_no, object conf,
 #ifdef SOCKET_DEBUG
       perror("SOCKETS:    -> Failed.\n");
 #endif
-      report_error("Failed to open socket on "+ether+":"+port_no+
-		   " (already bound?)\nErrno is: "+ port->errno()+"\n");
-      return 0;
+      report_warning("Failed to open socket on "+ether+":"+port_no+
+		     " (already bound?)\nErrno is: "+ port->errno()+"\n"
+		     "Retrying...\n");
+      sleep(1);
+#if defined(THREADS) && 0
+      if(!port->bind(port_no, 0, ether))
+#else
+      if(!port->bind(port_no, accept_callback, ether))
+#endif
+      {
+	report_error("Failed to open socket on "+ether+":"+port_no+
+		     " (already bound?)\nErrno is: "+ port->errno()+"\n");
+	return 0;
+      }
     }
   }
   portno[port]=({ port_no, conf, ether||"Any", 0, requestprogram });
@@ -1372,7 +1385,17 @@ public string config_url()
 #endif
   }
 
-  prot = (port[1][0..2]!="ssl"?port[1]:"https");
+  switch(port[1][..2]) {
+  case "ssl":
+    prot = "https";
+    break;
+  case "ftp":
+    prot = "ftp";
+    break;
+  default:
+    prot = port[1];
+    break;
+  }
   p = port[0];
 
   return (prot+"://"+host+":"+p+"/");

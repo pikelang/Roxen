@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.117 1998/04/03 17:20:15 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.118 1998/04/03 17:44:30 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2962,6 +2962,9 @@ string desc()
     {
     case "ssl":
       prt = "https://";
+      break;
+    case "ftp":
+      prt = "ftp://";
       break;
       
     default:
