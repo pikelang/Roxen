@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.70 1999/08/10 18:51:37 grubba Exp $
+ * $Id: smtp.pike,v 1.71 1999/08/23 22:21:19 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.70 1999/08/10 18:51:37 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.71 1999/08/23 22:21:19 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -270,7 +270,14 @@ static class Smtp_Connection {
 
     function f;
     if (f = this_object()["smtp_"+cmd]) {
-      f(cmd, arg);
+      mixed err;
+      if (err = catch {
+	f(cmd, arg);
+      }) {
+	report_error(sprintf("SMTP: %s: Internal error:\n"
+			     "%s\n", cmd, describe_backtrace()));
+	send(554, ({ sprintf("'%s': Internal error.", cmd }))
+      }
     } else if (command_help[cmd]) {
       // NOTE: RFC 821 4.3 states that 502 is not a legal reply
       //       to the following commands:
