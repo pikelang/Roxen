@@ -1,22 +1,25 @@
 // Some debug tools.
 //
-// $Id: Debug.pmod,v 1.2 2001/07/11 12:00:43 mast Exp $
+// $Id: Debug.pmod,v 1.3 2001/08/20 13:28:13 nilsson Exp $
 
 
-// Helper to locate leaking objects. Use a line like this to mark a
-// class for tracking:
-//
-// Debug.ObjectMarker __marker = Debug.ObjectMarker (this_object());
+//! Helper to locate leaking objects. Use a line like this to mark a
+//! class for tracking:
+//!
+//! @example
+//! Debug.ObjectMarker __marker = Debug.ObjectMarker (this_object());
 
 mapping(string:int) object_markers = ([]);
 
 int log_create_destruct = 1;
 
+//!
 class ObjectMarker
 {
   int count = ++all_constants()->__object_marker_count;
   string id;
 
+  //!
   void create (void|string|object obj)
   {
     if (obj) {
@@ -53,6 +56,7 @@ class ObjectMarker
   }
 }
 
+//!
 string report_leaks()
 {
   string res = "leaks: " + sort (indices (object_markers)) * ",\n       " + "\n";
