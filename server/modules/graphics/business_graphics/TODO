@@ -3,15 +3,15 @@ Fixa följande kollar i init:
 
 %get_font ska implementeras rätt. Se till att inga scale finns!
 
-Övriga kollar:
-Graph:
-se till att label för x inte är för lång.
-se till att labelcolor finns!
+%Övriga kollar:
+%Graph:
+%se till att label för x inte är för lång.
+%se till att labelcolor finns!
 
-Graph och bars:
-se till att x-texten inte är för lång.
-se till att den inte är för hög.
--"- y-texten
+%Graph och bars:
+%se till att x-texten inte är för lång.
+%se till att den inte är för hög.
+%-"- y-texten
 
 %Grind!
 
@@ -19,12 +19,12 @@ se till att den inte är för hög.
 I create_graph:
 Se till att antalet siffror på axlarna kan varieras.
 
-Default-färger för bars och graph
+%Default-färger för bars och graph
 
 Översätt till engelska
 
-Fixa så att bilderna inte behöver vara lika stora som graphen
+%Fixa så att bilderna inte behöver vara lika stora som graphen
 
-Kolla storlekar i pie-charts
+%Kolla storlekar i pie-charts
 
 %Svartvitt!
