@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.116 2004/06/21 11:55:26 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.117 2004/07/11 13:40:56 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -122,7 +122,7 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 
 <attr name='prefetch'><p>
  Tells the emit tag to prefetch all rows from the database so that
- any nested sqlqueries inside the emit will be ran in the same SQL-session
+ any nested sqlqueries inside the emit will be run in the same SQL-session
  as the current query.</p>
 </attr>
 
@@ -146,6 +146,11 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 // --------------------------- Database query code --------------------------------
 
 string default_db;
+
+private class Csql_result {
+  inherit Sql.sql_result;
+  object sqlsession;
+};
 
 array|object do_sql_query(mapping args, RequestID id,
 			  void|int(0..2) querytype)
@@ -220,6 +225,8 @@ array|object do_sql_query(mapping args, RequestID id,
     rows=sizeof(result); // FIXME use the intrinsic value passed by SQL instead
     RXML.user_set_var(args->rowinfo, rows);
   }
+  if(querytype==1)
+    (result=Csql_result(result))->sqlsession = con;
   return querytype==2 ? con : result;
 }
 
