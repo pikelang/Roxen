@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.52 1998/06/04 21:09:43 neotron Exp $
+ * $Id: ftp2.pike,v 1.53 1998/06/19 06:38:58 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -203,7 +203,7 @@ class FileWrapper
 
   static private void read_callback(mixed i, string s)
   {
-    read_cb(id, convert(s));
+    read_cb && read_cb(id, convert(s));
     ftpsession->touch_me();
   }
 
@@ -2347,7 +2347,7 @@ class FTPSession
     session->not_query = ncwd;
 
     array st = conf->stat_file(ncwd, session);
-
+    ncwd = session->not_query; // Makes internal redirects to work.
     if (!st) {
       send(550, ({ sprintf("%s: No such file or directory, or access denied.",
 			   ncwd) }));
