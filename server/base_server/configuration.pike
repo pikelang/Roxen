@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.187 1999/05/12 08:00:35 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.188 1999/05/12 08:04:55 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -3265,7 +3265,6 @@ int load_module(string module_file)
     master()->set_inhibit_compile_errors(0);
     
     if (sizeof(e->get())) {
-//       werror("compilation errors...\n"+e->get()+"\n");
       report_error(LOCALE->module_compilation_errors(module_file, e->get()));
       return(0);
     }
@@ -3599,15 +3598,11 @@ class ArgCache
                                        name,long_key[..79]));
       foreach( data, mapping m )
         if( m->contents == long_key )
-        {
-          werror("Found data as "+m->id+"\n");
           return m->id;
-        }
 
       db->query( sprintf("insert into %s (contents,lkey,atime) values "
                          "('%s','%s','%d')", 
                          name, long_key, long_key[..79], time() ));
-      werror("Creating new data...  ");
       return create_key( long_key );
     } else {
       string _key=MIME.encode_base64(Crypto.md5()->update(long_key)->digest(),1);
@@ -3617,17 +3612,13 @@ class ArgCache
       while( file_stat( path+short_key ) )
       {
         if( Stdio.read_bytes( path+short_key ) == long_key )
-        {
-          werror("Found old data as "+short_key+"\n");
           return short_key;
-        }
         short_key = _key[..strlen(short_key)];
         if( strlen(short_key) >= strlen(_key) )
           short_key += "."; // Not very likely...
       }
       object f = Stdio.File( path + short_key, "wct" );
       f->write( long_key );
-      werror("Creating new data as "+short_key+"\n");
       return short_key;
     }
   }
@@ -3647,7 +3638,6 @@ class ArgCache
     int e = gethrtime();
     array b = values(args), a = sort(indices(args),b);
     string data = MIME.encode_base64(encode_value(a),1);
-    werror("%.9f\n", (gethrtime()-e)/1000000.0 );
     if( cache[ data ] ) 
       return cache[ data ][ CACHE_SKEY ];
 
@@ -3669,7 +3659,6 @@ class ArgCache
 
   mapping lookup( string id )
   {
-//  werror("lookup [%O]\n", id);
     if(cache[id])
       return cache[cache[id]][CACHE_VALUE];
 
