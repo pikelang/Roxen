@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.422 2003/03/20 16:50:37 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.423 2003/03/20 17:45:03 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6143,8 +6143,10 @@ using the pre tag.
 
 <attr name='in' value='Character set'><p>
  Converts the contents of the charset tag from the character set indicated
- by this attribute to the internal text representation. Note, this attribute
- is depricated, use &lt;recode from=\"\"&gt...&lt;/recode&gt; instead</p>
+ by this attribute to the internal text representation.</p>
+
+ <note><p>This attribute is depricated, use &lt;recode 
+ from=\"\"&gt;...&lt;/recode&gt; instead.</p></note>
 </attr>
 
 <attr name='out' value='Character set'><p>
