@@ -24,7 +24,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.65 2001/05/16 07:50:59 per Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.66 2001/06/09 20:20:45 grubba Exp $";
 constant module_type = MODULE_LOCATION;
 LocaleString module_name = _(1,"File systems: User file system");
 LocaleString module_doc  = 
@@ -64,7 +64,7 @@ void create()
 	  "file system"),
 	 0, hide_searchpath);
 
-  set("mountpoint", "/home/");
+  set("mountpoint", "/~");
 
   defvar("only_password", 1, _(4,"Password users only"),
 	 TYPE_FLAG|VAR_INITIAL,
