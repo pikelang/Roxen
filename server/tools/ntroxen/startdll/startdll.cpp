@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.14 2002/10/24 00:26:30 nilsson Exp $
+// $Id: startdll.cpp,v 1.15 2002/10/24 03:39:18 nilsson Exp $
 //
 
 
@@ -510,7 +510,7 @@ void CServiceModule::MsgLoopCallback(int index)
   else if (exitcode == 0)
   {
     //clean shutdown
-    LogEvent("Roxen CMS shutdown.");
+    LogEvent("ChiliMoon shutdown.");
     Stop(FALSE);
   }
   else if (exitcode == 50)
@@ -523,7 +523,7 @@ void CServiceModule::MsgLoopCallback(int index)
   else if (exitcode == 100)
   {
     // restart using possibly new version of ourself
-    LogEvent("Changing Roxen CMS version. Restarting...");
+    LogEvent("Changing ChiliMoon version. Restarting...");
     
     if (!m_Cmdline.IsOnce())
       // restart the new version of the server!!
@@ -535,11 +535,11 @@ void CServiceModule::MsgLoopCallback(int index)
   {
     if (exitcode < 0)
     {
-      LogEvent("Roxen CMS died of signal %d. Restarting...", exitcode);
+      LogEvent("ChiliMoon died of signal %d. Restarting...", exitcode);
     }
     else // exitcode < 0
     {
-      LogEvent("Roxen CMS down. Restarting...");
+      LogEvent("ChiliMoon down. Restarting...");
     }
     Sleep(100);
     if (IsStopping())

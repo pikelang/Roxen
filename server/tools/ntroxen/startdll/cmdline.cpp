@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.24 2002/10/24 00:22:46 nilsson Exp $
+// $Id: cmdline.cpp,v 1.25 2002/10/24 03:39:18 nilsson Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -354,7 +354,7 @@ void CCmdLine::PrintHelp()
   {
     "",
     "",
-    ".BThis command will start Roxen CMSB..",
+    ".BThis command will start ChiliMoonB..",
     "",
     "The environment variable .BROXEN_ARGSB. can be used to specify",
     "the default arguments.",

@@ -104,8 +104,8 @@ IDR_Startdll            REGISTRY MOVEABLE PURE  "startdll.rgs"
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_SERVICENAME         "RoxenService"
-    IDS_SERVICEDESC         "Roxen CMS"
+    IDS_SERVICENAME         "ChiliMoonService"
+    IDS_SERVICEDESC         "ChiliMoon"
 END
 
 #endif    // English (U.S.) resources

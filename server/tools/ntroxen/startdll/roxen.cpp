@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.20 2002/10/24 00:25:01 nilsson Exp $
+// $Id: roxen.cpp,v 1.21 2002/10/24 03:39:18 nilsson Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -143,7 +143,7 @@ void CRoxen::PrintVersion()
         fclose(f);
       }
 
-      printf("Roxen CMS %s.%s%s NT", version, build, rel);
+      printf("ChiliMoon %s.%s%s NT", version, build, rel);
     }
     else
       printf("data\\include\\version.h not found!");
