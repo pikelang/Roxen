@@ -92,7 +92,6 @@ string|mapping parse( RequestID id )
 		           (get_dir( "../local/"+SITE_TEMPLATES )||({}))),
 	   string st )
   {
-    werror("Trying %s...\n", st);
     st = SITE_TEMPLATES+st;
     mixed err = catch {
       object q;
