@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.274 1999/05/12 10:00:37 per Exp $
+ * $Id: roxen.pike,v 1.275 1999/05/14 00:27:59 neotron Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.274 1999/05/12 10:00:37 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.275 1999/05/14 00:27:59 neotron Exp $";
 
 object backend_thread;
 object argcache;
@@ -2843,7 +2843,8 @@ anlending.");
   globvar("locale", "standard", "Language", TYPE_STRING_LIST,
 	  "Locale, used to localise all messages in roxen"
 #"Standard means using the default locale, which varies according to the 
-value of the 'LANG' environment variable.", sort(indices(Locale.Roxen)));
+value of the 'LANG' environment variable.", sort(indices(Locale.Roxen) -
+						 ({ "Modules" })));
   deflocaledoc("svenska", "locale", "Språk",
 	       "Den här variablen anger vilket språk roxen ska använda. "
 	       "'standard' betyder att språket sätts automatiskt från "

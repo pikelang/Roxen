@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.28 1998/11/18 04:53:57 per Exp $ */
+/* $Id: low_describers.pike,v 1.29 1999/05/14 00:28:00 neotron Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -314,6 +314,7 @@ string encode_one_port(array port, int id)
   switch(lower_case(port[1]))
   {
    case "ssl3":
+   case "https":
     string cf, kf;
     sscanf(port[3], "%*scert-file %s\n", cf);
     sscanf(port[3], "%*skey-file %s\n", kf);
@@ -322,7 +323,7 @@ string encode_one_port(array port, int id)
 	    "<tr width=100%><td colspan=2 width=100%><b>"+
 	    LOCALE->ssl_options()+"</b></td></tr>\n");
     res += LOCALE->ssl_variables(cf,kf,id);
-    res += "</table></td></tr>\n";
+    //    res += "</table></td></tr>\n";
     break;
   } 
   return res +
