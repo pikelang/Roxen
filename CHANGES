@@ -7,6 +7,8 @@ o Renabled the decoding of URLs in a way that shouldn't break anything.
 
 o Fixed Business Graphics to use background and forground colors if available.
 
+o Made a new SSL3 demo certificate that expires in the year 2011.
+
 
 Changes since Roxen Challenger 1.2.42 Red
 -----------------------------------------------
