@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.114 2000/04/14 23:05:57 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.115 2000/04/14 23:29:19 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -2415,11 +2415,11 @@ Sets a variable.</short>
 </attr>",
 
 "throw":#"<desc cont><short hide>
- Throws a text to be catched by <tag>catch</tag>.</short>
- Throws an exception, with the enclosed text as the error message.
- This tag has a close relation to <tag>catch</tag>. The RXML parsing
- will stop at the <tag>throw</tag> tag.
-</desc>",
+ Throws a text to be catched by <catch>.</short> Throws a text to be
+ catched by <tag>catch</tag>. Throws an exception, with the enclosed
+ text as the error message. This tag has a close relation to
+ <tag>catch</tag>. The RXML parsing will stop at the <tag>throw</tag>
+ tag. </desc>",
 
 "trimlines":#"<desc cont><short>
  Removes all empty lines from the contents.</short>
