@@ -2,14 +2,14 @@
 // This module can be used to turn off logging for some files.
 
 
-string cvs_version = "$Id: nologging.pike,v 1.3 1996/11/27 13:48:05 per Exp $";
+string cvs_version = "$Id: nologging.pike,v 1.4 1996/12/03 09:58:31 neotron Exp $";
 #include <module.h>
 inherit "module";
 
 array register_module()
 {
   return ({ MODULE_LOGGER,
-	      "Loging disabler",
+	      "Logging disabler",
 	      "This module can be used to turn off logging for some files. "
 	      "It is based on <a href=$docurl/regexp.html>Regular"
 	      " expressions</a>",
