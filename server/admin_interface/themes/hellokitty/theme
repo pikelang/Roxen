@@ -6,6 +6,7 @@
 <theme-set what=bgcolor   to=#e74294 />
 <theme-set what=fgcolor   to=pink />
 <theme-set what=linkcolor to=black />
+<theme-set what=fade2 to=#995577 />
 <theme-set what=font      to="yikes!" />
 
 <theme-set what=toptabs-seltextcolor to="steelblue3" />
