@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.53 1997/12/03 11:33:32 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.54 1997/12/03 11:56:55 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -690,7 +690,7 @@ mapping find_file(string f, object id)
 	img = create_graph(diagram_data)["image"];
   
   //img = img->map_closest(img->select_colors(254)+({ back }));
-
+  
   if (res->image)
     return http_string_answer(Image.GIF.encode(img,
 					       Image.colortable(6,6,6, 
