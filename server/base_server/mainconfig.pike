@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.58 1997/08/12 22:28:10 peter Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.59 1997/08/12 23:09:15 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -55,13 +55,13 @@ class Node {
     string name=path(1);
     if(folded)
       return ("<a name=\""+name+"\" href=\"/(unfold)" + name + "?"+(bar++)+
-	      "\">\n<img border=0 align=bottom src=\"/auto/unfold"
-	      +(changed?"2":"")+"\" alt=\""+(changed?"*-":"--")+"\">"
+	      "\">\n<img border=0 align=baseline src=/auto/unfold"
+	      +(changed?"2":"")+" alt=\""+(changed?"*-":"--")+"\">"
 	      "</a>\n "+s+"\n");
     else
-      return ("<a name=\""+name+"\"  href=\"/(fold)" + name + "?"+(bar++)+
-	      "\">\n<img border=0 src=\"/auto/fold"+(changed?"2":"")
-	      +"\"  alt="+(changed?"**":"\"\\/\"")+">"
+      return ("<a  name=\""+name+"\href=\"/(fold)" + name + "?"+(bar++)+
+	      "\">\n<img border=0 src=/auto/fold"+(changed?"2":"")
+	      +"  alt="+(changed?"**":"\"\\/\"")+">"
 	      "</a>\n "+s+"\n");
   }
 
@@ -95,6 +95,7 @@ class Node {
     {
       PUSH("<dl><dd>\n");
       node = down;
+      array node_desc = ({});
       while(node)
       {
 	if(!objectp(node))	// ERROR! Destructed node in tree!
@@ -106,8 +107,9 @@ class Node {
 	}
 	prevnode = node;
 	node = node->next;
-	PUSH(prevnode->describe());
+	node_desc += ({ prevnode->describe() });
       }
+      PUSH(node_desc*"\n");
       PUSH("</dl>\n\n");
     }
     return res*"";
@@ -165,7 +167,7 @@ inline string shutdown_restart(string save, int compact,void|object o)
 
 string default_head(string h, string|void save)
 {
-  return ("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Draft//EN\">\n"
+  return ("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Draft//EN\">"
 	  "<head><title>"+h+"</title></head>\n"+ BODY+"\n");
 }
 
@@ -918,7 +920,7 @@ mapping initial_configuration(object id)
   
   res += ("<pre>"
 	  "<font size=\"+1\">"
-	  "<form action=/(initial)/Globals/>"
+	  "<form action=\"/(initial)/Globals/\">"
 	  " User name <input name=user type=string>\n"
 	  "  Password <input name=pass type=password>\n"
 	  "     Again <input name=pass2 type=password>\n"
@@ -961,12 +963,12 @@ string tablist(array(string) nodes, array(string) links, int selected)
   for(int i=0; i<sizeof(nodes); i++)
     if(i!=selected)
       PUSH("<a href=\""+links[i]+"\"><img alt=\"_/"+
-	   nodes[i][0..strlen(nodes[i])-1]+"\\__\" src=\"/auto/unselected/"+
-	   replace(nodes[i]," ","%20")+"\" border=0></a>");
+          nodes[i][0..strlen(nodes[i])-1]+"\\__\" src=\"/auto/unselected/"+
+          replace(nodes[i]," ","%20")+"\" border=0></a>");
     else
       PUSH("<a href=\""+links[i]+"\"><b><img alt=\"_/"+
-	   nodes[i][0..strlen(nodes[i])-1]+"\\__\" src=\"/auto/selected/"+
-	   replace(nodes[i]," ","%20")+"\" border=0></b></a>");
+          nodes[i][0..strlen(nodes[i])-1]+"\\__\" src=\"/auto/selected/"+
+          replace(nodes[i]," ","%20")+"\" border=0></b></a>");
 //PUSH("<br>");
   return res*"";
 }
@@ -1133,7 +1135,7 @@ int nfoldedr(object o)
 string dn(object node)
 {
   if(!node) return "???";
-  string s = sizeof(node->_path)?node->_path[-1]:".";
+  string s = sizeof(node->_path)?node->_path[-1]:" ";
   if(((string)((int)s))==s)
     return "Instance "+s;
   switch(s)
@@ -1158,8 +1160,9 @@ string describe_node_path(object node)
     if(cnt>0)
     {
 //      werror("q="+q+"\n");
-      res += "<b><font size=\"+1\"><a href=\""+q+"\">"+
-	dn(find_node(http_decode_string(q[..strlen(q)-2])))+"</a></font></b> -&gt; ";
+      res += ("<b><font size=+1><a href=\""+q+"\">"+
+	      dn(find_node(http_decode_string(q[..strlen(q)-2])))+
+	      "</a></font></b> -&gt; ");
     }
     else
       cnt++;
@@ -1169,11 +1172,11 @@ string describe_node_path(object node)
 
 string status_row(object node)
 {
-  return ("<table width=\"100%\" bgcolor=\"#dddddd\" border=0 cellpadding=0"
-	  " cellspacing=0><tr><td valign=middle align=left><a "
-	  "href=\"$docurl\"><img border=0 src=\"/image/roxen-small.gif\" "
-	  "alt=\"Roxen\"></a></td><td align=right valign=top>"+
-	  describe_node_path(node)+"</td><td>&nbsp;</td></tr></table><br>");
+   return ("<table width=\"100%\" bgcolor=\"#dddddd\" border=0 cellpadding=0"
+	   " cellspacing=0><tr><td valign=middle align=left><a "
+	   "href=\"$docurl\"><img border=0 src=\"/image/roxen-small.gif\" "
+	   "alt=\"Roxen\"></a></td><td align=right valign=top>"+
+	   describe_node_path(node)+"</td><td>&nbsp;</td></tr></table><br>");
 }
 
 mapping logged = ([ ]);
@@ -1376,9 +1379,9 @@ mapping configuration_parse(object id)
       switch(o->type)
       {
        case NODE_CONFIGURATION:
-	PUSH("<font size=\"+2\">Do you really want to delete the"
-	     " configuration "+ o->data->name+
-	     ", all its modules and their copies?\n\n<p></font>");
+	PUSH("<font size=\"+2\">Do you really want to delete the configuration "+
+	     o->data->name + ", all its modules and their copies?"
+	     "\n\n<p></font>");
 	break;
 	
        case NODE_MODULE_MASTER_COPY:
@@ -1397,12 +1400,12 @@ mapping configuration_parse(object id)
        case NODE_CONFIGURATIONS:
 	return stores("You don't want to do that...\n");
       }
-      PUSH("<blockquote><font size=\"+2\"><i>This action cannot be"
-	   " undone.\n\n<p></font>"+ TABLEP("<table>", "")+
-	   "<tr><td><form action="+ o->path(1)+">"
+      PUSH("<blockquote><font size=\"+2\"><i>This action cannot be undone.\n\n<p></font>"+
+	   TABLEP("<table>", "") +"<tr><td><form action="+
+	   o->path(1)+">"
 	   "<input type=submit value=\"No, I do not want to delete it\"> "
-	   "</form></td><td><form action=/(really_delete)"+ o->path(1)+
-	   "><input type=submit value=\"Go ahead\"></form></td></tr> "
+	   "</form></td><td><form action=\"/(really_delete)"+o->path(1)+
+	   "\"><input type=submit value=\"Go ahead\"></form></td></tr> "
 	   "</table></blockquote>");
       
       return stores(res*"");
@@ -1616,13 +1619,12 @@ mapping configuration_parse(object id)
   
   PUSH(default_head("Roxen server configuration"));
 //  PUSH("<table><tr><td>&nbsp;<td>"
-//  PUSH("<dl>\n");
+  PUSH("<dl>\n");
   PUSH("\n"+status_row(o)+"\n"+display_tabular_header( o )+"\n");
   PUSH("<p>");
   if(o->up != root && o->up)
     PUSH("<a href=\""+ o->up->path(1)+"?"+(bar++)+"\">"
-	 "<img src=\"/auto/back\" alt=\"[Up]\" align=left hspace=0"
-	 " border=0></a>\n");
+	 "<img src=/auto/back alt=\"[Up]\" align=left hspace=0 border=0></a>\n");
 
   if(i=o->folded) o->folded=0;
   mixed tmp = o->describe(1,id);
@@ -1673,8 +1675,7 @@ mapping configuration_parse(object id)
 
   if(!lm)
   {
-    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0"
-	 " src=\"/auto/button/rm/%20\">");
+    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=\"/auto/button/rm/%20\">");
     PUSH("</nobr><br clear=all>");
     lm=1;
   }
@@ -1685,10 +1686,7 @@ mapping configuration_parse(object id)
     BUTTON(nomorevars, "Fewer options", left);
     
   if((o->changed||root->changed))
-  {
     BUTTON(save, "Save", left);
-    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=\"/auto/button/%20%20%20%20%20%20\">");
-  }
 //  BUTTON(restart, "Restart", left);
 //  BUTTON(shutdown,"Shutdown", left);
 

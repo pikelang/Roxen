@@ -2,7 +2,7 @@
 import Image;
 
 constant Image = image;
-string cvs_verison = "$Id: draw_things.pike,v 1.22 1997/08/12 19:45:41 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.23 1997/08/12 23:09:19 per Exp $";
 
 
 object (Image) load_image(string f)
@@ -89,25 +89,28 @@ object (Image) draw_module_header(string name, int type, object font)
 
 #define TABSIZE 15
 
-#define R 0x00
-#define G 0x40
-#define B 0x80
+#define R 11
+#define G 33
+#define B 77
 
 #define dR 0xff
 #define dG 0xff
 #define dB 0xff
 
 
-#define bR 0x00
-#define bG 0x50
-#define bB 0x90
+// 0x88, 0xcc, 0xaa
+// 11, 33, 77
+
+#define bR 11
+#define bG 33
+#define bB 77
 
 #define btR 0xff
 #define btG 0xff
 #define btB 0xff
 
 #define bhR 0x00
-#define bhG 0xaa
+#define bhG 0x60
 #define bhB 0xff
 
 #define tR 0xff

@@ -1,4 +1,4 @@
-/* $Id: builders.pike,v 1.10 1997/08/12 11:10:36 per Exp $ */
+/* $Id: builders.pike,v 1.11 1997/08/12 23:09:18 per Exp $ */
 
 #include <module.h>
 #include <confignode.h>
@@ -21,8 +21,9 @@ void low_build_variables(object node, mapping from)
   perror("low_build_variables()\n");
 #endif
 
-  m=sort(values(from));
-
+  m = values(from);
+  sort(column(m,VAR_NAME),m);
+  
   for(i=0; i<sizeof(m); i++)
   {
     if(m[i][VAR_TYPE] == TYPE_NODE)
