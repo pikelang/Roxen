@@ -185,5 +185,5 @@ function PopupProperties(hide_delay, ox, oy, pox, poy)
 }
 
 // Default popup properties
-default_props = new PopupProperties(300, 15, 0, 0, 0);
+default_props = new PopupProperties(200, 15, 0, 0, 0);
 
