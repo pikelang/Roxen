@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.161 1999/02/26 15:52:34 mast Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.162 1999/03/30 23:37:48 neotron Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -2000,7 +2000,7 @@ string tag_quote(string tagname, mapping m)
 
 string tag_ximage(string tagname, mapping m, object id)
 {
-  string img = id->conf->real_file(fix_relative(m->src||"", id));
+  string img = id->conf->real_file(fix_relative(m->src||"", id), id);
   if(img && search(img, ".gif")!=-1) {
     object fd = open(img, "r");
     if(fd) {
@@ -2063,9 +2063,10 @@ mapping query_tag_callers()
    return (["accessed":tag_accessed,
 	    "modified":tag_modified,
 	    "pr":tag_pr,
-	    "set-max-cache":lambda(string t, mapping m, object id) { 
-			      id->misc->cacheable = (int)m->time; 
-			    },
+	    "set-max-cache":
+	    lambda(string t, mapping m, object id) { 
+	      id->misc->cacheable = (int)m->time; 
+	    },
 	    "imgs":tag_ximage,
 	    "version":tag_version,
 	    "set":tag_set,
