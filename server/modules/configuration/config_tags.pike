@@ -819,7 +819,7 @@ string container_configif_output(string t, mapping m, string c, object id)
      break;
 
    case "module-variables-sections":
-     object conf = roxen->find_config_or_error( m->configuration );
+     object conf = find_config_or_error( m->configuration );
 
      object mod = conf->find_module( replace( m->module, "!", "#" ) );
      if( !mod )
