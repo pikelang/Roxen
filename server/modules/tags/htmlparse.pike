@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.181 1999/06/10 03:37:45 mast Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.182 1999/06/10 06:57:48 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -3022,10 +3022,10 @@ string tag_right(string t, mapping m, string s, object id)
   return "<table width=100%><tr><td align=right>"+s+"</td></tr></table>";
 }
 
-string tag_formoutput(string tag_name, mapping args, string contents,
-		      object id, mapping defines)
+array(string) tag_formoutput(string tag_name, mapping args, string contents,
+			     object id, mapping defines)
 {
-  return do_output_tag( args, ({ id->variables }), contents, id );
+  return ({do_output_tag( args, ({ id->variables }), contents, id )});
 }
 
 string tag_gauge(string t, mapping args, string contents, 
@@ -3380,7 +3380,7 @@ class SumTracer
 #endif
 }
 
-string tag_trace(string t, mapping args, string c , object id)
+array(string) tag_trace(string t, mapping args, string c , object id)
 {
   NOCACHE();
   object t;
@@ -3396,7 +3396,7 @@ string tag_trace(string t, mapping args, string c , object id)
   string r = parse_rxml(c, id);
   id->misc->trace_enter = a;
   id->misc->trace_leave = b;
-  return r + "<h1>Trace report</h1>"+t->res()+"</ol>";
+  return ({r + "<h1>Trace report</h1>"+t->res()+"</ol>"});
 }
 
 string tag_for(string t, mapping args, string c, object id)
