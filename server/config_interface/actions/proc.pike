@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.7 2000/09/19 15:45:05 lange Exp $
+ * $Id: proc.pike,v 1.8 2001/08/23 09:19:34 jonasw Exp $
  */
 
 inherit "wizard";
@@ -47,7 +47,7 @@ string process_map(string in)
   foreach((in/"\n")[1..], string m)
   {
     string a,b;
-    m=replace(m,"[ heap ]","Heap&nbsp(malloced&nbsp;memory)");
+    m=replace(m,"[ heap ]","Heap&nbsp;(malloced&nbsp;memory)");
     m=replace(m,"[ stack ]","Stack");
     array row = (replace(m,"\t"," ")/" "-({""}))[1..];
     row=replace(row, "read/exec", "read/exec/shared");

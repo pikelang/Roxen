@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.136 2001/06/17 20:07:11 nilsson Exp $
+// $Id: wizard.pike,v 1.137 2001/08/23 09:19:50 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -550,7 +550,7 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 	     LABEL(ok_label, LOCALE(55, "OK"))+" \" />&nbsp;&nbsp;"
 	     :"")+
 	    "\n&nbsp;&nbsp;<input type=\"submit\" name=\"cancel\" value=\" "+
-	    LABEL(cancel_label, LOCALE(56, "Cancel"))+" \" />&nbsp;&nbsp")
+	    LABEL(cancel_label, LOCALE(56, "Cancel"))+" \" />&nbsp;&nbsp;")
 	  :"\n         <input type=\"submit\" name=\"cancel\" value=\" "+
 	  LABEL(ok_label, LOCALE(55, "OK"))+" \" />")+
 	 "</td><td width=\"33%\" align=\"right\">"+
