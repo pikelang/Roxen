@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
-constant module_type = MODULE_FIRST;
+constant module_type = MODULE_FIRST|MODULE_LAST;
 
 constant module_name =
 "HTTP Relay module, take 2";
@@ -136,6 +136,7 @@ class Relay
   }
 }
 
+mapping stats = ([ ]);
 
 class Relayer
 {
@@ -143,6 +144,7 @@ class Relayer
   string pattern;
   string url;
   multiset options;
+  int last;
 
   string do_replace( string f )
   {
@@ -163,11 +165,15 @@ class Relayer
       file = file+"?"+id->query;
 
     if( r->match( file ) )
+    {
+      stats[ pattern ]++;
       return Relay( id, do_replace( file ), options );
+    }
   }
 
-  void create( string p, string u, multiset o )
+  void create( string p, string u, int _last, multiset o )
   {
+    last = _last;
     pattern = p;
     options = o;
     url = u;
@@ -181,14 +187,13 @@ class Relayer
 void create( Configuration c )
 {
   if( c )
-  {
     defvar( "patterns", "", "Relay patterns", TYPE_TEXT,
             "Syntax: \n"
             "<pre>\n"
-            "EXTENSION extension CALL url-prefix [rxml] [trimheaders] [raw] [utf8]\n"
-            "LOCATION location CALL url-prefix [rxml] [trimheaders] [raw] [utf8]\n"
-            "MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8]\n"
-            "</pre> \1 to \9 will be replaced with submatches from the regexp.<p>"
+            "[LAST ]EXTENSION extension CALL url-prefix [rxml] [trimheaders] [raw] [utf8]\n"
+            "[LAST ]LOCATION location CALL url-prefix [rxml] [trimheaders] [raw] [utf8]\n"
+            "[LAST ]MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8]\n"
+            "</pre> \\1 to \\9 will be replaced with submatches from the regexp.<p>"
             "rxml, trimheaders etc. are flags. If rxml is specified, the "
             "result of the relay will be RXML-parsed, Trimheaders and raw are "
             " mutually exclusive, if"
@@ -199,8 +204,19 @@ void create( Configuration c )
             "is changed.  If utf8 is specified the request is utf-8 encoded "
             "before it is sent to the remote server.<p>"
             " For EXTENSION and LOCATION, the matching local filename is "
-            "appended to the url-prefix specified, no replacing is done." );
-  }
+            "appended to the url-prefix specified, no replacing is done.<p>"
+            "If last is specified, the match is only tried if roxen "
+            "fails to find a file (a 404 error)");
+}
+
+string status()
+{
+  string res = "Relays per regexp:<p>\n"
+         "<table width=70% cellpadding=0 border=0>";
+  foreach( sort(indices(stats)), string s )
+    res += sprintf("<tr><td>%s</td><td align=right>%d</td></tr>\n",
+                   s, stats[s]);
+  return res + "</table>\n";
 }
 
 void start( int i, Configuration c )
@@ -214,9 +230,16 @@ void start( int i, Configuration c )
         continue;
       sscanf( line, "%s#", line );
       array tokens = replace( trim( line ), "\t", " ")/" " - ({ "" });
+      int last;
       if( sizeof( tokens ) > 2 )
       {
         tokens -= ({ "CALL", "call", "OPTIONS", "options" });
+        if( lower_case( tokens[0] ) == "last" )
+        {
+          last = 1;
+          tokens = tokens[1..];
+        }
+
         switch( lower_case(tokens[ 0 ]) )
         {
          case "match":
@@ -246,7 +269,7 @@ void start( int i, Configuration c )
            break;
         }
 
-        if(mixed e  = catch ( relays += ({ Relayer( tokens[0], tokens[1],
+        if(mixed e  = catch ( relays += ({ Relayer( tokens[0], tokens[1],last,
                                                     (multiset)map(tokens[2..],
                                                                   lower_case))
         }) ) )
@@ -261,6 +284,13 @@ void start( int i, Configuration c )
 mapping first_try( RequestID id )
 {
   foreach( relays, Relayer q )
-    if( q->relay( id ) )
+    if( !q->last && q->relay( id ) )
+      return http_pipe_in_progress( );
+}
+
+mapping last_resort( RequestID id )
+{
+  foreach( relays, Relayer q )
+    if( q->last && q->relay( id ) )
       return http_pipe_in_progress( );
 }
