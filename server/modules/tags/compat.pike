@@ -414,6 +414,46 @@ string|int tag_countdown(string tag, mapping m, string c, object id)
   }
 }
 
+string|int tag_tablify(string tag, mapping m, string q, object id)
+{
+  if(!m->fgcolor0 && !m->fgcolor1 && !m->fgcolor && !m->rowalign &&
+     !m->bgcolor && !m->preprocess && !m->parse) return 0;
+
+  if(m->fgcolor0) {
+    m->oddbgcolor=m->fgcolor0;
+    m_delete(m, "fgcolor0");
+    old_rxml_warning(id, "tablify attribute fgcolor0","oddbgcolor");
+  }
+  if(m->fgcolor1) {
+    m->evenbgcolor=m->fgcolor1;
+    m_delete(m, "fgcolor1");
+    old_rxml_warning(id, "tablify attribute fgcolor1","evenbgcolor");
+  }
+  if(m->fgcolor) {
+    m->textcolor=m->fgcolor;
+    m_delete(m, "fgcolor");
+    old_rxml_warning(id, "tablify attribute fgcolor","textcolor");
+  }
+  if(m->rowalign) {
+    m->cellalign=m->rowalign;
+    m_delete(m, "rowalign");
+    old_rxml_warning(id, "tablify attribute rowalign","cellalign");
+  }
+  // When people have forgotten what bgcolor meant we can reuse it as evenbgcolor=oddbgcolor=m->bgcolor
+  if(m->bgcolor) {
+    m->bordercolor=m->bgcolor;
+    m_delete(m, "bgcolor");
+    old_rxml_warning(id, "tablify attribute bgcolor","bordercolor");
+  }
+  if (m->preprocess || m->parse) {
+    q = parse_rxml(q, id);
+    old_rxml_warning(id, "tablify attribute "+(m->parse?"parse":"preprocess"),"preparse");
+    m_delete(m, "parse");
+    m_delete(m, "preprocess");
+  }
+  return make_container("tablify",m,q);
+}
+
 mapping query_tag_callers()
 {
   return ([
@@ -436,6 +476,7 @@ mapping query_tag_callers()
 mapping query_container_callers()
 {
   return ([ 
+    "tablify":tag_tablify,
     "apre":tag_aprestate,
     "preparse":tag_preparse,
     "autoformat":tag_autoformat,
@@ -444,7 +485,6 @@ mapping query_container_callers()
     "source":tag_source,
     "cset":lambda(string t, mapping m, string c, object id) {
 	   old_rxml_warning(id, "cset tag","&lt;define variable&gt;");
-           return tag_set("set",m+([ "value":html_decode_string(c) ]),
-	   id); }
+           return make_container("define", m, html_decode_string(c)); }
   ]);
 }
