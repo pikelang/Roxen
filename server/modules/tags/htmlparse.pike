@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.163 1999/04/07 18:51:20 peter Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.164 1999/04/13 00:17:47 mast Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -194,7 +194,8 @@ inline mixed open_db_file()
 // #endif
     database=open(QUERY(Accesslog)+".db", "wrc");
     if (!database) {
-      throw(({ sprintf("Failed to open \"%s.db\". Out of fd's?\n",
+      throw(({ sprintf("Failed to open \"%s.db\". "
+		       "Insufficient permissions or out of fd's?\n",
 		       QUERY(Accesslog)), backtrace() }));
     }
 // #if efun(chmod)
