@@ -8,7 +8,7 @@
 // </pike>
  
 inherit "module";
-string cvs_version = "$Id: lpctag.pike,v 1.5 1996/12/02 04:32:49 per Exp $";
+string cvs_version = "$Id: lpctag.pike,v 1.6 1997/01/27 00:03:13 per Exp $";
 #include <module.h>;
 
 array register_module()
@@ -46,10 +46,6 @@ inline private nomask string functions()
   return 
     "inherit \"roxenlib\";\n"
     "\n"
-    "object parser = roxen->current_configuration->parse_module;\n"
-    "int __accessed(string file, int|void add) {\n"
-    "  return parser->query_num(file, add);\n"
-    "}\n\n"
     "array data = ({});\n\n"
     "void output(mixed ... args) {\n"
     "if(sizeof(args) > 1) data += ({ sprintf(@args) }); else data += args;\n"
@@ -122,8 +118,10 @@ string tag_pike(string tag, mapping m, string s, object request_id,
       res = (o=p())->parse(request_id, defs, file, m);
     })
     {
-      perror(err[0]-"\n"+" in "+request_id->not_query+"\n");
-      res = (o->flush()||"")+"<h1><font color=red size=7><i>"+err[0]+"</i></font></h1>";
+	perror(err[0]-"\n"+" in "+request_id->not_query+"\n");
+      if(o)
+	res = (o->flush()||"");
+      res+="<h1><font color=red size=7><i>"+err[0]+"</i></font></h1>";
     }
 #if efun(set_max_eval_time)
     remove_max_eval_time(); // Remove the limit.
