@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.231 1999/11/24 01:58:12 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.232 1999/11/24 19:10:52 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2165,26 +2165,10 @@ void reload_module( string modname )
   if( !old_module )
     return;
 
-  foreach( Program.inherit_list(object_program(old_module)), program p )
-  {
-    if( master()->refresh( p ) )
-      do_delete_doto = 1;
-  }
-
-  if( do_delete_doto )
-  {
-    foreach( Program.inherit_list(object_program(old_module)), program p )
-    {
-      rm( master()->program_name( p )+".o" );
-      call_out( roxen.dump, 1, master()->program_name( p ) );
-    rm( master()->program_name( object_program( old_module ) )+".o" );
-    }
-  }
+  master()->refresh_inherit( object_program( old_module ) );
 
   if( enable_module( modname ) == old_module )
     return;
-
-
 
   catch( disable_module( modname ) );
 
