@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 // This module maintains an accessed database,
 // to be used by the <accessed> tag also provided
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.21 2000/02/16 11:07:18 per Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.22 2000/02/24 03:16:59 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -384,11 +384,11 @@ string tag_accessed(string tag, mapping m, RequestID id)
       query_num(m->file, -counts);
       database_set_created(m->file, time(1));
       return "Number of counts for "+m->file+" is now 0.<br>";
-    } else {
+    }
+    else
       // On a web hotell you don't want the guests to be alowed to reset
       // eachothers counters.
-      return rxml_error(tag, "You do not have access to reset this counter.", id);
-    }
+      RXML.run_error("You do not have access to reset this counter.");
   }
 
   if(m->silent)
@@ -443,7 +443,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
       break;
 
     default:
-      return rxml_error(tag, "Access count per what?", id);
+      RXML.parse_error("Access count per what?");
     }
   }
 

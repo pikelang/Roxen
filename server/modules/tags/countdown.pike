@@ -1,4 +1,7 @@
-constant cvs_version="$Id: countdown.pike,v 1.27 2000/02/17 08:42:43 per Exp $";
+// This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
+//
+
+constant cvs_version="$Id: countdown.pike,v 1.28 2000/02/24 03:20:15 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -254,7 +257,7 @@ string tag_countdown(string t, mapping m, object id)
          if(catch {
            unix_now = mktime(newnow);
          })
-           return rxml_error(t, "Bad now argument.", id);
+           RXML.parse_error("Bad now argument.");
        }
   }
   mapping now = localtime(unix_now);
@@ -389,7 +392,7 @@ string tag_countdown(string t, mapping m, object id)
   if(catch {
     when = mktime(time_args);
   })
-    return rxml_error(t, "Resulted in an invalid time.", id);
+    RXML.run_error("Resulted in an invalid time.");
 
   if(!zero_type(time_args->wday)) {
     int wen=when;
@@ -407,7 +410,7 @@ string tag_countdown(string t, mapping m, object id)
     if(catch {
       when = mktime(time_args);
     })
-      return rxml_error(t, "Resulted in an invalid time.", id);
+      RXML.run_error("Resulted in an invalid time.");
     //if(!zero_type(time_args->wday)) {
     //  when=weekday_handler(when, time_args);
     //}
