@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.394 2003/02/18 10:34:16 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.395 2003/02/25 16:11:24 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -575,11 +575,13 @@ private int parse_got( string new_data )
     line = res[1];
     request_headers = res[2];
   }
+  TIMER_END(parse_got);
   return parse_got_2();
 }
 
 private final int parse_got_2( )
 {
+  TIMER_START(parse_got_2);
   string trailer, trailer_trailer;
   multiset (string) sup;
   string a, b, s="", linename, contents;
@@ -649,7 +651,7 @@ private final int parse_got_2( )
     }
     if(!remoteaddr) {
       REQUEST_WERR("HTTP: No remote address.");
-      TIMER_END(parse_got);
+      TIMER_END(parse_got_2);
       return 2;
     }
   }
@@ -722,7 +724,7 @@ private final int parse_got_2( )
     if(strlen(data) < l)
     {
       REQUEST_WERR(sprintf("HTTP: More data needed in %s.", method));
-      TIMER_END(parse_got);
+      TIMER_END(parse_got_2);
       return 0;
     }
     leftovers = data[l+2..];
@@ -796,7 +798,7 @@ private final int parse_got_2( )
       return 2;
     }
   }
-  TIMER_END(parse_got);
+  TIMER_END(parse_got_2);
   return 3;	// Done.
 }
 
