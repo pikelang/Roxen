@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.26 2004/08/31 12:39:34 grubba Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.27 2004/12/16 10:27:16 erikd Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -159,6 +159,12 @@ class TagSprintf {
 class TagSscanf {
   inherit RXML.Tag;
   constant name = "sscanf";
+  mapping(string:RXML.Type) req_arg_types = ([ "variables" : RXML.t_text(RXML.PEnt),
+					       "format"    : RXML.t_text(RXML.PEnt)
+  ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "return"    : RXML.t_text(RXML.PEnt),
+					       "scope"     : RXML.t_text(RXML.PEnt)
+  ]);
 
   class Frame {
     inherit RXML.Frame;
