@@ -1,7 +1,7 @@
 /*
- * $Id: smsrcpt.pike,v 1.3 1998/11/29 19:40:05 js Exp $
+ * $Id: smsrcpt.pike,v 1.4 1999/01/27 01:42:02 js Exp $
  *
- * A LysKOM SMS module for the AutoMail system.
+ * A SMS module for the AutoMail system.
  *
  * Johan Schön, September 1998.
  */
@@ -13,7 +13,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: smsrcpt.pike,v 1.3 1998/11/29 19:40:05 js Exp $";
+constant cvs_version = "$Id: smsrcpt.pike,v 1.4 1999/01/27 01:42:02 js Exp $";
 
 /*
  * Roxen glue
@@ -33,6 +33,8 @@ void create()
 {
   defvar("outputstring", "Mail from: %s, Subject: %s, Mail body: %s",
 	 "SMS Message description string" ,TYPE_STRING,"");
+  defvar("strip_aao", 0,
+	 "Convert åäö to aao" ,TYPE_FLAG,"");
 }
 
 object session;
@@ -117,10 +119,9 @@ string desc(string addr, object o)
   }
 }
 
-string get_real_body(string body)
+string get_real_body(object msg)
 {
-  sscanf(body,"%*s\r\n\r\n%s",body);
-  return body;
+  return ((msg->body_parts || ({ msg })) -> getdata() ) * "";
 }
 
 
@@ -132,25 +133,29 @@ int put(string sender, string user, string domain,
 
   
   object clientlayer=conf->get_provider("automail_clientlayer");
-  object msg=MIME.Message();
-  mapping headers=msg->parse_headers(clientlayer->read_headers_from_fd(mail))[0];
-  
+  mail->seek(0);
+  object msg=MIME.Message(mail->read());
+  mapping headers=msg->headers;
+  werror("sms: headers: %O\n",headers);
   int res;
   object u = clientlayer->get_user_from_address(user+"@"+domain);
   object a = conf->get_provider("automail_admin");
+  
   if(u && a->query_status(u->id,query_automail_name()))
   {
-    mail->seek(0);
     string smsnumber=a->query_variable(u->id,query_automail_name(),"sms_number");
     if(smsnumber)
     {
+      string res=sprintf(query("outputstring"),
+			 headers->from||"",
+			 headers->subject||"",
+			 get_real_body(msg));
+      if(query("strip_aao"))
+	res=replace(res, "ÅÄÖåäö"/"", "AAOaao"/"");
+      werror("sms: res: %O\n",res);
       Process.create_process( ({ "/usr/bin/sms",
-				   smsnumber,
-				   sprintf(query("outputstring"),
-					   headers->from||"",
-					   headers->subject||"",
-					   get_real_body(mail->read()) ||"")
-				   }) );
+				 smsnumber,
+				 res }) );
       int customer_id=u->query_customer_id();
       clientlayer->add_charge_to("sms",customer_id);
     }

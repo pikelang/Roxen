@@ -1,5 +1,5 @@
 /*
- * $Id: faxrcpt.pike,v 1.5 1998/11/29 19:40:04 js Exp $
+ * $Id: faxrcpt.pike,v 1.6 1999/01/27 01:42:00 js Exp $
  *
  * A LysKOM FAX module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: faxrcpt.pike,v 1.5 1998/11/29 19:40:04 js Exp $";
+constant cvs_version = "$Id: faxrcpt.pike,v 1.6 1999/01/27 01:42:00 js Exp $";
 
 /*
  * Roxen glue
@@ -136,10 +136,9 @@ string desc(string addr, object o)
 #define times_10                "\033(s1p0b0s5t10V"
 #define times_12                "\033(s1p0b0s5t12V"
 
-string get_real_body(string body)
+string get_real_body(object msg)
 {
-  sscanf(body,"%*s\r\n\r\n%s",body);
-  return body;
+  return ((msg->body_parts || ({ msg })) -> getdata() ) * "";
 }
 
 string fontify_mail(mapping headers, string body)
@@ -154,7 +153,7 @@ string fontify_mail(mapping headers, string body)
     s+=((body/"\n")[..query("lineslimit")-1])*"\n"+"\n"+times_12_bold+"[truncated]";
   else
     s+=body;
-  return s;
+  return s+"\n";
 }
 
 int put(string sender, string user, string domain,
@@ -164,17 +163,20 @@ int put(string sender, string user, string domain,
 	       sender, user, domain, mail, csum);
   
   object clientlayer=conf->get_provider("automail_clientlayer");
-  object msg=MIME.Message();
-  mapping headers=msg->parse_headers(clientlayer->read_headers_from_fd(mail))[0];
-  
+  mail->seek(0);
+  string x=mail->read();
+  object msg=MIME.Message(x);
+  mapping headers=msg->headers;
+//   werror("Fax: x: %O\n",x);
+//   werror("headers: %O\n",headers);
+//   werror("real_body: %O\n",get_real_body(msg));
   int res;
   object u = clientlayer->get_user_from_address(user+"@"+domain);
   object a = conf->get_provider("automail_admin");
   if(u && a->query_status(u->id,query_automail_name()))
   {
     string fn="/tmp/fax"+time()+random(1000000);
-    mail->seek(0);
-    Stdio.File(fn,"rwct")->write( fontify_mail(headers,get_real_body(mail->read())) );
+    Stdio.File(fn,"rwct")->write( fontify_mail(headers,get_real_body(msg)) );
     string faxnumber=a->query_variable(u->id,query_automail_name(),"fax_number");
     if(faxnumber)
     {

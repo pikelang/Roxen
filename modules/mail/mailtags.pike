@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.25 1998/11/26 04:58:36 per Exp $";
+"$Id: mailtags.pike,v 1.26 1999/01/27 01:42:01 js Exp $";
 
 constant thread_safe = 1;
 
@@ -865,7 +865,8 @@ string tag_mail_show_attachments( string t, mapping args, object id )
     return "";
   }
 
-  if(id->variables->attach_file)
+  if(id->variables->attach_file && 
+     id->variables["attach_file.filename"])
   {
     if(!M->body_parts)
     {
