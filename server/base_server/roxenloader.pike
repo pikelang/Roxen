@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.227 2001/01/10 08:57:25 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.228 2001/01/10 16:12:43 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1010,7 +1010,7 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
     return tl->get();
   }
 
-  catch
+  if( mixed err = catch
   {
     string mysql_socket = combine_path( getcwd(), query_configuration_dir()+
                                       "_mysql/socket");
@@ -1020,10 +1020,11 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
       tl->set(Sql.Sql("mysql://ro@localhost:"+mysql_socket+"/"+db));
     else
       tl->set(Sql.Sql("mysql://rw@localhost:"+mysql_socket+"/"+db));
-  };
+  } && !ro && db=="mysql" )
+    throw( err );
   if( catch( tl->get()->query( "USE "+db ) ) )
   {
-    catch(connect_to_my_mysql( 0, "mysql" )->query( "CREATE DATABASE "+db ));
+    connect_to_my_mysql( 0, "mysql" )->query( "CREATE DATABASE "+db );
     return connect_to_my_mysql( ro, db );
   }
   return tl->get();
@@ -1039,7 +1040,7 @@ void start_mysql()
   {
     string version = db->query( "SELECT VERSION() AS v" )[0]->v;
     report_debug("%s %s [%.1fms]\n",
-                  (was?"Was running":"Done"),
+                 (was?"Was running":"Done"),
                   version, (gethrtime()-st)/1000.0);
     if( (float)version < 3.23 )
       report_debug( "Warning: This is a very old Mysql. "
@@ -1070,7 +1071,9 @@ void start_mysql()
 
   string mysqldir = combine_path( getcwd(),
                                   query_configuration_dir()+"_mysql");
-  if( !file_stat( mysqldir+"/mysql/user.MYD" ) )
+  if( !file_stat( mysqldir+"/mysql/user.MYD" ) ||
+      !file_stat( mysqldir+"/mysql/host.MYD" ) ||
+      !file_stat( mysqldir+"/mysql/db.MYD" ) )
   {
     report_debug("Mysql data directory does not exist -- copying template\n");
     mkdirhier( mysqldir+"/mysql/" );
