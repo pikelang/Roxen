@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.349 2003/10/20 13:23:55 mast Exp $
+// $Id: roxenloader.pike,v 1.350 2003/12/12 16:58:57 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.349 2003/10/20 13:23:55 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.350 2003/12/12 16:58:57 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1650,6 +1650,7 @@ void low_start_mysql( string datadir,
 #ifdef __NT__
                   // Use pipes with default name "MySQL" unless --socket is set
 		  "--socket="+replace(datadir, ":", "_") + "/pipe",
+		  "--enable-named-pipe",
 #else
 		  "--socket="+datadir+"/socket",
 		  "--pid-file="+pid_file,
