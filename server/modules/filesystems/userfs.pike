@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.58 2000/07/02 20:55:28 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.59 2000/07/03 15:26:43 grubba Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User file system";
 constant module_doc  = 
@@ -343,8 +343,6 @@ mapping|array find_dir(string f, RequestID id)
     else
       f = QUERY(searchpath) + u + "/" + f;
     array dir = filesystem::find_dir(f, id);
-    if(QUERY(virtual_hosting) && arrayp(dir))
-      return ([ "files": dir ]);
     return dir;
   }
   array(string) users = id->conf->userlist(id);
