@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.17 1998/10/01 23:37:12 grubba Exp $
+ * $Id: resolv.pike,v 1.18 1999/05/04 07:26:53 js Exp $
  */
 
 inherit "wizard";
@@ -11,7 +11,8 @@ string module_name(function|object m)
   if(!m)return "";
   if(functionp(m)) m = function_object(m);
   return "<font color=darkgreen>"+
-    (strlen(m->query("_name")) ? m->query("_name") :
+    (
+//      strlen(m->query("_name")) ? m->query("_name") :
      (m->query_name&&m->query_name()&&strlen(m->query_name()))?
      m->query_name():m->register_module()[1])+"</font>";
 }
