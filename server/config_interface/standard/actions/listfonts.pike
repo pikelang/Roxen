@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.8 2000/04/05 23:40:18 per Exp $
+ * $Id: listfonts.pike,v 1.9 2000/05/03 08:50:34 mast Exp $
  */
 
 constant action = "maintenance";
@@ -46,8 +46,8 @@ string page_1(object id)
   string res="";
   mapping v = id->variables;
   foreach(roxen->fonts->available_fonts(), string fn)
-    res += Roxen.html_encode_string (fn)+": "
-      "<gtext align=top font='"+fn+"'>"+
+    res += Roxen.html_encode_string (fn)+":<br />\n"
+      "<gtext align='top' font='"+fn+"'>"+
       Roxen.html_encode_string (v->text)+"</gtext><p>";
   return res+"<br /></p><p>\n<cf-ok></p>";
 }
