@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.97 2000/09/05 15:06:30 per Exp $
+// $Id: module.pike,v 1.98 2000/09/06 16:46:45 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -80,10 +80,23 @@ int module_dependencies(Configuration configuration,
                         int|void now)
 //! If your module depends on other modules present in the server,
 //! calling <pi>module_dependencies()</pi>, supplying an array of
-//! module identifiers (the filename minus extension, more or less).
+//! module identifiers. A module identifier is either the filename
+//! minus extension, or a string on the form that Roxen.get_modname
+//! returns. In the latter case, the <config name> and <copy> parts
+//! are ignored.
 {
-  if(configuration || my_configuration() ) 
-    (configuration||my_configuration())->add_modules( modules, now );
+  modules = map (modules,
+		 lambda (string modname) {
+		   sscanf ((modname / "/")[-1], "%[^#]", modname);
+		   return modname;
+		 });
+  Configuration conf = configuration || my_configuration();
+  if (!conf)
+    report_warning ("Configuration not resolved; module(s) %s that %s "
+		    "depend on weren't added.", String.implode_nicely (modules),
+		    Roxen.get_modname (this_object()) || module_identifier());
+  else
+    conf->add_modules( modules, now );
   return 1;
 }
 
