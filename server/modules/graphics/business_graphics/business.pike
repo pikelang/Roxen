@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.47 1997/11/30 05:05:33 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.48 1997/11/30 05:35:54 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -66,6 +66,7 @@ mixed *register_module()
        "  <b>3D</b>             Render piecharts on top of a cylinder, takes the\n                 height in pixels of the cylinder as argument.\n"
        /* " tone         Do nasty stuff to the background.\n"
 	  " Requires dark background to be visable.\n" */
+       "  <b>eng</b>            If present, numbers are shown like 1.2M.\n"
        "\n  You can also use the regular &lt;<b>img</b>&gt; arguments. They will be passed\n  on to the resulting &lt;<b>img</b>&gt; tag.\n\n"
        "The following internal tags are available:\n"
        "\n&lt;<b>data</b>&gt; (container) Mandatory.\n"
