@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.62 2001/01/01 09:05:40 nilsson Exp $
+// $Id: Roxen.pmod,v 1.63 2001/01/06 08:46:04 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -25,9 +25,9 @@ string http_roxen_config_cookie(string from)
 
 string http_roxen_id_cookie()
 {
-  return sprintf("RoxenUserID=0x%x; expires=" +
+  return sprintf("RoxenUserID=%x; expires=" +
 		 http_date (3600*24*365*2 + time (1)) + "; path=/",
-		 roxen->increase_id());
+		 roxen->create_unique_id());
 }
 
 
