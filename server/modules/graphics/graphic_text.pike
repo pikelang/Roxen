@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.179 1999/05/25 10:53:22 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.180 1999/05/30 22:45:15 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -389,7 +389,7 @@ object make_text_image(mapping args, object font, string text,object id)
   if(args->ysize) ys=(int)args->ysize;
 
 
-  if( xs != background->xsize() &&
+  if( xs != background->xsize() ||
       ys != background->ysize() )
   {
     if(!args->rescale)
