@@ -45,34 +45,17 @@ string|mapping parse( RequestID id )
     object c = roxen.find_configuration( id->variables->name );
     if( !c ) c = roxen.enable_configuration( id->variables->name );
     id->misc->new_configuration = c;
-    object b = ((program)id->variables->site_template)();
+
+    master()->clear_compilation_failures();
+    object b = ((program)id->variables->site_template)( );
     string q = b->parse( id );
-    if(!stringp( q ) ) q = "<done/>";
+    if( !stringp( q ) ) 
+      return q;
 
     if( lower_case(q-" ") == "<done/>" )
-    {
-      if( arrayp(id->misc->modules_to_add) &&
-          sizeof(id->misc->modules_to_add) )
-      {
-        q = ("add_module.pike?encoded=1&config="+
-             encode_site_name(id->variables->name));
-        foreach( id->misc->modules_to_add, string mod )
-          q += "&module_to_add="+Roxen.http_encode_string(mod);
-	if (id->misc->module_initial_vars) {
-	  q += "&mod_init_vars=1";
-	  foreach (id->misc->module_initial_vars || ({}), string var)
-	    q += "&init_var=" + Roxen.http_encode_string (replace (var, "#", "!"));
-	}
-        c->save (1);
-        return Roxen.http_redirect( Roxen.fix_relative(q, id), id );
-      }
-      else
-      {
-        c->save (1);
-        return Roxen.http_redirect(Roxen.fix_relative("site.html/"+
-                         Roxen.http_encode_string(id->variables->name)+"/", id), id);
-      }
-    }
+      return Roxen.http_redirect(Roxen.fix_relative("site.html/"+
+               Roxen.http_encode_string(id->variables->name)+"/", id), id);
+
     return sprintf(base,q);
   }
 
