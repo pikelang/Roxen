@@ -5,7 +5,7 @@
  */
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: atlas.pike,v 1.1 1999/05/15 17:23:05 noring Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.2 1999/06/11 13:50:43 mast Exp $";
 
 #include <module.h>
 
@@ -92,22 +92,22 @@ static private mixed cache_get_meta(string key)
 
 /* Tags. */
 
-string container_list_regions(string t, mapping arg, string contents,
-			      object id)
+array(string) container_list_regions(string t, mapping arg, string contents,
+				     object id)
 {
-  return do_output_tag(arg, Array.map(.Map.Earth()->regions(),
-				      lambda(string c)
-				      { return ([ "name":c ]); }),
-		       contents, id);
+  return ({do_output_tag(arg, Array.map(.Map.Earth()->regions(),
+					lambda(string c)
+					  { return ([ "name":c ]); }),
+			 contents, id)});
 }
 
-string container_list_countries(string t, mapping arg, string contents,
-				object id)
+array(string) container_list_countries(string t, mapping arg, string contents,
+				       object id)
 {
-  return do_output_tag(arg, Array.map(.Map.Earth()->countries(),
-				      lambda(string c)
-				      { return ([ "name":c ]); }),
-		       contents, id);
+  return ({do_output_tag(arg, Array.map(.Map.Earth()->countries(),
+					lambda(string c)
+					  { return ([ "name":c ]); }),
+			 contents, id)});
 }
 
 string container_atlas_country(string t, mapping arg, mapping state)

@@ -749,7 +749,7 @@ class SumTracer
 #endif
 }
 
-string tag_trace(string t, mapping args, string c , RequestID id)
+array(string) tag_trace(string t, mapping args, string c , RequestID id)
 {
   NOCACHE();
   object t;
@@ -765,7 +765,7 @@ string tag_trace(string t, mapping args, string c , RequestID id)
   string r = parse_rxml(c, id);
   id->misc->trace_enter = a;
   id->misc->trace_leave = b;
-  return r + "<h1>Trace report</h1>"+t->res()+"</ol>";
+  return ({r + "<h1>Trace report</h1>"+t->res()+"</ol>"});
 }
 
 string tag_for(string t, mapping args, string c, RequestID id)

@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.174 1999/06/11 13:42:52 mast Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.175 1999/06/11 13:50:44 mast Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1589,7 +1589,7 @@ string tag_debug( string tag_name, mapping args, object id )
   return "";
 }
 
-string tag_cache(string tag, mapping args, string contents, object id)
+array(string) tag_cache(string tag, mapping args, string contents, object id)
 {
 #define HASH(x) (x+id->not_query+id->query+id->realauth +id->conf->query("MyWorldLocation"))
 #if constant(Crypto.md5)
@@ -1606,7 +1606,7 @@ string tag_cache(string tag, mapping args, string contents, object id)
     parsed = parse_rxml(contents, id);
     cache_set("tag_cache", key, parsed);
   }
-  return parsed;
+  return ({parsed});
 #undef HASH
 }
 
@@ -1775,14 +1775,14 @@ string tag_random(string tag, mapping m, string s)
     return (q=s/q)[random(sizeof(q))];
 }
 
-string tag_formoutput(string tag_name, mapping args, string contents,
-		      object id, mapping defines)
+array(string) tag_formoutput(string tag_name, mapping args, string contents,
+			     object id, mapping defines)
 {
-  return do_output_tag( args, ({ id->variables }), contents, id );
+  return ({do_output_tag( args, ({ id->variables }), contents, id )});
 }
 
-string tag_gauge(string t, mapping args, string contents, 
-		 object id, object f, mapping defines)
+mixed tag_gauge(string t, mapping args, string contents,
+		object id, object f, mapping defines)
 {
   NOCACHE();
 
@@ -1802,10 +1802,10 @@ string tag_gauge(string t, mapping args, string contents,
 
   if(args->silent) return "";
   if(args->timeonly) return sprintf("%3.6f", t/1000000.0);
-  if(args->resultonly) return contents;
-  return ("<br><font size=-1><b>Time: "+
-	  sprintf("%3.6f", t/1000000.0)+
-	  " seconds</b></font><br>"+contents);
+  if(args->resultonly) return ({contents});
+  return ({"<br><font size=-1><b>Time: "+
+	   sprintf("%3.6f", t/1000000.0)+
+	   " seconds</b></font><br>"+contents});
 } 
 
 // Removes empty lines
@@ -1895,25 +1895,25 @@ private mixed tag_select( string tag_name, mapping args, string contents,
 
 // The default tag is used to give default values to forms elements,
 // without any fuss.
-string tag_default( string tag_name, mapping args, string contents,
-		    object id, object f, mapping defines, object fd )
+array(string) tag_default( string tag_name, mapping args, string contents,
+			   object id, object f, mapping defines, object fd )
 {
   string multi_separator = args->multi_separator || "\000";
 
   contents = parse_rxml( contents, id );
   if (args->value)
-    return parse_html( contents, ([ "input" : tag_input ]),
-		       ([ "select" : tag_select ]),
-		       args->name, mkmultiset( args->value
-					       / multi_separator ) );
+    return ({parse_html( contents, ([ "input" : tag_input ]),
+			 ([ "select" : tag_select ]),
+			 args->name, mkmultiset( args->value
+						 / multi_separator ) )});
   else if (args->variable && id->variables[ args->variable ])
-    return parse_html( contents, ([ "input" : tag_input ]),
-		       ([ "select" : tag_select ]),
-		       args->name,
-		       mkmultiset( id->variables[ args->variable ]
-				   / multi_separator ) );
+    return ({parse_html( contents, ([ "input" : tag_input ]),
+			 ([ "select" : tag_select ]),
+			 args->name,
+			 mkmultiset( id->variables[ args->variable ]
+				     / multi_separator ) )});
   else    
-    return contents;
+    return ({contents});
 }
 
 string tag_sort(string t, mapping m, string c, object id)
@@ -1939,8 +1939,8 @@ string tag_sort(string t, mapping m, string c, object id)
   return pre + sort(lines)*m->separator + post;
 }
 
-string tag_recursive_output (string tagname, mapping args, string contents,
-			     object id, object file, mapping defines)
+mixed tag_recursive_output (string tagname, mapping args, string contents,
+			    object id, object file, mapping defines)
 {
   int limit;
   array(string) inside, outside;
@@ -1977,7 +1977,7 @@ string tag_recursive_output (string tagname, mapping args, string contents,
   id->misc->recout_inside = save_inside;
   id->misc->recout_outside = save_outside;
 
-  return res;
+  return ({res});
 }
 
 mapping query_container_callers()
@@ -1997,7 +1997,7 @@ mapping query_container_callers()
 		     string r;
 		     array e = catch(r=parse_rxml(c, id));
 		     if(e) return e[0];
-		     return r;
+		     return ({r});
 		   },
 	   "throw":lambda(string t, mapping m, string c) {
 		     if(c[-1] != "\n") c+="\n";

@@ -1,5 +1,5 @@
 /* 
- * $Id: sqltag.pike,v 1.34 1999/05/14 08:03:19 neotron Exp $
+ * $Id: sqltag.pike,v 1.35 1999/06/11 13:50:45 mast Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.34 1999/05/14 08:03:19 neotron Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.35 1999/06/11 13:50:45 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -91,13 +91,14 @@ array register_module()
  * Tag handlers
  */
 
-string sqloutput_tag(string tag_name, mapping args, string contents,
-		     object request_id, object f,
-		     mapping defines, object fd)
+mixed sqloutput_tag(string tag_name, mapping args, string contents,
+		    object request_id, object f,
+		    mapping defines, object fd)
 {
   if(args->help) return register_module()[2]; // FIXME
 
   request_id->misc->cacheable=0;
+  mixed res;
 
   if (args->query) {
 
@@ -149,10 +150,10 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
 	  report_error(sprintf("SQLTAG: Couldn't connect to SQL-server:\n"
 			       "%s\n", describe_backtrace(error)));
 	}
-	contents = ("<h3>Couldn't connect to SQL-server</h1><br>\n" +
-		    html_encode_string(error[0]) + "<false>");
+	res = ("<h3>Couldn't connect to SQL-server</h1><br>\n" +
+	       html_encode_string(error[0]) + "<false>");
       } else {
-	contents = "<false>";
+	res = "<false>";
       }
     } else if (error = catch(result = con->query(args->query))) {
       if (!args->quiet) {
@@ -161,27 +162,27 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
 			       "%s\n",
 			       args->query, describe_backtrace(error)));
 	}
-	contents = ("<h3>Query \"" + html_encode_string(args->query)
-		    + "\" failed: " + html_encode_string(con->error()) 
-		    + "</h1>\n<false>");
+	res = ("<h3>Query \"" + html_encode_string(args->query)
+	       + "\" failed: " + html_encode_string(con->error())
+	       + "</h1>\n<false>");
       } else {
-	contents = "<false>";
+	res = "<false>";
       }
     } else if (result && sizeof(result))
     {
-      contents = do_output_tag( args, result, contents, request_id )
-	+ "<true>";
+      res = ({do_output_tag( args, result, contents, request_id )});
+      id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
 
       if( args["rowinfo"] )
              request_id->variables[args->rowinfo]=sizeof(result);
 
     } else {
-      contents = "<false>";
+      res = "<false>";
     }
   } else {
-    contents = "<!-- No query! --><false>";
+    res = "<!-- No query! --><false>";
   }
-  return(contents);
+  return(res);
 }
 
 string sqlquery_tag(string tag_name, mapping args,

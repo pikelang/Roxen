@@ -1,5 +1,5 @@
 /* This is a Roxen module. Copyright © 1996 - 1998, Idonex AB
- * $Id: directories2.pike,v 1.13 1999/01/14 00:43:57 grubba Exp $
+ * $Id: directories2.pike,v 1.14 1999/06/11 13:50:42 mast Exp $
  *
  * Directory listings mark 2
  *
@@ -12,7 +12,7 @@
  * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.13 1999/01/14 00:43:57 grubba Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.14 1999/06/11 13:50:42 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -81,8 +81,8 @@ string quote_plain_text(string s)
   return(replace(s, ({"<",">","&"}),({"&lt;","&gt;","&amp;"})));
 }
 
-string tag_rel(string tag_name, mapping args, string contents,
-	       object request_id, mapping defines)
+array(string) tag_rel(string tag_name, mapping args, string contents,
+		      object request_id, mapping defines)
 {
   string old_base;
   string res;
@@ -97,7 +97,7 @@ string tag_rel(string tag_name, mapping args, string contents,
   res = parse_rxml(contents, request_id);
 
   request_id->misc->rel_base = old_base;
-  return(res);
+  return({res});
 }
 
 string tag_arel(string tag_name, mapping args, string contents,
