@@ -182,6 +182,7 @@ nn binary
 /server/modules/graphics/gbutton.pike foreign_ident
 /server/modules/graphics/graphic_text.pike foreign_ident
 /server/modules/graphics/pimage.pike foreign_ident
+/server/modules/graphics/wiretap.pike foreign_ident
 /server/modules/ldap/ldaptag.pike foreign_ident
 /server/modules/ldap/ldapuserauth.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
