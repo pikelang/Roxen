@@ -125,7 +125,7 @@ install_only:
 	-@rm -f $(prefix)/roxen/server/bin/roxen >/dev/null 2>&1
 	ln $(prefix)/roxen/server/bin/pike $(prefix)/roxen/server/bin/roxen
 #	cp $(SRCDIR)/pike/$(PIKEVERSION)/bin/feature_list $(prefix)/roxen/server/bin
-	cp pike/$(PIKEVERSION)/bin/rsqld.pike $(prefix)/roxen/server/bin
+	cp $(SRCDIR)/pike/$(PIKEVERSION)/bin/rsqld.pike $(prefix)/roxen/server/bin
 	for d in local local/modules local/nfonts server/lib server/lib/pike; \
 	  do \
 	    test -d $(prefix)/roxen/$$d/. || mkdir $(prefix)/roxen/$$d; \
