@@ -479,7 +479,8 @@
 </str>
 
 <str id="74">
-<o>Loaded projects:</o>
+<changed from="Loaded projects:"/>
+<o>Loaded project files:</o>
 <t>Nata¾ené projekty:</t>
 </str>
 
@@ -935,4 +936,10 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 <str id="138">
 <o>Change version</o>
 <t>Zmìò verzi</t>
+</str>
+
+<str id="87">
+<new/>
+<o>Non-garbing Memory Cache</o>
+<t></t>
 </str>

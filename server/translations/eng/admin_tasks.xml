@@ -460,7 +460,7 @@
 </str>
 
 <str id="74">
-<o>Loaded projects:</o>
+<o>Loaded project files:</o>
 <t></t>
 </str>
 
@@ -852,5 +852,10 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 
 <str id="138">
 <o>Change version</o>
+<t></t>
+</str>
+
+<str id="87">
+<o>Non-garbing Memory Cache</o>
 <t></t>
 </str>
