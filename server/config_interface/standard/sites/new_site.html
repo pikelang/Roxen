@@ -7,25 +7,7 @@
 <br />
 <blockquote>
 
-<if variable="form.name">
-  <define variable=var.error preparse><insert file='verify_site_name.pike' nocache='' /></define>
-   <if not variable='var.error is error'>
- ... create the site ..
-     <if variable='form.new_with_template..x'>
-        <cset variable=form.name><insert file='encode_form_name.pike'></cset>
-        <redirect to='create_site_with_template.pike?name=&form.name:http;'/>
-     </if>
-     <if variable='form.new..x'>
-        <insert file='create_site.pike'/>
-        <redirect to='site.html/&form.name:http;/' />
-     </if>
-     <true/>
-   </if>
-</if>
-<if variable='var.error is error'><cset variable=var.error><translate id="296">Illegal site name</translate></cset><set variable=var.go value='1'></if>
-<if not variable='form.name'><set variable=var.go value='1'></if>
-<if variable='var.go'>
-
+<define variable='var.common'>
 <font color='&usr.warncolor;'>&var.error;<br /></font>
   <b><translate id="269">Site name:</translate></b> 
    <input name=name value="&form.name;" /><br />
@@ -53,7 +35,29 @@ name=new_with_template>&var.create_txt; &var.template_txt;</submit-gbutton2>
 name=new>&var.create_txt;</submit-gbutton2>
 <br />
 <cf-cancel/>
+</define>
 
+<if variable="form.name">
+  <define variable=var.error preparse><insert file='verify_site_name.pike' nocache='' /></define>
+   <if not variable='var.error is error'>
+     <if variable='form.new_with_template..x'>
+        <cset variable=form.name><insert file='encode_form_name.pike'></cset>
+        <redirect to='create_site_with_template.pike?name=&form.name:http;'/>
+     </if>
+     <if variable='form.new..x'>
+        <insert file='create_site.pike'/>
+        <redirect to='site.html/&form.name:http;/' />
+     </if>
+     <else>
+       <eval>&var.common:none;</eval>
+     </else>
+     <true/>
+   </if>
+</if>
+<if variable='var.error is error'><cset variable=var.error><translate id="296">Illegal site name</translate></cset><set variable=var.go value='1'></if>
+<if not variable='form.name'><set variable=var.go value='1'></if>
+<if variable='var.go'>
+   <eval>&var.common:none;</eval>
 </if>
 
 </st-page>
