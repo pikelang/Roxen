@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.110 2000/04/03 03:47:43 per Exp $
+# $Id: start,v 1.111 2000/04/05 14:44:08 grubba Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -43,7 +43,7 @@ verbose=1
 roxendir="`pwd`"
 
 # Locate Pike binary.
-pike=`type pike|head -1|sed -e 's,.*is ,,'`
+pike=`type pike 2>/dev/null|head -1|sed -e 's,.*is ,,'`
 if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
 if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
 if [ -x $LOCALDIR/bin/pike ] ; then pike=$LOCALDIR/bin/pike; fi
