@@ -4,9 +4,7 @@
 /server/tools/ntroxen/startdll/enumproc.c eol=crlf
 *.cif binary
 *.cpp eol=crlf
-/server/tools/roxenstarter/roxenstarter.cpp -text -crlf
 *.dsp eol=crlf
-*.dsw eol=crlf
 *.gif binary
 /server/tools/ntroxen/ntstart/StdAfx.h eol=crlf
 /server/tools/ntroxen/ntstart/resource.h eol=crlf
@@ -27,7 +25,6 @@
 *.png binary
 *.raw binary
 *.rc eol=crlf
-/server/tools/nt_service/roxen.rc !eol
 *.rgs eol=crlf
 *.tar binary
 *.ttf binary
@@ -36,12 +33,9 @@
 /server/nfonts/Hultog.txt eol=crlf
 /server/nfonts/Quadrang.txt eol=crlf
 /server/nfonts/Resegrg.txt eol=crlf
-/server/nfonts/lucida_unicode.txt eol=crlf
-/server/nfonts/verdana.txt eol=crlf
 *.xcf binary
 /server/etc/test/tests/rxml/RoxenTest_WashHtmlTag.xml -text -crlf
 nn binary
-rbf binary
 worldmap binary
 
 # Handling of foreign (ie CVS) identifiers.
@@ -203,6 +197,7 @@ worldmap binary
 /server/modules/compat/language.pike foreign_ident
 /server/modules/compat/secure_fs.pike foreign_ident
 /server/modules/compat/sqldb.pike foreign_ident
+/server/modules/compat/ssi.pike foreign_ident
 /server/modules/compat/ximg.pike foreign_ident
 /server/modules/configuration/config_filesystem.pike foreign_ident
 /server/modules/configuration/config_tags.pike foreign_ident
@@ -217,6 +212,7 @@ worldmap binary
 /server/modules/examples/last.pike foreign_ident
 /server/modules/examples/location.pike foreign_ident
 /server/modules/examples/newstyle_fnord.pike foreign_ident
+/server/modules/examples/tagdoc_notation.pike foreign_ident
 /server/modules/examples/userdb_ex.pike foreign_ident
 /server/modules/filesystems/filesystem.pike foreign_ident
 /server/modules/filesystems/incoming.pike foreign_ident
@@ -286,6 +282,7 @@ worldmap binary
 /server/modules/tags/check_spelling.pike foreign_ident
 /server/modules/tags/countdown.pike foreign_ident
 /server/modules/tags/email.pike foreign_ident
+/server/modules/tags/emit_timerange.pike foreign_ident
 /server/modules/tags/foldlist.pike foreign_ident
 /server/modules/tags/html_wash.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
@@ -297,7 +294,6 @@ worldmap binary
 /server/modules/tags/sed.pike foreign_ident
 /server/modules/tags/session_tag.pike foreign_ident
 /server/modules/tags/sizer.pike foreign_ident
-/server/modules/tags/ssi.pike foreign_ident
 /server/modules/tags/tablify.pike foreign_ident
 /server/modules/tags/translation_mod.pike foreign_ident
 /server/modules/tags/vform.pike foreign_ident
@@ -312,13 +308,6 @@ worldmap binary
 /server/modules/throttling/throttling_bytime.pike foreign_ident
 /server/modules/throttling/throttling_bytype.pike foreign_ident
 /server/modules/throttling/throttling_byuser.pike foreign_ident
-/server/more_modules/bofh.pike foreign_ident
-/server/more_modules/clock.pike foreign_ident
-/server/more_modules/cvsfs.pike foreign_ident
-/server/more_modules/emit_timerange.pike foreign_ident
-/server/more_modules/php4.pike foreign_ident
-/server/more_modules/tagdoc_notation.pike foreign_ident
-/server/ntroxenloader.pike foreign_ident
 /server/perl/bin/perlhelper foreign_ident
 /server/perl/bin/perlrun foreign_ident
 /server/protocols/ftp.pike foreign_ident
@@ -330,10 +319,6 @@ worldmap binary
 /server/rxml_packages/roxenlogo foreign_ident
 /server/start foreign_ident
 /server/tools/addfp98.pike foreign_ident
-/server/tools/nt_service/Makefile foreign_ident
-/server/tools/nt_service/roxen.c foreign_ident
-/server/tools/nt_service/roxen_service.c foreign_ident
-/server/tools/nt_service/roxen_service.h foreign_ident
 /server/tools/ntroxen/startdll/StdAfx.cpp foreign_ident
 /server/tools/ntroxen/startdll/StdAfx.h foreign_ident
 /server/tools/ntroxen/startdll/cmdline.cpp foreign_ident
@@ -345,5 +330,4 @@ worldmap binary
 /server/tools/ntroxen/startdll/startdll.idl foreign_ident
 /server/tools/ntroxen/version.h foreign_ident
 /server/tools/roxenis.mib foreign_ident
-/server/tools/roxenstarter/roxenstarter.cpp foreign_ident
 /start foreign_ident
