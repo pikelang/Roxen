@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.10 2004/02/26 16:52:20 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.11 2004/05/24 15:15:01 anders Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -29,15 +29,15 @@ constant module_doc  = "This module provides the emit sources \"timerange\" and"
 //   [calendar="{ISO/...}"]
 // > &_.week.day.name; and so on from the look of the below scope_layout </emit>
 
-static constant units = ({ "Year", "Month", "Week", "Day",
-			   "Hour", "Minute", "Second" }),
-	  calendars = ({ "ISO", "Gregorian", "Julian", "Coptic",
-			   "Islamic", "Discordian", "unknown" }),
-    output_units = ({ "years", "months", "weeks", "days",
-			   "hours", "minutes", "seconds", "unknown" }),
-    // output_unit_no is used for the comparing when using query attribute.
-    ouput_unit_no = ({ 3,6,0,9,12,15,18,0 }),
-    scope_layout = ([ // Date related data:
+static constant units =        ({ "Year", "Month", "Week", "Day",
+				  "Hour", "Minute", "Second" });
+static constant calendars =    ({ "ISO", "Gregorian", "Julian", "Coptic",
+				  "Islamic", "Discordian", "unknown" });
+static constant output_units = ({ "years", "months", "weeks", "days",
+				  "hours", "minutes", "seconds", "unknown" });
+// output_unit_no is used for the comparing when using query attribute.
+static constant ouput_unit_no = ({ 3,6,0,9,12,15,18,0 });
+static constant scope_layout = ([ // Date related data:
 			 "ymd"      : "format_ymd",
 			 "ymd_short": "format_ymd_short",
 			 "date"			: "format_ymd",
@@ -108,15 +108,14 @@ static constant units = ({ "Year", "Month", "Week", "Day",
 			 "default.timezone"	: "q:timezone",
 			 "default.timezone.region":"TZ:region",
 			 "default.timezone.detail":"TZ:detail",
-			 "default.language"	: "q:language" ]),
-
-  iso_weekdays = ({"monday","tuesday",
-		   "wednesday","thirsday",
-		   "friday","saturday",
-		   "sunday"}),
-  gregorian_weekdays = ({"sunday","monday","tuesday",
-			 "wednesday","thirsday",
-			 "friday","saturday"});
+			 "default.language"	: "q:language" ]);
+static constant iso_weekdays = ({ "monday","tuesday",
+				  "wednesday","thirsday",
+				  "friday","saturday",
+				  "sunday"});
+static constant gregorian_weekdays = ({ "sunday","monday","tuesday",
+					"wednesday","thirsday",
+					"friday","saturday"});
 
 static mapping layout;
 //! create() constructs this module-global recursive mapping,
@@ -133,9 +132,9 @@ Calendar.TimeRange prev(Calendar.TimeRange t) { return t->prev(); }
 Calendar.TimeRange same(Calendar.TimeRange t) { return t; }
 Calendar.TimeRange next(Calendar.TimeRange t) { return t->next(); }
 function(Calendar.TimeRange:Calendar.TimeRange)
-prev_year,prev_month,prev_week,prev_day,prev_hour,prev_minute,prev_second,
-this_year,this_month,this_week,this_day,this_hour,this_minute,this_second,
-next_year,next_month,next_week,next_day,next_hour,next_minute,next_second;
+  prev_year,prev_month,prev_week,prev_day,prev_hour,prev_minute,prev_second,
+  this_year,this_month,this_week,this_day,this_hour,this_minute,this_second,
+  next_year,next_month,next_week,next_day,next_hour,next_minute,next_second;
 
 function(Calendar.TimeRange:Calendar.TimeRange) get_prev_timerange(string Unit)
 { return lambda(Calendar.TimeRange t) { return t - Calendar[Unit]();}; }
@@ -187,7 +186,7 @@ void create(Configuration conf)
 	    t1[index] += ([ "" : value ]);
 	  else
 	    t1 += ([ index : value,
-		        "" : t2 ]);
+		     "" : t2 ]);
 	else
 	  t1[index] = value;
       else
@@ -822,7 +821,7 @@ array(mapping) db_query(string q,string db_name)
   array(mapping(string:mixed))|object result;
   error = catch(con = DBManager.get(db_name,my_configuration(),0));
   if(!con)
-  RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
+    RXML.run_error("Couldn't connect to SQL server"+
                  (error?": "+error[0]:"")+"\n");
   else
   {
