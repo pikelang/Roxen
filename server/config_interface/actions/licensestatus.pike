@@ -1,5 +1,5 @@
 /*
- * $Id: licensestatus.pike,v 1.7 2002/04/15 14:51:36 wellhard Exp $
+ * $Id: licensestatus.pike,v 1.8 2002/04/15 14:57:02 wellhard Exp $
  */
 
 #include <roxen.h>
@@ -17,7 +17,7 @@ mixed parse( RequestID id )
 {
   string txt = #"
   <font size='+1'>Installed Licenses</font>
-  <blockquote>Click on a license for more info.</blockquote>
+  <blockquote>Click on a license for more information.</blockquote>
   <input type='hidden' name='action' value='&form.action;'/>
   <input type='hidden' name='class' value='&form.class;'/>
   <table cellspacing='0' cellpadding='3' border='0'>
@@ -102,7 +102,7 @@ mixed parse( RequestID id )
           <tr bgcolor='&var.color;'>
             <td><e>&_.name;</e></td>
             <td align='center'>&_.enabled;</td>
-            <td>
+            <td nowrap=''>
               <emit source='license-module-features'
                 >&_.name;:&nbsp;&_.value;<delimiter><br /></delimiter></emit>
               <else>&nbsp;</else>
