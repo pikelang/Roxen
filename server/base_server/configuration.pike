@@ -3,7 +3,7 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.261 2000/02/16 11:12:10 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.262 2000/02/16 15:36:56 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2492,7 +2492,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
     destruct(me);
     return 0;
   }
-
+  if( inited && me->ready_to_receive_requests )
+    catch( me->ready_to_receive_requests );
   if (err = catch(pr = me->query("_priority")))
   {
 #ifdef MODULE_DEBUG
@@ -2834,10 +2835,24 @@ private string get_my_url()
   return "http://" + s + "/";
 }
 
+array after_init_hooks = ({});
+mixed add_init_hook( mixed what )
+{
+  if( inited )
+    call_out( what, 0, this_object() );
+  else
+    after_init_hooks |= ({ what });
+}
+
 void enable_all_modules()
 {
-  if( inited ) return; // already done
-  inited = 1;
+  ready_to_receive_requests( );
+}
+
+void ready_to_receive_requests()
+{
+  if( inited )
+    return; // already done
 
   int start_time = gethrtime();
   report_debug("\nEnabling all modules for "+query_name()+"... \n");
@@ -2871,6 +2886,22 @@ void enable_all_modules()
   roxenloader.pop_compile_error_handler();
   if( strlen( ec->get() ) )
     report_error( "While enabling modules in "+name+":\n"+ec->get() );
+
+  foreach( ({this_object()})+indices( otomod ), object mod )
+    if( mod->ready_to_receive_requests )
+      if( mixed q = catch( mod->ready_to_receive_requests( this_object() ) ) )
+        report_debug( "While calling ready_to_receive_requests in "+
+                      otomod[mod]+":\n"+
+                      describe_backtrace( q ) );
+
+  foreach( after_init_hooks, function q )
+    if( mixed w = catch( q ) )
+      report_debug( "While calling after_init_hook %O:\n%s",
+                    q,  describe_backtrace( w ) );
+
+  after_init_hooks = ({});
+
+  inited = 1;
   report_notice("All modules for %s enabled in %3.1f seconds\n\n",
                 query_name(),(gethrtime()-start_time)/1000000.0);
 }
