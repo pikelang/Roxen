@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.89 2001/05/20 13:02:42 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.90 2001/06/26 09:40:47 per Exp $";
 
 constant path = "config_interface/";
 
@@ -188,6 +188,9 @@ mixed find_file( string f, RequestID id )
       host = h[0];
     else
       host = id->remoteaddr;
+
+    // Patch it in. This is needed for the image-cache authentication handling.
+    id->conf->set_userdb_module_cache( ({ roxen.config_userdb_module }) );
 
     if( user = id->conf->authenticate( id, roxen.config_userdb_module ) )
     {
