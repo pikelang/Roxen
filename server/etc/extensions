@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.32 1998/12/31 13:16:10 grubba Exp $
+# $Id: extensions,v 1.33 1999/01/05 16:51:25 marcus Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -195,9 +195,9 @@ zip	application/zip
 # LivePicture PhotoVista RealSpace
 ivr	i-world/i-vrml
 
-vrml	x-world/x-vrml
-wrl	x-world/x-vrml
-wrml    x-world/x-vrml
+vrml	model/vrml
+wrl	model/vrml
+wrml    model/vrml
 
 talk    plugin/talker 
 
