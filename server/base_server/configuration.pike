@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.422 2001/03/12 14:05:02 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.423 2001/03/12 15:11:55 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2154,7 +2154,10 @@ void save(int|void all)
     foreach(indices(modules[modname]->copies), int i)
     {
       store(modname+"#"+i, modules[modname]->copies[i]->query(), 0, this_object());
-      catch(modules[modname]->copies[i]->start(2, this_object()));
+      if (mixed err = catch(modules[modname]->copies[i]->
+			    start(2, this_object())))
+	report_error("Error calling start in module.\n%s",
+		     describe_backtrace (err));
     }
   }
   invalidate_cache();

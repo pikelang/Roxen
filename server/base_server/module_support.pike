@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.86 2001/03/12 14:08:58 nilsson Exp $
+// $Id: module_support.pike,v 1.87 2001/03/12 15:11:54 anders Exp $
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
@@ -262,10 +262,10 @@ class ModuleInfo( string sname, string filename )
       return load( filename, silent )( conf );
     };
     roxenloader.pop_compile_error_handler( );
-    if( !silent )
-      return LoadFailed( ec );
     if( err )
       report_error( describe_backtrace( err ) );
+    if( !silent )
+      return LoadFailed( ec );
     return 0;
   }
 
