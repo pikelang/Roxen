@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.353 2002/01/16 15:38:01 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.354 2002/01/29 21:43:37 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1907,6 +1907,7 @@ void adjust_for_config_path( string p )
 static string cached_url_base;
 
 string url_base()
+// See the RequestID class for doc.
 {
   // Note: Code duplication in base_server/prototypes.pike.
 
@@ -1947,6 +1948,38 @@ string url_base()
     cached_url_base += "/";
   }
   return cached_url_base;
+}
+
+// The following two ought to be in RequestID, but we get resolve
+// order problems with the RXML module then.
+
+void add_response_header (string name, string value)
+// See the RequestID class for doc.
+{
+  if (misc->defines && misc->defines[" _extra_heads"]) {
+    Roxen.add_http_header (misc->defines[" _extra_heads"], name, value);
+    if (RXML.Context ctx = RXML_CONTEXT)
+      ctx->set_var (name, misc->defines[" _extra_heads"][name], "headers");
+  }
+  else {
+    if (!misc->moreheads) misc->moreheads = ([]);
+    Roxen.add_http_header (misc->moreheads, name, value);
+  }
+}
+
+void set_response_header (string name, string value)
+// See the RequestID class for doc.
+{
+  if (misc->defines && misc->defines[" _extra_heads"]) {
+    if (RXML.Context ctx = RXML_CONTEXT)
+      ctx->set_var (name, value, "headers");
+    else
+      misc->defines[" _extra_heads"][name] = value;
+  }
+  else {
+    if (!misc->moreheads) misc->moreheads = ([]);
+    misc->moreheads[name] = value;
+  }
 }
 
 /* We got some data on a socket.

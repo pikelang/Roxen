@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.46 2001/11/27 18:06:44 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.47 2002/01/29 21:48:11 mast Exp $";
 
 class Variable
 {
@@ -646,6 +646,33 @@ class RequestID
     }
     return cached_url_base;
   }
+
+  void add_response_header (string name, string value);
+  //! Adds a header @[name] with the value @[value] to be sent in the
+  //! http response. An existing header with the same name will not be
+  //! overridden, instead another (duplicate) header line will be sent
+  //! in the response.
+  //!
+  //! @note
+  //! If used from within an RXML parse session, this function will
+  //! ensure that the new header is registered properly in the RXML
+  //! p-code cache. That's the primary reason to used it instead of
+  //! adding the header directly to @tt{misc->moreheads@} or
+  //! @tt{misc->defines[" _extra_heads"]@}.
+
+  void set_response_header (string name, string value);
+  //! Sets the header @[name] to the value @[value] to be sent in the
+  //! http response. If an existing header with the same name exists,
+  //! its value(s) will be overridden. This is useful for headers like
+  //! "Expire-Time", otherwise @[add_response_header] is typically a
+  //! better choice.
+  //!
+  //! @note
+  //! If used from within an RXML parse session, this function will
+  //! ensure that the new header is registered properly in the RXML
+  //! p-code cache. That's the primary reason to used it instead of
+  //! adding the header directly to @tt{misc->moreheads@} or
+  //! @tt{misc->defines[" _extra_heads"]@}.
 
   string scan_for_query( string f )
   {
