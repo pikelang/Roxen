@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.41 1997/12/23 11:13:22 per Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.42 1998/01/14 15:22:51 grubba Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -202,7 +202,7 @@ static mapping build_roxen_env_vars(object id)
   foreach(indices(id->variables), tmp)
   {
     string name = replace(tmp," ","_");
-    if (sizeof(id->variables[tmp]) < 8192) {
+    if (id->variables[tmp] && (sizeof(id->variables[tmp]) < 8192)) {
       /* Some shells/OS's don't like LARGE environment variables */
       new["QUERY_"+name] = replace(id->variables[tmp],"\000"," ");
       new["VAR_"+name] = replace(id->variables[tmp],"\000","#");
