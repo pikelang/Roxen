@@ -328,13 +328,11 @@ class MetaData {
 					   string contents, mapping md)
   {
     md["template"] = "Yes";
-    if(args["none"])
-      md["template"] = "No";
   }
   
   mapping get_from_html(string html)
   {
-    mapping md = ([ "template":"Yes" ]);
+    mapping md = ([ "template":"No" ]);
     md->content_type = ContentTypes()->content_type_from_extension(f);
     if((md->content_type == "text/html")&&(sizeof(html))) 
       parse_html(html, ([ "meta": tag_meta ]),
@@ -502,14 +500,23 @@ class AutoFilter {
     res->res = contents;
     return "";
   }
-  
+
   string filter_body(string contents, mapping md)
   {
-    if(md->content_type=="text/html") {
+    if(!md->content_type=="text/html")
+      return contents;
+    
+    if(md->template == "Yes") {
       mapping res = ([ "res":"" ]);
       parse_html(contents, ([ ]), ([ "body":container_body ]), res);
+      
       if(sizeof(res->res))
-	return res->res;
+	contents = res->res;
+      
+      contents = parse_html(contents, ([ ]),
+			    ([ "template": lambda(string tag, mapping args,
+						  string contents)
+					   { return contents; } ]));
     }
     return contents;
   }
