@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.159 2000/03/09 22:33:29 nilsson Exp $
+// $Id: roxenlib.pike,v 1.160 2000/03/18 03:00:59 mast Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -1055,8 +1055,7 @@ RoxenModule get_module (string modname)
 
 string get_modname (RoxenModule module)
 // Returns a string uniquely identifying the given module on the form
-// `<config name>/<module short name>#<copy>', where `<copy>' is 0 for
-// modules with no copies.
+// `<config name>/<module short name>#<copy>'.
 {
   if (!module) return 0;
 
@@ -1103,8 +1102,7 @@ string roxen_encode( string val, string encoding )
      return http_encode_url (val);
 
    case "html":
-     // For generic html text and in tag arguments. Does
-     // not work in RXML tags (use dtag or stag instead).
+     // For generic html text and in tag arguments.
      return html_encode_string (val);
 
    case "dtag":
@@ -1634,10 +1632,13 @@ string API_read_file(RequestID id, string file)
 	}
       }
     }
-    if(!s)
+    if(!s) {
+      destruct (id);
       return 0;
+    }
   }
 
+  destruct (id);
   return s;
 }
 
