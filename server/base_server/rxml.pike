@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.271 2001/04/05 11:25:23 kuntri Exp $
+// $Id: rxml.pike,v 1.272 2001/04/19 15:41:10 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -336,7 +336,8 @@ class CompatTag
 	    return ({!pargs && !pcontent ? propagate_tag () :
 		     propagate_tag (pargs || args, pcontent || content)});
 	  else
-	    return ({RXML.make_unparsed_tag (pname, pargs || args, pcontent || content)});
+	    return ({RXML.make_unparsed_tag (
+		       pname, pargs || args, pcontent || content || "")});
 	}
 	else return result;
       }
