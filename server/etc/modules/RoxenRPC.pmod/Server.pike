@@ -1,4 +1,4 @@
-#define error(X) throw(({X, backtrace()}));
+#define error(X) throw(({X, backtrace()}))
 
 class Connection
 {
