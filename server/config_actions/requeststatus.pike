@@ -1,5 +1,5 @@
 /*
- * $Id: requeststatus.pike,v 1.4 1998/07/20 20:38:13 neotron Exp $
+ * $Id: requeststatus.pike,v 1.5 1998/07/20 20:51:16 neotron Exp $
  */
 
 inherit "wizard";
@@ -21,12 +21,15 @@ mixed page_0(object id, object mc)
 
 mixed page_1(object id)
 {
-  string res="";
+  string res="<b>These are all virtual servers. They are sorted by the "
+    "number of requests they have received - the most active being first.";
   foreach(Array.sort_array(roxen->configurations,
 			   lambda(object a, object b) {
-			     return lower_case(a->name) > lower_case(b->name);
+			     return a->requests < b->requests;
 			     }), object o)
-    res += sprintf("<h2>%s<br>%s</h2>\n", o->name,
+    res += sprintf("<h3><a href=%s>%s</a><br>%s</h3>\n",
+		   o->query("MyWorldLocation"),
+		   o->name,
 		   replace(o->status(), "<table>", "<table cellpadding=4>"));
   return res;
 }
