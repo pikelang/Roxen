@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.115 2001/06/28 20:04:26 mast Exp $
+// $Id: module.pike,v 1.116 2001/06/29 00:47:35 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -18,10 +18,14 @@ constant is_module = 1;
 constant module_unique  = 1;
 
 
-private Configuration _my_configuration =
-  roxen->module_init_info->get()[0];
+private Configuration _my_configuration;
 private string _module_identifier =
-  _my_configuration->name + "/" + roxen->module_init_info->get()[1];
+  lambda() {
+    if (array init_info = roxen->module_init_info->get()) {
+      [_my_configuration, string modname] = init_info;
+      return _my_configuration->name + "/" + modname;
+    }
+  }();
 static mapping _api_functions = ([]);
 
 string|array(string) module_creator;
