@@ -6,9 +6,9 @@ inherit "roxenlib";
 array(string) class_description( string d, object id )
 {
   string name, doc;
-  while(strlen(d) && !file_stat( d+"/INFO" ) )
+  while(!(< "", "/" >)[d] && !file_stat( d+"/INFO" ))
     d = dirname(d);
-  if(!strlen(d))
+  if((< "", "/" >)[d])
     return ({"Local modules", "" });
 
   string n = Stdio.read_bytes( d+"/INFO" );
