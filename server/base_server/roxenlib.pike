@@ -1,6 +1,6 @@
 inherit "http";
 
-string _cvs_version = "$Id: roxenlib.pike,v 1.9.2.4 1997/03/05 16:07:43 grubba Exp $";
+string _cvs_version = "$Id: roxenlib.pike,v 1.9.2.5 1997/03/07 18:01:01 grubba Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -351,7 +351,7 @@ string parse_rxml(string what, void|object|mapping id, void|object file,
 	 "conf":roxen->current_configuration,
 	 ]);
 
-  if(!(id->conf && id->conf->parse_module))
+  if(!id->conf || !id->conf->parse_module))
     return what;
   return parse_html(what, 
 		    (mapping)id->conf->parse_module->tag_callers,
@@ -361,7 +361,7 @@ string parse_rxml(string what, void|object|mapping id, void|object file,
 }
 
 constant safe_characters = "abcdefghijkklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789åäöÅÄÖ"/"";
-constant empty_strings = map(safe_characters,lambda(){return "";});
+/* constant */array empty_strings = map(safe_characters,lambda(){return "";});
 
 int is_safe_string(string in)
 {
