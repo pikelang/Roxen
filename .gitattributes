@@ -258,6 +258,7 @@ worldmap binary
 /server/pike_modules/SloppyDOM.pmod foreign_ident
 /server/pike_modules/StateHandler.pmod foreign_ident
 /server/pike_modules/Variable.pmod/module.pmod foreign_ident
+/server/plugins/arg_cache/replicate.pike foreign_ident
 /server/plugins/font_handlers/builtin.pike foreign_ident
 /server/plugins/font_handlers/imagedir.pike foreign_ident
 /server/plugins/font_handlers/old.pike foreign_ident

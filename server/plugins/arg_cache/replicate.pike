@@ -1,6 +1,8 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
 
+constant cvs_version="$Id: replicate.pike,v 1.18 2004/05/16 00:38:46 mani Exp $";
+
 #if constant(WS_REPLICATE)
 #define QUERY(X,Y...)    get_db()->query(X,Y)
 #define sQUERY( X,Y...) get_sdb()->query(X,Y)
@@ -57,9 +59,9 @@ void low_initiate_servers()
 
 void initiate_servers()
 {
-  // Locate new servers every minute.
-  call_out( initiate_servers, 60 );
   low_initiate_servers();
+  // Locate new servers every minute.
+  core.background_run( 60, initiate_servers );
 }
 
 mapping(string:Server) servers;
@@ -99,14 +101,19 @@ static void init_replicate_db()
 
   Thread.MutexKey key;
   catch( key = cache->mutex->lock() );
-  array have = (array(int))
-    cache->db->query( "SELECT id from "+cache->name )->id;
-
-  array shave = (array(int))
-    sQUERY( "SELECT id FROM "+cache->name+
-	    " WHERE server=%s", cache->secret )->id;
+  
   werror("Synchronizing remote arg-cache with local cache... ");
-  foreach( have-shave, int id )
+  int max_replicated_id = (int)
+    sQUERY( "SELECT MAX(id) as max_id "
+	    "  FROM "+cache->name+
+	    " WHERE server = %s", cache->secret )[0]->max_id;
+  
+  array new_entries = (array(int))
+    cache->db->query( "SELECT id "
+		      "  FROM "+cache->name+
+		      " WHERE id > %d", max_replicated_id )->id;
+
+  foreach( new_entries, int id )
     create_key( id, cache->read_args( id ) );
   werror("Done\n");
   key = 0;
@@ -186,6 +193,12 @@ static int get_and_store_data_from_server( Server server, int id,
     if(off)return X;							\
   }
 
+int is_functional()
+// Returns 1 if the database is configured and upp and running, otherwise 0.
+{
+  ENSURE_NOT_OFF(0);
+  return 1;
+}
 
 int create_key( int id, string data, string|void server )
 {
@@ -269,22 +282,6 @@ array(int) decode_id( string data )
   return 0;
 }
 
-array(int) get_local_ids(int|void from_time)
-{
-#ifdef THREADS
-  Thread.MutexKey key = cache->mutex->lock();
-#endif  
-  array have = (array(int))
-    cache->db->query( "SELECT id from "+cache->name+
-		      " WHERE atime >= %d", from_time )->id;
-
-  ENSURE_NOT_OFF( have );
-  array shave = (array(int))
-    sQUERY( "SELECT id FROM "+cache->name+
-	    " WHERE server!=%s", cache->secret )->id;
-  return have-shave;
-}
-
 void create_remote_key(int id, string key,
 		       int index_id, string index_key,
 		       string server)
@@ -299,7 +296,7 @@ void create_remote_key(int id, string key,
   // If an index id is specified create a record in the remote
   // database and create local records for index key and value
   // key. Also create a record in the arguments_replicated table.
-  if(index_id >= 0) {
+  if(index_id >= 0 && index_key) {
     create_key(index_id, index_key, server);
     add_replicated_key(cache->create_key(index_key, 0),
 		       cache->create_key(key, 0, index_id),
