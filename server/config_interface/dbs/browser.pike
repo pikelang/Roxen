@@ -37,10 +37,10 @@ string format_decode_value( string what )
   {
     mixed q = decode_value( what );
     if( objectp( q ) || programp( q ) )
-      return Roxen.http_encode_string("<"+_(233,"bytecode data")+">");
-    return trim_comments( sprintf("%O", q ) );
+      return Roxen.html_encode_string("<"+_(233,"bytecode data")+">");
+    return Roxen.html_encode_string( trim_comments( sprintf("%O", q ) ) );
   };
-  return what;
+  return Roxen.html_encode_string( what );
 }
 
 string store_image( string x )
