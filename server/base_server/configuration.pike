@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.498 2002/04/15 08:29:19 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.499 2002/05/29 15:12:51 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3322,41 +3322,42 @@ static void create()
 
 Log format is normal characters, or one or more of the variables below:
 
-\\n \\t \\r       -- As in C, newline, tab and linefeed
-$char(int)     -- Insert the (1 byte) character specified by the integer.
-$wchar(int)    -- Insert the (2 byte) word specified by the integer.
-$int(int)      -- Insert the (4 byte) word specified by the integer.
-$^             -- Supress newline at the end of the logentry
-$host          -- The remote host name, or ip number.
-$vhost         -- The Host request-header sent by the client, or - if none
-$ip_number     -- The remote ip number.
-$bin-ip_number -- The remote host id as a binary integer number.
-$cern_date     -- Cern Common Log file format date.
-$bin-date      -- Time, but as an 32 bit integer in network byteorder
-$method        -- Request method
-$resource      -- Resource identifier
-$full_resource -- Full requested resource, including any query fields
-$protocol      -- The protocol used (normally HTTP/1.0)
-$response      -- The response code sent
-$bin-response  -- The response code sent as a binary short number
-$length        -- The length of the data section of the reply
-$bin-length    -- Same, but as an 32 bit integer in network byteorder
-$request-time  -- The time the request took (seconds)
-$referer       -- the header 'referer' from the request, or '-'.
-$user_agent    -- the header 'User-Agent' from the request, or '-'.\n
-$user          -- the name of the auth user used, if any
-$user_id       -- A unique user ID, if cookies are supported,
-                  by the client, otherwise '0'
-$cache-status  -- A comma separated list of words (containing no
-                  whitespace) that describes which cache(s) the page
-                  was delivered from:
-                  protcache -- The low-level cache in the HTTP
-                               protocol module.
-                  xsltcache -- The XSLT cache.
-                  pcoderam  -- RXML parse tree RAM cache.
-                  pcodedisk -- RXML parse tree persistent cache.
-                  cachetag  -- No RXML &lt;cache&gt; tag misses.
-                  nocache   -- No hit in any known cache.
+\\n \\t \\r        -- As in C, newline, tab and linefeed
+$char(int)      -- Insert the (1 byte) character specified by the integer.
+$wchar(int)     -- Insert the (2 byte) word specified by the integer.
+$int(int)       -- Insert the (4 byte) word specified by the integer.
+$^              -- Supress newline at the end of the logentry
+$host           -- The remote host name, or ip number.
+$vhost          -- The Host request-header sent by the client, or - if none
+$ip_number      -- The remote ip number.
+$bin-ip_number  -- The remote host id as a binary integer number.
+$cern_date      -- Cern Common Log file format date.
+$bin-date       -- Time, but as an 32 bit integer in network byteorder
+$method         -- Request method
+$resource       -- Resource identifier
+$full_resource  -- Full requested resource, including any query fields
+$protocol       -- The protocol used (normally HTTP/1.0)
+$response       -- The response code sent
+$bin-response   -- The response code sent as a binary short number
+$length         -- The length of the data section of the reply
+$bin-length     -- Same, but as an 32 bit integer in network byteorder
+$request-time   -- The time the request took (seconds)
+$referer        -- The header 'referer' from the request, or '-'.
+$user_agent     -- The header 'User-Agent' from the request, or '-'.
+$user_agent_raw -- Same, but spaces in the name are encoded to %20.
+$user           -- the name of the auth user used, if any
+$user_id        -- A unique user ID, if cookies are supported,
+                   by the client, otherwise '0'
+$cache-status   -- A comma separated list of words (containing no
+                   whitespace) that describes which cache(s) the page
+                   was delivered from:
+                   protcache -- The low-level cache in the HTTP
+                                protocol module.
+                   xsltcache -- The XSLT cache.
+                   pcoderam  -- RXML parse tree RAM cache.
+                   pcodedisk -- RXML parse tree persistent cache.
+                   cachetag  -- No RXML &lt;cache&gt; tag misses.
+                   nocache   -- No hit in any known cache.
 </pre>"), 0, lambda(){ return !query("Log");});
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
