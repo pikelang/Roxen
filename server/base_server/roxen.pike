@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.368 1999/12/11 20:44:42 per Exp $
+ * $Id: roxen.pike,v 1.369 1999/12/15 01:45:50 marcus Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.368 1999/12/11 20:44:42 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.369 1999/12/15 01:45:50 marcus Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2371,7 +2371,7 @@ string decode_charset( string charset, string data )
   if( !cached_decoders[ charset ] )
     cached_decoders[ charset ] = Locale.Charset.decoder( charset );
   data = cached_decoders[ charset ]->feed( data )->drain();
-  cached_decoders[ charset ]->flush();
+  cached_decoders[ charset ]->clear();
   return data;
 }
 
