@@ -183,3 +183,67 @@ spotless:  clean
 
 distribute:	spotless
 	@(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" distribute)
+
+run_autoconf:
+	@(cd $(SRCDIR); pike/$(PIKEVERSION)/src/run_autoconf
+
+weak_cleanup:
+	@for f in `find $(SRCDIR) -type f -name '*~' -print` \
+	  `find $(SRCDIR) -type f -name '.#*' -print` \
+	  `find $(SRCDIR) -type f -name '#*' -print`; do \
+	  echo $$f; rm $$f || exit 1; \
+	done
+
+bump_version:
+	@(cd $(SRCDIR); \
+	  if cvs -q update -dA|egrep '^[CM?]'; then exit 1; else : ; fi; \
+	)
+	@if test -f $(SRCDIR)/server/base_server/roxen.pike.new; then \
+	  echo Deleting old $(SRCDIR)/server/base_server/roxen.pike.new...; \
+	  rm $(SRCDIR)/server/base_server/roxen.pike.new || exit 1; \
+	else : ; fi
+	@(cd $(SRCDIR)/server/base_server; \
+	  build=`sed <roxen.pike -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
+	  newbuild=`echo $$build 1+p|dc`; \
+	  sed <roxen.pike -e'/__roxen_build__/s/$$build/$$newbuild/' >roxen.pike.new; \
+	  checkbuild=`sed <roxen.pike.new -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`;
+	  if test "x$$newbuild" = "x$$checkbuild"; then \
+	    mv -f roxen.pike.new roxen.pike || exit 1; \
+	    echo "Successfull bump to build $$newbuild."; \
+	  else \
+	    echo "Version bump failed: $$newbuild \!= $$checkbuild."; \
+	    exit 1; \
+	  fi; \
+	  version=`sed <roxen.pike -e'/__roxen_version__/s/[^.0-9]*//gp' -ed|head -1`; \
+	  cvs ci -m "Version bumped to $version.$build by bump_version." roxen.pike || exit 1
+	  echo "Roxen $$version.$$build" >../../VERSION
+	)
+	(cd $(SRCDIR); \
+	  cvs tag `cat VERSION | tr 'A-Z.' 'a-z_'`||exit 1; \
+	)
+
+pre_dist: bump_version weak_cleanup run_autoconf depend
+	@(cd pike; $(MAKE) pre_dist)
+
+dist:
+	@if test -f $(SRCDIR)/VERSION; then :; else \
+	  echo 'You need to make pre_dist first!'; \
+	  exit 1; \
+	fi
+	@version=`cat $(SRCDIR)/VERSION | tr 'A-Z.' 'a-z_'`; \
+	if ls -d $$version*; then \
+	  echo Deleting old distributions...; \
+	  rm -rf $$version* || exit 1; \
+	else :; fi; \
+	mkdir $$version; \
+	(cd $(SRCDIR); tar cf - .)|(cd $$version; tar xf -; make dist_clean); \
+	tar cf - $$version | gzip -9 >$$version-nda.tar.gz; \
+	if (cd $$version; make keep_dbapi || exit 1); then \
+	  mv $$version/dbapi.tar . || exit 1; \
+	else :; fi; \
+	(cd $$version; make censor_dbapi); \
+	tar cf - $$version | gzip -9 >$$version.tar.gz; \
+	(cd $$version; make censor_crypto); \
+	tar cf - $$version | gzip -9 >$$version-int.tar.gz; \
+	(cd $$version; tar xf ../dbapi.tar); \
+	tar cf - $$version | gzip -9 >$$version-nda-int.tar.gz
