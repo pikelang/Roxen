@@ -580,7 +580,6 @@ string get_var_form( string s, object mod, object id )
      string tmp="<select name=\""+path+"\">  ";
      foreach( a, string q )
      {
-       werror("theme "+q+" <-> "+var[VAR_VALUE]+"\n");
        if( q == var[VAR_VALUE] )
          tmp += "<option selected value='"+q+"'>"+theme_name(q);
        else
