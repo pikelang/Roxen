@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.10 1998/11/16 22:07:46 nisse Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.11 1999/01/27 01:39:08 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -816,7 +816,7 @@ array register_module()
 void create()
 {
   werror("imap->create\n");
-  defvar("port", PORT, "SMTP port number", TYPE_INT,
+  defvar("port", PORT, "IMAP port number", TYPE_INT,
 	 "Portnumber to listen to. "
 	 "Usually " + PORT + ".\n");
   defvar("timeout", 600, "Max idle time.", TYPE_INT,
