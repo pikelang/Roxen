@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.63 2004/05/23 14:14:40 _cvs_dirix Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.64 2004/05/24 23:13:56 mani Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -1256,19 +1256,6 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
   if(!file)
     RXML.parse_error("No \"script\" argument to the CGI tag.");
   fid->not_query = Roxen.fix_relative( file, id );
-
-#ifdef OLD_RXML_COMPAT
-  foreach(indices(args), string arg )
-  {
-    if(arg[..7] == "default-")
-    {
-      if(!id->variables[arg[8..]])
-        fid->variables[arg[8..]] = args[arg];
-    }
-    else
-      fid->variables[arg] = args[arg];
-  }
-#endif
 
   fid->realfile=0;
   fid->method = "GET";

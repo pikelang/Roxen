@@ -3,7 +3,7 @@
 //
 // The ChiliMoon RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.333 2004/05/16 23:23:13 mani Exp $
+// $Id: rxml.pike,v 1.334 2004/05/24 23:01:08 mani Exp $
 
 
 inherit "rxmlhelp";
@@ -111,10 +111,6 @@ RXML.TagSet rxml_tag_set = class
     }
     misc->rxml_misc = 1;
 
-#if ROXEN_COMPAT <= 1.3
-    if (old_rxml_compat) ctx->compatible_scope = 1;
-#endif
-
     misc[" _ok"] = misc[" _prev_ok"] = 1;
     misc[" _error"] = 200;
     ctx->add_scope ("header", misc[" _extra_heads"] = ([ ]));
@@ -167,8 +163,6 @@ RXML.TagSet rxml_tag_set = class
 
 RXML.Type default_content_type = RXML.t_html (RXML.PXml);
 RXML.Type default_arg_type = RXML.t_text (RXML.PEnt);
-
-int old_rxml_compat;
 
 // A note on tag overriding: It's possible for old style tags to
 // propagate their results to the tags they have overridden (new style
