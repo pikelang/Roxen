@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.11 2001/03/16 15:09:07 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.12 2001/03/19 10:06:29 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -17,6 +17,10 @@ Configuration conf;
 #else
 # define LDAP_WERR(X)
 #endif
+
+// global vars
+string status_connect_server, status_connect_last, ldap_last_error;
+int status_connect_nums;
 
 
 // Module interface functions
@@ -196,23 +200,30 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
   else
     error = catch(con = Protocols.LDAP.client(host));
 
-  if (error)
+  if (error) {
     RXML.run_error("Couldn't connect to LDAP server. "+Roxen.html_encode_string(error[0]));
-
+     ldap_last_error = "Couldn't connect to LDAP server. "+Roxen.html_encode_string(error[0]);
+  }
 
   if(op != "delete" && op != "search") {
     attrvals = read_attrs(args->attr, args->op);
+    //attrvals = read_attrs(args->attr, (args->op == "replace") ? 2 : 0); // ldap->modify with flag 'replace'
     if(intp(attrvals))
       RXML.run_error("Couldn't parse attribute values.");
   }
 
-  int ver = (int)(args->version)||query("ldap_ver");
-  if(ver == 2 || ver == 3)
-    con->ldap_version = ver;
-  if(con->ldap_version == 2 || sizeof(pass))
-    error = catch(sizeof(pass) ? con->bind(args->dn, pass) : con->bind());
-  if(error)
+  int ver = (int)(args->version)||3;
+  if(ver == 2 || sizeof(pass))
+    error = catch(sizeof(pass) ? con->bind(args->dn, pass, ver) : con->bind());
+  if(error || con->error_number()) // trying v2 of LDAP protocol as fallback
+    error = catch(sizeof(pass) ? con->bind(args->dn, pass, 2) : con->bind("","",2));
+  if(error) {
     RXML.run_error("Couldn't bind to LDAP server. "+Roxen.html_encode_string(error[0]));
+    ldap_last_error = "Couldn't bind to LDAP server. "+Roxen.html_encode_string(error[0]);
+  }
+  status_connect_last = host + ", proto" + (string)con->ldap_version + ", "
+			+ ctime(time());
+  status_connect_nums++;
 
   switch (op) {
     case "search":
@@ -243,6 +254,7 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
   if(error) {
     error = Roxen.html_encode_string(sprintf("LDAP operation %s failed. %s",
 	    op, con->error_string()||""));
+    ldap_last_error = error;
     con->unbind();
     RXML.run_error(error);
   }
@@ -386,12 +398,6 @@ void create()
 	 "format "
 	 "<tt>ldap://host:port/basedn??scope?filter?!...</tt>.\n");
 
-  defvar("ldap_ver", 3, "Default LDAP protocol version",
-	 TYPE_INT | VAR_INITIAL,
-	 "The default version of LDAP protocol used by LDAP client "
-	 "for connection to the LDAP server. <br />"
-	 "NOTE: Internal LDAP client isn't smarty, so only explicit "
-	 "protocol version will be used.");
 }
 
 
@@ -401,6 +407,9 @@ void start(int level, Configuration _conf)
 {
   if (_conf)
     conf = _conf;
+  ldap_last_error = "";
+  status_connect_server = "";
+  status_connect_last = "";
 }
 
 string status()
@@ -413,6 +422,13 @@ string status()
     rv += " &lt;emit source='ldap' &gt;&lt/emit&gt; container or upgrade ";
     rv += " Pike to 7.0.236 or newer.</p>\n";
 #endif
+
+    if(status_connect_nums) {
+      rv += "<h2>Connection status</h2>\n";
+      rv += sprintf("<p>Last connected to %s [ %s]<br>Number of connections: %d<br /></p><p>Last error: %s<br /></p>\n",
+                status_connect_server, status_connect_last,
+                status_connect_nums, sizeof(ldap_last_error) ? ldap_last_error : "[none]");
+    }
 
     return rv;
 }
