@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.29 1999/06/25 17:58:12 per Exp $ */
+/* $Id: fonts.pike,v 1.30 1999/08/09 09:35:49 per Exp $ */
 
 #include <module.h>
 
@@ -224,6 +224,7 @@ object get_font(string f, int size, int bold, int italic,
   mixed err;
 
   key = f+size+bold+italic+justification+xspace+yspace;
+
   if(fnt=cache_lookup("fonts", key))
     return fnt;
 
@@ -242,6 +243,13 @@ object get_font(string f, int size, int bold, int italic,
       }
       object f = Image.TTF( values(ttf_font_names_cache[ lower_case(f) ])[0]);
       return TTFWrapper( f(), size );
+    } else if( search( lower_case(f), ".ttf" ) != -1 ) {
+      if( object f = Image.TTF( f ) )
+      {
+        f = TTFWrapper( f(), size );
+        cache_set("fonts", key, f); 
+        return f;
+      }
     }
 #endif
     fnt = Font();
