@@ -337,9 +337,11 @@ object make_text_image(mapping args, object font, string text,string basedir,
     if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
     if(args->xsize) xs=(int)args->xsize; 
     if(args->ysize) ys=(int)args->ysize;
-    background = background->copy(0,0,xs,ys);
+    if(args->scale == "scale")
+      background = background->scale(xs,ys);
+    else
+      background = background->copy(0,0,xs-1,ys-1);
   }
-
 
   xsize = background->xsize();
   ysize = background->ysize();
@@ -459,7 +461,7 @@ object make_text_image(mapping args, object font, string text,string basedir,
 
   background->paste_mask(foreground, text_alpha, xoffset, yoffset);
 
-  if(args->scale)
+  if((float)args->scale != 0.0)
     if((float)args->scale <= 2.0)
       background = background->scale((float)args->scale);
 
