@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.5 1996/12/02 04:32:46 per Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.6 1996/12/08 03:03:43 neotron Exp $";
 #include <module.h>
 
 inherit "module";
@@ -152,6 +152,11 @@ mixed *register_module()
     });
 }
 
+string check_variable(string name, string value)
+{
+  if(name == "mountpoint" && value[-1] != '/')
+    call_out(set, 0, "mountpoint", value+"/");
+}
 
 static string path;
 
