@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.300 2004/05/16 22:18:19 mani Exp $
+// $Id: module.pmod,v 1.301 2004/05/16 23:22:31 mani Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -65,6 +65,7 @@ static object roxen;
 // #define FRAME_DEPTH_DEBUG
 // #define RXML_PCODE_DEBUG
 // #define RXML_PCODE_UPDATE_DEBUG
+// #define RXML_PCODE_COMPACT_DEBUG
 // #define TAGSET_GENERATION_DEBUG
 
 
@@ -73,9 +74,11 @@ static object roxen;
      mapping|object __object_marker = RoxenDebug.ObjectMarker (this)
 #  define MARK_OBJECT_ONLY \
      mapping|object __object_marker = RoxenDebug.ObjectMarker (0)
+#  define DO_IF_RXML_OBJ_DEBUG(X...) X
 #else
 #  define MARK_OBJECT ;
 #  define MARK_OBJECT_ONLY ;
+#  define DO_IF_RXML_OBJ_DEBUG(X...)
 #endif
 
 #ifdef OBJ_COUNT_DEBUG
@@ -323,6 +326,9 @@ class Tag
     frame->flags = this->flags;
     frame->args = args;
     frame->content = zero_type (content) ? nil : content;
+#ifdef RXML_OBJ_DEBUG
+    frame->__object_marker->create (frame);
+#endif
     return frame;
   }
 
@@ -384,6 +390,7 @@ class Tag
     _frame->flags = this->flags|FLAG_UNPARSED;				\
     _frame->args = _args;						\
     _frame->content = _content || "";					\
+    DO_IF_RXML_OBJ_DEBUG (_frame->__object_marker->create (_frame));	\
     DO_IF_DEBUG(							\
       if (_args && ([mapping] (mixed) _args)["_debug_"]) {		\
 	_frame->flags |= FLAG_DEBUG;					\
@@ -622,7 +629,7 @@ class TagSet
   //! imported tag sets will be called in order of precedence; highest
   //! last.
 
-  function(Context:void) eval_finish;
+  //! @decl function(Context:void) eval_finish;
   //! If set, this will be called just before an evaluation of the
   //! given @[RXML.Context] finishes. The callbacks in imported tag
   //! sets will be called in order of precedence; highest last.
@@ -698,6 +705,12 @@ class TagSet
     else
       if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
       else tags[tag->name] = tag;
+    tag->tagset = this_object();
+#ifdef RXML_OBJ_DEBUG
+    // The object marker might not have gotten the proper name from
+    // Tag._sprintf so try to give it a better string now.
+    tag->__object_marker->create (tag);
+#endif
     changed();
   }
 
@@ -723,6 +736,11 @@ class TagSet
 	if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
 	else tags[tag->name] = tag;
       tag->tagset = this;
+#ifdef RXML_OBJ_DEBUG
+      // The object marker might not have gotten the proper name from
+      // Tag._sprintf so try to give it a better string now.
+      tag->__object_marker->create (tag);
+#endif
     }
     changed();
   }
@@ -984,7 +1002,10 @@ class TagSet
   //! context. The parser will collect an @[RXML.PCode] object if
   //! @[make_p_code] is nonzero.
   {
-    return new_context (id)->new_parser (top_level_type, make_p_code);
+    // Soft cast due to circular forward reference.
+    // Will hopefully be resolved with the next generation compiler.
+    return [object(Parser)](mixed)
+      new_context (id)->new_parser (top_level_type, make_p_code);
   }
 
   final Parser `() (Type top_level_type, void|RequestID id, void|int make_p_code)
@@ -1069,7 +1090,7 @@ class TagSet
   static void destroy()
   {
     catch (changed());
-    if (name) SET_TAG_SET (owner, name, generation);
+    if (name && global::this) SET_TAG_SET (owner, name, generation);
   }
 
   static void set_name (Configuration new_owner, string new_name)
@@ -1141,7 +1162,7 @@ class TagSet
     array(function(Context:void)) funs = ({});
     for (int i = sizeof (imported) - 1; i >= 0; i--)
       funs += imported[i]->get_eval_finish_funs();
-    if (eval_finish) funs += ({eval_finish});
+    if (this->eval_finish) funs += ({this->eval_finish});
     // We don't cache in eval_finish_funs; do that only at the top level.
     return funs;
   }
@@ -1234,7 +1255,7 @@ class TagSet
       proc_instrs && mkmultiset (indices (proc_instrs)),
       string_entities,
     }) + imported->get_hash_data() +
-      ({0}) + indices (dep_tag_sets)->get_hash_data();
+      ({0}) + (indices (dep_tag_sets) - ({0}))->get_hash_data();
   }
 
   /*static*/ string tag_set_component_names()
@@ -1335,10 +1356,10 @@ class Value
     // constant in the current request. Note that we can still
     // overcache the returned result; it's up to the user to avoid
     // that with suitable cache tags.
-    array var_chg = ctx->misc->variable_changes;
-    ctx->misc->variable_changes = 0;
+    array rec_chgs = ctx->misc->recorded_changes;
+    ctx->misc->recorded_changes = 0;
     ctx->set_var(var, val, scope_name);
-    ctx->misc->variable_changes = var_chg;
+    ctx->misc->recorded_changes = rec_chgs;
     return type ? type->encode (val) : val;
   }
 
@@ -1636,24 +1657,42 @@ class Context
     if (!scope_name) scope_name = "_";
     if (SCOPE_TYPE vars = scopes[scope_name]) {
       string|int index;
-      if (arrayp (var))
-	if (sizeof (var) > 1) {
-	  index = var[-1];
-	  array(string|int) path = var[..sizeof (var) - 1];
-	  vars = rxml_index (vars, path, scope_name, this);
-	  scope_name += "." + (array(string)) path * ".";
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name}) + var)] = val;
-	}
-	else {
-	  index = var[0];
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name, index}))] = val;
-	}
-      else {
-	index = var;
-	if (mapping var_chg = misc->variable_changes)
-	  var_chg[encode_value_canonic (({scope_name, index}))] = val;
+
+    record_change: {
+	if (arrayp (var))
+	  if (sizeof (var) > 1) {
+	    if (array rec_chgs = misc->recorded_changes)
+	      if (rec_chgs[-1][encode_value_canonic (({scope_name}))])
+		// The scope is added in the same entry. Since we
+		// can't do subindexing reliably in it we have to add
+		// another entry to ensure correct sequence. C.f.
+		// delete_var and VariableChange.add.
+		misc->recorded_changes +=
+		  ({([encode_value_canonic (({scope_name}) + var): val])});
+	      else
+		rec_chgs[-1][encode_value_canonic (({scope_name}) + var)] = val;
+
+	    array(string|int) path = var[..sizeof (var) - 2];
+	    vars = rxml_index (vars, path, scope_name, this_object());
+	    scope_name += "." + (array(string)) path * ".";
+	    index = var[-1];
+	    break record_change;
+	  }
+	  else
+	    index = var[0];
+	else
+	  index = var;
+
+	if (array rec_chgs = misc->recorded_changes)
+	  if (SCOPE_TYPE scope = rec_chgs[-1][encode_value_canonic (({scope_name}))])
+	    // The scope is added in the same entry so we modify it
+	    // with the new variable setting. This is done not only as
+	    // an optimization but also to ensure that VariableChange
+	    // doesn't try to set the variable before the scope is
+	    // installed. C.f. delete_var and VariableChange.add.
+	    scope[index] = val;
+	  else
+	    rec_chgs[-1][encode_value_canonic (({scope_name, index}))] = val;
       }
 
       if (objectp (vars) && vars->`[]=)
@@ -1711,24 +1750,41 @@ class Context
 
     if (!scope_name) scope_name = "_";
     if (SCOPE_TYPE vars = scopes[scope_name]) {
-      if (arrayp (var))
-	if (sizeof (var) > 1) {
-	  array(string|int) path = var[..sizeof (var) - 1];
-	  vars = rxml_index (vars, path, scope_name, this);
-	  scope_name += "." + (array(string)) path * ".";
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name}) + var)] = nil;
-	  var = var[-1];
-	}
-	else {
-	  var = var[0];
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name, var}))] = nil;
-	}
-      else {
-	if (mapping var_chg = misc->variable_changes)
-	  var_chg[encode_value_canonic (({scope_name, var}))] = nil;
-      }
+
+    record_change: {
+	if (arrayp (var))
+	  if (sizeof (var) > 1) {
+	    if (array rec_chgs = misc->recorded_changes)
+	      if (rec_chgs[-1][encode_value_canonic (({scope_name}))])
+		// The scope is added in the same entry. Since we
+		// can't do subindexing reliably in it we have to add
+		// another entry to ensure correct sequence. C.f.
+		// set_var and VariableChange.add.
+		misc->recorded_changes +=
+		  ({([encode_value_canonic (({scope_name}) + var): nil])});
+	      else
+		rec_chgs[-1][encode_value_canonic (({scope_name}) + var)] = nil;
+
+	    array(string|int) path = var[..sizeof (var) - 2];
+	    vars = rxml_index (vars, path, scope_name, this_object());
+	    scope_name += "." + (array(string)) path * ".";
+	    var = var[-1];
+	    break record_change;
+	  }
+	  else
+	    var = var[0];
+
+	if (array rec_chgs = misc->recorded_changes)
+	  if (SCOPE_TYPE scope = rec_chgs[-1][encode_value_canonic (({scope_name}))])
+	    // The scope is added in the same entry so we modify it to
+	    // delete the variable. This is done not only as an
+	    // optimization but also to ensure that VariableChange
+	    // doesn't try to set the variable before the scope is
+	    // installed. C.f. set_var and VariableChange.add.
+	    m_delete (scope, var);
+	  else
+	    rec_chgs[-1][encode_value_canonic (({scope_name, var}))] = nil;
+    }
 
       if (objectp (vars) && vars->_m_delete)
 	([object(Scope)] vars)->_m_delete (var, this, scope_name);
@@ -1821,9 +1877,9 @@ class Context
       }
     else scopes[scope_name] = vars;
 
-    if (mapping var_chg = misc->variable_changes) {
-      CLEANUP_VAR_CHG_SCOPE (var_chg, scope_name);
-      var_chg[encode_value_canonic (({scope_name}))] =
+    if (array rec_chgs = misc->recorded_changes) {
+      CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], scope_name);
+      rec_chgs[-1][encode_value_canonic (({scope_name}))] =
 	mappingp (vars) ? vars + ([]) : vars;
     }
   }
@@ -1866,9 +1922,9 @@ class Context
     else {
       scopes[scope_name] = vars;
 
-      if (mapping var_chg = misc->variable_changes) {
-	CLEANUP_VAR_CHG_SCOPE (var_chg, scope_name);
-	var_chg[encode_value_canonic (({scope_name}))] =
+      if (array rec_chgs = misc->recorded_changes) {
+	CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], scope_name);
+	rec_chgs[-1][encode_value_canonic (({scope_name}))] =
 	  mappingp (vars) ? vars + ([]) : vars;
       }
     }
@@ -1886,9 +1942,9 @@ class Context
     if (outermost) m_delete (hidden, outermost);
     else m_delete (scopes, scope_name);
 
-    if (mapping var_chg = misc->variable_changes) {
-      CLEANUP_VAR_CHG_SCOPE (var_chg, scope_name);
-      var_chg[encode_value_canonic (({scope_name}))] = 0;
+    if (array rec_chgs = misc->recorded_changes) {
+      CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], scope_name);
+      rec_chgs[-1][encode_value_canonic (({scope_name}))] = 0;
     }
   }
 
@@ -1947,9 +2003,9 @@ class Context
   {
     if (value == nil) m_delete (misc, index);
     else misc[index] = value;
-    if (mapping var_chg = misc->variable_changes) {
+    if (array rec_chgs = misc->recorded_changes) {
       if (stringp (index)) index = encode_value_canonic (index);
-      var_chg[index] = value;
+      rec_chgs[-1][index] = value;
     }
   }
 
@@ -1960,8 +2016,8 @@ class Context
   {
     if (value == nil) m_delete (id->misc, index);
     else id->misc[index] = value;
-    if (mapping var_chg = misc->variable_changes)
-      var_chg[encode_value_canonic (({1, index}))] = value;
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({1, index}))] = value;
   }
 
   void set_root_id_misc (mixed index, mixed value)
@@ -1972,8 +2028,24 @@ class Context
   {
     if (value == nil) m_delete (id->root_id->misc, index);
     else id->root_id->misc[index] = value;
-    if (mapping var_chg = misc->variable_changes)
-      var_chg[encode_value_canonic (({2, index}))] = value;
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({2, index}))] = value;
+  }
+
+  void add_p_code_callback (function|string callback, mixed... args)
+  //! If result p-code is collected then a call to @[callback] with
+  //! the given arguments is added to it, so that it will be called
+  //! when the result p-code is reevaluated.
+  //!
+  //! If @[callback] is a string then it's taken to be the name of a
+  //! function to call in the current @[id] object. The string can
+  //! also contain "->" to build index chains. E.g. the string
+  //! "misc->foo->bar" will cause a call to @[id]->misc->foo->bar()
+  //! when the result p-code is evaluated.
+  {
+    if (misc->recorded_changes)
+      // See PCode.process_recorded_changes for details.
+      misc->recorded_changes += ({callback, args, ([])});
   }
 
   static int last_internal_var_id = 0;
@@ -1987,8 +2059,8 @@ class Context
   //!
   //! @note
   //! The "_internal_" scope is currently hidden by default by
-  //! @[list_scope] but otherwise there's no access restriction on it.
-  //! Therefore an end user can get at the variables in that scope
+  //! @[list_scope] but otherwise there are no access restrictions on
+  //! it. Therefore an end user can get at the variables in that scope
   //! directly. On the other hand there's no guarantee that that will
   //! remain possible in the future, so no end user RXML code should
   //! use the "_internal_" scope.
@@ -2005,9 +2077,9 @@ class Context
   //! details). The current scope is used if @[scope_name] is left
   //! out.
   {
-    if (mapping var_chg = misc->variable_changes) {
+    if (array rec_chgs = misc->recorded_changes) {
       if (!scope_name) scope_name = "_";
-      var_chg[encode_value_canonic (({scope_name, var}))] = scopes[scope_name][var];
+      rec_chgs[-1][encode_value_canonic (({scope_name, var}))] = scopes[scope_name][var];
     }
   }
 
@@ -2020,9 +2092,9 @@ class Context
       fatal_error ("Cannot handle plugin tags added at runtime.\n");
 #endif
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
-    if (mapping var_chg = misc->variable_changes)
-      var_chg[encode_value_canonic (({0, tag->flags & FLAG_PROC_INSTR ?
-				      "?" + tag->name : tag->name}))] = tag;
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({0, tag->flags & FLAG_PROC_INSTR ?
+					  "?" + tag->name : tag->name}))] = tag;
     new_runtime_tags->add_tag (tag);
   }
 
@@ -2038,8 +2110,8 @@ class Context
       proc_instr = tag->flags & FLAG_PROC_INSTR;
       tag = tag->name;
     }
-    if (mapping var_chg = misc->variable_changes)
-      var_chg[encode_value_canonic (({0, proc_instr ? "?" + tag : tag}))] = 0;
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({0, proc_instr ? "?" + tag : tag}))] = 0;
     new_runtime_tags->remove_tag (tag, proc_instr);
   }
 
@@ -2069,7 +2141,10 @@ class Context
 
     if (objectp (err)) {
       if (err->is_RXML_break_eval) {
-	if (err->action == "continue") return;
+	if (err->action == "continue") {
+	  TAG_DEBUG (RXML_CONTEXT->frame, "Continuing after RXML break exception\n");
+	  return;
+	}
 	Context ctx = RXML_CONTEXT;
 	if (ctx->frame) {
 	  if (stringp (err->target) ? err->target == ctx->frame->scope_name :
@@ -2086,6 +2161,7 @@ class Context
 	    ctx->frame = 0;
 	    handle_exception (err, evaluator, p_code_error);
 	  }
+	TAG_DEBUG (RXML_CONTEXT->frame, "Rethrowing RXML break exception\n");
 	throw (err);
       }
 
@@ -2111,9 +2187,13 @@ class Context
 	      CompiledError comp_err = CompiledError (err);
 	      p_code_error->add (RXML_CONTEXT, comp_err, comp_err);
 	    }
+	    TAG_DEBUG (RXML_CONTEXT->frame,
+		       "RXML exception %O reported - continuing\n", err);
 	    return;
 	  }
 	}
+	TAG_DEBUG (RXML_CONTEXT->frame,
+		   "Rethrowing RXML exception %O\n", err);
 	throw (err);
       }
     }
@@ -2218,21 +2298,28 @@ class Context
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], scopes[scope_name]});
       scopes["_"] = scopes[scope_name] = vars;
+      if (array rec_chgs = misc->recorded_changes)
+	rec_chgs[-1][encode_value_canonic (({scope_name}))] =
+	  rec_chgs[-1][encode_value_canonic (({"_"}))] =
+	  mappingp (vars) ? vars + ([]) : vars;
     }
     else {
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], 0});
       scopes["_"] = vars;
+      if (array rec_chgs = misc->recorded_changes)
+	rec_chgs[-1][encode_value_canonic (({"_"}))] =
+	  mappingp (vars) ? vars + ([]) : vars;
     }
   }
 
   void leave_scope (Frame|CacheStaticFrame frame)
   {
     if (array(SCOPE_TYPE) back = hidden[frame]) {
-      if (mapping var_chg = misc->variable_changes) {
-	CLEANUP_VAR_CHG_SCOPE (var_chg, "_");
+      if (array rec_chgs = misc->recorded_changes) {
+	CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], "_");
 	if (string scope_name = frame->scope_name)
-	  CLEANUP_VAR_CHG_SCOPE (var_chg, scope_name);
+	  CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], scope_name);
       }
       if (SCOPE_TYPE cur = back[0]) scopes["_"] = cur;
       else m_delete (scopes, "_");
@@ -2260,15 +2347,15 @@ class Context
 
   void direct_add_runtime_tag (string name, Tag tag)
   {
-    if (mapping var_chg = misc->variable_changes)
-      var_chg[encode_value_canonic (({0, name}))] = tag;
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({0, name}))] = tag;
     runtime_tags[name] = tag;
   }
 
   void direct_remove_runtime_tag (string name)
   {
-    if (mapping var_chg = misc->variable_changes)
-      var_chg[encode_value_canonic (({0, name}))] = 0;
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({0, name}))] = 0;
     m_delete (runtime_tags, name);
   }
 
@@ -2528,7 +2615,7 @@ class Backtrace
     error ("Cannot set index %O to %O.\n", i, val);
   }
 
-  string _sprintf(int t) {return "RXML.Backtrace(" + (type || "") + ")";}
+  string _sprintf(int t) {return sprintf ("RXML.Backtrace(%s: %O)", type || "", msg);}
 }
 
 
@@ -2758,10 +2845,11 @@ constant FLAG_GET_EVALED_CONTENT = 0x00040000;
 constant FLAG_DONT_CACHE_RESULT	= 0x00080000;
 //! Keep this frame unevaluated in the p-code produced for a
 //! surrounding frame with @[FLAG_GET_EVALED_CONTENT]. That implies
-//! that all other surrounding frames also remain unevaluated, and
-//! this flag is therefore automatically propagated by the parser into
-//! surrounding frames. The flag is tested after the first evaluation
-//! of the frame has finished.
+//! that all other surrounding frames (that aren't cache static; see
+//! @[FLAG_IS_CACHE_STATIC]) also remain unevaluated, and this flag is
+//! therefore automatically propagated by the parser into surrounding
+//! frames. The flag is tested after the first evaluation of the frame
+//! has finished.
 
 constant FLAG_MAY_CACHE_RESULT	= 0x00100000;
 //! Mostly for internal use to flag that the result may be cached.
@@ -3611,7 +3699,7 @@ class Frame
       ENTER_SCOPE (ctx, this);						\
       if (flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {		\
 	if (!csf) csf = CacheStaticFrame (this->scope_name);		\
-	ctx->misc->variable_changes[csf] = mappingp (vars) ?		\
+	ctx->misc->recorded_changes[-1][csf] = mappingp (vars) ?	\
 	  vars + ([]) : mkmapping (indices (vars), values (vars));	\
       }									\
     }									\
@@ -3623,7 +3711,7 @@ class Frame
       LEAVE_SCOPE (ctx, this);						\
       if (flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {		\
 	if (!csf) csf = CacheStaticFrame (this->scope_name);		\
-	ctx->misc->variable_changes[csf] = 0;				\
+	ctx->misc->recorded_changes[-1][csf] = 0;			\
       }									\
     }									\
   } while (0)
@@ -4482,7 +4570,9 @@ class Frame
 #define CLEANUP do {							\
 	  DO_IF_DEBUG (							\
 	    if (id && ctx->misc != ctx->id->misc->defines)		\
-	      fatal_error ("ctx->misc != ctx->id->misc->defines\n");	\
+	      fatal_error ("ctx->misc != ctx->id->misc->defines\n"	\
+			   "%O != %O\n",				\
+			   ctx->misc, ctx->id->misc->defines);		\
 	  );								\
 	  if (in_args) {						\
 	    args = in_args;						\
@@ -4681,6 +4771,7 @@ final void run_error (string msg, mixed... args)
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
   array bt = backtrace();
+  TAG_DEBUG (RXML_CONTEXT->frame, "Throwing run error: %s", msg);
   throw (Backtrace ("run", msg, RXML_CONTEXT, bt[..sizeof (bt) - 2]));
 }
 
@@ -4692,6 +4783,7 @@ final void parse_error (string msg, mixed... args)
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
   array bt = backtrace();
+  TAG_DEBUG (RXML_CONTEXT->frame, "Throwing parse error: %s", msg);
   throw (Backtrace ("parse", msg, RXML_CONTEXT, bt[..sizeof (bt) - 2]));
 }
 
@@ -5246,7 +5338,7 @@ class Parser
   optional mixed read();
   //! Define to allow streaming operation. Returns the evaluated
   //! result so far, but does not do any more evaluation. Returns
-  //! RXML.nil if there's no data.
+  //! @[RXML.nil] if there's no data.
 
   mixed eval (void|int eval_piece);
   //! Evaluates the data fed so far and returns the result. The result
@@ -5856,9 +5948,10 @@ class Type
   //!   data is only split between (sensibly defined) atomic elements.
   //! @endul
 
-  //! @decl constant mixed empty_value;
+  //! @decl optional constant mixed empty_value;
   //!
-  //! The empty value, i.e. what eval ("") would produce.
+  //! The empty value, i.e. what eval ("") would produce. Must be
+  //! defined for every sequential type.
 
   Type supertype;
   //! The supertype for this type.
@@ -5873,9 +5966,9 @@ class Type
   //! There are however exceptions to the rule above about information
   //! preservation, since it's impossible to satisfy it for
   //! sufficiently generic types. E.g. the type @[RXML.t_any] cannot
-  //! express hardly any value (except @[RXML.nil]) without loss of
-  //! information, but still it should be used as the supertype as the
-  //! last resort if no better alternative exists.
+  //! express any value without loss of information, but still it
+  //! should be used as the supertype as the last resort if no better
+  //! alternative exists.
 
   Type conversion_type;
   //! The type to use as middlestep in indirect conversions. Required
@@ -6103,7 +6196,7 @@ class Type
   string _sprintf(int t)
   {
     return "RXML.Type(" + this->name + ", " +
-      parser_prog->name + ")" + OBJ_COUNT;}
+      (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;}
 }
 
 static class PCacheObj
@@ -6120,9 +6213,10 @@ TAny t_any = TAny();
 //! subtype of this one.
 //!
 //! This type is also special in that any value can be converted to
-//! and from this type without the value getting changed in any way,
-//! which means that the meaning of a value might change when this
-//! type is used as a middle step.
+//! and from this type without the value getting changed in any way
+//! (provided it's representable in the target type), which means that
+//! the meaning of a value might change when this type is used as a
+//! middle step.
 //!
 //! E.g if @tt{"<foo>"@} of type @[RXML.t_text] is converted directly
 //! to @[RXML.t_xml], it's quoted to @tt{"&lt;foo&gt;"@}, since
@@ -6146,12 +6240,52 @@ class TAny
     return val;
   }
 
-  string _sprintf(int t) {return "RXML.t_any(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_any(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
+}
+
+TBottom t_bottom = TBottom();
+//! A sequential type accepting no values. This type is by definition
+//! a subtype of every other type except @[RXML.t_nil].
+//!
+//! Supertype: @[RXML.t_any]
+
+static class TBottom
+{
+  inherit Type;
+  constant name = "bottom";
+  Type supertype = t_any;
+  Type conversion_type = 0;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    type_check_error (msg, args, "This type does not accept any value.\n");
+  }
+
+  Nil encode (mixed val, void|Type from)
+  {
+    type_check (val);
+  }
+
+  int subtype_of (Type other)
+  {
+    return other->name != "nil";
+  }
+
+  string _sprintf(int t)
+  {
+    return "RXML.t_bottom(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TNil t_nil = TNil();
-//! A sequential type accepting only the value nil. This type is by
-//! definition a subtype of every other type.
+//! Type version of @[RXML.nil], i.e. the type that signifies no value
+//! at all (not even the empty value of some type). This type is a
+//! subtype of every other type since all the RXML evaluation
+//! functions can return no value (i.e. @[RXML.nil]) regardless of the
+//! expected type.
 //!
 //! Supertype: @[RXML.t_any]
 
@@ -6159,30 +6293,25 @@ static class TNil
 {
   inherit Type;
   constant name = "nil";
-  constant sequential = 1;
-  Nil empty_value = nil;
   Type supertype = t_any;
   Type conversion_type = 0;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (val != nil)
-      type_check_error (msg, args, "Expected nil, got %t.\n", val);
+    type_check_error (msg, args, "This type can not be used for storage.\n");
   }
 
   Nil encode (mixed val, void|Type from)
   {
-    if (from && from != local::name)
-      val = indirect_convert (val, from);
-#ifdef MODULE_DEBUG
     type_check (val);
-#endif
-    return nil;
   }
 
   int subtype_of (Type other) {return 1;}
 
-  string _sprintf(int t) {return "RXML.t_nil(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_nil(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TSame t_same = TSame();
@@ -6194,7 +6323,10 @@ static class TSame
   constant name = "same";
   Type supertype = t_any;
   Type conversion_type = 0;
-  string _sprintf(int t) {return "RXML.t_same(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_same(" + parser_prog->name + ")" + OBJ_COUNT;
+  }
 }
 
 TType t_type = TType();
@@ -6208,7 +6340,6 @@ static class TType
   inherit Type;
   constant name = "type";
   constant sequential = 0;
-  Nil empty_value = nil;
   Type supertype = t_any;
   Type conversion_type = 0;
   constant handle_literals = 1;
@@ -6239,7 +6370,10 @@ static class TType
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf(int t) {return "RXML.t_type(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_type(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TParser t_parser = TParser();
@@ -6252,7 +6386,6 @@ static class TParser
   inherit Type;
   constant name = "parser";
   constant sequential = 0;
-  Nil empty_value = nil;
   Type supertype = t_any;
   Type conversion_type = 0;
   constant handle_literals = 1;
@@ -6281,7 +6414,10 @@ static class TParser
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf(int t) {return "RXML.t_parser(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_parser(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 // Basic types. Even though most of these have a `+ that fulfills
@@ -6300,7 +6436,6 @@ class TScalar
   inherit Type;
   constant name = "scalar";
   constant sequential = 0;
-  Nil empty_value = nil;
   Type supertype = t_any;
   Type conversion_type = 0;
   constant handle_literals = 1;
@@ -6325,7 +6460,10 @@ class TScalar
     return [string|int|float] val;
   }
 
-  string _sprintf(int t) {return "RXML.t_scalar(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_scalar(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TNum t_num = TNum();
@@ -6369,7 +6507,10 @@ class TNum
     return [int|float] val;
   }
 
-  string _sprintf(int t) {return "RXML.t_num(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_num(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TInt t_int = TInt();
@@ -6410,7 +6551,10 @@ class TInt
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf(int t) {return "RXML.t_int(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_int(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TFloat t_float = TFloat();
@@ -6451,7 +6595,10 @@ class TFloat
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf(int t) {return "RXML.t_float(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_float(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TString t_string = TString();
@@ -6520,7 +6667,10 @@ class TString
   string capitalize (string val) {return String.capitalize (val);}
   //! Converts the first literal character in @[val] to uppercase.
 
-  string _sprintf(int t) {return "RXML.t_string(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_string(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 // Text types:
@@ -6551,7 +6701,10 @@ class TAnyText
   constant free_text = 1;
   constant handle_literals = 0;
 
-  string _sprintf(int t) {return "RXML.t_any_text(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_any_text(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 TText t_text = TText();
@@ -6579,7 +6732,10 @@ class TText
 		 format_short (val), name, describe_error (err));
   }
 
-  string _sprintf(int t) {return "RXML.t_text(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_text(" + (parser_prog?parser_prog->name:"NULL") + ")" + OBJ_COUNT;
+  }
 }
 
 TXml t_xml = TXml();
@@ -6619,6 +6775,10 @@ class TXml
   {
     return charref_decode_parser->clone()->finish ([string] val)->read();
   }
+
+  string decode_charrefs (string val)
+  //! Decodes all character reference entities in @[val].
+    {return tolerant_charref_decode_parser->clone()->finish (val)->read();}
 
   string lower_case (string val)
     {return lowercaser->clone()->finish (val)->read();}
@@ -6733,7 +6893,10 @@ class TXml
     return "&" + entity + ";";
   }
 
-  string _sprintf(int t) {return "RXML.t_xml(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_xml(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 THtml t_html = THtml();
@@ -6755,7 +6918,10 @@ class THtml
 
   constant decode = 0;		// Cover it; not needed here.
 
-  string _sprintf(int t) {return "RXML.t_html(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t)
+  {
+    return "RXML.t_html(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
 }
 
 
@@ -6873,7 +7039,7 @@ class VariableChange (/*static*/ mapping settings)
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
-			   "    Installing cached scope %s with %d variables\n",
+			   "    Installing cached scope %O with %d variables\n",
 			   replace (var[0], ".", ".."), sizeof (settings[encoded_var]));
 #endif
 	      if (SCOPE_TYPE vars = settings[encoded_var])
@@ -6885,7 +7051,7 @@ class VariableChange (/*static*/ mapping settings)
 	    else {
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
-		TAG_DEBUG (ctx->frame, "    Installing cached value for %s: %s\n",
+		TAG_DEBUG (ctx->frame, "    Installing cached value for %O: %s\n",
 			   map ((array(string)) var, replace, ".", "..") * ".",
 			   format_short (settings[encoded_var]));
 #endif
@@ -6903,7 +7069,7 @@ class VariableChange (/*static*/ mapping settings)
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
-			   "    Installing cached runtime tag definition for %s: %O\n",
+			   "    Installing cached runtime tag definition for %O: %O\n",
 			   var[1], settings[encoded_var]);
 #endif
 	      if (Tag tag = settings[encoded_var])
@@ -6917,7 +7083,7 @@ class VariableChange (/*static*/ mapping settings)
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
-			   "    Installing cached id->misc entry: %s: %s\n",
+			   "    Installing cached id->misc entry %O: %s\n",
 			   format_short (var), format_short (settings[encoded_var]));
 #endif
 	      ctx->set_id_misc (var[1], settings[encoded_var]);
@@ -6928,10 +7094,11 @@ class VariableChange (/*static*/ mapping settings)
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
-			   "    Installing cached id->root_id->misc entry: %s: %s\n",
+			   "    Installing cached id->root_id->misc entry %O: %s\n",
 			   format_short (var), format_short (settings[encoded_var]));
 #endif
 	      ctx->set_root_id_misc (var[1], settings[encoded_var]);
+	      break;
 	  }
 
 	  continue handle_var_loop;
@@ -6959,7 +7126,7 @@ class VariableChange (/*static*/ mapping settings)
 
 #ifdef DEBUG
       if (TAG_DEBUG_TEST (ctx->frame))
-	TAG_DEBUG (ctx->frame, "    Installing cached misc entry: %s: %s\n",
+	TAG_DEBUG (ctx->frame, "    Installing cached misc entry %O: %s\n",
 		   format_short (var), format_short (settings[encoded_var]));
 #endif
       ctx->set_misc (var, settings[encoded_var]);
@@ -6968,9 +7135,88 @@ class VariableChange (/*static*/ mapping settings)
     return nil;
   }
 
-  void add (VariableChange later_chg)
+  int add (VariableChange later_chg)
   {
-    settings += later_chg->settings;
+    // Fix any sequence dependecies between the current settings and
+    // later_chg. Return zero if we can't resolve them so that the
+    // entries must remain separate.
+    mapping later_sets = later_chg->settings;
+    foreach (indices (later_sets), mixed encoded_var) {
+      if (stringp (encoded_var)) {
+	mixed var = decode_value (encoded_var);
+	string scope_name;
+	if (arrayp (var) && stringp (scope_name = var[0]) && sizeof (var) > 1)
+	  if (SCOPE_TYPE scope = settings[encode_value_canonic (({scope_name}))]) {
+
+	    // There's a variable change in later_chg in a scope
+	    // that's added in this entry.
+	    if (sizeof (var) > 2)
+	      // Subindexed variable. Since we can't do subindexing
+	      // reliably in it we have to keep the sequence. C.f.
+	      // Context.set_var and Context.delete_var.
+	      return 0;
+	    else {
+	      // Since the scope is added in this object we simply
+	      // modify it for the variable change. C.f.
+	      // Context.set_var and Context.delete_var.
+	      mixed val = later_sets[encoded_var];
+	      if (val == nil)
+		m_delete (scope, var[1]);
+	      else
+		scope[var[1]] = later_sets[encoded_var];
+	      continue;
+	    }
+	  }
+      }
+
+      settings[encoded_var] = later_sets[encoded_var];
+    }
+
+    return 1;
+  }
+
+  void eval_rxml_consts (Context ctx)
+  // This is used to evaluate constant RXML.Value objects before the
+  // p-code is saved so that we don't try to encode the objects
+  // themselves.
+  {
+    foreach (indices (settings), mixed encoded_var)
+      if (stringp (encoded_var)) {
+	mixed var = decode_value (encoded_var);
+
+	if (arrayp (var) && stringp (var[0]))
+	  if (sizeof (var) == 1) {
+	    if (SCOPE_TYPE vars = settings[encoded_var])
+	      foreach (indices (vars), string name) {
+		mixed val = vars[name];
+		if (objectp (val) && val->rxml_const_eval) {
+#ifdef DEBUG
+		  if (TAG_DEBUG_TEST (ctx->frame))
+		    TAG_DEBUG (ctx->frame,
+			       "    Evaluating constant rxml value in scope %s: "
+			       "%s: %s\n", replace (var[0], ".", ".."),
+			       replace (name, ".", ".."), format_short (val));
+#endif
+		  vars[name] = val->rxml_const_eval (ctx, name, var[0]);
+		}
+	      }
+	  }
+
+	  else {
+	    mixed val = settings[encoded_var];
+	    if (objectp (val) && val->rxml_const_eval) {
+#ifdef DEBUG
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame,
+			   "    Evaluating constant rxml value: %s: %s\n",
+			   map ((array(string)) var, replace, ".", "..") * ".",
+			   format_short (val));
+#endif
+	      settings[encoded_var] =
+		val->rxml_const_eval (ctx, var[-1], var[..sizeof (var) - 2] * ".");
+	    }
+	  }
+      }
   }
 
   mapping(string:mixed) _encode() {return settings;}
@@ -7010,6 +7256,48 @@ class VariableChange (/*static*/ mapping settings)
       ind += sprintf (", set misc: %O", var);
     }
     return "RXML.VariableChange(" + ind[2..] + ")" + OBJ_COUNT;
+  }
+}
+
+class CompiledCallback (static function|string callback, static array args)
+// A generic compiled-in callback.
+{
+  constant is_RXML_CompiledCallback = 1;
+  constant is_RXML_encodable = 1;
+  constant is_RXML_p_code_entry = 1;
+
+  mixed get (Context ctx)
+  {
+#ifdef DEBUG
+    if (TAG_DEBUG_TEST (ctx->frame))
+      TAG_DEBUG (ctx->frame,
+		 "    Calling cached callback: %O (%s)\n",
+		 callback, map (args, format_short) * ", ");
+#endif
+    if (stringp (callback)) {
+      mixed obj = ctx->id;
+      foreach (callback / "->", string name) obj = obj[name];
+      ([function] obj) (@args);
+    }
+    else
+      callback (@args);
+    return nil;
+  }
+
+  array _encode() {return ({callback, args});}
+  void _decode (array saved) {[callback, args] = saved;}
+
+  //! @ignore
+  MARK_OBJECT;
+  //! @endignore
+
+  string _sprintf()
+  {
+    if (args)
+      return sprintf ("RXML.CompiledCallback(%O(%s))",
+		      callback, map (args, format_short) * ", ");
+    else
+      return sprintf ("RXML.CompiledCallback(%O, no args)", callback);
   }
 }
 
@@ -7295,13 +7583,18 @@ static class PikeCompile
   string _sprintf(int t) {return "RXML.PikeCompile" + OBJ_COUNT;}
 }
 
+#if defined (RXML_PCODE_COMPACT_DEBUG) && !defined (RXML_PCODE_DEBUG)
+#  define RXML_PCODE_DEBUG
+#endif
+
 #ifdef RXML_PCODE_DEBUG
 #  define PCODE_MSG(X...) do {						\
   Context _ctx_ = RXML_CONTEXT;						\
   Frame _frame_ = _ctx_ && _ctx_->frame;				\
   if (TAG_DEBUG_TEST (!_frame_ || _frame_->flags & FLAG_DEBUG)) {	\
     if (_frame_) report_debug ("%O:   ", _frame_);			\
-    report_debug ("PCode" + OBJ_COUNT + ": " + X);			\
+    report_debug ("PCode(" + (flags & COLLECT_RESULTS ?			\
+			      "res" : "cont") + ")" + OBJ_COUNT + ": " + X); \
   }									\
 } while (0)
 #else
@@ -7427,8 +7720,8 @@ class PCode
       // Yes, the internal interaction between create, reset, the
       // context and CTX_ALREADY_GOT_VC is ugly.
       flags = COLLECT_RESULTS;
-      if (ctx->misc->variable_changes) flags |= CTX_ALREADY_GOT_VC;
-      ctx->misc->variable_changes = ([]);
+      if (ctx->misc->recorded_changes) flags |= CTX_ALREADY_GOT_VC;
+      ctx->misc->recorded_changes = ({([])});
     }
     else flags = 0;
     if (_type) {
@@ -7442,12 +7735,8 @@ class PCode
       flags |= UPDATED;
       protocol_cache_time = -1;
       p_code_comp = _p_code_comp || PikeCompile();
-      if (flags & COLLECT_RESULTS)
-	PCODE_MSG ("create or reset for result collection (with %s %O)\n",
-		   _p_code_comp ? "old" : "new", p_code_comp);
-      else
-	PCODE_MSG ("create or reset for content collection (with %s %O)\n",
-		   _p_code_comp ? "old" : "new", p_code_comp);
+      PCODE_MSG ("create or reset (with %s %O)\n",
+		 _p_code_comp ? "old" : "new", p_code_comp);
     }
   }
 
@@ -7458,6 +7747,11 @@ class PCode
   // between PCode instances.
   /*static*/ array exec;
   /*static*/ int length;
+
+#define EXPAND_EXEC(ELEMS) do {						\
+    if (length + (ELEMS) > sizeof (exec))				\
+      exec += allocate (max ((ELEMS), sizeof (exec)));			\
+  } while (0)
 
   /*static*/ int flags;
   static constant COLLECT_RESULTS = 0x2;
@@ -7481,6 +7775,51 @@ class PCode
   // This is inherited by nested PCode instances to make the
   // compilation units larger.
 
+  static void process_recorded_changes (array rec_chgs, Context ctx)
+  // This processes ctx->misc->recorded_changes, which is used to
+  // record things besides the frames that need to added to result
+  // collecting p-code. The format of ctx->misc->recorded_changes
+  // might change at any time. Currently it's like this:
+  //
+  // ctx->misc->recorded_changes is an array concatenated by any of
+  // the following sequences:
+  //
+  // ({mapping vars})
+  //   The mapping contains various variable and scope changes. It's
+  //   format is dictated by VariableChange.get.
+  //
+  // ({string|function callback, array args})
+  //   A generic function call to be issued when the p-code is
+  //   executed. If the callback is a string, it's the name of a
+  //   function to call in ctx->id. The string can also contain an
+  //   index chain separated with "->" to call something that is
+  //   indirectly referenced from ctx->id.
+  //
+  // Whenever ctx->misc->recorded_changes exists, it has a (possibly
+  // empty) variable mapping as the last entry.
+  {
+    // Note: This function assumes that there are at least
+    // sizeof(rec_chgs) elements available in exec.
+    for (int pos = 0; pos < sizeof (rec_chgs);)
+      if (mappingp (rec_chgs[pos])) {
+	// A variable changes mapping.
+	if (sizeof (rec_chgs[pos])) {
+	  PCODE_MSG ("adding variable changes %s\n", format_short (rec_chgs[pos]));
+	  VariableChange var_chg = VariableChange (rec_chgs[pos]);
+	  var_chg->eval_rxml_consts (ctx);
+	  exec[length++] = var_chg;
+	}
+	pos++;
+      }
+      else {
+	// A callback.
+	PCODE_MSG ("adding callback %O (%s)\n",
+		   rec_chgs[pos], map (rec_chgs[pos + 1], format_short) * ", ");
+	exec[length++] = CompiledCallback (rec_chgs[pos], rec_chgs[pos + 1]);
+	pos += 2;
+      }
+  }
+
   void add (Context ctx, mixed entry, mixed evaled_value)
   {
 #ifdef DEBUG
@@ -7494,19 +7833,17 @@ class PCode
 	// Special case: Poll for changes of the _ok flag, to avoid
 	// widespread compatibility issues with the existing tags.
 	ctx->set_misc (" _ok", ctx->misc[" _prev_ok"] = ctx->misc[" _ok"]);
-      mapping var_chg = ctx->misc->variable_changes;
-      if (length + (sizeof (var_chg) ? 2 : 1) > sizeof (exec))
-	exec += allocate (sizeof (exec));
+      array rec_chgs = ctx->misc->recorded_changes;
+      EXPAND_EXEC (1 + sizeof (rec_chgs));
       exec[length++] = evaled_value;
-      if (sizeof (var_chg)) {
-	PCODE_MSG ("adding variable changes %s\n", format_short (var_chg));
-	exec[length++] = VariableChange (var_chg);
-	ctx->misc->variable_changes = ([]);
+      if (!equal (rec_chgs, ({([])}))) {
+	process_recorded_changes (rec_chgs, ctx);
+	ctx->misc->recorded_changes = ({([])});
       }
     }
     else {
       PCODE_MSG ("adding entry %s\n", format_short (entry));
-      if (length + 1 > sizeof (exec)) exec += allocate (sizeof (exec));
+      EXPAND_EXEC (1);
       exec[length++] = entry;
     }
 
@@ -7541,8 +7878,8 @@ class PCode
 	    // Special case: Poll for changes of the _ok flag, to avoid
 	    // widespread compatibility issues with the existing tags.
 	    ctx->set_misc (" _ok", ctx->misc[" _prev_ok"] = ctx->misc[" _ok"]);
-	  mapping var_chg = ctx->misc->variable_changes;
-	  ctx->misc->variable_changes = ([]);
+	  array rec_chgs = ctx->misc->recorded_changes;
+	  ctx->misc->recorded_changes = ({([])});
 	  if ((frame_flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) !=
 	      FLAG_MAY_CACHE_RESULT)
 	    PCODE_MSG ("frame %O not result cached\n", frame);
@@ -7558,17 +7895,16 @@ class PCode
 	    }
 	    PCODE_MSG ("adding result of frame %O: %s\n",
 		       frame, format_short (evaled_value));
-	    if (length + (sizeof (var_chg) ? 2 : 1) >= sizeof (exec))
-	      exec += allocate (sizeof (exec));
+	    EXPAND_EXEC (1 + sizeof (rec_chgs));
 	    exec[length++] = evaled_value;
-	    if (sizeof (var_chg))
-	      exec[length++] = VariableChange (var_chg);
+	    if (!equal (rec_chgs, ({([])})))
+	      process_recorded_changes (rec_chgs, ctx);
 	    break add_frame;
 	  }
 	}
       }
 
-      if (length + 3 > sizeof (exec)) exec += allocate (sizeof (exec));
+      EXPAND_EXEC (3);
       exec[length] = frame->tag || frame; // To make new frames from.
 #ifdef DEBUG
       if (!stringp (frame->args) && !functionp (frame->args) &&
@@ -7593,8 +7929,13 @@ class PCode
 
       if (frame_flags != frame->flags) {
 	// Must copy the stored frame if we change the flags.
-	if (exec[length]->is_RXML_Tag)
-	  frame = exec[length]->Frame(), frame->tag = exec[length];
+	if (exec[length]->is_RXML_Tag) {
+	  frame = exec[length]->Frame();
+	  frame->tag = exec[length];
+#ifdef RXML_OBJ_DEBUG
+	  frame->__object_marker->create (frame);
+#endif
+	}
 	else
 	  exec[length] = frame = exec[length]->_clone_empty();
 	frame->_restore (exec[length + 2]);
@@ -7611,6 +7952,12 @@ class PCode
     if (p_code) p_code->add_frame (ctx, frame, evaled_value, cache_frame, frame_state);
   }
 
+#ifdef RXML_PCODE_COMPACT_DEBUG
+#  define PCODE_COMPACT_MSG(X...) PCODE_MSG (X)
+#else
+#  define PCODE_COMPACT_MSG(X...) do {} while (0)
+#endif
+
   void finish()
   {
 #ifdef DEBUG
@@ -7626,34 +7973,47 @@ class PCode
       // Install any trailing variable changes. This is useful to
       // catch the last scope leave from a FLAG_IS_CACHE_STATIC
       // optimized frame. With the compaction below it'll therefore
-      // ofter erase an earlier stored scope.
-      mapping var_chg = ctx->misc->variable_changes;
-      ctx->misc->variable_changes = ([]);
-      if (sizeof (var_chg)) {
-	if (length + 1 >= sizeof (exec)) exec += ({0});
-	exec[length++] = VariableChange (var_chg);
+      // often erase an earlier stored scope.
+      array rec_chgs = ctx->misc->recorded_changes;
+      ctx->misc->recorded_changes = ({([])});
+      if (sizeof (rec_chgs)) {
+	EXPAND_EXEC (sizeof (rec_chgs));
+	process_recorded_changes (rec_chgs, ctx);
       }
 
       if (!(flags & CTX_ALREADY_GOT_VC))
-	m_delete (RXML_CONTEXT->misc, "variable_changes");
+	m_delete (RXML_CONTEXT->misc, "recorded_changes");
       PCODE_MSG ("end result collection\n");
-
-      //werror ("before compact: %O\n", exec[..length - 1]);
 
       // Collapse sequences of constants. Could be done when not
       // collecting results too, but it's probably not worth the
       // bother then.
+
+      PCODE_COMPACT_MSG ("  Compact: Start with %O\n", exec[..length - 1]);
+
       int max = length;
       length = 0;
       for (int pos = 0; pos < max; pos++) {
 	mixed item = exec[pos];
+	PCODE_COMPACT_MSG ("  Compact: Got %O at %d\n", item, pos);
 
       process_entry: {
+	  VariableChange var_chg = 0;
+
 	  if (objectp (item))
 	    if (item->is_RXML_p_code_frame) {
-	      exec[length++] = exec[pos++];
-	      exec[length++] = exec[pos++];
-	      break process_entry;
+	      PCODE_COMPACT_MSG ("  Compact: Moving frame at %d..%d to %d..%d\n",
+				 pos, pos + 2, length + 2);
+	      exec[length++] = item;
+	      exec[length++] = exec[++pos];
+	      exec[length++] = exec[++pos];
+	      continue;
+	    }
+	    else if (item->is_RXML_VariableChange) {
+	      var_chg = item;
+	      // Ignore it in the `+ below.
+	      PCODE_COMPACT_MSG ("  Compact: Removing VariableChange at %d\n", pos);
+	      exec[pos] = nil;
 	    }
 	    else if (item->is_RXML_p_code_entry)
 	      break process_entry;
@@ -7661,16 +8021,26 @@ class PCode
 	      continue;
 
 	  int end = pos + 1;
-	  VariableChange var_chg = 0;
 	  while (end < max) {
 	    item = exec[end];
+	    PCODE_COMPACT_MSG ("  Compact sequence: Got %O at %d\n", item, end);
 	    if (objectp (item))
 	      if (item->is_RXML_VariableChange) {
 		// Try to compact VariableChange entries separated by
 		// constants.
-		if (var_chg) var_chg->add (item);
+		if (var_chg) {
+		  if (!var_chg->add (item)) {
+		    PCODE_COMPACT_MSG ("  Compact sequence: Adding %O to %O failed\n",
+				       item, var_chg);
+		    break;
+		  }
+		  PCODE_COMPACT_MSG ("  Compact sequence: Added %O to %O\n",
+				     item, var_chg);
+		}
 		else var_chg = item;
-		exec[end] = nil; // Ignore in the `+ below.
+		// Ignore it in the `+ below.
+		PCODE_COMPACT_MSG ("  Compact: Removing VariableChange at %d\n", end);
+		exec[end] = nil;
 	      }
 	      else if (var_chg && item != nil)
 		// Do not allow a VariableChange to switch places with
@@ -7682,19 +8052,25 @@ class PCode
 	    end++;
 	  }
 
-	  if (pos + !!var_chg < --end)
-	    exec[length++] = `+ (@exec[pos..end]);
-	  else
-	    exec[length++] = exec[pos];
+	  item = `+(@exec[pos..--end]);
+	  PCODE_COMPACT_MSG ("  Compact: Loop done - concatenating %d..%d to %O\n",
+			     pos, end, item);
 	  pos = end;
-	  if (var_chg) exec[length++] = var_chg;
-	  continue;
+
+	  if (var_chg) {
+	    PCODE_COMPACT_MSG ("  Compact: Adding VariableChange at %d\n",
+			       var_chg, length);
+	    exec[length++] = var_chg;
+	  }
+
+	  if (item == nil) continue;
 	}
 
-	exec[length++] = exec[pos];
+	PCODE_COMPACT_MSG ("  Compact: Adding %O at %d\n", item, length);
+	exec[length++] = item;
       }
 
-      //werror ("after compact: %O\n", exec[..length - 1]);
+      PCODE_COMPACT_MSG ("  Compact: Done at %d, got %O\n", max, exec[..length - 1]);
     }
 
     else {
@@ -7775,8 +8151,13 @@ class PCode
 		  exec[pos + 1] = 0;
 		}
 		else {
-		  if (item->is_RXML_Tag)
-		    frame = item->Frame(), frame->tag = item;
+		  if (item->is_RXML_Tag) {
+		    frame = item->Frame();
+		    frame->tag = item;
+#ifdef RXML_OBJ_DEBUG
+		    frame->__object_marker->create (frame);
+#endif
+		  }
 		  else frame = item->_clone_empty();
 		  frame->_restore (exec[pos + 2]);
 		}
@@ -7996,7 +8377,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 4.0;
+  constant P_CODE_VERSION = 5.2;
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
@@ -8057,8 +8438,13 @@ class PCode
       mixed item = exec[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
 	Frame frame;
-	if (item->is_RXML_Tag)
-	  exec[pos + 1] = frame = item->Frame(), frame->tag = item;
+	if (item->is_RXML_Tag) {
+	  exec[pos + 1] = frame = item->Frame();
+	  frame->tag = item;
+#ifdef RXML_OBJ_DEBUG
+	  frame->__object_marker->create (frame);
+#endif
+	}
 	else
 	  exec[pos + 1] = frame = item->_clone_empty();
 	frame->_restore (exec[pos + 2]);
@@ -8171,6 +8557,9 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	  [string ignored, Tag tag, mixed saved] = what;
 	  Frame frame = tag->Frame();
 	  frame->tag = tag;
+#ifdef RXML_OBJ_DEBUG
+	  frame->__object_marker->create (frame);
+#endif
 	  frame->_restore (saved);
 	  ENCODE_DEBUG_RETURN (frame);
 	}
@@ -8243,6 +8632,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
       ENCODE_MSG ("objectof (%O)\n", what);
       switch (what) {
 	case "nil": ENCODE_DEBUG_RETURN (nil);
+	case "empty": ENCODE_DEBUG_RETURN (empty);
 	case "RXML": ENCODE_DEBUG_RETURN (rxml_module);
 	case "utils": ENCODE_DEBUG_RETURN (utils);
 	case "xtp": ENCODE_DEBUG_RETURN (xml_tag_parser);
@@ -8355,6 +8745,8 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 
       else if(what == nil)
 	ENCODE_DEBUG_RETURN ("nil");
+      else if(what == empty)
+	ENCODE_DEBUG_RETURN ("empty");
       else if (what == rxml_module)
 	ENCODE_DEBUG_RETURN ("RXML");
       else if(what == utils)
@@ -8394,8 +8786,8 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	  // If the program also is a function the encoder won't dump
 	  // the byte code, but instead the parent object and the
 	  // identifier within it.
-	  ENCODE_MSG ("  encoding reference to program %O->%O\n",
-		      function_object (what), what);
+	  ENCODE_MSG ("  encoding reference to program %O in object %O\n",
+		      what, function_object (what));
 	  return UNDEFINED;
 	}
       }
@@ -8404,7 +8796,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 
       if (object o = functionp (what) && function_object (what))
 	if (o->is_RXML_encodable) {
-	  ENCODE_MSG ("  encoding reference to function %O->%O\n", o, what);
+	  ENCODE_MSG ("  encoding reference to function %O in object %O\n", what, o);
 	  return UNDEFINED;
 	}
     }
@@ -8424,9 +8816,9 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
       if (object o = function_object (what)) {
 	s = sprintf ("%O", o);
 	if (s == "object") s = "";
-	else s += "->";
+	else s = " in object " + s;
       }
-      error ("Cannot encode function %s%O at %s.\n", s, what, Function.defined (what));
+      error ("Cannot encode function %O%s at %s.\n", what, s, Function.defined (what));
     }
     else
       error ("Cannot encode %O.\n", what);
@@ -8518,19 +8910,21 @@ ignored; it will disappear the next time the page is evaluated.\n";
 
 // Some parser tools:
 
-Nil nil = Nil();
-//! An object representing the empty value. Works as initializer for
-//! sequences, since nil + anything == anything + nil == anything. It
-//! can cast itself to the empty value for the basic Pike types. It
-//! also evaluates to false in a boolean context, but it's not equal
-//! to 0.
+Empty empty = Empty();
+//! An object representing the empty value for @[RXML.t_any]. It works
+//! as initializer for sequences, since @[RXML.empty] + anything ==
+//! anything + @[RXML.empty] == anything. It can cast itself to the
+//! empty value for the basic Pike types.
+//!
+//! @note
+//! As opposed to @[RXML.nil], it's not false in a boolean context.
 
-static class Nil
+static class Empty
 {
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this;}
   mixed ``+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this;}
-  int `!() {return 1;}
-  string _sprintf(int t) {return "RXML.nil";}
+  string _sprintf(int t) {return "RXML.empty";}
+
   mixed cast(string type)
   {
     switch(type)
@@ -8548,10 +8942,34 @@ static class Nil
     case "mapping":
       return ([]);
     default:
-      fatal_error ("Cannot cast RXML.nil to "+type+".\n");
+      fatal_error ("Cannot cast %O to %s.\n", this, type);
     }
   }
-};
+}
+
+Nil nil = Nil();
+//! An object representing no value. It evaluates to false in a
+//! boolean context, but it's not equal to 0. There's no semantic
+//! difference between assigning this to a variable and removing the
+//! variable binding altogether.
+//!
+//! Like @[RXML.empty], it holds that nil + anything == anything + nil
+//! == anything, on the principle that the @code{+@} operator in
+//! essence is called with one argument in those cases. This avoids
+//! special handling of tags that return no result in sequential
+//! types.
+//!
+//! For compatibility, @[RXML.nil] can be cast to the empty value for
+//! the basic Pike types.
+static class Nil
+{
+  // Only inherit implementation; there's no type-wise significance
+  // whatsoever of this inherit.
+  inherit Empty;
+
+  int `!() {return 1;}
+  string _sprintf() {return "RXML.nil";}
+}
 
 Nil Void = nil;			// Compatibility.
 
@@ -8559,7 +8977,7 @@ mixed add_to_value (Type type, mixed value, mixed piece)
 //! Adds @[piece] to @[value] according to @[type]. If @[type] is
 //! sequential, they're concatenated with @[`+]. If @[type] is
 //! nonsequential, either @[value] or @[piece] is returned if the
-//! other is @[RXML.nil] and an error is thrown if neither are nil.
+//! other is @[RXML.nil] and an error is thrown if neither is nil.
 {
   if (type->sequential)
     return value + piece;
@@ -8629,7 +9047,7 @@ class ScanStream
   }
 
   mixed read()
-  //! Returns the next token, or RXML.nil if there's no more data.
+  //! Returns the next token, or @[RXML.nil] if there's no more data.
   {
     while (head->next)
       if (next_token >= sizeof (head->data)) {
@@ -8696,7 +9114,8 @@ static Type splice_arg_type;
 
 static object/*(Parser.HTML)*/ xml_tag_parser;
 static object/*(Parser.HTML)*/
-  charref_decode_parser, lowercaser, uppercaser, capitalizer;
+  charref_decode_parser, tolerant_charref_decode_parser,
+  lowercaser, uppercaser, capitalizer;
 
 static void init_parsers()
 {
@@ -8709,6 +9128,28 @@ static void init_parsers()
   p->match_tag (0);
   xml_tag_parser = p;
 
+#define TRY_DECODE_CHREF(CHREF) do {					\
+    if (sizeof (CHREF) && CHREF[0] == '#')				\
+      if ((<"#x", "#X">)[CHREF[..1]]) {					\
+	if (sscanf (CHREF, "%*2s%x%*c", int c) == 2)			\
+	  return ({(string) ({c})});					\
+      }									\
+      else								\
+	if (sscanf (CHREF, "%*c%d%*c", int c) == 2)			\
+	  return ({(string) ({c})});					\
+  } while (0)
+
+  p = Parser_HTML();
+  p->lazy_entity_end (1);
+  p->add_entities (Roxen->parser_charref_table);
+  p->_set_entity_callback (
+    lambda (object/*(Parser.HTML)*/ p) {
+      string chref = p->tag_name();
+      TRY_DECODE_CHREF (chref);
+      return ({p->current()});
+    });
+  tolerant_charref_decode_parser = p;
+
   // Pretty similar to PEnt..
   p = Parser_HTML();
   p->lazy_entity_end (1);
@@ -8716,14 +9157,7 @@ static void init_parsers()
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p) {
       string chref = p->tag_name();
-      if (sizeof (chref) && chref[0] == '#')
-	if ((<"#x", "#X">)[chref[..1]]) {
-	  if (sscanf (chref, "%*2s%x%*c", int c) == 2)
-	    return ({(string) ({c})});
-	}
-	else
-	  if (sscanf (chref, "%*c%d%*c", int c) == 2)
-	    return ({(string) ({c})});
+      TRY_DECODE_CHREF (chref);
       parse_error ("Cannot decode character entity reference %O.\n", p->current());
     });
   catch(add_efun((string)map(({5,16,0,4}),`+,98),lambda(){
