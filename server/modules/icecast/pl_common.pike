@@ -26,6 +26,9 @@ Stdio.File recode( Stdio.File fd, int bitrate )
     case "mpg123":
       args = ({ decoder,  "-s",  "-" });
       break;
+    case "amp":
+      args = ({ decoder,  "-c",  "-", "-" });
+      break;
     case "null":
       args = 0;
   }
@@ -53,7 +56,7 @@ Stdio.File recode( Stdio.File fd, int bitrate )
     case "bladeenc":
       array mono = ({});
       if( bitrate < 128 ) mono = ({ "-mono" });
-      args = ({ codec, "-"+(string)bitrate, "-progress=0", @mono})
+      args = ({ codec, "-"+(string)bitrate, "-progress=0", @mono,
 		"STDIN","STDOUT" });
       break;
   }
@@ -104,7 +107,7 @@ void codec_vars(function defvar)
 	 ({ "null", "bladeenc" }) );
   defvar("decoder", "null", _(0,"Decoder"), TYPE_STRING_LIST,
 	 _(0,"The decoder program to use to decode MPEG"),
-	 ({ "null", "mpg123" }) );
+	 ({ "null", "mpg123", "amp" }) );
   defvar("bitrate", 128, _(0,"Bitrate"), TYPE_INT,
 	 _(0,"The bitrate to use when recoding") );
 };
