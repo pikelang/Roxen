@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.37 1998/06/13 20:30:43 neotron Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.38 1998/06/26 14:53:32 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -16,6 +16,13 @@ inherit "roxenlib";
 #define SERIOUS
 //#define HTACCESS_DEBUG
 
+#ifdef HTACCESS_DEBUG
+#define TRACE_ENTER(A,B) do{if(id->misc->trace_enter)id->misc->trace_enter((A),(B));}while(0)
+#define TRACE_LEAVE(A) do{if(id->misc->trace_leave)id->misc->trace_leave((A));}while(0)
+#else /* !HTACCESS_DEBUG */
+#define TRACE_ENTER(A,B)
+#define TRACE_LEAVE(A)
+#endif /* HTACCESS_DEBUG */
 
 array *register_module()
 {
@@ -494,15 +501,21 @@ mapping|string|int htaccess(mapping access, object id)
 
   string htaccess, aname, userfile, tmp2, groupfile, hname, method, errorfile;
 
+  TRACE_ENTER("htaccess->htaccess()", access);
+
   if(access->redirect)
   {
     string from, to;
 
-    if(sscanf(access->redirect, "%s %s", from, to) < 2)
+    if(sscanf(access->redirect, "%s %s", from, to) < 2) {
+      TRACE_LEAVE("redirect (access->redirect)");
       return http_redirect(access->redirect,id);
+    }
 
-    if(search(id->not_query, from) + 1)
+    if(search(id->not_query, from) + 1) {
+      TRACE_LEAVE("redirect");
       return http_redirect(to,id);
+    }
   }
 
   if(id->remoteaddr)
@@ -520,6 +533,8 @@ mapping|string|int htaccess(mapping access, object id)
   werror("HTACCESS: Verifying access.\n");
 #endif
 
+  TRACE_ENTER("Checking method", id->method);
+
   if(!access[method = lower_case(id->method)])
   {
     if(access->all)
@@ -527,7 +542,16 @@ mapping|string|int htaccess(mapping access, object id)
     else switch(method)
     {
     case "list":
+    case "dir":
+      if (access->list) {
+	method = "list";
+	break;
+      } else if (access->dir) {
+	method = "dir";
+	break;
+      }
     case "head":
+    case "cwd":
     case "post":
       if (access->get) {
 	method = "get";
@@ -538,13 +562,19 @@ mapping|string|int htaccess(mapping access, object id)
 	method = "head";
 	break;
       }
+      TRACE_LEAVE("Method GET not specified!");
+      TRACE_LEAVE("Assumed OK");
       return 0;
       
     case "put": case "delete":
     default:
+      TRACE_LEAVE("Unknown method or PUT or DELETE");
+      TRACE_LEAVE("Assumed denied");
       return 1;
     }
   }
+
+  TRACE_LEAVE("Method to use:"+method);
   
   if(!access[method]->allow && !access[method]->deny)
     hok = 1;
@@ -563,10 +593,14 @@ mapping|string|int htaccess(mapping access, object id)
 	  allowed(access[method]->deny, hname, id->remoteaddr, 1));
   if(!hok && access[method]->all == 1)
   {
-    if(hname == id->remoteaddr)
+    if(hname == id->remoteaddr) {
+      TRACE_LEAVE("2");
       return 2;
+    }
+    TRACE_LEAVE("1");
     return 1;
   } else if(hok && access[method]->all == -1) {
+    TRACE_LEAVE("0");
     return 0;
   }
 #ifdef HTACCESS_DEBUG
@@ -584,6 +618,7 @@ mapping|string|int htaccess(mapping access, object id)
 #ifdef HTACCESS_DEBUG
       werror("HTACCESS: No authification string from client.\n");
 #endif
+      TRACE_LEAVE("No auth");
       return validate(aname);
     } else {
       string *auth;
@@ -602,16 +637,20 @@ mapping|string|int htaccess(mapping access, object id)
 	werror("HTACCESS: User access ok!\n");
 #endif
 	id->auth = ({ 1, auth[0], 0 });
+
+	TRACE_LEAVE("OK");
 	return 0;
       } else {
 #ifdef HTACCESS_DEBUG
 	werror("HTACCESS: User access denied, invalid user.\n");
 #endif
 	id->auth = ({ 0, auth[0], auth[1] });
+	TRACE_LEAVE("Invalid user");
 	return validate(aname);
       }
     }
   }
+  TRACE_LEAVE("OK");
 }
 
 inline string dot_dot(string from)
@@ -759,11 +798,14 @@ mapping try_htaccess(object id)
   mixed tmp;
   mapping access = ([]);
 
+  TRACE_ENTER("htaccess->try_htaccess()", 0);
+
   if(!(tmp = find_htaccess_file(id)))
   {
 #ifdef HTACCESS_DEBUG
     werror("HTACCESS: No htaccess file for "+id->not_query+"\n");
 #endif
+    TRACE_LEAVE("No htaccess file.");
     return 0;
   }
 
@@ -791,6 +833,9 @@ mapping try_htaccess(object id)
 	  }
 	}
 	id->misc->error_code = 403;
+
+	TRACE_LEAVE("Access Denied (1)");
+
 	return http_low_answer(403, file || 
 			       ("<title>Access Denied</title>"
 				"<h2 align=center>Access Denied</h2>"));
@@ -799,6 +844,9 @@ mapping try_htaccess(object id)
 
       else if(ret == 2) {
 	id->misc->error_code = 403;
+
+	TRACE_LEAVE("Access Denied (2)");
+
 	return http_low_answer(403, "<title>Access Denied</title>"
 			       "<h2 align=center>Access Denied</h2>"
 			       "<h3>The server hadn't resolved your "
@@ -824,6 +872,9 @@ mapping try_htaccess(object id)
 	  }
 	}
 	id->misc->error_code = ret->error || 403;
+
+	TRACE_LEAVE("Access Denied (mapping)");
+
 	return  (["data":file || 
 		 ("<title>Access Denied</title>"
 		  "<h2 align=center>Access forbidden by user</h2>") ]) 
@@ -832,35 +883,49 @@ mapping try_htaccess(object id)
     } else
       id->misc->auth_ok = 1;
   }
+
+  TRACE_LEAVE("OK");
 }
 
 mapping last_resort(object id)
 {
   mapping access_violation;
+
+  TRACE_ENTER("htaccess->last_resort()", 0);
+
   if(strlen(id->not_query)&&id->not_query[0]=='/')
-    if(access_violation = htaccess_no_file( id ))
+    if(access_violation = htaccess_no_file( id )) {
+      TRACE_LEAVE("Access violation");
       return access_violation;
+    }
+  TRACE_LEAVE("OK");
 }
 
 mapping remap_url(object id)
 {
   mapping access_violation;
 
+  TRACE_ENTER("htaccess->remap_url()", 0);
+
   if(strlen(id->not_query)&&id->not_query[0]=='/')
   {
     access_violation = try_htaccess( id );
-    if(access_violation)
+    if(access_violation) {
+      TRACE_LEAVE("Access violation");
       return access_violation;
-    else {
+    } else {
 
       string s = (id->not_query/"/")[-1];
       if (search(QUERY(denyhtlist), s) != -1) {
 	werror("Denied access for "+s+"\n");
 	id->misc->error_code = 401;
+	TRACE_LEAVE("Access Denied");
 	return http_low_answer(401, "<title>Access Denied</title>"
 			       "<h2 align=center>Access Denied</h2>");
       }
     }
   }
+  TRACE_LEAVE("OK");
 }
+
 
