@@ -136,7 +136,7 @@ string selected_item( string q, Configuration c, RequestID id,
       if( onlysel )
       {
 	pre += ("\n<tr><td valign='top'><img src=\"&usr."+
-		sel+"-indicator;\" width='12' height='12' alt='' /></td>"
+		sel+"-indicator;\" vspace='3' width='12' height='12' alt='' /></td>"
 		"<td>");
 	if( !do_js )
 	  pre += "<a "+
@@ -149,7 +149,7 @@ string selected_item( string q, Configuration c, RequestID id,
       {
 	pre += ("\n<tr><td valign='top'>"
 		"<img src=\"&usr."+sel+"-indicator;\" width='12'"
-		" height='12' alt='' /></td>"
+		" vspace='3' height='12' alt='' /></td>"
 		"<td>"+Roxen.html_encode_string(group_name)+":<br />\n");
 	pre += "<table cellspacing='0' cellpadding='0'>\n";
 	fin = 1;
@@ -163,18 +163,18 @@ string selected_item( string q, Configuration c, RequestID id,
 	if( data->sname != module )
 	  pre += ("\n<tr><td valign='top'>"
 		  "<img src=\"&usr.item-indicator;\" width='12' "
-		  "height='12' alt='' /></td>"
+		  "height='12' vspace='3' alt='' /></td>"
 		  "<td><a href=\""+quoted_url+
 		  Roxen.http_encode_string(group_name)+"!0/"+data->sname+
 		  "/\">"+Roxen.html_encode_string(data->name)+
-		  "</a>"+(data->locked?" <img src='internal-roxen-padlock'/>":
+		  "</a>"+(data->locked?" <imgs src='internal-roxen-padlock'/>":
 			               "")+"</td></tr>\n");
 	else
 	  pre += ("\n<tr><td valign='top'>"
 		  "<img src=\"&usr.selected-indicator;\" width='12' "
-		  "height='12' alt='' /></td>"
+		  "height='12' vspace='3' alt='' /></td>"
 		  "<td><b>" + Roxen.html_encode_string(data->name) +
-		  "</b>"+(data->locked?" <img src='internal-roxen-padlock'/>":
+		  "</b>"+(data->locked?" <imgs src='internal-roxen-padlock'/>":
 			               "")+"</td></tr>\n");
       }
     else
@@ -193,11 +193,12 @@ string selected_item( string q, Configuration c, RequestID id,
 	
 	foreach( gd[1], mapping data )
 	  pre += ("\n<img src=\"&usr.item-indicator;\" width='12' "
-		  "height='12' alt='' />"
+		  "height='12' vspace='1' alt='' />"
 		  "<a href=\""+quoted_url+
 		  Roxen.http_encode_string(group_name)+"!0/"+data->sname+
-		  "/\">"+Roxen.html_encode_string(data->name)+
-		  "</a>"+(data->locked?" <img src='internal-roxen-padlock'/>":
+		  "/\">"+
+		  replace(Roxen.html_encode_string(data->name), " ", "&nbsp;")+
+		  "</a>"+(data->locked?" <imgs src='internal-roxen-padlock'/>":
 			               "")+"<br />");
 	pre += "</td>\n</tr></table></td>\n</tr>\n</table>";
 	pre += "\n</js-popup>\n";
