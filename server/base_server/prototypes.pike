@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.89 2004/04/29 14:39:35 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.90 2004/04/29 19:30:01 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -167,8 +167,8 @@ class DAVLock(string locktoken,
 	      void|string owner,
 	     )
 //! Container for information about outstanding DAV write locks. No
-//! field may change after the object has been created since
-//! filesystem modules might store this info persistently.
+//! field except @[owner] may change after the object has been created
+//! since filesystem modules might store this info persistently.
 {
   //! @decl string locktoken;
   //!
@@ -210,6 +210,9 @@ class DAVLock(string locktoken,
   //!
   //! The owner identification (RFC 2518 12.10), or zero if unknown.
   //! The content is XML in string form.
+  //!
+  //! @[RoxenModule.lock_file] may set this if it's zero, otherwise
+  //! it shouldn't change.
 }
 
 class Configuration
@@ -1548,18 +1551,15 @@ class RoxenModule
   multiset(DAVLock) find_all_locks(string path,
 				   int(0..1) recursive,
 				   RequestID id);
-  DAVLock|int(-1..1) find_user_lock(string path, string user, RequestID id);
-  multiset(DAVLock)|int(-1..1) recur_find_user_locks(string path,
-						     string user,
-						     RequestID id);
-  void register_lock(string path, DAVLock lock, string user);
-  DAVLock|mapping(string:mixed) lock_file(string path,
-					  string locktype,
-					  string lockscope,
-					  string locktoken,
-					  int(0..1) recursive,
-					  string user,
-					  RequestID id);
+  DAVLock|int(-2..1) check_locks(string path,
+				 int(0..1) recursive,
+				 RequestID id);
+  mapping(string:mixed)|int(0..1) lock_file(string path,
+					    DAVLock lock,
+					    RequestID id);
+  mapping(string:mixed) unlock_file (string path,
+				     DAVLock lock,
+				     RequestID id);
   mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 							RequestID id);
   mapping(string:mixed) delete_file(string path, RequestID id);
