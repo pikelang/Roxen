@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.10 1999/11/21 04:02:38 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.11 1999/11/21 14:56:54 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -51,7 +51,7 @@ mapping tagdocumentation() {
   if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
   int start=__LINE__;
   /*
- ([ "accessed":#"<desc>Generates an access counter that shows how many
+ ([ "accessed":#"<desc type=tag>Generates an access counter that shows how many
  times the page has been accessed. A file, AccessedDB, in the logs directory is used to
  store the number of accesses to each page. By default the access count is
  only kept for files that actually contain an accessed-tag,
@@ -96,7 +96,7 @@ mapping tagdocumentation() {
  virtual filesystem.
 
  One limitation is that you cannot reference a file that does not
- have its own &lt;accessed&gt; tag. You can use &lt:accessed
+ have its own &lt;accessed&gt; tag. You can use &lt;accessed
  silent&gt; on a page if you want it to be possible to count accesses
  to it, but don't want an access counter to show on the page itself.
 </attr>
@@ -136,7 +136,7 @@ mapping tagdocumentation() {
  related attributes can be used. See the &lt;date&gt; tag.
 </attr>
 
-<attr type=number,string,roman,iso,discordian,stardate,mcdonalds,linus,ordered>
+<attr name=type value=number,string,roman,iso,discordian,stardate,mcdonalds,linus,ordered>
  Specifies how the count are to be presented. Some of these are only
  useful together with the since attribute.</attr>"])
   */
