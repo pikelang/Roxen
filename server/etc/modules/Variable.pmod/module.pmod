@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.57 2001/06/27 20:58:35 nilsson Exp $
+// $Id: module.pmod,v 1.58 2001/07/31 09:32:27 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1212,29 +1212,28 @@ class PortList
   {
     string res = "<input type=hidden name='"+prefix+"' value='"+prefix+"' />";
 
-    array split = val/"://";
+    Standards.URI split = Standards.URI( val );
 
     res += "<select name='"+prefix+"prot'>";
     foreach( sort(indices( roxenp()->protocols )), string p )
     {
-      if( p == split[0] )
+      if( p == split->scheme )
 	res += "<option selected='t'>"+p+"</option>";
       else
 	res += "<option>"+p+"</option>";
     }
     res += "</select>";
 
-    split = split[-1]/"/";
-    if( sizeof( split ) > 2 )
-      split[1] = split[1..]*"/";
-    else if( sizeof( split ) < 2 )
-      split += ({ "" });
-
+    if( split->scheme == "fhttp" && !split->port )
+      split->port = 80;
+    
     res += "://<input type=string name='"+prefix+"host' value='"+
-           Roxen.html_encode_string(split[0])+"' />";
+           Roxen.html_encode_string(split->host)+"' />";
+    res += ":<input type=string size=5 name='"+prefix+"port' value='"+
+             split->port+"' />";
 
     res += "/<input type=string name='"+prefix+"path' value='"+
-      Roxen.html_encode_string(split[1])+"' />";
+      Roxen.html_encode_string(split->path[1..])+"' />";
     
     return res;
   }
@@ -1242,9 +1241,8 @@ class PortList
   string transform_from_form( string v, mapping va )
   {
     if( v == "" ) return "http://*/";
-    
     v = v[strlen(path())..];
-    return va[v+"prot"]+"://"+va[v+"host"]+"/"+va[v+"path"];
+    return (string)Standards.URI(va[v+"prot"]+"://"+va[v+"host"]+":"+va[v+"port"]+"/"+va[v+"path"]);
   }
 
   array verify_set_from_form( array(string) new_value )

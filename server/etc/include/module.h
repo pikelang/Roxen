@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.52 2001/06/25 19:20:24 mast Exp $
+// $Id: module.h,v 1.53 2001/07/31 09:32:26 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 /* #include "config.h" */
@@ -47,14 +47,15 @@
 #define VAR_TYPE_MASK        255
 
 
-#define VAR_EXPERT         256
-#define VAR_MORE           512
-#define VAR_DEVELOPER     1024
-#define VAR_INITIAL       2048
-#define VAR_NOT_CFIF      4096
-#define VAR_INVISIBLE     8192
+#define VAR_EXPERT         0x100
+#define VAR_MORE           0x200
+#define VAR_DEVELOPER      0x400
+#define VAR_INITIAL        0x800
+#define VAR_NOT_CFIF      0x1000
+#define VAR_INVISIBLE     0x2000
 
-#define VAR_PUBLIC       16384
+#define VAR_PUBLIC        0x4000
+#define VAR_NO_DEFAULT    0x8000
 
 #define MOD_ALLOW	         1
 #define MOD_USER	         2

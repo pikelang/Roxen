@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.456 2001/07/31 07:46:43 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.457 2001/07/31 09:32:20 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3217,13 +3217,13 @@ static void create()
 		 "interface, it can be quite useful to use as a memory helper."));
 
   defvar("name", "", DLOCALE(24, "Site name"),
-	 TYPE_STRING|VAR_MORE| VAR_PUBLIC,
+	 TYPE_STRING|VAR_MORE| VAR_PUBLIC|VAR_NO_DEFAULT,
 	 DLOCALE(25, "This is the name that will be used in the administration "
 	 "interface. If this is left empty, the actual name of the "
 	 "site will be used."));
 
   defvar("compat_level", Variable.StringChoice (
-	   "", roxen.compat_levels, 0,
+	   "", roxen.compat_levels, VAR_NO_DEFAULT,
 	   DLOCALE(246, "Compatibility level"),
 	   DLOCALE(384, "The compatibility level is used by different modules to select "
 		   "the right behavior to remain compatible with earlier Roxen "
@@ -3314,7 +3314,7 @@ static void create()
 	 0, lambda(){ return !query("Log");});
 
   defvar("Domain", roxen.get_domain(), DLOCALE(34, "Domain"),
-	 TYPE_STRING|VAR_PUBLIC,
+	 TYPE_STRING|VAR_PUBLIC|VAR_NO_DEFAULT,
 	 DLOCALE(35, "The domain name of the server. The domain name is used "
 	 "to generate default URLs, and to generate email addresses."));
 
@@ -3331,7 +3331,7 @@ blank.
 also set 'URLs'."));
   
   defvar("URLs", 
-         Variable.PortList( ({"http://*/"}), VAR_INITIAL,
+         Variable.PortList( ({"http://*/"}), VAR_INITIAL|VAR_NO_DEFAULT,
            DLOCALE(38, "URLs"), 
 	   DLOCALE(39, "Bind to these URLs. You can use '*' and '?' to perform"
 		   " globbing (using any of these will default to binding to "

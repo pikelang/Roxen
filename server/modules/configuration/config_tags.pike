@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.151 2001/06/11 17:00:09 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.152 2001/07/31 09:32:35 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -346,8 +346,8 @@ string get_var_form( string s, object var, object mod, RequestID id,
 
   if( !view_mode && set )
   {
-    var->set_from_form( id );
-//     return 0;
+    if( set!=2 )    var->set_from_form( id );
+    else            var->set( var->default_value() );
   }
   string pre = var->get_warnings();
 
@@ -391,17 +391,11 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
 {
   if( !mod ) return ([]);
   object var = mod->getvar( s );
-
-//   if( !noset )
-//   {
-//     get_var_form( s, var, mod, id, 1 );
-//     return ([]);
-//   }
-
   mapping res = ([ "sname":s]);
-
   
-  if( res->form = get_var_form( s, var, mod, id, !noset ) )
+  if( res->form =
+      get_var_form( s, var, mod, id, !noset ?
+		    1+!!id->variables[var->path()+"do_default.x"]:0))
   {
     // FIXME: Do lazy evaluation of all this. It's rather likely that
     // the variable will be filtered away in the calling function.
@@ -409,6 +403,8 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     // Perhaps add caching as well (section -> visible variables)
     // That would invite problems, though.
     res->rname = (string)var->name();
+    res["no-default"] = var->get_flags() & VAR_NO_DEFAULT;
+    res->path = var->path();
     res->id = var->_id;
     res->changed = !var->is_defaulted();
     res->cid = res->changed*-10000000+res->id;
@@ -1012,7 +1008,8 @@ string simpletag_cf_render_variable( string t, mapping m,
 #define usr(X) RXML.get_var( X, "usr" )
 #define var(X) RXML.get_var( X, "var" )
 
-  string dfs, dfe;
+  int chng;
+  string dfs, dfe, def="";
   string df = config_setting( "docs-font-size" );
   
   if( !df )
@@ -1022,6 +1019,13 @@ string simpletag_cf_render_variable( string t, mapping m,
     dfe = "</font>";
     dfs = "<font size='"+(df>0?"+":"")+df+"'>";
   }
+  if( chng = ((int)_("changed") == 1) )
+  {
+    if( !(int)_("no-default") )
+      def = "<submit-gbutton2 name='"+_("path")+"do_default'> "+
+	LOCALE(0,"Restore default value")+
+	" </submit-gbutton2><br />\n";
+  }
   
   switch( usr( "changemark" ) )
   {
@@ -1029,28 +1033,27 @@ string simpletag_cf_render_variable( string t, mapping m,
       return
 	"<tr><td valign='top' width='20%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>\n"
-	"<td valign='top'>"+_("form")+"</td></tr>\n"
+	"<td valign='top'>"+_("form")+"<br />"+def+"</td></tr>\n"
 	"<tr><td colspan='2'>"+dfs+_("doc")+dfe+"</td></tr>\n";
 
     case "color":
-      if( (int)_("changed") == 1 )
+      if( chng )
 	extra = "bgcolor='"+usr("fade2")+"'";
       return "<tr>\n"
 	"<td valign='top' width='20%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>\n"
-	"<td valign='top' "+extra+">"+_("form")+"</td>\n"
+	"<td valign='top' "+extra+">"+_("form")+"<br />"+def+"</td>\n"
 	"</tr>\n"
 	"<tr>\n"
 	"<td colspan='2'>"+dfs+_("doc")+dfe+"</td>\n"
 	"</tr>\n";
       break;
-
+      
     case "header":
-      int c;
-      if( (c=(int)_("changed")) != (int)var("oldchanged") )
+      if( chng != (int)var("oldchanged") )
       {
-	RXML.set_var( "oldchanged", c, "var" );
-	if( c )
+	RXML.set_var( "oldchanged", chng, "var" );
+	if( chng )
 	  extra = 
 	    "<tr bgcolor='"+usr("content-titlebg")+"'>\n"
 	    "<td colspan='2' width='100%'>\n"
@@ -1072,7 +1075,7 @@ string simpletag_cf_render_variable( string t, mapping m,
 	extra+
 	"<tr><td valign='top' width='20%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>"
-	"<td valign='top'>"+_("form")+"</td></tr>"
+	"<td valign='top'>"+_("form")+"<br />"+def+"</td></tr>"
 	"<tr><td colspan='2'>"+dfs+_("doc")+dfe+"</td></tr>\n";
   }
 }

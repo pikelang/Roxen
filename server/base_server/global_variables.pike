@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.74 2001/07/09 11:02:50 lange Exp $
+// $Id: global_variables.pike,v 1.75 2001/07/31 09:32:21 per Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -432,7 +432,6 @@ void define_global_variables(  )
 	  "for CGI, and also 'access files as user' in the filesystems, but "
 	  "it gives better security."));
 
-  // FIXME: Should mention getcwd()
   defvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
 	 LOCALE(132, "Module directories"), 
 	 TYPE_DIR_LIST,
@@ -513,7 +512,9 @@ void define_global_variables(  )
 	  "be able to serve multiple requests, using a select loop based "
 	  "system.\n"
 	  "<i>This is quite useful if you have more than one CPU in "
-	  "your machine, or if you have a lot of slow NFS accesses.</i></p>"));
+	  "your machine, or if you have a lot of slow NFS accesses.</i></p>"
+  	  "<p>Do not increase this over 20 unless you have a "
+	  "very good reason to do so.</p>"));
 #endif // THREADS
 
 #ifndef __NT__
@@ -554,7 +555,7 @@ void define_global_variables(  )
   string secret=Crypto.md5()->update(""+time(1)+random(100000))->digest();
   secret = MIME.encode_base64(secret,1);
   defvar("server_salt", secret[..sizeof(secret)-3], LOCALE(8, "Server secret"),
-	 TYPE_STRING|VAR_MORE,
+	 TYPE_STRING|VAR_MORE|VAR_NO_DEFAULT,
 	 LOCALE(9, "The server secret is a string used in some "
 		"cryptographic functions, such as calculating "
 		"unique, non-guessable session id's. Change this "
@@ -565,7 +566,7 @@ void define_global_variables(  )
   secret = Crypto.md5()->update(""+time(1)+random(100000)+"x"+gethrtime())
     ->digest();
 
-  definvisvar("argcache_secret","",TYPE_STRING);
+  definvisvar("argcache_secret","",TYPE_STRING|VAR_NO_DEFAULT);
   set( "argcache_secret", secret );
   // force save.
 
