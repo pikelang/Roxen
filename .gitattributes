@@ -48,6 +48,7 @@ urw_itc_avant_garde-demi-r binary
 /extern/fast_cgi/libfcgi/fcgi_stdio.c foreign_ident
 /extern/fast_cgi/libfcgi/fcgiapp.c foreign_ident
 /extern/fast_cgi/libfcgi/strerror.c foreign_ident
+/extern/run_verify foreign_ident
 /mkdir foreign_ident
 /server/base_server/cache.pike foreign_ident
 /server/base_server/color.pike foreign_ident

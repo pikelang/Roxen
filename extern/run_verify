@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# $Id: run_verify,v 1.1 1998/05/21 20:02:24 grubba Exp $
+#
+# Don't ask!
+#
+# Kluge to be able to run make verbose_verify via su(1) on
+# OS's where su(1) only passes 2 arguments to /bin/sh
+#
+# Henrik Grubbström 1998-05-21
+#
+
+if test "x$KLUGE_MAKE" = "x"; then
+  echo KLUGE_MAKE not set.
+  exit 1
+else
+  exec $KLUGE_MAKE verbose_verify
+fi
