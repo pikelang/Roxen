@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.274 2001/08/23 01:49:13 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.275 2001/08/23 21:20:59 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -42,6 +42,12 @@ void create()
 TAGDOCUMENTATION;
 #ifdef manual
 constant gtextargs=#"
+<attr name='verbatim'><p>
+ By default the gtext tag will try to make typographical enhancements to the
+ text to make the resulting image as eye pleasing as possible. If you want to
+ turn this feature off, add this attribute to the tag.</p>
+</attr>
+
 <attr name='alpha' value='path'><p>
  Use the specified image as an alpha channel, together with the
  background attribute.</p>
@@ -582,10 +588,6 @@ void start(int num, Configuration conf)
 }
 
 private constant nbsp = Roxen.iso88591["&nbsp;"];
-private constant replace_from = indices( Roxen.iso88591 )+ ({"&ss;","&lt;","&gt;","&amp;",});
-private constant replace_to   = values( Roxen.iso88591 ) + ({ nbsp, "<", ">", "&", });
-
-#define simplify_text( from ) replace(from,replace_from,replace_to)
 
 private Image.Image|mapping draw_callback(mapping args, string text, RequestID id)
 {
@@ -601,14 +603,18 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
     id = (object)text;
     text = args->text;
   }
+
   if( !mappingp( args ) || !stringp( text ))
     // errors in the argument cache. Not all that unsusual when using the
     // relay module.
     return 0;
+
   if(!args->verbatim) // typographically correct...
   {
-    text = replace(text, nbsp, " ");
-    text = simplify_text( text );
+    text = replace(text, ([ nbsp:" ", "&ss;":nbsp,
+			    "\000":"", "\001":"" ]));
+    text = Parser.parse_html_entities(text);
+
     string res="",nspace="",cspace="";
     foreach(text/"\n", string line)
     {
@@ -638,9 +644,10 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
       }
       res+="\n";
     }
+
     text=replace(res[..strlen(res)-2], ({"!","?",": "}),({ nbsp+"!",nbsp+"?",nbsp+": "}));
-    text=replace(replace(replace(text,({". ",". "+nbsp}),
-                                 ({"\000","\001"})),".","."+nbsp+nbsp),
+    text=replace(replace( replace(text,({". ",". "+nbsp}),({"\000","\001"})),
+			  ".", "."+nbsp+nbsp),
                  ({"\000","\001"}),({". ","."+nbsp}));
   }
 
