@@ -247,6 +247,30 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
   return "<h2>&locale.eventlog;</h2>" + (report*"");
 }
 
+#define EC(X) niceerror( lambda(){ return (X); } , #X)
+
+string niceerror( function tocall, string y )
+{
+  string res;
+  mixed bt=catch( res = tocall( ) );
+
+  if( bt )
+  {
+    bt = (array)bt;
+    for( int i = 0; i<sizeof( bt[1] ); i++ )
+      if( bt[1][i][2] == niceerror )
+      {
+        werror("%O\n", bt[1][i][0] );
+        bt[1] = bt[1][i+2..];
+        break;
+      }
+    return sprintf("Error while calling "+ y+":<br><pre><font size=-1>"+
+                   html_encode_string( describe_backtrace( bt ) )+
+                   "</font></pre>" );
+  }
+  return res;
+}
+
 string find_module_doc( string cn, string mn, RequestID id )
 {
   Configuration c = roxen.find_configuration( cn );
@@ -298,10 +322,10 @@ string find_module_doc( string cn, string mn, RequestID id )
 #endif
 
   return replace( "<br><b><font size=+2>"
-                  + translate(m->register_module()[1]) +
+                  + EC(translate(m->register_module()[1])) +
                   "</font></b><br>"
-                  + translate(m->info()) + "<p>"
-                  + translate(m->status()||"") + "<p>"
+                  + EC(translate(m->info())) + "<p>"
+                  + EC(translate(m->status()||"")) + "<p>"
                   + eventlog +
                   ( config_setting( "devel_mode" ) ?
 		    dbuttons + "<br clear=all>"
@@ -317,7 +341,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    "<tr><td valign=top><b>Type:</b> </td><td "
                     "valign=top>" + describe_type( m, mi->type, id ) +
                     "</td></tr></table><br>" +
-                    translate(m->file_name_and_stuff()) +
+                    EC(translate(m->file_name_and_stuff())) +
 		    homepage + creators + "<dl>" +
                     rec_print_tree( Program.inherit_tree( object_program(m) ) )
                     + "</dl>" : homepage + creators),
