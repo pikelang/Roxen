@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.401 2002/10/08 14:57:25 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.402 2002/10/10 17:31:21 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1568,10 +1568,6 @@ class TagCache {
 	  // subvariables is part of the persistent state, but we'll
 	  // come to update_state later anyway if it should be called.
 	}
-	if (overridden_keymap) {
-	  RXML_CONTEXT->misc->cache_key = overridden_keymap;
-	  overridden_keymap = 0;
-	}
 
 	if (args->shared) {
 	  cache_set(cache_tag_location, key, evaled_content, timeout);
@@ -1601,6 +1597,11 @@ class TagCache {
       }
       else
 	TAG_TRACE_LEAVE ("");
+
+      if (overridden_keymap) {
+	RXML_CONTEXT->misc->cache_key = overridden_keymap;
+	overridden_keymap = 0;
+      }
 
       result += content;
       return 0;
@@ -5877,8 +5878,8 @@ using the pre tag.
  <ent>page.path</ent>). This is often a bad policy since it's easy for
  a client to generate many cache entries.</p>
 
- <p>There are no cache static tags if the compatibility level is 2.4
- or lower.</p>
+ <p>None of the standard RXML tags are cache static if the
+ compatibility level is 2.4 or lower.</p>
 </desc>
 
 <attr name='variable' value='string'>
