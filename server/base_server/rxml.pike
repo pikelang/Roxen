@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.259 2000/11/15 06:41:19 nilsson Exp $
+// $Id: rxml.pike,v 1.260 2000/11/19 16:32:31 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -1463,7 +1463,7 @@ class TagEmit {
 
     array do_enter(RequestID id) {
       if(!(plugin=get_plugins()[args->source]))
-	parse_error("Source not present.\n");
+	parse_error("The emit source %O doesn't exist.\n", args->source);
       scope_name=args->scope||args->source;
       TRACE_ENTER("Fetch emit dataset for source "+args->source, 0);
       res=plugin->get_dataset(args, id);
