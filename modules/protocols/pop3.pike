@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.3 1998/09/28 00:14:50 grubba Exp $
+ * $Id: pop3.pike,v 1.4 1998/09/28 00:26:30 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.3 1998/09/28 00:14:50 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.4 1998/09/28 00:26:30 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -284,7 +284,9 @@ static class Pop_Session
     username = replace(username, ({"*", "_AT_"}), ({ "@", "@" }));
     string pass = args * " ";
     foreach(conf->get_providers("automail_clientlayer")||({}), object o) {
-      if (user = o->authenticate_user(username, pass)) {
+      mixed u = o->authenticate_user(username, pass);
+      if (objectp(u)) {
+	user = u;
 	break;
       }
     }
