@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.56 2000/12/11 03:07:22 per Exp $
+ * $Id: Roxen.pmod,v 1.57 2000/12/11 03:36:16 per Exp $
  *
  * Various helper functions.
  *
@@ -11,6 +11,7 @@
 #include <module.h>
 #include <variables.h>
 #include <stat.h>
+#define roxen roxenp()
 
 #ifdef HTTP_DEBUG
 # define HTTP_WERR(X) werror("HTTP: "+X+"\n");
@@ -19,72 +20,38 @@
 #endif
 
 
-#define roxen roxenp()
-// From the old 'http' file
-string http_res_to_string( mapping file, RequestID id )
+string http_roxen_config_cookie(string from)
 {
-  mapping(string:string|array(string)) heads=
-    ([
-      "Content-type":[string]file["type"],
-      "Server":replace(roxen->version(), " ", "·"),
-      "Date":http_date([int]id->time)
-      ]);
-
-  if(file->encoding)
-    heads["Content-Encoding"] = [string]file->encoding;
-
-  if(!file->error)
-    file->error=200;
-
-  if(file->expires)
-      heads->Expires = http_date([int]file->expires);
-
-  if(!file->len)
-  {
-    if(objectp(file->file))
-      if(!file->stat && !(file->stat=([mapping(string:mixed)]id->misc)->stat))
-	file->stat = (array(int))file->file->stat();
-    array fstat;
-    if(arrayp(fstat = file->stat))
-    {
-      if(file->file && !file->len)
-	file->len = fstat[1];
-
-      heads["Last-Modified"] = http_date([int]fstat[3]);
-    }
-    if(stringp(file->data))
-      file->len += strlen([string]file->data);
-  }
-
-  if(mappingp(file->extra_heads))
-    heads |= file->extra_heads;
-
-  if(mappingp(([mapping(string:mixed)]id->misc)->moreheads))
-    heads |= ([mapping(string:mixed)]id->misc)->moreheads;
-
-  array myheads=({id->prot+" "+(file->rettext||errors[file->error])});
-  foreach(indices(heads), string h)
-    if(arrayp(heads[h]))
-      foreach([array(string)]heads[h], string tmp)
-	myheads += ({ `+(h,": ", tmp)});
-    else
-      myheads +=  ({ `+(h, ": ", heads[h])});
-
-
-  if(file->len > -1)
-    myheads += ({"Content-length: " + file->len });
-  string head_string = (myheads+({"",""}))*"\r\n";
-
-  if(id->conf) {
-    id->conf->hsent+=strlen(head_string||"");
-    if(id->method != "HEAD")
-      id->conf->sent+=(file->len>0 ? file->len : 1000);
-  }
-  if(id->method != "HEAD")
-    head_string+=(file->data||"")+(file->file?file->file->read():"");
-  return head_string;
+  return "RoxenConfig="+http_encode_cookie(from)
+    +"; expires=" + http_date (3600*24*365*2 + time (1)) + "; path=/";
 }
 
+string http_roxen_id_cookie()
+{
+  return sprintf("RoxenUserID=0x%x; expires=" +
+		 http_date (3600*24*365*2 + time (1)) + "; path=/",
+		 roxen->increase_id());
+}
+
+
+// These two functions are questionable, but rather widely used.
+string short_name(string long_name)
+{
+  long_name = replace(long_name, " ", "_");
+  return lower_case(long_name);
+}
+
+int _match(string w, array (string) a)
+{
+  if(!stringp(w)) // Internal request..
+    return -1;
+  foreach(a, string q)
+    if(stringp(q) && strlen(q) && glob(q, w))
+      return 1;
+}
+
+
+// From the old 'http' file
 mapping http_low_answer( int errno, string data )
 //! Return a result mapping with the error and data specified. The
 //! error is infact the status response, so '200' is HTTP Document
@@ -102,6 +69,10 @@ mapping http_low_answer( int errno, string data )
 }
 
 mapping http_pipe_in_progress()
+//! Return a result mapping that indicates that the request file
+//! should be kept open, but no result should be sent. Another result
+//! mapping can be sent later on with the send_result member
+//! function of the protocol object, if it is available.
 {
   HTTP_WERR("Pipe in progress");
   return ([ "file":-1, "pipe":1, ]);
@@ -135,7 +106,7 @@ mapping http_try_again( float delay )
   return ([ "try_again_later":delay ]);
 }
 
-class Delayer
+static class Delayer
 {
   RequestID id;
   int resumed;
@@ -189,6 +160,20 @@ array(object|mapping) http_try_resume( RequestID id, float|void max_delay )
   return ({delay, ([ "try_again":delay ]) });
 }
 
+
+mapping add_http_header(mapping to, string name, string value)
+{
+  if(to[name]) {
+    if(arrayp(to[name]))
+      to[name] += ({ value });
+    else
+      to[name] = ({ to[name], value });
+  }
+  else
+    to[name] = value;
+  return to;
+}
+
 mapping http_string_answer(string text, string|void type)
 //! Generates a result mapping with the given text as the request body
 //! with a content type of `type' (or "text/html" if none was given).
@@ -198,21 +183,24 @@ mapping http_string_answer(string text, string|void type)
 }
 
 mapping http_file_answer(Stdio.File text, string|void type, void|int len)
+//! Generate a result mapping with the given (open) file object as the
+//! request body, the content type defaults to text/html if none is
+//! given, and the length to the length of the file object.
 {
   HTTP_WERR("file answer ("+(type||"text/html")+")");
   return ([ "file":text, "type":(type||"text/html"), "len":len ]);
 }
 
-constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
-constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
+static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+static constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
 
 
 
 static int chd_lt;
 static string chd_lf;
 string cern_http_date(int t)
-//! Return a date, used in the common log format
+//! Return a date, formated to be used in the common log format
 {
   if( t == chd_lt ) return chd_lf;
 
@@ -234,7 +222,7 @@ string cern_http_date(int t)
 string http_date(int t)
 //! Returns a http_date, as specified by the HTTP-protocol standard.
 //! This is used for logging as well as the Last-Modified and Time
-//! heads in the reply.
+//! headers in the reply.
 {
   mapping(string:int) l = gmtime( t );
   return(sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT",
@@ -243,6 +231,9 @@ string http_date(int t)
 }
 
 string http_encode_string(string f)
+//! Encode dangerous characters in a string so that it can be used as
+//! a URL. Specifically, nul, space, tab, newline, linefeed, %, ' and
+//! " are quoted.
 {
   return replace(f, ({ "\000", " ", "\t", "\n", "\r", "%", "'", "\"" }),
 		 ({"%00", "%20", "%09", "%0a", "%0d", "%25", "%27", "%22"}));
@@ -254,24 +245,12 @@ string http_encode_cookie(string f)
 }
 
 string http_encode_url (string f)
+//! Like http_encode_string, but also quotes #, &, ?, =, / and :.
 {
   return replace (f, ({"\000", " ", "\t", "\n", "\r", "%", "'", "\"", "#",
 		       "&", "?", "=", "/", ":"}),
 		  ({"%00", "%20", "%09", "%0a", "%0d", "%25", "%27", "%22", "%23",
 		    "%26", "%3f", "%3d", "%2f", "%3a"}));
-}
-
-string http_roxen_config_cookie(string from)
-{
-  return "RoxenConfig="+http_encode_cookie(from)
-    +"; expires=" + http_date (3600*24*365*2 + time (1)) + "; path=/";
-}
-
-string http_roxen_id_cookie()
-{
-  return sprintf("RoxenUserID=0x%x; expires=" +
-		 http_date (3600*24*365*2 + time (1)) + "; path=/",
-		 roxen->increase_id());
 }
 
 string add_pre_state( string url, multiset state )
@@ -369,19 +348,6 @@ mapping http_proxy_auth_required(string realm, void|string message)
     + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
 
-mapping add_http_header(mapping to, string name, string value)
-{
-  if(to[name]) {
-    if(arrayp(to[name]))
-      to[name] += ({ value });
-    else
-      to[name] = ({ to[name], value });
-  }
-  else
-    to[name] = value;
-  return to;
-}
-
 // From the old 'roxenlib' file
 string extract_query(string from)
 {
@@ -392,6 +358,8 @@ string extract_query(string from)
 }
 
 mapping build_env_vars(string f, RequestID id, string path_info)
+//! Generate a mapping with environment variables suitable for use
+//! with CGI-scripts or SSI scripts etc.
 {
   string addr=id->remoteaddr || "Internal";
   mapping(string:string) new = ([]);
@@ -563,6 +531,15 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 }
 
 mapping build_roxen_env_vars(RequestID id)
+//! Generate a mapping with additional environment variables suitable
+//! for use with CGI-scripts or SSI scripts etc. These variables are
+//! roxen extensions and not defined in any standard document.
+//! Specifically:
+//! For each cookie:          COOKIE_cookiename=cookievalue
+//! For each variable:        VAR_variablename=variablevalue
+//! For each 'prestate':      PRESTATE_x=true
+//! For each 'config':        CONFIG_x=true
+//! For each 'supports' flag: SUPPORTS_x=true
 {
   mapping(string:string) new = ([]);
   string tmp;
@@ -620,68 +597,15 @@ mapping build_roxen_env_vars(RequestID id)
   return new;
 }
 
-
-
-string decode_mode(int m)
-{
-  string s;
-  s="";
-
-  if(S_ISLNK(m))  s += "Symbolic link";
-  else if(S_ISREG(m))  s += "File";
-  else if(S_ISDIR(m))  s += "Dir";
-  else if(S_ISCHR(m))  s += "Special";
-  else if(S_ISBLK(m))  s += "Device";
-  else if(S_ISFIFO(m)) s += "FIFO";
-  else if(S_ISSOCK(m)) s += "Socket";
-  else if((m&0xf000)==0xd000) s+="Door";
-  else s+= "Unknown";
-
-  s+=", ";
-
-  if(S_ISREG(m) || S_ISDIR(m))
-  {
-    s+="<tt>";
-    if(m&S_IRUSR) s+="r"; else s+="-";
-    if(m&S_IWUSR) s+="w"; else s+="-";
-    if(m&S_IXUSR) s+="x"; else s+="-";
-
-    if(m&S_IRGRP) s+="r"; else s+="-";
-    if(m&S_IWGRP) s+="w"; else s+="-";
-    if(m&S_IXGRP) s+="x"; else s+="-";
-
-    if(m&S_IROTH) s+="r"; else s+="-";
-    if(m&S_IWOTH) s+="w"; else s+="-";
-    if(m&S_IXOTH) s+="x"; else s+="-";
-    s+="</tt>";
-  } else {
-    s+="--";
-  }
-  return s;
-}
-
-int _match(string w, array (string) a)
-{
-  if(!stringp(w)) // Internal request..
-    return -1;
-  foreach(a, string q)
-    if(stringp(q) && strlen(q) && glob(q, w))
-      return 1;
-}
-
-string short_name(string long_name)
-{
-  long_name = replace(long_name, " ", "_");
-  return lower_case(long_name);
-}
-
 string strip_config(string from)
+//! Remove all 'config' data from the given (local) URL.
 {
   sscanf(from, "/<%*s>%s", from);
   return from;
 }
 
 string strip_prestate(string from)
+//! Remove all 'prestate' data from the given (local) URL.
 {
   sscanf(from, "/(%*s)%s", from);
   return from;
@@ -1001,26 +925,6 @@ string make_container(string name, mapping(string:string) args, string content)
   return make_tag(name,args)+content+"</"+name+">";
 }
 
-string dirname( string file )
-{
-  if(!file)
-    return "/";
-  if(file[-1] == '/')
-    if(strlen(file) > 1)
-      return file[0..strlen(file)-2];
-    else
-      return file;
-  array tmp=file/"/";
-  if(sizeof(tmp)==2 && tmp[0]=="")
-    return "/";
-  return tmp[0..sizeof(tmp)-2]*"/";
-}
-
-string conv_hex( int color )
-{
-  return sprintf("#%06X", color);
-}
-
 string add_config( string url, array config, multiset prestate )
 {
   if(!sizeof(config))
@@ -1028,19 +932,6 @@ string add_config( string url, array config, multiset prestate )
   if(strlen(url)>5 && (url[1] == '(' || url[1] == '<'))
     return url;
   return "/<" + config * "," + ">" + add_pre_state(url, prestate);
-}
-
-string msectos(int t)
-{
-  if(t<1000) /* One sec. */
-  {
-    return sprintf("0.%02d sec", t/10);
-  } else if(t<6000) {  /* One minute */
-    return sprintf("%d.%02d sec", t/1000, (t%1000 + 5) / 10);
-  } else if(t<3600000) { /* One hour */
-    return sprintf("%d:%02d m:s", t/60000,  (t%60000)/1000);
-  }
-  return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
 }
 
 string extension( string f, RequestID|void id)
@@ -1224,33 +1115,6 @@ string sizetostring( int size )
     size ++;
   }
   return sprintf("%.1f %s", s, PREFIX[ size ]);
-}
-
-mapping proxy_auth_needed(RequestID id)
-{
-  int|mapping res = id->conf->check_security(proxy_auth_needed, id);
-  if(res)
-  {
-    if(res==1) // Nope...
-      return http_low_answer(403, "You are not allowed to access this proxy");
-    if(!mappingp(res))
-      return 0; // Error, really.
-    res->error = 407;
-    return [mapping]res;
-  }
-  return 0;
-}
-
-// Please use __FILE__ if possible.
-string program_filename()
-{
-  return master()->program_name(this_object())||"";
-}
-
-string program_directory()
-{
-  array(string) p = program_filename()/"/";
-  return (sizeof(p)>1? p[..sizeof(p)-2]*"/" : getcwd());
 }
 
 string html_encode_string(LocaleString str)

@@ -1,19 +1,168 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.208 2000/12/11 03:07:11 per Exp $
+// $Id: roxenlib.pike,v 1.209 2000/12/11 03:36:16 per Exp $
 
 //#pragma strict_types
 
 #include <roxen.h>
 #include <config.h>
 #include <stat.h>
+#include <variables.h>
 
 inherit Roxen;
 
 #define roxen roxenp()
 
-// Functions declared as static are not reachable through Roxen.pmod.
 // These functions are to be considered deprecated.
+static string conv_hex( int color )
+{
+  return sprintf("#%06X", color);
+}
+
+
+mapping proxy_auth_needed(RequestID id)
+{
+  int|mapping res = id->conf->check_security(proxy_auth_needed, id);
+  if(res)
+  {
+    if(res==1) // Nope...
+      return http_low_answer(403, "You are not allowed to access this proxy");
+    if(!mappingp(res))
+      return 0; // Error, really.
+    res->error = 407;
+    return [mapping]res;
+  }
+  return 0;
+}
+
+// Please use __FILE__ if possible.
+string program_filename()
+{
+  return master()->program_name(this_object())||"";
+}
+
+string program_directory()
+{
+  array(string) p = program_filename()/"/";
+  return (sizeof(p)>1? p[..sizeof(p)-2]*"/" : getcwd());
+}
+
+string msectos(int t)
+{
+  if(t<1000) /* One sec. */
+  {
+    return sprintf("0.%02d sec", t/10);
+  } else if(t<6000) {  /* One minute */
+    return sprintf("%d.%02d sec", t/1000, (t%1000 + 5) / 10);
+  } else if(t<3600000) { /* One hour */
+    return sprintf("%d:%02d m:s", t/60000,  (t%60000)/1000);
+  }
+  return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
+}
+
+
+static string decode_mode(int m)
+{
+  string s;
+  s="";
+
+  if(S_ISLNK(m))  s += "Symbolic link";
+  else if(S_ISREG(m))  s += "File";
+  else if(S_ISDIR(m))  s += "Dir";
+  else if(S_ISCHR(m))  s += "Special";
+  else if(S_ISBLK(m))  s += "Device";
+  else if(S_ISFIFO(m)) s += "FIFO";
+  else if(S_ISSOCK(m)) s += "Socket";
+  else if((m&0xf000)==0xd000) s+="Door";
+  else s+= "Unknown";
+
+  s+=", ";
+
+  if(S_ISREG(m) || S_ISDIR(m))
+  {
+    s+="<tt>";
+    if(m&S_IRUSR) s+="r"; else s+="-";
+    if(m&S_IWUSR) s+="w"; else s+="-";
+    if(m&S_IXUSR) s+="x"; else s+="-";
+
+    if(m&S_IRGRP) s+="r"; else s+="-";
+    if(m&S_IWGRP) s+="w"; else s+="-";
+    if(m&S_IXGRP) s+="x"; else s+="-";
+
+    if(m&S_IROTH) s+="r"; else s+="-";
+    if(m&S_IWOTH) s+="w"; else s+="-";
+    if(m&S_IXOTH) s+="x"; else s+="-";
+    s+="</tt>";
+  } else {
+    s+="--";
+  }
+  return s;
+}
+
+static string http_res_to_string( mapping file, RequestID id )
+{
+  mapping(string:string|array(string)) heads=
+    ([
+      "Content-type":[string]file["type"],
+      "Server":replace(roxen->version(), " ", "·"),
+      "Date":http_date([int]id->time)
+      ]);
+
+  if(file->encoding)
+    heads["Content-Encoding"] = [string]file->encoding;
+
+  if(!file->error)
+    file->error=200;
+
+  if(file->expires)
+      heads->Expires = http_date([int]file->expires);
+
+  if(!file->len)
+  {
+    if(objectp(file->file))
+      if(!file->stat && !(file->stat=([mapping(string:mixed)]id->misc)->stat))
+	file->stat = (array(int))file->file->stat();
+    array fstat;
+    if(arrayp(fstat = file->stat))
+    {
+      if(file->file && !file->len)
+	file->len = fstat[1];
+
+      heads["Last-Modified"] = http_date([int]fstat[3]);
+    }
+    if(stringp(file->data))
+      file->len += strlen([string]file->data);
+  }
+
+  if(mappingp(file->extra_heads))
+    heads |= file->extra_heads;
+
+  if(mappingp(([mapping(string:mixed)]id->misc)->moreheads))
+    heads |= ([mapping(string:mixed)]id->misc)->moreheads;
+
+  array myheads=({id->prot+" "+(file->rettext||errors[file->error])});
+  foreach(indices(heads), string h)
+    if(arrayp(heads[h]))
+      foreach([array(string)]heads[h], string tmp)
+	myheads += ({ `+(h,": ", tmp)});
+    else
+      myheads +=  ({ `+(h, ": ", heads[h])});
+
+
+  if(file->len > -1)
+    myheads += ({"Content-length: " + file->len });
+  string head_string = (myheads+({"",""}))*"\r\n";
+
+  if(id->conf) {
+    id->conf->hsent+=strlen(head_string||"");
+    if(id->method != "HEAD")
+      id->conf->sent+=(file->len>0 ? file->len : 1000);
+  }
+  if(id->method != "HEAD")
+    head_string+=(file->data||"")+(file->file?file->file->read():"");
+  return head_string;
+}
+
 
 static string gif_size(Stdio.File gif)
 {
