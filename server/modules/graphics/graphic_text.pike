@@ -1,4 +1,5 @@
-string cvs_version="$Id: graphic_text.pike,v 1.57 1997/08/31 02:45:40 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.58 1997/08/31 04:12:43 peter Exp $";
+constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
@@ -155,8 +156,6 @@ void create()
 
 string query_location() { return query("location"); }
 
-mapping (string:object) fonts = ([]);
-
 object(Font) load_font(string name, string justification, int xs, int ys)
 {
   object fnt = Font();
@@ -218,7 +217,7 @@ object last_image;      // Cache the last image for a while.
 string last_image_name;
 object load_image(string f,object id)
 {
-  if(last_image_name==f) return last_image;
+  if(last_image_name == f && last_image) return last_image->copy();
   string data;
   object file;
   object img = Image();
@@ -227,11 +226,8 @@ object load_image(string f,object id)
     if(!(file=open(f,"r")) || (!(data=file->read(0x7fffffff))))
       return 0;
   
-  if(!img->frompnm(data) && !img->fromgif(data)) return 0;
-
-  last_image_name=f;
-  last_image=img;
-  call_out(lambda(){last_image=0;last_image_name=0;}, 0);
+  if(!img->frompnm(data)/* && !img->fromgif(data)*/) return 0;
+  last_image = img; last_image_name = f;
   return img->copy();
 }
 
@@ -401,8 +397,7 @@ object (Image) make_text_image(mapping args, object font, string text,object id)
   if(args->texture)    foreground = load_image(args->texture,id);
 
   if((args->background) && (background = load_image(args->background, id))) {
-    // Don't thrash the image-cache.
-    background = background->copy();
+    background = background;
     xsize = background->xsize();
     ysize = background->ysize();
     switch(lower_case(args->talign||"left")) {

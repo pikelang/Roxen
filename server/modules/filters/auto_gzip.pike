@@ -3,7 +3,8 @@
 inherit "module";
 #include <module.h>
 
-string cvs_version="$Id: auto_gzip.pike,v 1.1 1997/04/09 01:09:28 per Exp $";
+constant cvs_version="$Id: auto_gzip.pike,v 1.2 1997/08/31 04:12:40 peter Exp $";
+constant thread_safe=1;
 
 mixed *register_module()
 {

@@ -2,7 +2,9 @@
 // This module can be used to turn off logging for some files.
 
 
-string cvs_version = "$Id: nologging.pike,v 1.4 1996/12/03 09:58:31 neotron Exp $";
+constant cvs_version = "$Id: nologging.pike,v 1.5 1997/08/31 04:12:44 peter Exp $";
+constant thread_safe=1;
+
 #include <module.h>
 inherit "module";
 

@@ -3,9 +3,12 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
+constant cvs_version = "$Id: home_logger.pike,v 1.10 1997/08/31 04:12:44 peter Exp $";
+constant thread_safe=1;
 
-string cvs_version = "$Id: home_logger.pike,v 1.9 1997/08/12 06:32:25 per Exp $";
+
 #include <module.h>
+#include <config.h>
 inherit "module";
 inherit "roxenlib";
 
@@ -163,6 +166,9 @@ program CacheFile = class {
   int ready = 1, d, n;
   object next;
   object master;
+#ifdef THREADS
+  object mutex;
+#endif
 
   void move_this_to_tail();
 
@@ -192,7 +198,9 @@ program CacheFile = class {
   void move_this_to_head()
   {
     object tmp, tmp2;
-    
+#ifdef THREADS
+    object key = mutex->lock();
+#endif
     tmp2 = tmp = master->cache_head;
 
     if(tmp == this_object()) return;
@@ -208,6 +216,9 @@ program CacheFile = class {
   void move_this_to_tail()
   {
     object tmp;
+#ifdef THREADS
+    object key = mutex->lock();
+#endif
 
     if(this_object() == master->cache_head)
     {
@@ -237,8 +248,11 @@ program CacheFile = class {
     ::write(s);
   }
 
-  void create(int num, int delay, object m)
+  void create(int num, int delay, object m, object mu)
   {
+#ifdef THREADS
+    mutex = mu;
+#endif
     n = num;
     d = delay;
     master = m;
@@ -254,12 +268,17 @@ program CacheFile = class {
 
 
 object cache_head;
+#ifdef THREADS
+object mutex  = Thread.Mutex();
+#else
+# define mutex 0
+#endif
 
 string start()
 {
   object f;
   if(cache_head) destruct(cache_head);
-  cache_head = CacheFile(QUERY(num), QUERY(delay), this_object());
+  cache_head = CacheFile(QUERY(num), QUERY(delay), this_object(), mutex);
   parse_log_formats();
 }
 
@@ -325,6 +344,9 @@ string status()
 
 object find_cache_file(string f)
 {
+#ifdef THREADS
+  object key = mutex->lock();
+#endif
   if(!cache_head)
     start();
   

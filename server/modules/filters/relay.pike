@@ -7,7 +7,9 @@
 // caching. This module is therefore quite obsolete, really.  But
 // since it is so small, I have left it here.
 
-string cvs_version = "$Id: relay.pike,v 1.8 1997/07/06 15:20:07 grubba Exp $";
+constant cvs_version = "$Id: relay.pike,v 1.9 1997/08/31 04:12:42 peter Exp $";
+constant thread_safe = 1;
+
 #include <module.h>
 
 inherit "module";

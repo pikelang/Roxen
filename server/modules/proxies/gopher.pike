@@ -2,7 +2,9 @@
 
 // Gopher proxy module.
 
-string cvs_version = "$Id: gopher.pike,v 1.11 1997/08/14 22:18:55 grubba Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.12 1997/08/31 04:12:46 peter Exp $";
+constant thread_safe=1;
+
 #include <config.h>
 
 #define CONNECTION_REFUSED "HTTP/1.0 500 Connection refused by remote "	\

@@ -5,7 +5,9 @@
 
 import Stdio;
 
-string cvs_version = "$Id: htaccess.pike,v 1.18 1997/08/15 02:16:20 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.19 1997/08/31 04:12:41 peter Exp $";
+constant thread_safe=1;
+
 #include <module.h>
 #include <roxen.h>
 inherit "module";

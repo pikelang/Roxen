@@ -3,7 +3,9 @@
 // An implementation of the CONNECT methos, used for SSL tunneling in
 // Netscape (the "Secure proxy" field)
 
-string cvs_version = "$Id: connect.pike,v 1.8 1997/05/31 19:17:18 grubba Exp $";
+constant cvs_version = "$Id: connect.pike,v 1.9 1997/08/31 04:12:45 peter Exp $";
+constant thread_safe=1;
+
 #include <module.h>
 
 inherit "module";

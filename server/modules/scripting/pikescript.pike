@@ -8,11 +8,13 @@
 
 // This is an extension module.
 
+constant cvs_version = "$Id: pikescript.pike,v 1.13 1997/08/31 04:12:48 peter Exp $";
+constant thread_safe=1;
+
 mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
-string cvs_version = "$Id: pikescript.pike,v 1.12 1997/05/20 10:48:34 per Exp $";
 #include <module.h>
 
 #if constant(_static_modules) && efun(thread_create)

@@ -8,7 +8,9 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-string cvs_version = "$Id: hostredirect.pike,v 1.12 1997/08/16 23:00:47 grubba Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.13 1997/08/31 04:12:40 peter Exp $";
+constant thread_safe=1;
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";

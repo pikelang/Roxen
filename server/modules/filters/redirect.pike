@@ -4,14 +4,14 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-string cvs_version = "$Id: redirect.pike,v 1.9 1997/08/14 22:18:52 grubba Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.10 1997/08/31 04:12:41 peter Exp $";
+constant thread_safe = 1;
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 import Array;
-inherit Regexp : regexp;
-
 private int redirs = 0;
 
 void create()
@@ -131,12 +131,13 @@ mixed first_try(object id)
 	  break;
 	} else if(search(f, "*")!=-1) {
 	  array foo;
+	  function split;
 	  if(f[0] != '^')
-	    regexp::create("^"+f);
+	    split = Regexp("^"+f)->split;
 	  else
-	    regexp::create(f);
+	    split = Regexp(f)->split;
 	  
-	  if((foo=regexp::split(m)))
+	  if((foo=split(m)))
 	  {
 	    array bar = map(foo, lambda(string s, mapping f) {
 	      return "$"+(f->num++);

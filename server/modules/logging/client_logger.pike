@@ -2,7 +2,9 @@
 
 // Logs the User-agent fields in a separate log.
 
-string cvs_version = "$Id: client_logger.pike,v 1.4 1996/12/02 04:32:42 per Exp $";
+constant cvs_version = "$Id: client_logger.pike,v 1.5 1997/08/31 04:12:43 peter Exp $";
+constant thread_safe=1;
+
 #include <module.h>
 inherit "module";
 
