@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.140 2000/02/20 04:19:45 mast Exp $
+ * $Id: rxml.pike,v 1.141 2000/02/20 04:30:10 mast Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -836,7 +836,7 @@ class UserTagContents
       RXML.Frame frame = up;
       while (frame && !frame->user_tag_contents)
 	frame = frame->user_tag_up || frame->up;
-      if (!frame) run_error ("No contents to insert.\n");
+      if (!frame) parse_error ("No contents to insert.\n");
       user_tag_up = frame->up;
       return ({frame->user_tag_contents});
     }
