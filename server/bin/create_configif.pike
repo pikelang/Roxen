@@ -35,6 +35,8 @@ int main(int argc, array argv)
   	              ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), 
                       "../configurations");
 
+  if(reverse(configdir)[0] != '/')
+    configdir+="/";
   write( "Creating a configuration interface server in "+configdir+"\n");
 
   do 
