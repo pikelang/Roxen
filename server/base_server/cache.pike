@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.66 2001/04/08 23:08:05 per Exp $
+// $Id: cache.pike,v 1.67 2001/04/19 13:54:09 jonasw Exp $
 
 #pragma strict_types
 
@@ -228,8 +228,10 @@ private mapping(string:mapping(string:mixed)) nongc_cache;
 //! the @[cache_id]. This cache does not garb, hence it should be
 //! used for storing data where its size is well controled.
 void nongarbing_cache_set(string cache_id, string key, mixed value) {
-  if(nongc_cache[cache_id]) nongc_cache[cache_id][key] = value;
-  nongc_cache[cache_id] = ([ key:value ]);
+  if(nongc_cache[cache_id])
+    nongc_cache[cache_id][key] = value;
+  else
+    nongc_cache[cache_id] = ([ key:value ]);
 }
 
 //! Returns the value associated to the @[key] in the cache
