@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.12 2001/08/17 19:46:19 per Exp $
+ * $Id: restart.pike,v 1.13 2003/04/25 11:56:06 anders Exp $
  */
 
 #include <config_interface.h>
@@ -55,27 +55,31 @@ LOCALE(234, "You might see the old process for a while in the process table "
 
  <cf-perm perm='Restart'>
    <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
-            width=300 icon_src=&usr.err-2;> "+
+            width=250 icon_src=&usr.err-2;> "+
        LOCALE(197,"Restart")+#" </gbutton>
  </cf-perm>
 
 <cf-perm not perm='Restart'>
-  <gbutton dim width=300 icon_src=&usr.err-2;> "+
+  <gbutton dim width=250 icon_src=&usr.err-2;> "+
        LOCALE(197,"Restart")+#" </gbutton>
 </cf-perm>
 
+<br/><br/>
+
 <cf-perm perm='Shutdown'>
   <gbutton href='?what=shutdown&action=restart.pike&class=maintenance' 
-           width=300  icon_src=&usr.err-3;> "+
+           width=250  icon_src=&usr.err-3;> "+
        LOCALE(198,"Shutdown")+#" </gbutton>
 </cf-perm>
 
 <cf-perm not perm='Shutdown'>
-  <gbutton dim width=300 icon_src=&usr.err-3;> "+
+  <gbutton dim width=250 icon_src=&usr.err-3;> "+
        LOCALE(198,"Shutdown")+#" </gbutton>
 </cf-perm>
 
 </blockquote>
+
+<br/><br/>
 
 <p><cf-cancel href='?class=&form.class;'/></p>" );
      }
