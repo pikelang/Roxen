@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.159 1999/01/16 10:28:51 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.160 1999/01/31 22:45:07 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1392,10 +1392,16 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
     string f;
     f = fix_relative(m->file, id);
     id = id->clone_me();
-
     if(m->nocache) id->pragma["no-cache"] = 1;
-    if(id->scan_for_query)
-      f = id->scan_for_query( f );
+
+    if(sscanf(m->file, "%*s?%s", s) == 2) {
+      mapping oldvars = id->variables;
+      id->variables = ([]);
+      if(id->scan_for_query)
+	f = id->scan_for_query( f );
+      id->variables = oldvars | id->variables;
+      id->misc->_temporary_query_string = s;
+    }
     s = id->conf->try_get_file(f, id);
 
 
