@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.25 2000/03/21 21:10:42 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.26 2000/03/25 02:28:56 nilsson Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -112,7 +112,6 @@ constant tagdoc=([
 
 <attr name=var value=sizefmt>
  Print format for file sizes.
- <ex type=vert><!--#echo var=sizefmt --></ex>
 </attr>
 
 <attr name=var value='document name'>
@@ -122,7 +121,7 @@ constant tagdoc=([
 
 <attr name=var value='document uri'>
  URI (URL) to the current page.
- <ex type=vert><!--#echo var=uri --></ex>
+ <ex type=vert><!--#echo var=\"document uri\" --></ex>
 </attr>
 
 <attr name=var value='date local'>
@@ -166,23 +165,25 @@ constant tagdoc=([
 </attr>
 
 <attr name=var value='gateway interface'>
-
+ Answears \"CGI/1.1\".
 </attr>
 
 <attr name=var value='http cookie'>
-
+ A list of the set cookies.
+ <ex type=vert><!--#echo var=\"http cookie\" --></ex>
 </attr>
 
 <attr name=var value=cookie>
-
+ A list of the set cookies. Same as http cookie.
 </attr>
 
 <attr name=var value='http accept'>
-
+ A list of the http accept formats.
+ <ex type=vert><!--#echo var=\"http accept\" --></ex>
 </attr>
 
 <attr name=var value='http user agent'>
-
+ The user agent string.
 </attr>
 
 <attr name=var value='path translated'>
@@ -277,7 +278,7 @@ constant tagdoc=([
 <desc tag>
  This tag outputs a listing of all existing variables and their
  values. Attributes won't be printed.
- <ex type=vert><!--#printenv --></ex>
+ <ex type=vert><pre><!--#printenv --></pre></ex>
 </desc>",
 
 "!--#set":#"<desc tag>
