@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.23 1998/05/13 09:01:39 neotron Exp $
+ * $Id: ftp2.pike,v 1.24 1998/05/13 09:33:37 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -476,12 +476,12 @@ class LS_L
 
     if (flags & LS_FLAG_G) {
       // No group.
-      return sprintf("%s   1 %-10s %12d %s %02d %02d:%02d %s\n", perm*"",
+      return sprintf("%s   1 %-10s %12d %s %02d %02d:%02d %s\r\n", perm*"",
 		     (string)st[-2], (st[1]<0? 512:st[1]),
 		     months[lt->mon], lt->mday,
 		     lt->hour, lt->min, file);
     } else {
-      return sprintf("%s   1 %-10s %-6d%12d %s %02d %02d:%02d %s\n", perm*"",
+      return sprintf("%s   1 %-10s %-6d%12d %s %02d %02d:%02d %s\r\n", perm*"",
 		     (string)st[-2], st[-1], (st[1]<0? 512:st[1]),
 		     months[lt->mon], lt->mday,
 		     lt->hour, lt->min, file);
@@ -629,13 +629,13 @@ class LSFile
     }
     switch (flags & (LS_FLAG_l|LS_FLAG_C|LS_FLAG_m)) {
     case LS_FLAG_C:
-      res = sprintf("%#-79s\n", res);
+      res = sprintf("%#-79s\r\n", res);
       break;
     case LS_FLAG_m:
-      res = sprintf("%=-79s\n", (res/"\n")*", ");
+      res = sprintf("%=-79s\r\n", (res/"\n")*", ");
       break;
     case LS_FLAG_l:
-      res = "total " + total + "\n" + res;
+      res = "total " + total + "\r\n" + res;
       break;
     default:
       break;
@@ -717,7 +717,7 @@ class LSFile
 	DWRITE("FTP: LSFile->list_next_directory(): NO FILES!\n");
       }
       if (name_directories) {
-	listing = short + ":\n" + listing + "\n";
+	listing = short + ":\r\n" + listing + "\r\n";
       }
       if (listing != "") {
 	output(listing);
@@ -804,7 +804,7 @@ class LSFile
 	  files[n_files++] = short;
 	}
       } else {
-	output(short + ": not found\n");
+	output(short + ": not found\r\n");
 	session->conf->log(([ "error":404 ]), session);
       }
     }
