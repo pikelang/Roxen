@@ -13,10 +13,12 @@ inherit "roxenlib";
 #define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant module_type = MODULE_LOCATION;
-constant module_name = "Configuration Filesystem";
-constant module_doc = "This filesystem serves the administration interface";
+LocaleString module_name_locale = LOCALE(0,"Configuration Filesystem");
+LocaleString module_doc_locale =
+  LOCALE(0,"This filesystem serves the administration interface");
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.67 2001/01/10 08:57:27 per Exp $";
+constant cvs_version =
+  "$Id: config_filesystem.pike,v 1.68 2001/01/19 16:39:37 per Exp $";
 
 constant path = "config_interface/";
 
@@ -136,13 +138,42 @@ mixed find_dir( string f, object id )
   return get_dir(path + "standard/" + locale);
 }
 
+mapping logged_in = ([]);
+
 mixed find_file( string f, object id )
 {
   int is_docs;
+  User user;
+
+  string host;
+  if( array h = gethostbyaddr( id->remoteaddr ) )
+    host = h[0];
+  else
+    host = id->remoteaddr;
+
+  if( user = id->conf->authenticate( id, roxen.config_userdb_module ) )
+  {
+    if( !id->misc->cf_theme )
+      id->misc->cf_theme = ([]);
+    id->misc->cf_theme["user-uid"] = user->name();
+    id->misc->cf_theme["user-name"] = user->real_name();
+    id->misc->remote_config_host = host;
+    id->misc->config_user = user->ruser;
+    if( (time(1) - logged_in[ user->name()+host ]) > 1800 )
+      report_notice(LOCALE("dt", "Administrator logged on as %s from %s.")
+		    +"\n", user->name(), host+" ("+id->remoteaddr+")" );
+    logged_in[ user->name()+host ] = time(1);
+    roxen.adminrequest_get_context( user->name(), host, id );
+  }
+  else if( !id->misc->internal_get )
+  {
+    report_notice(LOCALE(0,"Failed login attempt from %s")+"\n",host);
+    return id->conf->authenticate_throw( id, "Roxen configuration",
+					 roxen.config_userdb_module );
+  }
+  
   if( !id->misc->internal_get )
   {
-    if( !id->misc->config_user )
-      return http_auth_required( "Roxen configuration" );
     if( (f == "") && !id->misc->pathinfo )
       return http_redirect(fix_relative( "/"+config_setting("locale")+"/",
 					 id ), id );
@@ -325,7 +356,7 @@ void start(int n, Configuration cfg)
       }
       else
       {
-        Filesystem.Tar T;
+        Filesystem.System T;
         report_notice( "Creating the 'docs' database\n");
         catch(T = Filesystem.Tar( "config_interface/docs.tar" ));
         if( !T )
@@ -358,10 +389,10 @@ void start(int n, Configuration cfg)
     }
 
     cfg->add_modules(({
-      "config_tags", "config_userdb",   "contenttypes",    "indexfiles",
+      "config_tags", "contenttypes",    "indexfiles",
       "gbutton",     "wiretap",         "graphic_text",    "pathinfo",
-      "pikescript",  "translation_mod", "rxmlparse",        "rxmltags",
-      "tablist",     "update",          "cimg"
+      "pikescript",  "translation_mod", "rxmlparse",       "rxmltags",
+      "tablist",     "update",          "cimg",            "httpcookie"
     }));
   }
   call_out( zap_old_modules, 0 );
@@ -370,11 +401,26 @@ void start(int n, Configuration cfg)
 void zap_old_modules()
 {
   if( my_configuration()->find_module("awizard#0") )
-    my_configuration()->disable_module( "awizard#0" ); // no longer used.
+    my_configuration()->disable_module( "awizard#0" );
+  if( my_configuration()->find_module("config_userdb#0") )
+    my_configuration()->disable_module( "config_userdb#0" );
 }
+
 
 void create()
 {
   defvar( "location", "/", LOCALE(264,"Mountpoint"), TYPE_LOCATION,
           LOCALE(265,"Usually / is a good idea") );
+
+
+  roxen.add_permission( "View Settings", LOCALE(192, "View Settings"));
+  roxen.add_permission( "Edit Users",    LOCALE(193, "Edit Users"));
+  roxen.add_permission( "Update",    LOCALE(349, "Update Client"));
+  roxen.add_permission( "Edit Global Variables",
+			LOCALE(194, "Edit Global Variables"));
+  roxen.add_permission( "Tasks", LOCALE(196, "Tasks"));
+  roxen.add_permission( "Restart", LOCALE(197, "Restart"));
+  roxen.add_permission( "Shutdown", LOCALE(198, "Shutdown"));
+  roxen.add_permission( "Create Site", LOCALE(199, "Create Sites"));
+  roxen.add_permission( "Add Module", LOCALE(200, "Add Modules"));
 }
