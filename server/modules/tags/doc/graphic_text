@@ -121,10 +121,17 @@ module in pike.
           Draw with more or less opaque text (100% is default).
 <dt><b>rotate</b>=<tt>ang(deg.)</tt><dd>
           Rotate the finished image.
-<dt><b>background</b>=<tt>file</tt><dd>
-          Use the specifed file as a background
+<dt><b>background</b>=<tt>file|color</tt><dd>
+          Use the specifed file or color as a background.
           Supported file-formats: gif and ppm, jpeg if
           the jpeg library was available when roxen was compiled.
+	  Together with <i>alpha</i> it can be useful to use the
+	  background attribute to specify a color as a background.
+<dt><b>alpha</b>=<tt>file</tt><dd>
+          Use the specifed file as an alpha channel image.
+          Supported file-formats: gif and ppm, jpeg if
+          the jpeg library was available when roxen was compiled.
+	  Use this together with <i>background</i>.
 <dt><b>texture</b>=<tt>file</tt><dd>
           Use the specified file as text texture.
 <dt><b>tile</b><dd>

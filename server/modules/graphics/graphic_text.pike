@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.139 1998/08/02 03:13:06 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.140 1998/08/10 05:09:09 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -406,12 +406,24 @@ object make_text_image(mapping args, object font, string text,object id)
       foreground = b2;
     }
   }
-
-  if((args->background) && (background = load_image(args->background, id))) {
-    background = background;
+  int background_is_color;
+  if(args->background &&
+     ((background = load_image(args->background, id)) ||
+      (sizeof(args->background)>1 &&
+       (background=Image.image(xsize,ysize, @(parse_color(args->background[1..]))))
+       && (background_is_color=1))))
+  {
+    object alpha;
+    if(args->alpha && (alpha = load_image(args->alpha,id)) && background_is_color)
+    {
+      xsize=MAX(xsize,alpha->xsize());
+      ysize=MAX(ysize,alpha->ysize());
+      background=Image.image(xsize,ysize, @(parse_color(args->background[1..])));
+    }
+      
     if((float)args->scale >= 0.1)
       background = background->scale(1.0/(float)args->scale);
-
+    
     if(args->tile)
     {
       object b2 = Image.image(xsize,ysize);
@@ -439,9 +451,13 @@ object make_text_image(mapping args, object font, string text,object id)
       }
       background = b2;
     }
+    xsize = MAX(xsize,background->xsize());
+    ysize = MAX(ysize,background->ysize());
+    werror("x: %O, y: %O\n",xsize,ysize);
 
-    xsize = background->xsize();
-    ysize = background->ysize();
+    if(alpha)
+      background->paste_alpha_color(alpha->invert(),@bgcolor);
+
     switch(lower_case(args->talign||"left")) {
     case "center":
       xoffset = (xsize/2 - txsize/2);
@@ -628,7 +644,6 @@ object make_text_image(mapping args, object font, string text,object id)
   }
 
   if(args->crop) background = background->autocrop();
-  
   return background;
 }
 
@@ -1226,6 +1241,9 @@ string tag_graphicstext(string t, mapping arg, string contents,
     arg->magic_background=fix_relative(arg->magic_background,id);
   if(arg->magicbg) 
     arg->magicbg = fix_relative(arg->magicbg,id);
+  if(arg->alpha) 
+    arg->alpha = fix_relative(arg->alpha,id);
+  
 
   string gif="";
   if(query("gif")) gif=".gif";
