@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.31 1998/05/14 23:58:02 grubba Exp $
+ * $Id: ftp2.pike,v 1.32 1998/05/15 00:06:16 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1541,14 +1541,18 @@ class FTPSession
     if(!file->len)
       file->len = file->data?(stringp(file->data)?strlen(file->data):0):0;
 
+    if (!file->mode) {
+      file->mode = mode;
+    }
+
     if(fd)
     {
       if (file->len) {
 	send(150, ({ sprintf("Opening %s data connection for %s (%d bytes).",
-			     modes[mode], file->full_path, file->len) }));
+			     modes[file->mode], file->full_path, file->len) }));
       } else {
 	send(150, ({ sprintf("Opening %s mode data connection for %s",
-			     modes[mode], file->full_path) }));
+			     modes[file->mode], file->full_path) }));
       }
     }
     else
@@ -1556,7 +1560,7 @@ class FTPSession
       send(425, ({ "Can't build data connect: Connection refused." })); 
       return;
     }
-    switch(mode) {
+    switch(file->mode) {
     case "A":
       if (file->data) {
 	file->data = replace(file->data, "\n", "\r\n");
@@ -1956,6 +1960,17 @@ class FTPSession
       ]);
     }
     if (file) {
+      // The listings returned by a LIST or NLST command SHOULD use an
+      // implied TYPE AN, unless the current type is EBCDIC, in which
+      // case an implied TYPE EN SHOULD be used.
+      // RFC 1123 4.1.2.7
+
+      if (mode != "E") {
+	file->mode = "A";
+      } else {
+	file->mode = "E";
+      }
+
       if (!file->full_path) {
 	file->full_path = argv[0];
       }
@@ -2017,10 +2032,8 @@ class FTPSession
     session->file->data = (Array.map(f, make_MLSD_fact, dir, session) * "\r\n")
       + "\r\n";
 
-    string old_mode = mode;
-    mode = "I";
+    session->file->mode = "I";
     connect_and_send(session->file, session);
-    mode = old_mode;
   }
 
   /*
@@ -2484,15 +2497,6 @@ class FTPSession
     // ftp_MLST(args); return;
 
     array(string) argv = glob_expand_command_line("/usr/bin/ls " + (args||""));
-
-    string old_mode = mode;
-    if (mode != "E") {
-      // The listings returned by a LIST or NLST command SHOULD use an
-      // implied TYPE AN, unless the current type is EBCDIC, in which
-      // case an implied TYPE EN SHOULD be used.
-      // RFC 1123 4.1.2.7
-      mode = "A";
-    }
 
     call_ls(argv);
 
