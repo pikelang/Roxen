@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.234 2001/01/22 19:22:43 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.235 2001/01/27 02:47:43 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -947,14 +947,36 @@ void paranoia_throw(mixed err)
 int main(int argc, array(string) argv)
 {
   // (. Note: Optimal implementation. .)
+  array av = copy_value( argv );
   configuration_dir =
-    Getopt.find_option(copy_value(argv), "d",({"config-dir","configuration-directory" }),
+    Getopt.find_option(av, "d",({"config-dir","configuration-directory" }),
 	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
+
   remove_dumped =
     Getopt.find_option(argv, "remove-dumped",({"remove-dumped", }), 0 );
 
-  if( configuration_dir[-1] != '/' )
-    configuration_dir+="/";
+  if( configuration_dir[-1] != '/' ) configuration_dir+="/";
+
+
+  // The default (internally managed) mysql path
+  string defpath =
+    "mysql://%user%@localhost:"+
+    combine_path( getcwd(), query_configuration_dir()+"_mysql/socket")+
+    "/%db%";
+  
+  my_mysql_path =
+    Getopt.find_option(av, "m",({"mysql-url", }), 0,defpath);
+
+  if( my_mysql_path != defpath )
+  {
+    werror(
+     "          : ----------------------------------------------------------\n"
+      "Notice: Not using the built-in mysql\n"
+      "Mysql path is "+my_mysql_path+"\n"
+    );
+    mysql_path_is_remote = 1;
+  }
+    
   nwrite = lambda(mixed ... ){};
   call_out( do_main_wrapper, 0, argc, argv );
   // Get rid of the _main and main() backtrace elements..
@@ -990,6 +1012,9 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
+string my_mysql_path;
+
+
 Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
 {
   Thread.Local tl;
@@ -997,7 +1022,8 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
   
   if( !my_mysql_cache[ro] )
     my_mysql_cache[ ro ] = ([]);
-  if( !( tl = my_mysql_cache[ro][db] ) )
+ 
+ if( !( tl = my_mysql_cache[ro][db] ) )
     tl = my_mysql_cache[ ro ][ db ] = Thread.Local();
 
   if( tl->get() ) 
@@ -1008,15 +1034,11 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
 
   if( mixed err = catch
   {
-    string mysql_socket = combine_path( getcwd(), query_configuration_dir()+
-                                      "_mysql/socket");
-    if( stringp( ro ) )
-      tl->set(Sql.Sql("mysql://"+ro+"@localhost:"+mysql_socket+"/"+db));
-    else if( ro )
-      tl->set(Sql.Sql("mysql://ro@localhost:"+mysql_socket+"/"+db));
-    else
-      tl->set(Sql.Sql("mysql://rw@localhost:"+mysql_socket+"/"+db));
-    return tl->get();
+    if( intp( ro ) )
+      ro = ro?"ro":"rw";
+    return tl->set( Sql.Sql(replace( my_mysql_path,
+				     ({"%user%", "%db%" }),
+				     ({ ro, db }))) );
   } )
     if( db == "mysql" )
       throw( err );
@@ -1075,35 +1097,13 @@ static void do_tailf( int loop, string f )
   } while( loop );
 }
 
+int mysql_path_is_remote;
 void start_mysql()
 {
-  int st = gethrtime();
   Sql.Sql db;
-  string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
-  
-  report_debug( "Starting mysql ... ");
-#if constant( thread_create )
-  thread_create( do_tailf, 1, mysqldir+"/error_log" );
-  sleep(0.1);
-#else
-  void do_do_tailf( )
+  int st = gethrtime();
+  void assure_that_base_tables_exists( )
   {
-    call_out( do_do_tailf, 1 );
-    do_tailf( 0, mysqldir+"/error_log"  );
-  };
-  call_out( do_do_tailf, 0 );
-#endif
-
-  void connected_ok(int was)
-  {
-    string version = db->query( "SELECT VERSION() AS v" )[0]->v;
-    report_debug("%s %s [%.1fms]\n",
-                 (was?"Was running":"Done"),
-                  version, (gethrtime()-st)/1000.0);
-    if( (float)version < 3.23 )
-      report_debug( "Warning: This is a very old Mysql. "
-                     "Please use 3.23.*\n");
-
     // 1: Create the 'ofiles' database.
     if( catch( db->query( "USE ofiles" ) ) )
     {
@@ -1125,11 +1125,48 @@ void start_mysql()
     }
   };
 
+  void connected_ok(int was)
+  {
+    string version = db->query( "SELECT VERSION() AS v" )[0]->v;
+    report_debug("%s %s [%.1fms]\n",
+                 (was?"Was running":"Done"),
+                  version, (gethrtime()-st)/1000.0);
+    if( (float)version < 3.23 )
+      report_debug( "Warning: This is a very old Mysql. "
+                     "Please use 3.23.*\n");
+
+    assure_that_base_tables_exists();
+  };
+
+  report_debug( "Starting mysql ... ");
+  
   if( !catch( db = connect_to_my_mysql( 0, "mysql" ) ) )
   {
     connected_ok(1);
     return;
   }
+
+  if( mysql_path_is_remote )
+  {
+    report_debug( "******************** FATAL ******************\n"
+		  "Cannot connect to the specified mysql, server\n"
+		  "                  Aborting\n"
+		  "******************** FATAL ******************\n" );
+    exit(1);
+  }
+
+  string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
+#if constant( thread_create )
+  thread_create( do_tailf, 1, mysqldir+"/error_log" );
+  sleep(0.1);
+#else
+  void do_do_tailf( )
+  {
+    call_out( do_do_tailf, 1 );
+    do_tailf( 0, mysqldir+"/error_log"  );
+  };
+  call_out( do_do_tailf, 0 );
+#endif
 
   if( !file_stat( mysqldir+"/mysql/user.MYD" ) ||
       !file_stat( mysqldir+"/mysql/host.MYD" ) ||
@@ -1154,11 +1191,13 @@ void start_mysql()
   Process.create_process( ({"bin/start_mysql",
                             mysqldir,
                             query_mysql_dir(),
+#if constant(getpwuid)
 			    getpwuid(getuid())[ 0 ]
+#else /* Should be ignored by the start_mysql script */
+			    "Administrator"
+#endif
 			  }) );
 
-  
-  string mysql_socket = mysqldir+"/socket";
   int repeat;
   while( 1 )
   {
