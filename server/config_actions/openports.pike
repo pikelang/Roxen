@@ -1,7 +1,9 @@
 #ifndef __NT__
 /*
- * $Id: openports.pike,v 1.11 1998/05/10 22:57:01 grubba Exp $
+ * $Id: openports.pike,v 1.12 1998/05/28 14:13:32 grubba Exp $
  */
+
+#include <module.h>
 
 inherit "wizard";
 constant name = "Maintenance//Show all open ports...";
@@ -42,6 +44,11 @@ mixed page_2(object id)
 
   if(!s || !(s=popen(s)) || !strlen(s))
   {
+#ifdef DEBUG
+    if (id->variables->lsof) {
+      roxen_perror("openports: lsof failed.\n");
+    }
+#endif /* DEBUG */
     s = popen("netstat -n -a");
     if(!s || !strlen(s)) {
       return "I cannot understand the output of netstat -a\n";
@@ -143,6 +150,12 @@ string cleanup_ip(string ip)
   return(ip);
 }
 
+// Fallback for Roxen 1.2.26
+string MKPORTKEY(array(string) p)
+{
+  return(p[1]+"://"+p[2]+":"+p[0]);
+}
+
 mixed page_0(object id)
 {
   string res = "<h1>All open ports in this Roxen</h1>\n";
@@ -151,24 +164,69 @@ mixed page_0(object id)
   mapping used = ([]);
   foreach(roxen->configurations, object c)
   {
-    mapping p = c->open_ports;
-    foreach(indices(p), object port)
-    {
-      // num, protocol, ip
-      // Why is port 0 sometimes? *bogglefluff* / David
-      if(port) {
-	string ip = cleanup_ip(p[port][2]);
-	if (!used[ip] || !used[ip][p[port][0]]) {
-	  if(!used[ip]) {
-	    used[ip] = (< p[port][0] >);
-	  } else {
-	    used[ip][p[port][0]] = 1;
+    if (mappingp(c->open_ports)) {
+      // Roxen 1.2.25 and earlier.
+      mapping p = c->open_ports;
+      foreach(indices(p), object port)
+      {
+	// num, protocol, ip
+	// Why is port 0 sometimes? *bogglefluff* / David
+	if(port) {
+	  string ip = cleanup_ip(p[port][2]);
+	  if (!used[ip] || !used[ip][p[port][0]]) {
+	    if(!used[ip]) {
+	      used[ip] = (< p[port][0] >);
+	    } else {
+	      used[ip][p[port][0]] = 1;
+	    }
+	    if(!ports_by_ip[ip]) {
+	      ports_by_ip[ip]=({({p[port][0],p[port][1],c})});
+	    } else {
+	      ports_by_ip[ip]+=({({p[port][0],p[port][1],c})});
+	    }
 	  }
-	  if(!ports_by_ip[ip]) {
-	    ports_by_ip[ip]=({({p[port][0],p[port][1],c})});
-	  } else {
-	    ports_by_ip[ip]+=({({p[port][0],p[port][1],c})});
+	}
+      }
+    } else {
+      // Roxen 1.2.26 and later.
+      array p;
+      if (c->variables["Ports"]) {
+	p = c->variables["Ports"][VAR_VALUE];
+      }
+
+      if (!c->server_ports) {
+	// Unpatched Roxen 1.2.26.
+      }
+
+      // Roxen 1.2.27 and later has c->MKPORTKEY
+      function mkportkey = c->MKPORTKEY || MKPORTKEY;
+      foreach(p || ({}), array port)
+      {
+	// num, protocol, ip
+	// Why is port 0 sometimes? *bogglefluff* / David
+	if(port && c->server_ports[mkportkey(port)]) {
+	  string ip = cleanup_ip(port[2]);
+	  if (!used[ip] || !used[ip][port[0]]) {
+	    if(!used[ip]) {
+	      used[ip] = (< port[0] >);
+	    } else {
+	      used[ip][port[0]] = 1;
+	    }
+	    if(!ports_by_ip[ip]) {
+	      ports_by_ip[ip] = ({({port[0], port[1], c})});
+	    } else {
+	      ports_by_ip[ip] += ({({port[0], port[1], c})});
+	    }
 	  }
+#ifdef DEBUG
+	} else {
+	  if (!port) {
+	    roxen_perror("No port\n");
+	  } else {
+	    roxen_perror(sprintf("No port %s not open\n"
+				 "%O\n", mkportkey(port), port));
+	  }
+#endif /* DEBUG */
 	}
       }
     }
@@ -185,9 +243,9 @@ mixed page_0(object id)
     ip = cleanup_ip(ip);
 
     if(!ports_by_ip[ip])
-      ports_by_ip[ip]=({({(int)port,"http",0})});
+      ports_by_ip[ip] = ({({(int)port,"http",0})});
     else
-      ports_by_ip[ip]+=({({(int)port,"http",0})});
+      ports_by_ip[ip] += ({({(int)port,"http",0})});
   }
 
   foreach(Array.sort_array(indices(ports_by_ip), lambda(string a, string b) {
