@@ -786,6 +786,19 @@ så här ofta. Tiden är angiven i dagar");
                "databas så kommer det fortfarande skrivas saker i det "
                "här directoryt.");
 
+  globvar("mem_cache_gc", 300,
+	  "Cache: Memory Cache Garbage Collect Time",
+	  TYPE_INT,
+	  "The number of seconds between every garbage collect "
+	  "(removal of old content) from the memory cache. The "
+	  "memory cache is used for various tasks like remebering "
+	  "what supports flags matches what client.");
+  deflocaledoc("svenska", "mem_cache_gc",
+	       "Cache: Minnescachens städningsintervall",
+	       "Hur många sekunder som ska gå mellan varje gång som "
+	       "allt gammalt innehåll i cachen städas bort. Minnescachen "
+	       "används för många olika saker som t.ex. att komma ihåg "
+	       "vilka supports flaggor som hör till vilken klient.");
 
   setvars(retrieve("Variables", 0));
 
