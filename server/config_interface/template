@@ -30,7 +30,7 @@
 
 <define container="cv-leftside">
   <colorscope ::="&usr.left-tableargs:none;">
-    <define preparse="1" variable="var.leftside"><contents/></define>
+    <define preparse="1" variable="var.leftside"><contents/>&usr.lefthtml:none;</define>
   </colorscope>
 </define>
 
@@ -69,7 +69,7 @@
       </tablist></td>
     </tr>
     <tr>
-      <td bgcolor="&usr.content-bg;">&var.__contents:none;</td>
+      <td bgcolor="&usr.content-bg;" ::="&usr.content-extratableargs;">&var.__contents:none;</td>
     </tr>
   </table>
 </define>
@@ -130,10 +130,10 @@
         <table>
          <tr>
            <td align="right">
-             <font color="&usr.top-fgcolor;">
+             <font color="&usr.top-fgcolor;"><colorscope ::=&usr.top-tableargs;>
               <gbutton href="/change_user.pike?uid=&usr.user-uid;"
-                  align="right" textcolor="&usr.top-fgcolor;" bgcolor="&usr.top-bgcolor;"
-                  width="70"> <translate id="206">User</translate>: </gbutton>
+                  align="right" 
+                  width="70"> <translate id="206">User</translate>: </gbutton></colorscope>
             </td>
             <td>
                <font color="&usr.top-fgcolor;">
