@@ -6,7 +6,8 @@
 <img src="/internal-roxen-unit" width=1 height="16" alt="" /><br />
 <gbutton frame-image='&usr.left-buttonframe;' 
          width='&usr.left-buttonwidth;'
-         bgcolor='&usr.left-selbuttonbg;' 
+         bgcolor='&usr.left-selbuttonbg;'
+         textcolor='&usr.left-selbuttonfg;'
          icon_src='&usr.selected-indicator;' 
          icon_align='left' 
          href=''>Sites</gbutton>
@@ -34,8 +35,9 @@ Select site<br />
  <emit source='configurations'>
   <cf-perm perm="Site:&_.name;">
    <gbutton frame-image='&usr.left-buttonframe;' 
-             bgcolor='&usr.left-buttonbg;' 
-             href='site.html/&_.sname;/' 
+             bgcolor='&usr.left-buttonbg;'
+             textcolor='&usr.left-buttonfg;'
+             href='site.html/&_.sname;/'
             width='&usr.left-buttonwidth;'>&_.name;</gbutton><br />
   </cf-perm>
  </emit>
@@ -46,16 +48,16 @@ Select site<br />
 
 <cv-split>
   <subtablist><st-page>
-  <cf-perm perm="Create Site">
+  <cf-perm perm="Create Site"><br /><p align="center">
      <gbutton href='new_site.html'
-              icon_src='&usr.next;' 
-              align_icon='right' 
+              icon_src='&usr.next;'
+              align_icon='right'
               hspace='5' vspace='5'>Create new site</gbutton>
      <gbutton href='drop_site.html' 
               icon_src='&usr.next;' 
               align_icon='right' 
               hspace='5' vspace='5'>Drop old site</gbutton>
-   </cf-perm>
+   </cf-perm></p><br />
   </st-page></subtablist>
 </cv-split>
 </content>
