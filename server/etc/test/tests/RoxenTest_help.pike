@@ -6,6 +6,38 @@ array(string) new = ({});
 
 void run_tests( Configuration c )
 {
+  // Create a new server
+  test( roxen.enable_configuration, "helptestserver" );
+
+  c = test_generic( check_is_configuration,
+		    roxen.find_configuration,
+		    "helptestserver" );
+
+  if( !c )  {
+    report_error( "Failed to find test configuration\n");
+    return;
+  }
+
+  // Add all modules except wrapper modules and other funny stuff.
+  array modules = roxen->all_modules();
+  sort(modules->sname, modules);
+  foreach(modules, ModuleInfo m) {
+    if( (< "roxen_test", "config_tags", "update",
+	   "compat", "configtablist", "flik", "lpctag",
+	   "xmig", "userdb", "htmlparse", "directories2",
+	   "fastdir" >)[m->sname] )
+      continue;
+    current_test++;
+    new += ({ m->sname });
+    test_generic( check_is_module, c->enable_module, m->sname );
+  }
+
+  // Wait for everything to settle down.
+  sleep(1);
+  test( c->disable_module, "ac_filesystem" );
+  test( c->disable_module, "auth" );
+  sleep(1);
+
   // Make a list of all tags and PI:s
   array tags=map(indices(c->rxml_tag_set->get_tag_names()),
 		 lambda(string tag) {
@@ -17,43 +49,14 @@ void run_tests( Configuration c )
 	      lambda(string tag) { return "?"+tag; } );
 
   RequestID id = roxen.InternalRequestID( );
-  id->set_url( "http://localhost:80/" );
   id->conf = c;
+  id->set_url( "http://localhost:80/" );
 
   foreach(tags, string tag)
     test_true(find_tag_doc, tag, id);
 
   foreach(new, string m)
     test( c->disable_module, m );
-}
 
-
-void low_run_tests( Configuration c, function go_on )
-{
-  if( mixed err = catch {
-    foreach(roxen->all_modules(), ModuleInfo m) {
-      if( (< "roxen_test", "config_tags", "update",
-	     "compat", "configtablist", "flik", "lpctag",
-	     "xmig" >)[m->sname] )
-	continue;
-      current_test++;
-      if( (m->type & MODULE_TAG) && !c->enabled_modules[m->sname])
-      {
-	test_generic( check_is_module, c->enable_module, m->sname );
-	new += ({ m->sname });
-      }
-    }
-  } )
-  {
-    go_on( current_test, tests_failed+1 );
-    return;
-  }
-  call_out( lambda(){
-	      mixed err = catch {
-		run_tests( c );
-	      };
-	      if( err )
-		write( describe_backtrace( err ) );
-	      go_on( current_test, tests_failed );
-	    }, 0.5 ); // enable_module does some work in a call_out
+  test( roxen.disable_configuration, "usertestconfig" );
 }
