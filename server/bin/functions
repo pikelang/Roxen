@@ -134,6 +134,13 @@ find_pike() {
    exit 1
  fi
 
+ # Check version of Pike.
+ if [ x`"$pike" -e 'if (__VERSION__ > 7.8) write("new");'` = "xnew" ]; then
+   # We're always targetting for the latest Pike, but you can add this:
+   #DEFINES="-V7.8 $DEFINES"
+   export DEFINES
+ fi
+
  PIKE="$pike"
  export PIKE
 }
