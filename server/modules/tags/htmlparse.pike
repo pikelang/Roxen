@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.103 1998/05/25 14:25:48 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.104 1998/05/28 21:59:13 js Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -760,6 +760,9 @@ string tag_set( string tag, mapping m, object id )
     else if(m->define)
       // Set variable to the value of a define
       id->variables[ m->variable ] = id->misc->defines[ m->define ];
+    else if (m->eval)
+      // Set variable to the result of some evaluated RXML
+      id->variables[ m->variable ] = parse_rxml(m->eval, id);
     else
       // Unset variable.
       m_delete( id->variables, m->variable );
