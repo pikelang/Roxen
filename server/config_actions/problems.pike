@@ -1,5 +1,5 @@
 /*
- * $Id: problems.pike,v 1.13 1998/11/22 17:08:45 per Exp $
+ * $Id: problems.pike,v 1.14 1999/05/30 22:43:57 per Exp $
  */
 
 inherit "wizard";
@@ -258,9 +258,9 @@ string wizard_done(object id)
 {
   if(actions)
   {
-    object o = ((program)"privs")("Fixing config");
     mkdir("disabled_modules");
-    foreach(actions, array action) action[1](@action[2..]);
+    foreach(actions, array action) 
+      action[1](@action[2..]);
   }
 }
 
