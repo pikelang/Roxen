@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.180 2001/06/28 19:32:37 mast Exp $
+// $Id: module.pmod,v 1.181 2001/06/28 20:06:59 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -521,9 +521,18 @@ class TagSet
   //!
   {
     id_number = ++tag_set_count;
-    if (all_tagsets[_name])
-      error ("The tag set name %O is not unique.\n", _name);
-    all_tagsets[name = _name] = this_object();
+    if (_name) {
+      if (!zero_type (all_tagsets[_name])) {
+	report_warning ("The tag set name %O is not unique - ignoring it.\n", _name);
+	if (TagSet other = all_tagsets[_name]) {
+	  // The already registered name is ambigious anyway.
+	  other->name = 0;
+	  all_tagsets[_name] = 0;
+	}
+      }
+      else
+	all_tagsets[name = _name] = this_object();
+    }
     if (_tags) add_tags (_tags);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
@@ -742,8 +751,8 @@ class TagSet
   {
     switch (var) {
       case "name":
-	m_delete (all_tagsets, name);
-	all_tagsets[name = val] = this_object();
+	if (name) m_delete (all_tagsets, name);
+	if (val) all_tagsets[name = val] = this_object();
 	break;
       case "imported":
 	if (!val) return val;	// Pike can call us with 0 as part of an optimization.
@@ -6047,11 +6056,12 @@ static class PCodec
     if(objectp(what)) {
       TagSet tagset;
       Tag tag;
-      if(what->is_RXML_Frame && (tag = what->tag) && (tagset = tag->tagset)) {
+      if(what->is_RXML_Frame && (tag = what->tag) && (tagset = tag->tagset) &&
+	 tag->name && tagset->name) {
 	saved_id[object_program(what)] =
 	  ((tag->flags & FLAG_PROC_INSTR)? "p":"t") + tag->name +
 	  (tag->plugin_name? "#"+tag->plugin_name : "") +
-	  "\n" + what->tag->tagset->name;
+	  "\n" + tagset->name;
 	return ([])[0];
       } else if(what->is_RXML_Type)
 	return "t:"+what->name;
