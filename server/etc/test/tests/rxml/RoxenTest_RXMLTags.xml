@@ -1137,6 +1137,18 @@ hej</result>
   <result>abab</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      <define tag="mytag" scope="rx">
+	<set variable="rx.count" value="0"/>
+      </define>
+      a<mytag />b
+    </cache>
+  </rxml>
+  <result>ab</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
