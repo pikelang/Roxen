@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.308 2003/03/25 20:30:24 mast Exp $
+// $Id: module.pmod,v 1.309 2003/03/31 12:50:21 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7101,9 +7101,10 @@ class CompiledCallback (static function|string callback, static array args)
     if (stringp (callback)) {
       mixed obj = ctx->id;
       foreach (callback / "->", string name) obj = obj[name];
-      callback = [function] obj;
+      ([function] obj) (@args);
     }
-    callback (@args);
+    else
+      callback (@args);
   }
 
   array _encode() {return ({callback, args});}
