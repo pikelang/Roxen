@@ -10,7 +10,7 @@ constant modules = ({
   "contenttypes",
   "directories",
   "gbutton",
-  "gtext",
+  "graphic_text",
   "obox",
   "pikescript",
   "rxmlparse",
