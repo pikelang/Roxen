@@ -1,3 +1,5 @@
+// $Id: SloppyDOM.pmod,v 1.2 2002/02/14 03:31:31 mast Exp $
+
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
 //! also a little bit of XPath evaluation to do queries on the node
@@ -21,7 +23,7 @@
 //! This belongs in @[Parser.XML] in Pike, but it's here for the time
 //! being until it has stabilized a bit.
 
-#pike __REAL_VERSION__
+// Created 2002-02-14 by Martin Stjernholm
 
 Document parse (string source, void|int raw_values)
 //! Normally entities are decoded, and @[Node.xml_format] will encode
