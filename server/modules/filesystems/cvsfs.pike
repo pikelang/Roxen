@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-constant cvs_version = "$Id: cvsfs.pike,v 1.18 1998/11/19 10:22:27 per Exp $";
+constant cvs_version = "$Id: cvsfs.pike,v 1.19 1999/12/18 14:36:52 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -39,7 +39,7 @@ string secure_path(string path)
     if (path[0] == '/')
       npath = "/" + npath;
 #ifdef CVSFS_DEBUG
-    roxen_perror(sprintf("secure_path(\"%s\") => \"%s\"\n", path, npath));
+    werror(sprintf("secure_path(\"%s\") => \"%s\"\n", path, npath));
 #endif /* CVSFS_DEBUG */
     return npath;
   }
@@ -320,7 +320,7 @@ object|mapping|int find_file(string name, object id)
   mapping(string:string|int) prestates = parse_prestate(id->prestate);
 
 #ifdef CVSFS_DEBUG
-  roxen_perror(sprintf("cvs->find_file: Looking for '%s'\n", name));
+  werror(sprintf("cvs->find_file: Looking for '%s'\n", name));
 #endif /* CVSFS_DEBUG */
 
   if (cvs_module_path && sizeof(cvs_module_path)) {
@@ -330,7 +330,7 @@ object|mapping|int find_file(string name, object id)
     int is_text = 0;
 
 #ifdef CVSFS_DEBUG
-    roxen_perror("Real file '" + fname + "'\n");
+    werror("Real file '" + fname + "'\n");
 #endif /* CVSFS_DEBUG */
 
     if (file_stat(fname + ",v")) {
@@ -368,7 +368,7 @@ object|mapping|int find_file(string name, object id)
       array arr = file_stat(fname + "/.");
       if (arr && (arr[1] < 0)) {
 #ifdef CVSFS_DEBUG
-	roxen_perror("CVS: \"" + fname + "\" is a directory.\n");
+	werror("CVS: \"" + fname + "\" is a directory.\n");
 #endif /* CVSFS_DEBUG */
 	return -1;
       }
@@ -376,7 +376,7 @@ object|mapping|int find_file(string name, object id)
   }
 
 #ifdef CVSFS_DEBUG
-  roxen_perror("CVS: file \"" + name + "\" not found.\n");
+  werror("CVS: file \"" + name + "\" not found.\n");
 #endif /* CVSFS_DEBUG */
   return 0;
 }

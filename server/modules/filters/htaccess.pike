@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // .htaccess compability by David Hedbor, neotron@idonex.se 
 //   Changed into module by Per Hedbor, per@idonex.se
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.50 1999/10/04 15:00:15 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.51 1999/12/18 14:20:53 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -393,7 +393,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 
   if (!groupfile) {
 #ifdef HTACCESS_DEBUG
-    roxen_perror(sprintf("HTACCESS: !groupfile\n"));
+    werror(sprintf("HTACCESS: !groupfile\n"));
 #endif
     if(!validate_user(1, auth, userfile, id))
       return 0;

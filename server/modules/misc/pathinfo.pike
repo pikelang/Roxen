@@ -1,6 +1,4 @@
 /*
- * $Id: pathinfo.pike,v 1.6 1999/10/10 19:16:37 per Exp $
- *
  * PATH_INFO support for Roxen.
  *
  * Henrik Grubbström 1998-10-01
@@ -11,7 +9,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.6 1999/10/10 19:16:37 per Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.7 1999/12/18 14:47:00 nilsson Exp $";
 constant thread_safe = 1;
 
 // #define PATHINFO_DEBUG
@@ -26,12 +24,12 @@ array register_module()
 mapping|int last_resort(object id)
 {
 #ifdef PATHINFO_DEBUG
-  roxen_perror(sprintf("PATHINFO: Checking %O...\n", id->not_query));
+  werror(sprintf("PATHINFO: Checking %O...\n", id->not_query));
 #endif /* PATHINFO_DEBUG */
   if (id->misc->path_info) {
     // Already been here...
 #ifdef PATHINFO_DEBUG
-    roxen_perror(sprintf("PATHINFO: Been here, done that.\n"));
+    werror(sprintf("PATHINFO: Been here, done that.\n"));
 #endif /* PATHINFO_DEBUG */
     return 0;
   }
@@ -50,15 +48,15 @@ mapping|int last_resort(object id)
       pi = "/"+add_path_info;
     id->misc->path_info = pi;
 #ifdef PATHINFO_DEBUG
-    roxen_perror("PATHINFO: Trying: %O (%O)\n", query, pi);
+    werror("PATHINFO: Trying: %O (%O)\n", query, pi);
 #endif 
     array st = id->conf->stat_file( query, id );
     if( st && (st[ ST_SIZE ] > 0))
     {
       id->not_query = query;
 #ifdef PATHINFO_DEBUG
-      roxen_perror("PATHINFO: Found: %O:%O\n",
-                   id->not_query, id->misc->path_info);
+      werror("PATHINFO: Found: %O:%O\n",
+	     id->not_query, id->misc->path_info);
 #endif 
       return 1;
     }

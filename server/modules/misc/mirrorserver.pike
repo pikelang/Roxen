@@ -5,7 +5,7 @@ inherit "module";
 #define MIRRORSERVER_DEBUG
 #endif /* MIRRORSERVER_DEBUG */
 
-constant cvs_version = "$Id: mirrorserver.pike,v 1.15 1999/04/22 09:10:43 per Exp $";
+constant cvs_version = "$Id: mirrorserver.pike,v 1.16 1999/12/18 14:46:30 nilsson Exp $";
 
 class MirrorServer {
   import Stdio;
@@ -76,7 +76,7 @@ class MirrorServer {
 
   void create(object fi, string ba)
   {
-    roxen_perror("Mirror server ok..\n");
+    werror("Mirror server ok..\n");
     fid = fi;
     base=ba;
   }

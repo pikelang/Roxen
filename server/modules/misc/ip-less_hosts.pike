@@ -1,6 +1,6 @@
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.25 1999/06/09 22:49:19 mast Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.26 1999/12/18 14:45:38 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -67,7 +67,7 @@ object find_server_for(object id, string host)
     object c;
     string hn;
 #ifdef IP_LESS_DEBUG
-    roxen_perror("IPLESS: find_server_for(object, \""+host+"\")...\n");
+    werror("IPLESS: find_server_for(object, \""+host+"\")...\n");
 #endif /* IP_LESS_DEBUG */
     foreach(roxen->configurations, object s) {
       string h = lower_case(s->query("MyWorldLocation"));
@@ -78,7 +78,7 @@ object find_server_for(object id, string host)
 
       int corr = String.fuzzymatch(host, h);
 #ifdef IP_LESS_DEBUG
-      roxen_perror(sprintf("IPLESS: host: \"%s\"\n"
+      werror(sprintf("IPLESS: host: \"%s\"\n"
 			   "IPLESS: server: \"%s\"\n"
 			   "IPLESS: corr: %d\n",
 			   host, h, corr));
@@ -89,7 +89,7 @@ object find_server_for(object id, string host)
 	 * or the same, but a shorter hostname.
 	 */
 #ifdef IP_LESS_DEBUG
-	roxen_perror(sprintf("IPLESS: \"%s\" is a better match for \"%s\" than \"%s\"\n",
+	werror(sprintf("IPLESS: \"%s\" is a better match for \"%s\" than \"%s\"\n",
 			     h, host, hn||""));
 #endif /* IP_LESS_DEBUG */
 	best = corr;
@@ -115,7 +115,7 @@ object find_server_for(object id, string host)
     string hn;
     object c;
 #ifdef IP_LESS_DEBUG
-    roxen_perror("IPLESS: find_server_for(object, \""+host+"\")...\n");
+    werror("IPLESS: find_server_for(object, \""+host+"\")...\n");
 #endif /* IP_LESS_DEBUG */
     foreach(roxen->configurations, object s) {
       string h = lower_case(s->query("MyWorldLocation"));
@@ -131,7 +131,7 @@ object find_server_for(object id, string host)
       int corr = sizeof(common);
 #ifdef IP_LESS_DEBUG
       string common_s = rows(h/"", common)*"";
-      roxen_perror(sprintf("IPLESS: h: \"%s\"\n"
+      werror(sprintf("IPLESS: h: \"%s\"\n"
 			   "IPLESS: common: %O (\"%s\")\n"
 			   "IPLESS: corr: %d\n",
 			   h, common, common_s, corr));
@@ -142,7 +142,7 @@ object find_server_for(object id, string host)
 	 * or the same, but a shorter hostname.
 	 */
 #ifdef IP_LESS_DEBUG
-	roxen_perror(sprintf("IPLESS: \"%s\" is a better match for \"%s\" than \"%s\"\n",
+	werror(sprintf("IPLESS: \"%s\" is a better match for \"%s\" than \"%s\"\n",
 			     h, host, hn||""));
 #endif /* IP_LESS_DEBUG */
 	best = corr;

@@ -1,6 +1,6 @@
 #include <config.h>
 
-// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
 // Support for user Pike-scripts, like CGI, but handled internally in
 // the server, and thus much faster, but blocking, and somewhat less
@@ -9,7 +9,7 @@
 // This is an extension module.
 
 constant cvs_version=
-"$Id: pikescript.pike,v 1.50 1999/12/09 00:57:43 grubba Exp $";
+"$Id: pikescript.pike,v 1.51 1999/12/18 14:25:45 nilsson Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -102,7 +102,7 @@ array|mapping call_script(function fun, object got, object file)
   string s;
   object privs;
   if(!functionp(fun)) {
-    roxen_perror("call_script() failed: %O is not a function!\n", fun);
+    werror("call_script() failed: %O is not a function!\n", fun);
     return 0;
   }
   string|array (int) uid, olduid, us;
@@ -130,7 +130,7 @@ array|mapping call_script(function fun, object got, object file)
     err = catch(result = fun(got)); 
 #endif /* constant(__builtin.security) */
 
-  // roxen_perror("call_script() err: %O result:%O\n", err, result);
+  // werror("call_script() err: %O result:%O\n", err, result);
 
   if(privs) 
     destruct(privs);
@@ -155,7 +155,7 @@ array|mapping call_script(function fun, object got, object file)
     return result;
 
   if(!result) {
-    // roxen_perror("call_script() failed: No result.\n");
+    // werror("call_script() failed: No result.\n");
     return 0;
   }
 

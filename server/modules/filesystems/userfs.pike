@@ -14,7 +14,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.45 1999/09/26 14:38:47 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.46 1999/12/18 14:42:44 nilsson Exp $";
 
 // import Array;
 // import Stdio;
@@ -168,7 +168,7 @@ static array(string) find_user(string f, object id)
   }
 
 #ifdef USERFS_DEBUG
-  roxen_perror(sprintf("USERFS: find_user(%O, X) => u:%O, f:%O\n", of, u, f));
+  werror(sprintf("USERFS: find_user(%O, X) => u:%O, f:%O\n", of, u, f));
 #endif /* USERFS_DEBUG */
 
   return({ u, f });
@@ -180,7 +180,7 @@ mixed find_file(string f, object got)
   of=f;
 
 #ifdef USERFS_DEBUG
-  roxen_perror(sprintf("USERFS: find_file(%O, X)\n", f));
+  werror(sprintf("USERFS: find_file(%O, X)\n", f));
 #endif /* USERFS_DEBUG */
 
   array a = find_user(f, got);
@@ -203,7 +203,7 @@ mixed find_file(string f, object got)
       {
 	if (!banish_reported[u]) {
 	  banish_reported[u] = 1;
-	  roxen_perror(sprintf("User %s banished (%O)...\n", u, us));
+	  werror(sprintf("User %s banished (%O)...\n", u, us));
 	}
 	return 0;
       }
@@ -255,7 +255,7 @@ string real_file( mixed f, mixed id )
   string u;
 
 #ifdef USERFS_DEBUG
-  roxen_perror(sprintf("USERFS: real_file(%O, X)\n", f));
+  werror(sprintf("USERFS: real_file(%O, X)\n", f));
 #endif /* USERFS_DEBUG */
 
   array a = find_user(f, id);
@@ -298,7 +298,7 @@ string real_file( mixed f, mixed id )
 mapping|array find_dir(string f, object got)
 {
 #ifdef USERFS_DEBUG
-  roxen_perror(sprintf("USERFS: find_dir(%O, X)\n", f));
+  werror(sprintf("USERFS: find_dir(%O, X)\n", f));
 #endif /* USERFS_DEBUG */
 
   array a = find_user(f, got);
@@ -344,7 +344,7 @@ mapping|array find_dir(string f, object got)
 mixed stat_file( mixed f, mixed id )
 {
 #ifdef USERFS_DEBUG
-  roxen_perror(sprintf("USERFS: stat_file(%O, X)\n", f));
+  werror(sprintf("USERFS: stat_file(%O, X)\n", f));
 #endif /* USERFS_DEBUG */
 
   array a = find_user(f, id);

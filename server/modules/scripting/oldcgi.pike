@@ -14,7 +14,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: oldcgi.pike,v 2.1 1999/04/22 14:19:01 per Exp $";
+string cvs_version = "$Id: oldcgi.pike,v 2.2 1999/12/18 14:25:20 nilsson Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -401,7 +401,7 @@ static inline array make_args( string rest_query )
 array stat_file(string f, object id) 
 {
 #ifdef CGI_DEBUG
-  roxen_perror("CGI: stat_file(\"" + f + "\")\n");
+  werror("CGI: stat_file(\"" + f + "\")\n");
 #endif /* CGI_DEBUG */
   return file_stat(search_path+f);
 }
@@ -409,7 +409,7 @@ array stat_file(string f, object id)
 string real_file( mixed f, mixed id )
 {
 #ifdef CGI_DEBUG
-  roxen_perror("CGI: real_file(\"" + f + "\")\n");
+  werror("CGI: real_file(\"" + f + "\")\n");
 #endif /* CGI_DEBUG */
   if(stat_file( f, id )) 
     return search_path+f;
@@ -418,7 +418,7 @@ string real_file( mixed f, mixed id )
 array find_dir(string f, object id) 
 {
 #ifdef CGI_DEBUG
-  roxen_perror("CGI: find_dir(\"" + f + "\")\n");
+  werror("CGI: find_dir(\"" + f + "\")\n");
 #endif /* CGI_DEBUG */
   if(QUERY(ls)) 
     return get_dir(search_path+f);
@@ -902,7 +902,7 @@ class spawn_cgi
     int pid;
     int use_native_wrapper;
 #ifdef CGI_DEBUG
-    roxen_perror("do_cgi()\n");
+    werror("do_cgi()\n");
 #endif /* CGI_DEBUG */
 
     if(wrapper) 
@@ -962,7 +962,7 @@ class spawn_cgi
     werror("Starting CGI.\n");
 #endif
 #ifdef CGI_DEBUG
-    roxen_perror(sprintf("create_process(%O, %O)...\n", args, options));
+    werror(sprintf("create_process(%O, %O)...\n", args, options));
 #endif /* CGI_DEBUG */
 
     object proc;
@@ -970,7 +970,7 @@ class spawn_cgi
       proc = Process.create_process(args, options);
 #ifdef CGI_DEBUG
       if (!proc) {
-	roxen_perror(sprintf("CGI: Process.create_process() returned 0.\n"));
+	werror(sprintf("CGI: Process.create_process() returned 0.\n"));
       }
 #endif /* CGI_DEBUG */
     };
@@ -1025,7 +1025,7 @@ class spawn_cgi
 	      int setgroups_)
   {
 #ifdef CGI_DEBUG
-    roxen_perror(sprintf("spawn_cgi(%O, %O, %O, %O, "
+    werror(sprintf("spawn_cgi(%O, %O, %O, %O, "
 			 "%O, %O, X, X, "
 			 "X, X, %O, %O, %O)\n",
 			 wrapper_, f_, args_, env_,
@@ -1109,7 +1109,7 @@ mixed low_find_file(string f, object id, string path)
   NOCACHE();
 
 #ifdef CGI_DEBUG
-  roxen_perror(sprintf("CGI: find_file(%O, X, %O)...\n", f, path));
+  werror(sprintf("CGI: find_file(%O, X, %O)...\n", f, path));
 #endif /* CGI_DEBUG */
 
   if (sizeof(path) && (path[-1] != '/')) {
@@ -1119,7 +1119,7 @@ mixed low_find_file(string f, object id, string path)
   }
 
 #ifdef CGI_DEBUG
-  roxen_perror("CGI: => f = \"" + f + "\"\n");
+  werror("CGI: => f = \"" + f + "\"\n");
 #endif /* CGI_DEBUG */
 
   if(id->misc->path_info)
@@ -1140,7 +1140,7 @@ mixed low_find_file(string f, object id, string path)
   }
   
 #ifdef CGI_DEBUG
-  roxen_perror("CGI: Starting '"+f+"'...\n");
+  werror("CGI: Starting '"+f+"'...\n");
 #endif
 
   wd = dirname(f);
@@ -1332,7 +1332,7 @@ mapping handle_file_extension(object o, string e, object id)
   // instead of /tmp/ but I don't think this code has ever been
   // used.	/grubba 1998-10-02
 #ifdef CGI_DEBUG
-  roxen_perror("CGI: Handling "+e+" by copying to /tmp/....\n");
+  werror("CGI: Handling "+e+" by copying to /tmp/....\n");
 #endif
   
   o->set_blocking();
