@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.178 2003/01/16 14:08:02 mast Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.179 2003/04/25 16:50:03 anders Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -121,7 +121,7 @@ class Scope_usr
      case "toptabs-padwidth": return ENCODE_RXML_INT(50, type);
      case "leftside-padwidth": return ENCODE_RXML_INT(150, type);
      case "logo-html":
-       return ENCODE_RXML_XML("<img border=\"0\" src="+QALIAS("logo")+" />", type);
+       return ENCODE_RXML_XML("<imgs border=\"0\" src="+QALIAS("logo")+" />", type);
 
      case "toptabs-args":
        res = "frame-image="+QALIAS("toptabs-frame");
@@ -208,6 +208,9 @@ class Scope_usr
       /* standalone, nothing is based on these. */
      case "warncolor":            return ENCODE_RXML_TEXT("darkred", type);
      case "content-toptableargs": return ENCODE_RXML_TEXT("", type);
+     case "split-tableargs":      return ENCODE_RXML_TEXT("", type);
+     case "split2-tableargs":     return ENCODE_RXML_TEXT("", type);
+     case "split2-width":         return ENCODE_RXML_TEXT("", type);
      case "left-image":           return ENCODE_RXML_TEXT("/internal-roxen-unit", type);
      case "selected-indicator":   return ENCODE_RXML_TEXT("/internal-roxen-next", type);
      case "database-small":       return ENCODE_RXML_TEXT("/internal-roxen-database_small", type);
@@ -219,7 +222,10 @@ class Scope_usr
      case "err-2":                return ENCODE_RXML_TEXT("/internal-roxen-err_2", type);
      case "err-3":                return ENCODE_RXML_TEXT("/internal-roxen-err_3", type);
      case "obox-titlefont":       return ENCODE_RXML_TEXT("helvetica,arial", type);
+     case "obox-titlestyle":      return ENCODE_RXML_TEXT("", type);
      case "obox-border":          return ENCODE_RXML_TEXT("black", type);
+     case "content-frame":        return ENCODE_RXML_TEXT("", type);
+     case "list-style-boxes":     return ENCODE_RXML_TEXT("", type);
 
 
       /* 1-st level */
@@ -1047,11 +1053,12 @@ string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
   <table cellpadding='2' cellspacing='0' border='0'
           width='"+m->iwidth+#"' align='center'>
   <tr bgcolor='"+config_setting2("obox-titlebg")+#"'>
-    <td valign='top'>
+    <th valign='top'>
       <font color='"+config_setting2( "obox-titlefg" )+#"' 
-            face='"+config_setting2("obox-titlefont")+
+            face='"+config_setting2("obox-titlefont")+#"'
+            style='"+config_setting2("obox-titlestyle")+
     "'><b>"+m->title+#"</b></font>
-    </td>
+    </th>
   </tr>
 
   <tr><td bgcolor='"+config_setting2("obox-bodybg")+"'><font color='"+
@@ -1059,6 +1066,23 @@ string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
   </table>
   </td></tr></table>";
 }
+string simpletag_box_frame( string t, mapping m, string c, RequestID id )
+{
+  if (!m["content-frame"]) return c;
+  return
+#"<table cellpadding='1' cellspacing='0' border='0'
+         width='"+m->width+"' align='left' bgcolor='"+
+    config_setting2("obox-border")+#"'>
+ <tr><td>
+  <table cellpadding='2' cellspacing='0' border='0'
+          width='"+m->iwidth+#"' align='center'>
+
+  <tr><td bgcolor='"+config_setting2("obox-bodybg")+"'><font color='"+
+    config_setting2("obox-bodyfg")+"'>"+c+#"</font></td></tr>
+  </table>
+  </td></tr></table>";
+}
+
 
 string simpletag_cf_render_variable( string t, mapping m,
 				     string c, RequestID id )

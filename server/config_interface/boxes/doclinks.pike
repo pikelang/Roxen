@@ -17,18 +17,24 @@ string parse( RequestID id )
   string docs = "";
   function exists =
      id->conf->find_module( "config_filesystem#0" )->stat_file;
+  int list_style = sizeof(RXML.user_get_var("list-style-boxes", "usr"));
 
 //    docs += "<a href='"+path("whatsnew.html")+"'>"+
 //      _(390,"Release notes")+"</a><br />";
 
   void add_doc_link(string doc_path, string title) {
-    if (exists(doc_path))
-      docs +=
-	"<tr><td valign='top'>"
-	"<a href='" + (doc_path - "index.html") + "'>"
+    if (exists(doc_path)) {
+      string s = "<a href='" + (doc_path - "index.html") + "'>"
 	"<font size='-1'>" + title + "</font>"
-	"</a>"
-	"</td></tr>";
+	"</a>";
+      if (list_style)
+	docs +=
+	  "<li style='margin-left: -0.9em; margin-right: 0.9em;'>"+
+	  s+"</li>";
+      else
+	docs +=
+	  "<tr><td valign='top'>"+s+"</td></tr>";
+    }
   };
   
   foreach( ({ "docs/roxen/3.4/" }), string rpath )
@@ -96,14 +102,19 @@ string parse( RequestID id )
   }
 
   if( docs == "" )
+  {
     docs =
-      "<tr><td>"
       "<font color='&usr.warncolor;'>" +
       _(397, "No documentation found at all") + 
-      "</font>"
-      "</td></tr>";
-  
-  docs = "<table>" + docs + "</table>";
+      "</font>";
+  }
+  else
+  {
+    if (list_style)
+      docs = "<ul>" + docs + "</ul>";
+    else
+      docs = "<table>" + docs + "</table>";
+  }
   
   return "<box type='"+box+"' title='"+box_name+"'>"+docs+"</box>";
 }

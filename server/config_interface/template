@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.113 2003/01/15 21:20:42 mast Exp $ -->
+<!-- $Id: template,v 1.114 2003/04/25 16:50:03 anders Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -27,7 +27,11 @@
 
 <define container="st-page" scope="st-page">
   <colorscope bgcolor="&usr.content-bg;">
-    <define preparse="1" variable="var.__contents"><contents scope="st-page"/></define>
+    <define preparse="1" variable="var.__contents">
+      <box-frame width="100%" iwidth="100%" ::="&usr.content-frame;">
+        <contents scope="st-page"/>
+      </box-frame>
+    </define>
   </colorscope>
 </define>
 
@@ -52,6 +56,10 @@
        <img src="/internal-roxen-unit" width="&var.leftside-padwidth;" height="1" alt="" /><br />
        &var.left-content:none;&var.leftimage:none;
      </td>
+     <td ::="&usr.split-tableargs:none;"><img height="1" src="/internal-roxen-unit" width="1"></td>
+     <if variable="usr.split2-width is ?*">
+       <td ::="&usr.split2-tableargs:none;"><img height="1" src="/internal-roxen-unit" width="&usr.split2-width;"></td>
+     </if>
      <td ::="&usr.content-tableargs:none;">
        <contents/>
      </td>
@@ -71,7 +79,7 @@
 <define container="subtablist">
 <nooutput>
   <contents/>
-</nooutput><p><br /></p>
+</nooutput>
   <table width="100%" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <td ::="&usr.subtabs-tableargs:none;"><tablist ::="&usr.subtabs-args:none;">
@@ -145,7 +153,7 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
              ::="&usr.top-tableargs:none;">
       <tr>
-      <td><a href="http://www.roxen.com/">&usr.logo-html:none;</a></td>
+      <td><a href="http://www.roxen.com/"><eval>&usr.logo-html:none;</eval></a></td>
       <td align="right" valign="top">
         <table>
          <tr>
@@ -169,6 +177,7 @@
      <td colspan="2" ::="&usr.toptabs-tableargs:none;" width="100%" valign="bottom"><img src="/internal-roxen-unit" width="&usr.toptabs-padwidth;" height="1" alt="" />&var._top_content:none;</td>
    </tr>
   </table>
+  <img src="/internal-roxen-unit" width="1" height="30" alt="" /><br />
 
     <!-- enctype="multipart/form-data"  -->
    

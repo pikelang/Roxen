@@ -107,7 +107,8 @@ string selected_item( string q, Configuration c, RequestID id,
   }
 
   sort( module_groups );
-  pre += "<table cellspacing='0' cellpadding='0'>\n";
+  pre += "<box-frame width='150' iwidth='150' ::='&usr.content-frame;'>"
+    "<table cellspacing='0' cellpadding='0'>\n";
   
   foreach( module_groups, array gd )
   {
@@ -206,7 +207,7 @@ string selected_item( string q, Configuration c, RequestID id,
     if( fin )
       pre += "</table></td></tr>";
   }
-  pre += "</table>\n";
+  pre += "</table></box-frame>\n";
 
   // Do not allow easy addition and removal of modules to and
   // from the configuration interface server. Most of the time
@@ -217,7 +218,7 @@ string selected_item( string q, Configuration c, RequestID id,
 #endif
     config_perm( "Add Module" ) )
   {
-    pre+=sprintf("<br />\n<gbutton frame-image='&usr.left-buttonframe;' "
+    pre+=sprintf("<br clear='all'/></br />\n<gbutton frame-image='&usr.left-buttonframe;' "
 		 "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' "
 		 "href='"+pre_site_url+
 		 "add_module.pike?config=%s'> "
