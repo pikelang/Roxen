@@ -3,13 +3,10 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-constant cvs_version = "$Id: ismap.pike,v 1.17 2000/09/05 15:06:44 per Exp $";
+constant cvs_version = "$Id: ismap.pike,v 1.18 2000/09/10 14:07:43 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
-inherit "roxenlib";
-
-// import Stdio;
 
 void create()
 {
@@ -30,23 +27,24 @@ int parse_color(string col, int multi)
   if(!multi) 
     return (int)col;
 
-  if(!sscanf(col, "(%d,%d,%d)", r, g, b))
-    if(!sscanf(col, "%d,%d,%d", r, g, b))
-      return 0;
+  if(!sscanf(col, "#%2x%2x%2x", r, g, b))
+    if(!sscanf(col, "(%d,%d,%d)", r, g, b))
+      if(!sscanf(col, "%d,%d,%d", r, g, b))
+	return 0;
   
   return r*256*256 + g*256 + b;
 }
 
 mapping find_colors(array lines, int color)
 {
-  int i;
   string s, url;
   int col1, col2;
-  int sr, sg, sb, er, eg, eb, r, g, b;
+  int sr, sg, sb, er, eg, eb;
   string bc, c;
+
   mapping res=([ "ranges":({}), ]);
 
-  for(i=0; i<sizeof(lines); i++)
+  for(int i=0; i<sizeof(lines); i++)
   {
     int sw;
     if(lower_case(lines[i][0..5])=="color:")
@@ -120,15 +118,15 @@ mapping find_colors(array lines, int color)
 #define TYPE_PPM_IMAGE (TYPE_IMAGE|TYPE_IMAGE_COLOR)
 #define TYPE_PGM_IMAGE TYPE_IMAGE
 
-mixed parse_roxen_map_line(string line)
+array parse_roxen_map_line(string line)
 {
-  string Url, tmp;
-  int c;
+  string Url;
   int x, y, x1, y1, r;
-  mixed tmp1;
-  line = (replace(line, "\t", "")/" " - ({""})) * "";;
-  if(sscanf(line, "%*s(%s", tmp1))
-    line="("+tmp1;
+
+  string tmp;
+  line = (replace(line, "\t", "")/" " - ({""})) * "";
+  if(sscanf(line, "%*s(%s", tmp))
+    line="("+tmp;
 
   if (sscanf( line, "(%d,%d)-(%d,%d)%s", x, y, x1, y1, Url ) == 5)
     return ({ ({ TYPE_RECTANGLE, Url, x, y, x1, y1 }) });
@@ -139,33 +137,28 @@ mixed parse_roxen_map_line(string line)
   return ({0});
 }
 
-mixed parse_cern_map_line(string line)
+array parse_cern_map_line(string line)
 {
-  string Url, tmp, cmd;
-  int c;
+  string Url;
   int x, y, x1, y1, r;
-  mixed tmp1;
 
-  line = replace(line, "\t", " ");
-  while(line != (line = replace(line, "  ", " ")))
-    ;
-  cmd = lower_case((line/" ")[0]);
+  line = (replace(line, "\t", "")/" " - ({""})) * "";
   
-  switch(cmd[0..3])
+  switch(line[0..3])
   {
    case "rect":
-    if (sscanf( line, cmd +" (%d,%d) (%d,%d) %s", x, y, x1, y1, Url ) == 5)
+    if (sscanf( line, "%*s (%d,%d) (%d,%d) %s", x, y, x1, y1, Url ) == 5)
       return ({ ({ TYPE_RECTANGLE, Url, x, y, x1, y1 }) });
     break;
    
    case "circ":
-    if (sscanf( line, cmd + " (%d,%d) %d %s", x, y, r, Url) == 4)
+    if (sscanf( line, "%*s (%d,%d) %d %s", x, y, r, Url) == 4)
       return ({ ({ TYPE_CIRCLE, Url, x, y, r }) });
     break;
     
    case "poly":
     mixed poly = ({});
-    sscanf(line, cmd +" %s", line);
+    sscanf(line, "%*s %s", line);
     while(sscanf(line, "(%d,%d) %s", x, y, line) == 3)
       poly += ({ ({ x, y }) });
 
@@ -179,34 +172,29 @@ mixed parse_cern_map_line(string line)
   return ({0});
 }
 
-mixed parse_ncsa_map_line(string line)
+array parse_ncsa_map_line(string line)
 {
-  mixed coordinate_list;
-  string Url, tmp, cmd;
-  int c;
+  string Url;
   int x, y, x1, y1, r;
-  mixed tmp1;
-  
-  line = replace(line, "\t", " ");
-  while(line != (line = replace(line, "  ", " ")))
-    ;
-  cmd = lower_case((line/" ")[0]);
-  switch(cmd[0..3])
+
+  line = (replace(line, "\t", "")/" " - ({""})) * "";
+
+  switch(line[0..3])
   {
    case "rect":
-    if (sscanf( line, cmd +" %s %d,%d %d,%d", Url, x, y, x1, y1 ) == 5)
+    if (sscanf( line, "%*s %s %d,%d %d,%d", Url, x, y, x1, y1 ) == 5)
       return ({ ({ TYPE_RECTANGLE, Url, x, y, x1, y1 }) });
     
    case "circ":
-    if (sscanf( line, cmd +" %s %d,%d %d,%d", Url, x, y, x1, y1) == 5)
+    if (sscanf( line, "%*s %s %d,%d %d,%d", Url, x, y, x1, y1) == 5)
       return  ({ ({ TYPE_NCSA_CIRCLE, Url,  ({ ({ x, y }), ({ x1, y1 }) }) 
 		    }) });
    case "poin":
-    if (sscanf(line, cmd +" %s %d,%d", Url, x, y) == 3)
+    if (sscanf(line, "%*s %s %d,%d", Url, x, y) == 3)
       return ({ ({ TYPE_POINT, ({ x, y, Url }) }) });
 
    case "poly":
-    if (sscanf(line, cmd +" %s %d,%d %s", Url, x, y, line) == 4)
+    if (sscanf(line, "%*s %s %d,%d %s", Url, x, y, line) == 4)
     {
       mixed poly = ({ ({x, y}) });
       
@@ -228,13 +216,13 @@ array compress_coordinate_list(array from)
   string def;
   array points=allocate(0, "array(int|string)"),
          result=allocate(sizeof(from), "string|array(int|string|array)");
-  int i, p;
+  int p;
   
   def=from[0];
  
   from -= ({ 0, ({ 0 }), def });
   
-  for(i = 0; i < sizeof(from); i++)
+  for(int i = 0; i < sizeof(from); i++)
   {
     if(from[i][0] == TYPE_POINT) 
       points += ({from[i][1]});
@@ -460,25 +448,21 @@ int polygon(mixed points, int tx, int ty)
 string map_get_filename( int x, int y, string map_file_name, object o,
 			 object conf)
 {
-  int c;
-  array(int) s;
-  string cache_key;
-  cache_key = "mapfile:" +conf->name;
-  mixed in_cache;
-
-  s = (array(int))o->stat();
+  string cache_name = "mapfile:" +conf->name;
+  array(int) s = (array(int))o->stat();
+  array in_cache;
   array coordinate_list;
 
-  if((in_cache=cache_lookup(cache_key, map_file_name))
+  if((in_cache=cache_lookup(cache_name, map_file_name))
      && (s[3] == in_cache[0]))
   {
     coordinate_list=in_cache[1];
   } else {
-    cache_set(cache_key,map_file_name,({ s[3],(in_cache=parse_map_file(o))}));
+    cache_set(cache_name, map_file_name, ({ s[3],(in_cache=parse_map_file(o))}));
     coordinate_list=in_cache;
   }
 
-  for (c=1; c<sizeof(coordinate_list); c++)
+  for (int c=1; c<sizeof(coordinate_list); c++)
   {
     if(x == -1 && y == -1)
     {
@@ -487,11 +471,11 @@ string map_get_filename( int x, int y, string map_file_name, object o,
     } else {
       if(coordinate_list[c][0] == TYPE_POINT)
       {
-	int i, maxd=1000000, closest=-1, dist;
+	int maxd=1000000, closest=-1, dist;
 	array (array (int|string)) points;
 	points=coordinate_list[c][1];
 	/* In the list of points find the closest... */
-	for(i=0; i<sizeof(points); i++)
+	for(int i=0; i<sizeof(points); i++)
 	{
 	  dist=sqrt(sqr(x-points[i][0]) + sqr(y-points[i][1]));
 	  if(dist < maxd)
@@ -539,29 +523,29 @@ int req;
 
 mapping thevoid()
 {
-#ifndef FUN
-  return 0;
+#ifdef NSERIOUS
+  return Roxen.http_string_answer("<html><head><title>The Void!</title></head>"
+				  "<body bgcolor='#000000' text='#ff0000'>"
+				  "<h1 align='center'>The Void!</h1>"
+				  "<h2>You come to the void if you fall out of a "
+				  "room, and have nowhere to go.  If you give the "
+				  "command 'church' you will be transported "
+				  "there. <br />"
+				  "Castle of Incanus."
+				  "<ul>No obvious exits.</ul>"
+				  "A nun (saintly).<br />"
+				  "A unicorn horn.<br />"
+				  "A rope tied to horn.<br />"
+				  "A unicorn.<br />"
+				  "A rope.<br />"
+				  "</h2></body></html>");
 #else
-  return http_string_answer("<html><head><title>The Void!</title></head>"
-			    "<body bgcolor=#000000 text=#ff0000>"
-			    "<h1 align=center>The Void!</h1>"
-			    "<h2>You come to the void if you fall out of a "
-			    "room, and have nowhere to go.  If you give the "
-			    "command 'church' you will be transported "
-			    "there. <br>"
-			    "Castle of Incanus."
-			    "<ul>No obvious exits.</ul>"
-			    "A nun (saintly).<br>"
-			    "A unicorn horn.<br>"
-			    "A rope tied to horn.<br>"
-			    "A unicorn.<br>"
-			    "A rope.<br>"
-			    "</h2></body></html>");
+  return 0;
 #endif
 } 
 
 
-mapping|string handle_file_extension(object file, string ext, object id)
+mapping|string handle_file_extension(Stdio.File file, string ext, RequestID id)
 {
   int x=-1, y=-1;
   string map_file_name;
@@ -582,7 +566,7 @@ mapping|string handle_file_extension(object file, string ext, object id)
     if(sscanf(" "+map_file_name+" ", "%s$%[a-zA-Z_]%s",pre, varname, rest)==3)
     {
       map_file_name = (pre + 
-		       http_encode_string(id->variables[varname]
+		       Roxen.http_encode_string(id->variables[varname]
 					  ||id->state[varname]||"")
 		       + rest) - " ";
     }
@@ -590,20 +574,15 @@ mapping|string handle_file_extension(object file, string ext, object id)
 	(map_file_name[3]==':' || map_file_name[4]==':' || 
 	 map_file_name[5]==':' || map_file_name[6]==':') ||
 	map_file_name[0]=='/'))
-      return http_redirect(map_file_name, id);
-    return http_redirect(dirname(id->not_query)+"/"+ map_file_name, id);
+      return Roxen.http_redirect(map_file_name, id);
+    return Roxen.http_redirect(dirname(id->not_query)+"/"+ map_file_name, id);
   }
   return thevoid();
 }
 
-
-string query_name() { return sprintf("Imagemap parsing of: %s",
-				     QUERY(extension)); }
-
-
 string status() 
 {
-  return ("Mapfile requests: "+req+"\n<br>");
+  return ("Mapfile requests: "+req+"\n<br />");
 }
 
 
