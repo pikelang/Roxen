@@ -7,7 +7,7 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.6 2000/05/14 16:13:00 kinkie Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.7 2000/05/15 19:54:18 kinkie Exp $";
 
 #include <module.h>
 inherit "module";
@@ -71,7 +71,7 @@ string update_rules() {
       continue;
     }
     
-    if (words[1]=="nothrottle") {
+    if (lower_case(words[1])=="nothrottle") {
       THROTTLING_DEBUG("nothrottle");
       cmd="!";
       val=0;
@@ -96,7 +96,8 @@ string update_rules() {
       continue;
     }
     if (cmd=="!" || sizeof(words)>2 ) {
-      if (cmd=="!" || words[2]=="fix") //don't change order, or it bangs!
+      if (cmd=="!" || lower_case(words[2])=="fix")
+        //don't change order, or it bangs!
         fix=1;
       else {
         THROTTLING_DEBUG("unknown keyword \""+words[2]+"\"");
@@ -129,15 +130,16 @@ string update_rules() {
   return 0;
 }
 
-string check_variable(string name, mixed value) {
+string|int check_variable(string name, mixed value) {
   mixed err;
   switch (name) {
   case "rules":
-    set(name,lower_case(value));
+    //    set(name,lower_case(value)); //broken, it will lower_case everything
     err=update_rules();
     if (err) return err;
     return 0;
   }
+  return 0;
 }
 
 void start() {
