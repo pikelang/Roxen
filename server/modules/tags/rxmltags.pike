@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.202 2001/02/11 03:59:53 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.203 2001/02/11 04:06:17 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3144,10 +3144,10 @@ Sets a variable.</short>
  </ex>
 
  Conversion between int and float may be done through the operators
- \"(int)\" and \"(float)\". The operators \"&\"(bitwise and),
- \"|\"((pipe)bitwise or), \"&&\"(logical and) and \"||\"((double
- pipe)logical or) may also be used in expressions. To set
- prioritizations within expressions the characters \"( and )\" are
+ \"(int)\" and \"(float)\". The operators \"&\" (bitwise and),
+ \"|\" (bitwise or), \"^\" (bitwise xor), \"&&\" (logical and) and \"||\"
+ (logical or) may also be used in expressions. To set
+ prioritizations within expressions the characters \"(\" and \")\" are
  included. General prioritization rules are:
 
  <list type='ol'>
@@ -3156,7 +3156,7 @@ Sets a variable.</short>
  <item>+, -</item>
  <item>&lt;, &gt;, &lt;=, &gt;=\</item>
  <item>==</item>
- <item>&, |</item>
+ <item>&, |, ^</item>
  <item>&&, ||</item>
  </list></p>
 
@@ -3169,9 +3169,8 @@ Sets a variable.</short>
  </ex>
  Expressions containing octal numbers may be used. It is also
  possible to evaluate calculator expressions.</p>
-
- <p>Expr is an <i>Eval</i> plugin.</p>
 </desc>
+
 <attr name='expr' value='expression'>
  Choose what expression to test.
 </attr>",
