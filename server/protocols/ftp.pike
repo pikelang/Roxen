@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.4.2.5 1997/03/09 13:42:22 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.4.2.6 1997/03/10 22:06:45 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -258,8 +258,12 @@ varargs int|string list_file(string arg, int srt, int short, int column,
   else
     filename = combine_path(cwd, arg);
 
-  while(filename[-1] == '.')
+#if 0
+  while(sizeof(filename) && filename[-1] == '.')
     filename=filename[..strlen(filename)-2];
+#else
+  filename = ((filename/"/")-({ ".", "" }))*"/";
+#endif /* 0 */
   
   this_object()->not_query = filename;
   st = roxen->stat_file(filename, this_object());
