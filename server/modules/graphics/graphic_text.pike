@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.267 2001/07/08 17:03:39 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.268 2001/07/10 18:46:18 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -565,8 +565,9 @@ function alter_image(label)
 
 // -------------------- Image cache functions --------------------
 
-roxen.ImageCache image_cache;
-string compat_level;
+private roxen.ImageCache image_cache;
+private string compat_level;
+private int magic_counter;
 
 string status() {
   array s=image_cache->status();
@@ -591,13 +592,13 @@ void start(int num, Configuration conf)
   compat_level = conf->query("compat_level");
 }
 
-constant nbsp = Roxen.iso88591["&nbsp;"];
-constant replace_from = indices( Roxen.iso88591 )+ ({"&ss;","&lt;","&gt;","&amp;",});
-constant replace_to   = values( Roxen.iso88591 ) + ({ nbsp, "<", ">", "&", });
+private constant nbsp = Roxen.iso88591["&nbsp;"];
+private constant replace_from = indices( Roxen.iso88591 )+ ({"&ss;","&lt;","&gt;","&amp;",});
+private constant replace_to   = values( Roxen.iso88591 ) + ({ nbsp, "<", ">", "&", });
 
 #define simplify_text( from ) replace(from,replace_from,replace_to)
 
-mixed draw_callback(mapping args, string text, RequestID id)
+private Image.Image|mapping draw_callback(mapping args, string text, RequestID id)
 {
   array data;
   Image.Font font;
@@ -774,70 +775,78 @@ mapping find_internal(string f, RequestID id)
 
 // -------------- helpfunctions to gtext tags and containers -----------------
 
-constant filearg=({"background","texture","alpha","magic-texture","magic-background","magic-alpha"});
-constant textarg=({"afont",
-		   "alpha",
-		   "bevel",
-		   "bgcolor",
-		   "bgturbulence",
-		   "black",
-		   "bold",
-		   "bshadow",
-		   "chisel",
-		   "encoding",
-		   "fadein",
-		   "fgcolor",
-		   "font",
-		   "fontsize",
-		   "ghost",
-		   "glow",
-		   "italic",
-		   "light",
-		   "mirrortile",
-		   "move",
-		   "narrow",
-		   "notrans",
-		   "opaque",
-		   "outline",
-		   "pressed",
-		   "rescale",
-		   "rotate",
-		   "scale",
-		   "scolor",
-		   "scroll",
-		   "shadow",
-		   "size",
-		   "spacing",
-		   "talign",
-		   "tile",
-		   "textbox",
-		   "textbelow",
-		   "textscale",
-		   "verbatim",
-		   "xpad",
-		   "xsize",
-		   "xspacing",
-		   "ypad",
-		   "ysize",
-		   "yspacing",
-                   "border",
-
- /* generic argcache arguments */
-		   "crop",
-                   "format",
-		   "quant",
-                   "dither",
-		   "fs",
-                   "*-*",
-                   "gamma",
-
+private constant filearg = ({
+  "background",
+  "texture",
+  "alpha",
+  "magic-texture",
+  "magic-background",
+  "magic-alpha"
 });
 
-constant theme=({"fgcolor","bgcolor","font"});
+private constant textarg = ({
+  "afont",
+  "alpha",
+  "bevel",
+  "bgcolor",
+  "bgturbulence",
+  "black",
+  "bold",
+  "bshadow",
+  "chisel",
+  "encoding",
+  "fadein",
+  "fgcolor",
+  "font",
+  "fontsize",
+  "ghost",
+  "glow",
+  "italic",
+  "light",
+  "mirrortile",
+  "move",
+  "narrow",
+  "notrans",
+  "opaque",
+  "outline",
+  "pressed",
+  "rescale",
+  "rotate",
+  "scale",
+  "scolor",
+  "scroll",
+  "shadow",
+  "size",
+  "spacing",
+  "talign",
+  "tile",
+  "textbox",
+  "textbelow",
+  "textscale",
+  "verbatim",
+  "xpad",
+  "xsize",
+  "xspacing",
+  "ypad",
+  "ysize",
+  "yspacing",
+  "border",
 
-constant hreffilter=(["split":1,"magic":1,"noxml":1,"alt":1]);
+  // generic argcache arguments
+  "crop",
+  "format",
+  "quant",
+  "dither",
+  "fs",
+  "*-*",
+  "gamma",
+});
 
-mapping mk_gtext_arg(mapping arg, RequestID id) 
+private constant theme = ({ "fgcolor", "bgcolor", "font" });
+
+private constant hreffilter = ([ "split":1, "magic":1, "noxml":1, "alt":1 ]);
+
+private mapping mk_gtext_arg(mapping arg, RequestID id)
 {
   mapping p=([]); //Picture rendering arguments.
 
@@ -921,7 +930,7 @@ mapping mk_gtext_arg(mapping arg, RequestID id)
   return p;
 }
 
-string fix_text(string c, mapping m, RequestID id) {
+private string fix_text(string c, mapping m, RequestID id) {
 
   if(m->nowhitespace)
   {
@@ -998,7 +1007,7 @@ class TagGText {
   }
 }
 
-string do_gtext(mapping arg, string c, RequestID id)
+private string do_gtext(mapping arg, string c, RequestID id)
 {
   if((c-" ")=="") return "";
 
@@ -1095,7 +1104,7 @@ string do_gtext(mapping arg, string c, RequestID id)
 
     if(!id->supports->images) return sprintf(lp,arg->alt);
 
-    string sn="gtext"+id->misc->gtext_mi++;
+    string sn = "gtext" + (magic_counter++ % 65535);
     if(!id->supports->js_image_object) {
       return (!input)?
         ("<a"+ea+"href=\""+url+"\">"+Roxen.make_tag("img",arg+(["name":sn]),xml)+"</a>"):
@@ -1135,7 +1144,7 @@ string do_gtext(mapping arg, string c, RequestID id)
   return sprintf(lp,Roxen.make_tag("img",arg,xml));
 }
 
-array(string) simpletag_gh(string t, mapping m, string c, RequestID id) {
+private array(string) simpletag_gh(string t, mapping m, string c, RequestID id) {
   int i;
   if(sscanf(t, "%s%d", t, i)==2 && i>1)
     m->scale = (string)(1.0 / ((float)i*0.6));
