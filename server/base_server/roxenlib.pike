@@ -1,7 +1,8 @@
+#include <roxen.h>
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.97 1999/04/24 09:58:43 neotron Exp $";
-// This code has to work both in the roxen object, and in modules
+// $Id: roxenlib.pike,v 1.98 1999/05/08 00:51:31 per Exp $
+// This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
 #endif
@@ -9,6 +10,7 @@ inherit "http";
 #include <stat.h>
 
 #define ipaddr(x,y) (((x)/" ")[y])
+
 
 string gif_size(object gif)
 {
