@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.98 2000/08/09 13:25:53 mast Exp $
+//! $Id: module.pmod,v 1.99 2000/08/12 04:49:08 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -92,6 +92,14 @@ class Tag
   //! result type has a parser, it'll be used to parse any strings in
   //! the exec array returned from Frame.do_enter() and similar
   //! callbacks.
+  //!
+  //! When the tag is used in content of some type, it suffices that
+  //! the content type is a subtype of any type in result_types. The
+  //! tag must therefore be prepared to produce result of more
+  //! specific types than those declared here. I.e. the extreme case,
+  //! t_any, means that this tag takes the responsibility to produce
+  //! result of any type that's asked for, not that it has the liberty
+  //! to produce results of any type it chooses.
 
   //!program Frame;
   //!object(Frame) Frame();
@@ -141,8 +149,6 @@ class Tag
   //! Make an initialized frame for the tag. Typically useful when
   //! returning generated tags from e.g. RXML.Frame.do_process(). The
   //! argument values and the content are normally not parsed.
-  //!
-  //! Note: Never reuse the same frame object.
   {
     Tag this = this_object();
     object/*(Frame)HMM*/ frame = ([function(:object/*(Frame)HMM*/)] this->Frame)();
@@ -228,8 +234,8 @@ class Tag
 	m_delete (ustate, parser);
 	if (!sizeof (ustate)) ctx->unwind_state = 0;
       }
-      else frame = `() (args, Void);
-    else frame = `() (args, Void);
+      else frame = `() (args, nil);
+    else frame = `() (args, nil);
 
     if (!zero_type (frame->raw_tag_text)) {
       if (splice_args)
@@ -241,9 +247,10 @@ class Tag
     mixed err = catch {
       frame->_eval (parser, args, content);
       mixed res;
-      if ((res = frame->result) == Void) return ({});
-      if (frame->result_type->quoting_scheme != parser->type->quoting_scheme)
-	res = parser->type->quote (res);
+      if ((res = frame->result) == nil) return ({});
+      if (!parser->type->encoding_type ||
+	  frame->result_type->encoding_type != parser->type->encoding_type)
+	res = parser->type->convert (res, frame->result_type);
       return ({res});
     };
 
@@ -269,8 +276,8 @@ class Tag
   // Callback similar to _handle_tag() for tag set parsers to handle
   // PI tags.
   {
-    sscanf (content, "%[ \t\n\r]%s", string ws, content);
-    if (ws == "" && content != "")
+    sscanf (content, "%[ \t\n\r]%s", string ws, string rest);
+    if (ws == "" && rest != "")
       // The parser didn't match a complete name, so this is a false
       // alarm for an unknown PI tag.
       return 0;
@@ -833,7 +840,7 @@ class Context
       if (objectp (vars)) {
 	if (zero_type (val = ([object(Scope)] vars)->`[] (
 			 var, this_object(), scope_name || "_")) ||
-	    val == Void)
+	    val == nil)
 	  return ([])[0];
       }
       else
@@ -843,14 +850,14 @@ class Context
 	return
 	  zero_type (val = ([object(Value)] val)->rxml_var_eval (
 		       this_object(), var, scope_name || "_", want_type)) ||
-	  val == Void ? ([])[0] : val;
+	  val == nil ? ([])[0] : val;
       }
       else
 	if (want_type)
 	  return
 	    // FIXME: Some system to find out the source type?
 	    zero_type (val = want_type->convert (val)) ||
-	    val == Void ? ([])[0] : val;
+	    val == nil ? ([])[0] : val;
 	else
 	  return val;
     }
@@ -1479,8 +1486,9 @@ constant FLAG_RAW_ARGS		= 0x00002000;
 //! The following flags specifies whether certain conditions must be
 //! met for a cached frame to be considered (if RXML.Frame.is_valid()
 //! is defined). They may be read directly after do_return() returns.
-//! The tag name is always the same. FIXME: These are ideas only; not
-//! yet implemented.
+//! The tag name is always the same. FIXME: These are ideas only;
+//! nothing is currently implemented and they might change
+//! arbitrarily.
 
 constant FLAG_CACHE_DIFF_ARGS	= 0x00010000;
 //! If set, the arguments to the tag need not be the same (using
@@ -1498,8 +1506,9 @@ constant FLAG_CACHE_DIFF_VARS	= 0x00080000;
 //! those that has been accessed with get_var()) need not have the
 //! same values (using equal()) as the actual variables.
 
-constant FLAG_CACHE_SAME_STACK	= 0x00100000;
-//! If set, the stack of call frames needs to be the same.
+constant FLAG_CACHE_DIFF_TAG_INSTANCE = 0x00100000;
+//! If set, the tag in the source document needs to be the same, so
+//! the same frame may be used when the tag occurs in another context.
 
 constant FLAG_CACHE_EXECUTE_RESULT = 0x00200000;
 //! If set, an exec array will be stored in the frame instead of the
@@ -1507,7 +1516,11 @@ constant FLAG_CACHE_EXECUTE_RESULT = 0x00200000;
 //! result.
 
 class Frame
-//! A tag instance.
+//! A tag instance. A new frame is normally created for every parsed
+//! tag in the source document. It might be reused both when the
+//! document is requested again and when the tag is reevaluated in a
+//! loop, but it's not certain in either case. Therefore, be careful
+//! about using variable initializers.
 {
   constant is_RXML_Frame = 1;
   constant thrown_at_unwind = 1;
@@ -1524,27 +1537,42 @@ class Frame
 
   int flags;
   //! Various bit flags that affect parsing. See the FLAG_* constants.
+  //! It's copied from Tag.flag when the frame is created.
 
   mapping(string:mixed) args;
-  //! The arguments passed to the tag. Set before any frame callbacks
-  //! are called. Not set for processing instruction (FLAG_PROC_INSTR)
+  //! The (parsed and evaluated) arguments passed to the tag. Set
+  //! every time the frame is executed, before any frame callbacks are
+  //! called. Not set for processing instruction (FLAG_PROC_INSTR)
   //! tags.
 
   Type content_type;
   //! The type of the content.
 
-  mixed content = Void;
+  mixed content;
   //! The content, if any. Set before do_process() and do_return() are
-  //! called.
+  //! called. Initialized to RXML.nil every time the frame executed.
 
   Type result_type;
-  //! The required result type. Set before any frame callbacks are
-  //! called. The frame should produce a result of this type.
+  //! The required result type. If it has a parser, it will affect how
+  //! execution arrays are handled; see the return value for
+  //! do_return() for details.
+  //!
+  //! This is set by the type inference from Tag.result_types before
+  //! any frame callbacks are called. The frame may change this type,
+  //! but it must produce a result value which matches it. The value
+  //! is converted before being inserted into the parent content if
+  //! necessary. An exception (which this frame can't catch) is thrown
+  //! if conversion is impossible.
 
-  mixed result = Void;
-  //! The result, which is assumed to be either Void or a valid value
-  //! according to result_type. The exec arrays returned by e.g.
+  mixed result;
+  //! The result, which is assumed to be either RXML.nil or a valid
+  //! value according to result_type. The exec arrays returned by e.g.
   //! do_return() changes this. It may also be set directly.
+  //! Initialized to RXML.nil every time the frame executed.
+  //!
+  //! If result_type has a parser set, it will be used by do_return()
+  //! etc before assigning to this variable. Thus it contains the
+  //! value after any parsing and will not be parsed again.
 
   //!mapping(string:mixed) vars;
   //! Set this to introduce a new variable scope that will be active
@@ -1583,11 +1611,12 @@ class Frame
   //! do_return() is called after the last call to do_process().
   //!
   //! The result_type variable is set to the type of result the parser
-  //! wants. It's any type or subtype that is valid by
-  //! tag->result_type. If the result type is sequential, it's spliced
-  //! into the surrounding content, otherwise it replaces the previous
-  //! value of the content, if any. If the result is Void, it does not
-  //! affect the surrounding content at all.
+  //! wants. The tag may change it; the value will then be converted
+  //! to the type that the parser wants. If the result type is
+  //! sequential, it's spliced into the surrounding content, otherwise
+  //! it replaces the previous value of the content, if any. If the
+  //! result is RXML.nil, it does not affect the surrounding content
+  //! at all.
   //!
   //! Return values:
   //!
@@ -1624,20 +1653,20 @@ class Frame
   //! accurately, evaluation) needs to be done.
   //!
   //! If an array instead of a function is given, the array is handled
-  //! as above. If the result variable is Void (which it defaults to),
-  //! content is used as result if it's of a compatible type.
+  //! as above. If the result variable is RXML.nil (which it defaults
+  //! to), content is used as result if it's of a compatible type.
   //!
   //! If there is no do_return() and the result from parsing the
-  //! content is not Void, it's assigned to or added to the content
-  //! variable. Assignment is used if the content type is
+  //! content is not RXML.nil, it's assigned to or added to the
+  //! content variable. Assignment is used if the content type is
   //! nonsequential, addition otherwise. Thus earlier values are
   //! simply overridden for nonsequential types.
   //!
   //! Regarding do_process only:
   //!
   //! Normally the content variable is set to the parsed content of
-  //! the tag before do_process() is called. This may be Void if the
-  //! content parsing didn't produce any result.
+  //! the tag before do_process() is called. This may be RXML.nil if
+  //! the content parsing didn't produce any result.
   //!
   //! piece is used when the tag is operating in streaming mode (i.e.
   //! FLAG_STREAM_CONTENT is set). It's then set to each successive
@@ -1828,14 +1857,14 @@ class Frame
     Frame this = this_object();
     Context ctx = parser->context;
     int i = 0;
-    mixed res = Void;
+    mixed res = nil;
     Parser subparser = 0;
 
     mixed err = catch {
       if (parent_scope) LEAVE_SCOPE (ctx, this);
 
       for (; i < sizeof (exec); i++) {
-	mixed elem = exec[i], piece = Void;
+	mixed elem = exec[i], piece = nil;
 
 	switch (sprintf ("%t", elem)) {
 	  case "string":
@@ -1878,7 +1907,7 @@ class Frame
 	}
 
 	if (result_type->sequential) res += piece;
-	else if (piece != Void) result = res = piece;
+	else if (piece != nil) result = res = piece;
       }
 
       if (result_type->sequential) result += res;
@@ -1893,11 +1922,12 @@ class Frame
       mapping(string:mixed)|mapping(object:array) ustate;
       if ((ustate = ctx->unwind_state) && !zero_type (ustate->stream_piece)) {
 	// Subframe wants to stream. Update stream_piece and send it on.
-	if (result_type->quoting_scheme != parser->type->quoting_scheme)
-	  res = parser->type->quote (res);
+	if (!result_type->encoding_type ||
+	    result_type->encoding_type != parser->type->encoding_type)
+	  res = parser->type->convert (res, result_type);
 	if (result_type->sequential)
 	  ustate->stream_piece = res + ustate->stream_piece;
-	else if (ustate->stream_piece == Void)
+	else if (ustate->stream_piece == nil)
 	  ustate->stream_piece = res;
       }
       ustate->exec_left = exec[i..]; // Left to execute.
@@ -1975,7 +2005,7 @@ class Frame
 			"unparsed frame.\n");
 #endif
       raw_args = args, args = 0;
-      raw_content = content, content = Void;
+      raw_content = content, content = nil;
 #ifdef MODULE_DEBUG
       if (!stringp (raw_content))
 	PRE_INIT_ERROR ("Content is not a string in unparsed tag frame.\n");
@@ -2002,7 +2032,7 @@ class Frame
 	PRE_INIT_ERROR ("Reuse of frame in different context.\n");
 #endif
       up = ctx->frame;
-      piece = Void;
+      content = result = piece = nil;
       if (++ctx->frame_depth >= ctx->max_frame_depth) {
 	ctx->frame = this;
 	ctx->frame_depth--;
@@ -2140,12 +2170,13 @@ class Frame
 		  if (ctx->unwind_state)
 		    fatal_error ("Internal error: Clobbering unwind_state "
 				 "to do streaming.\n");
-		  if (piece != Void)
+		  if (piece != nil)
 		    fatal_error ("Internal error: Thanks, we think about how nice "
 				 "it must be to play the harmonica...\n");
 #endif
-		  if (result_type->quoting_scheme != parser->type->quoting_scheme)
-		    res = parser->type->quote (res);
+		  if (!result_type->encoding_type ||
+		      result_type->encoding_type != parser->type->encoding_type)
+		    res = parser->type->convert (res, result_type);
 		  ctx->unwind_state = (["stream_piece": res]);
 		  throw (this);
 		}
@@ -2196,8 +2227,8 @@ class Frame
 		      // Squeeze out any free text from the subparser first.
 		      mixed res = subparser->read();
 		      if (content_type->sequential) piece = res + piece;
-		      else if (piece == Void) piece = res;
-		      if (piece != Void) {
+		      else if (piece == nil) piece = res;
+		      if (piece != nil) {
 			array|function(RequestID,void|mixed:array) do_process;
 			if ((do_process =
 			     [array|function(RequestID,void|mixed:array)]
@@ -2218,9 +2249,10 @@ class Frame
 				fatal_error ("Internal error: "
 					     "Clobbering unwind_state->stream_piece.\n");
 #endif
-			      if (result_type->quoting_scheme !=
-				  parser->type->quoting_scheme)
-				res = parser->type->quote (res);
+			      if (!result_type->encoding_type ||
+				  result_type->encoding_type !=
+				  parser->type->encoding_type)
+				res = parser->type->convert (res, result_type);
 			      ctx->unwind_state->stream_piece = res;
 			      throw (this);
 			    }
@@ -2229,20 +2261,20 @@ class Frame
 			  else if (flags & FLAG_STREAM_RESULT) {
 			    // do_process() finished the stream. Ignore remaining content.
 			    ctx->unwind_state = 0;
-			    piece = Void;
+			    piece = nil;
 			    break;
 			  }
 			}
-			piece = Void;
+			piece = nil;
 		      }
 		      if (finished) break;
 		    }
 		    else {	// The frame doesn't handle streamed content.
-		      piece = Void;
+		      piece = nil;
 		      if (finished) {
 			mixed res = subparser->eval(); // Might unwind.
 			if (content_type->sequential) content += res;
-			else if (res != Void) content = res;
+			else if (res != nil) content = res;
 			break;
 		      }
 		    }
@@ -2271,12 +2303,13 @@ class Frame
 		      if (ctx->unwind_state)
 			fatal_error ("Internal error: Clobbering unwind_state "
 				     "to do streaming.\n");
-		      if (piece != Void)
+		      if (piece != nil)
 			fatal_error ("Internal error: Thanks, we think about how nice "
 				     "it must be to play the harmonica...\n");
 #endif
-		      if (result_type->quoting_scheme != parser->type->quoting_scheme)
-			res = parser->type->quote (res);
+		      if (!result_type->encoding_type ||
+			  result_type->encoding_type != parser->type->encoding_type)
+			res = parser->type->convert (res, result_type);
 		      ctx->unwind_state = (["stream_piece": res]);
 		      throw (this);
 		    }
@@ -2304,7 +2337,7 @@ class Frame
 		exec = 0;
 	      }
 	    }
-	    else if (result == Void && !(flags & FLAG_EMPTY_ELEMENT))
+	    else if (result == nil && !(flags & FLAG_EMPTY_ELEMENT))
 	      if (result_type->_parser_prog == PNone) {
 		if (content_type->subtype_of (result_type))
 		  result = content;
@@ -2375,7 +2408,7 @@ class Frame
 	  if (id->misc->trace_leave && tag)
 	    TRACE_LEAVE ("exception");
 	  ctx->handle_exception (err, parser); // Will rethrow unknown errors.
-	  result = Void;
+	  result = nil;
 	  action = "return";
 	}
 
@@ -2677,7 +2710,7 @@ class Parser
   //! Must be set to nonzero before a stream is fed which should be
   //! compiled to p-code.
 
-  //!mixed unwind_safe;
+  //!int unwind_safe;
   //! If nonzero, the parser supports unwinding with throw()/catch().
   //! Whenever an exception is thrown from some evaluation function,
   //! it should be able to call that function again with identical
@@ -2703,15 +2736,15 @@ class Parser
 
   optional mixed read();
   //! Define to allow streaming operation. Returns the evaluated
-  //! result so far, but does not do any evaluation. Returns Void if
-  //! there's no data (for sequential types the empty value is also
+  //! result so far, but does not do any evaluation. Returns RXML.nil
+  //! if there's no data (for sequential types the empty value is also
   //! ok).
 
   mixed eval();
   //! Evaluates the data fed so far and returns the result. The result
   //! returned by previous eval() calls should not be returned again
-  //! as (part of) this return value. Returns Void if there's no data
-  //! (for sequential types the empty value is also ok).
+  //! as (part of) this return value. Returns RXML.nil if there's no
+  //! data (for sequential types the empty value is also ok).
 
   optional PCode p_compile();
   //! Define this to return a p-code representation of the current
@@ -2902,10 +2935,11 @@ class Type
   //!string name;
   //! Unique type identifier. Required and considered constant. Type
   //! hierarchies are currently implemented with glob patterns, e.g.
-  //! "image/png" is a subtype of "image/*", and "array(string)" is a
-  //! subtype of "array(*)".
+  //! "image/png" is a subtype of "image/*". However, this syntax will
+  //! be developed further, so for now use only characters [a-zA-Z/]
+  //! to write MIME-like types and use only * for globbing.
 
-  //!mixed sequential;
+  //!int sequential;
   //! Nonzero if data of this type is sequential, defined as:
   //! o  One or more data items can be concatenated with `+.
   //! o  (Sane) parsers are homomorphic on the type, i.e.
@@ -2918,7 +2952,7 @@ class Type
   //!mixed empty_value;
   //! The empty value, i.e. what eval ("") would produce.
 
-  //!mixed free_text;
+  //!int free_text;
   //! Nonzero if the type keeps the free text between parsed tokens,
   //! e.g. the plain text between tags in XML. The type must be
   //! sequential and use strings.
@@ -2927,28 +2961,21 @@ class Type
   //! Checks whether the given value is a valid one of this type. Type
   //! errors are thrown with RXML.parse_error().
 
-  //!string quoting_scheme;
-  //! An identifier for the quoting scheme this type uses, if any. The
-  //! quoting scheme specifies how literals needs to be quoted for the
-  //! type. Values converted between types with the same quoting
-  //! scheme are not quoted.
-
-  mixed quote (mixed val)
-  //! Quotes the given value according to the quoting scheme for this
-  //! type.
-  {
-    return val;
-  }
+  //!string encoding_type;
+  //! A type name identifying the encoding in this type, if
+  //! applicable. Conversion between two types with identical
+  //! encoding_type is always a nop, so the call to convert() may be
+  //! skipped.
 
   mixed convert (mixed val, void|Type from);
   //! Converts the given value to this type. If the from type is
   //! given, it's the type of the value. Since it's not always known,
-  //! this function should try to do something sensible based on the
-  //! primitive pike type. If the type can't be reasonably converted,
-  //! an RXML fatal should be thrown.
+  //! this function should try to do something sensible(*) based on
+  //! the primitive pike type, e.g. a string should be considered a
+  //! raw literal and be encoded if necessary. If the type can't be
+  //! converted, an RXML fatal should be thrown.
   //!
-  //! Quoting should be done if the from type is missing or has a
-  //! different quoting scheme.
+  //! *) Beware: This is not yet defined.
 
   Type clone()
   //! Returns a copy of the type.
@@ -3182,41 +3209,31 @@ static class PCacheObj
 
 
 static class TAny
-//! A completely unspecified nonsequential type.
+//! A completely unspecified nonsequential type. Every type is a
+//! subtype of this one.
 {
   inherit Type;
   constant name = "*";
-  constant quoting_scheme = "none";
-
   mixed convert (mixed val) {return val;}
-
   string _sprintf() {return "RXML.t_any" + OBJ_COUNT;}
 }
 TAny t_any = TAny();
 
-static class TNone
-//! A sequential type accepting only the empty value.
+static class TNil
+//! A sequential type accepting only the value nil. This type is by
+//! definition a subtype of every sequential type.
 {
   inherit Type;
-  constant name = "none";
+  constant name = "nil";
   constant sequential = 1;
-  VoidType empty_value = Void;
-  constant quoting_scheme = "none";
-
+  Nil empty_value = nil;
   void type_check (mixed val)
-  {
-    if (val != Void) parse_error ("A value is not accepted.\n");
-  }
-
-  mixed convert (mixed val)
-  {
-    type_check (val);
-    return Void;
-  }
-
-  string _sprintf() {return "RXML.t_none" + OBJ_COUNT;}
+    {if (val != nil) parse_error ("A non-nil value is not accepted.\n");}
+  mixed convert (mixed val) {type_check (val); return nil;}
+  int subtype_of (Type other) {return other->sequential || other == t_any;}
+  string _sprintf() {return "RXML.t_nil" + OBJ_COUNT;}
 }
-TNone t_none = TNone();
+TNil t_nil = TNil();
 
 static class TSame
 //! A magic type used in Tag.content_type.
@@ -3235,7 +3252,7 @@ static class TText
   constant sequential = 1;
   constant empty_value = "";
   constant free_text = 1;
-  constant quoting_scheme = "none";
+  constant encoding_type = "none";
 
   string convert (mixed val)
   {
@@ -3252,34 +3269,29 @@ static class TXml
 {
   inherit TText;
   constant name = "text/xml";
-  constant quoting_scheme = "xml";
-
-  string quote (string val)
-  {
-    return replace (
-      val,
-      // FIXME: This ignores the invalid Unicode character blocks.
-      ({"&", "<", ">", "\"", "\'",
-	"\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
-	"\010",                 "\013", "\014",         "\016", "\017",
-	"\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
-	"\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
-      }),
-      ({"&amp;", "&lt;", "&gt;", /*"&quot;"*/ "&#34;", /*"&apos;"*/ "&#39;",
-	"&#0;",  "&#1;",  "&#2;",  "&#3;",  "&#4;",  "&#5;",  "&#6;",  "&#7;",
-	"&#8;",                    "&#11;", "&#12;",          "&#14;", "&#15;",
-	"&#16;", "&#17;", "&#18;", "&#19;", "&#20;", "&#21;", "&#22;", "&#23;",
-	"&#24;", "&#25;", "&#26;", "&#27;", "&#28;", "&#29;", "&#30;", "&#31;",
-      }));
-  }
+  constant encoding_type = "xml";
 
   string convert (mixed val, void|Type from)
   {
     if (mixed err = catch {val = (string) val;})
       parse_error ("Couldn't convert value to text: " + describe_error (err));
-    if (!from || from->quoting_scheme != quoting_scheme)
-      val = quote ([string] val);
-    return val;
+    if (!from || from->encoding_type != encoding_type)
+      return replace (
+	[string] val,
+	// FIXME: This ignores the invalid Unicode character blocks.
+	({"&", "<", ">", "\"", "\'",
+	  "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+	  "\010",                 "\013", "\014",         "\016", "\017",
+	  "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+	  "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+	}),
+	({"&amp;", "&lt;", "&gt;", /*"&quot;"*/ "&#34;", /*"&apos;"*/ "&#39;",
+	  "&#0;",  "&#1;",  "&#2;",  "&#3;",  "&#4;",  "&#5;",  "&#6;",  "&#7;",
+	  "&#8;",                    "&#11;", "&#12;",          "&#14;", "&#15;",
+	  "&#16;", "&#17;", "&#18;", "&#19;", "&#20;", "&#21;", "&#22;", "&#23;",
+	  "&#24;", "&#25;", "&#26;", "&#27;", "&#28;", "&#29;", "&#30;", "&#31;",
+	}));
+    return [string] val;
   }
 
   string format_tag (string|Tag tag, void|mapping(string:string) args,
@@ -3397,12 +3409,12 @@ class PCode
 
 //! Some parser tools.
 
-static class VoidType
+static class Nil
 {
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   mixed ``+ (mixed val) {return val;}
   int `!() {return 1;}
-  string _sprintf() {return "RXML.Void";}
+  string _sprintf() {return "RXML.nil";}
   mixed cast(string type)
   {
     switch(type)
@@ -3420,14 +3432,19 @@ static class VoidType
     case "mapping":
       return ([]);
     default:
-      throw( ({ "Cannot cast RXML.Void to "+type+".\n", backtrace() }) );
+      error ("Cannot cast RXML.nil to "+type+".\n");
     }
   }
 };
 
-VoidType Void = VoidType();
-//! An object representing the void value. Works as initializer for
-//! sequences, since Void + anything == anything + Void == anything.
+Nil nil = Nil();
+//! An object representing the empty value. Works as initializer for
+//! sequences, since nil + anything == anything + nil == anything. It
+//! can cast itself to the empty value for the basic Pike types. It
+//! also evaluates to false in a boolean context, but it's not equal
+//! to 0.
+
+Nil Void = nil;			// Compatibility.
 
 class ScanStream
 //! A helper class for the input and scanner stage in a parser. It's a
@@ -3487,7 +3504,7 @@ class ScanStream
   }
 
   mixed read()
-  //! Returns the next token, or Void if there's no more data.
+  //! Returns the next token, or RXML.nil if there's no more data.
   {
     while (head->next)
       if (next_token >= sizeof (head->data)) {
@@ -3495,7 +3512,7 @@ class ScanStream
 	head = head->next;
       }
       else return head->data[next_token++];
-    return Void;
+    return nil;
   }
 
   void unread (mixed... put_back)
