@@ -246,6 +246,7 @@ worldmap binary
 /server/modules/tags/html_wash.pike foreign_ident
 /server/modules/tags/id3tag.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
+/server/modules/tags/inserthref.pike foreign_ident
 /server/modules/tags/javascript_support/javascript_support.pike foreign_ident
 /server/modules/tags/javascript_support/scripts/ColorSelector.js foreign_ident
 /server/modules/tags/killframe.pike foreign_ident

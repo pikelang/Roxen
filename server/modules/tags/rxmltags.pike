@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.426 2004/05/31 23:01:57 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.427 2004/06/01 17:02:37 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -30,11 +30,6 @@ float compat_level;
 
 void create()
 {
-  defvar("insert_href",0,"Allow <insert href>",
-	 TYPE_FLAG|VAR_MORE,
-         "If set, it will be possible to use <tt>&lt;insert href&gt;</tt> to "
-	 "insert pages from another web server. Note that the thread will be "
-	 "blocked while it fetches the web page.");
 }
 
 void start()
@@ -872,26 +867,6 @@ class TagInsertFile {
       RXML.run_error("No such file ("+Roxen.fix_relative( var, id )+").\n");
 
     return result;
-  }
-}
-
-class TagInsertHref {
-  inherit RXML.Tag;
-  constant name = "insert";
-  constant plugin_name = "href";
-
-  string get_data(string var, mapping args, RequestID id) {
-    if(!query("insert_href")) RXML.run_error("Insert href is not allowed.");
-
-    if(args->nocache)
-      NOCACHE();
-    else
-      CACHE(60);
-    Protocols.HTTP.Query q=Protocols.HTTP.get_url(args->href);
-    if(q && q->status>0 && q->status<400)
-      return q->data();
-
-    RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
   }
 }
 
@@ -4718,26 +4693,6 @@ just got zapped?
 
 	  ])
        }),
-
-//----------------------------------------------------------------------
-
-  "insert#href":#"<desc type='plugin'><p><short>
- Inserts the contents at that URL.</short> This function has to be
- enabled in the <module>Additional RXML tags</module> module in the
- ChiliMoon administration interface. The page download will block
- the current thread, and if running unthreaded, the whole server.
- There is no timeout in the download, so if the server connected to
- hangs during transaction, so will the current thread in this server.</p></desc>
-
-<attr name='href' value='string'><p>
- The URL to the page that should be inserted.</p>
-</attr>
-
-<attr name='nocache' value='string'><p>
- If provided the resulting page will get a zero cache time in the RAM cache.
- The default time is up to 60 seconds depending on the cache limit imposed by
- other RXML tags on the same page.</p>
-</attr>",
 
 //----------------------------------------------------------------------
 
