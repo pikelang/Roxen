@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.31 2000/08/23 08:45:44 lange Exp $
+ * $Id: Roxen.pmod,v 1.32 2000/08/27 14:21:18 mast Exp $
  *
  * Various helper functions.
  *
@@ -721,6 +721,39 @@ mapping(string:string) parser_charref_table =
     return table;
   }();
 
+//! The inverse mapping to parser_charref_table.
+mapping(string:string) inverse_charref_table =
+  lambda () {
+    mapping(string:string) table = ([]);
+    for (int i = 0; i < sizeof (replace_entities); i++) {
+      string chref = replace_entities[i];
+      table[replace_values[i]] = chref[1..sizeof (chref) - 2];
+    }
+    return table;
+  }();
+
+string decode_charref (string chref)
+//! Decodes a character reference entity either on symbolic or numeric
+//! form. Returns zero if the reference isn't recognized.
+{
+  if (sizeof (chref) <= 2 || chref[0] != '&' || chref[-1] != ';') return 0;
+  if (chref[1] != '#') return parser_charref_table[chref[1..sizeof (chref) - 2]];
+  if ((<'x', 'X'>)[chref[2]]) {
+    if (sscanf (chref, "&%*2s%x;%*c", int c) == 2) return sprintf ("%c", c);
+  }
+  else
+    if (sscanf (chref, "&%*c%d;%*c", int c) == 2) return sprintf ("%c", c);
+  return 0;
+}
+
+string encode_charref (string char)
+//! Encodes a character to a character reference entity. The symbolic
+//! form is preferred over the numeric. The lowercased hexadecimal
+//! variety of the numeric form is used.
+{
+  if (string chref = inverse_charref_table[char]) return "&" + chref + ";";
+  return sprintf ("&#x%x;", char[0]);
+}
 
 
 // RXML complementary stuff shared between configurations.
@@ -1113,7 +1146,7 @@ static string trace_msg (RequestID id, string msg, string name)
 void trace_enter (RequestID id, string msg, object|function thing)
 {
   if (!id->misc->trace_level) {
-    id->misc->trace_id_prefix = ({"%%", "##", "$$", "¤¤", "**", "@@", "§§"})[
+    id->misc->trace_id_prefix = ({"%%", "##", "§§", "**", "@@", "$$", "¤¤"})[
       all_constants()->id_trace_level_rotate_counter++ % 7];
     report_debug ("%s%s Request handled by: %O\n",
 		  id->misc->trace_id_prefix, id->misc->trace_id_prefix[..0],
