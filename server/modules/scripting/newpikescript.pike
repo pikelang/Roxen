@@ -1,4 +1,4 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.7 1998/08/10 21:37:58 per Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.8 1998/09/11 22:20:04 per Exp $";
 constant thread_safe=1;
 
 #if !constant(Remote)
@@ -76,7 +76,7 @@ object server_for(int uid, int gid)
     sleep(0.2);
   }
   // fallthrough..
-  werror("Failed to connect to old pike-script server.\n");
+  report_debug("Failed to connect to old pike-script server.\n");
   rm(SERVERDIR+uid);
   // So. Now we have to start a new server....
   object pid = 
@@ -267,7 +267,7 @@ mapping handle_file_extension(object file, string ext, object id)
 
   if(!file_name)
   {
-    werror("Copying temporary file... ["+id->not_query+"]\n");
+//     werror("Copying temporary file... ["+id->not_query+"]\n");
     file_name = "/tmp/"+getpid()+"."+uid+".pike";
     rm(file_name);
     Stdio.write_file( file_name, file->read() );
@@ -462,7 +462,8 @@ int main()
   array u = getpwuid(getuid());
   if(u)
   {
-    werror("Starting a pike-script server for "+u[4]+"; pid = "+getpid()+"\n");
+    report_notice("Starting a pike-script server for "+
+		  u[4]+"; pid = "+getpid()+"\n");
     cd(u[5]);
     if(cd(".pikescripts"))
     {

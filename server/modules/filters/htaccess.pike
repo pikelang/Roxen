@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.45 1998/08/10 21:52:11 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.46 1998/09/11 22:16:35 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -201,7 +201,7 @@ mapping|int parse_htaccess(object f, object id, string rht)
 
     default:
 #ifdef HTACCESS_DEBUG
-      werror(".htaccess: Unsupported command: "+ cmd +"\n");
+      report_debug(".htaccess: Unsupported command in "+cache_key+": "+ cmd +"\n");
 #endif
     }
 #ifdef HTACCESS_DEBUG
@@ -947,7 +947,7 @@ mapping remap_url(object id)
 
       string s = (id->not_query/"/")[-1];
       if (search(QUERY(denyhtlist), s) != -1) {
-	werror("Denied access for "+s+"\n");
+	report_debug("Denied access for "+s+"\n");
 	id->misc->error_code = 401;
 	TRACE_LEAVE("Access Denied");
 	return http_low_answer(401, "<title>Access Denied</title>"

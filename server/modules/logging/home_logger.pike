@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.17 1998/04/21 19:09:26 grubba Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.18 1998/09/11 22:19:59 per Exp $";
 constant thread_safe=1;
 
 
@@ -255,7 +255,7 @@ class CacheFile {
     remove_call_out(timeout);
     call_out(timeout, d);
     if(ready)
-      werror("home_logger: Trying to write to a closed file "+file+"\n");
+      report_debug("home_logger: Trying to write to a closed file "+file+"\n");
     else
       ::write(s);
   }
