@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.275 2001/08/13 18:15:46 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.276 2001/08/14 18:34:24 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1112,7 +1112,7 @@ Roxen 2.2 should be run with Pike 7.2.
 	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
 
   remove_dumped =
-    Getopt.find_option(argv, "remove-dumped",({"remove-dumped", }), 0 );
+    Getopt.find_option(av, "remove-dumped",({"remove-dumped", }), 0 );
 
   if( configuration_dir[-1] != '/' ) configuration_dir+="/";
 
@@ -1741,11 +1741,7 @@ Please install a newer version of Pike.
   add_constant("roxenloader", this_object());
   add_constant("ErrorContainer", ErrorContainer);
 
-#if constant (thread_create)
   add_constant("_cur_rxml_context", Thread.Local());
-#else
-  add_constant("_cur_rxml_context", 0);
-#endif
 
   start_mysql();
 

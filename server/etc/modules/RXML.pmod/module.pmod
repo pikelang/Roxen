@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.222 2001/08/14 17:05:42 mast Exp $
+// $Id: module.pmod,v 1.223 2001/08/14 18:35:44 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -125,13 +125,8 @@ class RequestID { };
 #define HASH_INT2(m, n) (n < 65536 ? (m << 16) + n : sprintf ("%x,%x", m, n))
 
 #undef RXML_CONTEXT
-#if constant (thread_create)
-#  define RXML_CONTEXT (_cur_rxml_context->get())
-#  define SET_RXML_CONTEXT(ctx) (_cur_rxml_context->set (ctx))
-#else
-#  define RXML_CONTEXT (_cur_rxml_context)
-#  define SET_RXML_CONTEXT(ctx) (_cur_rxml_context = (ctx))
-#endif
+#define RXML_CONTEXT (_cur_rxml_context->get())
+#define SET_RXML_CONTEXT(ctx) (_cur_rxml_context->set (ctx))
 
 // Use defines since typedefs doesn't work in soft casts yet.
 #define SCOPE_TYPE mapping(string:mixed)|object(Scope)
