@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.273 2001/04/23 12:41:26 leif Exp $
+// $Id: rxml.pike,v 1.274 2001/04/25 18:21:10 jhs Exp $
 
 
 inherit "rxmlhelp";
@@ -2989,9 +2989,9 @@ Kibibits.
 </attr>",
 
 "use":#"<desc cont='cont'><p><short>
- Reads tags, container tags and defines from a package.</short>
- Everything defined in the package is local for the page the package
- is used in.
+ Reads tags, container tags and defines from a package or file.</short>
+ Everything defined in the package is local for the page the package or
+ file is used from.
 </p></desc>
 
 <attr name='packageinfo'><p>
@@ -3004,15 +3004,15 @@ Kibibits.
  <i>../rxml_packages/</i>.</p>
 </attr>
 
-<attr name=file' value='path'><p>
+<attr name='file' value='path'><p>
  Reads all tags and container tags and defines from the file.</p>
 
  <p>This file will be fetched just as if someone had tried to fetch it
  with an HTTP request. This makes it possible to use Pike script
  results and other dynamic documents. Note, however, that the results
  of the parsing are heavily cached for performance reasons. If you do
- not want this cache, use <tag>insert file=...
- nocache</tag> instead.</p>
+ not want this cache, use <tag>insert file='...'
+ nocache=''</tag> instead.</p>
 </attr>
 
 <attr name='info'><p>
