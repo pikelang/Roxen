@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.295 1999/06/10 23:39:20 per Exp $
+ * $Id: roxen.pike,v 1.296 1999/06/11 01:11:50 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.295 1999/06/10 23:39:20 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.296 1999/06/11 01:11:50 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -3287,18 +3287,6 @@ så här ofta. Tiden är angiven i dagar");
   docurl=QUERY(docurl2);
 
 }
-
-
-
-// return all available fonts. Taken from the font_dirs list.
-array font_cache;
-array available_fonts(int cache)
-{
-  if(cache && font_cache) 
-    return font_cache;
-  return font_cache = fonts->available_fonts();
-}
-
 
 
 // Somewhat misnamed, since there can be more then one
