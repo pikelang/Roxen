@@ -153,7 +153,7 @@ static string xtable_c_cont( mixed a, mixed b, string c )
 static string help_tag( mixed a, mapping m, string c )
 {
   if( m["for"] )
-    return find_tag_doc( m["for"], RXML.get_context()->id );
+    return find_tag_doc( m["for"], RXML.get_context()->id,0,1 );
   return 0; // keep.
 }
 
@@ -213,9 +213,11 @@ static string format_doc(string|mapping doc, string name, void|object id)
 // ------------------ Parse docs in mappings --------------
 
 static string parse_doc(string|mapping|array doc, string name, void|object id) {
-  if(arrayp(doc))
+  if(arrayp(doc) && (sizeof( doc ) == 2) )
     return format_doc(doc[0], name, id)+
       "<dl><dd>"+parse_mapping(doc[1], id)+"</dd></dl>";
+  if( arrayp( doc ) && sizeof(doc) )
+    return format_doc( doc[0], name, id );
   return format_doc(doc, name, id);
 }
 
@@ -260,15 +262,18 @@ mapping call_tagdocumentation(RoxenModule o) {
 
 static int generation;
 multiset undocumented_tags=(<>);
-string find_tag_doc(string name, RequestID id, int|void no_undoc)
+string find_tag_doc(string name, RequestID id, int|void no_undoc,
+		    int|void reenter)
 {
   RXMLHELP_WERR("Help for tag "+name+" requested.");
-  object old_ctx = RXML.get_context();
 
+  object old_ctx = RXML.get_context();
 
   if( !id )
     error("find_tag_doc called without ID-object\n");
-  parse_rxml( "", id );
+
+  if( !reenter )
+    parse_rxml( "", id );
   RXML.TagSet tag_set = id->conf->rxml_tag_set;
   
   string doc;
@@ -295,7 +300,8 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc)
 
   if(!sizeof(tags))
   {
-    RXML.set_context( old_ctx );
+    if( !reenter )
+      RXML.set_context( old_ctx );
     return no_undoc ? "" : "<h4>That tag ("+name+") is not defined</h4>";
   }
 
@@ -308,7 +314,7 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc)
       if(sizeof(plugins)) {
 	plugindoc="<hr /><dl><dd>";
 	foreach(sort(indices(plugins)), string plugin)
-	  plugindoc+=find_tag_doc(name+"#"+plugin, id);
+	  plugindoc+=find_tag_doc(name+"#"+plugin, id,no_undoc,1);
 	plugindoc+="</dd></dl>";
       }
       if(tag->is_compat_tag) {
@@ -340,7 +346,8 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc)
     mapping tagdoc=call_tagdocumentation(tag);
     if(!tagdoc || !tagdoc[name]) continue;
     string res = parse_doc(tagdoc[name], name, id)+plugindoc;
-    RXML.set_context( old_ctx );
+    if( !reenter )
+      RXML.set_context( old_ctx );
     return res;
   }
 
@@ -349,7 +356,8 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc)
     sscanf(name,"%*s#%s", name);
     name="plugin "+name;
   }
-  RXML.set_context( old_ctx );
+  if( !reenter )
+    RXML.set_context( old_ctx );
   return (no_undoc ? "" : 
 	  "<h4>No documentation available for \""+name+"\".</h4>\n");
 }
