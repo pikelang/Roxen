@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.132 1999/03/29 00:18:31 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.133 1999/03/29 00:23:21 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1290,7 +1290,8 @@ class backend
 	break;
       case "unseen":
 	res += ({ "UNSEEN",
-		  imap_number(sizeof(m->contents->flags->read - ({ 0 }))),
+		  imap_number(sizeof(m->contents) -
+			      sizeof(m->contents->flags["\\Seen"] - ({ 0 }))),
 	});
 	break;
       default:
