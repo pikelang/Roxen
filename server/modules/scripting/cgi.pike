@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.8 1999/05/04 23:03:10 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.9 1999/05/12 08:03:14 per Exp $";
 
 
 array register_module()
@@ -617,7 +617,7 @@ mapping handle_file_extension(object o, string e, object id)
 {
   if(!QUERY(ex))
     return 0;
-#ifdef UNIX
+#if UNIX
   if(o && !(o->stat()[0]&0111))
     if(QUERY(noexec))
       return 0;
@@ -641,7 +641,7 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
 {
   array stat=stat_file(f,id);
   if(!stat) return 0;
-#ifdef UNIX
+#if UNIX
   if(!(stat[0]&0111))
   {
     if(QUERY(noexec))
