@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.35 1999/05/19 09:09:09 peter Exp $ */
+/* $Id: module.pike,v 1.36 1999/06/09 01:46:54 mast Exp $ */
 
 #include <module.h>
 
@@ -30,7 +30,9 @@ int module_dependencies(object configuration, array (string) modules)
     if(roxen->root)
       roxen->configuration_interface()->build_root(roxen->root);
   }
-  _do_call_outs();
+  mixed err;
+  if (err = catch (_do_call_outs()))
+    report_error ("Error doing call outs:\n" + describe_backtrace (err));
   return 1;
 }
 
