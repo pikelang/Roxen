@@ -26,7 +26,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.103 2003/12/15 15:51:58 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.104 2003/12/18 13:15:21 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -391,26 +391,34 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
   //  Generate text
   if (sizeof(text))
   {
-    int os, dir;
-    Font button_font;
-    int th = text_height;
-    do
-    {
-      button_font = resolve_font( args->font+" "+th );
+    int min_font_size = 0;
+    int max_font_size = text_height * 2;
+    do {
+      //  Use binary search to find an appropriate font size. Since we prefer
+      //  font sizes which err on the small side (so we never extend outside
+      //  the given boundaries) we must round up when computing the next size
+      //  or we risk missing a good size.
+      int try_font_size = (max_font_size + min_font_size + 1) / 2;
+      Font button_font = resolve_font(args->font + " " + try_font_size);
       text_img = button_font->write(text);
-      os = text_img->ysize();
-      if( !dir )
-        if( os < text_height )
-          dir = 1;
-        else if( os > text_height )
-          dir =-1;
-      if( dir > 0 && os > text_height ) break;
-      else if( dir < 0 && os < text_height ) dir = 1;
-      else if( os == text_height ) break;
-      th += dir;
-    } while( (text_img->ysize() - text_height)
-             && (th>0 && th<text_height*2));
-
+      int real_height = text_img->ysize();
+      
+      //  Early bail for fixed-point fonts which are too large
+      if (real_height > try_font_size * 2)
+	break;
+      
+      //  Go up or down in size?
+      if (real_height == text_height)
+	break;
+      if (real_height > text_height)
+	max_font_size = try_font_size - 1;
+      else {
+	if (min_font_size == max_font_size)
+	  break;
+	min_font_size = try_font_size;
+      }
+    } while (max_font_size - min_font_size >= 0);
+    
     // fonts that can not be scaled.
     if( abs(text_img->ysize() - text_height)>2 )
       text_img = text_img->scale(0, text_height );
