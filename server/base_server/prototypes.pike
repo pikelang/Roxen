@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.75 2004/03/15 17:12:41 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.76 2004/03/16 10:53:30 grubba Exp $";
 
 class Variable
 {
@@ -1256,6 +1256,28 @@ class MultiStatus
 
 #endif /* Parser.XML.Tree.XMLNSParser */
 
+// Only for protyping and breaking of circularities.
+static class PropertySet
+{
+  RequestID id;
+  string path;
+  Stat st;
+  multiset(string) query_all_properties();
+  string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
+    query_property(string prop_name);
+  mapping(string:mixed) start();
+  void unroll();
+  void commit();
+  mapping(string:mixed) set_property(string prop_name,
+				     string|array(Parser.XML.Tree.Node) value);
+  mapping(string:mixed) set_dead_property(string prop_name,
+					  array(Parser.XML.Tree.Node) value);
+  mapping(string:mixed) remove_property(string prop_name);
+  mapping(string:mixed) find_properties(string mode,
+					MultiStatus result,
+					multiset(string)|void filt);
+}
+
 class RoxenModule
 {
   inherit BasicDefvar;
@@ -1289,28 +1311,12 @@ class RoxenModule
   string info(object conf);
   string comment();
 
-  // Property handling stuff.
-  multiset(string) query_all_properties(string path, RequestID id);
+  PropertySet query_properties(string path, RequestID id);
   string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     query_property(string path, string prop_name, RequestID id);
-  mapping(string:mixed) find_properties(string path, string mode,
-					MultiStatus result, RequestID id,
-					multiset(string)|void filt);
   void recurse_find_properties(string path, string mode, int depth,
 			       MultiStatus result, RequestID id,
 			       multiset(string)|void filt);
-  mapping(string:mixed)|PatchPropertyContext
-    patch_property_start(string path, RequestID id);
-  class PatchPropertyContext
-  {
-    mapping(string:mixed) set_property(string prop_name,
-				       string|array(Parser.XML.Tree.Node) value);
-    mapping(string:mixed) set_dead_property(string prop_name,
-					    array(Parser.XML.Tree.Node) value);
-    mapping(string:mixed) remove_property(string prop_name);
-    void patch_unroll();
-    mapping(string:mixed) patch_commit();
-  }
   mapping(string:mixed) patch_properties(string path,
 					 array(PatchPropertyCommand) instructions,
 					 MultiStatus result, RequestID id);
