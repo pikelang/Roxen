@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.7 2003/01/27 15:36:59 mast Exp $
+ * $Id: debug_summary.pike,v 1.8 2003/08/26 15:05:30 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -136,12 +136,21 @@ string make_configuration_summary(string configuration)
   return res;
 }
 
+string make_global_summary()
+{
+  string res = make_headline("Global Variables");
+  res += make_variables_summary(roxen->getvars());
+  return res + "\n";
+}
+
 string make_summary()
 {
   string res = make_environment_summary()+"\n";
 
 //    res +=make_headline("CVS file versions");
 //    res +=indent(get_cvs_versions(getcwd()), 1);
+
+  res += make_global_summary();
 
   foreach(roxen->list_all_configurations(), string configuration)
   {
