@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.2 2000/07/07 12:34:25 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.3 2000/08/16 11:34:07 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "HTML washer";
@@ -15,7 +15,8 @@ class TagWashHtml
 {
   inherit RXML.Tag;
   constant name = "wash-html";
-
+  Regexp link_regexp;
+  
   string paragraphify(string s)
   {
     // more than one newline is considered a new paragraph
@@ -36,7 +37,7 @@ class TagWashHtml
   array parse_arg_array(string s)
   {
     if(!s)
-      return 0;
+      return ({ });
 
     return ((s - " ")/",") - ({ "" });
   }
@@ -47,12 +48,16 @@ class TagWashHtml
 		   ({ "<",">" }), ({ "\0[","\0]" }) ) + cont+"\0[/"+tag+"\0]";
   }
   
-  string safe_tag(string tag, mapping m)
+  string safe_tag(string tag, mapping m, string close_tags)
   {
+    if(close_tags)
+      m["/"] = "/";
+    
     return replace(Roxen.make_tag(tag, m), ({ "<",">" }), ({ "\0[","\0]" }) );
   }
   
-  string filter_body(string s, array keep_tags, array keep_containers)
+  string filter_body(string s, array keep_tags, array keep_containers,
+		     string close_tags)
   {
     s -= "\0";
     mapping allowed_tags =
@@ -63,9 +68,27 @@ class TagWashHtml
 		allocate(sizeof(keep_containers), safe_container));
     
     return replace(
-      parse_html(s, allowed_tags, allowed_containers),
+      parse_html(s, allowed_tags, allowed_containers, close_tags),
       ({ "<",    ">",    "&",     "\0[", "\0]" }),
       ({ "&lt;", "&gt;", "&amp;", "<",   ">" }));
+  }
+
+  string link_dwim(string s)
+  {
+    
+    return link_regexp->replace(s, lambda(string link)
+				   {return "<a href='"+link+"'>"+link+"</a>"; });
+  }
+  
+  string unlink_dwim(string s)
+  {
+    string tag_a(string tag, mapping arg, string cont)
+    {
+      if(sizeof(arg) == 1 && arg->href == cont)
+	return cont;
+    };
+    
+    return parse_html(s, ([ ]), ([ "a":tag_a ]) );
   }
   
   class Frame
@@ -82,18 +105,25 @@ class TagWashHtml
       if(!args["keep-all"])
 	res =
 	  filter_body(res,
-		      parse_arg_array(args["keep-tags"]) || ({ "br" }),
-		      parse_arg_array(args["keep-containers"]) || ({"b","i"}));
+		      parse_arg_array(args["keep-tags"]),
+		      parse_arg_array(args["keep-containers"]),
+		      args["close-tags"]);
       
       if(args->paragraphify)
 	res = paragraphify(res);
       
+      if(args["link-dwim"])
+	res = link_dwim(res);
+	
+      if(args["unlink-dwim"])
+	res = unlink_dwim(res);
+	
       if(args->quote)
 	res = Roxen.html_encode_string(res);
       
       if(args->unquote)
 	res = Roxen.html_decode_string(res);
-      
+
       return ({ res });
     }
   }
@@ -108,6 +138,10 @@ class TagWashHtml
 		       "paragraphify":RXML.t_text(RXML.PXml),
                        "unparagraphify":RXML.t_text(RXML.PXml),
 		       "keep-all":RXML.t_text(RXML.PXml) ]);
+    
+    link_regexp =
+      Regexp("(((http)|(https)|(ftp))://([^ \t\n\r<]+)(\\.[^ \t\n\r<>\"]+)+)|"
+	     "(((www)|(ftp))(\\.[^ \t\n\r<>\"]+)+)");
   }
 }
 
