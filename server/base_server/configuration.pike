@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.318 2000/07/09 18:19:12 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.319 2000/07/10 22:41:24 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -876,9 +876,8 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
 
       case MOD_DENY: // deny ip=...
 
-	// FIXME: LOCALE?
 	if(level[1](id->remoteaddr))
-	  return Roxen.http_low_answer(403, "<h2>Access forbidden</h2>");
+	  return Roxen.http_low_answer(403, "<h2>"+LOCALE("","Access forbidden")+"</h2>");
 	break;
 
       case MOD_USER: // allow user=...
@@ -1001,8 +1000,6 @@ string draw_saturation_bar(int hue,int brightness, int where)
 // from the administration interface. :-)
 private mapping internal_roxen_image(string from)
 {
-  // changed 970820 by js to allow for jpeg images
-  // changed 20000203 by per to allow for xcf and png images
   sscanf(from, "%s.gif", from);
   sscanf(from, "%s.jpg", from);
   sscanf(from, "%s.xcf", from);
@@ -1869,7 +1866,7 @@ public array open_file(string fname, string mode, RequestID id, void|int interna
     return ({ file->file, file });
   }
   id->not_query = oq;
-  return ({ 0, (["error":501, "data":"Not implemented"]) });
+  return ({ 0, (["error":501, "data":LOCALE("","Not implemented") ]) });
 }
 
 
@@ -2374,19 +2371,11 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     if(module_type != MODULE_CONFIG)
     {
       if (err = catch {
-	me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
-		   "The priority of the module. 9 is highest and 0 is lowest."
+	me->defvar("_priority", 5, LOCALE("", "Priority"), TYPE_INT_LIST,
+		   LOCALE("", "The priority of the module. 9 is highest and 0 is lowest."
 		   " Modules with the same priority can be assumed to be "
-		   "called in random order",
+		   "called in random order"),
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
-	me->deflocaledoc("deutsch", "_priority", "Priorität",
-                         "Modul Priorität. 9 höchste, 0 niedrigste."
-                         " Module mit gleicher Priorität werden in "
-                         "zufälliger Reihenfolge aufgerufen.");
-	me->deflocaledoc("svenska", "_priority", "Prioritet",
-			 "Modulens prioritet, 9 är högst och 0 är"
-			 " lägst. Moduler med samma prioritet anropas i "
-			 "mer eller mindre slumpmässig ordning.");
       }) {
 	throw(err);
       }
@@ -2396,25 +2385,13 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     {
       if(!(module_type & MODULE_PROXY))
       {
-	me->defvar("_sec_group", "user", "Security: Realm", TYPE_STRING,
-		   "The realm to use when requesting password from the "
+	me->defvar("_sec_group", "user", LOCALE("", "Security: Realm"), TYPE_STRING,
+		   LOCALE("", "The realm to use when requesting password from the "
 		   "client. Usually used as an informative message to the "
-		   "user.");
+		   "user."));
 
-	me->deflocaledoc("deutsch", "_sec_group", "Sicherheit: Bereich",
-                         "Bereichsname, der benutzt werden soll, "
-                         "wenn vom Webbrowser ein Passwort angefordert "
-                         "werden soll. Wird üblicherweise als informativer "
-                         "Hinweis für den Benutzer verwendet.");
-	me->deflocaledoc("svenska", "_sec_group", "Säkerhet: Grupp",
-			 "Gruppnamnet som används när klienten bes"
-			 " ange lösenord. I de flesta klienter visas den "
-			 " här informationen för användaren i"
-			 " lösenordsdialogen.");
-
-
-	me->defvar("_seclvl",  0, "Security: Security level", TYPE_INT,
-		   "The modules security level is used to determine if a "
+	me->defvar("_seclvl",  0, LOCALE("", "Security: Security level"), TYPE_INT,
+		   LOCALE("", "The modules security level is used to determine if a "
 		   " request should be handled by the module."
 		   "\n<p><h2>Security level vs Trust level</h2>"
 		   " Each module has a configurable <i>security level</i>."
@@ -2422,288 +2399,78 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   " <i>trust levels</i> grants access to modules with higher"
 		   " <i>security levels</i>."
 		   "\n<p><h2>Definitions</h2><ul>"
-		   " <li>A requests initial Trust level is infinitely high."
+		   " <li>A requests initial Trust level is infinitely high.</li>"
 		   " <li> A request will only be handled by a module if its"
 		   "     <i>trust level</i> is higher or equal to the"
-		   "     <i>security level</i> of the module."
+		   "     <i>security level</i> of the module.</li>"
 		   " <li> Each time the request is handled by a module the"
 		   "     <i>trust level</i> of the module will be set to the"
 		   "      lower of its <i>trust level</i> and the modules"
-		   "     <i>security level</i>."
-		   " </ul>"
+		   "     <i>security level</i>.</li>"
+		   " </ul></p>"
 		   "\n<p><h2>Example</h2>"
 		   " Modules:<ul>"
-		   " <li>  User filesystem, <i>security level</i> 1"
-		   " <li>  Filesystem module, <i>security level</i> 3"
-		   " <li>  CGI module, <i>security level</i> 2"
-		   " </ul>"
+		   " <li>  User filesystem, <i>security level</i> 1</li>"
+		   " <li>  Filesystem module, <i>security level</i> 3</li>"
+		   " <li>  CGI module, <i>security level</i> 2</li>"
+		   " </ul></p>"
 		   "\n<p>A request handled by \"User filesystem\" is assigned"
 		   " a <i>trust level</i> of one after the <i>security"
 		   " level</i> of that module. That request can then not be"
 		   " handled by the \"CGI module\" since that module has a"
 		   " higher <i>security level</i> than the requests trust"
-		   " level."
+		   " level.</p>"
 		   "\n<p>On the other hand, a request handled by the the"
 		   " \"Filsystem module\" could later be handled by the"
-		   " \"CGI module\".");
+		   " \"CGI module\".</p>"));
 
-       me->deflocaledoc("deutsch", "_seclvl", "Sicherheit: Sicherheitsebene",
-                   "Die Sicherheitsebene des Moduls wird verwendet, "
-                   "wenn ein Request vom Modul behandelt werden soll."
-                  "\n<p><h2>Sicherheitsebene vs Vertrauensebene</h2> "
-                   "Jedes Modul hat eine konfigurierbare "
-                   "<i>Sicherheitsebene</i>."
-                   "Jeder Request hat eine zugewiesene Vertrauensebene. "
-                   "Höhere <i>Vertrauensebeben</i> erlauben Zugriff zu "
-                   "Modulen mir höherer <i>Sicherheitsebene</i>."
-                  "\n<p><h2>Definitionen</h2><ul>"
-                   " <li>Die ursprüngliche Vertrauensebene eines Requests "
-                   "     ist unendlich hoch."
-                   " <li> Ein Request wird nur von einem Modul behandelt, wenn"
-                   "      seine <i>Vertrauensebene</i> mindestens so hoch ist,"
-                   "      wie die <i>Sicherheitsebene</i> des Moduls."
-                   " <li> Jedes Mal wenn ein Request von einem Modul "
-                   "      behandelt wird, wird die <i>Vertrauensebene</i>"
-                   "      des Requests auf den jeweils niedrigeren Wert"
-                   "      von der <i>Vertrauensebene</i> des Requests und der"
-                   "     <i>Sicherheitsebene</i> des Moduls, gesetzt."
-                  " </ul>"
-                  "\n<p><h2>Beispiel</h2>"
-                  " Module:<ul>"
-                  " <li>  User filesystem, <i>Sicherheitsebene</i> 1"
-                  " <li>  Filesystem module, <i>Sicherheitsebene</i> 3"
-                  " <li>  CGI module, <i>Sicherheitsebene</i> 2"
-                  " </ul>"
-                   "\n<p>Ein Request der vom \"User filesystem\" behandelt "
-                   "wird bekommt eine <i>Vertrauensebene</i> die der "
-                   "<i>Sicherheitsebene</i> des Moduls entspricht. "
-                   "Der Request kann dann nicht mehr vom \"CGI module\" "
-                   "behandelt werden, da dieses eine höhere "
-                   "<i>Sicherheitsebene</i> hat als die Vertrauensebene "
-                   "des Requests."
-                   "\n<p>Ein Request der vom \"Filsystem module\" behandelt "
-                   "wurde kann andererseits später vom \"CGI module\" "
-                   "behandelt werden.");
-	me->deflocaledoc("svenska", "_seclvl", "Säkerhet: Säkerhetsnivå",
-			 "Modulens säkerhetsnivå används för att avgöra om "
-			 " en specifik request ska få hanteras av  modulen. "
-			 "\n<p><h2>Säkerhetsnivå och pålitlighetsnivå</h2>"
-			 " Varje modul har en konfigurerbar "
-			 "<i>säkerhtesnivå</i>. "
-			 "Varje request har en <i>pålitlighetsnivå</i>.<p>"
-			 "Högre <i>pålitlighetsnivåer</i> ger "
-			 " requesten tillgång till moduler med högre "
-			 "<i>säkerhetsnivå</i>. <p>\n"
-			 "\n<p><h2>Defenitioner</h2><ul>"
-			 " <li>En requests initialpålitlighetsnivå är "
-			 " oändligt hög."
-			 " <li> En request hanteras bara av moduler om "
-			 "dess <i>pålitlighetsnivå</i> är högre eller "
-			 " lika hög som modulens <i>säkerhetsnivå</i>"
-			 " <li> Varje gång en request hanteras av en"
-			 " modul så sätts dess <i>pålitlighetsnivå</i> "
-			 "till modulens <i>säkerhetsnivå</i> om "
-			 " modulen har en <i>säkerhetsnivå</i> som är "
-			 "skiljd from noll. "
-			 " </ul>"
-			 "\n<p><h2>Ett exempel</h2>"
-			 " Moduler:<ul>"
-			 " <li>  Användarfilsystem, <i>säkerhetsnivå</i> 1"
-			 " <li>  Filesystem, <i>säkerhetsnivå</i> 3"
-			 " <li>  CGI modul, <i>säkerhetsnivå</i> 2"
-			 " </ul>"
-			 "\n<p>En request hanterad av "
-			 " <i>Användarfilsystemet</i> får ett "
-			 "som <i>pålitlighetsnivå</i>. Den här"
-			 " requesten kan därför inte skickas vidare "
-			 "till <i>CGI modulen</i> eftersom den har"
-			 " en <i>säkerhetsnivå</i> som är högre än"
-			 " requestens <i>pålitlighetsnivå</i>.<p>"
-			 "  Å andra sidan så kan en request som "
-			 " hanteras av <i>Filsystem</i> modulen "
-			 " skickas vidare till <i>CGI modulen</i>.");
-
-	me->defvar("_seclevels", "", "Security: Patterns", TYPE_TEXT_FIELD,
-		   "This is the 'security level=value' list.<br>"
+	me->defvar("_seclevels", "", LOCALE("", "Security: Patterns"), TYPE_TEXT_FIELD,
+		   LOCALE("", "This is the 'security level=value' list.<br />"
 		   "Each security level can be any or more from this list:"
-		   "<hr noshade>"
-		   "allow ip=<i>IP</i>/<i>bits</i><br>"
-		   "allow ip=<i>IP</i>:<i>mask</i><br>"
-		   "allow ip=<i>pattern</i><br>"
-		   "allow user=<i>username</i>,...<br>"
-		   "deny ip=<i>IP</i>/<i>bits</i><br>"
-		   "deny ip=<i>IP</i>:<i>mask</i><br>"
-		   "deny ip=<i>pattern</i><br>"
-		   "<hr noshade>"
+		   "<hr noshade=\"noshade\" />"
+		   "allow ip=<i>IP</i>/<i>bits</i><br />"
+		   "allow ip=<i>IP</i>:<i>mask</i><br />"
+		   "allow ip=<i>pattern</i><br />"
+		   "allow user=<i>username</i>,...<br />"
+		   "deny ip=<i>IP</i>/<i>bits</i><br />"
+		   "deny ip=<i>IP</i>:<i>mask</i><br />"
+		   "deny ip=<i>pattern</i><br />"
+		   "<hr noshade=\"noshade\" />"
 		   "In patterns: * matches one or more characters, "
-		   "and ? matches one character.<p>"
-		   "In username: 'any' stands for any valid account "
+		   "and ? matches one character."
+		   "<p>In username: 'any' stands for any valid account "
 		   "(from .htaccess"
 		   " or an auth module. The default (used when _no_ "
 		   "entries are present) is 'allow ip=*', allowing"
-		   " everyone to access the module.");
-
-	me->deflocaledoc("deutsch", "_seclevels",
-			 "Sicherheit: Muster",
-			 "Dies ist die Liste der Sicherheitsmuster.<p>"
-			 "Jede Sicherheitsebene kann aus einem oder mehr "
-			 "der folgenden Einträgen bestehen: "
-			 "<hr noshade>"
-			 "allow ip=<i>IP-Adresse</i>/<i>Bits</i><br>"
-			 "allow ip=<i>IP-Adresse</i>:<i>Netzmaske</i><br>"
-			 "allow ip=<i>Muster</i><br>"
-			 "allow user=<i>Benutzername</i>,...<br>"
-			 "deny ip=<i>IP-Adresse</i>/<i>Bits</i><br>"
-			 "deny ip=<i>IP-nummer</i>:<i>Netzmaske</i><br>"
-			 "deny ip=<i>Muster</i><br>"
-			 "<hr noshade>"
-			 "Bei den Mustern trifft '*' auf ein oder "
-			 "mehrere Zeichen zu, '?' auf genau ein "
-			 "Zeichen.<p> "
-			 "Bei den Benutzernamen steht 'any' für jeden "
-			 "gültigen Benutzernamen "
-			 "(aus einer .htaccess-Datei oder jedem anderen "
-                         "Auth-Modul)  Der Standard-Wert (wenn keine Eingaben "
-                         "gemacht wurden), ist 'allow ip=*', d.h. jeder "
-                         "darf auf das Modul zugreifen.");
-	me->deflocaledoc("svenska", "_seclevels",
-			 "Säkerhet: Behörighetsregler",
-			 "Det här är en lista av behörighetsregler.<p>"
-			 "Varje behörighetsregler måste följa någon av de "
-			 " här mönstren: "
-			 "<hr noshade>"
-			 "allow ip=<i>IP-nummer</i>/<i>antal nätmaskbittar</i><br>"
-			 "allow ip=<i>IP-nummer</i>:<i>nätmask</i><br>"
-			 "allow ip=<i>globmönster</i><br>"
-			 "allow user=<i>användarnamn</i>,...<br>"
-			 "deny ip=<i>IP-nummer</i>/<i>antal nätmaskbittar</i><br>"
-			 "deny ip=<i>IP-nummer</i>:<i>nätmask</i><br>"
-			 "deny ip=<i>globmönster</i><br>"
-			 "<hr noshade>"
-			 "I globmänster betyer '*' ett eller flera "
-			 "godtyckliga tecken, och '?' betyder exekt "
-			 "ett godtyckligt tecken.<p> "
-			 "Användnamnet 'any' kan användas för att ange "
-			 "att vilken giltig användare som helst ska "
-			 " kunna få använda modulen.");
+		   " everyone to access the module.</p>"));
       } else {
 	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
 
-	me->defvar("_sec_group", "user", "Security: Realm", TYPE_STRING,
-		   "The realm to use when requesting password from the "
+	me->defvar("_sec_group", "user", LOCALE("", "Security: Realm"), TYPE_STRING,
+		   LOCALE("", "The realm to use when requesting password from the "
 		   "client. Usually used as an informative message to the "
-		   "user.");
+		   "user."));
 
-        me->deflocaledoc("deutsch", "_sec_group", "Sicherheit: Bereich",
-                         "Bereichsname, der benutzt werden soll, "
-                         "wenn vom Webbrowser ein Passwort angefordert "
-                         "werden soll. Wird üblicherweise als informativer "
-                         "Hinweis für den Benutzer verwendet.");
-	me->deflocaledoc("svenska", "_sec_group", "Säkerhet: Grupp",
-			 "Gruppnamnet som används när klienten bes"
-			 " ange lösenord. I de flesta klienter visas den "
-			 " här informationen för användaren i"
-			 "lösenordsdialogen.");
-
-
-
-	me->defvar("_seclevels", "", "Security: Patterns",
+	me->defvar("_seclevels", "", LOCALE("", "Security: Patterns"),
 		   TYPE_TEXT_FIELD,
-		   "This is the 'security level=value' list.<br>"
+		   LOCALE("", "This is the 'security level=value' list.<br />"
 		   "Each security level can be any or more from "
-		   "this list:<br>"
-		   "<hr noshade>"
-		   "allow ip=pattern<br>"
-		   "allow user=username,...<br>"
-		   "deny ip=pattern<br>"
-		   "<hr noshade>"
+		   "this list:<br />"
+		   "<hr noshade=\"noshade\" />"
+		   "allow ip=pattern<br />"
+		   "allow user=username,...<br />"
+		   "deny ip=pattern<br />"
+		   "<hr noshade=\"noshade\" />"
 		   "In patterns: * is on or more characters, ? is one "
-		   " character.<p>"
-		   "In username: 'any' stands for any valid account"
+		   " character."
+		   "<p>In username: 'any' stands for any valid account"
 		   " (from .htaccess"
-		   " or an auth module. The default is 'deny ip=*'.");
-
-
-        me->deflocaledoc("deutsch", "_seclevels",
-                         "Sicherheit: Muster",
-                         "Dies ist die Liste der Sicherheitsmuster.<p>"
-                         "Jede Sicherheitsebene kann aus einem oder mehr "
-                         "der folgenden Einträgen bestehen: "
-                         "<hr noshade>"
-                         "allow ip=<i>IP-Adresse</i>/<i>Bits</i><br>"
-                         "allow ip=<i>IP-Adresse</i>:<i>Netzmaske</i><br>"
-                         "allow ip=<i>Muster</i><br>"
-                         "allow user=<i>Benutzername</i>,...<br>"
-                         "deny ip=<i>IP-Adresse</i>/<i>Bits</i><br>"
-                         "deny ip=<i>IP-nummer</i>:<i>Netzmaske</i><br>"
-                         "deny ip=<i>Muster</i><br>"
-                         "<hr noshade>"
-                         "Bei den Mustern trifft '*' auf ein oder "
-                         "mehrere Zeichen zu, '?' auf genau ein "
-                         "Zeichen.<p> "
-                         "Bei den Benutzernamen steht 'any' für jeden "
-                         "gültigen Benutzernamen "
-                         "(aus einer .htaccess-Datei oder jedem anderen "
-                         "Auth-Modul)  Der Standard-Wert (wenn keine Eingaben "
-                         "gemacht wurden), ist 'allow ip=*', d.h. jeder "
-                         "darf auf das Modul zugreifen.");
-	me->deflocaledoc("svenska", "_seclevels",
-			 "Säkerhet: Behörighetsregler",
-			 "Det här är en lista av behörighetsregler.<p>"
-			 "Varje behörighetsregler måste följa någon av de "
-			 " här mönstren: "
-			 "<hr noshade>"
-			 "allow ip=<i>IP-nummer</i>/<i>antal nätmaskbittar</i><br>"
-			 "allow ip=<i>IP-nummer</i>:<i>nätmask</i><br>"
-			 "allow ip=<i>globmönster</i><br>"
-			 "allow user=<i>användarnamn</i>,...<br>"
-			 "deny ip=<i>IP-nummer</i>/<i>antal nätmaskbittar</i><br>"
-			 "deny ip=<i>IP-nummer</i>:<i>nätmask</i><br>"
-			 "deny ip=<i>globmönster</i><br>"
-			 "<hr noshade>"
-			 "I globmönster betyder '*' ett eller flera "
-			 "godtyckliga tecken, och '?' betyder exekt "
-			 "ett godtyckligt tecken.<p> "
-			 "Användnamnet 'any' kan användas för att ange "
-			 "att vilken giltig användare som helst ska "
-			 " kunna få använda modulen.");
-
-
+		   " or an auth module. The default is 'deny ip=*'.</p>"));
       }
     }
   } else {
     me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
   }
-
-//   me->defvar("_comment", "", " Comment", TYPE_TEXT_FIELD|VAR_MORE,
-// 	     "An optional comment. This has no effect on the module, it "
-// 	     "is only a text field for comments that the administrator "
-// 	     "might have (why the module are here, etc.)");
-
-//   me->deflocaledoc("deutsch", "_comment",
-//                    "Kommentar",
-//                    "Ein Kommentar, der keinen technischen Einfluss "
-//                    "auf das Modul hat, sondern lediglich ein Textfeld "
-//                    "für Kommentare seitens des Administrators ist.");
-//   me->deflocaledoc("svenska", "_comment",
-// 		   "Kommentar",
-// 		   "En kommentar. Den här kommentaren påverkar inte "
-// 		   " funktionaliteten hos modulen på något sätt, den "
-// 		   " syns bara i konfigurationsinterfacet.");
-
-
-
-//   me->defvar("_name", "", "Module name", TYPE_STRING|VAR_MORE,
-// 	     "An optional name. You can set it to something to remind you what "
-// 	     "the module really does.");
-
-//   me->deflocaledoc("deutsch", "_name", "Modul-Name",
-// 		   "Modul-Name.  Hier kann ein beliebiger Wert eingetragen "
-//                    "werden, um die Funktionsweise des Moduls zu beschreiben.");
-//   me->deflocaledoc("svenska", "_name", "Namn",
-// 		   "Modulens namn. Om den här variablen är satt så "
-// 		   "används dess värde istället för modulens riktiga namn "
-// 		   "i konfigurationsinterfacet.");
 
   mapping(string:mixed) stored_vars = retrieve(modname + "#" + id, this_object());
   int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
@@ -2781,11 +2548,10 @@ void call_start_callbacks( RoxenModule me,
 
   if(module_type & MODULE_EXTENSION)
   {
-    report_error( moduleinfo->get_name()+
-                  " is an MODULE_EXTENSION, that type is no "
+    report_error( LOCALE("", "%s is an MODULE_EXTENSION, that type is no "
                   "longer available.\nPlease notify the modules writer.\n"
                   "Suitable replacement types include MODULE_FIRST and "
-                  " MODULE_LAST\n");
+                  " MODULE_LAST.\n"), moduleinfo->get_name());
   }
 
   if(module_type & MODULE_FILE_EXTENSION)
@@ -3188,50 +2954,32 @@ void create(string config)
 {
   name=config;
 
-  defvar("default_server", 0, "Default site",
+  defvar("default_server", 0, LOCALE("", "Default site"),
 	 TYPE_FLAG,
-	 "If true, this site will be selected in preference of "
+	 LOCALE("", "If true, this site will be selected in preference of "
 	 "other sites when virtual hosting is used and no host "
 	 "header is supplied, or the supplied host header does not "
-	 "match the address of any of the other servers." );
+	 "match the address of any of the other servers.") );
 
-  defvar("comment", "", "Virtual server comment",
+  defvar("comment", "", LOCALE("", "Virtual server comment"),
 	 TYPE_TEXT_FIELD|VAR_MORE,
-	 "This text will be visible in the administration interface, it "
-	 " can be quite useful to use as a memory helper.");
+	 LOCALE("", "This text will be visible in the administration interface, it "
+	 " can be quite useful to use as a memory helper."));
 
-  deflocaledoc("deutsch", "comment", "Kommentar",
-              "Ein Kommentar, der im Konfigurations-Interface "
-               "sichtbar ist und als Dokumentation nützlich ist.");
-  deflocaledoc("svenska", "comment", "Kommentar",
-	       "En kommentar som syns i konfigurationsinterfacet.");
-
-  defvar("name", "", "Virtual server name",
+  defvar("name", "", LOCALE("", "Virtual server name"),
 	 TYPE_STRING|VAR_MORE,
-	 "This is the name that will be used in the configuration "
+	 LOCALE("", "This is the name that will be used in the configuration "
 	 "interface. If this is left empty, the actual name of the "
-	 "virtual server will be used.");
-
-  deflocaledoc("deutsch", "name", "Servername",
-#"Dies ist der Name, der im Konfigurations-Interface für den
-  virtuellen Server benutzt wird.  Wird dieses Feld leer gelassen,
-  wird der eigentliche Name des virtuellen Servers benutzt.");
-  deflocaledoc("svenska", "name", "Serverns namn",
-#"Det här är namnet som kommer att synas i
-  konfigurationsgränssnittet. Om du lämnar det här fältet tomt kommer
-  serverns ursprungliga namn (det du skrev in när du skapade servern)
-  att användas.");
+	 "virtual server will be used."));
 
   defvar("LogFormat",
- "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
- "500: $host $referer ERROR [$cern_date] \"$method $resource $protocol\" 500 -\n"
- "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length"
-	 ,
-
-	 "Logging: Format",
+	 "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
+	 "500: $host $referer ERROR [$cern_date] \"$method $resource $protocol\" 500 -\n"
+	 "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length",
+	 LOCALE("", "Logging: Format"),
 	 TYPE_TEXT_FIELD|VAR_MORE,
 
-	 "What format to use for logging. The syntax is:\n"
+	 LOCALE("", "What format to use for logging. The syntax is:\n"
 	 "<pre>"
 	 "response-code or *: Log format for that response acode\n\n"
 	 "Log format is normal characters, or one or more of the "
@@ -3247,7 +2995,7 @@ void create(string config)
 	 "$bin-ip_number -- The remote host id as a binary integer number.\n"
 	 "\n"
 	 "$cern_date     -- Cern Common Log file format date.\n"
-       "$bin-date      -- Time, but as an 32 bit iteger in network byteorder\n"
+	 "$bin-date      -- Time, but as an 32 bit iteger in network byteorder\n"
 	 "\n"
 	 "$method        -- Request method\n"
 	 "$resource      -- Resource identifier\n"
@@ -3256,355 +3004,129 @@ void create(string config)
 	 "$response      -- The response code sent\n"
 	 "$bin-response  -- The response code sent as a binary short number\n"
 	 "$length        -- The length of the data section of the reply\n"
-       "$bin-length    -- Same, but as an 32 bit iteger in network byteorder\n"
+	 "$bin-length    -- Same, but as an 32 bit iteger in network byteorder\n"
 	 "$request-time  -- The time the request took (seconds)\n"
 	 "$referer       -- the header 'referer' from the request, or '-'.\n"
-      "$user_agent    -- the header 'User-Agent' from the request, or '-'.\n\n"
+	 "$user_agent    -- the header 'User-Agent' from the request, or '-'.\n\n"
 	 "$user          -- the name of the auth user used, if any\n"
 	 "$user_id       -- A unique user ID, if cookies are supported,\n"
 	 "                  by the client, otherwise '0'\n"
-	 "</pre>", 0, lambda(){ return !query("Log");});
+	 "</pre>"), 0, lambda(){ return !query("Log");});
 
-  deflocaledoc("deutsch", "LogFormat", "Logging: Loggingformat",
-#"Welches Format soll für die Logfiles benutzt werden.
-<pre>
-Antwort-Code oder *: Loggingformat für diesen Antwort-Code (z.B 404)
+  defvar("Log", 1, LOCALE("", "Logging: Enabled"), TYPE_FLAG, LOCALE("", "Log requests"));
 
-Das Loggingformat ist normaler Text, in den folgende
-Variabeln eingesetzt werden können.
-
-\\n \\t \\r    -- Newline, Tab oder Linefeed-Zeichen (wie in C)
-$char(int)     -- Fügt das 8Bit-Zeichen ein, das dem Integerwert entspricht.
-$wchar(int)    -- Fügt das 16Bit-Zeichen ein, das dem Integerwert entspricht.
-$int(int)      -- Fügt das 32Bit-Word ein, das dem Integerwert entspricht.
-$^             -- Unterdrückt das Newline-Zeichen am Ende des Eintrages.
-$host          -- Hostname oder IP-Adresse des Webbrowsers.
-$ip_number     -- IP-Adresse des Webbrowsers.
-$bin-ip_number -- IP-Adresse des Webbrowsers in 32Bit-Dezimaldarstellung.
-$cern_date     -- Uhrzeit und Datum im CERN-Format.
-$bin-date      -- Zeit als 32Bit-Integer-Darstellung (Sekunden seit 1.1.1970).
-$method        -- Anfrage-Methode (GET, POST, usw.)
-$resource      -- Angeforderte Datei.
-$protocol      -- Verwendetes Protokoll (normalerweise HTTP/1.0 oder HTTP/1.1)
-$response      -- Der verschichte Antwort-Code
-$bin-response  -- Der verschickte Antwort-Code in 32Bit-Dezimaldarstellung
-$length        -- Die Größe der verschickten Daten
-$bin-length    -- Die Größe der verschickten Daten in 32Bit-Dezimaldarstellung
-$request-time  -- Verstrichene Zeit in Sekunden, die die Anfrage benötigt hat
-$referer       -- Die 'referer'-Information aus der Anfrage, oder '-'
-$user_agent    -- Die 'user-agent'-Information aus der Anfrage, oder '-'
-$user          -- Der Name des angemeldeten Benutzers, sofern vorhanden
-$user_id       -- Die eindeutige Benutzerkennung, sofern Cookies vom
-                  Browser unterstützt wurden, ansonsten '0'.
-</pre>");
-
-  deflocaledoc("svenska", "LogFormat", "Loggning: Loggningsformat",
-#"Vilket format som ska användas för att logga
-<pre>
-svarskod eller *: Loggformat för svarskoden (eller alla koder som inte
-                  har något annat format specifierat om du använder '*')
-
-loggformatet är normala tecken, och en eller flera av koderna nedan.
-
-\\n \\t \\r    -- Precis som i C, ny rad, tab och carriage return
-$char(int)     -- Stoppa in det tecken vars teckenkod är det angivna nummret.
-$wchar(int)    -- Stoppa in det tvåocktetstecken vars teckenkod är det
-                  angivna nummret.
-$int(int)      -- Stoppa in det fyraocktetstecken vars teckenkod är det
-                  angivna nummret.
-$^             -- Stoppa <b>inte</b> in en vagnretur på slutet av
-                  varje loggrad
-$host          -- DNS namnet för datorn som gjorde förfrågan
-$ip_number     -- IP-nummret för datorn som gjorde förfrågan
-$bin-ip_number -- IP-nummret för datorn som gjorde förfrågan som
-                  binärdata i nätverksoktettordning
-
-$cern_date     -- Ett datum som det ska vara enligt Cern Common Log
-                  file specifikationen
-$bin-date      -- Tiden för requesten som sekunder sedan 1970, binärt
-                  i nätverksoktettordning.
-
-$method        -- Förfrågningsmetoden (GET, POST etc)
-$resource      -- Resursidentifieraren (filnamnet)
-$protocol      -- Protokollet som användes för att fråga efter filen
-$response      -- Den skickade svarskoden
-$bin-response  -- Den skickade svarskoden som ett binärt ord (2
-                  oktetter) i nätverksoktettordning
-$length        -- Längden av datan som skickades som svar till klienten
-$bin-length    -- Samma sak, men som ett 4 oktetters ord i
-                  nätverksoktettordning.
-$request-time  -- Tiden som requeten tog i sekunder
-$referer       -- Headern 'referer' från förfrågan eller '-'.
-$user_agent    -- Headern 'User-Agent' från förfrågan eller '-'.
-$user          -- Den autentifierade användarens namn, eller '-'
-$user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
-                  måste slå på kaksättningsfunktionaliteten i de
-                  globala inställningarna. '0' används för de
-                  förfrågningar som inte har kakan.
-</pre>");
-
-
-  defvar("Log", 1, "Logging: Enabled", TYPE_FLAG, "Log requests");
-  deflocaledoc("svenska", "Log", "Loggning: På",
-	       "Ska roxen logga alla förfrågningar till en logfil?");
-
+  // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
   defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
-
-	 "Logging: Log file", TYPE_FILE, "The log file. "
+	 LOCALE("", "Logging: Log file"), TYPE_FILE,
+	 LOCALE("", "The log file. "
 	 ""
-	 "A file name. May be relative to "+getcwd()+"."
-	 " Some substitutions will be done:"
+	 "A file name. Some substitutions will be done:"
 	 "<pre>"
 	 "%y    Year  (e.g. '1997')\n"
 	 "%m    Month (e.g. '08')\n"
 	 "%d    Date  (e.g. '10' for the tenth)\n"
 	 "%h    Hour  (e.g. '00')\n"
 	 "%H    Hostname\n"
-	 "</pre>"
+	 "</pre>")
 	 ,0, lambda(){ return !query("Log");});
-  deflocaledoc("deutsch", "LogFile",
-               "Logging: Logdatei",
-               "Ein Dateiname.  Kann relativ zu "+getcwd()+" sein."
-               "Einige Ersetzungen werden vorgenommen:"
-#"<pre>
-%y    Jahr     (z.B. '1997')
-%m    Monat    (z.B. '08')
-%d    Tag      (z.B. '10' für den 10. des Monats)
-%h    Stunden  (z.B. '00')
-</pre>");
-  deflocaledoc("svenska", "LogFile",
-	       "Loggning: Loggfil",
-	       "Filen som roxen loggar i. Filnamnet kan vara relativt "
-	       +getcwd()+
-#". Du kan använda några kontrollkoder för att få flera loggfiler och
- automatisk loggrotation:
-<pre>
-%y    År     (t.ex. '1997')
-%m    Månad  (t.ex. '08')
-%d    Datum  (t.ex. '10')
-%h    Timme  (t.ex. '00')
-</pre>");
-
 
   defvar("NoLog", ({ }),
-	 "Logging: No Logging for", TYPE_STRING_LIST|VAR_MORE,
-         "Don't log requests from hosts with an IP number which matches any "
+	 LOCALE("", "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
+         LOCALE("", "Don't log requests from hosts with an IP number which matches any "
 	 "of the patterns in this list. This also affects the access counter "
-	 "log.", 0, lambda(){ return !query("Log");});
+	 "log."), 0, lambda(){ return !query("Log");});
 
-  deflocaledoc("deutsch", "NoLog",
-               "Logging: Kein Log für",
-#"Für die folgenden IP-Adressen werden keine Log-Einträge vorgenommen.
-Dies hat auch Einfluss auf den Access-Counter.");
-  deflocaledoc("svenska", "NoLog",
-	       "Loggning: Logga inte för",
-#"Logga inte några förfrågningar vars IP-nummer matchar
-  något av de mönster som står i den här listan.  Den här variabeln
-  påverkar även &lt;accessed&gt; RXML-styrkoden.");
-
-  defvar("Domain", roxen->get_domain(), "Domain", TYPE_STRING,
-	 "The domainname of the server. The domainname is used "
-	 " to generate default URLs, and to gererate email addresses.");
-
-  deflocaledoc( "deutsch", "Domain",
-                "DNS-Domain",
-#"Der Domainname des Servers, der für die Generierung der
-Standard-URLs und Email-Adressen verwendet wird.");
-  deflocaledoc( "svenska", "Domain",
-		"DNS Domän",
-#"Serverns domännamn. Det av en del RXML styrkoder för att generara
-epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
-
+  defvar("Domain", roxen->get_domain(), LOCALE("", "Domain"), TYPE_STRING,
+	 LOCALE("", "The domainname of the server. The domainname is used "
+	 " to generate default URLs, and to gererate email addresses."));
 
   defvar("MyWorldLocation", "http://"+gethostname()+"/", 
-         "Primary Server URL", TYPE_URL,
-	 "This is the main server URL, where your start page is located. "
-         "Please note that you also have to configure the 'URLs' variable.");
-
-  deflocaledoc( "deutsch", "MyWorldLocation",
-                "Server-URL",
-                "Dies ist die URL des Haupt-Servers, auf dem die Startseite "
-                "abgelegt ist.");
-  deflocaledoc( "svenska", "MyWorldLocation",
-		"Serverns URL",
-#"Det här är huvudURLen till din startsida. Den används av många
-  moduler för att bygga upp absoluta URLer från en relativ URL.");
+         LOCALE("", "Primary Server URL"), TYPE_URL,
+	 LOCALE("", "This is the main server URL, where your start page is located. "
+         "Please note that you also have to configure the 'URLs' variable."));
 
   defvar("URLs", 
          Variable.PortList( ({"http://*/"}), VAR_INITIAL,
-                            "URLs", 
-         "Bind to these URLs. You can use '*' and '?' to perform globbing "
+                            LOCALE("", "URLs"), 
+         LOCALE("", "Bind to these URLs. You can use '*' and '?' to perform globbing "
          "(using any of these will default to binding to all IP-numbers on "
          "your machine).  The possible protocols are http, fhttp (a faster "
          "version of the normal HTTP protocol, but not 100% compatible with "
-         "all modules) https, ftp, ftps, gopher and tetris."));
+         "all modules) https, ftp, ftps, gopher and tetris.")));
 
   defvar("InternalLoc", "/_internal/",
-	 "Internal module resource mountpoint",
+	 LOCALE("", "Internal module resource mountpoint"),
          TYPE_LOCATION|VAR_MORE|VAR_DEVELOPER,
-         "Some modules may want to create links to internal resources.  "
+         LOCALE("", "Some modules may want to create links to internal resources.  "
 	 "This setting configures an internally handled location that can "
 	 "be used for such purposes.  Simply select a location that you are "
-	 "not likely to use for regular resources.");
+	 "not likely to use for regular resources."));
 
-  deflocaledoc("deutsch", "InternalLoc",
-               "Interner Modulressourcen-Mountpoint",
-#"Einige Module erzeugen Links auf interne Ressourcen. Diese Einstellung
-bestimmt eine intern verwandte Position im virtuellen Dateisystem, um
-solche Zwecke zu erfüllen.  Es sollte ein Wert benutzt werden, der nicht
-durch andere Ressourcen benutzt wird.");
-  deflocaledoc("svenska", "InternalLoc",
-	       "Intern modulresursmountpoint",
-#"Somliga moduler kan vilja skapa länkar till interna resurser.
-  Denna inställning konfigurerar en internt hanterad location som kan användas
-  för sådana ändamål.  Välj bara en location som du förmodligen inte kommer
-  behöva för vanliga resurser.");
 
-  // throttling-related variables
-  defvar("throttle",0,
-         "Bandwidth Throttling: Server: Enabled",TYPE_FLAG,
-#"If set, per-server bandwidth throttling will be enabled.
-It will allow you to limit the total available bandwidth for
-this Virtual Server.<BR>Bandwidth is assigned using a Token Bucket.
-The principle under which it works is: for each byte we send we use a token.
-Tokens are added to a repository at a constant rate. When there's not enough,
-we can't transmit. When there's too many, they \"spill\" and are lost.");
+  // Throttling-related variables
+
+  defvar("throttle", 0,
+         LOCALE("", "Bandwidth Throttling: Server: Enabled"),TYPE_FLAG,
+	 LOCALE("", "If set, per-server bandwidth throttling will be enabled. "
+		"It will allow you to limit the total available bandwidth for "
+		"this Virtual Server.<br />Bandwidth is assigned using a Token Bucket. "
+		"The principle under which it works is: for each byte we send we use a token. "
+		"Tokens are added to a repository at a constant rate. When there's not enough, "
+		"we can't transmit. When there's too many, they \"spill\" and are lost."));
   //TODO: move this explanation somewhere on the website and just put a link.
 
-  deflocaledoc( "deutsch", "throttle",
-                "Bandbreitenbegrenzung: Server: Aktiviert",
-#"Wenn gesetzt, wird pro Server eine Bandbreitenbegrenzung aktiviert.
-Dadurch kann man die zur Verfügung stehende Bandbreite für diesen
-virtuellen Server begrenzen.<br>");
-  deflocaledoc( "svenska", "throttle", "Bandviddsbegränsning: Servernivå: På",
-               #"Om den här variablen är på så kommer bandvisddsbegränsning
-på servernivå att ske. Det gör det möjligt för dig att begränsa den totala
-bandvidden som den här virtuella servern använder.
-<p>
-Bandvidden räknas ut genom att använda en poletthink. Principen som den
-arbetar efter är: För varje byte som sänds så används en polett, poletter
-stoppas i hinken i en konstant hastighet. När det inte finns några poletter
-så avstännar dataskickande tills en polett blir tillgänglig. När det är för
-många poletter i hinken så kommer de nya som kommer in att \"ramla ut\".");
-
-
-  defvar("throttle_fill_rate",102400,
-         "Bandwidth Throttling: Server: Average available bandwidth",
+  defvar("throttle_fill_rate", 102400,
+         LOCALE("", "Bandwidth Throttling: Server: Average available bandwidth"),
          TYPE_INT,
-#"This is the average bandwidth available to this Virtual Server in
-bytes/sec (the bucket \"fill rate\").",
-         0,arent_we_throttling_server);
+	 LOCALE("", "This is the average bandwidth available to this Virtual Server in "
+		"bytes/sec (the bucket \"fill rate\")."),
+         0, arent_we_throttling_server);
 
-  deflocaledoc( "deutsch", "throttle_fill_rate",
-                "Bandbreitenbegrenzung: Server: "
-                "Durchschnittliche Bandbreite",
-                "Dies ist die durchschnittliche Bandbreite, die "
-                "für diesen virtuellen Server zur Verfügung steht. "
-                "(in Bytes/Sekunde).");
-  deflocaledoc( "svenska", "throttle_fill_rate",
-                "Bandviddsbegränsning: Servernivå:"
-                " Genomsnittlig tillgänglig bandvidd",
-                "Det här är den genomsnittliga bandvidden som är tillgänglig "
-                "för servern (hastigheten med vilken hinken fylls).");
+  defvar("throttle_bucket_depth", 1024000,
+         LOCALE("", "Bandwidth Throttling: Server: Bucket Depth"), TYPE_INT,
+	 LOCALE("", "This is the maximum depth of the bucket. After a long enough period "
+		"of inactivity, a request will get this many unthrottled bytes of data, before "
+		"throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow "
+		"any data bursts. This value determines the length of the time over which the "
+		"bandwidth is averaged."), 0, arent_we_throttling_server);
 
-  defvar("throttle_bucket_depth",1024000,
-         "Bandwidth Throttling: Server: Bucket Depth", TYPE_INT,
-#"This is the maximum depth of the bucket. After a long enough period
-of inactivity, a request will get this many unthrottled bytes of data, before
-throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow
-any data bursts. This value determines the length of the time over which the
-bandwidth is averaged",0,arent_we_throttling_server);
+  defvar("throttle_min_grant", 1300,
+         LOCALE("", "Bandwidth Throttling: Server: Minimum Grant"), TYPE_INT,
+	 LOCALE("", "When the bandwidth availability is below this value, connections will "
+		"be delayed rather than granted minimal amounts of bandwidth. The purpose "
+		"is to avoid sending too small packets (which would increase the IP overhead)."),
+         0, arent_we_throttling_server);
 
-  //FIXME: German Translation missing.
-  deflocaledoc( "svenska", "throttle_bucket_depth",
-                "Bandviddsbegränsning: Servernivå:"
-                " Hinkstorlek",
-                "Det här är det maximala antalet poletter som får plats "
-                "i hinken. Om det här värdet är lika stort som den "
-                "genomsnittliga tillgängliga bandvidden så tillåts inga "
-                "tillfälliga datapulser när servern har varit inaktiv ett tag"
-                " utan data skickas alltid med max den bandvidden.");
-
-  defvar("throttle_min_grant",1300,
-         "Bandwidth Throttling: Server: Minimum Grant", TYPE_INT,
-#"When the bandwidth availability is below this value, connections will
-be delayed rather than granted minimal amounts of bandwidth. The purpose
-is to avoid sending too small packets (which would increase the IP overhead)",
-         0,arent_we_throttling_server);
-
-  //FIXME: German Translation missing.
-  deflocaledoc( "svenska", "throttle_min_grant",
-                "Bandviddsbegränsning: Servernivå:"
-                " Minimalt antal bytes",
-#"När det tillgängliga antalet poletter (alltså bytes) är mindre än det här
-värdet så fördröjs förbindelser, alternativet är att skicka små paket, vilket
-öker overheaden som kommer till från IP och TCP paketheadrar." );
-
-  defvar("throttle_max_grant",14900,
-         "Bandwidth Throttling: Server: Maximum Grant", TYPE_INT,
-#"This is the maximum number of bytes assigned in a single request
-to a connection. Keeping this number low will share bandwidth more evenly
-among the pending connections, but keeping it too low will increase IP
-overhead and (marginally) CPU usage. You'll want to set it just a tiny
-bit lower than any integer multiple of your network's MTU (typically 1500
-for ethernet)",0,arent_we_throttling_server);
-
-  //FIXME: German Translation missing.
-  deflocaledoc( "svenska", "throttle_max_grant",
-                "Bandviddsbegränsning: Servernivå:"
-                " Maximalt antal bytes",
-#"Det här är det maximala antalet bytes som en förbindelse kan få.
-Om det här värdet är lågt så fördelas bandvidden mer jämnt mellan olika
-förbindelser, men om det är för lågt så ökar overheaden från IP och TCP.
-<p>
-Sätt det till ett värde som är aningens lägre än en jämn multipel av
-ditt nätverks MTU (normala ethernetförbindelser har en MTU på 1500)." );
+  defvar("throttle_max_grant", 14900,
+         LOCALE("", "Bandwidth Throttling: Server: Maximum Grant"), TYPE_INT,
+	 LOCALE("", "This is the maximum number of bytes assigned in a single request "
+		"to a connection. Keeping this number low will share bandwidth more evenly "
+		"among the pending connections, but keeping it too low will increase IP "
+		"overhead and (marginally) CPU usage. You'll want to set it just a tiny "
+		"bit lower than any integer multiple of your network's MTU (typically 1500 "
+		"for ethernet)."), 0, arent_we_throttling_server);
 
   defvar("req_throttle", 0,
-         "Bandwidth Throttling: Request: Enabled", TYPE_FLAG,
-#"If set, per-request bandwidth throttling will be enabled."
+         LOCALE("", "Bandwidth Throttling: Request: Enabled"), TYPE_FLAG,
+	 LOCALE("", "If set, per-request bandwidth throttling will be enabled.")
          );
 
-  //FIXME: German Translation missing.
-  deflocaledoc( "svenska", "req_throttle",
-                "Bandviddsbegränsning: Förbindelsenivå: På",
-                "Om på så begränsas bandvidden individuellt på förbindelser"
-                );
-
   defvar("req_throttle_min", 1024,
-         "Bandwidth Throttling: Request: Minimum guarranteed bandwidth",
+         LOCALE("", "Bandwidth Throttling: Request: Minimum guarranteed bandwidth"),
          TYPE_INT,
-#"The maximum bandwidth each connection (in bytes/sec) can use is determined
-combining a number of modules. But doing so can lead to too small
-or even negative bandwidths for particularly unlucky requests. This variable
-guarantees a minimum bandwidth for each request",
-         0,arent_we_throttling_request);
-
-  //FIXME: German Translation missing.
-  deflocaledoc( "svenska", "req_throttle_min",
-                "Bandviddsbegränsning: Förbindelsenivå: Minimal bandvidd",
-#"Den maximala bandvidden som varje förbindelse får bestäms av en kombination
-av de bandviddsbegränsningsmoduler som är adderade i servern. Men ibland
-så blir det framräknade värdet väldigt lågt, och en del riktigt otursamma
-förbindelser kan råka hamna på 0 eller mindre bytes per sekund.  <p>Den
-här variablen garanterar en vis minimal bandvidd för alla requests"
-                );
+	 LOCALE("", "The maximum bandwidth each connection (in bytes/sec) can use is determined "
+		"combining a number of modules. But doing so can lead to too small "
+		"or even negative bandwidths for particularly unlucky requests. This variable "
+		"guarantees a minimum bandwidth for each request."),
+         0, arent_we_throttling_request);
 
   defvar("req_throttle_depth_mult", 60.0,
-         "Bandwidth Throttling: Request: Bucket Depth Multiplier",
+         LOCALE("", "Bandwidth Throttling: Request: Bucket Depth Multiplier"),
          TYPE_FLOAT,
-#"The average bandwidth available for each request will be determined by
-the modules combination. The bucket depth will be determined multiplying
-the rate by this factor.",
-         0,arent_we_throttling_request);
-
-  //FIXME: German Translation missing.
-  deflocaledoc( "svenska", "req_throttle_depth_mult",
-                "Bandviddsbegränsning: Förbindelsenivå: Hinkstorlek",
-#"Den genomsnittliga bandvidden som varje förbindelse bestäms av
-de adderade bandvidsbegränsningsmodulerna. Hinkstorleken bestäms genom att
-multiplicera detta värde med den här faktorn.");
-
+	 LOCALE("", "The average bandwidth available for each request will be determined by "
+		"the modules combination. The bucket depth will be determined multiplying "
+		"the rate by this factor."),
+         0, arent_we_throttling_request);
 
   defvar("ZNoSuchFile", #"
 <html><head>
@@ -3643,21 +3165,9 @@ page.
 </font>
 </body>
 ",
-	 "Messages: No such file",TYPE_TEXT_FIELD,
-	 "What to return when there is no resource or file available "
-	 "at a certain location.");
-
-  deflocaledoc("deutsch", "ZNoSuchFile",
-	       "Mitteilungen: Datei nicht gefunden",
-#"Dieser Text wird angezeigt, wenn eine nicht verfügbare Datei
-aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
-'$Me' durch die Server-URL.");
-  deflocaledoc("svenska", "ZNoSuchFile",
-	       "Meddelanden: Filen finns inte",
-#"Det här meddelandet returneras om en användare frågar efter en
-  resurs som inte finns. '$File' byts ut mot den efterfrågade
-  resursen, och '$Me' med serverns URL.");
-
+	 LOCALE("", "Messages: No such file"),TYPE_TEXT_FIELD,
+	 LOCALE("", "What to return when there is no resource or file available "
+	 "at a certain location."));
 
   definvisvar( "no_delayed_load", 0, TYPE_FLAG );
 
