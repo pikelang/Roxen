@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.38 2000/05/25 17:16:06 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.39 2000/10/02 21:04:49 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -690,13 +690,13 @@ class CGIScript
 
     mapping options = ([
       "stdin":stdin,
-      "stdout":(t=stdout->pipe(Stdio.PROP_IPC|Stdio.PROP_NONBLOCK)),
+      "stdout":(t=stdout->pipe()), /* Stdio.PROP_IPC|Stdio.PROP_NONBLOCK */
       "stderr":(stderr==stdout?t:stderr),
       "cwd":dirname( command ),
       "env":environment,
       "noinitgroups":1,
     ]);
-    stdin = stdin->pipe(Stdio.PROP_IPC|Stdio.PROP_NONBLOCK);
+    stdin = stdin->pipe(); /* Stdio.PROP_IPC|Stdio.PROP_NONBLOCK */
 
 #if UNIX
     if(!getuid())
