@@ -121,6 +121,31 @@ class ConfigurationSettings
 	      "english":"Configuration interface background color.",
 	      "svenska":"Bakgrundsfärg till konfigurationsgränssnittet."
 	    ]), 0, 0 );
+
+    defvar( "addmodulemethod", "normal", TYPE_STRING_LIST,
+            ([
+              "english":"Add/Delete module page type",
+              "svenska":"Typ som addera/ta bort modulsidorna har",
+            ]),
+            ([
+              "english":
+#"<pre>
+  normal  - Show module name and documentation with images
+  fast    - Like verbose, but no type images
+  compact - Only show the names of modules, and allow addition/deletion
+            of multiple modules at once
+</pre>
+",
+              "svenska":
+#"<pre>
+   normal  - Visa modulnamnet, dokumentationen och typbilder
+   snabb   - Som den normal, men inga typbilder
+   kompakt - Visa bara namnet, och tillåt adderande av flera moduler
+             på samma gång
+" ]),
+({ "normal","fast","compact"}),
+(["svenska":({ "normal","snabb","kompakt"}),])
+            );
   }
 }
 
