@@ -13,7 +13,6 @@ string c_name( string c, RequestID id )
 
 void really_do_create( RequestID id  )
 {
-  
   DBManager.create_group( c_name(id->variables->name,id),
 			     id->variables->lname,
 			     id->variables->comment,
@@ -25,6 +24,7 @@ void really_do_create( RequestID id  )
 
 mapping|string parse( RequestID id )
 {
+  int find_dbs;
   RXML.user_set_var( "var.go-on",  "<cf-ok/>" );
 
   if( !id->variables->name )
@@ -85,12 +85,14 @@ mapping|string parse( RequestID id )
 	error = sprintf( "<font color='&usr.warncolor;'>"+
 			 _(0,"Cannot connect to %s")+
 			 "</font>", "mysql://"+id->variables->url );
+      else
+	find_dbs = 1;
     }
     if(!strlen(error))
       if( DBManager.get_group( c_name(id->variables->name,id) ) )
 	error=sprintf("<font color='&usr.warncolor;'>"+
 		      _(0,"A database group named %s already exists")+
-		      "</font>");
+ 		      "</font>", id->variables->name );
     if( !strlen( error ) )
       if( Roxen.is_mysql_keyword( id->variables->name ) )
 	error = sprintf("<font color='&usr.warncolor;'>"+
@@ -100,7 +102,12 @@ mapping|string parse( RequestID id )
       else
       {
 	really_do_create( id );
-	RXML.user_set_var( "var.go-on", "<redirect to=''/>" );
+	if( find_dbs )
+	  RXML.user_set_var( "var.go-on",
+			     sprintf("<redirect to='import_dbs.pike?group=%s'/>",
+				     Roxen.http_encode_string(c_name(id->variables->name,id))));
+	else
+	  RXML.user_set_var( "var.go-on", "<redirect to=''/>" );
 	return "";
       }
   }
