@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.60 2004/06/09 11:00:28 jonasw Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.61 2004/06/23 13:03:07 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -458,7 +458,9 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			     },
     ]) );
 
-  if( catch(parser->finish(c)) ) {
+  if( mixed error = catch(parser->finish(c)) ) {
+    if (error != 1)
+      test_error ("Failed to parse test: " + describe_backtrace (error));
     fails++;
     lfails++;
   }
@@ -585,7 +587,8 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
     ]));
 
   if( mixed error = catch(parser->finish(c)) ) {
-    //werror("Error: %s\n", describe_backtrace(error));
+    if (error != 1)
+      test_error ("Failed to parse test: " + describe_backtrace (error));
     fails++;
     lfails++;
   }
@@ -672,8 +675,10 @@ void run_pike_tests(object test, string path)
 
   if(!test)
     return;
-  if( catch(test->low_run_tests(conf, update_num_tests)) )
+  if( mixed error = catch(test->low_run_tests(conf, update_num_tests)) ) {
+    if (error != 1) throw (error);
     update_num_tests( 1, 1 );
+  }
 }
 
 
