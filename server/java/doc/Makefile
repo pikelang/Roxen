@@ -1,4 +1,4 @@
 
 doc :
-	javadoc -sourcepath ../src -d . se.idonex.roxen
+	javadoc -sourcepath ../src -d . com.roxen.roxen
 

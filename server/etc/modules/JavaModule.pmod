@@ -53,22 +53,24 @@ static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava
 static object printwriter_flush = printwriter_class->get_method("flush", "()V");
 
 /* Module interface */
-static object reqid_class = FINDCLASS("se/idonex/roxen/RoxenRequest");
-static object conf_class = FINDCLASS("se/idonex/roxen/RoxenConfiguration");
-static object module_class = FINDCLASS("se/idonex/roxen/Module");
-static object defvar_class = FINDCLASS("se/idonex/roxen/Defvar");
-static object location_ifc = FINDCLASS("se/idonex/roxen/LocationModule");
-static object parser_ifc = FINDCLASS("se/idonex/roxen/ParserModule");
-static object fileext_ifc = FINDCLASS("se/idonex/roxen/FileExtensionModule");
-static object provider_ifc = FINDCLASS("se/idonex/roxen/ProviderModule");
-static object simpletagcaller_ifc = FINDCLASS("se/idonex/roxen/SimpleTagCaller");
-static object response_class = FINDCLASS("se/idonex/roxen/RoxenResponse");
-static object response2_class = FINDCLASS("se/idonex/roxen/RoxenStringResponse");
-static object response3_class = FINDCLASS("se/idonex/roxen/RoxenFileResponse");
-static object response4_class = FINDCLASS("se/idonex/roxen/RoxenRXMLResponse");
-static object reqid_init = reqid_class->get_method("<init>", "(Lse/idonex/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+static object reqid_class = FINDCLASS("com/roxen/roxen/RoxenRequest");
+static object conf_class = FINDCLASS("com/roxen/roxen/RoxenConfiguration");
+static object module_class = FINDCLASS("com/roxen/roxen/Module");
+static object defvar_class = FINDCLASS("com/roxen/roxen/Defvar");
+static object location_ifc = FINDCLASS("com/roxen/roxen/LocationModule");
+static object parser_ifc = FINDCLASS("com/roxen/roxen/ParserModule");
+static object fileext_ifc = FINDCLASS("com/roxen/roxen/FileExtensionModule");
+static object provider_ifc = FINDCLASS("com/roxen/roxen/ProviderModule");
+static object simpletagcaller_ifc = FINDCLASS("com/roxen/roxen/SimpleTagCaller");
+static object frame_class = FINDCLASS("com/roxen/roxen/Frame");
+static object response_class = FINDCLASS("com/roxen/roxen/RoxenResponse");
+static object response2_class = FINDCLASS("com/roxen/roxen/RoxenStringResponse");
+static object response3_class = FINDCLASS("com/roxen/roxen/RoxenFileResponse");
+static object response4_class = FINDCLASS("com/roxen/roxen/RoxenRXMLResponse");
+static object reqid_init = reqid_class->get_method("<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 static object conf_init = conf_class->get_method("<init>", "()V");
-static object _configuration = module_class->get_field("configuration", "Lse/idonex/roxen/RoxenConfiguration;");
+static object frame_init = frame_class->get_method("<init>", "()V");
+static object _configuration = module_class->get_field("configuration", "Lcom/roxen/roxen/RoxenConfiguration;");
 static object query_type = module_class->get_method("queryType", "()I");
 static object query_unique = module_class->get_method("queryUnique", "()Z");
 static object _query_name = module_class->get_method("queryName", "()Ljava/lang/String;");
@@ -78,19 +80,19 @@ static object _start = module_class->get_method("start", "()V");
 static object _stop = module_class->get_method("stop", "()V");
 static object _query_provides = provider_ifc->get_method("queryProvides", "()Ljava/lang/String;");
 static object _check_variable = module_class->get_method("checkVariable", "(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/String;");
-static object _getdefvars = module_class->get_method("getDefvars", "()[Lse/idonex/roxen/Defvar;");
-static object _find_internal = module_class->get_method("findInternal", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
+static object _getdefvars = module_class->get_method("getDefvars", "()[Lcom/roxen/roxen/Defvar;");
+static object _find_internal = module_class->get_method("findInternal", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
 static object _query_location = location_ifc->get_method("queryLocation", "()Ljava/lang/String;");
-static object _find_file = location_ifc->get_method("findFile", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
-static object _find_dir = location_ifc->get_method("findDir", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)[Ljava/lang/String;");
-static object _real_file = location_ifc->get_method("realFile", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;");
-static object _stat_file = location_ifc->get_method("statFile", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)[I");
+static object _find_file = location_ifc->get_method("findFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+static object _find_dir = location_ifc->get_method("findDir", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[Ljava/lang/String;");
+static object _real_file = location_ifc->get_method("realFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;");
+static object _stat_file = location_ifc->get_method("statFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[I");
 static object _query_file_extensions = fileext_ifc->get_method("queryFileExtensions", "()[Ljava/lang/String;");
-static object _handle_file_extension = fileext_ifc->get_method("handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
-static object _query_tag_callers = parser_ifc->get_method("querySimpleTagCallers", "()[Lse/idonex/roxen/SimpleTagCaller;");
+static object _handle_file_extension = fileext_ifc->get_method("handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+static object _query_tag_callers = parser_ifc->get_method("querySimpleTagCallers", "()[Lcom/roxen/roxen/SimpleTagCaller;");
 static object simpletagcaller_query_name = simpletagcaller_ifc->get_method("queryTagName", "()Ljava/lang/String;");
 static object simpletagcaller_query_flags = simpletagcaller_ifc->get_method("queryTagFlags", "()I");
-static object _tag_called = simpletagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;");
+static object _tag_called = simpletagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;Lcom/roxen/roxen/Frame;)Ljava/lang/String;");
 static object dv_var = defvar_class->get_field("var", "Ljava/lang/String;");
 static object dv_name = defvar_class->get_field("name", "Ljava/lang/String;");
 static object dv_doc = defvar_class->get_field("doc", "Ljava/lang/String;");
@@ -252,10 +254,12 @@ class ModuleWrapper
   {
     static object caller;
 
-    string call(string tag, mapping args, string contents, RequestID id)
+    string call(string tag, mapping args, string contents, RequestID id,
+		RXML.Frame frame)
     {
       object res = _tag_called(caller, tag, objify(args),
-			       stringp(contents)&&contents, make_reqid(id));
+			       stringp(contents)&&contents, make_reqid(id),
+			       make_frame(frame));
       check_exception();
       return res && (string)res;
     }
@@ -296,6 +300,14 @@ class ModuleWrapper
     check_exception();
     jotoid[r] = id;
     return r;
+  }
+
+  static object make_frame(RXML.Frame frame)
+  {
+    object f = frame_class->alloc();
+    frame_init->call_nonvirtual(f);
+    check_exception();
+    return f;
   }
 
   static mapping make_response(object r, RequestID id)
@@ -480,7 +492,7 @@ class ModuleWrapper
     modobj = new_instance(modcls);
     check_exception();
     if(!modobj->is_instance_of(module_class))
-      error("class does not implement se.idonex.roxen.Module\n");
+      error("class does not implement com.roxen.roxen.Module\n");
     else
       jotomod[modobj] = this_object();
   }
@@ -590,11 +602,11 @@ void create()
   }));
   natives_bind2 = conf_class->register_natives(({
     ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_queryconf}),
-    ({"queryInternalLocation", "(Lse/idonex/roxen/Module;)Ljava/lang/String;", native_queryconfinternal}),
+    ({"queryInternalLocation", "(Lcom/roxen/roxen/Module;)Ljava/lang/String;", native_queryconfinternal}),
   }));
-  natives_bind3 = FINDCLASS("se/idonex/roxen/RoxenLib")->register_natives(({
-    ({"doOutputTag", "(Ljava/util/Map;[Ljava/util/Map;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;", native_do_output_tag}),
-    ({"parseRXML", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;", native_parse_rxml}),
+  natives_bind3 = FINDCLASS("com/roxen/roxen/RoxenLib")->register_natives(({
+    ({"doOutputTag", "(Ljava/util/Map;[Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_do_output_tag}),
+    ({"parseRXML", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_parse_rxml}),
   }));
   natives_bind4 = reqid_class->register_natives(({
     ({"getVariables", "()Ljava/util/Map;", native_get_variables}),

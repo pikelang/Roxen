@@ -10,13 +10,13 @@ SRCDIR = ../src
 all : roxen_module.jar roxen_servlet.jar
 
 roxen_servlet.jar : servlet_classes
-	jar cf $@ se/idonex/servlet/*.class
+	jar cf $@ com/roxen/servlet/*.class
 
-servlet_classes : $(SRCDIR)/se/idonex/servlet/*.java
+servlet_classes : $(SRCDIR)/com/roxen/servlet/*.java
 	CLASSPATH=$(CLASSPATH) $(JAVAC) $(JAVAFLAGS) $^ -d .
 
 roxen_module.jar : module_classes
-	jar cf $@ se/idonex/roxen/*.class
+	jar cf $@ com/roxen/roxen/*.class
 
-module_classes : $(SRCDIR)/se/idonex/roxen/*.java
+module_classes : $(SRCDIR)/com/roxen/roxen/*.java
 	CLASSPATH=$(CLASSPATH) $(JAVAC) $(JAVAFLAGS) $^ -d .
