@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.286 2000/11/13 15:08:47 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.287 2000/11/16 11:51:48 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1916,7 +1916,7 @@ void got_data(mixed fooid, string s)
 
   if(wanted_data)
   {
-    werror(" Wanted: %d; have: %d\n", wanted_data, have_data );
+//     werror(" Wanted: %d; have: %d\n", wanted_data, have_data );
 //     ccd += ({ s });
     data += s;
     if(strlen(s) + have_data < wanted_data)
