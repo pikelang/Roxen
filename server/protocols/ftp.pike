@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.10 1997/04/08 23:46:49 marcus Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.11 1997/04/10 04:36:30 marcus Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -25,10 +25,13 @@ import Array;
 
 #define perror	roxen_perror
 
-string dataport_addr, cwd ="/";
+string controlport_addr, dataport_addr, cwd ="/";
 int controlport_port, dataport_port;
-object cmd_fd;
+object cmd_fd, pasv_port;
 int GRUK = random(_time(1));
+function(object,mixed:void) pasv_callback;
+mixed pasv_arg;
+array(object) pasv_accepted;
 #undef QUERY
 #define QUERY(X) roxen->variables->X[VAR_VALUE]
 #define Query(X) conf->variables[X][VAR_VALUE]  /* Per */
@@ -90,6 +93,10 @@ void disconnect()
   if(objectp(pipe) && pipe != Simulate.previous_object()) 
     destruct(pipe);
   cmd_fd = 0;
+  if(pasv_port) {
+    destruct(pasv_port);
+    pasv_port = 0;
+  }
   destruct(this_object());
 }
 
@@ -208,6 +215,35 @@ string file_ls(array (int) st, string file)
 		 (st[1]<0? 512:st[1]), ct[4..9], ct[11..15], file);
 }
 
+void pasv_accept_callback(mixed id)
+{
+  if(pasv_port) {
+    object fd = pasv_port->accept();
+    if(fd) {
+      array(string) remote = (fd->query_address()||"? ?")/" ";
+      mark_fd(fd->query_fd(),
+	      "ftp communication: -> "+remote[0]+":"+remote[1]);
+
+      if(pasv_callback) {
+	pasv_callback(fd, pasv_arg);
+	pasv_callback = 0;
+      } else
+	pasv_accepted += ({ fd });
+    }
+  }
+}
+
+void ftp_async_accept(function(object,mixed:void) callback, mixed arg)
+{
+  if(sizeof(pasv_accepted)) {
+    callback(pasv_accepted[0], arg);
+    pasv_accepted = pasv_accepted[1..];
+  } else {
+    pasv_callback = callback;
+    pasv_arg = arg;
+  }
+}
+
 void done_callback(object fd)
 {
   if(fd)
@@ -303,7 +339,10 @@ void ftp_async_connect(function(object,mixed:void) fun, mixed arg)
 
 void connect_and_send(mapping file)
 {
-  ftp_async_connect(connected_to_send, file);
+  if(pasv_port)
+    ftp_async_accept(connected_to_send, file);
+  else
+    ftp_async_connect(connected_to_send, file);
 }
 
 class put_file_wrapper {
@@ -394,7 +433,10 @@ void connected_to_receive(object fd, string arg)
 
 void connect_and_receive(string arg)
 {
-  ftp_async_connect(connected_to_receive, arg);
+  if(pasv_port)
+    ftp_async_accept(connected_to_receive, arg);
+  else
+    ftp_async_connect(connected_to_receive, arg);
 }
 
 varargs int|string list_file(string arg, int srt, int short, int column, 
@@ -842,6 +884,15 @@ void got_data(mixed fooid, string s)
       connect_and_receive(arg);
       break;
 
+    case "pasv":
+      if(pasv_port)
+	destruct(pasv_port);
+      pasv_port = files.port(0, pasv_accept_callback);
+      int port=(int)((pasv_port->query_address()/" ")[1]);
+      reply("227 Entering Passive Mode. "+replace(controlport_addr, ".", ",")+
+	    ","+(port>>8)+","+(port&0xff)+"\n");
+      break;
+
      default:
       reply("502 command '"+ cmd +"' unimplemented.\n");
     }
@@ -861,10 +912,14 @@ void create(object f, object c)
     cmd_fd->set_write_callback(lambda(){});
     cmd_fd->set_close_callback(end);
 
-    if(2 != sscanf(cmd_fd->query_address(17)||"", "%*s %d", controlport_port))
-      controlport_port = 21;
+    sscanf(cmd_fd->query_address(17)||"", "%s %d",
+	   controlport_addr, controlport_port);
 
     sscanf(cmd_fd->query_address()||"", "%s %d", dataport_addr, dataport_port);
+
+    pasv_port = 0;
+    pasv_callback = 0;
+    pasv_accepted = ({ });
 
     not_query = "/welcome.msg";
     call_out(end, 3600);
