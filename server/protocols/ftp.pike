@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.98 2004/06/08 12:47:43 grubba Exp $
+ * $Id: ftp.pike,v 2.99 2004/06/09 09:28:16 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -196,7 +196,7 @@ class RequestID2
 		"output_encode", "adjust_for_config_path",
 		"get_multi_status", "multi_status_size",
 		"set_status_for_path", "set_status_for_url",
-		"destroy", "_sprintf">)[var]) {
+		"destroy", "_sprintf", "__num" >)[var]) {
 #ifdef DEBUG
 	  if (catch {
 #endif /* DEBUG */
