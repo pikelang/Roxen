@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.18 1997/09/29 21:34:58 grubba Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.19 1997/10/26 20:20:50 js Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -249,7 +249,7 @@ mapping handle_file_extension(object f, string e, object got)
   function fun;
 
   if (!functionp(fun = scripts[got->not_query])) {
-    file=f->read(655565);
+    file=f->read(655565);   // fix this?
 
     array (function) ban = allocate(6, "function");
     ban[0] = setegid;
