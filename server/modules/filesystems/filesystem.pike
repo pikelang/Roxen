@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.82 2000/05/16 17:18:29 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.83 2000/06/23 16:16:43 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -188,7 +188,8 @@ mixed stat_file( string f, RequestID id )
 {
   array fs;
 
-  FILESYSTEM_WERR("stat_file for \""+f+"\"");
+  FILESYSTEM_WERR("stat_file for \""+f+"\"" +
+		  (id->misc->internal_get ? " (internal)" : ""));
 
   if (FILTER_INTERNAL_FILE (f, id)) return 0;
 
@@ -235,7 +236,8 @@ array find_dir( string f, RequestID id )
 {
   array dir;
 
-  FILESYSTEM_WERR("find_dir for \""+f+"\"");
+  FILESYSTEM_WERR("find_dir for \""+f+"\"" +
+		  (id->misc->internal_get ? " (internal)" : ""));
 
   object privs;
 
@@ -422,7 +424,8 @@ mixed find_file( string f, RequestID id )
   string tmp;
   string oldf = f;
 
-  FILESYSTEM_WERR("Request for \""+f+"\"");
+  FILESYSTEM_WERR("Request for \""+f+"\"" +
+		  (id->misc->internal_get ? " (internal)" : ""));
 
   string mountpoint = QUERY(mountpoint);
 
