@@ -1,14 +1,16 @@
 <topmenu base="../" selected=dbs />
 
 <content>
-  <subtablist width="100%">
-    <st-tabs>
-       <insert file="subtabs.pike"/> 
-    </st-tabs>
+  <cv-split>
+    <subtablist width="100%">
+      <st-tabs>
+         <insert file="subtabs.pike"/> 
+      </st-tabs>
 
-    <st-page><br />
-      <b>All database backups currently available:</b><br />
-      <eval><insert file='restore_db.pike' /></eval>
-    </st-page>
-  </subtablist>
+      <st-page><br />
+        <b>All database backups currently available:</b><br />
+        <eval><insert file='restore_db.pike' /></eval>
+      </st-page>
+    </subtablist>
+  </cv-split>
 </content>
