@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.43 1998/07/22 23:55:30 neotron Exp $
+# $Id: start,v 1.44 1998/07/27 07:12:56 mast Exp $
 
 VERSION=202; BETA=.b;
 
@@ -194,7 +194,7 @@ echo $$: Starting the Roxen Challenger World Wide Web server.
 if [ -z "$debug" ] ; then
   DEBUG="-DMODULE_DEBUG";
 else
-  DEBUG="-DDEBUG -DMODULE_DEBUG -DDEVELOPER -DMAC_DEBUG"
+  DEBUG="-DDEBUG -DMODULE_DEBUG"
 fi
 
 if [ -z "$once" ] ; then
