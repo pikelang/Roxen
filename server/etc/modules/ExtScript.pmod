@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.1 2000/08/01 14:22:08 leif Exp $
+// $Id: ExtScript.pmod,v 1.2 2000/08/17 15:19:52 leif Exp $
 
 #define THREADS 1
 
@@ -30,11 +30,9 @@ class Handler
     object lock = mutex ? mutex->lock() : 0;
 #endif
     if (proc && !proc->status() && pipe)
-    { pipe->set_nonblocking();
-      pipe->read(50000); // read away any junk that may be queued up
-      pipe->set_blocking();
+    {
+      // send 'exit' command to subprocess
       pipe->write("X");
-      pipe->read(1);
     }
   }
 
@@ -71,14 +69,23 @@ class Handler
     timeout = time(0) + 190;
 
     if (!proc || proc->status() != 0)
-    { pipe = Stdio.File();
+    {
+      pipe = Stdio.File();
       pipe_other = pipe->pipe();
+
+      diag("(L1)");
+
+      mapping opts = ([ "fds": ({ pipe_other }) ]);
+      if (settings->set_uid) opts["set_uid"] = settings->set_uid;
+
       if (catch (
         proc = Process.create_process( ({ binpath, "--cmdsocket=3" }),
-                                       ([ "fds": ({ pipe_other }) ])
+                                       opts
                                      )
-                ))
+               ))
          return ({ -1, "unable to start helper process" });
+
+      diag("(L2)");
       runcount = 0;
       pipe_other = 0;
       pipe->write("QP"); // send 'ping'
@@ -181,7 +188,7 @@ class Handler
       while (sizeof(res = pipe->read(1)) > 0)
       { diag("."+res);
         if (res == "a") continue;
-        else if (res == "X") { return ({ -1, "SCRIPT I/O ERROR 1" });}
+        else if (res == "X") { return ({ -1, "SCRIPT ERROR (1)" });}
         else if (res == "+" || res == "*" || res == "?" || res == "=")
         { string tmp = pipe->read(3);
           len = tmp[1]*256 + tmp[2];
@@ -206,7 +213,7 @@ class Handler
       }
       diag("<Done.>");
       if (res == "" || res == 0)
-           return ({ -1, "SCRIPT I/O ERROR 2" });
+           return ({ -1, "SCRIPT I/O ERROR (2)" });
 
       if (++runcount > 5000) proc = 0, pipe = 0;
 
@@ -227,7 +234,7 @@ class Handler
 
   void create(string helper_program_path, void|mapping settings0)
   { binpath = helper_program_path;
-    settings = settings0;
+    settings = settings0 ? settings0 : ([ ]);
     proc = 0; pipe = 0;
     timeout = time(0) + 300;
   }
@@ -289,7 +296,7 @@ void periodic_cleanup()
   objdiag();
 }
 
-object getscripthandler(string binpath, void|int multi)
+object getscripthandler(string binpath, void|int multi, void|mapping settings)
 { mapping m;
   object  h;
   object  lock;
@@ -331,9 +338,16 @@ object getscripthandler(string binpath, void|int multi)
       return m->handlers[i] = Handler(binpath);
 
   if (i < multi && multi < 10) // Another handler.
-  { m->handlers += ({ h = Handler(binpath) });
+  { m->handlers += ({ h = Handler(binpath, settings) });
     return h;
   }
 
   return m->handlers[random(sizeof(m->handlers))];
 }
+
+
+
+
+
+
+
