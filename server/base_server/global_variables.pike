@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.56 2000/12/30 07:16:58 per Exp $
+// $Id: global_variables.pike,v 1.57 2001/01/06 07:24:26 nilsson Exp $
 
 /*
 #pragma strict_types
@@ -539,6 +539,17 @@ void define_global_variables(  )
 			      roxenp()->set_default_locale(QUERY(locale));
 			      roxenp()->set_locale();
 			    } );
+
+  string secret=Crypto.md5()->update(""+time(1)+random(100000))->digest();
+  secret = MIME.encode_base64(secret,1);
+  defvar("server_salt", secret[..sizeof(secret)-3], LOCALE(0, "Server secret"),
+	 TYPE_STRING|VAR_MORE,
+	 LOCALE(0, "The server secret is a string used in some "
+		"cryptographic functions, such as calculating "
+		"unique, non-guessable session id's. Change this "
+		"value into something that is hard to guess, unless "
+		"you are satisfied with what your computers random "
+		"generator has produced") );
 
   defvar("suicide_engage", 0,
 	 LOCALE(160, "Auto Restart: Enable Automatic Restart"),

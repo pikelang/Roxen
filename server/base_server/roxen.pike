@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.606 2001/01/04 08:48:57 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.607 2001/01/06 07:24:26 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1553,7 +1553,6 @@ private void restore_current_user_id_number()
 #endif
 }
 
-
 int increase_id()
 {
   if(!current_user_id_file)
@@ -1569,6 +1568,14 @@ int increase_id()
   current_user_id_file->write((string)current_user_id_number);
   current_user_id_file_last_mod = current_user_id_file->stat()[2];
   return current_user_id_number;
+}
+
+private int unique_id_counter;
+string create_unique_id()
+{
+  object md5 = Crypto.md5();
+  md5->update(query("server_salt") + (unique_id_counter++) + time(1));
+  return Crypto.string_to_hex(md5->digest());
 }
 
 
