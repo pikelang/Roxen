@@ -26,10 +26,10 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
   sscanf( id->misc->path_info, "/"+q+"/%[^/]", subsel );
 
   string pre = ("<gbutton href='/"+id->misc->cf_locale+"/sites' "
-                "width=150 icon_src=/internal-roxen-next "
+                "width=150 bgcolor=#eeeeee icon_src=/internal-roxen-next "
                 "align_icon=left preparse><cf-locale get=servers></gbutton><br>"
-                "<gbutton width=150 "+(subsel == ""?"bgcolor=d9dee7":
-			      "href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' ")+
+                "<gbutton width=150 "+(subsel == ""?"bgcolor=#d9dee7":
+			      "bgcolor=#eeeeee href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' ")+
                 " icon_src=/internal-roxen-next align_icon=left>"+
                 c->query_name()+"</gbutton><br><br>");
 
@@ -92,7 +92,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
       }
       pre += "\n";
     } else
-      pre += ("<gbutton preparse width=150 href='"+DOTDOT(3)+q+"/'>"
+      pre += ("<gbutton preparse bgcolor=#eeeeee width=150 href='"+DOTDOT(3)+q+"/'>"
               "<cf-locale get="+q+"></gbutton><br>");
   }
   pre += "</item>";

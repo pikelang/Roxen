@@ -28,8 +28,7 @@
          txtcolor="white"
          selcolor="#eeeeee"
          #selected#
-         fgcolor="#999999"
-         bgcolor=white>
+         fgcolor="#999999">
    ½__tabs:quote=none½
 </tablist
 ></td></tr>
@@ -81,7 +80,7 @@
           <table>
          <cf-userwants option=devel_mode>
           <tr><td align=right>
-            <gtext font=haru scale=0.45 hspace=3>Language:</gtext>
+            <gtext bgcolor="d9dee7" font=haru scale=0.45 hspace=3>Language:</gtext>
           </td><td>
           <configif-output quote=¤ source=locales>
             <a href="¤path¤"><img
