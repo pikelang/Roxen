@@ -1,5 +1,5 @@
 /*
- * $Id: cgi.c,v 1.28 1998/05/08 14:29:31 grubba Exp $
+ * $Id: cgi.c,v 1.29 1998/05/19 10:44:21 grubba Exp $
  *
  * CGI-wrapper for Roxen.
  *
@@ -70,7 +70,7 @@
 # define MAXHEADERLEN 32769
 #endif
 
-/* #define DEBUG */
+#define DEBUG
 
 #include <errno.h>
 
@@ -236,6 +236,9 @@ int start_program(char **argv)
 
   fprintf(stderr, "Exec of %s failed\n", argv[0]);
   fprintf(stdout, "Exec of %s failed\n", argv[0]);
+#ifdef HAVE_PERROR
+  perror("CGI");
+#endif /* HAVE_PERROR */
 
   exit(0);
 
