@@ -10,6 +10,8 @@ inherit "roxenlib";
 
 #define ERROR(a) sprintf("<b>&lt;diagram&gt; error:</b> %s<br>\n", (a))
 
+constant unit_gif = "/internal-roxen-unit";
+
 string container_obox(string name, mapping args,
 		      string contents, object request_id)
 {
@@ -34,7 +36,6 @@ string container_obox(string name, mapping args,
 
   switch (name) {
   case "obox":
-    string unit_gif = combine_path(query("location"), "unit.gif");
       s = "<table border=0 cellpadding=0 cellspacing=0>\n"
           "<tr><td colspan=2>&nbsp;</td>\n"
           "<td rowspan=3>&nbsp;<b>"+title+"</b> </td>\n"
@@ -69,33 +70,14 @@ string container_obox(string name, mapping args,
   return s;
 }
 
-string unit_gif = "GIF89a\001\0\001\0\200ÿ\0ÀÀÀ\0\0\0!ù\004\001\0\0\0\0,"
-                  "\0\0\0\0\001\0\001\0\0\001\0012\0;";
-
-mapping find_file(string f, object rid)
-{
-      return http_string_answer(unit_gif, "image/gif");
-}
-
 array register_module()
 {
   return ({
-    MODULE_PARSER | MODULE_LOCATION,
+    MODULE_PARSER,
       "Outlined box",
       "This is a container tag making outlined boxes.<br>"
       "&lt;obox help&gt;&lt;/obox&gt; gives help.",
       0, 1 });
-}
-
-void create()
-{
-  defvar("location", "/obox/", "Mountpoint", TYPE_LOCATION,
-	 "The URL-prefix for the obox image.");
-}
-
-string query_location()
-{
-  return query("location");
 }
 
 mapping query_container_callers()
