@@ -124,7 +124,8 @@ array(Image.Image) make_text_image(
   mapping args, Image.Font font, string text, RequestID id)
 {
   if( args->encoding )
-    text = roxen.decode_charset(args->encoding,text);
+    catch( text = Locale.Charset.decoder(args->encoding)->
+	   feed(text)->drain() );
   Image.Image text_alpha=font->write(@(text/"\n"));
   int extend_alpha = 0;
   int xoffset=0, yoffset=0;
