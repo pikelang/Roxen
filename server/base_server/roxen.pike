@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.880 2004/08/25 08:48:18 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.881 2004/08/31 09:14:04 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -388,6 +388,9 @@ static Privs PRIVS(string r, int|string|void u, int|string|void g)
 {
   return Privs(r, u, g);
 }
+
+// Current Configuration.
+Thread.Local current_configuration = Thread.Local();
 
 // font cache and loading.
 // 
@@ -3268,6 +3271,7 @@ class ImageCache
   //! but instead zero will be returned (this will be seen as a 'File
   //! not found' error)
   {
+    current_configuration->set(id->conf);
     string na = store( data,id );
     mixed res;
 #ifdef ARG_CACHE_DEBUG
