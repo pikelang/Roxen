@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <sys/signal.h>
 #include <sys/time.h>
+#include "../pike/src/machine.h" /* for MAX_OPEN_FILEDESCRIPTORS */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -48,6 +49,9 @@
 
 /*  This is the PID of the child process (the CGI script) */
 int pid;
+
+/*  Indicates RAW-mode (for nph-scripts) */
+int raw;
 
 /* These variables are here to keep track of the headers sent from all
  * non-nph scripts. At the very least they will include a Content-type.
@@ -169,25 +173,27 @@ int start_program(char **argv)
   }
 #endif
 
+  if (!raw) {
 #ifdef HAVE_PIPE
-  pipe(fds);
+    pipe(fds);
 #else
 #ifdef HAVE_SOCKETPAIR
-  socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+    socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
 #else
 #error Bad luck.
 #endif
 #endif
 
-  if((pid = fork()))
-  {
+    if((pid = fork())) {
+      close(fds[1]);
+      return fds[0];
+    }
+
+    close(fds[0]);
+    dup2(fds[1], 1);
     close(fds[1]);
-    return fds[0];
   }
 
-  close(fds[0]);
-  dup2(fds[1], 1);
-  close(fds[1]);
   execv(argv[0], argv);
 
   fprintf(stderr, "Exec of %s failed\n", argv[0]);
@@ -373,7 +379,15 @@ int is_nph(char *foo)
 
 void main(int argc, char **argv)
 {
-  int raw;
+  int i;
+  /* Insure that all filedecriptors except stdin, stdout and stderr are closed
+   */
+  for (i=3; i < MAX_OPEN_FILEDESCRIPTORS; i++) {
+    close(i);
+  }
+
+  /* We want to die of SIGPIPE */
+  signal(SIGPIPE, SIG_DFL);
 
   /* Do not allow root execution
    *
@@ -419,8 +433,8 @@ void main(int argc, char **argv)
   FD_SET(1, writefd);
 #endif
 
-  script = start_program(argv+1);
   raw = is_nph(argv[1]);
+  script = start_program(argv+1);
 
   while(1)
   {
