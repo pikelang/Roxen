@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.7 2001/10/12 06:42:44 hop Exp $";
+  "$Id: userdb_ldap.pike,v 1.8 2001/10/16 06:13:41 hop Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -245,7 +245,7 @@ array(string)|int get_entry_dir(string u, string filter) {
   DEBUGLOG(sprintf("LDAPsearch: user: %O filter: %O", u, filter));
   err = catch(results=dir->search(filter)); // FIXME: set only interesting attrs!
   if (err || !objectp(results) || !results->num_entries()) {
-    DEBUGLOG ("no entry in directory, returning unknown");
+    DEBUGLOG (sprintf("no entry in directory, returning unknown. More debug info: %O", err));
     return 0;
   }
   if(results->num_entries() > 1) {
