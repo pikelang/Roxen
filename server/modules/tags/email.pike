@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.2 2000/10/12 00:46:47 hop Exp $";
+constant cvs_version = "$Id: email.pike,v 1.3 2001/02/06 15:11:00 hop Exp $";
 
 constant thread_safe=1;
 
@@ -36,10 +36,10 @@ void create()
          "The default recipient names (one name per line) will be "
          "used if no '<i>to</i>' "
          "attribute is given to the tag.");
-  defvar("CI_split", ",", "Default: Recipient name list split character",
+  defvar("CI_split", ",", "Default: Recipient name list character separator",
          TYPE_STRING,
-         "The default recipient name list split character "
-         "will be used if no '<i>split</i>' "
+         "The default recipient name list character separator "
+         "will be used if no '<i>separator</i>' "
          "attribute is given to the tag.");
   defvar("CI_charset", "iso-8859-1", "Default: Charset",
          TYPE_STRING|VAR_MORE,
@@ -279,7 +279,7 @@ class TagEmail {
       string body = content || "";
       string subject;
       string fromx;
-      string tox, split = query("CI_split");
+      string tox, split = args->separator || query("CI_split");
       string chs = "";
       mixed error;
       mapping headers = ([]);
