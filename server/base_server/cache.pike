@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.64 2001/03/11 18:48:39 nilsson Exp $
+// $Id: cache.pike,v 1.65 2001/03/19 19:47:20 nilsson Exp $
 
 #pragma strict_types
 
@@ -220,6 +220,35 @@ void cache_clean()
 }
 
 
+// --- Non-garbing "cache" -----------
+
+private mapping(string:mapping(string:mixed)) nongc_cache;
+
+//! Associates a @[value] to a @[key] in a cache identified with
+//! the @[cache_id]. This cache does not garb, hence it should be
+//! used for storing data where its size is well controled.
+void nongarbing_cache_set(string cache_id, string key, mixed value) {
+  if(nongc_cache[cache_id]) nongc_cache[cache_id][key] = value;
+  nongc_cache[cache_id] = ([ key:value ]);
+}
+
+//! Returns the value associated to the @[key] in the cache
+//! identified by @[cache_id] in the non-garbing cache.
+mixed nongarbing_cache_lookup(string cache_id, string key) {
+  return nongc_cache[cache_id]?nongc_cache[cache_id][key]:([])[0];
+}
+
+//! Remove a value from the non-garbing cache.
+void nongarbing_cache_remove(string cache_id, string key) {
+  if(nongc_cache[cache_id]) m_delete(nongc_cache[cache_id], key);
+}
+
+//! Flush a cache in the non-garbing cache.
+void nongarbing_cache_flush(string cache_id) {
+  m_delete(nongc_cache, cache_id);
+}
+
+
 // --- Session cache -----------------
 
 #ifndef SESSION_BUCKETS
@@ -354,6 +383,8 @@ void create()
   add_constant( "cache", this_object() );
   cache = ([ ]);
   call_out(cache_clean, 60);
+
+  nongc_cache = ([ ]);
 
   session_buckets = ({ ([]) }) * SESSION_BUCKETS;
   session_persistence = ([]);
