@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.165 2004/04/04 00:54:55 mani Exp $
+// $Id: Roxen.pmod,v 1.166 2004/04/22 16:27:48 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2977,10 +2977,12 @@ class ScopeRoxen {
 class ScopePage {
   inherit RXML.Scope;
   constant converter=(["fgcolor":"fgcolor", "bgcolor":"bgcolor",
-		       "theme-bgcolor":"theme_bgcolor", "theme-fgcolor":"theme_fgcolor",
+		       "theme-bgcolor":"theme_bgcolor",
+		       "theme-fgcolor":"theme_fgcolor",
 		       "theme-language":"theme_language"]);
 
-  mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
+  mixed `[] (string var, void|RXML.Context c, void|string scope,
+	     void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
     switch (var) {
       case "pathinfo": return ENCODE_RXML_TEXT(c->id->misc->path_info, type);
@@ -2988,7 +2990,8 @@ class ScopePage {
       case "virtroot": return ENCODE_RXML_TEXT(c->id->virtfile, type);
       case "mountpoint":
 	string s = c->id->virtfile || "";
-	return ENCODE_RXML_TEXT(s[sizeof(s)-1..sizeof(s)-1] == "/"? s[..sizeof(s)-2]: s, type); 
+	return ENCODE_RXML_TEXT(s[sizeof(s)-1..sizeof(s)-1] == "/" ?
+				s[..sizeof(s)-2]: s, type);
       case "virtfile": // Fallthrough from deprecated name.
       case "path": return ENCODE_RXML_TEXT(c->id->not_query, type);
       case "query": return ENCODE_RXML_TEXT(c->id->query, type);
@@ -3001,8 +3004,10 @@ class ScopePage {
       case "self": return ENCODE_RXML_TEXT( (c->id->not_query/"/")[-1], type);
       case "ssl-strength":
 	NOCACHE(c->id);
-	if (!c->id->my_fd || !c->id->my_fd->session) return ENCODE_RXML_INT(0, type);
-	return ENCODE_RXML_INT(c->id->my_fd->session->cipher_spec->key_bits, type);
+	if (!c->id->my_fd || !c->id->my_fd->session)
+	  return ENCODE_RXML_INT(0, type);
+	return ENCODE_RXML_INT(c->id->my_fd->session->cipher_spec->key_bits,
+			       type);
       case "dir":
 	array parts = c->id->not_query/"/";
 	return ENCODE_RXML_TEXT( parts[..sizeof(parts)-2]*"/"+"/", type);
@@ -3021,7 +3026,8 @@ class ScopePage {
     return ENCODE_RXML_TEXT(val, type);
   }
 
-  mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
+  mixed `[]= (string var, mixed val, void|RXML.Context c,
+	      void|string scope_name) {
     if (!c) c = RXML_CONTEXT;
     switch (var) {
       case "pathinfo": return c->id->misc->path_info = val;
@@ -3034,8 +3040,8 @@ class ScopePage {
   array(string) _indices(void|RXML.Context c) {
     if (!c) c = RXML_CONTEXT;
     array ind=indices(c->misc->scope_page) +
-      ({ "pathinfo", "realfile", "virtroot", "mountpoint", "virtfile", "path", "query",
-	 "url", "last-true", "language", "scope", "filesize", "self",
+      ({ "pathinfo", "realfile", "virtroot", "mountpoint", "virtfile", "path",
+	 "query", "url", "last-true", "language", "scope", "filesize", "self",
 	 "ssl-strength", "dir", "counter" });
     foreach(indices(converter), string def)
       if(c->misc[converter[def]]) ind+=({def});
@@ -3065,13 +3071,15 @@ class ScopePage {
 class ScopeCookie {
   inherit RXML.Scope;
 
-  mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
+  mixed `[] (string var, void|RXML.Context c, void|string scope,
+	     void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
     NOCACHE(c->id);
     return ENCODE_RXML_TEXT(c->id->cookies[var], type);
   }
 
-  mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
+  mixed `[]= (string var, mixed val, void|RXML.Context c,
+	      void|string scope_name) {
     if (mixed err = catch (val = (string) val || ""))
       RXML.parse_error ("Cannot set cookies of type %t.\n", val);
     if (!c) c = RXML_CONTEXT;
@@ -3082,9 +3090,11 @@ class ScopeCookie {
       // cookie scope, so we don't use c->id->add_response_header
       // below.
       c->id->cookies[var]=val;
-      add_http_header(c->misc[" _extra_heads"], "Set-Cookie", http_encode_cookie(var)+
+      add_http_header(c->misc[" _extra_heads"], "Set-Cookie",
+		      http_encode_cookie(var)+
 		      "="+http_encode_cookie( val )+
-		      "; expires="+http_date(time(1)+(3600*24*365*2))+"; path=/");
+		      "; expires="+http_date(time(1)+(3600*24*365*2))+
+		      "; path=/");
     }
     return val;
   }
@@ -3101,7 +3111,8 @@ class ScopeCookie {
     // Note: The same applies here as in `[]= above.
     predef::m_delete(c->id->cookies, var);
     add_http_header(c->misc[" _extra_heads"], "Set-Cookie",
-		    http_encode_cookie(var)+"=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
+		    http_encode_cookie(var)+
+		    "=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
   }
 
   string _sprintf(int t) { return "RXML.Scope(Cookie)"; }
