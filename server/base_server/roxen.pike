@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.318 1999/08/30 21:54:35 grubba Exp $
+ * $Id: roxen.pike,v 1.319 1999/09/02 18:32:16 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.318 1999/08/30 21:54:35 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.319 1999/09/02 18:32:16 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -23,10 +23,9 @@ object argcache;
 // Inherits
 inherit "global_variables";
 inherit "hosts";
-inherit "socket";
 inherit "disk_cache";
 inherit "language";
-
+inherit "supports";
 
 /*
  * Version information
@@ -362,6 +361,7 @@ int new_id(){ return idcount++; }
 // pids of the start-script and ourselves.
 int startpid, roxenpid;
 
+#ifndef THREADS
 class container
 {
   mixed value;
@@ -374,6 +374,7 @@ class container
     return value;
   }
 }
+#endif
 
 // Locale support
 object(Locale.Roxen.standard) default_locale=Locale.Roxen.standard /* nihongo */;
@@ -529,6 +530,7 @@ private static void accept_callback( object port )
  * handle() stuff
  */
 
+#ifndef THREADS
 // handle function used when THREADS is not enabled.
 void unthreaded_handle(function f, mixed ... args)
 {
@@ -536,6 +538,9 @@ void unthreaded_handle(function f, mixed ... args)
 }
 
 function handle = unthreaded_handle;
+#else
+function handle;
+#endif
 
 /*
  * THREADS code starts here
@@ -603,9 +608,10 @@ void start_handler_threads()
 {
   if (QUERY(numthreads) <= 1) {
     QUERY(numthreads) = 1;
-    perror("Starting 1 thread to handle requests.\n");
+    report_debug("Starting 1 thread to handle requests.\n");
   } else {
-    perror("Starting "+QUERY(numthreads)+" threads to handle requests.\n");
+    report_debug("Starting "+QUERY(numthreads)
+                 +" threads to handle requests.\n");
   }
   for(; number_of_threads < QUERY(numthreads); number_of_threads++)
     do_thread_create( "Handle thread ["+number_of_threads+"]",
@@ -617,7 +623,7 @@ void start_handler_threads()
 void stop_handler_threads()
 {
   int timeout=30;
-  perror("Stopping all request handler threads.\n");
+  roxen_perror("Stopping all request handler threads.\n");
   while(number_of_threads>0) {
     number_of_threads--;
     handle_queue->write(0);
@@ -625,32 +631,12 @@ void stop_handler_threads()
   }
   while(thread_reap_cnt) {
     if(--timeout<=0) {
-      perror("Giving up waiting on threads!\n");
+      roxen_perror("Giving up waiting on threads!\n");
       return;
     }
     sleep(0.1);
   }
 }
-
-mapping accept_threads = ([]);
-void accept_thread(object port,array pn)
-{
-  accept_threads[port] = this_thread();
-  program port_program = pn[-1];
-  mixed foo = pn[1];
-  array err;
-  object o;
-  while(!die_die_die)
-  {
-    o = port->accept();
-    err = catch {
-      if(o) port_program(o,foo);
-    };
-    if(err)
-      perror("Error in accept_thread: %O\n",describe_backtrace(err));
-  }
-}
-
 #endif /* THREADS */
 
 
@@ -693,11 +679,7 @@ object create_listen_socket(mixed port_no, object conf,
       ether=0;
     if(ether)
       sscanf(ether, "addr:%s", ether);
-#if defined(THREADS) && 0
-    if(!port->bind(port_no, 0, ether))
-#else
     if(!port->bind(port_no, accept_callback, ether))
-#endif
     {
 #ifdef SOCKET_DEBUG
       perror("SOCKETS:    -> Failed.\n");
@@ -706,11 +688,7 @@ object create_listen_socket(mixed port_no, object conf,
 		     socket_already_bound_retry(ether, port_no,
 						port->errno()));
       sleep(1);
-#if defined(THREADS) && 0
-      if(!port->bind(port_no, 0, ether))
-#else
       if(!port->bind(port_no, accept_callback, ether))
-#endif
       {
 	report_warning(LOCALE->
 		       socket_already_bound(ether, port_no, port->errno()));
@@ -719,10 +697,6 @@ object create_listen_socket(mixed port_no, object conf,
     }
   }
   portno[port]=({ port_no, conf, ether||"Any", 0, requestprogram });
-#if defined(THREADS) && 0
-  call_out(do_thread_create,0,"Accept thread ["+port_no+":"+(ether||"ANY]"),
-	   accept_thread, port,portno[port]);
-#endif
 #ifdef SOCKET_DEBUG
   perror("SOCKETS:    -> Ok.\n");
 #endif
@@ -877,276 +851,12 @@ void nwrite(string s, int|void perr, int|void type)
 }
 
 // When was Roxen started?
-int boot_time;
-int start_time;
+int boot_time  =time();
+int start_time =time();
 
 string version()
 {
   return QUERY(default_ident)?real_version:QUERY(ident);
-}
-
-// The db for the nice '<if supports=..>' tag.
-mapping (string:array (array (object|multiset))) supports;
-private multiset default_supports = (< >);
-
-private static inline array positive_supports(array from)
-{
-  array res = copy_value(from);
-  int i;
-  for(i=0; i<sizeof(res); i++)
-    if(res[i][0] == '-')
-      res[i] = 0;
-  return res - ({ 0 });
-}
-
-private inline array negative_supports(array from)
-{
-  array res = copy_value(from);
-  int i;
-  for(i=0; i<sizeof(res); i++)
-    if(res[i][0] != '-')
-      res[i] = 0;
-    else
-      res[i] = res[i][1..];
-  return res - ({ 0 });
-}
-
-private static mapping foo_defines = ([ ]);
-// '#define' in the 'supports' file.
-static private string current_section; // Used below.
-// '#section' in the 'supports' file.
-
-private void parse_supports_string(string what)
-{
-  string foo;
-  
-  array lines;
-  int i;
-  lines=replace(what, "\\\n", " ")/"\n"-({""});
-
-  foreach(lines, foo)
-  {
-    array bar, gazonk;
-    if(foo[0] == '#')
-    {
-      string file;
-      string name, to;
-      if(sscanf(foo, "#include <%s>", file))
-      {
-	if(foo=Stdio.read_bytes(file))
-	  parse_supports_string(foo);
-	else
-	  report_error(LOCALE->supports_bad_include(file));
-      } else if(sscanf(foo, "#define %[^ ] %s", name, to)) {
-	name -= "\t";
-	foo_defines[name] = to;
-//	perror("#defining '"+name+"' to "+to+"\n");
-      } else if(sscanf(foo, "#section %[^ ] {", name)) {
-//	perror("Entering section "+name+"\n");
-	current_section = name;
-	if(!supports[name])
-	  supports[name] = ({});
-      } else if((foo-" ") == "#}") {
-//	perror("Leaving section "+current_section+"\n");
-	current_section = 0;
-      } else {
-//	perror("Comment: "+foo+"\n");
-      }
-      
-    } else {
-      int rec = 10;
-      string q=replace(foo,",", " ");
-      foo="";
-      
-      // Handle all defines.
-      while((strlen(foo)!=strlen(q)) && --rec)
-      {
-	foo=q;
-	q = replace(q, indices(foo_defines), values(foo_defines));
-      }
-      
-      foo=q;
-      
-      if(!rec)
-	perror("Too deep recursion while replacing defines.\n");
-      
-//    perror("Parsing supports line '"+foo+"'\n");
-      bar = replace(foo, ({"\t",","}), ({" "," "}))/" " -({ "" });
-      foo="";
-      
-      if(sizeof(bar) < 2)
-	continue;
-    
-      if(bar[0] == "default")
-	default_supports = aggregate_multiset(@bar[1..]);
-      else
-      {
-	gazonk = bar[1..];
-	mixed err;
-	if (err = catch {
-	  supports[current_section]
-	    += ({ ({ Regexp(bar[0])->match,
-		     aggregate_multiset(@positive_supports(gazonk)),
-		     aggregate_multiset(@negative_supports(gazonk)),
-	    })});
-	}) {
-	  report_error(LOCALE->supports_bad_regexp(describe_backtrace(err)));
-	}
-      }
-    }
-  }
-}
-
-public void initiate_supports()
-{
-  supports = ([ 0:({ }) ]);
-  foo_defines = ([ ]);
-  current_section = 0;
-  parse_supports_string(QUERY(Supports));
-  foo_defines = 0;
-}
-
-array _new_supports = ({});
-
-void done_with_roxen_com()
-{
-  string new, old;
-  new = _new_supports * "";
-  new = (new/"\r\n\r\n")[1..]*"\r\n\r\n";
-  old = Stdio.read_bytes( "etc/supports" );
-  
-  if(strlen(new) < strlen(old)-200) // Error in transfer?
-    return;
-  
-  if(old != new) {
-    perror("Got new supports data from www.roxen.com\n");
-    perror("Replacing old file with new data.\n");
-// #ifndef THREADS
-//     object privs=Privs(LOCALE->replacing_supports());
-// #endif
-    mv("etc/supports", "etc/supports~");
-    Stdio.write_file("etc/supports", new, 0660);
-    old = Stdio.read_bytes( "etc/supports" );
-
-    if(old != new)
-    {
-      perror("FAILED to update the supports file.\n");
-      mv("etc/supports~", "etc/supports");
-// #ifndef THREADS
-//       privs = 0;
-// #endif
-    } else {
-// #ifndef THREADS
-//       privs = 0;
-// #endif
-      initiate_supports();
-    }
-  }
-#ifdef DEBUG
-  else
-    perror("No change to the supports file.\n");
-#endif
-}
-
-void got_data_from_roxen_com(object this, string foo)
-{
-  if(!foo)
-    return;
-  _new_supports += ({ foo });
-}
-
-void connected_to_roxen_com(object port)
-{
-  if(!port) 
-  {
-#ifdef DEBUG
-    perror("Failed to connect to www.roxen.com:80.\n");
-#endif
-    return 0;
-  }
-#ifdef DEBUG
-  perror("Connected to www.roxen.com.:80\n");
-#endif
-  _new_supports = ({});
-  port->set_id(port);
-  string v = version();
-  if (v != real_version) {
-    v = v + " (" + real_version + ")";
-  }
-  port->write("GET /supports HTTP/1.0\r\n"
-	      "User-Agent: " + v + "\r\n"
-	      "Host: www.roxen.com:80\r\n"
-	      "Pragma: no-cache\r\n"
-	      "\r\n");
-  port->set_nonblocking(got_data_from_roxen_com,
-			got_data_from_roxen_com,
-			done_with_roxen_com);
-}
-
-public void update_supports_from_roxen_com()
-{
-  // FIXME:
-  // This code has a race-condition, but it only occurs once a week...
-  if(QUERY(next_supports_update) <= time())
-  {
-    if(QUERY(AutoUpdate))
-    {
-      async_connect("www.roxen.com.", 80, connected_to_roxen_com);
-#ifdef DEBUG
-      perror("Connecting to www.roxen.com.:80\n");
-#endif
-    }
-    remove_call_out( update_supports_from_roxen_com );
-
-  // Check again in one week.
-    QUERY(next_supports_update)=3600*24*7 + time();
-    store("Variables", variables, 0, 0);
-  }
-  call_out(update_supports_from_roxen_com, QUERY(next_supports_update)-time());
-}
-
-// Return a list of 'supports' values for the current connection.
-
-public multiset find_supports(string from, void|multiset existing_sup)
-{
-  multiset (string) sup =  (< >);
-  multiset (string) nsup = (< >);
-
-  array (function|multiset) s;
-  string v;
-  array f;
-
-  if(!existing_sup) existing_sup = (<>);
-  
-  if(!strlen(from) || from == "unknown")
-    return default_supports|existing_sup;
-  if(!(sup = cache_lookup("supports", from))) {
-    sup = (<>);
-    foreach(indices(supports), v)
-    {
-      if(!v || !search(from, v))
-      {
-	//  perror("Section "+v+" match "+from+"\n");
-	f = supports[v];
-	foreach(f, s)
-	  if(s[0](from))
-	  {
-	    sup |= s[1];
-	    nsup  |= s[2];
-	  }
-      }
-    }
-    if(!sizeof(sup))
-    {
-      sup = default_supports;
-#ifdef DEBUG
-      perror("Unknown client: \""+from+"\"\n");
-#endif
-    }
-    sup -= nsup;
-    cache_set("supports", from, sup);
-  }
-  return sup|existing_sup;
 }
 
 public void log(mapping file, object request_id)
@@ -1548,430 +1258,7 @@ void post_create ()
     call_out (restart,60*60*24*QUERY(suicide_timeout));
 }
 
-void create()
-{
-//    SET_LOCALE(default_locale);
 
-
-  catch
-  {
-    module_stat_cache = decode_value(Stdio.read_bytes(".module_stat_cache"));
-    allmodules = decode_value(Stdio.read_bytes(".allmodules"));
-  };
-#ifndef __NT__
-  if(!getuid()) {
-    add_constant("Privs", Privs);
-  } else
-#endif /* !__NT__ */
-    add_constant("Privs", class{});
-
-  add_constant("roxen", this_object());
-  add_constant("RequestID", RequestID);
-  add_constant("load",    load);
-  add_constant("_Roxen_dot_set_locale", set_locale );
-  add_constant("_Roxen_dot_locale", locale );
-  add_constant("_Locale._Roxen", Locale.Roxen );
-
-  // compatibility
-  add_constant("hsv_to_rgb",  Colors.hsv_to_rgb  );
-  add_constant("rgb_to_hsv",  Colors.rgb_to_hsv  );
-  add_constant("parse_color", Colors.parse_color );
-  add_constant("color_name",  Colors.color_name  );
-  add_constant("colors",      Colors             );
-  fonts = (object)"fonts.pike";
-
-  Configuration = (program)"configuration";
-  if(!file_stat( "base_server/configuration.pike.o" ) ||
-     file_stat("base_server/configuration.pike.o")[ST_MTIME] <
-     file_stat("base_server/configuration.pike")[ST_MTIME])
-  {
-    Stdio.write_file( "base_server/configuration.pike.o", 
-                      encode_value( Configuration, Codec( Configuration) ) );
-  }
-  add_constant("Configuration", Configuration );
-  add_constant("Fonts", fonts );
-  add_constant("_____argcache", argcache );
-  add_constant("ArgCache", ArgCache );
-  add_constant("Stdio_dot_File_indeed", Stdio.File ); // for encode stuff
-
-  call_out(post_create,1); //we just want to delay some things a little
-}
-
-
-// Get the current domain. This is not as easy as one could think.
-string get_domain(int|void l)
-{
-  array f;
-  string t, s;
-
-//  ConfigurationURL is set by the 'install' script.
-  if(!(!l && sscanf(QUERY(ConfigurationURL), "http://%s:%*s", s)))
-  {
-#if constant(gethostbyname) && constant(gethostname)
-    f = gethostbyname(gethostname()); // First try..
-    if(f)
-      foreach(f, f) if (arrayp(f)) { 
-	foreach(f, t) if(search(t, ".") != -1 && !(int)t)
-	  if(!s || strlen(s) < strlen(t))
-	    s=t;
-      }
-#endif
-    if(!s)
-    {
-      // FIXME: NT support.
-
-      t = Stdio.read_bytes("/etc/resolv.conf");
-      if(t) 
-      {
-	if(!sscanf(t, "domain %s\n", s))
-	  if(!sscanf(t, "search %s%*[ \t\n]", s))
-	    s="nowhere";
-      } else {
-	s="nowhere";
-      }
-      s = "host."+s;
-    }
-  }
-  sscanf(s, "%*s.%s", s);
-  if(s && strlen(s))
-  {
-    if(s[-1] == '.') s=s[..strlen(s)-2];
-    if(s[0] == '.') s=s[1..];
-  } else {
-    s="unknown"; 
-  }
-  return s;
-}
-
-
-// This is the most likely URL for a virtual server. Again, this
-// should move into the actual 'configuration' object. It is not all
-// that nice to have all this code lying around in here.
-
-private string get_my_url()
-{
-  string s;
-#if constant(gethostname)
-  s = (gethostname()/".")[0] + "." + query("Domain");
-#else
-  s = "localhost";
-#endif
-  s -= "\n";
-  return "http://" + s + "/";
-}
-
-// Set the uid and gid to the ones requested by the user. If the sete*
-// functions are available, and the define SET_EFFECTIVE is enabled,
-// the euid and egid is set. This might be a minor security hole, but
-// it will enable roxen to start CGI scripts with the correct
-// permissions (the ones the owner of that script have).
-
-int set_u_and_gid()
-{
-#ifndef __NT__
-  string u, g;
-  int uid, gid;
-  array pw;
-  
-  u=QUERY(User);
-  sscanf(u, "%s:%s", u, g);
-  if(strlen(u))
-  {
-    if(getuid())
-    {
-      report_error ("It is only possible to change uid and gid if the server "
-		    "is running as root.\n");
-    } else {
-      if (g) {
-#if constant(getgrnam)
-	pw = getgrnam (g);
-	if (!pw)
-	  if (sscanf (g, "%d", gid)) pw = getgrgid (gid), g = (string) gid;
-	  else report_error ("Couldn't resolve group " + g + ".\n"), g = 0;
-	if (pw) g = pw[0], gid = pw[2];
-#else
-	if (!sscanf (g, "%d", gid))
-	  report_warning ("Can't resolve " + g + " to gid on this system; "
-			  "numeric gid required.\n");
-#endif
-      }
-
-      pw = getpwnam (u);
-      if (!pw)
-	if (sscanf (u, "%d", uid)) pw = getpwuid (uid), u = (string) uid;
-	else {
-	  report_error ("Couldn't resolve user " + u + ".\n");
-	  return 0;
-	}
-      if (pw) {
-	u = pw[0], uid = pw[2];
-	if (!g) gid = pw[3];
-      }
-
-#ifdef THREADS
-      object mutex_key;
-      catch { mutex_key = euid_egid_lock->lock(); };
-      object threads_disabled = _disable_threads();
-#endif
-
-#if constant(seteuid)
-      if (geteuid() != getuid()) seteuid (getuid());
-#endif
-
-#if constant(initgroups)
-      catch {
-	initgroups(pw[0], gid);
-	// Doesn't always work - David.
-      };
-#endif
-
-      if (QUERY(permanent_uid)) {
-#if constant(setuid)
-	if (g) {
-#  if constant(setgid)
-	  setgid(gid);
-	  if (getgid() != gid) report_error ("Failed to set gid.\n"), g = 0;
-#  else
-	  report_warning ("Setting gid not supported on this system.\n");
-	  g = 0;
-#  endif
-	}
-	setuid(uid);
-	if (getuid() != uid) report_error ("Failed to set uid.\n"), u = 0;
-	if (u) report_notice(LOCALE->setting_uid_gid_permanently (uid, gid, u, g));
-#else
-	report_warning ("Setting uid not supported on this system.\n");
-	u = g = 0;
-#endif
-      }
-      else {
-#if constant(seteuid)
-	if (g) {
-#  if constant(setegid)
-	  setegid(gid);
-	  if (getegid() != gid) report_error ("Failed to set effective gid.\n"), g = 0;
-#  else
-	  report_warning ("Setting effective gid not supported on this system.\n");
-	  g = 0;
-#  endif
-	}
-	seteuid(uid);
-	if (geteuid() != uid) report_error ("Failed to set effective uid.\n"), u = 0;
-	if (u) report_notice(LOCALE->setting_uid_gid (uid, gid, u, g));
-#else
-	report_warning ("Setting effective uid not supported on this system.\n");
-	u = g = 0;
-#endif
-      }
-
-      return !!u;
-    }
-  }
-#endif
-  return 0;
-}
-
-static mapping __vars = ([ ]);
-
-// These two should be documented somewhere. They are to be used to
-// set global, but non-persistent, variables in Roxen. By using
-// these functions modules can "communicate" with one-another. This is
-// not really possible otherwise.
-mixed set_var(string var, mixed to)
-{
-  return __vars[var] = to;
-}
-
-mixed query_var(string var)
-{
-  return __vars[var];
-}
-
-
-void reload_all_configurations()
-{
-  object conf;
-  array (object) new_confs = ({});
-  mapping config_cache = ([]);
-  int modified;
-
-  report_notice(LOCALE->reloading_config_interface());
-  configs = ([]);
-  setvars(retrieve("Variables", 0));
-  initiate_configuration_port( 0 );
-
-  foreach(list_all_configurations(), string config)
-  {
-    array err, st;
-    foreach(configurations, conf)
-    {
-      if(lower_case(conf->name) == lower_case(config))
-      {
-	break;
-      } else
-	conf = 0;
-    }
-    if(!(st = config_is_modified(config))) {
-      if(conf) {
-	config_cache[config] = config_stat_cache[config];
-	new_confs += ({ conf });
-      }
-      continue;
-    }
-    modified = 1;
-    config_cache[config] = st;
-    if(conf) {
-      // Closing ports...
-      if (conf->server_ports) {
-	// Roxen 1.2.26 or later
-	Array.map(values(conf->server_ports), destruct);
-      } else {
-	Array.map(indices(conf->open_ports), destruct);
-      }
-      conf->stop();
-      conf->invalidate_cache();
-      conf->modules = ([]);
-      conf->create(conf->name);
-    } else {
-      if(err = catch
-      {
-	conf = enable_configuration(config);
-      }) {
-	report_error(LOCALE->
-		     error_enabling_configuration(config,
-						  describe_backtrace(err)));
-	continue;
-      }
-    }
-    if(err = catch
-    {
-      conf->start();
-      conf->enable_all_modules();
-    }) {
-      report_error(LOCALE->
-		   error_enabling_configuration(config,
-						describe_backtrace(err)));
-      continue;
-    }
-    new_confs += ({ conf });
-  }
-    
-  foreach(configurations - new_confs, conf)
-  {
-    modified = 1;
-    report_notice(LOCALE->disabling_configuration(conf->name));
-    if (conf->server_ports) {
-      // Roxen 1.2.26 or later
-      Array.map(values(conf->server_ports), destruct);
-    } else {
-      Array.map(indices(conf->open_ports), destruct);
-    }
-    conf->stop();
-    destruct(conf);
-  }
-  if(modified) {
-    configurations = new_confs;
-    config_stat_cache = config_cache;
-    unload_configuration_interface();
-  }
-}
-
-object enable_configuration(string name)
-{
-  object cf = Configuration(name);
-  configurations += ({ cf });
-  report_notice(LOCALE->enabled_server(name));
-  
-  return cf;
-}
-
-// Enable all configurations
-void enable_configurations()
-{
-  array err;
-
-  enabling_configurations = 1;
-  configurations = ({});
-  foreach(list_all_configurations(), string config)
-  {
-    if(err=catch { enable_configuration(config)->start();  })
-      perror("Error while loading configuration "+config+":\n"+
-	     describe_backtrace(err)+"\n");
-  };
-  enabling_configurations = 0;
-}
-
-
-void enable_configurations_modules()
-{
-  foreach(configurations, object config)
-  {
-    array err;
-    if(err=catch { config->enable_all_modules();  })
-      perror("Error while loading modules in configuration "+config->name+":\n"+
-	     describe_backtrace(err)+"\n");
-  };
-}
-
-// return the URL of the configuration interface. This is not as easy
-// as it sounds, unless the administrator has entered it somewhere.
-
-public string config_url()
-{
-  if(strlen(QUERY(ConfigurationURL)-" "))
-    return QUERY(ConfigurationURL)-" ";
-
-  array ports = QUERY(ConfigPorts), port, tmp;
-
-  if(!sizeof(ports)) return "CONFIG";
-
-  int p;
-  string prot;
-  string host;
-
-  foreach(ports, tmp)
-    if(tmp[1][0..2]=="ssl") 
-    {
-      port=tmp; 
-      break;
-    }
-
-  if(!port)
-    foreach(ports, tmp)
-      if(tmp[1]=="http") 
-      {
-	port=tmp; 
-	break;
-      }
-
-  if(!port) port=ports[0];
-
-  if(port[2] == "ANY")
-//  host = quick_ip_to_host( port[2] );
-// else
-  {
-#if efun(gethostname)
-    host = gethostname();
-#else
-    host = "127.0.0.1";
-#endif
-  }
-
-  switch(port[1][..2]) {
-  case "ssl":
-    prot = "https";
-    break;
-  case "ftp":
-    prot = "ftp";
-    break;
-  default:
-    prot = port[1];
-    break;
-  }
-  p = port[0];
-
-  return (prot+"://"+host+":"+p+"/");
-}
 
 class ImageCache
 {
@@ -2222,7 +1509,7 @@ class ImageCache
       return 0;
 
     if( stringp( f ) )
-      return http_string_answer( f, m->type||("image/gif") );
+      return roxenp()->http_string_answer( f, m->type||("image/gif") );
     return roxenp()->http_file_answer( f, m->type||("image/gif") );
   }
 
@@ -2493,6 +1780,314 @@ class ArgCache
   }
 }
 
+void create()
+{
+   SET_LOCALE(default_locale);
+// catch
+// {
+//   module_stat_cache = decode_value(Stdio.read_bytes(".module_stat_cache"));
+//   allmodules = decode_value(Stdio.read_bytes(".allmodules"));
+// };
+#ifndef __NT__
+  if(!getuid()) {
+    add_constant("Privs", Privs);
+  } else
+#endif /* !__NT__ */
+    add_constant("Privs", class{});
+
+  // Dump some programs (for speed)
+  dump( "base_server/newdecode.pike" );
+  dump( "base_server/read_config.pike" );
+  dump( "base_server/global_variables.pike" );
+  dump( "base_server/module_support.pike" );
+  dump( "base_server/http.pike" );
+  dump( "base_server/smartpipe.pike" );
+  dump( "base_server/socket.pike" );
+  dump( "base_server/cache.pike" );
+  dump( "base_server/supports.pike" );
+  dump( "base_server/fonts.pike");
+  dump( "base_server/hosts.pike");
+  dump( "base_server/language.pike");
+
+
+  // for module encoding stuff
+  add_constant( "Image", Image );
+  add_constant( "Image.Image", Image.Image );
+  add_constant( "Image.Colortable", Image.Colortable );
+  add_constant("Fonts", fonts );
+  add_constant("_____argcache", argcache );
+  add_constant("ArgCache", ArgCache );
+  add_constant("Stdio_dot_File_indeed", Stdio.File );
+#if constant(Thread.Mutex)
+  add_constant( "_Thread_dot_Mutex_", Thread.Mutex );
+  add_constant( "_Thread_dot_Queue_", Thread.Queue );
+#endif
+
+  add_constant("roxen", this_object());
+  add_constant("RequestID", RequestID);
+  add_constant("load",    load);
+  add_constant("_Roxen_dot_set_locale", set_locale );
+  add_constant("_Roxen_dot_locale", locale );
+  add_constant("_Locale_dot_Roxen", Locale.Roxen );
+  add_constant("_roxen_dot_ImageCache", ImageCache );
+  // compatibility
+  add_constant("hsv_to_rgb",  Colors.hsv_to_rgb  );
+  add_constant("rgb_to_hsv",  Colors.rgb_to_hsv  );
+  add_constant("parse_color", Colors.parse_color );
+  add_constant("color_name",  Colors.color_name  );
+  add_constant("colors",      Colors             );
+  fonts = (object)"fonts.pike";
+
+  Configuration = (program)"configuration";
+  if(!file_stat( "base_server/configuration.pike.o" ) ||
+     file_stat("base_server/configuration.pike.o")[ST_MTIME] <
+     file_stat("base_server/configuration.pike")[ST_MTIME])
+  {
+    Stdio.write_file( "base_server/configuration.pike.o", 
+                      encode_value( Configuration, Codec( Configuration) ) );
+  }
+  add_constant("Configuration", Configuration );
+
+  call_out(post_create,1); //we just want to delay some things a little
+}
+
+
+
+// Set the uid and gid to the ones requested by the user. If the sete*
+// functions are available, and the define SET_EFFECTIVE is enabled,
+// the euid and egid is set. This might be a minor security hole, but
+// it will enable roxen to start CGI scripts with the correct
+// permissions (the ones the owner of that script have).
+
+int set_u_and_gid()
+{
+#ifndef __NT__
+  string u, g;
+  int uid, gid;
+  array pw;
+  
+  u=QUERY(User);
+  sscanf(u, "%s:%s", u, g);
+  if(strlen(u))
+  {
+    if(getuid())
+    {
+      report_error ("It is only possible to change uid and gid if the server "
+		    "is running as root.\n");
+    } else {
+      if (g) {
+#if constant(getgrnam)
+	pw = getgrnam (g);
+	if (!pw)
+	  if (sscanf (g, "%d", gid)) pw = getgrgid (gid), g = (string) gid;
+	  else report_error ("Couldn't resolve group " + g + ".\n"), g = 0;
+	if (pw) g = pw[0], gid = pw[2];
+#else
+	if (!sscanf (g, "%d", gid))
+	  report_warning ("Can't resolve " + g + " to gid on this system; "
+			  "numeric gid required.\n");
+#endif
+      }
+
+      pw = getpwnam (u);
+      if (!pw)
+	if (sscanf (u, "%d", uid)) pw = getpwuid (uid), u = (string) uid;
+	else {
+	  report_error ("Couldn't resolve user " + u + ".\n");
+	  return 0;
+	}
+      if (pw) {
+	u = pw[0], uid = pw[2];
+	if (!g) gid = pw[3];
+      }
+
+#ifdef THREADS
+      object mutex_key;
+      catch { mutex_key = euid_egid_lock->lock(); };
+      object threads_disabled = _disable_threads();
+#endif
+
+#if constant(seteuid)
+      if (geteuid() != getuid()) seteuid (getuid());
+#endif
+
+#if constant(initgroups)
+      catch {
+	initgroups(pw[0], gid);
+	// Doesn't always work - David.
+      };
+#endif
+
+      if (QUERY(permanent_uid)) {
+#if constant(setuid)
+	if (g) {
+#  if constant(setgid)
+	  setgid(gid);
+	  if (getgid() != gid) report_error ("Failed to set gid.\n"), g = 0;
+#  else
+	  report_warning ("Setting gid not supported on this system.\n");
+	  g = 0;
+#  endif
+	}
+	setuid(uid);
+	if (getuid() != uid) report_error ("Failed to set uid.\n"), u = 0;
+	if (u) report_notice(LOCALE->setting_uid_gid_permanently (uid, gid, u, g));
+#else
+	report_warning ("Setting uid not supported on this system.\n");
+	u = g = 0;
+#endif
+      }
+      else {
+#if constant(seteuid)
+	if (g) {
+#  if constant(setegid)
+	  setegid(gid);
+	  if (getegid() != gid) report_error ("Failed to set effective gid.\n"), g = 0;
+#  else
+	  report_warning ("Setting effective gid not supported on this system.\n");
+	  g = 0;
+#  endif
+	}
+	seteuid(uid);
+	if (geteuid() != uid) report_error ("Failed to set effective uid.\n"), u = 0;
+	if (u) report_notice(LOCALE->setting_uid_gid (uid, gid, u, g));
+#else
+	report_warning ("Setting effective uid not supported on this system.\n");
+	u = g = 0;
+#endif
+      }
+
+      return !!u;
+    }
+  }
+#endif
+  return 0;
+}
+
+void reload_all_configurations()
+{
+  object conf;
+  array (object) new_confs = ({});
+  mapping config_cache = ([]);
+  int modified;
+
+  report_notice(LOCALE->reloading_config_interface());
+  configs = ([]);
+  setvars(retrieve("Variables", 0));
+  initiate_configuration_port( 0 );
+
+  foreach(list_all_configurations(), string config)
+  {
+    array err, st;
+    foreach(configurations, conf)
+    {
+      if(lower_case(conf->name) == lower_case(config))
+      {
+	break;
+      } else
+	conf = 0;
+    }
+    if(!(st = config_is_modified(config))) {
+      if(conf) {
+	config_cache[config] = config_stat_cache[config];
+	new_confs += ({ conf });
+      }
+      continue;
+    }
+    modified = 1;
+    config_cache[config] = st;
+    if(conf) {
+      // Closing ports...
+      if (conf->server_ports) {
+	// Roxen 1.2.26 or later
+	Array.map(values(conf->server_ports), destruct);
+      } else {
+	Array.map(indices(conf->open_ports), destruct);
+      }
+      conf->stop();
+      conf->invalidate_cache();
+      conf->modules = ([]);
+      conf->create(conf->name);
+    } else {
+      if(err = catch
+      {
+	conf = enable_configuration(config);
+      }) {
+	report_error(LOCALE->
+		     error_enabling_configuration(config,
+						  describe_backtrace(err)));
+	continue;
+      }
+    }
+    if(err = catch
+    {
+      conf->start();
+      conf->enable_all_modules();
+    }) {
+      report_error(LOCALE->
+		   error_enabling_configuration(config,
+						describe_backtrace(err)));
+      continue;
+    }
+    new_confs += ({ conf });
+  }
+    
+  foreach(configurations - new_confs, conf)
+  {
+    modified = 1;
+    report_notice(LOCALE->disabling_configuration(conf->name));
+    if (conf->server_ports) {
+      // Roxen 1.2.26 or later
+      Array.map(values(conf->server_ports), destruct);
+    } else {
+      Array.map(indices(conf->open_ports), destruct);
+    }
+    conf->stop();
+    destruct(conf);
+  }
+  if(modified) {
+    configurations = new_confs;
+    config_stat_cache = config_cache;
+    unload_configuration_interface();
+  }
+}
+
+object enable_configuration(string name)
+{
+  object cf = Configuration(name);
+  configurations += ({ cf });
+  report_notice(LOCALE->enabled_server(name));
+  
+  return cf;
+}
+
+// Enable all configurations
+void enable_configurations()
+{
+  array err;
+
+  enabling_configurations = 1;
+  configurations = ({});
+  foreach(list_all_configurations(), string config)
+  {
+    if(err=catch { enable_configuration(config)->start();  })
+      perror("Error while loading configuration "+config+":\n"+
+	     describe_backtrace(err)+"\n");
+  };
+  enabling_configurations = 0;
+}
+
+
+void enable_configurations_modules()
+{
+  foreach(configurations, object config)
+  {
+    array err;
+    if(err=catch { config->enable_all_modules();  })
+      perror("Error while loading modules in configuration "+config->name+":\n"+
+	     describe_backtrace(err)+"\n");
+  };
+}
 
 array(int) invert_color(array color )
 {
@@ -3122,46 +2717,43 @@ void dump( string file )
   array q;
 
   if(!p)
+  {
+#ifdef DUMP_DEBUG
+    report_debug(file+" not loaded, and thus cannot be dumped.\n");
+#endif
     return;
+  }
 
   if(!file_stat( file+".o" ) ||
      (file_stat(file+".o")[ST_MTIME] < file_stat(file)[ST_MTIME]))
+  {
     if(q=catch{
       Stdio.write_file(file+".o",encode_value(p,Codec(p)));
+#ifdef DUMP_DEBUG
+b      report_debug( file+" dumped successfully to "+file+".o\n" );
+#endif
     })
-      werror("Cannot encode "+file+": "+describe_backtrace(q)+"\n");
+      report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
+  }
+#ifdef DUMP_DEBUG
+  else
+      report_debug(file+" already dumped (and up to date)\n");
+#endif
 }
 
 // And then we have the main function, this is the oldest function in
 // Roxen :) It has not changed all that much since Spider 2.0.
 int main(int|void argc, array (string)|void argv)
 {
-  // Dump some programs (for speed)
-  dump( "base_server/newdecode.pike" );
-  dump( "base_server/read_config.pike" );
-  dump( "base_server/global_variables.pike" );
-  dump( "base_server/module_support.pike" );
-  // dump( "base_server/http.pike" );
-  // Causes "Length of type is wrong. (should be 1, is 12)" for roxenlib.pike.
-  // /grubba 1999-08-30
-  dump( "base_server/smartpipe.pike" );
-  dump( "base_server/socket.pike" );
-  dump( "base_server/cache.pike" );
-  dump( "base_server/dates.pike");
-
 //   dump( "base_server/disk_cache.pike");
 // cannot encode this one yet...
 
-  dump( "base_server/fonts.pike");
-  dump( "base_server/highlight_pike.pike");
-  dump( "base_server/hosts.pike");
-  dump( "base_server/language.pike");
-  dump( "base_server/persistent.pike");
-  dump( "base_server/restorable.pike");
-//   dump( "base_server/rxml.pike" ); // #includeed in configuration.pike
-
   call_out( lambda() {
               dump( "base_server/state.pike" );
+              dump( "base_server/persistent.pike");
+              dump( "base_server/restorable.pike");
+              dump( "base_server/highlight_pike.pike");
+              dump( "base_server/dates.pike");
               dump( "base_server/wizard.pike" );
               dump( "base_server/proxyauth.pike" );
               dump( "base_server/html.pike" );
@@ -3181,8 +2773,7 @@ int main(int|void argc, array (string)|void argv)
   SET_LOCALE(default_locale);
   initiate_languages();
   mixed tmp;
-  start_time = boot_time = time();
-
+  
   mark_fd(0, "Stdin");
   mark_fd(1, "Stdout");
   mark_fd(2, "Stderr");
@@ -3202,8 +2793,6 @@ int main(int|void argc, array (string)|void argv)
 
   argv -= ({ 0 });
   argc = sizeof(argv);
-
-  roxen_perror("Restart initiated at "+ctime(time())); 
 
   define_global_variables(argc, argv);
   object o;
@@ -3250,17 +2839,6 @@ int main(int|void argc, array (string)|void argv)
   roxen_perror( "\n" );
 
   enable_configurations_modules();
-
-  
-// Rebuild the configuration interface tree if the interface was
-// loaded before the configurations was enabled (a configuration is a
-// virtual server, perhaps the name should be changed internally as
-// well.. :-)
-//   if(root)
-//   {
-//     destruct(configuration_interface());
-//     configuration_interface()->build_root(root);  
-//   }
   
   call_out(update_supports_from_roxen_com,
 	   QUERY(next_supports_update)-time());
@@ -3361,9 +2939,6 @@ string check_variable(string name, mixed value)
      break;
   }
 }
-
-
-
 
 
 mapping config_cache = ([ ]);
