@@ -123,14 +123,14 @@ class tab
 	+ o + "</pre>\n";
     else
     {
-      _master->set_inhibit_compile_errors("");
+      master()->set_inhibit_compile_errors("");
       mixed e = catch
       {
 	tmp = o->handle( sub, id );
 	wanted_buttons = o->get_buttons ? o->get_buttons( id ) : ({ });
 	all_buttons = o->get_all_buttons ? o->get_all_buttons( id ) : 0;
       };
-      _master->set_inhibit_compile_errors(0);
+      master()->set_inhibit_compile_errors(0);
       if (e)
       {
 	werror("show compile buttons error:\n"+
@@ -147,7 +147,7 @@ class tab
     tmp=0;
     if(file_stat(dir+"/wizards/"))
     {
-      _master->set_inhibit_compile_errors("");
+      master()->set_inhibit_compile_errors("");
       mixed err=
       catch
       {
@@ -166,12 +166,12 @@ class tab
       if(err)
       {
 	werror("wizard compilation failure...\n"
-	       + _master->errors + "\n");
-	tmp="<font color=red><pre>"+_master->errors+
+	       + master()->errors + "\n");
+	tmp="<font color=red><pre>"+master()->errors+
 	  "\n"+master()->describe_backtrace(err)
 	  +"</pre></font>";
       }
-      _master->set_inhibit_compile_errors(0);
+      master()->set_inhibit_compile_errors(0);
       if(arrayp(tmp)) return res;
       if(mappingp(tmp)) return tmp;
       if(tmp)
