@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.158 2002/11/14 23:58:58 mani Exp $
+// $Id: Roxen.pmod,v 1.159 2002/11/17 05:50:38 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1039,27 +1039,13 @@ RXML.Parser get_rxml_parser (RequestID id, void|RXML.Type type, void|int make_p_
   return parser;
 }
 
-static int(0..0) return_zero() {return 0;}
-
-static Parser.HTML xml_parser =
-  lambda() {
-    Parser.HTML p = Parser.HTML();
-    p->lazy_entity_end (1);
-    p->match_tag (0);
-    p->xml_tag_syntax (3);
-    p->add_quote_tag ("!--", return_zero, "--");
-    p->add_quote_tag ("![CDATA[", return_zero, "]]");
-    p->add_quote_tag ("?", return_zero, "?");
-    return p;
-  }();
-
 Parser.HTML get_xml_parser()
 //! Returns a @[Parser.HTML] initialized for parsing XML. It has all
 //! the flags set properly for XML syntax and have callbacks to ignore
 //! comments, CDATA blocks and unknown PI tags, but it has no
 //! registered tags and doesn't decode any entities.
 {
-  return xml_parser->clone();
+  return Parser.get_xml_parser();
 }
 
 constant iso88591
@@ -1903,8 +1889,6 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   //! with formating instructions and returns a string representation
   //! of that time. See the documentation of the date tag.
 {
-  string res;
-
   if (m->adjust) t+=(int)m->adjust;
 
   string lang;
@@ -2006,7 +1990,7 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   if(m->full) type="full";
   else if(m->date) type="date";
   else if(m->time) type="time";
-  res=language(lang, "date")(t,type);
+  string res = language(lang, "date")(t,type);
 
   if(m->case)
     switch(lower_case(m->case))
