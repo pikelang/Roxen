@@ -15,18 +15,6 @@
     <CustomAction Id="CreatePikeLocation" Directory="SERVERDIR"
       ExeCommand='"[SERVERDIR]\pike\bin\pike" -e "Stdio.write_file(argv[1], argv[2]);" "pikelocation.txt" "[SERVERDIR]\pike\bin\pike"'
       Execute="commit" />
-    <CustomAction Id="InstallRoxenService" Directory="TARGETDIR"
-      ExeCommand='"[TARGETDIR]\ntstart" --install'
-      Execute="commit" />
-    <CustomAction Id="RemoveRoxenService" Directory="TARGETDIR"
-      ExeCommand='"[TARGETDIR]\ntstart" --remove'
-      Execute="rollback" />
-    <CustomAction Id="StartServer" Directory="TARGETDIR"
-      ExeCommand='net start RoxenService'
-      Execute="commit" />
-    <CustomAction Id="StopServer" Directory="TARGETDIR"
-      ExeCommand='net stop RoxenService'
-      Execute="rollback" />
     <CustomAction Id="StartBrowser" Property="BROWSER"
       ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
       Execute="commit" Return="asyncNoWait" />
@@ -1134,10 +1122,7 @@ Click "Next" to start the installation.</Text>
       <RemoveExistingProducts After="InstallInitialize" />
       <Custom Action="CreateConfigInterface" Sequence="4100">REMOVE=""</Custom>
       <Custom Action="CreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
-      <Custom Action="RemoveRoxenService" After="CreatePikeLocation">REMOVE&lt;&gt;""</Custom>
-      <Custom Action="InstallRoxenService" After="RemoveRoxenService">REMOVE=""</Custom>
-      <Custom Action="StopServer" After="InstallRoxenService">REMOVE&lt;&gt;""</Custom>
-      <Custom Action="StartServer" After="StopServer">REMOVE=""</Custom>
+      <InstallServices Sequence="4200" />
     </InstallExecuteSequence>
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
     <Binary Id="UpFldrBtn" src="UpFldrBtn.icon" />
