@@ -1,6 +1,6 @@
 // Symbolic DB handling.
 //
-// $Id: DBManager.pmod,v 1.72 2004/06/17 02:50:43 _cvs_stephen Exp $
+// $Id: DBManager.pmod,v 1.73 2004/07/18 00:55:29 _cvs_stephen Exp $
 
 //! Manages database aliases and permissions
 
@@ -214,14 +214,14 @@ private
   Sql.Sql low_get(string user, string db, RequestID id)
   {
     if( !user )
-      return 0;
+      return has_value(db, ":") && sql_cache_get(db, id);
     mixed res;
     mapping(string:mixed) d = sql_url_cache[ db ];
     if( !d )
     {
       res = query("SELECT path,local FROM dbs WHERE name=%s", db );
       if( !sizeof( res ) )
-	return 0;
+        return 0;
       sql_url_cache[db] = d = res[0];
     }
 
