@@ -457,6 +457,11 @@
 <result>1</result>
 </test>
 
+<test>
+<rxml><emit source="values" values="1,2,3" split=","><if variable="_.value = 1">&_.value;</if></emit></rxml>
+<result>1</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Sort</comment>
