@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.90 2000/12/04 22:35:23 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.91 2000/12/04 22:49:58 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -90,7 +90,7 @@ void start(int n, Configuration c)
      <roxen align='right' size='small' />
     <font size='+3'>
    <emit source='path'>
-     <a href='&_.name:url;'> &_.name; <font color='black'>/</font></a>
+     <a href='&roxen.path;&_.path:http;'> &_.name; <font color='black'>/</font></a>
    </emit> </font><br /><br />
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>
