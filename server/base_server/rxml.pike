@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.67 2000/01/14 05:35:57 mast Exp $
+ * $Id: rxml.pike,v 1.68 2000/01/18 10:51:46 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -52,29 +52,34 @@ string handle_rxml_error (mixed err, RXML.Type type)
 // Note that there's no other way to handle tag overriding -- the page
 // is no longer parsed multiple times.
 
-class Entity_roxen_time {
-  int rxml_var_eval() { return time(1); }
+class Scope_roxen {
+  inherit RXML.Scope;
+  string ver=roxen.version();
+
+  string|int `[] (string var, void|RXML.Context c, void|string scope) {
+    switch(var) {
+    case "version":
+      return ver;
+    case "time":
+      return time(1);
+    case "server":
+      return c->id->conf->query("MyWorldLocation");
+    }
+    :: `[] (var, c, scope);
+  }
+
+  array(string) _indices() {
+    return ({"version", "time", "server"});
+  }
 }
 
-class Entity_roxen_server {
-  string rxml_var_eval(RXML.Context c) { return c->id->conf->query("MyWorldLocation"); }
-}
-
-class Entity_page_truth {
-  int rxml_var_eval(RXML.Context c) { return c->id->misc->defines[" _ok"]; }
-}
+RXML.Scope scope_roxen=Scope_roxen();
 
 void global_entities(RXML.Context c) {
-  c->add_scope("roxen",(["version":roxen.version(),
-			 "time":Entity_roxen_time(),
-			 "server":Entity_roxen_server() ])  );
+  c->add_scope("roxen",scope_roxen);
   c->add_scope("cookie" ,c->id->cookies);
   c->add_scope("form", c->id->variables);
   c->add_scope("var", ([]) );
-  c->add_scope("page",(["realfile":c->id->realfile,
-			"vfs":c->id->virtfile,
-			"uri":c->id->raw_url,
-			"truth":Entity_page_truth() ]) );
 }
 
 RXML.TagSet rxml_tag_set = lambda ()
@@ -737,7 +742,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 
     str=parse_html(str,([]),(["attrib":
       lambda(string tag, mapping m, string cont, mapping c) {
-        id->misc->defaults[n][m->name]=parse_rxml(cont,id);
+        if(m->name) id->misc->defaults[n][m->name]=parse_rxml(cont,id);
         return "";
       }
     ]));
@@ -772,7 +777,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 
     str=parse_html(str,([]),(["attrib":
       lambda(string tag, mapping m, string cont, mapping c) {
-        id->misc->defaults[n][m->name]=parse_rxml(cont,id);
+        if(m->name) id->misc->defaults[n][m->name]=parse_rxml(cont,id);
         return "";
       }
     ]));
