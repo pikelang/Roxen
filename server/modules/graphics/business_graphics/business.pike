@@ -162,6 +162,9 @@ string tag_diagram(string tag, mapping m, string contents,
   }
   else 
     res->dimensions = "2D";
+  
+  if(m->fontsize)
+    res->fontsize = m->fontsize;
 
   if(m->xsize)
     res->xsize = (int)m->xsize;
@@ -195,8 +198,6 @@ mapping find_file(string f, object id)
   mapping res = decode_value(MIME.decode_base64(f));    
   array (int) bg = res->bg, fg = res->fg;
 
-  res->colors = ({ ({0,255,0}), ({255,255,0}), ({0,255,255}),
-		   ({255,0,255}), ({0,255,0}), ({255,255,0}) });
   array datacolors = res->colors;
 
   array data = /* res->data;*/
@@ -204,31 +205,45 @@ mapping find_file(string f, object id)
 
   perror("f-data: %O\n", data);
 
+  //strap
+  res->fontsize=32;
+  res->legendfontsize=12;
+  res->labelcolor=({0,0,0});
+  res->axiscolor=({0,0,0});
+  res->linewidth=2.2;
+  res->xnames=
+    ({"jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep" });
+  res->labels=({"xstor", "ystor", "xenhet", "yenhet"});
+  res->legend_texts=
+    ({ "streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!", "lila",
+       "turkos" });
+  res->labelsize=12;
+  res->xminvalue=0.1;
+  res->yminvalue=0;
+
   mapping(string:mixed) diagram_data;
 
   if(res->type == "bars")
     diagram_data=(["type":"bars",
-		   "textcolor":fg,
-		   "subtype":"box",
-		   "orient":"vert",
-		   "data":data,
-		   "fontsize":32,
-		   "axcolor":({0,0,0}),
-		   "bgcolor" : bg,
-		   "labelcolor":({0,0,0}),
-		   "datacolors":datacolors,
-		   "linewidth":2.2,
-		   "xsize":res->xsize,
-		   "ysize":res->ysize,
-		   "xnames":({"jan", "feb", "mar", "apr", "maj", "jun"}),
-		   "fontsize":16,
-		   "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
-		   "legendfontsize":12,
-		   "legend_texts":
-		   ({ "streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" }),
-		   "labelsize":12,
-		   "xminvalue":0.1,
-		   "yminvalue":0
+		   "textcolor":  fg,
+		   "subtype":    "box",
+		   "orient":     "vert",
+		   "data":       data,
+		   "fontsize":   res->fontsize,
+		   "axcolor":    res->axiscolor,
+		   "bgcolor":    bg,
+		   "labelcolor": res->labelcolor,
+		   "datacolors": datacolors,
+		   "linewidth":  res->linewidth,
+		   "xsize":      res->xsize,
+		   "ysize":      res->ysize,
+		   "xnames":     res->xnames,
+		   "labels":     res->labels,
+		   "legendfontsize": res->legendfontsize,
+		   "legend_texts":   res->legend_texts, 
+		   "labelsize":  res->labelsize,
+		   "xminvalue":  res->xminvalue,
+		   "yminvalue":  res->yminvalue
     ]);
   
   if(res->type == "pie")
