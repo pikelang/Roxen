@@ -291,7 +291,7 @@ dist: ChangeLog.gz ChangeLog.rxml.gz
 	mkdir $$version; \
 	echo Copying files...; \
 	(cd $(SRCDIR); tar cf - .)|(cd $$version; tar xf -; make dist_clean); \
-	echo Building full NDA distribution... \
+	echo Building full NDA distribution...; \
 	tar cf - $$version | gzip -9 >$$version-nda.tar.gz; \
 	if (cd $$version; make keep_dbapi || exit 1); then \
 	  mv $$version/dbapi.tar . || exit 1; \
