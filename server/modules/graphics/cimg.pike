@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.52 2002/08/28 17:04:03 anders Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.53 2002/10/24 09:41:38 jonasw Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -157,7 +157,19 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
     layers = roxen.decode_layers( args->data, opts );
   else
   {
-    mixed tmp = roxen.load_layers( args->src, id, opts );
+    mixed tmp;
+#if constant(Sitebuilder)
+    //  Let SiteBuilder get a chance to decode its argument data
+    if (Sitebuilder.sb_start_use_imagecache) {
+      Sitebuilder.sb_start_use_imagecache(args, id);
+      tmp = roxen.load_layers(args->src, id, opts);
+      Sitebuilder.sb_end_use_imagecache(args, id);
+    } else
+#endif
+    {
+      tmp = roxen.load_layers(args->src, id, opts);
+    }
+    
     if (mappingp(tmp)) {
       if (tmp->error == 401)
 	return tmp;
@@ -251,6 +263,15 @@ mapping get_my_args( mapping args, RequestID id )
 	if( fn ) Roxen.add_cache_stat_callback( id, fn, st[ST_MTIME] );
       	a->mtime = (string) (a->stat = st[ST_MTIME]);
 	a->filesize = (string) st[ST_SIZE];
+	
+#if constant(Sitebuilder)
+	//  The file we called stat_file() on above may be a SiteBuilder
+	//  file. If so we need to extend the argument data with e.g.
+	//  current language fork.
+	if (Sitebuilder.sb_prepare_imagecache)
+	  if (object file_obj = id->misc->sbobj_last_used)
+	    a = Sitebuilder.sb_prepare_imagecache(a, a->src, id);
+#endif
       }
     };
 
