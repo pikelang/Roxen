@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.77 2002/02/12 16:45:15 grubba Exp $
+ * $Id: ftp.pike,v 2.78 2002/02/13 10:04:16 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2446,7 +2446,7 @@ class FTPSession
 
   string make_MDTM(int t)
   {
-    mapping lt = localtime(t);
+    mapping lt = gmtime(t);
     return sprintf("%04d%02d%02d%02d%02d%02d",
 		   lt->year + 1900, lt->mon + 1, lt->mday,
 		   lt->hour, lt->min, lt->sec);
