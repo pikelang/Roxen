@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.400 2000/02/01 23:09:48 jhs Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.401 2000/02/02 00:19:52 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1863,6 +1863,9 @@ class ImageCache
       if( format == "jpg" )
         format = "jpeg";
 
+      if( dither )
+        dither = replace( dither, "-", "_" );
+
       if(mappingp(reply))
       {
         alpha = reply->alpha;
@@ -1959,6 +1962,50 @@ class ImageCache
             alpha = alpha->scale( 0, y );
         }
       }
+
+      if( args["rotate-cw"] || args["rotate-ccw"])
+      {
+        float degree = (float)(args["rotate-cw"] || args["rotate-ccw"]);
+        switch( args["rotate-unit"] )
+        {
+         case "r":
+           degree = (degree / 2*3.1415) * 360;
+           break;
+         case "d":
+           break;
+         case "n":
+           degree = (degree / 400) * 360;
+           break;
+        }
+        if( args["rotate-ccw"] )
+          degree = -degree;
+        if( alpha )
+        {
+          reply = reply->rotate_expand( degree );
+          alpha = alpha->rotate( degree, 0,0,0 );
+        } else
+          reply = reply->rotate( degree )->autocrop();
+      }
+
+
+      if( args["mirror-x"] )
+      {
+        if( alpha )
+          alpha = alpha->mirrorx();
+        reply = reply->mirrorx();
+      }
+
+      if( args["mirror-y"] )
+      {
+        if( alpha )
+          alpha = alpha->mirrory();
+        reply = reply->mirrory();
+      }
+
+      if( args["cs-rgb-hsv"] )reply = reply->rgb_to_hsv();
+      if( args["cs-grey"] )   reply = reply->grey();
+      if( args["cs-invert"] ) reply = reply->invert();
+      if( args["cs-hsv-rgb"] )reply = reply->hsv_to_rgb();
 
       if( bgcolor && alpha )
       {
