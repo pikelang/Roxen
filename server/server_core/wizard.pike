@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.145 2002/10/22 00:06:13 nilsson Exp $
+// $Id: wizard.pike,v 1.146 2002/11/07 15:54:02 mani Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -849,8 +849,7 @@ mapping get_actions(RequestID id, string base,string dir, array args)
 {
   mapping acts = ([  ]);
   
-  //  Cannot clear wizard cache since it will trigger massive recompiles of
-  //  wizards from inside SiteBuilder. It also breaks wizards which use
+  //  Cannot clear wizard cache since it will breaks wizards which use
   //  persistent storage.
   //
   //  if(id->pragma["no-cache"]) wizards=([]);
