@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.29 1997/09/18 01:16:40 grubba Exp $
+ * $Id: upgrade.pike,v 1.30 1997/09/18 01:42:33 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -278,7 +278,8 @@ string upgrade_module(string m, object rpc)
   mixed __mkdirhier = mkdirhier;	// Fool pike's type-checker.
   __mkdirhier("modules/"+rm[0], 0755);
 
-  object o = open("modules/"+rm[0], "wct", 0644);
+  mixed __open = open;			// Fool pike's type-checker.
+  object o = __open("modules/"+rm[0], "wct", 0644);
   if(!o) res += "Failed to open "+"modules/"+rm[0]+" for writing.<br>";
   else {
     o->write(rm[1]);
@@ -444,7 +445,8 @@ string upgrade_component(string m, object rpc)
     else
       res+="Failed to move "+rthingie[0]+" to old_components/"+m+ext+"<br>\n";
   }
-  object o = open(rthingie[0], "wct", 0644);
+  mixed __open = open;			// Fool pike's type-checker.
+  object o = __open(rthingie[0], "wct", 0644);
   if(!o) res += "Failed to open "+rthingie[0]+" for writing.<br>";
   else
   {
