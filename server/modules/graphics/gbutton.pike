@@ -15,17 +15,17 @@
 //     border          -- image border
 //     state           -- enabled|disabled button state
 //     textstyle       -- normal|consensed text
-//     icon_src        -- icon reference
-//     icon_data       -- inline icon data
+//     icon-src        -- icon reference
+//     icon-data       -- inline icon data
 //     align           -- left|center|right text alignment
-//     align_icon      -- left|center_before|center_after|right icon alignment
+//     align-icon      -- left|center-before|center-after|right icon alignment
 //   >Button text</gbutton>
 //
 //  Alignment restriction: when text alignment is either left or right, icons
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.48 2000/05/24 12:03:08 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.49 2000/05/25 11:49:12 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -59,13 +59,13 @@ constant tagdoc=(["gbutton":#"<desc cont><short>Generates graphical buttons</sho
 
 <attr name=textstyle value=normal|condensed>Set to normal or condensed to alter text style.</attr>
 
-<attr name=icon_src value=path>Icon reference</attr>
+<attr name=icon-src value=path>Icon reference</attr>
 
-<attr name=icon_data value=string>Inline icon data</attr>
+<attr name=icon-data value=string>Inline icon data</attr>
 
 <attr name=align value=left|center|right>Text alignment</attr>
 
-<attr name=align_icon value=left|center_before|center_after|right>Icon alignment.
+<attr name=align-icon value=left|center-before|center-after|right>Icon alignment.
 	     There are some alignment restrictions: when text alignment is 
 	     either left or right, icons must also be 
 	     aligned left or right.</attr>
@@ -261,10 +261,12 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
      default:
      case "center":
      case "center_before":
+     case "center-before":
        icn_x = (req_width - i_width - i_spc - t_width) / 2;
        txt_x = icn_x + i_width + i_spc;
        break;
      case "center_after":
+     case "center-after":
        txt_x = (req_width - i_width - i_spc - t_width) / 2;
        icn_x = txt_x + t_width + i_spc;
        break;
@@ -471,6 +473,15 @@ class ButtonFrame {
     string fi = (args["frame-image"]||id->misc->defines["gbutton-frame-image"]);
     if( fi )
       fi = Roxen.fix_relative( fi, id );
+    
+    //  Harmonize some attribute names to RXML standards...
+    args->icon_src = args["icon-src"] || args->icon_src;
+    args->icon_data = args["icon-data"] || args->icon_data;
+    args->align_icon = args["align-icon"] || args->align_icon;
+    m_delete(args, "icon-src");
+    m_delete(args, "icon-data");
+    m_delete(args, "align-icon");
+    
     mapping new_args = ([
       "pagebg" :parse_color(args->pagebgcolor ||
 			    id->misc->defines->theme_bgcolor ||
@@ -537,6 +548,11 @@ class TagGButtom {
   class Frame {
     inherit ButtonFrame;
     array do_return(RequestID id) {
+      //  Peek at img-align and remove it so it won't be copied by "*-*" glob
+      //  in mk_url().
+      string img_align = args["img-align"];
+      m_delete(args, "img-align");
+      
       [string img_src, mapping new_args]=mk_url(id);
 
       mapping img_attrs = ([ "src"    : img_src,
@@ -544,9 +560,9 @@ class TagGButtom {
 			     "border" : args->border,
 			     "hspace" : args->hspace,
 			     "vspace" : args->vspace ]);
-      if( args->align )
-        img_attrs->align = args->align;
-
+      if (img_align)
+        img_attrs->align = img_align;
+      
       if (mapping size = button_cache->metadata(new_args, id, 1)) {
 	//  Image in cache (1 above prevents generation on-the-fly, i.e.
 	//  first image will lack sizes).
