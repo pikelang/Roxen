@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.84 1999/01/20 23:19:38 neotron Exp $
+ * $Id: roxenloader.pike,v 1.85 1999/01/31 20:48:42 peter Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.84 1999/01/20 23:19:38 neotron Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.85 1999/01/31 20:48:42 peter Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -573,7 +573,7 @@ int getgid(){ return 42; }
 #if !efun(gethrtime)
 int gethrtime()
 {
-  return (time()*1000);
+  return (time()*1000000);
 }
 #endif
 
