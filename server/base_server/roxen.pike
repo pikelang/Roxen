@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.334 1999/05/24 23:23:15 mast Exp $
+ * $Id: roxen.pike,v 1.335 1999/05/24 23:40:51 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.334 1999/05/24 23:23:15 mast Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.335 1999/05/24 23:40:51 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -1906,6 +1906,13 @@ class ArgCache
         path += "/";
       path += replace(name, "/", "_")+"/";
       mkdirhier( path + "/tmp" );
+      object test = Stdio.File();
+      if (!test->open (path + "/testfile", "wc"))
+	error ("Can't create files in the argument cache directory " + path + "\n");
+      else {
+	test->close();
+	rm (path + "/testfile");
+      }
     }
   }
 
@@ -3381,7 +3388,6 @@ int main(int|void argc, array (string)|void argv)
   {
     report_error( "Failed to initialize the global argument cache:\n"
                   + (describe_backtrace( e )/"\n")[0]+"\n");
-    werror( describe_backtrace( e ) );
   }
   roxen_perror( "\n" );
 
