@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.40 2000/11/27 13:45:06 nilsson Exp $
+// $Id: module.pmod,v 1.41 2000/12/02 16:11:49 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1282,8 +1282,8 @@ static array(string) verify_port( string port, int nofhttp )
   return ({ (strlen(warning)?warning:0), port });
 }
 
-static string input(string name, string value, int size,
-		    void|mapping(string:string) args, void|int noxml)
+string input(string name, string value, int size,
+	     void|mapping(string:string) args, void|int noxml)
 {
   if(!args)
     args=([]);
@@ -1291,8 +1291,9 @@ static string input(string name, string value, int size,
     args+=([]);
 
   args->name=name;
-  args->value=value;
-  if(!args->size)
+  if(value)
+    args->value=value;
+  if(!args->size && size)
     args->size=(string)size; 
 
   string render="<input";
