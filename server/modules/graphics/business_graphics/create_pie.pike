@@ -132,15 +132,18 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
     {
       xc=diagram_data["xsize"]/2;
       yc=diagram_data["ysize"]/2;
-      xr=min(xc-xmaxtext-ymaxtext-1, yc-2*ymaxtext-1);
+      xr=(int)min(xc-xmaxtext-ymaxtext-1-diagram_data["linewidth"], 
+		  yc-2*ymaxtext-1-diagram_data["linewidth"]);
       yr=xr;
     }
   else
     {
       xc=diagram_data["xsize"]/2;
       yc=diagram_data["ysize"]/2-diagram_data["3Ddepth"];
-      yr=min(xc-xmaxtext-ymaxtext-1-diagram_data["3Ddepth"], yc-2*ymaxtext-1);
-      xr=min(xc-xmaxtext-ymaxtext-1, yc+diagram_data["3Ddepth"]-2*ymaxtext-1);
+      yr=(int)(min(xc-xmaxtext-ymaxtext-1-diagram_data["3Ddepth"], yc-2*ymaxtext-1)
+	       -diagram_data["linewidth"]);
+      xr=(int)(min(xc-xmaxtext-ymaxtext-1, yc+diagram_data["3Ddepth"]-2*ymaxtext-1)-
+	       diagram_data["linewidth"]);
     }
   float w=diagram_data["linewidth"];
 
@@ -479,8 +482,8 @@ int main(int argc, string *argv)
 		 "linewidth":2.2,
 		 "xsize":300,
 		 "ysize":300,
-		 "xnames":({"jan", "feb", "mar", "aprfgh", "j", "jungd", "jul", "aug"//, "sep"
-		 }),
+		 "xnames":0,//({"jan", "feb", "mar", "aprfgh", "j", "jungd", "jul", "aug"//, "sep"
+		 // }),
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 //"legendfontsize":12,
 		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!", "lila", "turkos" }),
