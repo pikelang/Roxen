@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.748 2001/10/05 15:08:00 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.749 2001/10/09 12:38:05 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4040,7 +4040,7 @@ int main(int argc, array tmp)
   {
     report_notice( "Enabling replication support\n"
 		   "Please note that this is very much work in progress\n");
-    add_constant( "REPLICATE", 1 );
+    add_constant( "WS_REPLICATE", 1 );
     call_out( lambda() {
 		dump("arg_cache_plugins/replicate.pike");
 	      }, 2 );
