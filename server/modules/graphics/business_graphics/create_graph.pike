@@ -61,10 +61,11 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
     }
   else
     {
+      array(mixed) numbers;
       if (diagram_data["type"]=="pie")
-	array(mixed) numbers=diagram_data["data"][0];
+	numbers=diagram_data["data"][0];
       else
-	array(mixed) numbers=diagram_data["data"];
+	numbers=diagram_data["data"];
 
       int** carr=allocate(sizeof(numbers));
       int steg=128+128/(sizeof(numbers));
@@ -492,6 +493,9 @@ mapping draw_grind(mapping diagram_data, int|float xpos_for_yaxis,
 //Denna funktion skriver också ut infon i Legenden
 mapping set_legend_size(mapping diagram_data)
 {
+  if (!(diagram_data["legendfontsize"]))
+    diagram_data["legendfontsize"]=diagram_data["fontsize"];
+
   if (diagram_data["legend_texts"])
     {
       array(object(image)) texts;
@@ -500,7 +504,8 @@ mapping set_legend_size(mapping diagram_data)
       texts=allocate(sizeof(diagram_data["legend_texts"]));
       plupps=allocate(sizeof(diagram_data["legend_texts"]));
       
-      object notext=get_font("avant_garde", 32, 0, 0, "left",0,0);
+      object notext=get_font("avant_garde",diagram_data["legendfontsize"], 0, 0, 
+			     "left",0,0);
 
       int j=sizeof(texts);
       if (!diagram_data["legendcolor"])
@@ -597,9 +602,31 @@ mapping set_legend_size(mapping diagram_data)
 	throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
 		 backtrace()}));
 
-      //Ta reda på hur många kolumner vi kan ha:
+      //Ta redapå hur många kolumner vi kan ha:
       int b;
-      int columnnr=(diagram_data["image"]->xsize()-4)/(b=xmax+2*diagram_data["legendfontsize"]);
+      int columnnr=(diagram_data["image"]->xsize()-4)/
+	(b=xmax+2*diagram_data["legendfontsize"]);
+      
+      if (columnnr==0)
+	{
+	  int m=((diagram_data["image"]->xsize()-4)-2*diagram_data["legendfontsize"]);
+	  if (m<4) m=4;
+	  for(int i=0; i<sizeof(texts); i++)
+	    if (texts[i]->xsize()>m)
+	      {
+		texts[i]=
+		  texts[i]->scale((int)m,0);
+		write("x: "+texts[i]->xsize()+"\n");
+		write("y: "+texts[i]->ysize()+"\n");
+	      }
+	  columnnr=1;
+	}
+
+      write("columnnr: "+columnnr+"\n");
+      write("image ->xsize() "+diagram_data["image"]->xsize()+"\n");
+      write("columnnr: "+columnnr+"\n");
+      write("b"+b+"\n");
+
       int raws=(j+columnnr-1)/columnnr;
       diagram_data["legend_size"]=raws*diagram_data["legendfontsize"];
       
@@ -783,7 +810,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       else
 	label=diagram_data["labels"][0];
       if ((label!="")&&(label!=0))
-	labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
+	labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0, "left",0,0)->
 	  write(label)
 #ifndef ROXEN
 ->scale(0,diagram_data["labelsize"])
@@ -1272,7 +1299,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       else
 	label=diagram_data["labels"][1];
       if ((label!="")&&(label!=0))
-	labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
+	labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0, "left",0,0)->
 	  write(label)
 #ifndef ROXEN
 ->scale(0,diagram_data["labelsize"])
