@@ -36,7 +36,6 @@ mixed delete_db( string db, RequestID id )
   report_notice( _(0,"The database %s was deleted by %s")+"\n",
 		 db, id->misc->authenticated_user->name() );
   DBManager.drop_db( db );
-  werror("%O\n", Roxen.http_redirect( "../../", id ) );
   return Roxen.http_redirect( "../../", id );
 }
 
