@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.429 2003/05/09 12:32:39 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.430 2003/05/20 18:21:13 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2606,6 +2606,11 @@ class UserTagContents
     }
   }
 
+  static function(:mapping) get_arg_function (mapping args)
+  {
+    return lambda () {return args;};
+  }
+
   class ExpansionFrame
   {
     inherit RXML.Frame;
@@ -2632,9 +2637,7 @@ class UserTagContents
 	    // flag is to set args to a function returning the
 	    // argument mapping. It'd be prettier with a flag for
 	    // this.
-	    args = (mixed) lambda (mapping args) {
-			     return lambda() {return args;};
-			   } (args);
+	    args = (mixed) get_arg_function (args);
 	  }
 	  else {
 	    content = upframe->content_text;
