@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.64 2001/04/05 11:24:57 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.65 2001/04/24 01:15:25 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -343,7 +343,7 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
 
   m_delete(id->misc, "tmp_colmax");
   if(opt->nice || opt->nicer)
-    return Roxen.parse_rxml(r,id)+"</table></td></tr>\n</table>\n";
+    return Roxen.parse_rxml(r+"</table></td></tr>\n</table>\n", id);
 
   m_delete(opt, "cellalign");
   m_delete(opt, "cellvalign");
