@@ -23,19 +23,15 @@ string parse( RequestID id )
   else
   {
     string img;
-    string rant, status;
+    string status;
 
     sscanf( data, "%*sstrips/%s.gif", img );
     sscanf( data, "%*s<!--%*sstuff you%*s - start -->%s<!--", status );
 
-    sscanf( data,
-	    "%*s<!-- n e w s r a n t    c o m e n t -->"
-	    "%s"
-	    "<!-- comments area ends here for PIRO-->",
-	    rant );
-
-    if( !status || !rant || !img )
+    if( !img )
       return ("<box type='"+box+"' title='"+box_name+"'>"+data+"</box>");
+    if( !status )
+      status = "";
     array st = status/"<br>";
     string tmp;
     status = "<font size=-1>";
