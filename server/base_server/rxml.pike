@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.48 1999/12/27 23:52:41 nilsson Exp $
+ * $Id: rxml.pike,v 1.49 2000/01/05 17:46:20 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -10,8 +10,10 @@ inherit "roxenlib";
 
 #define old_rxml_compat 1
 
-array (mapping) tag_callers, container_callers;
-mapping (string:mapping(int:function)) real_tag_callers,real_container_callers;
+#if constant (RXML.PHtml.tagmap_compat)
+#define TAGMAP_COMPAT
+#endif
+
 mapping (string:function) real_if_callers;
 array (RoxenModule) parse_modules = ({  });
 string date_doc=#string "../modules/tags/doc/date_doc";
@@ -37,12 +39,41 @@ string handle_help(string file, string tag, mapping args)
 			   "<date-attributes>",date_doc),tag);
 }
 
-array|string call_tag(string tag, mapping args, int line, int i,
+// A note on tag overriding: It's possible for old-style tags to
+// propagate their results to the tags they have overridden. This is
+// done by an extension to the return value:
+//
+// If an array is returned with a 1 as the first element, the rest of
+// the array is concatenated as a string and propagated to the
+// overridden tag (if any). If the array is only one element, the
+// unparsed text of the tag is propagated.
+//
+// Note that there's no other way to handle tag overriding -- the page
+// is no longer parsed multiple times.
+
+RXML.TagSet rxml_tagset = RXML.TagSet ("rxml_tagset");
+mapping(RoxenModule:RXML.TagSet) module_tagsets = ([]);
+
+RXML.TagSet rxml_last_tagset = class
+{
+  inherit RXML.TagSet;
+
+  constant low_entities = ([
+    "quot": "\"",
+    "amp": "&",
+    "lt": "<",
+    "gt": ">",
+    "nbsp": "\0240",
+    // FIXME: More...
+  ]);
+} ("rxml_last_tagset");
+
+array|string call_tag(RXML.PHtml parser, mapping args, string|function rf,
 		      RequestID id, Stdio.File file, mapping defines,
 		      object client)
 {
-  string|function rf = real_tag_callers[tag][i];
-  id->misc->line = (string)line;
+  string tag = parser->tag_name();
+  id->misc->line = (string)parser->at_line();
   if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
   {
     TRACE_ENTER("tag &lt;"+tag+" help&gt", rf);
@@ -51,7 +82,6 @@ array|string call_tag(string tag, mapping args, int line, int i,
     return h;
   }
   if(stringp(rf)) return rf;
-
   TRACE_ENTER("tag &lt;" + tag + "&gt;", rf);
 #ifdef MODULE_LEVEL_SECURITY
   if(check_security(rf, id, id->misc->seclevel))
@@ -63,16 +93,20 @@ array|string call_tag(string tag, mapping args, int line, int i,
   mixed result=rf(tag,args,id,file,defines,client);
   TRACE_LEAVE("");
   if(args->noparse && stringp(result)) return ({ result });
+  if (arrayp (result) && sizeof (result) && result[0] == 1) {
+    parser->ignore_tag();
+    return sizeof (result) > 1 && result[1..] * "";
+  }
   return result;
 }
 
 array(string)|string 
-call_container(string tag, mapping args, string contents, int line,
-	       int i, RequestID id, Stdio.File file, mapping defines, 
+call_container(RXML.PHtml parser, mapping args, string contents, string|function rf,
+	       RequestID id, Stdio.File file, mapping defines,
                object client)
 {
-  id->misc->line = (string)line;
-  string|function rf = real_container_callers[tag][i];
+  string tag = parser->tag_name();
+  id->misc->line = (string)parser->at_line();
   if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
   {
     TRACE_ENTER("container &lt;"+tag+" help&gt", rf);
@@ -99,102 +133,91 @@ call_container(string tag, mapping args, string contents, int line,
   mixed result=rf(tag,args,contents,id,file,defines,client);
   TRACE_LEAVE("");
   if(args->noparse && stringp(result)) return ({ result });
+  if (arrayp (result) && sizeof (result) && result[0] == 1) {
+    parser->ignore_tag();
+    return sizeof (result) > 1 && result[1..] * "";
+  }
   return result;
 }
 
 
-string do_parse(string to_parse, RequestID id, 
+string do_parse(string to_parse, RequestID id,
                 Stdio.File file, mapping defines,
 		Stdio.File my_fd)
 {
-  if(!id->misc->_tags)
-  {
-    id->misc->_tags = copy_value(tag_callers[0]);
-    id->misc->_containers = copy_value(container_callers[0]);
-    id->misc->_ifs = copy_value(real_if_callers);
+  RXML.PHtml parser = rxml_tagset (RXML.t_text (RXML.PHtml), id);
+  parser->set_extra (id, file, defines, my_fd);
+
+#ifdef TAGMAP_COMPAT
+  if (id->misc->_tags) {
+    parser->tagmap_tags = id->misc->_tags;
+    parser->tagmap_containers = id->misc->_containers;
   }
-
-  to_parse=parse_html_lines(to_parse,id->misc->_tags,id->misc->_containers,
-			    0, id, file, defines, my_fd);
-
-  for(int i = 1; i<sizeof(tag_callers); i++)
-    to_parse=parse_html_lines(to_parse,tag_callers[i], container_callers[i],
-			      i, id, file, defines, my_fd);
-  return to_parse;
-}
-
-/* parsing modules */
-void insert_in_map_list(mapping to_insert, string map_in_object)
-{
-  function do_call = this_object()["call_"+map_in_object];
-  array (mapping) in = this_object()[map_in_object+"_callers"];
-  mapping (string:mapping) in2=
-    this_object()["real_"+map_in_object+"_callers"];
-
-  
-  foreach(indices(to_insert), string s)
-  {
-    if(!in2[s]) in2[s] = ([]);
-    int i;
-    for(i=0; i<sizeof(in); i++)
-      if(!in[i][s])
-      {
-	in[i][s] = do_call;
-	in2[s][i] = to_insert[s];
-	break;
-      }
-    if(i==sizeof(in))
-    {
-      in += ({ ([]) });
-      if(map_in_object == "tag")
-	container_callers += ({ ([]) });
-      else
-	tag_callers += ({ ([]) });
-      in[i][s] = do_call;
-      in2[s][i] = to_insert[s];
-    }
+  else {
+    id->misc->_tags = parser->tagmap_tags;
+    id->misc->_containers = parser->tagmap_containers;
   }
-  this_object()[map_in_object+"_callers"]=in;
-  this_object()["real_"+map_in_object+"_callers"]=in2;
-}
+#endif
 
+  if(!id->misc->_ifs) id->misc->_ifs = copy_value(real_if_callers);
+
+  parser->write_end (to_parse);
+  return parser->eval();
+}
 
 void build_callers()
 {
-  object o;
-  real_tag_callers=([]);
-  real_container_callers=([]);
+  mapping(RoxenModule:RXML.TagSet) tagsets = ([]);
+  array(RXML.TagSet) ts_list = ({});
+  array(int) ts_priorities = ({});
   real_if_callers=([]);
-
-  //   misc_cache = ([]);
-  tag_callers=({ ([]) });
-  container_callers=({ ([]) });
 
   parse_modules-=({0});
 
-  foreach(parse_modules, o)
-  {
-    mapping foo;
-    if(o->query_tag_callers)
-    {
-      foo=o->query_tag_callers();
-      if(mappingp(foo)) insert_in_map_list(foo, "tag");
-    }
-     
-    if(o->query_container_callers)
-    {
-      foo=o->query_container_callers();
-      if(mappingp(foo)) insert_in_map_list(foo, "container");
+  foreach (parse_modules, RoxenModule mod) {
+    RXML.TagSet tagset =
+      mod->query_tagset ? mod->query_tagset() :
+      RXML.TagSet (sprintf ("%O", mod));
+
+    mapping(string:mixed) defs;
+    if (mod->query_tag_callers &&
+	mappingp (defs = mod->query_tag_callers()) &&
+	sizeof (defs)) {
+      tagset->low_tags =
+	mkmapping (indices (defs),
+		   Array.transpose (({({call_tag}) * sizeof (defs),
+				      values (defs)})));
+      tagset->changed();
     }
 
-    if(o->query_if_callers)
-    {
-      foo=o->query_if_callers();
-      if(mappingp(foo)) 
-        real_if_callers |= foo;
+    if (mod->query_container_callers &&
+	mappingp (defs = mod->query_container_callers()) &&
+	sizeof (defs)) {
+      tagset->low_containers =
+	mkmapping (indices (defs),
+		   Array.transpose (({({call_container}) * sizeof (defs),
+				      values (defs)})));
+      tagset->changed();
     }
+
+    if (sizeof (tagset->get_local_tags()) || sizeof (tagset->imported) ||
+	tagset->low_tags || tagset->low_containers) {
+      tagsets[mod] = tagset;
+      ts_list += ({tagset});
+      ts_priorities += ({mod->query("_priority", 1) || 4});
+    }
+
+    if (mod->query_if_callers &&
+	mappingp (defs = mod->query_if_callers()) &&
+	sizeof (defs))
+      real_if_callers |= defs;
   }
-  sort_lists();
+
+  sort (ts_priorities, ts_list);
+  reverse (ts_list);
+  ts_list += ({rxml_last_tagset});
+  rxml_tagset->imported = ts_list;
+  module_tagsets = tagsets;
 }
 
 void add_parse_module(RoxenModule o)
@@ -213,9 +236,10 @@ void remove_parse_module(RoxenModule o)
 
 
 
-string call_user_tag(string tag, mapping args, int line, mixed foo, RequestID id)
+string call_user_tag(RXML.PHtml parser, mapping args, RequestID id)
 {
-  id->misc->line = line;
+  string tag = parser->tag_name();
+  id->misc->line = (string)parser->at_line();
   args = id->misc->defaults[tag]|args;
   TRACE_ENTER("user defined tag &lt;"+tag+"&gt;", call_user_tag);
   array replace_from = ({"#args#"})+
@@ -229,12 +253,12 @@ string call_user_tag(string tag, mapping args, int line, mixed foo, RequestID id
 }
 
 array|string 
-     call_user_container(string tag, mapping args, string contents, int line,
-			 mixed foo, RequestID id)
+  call_user_container(RXML.PHtml parser, mapping args, string contents, RequestID id)
 {
+  string tag = parser->tag_name();
   if(!id->misc->defaults[tag] && id->misc->defaults[""])
     tag = "";
-  id->misc->line = line;
+  id->misc->line = (string)parser->at_line();
   args = id->misc->defaults[tag]|args;
   if( args->preparse )
   {
@@ -263,42 +287,6 @@ array|string
   TRACE_LEAVE("");
   if( args->noparse ) return ({ r });
   return r;
-}
-
-
-void sort_lists()
-{
-  array ind, val, s;
-  foreach(indices(real_tag_callers), string c)
-  {
-    ind = indices(real_tag_callers[c]);
-    val = values(real_tag_callers[c]);
-    sort(ind);
-    s = Array.map(val, lambda(function f) {
-			 catch {
-			   return
-			     function_object(f)->query("_priority");
-			 };
-			 return 4;
-		       });
-    sort(s,val);
-    real_tag_callers[c]=mkmapping(ind,val);
-  }
-  foreach(indices(real_container_callers), string c)
-  {
-    ind = indices(real_container_callers[c]);
-    val = values(real_container_callers[c]);
-    sort(ind);
-    s = Array.map(val, lambda(function f) {
-			 catch{
-			   if (functionp(f)) 
-			     return function_object(f)->query("_priority");
-			 };
-			 return 4;
-		       });
-    sort(s,val);
-    real_container_callers[c]=mkmapping(ind,val);
-  }
 }
 
 
@@ -397,43 +385,63 @@ string tag_list_tags( string t, mapping args, RequestID id, Stdio.File f )
   string res="";
   if(args->verbose) verbose = 1;
 
-  for(int i = 0; i<sizeof(tag_callers); i++)
-  {
-    res += ("<b><font size=+1>Tags at prioity level "+i+": </b></font><p>");
-    foreach(sort(indices(tag_callers[i])), string tag)
-    {
-      res += "  <a name=\""+replace(tag+i, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag+i, "#","%23")+"#"+replace(tag+i, "#", ".")+"\">&lt;"+tag+"&gt;</a></a><br>";
-      if(verbose || id->variables->verbose == tag+i)
-      {
-	res += "<blockquote><table><tr><td>";
-	string tr;
-	catch(tr=call_tag(tag, (["help":"help"]), 
-				    id->misc->line,i,
-				    id, f, id->misc->defines, 0 ));
-	if(tr) res += tr; else res += "no help";
-	res += "</td></tr></table></blockquote>";
-      }
-    }
+  mapping(int:mapping(string:mixed)) tag_callers = ([]);
+  mapping(int:mapping(string:mixed)) container_callers = ([]);
+
+  foreach (indices (module_tagsets), RoxenModule mod) {
+    int priority = mod->query ("_priority", 1) || 4;
+    if (!tag_callers[priority]) tag_callers[priority] = ([]);
+    if (!container_callers[priority]) container_callers[priority] = ([]);
+    RXML.TagSet tagset = module_tagsets[mod];
+    if (tagset->low_tags) tag_callers[priority] += tagset->low_tags;
+    if (tagset->low_containers) container_callers[priority] += tagset->low_containers;
+    foreach (reverse (tagset->get_all_tags()), RXML.Tag tag)
+      if (tag->flags & RXML.FLAG_CONTAINER)
+	container_callers[priority][tag->name] = tag;
+      else
+	tag_callers[priority][tag->name] = tag;
   }
 
-  for(int i = 0; i<sizeof(container_callers); i++)
-  {
-    res += ("<p><b><font size=+1>Containers at prioity level "+i+": </b></font><p>");
-    foreach(sort(indices(container_callers[i])), string tag)
-    {
-      res += " <a name=\""+replace(tag+i, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag+i, "#", "%23")+"#"+replace(tag+i,"#",".")+"\">&lt;"+tag+"&gt;&lt;/"+tag+"&gt;</a></a><br>";
-      if(verbose || id->variables->verbose == tag+i)
+  foreach(indices(tag_callers), int i)
+    if (sizeof (tag_callers[i])) {
+      res += ("<b><font size=+1>Tags at prioity level "+i+": </b></font><p>");
+      foreach(sort(indices(tag_callers[i])), string tag)
       {
-	res += "<blockquote><table><tr><td>";
-	string tr;
-	catch(tr=call_container(tag, (["help":"help"]), "",
-				id->misc->line,
-				i, id,f, id->misc->defines, 0 ));
-	if(tr) res += tr; else res += "no help";
-	res += "</td></tr></table></blockquote>";
+	res += "  <a name=\""+replace(tag+i, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag+i, "#","%23")+"#"+replace(tag+i, "#", ".")+"\">&lt;"+tag+"&gt;</a></a><br>";
+	if(verbose || id->variables->verbose == tag+i)
+	{
+	  res += "<blockquote><table><tr><td>";
+	  string tr;
+// 	  FIXME
+// 	  catch(tr=call_tag(tag, (["help":"help"]), 
+// 			    id->misc->line,i,
+// 			    id, f, id->misc->defines, 0 ));
+	  if(tr) res += tr; else res += "no help";
+	  res += "</td></tr></table></blockquote>";
+	}
       }
     }
-  }
+
+  foreach(indices(container_callers), int i)
+    if (sizeof (container_callers[i])) {
+      res += ("<p><b><font size=+1>Containers at prioity level "+i+": </b></font><p>");
+      foreach(sort(indices(container_callers[i])), string tag)
+      {
+	res += " <a name=\""+replace(tag+i, "#", ".")+"\"><a href=\""+id->not_query+"?verbose="+replace(tag+i, "#", "%23")+"#"+replace(tag+i,"#",".")+"\">&lt;"+tag+"&gt;&lt;/"+tag+"&gt;</a></a><br>";
+	if(verbose || id->variables->verbose == tag+i)
+	{
+	  res += "<blockquote><table><tr><td>";
+	  string tr;
+// 	  FIXME
+// 	  catch(tr=call_container(tag, (["help":"help"]), "",
+// 				  id->misc->line,
+// 				  i, id,f, id->misc->defines, 0 ));
+	  if(tr) res += tr; else res += "no help";
+	  res += "</td></tr></table></blockquote>";
+	}
+      }
+    }
+
   return res;
 }
 
