@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.151 2003/02/10 16:23:06 grubba Exp $
+// $Id: Roxen.pmod,v 1.152 2003/02/13 14:58:46 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -940,7 +940,6 @@ mapping build_roxen_env_vars(RequestID id)
   foreach(indices(id->variables), tmp)
   {
     string name = mk_env_var_name(tmp);
-    while(
     if (mixed value = id->variables[tmp])
       if (!catch (value = (string) value) && (sizeof(value) < 8192)) {
 	// Some shells/OS's don't like LARGE environment variables
