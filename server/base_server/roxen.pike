@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.361 1999/08/12 13:33:08 grubba Exp $
+ * $Id: roxen.pike,v 1.362 1999/08/12 14:03:11 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.361 1999/08/12 13:33:08 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.362 1999/08/12 14:03:11 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -2367,10 +2367,6 @@ private void define_global_variables( int argc, array (string) argv )
 	  "This is very useful if you are debugging your own modules "
 	  "or writing Pike scripts.");
   
-<<<<<<< roxen.pike
-  
-=======
- 
   globvar("RestoreConnLogFull", 0,
 	  "Range: Log entire file length in restored connections",
 	  TYPE_TOGGLE,
@@ -2391,7 +2387,6 @@ private void define_global_variables( int argc, array (string) argv )
 	  "download partial files. Mostly used to continue interrupted "
 	  "connections");	
 
->>>>>>> 1.360
   // Hidden variables (compatibility ones, or internal or too
   // dangerous
   /*  globvar("BS", 0, "Configuration interface: Compact layout",*/
