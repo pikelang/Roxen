@@ -27,7 +27,7 @@ void write_status_file()
   call_out(write_status_file, 30);
 
   object fd = Stdio.File();
-  if(fd->open(log_dir+"\\status", "wct"))
+  if(fd->open(log_dir+"/status", "wct"))
   {
     if( roxen() )
     {
@@ -52,9 +52,21 @@ void my_werror(string fmt, mixed ... args)
 
 void read_from_stdin()
 {
-  while(!file_stat(log_dir + "\\" + key)) sleep(2);
-  rm(log_dir + "\\" + key);
+  while(!file_stat(log_dir + "/" + key)) sleep(2);
+  rm(log_dir + "/" + key);
   exit(0);
+}
+
+string pathcnv (string path)
+// Convert a path to use '/' as dir separator. Roxen always uses '/'
+// for that (even on NT).
+{
+  return path && replace (path, "\\", "/");
+}
+
+string getcwd()
+{
+  return pathcnv (predef::getcwd());
 }
 
 int main(int argc, array (string) argv)
@@ -64,21 +76,23 @@ int main(int argc, array (string) argv)
   if(argc > 1 && argv[1][0]=='+')
   {
     key = argv[1][1..];
-    argv = argv[1..];
+    argv = argv[..0] + argv[2..];
     argc--;
   }
 
   if(argc > 1 && argv[1] == "-silent")
   {
     redirect = 1;
-    argv = argv[1..];
+    argv = argv[..0] + argv[2..];
     argc--;
   }
 
-  dir = replace(combine_path(getcwd(),__FILE__), "/", "\\");
-  dir = dir[..sizeof(dir)-search(reverse(dir), "\\")-2];
-  if(sizeof(dir)<2 || dir[1]!=':' || !file_stat(dir+"\\server"))
-    dir = get_regvalue("installation_directory");
+  add_constant ("getcwd", getcwd);
+
+  dir = pathcnv (combine_path(getcwd(),__FILE__));
+  dir = dir[..sizeof(dir)-search(reverse(dir), "/")-2];
+  if(sizeof(dir)<2 || dir[1]!=':' || !file_stat(dir+"/server"))
+    dir = pathcnv (get_regvalue("installation_directory"));
   if(!dir)
   {
     werror("Failed to get registry entry for installation directory.\n"
@@ -86,20 +100,20 @@ int main(int argc, array (string) argv)
     exit(0);
   }
 
-  log_dir = get_regvalue("log_directory");
-  if(!log_dir)  log_dir = dir + "\\logs";
+  log_dir = pathcnv (get_regvalue("log_directory"));
+  if(!log_dir)  log_dir = dir + "/logs";
 
   
-  dir += "\\server\\";
-  dir = replace(dir, "\\\\", "\\");
+  dir += "/server/";
+  dir = replace(dir, "//", "/");
 
   if(!cd(dir))
   {
     werror("Failed to cd to "+dir+"\n");
     exit(0);
   }
-  add_module_path( dir+"etc\\modules" );
-  add_include_path( dir+"etc\\include" );
+  add_module_path( dir+"etc/modules" );
+  add_include_path( dir+"etc/include" );
 
   add_include_path( dir+"base_server" );
   add_program_path( dir+"base_server" );
@@ -114,12 +128,12 @@ int main(int argc, array (string) argv)
 
   if(redirect)
   {
-    mkdir(log_dir+"\\debug");
+    mkdir(log_dir+"/debug");
   
     for(int i=10;i>0;i--)
-      mv(log_dir+"\\debug\\default."+i, log_dir+"\\debug\\default."+(i+1));
+      mv(log_dir+"/debug/default."+i, log_dir+"/debug/default."+(i+1));
 
-    if(fd->open(log_dir+"\\debug\\default.1", "wct"))
+    if(fd->open(log_dir+"/debug/default.1", "wct"))
     {
       fd->dup2( Stdio.stderr );
       fd->dup2( Stdio.stdout );
@@ -146,8 +160,8 @@ int main(int argc, array (string) argv)
  "   Pike arch directory  : "+rget("lib_prefix")+"\n"
  "   Roxen base directory : "+dir+"\n"
  "   Roxen configurations : "+dir+"configurations\n"
- "   Roxen status file    : "+log_dir+"\\status\n"
- "   Roxen shutdown file  : "+(key?log_dir+"\\"+key:"None")+"\n"
+ "   Roxen status file    : "+log_dir+"/status\n"
+ "   Roxen shutdown file  : "+(key?log_dir+"/"+key:"None")+"\n"
  "   Roxen log directory  : "+log_dir+"\n"
  "   Roxen arguments      : "+(sizeof(argv)>1?argv[1..]*" ":"None")+"\n"
 #if constant(_Crypto) && constant(Crypto.rsa)
@@ -156,10 +170,10 @@ int main(int argc, array (string) argv)
  "\n");
  
   werror("Compiling second level bootstrap ["
-	 +dir+"base_server\\roxenloader.pike]\n");
+	 +dir+"base_server/roxenloader.pike]\n");
   call_out(write_status_file, 1);
   if(key) 
     thread_create(read_from_stdin);
-  return ((program)(dir+"base_server\\roxenloader.pike"))()
-    ->main(argc, argv);
+  argv[0] = dir+"base_server/roxenloader.pike";
+  return ((program)(argv[0]))()->main(argc, argv);
 }
