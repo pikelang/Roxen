@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.110 1998/02/27 05:46:07 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.111 1998/02/27 07:10:03 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -806,13 +806,27 @@ array(int)|string write_text(int _args, string text, int size, object id)
 {
   string key = base_key+_args;
   array err;
+  string orig_text = text;
+  mixed data;
+  mapping args = find_cached_args(_args);
+  if(data = cache_lookup(key, text))
+  {
+    if(args->nocache) // Remove from cache. Very useful for access counters
+      cache_remove(key, text);
+    if(size) return data[1];
+    return data[0];
+  } else if(data = get_cache_file( key, text )) {
+    cache_set(key, text, data);
+    if(size) return data[1];
+    return err[0];
+  }
+
   err = catch
   {
     object img;
-    mapping args = find_cached_args(_args);
     if(!args)
     {
-      args=(["fg":"black","bg":"white"]);
+      args=(["fg":"black","bg":"white","notrans":"1"]);
       text="Please reload this page";
     }
 
@@ -849,34 +863,8 @@ array(int)|string write_text(int _args, string text, int size, object id)
       text = replace(res[..strlen(res)-2], ({ "!","?",": " }), ({ nbsp+"!",nbsp+"?",nbsp+": " }));
       text = replace(replace(replace(text,({". ",". "+nbsp}), ({"\000","\001"})),".","."+nbsp+nbsp),({"\000","\001"}),({". ","."+nbsp}));
     }
-    // Check the cache first..
-    mixed data;
-    while(data = cache_lookup(key, text))
-    {
-      if(data == "rendering")
-      {
-// 	werror("rendering of "+_args+" <"+text+"> already in progress\n");
-	sleep(0.1);
-	continue;
-      }
-//       werror("rendering of "+_args+" <"+text+">: memory cache hit\n");
-      if(args->nocache) // Remove from cache. Very useful for access counters
-	cache_remove(key, text);
-      if(size) return data[1];
-      return data[0];
-    }
-//     werror("rendering of "+_args+" <"+text+"> started\n");
-    
-    //  Nothing found in the cache. Generate a new image.
-//     cache_set(key, text, "rendering");
 
-    if(!args->nocache && (err = get_cache_file( key, text )))
-    {
-      cache_set(key, text, err);
-//       werror("found < "+_args+" <"+text+"> in persistant cache\n");
-      if(size) return err[1];
-      return err[0];
-    }
+//  cache_set(key, text, "rendering");
 
 #if efun(get_font)
     if(args->nfont)
@@ -894,13 +882,13 @@ array(int)|string write_text(int _args, string text, int size, object id)
     {
 #endif
       string fkey = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
-      data = cache_lookup("fonts", fkey);
-      if(!data)
-      { 
+//       data = cache_lookup("fonts", fkey);
+//       if(!data)
+//       { 
 	data = load_font(args->font, lower_case(args->talign||"left"),
 			 (int)args->xpad,(int)args->ypad);
-	cache_set("fonts", fkey, data);
-      }
+// 	cache_set("fonts", fkey, data);
+//       }
 #if efun(get_font)
     } else {
       int bold, italic;
@@ -917,7 +905,7 @@ array(int)|string write_text(int _args, string text, int size, object id)
     if (!data) {
       roxen_perror("gtext: No font!\n");
 //       werror("no font found! < "+_args+" <"+text+">\n");
-      cache_set(key, text, 0);
+//       cache_set(key, orig_text, 0);
       return(0);
     }
 
@@ -927,7 +915,7 @@ array(int)|string write_text(int _args, string text, int size, object id)
     // Now we have the image in 'img', or nothing.
     if(!img) {
 //       werror("error while drawing image? (no image) < "+_args+" <"+text+">\n");
-      cache_set(key, text, 0);
+//       cache_set(key, orig_text, 0);
       return 0;
     }
   
@@ -944,8 +932,6 @@ array(int)|string write_text(int _args, string text, int size, object id)
 #endif
       img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
     }
-
-// place in cache, as a gif image.
 
     if(!args->scroll)
       if(args->fadein)
@@ -993,10 +979,10 @@ array(int)|string write_text(int _args, string text, int size, object id)
 	data = ({ res, ({ len, img->ysize() }) });
     }
 
-    
-    if(!args->nocache && store_cache_file( key, text, data ))
-//     werror("done! < "+_args+" <"+text+">\n");
-    cache_set(key, text, data);
+// place in caches, as a gif image.
+    if(!args->nocache)
+      store_cache_file( key, orig_text, data );
+    cache_set(key, orig_text, data);
     if(size) return data[1];
     return data[0];
   };
@@ -1132,8 +1118,6 @@ mapping find_cached_args(int num)
 {
   if(!args_restored) restore_cached_args();
   if(cached_args[num]) return cached_args[num];
-
-  // This is a very unlikely event...
   restore_cached_args();
   if(cached_args[num]) return cached_args[num];
   return 0;
