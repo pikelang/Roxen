@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.10 2001/10/02 10:00:02 tomas Exp $
+// $Id: cmdline.cpp,v 1.11 2001/10/02 12:48:37 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -1368,6 +1368,9 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
       {
         // Make sure that mysql is not running
         KillMySql();
+
+        // Make sure the var directory exists
+        CreateDirectory("..\\var", NULL);
 
         std::string selfTestDirUnx;
         selfTestDirUnx.resize(m_SelfTestDir.length());
