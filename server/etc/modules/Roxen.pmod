@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.6 1999/05/14 18:55:33 grubba Exp $
+ * $Id: Roxen.pmod,v 1.7 1999/05/16 15:36:46 grubba Exp $
  *
  * Various helper functions.
  *
@@ -272,6 +272,10 @@ class QuotaDB
       int hi = sizeof(index_acc);
       if (hi) {
 	do {
+	  // Loop invariants:
+	  //   hi is an element > key.
+	  //   lo-1 is an element < key.
+
 	  int probe = (lo + hi)/2;
 
 	  if (!index_acc[probe]) {
@@ -280,7 +284,7 @@ class QuotaDB
 	    index_acc[probe] = e->name;
 	  }
 	  if (index_acc[probe] < key) {
-	    lo = probe;
+	    lo = probe + 1;
 	  } else if (index_acc[probe] > key) {
 	    hi = probe;
 	  } else {
@@ -288,22 +292,24 @@ class QuotaDB
 	    // Shouldn't happen...
 	    break;
 	  }
-	} while(lo < hi-1);
+	} while(lo < hi);
 
-	if (lo < hi-1) {
+	if (lo < hi) {
 	  // Found...
 	  // Shouldn't happen, but...
 	  // Skip to the next key...
 	  continue;
 	}
-	lo *= acc_scale;
 	hi *= acc_scale;
+	lo = hi - acc_scale;
 
 	do {
+	  // Same loop invariants as above.
+
 	  int probe = (lo + hi)/2;
 	  object e = read_entry(index[probe]);
 	  if (e->name < key) {
-	    lo = probe;
+	    lo = probe + 1;
 	  } else if (e->name > key) {
 	    hi = probe;
 	  } else {
@@ -311,14 +317,14 @@ class QuotaDB
 	    // Shouldn't happen...
 	    break;
 	  }
-	} while (lo < hi-1);
-	if (lo < hi-1) {
+	} while (lo < hi);
+	if (lo < hi) {
 	  // Found...
 	  // Shouldn't happen, but...
 	  // Skip to the next key...
 	  continue;
 	}
-	new_index += index[prev..lo] + ({ new_entries_cache[key] });
+	new_index += index[prev..hi-1] + ({ new_entries_cache[key] });
 	prev = hi;
       } else {
 	new_index += ({ new_entries_cache[key] });
@@ -365,7 +371,14 @@ class QuotaDB
     int hi = sizeof(index_acc);
     if (hi) {
       do {
+	// Loop invariants:
+	//   hi is an element that is > key.
+	//   lo-1 is an element that is < key.
 	int probe = (lo + hi)/2;
+
+	QD_WRITE(sprintf("QuotaDB:low_lookup(%O): "
+			 "In acc: lo:%d, probe:%d, hi:%d\n",
+			 key, lo, probe, hi));
 
 	if (!index_acc[probe]) {
 	  object e = read_entry(index[probe * acc_scale], quota);
@@ -380,7 +393,7 @@ class QuotaDB
 	  }
 	}
 	if (index_acc[probe] < key) {
-	  lo = probe+1;
+	  lo = probe + 1;
 	} else if (index_acc[probe] > key) {
 	  hi = probe;
 	} else {
@@ -389,26 +402,37 @@ class QuotaDB
 			   key, probe * acc_scale));
 	  return read_entry(index[probe * acc_scale], quota);
 	}
-      } while(lo < hi-1);
+      } while(lo < hi);
+      // At this point hi is the first element that is > key.
+      // Not in the accellerated index.
 
-      /* Not in the accellerated index, so go to disk. */
-      lo *= acc_scale;
-      hi *= acc_scale;
-      do {
-	int probe = (lo + hi)/2;
-	object e = read_entry(index[probe], quota);
+      if (hi) {
+	// Go to disk
+
+	hi *= acc_scale;
+	lo = hi - acc_scale;
+	do {
+	  // Same loop invariant as above.
+
+	  int probe = (lo + hi)/2;
+
+	  QD_WRITE(sprintf("QuotaDB:low_lookup(%O): lo:%d, probe:%d, hi:%d\n",
+			   key, lo, probe, hi));
+
+	  object e = read_entry(index[probe], quota);
 	
-	if (e->name < key) {
-	  lo = probe+1;
-	} else if (e->name > key) {
-	  hi = probe;
-	} else {
-	  /* Found */
-	  QD_WRITE(sprintf("QuotaDB:low_lookup(%O): Found at %d\n",
-			   key, probe));
-	  return e;
-	}
-      } while (lo < hi-1);
+	  if (e->name < key) {
+	    lo = probe + 1;
+	  } else if (e->name > key) {
+	    hi = probe;
+	  } else {
+	    /* Found */
+	    QD_WRITE(sprintf("QuotaDB:low_lookup(%O): Found at %d\n",
+			     key, probe));
+	    return e;
+	  }
+	} while (lo < hi);
+      }
     }
 
     QD_WRITE(sprintf("QuotaDB::low_lookup(%O): Not found\n", key));
