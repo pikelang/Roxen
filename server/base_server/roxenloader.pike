@@ -3,9 +3,18 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen environment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.35 1997/08/23 01:33:44 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.36 1997/08/27 19:03:38 grubba Exp $";
 
 #define perror roxen_perror
+
+//
+// NOTE:
+//	This file uses replace_master() this implies that the
+//	master() efun will return the old master and not the
+//	new one.
+//
+private static object new_master;
+
 
 private static int perror_status_reported=0;
 
@@ -125,7 +134,7 @@ class db {
 program gdbm;
 object open_db(string id)
 {
-  if(!gdbm && !(gdbm = master()->resolv("Gdbm","base_server/foo")->gdbm))
+  if(!gdbm && !(gdbm = new_master->resolv("Gdbm","base_server/foo")->gdbm))
   {
     werror("No gdbm module installed.\n");
     exit(0);
@@ -251,17 +260,17 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
   int pid;
   string cwd = getcwd();
   string pikebin = combine_path(cwd, "bin/pike");
-  string mast = master()->_master_file_name ||
+  string mast = new_master->_master_file_name ||
     combine_path(cwd,"../pike/src/lib/master.pike");
   array preargs = ({ });
 
   if (file_stat(mast))
     preargs += ({ "-m", mast });
-  foreach(master()->pike_include_path, string s)
+  foreach(new_master->pike_include_path, string s)
     preargs += ({ "-I"+s });
-  foreach(master()->pike_module_path, string s)
+  foreach(new_master->pike_module_path, string s)
     preargs += ({ "-M"+s });
-  foreach(master()->pike_program_path, string s)
+  foreach(new_master->pike_program_path, string s)
     preargs += ({ "-P"+s });
   if ((pid = fork()) == 0) {
     stdin && stdin->dup2(file("stdin"));
@@ -466,14 +475,13 @@ string make_path(string ... from)
 }
 void main(mixed ... args)
 {
-  object mm;
   string path = make_path("base_server", "etc/include", ".");
   report_status();
   perror("Roxen loader version "+cvs_version+"\n");
   master()->putenv("PIKE_INCLUDE_PATH", path);
   master()->pike_include_path = path/":";
 
-  replace_master(mm=(((program)"etc/roxen_master.pike")()));
+  replace_master(new_master=(((program)"etc/roxen_master.pike")()));
 
   add_constant("open_db", open_db);
   add_constant("do_destruct", lambda(object o) {
