@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.82 2000/03/24 02:11:15 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.83 2000/03/25 03:56:56 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -67,6 +67,9 @@ class MyCodec
 
   function functionof(string x)
   {
+    if(!stringp(x))
+      return lambda(){};
+
     if(sscanf(x,"efun:%s",x) && functionp(all_constants()[x]))
       return all_constants()[x];
     error("Failed to decode function %s\n",x);
