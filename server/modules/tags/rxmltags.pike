@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.220 2001/03/29 02:06:43 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.221 2001/04/05 11:24:55 kuntri Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3348,7 +3348,14 @@ load.</p>
  Prints the contents in smallcaps.</short> If the size attribute is
  given, font tags will be used, otherwise big and small tags will be
  used.
-</p></desc>
+</p>
+
+<ex>
+  <smallcaps>Roxen WebServer</smallcaps>
+</ex>
+
+
+  </desc>
 
 <attr name=space>
  <p>Put a space between every character.</p>
@@ -3378,9 +3385,6 @@ load.</p>
 
  <ex>
   <smallcaps size='6' small='2'>Roxen WebServer</smallcaps>
- </ex>
- <ex>
-  <smallcaps>Roxen WebServer</smallcaps>
  </ex>
 </attr>",
 

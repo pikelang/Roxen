@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.288 2001/03/30 14:38:37 jenny Exp $
+// $Id: rxml.pike,v 1.289 2001/04/05 11:24:53 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2621,7 +2621,7 @@ Kibibits.
  <p>Just like any normal tag, the <tag>comment</tag> tag nests inside
  other <tag>comment</tag> tags. E.g:</p>
 
- <ex>
+ <ex type='box'>
    <comment> a <comment> b </comment> c </comment>
  </ex>
 
@@ -2640,7 +2640,13 @@ Kibibits.
 "?comment":#"<desc pi='pi'><p><short>
  Processing instruction tag for comments.</short> This tag is similar
  to the RXML <ref type='tag'><tag>comment</tag> tag but should be used
- when commenting arbitrary text that doesn't contain '?&gt;'.
+ when commenting arbitrary text that doesn't contain '?&gt;'.</p>
+
+<ex type='box'>
+<?comment
+  This comment will not be shown.
+?>
+</ex>
 </desc>",
 
 // <cset> is deprecated. This information is to be put in a special
@@ -2665,6 +2671,9 @@ Kibibits.
 
 <attr name='tag' value='name'><p>
  Defines a tag that outputs the contents of the container.</p>
+
+<ex><define tag=\"hi\">Hello <ent>_.name</ent>!</define>
+<hi name=\"Martin\"/></ex>
 </attr>
 
 <attr name='container' value='name'><p>
@@ -2683,9 +2692,7 @@ Kibibits.
 
  <p>The values of the attributes given to the defined tag are
  available in the scope created within the define tag.</p>
-
-<ex><define tag=\"hi\">Hello <ent>_.name</ent>!</define>
-<hi name=\"Martin\"/></ex>",
+",
 
 
 	    ([

@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.63 2001/03/08 14:35:48 per Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.64 2001/04/05 11:24:57 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -24,6 +24,17 @@ constant tagdoc=(["tablify":({ #"<desc cont='cont'><p><short>
 
 <attr name='cellseparator' value='string' default='tab'><p>
  Defines the cellseparator.</p>
+
+<ex>
+<tablify cellseparator=','>
+Country, Population
+Sweden, 8 911 296
+Denmark, 5 356 845
+Norway, 4 438 547
+Iceland, 272 512
+Finland, 5 158 372
+</tablify>
+</ex>
 </attr>
 
 <attr name='border' value='number'><p>
@@ -75,9 +86,15 @@ constant tagdoc=(["tablify":({ #"<desc cont='cont'><p><short>
 
 <attr name='width' value='number'><p>
  Defines the width of the table.</p>
+</attr>
 
+<h1>The 'nice' attribute</h1>
+
+<attr name='nice'><p>
+ Add some extra layout to the table. All attributes below only applies
+ in nice or nicer mode.</p>
 <ex>
-<tablify cellseparator=','>
+<tablify nice='' cellseparator=',' modulo='2'>
 Country, Population
 Sweden, 8 911 296
 Denmark, 5 356 845
@@ -86,13 +103,7 @@ Iceland, 272 512
 Finland, 5 158 372
 </tablify>
 </ex>
-</attr>
 
-<h1>The 'nice' attribute</h1>
-
-<attr name='nice'><p>
- Add some extra layout to the table. All attributes below only applies
- in nice or nicer mode.</p>
 </attr>
 
 <attr name='grid' value='number'><p>
@@ -125,17 +136,6 @@ Finland, 5 158 372
 
 <attr name='evenbgcolor' value='color' default='#ddeeff'><p>
  The second background color.</p>
-
-<ex>
-<tablify nice='' cellseparator=',' modulo='2'>
-Country, Population
-Sweden, 8 911 296
-Denmark, 5 356 845
-Norway, 4 438 547
-Iceland, 272 512
-Finland, 5 158 372
-</tablify>
-</ex>
 </attr>
 
 <h1>The 'nicer' attribute</h1>
