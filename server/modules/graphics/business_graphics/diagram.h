@@ -2,13 +2,14 @@
  * name = "BG: diagram.h";
  * doc = "Business Graphics common things. You must upgrade this component to use newer versions of BG.";
  *
- * string cvs_version="$Id: diagram.h,v 1.6 1998/11/04 20:13:42 peter Exp $";
+ * string cvs_version="$Id: diagram.h,v 1.7 1998/11/05 15:53:40 grubba Exp $";
  */
 
 
 #define max(i, j) (((i)>(j)) ? (i) : (j))
 #define min(i, j) (((i)<(j)) ? (i) : (j))
-#define abs(arg) ((arg)*(1-2*((arg)<0)))
+// #define abs(arg) ((arg)*(1-2*((arg)<0)))   // Don't do it this way! /grubba
+#define abs(arg) (((arg)<0) ? -(arg) : (arg))
 
 #define PI 3.14159265358979
 #define VOIDSYMBOL "\n"
