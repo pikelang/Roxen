@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-static string cvs_version = "$Id: cvsfs.pike,v 1.3 1997/02/07 22:54:46 nisse Exp $";
+static string cvs_version = "$Id: cvsfs.pike,v 1.4 1997/02/07 23:08:45 nisse Exp $";
 
 #include <module.h>
 #include <string.h>
@@ -187,14 +187,14 @@ mixed stat_file(string name, object id)
 object|mapping|int find_file(string name, object id)
 {
   werror(sprintf("find_file: Looking for '%s'\n", name));
-  string fname = query("cvsroot") + cvs_module_path + name;
+  string fname = query("cvsroot") + cvs_module_path + "/" + name;
   if (cvs_module_path)
     {
       if (file_stat(fname + ",v"))
 	{
 	  object f = run_cvs(query("cvsprogram"), 0, 0,
 			     "-d", query("cvsroot"), "checkout", "-p",
-			     cvs_module_path + name);
+			     cvs_module_path + "/" + name);
 	  if (f)
 	    accesses++;
 	  return f;
@@ -209,13 +209,14 @@ object|mapping|int find_file(string name, object id)
 array find_dir(string name, object id)
 {
   array info;
+  string fname = query("cvsroot") + cvs_module_path + "/" + name;
   werror(sprintf("find_dir: Looking for '%s'\n", name));
 
   if (cvs_module_path
-      && (info = file_stat(query("cvsroot") + cvs_module_path + name))
+      && (info = file_stat(fname))
       && (info[1] == -2))
     {
-      array dir = get_dir(query("cvsroot") + cvs_module_path + name);
+      array dir = get_dir(fname);
       if (dir)
 	dir = map(dir, lambda(string entry) {
 	  return (entry[strlen(entry)-2..] == ",v")
