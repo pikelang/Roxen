@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.172 1998/03/06 13:09:22 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.173 1998/03/10 18:38:45 neotron Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -315,7 +315,7 @@ object create_listen_socket(mixed port_no, object conf,
       ether=0;
     if(ether)
       sscanf(ether, "addr:%s", ether);
-#if defined(THREADS)
+#if defined(THREADS) && 0
     if(!port->bind(port_no, 0, ether))
 #else
     if(!port->bind(port_no, accept_callback, ether))
@@ -330,7 +330,7 @@ object create_listen_socket(mixed port_no, object conf,
     }
   }
   portno[port]=({ port_no, conf, ether||"Any", 0, requestprogram });
-#if defined(THREADS)
+#if defined(THREADS) && 0
   call_out(do_thread_create,0,"Accept thread ["+port_no+":"+(ether||"ANY]"),
 	   accept_thread, port,portno[port]);
 #endif
