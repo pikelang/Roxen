@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.317 1999/08/30 09:39:45 per Exp $
+ * $Id: roxen.pike,v 1.318 1999/08/30 21:54:35 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.317 1999/08/30 09:39:45 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.318 1999/08/30 21:54:35 grubba Exp $";
 
 object backend_thread;
 object argcache;
@@ -3141,7 +3141,9 @@ int main(int|void argc, array (string)|void argv)
   dump( "base_server/read_config.pike" );
   dump( "base_server/global_variables.pike" );
   dump( "base_server/module_support.pike" );
-  dump( "base_server/http.pike" );
+  // dump( "base_server/http.pike" );
+  // Causes "Length of type is wrong. (should be 1, is 12)" for roxenlib.pike.
+  // /grubba 1999-08-30
   dump( "base_server/smartpipe.pike" );
   dump( "base_server/socket.pike" );
   dump( "base_server/cache.pike" );
