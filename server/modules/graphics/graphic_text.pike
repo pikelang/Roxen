@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.23.2.3 1997/02/22 20:03:58 grubba Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.23.2.4 1997/02/24 20:36:01 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -510,12 +510,12 @@ array(int)|string write_text(int _args, string text, int size,
 
 
 
-  string fkey = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
-  data = cache_lookup("fonts", fkey);
+  string key = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
+  data = cache_lookup("fonts", key);
   if(!data)
   { 
     data = load_font(args->font, lower_case(args->talign||"left"),(int)args->xpad,(int)args->ypad);
-    cache_set("fonts", fkey, data);
+    cache_set("fonts", key, data);
   }
 
   // Fonts and such are now initialized.
@@ -642,7 +642,7 @@ string magic_image(string url, int xs, int ys, string sn,
   if(!id->supports->javascript)
     return (!input)?
       ("<a "+extra_args+"href=\""+url+"\"><img _parsed=1 src="+image_1+" name="+
-       sn+" border=0 alt=\""+alt+"\" ></a>\n"):
+       sn+" border=0 width="+xs+" height="+ys+" alt=\""+alt+"\"></a>\n"):
     ("<input type=image "+extra_args+" src="+image_1+" name="+input+">");
 
   return
@@ -689,7 +689,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 			object id, object foo, mapping defines)
 {
 // Allow <accessed> and others inside <gtext>.
-  contents = parse_rxml(contents, id, foo, defines);
+  contents = parse_rxml(contents, id, foo/*, defines */);
   
   string pre, post, defalign, gt, rest, magic;
   int i, split;
