@@ -1,3 +1,50 @@
+Changes since Roxen Challenger 1.2.30 Yellow
+-----------------------------------------------
+
+o Thread dead-lock bug in Pike 0.6 hopefully fixed.
+
+o Fixed serious security bug if Roxen is run with Pike 0.5 and with
+  SSI-exec enabled.
+
+o Fixed several serious thread dead-lock bugs in Pike 0.6.
+
+o Pike 0.6 now supports dynamic modules on HPUX.
+
+o Fixed some problems with the localinstall target.
+
+o The asynchronous DNS module should now be thread-safe.
+
+o The HTML-parser now parses <!--#foo xxx="yyy"--> correctly.
+
+o Detection of gmp2 added.
+
+o Updated pike/0.6/.how_to_create_modules
+
+o Added detection of broken readdir_r() in Linux (always returns 9).
+
+o Fixed Kinkie's email-address in lots of places.
+
+o conf->sql_connect() now uses a connection-cache.
+
+o Kinkie's Anti-Block System (ABS) hs been added.
+
+o Improved CGI support.
+
+o Added module for FrontPage support.
+
+o Several new formoutput quoting methods have been added.
+
+o The openfiles action now uses <pre> instead of <table>, since
+  NS's <table>-handling is so slow.
+
+o Fixed some problems the userfs module had with FTP.
+
+o Some <gtext> updates.
+
+o The pike-script module now has an option to clear password info
+  (enabled by default).
+
+
 Changes since Roxen Challenger 1.2.29 Red
 -----------------------------------------------
 
