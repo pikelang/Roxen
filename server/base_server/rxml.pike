@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.44 1999/12/08 12:24:11 per Exp $
+ * $Id: rxml.pike,v 1.45 1999/12/11 21:29:40 grubba Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -379,7 +379,7 @@ string tag_help(string t, mapping args, RequestID id)
     }
     return out + String.implode_nicely(tag_links);
   } else {
-    help_for -= "/";
+    help_for = replace(help_for, ({"/", "\\"}), ({"",""}));
 
     if(Stdio.file_size("modules/tags/doc/"+help_for) > 0) {
       string h = handle_help("modules/tags/doc/"+help_for, help_for, args);
@@ -462,7 +462,7 @@ array(string) list_packages()
 string read_package( string p )
 {
   string data;
-  p -= "/";
+  p = replace(p, ({"/", "\\"}), ({"",""}));
   if(file_stat( "../local/rxml_packages/"+p ))
     catch(data=Stdio.File( "../local/rxml_packages/"+p, "r" )->read());
   if(!data && file_stat( "../rxml_packages/"+p ))
