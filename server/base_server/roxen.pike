@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.780 2002/04/23 12:21:13 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.781 2002/04/23 16:20:51 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4361,9 +4361,8 @@ int main(int argc, array tmp)
 
   start_time=time();		// Used by the "uptime" info later on.
 
+  restart_suicide_checker();
 
-//   if (query("suicide_engage"))
-//     call_out (restart,60*60*24*max(1,query("suicide_timeout")));
 #ifndef __NT__
   restart_if_stuck( 0 );
 #endif
@@ -4373,15 +4372,51 @@ int main(int argc, array tmp)
   return -1;
 }
 
+void check_commit_suicide()
+{
+#ifdef SUICIDE_DEBUG
+  werror("check_commit_suicide(): Engage:%d, schedule: %d, time: %d\n",
+	 query("suicide_engage"),
+	 getvar("suicide_schedule")->get_next( query("last_suicide")),
+	 time());
+#endif /* SUICIDE_DEBUG */
+  if (query("suicide_engage")) {
+    int next = getvar("suicide_schedule")
+      ->get_next( query("last_suicide") );
+    if (next >= 0 && next <= time(1)) {
+      report_notice("Auto Restart triggered.\n");
+      restart();
+    } else {
+      call_out(check_commit_suicide, next - time(1));
+    }
+  }
+}
+
 void check_suicide( )
 {
-  int next = getvar("suicide_schedule")
-    ->get_next( query("last_suicide") );
-  if( next < time() )
-  {
-    set( "last_suicide", time() );
-    return 0;
+#ifdef SUICIDE_DEBUG
+  werror("check_suicide(): Engage:%d, schedule: %d, time: %d\n",
+	 query("suicide_engage"),
+	 getvar("suicide_schedule")->get_next( query("last_suicide")),
+	 time());
+#endif /* SUICIDE_DEBUG */
+  if (query("suicide_engage")) {
+    int next = getvar("suicide_schedule")
+      ->get_next( query("last_suicide") );
+    if( next >= 0 && next < time() )
+    {
+      set( "last_suicide", time() );
+      return 0;
+    }
   }
+}
+
+void restart_suicide_checker()
+{
+  remove_call_out(check_commit_suicide);
+  remove_call_out(check_suicide);
+  call_out(check_suicide, 60);
+  call_out(check_commit_suicide, 180);	// Minimum uptime: 3 minutes.
 }
 
 // Called from the administration interface.
@@ -4404,14 +4439,9 @@ string check_variable(string name, mixed value)
     break;
 #endif
 
-   case "suicide_engage":
-    if (value)
-    {
-      remove_call_out( check_suicide );
-      call_out( check_suicide, 60 );
-    }
-    else
-      remove_call_out( check_suicide );
+  case "suicide_schedule":
+  case "suicide_engage":
+    restart_suicide_checker();
     break;
 
 #ifdef SNMP_AGENT
