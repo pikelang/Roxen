@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.19 1999/02/03 20:09:45 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.20 1999/02/03 20:22:04 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -705,6 +705,7 @@ class imap_mailbox
 		       attrs));
 
 #ifdef IMAP_DEBUG
+    werror(describe_backtrace(({ "Backtrace:", backtrace() })));
     werror("=> res: %O\n", res);
 #endif /* IMAP_DEBUG */
       
