@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.50 2000/01/25 20:20:06 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.51 2000/01/25 22:31:16 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -703,12 +703,6 @@ load.",
 
 <attr name=extend>
  If set, all variables will be copied into the scope.
-</attr>
-
-<attr name=truth>
- Make a scope for truth as well. The previous true/false state will be
- inherited into the scope, but changes in the state will not affect
- anything outside the scope.
 </attr>",
 
 "set":#"<desc tag>
@@ -1598,21 +1592,38 @@ array(string) tag_set_max_cache( string tag, mapping m, RequestID id )
 
 // ------------------- Containers ----------------
 
-array|string container_scope(string tag, mapping m,
-                              string contents, RequestID id)
-{
-  if(!m->scope) {
-    mapping old_variables = copy_value(id->variables);
-    int truth=_ok;
-    if (!m->extend)
-      id->variables = ([]);
-    contents = parse_rxml(contents, id);
-    id->variables = old_variables;
-    if (m->truth)
-      _ok=truth;
-    return ({ contents });
+class TagScope {
+
+  inherit RXML.Tag;
+
+  constant name = "scope";
+  constant flags = RXML.FLAG_CONTAINER;
+  constant opt_arg_types = ([ "extend" : RXML.t_text ]);
+
+  class Frame {
+
+    inherit RXML.Frame;
+
+    constant scope_name = "form";
+    mapping vars;
+    mapping oldvar;
+
+    array do_enter(RequestID id) {
+      oldvar=id->variables;
+      if(args->extend)
+	vars=copy_value(id->variables);
+      else
+	vars=([]);
+      id->variables=vars;
+      return 0;
+    }
+
+    array do_return(RequestID id) {
+      id->variables=oldvar;
+      result=content;
+      return 0;
+    }
   }
-  return contents;
 }
 
 array(string) container_catch( string tag, mapping m, string c, RequestID id )
