@@ -32,10 +32,11 @@ gdbm: force
 zlib: force
 	-@(cd zlib;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" libz.a)
 
-platform: force
-	@if test -d platform/. ; then \
-	  (cd platform/;$(MAKE)) \
-	else :; fi; \
+# Does not work. The top level makefile contaminates the enviroment.
+#platform: force
+#	@if test -d platform/. ; then \
+#	  (cd platform/;$(MAKE)) \
+#	else :; fi; \
 
 force:
 
