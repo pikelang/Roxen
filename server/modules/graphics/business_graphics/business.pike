@@ -16,7 +16,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.13 1997/10/15 03:15:11 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.14 1997/10/15 03:28:17 hedda Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -255,7 +255,7 @@ string tag_diagram(string tag, mapping m, string contents,
   if(res->type == "pie")
     res->subtype="pie";
   else
-    res->drawtype="linar";
+    res->drawtype="linear";
 
   if(res->type == "bars")
     if(res->subtype!="line")
@@ -266,7 +266,8 @@ string tag_diagram(string tag, mapping m, string contents,
   
   if(res->type == "sumbars")
     if(res->subtype!="norm")
-      res->subtype=0;         /* #%¤%& Hedda! Fixa ett riktigt namn! */
+      res->subtype=0;         /* #%¤%& Hedda! Fixa ett riktigt namn! 
+			        - Näe! /Hedda                         */
 
   parse_html(contents,
 	     ([ "xaxis":itag_xaxis,
@@ -321,10 +322,18 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->linewidth) res->linewidth=(float)m->linewidth;
   else res->linewidth=2.2;
 
-  if(m->xsize) res->xsize = (int)m->xsize;
-  else return syntax( "You must specify an xsize for the diagram" );
-  if(m->xsize) res->ysize = (int)m->ysize;
-  else return syntax( "You must specify an ysize for the diagram" );
+  if(!m->image)
+  {
+    if(m->xsize) res->xsize = (int)m->xsize;
+    else return syntax( "You must specify an xsize for the diagram" );
+    if(m->xsize) res->ysize = (int)m->ysize;
+    else return syntax( "You must specify an ysize for the diagram" );
+  }
+  else
+  {
+    if(m->xsize) res->xsize = (int)m->xsize;
+    if(m->xsize) res->ysize = (int)m->ysize;
+  }
 
   if(m->tone) res->tone = 1;
   else res->tone = 0;
