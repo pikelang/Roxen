@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.14 2001/08/17 20:05:23 nilsson Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.15 2001/08/28 03:49:50 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -242,7 +242,10 @@ constant tagdoc=([
   "insert#href":#"<desc plugin='plugin'><p><short>
  Inserts the contents at that URL.</short> This function has to be
  enabled in the <module>Additional RXML tags</module> module in the
- Roxen WebServer configuration interface.</p></desc>
+ Roxen WebServer configuration interface. The page download will block
+ the current thread, and if running unthreaded, the whole server.
+ There is no timeout in the download, so if the server connected to
+ hangs during transaction, so will the current thread in this server.</p></desc>
 
 <attr name='href' value='string'><p>
  The URL to the page that should be inserted.</p>
