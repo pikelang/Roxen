@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.5 1998/03/08 13:48:52 per Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.6 1998/06/08 14:12:05 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -27,7 +27,7 @@ class Date
   
   int month(int|void m)
   {
-    if(m) split->mon = m;
+    if(m) split->mon = m-1;
     return split->mon;
   }
 
@@ -98,14 +98,14 @@ object event = class
   S_EVENT(christmas_eve, 24, 12);
   S_EVENT(christmas_day, 25, 12);
   mapping christmas = christmas_day;
-  mapping year2000 = ([ "mday":1, "mon":1, "hour":0, "min":0, "year":100 ]);
+  mapping year2000 = ([ "mday":1, "mon":0, "hour":0, "min":0, "year":100 ]);
 
   void easter(mapping m)
   {
     object t = Date(localtime(time())|m);
     t->set_to_easter();
     m->year = t->year()-1900;
-    m->mon = t->month();
+    m->mon = t->month()-1;
     m->mday = t->mday();
   }
 }();
