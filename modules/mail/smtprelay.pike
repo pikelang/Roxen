@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.6 1998/09/14 21:54:09 grubba Exp $
+ * $Id: smtprelay.pike,v 1.7 1998/09/14 21:55:17 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.6 1998/09/14 21:54:09 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.7 1998/09/14 21:55:17 grubba Exp $";
 
 /*
  * Some globals
@@ -502,16 +502,9 @@ static void send_mail()
 			       "ORDER BY mailid, domain",
 			       time()));
 
-  if (!m || !sizeof(m)) {
-    // No mail to send yet.
-
-    // Try sending again in an hour.
-    check_mail(60*60);
-  }
-
   // FIXME: Add some grouping code here.
 
-  foreach(m, mapping mm) {
+  foreach(m || ({}), mapping mm) {
     // Needed to not send it twice at the same time.
     // Resend in an hour.
     sql->query(sprintf("UPDATE send_q "
