@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.53 1998/06/19 06:38:58 neotron Exp $
+ * $Id: ftp2.pike,v 1.54 1998/06/26 00:46:56 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -220,7 +220,11 @@ class FileWrapper
   {
     read_cb = r_cb;
     close_cb = c_cb;
-    f->set_nonblocking(read_callback, w_cb, close_callback);
+    if (r_cb) {
+      f->set_nonblocking(read_callback, w_cb, close_callback);
+    } else {
+      f->set_nonblocking(0, w_cb, 0);
+    }
   }
 
   void set_blocking()
