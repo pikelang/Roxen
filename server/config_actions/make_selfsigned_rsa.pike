@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_rsa.pike,v 1.4 1999/06/07 05:02:37 mast Exp $
+ * $Id: make_selfsigned_rsa.pike,v 1.5 1999/06/07 05:11:49 mast Exp $
  */
 
 inherit "wizard";
@@ -272,8 +272,10 @@ mixed page_3(object id, object mc)
 	      "localityName", "organizationName",
 	      "organizationUnitName", "commonName" }), attr)
   {
-    if (id->variables[attr])
+    if (id->variables[attr]) {
       attrs[attr] = trim (id->variables[attr]);
+      if (attrs[attr] == "") m_delete (attrs, attr);
+    }
   }
 
   array name = ({ });

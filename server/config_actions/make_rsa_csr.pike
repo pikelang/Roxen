@@ -1,5 +1,5 @@
 /*
- * $Id: make_rsa_csr.pike,v 1.2 1999/06/07 05:02:35 mast Exp $
+ * $Id: make_rsa_csr.pike,v 1.3 1999/06/07 05:11:47 mast Exp $
  */
 
 inherit "wizard";
@@ -264,8 +264,10 @@ mixed page_4(object id, object mc)
 	      "organizationName", "organizationUnitName", "commonName",
 	      "emailAddress", "challengePassword"}), attr)
   {
-    if (id->variables[attr])
+    if (id->variables[attr]) {
       attrs[attr] = trim (id->variables[attr]);
+      if (attrs[attr] == "") m_delete (attrs, attr);
+    }
   }
 
   array name = ({ });
