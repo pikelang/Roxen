@@ -56,13 +56,14 @@ static object module_class = FINDCLASS("se/idonex/roxen/Module");
 static object defvar_class = FINDCLASS("se/idonex/roxen/Defvar");
 static object location_ifc = FINDCLASS("se/idonex/roxen/LocationModule");
 static object parser_ifc = FINDCLASS("se/idonex/roxen/ParserModule");
+static object fileext_ifc = FINDCLASS("se/idonex/roxen/FileExtensionModule");
 static object tagcaller_ifc = FINDCLASS("se/idonex/roxen/TagCaller");
 static object containercaller_ifc = FINDCLASS("se/idonex/roxen/ContainerCaller");
 static object response_class = FINDCLASS("se/idonex/roxen/RoxenResponse");
 static object response2_class = FINDCLASS("se/idonex/roxen/RoxenStringResponse");
 static object response3_class = FINDCLASS("se/idonex/roxen/RoxenFileResponse");
 static object response4_class = FINDCLASS("se/idonex/roxen/RoxenRXMLResponse");
-static object reqid_init = reqid_class->get_method("<init>", "()V");
+static object reqid_init = reqid_class->get_method("<init>", "(Lse/idonex/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 static object conf_init = conf_class->get_method("<init>", "()V");
 static object _configuration = module_class->get_field("configuration", "Lse/idonex/roxen/RoxenConfiguration;");
 static object query_type = module_class->get_method("queryType", "()I");
@@ -81,6 +82,8 @@ static object _find_file = location_ifc->get_method("findFile", "(Ljava/lang/Str
 static object _find_dir = location_ifc->get_method("findDir", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)[Ljava/lang/String;");
 static object _real_file = location_ifc->get_method("realFile", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Ljava/lang/String;");
 static object _stat_file = location_ifc->get_method("statFile", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)[I");
+static object _query_file_extensions = fileext_ifc->get_method("queryFileExtensions", "()[Ljava/lang/String;");
+static object _handle_file_extension = fileext_ifc->get_method("handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
 static object _query_tag_callers = parser_ifc->get_method("queryTagCallers", "()[Lse/idonex/roxen/TagCaller;");
 static object _query_container_callers = parser_ifc->get_method("queryContainerCallers", "()[Lse/idonex/roxen/ContainerCaller;");
 static object tagcaller_query_name = tagcaller_ifc->get_method("queryName", "()Ljava/lang/String;");
@@ -112,9 +115,9 @@ static void check_exception()
   object e = jvm->exception_occurred();
   if(e) {
     object sw = stringwriter_class->alloc();
-    stringwriter_init(sw);
+    stringwriter_init->call_nonvirtual(sw);
     object pw = printwriter_class->alloc();
-    printwriter_init(pw, sw);
+    printwriter_init->call_nonvirtual(pw, sw);
     throwable_printstacktrace(e, pw);
     printwriter_flush(pw);
     jvm->exception_clear();
@@ -164,7 +167,7 @@ static mixed objify(mixed v)
     return v;
   else if(intp(v)) {
     object z = int_class->alloc();
-    int_init(z, v);
+    int_init->call_nonvirtual(z, v);
     check_exception();
     return z;
   } else if(arrayp(v)) {
@@ -213,7 +216,7 @@ class ReaderFile
     if(r<=0)
       return "";
     object s = string_class->alloc();
-    string_init(s, a, 0, r);
+    string_init->call_nonvirtual(s, a, 0, r);
     check_exception();
     return (string)s;
   }
@@ -269,10 +272,12 @@ class ModuleWrapper
 
   static object make_conf(object conf)
   {
+    if(!conf)
+      return 0;
     if(conftojo[conf])
       return conftojo[conf];
     object ob = conf_class->alloc();
-    conf_init(ob);
+    conf_init->call_nonvirtual(ob);
     check_exception();
     jotoconf[ob] = conf;
     conftojo[conf] = ob;
@@ -282,7 +287,10 @@ class ModuleWrapper
   static object make_reqid(RequestID id)
   {
     object r = reqid_class->alloc();
-    reqid_init(r);
+    reqid_init->call_nonvirtual(r, make_conf(id->conf), id->raw_url, id->prot,
+				id->clientprot, id->method, id->realfile,
+				id->virtfile, id->raw, id->query,
+				id->not_query, id->remoteaddr);
     check_exception();
     jotoid[r] = id;
     return r;
@@ -291,7 +299,7 @@ class ModuleWrapper
   static object make_args(mapping args)
   {
     object m = map_class->alloc();
-    map_init(m, sizeof(args));
+    map_init->call_nonvirtual(m, sizeof(args));
     check_exception();
     foreach(indices(args), string key)
       map_put(m, key, args[key]);
@@ -399,6 +407,13 @@ class ModuleWrapper
     return l && (string)l;
   }
 
+  array(string) query_file_extensions()
+  {
+    object l = _query_file_extensions(modobj);
+    check_exception();
+    return l && valify(l);
+  }
+
   mapping query_tag_callers()
   {
     mapping res = ([ ]);
@@ -455,6 +470,19 @@ class ModuleWrapper
     object r = _stat_file(modobj, f, make_reqid(id));
     check_exception();
     return valify(r);
+  }
+
+  mixed handle_file_extension(object file, string ext, object id)
+  {
+    if(!id->realfile)
+      return 0;
+    object f = file_class->alloc();
+    check_exception();
+    file_init->call_nonvirtual(f, id->realfile);
+    check_exception();
+    object r = _handle_file_extension(modobj, f, ext, make_reqid(id));
+    check_exception();
+    return make_response(r, id);
   }
 
   mixed find_internal(string f, RequestID id)
