@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.899 2005/03/10 18:06:12 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.900 2005/03/30 17:52:39 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2092,7 +2092,17 @@ array(string) find_ips_for( string what )
 
   if( is_ip( what ) )
     return ({ what });
-  else if (has_suffix(lower_case(what), ".ipv6")) {
+  else if (what[0] == '[' && what[-1] == ']') {
+    /* RFC 3986 3.2.2. Host
+     *
+     * host       = IP-literal / IPv4address / reg-name
+     * IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+     * IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+     *
+     * IPv6address is as in RFC3513.
+     */
+    return ({ what[1..sizeof(what)-2] });
+  } else if (has_suffix(lower_case(what), ".ipv6")) {
     // draft-masinter-url-ipv6-00 3
     //
     //   a) replace every colon ":" with a "-"

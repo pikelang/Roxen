@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.188 2005/03/02 13:16:57 grubba Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.189 2005/03/30 17:55:13 grubba Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -653,11 +653,15 @@ mapping get_port_map( object p )
     return ([
       "port":p->get_key(),
       "warning":(p->bound?"":not_bound_warning()),
-      // draft-masinter-url-ipv6-00 3
-      //
-      //   a) replace every colon ":" with a "-"
-      //   b) append ".ipv6" to the end.
-      "name":p->name+"://"+replace(p->ip, ":", "-")+".ipv6:"+p->port+"/",
+      /* RFC 3986 3.2.2. Host
+       *
+       * host       = IP-literal / IPv4address / reg-name
+       * IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+       * IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+       *
+       * IPv6address is as in RFC 3513.
+       */
+      "name":p->name+"://["+p->ip+"]:"+p->port+"/",
     ]);
   }
 }
