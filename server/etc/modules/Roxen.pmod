@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.155 2003/04/09 14:01:02 anders Exp $
+// $Id: Roxen.pmod,v 1.156 2003/04/15 15:23:58 anders Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1907,7 +1907,7 @@ string fix_relative( string file, RequestID id )
 //! root directory. The returned path is @[simplify_path()]:ed.
 {
   string path = id->not_query;
-  if( !search( file, "http:" ) )
+  if( has_prefix( file, "http:" ) )
     return file;
 
   [string prefix, file] = win_drive_prefix(file);
@@ -1917,8 +1917,11 @@ string fix_relative( string file, RequestID id )
     ;
   else if(file != "" && file[0] == '#')
     file = path + file;
-  else
-    file = dirname(path) + "/" +  file;
+  else {
+    string dir = dirname(path);
+    if (dir == "/") file = "/" + file;
+    else file = dir + "/" +  file;
+  }
   return simplify_path(prefix + file);
 }
 
