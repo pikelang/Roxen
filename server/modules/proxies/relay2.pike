@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.24 2001/09/03 18:35:38 nilsson Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.25 2002/01/05 13:59:35 per-bash Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -234,6 +234,7 @@ class Relay
 #ifdef RELAY_DEBUG
       werror("RELAY: Connection failed\n");
 #endif
+      NOCACHE();
       id->send_result( ([
         "type":"text/plain",
         "data":"Connection to remote HTTP host failed."
