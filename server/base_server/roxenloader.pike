@@ -4,7 +4,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.20 1997/04/26 03:44:12 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.21 1997/04/26 04:58:25 per Exp $";
 
 #define perror roxen_perror
 
@@ -22,12 +22,22 @@ void roxen_perror(string format,mixed ... args)
   stderr->write(format);
 }
 
+mapping pwn=([]);
+void pw_name(int uid)
+{
+  if(pwn[uid]) return pwn[uid];
+  return pwn[uid]=(getpwuid(uid)||((""+uid)/":"))[0];
+}
 
 void report_status()
 {
   call_out(report_status, 60);
-  stderr->write("[1mRoxen is alive!     PID: "+pid+"    Time: "+
-		(ctime(time())/" ")[-2]+"[0m\n");
+  stderr->write("[1mRoxen is alive! pid: "+pid+"   ppid: "+getppid()+
+#if efun(geteuid)
+		(geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
+#endif
+		"   uid: "+pw_name(getuid())+
+		"    Time: "+(ctime(time())/" ")[-2]+"[0m\n");
 }
 
 mapping dbs = ([ ]);

@@ -60,8 +60,8 @@ string describe_errors(object node)
 		  (sizeof(node->data[err]) + " times:<br>"):"")
 		   + "<font size=-1>"+
 		   Array.map(node->data[err],
-			     roxen->language("en","date"))*"<br>"+"</font>"
-		   + err + "<hr noshade size=1>" });
+			     roxen->language("en","date"))*", "
+		   +"</font><br>" + err + "<p>" });
 
   return (link("<font size=+2>&nbsp;Error and debug log")
 	  + "</font><dd><pre>"+
