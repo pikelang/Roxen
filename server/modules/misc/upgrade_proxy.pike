@@ -30,7 +30,7 @@ class Proxy
   
   void create(int port, string master)
   {
-    server = RoxenRPC.server( port );
+    server = RoxenRPC.Server( port );
     sscanf(master, "%s:%s", ch, cp);
     server->provide("upgrade", this_object());
   }
