@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.218 2001/08/10 23:06:54 mast Exp $
+// $Id: module.pmod,v 1.219 2001/08/13 15:58:22 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6680,15 +6680,15 @@ class PCode
 		}							\
 		item = frame->_eval (					\
 		  ctx, this_object(), type); /* Might unwind. */	\
-		if (!exec[pos + 1]) {					\
-		  RESET_FRAME (frame);					\
-		  /* Race here, but it doesn't matter much. */		\
-		  exec[pos + 1] = frame;				\
-		}							\
 		if (ctx->state_updated > update_count) {		\
 		  exec[pos + 2] = frame->_save();			\
 		  flags |= UPDATED;					\
 		  update_count = ctx->state_updated;			\
+		}							\
+		if (!exec[pos + 1]) {					\
+		  RESET_FRAME (frame);					\
+		  /* Race here, but it doesn't matter much. */		\
+		  exec[pos + 1] = frame;				\
 		}							\
 		pos += 2;						\
 		if (p_code) p_code->add_frame (ctx, frame, item);	\
