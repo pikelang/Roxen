@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.79 1998/02/24 10:36:38 grubba Exp $
+ * $Id: ftp.pike,v 1.80 1998/02/28 19:55:02 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -331,11 +331,9 @@ class ls_program {
 	}
       }
       file_order -= ({ 0 });
-      if (!sizeof(file_order)) {
-	return(0);
-      }
     }
     string res = "";
+    int total = 0;
     foreach(file_order, string short) {
       array st = _files[short];
       if (st) {
@@ -350,12 +348,19 @@ class ls_program {
 	}
 	if (flags & LS_FLAG_l) {
 	  res += id->file_ls(st, short, flags);
+	  if (st[1] < 0) {
+	    total += 1;	// One block
+	  } else {
+	    total += (st[1]+1023)/1024;	// Blocks are 1KB.
+	  }
 	} else {
 	  res += short + "\n";
 	}
       }
     }
-    if (!(flags & LS_FLAG_l) && (flags & LS_FLAG_C)) {
+    if (flags & LS_FLAG_l) {
+      res = sprintf("total %d\n", total) + res;
+    } else if (flags & LS_FLAG_C) {
       res = sprintf("%-#79s\n", res);
     }
     return(res);
@@ -381,11 +386,13 @@ class ls_program {
 	if (block) {
 	  DWRITE(sprintf("list_stream->write_out(): Sending \"%s\"\n",
 			 block));
-	  read_callback(nb_id, block);
-	  if (this_object()) {
-	    sent += sizeof(block);
-	  } else {
-	    DWRITE(sprintf("list_stream->write:out(): DESTRUCTED!\n"));
+	  if (sizeof(block)) {
+	    read_callback(nb_id, block);
+	    if (this_object()) {
+	      sent += sizeof(block);
+	    } else {
+	      DWRITE(sprintf("list_stream->write:out(): DESTRUCTED!\n"));
+	    }
 	  }
 	} else {
 	  DWRITE(sprintf("list_stream->write_out(): EOD\n"));
@@ -399,9 +406,11 @@ class ls_program {
     {
       DWRITE(sprintf("list_stream->write(\"%O\")\n", (string)s));
       // write 0 to mark end of stream.
-      data->put(s && replace(s, "\n", "\r\n"));
-      if (read_callback) {
-	write_out();
+      if (!s || sizeof(s)) {
+        data->put(s && replace(s, "\n", "\r\n"));
+	if (read_callback) {
+	  write_out();
+	}
       }
     }
     void set_nonblocking(function _read_cb,
@@ -500,7 +509,7 @@ class ls_program {
 	    }
 	  }
 	  if (sizeof(_dir)) {
-	    s = list_files(_dir, combine_path(id->cwd, short)+"/", flags) || "\n";
+	    s = list_files(_dir, combine_path(id->cwd, short)+"/", flags);
 	  }
 	} else {
 	  DWRITE("do_assynch_dir_ls(): NO FILES!\n");
