@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.27 1999/09/09 23:38:09 nilsson Exp $
+ * $Id: rxml.pike,v 1.28 1999/10/08 12:42:16 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -823,56 +823,6 @@ array(string) tag_trace(string t, mapping args, string c , RequestID id)
   return ({r + "<h1>Trace report</h1>"+t->res()+"</ol>"});
 }
 
-string tag_for(string t, mapping args, string c, RequestID id)
-{
-  string v = args->variable;
-  int from = (int)args->from;
-  int to = (int)args->to;
-  int step = (int)args->step!=0?(int)args->step:(to<from?-1:1);
-
-  if((to<from && step>0)||(to>from && step<0)) to=from+step;
-
-  string res="";
-  if(to<from) {
-    for(int i=from; i>=to; i+=step)
-      res += "<set variable="+v+" value="+i+">"+c;
-    return res;
-  }
-  else if(to>from) {
-    for(int i=from; i<=to; i+=step)
-      res += "<set variable="+v+" value="+i+">"+c;
-    return res;
-  }
-
-  return "<set variable="+v+" value="+to+">"+c;
-}
-
-string tag_foreach(string t, mapping args, string c, RequestID id)
-{
-  string v = args->variable;
-  array what;
-  if(!args->in)
-    return rxml_error(t, "No in attribute given.", id);
-  if(args->variables)
-    what = Array.map(args->in/"," - ({""}),
-		     lambda(string name, mapping v) {
-				     return v[name] || "";
-				   }, id->variables);
-  else
-    what = Array.map(args->in / "," - ({""}),
-		     lambda(string var) {
-		       sscanf(var, "%*[ \t\n\r]%s", var);
-		       var = reverse(var);
-		       sscanf(var, "%*[ \t\n\r]%s", var);
-		       return reverse(var);
-		     });
-  
-  string res="";
-  foreach(what, string w) 
-    res += "<set variable="+v+" value="+w+">"+c;
-  return res;
-}
-
 array(string) tag_noparse(string t, mapping m, string c)
 {
   return ({ c });
@@ -1023,8 +973,6 @@ mapping query_container_callers()
     "cond":tag_cond,
     "strlen":tag_strlen,
     "define":tag_define,
-    "for":tag_for,
-    "foreach":tag_foreach,
     "trace":tag_trace,
     "use":tag_use,
   ]);
