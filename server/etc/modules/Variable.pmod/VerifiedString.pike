@@ -4,6 +4,11 @@
 
 inherit Variable.String;
 
+// Locale macros
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+#define LOCALE(X,Y)    \
+  ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
+
 constant type = "VerifiedString";
 array(function(string:array(string))) verifications = ({});
 int default_on_error = 0;
@@ -34,7 +39,8 @@ void add_regexp(string new_regexp)
   verifications+=({
     lambda(string in) {
       if(!regexp->match(in))
-	return ({ sprintf("Value %s does not match the regexp %s.", in, new_regexp), in });
+	return ({ sprintf(LOCALE(0,"Value %s does not match the regexp %s."),
+			  in, new_regexp), in });
       return ({ 0, in });
     }
   });
@@ -46,7 +52,8 @@ void add_glob(string new_glob)
   verifications+=({
     lambda(string in) {
       if(!glob(new_glob, in))
-	return ({ sprintf("Value %s does not match the glob %s.", in, new_glob), in });
+	return ({ sprintf(LOCALE(0,"Value %s does not match the glob %s."),
+			  in, new_glob), in });
       return ({ 0, in });
     }
   });
@@ -58,7 +65,8 @@ void add_minlength(int minlength)
   verifications+=({
     lambda(string in) {
       if(sizeof(in)<minlength)
-	return ({ sprintf("Value %s must be at least %d characters long. (%d character short)",
+	return ({ sprintf(LOCALE(0,"Value %s must be at least %d characters "
+				 "long. (%d character short)"),
 		       in, minlength, minlength-sizeof(in)), in });
       return ({ 0, in });
     }
@@ -71,7 +79,8 @@ void add_maxlength(int maxlength)
   verifications+=({
     lambda(string in) {
       if(sizeof(in)>maxlength)
-	return ({ sprintf("Value %s must not be more than %d characters long. (%d character too long)",
+	return ({ sprintf(LOCALE(0,"Value %s must not be more than %d "
+				 "characters long. (%d character too long)"),
 		       in, maxlength, sizeof(in)-maxlength), in[..maxlength-1]});
       return ({ 0, in });
     }
@@ -84,7 +93,8 @@ void add_upper()
   verifications+=({
     lambda(string in) {
       if(upper_case(in)!=in)
-	return ({ sprintf("Value %s is not uppercased.", in), upper_case(in) });
+	return ({ sprintf(LOCALE(0,"Value %s is not uppercased."), in),
+		  upper_case(in) });
       return ({ 0, in });
     }
   });
@@ -96,7 +106,8 @@ void add_lower()
   verifications+=({
     lambda(string in) {
       if(lower_case(in)!=in)
-	return ({ sprintf("Value %s is not lowercased.", in), lower_case(in) });
+	return ({ sprintf(LOCALE(0,"Value %s is not lowercased."), in),
+		  lower_case(in) });
       return ({ 0, in });
     }
   });

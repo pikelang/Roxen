@@ -1,5 +1,10 @@
 inherit Variable.String;
 
+// Locale macros
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+#define LOCALE(X,Y)    \
+  ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
+
 constant type="Upload";
 
 static string filename;
@@ -34,8 +39,8 @@ void set_from_form( RequestID id )
       if( q )
         add_warning( q );
       else
-        add_warning( "Internal error: Illegal sized array "
-                     "from verify_set_from_form\n" );
+        add_warning( LOCALE(0,"Internal error: Illegal sized array "
+			    "from verify_set_from_form")+"\n" );
       return;
     }
     if( b ) 
@@ -53,5 +58,7 @@ string render_form( RequestID id, void|mapping additional_args )
 
 string render_view( RequestID id )
 {
-  return get_filename() ? "Uploaded file: "+get_filename() : "";
+  return get_filename()
+    ? sprintf( LOCALE(0,"Uploaded file: %s"), get_filename() )
+    : "";
 }

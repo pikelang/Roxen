@@ -5,9 +5,16 @@ inherit Variable.String;
 constant type="Email";
 static int check_domain=1;
 
+// Locale macros
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+
+#define LOCALE(X,Y)    \
+  ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
+
+
 array(string) verify_set( string new_value ) {
   if(!has_value(new_value, "@"))
-    return ({ "An email address must contain \"@\".", new_value });
+    return ({ LOCALE(0,"An email address must contain \"@\"."), new_value });
 
   // RFC 822 tells us that <>, if present, contains the address.
   sscanf(new_value, "%*s<%s>%*s", new_value);
@@ -23,20 +30,20 @@ array(string) verify_set( string new_value ) {
   sscanf(domain,
 	 "%*[abcdefghijklmnopqrstuvwxyz0123456789.-_]%s", tmp); // More characters?
   if(sizeof(tmp))
-    return ({ "The email address domain contains forbidden characters.", new_value });
+    return ({ LOCALE(0,"The email address domain contains forbidden characters."), new_value });
 
   sscanf(lower_case(user),
 	 "%*[abcdefghijklmnopqrstuvwxyz0123456789.-_]%s", tmp); // More characters?
   if(sizeof(tmp))
-    return ({ "The email address user contains forbidden characters.", new_value });
+    return ({ LOCALE(0,"The email address user contains forbidden characters."), new_value });
 
   if( !sizeof( user ))
-    return({ "The email address does not contain a user.", new_value });
+    return({ LOCALE(0,"The email address does not contain a user."), new_value });
   if( !sizeof( domain ))
-    return({ "The email address does not contain a domain.", new_value });
+    return({ LOCALE(0,"The email address does not contain a domain."), new_value });
 
   if(user[0]=='.')
-    return ({ "The email address begins with an character that is not legal in that position.",
+    return ({ LOCALE(0,"The email address begins with an character that is not legal in that position."),
 	      new_value[1..] });
 
 #ifdef NSERIOUS
@@ -45,7 +52,8 @@ array(string) verify_set( string new_value ) {
 #endif
 
   if(check_domain && !Protocols.DNS.client()->get_primary_mx(domain))
-    return ({ "The domain "+domain+" could not be found.", new_value });
+    return ({ sprintf(LOCALE(0,"The domain %s could not be found."),domain),
+	      new_value });
   // We could perhaps take this a step further and ask the mailserver if the account is present.
 
   return ({ 0, new_value });

@@ -1,5 +1,11 @@
 inherit .Upload;
 
+// Locale macros
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+
+#define LOCALE(X,Y)    \
+  ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
+
 constant type="Image";
 
 array(Image.Layer) get_layers() 
@@ -41,9 +47,9 @@ array(string) verify_set_from_form( string newval )
   string warning;
   if( catch{
     if( !Image._decode( newval ) )
-      warning = "Cannot decode this file as an image\n";
+      warning = LOCALE(0,"Cannot decode this file as an image")+"\n";
   } )
-    warning = "Error while decoding image\n";
+    warning = LOCALE(0,"Error while decoding image")+"\n";
   return ({ warning, newval });
 }
 
@@ -64,10 +70,11 @@ string render_view( RequestID id, int|void thumb )
     }
     else 
     {
-      return "Valid image set (no cimg module available, cannot show it)\n";
+      return LOCALE(0,"Valid image set (no cimg module available, "
+		    "cannot show it)")+"\n";
     }
   } else {
-    return "No image set";
+    return LOCALE(0,"No image set");
   }
 }
 

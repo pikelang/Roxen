@@ -2,23 +2,23 @@
 
 inherit Variable.String;
 
+// Locale macros
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+
+#define LOCALE(X,Y)    \
+  ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
+
 constant type = "Date";
 
-array(string) verify_set( string new_value ) {
-#if constant(Calendar.II)
+Calendar.Day get_date()
+//! Returns the date as a Calendar.Day object.
+{
+  return Calendar.dwim_day( query() );
+}
+
+array(string) verify_set( string new_value )
+{
   if( catch( Calendar.dwim_day( new_value ) ) )
-    return ({ "Could not interpret the date", new_value });
+    return ({ LOCALE(0,"Could not interpret the date"), new_value });
   return ({ 0, new_value });
-#else
-  int y,m,d;
-  if( sscanf(new_value,"%4d-%2d-%2d",y,m,d)!=3 &&
-      sscanf(new_value,"%4d%2d%2d",y,m,d)!=3 )
-    return ({ "Could not interpret the date", new_value });
-  else {
-    if( sprintf("%4d-%02d-%02d", y, m, d) != Calendar.ISO.Year(y)->
-	month(m)->day(d)->iso_name() )
-      return ({ new_value+" does not appear to be a valid date.", new_value });
-  }
-  return ({ 0, new_value });
-#endif
 }
