@@ -1,31 +1,28 @@
 /*
- * $Id: tablist.pike,v 1.22 1999/11/11 09:24:07 mast Exp $
+ * $Id: tablist.pike,v 1.23 1999/11/14 11:32:04 per Exp $
  *
  * Makes a tab list like the one in the config interface.
  *
- * $Author: mast $
+ * $Author: per $
  */
 
-constant cvs_version="$Id: tablist.pike,v 1.22 1999/11/11 09:24:07 mast Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.23 1999/11/14 11:32:04 per Exp $";
 constant thread_safe=1;
 
-#define use_contents_cache 0
-#define use_gif_cache      1
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-#if use_contents_cache  
-mapping(string:string) contents_cache = ([]);
-#endif
-
-#if use_gif_cache  
-mapping(string:string) gif_cache = ([]);
-#endif
+roxen.ImageCache the_cache;
 
 /*
  * Functions
  */
+
+void start()
+{
+  the_cache = roxen.ImageCache( "tablist", draw_tab );
+}
 
 array register_module()
 {
@@ -64,11 +61,8 @@ array register_module()
 	      "the global setting.", 0, 1 }));
 }
 
-void create()
-{
-}
-
-string tag_tab(string t, mapping a, string contents, mapping d)
+string internal_tag_tab(string t, mapping a, string contents, mapping d,
+                        RequestID id)
 {
   if (a->help)
     return register_module()[2];
@@ -87,110 +81,65 @@ string tag_tab(string t, mapping a, string contents, mapping d)
   
   //  Create <img> tag
   mapping img_attrs = ([ ]);
-  img_attrs->src = query_internal_location() + dir +
-    replace(http_encode_string(contents), "?", "%3f") + ".gif";
-  
+
   if (a->alt) {
     img_attrs->alt = a->alt;
     m_delete(a, "alt");
-  } else {
+  } else
     img_attrs->alt = "_/" + html_encode_string(contents) + "\\_";
-  }
   
   if (a->border) {
     img_attrs->border = a->border;
     m_delete(a, "border");
-  } else {
+  } else
     img_attrs->border="0";
+  
+  img_attrs->src = query_internal_location()+
+                 the_cache->store( ({args,contents}), id );
+  if( mapping size = the_cache->metadata( a, id, 1 ) ) 
+  {
+    // image in cache (1 above prevents generation on-the-fly, 
+    // first image will lack sizes)
+    img_attrs->width = size->xsize;
+    img_attrs->height = size->ysize;
   }
-  
-  if (!a->noxml && !d->noxml)
-    img_attrs["/"]="/";
-  m_delete(a, "noxml");
-  
   return make_container("a", a, make_container("b", ([]),
 					       make_tag("img", img_attrs)));
 }
 
-
-int my_hash(mixed o)
+string container_tablist(string t, mapping a, string contents, RequestID id)
 {
-  switch(sprintf("%t",o))
-  {
-    case "string": return hash(o);
-    case "int": return o;
-    case "mapping":
-      int h = 17 + sizeof(o);
-      foreach(indices(o), mixed index)
-         h += hash(index) * my_hash(o[index]);
-      return h;
-
-   case "array":
-    return hash(sprintf("%O",o));
-   default:
-     return hash(encode_value(o));
-  }
-}
-
-
-string tag_tablist(string t, mapping a, string contents)
-{
-#if use_contents_cache
-  object md5 = Crypto.md5();
-  md5->update(contents+my_hash(a));
-  string key=md5->digest();
-  if(contents_cache[key])
-    return contents_cache[key];
-#endif
-  string res=replace(parse_html(contents, ([]), (["tab":tag_tab]), a),
+  string res=replace(parse_html(contents, ([]), (["tab":internal_tag_tab]), 
+                                a, id),
 		 ({ "\n", "\r" }), ({ "", "" }));
-#if use_contents_cache  
-  contents_cache[key]=res;
-#endif  
   return res;
 }
 
 
-mapping query_tag_callers()
-{
-  return ([]);
-}
-
-
-mapping query_container_callers()
-{
-  return ([ "tablist":tag_tablist ]);
-}
-
-
-Image.image load_image(string f)
-{
-  string data;
-  
-  if (!(data = Stdio.read_bytes("roxen-images/" + f))) {
-    werror("Tablist: Failed to open file: %s\n", f);
-    return 0;
-  }
-  return Image.PNG.decode(data);
-}
-
-object mask_image = load_image("tab_mask.png");
-object frame_image = load_image("tab_frame.png");
+Image.Image mask_image; 
+Image.Image frame_image;
 object button_font = resolve_font("haru 32");
 
-
-Image.image draw_tab(object text, mapping args)
+mapping(string:Image.Image) draw_tab(mapping args, string txt)
 {
+  Image.Image text;
   //  Create image with proper background
-  text = text->scale(0, frame_image->ysize());
-  object i = Image.image(frame_image->xsize() * 2 + text->xsize(),
-			 frame_image->ysize(),
-			 args->sel ? args->fg : args->dim);
+  text = button_font->write( txt )->scale(0, frame_image->ysize());
+
+  Image.Image i = Image.Image(frame_image->xsize() * 2 + text->xsize(),
+                              frame_image->ysize(),
+                              args->sel ? args->fg : args->dim);
+  Image.Image mask = Image.Image(frame_image->xsize() * 2 + text->xsize(),
+                                 frame_image->ysize(),Image.Color.white );
   
   //  Add outside corners
   i->paste_alpha_color(mask_image, args->bg);
+  mask->paste_alpha_color(mask_image, Image.Color.black);
+
   i->paste_alpha_color(mask_image->mirrorx(), args->bg,
-		       i->xsize() - mask_image->xsize(), 0);
+                       i->xsize() - mask_image->xsize(), 0);
+  mask->paste_alpha_color(mask_image->mirrorx(), Image.Color.black,
+                          i->xsize() - mask_image->xsize(), 0);
   
   //  Add tab frame. We compose the corners in a separate buffer where we
   //  draw the sides using a mult() operation to preserve antialiasing.
@@ -207,40 +156,19 @@ Image.image draw_tab(object text, mapping args)
   //  Create line on top of tab, and also at bottom if not selected
   i->line(frame_image->xsize() - 1, 0, i->xsize() - frame_image->xsize(), 0,
 	  0, 0, 0);
+
   if (!args->sel)
     i->line(0, i->ysize() - 1, i->xsize(), i->ysize() - 1, 0, 0, 0);
   
-  return i;
+  return ([ "img":i, "alpha":mask ]);
 }
-
 
 mapping find_internal(string f, object id)
 {
-  string s;
-  
-#if use_gif_cache
-  if(s = gif_cache[f]) {
-    //  report_debug("Tablist: "+f+" found in cache.\n");
-    return http_string_answer(s, "image/gif");
+  if( !mask_image )
+  {
+    mask_image = roxen.load_image("roxen-images/tab_mask.png",id);
+    frame_image = roxen.load_image("roxen-images/tab_frame.png",id);
   }
-#endif  
-
-  array(string) arr = f / "|";
-  if (sizeof(arr) > 1) {
-    //  Remove extension
-    if (arr[-1][sizeof(arr[-1]) - 4..] == ".gif") {
-      arr[-1] = arr[-1][..sizeof(arr[-1]) - 5];
-    }
-    
-    mapping args = decode_value(MIME.decode_base64(arr[0]));
-    s = Image.GIF.encode(draw_tab(button_font->write(arr[1..] * "|"), args));
-    
-#if use_gif_cache
-    if(!gif_cache[f])
-      gif_cache[f] = s;
-#endif  
-    
-    return http_string_answer(s, "image/gif");
-  }
-  return 0;
+  return the_cache->http_file_answer( f, id );
 }
