@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.232 2001/08/22 16:26:39 mast Exp $
+// $Id: module.pmod,v 1.233 2001/08/22 17:28:22 wellhard Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6685,7 +6685,9 @@ class PCode
   add_frame:
     {
     add_evaled_value:
-      if (flags & COLLECT_RESULTS)
+      if (flags & COLLECT_RESULTS) {
+	mapping var_chg = ctx->misc->variable_changes;
+	ctx->misc->variable_changes = ([]);
 	if (frame->flags & FLAG_DONT_CACHE_RESULT)
 	  PCODE_MSG ("frame %O not result cached\n", frame);
 	else {
@@ -6702,13 +6704,11 @@ class PCode
 		     frame, format_short (evaled_value));
 	  if (length + 1 >= sizeof (exec)) exec += allocate (sizeof (exec));
 	  exec[length++] = evaled_value;
-	  mapping var_chg = ctx->misc->variable_changes;
-	  if (sizeof (var_chg)) {
+	  if (sizeof (var_chg))
 	    exec[length++] = VariableChange (var_chg);
-	    ctx->misc->variable_changes = ([]);
-	  }
 	  break add_frame;
 	}
+      }
 
       PCODE_MSG ("adding frame %O\n", frame);
       if (length + 3 > sizeof (exec)) exec += allocate (sizeof (exec));
