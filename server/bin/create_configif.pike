@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.17 2000/04/03 14:57:50 per Exp $
+ * $Id: create_configif.pike,v 1.18 2000/04/04 19:15:30 mast Exp $
  *
  * Create an initial administration interface server.
  */
@@ -233,5 +233,5 @@ string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
   <str>password</str>    : <str>" + crypt(password) + #"</str>
   <str>name</str>        : <str>" + user + "</str>\n</map>" ));
 
-  write("Administrator user \"" + user + "\" created.");
+  write("Administrator user \"" + user + "\" created.\n");
 }
