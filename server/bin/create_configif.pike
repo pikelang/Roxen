@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.41 2002/06/05 10:14:23 nilsson Exp $
+ * $Id: create_configif.pike,v 1.42 2002/06/14 16:05:04 jhs Exp $
  *
  * Create an initial administration interface server.
  */
@@ -93,7 +93,7 @@ int main(int argc, array argv)
 
   if(has_value(argv, "--help")) {
     write(#"
-Creates and initializes a Roxen WebServer configuration
+Creates and initializes a Internet Server configuration
 interface. Arguments:
 
  -d dir   The location of the configuration interface.

@@ -1,6 +1,6 @@
-// This file is part of Roxen WebServer.
+// This file is part of Internet Server.
 // Copyright © 2000 - 2001, Roxen IS.
-// $Id: basic_defvar.pike,v 1.30 2002/06/05 10:08:52 nilsson Exp $
+// $Id: basic_defvar.pike,v 1.31 2002/06/14 16:05:03 jhs Exp $
 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 

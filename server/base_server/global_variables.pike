@@ -1,6 +1,6 @@
-// This file is part of Roxen WebServer.
+// This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.92 2002/06/13 22:51:37 nilsson Exp $
+// $Id: global_variables.pike,v 1.93 2002/06/14 16:05:03 jhs Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 

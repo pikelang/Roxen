@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.19 2002/06/05 10:46:26 nilsson Exp $
+// $Id: cmdline.cpp,v 1.20 2002/06/14 16:05:05 jhs Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -1206,7 +1206,7 @@ int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
   //   pass="$pass --version"
   // else
   //  if [ -f base_server/roxen.pike ]; then
-  //    echo "Roxen WebServer `roxen_version`"
+  //    echo "Internet Server `roxen_version`"
   //    exit 0
   //  else
   //    echo 'base_server/roxen.pike not found!'

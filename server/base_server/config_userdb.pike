@@ -1,4 +1,4 @@
-// This file is part of Roxen WebServer.
+// This file is part of Internet Server.
 // Copyright © 2000 - 2001, Roxen IS.
 //
 // Core part of the configuration user database.  Handles creation of

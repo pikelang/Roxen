@@ -1,9 +1,9 @@
-// This file is part of Roxen WebServer.
+// This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.334 2002/06/14 01:00:01 jhs Exp $
+// $Id: roxenloader.pike,v 1.335 2002/06/14 16:05:03 jhs Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.334 2002/06/14 01:00:01 jhs Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.335 2002/06/14 16:05:03 jhs Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1172,7 +1172,7 @@ int main(int argc, array(string) argv)
   if(roxen_is_cms)
     roxen_product_name="Roxen CMS";
   else
-    roxen_product_name="Roxen WebServer";
+    roxen_product_name="Internet Server";
 
   // The default (internally managed) mysql path
   string defpath =
@@ -1945,7 +1945,7 @@ void do_main( int argc, array(string) argv )
   // Set start time and report server version info.
   int start_time = gethrtime();
   last_was_nl = 1;
-  report_debug("-"*58+"\n"+version()+", Roxen WebServer "+roxen_version()+"\n");
+  report_debug("-"*58+"\n"+version()+", Internet Server "+roxen_version()+"\n");
 
 
   //
@@ -1997,7 +1997,7 @@ void do_main( int argc, array(string) argv )
 #if !constant( Gz.inflate )
   feature_warn("FATAL", ({
     "The Gz (zlib) module is not available. "
-    "Various parts for Roxen WebServer will not function correctly "
+    "Various parts for Internet Server will not function correctly "
     "without Gz support, e.g. the state handler and the built in font.",
     "To get zlib support, install zlib from "
     "ftp://ftp.freesoftware.com/pub/infozip/zlib/zlib.html "

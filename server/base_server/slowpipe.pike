@@ -1,4 +1,4 @@
-// This file is part of Roxen WebServer.
+// This file is part of Internet Server.
 // Copyright © 1999 - 2001, Roxen IS.
 //
 //
@@ -10,7 +10,7 @@
 // on demand might be very interesting to save memory and increase
 // performance. We'll see.
 
-constant cvs_version="$Id: slowpipe.pike,v 1.14 2002/03/28 03:06:50 per-bash Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.15 2002/06/14 16:05:04 jhs Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG

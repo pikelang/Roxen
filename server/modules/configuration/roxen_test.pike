@@ -3,11 +3,11 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.53 2002/06/05 10:12:07 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.54 2002/06/14 16:05:04 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
-constant module_doc  = "Tests Roxen WebServer.";
+constant module_doc  = "Tests Internet Server.";
 constant is_roxen_tester_module = 1;
 
 Configuration conf;

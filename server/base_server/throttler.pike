@@ -1,4 +1,4 @@
-// This file is part of Roxen WebServer.
+// This file is part of Internet Server.
 // Copyright © 1999 - 2001, Roxen IS.
 //
 // A throttling co-ordinator. Will share bandiwdth among
@@ -11,7 +11,7 @@
 // assumption. Per? Grubba?
 //
 
-constant cvs_version="$Id: throttler.pike,v 1.10 2002/03/28 03:05:10 per-bash Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.11 2002/06/14 16:05:04 jhs Exp $";
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000

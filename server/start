@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.197 2002/06/05 10:08:29 nilsson Exp $
+# $Id: start,v 1.198 2002/06/14 16:05:02 jhs Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -298,7 +298,7 @@ parse_args() {
      pass="$pass --version"
    else
     if [ -f base_server/roxen.pike ]; then
-      echo "Roxen WebServer `roxen_version`"
+      echo "Internet Server `roxen_version`"
       exit 0
     else
       echo 'base_server/roxen.pike not found!'
@@ -327,7 +327,7 @@ parse_args() {
      pass="$pass --help"
    else
   sed -e "s/\\.B/`tput 'bold' 2>/dev/null`/g" -e "s/B\\./`tput 'sgr0' 2>/dev/null`/g" << EOF
-.BThis command will start the Roxen WebServerB..
+.BThis command will start the Internet ServerB..
 
 The environment variable .BROXEN_ARGSB. can be used to specify
 the default arguments.
@@ -537,7 +537,7 @@ if [ ! "X$pass" = "X" ] ; then set -- $pass ;fi
 
 ####### BEGIN PIKE OPTIONS
 
-# Roxen WebServer will create files as the initial user,
+# Internet Server will create files as the initial user,
 # which it expects to be able to read as the run-time user.
 umask 022
 
@@ -623,7 +623,7 @@ signal_exit() {
   trap "" 2 15
   if [ "x$ROXEN_PID" != "x" ]; then
     kill $ROXEN_PID 2>/dev/null && wait $ROXEN_PID 2>/dev/null
-    dp "Roxen WebServer shutdown."
+    dp "Internet Server shutdown."
   fi
   if [ "x$keep_mysql" = "x" ] ; then
     if [ -f $DIR/_mysql/mysql_pid ] ; then
@@ -677,7 +677,7 @@ start_roxen() {
 
     if [ "x$once" = "x" ]; then
       eval "fork_roxen \"$pike\" $args 2>>\"${DEBUGLOG}.1\" 1>&2"
-      dp "Roxen WebServer server pid $ROXEN_PID."
+      dp "Internet Server server pid $ROXEN_PID."
       wait $ROXEN_PID 2>/dev/null 1>&2
       exitcode="$?"
       ROXEN_PID=""
@@ -781,7 +781,7 @@ fi
 
 if [ -z "$once" ] ; then
   if [ $verbose -gt 0 ]; then
-    dp "Starting the Roxen WebServer."
+    dp "Starting the Internet Server."
   else :; fi
   if [ "x$DEBUGLOG" = "x" ] ; then
     DEBUGDIR="$LOGDIR/debug"
@@ -828,18 +828,18 @@ if [ -z "$once" ] ; then
 
 	if [ "$exitcode" -eq "0" ] ; then
 	  # Clean shutdown.
-	  dp "Roxen WebServer shutdown."
+	  dp "Internet Server shutdown."
 	  signal_exit
 	  # Note reached, but...
 	  exit 0
 	fi
 	if [ "$exitcode" -lt "0" ] ; then
 	  # Signal death.
-	  dp "Roxen WebServer died of signal $exitcode."
+	  dp "Internet Server died of signal $exitcode."
 	else
          case "$exitcode" in
          100)
-           dp "Changing Roxen WebServer version. Restarting."
+           dp "Changing Internet Server version. Restarting."
 	   # We need to clean up the pid file, since we're mentioned in it...
 	   cleanup_pid_file
            cd .. && exec ./start "$@"
@@ -847,7 +847,7 @@ if [ -z "$once" ] ; then
            exit 1
            ;;
          *)
-           dp "Roxen WebServer down with code $exitcode."
+           dp "Internet Server down with code $exitcode."
            ;;
          esac
 	fi

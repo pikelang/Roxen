@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.15 2002/04/12 08:54:25 tomas Exp $
+// $Id: roxen.cpp,v 1.16 2002/06/14 16:05:05 jhs Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -69,7 +69,7 @@ void CRoxen::PrintVersion()
 {
   /*
     if [ -f base_server/roxen.pike ]; then
-      echo "Roxen WebServer `roxen_version`"
+      echo "Internet Server `roxen_version`"
       exit 0
     else
       echo 'base_server/roxen.pike not found!'

@@ -1,12 +1,12 @@
-// This file is part of Roxen WebServer.
+// This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
 //
-// The Roxen WebServer main program.
+// The Internet Server main program.
 //
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.805 2002/06/14 00:38:17 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.806 2002/06/14 16:05:03 jhs Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;

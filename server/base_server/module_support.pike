@@ -1,6 +1,6 @@
-// This file is part of Roxen WebServer.
+// This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.112 2002/06/13 01:05:36 nilsson Exp $
+// $Id: module_support.pike,v 1.113 2002/06/14 16:05:03 jhs Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>

@@ -1,6 +1,6 @@
-// This file is part of Roxen WebServer.
+// This file is part of Internet Server.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.53 2002/06/14 00:02:39 nilsson Exp $
+// $Id: prototypes.pike,v 1.54 2002/06/14 16:05:03 jhs Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -1149,7 +1149,7 @@ class UserDB
 
   User create_user( string s )
   //! Not necessarily implemented, as an example, it's not possible to
-  //! create users in the system user database from Roxen WebServer.
+  //! create users in the system user database from Internet Server.
   //! The default implementation returns 0.
   {
     return 0;
@@ -1157,7 +1157,7 @@ class UserDB
 
   Group create_group( string s )
   //! Not necessarily implemented, as an example, it's not possible to
-  //! create groups in the system user database from Roxen WebServer.
+  //! create groups in the system user database from Internet Server.
   //! The default implementation returns 0.
   {
     return 0;

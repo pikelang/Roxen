@@ -7,7 +7,7 @@
 
 <table width="100%"  border="0" cellspacing="0" cellpadding="0">
   <tr>
-    <td><img src="/internal-roxen-webserver" border="0" alt="Roxen WebServer" hspace="2" /></td>
+    <td><img src="/internal-roxen-webserver" border="0" alt="Internet Server" hspace="2" /></td>
     <td>&nbsp;</td>
     <td align="right"><b>&roxen.version;</b></td>
   </tr>

@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.9 2002/03/14 13:30:17 grubba Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.10 2002/06/14 16:05:04 jhs Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -66,9 +66,9 @@ void create(Configuration _conf) {
 
   defvar("trans_mods",
 	 Variable.Flag(1, 0, "Send active modules",
-		       "Transmits a list of all active modules in your Roxen WebServer. "
+		       "Transmits a list of all active modules in your Internet Server. "
 		       "This information is kept confidential and is only used to better "
-		       "see how Roxen WebServers in general are set up."));
+		       "see how Internet Servers in general are set up."));
 }
 
 void start() {

@@ -105,7 +105,7 @@
     %3ctd%3e%3cimg src="/internal-roxen-page-not-found&var.404;" border="0" alt="Page not found" width="404" hspace="2" /%3e%3c/td%3e
     %3ctd%3e&nbsp;%3c/td%3e
     %3ctd align="right"%3e%3cfont face="lucida,helvetica,arial"%3e
-      %3cb%3eRoxen WebServer &roxen.base-version;%3c/b%3e%3c/font%3e%3c/td%3e
+      %3cb%3eInternet Server &roxen.base-version;%3c/b%3e%3c/font%3e%3c/td%3e
   %3c/tr%3e
   %3ctr%3e
     %3ctd width="100%25" height="21" colspan="3" background="/internal-roxen-tile"%3e%3cimg src="/internal-roxen-unit" alt="" /%3e%3c/td%3e

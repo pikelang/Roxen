@@ -162,7 +162,7 @@ string|mapping parse( RequestID id )
 	//  where 999 is a number which orders the groups. The group name is
 	//  the only string which the user will see. All templates which don't
 	//  contain a number will default to position 500.
-	string sort_id = group || "Roxen WebServer";
+	string sort_id = group || "Internet Server";
 	if (!has_value(sort_id, "|"))
 	  sort_id = "500|" + sort_id;
 	sort_id += "|" + name;

@@ -1,5 +1,5 @@
 // -*- java -*-
-// This file is part of Roxen WebServer. Copyright (c) 1999 - 2001, Roxen IS.
+// This file is part of Internet Server. Copyright (c) 1999 - 2001, Roxen IS.
 
 var modifier;
 var src_actions;

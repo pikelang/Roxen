@@ -1,6 +1,6 @@
-// This file is part of Roxen WebServer.
+// This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.83 2002/06/14 00:38:17 nilsson Exp $
+// $Id: fonts.pike,v 1.84 2002/06/14 16:05:03 jhs Exp $
 
 #include <module_constants.h>
 #include <module.h>
