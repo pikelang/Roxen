@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.16 2002/06/14 16:05:05 jhs Exp $
+// $Id: roxen.cpp,v 1.17 2002/10/01 23:21:42 nilsson Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -68,11 +68,11 @@ void CRoxen::ErrorMsg (int show_last_err, const TCHAR *fmt, ...)
 void CRoxen::PrintVersion()
 {
   /*
-    if [ -f base_server/roxen.pike ]; then
+    if [ -f server_core/roxen.pike ]; then
       echo "Internet Server `roxen_version`"
       exit 0
     else
-      echo 'base_server/roxen.pike not found!'
+      echo 'server_core/roxen.pike not found!'
       exit 1
     fi
   */
@@ -83,9 +83,9 @@ void CRoxen::PrintVersion()
   build[0]   = '\0';
   rel[0]     = '\0';
 
-  if (GetFileAttributes("base_server/roxen.pike") != -1)
+  if (GetFileAttributes("server_core/roxen.pike") != -1)
   {
-    FILE *f = fopen("etc/include/version.h", "rb");
+    FILE *f = fopen("data/include/version.h", "rb");
     if (f != NULL)
     {
       char line[200];
@@ -146,11 +146,11 @@ void CRoxen::PrintVersion()
       printf("Roxen CMS %s.%s%s NT", version, build, rel);
     }
     else
-      printf("etc\\include\\version.h not found!");
+      printf("data\\include\\version.h not found!");
   }
   else
   {
-    printf("base_server\\roxen.pike not found!");
+    printf("server_core\\roxen.pike not found!");
   }
 }
 
@@ -714,8 +714,8 @@ BOOL CRoxen::CheckVersionChange()
 
   // Insert file listings
   ls += ListFiles(FindPike());
-  ls += ListFiles("etc\\modules");
-  ls += ListFiles("base_server");
+  ls += ListFiles("data\\modules");
+  ls += ListFiles("server_core");
 
   is.open("..\\var\\old_roxen_defines");
   while (is.good())
