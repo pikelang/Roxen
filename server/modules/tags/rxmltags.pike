@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.132 2000/06/18 16:49:05 grubba Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.133 2000/06/23 16:19:18 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -506,7 +506,7 @@ class TagImgs {
       if(args->src) {
 	string|object file=id->conf->real_file(Roxen.fix_relative(args->src, id), id);
 	if(!file) {
-	  file=id->conf->try_get_file(Roxen.fix_relative(args->src,id),id);
+	  file=id->conf->try_get_file(args->src,id);
 	  if(file)
 	    file=class {
 	      int p=0;
@@ -635,7 +635,7 @@ class TagFSize {
 	  return 0;
 	}
       };
-      if(string s=id->conf->try_get_file(Roxen.fix_relative(args->file, id), id) ) {
+      if(string s=id->conf->try_get_file(args->file, id) ) {
 	result = (string)strlen(s);
 	return 0;
       }
@@ -770,12 +770,12 @@ class TagInsert {
 	if(args->nocache) {
 	  int nocache=id->pragma["no-cache"];
 	  id->pragma["no-cache"] = 1;
-	  result=id->conf->try_get_file(Roxen.fix_relative(args->file,id),id);
+	  result=id->conf->try_get_file(args->file,id);
 	  if(!result) RXML.run_error("No such file ("+args->file+").\n");
 	  id->pragma["no-cache"] = nocache;
 	}
 	else
-	  result=id->conf->try_get_file(Roxen.fix_relative(args->file,id),id);
+	  result=id->conf->try_get_file(args->file,id);
 	if(args->quote=="html") result=Roxen.html_encode_string(result);
 
 #ifdef OLD_RXML_COMPAT
