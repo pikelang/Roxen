@@ -9,29 +9,6 @@ constant silent_modules = ({});
 //! Silent modules does not get their initial variables shown.
 
 
-string verify_url( string port )
-{
-  if( (int)port ) 
-    port = "http://*:"+port+"/";
-
-  string protocol, host, path;
-
-  if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
-    ;
-  else
-  {
-    int pno;
-    if( sscanf( host, "%s:%d", host, pno ) == 2)
-    {
-      if( pno != roxen->protocols[ lower_case( protocol ) ]->default_port )
-        host = host+":"+pno;
-    }
-    if( !strlen(path) )
-      path = "/";
-    port = lower_case( protocol )+"://"+host+path;
-  }
-  return port;
-}
 string initial_form( RequestID id )
 {
   Configuration conf = id->misc->new_configuration;
