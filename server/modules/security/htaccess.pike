@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.76 2001/05/16 07:51:00 per Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.77 2001/06/13 13:45:04 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -66,7 +66,7 @@ void create()
 
 }
 
-Thread.Local ui = Thread.Local( );
+// Thread.Local ui = Thread.Local( );
 
 string read( string f, RequestID id )
 {
@@ -89,10 +89,10 @@ string read( string f, RequestID id )
 /* Check if the person accessing this page should be denied or not. */
 mapping|string|int htaccess(mapping access, RequestID id)
 {
-  ui->set( ([
+  id->misc->ht_authinfo = ([
     "groupfile":READ( access->authgroupfile ),
     "userfile":READ( access->authuserfile ),
-  ]) );   
+  ]);   
   if(access->redirect)
     foreach( access->redirect, string r )
     {
@@ -580,9 +580,10 @@ mapping parse_userfile( string f, mapping u2g, mapping groups )
 }
 
 
-User find_user( string s )
+User find_user( string s, RequestID id )
 {
-  mapping uu = ui->get()||([]);
+  if( !id ) return 0;
+  mapping uu =   id->misc->ht_authinfo||([]);
   mapping groups, u2g, users;
 
   [groups,u2g] = parse_groupfile(uu->groupfile);
@@ -591,45 +592,50 @@ User find_user( string s )
     return HtUser( this_object(), users[s], );
 }
 
-User find_user_from_uid( int id )
+User find_user_from_uid( int uid, RequestID id )
 {
-  mapping uu = ui->get()||([]);
+  if( !id ) return 0;
+  mapping uu =   id->misc->ht_authinfo||([]);
   mapping groups, u2g, users;
 
   [groups,u2g] = parse_groupfile(uu->groupfile);
   users  = parse_userfile( uu->userfile, u2g, groups );
 
-  if( users[ id ] )
-    return HtUser( this_object(), users[id] );
+  if( users[ uid ] )
+    return HtUser( this_object(), users[uid] );
 }
 
-array(string) list_users( )
+array(string) list_users( RequestID id )
 {
-  mapping uu = ui->get()||([]);
+  if( !id ) return 0;
+  mapping uu =   id->misc->ht_authinfo||([]);
   return filter(indices(parse_userfile( uu->userfile, 0, 0 )),stringp);
 }
 
-Group find_group( string group )
+Group find_group( string group, RequestID id )
 {
-  mapping uu = ui->get()||([]);
+  if( !id ) return 0;
+  mapping uu =   id->misc->ht_authinfo||([]);
   mapping groups = ([]), u2g = ([]);
   [groups,u2g] = parse_groupfile(uu->groupfile);
   if( groups[group] )
     return HtGroup( this_object(), groups[group] );
 }
 
-Group find_group_from_gid( int id  )
+Group find_group_from_gid( int gid, RequestID id  )
 {
-  mapping uu = ui->get()||([]);
+  if( !id ) return 0;
+  mapping uu =   id->misc->ht_authinfo||([]);
   mapping groups = ([]), u2g = ([]);
   [groups,u2g] = parse_groupfile(uu->groupfile);
-  if( groups[id] )
-    return HtGroup( this_object(), groups[id] );
+  if( groups[gid] )
+    return HtGroup( this_object(), groups[gid] );
 }
 
-array(string) list_groups( )
+array(string) list_groups( RequestID id )
 {
-  mapping uu = ui->get()||([]);
+  if( !id ) return 0;
+  mapping uu =   id->misc->ht_authinfo||([]);
   mapping groups = ([]), u2g = ([]);
   [groups,u2g] = parse_groupfile(uu->groupfile);
   return filter(indices(groups),stringp);
