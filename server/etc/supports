@@ -1,4 +1,4 @@
-## $Id: supports,v 1.24 1997/04/24 16:34:27 grubba Exp $
+## $Id: supports,v 1.25 1997/04/25 16:08:10 grubba Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -58,6 +58,7 @@ mozilla.[2-9].[0-9]b[2-9].*           -java
 mozilla/2.*	        -javascript, -netscape_javascript
 mozilla/2.*X11		javascript
 mozilla/2.*Win16	-java
+mozilla/2.*Macintosh	-java
 
 mozilla/3.*		tablecolor
 
