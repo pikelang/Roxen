@@ -146,7 +146,7 @@ localinstall: all
 	    chmod u+w "$(SRCDIR)/server/$$d/."; \
 	  fi; \
 	done
-	@for d in `cd "pike/$(PIKEVERSION)/src/lib; find . -type d -print`; do \
+	@for d in `cd "pike/$(PIKEVERSION)/src/lib"; find . -type d -print`; do \
 	  if [ -d "$(SRCDIR)/server/lib/pike/$$d/." ]; then : ; else \
 	    echo "lib/pike/$$d"; \
 	    mkdir "$(SRCDIR)/server/lib/pike/$$d" || exit 1; \
@@ -154,7 +154,7 @@ localinstall: all
 	    chmod u+w "$(SRCDIR)/server/lib/pike/$$d/."; \
 	  fi; \
 	done
-	@for f in `cd "pike/$(PIKEVERSION)/src/lib; find . -type f -print`; do \
+	@for f in `cd "pike/$(PIKEVERSION)/src/lib"; find . -type f -print`; do \
 	  if cmp "$(SRCDIR)/server/lib/pike/$$f" "pike/$(PIKEVERSION)/src/lib/$$f" >/dev/null 2>&1 ; \
 	  then : ; else \
 	    echo "lib/pike/$$f"; \
