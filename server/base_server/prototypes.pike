@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.120 2004/05/13 12:35:14 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.121 2004/05/13 12:35:39 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1867,8 +1867,8 @@ enum Overwrite {
   MAYBE_OVERWRITE = 0,
   //! If the source and destination are directories, overwrite the
   //! properties only. If the source and destination are files,
-  //! overwrite the file along with the content. Otherwise fail if the
-  //! destination exists.
+  //! overwrite the file along with the properties. Otherwise fail if
+  //! the destination exists.
 
   DO_OVERWRITE = 1,
   //! If the destination exists then delete it recursively before
