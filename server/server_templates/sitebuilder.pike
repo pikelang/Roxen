@@ -1,5 +1,5 @@
 /*
- * $Id: sitebuilder.pike,v 1.4 1998/11/24 21:44:51 mast Exp $
+ * $Id: sitebuilder.pike,v 1.5 1998/12/03 18:28:54 mast Exp $
  */
 
 #include <module.h>
@@ -37,6 +37,7 @@ void post(object node)
       o2->change (1);
     }
     else report_warning ("Couldn't deactivate shells database check\n");
+    if (o2 = o->descend ("Ports", 1)) o2->folded = 0;
     o->save();
   }
   else report_warning ("Couldn't initialize in server variables section\n");
