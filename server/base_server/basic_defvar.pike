@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.17 2000/08/17 16:49:32 lange Exp $
+// $Id: basic_defvar.pike,v 1.18 2000/09/28 02:07:11 per Exp $
 // (string:Variable.Variable) 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -51,9 +51,10 @@ void setvars( mapping (string:mixed) vars )
 {
 //   werror("setvars: %O\n", vars );
   string v;
+  Variable.Variable q;
   foreach( indices( vars ), v )
-    if(variables[v])
-      set( v, vars[v] );
+    if(q = variables[v])
+      q->set( vars[v] );
 }
 
 /*

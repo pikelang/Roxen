@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.564 2000/09/25 09:31:53 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.565 2000/09/28 02:07:11 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -825,12 +825,11 @@ class Protocol
   }
 }
 
+#if constant(SSL.sslfile)
 class SSLProtocol
 //! Base protocol for SSL ports. Exactly like Port, but uses SSL.
 {
   inherit Protocol;
-
-#if constant(Crypto) && constant(Crypto.rsa) && constant(Standards) && constant(Standards.PKCS.RSA) && constant(SSL) && constant(SSL.sslfile)
 
   // SSL context
   object ctx;
@@ -1019,18 +1018,13 @@ class SSLProtocol
 #endif
     ::create(pn, i);
   }
-#else /* !constant(SSL.sslfile) */
-  void create(int pn, string i) 
-  {
-    report_error(LOC_M(18,"No SSL support available.")+"\n");
-    destruct();
-  }
-#endif /* constant(SSL.sslfile) */
+
   string _sprintf( )
   {
     return "SSLProtocol("+name+"://"+ip+":"+port+")";
   }
 }
+#endif
 
 #if constant(HTTPLoop.prog)
 class FHTTP
@@ -1273,6 +1267,7 @@ class HTTP
 
 }
 
+#if constant(SSL.sslfile)
 class HTTPS
 {
   inherit SSLProtocol;
@@ -1381,7 +1376,6 @@ class HTTPS
     }
   }
 
-#if constant(SSL.sslfile)
   class http_fallback {
     object my_fd;
 
@@ -1432,7 +1426,6 @@ class HTTPS
     }
     return q;
   }
-#endif /* constant(SSL.sslfile) */
 
   int set_cookie, set_cookie_only_once;
   void fix_cvars( Variable.Variable a )
@@ -1452,6 +1445,7 @@ class HTTPS
     ::create( @args );
   }
 }
+#endif
 
 class FTP
 {
@@ -1475,6 +1469,7 @@ class FTP
   }
 }
 
+#if constant(SSL.sslfile)
 class FTPS
 {
   inherit SSLProtocol;
@@ -1496,6 +1491,7 @@ class FTPS
     ::create( @args );
   }
 }
+#endif
 
 class GOPHER
 {
@@ -1550,7 +1546,8 @@ mapping protocols = ([
 #endif
   "http":HTTP,
   "ftp":FTP,
-#if constant(Crypto) && constant(Crypto.rsa) && constant(Standards) && constant(Standards.PKCS.RSA) && constant(SSL) && constant(SSL.sslfile)
+
+#if constant(Crypto) && constant(SSL.sslfile)
   "https":HTTPS,
   "ftps":FTPS,
 #endif
@@ -1655,6 +1652,13 @@ int register_url( string url, Configuration conf )
 		 url, conf->query_name());
     return 0;
   }
+
+  if( !protocols[ protocol ] )
+  {
+    report_error(LOC_M(0,"The protocol '%s' is not available")+"\n", protocol);
+    return 0;
+  }
+
   sscanf(host, "%[^:]:%d", host, port);
 
   if( !port )
@@ -3431,7 +3435,6 @@ int main(int argc, array tmp)
               (program)"module";
               dump( "protocols/http.pike");
               dump( "protocols/ftp.pike");
-              dump( "protocols/https.pike");
               dump( "base_server/state.pike" );
               dump( "base_server/highlight_pike.pike");
               dump( "base_server/wizard.pike" );
