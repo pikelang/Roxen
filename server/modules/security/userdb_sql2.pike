@@ -10,7 +10,7 @@
 //
 
 constant cvs_version =
- "$Id: userdb_sql2.pike,v 1.3 2004/06/19 22:15:04 _cvs_stephen Exp $";
+ "$Id: userdb_sql2.pike,v 1.4 2004/06/19 23:05:23 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -58,11 +58,13 @@ class getdb
 }
 
 private void initvars() {
-  catch {
-  array r=mdb->query("SELECT vint FROM globals WHERE gname='usecache' LIMIT 1");
-  if( r && sizeof(r))
-    usecache=(int)r[0]->vint||1;
-  };
+  if(catch {
+    array r=
+     mdb->query("SELECT vint FROM globals WHERE gname='usecache' LIMIT 1");
+    if( r && sizeof(r))
+      usecache=(int)r[0]->vint||1;
+   })
+    report_error("userdb_sql2 PostgreSQL database not properly initialised\n");
 }
 
 void create()
@@ -377,7 +379,7 @@ void start()
     if( DBManager.get(db) )
     {
       cmdb = 0;
-      report_error( db+" exists, but cannot be written to from this module" );
+      report_error( db+" exists, but cannot be written to from this module\n" );
       return;
     }
     DBManager.create_db( db, 0, 1 );
