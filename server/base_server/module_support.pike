@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.24 1999/09/02 18:32:57 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.25 1999/09/05 01:36:00 per Exp $";
 #include <roxen.h>
 #include <module.h>
 
@@ -53,6 +53,7 @@ static class ConfigurableWrapper
   }
 };
 
+function reg_s_loc;
 int globvar(string var, mixed value, string name, int type,
 	    string|void doc_str, mixed|void misc,
 	    int|function|void not_in_config)
@@ -79,20 +80,24 @@ int globvar(string var, mixed value, string name, int type,
     variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
   }
 
-  master()->resolv("Locale")["Roxen"]["standard"]
-    ->register_module_doc( this_object(), var, name, doc_str );
-
+  if(!reg_s_loc)
+    reg_s_loc = master()->resolv("Locale")["Roxen"]["standard"]
+              ->register_module_doc;
+  reg_s_loc( this_object(), var, name, doc_str );
   variables[var][ VAR_SHORTNAME ] = var;
 }
 
+mapping locs = ([]);
 void deflocaledoc( string locale, string variable, 
 		   string name, string doc, mapping|void translate)
 {
-  if(!master()->resolv("Locale")["Roxen"][locale])
+  if(!locs[locale] )
+    locs[locale] = master()->resolv("Locale")["Roxen"][locale]
+                 ->register_module_doc;
+  if(!locs[locale])
     report_debug("Invalid locale: "+locale+". Ignoring.\n");
   else
-    master()->resolv("Locale")["Roxen"][locale]
-      ->register_module_doc( this_object(), variable, name, doc, translate );
+    locs[locale]( this_object(), variable, name, doc, translate );
 }
 
 
