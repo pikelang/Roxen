@@ -1,6 +1,6 @@
 #ifndef __NT__
 /*
- * $Id: openports.pike,v 1.9 1998/02/05 00:59:22 js Exp $
+ * $Id: openports.pike,v 1.10 1998/04/29 03:57:55 grubba Exp $
  */
 
 inherit "wizard";
@@ -174,7 +174,10 @@ mixed page_0(object id)
     }
   }
 
-  foreach(roxen->configuration_ports, object o)
+  // Fool the compiler... (backward compatibility).
+  function fun = roxen->get_configuration_ports;
+
+  foreach(((fun && fun()) || roxen->configuration_ports), object o)
   {
     string port, ip;
     sscanf(o->query_address(1), "%s %s", ip, port);
