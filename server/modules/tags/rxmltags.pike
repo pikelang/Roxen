@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.467 2004/09/27 14:09:18 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.468 2004/10/06 18:51:15 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -655,8 +655,9 @@ static void inc(mapping m, int val, RequestID id)
 {
   RXML.Context context=RXML_CONTEXT;
   array entity=context->parse_user_var(m->variable, m->scope);
-  if(!context->exist_scope(entity[0])) RXML.parse_error("Scope "+entity[0]+" does not exist.\n");
-  context->user_set_var(m->variable, (int)context->user_get_var(m->variable, m->scope)+val, m->scope);
+  string scope = entity[0];
+  entity = entity[1..];
+  context->set_var (entity, context->get_var (entity, scope, RXML.t_int) + val, scope);
 }
 
 class TagImgs {
