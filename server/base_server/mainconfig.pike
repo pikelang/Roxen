@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.40 1997/06/01 22:10:29 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.41 1997/06/09 19:07:00 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -441,8 +441,8 @@ mapping module_nomore(string name, int type, object conf)
     && (!module->copies && module->enabled))
     return module;
   if(((type & MODULE_DIRECTORIES) && (o=conf->dir_module))
-//   || ((type & MODULE_AUTH)  && (o=conf->auth_module))
-//   || ((type & MODULE_TYPES) && (o=conf->types_module))
+     || ((type & MODULE_AUTH)  && (o=conf->auth_module))
+     || ((type & MODULE_TYPES) && (o=conf->types_module))
      || ((type & MODULE_MAIN_PARSER)  && (o=conf->parse_module)))
     return conf->modules[conf->otomod[o]];
 }
@@ -1109,18 +1109,20 @@ mapping configuration_parse(object id)
       
       o->save();
       cache_remove("modules", modname);
-      _master->set_inhibit_compile_errors("");
+
+      // Not usefull since load_module() also does it.
+      // _master->set_inhibit_compile_errors("");
       
       if(!o->config()->load_module(modname))
       {
 	mapping rep;
 	rep = http_string_answer("The reload of this module failed.\n"
 				 "This is (probably) the reason:\n<pre>"
-				 + _master->errors + "</pre>" );
-	_master->set_inhibit_compile_errors(0);
+				 + roxen->last_error + "</pre>" );
+	// _master->set_inhibit_compile_errors(0);
 	return rep;
       }
-      _master->set_inhibit_compile_errors(0);
+      // _master->set_inhibit_compile_errors(0);
       object mod;
       if(!o->config()->disable_module(name))error("Failed to disable module.\n");
       if(!(mod=o->config()->enable_module(name)))error("Failed to enable module.\n");
