@@ -1,5 +1,5 @@
 /* Bugs by: Per */
-string cvs_version = "$Id: spanish.pike,v 1.4 1997/08/19 06:38:19 per Exp $";
+string cvs_version = "$Id: spanish.pike,v 1.5 1998/03/17 16:46:51 grubba Exp $";
 /*
  * name = "Spanish language plugin ";
  * doc = "Handles the conversion of numbers and dates to spanish. Translated by jordi@lleida.net. You have to restart the server for updates to take effect.";
@@ -41,12 +41,14 @@ string date(int timestamp, mapping|void m)
     return (month(t1["mon"]+1) + " " + ordered(t1["mday"]));
   }
   if(m["full"])
-    return ctime(timestamp)[11..15]+", "+
-           month(t1["mon"]+1) + " the "
-           + ordered(t1["mday"]) + ", " +(t1["year"]+1900);
+    return ctime(timestamp)[11..15]+", "
+	+ t1["mday"] + " de "  + month(t1["mon"]+1)
+      	+ " de " +(t1["year"]+1900);
+
   if(m["date"])
-    return month(t1["mon"]+1) + " the "  + ordered(t1["mday"])
-      + " en el año " +(t1["year"]+1900);
+    return t1["mday"] + " de "  + month(t1["mon"]+1)
+      	+ " de " +(t1["year"]+1900);
+
   if(m["time"])
     return ctime(timestamp)[11..15];
 }
