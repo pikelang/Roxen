@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.262 2000/08/28 12:10:47 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.263 2000/08/31 03:00:34 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1924,6 +1924,20 @@ void got_data(mixed fooid, string s)
 {
   ITIMER();
   TIMER("got_data");
+
+  // The port has been closed, but old (probably keep-alive
+  // connections remain.  Close those connections.
+  if( !port_obj ) 
+  {
+    catch  // paranoia
+    {
+      my_fd->close();
+      destruct( my_fd );
+      destruct( );
+    };
+    return;
+  }
+
   if (mixed err = catch {
 
   int tmp;
