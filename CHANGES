@@ -17,6 +17,10 @@ o Fixed ABS to print out the backtraces of all threds if engaged.
 o Added workaround in the CGI-module for systems that dont like
   negative UIDs/GIDs.
 
+o Fixed new "power by"-icons.
+
+o Made new manuals. Now includes the mythical programmers manual.
+
 
 Changes since Roxen Challenger 1.3.111 Yellow
 -----------------------------------------------
@@ -49,8 +53,9 @@ o Brought back extern/README to reality as of 1999.
 
 o Disabled the socketpair kludge for Linux. Roxen needs more
   functionality than Linux broken socketpair provides, so let it fall
-  back on socketpair ultra instead. This will surely break CGI-scripts
-  on Linux, but now we have a chance of fixing it in pikes fall backs.
+  back on socketpair ultra instead. This might break CGI-scripts
+  on Linux, but now we have a chance of fixing it in pikes fall
+  backs. Tests with Linuxen that we have available show no breakage.
 
 o Fixed several bugs in the CGI-support.
 
