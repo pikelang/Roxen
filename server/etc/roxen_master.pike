@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.130 2003/01/15 10:22:21 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.131 2003/02/03 15:32:06 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -346,7 +346,11 @@ class MyCodec
       DUMP_DEBUG_RETURN("resolv:" + res);
     }
     if (res == "master().dirnode") error("Encoding dirnode program");
+#if constant(function_program)
     program parent = function_program(prog);
+#else /* !constant(function_program) */
+    program parent = object_program(function_object(prog));
+#endif /* constant(function_program) */
     DUMP_DEBUG_ENTER("  parent:%O\n", parent);
     if (parent && (parent != p)) {
       string name = function_name(prog);
