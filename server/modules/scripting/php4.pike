@@ -15,7 +15,7 @@ inherit "module";
 
 #include <roxen.h>
 
-constant cvs_version="$Id: php4.pike,v 2.9 2000/07/04 03:42:45 per Exp $";
+constant cvs_version="$Id: php4.pike,v 2.10 2000/07/21 04:33:40 hop Exp $";
 constant thread_safe=1;
 constant module_type=MODULE_FILE_EXTENSION;
 
@@ -43,7 +43,7 @@ class PHPScript
       if(query("rxml"))
       {
         if( mid )
-          buffer = parse_rxml(buffer, mid);
+          buffer = Roxen.parse_rxml(buffer, mid);
 	write_callback();
       }
     } else
@@ -193,8 +193,8 @@ class PHPScript
 
     environment =([]);
     environment |= global_env;
-    environment |= build_env_vars( id->realfile, id, id->misc->path_info );
-    environment |= build_roxen_env_vars(id);
+    environment |= Roxen.build_env_vars( id->realfile, id, id->misc->path_info );
+    environment |= Roxen.build_roxen_env_vars(id);
     if(id->misc->ssi_env)     	environment |= id->misc->ssi_env;
     if(id->misc->is_redirected) environment["REDIRECT_STATUS"] = "1";
     if(id->rawauth && query("rawauth"))
@@ -250,7 +250,7 @@ int|mapping handle_file_extension(object o, string e, object id)
   DWERROR("PHP:handle_file_extension()\n");
   roxen->handle(PHPScript(id)->run);
   DWERROR("PHP:handle_file_extension done\n");
-  return http_pipe_in_progress();
+  return Roxen.http_pipe_in_progress();
 }
 #else
 
