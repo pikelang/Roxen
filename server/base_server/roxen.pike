@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.733 2001/09/06 10:28:52 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.734 2001/09/06 11:54:28 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2099,8 +2099,8 @@ class ImageCache
 //! being a cache, however, it serves a wide variety of other
 //! interesting image conversion/manipulation functions as well.
 {
-#define QUERY(X,Y...) get_db()->query(X,Y)
-  function(void:Sql.Sql) get_db;
+#define QUERY(X,Y...) db->query(X,Y)
+  Sql.Sql db;
   string name;
   string dir;
   function draw_function;
@@ -2988,8 +2988,7 @@ class ImageCache
   static void init_db( )
   {
     meta_cache = ([]);
-    function f = master()->resolv( "DBManager.cached_get" );
-    get_db = lambda() { return f("local"); };
+    db = master()->resolv( "DBManager.cached_get" )("local");
     setup_tables();
   }
 
@@ -3026,7 +3025,7 @@ class ArgCache
 //! refetched later by a short string key. This being a cache, your
 //! data may be thrown away at random when the cache is full.
 {
-  function(void:Sql.Sql) get_db;
+  Sql.Sql db;
   string name;
 
 #define CACHE_VALUE 0
@@ -3069,8 +3068,7 @@ class ArgCache
     // Delay DBManager resolving to before the 'roxen' object is
     // compiled.
     cache = ([]);
-    function f = master()->resolv( "DBManager.cached_get" );
-    get_db = lambda() { return f("local"); };
+    db = master()->resolv( "DBManager.cached_get" )("local");
     setup_table( );
   }
 
@@ -3103,12 +3101,12 @@ class ArgCache
     
     foreach( data, mapping m )
       if( m->contents == long_key )
-	return (int)m->id;
-    
+      	return (int)m->id;
+
+
     QUERY( "INSERT INTO "+name+" (contents,md5,atime) VALUES "
 	   "(%s,%s,UNIX_TIMESTAMP())", long_key, md );
-
-    int id = (int)get_db()->master_sql->insert_id();
+    int id = (int)db->master_sql->insert_id();
 
     (plugins->create_key-({0}))( id, long_key, md );
 
