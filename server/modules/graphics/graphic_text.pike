@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.167 1999/05/08 00:52:43 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.168 1999/05/12 08:00:35 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -11,8 +11,11 @@ inherit "roxenlib";
 #define VAR_MORE	0
 #endif /* VAR_MORE */
 
+
+roxen.Configuration.ArgCache argcache;
+
+
 static private int loaded;
-int args_restored = 0;
 
 static private string doc()
 {
@@ -45,6 +48,13 @@ array (string) list_fonts()
 
 void create()
 {
+  defvar("allowgenericurls", 1, 
+         "Allow generation of images with text from the URL",
+         TYPE_FLAG,
+         "If set, it will be possible to generate gtext images with the "
+         "actual text in the URL. Use &lt;gtext-id&gt; to get the URL-prefix "
+         "to use to generate images, then prepend the actual text");
+
   defvar("cache_dir", "../gtext_cache", "Cache directory for gtext images",
 	 TYPE_DIR,
 	 "The gtext tag saves images when they are calculated in this "
@@ -98,21 +108,19 @@ void create()
 	 "only waste bandwidth");
 
 
-#ifdef TYPE_FONT
-  // compatibility variables...
-  defvar("default_size", 32, 0, TYPE_INT,0,0,1);
-  defvar("default_font", "urw_itc_avant_garde-demi-r",0,TYPE_STRING,0,0,1);
-#else
-  defvar("default_size", 32, "Default font size", TYPE_INT_LIST,
-	 "The default size for the font. This is used for the 'base' size, "
-	 "and can be scaled up or down in the tags.",
-	 ({ 16, 32, 64 }));
-  
-  defvar("default_font", "urw_itc_avant_garde-demi-r", "Default font",
-	 TYPE_STRING_LIST,
-	 "The default font. The 'font dir' will be prepended to the path",
-	 list_fonts());
-#endif
+  defvar("cacheindb", 0, 
+         "Store the arguments and text cache in a mysql database",
+         TYPE_FLAG|VAR_MORE,
+         "If set, store the argument cache (and text cache) in a mysql "
+         "database. This is very useful for load balancing using multiple "
+         "roxen servers, since the mysql database handles synchronization"); 
+
+  defvar( "dbpath", "mysql://localhost/gtextcache", 
+          "Database URL to use",
+          TYPE_STRING|VAR_MORE,
+          "The database to use to store the argument cache",
+          0,
+          lambda(){ return !query("cacheindb"); });
 }
 
 string query_location() { return query("location"); }
@@ -202,7 +210,7 @@ constant lgrey = ({ 200,200,200 });
 constant grey = ({ 128,128,128 });
 constant black = ({ 0,0,0 });
 
-object  bevel(object  in, int width, int|void invert)
+object bevel(object  in, int width, int|void invert)
 {
   int h=in->ysize();
   int w=in->xsize();
@@ -665,22 +673,46 @@ void clean_cache_dir()
     call_out(clean_cache_dir, 3600);
 }
 
+string error_status;
 void start(int|void val, object|void conf)
 {
   loaded = 1;
 
   if(conf)
   {
+    int id;
+    string cp = query( "cache_dir" ), na = "args";
     mkdirhier( query( "cache_dir" )+"/.foo" );
-#if constant(chmod)
-    // FIXME: Should this error be propagated?
-    catch { chmod( query( "cache_dir" ), 0777 ); };
-#endif
+    if( query("cacheindb") )
+    {
+      id = 1;
+      cp = query("dbpath");
+      na = "gtext_arguments";
+    }
+    mixed e;
+    e = catch {
+      argcache = conf->ArgCache( na, cp, id );
+    };
+    if( e )
+    {
+      error_status = "Failed to initialize the GTEXT argument cache:\n"
+        + (describe_backtrace( e )/"\n")[0]+"\n";
+      report_error( error_status );
+      werror( describe_backtrace( e ) );
+      error_status = "<font color=red size=+2>"+
+        html_encode_string(error_status)+"</font>";
+    } else
+      error_status = 0;
     remove_call_out(clean_cache_dir);
     call_out(clean_cache_dir, 10);
     mc = conf;
-    base_key = "gtext:"+(conf?conf->name:roxen->current_configuration->name);
+    base_key = "gtext:";
   }
+}
+
+mixed status()
+{
+  return error_status;
 }
 
 #ifdef QUANT_DEBUG
@@ -701,8 +733,6 @@ object number_lock = Thread.Mutex();
 #define NUMBER_LOCK()
 #define NUMBER_UNLOCK()
 #endif /* THREADS */
-
-mapping find_cached_args(int num);
 
 constant nbsp = iso88591["&nbsp;"];
 
@@ -745,13 +775,14 @@ void store_cache_file(string a, string b, array data)
 }
 
 
-array(int)|string write_text(int _args, string text, int size, object id)
+array(int)|string write_text(string _args, string text, int size, object id)
 {
   string key = base_key+(cvs_version/" ")[2]+_args;
   array err;
   string orig_text = text;
   mixed data;
-  mapping args = find_cached_args(_args) || ([]);
+  int elapsed;
+  mapping args = argcache->lookup( _args ) || ([]);
 
   if(data=cache_lookup(key, text))
   {
@@ -764,11 +795,9 @@ array(int)|string write_text(int _args, string text, int size, object id)
     if(size) return data[1];
     return data[0];
   }
-  //werror("Not cached: %O -> %O\n", key, text);
-  //werror("In cache: %O\n", sort(indices(cache->cache)));
 
   // So. We have to actually draw the thing...
-
+  elapsed = gethrtime();
   err = catch
   {
     object img;
@@ -906,11 +935,13 @@ array(int)|string write_text(int _args, string text, int size, object id)
       data = ({ res, ({ len, img->ysize() }) });
     }
 
+    elapsed = gethrtime()-elapsed;
+    werror("elapsed: %d\n", elapsed);
 // place in caches, as a gif image.
-    if(!args->nocache)
+    if(elapsed > 100*1000 && !args->nocache)
       store_cache_file( key, orig_text, data );
     cache_set(key, orig_text, data);
-    //  werror("Cache set:  %O -> %O\n", key, orig_text);
+//  werror("Cache set:  %O -> %O\n", key, orig_text);
     if(size) return data[1];
     return data[0];
   };
@@ -934,23 +965,13 @@ array stat_file(string f, object rid)
 
 array find_dir(string f, object rid)
 {
-  if(!strlen(f))
-  {
-    if(!args_restored) restore_cached_args();
-    return Array.map(indices(cached_args), lambda(mixed m){return (string)m;});
-  }
-  return ({"Example"});
 }
 
 mapping find_file(string f, object rid)
 {
-  int id;
-#if constant(Gz)
-  object g;
-#endif
+  string id;
 
-  if((rid->method != "GET") 
-     || (sscanf(f,"%d/%s", id, f) != 2))
+  if((rid->method != "GET") || (sscanf(f,"%[^/]/%s", id, f) != 2))
     return 0;
 
   if( query("gif") && f[strlen(f)-4..]==".gif") // Remove .gif
@@ -959,147 +980,24 @@ mapping find_file(string f, object rid)
   if(!sizeof(f))   // No string to write.
     return 0;
 
-  if (f[0] == '$') // Illegal in BASE64
-    f = f[1..];
-#if constant(Gz)
-  else if (sizeof(indices(g=Gz)))
-    catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
-#endif
-  else
-    catch(f = MIME.decode_base64(f));
-
+  if(f[0] != '^')
+  {
+    mapping t = argcache->lookup( f );
+    if(!t)
+      error("Invalid text identifier. Aborting\n");
+    f = t->t;
+  } else {
+    if(QUERY(allowgenericurls))
+      f = f[1..];
+  }
   // Generate the image.
   return http_string_answer(write_text(id,f,0,rid), "image/gif");
 }
-mapping url_cache = ([]);
+
 string quote(string in)
 {
-  string option;
-  if(option = url_cache[in]) return option;
-  object g;
-  if (sizeof(indices(g=Gz))) {
-    option=MIME.encode_base64(g->deflate()->deflate(in));
-  } else {
-    option=MIME.encode_base64(in);
-  }
-  if(search(in,"/")!=-1) return url_cache[in]=option;
-  string res="$";	// Illegal in BASE64
-  for(int i=0; i<strlen(in); i++)
-    switch(in[i])
-    {
-     case 'a'..'z':
-     case 'A'..'Z':
-     case '0'..'9':
-     case '.': case ',': case '!':
-      res += in[i..i];
-      break;
-     default:
-      res += sprintf("%%%02x", in[i]);
-    }
-  if(strlen(res) < strlen(option)) return url_cache[in]=res;
-  return url_cache[in]=option;
+  return argcache->store( ([ "t":in ]) );
 }
-
-#define ARGHASH query("cache_dir")+hash((cvs_version/" ")[2])+"ARGS_"+hash(mc->name)
-
-int last_argstat;
-
-void restore_cached_args()
-{
-  args_restored = 1;
-  array a = file_stat(ARGHASH);
-  if(a && (a[ST_MTIME] > last_argstat))
-  {
-    last_argstat = a[ST_MTIME];
-    object o = open(ARGHASH, "r");
-    if(o)
-    {
-      string data = o->read();
-      catch {
-	object q;
-	if(sizeof(indices(q=Gz)))
-	  data=q->inflate()->inflate(data);
-      };
-      catch {
-	cached_args |= decode_value(data);
-      };
-    }
-    NUMBER_LOCK();
-    if (cached_args && sizeof(cached_args)) {
-      number = sort(indices(cached_args))[-1]+1;
-    } else {
-      cached_args = ([]);
-      number = 0;
-    }
-    NUMBER_UNLOCK();
-  }
-}
-
-void save_cached_args()
-{
-  restore_cached_args();
-  object o = open(ARGHASH, "wct");
-  if(o)
-  {
-#if constant(chmod)
-    // FIXME: Should this error be propagated?
-    catch { chmod( ARGHASH, 0666 ); };
-#endif
-    string data=encode_value(cached_args);
-    catch {
-      object q;
-      if(sizeof(indices(q=Gz)))
-	data=q->deflate()->deflate(data);
-    };
-    o->write(data);
-  }
-}
-
-mapping find_cached_args(int num)
-{
-  if(!args_restored) restore_cached_args();
-  if(cached_args[num]) return cached_args[num];
-  restore_cached_args(); /* Not slow anymore, checks with stat... */
-  if(cached_args[num]) return cached_args[num];
-  return 0;
-}
-
-int find_or_insert(mapping find)
-{
-  mapping f2 = copy_value(find);
-  int res;
-  string q;
-
-  foreach(glob("magic_*", indices(f2)), q) 
-    m_delete(f2,q);
-
-  if(!args_restored)
-    restore_cached_args( );
-
-  array a=indices(f2),b=values(f2);
-  sort(a,b);
-  q = a*""+((array(string))b)*"";
-
-  if(res = cached_args[ q ])
-    return res;
-
-  restore_cached_args(); /* Not slow now, checks with stat.. */
-
-  if(res = cached_args[ q ])
-    return res;
-
-  int n;
-  NUMBER_LOCK();
-  cached_args[ number ] = f2;
-  cached_args[ q ] = number;
-  n = number++;
-  NUMBER_UNLOCK();
-
-  remove_call_out(save_cached_args);
-  call_out(save_cached_args, 10);
-  return n;
-}
-
 
 string magic_javascript_header(object id)
 {
@@ -1192,12 +1090,12 @@ string tag_gtext_id(string t, mapping arg,
   if(arg->alpha) 
     arg->alpha = fix_relative(arg->alpha,id);
 
-  int num = find_or_insert( arg );
+  string id = argcache->store( arg );
 
   if(!short)
-    return query_location()+num+"/";
+    return query_location()+id+"/^";
   else
-    return (string)num;
+    return id;
 }
 
 string tag_graphicstext(string t, mapping arg, string contents,
@@ -1312,7 +1210,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   m_delete(arg, "name"); m_delete(arg, "align");
 
   // Now the 'arg' mapping is modified enough..
-  int num = find_or_insert( arg );
+  string num = argcache->store( arg );
 
   gt=contents;
   rest="";
@@ -1404,7 +1302,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
       m_delete(arg, q);
     }
     
-    int num2 = find_or_insert(arg);
+    string num2 = argcache->store( arg );
     array size = write_text(num2,gt,1,id);
 
     if(!defines->magic_java) res = magic_javascript_header(id);
