@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.146 2001/01/31 04:26:18 per Exp $
+# $Id: start,v 1.147 2001/01/31 07:32:36 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -122,6 +122,20 @@ remove_old_dot_o_files () {
 ## GNU-style, long options only, except for -D, simply passed on.
 ARGS=""
 
+setup_for_tests() {
+    DEFINES="-DRUN_SELF_TEST $DEFINES"
+    # Kill roxen mysql if it's running...
+    if [ -f ${VARDIR}test_config/_mysql/mysql_pid ] ; then
+      kill `cat ${VARDIR}test_config/_mysql/mysql_pid`
+    fi
+    rm -rf "$VARDIR""test_config"*
+    cp -R etc/roxen_test/test_config $VARDIR
+    cp etc/roxen_test/filesystem/test_rxml_package rxml_packages/test_rxml_package
+    DIR="$VARDIR""test_config"
+    once=1
+    remove_dumped=1
+}
+
 parse_args() {
  while [ ! c"$1" = "c" ] ; do
   case $1 in
@@ -233,17 +247,17 @@ parse_args() {
     fi
   ;;
   '--self-test')
-    DEFINES="-DRUN_SELF_TEST $DEFINES"
-    # Kill roxen mysql if it's running...
-    if [ -f ${VARDIR}test_config/_mysql/mysql_pid ] ; then
-      kill `cat ${VARDIR}test_config/_mysql/mysql_pid`
-    fi
-    rm -rf "$VARDIR""test_config"*
-    cp -R etc/roxen_test/test_config $VARDIR
-    cp etc/roxen_test/filesystem/test_rxml_package rxml_packages/test_rxml_package
-    DIR="$VARDIR""test_config"
-    once=1
-    remove_dumped=1
+    setup_for_tests
+  ;;
+  '--self-test-quiet')
+    debug=-1
+    SILENT_START=y
+    do_pipe="| grep '  |'"
+    setup_for_tests
+  ;;
+  '--self-test-verbose')
+    pass="$pass --tests-verbose=1"
+    setup_for_tests
   ;;
   '--help'|'-?')
   sed -e "s/\\.B/`tput 'bold' 2>/dev/null`/g" -e "s/B\\./`tput 'sgr0' 2>/dev/null`/g" << EOF
@@ -299,8 +313,8 @@ the default arguments.
                                   for each and every file.
 
       .B--self-testB.:                 Runs a testsuite.
-				 WARNING: This will kill any running 
-				 roxen_mysql processes
+      .B--self-test-verboseB.:         Runs a testsuite, report all tests.
+      .B--self-test-quiet.:            Runs a testsuite, only report errors.
 
       .B--onceB.:                     Run the server only once, in the foreground.
 			   	  This is very useful when debugging.
@@ -562,14 +576,18 @@ start_roxen() {
     trap signal_exit 2 15
     trap "" 1
     if [ "x$once" = "x" ]; then
-      $pike $args "$@" 2>>$LOGDIR/debug/$FILES.1 1>&2 &
+      $pike $args "$@" 2>>$LOGDIR/debug/$FILES.1 1>&2
       ROXEN_PID=$!
       dp "Roxen WebServer server pid $ROXEN_PID."
       wait $! 2>/dev/null 1>&2
       exitcode="$?"
       ROXEN_PID=""
     else
-      $pike $args "$@" 2>&1
+      if [ "x$do_pipe" = "x" ] ; then
+        $pike $args "$@" 2>&1
+      else
+        eval "$pike $args "$@" 2>&1  $do_pipe"
+      fi
     fi
   else
     echo >.gdbinit handle SIGPIPE nostop noprint pass
