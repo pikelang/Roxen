@@ -38,7 +38,7 @@ array|string low_nameof(object|program|function fo)
   
   if(p=search(programs, object_program(foo)))
     return ({ p, (functionp(foo->name)?foo->name():
-		  (stringp(foo->name)?foo->name:time(1)+":"+mid++)), post})-({"",0});
+		  (stringp(foo->name)?foo->name:time(1)+":"+mid++)),post})-({"",0});
 
   werror("nameof: unknown thingie.\n");
 }
@@ -73,6 +73,7 @@ object objectof(array foo)
     o = p();
 
     saved_names[ foo[0..1]*"\0" ] = o;
+
     saved_names[ o ] = foo;
 
     o->persist && o->persist( foo );

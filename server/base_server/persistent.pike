@@ -1,6 +1,6 @@
 static private inherit "db";
 
-/* $Id: persistent.pike,v 1.7 1997/02/14 03:42:55 per Exp $ */
+/* $Id: persistent.pike,v 1.8 1997/02/14 04:37:22 per Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -75,8 +75,9 @@ PRIVATE void restore_variables()
 {
   array var;
   if(var = db_get("v"))
-    foreach(var, var)
-      catch { this[var[0]] = var[1]; };
+    foreach(var, var) catch {
+      this[var[0]] = var[1];
+    };
 }
 
 
@@ -129,8 +130,6 @@ public void begone()
 
 public void persist(mixed id)
 {
-  array var;
-
   if(arrayp(id)) id=(id[0]+".class/"+id[1]);
   /* No known id. This should not really happend. */
   if(!id)  error("No known id in persist.\n");
@@ -152,9 +151,9 @@ public void save()
     if(arrayp(i)) __id=(i[0]+".class/"+i[1]);
     db_open( __id, 1 );
   }
-#if 0
-  perror("save "+__id+"\n");
-#endif
+
+//perror("\n\n\npersist->save ("+__id+")\n"+describe_backtrace(backtrace()));
+
   /* "Simply" save all global (non-static) variables and callouts. */
   save_variables();
   save_call_out_list();
@@ -171,8 +170,9 @@ public void save()
  */  
 void destroy()  
 {
-  if(!_____destroyed)
-    save();
+  perror("\n\n\npersist->destroy ("+__id+")\n"+describe_backtrace(backtrace()));
+//  if(!_____destroyed)
+//    save();
 }
     
 
