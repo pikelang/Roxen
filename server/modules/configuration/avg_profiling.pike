@@ -120,21 +120,26 @@ array(mapping) sql2emit(array(mapping) rows)
 }
 
 
-array(mapping) get_events(mapping where, string sort, string sort_dir)
+array(mapping) get_events(array where, string sort, string sort_dir, string group_by)
 {
   Sql.Sql sql = DBManager.get( query( "db" ) );
-  string w = map(indices(where),
-		 lambda(string name)
-		 {
-		   return sprintf("%s = '%s'", name, sql->quote(where[name]));
-		 }) * " AND ";
-  string q = "SELECT session, config, file, calls, "
-	     "       real_ns/1000 as real_us, real_ns/calls/1000 as real_us_average, "
-	     "       cpu_ns/1000 as cpu_us, cpu_ns/calls/1000 as cpu_us_average, "
-	     "       event_name, event_class "
+  string w = map(where, lambda(object o) { return o->query(sql); } ) * " AND ";
+
+  string select =
+    "calls, "
+    "real_ns/1000 as real_us, real_ns/calls/1000 as real_us_average, "
+    "cpu_ns/1000 as cpu_us, cpu_ns/calls/1000 as cpu_us_average";
+  string group_select =
+    "SUM(calls) as calls, "
+    "SUM(real_ns/1000) as real_us, SUM(real_ns/calls/1000) as real_us_average, "
+    "SUM(cpu_ns/1000) as cpu_us, SUM(cpu_ns/calls/1000) as cpu_us_average";
+  string q = "SELECT session, config, file, event_name, event_class, "+
+	     (group_by? group_select: select)+" "
 	     "  FROM average_profiling "+
 	     (sizeof(w)? "WHERE " + w: "")+
+	     (group_by? " GROUP BY "+group_by:"")+
 	     (sort? " ORDER BY "+sort+" "+(sort_dir||""): "");
+  //werror("Query: %O\n", q);
   return sql->query( q );
 }
 
@@ -144,22 +149,49 @@ class TagEmitAPEvents
   constant name = "emit";
   constant plugin_name = "ap-events";
 
+  class WhereEqual(string column, string value)
+  {
+    string query(Sql.Sql db)
+    {
+      return sprintf("%s = '%s'", column, db->quote(value));
+    }
+  }
+  
+  class WhereLike(string column, string value)
+  {
+    string query(Sql.Sql db)
+    {
+      return sprintf("%s like '%s'", column, db->quote(value));
+    }
+  }
+  
   array get_dataset(mapping args, RequestID id)
   {
-    mapping where = ([]);
+    array where = ({});
 
     void fix_arg(string name)
     {
       if(args[name] && args[name] != "")
-	where[replace(name, "-", "_")] = args[name];
+	where += ({ WhereEqual(replace(name, "-", "_"), args[name]) });
     };
     
     map(({ "config", "config", "file", "event-class", "event-name"}), fix_arg);
-
-    if(args["order-by"] == "")
+    
+    if(sizeof(args["file-glob"]||""))
+      where += ({ WhereLike("file", args["file-glob"]) });
+    
+    if(sizeof(args["order-by"] || ""))
+      args["order-by"] = replace(args["order-by"], "-", "_");
+    else
       m_delete(args, "order-by");
     
-    return sql2emit(get_events(where, args["order-by"], args["sort-dir"]));
+    if(sizeof(args["group-by"] || ""))
+      args["group-by"] = replace(args["group-by"], "-", "_");
+    else
+      m_delete(args, "group-by");
+    
+    return sql2emit(get_events(where, args["order-by"], args["sort-dir"],
+			       args["group-by"]));
   }
 }
 
@@ -185,65 +217,6 @@ class TagEmitAPNames
   }
 }
 
-
-//class TagEmitUrl
-//{
-//  inherit RXML.Tag;
-//  constant name = "emit";
-//  constant plugin_name = "ap-names";
-//
-//  class Url
-//  {
-//    Standards.URI url;
-//    
-//    class Entity(string entity_name)
-//    {
-//	inherit RXML.Value;
-//	mixed rxml_var_eval(RXML.Context c, string var,
-//			    string scope_name, void|RXML.Type type) {
-//	  switch(entity_name)
-//	  {
-//	    case "protocol":
-//	      return ENCODE_RXML_TEXT(url->protocol);
-//	    case "host":
-//	      return ENCODE_RXML_TEXT(url->host);
-//	    case "port":
-//	      return ENCODE_RXML_INT(url->port);
-//	    default:
-//	      return ENCODE_RXML_TEXT("Hepp");
-//	  }
-//	  return RXML.nil;
-//	}
-//    }
-//
-//    void create(string _url)
-//    {
-//	url = Standards.URI(_url);
-//    }
-//  }
-//  
-//  Url url;
-//  array get_dataset(mapping args, RequestID id)
-//  {
-//    url = Url(args->url);
-//    return ({ ([
-//	"protocol":   url->Entity("protocol"),
-//	"host":       url->Entity("host"),
-//	"port":       url->Entity("port"),
-//	"hostport":   url->Entity("hostport"),
-//	"prestates":  url->Entity("prestates"),
-//	"path":       url->Entity("path"),
-//	"dirpath":    url->Entity("dirpath"),
-//	"filename":   url->Entity("filename"),
-//	"query":      url->Entity("query"),
-//	"query-rest": url->Entity("query-rest"),
-//	"query-full": url->Entity("query-full"),
-//	"fragment":   url->Entity("fragment"),
-//	"url":        url->Entity("url")
-//    ]) });
-//  }
-//}
-
 mapping find_file (string f, RequestID id)
 {
   string res = #"
@@ -264,29 +237,26 @@ mapping find_file (string f, RequestID id)
 
 <body bgcolor='white'>
 
-<font size='-1'><form>
-  <h1>Filter</h1>
+<form>
   <table cellspacing='0' cellpadding='0' border='0'>
     <tr>
       <td><b>Session:</b></td>
       <td>
         <default name='session' value='&form.session;'>
   	  <select name='session'>
-  	    <option value=''>All</option>
+  	    <option value=''>-- All --</option>
   	    <emit source='ap-names' column='session'>
   	      <option value='&_.name;'>&_.name;</option>
   	    </emit>
   	  </select>
         </default>
       </td>
-    </tr>
 
-    <tr>
       <td><b>Config:</b></td>
       <td>
         <default name='config' value='&form.config;'>
           <select name='config'>
-            <option value=''>All</option>
+            <option value=''>-- All --</option>
             <emit source='ap-names' column='config'>
               <option value='&_.name;'>&_.name;</option>
             </emit>
@@ -296,16 +266,22 @@ mapping find_file (string f, RequestID id)
     </tr>
 
     <tr>
+      <!--
       <td><b>File:</b></td>
       <td>
         <default name='file' value='&form.file;'>
           <select name='file'>
-            <option value=''>All</option>
+            <option value=''>-- All --</option>
             <emit source='ap-names' column='file'>
               <option value='&_.name;'>&_.name;</option>
             </emit>
           </select>
         </default>
+      </td>
+      -->
+      <td><b>File glob:</b></td>
+      <td colspan='3'>
+        <input type='text' name='file-glob' value='&form.file-glob;' size='80'/>
       </td>
     </tr>
 
@@ -314,21 +290,19 @@ mapping find_file (string f, RequestID id)
       <td>
         <default name='event-class' value='&form.event-class;'>
           <select name='event-class'>
-            <option value=''>All</option>
+            <option value=''>-- All --</option>
             <emit source='ap-names' column='event_class'>
               <option value='&_.name;'>&_.name;</option>
             </emit>
           </select>
         </default>
       </td>
-    </tr>
 
-    <tr>
       <td><b>Event Name:</b></td>
       <td>
         <default name='event-name' value='&form.event-name;'>
           <select name='event-name'>
-            <option value=''>All</option>
+            <option value=''>-- All --</option>
             <if sizeof='form.event-class == 0'>
               <emit source='ap-names' column='event_name'>
                 <option value='&_.name;'>&_.name;</option>
@@ -350,28 +324,45 @@ mapping find_file (string f, RequestID id)
       <td>
         <default name='sort' value='&form.sort;'>
           <select name='sort'>
+            <option value='real-us'>Real</option>
+            <option value='cpu-us'>CPU</option>
+            <option value='calls'>Calls</option>
             <option value='session'>Session</option>
             <option value='config'>Config</option>
             <option value='file'>File</option>
-            <option value='event_class'>Event Class</option>
-            <option value='event_name'>Event Name</option>
-            <option value='calls'>Calls</option>
-            <option value='real_ns'>Real ns</option>
-            <option value='cpu_ns'>CPU ns</option>
+            <option value='event-class'>Event Class</option>
+            <option value='event-name'>Event Name</option>
           </select>
         </default>
-        &nbsp;Direction:
+      </td>
+      <td><b>Direction:</b></td>
+      <td>
         <default name='sort-dir' value='&form.sort-dir;'>
           <select name='sort-dir'>
-            <option value='ASC'>Ascending</option>
             <option value='DESC'>Descending</option>
+            <option value='ASC'>Ascending</option>
           </select>
         </default>
       </td>
     </tr>
+
+    <tr>
+      <td><b>Broup by:</b></td>
+      <td>
+        <default name='group-by' value='&form.group-by;'>
+          <select name='group-by'>
+            <option value=''>-- None --</option>
+            <option value='file'>File</option>
+            <option value='event-class'>Event Class</option>
+            <option value='event-name'>Event Name</option>
+          </select>
+        </default>
+      </td>
+    </tr>
+
   </table>
   <table><tr><td><input type='submit' name='update' value=' Update ' /></td></tr></table>
-</form></font>
+</form>
 
 <if match='x&form.page; is x'>
   <set variable='form.page' value='1'/>
@@ -384,78 +375,112 @@ mapping find_file (string f, RequestID id)
   session='&form.session;'
   config='&form.config;'
   file='&form.file;'
+  file-glob='&form.file-glob;'
   event-class='&form.event-class;'
   event-name='&form.event-name;'
   order-by='&form.sort;'
   sort-dir='&form.sort-dir;'
+  group-by='&form.group-by;'
 </define>
 
 <emit source='ap-events' ::='&var.emit-args;' rowinfo='var.rows'/>
-<set variable='var.pages' expr='&var.rows;/&var.maxrows;'/>
-<h1>Statistics</h1>
-<pager/>
-<table cellspacing='0'>
-  <tr bgcolor='#dee2eb'>
-    <if sizeof='form.session == 0'>
-      <td><b>Session</b></td>
-    </if>
-    <if sizeof='form.config == 0'>
-      <td><b>Config</b></td>
-    </if>
-    <if sizeof='form.file == 0'>
-      <td><b>File</b></td>
-    </if>
-    <if sizeof='form.event-class == 0'>
-      <td><b>Event Class</b></td>
-    </if>
-    <if sizeof='form.event-name == 0'>
-      <td><b>Event Name</b></td>
-    </if>
-    <td><b>Calls</b></td>
-    <td><b>Real (탎)</b></td>
-    <td><b>Average Real (탎)</b></td>
-    <td><b>CPU (탎)</b></td>
-    <td><b>Average CPU (탎)</b></td>
-  </tr>
+<set variable='var.pages' expr='1 + &var.rows;/&var.maxrows;'/>
 
-  <set variable='var.bgcolor' value='#dee2eb'/>
-  <emit source='ap-events' ::='&var.emit-args;'
-        maxrows='50'
-        rowinfo='var.rows'
-        maxrows='&var.maxrows;'
-        skiprows='&var.skiprows;'
-        remainderinfo='var.remainder'>
-    <if variable='var.bgcolor == white'>
-      <set variable='var.bgcolor' value='#dee2eb'/>
-    </if><else>
-      <set variable='var.bgcolor' value='white'/>
-    </else>
-    <tr bgcolor='&var.bgcolor;'>
-      <if sizeof='form.session == 0'>
-        <td>&_.session;</td>
+<if sizeof='form.session == 0'>
+  <set variable='var.show-session' value='t'/>
+</if>
+<if sizeof='form.config == 0'>
+  <set variable='var.show-config' value='t'/>
+</if>
+<if sizeof='form.file == 0'>
+  <set variable='var.show-file' value='t'/>
+</if>
+<if sizeof='form.event-class == 0'>
+  <set variable='var.show-event-class' value='t'/>
+</if>
+<if sizeof='form.event-name == 0'>
+  <set variable='var.show-event-name' value='t'/>
+</if>
+
+<if variable='form.group-by == file'>
+  <unset variable='var.show-event-class'/>
+  <unset variable='var.show-event-name'/>
+</if>
+<if variable='form.group-by == event-class'>
+  <unset variable='var.show-file'/>
+  <unset variable='var.show-event-name'/>
+</if>
+<if variable='form.group-by == event-name'>
+  <unset variable='var.show-file'/>
+  <unset variable='var.show-event-class'/>
+</if>
+
+<if variable='var.rows > 0'>
+  Found &var.rows; hits.<br />
+  <pager/>
+  <table cellspacing='0'>
+    <tr bgcolor='#dee2eb'>
+      <if variable='var.show-session'>
+  	<td><b>Session</b>&nbsp;</td>
       </if>
-      <if sizeof='form.config == 0'>
-        <td>&_.config;</td>
+      <if variable='var.show-config'>
+  	<td><b>Config</b>&nbsp;</td>
       </if>
-      <if sizeof='form.file == 0'>
-        <td>&_.file;</td>
+      <if variable='var.show-file'>
+  	<td><b>File</b>&nbsp;</td>
       </if>
-      <if sizeof='form.event-class == 0'>
-        <td>&_.event-class;</td>
+      <if variable='var.show-event-class'>
+  	<td><b>Event&nbsp;Class</b>&nbsp;</td>
       </if>
-      <if sizeof='form.event-name == 0'>
-        <td>&_.event-name;</td>
+      <if variable='var.show-event-name'>
+  	<td><b>Event&nbsp;Name</b>&nbsp;</td>
       </if>
-      <td align='right'>&_.calls;</td>
-      <td align='right'>&_.real-us;</td>
-      <td align='right'>&_.real-us-average;</td>
-      <td align='right'>&_.cpu-us;</td>
-      <td align='right'>&_.cpu-us-average;</td>
+      <td><b>Calls</b>&nbsp;</td>
+      <td><b>Real&nbsp;(탎)</b>&nbsp;</td>
+      <td><b>Av.&nbsp;Real&nbsp;(탎)</b>&nbsp;</td>
+      <td><b>CPU&nbsp;(탎)</b>&nbsp;</td>
+      <td><b>Av.&nbsp;CPU&nbsp;(탎)</b></td>
     </tr>
-  </emit>
-</table>
-
-<pager/>
+  
+    <set variable='var.bgcolor' value='#dee2eb'/>
+    <emit source='ap-events' ::='&var.emit-args;'
+  	  maxrows='50'
+  	  rowinfo='var.rows'
+  	  maxrows='&var.maxrows;'
+  	  skiprows='&var.skiprows;'
+  	  remainderinfo='var.remainder'>
+      <if variable='var.bgcolor == white'>
+  	<set variable='var.bgcolor' value='#dee2eb'/>
+      </if><else>
+  	<set variable='var.bgcolor' value='white'/>
+      </else>
+      <tr bgcolor='&var.bgcolor;'>
+        <if variable='var.show-session'>
+  	  <td>&_.session;</td>
+  	</if>
+        <if variable='var.show-config'>
+  	  <td>&_.config;</td>
+  	</if>
+        <if variable='var.show-file'>
+  	  <td>&_.file;</td>
+  	</if>
+        <if variable='var.show-event-class'>
+  	  <td>&_.event-class;</td>
+  	</if>
+        <if variable='var.show-event-name'>
+  	  <td>&_.event-name;</td>
+  	</if>
+  	<td align='right'>&_.calls;</td>
+  	<td align='right'>&_.real-us;</td>
+  	<td align='right'>&_.real-us-average;</td>
+  	<td align='right'>&_.cpu-us;</td>
+  	<td align='right'>&_.cpu-us-average;</td>
+      </tr>
+    </emit>
+  </table>
+  
+  <pager/>
+</if>
 
 </body>
 </html>
