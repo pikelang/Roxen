@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.84 2000/01/25 20:40:47 mast Exp $
+ * $Id: rxml.pike,v 1.85 2000/01/26 14:28:57 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -14,6 +14,8 @@ inherit "rxmlhelp";
 #define TAGMAP_COMPAT
 
 #define RXML_NAMESPACE "rxml"
+
+#ifndef manual
 
 mapping (string:function) real_if_callers;
 
@@ -1500,3 +1502,15 @@ mapping query_if_callers()
     "variable":IfIs( "variables", 1 ),
   ]);
 }
+
+#endif
+
+mapping tagdocumentation() {
+  Stdio.File file=Stdio.File();
+  if(!file->open(__FILE__,"r")) return 0;
+  return compile_string("#define manual\n"+file->read())->tagdoc;
+}
+
+#ifdef manual
+constant tagdoc=(["true":"<desc tag>Sets the true flag</desc>"]);
+#endif
