@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: gopher.pike,v 1.15 2000/09/15 14:14:11 grubba Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.16 2000/09/17 13:40:27 grubba Exp $";
 // Gopher protocol module
 
 #ifdef GOPHER_DEBUG
@@ -181,11 +181,11 @@ void gopher_trace_leave(string s)
 }
 #endif /* GOPHER_DEBUG */
 
-void create(object f, object c)
+void create(object f, object c, object cc)
 {
   if(f)
   {
-    ::create(f, c);
+    ::create(f, c, cc);
     my_fd->set_nonblocking(got_data, lambda(){}, end);
 
 #ifdef GOPHER_DEBUG
