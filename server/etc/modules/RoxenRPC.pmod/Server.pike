@@ -218,6 +218,11 @@ void low_got_connection(object c)
   }
 }
 
+int num_connections()
+{
+  return sizeof(connections);
+}
+
 void got_connection(object on)
 {
   object c = on->accept();
