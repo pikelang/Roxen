@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.31 1998/09/15 13:58:18 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.32 1998/09/18 18:20:18 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -27,6 +27,11 @@ void roxen_perror(string format,mixed ... args)
 
 
 void report_error(string s)
+{
+  werror(s);
+}
+
+void report_fatal(string s)
 {
   werror(s);
 }
