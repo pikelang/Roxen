@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.108 2004/05/22 21:48:18 _cvs_stephen Exp $
+// $Id: global_variables.pike,v 1.109 2004/05/29 20:31:19 _cvs_stephen Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -596,7 +596,7 @@ The start script attempts to fix this for the standard file locations.</p>");
   // SNMP stuffs
   defvar("snmp_agent", 0, "SNMP: Enable SNMP agent",
 	 TYPE_FLAG|VAR_MORE,
-	 "If set, the ChiliMoon SNMP agent will be anabled.");
+	 "If set, the ChiliMoon SNMP agent will be enabled.");
 
   defvar("snmp_community", ({"public:ro"}), "SNMP: Community string",
          TYPE_STRING_LIST,
