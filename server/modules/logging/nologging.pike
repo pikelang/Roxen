@@ -2,7 +2,7 @@
 // This module can be used to turn off logging for some files.
 
 
-constant cvs_version = "$Id: nologging.pike,v 1.7 1999/06/07 00:22:54 mast Exp $";
+constant cvs_version = "$Id: nologging.pike,v 1.8 1999/08/30 15:09:10 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -38,10 +38,11 @@ string make_regexp(array from)
 }
 
 
-string checkvar(string name, mixed value)
+string check_variable(string name, mixed value)
 {
   if(catch(Regexp(make_regexp(QUERY(value)/"\n"-({""})))))
     return "Compile error in regular expression.\n";
+  return 0;
 }
 
 
