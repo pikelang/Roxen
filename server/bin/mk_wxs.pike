@@ -1,5 +1,5 @@
 /*
- * $Id: mk_wxs.pike,v 1.13 2004/11/23 16:03:48 grubba Exp $
+ * $Id: mk_wxs.pike,v 1.14 2004/11/23 17:14:14 grubba Exp $
  *
  * Make a Windows Installer XML Source file (wxs) suitable
  * for a Roxen installer.
@@ -39,7 +39,7 @@ int main(int argc, array(string) argv)
       if (stringp(opt[1])) {
 	version_str = opt[1];
       } else {
-	werror("$Id: mk_wxs.pike,v 1.13 2004/11/23 16:03:48 grubba Exp $\n");
+	werror("$Id: mk_wxs.pike,v 1.14 2004/11/23 17:14:14 grubba Exp $\n");
 	exit(0);
       }
       break;
@@ -128,6 +128,17 @@ int main(int argc, array(string) argv)
   sub_menu->low_add_shortcut("Roxen Administration", "START_MENU", 0,
 			     "[BROWSER]", 0,
 			     "[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/");
+  sub_menu->low_add_shortcut("Roxen Documentation", "START_MENU", 0,
+			     "[BROWSER]", 0,
+			     "[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/docs/");
+  sub_menu->low_add_shortcut("Start Roxen (log to file)", "START_MENU", 0,
+			     "[TARGETDIR]ntstart",
+			     "\"[TARGETDIR]ntstart.exe\" --quiet",
+			     "[TARGETDIR]", "minimized");
+  sub_menu->low_add_shortcut("Start Roxen (log to window)", "START_MENU", 0,
+			     "[TARGETDIR]ntstart",
+			     "\"[TARGETDIR]ntstart.exe\"",
+			     "[TARGETDIR]");
   feature_node->add_child(WixNode("ComponentRef", ([
 				    "Id":"C_" + sub_menu->id,
 				  ])))->
