@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.13 2000/09/15 09:17:51 kuntri Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.14 2000/10/13 13:26:51 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "HTML washer";
@@ -181,8 +181,12 @@ TAGDOCUMENTATION;
 constant tagdoc=([
 "wash-html":#"<desc cont><short hide>
 
- </short>
-
+ Turns a text into HTML.</short>This tag is mostly useful for turning
+ user freetext input from a form into HTML intelligently, by turning
+ sections of the text separated by more than one newline into
+ <tag>p</tag>paragraphs<tag>/p</tag>, filtering out or explicitly
+ allowing some HTML tags in the input and creating
+ <tag>a</tag>anchor-links<tag>/a</tag> out of potential www-addresses.
 </desc>
 
 <attr name='keep-all'>
@@ -194,15 +198,15 @@ constant tagdoc=([
 <wash-html keep-all=''>
   Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
 
-  <hr>A litle image:<img src='/internal-roxen-next'>.
+  <hr>A little image:<img src='/internal-roxen-next'>.
 </wash-html>
 </ex>
 </attr>
 
 <attr name='keep-tags' value='list'>
 
- Comma-separated array of empty element <tag>tags/</tag> not to
- filter. Quote all other empty element tags e.i. transform \"&lt;\",
+ Comma-separated array of empty element <tag>tags</tag> not to
+ filter. Quote all other empty element tags i.e. transform \"&lt;\",
  \"&gt;\" and \"&amp;\" to \"&amp;lt;\", \"&amp;gt;\" and
  \"&amp;amp;\".
 
@@ -210,7 +214,7 @@ constant tagdoc=([
 <wash-html keep-tags='hr'>
   Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
 
-  <hr>A litle image:<img src='/internal-roxen-next'>.
+  <hr>A little image:<img src='/internal-roxen-next'>.
 </wash-html>
 </ex>
 </attr>
@@ -225,7 +229,7 @@ constant tagdoc=([
 <wash-html keep-containers='b'>
   Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
 
-  <hr>A litle image:<img src='/internal-roxen-next'>.
+  <hr>A little image:<img src='/internal-roxen-next'>.
 </wash-html>
 </ex>
 </attr>
