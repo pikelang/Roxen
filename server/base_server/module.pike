@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.174 2004/05/04 15:02:20 mast Exp $
+// $Id: module.pike,v 1.175 2004/05/04 17:53:22 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -583,23 +583,22 @@ string resource_id (string path, RequestID id)
 //! "doc/foobar".
 //!
 //! @param path
-//! The requested path below the filesystem location. @[path] has been
+//! The requested path below the filesystem location. It has been
 //! normalized with @[VFS.normalize_path].
 {
   return has_suffix (path, "/") ? path : path + "/";
 }
 
-mixed authenticated_user_id (RequestID id)
+string|int authenticated_user_id (string path, RequestID id)
 //! Return a value that uniquely identifies the user that the given
 //! request is authenticated as.
 //!
 //! This function is e.g. used by the default lock implementation to
 //! tell different users holding locks apart.
 //!
-//! @note
-//! The returned value is typically a string or integer, but if it
-//! isn't then it must be able to compare for equality with
-//! @[lfun::`==] and @[lfun::__hash].
+//! @param path
+//! The requested path below the filesystem location. It has been
+//! normalized with @[VFS.normalize_path].
 {
   // Leave this to the standard auth system by default.
   User uid = my_configuration()->authenticate (id);
@@ -669,7 +668,7 @@ multiset(DAVLock) find_locks(string path,
   function(mapping(mixed:DAVLock):void) add_locks;
 
   if (exclude_shared) {
-    mixed auth_user = authenticated_user_id (id);
+    mixed auth_user = authenticated_user_id (path, id);
     add_locks = lambda (mapping(mixed:DAVLock) sub_locks) {
 		  foreach (sub_locks; string user; DAVLock lock)
 		    if (user == auth_user ||
@@ -762,7 +761,7 @@ DAVLock|int(0..3) check_locks(string path,
 
   path = resource_id (path, id);
 
-  mixed auth_user = authenticated_user_id (id);
+  mixed auth_user = authenticated_user_id (path, id);
 
   if (DAVLock lock =
       file_locks[path] && file_locks[path][auth_user] ||
@@ -872,7 +871,7 @@ mapping(string:mixed) lock_file(string path,
   TRACE_ENTER(sprintf("lock_file(%O, lock(%O), X).", path, lock->locktoken),
 	      this);
   path = resource_id (path, id);
-  mixed auth_user = authenticated_user_id (id);
+  mixed auth_user = authenticated_user_id (path, id);
   if (lock->recursive) {
     if (prefix_locks[path]) {
       prefix_locks[path][auth_user] = lock;
@@ -908,7 +907,7 @@ mapping(string:mixed) unlock_file (string path,
 {
   TRACE_ENTER(sprintf("unlock_file(%O, lock(%O), X).", path, lock->locktoken),
 	      this);
-  mixed auth_user = authenticated_user_id (id);
+  mixed auth_user = authenticated_user_id (path, id);
   path = resource_id (path, id);
   DAVLock removed_lock;
   if (lock->recursive) {
