@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.447 2004/05/18 15:40:30 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.448 2004/05/18 18:24:10 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -406,17 +406,6 @@ private void really_set_config(array mod_config)
 
 private static mixed f, line;
 private static int hstart;
-
-class CacheKey {
-#if ID_CACHEKEY_DEBUG
-  constant __num = ({ 0 });
-  int _num;
-  string _sprintf() { return "CacheKey(#" + _num + ")"; }
-  void create() { _num = ++__num[0]; }
-  void destroy() { werror("CacheKey(#" + _num + "): --DESTROY--\n"
-			  "%s\n\n", "" || describe_backtrace(backtrace())); }
-#endif
-}
 
 //! Parse a cookie string.
 //!

@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.133 2004/05/18 15:43:52 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.134 2004/05/18 18:24:12 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -673,6 +673,18 @@ class PrefLanguages
 
 //  Kludge for resolver problems
 static function _charset_decoder_func;
+
+//! Used as @expr{id->misc->cachekey@}.
+class CacheKey {
+#if ID_CACHEKEY_DEBUG
+  constant __num = ({ 0 });
+  int _num;
+  string _sprintf() { return "CacheKey(#" + _num + ")"; }
+  void create() { _num = ++__num[0]; }
+  void destroy() { werror("CacheKey(#" + _num + "): --DESTROY--\n"
+			  "%s\n\n", "" || describe_backtrace(backtrace())); }
+#endif
+}
 
 class RequestID
 //! @appears RequestID
