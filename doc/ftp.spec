@@ -17,6 +17,4 @@ Vissa taggar ska tolkas och specialbehandlas.
                      content="Intruduction to the UltraViking Company">
  - template ur <template> ... </template>
 TODO
-  Kolla att metadatan extraheras korrekt.
-  Fixa cache-reloadbuggen vid uppload.
   kolla om busiga filnamn strular.
