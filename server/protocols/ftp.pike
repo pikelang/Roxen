@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.53 2001/03/13 14:50:45 grubba Exp $
+ * $Id: ftp.pike,v 2.54 2001/03/13 19:48:22 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2865,7 +2865,7 @@ class FTPSession
     }
 
     string delimiter = args[0..0];
-    if ((delimiter[0] <= 32) || (delimiter >= 127)) {
+    if ((delimiter[0] <= 32) || (delimiter[0] >= 127)) {
       send(501, ({ "Invalid delimiter." }));
     }
     array(string) segments = args/delimiter;
