@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.27 1997/09/14 22:17:17 grubba Exp $
+ * $Id: upgrade.pike,v 1.28 1997/09/17 21:37:18 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -248,7 +248,7 @@ string upgrade_module(string m, object rpc)
 {
   array rm = rpc->get_module(m,roxen->real_version);
   string res="";
-  object privs = ((program)"privs")("Upgrading modules", "root");
+  object privs = ((program)"privs")("Upgrading modules");
   if(!rm) return "Failed to fetch the module '"+m+"'.";
   if(!modules) find_modules(1);
   if(modules[m])
@@ -428,7 +428,7 @@ string upgrade_component(string m, object rpc)
 {
   array rthingie = rpc->get_component(m,roxen->real_version);
   string res="";
-  object privs = ((program)"privs")("Upgrading components","root");
+  object privs = ((program)"privs")("Upgrading components");
   string ext="";
   if(!rthingie) return "Failed to fetch the component '"+m+"'.";
 
