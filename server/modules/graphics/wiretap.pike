@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.3 2000/01/08 07:52:44 mast Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.4 2000/01/12 20:12:24 marcus Exp $";
 
 #include <module.h>
 inherit "module";
@@ -125,8 +125,8 @@ string|array pop_color(string tagname, mapping args, RequestID id)
     for(i=0; i<sizeof(c); i++)
       if(c[-i-1][0]==tagname)
       {
-	id->misc->wiretap_stack = c[-i-1][1];
-	id->misc->wiretap_stack = c[-i-1][2];
+	id->misc->defines->fgcolor = c[-i-1][1];
+	id->misc->defines->bgcolor = c[-i-1][2];
 	break;
       }
 
