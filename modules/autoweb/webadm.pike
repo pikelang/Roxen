@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.16 1998/08/06 19:03:58 wellhard Exp $
+ * $Id: webadm.pike,v 1.17 1998/08/08 00:02:54 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.16 1998/08/06 19:03:58 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.17 1998/08/08 00:02:54 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -73,19 +73,17 @@ string insert_navigation(string tag, mapping args, string navigation)
 }
 
 
-string|int get_variable_value(object db, string customer_id, string variable)
+string|int get_variable_value(object db, string scheme_id, string variable)
 {
   array query_result = 
-    db->query("select template_vars_opts.value from "
-	      "template_vars,customers_preferences,template_vars_opts where "
-	      "customers_preferences.customer_id='"+customer_id+"' and " 
-	      "template_vars.name='"+variable+"' and "
-	      "customers_preferences.variable_id=template_vars.id and "
-	      "customers_preferences.value=template_vars_opts.name");
+    db->query("select * from template_schemes_vars,template_vars where "
+	      "template_schemes_vars.scheme_id='"+scheme_id+"' and "
+	      "template_schemes_vars.variable_id=template_vars.id and "
+	      "template_vars.name='"+variable+"'");
   //werror("%O\n", query_result);
   if(!sizeof(query_result)) {
-    werror("No such customer '%s' or variable '%s' is undefined.\n",
-	   customer_id, variable);
+    werror("No such scheme '%s' or variable '%s' is undefined.\n",
+	   scheme_id, variable);
     return 0;
   }
   return query_result[0]->value;
@@ -99,9 +97,17 @@ string update_template(string tag_name, mapping args, object id)
   string destfile = query("searchpath")+
 		    (string)id->variables->customer_id+
 		    "/templates/default.tmpl";
+
+  array scheme =
+    db->query ("select * from customers where "
+	       "id='"+id->variables->customer_id+"'");
+  string scheme_id = 0;
+  if(sizeof(scheme))
+    scheme_id = scheme[0]->template_scheme_id;
+  
   // Template
   string template_filename =
-    get_variable_value(db, id->variables->customer_id, "template_name");
+    get_variable_value(db, scheme_id, "template_name");
   if(!template_filename)
     return "";
   
@@ -114,7 +120,7 @@ string update_template(string tag_name, mapping args, object id)
   
   // Navigation
   string navigation_filename =
-    get_variable_value(db, id->variables->customer_id, "nav_name");
+    get_variable_value(db, scheme_id, "nav_name");
   if(!navigation_filename)
     return "";
   
@@ -130,16 +136,18 @@ string update_template(string tag_name, mapping args, object id)
 	       navigation);
 
   // Fetch variables from database
+
   array variables =
-    db->query("select * from customers_preferences,template_vars where "
-	      "customers_preferences.customer_id='"+
-	      id->variables->customer_id+"' and "
-	      "customers_preferences.variable_id=template_vars.id");
-  
+    db->query("select * from template_schemes_vars,template_vars where "
+	      "template_schemes_vars.scheme_id='"+scheme_id+"' and "
+	      "template_schemes_vars.variable_id=template_vars.id");
+  //werror("scheme: %O, scheme_id: %O, variables:%O\n",
+  //	 scheme, scheme_id, variables);
   // Replace placeholders with customer spesific preferences  
   foreach(variables, mapping variable) {
     string from = "$$"+variable->name+"$$";
     string to = variable->value;
+#if 0
     if(variable->type == "select") {
       array options =
 	db->query("Select * from template_vars_opts where "
@@ -147,6 +155,7 @@ string update_template(string tag_name, mapping args, object id)
       if(sizeof(options))
 	to = options[0]->value;
     }
+#endif
     if(variable->type == "font")
       to = replace(to, " ", "_");
     

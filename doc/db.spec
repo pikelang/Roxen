@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.13 1998/08/06 19:05:48 wellhard Exp $
+# $Id: db.spec,v 1.14 1998/08/08 00:02:42 wellhard Exp $
 
 drop table customers;
 drop table dns;
@@ -11,9 +11,6 @@ drop table template_vars;
 drop table template_vars_opts;
 drop table template_schemes;
 drop table template_schemes_vars;
-drop table customers_files;
-drop table customers_menu;
-drop table customers_md;
 
 
 create table customers (
@@ -25,7 +22,8 @@ create table customers (
 	     logview		     int,
 	     sms		     int,
 	     fax		     int,
-             registration_date       timestamp
+             registration_date       timestamp,
+             template_scheme_id      int not null default 1,
      );
 
 create table dns (
@@ -67,6 +65,7 @@ create table customers_preferences (
              value                   blob
      );
 
+# Template wizards
 create table template_wizards (
              id                      int auto_increment primary key,
              name                    varchar(64),
@@ -90,7 +89,8 @@ create table template_vars_opts (
              name		     varchar(255),
              value		     blob
      );
-    
+
+# Default schemes
 create table template_schemes (
              id                      int auto_increment primary key,
 	     customer_id             int,

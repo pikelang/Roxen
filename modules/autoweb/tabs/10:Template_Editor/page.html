@@ -18,84 +18,278 @@
   return "";
 </pike>
 
+<formoutput quote='¤'>
+  <cset preparse variable=curent_scheme><pike>
+    return
+      "<sqloutput quote='£' query="
+      "\"select * from customers "
+      "where id=¤customer_id¤\">"
+      "£template_scheme_id£</sqloutput>";
+  </pike></cset>
+</formoutput>
+
 <if variable=edit>
   <formoutput quote='¤'>
-  <sqloutput quote='¥' query="select * from template_wizards where id='¤edit¤'">
-  <wizard preparse name="¥title:quote=mysql¥">
-    <sqloutput quote='#' query="select * from template_vars where
-                      wizard_id='¤edit¤'">
-      <page>
-       <input type=hidden name=edit value='¤edit:quote=mysql¤'>
-       <input type=hidden name=category value='¤category:quote=mysql¤'>
-        <h3>#title#</h3>
-	<cset preparse variable=options><pike>
-	  string query=
-	    "<sqloutput quote='£' query="
-	    "\"select * from template_vars_opts where"
-	    " variable_id='#id:quote=mysql#'\">"
-            "£name£,</sqloutput>";
-          return ((parse_rxml(query, id)/",")-({ "" }))*",";
+    <if variable="edit is scheme">
+      <wizard preparse name="Change custom template scheme">
+	<page>
+	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
+	  <h3>Custom template scheme</h3>
+	  <cset preparse variable=options><pike>
+	    string query=
+	      "<sqloutput quote='£' query="
+	      "\"select * from template_schemes where "
+	      "customer_id='¤customer_id¤'\">"
+	      "£id£:£name£,</sqloutput>";
+	    return ((parse_rxml(query, id)/",")-({ "" }))*",";
 	  </pike></cset>
-	<cset preparse variable=default><pike>
-	  return
-	    "<sqloutput quote='£' query="
-	    "\"select * from customers_preferences "
-	    "where customer_id='¤customer_id:quote=mysql¤' and"
-	    " variable_id='#id:quote=mysql#'\">"
-	    "£value£</sqloutput>";
-          </pike></cset>
-	<formoutput quote='$'>
-	  <var preparse name="variable_#id#" type="#type#"
-	        options="$options$" default="$default$">
-	</formoutput>
-	<br>
-        #help#<br>
-      </page>
-    </sqloutput>
-    <noparse><noparse>
-    <done>
-      <pike>
-        //werror("\nSaving to database customer: ¤customer_id¤\n");
-        string r = "";
-	foreach(indices(id->variables), string variable)
-          if((sscanf(variable, "variable_%d%s",
-	            int variable_id, string slask)>0)&&(slask=="")) {
-	    //werror("%s=%s\n", variable, id->variables[variable]);
-            r += "<sqlquery query=\""
-	         "delete from customers_preferences "
-	  	 "where customer_id='¤customer_id¤' and "
-		 "variable_id='"+variable_id+"'"
-		 "\">\n";
-	    r += "<sqlquery query=\""
-	         "insert into customers_preferences "
-	         "(customer_id,variable_id,value) "
-	         " values ('¤customer_id¤','"+variable_id+"','"+
-		 id->variables[variable]+"')"+
-		 "\">\n";
-	  }
-        return r;
-      </pike>
-    </done></noparse></noparse>
-  </wizard>
-  </sqloutput>
+	  <cset preparse variable=default><pike>
+	    return
+	      "<sqloutput quote='£' query="
+	      "\"select * from customers "
+	      "where id=¤customer_id¤\">"
+	      "£template_scheme_id£</sqloutput>";
+	  </pike></cset>
+	  <formoutput quote='$'>
+	    <var name="new_scheme" type="select"
+		 options="$options$" default="$default$">
+	  </formoutput>
+	  <br>
+	  Please select the scheme you like.<br>
+	</page>
+	<noparse><noparse><done>
+	  <formoutput quote=$>
+	    <sqlquery query="update customers set
+	                     template_scheme_id=$new_scheme$
+			     where id=$customer_id$">
+	  </formoutput>
+	  <pike>
+	    //werror("scheme: %O\n", id->variables->scheme);
+	    return "";
+	  </pike>
+	</done></noparse></noparse>
+      </wizard>
+    </if>
+
+    
+    <if variable="edit is load">
+      <wizard preparse name="Load predefined template scheme">
+	<page>
+	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
+	  <h3>Template scheme</h3>
+	  <cset preparse variable=options><pike>
+	    string query=
+	      "<sqloutput quote='£' query="
+	      "\"select * from template_schemes where "
+	      "customer_id=0\">"
+	      "£id£:£name£,</sqloutput>";
+	    return ((parse_rxml(query, id)/",")-({ "" }))*",";
+	  </pike></cset>
+	  <cset preparse variable=default><pike>
+	    return
+	      "<sqloutput quote='£' query="
+	      "\"select * from customers "
+	      "where id=¤customer_id¤\">"
+	      "£template_scheme_id£</sqloutput>";
+	  </pike></cset>
+	  <formoutput quote='$'>
+	    <var name="load_scheme" type="select"
+		 options="$options$" default="$default$">
+	  </formoutput>
+	  <br>
+	  Please select the scheme you like.<br>
+	</page>
+	<noparse><noparse><done>
+	  <formoutput quote=$>
+	    <sqloutput quote='£'
+	       query="select * from template_schemes_vars
+	              where scheme_id=$load_scheme$">
+	      <sqlquery query="delete from template_schemes_vars where
+	                       scheme_id='$curent_scheme$'
+			       and variable_id=£variable_id£">
+              <sqlquery query="insert into  template_schemes_vars
+	                       (scheme_id,variable_id,value) values
+			       ('$curent_scheme$','£variable_id£','£value£')">
+            </sqloutput>
+	  </formoutput>
+	</done></noparse></noparse>
+      </wizard>
+    </if>
+
+
+    <if variable="edit is new_scheme">
+      <wizard preparse name="Create a new custom template scheme">
+	<page>
+	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
+	  <h3>Scheme name</h3>
+	  <var name=scheme_name type=string>
+	  Enter a name for your new scheme.<br>
+	</page>
+	<page>
+	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
+	  <h3>Scheme</h3>
+          <cset preparse variable=options><pike>
+	    string query=
+	      "<sqloutput quote='£' query="
+	      "\"select * from template_schemes where "
+	      "customer_id='0'\">"
+	      "£id£:£name£,</sqloutput>";
+	    return ((parse_rxml(query, id)/",")-({ "" }))*",";
+	  </pike></cset>
+	  <formoutput quote='$'>
+	    <var name="load_scheme" type="select"
+		 options="$options$">
+	  </formoutput>	  
+	  <br>Select a template scheme for your new custom scheme.<br>
+	</page>
+	<noparse><noparse><done>
+	  <formoutput quote=$>
+	    <cset preparse variable=scheme_exist><sqloutput quote='£'
+	      query="select * from template_schemes where
+	             customer_id='$customer_id$' and
+		     name='$scheme_name$'">£id£</sqloutput></cset>
+            <pike>
+	      id->variables->scheme_empty=
+	        (id->variables->scheme_exist==""?1:0);
+	      return "";
+	    </pike>
+	    <if variable=scheme_empty>
+    	      <sqlquery mysql-insert-id=new_scheme
+	        query="insert into template_schemes 
+	               (customer_id,name) values 
+		       ('$customer_id$','$scheme_name$')">
+
+              <formoutput quote='¥'>
+	        <sqlquery query="update customers set
+	                         template_scheme_id=¥new_scheme¥
+	                         where id=$customer_id$">
+  	        <sqloutput quote='£'
+	           query="select * from template_schemes_vars
+	                  where scheme_id=$load_scheme$">
+                  <sqlquery query="insert into  template_schemes_vars
+	                           (scheme_id,variable_id,value) values
+		                   ('¥new_scheme¥','£variable_id£','£value£')">
+                </sqloutput>	    
+      	      </formoutput>
+	    </if>
+      	  </formoutput>
+	</done></noparse></noparse>
+      </wizard>
+    </if>
+
+    
+    <if variable="edit is template">
+      <sqloutput quote='¥' query="select * from template_wizards
+				  where id='¤wizard¤'">
+        <wizard preparse name="¥title:quote=mysql¥">
+	  <sqloutput quote='#' query="select * from template_vars where
+			              wizard_id='¤wizard¤'">
+	    <page>
+	     <input type=hidden name=edit value='¤edit:quote=mysql¤'>
+	     <input type=hidden name=wizard value='¤wizard:quote=mysql¤'>
+	      <h3>#title#</h3>
+	      <cset preparse variable=options><pike>
+		string query=
+		  "<sqloutput quote='£' query="
+		  "\"select * from template_vars_opts where"
+		  " variable_id='#id:quote=mysql#'\">"
+		  "£value£:£name£,</sqloutput>";
+		return ((parse_rxml(query, id)/",")-({ "" }))*",";
+		</pike></cset>
+	      <cset preparse variable=default><pike>
+		return
+		  "<sqloutput quote='£' query="
+		  "\"select * from template_schemes_vars "
+		  "where scheme_id='¤curent_scheme:quote=mysql¤' and"
+		  " variable_id='#id:quote=mysql#'\">"
+		  "£value£</sqloutput>";
+		</pike></cset>
+	      <formoutput quote='$'>
+		<var name="variable_#id#" type="#type#"
+		      options="$options$" default="$default$">
+	      </formoutput>
+	      <br>
+	      #help#<br>
+	    </page>
+	  </sqloutput>
+	  <noparse><noparse><done>
+	    <pike>
+	      //werror("\nSaving to database customer: ¤customer_id¤\n");
+	      string r = "";
+	      foreach(indices(id->variables), string variable)
+		if((sscanf(variable, "variable_%d%s",
+			  int variable_id, string slask)>0)&&(slask=="")) {
+		  //werror("%s=%s\n", variable, id->variables[variable]);
+		  r += "<sqlquery query=\""
+		       "delete from template_schemes_vars "
+		       "where scheme_id='¤curent_scheme¤' and "
+		       "variable_id='"+variable_id+"'"
+		       "\">\n";
+		  r += "<sqlquery query=\""
+		       "insert into template_schemes_vars "
+		       "(scheme_id,variable_id,value) "
+		       " values ('¤curent_scheme¤','"+variable_id+"','"+
+		       id->variables[variable]+"')"+
+		       "\">\n";
+		}
+	      return r;
+	    </pike>
+	  </done></noparse></noparse>
+	</wizard>
+      </sqloutput>
+    </if>
   </formoutput>
 </if>
 <if variable=show_menu>
+  <formoutput quote='¤'>
+    <cset preparse variable=curent_scheme><pike>
+      return
+        "<sqloutput quote='£' query="
+        "\"select * from customers "
+        "where id=¤customer_id¤\">"
+        "£template_scheme_id£</sqloutput>";
+    </pike></cset>
+  </formoutput>
+  <formoutput quote='¤'>
+    <sqloutput quote='£' query="select * from template_schemes where
+                                id=¤curent_scheme¤">
+      <b>Active custom scheme:</b> ¤curent_scheme¤:£name£<br>
+    </sqloutput>
+  </formoutput>
+  
+  <h3>Template schemes</h3>
+  <blockquote><dl>
+    <dt><font size=+1>
+      <a href="./?edit=scheme">Change scheme...</a>
+    </font>
+    <dd>Change custom template scheme
+    
+    <dt><font size=+1>
+      <a href="./?edit=load">Load scheme...</a>
+    </font>
+    <dd>Load predefined template scheme
+
+    <dt><font size=+1>
+      <a href="./?edit=new_scheme">New scheme...</a>
+    </font>
+    <dd>Create a new custom template scheme
+  </dl></blockquote>
 
   <h3>Template wizards</h3>
   <blockquote><dl>
     <sqloutput query="select * from template_wizards where category='tmpl'">
       <dt><font size=+1>
-         <a href="./?edit=#id#">#name#...</a>
+         <a href="./?edit=template&wizard=#id#">#name#...</a>
       </font>
       <dd>#title#
     </sqloutput>
   </dl></blockquote>
+
   <h3>Navigation wizards</h3>
   <blockquote><dl>
     <sqloutput query="select * from template_wizards where category='nav'">
       <dt><font size=+1>
-        <a href="./?edit=#id#">#name#...</a>
+        <a href="./?edit=template&wizard=#id#">#name#...</a>
       </font>
       <dd>#title#
     </sqloutput>
@@ -114,3 +308,4 @@
 <tablify preparse nice cellseparator='='>Variable=Value
   <insert variables=full></tablify>
 </comment>
+

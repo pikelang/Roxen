@@ -141,10 +141,10 @@ string|mapping navigate(object id, string f, string base_url)
       string href = "<a href='"+encode_url(base_url, "go", f+item)+"'>";
       res += "<tr><td>"+href+"<img src='"+img+"' border=0></a></td>";
       res += "<td>"+href+"<tt>"+html_encode_string(item)+"</tt></a></td>";
-      res += "<td><tt>";
+      res += "<td>";
       if(md->title)
 	res += html_encode_string(md->title);
-      res += "</tt></td></tr>\n";
+      res += "</td></tr>\n";
       
     }
     if(!sizeof(dirs+files))

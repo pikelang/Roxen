@@ -200,7 +200,7 @@ class tab
 	string bg="#eeeeee";
 	if(arrayp(tmp))
 	  return "<content><table cellspacing=1><tr><td bgcolor=black>"
-	    "<table border=0 cellspacing=1 cellpadding=3>"
+	    "<table border=0 cellspacing=1 cellpadding=10>"
 	    "<tr><td bgcolor="+bg+"><font size=+1><b>Toolbar</b></font></td>"
 	    "<td bgcolor="+bg+">"
 	    "<font size=+1><b>File Browser</b></font></td></tr>"
