@@ -169,7 +169,7 @@ class FTFont
   Image.Image write( string ... what )
   {
     object key = lock->lock();
-    face->set_size( 0, size );
+    face->set_size( 0, size * 2);
     if( !sizeof( what ) )
       return Image.Image( 1,height() );
 
@@ -214,7 +214,7 @@ class FTFont
     rr->setcolor( 0,0,0 );
     if( fake_italic )
       rr = rr->skewx( -(rr->ysize()/3) );
-    return rr;
+    return rr->scale(0.5);
   }
 
   string _sprintf() {
