@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.421 2004/02/20 17:25:36 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.422 2004/03/03 15:37:46 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1726,10 +1726,16 @@ void send_result(mapping|void result)
               }
             }
           }
-        }
-	head_string = sprintf("%s %d %s\r\n",
-			      prot, file->error,
-			      file->rettext ||errors[file->error]||"");
+	}
+
+	if ((head_string = file->rettext)) {
+	  if (has_value (head_string, "\n"))
+	    // Fold lines nicely.
+	    head_string = map (head_string / "\n", String.trim_all_whites) * " ";
+	}
+	else
+	  head_string = errors[file->error] || "";
+	head_string = sprintf("%s %d %s\r\n", prot, file->error, head_string);
 
 //         if( file->len > 0 || (file->error != 200) )
 	heads["Content-Length"] = (string)file->len;
