@@ -12,7 +12,7 @@ constant required_charset = "iso-8859-2";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: polish.pike,v 1.5 2000/02/14 09:22:08 per Exp $";
+constant cvs_version = "$Id: polish.pike,v 1.6 2000/07/11 10:55:56 grubba Exp $";
 constant _id = ({ "pl", "polish", "" });
 constant _aliases = ({ "pl", "po", "pol", "polish" });
 
@@ -118,19 +118,19 @@ string number(int num)
    case 501..599: case 601..699: case 701..799: case 801..899:
    case 901..999:
      return number(num-(num%100))+" "+number(num%100);
-   case 1000..1999: return "tisi±c "+number(num%1000);
-   case 2000..4999: return number(num/1000)+" tisi±ce "+number(num%1000);
-   case 5000..999999: return number(num/1000)+" tisiêcy "+number(num%1000);
+   case 1000..1999: return "tysi±c "+number(num%1000);
+   case 2000..4999: return number(num/1000)+" tysi±ce "+number(num%1000);
+   case 5000..999999: return number(num/1000)+" tysiêcy "+number(num%1000);
    case 1000001..1999999:
-     return number(num/1000000)+" million "+number(num%1000000);
+     return number(num/1000000)+" milion "+number(num%1000000);
    case 2000000..999999999:
      tmp = (num/1000000) - ((num/10000000)*10000000);
      switch (tmp)
      {
 	case 2: case 3: case 4:
-	     return number(num/1000000)+" milliony "+number(num%1000000);
+	     return number(num/1000000)+" miliony "+number(num%1000000);
 	default:
-	     return number(num/1000000)+" millionów "+number(num%1000000);
+	     return number(num/1000000)+" milionów "+number(num%1000000);
      }
    default:
     return "wiele";
