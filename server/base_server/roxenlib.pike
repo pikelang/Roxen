@@ -1,6 +1,6 @@
 inherit "http";
 
-string _cvs_version = "$Id: roxenlib.pike,v 1.10 1997/01/29 05:41:24 per Exp $";
+string _cvs_version = "$Id: roxenlib.pike,v 1.11 1997/01/29 06:38:55 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -365,6 +365,8 @@ string parse_rxml(string what, void|object|mapping id, void|object file,
 		    (mapping)id->conf->parse_module->container_callers,
 		    id, file||this_object(), defines, id->my_fd);
 
+  if(!id->misc->more_heads)
+    id->misc->more_heads= ([]);
   id->misc->more_heads |= _extra_heads;
   return what;
 }

@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 
-string cvs_version = "$Id: http.pike,v 1.12 1997/01/29 06:17:13 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.13 1997/01/29 06:38:56 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -225,13 +225,14 @@ private int parse_got(string s)
 
   raw_url    = f;
   time       = _time(1);
-
+  
+#if 0
   if(!remoteaddr)
   {
     catch(remoteaddr = ((my_fd->query_address()||"")/" ")[0]);
     if(!remoteaddr) this_object()->end();
   }
-  
+#endif  
 #if 0
   sscanf(f,"%s;%s", f, range);
 #endif
