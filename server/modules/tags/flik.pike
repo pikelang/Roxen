@@ -1,5 +1,5 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
-// $Id: flik.pike,v 1.3 1997/01/20 05:08:15 law Exp $
+// $Id: flik.pike,v 1.3.2.1 1997/02/13 23:30:17 grubba Exp $
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -16,7 +16,7 @@
 
 // made by Pontus Hagland <law@infovav.se> december -96
 
-string cvs_version = "$Id: flik.pike,v 1.3 1997/01/20 05:08:15 law Exp $";
+string cvs_version = "$Id: flik.pike,v 1.3.2.1 1997/02/13 23:30:17 grubba Exp $";
 #include <module.h>
 
 inherit "module";
@@ -85,8 +85,14 @@ string encode_url(object id,
 string tag_fl_postparse( string tag, mapping m, string cont, object id,
 			 object file, mapping defines, object client )
 {
+   perror(id->not_query+": "+
+	  id->misc->fl+", "+
+	  id->variables->fl+" -> ");
    if (!id->variables->fl)
-      id->variables->fl=flno++;
+     id->misc->fl=id->variables->fl=id->misc->fl||(flno++);
+   else if (!id->misc->fl)
+     id->misc->fl=id->variables->fl;
+
    if (!flcache[id->not_query])
    {
       if (-1==find_call_out(gc))
@@ -96,6 +102,14 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
    flcache[id->not_query]->gc-=({id->variables->fl});
    if (!flcache[id->not_query][id->variables->fl])
       flcache[id->not_query][id->variables->fl]=([]);
+
+   perror(id->misc->fl+", "
+	  +id->variables->fl+": "
+	  +m->id+":"+flcache[id->not_query][id->variables->fl][m->id]
+	  +" but "
+	  +((string)(id->variables["flc"+m->id]||"no"))
+	  +"\n");
+
 
    if (id->variables["flc"+m->id])
    {
@@ -110,12 +124,15 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
 	 flcache[id->not_query][id->variables->fl][m->id]=1;
    }
 
+   id->misc->fliklistinfo=m->id+".";
+
    if (m->title)
    if (flcache[id->not_query][id->variables->fl][m->id]==1)
    {
       return "<!--"+m->id+"-->"
 	     "<a href="+encode_url(id,m->id,2)+">"
-	     "<img width=20 height=20 src=internal-roxen-unfold border=0></a>"+cont;
+	     "<img width=20 height=20 src=internal-roxen-unfold border=0></a>"
+             +cont;
    }
    else
    {
@@ -127,7 +144,7 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
    else
    if (flcache[id->not_query][id->variables->fl][m->id]==1)
    {
-      return "<!--"+m->id+"-->"+"";
+      return "<!--"+m->id+" (folded)-->"+"";
    }
    else
    {
@@ -137,15 +154,18 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
 
 string recurse_parse_ftfd(string cont,mapping m,string id);
 
+// called both from local and global parser!
 string tag_fl( string tag, mapping arg, string cont, 
-	       mapping ma, string id, mapping defines)
+	       object|mapping ma, object|string id, mapping defines)
 {
    mapping m=(["ld":"","t":"","cont":"","count":0]);
 
    if (defines && defines[" fl "]) m=defines[" fl "];
 
-   if (objectp(id)) id="";
-   else id=((id=="")?"":id+":")+ma->count+":";
+   if (objectp(ma)) 
+     id=ma->misc->fliklistinfo||"";
+   else 
+     id=((id=="")?"":id+":")+ma->count+":";
 
    if (!arg->folded) m->folded="unfolded";
    else m->folded="folded";
