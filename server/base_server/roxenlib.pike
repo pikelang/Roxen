@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.113 1999/09/17 08:30:39 mast Exp $
+// $Id: roxenlib.pike,v 1.114 1999/10/02 22:48:39 nilsson Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -667,10 +667,7 @@ int get_size(mixed x)
 
 static int ipow(int what, int how)
 {
-  int r=what;
-  if(!how) return 1;
-  while (how-=1) r *= what; 
-  return r;
+  return (int)pow(what, how);
 }
 
 /* This one will remove .././ etc. in the path. Might be useful :) */
