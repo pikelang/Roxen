@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.25 1997/10/09 04:00:53 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.26 1997/10/11 20:42:54 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -142,9 +142,15 @@ void create(string reason, int|string|void uid, int|string|void gid)
 void destroy()
 {
 #ifdef HAVE_EFFECTIVE_USER
-  if(LOGP)
-    report_notice(sprintf("Change back to uid#%d, from %s",saved_uid,
-			  dbt(backtrace()[-2])));
+  if(LOGP) {
+    array bt = backtrace();
+    if (sizeof(bt) >= 2) {
+      report_notice(sprintf("Change back to uid#%d, from %s",saved_uid,
+			    dbt(bt[-2])));
+    } else {
+      report_notice(sprintf("Change back to uid#%d, from backend",saved_uid));
+    }
+  }
 
   if(getuid()) return;
 
