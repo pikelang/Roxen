@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.192 2004/05/10 18:38:17 grubba Exp $
+// $Id: module.pike,v 1.193 2004/05/10 19:09:03 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1178,7 +1178,7 @@ mapping make_collection(string path, RequestID id)
   tmp_id->not_query = query_location() + path;
   tmp_id->method = "MKCOL";
   // FIXME: Logging?
-  return find_file(path, id);
+  return find_file(path, tmp_id);
 }
 
 //! State of the Overwrite header.
