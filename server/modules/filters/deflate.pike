@@ -9,7 +9,7 @@
 //
 
 constant cvs_version =
- "$Id: deflate.pike,v 1.6 2004/06/19 23:17:42 _cvs_stephen Exp $";
+ "$Id: deflate.pike,v 1.7 2004/07/12 00:11:46 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -66,7 +66,10 @@ mapping filter( mapping result, RequestID id )
        || (len=sizeof(result->data))<query("minfilesize")
        || result->encoding                // FIXME Does this catch CGI output?
        && (result->encoding=="deflate" || result->encoding=="gzip")
-       || (type=id->misc->moreheads["Content-Type"]||result->type)
+       || (type=id->misc->moreheads&&id->misc->moreheads["Content-Type"]
+           ||id->misc->defines[" _extra_heads"]
+            &&id->misc->defines[" _extra_heads"]["Content-Type"]
+	   ||result->type)
        && !has_prefix(type, "text/")
        && !has_prefix(type, "application/x-javascript"))
      return 0;
