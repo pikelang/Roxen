@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.168 2004/04/29 19:30:02 mast Exp $
+// $Id: module.pike,v 1.169 2004/05/03 19:04:43 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -574,7 +574,7 @@ static mapping(string:mapping(string:DAVLock)) file_locks = ([]);
 //! Only used internally by the default lock implementation.
 static mapping(string:mapping(string:DAVLock)) prefix_locks = ([]);
 
-//! Find all locks that apply to @[path].
+//! Find some or all locks that apply to @[path].
 //!
 //! @param path
 //!   Canonical path relative to the filesystem root. Always ends with
@@ -583,45 +583,70 @@ static mapping(string:mapping(string:DAVLock)) prefix_locks = ([]);
 //! @param recursive
 //!   If @expr{1@} also return all locks under @[path].
 //!
+//! @param exclude_shared
+//!   If @expr{1@} do not return shared locks that are held by users
+//!   other than the one the request is authenticated as. (This is
+//!   appropriate to get the list of locks that would conflict if the
+//!   current user were to make a shared lock.)
+//!
 //! @returns
 //!   Returns a multiset containing all applicable locks in
 //!   this location module, or @expr{0@} (zero) if there are none.
 //!
 //! @note
 //! @[DAVLock] objects may be created if the filesystem has some
-//! persistent storage of them. They must be filled in completely in
-//! that case. The default implementation does not store locks
-//! persistently.
+//! persistent storage of them. The default implementation does not
+//! store locks persistently.
 //!
 //! @note
 //! The default implementation only handles the @expr{"DAV:write"@}
 //! lock type.
-multiset(DAVLock) find_all_locks(string path,
-				 int(0..1) recursive,
-				 RequestID id)
+multiset(DAVLock) find_locks(string path,
+			     int(0..1) recursive,
+			     int(0..1) exclude_shared,
+			     RequestID id)
 {
   // Common case.
   if (!sizeof(file_locks) && !sizeof(prefix_locks)) return 0;
 
   multiset(DAVLock) locks = (<>);
-  if (file_locks[path]) {
-    locks = (< @values(file_locks[path]) >);
+  function(mapping(string:DAVLock):void) add_locks;
+
+  if (exclude_shared) {
+    User uid = id->conf->authenticate (id);
+    string auth_user = uid && uid->name();
+    add_locks = lambda (mapping(string:DAVLock) sub_locks) {
+		  foreach (sub_locks; string user; DAVLock lock)
+		    if (user == auth_user || lock->lockscope == "DAV:exclusive")
+		      locks[lock] = 1;
+		};
   }
+  else
+    add_locks = lambda (mapping(string:DAVLock) sub_locks) {
+		  locks |= mkmultiset (values (sub_locks));
+		};
+
+  if (file_locks[path]) {
+    add_locks (file_locks[path]);
+  }
+
   foreach(prefix_locks;
 	  string prefix; mapping(string:DAVLock) sub_locks) {
     if (has_prefix(path, prefix)) {
-      locks |= (< @values(sub_locks) >);
+      add_locks (sub_locks);
       break;
     }
   }
+
   if (recursive) {
     foreach(file_locks|prefix_locks;
 	    string prefix; mapping(string:DAVLock) sub_locks) {
       if (has_prefix(prefix, path)) {
-	locks |= (< @values(sub_locks) >);
+	add_locks (sub_locks);
       }
     }
   }
+
   return sizeof(locks) && locks;
 }
 
@@ -661,9 +686,8 @@ multiset(DAVLock) find_all_locks(string path,
 //!
 //! @note
 //! @[DAVLock] objects may be created if the filesystem has some
-//! persistent storage of them. They must be filled in completely in
-//! that case. The default implementation does not store locks
-//! persistently.
+//! persistent storage of them. The default implementation does not
+//! store locks persistently.
 //!
 //! @note
 //! The default implementation only handles the @expr{"DAV:write"@}
@@ -737,7 +761,7 @@ DAVLock|int(-2..1) check_locks(string path,
 //! @expr{0@} or @expr{1@}.
 //!
 //! This function is only provided as a helper to call from
-//! @[lock_file] if the default @[find_all_locks] and @[check_locks]
+//! @[lock_file] if the default @[find_locks] and @[check_locks]
 //! implementations are to be used.
 //!
 //! @param path

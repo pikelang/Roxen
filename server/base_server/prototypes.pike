@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.92 2004/04/30 09:19:30 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.93 2004/05/03 19:04:43 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1578,9 +1578,10 @@ class RoxenModule
 				      RequestID id);
   mapping(string:mixed) remove_property (string path, string prop_name,
 					 RequestID id);
-  multiset(DAVLock) find_all_locks(string path,
-				   int(0..1) recursive,
-				   RequestID id);
+  multiset(DAVLock) find_locks(string path,
+			       int(0..1) recursive,
+			       int(0..1) exclude_shared,
+			       RequestID id);
   DAVLock|int(-2..1) check_locks(string path,
 				 int(0..1) recursive,
 				 RequestID id);
