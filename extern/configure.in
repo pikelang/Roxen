@@ -94,7 +94,7 @@ else
   AC_MSG_RESULT(no)
 fi
 
-AC_HAVE_FUNCS(memmove setrlimit pipe socketpair poll shutdown bcopy memcpy realloc mlockall wait3 wait4 waitpid plock memset nice)
+AC_HAVE_FUNCS(memmove setrlimit pipe socketpair poll shutdown bcopy memcpy realloc mlockall wait3 wait4 waitpid plock memset nice seteuid setresuid)
 
 AC_C_CONST
 AC_TYPE_SIZE_T
