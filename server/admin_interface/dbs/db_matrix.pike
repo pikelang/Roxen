@@ -134,6 +134,7 @@ string|mapping parse( RequestID id )
 #define PERM(P,T,L)\
      rres[DBManager.db_group(db)] += sprintf((view_mode ? "":"<a href='?set_"+L+"=%s&db=%s'>")+\
 		     "<gtext fontsize='13' fgcolor='&usr.linkcolor;'"+\
+		     " alt='"+((p[conf]==DBManager.P)?T:"-")+"'"\
 		     ">"+((p[conf]==DBManager.P)?(DBManager.P!=DBManager.NONE?"&nbsp;":"")+T:(DBManager.P!=DBManager.NONE?"&nbsp;-":"-"))+"</gtext>"\
 		     +(view_mode?"":"</a>"), Roxen.http_encode_string(conf),\
 		     Roxen.http_encode_string(db))
