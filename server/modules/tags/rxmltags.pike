@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.135 2000/06/20 13:56:34 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.136 2000/06/20 15:39:55 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -787,9 +787,9 @@ string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File fi
 
   b=m->name;
 
-  dom = id->conf->query("Domain");
-  if(sizeof(dom) && (dom[-1]=='.'))
-    dom = dom[0..strlen(dom)-2];
+  dom=id->conf->query("Domain");
+  if(dom[-1]=='.')
+    dom=dom[0..strlen(dom)-2];
   if(!b) return "";
   u=id->conf->userinfo(b, id);
   if(!u) return "";
@@ -1552,7 +1552,6 @@ documentation for that module.</desc>",
 <ex>
 <define variable='var.ris'/>
 <append variable='var.ris' value='Roxen Internet Software'/>
-
 &var.ris;
 </ex>
 
@@ -2119,8 +2118,7 @@ This cascading style sheet (CSS) definition will be applied on the pre element.
 </attr>
 
 <attr name=variables>
- Inserts a variable listing.
-
+ Inserts a variable listing. Presently, only the argument 'full' is available.
 </attr>
 
 <attr name=scopes>
@@ -2372,6 +2370,10 @@ Sets a variable.</short>
 
 <attr name=variable value=string required>
  The name of the variable.
+<ex type='box'>
+<set variable='var.foo' value='bar'/>
+</ex>
+
 </attr>
 
 <attr name=value value=string>
@@ -2392,8 +2394,10 @@ Sets a variable.</short>
 
  If none of the above attributes are specified, the variable is unset.
  If debug is currently on, more specific debug information is provided
- if the operation failed. See also: <tag><ref type='tag'>append</ref></tag>
- and <tag><ref type='tag'>debug</ref></tag>",
+ if the operation failed. See also: <ref type='tag'>append</ref>/home/per/src/.luke/clients/import.pike /home/musik/storage/2/live/the.distance.to.here/*
+
+																		       
+ and <ref type='tag'>debug</ref>",
 
 "set-cookie":#"<desc tag><short>
  Sets a cookie that will be stored by the user's browser.</short> This
@@ -2618,6 +2622,13 @@ Communicating?
 
 <attr name=variable value=string required>
  The name of the variable.
+
+<ex>
+<set variable='var.jump' value='do it'/>
+&var.jump;
+<unset variable='var.jump'/>
+&var.jump;
+</ex>
 </attr>",
 
 "user":#"<desc tag><short>
