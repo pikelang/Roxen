@@ -23,7 +23,7 @@ OS=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`
 all: pike_version_test
 
 
-install : all install_dirs install_data mysql config_test
+install : all install_dirs install_data mysql config_test buildenv_test
 
 	
 pike_version_test:
@@ -77,13 +77,15 @@ install_data:
 	${INSTALL_DATA}   server/data/supports		${PROG_DIR}/server/data/;
 	${INSTALL_DATA_R} server/java			${PROG_DIR}/server/;
 	${INSTALL_DATA_R} server/modules		${PROG_DIR}/server/;
+	${INSTALL_DATA_R} server/perl			${PROG_DIR}/server/;
+	${INSTALL_DATA_R} server/plugins		${PROG_DIR}/server/;
 	${INSTALL_DATA_R} server/pike_modules		${PROG_DIR}/server/;
 	${INSTALL_DATA_R} server/rxml_packages		${PROG_DIR}/server/;
 	${INSTALL_DATA_R} server/server_core		${PROG_DIR}/server/;
 	${INSTALL_DATA_R} server/site_templates		${PROG_DIR}/server/;
 	${INSTALL_DATA_R} server/translations		${PROG_DIR}/server/;
 	${INSTALL_DATA}   server/start			${PROG_DIR}/server/;
-	${INSTALL_DATA_R} local 		${PROG_DIR}/;
+	#${INSTALL_DATA_R} local 		${PROG_DIR}/;
 	#${INSTALL_DATA}   GPL   	${PROG_DIR}/;
 	#${INSTALL_DATA}   COPYING   	${PROG_DIR}/;
 	${INSTALL_DATA}   start  	${PROG_DIR}/;
@@ -134,5 +136,15 @@ mysql:
   	fi\
 	fi
 
+buildenv_test:
+	@if [ -f /etc/chilimoon/environment ] ; then\
+	:;\
+	else\
+	make buildenv;\
+	fi
+
+buildenv:
+	cd ${PROG_DIR}/server;\
+	pike bin/buildenv.pike;
 
 .phony: install
