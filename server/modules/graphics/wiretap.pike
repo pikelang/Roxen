@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.22 2001/01/13 18:16:31 nilsson Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.23 2001/02/06 22:39:56 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -42,118 +42,6 @@ tag.");
 
 // -------------------- The actual wiretap code  --------------------------
 
-inline string ns_color(array (int) col)
-{
-  if(!arrayp(col)||sizeof(col)!=3)
-    return "#000000";
-  return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
-}
-
-static int init_wiretap_stack (mapping(string:string) args, RequestID id)
-{
-  int changed=0;
-  mixed cols=(args->bgcolor||args->text||args->link||args->alink||args->vlink);
-
-#define FIX(Y,Z,X) do{ \
-  if(!args->Y || args->Y==""){ \
-    id->misc->defines[X]=Z; \
-    if(cols){ \
-      args->Y=Z; \
-      changed=1; \
-    } \
-  } \
-  else{ \
-    id->misc->defines[X]=args->Y; \
-    if(query("colormode")&&args->Y[0]!='#'){ \
-      args->Y=ns_color(parse_color(args->Y)); \
-      changed=1; \
-    } \
-  } \
-}while(0)
-
-  //FIXME: These values are not up to date
-
-  FIX(text,   "#000000","fgcolor");
-  FIX(link,   "#0000ee","link");
-  FIX(alink,  "#ff0000","alink");
-  FIX(vlink,  "#551a8b","vlink");
-
-  if(id->client_var && has_value(id->client_var->fullname||"","windows"))
-  {
-    FIX(bgcolor,"#c0c0c0","bgcolor");
-  } else {
-    FIX(bgcolor,"#ffffff","bgcolor");
-  }
-
-  id->misc->wiretap_stack = ({});
-
-#ifdef WIRETAP_TRACE
-  werror ("Init wiretap stack for %O: "
-	  "fgcolor=%O, bgcolor=%O, link=%O, alink=%O, vlink=%O\n",
-	  id, id->misc->defines->fgcolor, id->misc->defines->bgcolor,
-	  id->misc->defines->alink, id->misc->defines->alink,
-	  id->misc->defines->vlink);
-#endif
-
-  return changed;
-}
-
-static int push_color (string tagname, mapping(string:string) args, RequestID id)
-{
-  int changed;
-  if(!id->misc->wiretap_stack)
-    init_wiretap_stack (([]), id);
-
-  id->misc->wiretap_stack +=
-    ({ ({ tagname, id->misc->defines->fgcolor, id->misc->defines->bgcolor }) });
-
-#undef FIX
-#define FIX(X,Y) if(args->X && args->X!=""){ \
-  id->misc->defines->Y=args->X; \
-  if(query("colormode") && args->X[0]!='#'){ \
-    args->X=ns_color(parse_color(args->X)); \
-    changed = 1; \
-  } \
-}
-
-  FIX(bgcolor,bgcolor);
-  FIX(color,fgcolor);
-  FIX(text,fgcolor);
-#undef FIX
-
-#ifdef WIRETAP_TRACE
-  werror ("%*sPush wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
-	  sizeof (id->misc->wiretap_stack) * 2, "", id, tagname,
-	  id->misc->defines->fgcolor, id->misc->defines->bgcolor);
-#endif
-
-  return changed;
-}
-
-static void pop_color (string tagname, RequestID id)
-{
-  array c = id->misc->wiretap_stack;
-  if(c && sizeof(c)) {
-    int i;
-
-    for(i=0; i<sizeof(c); i++)
-      if(c[-i-1][0]==tagname)
-      {
-	id->misc->defines->fgcolor = c[-i-1][1];
-	id->misc->defines->bgcolor = c[-i-1][2];
-	break;
-      }
-
-    id->misc->wiretap_stack = c[..sizeof(c)-i-2];
-
-#ifdef WIRETAP_TRACE
-  werror ("%*sPop wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
-	  sizeof (c) * 2, "", id, tagname,
-	  id->misc->defines->fgcolor, id->misc->defines->bgcolor);
-#endif
-  }
-}
-
 class TagBody
 {
   inherit RXML.Tag;
@@ -172,7 +60,7 @@ class TagBody
       args = mkmapping (map (indices (args), lower_case), values (args));
 //       werror ("body " + name + " %O\n", args);
 //       werror ("raw_tag_text: %O\n", raw_tag_text);
-      if(init_wiretap_stack (args, id) && query("colormode"))
+      if(Roxen.init_wiretap_stack (args, id, query("colormode")))
 	return ({propagate_tag (args)});
       return ({propagate_tag()});
     }
@@ -195,7 +83,7 @@ class TagPushColor
     array do_return (RequestID id)
     {
       args = mkmapping (map (indices (args), lower_case), values (args));
-      if(push_color (name, args, id) && query("colormode"))
+      if(Roxen.push_color (name, args, id, query("colormode")))
 	return ({propagate_tag (args)});
       return ({propagate_tag()});
     }
@@ -217,7 +105,7 @@ class TagPopColor
 
     array do_return (RequestID id)
     {
-      pop_color (tagname, id);
+      Roxen.pop_color (tagname, id);
       return ({propagate_tag()});
     }
   }
@@ -229,7 +117,7 @@ class TagPopColor
 RXML.TagSet query_tag_set()
 {
   if (!module_tag_set) {
-    array(RXML.Tag) tags = ({TagColorScope()});
+    array(RXML.Tag) tags = ({});
     foreach(query("colorparsing"), string t)
     {
       array(string) variants =
@@ -247,77 +135,3 @@ RXML.TagSet query_tag_set()
   }
   return module_tag_set;
 }
-
-
-// --------------------- Wiretap countermeasure --------------------
-
-class TagColorScope {
-  inherit RXML.Tag;
-  constant name = "colorscope";
-
-  class Frame {
-    inherit RXML.Frame;
-    string link, alink, vlink;
-
-#define LOCAL_PUSH(X) if(args->X) { X=id->misc->defines->X; id->misc->defines->X=args->X; }
-    array do_enter(RequestID id) {
-      push_color("colorscope",args,id);
-      LOCAL_PUSH(link);
-      LOCAL_PUSH(alink);
-      LOCAL_PUSH(vlink);
-      return 0;
-    }
-
-#define LOCAL_POP(X) if(X) id->misc->defines->X=X
-    array do_return(RequestID id) {
-      pop_color("colorscope",id);
-      LOCAL_POP(link);
-      LOCAL_POP(alink);
-      LOCAL_POP(vlink);
-      result=content;
-      return 0;
-    }
-  }
-}
-
-TAGDOCUMENTATION;
-#ifdef manual
-constant tagdoc=([
-  "colorscope":#"<desc cont>Makes it possible to change the autodetected
-colors within the tag. Useful when out-of-order parsing occurs, e.g.
-<ex type=box>
-<define tag=\"hello\">
-  <colorscope bgcolor=\"red\">
-    <gtext>Hello</gtext>
-  </colorscope>
-</define>
-
-<table><tr>
-  <td bgcolor=\"red\">
-    <hello/>
-  </td>
-</tr></table>
-</ex>
-</desc>
-
-<attr name=text value=color>
- Set the text color within the scope.
-</attr>
-
-<attr name=bgcolor value=color>
- Set the background color within the scope.
-</attr>
-
-<attr name=link value=color>
- Set the link color within the scope.
-</attr>
-
-<attr name=alink value=color>
- Set the active link color within the scope.
-</attr>
-
-<attr name=vlink value=color>
- Set the visited link color within the scope.
-</attr>"
-]);
-#endif
