@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.15 2000/03/30 23:32:26 nilsson Exp $
+ * $Id: create_configif.pike,v 1.16 2000/04/03 13:48:04 per Exp $
  *
  * Create an initial administration interface server.
  */
@@ -64,20 +64,66 @@ int main(int argc, array argv)
 
   do
   {
-    if(!admin) {
+    if(!admin) 
+    {
       name = rl->read( "Server name [Administration Interface]: " );
       if( !strlen(name-" ") )
 	name = "Administration Interface";
 
-      port = rl->read( "Port ["+def_port+"]: ");
-      if( !strlen(port-" ") )
-	port = def_port;
+      int port_ok;
+      while( !port_ok )
+      {
+        string protocol, host, path;
+
+        port = rl->read( "Port URL ["+def_port+"]: ");
+        if( !strlen(port-" ") )
+          port = def_port;
+        else if( (int)port )
+        {
+          int ok;
+          while( !ok )
+          {
+            switch( protocol = lower_case(rl->read( "Protocol [http]: ")) )
+            {
+             case "":
+               protocol = "http";
+             case "http":
+             case "https":
+               port = protocol+"://*:"+port+"/";
+               ok=1;
+               break;
+             default:
+               write("Only http and https are supported for the "
+                     "configuration interface\n");
+               break;
+            }
+          }
+        }
+
+        if( sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) == 3)
+        {
+          switch( lower_case(protocol) )
+          {
+           case "http":
+           case "https":
+             // Verify hostname here...
+             port = lower_case( protocol )+"://"+host+path;
+             port_ok = 1;
+             break;
+           default:
+             write("Only http and https are supported for the "
+                   "configuration interface\n");
+             break;
+          }
+        }
+      }
     }
 
-    do {
+    do 
+    {
       user = rl->read( "Administrator user name [administrator]: ");
     } while(((search(user, "/") != -1) || (search(user, "\\") != -1)) &&
-	    write("User name may not contain slashes.\n"));
+            write("User name may not contain slashes.\n"));
     if( !strlen(user-" ") )
       user = "administrator";
 
@@ -92,36 +138,38 @@ int main(int argc, array argv)
   } while( strlen( passwd2 = rl->read( "Ok? [y]: " ) ) && passwd2[0]=='n' );
 
 
-  string community_user, community_password, proxy_host="", proxy_port="80";
-  string community_userpassword="";
-  int use_update_system=0;
-  
-  write("Roxen 2.0 has a built-in update system. If enabled it will periodically\n");
-  write("contact update servers over the Internet. Do you want to enable this?\n");
-
-  if(!(strlen( passwd2 = rl->read( "Ok? [y]: " ) ) && passwd2[0]=='n' ))
+  if( !admin )
   {
-    use_update_system=1;
-    write("If you have a registered user identity at Roxen Community\n");
-    write("(http://community.roxen.com), you may be able to access\n");
-    write("additional material through the update system.\n");
-    write("Press enter to skip this.\n");
-    community_user=rl->read("Roxen Community Identity (your e-mail): ");
-    if(sizeof(community_user))
+    string community_user, community_password, proxy_host="", proxy_port="80";
+    string community_userpassword="";
+    int use_update_system=0;
+  
+    write("Roxen 2.0 has a built-in update system. If enabled it will periodically\n");
+    write("contact update servers over the Internet. Do you want to enable this?\n");
+
+    if(!(strlen( passwd2 = rl->read( "Ok? [y]: " ) ) && passwd2[0]=='n' ))
     {
-      do
+      use_update_system=1;
+      write("If you have a registered user identity at Roxen Community\n");
+      write("(http://community.roxen.com), you may be able to access\n");
+      write("additional material through the update system.\n");
+      write("Press enter to skip this.\n");
+      community_user=rl->read("Roxen Community Identity (your e-mail): ");
+      if(sizeof(community_user))
       {
-	rl->get_input_controller()->dumb=1;
-	community_password = rl->read( "Roxen Community Password: ");
-	passwd2 = rl->read( "Roxen Community Password (again): ");
-	rl->get_input_controller()->dumb=0;
-	write("\n");
-	community_userpassword=community_user+":"+community_password;
-      } while(!strlen(community_password) || (community_password != passwd2));
+        do
+        {
+          rl->get_input_controller()->dumb=1;
+          community_password = rl->read( "Roxen Community Password: ");
+          passwd2 = rl->read( "Roxen Community Password (again): ");
+          rl->get_input_controller()->dumb=0;
+          write("\n");
+          community_userpassword=community_user+":"+community_password;
+        } while(!strlen(community_password) || (community_password != passwd2));
       
-      if((strlen( passwd2 = rl->read("Do you want to access the update "
-				     "server through an HTTP proxy? [n]: "))
-	  && passwd2[0]!='n' ))
+        if((strlen( passwd2 = rl->read("Do you want to access the update "
+                                       "server through an HTTP proxy? [n]: "))
+            && passwd2[0]!='n' ))
 	{
 	  proxy_host=rl->read("Proxy host: ");
 	  if(sizeof(proxy_host))
@@ -129,28 +177,11 @@ int main(int argc, array argv)
 	  if(!sizeof(proxy_port))
 	    proxy_port="80";
 	}
+      }
     }
-  }
-
-  string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
-  mkdirhier( ufile );
-  Stdio.write_file(ufile,
-string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
-<map>
-  <str>permissions</str> : <a> <str>Everything</str> </a>
-  <str>real_name</str>   : <str>Administration Interface Default User</str>
-  <str>password</str>    : <str>" + crypt(password) + #"</str>
-  <str>name</str>        : <str>" + user + "</str>\n</map>" ));
-
-  if(admin)
-  {
-    write("Administrator user \"" + user + "\" created.");
-    return 0;
-  }
-
-  mkdirhier( configdir );
-  Stdio.write_file( configdir+replace( name, " ", "_" ),
-replace(
+    mkdirhier( configdir );
+    Stdio.write_file( configdir+replace( name, " ", "_" ),
+                      replace(
 #"
 <!-- -*- html -*- -->
 <?XML version=\"1.0\"?>
@@ -187,6 +218,18 @@ replace(
     "$PROXY_HOST", "$COMMUNITY_USERPASSWORD$" }),
  ({ name, port, (string)use_update_system, proxy_port,
     proxy_host, community_userpassword }) ));
-  write("Administration interface created\n");
+    write("Administration interface created\n");
+  }
 
+  string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
+  mkdirhier( ufile );
+  Stdio.write_file(ufile,
+string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
+<map>
+  <str>permissions</str> : <a> <str>Everything</str> </a>
+  <str>real_name</str>   : <str>Administration Interface Default User</str>
+  <str>password</str>    : <str>" + crypt(password) + #"</str>
+  <str>name</str>        : <str>" + user + "</str>\n</map>" ));
+
+  write("Administrator user \"" + user + "\" created.");
 }
