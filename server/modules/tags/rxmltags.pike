@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.332 2001/12/04 16:05:16 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.333 2002/01/04 09:38:10 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -186,7 +186,9 @@ class EntityClientAuthenticated {
 			string scope_name, void|RXML.Type type) {
     // Actually, it is cacheable, but _only_ if there is no authentication.
     c->id->misc->cacheable=0;
-    return ENCODE_RXML_INT(!!c->id->conf->authenticate( c->id ), type );
+    User u = c->id->conf->authenticate(c->id);
+    if (!u) return RXML.nil;
+    return ENCODE_RXML_TEXT(u->name(), type );
   }
 }
 
@@ -194,10 +196,11 @@ class EntityClientUser {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var,
 			string scope_name, void|RXML.Type type) {
-    User u = c->id->conf->authenticate( c->id );
     c->id->misc->cacheable=0;
-    if(!u) return RXML.nil;
-    return ENCODE_RXML_TEXT(u->name(), type);
+    if (c->id->realauth) {
+      return ENCODE_RXML_TEXT((c->id->realauth/":")[0], type);
+    }
+    return RXML.nil;
   }
 }
 
