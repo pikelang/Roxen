@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.96 1998/07/24 09:47:10 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.97 1998/07/24 10:51:53 neotron Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -340,7 +340,7 @@ void start(int n, object conf)
   if(!conf) conf=roxen->current_configuration;
   if(!conf) return;
 
-  call_out(init_log_file, 0.1);
+  init_log_file();
 
   string tmp;
   array us;
