@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.85 2002/11/10 01:48:25 mani Exp $
+ * $Id: ftp.pike,v 2.86 2003/01/07 18:34:07 jhs Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -949,6 +949,7 @@ class LSFile
       session = RequestID2(master_session);
       session->method = "LIST";
       session->not_query = long;
+      session->conf->sent = sizeof(listing);
       session->conf->log(([ "error":200, "len":sizeof(listing) ]), session);
     }
     if (!dir_stack->ptr) {
@@ -1057,6 +1058,7 @@ class LSFile
       RequestID session = RequestID2(master_session);
       session->not_query = Array.map(files, fix_path) * " ";
       session->method = "LIST";
+      session->conf->sent = sizeof(s);
       session->conf->log(([ "error":200, "len":sizeof(s) ]), session);
     }
     if (dir_stack->ptr) {
@@ -1828,6 +1830,7 @@ class FTPSession
 			   cmd, f) }));
       break;
     }
+    session->conf->sent = file->len;
     session->conf->log(file, session);
   }
 
@@ -2032,6 +2035,7 @@ class FTPSession
 	  send(550, ({ sprintf("%s: Error opening file.", args) }));
 	  break;
 	}
+	session->conf->sent = session->file->len;
 	session->conf->log(session->file, session);
 	return;
       }
@@ -2771,6 +2775,7 @@ class FTPSession
     if (!st) {
       send(550, ({ sprintf("%s: No such file or directory, or access denied.",
 			   ncwd) }));
+      session->conf->sent = session->file && session->file->len;
       session->conf->log(session->file || ([ "error":404 ]), session);
       return;
     }
@@ -2817,7 +2822,8 @@ class FTPSession
 
     session->method = "CWD";	// Restore it again.
     send(250, reply);
-    session->conf->log(([ "error":200, "len":sizeof(reply*"\n") ]), session);
+    session->conf->sent = sizeof(reply * "\n");
+    session->conf->log(([ "error":200, "len":session->conf->sent ]), session);
   }
 
   void ftp_XCWD(string args)
