@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.6 2001/07/19 20:23:02 hop Exp $
+ * $Id: snmpagent.pike,v 1.7 2001/08/14 01:47:17 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -27,6 +27,9 @@ Developer notes:
 	  used then. [threads leak] // FIXME: solved by switching to the async i/o
 	- the OID must be minimally 5 elements long, otherwise GETNEXT return
 	  "no such name" error
+	- default value for snmpagent host/port variable in the config. int.
+	  hasn't set correctly hostname part // FIXME: how reach config.int.'s URL
+						       from define_global_variables ?
  Todos:
     v1.0 todo:
 	- cold/warm start trap generation
@@ -55,13 +58,17 @@ inherit Roxen;
 //#define NO_THREADS !constant(thread_create)
 #define NO_THREADS 1 
 
-//#define SNMPAGENT_DEBUG 1
 #ifdef SNMPAGENT_DEBUG
 # define SNMPAGENT_MSG(X) report_notice("SNMPagent: "+X+"\n")
 # define SNMPAGENT_MSGS(X, Y) report_notice("SNMPagent: "+X+"\n", @Y)
 #else
 # define SNMPAGENT_MSG(X)
 # define SNMPAGENT_MSGS(X, Y)
+#endif
+
+//! Default port number for agent
+#ifndef SNMPAGENT_DEFAULT_PORT
+#define SNMPAGENT_DEFAULT_PORT	1610
 #endif
 
 #define SNMP_OP_GETREQUEST	0
@@ -121,6 +128,8 @@ class SNMPagent {
   //! Enable SNMPagent processing.
   int enable() {
 
+    if(enabled)
+      return(enabled);
     mib = SubMIBsystem();		// system.* table
     if(objectp(mib)) {
       // snmp.*
@@ -178,7 +187,7 @@ class SNMPagent {
     snmpinpkts++;
     pdata = fd->decode_asn1_msg(data);
 
-    SNMPAGENT_MSG(sprintf("Got parsed: %O", pdata));
+    //SNMPAGENT_MSG(sprintf("Got parsed: %O", pdata));
 
     if(!mappingp(pdata)) {
       SNMPAGENT_MSG("SNMP message can not be decoded. Silently ommited.");
@@ -250,15 +259,22 @@ class SNMPagent {
       fd->get_response(rdata, pdata);
   }
 
+  //! Returns domain name of the config. int. virtual server
+  private string get_cif_domain() {
+
+    return(Standards.URI(roxen->configurations[0]->get_url()||"http://0.0.0.0")->host);
+  }
+
   //! Opens the SNMP port. Then waits for the requests. 
   private void real_start() {
 
     mixed err;
     mapping data;
     array hp = query("snmp_hostport")/":";
-    int p = (sizeof(hp)>1) ? (int)hp[1] : 161; // FIXME: SNMPAGENT_DEFAULT_PORT !!!
+    int p = (sizeof(hp)>1) ? (int)hp[1] : (int)SNMPAGENT_DEFAULT_PORT;
 
-
+    if(!sizeof(hp[0]))
+      hp[0] = get_cif_domain();
     err = catch( fd = Protocols.SNMP.protocol(0, hp[0], p||161) );
     if(arrayp(err))
       RXML.run_error("SNMPagent: can't open UDP port " + hp[0]+":"+(string)(p||161)+"[" + err[0] + "].");
@@ -324,15 +340,18 @@ class SNMPagent {
 	  return;
 	foreach(vsarr, int vsid)
 	  if(vsdb[vsid] && vsdb[vsid]->variables["snmp_traphosts"]) {
-	     SNMPAGENT_MSG(sprintf("virt.serv[%d/%s]'s traphosts:%O", vsid,
-			vsdb[vsid]->name, vsdb[vsid]->variables["snmp_traphosts"]));
-	    foreach(vsdb[vsid]->variables["snmp_traphosts"], string thost) {
+	     SNMPAGENT_MSG(sprintf("virt.serv[%d/%s]'s traphosts:%O",
+			vsid, vsdb[vsid]->name,
+			vsdb[vsid]->variables["snmp_traphosts"]->query()));
+	    foreach(vsdb[vsid]->variables["snmp_traphosts"]->query(), mixed thost) {
 		  uri = Standards.URI(thost);
 		  SNMPAGENT_MSG(sprintf("Trap sent: %s.", thost));
-		  fd->trap(RISMIB_BASE_WEBSERVER,
-			Standards.URI(vsdb[vsid]->varibles["MyWorldLocation"])->host,
-			0, 0,
-			get_uptime(), 0, uri->host, uri->port);
+/*
+		  fd->trap(
+		    ([RISMIB_BASE_WEBSERVER+".999.1.1":
+                        ({ "str", Standards.URI(vsdb[vsid]->variables["MyWorldLocation"]->query())->host}) ]),
+		    uri->host, uri->port);
+*/
 		}
 	  } else
 	    if(vsdb[vsid])
@@ -360,7 +379,8 @@ class SNMPagent {
   int add_virtserv(int vsid) {
 
     if(zero_type(vsdb[vsid])) {
-report_debug(sprintf("snmpagent:DEB: add: %O->%O\n",vsid,roxen->configurations[vsid]->name));
+      report_debug(sprintf("snmpagent: virt.serv.[%d/%s] added.\n",
+		           vsid,roxen->configurations[vsid]->name));
 //report_debug(sprintf("snmpagent:DEB: %O\n",mkmapping(indices(roxen->configurations[vsid]), values(roxen->configurations[vsid]))));
 	  vsdb += ([vsid: roxen->configurations[vsid]]);
      }
@@ -368,11 +388,18 @@ report_debug(sprintf("snmpagent:DEB: add: %O->%O\n",vsid,roxen->configurations[v
     return(1);
   }
 
+  //! Returns name of the virtual server
+  string get_virtservname(int vsid) {
+    if(zero_type(vsdb[vsid]))
+      return 0; // bad index number
+    return (roxen->configurations[vsid]->name);
+  }
+
   //! Deletes virtual server's specific objects from DB
   int del_virtserv(int vsid) {
 
     if(!zero_type(vsdb[vsid])) {
-report_debug(sprintf("snmpagent:DEB: del: %O->%O\n",vsid,roxen->configurations[vsid]->name));
+SNMPAGENT_MSG(sprintf("snmpagent:DEB: del: %O->%O\n",vsid,roxen->configurations[vsid]->name));
 	  vsdb -= ([ vsid: 0 ]);
 	}
 
@@ -548,7 +575,7 @@ SNMPAGENT_MSG(sprintf("DEB: %d: %O", cnt, s[..cnt]*"."));
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.6 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.7 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -708,7 +735,9 @@ class SubMIBroxenis {
     submibtab = ([
 	// enterprises
 	// hack2 :)
-	"4.1.8614.1.1.999.2.1.0": agent->get_virtserv
+	"4.1.8614.1.1.999.2.1.0": agent->get_virtserv,
+	"4.1.8614.1.1.999.2.1.1": agent->get_virtservname	// !! tabular op !!
+// !! nedoreseno! Melo by to vracet ..2.1.1.0 az ..2.1.1.n (tj. podle velikosti)
     ]);
   }
 }

@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.461 2001/08/13 18:19:35 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.462 2001/08/14 01:47:16 hop Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2315,6 +2315,12 @@ void start(int num)
   do_not_log_patterns = query("NoLog");
   if(!sizeof(do_not_log_patterns))
     do_not_log_patterns = 0;
+
+#ifdef SNMP_AGENT
+  if(query("snmp_process") && objectp(roxen->snmpagent))
+      roxen->snmpagent->add_virtserv(get_config_id());
+#endif
+
 }
 
 void save_me()

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.76 2001/08/05 20:06:17 nilsson Exp $
+// $Id: global_variables.pike,v 1.77 2001/08/14 01:47:17 hop Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -30,6 +30,10 @@ private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident");
 
 #ifdef SNMP_AGENT
 private int(0..1) snmp_disabled() { return !query("snmp_agent"); }
+private string snmp_get_cif_domain() {
+  //return(Standards.URI(roxenp()->configurations[0]->get_url()||"http://0.0.0.0")->host);
+  return("");
+}
 #endif
 
 // And why put these functions here, you might righfully ask.
@@ -570,9 +574,6 @@ void define_global_variables(  )
 		"in the configuration files. Only useful if you read or "
 		"edit the config files directly."));
 
-  defvar("global_position",
-	 Variable.Variable(0, VAR_INVISIBLE));
-
 
 
 #ifdef SNMP_AGENT
@@ -594,7 +595,7 @@ void define_global_variables(  )
          "proxy, agentx or automatic (smart) mode.",
          ({"smart", "agent", "agentx", "smux", "proxy" }));
 */
-  defvar("snmp_hostport", "", "SNMP: IP address and port",
+  defvar("snmp_hostport", snmp_get_cif_domain(), "SNMP: IP address and port",
          TYPE_STRING,
          "Agent listenning IP adress and port. Format: [[host]:port] "
          "If host isn't set then will be use IP address of config interface",
@@ -626,6 +627,9 @@ void define_global_variables(  )
          "primarily offers.",
 	 0, snmp_disabled);
 #endif // SNMP_AGENT
+
+  defvar("global_position",
+	 Variable.Variable(0, VAR_INVISIBLE));
 
 }
 

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.695 2001/08/13 21:35:47 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.696 2001/08/14 01:47:17 hop Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3877,6 +3877,19 @@ int main(int argc, array tmp)
     master()->add_module_path( d );
   report_debug("\bDone [%dms]\n", (gethrtime()-t)/1000 );
 
+#ifdef SNMP_AGENT
+  //SNMPagent start
+  report_debug("SNMPagent configuration checking ... \b");
+  if(query("snmp_agent")) {
+    // enabling SNMP agent
+    snmpagent = SNMPagent();
+    snmpagent->enable();
+    report_debug("\benabled.\n");
+
+  } else
+    report_debug("\bdisabled.\n");
+#endif // SNMP_AGENT
+
   enable_configurations();
 
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
@@ -3899,19 +3912,6 @@ int main(int argc, array tmp)
   backend_thread = this_thread();
   name_thread( backend_thread, "Backend" );
 #endif /* THREADS */
-
-#ifdef SNMP_AGENT
-  //SNMPagent start
-  report_debug("SNMPagent configuration checking ... \b");
-  if(query("snmp_agent")) {
-    // enabling SNMP agent
-    snmpagent = SNMPagent();
-    snmpagent->enable();
-    report_debug("\benabled.\n");
-
-  } else
-    report_debug("\bdisabled.\n");
-#endif // SNMP_AGENT
 
   // Signals which cause a restart (exitcode != 0)
   foreach( ({ "SIGINT", "SIGTERM" }), string sig)
