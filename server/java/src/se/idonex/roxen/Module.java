@@ -1,9 +1,11 @@
 /*
- * $Id: Module.java,v 1.1 1999/12/19 00:26:00 marcus Exp $
+ * $Id: Module.java,v 1.2 1999/12/19 21:01:12 marcus Exp $
  *
  */
 
 package se.idonex.roxen;
+
+import java.util.Vector;
 
 public abstract class Module {
 
@@ -72,6 +74,7 @@ public abstract class Module {
 
   private RoxenConfiguration configuration;
 
+  private Vector defvars = null;
   
   public abstract String queryName();
 
@@ -116,6 +119,46 @@ public abstract class Module {
 
   void stop()
   {
+  }
+
+  private void addDefvar(Defvar dv)
+  {
+    if(defvars == null)
+      defvars = new Vector();
+    defvars.add(dv);
+  }
+
+  Defvar[] getDefvars()
+  {
+    if(defvars == null)
+      return new Defvar[0];
+    Defvar[] dvs = new Defvar[defvars.size()];
+    dvs = (Defvar[])defvars.toArray(dvs);
+    defvars = null;
+    return dvs;
+  }
+
+  protected void defvar(String var, Object value, String name, int type,
+			String doc)
+  {
+    addDefvar(new Defvar(var, value, name, type, doc));
+  }
+
+  protected void defvar(String var, Object value, String name, int type)
+  {
+    defvar(var, value, name, type, null);
+  }
+
+  public native Object query(String name);
+
+  public int queryInt(String name)
+  {
+    return ((Integer)query(name)).intValue();
+  }
+
+  public String queryString(String name)
+  {
+    return (String)query(name);
   }
 
 }
