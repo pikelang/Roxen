@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.354 2004/05/07 18:26:20 mast Exp $
+// $Id: roxenloader.pike,v 1.355 2004/05/13 23:18:46 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.354 2004/05/07 18:26:20 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.355 2004/05/13 23:18:46 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -640,7 +640,7 @@ void push_compile_error_handler( _error_handler q )
 
 void pop_compile_error_handler()
 {
-  if( !sizeof( compile_error_handlers ) )
+  if( !compile_error_handlers[0] )
   {
     master()->set_inhibit_compile_errors(0);
     return;
