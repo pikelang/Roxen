@@ -5,6 +5,9 @@ o Minor redesign of the buttons in the config-interface.
 
 o Copying of configurations now works again.
 
+o The htaccess module is now a MODULE_URL module, which improves the internal
+  security in Roxen.
+
 
 Changes since Roxen Challenger 1.2 alpha 8
 -----------------------------------------------
