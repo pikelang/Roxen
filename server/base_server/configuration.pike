@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.237 1999/11/29 22:07:01 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.238 1999/12/09 04:30:06 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2125,20 +2125,18 @@ void save_me()
 
 void save(int|void all)
 {
-  mapping mod;
   if(all)
   {
-    store("spider.lpc#0", variables, 0, this_object());
+    store("spider#0", variables, 0, this_object());
     start(2);
   }
   
-  foreach(values(modules), mod)
+  foreach(indices(modules), string modname)
   {
-    int i;
-    foreach(indices(mod->copies), i)
+    foreach(indices(modules[modname]->copies), int i)
     {
-      store(mod->sname+"#"+i, mod->copies[i]->query(), 0, this_object());
-      mod->copies[i]->start(2, this_object());
+      store(modname+"#"+i, modules[modname]->copies[i]->query(), 0, this_object());
+      modules[modname]->copies[i]->start(2, this_object());
     }
   }
   invalidate_cache();
