@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.228 2000/04/06 07:41:44 wing Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.229 2000/05/03 14:48:31 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -13,8 +13,8 @@ inherit "roxenlib";
 constant module_type   = MODULE_PARSER;
 constant module_name   = "Graphic text";
 constant module_doc    = 
-#"Provides the <tt>&lt;gtext&gt;</tt> that is used to generate text into 
-graphical images.";
+#"Provides the <tt>&lt;gtext&gt;&lt;/gtext&gt;</tt> tag that is used
+to generate text into graphical images.";
 constant thread_safe   = 1;
 
 void create()
@@ -493,6 +493,10 @@ string status() {
   array s=image_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br>\n<b>Cache size:</b> %s",
 		 s[0]/2, sizetostring(s[1]));
+}
+
+mapping(string:function) query_action_buttons() {
+  return ([ "Clear cache":image_cache->flush ]);
 }
 
 void start(int num, Configuration conf)
