@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.36 2000/01/10 09:05:55 nilsson Exp $ */
+/* $Id: fonts.pike,v 1.37 2000/01/25 04:03:02 per Exp $ */
 
 #include <module.h>
 
@@ -294,7 +294,7 @@ object get_font(string f, int size, int bold, int italic,
     {
       if(f == roxen->QUERY(default_font))
       {
-	report_error("Failed to load the default font.\n");
+	report_error("Failed to load the default font ("+f+")!\n");
 	return 0;
       }
       return get_font(roxen->QUERY(default_font),
@@ -366,7 +366,7 @@ object resolve_font(string f, string|void justification)
   int size=32;
   sscanf(f, "%s %d", f, size);
   object fn;
-  fn = get_font((f/" ")[0], size, bold, italic,
+  fn = get_font(f, size, bold, italic,
 	      justification||"left",xspace, 0.0);
   if(!fn)
     fn = get_font(roxen->query("default_font"),size,bold,italic,
