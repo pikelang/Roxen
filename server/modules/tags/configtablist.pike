@@ -1,13 +1,15 @@
 /*
- * $Id: configtablist.pike,v 1.13 1999/05/20 03:26:17 neotron Exp $
+ * $Id: configtablist.pike,v 1.14 1999/07/24 21:56:21 nilsson Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
- * $Author: neotron $
+ * $Author: nilsson $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.13 1999/05/20 03:26:17 neotron Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.14 1999/07/24 21:56:21 nilsson Exp $";
 constant thread_safe=1;
+
+#define old_rxml_compat 1
 
 #define use_contents_cache 0
 #define use_gif_cache      1
@@ -33,11 +35,11 @@ array register_module()
 	      "Adds some tags for making a config-interface "
 	      "look-alike tab-list.<br>\n"
 	      "Usage:<br>\n"
-	      "<ul><pre>&lt;config_tablist&gt;\n"
+	      "<ul><pre>&lt;tablist&gt;\n"
 	      "&lt;tab href=\"/tab1/\"&gt;Some text&lt;/tab&gt;\n"
 	      "&lt;tab href=\"/tab2/\"&gt;Some more text&lt;/tab&gt;\n"
 	      "&lt;tab href=\"a/strange/place/\"&gt;Tab 3&lt;/tab&gt;\n"
-	      "&lt;/config_tablist&gt;\n"
+	      "&lt;/tablist&gt;\n"
 	      "</pre></ul>Attributes for the &lt;tab&gt; tag:<br>\n"
 	      "<ul><table border=0>\n"
 	      "<tr><td><b>selected</b></td><td>Whether the tab is selected "
@@ -55,7 +57,7 @@ void create()
 {
 }
 
-string tag_config_tab(string t, mapping a, string contents)
+string tag_config_tab(string t, mapping a, string contents, mapping d)
 {
   string dir = "u/";
   mapping img_attrs = ([]);
@@ -65,6 +67,8 @@ string tag_config_tab(string t, mapping a, string contents)
   }
   if(a->bgcolor)
     dir+=replace(a->bgcolor,"#","|");
+  else if(d->bgcolor)
+    dir+=replace(d->bgcolor,"#","|");
   else
     dir+="white";
   dir+="/";
@@ -84,6 +88,8 @@ string tag_config_tab(string t, mapping a, string contents)
   } else {
     img_attrs->border="0";
   }
+  if(!a->noxml && !d->noxml) img_attrs["/"]="/";
+  m_delete(a, "noxml");
   return make_container("a", a, make_container("b", ([]),
 					       make_tag("img", img_attrs)));
 }
@@ -116,7 +122,7 @@ string tag_config_tablist(string t, mapping a, string contents)
   if(contents_cache[key])
     return contents_cache[key];
 #endif
-  string res=replace(parse_html(contents, ([]), (["tab":tag_config_tab])),
+  string res=replace(parse_html(contents, ([]), (["tab":tag_config_tab]), a),
 		 ({ "\n", "\r" }), ({ "", "" }));
 #if use_contents_cache  
   contents_cache[key]=res;
@@ -130,7 +136,11 @@ mapping query_tag_callers()
 }
   mapping query_container_callers()
 {
-  return ([ "config_tablist":tag_config_tablist ]);
+  return ([ "tablist":tag_config_tablist 
+#if old_rxml_compat
+	    ,"config_tablist":tag_config_tablist
+#endif
+  ]);
 }
 
 #if constant(thread_create)
