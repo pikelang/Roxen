@@ -57,6 +57,7 @@ font binary
 /server/languages/french.pike foreign_ident
 /server/languages/german.pike foreign_ident
 /server/languages/japanese.pike foreign_ident
+/server/languages/maori.pike foreign_ident
 /server/languages/norwegian.pike foreign_ident
 /server/languages/portuguese.pike foreign_ident
 /server/languages/spanish.pike foreign_ident

@@ -1,6 +1,8 @@
 /* Maaori (New Zealand) */
 /* any bugs in this file were inserted by Jason Rumney <jasonr@pec.co.nz> */
 
+string cvs_version = "$Id: maori.pike,v 1.2 1996/12/05 03:09:06 grubba Exp $";
+
 inline string month( int num )
      {
 	return ( {
