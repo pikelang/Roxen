@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.86 2001/09/21 09:51:20 per Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.87 2001/09/27 14:08:27 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -161,16 +161,29 @@ function(RequestID:mapping|int) allow_deny( function allow,
 					    function deny,
 					    int order )
 {
+#ifdef HTACCESS_DEBUG
+  report_debug("HTACCESS: allow_deny(%O, %O, %s)\n",
+	       allow, deny, 
+	       ([1:"allow, deny", -1:"mutual-failure",
+		 0:"deny, allow"])[order] || "UNKNOWN");
+#endif /* HTACCESS_DEBUG */
+  // Sanity check.
+  if (!allow && !deny) {
+    error("At least one of allow or deny must be a function!\n");
+  }
   return lambda( RequestID id ) {
 	   mixed not_allowed = allow && allow( id );
 	   mixed denied  = deny && deny( id );
 #ifdef HTACCESS_DEBUG
 	   report_debug("HTACCESS: not_allowed: %O\n"
 			"          denied: %O\n"
-			"          order: %s\n",
+			"          order: %s\n"
+			"          allow: %O\n"
+			"          deny: %O\n",
 			not_allowed, denied,
 			([1:"allow, deny", -1:"mutual-failure",
-			  0:"deny, allow"])[order] || "UNKNOWN");
+			  0:"deny, allow"])[order] || "UNKNOWN",
+			allow, deny);
 #endif /* HTACCESS_DEBUG */
 	   int ok;
 	   switch( order )
