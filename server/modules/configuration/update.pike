@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.10 2000/03/24 23:49:40 js Exp $
+ * $Id: update.pike,v 1.11 2000/04/05 16:55:10 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -217,7 +217,7 @@ string container_update_package_output(string t, mapping m, string c, RequestID 
     foreach(packages, string pkg)
     {
       mapping p=pkginfo[pkg];
-      if( !installed[pkg] && ((m->type && p["package-type"]==m->type) || !m->type))
+      if( !m->installed && !installed[pkg] && ((m->type && p["package-type"]==m->type) || !m->type))
 	res+=({ p });
       if(m->installed && installed[pkg])
 	res+=({ p });
