@@ -1,5 +1,5 @@
 /*
- * $Id: mailadmin.pike,v 1.5 1998/09/09 23:37:27 js Exp $
+ * $Id: mailadmin.pike,v 1.6 1998/09/10 18:48:32 js Exp $
  *
  * A general administration module for Roxen AutoMail
  * Johan Schön, September 1998
@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version="$Id: mailadmin.pike,v 1.5 1998/09/09 23:37:27 js Exp $";
+constant cvs_version="$Id: mailadmin.pike,v 1.6 1998/09/10 18:48:32 js Exp $";
 constant thread_safe=1;
 
 mapping sql_objs=([]);
@@ -147,8 +147,11 @@ string tag_matrix(string tag_name, mapping args, object id)
 	 sizeof(db->query("select name from admin_variables where user_id='"+user_id+
 			  "' and rcpt_name='"+name+"'"))))
 	return set_variables(id,name,user_id,rcpt_name_to_object);
-//       else
-//  	return "<redirect to='"+"http://www.liu.se/"+"'>"; //id->not_query
+      else
+      {
+	id->misc->do_redirect=1;
+	return "";
+      }
     }
   }
 
@@ -257,7 +260,8 @@ string tag_adduser(string tag_name, mapping args, object id)
 				      "name": name,
 				      "value": id->variables[var] ])));
       }
-      return "Foo! <redirect to=/>";
+      id->misc->do_redirect=1;
+      return "";
     }
   }
   string s=
@@ -306,9 +310,8 @@ string tag_delete_user(string tag_name, mapping args, object id)
     squery("delete from admin_status where user_id='%d'",(int)id->variables->edit);
     squery("delete from admin_variables where user_id='%d'",(int)id->variables->edit);
     squery("delete from users where id='%d'",(int)id->variables->edit);
-    return "Poof.";
-    // radera
-    // redirect
+    id->misc->do_redirect=1;
+    return "";
   }
   else
   {
@@ -328,6 +331,8 @@ string tag_delete_user(string tag_name, mapping args, object id)
   }
 }
 
+// roxen module callback
+
 mapping query_tag_callers()
 {
   return ([ "automail-admin-matrix" : tag_matrix,
@@ -335,4 +340,29 @@ mapping query_tag_callers()
 	    "automail-admin-delete-user": tag_delete_user
   ]);
 }
+
+
+// callbacks
+
+int query_status(int user_id, string rcpt_name)
+{
+  array a=squery("select status from admin_status where user_id='%d' and rcpt_name='%s'",
+		 user_id,quote(rcpt_name));
+  if(!sizeof(a))
+    return 0;
+  else
+    return (int)a[0]->status;
+}
+
+string query_variable(int user_id, string rcpt_name, string variable)
+{
+  array a=squery("select value from admin_variables where user_id='%d' and "
+		 "rcpt_name='%s' and name='%s'",
+		 user_id,quote(rcpt_name),quote(variable));;
+  if(!sizeof(a))
+    return 0;
+  else
+    return a[0]->value;
+}
+
 
