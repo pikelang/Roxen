@@ -1,7 +1,6 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-#include <stat.h>
 inherit "module";
 constant module_type = MODULE_TAG|MODULE_LOCATION;
 constant module_name = "Tags: Dir emit source";
@@ -125,7 +124,7 @@ class TagDirectoryplugin
 
     mapping get_datum( string file )
     {
-      array st = a[ file ];
+      Stdio.Stat st = a[ file ];
 
       mapping m =
               ([
@@ -133,25 +132,25 @@ class TagDirectoryplugin
                 "filename":file,
                 "dirname":d,
                 "path":combine_path( d, file ),
-                "atime-unix":st[ ST_ATIME ],
-                "mtime-unix":st[ ST_MTIME ],
-                "mtime-iso":Roxen.strftime( "%Y-%m-%d", st[ST_MTIME] ),
-                "atime-iso":Roxen.strftime( "%Y-%m-%d", st[ST_ATIME] ),
-                "mode-int":st[ ST_MODE ],
-                "filesize":st[ ST_SIZE ],
-                "mode":(Roxen.decode_mode( st[ ST_MODE ] )/"<tt>")[-1]-"</tt>",
+                "atime-unix":st->atime,
+                "mtime-unix":st->mtime,
+                "mtime-iso":Roxen.strftime( "%Y-%m-%d", st->mtime ),
+                "atime-iso":Roxen.strftime( "%Y-%m-%d", st->atime ),
+                "mode-int":st->mode,
+                "filesize":st->size,
+                "mode":(Roxen.decode_mode( st->mode )/"<tt>")[-1]-"</tt>",
               ]);
 
       if( args->strftime )
       {
-        m["mtime"] = Roxen.strftime( args->strftime, st[ ST_MTIME ] );
-        m["atime"] = Roxen.strftime( args->strftime, st[ ST_ATIME ] );
+        m["mtime"] = Roxen.strftime( args->strftime, st->mtime );
+        m["atime"] = Roxen.strftime( args->strftime, st->atime );
       }  else {
         m->mtime = m["mtime-iso"];
         m->atime = m["atime-iso"];
       }
 
-      if( st[ ST_SIZE ] < 0 )
+      if( st->size < 0 )
       {
         m->size = "0";
         m->type = "directory";
@@ -159,7 +158,7 @@ class TagDirectoryplugin
         m["type-img"] = "internal-gopher-menu";
       } else {
         m->type = id->conf->type_from_filename( file );
-        m->size = String.int2size( st[ ST_SIZE ] );
+        m->size = String.int2size( st->size );
         m["type-img"] = Roxen.image_from_type( m->type );
       }
 

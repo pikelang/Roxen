@@ -2,13 +2,12 @@
 //
 
 #include <module.h>
-#include <stat.h>
 inherit "module";
 constant thread_safe=1;
 
 core.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.58 2004/06/01 21:33:51 _cvs_dirix Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.59 2004/06/01 22:16:40 _cvs_dirix Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "

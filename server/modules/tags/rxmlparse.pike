@@ -15,13 +15,12 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.77 2004/05/31 23:54:07 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.78 2004/06/01 22:28:48 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
 #include <module.h>
 #include <request_trace.h>
-#include <stat.h>
 
 inherit "module";
 
@@ -113,7 +112,7 @@ function(string,int|void,string|void:string) file2type;
 
 mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 {
-  array stat = [array]_id_misc->stat || file->stat();
+  Stdio.Stat stat = [mapping]_id_misc->stat || file->stat();
 
   if(require_exec && !(stat[0] & 07111)) return 0;
   if(!parse_exec && (stat[0] & 07111)) return 0;
@@ -159,7 +158,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
     if (ram_cache_name) {
       array cache_ent;
       if ((cache_ent = cache_lookup (ram_cache_name, id->not_query)) &&
-	  cache_ent[0] == stat[ST_MTIME]) {
+	  cache_ent[0] == stat->mtime) {
 	TRACE_ENTER (sprintf ("Evaluating RXML page %O from RAM cache",
 			      id->not_query), this);
 	if (cache_ent[1]->is_stale()) {
@@ -181,7 +180,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
       rxml = parser->eval();
       RXML.PCode p_code = parser->p_code;
       p_code->finish();
-      cache_set (ram_cache_name, id->not_query, ({stat[ST_MTIME], p_code}));
+      cache_set (ram_cache_name, id->not_query, ({stat->mtime, p_code}));
     }
     else {
       TRACE_ENTER (sprintf ("Evaluating RXML page %O",
