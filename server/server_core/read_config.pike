@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.75 2004/06/04 08:29:32 _cvs_stephen Exp $
+// $Id: read_config.pike,v 1.76 2005/02/20 21:12:07 _cvs_dirix Exp $
 
 #include <module.h>
 #include <module_constants.h>
@@ -16,7 +16,7 @@ constant IGNORE_NAMES = ({ "CVS", "Global_Variables", "Global Variables",
 			   "server_version", "server version",
 			   });
 
-mapping (string:array(int)) config_stat_cache = ([]);
+mapping (string:Stdio.Stat) config_stat_cache = ([]);
 
 //! @return
 //! @array all configurationfiles
