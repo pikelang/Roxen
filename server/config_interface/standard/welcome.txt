@@ -10,9 +10,11 @@
 
 <a href="whatsnew.html"><h2>What's new?</h2></a>
 
-<h2>Manuals</h2>
+<h2>Manuals:</h2>
 <blockquote>
-  <a href="docs/creator/"><h2>Web Site Creator Manual</h2></a><br>
-  <a href="docs/administrator/"><h2>Administrator Manual</h2></a><br>
-  <a href="docs/user/"><h2>User Manual</h2></a><br>
+<font size=+1><b>
+ <li> <a href="docs/creator/">Web Site Creator Manual</a><br>
+ <li> <a href="docs/administrator/">Administrator Manual</a><br>
+ <li> <a href="docs/user/">User Manual</a><br>
+</b></font>
 </blockquote>
