@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.251 2001/10/03 05:39:14 mast Exp $
+// $Id: module.pmod,v 1.252 2001/10/03 06:01:44 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6891,10 +6891,19 @@ class PCode
     int ppos = 0;
     int update_count = ctx->state_updated;
 
+#if 0
+    // This check doesn't work in some "chicken-and-egg" cases when
+    // the executed p-code causes tag set updates. Can occur in the
+    // admin interface, for instance. (To be _really_ correct in those
+    // cases we should switch over to source code on the fly, but it's
+    // unlikely to be a practical problem to finish the evaluation
+    // with stale code in the current request and then create new
+    // first in the next one.)
 #ifdef MODULE_DEBUG
     if (tag_set && tag_set->generation != generation)
       error ("P-code is stale - tag set %O has generation %d and not %d.\n",
 	     tag_set, tag_set->generation, generation);
+#endif
 #endif
 
     if (ctx->unwind_state)
