@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.25 2004/06/06 22:16:26 _cvs_dirix Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.26 2004/06/07 10:32:30 _cvs_stephen Exp $";
 
 //#define DEBUG
 
@@ -338,16 +338,16 @@ void find_all_files_in(string dir, function|void cb)
     Stdio.Stat st = file_stat(dir+path);
     if(st)
     {
-      if(st->type == -2)
+      if(st->isdir)
       {
 	if((path != "..") && (path!="."))
 	  find_all_files_in(dir+path+"/", cb);
       } else {
 	if(!cb)
 	{
-	  cache_size += FILE_SIZE_TO_BLOCK(st->type);
+	  cache_size += FILE_SIZE_TO_BLOCK(st->size);
 	  num_files++;
-	  update(dir+path, st->atime, st->mtime);
+	  update(dir+path, st->atime, st->size);
 	} else
 	  cb(dir+path);
       }
