@@ -63,6 +63,7 @@ zlib: force
 #	else :; fi; \
 
 force:
+	:
 
 # These are here for compatibility with the easy-start makefile
 easy: all
