@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.43 1998/08/05 07:27:14 neotron Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.44 1998/08/05 08:00:56 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -214,7 +214,7 @@ mapping|int parse_htaccess(object f, object id, string rht)
 }
 
 /* The host/ip verifier */
-int allowed(multiset allow, string ip, int def)
+int allowed(multiset allow, string ip, int def, object id)
 {
   string s;
   int ok, i, a;
@@ -591,18 +591,18 @@ mapping|string|int htaccess(mapping access, object id)
     hok = 1;
   else {
     if(access[method]->order == 1) {
-      if(allowed(access[method]->allow, id->remoteaddr, 0))
+      if(allowed(access[method]->allow, id->remoteaddr, 0, id))
 	hok = 1;
-      if(allowed(access[method]->deny, id->remoteaddr, 1))
+      if(allowed(access[method]->deny, id->remoteaddr, 1, id))
 	hok = 0;
     } else if(access[method]->order == 0) {
-      if(allowed(access[method]->deny, id->remoteaddr, 1))
+      if(allowed(access[method]->deny, id->remoteaddr, 1, id))
 	hok = 0;
-      if(allowed(access[method]->allow, id->remoteaddr, 0))
+      if(allowed(access[method]->allow, id->remoteaddr, 0, id))
 	hok = 1;
     } else 
-      hok = (allowed(access[method]->allow, id->remoteaddr, 0) && 
-	     allowed(access[method]->deny, id->remoteaddr, 1));
+      hok = (allowed(access[method]->allow, id->remoteaddr, 0, id) && 
+	     allowed(access[method]->deny, id->remoteaddr, 1, id));
   }
   if(!hok && access[method]->all == 1)
   {
