@@ -1,4 +1,4 @@
-/* $Id: https.pike,v 1.5 1999/06/07 03:42:08 mast Exp $
+/* $Id: https.pike,v 1.6 1999/06/08 02:59:26 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -129,7 +129,7 @@ array|void real_port(array port, object cfg)
     object rsa = Standards.PKCS.RSA.parse_private_key(key);
     if (!rsa)
       throw ("https: Private rsa key not valid (DER).\n");
-      
+
     ctx->rsa = rsa;
     
 #ifdef SSL3_DEBUG
@@ -144,6 +144,11 @@ array|void real_port(array port, object cfg)
       // ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
     }
     ctx->rsa_mode();
+
+    object tbs = Tools.X509.decode_certificate (cert);
+    if (!tbs) throw ("https: Certificate not valid (DER).\n");
+    if (!tbs->public_key->rsa->public_key_equal (rsa))
+      throw ("https: Certificate and private key do not match.\n");
   }
   else if (part = msg->parts["DSA PRIVATE KEY"])
   {
@@ -164,10 +169,12 @@ array|void real_port(array port, object cfg)
     ctx->dh_params = SSL.cipher.dh_parameters();
 
     ctx->dhe_dss_mode();
+
+    // FIXME: Add cert <-> private key check.
   }
   else
     throw ("https: No private key found.\n");
-    
+
   ctx->certificates = ({ cert });
   ctx->random = r;
 
