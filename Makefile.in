@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.in,v 1.99 1999/08/27 12:39:44 grubba Exp $
+# $Id: Makefile.in,v 1.100 1999/08/27 13:02:48 grubba Exp $
 #
 
 # @configure_input@
@@ -354,7 +354,16 @@ dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	      >"$$f/Repository.new" && \
 	      mv "$$f/Repository.new" "$$f/Repository"; \
 	    echo "anonymous@cvs.roxen.com:/cvs" >"$$f/Root"; \
-	  else :; fi; \
+	  else
+	    if egrep '^//*cvs//*Pike//*0.7' "$$f/Repository" 2>&1 >/dev/null; \
+	    then \
+	      echo "Altering $$f..."; \
+	      sed -e 's/^\/\/*cvs\/\/*Pike\/\/*0\.7[^/]*/\/cvs\/Pike\/0.7/' <"$$f/Repository" \
+	        >"$$f/Repository.new" && \
+	        mv "$$f/Repository.new" "$$f/Repository"; \
+	      echo "anonymous@cvs.roxen.com:/cvs" >"$$f/Root"; \
+	    else :; fi; \
+	  fi; \
 	done; \
 	echo Determining if this is a 0.7 or no_pike distribution...; \
 	if test -d $$version/pike/0.7/. ; then \
