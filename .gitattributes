@@ -232,6 +232,7 @@ urw_itc_avant_garde-demi-r binary
 /server/more_modules/clock.pike foreign_ident
 /server/more_modules/configure.pike foreign_ident
 /server/more_modules/lysator.pike foreign_ident
+/server/old_modules/filters/hostredirect.pike foreign_ident
 /server/protocols/ftp.pike foreign_ident
 /server/protocols/ftp2.pike foreign_ident
 /server/protocols/gopher.pike foreign_ident
