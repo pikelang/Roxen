@@ -6,6 +6,7 @@ string http_url;
 int current_test, tests_failed;
 Process.Process test;
 
+mapping all_tests = ([]);
 string indent( int l, string what )
 {
   array q = what/"\n";
@@ -57,7 +58,7 @@ void run_pikescript( string p, string ... args  )
 
 void current_test_done()
 {
-#define IND(X) this_object()[ "test_"+current_test+(X) ]
+#define IND(X) all_tests[ current_test+(X) ]
   if( !test || test->status() )
   {
     if(  function fp = IND("_check") )
@@ -102,8 +103,21 @@ void low_run_tests( Configuration _c, function go_on )
   call_out( current_test_done, 0 );
 }
 
-
+void setup();
 void create( int v )
 {
   verbose = v;
+  setup();
+}
+
+
+int dt;
+void atest( string n,
+	    function t,
+	    function c )
+{
+  dt++;
+  all_tests[ dt+"_desc" ] = n;
+  all_tests[ dt+"" ] = t;
+  all_tests[ dt+"_check" ] = c;
 }

@@ -2,11 +2,13 @@ inherit "http_common";
 
 void main(int argc, array argv)
 {
-  if( argc != 4 )  exit( BADARG );
+  string sep;
+  if( argc < 4 )  exit( BADARG );
+  if( argc == 5 )  sep = "\n"; else  sep = "\r\n";
 
-  Stdio.File f = connect(  argv[1] );
+  Stdio.File f = connect( argv[1] );
 
-  f->write( "GET "+argv[2]+"\r\n" );
+  f->write( "GET "+argv[2]+sep );
   
   string data = f->read();
 
