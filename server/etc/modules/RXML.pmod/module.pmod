@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.167 2001/06/18 15:18:27 mast Exp $
+// $Id: module.pmod,v 1.168 2001/06/19 00:24:21 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -793,7 +793,11 @@ class TagSet
 
   final Parser `() (Type top_level_type, void|RequestID id, void|int make_p_code)
   //! For compatibility. Use @[get_parser] instead.
-    {werror ("Old RXML.TagSet.`() used:\n" + describe_backtrace (backtrace())); return get_parser (top_level_type, id, make_p_code);}
+  {
+    // Temporary measure to catch places to update.
+    werror ("Old RXML.TagSet.`() used:\n" + describe_backtrace (backtrace()));
+    return get_parser (top_level_type, id, make_p_code);
+  }
 
   void changed()
   //! Should be called whenever something is changed. Done
@@ -1539,6 +1543,14 @@ class Context
     return mkmultiset (values (tags));
   }
 
+  int incomplete_eval()
+  //! Returns true if the last evaluation isn't complete, i.e. when
+  //! this context is unwound due to use of streaming/nonblocking
+  //! operation.
+  {
+    return unwind_state && unwind_state->reason == "streaming";
+  }
+
   void handle_exception (mixed err, PCode|Parser evaluator)
   //! This function gets any exception that is catched during
   //! evaluation. evaluator is the object that catched the error.
@@ -1707,6 +1719,8 @@ class Context
   //	do_process() with this stream piece.)
   // "exec_left": array (Exec array left to evaluate. Only used
   //	between Frame._exec_array() and Frame._eval().)
+  // "reason": string (The reason why the state is unwound. Can
+  //    currently be "streaming".)
 
   MARK_OBJECT_ONLY;
 
@@ -2723,7 +2737,8 @@ class Frame
 			 "to play the harmonica...\n");			\
 	);								\
 	CONV_RESULT (res, result_type, res, type);			\
-	ctx->unwind_state = (["stream_piece": res]);			\
+	ctx->unwind_state = (["stream_piece": res,			\
+			      "reason": "streaming"]);			\
 	THIS_TAG_DEBUG ("Streaming %s from " #cb "\n",			\
 			utils->format_short (res));			\
 	throw (this);							\
@@ -3210,7 +3225,9 @@ class Frame
 		    finished = 0; // Continuing an unwound subevaler.
 		  else if (stringp (in_content)) {
 		    if (in_content == "")
-		      subevaler = PCode (content_type, 0);
+		      subevaler = PCode (
+			content_type, 0,
+			evaler->recover_errors && !(flags & FLAG_DONT_RECOVER));
 		    else if (flags & FLAG_EMPTY_ELEMENT)
 		      parse_error ("This tag doesn't handle content.\n");
 		    else {	// The nested content is not yet parsed.
@@ -3263,6 +3280,7 @@ class Frame
 #endif
 			    CONV_RESULT (res, result_type, res, type);
 			    ctx->unwind_state->stream_piece = res;
+			    ctx->unwind_state->reason = "streaming";
 			    THIS_TAG_DEBUG ("Iter[%d]: Streaming %s from do_process\n",
 					    debug_iter, utils->format_short (res));
 			    throw (this);
@@ -3818,6 +3836,7 @@ class Parser
 		       "Can't rewind.\n");
 #endif
 	m_delete (context->unwind_state, "top");
+	m_delete (context->unwind_state, "reason");
 	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
       }
       if (feed (in)) res = 1; // Might unwind.
@@ -3855,6 +3874,7 @@ class Parser
 		       "Can't rewind.\n");
 #endif
 	m_delete (context->unwind_state, "top");
+	m_delete (context->unwind_state, "reason");
 	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
       }
       finish (in); // Might unwind.
@@ -3994,11 +4014,14 @@ class Parser
   //! result so far, but does not do any more evaluation. Returns
   //! RXML.nil if there's no data.
 
-  mixed eval();
+  mixed eval (void|int eval_piece);
   //! Evaluates the data fed so far and returns the result. The result
-  //! returned by previous eval() calls should not be returned again
-  //! as (part of) this return value. Returns RXML.nil if there's no
-  //! data (for sequential types the empty value is also ok).
+  //! returned by previous @[eval] calls should not be returned again
+  //! as (part of) this return value. Returns @[RXML.nil] if there's
+  //! no data (for sequential types the empty value is also ok). If
+  //! @[eval_piece] is nonzero, the evaluation may break prematurely
+  //! due to streaming/nonblocking operation.
+  //! @[context->incomplete_eval] will return nonzero in that case.
   //!
   //! @note
   //! The implementation must call @[context->eval_finish] after all
@@ -4081,7 +4104,14 @@ class TagSetParser
 
   //(!) Services:
 
-  mixed eval() {return read();}
+  mixed eval (void|int eval_piece)
+  {
+    mixed res = read();
+    if (!eval_piece)
+      while (context->incomplete_eval())
+	res = add_to_value (type, res, read());
+    return res;
+  }
 
   //(!) Interface:
 
@@ -4111,7 +4141,7 @@ class TagSetParser
 
   mixed read();
   //! No longer optional in this class. Since the evaluation is done
-  //! in Tag.handle_tag() or similar, this always does the same as
+  //! in @[Tag.handle_tag] or similar, this always does the same as
   //! eval().
   //!
   //! @note
@@ -4406,7 +4436,7 @@ class Type
   {
     if (_p_cache && !tag_set) tag_set = ctx->tag_set;
     Parser p = get_parser (ctx, tag_set, parent);
-    p->p_code = PCode (this_object(), tag_set);
+    p->p_code = PCode (this_object(), tag_set, p->recover_errors);
     return p;
   }
 
@@ -5506,41 +5536,57 @@ class PCode
     return tag_set ? tag_set->new_context (id) : Context (0, id);
   }
 
-  mixed eval (Context context)
+  mixed eval (Context context, void|int eval_piece)
   //! Evaluates the p-code in the given context (which typically has
-  //! been created by @[new_context]).
+  //! been created by @[new_context]). If @[eval_piece] is nonzero,
+  //! the evaluation may break prematurely due to
+  //! streaming/nonblocking operation. @[context->incomplete_eval]
+  //! will return nonzero in that case.
   {
-    mixed res;
+    mixed res, piece;
+    int eval_loop = 0;
     ENTER_CONTEXT (context);
-    if (mixed err = catch {
-      if (context && context->unwind_state && context->unwind_state->top) {
+    while (1) {			// Loops when the evaluation is incomplete.
+      if (mixed err = catch {
+	if (context && context->unwind_state && context->unwind_state->top) {
 #ifdef MODULE_DEBUG
-	if (context->unwind_state->top != this_object())
-	  fatal_error ("The context got an unwound state "
-		       "from another evaluator object. Can't continue.\n");
+	  if (context->unwind_state->top != this_object())
+	    fatal_error ("The context got an unwound state "
+			 "from another evaluator object. Can't continue.\n");
 #endif
-	m_delete (context->unwind_state, "top");
-	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
+	  m_delete (context->unwind_state, "top");
+	  m_delete (context->unwind_state, "reason");
+	  if (!sizeof (context->unwind_state)) context->unwind_state = 0;
+	}
+	piece = _eval (context); // Might unwind.
+      }) {
+	if (objectp (err) && ([object] err)->thrown_at_unwind) {
+	  if (!eval_piece && context->incomplete_eval()) {
+	    if (eval_loop) res = add_to_value (type, res, piece);
+	    eval_loop = 1;
+	    continue;
+	  }
+	  if (!context->unwind_state) context->unwind_state = ([]);
+	  context->unwind_state->top = this_object();
+	}
+	else {
+	  LEAVE_CONTEXT();
+	  throw_fatal (err);
+	}
       }
-      res = _eval (context);	// Might unwind.
-    })
-      if (objectp (err) && ([object] err)->thrown_at_unwind) {
-	if (!context->unwind_state) context->unwind_state = ([]);
-	context->unwind_state->top = this_object();
-      }
-      else {
-	LEAVE_CONTEXT();
-	throw_fatal (err);
-      }
+      else
+	if (eval_loop) piece = add_to_value (type, res, piece);
+      break;
+    }
     LEAVE_CONTEXT();
-    return res;
+    return piece;
   }
 
   //function(Context:mixed) compile();
   // Returns a compiled function for doing the evaluation. The
   // function will receive a context to do the evaluation in.
 
-  static void create (Type _type, void|TagSet _tag_set)
+  static void create (Type _type, void|TagSet _tag_set, void|int recover_errors)
   {
     type = _type, tag_set = _tag_set;
   }
@@ -5701,6 +5747,22 @@ static class Nil
 };
 
 Nil Void = nil;			// Compatibility.
+
+mixed add_to_value (Type type, mixed value, mixed piece)
+//! Adds @[piece] to @[value] according to @[type]. If @[type] is
+//! sequential, they're concatenated with @[`+]. If @[type] is
+//! nonsequential, either @[value] or @[piece] is returned if the
+//! other is @[RXML.nil] and an error is thrown if neither are nil.
+{
+  if (type->sequential)
+    return value + piece;
+  else
+    if (piece == nil) return value;
+    else if (value != nil)
+      parse_error ("Cannot append another value %s to non-sequential "
+		   "result of type %s.\n", utils->format_short (piece), type->name);
+    else return piece;
+}
 
 class ScanStream
 //! A helper class for the input and scanner stage in a parser. It's a
