@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.115 2003/03/18 13:47:01 mast Exp $
+// $Id: module_support.pike,v 1.116 2003/12/15 09:48:24 grubba Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -160,7 +160,7 @@ class BasicModule
   void save_me() {}
   void save() {}
   string comment() { return ""; }
-  array query_seclevels() { return ({}); }
+  function(RequestID:int|mapping) query_seclevels() { return 0; }
   mapping api_functions() { return ([]); }
 }
 
