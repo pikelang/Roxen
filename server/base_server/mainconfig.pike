@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.26 1996/12/07 11:37:42 neotron Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.27 1996/12/10 00:15:40 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -15,7 +15,7 @@ inherit "config/draw_things";
 #define bdB "90"
 
 
-#define BODY "<body "+(roxen->QUERY(BG)?"background=/image/background.gif ":"")+"bgcolor=#"+dR+dG+dB+" text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0><blockquote>"
+#define BODY "<body "+(roxen->QUERY(BG)?"background=/image/background.gif ":"")+"bgcolor=#"+dR+dG+dB+" text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
 
 #define TABLEP(x, y) (id->supports->tables ? x : y)
 #define PUSH(X) do{res+=({(X)});}while(0)
@@ -421,7 +421,7 @@ string new_configuration_form()
 {
   return replace(default_head("")+read_bytes("etc/newconfig.html"), ({"$COPIES","$configurl"}), 
 		 ({configuration_list(),CONFIG_URL})) +
-    "\n\n</blockquote></body>";
+    "\n\n</body>";
 }
 
 mapping module_nomore(string name, int type, object conf)
@@ -542,7 +542,7 @@ string new_module_form(object id, object node)
 		 "</a><br>"+a[q][1]+"<p><br><p>"});
     }
   }
-  return res*""+"</td></tr></table></blockquote>";
+  return res*""+"</td></tr></table>";
 }
 
 mapping new_module(object id, object node)
@@ -689,14 +689,14 @@ mapping new_configuration(object id)
 
   if(!id->variables->name)
     return stores(default_head("Bad luck")+
-		  "<h1>No configuration name?</h1>"
+		  "<blockquote><h1>No configuration name?</h1>"
 		  "Either you entered no name, or your WWW-browser "
 		  "failed to include it in the request</blockquote>");
   
   id->variables->name=(replace(id->variables->name,"\000"," ")/" "-({""}))*" ";
   if(!low_enable_configuration(id->variables->name, id->variables->type))
     return stores(default_head("Bad luck") +
-		  "<h1>Illegal configuration name</h1>"
+		  "<blockquote><h1>Illegal configuration name</h1>"
 		  "The name of the configuration must contain characters"
 		  " other than space and tab, it should not end with "
 		  "~, and it must not be 'CVS', 'Global Variables' or "
@@ -765,7 +765,7 @@ mapping initial_configuration(object id)
 
   res += read_bytes("etc/welcome.html");
   if(error && strlen(error))
-    res += "\n<p><b>"+error+"</b>";
+    res += "<blockquote>\n<p><b>"+error+"</b>";
   
   res += ("<pre>"
 	  "<font size=+1>"
@@ -1371,7 +1371,8 @@ mapping configuration_parse(object id)
   PUSH(tmp);
   o->folded=i;
   
-  PUSH("</dl><p><br clear=all><p>\n");
+  PUSH("</dl>");
+  PUSH("<p><br clear=all><p>\n");
 
   int lm=1;
   
@@ -1406,8 +1407,8 @@ mapping configuration_parse(object id)
 
   if(nfolded(o))
     BUTTON(unfoldlevel, "Unfold level", left);
-  else if(nfoldedr(o))
-    BUTTON(unfoldall, "Unfold all", left);
+//  else if(nfoldedr(o))
+//    BUTTON(unfoldall, "Unfold all", left);
 
 
   if((o->changed||root->changed))
@@ -1419,7 +1420,7 @@ mapping configuration_parse(object id)
   
   PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
   PUSH("</nobr><br clear=all>");
-  PUSH("<p align=right><font size=-1 color=blue><a href=$docurl><font color=blue>"+roxen->real_version +"</font></a></font></p>");
+//  PUSH("<p align=right><font size=-1 color=blue><a href=$docurl><font color=blue>"+roxen->real_version +"</font></a></font></p>");
   PUSH("</body>\n");
   return stores(res*"");
 }

@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.6 1996/12/07 11:37:53 neotron Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.7 1996/12/10 00:15:42 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -42,8 +42,12 @@ array register_module()
 	      "                 in the specified color\n"
 	      " spacing=int     Add this amount of spacing around the text\n"
 	      " bevel=int       Draw a bevel box (width is the argument)\n"
+	      " pressed         Invert the \"direction\" of the bevel box\n"
+	      " talign=dir      Justify the text to the left, right, or center\n"
 	      " textbox=al,#col Use 'al' as opaque value to draw a box below\n"
 	      "                 the text with the specified color.\n"
+	      " xpad=X%         Increase padding between characters with X%\n"
+	      " xpad=Y%         Increase padding between lines with Y%\n"
 	      " shadow=int,dist Draw a drop-shadow (variable distance/intensity)\n"
 	      " fuzz=#col       The 'shine' effect used in the 'magic'\n"
 	      "                 highlightning\n"
@@ -52,6 +56,9 @@ array register_module()
 	      " rotate=ang(deg.)Rotate the finished image\n"
 	      " background=file Use the specifed file as a background\n"
 	      " texture=file    Use the specified file as text texture\n"
+	      " turbulence=args args is: frequency,color;freq,col;freq,col\n"
+	      "                 Apply a turbulence filter, and use this as the"
+	      "                 background.\n"
 	      "</pre>\n",
 	      0,
 	      1,
@@ -96,18 +103,26 @@ string query_location() { return query("location"); }
 
 mapping (string:object) fonts = ([]);
 
-object(Font) load_font(string name)
+object(Font) load_font(string name, string justification, int xs, int ys)
 {
   object fnt = Font();
-  if(!name) name = QUERY(default_size)+"/"+QUERY(default_font);
-  else if(sscanf(name, "%*s/%*s") != 2) name=QUERY(default_size)+"/"+name;
+
+  if(sscanf(name, "%*s/%*s") != 2)
+    name=QUERY(default_size)+"/"+name;
 
   name = "fonts/" + name;
 
-  if(fnt->load( name )) return fnt;
-  perror("Failed to load the font "+name+", using the default font.\n");
-  if(!fnt->load("fonts/"+QUERY(default_size) +"/"+ QUERY(default_font)))
-    error("Failed to load the default font\n");
+  if(!fnt->load( name ))
+  {
+    perror("Failed to load the font "+name+", using the default font.\n");
+    if(!fnt->load("fonts/"+QUERY(default_size) +"/"+ QUERY(default_font)))
+      error("Failed to load the default font\n");
+  }
+
+  if(justification=="right") fnt->right();
+  if(justification=="center") fnt->center();
+  fnt->set_x_spacing((100.0+(float)xs)/100.0);
+  fnt->set_y_spacing((100.0+(float)ys)/100.0);
   return fnt;
 }
 
@@ -163,34 +178,43 @@ constant grey = ({ 128,128,128 });
 constant black = ({ 0,0,0 });
 
 constant wwwb = ({ lgrey,lgrey,grey,black });
-object (Image) bevel(object (Image) in, int width)
+object (Image) bevel(object (Image) in, int width, int|void invert)
 {
   int h=in->ysize();
   int w=in->xsize();
 
-  in->paste_alpha(Image(width,h-width*2,@white), 160, 0, width);
-  in->paste_alpha(Image(width,h-width*2,@black), 128, in->xsize()-width, width);
-  in->paste_alpha(Image(w-width,width,@white), 160, 0, 0);
-  in->paste_alpha(Image(w-width,width,@black), 128, width, in->ysize()-width);
-
   object corner = Image(width+1,width+1);
   object corner2 = Image(width+1,width+1);
   object pix = Image(1,1);
+
   for(int i=-1; i<=width; i++) {
     corner->line(i,width-i,i,-1, @white);
     corner2->setpixel(width-i, width-i, @white);
     in->paste_alpha(pix, 185, w - width + i+1, h - width + i+1);
   }
-  in->paste_mask(corner, corner->color(95,95,95),
-		 in->xsize()-width,-1);
-  in->paste_mask(corner, corner->invert()->color(128,128,128), 
-		 in->xsize()-width,-1);
-  in->paste_mask(corner, corner->color(95,95,95),
-		 -1, in->ysize()-width);
+
+  if(!invert)
+  {
+    in->paste_alpha(Image(width,h-width*2,@white), 160, 0, width);
+    in->paste_alpha(Image(width,h-width*2,@black), 128, in->xsize()-width, width);
+    in->paste_alpha(Image(w-width,width,@white), 160, 0, 0);
+    in->paste_alpha(Image(w-width,width,@black), 128, width, in->ysize()-width);
+  } else  {
+    corner=corner->invert();
+    corner2=corner2->invert();
+    in->paste_alpha(Image(width,h-width*2,@black), 160, 0, width);
+    in->paste_alpha(Image(width,h-width*2,@white), 128, in->xsize()-width, width);
+    in->paste_alpha(Image(w-width,width,@black), 160, 0, 0);
+    in->paste_alpha(Image(w-width,width,@white), 128, width, in->ysize()-width);
+  }
+
+  in->paste_mask(corner, corner->color(95,95,95), in->xsize()-width,-1);
   in->paste_mask(corner, corner->invert()->color(128,128,128),
-		 -1, in->ysize()-width);
-  in->paste_mask(corner2, corner2->color(70,70,70), 
-		 -1, -1);
+		 in->xsize()-width,-1);
+  in->paste_mask(corner, corner->color(95,95,95), -1, in->ysize()-width);
+  in->paste_mask(corner, corner->invert()->color(128,128,128),
+                 -1, in->ysize()-width);
+  in->paste_mask(corner2, corner2->color(70,70,70), -1, -1);
 
   corner = corner2 = pix = 0;
 
@@ -268,10 +292,34 @@ object (Image) make_text_image(mapping args, object font, string text)
     background = load_image(args->background);
     xsize = background->xsize();
     ysize = background->ysize();
+    switch(lower_case(args->talign))
+    {
+     case "center":
+      xoffset = (xsize/2 - txsize/2);
+      break;
+     case "right":
+      xoffset = (xsize - txsize);
+      break;
+     case "left":
+    }
   } else
     background = Image(xsize, ysize, @bgcolor);
 
-  if(args->bevel) background = bevel(background, (int)args->bevel);
+  if(args->turbulence)
+  {
+    array (float|array(int)) arg=({});
+    foreach((args->turbulence/";"),  string s)
+    {
+      array q= s/",";
+      if(sizeof(q)<2) args+=({ ((float)s)||0.2, ({ 255,255,255 }) });
+      arg+=({ ((float)q[0])||0.2, parse_color(q[1]) });
+    }
+    background=background->turbulence(arg);
+  }
+  
+
+  if(args->bevel)
+    background = bevel(background,(int)args->bevel,!!args->pressed);
 
   if(args->textbox) // Draw a text-box on the background.
   {
@@ -279,8 +327,9 @@ object (Image) make_text_image(mapping args, object font, string text)
     string bg;
     sscanf(args->textbox, "%d,%s", alpha, bg);
     sscanf(bg,"%s,%d", bg,border);
-    background->paste_alpha(Image(txsize+border,tysize+border,@parse_color(bg)),
-			    255-(alpha*255/100), xoffset, yoffset);
+    background->paste_alpha(Image(txsize+border*2,tysize+border*2,
+				  @parse_color(bg)),
+			    255-(alpha*255/100),xoffset-border,yoffset-border);
   }
 
   if(args->shadow)
@@ -292,7 +341,14 @@ object (Image) make_text_image(mapping args, object font, string text)
     background->paste_mask(Image(txsize,tysize),ta,xoffset+sdist, yoffset+sdist);
   }
 
-  if(!foreground)  foreground=Image(xsize, ysize, @fgcolor);
+  if(args->chisel)
+    foreground=text_alpha->apply_matrix( ({ ({8,1,0}),
+					   ({1,0,-1}),
+					   ({0,-1,-8}) }), 128,128,128, 15 )
+      ->color(@fgcolor);
+  
+
+  if(!foreground)  foreground=Image(txsize, tysize, @fgcolor);
 
   background->paste_mask(foreground, text_alpha, xoffset, yoffset);
 
@@ -339,10 +395,12 @@ array(int)|string write_text(int _args, string text, int size,
 
   //  Nothing found in the cache. Generate a new image.
 
-  data = cache_lookup("fonts:fonts", args->font);
+  data = cache_lookup("fonts:fonts",
+		      args->font+args->justift+":"+
+		      args->xpad+":"+args->ypad);
   if(!data)
   { 
-    data = load_font(args->font);
+    data = load_font(args->font, lower_case(args->talign||""),(int)args->xpad,(int)args->ypad);
     cache_set("fonts:fonts", args->font, data);
   }
 
@@ -456,13 +514,14 @@ string magic_javascript_header(object id)
 
 string magic_image(string url, int xs, int ys, string sn,
 		   string image_1, string image_2, string alt,
-		   string mess,object id)
+		   string mess,object id,string input)
 {
   if(!id->supports->images) return alt;
   if(!id->supports->javascript)
-    return
+    return (!input)?
       ("<a href=\""+url+"\"><img src="+image_1+" name="+
-       sn+" border=0 alt=\""+alt+"\" ></a>\n");
+       sn+" border=0 alt=\""+alt+"\" ></a>\n"):
+    ("<input type=image src="+image_1+" name="+input+">");
 
   return
     ("<script>\n"
@@ -475,12 +534,13 @@ string magic_image(string url, int xs, int ys, string sn,
      "  "+sn+"2.src = \""+image_2+"\";\n"
      "}\n"
      "// -->\n"
-     "</script>\n"
-     "<a href=\""+url+"\" onMouseover=\"img_act('"+sn+"','"
-     +(mess||url)+"');return true;\"\n"
-     "\n"
-     "onMouseout=\"img_inact('"+sn+"')\"><img \n"
-     " src="+image_1+" name="+sn+" border=0 alt=\""+alt+"\" ></a>\n");
+     "</script>\n"+
+     ("<a href=\""+url+"\" "+(input?"onClick='document.forms[0].submit();' ":"")
+      +"onMouseover=\"img_act('"+sn+"','"
+      +(mess||url)+"');return true;\"\n"
+      "\n"
+      "onMouseout=\"img_inact('"+sn+"')\"><img \n"
+      " src="+image_1+" name="+sn+" border=0 alt=\""+alt+"\" ></a>\n"));
 }
 
 string tag_graphicstext(string t, mapping arg, string contents,
@@ -496,6 +556,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(!id->supports->images || id->prestate->noimages)
   {
     if(!arg->split) contents=replace(contents,"\n", "\n<br>\n");
+    if(arg->submit) return "<input type=submit value=\""+contents+"\">";
     switch(t)
     {
      case "gtext":
@@ -519,6 +580,13 @@ string tag_graphicstext(string t, mapping arg, string contents,
   {
     magic=arg->magic;
     m_delete(arg,"magic");
+  }
+
+  int input;
+  if(arg->submit)
+  {
+    input=1;
+    m_delete(arg,"submit");
   }
   
   string lp, url;
@@ -569,11 +637,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
     m_delete(arg,"vspace");
   }
   
-
-
   // Now the 'args' mapping is modified enough..
   int num = find_or_insert( arg );
-
 
   gt=contents;
   rest="";
@@ -622,19 +687,23 @@ string tag_graphicstext(string t, mapping arg, string contents,
     arg = mkmapping(indices(arg), values(arg));
     arg->fuzz = arg->fg;
     arg->fg = defines->alink||"#ff0000";
+    if(arg->bevel) arg->pressed=1;
     int num2 = find_or_insert(arg);
     array size = write_text(num2,gt,1,0);
-    if(!defines->magic_java)
-      res = magic_javascript_header(id);
+    if(!defines->magic_java) res = magic_javascript_header(id);
     defines->magic_java="yes";
     return res + magic_image(url||"", size[0], size[1],
 			     "i"+(num+""+hash(gt,0x7fffffff))+"g",
 			     query_location()+num+"/"+quote(gt),
 			     query_location()+num2+"/"+quote(gt),
 			     replace(gt, "\"","'"),(magic=="magic"?0:magic),
-			     id);
+			     id,input?(arg->name||"submit"):0);
   }
-  
+  if(input && id->supports->images)
+    return (pre+"<input type=image name=\""+arg->name+"\" border=0 alt=\""+
+	    replace(gt,"\"","'")+"\" src="+query_location()+num+"/"+quote(gt)
+	    +" align="+(arg->align?arg->align:defalign)+
+	    " width="+size[0]+" height="+size[1]+">"+rest+post);
   return (pre+(lp?lp:"")+
 	  "<img border=0  alt=\""+replace(gt,"\"","'")+"\" src="+
 	  query_location()+num+"/"+quote(gt)
@@ -645,16 +714,30 @@ string tag_graphicstext(string t, mapping arg, string contents,
 string tag_body(string t, mapping args, object id, object file,
 		mapping defines)
 {
-  if(args->bgcolor) defines->bg    = args->bgcolor;
-  if(args->text)    defines->fg    = args->text;
-  if(args->link)    defines->link  = args->link;
-  if(args->alink)   defines->alink = args->alink;
-  if(args->clink)   defines->clink = args->clink;
-  if(args->vlink)   defines->vlink = args->vlink;
+  int bg, text, link, alink, vlink, background;
+//if(args->clink)     { defines->clink = args->clink;   
+  if(args->bgcolor)   { defines->bg    = args->bgcolor;  bg=1;   }
+  if(args->text)      { defines->fg    = args->text;     text=1; }
+  if(args->link)      { defines->link  = args->link;     link=1; }
+  if(args->background){ background=1; }
+  if(args->alink)     { defines->alink = args->alink;    alink=1;}
+  if(args->vlink)     { defines->vlink = args->vlink;    vlink=1;}
+  if(bg+text+link+alink+vlink+background+bg&&
+     (bg+text+link+alink+vlink+background+bg)<5)
+  {
+    if(!bg)   args->bgcolor=args->text  || "black";
+    if(!text) args->text=args->bgcolor  || "white";
+    if(!link) args->link=args->bgcolor  || "yellow";
+    if(!vlink)args->vlink=args->bgcolor || "pink";
+    if(!alink)args->alink=args->bgcolor || "red";
+    return ("<body "+(background?"background="+args->background+" ":"")+
+	    "bgcolor="+args->bgcolor+" text="+args->text+" link="+
+	    args->link+" vlink="+args->vlink+" alink="+args->alink+">");
+  }
 }
 
 
-mapping query_tag_callers()
+  mapping query_tag_callers()
 {
   return (["body":tag_body]);
 }

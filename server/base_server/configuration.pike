@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.9 1996/12/07 11:37:41 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.10 1996/12/10 00:15:39 per Exp $";
 #include <module.h>
 /* A configuration.. */
 
@@ -32,7 +32,7 @@ string comment()
 
 
 
-static private program Priority = class
+class Priority 
 {
   array (object) url_modules = ({ });
   array (object) logger_modules = ({ });
@@ -43,7 +43,19 @@ static private program Priority = class
   
   mapping (string:array(object)) extension_modules = ([ ]);
   mapping (string:array(object)) file_extension_modules = ([ ]);
-};
+
+
+  void stop()
+  {
+    foreach(url_modules, object m)      catch { m->stop(); };
+    foreach(logger_modules, object m)   catch { m->stop(); };
+    foreach(filter_modules, object m)  catch { m->stop(); };
+    foreach(location_modules, object m)catch { m->stop(); };
+    foreach(last_modules, object m)    catch { m->stop(); };
+    foreach(first_modules, object m)    catch { m->stop(); };
+  }
+}
+
 
 
 /* A 'pri' is one of the ten priority objects. Each one holds a list
@@ -156,6 +168,18 @@ private array (function) filter_module_cache;
 private array (array (string|function)) location_module_cache;
 private mapping (string:array (function)) extension_module_cache=([]);
 private mapping (string:array (function)) file_extension_module_cache=([]);
+
+
+// Call stop in all modules.
+void stop()
+{
+  catch { parse_module->stop(); };
+  catch { types_module->stop(); };
+  catch { auth_module->stop(); };
+  catch { dir_module->stop(); };
+  for(int i=0; i<10; i++) catch { pri[i]->stop(); };
+}
+
 
 // Empty all the caches above.
 void unvalidate_cache()

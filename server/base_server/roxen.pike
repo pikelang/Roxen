@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.21 1996/12/08 10:33:24 neotron Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.22 1996/12/10 00:15:41 per Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -1466,6 +1466,13 @@ string check_variable(string name, string value)
   }
 }
 
+void stop_all_modules()
+{
+  foreach(configurations, object conf)
+    conf->stop();
+}
+
+
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports, fork a new copy to handle the last connections, and
 // then quit the original process.  The 'start' script should then
@@ -1473,6 +1480,7 @@ string check_variable(string name, string value)
 
 mapping restart() 
 { 
+  stop_all_modules();
   call_out(fork_or_quit, 1);
   return ([ "data":read_bytes("etc/restart.html"), "type":"text/html" ]);
 } 
@@ -1487,11 +1495,13 @@ int startpid;
 
 mapping shutdown() 
 {
-  object privs = ((program)"privs")("Shutting down the server");
-  // Change to root user.
   catch(map_array(indices(portno)), destruct);
 
+  object privs = ((program)"privs")("Shutting down the server");
+  // Change to root user.
 
+  stop_all_modules();
+  
   if(main_configuration_port && objectp(main_configuration_port))
   {
     // Only _really_ do something in the main process.
@@ -3114,8 +3124,13 @@ void exit_when_done()
 {
   object o;
   int i;
+  perror("Interrupt request received. Exiting,\n");
   if(++_recurse > 4)
+  {
+    werror("Exiting roxen (spurious signals received).\n");
+    stop_all_modules();
     exit(0);
+  }
   if(main_configuration_port && objectp(main_configuration_port))
   {
     int pid;
@@ -3137,10 +3152,19 @@ void exit_when_done()
 #if efun(_pipe_debug)
   call_out(lambda() { 
     call_out(this_function(), 5);
-    if(!_pipe_debug()[0]) exit(0);
-  }, 0);
+    if(!_pipe_debug()[0])
+    {
+      werror("Exiting roxen (all connections closed).\n");
+      stop_all_modules();
+      exit(0);
+    }
+  }, 0.1);
 #endif
-  call_out(exit, 600, 0); // Slow buggers..
+  call_out(lambda(){
+    werror("Exiting roxen (timeout).\n");
+    stop_all_modules();
+    exit(0);
+  }, 600, 0); // Slow buggers..
 }
 
 void exit_it()

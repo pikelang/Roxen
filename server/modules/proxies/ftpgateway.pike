@@ -37,7 +37,7 @@
 // 1.6   nov 23 law
 //       new directory format (used by ftp.uwp.edu) 
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.7 1996/12/08 11:25:54 neotron Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.8 1996/12/10 00:15:43 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -84,11 +84,7 @@ inherit "roxenlib";
 
 #include "base_server/proxyauth.pike"
 
-program filep = (program)"/precompiled/file";
-
-program Request = class
-{
-
+class Request {
   inherit "socket";
   inherit "roxenlib";
 
@@ -642,7 +638,7 @@ program Request = class
     {
       id->end(ERROR_MESSAGE("Transfer failed: Remote server failed to open connection:\n<pre>"+r+" "+arg+"</pre>"));
     }
-    else if ( (r=="150") || (r=="226") )  /* ok */
+    else if ( (r=="150") || (r=="226") || (r=="213") )  /* ok */
     {
       if (sscanf(arg,"%*s(%d bytes",bytes_size)<2) bytes_size=-1;
       transfer();
