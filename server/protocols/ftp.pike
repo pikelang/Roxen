@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.28 2000/02/04 06:29:43 per Exp $
+ * $Id: ftp.pike,v 2.29 2000/02/14 16:07:40 jonasw Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1950,7 +1950,7 @@ class FTPSession
     }
     if(file->file) {
       file->file->set_blocking();
-      pipe->input(file->file);
+      pipe->input(file->file, file->len);
     }
     curr_pipe = pipe;
     pipe->output(fd);
