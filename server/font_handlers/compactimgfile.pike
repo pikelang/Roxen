@@ -59,11 +59,9 @@ class CIF
   Stdio.File fd;
   array filelist ;
   mapping offsets;
+  string prefix="";
   array get_dir( string f )
   {
-// #ifdef THREADS
-//     object lock = lock->trylock();
-// #endif
     if(!filelist)
     {
       offsets = ([]);
@@ -81,7 +79,10 @@ class CIF
             filelist += ({ sprintf( "/0x%x", c ) });
         else
           filelist += ({ sprintf( "/%c", c ) });
-        fd->read( getint() ); // skip data.
+        if( c == 0xfffffffe )
+          prefix = fd->read( getint() );
+        else
+          fd->read( getint() );
       }
     }
     return filelist;
@@ -112,11 +113,14 @@ class CIF
     if( strlen(fname) > 2 ) sscanf( fname, "0x%x", wc ); else wc=fname[0];
     int c;
 
-    if( fname == "fontinfo" )  wc = 0xffffffff;
+    if( fname == "fontinfo" )
+      wc = 0xffffffff;
 
     if( offsets[ wc ] )
     {
       fd->seek( offsets[ wc ] );
+      if( wc <= 0x7fffffff ) // Normal character
+        return StringFile( prefix+fd->read( getint() ) );
       return StringFile( fd->read( getint() ) );
     }
     return 0;
