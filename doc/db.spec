@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.34 1998/09/24 18:58:32 per Exp $
+# $Id: db.spec,v 1.35 1998/09/27 16:25:41 wellhard Exp $
 
 drop table mail_misc;
 drop table user_misc;
@@ -173,6 +173,15 @@ CREATE TABLE template_wizards_pages (
              wizard_id               INT NOT NULL,
              help                    BLOB,
              example_html            BLOB,
+             PRIMARY KEY(id),
+             FOREIGN KEY (wizard_id)
+               REFERENCES template_wizards (id)
+     );
+
+# Template variables option groups
+CREATE TABLE template_option_groups (
+             id                      INT NOT NULL AUTO_INCREMENT,
+             name                    VARCHAR(64) NOT NULL,
              PRIMARY KEY(id)
      );
 
@@ -185,14 +194,13 @@ CREATE TABLE template_vars (
              help                    BLOB,
              type                    VARCHAR(64) NOT NULL,
              option_group_id         INT,
-             PRIMARY KEY(id)
-     );
-
-# Template variables option groups
-CREATE TABLE template_option_groups (
-             id                      INT NOT NULL AUTO_INCREMENT,
-             name                    VARCHAR(64) NOT NULL,
-             PRIMARY KEY(id)
+             PRIMARY KEY(id),
+             UNIQUE (name),
+             INDEX name_index (name),
+             FOREIGN KEY (page_id)
+               REFERENCES template_pages (id),
+             FOREIGN KEY (option_group_id)
+               REFERENCES template_option_groups (id)
      );
 
 # Template variables options
@@ -201,7 +209,9 @@ CREATE TABLE template_options (
              option_group_id         INT NOT NULL,
              name                    VARCHAR(255) NOT NULL,
              value                   BLOB,
-             PRIMARY KEY(id)
+             PRIMARY KEY(id),
+             FOREIGN KEY (option_group_id)
+               REFERENCES template_option_groups (id)
      );
 
 # Template schemes
@@ -214,12 +224,14 @@ CREATE TABLE template_schemes (
 
 # Template schemes variables
 CREATE TABLE template_schemes_vars (
-             id                      INT NOT NULL AUTO_INCREMENT,
              scheme_id               INT NOT NULL,
-             variable_id             INT NOT NULL,
+             variable_name           VARCHAR(64) NOT NULL,
              value                   BLOB,
-             PRIMARY KEY(id),
-             UNIQUE(scheme_id, variable_id)
+             PRIMARY KEY(scheme_id, variable_name),
+             FOREIGN KEY (variable_name)
+               REFERENCES template_vars (name),
+             FOREIGN KEY (scheme_id)
+               REFERENCES template_schemes (id) 
      );
 
 # Customers schemes
@@ -228,15 +240,19 @@ create table customers_schemes (
              customer_id             INT,
              name                    VARCHAR(64) NOT NULL,
              description             BLOB,
-             PRIMARY KEY(id)
+             PRIMARY KEY(id),
+             FOREIGN KEY (customer_id)
+               REFERENCES customers (id) 
      );
 
 # Customers schemes variables
 CREATE TABLE customers_schemes_vars (
-             id                      INT NOT NULL AUTO_INCREMENT,
              scheme_id               INT NOT NULL,
-             variable_id             INT NOT NULL,
+             variable_name           VARCHAR(64) NOT NULL,
              value                   BLOB,
-             PRIMARY KEY(id),
-             UNIQUE(scheme_id, variable_id)
+             PRIMARY KEY (scheme_id, variable_name),
+             FOREIGN KEY (variable_name)
+               REFERENCES template_vars (name),
+             FOREIGN KEY (scheme_id)
+               REFERENCES customers_schemes (id) 
      );
