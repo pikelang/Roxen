@@ -7,12 +7,24 @@ o Portuguese language module added.
 
 o Renamed the kanji module to japanese.
 
+o The configuration interface has been optimized about a factor of
+  1000.  It should fast enough now.
 
+o Disk cache fixed again. Thanks to Wilhelm Koehler <wk@cs.tu-berlin.de>
+
+o Fix in hostname lookup code, again, Thanks to Wilhelm Koehler
+
+
+
+ 
 Changes since Roxen 1.1 alpha
 -----------------------------------------------
 
 o Maori language module added.
 
+o Redesign of configuration interface again..
+
+o The 'save' and 'add new server' etc. modules now actually work.
 
 Changes since Roxen 1.0 
 -----------------------------------------------
