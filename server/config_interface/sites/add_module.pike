@@ -292,8 +292,8 @@ function describe_module_normal( int image )
   {
     if(!block)
     {
-return sprintf(
-#"
+      return sprintf(
+	#"
   <tr>
    <td colspan='2'>
      <table width='100%%'>
@@ -320,9 +320,10 @@ return sprintf(
     </td>
   </tr>
 ",
-     Roxen.html_encode_string(strip_leading(module->get_name())),
-     Roxen.html_encode_string (module->sname),
-     (image?module_image(module->type):""),
+	//Roxen.html_encode_string(strip_leading(module->get_name())),
+	Roxen.html_encode_string(module->get_name()),
+	Roxen.html_encode_string (module->sname),
+	(image?module_image(module->type):""),
      module->sname,
    LOCALE(251, "Add Module"),
    module->get_description(),
@@ -387,7 +388,7 @@ string describe_module_faster( object module, object block)
   if(!block)
   {
 return sprintf(
-#"
+   #"
     <tr><td colspan='2'><table width='100%%'>
         <td><font size='+2'>%s</font></td>
         <td align='right'>(%s) %s</td></table></td></tr>
@@ -396,11 +397,13 @@ return sprintf(
         </td><td valign='top'>%s<p>%s</p></td>
     </tr>
 ",
-   Roxen.html_encode_string(strip_leading(module->get_name())),
+   //Roxen.html_encode_string(strip_leading(module->get_name())),
+   Roxen.html_encode_string(module->get_name()),
    Roxen.html_encode_string (module->sname),
    module_image(module->type),
    module->sname,
-   Roxen.html_encode_string(strip_leading(module->get_name())),
+   //Roxen.html_encode_string(strip_leading(module->get_name())),
+   Roxen.html_encode_string(module->get_name()),
    module->get_description(),
    LOCALE(266, "Will be loaded from: ")+module->filename
   );
@@ -468,7 +471,8 @@ array(int|string) class_visible_compact( string c, string d, RequestID id )
 string describe_module_compact( object module, object block )
 {
   if(!block) {
-    string modname = strip_leading (module->get_name());
+    //string modname = strip_leading (module->get_name());
+    string modname = module->get_name();
     return "<option value='"+module->sname+"'>"+
       Roxen.html_encode_string(
 	modname + "\0240" * max (0, (int) ((40 - sizeof (modname)) * 1.4)) +
@@ -520,7 +524,7 @@ string page_really_compact( RequestID id )
 
   sort(map(mods->get_name(), lambda(LocaleString in) {
 			       in = lower_case((string)in);
-			       sscanf(in, "%*s: %s", in);
+			       //sscanf(in, "%*s: %s", in);
 			       return in;
 			     }), mods);
   string res = "";
@@ -581,7 +585,8 @@ array initial_form( RequestID id, Configuration conf, array modules )
         num++;
         res += "<tr><td colspan='3'><h2>"
         +LOCALE(1,"Initial variables for ")+
-            Roxen.html_encode_string(strip_leading(mi->get_name()))
+	  //Roxen.html_encode_string(strip_leading(mi->get_name()))
+	  Roxen.html_encode_string(mi->get_name())
 	  +"</h2></td></tr>"
         "<emit source='module-variables' "
 	  " configuration=\""+conf->name+"\""
