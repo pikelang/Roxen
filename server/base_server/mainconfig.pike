@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.67 1997/08/13 22:07:20 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.68 1997/08/13 22:10:09 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -533,12 +533,12 @@ string configuration_types()
   {
     array err;
     if (err = catch {
-      if(c[-1]=='e' || c[0]!='#') {
+      if(c[-1]=='e' && c[0]!='#') {
 	object o = get_template(c);
-	res += sprintf("<option value=\"%s\"%s>%s\n",
-		       c,
-		       (o->selected?" selected":""),
-		       o->name);
+	if (o) {
+	  res += sprintf("<option value=\"%s\"%s>%s\n",
+			 c, (o->selected?" selected":""), o->name);
+	}
       }
     }) {
       report_error(sprintf("Error initializing server template \"%s\"\n"
