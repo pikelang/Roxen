@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.515 2000/08/03 06:06:11 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.516 2000/08/10 23:30:32 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -674,6 +674,8 @@ class Protocol
   local function sp_fcfu;
 
 
+  mapping mu;
+
   object find_configuration_for_url( string url, RequestID id, 
                                      int|void no_default )
   //! Given a url and requestid, try to locate a suitable configuration
@@ -681,8 +683,20 @@ class Protocol
   //! This interface is not at all set in stone, and might change at 
   //! any time.
   {
-    url = lower_case( url );
     object c;
+    if( sizeof( urls ) == 1 )
+    {
+      if(!mu) mu = urls[sorted_urls[0]];
+      if( mu->path )
+      {
+        id->not_query = id->not_query[strlen(mu->path)..];
+        id->misc->site_prefix_path = mu->path;
+      }
+      if(!(c=mu->conf)->inited) c->enable_all_modules();
+      return c;
+    }
+
+    url = lower_case( url );
     // The URLs are sorted from longest to shortest, so that short
     // urls (such as http://*/) will not match before more complete
     // ones (such as http://*.roxen.com/)
