@@ -5,20 +5,22 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.6 1997/11/09 18:38:53 grubba Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.7 1998/03/07 19:03:44 noring Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-#define INFO(s)  // perror("### %O"+(s))
-#define DEBUG(s) perror("### %O\n",(s))
-#define FATAL(s) perror("### %O\n"+(s))
-
-#define ERROR(a) sprintf("<b>&lt;obox&gt; error:</b> %s<br>\n", (a))
-
 constant unit_gif = "/internal-roxen-unit";
+
+static private int loaded;
+
+static private string doc()
+{
+  return !loaded?"":replace(Stdio.read_bytes("modules/tags/doc/obox")||"",
+			    ({ "{", "}" }), ({ "&lt;", "&gt;" }));
+}
 
 static string img_placeholder (mapping args)
 {
@@ -116,30 +118,7 @@ string container_obox(string name, mapping args,
   if (args->help) {
     args->right = 250;
     args->title = "The Outlined Box container tag";
-    contents = "Usage:<p>"
-               "&lt;<b>obox</b> <b>title</b>=\"Sample title\"&gt;"
-               "<br>Anything, html, text, ...<br>"
-               "&lt;<b>/obox</b>&gt;<p>\n"
-               "Options:<p>\n\n"
-      "<b>left</b>: Length of line on the left side of the title<br>\n"
-      "<b>right</b>: Length of line on the right side of to the title<br>\n"
-      "<i>Notice</i> that left and right arguments are constrained by the "
-      "width argument, if specified.<br>\n"
-      "<b>spacing</b>: Width of the space inside the box<br>\n"
-      "<b>titlecolor</b>: Color of the title of the box<br>\n"
-      "<b>outlinecolor</b>: Color of the outline<br>\n"
-      "<b>outlinewidth</b>: Width (in pixels) of the outline<br>\n"
-      "<b>bgcolor</b>: Color of the background and title label<br>\n"
-      "<b>textcolor</b>: Color of the text inside the box<br>\n"
-      "<b>align</b>: How to align the box (left|right)<br>\n"
-      "<b>width</b>: width of the generated box<br>\n"
-      "<b>style=&lt;caption|groupbox&gt;</b>: "
-      "style of the generated box. "
-      "(<i>default: groupbox</i>)<br>\n"
-      "<p>\n\n"
-      "If the title is not specified in the argument list,<br>"
-      "you can put it inside the box text, in a &lt;TITLE&gt; "
-      "HTML container,<br>should it be needed for HTML clarity.<br>";
+    contents = doc();
   }
 
   // Set the defaults...
@@ -186,9 +165,14 @@ array register_module()
   return ({
     MODULE_PARSER,
       "Outlined box",
-      "This is a container tag making outlined boxes.<br>"
-      "&lt;obox help&gt;&lt;/obox&gt; gives help.",
+      "This is a container tag making outlined boxes.<p>"
+      "<tt>&lt;obox help&gt;&lt;/obox&gt;</tt> gives help.\n\n<p>"+doc(),
       0, 1 });
+}
+
+void start(int num, object configuration)
+{
+  loaded = 1;
 }
 
 mapping query_container_callers()

@@ -1,9 +1,7 @@
-This module defines the tag {tablify}.<p>
-
 <h3>Tablify</h3>
 
-{tablify} generates tables from, for example, tab separated fields in
-newline separated records (this is the default).<p>
+The tablify container tag generates tables from, for example,
+tab separated fields in newline separated records (this is the default).<p>
 
 <h3>Tablify options</h3>
 <blockquote><dl>

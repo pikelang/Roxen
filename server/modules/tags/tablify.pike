@@ -5,24 +5,33 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.12 1998/03/07 17:30:49 noring Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.13 1998/03/07 19:03:13 noring Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
 inherit "wizard";
 
-string doc()
+static private int loaded;
+
+static private string doc()
 {
-  return replace(Stdio.read_bytes("modules/tags/doc/tablify")||"",
-		 ({ "{", "}" }), ({ "&lt;", "&gt;" }));
+  return !loaded?"":replace(Stdio.read_bytes("modules/tags/doc/tablify")||"",
+			    ({ "{", "}" }), ({ "&lt;", "&gt;" }));
 }
 
 mixed *register_module()
 {
   return ({ 
     MODULE_PARSER,
-    "Tablify", doc(),
+    "Tablify", 
+    "This tag generates tables.<p>"
+    "<tt>&lt;tablify help&gt;&lt;/tablify&gt;</tt> gives help.\n\n<p>"+doc(),
     ({}), 1, });
+}
+
+void start(int num, object configuration)
+{
+  loaded = 1;
 }
 
 /* The meat of the module. Convert the contents of the tag (in 'q') to
