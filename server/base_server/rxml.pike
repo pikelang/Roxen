@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.227 2000/08/20 16:40:39 nilsson Exp $
+// $Id: rxml.pike,v 1.228 2000/08/23 12:33:31 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -600,6 +600,7 @@ class TagUse {
 
     array do_return(RequestID id) {
       if(args->packageinfo) {
+	NOCACHE();
 	string res ="<dl>";
 	foreach(list_packages(), string f)
 	  res += use_file_doc(f, read_package( f ));
@@ -1760,6 +1761,7 @@ class TagIfAccept {
   inherit IfMatch;
   constant plugin_name = "accept";
   array source(RequestID id) {
+    NOCACHE();
     return id->misc->accept;
   }
 }
@@ -1768,6 +1770,7 @@ class TagIfConfig {
   inherit IfIs;
   constant plugin_name = "config";
   int source(RequestID id, string s) {
+    NOCACHE();
     return id->config[s];
   }
 }
@@ -1776,6 +1779,7 @@ class TagIfCookie {
   inherit IfIs;
   constant plugin_name = "cookie";
   string source(RequestID id, string s) {
+    NOCACHE();
     return id->cookies[s];
   }
 }
@@ -1784,6 +1788,7 @@ class TagIfClient {
   inherit IfMatch;
   constant plugin_name = "client";
   array source(RequestID id) {
+    NOCACHE();
     return id->client;
   }
 }
@@ -1801,6 +1806,7 @@ class TagIfDefined {
   constant cache = 1;
   string|int|float source(RequestID id, string s) {
     mixed val;
+    NOCACHE();
     if(!id->misc->defines || !(val=id->misc->defines[s])) return 0;
     if(stringp(val) || intp(val) || floatp(val)) return val;
     return 1;
@@ -1811,6 +1817,7 @@ class TagIfDomain {
   inherit IfMatch;
   constant plugin_name = "domain";
   string source(RequestID id) {
+    NOCACHE();
     return id->host;
   }
 }
@@ -1819,6 +1826,7 @@ class TagIfIP {
   inherit IfMatch;
   constant plugin_name = "ip";
   string source(RequestID id) {
+    NOCACHE();
     return id->remoteaddr;
   }
 }
@@ -1834,6 +1842,7 @@ class TagIfLanguage {
   inherit IfMatch;
   constant plugin_name = "language";
   array source(RequestID id) {
+    NOCACHE();
     return id->misc->pref_languages->get_languages();
   }
 }
@@ -1850,6 +1859,7 @@ class TagIfPragma {
   inherit IfIs;
   constant plugin_name = "pragma";
   string source(RequestID id, string s) {
+    NOCACHE();
     return id->pragma[s];
   }
 }
@@ -1867,6 +1877,7 @@ class TagIfReferrer {
   inherit IfMatch;
   constant plugin_name = "referrer";
   array source(RequestID id) {
+    NOCACHE();
     return id->referer;
   }
 }
@@ -1875,6 +1886,7 @@ class TagIfSupports {
   inherit IfIs;
   constant plugin_name = "supports";
   int source(RequestID id, string s) {
+    NOCACHE();
     return id->supports[s];
   }
 }
@@ -1911,6 +1923,7 @@ class TagIfClientvar {
   inherit IfIs;
   constant plugin_name = "clientvar";
   string source(RequestID id, string s) {
+    NOCACHE();
     return id->client_var[s];
   }
 }
