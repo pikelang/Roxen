@@ -801,7 +801,6 @@ array container_obox(string t, mapping m, string c, RequestID id) {
 
 array|string container_if(string t, mapping m, string c, RequestID id) {
   if(id->misc->compat_if) return ({ 1 });
-  id->misc->compat_if = 1;
   int only_once;
   string rxml = Parser.HTML()
     ->add_tag("otherwise", lambda(){
@@ -811,8 +810,19 @@ array|string container_if(string t, mapping m, string c, RequestID id) {
   if(only_once)
     old_rxml_warning(id, "otherwise "+LOCALE(20,"tag"),
 		     "else "+LOCALE(20,"tag"));
+  else
+    return ({ 1 });
 
-  rxml = parse_rxml(make_container("if", m, rxml), id);
+  id->misc->compat_if = 1;
+  string tag = "<if";
+  foreach(indices(m), string attr)
+    if(!has_value(m[attr], "\""))
+      tag += " " + attr + "=\"" + m[attr] + "\"";
+    else if(!has_value(m[attr], "'"))
+      tag += " " + attr + "='" + m[attr] + "'";
+    else
+      tag += " " + attr + "=\"" + replace(m[attr], "\"", "&quot;") + "\"";
+  rxml = parse_rxml( tag+">"+rxml+"</if>", id );
   m_delete(id->misc, "compat_if");
   return rxml;
 }
