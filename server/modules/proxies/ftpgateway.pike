@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.23 1998/06/08 17:22:26 grubba Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.24 1998/06/27 13:18:00 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -1492,7 +1492,7 @@ void remove_dataport(mixed m)
 void dataport_accept(object u)
 {
   if(!u){
-    roxen_perror("FTP GATEWAY: no arguments to dataport_accept()");
+    roxen_perror("FTP GATEWAY: no arguments to dataport_accept()\n");
     return;
   }
   if (request_port[u])
@@ -1514,10 +1514,17 @@ mixed create_dataport(function acceptfunc)
   ii=random(20000)+20000;
   for (i=0; i<500&&ii<65535; i++)
   {
-    if (!dataport->bind(ii,dataport_accept,0))
+    if (!dataport->bind(ii,dataport_accept))
       ii+=random(200);
     else break;
   }
+  if (dataport->query_id() != dataport){
+#ifdef PROXY_DEBUG
+    roxen_perror("FTP GATEWAY: id set to dataport\n");
+#endif /* PROXY_DEBUG */
+    dataport->set_id(dataport);
+  }
+
   if (i>=500||ii>65535)
   {
     return 0;
