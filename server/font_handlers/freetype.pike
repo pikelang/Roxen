@@ -62,9 +62,7 @@ static void build_font_names_cache( )
   map( roxen->query("font_dirs"), traverse_font_dir );
 }
 
-#ifdef THREADS
 Thread.Mutex lock = Thread.Mutex();
-#endif
 
 class FTFont
 {
@@ -120,16 +118,15 @@ class FTFont
       res->paste_alpha_color( c->img, ({255,255,255}),
                               xp+c->x,
                               ys+c->descender-c->y );
-      xp += (int)(c->advance*x_spacing+kerning[i+1]);
+      xp += (int)(c->advance*x_spacing) + kerning[i+1];
     }  
     return res;
   }
 
   Image.Image write( string ... what )
   {
-#ifdef THREADS
     object key = lock->lock();
-#endif
+    face->set_size( 0, size );
     if( !sizeof( what ) )
       return Image.Image( 1,height() );
 
@@ -163,10 +160,9 @@ class FTFont
         rr->paste_alpha_color( r, 255,255,255, 0, (int)start );
       start += r->ysize()*y_spacing;
     }
-    return rr;
+    return rr->gamma( 1.3 );
   }
 
-  static mixed lock;
   static void create(object r, int s, string fn, mixed|void _lock)
   {
     string encoding;
@@ -174,7 +170,6 @@ class FTFont
       lock = _lock;
     face = r; size = s;
 
-    face->set_size( 0, size );
     if(r_file_stat(fn+".properties"))
       parse_html(lopen(fn+".properties","r")->read(), ([]),
                  (["encoding":lambda(string tag, mapping m, string enc) {
@@ -204,14 +199,16 @@ array(mapping) font_information( string font )
     "name":font,
     "format":"freetype",
   ]);
-  Image.TTF f;
+  catch {
+  Image.FreeType.Face f;
   if( font[0] == '/' )
-    f = Image.TTF( font );
+    f = Image.FreeType.Face( font );
   else
-    f = Image.TTF( (font=values(ttf_font_names_cache[ font ])[0]) );
+    f = Image.FreeType.Face( (font=values(ttf_font_names_cache[ font ])[0]) );
 
   res->path = font;
   res |= f->info();
+  };
   return ({ res });
 }
 
