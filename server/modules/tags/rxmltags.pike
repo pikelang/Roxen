@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.338 2002/01/30 00:19:44 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.339 2002/02/04 12:09:16 stewa Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -249,10 +249,12 @@ class TagRoxenACV {
 
   class Frame {
     inherit RXML.Frame;
+    // Pass CJK character as entity to prevent changing default output
+    // character set of pages to UTF-8.
     constant html_magic =
-      "<input type=\"hidden\" name=\"magic_roxen_automatic_charset_variable\" value=\"едц\" />";
+      "<input type=\"hidden\" name=\"magic_roxen_automatic_charset_variable\" value=\"едц&#x829f;\" />";
     constant wml_magic =
-      "<postfield name='magic_roxen_automatic_charset_variable' value='едц' />";
+      "<postfield name='magic_roxen_automatic_charset_variable' value='едц&#x829f;' />";
 
     array do_return(RequestID id) {
       if(result_type->name=="text/wml")
