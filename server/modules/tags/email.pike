@@ -1,13 +1,12 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 // Todo:
-//	- multiple Bcc recipients
 //	- Docs
 //	- more debug coloring :)
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.23 2003/01/24 17:01:56 anders Exp $";
+constant cvs_version = "$Id: email.pike,v 1.24 2003/05/07 16:43:08 anders Exp $";
 
 constant thread_safe=1;
 
@@ -87,7 +86,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.23 $"/" ")[1];
+string revision = ("$Revision: 1.24 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -113,16 +112,24 @@ class TagEmail {
 
       array do_return(RequestID id) {
 
+	string value;
 	if(args->name && args->value)
-	  id->misc["_email_headers_"] += ([ upper_case(args->name) : (string)(args->value) ]);
+	  value = args->value;
 	else {
+	  value = (string)content;
 	  // converting bare LFs (QMail specials:)
 	  if(query("CI_qmail_spec")) {
-	    content = replace(content, "\r", "");
-	    content = replace(content, "\n", "");
+	    value = replace(value, "\r", "");
+	    value = replace(value, "\n", "");
 	  }
-	  id->misc["_email_headers_"] += ([ upper_case(args->name) : (string)content ]);
 	}
+	if (!id->misc["_email_headers_"])
+	  id->misc["_email_headers_"] = ([]);
+	string header_name = upper_case(args->name);
+	if (id->misc["_email_headers_"][header_name])
+	  id->misc["_email_headers_"][header_name] += ","+value;
+	else
+	  id->misc["_email_headers_"][header_name] = value;
 
         return 0;
       }
@@ -314,6 +321,8 @@ class TagEmail {
       string subject;
       string fromx;
       string tox, split = args->separator || query("CI_split");
+      string ccx;
+      string bccx;
       string chs = "";
       mixed error;
       mapping headers = ([]);
@@ -353,6 +362,22 @@ class TagEmail {
 	split = "\0"; //default 
      tox = args->to || headers->TO ||
        ((replace(query("CI_to"),"\r","")/"\n")*split);
+
+     if (args->cc)
+       ccx = args->cc;
+     if (headers->CC)
+       ccx = (ccx?ccx+",":"") + headers->CC;
+     if (ccx) {
+       headers->CC = ccx;
+     }
+     if (args->bcc)
+       bccx = args->bcc;
+     if (headers->BCC)
+       bccx = (bccx?bccx+",":"") + headers->BCC;
+     // Our SMTP.client should remove any BCC header, but it does not parse
+     // headers at all so we have to do it here.
+     m_delete(headers, "BCC");
+
      if (!tox || sizeof(tox)<1)
        RXML.run_error(EMAIL_LABEL+"Recipient address is missing!");
 
@@ -443,8 +468,13 @@ class TagEmail {
 
      catch(msglast = (string)m);
 
-     error = catch(o->send_message(only_from_addr(fromx), tox/split,
-				   (string)m));
+     array(string) to = tox / split;
+     if (ccx)  to |= ccx / split;
+     if (bccx) to |= bccx / split;
+     string from = only_from_addr(fromx);
+     string message = (string)m;
+
+     error = catch(o->send_message(from, to, message));
      if (error)
        RXML.run_error(EMAIL_LABEL+Roxen.html_encode_string(error[0]));
 
@@ -533,6 +563,18 @@ value=''><p>
 </p>
 </attr>
 
+<attr name='cc' value='' default='(empty)'><p>
+ The list of carbon copy recipient email address(es).
+ Separator character can be defined by the 'separator' attribute.
+</p>
+</attr>
+
+<attr name='bcc' value='' default='(empty)'><p>
+ The list of blind carbon copy recipient email address(es).
+ Separator character can be defined by the 'separator' attribute.
+</p>
+</attr>
+
 <attr name='separator' value='' default=','><p>
  The separator character for the recipient list.
 </p>
@@ -570,15 +612,17 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
 </desc>
 
 <attr name='name' value='string' required='required'><p>
- The name of the header. Standard headers are 'From:', 'To:', 'Cc:',
- 'Bcc:' and 'Subject:'. However, there are no restrictions on how many
+ The name of the header. Standard headers are 'From', 'To', 'Cc',
+ 'Bcc' and 'Subject'. However, there are no restrictions on how many
  headers are sent.</p>
 </attr>
 
 <attr name='value' value=''><p>
  The value of the header. This attribute is only used when using the
  singletag version of the tag. In case of the tag being used as a
- containertag the content will be the value.</p>
+ containertag the content will be the value. The 'Bcc' and
+ 'Cc' headers can contain multiple addresses separated by
+ ',' or the string in the split attribute of <tag>email</tag>.</p>
 </attr>
 
 
@@ -586,6 +630,7 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
 separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
+<header name=\"Bcc\">joe@bar.com|jane@foo.com</header>
 <header name=\"X-foo-header\" value=\"one two three\" />
 <header name=\"Importance\">Normal</header>
 <header name=\"X-MSMail-Priority\" value=\"Normal\" />
