@@ -7,9 +7,13 @@ shift;shift
 . bin/functions
 
 if [ ! -f $bindir/mysqld ] ; then
-  dp "No Mysql in '$bindir'"
-  dp "Aborting."
-  exit 1
+  obindir="$bindir"
+  bindir="$basedir/bin/"
+  if [ ! -f $bindir/mysqld ] ; then
+    dp "No Mysql in $bindir or $obindir"
+    dp "Aborting."
+    exit 1
+  fi
 fi
 
 pid_file=$datadir/mysql_pid
@@ -61,7 +65,7 @@ my_cp $bindir/mysqld bin/roxen_mysql
 if [ -f  bin/roxen_mysql ] ; then 
   bin/roxen_mysql $args >$err_log 2>&1 &
 else
- $bindir/mysqld $args >$err_log 2>&1 &
+  $bindir/mysqld $args >$err_log 2>&1 &
 fi
 
 exit 0
