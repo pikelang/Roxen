@@ -84,6 +84,7 @@ nn binary
 /server/java/src/se/idonex/roxen/ContainerCaller.java foreign_ident
 /server/java/src/se/idonex/roxen/Defvar.java foreign_ident
 /server/java/src/se/idonex/roxen/ExperimentalModule.java foreign_ident
+/server/java/src/se/idonex/roxen/FileExtensionModule.java foreign_ident
 /server/java/src/se/idonex/roxen/HTTP.java foreign_ident
 /server/java/src/se/idonex/roxen/LocationModule.java foreign_ident
 /server/java/src/se/idonex/roxen/Module.java foreign_ident
