@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.48 1997/12/11 01:22:13 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.49 1998/01/17 02:57:33 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -14,7 +14,7 @@ constant _query=roxen->query;
 import Simulate;
 
 
-function _time=time;
+function _time=predef::time;
 private static array(string) cache;
 private static int wanted_data, have_data;
 

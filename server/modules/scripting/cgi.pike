@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.60 1998/01/15 16:54:33 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.61 1998/01/17 02:57:28 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -392,14 +392,18 @@ class spawn_cgi
   void do_cgi()
   {
     int pid;
-#if constant(create_process)
+#if constant(Process.create_process)
     if(wrapper) {
-      if(!(us = file_stat(combine_path(oldwd, wrapper))) ||
+      array us;
+      wrapper = combine_path(getcwd(), wrapper);
+
+      if(!(us = file_stat(wrapper)) ||
 	 !(us[0]&0111)) {
-	cgi_fail(403,
-		 "Wrapper exists, but access forbidden for user");
+	report_error(sprintf("Wrapper \"%s\" doesn't exist, or "
+			     "is not executable\n", wrapper));
+	return;
       }
-      args = ({ combine_path(getcwd(), wrapper), f }) + args;
+      args = ({ wrapper, f }) + args;
     } else {
       args = ({ f }) + args;
     }
@@ -426,7 +430,7 @@ class spawn_cgi
     }
     object proc;
     mixed err = catch {
-      proc = create_process(args, options);
+      proc = Process.create_process(args, options);
     };
     privs = 0;
 
@@ -453,7 +457,7 @@ class spawn_cgi
 	  perror("Killed CGI pid "+pid+"\n");
       }, kill_call_out * 60 , proc->pid);
     }
-#else /* !create_process */
+#else /* !constant(Process.create_process) */
     if (!(pid = fork())) {
       mixed err = catch {
 	array us;
@@ -546,7 +550,7 @@ class spawn_cgi
 	  perror("Killed CGI pid "+pid+"\n");
       }, kill_call_out * 60 , pid);
     }
-#endif /* constant(create_process) */
+#endif /* constant(Process.create_process) */
 
   }
   

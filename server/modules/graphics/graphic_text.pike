@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.95 1997/12/23 11:13:25 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.96 1998/01/17 02:57:24 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -685,7 +685,8 @@ array(int)|string write_text(int _args, string text, int size,
       text = replace(replace(replace(text,({". ",". "+nbsp}), ({"\000","\001"})),".","."+nbsp+nbsp),({"\000","\001"}),({". ","."+nbsp}));
     }
     // Check the cache first..
-    while(mixed data = cache_lookup(key, text))
+    mixed data;
+    while(data = cache_lookup(key, text))
     {
       if(data == "rendering")
       {

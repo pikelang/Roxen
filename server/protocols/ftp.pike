@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.74 1998/01/15 18:30:48 grubba Exp $
+ * $Id: ftp.pike,v 1.75 1998/01/17 02:57:32 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -54,7 +54,7 @@ string controlport_addr, dataport_addr, cwd ="/";
 int controlport_port, dataport_port;
 object cmd_fd, pasv_port;
 object curr_pipe=0;
-int GRUK = random(_time(1));
+int GRUK = random(predef::time(1));
 function(object,mixed:void) pasv_callback;
 mixed pasv_arg;
 array(object) pasv_accepted;
@@ -440,7 +440,7 @@ class ls_program {
 	close_callback = 0;
 	if (this_object()) {
 	  // Paranoia.
-	  destruct();
+	  catch { destruct(); };
 	}
       }
     }
@@ -1721,7 +1721,6 @@ void create(object f, object c)
       roxen->set_var(conf->name + ":ftp:stat_cache", stat_cache = ([]));
     }
     is_connection=1;
-    client="unknown";
     conf->misc->ftp_users++;
     conf->misc->ftp_users_now++;
     cmd_fd = f;

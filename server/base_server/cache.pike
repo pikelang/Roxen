@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.16 1997/10/30 10:29:16 per Exp $";
+string cvs_version = "$Id: cache.pike,v 1.17 1998/01/17 02:57:16 grubba Exp $";
 
 #include <config.h>
 
@@ -72,7 +72,9 @@ string status()
   b=indices(cache);
   c=Array.map(values(cache), get_size);
 
-  for(int i=0; i<sizeof(b); i++)
+  int i;
+
+  for(i=0; i<sizeof(b); i++)
   {
     int s = sizeof(cache[b[i]]);
     int h = hits[b[i]];

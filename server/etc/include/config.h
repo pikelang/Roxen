@@ -54,6 +54,7 @@
  *  NEIGH_DEBUG
  */
 
+// #define MIRRORSERVER_DEBUG
 // #define HTACCESS_DEBUG
 
 /* #undef DEBUG_LEVEL */

@@ -5,7 +5,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.50 1998/01/16 02:02:25 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.51 1998/01/17 02:57:22 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -87,77 +87,6 @@ object open_db(string id)
   return dbs[id]=db[id];
 }
 
-string popen(string s, void|mapping env, int|void uid, int|void gid)
-{
-  object p,p2;
-
-  p2 = file();
-  p=p2->pipe();
-  if(!p) error("Popen failed. (couldn't create pipe)\n");
-
-  p2->set_close_on_exec(1);	// Paranoia.
-
-#if constant(Process.create_process)
-
-  object privs;
-  if (uid || gid) {
-    privs = Privs("Executing script as non-www user", uid, gid);
-  }
-  mapping opts = ([
-    "toggle_uid":1,
-    "env": env || getenv(),
-    "stdout":p
-  ]);
-  object proc;
-  proc = Process.create_process(({ "/bin/sh", "-c", s }), opts);
-
-  privs = 0;
-  if (proc) {
-    p->close();
-    destruct(p);
-    string t = p2->read(0x7fffffff);
-    p2->close();
-    destruct(p2);
-    return t;
-  }
-  return 0;
-  
-#else /* !constant(Process.create_process) */
-  if(!fork())
-  {
-    array (int) olduid = ({ -1, -1 });
-    catch {
-      if(p->query_fd() < 0)
-      {
-	perror("File to dup2 to closed!\n");
-	exit(99);
-      }
-      p->dup2(file("stdout"));
-      p->close();
-      if(uid || gid)
-      {
-	object privs = Privs("Executing script as non-www user");
-	olduid = ({ uid, gid });
-	setgid(olduid[1]);
-	setuid(olduid[0]);
-#if efun(initgroups)
-	array pw = getpwuid((int)uid);
-	if(pw) initgroups(pw[0], (int)olduid[0]);
-#endif
-      }
-      catch(exece("/bin/sh", ({ "-c", s }), (env||getenv())));
-    };
-    exit(69);
-  }else{
-    string t;
-    destruct(p);
-    t=p2->read(0x7fffffff);
-    destruct(p2);
-    return t;
-  }
-#endif /* constant(Process.create_process) */
-}
-
 
 mapping make_mapping(string *f)
 {
@@ -171,117 +100,6 @@ mapping make_mapping(string *f)
   return foo;
 }
 
-int low_spawne(string s,string *args, mapping|array env, object stdin, 
-	   object stdout, object stderr, void|string wd)
-{
-  object p;
-  int pid;
-  string t;
-
-  if(arrayp(env))
-    env = make_mapping(env);
-  if(!mappingp(env)) 
-    env=([]);
-  
-  
-  stdin->dup2(file("stdin"));
-  stdout->dup2(file("stdout"));
-  stderr->dup2(file("stderr"));
-  if(stringp(wd) && sizeof(wd))
-    cd(wd);
-  exece(s, args, env);
-  perror(sprintf("Spawne: Failed to exece %s\n", s));
-  exit(99);
-}
-
-int spawne(string s,string *args, mapping|array env, object stdin, 
-	   object stdout, object stderr, void|string wd, void|array (int) uid)
-{
-  int pid, *olduid = allocate(2, "int");
-  object privs;
-
-#if constant(Process.create_process)
-  if (arrayp(uid) && (sizeof(uid) == 2)) {
-    privs = Privs("Executing program as non-www user (outside roxen)", @uid);
-  }
-  object proc = Process.create_process(({ s }) + (args || ({})), ([
-    "toggle_uid":1,
-    "stdin":stdin,
-    "stdout":stdout,
-    "stderr":stderr,
-    "cwd":wd,
-    "env":env
-  ]));
-
-  privs = 0;
-
-  if (proc) {
-    return(proc->pid());
-  }
-  return(-1);
-
-#else /* !constant(Process.create_process) */
-  if(pid=fork()) return pid;
-
-  if(arrayp(uid) && sizeof(uid) == 2)
-  {
-    privs = Privs("Executing program as non-www user (outside roxen)");
-    setgid(uid[1]);
-    setuid(uid[0]);
-  } 
-  catch(low_spawne(s, args, env, stdin, stdout, stderr, wd));
-  exit(99); 
-#endif /* constant(Process.create_process) */
-}
-
-int spawn_pike(array(string) args, void|string wd, object|void stdin,
-	       object|void stdout, object|void stderr)
-{
-  int pid;
-  string cwd = getcwd();
-  string pikebin = combine_path(cwd, "bin/pike");
-  string mast = new_master->_master_file_name ||
-    combine_path(cwd,"../pike/src/lib/master.pike");
-  array preargs = ({ });
-
-  if (file_stat(mast))
-    preargs += ({ "-m", mast });
-  foreach(new_master->pike_include_path, string s)
-    preargs += ({ "-I"+s });
-  foreach(new_master->pike_module_path, string s)
-    preargs += ({ "-M"+s });
-  foreach(new_master->pike_program_path, string s)
-    preargs += ({ "-P"+s });
-
-#if constant(Process.create_process)
-  object proc = Process.create_process(({ pikebin }) + preargs + args, ([
-    "toggle_uid":1,
-    "stdin":stdin,
-    "stdout":stdout,
-    "stderr":stderr,
-    "cwd":wd,
-    "env":getenv()
-  ]));
-
-  if (proc) {
-    return(proc->pid());
-  }
-  return -1;
-
-#else /* !constant(Process.create_process) */
-  if ((pid = fork()) == 0) {
-    stdin && stdin->dup2(file("stdin"));
-    stdout && stdout->dup2(file("stdout"));
-    stderr && stderr->dup2(file("stderr"));
-    if(wd)
-      cd(wd);
-    exece(pikebin, preargs+args, getenv());
-    perror(sprintf("Spawn_pike: Failed to exece %s\n", pikebin));
-    exit(-1);
-  }
-  return pid;
-#endif /* constant(Process.create_process) */
-}
 
 
 object roxen;
@@ -429,6 +247,220 @@ void report_fatal(string message)
     nwrite(message,0,3);
 }
  
+string popen(string s, void|mapping env, int|void uid, int|void gid)
+{
+  object p,p2;
+
+  p2 = file();
+  p=p2->pipe();
+  if(!p) error("Popen failed. (couldn't create pipe)\n");
+
+  p2->set_close_on_exec(1);	// Paranoia.
+
+#if constant(Process.create_process)
+
+  object privs;
+  if (uid || gid) {
+    privs = Privs("Executing script as non-www user", uid, gid);
+  }
+  mapping opts = ([
+    "toggle_uid":1,
+    "env": env || getenv(),
+    "stdout":p
+  ]);
+
+#ifdef MODULE_DEBUG
+  report_debug(sprintf("POPEN: Creating process( %O, %O)...\n",
+		       ({ "/bin/sh", "-c", s }), opts));
+#endif /* MODULE_DEBUG */
+  object proc;
+  proc = Process.create_process(({ "/bin/sh", "-c", s }), opts);
+
+  privs = 0;
+  if (proc) {
+    p->close();
+    destruct(p);
+    string t = p2->read(0x7fffffff);
+    p2->close();
+    destruct(p2);
+    return t;
+  }
+  return 0;
+  
+#else /* !constant(Process.create_process) */
+  if(!fork())
+  {
+    array (int) olduid = ({ -1, -1 });
+    catch {
+      if(p->query_fd() < 0)
+      {
+	perror("File to dup2 to closed!\n");
+	exit(99);
+      }
+      p->dup2(file("stdout"));
+      p->close();
+      if(uid || gid)
+      {
+	object privs = Privs("Executing script as non-www user");
+	olduid = ({ uid, gid });
+	setgid(olduid[1]);
+	setuid(olduid[0]);
+#if efun(initgroups)
+	array pw = getpwuid((int)uid);
+	if(pw) initgroups(pw[0], (int)olduid[0]);
+#endif
+      }
+      catch(exece("/bin/sh", ({ "-c", s }), (env||getenv())));
+    };
+    exit(69);
+  }else{
+    string t;
+    destruct(p);
+    t=p2->read(0x7fffffff);
+    destruct(p2);
+    return t;
+  }
+#endif /* constant(Process.create_process) */
+}
+
+int low_spawne(string s,string *args, mapping|array env, object stdin, 
+	   object stdout, object stderr, void|string wd)
+{
+  object p;
+  int pid;
+  string t;
+
+  if(arrayp(env))
+    env = make_mapping(env);
+  if(!mappingp(env)) 
+    env=([]);
+  
+  
+  stdin->dup2(file("stdin"));
+  stdout->dup2(file("stdout"));
+  stderr->dup2(file("stderr"));
+  if(stringp(wd) && sizeof(wd))
+    cd(wd);
+  exece(s, args, env);
+  perror(sprintf("Spawne: Failed to exece %s\n", s));
+  exit(99);
+}
+
+int spawne(string s,string *args, mapping|array env, object stdin, 
+	   object stdout, object stderr, void|string wd, void|array (int) uid)
+{
+  int pid, *olduid = allocate(2, "int");
+  object privs;
+
+#if constant(Process.create_process)
+  if (arrayp(uid) && (sizeof(uid) == 2)) {
+    privs = Privs("Executing program as non-www user (outside roxen)", @uid);
+  }
+
+#ifdef MODULE_DEBUG
+  report_debug(sprintf("SPAWNE: Creating process( %O, %O)...\n",
+		       ({ s }) + (args || ({})), ([
+			 "toggle_uid":1,
+			 "stdin":stdin,
+			 "stdout":stdout,
+			 "stderr":stderr,
+			 "cwd":wd,
+			 "env":env
+		       ])));
+#endif /* MODULE_DEBUG */
+
+  object proc = Process.create_process(({ s }) + (args || ({})), ([
+    "toggle_uid":1,
+    "stdin":stdin,
+    "stdout":stdout,
+    "stderr":stderr,
+    "cwd":wd,
+    "env":env
+  ]));
+
+  privs = 0;
+
+  if (proc) {
+    return(proc->pid());
+  }
+  return(-1);
+
+#else /* !constant(Process.create_process) */
+  if(pid=fork()) return pid;
+
+  if(arrayp(uid) && sizeof(uid) == 2)
+  {
+    privs = Privs("Executing program as non-www user (outside roxen)");
+    setgid(uid[1]);
+    setuid(uid[0]);
+  } 
+  catch(low_spawne(s, args, env, stdin, stdout, stderr, wd));
+  exit(99); 
+#endif /* constant(Process.create_process) */
+}
+
+int spawn_pike(array(string) args, void|string wd, object|void stdin,
+	       object|void stdout, object|void stderr)
+{
+  int pid;
+  string cwd = getcwd();
+  string pikebin = combine_path(cwd, "bin/pike");
+  string mast = new_master->_master_file_name ||
+    combine_path(cwd,"../pike/src/lib/master.pike");
+  array preargs = ({ });
+
+  if (file_stat(mast))
+    preargs += ({ "-m", mast });
+  foreach(new_master->pike_include_path, string s)
+    preargs += ({ "-I"+s });
+  foreach(new_master->pike_module_path, string s)
+    preargs += ({ "-M"+s });
+  foreach(new_master->pike_program_path, string s)
+    preargs += ({ "-P"+s });
+
+#if constant(Process.create_process)
+
+#ifdef MODULE_DEBUG
+  report_debug(sprintf("SPAWN_PIKE: Creating process( %O, %O)...\n",
+		       ({ pikebin }) + preargs + args, ([
+			 "toggle_uid":1,
+			 "stdin":stdin,
+			 "stdout":stdout,
+			 "stderr":stderr,
+			 "cwd":wd,
+			 "env":getenv()
+		       ])));
+#endif /* MODULE_DEBUG */
+
+  object proc = Process.create_process(({ pikebin }) + preargs + args, ([
+    "toggle_uid":1,
+    "stdin":stdin,
+    "stdout":stdout,
+    "stderr":stderr,
+    "cwd":wd,
+    "env":getenv()
+  ]));
+
+  if (proc) {
+    return(proc->pid());
+  }
+  return -1;
+
+#else /* !constant(Process.create_process) */
+  if ((pid = fork()) == 0) {
+    stdin && stdin->dup2(file("stdin"));
+    stdout && stdout->dup2(file("stdout"));
+    stderr && stderr->dup2(file("stderr"));
+    if(wd)
+      cd(wd);
+    exece(pikebin, preargs+args, getenv());
+    perror(sprintf("Spawn_pike: Failed to exece %s\n", pikebin));
+    exit(-1);
+  }
+  return pid;
+#endif /* constant(Process.create_process) */
+}
+
 
 
 static private void initiate_cache()

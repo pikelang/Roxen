@@ -1,6 +1,6 @@
 // The Tab lists tag module.
 // Developed by Fredrik Noring <noring@infovav.se>, ask him for more info
-string cvs_version = "$Id: tablist.pike,v 1.9 1997/09/18 22:24:40 grubba Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.10 1998/01/17 02:57:25 grubba Exp $";
 #include <module.h>
 
 inherit "module";
@@ -9,7 +9,7 @@ inherit "roxenlib";
 import Array;
 import Image;
 
-constant Image = image;
+//constant Image = image;
 constant Font = font;
 
 #define DEFAULT_FONT "32/urw_itc_avant_garde-demi-r"

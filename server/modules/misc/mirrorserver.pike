@@ -6,7 +6,7 @@ constant Privs=((program)"privs");
 #endif /* !constant(Privs) */
 
 #ifndef MIRRORSERVER_DEBUG
-//#define MIRRORSERVER_DEBUG
+#define MIRRORSERVER_DEBUG
 #endif /* MIRRORSERVER_DEBUG */
 
 class MirrorServer {

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.156 1998/01/16 21:23:14 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.157 1998/01/17 02:57:19 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2173,7 +2173,8 @@ void start_shuffler_threads()
   } else {
 //  perror("Starting "+QUERY(numshufflethreads)+" threads to shuffle data.\n");
   }
-  for(int i = number_of_shuffler_threads; i < QUERY(numshufflethreads); i++) {
+  int i;
+  for(i = number_of_shuffler_threads; i < QUERY(numshufflethreads); i++) {
     thread_create( shuffle_thread, i );
   }
   number_of_shuffler_threads = i;

@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.42 1998/01/14 15:22:51 grubba Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.43 1998/01/17 02:57:21 grubba Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -122,8 +122,9 @@ static mapping build_env_vars(string f, object id, string path_info)
     new["REMOTE_HOST"]=roxen->quick_ip_to_host(addr);
 
   catch {
-    if(id->my_fd)
-      new["REMOTE_PORT"]=ipaddr(id->my_fd->query_address(),1);
+    if(id->my_fd) {
+      new["REMOTE_PORT"] = ipaddr(id->my_fd->query_address(), 1);
+    }
   };
     
   new["HTTP_USER_AGENT"] = id->client*" "; 
