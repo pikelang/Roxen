@@ -18,8 +18,10 @@ string parse( RequestID id )
 {
   string docs = "";
   function exists =
-     values(id->conf->modules["config_filesystem"]->copies)[0]->stat_file;
+     id->conf->find_module( "config_filesystem#0" )->stat_file;
 
+  docs += "<a href='whatsnew.html'>"+_(0,"Release notes")+"</a>";
+  
   foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
   {
   if( exists(  rpath + "creator/index.html" ) )
