@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.18 1998/03/29 02:30:54 neotron Exp $
+ * $Id: smartpipe.pike,v 1.19 1998/03/29 02:32:33 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -31,7 +31,7 @@ void check_for_closing()
 #ifdef FD_DEBUG
     write("Detected closed FD. Self-Destructing.\n");
 #endif
-    finis();
+    finish();
   } else
     call_out(check_for_closing, 10);
 }
