@@ -1,7 +1,17 @@
+
 Changes since Roxen Challenger 1.2.35 Yellow
 -----------------------------------------------
 
+o Diabled some modules that won't compile.
 
+o Pike is now by default compiled without debug. To enable debug
+  configure --with-debug.
+
+o Some SSI updates.
+
+o <expire-time> now supports the argument "now".
+
+o Updated Pike 0.6
 
 Changes since Roxen Challenger 1.2.34 Yellow
 -----------------------------------------------
