@@ -61,7 +61,14 @@ string|mapping parse( RequestID id )
     id->misc->new_configuration = c;
 
     master()->clear_compilation_failures();
-    object b = ((program)id->variables->site_template)( );
+
+    object b;
+    if (file_stat("../local/"+id->variables->site_template)) {
+      b = ((program)("../local/"+id->variables->site_template))();
+    } else {
+      b = ((program)id->variables->site_template)();
+    }
+    
     string q = b->parse( id );
     if( !stringp( q ) ) 
       return q;
@@ -85,12 +92,15 @@ string|mapping parse( RequestID id )
 		           (get_dir( "../local/"+SITE_TEMPLATES )||({}))),
 	   string st )
   {
+    werror("Trying %s...\n", st);
     st = SITE_TEMPLATES+st;
-    catch
-    {
+    mixed err = catch {
       object q;
-      if( catch( q = ((program)("../local/"+st))( ) ) )
+      if (file_stat("../local/"+st)) {
+	q = ((program)("../local/"+st))();
+      } else {
 	q = ((program)st)();
+      }
       if( q->site_template )
       {
         string name, doc;
@@ -115,6 +125,11 @@ string|mapping parse( RequestID id )
                     "<blockquote>"+doc+"</blockquote>" })});
       }
     };
+    if (err) {
+      report_error(sprintf("Template %O failed:\n"
+			   "%s\n",
+			   st, describe_backtrace(err)));
+    }
   }
 
   sort( sts );
