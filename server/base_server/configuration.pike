@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.509 2002/04/15 08:29:23 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.510 2002/04/15 16:29:53 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2456,6 +2456,7 @@ void save(int|void all)
     start(2);
   }
 
+  store( "EnabledModules", enabled_modules, 1, this_object());
   foreach(indices(modules), string modname)
   {
     foreach(indices(modules[modname]->copies), int i)
