@@ -1,0 +1,211 @@
+# $Id: vanilla,v 1.1 1999/09/23 23:40:03 nilsson Exp $
+# name="Vanilla extension database";
+# doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
+#
+
+# This file provides the most commonly used extensions.
+
+
+# IANA registered media types (www.iana.org)
+
+
+aif	audio/x-aiff
+aifc	audio/x-aiff
+aiff	audio/x-aiff
+au	audio/basic
+m3u	audio/x-mpegurl
+mid	audio/midi
+midi	audio/midi
+mod	audio/x-mod
+mp2	audio/x-mpeg
+mp3	audio/x-mpeg
+pls	audio/x-mpegurl
+ra	audio/x-pn-realaudio
+ram	audio/x-pn-realaudio
+sid	audio/x-psid
+snd	audio/basic
+vqf	audio/x-twinvq
+wav	audio/x-wav
+
+bmp	image/x-MS-bmp
+gif	image/gif
+iff	image/ilbm
+jpe	image/jpeg
+jpeg	image/jpeg
+jpg	image/jpeg
+pbm	image/x-portable-bitmap
+pcd	image/x-photo-cd
+pic	image/pict
+pict	image/pict
+png	image/png
+pnm	image/x-portable-anymap
+ppm	image/x-portable-pixmap
+rs	image/x-sun-raster
+tif	image/tiff
+tiff	image/tiff
+xbm	image/x-xbitmap
+xpm	image/x-xpixmap
+xwd	image/x-xwindowdump
+
+asf	video/x-ms-asf
+asx	video/x-ms-asf
+avi	video/x-msvideo
+fli	video/x-fli
+lsf	video/x-ms-asf
+lsx	video/x-ms-asx
+mov	video/quicktime
+movie	video/x-sgi-movie
+mpeg	video/mpeg
+mpg	video/mpeg
+qt	video/quicktime
+viv	video/vnd.vivo
+vivo	video/vnd.vivo
+
+bat	text/plain
+c	text/x-c-code
+cc	text/x-c++-code
+cpp	text/x-c++-code
+css	text/css
+h	text/x-include-file
+htm	text/html
+html	text/html
+java	text/plain
+rtf	text/rtf
+rtx	text/richtext
+rxml	text/roxencode
+sgm	text/x-sgml
+sgml	text/x-sgml
+shtml	text/html
+spider	text/spidercode
+spml	text/spinnercode
+text	text/plain
+tsv	text/tab-separated-values
+txt	text/plain
+vcf	text/x-vcard
+vcs	text/x-vcal
+xml	text/xml
+
+adr	application/x-msaddr
+ai	application/postscript
+arj	application/octet-stream
+bin	application/octet-stream
+cert	application/x-x509-ca-cert
+cer	application/x-x509-ca-cert
+cdf	application/x-netcdf
+cdr	application/x-coreldraw
+class	application/x-java-vm
+com	application/octet-stream
+crl	application/x-pkcs7-crl
+crt	application/x-x509-ca-cert
+csm	application/x-cu-seeme
+cu	application/x-cu-seeme
+der	application/x-x509-ca-cert
+dll	application/octet-stream
+doc	application/msword
+dot	application/msword
+drv	application/octet-stream
+eps	application/postscript
+exe	application/octet-stream
+gtar	application/x-gtar
+hpf	application/x-icq
+hqx	application/mac-binhex40
+jar	application/x-java-archive
+js	application/x-javascript
+jsc	application/x-javascript-config
+latex	application/x-latex
+lha	application/lha
+lzh	application/lha
+man	application/x-troff-man
+mdb	application/vnd.ms-access
+me	application/x-troff-me
+ms	application/x-troff-ms
+p7c	application/x-pkcs7-mime
+p7m	application/x-pkcs7-mime
+p7s	application/x-pkcs7-signature
+pdf	application/pdf
+pfr	application/font-tdpfr
+pics	application/pics-service
+pl	application/x-perl
+ppt	application/vnd.ms-powerpoint
+ps	application/postscript
+quake	application/x-qplug-plugin
+rm	application/vnd.rn-realmedia
+roff	application/x-troff
+scm	application/x-icq
+sh	application/x-sh
+shar	application/x-shar
+sit	application/x-stuffit
+so	application/octet-stream
+spl	application/futuresplash
+src	application/x-wais-source
+ssm	application/streamingmedia
+swf	application/x-shockwave-flash
+t	application/x-troff
+tar	application/unix-tar
+tcl	application/x-tcl
+tex	application/x-tex
+texi	application/x-texinfo
+texinfo	application/x-texinfo
+tgz	application/unix-tar	x-gzip
+tr	application/x-troff
+txi	application/x-texinfo
+uin	application/x-icq
+user	application/x-x509-user-cert
+usr	application/x-x509-user-cert
+vbd	application/activexdocument
+wlt	application/x-mswallet
+xls	application/vnd.ms-excel
+zip	application/zip
+
+
+# WML - Wireless Markup Language (1.2)
+
+# http://www1.wapforum.org/what/technical/PROP-WML-19990815.pdf
+# WML source
+wml	text/vnd.wap.wml
+# Compiled WML
+wmlc	application/vnd.wap.wmlc
+
+# http://www1.wapforum.org/what/technical/PROP-WBXML-19990815.pdf
+wbxml	application/vnd.wap.wbxml
+
+# http://www1.wapforum.org/what/technical/PROP-WMLScript-19990815.pdf
+# WMLScript source
+wmls	text/vnd.wap.wmlscript
+# Compiled WMLScript
+wmlsc	application/vnd.wap.wmlscriptc
+
+# http://www1.wapforum.org/what/technical/PROP-WAESpec-19990815.pdf
+# WAP image
+wbmp	image/vnd.wap.wbmp
+
+
+# This one hasn't been registred with IANA yet, but is added anyway.
+# LivePicture PhotoVista RealSpace
+ivr	i-world/i-vrml
+
+vrml	model/vrml
+wrl	model/vrml
+wrml	model/vrml
+
+# Windows Write
+wri	application/x-write
+
+# MacroMedia Director (http://www.macromedia.com/)
+dcr	application/x-director
+dir	application/x-director
+dxr	application/x-director
+swa	application/x-director
+
+
+# Certificate Authority Certificate (recognized at least by Netscape)
+ca_cert application/x-x509-ca-cert
+
+# This is supposed to be just 'gzip' and 'compress', but Netscape
+# barfs.. Fixed in Netscape 3.*, but quite a lot of people still run 2.*
+Z	STRIP			x-compress
+gz	STRIP			x-gzip
+bz	STRIP			x-bzip
+
+uu	STRIP			uuencode
+b64	STRIP			base64
