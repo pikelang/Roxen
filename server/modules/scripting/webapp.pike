@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.12 2002/03/18 13:52:39 tomas Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.13 2002/04/09 09:56:17 jonasw Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -932,8 +932,21 @@ class ServletChainingWrapper
   }
 }
 
+
+#if constant(thread_create)
+//  Servlet loading mutex
+Thread.Mutex load_mutex = Thread.Mutex();
+#endif
+
+
 int load_servlet(mapping(string:string|mapping|Servlet.servlet) servlet)
 {
+#if constant(thread_create)
+  //  Serialize initializations so concurrent threads won't init the same
+  //  servlet several times.
+  Thread.MutexKey key = load_mutex->lock();
+#endif
+  
   string classname = servlet["servlet-class"];
 
   if (!servlet->loaded)
