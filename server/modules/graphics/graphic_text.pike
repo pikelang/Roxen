@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.97 1998/01/26 08:22:08 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.98 1998/02/02 09:40:43 jens Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1394,7 +1394,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   return (pre+(lp?lp:"")
 	  + "<img _parsed=1 border=0 alt=\""
-	  + (arg->alt?arg->alt:replace(gt,"\"","'")+"\"")
+	  + (arg->alt?arg->alt:replace(gt,"\"","'"))
 	  + "\" src=\""
 	  + query_location()+num+"/"+quote(gt)+gif+"\" "+ea
 	  + " align="+(al || defalign)
