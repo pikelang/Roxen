@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.20 1998/03/11 19:42:39 neotron Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.21 1998/03/26 07:51:48 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -1149,9 +1149,7 @@ void start()
   } else if(QUERY(logfile) == "stderr") {
     logfile=stderr;
   } else {
-    if(logfile=open(QUERY(logfile), "wac"))
-      mark_fd(logfile->query_fd(),"FTP gateway logfile ("+QUERY(logfile)+")")
-	;
+    logfile=open(QUERY(logfile), "wac");
   }
 }
 

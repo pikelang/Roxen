@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.29 1998/03/11 19:42:40 neotron Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.30 1998/03/26 07:51:50 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -77,9 +77,7 @@ void start()
   } else if(QUERY(logfile) == "stderr") {
     logfile=stderr;
   } else {
-    if(logfile=open(QUERY(logfile), "wac"))
-      mark_fd(logfile->query_fd(),"Proxy logfile ("+QUERY(logfile)+")")
-	;
+    logfile=open(QUERY(logfile), "wac");
   }
 }
 

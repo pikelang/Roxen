@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.112 1998/03/23 08:20:54 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.113 1998/03/26 07:51:40 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -601,7 +601,6 @@ void init_log_file()
 	    break;
 	  }
 	}
-	mark_fd(lf->query_fd(), "Roxen log file ("+logfile+")");
 	log_function=lf->write;	
 	// Function pointer, speeds everything up (a little..).
 	lf=0;

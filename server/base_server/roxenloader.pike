@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.64 1998/03/26 07:20:39 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.65 1998/03/26 07:51:44 per Exp $";
 
 #define perror roxen_perror
 
@@ -607,7 +607,7 @@ void load_roxen()
   nwrite = roxen->nwrite;
 }
 
-#ifdef DEBUG
+#ifdef FD_DEBUG
 class mf
 {
   inherit Stdio.File;

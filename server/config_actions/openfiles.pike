@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.2 1998/03/26 07:22:04 per Exp $
+ * $Id: openfiles.pike,v 1.3 1998/03/26 07:51:46 per Exp $
  */
 
 inherit "wizard";
@@ -39,17 +39,23 @@ string page_0()
   return
     ("<h1>Active filedescriptors</h1>\n"+
      "<br clear=left><hr>\n"+
-     "<table width=100% cellspacing=0 cellpadding=0>\n"+
+     "<table width=100% cellspacing=0 cellpadding=3>\n"+
      "<tr align=right><td>fd</td><td>type</td><td>mode</td>"+
      "<td>size</td><td>inode</td></tr>\n"+
      (Array.map(get_all_active_fd(),
 	  lambda(int fd) 
 	  {
+	    string fdc = 
+#ifdef FD_DEBUG
+	      mark_fd(fd)||"?";
+#else
+	    "";
+#endif
 	    return ("<tr align=right><th>"+fd+"</th><td>"+
  		    replace(checkfd_fix_line(fd_info(fd)),",",
 			    "</td><td>")
 		    +"</td><td align=left>"
-		    +(mark_fd(fd)||"?")+"<br></td></tr>"); 
+		    +(fdc)+"<br></td></tr>"); 
 	  })*"\n")+
      "</table>");
 }

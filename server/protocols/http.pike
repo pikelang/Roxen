@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.70 1998/03/26 07:31:02 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.71 1998/03/26 07:51:52 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -17,6 +17,12 @@ private inherit "roxenlib";
 
 #ifdef PROFILE
 int req_time = HRTIME();
+#endif
+
+#ifdef FD_DEBUG
+#define MARK_FD(X) catch(mark_fd(my_fd->query_fd(), (X)+" "+remoteaddr))
+#else
+#define MARK_FD(X)
 #endif
 
 constant decode=roxen->decode;
@@ -567,9 +573,7 @@ void disconnect()
   if(do_not_disconnect) {
     return;
   }
-#ifdef FD_DEBUG
-  mark_fd(my_fd->query_fd(), "HTTP disconnected");
-#endif
+  MARK_FD("my_fd in HTTP disconnected?");
   destruct();
 }
 
@@ -601,9 +605,7 @@ void end(string|void s, int|void keepit)
     o->supports = supports;
     o->host = host;
     o->client = client;
-#ifdef FD_DEBUG
-    mark_fd(my_fd->query_fd(), "HTTP kept alive");
-#endif
+    MARK_FD("HTTP kept alive");
     object fd = my_fd;
     my_fd=0;
     if(s) leftovers += s;
@@ -615,13 +617,11 @@ void end(string|void s, int|void keepit)
 
   if(objectp(my_fd))
   {
-#ifdef FD_DEBUG
-    mark_fd(my_fd->query_fd(), "HTTP closed");
-#endif
+    MARK_FD("HTTP closed");
     catch {
       my_fd->set_close_callback(0);
       my_fd->set_read_callback(0);
-//       my_fd->set_blocking();
+      my_fd->set_blocking();
       if(s) my_fd->write(s);
       my_fd->close();
       destruct(my_fd);
@@ -636,9 +636,7 @@ static void do_timeout(mapping foo)
   int elapsed = _time()-time;
   if(elapsed >= 30)
   {
-#ifdef FD_DEBUG
-    mark_fd(my_fd->query_fd(), "HTTP timeout");
-#endif
+    MARK_FD("HTTP timeout");
     end("HTTP/1.0 408 Timeout\r\n"
 	"Content-type: text/plain\r\n"
 	"Server: Roxen Challenger\r\n"
@@ -648,9 +646,7 @@ static void do_timeout(mapping foo)
   } else {
     // premature call_out... *¤#!"
     call_out(do_timeout, 10);
-#ifdef FD_DEBUG
-    mark_fd(my_fd->query_fd(), "HTTP premature timeout");
-#endif
+    MARK_FD("HTTP premature timeout");
   }
 }
 
@@ -702,7 +698,7 @@ array add_id(array from)
   foreach(from[1], array q)
   catch {
     int id;
-    if(sscanf(Stdio.read_bytes(q[0]), "%*s$Id: http.pike,v 1.70 1998/03/26 07:31:02 neotron Exp $", id) == 4)
+    if(sscanf(Stdio.read_bytes(q[0]), "%*s$"+"Id: %*s,v %[^ ] ", id) == 2)
       q[0] += "  ("+id+")";
   };
   return from;
@@ -779,9 +775,7 @@ constant errors =
 
 void do_log()
 {
-#ifdef FD_DEBUG
-  mark_fd(my_fd->query_fd(), "HTTP logging");
-#endif
+  MARK_FD("HTTP logging"); // fd can be closed here
   if(conf)
   {
     int len;
@@ -806,9 +800,7 @@ void handle_request( )
   object thiso=this_object();
 
   remove_call_out(do_timeout);
-#ifdef FD_DEBUG
-  mark_fd(my_fd->query_fd(), "HTTP handling request");
-#endif
+  MARK_FD("HTTP handling request");
 
   if(conf)
   {
@@ -943,9 +935,7 @@ void handle_request( )
     file->file = 0;
     file->data="";
   }
-#ifdef FD_DEBUG
-  mark_fd(my_fd->query_fd(), "HTTP handled");
-#endif
+MARK_FD("HTTP handled");
 
 
 #ifdef KEEP_ALIVE
@@ -971,15 +961,13 @@ void handle_request( )
   } else
     file->len = 1; // Keep those alive, please...
   if (pipe) {
+    MARK_FD("HTTP really handled, piping");
     pipe->set_done_callback( do_log );
     pipe->output(my_fd);
   } else {
-    my_fd->close();
+    MARK_FD("HTTP really handled, pipe done");
     do_log();
   }
-#ifdef FD_DEBUG
-  mark_fd(my_fd->query_fd(), "HTTP really handled");
-#endif
 }
 
 /* We got some data on a socket.
@@ -989,9 +977,7 @@ int processed;
 void got_data(mixed fooid, string s)
 {
   int tmp;
-#ifdef FD_DEBUG
-  mark_fd(my_fd->query_fd(), "HTTP got data");
-#endif
+  MARK_FD("HTTP got data");
   remove_call_out(do_timeout);
   call_out(do_timeout, 30); // Close down if we don't get more data 
                          // within 30 seconds. Should be more than enough.
@@ -1100,13 +1086,9 @@ object clone_me()
 void clean()
 {
   if(!(my_fd && objectp(my_fd)))
-  {
     end();
-#ifdef FD_DEBUG
-    mark_fd(my_fd->query_fd(), "HTTP clean up");
-#endif
-  }  
-  else if((_time(1) - time) > 4800) end();
+  else if((_time(1) - time) > 4800) 
+    end();
 }
 
 void create(object f, object c)
@@ -1115,7 +1097,7 @@ void create(object f, object c)
   {
     my_fd = f;
     conf = c;
-    mark_fd(my_fd->query_fd(), "HTTP connection");
+    MARK_FD("HTTP connection");
     my_fd->set_close_callback(end);
     my_fd->set_read_callback(got_data);
     // No need to wait more than 30 seconds to get more data.
@@ -1142,6 +1124,7 @@ void chain(object f, object c, string le)
     if(!processed) {
       f->set_close_callback(end);
       f->set_read_callback(got_data);
+      f->write("");
     }
   }
 }

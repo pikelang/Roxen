@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.87 1998/03/23 19:30:19 grubba Exp $
+ * $Id: ftp.pike,v 1.88 1998/03/26 07:51:51 per Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -791,9 +791,10 @@ void pasv_accept_callback(mixed id)
       // the corresponding control connection to port L.
       // RFC 1123 4.1.2.12
       array(string) remote = (fd->query_address()||"? ?")/" ";
+#ifdef FD_DEBUG
       mark_fd(fd->query_fd(),
 	      "ftp communication: -> "+remote[0]+":"+remote[1]);
-
+#endif
       if(pasv_callback) {
 	pasv_callback(fd, pasv_arg);
 	pasv_callback = 0;
@@ -829,7 +830,9 @@ void done_callback(object fd)
   cmd_fd->set_read_callback(got_data);
   cmd_fd->set_write_callback(lambda(){});
   cmd_fd->set_close_callback(end);
+#ifdef FD_DEBUG
   mark_fd(cmd_fd->query_fd(), GRUK+" cmd channel not sending data");
+#endif
 }
 
 void connected_to_send(object fd,mapping file)
@@ -928,9 +931,11 @@ void ftp_async_connect(function(object,mixed:void) fun, mixed arg)
     args[0](0, @args[1]);
   });
 
+#ifdef FD_DEBUG
   mark_fd(f->query_fd(), "ftp communication: " + local_addr + ":" +
 	  (controlport_port - 1) + " -> " +
 	  dataport_addr + ":" + dataport_port);
+#endif
 
   if(catch(f->connect(dataport_addr, dataport_port)))
   {

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.177 1998/03/26 07:21:51 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.178 1998/03/26 07:51:42 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -172,7 +172,7 @@ private static void accept_callback( object port )
 	return;
       }
     }
-#ifdef SOCKET_DEBUG
+#ifdef FD_DEBUG
     mark_fd( file->query_fd(), "Connection from "+file->query_address());
 #endif
     pn[-1](file,pn[1]);
@@ -708,7 +708,9 @@ private void restore_current_user_id_number()
   current_user_id_file_last_mod = current_user_id_file->stat()[2];
   perror("Restoring unique user ID information. (" + current_user_id_number 
 	 + ")\n");
+#ifdef FD_DEBUG
   mark_fd(current_user_id_file->query_fd(), "Unique user ID logfile.\n");
+#endif
 }
 
 
@@ -2257,10 +2259,11 @@ int main(int|void argc, array (string)|void argv)
 
   report_notice("Starting roxen\n");
   
-  
+#ifdef FD_DEBUG  
   mark_fd(0, "Stdin");
   mark_fd(1, "Stdout");
   mark_fd(2, "Stderr");
+#endif
 
   configuration_dir =
     find_arg(argv, "d",({"config-dir","configuration-directory" }),

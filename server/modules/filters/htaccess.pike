@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.31 1998/03/11 19:42:37 neotron Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.32 1998/03/26 07:51:47 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -435,7 +435,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
     return 0;
   }
 
-#ifdef DEBUG
+#ifdef FD_DEBUG
   mark_fd(f->query_fd(), ".htaccess groupfile ("+groupfile+")\n");
 #endif
   s = (int *)f->stat();
@@ -675,7 +675,7 @@ array rec_find_htaccess_file(object id, string vpath)
     if((st = file_stat(path + query("file"))) && (st[1] != -4) &&
        (f = open(path + query("file"), "r")))
     {
-#ifdef DEBUG
+#ifdef FD_DEBUG
       mark_fd(f->query_fd(), ".htaccess file in "+path);
 #endif
       cache_set_path_of_htaccess(vpath, path+ query("file"),id);

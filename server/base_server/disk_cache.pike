@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: disk_cache.pike,v 1.34 1998/02/10 18:36:02 per Exp $";
+// string cvs_version = "$Id: disk_cache.pike,v 1.35 1998/03/26 07:51:41 per Exp $";
 #include <module.h>
 #include <stat.h>
 
@@ -419,7 +419,7 @@ object new_cache_stream(object fp, string fn)
   object res;
   if(!QUERY(cache)) return 0;
   res=CacheStream (fp, fn, 1);
-#ifdef DEBUG
+#ifdef FD_DEBUG
   mark_fd(fp->query_fd(), "Cache stream to "+fn+"\n");
 #endif
   res->done_callback = default_check_cache_file;

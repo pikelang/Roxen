@@ -1,5 +1,5 @@
 // This code has to work both in 'roxen.pike' and all modules
-// string _cvs_version = "$Id: socket.pike,v 1.11 1998/02/10 18:36:11 per Exp $";
+// string _cvs_version = "$Id: socket.pike,v 1.12 1998/03/26 07:51:45 per Exp $";
 
 #if !efun(roxen)
 #define roxen roxenp()
@@ -55,9 +55,9 @@ private void got_host_name(string host, string oh, int port,
   }
   f->set_id( ({ callback, args, f }) );
   f->set_nonblocking(0, connected, failed);
-//#ifdef DEBUG
+#ifdef FD_DEBUG
   mark_fd(f->query_fd(), "async socket communication: -> "+host+":"+port);
-//#endif
+#endif
   if(catch(f->connect(host, port))) // Illegal format...
   {
 #ifdef SOCKET_DEBUG
