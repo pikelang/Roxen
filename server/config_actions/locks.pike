@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.2 1997/09/14 20:45:55 per Exp $
+ * $Id: locks.pike,v 1.3 1997/09/16 01:03:54 grubba Exp $
  */
 #include <config.h>
 
@@ -32,8 +32,12 @@ mixed page_0(object id, object mc)
 {
   mapping l = ([]), locks=([]), L=([]);
   foreach(roxen->configurations, object c) {
-    l += c->locked;
-    L += c->thread_safe;
+    if (c->locked) {
+      l += c->locked;
+    }
+    if (c->thread_safe) {
+      L += c->thread_safe;
+    }
   }
   mapping res=([]);
   string data=("<font size=+2>Module lock status</font><p>Accesses to all modules, "
