@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.20 2000/02/08 17:35:44 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.21 2000/02/08 22:13:52 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -221,12 +221,12 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
 
   //  Compute text and icon placement
   req_width = text_img->xsize() + left + right + i_width + i_spc;
-  
+
   if (args->wi && (req_width < args->wi))
     req_width = args->wi;
 
   int icn_x, txt_x;
-  
+
   switch (lower_case(args->al))
   {
   case "left":
