@@ -1,13 +1,12 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 // This module maintains an accessed database,
 // to be used by the <accessed> tag also provided
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.14 1999/12/07 12:11:32 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.15 2000/01/16 17:12:15 nilsson Exp $";
 constant thread_safe=1;
-
 constant language = roxen->language;
 
 #include <module.h>
@@ -18,14 +17,19 @@ inherit "roxenlib";
 int cnum=0;
 mapping fton=([]); // Holds the access database
 
-object database, names_file;
+Stdio.File database, names_file;
+
+constant module_type = MODULE_PARSER | MODULE_LOGGER;
+constant module_name = "Accessed counter";
+constant module_doc  ="This module provides an accessed counter, both through the &lt;accessed&gt; tag and "
+  "filewise.";
 
 string status()
 {
-  return (sizeof(fton)+" entries in the accessed database.<br>");
+  return sizeof(fton)+" entries in the accessed database.<br>";
 }
 
-void create(object c)
+void create(Configuration c)
 {
   defvar("Accesslog", 
 	 GLOBVAR(logdirprefix)+
@@ -186,7 +190,7 @@ inline mixed open_db_file()
   return key;
 }
 
-void start(int q, object c)
+void start(int q, Configuration c)
 {
   mixed tmp;
 
@@ -290,15 +294,7 @@ int query_num(string file, int count)
   return 0;
 }
 
-array register_module()
-{
-  return ({ MODULE_PARSER|MODULE_LOGGER, 
-	    "Accessed counter", 
-	    ("This module provides an accessed counter, both through the &lt;accessed&gt; tag and "
-             "filewise."), 0, 1 });
-}
-
-int log(object id, mapping file)
+int log(RequestID id, mapping file)
 {
   if(id->misc->accessed || query("extcount")==({})) {
     return 0;
@@ -315,7 +311,7 @@ int log(object id, mapping file)
   return 0;
 }
 
-string tag_accessed(string tag, mapping m, object id)
+string tag_accessed(string tag, mapping m, RequestID id)
 {
   int counts, n, prec, q, timep;
   string real, res;
@@ -355,7 +351,7 @@ string tag_accessed(string tag, mapping m, object id)
     } else {
       // On a web hotell you don't want the guests to be alowed to reset
       // eachothers counters.
-      return "You do not have access to reset this counter.";
+      return rxml_error(tag, "You do not have access to reset this counter.", id);
     }
   }
 
@@ -446,7 +442,7 @@ string tag_accessed(string tag, mapping m, object id)
   return res+(m->addreal?real:"");
 }                  
 
-int api_query_num(object id, string f, int|void i)
+int api_query_num(RequestID id, string f, int|void i)
 {
   NOCACHE();
   return query_num(f, i);

@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1999, Idonex AB.
+// This is a roxen module. Copyright © 1999-2000, Idonex AB.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.10 1999/12/08 19:27:09 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.11 2000/01/16 17:12:34 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -10,12 +10,9 @@ inherit "module";
 inherit "roxenlib";
 inherit "state";
 
-array(string|int) register_module()
-{
-  return ({ MODULE_PARSER, "Folding list tag",
-	    "Adds the &lt;foldlist&gt; tag. This makes it easy to build a folder list or an outline.",
-	    0,1 });
-}
+constant module_type = MODULE_PARSER;
+constant module_name = "Folding list tag";
+constant module_doc  = "Adds the &lt;foldlist&gt; tag. This makes it easy to build a folder list or an outline.";
 
 TAGDOCUMENTATION
 #ifdef manual
@@ -37,7 +34,7 @@ The tags used to build the lists elements are ft and fd.</desc>
 })]);
 #endif
 
-string encode_url(array states, object state, object id){
+string encode_url(array states, object state, RequestID id){
   string value="";
 
   foreach(states, int tmp) {
@@ -52,14 +49,14 @@ string encode_url(array states, object state, object id){
 }
 
 //It seams like the fold/unfold images are mixed up.
-private string tag_ft(string tag, mapping m, string cont, object id, object state, mapping fl) {
+private string tag_ft(string tag, mapping m, string cont, RequestID id, object state, mapping fl) {
     int index=fl->cnt++;
     array states=copy_value(fl->states);
     if((m->unfolded && states[index]==-1) ||
       states[index]==1) {
         fl->txt="";
         fl->states[index]=1;
-        id->misc->defines[" fl "]=fl->inh+(fl->cnt>10?":":"")+(string)fl->cnt;
+        id->misc->foldlist_id=fl->inh+(fl->cnt>10?":":"")+(string)fl->cnt;
         states[index]=0;
 	return "<dt><a target=\"_self\" href=\""+
 	       encode_url(states,state,id)+
@@ -67,11 +64,11 @@ private string tag_ft(string tag, mapping m, string cont, object id, object stat
                "src=\""+(m->unfoldedsrc||fl->ufsrc)+"\" border=\"0\" "
 	       "alt=\"-\" /></a>"+
                parse_html(cont,([]),(["fd":
-				      lambda(string tag, mapping m, string cont, object id) {
+				      lambda(string tag, mapping m, string cont) {
 					fl->txt+=parse_rxml(cont,id);
 					return "";
 				      }
-	       ]),id)+"</dt><dd>"+fl->txt+"</dd>";
+	       ]))+"</dt><dd>"+fl->txt+"</dd>";
     }
     fl->states[index]=0;
     states[index]=1;
@@ -82,12 +79,12 @@ private string tag_ft(string tag, mapping m, string cont, object id, object stat
 	   "alt=\"+\" /></a>"+parse_html(cont,([]),(["fd":""]))+"</dt>";
 }
 
-string container_foldlist(string tag, mapping m, string c, object id) {
+string container_foldlist(string tag, mapping m, string c, RequestID id) {
   array states;
   int fds=sizeof(lower_case(c)/"<fd")-1;
 
-  if(!id->misc->defines[" fl "])
-    id->misc->defines[" fl "]="";
+  if(!id->misc->foldlist_id)
+    id->misc->foldlist_id="";
 
   //Make an initial guess of what should be folded and what should not.
   if(m->unfolded)
@@ -98,7 +95,7 @@ string container_foldlist(string tag, mapping m, string c, object id) {
     states=allocate(fds,-1); //All unknown
 
   //Register ourselfs as state consumers and incorporate our initial state.
-  string fl_name = (m->name || "fl")+fds+(id->misc->defines[" fl "]!=""?":"+id->misc->defines[" fl "]:"");
+  string fl_name = (m->name || "fl")+fds+(id->misc->foldlist_id!=""?":"+id->misc->foldlist_id:"");
   object state=Page_state(id);
   string state_id = state->register_consumer(fl_name, id);
   string error="";
@@ -113,14 +110,14 @@ string container_foldlist(string tag, mapping m, string c, object id) {
 
   mapping fl=(["states":states,
                "cnt":0,
-               "inh":id->misc->defines[" fl "],
+               "inh":id->misc->foldlist_id,
                "txt":"",
                "fsrc":m->foldedsrc||"/internal-roxen-unfold",
                "ufsrc":m->unfoldedsrc||"/internal-roxen-fold"]);
 
   //Do the real thing.
   c=parse_html(c,([]),(["ft":tag_ft]),id,state,fl);
-  id->misc->defines[" fl "]=fl->inh;
+  id->misc->foldlist_id=fl->inh;
 
   return (id->misc->debug?"<!-- "+state_id+" -->":"")+"<dl>"+c+"</dl>"+error+"\n";
 }
