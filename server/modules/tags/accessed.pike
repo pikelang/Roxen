@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.46 2001/09/03 18:52:17 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.47 2001/09/03 23:48:33 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -153,7 +153,7 @@ constant tagdoc=([
  normal date related attributes can be used. Also see: <xref
  href='date.tag' />.</p>
 
- <ex><accessed since=\"\"/></ex>
+ <ex><accessed since=\"1\"/></ex>
 </attr>
 
 <attr name='type' value='number|string|roman|iso|discordian|stardate|mcdonalds|linus|ordered'><p>
@@ -161,9 +161,9 @@ constant tagdoc=([
  useful together with the since attribute.</p>
 
  <ex><accessed type=\"roman\"/></ex>
- <ex><accessed since=\"\" type=\"iso\"/></ex>
- <ex><accessed since=\"\" type=\"discordian\"/></ex>
- <ex><accessed since=\"\" type=\"stardate\"/></ex>
+ <ex><accessed since=\"1\" type=\"iso\"/></ex>
+ <ex><accessed since=\"1\" type=\"discordian\"/></ex>
+ <ex><accessed since=\"1\" type=\"stardate\"/></ex>
  <ex><accessed type=\"mcdonalds\"/></ex>
  <ex><accessed type=\"linus\"/></ex>
  <ex><accessed type=\"ordered\"/></ex>
