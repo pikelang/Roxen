@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.395 2003/02/25 16:11:24 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.396 2003/03/20 15:36:27 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -169,16 +169,14 @@ void decode_map( mapping what, function decoder )
 
 void decode_charset_encoding( string|function(string:string) decoder )
 {
-  if(stringp(decoder))
-    decoder = Roxen._charset_decoder(Locale.Charset.decoder(decoder))->decode;
-
   if( misc->request_charset_decoded )
     return;
-
-  misc->request_charset_decoded = 1;
-
+  if(stringp(decoder))
+    decoder = Roxen._charset_decoder(Locale.Charset.decoder(decoder))->decode;
   if( !decoder )
     return;
+  
+  misc->request_charset_decoded = 1;
 
   string safe_decoder(string s) {
     catch { return decoder(s); };
