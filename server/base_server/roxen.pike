@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.206 1998/06/01 16:07:39 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.207 1998/06/02 10:35:18 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1274,7 +1274,7 @@ int set_u_and_gid()
 	setgid((int)g);
 #endif
 	setuid((int)u);
-	report_notice("Setting UID permanently to "+u+" and GID to "+g);
+	report_notice("Setting UID permanently to "+u+" and GID to "+g+"\n");
       } else {
 #endif
 #if efun(setegid) && defined(SET_EFFECTIVE)
@@ -1287,7 +1287,7 @@ int set_u_and_gid()
 #else
 	setuid((int)u);
 #endif
-	report_notice("Setting UID to "+u+" and GID to "+g);
+	report_notice("Setting UID to "+u+" and GID to "+g+"\n");
 	return 1;
 #if efun(setuid)
       }
