@@ -193,11 +193,6 @@ rbf binary
 /server/modules/filters/url_rectifier.pike foreign_ident
 /server/modules/graphics/atlas/atlas.pike foreign_ident
 /server/modules/graphics/business_graphics/business.pike foreign_ident
-/server/modules/graphics/business_graphics/create_bars.pike foreign_ident
-/server/modules/graphics/business_graphics/create_graph.pike foreign_ident
-/server/modules/graphics/business_graphics/create_pie.pike foreign_ident
-/server/modules/graphics/business_graphics/diagram.h foreign_ident
-/server/modules/graphics/business_graphics/polyline.pike foreign_ident
 /server/modules/graphics/cimg.pike foreign_ident
 /server/modules/graphics/counter.pike foreign_ident
 /server/modules/graphics/gbutton.pike foreign_ident
