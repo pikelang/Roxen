@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.223 2001/08/14 18:35:44 grubba Exp $
+// $Id: module.pmod,v 1.224 2001/08/20 11:55:57 nilsson Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -16,7 +16,7 @@ class RequestID { };
 //! intended to not change in incompatible ways. There are however
 //! some areas where incompatible changes still must be expected:
 //!
-//! @list
+//! @ul
 //!  @item
 //!   The namespace handling will likely change to conform to XML
 //!   namespaces. The currently implemented system is inadequate then
@@ -40,7 +40,7 @@ class RequestID { };
 //!   to say they don't work as documented yet, and the doc should be
 //!   considered as ideas only; it might work differently when it's
 //!   actually implemented.
-//! @endlist
+//! @endul
 //!
 //! @note
 //! The API for parsers, p-code evaluators etc is not part of the
@@ -272,7 +272,7 @@ class Tag
   //! object instead of handling the actual tags of its own. It works
   //! as follows:
   //!
-  //! @list
+  //! @ul
   //!  @item
   //!   Instead of installing the callbacks for this tag, the parser
   //!   uses another registered "socket" @[Tag] object that got the
@@ -299,7 +299,7 @@ class Tag
   //!  @item
   //!   It's not an error to register a plugin for which there is no
   //!   socket. Such plugins are simply ignored.
-  //! @endlist
+  //! @endul
 
   // Services:
 
@@ -4048,7 +4048,7 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 //!
 //! The special RXML index rules are:
 //!
-//! @list
+//! @ul
 //!  @item
 //!   Arrays are indexed with 1 for the first element, or
 //!   alternatively -1 for the last. Indexing an array of size n with
@@ -4073,7 +4073,7 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 //!   Both the special value nil and the undefined value (a zero with
 //!   zero_type 1) may be used to signify no value at all, and both
 //!   will be returned as the undefined value.
-//! @endlist
+//! @endul
 //!
 //! If the @[want_type] argument is set, the result value is converted
 //! to that type with @[RXML.Type.encode]. If the value can't be
@@ -5112,7 +5112,7 @@ class Type
 
   constant sequential = 0;
   //! Nonzero if data of this type is sequential, defined as:
-  //! @list
+  //! @ul
   //!  @item
   //!   One or more data items can be concatenated with `+.
   //!  @item
@@ -5120,7 +5120,7 @@ class Type
   //!   @code{eval("da") + eval("ta") == eval("da" + "ta")@} and
   //!   @code{eval("data") + eval("") == eval("data")@} provided the
   //!   data is only split between (sensibly defined) atomic elements.
-  //! @endlist
+  //! @endul
 
   //! @decl constant mixed empty_value;
   //!
