@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.40 1999/03/12 17:56:34 grubba Exp $
+ * $Id: smtprelay.pike,v 1.41 1999/08/11 15:17:41 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.40 1999/03/12 17:56:34 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.41 1999/08/11 15:17:41 grubba Exp $";
 
 /*
  * Some globals
@@ -56,6 +56,9 @@ void create()
   defvar("mailerdaemon", "Mail Delivery Subsystem <MAILER-DAEMON@" +
 	 gethostname()+">", "Mailer daemon address", TYPE_STRING,
 	 "Email address of the mailer daemon.");
+
+  defvar("maxhops", 10, "Maximum number of hops", TYPE_INT,
+	 "Maximum number of MTA hops (used to avoid loops).");
 }
 
 array(string)|multiset(string)|string query_provides()
@@ -1047,7 +1050,38 @@ int relay(string from, string user, string domain,
 
     mail->seek(0);
     string s;
+    string headers = "";
+    int headers_found;
     while((s = mail->read(8192)) && (s != "")) {
+      if (QUERY(maxhops) && !headers_found) {
+	headers += s;
+	headers_found = (sscanf(headers, "%s\r\n\r\n", headers) ||
+			 sscanf(headers, "%s\n\n", headers));
+	if (headers_found) {
+	  array a = lower_case(headers)/"received:";
+	  int hops = sizeof(a);
+	  int i;
+	  for(i=0; i < sizeof(a)-1; i++) {
+	    if (a[i]=="" || a[i][-1] != '\n') {
+	      hops--;
+	    }
+	  }
+
+#ifdef RELAY_DEBUG
+	  report_debug(sprintf("SMTPRelay: hops:%d\n", hops));
+#endif /* RELAY_DEBUG */
+
+	  if (hops > QUERY(maxhops)) {
+	    report_error(sprintf("SMTPRelay: Too many hops!\n"));
+
+	    // FIXME: Should send a message to from here.
+
+	    rm(fname);
+
+	    return(0);
+	  }
+	}
+      }
       if (spoolfile->write(s) != sizeof(s)) {
 	report_error(sprintf("SMTPRelay: Failed to write spoolfile %O!\n",
 			     fname));
