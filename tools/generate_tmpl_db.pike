@@ -37,7 +37,7 @@ string tag_insert(string tag, mapping args, mapping oa)
   string q = sprintf("insert into " +
 		     oa->table + " ("+cols+") values ("+values+")");
   db->query(q);
-  write("  "+q+"\n");
+  //write("  "+q+"\n");
   return "";
 }
 
@@ -46,7 +46,7 @@ string tag_delete(string tag, mapping args, mapping oa)
   if(args->all) {
     string q = "delete from "+oa->table;
     db->query(q);
-    write("  "+q+"\n");
+    //write("  "+q+"\n");
   }
 }
 
@@ -73,7 +73,7 @@ int main(int argc, array(string) argv)
   
   string s = Stdio.read_bytes(argv[1]);
   if(!s) {
-    write("File not found or is empty");
+    write("File not found");
   }
   
   spider;
