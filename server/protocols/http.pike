@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.339 2001/10/08 06:08:36 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.340 2001/10/09 11:29:05 wellhard Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -468,7 +468,7 @@ private void really_set_config(array mod_config)
   void do_send_reply( string what, string url ) {
     url = url_base() + url[1..];
     my_fd->write( prot + " 302 Roxen config coming up\r\n"+
-                  (what?what+"\r\n":"")+"Location: "+url+
+                  (what?what+"\r\n":"")+"Location: "+url+"\r\n"
                   "Connection: close\r\nDate: "+
                   Roxen.http_date(predef::time(1))+
                   "\r\nContent-Type: text/html\r\n"
