@@ -3,12 +3,16 @@ versions of Roxen WebServer.
 
 Between InternetServer 2.4 and Roxen WebServer <= 2.4
 
- - The font folder has moved from server/nfonts to etc/fonts. The font
-   directory setting must be updated in all configurations.
+ - The font folder has moved from server/nfonts to data/fonts. The font
+   directory setting must be updated in all configurations. This can
+   also be solved by adding a symlink.
+     ln -s server/data/fonts server/nfonts
 
  - The example file folder example_pages has moved from
-   server/example_pages to server/etc/example_pages. All example
-   servers must have their filesystem module search path updated.
+   server/example_pages to server/data/example_pages. All example
+   servers must have their filesystem module search path updated. This
+   can also be solved by adding a symlink.
+     ln -s server/data/example_pages server/example_pages
 
  - The start script no longer adds local/etc/modules to module path,
    local/etc/include to include path and local/etc to program path.
@@ -16,3 +20,14 @@ Between InternetServer 2.4 and Roxen WebServer <= 2.4
    is entierly deprecated. A subset of the active include paths are no
    longer added to the internal environment variable representation
    mapping, where it was previously available as PIKE_INCLUDE_PATH.
+   This can also be solved by adding symlinks or by adding the
+   following arguments to the start script.
+     -M../local/etc/modules
+     -I../local/etc/include
+     -P../local/etc
+
+ - The etc directory is renamed to data. This affects the settings for
+   the content type module and the supports system, both using files
+   in that directory. Either all server configurations and the global
+   settings has to be updated or a symlink must be added.
+     ln -s server/data server/etc
