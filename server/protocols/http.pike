@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.309 2001/03/20 01:04:39 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.310 2001/05/04 16:19:16 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1513,9 +1513,10 @@ array parse_range_header(int len)
 // Tell the client that it can start sending some more data
 void ready_to_receive()
 {
-  if (clientprot == "HTTP/1.1") {
+  if (clientprot == "HTTP/1.1" && request_headers->Expect &&
+      (request_headers->Expect ==  "100-continue" ||
+       has_value(request_headers->Expect, "100-continue" )))
     my_fd->write("HTTP/1.1 100 Continue\r\n");
-  }
 }
 
 // Send the result.
