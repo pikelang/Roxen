@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.79 1997/09/14 20:45:53 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.80 1997/09/22 21:06:56 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1145,7 +1145,7 @@ public array find_dir(string file, object id)
     }
     id->not_query=of;
   }
-#endif
+#endif /* URL_MODULES */
 
   foreach(location_modules(id), tmp)
   {
@@ -1237,6 +1237,92 @@ public array stat_file(string file, object id)
 	return s;
     }
   }
+}
+
+public array(array(mixed)) find_dir_stat(string file, object id)
+{
+  string loc;
+  array(array(mixed)) dir = ({ });
+  array(mixed) d, tmp;
+
+  file=replace(file, "//", "/");
+  
+  if(file[0] != '/')
+    file = "/" + file;
+
+#ifdef URL_MODULES
+#ifdef THREADS
+  object key;
+#endif
+  // Map URL-modules
+  foreach(url_modules(id), function funp)
+  {
+    string of = id->not_query;
+    id->not_query = file;
+    LOCK(funp);
+    tmp=funp( id, file );
+    UNLOCK();
+
+    if(mappingp( tmp ))
+    {
+      id->not_query=of;
+      return 0;
+    }
+    if(objectp( tmp ))
+    {
+      array err;
+      nest ++;
+      
+      file = id->not_query;
+      err = catch {
+	if( nest < 20 )
+	  tmp = (id->conf || this_object())->find_dir_stat( file, id );
+	else
+	  error("Too deep recursion in roxen::find_dir_stat() while mapping "
+		+file+".\n");
+      };
+      nest = 0;
+      if(err)
+	throw(err);
+      return tmp;
+    }
+    id->not_query=of;
+  }
+#endif /* URL_MODULES */
+
+  foreach(location_modules(id), tmp)
+  {
+    loc = tmp[0];
+    
+    if(!search(file, loc))
+    {
+#ifdef MODULE_LEVEL_SECURITY
+      if(check_security(tmp[1], id)) continue;
+#endif
+      object c = function_object(tmp[1]);
+      string f = file[strlen(loc)..];
+      if (c->find_dir_stat) {
+	if (d = c->find_dir_stat(f, id)) {
+	  dir |= d;
+	}
+      } else if(d = c->find_dir(f, id)) {
+	dir |= map(d, lambda(string f, string base, object c, object id) {
+	  return(({ f, c->stat_file(base + f, id) }));
+	}, f, c, id);
+      }
+    } else {
+      if(search(loc, file)==0 && loc[strlen(file)-1]=='/' 
+	 && (loc[0]==loc[-1]) && loc[-1]=='/' &&
+	 sizeof(function_object(tmp[1])->find_dir("", id)||({})))
+      {
+	loc=loc[strlen(file)..];
+	sscanf(loc, "%s/", loc);
+	dir += ({ ({ loc, ({ 0775, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 }) }) });
+      }
+    }
+  }
+  if(sizeof(dir))
+    return dir;
 }
 
 
