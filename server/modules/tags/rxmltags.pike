@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.233 2001/05/31 16:53:10 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.234 2001/06/04 19:10:32 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2876,6 +2876,7 @@ class TagEmit {
 
       if(plugin->skiprows && args->skiprows)
 	m_delete(args, "skiprows");
+
       if(args->maxrows) {
 	if(plugin->maxrows)
 	  m_delete(args, "maxrows");
@@ -3006,7 +3007,7 @@ class TagEmit {
 	    res=res[(int)args->skiprows..];
 	  }
 
-	  if(args->remainderinfo)
+ 	  if(args->remainderinfo)
 	    RXML.user_set_var(args->remainderinfo, args->maxrows?
 			      max(sizeof(res)-args->maxrows, 0): 0);
 
@@ -6787,13 +6788,39 @@ load.</p>
 </attr>
 
 <attr name='rowinfo' value='variable'><p>
- The number of rows in the result, after it has been limited by
- maxrows and skiprows, will be put in this variable, if given.</p>
+ The number of rows in the result, after it has been filtered and
+ limited by maxrows and skiprows, will be put in this variable,
+ if given. Note that this may not be the same value as the number
+ of emit iterations that the emit tag will perform, since it will
+ always make one iteration when the attribute do-once is set.</p>
 </attr>
 
 <attr name='do-once'><p>
  Indicate that at least one loop should be made. All variables in the
- emit scope will be empty.</p>
+ emit scope will be empty, except for the counter variable.</p>
+</attr>
+
+<attr name='filter' value='list'><p>
+  The filter attribute is used to block certain 'rows' from the
+  source from being emitted. The filter attribute should be set
+  to a list with variable names in the emitted scope and glob patterns
+  the the variable value must match in order to not get filtered.
+  A list might look like <tt>name=a*,name=b*,id=??3?45</tt>.
+<ex>
+<emit source='values' values='foo,bar,baz' split=',' filter='value=b*'>
+&_.value;
+</emit>
+</ex></p>
+</attr>
+
+<attr name='sort' value='list'><p>
+  The emit result can be sorted by the emit tag befor outputted.
+  Just list the variable names in the scope that the result should
+  be sorted on, in prioritized order, e.g. \"lastname,firstname\".
+  By adding a \"-\" sign in front of a name that entry will be
+  sorted in the reversed order. The sort algorithm will treat numbers
+  as complete numbers and not digits in a string, hence \"foo8bar\"
+  will be sorted before \"foo11bar\".</p>
 </attr>",
 
 	  ([
