@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.12 1999/07/24 21:04:16 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.13 1999/08/02 15:53:52 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -36,8 +36,7 @@ mapping set_to_gregorian_easter(int year) {
 array register_module()
 {
   return ({ MODULE_PARSER, "Countdown",
-	    "This module adds a new tag, when enabled, see "
-	    "&lt;countdown help&gt; for usage information.",0,1 });
+            "Shows how long time it is until a certain event.",0,1 });
 }
 
 // :-) This code is not exactly conforming to the Roxen API, since it
@@ -69,104 +68,10 @@ int find_a_day(string which)
   return 1;
 }
 
-
 string show_number(int n,mapping m)
 {
   return number2string(n,m,language(m->lang,m->ordered?"ordered":"number"));
 }
-
-string describe_example(array a)
-{
-  return ("<b><font size=+1>"+a[0]+"</font></b><br>"
-	  "<b>Source:</b> "+replace(a[1], ({ "<", ">", "&" }), 
-				   ({ "&lt;", "&gt;", "&amp"}))
-	  +"<br><b>Result:</b> "+a[1]+"<p>");
-}
-
-#define E(X,Y) ({ X, Y })
-
-constant examples = 
-({
-  E("The age of something", "Per Hedbor is <countdown iso=1973-01-16 since display=years type=string> years old"),
-
-  E("How many days are left to year 2000?", "There are <countdown event=year2000 display=days> days left until year 2000"),
-
-  E("Which date is the first monday in January 1998?",
-    "<countdown month=january day=monday year=1998 date display=when part=date type=ordered>"),
-
-  E("Is this a Sunday?",
-    "<if eval='<countdown day=sunday display=boolean>'>This is indeed a Sunday</if><else>Nope</else>."),
-
-  E("On which day will the next christmas eve be?",
-    "It will be a <countdown event=christmas_eve lang=en display=when date part=day type=string>"),
-
-  E("How old Fredrik & Monica Hübinette's dog Sadie?",
-    "She is <countdown iso=1998-03-29 prec=day since months display=combined> old or <countdown iso=1998-03-29 prec=day since display=dogyears> dog years."),
-});
-
-string describe_examples()
-{
-  return "</b><p>"+Array.map(examples, describe_example)*"";
-}
-
-string usage()
-{
-  return (#"<h1>The &lt;countdown&gt; tag.</h1>
-This tag can count days, minutes, months, etc. from a specified date or time. It can also
-give the time to or from a few special events. See below for a full list.
-<p>
-<b>Time:</b>
-<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">
-<tr valign=\"top\"><td>year = int</td><td><i>sets the year</i></td></tr>
-<tr valign=\"top\"><td>month = int | month_name&nbsp;</td><td><i>sets the month</i></td></tr>
-<tr valign=\"top\"><td>day = int | day_name</td><td><i>sets the weekday</i></td></tr>
-<tr valign=\"top\"><td>mday = int</td><td><i>sets the day of the month</i></td></tr>
-<tr valign=\"top\"><td>hour = int</td><td><i>sets the hour. Might be useful, perhaps..</i></td></tr>
-<tr valign=\"top\"><td>minute = int</td><td><i>sets the minute.</i></td></tr>
-<tr valign=\"top\"><td>second = int</td><td><i>sets the second.</i></td></tr>
-<tr valign=\"top\"><td>iso = year-month-day</td>
-  <td><i>Sets the year, month and day all at once (YYYY-MM-DD or YYYYMMDD)</i></td></tr>
-<tr><td><br><b>Special events:</b></td>
-<tr><td>easter</td></tr>\n
-<tr><td>gregorian-easter</td></tr>\n
-<tr><td>julian-easter</td></tr>\n
-<tr><td>christmas</td></tr>\n
-<tr><td>christmas-day</td></tr>\n
-<tr><td>christmas-eve</td></tr>\n
-<tr><td>year2000</td></tr>\n
-<tr><td>y2k</td></tr>\n
-<tr valign=\"top\"><td><br><b>Presentation:</b></tr></tr>
-<tr valign=\"top\"><td>display = when</td><td><i>Shows when the time will occur.
-  All arguments that are valid in a
-  &lt;date&gt; tag can be used to modify the display</i></td></tr>
-<tr valign=\"top\"><td>display = years</td><td><i>How many years until the time</i></td></tr>
-<tr valign=\"top\"><td>display = months</td><td><i>How many months until the time</i></td></tr>
-<tr valign=\"top\"><td>display = weeks</td><td><i>How many weeks until the time</i></td></tr>
-<tr valign=\"top\"><td>display = days</td><td><i>How many days until the time</i></td></tr>
-<tr valign=\"top\"><td>display = hours</td><td><i>How many hours until the time</i></td></tr>
-<tr valign=\"top\"><td>display = minutes</td><td><i>How many minutes until the time</i></td></tr>
-<tr valign=\"top\"><td>display = seconds</td><td><i>How many seconds until the time</i></td></tr>
-<tr valign=\"top\"><td>display = combined</td><td><i>Shows an english text describing the time period.
-  Example: 2 days, 1 hour and 5 seconds. You may use the 'prec' tag to limit how precise the description
-  is. Also, you can use the 'month' tag if you want to see years/months/days instead of years/weeks/days.
-</i></td></tr>
-<tr valign=\"top\"><td>display = dogyears</td><td><i>How many dog-years until the time. (With one decimal)
-  </i></td></tr>
-<tr valign=\"top\"><td>display = boolean</td>
-  <td><i>Return 1 or 0, depending on if the time is _now_ or not. The
-  fuzziness of 'now' is decided by the \"prec\" option.</td></tr>
-<tr valign=\"top\"><td>type=type, lang=language</td><td><i>As for 'date'. Useful values for type include
-  string, number and ordered.</i></td></tr>
-<tr valign=\"top\"><td>since</td><td><i>Negate the period of time (replace 'until' with 'since' in
-  the above sentences to see why it is named 'since')</i></td></tr>
-<tr valign=\"top\"><td>next</td><td><i>Always count down to the next event. &lt;countdown day=friday
-  next&gt; says 6 on a friday as opposed to 0 without the next attribute.</i></td></tr>
-<tr valign=\"top\"><td>prec</td><td><i>modifier for 'boolean' and 'combined'. Can be one of
-  year, month, week, day, hour minute of second.</td></tr></table>
-<p><b>Examples</b>"+describe_examples());
-  
-}
-
 
 // This function should be fixed to support different languages.
 // Possibly even implemented in the language module itself.
@@ -264,6 +169,8 @@ int weekday_handler(int when, mapping time_args) {
 string tag_countdown(string t, mapping m, object id)
 {
 
+  if(m->help) return "Shows how long time it is until a certain event.";
+
 #if old_rxml_compat
   foreach( ({ 
     ({"min","minute"}),
@@ -310,8 +217,6 @@ string tag_countdown(string t, mapping m, object id)
     CACHE(1);
   else
     CACHE(59);
-
-  if(m->help) return usage();
 
   float days_per_year = 365.242190; // Y28K safe
 
@@ -513,6 +418,9 @@ string tag_countdown(string t, mapping m, object id)
 
     case "hours":
     return  show_number(delay/3600, m);
+
+    case "beats":
+    return "@"+show_number(delay/(3600*24/1000), m);
 
     case "minutes":
     return show_number(delay/60,m);
