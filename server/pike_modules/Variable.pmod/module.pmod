@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.84 2004/05/16 01:44:50 mani Exp $
+// $Id: module.pmod,v 1.85 2004/05/16 01:59:02 mani Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1456,16 +1456,16 @@ class List
 #define DIMBUTTON(X) ("<disabled-gbutton icon-src='"+X+"'></disabled-gbutton>")
       if( i )
         res += "\n<td>"+
-            REORDER(prefix+"up."+i, "/internal-roxen-up")+
+            REORDER(prefix+"up."+i, "/%01/up")+
             "</td>";
       else
-        res += "\n<td>"+DIMBUTTON("/internal-roxen-up")+"</td>";
+        res += "\n<td>"+DIMBUTTON("/%01/up")+"</td>";
       if( i != sizeof( query())- 1 )
         res += "\n<td>"+
-            REORDER(prefix+"down."+i, "/internal-roxen-down")
+            REORDER(prefix+"down."+i, "/%01/down")
             +"</td>";
       else
-        res += "\n<td>"+DIMBUTTON("/internal-roxen-down")+"</td>";
+        res += "\n<td>"+DIMBUTTON("/%01/down")+"</td>";
       res += "\n<td>"+
             BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
           +"</td>";
