@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.170 2000/05/17 15:24:35 nilsson Exp $
+// $Id: roxenlib.pike,v 1.171 2000/06/28 20:58:35 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -708,6 +708,21 @@ static int ipow(int what, int how)
   return (int)pow(what, how);
 }
 
+//  Splits path into ({ prefix, path }) array. Prefix is "" for paths on
+//  non-Windows systems or when no proper drive prefix is found.
+array(string) win_drive_prefix(string path)
+{
+#ifdef __NT__
+  string prefix;
+  if (sscanf(path, "\\\\%s%*[\\/]%s", prefix, string path_end) == 3) {
+    return ({ "\\\\" + prefix, "/" + path_end });
+  } else if (sscanf(path, "%1s:%s", prefix, path) == 2) {
+    return ({ prefix + ":", path });
+  }
+#endif
+  return ({ "", path });
+}
+
 string simplify_path(string file)
   //! This one will remove .././ etc. in the path.
 {
@@ -717,6 +732,8 @@ string simplify_path(string file)
     return file;
 
   int t2,t1;
+
+  [string prefix, file] = win_drive_prefix(file);
 
   if(file[0] != '/')
     t2 = 1;
@@ -730,9 +747,9 @@ string simplify_path(string file)
   file=combine_path("/", file);
 
   if(t1) file += "/.";
-  if(t2) return file[1..];
+  if(t2) return prefix + file[1..];
 
-  return file;
+  return prefix + file;
 }
 
 string short_date(int timestamp)
@@ -1404,6 +1421,9 @@ string fix_relative( string file, RequestID id )
   string path = id->not_query;
   if( !search( file, "http:" ) )
     return file;
+
+  [string prefix, file] = win_drive_prefix(file);
+
   // +(id->misc->path_info?id->misc->path_info:"");
   if(file != "" && file[0] == '/')
     ;
@@ -1411,7 +1431,7 @@ string fix_relative( string file, RequestID id )
     file = path + file;
   else
     file = dirname(path) + "/" +  file;
-  return simplify_path(file);
+  return simplify_path(prefix + file);
 }
 
 Stdio.File open_log_file( string logfile )
