@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.299 2001/09/10 16:10:38 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.300 2001/09/13 00:08:49 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -332,10 +332,10 @@ class TagExpireTime {
 
     array do_return(RequestID id) {
       int t,t2;
-      t=t2=time(1);
+      t = t2 = (int)args["unix-time"]||time(1);
       if(!args->now) {
-	t+=Roxen.time_dequantifier(args);
-	CACHE(max(t-t2,0));
+	t = Roxen.time_dequantifier(args, t);
+	CACHE( max(t-t2,0) );
       }
       if(t==t2) {
 	NOCACHE();
@@ -5549,13 +5549,20 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "expire-time":#"<desc tag='tag'><p><short hide='hide'>
- Sets client cache expire time for the document.</short>Sets client cache expire time for the document by sending the HTTP header \"Expires\".
+ Sets client cache expire time for the document.</short>
+ Sets client cache expire time for the document by sending the HTTP header
+ \"Expires\". Note that on most systems the time can only be set to dates
+ before 2038 due to operating software limitations.
 </p></desc>
 
 <attr name=now>
-  <p>Notify the client that the document expires now. The headers \"Pragma: no-cache\" and \"Cache-Control: no-cache\"
-  will be sent, besides the \"Expires\" header.</p>
+ <p>Notify the client that the document expires now. The headers
+ \"Pragma: no-cache\" and \"Cache-Control: no-cache\"
+ will also be sent, besides the \"Expires\" header.</p>
+</attr>
 
+<attr name='unix-time' value='number'>
+ <p>The exact time of expiration, expressed as a posix time integer.</p>
 </attr>
 
 <attr name=years value=number>
@@ -5589,8 +5596,6 @@ using the pre tag.
 <attr name=seconds value=number>
    <p>Add this number of seconds to the result.</p>
 
- <p>It is not possible at the time to set the date beyond year 2038,
- since Unix variable <i>time_t</i> data type is used. The <i>time_t</i> data type stores the number of seconds elapsed since 00:00:00 January 1, 1970 UTC. </p>
 </attr>",
 
 //----------------------------------------------------------------------
