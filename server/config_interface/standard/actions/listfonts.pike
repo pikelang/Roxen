@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.12 2000/09/04 07:29:23 per Exp $
+ * $Id: listfonts.pike,v 1.13 2000/09/04 07:40:38 per Exp $
  */
 
 #include <roxen.h>
@@ -48,14 +48,29 @@ string list_font(string font)
           "</b></font> <font size='-1'>"+versions(font)+"</font><br />");
 }
 
+string font_loaders( )
+{
+  string res ="<dl>";
+  foreach( roxen->fonts->font_handlers, FontHandler fl )
+  {
+    int nf =  sizeof( fl->available_fonts() );
+    res += "<b><dt><font size=+1>"+fl->name+" ("+nf
+        +" font"+(nf==1?"":"s")+")</font></b></dt>"
+        "<dd>"+fl->doc+"</dd><p />";
+  }
+  return res+"</dl>";
+}
+
 string page_0(RequestID id)
 {
   array q = roxen.fonts->get_font_information();
   info = mkmapping( q->name, q );
   string res=("<input type='hidden' name='action' value='listfonts.pike'/>"
               "<input type='hidden' name='doit' value='indeed'/>\n"
-	      "<font size='+1'>" +
-	      LOCALE("dI","All available fonts") + "</font><p>");
+              "<font size='+1'><b>" +
+	      LOCALE("dI","Available font loaders") + "</b></font><p>"+
+              font_loaders()+"<font size='+1'><b>" +
+	      LOCALE("dI","All available fonts") + "</b></font><p>");
   foreach(sort(roxen->fonts->available_fonts(1)), string font)
     res+=list_font(font);
   res += ("</p><p>" + LOCALE(236,"Example text") +
