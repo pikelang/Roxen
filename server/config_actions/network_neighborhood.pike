@@ -5,11 +5,11 @@ string doc = "";
 
 string page_0()
 {
-  return html_table(({"Config URL", "Host", "Sequence", "Last Reboot",
+  return html_table(({"Config URL", "Host", "Seq", "Last Reboot",
 			({"Server info"})}),
 		    Array.map(indices(neighborhood), lambda(string s) {
      mapping ns = neighborhood[s];
-     return({(string)s,
+     return({(string)"<a href='"+s+"'>"+s+"</a>",
 	     (string)ns->host,
 	     (string)ns->sequence,
 	     (string)(ns->seq_reboots>1?"<font fg=red><blink>":"")+
