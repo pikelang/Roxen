@@ -1,12 +1,18 @@
 #
-# $Id: configure.in,v 1.68 1999/06/23 22:24:32 marcus Exp $
+# $Id: configure.in,v 1.69 1999/08/15 18:10:03 grubba Exp $
 #
 
 prefix=$PWD
 AC_INIT(Makefile.in)
 
 AC_ARG_WITH(fullwarn, [  --with-fullwarn	enable as many warnings as possible],[],[with_fullwarn=no])
-AC_ARG_WITH(rtldebug, [  --with-rtldebug	enable run-time level debug],[],[with_rtldebug=no])
+AC_ARG_WITH(rtldebug, [  --with-rtldebug	enable run-time level debug],[],[
+  if test "$with_debug" = "yes"; then
+    with_rtldebug="yes";
+  else
+    with_rtldebug=no;
+  fi
+])
 
 # Make sure with_rtldebug is propagated to the other configure-scripts.
 export with_rtldebug
@@ -164,6 +170,42 @@ case $CC in
  ;;
 esac
 
+# Compiler flags...
+
+AC_DEFUN(AC_SYS_COMPILER_FLAG,
+[
+  AC_MSG_CHECKING($1)
+  OLD_CFLAGS="[$]CFLAGS"
+  AC_CACHE_VAL(roxen_cv_option_$2,
+  [
+    CFLAGS="[$]OLD_CFLAGS $1"
+    AC_TRY_RUN([int main(){exit(0);}],roxen_cv_option_$2=yes,roxen_cv_option_$2=no)
+  ])
+  
+  CFLAGS="[$]OLD_CFLAGS"
+  
+  if test x"[$]roxen_cv_option_$2" = "xyes" ; then
+    $3="[$]$3 $1"
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+])
+
+AC_DEFUN(AC_SYS_CPU_COMPILER_FLAG,
+[
+  if test "`uname -m 2>/dev/null`" = "$1" ; then
+    AC_SYS_COMPILER_FLAG($2,$3,$4)
+  fi
+])
+
+AC_DEFUN(AC_SYS_OS_COMPILER_FLAG,
+[
+  if test "x$roxen_cv_sys_os" = "x$1" ; then
+    AC_SYS_COMPILER_FLAG($2,$3,$4)
+  fi
+])
+
 # We need some special hacks when running slowaris
 AC_PATH_PROG(uname_prog,uname,no)
 AC_MSG_CHECKING(operating system)
@@ -190,17 +232,21 @@ case "$roxen_cv_sys_os" in
      case "$CFLAGS" in
        *-belf*) ;;
        *)
-	  echo "Adding -belf option to CFLAGS."
-          CFLAGS="$CFLAGS -belf"
+          AC_SYS_COMPILER_FLAG(-belf,belf,CFLAGS)
        ;;
      esac
      case "$LDFLAGS" in
        *-belf*) ;;
        *)
-	  echo "Adding -belf option to LDFLAGS."
-          LDFLAGS="$LDFLAGS -belf"
+          AC_SYS_COMPILER_FLAG(-belf,belf,LDFLAGS)
        ;;
      esac
+  ;;
+  UnixWare*)
+    if test "$GCC" = "yes"; then :; else
+      # Try using the built-in alloca function
+      AC_SYS_COMPILER_FLAG(-Kalloca,Kalloca,CFLAGS)
+    fi
   ;;
 esac
 
@@ -266,40 +312,6 @@ fi
 
 #############################################################
 # Optimization flags...
-
-AC_DEFUN(AC_SYS_COMPILER_FLAG,
-[
-  AC_MSG_CHECKING($1)
-  OLD_CFLAGS="[$]CFLAGS"
-  AC_CACHE_VAL(roxen_cv_option_$2,
-  [
-    CFLAGS="[$]OLD_CFLAGS $1"
-    AC_TRY_RUN([int main(){exit(0);}],roxen_cv_option_$2=yes,roxen_cv_option_$2=no)
-  ])
-  
-  CFLAGS="[$]OLD_CFLAGS"
-  
-  if test x"[$]roxen_cv_option_$2" = "xyes" ; then
-    $3="[$]$3 $1"
-    AC_MSG_RESULT(yes)
-  else
-    AC_MSG_RESULT(no)
-  fi
-])
-
-AC_DEFUN(AC_SYS_CPU_COMPILER_FLAG,
-[
- if test "`uname -m 2>/dev/null`" = "$1" ; then
-    AC_SYS_COMPILER_FLAG($2,$3,$4)
- fi
-])
-
-AC_DEFUN(AC_SYS_OS_COMPILER_FLAG,
-[
- if test "x$roxen_cv_sys_os" = "x$1" ; then
-    AC_SYS_COMPILER_FLAG($2,$3,$4)
- fi
-])
 
 WARN=""
 OPTIMIZE=""
