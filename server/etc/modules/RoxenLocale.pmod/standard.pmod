@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.11 2000/04/05 16:39:46 js Exp $
+ * $Id: standard.pmod,v 1.12 2000/04/25 23:01:36 jhs Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -486,7 +486,10 @@ other than space and tab, it should not end with
 ~, and it must not be 'CVS', 'Global Variables' or
 'global variables', nor the name of an existing
 configuration, and the character '/' cannot be
-used";
+used. This name will show up in the sites menu, a
+lowercased, filesystem-friendly version will become
+the virtual server's configuration file name as well
+as the name of its log file directory.";
 };
 object(_config_interface) config_interface = _config_interface();
 
