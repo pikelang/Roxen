@@ -267,9 +267,24 @@ mixed do_it( RequestID id )
   if(!conf)
     return "Configuration gone!\n";
 
+  if( !conf->inited )
+    conf->enable_all_modules();
+
   foreach( id->variables->module_to_add/"\0", string mod )
-    last_module = replace((conf->otomod[ conf->enable_module( mod ) ]||""),
-                          "#", "!" );
+    if (RoxenModule m = conf->enable_module( mod )) {
+      mod = conf->otomod[m];
+      last_module = replace(mod, "#", "!" );
+      if (id->variables->mod_init_vars) {
+	foreach (indices (m->variables), string var)
+	  roxen->change_configurable (m->variables[var], VAR_INITIAL, 0);
+	foreach (id->variables->init_var / "\0", string var) {
+	  array(string) split = array_sscanf (var, "%s/%s");
+	  if (sizeof (split) == 2 && split[0] == mod && m->variables[split[1]])
+	    roxen->change_configurable (m->variables[split[1]], VAR_INITIAL, VAR_INITIAL);
+	}
+      }
+    }
+    else last_module = "";
 
   if( strlen( last_module ) )
     return http_redirect( site_url( id, id->variables->config )+
