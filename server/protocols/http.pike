@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.403 2003/07/09 10:02:29 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.404 2003/07/16 14:52:34 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1853,9 +1853,9 @@ void handle_request( )
 	else if( file->pipe )
 	  return;
     }
-    TIMER_END(handle_request);
-    send_result();
   }
+  TIMER_END(handle_request);
+  send_result();
 }
 
 string url_base()
