@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.13 1996/12/13 00:41:18 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.14 1997/01/07 03:35:11 neotron Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -465,10 +465,13 @@ string tagtime(int t,mapping m)
 string fix_relative(string file, object got)
 {
   string other;
-  if (file != "" && file[0] == '/') 
+  if(file != "" && file[0] == '/')
     return file;
   other=got->not_query;
-  file = dirname(got->not_query) + "/" +  file;
+  if(file != "" && file[0] == '#')
+    file = got->not_query+  file;
+  else
+    file = dirname(got->not_query) + "/" +  file;
   return simplify_path(replace(file, ({ "//", "..."}), ({"./..", "//"})));
 }
 

@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.8 1996/12/10 03:04:42 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.9 1997/01/07 03:35:10 neotron Exp $";
 #include <module.h>
 
 inherit "module";
@@ -24,7 +24,11 @@ mapping build_env_vars(string f, object id, string|void path_info)
     new["HTTP_AUTHORIZATION"] = id->rawauth;
   if(QUERY(clearpass) && id->realauth)
     new["REMOTE_PASSWORD"] = (id->realauth/":")[1];
-    
+
+  if(id->auth && !id->auth[0] && id->realauth ) {
+    new["REMOTE_USER"] = (id->realauth/":")[0];
+    env["AUTH_TYPE"] = "";
+  }
   if(QUERY(Enhancements))
     new |= build_roxen_env_vars(id);
   

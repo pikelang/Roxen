@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.10 1996/12/07 11:37:41 neotron Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.11 1997/01/07 03:35:02 neotron Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -54,8 +54,8 @@ class CacheStream {
       perror("open failed: "+QUERY(cachedir)+fname+"\n");
       return;
     }
-    headers[" returncode"] = get_code((cf->gets()-"\r")-"\n");
-    while(strlen( (line = (cf->gets()-"\r")-"\n") || "" ))
+    headers[" returncode"] = get_code(((cf->gets()||"")-"\r")-"\n");
+    while(strlen( (line = ((cf->gets()||"")-"\r")-"\n")))
     {
       if(sscanf(line, "%s:%s", name, value) == 2)
       {

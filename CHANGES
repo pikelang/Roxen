@@ -6,7 +6,10 @@ o Support for shadow passwords added to userdb (method shadow). The
   with thousands of users, it takes a VERY long time to read all the
   users. 
 
-o <apre href=#foo> and more now works as expected.
+o allow/deny user using 'any' was broken in the last fix. This is, of
+  course, fixed now.
+
+o <apre href=#foo> and others now works as expected.
 
 o Install script now doesn't append the domain name if it's already in
   the hostname (which is the case in BSD UNIXes).
@@ -2145,3 +2148,4 @@ o Changed some of the default settings, and added some more
 o In modules/configure.lpc: Table code cleaned, new variable added: More 
   options (advanced), adds a reload from file and a refresh icon for 
   module developers, mainly (and for me, ofcourse...)
+

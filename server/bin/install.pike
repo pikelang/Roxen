@@ -1,5 +1,5 @@
 #!bin/pike -m etc/master.pike
-string cvs_version = "$Id: install.pike,v 1.7 1996/12/07 11:37:47 neotron Exp $";
+string cvs_version = "$Id: install.pike,v 1.8 1997/01/07 03:35:06 neotron Exp $";
 #include <simulate.h>
 #include <roxen.h>
 
@@ -241,7 +241,7 @@ string find_arg(array argv, array|string shortform,
 
 void main(int argc, string *argv)
 {
-  string host, client, log_dir;
+  string host, client, log_dir, domain;
   mixed tmp;
   int port, configuration_dir_changed, logdir_changed;
   add_constant("roxen", this_object());
@@ -273,7 +273,10 @@ void main(int argc, string *argv)
 		     "../logs/");
   write(popen("clear"));
 
-  host=gethostname()+"."+get_domain();
+  host=gethostname();
+  domain = get_domain();
+  if(search(host, domain) == -1)
+    host += "."+domain;
   if(sscanf(host, "%s.0", tmp))
     host=tmp;
 

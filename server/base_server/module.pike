@@ -277,7 +277,7 @@ array query_seclevels()
 	break;
 
        case "allowuser":
-	value = replace("(^"+(value/",")*"$)|(^"+"$)","(any)","(.*)");
+	value = replace("(^"+(value/",")*"$)|(^"+"$)","(^any$)","(.*)");
 	if(this->proxy_auth_needed) {
 	  patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
 	} else {
