@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.174 1999/01/14 00:27:24 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.175 1999/01/14 00:53:17 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1417,7 +1417,7 @@ mapping|int low_get_file(object id, int|void no_magic)
 	/* FIXME: Should probably keep prestate etc.
 	 *	/grubba 1999-01-14
 	 */
-	string new_query = id->not_query + "/" +
+	string new_query = http_encode_string(id->not_query) + "/" +
 	  (id->query?("?"+id->query):"");
 
 	return http_redirect(new_query, id);
