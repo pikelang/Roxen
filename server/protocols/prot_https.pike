@@ -1,4 +1,7 @@
-// $Id: prot_https.pike,v 2.3 2001/07/21 10:13:31 mast Exp $
+// This is a roxen protocol module.
+// Copyright © 2001, Roxen IS.
+
+// $Id: prot_https.pike,v 2.4 2001/08/23 05:33:44 nilsson Exp $
 
 // --- Debug defines ---
 

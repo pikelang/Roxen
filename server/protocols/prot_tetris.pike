@@ -1,3 +1,6 @@
+// This is a roxen protocol module.
+// Copyright © 2001, Roxen IS.
+
 inherit Protocol;
 constant supports_ipless = 0;
 constant name = "tetris";

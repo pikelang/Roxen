@@ -1,7 +1,10 @@
+// This is a roxen protocol module.
+// Copyright © 1997 - 2001, Roxen IS.
+
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.64 2001/08/22 16:50:20 grubba Exp $
+ * $Id: ftp.pike,v 2.65 2001/08/23 05:33:43 nilsson Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -84,7 +87,7 @@
 
 //#define FTP2_DEBUG
 
-#define FTP2_XTRA_HELP ({ "Report any bugs to bugs@roxen.com." })
+#define FTP2_XTRA_HELP ({ "Report any bugs at http://community.roxen.com/crunch/" })
 
 #define FTP2_TIMEOUT	(5*60)
 

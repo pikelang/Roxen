@@ -1,3 +1,6 @@
+// This is a roxen protocol module.
+// Copyright © 2001, Roxen IS.
+
 //<locale-token project="roxen_message"> LOC_M </locale-token>
 #include <roxen.h>
 
