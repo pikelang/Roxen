@@ -55,7 +55,7 @@ fixperms() {
 
 
 start_roxen() {
-  args="-DROXEN $DEFINES $pass $DEBUG base_server/roxenloader --config-dir=$DIR --start-script-pid=$$"
+  args="-DROXEN $DEBUG $DEFINES $pass base_server/roxenloader --config-dir=$DIR --start-script-pid=$$"
   echo Executing $pike $args $@
   $pike $args $@
 }
@@ -68,7 +68,7 @@ while [ ! c"$1" = "c" ] ; do
   case $1 in
 # Used by the 'install' script
   -D*)
-   DEFINES="$DEFINES $1"
+   DEFINES="$1 $DEFINES"
   ;;
   --no-chown) 
    NOCHOWN=TRUE
