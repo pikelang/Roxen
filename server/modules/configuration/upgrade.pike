@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.9 2000/02/11 18:33:40 js Exp $
+ * $Id: upgrade.pike,v 1.10 2000/02/14 17:57:30 js Exp $
  *
  * The Roxen Upgrade Client
  *
@@ -69,12 +69,12 @@ void set_entities(RXML.Context c)
   c->extend_scope("upgrade", upgrade_scope);
 }
 
-array(mapping) menu = ({
-  ([ "Main":"" ]),
-  ([ "Security":"security.html" ]),
-  ([ "Bugfixes":"bugfixes.html" ]),
-  ([ "Idonex":"idonex.html" ]),
-  ([ "3rd part":"3rdpart.html" ]),
+array(array) menu = ({
+  ({ "Main","" }),
+  ({ "Security","security" }),
+  ({ "Bugfixes","bugfixes" }),
+  ({ "Idonex","idonex" }),
+  ({ "3rd part","3rdpart" }),
 });
 
 string tag_upgrade_sidemenu(string t, mapping m, RequestID id)
@@ -82,13 +82,18 @@ string tag_upgrade_sidemenu(string t, mapping m, RequestID id)
   string ret =
     "<gbutton width=150 bgcolor=&usr.fade1;>Update List</gbutton><br><br>";
   
-  foreach(menu, mapping entry)
+  foreach(menu, array entry)
   {
-    ret += "<gbutton width=150 bgcolor=&usr.fade1; ";
-    if(m->this && lower_case(m->this)==lower_case(indices(entry)[0]))
-      ret += " icon_src=&usr.selected-indicator; ";
-    ret += "icon_align=left preparse href='"
-      + values(entry)[0] +"'>"+ indices(entry)[0] +"</gbutton><br>";
+    ret += "<gbutton width=150 ";
+    if((id->variables->category||"")==entry[1])
+    {
+      ret += "bgcolor=&usr.left-selbuttonbg; "+
+	" icon_src=&usr.selected-indicator; ";
+    }
+    else
+      ret += "bgcolor=&usr.fade1; ";
+    ret += "icon_align=left preparse href=\"upgrade.html?category="+
+      entry[1]+"\">"+entry[0]+"</gbutton><br>";
   }
  
   return ret;
@@ -97,7 +102,7 @@ string tag_upgrade_sidemenu(string t, mapping m, RequestID id)
 string container_packet_list(string t, mapping m, string c, RequestID id)
 {
   // limit
-  for
+//   for
   return "";
 }
 
@@ -165,7 +170,6 @@ class GetInfoFile
 
   string get_containers(string t, mapping m, string c, mapping res)
   {
-    werror("t: %O   c: %O\n",res,c);
     if(sizeof(t) && t[0]!='/')
       res[t]=c;
   }
