@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.52 1998/02/21 22:25:03 js Exp $
+/* $Id: wizard.pike,v 1.53 1998/02/24 22:29:42 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -293,7 +293,7 @@ string parse_wizard_page(string form, object id, string wiz_name)
 		       "help":parse_wizard_help]), id, foo );
   
   res = ("<!--Wizard-->\n"
-         "<form method=get>\n"
+         "<form method=post>\n"
 	 " <input type=hidden name=action value=\""+id->variables->action+"\">\n"
 	 " <input type=hidden name=_page value=\""+page+"\">\n"
 	 " <input type=hidden name=_state value=\""+compress_state(id->variables)+"\">\n"
@@ -415,7 +415,7 @@ mapping|string wizard_for(object id,string cancel,mixed ... args)
   for(; !data; v->_page=PAGE(offset))
   {
     function pg=this_object()[wiz_name+((int)v->_page)];
-    if(!pg) return "Error: Invalid page ("+v->_page+")!";
+    if(!pg) return "Internal error in wizard code: Invalid page ("+v->_page+")!";
     if(data = pg(id,@args)) break;
   }
   return parse_wizard_page(data,id,wiz_name);
@@ -426,13 +426,7 @@ string err;
 object get_wizard(string act, string dir, mixed ... args)
 {
   act-="/";
-  //  _master->set_inhibit_compile_errors("");
-  //  catch {
-    if(!wizards[dir+act]) wizards[dir+act]=compile_file(dir+act)(@args);
-    //  };
-//   if(_master->errrors && strlen(_master->errors)) err+=_master->errors;
-  //  _master->set_inhibit_compile_errors(0);
-  //  if(!wizards[dir+act]) throw("Failed to compile "+act+"\n");
+  if(!wizards[dir+act]) wizards[dir+act]=compile_file(dir+act)(@args);
   return wizards[dir+act];
 }
 
@@ -657,5 +651,6 @@ string html_border(string what, int|void width, int|void ww,
 void filter_checkbox_variables(mapping v)
 {
   foreach(indices(v), string s)
-    if(v[s]=="0") m_delete(v,s);
+    if(v[s]=="0")   m_delete(v,s);
+    else            v[s]-="\00";
 }
