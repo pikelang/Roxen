@@ -1,5 +1,5 @@
 /*
- * $Id: licensestatus.pike,v 1.3 2002/03/07 09:21:01 wellhard Exp $
+ * $Id: licensestatus.pike,v 1.4 2002/03/07 16:43:31 wellhard Exp $
  */
 
 #include <roxen.h>
@@ -24,6 +24,7 @@ mixed parse( RequestID id )
       <th align='left'>Filename</th>
       <th align='left'>#</th>
       <th align='left'>Type</th>
+      <th align='left'>Status</th>
     </tr>
     <emit source='licenses'>
       <tr>
@@ -31,6 +32,11 @@ mixed parse( RequestID id )
           >&_.filename;</a>&nbsp;&nbsp;&nbsp;</td>
         <td>&_.number;&nbsp;&nbsp;&nbsp;</td>
         <td>&_.type;&nbsp;&nbsp;&nbsp;</td>
+        <td>
+          <emit source='license-warnings' rowinfo='var.warnings'></emit>
+          <if variable='var.warnings > 0'>Warnings detected</if>
+          &nbsp;&nbsp;&nbsp;
+        </td>
       </tr>
     </emit>
   </table>
@@ -40,13 +46,13 @@ mixed parse( RequestID id )
     <font size='+1'>License &form.license;</font>
       <license name='&form.license;'>
       <table>
-        <tr><td><e>Company Name:</e></td><td>&_.company_name;</td></tr>
-        <tr><td><e>Expires:</e></td><td>&_.expires;</td></tr>
-        <tr><td><e>Hostname:</e></td><td>&_.hostname;</td></tr>
-        <tr><td><e>Type:</e></td><td>&_.type;</td></tr>
-        <tr><td><e>Number:</e></td><td>&_.number;</td></tr>
-        <tr><td><e>Created:</e></td><td>&_.created;</td></tr>
-        <tr><td><e>Created by:</e></td><td>&_.creator;@roxen.com</td></tr>
+        <tr><td>Company Name:</td><td>&_.company_name;</td></tr>
+        <tr><td>Expires:</td><td>&_.expires;</td></tr>
+        <tr><td>Hostname:</td><td>&_.hostname;</td></tr>
+        <tr><td>Type:</td><td>&_.type;</td></tr>
+        <tr><td>Number:</td><td>&_.number;</td></tr>
+        <tr><td>Created:</td><td>&_.created;</td></tr>
+        <tr><td>Created by:</td><td>&_.creator;@roxen.com</td></tr>
       </table><br />
       <table>
         <tr>
@@ -66,6 +72,23 @@ mixed parse( RequestID id )
           </tr>
         </emit>
       </table>
+      <emit source='license-warnings' rowinfo='var.warnings'></emit>
+      <if variable='var.warnings > 0'>
+        <table>
+          <tr>
+            <th align='left'>Type</th>
+            <th align='left'>Warning</th>
+            <th align='left'>Time</th>
+          </tr>
+          <emit source='license-warnings'>
+            <tr>
+              <td>&_.type;&nbsp;&nbsp;&nbsp;</td>
+              <td nowrap=''>&_.msg;&nbsp;&nbsp;&nbsp;</td>
+              <td><date type='iso' unix-time='&_.time;'/>&nbsp;&nbsp;&nbsp;</td>
+            </tr>
+          </emit>
+        </table>
+      </if>
     </license>
   </if>
 ";
