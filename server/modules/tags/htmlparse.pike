@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.137 1998/09/18 14:05:19 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.138 1998/09/20 00:00:13 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2569,7 +2569,6 @@ mapping query_tag_callers()
 	    "header":tag_header,
 	    "redirect":tag_redirect,
 	    "auth-required":tag_auth_required,
-	    "expire_time":tag_expire_time,
 	    "expire-time":tag_expire_time,
 	    "signature":tag_signature,
 	    "user":tag_user,
