@@ -1,14 +1,14 @@
-//! Variant of PHtml that parses only entities.
+//! Variant of PXml that parses only entities.
 //!
 //! This parser is the default for arguments.
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.6 2000/02/12 21:27:55 mast Exp $
+//! $Id: PEnt.pike,v 1.7 2000/02/13 18:07:33 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
-inherit RXML.PHtml;
+inherit RXML.PXml;
 
 // Block these to avoid confusion.
 constant add_tag = 0;
@@ -42,7 +42,7 @@ static void create (
   ignore_tags (1);
   lazy_entity_end (1);
   match_tag (0);
-  _set_entity_callback (.utils.p_html_entity_cb);
+  _set_entity_callback (.utils.p_xml_entity_cb);
   if (!type->free_text) _set_data_callback (.utils.return_empty_array);
 }
 

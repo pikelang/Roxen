@@ -1,16 +1,17 @@
-//! Compatibility variant of RXML.PHtml for parsing old style tags.
+//! Compatibility variant of RXML.PXml for parsing old style tags
+//! according to HTML syntax.
 //!
-//! The difference from RXML.PHtml is mainly that only variable
-//! reference entities are parsed. It also provides mappings for tags
-//! and containers that allows destructive modifications.
+//! The difference from RXML.PXml is mainly that tags and containers
+//! are told apart according to callback registration and not syntax.
+//! Also, only variable reference entities are parsed.
 //!
 //! Created 2000-01-08 by Martin Stjernholm.
 //!
-//! $Id: PHtmlCompat.pike,v 1.11 2000/02/11 01:07:43 mast Exp $
+//! $Id: PHtmlCompat.pike,v 1.12 2000/02/13 18:07:33 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
-inherit RXML.PHtml;
+inherit RXML.PXml;
 
 constant unwind_safe = 0;
 // Used from do_parse() in rxml.pike where we recurse without support
