@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.119 2001/08/28 18:10:00 per Exp $
+// $Id: Roxen.pmod,v 1.120 2001/08/29 17:05:56 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1481,10 +1481,14 @@ string image_from_type( string t )
   return "internal-gopher-unknown";
 }
 
-#define  PREFIX ({ "bytes", "kb", "Mb", "Gb", "Tb", "Hb" })
+#define  PREFIX ({ "bytes", "kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb" })
 string sizetostring( int size )
   //! Returns the size as a memory size string with suffix,
-  //! e.g. 43210 is converted into "42.2 kb.
+  //! e.g. 43210 is converted into "42.2 kb". To be correct
+  //! to the latest standards it should really read "42.2 KiB",
+  //! but we have chosen to keep the old notation for a while.
+  //! The function knows about the quantifiers kilo, mega, giga,
+  //! tera, peta, exa, zetta and yotta.
 {
   if(size<0) return "--------";
   float s = (float)size;
@@ -2868,7 +2872,7 @@ class ScopeRoxen {
        return ENCODE_RXML_TEXT(__roxen_build__, type);
      case "time":
        CACHE(c->id,1);
-       return ENCODE_RXML_INT(time(1),  type);
+       return ENCODE_RXML_INT(time(),  type);
      case "server":
        return ENCODE_RXML_TEXT (c->id->url_base(), type);
      case "domain":
