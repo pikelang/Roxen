@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.30 2000/04/06 06:37:00 wing Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.31 2000/05/01 08:23:41 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -383,12 +383,12 @@ string tag_accessed(string tag, mapping m, RequestID id)
   if(m->reset)
   {
     // FIXME: There are a few cases where users can avoid this.
-    if( !search( (dirname(m->file)+"/")-"//",
-		 (dirname(id->not_query)+"/")-"//" ) )
+    if( !search( (dirname(fix_relative(m->file, id))+"/")-"//",
+		 (dirname(fix_relative(id->not_query, id))+"/")-"//" ) )
     {
       query_num(m->file, -counts);
       database_set_created(m->file, time(1));
-      return "Number of counts for "+m->file+" is now 0.<br>";
+      return "Number of counts for "+m->file+" is now 0.<br />";
     }
     else
       // On a web hotell you don't want the guests to be alowed to reset
