@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.103 2001/08/13 18:18:48 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.104 2001/08/15 16:42:53 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -31,6 +31,12 @@ constant thread_safe=1;
 #else
 # define QUOTA_WERR(X)
 #endif
+
+#if constant(system.normalize_path)
+#define NORMALIZE_PATH(X)	system.normalize_path(X)
+#else /* !constant(system.normalize_path) */
+#define NORMALIZE_PATH(X)	(X)
+#endif /* constant(system.normalize_path) */
 
 constant module_type = MODULE_LOCATION;
 LocaleString module_name = LOCALE(51,"File systems: Normal File system");
@@ -172,7 +178,7 @@ void create()
 		" <tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt>."));
 }
 
-string path, mountpoint, charset, path_encoding;
+string path, mountpoint, charset, path_encoding, normalized_path;
 int stat_cache, dotfiles, access_as_user, no_symlinks, tilde;
 array(string) internal_files;
 
@@ -188,6 +194,25 @@ void start()
   mountpoint = query("mountpoint");
   stat_cache = query("stat_cache");
   internal_files = query("internal_files");
+#if constant(system.normalize_path)
+  if (catch {
+    if ((<'/','\\'>)[path[-1]]) {
+      normalized_path = system.normalize_path(path + ".");
+    } else {
+      normalized_path = system.normalize_path(path);
+    }
+#ifdef __NT__
+    normalized_path += "\\";
+#else /* !__NT__ */
+    normalized_path += "/";
+#endif /* __NT__ */    
+  }) {
+    report_error(LOCALE(0, "Path verification of %s failed.\n"), mountpoint);
+    normalized_path = path;
+  }
+#else /* !constant(system.normalize_path) */
+  normalized_path = path;
+#endif /* constant(system.normalize_path) */
   FILESYSTEM_WERR("Online at "+query("mountpoint")+" (path="+path+")");
   cache_expire("stat_cache");
 }
@@ -231,8 +256,11 @@ mixed stat_file( string f, RequestID id )
 
 string real_file( string f, RequestID id )
 {
-  if(stat_file( f, id ))
-    return path + f;
+  if(stat_file( f, id )) {
+    catch {
+      return NORMALIZE_PATH(decode_path(path + f));
+    };
+  }
 }
 
 int dir_filter_function(string f, RequestID id)
@@ -259,7 +287,9 @@ array find_dir( string f, RequestID id )
     // NB: Root-access is prevented.
     privs=Privs("Getting dir", (int)id->misc->uid, (int)id->misc->gid );
 
-  if(!(dir = get_dir( decode_path(path + f) ))) {
+  if (catch {
+    f = NORMALIZE_PATH(decode_path(path + f));
+  } || !(dir = get_dir(f))) {
     privs = 0;
     return 0;
   }
@@ -390,9 +420,6 @@ string decode_path( string p )
   while( strlen(p) && p[-1] == '/' )
     p = p[..strlen(p)-2];
 #endif
-#if constant( system.normalize_path )
-  p = system.normalize_path( p );
-#endif
   return p;
 }
 
@@ -452,13 +479,28 @@ mixed find_file( string f, RequestID id )
   /* only used for the quota system, thus rather unessesary to do for
      each request....
   */
-#define URI combine_path(mountpoint + "/" + f, ".")
+#define URI combine_path(mountpoint + "/" + oldf, ".")
 
-  f = path + f;
+  string norm_f;
 
-// #ifdef __NT__ // fixed in decode_path
-//   if(f[-1]=='/') f = f[..strlen(f)-2];
-// #endif
+  catch {
+    /* NOTE: NORMALIZE_PATH() may throw errors. */
+    f = norm_f = NORMALIZE_PATH(f = decode_path(path + f));
+#if constant(system.normalize_path)
+    if (!has_prefix(norm_f, normalized_path)) {
+      errors++;
+      report_error(LOCALE(0, "Path verification of %O failed.\n"), oldf);
+      TRACE_LEAVE("");
+      TRACE_LEAVE("Permission denied.");
+      return http_low_answer(403, "<h2>File exists, but access forbidden "
+			     "by user</h2>");
+    }
+    
+    id->not_query = mountpoint + replace(norm_f[sizeof(normalized_path)..],
+					 "\\", "/");
+#endif /* constant(system.normalize_path) */
+  };
+
   size = _file_size( f, id );
 
   /*
@@ -485,8 +527,10 @@ mixed find_file( string f, RequestID id )
       return -1; /* Is dir */
 
     default:
-      if( f[ -1 ] == '/' ) /* Trying to access file with '/' appended */
+      if( oldf[ -1 ] == '/' ||	/* Trying to access file with '/' appended */
+	  !norm_f) {		/* Or a file that is not normalizable. */
 	return 0;
+      }
 
       if(!id->misc->internal_get) 
       {
@@ -513,8 +557,7 @@ mixed find_file( string f, RequestID id )
 	privs=Privs("Getting file", (int)id->misc->uid, (int)id->misc->gid );
 
       o = Stdio.File( );
-      f = decode_path( f );
-      if(!o->open(f, "r" )) o = 0;
+      if(!o->open(norm_f, "r" )) o = 0;
       privs = 0;
 
       if(!o || (no_symlinks && (contains_symlinks(path, oldf))))
@@ -528,7 +571,7 @@ mixed find_file( string f, RequestID id )
 			       "by user</h2>");
       }
 
-      id->realfile = f;
+      id->realfile = norm_f;
       TRACE_LEAVE("");
       accesses++;
       TRACE_LEAVE("Normal return");
@@ -556,6 +599,11 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
+    if (size) {
+      TRACE_LEAVE("MKDIR failed. Directory name already exists. ");
+      return 0;
+    }
+
     if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
       TRACE_LEAVE("MKDIR: Permission denied");
       return Roxen.http_auth_required("foo",
@@ -573,12 +621,13 @@ mixed find_file( string f, RequestID id )
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
       errors++;
-      report_error(LOCALE(46,"Creation of %s failed. Permission denied.\n"),f);
+      report_error(LOCALE(46,"Creation of %s failed. Permission denied.\n"),
+		   oldf);
       TRACE_LEAVE("MKDIR: Contains symlinks. Permission denied");
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    int code = mkdir( decode_path(f) );
+    int code = mkdir(f);
     privs = 0;
 
     TRACE_ENTER("MKDIR: Accepted", 0);
@@ -642,22 +691,18 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    rm( decode_path(f) );
-    mkdirhier( decode_path(f) );
+    rm(f);
+    mkdirhier(f);
 
     if (id->misc->quota_obj) {
-      QUOTA_WERR("Checking if the file already exists.");
+      QUOTA_WERR("Checking if the file already existed.");
       if (size > 0) {
 	QUOTA_WERR("Deallocating " + size + "bytes.");
 	id->misc->quota_obj->deallocate(URI, size);
       }
-      if (size) {
-	QUOTA_WERR("Deleting old file.");
-	rm(f);
-      }
     }
 
-    object to = open(decode_path(f), "wct");
+    object to = open(f, "wct");
     privs = 0;
 
     TRACE_ENTER("PUT: Accepted", 0);
@@ -676,7 +721,7 @@ mixed find_file( string f, RequestID id )
     }
 
     // FIXME: Race-condition.
-    chmod(decode_path(f), 0666 & ~(id->misc->umask || 022));
+    chmod(f, 0666 & ~(id->misc->umask || 022));
 
     putting[id->my_fd] = id->misc->len;
     if(id->data && strlen(id->data))
@@ -748,7 +793,7 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    array err = catch(chmod(decode_path(f), id->misc->mode & 0777));
+    array err = catch(chmod(f, id->misc->mode & 0777));
     privs = 0;
 
     chmods++;
@@ -830,7 +875,7 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    code = mv(decode_path(movefrom), decode_path(f));
+    code = mv(movefrom, f);
     privs = 0;
 
     moves++;
@@ -932,7 +977,7 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    code = mv(decode_path(f), decode_path(moveto));
+    code = mv(f, decode_path(moveto));
     privs = 0;
 
     TRACE_ENTER("MOVE: Accepted", 0);
@@ -996,7 +1041,7 @@ mixed find_file( string f, RequestID id )
       cache_set("stat_cache", f, 0);
     }
 
-    if(!rm(decode_path(f)))
+    if(!rm(f))
     {
       privs = 0;
       id->misc->error_code = 405;
