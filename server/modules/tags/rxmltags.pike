@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.342 2002/02/05 19:55:55 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.343 2002/02/06 15:48:14 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2745,10 +2745,10 @@ class TagDefine {
 	if ((oldtagdef = ctx->misc[lookup_name]) &&
 	    !((user_tag = oldtagdef[3])->flags & RXML.FLAG_EMPTY_ELEMENT) ==
 	    !(moreflags & RXML.FLAG_EMPTY_ELEMENT)) // Redefine.
-	  ctx->misc[lookup_name] = ({def, defaults, args->scope, user_tag, preparse});
+	  ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag, preparse}));
 	else {
 	  user_tag = UserTag (n, moreflags);
-	  ctx->misc[lookup_name] = ({def, defaults, args->scope, user_tag, preparse});
+	  ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag, preparse}));
 	  ctx->add_runtime_tag(user_tag);
 	}
 	return 0;
