@@ -1,22 +1,8 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <locale version="1.0"/>
 <project>roxen_start</project>
-<language>English</language>
-<dumped>965273108</dumped>
-<added id="1"/>
-
-<!--
-*
-*  The 'roxen_start' project is intended only for messages that are
-*  printed to at least the event log during a normal server start.
-*  It should be kept small to avoid overhead.
-*
-*  Strings to report_debug() should not be translated.
-*  Admin Interface-related messages belong in 'roxen_config'
-*  Errormessages and messages caused by other events should 
-*  be in 'roxen_message'.
-*
--->
+<language>eng</language>
+<dumped>966022489</dumped>
 
 
 <str id="1">
@@ -26,7 +12,7 @@
 </str>
 
 <str id="2">
-<o>Starting %d threads to handle requests.
+<o>Starting %s threads to handle requests.
 </o>
 <t></t>
 </str>
@@ -53,4 +39,3 @@
 </o>
 <t></t>
 </str>
-

@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 
 <project name="roxen_start">
-<add id="1">
+<baselang>eng</baselang>
+<xmlpath>../translations/%L/roxen_start.xml</xmlpath>
+<nocopy />
+
 <!--
 *
 *  The 'roxen_start' project is intended only for messages that are
@@ -14,11 +17,6 @@
 *  be in 'roxen_message'.
 *
 -->
-</add>
-
-<out>../translations/eng/roxen_start.xml</out>
-<nocopy />
-<wipe />
 
 <file>../base_server/roxen.pike</file>
 <file>../base_server/configuration.pike</file>

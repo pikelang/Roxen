@@ -2,8 +2,8 @@
 
 <project name="roxen_message">
 <nocopy />
-<wipe />
-<out>../translations/eng/roxen_message.xml</out>
+<baselang>eng</baselang>
+<xmlpath>../translations/%L/roxen_message.xml</xmlpath>
 
 <file>../base_server/roxen.pike</file>
 <file>../base_server/configuration.pike</file>
@@ -23,4 +23,5 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 
 </pike>
 </add>
+
 </project>

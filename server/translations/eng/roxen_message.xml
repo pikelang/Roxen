@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <locale version="1.0"/>
 <project>roxen_message</project>
-<language>English</language>
-<dumped>965274121</dumped>
+<language>eng</language>
+<dumped>966022518</dumped>
 <added id="1"/>
 
 <str id="1">
@@ -60,7 +60,7 @@ Check that your password database is correct for user %s(%d),
 </str>
 
 <str id="10">
-<o>ssl3: No certificate found.
+<o>SSL3: No certificate found.
 </o>
 <t></t>
 </str>

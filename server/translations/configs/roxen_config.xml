@@ -2,8 +2,8 @@
 
 <project name="roxen_config">
 <nocopy />
-<wipe />
-<out>../translations/eng/roxen_config.xml</out>
+<baselang>eng</baselang>
+<xmlpath>../translations/%L/roxen_config.xml</xmlpath>
 
 <file>../base_server/roxen.pike</file>
 <file>../base_server/configuration.pike</file>

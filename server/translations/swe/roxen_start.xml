@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <locale version="1.0"/>
 <project>roxen_start</project>
-<language>English</language>
-<dumped>965273108</dumped>
-<added id="1"/>
+<language>swe</language>
+<dumped>966022489</dumped>
+
 
 <str id="1">
 <o>Starting one thread to handle requests.
@@ -26,6 +26,11 @@
 </t>
 </str>
 
+<str id="4">
+<o>All modules for %s enabled in %3.1f seconds</o>
+<t>Alla moduler till %s aktiverade på %3.1f sekunder</t>
+</str>
+
 <str id="5">
 <o>Update: Found new packages: %s
 </o>
@@ -38,23 +43,4 @@
 </o>
 <t>Uppdatering: Inga nya paket.
 </t>
-</str>
-
-
-<!--
-*
-*  The 'roxen_start' project is intended only for messages that are
-*  printed to at least the event log during a normal server start.
-*  It should be kept small to avoid overhead.
-*
-*  Strings to report_debug() should not be translated.
-*  Admin Interface-related messages belong in 'roxen_config'
-*  Errormessages and messages caused by other events should 
-*  be in 'roxen_message'.
-*
--->
-
-<str id="4">
-<o>All modules for %s enabled in %3.1f seconds</o>
-<t>Alla moduler till %s aktiverade på %3.1f sekunder</t>
 </str>

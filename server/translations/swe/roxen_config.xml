@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <locale version="1.0"/>
 <project>roxen_config</project>
-<language>English</language>
-<dumped>965274080</dumped>
+<language>swe</language>
+<dumped>966022474</dumped>
 <added id="1"/>
 
 <str id="1">
@@ -1518,13 +1518,13 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="237">
-<changed>
+<new/>
 <o>Jackdaws love my big sphinx of quartz.</o>
 <t></t>
 </str>
 
 <str id="238">
-<changed>
+<new/>
 <o>Features</o>
 <t></t>
 </str>
@@ -1555,7 +1555,7 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="243">
-<changed>
+<new/>
 <o>N/A</o>
 <t></t>
 </str>
@@ -1679,7 +1679,7 @@ string ftp_stat_line(string cmd, int times) {
 </str>
 
 <str id="254">
-<changed>
+<new/>
 <o>Module homepage</o>
 <t></t>
 </str>
@@ -1772,7 +1772,6 @@ tecknen / och \ får inte användas.
 </str>
 
 <str id="273">
-<changed>
 <o>Select one or several modules to add.</o>
 <t>Markera en eller flera moduler som ska läggas till.</t>
 </str>

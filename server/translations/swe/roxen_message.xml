@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <locale version="1.0"/>
 <project>roxen_message</project>
-<language>English</language>
-<dumped>965274122</dumped>
+<language>swe</language>
+<dumped>966022518</dumped>
 <added id="1"/>
 
 <str id="1">
@@ -63,7 +63,7 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 </str>
 
 <str id="10">
-<o>ssl3: No certificate found.
+<o>SSL3: No certificate found.
 </o>
 <t>SSL3: Hittade inget certifikat.
 </t>
