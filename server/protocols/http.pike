@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 
-string cvs_version = "$Id: http.pike,v 1.14 1997/01/29 06:39:12 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.15 1997/01/29 07:40:53 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -85,7 +85,6 @@ private void setup_pipe(int noend)
 {
   if(!my_fd) return end();
   if(!pipe)  pipe=((program)"/precompiled/pipe")();
-  if(!noend) pipe->set_done_callback(end);
 #ifdef REQUEST_DEBUG
   perror("REQUEST: Pipe setup.\n");
 #endif
@@ -612,11 +611,15 @@ int wants_more()
 static void handle_request( )
 {
   mixed *err;
-  int tmp, keep_alive;
+  int tmp;
+#ifdef KEEP_CONNECTION_ALIVE
+  int keep_alive;
+#endif
   function funp;
   mapping heads;
-  string head_string, tmp2, tmp3;
+  string head_string;
   object thiso=this_object();
+
 #ifndef SPEED_MAX
   remove_call_out(timeout);
 #endif
@@ -745,41 +748,47 @@ static void handle_request( )
     head_string = (myheads+({"",""}))*"\r\n";
     
     if(conf)conf->hsent+=strlen(head_string||"");
+    my_fd->set_read_callback(0);
+    my_fd->set_close_callback(0);
+
     if(method=="HEAD")
     {
       if(conf)conf->log(file, thiso);
+#ifdef KEEP_CONNECTION_ALIVE
       if(keep_alive)
       {
 	my_fd->write(head_string);
 	misc->connection = 0;
-#ifdef KEEP_CONNECTION_ALIVE
 	keep_connection_alive();
+      } else
 #endif
-      } else {
 	end(head_string);
-      }
       return;
     }
 
     if(conf)
       conf->sent+=(file->len>0 ? file->len : 1000);
     
-    if((file->len<=0 || (file->len > 30000))
-       && !keep_alive && objectp(file->file))
+    if(!file->data &&
+       (file->len<=0 || (file->len > 30000))
+#ifdef KEEP_CONNECTION_ALIVE
+       && !keep_alive
+#endif
+       && objectp(file->file))
     {
-      if(file->data)  head_string += file->data;
-      if(head_string)
-      {
-	my_fd->write(head_string);
-	head_string=0;
-      }
+      if(head_string) my_fd->write(head_string);
       shuffle( file->file, my_fd );
       if(conf)conf->log(file, thiso); 
       my_fd=file->file=file=pipe=0;
-      destruct();
+      destruct(thiso);
+      return;
     }
   
-    if(!keep_alive && file->len < 3000 && file->len >= 0)
+    if(file->len < 3000 &&
+#ifdef KEEP_CONNECTION_ALIVE
+       !keep_alive &&
+#endif
+       file->len >= 0)
     {
 //    perror("fo\n");
       if(file->data)
@@ -796,7 +805,7 @@ static void handle_request( )
     }
   }
 
-// perror("Last case...\n");
+perror("Last case...\n");
   if(head_string) send(head_string);
   if(file->data)  send(file->data);
   if(file->file)  send(file->file);
@@ -814,8 +823,11 @@ static void handle_request( )
     }
   } else 
 #endif
+  {
     my_fd=0;
-  pipe=file=0;
+    pipe=file=0;
+    destruct(thiso);
+  }
 }
 
 /* We got some data on a socket.
@@ -863,9 +875,6 @@ void got_data(mixed fooid, string s)
     end();
     return;
   }
-#ifdef THREADS
-//  my_fd->set_blocking();
-#endif
   if(conf)
   {
     conf->received += strlen(s);
@@ -915,8 +924,6 @@ void create(object f, object c)
   if(f)
   {
     my_fd = f;
-    my_fd->set_id(0);
-
     my_fd->set_read_callback(got_data);
     my_fd->set_close_callback(end);
     conf = c;

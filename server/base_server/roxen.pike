@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.34 1997/01/29 05:30:30 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.35 1997/01/29 07:40:52 per Exp $";
 #define IN_ROXEN
 
 #include <fifo.h>
@@ -1713,34 +1713,31 @@ void create_pid_file(string where)
     perror("I cannot create the pid file ("+where+").\n");
 }
 
+void init_shuffler();
 // External multi-threaded data shuffler. This leaves roxen free to
 // serve new requests. The file descriptors of the open files and the
 // clients are sent to the program, then the shuffler just shuffles 
 // the data to the client.
-int _shuffle(object from, object to)
+void _shuffle(object from, object to)
 {
   if(shuffle_fd)
+  {
     if(send_fd(shuffle_fd,from->query_fd())&&
        send_fd(shuffle_fd,to->query_fd()))
-    {
-#if 0
-      destruct(from);
-      destruct(to);
-#endif
-      return 1;
-    }
+      return;
+    init_shuffler();
+  }
 #if efun(Pipe)
   object p = Pipe();
   p->input(from);
   p->output(to);
-  return 1;
 #else
+  perror("Shuffle: using fallback(Ouch!)\n",from,to);
   // Fallback. Very unlikely.
   from->set_id(to->write);
   from->set_nonblocking(lambda(function w,string s){w(s);},lambda(){},
                         lambda(function w){destruct(function_object(w));});
 #endif
-  return 1;
 }
 
 #ifdef THREADS
@@ -1759,16 +1756,16 @@ void shuffle(object a, object b)
 function shuffle = _shuffle;
 #endif
 
+#ifdef THREADS
+object st=thread_create(shuffle_thread);
+#endif
+
   
 object shuffler;
 void init_shuffler()
 {
   object out;
   object out2;
-#ifdef THREADS
-  thread_create(shuffle_thread);
-#endif
-
   if(file_size("bin/shuffle") > 100)
   {
     if(shuffler)
