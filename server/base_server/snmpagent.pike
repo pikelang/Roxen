@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.13 2001/08/28 14:39:05 hop Exp $
+ * $Id: snmpagent.pike,v 1.14 2001/08/30 13:23:23 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -101,22 +101,24 @@ inherit Roxen;
 #define RISMIB_BASE_WEBSERVER_GLOBAL		RISMIB_BASE_WEBSERVER+".1"
 // enterprises.roxenis.app.webserver.global.restart
 #define RISMIB_BASE_WEBSERVER_GLOBAL_BOOT	RISMIB_BASE_WEBSERVER_GLOBAL+".1"
-// enterprises.roxenis.app.webserver.vsTable.vsEntry
-#define RISMIB_BASE_WEBSERVER_VS		RISMIB_BASE_WEBSERVER+".2.1"
+// enterprises.roxenis.app.webserver.global.vsCount
+#define RISMIB_BASE_WEBSERVER_GLOBAL_VS		RISMIB_BASE_WEBSERVER_GLOBAL+".2"
+// enterprises.roxenis.app.webserver.vsTable
+#define RISMIB_BASE_WEBSERVER_VS		RISMIB_BASE_WEBSERVER+".2"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsIndex
-#define RISMIB_BASE_WEBSERVER_VS_INDEX		RISMIB_BASE_WEBSERVER_VS+".1"
+#define RISMIB_BASE_WEBSERVER_VS_INDEX		RISMIB_BASE_WEBSERVER_VS+".1.1"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsName
-#define RISMIB_BASE_WEBSERVER_VS_NAME		RISMIB_BASE_WEBSERVER_VS+".2"
+#define RISMIB_BASE_WEBSERVER_VS_NAME		RISMIB_BASE_WEBSERVER_VS+".1.2"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsDescription
-#define RISMIB_BASE_WEBSERVER_VS_DESC		RISMIB_BASE_WEBSERVER_VS+".3"
+#define RISMIB_BASE_WEBSERVER_VS_DESC		RISMIB_BASE_WEBSERVER_VS+".1.3"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsSent
-#define RISMIB_BASE_WEBSERVER_VS_SDATA		RISMIB_BASE_WEBSERVER_VS+".4"
+#define RISMIB_BASE_WEBSERVER_VS_SDATA		RISMIB_BASE_WEBSERVER_VS+".1.4"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsReceived
-#define RISMIB_BASE_WEBSERVER_VS_RDATA		RISMIB_BASE_WEBSERVER_VS+".5"
+#define RISMIB_BASE_WEBSERVER_VS_RDATA		RISMIB_BASE_WEBSERVER_VS+".1.5"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsHeaders
-#define RISMIB_BASE_WEBSERVER_VS_SHDRS		RISMIB_BASE_WEBSERVER_VS+".6"
+#define RISMIB_BASE_WEBSERVER_VS_SHDRS		RISMIB_BASE_WEBSERVER_VS+".1.6"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsRequests
-#define RISMIB_BASE_WEBSERVER_VS_REQS		RISMIB_BASE_WEBSERVER_VS+".7"
+#define RISMIB_BASE_WEBSERVER_VS_REQS		RISMIB_BASE_WEBSERVER_VS+".1.7"
 
 #define LOG_EVENT(txt, pkt) log_event(txt, pkt)
 
@@ -182,7 +184,7 @@ class SNMPagent {
       mib->register(SubMIBSnmp(this_object()));
       // enterprises.roxenis.*
       mib->register(SubMIBRoxenVS(this_object()));
-      mib->register(SubMIBRoxenVSName(this_object()));
+      mib->register(SubMIBRoxenVSTable(this_object()));
       mib->register(SubMIBRoxenBoot(this_object()));
     }
     if (!status())
@@ -698,7 +700,7 @@ SNMPAGENT_MSG(sprintf("DEB: idx:%O, idxnums: %O", idx, idxnums));
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.13 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.14 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -865,8 +867,8 @@ class SubMIBRoxenVS {
 
   inherit SubMIBManager;
 
-  constant name = "enterprises.roxenis.app.webserver.vsTable";
-  constant tree = RISMIB_BASE_WEBSERVER_VS - (MIBTREE_BASE+".");
+  constant name = "enterprises.roxenis.app.webserver.global.vsCount";
+  constant tree = RISMIB_BASE_WEBSERVER_GLOBAL_VS - (MIBTREE_BASE+".");
 
   void create(object agent) {
 
@@ -912,7 +914,7 @@ class SubMIBRoxenVS {
 
 //! roxenis enterprise subtree manager
 //! Manages the enterprises.roxenis.app.webserver.vsTable submib tree.
-class SubMIBRoxenVSName {
+class SubMIBRoxenVSTable {
 
   inherit SubMIBManager;
 
@@ -942,11 +944,11 @@ class SubMIBRoxenVSName {
     }*/
 
     // no, so we will try to find "tabular" object instead
-    if(sizeof((soid = soid - (tree + "."))/".") != 2)
-      return ({}); // exactly one point, please
+    if(sizeof((soid = soid - (tree + "."))/".") != 3 || (soid/".")[0] != "1")
+      return ({}); // exactly two points, please (vsEntry.vs<xxx>.<num>)
 
-    idx = ((int)(soid/".")[1])+1;
-    switch ((soid/".")[0]) {
+    idx = ((int)(soid/".")[2]);
+    switch ((soid/".")[1]) {
 
 	case "1": // VS_INDEX
     	  vname = agent->get_virtservname(idx);
@@ -1005,8 +1007,8 @@ class SubMIBRoxenVSName {
     soid = oid_strip(oid);
 
     if(oid == (MIBTREE_BASE+"."+tree)) {
-      soid = "1.-1"; 			// special case
-      oid += ".1.-1";			// trash only
+      soid = "1.1.-1"; 			// special case
+      oid += ".1.1.-1";			// trash only
     }
 
     arr = ((soid = soid - (tree + "."))/".");
@@ -1015,37 +1017,57 @@ class SubMIBRoxenVSName {
       oid += "."+soid;			// trash only
     }
 
-    idx = (int)((soid/".")[1])+1;
-    noid = (reverse(reverse(oid/".")[1..])*".")+"."+(string)idx;
+    idx = (int)((soid/".")[2]);
+    if(!stringp(agent->get_virtservname(idx+1))) {  // check on correct index
+      vdata = ((int)(soid/".")[1])+1;
+      if(vdata > 7)
+	    return ({}); // outside of current manager scope
+      soid = "1."+(string)vdata+".1";
+      noid = MIBTREE_BASE+"."+tree+"."+soid;
+    } else 
+      noid = (reverse(reverse(oid/".")[1..])*".")+"."+(string)++idx;
+SNMPAGENT_MSG(sprintf("DEB: idx:%O, soid: %O, noid: %O", idx, soid, noid));
 
-    switch ((soid/".")[0]) {
+    switch ((soid/".")[1]) {
 
-	case "1": // VS_NAME
-	  vname = agent->get_virtservname(idx+1);
+	case "1": // VS_INDEX
+	  vname = agent->get_virtservname(idx);  // only checking
+	  if(!stringp(vname))
+	    return ({}); // wrong index
+	  return (({noid, @OBJ_INT(idx)}));
+
+	case "2": // VS_NAME
+	  vname = agent->get_virtservname(idx);
 	  if(!stringp(vname))
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_STR(vname)}));
 
-	case "2": // VS_SDATA
-	  vdata = agent->get_virtservsdata(idx+1);
+	case "3": // VS_DESCR
+	  vname = agent->get_virtservname(idx);  // FIXME:  change to descr!
+	  if(!stringp(vname))
+	    return ({}); // wrong index
+	  return (({noid, @OBJ_STR(vname)}));
+
+	case "4": // VS_SDATA
+	  vdata = agent->get_virtservsdata(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_COUNT(vdata)}));
 
-	case "3": // VS_SHDRS
-	  vdata = agent->get_virtservshdrs(idx+1);
+	case "5": // VS_RDATA
+	  vdata = agent->get_virtservrdata(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_COUNT(vdata)}));
 
-	case "4": // VS_RDATA
-	  vdata = agent->get_virtservrdata(idx+1);
+	case "6": // VS_SHDRS
+	  vdata = agent->get_virtservshdrs(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_COUNT(vdata)}));
 
-	case "5": // VS_REQS
-	  vdata = agent->get_virtservreqs(idx+1);
+	case "7": // VS_REQS
+	  vdata = agent->get_virtservreqs(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_COUNT(vdata)}));
@@ -1069,7 +1091,7 @@ class SubMIBRoxenBoot {
   
   void create(object agentp) {
     agent = agentp;
-    submibtab = ([ tree+".0": get_null ]);
+    submibtab = ([ tree+".0": lambda() { return OBJ_INT(0); }  ]);
   }
 
   // HACK! For testing purpose only!
