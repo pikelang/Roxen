@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.92 2000/07/04 03:45:20 per Exp $
+// $Id: module.pike,v 1.93 2000/07/18 15:55:53 jhs Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -77,6 +77,9 @@ string fix_cvs(string from)
 int module_dependencies(Configuration configuration,
                         array (string) modules,
                         int|void now)
+//! If your module depends on other modules present in the server,
+//! calling <pi>module_dependencies()</pi>, supplying an array of
+//! module identifiers (the filename minus extension, more or less).
 {
   if(configuration || my_configuration() ) 
     (configuration||my_configuration())->add_modules( modules, now );
@@ -93,6 +96,8 @@ string file_name_and_stuff()
 
 
 Configuration my_configuration()
+//! Returns the Configuration object of the virtual server the module
+//! belongs to.
 {
   if(_my_configuration)
     return _my_configuration;
@@ -111,11 +116,20 @@ nomask void set_configuration(Configuration c)
 }
 
 void set_module_creator(string|array(string) c)
+//! Set the name and optionally email address of the author of the
+//! module. Names on the format "author name <author_email>" will
+//! end up as links on the module's information page in the admin
+//! interface. In the case of multiple authors, an array of such
+//! strings can be passed.
 {
   module_creator = c;
 }
 
 void set_module_url(string to)
+//! A common way of referring to a location where you maintain
+//! information about your module or similar. The URL will turn up
+//! on the module's information page in the admin interface,
+//! referred to as the module's home page.
 {
   module_url = to;
 }
@@ -128,7 +142,7 @@ string status() {}
 
 string info(Configuration conf)
 {
-  return (this_object()->register_module()[2]);
+ return (this_object()->register_module()[2]);
 }
 
 void save_me()
@@ -147,13 +161,14 @@ string comment()
 }
 
 string query_internal_location()
+//! Returns the internal mountpoint, where <ref>find_internal()</ref>
+//! is mounted.
 {
   if(!_my_configuration)
     error("Please do not call this function from create()!\n");
   return _my_configuration->query_internal_location(this_object());
 }
 
-/* Per default, return the value of the module variable 'location' */
 string query_location()
 {
   string s;
@@ -162,7 +177,8 @@ string query_location()
 }
 
 array(string) location_urls()
-// The first is the canonical one built with MyWorldLocation.
+//! Returns an array of all locations where the module is mounted.
+//! The first is the canonical one built with MyWorldLocation.
 {
   string loc = query_location();
   if (!loc) return ({});
@@ -416,6 +432,7 @@ mapping api_functions()
 }
 
 mapping query_tag_callers()
+//! Compat
 {
   mapping m = ([]);
   foreach(glob("tag_*", indices( this_object())), string q)
