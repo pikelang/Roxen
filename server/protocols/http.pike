@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.344 2001/11/05 12:59:40 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.345 2001/11/07 09:53:07 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -942,7 +942,7 @@ private final int parse_got_2( )
       }
     }
   }
-  if (!(< "HTTP/1.0", "HTTP/0.9" >)[clientprot]) {
+  if (!(< "HTTP/1.0", "HTTP/0.9" >)[prot]) {
     if (!misc->host) {
       // RFC 2616 requires this behaviour.
       REQUEST_WERR("HTTP: HTTP/1.1 request without a host header.");
