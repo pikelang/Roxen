@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.17 1997/08/30 15:57:40 peter Exp $
+# $Id: extensions,v 1.18 1997/10/16 12:17:46 grubba Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -42,6 +42,7 @@ ppm	image/x-portable-pixmap
 ras	image/x-cmu-raster
 rgb	image/x-rgb
 rs	image/x-sun-raster
+tga	image/x-targa
 tif	image/tiff
 tiff	image/tiff
 xbm	image/x-xbitmap
