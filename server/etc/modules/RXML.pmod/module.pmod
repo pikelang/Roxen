@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.201 2001/07/12 21:49:00 mast Exp $
+// $Id: module.pmod,v 1.202 2001/07/16 02:02:47 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -65,6 +65,7 @@ class RequestID { };
 // #define RXML_VERBOSE
 // #define RXML_COMPILE_DEBUG
 // #define RXML_ENCODE_DEBUG
+// #define TYPE_OBJ_DEBUG
 // #define PARSER_OBJ_DEBUG
 
 
@@ -4572,28 +4573,41 @@ class Type
     return 0;
   }
 
+#ifdef TYPE_OBJ_DEBUG
+#  define TDEBUG_MSG(X...) (report_debug (X))
+#else
+#  define TDEBUG_MSG(X...) 0
+#endif
+
   Type `() (program/*(Parser)HMM*/ newparser, mixed... parser_args)
   //! Returns a type identical to this one, but which has the given
   //! parser. parser_args is passed as extra arguments to the
   //! create()/reset()/clone() functions.
   {
+    TDEBUG_MSG ("%O(%s%{, %O%})", this_object(), newparser->name, parser_args);
     Type newtype;
     if (sizeof (parser_args)) {	// Can't cache this.
       newtype = clone();
       newtype->parser_prog = newparser;
       newtype->parser_args = parser_args;
       if (newparser->tag_set_eval) newtype->_p_cache = set_weak_flag (([]), 1);
+      TDEBUG_MSG (" got args, can't cache\n");
     }
     else {
       if (!_t_obj_cache) _t_obj_cache = ([]);
       if (!(newtype = _t_obj_cache[newparser]))
-	if (newparser == parser_prog)
+	if (newparser == parser_prog) {
 	  _t_obj_cache[newparser] = newtype = this_object();
+	  TDEBUG_MSG (" caching and returning this object\n");
+	}
 	else {
 	  _t_obj_cache[newparser] = newtype = clone();
 	  newtype->parser_prog = newparser;
 	  if (newparser->tag_set_eval) newtype->_p_cache = set_weak_flag (([]), 1);
+	  TDEBUG_MSG (" returning cloned type %O\n", newtype);
 	}
+      else
+	TDEBUG_MSG (" returning %O from cache\n", newtype);
     }
 #ifdef DEBUG
     if (reg_types[this_object()->name]->parser_prog != PNone)
@@ -6348,9 +6362,17 @@ class PCode
 
 #ifdef RXML_ENCODE_DEBUG
 #  define ENCODE_MSG(X...) do report_debug (X); while (0)
+#  define ENCODE_DEBUG_RETURN(val) do {					\
+  mixed _v__ = (val);							\
+  report_debug ("  returned %s\n",					\
+		zero_type (_v__) ? "([])[0]" :				\
+		utils->format_short (_v__, 160));			\
+  return _v__;								\
+} while (0)
 string _sprintf() {return "RXML.pmod";}
 #else
 #  define ENCODE_MSG(X...) do {} while (0)
+#  define ENCODE_DEBUG_RETURN(val) do return (val); while (0)
 #endif
 
 constant is_RXML_encodable = 1;
@@ -6393,55 +6415,67 @@ class PCodec
 	  Frame frame = tag->Frame();
 	  frame->tag = tag;
 	  frame->_restore (saved);
-	  return frame;
+	  ENCODE_DEBUG_RETURN (frame);
 	}
 	case "tag": {
-	  [string ignored, TagSet tag_set, int proc_instr, string name] = what;
+	  [string ignored, string ts_name, int proc_instr, string name] = what;
+	  sscanf (ts_name, "ts:%s", ts_name);
+	  TagSet tag_set;
+	  if (sscanf (ts_name, "[%d]%s", int pos, ts_name) == 2)
+	    ENCODE_DEBUG_RETURN (resolve_composite_tag_set (pos, ts_name));
+	  if (!(tag_set = all_tagsets[ts_name]) || !objectp (tag_set))
+	    error ("Cannot find tag set %O.\n", ts_name);
 	  if (Tag tag = tag_set->get_local_tag(name, proc_instr))
-	    return tag;
+	    ENCODE_DEBUG_RETURN (tag);
 	  error ("Cannot find %s %O in tag set %O.\n",
 		 proc_instr ? "processing instruction" : "tag",
 		 name, tag_set);
 	}
-	case "type":
-	  return reg_types[what[1]] (@what[2..]);
+	case "type": {
+	  string parser_name;
+	  sscanf (what[2], "p:%s", parser_name);
+	  program/*(Parser)*/ parser_prog = reg_parsers[parser_name];
+	  if (!parser_prog)
+	    error ("Cannot find parser %O.\n", parser_name);
+	  ENCODE_DEBUG_RETURN (reg_types[what[1]] (parser_prog, @what[3..]));
+	}
 	case "ObjectMarker":
-	  return Debug.ObjectMarker (
 #ifdef RXML_OBJ_DEBUG
-	    what[1]
+	  ENCODE_DEBUG_RETURN (Debug.ObjectMarker (what[1]));
 #else
-	    0			// Avoids the debug printouts, at least.
+	  // This at least avoids the debug printouts if an entry
+	  // encoded with RXML_OBJ_DEBUG is decoded.
+	  ENCODE_DEBUG_RETURN (Debug.ObjectMarker (0));
 #endif
-	  );
       }
     }
 
     else {
       ENCODE_MSG ("objectof (%O)\n", what);
       switch (what) {
-	case "nil": return nil;
-	case "RXML": return rxml_module;
-	case "utils": return utils;
-	case "xml_tag_parser": return xml_tag_parser;
+	case "nil": ENCODE_DEBUG_RETURN (nil);
+	case "RXML": ENCODE_DEBUG_RETURN (rxml_module);
+	case "utils": ENCODE_DEBUG_RETURN (utils);
+	case "xml_tag_parser": ENCODE_DEBUG_RETURN (xml_tag_parser);
       }
 
       if (sscanf (what, "ts:%s", what)) {
 	if (sscanf (what, "[%d]%s", int pos, what) == 2)
-	  return resolve_composite_tag_set (pos, what);
+	  ENCODE_DEBUG_RETURN (resolve_composite_tag_set (pos, what));
 	if (TagSet tag_set = all_tagsets[what])
 	  if (objectp (tag_set))
-	    return tag_set;
+	    ENCODE_DEBUG_RETURN (tag_set);
 	error ("Cannot find tag set %O.\n", what);
       }
       else if(sscanf (what, "mod:%s", what)) {
 	if (object/*(RoxenModule)*/ mod = Roxen->get_module(what))
-	  return mod;
+	  ENCODE_DEBUG_RETURN (mod);
 	error ("Cannot find module %O.\n", what);
       }
       else if (sscanf (what, "c:%s", what)) {
 	mixed efun;
 	if (objectp (efun = all_constants()[what]))
-	  return efun;
+	  ENCODE_DEBUG_RETURN (efun);
 	error ("Cannot find global constant object %O.\n", what);
       }
     }
@@ -6455,13 +6489,13 @@ class PCodec
 
     if (sscanf (what, "p:%s", what)) {
       if (program/*(Parser)*/ parser_prog = reg_parsers[what])
-	return parser_prog;
+	ENCODE_DEBUG_RETURN (parser_prog);
       error ("Cannot find parser %O.\n", what);
     }
     else if (sscanf (what, "c:%s", what)) {
       mixed efun;
       if (functionp (efun = all_constants()[what]))
-	return efun;
+	ENCODE_DEBUG_RETURN (efun);
       error ("Cannot find global constant function %O.\n", what);
     }
 
@@ -6474,13 +6508,13 @@ class PCodec
 
     if (sscanf (what, "p:%s", what)) {
       if (program/*(Parser)*/ parser_prog = reg_parsers[what])
-	return parser_prog;
+	ENCODE_DEBUG_RETURN (parser_prog);
       error ("Cannot find parser %O.\n", what);
     }
     else if (sscanf (what, "c:%s", what)) {
       mixed efun;
       if (programp (efun = all_constants()[what]))
-	return efun;
+	ENCODE_DEBUG_RETURN (efun);
       error ("Cannot find global constant program %O.\n", what);
     }
 
@@ -6493,53 +6527,63 @@ class PCodec
       ENCODE_MSG ("nameof (object %O)\n", what);
       if(what->is_RXML_Frame) {
 	if (Tag tag = what->RXML_dump_frame_reference && what->tag)
-	  return ({"frame", tag, what->_save()});
-	ENCODE_MSG ("encoding frame %O recursively\n", what);
+	  ENCODE_DEBUG_RETURN (({"frame", tag, what->_save()}));
+	ENCODE_MSG ("  encoding frame recursively\n");
 	return ([])[0];
       }
       else if (what->is_RXML_Tag) {
 	TagSet tagset;
 	if ((tagset = what->tagset) && what->name && tagset->name)
-	  return ({"tag",
-		   tagset,
-		   what->flags & FLAG_PROC_INSTR,
-		   what->name + (what->plugin_name? "#"+what->plugin_name : "")});
-	ENCODE_MSG ("encoding tag %O recursively\n", what);
+	  ENCODE_DEBUG_RETURN (({
+	    "tag",
+	    "ts:" + tagset->name,
+	    what->flags & FLAG_PROC_INSTR,
+	    what->name + (what->plugin_name? "#"+what->plugin_name : "")}));
+	ENCODE_MSG ("  encoding tag recursively\n");
 	return ([])[0];
       }
       else if (what->is_RXML_TagSet) {
 	if (what->name)
-	  return "ts:" + what->name;
+	  ENCODE_DEBUG_RETURN ("ts:" + what->name);
 	error ("Cannot encode unnamed tag set %O.\n", what);
       }
-      else if (what->is_RXML_Type)
-	return ({"type", what->name, what->parser_prog}) + what->parser_args;
+      else if (what->is_RXML_Type) {
+	string parser_name = what->parser_prog->name;
+#ifdef DEBUG
+	if (!reg_parsers[parser_name])
+	  error ("Cannot encode unregistered parser %O in type %O.\n",
+		 parser_name, what);
+#endif
+	ENCODE_DEBUG_RETURN (({"type", what->name, "p:" + parser_name}) +
+			     what->parser_args);
+      }
       else if(string modname = what->is_module && what->module_identifier())
-	return "mod:"+modname;
+	ENCODE_DEBUG_RETURN ("mod:" + modname);
       else if(what == nil)
-	return "nil";
+	ENCODE_DEBUG_RETURN ("nil");
       else if (what == rxml_module)
-	return "RXML";
+	ENCODE_DEBUG_RETURN ("RXML");
       else if(what == utils)
-	return "utils";
+	ENCODE_DEBUG_RETURN ("utils");
       else if (what == xml_tag_parser)
-	return "xml_tag_parser";
+	ENCODE_DEBUG_RETURN ("xml_tag_parser");
 #ifdef RXML_OBJ_DEBUG
       else if (object_program (what) == Debug.ObjectMarker)
-	return ({"ObjectMarker",
-		 reverse (array_sscanf (reverse (what->id), "]%*d[%s")[0])});
+	ENCODE_DEBUG_RETURN (({
+	  "ObjectMarker",
+	  reverse (array_sscanf (reverse (what->id), "]%*d[%s")[0])}));
 #endif
       else if (what->is_RXML_encodable) {
-	ENCODE_MSG ("encoding object %O recursively\n", what);
+	ENCODE_MSG ("  encoding object recursively\n");
 	return ([])[0];
       }
     }
 
     else {
-      ENCODE_MSG ("nameof (%O)\n", what);
       if (programp (what)) {
+	ENCODE_MSG ("nameof (program %s)\n", Program.defined (what));
 	if (what->is_RXML_pike_code) {
-	  ENCODE_MSG ("encoding byte code for %s\n", Program.defined (what));
+	  ENCODE_MSG ("  encoding byte code\n");
 	  return ([])[0];
 	}
 	else if (what->is_RXML_Parser) {
@@ -6547,30 +6591,32 @@ class PCodec
 	  if (!reg_parsers[what->name])
 	    error ("Cannot encode unregistered parser %O.\n", what->name);
 #endif
-	  return "p:" + what->name;
+	  ENCODE_DEBUG_RETURN ("p:" + what->name);
 	}
 	else if (functionp (what) && what->is_RXML_encodable) {
 	  // If the program also is a function the encoder won't dump
 	  // the byte code, but instead the parent object and the
 	  // identifier within it.
-	  ENCODE_MSG ("encoding reference to program %O->%O\n",
+	  ENCODE_MSG ("  encoding reference to program %O->%O\n",
 		      function_object (what), what);
 	  return ([])[0];
 	}
       }
+      else
+	ENCODE_MSG ("nameof (%O)\n", what);
       if (object o = functionp (what) && function_object (what))
 	if (o->is_RXML_encodable) {
-	  ENCODE_MSG ("encoding reference to function %O->%O\n", o, what);
+	  ENCODE_MSG ("  encoding reference to function %O->%O\n", o, what);
 	  return ([])[0];
 	}
     }
 
     if (string efun = reverse_constants[what])
       if (all_constants()[efun] == what)
-	return "c:" + efun;
+	ENCODE_DEBUG_RETURN ("c:" + efun);
     if (string efun = search (all_constants(), what)) {
       reverse_constants[efun] = what;
-      return "c:" + efun;
+      ENCODE_DEBUG_RETURN ("c:" + efun);
     }
 
     if (programp (what))
@@ -6582,7 +6628,7 @@ class PCodec
   mixed encode_object (object x)
   {
     ENCODE_MSG ("encode_object (%O)\n", x);
-    if (x->_encode && x->_decode) return x->_encode();
+    if (x->_encode && x->_decode) ENCODE_DEBUG_RETURN (x->_encode());
     error ("Cannot encode object %O without _encode() and _decode().\n", x);
   }
 
@@ -6601,7 +6647,16 @@ string p_code_to_string(PCode p_code)
 
 PCode string_to_p_code(string str)
 {
-  return [object(PCode)]decode_value(str, PCodec());
+  mixed err = catch {
+    return [object(PCode)]decode_value(str, PCodec());
+  };
+  // Try to explain the error a bit more.
+  catch {
+    err[0] +=
+      "The encoded p-code is probably just of an older version.\n"
+      "In that case the problem will disappear with the next update.\n";
+  };
+  throw (err);
 }
 
 // Some parser tools:
