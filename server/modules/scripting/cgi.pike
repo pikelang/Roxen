@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.4 1999/04/28 18:42:00 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.5 1999/04/30 07:56:05 neotron Exp $";
 
 
 array register_module()
@@ -353,7 +353,7 @@ class CGIWrapper
   {
     int pos, skip=4;
     if(((pos=search( headers, "\r\n\r\n" )) != -1) ||
-       (skip=2 && ((pos=search( headers, "\n\n" )) != -1)))
+       ((skip=2) && ((pos=search( headers, "\n\n" )) != -1)))
     {
       output( handle_headers( headers[..pos-1] ) );
       output( headers[pos+skip+1..] );
