@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.111 1999/07/21 19:29:40 mast Exp $
+// $Id: roxenlib.pike,v 1.112 1999/08/12 17:20:37 grubba Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -309,7 +309,7 @@ static int is_modified(string a, int t, void|int len)
   string m, extra;
   if(!a)
     return 1;
-  t1=localtime(t + timezone() - localtime(t)->isdst*3600);
+  t1=gmtime(t);
    // Expects 't' as returned from time(), not UTC.
   sscanf(lower_case(a), "%*s, %s; %s", a, extra);
   if(extra && sscanf(extra, "length=%d", length) && len && length != len)
