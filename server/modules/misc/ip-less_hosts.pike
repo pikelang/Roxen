@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.24 1999/02/15 23:28:36 per Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.25 1999/06/09 22:49:19 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -11,7 +11,7 @@ inherit "module";
 array register_module()
 {
   return ({ MODULE_FIRST,
-	      "IP-Less virtual hosting DEPRECTATED",
+	      "IP-Less virtual hosting DEPRECATED",
             "<h2>The support for ip-less hosting is now included in the "
             "Roxen Challenger core</h2>"+
             "this module adds support for IP-less virtual hosts, "
