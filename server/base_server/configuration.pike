@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.211 1999/10/04 19:09:07 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.212 1999/10/09 17:26:25 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
@@ -807,6 +807,21 @@ public string *user_from_uid(int u, object|void id)
 			      LOCALE->no_auth_module(),
 			      describe_backtrace(backtrace())));
 }
+
+public string last_modified_by(object file, object id)
+{
+  int *s;
+  int uid;
+  mixed *u;
+  
+  if(objectp(file)) s=file->stat();
+  if(!s || sizeof(s)<5) return "A. Nonymous";
+  uid=s[5];
+  u=user_from_uid(uid, id);
+  if(u) return u[0];
+  return "A. Nonymous";
+}
+
 
 
 
