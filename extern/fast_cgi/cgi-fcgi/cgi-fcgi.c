@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.2 1996/12/22 16:07:59 grubba Exp $";
+static const char rcsid[] = "$Id: cgi-fcgi.c,v 1.3 1997/05/09 17:24:01 grubba Exp $";
 #endif /* not lint */
 
 #include <stdio.h>
@@ -245,7 +245,7 @@ static void send_data(char *bar, int re)
   } while(re);
 }
 
-static int parse_and_send_headers()
+static int parse_and_send_headers(void)
 {
   char *error, *pointer;
   if(headers)
