@@ -69,6 +69,7 @@ worldmap binary
 /server/base_server/roxenloader.pike foreign_ident
 /server/base_server/rxml.pike foreign_ident
 /server/base_server/slowpipe.pike foreign_ident
+/server/base_server/snmpagent.pike foreign_ident
 /server/base_server/socket.pike foreign_ident
 /server/base_server/supports.pike foreign_ident
 /server/base_server/throttler.pike foreign_ident
@@ -184,7 +185,6 @@ worldmap binary
 /server/modules/configuration/config_filesystem.pike foreign_ident
 /server/modules/configuration/config_tags.pike foreign_ident
 /server/modules/configuration/roxen_test.pike foreign_ident
-/server/modules/configuration/snmpagent.pike foreign_ident
 /server/modules/configuration/update.pike foreign_ident
 /server/modules/database/SQLuserdb.pike foreign_ident
 /server/modules/database/sqltag.pike foreign_ident
