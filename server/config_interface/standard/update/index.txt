@@ -19,9 +19,20 @@
   &nbsp;
 </define>
 
-  <if variable="form.uninstall_package">
-    <update-uninstall-package package="&form.uninstall_package;">
-  </if>
+
+<if variable="form.install">
+  <redirect to="/standard/update.html?page=install&install=&form.install;" />
+</if>
+
+
+<if variable="form.download">
+  <update-start-download package="&form.details;" />
+  <redirect to="/standard/update.html?bar" />
+</if>
+
+<if variable="form.uninstall_package">
+  <update-uninstall-package package="&form.uninstall_package;">
+</if>
 
 
 <h1>Roxen Update System</h1>
@@ -74,7 +85,7 @@ This information was last synchronized with the main server &var.last_updated; a
       <update-downloaded-packages>
       <tr>
         <td nowrap="nowrap">&_.title;
-          <a href="update.html?details=&_.id;">[Details...]</a></td>
+          <a href="update.html?page=details&details=&_.id;">[Details...]</a></td>
         <td nowrap="nowrap">&_.size;</td>
         <td nowrap="nowrap">
           <a href="update.html?install=&_.id;">[Install...]</a>

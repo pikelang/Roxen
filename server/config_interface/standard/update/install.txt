@@ -10,14 +10,13 @@
   </tr>
 </define>
 
+<input type="hidden" name="page" value="install" />
+
 <if variable="form.no">
-foobar
   <redirect to="/standard/update.html?foo" />
 </if>
 <if variable="form.yes">
-
-  <update-install-package package="&form.install;"><br />
-  
+  <update-install-package package="&form.install;" /><br />
   <a href="update.html">[Return]</a>
 </if>
 <else>
@@ -36,7 +35,6 @@ foobar
 <br />
 
 <if variable="form.show">
-
   <input type=submit name="hide" value="Hide package contents"><br />
   <br />
   <cv-obox title="The following files will be installed:">
@@ -46,13 +44,13 @@ foobar
       <td>&nbsp;</td>
       <td nowrap="nowrap"><b>Path</b></td>
     </tr>
-    <update-package-contents-output package="&form.install;">
+    <update-package-contents package="&form.install;">
       <tr>
-  	<td align="right" nowrap="nowrap">#size#</td>
+  	<td align="right" nowrap="nowrap">&_.size;</td>
 	<td>&nbsp;</td>
-  	<td nowrap="nowrap">#path#</tt></td>
+  	<td nowrap="nowrap">&_.path;</tt></td>
       </tr>
-    </update-package-contents-output>
+    </update-package-contents>
   </table>
   </cv-obox>  
 </if>

@@ -10,11 +10,6 @@
   </tr>
 </define>
 
-  <if variable="form.download">
-    <update-start-download package="&form.details;" />
-    <redirect to="/standard/update.html?bar" />
-  </if>
-
 <update-package package="&form.details;">
   <table bgcolor="&usr.obox-titlebg;" width="100%">
     <tr><td><font size="+1" color="&usr.obox-titlefg;"><b>&_.title;</b></font></td></tr>

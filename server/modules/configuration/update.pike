@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.21 2000/09/03 00:52:14 nilsson Exp $
+ * $Id: update.pike,v 1.22 2000/09/09 15:25:25 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -298,7 +298,7 @@ class TagUpdatePackageIsDownloaded {
   inherit RXML.Tag;
   constant name = "update-package-is-downloaded";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "package" : RXML.t_text ]);
+//   mapping(string:RXML.Type) req_arg_types = ([ "package" : RXML.t_text ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -315,7 +315,7 @@ class TagUpdatePackageIsDownloaded {
 
 class TagDownloadProgress {
   inherit RXML.Tag;
-  constant name = "download-progress";
+  constant name = "update-download-progress";
 
   class Frame {
     inherit RXML.Frame;
@@ -391,7 +391,10 @@ class TagUpdateDownloadedPackages {
     int counter;
 
     array do_enter(RequestID id) {
-      array(int) packages=sort((array(int))glob("*.tar",r_get_dir(QUERY(pkgdir))));
+
+      array(int) packages=sort((array(int))glob("*.tar",
+						r_get_dir(QUERY(pkgdir))||
+						({}) ));
       foreach(packages, int package) {
 	mapping pkg=pkginfo[(string)package];
 	if(pkg && !installed[(string)package]) {
@@ -497,7 +500,7 @@ class TagUpdateInstallPackage {
   inherit RXML.Tag;
   constant name = "update-install-package";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "package" : RXML.t_text ]);
+//   mapping(string:RXML.Type) req_arg_types = ([ "package" : RXML.t_text ]);
 
   class Frame {
     inherit RXML.Frame;
