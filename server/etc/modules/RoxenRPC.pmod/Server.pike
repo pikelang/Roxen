@@ -207,24 +207,32 @@ function ip_security, security;
 void set_ip_security(function f) { ip_security = f; }
 void set_security(function f)    {  security = f;   }
 
-void got_connection(object on)
+void low_got_connection(object c)
 {
-  object c = on->accept();
   if(c
      && (!ip_security || ip_security(c->query_address()))
      && (!security || security(c)))
     connections += ({ Connection( c, this_object() ) });
-  else
+  else {
     catch(destruct(c));
+  }
+}
+
+void got_connection(object on)
+{
+  object c = on->accept();
+  low_got_connection(c);
   c->write("!");
 }
 
-void create(string host, int p )
+void create(string|object host, int|void p )
 {
-  if(host)
+  if(objectp(host))
   {
-    if(!port->bind(p, got_connection, host)) error("Failed to bind to port\n");
-    return;
-  }
-  if(!port->bind(p, got_connection)) error("Failed to bind to port\n");
+    low_got_connection(host);
+  } else if(host) {
+    if(!port->bind(p, got_connection, host))
+      error("Failed to bind to port\n");
+  } else if(!!port->bind(p, got_connection))
+    error("Failed to bind to port\n");
 }

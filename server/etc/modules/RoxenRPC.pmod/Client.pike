@@ -22,13 +22,13 @@ class RemoteFunctionCall
     if(strlen(data) < len) data += server->read(len-strlen(data));
     data = decode_value(data);
 
+    /* The server returned a pointer to an object. */
+    /* Build a new RPC object and return it... */
     if(data[0]==2)
-      /* The server returned a pointer to an object. */
-      /* Build a new RPC object and return it... */
       return object_program(master)( server, 0, data[1], !master->nolock);
+    /* The server returned a pointer to a program or function. */
+    /* Build a new RPC function call object and return it... */
     else if(data[0]==3)
-      /* The server returned a pointer to a program or function. */
-      /* Build a new RPC function call object and return it... */
       return object_program(this_object())( 0, data[1], server, lock, master )
 	->call;
 
