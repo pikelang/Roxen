@@ -2,7 +2,7 @@
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.2 1999/11/05 14:59:51 marcus Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.3 2000/01/23 14:02:28 nilsson Exp $";
 int thread_safe=1;
 
 inherit "module";
@@ -13,15 +13,10 @@ object servlet;
 
 string status_info="";
 
-array register_module()
-{
-  return ({
-    MODULE_LOCATION, "Java Servlet bridge",
-    "An interface to Java <a href=\"http://jserv.javasoft.com/"
-    "products/java-server/servlets/index.html\">Servlets</a>.",
-    0
-  });
-}
+constant module_type = MODULE_LOCATION;
+constant module_name = "Java Servlet bridge";
+constant module_doc  = "An interface to Java <a href=\"http://jserv.javasoft.com/"
+  "products/java-server/servlets/index.html\">Servlets</a>.";
 
 void stop()
 {
@@ -41,7 +36,7 @@ static mapping(string:string) make_initparam_mapping()
   return p;
 }
 
-void start(int x, object conf)
+void start(int x, Configuration conf)
 {
   if(x == 2)
     stop();
@@ -53,7 +48,7 @@ void start(int x, object conf)
   status_info="";
   if(exc)
   {
-    werror(exc[0]);
+    report_error("Servlet: %s\n",exc[0]);
     status_info=sprintf("<pre>%s</pre>",exc[0]);
   }
   else
@@ -69,20 +64,15 @@ string status()
 	  status_info);
 }
 
-string query_location()
-{
-  return QUERY(mountpoint);
-}
-
 string query_name()
 {
   return sprintf("<i>%s</i> mounted on <i>%s</i>", query("classname"),
-		 query("mountpoint"));
+		 query("location"));
 }
 
 void create()
 {
-  defvar("mountpoint", "/servlet/NONE", "Servlet location", TYPE_LOCATION,
+  defvar("location", "/servlet/NONE", "Servlet location", TYPE_LOCATION,
 	 "This is where the servlet will be inserted in the "
 	 "namespace of your server.");
 
@@ -98,8 +88,7 @@ void create()
 
 }
 
-
-mixed find_file( string f, object id )
+mixed find_file( string f, RequestID id )
 {
   if(!servlet)
     return 0;
@@ -108,7 +97,7 @@ mixed find_file( string f, object id )
   id->my_fd->set_close_callback(0);
   id->my_fd->set_blocking();
   id->misc->path_info = f;
-  id->misc->mountpoint = QUERY(mountpoint);
+  id->misc->mountpoint = QUERY(location);
   servlet->service(id);
 
   return http_pipe_in_progress();
