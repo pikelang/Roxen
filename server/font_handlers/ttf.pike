@@ -1,5 +1,9 @@
+// This file is part of Roxen WebServer.
+// Copyright © 1996 - 2000, Roxen IS.
+
 #if constant(has_Image_TTF)
-constant cvs_version = "$Id: ttf.pike,v 1.1 2000/09/03 02:33:01 per Exp $";
+#include <config.h>
+constant cvs_version = "$Id: ttf.pike,v 1.2 2000/09/03 16:46:26 nilsson Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader.";
@@ -166,25 +170,24 @@ array available_fonts()
   return indices( ttf_font_names_cache );
 }
 
-mapping font_information( string font )
+array(mapping) font_information( string font )
 {
   if( !has_font( font, 0 ) )
-    return 0;
+    return ({});
 
   mapping res = ([ 
     "name":font,
-    "ttf":"yes", // compatibility
     "format":"ttf",
   ]);
   Image.TTF f;
   if( font[0] == '/' )
     f = Image.TTF( font );
   else
-    f = Image.TTF( (font=ttf_font_names_cache[ font ]) );
+    f = Image.TTF( (font=values(ttf_font_names_cache[ font ])[0]) );
 
   res->path = font;
   res |= f->names();
-  return res;
+  return ({ res });
 }
 
 array(string) has_font( string name, int size )
