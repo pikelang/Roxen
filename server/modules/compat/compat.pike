@@ -488,6 +488,14 @@ string|int tag_counter(string t, mapping m, RequestID id) {
   return make_tag(t,m);
 }
 
+string tag_available_languages(string t, mapping m) {
+  return make_tag("available-languages",m);
+}
+
+string tag_unavailable_languages(string t, mapping m) {
+  return make_tag("unavailable-languages",m);
+}
+
 mapping query_tag_callers() {
   return (["echo":tag_echo,
 	   "countdown":tag_countdown,
@@ -499,7 +507,10 @@ mapping query_tag_callers() {
 	   "set":tag_set,
 	   "redirect":tag_redirect,
 	   "append":tag_append,
-	   "gtext-id":tag_gtext_id
+	   "gtext-id":tag_gtext_id,
+           "available_language" : tag_available_languages,
+           "available_languages" : tag_available_languages,
+           "unavailable_languages" : tag_available_languages
   ]);
 }
 
