@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.266 1999/04/22 09:28:06 per Exp $
+ * $Id: roxen.pike,v 1.267 1999/04/22 14:17:40 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.266 1999/04/22 09:28:06 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.267 1999/04/22 14:17:40 per Exp $";
 
 object backend_thread;
 
@@ -90,14 +90,6 @@ class RequestID
 
 
 constant pipe = (program)"smartpipe";
-constant __roxen_version__ = "1.4";
-constant __roxen_build__ = "37";
-
-#ifdef __NT__
-constant real_version = "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__+" NT";
-#else
-constant real_version = "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__;
-#endif
 
 /*
  * The privilege changer.
@@ -363,9 +355,6 @@ static object PRIVS(string r, int|string|void u, int|string|void g)
   return Privs(r, u, g);
 }
 
-
-// The datashuffler program
-constant pipe = (program)"smartpipe";
 
 #if _DEBUG_HTTP_OBJECTS
 mapping httpobjects = ([]);

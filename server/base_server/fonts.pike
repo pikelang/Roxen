@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.26 1998/11/19 10:22:22 per Exp $ */
+/* $Id: fonts.pike,v 1.27 1999/04/22 14:17:37 per Exp $ */
 
 #include <module.h>
 
@@ -82,10 +82,12 @@ array available_font_versions(string name, int size)
       {
 	if(!ttf_done[combine_path(dir+"/",fname)]++)
 	{
+//   werror("Trying TTF: "+combine_path(dir+"/",fname)+"\n");
 	  object ttf = Image.TTF( combine_path(dir+"/",fname) );
 	  if(ttf)
 	  {
 	    mapping n = ttf->names();
+//        werror("okiedokie! "+n->family+"\n");
 	    ttffontschanged++;
 	    string f = lower_case(trimttfname(n->family));
 	    if(!ttf_font_names_cache[f])
@@ -104,7 +106,7 @@ array available_font_versions(string name, int size)
 		 "wct")->write(encode_value(ttf_font_names_cache));
     };
   if(ttffound)
-    return  indices(ttf_font_names_cache[ name ]);
+    return  indices(ttf_font_names_cache[ lower_case(name) ]);
 #endif
 
   foreach(roxen->query("font_dirs"), dir)
@@ -200,22 +202,23 @@ object get_font(string f, int size, int bold, int italic,
 
   err = catch {
     name=make_font_name(f,size,bold,italic);
-//     werror("name is "+name+"; f is "+f+"\n");
+//  werror("name is "+name+"; f is "+f+"\n");
 #if constant(Image.TTF)
     if(ttf_font_names_cache[ lower_case(f) ])
     {
+      werror("using "+ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]]+"\n");
       f = lower_case(f);
-//       werror("font is ttf font.\n");
-      if( ttf_font_names_cache[ f ][ (name/"/")[1] ] )
+//    werror("font is ttf font.\n");
+      if( ttf_font_names_cache[ lower_case(f) ][ (name/"/")[1] ] )
       {
-	object f = Image.TTF( ttf_font_names_cache[ f ][(name/"/")[1]]);
+	object f = Image.TTF( ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]]);
 	// TODO: fix support for xpace/yspace etc.
 	f = f();
-	f->set_height( size*2 );
+	f->set_height( size );
 	cache_set("fonts", key, f); 
 	return f;
       }
-      object f = Image.TTF( values(ttf_font_names_cache[ f ])[0]);
+      object f = Image.TTF( values(ttf_font_names_cache[ lower_case(f) ])[0]);
       // TODO: fix support for xpace/yspace etc.
       return f()->set_height( size*2 );
     }
@@ -232,7 +235,7 @@ object get_font(string f, int size, int bold, int italic,
     }
     if(!fnt->load( name ))
     {
-      if(name == roxen->QUERY(default_font))
+      if(f == roxen->QUERY(default_font))
       {
 	report_error("Failed to load the default font.\n");
 	return 0;
@@ -313,6 +316,9 @@ object resolve_font(string f, string|void justification)
   if(!fn)
     fn = get_font(roxen->query("default_font"),size,bold,italic,
 		  justification||"left",xspace, 0.0);
+  if(!fn)
+    report_error("failed miserably to open the default font ("+
+                 roxen->query("default_font")+")\n");
   return fn;
 }
 

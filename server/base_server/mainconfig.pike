@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.118 1999/04/22 09:20:47 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.119 1999/04/22 14:17:38 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -181,7 +181,7 @@ int expert_mode, more_mode=restore_more_mode();
 void save_more_mode()
 {
   if(more_mode)
-    open(".more_mode", "wct");
+    Stdio.File(".more_mode", "wct");
   else
     rm(".more_mode");
 }
@@ -225,20 +225,56 @@ mapping file_image(string img)
   return ([ "file":o, "type":"image/" + ((img[-1]=='f')?"gif":"jpeg"), ]);
 }
 
+
+mapping charset_encode( mapping what )
+{
+  if(what->type && (what->type/"/")[0] == "text")
+  {
+    string enc = LOW_LOCALE->reply_encoding || LOW_LOCALE->encoding;
+    if(enc)
+    {
+      what->data = Locale.Charset->encoder(enc)->feed(what->data)->drain();
+      if(!what->extra_heads)
+        what->extra_heads = ([]);
+      what->extra_heads["Content-type"] = what->type+"; charset="+enc;
+    }
+  }
+  return what;
+}
+
+string charset_decode_from_url( string what )
+{
+  string enc = LOW_LOCALE->reply_encoding || LOW_LOCALE->encoding;
+  if(enc) return Locale.Charset->decoder(enc)->feed(what)->drain();
+  return what;
+}
+
+
+string charset_decode( string what )
+{
+  string enc = LOW_LOCALE->encoding;
+  if(enc) return Locale.Charset->decoder(enc)->feed(what)->drain();
+  return what;
+}
+
+string encode_filename( string what )
+{
+  return Locale.Charset->encoder("utf-8")->feed(what)->drain();
+}
+
 mapping stores( string s )
 {
-  return 
+  return charset_encode(
     ([
       "data":replace(s, "$docurl", roxen->docurl),
       "type":"text/html",
       "extra_heads":
       ([
-	"Title":LOCALE->roxen_challenger_maintenance(),
-//      "Expires":http_date(time(1)+2),
-//	"Pragma":"no-cache",
+        "Expires":http_date(time(1)+2),
+	"Pragma":"no-cache",
 	"Last-Modified":http_date(time(1)),
 	])
-      ]);
+      ]));
 }
 
 #define CONFIG_URL roxen->config_url()
@@ -718,7 +754,7 @@ mixed new_module_copy(object node, string name, object id)
   orig = node->config()->enable_module(name+"#"+i);
 
   if(!orig)
-    return http_string_answer(LOCALE->could_not_enable_module());
+    return charset_encode(http_string_answer(LOCALE->could_not_enable_module()));
     
   module = node->config()->modules[name];
   node = node->descend(module->name);
@@ -1114,26 +1150,42 @@ mapping auto_image(string in, object id)
   mixed e;
   object i;
 
+  in = charset_decode_from_url( in );
+
+//   werror("Str=%O\n", in);
+
   string img_key = "auto/"+replace(in,"/","_")+".gif"-" ";
   
-  if(e=file_image(img_key))
+  if(e=file_image(encode_filename(img_key)))
     return e;
   
-  if(!sscanf(in, "%s/%s", key, value)) key=in;
+
+  key = (in/"/")[0];
+  value = (in/"/")[1..]*"/";
+//   werror("key=%O; value=%O\n", key,value);
+
 
   switch(key)
   {
    case "module":
      sscanf(value, "%*d/%s", value);
-     i = draw_module_header(roxen->allmodules[value][0],
+     i = draw_module_header(charset_decode(roxen->allmodules[value][0]),
 			    roxen->allmodules[value][2],
 			    module_font);
      break;
     
    case "button":
      int lm,rm;
-     if(sscanf(value, "lm/%s", value)) lm=1;
-     if(sscanf(value, "rm/%s", value)) rm=1;
+     if(value[..2] == "lm/")
+     {
+       lm=1;
+       value = value[3..];
+     }
+     if(value[..2] == "rm/")
+     {
+       rm=1;
+       value = value[3..];
+     }
      i=draw_config_button(value,button_font,lm,rm);
      break;
 
@@ -1170,7 +1222,7 @@ mapping auto_image(string in, object id)
 //			     ({0,0,0}),({255,255,0}),16,
 //			     ({0,0,0}),({170,170,255}),48,
 //			     )
-  object o = open("roxen-images/"+img_key,"wct"); 
+  object o = Stdio.File(encode_filename("roxen-images/"+img_key), "wct"); 
   e=Image.GIF.encode(i,ct);
   i=0;
   if(o) { o->write(e); o=0; }
@@ -1350,13 +1402,14 @@ mapping configuration_parse(object id)
       }
     };
 
-    return http_string_answer(default_head("Roxen Challenger " +
-					   roxen->__roxen_version__ + "." +
-					   roxen->__roxen_build__)+
-			      status_row(root)+
-			      display_tabular_header(root)+
-			      Stdio.read_bytes(full_version?"etc/config.html":
-					 "etc/config.int.html"), "text/html");
+    mapping tmp = http_string_answer(default_head("Roxen Challenger " +
+                                        roxen->__roxen_version__ + "." +
+                                        roxen->__roxen_build__)+
+                                     status_row(root)+
+                                     display_tabular_header(root)+
+                              Stdio.read_bytes(full_version?"etc/config.html":
+                                    "etc/config.int.html"), "text/html");
+    return charset_encode(tmp);
   }
   
   if(sizeof(id->prestate))
@@ -1445,7 +1498,7 @@ mapping configuration_parse(object id)
 				 "This is (probably) the reason:\n<pre>"
 				 + roxen->last_error + "</pre>" );
 	// _master->set_inhibit_compile_errors(0);
-	return rep;
+	return charset_encode(rep);
       }
       program newprg = cache_lookup ("modules", modname);
       // _master->set_inhibit_compile_errors(0);
@@ -1455,7 +1508,7 @@ mapping configuration_parse(object id)
 	rep = http_string_answer("Failed to disable this module.\n"
 				 "This is (probably) the reason:\n<pre>"
 				 + roxen->last_error + "</pre>" );
-	return rep;
+	return charset_encode(rep);
       }
       cache_set ("modules", modname, newprg); // Do not compile again in enable_module.
       if(!(mod=o->config()->enable_module(name))) {
@@ -1470,7 +1523,7 @@ mapping configuration_parse(object id)
 	perror ("Modules: Trying to re-enable the old module.\n");
 #endif
 	o->config()->enable_module(name);
-	return rep;
+	return charset_encode(rep);
       }
 
       o->clear();
