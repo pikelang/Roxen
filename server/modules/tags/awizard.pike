@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.26 2002/07/03 12:41:48 nilsson Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.27 2002/10/01 22:48:18 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";
@@ -357,7 +357,7 @@ class AWizard
   mapping|string handle( RequestID id )
   {
     object|mapping v = id->variables;
-    mapping s, error;
+    mapping s, err;
     object page, last_page;
     int new_page;
     string contents, goto;
@@ -399,10 +399,10 @@ class AWizard
 
       if(last_page) v->last_page = last_page->name;
       if(mappingp(er) && !er->page)
-	error = er;
+	err = er;
       else if(mappingp(er) && er->page)
-	new_page = (pages_by_name[ error->page ] &&
-		    pages_by_name[ error->page ]->num)+1;
+	new_page = (pages_by_name[ err->page ] &&
+		    pages_by_name[ err->page ]->num)+1;
       else if(sscanf(goto, "goto_next_page/%d",id->misc->button_id))
 	new_page = ((int)v->_page_num)+2;
       else if(sscanf(goto, "goto_prev_page/%d", id->misc->button_id))
@@ -433,22 +433,22 @@ class AWizard
       return "No such page";
     page = pages[ (int)v->_page_num ];
 
-    if(!error)
+    if(!err)
     {
       contents = page->generate( id, header, footer );
-      error = id->misc->return_me;
+      err = id->misc->return_me;
     }
 
-    if(error)
+    if(err)
     {
-      if(error->page && error->page != page->name)
+      if(err->page && err->page != page->name)
       {
-	v["goto_page_"+error->page+"/0"]=1;
+	v["goto_page_"+err->page+"/0"]=1;
 	return handle( id );
-      } else if(error->href) {
-	return http_redirect(fix_relative(error->href,id), id);
-      } else if(!error->page)
-	return error;
+      } else if(err->href) {
+	return http_redirect(fix_relative(err->href,id), id);
+      } else if(!err->page)
+	return err;
     }
 
     foreach(glob("goto_*", indices(v)), string nope)  m_delete(v, nope);
@@ -530,7 +530,7 @@ mixed container_awizard(string tagname, mapping arguments,
     string v = "";
     foreach(indices(res->extra_heads), string i)
       v += "<header name="+i+" value='"+res->extra_heads[i]+"'>";
-    return v+"<return code="+res->error+">";
+    return v+"<return code="+res->err+">";
   }
   return ({res});
 }
