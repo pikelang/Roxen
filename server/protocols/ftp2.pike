@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.5 1998/04/04 19:37:46 grubba Exp $
+ * $Id: ftp2.pike,v 1.6 1998/04/06 18:58:59 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2566,6 +2566,8 @@ class FTPSession
   }
 };
 
+object conf;
+
 void destroy()
 {
   conf->extra_statistics->ftp->sessions--;
@@ -2574,6 +2576,7 @@ void destroy()
 void create(object f, object c)
 {
   if (f) {
+    conf = c;
     if (!conf->extra_statistics->ftp) {
       conf->extra_statistics->ftp = ([ "sessions":1 ]);
     } else {
