@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.418 2000/02/08 03:37:15 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.419 2000/02/08 22:12:48 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -815,15 +815,6 @@ class Protocol
     ip = i;
 
     restore();
-//     if (query_option("do_not_bind"))
-//     {
-      // This is useful if you run two Roxen processes,
-      // that both handle an URL which has two IPs, and
-      // use DNS round-robin.
-//       report_warning(sprintf("Binding to %s://%s:%d/ disabled\n",
-// 			     name, ip, port));
-//       destruct();
-//     }
     if( !requesthandler )
       requesthandler = (program)requesthandlerfile;
 
@@ -900,26 +891,16 @@ class SSLProtocol
   void create(int pn, string i)
   {
     ctx = SSL.context();
-
-    defvar( "ssl_cert_file", "demo_certificate.pem",
-            TYPE_STRING,
-            ([
-              "standard":"SSL certificate file",
-              "svenska":"SSL-certifikatsfil",
-            ]),
-            ([
-              "standard":"The SSL certificate file to use. The path "
-                         "is relative to "+getcwd()+"\n",
-              "svenska":"SSLcertifikatfilen som den här porten ska använda."
-                        " Filnamnet är relativt "+getcwd()+"\n",
-            ]) );
-
+    set_up_ssl_variables( this_object() );
+    restore();
 
     object privs = Privs("Reading cert file");
+
     string f = Stdio.read_file(query_option("ssl_cert_file") ||
 			       "demo_certificate.pem");
     string f2 = query_option("ssl_key_file") &&
-      Stdio.read_file(query_option("ssl_key_file"));
+           strlen(query_option("ssl_key_file")) &&
+           Stdio.read_file(query_option("ssl_key_file"));
     if (privs)
       destruct(privs);
 
@@ -941,7 +922,7 @@ class SSLProtocol
       return;
     }
 
-    if (query_option("ssl_key_file"))
+    if (query_option("ssl_key_file") && strlen(query_option("ssl_key_file") ))
     {
       if (!f2) {
 	report_error("SSL3: Reading key-file failed!\n");
@@ -1239,71 +1220,11 @@ class FHTTP
   {
     requesthandler = (program)"protocols/fhttp.pike";
 
-//     if (query_option("do_not_bind"))
-//     {
-//       // This is useful if you run two Roxen processes,
-//       // that both handle an URL which has two IPs, and
-//       // use DNS round-robin.
-//       report_warning(sprintf("Binding to %s://%s:%d/ disabled\n",
-// 			     name, ip, port));
-//       destruct();
-//       return;
-//     }
     port = pn;
     ip = i;
-    set_up_http_variables( this_object() );
-
-    defvar( "log", "None", TYPE_STRING_LIST,
-            (["standard":"Logging method",
-              "svenska":"Loggmetod", ]),
-            (["standard":
-              "None - No log<br>"
-              "CommonLog - A common log in a file<br>"
-              "Compat - Log though roxen's normal logging format.<br>"
-              "<p>Please note that compat limits roxen to less than 1k "
-              "requests/second.",
-              "svenska":
-              "Ingen - Logga inte alls<br>"
-              "Commonlog - Logga i en commonlogfil<br>"
-              "Kompatibelt - Logga som vanligt. Notera att det inte går "
-              "speciellt fort att logga med den här metoden, det begränsar "
-              "roxens hastighet till strax under 1000 requests/sekund på "
-              "en normalsnabb dator år 1999.",
-            ]),
-            ({ "None", "CommonLog", "Compat" }),
-            ([ "svenska":
-               ([
-                 "None":"Ingen",
-                 "CommonLog":"Commonlog",
-                 "Compat":"Kompatibel",
-               ])
-            ]) );
-
-    defvar( "log_file", "../logs/clog-"+ip+":"+port, TYPE_FILE,
-            ([ "standard":"Log file",
-               "svenska":"Logfil", ]),
-            ([ "svenska":"Den här filen används om man loggar med "
-               " commonlog metoden.",
-               "standard":"This file is used if logging is done using the "
-               "CommonLog method."
-            ]));
-
-    defvar( "ram_cache", 20, TYPE_INT,
-            (["standard":"Ram cache",
-              "svenska":"Minnescache"]),
-            (["standard":"The size of the ram cache, in MegaBytes",
-              "svenska":"Storleken hos minnescachen, i Megabytes"]));
-
-    defvar( "read_timeout", 120, TYPE_INT,
-            ([ "standard":"Client timeout",
-               "svenska":"Klienttimeout" ]),
-            ([ "standard":"The maximum time roxen will wait for a "
-               "client before giving up, and close the connection, in seconds",
-               "svenska":"Maxtiden som roxen väntar innan en klients "
-               "förbindelse stängs, i sekunder" ]) );
-
-
+    set_up_fhttp_variables( this_object() );
     restore();
+
     dolog = (query_option( "log" ) && (query_option( "log" )!="None"));
     portobj = Stdio.Port(); /* No way to use ::create easily */
     if( !portobj->bind( port, 0, ip ) )
@@ -2583,6 +2504,7 @@ void create()
    SET_LOCALE(default_locale);
   // Dump some programs (for speed)
 
+  dump( "base_server/basic_defvar.pike" );
   dump( "base_server/newdecode.pike" );
   dump( "base_server/read_config.pike" );
   dump( "base_server/global_variables.pike" );
