@@ -1,6 +1,6 @@
 inherit "wizard";
 
-string name = "Neighborhood//Roxen Neighborhood...";
+string name = "Neighbourhood//Roxen Neighbourhood...";
 string doc = "";
 
 string sv(string in)
@@ -44,34 +44,28 @@ string time_interval(int s)
 string page_0()
 {
   array sn = indices(neighborhood);
-  sort(Array.map(sn, lambda(string s){ return neighborhood[s]->host+":"+getpwuid(neighborhood[s]->uid)[0]+":"+neighborhood[s]->config_url; }), sn);
-  return html_table(({"Config URL", "User", "Host", "Uptime", "Last Reboot","Version",
-			/*({"Server info"})*/}),
+  sort(Array.map(sn, lambda(string s)
+		 { return neighborhood[s]->host+":"+
+		          getpwuid(neighborhood[s]->uid)[0]+":"+
+		          neighborhood[s]->config_url; }), sn);
+  return html_table(({"Config URL", "User", "Host", "Uptime",
+		      "Last Reboot","Version", /*({"Server info"})*/}),
 		    Array.map(sn, lambda(string s) {
      mapping ns = neighborhood[s];
+     int vanished = (time() - ns->rec_time) > 60;
      int re=ns->seq_reboots;
      string ER="",RE="";
-     if(re>1)
-     {
-       RE="<font color=red><b><blink>";
-       ER="</blink></b></font>";
-     }
-#if 0
-     else if(re || (time()-ns->last_reboot<120)) {
+     if(vanished) {
        RE="<font color=orange><b>";
        ER="</b></font>";
-     } else if(ns->time && (time()-ns->time)>300) {
-       RE="<font color=#bbbbbb><b>";
+     } else if(re>1) {
+       RE="<font color=red><b>";
        ER="</b></font>";
-     } if(ns->time && (time()-ns->time)>600) {
-       RE="<font color=#bbbbbb><i>";
-       ER="</i></font>";
-     }
-#endif
+     } 
      return({  "<a href='"+s+"'>"+s+"</a></font>",
 	       RE+getpwuid(ns->uid)[0]+ER,
 	       RE+ns->host+ER,
-	       RE+time_interval(time()-ns->last_reboot)+ER,
+	       RE+(vanished?"???":time_interval(time()-ns->last_reboot))+ER,
 	       RE+roxen->language("en","date")(ns->last_reboot)+ER,
 	       RE+sv(ns->version)+ER
      });
