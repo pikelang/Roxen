@@ -24,6 +24,10 @@ inherit Parser.HTML : low_parser;
 
 #define CONTAINER_TYPE string|array|CONTAINER_FUNC_TYPE
 
+#define ENTITY_TYPE							\
+  string|array|								\
+  function(void|Parser.HTML:int(1..1)|string|array)
+
 static class TagDef
 {
   TAG_TYPE tdef;
@@ -90,6 +94,10 @@ this_program add_container (string name, CONTAINER_TYPE cdef)
   else m_delete (tagmap_containers, name);
   return this_object();
 }
+
+mapping(string:TAG_TYPE) tags() {return tagmap_tags;}
+
+mapping(string:CONTAINER_TYPE) containers() {return tagmap_containers;}
 
 #endif
 
@@ -261,6 +269,28 @@ mixed read()
     }
   }
   // Not reached.
+}
+
+
+// Misc services.
+
+static mapping(string:ENTITY_TYPE) saved_entities;
+
+int parse_entities (int flag)
+{
+  int oldflag = !saved_entities;
+  if (!oldflag != !flag)
+    if (flag) {
+      add_entities (saved_entities);
+      saved_entities = 0;
+      _set_entity_callback (entity_cb);
+    }
+    else {
+      saved_entities = entities();
+      map (indices (saved_entities), add_entity, 0);
+      _set_entity_callback (0);
+    }
+  return oldflag;
 }
 
 
