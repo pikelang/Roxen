@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.87 2001/04/21 20:20:16 nilsson Exp $
+// $Id: Roxen.pmod,v 1.88 2001/05/16 20:52:28 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -327,18 +327,22 @@ string add_pre_state( string url, multiset state )
   return "/(" + sort(indices(state)) * "," + ")" + url ;
 }
 
-mapping http_redirect( string url, RequestID|void id )
+mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
 //! Simply returns a http-redirect message to the specified URL. If
 //! the url parameter is just a virtual (possibly relative) path, the
 //! current id object must be supplied to resolve the destination URL.
+//! If no prestates are provided, the current prestates in the request id
+//! object will be added to the url.
 {
-  if(strlen(url) && url[0] == '/')
+  if(!has_prefix(url, "://") && url[0]!='/')
+    url = fix_relative(url, id);
+  if(strlen(url) && url[0]=='/')
   {
     if(id)
     {
       if( id->misc->site_prefix_path )
         url = replace( [string]id->misc->site_prefix_path + url, "//", "/" );
-      url = add_pre_state(url,id->prestate);
+      url = add_pre_state(url, prestates || id->prestate);
       if(id->misc->host)
       {
 	array(string) h;
