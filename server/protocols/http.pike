@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.293 2000/12/30 09:12:17 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.294 2001/01/03 09:48:28 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -68,7 +68,7 @@ constant decode          = MIME.decode_base64;
 constant find_supports_and_vars = roxen.find_supports_and_vars;
 constant version         = roxen.version;
 constant _query          = roxen.query;
-constant _time           = predef::time;
+// constant _time           = predef::time;
 
 private static array(string) cache;
 private static int wanted_data, have_data;
@@ -371,7 +371,7 @@ void start_sender( )
   {
     MARK_FD("HTTP really handled, piping "+not_query);
 #ifdef FD_DEBUG
-    call_out(timer, 30, _time(1)); // Update FD with time...
+    call_out(timer, 30, predef::time(1)); // Update FD with time...
 #endif
     pipe->set_done_callback( do_log );
     pipe->output( my_fd );
@@ -842,7 +842,7 @@ private int parse_got( string new_data )
   REQUEST_WERR(sprintf("***** headers:  %O", request_headers));
   REQUEST_WERR(sprintf("***** data (%d):%O", strlen(data),data));
   raw_url    = f;
-  time       = _time(1);
+  time       = predef::time(1);
   // if(!data) data = "";
   REQUEST_WERR(sprintf("RAW_URL:%O", raw_url));
 
@@ -1042,7 +1042,7 @@ void end(int|void keepit)
 
 static void do_timeout()
 {
-  int elapsed = _time(1)-time;
+  int elapsed = predef::time(1)-time;
   if(time && elapsed >= 30)
   {
     MARK_FD("HTTP timeout");
@@ -1342,7 +1342,7 @@ void timer(int start)
 		    stringp(pipe->current_input) ?
 		    strlen(pipe->current_input) : -1,
 		    pipe->last_called,
-		    _time(1) - start,
+		    predef::time(1) - start,
 		    not_query));
   } else {
     MARK_FD("HTTP piping, but no pipe for "+not_query);
@@ -1688,6 +1688,7 @@ void send_result(mapping|void result)
         if(!file->error)
           file->error=200;
 
+        heads->Date = Roxen.http_date(predef::time(1));
         if(file->expires)
           heads->Expires = Roxen.http_date(file->expires);
 
@@ -1785,12 +1786,13 @@ void send_result(mapping|void result)
              conf->datacache->max_file_size) 
             && misc->cachekey )
         {
-          string data = head_string;
+          string data = "";
           if( file->file )   data += file->file->read();
           if( file->data )   data += file->data;
           conf->datacache->set( raw_url, data, 
                                 ([
-                                  "hs":strlen(head_string),
+                                  // We have to handle the date header.
+                                  "hs":head_string,
                                   "key":misc->cachekey,
                                   "callbacks":misc->_cachecallbacks,
                                   "len":file->len,
@@ -1802,7 +1804,6 @@ void send_result(mapping|void result)
                                 ]), 
                                 misc->cacheable );
           file = ([ "data":data, "raw":file->raw ]);
-          head_string = "";
         }
       }
 #endif
@@ -1928,7 +1929,8 @@ void got_data(mixed fooid, string s)
   int tmp;
 
   MARK_FD("HTTP got data");
-//   time = _time(1); // Check is made towards this to make sure the object
+//   time = predef::time(1);
+//                   // Check is made towards this to make sure the object
 //                   // is not killed prematurely.
   if(!raw) raw = s; else raw += s;
 
@@ -2077,18 +2079,25 @@ void got_data(mixed fooid, string s)
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
         Stat st;
         if( !file->rf || !file->mtime || 
-            ((st = file_stat( file->rf )) &&
-             st[ST_MTIME] == file->mtime ) )
+            ((st = file_stat( file->rf )) && st->mtime == file->mtime ))
 #endif
         {
-          conf->hsent += file->hs;
+          string fix_date( string headers )
+          {
+            string a, b;
+            if( sscanf( headers, "%sDate: %*s\n%s", a, b ) == 3 )
+              return a+"Date: "+Roxen.http_date( predef::time(1) ) +"\n"+b;
+            return headers;
+          };
+        
+          conf->hsent += strlen(file->hs);
           if( strlen( d ) < 4000 )
           {
-            do_log( my_fd->write( d ) );
+            do_log( my_fd->write( fix_date(file->hs)+d ) );
           } 
           else 
           {
-            send( d );
+            send( fix_date(file->hs)+d );
             start_sender( );
           }
           return;
@@ -2176,7 +2185,7 @@ void clean()
 {
   if(!(my_fd && objectp(my_fd)))
     end();
-  else if((_time(1) - time) > 4800)
+  else if((predef::time(1) - time) > 4800)
     end();
 }
 
@@ -2193,7 +2202,7 @@ static void create(object f, object c, object cc)
     my_fd = f;
     if( c ) port_obj = c;
     if( cc ) conf = cc;
-    time = _time(1);
+    time = predef::time(1);
     call_out(do_timeout, 90);
 //     string q = f->read( 8192, 1 );
 //     if( q ) got_data( 0, q );
@@ -2208,7 +2217,7 @@ void chain(object f, object c, string le)
   processed = 0;
   do_not_disconnect=-1;		// Block destruction until we return.
   MARK_FD("Kept alive");
-  time = _time(1);
+  time = predef::time(1);
 
   if ( strlen( le ) )
     got_data( 0,le );
