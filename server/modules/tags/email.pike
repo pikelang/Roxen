@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.25 2003/05/12 15:56:50 anders Exp $";
+constant cvs_version = "$Id: email.pike,v 1.26 2003/06/23 09:57:01 jonasw Exp $";
 
 constant thread_safe=1;
 
@@ -86,7 +86,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.25 $"/" ")[1];
+string revision = ("$Revision: 1.26 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -227,12 +227,12 @@ class TagEmail {
 	else
 	{
 	  // We assume container with text (and default type "text/plain")
-
-	  ftype = args->mimetype     || "text/plain";
+	  string guess_mimetype = aname && id->conf->type_from_filename(aname);
+	  ftype = args->mimetype     || guess_mimetype || "text/plain";
 	  fenc  = args->mimeencoding || "8bit";
 
 	  // Converting bare LFs (QMail specials:)
-	  if(query("CI_qmail_spec") && ftype == "test/plain")
+	  if(query("CI_qmail_spec") && ftype == "text/plain")
 	    body = (Array.map(body / "\r\n",
 			      lambda(string el1) {
 				return (replace(el1, "\n", "\r\n"));
