@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.19 1999/10/29 21:07:49 grubba Exp $
+ * $Id: ftp.pike,v 2.20 1999/12/06 01:01:09 mast Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1791,16 +1791,16 @@ class FTPSession
       }
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
-	DWRITE(sprintf("FTP: Error opening file \"%s\"\n"
-		       "%s\n", fname, describe_backtrace(err)));
+	report_error("FTP: Error opening file \"%s\"\n"
+		     "%s\n", fname, describe_backtrace(err));
 	send(550, ({ sprintf("%s: Error, can't open file.", fname) }));
 	return 0;
       }
     } else if ((< "STOR", "APPE", "MKD", "MOVE" >)[cmd]) {
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
-	DWRITE(sprintf("FTP: Error opening file \"%s\"\n"
-		       "%s\n", fname, describe_backtrace(err)));
+	report_error("FTP: Error opening file \"%s\"\n"
+		     "%s\n", fname, describe_backtrace(err));
 	send(550, ({ sprintf("%s: Error, can't open file.", fname) }));
 	return 0;
       }
