@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.162 2004/06/08 12:46:51 noring Exp $
+// $Id: Roxen.pmod,v 1.163 2004/11/23 10:06:21 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2221,61 +2221,76 @@ function get_client_charset_decoder( string едц, RequestID|void id )
   // Netscape seems to send "?" for characters that can't be represented
   // by the current character set while IE encodes those characters
   // as entities, while Opera uses "\201" or "?x829f;"...
-  string test = replace((едц/"\0")[0],
-			({ "&aring;", "&#229;", "&#xe5;",
-			   "&auml;", "&#228;", "&#xe4;",
-			   "&ouml;", "&#246;", "&#xf6;",
-			   "&#33439;","&#x829f;", "\201", "?x829f;",
-			   "\x829f" }),
+  string entity_test =
+    replace((едц/"\0")[0], ({ "\201", "?x829f;" }), ({ "?", "?" }));
+
+  string test = replace(entity_test,
+			({ "&aring;", "&#229;", "&#xe5;",	// е
+			   "&auml;", "&#228;", "&#xe4;",	// д
+			   "&ouml;", "&#246;", "&#xf6;",	// ц
+			   "&#33439;","&#x829f;", }),		// \u829f
 			({ "?", "?", "?",
 			   "?", "?", "?",
 			   "?", "?", "?",
-			   "?", "?", "?", "?",
-			   "?" }));
+			   "?", "?", }));
+
+  function(function:function) wrap = lambda(function x) { return x; };
+
+  if (test != entity_test) {
+    wrap = lambda(function decoder) {
+	     Parser.HTML entity_parser = Parser.html_entity_parser();
+	     return lambda(string x) {
+		      return entity_parser->finish(decoder(x))->read();
+		    };
+	   };
+  }
 			
   switch( test ) {
   case "edv":
   case "edv?":
     report_notice( "Warning: Non 8-bit safe client detected (%s)",
 		   (id?id->client*" ":"unknown client"));
-    return 0;
+    // FALL_THROUGH
 
   case "едц":
   case "едц?":
+    if (test != entity_test)
+      return Parser.parse_html_entities;
     return 0;
     
   case "\33-Aедц":
   case "\33-A\345\344\366\33$Bgl":
     id && id->set_output_charset && id->set_output_charset( "iso-2022" );
-    return _charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->decode;
+    return wrap(_charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->
+		decode);
     
   case "+AOUA5AD2-":
   case "+AOUA5AD2gp8-":
     id && id->set_output_charset && id->set_output_charset( "utf-7" );
-     return _charset_decoder(Locale.Charset.decoder("utf-7"))->decode;
+    return wrap(_charset_decoder(Locale.Charset.decoder("utf-7"))->decode);
      
   case "ГҐГ¤Г¶":
   case "ГҐГ¤Г¶?":
   case "ГҐГ¤":
   case "ГҐГ¤Г¶\350\212\237":
     id && id->set_output_charset && id->set_output_charset( "utf-8" );
-    return utf8_to_string;
+    return wrap(utf8_to_string);
 
   case "\214\212\232":
   case "\214\212\232?":
     id && id->set_output_charset && id->set_output_charset( "mac" );
-    return _charset_decoder( Locale.Charset.decoder( "mac" ) )->decode;
+    return wrap(_charset_decoder( Locale.Charset.decoder( "mac" ) )->decode);
     
   case "\0е\0д\0ц":
   case "\0е\0д\0ц\202\237":
      id&&id->set_output_charset&&id->set_output_charset(string_to_unicode);
-     return unicode_to_string;
+     return wrap(unicode_to_string);
      
   case "\344\214":
   case "???\344\214":
   case "\217\206H\217\206B\217\206r\344\214": // Netscape sends this (?!)
     id && id->set_output_charset && id->set_output_charset( "shift_jis" );
-    return _charset_decoder(Locale.Charset.decoder("shift_jis"))->decode;
+    return wrap(_charset_decoder(Locale.Charset.decoder("shift_jis"))->decode);
   }
   if (!charset_warned_for[test] && (sizeof(charset_warned_for) < 256)) {
     charset_warned_for[test] = 1;
