@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.10 2003/11/17 16:01:26 anders Exp $
+ * $Id: flush.pike,v 1.11 2004/09/15 16:33:23 jonasw Exp $
  */
 #include <config_interface.h>
 #include <roxen.h>
@@ -15,9 +15,12 @@ string doc = LOCALE(9, "Flush all memory caches.");
 mixed doit()
 {
   /* Flush the userdb. */
-  foreach(roxen->configurations, object c)
+  foreach(roxen->configurations, object c) {
     if(c->modules["userdb"] && c->modules["userdb"]->master)
       c->modules["userdb"]->master->read_data();
+    if (c->datacache)
+      c->datacache->flush();
+  }
 
   /* Flush the memory cache. */
   cache.flush_memory_cache();
