@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.440 2000/02/23 16:50:30 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.441 2000/02/25 16:14:38 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1657,42 +1657,34 @@ string version()
 #else
   multiset choices=(<>);
   string version=QUERY(default_ident)?real_version:QUERY(ident);
-  array brag=({});
-  while(sizeof(choices)<5) {
-    int choice=random(26);
-    if(!choices[choice]) {
-      choices[choice]=1;
-      brag+= ({ ({
-	"Applier of Templates",
-	"Beautifier of Layouts",
-	"Conqueror of Comdex",
-	"Deliverer of Documents",
-	"Enhancer of Abilities",
-	"Freer of Webmasters",
-	"Generator of Logs",
-	"Helper of Users",
-	"Interpreter of Scripts",
-	"Juggler of Java-code",
-	"Keeper of Databases",
-	"Locator of Keywords",
-	"Manipulator of Data",
-	"Negatiator of Protocols",
-	"Operator of Sites",
-	"Provider of Contents",
-	"Quintessence of Quality",
-	"Responder to Connections",
-	"Server of Webs",
-	"Translator of Texts",
-	"Unifier of Interfaces",
-	"Valet of Visitors",
-	"Watcher for Requests",
-	"Xylem of Services",
-	"Yielder of Information",
-	"Zenith of Extensibility"
-      })[choice] });
-    }
-  }
-  return version+", "+String.implode_nicely(brag);
+  return version+", "+ ({
+    "Applier of Templates",
+    "Beautifier of Layouts",
+    "Conqueror of Comdex",
+    "Deliverer of Documents",
+    "Enhancer of Abilities",
+    "Freer of Webmasters",
+    "Generator of Logs",
+    "Helper of Users",
+    "Interpreter of Scripts",
+    "Juggler of Java-code",
+    "Keeper of Databases",
+    "Locator of Keywords",
+    "Manipulator of Data",
+    "Negatiator of Protocols",
+    "Operator of Sites",
+    "Provider of Contents",
+    "Quintessence of Quality",
+    "Responder to Connections",
+    "Server of Webs",
+    "Translator of Texts",
+    "Unifier of Interfaces",
+    "Valet of Visitors",
+    "Watcher for Requests",
+    "Xylem of Services",
+    "Yielder of Information",
+    "Zenith of Extensibility"
+  })[random(26)];
 #endif
 }
 
