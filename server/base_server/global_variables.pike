@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.75 2001/07/31 09:32:21 per Exp $
+// $Id: global_variables.pike,v 1.76 2001/08/05 20:06:17 nilsson Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -97,7 +97,7 @@ void set_up_ftp_variables( Protocol o )
 }
 
 
-void set_up_http_variables( Protocol o, int|void fhttp )
+void set_up_http_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
 
@@ -121,56 +121,21 @@ void set_up_http_variables( Protocol o, int|void fhttp )
 		"This is very useful if you are debugging your own modules "
 		"or writing Pike scripts."));
 
-  if(!fhttp)
-  {
-    defvar("set_cookie", 0, LOCALE(74, "Logging: Set unique user id cookies"),
-	   TYPE_FLAG,
-	   LOCALE(75, "If set to Yes, all users of your server whose clients "
-		  "support cookies will get a unique 'user-id-cookie', this "
-		  "can then be used in the log and in scripts to track "
-		  "individual users."));
+  defvar("set_cookie", 0, LOCALE(74, "Logging: Set unique user id cookies"),
+	 TYPE_FLAG,
+	 LOCALE(75, "If set to Yes, all users of your server whose clients "
+		"support cookies will get a unique 'user-id-cookie', this "
+		"can then be used in the log and in scripts to track "
+		"individual users."));
 
-    defvar("set_cookie_only_once", 1, 
-	   LOCALE(76, "Logging: Set ID cookies only once"),
-           TYPE_FLAG,
-	   LOCALE(77, "If set to Yes, Roxen will attempt to set unique user "
-		  "ID cookies only upon receiving the first request (and "
-		  "again after some minutes). Thus, if the user doesn't allow "
-		  "the cookie to be set, she won't be bothered with "
-		  "multiple requests."),0, do_set_cookie( o ));
-  }
-}
-
-void set_up_fhttp_variables( Protocol o )
-{
-  function(BDEFVAR) defvar = o->defvar;
-
-  defvar( "log", "None", LOCALE(78, "Logging method"),
-	  TYPE_STRING_LIST,
-	  LOCALE(79, "None - No log<br />"
-		 "CommonLog - A common log in a file<br />"
-		 "Compat - Log through Roxen's normal logging format.<br />"
-		 "<p>Please note that compat limits Roxen to less than 1k "
-		 "requests/second.</p>"),
-          ({ "None", "CommonLog", "Compat" }));
-
-  defvar( "log_file", "$LOGDIR/clog-"+o->ip+":"+o->port,
-	  LOCALE(80, "Log file"),
-	  TYPE_FILE,
-	  LOCALE(81, "This file is used if logging is done using the "
-		 "CommonLog method."));
-
-  defvar( "ram_cache", 20, LOCALE(82, "Ram cache"),
-	  TYPE_INT,
-	  LOCALE(83, "The size of the ram cache, in MegaBytes"));
-
-  defvar( "read_timeout", 120, LOCALE(84, "Client timeout"),
-	  TYPE_INT,
-	  LOCALE(85, "The maximum time Roxen will wait for a client "
-		 "before giving up, and close the connection, in seconds"));
-
-  set_up_http_variables( o,1 );
-
+  defvar("set_cookie_only_once", 1,
+	 LOCALE(76, "Logging: Set ID cookies only once"),
+	 TYPE_FLAG,
+	 LOCALE(77, "If set to Yes, Roxen will attempt to set unique user "
+		"ID cookies only upon receiving the first request (and "
+		"again after some minutes). Thus, if the user doesn't allow "
+		"the cookie to be set, she won't be bothered with "
+		"multiple requests."),0, do_set_cookie( o ));
 }
 
 void set_up_ssl_variables( Protocol o )

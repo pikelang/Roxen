@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.459 2001/08/01 19:33:46 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.460 2001/08/05 20:05:03 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3336,9 +3336,7 @@ also set 'URLs'."));
 	   DLOCALE(39, "Bind to these URLs. You can use '*' and '?' to perform"
 		   " globbing (using any of these will default to binding to "
 		   "all IP-numbers on your machine).  The possible protocols "
-		   "are http, fhttp (a faster version of the normal HTTP "
-		   "protocol, but not 100% compatible with all modules) "
-		   "https, ftp, ftps, hilfe and tetris.")));
+		   "are http, https, ftp, ftps, hilfe and tetris.")));
 
   defvar("InternalLoc", "/_internal/",
 	 DLOCALE(40, "Internal module resource mountpoint"),

@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.107 2001/07/25 18:47:21 mast Exp $
+// $Id: Roxen.pmod,v 1.108 2001/08/05 20:11:14 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3175,7 +3175,7 @@ string get_world(array(string) urls) {
   if(!sizeof(urls)) return 0;
 
   string url=urls[0];
-  foreach( ({"http:","fhttp:","https:","ftp:"}), string p)
+  foreach( ({"http:","https:","ftp:"}), string p)
     foreach(urls, string u)
       if(u[0..sizeof(p)-1]==p) {
 	url=u;
@@ -3189,8 +3189,6 @@ string get_world(array(string) urls) {
      sscanf(url, "%s://%s/%s", protocol, server, path)!=3 &&
      sscanf(url, "%s://%s", protocol, server)!=2 )
     return 0;
-
-  if(protocol=="fhttp") protocol="http";
 
   array hosts=({ gethostname() }), dns;
   catch(dns=Protocols.DNS.client()->gethostbyname(hosts[0]));

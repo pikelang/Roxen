@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.60 2001/08/01 19:34:10 per Exp $
+// $Id: module.pmod,v 1.61 2001/08/05 20:12:36 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -892,7 +892,7 @@ class URL
 
   array verify_set_from_form( string new_value )
   {
-    return verify_port( new_value, 1 );
+    return verify_port( new_value );
   } 
 }
 
@@ -1410,7 +1410,7 @@ class URLList
     foreach( new_value, string vv )
     {
       string tmp1, tmp2;
-      [tmp1,tmp2] = verify_port( vv, 1 );
+      [tmp1,tmp2] = verify_port( vv );
       if( tmp1 )
         warn += tmp1;
       res += ({ tmp2 });
@@ -1443,9 +1443,6 @@ class PortList
     }
     res += "</select>";
 
-    if( split->scheme == "fhttp" && !split->port )
-      split->port = 80;
-    
     res += "://<input type=string name='"+prefix+"host' value='"+
            Roxen.html_encode_string(split->host)+"' />";
     res += ":<input type=string size=5 name='"+prefix+"port' value='"+
@@ -1471,7 +1468,7 @@ class PortList
     foreach( new_value, string vv )
     {
       string tmp1, tmp2;
-      [tmp1,tmp2] = verify_port( vv, 0 );
+      [tmp1,tmp2] = verify_port( vv );
       if( tmp1 )
         warn += tmp1;
       res += ({ tmp2 });
@@ -1533,7 +1530,7 @@ class Flag
 // =================================================================
 // Utility functions used in multiple variable classes above
 // =================================================================
-static array(string) verify_port( string port, int nofhttp )
+static array(string) verify_port( string port )
 {
   if(!strlen(port))
     return ({ 0, port });
@@ -1559,29 +1556,21 @@ static array(string) verify_port( string port, int nofhttp )
     warning += sprintf(LOCALE(336,"Added / to the end of %s")+"\n",port);
     path += "/";
   }
-  if( nofhttp && protocol == "fhttp" )
-  {
-    warning += sprintf(LOCALE(337,"Changed %s to http")+"\n",protocol);
-    protocol = "http";
-  }
   if( protocol != lower_case( protocol ) )
   {
     warning += sprintf(LOCALE(338,"Changed %s to %s"),
 		       protocol, lower_case( protocol ))+"\n";  
     protocol = lower_case( protocol );
   }
-  if(!nofhttp) // it's a port, not a URL
-  {
 #if constant(SSL.sslfile)
-    /* All is A-OK */
+  // All is A-OK
 #else
-    if( (protocol == "https" || protocol == "ftps") )
-      warning +=
-	LOCALE(339,"SSL support not available in this Pike version.")+"\n"+
-	sprintf(LOCALE(340,"Please use %s instead."),
-		protocol[..strlen(protocol)-2])+"\n";
+  if( (protocol == "https" || protocol == "ftps") )
+    warning +=
+      LOCALE(339,"SSL support not available in this Pike version.")+"\n"+
+      sprintf(LOCALE(340,"Please use %s instead."),
+	      protocol[..strlen(protocol)-2])+"\n";
 #endif
-  }
   int pno;
   if( sscanf( host, "%s:%d", host, pno ) == 2)
     if( roxenp()->protocols[ lower_case( protocol ) ] 

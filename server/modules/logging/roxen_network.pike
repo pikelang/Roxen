@@ -1,4 +1,4 @@
-// The Roxen Network module. Copyright © 2000, Roxen IS.
+// The Roxen Network module. Copyright © 2000-2001, Roxen IS.
 //
 
 #include <module.h>
@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.5 2001/07/06 11:36:09 nilsson Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.6 2001/08/05 20:14:56 nilsson Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -97,7 +97,7 @@ class Poster
   
   void fail( Protocols.HTTP.Query qu )
   {
-    report_warning( "Roxen Network: Failed to connect to community.roxen.com." );
+    report_warning( "Roxen Network: Failed to connect to community.roxen.com.\n" );
     call_out( start, 60 );
   }
 
@@ -151,7 +151,7 @@ string build_package() {
   hosts = Array.uniq(hosts);
 
   foreach(conf->registered_urls, string url) {
-    if(url[0..3]!="http" && url[0..3]!="fhttp") continue;
+    if(!has_prefix(url, "http")) continue;
     foreach(hosts, string host) {
       string tmpurl = url, port = "80", path = "";
       sscanf(tmpurl, "%*s://%s/%s", tmpurl, path);
