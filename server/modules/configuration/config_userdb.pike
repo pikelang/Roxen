@@ -334,7 +334,7 @@ void first_try( RequestID id )
   if( id->misc->config_user )
     u = id->misc->config_user->name;
   else
-    u = "anonymous";
+    return;
 
   string host;
 
@@ -342,7 +342,6 @@ void first_try( RequestID id )
     host = h[0];
   else
     host = id->remoteaddr;
-  
   if( (time() - logged_in[ u+host ]) > 1800 )
     report_notice(LOW_LOCALE->config_interface->
                   admin_logged_on( u, host+" ("+id->remoteaddr+")" ));
