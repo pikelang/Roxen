@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.128 2000/06/01 12:09:59 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.129 2000/06/01 13:11:46 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1296,7 +1296,7 @@ array split_on_option( string what, Regexp r )
 }
 private int|array internal_tag_select(string t, mapping m, string c, string name, multiset(string) value)
 {
-  if(m->name!=name) return ({ Roxen.make_container(t,m,c) });
+  if(name && m->name!=name) return ({ Roxen.make_container(t,m,c) });
   Regexp r = Regexp( "(.*)<([Oo][Pp][Tt][Ii][Oo][Nn])([^>]*)>(.*)" );
   array(string) tmp=split_on_option(c,r);
   string ret=tmp[0],nvalue;
@@ -1902,40 +1902,23 @@ Pike-script or Roxen module.
  The value to set.
 </attr>
 
-<attr name=separator value=string>
-<ex>
-<default name='my-checkbox' value='2,3'>
-
-</default>
-</ex>
+<attr name=separator value=string default=','>
+If several values are to be selected, this is the string that seperates them.
 </attr>
 
 <attr name=name value=string>
  Only affect form element with this name.
 </attr>
 
-<attr name=variable value=string>
-
-</attr>
-<ex>
-<default name='my-checkbox' value='2,3'>
-  <input type='checkbox' name='my-checkbox' value='1' />
-  <input type='checkbox' name='my-checkbox' value='2' />
-  <input type='checkbox' name='my-checkbox' value='3' />
-  <input type='checkbox' name='my-checkbox' value='4' />
-  <input type='checkbox' name='other-checkbox' value='3' />
-</default>
-
-<default name='my-select' value='2'>
+<ex type='box'>
+<default name='my-select' value='&form.preset;'>
   <select name='my-select'>
     <option value='1'>First</option>
     <option value='2'>Second</option>
     <option value='3'>Third</option>
   </select>
 </default>
-</ex>
-
-",
+</ex>",
 
 "doc":#"<desc cont><short hide>
  Eases code documentation by reformatting it.</short>
