@@ -1,4 +1,4 @@
-TODO list for AutoSite
+TODO lista för AutoSite
 
 * Fixa en modul som laddar in samtliga moduler i "roxen_setup"-filen
   samt konfigurerar dem.
@@ -11,26 +11,13 @@ TODO list for AutoSite
 WebAdmin
 --------
 * Template Editor
-  - Make templates and nav-templates
-  - Example images of templates and navigations in their wizards
-  - Fix variables
-  - Fix variable help
-
-* Html Editor
-  - Upload: if content-type is text/html save only content of body-tag
-
-* Menu Editor
-  - New: If url = ../index.html link to ../
-  - Implement Edit button
+  - Visa exempel bild av templates och navigations i deras wizards
 
 * Statistics
-  - Only show statisticstab when it's enabled
-
-* LogView
+  - Visa bara statestikfliken då kunden har köpt statestik
 
 * IntraSeek
 
-* Make some kind of manual
+* Manual
 
-* Make start screen
-
+* Start text
