@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: newdecode.pike,v 1.26 2000/03/21 09:47:00 mast Exp $
+// $Id: newdecode.pike,v 1.27 2000/03/21 14:25:50 mast Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -114,7 +114,7 @@ mapping decode_config_file(string s)
   return res;
 }
 
-string encode_mixed(mixed from, object c, int indent)
+string encode_mixed(mixed from, object c, int|void indent)
 {
   switch(sprintf("%t", from))
   {
