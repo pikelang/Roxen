@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.11 1999/01/27 01:39:08 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.12 1999/01/27 02:13:45 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -749,14 +749,20 @@ class backend
     }
   
   array list(object|mapping session, string reference, string glob)
-    {
-      if ( (reference != "") )
-	return ({ });
-
-      return Array.map(imap_glob(glob, session->user->mailboxes()->query_name()),
-		       lambda (string name)
-			 { return ({ imap_list( ({}) ), "nil", name }); } );
-    }
+  {
+    if ( (reference != "") )
+      return ({ });
+    
+    return Array.map(imap_glob(glob,
+			       Array.map(session->user->mailboxes()->
+					 query_name(),
+					 lambda(string n) {
+					   // Remap incoming => INBOX.
+					   return (n=="incoming")?"INBOX":n;
+					 })),
+		     lambda (string name)
+		     { return ({ imap_list( ({}) ), "nil", name }); } );
+  }
 
   array lsub(object|mapping session, string reference, string glob)
     {
@@ -771,25 +777,27 @@ class backend
     }
 
   array select(object|mapping session, string mailbox)
+  {
+    // Remap INBOX => incoming.
+    mailbox = (mailbox == "INBOX")?"incoming":mailbox;
+    object m = session->user->get_mailbox(mailbox);
+
+    if (!m)
     {
-      object m = session->user->get_mailbox(mailbox);
-
-      if (!m)
-      {
-	session->mailbox = 0;
-	return 0;
-      }
-      m = imap_mailbox(m);
-      session->mailbox = m;
-
-      return ({ m->get_uidvalidity(),
-		m->get_exists(),
-		m->get_recent(),
-		m->get_unseen(),
-		m->get_flags(),
-		m->get_permanent_flags() });
-      
+      session->mailbox = 0;
+      return 0;
     }
+    m = imap_mailbox(m);
+    session->mailbox = m;
+    
+    return ({ m->get_uidvalidity(),
+	      m->get_exists(),
+	      m->get_recent(),
+	      m->get_unseen(),
+	      m->get_flags(),
+	      m->get_permanent_flags() });
+      
+  }
 
   array fetch(mapping|object session, object message_set,
 	      array(mapping) fetch_attrs)
