@@ -1,6 +1,6 @@
 //#define USE_GDBM
 
-/* $Id: db.pike,v 1.7 1997/02/14 03:42:54 per Exp $ */
+/* $Id: db.pike,v 1.8 1997/02/14 03:50:13 per Exp $ */
 
 private static inherit files.file;
 private static mapping db;
@@ -36,7 +36,7 @@ public int db_open(string f, int noread)
 #ifdef DEBUG_DB
   perror("db_open "+f+"\n");
 #endif
-  if(noread && (last != f))
+  if(!noread && (last != f))
   {
     int res;
     perror("restore ("+ f +")\n");
