@@ -1,18 +1,18 @@
 /*
- * $Id: quick_config.pike,v 1.3 1997/09/17 02:00:56 grubba Exp $
+ * $Id: quick_config.pike,v 1.4 1997/12/15 20:03:30 peter Exp $
  */
 
 inherit "wizard";
 
 string name="Maintenance//Quick Config...";
-string doc = "Automate the most common configuration and maintenance tasks";
+string doc = "You can here automate the most common configuration and maintenance tasks.";
 
 
 constant features = ([
   "&lt;GText&gt;":([ "module":"graphic_text", "depend":"htmlparse",
 	              "help":"The RXML graphical text tag &lt;gtext&gt;"]),
     "RXML":([ "module":"htmlparse",
-	      "help":"If off, disable all RXML parsing"]),
+	      "help":"If removed, all RXML parsing will be disbled"]),
     "CGI":([
      "module":"cgi",
      "help":"Support for CGI scripts",
@@ -31,7 +31,7 @@ constant features = ([
     "Imagemaps":([ "module":"ismap", ]),
     "&lt;Tablify&gt;":([ "module":"tablify", "depend":"htmlparse" ]),
     "Userfs":([
-      "module":"htmlparse", "depend":"userdb",
+      "module":"userfs", "depend":"userdb",
       "help":"Enable user directories"
      ]),
 ]);
