@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.76 1998/07/12 22:40:32 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.77 1998/07/17 17:50:54 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -676,7 +676,10 @@ class mf
   int close(string|void what)
   {
     destroy();
-    return ::close(what);
+    if (what) {
+      return ::close(what);
+    }
+    return ::close();
   }
 }
 #else
