@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.231 2000/05/08 00:08:23 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.232 2000/05/14 16:10:09 kinkie Exp $";
 
 #define MAGIC_ERROR
 
@@ -35,6 +35,13 @@ int footime, bartime;
 #define MARK_FD(X) catch{REQUEST_WERR(X); mark_fd(my_fd->query_fd(), (X)+" "+remoteaddr);}
 #else
 #define MARK_FD(X) REQUEST_WERR(X)
+#endif
+
+#ifdef THROTTLING_DEBUG
+#undef THROTTLING_DEBUG
+#define THROTTLING_DEBUG(X) werror("Throttling: "+X+"\n")
+#else
+#define THROTTLING_DEBUG(X)
 #endif
 
 constant decode          = MIME.decode_base64;
@@ -311,12 +318,13 @@ private void setup_pipe()
       pipe=roxen->fastpipe();
     }
   }
-  if (throttle->doit) {
+  if (throttle->doit) { //we are sure that pipe is really a slowpipe.
     throttle->rate=max(throttle->rate,
              conf->query("req_throttle_min")); //if conf=0 => throttle=0
     pipe->throttle(throttle->rate,
                    (int)(throttle->rate*conf->query("req_throttle_depth_mult")),
                    0);
+    THROTTLING_DEBUG("throtting request at "+throttle->rate);
   }
   if (conf && conf->throttler) {
     pipe->assign_throttler(conf->throttler);
