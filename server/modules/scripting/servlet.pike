@@ -4,7 +4,7 @@ inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.21 2002/01/18 13:42:35 tomas Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.22 2003/03/04 17:40:52 anders Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -129,7 +129,7 @@ mixed find_file( string f, RequestID id )
     id->misc->path_info = f;
     id->misc->mountpoint = "";
     if(query("rxml"))
-      id->my_fd = RXMLParseWrapper(id->my_fd, id);
+      id->my_fd = (object)RXMLParseWrapper(id->my_fd, id);
     servlet->service(id);
   }
 
@@ -150,7 +150,7 @@ mixed handle_file_extension(object o, string e, RequestID id)
     id->misc->path_info = id->not_query;
     id->misc->mountpoint = "/";
     if(query("rxml"))
-      id->my_fd = RXMLParseWrapper(id->my_fd, id);
+      id->my_fd = (object)RXMLParseWrapper(id->my_fd, id);
     servlet->service(id);
   }
 
