@@ -243,6 +243,7 @@ urw_itc_avant_garde-demi-r binary
 /server/server_templates/bare.pike foreign_ident
 /server/server_templates/basic.pike foreign_ident
 /server/server_templates/ftp.pike foreign_ident
+/server/server_templates/manualserver.pike foreign_ident
 /server/server_templates/proxy.pike foreign_ident
 /server/server_templates/standard.pike foreign_ident
 /server/start foreign_ident
