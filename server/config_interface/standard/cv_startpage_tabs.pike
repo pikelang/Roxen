@@ -1,6 +1,7 @@
 array pages =
 ({
   ({ "welcome",     "",                0,               0             }),
+  ({ "upgrade",     "upgrade.html",    0,               0             }),
   ({ "usersettings","settings.html",   0,               0             }),
   ({ "users",       "users.html",      "Edit Users",    0             }),
 });

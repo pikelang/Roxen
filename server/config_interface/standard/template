@@ -14,6 +14,23 @@
 </subtablist>
 </define>
 
+<define container=cv-obox>
+  <table cellpadding=2 cellspacing=0 border=0 width="200" align=center>
+  <tr bgcolor="&usr.fade2;">
+    <td valign=top>
+      <gtext bgcolor="&usr.fade2;" fgcolor="&usr.bgcolor;" font=bastard font_size=24>&title;</gtext>
+    </td>
+  </tr>
+  <cset preparse variable=usr.fade2>&usr.bgcolor;</cset>
+  <cset preparse variable=usr.fgcolor>&usr.fgcolor;</cset>
+  <formoutput>
+  <tr><td bgcolor="#usr.fade2#"><font color="#usr.fgcolor#" size=2>
+    <contents>
+  </font></td></tr>
+  </formoutput>
+  </table>
+</define>
+
 <define container=subtablist default_width=90%>
 <contents>
 <cset variable=dammit preparse>&usr.fade1;</cset>
@@ -44,7 +61,9 @@
 
 <define tag=topmenu default_base="" default_selected=home>
   <top-menu>
-    <item first perm="View Settings"
+    <item first title="<cf-locale get=home>" href="&base;"
+          <if match="&selected; is home"> selected</if> />
+    <item perm="View Settings"
           title="<cf-locale get=sites>" href="&base;sites/"
       <if match="&selected; is sites"> selected</if> />
     <item perm="View Settings"
@@ -56,10 +75,8 @@
     <item perm="View Settings"
           title="<cf-locale get=eventlog>" href="&base;event_log/"
           <if match="&selected; is event_log"> selected</if> />
-    <item perm="Tasks" title="<cf-locale get=actions>" href="&base;actions/"
+    <item last=20 perm="Tasks" title="<cf-locale get=actions>" href="&base;actions/"
           <if match="&selected; is actions"> selected</if>  />
-    <item last=20 title="<cf-locale get=home>" href="&base;"
-          <if match="&selected; is home"> selected</if> />
   </top-menu>
 </define>
 

@@ -39,12 +39,17 @@ string make_if( string q )
   return "<if "+q+"=?></if>";
 }
 
+string simplified_make_container( string tagname, mapping args, string c )
+{
+  return make_tag(tagname, args)+" "+make_tag("/...",args);
+}
+
 string describe_tags( object m, int q )
 {
   return html_encode_string(String.implode_nicely(map(sort(indices(m->query_tag_callers())),
 						      make_tag, ([])) +
 						  map(sort(indices(m->query_container_callers())),
-						      make_container, ([]), "") +
+						      simplified_make_container, ([]), "") +
 						  map(sort(indices(m->query_if_callers())),
 						      make_if)));
 }
