@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.873 2004/06/15 22:11:03 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.874 2004/06/23 00:42:55 _cvs_stephen Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -68,24 +68,11 @@ int test_euid_change;
 
 static array(Shuffler.Shuffler) shufflers = ({ Shuffler.Shuffler() });
 
-// FIXME: Kludge for bug in socket callbacks.
-class ShuffleWrapper (Stdio.File fd) {
-  void set_nonblocking(mixed ... args) {
-    fd->set_nonblocking(@args);
-  }
-  void set_write_callback(mixed ... args) {
-    fd->set_write_callback(@args);
-  }
-  mixed write(mixed ... args) {
-    return fd->write(@args);
-  }
-}
-
 Shuffler.Shuffle get_shuffler( Stdio.File fd )
 {
   if( fd->sslfile )
     fd = fd->sslfile;
-  return random(shufflers)->shuffle( ShuffleWrapper(fd) );
+  return random(shufflers)->shuffle(fd);
 }
 
 string md5( string what )
