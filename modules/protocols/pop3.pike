@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.2 1998/09/28 00:03:34 grubba Exp $
+ * $Id: pop3.pike,v 1.3 1998/09/28 00:14:50 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.2 1998/09/28 00:03:34 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.3 1998/09/28 00:14:50 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -27,6 +27,7 @@ static class Pop_Session
   static void send(string s)
   {
     send_q->put(s);
+    con->set_write_callback(write_callback);
   }
 
   static void send_error(string s)
@@ -306,6 +307,9 @@ static class Pop_Session
   {
     conf = c;
     ::create(con);
+
+    send_ok(sprintf("POP3 (%s). Timestamp: <%d.%d@%s>",
+		    roxen->version(), getpid(), time(), gethostname()));
   }
 };
 
