@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.62 1998/03/20 03:35:27 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.63 1998/03/23 19:48:04 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -554,9 +554,21 @@ object really_load_roxen()
   return res;
 }
 
+#ifdef TRACE_DESTRUCT
+void trace_destruct(mixed x)
+{
+  roxen_perror(sprintf("DESTRUCT(%O)\n%s\n",
+		       x, describe_backtrace(backtrace())));
+  destruct(x);
+}
+#endif /* TRACE_DESTRUCT */
+
 void load_roxen()
 {
   add_constant("cd", restricted_cd());
+#ifdef TRACE_DESTRUCT
+  add_constant("destruct", trace_destruct);
+#endif /* TRACE_DESTRUCT */
 #if !constant(getppid)
   add_constant("getppid", getppid);
 #endif
