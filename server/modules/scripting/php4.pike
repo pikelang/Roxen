@@ -15,11 +15,11 @@ inherit "module";
 
 #include <roxen.h>
 
-constant cvs_version = "$Id: php4.pike,v 2.14 2001/02/17 16:42:29 nilsson Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.15 2001/03/03 07:15:12 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILE_EXTENSION;
 
-constant module_name = "PHP Script Support";
+constant module_name = "Scripting: PHP Support";
 constant module_doc  = ("This module allows Roxen users to run PHP scripts, "
 			"optionally in combination with RXML.");
 

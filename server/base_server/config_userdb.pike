@@ -121,7 +121,7 @@ class ConfigurationSettings
     {
       return (get_dir( "config_interface/themes/" ) + 
               (get_dir( "../local/config_interface/themes/" )||({}))-
-              ({"CVS","README"}));
+              ({"CVS","README",".distignore",".cvsignore"}));
     }
 
     void set_choice_list()

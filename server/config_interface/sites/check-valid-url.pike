@@ -13,7 +13,8 @@ mixed parse( RequestID id )
     conf->enable_all_modules();
   
   // error_log[0] is true for non-completely added sites.
-  if(!conf || conf->error_log[0]) // /site.html/<site>/[<module>/] -> /
+  if(!conf || conf->error_log[0])
+    // /site.html/<site>/[<mgroup>/[<module>/]] -> /
     if( search( path[0], "%20" ) != -1 )
       return Roxen.http_string_answer("<redirect to='"+
                                 ("../"*sizeof(path))+
@@ -22,9 +23,9 @@ mixed parse( RequestID id )
       return Roxen.http_string_answer("<redirect to='../"+
                                 ("../"*sizeof(path))+"'/><true/>");
   
-  if( sizeof( path ) > 1 && path[1] != "settings" )
+  if( sizeof( path ) > 2 && path[2] != "settings" )
     // /site.html/<site>/[<module>/] -> /
-    if(!conf->find_module( replace( path[1], "!", "#" ) ) )
+    if(!conf->find_module( replace( path[2], "!", "#" ) ) )
       return Roxen.http_string_answer("<redirect to='../'/><true/>");
 
   if( conf && ( !config_perm( "Site:"+conf->name ) ) )

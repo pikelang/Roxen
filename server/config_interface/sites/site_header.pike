@@ -35,7 +35,7 @@ string parse( RequestID id )
   if( !conf->inited )
     conf->enable_all_modules();
   id->misc->current_configuration = conf;
-  switch( sizeof(path)==1?"settings":path[ 1 ] )
+  switch( sizeof(path)<3?"settings":path[ 1 ] )
   {
    case "settings":
      return 
@@ -47,6 +47,6 @@ string parse( RequestID id )
      break;
 
    default:
-     return module_page( id, path[0], path[1] );
+     return module_page( id, path[0], path[2] );
   }
 }

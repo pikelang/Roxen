@@ -276,6 +276,12 @@ string module_image( int type )
 {
   return "";
 }
+string strip_leading( string what )
+{
+  sscanf( (string)what, "%*s:%s", what );
+  return what;
+}
+
 
 function describe_module_normal( int image )
 {
@@ -311,7 +317,7 @@ return sprintf(
     </td>
   </tr>
 ",
-     Roxen.html_encode_string(module->get_name()),
+     Roxen.html_encode_string(strip_leading(module->get_name())),
      (image?module_image(module->type):""),
      module->sname,
    LOCALE(251, "Add Module"),
@@ -383,10 +389,10 @@ return sprintf(
         </td><td valign='top'>%s<p>%s</p></td>
     </tr>
 ",
-   Roxen.html_encode_string(module->get_name()),
+   Roxen.html_encode_string(strip_leading(module->get_name())),
    module_image(module->type),
    module->sname,
-   Roxen.html_encode_string(module->get_name()),
+   Roxen.html_encode_string(strip_leading(module->get_name())),
    module->get_description(),
    LOCALE(266, "Will be loaded from: ")+module->filename
   );
@@ -452,7 +458,7 @@ array(int|string) class_visible_compact( string c, string d, RequestID id )
 string describe_module_compact( object module, object block )
 {
   if(!block)
-    return "<option value='"+module->sname+"'>"+Roxen.html_encode_string(module->get_name())+"</option>";
+    return "<option value='"+module->sname+"'>"+Roxen.html_encode_string(strip_leading(module->get_name()))+"</option>";
   return "";
 }
 
@@ -556,7 +562,8 @@ array initial_form( RequestID id, Configuration conf, array modules )
         num++;
         res += "<tr><td colspan='3'><h2>"
         +LOCALE(1,"Initial variables for ")+
-            Roxen.html_encode_string(mi->get_name())+"</h2></td></tr>"
+            Roxen.html_encode_string(strip_leading(mi->get_name()))
+	  +"</h2></td></tr>"
         "<emit source='module-variables' "
 	  " configuration=\""+conf->name+"\""
         " module=\""+mod+#"\"/>

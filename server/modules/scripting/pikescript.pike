@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.69 2000/09/16 20:23:48 per Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.70 2001/03/03 07:15:12 per Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -16,7 +16,7 @@ mapping scripts=([]);
 inherit "module";
 
 constant module_type = MODULE_FILE_EXTENSION;
-constant module_name = "Pike script support";
+constant module_name = "Scripting: Pike script support";
 constant module_doc  = #"Support for user Pike-scripts, like CGI, but
 handled internally in the server, and thus much faster, but blocking,
 and less secure.<br /><img src=\"/internal-roxen-err_2\" align=\"left\"

@@ -457,7 +457,7 @@ string parse( RequestID id )
 
   id->misc->current_configuration = conf;
 
-  if( sizeof( path ) == 1 )
+  if( sizeof( path ) < 3 )
   {
     /* Global information for the configuration */
     switch( section )
@@ -559,6 +559,6 @@ string parse( RequestID id )
        return res+"<br />\n";
     }
   } else
-    return module_page( id, path[0], path[1] );
+    return module_page( id, path[0], path[2] );
   return "";
 }

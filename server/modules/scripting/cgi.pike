@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.54 2001/01/13 18:17:48 nilsson Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.55 2001/03/03 07:15:12 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -49,7 +49,7 @@ problem.\n"
 
 constant module_unique = 0;
 constant module_type = MODULE_LOCATION | MODULE_FILE_EXTENSION | MODULE_TAG;
-constant module_name = "CGI scripting support";
+constant module_name = "Scripting: CGI scripting support";
 constant module_doc  = "Support for the <a href=\"http://hoohoo.ncsa.uiuc.edu/docs/cgi/"
   "interface.html\">CGI/1.1 interface</a>, and more.";
 

@@ -13,11 +13,11 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.15 2001/01/30 13:48:48 leif Exp $";
+       "$Id: perl.pike,v 2.16 2001/03/03 07:15:12 per Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
-constant module_name = "Perl support";
+constant module_name = "Scripting: Perl support";
 constant module_doc =
    "This module provides a faster way of running Perl scripts with Roxen. "
    "The module also optionally provides a &lt;perl&gt;..&lt;/perl&gt; "
