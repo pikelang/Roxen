@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.105 1999/11/04 16:44:59 grubba Exp $
+ * $Id: roxenloader.pike,v 1.106 1999/11/04 18:50:16 grubba Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.105 1999/11/04 16:44:59 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.106 1999/11/04 18:50:16 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -447,6 +447,38 @@ static private void initiate_cache()
                lambda(string s){return upper_case(s[0..0])+s[1..];});
 }
 
+class ErrorContainer
+{
+  string d;
+  string errors="";
+  string get()
+  {
+    return errors;
+  }
+  void got_error(string file, int line, string err)
+  {
+    if (file[..sizeof(d)-1] == d) {
+      file = file[sizeof(d)..];
+    }
+    errors += sprintf("%s:%d\t%s\n", file, line, err);
+  }
+  void compile_error(string file, int line, string err)
+  {
+    got_error(file, line, "Error: " + err);
+  }
+  void compile_warning(string file, int line, string err)
+  {
+    got_error(file, line, "Warning: " + err);
+  }
+  void create()
+  {
+    d = getcwd();
+    if (sizeof(d) && (d[-1] != '/') && (d[-1] != '\\')) {
+      d += "/";
+    }
+  }
+}
+
 // Don't allow cd() unless we are in a forked child.
 class restricted_cd
 {
@@ -481,11 +513,26 @@ object really_load_roxen()
 {
   int start_time = gethrtime();
   roxen_perror("Loading roxen ... ");
-  object res =((program)"roxen")();
+  object e = ErrorContainer();
+  object res;
+  master()->set_inhibit_compile_errors(e);
+  mixed err = catch {
+    res =((program)"roxen")();
+  };
+  master()->set_inhibit_compile_errors(0);
+  string q = e->get();
+  if (err) {
+    roxen_perror("ERROR\n" + (q||""));
+    throw(err);
+  }
+  roxen_perror("done after %3.3fs\n",
+	       (gethrtime()-start_time)/1000000.0);
+
+  if (q && sizeof(q)) {
+    roxen_perror("Warnings compiling Roxen:\n" + q);
+  }
   res->start_time = start_time;
   res->boot_time = start_time;
-  roxen_perror("done after %3.3fs\n",
-               (gethrtime()-start_time)/1000000.0);
   return res;
 }
 
@@ -897,37 +944,7 @@ int main(int argc, array argv)
   replace_master(new_master=(((program)"etc/roxen_master.pike")()));
 
   add_constant("open_db", open_db);
-  add_constant("ErrorContainer", class 
-  {
-    string d;
-    string errors="";
-    string get()
-    {
-      return errors;
-    }
-    void got_error(string file, int line, string err)
-    {
-      if (file[..sizeof(d)-1] == d) {
-	file = file[d..];
-      }
-      errors += sprintf("%s:%d\t%s\n", file, line, err);
-    }
-    void handle_error(string file, int line, string err)
-    {
-      got_error(file, line, "Error: " + err);
-    }
-    void handle_warning(string file, int line, string err)
-    {
-      got_error(file, line, "Warning: " + err);
-    }
-    void create()
-    {
-      d = getcwd();
-      if (sizeof(d) && (d[-1] != '/') && (d[-1] != '\\')) {
-	d += "/";
-      }
-    }
-  });
+  add_constant("ErrorContainer", ErrorContainer);
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
   add_constant("perror",roxen_perror);
