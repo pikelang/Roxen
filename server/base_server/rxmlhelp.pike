@@ -65,7 +65,7 @@ private string ex_cont(string t, mapping m, string c, string rt, void|object id)
 {
   if(!id) return "";
   string parsed=id->conf->parse_rxml(c,id);
-  c=replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) );
+  c="<pre>"+replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
 
   switch(m->type) {
   case "box":
@@ -102,11 +102,12 @@ private string format_doc(string|mapping doc, string name, void|object id) {
       doc=doc->standard;
   }
 
-  return parse_html(doc, ([]), ([
+  return parse_html(doc, (["lang":lambda() { return available_languages(id); } ]), ([
     "desc":desc_cont,
     "attr":attr_cont,
     "ex":ex_cont,
-    "lang":lambda(string t, mapping m) { return available_languages(id); }
+    "tag":lambda(string tag, mapping m, string c) { return "&lt;"+c+"&gt;"; },
+    "ref":lambda(string tag, mapping m, string c) { return c; }
   ]), name, id);
 }
 
