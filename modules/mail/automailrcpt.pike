@@ -1,5 +1,5 @@
 /*
- * $Id: automailrcpt.pike,v 1.3 1998/09/13 14:49:51 grubba Exp $
+ * $Id: automailrcpt.pike,v 1.4 1998/09/14 13:51:23 grubba Exp $
  *
  * A RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: automailrcpt.pike,v 1.3 1998/09/13 14:49:51 grubba Exp $";
+constant cvs_version = "$Id: automailrcpt.pike,v 1.4 1998/09/14 13:51:23 grubba Exp $";
 
 /*
  * Roxen glue
@@ -94,8 +94,17 @@ string desc(string addr, object o)
 
   addr = get_addr(addr);
 
+  string addr2;
+
+  if (addr[-1] == '.') {
+    addr2 = addr[..sizeof(addr)-2];
+  } else {
+    addr2 = addr + ".";
+  }
+
   foreach(conf->get_providers("automail_clientlayer")||({}), object o) {
-    object u = o->get_user_from_address(addr);
+    object u = o->get_user_from_address(addr) ||
+      o->get_user_from_address(addr2);
 
     if (u) {
       return(u->query_name()||"");
@@ -115,23 +124,26 @@ int put(string sender, string user, string domain,
 
   string addr = user + "@" + domain;
 
-  object m;
+  string addr2;
+  if (domain[-1] == '.') {
+    addr2 = user + "@" + domain[..sizeof(domain)-2];
+  } else {
+    addr2 = addr + ".";
+  }
+
+  int res;
 
   foreach(conf->get_providers("automail_clientlayer")||({}), object o) {
-    object u = o->get_user_from_address(addr);
+    object u = o->get_user_from_address(addr) ||
+      o->get_user_from_address(addr2);
 
     if (u) {
-      m = u->get_incoming();
+      u->get_incoming()->create_mail_from_fd(mail);
+      res = 1;
     }
   }
 
-  if (!m) {
-    return 0;
-  }
-
-  m->create_mail_from_fd(mail);
-
-  return 1;
+  return(res);
 }
 
 multiset(string) query_domain()
