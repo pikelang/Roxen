@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.2 1998/01/22 07:34:07 neotron Exp $
+// $Id: counter.pike,v 1.3 1998/02/22 02:26:12 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 //
@@ -21,6 +21,9 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.2  1998/01/22 07:34:07  neotron
+// Fixed the graphical counter!
+//
 // Revision 1.1  1998/01/21 08:09:02  neotron
 // Added the counter module to CVS. It's now extremely easy to make a
 // graphical counter! Just get the fonts and add the options in the
@@ -56,7 +59,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.2 1998/01/22 07:34:07 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.3 1998/02/22 02:26:12 neotron Exp $";
 
 string copyright = "<BR>Copyright 1997 "
 +"<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -243,9 +246,9 @@ mixed find_file_ppm( string f, object id )
 {
   string fontname, strcounter, strsize, fg, bg, user;
   int len, counter, trans, rot;
-  object digit, result;
+  object result;
   float scale;
-  string ppmbuff, ppmfile, giffile, gifbuff, prefix, dir, *us;
+  string ppmbuff, dir, *us;
   int currx;
   mapping retval;
   if(sscanf(f, "%s/%s/%s/%d/%d/%f/%d/%s/%d", 
@@ -262,33 +265,55 @@ mixed find_file_ppm( string f, object id )
     dir = us[5] + (us[5][-1]!='/'?"/":"")+ query("userpath");
   else
     dir = query("ppmpath"); 
-  mapping digits = ([]);
-  for( int dn=0; dn < sizeof( strcounter ); dn++ )
-  {
-    
-    prefix  = fontname + "/" + (int)( strcounter[dn] - '0' );
-    digit = digits[strcounter[dn]] || cache_lookup("ppmdigits", prefix);
-    //      if(digit == -1)
-    //	return ppmlist( fontname, user, dir );	// Failed !!
-    if(!objectp(digit)) {
-      ppmfile = dir + prefix + ".ppm";
-      ppmbuff = read_bytes( ppmfile );		// Try .ppm
+  array digits = cache_lookup("digits", fontname);
+  object colortable;
+  if(digits == -1)
+    return ppmlist( fontname, user, dir );	// Failed !!
+  if(!arrayp(digits)) {
+    digits = allocate(10);
+    object digit;
+    for( int dn=0; dn < 10; dn++ )
+    {
+      ppmbuff = read_bytes( dir + fontname+"/"+dn+".ppm");     // Try .ppm
       if(!ppmbuff || catch( digit = Image.image()->fromppm( ppmbuff ))) {
-	cache_set("ppmdigits", prefix,  -1);
+	cache_set("digits", fontname,  -1);
 	return ppmlist( fontname, user, dir );	// Failed !!
       } 
-      cache_set("ppmdigits", prefix, digit || -1);
-      digits[strcounter[dn]] = digit;
+      digits[dn] = digit;
     }
-
-    if(!result)
-      result = Image.image(digit->xsize()*2 * numdigits, digit->ysize());
-    result = result->paste(digit, currx, 0);
-    currx += digit->xsize();
+    cache_set("digits", fontname,  digits);
   }
+  result = Image.image(digits[0]->xsize()*2 * numdigits,
+		       digits[0]->ysize());
+  for( int dn=0; dn < sizeof( strcounter ); dn++ )
+  {
+    int c = (int)strcounter[dn..dn];
+    result = result->paste(digits[c], currx, 0);
+    currx += digits[c]->xsize();
+  }
+  string gif;
+//#define OLD
+#ifndef OLD
+  colortable = cache_lookup("colortables", fontname);
+  if(!colortable) {
+    object data;
+    int x;
+    data = Image.image(digits[0]->xsize()*2 * numdigits,
+		       digits[0]->ysize());
+    for( int dn = 0; dn < 10; dn++ ) {
+      data = result->paste(digits[dn], x, 0);
+      x += digits[dn]->xsize();
+    }
+    colortable = Image.colortable(data->copy(0,0,x-1,data->ysize()-1), 64);
+    cache_set("colortables", fontname, colortable->cubicles(20,20,20));
+  }
+  
+  gif = Image.GIF.encode(result->copy(0,0,currx-1,result->ysize()-1),colortable);
+#else
+  gif = result->copy(0,0,currx-1,result->ysize()-1)->togif();
+#endif
   return
-    http_string_answer(result->copy(0,0,currx-1,result->ysize()-1)->togif(),
-		       "image/gif" );
+    http_string_answer(gif);
 }
 
 mapping find_file( string f, object id )
@@ -310,7 +335,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.2 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.3 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
