@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.226 1999/11/23 06:37:44 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.227 1999/11/23 09:43:43 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -158,6 +158,11 @@ string comment()
 
 class Priority 
 {
+  string _sprintf()
+  {
+    return "Priority()";
+  }
+
   array (object) url_modules = ({ });
   array (object) logger_modules = ({ });
   array (object) location_modules = ({ });
@@ -1720,6 +1725,11 @@ class StringFile
 {
   string data;
   int offset;
+
+  string _sprintf()
+  {
+    return "StringFile("+strlen(data)+","+offset+")";
+  }
 
   string read(int nbytes)
   {

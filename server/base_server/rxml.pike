@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.35 1999/11/23 06:41:41 per Exp $
+ * $Id: rxml.pike,v 1.36 1999/11/23 09:43:44 per Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -127,6 +127,10 @@ string do_parse(string to_parse, RequestID id, object file, mapping defines,
     {
       inherit Parser.HTML;
       object up;
+      string _sprintf()
+      {
+        return "CompatRXMLParser()";
+      }
       void create (object _up) {::create(); up = _up;}
     }(0);
   }
@@ -141,7 +145,7 @@ string do_parse(string to_parse, RequestID id, object file, mapping defines,
     });
   id->misc->_parser_obj = parser;
   parser->set_extra( 0, id, file, defines, my_fd );
-  to_parse = parser->finish (to_parse)->read();
+  to_parse = parser->finish( to_parse )->read();
   id->misc->_parser_obj = 0;
 #endif
 
@@ -761,6 +765,11 @@ class Tracer
   inherit "roxenlib";
   string resolv="<ol>";
   int level;
+
+  string _sprintf()
+  {
+    return "Tracer()";
+  }
 
   mapping et = ([]);
 #if efun(gethrvtime)
