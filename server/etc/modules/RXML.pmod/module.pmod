@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.335 2004/08/11 15:45:37 grubba Exp $
+// $Id: module.pmod,v 1.336 2004/10/20 14:11:11 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3092,7 +3092,7 @@ class Frame
   //!	  parser, the string will be parsed with it before it's
   //!	  assigned to the result variable and passed on.
   //!    @type RXML.Frame
-  //!	  Already initialized frame to process. It's result is added
+  //!	  Already initialized frame to process. Its result is added
   //!	  or put into the result of this tag. The functions
   //!	  @[RXML.make_tag], @[RXML.make_unparsed_tag] are useful to
   //!	  create frames.
