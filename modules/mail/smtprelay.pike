@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.27 1998/09/21 16:25:35 grubba Exp $
+ * $Id: smtprelay.pike,v 1.28 1998/09/21 16:30:31 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.27 1998/09/21 16:25:35 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.28 1998/09/21 16:30:31 grubba Exp $";
 
 /*
  * Some globals
@@ -256,7 +256,7 @@ class MailSender
   {
     int i = con->write(out_buf);
 #ifdef RELAY_DEBUG
-    report_debug("SMTP: Wrote %d bytes\n", i);
+    report_debug(sprintf("SMTP: Wrote %d bytes\n", i));
 #endif /* RELAY_DEBUG */
     if (i < 0) {
       // Error
@@ -804,42 +804,43 @@ void bounce(mapping msg, string code, array(string) text, string last_command)
       } 
     }
 
+    string statusmessage;
     if (sizeof(msg->remotename)) {
-      string statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
-				     "Received-From-MTA: DNS; %s\r\n"
-				     "Arrival-Date: %s\r\n"
-				     "\r\n"
-				     "Final-Recipient: RFC822; %s@%s\r\n"
-				     "Action: failed\r\n"
-				     "Status: %s\r\n"
-				     "Remote-MTA: DNS; %s\r\n"
-				     "Diagnostic-Code: SMTP; %s %s\r\n"
-				     "Last-Attempt-Date: %s\r\n",
-				     gethostname(),
-				     msg->remotename,
-				     mktimestamp((int)msg->received_at),
-				     msg->user, msg->domain,
-				     msg->status || "5.1.1",
-				     msg->remote_mta,
-				     code, sizeof(text)?text[-1]:"",
-				     mktimestamp((int)msg->last_attempt_at));
+      statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
+			      "Received-From-MTA: DNS; %s\r\n"
+			      "Arrival-Date: %s\r\n"
+			      "\r\n"
+			      "Final-Recipient: RFC822; %s@%s\r\n"
+			      "Action: failed\r\n"
+			      "Status: %s\r\n"
+			      "Remote-MTA: DNS; %s\r\n"
+			      "Diagnostic-Code: SMTP; %s %s\r\n"
+			      "Last-Attempt-Date: %s\r\n",
+			      gethostname(),
+			      msg->remotename,
+			      mktimestamp((int)msg->received_at),
+			      msg->user, msg->domain,
+			      msg->status || "5.1.1",
+			      msg->remote_mta,
+			      code, sizeof(text)?text[-1]:"",
+			      mktimestamp((int)msg->last_attempt_at));
     } else {
-      string statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
-				     "Arrival-Date: %s\r\n"
-				     "\r\n"
-				     "Final-Recipient: RFC822; %s@%s\r\n"
-				     "Action: failed\r\n"
-				     "Status: %s\r\n"
-				     "Remote-MTA: DNS; %s\r\n"
-				     "Diagnostic-Code: SMTP; %s %s\r\n"
-				     "Last-Attempt-Date: %s\r\n",
-				     gethostname(),
-				     mktimestamp((int)msg->received_at),
-				     msg->user, msg->domain,
-				     msg->status || "5.1.1",
-				     msg->remote_mta,
-				     code, sizeof(text)?text[-1]:"",
-				     mktimestamp((int)msg->last_attempt_at));
+      statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
+			      "Arrival-Date: %s\r\n"
+			      "\r\n"
+			      "Final-Recipient: RFC822; %s@%s\r\n"
+			      "Action: failed\r\n"
+			      "Status: %s\r\n"
+			      "Remote-MTA: DNS; %s\r\n"
+			      "Diagnostic-Code: SMTP; %s %s\r\n"
+			      "Last-Attempt-Date: %s\r\n",
+			      gethostname(),
+			      mktimestamp((int)msg->received_at),
+			      msg->user, msg->domain,
+			      msg->status || "5.1.1",
+			      msg->remote_mta,
+			      code, sizeof(text)?text[-1]:"",
+			      mktimestamp((int)msg->last_attempt_at));
     }
 
     string body = sprintf("Message to %s@%s from %s bounced (code %s):\r\n"
