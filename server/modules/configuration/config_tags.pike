@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.139 2001/03/04 12:57:34 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.140 2001/03/05 20:02:13 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -820,7 +820,7 @@ class TagModuleVariablesSectionsplugin
     if( mod->module_full_doc || (mod->module_type & MODULE_TAG ) )
       variables +=({ ([
        "section":"Docs",
-       "sectionname":LOCALE(0,"Documentation"),
+       "sectionname":LOCALE(383,"Documentation"),
        "selected":((section=="Docs")?"selected":""),
      ])});
     
