@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.230 1998/09/01 13:48:07 marcus Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.231 1998/09/01 14:00:07 grubba Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -93,29 +93,36 @@ void stop_handler_threads(); // forward declaration
 int privs_level;
 int die_die_die;
 
-// Fork, and then do a 'slow-quit' in the forked copy. Exit the
-// original copy, after all listen ports are closed.
-// Then the forked copy can finish all current connections.
-private static void fork_or_quit()
+void stop_all_modules()
 {
-  int i;
-  object *f;
-  int pid;
-  perror("Exiting Roxen.\n");
+  foreach(configurations, object conf)
+    conf->stop();
+}
+
+private static void really_low_shutdown(int exit_code)
+{
+  // Die nicely.
 
 #ifdef SOCKET_DEBUG
-  perror("SOCKETS: fork_or_quit()\n                 Bye!\n");
+  roxen_perror("SOCKETS: really_low_shutdown\n"
+	       "                        Bye!\n");
 #endif
 
 #ifdef THREADS
   stop_handler_threads();
 #endif /* THREADS */
 
+  // Don't use fork() with threaded servers.
 #if constant(fork) && !defined(THREADS)
 
+  // Fork, and then do a 'slow-quit' in the forked copy. Exit the
+  // original copy, after all listen ports are closed.
+  // Then the forked copy can finish all current connections.
   if(fork()) {
+    // Kill the parent.
     add_constant("roxen", 0);	// Remove some extra refs...
-    exit(-1);	// Restart.
+
+    exit(exit_code);		// Die...
   }
   // Now we're running in the forked copy.
 
@@ -123,24 +130,101 @@ private static void fork_or_quit()
   // since only one thread is left running after the fork().
 #if efun(_pipe_debug)
   call_out(lambda() {  // Wait for all connections to finish
-    call_out(Simulate.this_function(), 20);
-    if(!_pipe_debug()[0]) exit(0);
-  }, 1);
+	     call_out(Simulate.this_function(), 20);
+	     if(!_pipe_debug()[0]) exit(0);
+	   }, 1);
 #endif /* efun(_pipe_debug) */
   call_out(lambda(){ exit(0); }, 600); // Slow buggers..
   f=indices(portno);
   for(i=0; i<sizeof(f); i++)
     catch(destruct(f[i]));
-#else /* !constant(fork) */
+#else /* !constant(fork) || defined(THREADS) */
 
   // FIXME:
   // Should probably attempt something similar to the above,
   // but this should be sufficient for the time being.
   add_constant("roxen", 0);	// Paranoia...
-  exit(-1);	// Restart
 
-#endif /* constant(fork) */
+  exit(exit_code);		// Now we die...
+
+#endif /* constant(fork) && !defined(THREADS) */
 }
+
+// Shutdown Roxen
+//  exit_code = 0	True shutdown
+//  exit_code = -1	Restart
+private static void low_shutdown(int exit_code)
+{
+  // Change to root user if possible ( to kill the start script... )
+#if efun(seteuid)
+  seteuid(getuid());
+  setegid(getgid());
+#endif
+#if efun(setuid)
+  setuid(0);
+#endif
+  stop_all_modules();
+  
+  if(main_configuration_port && objectp(main_configuration_port))
+  {
+    // Only _really_ do something in the main process.
+    int pid;
+    if (exit_code) {
+      roxen_perror("Restarting Roxen.\n");
+    } else {
+      roxen_perror("Shutting down Roxen.\n");
+
+      // This has to be refined in some way. It is not all that nice to do
+      // it like this (write a file in /tmp, and then exit.)  The major part
+      // of code to support this is in the 'start' script.
+#ifndef __NT__
+#ifdef USE_SHUTDOWN_FILE
+      // Fallback for systems without geteuid, Roxen will (probably)
+      // not be able to kill the start-script if this is the case.
+      rm("/tmp/Roxen_Shutdown_"+startpid);
+
+      object f;
+      f=open("/tmp/Roxen_Shutdown_"+startpid, "wc");
+      
+      if(!f) 
+	roxen_perror("cannot open shutdown file.\n");
+      else f->write(""+getpid());
+#endif /* USE_SHUTDOWN_FILE */
+
+      // Try to kill the start-script.
+      if(startpid != getpid())
+      {
+	kill(startpid, signum("SIGINTR"));
+	kill(startpid, signum("SIGHUP"));
+	kill(getppid(), signum("SIGINTR"));
+	kill(getppid(), signum("SIGHUP"));
+      }
+#endif /* !__NT__ */
+    }
+  }
+
+  call_out(really_low_shutdown, 5, exit_code);
+}
+
+// Perhaps somewhat misnamed, really...  This function will close all
+// listen ports, fork a new copy to handle the last connections, and
+// then quit the original process.  The 'start' script should then
+// start a new copy of roxen automatically.
+mapping restart() 
+{ 
+  low_shutdown(-1);
+  return ([ "data": replace(Stdio.read_bytes("etc/restart.html"),
+			    ({"$docurl", "$PWD"}), ({roxen->docurl, getcwd()})),
+		  "type":"text/html" ]);
+} 
+
+mapping shutdown() 
+{
+  low_shutdown(0);
+  return ([ "data":replace(Stdio.read_bytes("etc/shutdown.html"),
+			   ({"$docurl", "$PWD"}), ({roxen->docurl, getcwd()})),
+	    "type":"text/html" ]);
+} 
 
 // This is called for each incoming connection.
 private static void accept_callback( object port )
@@ -189,7 +273,7 @@ private static void accept_callback( object port )
 
        case 24:
 	report_fatal("Out of sockets. Restarting server gracefully.\n");
-	fork_or_quit();
+	low_shutdown(-1);
 	return;
       }
     }
@@ -999,27 +1083,6 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
 
 int config_ports_changed = 0;
 
-void stop_all_modules()
-{
-  foreach(configurations, object conf)
-    conf->stop();
-}
-
-
-// Perhaps somewhat misnamed, really...  This function will close all
-// listen ports, fork a new copy to handle the last connections, and
-// then quit the original process.  The 'start' script should then
-// start a new copy of roxen automatically.
-
-mapping restart() 
-{ 
-  stop_all_modules();
-  call_out(fork_or_quit, 5, -1);
-  return ([ "data": replace(Stdio.read_bytes("etc/restart.html"),
-			    ({"$docurl", "$PWD"}), ({roxen->docurl, getcwd()})),
-		  "type":"text/html" ]);
-} 
-
 static string MKPORTKEY(array(string) p)
 {
   if (sizeof(p[3])) {
@@ -1042,68 +1105,6 @@ array(object) get_configuration_ports()
 {
   return(values(configuration_ports));
 }
-
-// This has to be refined in some way. It is not all that nice to do
-// it like this (write a file in /tmp, and then exit.)  The major part
-// of code to support this is in the 'start' script.
-void kill_me()
-{
-  // Change to root user if possible ( to kill the start script... )
-#if efun(seteuid)
-  seteuid(getuid());
-  setegid(getgid());
-#endif
-#if efun(setuid)
-  setuid(0);
-#endif
-  stop_all_modules();
-  
-#ifdef THREADS
-  stop_handler_threads();
-#endif /* THREADS */
-
-  if(main_configuration_port && objectp(main_configuration_port))
-  {
-    // Only _really_ do something in the main process.
-    int pid;
-    perror("Shutting down Roxen.\n");
-
-#ifndef __NT__
-#ifdef USE_SHUTDOWN_FILE
-
-    // Fallback for systems without geteuid, Roxen will (probably)
-    // not be able to kill the start-script if this is the case.
-    rm("/tmp/Roxen_Shutdown_"+startpid);
-
-    object f;
-    f=open("/tmp/Roxen_Shutdown_"+startpid, "wc");
-      
-    if(!f) 
-      perror("cannot open shutdown file.\n");
-    else f->write(""+getpid());
-
-    if(startpid != getpid())
-    {
-      kill(startpid, signum("SIGINTR"));
-      kill(startpid, signum("SIGHUP"));
-      kill(getppid(), signum("SIGINTR"));
-      kill(getppid(), signum("SIGHUP"));
-    }
-
-#endif /* USE_SHUTDOWN_FILE */
-#endif
-  }
-  // Die nicely (we're shutting down).
-  call_out(exit, 2, 0);
-}
-
-mapping shutdown() 
-{
-  call_out(kill_me, 5, 0);
-  return ([ "data":replace(Stdio.read_bytes("etc/shutdown.html"),
-			   ({"$docurl", "$PWD"}), ({roxen->docurl, getcwd()})),
-	    "type":"text/html" ]);
-} 
 
 string docurl;
 
@@ -2492,6 +2493,7 @@ void shuffle(object from, object to,
 
 static private int _recurse;
 
+// FIXME: Ought to use the shutdown code.
 void exit_when_done()
 {
   object o;
@@ -2537,7 +2539,7 @@ void exit_when_done()
     werror("Exiting roxen (timeout).\n");
     stop_all_modules();
     add_constant("roxen", 0);	// Paranoia...
-    exit(0); // Restart.
+    exit(-1); // Restart.
   }, 600, 0); // Slow buggers..
 }
 
@@ -2642,8 +2644,8 @@ int main(int|void argc, array (string)|void argv)
   }
   catch { signal(signum("SIGHUP"), reload_all_configurations); };
   // Signals which cause a shutdown (exitcode == 0)
-  foreach( ({ "SIGQUIT" }), string sig) {
-    catch { signal(signum(sig), kill_me); };
+  foreach( ({ "SIGTERM" }), string sig) {
+    catch { signal(signum(sig), shutdown); };
   }
 
   report_notice("Roxen started in "+(time()-start_time)+" seconds.\n");
