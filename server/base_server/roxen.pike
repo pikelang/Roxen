@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.196 1998/05/04 15:39:39 marcus Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.197 1998/05/06 22:16:27 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -441,8 +441,6 @@ void nwrite(string s, int|void perr, int|void type)
   }
   if(type>=1) roxen_perror(s);
 }
- 
-
 
 // When was Roxen started?
 int start_time;
