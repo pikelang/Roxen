@@ -120,15 +120,13 @@
 </str>
 
 <str id="10">
-<new/>
 <o>List fonts</o>
-<t></t>
+<t>Seznam fontù</t>
 </str>
 
 <str id="11">
-<new/>
 <o>List all available fonts</o>
-<t></t>
+<t>Seznam v¹ech dosupných fontù</t>
 </str>
 
 <str id="dH">
@@ -152,27 +150,23 @@
 </str>
 
 <str id="280">
-<new/>
 <o>Module lock status</o>
-<t></t>
+<t>Stav zámku</t>
 </str>
 
 <str id="281">
-<new/>
 <o>Shows various information about the module thread locks in Roxen.</o>
-<t></t>
+<t>Zobrazí informace o zámcích ve vláknech modulù.</t>
 </str>
 
 <str id="12">
-<new/>
 <o>Unknown module</o>
-<t></t>
+<t>Neznámý modul</t>
 </str>
 
 <str id="13">
-<new/>
 <o>Module lock status : Accesses to all modules</o>
-<t></t>
+<t>Stav zámku: pøístupy v¹ch modulù</t>
 </str>
 
 <str id="14">
@@ -188,39 +182,33 @@
 </str>
 
 <str id="17">
-<new/>
 <o>Module</o>
-<t></t>
+<t>Modul</t>
 </str>
 
 <str id="18">
-<new/>
 <o>File</o>
-<t></t>
+<t>Soubor</t>
 </str>
 
 <str id="19">
-<new/>
 <o>Locked</o>
-<t></t>
+<t>Uzamèen</t>
 </str>
 
 <str id="20">
-<new/>
 <o>Unlocked</o>
-<t></t>
+<t>Odemèen</t>
 </str>
 
 <str id="21">
-<new/>
 <o>Open files</o>
-<t></t>
+<t>Otevøené soubory</t>
 </str>
 
 <str id="22">
-<new/>
 <o>Show a list of all open files and network connections.</o>
-<t></t>
+<t>Ukázat seznam v¹ech otevøených souborù a sí»ových spojení.</t>
 </str>
 
 <str id="23">
@@ -230,21 +218,18 @@
 </str>
 
 <str id="24">
-<new/>
 <o>Reload configurations from disk</o>
-<t></t>
+<t>Naètení konfigurací z disku</t>
 </str>
 
 <str id="25">
-<new/>
 <o>Force a reload of all configuration information from the configuration files.</o>
-<t></t>
+<t>Vynutit naètení v¹ech konfigurací z konfiguraèních souborù.</t>
 </str>
 
 <str id="26">
-<new/>
 <o>All configurations reloaded from disk.</o>
-<t></t>
+<t>V¹echny konfigurace byly znovu naèteny z disku.</t>
 </str>
 
 <str id="27">
@@ -260,9 +245,8 @@
 </str>
 
 <str id="29">
-<new/>
 <o>URL</o>
-<t></t>
+<t>URL</t>
 </str>
 
 <str id="206">
@@ -271,9 +255,8 @@
 </str>
 
 <str id="30">
-<new/>
 <o>Password</o>
-<t></t>
+<t>Heslo</t>
 </str>
 
 <str id="31">
@@ -289,15 +272,13 @@
 </str>
 
 <str id="33">
-<new/>
 <o>in</o>
-<t></t>
+<t>v</t>
 </str>
 
 <str id="34">
-<new/>
 <o>Restart or shutdown</o>
-<t></t>
+<t>Restart nebo zastavení</t>
 </str>
 
 <str id="197">
@@ -306,8 +287,9 @@
 </str>
 
 <str id="233">
+<changed/>
 <o>Roxen will restart automatically.</o>
-<t>Roxen se bude automaticky restartovat.</t>
+<t>Roxen bude automaticky restartován.</t>
 </str>
 
 <str id="234">
@@ -322,8 +304,9 @@
 </str>
 
 <str id="198">
+<changed/>
 <o>Shutdown</o>
-<t>Shutdown</t>
+<t>Zastavení</t>
 </str>
 
 <str id="235">
@@ -409,9 +392,8 @@
 </str>
 
 <str id="44">
-<new/>
 <o>Server Overview</o>
-<t></t>
+<t>Pøehled</t>
 </str>
 
 <str id="45">
@@ -427,15 +409,13 @@
 </str>
 
 <str id="47">
-<new/>
 <o>day</o>
-<t></t>
+<t>den</t>
 </str>
 
 <str id="48">
-<new/>
 <o>days</o>
-<t></t>
+<t>dní</t>
 </str>
 
 <str id="49">
@@ -457,15 +437,13 @@
 </str>
 
 <str id="52">
-<new/>
 <o>idle</o>
-<t></t>
+<t>neèinnost</t>
 </str>
 
 <str id="53">
-<new/>
 <o>From</o>
-<t></t>
+<t>Z</t>
 </str>
 
 <str id="54">
@@ -475,15 +453,13 @@
 </str>
 
 <str id="55">
-<new/>
 <o>Action</o>
-<t></t>
+<t>Akce</t>
 </str>
 
 <str id="56">
-<new/>
 <o>Transferred</o>
-<t></t>
+<t>Pøeneseno.</t>
 </str>
 
 <str id="57">
@@ -498,39 +474,34 @@
 </str>
 
 <str id="59">
-<new/>
 <o>Cache status</o>
-<t></t>
+<t>Stav mezipamìti</t>
 </str>
 
 <str id="60">
-<new/>
 <o>Show information about the main memory cache in Roxen</o>
-<t></t>
+<t>Ukazat informace o hlavní mezipamìti</t>
 </str>
 
 <str id="61">
-<new/>
 <o>WebServer Memory Cache</o>
-<t></t>
+<t>Mezipamì» serveru</t>
 </str>
 
 <str id="62">
-<new/>
 <o>Class</o>
-<t></t>
+<t>Tøída</t>
 </str>
 
 <str id="64">
-<new/>
 <o>Size</o>
-<t></t>
+<t>Velikost</t>
 </str>
 
 <str id="67">
 <new/>
 <o>Hit rate</o>
-<t></t>
+<t>Èetnost hitù</t>
 </str>
 
 <str id="68">
@@ -540,9 +511,8 @@
 </str>
 
 <str id="69">
-<new/>
 <o>Fonts</o>
-<t></t>
+<t>Fonty</t>
 </str>
 
 <str id="70">
@@ -558,39 +528,33 @@
 </str>
 
 <str id="72">
-<new/>
 <o>Used languages:</o>
-<t></t>
+<t>Pou¾ívané jazyky:</t>
 </str>
 
 <str id="73">
-<new/>
 <o>Registered projects:</o>
-<t></t>
+<t>Registrované projekty:</t>
 </str>
 
 <str id="74">
-<new/>
 <o>Loaded projects:</o>
-<t></t>
+<t>Nata¾ené projekty:</t>
 </str>
 
 <str id="75">
-<new/>
 <o>Current cache size:</o>
-<t></t>
+<t>Aktuální velikost mezipamìti:</t>
 </str>
 
 <str id="295">
-<new/>
 <o>Entries</o>
-<t></t>
+<t>Polo¾ky</t>
 </str>
 
 <str id="293">
-<new/>
 <o>Hits</o>
-<t></t>
+<t>Hity</t>
 </str>
 
 <str id="294">
@@ -600,9 +564,8 @@
 </str>
 
 <str id="63">
-<new/>
 <o>Extended process status</o>
-<t></t>
+<t>Roz¹íøený stav procesu</t>
 </str>
 
 <str id="65">
