@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.74 2004/05/24 10:15:14 mani Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.75 2004/05/30 23:15:56 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -41,9 +41,11 @@ string status()
 
 void create()
 {
-  defvar("toparse", ({ "html", "htm", "rxml" }), "Extensions to parse",
+  defvar("toparse", ({ "rxml" }), "Extensions to parse",
 	 TYPE_STRING_LIST|VAR_NOT_CFIF, 
          "Files with these extensions will be parsed. "
+	 "Putting html and htm in this list is possible, but will impact "
+	 "performance. "
 	 "Note: This module must be reloaded before a change to this "
 	 "setting take effect.");
 
@@ -134,6 +136,12 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 		      ->feed( data )
 		      ->drain());
      break;
+  }
+
+  if(id->misc->rxmlprefix)
+  {
+    data = id->misc->rxmlprefix+data;
+    m_delete(id->misc, "rxmlprefix");
   }
 
   RXML.Context context;

@@ -274,6 +274,7 @@ worldmap binary
 /server/rxml_packages/counter foreign_ident
 /server/rxml_packages/gtext_list foreign_ident
 /server/rxml_packages/roxenlogo foreign_ident
+/server/rxml_packages/roxenwebserver foreign_ident
 /server/server_core/basic_defvar.pike foreign_ident
 /server/server_core/cache.pike foreign_ident
 /server/server_core/configuration.pike foreign_ident

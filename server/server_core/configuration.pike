@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.565 2004/05/29 21:00:29 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.566 2004/05/30 23:15:58 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2270,7 +2270,7 @@ mapping error_file( RequestID id )
   NOCACHE();
 #if ROXEN_COMPAT <= 2.1
   data = replace(data,({"$File", "$Me"}),
-                 ({"&page.virtfile;", "&roxen.server;"}));
+                 ({"&page.virtfile;", "&system.server;"}));
 #endif
   mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
   res->error = 404;
@@ -4068,7 +4068,7 @@ also set 'URLs'.</p>");
           <td><img src='/*/chili-small-white.gif' /></td>
           <td class='info'>
             &nbsp;&nbsp;<b>ChiliMoon</b> <font color='#ffbe00'>|</font>
-            version &roxen.dist-version;
+            version &system.dist-version;
           </td>
         </tr>
       </table>

@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.421 2004/05/30 14:54:06 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.422 2004/05/30 23:15:57 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -696,12 +696,6 @@ class TagChili {
       return 0;
     }
   }
-}
-
-// NGSERVER Remove this tag
-class TagRoxen {
-  inherit TagChili;
-  constant name = "roxen";
 }
 
 class TagDebug {

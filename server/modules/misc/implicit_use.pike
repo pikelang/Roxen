@@ -4,7 +4,7 @@
 #include <config.h>
 inherit "module";
 
-constant cvs_version = "$Id: implicit_use.pike,v 1.7 2002/12/03 01:16:20 mani Exp $";
+constant cvs_version = "$Id: implicit_use.pike,v 1.8 2004/05/30 23:15:56 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Implicit <use> Module";
@@ -18,10 +18,10 @@ void create() {
 
 }
 
-Configuration conf;
 mapping(string:array(string)) matches;
 
-void start(int num, Configuration c) {
+void start()
+{
   matches=([]);
   string uses=query("uses")-"\r";
   foreach(uses/"\n", string pair) {
@@ -34,7 +34,6 @@ void start(int num, Configuration c) {
 	matches[res[0]] = ({ res[1..]*" " });
     }
   }
-  conf = c;
 }
 
 string status() {
@@ -51,7 +50,8 @@ string status() {
 
 mapping first_try(RequestID id) {
 
-  if(id->misc->_parser) return 0;
+  if(id->misc->_implicituse)
+    return 0;
 
   string uses="";
   foreach(indices(matches), string match)
@@ -59,16 +59,8 @@ mapping first_try(RequestID id) {
       uses += map(matches[match],
 		  lambda(string in) { return "<use "+in+"/>"; })*"";
 
-  RXML.PXml parser = conf->rxml_tag_set ( RXML.t_html(RXML.PXml), id);
-  parser->recover_errors = 1;
-  id->misc->_parser = parser;
-
-  if (mixed err = catch( parser->write_end (uses) )) {
-    if (objectp (err) && err->thrown_at_unwind)
-      error ("Can't handle RXML parser unwinding in "
-	     "compatibility mode (error=%O).\n", err);
-    else throw (err);
-  }
+  id->misc->rxmlprefix = (id->misc->rxmlprefix||"") + use;
+  id->misc->_implicituse = 1;
 
   return 0;
 }

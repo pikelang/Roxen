@@ -1,0 +1,9 @@
+-*- html -*-
+<info>
+version="$Id: roxenwebserver,v 1.1 2004/05/30 23:15:57 _cvs_stephen Exp $";
+name="roxenwebserver";
+doc="Defines the compatility tags which are present in Roxen 4.0 and have been dropped or renamed in ChiliMoon.";
+help=1;
+</info>
+
+<define tag=roxen><chili ::="&_.rest-args:;" /></define>

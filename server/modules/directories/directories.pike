@@ -9,7 +9,7 @@
 //  o Add readme support
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.101 2004/05/27 21:24:36 _cvs_stephen Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.102 2004/05/30 23:15:55 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -23,7 +23,7 @@ constant default_template= #"
      <chili align='right' size='small' color='black' />
     <font size='+3'>
    <emit source='path'>
-     <a href='&roxen.path;&_.path:http;'> &_.name; <font color='#808080'>/</font></a>
+     <a href='&system.path;&_.path:http;'> &_.name; <font color='#808080'>/</font></a>
    </emit> </font><br /><br />
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>

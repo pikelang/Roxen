@@ -2889,13 +2889,13 @@ cd</rxml>
 <!-- ............................................................ -->
 <comment>Roxen scope</comment>
 <test>
-<rxml>&roxen.no-such-variable;</rxml>
+<rxml>&system.no-such-variable;</rxml>
 <result></result>
 </test>
 
 <!-- Should fail
 <test>
-<rxml><set variable="roxen.foo" value="x"/>&roxen.foo;</rxml>
+<rxml><set variable="roxen.foo" value="x"/>&system.foo;</rxml>
 <result></result>
 </test>
 -->
@@ -2906,72 +2906,72 @@ cd</rxml>
 </test>
 
 <test>
-<rxml>&roxen.domain;</rxml>
+<rxml>&system.domain;</rxml>
 <glob>?*</glob>
 </test>
 
 <test>
-<rxml>&roxen.hits;</rxml>
+<rxml>&system.hits;</rxml>
 <regexp>[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.hits-per-minute;</rxml>
+<rxml>&system.hits-per-minute;</rxml>
 <regexp>[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.locale;</rxml>
+<rxml>&system.locale;</rxml>
 <result>eng</result>
 </test>
 
 <test>
-<rxml>&roxen.path;</rxml>
+<rxml>&system.path;</rxml>
 <result></result>
 </test>
 
 <test>
-<rxml>&roxen.pike-version;</rxml>
+<rxml>&system.pike-version;</rxml>
 <regexp>Pike v7.[2-9] release [0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.sent;</rxml>
+<rxml>&system.sent;</rxml>
 <regexp>[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.sent-kbit-per-second;</rxml>
+<rxml>&system.sent-kbit-per-second;</rxml>
 <regexp>[0-9]+\.[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.sent-mb;</rxml>
+<rxml>&system.sent-mb;</rxml>
 <regexp>[0-9]+\.[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.sent-per-minute;</rxml>
+<rxml>&system.sent-per-minute;</rxml>
 <regexp>[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.server;</rxml>
+<rxml>&system.server;</rxml>
 <glob>http://*:17369/</glob>
 </test>
 
 <test>
-<rxml>&roxen.ssl-strength;</rxml>
+<rxml>&system.ssl-strength;</rxml>
 <regexp>0|40|128|168</regexp>
 </test>
 
 <test>
-<rxml>&roxen.time;</rxml>
+<rxml>&system.time;</rxml>
 <regexp>[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.time; <testsleep time="3"/>&roxen.time;</rxml>
+<rxml>&system.time; <testsleep time="3"/>&system.time;</rxml>
 <pike>
   array x=array_sscanf(res, "%d %d");
   if(sizeof(x)!=2) return "\""+res+"\" doesn't match \"%d %d\".";
@@ -2981,32 +2981,32 @@ cd</rxml>
 </test>
 
 <test>
-<rxml>&roxen.uptime;</rxml>
+<rxml>&system.uptime;</rxml>
 <regexp>[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.uptime-days;</rxml>
+<rxml>&system.uptime-days;</rxml>
 <regexp>[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.uptime-hours;</rxml>
+<rxml>&system.uptime-hours;</rxml>
 <regexp>[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.uptime-minutes;</rxml>
+<rxml>&system.uptime-minutes;</rxml>
 <regexp>[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.version;</rxml>
+<rxml>&system.version;</rxml>
 <regexp>ChiliMoon/2004\.[0-9]+</regexp>
 </test>
 
 <test>
-<rxml>&roxen.unique-id;</rxml>
+<rxml>&system.unique-id;</rxml>
 <regexp>[0-9A-F]+</regexp>
 </test>
 

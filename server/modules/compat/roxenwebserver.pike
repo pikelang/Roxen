@@ -12,7 +12,7 @@
 //
 
 constant cvs_version =
- "$Id: roxenwebserver.pike,v 1.1 2004/05/30 14:54:06 _cvs_stephen Exp $";
+ "$Id: roxenwebserver.pike,v 1.2 2004/05/30 23:15:55 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_unique = 0;
 
@@ -21,8 +21,7 @@ constant module_unique = 0;
 inherit "module";
 
 constant module_type = MODULE_TAG|MODULE_FIRST;
-constant module_name =
- "Tags: Roxen Webserver";
+constant module_name = "Tags: Roxen Webserver";
 constant module_doc  = 
  "This is a ChiliMoon module which provides miscellaneous backward "
  "compatibility tags and entities which are part of Roxen Webserver, "
@@ -44,7 +43,8 @@ void create()
 
 // ----------------- Entities ----------------------
 
-void set_entities(RXML.Context c) {
+void set_entities(RXML.Context c)
+{
   c->add_scope("roxen", Roxen.scope_roxen);
 }
 
@@ -59,18 +59,28 @@ void start()
   query_tag_set()->prepare_context=set_entities;
 }
 
-mixed first_try(object id)
+mapping first_try(RequestID id)
 {
   constant introxen="/internal-roxen-";
   string m=id->not_query;
+
   if(sizeof(m)>sizeof(introxen) && has_prefix(m,introxen))
     id->not_query = "/*/" + m[sizeof(introxen)..];
+
+  if(!id->misc->_roxenwebserver)
+  {
+    id->misc->rxmlprefix = "<use package=\"roxenwebserver\" />"
+     +(id->misc->rxmlprefix||"");
+    id->misc->_roxenwebserver = 1;
+  }
+
+  return 0;
 }
 
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"&roxen.":#"<desc type='scope'><p><short>
+"&system.":#"<desc type='scope'><p><short>
  Obsoleted by the &amp;system. scope.</short>
  </p>
 </desc>",
