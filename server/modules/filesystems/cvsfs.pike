@@ -5,17 +5,21 @@
  * Written by Niels Möller 1997
  */
 
-static string cvs_version = "$Id: cvsfs.pike,v 1.8 1997/02/14 03:40:40 grubba Exp $";
+static string cvs_version = "$Id: cvsfs.pike,v 1.9 1997/02/19 01:14:11 nisse Exp $";
 
 #include <module.h>
-#include <string.h>
 #include <roxen.h>
 
 inherit "module";
 inherit "roxenlib";
 
+import Stdio;
+import Array;
+
 string cvs_module_path = 0; /* Path in CVS repository */
 string cvs_program, rlog_program, rcsdiff_program;
+
+int cvs_initialized = 0;
 
 int accesses, dirlists, errors;
 
@@ -47,7 +51,7 @@ mapping parse_modules_file(string modules)
   int i;
   array rows = map(replace(modules, "\t", " ") / "\n",
 		   lambda (string row) { return (row / " ") - ({""}); } ) - ({ ({}) }) ;
-  // werror(sprintf("parse_modules_file: %O\n", rows));
+// werror(sprintf("parse_modules_file: %O\n", rows));
   return mkmapping(map(rows, lambda(array data) { return data[0]; }), rows);
 }
 
@@ -74,6 +78,12 @@ string lookup_cvs_module(string prog, string root, string module)
   /* cvs checkout -c is not eightbit clean. argh! */
   object f;
   string mods;
+
+  if (! (prog && root && module))
+    return 0;
+  
+  // werror(sprintf("lookup_cvs_module: prog = %O, root = %O, module=%O\n",
+     prog, root, module));
 
   f = run_cvs(prog, 0, 0, "-d", root, "checkout", "-p", "CVSROOT/modules");
   if (!f)
@@ -109,78 +119,6 @@ string lookup_cvs_module(string prog, string root, string module)
   return mod[index];
 }
 
-array register_module()
-{
-  return ({ MODULE_LOCATION,
-	      "CVS File system",
-	      "Accessing files under CVS control" });
-}
-
-void create()
-{
-  /* defvar()'s */
-  defvar("location", "/CVS", "Mount point", TYPE_LOCATION,
-	 "This is where the module will be inserted in the "
-	 "name space of your server.");
-  defvar("cvsroot", getenv("CVSROOT") || "/usr/local/cvs",
-	 "CVS repository", TYPE_DIR, "Where CVS stores its files.");
-  defvar("path", "/usr/bin:/usr/local/bin:/usr/gnu/bin", "Path for locating binaries",
-	 TYPE_STRING, "Colon separated list of directories to search for the cvs "
-	 "and rcs binaries.");
-#if 0
-  defvar("cvsprogram", "/usr/local/bin/cvs", "The <tt>cvs</tt> program",
-	 TYPE_FILE, "The program used for accessing the CVS repository.");
-#endif
-  defvar("cvsmodule", "NONE", "CVS (sub)module", TYPE_STRING,
-	 "<tt>module/subdirectory</tt>, where <tt>module</tt> is a module "
-	 "defined in the CVS repository, and <tt>subdirectory</tt> "
-	 "is a path to a subdirectory of the module.");
-}
-
-string|void check_variable(string name, string value)
-{
-  string path;
-  switch(name)
-    {
-    case "cvsprogram":
-      {
-	array info = file_stat(value);
-	if (! (info && (info[1] > 0) && (info[0] & 0111 )))
-	  return "No such program";
-	break;
-      }
-    case "cvsmodule":
-      {
-	string path =
-	  lookup_cvs_module(cvs_program, query("cvsroot"),
-			    (value / "/")[0] );
-	if (! (path && strlen(path) ))
-	  return "Module not found in CVS";
-	if (!file_stat(query("cvsroot") + path))
-	  return "No such subdirectory"; 
-	break;
-      }
-    case "path":
-      {
-	string name;
-	array required = ({"cvs", "rlog", "rcs", "co", "rcsdiff"});
-	foreach(value /":", name)
-	  {
-	    required = filter(required, lambda(string prog, string name)
-			      { return !file_stat(name + "/" + prog); },
-			      name);
-	    if (!sizeof(required))
-	      break;
-	  }
-	return (sizeof(required) ?
-		sprintf("Can't find binaries for: %s", required * " ")
-		: 0);
-      }
-    default:
-      return 0;
-    }
-}
-
 string locate_binary(array path, string name)
 {
   string dir;
@@ -195,26 +133,99 @@ string locate_binary(array path, string name)
   return 0;
 }
 
-void start()
+string find_binaries(array path, array|void extra)
 {
-  array path = query("path") / ":";
+  string prog;
 
   cvs_program = locate_binary(path, "cvs");
-  werror(sprintf("cvs program located as: %s\n", cvs_program));
+  // werror(sprintf("cvs program located as: %s\n", cvs_program || ""));
   rlog_program = locate_binary(path, "rlog");
-  werror(sprintf("rlog program located as: %s\n", rlog_program));
+  // werror(sprintf("rlog program located as: %s\n", rlog_program || ""));
   rcsdiff_program = locate_binary(path, "rcsdiff");
-  werror(sprintf("rcsdiff program located as: %s\n", rcsdiff_program));
-  
-  path = query("cvsmodule") / "/";
-  cvs_module_path =
-    lookup_cvs_module(cvs_program, query("cvsroot"), path[0]) +
-    "/" + (path[1..] * "/");
+  // werror(sprintf("rcsdiff program located as: %s\n", rcsdiff_program ||""));
 
-  werror(sprintf("start: cvs_module_path ='%s'\n", cvs_module_path));
-  
+  if (!cvs_program)
+    return "No cvs program found.";
+  if (!rlog_program)
+    return "No rlog program found.";
+  if (!rcsdiff_program) "No rcsdiff program found.";
 
+  if (extra)
+    foreach(extra, prog)
+      if (!locate_binary(path, prog))
+	return ("No " + prog + " program found.");
+  return 0;
+}
+
+string find_cvs_dir(string path)
+{
+  array(string) components = path / "/";
+  string name =
+    lookup_cvs_module(cvs_program, query("cvsroot"),
+		      components[0] );
+  // werror(sprintf("components = %O\n", components));
+  if (! (name && strlen(name) ))
+    return "Module not found in CVS";
+  if (!file_stat(query("cvsroot") + name))
+    return "No such subdirectory"; 
+  cvs_module_path = name + "/" + (components[1..] * "/");
+  return 0;
+}
+
+array register_module()
+{
+  return ({ MODULE_LOCATION,
+	      "CVS File system",
+	      "Accessing files under CVS control",
+	      0, 0 });
+}
+
+void create()
+{
+  /* defvar()'s */
+  defvar("location", "/CVS", "Mount point", TYPE_LOCATION,
+	 "This is where the module will be inserted in the "
+	 "name space of your server.");
+  defvar("cvsroot", getenv("CVSROOT") || "/usr/local/cvs",
+	 "CVS repository", TYPE_DIR, "Where CVS stores its files.");
+  defvar("path", "/usr/bin:/usr/local/bin:/usr/gnu/bin", "Path for locating binaries",
+	 TYPE_STRING, "Colon separated list of directories to search for the cvs "
+	 "and rcs binaries.");
+  defvar("cvsmodule", "NONE", "CVS (sub)module", TYPE_STRING,
+	 "<tt>module/subdirectory</tt>, where <tt>module</tt> is a module "
+	 "defined in the CVS repository, and <tt>subdirectory</tt> "
+	 "is a path to a subdirectory of the module.");
+}
+
+string|void check_variable(string name, string value)
+{
+  string path;
+  // werror("Trying to set '" + name + "' = '" + value + "'\n");
+  switch(name)
+  {
+  case "cvsmodule":
+  {
+    if (!cvs_initialized)
+      find_binaries(query("path") / ":");
+    cvs_initialized = 1;
+    return find_cvs_dir(value);
+  }
+  case "path":
+    return find_binaries(value / ":",
+			 ({"rcs", "co"}) );
+  default:
+    return 0;
+  }
+}
   
+void start()
+{
+  if (!cvs_initialized)
+  {
+    find_binaries(query("path") / ":");
+    find_cvs_dir(query("cvsmodule"));
+    cvs_initialized = 1;
+  }
 }
 
 string status()
@@ -256,9 +267,10 @@ object|mapping|int find_file(string name, object id)
   array(string) extra_args = ({});
   mapping(string:string|int) prestates = parse_prestate(id->prestate);
 
-  // werror(sprintf("find_file: Looking for '%s'\n", name));
+  // werror(sprintf("cvs->find_file: Looking for '%s'\n", name));
   string fname = query("cvsroot") + cvs_module_path + "/" + name;
 
+  // werror("Real file '" + fname + "'\n");
   if (cvs_module_path)
     {
       int is_text = 0;
@@ -299,6 +311,16 @@ object|mapping|int find_file(string name, object id)
     }
   else
     return 0;
+}
+
+string try_get_file(string name, object id)
+{
+  object|string|int res = find_file(name, id);
+  if (objectp(res))
+    return res->read();
+  else if (stringp(res))
+    return res;
+  else return 0;
 }
 
 array find_dir(string name, object id)
