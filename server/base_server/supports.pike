@@ -57,43 +57,43 @@ private void parse_supports_string(string what)
       } else if(sscanf(foo, "#define %[^ ] %s", name, to)) {
 	name -= "\t";
 	foo_defines[name] = to;
-//	perror("#defining '"+name+"' to "+to+"\n");
+//	werror("#defining '"+name+"' to "+to+"\n");
       } else if(sscanf(foo, "#section %[^ ] {", name)) {
-//	perror("Entering section "+name+"\n");
+//	werror("Entering section "+name+"\n");
 	current_section = name;
 	if(!supports[name])
 	  supports[name] = ({});
       } else if((foo-" ") == "#}") {
-//	perror("Leaving section "+current_section+"\n");
+//	werror("Leaving section "+current_section+"\n");
 	current_section = 0;
       } else {
-//	perror("Comment: "+foo+"\n");
+//	werror("Comment: "+foo+"\n");
       }
-      
+
     } else {
       int rec = 10;
       string q=replace(foo,",", " ");
       foo="";
-      
+
       // Handle all defines.
       while((strlen(foo)!=strlen(q)) && --rec)
       {
 	foo=q;
 	q = replace(q, indices(foo_defines), values(foo_defines));
       }
-      
+
       foo=q;
-      
+
       if(!rec)
-	perror("Too deep recursion while replacing defines.\n");
-      
-//    perror("Parsing supports line '"+foo+"'\n");
+	werror("Too deep recursion while replacing defines.\n");
+
+//    werror("Parsing supports line '"+foo+"'\n");
       bar = replace(foo, ({"\t",","}), ({" "," "}))/" " -({ "" });
       foo="";
-      
+
       if(sizeof(bar) < 2)
 	continue;
-    
+
       if(bar[0] == "default")
 	default_supports = aggregate_multiset(@bar[1..]);
       else
@@ -131,20 +131,20 @@ void done_with_roxen_com()
   new = _new_supports * "";
   new = (new/"\r\n\r\n")[1..]*"\r\n\r\n";
   old = Stdio.read_bytes( "etc/supports" );
-  
+
   if(strlen(new) < strlen(old)-200) // Error in transfer?
     return;
-  
+
   if(old != new) {
-    perror("Got new supports data from www.roxen.com\n");
-    perror("Replacing old file with new data.\n");
+    werror("Got new supports data from www.roxen.com\n");
+    werror("Replacing old file with new data.\n");
     mv("etc/supports", "etc/supports~");
     Stdio.write_file("etc/supports", new, 0660);
     old = Stdio.read_bytes( "etc/supports" );
 
     if(old != new)
     {
-      perror("FAILED to update the supports file.\n");
+      werror("FAILED to update the supports file.\n");
       mv("etc/supports~", "etc/supports");
     } else {
       initiate_supports();
@@ -152,7 +152,7 @@ void done_with_roxen_com()
   }
 #ifdef DEBUG
   else
-    perror("No change to the supports file.\n");
+    werror("No change to the supports file.\n");
 #endif
 }
 
@@ -168,12 +168,12 @@ void connected_to_roxen_com(object port)
   if(!port) 
   {
 #ifdef DEBUG
-    perror("Failed to connect to www.roxen.com:80.\n");
+    werror("Failed to connect to www.roxen.com:80.\n");
 #endif
     return 0;
   }
 #ifdef DEBUG
-  perror("Connected to www.roxen.com.:80\n");
+  werror("Connected to www.roxen.com.:80\n");
 #endif
   _new_supports = ({});
   port->set_id(port);
@@ -201,7 +201,7 @@ public void update_supports_from_roxen_com()
     {
       async_connect("www.roxen.com.", 80, connected_to_roxen_com);
 #ifdef DEBUG
-      perror("Connecting to www.roxen.com.:80\n");
+      werror("Connecting to www.roxen.com.:80\n");
 #endif
     }
     remove_call_out( update_supports_from_roxen_com );
@@ -225,7 +225,7 @@ public multiset find_supports(string from, void|multiset existing_sup)
   array f;
 
   if(!existing_sup) existing_sup = (<>);
-  
+
   if(!strlen(from) || from == "unknown")
     return default_supports|existing_sup;
   if(!(sup = cache_lookup("supports", from))) {
@@ -234,7 +234,7 @@ public multiset find_supports(string from, void|multiset existing_sup)
     {
       if(!v || !search(from, v))
       {
-	//  perror("Section "+v+" match "+from+"\n");
+	//  werror("Section "+v+" match "+from+"\n");
 	f = supports[v];
 	foreach(f, s)
 	  if(s[0](from))
@@ -248,7 +248,7 @@ public multiset find_supports(string from, void|multiset existing_sup)
     {
       sup = default_supports;
 #ifdef DEBUG
-      perror("Unknown client: \""+from+"\"\n");
+      werror("Unknown client: \""+from+"\"\n");
 #endif
     }
     sup -= nsup;
