@@ -7,48 +7,129 @@ navigation
 weblayout
 menumaker
 
+(Bind 8, Mysql 3.22+)
+
 Database setup from scratch for Mysql
 -------------------------------------
 A. LogView SQL: 1. Edit the file logview_sql/LogViewSQL.pmod/config.h
                 2. Change the definition of "DATABASE" to the correct value.
                 3. Run logview_sql/tools/setup.pike
 
+B. AutoSite: load doc/db.spec
 
 Roxen modules needed by AutoSite
 --------------------------------
-  AutoMail Database API Module
-    Database URL : mysql://auto:site@kopparorm.idonex.se/autosite 
+  AutoMail Administration module
+    Database URL : mysql://auto:site@/autosite
+  AutoMail Client Layer module
+    Database URL : mysql://auto:site@/autosite 
+    Mail storage directory : /usr/www/AutoMail/storage/ 
+  AutoMail Fax recipient
+    Lines limit : 100 
+  Automail HTML client 
+    Location : /mailextras/ 
+    Security level : high
+  AutoMail SMS recipient 
+    SMS Message description string : Mail from: %s, Subject: %s 
+  AutoReg
   AutoSite Administration Interface
+    Admin password : **** 
+    Admin user name : admin 
     Mountpoint : /admin/ 
   AutoSite DNS Administration Module
-    Database URL : mysql://auto:site@kopparorm.idonex.se/autosite 
+    Database URL : mysql://auto:site@/autosite
+  AutoSite Forms Mailer module
+  AutoSite Intraseek helper module
+    Intraseek database directory : /usr/www/intraseek_databases/ 
   AutoSite IP-less hosting Filesystem
-     Mount point : / 
-     Search path : /.../AutoSite/sites/
-     Priority : 6
+    Mount point : / 
+    Search path : /.../AutoSite/sites/
+    Security: Trust level : 1
+    Priority : 6
   AutoWeb Administration Interface
-     Mount point : /webadm/
-     Sites directory : /.../AutoSite/sites/
+    Mount point : /webadm/
+    Sites directory : /usr/www/sites/
+    Administrator login : admin 
+    Administrator password : ****
+  Blob module
+    Mountpoint : /blob/
+  Business Graphics
   Config tab-list 
   Content types 
   Directory parsing module 
   Filesystem
-    /.../AutoSite/modules/autoweb/img/ mounted on /webadmimg/ 
-    /.../AutoSite/templates/img/ mounted on /img/ 
-  Graphics text 
+    /usr/www/roxen/local/AutoSite/modules/autoweb/img/ mounted on /webadmimg/ 
+    /usr/www/roxen/local/AutoSite/templates/img/ mounted on /img/ 
+    /usr/www/roxen/local/AutoSite/html/mail/ mounted on /mail/
+  Graphics text
+    Tags to parse for color : body
+  IntraSeek 1.0.15 Search Engine
+    Profile config location : /usr/www/intraseek_databases/
+    Engine home location : /usr/www/roxen/local/intraseek/
+  LogView SQL
+    Only show maps : Yes
+    Mount point : /logview-sql/ 
+    Protection realm name : LogView SQL 
+    User URL encoding format : $PATH 
+  LogView SQL Log module
+    Ignore table : 15 lines
+      /admin/*
+      /blob/*
+      /logview-sql/*
+      /mail/*
+      /webadm/*
+      /webadmimg/*
+      /navigation/*
+      /configtabs/*
+      /img/*
+      /diagram/*
+      /ri/*
+      /gtext/*
+      /blob/*
+      /admin/*
+      /template_admin/*
+    Launch importer : Yes 
+    Log path : ../logs/autosite/logview-sql.data/ 
   Main RXML parser 
   Menumaker 
-  Navigation version 1.0alpha2 
-  Pike tag 
+  Navigation version 1.0alpha2
+  Outlined box
+  Pike script support 
+    Security: Trust level : 2 
+  Pike tag
+    Security: Trust level : 2
+  POP3 protocol
+    pop3://tifa.idonex.se:110/
+  Roxen image manipulation tag
+  SMTP FROM verification 
+  SMTP protocol
+    smtp://tifa.idonex.se:25/
+  SMTP RBL support 
+    SMTP RBL: orbs.dorkslayers.com 
+    SMTP RBL: rbl.maps.vix.com
+  SMTP relay filter
+    Connection filter : 3 lines
+      # Allow relaying from Idonex's local machines.
+      100	idonex.se, *.idonex.se
+      100	194.52.182.?, 194.52.182.??, 194.52.182.???
+    Default connection level : 0 
+    Default relay policy : 100 
+    Maximum cache size : 1024 
+    Recipient filter : 2 lines
+      # Allow relaying to *.idonex.se
+      0	      idonex.se, *.idonex.se
+  SMTP-relay
+    SMTP-relay copy 0
+      Database URL : mysql://auto:site@/autosite
+      Mail queue directory : /usr/www/AutoMail/mqueue/ 
+      Mailer daemon address : Mail Delivery Subsystem <MAILER-DAEMON@tifa.idonex.se>
+      Postmaster address : Postmaster <postmaster@idonex.se>
   SQL-module
-     Default SQL-database host : mysql://auto:site@kopparorm.idonex.se/autosite 
+    Default SQL-database host : mysql://auto:site@/autosite
+  SQL Databases
+    Table : 2 lines 
+      logview-sql mysql://auto:site@/logview_sql
+      autosite mysql://auto:site@/autosite
   Tablify 
   WebLayout Templates 
   Wizard generator
-  SQL Databases
-     Table : logview-sql  mysql://auto:site@kopparorm.idonex.se/statistics
-             autosite     mysql://auto:site@kopparorm.idonex.se/autosite
-  LogView SQL
-     Mount point : 
-     User URL encoding format : $PATH
-  LogView SQL Log module
