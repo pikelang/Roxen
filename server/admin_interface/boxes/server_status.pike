@@ -17,6 +17,8 @@ string parse( RequestID id )
 		       Roxen.strftime( "%Y-%m-%d %H:%M:%S", roxen->start_time) );
   contents += add_row( "Server uptime",
 		      Roxen.msectos( dt*1000 ));
+#if constant(rusage)
+  // Pike 7.4
   array ru;
   if(!catch(ru=rusage())) {
     int tmp;
@@ -26,6 +28,18 @@ string parse( RequestID id )
 			 Roxen.msectos(ru[0]+ru[1]) +
 			 (tmp?(" ("+tmp/10+"."+tmp%10+"%)"):""));
   }
+#else
+  // Pike 7.5
+  mapping ru;
+  if(!catch(ru=System.getrusage())) {
+    int tmp;
+    if(ru->utime)
+      tmp = ru->utime/(time() - roxen->start_time+1);
+    contents += add_row( "CPU-time used",
+			 Roxen.msectos(ru->utime+ru->stime) +
+			 (tmp?(" ("+tmp/10+"."+tmp%10+"%)"):""));
+  }
+#endif
 
   mapping total = ([]);
   foreach(roxen->configurations, Configuration conf) {
