@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.272 2001/04/19 15:41:10 mast Exp $
+// $Id: rxml.pike,v 1.273 2001/04/23 12:41:26 leif Exp $
 
 
 inherit "rxmlhelp";
@@ -2345,10 +2345,7 @@ Kibibits.
 
 "define":({ #"<desc cont='cont'><p><short>
 
- Defines variables, tags, containers and if-callers.</short> This tag
- can also be used to redefine existing HTML-tags. Note that everything
- defined by this tag are locally for the document they exist in, not
- globally like variables or tags defined in Roxen-modules are.
+ Defines variables, tags, containers and if-callers.</short>
 </p></desc>
 
 <attr name='variable' value='name'><p>
@@ -2374,6 +2371,11 @@ Kibibits.
 <attr name='trimwhites'><p>
  Trim all white space characters from the begining and the end of the
  contents.</p>
+</attr>
+
+<attr name='preparse' value='preparse'><p>
+ Sends the definition through the RXML parser when defining. (Without
+ this attribute, the definition is only RXML parsed when it is invoked.)
 </attr>
 
  <p>The values of the attributes given to the defined tag are
