@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.189 2004/10/11 18:40:37 mast Exp $
+// $Id: Roxen.pmod,v 1.190 2004/10/11 18:44:45 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -592,7 +592,7 @@ string http_encode_invalids (string f)
       "%18", "%19", "%1a", "%1b", "%1c", "%1d", "%1e", "%1f",
       "%7f",
       "%20",
-      "%22", "%27"
+      "%22", "%27",
     }));
 }
 
@@ -607,14 +607,14 @@ string http_encode_cookie(string f)
       "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
       "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
       "\177",
-      "=", ",", ";", "%"
+      "=", ",", ";", "%",
     }), ({
       "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
       "%08", "%09", "%0a", "%0b", "%0c", "%0d", "%0e", "%0f",
       "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
       "%18", "%19", "%1a", "%1b", "%1c", "%1d", "%1e", "%1f",
       "%7f",
-      "%3d", "%2c", "%3b", "%25"
+      "%3d", "%2c", "%3b", "%25",
     }));
 }
 
@@ -625,7 +625,7 @@ string http_encode_url (string f)
 //!
 //! Eight bit chars and wider are encoded using UTF-8 followed by http
 //! escaping. This is in line with the recommendations in RFC 2718
-//! section 2.2.5, B.2 in the HTML 4.01 standard
+//! section 2.2.5, appendix B.2 in the HTML 4.01 standard
 //! (http://www.w3.org/TR/html4/appendix/notes.html#non-ascii-chars),
 //! and the IRI recommendation
 //! (http://www.w3.org/International/O-URL-and-ident.html). (It should
