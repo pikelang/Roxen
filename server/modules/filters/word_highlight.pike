@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 inherit "module";
 
-constant cvs_version = "$Id: word_highlight.pike,v 1.3 2001/09/03 18:12:21 nilsson Exp $";
+constant cvs_version = "$Id: word_highlight.pike,v 1.4 2004/06/30 16:59:02 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Word highlighter";

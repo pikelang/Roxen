@@ -74,7 +74,7 @@ BEGIN
             VALUE "FileDescription", "startdll Module\0"
             VALUE "FileVersion", "1, 0, 0, 1\0"
             VALUE "InternalName", "startdll\0"
-            VALUE "LegalCopyright", "Copyright 2001\0"
+            VALUE "LegalCopyright", "Copyright 2004\0"
             VALUE "OriginalFilename", "startdll.DLL\0"
             VALUE "ProductName", "startdll Module\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"

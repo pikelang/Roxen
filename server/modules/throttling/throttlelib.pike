@@ -1,13 +1,13 @@
 #!NO_MODULE
 /*
  * by Francesco Chemolli
- * Copyright © 1999 - 2001, Roxen IS.
+ * Copyright © 1999 - 2004, Roxen IS.
  *
  * Notice: this might look ugly, it's been designed to fit various kinds of
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.13 2001/11/12 17:52:13 mast Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.14 2004/06/30 16:59:31 mast Exp $";
 
 #include <module.h>
 inherit "module";

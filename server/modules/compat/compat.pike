@@ -1,4 +1,4 @@
-// Old RXML Compatibility Module Copyright © 2000 - 2001, Roxen IS.
+// Old RXML Compatibility Module Copyright © 2000 - 2004, Roxen IS.
 //
 
 inherit "module";

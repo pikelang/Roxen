@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.51 2003/03/27 10:02:04 wellhard Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.52 2004/06/30 16:59:24 mast Exp $";
 #include <module.h>
 inherit "module";
 

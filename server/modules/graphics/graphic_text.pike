@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.294 2003/10/16 11:46:15 anders Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.295 2004/06/30 16:59:04 mast Exp $";
 
 #include <module.h>
 inherit "module";

@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 // Perl script and tag handler module.
 // by Leif Stensson.
 
@@ -14,7 +14,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.24 2003/06/26 15:59:22 anders Exp $";
+       "$Id: perl.pike,v 2.25 2004/06/30 16:59:20 mast Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 

@@ -9,7 +9,7 @@ import java.lang.reflect.Constructor;
 
 /*
  * This is an example Roxen location module.
- * Copyright (c) 2000 - 2001, Roxen IS
+ * Copyright (c) 2000 - 2004, Roxen IS
  */
 
 

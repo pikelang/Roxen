@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.61 2004/06/23 13:03:07 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.62 2004/06/30 16:58:53 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";

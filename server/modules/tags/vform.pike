@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 // By Martin Nilsson
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.46 2004/01/27 15:18:51 anders Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.47 2004/06/30 16:59:27 mast Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;

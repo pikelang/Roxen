@@ -1,12 +1,12 @@
 // This file is part of Roxen WebServer.
-// Copyright © 2001, Roxen IS.
+// Copyright © 2001 - 2004, Roxen IS.
 
 #include <stat.h>
 #include <config.h>
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.144 2004/06/30 14:52:44 stewa Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.145 2004/06/30 16:58:39 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)

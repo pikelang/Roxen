@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1997-2001, Roxen IS.
+// This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.101 2003/01/16 09:43:37 anders Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.102 2004/06/30 16:58:55 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 

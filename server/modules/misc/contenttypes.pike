@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 
 // This module handles all normal extension to content type
 // mapping. Given the file 'foo.html', it will per default
@@ -7,7 +7,7 @@
 inherit "module";
 #include <module.h>
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.23 2001/09/03 18:31:03 nilsson Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.24 2004/06/30 16:59:15 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TYPES;
 constant module_name = "Content types";

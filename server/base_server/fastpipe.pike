@@ -1,10 +1,10 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1999 - 2001, Roxen IS.
+// Copyright © 1999 - 2004, Roxen IS.
 //
 // Pipe using sendfile, if possible.
 // by Francesco Chemolli, based upon work by Per Hedbor and others.
 
-constant cvs_version="$Id: fastpipe.pike,v 1.8 2001/06/17 20:07:09 nilsson Exp $";
+constant cvs_version="$Id: fastpipe.pike,v 1.9 2004/06/30 16:58:37 mast Exp $";
 
 private array(string) headers=({});
 private Stdio.File file;

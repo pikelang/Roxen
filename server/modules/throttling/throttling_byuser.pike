@@ -1,6 +1,6 @@
 /*
  * By Francesco Chemolli
- * This is a Roxen module. Copyright © 2000 - 2001, Roxen IS.
+ * This is a Roxen module. Copyright © 2000 - 2004, Roxen IS.
  *
  * This module was developed while traveling by plane, while returning
  * from Sweden.
@@ -9,7 +9,7 @@
  * fastest-developed module.
  */
 
-constant cvs_version="$Id: throttling_byuser.pike,v 1.3 2001/09/03 18:55:12 nilsson Exp $";
+constant cvs_version="$Id: throttling_byuser.pike,v 1.4 2004/06/30 16:59:32 mast Exp $";
 
 #include <module.h>
 inherit "throttlelib";

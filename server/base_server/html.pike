@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: html.pike,v 1.15 2001/06/17 20:07:09 nilsson Exp $
+// Copyright © 1996 - 2004, Roxen IS.
+// $Id: html.pike,v 1.16 2004/06/30 16:58:37 mast Exp $
 
 #pragma strict_types
 

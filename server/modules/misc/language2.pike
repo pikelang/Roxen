@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 //
 
 //#pragma strict_types
@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.21 2003/05/13 15:51:46 jonasw Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.22 2004/06/30 16:59:16 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";

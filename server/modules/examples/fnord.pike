@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 
 // This is a small sample module.  It is intended to show a simple example
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: fnord.pike,v 1.16 2001/09/21 15:58:08 jhs Exp $";
+constant cvs_version = "$Id: fnord.pike,v 1.17 2004/06/30 16:58:58 mast Exp $";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.

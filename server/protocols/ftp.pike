@@ -1,10 +1,10 @@
 // This is a roxen protocol module.
-// Copyright © 1997 - 2001, Roxen IS.
+// Copyright © 1997 - 2004, Roxen IS.
 
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.101 2004/06/30 13:02:00 stewa Exp $
+ * $Id: ftp.pike,v 2.102 2004/06/30 16:59:34 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */

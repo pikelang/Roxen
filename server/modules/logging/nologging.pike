@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 // This module can be used to turn off logging for some files.
 
 
-constant cvs_version = "$Id: nologging.pike,v 1.14 2001/09/03 18:18:32 nilsson Exp $";
+constant cvs_version = "$Id: nologging.pike,v 1.15 2004/06/30 16:59:14 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>

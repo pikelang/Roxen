@@ -1,11 +1,11 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
+// Copyright © 1996 - 2004, Roxen IS.
 //
 
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.581 2004/06/21 08:11:11 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.582 2004/06/30 16:58:36 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>

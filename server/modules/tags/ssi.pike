@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 //
 
 inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.44 2001/09/21 15:58:16 jhs Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.45 2004/06/30 16:59:27 mast Exp $";
 
 
 constant module_type = MODULE_TAG;

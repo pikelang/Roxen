@@ -1,9 +1,9 @@
 // This file is part of Roxen WebServer.
-// Copyright © 2000 - 2001, Roxen IS.
+// Copyright © 2000 - 2004, Roxen IS.
 
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.13 2003/09/18 16:31:22 mast Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.14 2004/06/30 16:58:48 mast Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "

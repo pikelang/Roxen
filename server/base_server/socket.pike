@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: socket.pike,v 1.24 2002/12/14 14:43:32 anders Exp $
+// Copyright © 1996 - 2004, Roxen IS.
+// $Id: socket.pike,v 1.25 2004/06/30 16:58:41 mast Exp $
 
 #define roxen roxenp()
 

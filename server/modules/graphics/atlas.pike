@@ -1,4 +1,4 @@
-// The Atlas module. Copyright © 1999 - 2001, Roxen IS.
+// The Atlas module. Copyright © 1999 - 2004, Roxen IS.
 //
 // Please note: The map is incomplete and incorrect in details.  Countries
 // and territories are missing.
@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.15 2003/01/22 16:34:33 grubba Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.16 2004/06/30 16:59:03 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";

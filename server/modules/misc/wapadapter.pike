@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 //
 
 #define _id_misc ([mapping(string:mixed)]id->misc)
@@ -11,7 +11,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.11 2002/01/30 00:19:41 mast Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.12 2004/06/30 16:59:16 mast Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG;
 constant module_name = "WAP Adapter";

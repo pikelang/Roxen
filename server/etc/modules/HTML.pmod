@@ -1,6 +1,6 @@
-// This is a roxen pike module. Copyright © 2001, Roxen IS.
+// This is a roxen pike module. Copyright © 2001 - 2004, Roxen IS.
 //
-// $Id: HTML.pmod,v 1.6 2002/12/04 10:52:22 mast Exp $
+// $Id: HTML.pmod,v 1.7 2004/06/30 16:58:45 mast Exp $
 
 //! Functions that helps generating HTML. All functions generates
 //! HTML that is XHTML compliant as well as backwards compatible

@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 //
 
 inherit "module";
@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.26 2003/08/15 08:12:55 mattias Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.27 2004/06/30 16:59:24 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";

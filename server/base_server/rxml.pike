@@ -1,9 +1,9 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
+// Copyright © 1996 - 2004, Roxen IS.
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.328 2003/06/24 12:41:43 grubba Exp $
+// $Id: rxml.pike,v 1.329 2004/06/30 16:58:40 mast Exp $
 
 
 inherit "rxmlhelp";

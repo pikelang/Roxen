@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
+// This is a roxen module. Copyright © 2001 - 2004, Roxen IS.
 //
 #include <module.h>
 inherit "module";
@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.31 2004/03/11 14:13:41 wellhard Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.32 2004/06/30 16:59:04 mast Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");

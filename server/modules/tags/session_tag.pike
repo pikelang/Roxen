@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
+// This is a roxen module. Copyright © 2001 - 2004, Roxen IS.
 //
 
 #define _error id->misc->defines[" _error"]
@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.19 2004/04/13 13:06:55 anders Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.20 2004/06/30 16:59:26 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";

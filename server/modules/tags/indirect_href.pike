@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 // This module makes it possible to write symbolic names instead of
 // absoulte hrefs.
@@ -7,7 +7,7 @@
 
 #pragma strict_types
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.33 2002/01/17 22:37:53 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.34 2004/06/30 16:59:25 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 

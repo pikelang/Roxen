@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1998 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 1998 - 2004, Roxen IS.
 
 #include <module.h>
 inherit "roxenlib";

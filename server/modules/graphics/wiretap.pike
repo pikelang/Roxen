@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 2000-2001, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.34 2001/10/16 12:01:49 grubba Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.35 2004/06/30 16:59:04 mast Exp $";
 
 #include <module.h>
 inherit "module";

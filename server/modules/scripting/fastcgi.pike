@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.11 2002/10/01 13:54:25 mast Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.12 2004/06/30 16:59:20 mast Exp $";
 
 #include <roxen.h>
 #include <module.h>

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: newdecode.pike,v 1.30 2001/06/17 20:07:10 nilsson Exp $
+// Copyright © 1996 - 2004, Roxen IS.
+// $Id: newdecode.pike,v 1.31 2004/06/30 16:58:39 mast Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp

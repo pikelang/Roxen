@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 // Todo:
 //	- Docs
@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.27 2004/03/09 16:33:34 grubba Exp $";
+constant cvs_version = "$Id: email.pike,v 1.28 2004/06/30 16:59:24 mast Exp $";
 
 constant thread_safe=1;
 
@@ -86,7 +86,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.27 $"/" ")[1];
+string revision = ("$Revision: 1.28 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;

@@ -1,6 +1,6 @@
 // Roxen Locale Support
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: language.pike,v 1.40 2002/08/12 12:20:26 jonasw Exp $
+// Copyright © 1996 - 2004, Roxen IS.
+// $Id: language.pike,v 1.41 2004/06/30 16:58:38 mast Exp $
 
 #pragma strict_types
 

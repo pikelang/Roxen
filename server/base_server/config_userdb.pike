@@ -1,5 +1,5 @@
 // This file is part of Roxen WebServer.
-// Copyright © 2000 - 2001, Roxen IS.
+// Copyright © 2000 - 2004, Roxen IS.
 //
 // Core part of the configuration user database.  Handles creation of
 // users and permissions, and verifies users against the database.

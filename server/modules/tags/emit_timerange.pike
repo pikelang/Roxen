@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
+// This is a roxen module. Copyright © 2001 - 2004, Roxen IS.
 
 #include <module.h>
 inherit "module";
@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.13 2004/05/25 16:17:50 anders Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.14 2004/06/30 16:59:24 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;

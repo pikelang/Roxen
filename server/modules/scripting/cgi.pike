@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.61 2003/10/21 11:00:06 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.62 2004/06/30 16:59:19 mast Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1

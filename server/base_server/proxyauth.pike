@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: proxyauth.pike,v 1.9 2001/09/06 15:28:33 per Exp $
+// Copyright © 1996 - 2004, Roxen IS.
+// $Id: proxyauth.pike,v 1.10 2004/06/30 16:58:39 mast Exp $
 
 // Mostly compatibility file
 inherit "roxenlib";

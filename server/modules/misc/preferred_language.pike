@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 2000 - 2002, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 //
 
 #include <module.h>
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.26 2002/12/11 17:55:03 stewa Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.27 2004/06/30 16:59:16 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";

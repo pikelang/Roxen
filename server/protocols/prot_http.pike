@@ -1,5 +1,5 @@
 // This is a roxen protocol module.
-// Copyright © 2001, Roxen IS.
+// Copyright © 2001 - 2004, Roxen IS.
 
 inherit Protocol;
 constant supports_ipless = 1;

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1999 - 2001, Roxen IS.
-// $Id: javamodule.pike,v 1.5 2001/06/17 20:07:09 nilsson Exp $
+// Copyright © 1999 - 2004, Roxen IS.
+// $Id: javamodule.pike,v 1.6 2004/06/30 16:58:38 mast Exp $
 
 #include <module.h>
 inherit "module";

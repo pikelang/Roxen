@@ -1,4 +1,4 @@
-/* This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
+/* This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
  *
  * Adds some java script that will prevent others from putting
  * your page in a frame.
@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.35 2001/09/21 15:58:16 jhs Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.36 2004/06/30 16:59:25 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>

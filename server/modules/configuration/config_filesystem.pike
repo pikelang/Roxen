@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 //
 // A filesystem for the roxen administration interface.
 #include <module.h>
@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.111 2004/01/14 16:46:30 jonasw Exp $";
+  "$Id: config_filesystem.pike,v 1.112 2004/06/30 16:58:53 mast Exp $";
 
 constant path = "config_interface/";
 

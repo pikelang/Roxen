@@ -1,5 +1,5 @@
 // -*- java -*-
-// This file is part of Roxen WebServer. Copyright (c) 2001, Roxen IS.
+// This file is part of Roxen WebServer. Copyright (c) 2001 - 2004, Roxen IS.
 
 // DynamicLoading: A component for dynamic loading of documents into layers. 
 // different methods are used to accomplish this. For Netscape 4 the layer/src

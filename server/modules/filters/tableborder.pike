@@ -1,4 +1,4 @@
-// Copyright (C) 2001 Roxen IS
+// Copyright (C) 2001 - 2004, Roxen IS
 // Module author: Johan Sundström
 
 inherit "module";
@@ -26,7 +26,7 @@ inherit "module";
 "with(location)"                          \
   "pathname=R(/^(\\/\\(([^)]*)\\))?(.*)/(pathname))"
 
-constant cvs_version = "$Id: tableborder.pike,v 1.11 2001/03/02 20:15:43 jhs Exp $";
+constant cvs_version = "$Id: tableborder.pike,v 1.12 2004/06/30 16:59:02 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Table/Image Border Unveiler";

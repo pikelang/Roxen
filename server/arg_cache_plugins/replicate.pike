@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
-// Copyright © 2001, Roxen IS.
+// Copyright © 2001 - 2004, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.19 2004/02/09 18:23:05 wellhard Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.20 2004/06/30 16:58:33 mast Exp $";
 
 #if constant(WS_REPLICATE)
 #define QUERY(X,Y...)    get_db()->query(X,Y)

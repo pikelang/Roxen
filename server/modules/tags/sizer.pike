@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.23 2001/11/27 10:42:00 anders Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.24 2004/06/30 16:59:27 mast Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";

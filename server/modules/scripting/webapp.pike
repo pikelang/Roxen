@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2002, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 
 //inherit "module";
 inherit "roxen-module://filesystem";
@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.30 2003/02/05 10:36:33 anders Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.31 2004/06/30 16:59:21 mast Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
