@@ -1,10 +1,10 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-// This module handles all normal extension to contenttype
+// This module handles all normal extension to content type
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.9 1997/10/05 03:37:15 grubba Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.10 1997/10/20 22:43:48 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -25,12 +25,16 @@ void create()
 	 "#include <etc/extensions>\n\n", "Extensions", 
 	 TYPE_TEXT_FIELD, 
 	 "This is file extension "
-	 "to contenttype mapping. The format is as follows:\n"
+	 "to content type mapping. The format is as follows:\n"
 	 "<pre>extension type encoding\ngif image/gif\n"
 	 "gz STRIP application/gnuzip\n</pre>"
 	 "For a list of types, see <a href=ftp://ftp.isi.edu/in-"
 	 "notes/iana/assignments/media-types/media-types>ftp://ftp"
 	 ".isi.edu/in-notes/iana/assignments/media-types/media-types</a>");
+  defvar("default", "application/octet-stream", "Default content type",
+	 TYPE_STRING, 
+	 "This is the default content type which is used if a file lacks "
+	 "extension or if the extension is unknown.\n");
 }
 
 string status()
@@ -81,16 +85,19 @@ void start()
 
 array register_module()
 {
-  return ({ MODULE_TYPES, "Contenttypes",
+  return ({ MODULE_TYPES, "Content types",
 	    ("This module handles all normal extension to "+
-	     "contenttype mapping. Given the file 'foo.html', it will "+
-	     "normally set the contenttype to 'text/html'."), ({}), 1 });
+	     "content type mapping. Given the file 'foo.html', it will "+
+	     "normally set the content type to 'text/html'."), ({}), 1 });
 }
 
 array type_from_extension(string ext)
 {
-  if(extensions[ ext ])
-  {
+  if(ext == "default") {
+//    roxen_perror("%O\n", ({ QUERY(default), 0 }));
+    accessed[ ext ] ++;
+    return ({ query("default"), 0 });
+  } else if(extensions[ ext ]) {
     accessed[ ext ]++;
     return ({ extensions[ ext ], encodings[ ext ] });
   }
