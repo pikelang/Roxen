@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.78 2004/03/16 13:58:10 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.79 2004/03/23 14:33:47 mast Exp $";
 
 class Variable
 {
@@ -1231,6 +1231,10 @@ class MultiStatus
   }
 
   class prefix(static string href_prefix) {
+    int(0..1) is_empty()
+    {
+      return MultiStatus::is_empty();
+    }
     void add_response(string href, Node response_node) {
       MultiStatus::add_response(href_prefix + href, response_node);
     }
@@ -1311,7 +1315,7 @@ class RoxenModule
   string info(object conf);
   string comment();
 
-  PropertySet query_properties(string path, RequestID id);
+  PropertySet|mapping(string:mixed) query_properties(string path, RequestID id);
   string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     query_property(string path, string prop_name, RequestID id);
   void recurse_find_properties(string path, string mode, int depth,
