@@ -193,31 +193,34 @@ localinstall: all
 	    chmod u+w "$(SRCDIR)/server/$$d/."; \
 	  fi; \
 	done
-	@for sd in pike/$(PIKEVERSION)/src/lib pike/$(PIKEVERSION)/src/share; do \
-	  (if cd $$sd >/dev/null 2>&1; then \
-	    echo "Updating from $$sd"; \
-	    for d in `find . -type d -print`; do \
-	      if [ -d "$(SRCDIR)/server/lib/pike/$$d/." ]; then : ; else \
-		echo "$$sd/$$d"; \
-		mkdir "$(SRCDIR)/server/lib/pike/$$d" || exit 1; \
-		chmod a+rx "$(SRCDIR)/server/lib/pike/$$d/."; \
-		chmod u+w "$(SRCDIR)/server/lib/pike/$$d/."; \
-	      fi; \
-	    done; \
-	    for f in `find . -type f -print`; do \
-	      if cmp "$(SRCDIR)/server/lib/pike/$$f" "$$f" >/dev/null 2>&1 ; \
-	      then : ; else \
-		echo "$$sd/$$f"; \
-		if [ -f "$(SRCDIR)/server/lib/pike/$$f" ]; then \
-		  mv -f "$(SRCDIR)/server/lib/pike/$$f" "$(SRCDIR)/server/lib/pike/$$f.old"; \
-		else : ; fi; \
-		cp "$$f" "$(SRCDIR)/server/lib/pike/$$f" || exit 1; \
-		chmod a+r "$(SRCDIR)/server/lib/pike/$$f"; \
-		chmod u+w "$(SRCDIR)/server/lib/pike/$$f"; \
-	      fi ; \
-	    done; \
-          else : ; fi); : ; \
-	done
+	@(cd pike/$(PIKEVERSION)/src/lib && { \
+	  echo "Updating from pike/$(PIKEVERSION)/src/lib"; \
+	  for d in `find . -type d \( -name CVS -o -print \)`; do \
+	    if [ -d "$(SRCDIR)/server/lib/pike/$$d/." ]; then : ; else \
+	      echo "Creating directory $(SRCDIR)/server/lib/pike/$$d"; \
+	      mkdir "$(SRCDIR)/server/lib/pike/$$d" || exit 1; \
+	      chmod a+rx "$(SRCDIR)/server/lib/pike/$$d/."; \
+	      chmod u+w "$(SRCDIR)/server/lib/pike/$$d/."; \
+	    fi; \
+	  done; \
+	  for f in `find . -type d -name CVS -prune -o -type f -print`; do \
+	    if cmp "$(SRCDIR)/server/lib/pike/$$f" "$$f" >/dev/null 2>&1 ; \
+	    then : ; else \
+	      echo "Copying pike/$(PIKEVERSION)/src/lib/$$f"; \
+	      if [ -f "$(SRCDIR)/server/lib/pike/$$f" ]; then \
+		mv -f "$(SRCDIR)/server/lib/pike/$$f" \
+		      "$(SRCDIR)/server/lib/pike/$$f.old"; \
+	      else : ; fi; \
+	      cp "$$f" "$(SRCDIR)/server/lib/pike/$$f" || exit 1; \
+	      chmod a+r "$(SRCDIR)/server/lib/pike/$$f"; \
+	      chmod u+w "$(SRCDIR)/server/lib/pike/$$f"; \
+	    fi; \
+	  done; \
+	} )
+	@(if [ -d $(SRCDIR)/pike/$(PIKEVERSION)/lib ] ; then \
+	  rm -f "$(SRCDIR)/server/lib/pike/share" >/dev/null 2>&1; \
+	  ln -s "../../../pike/$(PIKEVERSION)/lib" "$(SRCDIR)/server/lib/pike/share"; \
+	else : ; fi)
 	(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 
 spotless:  clean
