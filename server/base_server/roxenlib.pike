@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.118 1999/10/17 15:35:56 nilsson Exp $
+// $Id: roxenlib.pike,v 1.119 1999/10/17 22:43:25 nilsson Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -14,12 +14,8 @@ inherit "http";
 
 string gif_size(object gif)
 {
-  int x,y;
-  string d;
-  gif->seek(6);
-  d = gif->read(4);
-  x = (d[1]<<8) + d[0]; y = (d[3]<<8) + d[2];
-  return "width="+x+" height="+y;
+  array xy=Dims.dims()->get(gif);
+  return "width="+xy[0]+" height="+xy[1];
 }
 
 static string extract_query(string from)
@@ -482,12 +478,11 @@ constant iso88591
     "&yuml;":   "ÿ",
 ]);
 
+constant replace_entities=indices( iso88591 )+({"&lt;","&gt;","&amp;","&#022;","&#34;","&#39;","&#0;"});
+constant replace_values  =values( iso88591 )+ ({"<",">","&","\"","\"","\'","\000"});
+
 constant safe_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"/"";
 constant empty_strings = ({""})*sizeof(safe_characters);
-// "","","","","","","","","","","","","","","","","","","","","","","","","",
-// "","","","","","","","","","","","","","","","","","","","","","","","","",
-// "","","","","","","","","","","","",
-// });
 
 static int is_safe_string(string in)
 {
@@ -773,15 +768,18 @@ static string number2string(int n,mapping m,mixed names)
    default:
     return (string)n;
   }
-  if (m->lower) s=lower_case(s);
-  if (m->upper) s=upper_case(s);
-  if (m->cap||m->capitalize) s=String.capitalize(s);
 
   switch(m["case"]) {
-    case "lower": s=lower_case(s); break;
-    case "upper": s=upper_case(s); break;
-    case "capitalize": s=String.capitalize(s);
+    case "lower": return lower_case(s);
+    case "upper": return upper_case(s);
+    case "capitalize": return capitalize(s);
   }
+
+#if old_rxml_compat
+  if (m->lower) return lower_case(s);
+  if (m->upper) return upper_case(s);
+  if (m->cap||m->capitalize) return capitalize(s);
+#endif
 
   return s;
 }
@@ -861,8 +859,7 @@ string html_encode_string(string str)
 string html_decode_string(string str)
 // Decodes str, opposite to html_encode_string()
 {
-  return replace(str, ({"&amp;", "&lt;", "&gt;", "&#34;", "&#39;", "&#0;"}),
-		 ({"&", "<", ">", "\"", "\'", "\000" }) );
+  return replace(str, replace_entities, replace_values);
 }
 
 string html_encode_tag_value(string str)
@@ -1467,36 +1464,55 @@ string|int tagtime(int t, mapping m, object id, object language)
     switch (m->part)
     {
      case "year":
-      return number2string((int)(localtime(t)->year+1900),m,
+      return number2string(localtime(t)->year+1900,m,
 			   language(m->lang, sp||"number"));
      case "month":
-      return number2string((int)(localtime(t)->mon+1),m,
+      return number2string(localtime(t)->mon+1,m,
 			   language(m->lang, sp||"month"));
+     case "week":
+      return number2string(Calendar.datetime(t)->week,m,
+                           language(m->lang, sp||"number"));
      case "day":
      case "wday":
-      return number2string((int)(localtime(t)->wday+1),m,
+      return number2string(localtime(t)->wday+1,m,
 			   language(m->lang, sp||"day"));
      case "date":
      case "mday":
-      return number2string((int)(localtime(t)->mday),m,
+      return number2string(localtime(t)->mday,m,
 			   language(m->lang, sp||"number"));
      case "hour":
-      return number2string((int)(localtime(t)->hour),m,
+      return number2string(localtime(t)->hour,m,
 			   language(m->lang, sp||"number"));
-    case "min":  // Not part of RXML 1.4
+
+     case "beat":
+       //FIXME This should be done inside Calendar.
+       mapping lt=Calendar.datetime(t);
+       int secs=3600;
+       secs+=lt->timezone;
+       secs-=lt->DST*3600;
+       secs+=lt->hour*3600;
+       secs+=lt->minute*60;
+       secs+=lt->second;
+       secs%=24*3600;
+       float beats=secs/86.4;
+       if(!sp) return sprintf("@%03d",(int)beats);
+       return number2string((int)beats,m,
+                            language(m->lang, sp||"number"));
+     case "min":  // Not part of RXML 1.4
      case "minute":
-      return number2string((int)(localtime(t)->min),m,
+      return number2string(localtime(t)->min,m,
 			   language(m->lang, sp||"number"));
-    case "sec":  // Not part of RXML 1.4
+     case "sec":  // Not part of RXML 1.4
      case "second":
-      return number2string((int)(localtime(t)->sec),m,
+      return number2string(localtime(t)->sec,m,
 			   language(m->lang, sp||"number"));
      case "yday":
-      return number2string((int)(localtime(t)->yday),m,
+      return number2string(localtime(t)->yday,m,
 			   language(m->lang, sp||"number"));
      default: return "";
     }
-  } else if(m->type) {
+  }
+  else if(m->type) {
     switch(m->type)
     {
      case "iso":
@@ -1593,7 +1609,7 @@ int time_dequantifier(mapping m)
   if (m->hours)   t+=((float)(m->hours))*3600;
   if (m->days)    t+=((float)(m->days))*86400;
   if (m->weeks)   t+=((float)(m->weeks))*604800;
-  if (m->months)  t+=((float)(m->months))*(24*3600*30.46);
-  if (m->years)   t+=((float)(m->years))*(3600*(24*365.242190));
+  if (m->months)  t+=((float)(m->months))*(24*3600*30.436849);
+  if (m->years)   t+=((float)(m->years))*(3600*24*365.242190);
   return (int)t;
 }
