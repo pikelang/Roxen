@@ -572,17 +572,17 @@ string get_var_form( string s, object mod, object id )
    case TYPE_LOCATION:
      if( view_mode )
        return "<b>"+html_encode_string(var[VAR_VALUE])+"</b>";
-     return input(path, var[VAR_VALUE], 30);
+     return pre+input(path, html_encode_string(var[VAR_VALUE]), 30);
 
    case TYPE_FLOAT:
      if( view_mode )
        return "<b>"+var[VAR_VALUE]+"</b>";
-     return input(path, sprintf( "%.3f", var[VAR_VALUE]), 10);
+     return pre+input(path, sprintf( "%.3f", var[VAR_VALUE]), 10);
 
    case TYPE_INT:
      if( view_mode )
        return "<b>"+var[VAR_VALUE]+"</b>";
-     return input(path, var[VAR_VALUE], 10);
+     return pre+input(path, var[VAR_VALUE], 10);
 
    case TYPE_THEME: /* config-if local type... */
      array a = all_themes( );
@@ -595,7 +595,7 @@ string get_var_form( string s, object mod, object id )
        else
          tmp += "<option value='"+q+"'>"+theme_name(q);
      }
-     return tmp+"</select>";
+     return pre+tmp+"</select>";
 
    case TYPE_DIR_LIST:
    case TYPE_STRING_LIST:
@@ -629,11 +629,11 @@ string get_var_form( string s, object mod, object id )
 		replace((string)misc[i],"\"","&quote;")+ "\"> "+
 		translate[misc[i]]+" ");
       }
-      return tmp+"</select>";
+      return pre+tmp+"</select>";
     }
     if( view_mode )
       return "<b><tt>"+html_encode_string((((array(string))var[VAR_VALUE])*","))+"</tt></b>";
-    return input( path, ((array(string))var[VAR_VALUE])*", ", 40 );
+    return pre+input( path, ((array(string))var[VAR_VALUE])*", ", 40 );
 
 
    case TYPE_FLAG:
@@ -646,7 +646,7 @@ string get_var_form( string s, object mod, object id )
      else
        res +=  ("<option value=Yes>"+LOW_LOCALE->yes+
                 "<option value=No selected>"+LOW_LOCALE->no);
-     return res + "</select>";
+     return pre+res + "</select>";
     break;
 
   }
@@ -812,11 +812,6 @@ array get_variable_sections( object mod, mapping m, object id )
                        });
   sort( variables->section, variables );
   return variables;
-}
-
-string container_cf_dirlist( string t, mapping m, string c, object id )
-{
-
 }
 
 object(Configuration) find_config_or_error(string config)
@@ -1065,12 +1060,6 @@ string container_rul( string t, mapping m, string c, object id )
 {
   id->misc->_rul_cnt = -1;
   return "<table>"+c+"</table>";
-}
-
-
-string tag_cf_locale( string t, mapping m, object id )
-{
-  return "DEPRECATED: Use &amp;locale.variable; instead.";
 }
 
 string container_cf_perm( string t, mapping m, string c, RequestID id )
