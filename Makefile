@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.31 1998/03/12 19:48:44 grubba Exp $
+# $Id: Makefile,v 1.32 1998/03/23 11:30:09 per Exp $
 #
 # Bootstrap Makefile
 #
@@ -11,6 +11,12 @@ OS=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`
 BUILDDIR=build/$(OS)
 
 easy : blurb all
+
+ChangeLog.gz:
+	pike tools/make_changelog.pike | gzip -9 > ChangeLog.gz
+
+ChangeLog.rxml.gz:
+	pike tools/make_changelog.pike --rxml |gzip -9 > ChangeLog.rxml.gz
 
 hard : configure
 	@grep Bootstrap Makefile >/dev/null 2>&1 && mv Makefile Makefile.boot
