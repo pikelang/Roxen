@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.286 2001/01/10 21:32:25 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.287 2001/02/01 03:16:09 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -404,7 +404,8 @@ string scan_for_query( string f )
   return f;
 }
 
-#ifdef OLD_RXML_COMPAT
+#define OLD_RXML_CONFIG
+#ifdef OLD_RXML_CONFIG
 private int really_set_config(array mod_config)
 {
   string url, m;
@@ -558,7 +559,6 @@ class PrefLanguages {
 
 class CacheKey {}
 
-#define OLD_RXML_CONFIG
 void things_to_do_when_not_sending_from_cache( )
 {
 #ifdef OLD_RXML_CONFIG
@@ -1697,45 +1697,43 @@ void send_result(mapping|void result)
     if(!file->raw)
     {
       heads = ([]);
-      if( !file->len )
+
+      if(objectp(file->file))
+	if(!file->stat && !(file->stat=misc->stat))
+	  file->stat = file->file->stat();
+      if( Stat fstat = file->stat )
       {
-        if(objectp(file->file))
-          if(!file->stat && !(file->stat=misc->stat))
-            file->stat = file->file->stat();
-        array fstat;
-        if(arrayp(fstat = file->stat))
-        {
-          if( !file->len )
-            file->len = fstat[1];
+	if( !file->len )
+	  file->len = fstat[1];
 
-          if (fstat[ST_MTIME] > misc->last_modified) {
-            misc->last_modified = fstat[ST_MTIME];
-          }
+	if (fstat[ST_MTIME] > misc->last_modified) {
+	  misc->last_modified = fstat[ST_MTIME];
+	}
 
-          if(prot != "HTTP/0.9" && (misc->cacheable==INITIAL_CACHEABLE) )
-          {
-            heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
+	if(prot != "HTTP/0.9" && (misc->cacheable==INITIAL_CACHEABLE) )
+	{
+	  heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
 
-            if(since)
-            {
-              /* ({ time, len }) */
-              array(int) since_info = Roxen.parse_since( since );
-              if ( ((since_info[0] >= misc->last_modified) && 
-                    ((since_info[1] == -1) || (since_info[1] == file->len)))
-                   // actually ok, or...
-                   || ((misc->cacheable>0) 
-                       && (since_info[0] + misc->cacheable<= predef::time(1)))
-                   // cacheable, and not enough time has passed.
-                   )
-              {
-                file->error = 304;
-                file->file = 0;
-                file->data="";
-              }
-            }
-          }
-        }
+	  if(since)
+	  {
+	    /* ({ time, len }) */
+	    array(int) since_info = Roxen.parse_since( since );
+	    if ( ((since_info[0] >= misc->last_modified) && 
+		  ((since_info[1] == -1) || (since_info[1] == file->len)))
+		 // actually ok, or...
+		 || ((misc->cacheable>0) 
+		     && (since_info[0] + misc->cacheable<= predef::time(1)))
+		 // cacheable, and not enough time has passed.
+	       )
+	    {
+	      file->error = 304;
+	      file->file = 0;
+	      file->data="";
+	    }
+	  }
+	}
       }
+
       if(prot != "HTTP/0.9") 
       {
         string h, charset="";
