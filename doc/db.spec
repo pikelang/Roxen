@@ -1,8 +1,9 @@
-# $Id: db.spec,v 1.24 1998/09/12 20:46:17 per Exp $
+# $Id: db.spec,v 1.25 1998/09/13 23:28:22 grubba Exp $
 
 drop table messages;
 drop table mail;
 drop table mailboxes;
+drop table send_q;
 drop table users;
 drop table customers;
 drop table dns;
@@ -57,6 +58,16 @@ create table mailboxes (
              id	                     int auto_increment primary key,	
              user_id                 int,
 	     name		     varchar(64)
+     );
+
+create table send_q (
+	     id			     int auto_increment primary key,
+	     sender		     varchar(255),
+	     user		     varchar(255),
+	     domain		     varchar(255),
+	     mailid		     varchar(32),
+	     send_at		     int,
+	     times		     int,
      );
  
 create table users (
