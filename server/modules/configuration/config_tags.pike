@@ -587,14 +587,6 @@ string get_var_form( string s, object mod, object id )
      return res + "</select>";
     break;
 
-   case TYPE_COLOR:
-     if (!intp( var[ VAR_VALUE ] ))
-       var[ VAR_VALUE ] = 0;	// Black.. maybe not the best default color...
-    return "<input name=" + path + " size=12 value= "
-           + ((var[ VAR_VALUE ] >> 16) & 255)
-           + ":" + ((var[ VAR_VALUE ] >> 8) & 255)
-           + ":" + (var[ VAR_VALUE ] & 255)
-           + ">"+"<input type=submit value="+LOW_LOCALE->ok+">";
   }
 
 
@@ -608,9 +600,7 @@ string get_var_type( string s, object mod, object id )
    case TYPE_CUSTOM:
    case TYPE_TEXT_FIELD:
    case TYPE_STRING:
-   case TYPE_PORTS:
    case TYPE_FLAG:
-   case TYPE_COLOR:
    case TYPE_FONT:
      break;
 
@@ -771,6 +761,23 @@ object(Configuration) find_config_or_error(string config)
   return conf;
 }
 
+mapping get_port_map( object p )
+{
+  return ([
+    "port":p->get_key(),
+    "name":p->name+"://"+(p->ip||"*")+":"+p->port+"/",
+  ]);
+}
+
+mapping get_url_map( string u, mapping ub )
+{
+  return ([
+    "url":u,
+    "conf":replace(ub[u]->conf->name, " ", "-" ),
+    "confname":ub[u]->conf->query_name(),
+  ]);
+}
+
 string container_configif_output(string t, mapping m, string c, object id)
 {
   array(mapping) variables;
@@ -837,6 +844,30 @@ string container_configif_output(string t, mapping m, string c, object id)
      object conf = find_config_or_error( m->configuration );
 
      variables = get_variable_maps( conf, m, id );
+     break;
+
+   case "ports":
+     array pos = roxen->all_ports();
+     sort( pos->get_key(), pos );
+     variables = map( pos, get_port_map );
+     int sel;
+     foreach( variables, mapping v )
+       if( v->port == id->variables->port )
+       {
+         v->selected = "selected";
+         sel=1;
+       }
+     break;
+
+   case "port-variables":
+     catch {
+       variables = get_variable_maps( roxen->find_port( m->port ), ([]), id );
+     };
+     break;
+
+   case "port-urls":
+     mapping u = roxen->find_port( m->port )->urls;
+     variables = map(indices(u),get_url_map,u);
      break;
 
    case "config-variables-sections":
