@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.160 2001/05/22 16:59:23 marcus Exp $
+// $Id: module.pmod,v 1.161 2001/06/01 17:25:40 jhs Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3364,7 +3364,7 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 #ifdef MODULE_DEBUG
     mapping(object:int) called = ([]);
 #endif
-    while (objectp (val) && ([object] val)->rxml_var_eval) {
+    while (objectp (val) && ([object] val)->rxml_var_eval && !([object] val)->`[]) {
 #ifdef MODULE_DEBUG
       // Detect infinite loops. This check is slightly too strong;
       // it's theoretically possible that a couple of Value objects
