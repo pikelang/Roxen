@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.154 2001/03/17 02:27:20 mast Exp $
+# $Id: start,v 1.155 2001/03/20 15:18:55 noring Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -47,9 +47,12 @@ case "$dn" in
  *)
   # dp is not used here since we cannot source bin/functions before we
   # are in the correct directory, for quite obvious reasons...
-  echo "          : Changing current directory to '$dn' (now `pwd`)" >&2
-  cd $dn
-  echo "          : Got new directory as `pwd`" >&2
+  if [ ! "$dn" = "`pwd`" ]
+  then
+    echo "          : Changing current directory to '$dn' (now `pwd`)" >&2
+    cd $dn
+    echo "          : Got new directory as `pwd`" >&2
+  fi
   ;;
 esac
 
