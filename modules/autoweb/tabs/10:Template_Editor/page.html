@@ -1,3 +1,12 @@
+<define tag=fix_options>
+  <pike>
+    id->variables->options =
+      ((id->variables->options/",")-({ "" }))*",";
+    return "";
+  </pike>
+</define>
+
+
 <pike>
   id->variables->show_wizard=!(id->variables->ok||id->variables->cancel);
   id->variables->show_menu=
@@ -6,13 +15,11 @@
 </pike>
 
 <formoutput quote='¤'>
-  <cset preparse variable=current_scheme><pike>
-    return
-      "<sqloutput quote='£' query="
-      "\"select * from customers "
-      "where id=¤customer_id¤\">"
-      "£template_scheme_id£</sqloutput>";
-  </pike></cset>
+  <cset preparse variable=current_scheme>
+    <sqloutput quote='£' query="
+      SELECT * FROM customers 
+        WHERE id=¤customer_id¤"
+      >£template_scheme_id£</sqloutput></cset>
 </formoutput>
 
 <if variable=edit>
@@ -24,21 +31,15 @@
 	<page>
 	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	  <b>Activate template: </b>
-	  <cset preparse variable=options><pike>
-	    string query=
-	      "<sqloutput quote='£' query="
-	      "\"select * from customers_schemes where "
-	      "customer_id='¤customer_id¤'\">"
-	      "£id£:£name£,</sqloutput>";
-	    return ((parse_rxml(query, id)/",")-({ "" }))*",";
-	  </pike></cset>
-	  <cset preparse variable=default><pike>
-	    return
-	      "<sqloutput quote='£' query="
-	      "\"select * from customers "
-	      "where id=¤customer_id¤\">"
-	      "£template_scheme_id£</sqloutput>";
-	  </pike></cset>
+
+	  <cset preparse variable=options><sqloutput quote='£' query="
+	    SELECT * FROM customers_schemes
+	      WHERE customer_id='¤customer_id¤'"
+	    >£id£:£name£,</sqloutput></cset>
+          <fix_options>	  
+	  <cset preparse variable=default><sqloutput quote='£' query="
+	    SELECT * FROM customers
+	      WHERE id=¤customer_id¤">£template_scheme_id£</sqloutput></cset>
 	  <formoutput quote='$'>
 	    <var name="new_scheme" type="select"
 		 options="$options$" default="$default$">
@@ -48,9 +49,9 @@
 	</page>
 	<noparse><noparse><done>
 	  <formoutput quote=$>
-	    <sqlquery query="update customers set
-	                     template_scheme_id=$new_scheme$
-			     where id=$customer_id$">
+	    <sqlquery query="UPDATE customers
+	                       SET template_scheme_id=$new_scheme$
+			       WHERE id=$customer_id$">
 	  </formoutput>
           <autosite-webadm-update-template>
 	</done></noparse></noparse>
@@ -63,20 +64,12 @@
 	<page>
 	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	  <b>Load template: </b>
-	  <cset preparse variable=options><pike>
-	    string query=
-	      "<sqloutput quote='£' query="
-	      "\"select * from template_schemes\">"
-	      "£id£:£name£,</sqloutput>";
-	    return ((parse_rxml(query, id)/",")-({ "" }))*",";
-	  </pike></cset>
-	  <cset preparse variable=default><pike>
-	    return
-	      "<sqloutput quote='£' query="
-	      "\"select * from customers "
-	      "where id=¤customer_id¤\">"
-	      "£template_scheme_id£</sqloutput>";
-	  </pike></cset>
+	  <cset preparse variable=options><sqloutput quote='£' query="
+	    SELECT * FROM template_schemes">£id£:£name£,</sqloutput></cset>
+	  <fix_options>
+	  <cset preparse variable=default><sqloutput quote='£' query="
+	    SELECT * FROM customers 
+	      WHERE id=¤customer_id¤">£template_scheme_id£</sqloutput></cset>
 	  <formoutput quote='$'>
 	    <var name="load_scheme" type="select"
 		 options="$options$" default="$default$">
@@ -88,16 +81,16 @@
 	<noparse><noparse><done>
 	  <formoutput quote=$>
 	    <sqloutput quote='£'
-	       query="select * from template_schemes_vars
-	              where scheme_id=$load_scheme$">
-	      <sqlquery query="delete from customers_schemes_vars where
-	                       scheme_id='$current_scheme$'
-			       and variable_id=£variable_id£">
-              <sqlquery query="insert into customers_schemes_vars
-	                       (scheme_id,variable_id,value) values
-			       ('$current_scheme$',
-			        '£variable_id:quote=none£',
-				'£value:quote=none£')">
+	       query="SELECT * FROM template_schemes_vars
+	                WHERE scheme_id=$load_scheme$">
+	      <sqlquery query="DELETE FROM customers_schemes_vars
+	                         WHERE scheme_id='$current_scheme$'
+			           AND variable_name='£variable_name£'">
+              <sqlquery query="INSERT INTO customers_schemes_vars
+	                         (scheme_id,variable_name,value)
+			         VALUES ('$current_scheme$',
+			                 '£variable_name:quote=none£',
+				         '£value:quote=none£')">
             </sqloutput>
 	  </formoutput>
           <autosite-webadm-update-template>
@@ -117,13 +110,10 @@
 	<page>
 	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	  <b>Template: </b>
-          <cset preparse variable=options><pike>
-	    string query=
-	      "<sqloutput quote='£' query="
-	      "\"select * from template_schemes\">"
-	      "£id£:£name:quote=mysql£,</sqloutput>";
-	    return ((parse_rxml(query, id)/",")-({ "" }))*",";
-	  </pike></cset>
+          <cset preparse variable=options><sqloutput quote='£' query="
+	    SELECT * FROM template_schemes"
+	    >£id£:£name:quote=mysql£,</sqloutput></cset>
+	  <fix_options>
 	  <formoutput quote='$'>
 	    <var name="load_scheme" type="select"
 		 options="$options$">
@@ -134,9 +124,10 @@
 	<noparse><noparse><done>
 	  <formoutput quote=$>
 	    <cset preparse variable=scheme_exist><sqloutput quote='£'
-	      query="select * from customers_schemes where
-	             customer_id='$customer_id$' and
-		     name='$scheme_name:quote=mysql$'">£id£</sqloutput></cset>
+	      query="SELECT * FROM customers_schemes
+	               WHERE customer_id='$customer_id$'
+		         AND name='$scheme_name:quote=mysql$'"
+	      >£id£</sqloutput></cset>
             <pike>
 	      id->variables->scheme_empty=
 	        (id->variables->scheme_exist==""?1:0);
@@ -144,22 +135,24 @@
 	    </pike>
 	    <if variable=scheme_empty>
     	      <sqlquery mysql-insert-id=new_scheme
-	        query="insert into customers_schemes 
-	               (customer_id,name) values 
-		       ('$customer_id$','$scheme_name:quote=mysql$')">
+	        query="INSERT INTO customers_schemes 
+	                 (customer_id,name)
+		         VALUES ('$customer_id$',
+			         '$scheme_name:quote=mysql$')">
 
               <formoutput quote='¥'>
-	        <sqlquery query="update customers set
-	                         template_scheme_id=¥new_scheme¥
-	                         where id=$customer_id$">
+	        <sqlquery query="UPDATE customers
+		                   SET template_scheme_id=¥new_scheme¥
+	                           WHERE id=$customer_id$">
   	        <sqloutput quote='£'
-	           query="select * from template_schemes_vars
-	                  where scheme_id=$load_scheme$">
+	           query="SELECT * FROM template_schemes_vars
+	                    WHERE scheme_id=$load_scheme$">
                   <sqlquery
-		    query="insert into customers_schemes_vars
-	                   (scheme_id,variable_id,value) values
-		           ('¥new_scheme¥','£variable_id£',
-			    '£value:quote=mysql£')">
+		    query="INSERT INTO customers_schemes_vars
+	                     (scheme_id,variable_name,value)
+			     VALUES ('¥new_scheme¥',
+			             '£variable_name£',
+				     '£value:quote=mysql£')">
                 </sqloutput>	    
       	      </formoutput>
 	    </if>
@@ -175,16 +168,12 @@
 	<page>
 	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	  <b>Remove template: </b>
-          <cset preparse variable=options><pike>
-	    string query=
-	      "<sqloutput quote='£' query="
-	      "\"select * from customers_schemes where "
-	      "customer_id='¤customer_id¤' and "
-	      "not(id='¤current_scheme¤') "
-	      "order by name\">"
-	      "£id£:£name:quote=mysql£,</sqloutput>";
-	    return ((parse_rxml(query, id)/",")-({ "" }))*",";
-	  </pike></cset>
+          <cset preparse variable=options><sqloutput quote='£' query="
+	    SELECT * FROM customers_schemes
+	      WHERE customer_id='¤customer_id¤'
+	        AND NOT(id='¤current_scheme¤')
+	      ORDER BY name">£id£:£name:quote=mysql£,</sqloutput></cset>
+	  <fix_options>
 	  <formoutput quote='$'>
 	    <var name="remove_scheme" type="select"
 		 options="$options$">
@@ -195,12 +184,12 @@
 	<noparse><noparse><done>
 	  <formoutput quote=$>
 	  <sqlquery
-	    query="delete from customers_schemes where
-	           customer_id='$customer_id$' and
-		   id='$remove_scheme$'">
+	    query="DELETE FROM customers_schemes
+	             WHERE customer_id='$customer_id$'
+		       AND id='$remove_scheme$'">
 	  <sqlquery
-	    query="delete from customers_schemes_vars where
-		   scheme_id='$remove_scheme$'">
+	    query="DELETE FROM customers_schemes_vars
+	             WHERE scheme_id='$remove_scheme$'">
       	  </formoutput>
 	</done></noparse></noparse>
       </wizard>
@@ -208,20 +197,17 @@
 
     
     <if variable="edit is template">
-      <sqloutput quote='¥' query="SELECT *
-                                    FROM template_wizards
+      <sqloutput quote='¥' query="SELECT * FROM template_wizards
 				    WHERE id='¤wizard¤'">
         <wizard preparse name="¥name:quote=mysql¥">
-	  <sqloutput quote='$' query="SELECT *
-	                                FROM template_wizards_pages
+	  <sqloutput quote='$' query="SELECT * FROM template_wizards_pages
 					WHERE wizard_id='¤wizard¤'">
 	    <page>
 	      <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	      <input type=hidden name=wizard value='¤wizard:quote=mysql¤'>
               <table border=0>
 	        <tr><td colspan=2><h3>$title$</h3></td></tr>
-	        <sqloutput quote='#' query="SELECT *
-		                              FROM template_vars
+	        <sqloutput quote='#' query="SELECT * FROM template_vars
 					      WHERE page_id='$id$'">
 		  <cset preparse variable=options><sqloutput quote='£' query="
 		      SELECT o.value, o.name
@@ -230,16 +216,11 @@
 			WHERE g.id='#option_group_id#'
 			  AND g.id=o.option_group_id"
 	            >£value£:£name£,</sqloutput></cset>
-		  <pike>
-		    id->variables->options =
-		      ((id->variables->options/",")-({ "" }))*",";
-		    return "";
-		  </pike>
+                  <fix_options>
 		  <cset preparse variable=default><sqloutput quote='£' query="
-		      SELECT *
-		        FROM customers_schemes_vars
+		      SELECT * FROM customers_schemes_vars
 		        WHERE scheme_id='¤current_scheme:quote=mysql¤'
-			  AND variable_id='#id:quote=mysql#'"
+			  AND variable_name='#name:quote=mysql#'"
 		    >£value£</sqloutput></cset>
                   <if match='#type# is string'>
 		    <cset variable=size>size=40</cset></if>
@@ -281,17 +262,21 @@
 		if((sscanf(variable, "variable_%d%s",
 			  int variable_id, string slask)>0)&&(slask=="")) {
 		  //werror("%s=%s\n", variable, id->variables[variable]);
-		  r += "<sqlquery query=\""
-		       "delete from customers_schemes_vars "
-		       "where scheme_id='¤current_scheme¤' and "
-		       "variable_id='"+variable_id+"'"
-		       "\">\n";
-		  r += "<sqlquery query=\""
-		       "insert into customers_schemes_vars "
-		       "(scheme_id,variable_id,value) "
-		       " values ('¤current_scheme¤','"+variable_id+"','"+
-		       id->variables[variable]+"')"+
-		       "\">\n";
+		  r += "<sqloutput quote=£ query=\"\n"
+		       "  SELECT name \n"
+		       "    FROM template_vars \n"
+		       "    WHERE id="+variable_id+"\">\n"
+		       "  <sqlquery query=\""
+		       "    DELETE FROM customers_schemes_vars \n"
+		       "      WHERE scheme_id='¤current_scheme¤' \n"
+		       "        AND variable_id='"+variable_id+"'\">\n"
+		       "  <sqlquery query=\""
+		       "    INSERT INTO customers_schemes_vars \n"
+		       "      (scheme_id,variable_name,value) \n"
+		       "      VALUES ('¤current_scheme¤',\n"
+		       "              '£name£',\n"
+		       "              '"+id->variables[variable]+"')\">\n"
+		       "</sqloutput>\n";
 		}
 	      return r;
 	    </pike>

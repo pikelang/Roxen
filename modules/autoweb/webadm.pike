@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.28 1998/09/26 21:31:48 wellhard Exp $
+ * $Id: webadm.pike,v 1.29 1998/09/27 16:27:01 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.28 1998/09/26 21:31:48 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.29 1998/09/27 16:27:01 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -69,10 +69,10 @@ string customer_name(string tag_name, mapping args, object id)
 string|int get_variable_value(object db, string scheme_id, string variable)
 {
   array query_result = 
-    db->query("select * from customers_schemes_vars,template_vars where "
-	      "customers_schemes_vars.scheme_id='"+scheme_id+"' and "
-	      "customers_schemes_vars.variable_id=template_vars.id and "
-	      "template_vars.name='"+variable+"'");
+    db->query("SELECT * FROM customers_schemes_vars,template_vars "
+	      "  WHERE customers_schemes_vars.scheme_id='"+scheme_id+"' "
+	      "    AND customers_schemes_vars.variable_name=template_vars.name "
+	      "    AND template_vars.name='"+variable+"'");
   //werror("%O\n", query_result);
   if(!sizeof(query_result)) {
     werror("No such scheme '%s' or variable '%s' is undefined.\n",
@@ -141,9 +141,9 @@ string update_template(string tag_name, mapping args, object id)
   
   // Fetch variables from database
   array variables =
-    db->query("select * from customers_schemes_vars,template_vars where "
-	      "customers_schemes_vars.scheme_id='"+scheme_id+"' and "
-	      "customers_schemes_vars.variable_id=template_vars.id");
+    db->query("SELECT * FROM customers_schemes_vars,template_vars "
+	      "  WHERE customers_schemes_vars.scheme_id='"+scheme_id+"' "
+	      "   AND customers_schemes_vars.variable_name=template_vars.name");
   
   mapping vars=([]);
   foreach(variables, mapping variable) {
