@@ -4,7 +4,7 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-constant cvs_version = "$Id: home_logger.pike,v 1.26 2000/07/21 10:07:22 hop Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.27 2000/08/15 13:03:15 jhs Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -462,7 +462,7 @@ inline string format_log(object id, mapping file)
 		 (string)(file->len>=0?file->len:"?"));
 }
 
-mixed log(object id, mapping file)
+int log(RequestID id, mapping file)
 {
   string s;
   object fnord;
