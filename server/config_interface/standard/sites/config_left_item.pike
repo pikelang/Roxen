@@ -84,16 +84,21 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
          }
          sort( variables->name, variables );
 
+	 pre += "<table cellspacing=0 cellpadding=0>\n";
+
          foreach( variables, mapping data )
          {
            if( data->sname != module )
-             pre += ("\n<img src=\"/internal-roxen-unit\" width=12 height=12>"
-		     "<a href=\""+qurl+data->sname+
-                     "/\">"+replace(data->name, " ", "&nbsp;")+"</a><br>\n");
+             pre += ("\n<tr><td valign=top><img src=\"&usr.item-indicator;\" width=12 height=12></td>"
+		     "<td><a href=\""+qurl+data->sname+
+                     "/\">"+html_encode_string(data->name)+"</a></td></tr>\n");
            else
-             pre += ("\n<img src=\"&usr.selected-indicator;\" width=12 height=12>"
-		     "<b>" + replace(data->name, " ", "&nbsp;") + "</b><br>\n");
+             pre += ("\n<tr><td><img src=\"&usr.selected-indicator;\" width=12 height=12></td>"
+		     "<td><b>" + html_encode_string(data->name) + "</b></td></tr>\n");
          }
+
+	 pre += "</table>\n";
+
          if( config_perm( "Add Module" ) )
          {
            pre+=sprintf("<br><gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-buttonbg; preparse href='"+tmp+
