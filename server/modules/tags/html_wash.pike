@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.8 2000/09/11 18:26:51 jhs Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.9 2000/09/12 18:47:05 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "HTML washer";
@@ -66,10 +66,10 @@ class TagWashHtml
 
   string safe_tag(string tag, mapping m, string close_tags)
   {
-    if(close_tags)
-      m["/"] = "/";
-
-    return replace(Roxen.make_tag(tag, m), ({ "<",">" }), ({ "\0[","\0]" }) );
+    return replace(RXML.t_xml->format_tag(tag, m, 0, (close_tags?0:
+						      RXML.FLAG_COMPAT_PARSE|
+						      RXML.FLAG_EMPTY_ELEMENT)),
+		   ({ "<",">" }), ({ "\0[","\0]" }) );
   }
 
   string filter_body(string s, array keep_tags, array keep_containers,
