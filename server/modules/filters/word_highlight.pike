@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: word_highlight.pike,v 1.1 2000/11/18 07:33:09 nilsson Exp $";
+constant cvs_version = "$Id: word_highlight.pike,v 1.2 2001/04/08 20:41:35 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Word highlighter";
@@ -29,6 +29,7 @@ string do_highlighting(string txt, RequestID id) {
   array to = map(from, lambda(string in) { return pre+in+post; } );
 
   Parser.HTML p = Parser.HTML();
+  p->add_quote_tag("!--", 0, "--");
   p->_set_data_callback(lambda(Parser.HTML p, string in) {
 			  return ({ replace(in, from, to) });
 			} );
