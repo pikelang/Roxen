@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.175 1999/05/19 07:07:09 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.176 1999/05/25 09:48:17 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -558,16 +558,6 @@ mixed draw_callback(mapping args, object id)
   string orig_text = text;
   object img;
 
-  m_delete( args, "text" );
-
-  if(!sizeof(args))
-  {
-    args=(["fg":"black","bg":"white","notrans":"1"]);
-    text="Please reload this page";
-  }
-  //werror("Not cached: %O -> %O\n", key, text);
-  //werror("In cache: %O\n", sort(indices(cache->cache)));
-
   if(!args->verbatim) // typographically correct...
   {
     text = replace(text, nbsp, " ");
@@ -877,7 +867,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   if(arg->split)
   {
-    if (sizeof(split=arg->split) != 1)
+    if ((split=arg->split) == "split")
       split = " ";
     m_delete(arg,"split");
   }
@@ -929,7 +919,6 @@ string tag_graphicstext(string t, mapping arg, string contents,
       arg->text = word;
       string fn = image_cache->store( arg );
       mapping size = image_cache->metadata( fn, id, 1 );
-
       mapping tag = 
       ([ 
         "alt":(arg->alt||word),
@@ -937,8 +926,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
       ]);
       if( size )
       {
-        tag->width = size->xsize;
-        tag->height = size->ysize;
+        tag->width  = (string)size->xsize;
+        tag->height = (string)size->ysize;
       }
       res += ({ make_tag( "img", tag )+" " });
     }
