@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.115 1999/06/15 06:56:41 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.116 1999/07/26 13:27:28 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -834,6 +834,11 @@ string container_diagram(string tag, mapping m, string contents,
     m->width = size->xsize;
     m->height = size->ysize;
   }
+
+  if(m->noxml)
+    m_delete(m, "noxml");
+  else
+    m["/"]="/";
 
 #ifdef BG_DEBUG
   if(id->prestate->debug)
