@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.12 1997/04/05 01:26:16 per Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.13 1997/07/19 23:23:55 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -190,11 +190,11 @@ void read_data()
   object privs = ((program)"privs")("Reading password database");
   switch(query("method"))
   {
-   case "ypcat":
+  case "ypcat":
     data=popen("ypcat "+query("args")+" passwd");
     break;
 
-   case "getpwent":
+  case "getpwent":
 #if efun(getpwent)
      // This could be a _lot_ faster.
      tmp2 = ({ });
@@ -208,13 +208,13 @@ void read_data()
      break;
 #endif
 
-   case "file":
+  case "file":
     fstat = file_stat(query("file"));
-    data=Stdio.read_bytes(query("file"));
+    data = Stdio.read_bytes(query("file"));
     last_password_read = time();
     break;
     
-   case "shadow":
+  case "shadow":
     string shadow;
     array pw, sh, a, b;
     mapping sh = ([]);
@@ -237,7 +237,7 @@ void read_data()
     last_password_read = time();
     break;
 
-   case "niscat":
+  case "niscat":
     data=popen("niscat "+query("args")+" passwd.org_dir");
     break;
   }
