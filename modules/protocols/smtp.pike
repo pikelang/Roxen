@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.75 1999/08/31 12:40:09 grubba Exp $
+ * $Id: smtp.pike,v 1.76 1999/08/31 12:47:14 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.75 1999/08/31 12:40:09 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.76 1999/08/31 12:47:14 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -54,6 +54,10 @@ inherit "module";
  *
  * NOTE: Modules need to handle the terminating '.' in domainnames.
  */
+
+// Valid flags from smtp_rcpt::put():
+constant SMTP_PUT_OK = 0x01
+constant SMTP_PUT_QUOTA = 0x02
 
 static class Mail {
   string id;
@@ -1500,19 +1504,21 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
     if (handled) {
       any_handled |= handled;
 
-      if (handled == 0x01) {
+      if (handled == SMTP_PUT_OK) {
 	// Mail accepted OK.
 	expanded[addr] = 0;
       }
 
-      if (handled & 0x01) {
+      if (handled & SMTP_PUT_OK) {
 	// Mail accepted for delivery.
 
 	conf->log(([ "error":200, "len":sizeof(data)]), id);
-      }
-      if (handled & 0x02) {
+      } else if (handled & SMTP_PUT_QUOTA) {
 	// Mail quota exceeded.
 	conf->log(([ "error":413, "len":sizeof(data)]), id);
+      } else {
+	// Unknwon error
+	conf->log(([ "error":505, "len":sizeof(data)]), id);
       }
     } else {
       // Mail not accepted.
@@ -1531,8 +1537,11 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
   if (sizeof(expanded)) {
     // Partial success.
 
-    if (handled == 0x02) {
+    if (handled == SMTP_PUT_QUOTA) {
       // Out of quota.
+#ifdef SMTP_DEBUG
+      report_notice("SMTP: Out of quota.\n");
+#endif /* SMTP_DEBUG */
       return(({ 552 }));
     }
 
