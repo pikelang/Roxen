@@ -88,7 +88,13 @@ char *host_to_ip(char *host)
   struct hostent *he;
   static char buf[64];
 
-  he=gethostbyname(host);
+#ifdef HAVE_H_ERRNO
+  do {
+#endif /* HAVE_H_ERRNO */
+    he=gethostbyname(host);
+#ifdef HAVE_H_ERRNO
+  } while ((!he) && (h_errno == TRY_AGAIN));
+#endif /* HAVE_H_ERRNO */
   if (!he) return NULL;
   sprintf(buf,"%u.%u.%u.%u",
 	  (unsigned char)he->h_addr_list[0][0],
