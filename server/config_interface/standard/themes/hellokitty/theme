@@ -1,0 +1,18 @@
+<theme-set what=left-image to=hellokitty2.gif themefile />
+
+<theme-set what=bgcolor to=#e74294>
+<theme-set what=fgcolor to=pink>
+<theme-set what=linkcolor to=black>
+<theme-set what=font to=bethhand>
+
+<theme-set what=selected-indicator to=heart.gif themefile />
+
+<theme-set what=err-1 to=err_1.gif themefile />
+<theme-set what=err-2 to=err_2.gif themefile />
+<theme-set what=err-3 to=err_3.gif themefile />
+
+<theme-set what=logo to=kittylogo.gif themefile />
+
+<theme-path match='/upgrade*'>
+  <theme-set what=left-image to=a-kitty.gif themefile />
+</theme-path>
