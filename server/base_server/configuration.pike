@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.236 1999/11/28 04:32:11 jhs Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.237 1999/11/29 22:07:01 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -32,16 +32,15 @@ mapping profile_map = ([]);
 
 #include "rxml.pike";
 
-object throttler=0;
-function store = roxen->store;
-function retrieve = roxen->retrieve;
-function remove = roxen->remove;
-function do_dest = roxen->do_dest;
-object   types_module;
-object   auth_module;
-object   dir_module;
-function types_fun;
-function auth_fun;
+object      throttler;
+function    store = roxen->store;
+function    retrieve = roxen->retrieve;
+function    remove = roxen->remove;
+RoxenModule types_module;
+RoxenModule auth_module;
+RoxenModule dir_module;
+function    types_fun;
+function    auth_fun;
 
 string name;
 
@@ -50,7 +49,7 @@ mapping variables = ([]);
 
 string get_doc_for( string region, string variable )
 {
-  object module;
+  RoxenModule module;
   if(variable[0] == '_')
     return 0;
   if((int)reverse(region))
@@ -139,7 +138,7 @@ int definvisvar(string var, mixed value, int type)
   return defvar(var, value, "", type, "", 0, 1);
 }
 
-string query_internal_location(object|void mod)
+string query_internal_location(RoxenModule|void mod)
 {
   return QUERY(InternalLoc)+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
 }
@@ -163,30 +162,30 @@ class Priority
     return "Priority()";
   }
 
-  array (object) url_modules = ({ });
-  array (object) logger_modules = ({ });
-  array (object) location_modules = ({ });
-  array (object) filter_modules = ({ });
-  array (object) last_modules = ({ });
-  array (object) first_modules = ({ });
-  mapping (string:array(object)) file_extension_modules = ([ ]);
-  mapping (object:multiset) provider_modules = ([ ]);
+  array (RoxenModule) url_modules = ({ });
+  array (RoxenModule) logger_modules = ({ });
+  array (RoxenModule) location_modules = ({ });
+  array (RoxenModule) filter_modules = ({ });
+  array (RoxenModule) last_modules = ({ });
+  array (RoxenModule) first_modules = ({ });
+  mapping (string:array(RoxenModule)) file_extension_modules = ([ ]);
+  mapping (RoxenModule:multiset(string)) provider_modules = ([ ]);
 
   void stop()
   {
-    foreach(url_modules, object m)      	 
+    foreach(url_modules, RoxenModule m)      	 
       CATCH("stopping url modules",m->stop && m->stop());
-    foreach(logger_modules, object m)   	 
+    foreach(logger_modules, RoxenModule m)   	 
       CATCH("stopping logging modules",m->stop && m->stop());
-    foreach(filter_modules, object m)  		 
+    foreach(filter_modules, RoxenModule m)  		 
       CATCH("stopping filter modules",m->stop && m->stop());
-    foreach(location_modules, object m)		 
+    foreach(location_modules, RoxenModule m)		 
       CATCH("stopping location modules",m->stop && m->stop());
-    foreach(last_modules, object m)    		 
+    foreach(last_modules, RoxenModule m)    		 
       CATCH("stopping last modules",m->stop && m->stop());
-    foreach(first_modules, object m)    	 
+    foreach(first_modules, RoxenModule m)    	 
       CATCH("stopping first modules",m->stop && m->stop());
-    foreach(indices(provider_modules), object m) 
+    foreach(indices(provider_modules), RoxenModule m) 
       CATCH("stopping provider modules",m->stop && m->stop());
   }
 }
@@ -198,7 +197,7 @@ class Priority
  * performance reasons later on.
  */
 
-array (object) allocate_pris()
+array (Priority) allocate_pris()
 {
   return allocate(10, Priority)();
 }
@@ -224,14 +223,14 @@ function(string:int) log_function;
 private mapping (string:string) log_format = ([]);
 
 // A list of priority objects
-private array (object) pri = allocate_pris();
+private array (Priority) pri = allocate_pris();
 
 // All enabled modules in this virtual server.
 // The format is "module":{ "copies":([ num:instance, ... ]) }
 public mapping modules = ([]);
 
 // A mapping from objects to module names
-public mapping (object:string) otomod = ([]);
+public mapping (RoxenModule:string) otomod = ([]);
 
 
 // Caches to speed up the handling of the module search.
@@ -242,7 +241,7 @@ private array (function) logger_module_cache, first_module_cache;
 private array (function) filter_module_cache;
 private array (array (string|function)) location_module_cache;
 private mapping (string:array (function)) file_extension_module_cache=([]);
-private mapping (string:array (object)) provider_module_cache=([]);
+private mapping (string:array (RoxenModule)) provider_module_cache=([]);
 
 
 // Call stop in all modules.
@@ -256,7 +255,7 @@ void stop()
         dir_module && dir_module->stop && dir_module->stop());
   for(int i=0; i<10; i++) 
     CATCH("stopping priority group",
-          pri[i] && pri[i]->stop && pri[i]->stop());
+          (pri[i],pri[i]->stop,pri[i]->stop()));
 }
 
 public string type_from_filename( string file, int|void to, string|void myext )
@@ -289,7 +288,7 @@ public string type_from_filename( string file, int|void to, string|void myext )
 }
 
 // Return an array with all provider modules that provides "provides".
-array (object) get_providers(string provides)
+array (RoxenModule) get_providers(string provides)
 {
   // FIXME: Is there any way to clear this cache?
   // /grubba 1998-05-28
@@ -300,7 +299,7 @@ array (object) get_providers(string provides)
     provider_module_cache[provides]  = ({ });
     for(i = 9; i >= 0; i--)
     {
-      foreach(indices(pri[i]->provider_modules), object d) 
+      foreach(indices(pri[i]->provider_modules), RoxenModule d) 
 	if(pri[i]->provider_modules[ d ][ provides ]) 
 	  provider_module_cache[provides] += ({ d });
     }
@@ -309,9 +308,9 @@ array (object) get_providers(string provides)
 }
 
 // Return the first provider module that provides "provides".
-object get_provider(string provides)
+RoxenModule get_provider(string provides)
 {
-  array (object) prov = get_providers(provides);
+  array (RoxenModule) prov = get_providers(provides);
   if(sizeof(prov))
     return prov[0];
   return 0;
@@ -320,11 +319,11 @@ object get_provider(string provides)
 // map the function "fun" over all matching provider modules.
 array(mixed) map_providers(string provides, string fun, mixed ... args)
 {
-  array (object) prov = get_providers(provides);
+  array (RoxenModule) prov = get_providers(provides);
   array error;
   array a=({ });
   mixed m;
-  foreach(prov, object mod) 
+  foreach(prov, RoxenModule mod) 
   {
     if(!objectp(mod))
       continue;
@@ -345,7 +344,8 @@ array(mixed) map_providers(string provides, string fun, mixed ... args)
 // return the first positive response.
 mixed call_provider(string provides, string fun, mixed ... args)
 {
-  foreach(get_providers(provides), object mod) {
+  foreach(get_providers(provides), RoxenModule mod) 
+  {
     function f;
     if(objectp(mod) && functionp(f = mod[fun])) {
       mixed error;
@@ -362,7 +362,7 @@ mixed call_provider(string provides, string fun, mixed ... args)
   }
 }
 
-array (function) file_extension_modules(string ext, object id)
+array (function) file_extension_modules(string ext, RequestID id)
 {
   if(!file_extension_module_cache[ext])
   { 
@@ -370,7 +370,8 @@ array (function) file_extension_modules(string ext, object id)
     file_extension_module_cache[ext]  = ({ });
     for(i=9; i>=0; i--)
     {
-      object *d, p;
+      array(RoxenModule) d;
+      RoxenModule p;
       if(d = pri[i]->file_extension_modules[ext])
 	foreach(d, p)
 	  file_extension_module_cache[ext] += ({ p->handle_file_extension });
@@ -379,7 +380,7 @@ array (function) file_extension_modules(string ext, object id)
   return file_extension_module_cache[ext];
 }
 
-array (function) url_modules(object id)
+array (function) url_modules(RequestID id)
 {
   if(!url_module_cache)
   {
@@ -387,7 +388,8 @@ array (function) url_modules(object id)
     url_module_cache=({ });
     for(i=9; i>=0; i--)
     {
-      object *d, p;
+      array(RoxenModule) d;
+      RoxenModule p;
       if(d=pri[i]->url_modules)
 	foreach(d, p)
 	  url_module_cache += ({ p->remap_url });
@@ -397,12 +399,12 @@ array (function) url_modules(object id)
 }
 
 mapping api_module_cache = ([]);
-mapping api_functions(void|object id)
+mapping api_functions(void|RequestID id)
 {
   return copy_value(api_module_cache);
 }
 
-array (function) logger_modules(object id)
+array (function) logger_modules(RequestID id)
 {
   if(!logger_module_cache)
   {
@@ -410,7 +412,8 @@ array (function) logger_modules(object id)
     logger_module_cache=({ });
     for(i=9; i>=0; i--)
     {
-      object *d, p;
+      array(RoxenModule) d;
+      RoxenModule p;
       if(d=pri[i]->logger_modules)
 	foreach(d, p)
 	  if(p->log)
@@ -420,7 +423,7 @@ array (function) logger_modules(object id)
   return logger_module_cache;
 }
 
-array (function) last_modules(object id)
+array (function) last_modules(RequestID id)
 {
   if(!last_module_cache)
   {
@@ -428,7 +431,8 @@ array (function) last_modules(object id)
     last_module_cache=({ });
     for(i=9; i>=0; i--)
     {
-      object *d, p;
+      array(RoxenModule) d;
+      RoxenModule p;
       if(d=pri[i]->last_modules)
 	foreach(d, p)
 	  if(p->last_resort)
@@ -439,7 +443,7 @@ array (function) last_modules(object id)
 }
 
 #ifdef __NT__
-static mixed strip_fork_information(object id)
+static mixed strip_fork_information(RequestID id)
 {
   array a = id->not_query/"::";
   id->not_query = a[0];
@@ -448,7 +452,7 @@ static mixed strip_fork_information(object id)
 }
 #endif /* __NT__ */
 
-array (function) first_modules(object id)
+array (function) first_modules(RequestID id)
 {
   if(!first_module_cache)
   {
@@ -460,7 +464,7 @@ array (function) first_modules(object id)
     });
     for(i=9; i>=0; i--)
     {
-      object *d, p;
+      array(RoxenModule) d; RoxenModule p;
       if(d=pri[i]->first_modules) {
 	foreach(d, p) {
 	  if(p->first_try) {
@@ -475,7 +479,7 @@ array (function) first_modules(object id)
 }
 
 
-array location_modules(object id)
+array location_modules(RequestID id)
 {
   if(!location_module_cache)
   {
@@ -483,7 +487,8 @@ array location_modules(object id)
     array new_location_module_cache=({ });
     for(i=9; i>=0; i--)
     {
-      object *d, p;
+      array(RoxenModule) d; 
+      RoxenModule p;
       if(d=pri[i]->location_modules) {
 	array level_find_files = ({});
 	array level_locations = ({});
@@ -509,7 +514,7 @@ array location_modules(object id)
   return location_module_cache;
 }
 
-array filter_modules(object id)
+array filter_modules(RequestID id)
 {
   if(!filter_module_cache)
   {
@@ -517,7 +522,8 @@ array filter_modules(object id)
     filter_module_cache=({ });
     for(i=9; i>=0; i--)
     {
-      object *d, p;
+      array(RoxenModule) d; 
+      RoxenModule p;
       if(d=pri[i]->filter_modules)
 	foreach(d, p)
 	  if(p->filter)
@@ -551,7 +557,7 @@ void init_log_file()
     if(strlen(logfile))
     {
       do {
-	object lf=open( logfile, "wac");
+	Stdio.File lf=open( logfile, "wac");
 	if(!lf) {
 	  mkdirhier(logfile);
 	  if(!(lf=open( logfile, "wac"))) {
@@ -738,7 +744,7 @@ public string status()
   return res;
 }
 
-public string *userinfo(string u, object|void id)
+public array(string) userinfo(string u, RequestID|void id)
 {
   if(auth_module) return auth_module->userinfo(u);
   else report_warning(sprintf("userinfo(): %s\n"
@@ -747,7 +753,7 @@ public string *userinfo(string u, object|void id)
 			      describe_backtrace(backtrace())));
 }
 
-public string *userlist(object|void id)
+public array(string) userlist(RequestID|void id)
 {
   if(auth_module) return auth_module->userlist();
   else report_warning(sprintf("userlist(): %s\n"
@@ -756,7 +762,7 @@ public string *userlist(object|void id)
 			      describe_backtrace(backtrace())));
 }
 
-public string *user_from_uid(int u, object|void id)
+public array(string) user_from_uid(int u, RequestID|void id)
 {
   if(auth_module)
     return auth_module->user_from_uid(u);
@@ -766,7 +772,7 @@ public string *user_from_uid(int u, object|void id)
 			      describe_backtrace(backtrace())));
 }
 
-public string last_modified_by(object file, object id)
+public string last_modified_by(Stdio.File file, RequestID id)
 {
   int *s;
   int uid;
@@ -793,7 +799,7 @@ private mapping internal_gopher_image(string from)
   // Disallow "internal-gopher-..", it won't really do much harm, but a list of
   // all files in '..' might be retrieved (that is, the actual directory
   // file was sent to the browser)
-  object f = open("roxen-images/dir/"+from+".gif","r");
+  Stdio.File f = open("roxen-images/dir/"+from+".gif","r");
   if (f) {
     return (["file":f, "type":"image/gif"]);
   } else {
@@ -807,7 +813,7 @@ private static int nest = 0;
 #ifdef MODULE_LEVEL_SECURITY
 private mapping misc_cache=([]);
 
-int|mapping check_security(function a, object id, void|int slevel)
+int|mapping check_security(function a, RequestID id, void|int slevel)
 {
   array level;
   array seclevels;
@@ -945,7 +951,7 @@ void invalidate_cache()
 void clear_memory_caches()
 {
   invalidate_cache();
-  foreach(indices(otomod), object m) 
+  foreach(indices(otomod), RoxenModule m) 
     if (m && m->clear_memory_caches) 
       if (mixed err = catch( m->clear_memory_caches() )) 
 	report_error(LOCALE->
@@ -955,7 +961,7 @@ void clear_memory_caches()
 
 string draw_saturation_bar(int hue,int brightness, int where)
 {
-  object bar=Image.image(30,256);
+  Image.Image bar=Image.Image(30,256);
 
   for(int i=0;i<128;i++)
   {
@@ -1009,7 +1015,7 @@ mapping (mixed:function|int) locks = ([]);
 
 mapping locked = ([]), thread_safe = ([]);
 
-object _lock(object|function f)
+mixed _lock(object|function f)
 {
   object key;
   function|int l;
@@ -1122,7 +1128,7 @@ string examine_return_mapping(mapping m)
 // The function that actually tries to find the data requested.  All
 // modules are mapped, in order, and the first one that returns a
 // suitable responce is used.
-mapping|int low_get_file(object id, int|void no_magic)
+mapping|int low_get_file(RequestID id, int|void no_magic)
 {
 #ifdef MODULE_LEVEL_SECURITY
   int slevel;
@@ -1179,7 +1185,7 @@ mapping|int low_get_file(object id, int|void no_magic)
     if(!search(file, QUERY(InternalLoc))) 
     {
       TRACE_ENTER(LOCALE->magic_internal_module_location(), 0);
-      object module;
+      RoxenModule module;
       string name, rest;
       function find_internal;
       if(2==sscanf(file[strlen(QUERY(InternalLoc))..], "%s/%s", name, rest) &&
@@ -1463,7 +1469,7 @@ mapping|int low_get_file(object id, int|void no_magic)
 }
 
 
-mixed handle_request( object id  )
+mixed handle_request( RequestID id  )
 {
   function funp;
   mixed file;
@@ -1500,7 +1506,7 @@ mixed handle_request( object id  )
   return file;
 }
 
-mixed get_file(object id, int|void no_magic)
+mixed get_file(RequestID id, int|void no_magic)
 {
   mixed res, res2;
   function tmp;
@@ -1523,7 +1529,7 @@ mixed get_file(object id, int|void no_magic)
   return res;
 }
 
-public array find_dir(string file, object id)
+public array find_dir(string file, RequestID id)
 {
   string loc;
   array dir = ({ }), tmp;
@@ -1631,7 +1637,7 @@ public array find_dir(string file, object id)
 
 // Stat a virtual file. 
 
-public array stat_file(string file, object id)
+public array(int) stat_file(string file, RequestID id)
 {
   string loc;
   array s, tmp;
@@ -1760,7 +1766,7 @@ class StringFile
 
 
 // this is not as trivial as it sounds. Consider gtext. :-)
-public array open_file(string fname, string mode, object id)
+public array open_file(string fname, string mode, RequestID id)
 {
   object oc = id->conf;
   string oq = id->not_query;
@@ -1834,7 +1840,7 @@ public array open_file(string fname, string mode, object id)
 }
 
 
-public mapping(string:array(mixed)) find_dir_stat(string file, object id)
+public mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
 {
   string loc;
   mapping(string:array(mixed)) dir = ([]);
@@ -1918,7 +1924,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
 #endif
-      object c = function_object(tmp[1]);
+      RoxenModule c = function_object(tmp[1]);
       string f = file[strlen(loc)..];
       if (c->find_dir_stat) {
 	TRACE_ENTER(LOCALE->has_find_dir_stat(), 0);
@@ -1930,10 +1936,10 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
 	TRACE_LEAVE("");
       } else if(d = c->find_dir(f, id)) {
 	TRACE_ENTER(LOCALE->returned_array(), 0);
-	dir = mkmapping(d, Array.map(d, lambda(string f, string base,
-					 object c, object id) {
-				    return c->stat_file(base + f, id);
-				  }, f, c, id)) | dir;
+	dir = mkmapping(d, Array.map(d, lambda(string fn) 
+                                        {
+                                          return c->stat_file(f + fn, id);
+                                        })) | dir;
 	TRACE_LEAVE("");
       }
     } else if(search(loc, file)==0 && loc[strlen(file)-1]=='/' &&
@@ -1959,7 +1965,7 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
 
 // Access a virtual file?
 
-public array access(string file, object id)
+public array access(string file, RequestID id)
 {
   string loc;
   array s, tmp;
@@ -1989,7 +1995,7 @@ public array access(string file, object id)
 
 // Return the _real_ filename of a virtual file, if any.
 
-public string real_file(string file, object id)
+public string real_file(string file, RequestID id)
 {
   string loc;
   string s;
@@ -2018,25 +2024,26 @@ public string real_file(string file, object id)
 
 // NOTE: A 'file' can be a cgi script, which will be executed, resulting in
 // a horrible delay.
-int|string try_get_file(string s, object id, int|void status, int|void nocache)
+int|string try_get_file(string s, RequestID id, 
+                        int|void status, int|void nocache)
 {
   string res, q;
-  object fake_id;
+  RequestID fake_id;
   mapping m;
 
-  if(objectp(id)) {
-    // id->misc->common makes it possible to pass information to
-    // the originating request.
-    if ( !id->misc )
-      id->misc = ([]);
-    if ( !id->misc->common )
-      id->misc->common = ([]);
-
-    fake_id = id->clone_me();
-
-    fake_id->misc->common = id->misc->common;
-  } else
+  if(!objectp(id)) 
     error("No ID passed to 'try_get_file'\n");
+
+  // id->misc->common makes it possible to pass information to
+  // the originating request.
+  if ( !id->misc )
+    id->misc = ([]);
+  if ( !id->misc->common )
+    id->misc->common = ([]);
+  
+  fake_id = id->clone_me();
+  
+  fake_id->misc->common = id->misc->common;
 
   if(!id->pragma["no-cache"] && !nocache && (!id->auth || !id->auth[0]))
     if(res = cache_lookup("file:"+id->conf->name, s))
@@ -2088,7 +2095,7 @@ int|string try_get_file(string s, object id, int|void status, int|void nocache)
 }
 
 // Is 'what' a file in our virtual filesystem?
-int(0..1) is_file(string what, object id)
+int(0..1) is_file(string what, RequestID id)
 {
   return !!stat_file(what, id);
 }
@@ -2138,7 +2145,7 @@ void save(int|void all)
 }
 
 // Save all variables in _one_ module.
-int save_one( object o )
+int save_one( RoxenModule o )
 {
   mapping mod;
   if(!o) 
@@ -2160,7 +2167,7 @@ int save_one( object o )
 
 void reload_module( string modname )
 {
-  object old_module = find_module( modname );
+  RoxenModule old_module = find_module( modname );
   int do_delete_doto;
 
   if( !old_module )
@@ -2183,11 +2190,11 @@ class ModuleCopies
   string _sprintf( ) { return "ModuleCopies()"; }
 }
 
-object enable_module( string modname, object|void me )
+RoxenModule enable_module( string modname, RoxenModule|void me )
 {
   int id;
-  object moduleinfo;
-  object module;
+  ModuleInfo moduleinfo;
+  ModuleCopies module;
   int pr;
   mixed err;
   int module_type;
@@ -2638,11 +2645,11 @@ string check_variable(string name, mixed value)
 
 int disable_module( string modname )
 {
-  object me;
+  RoxenModule me;
   int id, pr;
   sscanf(modname, "%s#%d", modname, id );
 
-  object moduleinfo =  roxen->find_module( modname );
+  ModuleInfo moduleinfo =  roxen->find_module( modname );
   mapping module = modules[ modname ];
 
   if(!module) 
@@ -2745,7 +2752,7 @@ int disable_module( string modname )
   return 1;
 }
 
-object|string find_module(string name)
+RoxenModule|string find_module(string name)
 {
   int id;
   sscanf(name, "%s#%d", name, id);
@@ -2787,7 +2794,7 @@ mapping(string:string) sql_urls = ([]);
 
 mapping sql_cache = ([]);
 
-object sql_cache_get(string what)
+Sql.sql sql_cache_get(string what)
 {
 #ifdef THREADS
   if(sql_cache[what] && sql_cache[what][this_thread()])
@@ -2804,7 +2811,7 @@ object sql_cache_get(string what)
 #endif
 }
 
-object sql_connect(string db)
+Sql.sql sql_connect(string db)
 {
   if (sql_urls[db])
     return sql_cache_get(sql_urls[db]);
