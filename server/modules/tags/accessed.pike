@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.34 2000/07/24 00:44:28 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.35 2000/09/04 22:20:11 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER | MODULE_LOGGER;
 constant module_name = "Accessed counter";
@@ -175,7 +175,18 @@ constant tagdoc=([
  <ex><accessed type=\"linus\"/></ex>
  <ex><accessed type=\"ordered\"/></ex>
 
-</attr>"]);
+</attr>
+
+<attr name=minlength value=number>
+ Defines a minimum length the the resulting string should have. If it is
+ shorter it is padded from the left with the padding value. Only values
+ between 2 and 10 are valid.
+</attr>
+
+<attr name=padding value=character default=0>
+ The padding that the minlength function should use.
+</attr>
+"]);
 #endif
 
 object counter;
@@ -616,5 +627,15 @@ string tag_accessed(string tag, mapping m, RequestID id)
   default:
     res=Roxen.number2string(counts, m, language(m->lang||id->misc->defines->theme_language, "number", id));
   }
+
+  if(m->minlength) {
+    m->minlength=(int)(m->minlength);
+    if(m->minlength>10) m->minlength=10;
+    if(m->minlength<2) m->minlength=2;
+    if(!m->padding || !sizeof(m->padding)) m->padding="0";
+    if(sizeof(res)<m->minlength)
+      res=(m->padding[0..0])*(m->minlength-sizeof(res))+res;
+  }
+
   return res+(m->addreal?real:"");
 }
