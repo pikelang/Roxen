@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.18 2001/01/29 15:02:14 leif Exp $";
+       "$Id: perl.pike,v 2.19 2001/03/13 15:13:54 leif Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -49,7 +49,7 @@ void create()
     "This setting decides whether to enable parsing of Perl code in "
     "RXML pages, in &lt;perl&gt;..&lt;/perl&gt; containers.");
 
-  defvar("scriptout", "HTML", "Script output", TYPE_MULTIPLE_STRING,
+  defvar("scriptout", "HTTP", "Script output", TYPE_MULTIPLE_STRING,
     "How to treat script output. HTML means treat it as a plain HTML "
     "document. RXML is similar, but passes it through the RXML parser "
     "before returning it to the client. HTTP is the traditional CGI "
