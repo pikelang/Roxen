@@ -39,8 +39,8 @@ array|string low_nameof(object|program|function fo)
   if(p=search(programs, object_program(foo)))
     return ({ p, (functionp(foo->name)?foo->name():
 		  (stringp(foo->name)?foo->name:time(1)+":"+mid++)),post})-({"",0});
-
-  werror("nameof: unknown thingie.\n");
+		  
+  throw(({"nameof: unknown thingie.\n",backtrace()}));
 }
 
 array|string nameof(mixed foo)

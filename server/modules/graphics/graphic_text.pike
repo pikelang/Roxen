@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.27 1997/02/19 01:00:53 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.28 1997/02/22 00:02:14 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -666,7 +666,8 @@ string magic_image(string url, int xs, int ys, string sn,
      "}\n"
      "// -->\n"
      "</script>\n"+
-     ("<a "+extra_args+"href=\""+url+"\" "+(input?"onClick='document.forms[0].submit();' ":"")
+     ("<a "+extra_args+"href=\""+url+"\" "+
+      (input?"onClick='document.forms[0].submit();' ":"")
       +"onMouseover=\"img_act('"+sn+"','"
       +(mess||url)+"');return true;\"\n"
       "\n"
@@ -848,7 +849,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 			     replace(gt, "\"","'"),(magic=="magic"?0:magic),
 			     id,input?(arg->name||"submit"):0,ea);
   }
-  if(input && id->supports->images)
+  if(input)
     return (pre+"<input type=image name=\""+arg->name+"\" border=0 alt=\""+
 	    replace(gt,"\"","'")+"\" src="+query_location()+num+"/"+quote(gt)
 	    +" align="+(arg->align?arg->align:defalign)+ea+
