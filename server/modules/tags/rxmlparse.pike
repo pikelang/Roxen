@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.68 2001/11/23 21:29:34 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.69 2002/04/22 20:39:58 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -170,6 +170,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
       parser->write_end (data);
       rxml = parser->eval();
       RXML.PCode p_code = parser->p_code;
+      p_code->finish();
       cache_set (ram_cache_name, id->not_query, ({stat[ST_MTIME], p_code}));
     }
     else {

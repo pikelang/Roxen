@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.130 2002/02/08 08:36:13 stewa Exp $
+// $Id: Roxen.pmod,v 1.131 2002/04/22 20:40:00 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -962,6 +962,7 @@ array(string|RXML.PCode) compile_rxml (string what, RequestID id)
   RXML.Parser parser = get_rxml_parser (id, 0, 1);
   parser->write_end (what);
   array(string|RXML.PCode) res = ({parser->eval(), parser->p_code});
+  res[1]->finish();
   //parser->type->give_back (parser); // RXML.PXml is not resettable anyway.
   return res;
 }
