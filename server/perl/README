@@ -1,0 +1,11 @@
+Note: The Roxen Perl support is still experimental, so don't rely
+on these things quite yet.
+
+/Stensson, April 2000.
+
+---
+
+The server/perl/lib/ directory will contain Perl modules, and should
+be added to @INC for Roxen-related Perl scripts.
+
+
