@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.64 2004/05/21 09:46:19 jonasw Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.65 2004/06/16 09:23:22 anders Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -333,6 +333,13 @@ class TagCimgplugin
     string data;
     mixed err = catch // This code will fail if the image does not exist.
     {
+      // Store misc->cacheable since the image cache can raise it and
+      // disable protocol cache.
+      int cacheable = id->misc->cacheable;
+      int no_proto_cache = id->misc->no_proto_cache;
+#ifdef DEBUG_CACHEABLE
+      report_debug("%s:%d saved cacheable flags\n", __FILE__, __LINE__);
+#endif
       res->src=(query_absolute_internal_location(id)+the_cache->store( a,id ));
       if(do_ext)
 	res->src += "." + (a->format || "gif");
@@ -341,6 +348,11 @@ class TagCimgplugin
       res["file-size-kb"] = strlen(data)/1024;
       res["data"] = data;
       res |= the_cache->metadata( a, id, 0 ); // enforce generation
+#ifdef DEBUG_CACHEABLE
+      report_debug("%s:%d restored cacheable flags\n", __FILE__, __LINE__);
+#endif
+      id->misc->cacheable = cacheable;
+      id->misc->no_proto_cache = no_proto_cache;
       return ({ res });
     };
 #ifdef DEBUG
