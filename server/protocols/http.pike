@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.412 2003/11/03 23:02:13 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.413 2003/11/04 17:18:36 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2289,11 +2289,13 @@ static void create(object f, object c, object cc)
 {
   if(f)
   {
+#if !constant (SSL.sslfile.PACKET_MAX_SIZE)
     if (f->query_accept_callback)
-      // For SSL.sslfile.
+      // The new SSL.sslfile in 7.5.12 sets the accept callback too.
       f->set_nonblocking(got_data, f->query_write_callback(), end, 0, 0,
 			 f->query_accept_callback());
     else
+#endif
       f->set_nonblocking(got_data, f->query_write_callback(), end);
     my_fd = f;
     MARK_FD("HTTP connection");
