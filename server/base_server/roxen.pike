@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.333 1999/10/09 21:30:33 grubba Exp $
+ * $Id: roxen.pike,v 1.334 1999/10/10 10:37:53 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.333 1999/10/09 21:30:33 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.334 1999/10/10 10:37:53 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -539,75 +539,8 @@ void stop_handler_threads()
 }
 #endif /* THREADS */
 
-
-#if 0
-/* Grubbas */
-
-/*
- * Port DB stuff.
- */
-
-// ([ "prot" : ([ "ip" : ([ port : protocol_handler, ]), ]), ])
-static mapping(string:mapping(string:mapping(int:object))) handler_db = ([]);
-
-// ([ "prot" : protocol_program, ])
-static mapping(string:program) port_db = ([]);
-
-// Is there a handler for this port?
-object low_find_handler(string prot, string ip, int port)
+class fallback_redirect_request 
 {
-  mixed res;
-  return((res = handler_db[prot]) && (res = res[ip]) && res[port]);
-}
-
-// Register a handler for a port.
-void register_handler(string prot, string ip, int port, object handler)
-{
-  mapping m;
-  if (m = handler_db[prot]) {
-    mapping mm;
-    if (mm = m[ip]) {
-      // FIXME: What if mm[port] already exists?
-      mm[port] = handler;
-    } else {
-      m[ip] = ([ port : handler ]);
-    }
-  } else {
-    handler_db[prot] = ([ ip : ([ port : handler ]) ]);
-  }
-}
-
-object find_handler(string prot, string ip, int port)
-{
-  object handler = low_find_handler(prot, ip, port);
-
-  if (!handler) {
-    program prog = port_db[prot];
-    if (!prog) {
-      return 0;
-    }
-    mixed err = catch {
-      handler = prog(prot, ip, port);
-    };
-    if (err) {
-      report_error(LOCALE->failed_to_open_port("?",
-					       sprintf("%s://%s:%d/",
-						       prot, ip, port),
-					       describe_backtrace(err)));
-    } else {
-      register_handler(prot, ip, port, handler);
-    }
-  }
-  return handler;
-}
-#endif
-
-
-#if 1
-
-/* Pers */
-
-class fallback_redirect_request {
   string in = "";
   string out;
   string default_prefix;
@@ -821,8 +754,9 @@ class Protocol
 	return res;
       }
     }
-      
-    return all_options[""][option];
+    if( all_options[""] )
+      return all_options[""][option];
+    return 0;
   }
 
   void create( int pn, string i )
@@ -1188,7 +1122,7 @@ array(string) find_ips_for( string what )
   if( what == "*" || lower_case(what) == "any" )
     return 0;
 
-  if( !strlen( replace( what, "01234567890."/"", (" "*11)/"" ) ) )
+  if( is_ip( what ) )
     return ({ what });
 
   array res = gethostbyname( what );
@@ -1199,7 +1133,7 @@ array(string) find_ips_for( string what )
   else
     return Array.uniq(res[1][0] + Array.filter(res[2],
 				    lambda(string ip) {
-      return !strlen( replace( what, "01234567890."/"", (" "*11)/"" ) );
+      return is_ip( what );
     }));
 }
 
@@ -1317,8 +1251,6 @@ int register_url( string url, object conf )
   return 1;
 }
 
-
-#endif
 
 object find_configuration( string name )
 {
@@ -2340,10 +2272,9 @@ void reload_all_configurations()
 
 object enable_configuration(string name)
 {
-  object cf = Configuration(name);
+  object cf = Configuration( name );
   configurations += ({ cf });
-  report_notice(LOCALE->enabled_server(name));
-  
+  report_notice( LOCALE->enabled_server(name) );
   return cf;
 }
 
@@ -2351,26 +2282,23 @@ object enable_configuration(string name)
 void enable_configurations()
 {
   array err;
-
   configurations = ({});
+
   foreach(list_all_configurations(), string config)
-  {
-    if(err=catch { enable_configuration(config)->start();  })
-      perror("Error while loading configuration "+config+":\n"+
-	     describe_backtrace(err)+"\n");
-  };
+    if(err=catch( enable_configuration(config)->start() ))
+      report_error("Error while loading configuration "+config+":\n"+
+                   describe_backtrace(err)+"\n");
 }
 
 
 void enable_configurations_modules()
 {
+  mixed err;
+
   foreach(configurations, object config)
-  {
-    array err;
-    if(err=catch { config->enable_all_modules();  })
-      perror("Error while loading modules in configuration "+config->name+":\n"+
-	     describe_backtrace(err)+"\n");
-  };
+    if(err=catch( config->enable_all_modules() ))
+      report_error("Error while loading modules in configuration "+
+                   config->name+":\n"+describe_backtrace(err)+"\n");
 }
 
 array(int) invert_color(array color )
@@ -2613,8 +2541,6 @@ object load_image(string f,object id)
   if( q ) return q->img;
   return 0;
 }
-
-
 
 // do the chroot() call. This is not currently recommended, since
 // roxen dynamically loads modules, all module files must be
@@ -2883,24 +2809,17 @@ int main(int argc, array argv)
   start_handler_threads();
   catch( this_thread()->set_name("Backend") );
   backend_thread = this_thread();
-#if efun(thread_set_concurrency)
-  thread_set_concurrency(QUERY(numthreads)+1);
-#endif
 #endif /* THREADS */
 
   // Signals which cause a restart (exitcode != 0)
-  foreach( ({ "SIGINT", "SIGTERM" }), string sig) {
-    catch { signal(signum(sig), exit_when_done); };
-  }
-  catch { signal(signum("SIGHUP"), reload_all_configurations); };
-  // Signals which cause a shutdown (exitcode == 0)
-  foreach( ({  }), string sig) {
-    catch { signal(signum(sig), shutdown); };
-  }
+  foreach( ({ "SIGINT", "SIGTERM" }), string sig)
+    catch( signal(signum(sig), exit_when_done) );
+
+  catch( signal(signum("SIGHUP"), reload_all_configurations) );
+
   // Signals which cause Roxen to dump the thread state
-  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGTRAP" }), string sig) {
-    catch { signal(signum(sig), describe_all_threads); };
-  }
+  foreach( ({ "SIGUSR1", "SIGUSR2", "SIGTRAP" }), string sig)
+    catch( signal(signum(sig), describe_all_threads) );
 
 #ifdef __RUN_TRACE
   trace(1);
@@ -2955,4 +2874,3 @@ int is_ip(string s)
 {
   return (replace(s,"0123456789."/"",({""})*11) == "");
 }
-
