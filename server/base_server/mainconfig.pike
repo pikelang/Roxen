@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.65 1997/08/13 21:37:32 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.66 1997/08/13 22:06:05 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -9,7 +9,7 @@ string status_row(object node);
 string display_tabular_header(object node);
 object get_template(string t);
 
-/* Work-around for Simulate.perror */
+/* Work-around for Simulate.perror */#
 #define perror roxen_perror
 
 #include <confignode.h>
@@ -531,10 +531,19 @@ string configuration_types()
   string res="";
   foreach(get_dir("server_templates"), string c)
   {
-    catch {
-      if(c[-1]=='e' || c[0]!='#')
-	res += "<option value=\""+c+"\">"+get_template(c)->name;
-    };
+    array err;
+    if (err = catch {
+      if(c[-1]=='e' || c[0]!='#') {
+	object o = get_template(c);
+	res += sprintf("<option value=\"%s\"%s>%s\n",
+		       c,
+		       (o->selected?" selected":""),
+		       o->name);
+      }
+    }) {
+      report_error(sprintf("Error initializing server template \"%s\"\n"
+			   "%s\n", c, describe_backtrace(err)));
+    }
   }
   return res;
 }
