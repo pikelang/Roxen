@@ -1,5 +1,5 @@
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.3 2001/04/10 05:23:42 per Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.4 2001/04/10 05:26:29 per Exp $";
 constant thread_safe=1;
 
 #define BSIZE 8192
@@ -15,7 +15,9 @@ constant thread_safe=1;
 
 constant     module_type = MODULE_LOCATION;
 LocaleString module_name = _(0,"Icecast: Server");
-LocaleString  module_doc = _(0,"");
+LocaleString  module_doc = _(0, "Supports the ICY and Audio-cast protocols "
+			     "for streaming MPEG sound. Relies on other "
+			     "modules for the actual mpeg streams." );
 constant   module_unique = 0;
 
 class Playlist
