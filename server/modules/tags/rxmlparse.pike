@@ -2,8 +2,6 @@
 //
 // The main RXML parser. If this module is not added to a configuration,
 // no RXML parsing will be done at all for .html files. 
-// This module also maintains an
-// accessed database, to be used by the <accessed> tag.
 //
 // It is in severe need of a cleanup in the code.
 //
@@ -18,7 +16,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.3 1999/07/22 22:32:44 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.4 1999/07/23 01:36:31 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -31,12 +29,7 @@ inherit "roxenlib";
 
 constant language = roxen->language;
 
-int old_RXML_compat=0;
-int cnum=0;
-mapping fton=([]); // Holds the access database
 int bytes;  // Holds the number of bytes parsed
-
-object database, names_file;
 
 // If the string 'w' match any of the patterns in 'a', return 1, else 0.
 int _match(string w, array (string) a)
@@ -55,30 +48,11 @@ string comment()
 
 string status()
 {
-  return (bytes/1024 + " Kb parsed.<br>"+
-   sizeof(fton)+" entries in the accessed database.<br>");
-}
-
-private int ac_is_not_set()
-{
-  return !QUERY(ac);
+  return (bytes/1024 + " Kb parsed.<br>");
 }
 
 void create(object c)
 {
-  defvar("Accesslog", 
-	 GLOBVAR(logdirprefix)+
-	 short_name(c?c->name:".")+"/Accessed", 
-	 "Access log file", TYPE_FILE|VAR_MORE,
-	 "In this file all accesses to files using the &lt;accessed&gt;"
-	 " tag will be logged.", 0, ac_is_not_set);
-
-  defvar("noparse", ({  }), "Extensions to access count",
-          TYPE_STRING_LIST,
-         "Always access count all files ending with these extensions. "
-	 "Note: This module must be reloaded for a change here to take "
-	 "effect.");
-
   defvar("toparse", ({ "rxml","spml", "html", "htm" }), "Extensions to parse", 
 	 TYPE_STRING_LIST, "Parse all files ending with these extensions. "
 	 "Note: This module must be reloaded for a change here to take "
@@ -96,206 +70,32 @@ void create(object c)
 	 "reverse of the 'Require exec bit on files for parsing' flag. "
 	 "It is not very useful to set both variables.");
 	 
-  defvar("ac", 1, "Access log", TYPE_FLAG,
-	 "If unset, the &lt;accessed&gt; tag will not work, and no access log "
-	 "will be needed. This will save one file descriptor.");
-
   defvar("max_parse", 100, "Maximum file size", TYPE_INT|VAR_MORE,
 	 "Maximum file size to parse, in Kilo Bytes.");
-
-  defvar("close_db", 1, "Close the database if it is not used",
-	 TYPE_FLAG|VAR_MORE,
-	 "If set, the accessed database will be closed if it is not used for "
-	 "8 seconds");
 }
 
-static string olf; // Used to avoid reparsing of the accessed index file...
-static mixed names_file_callout_id;
-inline void open_names_file()
-{
-  if(objectp(names_file)) return;
-  remove_call_out(names_file_callout_id);
-  names_file=open(QUERY(Accesslog)+".names", "wrca");
-  names_file_callout_id = call_out(destruct, 1, names_file);
-}
-
-#ifdef THREADS
-object db_lock = Thread.Mutex();
-#endif /* THREADS */
-
-static void close_db_file(object db)
-{
-#ifdef THREADS
-  mixed key = db_lock->lock();
-#endif /* THREADS */
-  if (db) {
-    destruct(db);
-  }
-}
-
-static mixed db_file_callout_id;
-inline mixed open_db_file()
-{
-  mixed key;
-#ifdef THREADS
-  catch { key = db_lock->lock(); };
-#endif /* THREADS */
-  if(objectp(database)) return key;
-  if(!database)
-  {
-    if(db_file_callout_id) remove_call_out(db_file_callout_id);
-    database=open(QUERY(Accesslog)+".db", "wrc");
-    if (!database) {
-      throw(({ sprintf("Failed to open \"%s.db\". "
-		       "Insufficient permissions or out of fd's?\n",
-		       QUERY(Accesslog)), backtrace() }));
-    }
-    if (QUERY(close_db)) {
-      db_file_callout_id = call_out(close_db_file, 9, database);
-    }
-  }
-  return key;
-}
 
 void start(int q, object c)
 {
-  mixed tmp;
   if(!c) return;
   call_user_container = c->parse_module->call_user_container;
   call_user_tag = c->parse_module->call_user_tag;
   define_API_functions();
-  
-  if(!QUERY(ac))
-  {
-    if(database)  destruct(database);
-    if(names_file) destruct(names_file);
-    return;
-  }
-
-  if(olf != QUERY(Accesslog))
-  {
-    olf = QUERY(Accesslog);
-    mkdirhier(query("Accesslog"));
-    if(names_file=open(olf+".names", "wrca"))
-    {
-      cnum=0;
-      tmp=parse_accessed_database(names_file->read(0x7ffffff));
-      fton=tmp[0];
-      cnum=tmp[1];
-      names_file = 0;
-    }
-  }
-}
-
-static int mdc;
-int main_database_created()
-{
-  if(!QUERY(ac)) return -1;
-
-  if(!mdc)
-  {
-    mixed key = open_db_file();
-    database->seek(0);
-    sscanf(database->read(4), "%4c", mdc);
-    return mdc;
-  }
-  return mdc;
-}
-
-int database_set_created(string file, void|int t)
-{
-  int p;
-
-  if(!QUERY(ac)) return -1;
-
-  p=fton[file];
-  if(!p) return 0;
-  mixed key = open_db_file();
-  database->seek((p*8)+4);
-  return database->write(sprintf("%4c", t||time(1)));
-}
-
-int database_created(string file)
-{
-  int p,w;
-
-  if(!QUERY(ac)) return -1;
-
-  p=fton[file];
-  if(!p) return main_database_created();
-  mixed key = open_db_file();
-  database->seek((p*8)+4);
-  sscanf(database->read(4), "%4c", w);
-  if(!w)
-  {
-    w=main_database_created();
-    database_set_created(file, w);
-  }
-  return w;
-}
-
-
-int query_num(string file, int count)
-{
-  int p, n;
-  string f;
-
-  if(!QUERY(ac)) return -1;
-
-  mixed key = open_db_file();
-
-  // if(lock) lock->aquire();
-  
-  if(!(p=fton[file]))
-  {
-    if(!cnum)
-    {
-      database->seek(0);
-      database->write(sprintf("%4c", time(1)));
-    }
-    fton[file]=++cnum;
-    p=cnum;
-
-//  perror(file + ": New entry.\n");
-    open_names_file();
-//  perror(file + ": Created new entry.\n");
-    names_file->write(file+":"+cnum+"\n");
-
-    database->seek(p*8);
-    database->write(sprintf("%4c", 0));
-    database_set_created(file);
-  }
-  if(database->seek(p*8) > -1)
-  {
-    sscanf(database->read(4), "%4c", n);
-//  perror("Old count: " + n + "\n");
-    if (count) 
-    { 
-//    perror("Adding "+count+" to it..\n");
-      n+=count; 
-      database->seek(p*8);
-      database->write(sprintf("%4c", n)); 
-    }
-    //lock->free();
-    return n;
-  } 
-//perror("Seek failed\n");
-  //lock->free();
-  return 0;
 }
 
 array register_module()
 {
   return ({ MODULE_FILE_EXTENSION|MODULE_PARSER, 
 	    "RXML 1.4 parser", 
-	    ("This module provides basic RXML 1.4 support, e.g. adds a lot of RXML tags, "
-             "handles the mapping from .html to the rxml parser, and provides the "
-	     "database for the &lt;accessed&gt; tag."), ({}), 1 });
+	    ("This module provides basic RXML 1.4 support, e.g. adds a lot of RXML tags and "
+             "handles the mapping from .html to the rxml parser."), ({}), 1 });
 }
 
 array(string) query_file_extensions() 
-{ 
-  return query("toparse") + query("noparse"); 
+{
+  if(api_functions()->accessed_extensions)
+    return query("toparse") + api_functions()->accessed_extensions[0]();
+  return query("toparse");
 }
 
 mapping handle_file_extension( object file, string e, object id)
@@ -304,13 +104,15 @@ mapping handle_file_extension( object file, string e, object id)
   mapping defines = id->misc->defines || ([]);
   array stat = defines[" _stat"] || id->misc->stat || file->stat();
   id->misc->defines = defines;
-  if(search(QUERY(noparse),e)!=-1)
+  
+  if(id->conf->modules->accessed && search(id->conf->api_functions()->accessed_extensions[0](),e)!=-1)
   {
-    query_num(id->not_query, 1);
+    id->conf->api_functions()->accessed[0](id, id->not_query, 1);
     defines->counted = "1";
-    if(search(QUERY(toparse),e)==-1)  /* Parse anyway */
+    if(search(QUERY(toparse),e)==-1)  // Parse anyway
       return 0;
   }
+
   if(QUERY(parse_exec) &&   !(stat[0] & 07111)) return 0;
   if(QUERY(no_parse_exec) && (stat[0] & 07111)) return 0;
 
@@ -674,143 +476,6 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
 
   return "";
 }
-
-string tag_accessed(string tag,mapping m,object id,object file,
-		    mapping defines)
-{
-  int counts, n, prec, q, timep;
-  string real, res;
-
-  if(!QUERY(ac))
-    return "Accessed support disabled.";
-
-  NOCACHE();
-  if(m->file)
-  {
-    m->file = fix_relative(m->file, id);
-    if(m->add) 
-      counts = query_num(m->file, (int)m->add||1);
-    else
-      counts = query_num(m->file, 0);
-
-  } else {
-    if(_match(id->remoteaddr, id->conf->query("NoLog")))
-      counts = query_num(id->not_query, 0);
-    else if(defines->counted != "1") 
-    {
-      counts = query_num(id->not_query, (int)m->add||1);
-      defines->counted = "1";
-    } else {
-      counts = query_num(id->not_query, (int)m->add||0);
-    }
-      
-    m->file=id->not_query;
-  }
-  
-  int bar;
-
-  if(m->reset)
-  {
-    // FIXME: There are a few cases where users can avoid this.
-    if( !search( (dirname(m->file)+"/")-"//",
-		 (dirname(id->not_query)+"/")-"//" ) )
-    {
-      query_num(m->file, -counts);
-      database_set_created(m->file, time(1));
-      return "Number of counts for "+m->file+" is now 0.<br>";
-    } else {
-      // On a web hotell you don't want the guests to be alowed to reset
-      // eachothers counters.
-      return "You do not have access to reset this counter.";
-    }
-  }
-
-  if(m->silent)
-    return "";
-
-  if(m->since) 
-  {
-    if(m->database)
-      return tagtime(database_created(0),m);
-    return tagtime(database_created(m->file),m);
-  }
-
-  real="<!-- ("+counts+") -->";
-
-  counts += (int)m->cheat;
-
-  if(m->factor)
-    counts = (counts * (int)m->factor) / 100;
-
-  if(m->per)
-  {
-    timep=time(1) - database_created(m->file) + 1;
-    
-    switch(m->per)
-    {
-     case "second":
-      counts /= timep;
-      break;
-
-     case "minute":
-      counts = (int)((float)counts/((float)timep/60.0));
-      break;
-
-     case "hour":
-      counts = (int)((float)counts/(((float)timep/60.0)/60.0));
-      break;
-
-     case "day":
-      counts = (int)((float)counts/((((float)timep/60.0)/60.0)/24.0));
-      break;
-
-     case "week":
-      counts = (int)((float)counts/(((((float)timep/60.0)/60.0)/24.0)/7.0));
-      break;
-
-     case "month":
-      counts = (int)((float)counts/(((((float)timep/60.0)/60.0)/24.0)/30.42));
-      break;
-
-     case "year":
-      counts=(int)((float)counts/(((((float)timep/60.0)/60.0)/24.0)/365.249));
-      break;
-
-    default:
-      return (id->misc->debug?"Access count per what?":"");
-    }
-  }
-
-  if(prec=(int)m->prec)
-  {
-    n=ipow(10, prec);
-    while(counts>n) { counts=(counts+5)/10; q++; }
-    counts*=ipow(10, q);
-  }
-
-  switch(m->type)
-  {
-   case "mcdonalds":
-    q=0;
-    while(counts>10) { counts/=10; q++; }
-    res="More than "+roxen->language("eng", "number")(counts*ipow(10, q))
-        + " served.";
-    break;
-    
-   case "linus":
-    res=counts+" since "+ctime(database_created(0));
-    break;
-
-   case "ordered":
-    m->type="string";
-    res=number2string(counts,m,language(m->lang, "ordered"));
-    break;
-
-   default:
-    res=number2string(counts,m,language(m->lang, "number"));
-  }
-  return res+(m->addreal?real:"");
-}                  
 
 string tag_modified(string tag, mapping m, object id, object file,
 		    mapping defines)
@@ -1355,7 +1020,6 @@ string tag_signature(string tag, mapping m, object id, object file,
 mapping query_tag_callers()
 {
    return (["accept-language":tag_language,
-            "accessed":tag_accessed,
 	    "append":tag_append,
 	    "auth-required":tag_auth_required,
 	    "clientname":tag_clientname,
@@ -1811,17 +1475,10 @@ mapping query_if_callers()
   ]);
 }
 
-int api_query_num(object id, string f, int|void i)
-{
-  NOCACHE();
-  return query_num(f, i);
-}
-
 string api_parse_rxml(object id, string r)
 {
   return parse_rxml( r, id );
 }
-
 
 string api_tagtime(object id, int ti, string t, string l)
 {
@@ -1955,7 +1612,6 @@ void add_api_function( string name, function f, void|array(string) types)
 
 void define_API_functions()
 {
-  add_api_function("accessed", api_query_num, ({ "string", 0,"int" }));
   add_api_function("parse_rxml", api_parse_rxml, ({ "string" }));
   add_api_function("tag_time", api_tagtime, ({ "int", 0,"string", "string" }));
   add_api_function("fix_relative", api_relative, ({ "string" }));
