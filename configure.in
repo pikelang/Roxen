@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.5 1997/08/18 14:12:53 grubba Exp $
+# $Id: configure.in,v 1.6 1997/08/18 14:46:24 grubba Exp $
 #
 
 prefix=$PWD
@@ -218,7 +218,7 @@ fi
 MAKE_GMP=""
 AC_SUBST(MAKE_GMP)
 if test -d $srcdir/gmp/.; then
-  ac_cv_header_gmp_h=""
+  unset ac_cv_header_gmp_h
   if test x$with_gmp = xyes; then
     AC_CHECK_HEADERS(gmp.h)
     if test "$ac_cv_header_gmp_h" = "yes"; then
@@ -243,7 +243,7 @@ fi
 MAKE_ZLIB=""
 AC_SUBST(MAKE_ZLIB)
 if test -d zlib/.; then
-  ac_cv_header_gmp_h=""
+  unset ac_cv_header_gmp_h
   if test x$with_zlib = xyes; then
     AC_CHECK_HEADERS(zlib.h)
     if test "$ac_cv_header_zlib_h" = "yes"; then
@@ -268,7 +268,7 @@ fi
 MAKE_GDBM=""
 AC_SUBST(MAKE_GDBM)
 if test -d gdbm/.; then
-  ac_cv_header_gdbm_h=""
+  unset ac_cv_header_gdbm_h
   if test x$with_gdbm = xyes; then
     AC_CHECK_HEADERS(gdbm.h)
     if test "$ac_cv_header_gdbm_h" = "yes"; then
