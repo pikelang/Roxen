@@ -59,16 +59,18 @@ pureshuffle:	shuffle.o
 
 check: verify
 
-verify: cgi
+verify: verbose_verify
+
+verbose_verify: cgi
 	@test -d cgi.testsuite || mkdir cgi.testsuite
 	@for t in `cd $(SRCDIR)/cgi.testsuite; find . -name '*.in' -print`; \
 	  do \
 	    base="`echo $$t|sed -e 's/\.in$$//'`"; \
 	    echo CGI Test: $$base; \
 	    INPUT="$(SRCDIR)/cgi.testsuite/$$t"; export INPUT; \
-	    ./cgi testsuite.cgi >cgi.testsuite/$$base.out || exit 1; \
-	    if cmp "$(SRCDIR)/cgi.testsuite/$$base.output" \
-		cgi.testsuite/$$base.out ; then :; else \
+	    ./cgi "$(SRCDIR)/testsuite.cgi" >cgi.testsuite/$$base.output || exit 1; \
+	    if cmp "$(SRCDIR)/cgi.testsuite/$$base.out" \
+		cgi.testsuite/$$base.output ; then :; else \
 	      echo "Failed."; exit 1; \
 	    fi; \
 	  done
