@@ -1,0 +1,13 @@
+AC_REVISION("$Id")
+
+AC_INIT(Makefile.in)
+
+AC_PROG_CC
+
+AC_CHECK_FUNCS(crypt)
+
+if test $ac_cv_func_crypt = no ; then
+  AC_CHECK_LIB(crypt,crypt,[LIBS="${LIBS} -lcrypt" ; AC_DEFINE(HAVE_CRYPT)])
+fi
+
+AC_OUTPUT(Makefile)

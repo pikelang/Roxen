@@ -18,7 +18,7 @@ PIKEVERSION=@PIKEVERSION@
 # Used to avoid make compatibility problems.
 BIN_TRUE=":"
 
-all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_LIBIODBC@ @MAKE_PLATFORM@ pike extern
+all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_LIBIODBC@ @MAKE_PLATFORM@ pike extern tools
 	-@$(BIN_TRUE)
 
 pike: force
@@ -26,6 +26,9 @@ pike: force
 
 extern: force
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
+
+tools: force
+	@(cd tools;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
 
 gmp: force
 	-@(cd gmp;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
@@ -98,6 +101,7 @@ check: verify
 clean:
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
+	@(cd tools;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
 
 install_all: install_pike install
 	-@$(BIN_TRUE)
@@ -175,6 +179,7 @@ install_only:
 	test -d $(prefix)/roxen/server/include/pike/. || mkdir $(prefix)/roxen/server/include/pike
 	for a in $(SRCDIR)/pike/$(PIKEVERSION)/src/*.h ./pike/$(PIKEVERSION)/src/*.h; do $(INSTALL) $$a $(prefix)/roxen/server/include/pike; done
 	-@(cd extern;$(MAKE) install "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)";cd ../)
+	-@(cd tools;$(MAKE) install "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)";cd ../)
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/configurations
 	-chmod a+rx $(prefix)
@@ -275,9 +280,11 @@ localinstall: all
 	  ln -s "../../pike/$(PIKEVERSION)/lib" "$(SRCDIR)/server/share/pike"; \
 	else : ; fi)
 	(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
+	(cd tools; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 
 spotless:  clean
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" spotless)
+	@(cd tools;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" spotless)
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" spotless)
 	rm -f server/bin/selfdir server/bin/roxen_hostname pike/$(PIKEVERSION)/src/pike\
 	pike/$(PIKEVERSION)/src/pike.old server/bin/proxygarb 
@@ -291,6 +298,7 @@ spotless:  clean
 
 distribute:	spotless
 	@(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" distribute)
+	@(cd tools; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" distribute)
 
 run_autoconfig:
 	@(cd $(SRCDIR); pike/$(PIKEVERSION)/src/run_autoconfig .)
