@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.2 2000/02/20 05:33:29 mast Exp $
+ * $Id: openfiles.pike,v 1.3 2000/03/16 04:18:43 mast Exp $
  */
 
 inherit "wizard";
@@ -63,5 +63,5 @@ string parse(object id)
 	    return "Error when making info list...\n";
 
 	  })*"\n")+
-     "</pre><cf-ok>");
+     "</pre><p><cf-ok>");
 }

@@ -5,11 +5,11 @@ constant name = "Pike module list";
 constant name_svenska = "Pikemodullista";
 
 constant doc =
-"show information about which features and modules are "
-"available in the pike this roxen is using";
+"Show information about which features and modules are "
+"available in the pike this roxen is using.";
 constant doc_svenska =
 "Visa information om vilka features och moduler som är tillgängliga "
-"i den pike som den här roxenservern använder";
+"i den pike som den här roxenservern använder.";
 
 mapping(string:int) modules = ([]);
 
@@ -155,10 +155,10 @@ mixed page_1(object id, object mc)
                    "&locale.na:none;",
                    "&locale.enabled:none;" })[ r[trans[s]] + 1]+
                  "</td></tr>\n";
-             }, modules)*"")+"</table>";
+             }, modules)*"")+"</table></ul>";
 }
 
 mixed parse(object id)
 {
-  return page_0(id,0)+page_1(id,0);
+  return page_0(id,0)+page_1(id,0) + "<p><cf-ok>";
 }
