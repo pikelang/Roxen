@@ -2184,7 +2184,7 @@ cd</rxml>
 
 <test>
 <rxml>&client.name;</rxml>
-<result></result>
+<result>RoxenTest</result>
 </test>
 
 <test>
