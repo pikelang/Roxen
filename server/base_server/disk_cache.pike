@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.30 1997/09/16 01:34:59 per Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.31 1998/01/20 21:47:31 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -284,41 +284,60 @@ class Cache {
     object lcs;
     cd = basename;
     lcs = command_stream->pipe();
-    if(fork())
-    {
-      /* Master */
-      catch
-      {
-	destruct(lcs);
-	reinit(basename);
-	command_stream->set_id(basename);
-	command_stream->set_nonblocking(nil,really_send,do_create);
-      };
-      return;
-    }
-    /* Child */
-    lcs->dup2( files.file ("stdin") );
+
+#if constant(Process.create_process)
     object privs = Privs("Starting the garbage collector");
-    // start garbagecollector niced as possible to reduce I/O-Load
 
     // FIXME: Should use spawn_pike() here.
+    object proc = Process.create_process(({
+      "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
+      "-M", "etc/modules", "bin/garbagecollector.pike"
+      }), ([
+	"stdin":lcs,
+	"nice":19,
+	"toggle_uid":1
+      ]));
+    privs = 0;
+
+#else /* !constant(Process.create_process) */
+    if(!fork())
+    {
+      /* Child */
+      catch {
+	lcs->dup2( files.file ("stdin") );
+	object privs = Privs("Starting the garbage collector");
+	// start garbagecollector niced as possible to reduce I/O-Load
+
+	// FIXME: Should use spawn_pike() here.
 #if !constant(nice)
-    exec("/usr/bin/nice", "-19",
-	 "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
-         "-M", "etc/modules", "bin/garbagecollector.pike");
-    perror("Failed to start niced garbage collector - retry without nice\n");
+	exec("/usr/bin/nice", "-19",
+	     "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
+	     "-M", "etc/modules", "bin/garbagecollector.pike");
+	perror("Failed to start niced garbage collector - retry without nice\n");
 #else
-    int q=9;
-    nice(q);
-    nice(q);
+	int q=9;
+	nice(q);
+	nice(q);
 #endif
-    exec("bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
-	 "-M", "etc/modules", "bin/garbagecollector.pike");
-    perror("Failed to start garbage collector (exec failed)!\n");
+	exec("bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
+	     "-M", "etc/modules", "bin/garbagecollector.pike");
+	perror("Failed to start garbage collector (exec failed)!\n");
 #if efun(real_perror)
-    perror("bin/pike: ");real_perror();
+	perror("bin/pike: ");real_perror();
 #endif
-    exit(0);
+      };
+      exit(0);
+    }
+#endif /* constant(Process.create_process) */
+    /* Master */
+    catch
+    {
+      destruct(lcs);
+      reinit(basename);
+      command_stream->set_id(basename);
+      command_stream->set_nonblocking(nil, really_send, do_create);
+    };
+    return;
   }
   
   /*
