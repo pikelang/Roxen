@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.480 2000/04/14 22:02:52 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.481 2000/04/17 16:54:53 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2121,8 +2121,8 @@ class ImageCache
         float degree = (float)(args["rotate-cw"] || args["rotate-ccw"]);
         switch( args["rotate-unit"] && args["rotate-unit"][0..0] )
         {
-         case "r":  degree = (degree / 2*3.1415) * 360;   break;
-         case "d":  break;
+         case "r":  degree = (degree / (2*3.1415)) * 360; break;
+         case "d":                                        break;
          case "n":  degree = (degree / 400) * 360;        break;
          case "p":  degree = (degree / 1.0) * 360;        break;
         }
