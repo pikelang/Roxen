@@ -112,7 +112,7 @@ string|mapping parse( RequestID id )
       "<td align='left'><submit-gbutton2 name='really'> "+
       LOCALE(249,"Drop old site") +
       " </submit-gbutton2></td><td align='right'>"
-      "<cf-cancel/></td></tr></table>";
+      "<cf-cancel href='./'/></td></tr></table>";
     
     return res + 
       "</st-page></subtablist></td></tr></table>"
