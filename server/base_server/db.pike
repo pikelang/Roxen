@@ -1,6 +1,6 @@
 //#define USE_GDBM
 
-/* $Id: db.pike,v 1.11 1997/02/22 22:30:09 per Exp $ */
+/* $Id: db.pike,v 1.12 1997/02/23 03:03:05 per Exp $ */
 
 private static inherit files.file;
 private static mapping db;
@@ -16,7 +16,7 @@ private static void sync()
 #endif
   if(last)
   {
-    perror("save ("+ last +")\n");
+//    perror("save ("+ last +")\n");
     if(!file::open(DIR+last,"wct"))
     {
       mkdirhier(DIR+last);
@@ -44,7 +44,7 @@ public int db_open(string f, int noread)
   {
     last = f;
     if(!file::open(DIR+f, "r")) return 0;
-    perror("restore ("+ f +")\n");
+//  perror("restore ("+ f +")\n");
     string s;
     if((s = file::read(0x7ffffff)) && strlen(s))
       db = decode_value(s);
