@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.113 2000/02/09 21:39:09 nilsson Exp $
+ * $Id: rxml.pike,v 1.114 2000/02/10 02:37:21 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -1631,6 +1631,13 @@ class TagIfClient {
   }
 }
 
+#ifdef OLD_RXML_COMPAT
+class TagIfName {
+  inherit TagIfClient;
+  constant plugin_name = "name";
+}
+#endif
+
 class TagIfDefined {
   inherit IfIs;
   constant plugin_name = "defined";
@@ -1648,14 +1655,6 @@ class TagIfDomain {
   }
 }
 
-class TagIfHost {
-  inherit IfMatch;
-  constant plugin_name = "host";
-  string source(RequestID id) {
-    return id->remoteaddr;
-  }
-}
-
 class TagIfIP {
   inherit IfMatch;
   constant plugin_name = "ip";
@@ -1663,6 +1662,13 @@ class TagIfIP {
     return id->remoteaddr;
   }
 }
+
+#ifdef OLD_RXML_COMPAT
+class TagIfHost {
+  inherit TagIfIP;
+  constant plugin_name = "host";
+}
+#endif
 
 class TagIfLanguage {
   inherit IfMatch;
@@ -1678,11 +1684,6 @@ class TagIfMatch {
   string source(RequestID id, string s) {
     return s;
   }
-}
-
-class TagIfName {
-  inherit TagIfClient;
-  constant plugin_name = "name";
 }
 
 class TagIfPragma {
@@ -1780,6 +1781,7 @@ constant tagdoc=([
 <attr name=capitalize>
  Capitalizes the first letter in the content.
 </attr>",
+
 "cond":#"<desc>
 
 </desc>",
@@ -1818,7 +1820,6 @@ constant tagdoc=([
  Trim all white space characters fromt the begining and the end of the contents.
 </attr>
 
-
  When defining a container the tag <tag>contents</tag> can be used to
  insert the contents of the defined container.
 
@@ -1836,24 +1837,24 @@ constant tagdoc=([
 </desc>",
 
 "else":#"<desc cont>
- Show the contents if the previous <tag><ref type=cont>if</ref></tag>
+ Show the contents if the previous <tag><ref type=tag>if</ref></tag>
  tag didn't, or if there was a <tag><ref type=tag>false</ref></tag>
  above. The result is undefined if there has been no <tag><ref
- type=cont>if</ref></tag>, <true> or <tag><ref
+ type=tag>if</ref></tag>, <true> or <tag><ref
  type=tag>false</ref></tag> tag above.
 </desc>",
 
 "elseif":#"<desc cont>
- Same as the <tag><ref type=cont>if</ref></tag>, but it will only
- evaluate if the previous <tag><ref type=cont>if</ref></tag> tag
+ Same as the <tag><ref type=tag>if</ref></tag>, but it will only
+ evaluate if the previous <tag><ref type=tag>if</ref></tag> tag
  returned false.
 </desc>",
 
 "false":#"<desc tag>
  Internal tag used to set the return value of <tag><ref
- type=cont>if</ref></tag> tags. It will ensure that the next <tag><ref
- type=cont>else</ref></tag> tag will show its contents. It can be
- useful if you are writing your own <tag><ref type=cont>if</ref></tag>
+ type=tag>if</ref></tag> tags. It will ensure that the next <tag><ref
+ type=tag>else</ref></tag> tag will show its contents. It can be
+ useful if you are writing your own <tag><ref type=tag>if</ref></tag>
  lookalike tag.
 </desc>",
 
@@ -1864,14 +1865,12 @@ constant tagdoc=([
 
 <attr name=for value=tag>
  Gives the help text for that tag.
-</attr>
-
-<ex>help for=modified</ex>",
+</attr>",
 
 "if":#"<desc cont>
- <tag><ref type=cont>if</ref></tag> is used to conditionally show its
- contents. <tag><ref type=cont>else</ref></tag>, <tag><ref
- type=cont>elif</ref></tag> or <tag><ref type=cont>elseif</ref></tag>
+ <tag><ref type=tag>if</ref></tag> is used to conditionally show its
+ contents. <tag><ref type=tag>else</ref></tag>, <tag><ref
+ type=tag>elif</ref></tag> or <tag><ref type=tag>elseif</ref></tag>
  can be used to suggest alternative content. It is possible to use
  glob patterns in almost all attributes, where * means match zero or
  more characters while ? matches one character. * Thus t*f?? will
@@ -1889,16 +1888,20 @@ constant tagdoc=([
  If all criterions are met the result is true. And is default.
 </attr>
 
-
- if-caller
+ <p>
  In the rxml.pike file the main if functionality is defined. There are
- two main types of if callers defined in rxml.pike,\"IfIs\" and \"IfMatch\". If the if caller is of an IfMatch type the if statement will be
+ two main types of if callers defined in rxml.pike,\"IfIs\" and \"IfMatch\".
+ If the if caller is of an IfMatch type the if statement will be
  matched as a glob, i.e. * is considered a multicharacter wildcard.
- E.g. <tag><ref type=cont>if ip=\"130.236.*\"</ref></tag>Your domain is liu.se<tag><ref type=cont>/if</ref></tag>.
+ </p>
 
+ <ex type=vert>Your domain <if ip=\"130.236.*\">is</if><else>isn't</else> liu.se.</ex>
+
+ <p>
  If the if caller is of an IfIs type the if statement will be compared
  with one of the following operators is, =, ==, !=, &lt; and &gt. The
  operators is, = and == are the same.
+ </p>
  <ex><set variable=x value=6>
 <if variable=\"x > 5\">More than one hand</if></ex>",
 
@@ -1909,7 +1912,7 @@ constant tagdoc=([
 
 "if#false":#"<desc plugin>
  This will always be true if the truth value is set to be false.
- Equivalent with <tag><ref type=cont>else</ref></tag>.
+ Equivalent with <tag><ref type=tag>else</ref></tag>.
 </desc>",
 
 "if#accept":#"<desc plugin>
@@ -1921,7 +1924,7 @@ constant tagdoc=([
 
 "if#config":#"<desc plugin>
  Has the config been set by use of the <tag><ref
- type=cont>aconf</ref></tag> tag? (Config is an IfIs if caller,
+ type=tag>aconf</ref></tag> tag? (Config is an IfIs if caller,
  although that functionality does not apply here.).
 </desc>",
 
@@ -1941,15 +1944,12 @@ constant tagdoc=([
 </desc>
 
 <attr name=after>
-
 </attr>
 
 <attr name=before>
-
 </attr>
 
 <attr name=inclusive>
-
 </attr>",
 
 "if#defined":#"<desc plugin>
@@ -1966,13 +1966,13 @@ constant tagdoc=([
 "if#exists":#"<desc plugin>
  Returns true if the file path exists. If path does not begin with /,
  it is assumed to be a URL relative to the directory containing the page
- with the <tag><ref type=cont>if</ref></tag>-statement.
+ with the <tag><ref type=tag>if</ref></tag>-statement.
 </desc>",
 
 "if#expr":#"<desc plugin>
  Evaluates expressions. The following characters may be used: \"1, 2,
- 3, 4, 5, 6, 7, 8, 9, x, a, b, c, d, e, f, n, t, \, X. A, B, C, D, E,
- F, l, o, &lt;, &gt;, =, 0, -, +, /, %, &, |, (, )\".
+ 3, 4, 5, 6, 7, 8, 9, x, a, b, c, d, e, f, i, n, t, \, X. A, B, C, D, E,
+ F, l, o, &lt;, &gt;, =, 0, -, +, /, %, &, |, (, ), .\".
 </desc>",
 
 "if#group":#"<desc plugin>
@@ -1980,7 +1980,7 @@ constant tagdoc=([
  the groupfile.
 </desc>",
 
-"if#host and ip":#"<desc plugin>
+"if#ip":#"<desc plugin>
  Does the users computers IP address match any of the patterns? Host and
  ip are IfMatch if callers.
 </desc>",
@@ -2019,9 +2019,17 @@ The following features are supported:
 
 "if#time":#"<desc plugin>
  Is the date ttmm? The attributes before, after and inclusive modifies
- the behavior. The attributes are used in the same fashion as with the
- date plugin.
-</desc>",
+ the behavior.
+</desc>
+
+<attr name=after>
+</attr>
+
+<attr name=before>
+</attr>
+
+<attr name=inclusive>
+</attr>",
 
 "if#user":#"<desc plugin>
  Has the user been authenticated as one of these users? If any is given as
@@ -2033,15 +2041,10 @@ The following features are supported:
  Variable is an IfIs plugin.
 </desc>",
 
+// The list of support flags is extracted from the supports database and
+// concatenated to this entry.
 "if#clientvar":#"<desc plugin>
-
- The request really comes from a search robot, not an actual browser.
-
- Examples of robots are: architex, backrub, checkbot, fast, freecrawl,
- passagen, gcreep, googlebot, harvest, alexa, infoseek, intraseek,
- lycos, webinfo, roxen, altavista, scout, hotbot, url-minder,
- webcrawler, wget, xenu, yahoo, unknown. For more information search
- in the &lt;roxen-dir&gt;/server/etc/supports file.</desc>
+ </desc>
 
  Available variables are:
 ",
@@ -2050,9 +2053,11 @@ The following features are supported:
  The contents will not be sent through to the page. Side effects, for
  example sending queries to databases, will take effect.
 </desc>",
+
 "noparse":#"<desc cont>
  The contents of this container tag won't be RXML parsed.
 </desc>",
+
 "number":#"<desc tag>
  Prints a number as a word.
 </desc>
@@ -2075,23 +2080,26 @@ it, jp, mi, no, pt, ru, sr, si, es, sv>
 </attr>",
 
 "strlen":#"<desc cont>
- Returns the length of the contents. Strlen can be used with <tag><ref
- type=cont>if eval=...</ref></tag> to test the length of variables.
+ Returns the length of the contents. Strlen can be used with 
+ <tag><ref type=tag>if eval=...</ref></tag> to test the length
+ of variables.
 </desc>",
+
 "then":#"<desc cont>
  Shows its content if the truth-value is true.
 </desc>",
+
 "trace":#"<desc cont>
  Executes the contained RXML code and makes a trace report about how
  the contents are parsed by the RXML parser.
 </desc>",
 
 "true":#"<desc tag>
- An internal tag used to set the return value of tag><ref
- type=cont>if</ref></tag> tags. It will ensure that the next tag><ref
- type=cont>else</ref></tag> tag will not show its contents. It can be
- useful if you are writing your own tag><ref type=cont>if</ref></tag>
- lookalike tag.
+ An internal tag used to set the return value of
+ <tag><ref type=tag>if</ref></tag> tags. It will ensure that the next
+ <tag><ref type=tag>else</ref></tag> tag will not show its contents.
+ It can be useful if you are writing your own
+ <tag><ref type=tag>if</ref></tag> lookalike tag.
 </desc>",
 
 "undefine":#"<desc tag>
@@ -2129,10 +2137,6 @@ it, jp, mi, no, pt, ru, sr, si, es, sv>
 <attr name=package value=name>
  Reads all tags, container tags and defines from the given package.
  Packages are files located in local/rxml_packages/.
-
- <p>By default, the package gtext_headers is available, that replaces
- normal headers with graphical headers. It redefines the h1, h2, h3,
- h4, h5 and h6 container tags.</p>
 </attr>
 
 <attr name=file value=path>
