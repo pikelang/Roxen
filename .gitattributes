@@ -85,6 +85,7 @@ worldmap binary
 /server/bin/fixquota.pike foreign_ident
 /server/bin/garbagecollector.pike foreign_ident
 /server/bin/lsquota.pike foreign_ident
+/server/bin/mk_wxs.pike foreign_ident
 /server/bin/mysql_client foreign_ident
 /server/bin/pdbi.pike foreign_ident
 /server/bin/setup_nsr.pike foreign_ident
