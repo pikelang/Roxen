@@ -1,24 +1,11 @@
-// This file is part of Roxen WebServer.
-// Copyright © 1996 - 2000, Roxen IS.
-
-#if !constant(Image.FreeType.Face)
-#if constant(has_Image_TTF)
-#include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.8 2000/12/11 10:44:37 per Exp $";
-
-constant name = "TTF fonts";
-constant doc = "True Type font loader. Uses freetype to render text.";
+#if constant(Image.FreeType.Face)
+constant name = "FreeType fonts";
+constant doc = "Freetype 2.0 font loader. Uses freetype to render text from, among other formats, TrueType, OpenType and Postscript Type1 fonts.";
 constant scalable = 1;
 
 inherit FontHandler;
 
 static mapping ttf_font_names_cache;
-
-static string trimttfname( string n )
-{
-  n = lower_case(replace( n, "\t", " " ));
-  return ((n/" ")*"")-"'";
-}
 
 static string translate_ttf_style( string style )
 {
@@ -57,15 +44,13 @@ static void build_font_names_cache( )
             traverse_font_dir( path );
           continue;
         }
-        // Here is a good place to impose the artificial restraint that
-        // the file must match *.ttf
-        Image.TTF ttf;
-        if(catch(ttf = Image.TTF( combine_path(dir+"/",fname) )))
+        Image.FreeType.Face ttf;
+        if(catch(ttf = Image.FreeType.Face( combine_path(dir+"/",fname) )))
           continue;
         if(ttf)
         {
-          mapping n = ttf->names();
-          string f = lower_case(trimttfname(n->family));
+          mapping n = ttf->info();
+          string f = lower_case(n->family);
           if(!ttf_font_names_cache[f])
             ttf_font_names_cache[f] = ([]);
           ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
@@ -77,38 +62,74 @@ static void build_font_names_cache( )
   map( roxen->query("font_dirs"), traverse_font_dir );
 }
 
+#ifdef THREADS
+Thread.Mutex lock = Thread.Mutex();
+#endif
 
-
-class TTFWrapper
+class FTFont
 {
   inherit Font;
-  static int size, rsize;
-  static object real;
+  static int size;
+  static Image.FreeType.Face face;
   static object encoder;
-  static function(string ...:Image.image) real_write;
-
+  
+  array text_extents( string what )
+  {
+    Image.Image o = write( what );
+    return ({ o->xsize(), o->ysize() });
+  }
+  
   int height( )
   {
-    return rsize ? rsize : (rsize = text_extents("W")[1] );
+    return size;
   }
 
-  static string _sprintf()
+  static Image.Image write_row( string text )
   {
-    return sprintf( "TTF(%O,%d)", real, size );
+    Image.Image res;
+    int xp, ys;
+    array chars = map( (array(int))text, face->write_char );
+
+    int oc;
+    array kerning = ({});
+    foreach( (array(int))text, int c  )
+    {
+      if( oc )
+        kerning += ({ face->get_kerning( oc, c )>>6 });
+      else
+        kerning += ({ 0 });
+      oc = c;
+    }
+    kerning += ({ 0 });
+    int w;
+
+    for(int i = 0; i<sizeof(chars)-1; i++ )
+      w += (int)(chars[i]->advance*x_spacing + kerning[i+1]);
+    w += (int)(chars[-1]->img->xsize()+chars[-1]->x);
+
+    ys = chars[0]->height;
+
+    res = Image.Image( w, ys );
+
+    if( x_spacing < 0 )
+      xp = w-(chars[0]->xsize+chars[0]->x);
+  
+    for( int i = 0; i<sizeof( chars); i++ )
+    {
+      mapping c = chars[i];
+      res->paste_alpha_color( c->img, ({255,255,255}),
+                              xp+c->x,
+                              ys+c->descender-c->y );
+      xp += (int)(c->advance*x_spacing+kerning[i+1]);
+    }  
+    return res;
   }
 
-  static Image.image write_encoded(string ... what)
-  {
-    return real->write(@(encoder?
-                         Array.map(what, lambda(string s) {
-                                           return encoder->clear()->
-                                                  feed(s)->drain();
-                                         }):what));
-  }
-
-  // FIXME: Handle x_spacing
   Image.Image write( string ... what )
   {
+#ifdef THREADS
+    object key = lock->lock();
+#endif
     if( !sizeof( what ) )
       return Image.Image( 1,height() );
 
@@ -118,7 +139,12 @@ class TTFWrapper
     // cannot write "" with Image.TTF.
     what = replace( what, "", " " );
 
-    array(Image.Image) res = map( what, real_write );
+    if( encoder )
+      what = Array.map(what, lambda(string s) {
+                               return encoder->clear()->feed(s)->drain();
+                             });
+    
+    array(Image.Image) res = map( what, write_row );
 
     Image.Image rr = Image.Image( max(0,@res->xsize()),
                                   (int)abs(`+(0,0,@res[..sizeof(res)-2]->ysize())*y_spacing)+res[-1]->ysize() );
@@ -140,19 +166,15 @@ class TTFWrapper
     return rr;
   }
 
-  array text_extents( string what )
-  {
-    Image.Image o = write( what );
-    return ({ o->xsize(), o->ysize() });
-  }
-
-  void create(object r, int s, string fn)
+  static mixed lock;
+  static void create(object r, int s, string fn, mixed|void _lock)
   {
     string encoding;
-    real = r;
-    size = s;
-    real->set_height( (int)(size*32/34.5) ); // aproximate to pixels
+    if( _lock )
+      lock = _lock;
+    face = r; size = s;
 
+    face->set_size( 0, size );
     if(r_file_stat(fn+".properties"))
       parse_html(lopen(fn+".properties","r")->read(), ([]),
                  (["encoding":lambda(string tag, mapping m, string enc) {
@@ -161,14 +183,8 @@ class TTFWrapper
 
     if(encoding)
       encoder = Locale.Charset.encoder(encoding, "");
-
-    real_write = (encoder? write_encoded : real->write);
   }
 }
-
-#ifdef THREADS
-Thread.Mutex lock = Thread.Mutex();
-#endif
 
 array available_fonts()
 {
@@ -186,7 +202,7 @@ array(mapping) font_information( string font )
 
   mapping res = ([ 
     "name":font,
-    "format":"ttf",
+    "format":"freetype",
   ]);
   Image.TTF f;
   if( font[0] == '/' )
@@ -195,7 +211,7 @@ array(mapping) font_information( string font )
     f = Image.TTF( (font=values(ttf_font_names_cache[ font ])[0]) );
 
   res->path = font;
-  res |= f->names();
+  res |= f->info();
   return ({ res });
 }
 
@@ -210,6 +226,16 @@ array(string) has_font( string name, int size )
     return indices(ttf_font_names_cache[ name ]);
 }
 
+Image.FreeType.Face last;
+string last_file;
+
+Image.FreeType.Face open_face( string file )
+{
+  if( file == last_file )
+    return last;
+  last_file = file;
+  return last = Image.FreeType.Face( file );
+}
 Font open(string f, int size, int bold, int italic )
 {
   string tmp;
@@ -218,8 +244,8 @@ Font open(string f, int size, int bold, int italic )
 
   if( style == -1 ) // exact file
   {
-    if( fo = Image.TTF( name ) )
-      return TTFWrapper( fo, size, f );
+    if( fo = Image.FreeType.Face( name ) )
+      return FTFont( fo, size, f );
     return 0;
   }
 
@@ -228,17 +254,14 @@ Font open(string f, int size, int bold, int italic )
     f = lower_case(f);
     if( tmp = ttf_font_names_cache[ f ][ style ] )
     {
-      fo = Image.TTF( tmp );
-      if( fo ) return TTFWrapper( fo(), size, tmp );
+      fo = open_face( tmp );
+      if( fo ) return FTFont( fo, size, tmp );
     }
-    if( fo = Image.TTF( roxen_path(f = values(ttf_font_names_cache[ f ])[0])))
-      return TTFWrapper( fo(), size, f );
+    if(fo=open_face( roxen_path(f=values(ttf_font_names_cache[ f ])[0])))
+      return FTFont( fo, size, f );
   }
   return 0;
 }
-
-
-
 
 void create()
 {
@@ -247,5 +270,4 @@ void create()
                                 ttf_font_names_cache=0;
                               } );
 }
-#endif
 #endif

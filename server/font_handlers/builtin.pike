@@ -1,6 +1,10 @@
 #include <config.h>
+#if constant(Image.FreeType.Face)
+inherit "freetype";
+#else
 inherit "ttf";
-constant cvs_version = "$Id: builtin.pike,v 1.5 2000/09/26 23:14:03 per Exp $";
+#endif
+constant cvs_version = "$Id: builtin.pike,v 1.6 2000/12/11 10:44:34 per Exp $";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";
@@ -61,14 +65,24 @@ Font open( string name, int size, int bold, int italic )
   switch( replace(lower_case(name)," ","_")-"_" )
   {
    case "roxenbuiltin":
-#ifdef THREADS
-     object lock = lock->lock();
-#endif
+     object key;
 #if constant(__rbf) && constant(grbf)
+#if constant(Image.FreeType.Face)
+     if( !roxenbuiltin )
+     {
+#ifdef THREADS
+       key = lock->lock();
+#endif
+       catch(roxenbuiltin = grbf());
+     }
+     if( roxenbuiltin )
+       return FTFont( roxenbuiltin, size, "-" );
+#else
      if( !roxenbuiltin )
        catch(roxenbuiltin = grbf());
      if( roxenbuiltin )
        return TTFWrapper( roxenbuiltin(), size, "-" );
+#endif
 #endif
    case "pikebuiltin":
      return Image.Font();
