@@ -139,5 +139,5 @@ mixed parse( RequestID id, mapping|void opt )
     "<h2>"+LOCALE(190,"Initial variables for the site")+"</h2>"
     "<table>" + cf_form + initial_form( conf, id, 0 ) + 
          ((opt||([]))->no_end_table?"":"</table><p>")+
-         ((opt||([]))->no_ok?"":"<cf-ok />");
+         ((opt||([]))->no_ok?"":"<p align=right><cf-ok /></p>");
 }
