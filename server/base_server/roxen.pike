@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.683 2001/07/09 22:51:27 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.684 2001/07/12 12:37:07 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3641,21 +3641,38 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
 // Dump all threads to the debug log.
 void describe_all_threads()
 {
-  array(mixed) all_backtraces;
-#if constant(all_threads)
-  all_backtraces = all_threads()->backtrace();
-#else /* !constant(all_threads) */
-  all_backtraces = ({ backtrace() });
-#endif /* constant(all_threads) */
+#if constant (thread_create)
+  // Disable all threads to avoid potential locking problems while we
+  // have the backtraces. It also gives an atomic view of the state.
+  object threads_disabled = _disable_threads();
 
-  report_debug("Describing all threads:\n");
+  report_debug("### Describing all pike threads:\n\n");
+
+  array(Thread.Thread) threads = all_threads();
+  array(string|int) thread_ids =
+    map (threads,
+	 lambda (Thread.Thread t) {
+	   string desc = sprintf ("%O", t);
+	   if (sscanf (desc, "Thread.Thread(%d)", int i)) return i;
+	   else return desc;
+	 });
+  sort (thread_ids, threads);
+
   int i;
-  for(i=0; i < sizeof(all_backtraces); i++) {
-    report_debug("Thread %d:\n"
-		 "%s\n",
-		 i+1,
-		 describe_backtrace(all_backtraces[i]));
+  for(i=0; i < sizeof(threads); i++) {
+    report_debug("### Thread %s%s:\n",
+		 (string) thread_ids[i],
+		 threads[i] == backend_thread ? " (backend thread)" : "");
+    report_debug(describe_backtrace(threads[i]->backtrace()) + "\n");
   }
+
+  report_debug ("### Total %d pike threads\n", sizeof (threads));
+
+  threads = 0;
+  threads_disabled = 0;
+#else
+  report_debug("Describing single thread:\n%s\n", backtrace());
+#endif
 }
 
 constant dump = roxenloader.dump;
