@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.49 2000/07/04 03:46:10 per Exp $
+// $Id: disk_cache.pike,v 1.50 2000/07/09 14:11:05 per Exp $
 
 #include <module_constants.h>
 #include <stat.h>
@@ -18,8 +18,8 @@
 object this = this_object();
 
 #undef QUERY
-#define QUERY(x) roxenp()->variables->x->query()
-#define SET(x,Y) roxenp()->variables->x->set(Y)
+#define QUERY(x) roxenp()->query(#x)
+#define SET(x,Y) roxenp()->set(#x, Y)
 
 string file_name_r(string what, int nd, int hv)
 {
