@@ -9,7 +9,7 @@ mixed parse( RequestID id )
 
   Configuration conf = roxen->find_configuration( path[0] );
   
-  if(!conf) // /site.html/<site>/[<module>/] -> /
+  if(!conf || conf->error_log[0]) // /site.html/<site>/[<module>/] -> /
     if( search( path[0], "%20" ) != -1 )
       return Roxen.http_string_answer("<redirect to='"+
                                 ("../"*sizeof(path))+

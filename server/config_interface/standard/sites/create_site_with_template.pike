@@ -44,6 +44,7 @@ string|mapping parse( RequestID id )
   {
     object c = roxen.find_configuration( id->variables->name );
     if( !c ) c = roxen.enable_configuration( id->variables->name );
+    c->error_log[0] = 1;
     id->misc->new_configuration = c;
 
     master()->clear_compilation_failures();
@@ -53,10 +54,12 @@ string|mapping parse( RequestID id )
       return q;
 
     if( lower_case(q-" ") == "<done/>" )
+    {
+      c->error_log = ([]);
       return Roxen.http_redirect(Roxen.fix_relative("site.html/"+
                                                     id->variables->name+"/", 
                                                     id), id);
-
+    }
     return sprintf(base,q);
   }
 
