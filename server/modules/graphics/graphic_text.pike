@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.62 1997/09/03 00:31:42 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.63 1997/09/03 05:16:34 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -228,7 +228,7 @@ object load_image(string f,object id)
   if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
     if(!(file=open(f,"r")) || (!(data=file->read())))
       return 0;
-  werror("Read "+strlen(data)+" bytes.\n");
+//werror("Read "+strlen(data)+" bytes.\n");
   if(!img->frompnm(data)) return 0;
   last_image = img; last_image_name = f;
   return img->copy();
@@ -644,9 +644,9 @@ array(int)|string write_text(int _args, string text, int size,
 		      lower_case(args->talign||"left"),
 		      (float)(int)args->xpad, (float)(int)args->ypad);
     }
-    else 
-#endif
+    else if(args->font)
     {
+#endif
       string fkey = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
       data = cache_lookup("fonts", fkey);
       if(!data)
@@ -655,7 +655,18 @@ array(int)|string write_text(int _args, string text, int size,
 			 (int)args->xpad,(int)args->ypad);
 	cache_set("fonts", fkey, data);
       }
+#if efun(get_font)
+    } else {
+      int bold, italic;
+      if(args->bold) bold=1;
+      if(args->light) bold=-1;
+      if(args->italic) italic=1;
+      if(args->black) bold=2;
+      data = get_font("default",32,bold,italic,
+		      lower_case(args->talign||"left"),
+		      (float)(int)args->xpad, (float)(int)args->ypad);
     }
+#endif
 
     // Fonts and such are now initialized.
     img = make_text_image(args,data,text,id);
@@ -868,11 +879,15 @@ string tag_gtext_id(string t, mapping arg,
   extra_args(arg);        m_delete(arg,"split");
   if(defines->fg && !arg->fg) arg->fg=defines->fg;
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
-  if(!arg->font) arg->font=defines->font||QUERY(default_font);
 #if efun(get_font)
   if(!arg->nfont) arg->nfont=defines->nfont;
 #endif
-  
+  if(!arg->font) arg->font=defines->font
+#if !efun(get_font)
+		   ||QUERY(default_font)
+#endif
+		   ;
+
   int num = find_or_insert( arg );
 
   if(!short)
@@ -957,11 +972,15 @@ string tag_graphicstext(string t, mapping arg, string contents,
 #if efun(get_font)
   if(!arg->nfont) arg->nfont=defines->nfont;
 #endif
+  if(!arg->font) arg->font=defines->font
+#if !efun(get_font)
+		   ||QUERY(default_font)
+#endif
+		   ;
   if(!arg->bold) arg->bold=defines->bold;
   if(!arg->italic) arg->italic=defines->italic;
   if(!arg->black) arg->black=defines->black;
   if(!arg->narrow) arg->narrow=defines->narrow;
-  if(!arg->font) arg->font=defines->font||QUERY(default_font);
 
   if(arg->split)
   {

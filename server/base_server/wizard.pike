@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.36 1997/08/26 17:03:44 peter Exp $
+/* $Id: wizard.pike,v 1.37 1997/09/03 05:19:28 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -321,7 +321,6 @@ mapping get_actions(string base,string dir, array args)
       if(act[0]!='#' && act[-1]=='e')
       {
 	string sm,rn = (get_wizard(act,dir,@args)->name||act), name;
-
 	if(sscanf(rn, "%*s:%s", name) != 2) name = rn;
 	sscanf(name, "%s//%s", sm, name);
 	if(!acts[sm]) acts[sm] = ({ });

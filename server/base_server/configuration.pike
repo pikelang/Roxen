@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.71 1997/08/31 18:36:20 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.72 1997/09/03 05:16:31 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1341,7 +1341,7 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
   
   if(m->file)
   {
-    res += m->file->read(200000);
+    res += m->file->read();
     destruct(m->file);
     m->file = 0;
   }

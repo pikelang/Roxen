@@ -82,6 +82,7 @@ urw_itc_avant_garde-demi-r binary
 /server/config_actions/openports.pike foreign_ident
 /server/config_actions/pipestatus.pike foreign_ident
 /server/config_actions/problems.pike foreign_ident
+/server/config_actions/proc.pike foreign_ident
 /server/config_actions/processstatus.pike foreign_ident
 /server/config_actions/reloadconfiginterface.pike foreign_ident
 /server/config_actions/reloadconfigurations.pike foreign_ident
