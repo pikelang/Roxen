@@ -1,17 +1,29 @@
-constant cvs_version = "$Id: roxen.pike,v 1.241 1998/10/01 01:02:40 peter Exp $";
+/*
+ * $Id: roxen.pike,v 1.242 1998/10/03 22:19:18 grubba Exp $
+ *
+ * The Roxen Challenger main program.
+ *
+ * Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
+ */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
+constant cvs_version = "$Id: roxen.pike,v 1.242 1998/10/03 22:19:18 grubba Exp $";
+
+
+// Some headerfiles
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
 #include <module.h>
 #include <variables.h>
 
-inherit "read_config";
 // #ifdef __NT__
 // #define NO_DNS
 // #endif
+
+// Inherits
+inherit "read_config";
 #ifdef NO_DNS
 inherit "dummy_hosts";
 #else
@@ -22,6 +34,7 @@ inherit "socket";
 inherit "disk_cache";
 inherit "language";
 
+// The datashuffler program
 #if constant(spider.shuffle) && (defined(THREADS) || defined(__NT__))
 constant pipe = (program)"smartpipe";
 #else
@@ -63,6 +76,7 @@ int new_id(){ return idcount++; }
 #define MD_PERROR(X)
 #endif /* MODULE_DEBUG */
 
+// pids of the start-script and ourselves.
 int startpid, roxenpid;
 object roxen=this_object(), current_configuration;
 
@@ -100,6 +114,7 @@ void stop_all_modules()
     conf->stop();
 }
 
+// Function that actually shuts down Roxen. (see low_shutdown).
 private static void really_low_shutdown(int exit_code)
 {
   // Die nicely.
@@ -289,6 +304,7 @@ private static void accept_callback( object port )
   }
 }
 
+// handle function used when THREADS is not enabled.
 void unthreaded_handle(function f, mixed ... args)
 {
   f(@args);
@@ -296,6 +312,9 @@ void unthreaded_handle(function f, mixed ... args)
 
 function handle = unthreaded_handle;
 
+/*
+ * THREADS code starts here
+ */
 #ifdef THREADS
 #define THREAD_DEBUG
 
@@ -307,7 +326,11 @@ object do_thread_create(string id, function f, mixed ... args)
   return t;
 }
 
+// Queue of things to handle.
+// An entry consists of an array(function fp, array args)
 static object (Thread.Queue) handle_queue = Thread.Queue();
+
+// Number of handler threads that are alive.
 static int thread_reap_cnt;
 
 void handler_thread(int id)
@@ -335,9 +358,7 @@ void handler_thread(int id)
 	report_error("Uncaught error in handler thread: " +
 		     describe_backtrace(q) +
 		     "Client will not get any response from Roxen.\n");
-		     
       }
-      
     }
   }
 }
