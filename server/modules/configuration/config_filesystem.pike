@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.85 2001/05/16 08:56:57 per Exp $";
+  "$Id: config_filesystem.pike,v 1.86 2001/05/16 09:50:41 per Exp $";
 
 constant path = "config_interface/";
 
@@ -478,11 +478,14 @@ void start(int n, Configuration cfg)
       }
     }
 
+    cfg->disable_module( "auth_httpbasic#0" );
+    cfg->disable_module( "auth_httpcookie#0" );
+
     cfg->add_modules(({
       "config_tags", "contenttypes",    "indexfiles",
       "gbutton",     "graphic_text",    "pathinfo",        "javascript_support",
       "pikescript",  "translation_mod", "rxmlparse",       "rxmltags",
-      "tablist",     "update",          "cimg",            "auth_httpbasic"
+      "tablist",     "update",          "cimg", query( "auth_method" )
     }));
 
     RoxenModule m;
@@ -522,6 +525,15 @@ void create()
   defvar( "location", "/", LOCALE(264,"Mountpoint"), TYPE_LOCATION,
           LOCALE(265,"Usually / is a good idea") );
 
+  defvar( "auth_method", "auth_httpbasic",
+	  LOCALE(0,"Authentication method"),
+	  TYPE_STRING_LIST,
+	  LOCALE(0,"The method to use to authenticate configuration interface "
+		 "users." ),
+	  ([
+	    "auth_httpbasic":LOCALE(0,"HTTP Basic passwords" ),
+	    "auth_httpcookie":LOCALE(0,"HTTP Cookies" ),
+	  ]) );
 
   roxen.add_permission( "View Settings", LOCALE(192, "View Settings"));
   roxen.add_permission( "Update",    LOCALE(349, "Update Client"));
