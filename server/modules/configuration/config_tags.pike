@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.143 2001/03/13 20:30:31 mast Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.144 2001/03/14 01:02:12 mast Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -39,10 +39,10 @@ class Scope_cf
      case "num-dotdots":
        int depth = sizeof( (id->not_query+(id->misc->path_info||"") )/"/" )-2;
        string dotodots = depth>0?(({ "../" })*depth)*"":"./";
-       return ENCODE_RXML_PLAIN(dotodots, type);
+       return ENCODE_RXML_TEXT(dotodots, type);
 
      case "current-url":
-       return ENCODE_RXML_PLAIN(id->not_query+(id->misc->path_info||""), type);
+       return ENCODE_RXML_TEXT(id->not_query+(id->misc->path_info||""), type);
     }
   }
 }
@@ -69,10 +69,10 @@ class Scope_usr
      case "left-buttonwidth": return "150";
 
       /* composite */
-     case "count-0": return ENCODE_RXML_PLAIN("/internal-roxen-count_0", type);
-     case "count-1": return ENCODE_RXML_PLAIN("/internal-roxen-count_1", type);
-     case "count-2": return ENCODE_RXML_PLAIN("/internal-roxen-count_3", type);
-     case "count-3": return ENCODE_RXML_PLAIN("/internal-roxen-count_2", type);
+     case "count-0": return ENCODE_RXML_TEXT("/internal-roxen-count_0", type);
+     case "count-1": return ENCODE_RXML_TEXT("/internal-roxen-count_1", type);
+     case "count-2": return ENCODE_RXML_TEXT("/internal-roxen-count_3", type);
+     case "count-3": return ENCODE_RXML_TEXT("/internal-roxen-count_2", type);
 
 
      case "toptabs-padwidth": return ENCODE_RXML_INT(50, type);
@@ -163,62 +163,62 @@ class Scope_usr
 
 
       /* standalone, nothing is based on these. */
-     case "warncolor":            return ENCODE_RXML_PLAIN("darkred", type);
-     case "content-toptableargs": return ENCODE_RXML_PLAIN("", type);
-     case "left-image":           return ENCODE_RXML_PLAIN("/internal-roxen-unit", type);
-     case "selected-indicator":   return ENCODE_RXML_PLAIN("/internal-roxen-next", type);
-     case "database-small":       return ENCODE_RXML_PLAIN("/internal-roxen-database_small", type);
-     case "table-small":          return ENCODE_RXML_PLAIN("/internal-roxen-table_small", type);
-     case "next":                 return ENCODE_RXML_PLAIN("/internal-roxen-next", type);
-     case "item-indicator":       return ENCODE_RXML_PLAIN("/internal-roxen-dot", type);
-     case "logo":                 return ENCODE_RXML_PLAIN("/internal-roxen-roxen", type);
-     case "err-1":                return ENCODE_RXML_PLAIN("/internal-roxen-err_1", type);
-     case "err-2":                return ENCODE_RXML_PLAIN("/internal-roxen-err_2", type);
-     case "err-3":                return ENCODE_RXML_PLAIN("/internal-roxen-err_3", type);
-     case "obox-titlefont":       return ENCODE_RXML_PLAIN("helvetica,arial", type);
-     case "obox-border":          return ENCODE_RXML_PLAIN("black", type);
+     case "warncolor":            return ENCODE_RXML_TEXT("darkred", type);
+     case "content-toptableargs": return ENCODE_RXML_TEXT("", type);
+     case "left-image":           return ENCODE_RXML_TEXT("/internal-roxen-unit", type);
+     case "selected-indicator":   return ENCODE_RXML_TEXT("/internal-roxen-next", type);
+     case "database-small":       return ENCODE_RXML_TEXT("/internal-roxen-database_small", type);
+     case "table-small":          return ENCODE_RXML_TEXT("/internal-roxen-table_small", type);
+     case "next":                 return ENCODE_RXML_TEXT("/internal-roxen-next", type);
+     case "item-indicator":       return ENCODE_RXML_TEXT("/internal-roxen-dot", type);
+     case "logo":                 return ENCODE_RXML_TEXT("/internal-roxen-roxen", type);
+     case "err-1":                return ENCODE_RXML_TEXT("/internal-roxen-err_1", type);
+     case "err-2":                return ENCODE_RXML_TEXT("/internal-roxen-err_2", type);
+     case "err-3":                return ENCODE_RXML_TEXT("/internal-roxen-err_3", type);
+     case "obox-titlefont":       return ENCODE_RXML_TEXT("helvetica,arial", type);
+     case "obox-border":          return ENCODE_RXML_TEXT("black", type);
 
 
       /* 1-st level */
-     case "tab-frame-image":      return ENCODE_RXML_PLAIN("/internal-roxen-tabframe", type);
-     case "gbutton-frame-image":  return ENCODE_RXML_PLAIN("/internal-roxen-gbutton", type);
+     case "tab-frame-image":      return ENCODE_RXML_TEXT("/internal-roxen-tabframe", type);
+     case "gbutton-frame-image":  return ENCODE_RXML_TEXT("/internal-roxen-gbutton", type);
 
     /* also: font, bgcolor, fgcolor */
 
   /* 2nd level */
-     case "content-titlebg":      return ENCODE_RXML_PLAIN( ALIAS( "bgcolor" ), type);
-     case "content-titlefg":      return ENCODE_RXML_PLAIN( ALIAS( "fgcolor" ), type);
-     case "gbutton-font":         return ENCODE_RXML_PLAIN( ALIAS( "font" ), type);
-     case "left-buttonframe":     return ENCODE_RXML_PLAIN( ALIAS( "gbutton-frame-image" ), type);
-     case "obox-bodybg":          return ENCODE_RXML_PLAIN( ALIAS( "bgcolor" ), type);
-     case "obox-bodyfg":          return ENCODE_RXML_PLAIN( ALIAS( "fgcolor" ), type);
-     case "obox-titlefg":         return ENCODE_RXML_PLAIN( ALIAS( "bgcolor" ), type);
-     case "subtabs-bgcolor":      return ENCODE_RXML_PLAIN( ALIAS( "bgcolor" ), type);
-     case "subtabs-dimtextcolor": return ENCODE_RXML_PLAIN( ALIAS( "bgcolor" ), type);
-     case "subtabs-frame":        return ENCODE_RXML_PLAIN( ALIAS( "tab-frame-image" ), type);
-     case "subtabs-seltextcolor": return ENCODE_RXML_PLAIN( ALIAS( "fgcolor" ), type);
-     case "tabs-font":            return ENCODE_RXML_PLAIN( ALIAS( "font" ), type);
-     case "toptabs-frame":        return ENCODE_RXML_PLAIN( ALIAS( "tab-frame-image" ), type);
-     case "toptabs-dimtextcolor": return ENCODE_RXML_PLAIN( ALIAS( "bgcolor" ), type);
-     case "toptabs-selcolor":     return ENCODE_RXML_PLAIN( ALIAS( "bgcolor" ), type);
-     case "toptabs-seltextcolor": return ENCODE_RXML_PLAIN( ALIAS( "fgcolor" ), type);
+     case "content-titlebg":      return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
+     case "content-titlefg":      return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
+     case "gbutton-font":         return ENCODE_RXML_TEXT( ALIAS( "font" ), type);
+     case "left-buttonframe":     return ENCODE_RXML_TEXT( ALIAS( "gbutton-frame-image" ), type);
+     case "obox-bodybg":          return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
+     case "obox-bodyfg":          return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
+     case "obox-titlefg":         return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
+     case "subtabs-bgcolor":      return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
+     case "subtabs-dimtextcolor": return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
+     case "subtabs-frame":        return ENCODE_RXML_TEXT( ALIAS( "tab-frame-image" ), type);
+     case "subtabs-seltextcolor": return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
+     case "tabs-font":            return ENCODE_RXML_TEXT( ALIAS( "font" ), type);
+     case "toptabs-frame":        return ENCODE_RXML_TEXT( ALIAS( "tab-frame-image" ), type);
+     case "toptabs-dimtextcolor": return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
+     case "toptabs-selcolor":     return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
+     case "toptabs-seltextcolor": return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
 
     /* also: fade1 - fade4 */
 
     /* 3rd level */
 
-     case "content-bg":           return ENCODE_RXML_PLAIN( ALIAS( "fade1" ), type);
-     case "left-buttonbg":        return ENCODE_RXML_PLAIN( ALIAS( "fade1" ), type);
-     case "left-selbuttonbg":     return ENCODE_RXML_PLAIN( ALIAS( "fade3" ), type);
-     case "obox-titlebg":         return ENCODE_RXML_PLAIN( ALIAS( "fade2" ), type);
-     case "subtabs-dimcolor":     return ENCODE_RXML_PLAIN( ALIAS( "fade2" ), type);
-     case "subtabs-font":         return ENCODE_RXML_PLAIN( ALIAS( "tabs-font" ), type);
-     case "subtabs-selcolor":     return ENCODE_RXML_PLAIN( ALIAS( "fade1" ), type);
-     case "top-bgcolor":          return ENCODE_RXML_PLAIN( ALIAS( "fade3" ), type);
-     case "top-fgcolor":          return ENCODE_RXML_PLAIN( ALIAS( "fade4" ), type);
-     case "toptabs-bgcolor":      return ENCODE_RXML_PLAIN( ALIAS( "fade3" ), type);
-     case "toptabs-dimcolor":     return ENCODE_RXML_PLAIN( ALIAS( "fade2" ), type);
-     case "toptabs-font":         return ENCODE_RXML_PLAIN( ALIAS( "tabs-font" ), type);
+     case "content-bg":           return ENCODE_RXML_TEXT( ALIAS( "fade1" ), type);
+     case "left-buttonbg":        return ENCODE_RXML_TEXT( ALIAS( "fade1" ), type);
+     case "left-selbuttonbg":     return ENCODE_RXML_TEXT( ALIAS( "fade3" ), type);
+     case "obox-titlebg":         return ENCODE_RXML_TEXT( ALIAS( "fade2" ), type);
+     case "subtabs-dimcolor":     return ENCODE_RXML_TEXT( ALIAS( "fade2" ), type);
+     case "subtabs-font":         return ENCODE_RXML_TEXT( ALIAS( "tabs-font" ), type);
+     case "subtabs-selcolor":     return ENCODE_RXML_TEXT( ALIAS( "fade1" ), type);
+     case "top-bgcolor":          return ENCODE_RXML_TEXT( ALIAS( "fade3" ), type);
+     case "top-fgcolor":          return ENCODE_RXML_TEXT( ALIAS( "fade4" ), type);
+     case "toptabs-bgcolor":      return ENCODE_RXML_TEXT( ALIAS( "fade3" ), type);
+     case "toptabs-dimcolor":     return ENCODE_RXML_TEXT( ALIAS( "fade2" ), type);
+     case "toptabs-font":         return ENCODE_RXML_TEXT( ALIAS( "tabs-font" ), type);
     }
 
 
@@ -255,7 +255,7 @@ class Scope_usr
            hsv[2] = add;
          else
            hsv[2] = max( hsv[2]-add, 0);
-         return ENCODE_RXML_PLAIN( (string)Image.Color.hsv(@hsv), type);
+         return ENCODE_RXML_TEXT( (string)Image.Color.hsv(@hsv), type);
       }
     };
 
@@ -286,7 +286,7 @@ class Scope_usr
          a[1] -= sub[1];
          a[2] -= sub[2];
        }
-       return ENCODE_RXML_PLAIN( (string)Image.Color( @map(map(a,max,0),min,255) ), type);
+       return ENCODE_RXML_TEXT( (string)Image.Color( @map(map(a,max,0),min,255) ), type);
      }
 
      case "fade4": {
@@ -303,7 +303,7 @@ class Scope_usr
          a[1] -= sub[1];
          a[2] -= sub[2];
        }
-       return ENCODE_RXML_PLAIN( (string)Image.Color( @map(map(a,max,0),min,255) ), type);
+       return ENCODE_RXML_TEXT( (string)Image.Color( @map(map(a,max,0),min,255) ), type);
      }
     }
     return config_setting( var );

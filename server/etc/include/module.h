@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.47 2001/03/13 20:24:07 mast Exp $
+// $Id: module.h,v 1.48 2001/03/14 01:02:05 mast Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 /* #include "config.h" */
@@ -68,8 +68,8 @@
   (type && type != RXML.t_int ? type->encode ((value), RXML.t_int) : (value))
 #define ENCODE_RXML_FLOAT(value, type) \
   (type && type != RXML.t_float ? type->encode ((value), RXML.t_float) : (value))
-#define ENCODE_RXML_PLAIN(value, type) \
-  (type && type != RXML.t_plain ? type->encode ((value), RXML.t_plain) : (value))
+#define ENCODE_RXML_TEXT(value, type) \
+  (type && type != RXML.t_text ? type->encode ((value), RXML.t_text) : (value))
 #define ENCODE_RXML_XML(value, type) \
   (type && type != RXML.t_xml ? type->encode ((value), RXML.t_xml) : (value))
 

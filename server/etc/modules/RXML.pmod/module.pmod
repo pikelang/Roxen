@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.139 2001/03/13 20:35:18 mast Exp $
+//! $Id: module.pmod,v 1.140 2001/03/14 01:02:10 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -37,7 +37,7 @@ class RequestID { };
 //!    Type class might change as advanced types gets implemented.
 //!    Don't make assumptions about undocumented behavior. Declare
 //!    data properly with the types RXML.t_xml, RXML.t_html and
-//!    RXML.t_plain to let the parser handle the necessary conversions
+//!    RXML.t_text to let the parser handle the necessary conversions
 //!    instead of doing it yourself. Try to avoid implementing types.
 //!
 //! o  Various utilities have FIXME's in their documentation. Needless
@@ -109,7 +109,7 @@ class Tag
   //! type specifies a parser, it'll be used on the argument value.
   //! Note that the order in which arguments are parsed is arbitrary.
 
-  Type def_arg_type = t_plain (PEnt);
+  Type def_arg_type = t_text (PEnt);
   //! The type used for arguments that isn't present in neither
   //! req_arg_types nor opt_arg_types. This default is a parser that
   //! only parses XML-style entities.
@@ -123,11 +123,11 @@ class Tag
   //! which means that the content is preparsed with XML syntax. Use
   //! no parser to get the raw text.
   //!
-  //! Note: You probably want to change this to @[RXML.t_plain]
+  //! Note: You probably want to change this to @[RXML.t_text]
   //! (without parser) if the tag is a processing instruction (see
   //! @[FLAG_PROC_INSTR]).
 
-  array(Type) result_types = ({t_xml, t_html, t_plain});
+  array(Type) result_types = ({t_xml, t_html, t_text});
   //! The possible types of the result, in order of precedence. If a
   //! result type has a parser, it'll be used to parse any strings in
   //! the exec array returned from @[Frame.do_enter] and similar
@@ -257,7 +257,7 @@ class Tag
 #ifdef MODULE_DEBUG
       if (mixed err = catch {
 #endif
-	splice_args = t_plain (PEnt)->eval (splice_args, ctx, 0, parser, 1);
+	splice_args = t_text (PEnt)->eval (splice_args, ctx, 0, parser, 1);
 #ifdef MODULE_DEBUG
       }) {
 	if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -832,8 +832,8 @@ class Value
   //! (not zero), which is preferably optimized like this:
   //!
   //! @example
-  //!   return type && type != RXML.t_plain ?
-  //!          type->encode (my_string, RXML.t_plain) : my_string;
+  //!   return type && type != RXML.t_text ?
+  //!          type->encode (my_string, RXML.t_text) : my_string;
   //! @endexample
   //!
   //! Also, by letting the producer know the type context of the value
@@ -841,7 +841,7 @@ class Value
   //! to adapt the value according to the context it'll be used in,
   //! e.g. to return a powerful object if no type conversion is
   //! wanted, a simple text representation of it when the type is
-  //! @[RXML.t_plain], and a more nicely formatted representation when
+  //! @[RXML.t_text], and a more nicely formatted representation when
   //! it's @[RXML.t_html].
   //!
   //! @note The @[type] argument being @tt{void|Type@} means that the
@@ -3359,7 +3359,7 @@ class Parser
 	mixed val;
 	if (zero_type (val = context->get_var ( // May throw.
 			 splitted[1..], splitted[0],
-			 encoding ? t_plain : surrounding_type))) {
+			 encoding ? t_text : surrounding_type))) {
 	  context->current_var = 0;
 	  return ({});
 	}
@@ -3956,7 +3956,7 @@ class Type
   //! thrown. That might happen if the value contains markup or
   //! similar that can't be represented in the conversion type.
   //!
-  //! E.g. in a type for XML markup which have @[RXML.t_plain] as the
+  //! E.g. in a type for XML markup which have @[RXML.t_text] as the
   //! conversion type, this function should return a literal string
   //! only if the text doesn't contain tags, otherwise it should throw
   //! an error. It should never both decode "&lt;" to "<" and just
@@ -4102,9 +4102,9 @@ TAny t_any = TAny();
 //! which means that the meaning of a value might change when this
 //! type is used as a middle step.
 //!
-//! E.g if @tt{"<foo>"@} of type @[RXML.t_plain] is converted directly
+//! E.g if @tt{"<foo>"@} of type @[RXML.t_text] is converted directly
 //! to @[RXML.t_xml], it's quoted to @tt{"&lt;foo&gt;"@}, since
-//! @[RXML.t_plain] always is literal text. However if it's first
+//! @[RXML.t_text] always is literal text. However if it's first
 //! converted to @[RXML.t_any] and then to @[RXML.t_xml], it still
 //! remains @tt{"<foo>"@}, which then carries a totally different
 //! meaning.
@@ -4329,10 +4329,14 @@ static class TFloat
 
 TString t_string = TString();
 //! Any type of string; acts as a supertype for all text types.
+//!
 //! Conversion to and from this type and other text types is similar
 //! to @[RXML.t_any] in that the value doesn't change, which means
 //! that its meaning might change (for an example see the doc for
-//! @[RXML.t_any]).
+//! @[RXML.t_any]). This implies that strings produced by tags etc
+//! (which are typically literal) should be given the type
+//! @[RXML.t_text] and not this type, so that they get correctly
+//! encoded when inserted into e.g. XML markup.
 
 static class TString
 {
@@ -4381,10 +4385,11 @@ static class TString
   string _sprintf() {return "RXML.t_string" + OBJ_COUNT;}
 }
 
-TPlain t_plain = TPlain();
-//! The type for plain text.
+TText t_text = TText();
+//! The type for plain text. Note that this is not any (unspecified)
+//! type of text; @[RXML.t_string] represents that.
 
-static class TPlain
+static class TText
 {
   inherit TString;
   constant name = "text/plain";
@@ -4402,10 +4407,8 @@ static class TPlain
     parse_error ("Cannot convert value to %s: %s", name, describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_plain" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.t_text" + OBJ_COUNT;}
 }
-
-TPlain t_text = t_plain;	// For compatibility.
 
 THtml t_xml = TXml();
 //! The type for XML and similar markup.
@@ -4414,7 +4417,7 @@ static class TXml
 {
   inherit TString;
   constant name = "text/xml";
-  Type conversion_type = t_plain;
+  Type conversion_type = t_text;
   constant entity_syntax = 1;
   constant encoding_type = "xml"; // For compatibility.
 
@@ -4427,7 +4430,7 @@ static class TXml
 	case TAny.name: type_check (val); // Fall through.
 	case TString.name: case local::name: return [string] val;
 	default: return [string] indirect_convert (val, from);
-	case TPlain.name:
+	case TText.name:
       }
     else if (mixed err = catch {val = (string) val;})
       parse_error ("Cannot convert value to %s: %s", name, describe_error (err));

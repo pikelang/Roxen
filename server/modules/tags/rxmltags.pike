@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.215 2001/03/13 20:30:33 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.216 2001/03/14 01:02:14 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -56,35 +56,35 @@ string sexpr_eval(string what)
 class EntityPageRealfile {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_PLAIN(c->id->realfile, type);
+    return ENCODE_RXML_TEXT(c->id->realfile, type);
   }
 }
 
 class EntityPageVirtroot {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_PLAIN(c->id->virtfile, type);
+    return ENCODE_RXML_TEXT(c->id->virtfile, type);
   }
 }
 
 class EntityPageVirtfile {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_PLAIN(c->id->not_query, type);
+    return ENCODE_RXML_TEXT(c->id->not_query, type);
   }
 }
 
 class EntityPageQuery {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_PLAIN(c->id->query, type);
+    return ENCODE_RXML_TEXT(c->id->query, type);
   }
 }
 
 class EntityPageURL {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_PLAIN(c->id->raw_url, type);
+    return ENCODE_RXML_TEXT(c->id->raw_url, type);
   }
 }
 
@@ -99,14 +99,14 @@ class EntityPageLanguage {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable=0;
-    return ENCODE_RXML_PLAIN(c->id->misc->defines->language, type);
+    return ENCODE_RXML_TEXT(c->id->misc->defines->language, type);
   }
 }
 
 class EntityPageScope {
   inherit RXML.Value;
   mixed rxml_var_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_PLAIN(c->current_scope(), type);
+    return ENCODE_RXML_TEXT(c->current_scope(), type);
   }
 }
 
@@ -121,7 +121,7 @@ class EntityPageFileSize {
 class EntityPageSelf {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_PLAIN( (c->id->not_query/"/")[-1], type);
+    return ENCODE_RXML_TEXT( (c->id->not_query/"/")[-1], type);
   }
 }
 
@@ -164,7 +164,7 @@ class EntityClientReferrer {
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable=0;
     array referrer=c->id->referer;
-    return referrer && sizeof(referrer)?ENCODE_RXML_PLAIN(referrer[0], type):RXML.nil;
+    return referrer && sizeof(referrer)?ENCODE_RXML_TEXT(referrer[0], type):RXML.nil;
   }
 }
 
@@ -173,7 +173,7 @@ class EntityClientName {
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable=0;
     array client=c->id->client;
-    return client && sizeof(client)?ENCODE_RXML_PLAIN(client[0], type):RXML.nil;
+    return client && sizeof(client)?ENCODE_RXML_TEXT(client[0], type):RXML.nil;
   }
 }
 
@@ -181,7 +181,7 @@ class EntityClientIP {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable=0;
-    return ENCODE_RXML_PLAIN(c->id->remoteaddr, type);
+    return ENCODE_RXML_TEXT(c->id->remoteaddr, type);
   }
 }
 
@@ -190,7 +190,7 @@ class EntityClientAcceptLanguage {
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable=0;
     if(!c->id->misc["accept-language"]) return RXML.nil;
-    return ENCODE_RXML_PLAIN(c->id->misc["accept-language"][0], type);
+    return ENCODE_RXML_TEXT(c->id->misc["accept-language"][0], type);
   }
 }
 
@@ -200,7 +200,7 @@ class EntityClientAcceptLanguages {
     c->id->misc->cacheable=0;
     if(!c->id->misc["accept-language"]) return RXML.nil;
     // FIXME: Should this be an array instead?
-    return ENCODE_RXML_PLAIN(c->id->misc["accept-language"]*", ", type);
+    return ENCODE_RXML_TEXT(c->id->misc["accept-language"]*", ", type);
   }
 }
 
@@ -209,7 +209,7 @@ class EntityClientLanguage {
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable=0;
     if(!c->id->misc->pref_languages) return RXML.nil;
-    return ENCODE_RXML_PLAIN(c->id->misc->pref_languages->get_language(), type);
+    return ENCODE_RXML_TEXT(c->id->misc->pref_languages->get_language(), type);
   }
 }
 
@@ -219,7 +219,7 @@ class EntityClientLanguages {
     c->id->misc->cacheable=0;
     if(!c->id->misc->pref_languages) return RXML.nil;
     // FIXME: Should this be an array instead?
-    return ENCODE_RXML_PLAIN(c->id->misc->pref_languages->get_languages()*", ", type);
+    return ENCODE_RXML_TEXT(c->id->misc->pref_languages->get_languages()*", ", type);
   }
 }
 
@@ -227,8 +227,8 @@ class EntityClientHost {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable=0;
-    if(c->id->host) return ENCODE_RXML_PLAIN(c->id->host, type);
-    return ENCODE_RXML_PLAIN(c->id->host=roxen->quick_ip_to_host(c->id->remoteaddr),
+    if(c->id->host) return ENCODE_RXML_TEXT(c->id->host, type);
+    return ENCODE_RXML_TEXT(c->id->host=roxen->quick_ip_to_host(c->id->remoteaddr),
 			    type);
   }
 }
@@ -246,7 +246,7 @@ class EntityClientUser {
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable=0;
     if(!c->id->realauth) return RXML.nil;
-    return ENCODE_RXML_PLAIN((c->id->realauth/":")[0], type);
+    return ENCODE_RXML_TEXT((c->id->realauth/":")[0], type);
   }
 }
 
@@ -259,7 +259,7 @@ class EntityClientPassword {
        && c->id->auth[0] 
        && c->id->realauth
        && (sizeof(tmp = c->id->realauth/":") > 1) )
-      return ENCODE_RXML_PLAIN(tmp[1..]*":", type);
+      return ENCODE_RXML_TEXT(tmp[1..]*":", type);
     return RXML.nil;
   }
 }

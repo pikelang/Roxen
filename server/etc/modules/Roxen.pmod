@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.77 2001/03/13 20:35:16 mast Exp $
+// $Id: Roxen.pmod,v 1.78 2001/03/14 01:02:07 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2578,7 +2578,7 @@ class ScopeRoxen {
        CACHE(c->id,10);
        // FIXME: Use float here instead?
        return ENCODE(sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0)),
-		     t_plain, type);
+		     t_text, type);
      case "sent":
        NOCACHE(c->id);
        return ENCODE(c->id->conf->sent, t_int, type);
@@ -2591,37 +2591,37 @@ class ScopeRoxen {
        // FIXME: Use float here instead?
        return ENCODE(sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
 				      (time(1)-roxenp()->start_time || 1))),
-		     t_plain, type);
+		     t_text, type);
      case "ssl-strength":
        return ENCODE(ssl_strength, t_int, type);
      case "pike-version":
-       return ENCODE(pike_version, t_plain, type);
+       return ENCODE(pike_version, t_text, type);
      case "version":
-       return ENCODE(roxenp()->version(), t_plain, type);
+       return ENCODE(roxenp()->version(), t_text, type);
      case "base-version":
-       return ENCODE(__roxen_version__, t_plain, type);
+       return ENCODE(__roxen_version__, t_text, type);
      case "build":
-       return ENCODE(__roxen_build__, t_plain, type);
+       return ENCODE(__roxen_build__, t_text, type);
      case "time":
        CACHE(c->id,1);
        return ENCODE(time(1), t_int, type);
      case "server":
        if( c->id->misc->host )
-         return ENCODE(c->id->port_obj->name+"://"+c->id->misc->host+"/", t_plain, type);
-       return ENCODE(c->id->conf->query("MyWorldLocation") || "", t_plain, type);
+         return ENCODE(c->id->port_obj->name+"://"+c->id->misc->host+"/", t_text, type);
+       return ENCODE(c->id->conf->query("MyWorldLocation") || "", t_text, type);
      case "domain":
        if( c->id->misc->host )
-         return ENCODE((c->id->misc->host/":")[0], t_plain, type);
+         return ENCODE((c->id->misc->host/":")[0], t_text, type);
        string tmp=c->id->conf->query("MyWorldLocation");
        sscanf(tmp, "%*s//%s", tmp);
        sscanf(tmp, "%s:", tmp);
        sscanf(tmp, "%s/", tmp);
-       return ENCODE(tmp, t_plain, type);
+       return ENCODE(tmp, t_text, type);
      case "locale":
        NOCACHE(c->id);
-       return ENCODE(roxenp()->locale->get(), t_plain, type);
+       return ENCODE(roxenp()->locale->get(), t_text, type);
      case "path":
-       return ENCODE(c->id->misc->site_prefix_path || "", t_plain, type);
+       return ENCODE(c->id->misc->site_prefix_path || "", t_text, type);
      default:
        return RXML.nil;
     }
@@ -2647,7 +2647,7 @@ class ScopePage {
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     switch (var) {
-      case "pathinfo": return ENCODE(c->id->misc->path_info, t_plain, type);
+      case "pathinfo": return ENCODE(c->id->misc->path_info, t_text, type);
     }
     mixed val;
     if(converter[var])
@@ -2701,7 +2701,7 @@ class ScopeCookie {
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if(!c) return RXML.nil;
     NOCACHE(c->id);
-    return ENCODE(c->id->cookies[var], t_plain, type);
+    return ENCODE(c->id->cookies[var], t_text, type);
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
