@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.59 2000/03/10 19:42:34 mast Exp $
+// $Id: module_support.pike,v 1.60 2000/03/11 13:27:25 grubba Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -177,8 +177,6 @@ program my_compile_file(string file)
   if( file[0] != '/' )
     file = replace(getcwd()+"/"+file, "//", "/");
 
-  string ofile = master()->make_ofilename( file );
-
   program p;
 
   ErrorContainer e = ErrorContainer();
@@ -200,6 +198,9 @@ program my_compile_file(string file)
     report_debug(sprintf("Warnings during compilation of module %s:\n"
 			 "%s", file, q));
   }
+
+  string ofile = master()->make_ofilename( file );
+
   if (p->dont_dump_program) {
 #ifdef MODULE_DEBUG
     report_debug("\b[dontdump] \b");
