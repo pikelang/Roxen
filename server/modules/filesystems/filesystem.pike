@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.125 2004/04/20 15:26:16 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.126 2004/04/20 21:10:46 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -686,6 +686,8 @@ mixed find_file( string f, RequestID id )
   int size;
   string tmp;
   string oldf = f;
+  object privs;
+  int code;
 
   FILESYSTEM_WERR("Request for \""+f+"\"" +
 		  (id->misc->internal_get ? " (internal)" : ""));
@@ -778,7 +780,6 @@ mixed find_file( string f, RequestID id )
 
       TRACE_ENTER("Opening file \"" + f + "\"", 0);
 
-      object privs;
       SETUID_TRACE("Open file", 1);
 
       o = Stdio.File( );
@@ -858,7 +859,6 @@ mixed find_file( string f, RequestID id )
 					id->method));
     }
     mkdirs++;
-    object privs;
     SETUID_TRACE("Creating directory/collection", 0);
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
@@ -871,7 +871,7 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
-    int code = mkdir(f);
+    code = mkdir(f);
     int err_code = errno();
     privs = 0;
 
