@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.41 1997/07/31 20:50:10 marcus Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.42 1997/08/01 20:08:02 noring Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2367,7 +2367,7 @@ void create(string config)
   
   defvar("LogFormat", 
  "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
- "500: $host ERROR - [$cern_date] \"$method $resource $protocol\" 500 -\n"
+ "500: $host $referer ERROR [$cern_date] \"$method $resource $protocol\" 500 -\n"
  "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length"
 	 ,
 
