@@ -11,7 +11,7 @@ constant module_type = MODULE_TAG;
 constant module_name = "Translation module";
 constant module_doc  = "This module provides an RXML API to the Pike localization system.";
 constant thread_safe = 1;
-constant cvs_version = "$Id: translation_mod.pike,v 1.7 2000/09/10 16:35:08 nilsson Exp $";
+constant cvs_version = "$Id: translation_mod.pike,v 1.8 2000/11/02 13:01:02 kuntri Exp $";
 
 
 
@@ -82,3 +82,49 @@ class TagTranslate {
     }
   }
 }
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+
+"trans-reg":#"<desc tag><p><short>
+
+ </short>
+
+</p></desc>
+
+<attr name='project' value='string'>
+
+</attr>
+
+<attr name='path' value='URL'>
+
+</attr>",
+
+
+
+"translate":#"<desc tag><p><short>
+
+ </short>
+
+</p></desc>
+
+<attr name='id' value=''>
+
+</attr>
+
+<attr name='project' value=''>
+
+</attr>
+
+<attr name='variable' value=''>
+
+</attr>
+
+<attr name='scope' value=''>
+
+</attr>",
+
+
+  ]);
+#endif
