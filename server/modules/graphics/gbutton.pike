@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.68 2000/12/05 00:40:28 nilsson Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.69 2000/12/11 05:14:56 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -271,7 +271,6 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 {
   Image.Image  text_img;
   mapping      icon;
-  object       button_font = resolve_font( args->font );
 
   Image.Layer background;
   Image.Layer frame;
@@ -390,7 +389,10 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   //  Generate text
   if (sizeof(text))
   {
-    text_img = button_font->write(text)->scale(0, text_height );
+    Font button_font = resolve_font( args->font+" "+text_height );
+    text_img = button_font->write(text);
+    if( abs(text_img->ysize() -text_height) > 2 )
+      text_img = text_img->scale(0, text_height );
     if (args->cnd)
       text_img = text_img->scale((int) round(text_img->xsize() * 0.8),
 				 text_img->ysize());
