@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.339 2005/02/17 17:17:46 mast Exp $
+// $Id: module.pmod,v 1.340 2005/04/06 12:47:05 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1571,7 +1571,7 @@ class Context
   //! @tt{"yow...cons..yet"@} is separated into @tt{"yow."@} and
   //! @tt{"cons.yet"@}. Any subindex that can be parsed as a signed
   //! integer is converted to it. Note that it doesn't happen for the
-  //! first index, since a variable in a scope always is a string.
+  //! first index, since a variable name in a scope always is a string.
   {
 #ifdef OLD_RXML_COMPAT
     if (compatible_scope && !intp(scope_name))
