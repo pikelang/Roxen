@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.81 1997/10/03 17:16:45 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.82 1997/10/12 21:08:42 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -415,16 +415,31 @@ array location_modules(object id)
   if(!location_module_cache)
   {
     int i;
-    location_module_cache=({ });
+    array new_location_module_cache=({ });
     for(i=9; i>=0; i--)
     {
       object *d, p;
-      if(d=pri[i]->location_modules)
-	foreach(d, p)
-	  if(p->find_file && p->query_location())
-	    location_module_cache+=({({ p->query_location(), 
-					  p->find_file })});
+      if(d=pri[i]->location_modules) {
+	array level_find_files = ({});
+	array level_locations = ({});
+	foreach(d, p) {
+	  string location;
+	  // FIXME: Should there be a catch() here?
+	  if(p->find_file && (location = p->query_location())) {
+	    level_find_files += ({ p->find_file });
+	    level_locations += ({ location });
+	  }
+	}
+	sort(level_locations, level_find_files);
+	int j;
+	for (j = sizeof(level_locations); j--;) {
+	  // Order after longest path first.
+	  new_location_module_cache += ({ ({ level_locations[j],
+					     level_find_files[j] }) });
+	}
+      }
     }
+    location_module_cache = new_location_module_cache;
   }
   return location_module_cache;
 }
@@ -794,7 +809,7 @@ int|mapping check_security(function a, object id, void|int slevel)
 }
 #endif
 // Empty all the caches above.
-void unvalidate_cache()
+void invalidate_cache()
 {
   last_module_cache = 0;
   filter_module_cache = 0;
@@ -1555,7 +1570,7 @@ void save(int|void all)
       }
     }
   }
-  unvalidate_cache();
+  invalidate_cache();
 }
 
 // Save all variables in _one_ module.
@@ -1574,7 +1589,7 @@ int save_one( object o )
     {
       store(mod->sname+"#0", o->query(), 0, this);
       o->start(2, this);
-      unvalidate_cache();
+      invalidate_cache();
       return 1;
     } else if(mod->copies) {
       int i;
@@ -1584,7 +1599,7 @@ int save_one( object o )
 	{
 	  store(mod->sname+"#"+i, o->query(), 0, this);
 	  o->start(2, this);
-	  unvalidate_cache();
+	  invalidate_cache();
 	  return 1;
 	}
       }
@@ -1902,7 +1917,7 @@ object enable_module( string modname )
 #ifdef MODULE_DEBUG
     perror(" Done.\n");
 #endif 
-    unvalidate_cache();
+    invalidate_cache();
     return me;
   }
   return 0;
@@ -2084,7 +2099,7 @@ int disable_module( string modname )
     unload_module(modname);
   }
 
-  unvalidate_cache();
+  invalidate_cache();
 
   if(!me)
   {
@@ -2352,7 +2367,7 @@ int load_module(string module_file)
   perror(" Done ("+search(_master->programs,prog)+").\n");
 #endif
   cache_set("modules", module_file, modules[module_file]["program"]);
-// ??  unvalidate_cache();
+// ??  invalidate_cache();
 
   return 1;
 }
