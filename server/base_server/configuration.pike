@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.137 1998/06/02 10:45:47 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.138 1998/06/24 15:12:48 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -3304,8 +3304,9 @@ void create(string config)
 	 "Limit of concurrent sessions a FTP user may have. 0 = unlimited.\n");
 
   defvar("shells", "/etc/shells", "Shell database", TYPE_FILE|VAR_MORE,
-	 "File which contains a list of all valid shells.\n"
-	 "Usually /etc/shells\n");
+	 "File which contains a list of all valid shells\n"
+	 "(usually /etc/shells). Used for named ftp.\n"
+	 "Specify the empty string to disable shell database lookup.\n");
 
   defvar("_v", CONFIGURATION_FILE_LEVEL, 0, TYPE_INT, 0, 0, 1);
   setvars(retrieve("spider#0", this));
