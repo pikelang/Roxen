@@ -1,8 +1,8 @@
 // randomtext.pike
 //
-// Written by Michael Leif Richard Stensson
+// Written by Michael Leif Richard Stensson.
 //
-//   PRELIMINARY VERSION! February 1, 2000.
+//   PRELIMINARY VERSION! February 21, 2000.
 //
 //    Roxen module for generating semi-random text based on a set of
 //    rules. The functionality is available through a tag
@@ -51,12 +51,15 @@
 //    rule has the directive "single-shot", meaning it should only select
 //    randomly once, but then produce the same result every time it is
 //    called.
+//
+// ... any yes, the code for this module is rather messy. It was a
+// quick for fun.
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-string version = "$Id: randomtext.pike,v 1.2 2000/02/12 16:09:55 nilsson Exp $";
+string version = "$Id: randomtext.pike,v 1.3 2000/02/22 18:06:28 leif Exp $";
 
 mapping text_cache = ([ ]);
 
@@ -68,10 +71,12 @@ void create()
     "This is the location in the real file system where the random "
     "text module will look for rule files.");
 
+#if 0
   defvar("searchcwd", 0, "Search Document Directory", TYPE_FLAG,
     "If this option is enabled, the module will search the current "
     "directory for rule files before trying the general rules file "
-    "search path. (Note: may not work yet.)");
+    "search path. (Note: not supported yet.)");
+#endif
 
   defvar("flushcache", 3, "Minutes Between Cache Flushes", TYPE_MULTIPLE_INT,
     "This is the number of minutes that should pass between each "
@@ -79,15 +84,37 @@ void create()
     "is 3.",
          ({ 0, 1, 2, 3, 5, 10, 15 })
         );
+
+  defvar("maxeval", 20000, "Maximum Evaluation Steps", TYPE_MULTIPLE_INT,
+    "This value limits the number of evaluation steps that may be taken "
+    "while evaluating a rule file. The default value for this option is "
+    "20000.",
+          ({ 5000, 10000, 20000, 50000, 100000 })
+        );
 }
 
+#if __ROXEN_VERSION__ < 2.0
+array register_module()
+{ return ({ MODULE_PARSER,
+       "Random Text Generator Module",
+       ("This module provides a simple way of generating texts on a "
+        "semi-random basis according to a set of rules. Apart from its "
+        "amusement value, this can be useful for testing and educational "
+        "purposes, such as generating small quiz pages or producing "
+        "many different kinds of input to text processing tags."),
+       0,
+       1 });
+}
+#else
 constant module_type = MODULE_PARSER;
-constant module_name = "Random Text Generator Module";
-constant module_doc  = "This module provides a simple way of generating texts on a "
-  "semi-random basis according to a set of rules. Apart from its "
-  "amusement value, this can be useful for testing and educational "
-  "purposes, such as generating small quiz pages or producing "
-  "many different kinds of input to text processing tags.";
+constant module_name = "Random Text Generator Module"; 
+constant module_doc  =
+   "This module provides a simple way of generating texts on a "
+   "semi-random basis according to a set of rules. Apart from its "
+   "amusement value, this can be useful for testing and educational "
+   "purposes, such as generating small quiz pages or producing "
+   "many different kinds of input for testing text processing tags.";
+#endif
 
 string status()
 { return
@@ -110,7 +137,73 @@ void start()
   call_out(flush_cache, period < 5 ? 5 : period);
 }
 
+static int isalnum(string c)
+{ if (!stringp(c) || sizeof(c) != 1) return 0;
+  if (c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c >= "0" && c <= "9")
+        return 1;
+  return 0;
+}
+
+static int isidchar(string c)
+{ return isalnum(c) || c == "-" || c == "_";
+}
+
+static int isopchar(string c)
+{ return (< "+", "-", "*", "/", "%", "!", "=", "<", ">" >)[c];
+} 
+
+mixed evalexpr(string expr, mapping args)
+//
+// Evaluate a simple expression. Note: this function doesn't care
+// about traditional operator precedence - binary operators are
+// always applied from right to left.
+//
+{ string pre, op; int i, j; mixed v, v2;
+  while (expr[0..0] == " " || expr[0..0] == "\n") expr = expr[1..];
+  for(i = 0; isidchar(expr[i..i]); ++i);
+  if (i == 0)
+  { if (isopchar(expr[0..0]))
+         v = evalexpr(expr[1..], args);
+    else v = 0;
+    if (intp(v)) switch (expr[0..0])
+    { case "-": return -v;
+      case "!": return !v;
+    }
+    return "<b>(EXPR1?:" + expr + ")</b>";
+  }
+  pre = expr[0..i-1];
+  while (expr[i..i] == " " || expr[i..i] == "\n") ++i;
+  expr = expr[i..];
+  for(i = 0; sizeof(expr) >= i && isopchar(expr[i..i]); ++i);
+
+  if (i == 0)
+  { if (sscanf((string)pre, "%d", v) ||
+        sscanf((string)args[upper_case(pre)], "%d", v))
+          return v;
+     if (args[upper_case(pre)]) return args[upper_case(pre)];
+     return 0;
+  }
+
+  op = expr[0..i-1];
+  v  = evalexpr(pre, args);
+  v2 = evalexpr(expr[i..], args);
+
+  if (stringp(v )) sscanf(v,  "%d", v);
+  if (stringp(v2)) sscanf(v2, "%d", v2);
+
+  if (intp(v) && intp(v2)) switch (op)
+  { case "+": return v + v2;
+    case "-": return v - v2;
+    case "*": return v * v2;
+    case "/": return v / (v2 ? v2 : 1);
+  }
+  return "<b>(EXPR?:" + pre + " " + op + " " + expr[i..] + ")</b>";
+}
+
 string rtt_parse(mapping sections, string sec, mapping args, int depth)
+//
+// Parse a random text template/rule file.
+//
 { int choice, counts;
 
   if (!mappingp(sections[sec]))
@@ -232,9 +325,15 @@ string rtt_parse(mapping sections, string sec, mapping args, int depth)
       else if (a[i][0..6] == "STRING:")
         { a[i] = a[i][7..];
         }
+      else if (a[i][0..5] == "VALUE:")
+          a[i] = a[i][6..];
+      else if (a[i][0..4] == "EXPR:")
+          a[i] = "" + evalexpr(a[i][5..], args);
       else if (a[i] == "GLUE"  || a[i] == "NEWLINE" ||
                a[i] == "SPACE" || a[i] == "CAPITALIZE")
           a[i] = "<<<" + a[i] + ">>>";
+      else if (a[i] == "DOLLAR")
+          a[i] = "$";
       else
           a[i] = "<b>(?" + a[i] + "?)</b>";
 
@@ -251,8 +350,10 @@ string rtt_parse(mapping sections, string sec, mapping args, int depth)
   if (sections[sec]["trim-spaces"])
   { while ((zap = search(text, "\n")) >= 0)
        text = (zap > 0 ? text[0..zap-1] : "") + " " + text[zap+1..];
-    while (sizeof(text) > 0 && text[ 0.. 0] == " ") text = text[1..];
-    while (sizeof(text) > 0 && text[-1..-1] == " ") text = text[0..-2];
+    while (sizeof(text) > 0 && text[sizeof(text)-1..sizeof(text)-1] == " ")
+       text = text[0..sizeof(text)-2];
+    while (sizeof(text) > 0 && text[ 0.. 0] == " ")
+       text = text[1..];
     while ((zap = search(text, "  ")) >= 0)
       { text = text[0..zap] + text[zap+2..];}
   }
@@ -365,7 +466,7 @@ mixed make_random_text(string tag, mapping attr, object id)
     { if (attr->nocache)
          return rtt_read(path);
       if (!text_cache[path])
-         text_cache[path] = rtt_read(path);
+         return text_cache[path] = rtt_read(path);
       return text_cache[path];
     }
     return "<b>make-random-text: `" + (attr->rules) + "' rules not found</b>";
