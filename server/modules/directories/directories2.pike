@@ -1,12 +1,12 @@
 /*
- * $Id: directories2.pike,v 1.1.2.2 1997/02/14 03:16:24 grubba Exp $
+ * $Id: directories2.pike,v 1.1.2.3 1997/03/01 17:37:25 grubba Exp $
  *
  * Directory listings mark 2
  *
  * Henrik Grubbström 1997-02-13
  */
 
-string cvs_version = "$Id: directories2.pike,v 1.1.2.2 1997/02/14 03:16:24 grubba Exp $";
+string cvs_version = "$Id: directories2.pike,v 1.1.2.3 1997/03/01 17:37:25 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -126,6 +126,7 @@ string describe_directory(string d, object id)
   array(string) dir;
   int override = (path[-1] == ".");
   string result = "";
+  int toplevel;
 
   // werror(sprintf("describe_directory(%s)\n", d));
   
@@ -134,109 +135,131 @@ string describe_directory(string d, object id)
 
   dir = roxen->find_dir(d, id);
 
-  if (!id->misc->dir_no_head) {
+  if (dir && sizeof(dir)) {
+    dir = sort(dir);
+  } else {
+    dir = ({});
+  }
+
+  if (id->prestate->spartan_directories) {
+    return(sprintf("<html><head><title>Directory listing of %s</title></head>\n"
+		   "<body><h1>Directory listing of %s</h1>\n"
+		   "<pre>%s</pre></body</html>\n",
+		   d, d,
+		   map(sort(dir), lambda(string f, string d, object r, object id) {
+		     array stats = r->stat_file(d+f, id);
+		     if (stats && stats[1]<0) {
+		       return("<a href=\""+f+"/.\">"+f+"/</a>");
+		     } else {
+		       return("<a href=\""+f+"\">"+f+"</a>");
+		     } }, d, roxen, id)*"\n"+"</pre></body></html>\n"));
+  }
+
+  if ((toplevel = !id->misc->dir_no_head)) {
     id->misc->dir_no_head = 1;
 
-    result += "<h1>Directory listing of "+d+"</h1>\n<p>";
+    result += "<html><head><title>Directory listing of "+d+"</title></head>\n"
+      "<body>\n<h1>Directory listing of "+d+"</h1>\n<p>";
 
     if (QUERY(readme)) {
       result += find_readme(d, id);
     }
-    result += "<hr noshade>\n";
+    result += "<hr noshade><pre>\n";
   }
-  result += "<pre><fl folded>\n";
+  result += "<fl folded>\n";
 
-  if (dir && sizeof(dir)) {
-    foreach(sort(dir), string file) {
-      array stats = roxen->stat_file(d + file, id);
-      string type = "Unknown";
-      string icon;
-      int len = stats?stats[1]:0;
+  foreach(sort(dir), string file) {
+    array stats = roxen->stat_file(d + file, id);
+    string type = "Unknown";
+    string icon;
+    int len = stats?stats[1]:0;
 	
-      // werror(sprintf("stat_file(\"%s\")=>%O\n", d+file, stats));
+    // werror(sprintf("stat_file(\"%s\")=>%O\n", d+file, stats));
 
-      switch(-len) {
-      case 3:
-      case 2:
-	type = "   "+({ 0,0,"Directory","Module location" })[-stats[1]];
-
-	/* Directory or module */
-	file += "/";
-	icon = "internal-gopher-menu";
-
-	break;
-      default:
-	array tmp = roxen->type_from_filename(file,1);
-	if (tmp) {
-	  type = tmp[0];
-	}
-	icon = image_from_type(type);
-	if (tmp && tmp[1]) {
-	  type += " " + tmp[1];
-	}
-
-	break;
+    switch(-len) {
+    case 3:
+    case 2:
+      type = "   "+({ 0,0,"Directory","Module location" })[-stats[1]];
+      
+      /* Directory or module */
+      file += "/";
+      icon = "internal-gopher-menu";
+      
+      break;
+    default:
+      array tmp = roxen->type_from_filename(file,1);
+      if (tmp) {
+	type = tmp[0];
       }
-      result += sprintf("<ft><img border=0 src=\"%s\" alt=\"\"> "
-			"<arel href=\"%s\">%-40s</arel> %8s %-20s\n",
-			icon, file, file, sizetostring(len), type);
-
-      array(string) split_type = type/"/";
-      string extras = "Not supported for this file type";
-
-      switch(split_type[0]) {
-      case "text":
-	if (sizeof(split_type) > 1) {
-	  switch(split_type[1]) {
-	  case "html":
-	    extras = "</pre>\n<insert file=\""+d+file+"\"><pre>";
-	    break;
-	  case "plain":
-	    extras = "<insert-quoted file=\""+d+file+"\">";
-	    break;
-	  }
-	}
-	break;
-      case "application":
-	if (sizeof(split_type) > 1) {
-	  switch(split_type[1]) {
-	  case "x-include-file":
-	  case "x-c-code":
-	    extras = "<insert-quoted file=\""+d+file+"\">";
-	    break;
-	  }
-	}
-	break;
-      case "image":
-	extras = "<img src=\""+d+file+"\" border=0>";
-	break;
-      case "   Directory":
-      case "   Module location":
-	extras = "<rel base=\""+file+"\">"
-	  "<insert nocache file=\""+d+file+".\"></rel>";
-	break;
-      case "Unknown":
-	switch(lower_case(file)) {
-	case ".cvsignore":
-	case "configure":
-	case "configure.in":
-	case "bugs":
-	case "copying":
-	case "copyright":
-	case "changelog":
-	case "disclaimer":
-	case "makefile":
-	case "makefile.in":
-	case "readme":
+      icon = image_from_type(type);
+      if (tmp && tmp[1]) {
+	type += " " + tmp[1];
+      }
+      
+      break;
+    }
+    result += sprintf("<ft><img border=0 src=\"%s\" alt=\"\"> "
+		      "<arel href=\"%s\">%-40s</arel> %8s %-20s\n",
+		      icon, file, file, sizetostring(len), type);
+    
+    array(string) split_type = type/"/";
+    string extras = "Not supported for this file type";
+    
+    switch(split_type[0]) {
+    case "text":
+      if (sizeof(split_type) > 1) {
+	switch(split_type[1]) {
+	case "html":
+	  extras = "</pre>\n<insert file=\""+d+file+"\"><pre>";
+	  break;
+	case "plain":
 	  extras = "<insert-quoted file=\""+d+file+"\">";
 	  break;
 	}
+      }
+      break;
+    case "application":
+      if (sizeof(split_type) > 1) {
+	switch(split_type[1]) {
+	case "x-include-file":
+	case "x-c-code":
+	  extras = "<insert-quoted file=\""+d+file+"\">";
+	  break;
+	}
+      }
+      break;
+    case "image":
+      extras = "<img src=\""+d+file+"\" border=0>";
+      break;
+    case "   Directory":
+    case "   Module location":
+      extras = "<rel base=\""+file+"\">"
+	"<insert nocache file=\""+d+file+".\"></rel>";
+      break;
+    case "Unknown":
+      switch(lower_case(file)) {
+      case ".cvsignore":
+      case "configure":
+      case "configure.in":
+      case "bugs":
+      case "copying":
+      case "copyright":
+      case "changelog":
+      case "disclaimer":
+      case "makefile":
+      case "makefile.in":
+      case "readme":
+	extras = "<insert-quoted file=\""+d+file+"\">";
 	break;
       }
-      result += "<fd>"+extras+"\n";
+      break;
     }
+    result += "<fd>"+extras+"\n";
   }
-  result += "</fl></pre>\n";
+  result += "</fl>\n";
+  if (toplevel) {
+    result +="</pre></body></html>\n";
+  }
 
   // werror(sprintf("describe_directory()=>\"%s\"\n", result));
 
