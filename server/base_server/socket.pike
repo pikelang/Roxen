@@ -1,5 +1,5 @@
 // This code has to work both in 'roxen.pike' and all modules
-// string _cvs_version = "$Id: socket.pike,v 1.12 1998/03/26 07:51:45 per Exp $";
+// string _cvs_version = "$Id: socket.pike,v 1.13 1999/03/05 01:59:53 grubba Exp $";
 
 #if !efun(roxen)
 #define roxen roxenp()
@@ -20,6 +20,18 @@ private void connected(array args)
     return;
   }
 #ifdef SOCKET_DEBUG
+  if (!args[0]) {
+    perror("SOCKETS: async_connect: No arguments[0] to connected\n");
+    return;
+  }
+  if (!args[1]) {
+    perror("SOCKETS: async_connect: No arguments[1] to connected\n");
+    return;
+  }
+  if (!args[2]) {
+    perror("SOCKETS: async_connect: No arguments[2] to connected\n");
+    return;
+  }
   perror("SOCKETS: async_connect ok.\n");
 #endif
   args[2]->set_id(0);
@@ -39,6 +51,14 @@ private void failed(array args)
 private void got_host_name(string host, string oh, int port,
 			   function callback, mixed ... args)
 {
+  if(!host)
+  {
+#ifdef SOCKET_DEBUG
+    perror("SOCKETS: got_hostname - no host ("+oh+")\n");
+#endif
+    callback(0, @args);
+    return;
+  }
   object f;
   f=Stdio.File();
 #ifdef SOCKET_DEBUG
@@ -54,19 +74,28 @@ private void got_host_name(string host, string oh, int port,
     return;
   }
   f->set_id( ({ callback, args, f }) );
-  f->set_nonblocking(0, connected, failed);
+  // f->set_nonblocking(0, connected, failed);
+  f->set_nonblocking(0,0,0);
 #ifdef FD_DEBUG
   mark_fd(f->query_fd(), "async socket communication: -> "+host+":"+port);
 #endif
-  if(catch(f->connect(host, port))) // Illegal format...
+  int res=0;
+  array err;
+  if(err=catch(res=f->connect(host, port))||!res) // Illegal format...
   {
-#ifdef SOCKET_DEBUG
-    perror("SOCKETS: Illegal internet address in connect in async comm.\n");
-#endif
+//#ifdef SOCKET_DEBUG
+    perror("SOCKETS: Illegal internet address (" + host + ":" +port + ")"
+	   " in connect in async comm.\n");
+    if(err&&err[1])
+      perror("SOCKETS: " + err[0] - "\n" + " (" + host + ":" + port + ")"
+	     " in connect in async comm.\n");
+//#endif
+    //f->set_nonblocking(0,0,0);
     callback(0, @args);
     destruct(f);
     return;
   }
+  f->set_nonblocking(0, connected, failed);
 }
 
 void async_connect(string host, int port, function|void callback,
@@ -154,6 +183,3 @@ void async_cache_connect(string host, int port, string cl,
   }
   roxen->host_to_ip(host, got_host_name, host, port, callback, @args);
 }
-
-
-
