@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.503 2002/03/22 15:33:59 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.504 2002/03/27 17:48:40 per-bash Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -176,6 +176,38 @@ void avg_prof_leave( string name, string type, RequestID id )
 /* A configuration.. */
 inherit Configuration;
 inherit "basic_defvar";
+
+static mapping(RequestID:mapping) current_connections =
+  set_weak_flag( ([ ]), 1 );
+
+void connection_add( RequestID id, mapping data )
+//! Add a connection. The data mapping can contain things such as
+//! currently sent bytes.
+//!
+//! See protocols/http.pike and slowpipe.pike for more information.
+//!
+//! You are not in any way forced to use this method from your
+//! protocol module. The information is only used for debug purposes
+//! in the configuration interface.
+//!
+//! You have to keep a reference to the mapping on your own, none is
+//! kept by the configuration object.
+{
+  current_connections[id] = data;
+}
+
+mapping connection_drop( RequestID id )
+//! Remove a connection from the list of currently active connections.
+//! Returns the mapping previously added with connection_add, if any.
+{
+  m_delete( current_connections, id );
+}
+
+mapping(RequestID:mapping) connection_get( )
+//! Return all currently active connections.
+{
+  return current_connections;
+}
 
 // It's nice to have the name when the rest of __INIT executes.
 string name = roxen->bootstrap_info->get();
@@ -2380,6 +2412,24 @@ void start(int num)
   if(!sizeof(do_not_log_patterns))
     do_not_log_patterns = 0;
 
+  if( query("throttle") )
+  {
+    if( !throttler )
+      throttler=.throttler();
+    throttler->throttle(query("throttle_fill_rate"),
+                        query("throttle_bucket_depth"),
+                        query("throttle_min_grant"),
+                        query("throttle_max_grant"));
+  }
+  else if( throttler )
+  {
+    // This is done to give old connections more bandwidth.
+    throttler->throttle( 1000000000, 1000000000, // 800Mbit.
+			 1024, 65536 );
+    // and new connections does not even have to care.
+    throttler = 0;
+  }
+
 #ifdef SNMP_AGENT
   if(query("snmp_process") && objectp(roxen->snmpagent))
       roxen->snmpagent->add_virtserv(get_config_id());
@@ -2908,33 +2958,15 @@ string check_variable(string name, mixed value)
   case "URLs":
     fix_my_url();
     return 0;
-  case "throttle":
-    if (value) {
-      THROTTLING_DEBUG("configuration: Starting throttler up");
-      throttler=.throttler();
-      throttler->throttle(query("throttle_fill_rate"),
-                          query("throttle_bucket_depth"),
-                          query("throttle_min_grant"),
-                          query("throttle_max_grant"));
-    } else {
-      if (throttler) { //check, or get a backtrace the first time it's set
-        THROTTLING_DEBUG("configuration: Stopping throttler");
-        destruct(throttler);
-        throttler=0;
-      }
-    }
-    return 0;
-  case "throttle_fill_rate":
-  case "throttle_bucket_depth":
-  case "throttle_min_grant":
-  case "throttle_max_grant":
-    THROTTLING_DEBUG("configuration: setting throttling parameter: "+
-                     name+"="+value);
-    throttler->throttle(query("throttle_fill_rate"),
-                        query("throttle_bucket_depth"),
-                        query("throttle_min_grant"),
-                        query("throttle_max_grant"));
-    return 0;
+//    case "throttle":
+//      // There was code here to sett the throttling. That's not a
+//      // good idea. Moved to start. The code now also avoids
+//      // creating new throttle objects each time a value is changed.
+//    case "throttle_fill_rate":
+//    case "throttle_bucket_depth":
+//    case "throttle_min_grant":
+//    case "throttle_max_grant":
+//      return 0;
 #ifdef SNMP_AGENT
   case "snmp_process":
     if (objectp(roxen->snmpagent)) {
@@ -3628,14 +3660,6 @@ page.
   setvars( retrieved_vars );
 
 //   report_debug("[restore: %.1fms] ", (gethrtime()-st)/1000.0 );
-  if (query("throttle"))
-  {
-    throttler=.throttler();
-    throttler->throttle(query("throttle_fill_rate"),
-                        query("throttle_bucket_depth"),
-                        query("throttle_min_grant"),
-                        query("throttle_max_grant"));
-  }
 }
 
 static int arent_we_throttling_server () {
