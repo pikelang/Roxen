@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.255 2001/11/14 15:33:15 mast Exp $
+// $Id: module.pmod,v 1.256 2001/11/14 15:45:25 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6772,7 +6772,7 @@ class PCode
       if (ctx->misc[" _ok"] != ctx->misc[" _prev_ok"])
 	// Special case: Poll for changes of the _ok flag, to avoid
 	// widespread compatibility issues with the existing tags.
-	ctx->set_misc (" _ok", ctx->misc[" _ok"]);
+	ctx->set_misc (" _ok", ctx->misc[" _prev_ok"] = ctx->misc[" _ok"]);
       mapping var_chg = ctx->misc->variable_changes;
       if (length + (sizeof (var_chg) ? 2 : 1) > sizeof (exec))
 	exec += allocate (sizeof (exec));
@@ -6807,7 +6807,7 @@ class PCode
 	if (ctx->misc[" _ok"] != ctx->misc[" _prev_ok"])
 	  // Special case: Poll for changes of the _ok flag, to avoid
 	  // widespread compatibility issues with the existing tags.
-	  ctx->set_misc (" _ok", ctx->misc[" _ok"]);
+	  ctx->set_misc (" _ok", ctx->misc[" _prev_ok"] = ctx->misc[" _ok"]);
 	mapping var_chg = ctx->misc->variable_changes;
 	ctx->misc->variable_changes = ([]);
 	if (frame->flags & FLAG_DONT_CACHE_RESULT)
