@@ -1,15 +1,35 @@
-<template base=/webadm>
-
 <tmpl_vars>
   <cset variable=tab>template_editor</cset>
 </tmpl_vars>
 
+
 <tmpl_body>
-  Template Editor <br>
+
+<br><br>
+
+<if variable=edit>
+  <preparse tag=wizard name="Select some colors...">
+  <formoutput quote='¤'>
+    <sqloutput query="select * from template_vars where
+                      group_name='¤edit¤'">
+      <page>
+       <input type=hidden name=edit value='¤edit:quote=mysql¤'>
+        <h3>#title#</h3>
+        <var name=#name# type=#type#>
+	<br>
+        #help#<br>
+      </page>
+      <done>
+         *saving...*
+      </done>
+    </sqloutput>
+  </formoutput>
+  </preparse>
+</if>    
   <h3>Template variables</h3>
   <ul>
     <sqloutput query='select distinct group_name from template_vars'>
-      <li><a href="template_editor.html?template_wizarde=#group_name#">
+      <li><a href="template_editor.html?edit=#group_name#">
         #group_name#
       </a>
     </sqloutput>
@@ -23,6 +43,5 @@
       </a>
     </sqloutput>
   </ul>
-</tmpl_body>
 
-</template>
+</tmpl_body>
