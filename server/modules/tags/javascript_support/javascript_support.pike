@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.31 2001/05/16 09:09:29 per Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.32 2001/05/16 10:26:17 per Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -14,6 +14,8 @@ constant module_name = "Tags: Javascript Support";
 constant module_doc  = ("This module provides some tags to support "
 			"javascript development (i.e. Javascript popup menus).");
 
+// This module is indeed thread-safe.
+constant thread_safe = 1;
 
 //  Mapping of known callback functions. A callback is defined as
 //
