@@ -348,6 +348,9 @@ string page_really_compact( RequestID id )
   object ec = roxenloader.LowErrorContainer();
   master()->set_inhibit_compile_errors( ec );
 
+  if( id->variables->reload_module_list )
+    roxen->clear_all_modules_cache();
+
   array mods;
   roxenloader.push_compile_error_handler( ec );
   mods = roxen->all_modules();
@@ -406,7 +409,7 @@ mixed do_it( RequestID id )
   if( !conf->inited )
     conf->enable_all_modules();
 
-  werror("%O\n", id->variables->mod_init_vars);
+  //werror("%O\n", id->variables->mod_init_vars);
   foreach( id->variables->module_to_add/"\0", string mod ) {
     if (RoxenModule m = conf->enable_module( mod )) {
       mod = conf->otomod[m];
