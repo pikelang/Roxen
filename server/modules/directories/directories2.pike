@@ -1,5 +1,5 @@
 /* This is a Roxen module. Copyright © 1996 - 1998, Idonex AB, (c) Idonex AB 1998
- * $Id: directories2.pike,v 1.9 1998/03/11 19:42:34 neotron Exp $
+ * $Id: directories2.pike,v 1.10 1998/09/17 14:31:54 grubba Exp $
  *
  * Directory listings mark 2
  *
@@ -12,7 +12,7 @@
  * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.9 1998/03/11 19:42:34 neotron Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.10 1998/09/17 14:31:54 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -40,6 +40,11 @@ array register_module()
 	      ({ }), 1 });
 }
 
+int dirlisting_not_set()
+{
+  return(!QUERY(dirlisting));
+}
+
 void create()
 {
   defvar("indexfiles", ({ "index.html", "Main.html", "welcome.html",
@@ -48,18 +53,27 @@ void create()
 	 "If one of these files is present in a directory, it will "
 	 "be returned instead of the directory listing.");
 
+  defvar("dirlisting", 1, "Enable directory listings", TYPE_FLAG,
+	 "If set, a directory listing is generated if there is "
+	 "no index file for the directory.<br>\n"
+	 "If disabled, a file not found error will be generated "
+	 "instead.<br>\n");
+
   defvar("readme", 1, "Include readme files", TYPE_FLAG,
-	 "If set, include readme files in directory listings");
+	 "If set, include readme files in directory listings",
+	 0, dirlisting_not_set);
   
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
 	 "in a directory by appending '.' or '/' to the directory name, like "
 	 "this: <a href=http://www.roxen.com//>http://www.roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
-	 "security hole.");
+	 "security hole.",
+	 0, dirlisting_not_set);
   
   defvar("size", 1, "Include file size", TYPE_FLAG,
-	 "If set, include the size of the file in the listing.");
+	 "If set, include the size of the file in the listing.",
+	 0, dirlisting_not_set);
 }
 
 string quote_plain_text(string s)
@@ -300,7 +314,8 @@ string|mapping parse_directory(object id)
    * is set, a directory listing should be sent instead of the
    * indexfile.
    */
-  if(!(sizeof(f)>1 && f[-2]=='/' && f[-1]=='.' && QUERY(override))) {
+  if(!(sizeof(f)>1 && f[-2]=='/' && f[-1]=='.' &&
+       QUERY(dirlisting) && QUERY(override))) {
     /* Handle indexfiles */
     string file, old_file;
     string old_not_query;
@@ -313,6 +328,9 @@ string|mapping parse_directory(object id)
 	return got;
     }
     id->not_query = old_not_query;
+  }
+  if (!QUERY(dirlisting)) {
+    return 0;
   }
   if (f[-1] != '.') {
 #if 0
