@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.116 2000/10/11 22:48:33 mast Exp $
+//! $Id: module.pmod,v 1.117 2000/10/17 23:02:30 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1848,33 +1848,33 @@ class Frame
     get_context()->delete_var (var, scope_name);
   }
 
-  local void run_error (string msg, mixed... args)
+  void run_error (string msg, mixed... args)
   //! A wrapper for easy access to RXML.run_error().
   {
     _run_error (msg, @args);
   }
 
-  local void parse_error (string msg, mixed... args)
+  void parse_error (string msg, mixed... args)
   //! A wrapper for easy access to RXML.parse_error().
   {
     _parse_error (msg, @args);
   }
 
-  local void tag_debug (string msg, mixed... args)
+  void tag_debug (string msg, mixed... args)
   //! Writes the message to the debug log if this tag has FLAG_DEBUG
   //! set.
   {
     if (flags & FLAG_DEBUG) werror (msg, @args);
   }
 
-  local void terminate()
+  void terminate()
   //! Makes the parser abort. The data parsed so far will be returned.
   //! Does not return; throws a special exception instead.
   {
     fatal_error ("FIXME\n");
   }
 
-  local void suspend()
+  void suspend()
   //! Used together with resume() for nonblocking mode. May be called
   //! from any frame callback to suspend the parser: The parser will
   //! just stop, leaving the context intact. If it returns, the parser
@@ -1884,14 +1884,14 @@ class Frame
     fatal_error ("FIXME\n");
   }
 
-  local void resume()
+  void resume()
   //! Makes the parser continue where it left off. The function that
   //! called suspend() will be called again.
   {
     fatal_error ("FIXME\n");
   }
 
-  local mapping(string:Tag) get_plugins()
+  mapping(string:Tag) get_plugins()
   //! Returns the plugins registered for this tag, which is assumed to
   //! be a socket tag, i.e. to have FLAG_SOCKET_TAG set (see
   //! Tag.plugin_name for details). Indices are the plugin_name values
@@ -1899,7 +1899,7 @@ class Frame
   //! themselves. Don't be destructive on the returned mapping.
   {
 #ifdef MODULE_DEBUG
-    if (!(flags & FLAG_SOCKET_TAG))
+    if (!(tag->flags & FLAG_SOCKET_TAG))
       fatal_error ("This tag is not a socket tag.\n");
 #endif
     return get_context()->tag_set->get_plugins (tag->name, tag->flags & FLAG_PROC_INSTR);
@@ -1911,7 +1911,7 @@ class Frame
     return get_context()->tag_set->get_overridden_tag (tag);
   }
 
-  local Frame|string propagate_tag (void|mapping(string:string) args, void|string content)
+  Frame|string propagate_tag (void|mapping(string:string) args, void|string content)
   //! This function is intended to be used in the execution array from
   //! do_return() etc to propagate the tag to the next overridden tag
   //! definition, if any exists. It either returns a frame from the
