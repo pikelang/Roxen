@@ -109,7 +109,7 @@ string selected_item( string q, Configuration c, RequestID id, string module )
              });
            }
          }
-         sort( variables->name, variables );
+         sort( map(variables->name, lower_case), variables );
 
 	 pre += "<table cellspacing='0' cellpadding='0'>\n";
 

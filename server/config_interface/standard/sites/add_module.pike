@@ -230,8 +230,7 @@ array(string) get_module_list( function describe_module,
   string doubles="", already="";
   array w = map(mods, module_class, id);
 
-  mapping classes = ([
-  ]);
+  mapping classes = ([]);
   sort(w,mods);
   for(int i=0; i<sizeof(w); i++)
   {
@@ -467,8 +466,6 @@ string page_compact( RequestID id )
 string page_really_compact( RequestID id )
 {
   first=0;
-  string desc, err;
-
 
   object conf = roxen.find_configuration( id->variables->config );
   object ec = roxenloader.LowErrorContainer();
@@ -491,6 +488,7 @@ string page_really_compact( RequestID id )
   mods = roxen->all_modules();
   roxenloader.pop_compile_error_handler();
 
+  sort(map(mods->get_name(), lower_case), mods);
   string res = "";
 
   mixed r;
@@ -509,12 +507,11 @@ string page_really_compact( RequestID id )
     res += r[1];
 
   master()->set_inhibit_compile_errors( 0 );
-  desc=res;
 
   return page_base(id,
                    "<form action=\"add_module.pike\" method=\"post\">"
                    "<input type=\"hidden\" name=\"config\" value=\"&form.config;\" />"+
-                   desc+"</select><br /><submit-gbutton> "
+                   res+"</select><br /><submit-gbutton> "
                    +LOCALE(251, "Add Module")+" </submit-gbutton><br />"
                    +pafeaw(ec->get(),ec->get_warnings())+"</form>",
                    );
