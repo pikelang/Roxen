@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.213 2004/05/17 17:44:58 mast Exp $
+// $Id: module.pike,v 1.214 2004/05/17 18:22:21 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1138,8 +1138,7 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
 
   string|int(-1..0) etag;
 
-  mapping(string:mixed) res =
-    lock && Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
+  int(0..1) locked_fail = !!lock;
  next_condition:
   foreach(condition, array(array(string)) sub_cond) {
     SIMPLE_TRACE_ENTER(this,
@@ -1175,9 +1174,7 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
 	break;
       case "key":
 	// The user has specified a key, so don't fail with DAV_LOCKED.
-	if (res && res->error == Protocols.HTTP.DAV_LOCKED) {
-	  res = 0;
-	}
+	locked_fail = 0;
 	if (negate) {
 	  if (lock && lock->locktoken == token[1]) {
 	    TRACE_LEAVE("Matched negated lock.");
@@ -1202,10 +1199,13 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
     }
     SIMPLE_TRACE_LEAVE("Conditional ok, but still locked (locktoken: %O).",
 		       lock->locktoken);
+    locked_fail = 1;
   }
 
   TRACE_LEAVE("Failed.");
-  return res || Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
+  return Roxen.http_status(locked_fail ?
+			   Protocols.HTTP.DAV_LOCKED :
+			   Protocols.HTTP.HTTP_PRECOND_FAILED);
 }
 
 //! Used by some default implementations to check if we may perform a
