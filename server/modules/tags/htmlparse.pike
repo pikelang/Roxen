@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.166 1999/03/23 22:24:58 mast Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.167 1999/03/24 16:42:12 js Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -3341,8 +3341,12 @@ string tag_for(string t, mapping args, string c, object id)
   m_delete(args, "to");
   m_delete(args, "variable");
   string res="";
-  for(int i=from; i<=to; i+=step)
-    res += "<set variable="+v+" value="+i+">"+c;
+  if(step<0)
+    for(int i=from; i>=to; i+=step)
+      res += "<set variable="+v+" value="+i+">"+c;
+  else
+    for(int i=from; i<=to; i+=step)
+      res += "<set variable="+v+" value="+i+">"+c;
   return res;
 }
 
