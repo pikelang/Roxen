@@ -811,7 +811,7 @@ int main(int argc, string *argv)
 		 "xnames":({"jan", "feb", "mar", "apr", "maj"//, "jun"
 }),
 		 "fontsize":16,
-		 "labels":0,//({"xstor", "ystor", "xenhet", "yenhet"}),
+		 "labels":0,({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":20,
 		 "legend_texts":({"Roxen", "Netscape", "Apache", "Microsoft" }),
 		 "labelsize":12,
@@ -819,7 +819,8 @@ int main(int argc, string *argv)
 		 "yminvalue":0,
 		 "horgrind": 1,
 		 "grindwidth": 0.5,
-		 "backlinecolor":1.0
+		 "backlinecolor":1.0,
+		 "xnames":({"hej", "olle"})
   ]);
 
   diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));

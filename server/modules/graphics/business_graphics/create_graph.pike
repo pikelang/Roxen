@@ -332,14 +332,15 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 
   diagram_data["ynamesimg"]=allocate(j=sizeof(diagram_data["ynames"]));
   for(int i=0; i<j; i++)
-    if ((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i])))
+    if (((diagram_data["values_for_ynames"][i]>LITET)||(diagram_data["values_for_ynames"][i]<-LITET))&&    
+	((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i]))))
       diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
-->scale(0,diagram_data["fontsize"])
-;
+	->scale(0,diagram_data["fontsize"])
+	;
     else
       diagram_data["ynamesimg"][i]=
 	image(diagram_data["fontsize"],diagram_data["fontsize"]);
-
+  
 
 
   if (diagram_data["orient"]=="vert")
@@ -1228,7 +1229,7 @@ int main(int argc, string *argv)
 }),
 		 "labelsize":0,
 		 "xminvalue":0,
-		 "yminvalue":0.1,
+		 "yminvalue":-1,
 		 "vertgrind": 1,
 		 "grindwidth": 0.5
 
