@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.5 1997/10/09 01:04:35 grubba Exp $
+ * $Id: locks.pike,v 1.6 1998/03/20 03:29:35 per Exp $
  */
 #include <config.h>
 
@@ -21,10 +21,9 @@ string describe_module(object q)
 	mapping mod = c->modules[m];
 	if(mod->enabled == q)
 	  return c->name+"/"+m+"</td><td>"+roxen->filename(q);
-	else if(mod->copies &&
-		!zero_type(((mod=mkmapping(values(mod->copies),
-					   indices(mod->copies)))[q])))
-	  return c->name+"/"+m+"#"+mod[q]+"</td><td>"+roxen->filename(q);
+	else if(mod->copies && !zero_type(search(mod->copies,q)))
+	  return (c->name+"/"+m+"#"+search(mod->copies,q)+
+		  "</td><td>"+roxen->filename(q));
     }
   }
   return "Unknown module</td><td>"+roxen->filename(q)+"";
