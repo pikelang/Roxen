@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.249 1999/12/30 00:45:07 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.250 2000/01/05 17:26:53 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -71,12 +71,13 @@ string get_doc_for( string region, string variable )
       "\n"+variables[ variable ][ VAR_DOC_STR ];
 }
 
-public mixed query(string var)
+public mixed query(string var, void|int ok)
 {
   if(var && variables[var])
     return variables[var][ VAR_VALUE ];
   if(!var) return variables;
-  error("query("+var+"): Unknown variable.\n");
+  if (!ok) error("query("+var+"): Unknown variable.\n");
+  return 0;
 }
 
 mixed set(string var, mixed val)
