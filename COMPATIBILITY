@@ -108,3 +108,5 @@ and Roxen WebServer 4.0.
    a separate module.  Volunteers please.
 
  - roxen-module:// needs to be replaced by chili-module: in inherits
+
+ - Obsolete doOutputTag support dropped from JavaModule and roxenlib

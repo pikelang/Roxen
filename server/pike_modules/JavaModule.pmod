@@ -673,13 +673,6 @@ static object native_queryconfinternal(object conf, object mod)
   return conf && conf->query_internal_location(mod && jotomod[mod]);
 }
 
-static string native_do_output_tag(object args, object var_arr,
-				   object contents, object id)
-{
-  return do_output_tag(valify(args), valify(var_arr),
-		       contents && (string)contents, jotoid[id]);
-}
-
 static string native_parse_rxml(object what, object id)
 {
   return parse_rxml( what && (string)what, jotoid[id] );
@@ -831,7 +824,6 @@ void create()
     ({"getProviders", "(Ljava/lang/String;)[Lcom/roxen/roxen/Module;", native_get_providers}),
   }));
   natives_bind3 = FINDCLASS("com/roxen/roxen/RoxenLib")->register_natives(({
-    ({"doOutputTag", "(Ljava/util/Map;[Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_do_output_tag}),
     ({"parseRXML", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_parse_rxml}),
   }));
   natives_bind4 = reqid_class->register_natives(({
