@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.237 2001/01/31 04:28:37 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.238 2001/01/31 07:33:00 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1179,16 +1179,22 @@ void start_mysql()
       !file_stat( mysqldir+"/mysql/host.MYD" ) ||
       !file_stat( mysqldir+"/mysql/db.MYD" ) )
   {
+#ifdef DEBUG
     report_debug("Mysql data directory does not exist -- copying template\n");
+#endif
     mkdirhier( mysqldir+"/mysql/" );
     Filesystem.System tar = Filesystem.Tar( "etc/mysql-template.tar" );
     foreach( tar->get_dir( "mysql" ), string f )
     {
+#ifdef DEBUG
       report_debug("copying "+f+" ... ");
+#endif
       Stdio.File to = Stdio.File( mysqldir+f, "wct" );
       Stdio.File from = tar->open( f, "r" );
       to->write( from->read() );
+#ifdef DEBUG
       report_debug("\n");
+#endif
     }
   }
 
