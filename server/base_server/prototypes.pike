@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.7 2001/01/19 18:34:44 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.8 2001/01/19 18:58:21 per Exp $";
 
 class Variable
 {
@@ -720,14 +720,16 @@ class User( UserDB database )
   //! Used by compat_userinfo(). The default implementation returns "x"
 
 
-  int set_name()              {}
-  int set_real_name()         {}
-  int set_uid()               {}
-  int set_gid()               {}
-  int set_shell()             {}
-  int set_gecos()             {}
-  int set_homedir()           {}
-  int set_crypted_password()  {}
+  int set_name(string name)               {}
+  int set_real_name(string rname)         {}
+  int set_uid(int uid)                    {}
+  int set_gid(int gid)                    {}
+  int set_shell(string shell)             {}
+  int set_gecos(string gecos)             {}
+  int set_homedir(string hodir)           {}
+  int set_crypted_password(string passwd) {}
+  int set_password(string passwd)         {}
+  //! Returns 1 if it was possible to set the variable.
   
   array compat_userinfo( )
   //! Return a unix passwd compatible array with user information. The
@@ -744,7 +746,7 @@ class User( UserDB database )
   }
 
   
-  void set_var( RoxenModule module, string index, mixed value )
+  mixed set_var( RoxenModule module, string index, mixed value )
   //! Set a specified variable in the user. If @[value] is a string,
   //! it's stored as is in the database, otherwise it's encoded using
   //! encode_value before it's stored.
@@ -776,6 +778,7 @@ class User( UserDB database )
       "INSERT INTO user_data VALUES ("+mm+", %s, %s, %s, %d)",
       index, name(), value, encoded
     );
+    return value;
   }
 
   mixed get_var( RoxenModule module, string index )
