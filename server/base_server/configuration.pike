@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.414 2001/01/28 05:45:29 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.415 2001/01/29 05:47:58 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -457,7 +457,7 @@ array(UserDB) user_databases()
 	tmp += ({ ({ mo->query( "_priority" ), mo }) });
 
   sort( tmp );
-  tmp += ({ ({ 0, roxen->config_userdb_module }) });
+//   tmp += ({ ({ 0, roxen->config_userdb_module }) });
   return userdb_module_cache = reverse(column(tmp,1));
 }
 
@@ -627,6 +627,8 @@ public array(string) user_from_uid(int u, RequestID|void id)
 }
 
 UserDB find_user_database( string name )
+//! Given a user database name, returns it if it exists in this
+//! configuration, otherwise returns 0.
 {
   foreach( user_databases(), UserDB m )
     if( m->name == name )
@@ -634,17 +636,18 @@ UserDB find_user_database( string name )
 }
 
 AuthModule find_auth_module( string name )
+//! Given a authentication method name, returns it if it exists in
+//! this configuration, otherwise returns 0.
 {
   foreach( auth_modules(), AuthModule m )
     if( m->name == name )
       return m;
 }
 
-public User authenticate( RequestID id, UserDB|void database)
+User authenticate( RequestID id, UserDB|void database)
 //! Try to authenticate the request with users from the specified user
 //! database. If no @[database] is specified, all datbases in the
-//! current configuration are searched in priority order, then the
-//! configuration user database.
+//! current configuration are searched in priority order.
 //!
 //! The return value is the autenticated user.
 //! id->misc->authenticated_user is always set to the return value.
@@ -655,20 +658,52 @@ public User authenticate( RequestID id, UserDB|void database)
       return id->misc->authenticated_user = u;
 }
 
-public mapping authenticate_throw( RequestID id, string realm,
-				   UserDB|void database)
+mapping authenticate_throw( RequestID id, string realm,
+			    UserDB|void database)
 //! Returns a reply mapping, similar to @[Roxen.http_rxml_reply] with
 //! friends. If no @[database] is specified, all datbases in the
-//! current configuration are searched in priority order, then the
-//! configuration user database.
+//! current configuration are searched in priority order.
 {
   mapping m;
   foreach( auth_modules(), AuthModule method )
     if( m  = method->authenticate_throw( id, realm, database ) )
-    {
-      werror( "%O\n", m );
       return m;
-    }
+}
+
+User find_user( string user, RequestID|void id )
+//! Tries to find the specified user in the currently available user
+//! databases. If id is specified, this function defaults to the
+//! database that the currently authenticated user came from, if any.
+//!
+//! The other user databases are processed in priority order
+{
+  User uid;
+
+  if( id->misc->authenticated_user
+      && ( uid = id->misc->authenticated_user->database->find_user( user ) ))
+    return uid;
+  
+  foreach( user_databases(), UserDB m )
+    if( uid = m->find_user( user ) )
+      return uid;
+}
+
+Group find_group( string group, RequestID|void id )
+//! Tries to find the specified group in the currently available user
+//! databases. If id is specified, this function defaults to the
+//! database that the currently authenticated user came from, if any.
+//!
+//! The other user databases are processed in priority order
+{
+  Group uid;
+
+  if( id->misc->authenticated_user
+      && ( uid = id->misc->authenticated_user->database->find_group( group ) ))
+    return uid;
+  
+  foreach( user_databases(), UserDB m )
+    if( uid = m->find_group( group ) )
+      return uid;
 }
 
 
@@ -2000,7 +2035,8 @@ int|string try_get_file(string s, RequestID id,
     return 0;
   }
 
-  if (!(< 0, 200, 201, 202, 203 >)[m->error]) return 0;
+  // Allow 2* and 3* error codes, not only a few specific ones.
+  if (!(< 0,2,3 >)[m->error/100]) return 0;
 
   if(status) return 1;
 
@@ -2833,10 +2869,6 @@ void low_init(void|int modules_already_enabled)
 
     array modules_to_process = indices( enabled_modules );
     string tmp_string;
-
-    // Always enable the user database module first.
-    if(search(modules_to_process, "userdb#0")>-1)
-      modules_to_process = (({"userdb#0"})+(modules_to_process-({"userdb#0"})));
 
     array err;
     forcibly_added = (<>);
