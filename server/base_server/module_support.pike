@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.68 2000/04/05 23:41:22 per Exp $
+// $Id: module_support.pike,v 1.69 2000/04/13 21:43:03 marcus Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -498,7 +498,11 @@ array rec_find_all_modules( string dir )
       {
         if( file[0] == '.' ) continue;
         if( file[-1] == '~' ) continue;
-        if( (< "so", "pike", "class" >)[ extension( file ) ] )
+        if( (< "so", "pike",
+#if constant(Java.jvm)
+	       "class"
+#endif
+	>)[ extension( file ) ] )
         {
           Stdio.File f = open( dir+file, "r" );
           if( (f->read( 4 ) != "#!NO" ) )
