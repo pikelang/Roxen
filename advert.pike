@@ -218,7 +218,7 @@ mixed clickthrough(object id)
   mapping v = id->variables;
 
   if (!v->ad || !v->run || !v->group || !v->url)
-    return;
+    return 0;
 
   .Advert.Ad.log_clickthrough((int)v->impression, (int)v->ad,
 	(int)v->run,(int)v->group, 
