@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.302 2001/11/07 17:13:47 anders Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.303 2001/11/08 10:05:11 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1199,7 +1199,7 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
-mapping(string:array(Sql.Sql)) sql_free_list = ([ ]);
+mapping(string:array(MySQLTimeout)) sql_free_list = ([ ]);
 mapping sql_active_list = ([ ]);
 
 #ifdef DB_DEBUG
@@ -1215,6 +1215,28 @@ void clear_connect_to_my_mysql_cache( )
   sql_free_list = ([]);
 }
 
+class MySQLTimeout(static Sql.Sql real)
+{
+  // 5 minutes timeout.
+  static int timeout = time(1) + 5*60;
+
+  static int(0..1) `!()
+  {
+    if (timeout < time(1)) {
+      real = 0;
+    }
+    return !real;
+  }
+  Sql.Sql get()
+  {
+    if (timeout < time(1)) {
+      real = 0;
+    }
+    Sql.Sql res = real;
+    real = 0;
+    return res;
+  }
+}
 
 class MySQLResKey(static object real, static MySQLKey key)
 {
@@ -1344,7 +1366,8 @@ class MySQLKey
 #endif
     if( !--sql_active_list[name] )
       m_delete( sql_active_list, name );
-    sql_free_list[ name ] = ({ real }) + (sql_free_list[ name ]||({}));
+    sql_free_list[ name ] = ({ MySQLTimeout(real) }) +
+      (sql_free_list[ name ]||({}));
     if( `+( 0, @map(values( sql_free_list ),sizeof ) ) > 20 )
     {
 #ifdef DB_DEBUG
@@ -1393,7 +1416,7 @@ mixed sq_cache_lock()
 
 mixed sq_cache_get( string i )
 {
-  if( sql_free_list[ i ] )
+  while(sql_free_list[ i ])
   {
 #ifdef DB_DEBUG
     werror("%O found in free list\n", i );
@@ -1403,6 +1426,7 @@ mixed sq_cache_get( string i )
       sql_free_list[ i ] = sql_free_list[i][1..];
     else
       m_delete( sql_free_list, i );
+    if (!res || !(res = res->get())) continue;
     sql_active_list[i]++;
     return MySQLKey( res, i );
   }
