@@ -1,0 +1,48 @@
+A few guidelines to people contributing to the code:
+
+- Since we're using Pike 7.7 CVS, all recent Pike constructs are allowed
+  and even preferred.
+
+- This means that all references to "this_object()" are changed to "this".
+
+- search() is replaced with has_value(), has_prefix() or has_suffix()
+  if deemed appropriate.
+
+- Reporting and debugging functions/macros should avoid nested sprintf()
+  constructs, the functions themselves should be sprintf compatible in their
+  argumentlists or be made so.
+
+- Sometimes we improve the distribution of whitespace in expressions to
+  make them more readable.  When in doubt, though, always copy whitespace
+  changes from the Roxen 4.0 sources; keep the diffs as small as possible.
+
+- We're trying to deliver a product superior to Roxen 4.0, so improvements
+  in logic are welcome; please try to look what you merge in, if you
+  think it can be improved upon, you're welcome to do it (but, test it
+  before committing; also, document the change).
+
+- When syncing with Roxen 4.0, if possible, include the revision number of
+  the Roxen source of the file in the cvslog.
+
+- It is not our intent to remove copyright notices, primarily all visible
+  (to end users and administrators) references to Roxen should be replaced
+  by ChiliMoon.
+
+- We're aiming for compatibility with RXML2 of Roxen 4.0.
+
+- Anonymous access to the CVS should be possible through:
+  cvs -d :pserver:anonymous@cvs.lysator.liu.se:/cvsroot/ChiliMoon login
+  cvs -d :pserver:anonymous@cvs.lysator.liu.se:/cvsroot/ChiliMoon \
+   co ChiliMoon/2004
+
+- Write access to the CVS should be possible through:
+  Apply for an account at:
+   http://cvs.lysator.liu.se/
+  Go to the Bugzilla Installation.  Enter username and password.
+  Then send a mail to mani@lysator.liu.se asking for CVS write access.
+  You'll get a username and password for the CVS in the E-mail.
+  E.g. the username is _cvs_stephen (usually formed from the lefthand-side
+  of the E-mail address supplied to the Bugzilla interface), then
+  cvs -d :ext:_cvs_stephen@cvs.lysator.liu.se:/cvsroot/ChiliMoon \
+   co ChiliMoon/2004
+  should be able to be used to gain access.
