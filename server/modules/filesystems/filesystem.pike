@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.17 1997/06/11 23:20:17 grubba Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.18 1997/07/06 18:29:11 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -92,6 +92,12 @@ void create()
 	 TYPE_FLAG,
 	 "EXPERIMENTAL. Access file as the logged in user.<br>\n"
 	 "This is useful for eg named-ftp.");
+
+  defvar("no_symlinks", 0, "Forbid access to symlinks", TYPE_FLAG,
+	 "EXPERIMENTAL.\n"
+	 "Forbid access to paths containing symbolic links.<br>\n"
+	 "NOTE: This can cause *alot* of lstat system-calls to be performed "
+	 "and can make the server much slower.");
 }
 
 
@@ -225,11 +231,29 @@ int _file_size(string X,object id)
 
 #define FILE_SIZE(X) (stat_cache?_file_size((X),id):Stdio.file_size(X))
 
+int contains_symlinks(string root, string path)
+{
+  array arr = path/"/";
+
+  foreach(arr - ({ "" }), path) {
+    root += "/" + path;
+    if (arr = file_stat(root, 1)) {
+      if (arr[1] == -3) {
+	return(1);
+      }
+    } else {
+      return(0);
+    }
+  }
+  return(0);
+}
+
 mixed find_file( string f, object id )
 {
   object o;
   int size;
   string tmp;
+  string oldf = f;
 #ifdef FILESYSTEM_DEBUG
   perror("FILESYSTEM: Request for "+f+"\n");
 #endif
@@ -276,7 +300,7 @@ mixed find_file( string f, object id )
 
       privs = 0;
 
-      if(!o)
+      if(!o || (QUERY(no_symlinks) && (contains_symlinks(path, oldf))))
       {
 	errors++;
 	report_error("Open of " + f + " failed. Permission denied.\n");
@@ -311,6 +335,12 @@ mixed find_file( string f, object id )
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       privs=((program)"privs")("Saving file", (int)id->misc->uid, 
 			       (int)id->misc->gid );
+    }
+
+    if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
+      errors++;
+      report_error("Creation of " + f + " failed. Permission denied.\n");
+      return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
     rm( f );
@@ -350,6 +380,12 @@ mixed find_file( string f, object id )
     }
     if(QUERY(check_auth) && (!id->auth || !id->auth[0]))
       return http_low_answer(403, "<h1>Permission to DELETE file denied</h1>");
+
+    if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
+      errors++;
+      report_error("Deletion of " + f + " failed. Permission denied.\n");
+      return http_low_answer(403, "<h2>Permission denied.</h2>");
+    }
 
     report_notice("DELETING the file "+f+"\n");
     accesses++;
