@@ -1,10 +1,10 @@
-/* This is a roxen module. (c) Informationsvävarna AB 1997.
+/* This is a roxen module. (c) Idonex AB 1997.
  * Resdistribution of this file is not permitted.
  * 
  * Draws diagrams pleasing to the eye.
  * 
- * Made by Peter Bortas <peter@infovav.se> and Henrik Wallin <hedda@infovav.se>
- * in October -97
+ * Made by Peter Bortas <peter@idonex.se> and Henrik Wallin <hedda@idonex.se>
+ * in October 1997
  */
 
 /* TODO:
@@ -16,7 +16,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.10 1997/10/15 02:29:04 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.11 1997/10/15 03:03:23 hedda Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -37,7 +37,7 @@ mixed *register_module()
        "<br>This module defines some tags,"
        "<pre>"
        "&lt;diagram&gt;: \n"
-       "Draws differet kinds of diagrams. "
+       "Draws different kinds of diagrams. "
        "Defines the following attributes: \n"
        " type=        { sumbars | normsumbars |linechart | barchart | piechart | graph }\n"
        " background=  Takes the filename of a ppm image is input.\n"
