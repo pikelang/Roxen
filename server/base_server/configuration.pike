@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.370 2000/09/13 14:16:01 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.371 2000/09/18 23:47:12 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2137,6 +2137,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     {
       report_warning("Failed to load %s. The module probably "
                      "doesn't exist in the module path.\n", modname);
+      got_no_delayed_load = -1;
       return 0;
     }
   }
