@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.382 2000/11/02 11:34:02 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.383 2000/11/02 14:02:24 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2057,6 +2057,7 @@ int save_one( RoxenModule o )
 
   store(q, o->query(), 0, this_object());
   invalidate_cache();
+  mixed error;
   if( error = catch( o->start(2, this_object()) ) )
   {
     if( objectp(error ) )
