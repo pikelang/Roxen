@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.58 1997/12/21 20:54:05 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.59 1997/12/21 21:59:39 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -59,23 +59,29 @@ mixed *register_module()
        "  <b>help</b>           Displays this text.\n"
        "  <b>type</b>           Mandatory. Type of graph. Valid types are:\n"
        "                 <b>sumbars</b>, <b>normsumbars</b>, <b>linechart</b>,"
-       " <b>barchart</b>, <b>piechart</b> and <b>graph</b>\n"
+       " <b>barchart</b>,\n"
+       "                 <b>piechart</b> and <b>graph</b>\n"
        "  <b>background</b>     Takes the filename of a ppm image as input.\n"
        "  <b>width</b>          Width of diagram image in pixels.\n"
        "                 (will not have any effect below 100)\n"
        "  <b>height</b>         Height of diagram image in pixels.\n"
        "                 (will not have any effect below 100)\n"
        "  <b>fontsize</b>       Height of text in pixels.\n"
-       "  <b>legendfontsize</b> Height of legend text in pixels. Uses fontsize if not defined.\n"
+       "  <b>legendfontsize</b> Height of legend text in pixels. Uses\n"
+       "                 <b>fontsize</b> if not defined.\n"
        "  <b>3D</b>             Render piecharts on top of a cylinder, takes the\n                 height in pixels of the cylinder as argument.\n"
        /* " tone         Do nasty stuff to the background.\n"
 	  " Requires dark background to be visable.\n" */
        "  <b>eng</b>            If present, numbers are shown like 1.2M.\n"
        "  <b>tonedbox</b>       Creates a background shading between the\n"
-       "                        colors assigned to each of the four corners.\n"
-       "  <b>center</b>         (Only for pie) center=n centers the nth slice\n"
+       "                 colors assigned to each of the four corners.\n"
+       "  <b>center</b>         (Only for <b>pie</b>) center=n centers the nth slice\n"
+       "  <b>voidsep</b>        If this separator is given it will be used\n"
+       "                 instead of VOID (This option can also\n"
+       "                 be given i <b>xnames</b> and so on)\n"
        "  <b>bgcolor</b>        Sets the color for the background\n"
        "  <b>textcolor</b>      Sets the color for all text\n"
+       "                 (Can be overrided)\n"
        "  <b>labelcolor</b>     Sets the color for the labels of the axis\n"
        
        "  <b>horgrid</b>        If present a horizontal grid is drawn\n"
