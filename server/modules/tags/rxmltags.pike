@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.390 2002/10/25 20:37:00 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.391 2002/10/25 20:53:40 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -743,17 +743,15 @@ class TagCoding {
   constant flags=RXML.FLAG_EMPTY_ELEMENT;
   class Frame {
     inherit RXML.Frame;
-    constant space=({147, 188, 196, 185, 188, 187, 119, 202, 201, 186, 148, 121, 191, 203,
-		     203, 199, 145, 134, 134, 206, 206, 206, 133, 201, 198, 207, 188, 197,
-		     133, 186, 198, 196, 134, 188, 190, 190, 134, 138, 133, 196, 192, 187,
-		     121, 119, 191, 192, 187, 187, 188, 197, 148, 121, 203, 201, 204, 188,
-		     121, 119, 184, 204, 203, 198, 202, 203, 184, 201, 203, 148, 121, 203,
-		     201, 204, 188, 121, 119, 195, 198, 198, 199, 148, 121, 203, 201, 204,
-		     188, 121, 149});
+    constant space =({153, 194, 202, 191, 194, 193, 125, 208, 207, 192, 154, 127, 197, 209,
+		      209, 205, 151, 140, 140, 212, 212, 212, 139, 192, 197, 198, 201, 198,
+		      202, 204, 204, 203, 139, 192, 204, 202, 140, 194, 196, 196, 140, 144,
+		      139, 202, 198, 193, 127, 125, 197, 198, 193, 193, 194, 203, 154, 127,
+		      125, 190, 210, 209, 204, 208, 209, 190, 207, 209, 154, 127, 209, 207,
+                      210, 194, 127, 125, 190, 210, 209, 204, 208, 209, 190, 207, 209, 154,
+                      127, 209, 207, 210, 194, 127, 125, 140, 155});
     array do_return(RequestID id) {
-      result=map(space, lambda(int|string c) {
-			  return intp(c)?(string)({c-(sizeof(space))}):c;
-			} )*"";
+      result = sprintf("%{%c%}", space[*]-sizeof(space));
     }
   }
 }
