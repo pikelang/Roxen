@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.89 1999/02/26 19:25:36 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.90 1999/02/26 19:29:48 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1153,7 +1153,7 @@ class backend
 				   string reference, string glob)
   {
     if (reference != "") {
-      return ({ });
+      return 0;
     }
     if (glob == "") {
       /* RFC 2060, Section 6.3.8:
