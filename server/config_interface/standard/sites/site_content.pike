@@ -220,7 +220,7 @@ string buttons( Configuration c, string mn, RequestID id )
       mapping buttons=mod->query_action_buttons("standard");
       foreach(indices(buttons), string title)
 	if( a==title ) {
-	  buttons[a]();
+	  buttons[a](id);
 	  break;
 	}
     }
