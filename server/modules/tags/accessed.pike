@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.53 2004/05/20 16:04:11 _cvs_stephen Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.54 2004/05/21 23:49:43 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -430,7 +430,7 @@ class SQLCounter {
   private string fix_file(string file)
   {
     if(sizeof(file)>255)
-      file="//"+MIME.encode_base64(Crypto.MD5()->update(file)->digest(),1);
+      file="//"+MIME.encode_base64(Crypto.MD5.hash(file),1);
     return file;
   }
 
