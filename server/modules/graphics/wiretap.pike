@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000-2001, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.34 2001/10/16 12:01:49 grubba Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.35 2004/05/27 23:31:17 mani Exp $";
 
 #include <module.h>
 inherit "module";
@@ -23,7 +23,7 @@ constant thread_safe   = 1;
 
 void create()
 {
-  defvar("colorparsing", ({ "td", "layer", "ilayer", "table" }),
+  defvar("colorparsing", ({ "td", "table" }),
 	 "Tags to parse for color",
 	 TYPE_STRING_LIST|VAR_NOT_CFIF,
 	 "Which tags should be parsed for document colors? "
