@@ -13,13 +13,23 @@ o Fixed bug in sqltag module. (con->error() == 0 was not handled.)
 
 o Added the image conversion module.
 
+o Fixed typo in servlet.pike that prevented it from compiling.
+
+o Added optional displaying of dates in directory listings.
+
+o Added kludge for problem with getting separate wizard instances for
+  each page with IE.
+
+o Added better configure tests for UnixWare and OpenServer.  (Thanks
+  to Boyd Lynn Gerber)
+
 Changes since Roxen Challenger 1.3.120 Yellow
 -----------------------------------------------
 
 o HTML-quoted the output from information tags in htmlparse that
   weren't already doing that. (security fix)
 
-o Fixed fontlistings in wizards and config action.
+o Fixed font listings in wizards and config action.
 
 Changes since Roxen Challenger 1.3.115 Yellow
 -----------------------------------------------
@@ -36,9 +46,9 @@ o Added byte-range handling. (Thanks to David Hedbor at Real Audio.)
 
 o Added a supports lookup cache. 
 
-o Fixed start --version to acctually output the correct version.
+o Fixed start --version to actually output the correct version.
 
-o Fixed ABS to print out the backtraces of all threds if engaged.
+o Fixed ABS to print out the backtraces of all threads if engaged.
 
 o Added workaround in the CGI-module for systems that don't like
   negative UIDs/GIDs.
@@ -146,7 +156,7 @@ o Fixed so that Challenger doesn't unnecessarily try to become
 o Fixed so that Challenger doesn't unnecessarily change permissions on
   files.
 
-NOTE: The two changes above can lead to Challenger beeing unable to
+NOTE: The two changes above can lead to Challenger being unable to
       read files from an old installation. Check permissions on the
       following files to make sure the user you are running Roxen as
       can read (and write) them:
@@ -165,7 +175,7 @@ o Fixed bug in SSL that that broke <aconf> on Unix and SSL on NT.
 
 o Added kludge for glibc2.1
 
-o Added config action that makes a self-signed SSL sertificate.
+o Added config action that makes a self-signed SSL certificate.
 
 o Added quoting to insert. When used with the argument variable or
   cookie the inserted string will will have "<", ">", "&",""" ,"'"
