@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.344 2000/08/19 01:39:17 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.345 2000/08/20 03:25:23 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2325,16 +2325,15 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if (enable_module_batch_msgs)
     report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
 #endif
-  if( me->no_delayed_load ) {
+  if( me->no_delayed_load ) 
+  {
     set( "no_delayed_load", 1 );
     save_me();
   }
 
-  if(!enabled_modules[ modname+"#"+id ])
-  {
-    enabled_modules[modname+"#"+id] = 1;
-    store( "EnabledModules", enabled_modules, 1, this_object());
-  }
+  enabled_modules[modname+"#"+id] = 1;
+  store( "EnabledModules", enabled_modules, 1, this_object());
+
   if (!has_stored_vars)
     store (modname + "#" + id, me->query(), 0, this_object());
 
@@ -2619,12 +2618,10 @@ int disable_module( string modname, int|void nodest )
       pri[pr]->logger_modules -= ({ me });
 
 
-  if( enabled_modules[modname+"#"+id] )
-  {
-    m_delete( enabled_modules, modname + "#" + id );
-    forcibly_added[ modname + "#" + id ] = 0;
-    store( "EnabledModules",enabled_modules, 1, this_object());
-  }
+  m_delete( enabled_modules, modname + "#" + id );
+  forcibly_added[ modname + "#" + id ] = 0;
+  store( "EnabledModules",enabled_modules, 1, this_object());
+
   if(!nodest)
     destruct(me);
   return 1;
