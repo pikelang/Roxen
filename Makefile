@@ -28,12 +28,11 @@ all:
 	@echo "###                                         ###"
 	@echo "###############################################"
 
-install : pike_version_test install_dirs install_data config 
+install : pike_version_test install_dirs install_data config_test 
 
 	
 pike_version_test:
-	@VERSION=OK;\
-	CONTINUE=0;\
+	@CONTINUE=0;\
 	if [ `which pike` ] ; then\
 	echo TESTING PIKE VERSION;\
 	echo Current Pike Version is `pike --dumpversion`;\
@@ -48,20 +47,15 @@ pike_version_test:
         read CONTINUE;\
 	done;\
 	if [ "$${CONTINUE}" == "Y" ] ; then\
-	VERSION=OK;\
+	: ;\
 	else\
-	VERSION=NOK;\
+	make build_pike;\
 	fi\
 	fi\
 	else\
 	echo Pike not found.;\
-	VERSION=NOK;\
-	fi;\
-	if [ "$${VERSION}" == "NOK" ] ; then\
-	for i in ${PIKE_SRC_DIRS} ; do\
-	cd $${i}/ && make;\
-	done;\
-	fi\
+	make build_pike;\
+	fi
 
 install_dirs:
 	${INSTALL_DIR} -dD ${PREFIX}/${PROGNAME};
@@ -75,6 +69,7 @@ install_data:
 	#${INSTALL_DATA}   COPYING   	${PREFIX}/${PROGNAME}/;
 	${INSTALL_DATA}   start  	${PREFIX}/${PROGNAME}/;
 	${INSTALL_DATA}   server/tools/init.d_chilimoon ${STARTSCRIPTS}/chilimoon
+
 config_test: 
 	@if [ -f /etc/chilimoon/_admininterface/settings/admin_uid ] ; then\
 	: ;\
@@ -86,5 +81,15 @@ config:
 	@cd ${PREFIX}/${PROGNAME}/server/mysql;\
 	./lnmysql.sh >/dev/null 2>/dev/null;
 	@pike ${PREFIX}/${PROGNAME}/server/bin/create_configif.pike -d ${CONFIGDIR} 
+
+build_pike:
+	BUILD=0;\
+	for i in ${PIKE_SRC_DIRS} ; do\
+	cd $${i} && make && make install && BUILD=OK;\
+	done;\
+	if [ "$${BUILD}" != "OK" ] ; then\
+	echo BUILDING Failed, Try building Pike Manually.;\
+	exit 1;\
+	fi	
 
 .phony: install
