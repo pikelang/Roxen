@@ -41,7 +41,7 @@ string make_if( string q )
 
 string simplified_make_container( string tagname, mapping args, string c )
 {
-  return make_tag(tagname, args)+" "+make_tag("/...",args);
+  return make_tag(tagname, args)+make_tag("/...",args);
 }
 
 string describe_tags( object m, int q )
@@ -49,9 +49,7 @@ string describe_tags( object m, int q )
   return html_encode_string(String.implode_nicely(map(sort(indices(m->query_tag_callers())),
 						      make_tag, ([])) +
 						  map(sort(indices(m->query_container_callers())),
-						      simplified_make_container, ([]), "") +
-						  map(sort(indices(m->query_if_callers())),
-						      make_if)));
+						      simplified_make_container, ([]), "")));
 }
 
 string describe_provides( object m, int q )
@@ -73,7 +71,7 @@ do                                                                      \
 {                                                                       \
    if(t&X)                                                              \
      if( Y )                                                            \
-       res += ("<table border=0 cellspacing=0 cellpadding=0><tr><td valign=top><b>" + #X + "</b>(</td>"     \
+       res += ("<table border=0 cellspacing=0 cellpadding=0><tr><td valign=top><b>" + #X + "</b> (</td>"     \
                "<td valign=top>"+Y(m,Z)+")</td></tr></table>");         \
      else                                                               \
        res += "<b>" + #X + "</b><br>";                                 \
