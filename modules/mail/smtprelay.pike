@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.8 1998/09/15 00:04:26 grubba Exp $
+ * $Id: smtprelay.pike,v 1.9 1998/09/15 18:13:45 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.8 1998/09/15 00:04:26 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.9 1998/09/15 18:13:45 grubba Exp $";
 
 /*
  * Some globals
@@ -129,9 +129,94 @@ static string get_addr(string addr)
   return(a*"");
 }
 
+class SocketNotSelf
+{
+  private void connected(array args)
+  {
+    if (!args) {
+#ifdef SOCKET_DEBUG
+      perror("SOCKETS: async_connect: No arguments to connected\n");
+#endif /* SOCKET_DEBUG */
+      return;
+    }
+#ifdef SOCKET_DEBUG
+    perror("SOCKETS: async_connect ok.\n");
+#endif
+    args[2]->set_id(0);
+    args[0](args[2], @args[1]);
+  }
+
+  private void failed(array args)
+  {
+#ifdef SOCKET_DEBUG
+    perror("SOCKETS: async_connect failed\n");
+#endif
+    args[2]->set_id(0);
+    destruct(args[2]);
+    args[0](0, @args[1]);
+  }
+
+  private void got_host_name(string host, string oh, int port,
+			     function callback, mixed ... args)
+  {
+    // *** BEGIN CODE THAT DIFFERS FROM socket.pike ***
+
+    object p = Stdio.Port;
+
+    if (p->bind(0,0,host)) {
+      // We were just about to connect to ourselves!
+
+      callback(-1, @args);
+      destruct(p);
+      return;
+    }
+    destruct(p);
+
+    // *** END CODE THAT DIFFERS FROM socket.pike ***
+
+    object f;
+    f=Stdio.File();
+#ifdef SOCKET_DEBUG
+    perror("SOCKETS: async_connect "+oh+" == "+host+"\n");
+#endif
+    if(!f->open_socket())
+    {
+#ifdef SOCKET_DEBUG
+      perror("SOCKETS: socket() failed. Out of sockets?\n");
+#endif
+      callback(0, @args);
+      destruct(f);
+      return;
+    }
+    f->set_id( ({ callback, args, f }) );
+    f->set_nonblocking(0, connected, failed);
+#ifdef FD_DEBUG
+    mark_fd(f->query_fd(), "async socket communication: -> "+host+":"+port);
+#endif
+    if(catch(f->connect(host, port))) // Illegal format...
+    {
+#ifdef SOCKET_DEBUG
+      perror("SOCKETS: Illegal internet address in connect in async comm.\n");
+#endif
+      callback(0, @args);
+      destruct(f);
+      return;
+    }
+  }
+
+  void async_connect(string host, int port, function|void callback,
+		     mixed ... args)
+  {
+#ifdef SOCKET_DEBUG
+    perror("SOCKETS: async_connect requested to "+host+":"+port+"\n");
+#endif
+    roxen->host_to_ip(host, got_host_name, host, port, callback, @args);
+  }
+};
+
 class MailSender
 {
-  private static inherit "socket.pike";
+  private static inherit SocketNotSelf;
 
   static object parent;
 
@@ -372,6 +457,23 @@ class MailSender
       // Connection refused.
       connect_and_send();
       return;
+    } else if (c == -1) {
+      // Connected to ourselves.
+      if (servercount == 1) {
+	// FIXME: This won't work since bounce() won't be able
+	// to send to localhost.
+
+	// We're the primary MX!
+	result = -3;
+
+	parent->bounce(message, "554", ({
+	  sprintf("MX list for %s points back to %s",
+		  message->domain, gethostname()),
+	  sprintf("<%s@%s>... Local configuration error",
+		  message->user, message->domain),
+	}));
+      }
+      connect_and_send();
     }
 
     con = c;
@@ -543,65 +645,24 @@ static void check_mail(int t)
 /*
  * Callable from elsewhere to send message's
  */
-void send_message(string from, array(string) rcpt,
+void send_message(string from, multiset(string) rcpt,
 		  string message, string|void csum)
 {
   roxen_perror(sprintf("SMTP: send_message(%O, %O, X)\n", from, rcpt));
 
-  if (!csum) {
-    csum = replace(MIME.encode_base64(Crypto.sha()->update(message)->
-				      digest()), "/", ".");
-  }
-
-  // Queue mail for sending.
-
-  // NOTE: We assume that an SHA checksum will never occur twice.
-
-  string fname = combine_path(QUERY(spooldir), csum);
-
-#ifdef THREADS
-  mixed key = queue_mutex->lock();
-#endif /* THREADS */
-
-  if (!file_stat(fname)) {
-    object spoolfile = Stdio.File();
-    if (!spoolfile->open(fname, "cwxa")) {
-      report_error(sprintf("SMTPRelay: Failed to open spoolfile %O!\n",
-			   fname));
-      return;
+  int sent;
+  foreach(conf->get_providers("smtp_protocol")||({}), object o) {
+    if (o->send_mail) {
+      array a = o->send_mail(message, ([ "from":from, "recipients":rcpt ]));
+      if (a[0]/100 == 2) {
+	sent = 1;
+	break;
+      }
     }
-
-    if (spoolfile->write(message) != sizeof(message)) {
-      report_error(sprintf("SMTPRelay: Failed to write spoolfile %O!\n",
-			   fname));
-      
-      rm(fname);
-
-      return;
-    }
-    spoolfile->close();
   }
-  
-  foreach(rcpt, string to) {
-    array(string) a = to/"@";
-
-    string user = a[0];
-    string domain = (sizeof(a)>1)?(a[-1]):"localhost";
-
-    sql->query(sprintf("INSERT INTO send_q "
-		       "(sender, user, domain, mailid, send_at) "
-		       "VALUES('%s', '%s', '%s', '%s', 0)",
-		       sql->quote(from), sql->quote(user), sql->quote(domain),
-		       sql->quote(csum)));
+  if (!sent) {
+    report_error(sprintf("send_message() Failed!\n"));
   }
-
-#ifdef THREADS
-  if (key) {
-    destruct(key);
-  }
-#endif /* THREADS */
-
-  check_mail(10);
 }
 
 /*
@@ -667,7 +728,7 @@ void bounce(mapping msg, string code, array(string) text)
 				     "text/rfc822-headers" ])),
 		   }));
 
-    send_message("<>", ({ msg->sender }), message);
+    send_message("<>", (< msg->sender, QUERY(postmaster) >), message);
   } else {
     roxen_perror("A bounce which bounced!\n");
   }
@@ -680,6 +741,11 @@ void bounce(mapping msg, string code, array(string) text)
 int relay(string from, string user, string domain,
 	  object mail, string csum, object o)
 {
+#ifdef RELAY_DEBUG
+  roxen_perror(sprintf("SMTP: relay(%O, %O, %O, X, %O, X)\n",
+		       from, user, domain, csum));
+#endif /* RELAY_DEBUG */
+
   if (!domain) {
     // Shouldn't happen, but...
     return(0);
