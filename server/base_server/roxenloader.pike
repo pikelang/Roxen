@@ -3,7 +3,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen environment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.34 1997/08/18 15:49:46 grubba Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.35 1997/08/23 01:33:44 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -440,7 +440,8 @@ static private void initiate_cache()
 void load_roxen()
 {
   roxen = ((program)"roxen")();
-  perror("Roxen version "+roxen->cvs_version+"\n");
+  perror("Roxen version "+roxen->cvs_version+"\n"
+	 "Roxen release "+roxen->real_version+"\n");
   nwrite = roxen->nwrite;
 }
 
