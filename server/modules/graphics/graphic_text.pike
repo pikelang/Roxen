@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.194 1999/12/07 13:58:08 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.195 1999/12/09 09:58:24 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -53,6 +53,22 @@ void create()
 	 "Append .gif, .png, .gif etc to all images made by gtext. "
          "Normally this will only waste bandwidth");
 }
+
+TAGDOCUMENTATION
+#ifdef manual
+constant gtextargs="";
+constant tagdoc=(["gtext":"<desc cont></desc>"+gtextargs,
+		  "gtext-id":"<desc tag></desc>"+gtextargs,
+		  "anfang":"<desc cont></desc>"+gtextargs,
+		  "gtext-url":"<desc cont></desc>"+gtextargs,
+		  "gh":"<desc cont></desc>"+gtextargs,
+		  "gh1":"<desc cont></desc>"+gtextargs,
+		  "gh2":"<desc cont></desc>"+gtextargs,
+		  "gh3":"<desc cont></desc>"+gtextargs,
+		  "gh4":"<desc cont></desc>"+gtextargs,
+		  "gh5":"<desc cont></desc>"+gtextargs,
+		  "gh6":"<desc cont></desc>"+gtextargs]);
+#endif
 
 
 // ------------------- The actual graphics routines ----------------------

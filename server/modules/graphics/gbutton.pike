@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.7 1999/11/24 17:35:26 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.8 1999/12/09 09:58:57 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -48,7 +48,15 @@ array register_module()
   return( ({ MODULE_PARSER,
 	     "GButton",
 	     "Provides the <tt>&lt;gbutton&gt;Title&lt;/gbutton&gt;</tt> "
-	     "tag for drawing graphical buttons. Arguments:<p>"
+	     "tag for drawing graphical buttons.",
+	     0, 1 }) );
+}
+
+
+TAGDOCUMENTATION
+#if manual
+constant tagdoc=(["gbutton":"","gbutton-url":""]);
+/*
 	     "<table border=0>"
 
 	     "<tr><td><b>bgcolor</b></td><td>Background color inside and "
@@ -83,11 +91,9 @@ array register_module()
 	     "</table><p>"
 	     "There are some alignment restrictions: when text alignment is "
 	     "either <tt>left</tt> or <tt>right</tt>, icons must also be "
-	     "aligned <tt>left</tt> or <tt>right</tt>.",
-	     
-	     0, 1 }) );
-}
-
+	     "aligned <tt>left</tt> or <tt>right</tt>."
+ */
+#endif
 
 void start()
 {

@@ -1,10 +1,15 @@
+// This is a roxen module. Copyright © 1999, Idonex AB.
+//
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 constant thread_safe=1;
 
 roxen.ImageCache the_cache;
-constant cvs_version="$Id: cimg.pike,v 1.8 1999/11/24 15:03:05 per Exp $";
+constant cvs_version="$Id: cimg.pike,v 1.9 1999/12/09 09:58:10 nilsson Exp $";
+constant tagdesc="Provides the tag 'cimg' that can be used to convert images "
+  "between different image formats.";
 
 array register_module()
 {
@@ -12,11 +17,19 @@ array register_module()
    ({ 
       MODULE_PARSER,
       "Image converter",
-      "Provides a tag 'cimg'. Usage: "
-      "&lt;cimg src=\"indata file\" format=outformat [quant=numcolors] [img args]&gt;",
+      tagdesc,
       0,1
    });
 }
+
+TAGDOCUMENTATION
+#ifdef manul
+constant tagdoc=(["cimg":"<desc tag>"+tagdesc+"</desc>"]);
+/*
+      "Provides a tag 'cimg'. Usage: "
+      "&lt;cimg src=\"indata file\" format=outformat [quant=numcolors] [img args]&gt;",
+*/
+#endif
 
 void start()
 {
