@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.19.2.3 1997/03/02 19:28:43 grubba Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.19.2.4 1997/03/09 13:39:57 grubba Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -917,7 +917,7 @@ string tag_modified(string tag, mapping m, object got, object file)
   {
     if(!got->conf->auth_module)
       return "<!-- modified by requires an user database! -->\n";
-    m->name = roxen->last_modified_by(file);
+    m->name = roxen->last_modified_by(file, got);
     return tag_user(tag, m, got, file);
   }
 
