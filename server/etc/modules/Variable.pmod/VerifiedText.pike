@@ -21,5 +21,5 @@ string render_form( RequestID id, void|mapping args ) {
     else render+="'"+replace(args[attr], "'", "&#39;")+"'";
   }
 
-  return render+">"+ Roxen.html_encode_string ((string)query()) +"</textarea>";
+  return render+">"+ (string)query() +"</textarea>";
 }
