@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.26 2003/01/20 10:36:20 anders Exp $
+ * $Id: debug_info.pike,v 1.27 2003/02/04 16:34:26 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -200,27 +200,29 @@ mixed page_0( object id )
 
   int gc_freed = id->real_variables->do_gc && gc();
 
-  mixed foo = _memory_usage();
-  object start = this_object();
-  int walked_objects = 0;
-  for (object o = start;
-       objectp (o) ||		// It's a normal object.
-       (intp (o) && o) ||	// It's a bignum object.
-       zero_type (o);		// It's a destructed object.
-       o = _prev (o)) {
-    string|program p = object_program (o);
-    p = p ? Program.defined (p) || p : "    ";
-    if (++numobjs[p] <= 50) allobj[p] += ({o});
+  mapping(string:int) mem_usage = _memory_usage();
+  int this_found = 0, walked_objects = 0;
+  object obj = next_object();
+  // next_object skips over destructed objects, so back up over them.
+  while (zero_type (_prev (obj))) obj = _prev (obj);
+  for (; objectp (obj) ||	// It's a normal object.
+       (intp (obj) && obj) ||	// It's a bignum object.
+       zero_type (obj);		// It's a destructed object.
+       obj = _next (obj)) {
+    string|program p = object_program (obj);
+    if (p == this_program && obj == this_object()) this_found = 1;
+    p = p ? functionp (p) && Function.defined (p) ||
+      programp (p) && Program.defined (p) || p : "    ";
+    if (++numobjs[p] <= 50) allobj[p] += ({obj});
     walked_objects++;
   }
-  start = _next (start);
-  for (object o = start; objectp (o) || (intp (o) && o) || zero_type (o); o = _next (o)) {
-    string|program p = object_program (o);
-    p = p ? Program.defined (p) || p : "    ";
-    if (++numobjs[p] <= 50) allobj[p] += ({o});
-    walked_objects++;
-  }
-  int num_objs_afterwards = _memory_usage()->num_objects;
+  mapping(string:int) mem_usage_afterwards = _memory_usage();
+  int num_things_afterwards =
+    mem_usage_afterwards->num_arrays +
+    mem_usage_afterwards->num_mappings +
+    mem_usage_afterwards->num_multisets +
+    mem_usage_afterwards->num_objects +
+    mem_usage_afterwards->num_programs;
 
 #if constant (Pike.gc_parameters)
   Pike.gc_parameters ((["enabled": orig_enabled]));
@@ -228,22 +230,31 @@ mixed page_0( object id )
   mapping gc_status = _gc_status();
   threads_disabled = 0;
 
-  string res = "<p>";
+  string res = "<p>Current time: " + ctime (time()) + "</p>\n"
+    "<p>";
   if (id->real_variables->do_gc)
-    res += sprintf (LOCALE(169, "The garbage collector freed %d of %d things (%f%%).\n"),
-		    gc_freed, gc_freed + num_objs_afterwards,
-		    (float) gc_freed / (gc_freed + num_objs_afterwards) * 100);
+    res += sprintf (LOCALE(169, "The garbage collector freed %d of %d things (%d%%)."),
+		    gc_freed, gc_freed + num_things_afterwards,
+		    gc_freed * 100 / (gc_freed + num_things_afterwards));
   else
-    res += sprintf (LOCALE(170, "%d seconds since last garbage collection.\n"),
-		    time() - gc_status->last_gc);
-  res += "<br /><input type='checkbox' name='do_gc' value='yes'" +
+    res += sprintf (LOCALE (170, "%d seconds since last garbage collection, "
+			    "%d%% of the interval is consumed."),
+		    time() - gc_status->last_gc,
+		    (gc_status->num_allocs + 1) * 100 /
+		    (gc_status->alloc_threshold + 1));
+
+  res += "<br />\n<input type='checkbox' name='do_gc' value='yes'" +
     (id->real_variables->do_gc ? " checked='checked'" : "") +
     " /> " + LOCALE(171, "Run the garbage collector first.") + "</p>\n";
 
+  if (!this_found)
+    res += "<p><font color='&usr.warncolor;'>" + LOCALE (0, "Internal inconsistency") +
+      ":</font> " + LOCALE (0, "Object(s) missing in object link list.") + "</p>\n";
+
   string first="";
-  foo->total_usage = 0;
-  foo->num_total = 0;
-  array ind = sort(indices(foo));
+  mem_usage->total_usage = 0;
+  mem_usage->num_total = 0;
+  array ind = sort(indices(mem_usage));
   string f;
   int row=0;
 
@@ -253,30 +264,28 @@ mixed page_0( object id )
     if(!search(f, "num_"))
     {
       if(f!="num_total")
-	foo->num_total += foo[f];
+	mem_usage->num_total += mem_usage[f];
 
       string col
            ="&usr.warncolor;";
-      if((foo[f]-last_usage[f]) < foo[f]/60)
+      if((mem_usage[f]-last_usage[f]) < mem_usage[f]/60)
 	col="&usr.warncolor;";
-      if((foo[f]-last_usage[f]) == 0)
+      if((mem_usage[f]-last_usage[f]) == 0)
 	col="&usr.fgcolor;";
-      if((foo[f]-last_usage[f]) < 0)
+      if((mem_usage[f]-last_usage[f]) < 0)
 	col="&usr.fade4;";
 
       string bn = f[4..sizeof(f)-2]+"_bytes";
-      foo->total_bytes += foo[ bn ];
+      mem_usage->total_bytes += mem_usage[ bn ];
       if( bn == "tota_bytes" )
         bn = "total_bytes";
       table += ({ ({
-	col, f[4..], foo[f], foo[f]-last_usage[f],
-        sprintf( "%.1f",foo[bn]/1024.0),
-        sprintf( "%.1f",(foo[bn]-last_usage[bn])/1024.0 ),
+	col, f[4..], mem_usage[f], mem_usage[f]-last_usage[f],
+        sprintf( "%.1f",mem_usage[bn]/1024.0),
+        sprintf( "%.1f",(mem_usage[bn]-last_usage[bn])/1024.0 ),
       }) });
     }
-  roxen->set_var("__memory_usage", foo);
-
-  mapping bar = roxen->query_var( "__num_clones" )||([]);
+  roxen->set_var("__memory_usage", mem_usage);
 
 #define HCELL(thargs, color, text)					\
   ("<th " + thargs + ">"						\
@@ -303,17 +312,22 @@ mixed page_0( object id )
       TCELL ("align='right'", entry[0], entry[5]) + "</tr>\n";
   res += "</table></p>\n";
 
-  if (walked_objects != foo->num_objects)
-    if (num_objs_afterwards != foo->num_objects)
-      res += "<p><font color='&usr.warncolor;'>Warning:</font> "
-	"Number of objects changed during object walkthrough "
-	"(probably due to automatic gc call) - "
-	"the list below is not complete.</p>\n";
+  if (walked_objects != mem_usage->num_objects) {
+    res += "<p><font color='&usr.warncolor;'>" + LOCALE (0, "Warning") + ":</font> ";
+    if (mem_usage_afterwards->num_objects != mem_usage->num_objects)
+      res += LOCALE (0, "Number of objects changed during object walkthrough "
+		     "(probably due to automatic gc call) - "
+		     "the list below is not complete.");
     else
-      res += "<p><font color='&usr.warncolor;'>Warning:</font> "
-	"The object walkthrough only visited " + walked_objects +
-	" of " + foo->num_objects + " objects - "
-	"the list below is not complete.</p>\n";
+      res += sprintf (LOCALE (0, "The object walkthrough visited %d of %d objects - "
+			      "the list below is not accurate."),
+		      walked_objects, mem_usage->num_objects);
+    res += "</p>\n";
+  }
+
+  mapping save_numobjs = roxen->query_var( "__num_clones" );
+  int no_save_numobjs = !save_numobjs;
+  if (no_save_numobjs) save_numobjs = ([]);
 
   foreach (values (allobj), array objs)
     for (int i = 0; i < sizeof (objs); i++)
@@ -330,7 +344,26 @@ mixed page_0( object id )
   for (int i = 0; i < sizeof (table); i++) {
     [string|program prog, array(string) objs] = table[i];
 
-    if (sizeof (objs) > 2) {
+    string objstr = String.common_prefix (objs)[..30];
+    if (!(<"", "object">)[objstr]) {
+      int next = 0;
+      sscanf (objstr, "%*[^]`'\")}({[]%c", next);
+      if (sizeof (objstr) < max (@map (objs, sizeof))) objstr += "...";
+      if (int c = (['(': ')', '[': ']', '{': '}'])[next])
+	if (objstr[-1] != c)
+	  objstr += (string) ({c});
+    }
+    else objstr = "";
+
+    int|string change;
+    if (array ent = save_numobjs[prog]) {
+      change = numobjs[prog] - ent[0];
+      ent[0] = numobjs[prog];
+    }
+    else
+      save_numobjs[prog] = ({change = numobjs[prog], objstr});
+
+    if (sizeof (objs) > 2 || abs (change) > 2) {
       string progstr;
       if (stringp (prog)) {
 	if (has_prefix (prog, cwd))
@@ -340,34 +373,37 @@ mixed page_0( object id )
       }
       else progstr = "";
 
-      string objstr = String.common_prefix (objs)[..30];
-      if (!(<"", "object">)[objstr]) {
-	int next = 0;
-	sscanf (objstr, "%*[^]`'\")}({[]%c", next);
-	if (sizeof (objstr) < max (@map (objs, sizeof))) objstr += "...";
-	if (int c = (['(': ')', '[': ']', '{': '}'])[next])
-	  if (objstr[-1] != c)
-	    objstr += (string) ({c});
-      }
-      else objstr = "";
-
-      int|string change;
       string color;
-      if (zero_type (bar[prog])) {
+      if (no_save_numobjs) {
 	change = "N/A";
 	color = same_color;
       }
       else {
-	change = numobjs[prog] - bar[prog];
 	if (change > 0) color = inc_color, change = "+" + change;
 	else if (change < 0) color = dec_color;
 	else color = same_color;
       }
-      bar[prog] = numobjs[prog];
 
       table[i] = ({color, progstr, objstr, numobjs[prog], change});
     }
     else table[i] = 0;
+  }
+
+  // Add decrement entries for the objects that have disappeared completely.
+  foreach (indices (save_numobjs - allobj), string|program prog) {
+    if (save_numobjs[prog][0] > 2) {
+      string progstr;
+      if (stringp (prog)) {
+	if (has_prefix (prog, cwd))
+	  progstr = prog[sizeof (cwd)..];
+	else
+	  progstr = prog;
+      }
+      else progstr = "";
+      table +=
+	({({dec_color, progstr, save_numobjs[prog][1], 0, -save_numobjs[prog][0]})});
+    }
+    save_numobjs[prog][0] = 0;
   }
 
   table = Array.sort_array (table - ({0}),
@@ -377,7 +413,7 @@ mixed page_0( object id )
 				  a[1] < b[1]));
 			    });
 
-  roxen->set_var("__num_clones", bar);
+  roxen->set_var("__num_clones", save_numobjs);
 
   res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
     HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(141,"Source")) +
@@ -402,9 +438,10 @@ mixed page_0( object id )
   res += "</table></p>\n";
 
   if (gc_status->non_gc_time)
-    gc_status->gc_time_ratio = (float) gc_status->gc_time / gc_status->non_gc_time;
+    gc_status->gc_time_ratio =
+      (float) gc_status->gc_time / gc_status->non_gc_time;
 
-  res += "<p><b>" + LOCALE(172,"Status from last garbage collection") + "</b><br />\n"
+  res += "<p><b>" + LOCALE (172,"Garbage collector status") + "</b><br />\n"
     "<table border='0' cellpadding='0'>\n";
   foreach (sort (indices (gc_status)), string field)
     res += "<tr>" +
