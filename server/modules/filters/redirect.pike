@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.35 2002/11/11 01:53:04 mani Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.36 2004/05/20 13:39:53 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -24,11 +24,12 @@ void create()
 
 	 "<p>Some examples:'"
 	 "<pre>"
-         "/from/.*      http://to.chilimoon.com/to/%f\n"
-         ".*\\.cgi       http://cgi.foo.bar/cgi-bin/%p\n"
-	 "/thb/.*       %u/thb_gone.html\n"
-	 "/chili/       http://www.chilimoon.org/\n"
-	 "exact /       /main/index.html\n"
+         "/from/.*               http://to.chilimoon.com/to/%f\n"
+         ".*\\.cgi                http://cgi.foo.bar/cgi-bin/%p\n"
+	 "/thb/.*                %u/thb_gone.html\n"
+	 "/chili/                http://www.chilimoon.org/\n"
+	 "exact /                /main/index.html\n"
+	 "/(.*[^/])\\.php(/.*)?$  /cgi-bin/php/$1.php$2\n"
 	 "</pre>"
 
 	 "A %f in the 'to' field will be replaced with the filename of "
