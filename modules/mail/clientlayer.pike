@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.33 1999/02/04 20:39:35 grubba Exp $
+ * $Id: clientlayer.pike,v 1.34 1999/02/05 10:52:31 js Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.33 1999/02/04 20:39:35 grubba Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.34 1999/02/05 10:52:31 js Exp $";
 constant thread_safe=1;
 
 
@@ -820,7 +820,7 @@ int authenticate_user(string username_at_host, string passwordcleartext)
   array a=squery("select password from users where id='%d'", id);
   if(!sizeof(a))
     return 0;
-  return crypt(passwordcleartext, a[0]->password) && id;
+  return (crypt(passwordcleartext, a[0]->password)) && id;
 }
 
 mapping(string:int) list_mailboxes(int user)

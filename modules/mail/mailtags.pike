@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.26 1999/01/27 01:42:01 js Exp $";
+"$Id: mailtags.pike,v 1.27 1999/02/05 10:52:32 js Exp $";
 
 constant thread_safe = 1;
 
@@ -155,8 +155,24 @@ mapping find_file(string f, object id)
 
 /* Utility functions ---------------------------------------------- */
 
-
-
+string fake_decode_qp(string in)
+{
+  array(string) fusk0 = in/"=?";
+  in=fusk0[0];
+  foreach(fusk0[1..], string fusk)
+  {
+    string fusk2;
+    string p1,p2,p3;
+    if(sscanf(fusk, "%[^?]?%1s?%[^?]%s", p1,p2,p3, fusk) == 4)
+    {
+      werror("dw: =?"+p1+"?"+p2+"?"+p3+"?=\n");
+      in += MIME.decode_word("=?"+p1+"?"+p2+"?"+p3+"?=")[0];
+    }
+    sscanf(fusk, "?=%s", fusk);
+    in += fusk;
+  }
+  return replace(in,({" ","+"}),({"_","_"}));
+}
 
 object bevel1(object from)
 {
@@ -911,8 +927,10 @@ string tag_mail_show_attachments( string t, mapping args, object id )
       {
 	object m = M->body_parts[ i ];
 	res += ("<tr bgcolor=white><td><a target=Display href=display.html?mail="+
-		id->variables->mail_id+"&part="+i+"&name="+m->get_filename()
-		+">"+m->get_filename()+"</a></td><td align=right>"+
+		id->variables->mail_id+"&part="+i+"&name="+
+		fake_decode_qp(m->get_filename())+
+		">"+fake_decode_qp(m->get_filename())+
+		"</a></td><td align=right>"+
 		m->type+"/"+m->subtype+"</td><td align=right>"+
 		sizeof(m->getdata())/1024+"Kb"+
 		"</td><td><font size=-1><input type=submit name=delete_part_"+i+
@@ -2341,12 +2359,12 @@ string low_container_mail_body_parts( string tag, mapping args,
 	  mapping q = ([ "#url#":replace(binary_part_url,
 					 ({"#mail#", "#part#","#name#" }),
 					 ({ args->mail,partpre+"/"+(string)i, 
-					    http_encode_string(msg->
-							       get_filename()
-						       ||"unknown name")
+		      http_encode_string(fake_decode_qp(msg->get_filename()
+							||"unknown name"))
 					 })),
-			 "#name#":html_encode_string(msg->get_filename()
-						     ||"unknown name"),
+			 "#name#":
+			 html_encode_string(fake_decode_qp(msg->get_filename()
+							   ||"unknown name")),
 			 "#type#":html_encode_string(msg->type+"/"
 						     +msg->subtype),
 	  ]);
