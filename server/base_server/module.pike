@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.22 1997/08/19 00:36:11 grubba Exp $ */
+/* $Id: module.pike,v 1.23 1997/08/24 23:14:01 peter Exp $ */
 
 #include <module.h>
 
@@ -11,6 +11,24 @@ string fix_cvs(string from)
   from = replace(from, ({ "$", "Id: "," Exp $" }), ({"","",""}));
   sscanf(from, "%*s,v %s", from);
   return from;
+}
+
+int module_dependencies(object configuration, array (string) modules)
+{
+  if(configuration)
+  {
+    foreach (modules, string module)
+    {
+      if(!configuration->modules[module] ||
+	 (!configuration->modules[module]->copies &&
+	  !configuration->modules[module]->master))
+	configuration->enable_module(module+"#0");
+    }
+    if(roxen->root)
+      roxen->configuration_interface()->build_root(roxen->root);
+  }
+  _do_call_outs();
+  return 1;
 }
 
 string file_name_and_stuff()
