@@ -8,7 +8,7 @@ import Stdio;
 
 inherit "polyline.pike";
 
-constant cvs_version = "$Id: create_graph.pike,v 1.105 1998/11/04 20:13:39 peter Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.106 1999/05/03 12:04:16 marcus Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -460,7 +460,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 #ifndef ROXEN
 object get_font(string j, int p, int t, int h, string fdg, int s, int hd)
 {
-  return Image.font()->load("avant_garde");
+  return font()->load("avant_garde");
 };
 #endif
 
