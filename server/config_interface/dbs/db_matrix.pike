@@ -156,7 +156,7 @@ string parse( RequestID id )
         url = "internal";
       else
       {
-	if( catch( DBManager.get( db )->query("select 1") ) )
+	if( catch( DBManager.cached_get( db )->query("select 1") ) )
 	  url="<font color='&usr.warncolor;'>"+
 	    _(381,"Failed to connect")+"</font>";
 	else
