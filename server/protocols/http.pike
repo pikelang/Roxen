@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.457 2004/06/21 13:04:13 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.458 2004/06/21 13:58:25 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1005,7 +1005,6 @@ static void do_timeout()
 string link_to(string file, int line, string fun, int eid, int qq)
 {
   if (!file || !line) return "<a>";
-  if(file[0]!='/') file = combine_path(getcwd(), file);
   return ("<a href=\"/(old_error,find_file)/error/?"+
 	  "file="+Roxen.http_encode_url(file)+
 	  (fun ? "&fun="+Roxen.http_encode_url(fun) : "") +
