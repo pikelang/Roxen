@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.799 2002/06/12 22:28:48 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.800 2002/06/12 23:47:39 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3533,7 +3533,6 @@ void create()
 #define __REG_PROJ Locale.register_project
   __REG_PROJ("roxen_""config",  "translations/%L/roxen_config.xml");
   __REG_PROJ("roxen_""message", "translations/%L/roxen_message.xml");
-  __REG_PROJ("admin_""tasks",   "translations/%L/admin_tasks.xml");
   Locale.set_default_project_path("translations/%L/%P.xml");
 #undef __REG_PROJ
 
