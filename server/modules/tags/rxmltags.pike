@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.122 2000/05/12 21:04:35 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.123 2000/05/25 15:57:08 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -463,8 +463,29 @@ string|array(string) tag_imgs(string tag, mapping m, RequestID id)
 {
   if(m->src)
   {
-    string file;
-    if(file=id->conf->real_file(Roxen.fix_relative(m->src, id), id))
+    string|object file=id->conf->real_file(Roxen.fix_relative(m->src, id), id);
+    if(!file) {
+      file=id->conf->try_get_file(Roxen.fix_relative(m->src,id),id);
+      if(file)
+	file=class {
+	  int p=0;
+	  string d;
+          void create(string data) { d=data; }
+	  int tell() { return p; }
+	  int seek(int pos) {
+	    if(abs(pos)>sizeof(d)) return -1;
+	    if(pos<0) pos=sizeof(d)+pos;
+	    p=pos;
+	    return p;
+	  }
+	  string read(int bytes) {
+	    p+=bytes;
+	    return d[p-bytes..p-1];
+	  }
+	}(file);
+    }
+
+    if(file)
     {
       array(int) xysize;
       if(xysize=Dims.dims()->get(file))
@@ -481,6 +502,7 @@ string|array(string) tag_imgs(string tag, mapping m, RequestID id)
     if(!m->alt) {
       array src=m->src/"/";
       string src=src[sizeof(src)-1];
+      sscanf(src, "internal-roxen-%s", src);
       m->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
     }
 
