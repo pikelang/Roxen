@@ -4,13 +4,13 @@ inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.22 2004/05/22 22:34:42 _cvs_dirix Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.23 2004/05/22 22:41:17 _cvs_dirix Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
 static inherit "http";
 
-object Servlet;
+object servlet;
 
 string status_info="";
 
@@ -19,7 +19,7 @@ constant module_name = "Java: Java Servlet bridge";
 constant module_doc  = "An interface to Java <a href=\"http://java.sun.com/"
   "products/servlet/index.html""\">Servlets</a>.";
 
-#if constant(Servlet.servlet)
+#if constant(servlet.servlet)
 
 void stop()
 {
