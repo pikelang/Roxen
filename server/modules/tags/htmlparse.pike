@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.159 1999/02/15 23:26:12 per Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.160 1999/02/16 20:46:23 marcus Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -2045,12 +2045,6 @@ string tag_pr(string tagname, mapping m)
   if(!m->alt) m->alt="Powered by Roxen";
   if(!m->border) m->border="0";
   return ("<a href=\"http://www.roxen.com/\">"+make_tag("img", m)+"</a>");
-}
-
-string tag_number(string t, mapping args)
-{
-  return language(args->language||args->lang, 
-		  args->type||"number")( (int)args->num );
 }
 
 string tag_debug( string tag_name, mapping args, object id )

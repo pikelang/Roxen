@@ -405,6 +405,12 @@ string tag_list_tags( string t, mapping args, object id, object f )
   return res;
 }
 
+string tag_number(string t, mapping args)
+{
+  return roxen->language(args->language||args->lang, 
+			 args->type||"number")( (int)args->num );
+}
+
 string tag_line( string t, mapping args, object id)
 {
   return id->misc->line;
@@ -599,6 +605,7 @@ mapping query_tag_callers()
 {
   return ([
     "list-tags":tag_list_tags,
+    "number":tag_number,
     "undefine":tag_undefine,
     "help": tag_help,
     "line":tag_line,
