@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.106 1998/06/27 14:53:19 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.107 1998/07/03 15:57:55 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -244,6 +244,19 @@ private int parse_got(string s)
 	f = line[start+1..sizeof(line)-(end+2)];
 	prot = clientprot = line[sizeof(line)-end..];
 
+	if (!(< "HTTP/0.9", "HTTP/1.0", "HTTP/1.1" >)[upper_case(prot)]) {
+	  if (upper_case(prot)[..3] == "HTTP") {
+	    // Latest implemented version of HTTP implemented by this
+	    // module is HTTP/1.1.
+	    prot = "HTTP/1.1";
+	  } else {
+	    // Unknown protocol
+	    my_fd->write(sprintf("400 Unknown Protocol HTTP/1.1\r\n\r\n"
+				 "Protocol is not HTTP.\r\n"));
+	    return -2;
+	  }
+	}
+
 	// Check that the request is complete
 	int end;
 	if ((end = search(s, "\r\n\r\n")) == -1) {
@@ -278,7 +291,7 @@ private int parse_got(string s)
 
   if(method == "PING")
   { 
-    my_fd->write("PONG\n"); 
+    my_fd->write("PONG\r\n"); 
     return -2; 
   }
 
