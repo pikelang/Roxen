@@ -10,7 +10,7 @@ inherit "module";
 int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql.pike,v 1.6 2001/11/06 10:53:15 anders Exp $";
+  "$Id: userdb_sql.pike,v 1.7 2001/11/21 15:49:34 grubba Exp $";
 
 LocaleString module_name = _(1,"Authentication: SQL user database");
 LocaleString module_doc  = _(2,"This module implements a user database via "
@@ -216,15 +216,15 @@ void create()
   defvar( "passwd_type",
           Variable.StringChoice("password",
 				([
-				  "password":_(0,"MySQL Password"),
-				  "crypt":_(0,"Unix crypt"),
-				  "clear text":_(0,"Clear text"),
+				  "password":_(5,"MySQL Password"),
+				  "crypt":_(6,"Unix crypt"),
+				  "clear text":_(7,"Clear text"),
 #if constant(Crypto.crypt_md5)
-				  "md5 crypt":_(0,"MD5 crypt"),
+				  "md5 crypt":_(8,"MD5 crypt"),
 #endif
 				]), 0,
-				_(0,"Password type"),
-				_(0,"Password hashing method. "
+				_(9,"Password type"),
+				_(10,"Password hashing method. "
 				  "By changing this variable you can "
 				  "select the meaning of password field. "
 				  "By default the passwords are supposed "

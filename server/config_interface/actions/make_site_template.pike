@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.1 2001/11/20 15:43:56 grubba Exp $
+ * $Id: make_site_template.pike,v 1.2 2001/11/21 15:49:33 grubba Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -12,8 +12,8 @@
 
 constant action = "maintenance";
 
-string name = LOCALE(0, "Create site template");
-string doc  = LOCALE(0, "Create a site template from a site configuration");
+string name = LOCALE(144, "Create site template");
+string doc  = LOCALE(145, "Create a site template from a site configuration");
 
 string indent(string s)
 {
@@ -55,12 +55,12 @@ string parse(RequestID id)
     // Select a configuration.
     if (conf_name) {
       res += sprintf("<p><font color='&usr.warncolor'>%s: %s</font></p>\n",
-		     LOCALE(0, "Coundn't find configuration"),
+		     LOCALE(146, "Coundn't find configuration"),
 		     conf_name);
     }
     res += sprintf("<p>%s</p>\n"
 		   "<p>%{<submit-gbutton2 name='conf-%s'>%s</submit-gbutton2><br\>\n%}</p>\n",
-		   LOCALE(0, "Select configuration to base the template on."),
+		   LOCALE(147, "Select configuration to base the template on."),
 		   map(roxen.configurations->name,
 		       lambda(string n) {
 			 return ({ Roxen.http_encode_string(n),
@@ -74,7 +74,7 @@ string parse(RequestID id)
       //
       // Select a filename
       res += sprintf("<p>%s: %s</p>\n",
-		     LOCALE(0, "Selected configuration"),
+		     LOCALE(148, "Selected configuration"),
 		     Roxen.html_encode_string(conf_name));
 
       res += sprintf("<p>Filename (.pike will be added):"
@@ -176,14 +176,14 @@ string parse(RequestID id)
       if (!(st = file_stat("../local/" SITE_TEMPLATES))) {
 	if (!mkdir("../local/" SITE_TEMPLATES, 0755)) {
 	  res += sprintf("<p><font color='&usr.warncolor'>%s: %O</font></p>\n",
-			 LOCALE(0, "Coundn't create directory"),
+			 LOCALE(149, "Coundn't create directory"),
 			 "../local/" SITE_TEMPLATES);
 	}
       }
       Stdio.File f = lopen(SITE_TEMPLATES + fname + ".pike", "cw", 0644);
       if (!f) {
 	res += sprintf("<p><font color='&usr.warncolor'>%s: %O</font></p>\n",
-		       LOCALE(0, "Failed to create template file"),
+		       LOCALE(150, "Failed to create template file"),
 		       "../local/" SITE_TEMPLATES +
 		       Roxen.html_encode_string(fname));
       } else {
@@ -192,14 +192,14 @@ string parse(RequestID id)
 
 	if (n != sizeof(template)) {
 	  res += sprintf("<p><font color='&usr.warncolor'>%s: %O</font></p>\n",
-			 LOCALE(0, "Failed to write template file"),
+			 LOCALE(151, "Failed to write template file"),
 			 "../local/" SITE_TEMPLATES +
 			 Roxen.html_encode_string(fname));
 	} else {
 	  res += sprintf("<p>%s</p>\n",
-			 LOCALE(0, "Site template created successfully."));
+			 LOCALE(152, "Site template created successfully."));
 	  res += sprintf("<p><center><submit-gbutton>%s</submit-gbutton></center></p>\n",
-			 LOCALE(0, "Ok"));
+			 LOCALE(153, "Ok"));
 	  done = 1;
 	}
       }
