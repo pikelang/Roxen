@@ -6,39 +6,42 @@
 <xmlpath>../translations/%L/roxen_config.xml</xmlpath>
 
 <file>../base_server/configuration.pike</file>
+<file>../base_server/config_userdb.pike</file>
 <file>../base_server/global_variables.pike</file>
+
 <file>../etc/modules/Variable.pmod/module.pmod</file>
 
 <file>../modules/configuration/config_tags.pike</file>
 <file>../modules/configuration/config_userdb.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 
-<file>../config_interface/standard/template</file>
+<file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/logutil.pike</file>
 <file>../config_interface/standard/statusinfo.pike</file>
+<file>../config_interface/standard/template</file>
 <file>../config_interface/standard/topmenu.pike</file>
-<file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/users.html</file>
-<file>../config_interface/standard/user_form.pike</file>
 <file>../config_interface/standard/user_delete.pike</file>
+<file>../config_interface/standard/user_form.pike</file>
 
 <file>../config_interface/standard/actions/index.html</file>
+<!-- The rest of the files in this dir in the project 'admin_tasks' -->
 
+<file>../config_interface/standard/event_log/clear_log.pike</file>
 <file>../config_interface/standard/event_log/index.html</file>
 <file>../config_interface/standard/event_log/log.pike</file>
-<file>../config_interface/standard/event_log/clear_log.pike</file>
 
+<file>../config_interface/standard/sites/add_module.pike</file>
+<file>../config_interface/standard/sites/config_left_item.pike</file>
+<file>../config_interface/standard/sites/create_site.pike</file>
+<file>../config_interface/standard/sites/drop_module.pike</file>
+<file>../config_interface/standard/sites/drop_site.html</file>
+<file>../config_interface/standard/sites/drop_site.pike</file>
 <file>../config_interface/standard/sites/index.html</file>
 <file>../config_interface/standard/sites/log.pike</file>
+<file>../config_interface/standard/sites/new_site.html</file>
 <file>../config_interface/standard/sites/site_content.pike</file>
 <file>../config_interface/standard/sites/site_header.pike</file>
-<file>../config_interface/standard/sites/new_site.html</file>
-<file>../config_interface/standard/sites/create_site.pike</file>
-<file>../config_interface/standard/sites/drop_site.pike</file>
-<file>../config_interface/standard/sites/drop_site.html</file>
-<file>../config_interface/standard/sites/add_module.pike</file>
-<file>../config_interface/standard/sites/drop_module.pike</file>
-<file>../config_interface/standard/sites/config_left_item.pike</file>
 <file>../config_interface/standard/sites/site_templates/common.pike</file>
 
 </project>
