@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.29 2004/05/13 13:39:39 grubba Exp $
+// $Id: webdav.pike,v 1.30 2004/05/13 14:22:14 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.29 2004/05/13 13:39:39 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.30 2004/05/13 14:22:14 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -48,6 +48,7 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
   case "LOCK":
   case "UNLOCK":
   case "COPY":
+  case "MOVE":
   case "DELETE":
   case "PROPFIND":
   case "PROPPATCH":
@@ -129,7 +130,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     TRACE_LEAVE("Malformed XML.");
     return Roxen.http_status(400, "Malformed XML data.");
   }
-  if (!(< "LOCK", "UNLOCK", "COPY", "DELETE",
+  if (!(< "LOCK", "UNLOCK", "COPY", "MOVE", "DELETE",
 	  "PROPFIND", "PROPPATCH">)[id->method]) {
     TRACE_LEAVE("Not implemented.");
     return Roxen.http_status(501, "Not implemented.");
@@ -295,9 +296,12 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     return Roxen.http_status(204, "Ok.");
 
   case "COPY":
+  case "MOVE":
     if (!id->request_headers->destination) {
-      TRACE_LEAVE("COPY: No destination header.");
-      return Roxen.http_status(400, "COPY: Missing destination header.");
+      SIMPLE_TRACE_LEAVE("%s: No destination header.", id->method);
+      return Roxen.http_status(400,
+			       sprintf("%s: Missing destination header.",
+				       id->method));
     }
     PropertyBehavior propertybehavior = (<>);	// default
     if (xml_data) {
@@ -314,7 +318,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       SimpleNode prop_behav_node =
 	xml_data->get_first_element("DAV:propertybehavior", 1);
       if (!prop_behav_node) {
-	TRACE_LEAVE("COPY: No DAV:propertybehavior.");
+	SIMPLE_TRACE_LEAVE("%s: No DAV:propertybehavior.", id->method);
 	return Roxen.http_status(400, "Missing DAV:propertybehavior.");
       }
       /* Valid children of <DAV:propertybehavior> are
@@ -337,19 +341,22 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	  foreach(n->get_children(), SimpleNode href) {
 	    if (href->get_full_name == "DAV:href") {
 	      if (!multisetp(propertybehavior)) {
-		TRACE_LEAVE("COPY: Conflicting DAV:propertybehaviour.");
+		SIMPLE_TRACE_LEAVE("%s: Conflicting DAV:propertybehaviour.",
+				   id->method);
 		return Roxen.http_status(400,
 					 "Conflicting DAV:propertybehavior.");
 	      }
 	      propertybehavior[href->value_of_node()] = 1;
 	    } else if (href->mNodeType == Parser.XML.Tree.XML_TEXT) {
 	      if (href->get_text() != "*"){
-		TRACE_LEAVE("COPY: Syntax error in DAV:keepalive.");
+		SIMPLE_TRACE_LEAVE("%s: Syntax error in DAV:keepalive.",
+				   id->method);
 		return Roxen.http_status(400,
 					 "Syntax error in DAV:keepalive.");
 	      }
 	      if (!multisetp(propertybehavior) || sizeof(propertybehavior)) {
-		TRACE_LEAVE("COPY: Conflicting DAV:propertybehaviour.");
+		SIMPLE_TRACE_LEAVE("%s: Conflicting DAV:propertybehaviour.",
+				   id->method);
 		return Roxen.http_status(400,
 					 "Conflicting DAV:propertybehavior.");
 	      }
@@ -366,10 +373,11 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		// included in a COPY or MOVE request then the
 		// resource [sic] MUST treat the request as if it has
 		// an overwrite header of value "T".
-		!id->request_headers->overwrite ||
-		id->request_headers->overwrite=="T",
+		(!id->request_headers->overwrite ||
+		 id->request_headers->overwrite=="T")?
+		DO_OVERWRITE:NEVER_OVERWRITE,
     });
-    
+
     recur_func = lambda(string source, string loc, int d, RoxenModule module,
 			RequestID id, string destination,
 			PropertyBehavior behavior,
@@ -380,9 +388,14 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		   }
 		   // Convert destination to module location relative.
 		   destination = destination[sizeof(loc)..];
-		   mapping res =
-		     module->recurse_copy_files(source, destination, d,
-						behavior, overwrite, id);
+		   mapping(string:mixed) res;
+		   if (id->method == "COPY") {
+		     res = module->recurse_copy_files(source, destination, d,
+						      behavior, overwrite, id);
+		   } else {
+		     res = module->recurse_move_files(source, destination,
+						      behavior, overwrite, id);
+		   }
 		   if (res && ((res->error == 201) || (res->error == 204))) {
 		     empty_result = res;
 		     return 0;
