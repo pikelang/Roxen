@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.411 2004/06/19 23:59:22 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.412 2004/06/23 00:32:11 _cvs_stephen Exp $";
 //#define REQUEST_DEBUG
 //#define CONNECTION_DEBUG
 #define MAGIC_ERROR
@@ -246,7 +246,7 @@ void send(string|object what, int|void len, int|void start)
   if(!pipe) setup_pipe();
   if( len>0 && port_obj && port_obj->minimum_byterate )
     call_out( end, len / port_obj->minimum_byterate );
-  pipe->add_source(what,start,len||sizeof(what));
+  pipe->add_source(what,start,len>0?len:-1);
 }
 
 void start_sender( )
