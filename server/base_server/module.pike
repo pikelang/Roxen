@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.194 2004/05/10 19:11:50 grubba Exp $
+// $Id: module.pike,v 1.195 2004/05/10 19:25:05 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -388,7 +388,7 @@ class DefaultPropertySet
 //!   the properties.
 //!
 //!   Otherwise returns a @[PropertySet] object.
-PropertySet|mapping(string:mixed) query_properties(string path, RequestID id)
+PropertySet|mapping(string:mixed) query_property_set(string path, RequestID id)
 {
   SIMPLE_TRACE_ENTER (this, "Querying properties on %O", path);
   Stat st = stat_file(path, id);
@@ -412,7 +412,7 @@ PropertySet|mapping(string:mixed) query_properties(string path, RequestID id)
 string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
   query_property(string path, string prop_name, RequestID id)
 {
-  mapping(string:mixed)|PropertySet properties = query_properties(path, id);
+  mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
   if (!properties) {
     return Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND,
 			     "No such file or directory.");
@@ -436,7 +436,7 @@ void recurse_find_properties(string path, string mode,
 		      mode == "DAV:prop" ? "Retrieving specific properties" :
 		      "Finding properties with mode " + mode,
 		      path, depth);
-  mapping(string:mixed)|PropertySet properties = query_properties(path, id);
+  mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
 
   if (!properties) {
     SIMPLE_TRACE_LEAVE ("No such file or dir");
@@ -475,14 +475,14 @@ mapping(string:mixed) patch_properties(string path,
 				       MultiStatus.Prefixed result, RequestID id)
 {
   SIMPLE_TRACE_ENTER (this, "Patching properties for %O", path);
-  mapping(string:mixed)|PropertySet properties = query_properties(path, id);
+  mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
 
   if (!properties) {
     SIMPLE_TRACE_LEAVE ("No such file or dir");
     return 0;
   }
   if (mappingp (properties)) {
-    SIMPLE_TRACE_LEAVE ("Got error %d from query_properties: %O",
+    SIMPLE_TRACE_LEAVE ("Got error %d from query_property_set: %O",
 			properties->error, properties->rettext);
     return properties;
   }
@@ -553,7 +553,7 @@ mapping(string:mixed) set_property (string path, string prop_name,
 				    string|array(Parser.XML.Tree.SimpleNode) value,
 				    RequestID id)
 {
-  mapping(string:mixed)|PropertySet properties = query_properties(path, id);
+  mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
   if (!properties) return Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND,
 					    "File not found.");
   if (mappingp (properties)) return properties;
@@ -579,7 +579,7 @@ mapping(string:mixed) set_property (string path, string prop_name,
 mapping(string:mixed) remove_property (string path, string prop_name,
 				       RequestID id)
 {
-  mapping(string:mixed)|PropertySet properties = query_properties(path, id);
+  mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
   if (!properties) return Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND,
 					    "File not found.");
   if (mappingp (properties)) return properties;
@@ -1170,7 +1170,7 @@ mapping(string:mixed) recurse_delete_files(string path,
     // RFC 2518 8.6.2
     //   The DELETE operation on a collection MUST act as if a
     //   "Depth: infinity" header was used on it.
-    mapping fail;
+    mapping(string:mixed) fail;
     if (!has_suffix(path, "/")) path += "/";
     foreach(find_dir(path, id) || ({}), string fname) {
       mapping sub_res = recurse_delete_files(path+fname, stat, id);
@@ -1191,7 +1191,7 @@ mapping(string:mixed) recurse_delete_files(string path,
   return delete_file(path, id) || Roxen.http_status(204);
 }
 
-mapping make_collection(string path, RequestID id)
+mapping(string:mixed) make_collection(string path, RequestID id)
 {
   // Fall back to find_file().
   RequestID tmp_id = id->clone_me();
@@ -1215,16 +1215,16 @@ static enum PropertyBehavior {
   PROPERTY_ALIVE = 1,	//! DAV:keepalive (Live properties must be kept alive).
 }
 
-mapping copy_properties(string source, string destination,
-			PropertyBehavior behavior, RequestID id)
+mapping(string:mixed) copy_properties(string source, string destination,
+				      PropertyBehavior behavior, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_properties(%O, %O, %O, %O)",
 		     source, destination, behavior, id);
-  PropertySet source_properties = query_properties(source, id);
-  PropertySet destination_properties = query_properties(destination, id);
+  PropertySet source_properties = query_property_set(source, id);
+  PropertySet destination_properties = query_property_set(destination, id);
 
   multiset(string) property_set = source_properties->query_all_properties();
-  mapping res;
+  mapping(string:mixed) res;
   foreach(property_set; string property_name;) {
     SIMPLE_TRACE_ENTER(this, "Copying the property %O.", property_name);
     string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed) source_val =
@@ -1239,24 +1239,24 @@ mapping copy_properties(string source, string destination,
       TRACE_LEAVE("Destination already has the correct value.");
       continue;
     }
-    mapping res =
+    mapping(string:mixed) subres =
       destination_properties->set_property(property_name, source_val);
     if (behavior == PROPERTY_OMIT) {
       TRACE_LEAVE("Omit verify.");
       continue;
     }
-    if ((behavior == PROPERTY_ALIVE) && (res->error < 300)) {
+    if ((behavior == PROPERTY_ALIVE) && (subres->error < 300)) {
       // FIXME: Check that if the property was live in source,
       //        it is still live in destination.
       // This is likely already so, since we're in the same module.
     }
-    if ((res->error < 300) ||
-	(res->error == Protocols.HTTP.HTTP_CONFLICT)) {
+    if ((subres->error < 300) ||
+	(subres->error == Protocols.HTTP.HTTP_CONFLICT)) {
       // Ok, or read-only property.
       TRACE_LEAVE("Copy ok or read-only property.");
       continue;
     }
-    if (!res) {
+    if (!subres) {
       // Copy failed, but attempt to copy the rest.
       res = Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
     }
@@ -1266,9 +1266,11 @@ mapping copy_properties(string source, string destination,
   return res;
 }
 
-mapping copy_collection(string source, string destination,
-			PropertyBehavior behavior, Overwrite overwrite,
-			MultiStatus.Prefixed result, RequestID id)
+//! Used by the default @[recurse_copy_files] to copy a collection
+//! (aka directory).
+mapping(string:mixed) copy_collection(string source, string destination,
+				      PropertyBehavior behavior, Overwrite overwrite,
+				      MultiStatus.Prefixed result, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_collection(%O, %O, %O, %O, %O, %O).",
 		     source, destination, behavior, overwrite, result, id);
@@ -1283,7 +1285,7 @@ mapping copy_collection(string source, string destination,
       //   MUST perform a DELETE with "Depth: infinity" on the
       //   destination resource.
       TRACE_ENTER("Destination exists and overwrite is on.", this);
-      mapping res = recurse_delete_files(destination, result, id);
+      mapping(string:mixed) res = recurse_delete_files(destination, result, id);
       if (res && (res->error >= 300)) {
 	// Failed to delete something.
 	TRACE_LEAVE("Deletion failed.");
@@ -1308,13 +1310,13 @@ mapping copy_collection(string source, string destination,
   }
   // Create the new collection.
   TRACE_LEAVE("Make a new collection.");
-  mapping res = make_collection(destination, id);
+  mapping(string:mixed) res = make_collection(destination, id);
   if (res && res->error >= 300) return res;
   return copy_properties(source, destination, behavior, id) || res;
 }
 
-mapping copy_file(string path, string dest, PropertyBehavior behavior,
-		  Overwrite overwrite, RequestID id)
+mapping(string:mixed) copy_file(string path, string dest, PropertyBehavior behavior,
+				Overwrite overwrite, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_file(%O, %O, %O, %O, %O)\n",
 		     path, dest, behavior, overwrite, id);
@@ -1322,10 +1324,10 @@ mapping copy_file(string path, string dest, PropertyBehavior behavior,
   return Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL);
 }
 
-mapping recurse_copy_files(string source, string destination, int depth,
-			   mapping(string:PropertyBehavior) behavior,
-			   Overwrite overwrite,
-			   MultiStatus.Prefixed result, RequestID id)
+mapping(string:mixed) recurse_copy_files(string source, string destination, int depth,
+					 mapping(string:PropertyBehavior) behavior,
+					 Overwrite overwrite,
+					 MultiStatus.Prefixed result, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "recurse_copy_files(%O, %O, %O, %O, %O, %O)\n",
 		     source, destination, depth, behavior, result, id);
@@ -1344,10 +1346,10 @@ mapping recurse_copy_files(string source, string destination, int depth,
   }
   // FIXME: Check destination?
   if (st->isdir) {
-    mapping res = copy_collection(source, destination,
-				  behavior[query_location()+source] ||
-				  behavior[0],
-				  overwrite, result, id);
+    mapping(string:mixed) res =
+      copy_collection(source, destination,
+		      behavior[query_location()+source] || behavior[0],
+		      overwrite, result, id);
     if (res && (res->error != 204) && (res->error != 201)) {
       if (res->error >= 300) {
 	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
@@ -1362,10 +1364,10 @@ mapping recurse_copy_files(string source, string destination, int depth,
     }
     depth--;
     foreach(find_dir(source, id), string filename) {
-      mapping sub_res = recurse_copy_files(combine_path(source, filename),
-					   combine_path(destination, filename),
-					   depth,
-					   behavior, overwrite, result, id);
+      mapping(string:mixed) sub_res =
+	recurse_copy_files(combine_path(source, filename),
+			   combine_path(destination, filename),
+			   depth, behavior, overwrite, result, id);
       if (sub_res && (sub_res->error != 204) && (sub_res->error != 201)) {
 	result->add_status(combine_path(destination, filename),
 			   sub_res->error, sub_res->rettext);
