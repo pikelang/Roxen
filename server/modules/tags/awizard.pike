@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.24 2001/09/21 15:58:14 jhs Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.25 2002/01/07 16:04:14 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";
@@ -88,7 +88,8 @@ class Page
 
   string tag_button(string t, mapping m, RequestID id)
   {
-    mapping args = ([]);
+    mapping args = m - (["id": 1, "page": 1, "href": 1, "next": 1, "prev": 1,
+			 "image": 1, "gbutton_title": 1, "title": 1]);
     if(m->page)
       args->name  = "goto_page_"+m->page+"/"+m->id;
     else if(m->href)
@@ -134,7 +135,8 @@ class Page
 
   string container_dbutton(string t, mapping m, string c, RequestID id)
   {
-    mapping args = ([]);
+    mapping args = m - (["id": 1, "page": 1, "href": 1, "next": 1, "prev": 1,
+			 "image": 1, "gbutton_title": 1, "title": 1]);
     if(m->page)
       args->name  = "goto_page_"+m->page+"/"+m->id;
     else if(m->href)
