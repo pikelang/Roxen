@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.369 2000/09/13 14:09:35 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.370 2000/09/13 14:16:01 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -1550,6 +1550,7 @@ class StringFile
 {
   string data;
   int offset;
+  mixed _st;
 
   string _sprintf()
   {
@@ -1568,6 +1569,12 @@ class StringFile
     return d;
   }
 
+  array|mixed stat()
+  {
+    if( _st ) return _st;
+    return ({ 0, strlen(data), time(), time(), time(), 0, 0, 0 });
+  }
+
   void write(mixed ... args)
   {
     throw( ({ "File not open for write\n", backtrace() }) );
@@ -1578,9 +1585,10 @@ class StringFile
     offset = to;
   }
 
-  void create(string d)
+  void create(string d, mixed|void __st)
   {
     data = d;
+    _st = __st;
   }
 
 }
