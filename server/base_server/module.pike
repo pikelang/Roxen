@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.15 1997/06/01 01:07:19 grubba Exp $ */
+/* $Id: module.pike,v 1.16 1997/06/12 20:46:59 grubba Exp $ */
 
 #include <module.h>
 
@@ -80,98 +80,105 @@ varargs void defvar(string var, mixed value, string name, int type,
   
   switch (type & VAR_TYPE_MASK)
   {
-   case TYPE_NODE:
-     if(!arrayp(value))
-       error("TYPE_NODE variables should contain a list of variables "
-	     "to use as subnodes.\n");
-     break;
-   case TYPE_CUSTOM:
-     if(!misc
-	&& arrayp(misc)
-	&& (sizeof(misc)>=3)
-	&& functionp(misc[0])
-	&& functionp(misc[1])
-	&& functionp(misc[2]))
+  case TYPE_NODE:
+    if(!arrayp(value))
+      error("TYPE_NODE variables should contain a list of variables "
+	    "to use as subnodes.\n");
+    break;
+  case TYPE_CUSTOM:
+    if(!misc
+       && arrayp(misc)
+       && (sizeof(misc)>=3)
+       && functionp(misc[0])
+       && functionp(misc[1])
+       && functionp(misc[2]))
        error("When defining a TYPE_CUSTOM variable, the MISC "
 	     "field must be an array of functionpointers: \n"
 	     "({describe,describe_form,set_from_form})\n");
-     break;
+    break;
 
-   case TYPE_TEXT_FIELD:
-   case TYPE_FILE:
-   case TYPE_STRING:
-   case TYPE_LOCATION:
-     if(value && !stringp(value)) {
-       report_error(sprintf("Passing illegal value (%t:%O) "
-			    "to string type variable.\n",
-			    value, value));
-     }
-     break;
+  case TYPE_TEXT_FIELD:
+  case TYPE_FILE:
+  case TYPE_STRING:
+  case TYPE_LOCATION:
+  case TYPE_PASSWORD:
+    if(value && !stringp(value)) {
+      report_error(sprintf("%s:\nPassing illegal value (%t:%O) "
+			   "to string type variable.\n",
+			   roxen->filename(this), value, value));
+    }
+    break;
     
-   case TYPE_FLOAT:
-     if(!floatp(value))
-       report_error(sprintf("Passing illegal value (%t:%O) "
-			    "(not float) to floating point "
-			    "decimal number variable.\n", value, value));
-     break;
-   case TYPE_INT:
-     if(!intp(value))
-       report_error(sprintf("Passing illegal value (%t:%O) "
-			    "(not int) to integer number variable.\n",
-			    value, value));
-     break;
-
-   case TYPE_MODULE_LIST:
-     value = ({});
-     break;
+  case TYPE_FLOAT:
+    if(!floatp(value))
+      report_error(sprintf("%s:\nPassing illegal value (%t:%O) "
+			   "(not float) to floating point "
+			   "decimal number variable.\n",
+			   roxen->filename(this), value, value));
+    break;
+  case TYPE_INT:
+    if(!intp(value))
+      report_error(sprintf("%s:\nPassing illegal value (%t:%O) "
+			   "(not int) to integer number variable.\n",
+			   roxen->filename(this), value, value));
+    break;
+     
+  case TYPE_MODULE_LIST:
+    value = ({});
+    break;
     
-   case TYPE_MODULE:
-     /* No default possible */
-     value = 0;
-     break;
+  case TYPE_MODULE:
+    /* No default possible */
+    value = 0;
+    break;
 
-   case TYPE_DIR_LIST:
-     int i;
-     if(!arrayp(value)) {
-       report_error(sprintf("Illegal type %t to TYPE_DIR_LIST, "
-			    "must be array.\n", value));
-       value = ({ "./" });
-     } else {
-       for(i=0; i<sizeof(value); i++) {
-	 if(strlen(value[i])) {
-	   if(value[i][-1] != '/')
-	     value[i] += "/";
+  case TYPE_DIR_LIST:
+    int i;
+    if(!arrayp(value)) {
+      report_error(sprintf("%s:\nIllegal type %t to TYPE_DIR_LIST, "
+			   "must be array.\n",
+			   roxen->filename(this), value));
+      value = ({ "./" });
+    } else {
+      for(i=0; i<sizeof(value); i++) {
+	if(strlen(value[i])) {
+	  if(value[i][-1] != '/')
+	    value[i] += "/";
 	 } else {
 	   value[i]="./";
 	 }
-       }
-     }
-     break;
+      }
+    }
+    break;
 
-   case TYPE_DIR:
-     if(value && !stringp(value))
-       report_error(sprintf("Passing illegal value (%t:%O) (not string) "
-			    "to directory variable.\n", value, value));
-
-     if(value && strlen(value) && ((string)value)[-1] != '/')
-       value+="/";
-     break;
+  case TYPE_DIR:
+    if(value && !stringp(value))
+      report_error(sprintf("%s:\nPassing illegal value (%t:%O) (not string) "
+			   "to directory variable.\n",
+			   roxen->filename(this), value, value));
     
-   case TYPE_INT_LIST:
-   case TYPE_STRING_LIST:
-     if(!misc && value && !arrayp(value)) {
-       report_error(sprintf("Passing illegal misc (%t:%O) (not array) "
-			    "to multiple choice variable.\n", value, value));
-     } else {
-       if(misc && !arrayp(misc)) {
-	 report_error(sprintf("Passing illegal misc (%t:%O) (not array) "
-			      "to multiple choice variable.\n", misc, misc));
-       }
-       if(misc && search(misc, value)==-1) {
-	 report_error(sprintf("Passing value (%t:%O) not present "
-			      "in the misc array.\n", value, value));
-       }
-     }
+    if(value && strlen(value) && ((string)value)[-1] != '/')
+      value+="/";
+    break;
+    
+  case TYPE_INT_LIST:
+  case TYPE_STRING_LIST:
+    if(!misc && value && !arrayp(value)) {
+      report_error(sprintf("%s:\nPassing illegal misc (%t:%O) (not array) "
+			   "to multiple choice variable.\n",
+			   roxen->filename(this), value, value));
+    } else {
+      if(misc && !arrayp(misc)) {
+	report_error(sprintf("%s:\nPassing illegal misc (%t:%O) (not array) "
+			     "to multiple choice variable.\n",
+			     roxen->filename(this), misc, misc));
+      }
+      if(misc && search(misc, value)==-1) {
+	report_error(sprintf("%s:\nPassing value (%t:%O) not present "
+			     "in the misc array.\n",
+			     roxen->filename(this), value, value));
+      }
+    }
     break;
     
   case TYPE_FLAG:
@@ -183,12 +190,20 @@ varargs void defvar(string var, mixed value, string name, int type,
 
   case TYPE_COLOR:
     if (!intp(value))
-      report_error(sprintf("Passing illegal value (%t:%O) (not int) "
-			   "to color variable.\n", value, value));
+      report_error(sprintf("%s:\nPassing illegal value (%t:%O) (not int) "
+			   "to color variable.\n",
+			   roxen->filename(this), value, value));
     break;
     
+  case TYPE_FILE_LIST:
+  case TYPE_PORTS:
+  case TYPE_FONT:
+    // FIXME: Add checks for these.
+    break;
+
   default:
-    report_error("Illegal type ("+type+") in defvar.\n");
+    report_error(sprintf("%s:\nIllegal type (%s) in defvar.\n",
+			 roxen->filename(this), type));
     break;
   }
 
