@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.256 1998/11/08 20:54:36 peter Exp $
+ * $Id: roxen.pike,v 1.257 1998/11/30 03:57:42 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.256 1998/11/08 20:54:36 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.257 1998/11/30 03:57:42 peter Exp $";
 
 
 // Some headerfiles
@@ -2240,7 +2240,7 @@ void scan_module_dir(string d)
 
 	    foo = o->register_module();
 	    if (!foo) {
-	      MD_PERROR(("registration failed"));
+	      MD_PERROR(("registration failed. "));
 	      return 0;
 	    } else {
 	      MD_PERROR(("registered."));
