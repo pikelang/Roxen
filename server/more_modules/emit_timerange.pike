@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.7 2004/02/10 01:14:06 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.8 2004/02/10 01:19:02 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -722,7 +722,6 @@ class TagEmitTimeRange
 	  {
             if(testing->format_time()[..compare_num] == rsrow[use_date])
             {
-	      werror("Hur är det nu: "+i);
 	      dset += ({({testing, rsrow})});
 	      test = 0;
 	    }
