@@ -26,6 +26,7 @@ string module_global_page( RequestID id, Configuration conf )
 </awizard>";
 }
 
+
 #define translate( X ) _translate( (X), id )
 
 string _translate( mixed what, object id )
@@ -105,11 +106,11 @@ do                                                                      \
   return res;
 }
 
-int creation_date = time();
-int no_reload()
-{
-  return creation_date > file_stat( __FILE__ )[ST_MTIME];
-}
+// int creation_date = time();
+// int no_reload()
+// {
+//   return creation_date > file_stat( __FILE__ )[ST_MTIME];
+// }
 
 mapping current_compile_errors = ([]);
 string devel_buttons( object c, string mn, object id )
