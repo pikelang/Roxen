@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.105 1999/06/02 09:15:23 wing Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.106 1999/06/21 15:16:35 marcus Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -722,8 +722,8 @@ static string short_date(int timestamp)
 {
   int date = time(1);
   
-  if(ctime(date)[19..22] < ctime(timestamp)[19..22])
-    return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[19..22];
+  if(ctime(date)[20..23] < ctime(timestamp)[20..23])
+    return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[20..23];
   
   return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[11..15];
 }
