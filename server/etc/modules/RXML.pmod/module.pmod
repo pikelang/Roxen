@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.169 2001/06/20 23:27:24 mast Exp $
+// $Id: module.pmod,v 1.170 2001/06/21 02:43:46 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1786,24 +1786,24 @@ class Backtrace
   //! Returns a formatted RXML frame backtrace.
   {
     String.Buffer txt = String.Buffer();
-    function(string:void) add = txt->add;
+    function(string...:void) add = txt->add;
     add (no_msg ? "" : "RXML" + (type ? " " + type : "") + " error");
     if (context) {
-      if (!no_msg) add (": " + (msg || "(no error message)\n"));
-      if (current_var) add (" | &" + current_var + ";\n");
+      if (!no_msg) add (": ", msg || "(no error message)\n");
+      if (current_var) add (" | &", current_var, ";\n");
       for (Frame f = frame; f; f = f->up) {
 	string name;
 	if (f->tag) name = f->tag->name;
 	else if (!f->up) break;
 	else name = "(unknown)";
 	if (f->flags & FLAG_PROC_INSTR)
-	  add (" | <?" + name + "?>\n");
+	  add (" | <?", name, "?>\n");
 	else {
-	  add (" | <" + name);
+	  add (" | <", name);
 	  if (mappingp (f->args))
 	    foreach (sort (indices (f->args)), string arg) {
 	      mixed val = f->args[arg];
-	      add (" " + arg + "=");
+	      add (" ", arg, "=");
 	      if (arrayp (val)) add (map (val, error_print_val) * ",");
 	      else add (error_print_val (val));
 	    }
@@ -1813,7 +1813,7 @@ class Backtrace
       }
     }
     else
-      if (!no_msg) add (" (no context): " + (msg || "(no error message)\n"));
+      if (!no_msg) add (" (no context): ", msg || "(no error message)\n");
     return txt->get();
   }
 
@@ -2158,11 +2158,11 @@ class Frame
   //! does not affect the surrounding content at all.
   //!
   //! Return values:
-  //! @list dl
+  //! @dl
   //!  @item array
   //!   A so-called exec array to be handled by the parser. The
   //!	elements are processed in order, and have the following usage:
-  //!   @list dl
+  //!   @dl
   //!    @item string
   //!	  Added or put into the result. If the result type has a
   //!	  parser, the string will be parsed with it before it's
@@ -2170,7 +2170,9 @@ class Frame
   //!    @item RXML.Frame
   //!	  Already initialized frame to process. Neither arguments nor
   //!	  content will be parsed. It's result is added or put into the
-  //!	  result of this tag.
+  //!	  result of this tag. The functions @[RXML.make_tag],
+  //!	  @[RXML.make_unparsed_tag] and @[RXML.parse_frame] are useful
+  //!	  to create frames.
   //!    @item mapping(string:mixed)
   //!	  A response mapping which will be returned instead of the
   //!	  evaluated page. The evaluation is stopped immediately after
@@ -2188,11 +2190,11 @@ class Frame
   //!	  this is used, it's probably necessary to define the
   //!	  @[raw_tag_text] variable. For further details see the doc
   //!	  for @[propagate_tag] in this class.
-  //!   @endlist
+  //!   @enddl
   //!  @item 0
   //!   Do nothing special. Exits the tag when used from
   //!   @[do_process] and @[FLAG_STREAM_RESULT] is set.
-  //! @endlist
+  //! @enddl
   //!
   //! Note that the intended use is not to postparse by setting a
   //! parser on the result type, but instead to return an array with
@@ -2477,7 +2479,8 @@ class Frame
   do {									\
     THIS_TAG_DEBUG ("Adding %s to " desc "\n",				\
 		    utils->format_short (from));			\
-    to += from;								\
+    /* Keep only one ref to to to allow destructive change. */		\
+    to = to + (to = 0, from);						\
   } while (0)
 
 #define SET_NONSEQUENTIAL(from, to, to_type, desc)			\
@@ -2494,16 +2497,18 @@ class Frame
     }									\
   } while (0)
 
-#define CONV_RESULT(from, from_type, to, to_type)			\
+#define CONVERT_VALUE(from, from_type, to, to_type, desc)		\
   do {									\
     if (from_type->name != to_type->name) {				\
-      THIS_TAG_DEBUG ("Converting result from %s to %s of "		\
-		      "surrounding content\n",				\
-		      from_type->name, to_type->name);			\
+      THIS_TAG_DEBUG (desc, from_type->name, to_type->name);		\
       to = to_type->encode (from, from_type);				\
     }									\
     else to = from;							\
   } while (0)
+
+#define CONV_RESULT(from, from_type, to, to_type) \
+  CONVERT_VALUE(from, from_type, to, to_type, \
+		"Converting result from %s to %s of surrounding content\n")
 
   private void _exec_array_fatal (string where, int pos, mixed elem,
 				  string msg, mixed... args)
@@ -2573,6 +2578,14 @@ class Frame
 		  ctx, evaler, result_type); // Might unwind.
 		break;
 	      }
+//  	      else if (([object] elem)->is_RXML_PCode) {
+//  		THIS_TAG_DEBUG ("Exec[%d]: Evaluating p-code\n", i);
+//  		piece = ([object(PCode)] elem)->eval (ctx);
+//  		CONVERT_VALUE (piece, ([object(PCode)] elem)->type,
+//  			       piece, result_type,
+//  			       "Converting p-code result from %s "
+//  			       "to tag result type %s\n");
+//  	      }
 	      else if (([object] elem)->is_RXML_Parser) {
 		// The subparser above unwound.
 		THIS_TAG_DEBUG ("Exec[%d]: Continuing eval of frame %O\n",
@@ -2588,7 +2601,7 @@ class Frame
 	else SET_NONSEQUENTIAL (piece, result, result_type, "result");
       }
 
-      if (result_type->sequential) result += res;
+      if (result_type->sequential) result = result + (result = 0, res);
       else res = result;
 
       if (parent_scope) {
@@ -2598,7 +2611,7 @@ class Frame
       return res;
     };
 
-    if (result_type->sequential) result += res;
+    if (result_type->sequential) result = result + (result = 0, res);
     if (parent_scope) {
       THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this);
       ENTER_SCOPE (ctx, this);
@@ -2831,11 +2844,10 @@ class Frame
 	      }
 #endif
 	      fn_text->add (
-		sprintf ("return %s (context, "
-			 "RXML.xml_tag_parser->parse_tag_args ((%s) || \"\"), %s) + ([\n",
-			 comp->bind (_eval_args),
-			 p->p_code->_compile_text (comp),
-			 comp->bind (splice_req_types)));
+		"return ", comp->bind (_eval_args), " (context, "
+		"RXML.xml_tag_parser->parse_tag_args ((",
+		p->p_code->_compile_text (comp), ") || \"\"), ",
+		comp->bind (splice_req_types), ") + ([\n");
 	      splice_arg_type->give_back (p);
 	      args = _eval_args (ctx, xml_tag_parser->parse_tag_args (splice_arg || ""),
 				 splice_req_types);
@@ -5170,7 +5182,7 @@ static class TText
   string _sprintf() {return "RXML.t_text" + OBJ_COUNT;}
 }
 
-THtml t_xml = TXml();
+TXml t_xml = TXml();
 //! The type for XML and similar markup.
 
 static class TXml
@@ -5199,16 +5211,16 @@ static class TXml
       [string] val,
       // FIXME: This ignores the invalid Unicode character blocks.
       ({"&", "<", ">", "\"", "\'",
-	"\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
-	"\010",                 "\013", "\014",         "\016", "\017",
-	"\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
-	"\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+//  	"\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+//  	"\010",                 "\013", "\014",         "\016", "\017",
+//  	"\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+//  	"\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
       }),
       ({"&amp;", "&lt;", "&gt;", /*"&quot;"*/ "&#34;", /*"&apos;"*/ "&#39;",
-	"&#0;",  "&#1;",  "&#2;",  "&#3;",  "&#4;",  "&#5;",  "&#6;",  "&#7;",
-	"&#8;",                    "&#11;", "&#12;",          "&#14;", "&#15;",
-	"&#16;", "&#17;", "&#18;", "&#19;", "&#20;", "&#21;", "&#22;", "&#23;",
-	"&#24;", "&#25;", "&#26;", "&#27;", "&#28;", "&#29;", "&#30;", "&#31;",
+//  	"&#0;",  "&#1;",  "&#2;",  "&#3;",  "&#4;",  "&#5;",  "&#6;",  "&#7;",
+//  	"&#8;",                    "&#11;", "&#12;",          "&#14;", "&#15;",
+//  	"&#16;", "&#17;", "&#18;", "&#19;", "&#20;", "&#21;", "&#22;", "&#23;",
+//  	"&#24;", "&#25;", "&#26;", "&#27;", "&#28;", "&#29;", "&#30;", "&#31;",
       }));
   }
 
@@ -5295,31 +5307,27 @@ static class TXml
     }
 
     String.Buffer res = String.Buffer();
-    function(string:void) add = res->add;
-    add ("<");
-    add (tagname);
+    function(string...:void) add = res->add;
+    add ("<", tagname);
 
     if (args)
       if (flags & FLAG_RAW_ARGS)
-	foreach (indices (args), string arg) {
-	  add (" "), add (arg), add ("=\"");
-	  add (replace (args[arg], "\"", "\"'\"'\""));
-	  add ("\"");
-	}
+	foreach (indices (args), string arg)
+	  add (" ", arg, "=\"", replace (args[arg], "\"", "\"'\"'\""), "\"");
       else
-	foreach (indices (args), string arg) {
-	  add (" "), add (arg), add ("=");
-	  add (Roxen->html_encode_tag_value (args[arg]));
-	}
+	foreach (indices (args), string arg)
+	  add (" ", arg, "=\"",
+	       replace (args[arg], ({"&", "\"", "<"}), ({"&amp;", "&quot;", "&lt;"})),
+	       "\"");
 
-    if (content) {
-      add (">"), add (content);
-      add ("</"), add (tagname), add (">");
-    }
+    if (content)
+      add (">", content, "</", tagname, ">");
     else
       if (flags & FLAG_COMPAT_PARSE)
-	if (flags & FLAG_EMPTY_ELEMENT) add (">");
-	else add ("></"), add (tagname), add (">");
+	if (flags & FLAG_EMPTY_ELEMENT)
+	  add (">");
+	else
+	  add ("></", tagname, ">");
       else
 	add (" />");
 

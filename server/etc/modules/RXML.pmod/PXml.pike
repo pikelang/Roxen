@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.58 2001/06/20 23:27:24 mast Exp $
+//! $Id: PXml.pike,v 1.59 2001/06/21 02:43:46 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -259,9 +259,9 @@ static void initialize (RXML.Context ctx, RXML.Type type,
   TagSetParser::initialize (ctx, type, p_code, tag_set);
 
   if (type->sequential)
-//      if (type->empty_value == "")
-//        value = String.Buffer();
-//      else
+    if (type->empty_value == "")
+      value = String.Buffer();
+    else
       value = type->empty_value;
   else
     value = RXML.nil;
