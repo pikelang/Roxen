@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.660 2001/04/18 13:05:13 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.661 2001/04/24 12:23:24 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -3937,6 +3937,13 @@ array security_checks = ({
     " if( ((th >= %[0]d) && (tm >= %[1]d)) &&\n"
     "     ((th <= %[2]d) && (tm <= %[3]d)) )",
   }),
+  "referer=%s", 1, ({
+    (< "  string referer = sizeof(request_id->referer||({}))?"
+       "request_id->referer[0]:\"\"; " >),
+    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
+    "            return glob(q,referer);\n"
+    "           })) )"
+  }),
   "day=%s",1,({
     lambda( string q ) {
       multiset res = (<>);
@@ -3977,9 +3984,14 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 //!  CMD group=name[,name,...] [return]
 //! 
 //!  CMD dns=pattern           [return]
+//!
+//!  CMD day=pattern           [return]
 //! 
 //!  CMD time=<start>-<stop>   [return]
 //!       times in HH:mm format
+//!
+//!  CMD referer=pattern      [return]
+//!       Check the referer header.
 //!
 //!  pattern is a glob pattern.
 //!
