@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.192 2000/12/09 19:10:28 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.193 2000/12/12 07:20:15 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -266,7 +266,7 @@ class TagRoxenACV {
   class Frame {
     inherit RXML.Frame;
     constant magic=
-      "<input type=\"hidden\" name=\"magic_roxen_automatic_charset_variable\" value=\"ед\" />";
+      "<input type=\"hidden\" name=\"magic_roxen_automatic_charset_variable\" value=\"едц\" />";
 
     array do_return(RequestID id) {
       result=magic;
@@ -883,10 +883,8 @@ class TagInsertFile {
   string get_data(string var, mapping args, RequestID id) {
     string result;
     if(args->nocache) {
-      int nocache=id->pragma["no-cache"];
-      id->pragma["no-cache"] = 1;
-      result=id->conf->try_get_file(var, id);
-      id->pragma["no-cache"] = nocache;
+      CACHE(0);
+      result=id->conf->try_get_file(var, id, 0, 1);
     }
     else result = id->conf->try_get_file(var, id);
     if(!result) RXML.run_error("No such file ("+var+").\n");
