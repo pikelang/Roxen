@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.320 2001/10/04 13:19:19 sara Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.321 2001/10/04 14:36:52 sara Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5819,13 +5819,13 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "insert#variables":#"<desc type='plugin'><p><short>
- Inserts a listing of all variables in a scope.</short> Note that it is
+ Inserts a listing of all variables in a scope.</short><note><p>It is
  possible to create a scope with an infinite number of variables set.
- In this case the programme of that scope decides which variables that
+ In this case the programmer of that scope decides which variables that
  should be listable, i.e. this will not cause any problem except that
  all variables will not be listed. It is also possible to hide
  variables so that they are not listed with this tag.
-</p></desc>
+</p></note></p></desc>
 
 <attr name='variables' value='full|plain'>
  <p>Sets how the output should be formatted.</p>
