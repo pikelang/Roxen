@@ -8,13 +8,14 @@
 inherit "module";
 inherit "roxenlib";
 
+//<locale-token project="config_interface">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.38 2000/07/15 00:59:53 lange Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.39 2000/07/17 16:55:47 lange Exp $";
 
 constant path = "config_interface/";
 
@@ -273,8 +274,8 @@ void start(int n, Configuration cfg)
 
 void create()
 {
-  defvar("encoding", "UTF-8", LOCALE("","Character encoding"), TYPE_STRING,
-	 LOCALE("","Send pages to client in this character encoding."));
-  defvar( "location", "/", LOCALE("","Mountpoint"), TYPE_LOCATION,
-          LOCALE("","Usually / is a good idea") );
+  defvar("encoding", "UTF-8", LOCALE("du","Character encoding"), TYPE_STRING,
+	 LOCALE("dv","Send pages to client in this character encoding."));
+  defvar( "location", "/", LOCALE("dw","Mountpoint"), TYPE_LOCATION,
+          LOCALE("dx","Usually / is a good idea") );
 }

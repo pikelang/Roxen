@@ -1,5 +1,3 @@
-inherit "roxenlib";
-
 
 string get_id(string from)
 {

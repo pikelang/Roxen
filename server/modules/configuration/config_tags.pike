@@ -8,6 +8,7 @@ inherit "roxenlib";
 #include <config_interface.h>
 #include <config.h>
 
+//<locale-token project="config_interface">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 #define CU_AUTH id->misc->config_user->auth

@@ -6,6 +6,8 @@ inherit "module";
 #include <roxen.h>
 #include <module.h>
 
+//<locale-token project="config_interface"> LOCALE </locale-token>
+//<locale-token project="config_interface"> SLOCALE </locale-token>
 USE_DEFERRED_LOCALE;
 #define LOCALE(X,Y)	_DEF_LOCALE("config_interface",X,Y)
 #define SLOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
@@ -90,45 +92,45 @@ class ConfigurationSettings
                                     "Theme",
                                     "The theme to use" ) );
 
-    defvar( "docs", 1, LOCALE("", "Show documentation"),
-            TYPE_FLAG, LOCALE("", "Show the variable documentation."),
+    defvar( "docs", 1, LOCALE("c2", "Show documentation"),
+            TYPE_FLAG, LOCALE("c3", "Show the variable documentation."),
             0, 0 );
 
-    defvar( "more_mode", 1, LOCALE("", "Show advanced configuration options"),
-	    TYPE_FLAG, LOCALE("", "Show all possible configuration options, not only "
+    defvar( "more_mode", 1, LOCALE("c4", "Show advanced configuration options"),
+	    TYPE_FLAG, LOCALE("c5", "Show all possible configuration options, not only "
 			      "the ones that are most often changed."),
 	    0, 0 );
 
-    defvar( "translations", 0, LOCALE("", "Show the incomplete translations"),
-            TYPE_FLAG, LOCALE("", "Show the language selection flags. The translation "
+    defvar( "translations", 0, LOCALE("c6", "Show the incomplete translations"),
+            TYPE_FLAG, LOCALE("c7", "Show the language selection flags. The translation "
 			      "of the configuration interface is not done yet, so this is "
 			      "mostly useful for the curious or the translator."),
 	    0, 0 );
 
-    defvar( "devel_mode", 1, LOCALE("", "Show developer options and actions"),
-	    TYPE_FLAG, LOCALE("", "Show settings and actions that are not normaly "
+    defvar( "devel_mode", 1, LOCALE("c8", "Show developer options and actions"),
+	    TYPE_FLAG, LOCALE("c9", "Show settings and actions that are not normaly "
 			      "useful for non-developer users. If you develop your own "
 			      "roxen modules, this option is for you."),
 	    0, 0 );
 
-    defvar( "bgcolor", "white", LOCALE("", "Background color"),
-	    TYPE_STRING, LOCALE("", "Administration interface background color."),
+    defvar( "bgcolor", "white", LOCALE("da", "Background color"),
+	    TYPE_STRING, LOCALE("db", "Administration interface background color."),
 	    0, 0 );
 
-    defvar( "fgcolor", "black", LOCALE("", "Text color"),
-	    TYPE_STRING, LOCALE("", "Administration interface text color."),
+    defvar( "fgcolor", "black", LOCALE("dc", "Text color"),
+	    TYPE_STRING, LOCALE("dd", "Administration interface text color."),
 	    0, 0 );
 
-    defvar( "linkcolor", "darkblue", LOCALE("", "Link color"),
-	    TYPE_STRING, LOCALE("", "Administration interface text color."),
+    defvar( "linkcolor", "darkblue", LOCALE("de", "Link color"),
+	    TYPE_STRING, LOCALE("dd", "Administration interface text color."),
 	    0, 0 );
 
-    defvar( "font", "franklin gothic demi", LOCALE("", "Font"),
-	    TYPE_FONT, LOCALE("", "Administration interface font."),
+    defvar( "font", "franklin gothic demi", LOCALE("df", "Font"),
+	    TYPE_FONT, LOCALE("dg", "Administration interface font."),
 	    0, 0 );
 
-    defvar( "addmodulemethod", "normal", LOCALE("", "Add/Delete module page type"),
-            TYPE_STRING_LIST, LOCALE("", "<dl>\n"
+    defvar( "addmodulemethod", "normal", LOCALE("dh", "Add/Delete module page type"),
+            TYPE_STRING_LIST, LOCALE("di", "<dl>\n"
 	     "<dt>normal</dt><dd>Show module name and documentation with images.</dd>\n"
 	     "<dt>fast</dt><dd>Like verbose, but no type images.</dd>\n"
 	     "<dt>faster</dt><dd>Like verbose, but allows to select multiple modules at once.</dd>\n"
@@ -172,16 +174,16 @@ void add_permission( string perm, string text )
 
 void create()
 {
-  add_permission( "Everything", LOCALE("", "All Permissions"));
-  add_permission( "View Settings", LOCALE("", "View Settings"));
-  add_permission( "Edit Users", LOCALE("", "Edit Users"));
-  add_permission( "Edit Global Variables", LOCALE("", "Edit Global Variables"));
-  add_permission( "Edit Module Variables", LOCALE("", "Edit Module Variables"));
-  add_permission( "Tasks", LOCALE("", "Tasks"));
-  add_permission( "Restart", LOCALE("", "Restart"));
-  add_permission( "Shutdown", LOCALE("", "Shutdown"));
-  add_permission( "Create Site", LOCALE("", "Create Sites"));
-  add_permission( "Add Module", LOCALE("", "Add Modules"));
+  add_permission( "Everything", LOCALE("dj", "All Permissions"));
+  add_permission( "View Settings", LOCALE("dk", "View Settings"));
+  add_permission( "Edit Users", LOCALE("dm", "Edit Users"));
+  add_permission( "Edit Global Variables", LOCALE("dn", "Edit Global Variables"));
+  add_permission( "Edit Module Variables", LOCALE("do", "Edit Module Variables"));
+  add_permission( "Tasks", LOCALE("cH", "Tasks"));
+  add_permission( "Restart", LOCALE("dp", "Restart"));
+  add_permission( "Shutdown", LOCALE("dq", "Shutdown"));
+  add_permission( "Create Site", LOCALE("dr", "Create Sites"));
+  add_permission( "Add Module", LOCALE("ds", "Add Modules"));
 
   if(sizeof(roxen->configuration_perm))
     foreach(indices(roxen->configuration_perm), string perm)
@@ -258,7 +260,7 @@ class User
       }
       m_delete( id->variables, rp );
     }
-    string set_src =  Roxen.parse_rxml( "<gbutton-url font=&usr.font; width=180 preparse> "+SLOCALE("", "Save")+
+    string set_src =  Roxen.parse_rxml( "<gbutton-url font=&usr.font; width=180 preparse> "+SLOCALE("bA", "Save")+
 					" </gbutton-url>", id );
     string form = error+
 #"
@@ -438,7 +440,7 @@ void first_try( RequestID id )
   else
     host = id->remoteaddr;
   if( (time(1) - logged_in[ u+host ]) > 1800 )
-    report_notice(SLOCALE("", "Administrator logged on as %s from %s.\n"),
+    report_notice(SLOCALE("dt", "Administrator logged on as %s from %s.\n"),
 		  u, host+" ("+id->remoteaddr+")" );
 
   logged_in[ u+host ] = time();

@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// The translation module. Copyright © 2000, Roxen IS.
 //
 
 #include <module.h>
@@ -10,6 +10,10 @@ inherit "module";
 constant module_type = MODULE_PARSER;
 constant module_name = "Translation module";
 constant module_doc  = "This module provides an RXML API to the Pike localization system.";
+constant thread_safe = 1;
+constant cvs_version = "$Id: translation_mod.pike,v 1.5 2000/07/17 16:55:47 lange Exp $";
+
+
 
 
 // ------------------------ The tags -------------------------
@@ -54,7 +58,7 @@ class TagTranslate {
 
     array do_return(RequestID id) {
       string proj = args->project || id->misc->translation_proj;
-#if constant(Locale.transtale)
+#if constant(Locale.translate)
       string trans = Locale.translate(proj, roxen.locale->get(),
 				      args->id,
 				      content);

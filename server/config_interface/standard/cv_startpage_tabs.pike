@@ -1,13 +1,15 @@
 #include <roxen.h>
+
+//<locale-token project="config_interface">LOCALE</locale-token>
 USE_DEFERRED_LOCALE;
 #define LOCALE(X,Y)	_DEF_LOCALE("config_interface",X,Y)
 
 array pages =
 ({
-  ({ LOCALE("", "Startpage"),     "",                0,               0             }),
-  ({ LOCALE("", "Update"),        "update.html",     0,               0             }),
-  ({ LOCALE("", "Your Settings"), "settings.html",   0,               0             }),
-  ({ LOCALE("", "Users"),         "users.html",      "Edit Users",    0             }),
+  ({ LOCALE("cJ", "Startpage"),     "",                0,               0             }),
+  ({ LOCALE("cK", "Update"),        "update.html",     0,               0             }),
+  ({ LOCALE("cL", "Your Settings"), "settings.html",   0,               0             }),
+  ({ LOCALE("cM", "Users"),         "users.html",      "Edit Users",    0             }),
 });
 
 string parse(object id)

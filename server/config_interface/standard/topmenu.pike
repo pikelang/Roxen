@@ -1,5 +1,7 @@
 #include <config_interface.h>
 #include <roxen.h>
+
+//<locale-token project="config_interface">LOCALE</locale-token>
 USE_DEFERRED_LOCALE;
 #define LOCALE(X,Y)	_DEF_LOCALE("config_interface",X,Y)
 
@@ -7,13 +9,13 @@ constant tablist = "<tablist preparse ::=&usr.toptabs-args;>";
 
 array selections =
 ({
-  ({ LOCALE("", "Admin"),   "home",      "",                 0 }),
-  ({ LOCALE("", "Sites"),   "sites",     "sites/",           0 }),
-  ({ LOCALE("", "Globals"), "globals",   "global_settings/", 0 }),
-  ({ LOCALE("", "Ports"),   "ports",     "ports/",           0 }),
-  ({ LOCALE("", "Events"),  "event_log", "event_log/",       0 }),
-  ({ LOCALE("", "Tasks"),   "actions",   "actions/",   "Tasks" }),
-  ({ LOCALE("", "Docs"),    "docs",      "docs/",            0 }),
+  ({ LOCALE("cC", "Admin"),   "home",      "",                 0 }),
+  ({ LOCALE("cD", "Sites"),   "sites",     "sites/",           0 }),
+  ({ LOCALE("cE", "Globals"), "globals",   "global_settings/", 0 }),
+  ({ LOCALE("cF", "Ports"),   "ports",     "ports/",           0 }),
+  ({ LOCALE("cG", "Events"),  "event_log", "event_log/",       0 }),
+  ({ LOCALE("cH", "Tasks"),   "actions",   "actions/",   "Tasks" }),
+  ({ LOCALE("cI", "Docs"),    "docs",      "docs/",            0 }),
 });
 
 string parse( RequestID id )
