@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.21 1997/11/07 17:09:26 grubba Exp $
+# $Id: extensions,v 1.22 1997/11/12 16:56:41 grubba Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -36,7 +36,7 @@ pbm	image/x-portable-bitmap
 pgm	image/x-portable-graymap
 pict  	image/pict
 pjpg    image/jpeg
-png	image/x-png
+png	image/png
 pnm	image/x-portable-anymap
 ppm	image/x-portable-pixmap
 ras	image/x-cmu-raster
