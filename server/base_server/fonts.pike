@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.31 1999/11/23 06:38:36 per Exp $ */
+/* $Id: fonts.pike,v 1.32 1999/11/29 22:07:46 per Exp $ */
 
 #include <module.h>
 
@@ -83,7 +83,7 @@ array available_font_versions(string name, int size)
 	if(!ttf_done[combine_path(dir+"/",fname)]++)
 	{
 //   werror("Trying TTF: "+combine_path(dir+"/",fname)+"\n");
-	  object ttf = Image.TTF( combine_path(dir+"/",fname) );
+	  Image.TTF ttf = Image.TTF( combine_path(dir+"/",fname) );
 	  if(ttf)
 	  {
 	    mapping n = ttf->names();
@@ -191,7 +191,7 @@ string make_font_name(string name, int size, int bold, int italic)
 class TTFWrapper
 {
   int size;
-  object real;
+  Image.TTF real;
   int height( )
   {
     return size;
@@ -204,18 +204,18 @@ class TTFWrapper
 
   array text_extents( string what )
   {
-    object o = real->write( what );
+    Image.Image o = real->write( what );
     return ({ o->xsize(), o->ysize() });
   }
 
-  void create(object r, int s)
+  void create(Image.TTF r, int s)
   {
     real = r;
     size = s;
     real->set_height( size );
   }
 
-  object write( string ... what )
+  Image.Image write( string ... what )
   {
     return real->write(@Array.map( (array(string))what,replace," ",""));
   }

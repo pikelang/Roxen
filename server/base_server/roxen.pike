@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.362 1999/11/29 18:50:31 per Exp $
+ * $Id: roxen.pike,v 1.363 1999/11/29 22:10:03 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,10 +7,10 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.362 1999/11/29 18:50:31 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.363 1999/11/29 22:10:03 per Exp $";
 
 object backend_thread;
-object argcache;
+ArgCache argcache;
 
 // Some headerfiles
 #define IN_ROXEN
@@ -41,7 +41,57 @@ string real_version= "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__+"
 string real_version= "Roxen Challenger/"+__roxen_version__+"."+__roxen_build__;
 #endif
 
+
 // Prototypes for other parts of roxen.
+
+
+class RoxenModule
+{
+  constant is_module=1;
+  constant module_type = 0;
+  constant module_unique = 1;
+  string|mapping(string:string) module_name;
+  string|mapping(string:string) module_doc;
+
+  array(int|string|mapping) register_module();
+  string file_name_and_stuff();
+
+  void start(void|int num, void|object conf);
+
+  void defvar(string var, mixed value, string name,
+              int type, string|void doc_str, mixed|void misc,
+              int|function|void not_in_config);
+  void definvisvar(string name, int value, int type, array|void misc);
+
+  void deflocaledoc( string locale, string variable, 
+                     string name, string doc, 
+                     mapping|void translate );
+  int killvar(string var);
+  string check_variable( string s, mixed value );
+  mixed query(string|void var, int|void ok);
+
+  void set(string var, mixed value);
+  int setvars( mapping (string:mixed) vars );
+
+
+  string query_internal_location();
+  string query_location();
+  string query_provides();
+  array query_seclevels();
+  array(int) stat_file(string f, RequestID id);
+  array(String) find_dir(string f, RequestID id);
+  mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
+  string real_file(string f, RequestID id);
+  void save();
+  mapping api_functions();
+  mapping query_tag_callers();
+  mapping query_container_callers();
+  mapping query_if_callers();
+  
+  string info(object conf);
+  string comment();
+}
+
 class RequestID 
 {
   object conf; // Really Configuration, but that's sort of recursive.
@@ -108,7 +158,7 @@ string filename( program|object o )
 
 #ifdef THREADS
 // This mutex is used by Privs
-object euid_egid_lock = Thread.Mutex();
+Thread.Mutex euid_egid_lock = Thread.Mutex();
 #endif /* THREADS */
 
 /*
@@ -2123,6 +2173,7 @@ void create()
 #endif /* !__NT__ */
     add_constant("Privs",class{});
 
+
   // for module encoding stuff
 
   add_constant( "MIME.encode_base64", MIME.encode_base64 );
@@ -2154,7 +2205,11 @@ void create()
 
   add_constant( "roxen", this_object());
   add_constant( "roxen.decode_charset", decode_charset);
+
   add_constant( "RequestID", RequestID);
+  add_constant( "RoxenModule", RoxenModule);
+  add_constant( "ModuleInfo", Module );
+
   add_constant( "load",    load);
   add_constant( "Roxen.set_locale", set_locale );
   add_constant( "Roxen.locale", locale );
@@ -2176,9 +2231,10 @@ void create()
       (file_stat("base_server/configuration.pike.o")||(<>))[ST_MTIME] <
       file_stat("base_server/rxml.pike")[ST_MTIME])
     rm ("base_server/configuration.pike.o");
+
   Configuration = (program)"configuration";
   dump( "base_server/configuration.pike" );
-  add_constant("Configuration", Configuration );
+  add_constant( "Configuration", Configuration );
 
   call_out(post_create,1); //we just want to delay some things a little
 }

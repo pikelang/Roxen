@@ -1,5 +1,5 @@
 // This code has to work both in 'roxen.pike' and all modules
-// string _cvs_version = "$Id: socket.pike,v 1.15 1999/04/09 16:00:44 marcus Exp $";
+// string _cvs_version = "$Id: socket.pike,v 1.16 1999/11/29 22:10:43 per Exp $";
 
 #if !efun(roxen)
 #define roxen roxenp()
@@ -59,8 +59,7 @@ private void got_host_name(string host, string oh, int port,
     callback(0, @args);
     return;
   }
-  object f;
-  f=Stdio.File();
+  Stdio.File f = Stdio.File();
 #ifdef SOCKET_DEBUG
   perror("SOCKETS: async_connect "+oh+" == "+host+"\n");
 #endif
@@ -108,7 +107,7 @@ void async_connect(string host, int port, function|void callback,
 }
 
 
-private void my_pipe_done(object which)
+private void my_pipe_done(Pipe.pipe which)
 {
   if(objectp(which))
   {
@@ -119,7 +118,8 @@ private void my_pipe_done(object which)
   }
 }
 
-void async_pipe(object to, object from, function|void callback, 
+void async_pipe(Stdio.File to, Stdio.File from, 
+                function|void callback, 
 		mixed|void id, mixed|void cl, mixed|void file)
 {
   object pipe=Pipe.pipe();

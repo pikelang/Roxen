@@ -4,7 +4,7 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.26 1999/03/27 22:16:37 grubba Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.27 1999/11/29 22:09:53 per Exp $";
 #else
 import spider;
 # include "newdecode.pike"
@@ -55,7 +55,7 @@ array (string) list_all_configurations()
 
 void save_it(string cl)
 {
-  object fd;
+  Stdio.File fd;
   string f;
 #ifdef DEBUG_CONFIG
   perror("CONFIG: Writing configuration file for cl "+cl+"\n");
@@ -154,9 +154,9 @@ private static void read_it(string cl)
 {
   if(configs[cl]) return;
 
-  object fd;
+  Stdio.File fd;
 #ifndef THREADS
-  object privs = Privs("Reading config file"); // Change to root user.
+  Privs privs = Privs("Reading config file"); // Change to root user.
 #endif
 
   mixed err;
@@ -211,7 +211,7 @@ void remove_configuration( string name )
   string f;
 
 #ifndef THREADS
-  object privs = Privs("Removing config file"); // Change to root user.
+  Privs privs = Privs("Removing config file"); // Change to root user.
 #endif
 
   f = configuration_dir + replace(name, " ", "_");

@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.42 1999/11/28 07:17:59 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.43 1999/11/29 22:09:21 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -146,7 +146,7 @@ program my_compile_file(string file)
     rm (ofile);
   program p;
 
-  object e = ErrorContainer();
+  ErrorContainer e = ErrorContainer();
   master()->set_inhibit_compile_errors(e);
   catch {
     p  = (program)( file );
