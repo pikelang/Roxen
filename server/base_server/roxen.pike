@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.759 2001/11/23 13:42:28 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.760 2001/11/26 17:58:33 wellhard Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2921,10 +2921,12 @@ class ImageCache
 #endif
     if(! (res=restore( na,id )) )
     {
-      if (nodraw || catch {
+      mixed err;
+      if (nodraw || (err = catch {
 	draw( na, id );
-      }) {
+      })) {
 	// File not found.
+	werror("Error in draw: %s\n", describe_backtrace(err));
 	return 0;
       }
       if( !(res = restore( na,id )) )
@@ -3008,6 +3010,16 @@ class ImageCache
 		       user||"", ci )) )
 	QUERY("INSERT INTO "+name+" (id,uid,atime) VALUES (%s,%s,%d)",
 	      ci, user||"", time(1) );
+    }
+    
+    if(id->misc->persistent_cache_crawler) {
+      // Force an update of atime for the requested arg cache id.
+      foreach(ci/"$", string key) {
+#if REPLICATE_DEBUG
+	werror("Request for id %O from prefetch crawler.\n", key);
+#endif
+	argcache->refresh_arg(key);
+      }
     }
     return ci;
   }
@@ -3122,11 +3134,18 @@ class ArgCache
 	  "mapping" );
       catch(QUERY("DROP TABLE "+name ));
       QUERY("CREATE TABLE "+name+" ("
-	    "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, "
-	    "md5 CHAR(32) NOT NULL DEFAULT '', "
-	    "atime INT UNSIGNED NOT NULL DEFAULT 0, "
-	    "contents BLOB NOT NULL DEFAULT '', "
+	    "id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, "
+	    "index_id  INT UNSIGNED NULL DEFAULT NULL, "
+	    "md5       CHAR(32) NOT NULL DEFAULT '', "
+	    "atime     INT UNSIGNED NOT NULL DEFAULT 0, "
+	    "contents  BLOB NOT NULL DEFAULT '', "
 	    "INDEX hind (md5))");
+    }
+    // Add column index_id if it doesn't exists.
+    if(catch(QUERY("SELECT index_id FROM "+name+" WHERE id=0")))
+    {
+      QUERY("ALTER TABLE "+name+" "
+	    "ADD index_id INT UNSIGNED NULL DEFAULT NULL");
     }
   }
 
@@ -3161,7 +3180,16 @@ class ArgCache
     return 0;
   }
 
-  int create_key( string long_key, string|void md )
+  int read_index_id( int id )
+  {
+    LOCK();
+    array res = QUERY("SELECT index_id FROM "+name+" WHERE id="+id);
+    if(sizeof(res) && res[0]->index_id)
+      return (int)res[0]->index_id;
+    return -1;
+  }
+
+  int create_key( string long_key, string|void md, int|void index_id )
   {
     if( !md )  md = md5(long_key);
     array data =
@@ -3171,12 +3199,18 @@ class ArgCache
       if( m->contents == long_key )
       	return (int)m->id;
 
-
-    QUERY( "INSERT INTO "+name+" (contents,md5,atime) VALUES "
-	   "(%s,%s,UNIX_TIMESTAMP())", long_key, md );
+    if(zero_type(index_id))
+      index_id = -1;
+    
+    string index_id_value = (index_id == -1? "NULL": index_id);
+    QUERY( "INSERT INTO "+name+" (contents,md5,atime,index_id) VALUES "
+	   "(%s,%s,UNIX_TIMESTAMP(),"+index_id_value+")", long_key, md );
     int id = (int)db->master_sql->insert_id();
+#ifdef REPLICATE_DEBUG
+    werror("Create new local key: id: %d, index_id: %d.\n", id, index_id);
+#endif
 
-    (plugins->create_key-({0}))( id, long_key, md );
+    (plugins->create_key-({0}))( id, long_key );
 
     return id;
   }
@@ -3198,11 +3232,11 @@ class ArgCache
       secret = query( "argcache_secret" );
   }
 
-  static string encode_id( int a, int b )
+  string encode_id( int a, int b, string|void server )
   {
     ensure_secret();
     object crypto = Crypto.arcfour();
-    crypto->set_encrypt_key( secret );
+    crypto->set_encrypt_key( server||secret );
     string res = crypto->crypt( a+"\327"+b );
     res = Gmp.mpz( res, 256 )->digits( 36 );
     return res;
@@ -3264,13 +3298,14 @@ class ArgCache
   {
     array b = values(args), a = sort(indices(args),b);
     LOCK();
-    string id = encode_id( low_store( a ), low_store( b ) );
+    int index_id = low_store( a );
+    string id = encode_id( index_id, low_store( b, index_id ) );
     if( !cache[ id ] )
       cache[ id ] = args+([]);
     return id;
   }
 
-  int low_store( array a )
+  int low_store( array a, int|void index_id )
   {
     string data = encode_value_canonic( a );
     string hv = md5( data );
@@ -3284,7 +3319,7 @@ class ArgCache
     if( sizeof( cache ) >= CACHE_SIZE )
       cache = ([]);
 
-    int id = create_key( data, hv );
+    int id = create_key( data, hv, index_id );
     cache[ hv ] = id;
     cache[ id ] = a;
     return id;
@@ -3335,6 +3370,90 @@ class ArgCache
       }
       QUERY( "DELETE FROM "+name+" WHERE id="+id );
     }
+  }
+
+  int write_dump(Stdio.File file, int|void from_time)
+  // Write a mapping from id to encoded arg string for all local arg
+  // entries created after from_time to a file. Returns 0 if faled, 1
+  // otherwise.
+  {
+    array(int) ids;
+    if(!sizeof(plugins)) {
+      if(from_time)
+	ids = (array(int))
+	      QUERY( "SELECT id from "+name+
+		     " WHERE atime >= %d "
+		     "   AND index_id IS NOT NULL", from_time )->id;
+      else
+	ids = (array(int))
+	      QUERY( "SELECT id from "+name )->id;
+    }
+    else
+      ids = ((plugins->get_local_ids-({0}))(from_time)) * ({});
+    
+    if(sizeof(secret+"\n") != file->write(secret+"\n"))
+      return 0;
+
+    foreach(ids, int id) {
+      int index_id = read_index_id(id);
+#ifdef REPLICATE_DEBUG
+      werror("write_dump: argcache id: %d, index_id: %d.\n", id, index_id);
+#endif
+
+      string s = 
+	MIME.encode_base64(encode_value(({ id, read_args(id),
+					   index_id, read_args(index_id) })),
+			   1)+"\n";
+      if(sizeof(s) != file->write(s))
+	return 0;
+    }
+    return file->write("EOF\n") == 4;
+  }
+
+  static void create_remote_key(int id, string key,
+			 int index_id, string index_key,
+			 string server)
+  {
+    (plugins->create_remote_key-({0}))( id, key, index_id, index_key, server );
+  }
+  
+  string read_dump (Stdio.FILE file)
+  // Returns an error message if there was a parse error, 0 otherwise.
+  {
+    string secret = file->gets();
+    if(!secret || !sizeof(secret))
+      return "Server secret is missing\n";
+
+    string s;
+    while(s = file->gets())
+    {
+      if(s == "EOF")
+	return 0;
+      array a;
+      if(catch {
+	a = decode_value(MIME.decode_base64(s));
+      }) return "Decode failed for argcache record\n";
+
+      if(sizeof(a) != 4)
+	return "Decode failed for argcache record (wrong size on key array)\n";
+      
+#ifdef REPLICATE_DEBUG
+      werror("read_dump: argcache id: %d, index_id: %d.\n", a[0], a[2]);
+#endif
+      create_remote_key(a[0], a[1], a[2], a[3], secret);
+    }
+    if(s != "EOF")
+      return "Missing data in argcache file\n";
+    return 0;
+  }
+
+  void refresh_arg(string id)
+  {
+    array i = decode_id( id );
+    if( !i )
+      error("Requesting unknown key\n");
+    QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[0]);
+    QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[1]);
   }
 }
 
