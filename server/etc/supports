@@ -1,4 +1,4 @@
-## $Id: supports,v 1.70 1999/11/23 07:53:01 nilsson Exp $
+## $Id: supports,v 1.71 2000/01/30 15:45:36 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -64,19 +64,16 @@
 #! images - The browser can display images.
 #! java - The browser supports Java applets.
 #! javascript - The browser supports javascripts.
-#! javascript1.2 - The browser supports javascript 1.2.
 #! jpeginline - The browser can show JPEG images inlined.
 #! mailto - The browser supports mailto URLs.
 #! math - The <math> tag is correctly displayed by the browser.
 #! msie - This is a Microsoft Internet Explorer browser.
 #! netscape_javascript - The browser needs netscape styled javascript.
-#! perl - The browser supports Perl applets.
 #! phone - The client is a phone.
 #! pjpeginline - The browser can handle progressive JPEG images, .pjpeg, inline.
 #! pnginline - The browser can handle PNG images inlined.
 #! pull - The browser handles Client Pull.
 #! push - The browser handles Server Push.
-#! python - The browser supports Python applets.
 #! requests_are_utf8_encoded - Well.. The requests are UTF8 encoded.
 #! robot - The request really comes from a search robot, not an actual browser.
 #! ssl - The browser handles secure sockets layer.
@@ -85,7 +82,6 @@
 #! tables - The browser handles tables according to the HTML3.0 specification.
 #! tablecolor - It is possible to set the background color in the browser.
 #! tableimages - It is possible to set a backgroud image in a table in the browser.
-#! tcl - The browser supports TCL applets.
 #! unknown - The browser is not known, hence the supports classes can not be trusted.
 #! vrml - The browser supports VRML.
 #! wbmp0 - The browser supports Wireless Bitmap Picture Format, type 0.
@@ -94,9 +90,10 @@
 #!
 #! Supports variables
 #!
+#! height - The presentation area height in pixels.
+#! javascript - The version of supported javascript.
 #! robot - The name of the search engine.
 #! width - The presentation area width in pixels.
-#! height - The presentation area height in pixels.
 
 #define basic		images, forms, gifinline, mailto, html
 #define some_html3	divisions, div, supsub, bigsmall, align
@@ -122,19 +119,20 @@ mozilla.[2-9].[0-9].*	some_html3, fontcolor, pjpeginline, fontcolor
 mozilla.2.0b[2-9].*	-java
 
 #Old versions on Mac crash the entire machine if you use javascript.
-mozilla/2.*		-netscape_javascript
+mozilla/2.*		-netscape_javascript, *javascript=1.0
 mozilla/2.*X11		javascript
-mozilla/2.*OS/2		javascript, tcl
+mozilla/2.*OS/2		javascript
 mozilla/2.*Win16	-java, javascript
 mozilla/2.*Macintosh	-java
 
-mozilla/[3-9].*		javascript, tablecolor
+mozilla/[3-9].*		javascript, tablecolor, *javascript=1.1
 
-mozilla/[4-9].*		stylesheets, tableimages, javascript1.2
+mozilla/[4-9].*		stylesheets, tableimages, *javascript=1.1
 mozilla/4\.0[4-9].*	pnginline
-mozilla/4\.[5-9].*	pnginline
-mozilla/5\.0b1		-java, pnginline, tcl
-mozilla/[5-9].*		pnginline
+mozilla/4\.0[5-9].*     *javascript=1.2
+mozilla/4\.[5-9].*	pnginline, *javascript=1.2
+mozilla/5\.0b1		-java, pnginline
+mozilla/[5-9].*		pnginline, *javascript=1.3
 
 # Opera
 
@@ -142,7 +140,7 @@ mozilla/[5-9].*		pnginline
 				-divisions, -font, -forms, -frames, -imagealign,\
 				-supsub
 .*compatible.*opera.2.*		align, fontcolor, tablecolor
-.*compatible.*opera.[3-9].*	-java, javascript, fontcolor, tablecolor
+.*compatible.*opera.[3-9].*	-java, javascript, fontcolor, tablecolor, *javascript=1.1
 
 # BLAM BLAM BLAM BLAM
 .*compatible.*			-push
@@ -152,11 +150,11 @@ mozilla/[5-9].*		pnginline
 				-frames, -supsub
 .*compatible.*msie.[1-3]	-netscape_javascript
 
-.*compatible.*msie.[2-9]	tablecolor, javascript, fontcolor
-.*compatible.*msie.[3-9]	activex, tableimages
+.*compatible.*msie.[2-9]	tablecolor, fontcolor
+.*compatible.*msie.[3-9]	activex, tableimages, javascript, *javascript=1.0
 # MSIE3 stylesheets are broken
-.*compatible.*msie.[4-9]	stylesheets, javascript1.2
-.*compatible.*msie.5\.0		requests_are_utf8_encoded
+.*compatible.*msie.[4-9]	stylesheets, *javascript=1.2
+.*compatible.*msie.5\.0		requests_are_utf8_encoded, *javascript=1.3
 # }
 
 
@@ -166,7 +164,7 @@ mozilla/[5-9].*		pnginline
 .*			basic, jpeginline, center
 netsurfer.1\.[1-9].*	backgrounds, fontcolor, pnginline, videoinline
 netsurfer.2\.[0-9].*	align, pjpeginline, tables, frames, java, font,\
-			bigsmall, supsub, perl, tcl, python
+			bigsmall, supsub
 # }
 
 #section omniweb {
@@ -359,15 +357,15 @@ nokia.7110.*	wml1.1, wbmp0
 # }
 
 #section infoseek {
-.*		html, robot, *robot=infoseek, infoseek
+.*		html, robot, *robot=infoseek
 # }
 
 #section intraseek {
-.*		html, robot, *robot=intraseek, intraseek
+.*		html, robot, *robot=intraseek
 # }
 
 #section lycos {
-.*		html, robot, *robot=lycos, lycos
+.*		html, robot, *robot=lycos
 # }
 
 #section momspider {
@@ -375,11 +373,11 @@ nokia.7110.*	wml1.1, wbmp0
 # }
 
 #section roxen {
-.*		html, *robot=roxen
+.*		html, robot, *robot=roxen
 # }
 
 #section scooter {
-.*		html, robot, *robot=altavista, altavista
+.*		html, robot, *robot=altavista
 # }
 
 #section scoutget {
@@ -387,7 +385,7 @@ nokia.7110.*	wml1.1, wbmp0
 # }
 
 #section slurp {
-.*		html, robot, *robot=hotbot, hotbot
+.*		html, robot, *robot=hotbot
 # }
 
 #section url {
@@ -407,7 +405,7 @@ nokia.7110.*	wml1.1, wbmp0
 # }
 
 #section yahoo {
-.*		html, robot, *robot=yahoo, yahoo
+.*		html, robot, *robot=yahoo
 # }
 
 .*robot.*	html, robot, unknown
