@@ -463,7 +463,8 @@ object request(object context, mapping(string:array(string))|object id,
 		   id->misc["content-type"], id->prot,
                    (id && id->port_obj && lower_case(id->port_obj->prot_name))||
 		   lower_case((id->prot/"/")[0]), tmp,		   
-		   (id->my_fd&&(int)((id->my_fd->query_address(1)||"0 0")/" ")[1]),
+		   (id->my_fd&&id->my_fd->query_address&&
+                    (int)((id->my_fd->query_address(1)||"0 0")/" ")[1]),
 		   addr, (host != addr)&&host, id->data,
 		   id->misc->mountpoint, id->misc->servlet_path,
                    id->misc->path_info, id->method,
