@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.120 1998/07/17 22:51:05 noring Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.121 1998/07/19 18:02:26 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -949,8 +949,12 @@ string tag_use(string tag, mapping m, object id)
 string tag_define(string tag, mapping m, string str, object id, object file,
 		  mapping defines)
 { 
+  if(m->parse)
+    str = parse_rxml( str, id );
   if (m->name) 
     defines[m->name]=str;
+  else if(m->variable)
+    id->variables[m->variable] = str;
   else if (m->tag) 
   {
     if(!id->misc->tags)
