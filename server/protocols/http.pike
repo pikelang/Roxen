@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.230 2000/04/28 15:51:45 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.231 2000/05/08 00:08:23 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -12,7 +12,6 @@ inherit "highlight_pike";
 
 // HTTP protocol module.
 #include <config.h>
-private inherit "roxenlib";
 
 #ifdef PROFILE
 #define HRTIME() gethrtime()
@@ -148,7 +147,7 @@ function charset_function( function|string what )
    case string_to_utf8:
      return string_to_utf8;
    default:
-     return _charset_decoder( Locale.Charset.encoder( (string)what ) )->decode;
+     return Roxen._charset_decoder( Locale.Charset.encoder( (string)what ) )->decode;
   }
 }
 
@@ -225,7 +224,7 @@ void decode_map( mapping what, function decoder )
 void decode_charset_encoding( string|function(string:string) decoder )
 {
   if(stringp(decoder))
-    decoder = _charset_decoder( Locale.Charset.decoder(decoder) )->decode;
+    decoder = Roxen._charset_decoder( Locale.Charset.decoder(decoder) )->decode;
 
   if( misc->request_charset_decoded )
     return;
@@ -410,7 +409,7 @@ private int really_set_config(array mod_config)
 
     my_fd->write(prot + " 302 Config in cookie!\r\n"
 		 "Set-Cookie: "
-		  + http_roxen_config_cookie(indices(config) * ",") + "\r\n"
+		  + Roxen.http_roxen_config_cookie(indices(config) * ",") + "\r\n"
 		 "Location: " + url + "\r\n"
 		 "Content-Type: text/html\r\n"
 		 "Content-Length: 0\r\n\r\n");
@@ -432,7 +431,7 @@ private int really_set_config(array mod_config)
       url = "/" + url;
     }
 
-    url = add_pre_state(url, prestate);
+    url = Roxen.add_pre_state(url, prestate);
 
     if (base[-1] == '/') {
       url = base + url[1..];
@@ -686,7 +685,7 @@ private int parse_got()
 
   REQUEST_WERR(sprintf("After prestate scan:%O", f));
 
-  not_query = simplify_path(f);
+  not_query = Roxen.simplify_path(f);
 
   REQUEST_WERR(sprintf("After simplify_path == not_query:%O", not_query));
 
@@ -755,7 +754,6 @@ private int parse_got()
 		break;
 
 	      case "multipart/form-data":
-		//		werror("Multipart/form-data post detected\n");
 		object messg = MIME.Message(data, misc);
 		foreach(messg->body_parts, object part) {
 		  if(part->disp_params->filename) {
@@ -966,14 +964,13 @@ private int parse_got()
   if(!supports->cookies)
     config = prestate;
   else
-    if(conf
-       && port_obj->query("set_cookie")
+    if(port_obj->query("set_cookie")
        && !cookies->RoxenUserID && strlen(not_query)
        && not_query[0]=='/' && method!="PUT")
     {
       if (!(port_obj->query("set_cookie_only_once") &&
 	    cache_lookup("hosts_for_cookie",remoteaddr))) {
-	misc->moreheads = ([ "Set-Cookie":http_roxen_id_cookie(), ]);
+	misc->moreheads = ([ "Set-Cookie":Roxen.http_roxen_id_cookie(), ]);
       }
       if (port_obj->query("set_cookie_only_once"))
 	cache_set("hosts_for_cookie",remoteaddr,1);
@@ -1103,8 +1100,8 @@ string link_to(string file, int line, string fun, int eid, int qq)
   if (!file || !line) return "<a>";
   if(file[0]!='/') file = combine_path(getcwd(), file);
   return ("<a href=\"/(old_error,find_file)/error/?"+
-	  "file="+http_encode_string(file)+
-	  (fun ? "&fun="+http_encode_string(fun) : "") +
+	  "file="+Roxen.http_encode_string(file)+
+	  (fun ? "&fun="+Roxen.http_encode_string(fun) : "") +
 	  "&off="+qq+
 	  "&error="+eid+
 	  (line ? "&line="+line+"#here" : "") +
@@ -1113,13 +1110,13 @@ string link_to(string file, int line, string fun, int eid, int qq)
 
 static string error_page_header (string title)
 {
-  title = html_encode_string (title);
+  title = Roxen.html_encode_string (title);
   return #"<html><head><title>" + title + #"</title></head>
 <body bgcolor='white' text='black' link='#ce5c00' vlink='#ce5c00'>
 <table width='100%'><tr>
 <td><a href='http://www.roxen.com/'><img border='0' src='/internal-roxen-roxen-small'></a></td>
 <td><b><font size='+1'>" + title + #"</font></b></td>
-<td align='right'><font size='+1'>Roxen WebServer " + html_encode_string (roxen_version()) + #"</font></td>
+<td align='right'><font size='+1'>Roxen WebServer " + Roxen.html_encode_string (roxen_version()) + #"</font></td>
 </tr></table>
 
 ";
@@ -1132,12 +1129,12 @@ string format_backtrace(int eid)
     roxen.query_var ("errors")[eid];
 
   string res = error_page_header ("Internal Server Error") +
-    "<h1>" + replace (html_encode_string (msg), "\n", "<br />\n") + "</h1>\n";
+    "<h1>" + replace (Roxen.html_encode_string (msg), "\n", "<br />\n") + "</h1>\n";
 
   if (rxml_bt && sizeof (rxml_bt)) {
     res += "<h3>RXML frame backtrace</h3>\n<ul>\n";
     foreach (rxml_bt, string line)
-      res += "<li>" + html_encode_string (line) + "</li>\n";
+      res += "<li>" + Roxen.html_encode_string (line) + "</li>\n";
     res += "</ul>\n\n";
   }
 
@@ -1147,10 +1144,10 @@ string format_backtrace(int eid)
     foreach(reverse (bt), [string file, int line, string func, string descr])
       res += "<li value="+(q--)+">" +
 	link_to (file, line, func, eid, q) +
-	(file ? html_encode_string (file) : "<i>Unknown program</i>") +
+	(file ? Roxen.html_encode_string (file) : "<i>Unknown program</i>") +
 	(line ? ":" + line : "") +
-	"</a>" + (file ? html_encode_string (get_id (file)) : "") + ":<br />\n" +
-	replace (html_encode_string (descr),
+	"</a>" + (file ? Roxen.html_encode_string (get_id (file)) : "") + ":<br />\n" +
+	replace (Roxen.html_encode_string (descr),
 		 ({"(", ")"}), ({"<b>(</b>", "<b>)</b>"})) +
 	"</li>\n";
     res += "</ul>\n\n";
@@ -1267,18 +1264,18 @@ void internal_error(array err)
   if(port_obj->query("show_internals"))
   {
     err2 = catch {
-      file = http_low_answer(500, format_backtrace(store_error(err)));
+      file = Roxen.http_low_answer(500, format_backtrace(store_error(err)));
     };
     if(err2) {
       werror("Internal server error in internal_error():\n" +
 	     describe_backtrace(err2)+"\n while processing \n"+
 	     describe_backtrace(err));
-      file = http_low_answer(500, "<h1>Error: The server failed to "
+      file = Roxen.http_low_answer(500, "<h1>Error: The server failed to "
 			     "fulfill your query, due to an "
 			     "internal error in the internal error routine.</h1>");
     }
   } else {
-    file = http_low_answer(500, "<h1>Error: The server failed to "
+    file = Roxen.http_low_answer(500, "<h1>Error: The server failed to "
 			   "fulfill your query, due to an internal error.</h1>");
   }
   report_error("Internal server error: " +
@@ -1371,7 +1368,7 @@ string handle_error_file_request (string msg, array(string) rxml_bt, array(array
 
   // The highlighting doesn't work well enough on recent pike code.
   //lines=highlight_pike("foo", ([ "nopre":1 ]), lines[start..end]*"\n")/"\n";
-  lines = map (lines[start..end], html_encode_string);
+  lines = map (lines[start..end], Roxen.html_encode_string);
 
   if(sizeof(lines)>off) {
     sscanf (lines[off], "%[ \t]%s", string indent, string code);
@@ -1562,20 +1559,20 @@ void send_result(mapping|void result)
   if(!mappingp(file))
   {
     if(misc->error_code)
-      file = http_low_answer(misc->error_code, errors[misc->error]);
+      file = Roxen.http_low_answer(misc->error_code, errors[misc->error]);
     else if(err = catch {
-      file=http_low_answer(404,
-			   parse_rxml(
+      file = Roxen.http_low_answer(404,
+				   Roxen.parse_rxml(
 #ifdef OLD_RXML_COMPAT
-				      replace(conf->query("ZNoSuchFile"),
-					      ({"$File", "$Me"}),
-					      ({ "&page.virtfile;",
-						 conf->query("MyWorldLocation")
-					      })),
+						    replace(conf->query("ZNoSuchFile"),
+							    ({"$File", "$Me"}),
+							    ({ "&page.virtfile;",
+							       conf->query("MyWorldLocation")
+							    })),
 #else
-				      conf->query("ZNoSuchFile"),
+						    conf->query("ZNoSuchFile"),
 #endif
-                                      this_object()));
+						    this_object()));
     }) {
       INTERNAL_ERROR(err);
     }
@@ -1615,7 +1612,7 @@ void send_result(mapping|void result)
 	}
 
 	if(prot != "HTTP/0.9") {
-	  heads["Last-Modified"] = http_date(misc->last_modified);
+	  heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
 
 	  if(since)
 	  {
@@ -1661,7 +1658,7 @@ void send_result(mapping|void result)
 #else
 	"Connection"	: "close",
 #endif
-	"Date"		: http_date(time)
+	"Date"		: Roxen.http_date(time)
       ]);
 
 
@@ -1672,7 +1669,7 @@ void send_result(mapping|void result)
 	file->error=200;
 
       if(file->expires)
-	heads->Expires = http_date(file->expires);
+	heads->Expires = Roxen.http_date(file->expires);
 
       if(mappingp(file->extra_heads))
 	heads |= file->extra_heads;
@@ -1825,7 +1822,7 @@ void handle_request( )
 	if(prestate->find_file)
         {
 	  if (!roxen.configuration_authenticate (this_object(), "View Settings"))
-	    file = http_auth_required("admin");
+	    file = Roxen.http_auth_required("admin");
 	  else
 	    file = ([
 	      "type":"text/html",
@@ -1906,7 +1903,7 @@ void got_data(mixed fooid, string s)
 
   mixed q;
   if( q = variables->magic_roxen_automatic_charset_variable )
-    decode_charset_encoding( get_client_charset_decoder( q,this_object() ) );
+    decode_charset_encoding( Roxen.get_client_charset_decoder( q,this_object() ) );
   if( input_charset )
     decode_charset_encoding( input_charset );
 
