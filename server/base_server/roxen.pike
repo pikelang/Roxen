@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.457 2000/03/15 17:18:03 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.458 2000/03/19 16:54:50 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1633,7 +1633,7 @@ void nwrite(string s, int|void perr, int|void errtype,
             object|void mod, object|void conf)
 {
   int log_time = time();
-  string reference = (mod ? get_modname(mod) : conf && conf->name) || "";
+  string reference = (mod ? Roxen.get_modname(mod) : conf && conf->name) || "";
   string log_index = sprintf("%d,%s,%s", errtype, reference, s);
   if(!error_log[log_index])
     error_log[log_index] = ({ log_time });
@@ -2244,8 +2244,8 @@ class ImageCache
       return 0;
 
     if( stringp( f ) )
-      return roxenp()->http_string_answer( f, m->type||("image/gif") );
-    return roxenp()->http_file_answer( f, m->type||("image/gif") );
+      return Roxen.http_string_answer( f, m->type||("image/gif") );
+    return Roxen.http_file_answer( f, m->type||("image/gif") );
   }
 
 
@@ -3275,64 +3275,6 @@ mapping host_accuracy_cache = ([]);
 int is_ip(string s)
 {
   return (sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>47 && s[-1]<58);
-}
-
-constant months=(["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,
-	         "Jul":6, "Aug":7, "Sep":8, "Oct":9, "Nov":10, "Dec":11,
-		 "jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,
-	         "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,]);
-
-#define MAX_SINCE_CACHE 16384
-static mapping(string:int) since_cache=([ ]);
-array(int) parse_since(string date)
-{
-  if(!date || sizeof(date)<14) return({0,-1});
-  int t=0, length = -1;
-  string dat;
-
-#if constant(mktime)
-  // Tue, 28 Apr 1998 13:31:29 GMT
-  sscanf(lower_case(date+"; length="), "%*s, %s; length=%d", dat, length);
-
-  if(!(t=since_cache[dat])) {
-    int day, year = -1, month, hour, minute, second;
-    string m;
-    if(sscanf(dat, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
-    {
-      month=months[m];
-    } else if(dat[2]==',') { // I bet a buck that this never happens
-      sscanf(dat, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
-      month=months[m];
-    } else if(!(int)dat) {
-      sscanf(dat, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
-      month=months[m];
-    } else {
-      sscanf(dat, "%d %s %d %d:%d:%d", day, m, year, hour, minute, second);
-      month=months[m];
-    }
-
-    if(year >= 0) {
-      // Fudge year to be localtime et al compatible.
-      if (year < 60) {
-	// Assume year 0 - 59 is really year 2000 - 2059.
-	// Can't people stop using two digit years?
-	year += 100;
-      } else if (year >= 1900) {
-	year -= 1900;
-      }
-      catch {
-	t = mktime(second, minute, hour, day, month, year, -1, 0);
-      };
-    } else {
-      report_debug("Could not parse \""+date+"\" to a time int.");
-    }
-
-    if (sizeof(since_cache) > MAX_SINCE_CACHE)
-      since_cache = ([]);
-    since_cache[dat]=t;
-  }
-#endif /* constant(mktime) */
-  return ({ t, length });
 }
 
 array configuration_auth=({});
