@@ -15,8 +15,7 @@
 </pike>
 
 <formoutput quote='¤'>
-  <cset preparse variable=current_scheme>
-    <sqloutput quote='£' query="
+  <cset preparse variable=current_scheme><sqloutput quote='£' query="
       SELECT * FROM customers 
         WHERE id=¤customer_id¤"
       >£template_scheme_id£</sqloutput></cset>
@@ -269,7 +268,7 @@
 		       "  <sqlquery query=\""
 		       "    DELETE FROM customers_schemes_vars \n"
 		       "      WHERE scheme_id='¤current_scheme¤' \n"
-		       "        AND variable_id='"+variable_id+"'\">\n"
+		       "        AND variable_name='£name£'\">\n"
 		       "  <sqlquery query=\""
 		       "    INSERT INTO customers_schemes_vars \n"
 		       "      (scheme_id,variable_name,value) \n"
