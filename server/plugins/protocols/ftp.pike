@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.95 2004/05/17 16:35:34 mani Exp $
+ * $Id: ftp.pike,v 2.96 2004/05/17 16:38:23 mani Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1891,6 +1891,10 @@ class FTPSession
 
     file = stat_file(fname, session);
 
+    // The caller is assumed to have made a new session object for us
+    // but not to set not_query in it..
+    session->not_query = fname;
+
     if (objectp(file) || arrayp(file)) {
       array|object st = file;
       file = 0;
@@ -3249,17 +3253,12 @@ class FTPSession
     }
     args = fix_path(args);
 
-    RequestID session = RequestID2(master_session);
-
-    session->method = "STAT";
-
-    if (stat_file(args, session)) {
+    if (stat_file(args)) {
       send(350, ({ sprintf("%s ok, waiting for destination name.", args) }) );
       rename_from = args;
     } else {
       send(550, ({ sprintf("%s: no such file or permission denied.",args) }) );
     }
-    destruct(session);
   }
 
   void ftp_RNTO(string args)
@@ -3481,16 +3480,13 @@ class FTPSession
       return;
     }
     args = fix_path(args);
-    RequestID session = RequestID2(master_session);
-    session->method = "STAT";
-    mapping|array|object st = stat_file(args, session);
+    mapping|array|object st = stat_file(args);
 
     if (!arrayp(st) && !objectp(st)) {
-      send_error("MDTM", args, st, session);
+      send_error("MDTM", args, st, master_session);
     } else {
       send(213, ({ make_MDTM(st[3]) }));
     }
-    destruct(session);
   }
 
   void ftp_SIZE(string args)
@@ -3500,23 +3496,19 @@ class FTPSession
     }
     args = fix_path(args);
 
-    RequestID session = RequestID2(master_session);
-    session->method = "STAT";
-    mapping|array|object st = stat_file(args, session);
+    mapping|array|object st = stat_file(args);
 
     if (!arrayp(st) && !objectp(st)) {
-      send_error("SIZE", args, st, session);
-      destruct(session);
+      send_error("SIZE", args, st, master_session);
       return;
     }
     int size = st[1];
     if (size < 0) {
-      send_error("SIZE", args, ([ "error":405, ]), session);
+      send_error("SIZE", args, ([ "error":405, ]), master_session);
       // size = 512;
     } else {
       send(213, ({ (string)size }));
     }
-    destruct(session);
   }
 
   void ftp_STAT(string args)
@@ -3559,12 +3551,10 @@ class FTPSession
       return;
     }
     string long = fix_path(args);
-    RequestID session = RequestID2(master_session);
-    session->method = "STAT";
     mapping|array|object st = stat_file(long);
 
     if (!arrayp(st) && !objectp(st)) {
-      send_error("STAT", long, st, session);
+      send_error("STAT", long, st, master_session);
     } else {
       string s = LS_L(master_session)->ls_l(args, st);
 
@@ -3572,7 +3562,6 @@ class FTPSession
 			"%s"
 			"End of Status", args, s)/"\n");
     }
-    destruct(session);
   }
 
   void ftp_NOOP(string args)
