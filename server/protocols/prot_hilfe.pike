@@ -24,7 +24,8 @@ class Connection
   class myRequestID
   {
     inherit RequestID;
-
+    string real_auth;
+    string remoteaddr = "127.0.0.1";
     static string _sprintf()
     {
       return sprintf("RequestID(conf=%O; not_query=%O)", conf, not_query );
@@ -41,6 +42,7 @@ class Connection
       method = "GET";
 
       variables = ([]);
+      real_variables = ([]);
       misc = ([]);
       cookies = ([]);
       throttle = ([]);
