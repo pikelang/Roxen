@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.465 2001/08/22 20:04:26 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.466 2001/08/22 21:21:35 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3305,6 +3305,7 @@ $cache-status  -- A comma separated list of words (containing no
                                protocol module.
                   xsltcache -- The XSLT cache.
 		  pcoderam  -- RXML parse tree RAM cache.
+		  pcodedisk -- RXML parse tree persistent cache.
                   cachetag  -- No RXML &lt;cache&gt; tag misses.
                   nocache   -- No hit in any known cache.
 </pre>"), 0, lambda(){ return !query("Log");});
