@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.8 2000/08/16 14:49:05 lange Exp $
+ * $Id: restart.pike,v 1.9 2000/08/17 11:11:42 jhs Exp $
  */
 
 #include <config_interface.h>
@@ -27,10 +27,10 @@ string parse( RequestID id )
 "<font color='&usr.warncolor;'><h1>"+LOCALE(197,"Restart")+"</h1></font>"+
  LOCALE(233, "Roxen will restart automatically.")+
 "\n\n<p><i>"+
-LOCALE(234, #"You might see the old process for a while in the process table
-when doing 'ps' or running 'top'. This is normal. Roxen waits for a
-while for all connections to finish, the process will go away after at
-most 15 minutes.")+ "</i></p>";
+LOCALE(234, "You might see the old process for a while in the process table "
+       "when doing 'ps' or running 'top'. This is normal. Roxen waits for a "
+       "while for all connections to finish, the process will go away after "
+       "at most 15 minutes.")+ "</i></p>";
      }
      return LOCALE(226,"Permission denied");
 
@@ -42,10 +42,10 @@ most 15 minutes.")+ "</i></p>";
 "<font color='&usr.warncolor;'><h1>"+LOCALE(198,"Shutdown")+"</h1></font>"+
 LOCALE(235,"Roxen will <b>not</b> restart automatically.")+
 "\n\n<p><i>"+
-LOCALE(234, #"You might see the old process for a while in the process table
-when doing 'ps' or running 'top'. This is normal. Roxen waits for a
-while for all connections to finish, the process will go away after at
-most 15 minutes.")+ "</i></p>";
+LOCALE(234, "You might see the old process for a while in the process table "
+       "when doing 'ps' or running 'top'. This is normal. Roxen waits for a "
+       "while for all connections to finish, the process will go away after "
+       "at most 15 minutes.")+ "</i></p>";
      }
      return LOCALE(226,"Permission denied");
 

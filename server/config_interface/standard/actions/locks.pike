@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.5 2000/08/16 14:48:36 lange Exp $
+ * $Id: locks.pike,v 1.6 2000/08/17 11:11:48 jhs Exp $
  */
 
 #include <config.h>
@@ -54,17 +54,19 @@ string parse( RequestID id )
   string data=("<font size='+2'>"+
 	       LOCALE(13, "Module lock status : Accesses to all modules")+
 	       "</font><p>"+
-	       LOCALE(14, #"Locked means that the access was done using a
-serializing lock since the module was not thread-safe,
-unlocked means that there was no need for a lock.")+
+	       LOCALE(14, "Locked means that the access was done using a "
+		      "serializing lock since the module was not thread-safe, "
+		      "unlocked means that there was no need for a lock.")+
 	       "</p><p>"+
-	       LOCALE(15, #"Locked accesses to a single module can inflict 
-quite a severe performance degradation of the whole server, since a 
-locked module will act as a bottleneck, blocking access for 
-all other threads that want to access that module.")+ 
-	       "</p><p>"+ 
-	       LOCALE(16, #"This is only a problem if a significant percentage 
-of the accesses are passed through non-threadsafe modules.") +"</p>");
+	       LOCALE(15, "Locked accesses to a single module can inflict "
+		      "quite a severe performance degradation of the whole "
+		      "server, since a locked module will act as a bottleneck, "
+		      "blocking access for all other threads that want to "
+		      "access that module.")+
+	       "</p><p>"+
+	       LOCALE(16, "This is only a problem if a significant percentage "
+		      "of the accesses are passed through non-threadsafe "
+		      "modules.") +"</p>");
   array mods = (indices(L)+indices(l));
   mods &= mods;
   foreach(mods, object q)
