@@ -52,7 +52,7 @@ Image.Image assert_size( Image.Image in, int x, int y )
 Image.Image get_channel( Image.Layer from, string channel )
 {
   if(channel == "mask") channel="alpha";
-  return from[channel]()
+  return from[channel]();
 }
 
 Image.Layer add_channel( Image.Layer to, string channel, object img, int xp, int yp )
@@ -76,7 +76,7 @@ Image.Layer add_channel( Image.Layer to, string channel, object img, int xp, int
   set_channel( to, channel, i );
 }
 
-Image.Layer set_channel( Image.Layer in, string channel )
+Image.Layer set_channel( Image.Layer in, string channel, Image.Image from )
 {
   if(channel == "mask") channel="alpha";
   mapping q = ([ "image":in->image(), "alpha":in->alpha() ]);
@@ -156,7 +156,7 @@ mapping low_render_image(string how, object id)
     "type":"image/png",
   ]);
 
-  res->image = i;
+  res->image = l;
   return res;
 }
 
