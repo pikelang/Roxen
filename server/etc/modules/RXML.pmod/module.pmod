@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.96 2000/08/05 05:05:06 nilsson Exp $
+//! $Id: module.pmod,v 1.97 2000/08/05 21:57:42 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -82,6 +82,10 @@ class Tag
   //! causes the standard XML parser to be used to read it, which
   //! means that the content is preparsed with XML syntax. Use no
   //! parser to get the raw text.
+  //!
+  //! Note: You probably want to change this to t_text (without
+  //! parser) if the tag is a processing instruction (see
+  //! FLAG_PROC_INSTR).
 
   array(Type) result_types = ({t_xml, t_html, t_text});
   //! The possible types of the result, in order of precedence. If a
@@ -190,15 +194,17 @@ class Tag
 
   array _handle_tag (TagSetParser parser, mapping(string:string) args,
 		     void|string content)
-  // Callback for tag set parsers. Returns a sequence of result values
-  // to be added to the result queue. Note that this function handles
-  // an unwind frame for the parser.
+  // Callback for tag set parsers to handle non-PI tags. Returns a
+  // sequence of result values to be added to the result queue. Note
+  // that this function handles an unwind frame for the parser.
   {
+    // Note: args may be zero since this is called from _handle_pi_tag().
+
     Context ctx = parser->context;
     // FIXME: P-code generation.
 
     string splice_args;
-    if ((splice_args = args["::"])) {
+    if (args && (splice_args = args["::"])) {
       // Somewhat kludgy solution for the time being.
 #ifdef MODULE_DEBUG
       if (mixed err = catch {
@@ -259,6 +265,18 @@ class Tag
     }
   }
 
+  array _handle_pi_tag (TagSetParser parser, string content)
+  // Callback similar to _handle_tag() for tag set parsers to handle
+  // PI tags.
+  {
+    sscanf (content, "%[ \t\n\r]%s", string ws, content);
+    if (ws == "" && content != "")
+      // The parser didn't match a complete name, so this is a false
+      // alarm for an unknown PI tag.
+      return 0;
+    return _handle_tag (parser, 0, content);
+  }
+
   /* Can't define `== here due to Pike bugs..
   int __hash()
   {
@@ -275,7 +293,10 @@ class Tag
 
   string _sprintf()
   {
-    return "RXML.Tag(" + [string] this_object()->name + ")" + OBJ_COUNT;
+    return "RXML.Tag(" + [string] this_object()->name +
+      (this_object()->plugin_name ? "#" + [string] this_object()->plugin_name : "") +
+      ([int] this_object()->flags & FLAG_PROC_INSTR ? " [PI]" : "") + ")" +
+      OBJ_COUNT;
   }
 }
 
@@ -286,7 +307,11 @@ class TagSet
 //! data are created from this. TagSet objects may somewhat safely be
 //! destructed explicitly; the tags in a destructed tag set will not
 //! be active in parsers that are instantiated later, but will work in
-//! current instances.
+//! current instances. Element (i.e. non-PI) tags and PI tags have
+//! separate namespaces.
+//!
+//! Note: A Tag object may not be registered in more than one tag set
+//! at the same time.
 {
   string name;
   //! Used for identification only.
@@ -322,10 +347,7 @@ class TagSet
   {
     id_number = ++tag_set_count;
     name = _name;
-    if (_tags)
-      foreach (_tags, Tag tag)
-	if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
-	else tags[tag->name] = tag;
+    if (_tags) add_tags (_tags);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
 #endif
@@ -334,51 +356,99 @@ class TagSet
   void add_tag (Tag tag)
   //!
   {
-    if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
-    else tags[tag->name] = tag;
+    if (tag->flags & FLAG_PROC_INSTR) {
+      if (!proc_instrs) proc_instrs = ([]);
+      if (tag->plugin_name) proc_instrs[tag->name + "#" + tag->plugin_name] = tag;
+      else proc_instrs[tag->name] = tag;
+    }
+    else
+      if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
+      else tags[tag->name] = tag;
     changed();
   }
 
   void add_tags (array(Tag) _tags)
   //!
   {
-    foreach (_tags, Tag tag)
-      if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
-      else tags[tag->name] = tag;
+    foreach (_tags, Tag tag) {
+      if (tag->flags & FLAG_PROC_INSTR) {
+	if (!proc_instrs) proc_instrs = ([]);
+	if (tag->plugin_name) proc_instrs[tag->name + "#" + tag->plugin_name] = tag;
+	else proc_instrs[tag->name] = tag;
+      }
+      else
+	if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
+	else tags[tag->name] = tag;
+    }
     changed();
   }
 
-  void remove_tag (string|Tag tag)
-  //!
+  void remove_tag (string|Tag tag, void|int proc_instr)
+  //! If tag is a Tag object, it's removed if this tag set contains
+  //! it. If tag is a string, the tag with that name is removed. In
+  //! the latter case, if proc_instr is nonzero the set of PI tags is
+  //! searched, else the set of normal element tags.
   {
     if (stringp (tag))
-      m_delete (tags, tag);
-    else
-      for (string n; !zero_type (n = search (tags, [object(Tag)] tag));)
-	m_delete (tags, n);
+      if (proc_instr) {
+	if (proc_instrs) m_delete (proc_instrs, tag);
+      }
+      else
+	m_delete (tags, tag);
+    else {
+      string n;
+      if (tag->flags & FLAG_PROC_INSTR) {
+	if (proc_instrs && !zero_type (n = search (tags, [object(Tag)] tag)))
+	  m_delete (proc_instrs, n);
+      }
+      else
+	if (!zero_type (n = search (tags, [object(Tag)] tag)))
+	  m_delete (tags, n);
+    }
     changed();
   }
 
-  local Tag get_local_tag (string name)
-  //! Returns the Tag object for the given name in this tag set.
+  local Tag get_local_tag (string name, void|int proc_instr)
+  //! Returns the Tag object for the given name in this tag set, if
+  //! any. If proc_instr is nonzero the set of PI tags is searched,
+  //! else the set of normal element tags.
   {
-    return tags[name];
+    return proc_instr ? proc_instrs && proc_instrs[name] : tags[name];
   }
 
   array(Tag) get_local_tags()
-  //!
+  //! Returns all the Tag objects in this tag set.
   {
-    return values (tags);
+    array(Tag) res = values (tags);
+    if (proc_instrs) res += values (proc_instrs);
+    return res;
   }
 
-  Tag get_tag (string name)
-  //! Returns the active tag definition for the given name.
+  Tag get_tag (string name, void|int proc_instr)
+  //! Returns the Tag object for the given name, if any, that's
+  //! defined by this tag set (including its imported tag sets). If
+  //! proc_instr is nonzero the set of PI tags is searched, else the
+  //! set of normal element tags.
   {
-    if (object(Tag) def = get_local_tag (name))
+    if (object(Tag) def = get_local_tag (name, proc_instr))
       return def;
     foreach (imported, TagSet tag_set)
-      if (object(Tag) tag = [object(Tag)] tag_set->get_tag (name)) return tag;
+      if (object(Tag) tag = [object(Tag)] tag_set->get_tag (name, proc_instr))
+	return tag;
     return 0;
+  }
+
+  multiset(string) get_tag_names()
+  //! Returns the names of all non-PI tags that this tag set defines.
+  {
+    return `| ((multiset) indices (tags), @imported->get_tag_names());
+  }
+
+  multiset(string) get_proc_instr_names()
+  //! Returns the names of all PI tags that this tag set defines.
+  {
+    return `| (proc_instrs ? (multiset) indices (proc_instrs) : (<>),
+	       @imported->get_proc_instr_names());
   }
 
   Tag get_overridden_tag (Tag overrider)
@@ -390,29 +460,27 @@ class TagSet
     Tag tag;
     if (zero_type (tag = overridden_tag_lookup[overrider]))
       tag = overridden_tag_lookup[overrider] =
+	overrider->flags & FLAG_PROC_INSTR ?
+	find_overridden_proc_instr (overrider) :
 	find_overridden_tag (overrider);
     return tag;
   }
 
-  array(Tag) get_overridden_tags (string name)
+  array(Tag) get_overridden_tags (string name, void|int proc_instr)
   //! Returns all tag definitions for the given name, i.e. including
   //! the overridden ones. A tag to the left overrides one to the
-  //! right.
+  //! right. If proc_instr is nonzero the set of PI tags is searched,
+  //! else the set of normal element tags.
   {
-    if (object(Tag) def = get_local_tag (name))
-      return ({def}) + imported->get_overridden_tags (name) * ({});
-    else return imported->get_overridden_tags (name) * ({});
-  }
-
-  multiset(string) get_tag_names()
-  //!
-  {
-    return `| ((multiset) indices (tags), @imported->get_tag_names());
+    if (object(Tag) def = get_local_tag (name, proc_instr))
+      return ({def}) + imported->get_overridden_tags (name, proc_instr) * ({});
+    else
+      return imported->get_overridden_tags (name, proc_instr) * ({});
   }
 
   void add_string_entities (mapping(string:string) entities)
   //! Adds a set of entitity replacements that are used foremost by
-  //! the PXml parser to decode simple entities, like e.g. &amp;. The
+  //! the PXml parser to decode simple entities like &amp;. The
   //! indices are the entity names without & and ;.
   {
     if (string_entities) string_entities |= entities;
@@ -437,14 +505,25 @@ class TagSet
       return `+(@imported->get_string_entities(), ([]));
   }
 
-  mapping(string:Tag) get_plugins (string name)
+  mapping(string:Tag) get_plugins (string name, void|int proc_instr)
   //! Returns the registered plugins for the given tag name. Don't be
-  //! destructive on the returned mapping.
+  //! destructive on the returned mapping. If proc_instr is nonzero,
+  //! the function searches for processing instruction plugins,
+  //! otherwise it searches for plugins to normal element tags.
   {
     mapping(string:Tag) res;
-    if ((res = plugins[name])) return res;
-    low_get_plugins (name + "#", res = ([]));
-    return plugins[name] = res;
+    if (proc_instr) {
+      if (!pi_plugins) pi_plugins = ([]);
+      if ((res = pi_plugins[name])) return res;
+      low_get_pi_plugins (name + "#", res = ([]));
+      return pi_plugins[name] = res;
+    }
+    else {
+      if (!plugins) plugins = ([]);
+      if ((res = plugins[name])) return res;
+      low_get_plugins (name + "#", res = ([]));
+      return plugins[name] = res;
+    }
   }
 
   int has_effective_tags (TagSet tset)
@@ -490,10 +569,10 @@ class TagSet
     generation++;
     prepare_funs = 0;
     overridden_tag_lookup = 0;
-    plugins = ([]);
+    plugins = pi_plugins = 0;
     (notify_funcs -= ({0}))();
     set_weak_flag (notify_funcs, 1);
-    got_local_tags = sizeof (tags);
+    got_local_tags = sizeof (tags) || (proc_instrs && sizeof (proc_instrs));
   }
 
   // Internals.
@@ -515,8 +594,8 @@ class TagSet
     catch (changed());
   }
 
-  static mapping(string:Tag) tags = ([]);
-  // Static since we want to track changes in this.
+  static mapping(string:Tag) tags = ([]), proc_instrs;
+  // Static since we want to track changes in these.
 
   static mapping(string:string) string_entities;
   // Used by e.g. PXml to hold normal entities that should be replaced
@@ -526,7 +605,7 @@ class TagSet
   // The imported tag set with the highest priority.
 
   static int got_local_tags;
-  // Nonzero if there are local tags.
+  // Nonzero if there are local element tags or PI tags.
 
   static array(function(:void)) notify_funcs = ({});
   // Weak (when nonempty).
@@ -566,6 +645,26 @@ class TagSet
     return 0;
   }
 
+  /*static*/ Tag find_overridden_proc_instr (Tag overrider)
+  {
+    if (proc_instrs && proc_instrs[overrider->name] == overrider) {
+      foreach (imported, TagSet tag_set)
+	if (object(Tag) overrider = tag_set->get_proc_instr (overrider->name))
+	  return overrider;
+    }
+    else {
+      int found = 0;
+      foreach (imported, TagSet tag_set)
+	if (object(Tag) subtag = tag_set->get_proc_instr (overrider->name))
+	  if (found) return subtag;
+	  else if (subtag == overrider)
+	    if ((subtag = tag_set->find_overridden_proc_instr (overrider)))
+	      return subtag;
+	    else found = 1;
+    }
+    return 0;
+  }
+
   void call_prepare_funs (Context ctx)
   // Kludge function used from rxml.pike.
   {
@@ -573,7 +672,7 @@ class TagSet
     (prepare_funs -= ({0})) (ctx);
   }
 
-  static mapping(string:mapping(string:Tag)) plugins = ([]);
+  static mapping(string:mapping(string:Tag)) plugins, pi_plugins;
 
   /*static*/ void low_get_plugins (string prefix, mapping(string:Tag) res)
   {
@@ -585,6 +684,19 @@ class TagSet
 	if (tag->plugin_name) res[[string] tag->plugin_name] = tag;
       }
     // We don't cache in plugins; do that only at the top level.
+  }
+
+  /*static*/ void low_get_pi_plugins (string prefix, mapping(string:Tag) res)
+  {
+    for (int i = sizeof (imported) - 1; i >= 0; i--)
+      imported[i]->low_get_pi_plugins (prefix, res);
+    if (proc_instrs)
+      foreach (indices (proc_instrs), string name)
+	if (name[..sizeof (prefix) - 1] == prefix) {
+	  Tag tag = proc_instrs[name];
+	  if (tag->plugin_name) res[[string] tag->plugin_name] = tag;
+	}
+    // We don't cache in pi_plugins; do that only at the top level.
   }
 
   string _sprintf()
@@ -938,30 +1050,30 @@ class Context
   //! Adds a tag that will exist from this point forward in the
   //! current context only.
   {
+#ifdef MODULE_DEBUG
+    if (tag->plugin_name)
+      fatal_error ("Can't currently handle adding of plugin tags at runtime.\n");
+#endif
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
-    new_runtime_tags->add_tags[tag->name] = tag;
-    // By doing the following, we can let remove_tags take precedence.
-    m_delete (new_runtime_tags->remove_tags, tag->name);
+    new_runtime_tags->add_tag (tag);
   }
 
-  void remove_runtime_tag (string|Tag tag)
-  //! Removes a tag added by add_runtime_tag(). If a string is given,
-  //! it's assumed to be a tag name without prefix.
+  void remove_runtime_tag (string|Tag tag, void|int proc_instr)
+  //! If tag is a Tag object, it's removed from the set of runtime
+  //! tags. If tag is a string, the tag with that name is removed. In
+  //! the latter case, if proc_instr is nonzero the set of runtime PI
+  //! tags is searched, else the set of normal element runtime tags.
   {
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
     if (objectp (tag)) tag = tag->name;
-    new_runtime_tags->remove_tags[tag] = 1;
+    new_runtime_tags->remove_tag (tag);
   }
 
   multiset(Tag) get_runtime_tags()
-  //! Returns all currently active runtime tags. Don't be destructive
-  //! on the returned multiset.
+  //! Returns all currently active runtime tags.
   {
     mapping(string:Tag) tags = runtime_tags;
-    if (new_runtime_tags) {
-      tags |= new_runtime_tags->add_tags;
-      tags -= new_runtime_tags->remove_tags;
-    }
+    if (new_runtime_tags) tags = new_runtime_tags->filter_tags (tags);
     return mkmultiset (values (tags));
   }
 
@@ -1062,6 +1174,9 @@ class Context
 #define LEAVE_SCOPE(ctx, frame) (frame->vars && ctx->leave_scope (frame))
 
   mapping(string:Tag) runtime_tags = ([]);
+  // The active runtime tags. PI tags are stored in the same mapping
+  // with their names prefixed by '?'.
+
   NewRuntimeTags new_runtime_tags;
   // Used to record the result of any add_runtime_tag() and
   // remove_runtime_tag() calls since the last time the parsers ran.
@@ -1103,9 +1218,55 @@ class Context
 }
 
 static class NewRuntimeTags
+// Tool class used to track runtime tags in Context.
 {
-  mapping(string:Tag) add_tags = ([]);
-  mapping(string:int) remove_tags = ([]);
+  static mapping(string:Tag) add_tags;
+  static mapping(string:int|string) remove_tags;
+
+  void add_tag (Tag tag)
+  {
+    if (!add_tags) add_tags = ([]);
+    if (tag->flags & FLAG_PROC_INSTR) {
+      add_tags["?" + tag->name] = tag;
+      // By doing the following, we can let remove_proc_instrs take precedence.
+      if (remove_tags) m_delete (remove_tags, "?" + tag->name);
+    }
+    else {
+      add_tags[tag->name] = tag;
+      if (remove_tags) m_delete (remove_tags, tag->name);
+    }
+  }
+
+  void remove_tag (string name, int proc_instr)
+  {
+    if (!remove_tags) remove_tags = ([]);
+    if (proc_instr) remove_tags["?" + name] = name;
+    else remove_tags[name] = 1;
+  }
+
+  array(Tag) added_tags()
+  {
+    if (!add_tags) return ({});
+    if (remove_tags) return values (add_tags - remove_tags);
+    return values (add_tags);
+  }
+
+  array(string) removed_tags()
+  {
+    return remove_tags ? indices (filter (remove_tags, intp)) : ({});
+  }
+
+  array(string) removed_pi_tags()
+  {
+    return remove_tags ? values (remove_tags) - ({1}) : ({});
+  }
+
+  mapping(string:Tag) filter_tags (mapping(string:Tag) tags)
+  {
+    if (add_tags) tags |= add_tags;
+    if (remove_tags) tags -= remove_tags;
+    return tags;
+  }
 }
 
 class Backtrace
@@ -1145,19 +1306,24 @@ class Backtrace
       if (!no_msg) txt += ": " + (msg || "(no error message)\n");
       txt += current_var ? " | &" + current_var + ";\n" : "";
       for (Frame f = frame; f; f = f->up) {
-	if (f->tag) txt += " | <" + f->tag->name;
-	else if (f->tag_name) txt += " | <" + f->tag_name;
+	string name;
+	if (f->tag) name = f->tag->name;
 	else if (!f->up) break;
-	else txt += " | <(unknown tag)";
-	if (f->args)
-	  foreach (sort (indices (f->args)), string arg) {
-	    mixed val = f->args[arg];
-	    txt += " " + arg + "=";
-	    if (arrayp (val)) txt += map (val, error_print_val) * ",";
-	    else txt += error_print_val (val);
-	  }
-	else txt += " (no argmap)";
-	txt += ">\n";
+	else name = "(unknown)";
+	if (f->flags & FLAG_PROC_INSTR)
+	  txt += " | <?" + name + "?>\n";
+	else {
+	  txt += " | <" + name;
+	  if (f->args)
+	    foreach (sort (indices (f->args)), string arg) {
+	      mixed val = f->args[arg];
+	      txt += " " + arg + "=";
+	      if (arrayp (val)) txt += map (val, error_print_val) * ",";
+	      else txt += error_print_val (val);
+	    }
+	  else txt += " (no argmap)";
+	  txt += ">\n";
+	}
       }
     }
     else
@@ -1236,6 +1402,12 @@ constant FLAG_NONE		= 0x00000000;
 
 //! Static flags (i.e. tested in the Tag object).
 
+constant FLAG_PROC_INSTR	= 0x00000010;
+//! Flags this as a processing instruction tag (i.e. one parsed with
+//! the <?name ... ?> syntax in XML). The string after the tag name to
+//! the ending separator constitutes the content of the tag. Arguments
+//! are not used.
+
 constant FLAG_EMPTY_ELEMENT	= 0x00000001;
 //! If set, the tag does not use any content. E.g. with an HTML parser
 //! this defines whether the tag is a container or not, and in XML
@@ -1255,8 +1427,10 @@ constant FLAG_SOCKET_TAG	= 0x00000008;
 //! Tag.plugin_name for details).
 
 constant FLAG_DONT_PREPARSE	= 0x00000040;
-//! Don't preparse the content with the PXml parser. This is only used
-//! in the simple tag wrapper. Defined here as placeholder.
+//! Don't preparse the content with the PXml parser. This is always
+//! the case for PI tags, so this flag doesn't have any effect for
+//! those. This is only used in the simple tag wrapper. Defined here
+//! as placeholder.
 
 constant FLAG_POSTPARSE		= 0x00000080;
 //! Postparse the result with the PXml parser. This is only used in
@@ -1353,7 +1527,8 @@ class Frame
 
   mapping(string:mixed) args;
   //! The arguments passed to the tag. Set before any frame callbacks
-  //! are called.
+  //! are called. Not set for processing instruction (FLAG_PROC_INSTR)
+  //! tags.
 
   Type content_type;
   //! The type of the content.
@@ -1577,7 +1752,7 @@ class Frame
     if (!(flags & FLAG_SOCKET_TAG))
       fatal_error ("This tag is not a socket tag.\n");
 #endif
-    return get_context()->tag_set->get_plugins (tag->name);
+    return get_context()->tag_set->get_plugins (tag->name, tag->flags & FLAG_PROC_INSTR);
   }
 
   Frame|string propagate_tag (void|mapping(string:string) args, void|string content)
@@ -1627,16 +1802,22 @@ class Frame
 	  fatal_error ("The variable raw_tag_text must be defined.\n");
 	if (!stringp (this_object()->raw_tag_text))
 	  fatal_error ("raw_tag_text must have a string value.\n");
-	if (mixed err = catch {
 #endif
-	  return t_xml (PEnt)->eval (this_object()->raw_tag_text, ctx, empty_tag_set);
+	if (flags & FLAG_PROC_INSTR)
+	  return this_object()->raw_tag_text;
+	else {
 #ifdef MODULE_DEBUG
-	}) {
-	  if (objectp (err) && ([object] err)->thrown_at_unwind)
-	    fatal_error ("Can't save parser state when evaluating arguments.\n");
-	  throw_fatal (err);
-	}
+	  if (mixed err = catch {
 #endif
+	    return t_xml (PEnt)->eval (this_object()->raw_tag_text, ctx, empty_tag_set);
+#ifdef MODULE_DEBUG
+	  }) {
+	    if (objectp (err) && ([object] err)->thrown_at_unwind)
+	      fatal_error ("Can't save parser state when evaluating arguments.\n");
+	    throw_fatal (err);
+	  }
+#endif
+	}
       }
   }
 
@@ -1733,19 +1914,19 @@ class Frame
   private void _handle_runtime_tags (Context ctx, TagSetParser parser)
   {
     // FIXME: PCode handling.
-    mapping(string:int) rem_tags = ctx->new_runtime_tags->remove_tags;
-    mapping(string:Tag) add_tags = ctx->new_runtime_tags->add_tags - rem_tags;
-    array(string) arr_rem_tags = indices (rem_tags);
-    array(Tag) arr_add_tags = values (add_tags);
+    array(Tag) arr_add_tags = ctx->new_runtime_tags->added_tags();
+    array(string) arr_rem_tags = ctx->new_runtime_tags->removed_tags();
+    array(string) arr_rem_pi_tags = ctx->new_runtime_tags->removed_pi_tags();
     for (Parser p = parser; p; p = p->_parent)
       if (p->tag_set_eval && !p->_local_tag_set && p->add_runtime_tag) {
 	foreach (arr_add_tags, Tag tag)
 	  ([object(TagSetParser)] p)->add_runtime_tag (tag);
 	foreach (arr_rem_tags, string tag)
 	  ([object(TagSetParser)] p)->remove_runtime_tag (tag);
+	foreach (arr_rem_pi_tags, string tag)
+	  ([object(TagSetParser)] p)->remove_runtime_tag (tag, 1);
       }
-    ctx->runtime_tags |= add_tags;
-    ctx->runtime_tags -= rem_tags;
+    ctx->runtime_tags = ctx->new_runtime_tags->filter_tags (ctx->runtime_tags);
     ctx->new_runtime_tags = 0;
   }
 
@@ -1835,7 +2016,7 @@ class Frame
 
     do {			// Target for breaks (goto wouldn't be all bad, really).
       if (tag) {
-	if ((raw_args || args)->help) {
+	if ((raw_args || args || ([]))->help) {
 	  TRACE_ENTER ("tag &lt;" + tag->name + " help&gt;", tag);
 	  string help = id->conf->find_tag_doc (tag->name, id);
 	  TRACE_LEAVE ("");
@@ -1855,6 +2036,10 @@ class Frame
       }
 
       if (raw_args) {
+#ifdef MODULE_DEBUG
+	if (flags & FLAG_PROC_INSTR)
+	  fatal_error ("Can't pass arguments to a processing instruction tag.\n");
+#endif
 	if (sizeof (raw_args)) {
 	  // Note: Code duplication in Tag.eval_args().
 	  mapping(string:Type) atypes = raw_args & tag->req_arg_types;
@@ -1882,9 +2067,8 @@ class Frame
 	}
 	args = raw_args;
       }
-
 #ifdef MODULE_DEBUG
-      if (!args) fatal_error ("args not set.\n");
+      else if (!args && !(flags & FLAG_PROC_INSTR)) fatal_error ("args not set.\n");
 #endif
 
       if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
@@ -2583,9 +2767,10 @@ class TagSetParser
 //! Interface class for parsers that evaluates using the tag set. It
 //! provides the evaluation and compilation functionality. The parser
 //! should call Tag._handle_tag() from feed() and finish() for every
-//! encountered tag, and Parser.handle_var() for encountered variable
+//! encountered element tag and Tag._handle_pi_tag() for every PI tag.
+//! Parser.handle_var() should be called for encountered variable
 //! references. It must be able to continue cleanly after throw() from
-//! Tag._handle_tag().
+//! Tag._handle_tag() and Tag._handle_pi_tag().
 {
   inherit Parser;
 
@@ -2626,10 +2811,13 @@ class TagSetParser
   //! current parser instance only. This may only be left undefined if
   //! the parser doesn't parse tags at all.
 
-  optional void remove_runtime_tag (string|Tag tag);
-  //! Removes a tag added by add_runtime_tag(). If it's a string, it's
-  //! assumed to always be without prefix. This may only be left
-  //! undefined if the parser doesn't parse tags at all.
+  optional void remove_runtime_tag (string|Tag tag, void|int proc_instr);
+  //! If tag is a Tag object, it's removed from the set of runtime
+  //! tags that's been added by add_runtime_tag(). If tag is a string,
+  //! the tag with that name is removed. In this case, if proc_instr
+  //! is nonzero the set of runtime PI tags is searched, else the set
+  //! of normal element runtime tags. This may only be left undefined
+  //! if the parser doesn't parse tags at all.
 
   // Internals.
 
@@ -3095,15 +3283,21 @@ static class TXml
 
   string format_tag (string|Tag tag, void|mapping(string:string) args,
 		     void|string content, void|int flags)
-  //! Returns a formatted XML tag. If tag is a Tag object, the flags
-  //! FLAG_COMPAT_PARSE and FLAG_EMPTY_ELEMENT are heeded when
-  //! formatting empty element tags. The special flag FLAG_RAW_ARGS
-  //! are used to decide the formatting of arguments.
+  //! Returns a formatted XML tag. The flags argument contains a flag
+  //! field compatible with Tag.flags etc; the flags FLAG_PROC_INSTR,
+  //! FLAG_COMPAT_PARSE, FLAG_EMPTY_ELEMENT and FLAG_RAW_ARGS are
+  //! heeded when formatting the tag. If tag is an object, its flags
+  //! field is used instead of the flags argument.
   {
     string tagname;
     if (objectp (tag)) tagname = tag->name, flags = tag->flags;
     else tagname = tag;
+
+    if (flags & FLAG_PROC_INSTR)
+      return "<?" + tagname + " " + content + "?>";
+
     string res = "<" + tagname;
+
     if (args)
       if (flags & FLAG_RAW_ARGS)
 	foreach (indices (args), string arg)
@@ -3111,6 +3305,7 @@ static class TXml
       else
 	foreach (indices (args), string arg)
 	  res += " " + arg + "=" + Roxen->html_encode_tag_value (args[arg]);
+
     if (content)
       res += ">" + content + "</" + tag->name + ">";
     else
@@ -3119,6 +3314,7 @@ static class TXml
 	else res += "></" + tag->name + ">";
       else
 	res += " />";
+
     return res;
   }
 
