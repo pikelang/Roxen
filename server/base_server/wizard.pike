@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.137 2001/08/23 09:19:50 jonasw Exp $
+// $Id: wizard.pike,v 1.138 2001/08/24 11:57:57 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -325,7 +325,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
        res = ("<input type=\"submit\" value=\"" + LOCALE(47, "Example") + "\"><br />"+
 	      ((current&&strlen(current))?
-	       "<gtext nfont=\""+current+"\">" + LOCALE(48, "Example Text") + "</gtext><br />"
+	       "<gtext font=\""+current+"\">" + LOCALE(48, "Example Text") + "</gtext><br />"
 	       :""));
      m_delete(m, "noexample");
      return wizard_tag_var("var", m, id) + res;
