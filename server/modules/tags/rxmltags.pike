@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.483 2005/03/16 14:26:22 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.484 2005/03/17 09:41:42 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2182,6 +2182,8 @@ string simpletag_smallcaps(string t, mapping m, string s)
 string simpletag_random(string tag, mapping m, string s, RequestID id)
 {
   NOCACHE();
+  if(m->range)
+    return (string)random((int)m->range);
   array q = s/(m->separator || m->sep || "\n");
   int index;
   if(m->seed)
@@ -7279,8 +7281,15 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 //----------------------------------------------------------------------
 
 "random":#"<desc type='cont'><p><short>
- Randomly chooses a message from its contents.</short>
+ Randomly chooses a message from its contents, or
+ returns an integer within a given range.</short>
 </p></desc>
+
+<attr name='range' value='integer'>
+ <p>The random range, from 0 up to but not including the range integer.</p>
+
+ <ex><random random='10'/></ex>
+</attr>
 
 <attr name='separator' value='string'>
  <p>The separator used to separate the messages, by default newline.</p>
