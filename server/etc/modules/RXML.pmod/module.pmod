@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.107 2000/09/07 20:26:14 mast Exp $
+//! $Id: module.pmod,v 1.108 2000/09/08 03:23:58 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -78,6 +78,12 @@ class RequestID { };
 #  define OBJ_COUNT (__object_marker ? "[" + __object_marker->count + "]" : "")
 #else
 #  define OBJ_COUNT ""
+#endif
+
+#ifdef DEBUG
+#  define TAG_DEBUG(frame, msg) (frame)->tag_debug ("%O: %s", (frame), (msg))
+#else
+#  define TAG_DEBUG(frame, msg) 0
 #endif
 
 #define HASH_INT2(m, n) (n < 65536 ? (m << 16) + n : sprintf ("%x,%x", m, n))
@@ -263,14 +269,17 @@ class Tag
     }
 
     object/*(Frame)HMM*/ frame;
-    if (mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state)
-      if (ustate[parser]) {
-	frame = [object/*(Frame)HMM*/] ustate[parser][0];
-	m_delete (ustate, parser);
-	if (!sizeof (ustate)) ctx->unwind_state = 0;
-      }
-      else frame = `() (args, nil);
-    else frame = `() (args, nil);
+    do {
+      if (mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state)
+	if (ustate[parser]) {
+	  frame = [object/*(Frame)HMM*/] ustate[parser][0];
+	  m_delete (ustate, parser);
+	  if (!sizeof (ustate)) ctx->unwind_state = 0;
+	  break;
+	}
+      frame = `() (args, nil);
+      TAG_DEBUG (frame, "New frame\n");
+    } while (0);		// The break goes here.
 
     if (!zero_type (frame->raw_tag_text)) {
       if (splice_args)
@@ -285,8 +294,12 @@ class Tag
       if ((res = frame->result) == nil) return ({});
       if (frame->result_type->encoding_type ?
 	  frame->result_type->encoding_type != parser->type->encoding_type :
-	  frame->result_type != parser->type)
+	  frame->result_type != parser->type) {
+	TAG_DEBUG (frame, sprintf (
+		     "Converting result from %s to %s of surrounding content\n",
+		     frame->result_type->name, parser->type->name));
 	res = parser->type->encode (res, frame->result_type);
+      }
       return ({res});
     };
 
@@ -1473,6 +1486,12 @@ local Context get_context() {return _context;}
 constant FLAG_NONE		= 0x00000000;
 //! The no-flags flag. In case you think 0 is too ugly. ;)
 
+constant FLAG_DEBUG		= 0x40000000;
+//! Write a lot of debug during the execution of the tag, showing what
+//! type conversions are done, what callbacks are being called etc.
+//! Note that DEBUG must be defined for the debug printouts to be
+//! compiled in (normally enabled with the --debug flag to Roxen).
+
 //! Static flags (i.e. tested in the Tag object).
 
 constant FLAG_PROC_INSTR	= 0x00000010;
@@ -1784,8 +1803,8 @@ class Frame
   //! through the content. This will repeat until 0 is returned.
   //!
   //! If do_iterate is a positive integer, that many passes is done
-  //! and then the tag exits. If do_iterate is zero no pass is done.
-  //! If do_iterate is missing, one pass is done.
+  //! and then the tag exits. If do_iterate is zero or missing, one
+  //! pass is done. If do_iterate is negative, no pass is done.
 
   //!int|function(RequestID:int) is_valid;
   //! When defined, the frame may be cached. First the name of the tag
@@ -1831,6 +1850,13 @@ class Frame
   //! A wrapper for easy access to RXML.parse_error().
   {
     _parse_error (msg, @args);
+  }
+
+  local void tag_debug (string msg, mixed... args)
+  //! Writes the message to the debug log if this tag has FLAG_DEBUG
+  //! set.
+  {
+    if (flags & FLAG_DEBUG) werror (msg, @args);
   }
 
   void terminate()
@@ -1939,6 +1965,20 @@ class Frame
 
   // Internals.
 
+#ifdef DEBUG
+#  define THIS_TAG_TOP_DEBUG(msg) tag_debug ("%O: %s", this_object(), (msg))
+#  define THIS_TAG_DEBUG(msg) tag_debug ("%O:   %s", this_object(), (msg))
+#  define THIS_TAG_DEBUG_ENTER_SCOPE(ctx, this, msg) \
+     if (this->vars && ctx->scopes["_"] != this->vars) THIS_TAG_DEBUG (msg)
+#  define THIS_TAG_DEBUG_LEAVE_SCOPE(ctx, this, msg) \
+     if (this->vars && ctx->scopes["_"] == this->vars) THIS_TAG_DEBUG (msg)
+#else
+#  define THIS_TAG_TOP_DEBUG(msg) 0
+#  define THIS_TAG_DEBUG(msg) 0
+#  define THIS_TAG_DEBUG_ENTER_SCOPE(ctx, this, msg) 0
+#  define THIS_TAG_DEBUG_LEAVE_SCOPE(ctx, this, msg) 0
+#endif
+
   mixed _exec_array (TagSetParser parser, array exec, int parent_scope)
   {
     Frame this = this_object();
@@ -1948,44 +1988,62 @@ class Frame
     Parser subparser = 0;
 
     mixed err = catch {
-      if (parent_scope) LEAVE_SCOPE (ctx, this);
+      if (parent_scope) {
+	THIS_TAG_DEBUG_LEAVE_SCOPE (ctx, this, "Exec: Temporary leaving scope\n");
+	LEAVE_SCOPE (ctx, this);
+      }
 
       for (; i < sizeof (exec); i++) {
 	mixed elem = exec[i], piece = nil;
 
 	switch (sprintf ("%t", elem)) {
 	  case "string":
-	    if (result_type->_parser_prog == PNone)
+	    if (result_type->_parser_prog == PNone) {
+	      THIS_TAG_DEBUG (sprintf ("Exec[%d]: String\n", i));
 	      piece = elem;
+	    }
 	    else {
 	      subparser = result_type->get_parser (ctx, 0, parser);
 	      if (flags & FLAG_DONT_REPORT_ERRORS)
 		subparser->disable_report_error = 1;
+	      THIS_TAG_DEBUG (sprintf ("Exec[%d]: Parsing string with %O\n",
+				       i, subparser));
 	      subparser->finish ([string] elem); // Might unwind.
 	      piece = subparser->eval(); // Might unwind.
 	      subparser = 0;
 	    }
 	    break;
+
 	  case "mapping":
+	    THIS_TAG_DEBUG (sprintf ("Exec[%d]: Header mapping\n", i));
 	    fatal_error ("Header mappings not yet implemented.\n");
 	    break;
+
 	  case "multiset":
-	    if (sizeof ([multiset] elem) == 1) piece = ((array) elem)[0];
+	    if (sizeof ([multiset] elem) == 1) {
+	      piece = ((array) elem)[0];
+	      THIS_TAG_DEBUG (sprintf ("Exec[%d]: Verbatim %t value\n", i, piece));
+	    }
 	    else if (sizeof ([multiset] elem) > 1)
 	      fatal_error (sizeof ([multiset] elem) +
 			   " values in multiset in exec array.\n");
 	    else fatal_error ("No value in multiset in exec array.\n");
 	    break;
+
 	  default:
 	    if (objectp (elem))
 	      // Can't count on that sprintf ("%t", ...) on an object
 	      // returns "object".
 	      if (([object] elem)->is_RXML_Frame) {
+		THIS_TAG_DEBUG (sprintf ("Exec[%d]: Evaluating frame %O\n",
+					 i, ([object] elem)));
 		([object(Frame)] elem)->_eval (parser); // Might unwind.
 		piece = ([object(Frame)] elem)->result;
 	      }
 	      else if (([object] elem)->is_RXML_Parser) {
 		// The subparser above unwound.
+		THIS_TAG_DEBUG (sprintf ("Exec[%d]: Continuing eval of frame %O\n",
+					 i, ([object] elem)));
 		([object(Parser)] elem)->finish(); // Might unwind.
 		piece = ([object(Parser)] elem)->eval(); // Might unwind.
 	      }
@@ -1995,19 +2053,32 @@ class Frame
 	      fatal_error ("Invalid type %t in exec array.\n", elem);
 	}
 
-	if (result_type->sequential) res += piece;
-	else if (piece != nil) result = res = piece;
+	if (result_type->sequential) {
+	  THIS_TAG_DEBUG (sprintf ("Exec[%d]: Adding %t to result\n", i, piece));
+	  res += piece;
+	}
+	else if (piece != nil) {
+	  THIS_TAG_DEBUG (sprintf ("Exec[%d]: Setting result to %t\n", i, piece));
+	  result = res = piece;
+	}
       }
 
       if (result_type->sequential) result += res;
-      if (parent_scope) ENTER_SCOPE (ctx, this);
+      if (parent_scope) {
+	THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this, "Exec: Reentering scope\n");
+	ENTER_SCOPE (ctx, this);
+      }
       return res;
     };
 
-    if (parent_scope) ENTER_SCOPE (ctx, this);
+    if (parent_scope) {
+      THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this, "Exec: Reentering scope\n");
+      ENTER_SCOPE (ctx, this);
+    }
     if (result_type->sequential) result += res;
 
     if (objectp (err) && ([object] err)->thrown_at_unwind) {
+      THIS_TAG_DEBUG (sprintf ("Exec: Interrupted at position %d\n", i));
       mapping(string:mixed)|mapping(object:array) ustate;
       if ((ustate = ctx->unwind_state) && !zero_type (ustate->stream_piece)) {
 	// Subframe wants to stream. Update stream_piece and send it on.
@@ -2039,12 +2110,18 @@ class Frame
     array(string) arr_rem_pi_tags = ctx->new_runtime_tags->removed_pi_tags();
     for (Parser p = parser; p; p = p->_parent)
       if (p->tag_set_eval && !p->_local_tag_set && p->add_runtime_tag) {
-	foreach (arr_add_tags, Tag tag)
+	foreach (arr_add_tags, Tag tag) {
+	  THIS_TAG_DEBUG (sprintf ("Adding runtime tag %O\n", tag));
 	  ([object(TagSetParser)] p)->add_runtime_tag (tag);
-	foreach (arr_rem_tags, string tag)
+	}
+	foreach (arr_rem_tags, string tag) {
+	  THIS_TAG_DEBUG (sprintf ("Removing runtime tag %s\n", tag));
 	  ([object(TagSetParser)] p)->remove_runtime_tag (tag);
-	foreach (arr_rem_pi_tags, string tag)
+	}
+	foreach (arr_rem_pi_tags, string tag) {
+	  THIS_TAG_DEBUG (sprintf ("Removing runtime tag %s\n", tag));
 	  ([object(TagSetParser)] p)->remove_runtime_tag (tag, 1);
+	}
       }
     ctx->runtime_tags = ctx->new_runtime_tags->filter_tags (ctx->runtime_tags);
     ctx->new_runtime_tags = 0;
@@ -2068,6 +2145,9 @@ class Frame
 #define EVSTAT_ITER_DONE 3
     int eval_state = EVSTAT_BEGIN;
     int iter;
+#ifdef DEBUG
+    int debug_iter = 1;
+#endif
     Parser subparser;
     mixed piece;
     array exec;
@@ -2088,20 +2168,6 @@ class Frame
 		      "Context.remove_runtime_tag() was used outside any parser.\n");
 #endif
 
-    if (flags & FLAG_UNPARSED) {
-#ifdef DEBUG
-      if (raw_args || raw_content)
-	PRE_INIT_ERROR ("Internal error: raw_args or raw_content given for "
-			"unparsed frame.\n");
-#endif
-      raw_args = args, args = 0;
-      raw_content = content, content = nil;
-#ifdef MODULE_DEBUG
-      if (!stringp (raw_content))
-	PRE_INIT_ERROR ("Content is not a string in unparsed tag frame.\n");
-#endif
-    }
-
     if (array state = ctx->unwind_state && ctx->unwind_state[this]) {
 #ifdef DEBUG
       if (!up)
@@ -2112,11 +2178,33 @@ class Frame
 #endif
       object ignored;
       [ignored, eval_state, iter, raw_content, subparser, piece, exec, orig_tag_set,
-       ctx->new_runtime_tags] = state;
+       ctx->new_runtime_tags
+#ifdef DEBUG
+       , debug_iter
+#endif
+      ] = state;
       m_delete (ctx->unwind_state, this);
       if (!sizeof (ctx->unwind_state)) ctx->unwind_state = 0;
+      THIS_TAG_TOP_DEBUG ("Continuing evaluation" +
+			  (piece ? " with stream piece\n" : "\n"));
     }
     else {
+      if (flags & FLAG_UNPARSED) {
+#ifdef DEBUG
+	if (raw_args || raw_content)
+	  PRE_INIT_ERROR ("Internal error: raw_args or raw_content given for "
+			  "unparsed frame.\n");
+#endif
+	raw_args = args, args = 0;
+	raw_content = content, content = nil;
+#ifdef MODULE_DEBUG
+	if (!stringp (raw_content))
+	  PRE_INIT_ERROR ("Content is not a string in unparsed tag frame.\n");
+#endif
+	THIS_TAG_TOP_DEBUG ("Evaluating unparsed\n");
+      }
+      else THIS_TAG_TOP_DEBUG ("Evaluating\n");
+
 #ifdef MODULE_DEBUG
       if (up && up != ctx->frame)
 	PRE_INIT_ERROR ("Reuse of frame in different context.\n");
@@ -2140,6 +2228,7 @@ class Frame
 	  TRACE_ENTER ("tag &lt;" + tag->name + " help&gt;", tag);
 	  string help = id->conf->find_tag_doc (tag->name, id);
 	  TRACE_LEAVE ("");
+	  THIS_TAG_TOP_DEBUG ("Reporting help - frame done\n");
 	  ctx->handle_exception ( // Will throw if necessary.
 	    Backtrace ("help", help, ctx), parser);
 	  break;
@@ -2149,6 +2238,7 @@ class Frame
 
 #ifdef MODULE_LEVEL_SECURITY
 	if (id->conf->check_security (tag, id, id->misc->seclevel)) {
+	  THIS_TAG_TOP_DEBUG ("Access denied - exiting\n");
 	  TRACE_LEAVE("access denied");
 	  break;
 	}
@@ -2174,9 +2264,20 @@ class Frame
 #ifdef MODULE_DEBUG
 	  if (mixed err = catch {
 #endif
-	    foreach (indices (raw_args), string arg)
+	    foreach (indices (raw_args), string arg) {
+#ifdef DEBUG
+	      Type t = atypes[arg] || tag->def_arg_type;
+	      if (t->_parser_prog != PNone) {
+		Parser p = t->get_parser (ctx, 0, parser);
+		THIS_TAG_DEBUG (sprintf ("Evaluating argument %O with %O\n", arg, p));
+		p->finish (raw_args[arg]); // Should not unwind.
+		raw_args[arg] = p->eval(); // Should not unwind.
+	      }
+#else
 	      raw_args[arg] = (atypes[arg] || tag->def_arg_type)->
 		eval (raw_args[arg], ctx, 0, parser, 1); // Should not unwind.
+#endif
+	    }
 #ifdef MODULE_DEBUG
 	  }) {
 	    if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -2192,11 +2293,15 @@ class Frame
 #endif
 
       if (!zero_type (this->parent_frame))
-	if (up->local_tags && up->local_tags->has_tag (tag))
+	if (up->local_tags && up->local_tags->has_tag (tag)) {
+	  THIS_TAG_DEBUG (sprintf ("Setting parent_frame to %O from local_tags\n", up));
 	  this->parent_frame = up;
+	}
 	else
 	  for (Frame f = up; f; f = f->up)
 	    if (f->additional_tags && f->additional_tags->has_tag (tag)) {
+	      THIS_TAG_DEBUG (sprintf ("Setting parent_frame to %O "
+				       "from additional_tags\n", f));
 	      this->parent_frame = f;
 	      break;
 	    }
@@ -2204,6 +2309,7 @@ class Frame
       if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
 	TagSet tset = ctx->tag_set;
 	if (!tset->has_effective_tags (add_tags)) {
+	  THIS_TAG_DEBUG (sprintf ("Installing additional_tags %O\n", add_tags));
 	  int hash = HASH_INT2 (tset->id_number, add_tags->id_number);
 	  orig_tag_set = tset;
 	  TagSet local_ts;
@@ -2214,6 +2320,9 @@ class Frame
 	  }
 	  ctx->tag_set = local_ts;
 	}
+	else
+	  THIS_TAG_DEBUG (sprintf ("Not installing additional_tags %O "
+				   "since they're already in the tag set\n", add_tags));
       }
 
       if (!result_type) {
@@ -2232,12 +2341,16 @@ class Frame
 	    result_type = ptype (rtype->_parser_prog);
 	    break;
 	  }
-	if (!result_type)		// Sigh..
+	if (!result_type)
 	  parse_error (
 	    "Tag returns " +
 	    String.implode_nicely ([array(string)] tag->result_types->name, "or") +
 	    " but " + [string] parser->type->name + " is expected.\n");
+	THIS_TAG_DEBUG (sprintf ("Resolved result_type to %O from surrounding %O\n",
+				 result_type, ptype));
       }
+      else THIS_TAG_DEBUG (sprintf ("Keeping result_type %O\n", result_type));
+
       if (!content_type) {
 #ifdef MODULE_DEBUG
 	if (!tag) fatal_error ("content_type not set in Frame object %O, "
@@ -2245,10 +2358,20 @@ class Frame
 			       this_object());
 #endif
 	content_type = tag->content_type;
-	if (content_type == t_same)
+	if (content_type == t_same) {
 	  content_type = result_type (content_type->_parser_prog);
+	  THIS_TAG_DEBUG (sprintf ("Resolved t_same to content_type %O\n",
+				   content_type));
+	}
+	else THIS_TAG_DEBUG (sprintf ("Setting content_type to %O from tag\n",
+				      content_type));
       }
-      if (raw_content) content = content_type->empty_value;
+      else THIS_TAG_DEBUG (sprintf ("Keeping content_type %O\n", content_type));
+
+      if (raw_content) {
+	THIS_TAG_DEBUG ("Initializing the content variable to nil\n");
+	content = content_type->empty_value;
+      }
 
       mixed err = catch {
 	switch (eval_state) {
@@ -2256,15 +2379,27 @@ class Frame
 	    if (array|function(RequestID:array) do_enter =
 		[array|function(RequestID:array)] this->do_enter) {
 	      if (!exec) {
-		exec = arrayp (do_enter) ? [array] do_enter :
-		  ([function(RequestID:array)] do_enter) (
-		    id); // Might unwind.
+		if (arrayp (do_enter)) {
+		  THIS_TAG_DEBUG ("Getting exec array from do_enter\n");
+		  exec = [array] do_enter;
+		}
+		else {
+		  THIS_TAG_DEBUG ("Calling do_enter\n");
+		  exec = ([function(RequestID:array)] do_enter) (id); // Might unwind.
+		  THIS_TAG_DEBUG ((exec ? "Exec array" : "Zero") +
+				  " returned from do_enter\n");
+		}
 		if (ctx->new_runtime_tags)
 		  _handle_runtime_tags (ctx, parser);
 	      }
+
 	      if (exec) {
-		if (!(flags & FLAG_PARENT_SCOPE)) ENTER_SCOPE (ctx, this);
+		if (!(flags & FLAG_PARENT_SCOPE)) {
+		  THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this, "Entering scope\n");
+		  ENTER_SCOPE (ctx, this);
+		}
 		mixed res = _exec_array (parser, exec, 0); // Might unwind.
+
 		if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 		  if (ctx->unwind_state)
@@ -2276,11 +2411,17 @@ class Frame
 #endif
 		  if (result_type->encoding_type ?
 		      result_type->encoding_type != parser->type->encoding_type :
-		      result_type != parser->type)
+		      result_type != parser->type) {
+		    THIS_TAG_DEBUG (sprintf ("Converting result from %s to %s of "
+					     "surrounding content\n",
+					     result_type->name, parser->type->name));
 		    res = parser->type->encode (res, result_type);
+		  }
 		  ctx->unwind_state = (["stream_piece": res]);
+		  THIS_TAG_DEBUG (sprintf ("Streaming %t from do_enter\n", res));
 		  throw (this);
 		}
+
 		exec = 0;
 	      }
 	    }
@@ -2296,21 +2437,38 @@ class Frame
 		if (intp (do_iterate)) {
 		  iter = [int] do_iterate || 1;
 		  eval_state = EVSTAT_LAST_ITER;
+#ifdef DEBUG
+		  if (iter > 1)
+		    THIS_TAG_DEBUG (sprintf ("Getting %d iterations from do_iterate\n",
+					     iter));
+		  else if (iter < 0)
+		    THIS_TAG_DEBUG ("Skipping to finish since do_iterate is negative\n");
+#endif
 		}
 		else {
+		  THIS_TAG_DEBUG ("Calling do_iterate\n");
 		  iter = (/*[function(RequestID:int)]HMM*/ do_iterate) (
 		    id); // Might unwind.
+		  THIS_TAG_DEBUG (sprintf ("%O returned from do_iterate\n", iter));
 		  if (ctx->new_runtime_tags)
 		    _handle_runtime_tags (ctx, parser);
 		  if (!iter) eval_state = EVSTAT_LAST_ITER;
 		}
 	      }
+
+	      THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this, "Entering scope\n");
 	      ENTER_SCOPE (ctx, this);
 
-	      for (; iter > 0; iter--) {
+	      for (; iter > 0;
+		   iter--
+#ifdef DEBUG
+		     , debug_iter++
+#endif
+		  ) {
 		if (raw_content && raw_content != "")
 		  if (flags & FLAG_EMPTY_ELEMENT)
 		    parse_error ("This tag doesn't handle content.\n");
+
 		  else {	// Got nested parsing to do.
 		    int finished = 0;
 		    if (!subparser) { // The nested content is not yet parsed.
@@ -2318,9 +2476,18 @@ class Frame
 			subparser = content_type->get_parser (
 			  ctx, [object(TagSet)] this->local_tags, parser);
 			subparser->_local_tag_set = 1;
+			THIS_TAG_DEBUG (
+			  sprintf ("Iter[%d]: Evaluating content with %O "
+				   "from local_tags\n", debug_iter, subparser));
 		      }
-		      else
+		      else {
 			subparser = content_type->get_parser (ctx, 0, parser);
+#ifdef DEBUG
+			if (content_type->_parser_prog != PNone)
+			  THIS_TAG_DEBUG (sprintf ("Iter[%d]: Evaluating content "
+						   "with %O\n", debug_iter, subparser));
+#endif
+		      }
 		      if (flags & FLAG_DONT_REPORT_ERRORS)
 			subparser->disable_report_error = 1;
 		      subparser->finish (raw_content); // Might unwind.
@@ -2334,6 +2501,10 @@ class Frame
 			mixed res = subparser->read();
 			if (content_type->sequential) piece = res + piece;
 			else if (piece == nil) piece = res;
+			THIS_TAG_DEBUG (
+			  sprintf ("Iter[%d]: Got %s %t stream piece\n",
+				   debug_iter, finished ? "ending" : "a", piece));
+
 			if (piece != nil) {
 			  array|function(RequestID,void|mixed:array) do_process;
 			  if ((do_process =
@@ -2341,14 +2512,24 @@ class Frame
 			       this->do_process) &&
 			      !arrayp (do_process)) {
 			    if (!exec) {
+			      THIS_TAG_DEBUG (sprintf ("Iter[%d]: Calling do_process in "
+						       "streaming mode\n", debug_iter));
 			      exec = do_process (id, piece); // Might unwind.
+			      THIS_TAG_DEBUG (sprintf ("Iter[%d]: %s returned from "
+						       "do_process\n", debug_iter,
+						       exec ? "Exec array" : "Zero"));
 			      if (ctx->new_runtime_tags)
 				_handle_runtime_tags (ctx, parser);
 			    }
+
 			    if (exec) {
+			      THIS_TAG_DEBUG_ENTER_SCOPE (
+				ctx, this, sprintf ("Iter[%d]: Entering scope\n",
+						    debug_iter));
 			      ENTER_SCOPE (ctx, this);
 			      mixed res = _exec_array (
 				parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
+
 			      if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 				if (!zero_type (ctx->unwind_state->stream_piece))
@@ -2358,16 +2539,26 @@ class Frame
 				if (result_type->encoding_type ?
 				    result_type->encoding_type !=
 				    parser->type->encoding_type :
-				    result_type != parser->type)
+				    result_type != parser->type) {
+				  THIS_TAG_DEBUG (
+				    sprintf ("Iter[%d]: Converting result from %s to %s"
+					     " of surrounding content\n", debug_iter,
+					     result_type->name, parser->type->name));
 				  res = parser->type->encode (res, result_type);
+				}
 				ctx->unwind_state->stream_piece = res;
+				THIS_TAG_DEBUG (
+				  sprintf ("Iter[%d]: Streaming %t from "
+					   "do_process\n", debug_iter, res));
 				throw (this);
 			      }
+
 			      exec = 0;
 			    }
 			    else if (flags & FLAG_STREAM_RESULT) {
-			      // do_process() finished the stream.
-			      // Ignore remaining content.
+			      THIS_TAG_DEBUG (
+				sprintf ("Iter[%d]: do_process finished the stream; "
+					 "ignoring remaining content\n", debug_iter));
 			      ctx->unwind_state = 0;
 			      piece = nil;
 			      break;
@@ -2375,14 +2566,23 @@ class Frame
 			  }
 			  piece = nil;
 			}
+
 			if (finished) break;
 		      }
 		      else {	// The frame doesn't handle streamed content.
 			piece = nil;
 			if (finished) {
 			  mixed res = subparser->eval(); // Might unwind.
-			  if (content_type->sequential) content += res;
-			  else if (res != nil) content = res;
+			  if (content_type->sequential) {
+			    THIS_TAG_DEBUG (sprintf ("Iter[%d]: Adding %t to content\n",
+						     debug_iter, res));
+			    content += res;
+			  }
+			  else if (res != nil) {
+			    THIS_TAG_DEBUG (sprintf ("Iter[%d]: Setting content to %t\n",
+						     debug_iter, res));
+			    content = res;
+			  }
 			  break;
 			}
 		      }
@@ -2396,16 +2596,30 @@ class Frame
 		if (array|function(RequestID,void|mixed:array) do_process =
 		    [array|function(RequestID,void|mixed:array)] this->do_process) {
 		  if (!exec) {
-		    exec = arrayp (do_process) ? [array] do_process :
-		      ([function(RequestID,void|mixed:array)] do_process) (
+		    if (arrayp (do_process)) {
+		      THIS_TAG_DEBUG (sprintf ("Iter[%d]: Getting exec array from "
+					       "do_process\n", debug_iter));
+		      exec = [array] do_process;
+		    }
+		    else {
+		      THIS_TAG_DEBUG (sprintf ("Iter[%d]: Calling do_process\n",
+					       debug_iter));
+		      exec = ([function(RequestID,void|mixed:array)] do_process) (
 			id); // Might unwind.
+		      THIS_TAG_DEBUG (sprintf ("Iter[%d]: %s returned from do_process\n",
+					       debug_iter, exec ? "Exec array" : "Zero"));
+		    }
 		    if (ctx->new_runtime_tags)
 		      _handle_runtime_tags (ctx, parser);
 		  }
+
 		  if (exec) {
+		    THIS_TAG_DEBUG_ENTER_SCOPE (
+		      ctx, this, sprintf ("Iter[%d]: Entering scope\n", debug_iter));
 		    ENTER_SCOPE (ctx, this);
 		    mixed res = _exec_array (
 		      parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
+
 		    if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 		      if (ctx->unwind_state)
@@ -2417,11 +2631,19 @@ class Frame
 #endif
 		      if (result_type->encoding_type ?
 			  result_type->encoding_type != parser->type->encoding_type :
-			  result_type != parser->type)
+			  result_type != parser->type) {
+			THIS_TAG_DEBUG (sprintf ("Iter[%d]: Converting result from "
+						 "type %s to type %s of surrounding "
+						 "content\n", debug_iter,
+						 result_type->name, parser->type->name));
 			res = parser->type->encode (res, result_type);
+		      }
 		      ctx->unwind_state = (["stream_piece": res]);
+		      THIS_TAG_DEBUG (sprintf ("Iter[%d]: Streaming %t from "
+					       "do_process\n", debug_iter, res));
 		      throw (this);
 		    }
+
 		    exec = 0;
 		  }
 		}
@@ -2435,29 +2657,63 @@ class Frame
 		[array|function(RequestID:array)] this->do_return) {
 	      eval_state = EVSTAT_ITER_DONE; // Only need to record this state here.
 	      if (!exec) {
-		exec = arrayp (do_return) ? [array] do_return :
-		  ([function(RequestID:array)] do_return) (id); // Might unwind.
+		if (arrayp (do_return)) {
+		  THIS_TAG_DEBUG ("Getting exec array from do_return\n");
+		  exec = [array] do_return;
+		}
+		else {
+		  THIS_TAG_DEBUG ("Calling do_return\n");
+		  exec = ([function(RequestID:array)] do_return) (id); // Might unwind.
+		  THIS_TAG_DEBUG ((exec ? "Exec array" : "Zero") +
+				  " returned from do_return\n");
+		}
 		if (ctx->new_runtime_tags)
 		  _handle_runtime_tags (ctx, parser);
 	      }
+
 	      if (exec) {
+		THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this, "Entering scope\n");
 		ENTER_SCOPE (ctx, this);
 		_exec_array (parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
 		exec = 0;
 	      }
 	    }
-	    else if (result == nil && !(flags & FLAG_EMPTY_ELEMENT))
+
+	    else if (result == nil && !(flags & FLAG_EMPTY_ELEMENT)) {
 	      if (result_type->_parser_prog == PNone) {
-		if (content_type->subtype_of (result_type))
+		if (content_type->encoding_type ?
+		    content_type->encoding_type != result_type->encoding_type :
+		    content_type != result_type) {
+		  THIS_TAG_DEBUG (sprintf ("Assigning content to result after "
+					   "converting from %s to %s\n",
+					   content_type->name, result_type->name));
+		  result = result_type->encode (content, content_type);
+		}
+		else {
+		  THIS_TAG_DEBUG ("Assigning content to result\n");
 		  result = content;
+		}
 	      }
 	      else
-		if (stringp (content_type)) {
+		if (stringp (content)) {
 		  eval_state = EVSTAT_ITER_DONE; // Only need to record this state here.
-		  if (!exec) exec = ({content});
+		  if (!exec) {
+		    THIS_TAG_DEBUG ("Parsing content with exec array "
+				    "for assignment to result\n");
+		    exec = ({content});
+		  }
 		  _exec_array (parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
 		  exec = 0;
 		}
+	    }
+	    else {
+#ifdef DEBUG
+	      if (!(flags & FLAG_EMPTY_ELEMENT))
+		THIS_TAG_DEBUG ("Skipping nil result\n");
+#endif
+	    }
+
+	    THIS_TAG_DEBUG_LEAVE_SCOPE (ctx, this, "Leaving scope\n");
 	    LEAVE_SCOPE (ctx, this);
 	}
 
@@ -2468,6 +2724,7 @@ class Frame
       ctx->frame_depth--;
 
       if (err) {
+	THIS_TAG_DEBUG_LEAVE_SCOPE (ctx, this, "Leaving scope\n");
 	LEAVE_SCOPE (ctx, this);
 	string action;
 	if (objectp (err) && ([object] err)->thrown_at_unwind) {
@@ -2492,12 +2749,16 @@ class Frame
 	      if (err == this) err = 0;
 	      if (orig_tag_set) ctx->tag_set = orig_tag_set, orig_tag_set = 0;
 	      action = "break";
+	      THIS_TAG_TOP_DEBUG ("Interrupted for streaming - "
+				  "breaking to parent frame\n");
 	    }
 	    else {
 	      // Can't stream since the parser isn't unwind safe. Just
 	      // continue.
 	      m_delete (ustate, "stream_piece");
 	      action = "continue";
+	      THIS_TAG_TOP_DEBUG ("Interrupted for streaming - "
+				  "continuing since parser isn't unwind safe\n");
 	    }
 	  else if (!zero_type (ustate->stream_piece)) {
 	    // Got a stream piece from a subframe. We handle it above;
@@ -2506,13 +2767,21 @@ class Frame
 	    m_delete (ustate, "stream_piece");
 	    action = "continue";
 	  }
-	  else action = "break";	// Some other reason - back up to the top.
+	  else {
+	    action = "break";	// Some other reason - back up to the top.
+	    THIS_TAG_TOP_DEBUG ("Interrupted\n");
+	  }
 
 	  ustate[this] = ({err, eval_state, iter, raw_content, subparser, piece,
-			   exec, orig_tag_set, ctx->new_runtime_tags});
+			   exec, orig_tag_set, ctx->new_runtime_tags,
+#ifdef DEBUG
+			   debug_iter,
+#endif
+			 });
 	  TRACE_LEAVE (action);
 	}
 	else {
+	  THIS_TAG_TOP_DEBUG ("Exception\n");
 	  TRACE_LEAVE ("exception");
 	  ctx->handle_exception (err, parser); // Will rethrow unknown errors.
 	  result = nil;
@@ -2535,8 +2804,10 @@ class Frame
 	    fatal_error ("Internal error: Don't you come here and %O on me!\n", action);
 	}
       }
-      else
+      else {
+	THIS_TAG_TOP_DEBUG ("Done\n");
 	TRACE_LEAVE ("");
+      }
     } while (0);		// Breaks go here.
 
     if (orig_tag_set) ctx->tag_set = orig_tag_set;
@@ -2620,6 +2891,15 @@ void throw_fatal (mixed err)
   throw (err);
 }
 
+local void tag_debug (string msg, mixed... args)
+//! Writes the message to the debug log if the innermost tag being
+//! executed has FLAG_DEBUG set.
+{
+  if (Frame f = get_context()->frame) // It's intentional that this assumes a context.
+    if (f->flags & FLAG_DEBUG)
+      werror (msg, @args);
+}
+
 Frame make_tag (string name, mapping(string:mixed) args, void|mixed content,
 		void|Tag overridden_by)
 //! Returns a frame for the specified tag, or 0 if no such tag exists.
@@ -2668,7 +2948,7 @@ class parse_frame /* (Type type, string to_parse) */
     content = to_parse;
   }
 
-  string _sprintf() {return sprintf ("parse_frame(%O)", content_type);}
+  string _sprintf() {return sprintf ("RXML.parse_frame(%O)", content_type);}
 }
 
 
@@ -2903,7 +3183,7 @@ class Parser
 
   string _sprintf()
   {
-    return sprintf ("RXML.Parser(%O,%O)%s", context, type, OBJ_COUNT);
+    return sprintf ("RXML.Parser(%O)%s", type, OBJ_COUNT);
   }
 }
 
@@ -2970,7 +3250,7 @@ class TagSetParser
 
   string _sprintf()
   {
-    return sprintf ("RXML.TagSetParser(%O,%O,%O)%s", context, type, tag_set, OBJ_COUNT);
+    return sprintf ("RXML.TagSetParser(%O,%O)%s", type, tag_set, OBJ_COUNT);
   }
 }
 
@@ -3400,7 +3680,7 @@ TText t_text = TText();
 static class TText
 {
   inherit Type;
-  constant name = "text/*";
+  constant name = "text/plain";
   constant sequential = 1;
   constant empty_value = "";
   constant free_text = 1;
