@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.83 2001/04/18 05:46:23 per Exp $";
+  "$Id: config_filesystem.pike,v 1.84 2001/04/18 06:34:49 per Exp $";
 
 constant path = "config_interface/";
 
@@ -373,10 +373,8 @@ mixed find_file( string f, RequestID id )
 
   if( type  == "text/html" )
   {
-    string data, title=id->not_query, pre;
-    sscanf( title, "%s/%*[^/].html", title );
-    if( strlen( title ) && title[-1] == '/' )    title = title[..sizeof(title)-2];
-    if( strlen( title ) && title[0] == '/' )     title = title[1..];
+    string data, title, pre;
+    title = " "+Roxen.http_decode_string((id->raw_url/"?")[0]);
 
     if( stringp( retval ) )
       data = retval;
