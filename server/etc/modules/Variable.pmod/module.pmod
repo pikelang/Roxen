@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.55 2001/06/18 06:00:58 nilsson Exp $
+// $Id: module.pmod,v 1.56 2001/06/19 21:30:31 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -797,8 +797,8 @@ class MultipleChoice
     return res + "</select>";
   }
   static void create( mixed default_value, array|mapping choices,
-                      int _flags, LocaleString std_name,
-		      LocaleString std_doc )
+                      void|int _flags, void|LocaleString std_name,
+		      void|LocaleString std_doc )
     //! Constructor. 
     //!
     //! Choices is the list of possible choices, can be set with 
@@ -889,8 +889,8 @@ class FontChoice
   {
     return roxenp()->fonts->available_fonts();
   }
-  static void create(mixed default_value,int flags,
-                     LocaleString std_name,LocaleString std_doc)
+  static void create(mixed default_value, void|int flags,
+                     void|LocaleString std_name, void|LocaleString std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 
