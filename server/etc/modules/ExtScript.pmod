@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.10 2000/12/02 19:26:10 per Exp $
+// $Id: ExtScript.pmod,v 1.11 2000/12/13 19:01:46 leif Exp $
 
 mapping scripthandlers = ([ ]);
 
@@ -12,15 +12,20 @@ static void diag(string x)
 }
 
 class Handler
-{
-  object      proc;
-  Stdio.File  pipe;
-  Stdio.File  pipe_other;
-  string  binpath;
-  mapping(string:mixed) settings;
-  int     runcount = 0;
-  int     timeout;
-  Thread.Mutex  mutex = Thread.Mutex();
+{ object     proc;
+  Stdio.File pipe;
+  Stdio.File pipe_other;
+  string     binpath;
+  mapping(string:mixed)
+             settings;
+  int        runcount = 0;
+  int        timeout;
+  RequestID  nb_id;
+  function   nb_when_done;
+  int        nb_status = 0, nb_returncode = 0;
+  string     nb_output = 0, nb_errmsg = 0, nb_headers = 0, nb_data;
+  Thread.Mutex mutex = Thread.Mutex();
+  Thread.MutexKey run_lock = 0;
 
   void terminate()
   {
@@ -28,12 +33,17 @@ class Handler
     if (proc && !proc->status() && pipe)
       // send 'exit' command to subprocess
       pipe->write("X");
+    proc = 0;
+    pipe = 0;
+    pipe_other = 0;
   }
 
   int busy()
   {
+    if (run_lock)
+      return 1;
     if (mutex)
-      return !mutex->trylock();
+      return !mutex->trylock(2);
     return 0;
   }
 
@@ -53,9 +63,99 @@ class Handler
     pipe->write(vval);
   }
 
-  array launch(string how, string arg, RequestID id)
+  array get_results()
+  { array result = 0;
+    if (run_lock && nb_status)
+    {
+      if (nb_errmsg)
+          result = ({ -1, nb_errmsg, 0 });
+      else if (nb_output)
+          result = ({ nb_returncode, nb_output, nb_headers });
+      else
+          result = ({ -1, "Script error", 0 });
+      nb_errmsg = 0;
+      nb_output = 0;
+    }
+    if (result)
+        run_lock = 0;
+    return result;
+  }
+
+  void finalize(void|RequestID id1)
   {
-    Thread.MutexKey lock = mutex ? mutex->lock() : 0;
+    if (run_lock)
+    { Thread.MutexKey tmplock = run_lock;
+      RequestID id = id1 ? id1 : nb_id; // nb_id can get reset before we're done.
+//      werror("ExtScript/finalize: %O %O\n", id, run_lock);
+      if (nb_when_done)
+        nb_when_done(id, get_results());
+      run_lock = 0;
+      nb_id    = 0;
+    }
+  }
+
+  static void read_callback(mixed fid, string data)
+  { if (!run_lock || !stringp(data) || strlen(data) < 1)
+      { return;}
+    if (nb_data != 0)
+      { data = nb_data + data; nb_data = 0;}
+    string ptype = data[0..0];
+//    werror("ExtScript/rcb0: %O %O\n", nb_id, run_lock);
+    if ( (< "+", "*", "?", "=" >) [ ptype ] )
+    { if (strlen(data) < 4)
+        { nb_data = data; return;}
+      int len = data[2]*256 + data[3];
+      if (strlen(data) < 4+len)
+        { nb_data = data; return;}
+      if (strlen(data) > 4+len)
+        { nb_data = data[4+len..];
+          data    = data[..3+len];
+        }
+    }
+    diag(sprintf("<%s:%d>", ptype, strlen(data)));
+    switch (ptype)
+    { case "X":
+        finalize();
+        return;
+      case "=":
+        array arr = data[4..] / "=";
+        if (arr[0] == "RETURNCODE")
+          if (sscanf(arr[1], "%d", nb_returncode) != 1)
+            nb_returncode = 200;
+        if (arr[0] == "HEADERS")
+            nb_headers = arr[1..] * "=";
+        if (arr[0] == "ADDHEADER")
+            nb_headers = (nb_headers || "") + arr[1]*"=" + "\n";
+        break;
+      case "+":
+        nb_output = (nb_output || "") + data[4..];
+        break;
+      case "*":
+//        werror("ExtScript/rcb*: %O %O\n", nb_id, run_lock);
+        nb_output = (nb_output || "") + data[4..];
+        nb_status = 1;
+        finalize(nb_id);
+        break;
+      case "?":
+        nb_errmsg = "ERROR: " + data[4..];
+        nb_status = 2;
+        finalize();
+        break;
+
+      /* more cases here to support "script callbacks" */
+
+      default:
+        werror(sprintf("ExtScript: bad command code 0x%02X from subprocess\n",
+                        data[0]));
+        break;
+    }
+  }
+
+  array launch(string mode, string arg, RequestID id,
+               void|int|function nonblock)
+  {
+    Thread.MutexKey lock = mutex ? mutex->lock(1) : 0;
+
     timeout = time(0) + 190;
 
     if (!proc || proc->status() != 0)
@@ -86,7 +186,7 @@ class Handler
 	return ({ -1, "external process didn't respond"
 		  + sprintf("(Got: %O)", res) });
       diag("(NewSubprocess)");
-      if (how == "run")
+      if (mode == "run")
         putvar("L", "cd", dirname(arg));
       if (mappingp(settings))
         foreach( ({ "libdir", "cd" }), string s)
@@ -100,6 +200,7 @@ class Handler
 
       diag("{");
       // Reset script variables.
+      pipe->set_blocking();
       pipe->write("R");
 
       // Environment variables.
@@ -184,13 +285,26 @@ class Handler
       {
 	pipe = 0; proc = 0; diag("@");
         lock = 0;
-        return launch(how, arg, id);
+        diag("ExtScript/restart\n");
+        return launch(mode, arg, id, nonblock);
       }
 
       // start operation
       diag("$");
-      pipe->write("%c%3c%s", (how == "eval" ? 'C' : 'S'), strlen(arg), arg);
+      pipe->write("%c%3c%s", (mode == "eval" ? 'C' : 'S'), strlen(arg), arg);
       string output = "";
+
+      nb_output = nb_errmsg = nb_returncode = nb_headers = 0;
+      nb_data = 0; nb_status = 0; nb_when_done = 0; nb_id = id ? id : nb_id;
+      if (nonblock)
+      { if (functionp(nonblock))
+            nb_when_done = nonblock;
+//        werror("ExtScript/launch/nonblock: %O\n", nb_id);
+        if (!catch ( pipe->set_nonblocking(read_callback, 0, finalize) ) )
+        { run_lock = lock;
+          return ({ });
+        }
+      }
 
       while (sizeof(res = pipe->read(1)) > 0)
       {
@@ -243,7 +357,7 @@ class Handler
 	return ({ -1, "SCRIPT I/O ERROR (2)" });
 
       if (++runcount > 5000)
-	proc = 0, pipe = 0;
+	proc = 0, pipe = 0, runcount = 0;
 
       diag("}");
 
@@ -253,14 +367,12 @@ class Handler
     else return ({ -1, "[Internal error?]" });
   }
 
-  array run(string path, RequestID id)
-  {
-    return launch("run", path, id);
+  array run(string path, RequestID id, void|int|function nonblock)
+  { return launch("run", path, id, nonblock);
   }
 
-  array eval(string expr, RequestID id)
-  {
-    return launch("eval", expr, id);
+  array eval(string expr, RequestID id, void|int|function nonblock)
+  { return launch("eval", expr, id, nonblock);
   }
 
   void create(string helper_program_path, void|mapping settings0)
@@ -278,19 +390,20 @@ static int lastobjdiag = 0;
 
 static void objdiag()
 {
-  if (lastobjdiag > time(0)-25)
-    return;
-  lastobjdiag = time(0);
-  diag("Subprocess status:\n");
-  foreach(indices(scripthandlers), string binpath)
+  if (lastobjdiag < time(0)-25)
   {
-    mapping m = scripthandlers[binpath];
-    string line = "  " + binpath;
-    int     n = 0;
-    foreach(m->handlers, Handler h)
-      if (h)
-        line += "  H" + (++n) + "=" + h->procstat();
-    diag(line + "\n");
+    lastobjdiag = time(0);
+    diag("Subprocess status:\n");
+    foreach(indices(scripthandlers), string binpath)
+    {
+      mapping m = scripthandlers[binpath];
+      string line = "  " + binpath;
+      int     n = 0;
+      foreach(m->handlers, Handler h)
+  	if (h)
+  	  line += "  H" + (++n) + "=" + h->procstat();
+      diag(line + "\n");
+    }
   }
 }
 
@@ -307,7 +420,7 @@ void periodic_cleanup()
       mapping m = scripthandlers[binpath];
       if (m->expire < now)
       {
-        Thread.MutexKey lock = m->mutex->lock();
+        object lock = m->mutex->lock();
   	diag("(Z)");
   	if (m->handlers[0])
   	{ if (m->handlers[0]->probe())
@@ -334,7 +447,7 @@ Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
 {
   mapping m;
   Handler  h;
-  Thread.MutexKey  lock;
+  Thread.MutexKey lock;
   int     i;
 
   if (!intp(multi) || multi < 1) multi = 1;
