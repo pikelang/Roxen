@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.3 2001/07/30 16:10:22 tomas Exp $
+// $Id: roxen.cpp,v 1.4 2001/08/09 16:23:47 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -219,16 +219,20 @@ int stracat(char *out, char **arr)
 
 BOOL CRoxen::CreatePikeCmd(char *cmd, std::string pikeloc, CCmdLine &cmdline, char *key)
 {
-  char *p;
+  char *p = cmd;
+
+  // insert debugger name
+  if (cmdline.IsMsdev())
+    p += sprintf(p, "msdev ");
 
   // Copy path to pike
   if (pikeloc[0] == '"')
   {
-    strcpy(cmd, pikeloc.c_str());
-    p = cmd + pikeloc.length();
+    strcpy(p, pikeloc.c_str());
+    p += pikeloc.length();
   }
   else
-    p = cmd + sprintf(cmd, "\"%s\"", pikeloc.c_str());
+    p += sprintf(p, "\"%s\"", pikeloc.c_str());
 
   // Insert pike defines
   p += stracat(p, cmdline.GetPikeDefines().GetList());

@@ -92,6 +92,10 @@ SOURCE=.\cmdline.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\enumproc.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\roxen.cpp
 # End Source File
 # Begin Source File
@@ -101,9 +105,7 @@ SOURCE=.\startdll.cpp
 # Begin Source File
 
 SOURCE=.\startdll.idl
-
 # ADD MTL /tlb ".\startdll.tlb" /h "startdll.h" /iid "startdll_i.c" /Oicf
-
 # End Source File
 # Begin Source File
 
@@ -120,6 +122,10 @@ SOURCE=.\StdAfx.cpp
 # Begin Source File
 
 SOURCE=.\cmdline.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\enumproc.h
 # End Source File
 # Begin Source File
 

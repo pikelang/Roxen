@@ -1,12 +1,13 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.5 2001/08/06 14:18:44 tomas Exp $
+// $Id: cmdline.cpp,v 1.6 2001/08/09 16:23:45 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "startdll.h"
 #include "cmdline.h"
+#include "enumproc.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -208,17 +209,19 @@ BOOL CArgList::Remove(char *item)
 
 CCmdLine::CCmdLine()
 {
-  m_bPreloaded = FALSE;
+  m_bPreloaded  = FALSE;
 
-  m_bInstall  = FALSE;
-  m_bRemove   = FALSE;
-  m_bOnce     = FALSE;
-  m_bHelp     = FALSE;
-  m_bVersion  = FALSE;
-  m_bPassHelp = FALSE;
+  m_bInstall    = FALSE;
+  m_bRemove     = FALSE;
+  m_bOnce       = FALSE;
+  m_bHelp       = FALSE;
+  m_bVersion    = FALSE;
+  m_bPassHelp   = FALSE;
+  m_bKeepMysql  = FALSE;
+  m_bMsdev      = FALSE;
 
-  m_iVerbose  = 1;
-  m_iDebug    = 0;
+  m_iVerbose    = 1;
+  m_iDebug      = -1;
 
 }
 
@@ -400,21 +403,37 @@ void CCmdLine::PrintHelp()
     "",
     "      .B--onceB.:                     Run the server only once, in the foreground.",
     "                                  This is very useful when debugging.",
+    "                                  Implies --module-debug.",
     "",
+/*
+    "      .B--keep-mysqlB.:               Don't shut down MySQL process when exiting",
+    "                                  the start script. Useful during development",
+    "                                  or any other scenario where the start script",
+    "                                  is frequently terminated.",
+    "",
+*/
 /*
     "      .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..",
     "",
 */
+/*
+    "      .B--msdevB.:                    Run the server in Microsoft Developer Studio.",
+    "                                  Implies .B--onceB..",
+*/
+    "",
     "      .B--programB.:                  Start a different program with the roxen",
     "                                  Pike.",
     "",
     "      .B--with-debugB.:               Enable debug",
     "",
-    "      .B--without-debugB.:            Disable all debug",
+    "      .B--without-debugB.:            Disable all debug. This is the default.",
     "",
-    "      .B--with-fd-debugB.:            Enable FD debug.",
+    "      .B--module-debugB.:             Enable more internal debug checks to",
+    "                                  simplify debugging of Roxen modules.",
     "",
-    "      .B--with-dump-debugB.:          Enable dump debug.",
+    "      .B--fd-debugB.:                 Enable FD debug.",
+    "",
+    "      .B--dump-debugB.:               Enable dump debug.",
     "",
 /*
     "      .B--trussB.:                    (Solaris only). Run the server under",
@@ -879,6 +898,17 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     return 1;
   }
 
+  //'--module-debug')
+  //  debug=0
+  if (Match(*argv, "--module-debug", NULL, NULL) ||
+    Match(*argv, "--with-module-debug", NULL, NULL) ||
+    Match(*argv, "--enable-module-debug", NULL, NULL) )
+  {
+    m_iDebug = 0;
+    type = eArgDebug;
+    return 1;
+  }
+
   //'--fd-debug'|'--with-fd-debug'|'--enable-fd-debug')
   //  DEFINES="-DFD_DEBUG $DEFINES"
   if (Match(*argv, "--fd-debug", NULL, NULL) ||
@@ -1000,6 +1030,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
   if (Match(*argv, "--once", NULL, NULL) )
   {
     m_bOnce = TRUE;
+    m_iDebug = max(m_iDebug, 0);
     type = eArgStart;
     return 1;
   }
@@ -1013,9 +1044,32 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
       Match(*argv, "--onev", NULL, NULL) )
   {
     m_bOnce = TRUE;
+    m_iDebug = max(m_iDebug, 0);
     type = eArgStart;
     return 1;
   }
+
+  //'--keep-mysql')
+  //  keep_mysql=1
+  if (Match(*argv, "--keep-mysql", NULL, NULL) )
+  {
+    m_bKeepMysql = TRUE;
+    type = eArgStart;
+    return 1;
+  }
+
+  //'--gdb')
+  //  gdb=gdb
+  //  once=1
+/*
+  if (Match(*argv, "--msdev", NULL, NULL) )
+  {
+    m_bOnce = TRUE;
+    m_bMsdev = TRUE;
+    type = eArgStart;
+    return 1;
+  }
+*/
 
   //'--program')
   //  program="$2"
@@ -1046,7 +1100,8 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     return 2;
   }
 
-  //--debug-without=*|-r*|-d*|-t*|-l*|-w*|-a*)
+  //--debug-without=*|-r*|-d*|-t*|-l*|-w*|-a*|-p*|--*-debug*)
+  // TODO: --*-debug*
   //  # Argument passed along to Pike.
   //  ARGS="$ARGS $1"
   if (Match(*argv, "--debug-without=*", NULL, NULL) ||
@@ -1055,6 +1110,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
       Match(*argv, "-t*", NULL, NULL) ||
       Match(*argv, "-l*", NULL, NULL) ||
       Match(*argv, "-w*", NULL, NULL) ||
+      Match(*argv, "-p*", NULL, NULL) ||
       Match(*argv, "-a*", NULL, NULL) )
   {
     m_saPikeArgs.Add(*argv);
@@ -1169,7 +1225,11 @@ BOOL CCmdLine::Parse(char * cmdline)
 
   SplitCmdline((_TSCHAR *)cmdline, (_TSCHAR **)p, p + numargs * sizeof(char *), &numargs, &numchars);
 
-  return Parse(numargs-1, (char **)p);
+  int ret = Parse(numargs-1, (char **)p);
+
+  delete p;
+
+  return ret;
 }
 
 
@@ -1250,6 +1310,9 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
       break;
 
     case eArgSelfTest:
+      // Make sure that mysql is not running
+      KillMySql();
+
       //DEFINES="-DRUN_SELF_TEST $DEFINES"
       //rm -rf $VARDIR/test_config*
       //cp -R etc/test/config $VARDIR/test_config
@@ -1258,9 +1321,10 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
       //once=1
       //remove_dumped=1
       m_saPikeArgs.Add("-DRUN_SELF_TEST");
-      system("rmdir /Q /S ..\\var\\test_config");
-      system("xcopy etc\\test\\config ..\\var\\test_config\\ /E /Q /Y >NUL:");
-      system("copy /Y etc\\test\\filesystem\\test_rxml_package rxml_packages\\test_rxml_package >NUL:");
+      SetEnvironmentVariable("COPYCMD", "/Y");
+      system("rmdir /Q /S ..\\var\\test_config >NUL:");
+      system("xcopy etc\\test\\config ..\\var\\test_config\\ /E /Q >NUL:");
+      system("copy etc\\test\\filesystem\\test_rxml_package rxml_packages\\test_rxml_package >NUL:");
 
       m_bOnce = TRUE;
       m_saRoxenArgs.Add("--config-dir=../var/test_config");

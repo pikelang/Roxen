@@ -1,6 +1,7 @@
 [attr]binary -text -crlf -diff -ident
 * text ident
 *.DSW eol=crlf
+/server/tools/ntroxen/startdll/enumproc.c eol=crlf
 *.cif binary
 *.cpp eol=crlf
 /server/tools/roxenstarter/roxenstarter.cpp -text -crlf
@@ -11,6 +12,7 @@
 /server/tools/ntroxen/ntstart/resource.h eol=crlf
 /server/tools/ntroxen/startdll/StdAfx.h eol=crlf
 /server/tools/ntroxen/startdll/cmdline.h eol=crlf
+/server/tools/ntroxen/startdll/enumproc.h eol=crlf
 /server/tools/ntroxen/startdll/resource.h eol=crlf
 /server/tools/ntroxen/startdll/roxen.h eol=crlf
 /server/tools/ntroxen/version.h eol=crlf

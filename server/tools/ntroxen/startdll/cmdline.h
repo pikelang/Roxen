@@ -1,6 +1,6 @@
 // cmdline.h: interface for the CCmdLine class.
 //
-// $Id: cmdline.h,v 1.4 2001/08/06 14:18:45 tomas Exp $
+// $Id: cmdline.h,v 1.5 2001/08/09 16:23:46 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -76,15 +76,17 @@ public:
 
   void PrintHelp();
 
-  BOOL IsInstall()  { return m_bInstall; }
-  BOOL IsRegister() { return m_bRegister; }
-  BOOL IsRemove()   { return m_bRemove; }
-  BOOL IsOnce()     { return m_bOnce; }
-  BOOL IsHelp()     { return m_bHelp; }
-  BOOL IsVersion()  { return m_bVersion; }
+  BOOL IsInstall()    { return m_bInstall; }
+  BOOL IsRegister()   { return m_bRegister; }
+  BOOL IsRemove()     { return m_bRemove; }
+  BOOL IsOnce()       { return m_bOnce; }
+  BOOL IsHelp()       { return m_bHelp; }
+  BOOL IsVersion()    { return m_bVersion; }
+  BOOL IsKeepMysql()  { return m_bKeepMysql; }
+  BOOL IsMsdev()      { return m_bMsdev; }
 
-  int GetVerbose()  { return m_iVerbose; }
-  int GetDebug()    { return m_iDebug; }
+  int GetVerbose()    { return m_iVerbose; }
+  int GetDebug()      { return m_iDebug; }
 
   CArgList & GetNtstartArgs() { return m_saNtstartArgs; }
   CArgList & GetPikeArgs()    { return m_saPikeArgs; }
@@ -117,6 +119,8 @@ private:
   BOOL m_bHelp;
   BOOL m_bVersion;
   BOOL m_bPassHelp;
+  BOOL m_bKeepMysql;
+  BOOL m_bMsdev;
 
   int  m_iVerbose;
   int  m_iDebug;
