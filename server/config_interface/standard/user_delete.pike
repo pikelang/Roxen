@@ -1,11 +1,9 @@
-inherit "roxenlib";
-
-mixed parse( object id )
+mixed parse( RequestID id )
 {
   string res="";
   mapping v = id->variables;
   if(! id->misc->config_user->auth( "Edit Users" ) )
-    return "No such luck (permission denied)";
+    return "&var.no_perm_txt;";
 
   while( id->misc->orig ) id = id->misc->orig;
 
@@ -18,13 +16,16 @@ mixed parse( object id )
   {
     object u = id->misc->get_config_user( uid );
     if( u == id->misc->config_user )
-       res += ("<gbutton font='&usr.gbutton-font;' dim='1' width='300' preparse='1'>&locale.delete; "
-               +u->real_name+" ("+uid+")</gbutton><br />");
+       res += ("<gbutton font='&usr.gbutton-font;' "
+	       "dim='1' width='300' preparse='1'> &var.delete_txt; "
+               + u->real_name+" ("+uid+")</gbutton><br />");
     else
-       res += ("<dbutton gbutton-width='300' gbutton-font='&usr.gbutton-font;' gbutton-preparse='1' "
-               "gbutton_title='&locale.delete; "
-               +u->real_name+" ("+uid+")'/>"
-               " <insert file='user_delete.pike?delete_user="+html_encode_string(uid)+"'/></dbutton><br />");
+       res += ("<dbutton gbutton-width='300' "
+	       "gbutton-font='&usr.gbutton-font;' gbutton-preparse='1' "
+               "gbutton_title=' &var.delete_txt; "
+               + u->real_name + " ("+uid+")'/>"
+               " <insert file='user_delete.pike?delete_user="+
+	       Roxen.html_encode_string(uid)+"'/></dbutton><br />");
   }
   return res;
 }

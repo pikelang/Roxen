@@ -3,39 +3,50 @@
 <content>
 <cv-startpage>
 <awizard>
+
 <page name="top"><cf-perm perm="Edit Users">
+  <insert file=user_create.pike nocache=""/>
+  <translate id="dA" variable="var.create_txt">Create new user</translate>
+  <translate id="dB" variable="var.delete_txt">Delete old user</translate>
   <table border="0" cellpadding="5" cellspacing="0"><tr><td>
-  <button gbutton_title=" &locale.create_user; "
+  <button gbutton_title=" &var.create_txt; "
           gbutton-icon_src="/internal-roxen-next"  gbutton-preparse="1"
           gbutton-font="&usr.gbutton-font;"
           gbutton-width="200"
           gbutton-align_icon="right" page="create_user"/>
   <br />
-  <button gbutton_title=" &locale.delete_user; "
+  <button gbutton_title=" &var.delete_txt; "
           gbutton-width="200"
           gbutton-font="&usr.gbutton-font;"
           gbutton-icon_src="/internal-roxen-next" gbutton-preparse="1"
           gbutton-align_icon="right" page="delete_user"/>
   </td></tr></table>
+  <insert file=user_form.pike nocache=""/>
 </cf-perm>
-
-<insert file=user_form.pike nocache=""/>
 </page>
 
 <page name="create_user"><cf-perm perm="Edit Users">
-<table><tr><td>User ID:</td><td><input name="user_name" /></td>
-<td><dbutton page="top" gbutton-font="&usr.gbutton-font;" gbutton_title=" Create User "/></td></tr></table>
-<insert file=user_create.pike nocache=""/>
-</dbutton>
-</table>
-</cf-perm></page>
+  <translate id="dC" variable="var.create_txt">Create User</translate>
+  <translate id="dD" variable="var.id_txt">User ID</translate>
+  <table><tr><td>&var.id_txt;:</td><td><input name="create_user_name" /></td>
+  <td><dbutton page="top" gbutton-font="&usr.gbutton-font;" 
+       gbutton_title=" &var.create_txt; "/></td></tr></table>
+  </dbutton>
+  </table>
+</cf-perm>
+</page>
 
 <page name="delete_user"><cf-perm perm="Edit Users">
-<insert file=user_delete.pike nocache=""/>
-<p>
- <button gbutton-font="&usr.gbutton-font;" gbutton_title=" &locale.cancel; " page="top" gbutton-preparse="1"/>
-</p>
-</cf-perm></page>
+  <translate id="bC" variable="var.cancel_txt">Cancel</translate>
+  <translate id="dE" variable="var.delete_txt">Delete</translate>
+  <translate id="dy" variable="var.no_perm_txt">No such luck (permission denied)</translate>
+  <insert file=user_delete.pike nocache=""/>
+  <p>
+  <button gbutton-font="&usr.gbutton-font;" 
+   gbutton_title=" &var.cancel_txt; " page="top" gbutton-preparse="1"/>
+  </p>
+</cf-perm>
+</page>
 
 </awizard>
 </cv-startpage>

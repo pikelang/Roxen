@@ -1,7 +1,8 @@
-string parse( object id )
+string parse( RequestID id )
 {
-  if( !strlen(id->variables->user_name) )
-    return "<error>Too short user name</error>";
-  id->misc->create_new_config_user(   id->variables->user_name );
+  if( !id->variables->create_user_name ||
+      !strlen( id->variables->create_user_name ) )
+    return "";
+  id->misc->create_new_config_user( id->variables->create_user_name );
   return "";
 }

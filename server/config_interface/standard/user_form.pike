@@ -1,6 +1,8 @@
-inherit "roxenlib";
-
 #include <config_interface.h>
+#include <roxen.h>
+//<locale-token project="config_interface"> LOCALE </locale-token>
+#define LOCALE(X,Y)  _STR_LOCALE("config_interface",X,Y)
+
 mapping parse( RequestID id )
 {
   string res="";
@@ -11,7 +13,9 @@ mapping parse( RequestID id )
     nid = nid->misc->orig;
 
   if( !nid->misc->config_user->auth( "Edit Users" ) )
-    return http_string_answer("No such luck (permission denied)", "text/html");
+    return Roxen.http_string_answer(LOCALE("dy", 
+					   "No such luck (permission denied)"),
+				    "text/html");
 
   foreach( sort( nid->misc->list_config_users() ), string uid )
   {
@@ -27,5 +31,5 @@ mapping parse( RequestID id )
     id = id->misc->orig;
   } while( id );
 
-  return http_string_answer(res, "text/html");
+  return Roxen.http_string_answer(res, "text/html");
 }
