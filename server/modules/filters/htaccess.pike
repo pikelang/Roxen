@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.44 1998/08/05 08:00:56 neotron Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.45 1998/08/10 21:52:11 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -214,31 +214,16 @@ mapping|int parse_htaccess(object f, object id, string rht)
 }
 
 /* The host/ip verifier */
-int allowed(multiset allow, string ip, int def, object id)
+int allowed(multiset allow, string hname, string ip, int def)
 {
   string s;
   int ok, i, a;
   array tmp1, tmp2;
   if(!allow || !sizeof(allow))
     return 0;
-  string hname = id->misc->hname;
   foreach(indices(allow), s)
   {
-    if(!hname && s != "all" && s != ip) {
-      // Ok, ok, we'll do the host name lookup here..
-      if(!id->misc->hname)
-      {
-	if(!((hname=roxen->quick_ip_to_host(ip)) && 
-	     hname != ip))
-	  hname = roxen->blocking_ip_to_host(ip);
-      }
-      if(!hname) {
-	hname =  id->remoteaddr;
-      } else {
-	id->misc->hname = hname;
-      }
-    }
-    if(s == "all" || s == ip || s == id->misc->hname)
+    if(s == "all" || s==ip || s == hname)
     {
       ok = 1;
 #ifdef HTACCESS_DEBUG
@@ -531,7 +516,6 @@ mapping|string|int htaccess(mapping access, object id)
       return http_redirect(to,id);
     }
   }
-
   aname      = access->authname || "authorization";
   userfile   = access->authuserfile;
   groupfile  = access->authgroupfile;
@@ -564,6 +548,7 @@ mapping|string|int htaccess(mapping access, object id)
 	method = "get";
 	break;
       }
+
     case "get":
       if (access->head) {
 	method = "head";
@@ -576,9 +561,12 @@ mapping|string|int htaccess(mapping access, object id)
     case "mv":
     case "chmod":
     case "mkdir":
-    case "put":
     case "delete":
     default:
+      if (access->put) {
+	method = "put";
+	break;
+      }
       TRACE_LEAVE("Unknown method or PUT or DELETE");
       TRACE_LEAVE("Assumed denied");
       return 1;
@@ -589,20 +577,49 @@ mapping|string|int htaccess(mapping access, object id)
   
   if(!access[method]->allow && !access[method]->deny)
     hok = 1;
-  else {
+  else 
+  {
     if(access[method]->order == 1) {
-      if(allowed(access[method]->allow, id->remoteaddr, 0, id))
+      if(allowed(access[method]->allow, id->remoteaddr, id->remoteaddr, 0))
 	hok = 1;
-      if(allowed(access[method]->deny, id->remoteaddr, 1, id))
+      if(allowed(access[method]->deny, id->remoteaddr, id->remoteaddr, 1))
 	hok = 0;
     } else if(access[method]->order == 0) {
-      if(allowed(access[method]->deny, id->remoteaddr, 1, id))
+      if(allowed(access[method]->deny, id->remoteaddr, id->remoteaddr, 1))
 	hok = 0;
-      if(allowed(access[method]->allow, id->remoteaddr, 0, id))
+      if(allowed(access[method]->allow, id->remoteaddr, id->remoteaddr, 0))
 	hok = 1;
     } else 
-      hok = (allowed(access[method]->allow, id->remoteaddr, 0, id) && 
-	     allowed(access[method]->deny, id->remoteaddr, 1, id));
+      hok = (allowed(access[method]->allow, id->remoteaddr,
+		     id->remoteaddr, 0) && 
+	     allowed(access[method]->deny, id->remoteaddr, 
+		     id->remoteaddr, 1));
+
+    if(!hok)
+    {
+      if(id->remoteaddr)
+      {
+	if(!((hname=roxen->quick_ip_to_host(id->remoteaddr)) && 
+	     hname != id->remoteaddr))
+	  hname = roxen->blocking_ip_to_host(id->remoteaddr);
+      }
+    
+      if(!hname)
+	hname = id->remoteaddr;
+      if(access[method]->order == 1) {
+	if(allowed(access[method]->allow, hname, id->remoteaddr, 0))
+	  hok = 1;
+	if(allowed(access[method]->deny, hname, id->remoteaddr, 1))
+	  hok = 0;
+      } else if(access[method]->order == 0) {
+	if(allowed(access[method]->deny, hname, id->remoteaddr, 1))
+	  hok = 0;
+	if(allowed(access[method]->allow, hname, id->remoteaddr, 0))
+	  hok = 1;
+      } else 
+	hok = (allowed(access[method]->allow, hname, id->remoteaddr, 0) && 
+	       allowed(access[method]->deny, hname, id->remoteaddr, 1));
+    }
   }
   if(!hok && access[method]->all == 1)
   {
@@ -617,7 +634,7 @@ mapping|string|int htaccess(mapping access, object id)
     return 0;
   }
 #ifdef HTACCESS_DEBUG
-  werror("HTACCESS: Host based access verified and granted.\n");
+  if(hok) werror("HTACCESS: Host based access verified and granted.\n");
 #endif
 
   if(access[method]->user || access[method]["valid-user"] 
@@ -786,7 +803,7 @@ mapping htaccess_no_file(object id)
 
   access = parse_htaccess(tmp[1], id, tmp[0]);
 
-  if(access && access->nofile)
+  if(access && (access->nofile || (access->nofile=access->errorfile)))
   {
     array st;
 
@@ -821,7 +838,7 @@ mapping try_htaccess(object id)
     TRACE_LEAVE("No htaccess file.");
     return 0;
   }
-
+  NOCACHE(); // Since there is a htaccess file we cannot cache at all.
   access = parse_htaccess(tmp[1], id, tmp[0]);
 
   if(access)
