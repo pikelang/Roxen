@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.138 2004/05/13 12:33:34 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.139 2004/05/13 16:04:47 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -372,6 +372,24 @@ array(string) list_lock_files() {
   return query("nobrowse");
 }
 
+static mapping(string:mixed)|int(0..1) write_access(string path,
+						    int(0..1) recursive,
+						    RequestID id)
+{
+  SIMPLE_TRACE_ENTER(this, "write_access(%O, %O, %O)\n", path, recursive, id);
+  if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
+    SIMPLE_TRACE_LEAVE("%s: Authentication required.", id->method);
+    // FIXME: Sane realm.
+    // FIXME: Recursion and htaccess?
+    return
+      Roxen.http_auth_required("foo",
+			       sprintf("<h1>Permission to '%s' denied</h1>",
+				       id->method));
+  }
+  TRACE_LEAVE("Fall back to the default write access checks.");
+  return ::write_access(path, recursive, id);
+}
+
 array find_dir( string f, RequestID id )
 {
   array dir;
@@ -635,14 +653,6 @@ mapping make_collection(string coll, RequestID id)
     return 0;
   }
 
-  if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
-    TRACE_LEAVE(sprintf("%s: Permission denied", id->method));
-    // FIXME: Sane realm.
-    return Roxen.http_auth_required("foo",
-				    sprintf("<h1>Permission to '%s' denied</h1>",
-					    id->method));
-  }
-
   // Disallow if the name is locked, or if the parent directory is locked.
   mapping(string:mixed) ret = write_access(coll, 0, id) ||
     write_access(combine_path(coll, ".."), 0, id);
@@ -866,13 +876,11 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
-      TRACE_LEAVE(sprintf("%s: Permission denied", id->method));
-      // FIXME: Sane realm.
-      return Roxen.http_auth_required("foo",
-				sprintf("<h1>Permission to '%s' denied</h1>",
-					id->method));
+    if (mapping(string:mixed) ret = write_access(oldf, 0, id)) {
+      TRACE_LEAVE("MKCOL: Write access denied.");
+      return ret;
     }
+
     mkdirs++;
     SETUID_TRACE("Creating directory/collection", 0);
 
@@ -935,13 +943,6 @@ mixed find_file( string f, RequestID id )
       id->misc->error_code = 405;
       TRACE_LEAVE("PUT of internal file is disallowed");
       return 0;
-    }
-
-    if(query("check_auth") &&  (!id->conf->authenticate( id ) ) ) {
-      TRACE_LEAVE("PUT: Permission denied");
-      // FIXME: Sane realm.
-      return Roxen.http_auth_required("foo",
-				"<h1>Permission to 'PUT' files denied</h1>");
     }
 
     if (mapping(string:mixed) ret = write_access(oldf, 0, id)) {
@@ -1058,13 +1059,6 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(query("check_auth") &&  (!id->conf->authenticate( id ) ) )  {
-      TRACE_LEAVE("CHMOD: Permission denied");
-      // FIXME: Sane realm.
-      return Roxen.http_auth_required("foo",
-				"<h1>Permission to 'CHMOD' files denied</h1>");
-    }
-
     if (mapping(string:mixed) ret = write_access(oldf, 0, id)) {
       TRACE_LEAVE("CHMOD: Locked");
       return ret;
@@ -1126,12 +1120,6 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
-      TRACE_LEAVE("MV: Permission denied");
-      // FIXME: Sane realm.
-      return Roxen.http_auth_required("foo",
-				"<h1>Permission to 'MV' files denied</h1>");
-    }
     string movefrom;
     if(!id->misc->move_from ||
        !has_prefix(id->misc->move_from, mountpoint) ||
@@ -1208,13 +1196,6 @@ mixed find_file( string f, RequestID id )
       id->misc->error_code = 404;
       TRACE_LEAVE("MOVE failed (no such file)");
       return 0;
-    }
-
-    if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
-      TRACE_LEAVE("MOVE: Permission denied");
-      // FIXME: Sane realm.
-      return Roxen.http_auth_required("foo",
-                                "<h1>Permission to 'MOVE' files denied</h1>");
     }
 
     string new_uri = id->misc["new-uri"] || "";
@@ -1341,11 +1322,6 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if(query("check_auth") && (!id->conf->authenticate( id ) ) )  {
-      TRACE_LEAVE("DELETE: Permission denied");
-      return Roxen.http_status(403, "Permission to DELETE file denied");
-    }
-
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       errors++;
       report_error(LOCALE(48,"Deletion of %s failed. Permission denied.\n"),f);
@@ -1460,14 +1436,6 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
   if (!query("put")) {
     TRACE_LEAVE("COPY: Put not allowed.");
     return Roxen.http_status(405, "Not allowed.");
-  }
-  if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
-    TRACE_LEAVE("COPY: Authentication required.");
-    return
-      // FIXME: Sane realm.
-      Roxen.http_auth_required("foo",
-			       sprintf("<h1>Permission to 'COPY' denied</h1>",
-				       id->method));
   }
   mapping|int(0..1) res = write_access(combine_path(dest, "../"), 0, id);
   if (mappingp(res)) return res;
