@@ -95,7 +95,7 @@ string|array tag_redirect(string tag, mapping m, RequestID id)
 array tag_refferrer(string tag, mapping m, RequestID id)
 {
   if(tag=="refferrer") old_rxml_warning(id, "refferrer tag","referrer tag");
-  return ({1, "referrer"});
+  return ({1, "referrer", 0});
 }
 
 array tag_set(string tag, mapping m, RequestID id)
@@ -111,7 +111,7 @@ array tag_set(string tag, mapping m, RequestID id)
 array tag_pr(string tag, mapping m, RequestID id)
 {
   if(tag=="pr") old_rxml_warning(id,"pr tag","roxen tag");
-  return ({1, "roxen"});
+  return ({1, "roxen", 0});
 }
 
 array(string) tag_date(string q, mapping m, RequestID id)
@@ -217,7 +217,7 @@ string|array container_apre(string tag, mapping m, string q, RequestID id)
     href=strip_prestate(fix_relative(href, id));
     m_delete(m, "href");
   }
-  
+
   if(!strlen(href))
     href="";
 
@@ -249,7 +249,7 @@ string|array container_aconf(string tag, mapping m, string q, RequestID id)
 
   if(!m->href)
     href=strip_prestate(strip_config(id->raw_url));
-  else 
+  else
   {
     href=m->href;
     if (search(href, ":") == search(href, "//")-1)
@@ -284,9 +284,9 @@ array container_autoformat(string tag, mapping m, string c, RequestID id)
 {
   if(!m->pre) return ({1});
   old_rxml_warning(id, "pre attribute in autoformat tag","p attribute");
-  m+=(["p":1]);
+  m->p=1;
   m_delete(m, "pre");
-  return ({1, tag, m});
+  return ({1, tag, m, c});
 }
 
 array container_default(string tag, mapping m, string c, RequestID id)
@@ -295,7 +295,7 @@ array container_default(string tag, mapping m, string c, RequestID id)
   old_rxml_warning(id, "multiseparator attribute in default tag","separator attribute");
   m+=(["separator":m->multi_separator]);
   m_delete(m, "multi_separator");
-  return ({1, tag, m});
+  return ({1, tag, m, c});
 }
 
 array container_recursive_output(string tag, mapping m, string c, RequestID id)
@@ -320,11 +320,11 @@ string container_source(string tag, mapping m, string s, RequestID id)
 
 array tag_countdown(string tag, mapping m, string c, RequestID id)
 {
-  foreach( ({ 
+  foreach( ({
     ({"min","minute"}),
     ({"sec","second"}),
     ({"age","since"}) }), array tmp)
-    { if(m[tmp[0]]) { 
+    { if(m[tmp[0]]) {
       m[tmp[1]]=m[tmp[0]];
       m_delete(m, tmp[0]);
       old_rxml_warning(id, "countdown attribute "+tmp[0],tmp[1]);
@@ -360,7 +360,7 @@ array tag_countdown(string tag, mapping m, string c, RequestID id)
     }
   }
 
-  return ({1, tag, m});
+  return ({1, tag, m, c});
 }
 
 array container_tablify(string tag, mapping m, string q, RequestID id)
@@ -406,7 +406,7 @@ array tag_echo(string t, mapping m, RequestID id) {
 }
 
 array container_gtext(string t, mapping|int m, string c, RequestID id) {
-  return ({1, t, gtext_compat(m,id)});
+  return ({1, t, gtext_compat(m,id), c});
 }
 
 array tag_gtext_id(string t, int|mapping m, RequestID id) {
