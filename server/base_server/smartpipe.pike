@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.26 1998/10/15 21:28:37 grubba Exp $
+ * $Id: smartpipe.pike,v 1.27 1999/02/15 23:22:26 per Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -107,6 +107,7 @@ void shuffle()
     if(!current_input_len)
       break;
   }
+  catch(current_input->close());
   next_input();
 }
 
