@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.222 2000/03/20 02:30:55 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.223 2000/03/24 02:08:54 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -1085,99 +1085,89 @@ string get_id(string from)
   return "";
 }
 
-void add_id(array to)
+void add_id(mixed to)
 {
-  foreach(to[1], array q)
-    if(stringp(q[0]))
-      q[0]+=get_id(q[0]);
+  if (arrayp (to) && sizeof (to) >= 2)
+    foreach(to[1], array q)
+      if(stringp(q[0]))
+	q[0]+=get_id(q[0]);
 }
 
-string link_to(string what, int eid, int qq)
+string link_to(string file, int line, string fun, int eid, int qq)
 {
-  int line;
-  string file, fun;
-  sscanf(what, "%s(%*s in line %d in %s", fun, line, file);
-  if(file && fun && line)
-  {
-    sscanf(file, "%s (", file);
-    if(file[0]!='/') file = combine_path(getcwd(), file);
-//     werror("link to the function "+fun+" in the file "+
-// 	   file+" line "+line+"\n");
-    return ("<a href=\"/(old_error,find_file)/error?"+
-	    "file="+http_encode_string(file)+"&"
-	    "fun="+http_encode_string(fun)+"&"
-	    "off="+qq+"&"
-	    "error="+eid+"&"
-	    "line="+line+"#here\">");
-  }
-  return "<a>";
+  if (!file || !line) return "<a>";
+  if(file[0]!='/') file = combine_path(getcwd(), file);
+  return ("<a href=\"/(old_error,find_file)/error?"+
+	  "file="+http_encode_string(file)+
+	  (fun ? "&fun="+http_encode_string(fun) : "") +
+	  "&off="+qq+
+	  "&error="+eid+
+	  (line ? "&line="+line+"#here" : "") +
+	  "\">");
 }
 
-
-string format_backtrace(array bt, int eid)
+static string error_page_header (string title)
 {
-  // first entry is always the error,
-  // second is the actual function,
-  // rest is backtrace.
-  //   bt = map( bt, html_encode_string );
-  bt = map( bt, lambda( string q ){
-                  return highlight_pike("foo", ([ "nopre":1 ]), q);
-                } );
-  if(sizeof(bt) == 1) // No backtrace?!
-    bt += ({ "Unknown error, no backtrace."});
-  string res = (#"<html><head><title>Internal Server Error</title></head>
-<body bgcolor=\"white\" text=\"black\" link=\"darkblue\" vlink=\"darkblue\">
-<table width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>
-<td valign=\"bottom\" align=\"left\" rowspan=\"2\">
-  <img border=\"0\" src=\"internal-roxen-roxen.gif\" alt=\"\" hspace=\"5\" vspace=\"1\"/>&nbsp;
-</td>
-<td width=\"100%\" height=\"100%\" align=\"right\" valign=\"bottom\">
- <b><font size=+1>Failed to complete your request</font></b>
-</td></tr>
-<tr><td><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" height=\"0%\" width=\"100%\">
- <tr><td bgcolor=\"#003366\" align=\"right\" width=\"100%\">
-  <font color=\"white\" size=\"-2\">Internal Server Error&nbsp;&nbsp;</font>
- </td></tr></table>
-</td></tr></table>
-<p>
-<font size=\"+2\" color=\"darkred\">"
-  +bt[0]+"</font><br />\n"
-  "The error occured while calling <b>"+
-  bt[1]+"</b></p>\n"
-  +"<br /><h3>Complete Backtrace:</h3>\n\n<ul>");
+  title = html_encode_string (title);
+  return #"<html><head><title>" + title + #"</title></head>
+<body bgcolor='white' text='black' link='#ce5c00' vlink='#ce5c00'>
+<table width='100%'><tr>
+<td><a href='http://www.roxen.com/'><img border='0' src='/internal-roxen-roxen-small'></a></td>
+<td><b><font size='+1'>" + title + #"</font></b></td>
+<td align='right'><font size='+1'>Roxen WebServer " + html_encode_string (roxen_version()) + #"</font></td>
+</tr></table>
 
-  int q = sizeof(bt)-1;
-  foreach(bt[1..], string line)
-  {
-    string fun, args, where, fo;
-    if((sscanf(html_encode_string(line), "%s(%s) in %s",
-	       fun, args, where) == 3) &&
-       (sscanf(where, "%*s in %s", fo) && fo)) {
-      line += get_id( fo );
-      res += ("<li value="+(q--)+"> "+
-	      (replace(line, fo, link_to(line,eid,sizeof(bt)-q-1)+fo+"</a>")
-	       -(getcwd()+"/"))+"<p>\n");
-    } else {
-      res += "<li value="+(q--)+"> <b><font color=darkgreen>"+
-	line+"</font></b><p>\n";
-    }
+";
+}
+
+string format_backtrace(int eid)
+{
+  [string msg, array(string) rxml_bt, array(array) bt,
+   mixed raw_err, string raw_url, string raw] =
+    roxen.query_var ("errors")[eid];
+
+  string res = error_page_header ("Internal Server Error") +
+    "<h1>" + html_encode_string (msg) + "</h1>\n";
+
+  if (rxml_bt && sizeof (rxml_bt)) {
+    res += "<h3>RXML frame backtrace</h3>\n<ul>\n";
+    foreach (rxml_bt, string line)
+      res += "<li>" + html_encode_string (line) + "</li>\n";
+    res += "</ul>\n\n";
   }
-  res += ("</ul><p><b><a href=\"/(old_error,plain)/error?error="+eid+"\">"
-	  "Generate text-only version of this error message, for bug reports"+
-	  "</a></b></p>");
+
+  if (sizeof (bt)) {
+    res += "<h3>Pike backtrace</h3>\n<ul>\n";
+    int q = sizeof (bt);
+    foreach(reverse (bt), [string file, int line, string func, string descr])
+      res += "<li value="+(q--)+">" +
+	link_to (file, line, func, eid, q) +
+	(file ? html_encode_string (file) : "<i>Unknown program</i>") +
+	(line ? ":" + line : "") +
+	"</a>" + (file ? html_encode_string (get_id (file)) : "") + ":<br />\n" +
+	replace (html_encode_string (descr),
+		 ({"(", ")"}), ({"<b>(</b>", "<b>)</b>"})) +
+	"</li>\n";
+    res += "</ul>\n\n";
+  }
+
+  res += ("<p><b><a href=\"/(old_error,plain)/error?error="+eid+"\">"
+	  "Generate text only version of this error message, for bug reports"+
+	  "</a></b></p>\n\n");
   return res+"</body></html>";
 }
 
-string generate_bugreport(array from, string u, string rd)
+string generate_bugreport(string msg, array(string) rxml_bt, array(string) bt,
+			  mixed raw_err, string raw_url, string raw)
 {
-  add_id(from);
+  add_id(raw_err);
   return ("<pre>"+html_encode_string("Roxen version: "+version()+
-	  (roxen.real_version != version()?
-	   " ("+roxen.real_version+")":"")+
-	  "\nRequested URL: "+u+"\n"
-	  "\nError: "+
-	  describe_backtrace(from)-(getcwd()+"/")+
-	  "\n\nRequest data:\n"+rd));
+				     (roxen.real_version != version()?
+				      " ("+roxen.real_version+")":"")+
+				     "\nRequested URL: "+raw_url+"\n"
+				     "\nError: "+
+				     describe_backtrace(raw_err)+
+				     "\n\nRequest data:\n"+raw));
 }
 
 string censor(string what)
@@ -1185,12 +1175,12 @@ string censor(string what)
   string a, b, c;
   if(!what)
     return "No backtrace";
-  if(sscanf(what, "%shorization:%s\n%s", a, b, c)==3)
-    return a+" ################ (censored)\n"+c;
+  if(sscanf(what, "%suthorization:%s\n%s", a, b, c)==3)
+    return a+"uthorization: ################ (censored)\n"+c;
   return what;
 }
 
-int store_error(array err)
+int store_error(mixed err)
 {
   mapping e = roxen.query_var("errors");
   if(!e) roxen.set_var("errors", ([]));
@@ -1198,7 +1188,62 @@ int store_error(array err)
 
   int id = ++e[0];
   if(id>1024) id = 1;
-  e[id] = ({err,raw_url,censor(raw)});
+
+  string msg;
+  array(string) rxml_bt;
+
+  if (!err) msg = "Unknown error";
+  else {
+    msg = describe_error (err);
+    // Ugly, but it's hard to fix it better..
+    int i = search (msg, "\nRXML frame backtrace:\n");
+    if (i >= 0) {
+      rxml_bt = (msg[i + sizeof ("\nRXML frame backtrace:")..] / "\n | ")[1..];
+      if (sizeof (rxml_bt)) rxml_bt[-1] = rxml_bt[-1][..sizeof (rxml_bt[-1]) - 2];
+      msg = msg[..i - 1];
+    }
+  }
+
+  string cwd = getcwd() + "/";
+  array bt;
+  if (arrayp (err) && sizeof (err) >= 2 && arrayp (err[1])) {
+    bt = ({});
+    foreach (err[1], mixed ent) {
+      string file, func, descr;
+      int line;
+      if (arrayp (ent)) {
+	if (sizeof (ent) && stringp (ent[0]))
+	  if (ent[0][..sizeof (cwd) - 1] == cwd)
+	    file = ent[0] = ent[0][sizeof (cwd)..];
+	  else
+	    file = ent[0];
+	if (sizeof (ent) >= 2) line = ent[1];
+	if (sizeof (ent) >= 3)
+	  if(functionp(ent[2])) {
+	    func = function_name(ent[2]);
+	    if (!file)
+	      catch {
+		file = master()->describe_program (
+		  object_program (function_object (ent[2])));
+		if (file[..sizeof (cwd) - 1] == cwd) file = file[sizeof (cwd)..];
+	      };
+	  }
+	  else if (stringp(ent[2])) func = ent[2];
+	  else func ="unknown function";
+	if (sizeof (ent) >= 4)
+	  descr = func + "(" + master()->stupid_describe_comma_list (
+	    ent[3..], master()->bt_max_string_len) + ")";
+	else
+	  descr = func + "()";
+      }
+      else if (stringp (ent)) descr = ent;
+      else if (catch (descr = sprintf ("%O", ent)))
+	descr = "???";
+      bt += ({({file, line, func, descr})});
+    }
+  }
+
+  e[id] = ({msg,rxml_bt,bt,err,raw_url,censor(raw)});
   return id;
 }
 
@@ -1216,8 +1261,7 @@ void internal_error(array err)
   if(port_obj->query("show_internals"))
   {
     err2 = catch {
-      array(string) bt = (describe_backtrace(err)/"\n") - ({""});
-      file = http_low_answer(500, format_backtrace(bt, store_error(err)));
+      file = http_low_answer(500, format_backtrace(store_error(err)));
     };
     if(err2) {
       werror("Internal server error in internal_error():\n" +
@@ -1289,37 +1333,50 @@ void timer(int start)
 }
 #endif
 
-string handle_error_file_request(array err, int eid)
+string handle_error_file_request (string msg, array(string) rxml_bt, array(array) bt,
+				  mixed raw_err, string raw_url, string raw)
 {
-//   return "file request for "+variables->file+"; line="+variables->line;
   string data = Stdio.read_bytes(variables->file);
-  array(string) bt = (describe_backtrace(err)/"\n") - ({""});
-  string down;
 
-  if((int)variables->off-1 >= 1)
-    down = link_to( bt[(int)variables->off-1],eid, (int)variables->off-1);
+  if(!data)
+    return error_page_header (variables->file) +
+      "<h3><i>Source file could not be read</i></h3>\n"
+      "</body></html>";
+
+  string down;
+  int next = (int) variables->off + 1;
+
+  if(next < sizeof (bt)) {
+    [string file, int line, string func, string descr] = bt[next];
+    down = link_to (file, line, func, (int) variables->error, next);
+  }
   else
     down = "<a>";
-  if(data)
+
+  int off = 49;
+  array (string) lines = data/"\n";
+  int start = (int)variables->line-50;
+  if(start < 0)
   {
-    int off = 49;
-    array (string) lines = data/"\n";
-    int start = (int)variables->line-50;
-    if(start < 0)
-    {
-      off += start;
-      start = 0;
-    }
-    int end = (int)variables->line+50;
-    lines=highlight_pike("foo", ([ "nopre":1 ]), lines[start..end]*"\n")/"\n";
-
-    if(sizeof(lines)>off)
-      lines[off]=("<font size=+2><b>"+down+lines[off]+"</a></b></font></a>");
-    lines[max(off-20,0)] = "<a name=here>"+lines[max(off-20,0)]+"</a>";
-    data = lines*"\n";
+    off += start;
+    start = 0;
   }
+  int end = (int)variables->line+50;
 
-  return format_backtrace(bt,eid)+"<hr noshade><pre>"+data+"</pre>";
+  // The highlighting doesn't work well enough on recent pike code.
+  //lines=highlight_pike("foo", ([ "nopre":1 ]), lines[start..end]*"\n")/"\n";
+  lines = map (lines[start..end], html_encode_string);
+
+  if(sizeof(lines)>off) {
+    sscanf (lines[off], "%[ \t]%s", string indent, string code);
+    if (!sizeof (code)) code = "&nbsp;";
+    lines[off] = indent + "<font size='+1'><b>"+down+code+"</a></b></font></a>";
+  }
+  lines[max(off-20,0)] = "<a name=here>"+lines[max(off-20,0)]+"</a>";
+
+  return error_page_header (variables->file) +
+    "<font size='-1'><pre>" + lines*"\n" + "</pre></font>\n"
+    "</body></html>";
 }
 
 // The wrapper for multiple ranges (send a multipart/byteranges reply).
@@ -1741,21 +1798,13 @@ void handle_request( )
       } else {
 	if(prestate->find_file)
         {
-	  if(!realauth)
+	  if (!roxen.configuration_authenticate (this_object(), "View Settings"))
 	    file = http_auth_required("admin");
 	  else
-	  {
-	    array auth = (realauth+":")/":";
-	    if((auth[0] != roxen.query("ConfigurationUser"))
-	       || !crypt(auth[1], roxen.query("ConfigurationPassword")))
-	      file = http_auth_required("admin");
-	    else
-	      file = ([
-		"type":"text/html",
-		"data":handle_error_file_request( err[0],
-						  (int)variables->error ),
-	      ]);
-	  }
+	    file = ([
+	      "type":"text/html",
+	      "data":handle_error_file_request( @err ),
+	    ]);
           send_result();
           return;
 	}
