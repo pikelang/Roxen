@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.285 2001/09/05 20:55:47 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.286 2001/09/06 09:47:03 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1229,7 +1229,8 @@ class MySQLKey( object real, string name )
 
     m_delete(my_mysql_last_user, num);
 #endif
-    sql_active_list[name]--;
+    if( !--sql_active_list[name] )
+      m_delete( sql_active_list, name );
     sql_free_list[ name ] += ({ real });
     if( `+( 0, @map(values( sql_free_list ),sizeof ) ) > 20 )
     {
@@ -1261,17 +1262,25 @@ class MySQLKey( object real, string name )
   }
 }
 
-//! @appears connect_to_my_mysql
-mixed connect_to_my_mysql( string|int ro, void|string db )
+#ifdef THREADS
+Thread.Mutex mt = Thread.Mutex();
+#endif
+
+mixed sq_cache_lock()
 {
-  mixed res;  
-  string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
+#ifdef THREADS
+  return mt->lock();
+#endif
+}
+
+mixed sq_cache_get( string i )
+{
   if( sql_free_list[ i ] )
   {
 #ifdef DB_DEBUG
     werror("%O found in free list\n", i );
 #endif
-    res = sql_free_list[i][0];
+    mixed res = sql_free_list[i][0];
     if( sizeof( sql_free_list[ i ] ) > 1)
       sql_free_list[ i ] = sql_free_list[i][1..];
     else
@@ -1279,11 +1288,23 @@ mixed connect_to_my_mysql( string|int ro, void|string db )
     sql_active_list[i]++;
     return MySQLKey( res, i );
   }
-  if( res = low_connect_to_my_mysql( ro, db ) )
+}
+
+mixed sq_cache_set( string i, mixed res )
+{
+  if( res )
   {
     sql_active_list[i]++;
     return MySQLKey( res, i );
   }
+}
+
+//! @appears connect_to_my_mysql
+mixed connect_to_my_mysql( string|int ro, void|string db )
+{
+  mixed key = sq_cache_lock();  
+  string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
+  return sq_cache_get(i)||sq_cache_set(i,low_connect_to_my_mysql( ro, db ));
 }
 
 static mixed low_connect_to_my_mysql( string|int ro, void|string db )
@@ -1315,9 +1336,9 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
       werror ("Couldn't connect to mysql as %s: %s", ro, describe_error (err));
 #endif
   if( db != "mysql" )
-    connect_to_my_mysql( 0, "mysql" )
+    low_connect_to_my_mysql( 0, "mysql" )
       ->query( "CREATE DATABASE "+ db );
-  return connect_to_my_mysql( ro, db );
+  return low_connect_to_my_mysql( ro, db );
 }
 
 
