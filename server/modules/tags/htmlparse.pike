@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.181 1999/08/01 17:30:56 nilsson Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.182 1999/08/01 17:44:20 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -141,6 +141,11 @@ void create(object c)
 	 TYPE_FLAG|VAR_MORE,
 	 "If set, the accessed database will be closed if it is not used for "
 	 "8 seconds");
+
+  defvar("logold", 0, "Log all old RXML calls in the event log.",
+         TYPE_FLAG|VAR_MORE,
+         "If set, all calls though the backward compatibility code will be"
+         "logged in the event log, enabeling you to upgrade those RXML tags.");
 }
 
 static string olf; // Used to avoid reparsing of the accessed index file...
@@ -2176,6 +2181,11 @@ void add_api_function( string name, function f, void|array(string) types)
     this_object()["_api_functions"][name] = ({ f, types });
 }
 
+void api_old_rxml_warning(object id, string problem, string solution)
+{
+  if(query("logold"))
+    report_warning("Old RXML in "+(id->query||id->not_query)+", contains "+problem+". Use "+solution+" instead.");
+}
 
 void define_API_functions()
 {
@@ -2211,6 +2221,7 @@ void define_API_functions()
 
   add_api_function("roxen_version", tag_version, ({}));
   add_api_function("config_url", tag_configurl, ({}));
+  add_api_function("old_rxml_warning", api_old_rxml_warning, ({ "string", "string" }));
 }
 
 int may_disable()  { return 0; }
