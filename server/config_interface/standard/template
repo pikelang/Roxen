@@ -14,153 +14,160 @@
 
 
 <define container=cv-split>
-<table><tr><td valign=top width=150><img src=/internal-roxen-unit width=150 height=1><br>
-&form.leftside:none;&form.leftimage:none;</td><td width='100%' valign=top>
-<contents>
-</td></tr></table>
+ <table ::=&usr.content-toptableargs:none;>
+   <tr>
+     <td width=10><img src=/internal-roxen-unit width=10 height=1></td>
+     <td ::=&usr.left-tableargs:none;>
+       <img src=/internal-roxen-unit width=150 height=1><br>
+       &form.leftside:none;&form.leftimage:none;
+     </td>
+     <td ::=&usr.content-tableargs:none;>
+       <contents>
+     </td>
+   </tr>
+  </table>
 </define>
 
 <define container=cv-startpage>
-
-<table><tr><td valign=top width=150><img src=/internal-roxen-unit width=150 height=1><br>
-&form.leftside:none;&form.leftimage:none;</td><td width='100%' valign=top>
-<subtablist width='100%'>
-  <st-tabs><insert file=/standard/cv_startpage_tabs.pike nocache></st-tabs>
-  <st-page><contents></st-page>
-</subtablist></td></tr></table>
+  <cv-split>
+    <subtablist>
+      <st-tabs><insert file=cv_startpage_tabs.pike nocache></st-tabs>
+      <st-page><contents></st-page>
+    </subtablist>
+   </cv-split>
 </define>
 
 <define container=cv-obox>
-  <table cellpadding=1 cellspacing=0 border=0 width="202" align=center bgcolor="#000000">
+  <table cellpadding=1 cellspacing=0 border=0 width=202 align=center bgcolor=&usr.obox-border;>
   <tr><td>
-  <table cellpadding=2 cellspacing=0 border=0 width="200" align=center>
-  <tr bgcolor="&usr.obox-titlebg;">
+  <table cellpadding=2 cellspacing=0 border=0 width=200 align=center>
+  <tr bgcolor=&usr.obox-titlebg;>
     <td valign=top>
-      <font color="&usr.obox-titlefg;"
-            face="&usr.obox-titlefont;"
+      <font color=&usr.obox-titlefg; face=&usr.obox-titlefont;
             size=+1><b>&title;</b></font>
     </td>
   </tr>
 
-  <tr><td bgcolor="&usr.obox-bodybg;"><font color="&usr.obox-bodyfg;" size=2>
+  <tr><td bgcolor=&usr.obox-bodybg;><font color=&usr.obox-bodyfg; size=2>
     <contents>
   </font></td></tr>
-
   </table>
   </td></tr></table>
 </define>
 
-<define container=subtablist default_width=100%>
-<contents>
-<p><br><p>
-
-<table width=&width; border=0 cellpadding=0 cellspacing=0>
-<tr>
-<td valign=bottom
-><tablist preparse
-         frame-image=&usr.subtabs-frame;
-         bgcolor=&usr.subtabs-bgcolor;
-         font="&usr.subtabs-font;"
-         textcolor="&usr.subtabs-dimtextcolor;"
-         dimcolor="&usr.subtabs-dimcolor;"
-         seltextcolor="&usr.subtabs-seltextcolor;"
-         selcolor="&usr.subtabs-selcolor;">
-   <eval>&form.__tabs:none;</eval>
-</tablist
-></td></tr>
-<tr>
-<td bgcolor="&usr.content-bg;">&form.__contents:none;</td>
-</tr></table>
+<define container=subtablist>
+<comment preparse>
+  <contents>
+</comment><p><br><p>
+  <table width=100% border=0 cellpadding=0 cellspacing=0 >
+    <tr>
+      <td ::=&usr.subtabs-tableargs:none;><tablist preparse ::=&usr.subtabs-args:none;>
+        <eval>&form.__tabs:none;</eval>
+      </tablist></td>
+    </tr>
+    <tr>
+      <td bgcolor="&usr.content-bg;">&form.__contents:none;</td>
+    </tr>
+    </table>
 </define>
 
 <define tag=topmenu default_base="" default_selected=home>
   <top-menu>
-    <item tab-frame-image=&usr.toptab-frame;
+    <item ::=&usr.toptabs-args:none;
           title="<cf-locale get=configiftab>" href="&base;"
-      <if match="&selected; is home"> selected</if>           />
-    <item tab-frame-image=&usr.toptab-frame; perm="View Settings"
+      <if match="&selected; is home"> selected</if>  />
+    <item ::=&usr.toptabs-args:none; perm="View Settings"
           title="<cf-locale get=sites>" href="&base;sites/"
       <if match="&selected; is sites"> selected</if> />
-    <item tab-frame-image=&usr.toptab-frame; perm="View Settings"
+    <item ::=&usr.toptabs-args:none; perm="View Settings"
           title="<cf-locale get=globals>" href="&base;global_settings/"
           <if match="&selected; is globals"> selected</if> />
-    <item tab-frame-image=&usr.toptab-frame; perm="View Settings"
+    <item ::=&usr.toptabs-args:none; perm="View Settings"
           title="<cf-locale get=ports>" href="&base;ports/"
           <if match="&selected; is ports"> selected</if> />
-    <item tab-frame-image=&usr.toptab-frame; perm="View Settings"
+    <item ::=&usr.toptabs-args:none; perm="View Settings"
           title="<cf-locale get=eventlog>" href="&base;event_log/"
           <if match="&selected; is event_log"> selected</if> />
-    <item tab-frame-image=&usr.toptab-frame; perm="Tasks" title="<cf-locale get=actions>" href="&base;actions/"
+    <item ::=&usr.toptabs-args:none; perm="Tasks"
+          title="<cf-locale get=actions>" href="&base;actions/"
           <if match="&selected; is actions"> selected</if>  />
   </top-menu>
 </define>
 
 <define container=submit-gbutton default_align=baseline>
-<input align=&align; type=image name='<contents>' value='<contents>'
-       src='<gbutton-url font='&usr.gbutton-font;' preparse><contents></gbutton-url>' border=0>
+  <cset variable=url preparse><gbutton-url font='&usr.gbutton-font;' preparse><contents></gbutton-url></cset>
+   <input align=&align; type=image name='<contents>' value='<contents>'
+          src='&form.url;' border=0>
 </define>
 
-<define tag=cf-ok><submit-gbutton> <cf-locale get=ok> </submit-gbutton></define>
+<define tag=cf-ok>
+   <submit-gbutton> <cf-locale get=ok> </submit-gbutton>
+</define>
 
-<define tag=cf-cancel><gbutton preparse href='&href;'> <cf-locale get=cancel> </gbutton></define>
+<define tag=cf-cancel>
+   <gbutton preparse href='&href;'> <cf-locale get=cancel> </gbutton>
+</define>
 
-<define tag=cf-next><submit-gbutton preparse href='&href;'> <cf-locale get=next> > </submit-gbutton></define>
+<define tag=cf-next>
+   <submit-gbutton preparse href='&href;'> <cf-locale get=next> > </submit-gbutton>
+</define>
 
 <define container=tmpl>
-<cset variable=leftimage>
-  <p><if not match="&usr.left-image; is "><img src=&usr.left-image;></if>
-</cset>
-  <title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
-  <if not match="&usr.theme; is ">
-     <insert file=/standard/themes/&usr.theme;/theme nocache>
-  </if>
+<title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
+<comment preparse> <!-- We do not want any output from this. -->
+  <insert file=/standard/themes/&usr.theme;/theme nocache>
+  <define preparse variable=leftimage><img src=&usr.left-image;></define>
   <define preparse name=tab-frame-image>&usr.tab-frame-image;</define>
   <define preparse name=tab-font-size>&usr.tab-font-size;</define>
   <define preparse name=gbutton-frame-image>&usr.gbutton-frame-image;</define>
+  <define name=font preparse>&usr.font;</define>
   <expire-time now>
-
-
-  <body topmargin=0 leftmargin=0 marginwidth=0 marginheight=0
-        bottommargin=0 rightmargin=0 margin=0
-        link=&usr.linkcolor;  vlink=&usr.linkcolor; alink=&usr.fade2;
-        bgcolor=&usr.bgcolor; text=&usr.fgcolor;>
-
+</comment>
+  <body ::=&usr.body-args:none;>
     <form method=POST action='<cf-current-url>'>
-      <define name=font preparse>&usr.font;</define>
       <roxen-automatic-charset-variable>
       <roxen-config preparse>
-        <middle title="">
-          <table>
-         <cf-userwants option=devel_mode>
-          <tr><td align=right>
-            <gtext preparse bgcolor="&usr.top-bgcolor;" font='&usr.font;' fgcolor='&usr.top-fgcolor;' scale=0.45 hspace=3><cf-locale get=language>:</gtext>
-          </td><td><font color=black>
-          <configif-output quote=¤ source=locales>
-            <a href="¤path¤"><img
-              src="/internal-roxen-¤latin1-name¤¤-selected¤.gif"
-              alt="¤latin1-name¤" border=0 height=16
-            ></a>
-          </configif-output></font>
-          </tr>
-         </cf-userwants>
-         <tr><td bgcolor=&usr.top-bgcolor; align=right>
+        <middle>
+          <table><tr><td align=right>
+            <gtext preparse  font=&usr.font;
+                   fgcolor=&usr.top-fgcolor; scale=0.45
+                   hspace=3><cf-locale get=language>:</gtext>
+            </td>
+            <td>
+              <font color=&usr.fgcolor;>
+               <configif-output quote=¤ source=locales>
+                <a href="¤path¤">
+                  <img src="/internal-roxen-¤latin1-name¤¤-selected¤.gif"
+                       alt="¤latin1-name¤" border=0 height=16>
+                </a>
+                </configif-output>
+              </font>
+           </td>
+         </tr>
+         <tr>
+           <td align=right>
              <font color=&usr.top-fgcolor;>
-         <gbutton preparse href='/standard/change_user.pike?uid=&form.config_user_uid;'
-                  align=right textcolor=&usr.top-fgcolor; bgcolor='&usr.top-bgcolor;' width=70> <cf-locale get=user>: </gbutton>
-          </td><td>
-            <font color=&usr.top-fgcolor;>
-               &form.config_user_name; (&form.config_user_uid;)
-            </font>
-           </td></tr>
-          </table>
+               <gbutton preparse
+                    href='/standard/change_user.pike?uid=&form.config_user_uid;'
+                    align=right textcolor=&usr.top-fgcolor;
+                    width=70> <cf-locale get=user>: </gbutton>
+            </td>
+            <td>
+              <font color=&usr.top-fgcolor;>
+                 &form.config_user_name; (&form.config_user_uid;)
+              </font>
+            </td>
+           </tr>
+         </table>
         </middle>
         <contents>
-      </roxen-config>
+     </roxen-config>
     </form>
-<div align=right><font size=-1>&roxen.version; / &roxen.pike-version;</font></div>
+    <div align=right>
+       <b><font size=-1>&roxen.version; / &roxen.pike-version;</font></b>
+    </div>
   </body>
 </define>
-
 
 <define tag=cf-save>
   <submit-gbutton align=right> <cf-locale get=save> </submit-gbutton>

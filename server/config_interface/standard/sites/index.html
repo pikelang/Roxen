@@ -4,21 +4,17 @@
 <content>
 
 <br><p>
-<table width=100%>
-<tr><td><img src="internal-roxen-unit" height="10"><br></td></tr>
-<tr><td>
-
+<cv-leftside>
+<img src="internal-roxen-unit" height="16"><br>
 <gbutton frame-image=&usr.left-buttonframe; width=150 bgcolor=&usr.left-selbuttonbg; icon_src=&usr.selected-indicator; icon_align=left preparse><cf-locale get=servers></gbutton><br><br>
 <configif-output source=configurations>
  <gbutton frame-image=&usr.left-buttonframe; bgcolor=&usr.left-buttonbg; href='site.html/#sname:quote=stag#/' width=150>#name#</gbutton><br>
 </configif-output>
-<br>&form.leftimage:none;
-</td>
-<td bgcolor="&usr.content-bg;" width=80% valign=top>
-<cf-perm perm="Create Site">
- <gbutton href=new_site.html preparse icon_src=/internal-roxen-next align_icon=right hspace=5 vspace=5><cf-locale get=create_new_site></gbutton>
-</cf-perm>
-</td>
-</tr></table>
-</p>
-</content>
+</cv-leftside>
+
+<cv-split>
+  <subtablist><st-page>
+  <cf-perm perm="Create Site">
+   <gbutton href=new_site.html preparse icon_src=/internal-roxen-next align_icon=right hspace=5 vspace=5><cf-locale get=create_new_site></gbutton>
+  </st-page></subtablist></cf-perm>
+</cv-split>
