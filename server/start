@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.170 2001/07/02 01:45:36 nilsson Exp $
+# $Id: start,v 1.171 2001/07/02 02:53:18 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -576,7 +576,6 @@ cleanup_pid_file() {
 
 signal_exit() {
   trap "" 2 15
-  dp "Start script terminated."
   if [ "x$ROXEN_PID" != "x" ]; then
     kill $ROXEN_PID 2>/dev/null && wait $ROXEN_PID 2>/dev/null
     dp "Roxen WebServer shutdown."
@@ -590,6 +589,7 @@ signal_exit() {
     fi
     rm -f $DIR/_mysql/mysql_pid 2>/dev/null
   fi
+  dp "Start script terminated."
   exit 0
 }
 
