@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.25 2000/09/28 03:43:38 per Exp $
+// $Id: module.pmod,v 1.26 2000/09/28 03:54:40 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -538,7 +538,6 @@ class Int
 // =====================================================================
 // String
 // =====================================================================
-
 class String
 //! String variable
 {
@@ -546,6 +545,12 @@ class String
   constant type = "String";
   constant width = 40;
   //! The width of the input field. Used by overriding classes.
+
+  array(string) verify_set_from_form( string new )
+  {
+    return ({ 0, new-"\r" });
+  }
+
   string render_form( RequestID id, void|mapping additional_args )
   {
     return input(path(), (string)query(), width, additional_args);
