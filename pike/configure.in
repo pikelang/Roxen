@@ -13,19 +13,19 @@ AC_SUBST(OPTIMIZE)
 
 AC_SET_MAKE
 
-AC_ARG_WITH(pike,   [  --with-pike          Specify version of Pike],[],[with_pike=0.5])
+AC_ARG_WITH(pike,   [  --with-pike          Specify version of Pike],[],[with_pike=0.6])
 
 AC_MSG_CHECKING(version of Pike to use)
 case "$with_pike" in
-  0.5)
-  ;;
   0.6)
+  ;;
+  0.7)
   ;;
   dual|multi)
     with_pike=dual
   ;;
   *)
-    with_pike=0.5
+    with_pike=0.6
   ;;
 esac
 AC_MSG_RESULT($with_pike)

@@ -5,7 +5,7 @@ prefix=@prefix@
 @SET_MAKE@
 
 pre_dist:
-	-rm -rf $(SRCDIR)/*/about_pike $(SRCDIR)/*/doc $(SRCDIR)/0.5/tutorial
+	-rm -rf $(SRCDIR)/*/about_pike $(SRCDIR)/*/doc
 	@for d in [0-9]*; do \
 	  (cd $$d; $(MAKE); $(MAKE) new_peep_engine); \
 	done
