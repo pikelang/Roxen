@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.269 2001/08/09 13:30:35 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.270 2001/08/09 14:08:11 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1113,6 +1113,7 @@ string query_mysql_dir()
 }
 
 mapping my_mysql_cache = ([]);
+int     my_mysql_num_connections;
 string  my_mysql_path;
 
 string query_configuration_dir()
@@ -1133,6 +1134,7 @@ void clear_connect_to_my_mysql_cache( )
 	destruct( s->master_sql );
       destruct( s );
     }
+  my_mysql_num_connections = 0;
   my_mysql_cache = ([]);
 }
 
@@ -1173,6 +1175,8 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
     res = Sql.Sql( replace( my_mysql_path,
 			    ({"%user%", "%db%" }),
 			    ({ ro, db })) );
+    if( my_mysql_num_connections++ > 40 )
+      clear_connect_to_my_mysql_cache();
     res->query( "USE "+ db );
     return m[ i ] = res;
   } )
@@ -1761,6 +1765,12 @@ library should be enough.
   
   function add_dump_constant = new_master->add_dump_constant;
   int t = gethrtime();
+
+  DC( "Protocols.HTTP" );
+  DC( "Protocols.HTTP.Query" );
+
+  DC( "Calendar.ISO" );
+  DC( "Calendar.ISO.Second" );
 
   DC( "Stdio.Stat" );
 
