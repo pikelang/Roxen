@@ -128,18 +128,18 @@ or writing Pike scripts.");
 Det är väldigt användbart när du utvecklar egna moduler eller pikeskript.");
 
   globvar("default_font_size", 32, 0, TYPE_INT, 0, 0, 1);
-  globvar("default_font", "lucida", "Fonts: Default font", TYPE_FONT,
+  globvar("default_font", "lucida", "Default font", TYPE_FONT,
 	  "The default font to use when modules request a font.");
   
-  deflocaledoc( "svenska", "default_font", "Typsnitt: Normaltypsnitt",
+  deflocaledoc( "svenska", "default_font", "Normaltypsnitt",
 		#"När moduler ber om en typsnitt som inte finns, eller skriver 
 grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 
   globvar("font_dirs", ({"../local/nfonts/", "nfonts/" }),
-	  "Fonts: Font directories", TYPE_DIR_LIST,
+	  "Font directories", TYPE_DIR_LIST,
 	  "This is where the fonts are located.");
 
-  deflocaledoc( "svenska", "font_dirs", "Typsnitt: Typsnittssökväg",
+  deflocaledoc( "svenska", "font_dirs", "Typsnittssökväg",
 		"Sökväg för typsnitt.");
 
 
@@ -415,7 +415,9 @@ normal grupper.");
   Normalt sätt så hämtas den här databasen från filen server/etc/supports, men
   du kan om du vill specifiera fler mönster i den här variabeln. Formatet ser
   ur så här:<pre>
-  reguljärt uttryck som matchar bäddrarens namn	funktion, funktion, ...
+  reguljärt uttryck 	funktion, funktion
+  reguljärt uttryck 	funktion, funktion
+  ...
  </pre>Se filen server/etc/supports för en mer utförlig dokumentation");
 
   globvar("audit", 0, "Logging: Audit trail", TYPE_FLAG,
@@ -549,7 +551,7 @@ anlending.");
   typen gör det.");
 
   globvar("abs_timeout", 5, "ABS: Timeout", 
-	  TYPE_INT_LIST,
+	  TYPE_INT_LIST|VAR_MORE,
 #"If the server is unable to accept connection for this many 
   minutes, it will be restarted. You need to find a balance: 
   if set too low, the server will be restarted even if it's doing 
@@ -589,7 +591,7 @@ because of memory leaks."
 	  );
   deflocaledoc("svenska", "suicide_engage",
 	       "Auto omstart: Starta om automatiskt",
-#"Roxen har stöd för att starta automatiskt då ock då. Eftersom roxen är en
+#"Roxen har stöd för att starta automatiskt då och då. Eftersom roxen är en
 monolitisk icke-forkande server (en enda långlivad process) så tenderar
 processen att växa med tiden.  Det beror mest på minnesfragmentation, men även
 på att en del minnesläckor fortfarande finns kvar. Ett sätt att återvinna minne
