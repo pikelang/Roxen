@@ -9,7 +9,7 @@
 #define _extra_heads id->misc->defines[" _extra_heads"]
 #define _rettext id->misc->defines[" _rettext"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.38 2000/01/25 15:23:51 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.39 2000/02/14 09:23:02 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -92,7 +92,26 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 
   bytes += stat[1];
 
-  return http_rxml_answer( file->read(), id, file, file2type(id->realfile||id->no_query||"index.html") );
+  string data = file->read();
+  switch( id->misc->input_charset )
+  {
+   case 0:
+   case "iso-8859-1":
+     break;
+   case "utf-8":
+     data = utf8_to_string( data );
+     break;
+   case "unicode":
+     data = unicode_to_string( data );
+     break;
+   default:
+     data = (Locale.Charset.decoder( id->misc->input_charset )
+             ->feed( data )->drain());
+     break;
+  }
+
+
+  return http_rxml_answer(data,id,file,file2type(id->realfile||id->no_query||"index.html") );
 }
 
 
