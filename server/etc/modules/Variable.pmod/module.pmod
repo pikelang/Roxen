@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.69 2001/10/05 15:08:02 per Exp $
+// $Id: module.pmod,v 1.70 2001/11/01 14:58:53 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1296,6 +1296,17 @@ class List
   inherit Variable;
   constant type="List";
   int width = 40;
+
+  array(string|array(string)) verify_set(mixed to)
+  {
+    if (stringp(to)) {
+      // Backward compatibility junk...
+      return ({ "Compatibility: "
+		"Converted from TYPE_STRING to TYPE_STRING_LIST.\n",
+	       (to-" ")/"," });
+    }
+    return ::verify_set(to);
+  }
 
   string transform_to_form( mixed what )
     //! Override this function to do the value->form mapping for
