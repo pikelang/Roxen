@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.20 2001/10/09 14:59:39 jhs Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.21 2003/05/13 15:51:46 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
@@ -61,6 +61,7 @@ array(string) find_language(RequestID id) {
 }
 
 object remap_url(RequestID id, string url) {
+  if (!languages) return 0;   //  module not initialized
   if(!id->misc->language_remap) id->misc->language_remap=([]);
   if(id->misc->language_remap[url]==1) return 0;
   id->misc->language_remap[url]++;
