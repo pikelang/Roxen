@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.472 2000/03/30 23:13:09 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.473 2000/04/03 14:48:55 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3303,11 +3303,20 @@ int is_ip(string s)
   return (sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>47 && s[-1]<58);
 }
 
-array configuration_auth=({});
+array(RoxenModule) configuration_auth=({});
 mapping configuration_perm=([]);
+
+void fix_configuration_auth()
+{
+  foreach (configurations, Configuration c)
+    if (!c->inited && c->retrieve("EnabledModules", c)["config_userdb#0"])
+      c->enable_all_modules();
+  configuration_auth -= ({0});
+}
 
 void add_permission(string name, mapping desc)
 {
+  fix_configuration_auth();
   configuration_perm[ name ]=desc;
   configuration_auth->add_permission( name, desc );
 }
@@ -3327,10 +3336,7 @@ string configuration_authenticate(RequestID id, string what)
 {
   if(!id->realauth)
     return 0;
-
-  foreach (configurations, object c)
-    if (!c->inited && c->retrieve("EnabledModules", c)["config_userdb#0"])
-      c->enable_all_modules();
+  fix_configuration_auth();
 
   array auth;
   RoxenModule o;
@@ -3351,12 +3357,14 @@ string configuration_authenticate(RequestID id, string what)
 
 array(object) get_config_users( string uname )
 {
+  fix_configuration_auth();
   return configuration_auth->find_admin_user( uname );
 }
 
 
 array(string|object) list_config_users(string uname, string|void required_auth)
 {
+  fix_configuration_auth();
   array users = `+( ({}), configuration_auth->list_admin_users( ) );
   if( !required_auth )
     return users;
