@@ -7,21 +7,22 @@
 mapping images = ([]);
 int image_id;
 
+string is_image( string x )
+{
+  if( !search( x, "GIF" ) )
+    return "gif";
+  if( has_value( x, "JFIF" ) )
+    return "jpeg";
+  if( !search( x, "\x89PNG" ) )
+    return "png";
+}
+
 string store_image( string x )
 {
-  string image_type()
-  {
-    if( !search( x, "GIF" ) )
-      return "gif";
-    if( has_value( x, "JFIF" ) )
-      return "jpeg";
-    return "png"; // not nessesarily true.
-  };
-
   string id = (string)image_id++;
 
   images[ id ] = ([
-    "type":"image/"+image_type(),
+    "type":"image/"+is_image( x ),
     "data":x,
     "len":strlen(x),
   ]);
@@ -227,7 +228,7 @@ mapping|string parse( RequestID id )
       {
 	res += "<tr>";
 	for( int i = 0; i<sizeof(q); i++ )
-	  if( image_columns[i] )
+	  if( image_columns[i] || is_image( q[i] ) )
 	    res +=
            "<td><img src='browser.pike?image="+store_image( q[i] )+"' /></td>";
 	  else if( right_columns[i] )
