@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.58 1998/02/10 18:36:10 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.59 1998/02/14 17:33:17 noring Exp $";
 
 #define perror roxen_perror
 
@@ -60,8 +60,9 @@ void roxen_perror(string format,mixed ... args)
   stderr->write(format);
 }
 
-void mkdirhier(string from, int|void mode)
+int mkdirhier(string from, int|void mode)
 {
+  int r = 1;
   string a, b;
   array f;
 
@@ -70,7 +71,7 @@ void mkdirhier(string from, int|void mode)
 
   foreach(f[0..sizeof(f)-2], a)
   {
-    mkdir(b+a);
+    r = mkdir(b+a);
 #if constant(chmod)
     if (mode) {
       catch { chmod(b+a, mode); };
@@ -78,6 +79,9 @@ void mkdirhier(string from, int|void mode)
 #endif /* constant(chmod) */
     b+=a+"/";
   }
+  if(!r)
+    return (file_stat(from)||({0,0}))[1] == -2;
+  return 1;
 }
 
 object db;
