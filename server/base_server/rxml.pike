@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.319 2001/11/15 16:52:15 mast Exp $
+// $Id: rxml.pike,v 1.320 2001/11/23 21:02:02 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -73,15 +73,25 @@ RXML.TagSet rxml_tag_set = class
 
     PROF_ENTER( "rxml", "overhead" );
 
-    // Mostly for compatibility.
-    if (id->misc->defines && id->misc->defines != ctx->misc) {
-      ctx->misc->old_defines = id->misc->defines;
-      // These settings ought to be in id->misc but are in this
-      // mapping for historical reasons.
-      ctx->misc->language = id->misc->defines->language;
-      ctx->misc->present_languages = id->misc->defines->present_languages;
+    // The id->misc->defines mapping is handled in a fairly ugly way:
+    // If this is a nested parse, it's temporarily overridden with
+    // ctx->misc (to get parse local scope), otherwise it's the other
+    // way around. The latter is to be compatible with top level code
+    // that initializes id->misc->defines before a parse and/or uses
+    // it afterwards.
+    if (mapping defines = id->misc->defines) {
+      if (defines != ctx->misc)
+	if (defines->rxml_nested) {
+	  ctx->id_defines = defines;
+	  ctx->misc->rxml_nested = 1;
+	  // These settings ought to be in id->misc but are in this
+	  // mapping for historical reasons.
+	  ctx->misc->language = defines->language;
+	  ctx->misc->present_languages = defines->present_languages;
+	}
+	else ctx->misc = defines;
     }
-    id->misc->defines = ctx->misc;
+    else id->misc->defines = ctx->misc;
 
 #if ROXEN_COMPAT <= 1.3
     if (old_rxml_compat) ctx->compatible_scope = 1;
@@ -103,11 +113,11 @@ RXML.TagSet rxml_tag_set = class
       else
 	id->misc->moreheads = ctx->misc[" _extra_heads"];
 
-    if (mapping olddefs = ctx->misc->old_defines) {
+    if (mapping orig_defines = ctx->id_defines) {
       // Somehow it seems like these values are stored in the wrong place.. :P
-      if (int v = ctx->misc[" _error"]) olddefs[" _error"] = v;
-      if (string v = ctx->misc[" _rettext"]) olddefs[" _rettext"] = v;
-      id->misc->defines = olddefs;
+      if (int v = ctx->misc[" _error"]) orig_defines[" _error"] = v;
+      if (string v = ctx->misc[" _rettext"]) orig_defines[" _rettext"] = v;
+      id->misc->defines = orig_defines;
     }
 
     PROF_LEAVE( "rxml", "overhead" );
