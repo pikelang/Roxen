@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.8 1997/04/05 18:16:32 marcus Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.9 1997/04/07 23:14:19 marcus Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -26,7 +26,7 @@ import Array;
 #define perror	roxen_perror
 
 string dataport_addr, cwd ="/";
-int dataport_port;
+int controlport_port, dataport_port;
 int GRUK = random(_time(1));
 #undef QUERY
 #define QUERY(X) roxen->variables->X[VAR_VALUE]
@@ -254,11 +254,10 @@ void connect_and_send(mapping file)
 
   object privs = (object)"privs";
 
-  // FIXME: Should really use ftp_port - 1
-  if(!f->open_socket(20))
+  if(!f->open_socket(controlport_port-1))
   {
 #ifdef FTP_DEBUG
-    perror("ftp: socket(20) failed. Trying with any port.\n");
+    perror("ftp: socket("+(controlport_port-1)+") failed. Trying with any port.\n");
 #endif
     if (!f->open_socket()) {
 #ifdef FTP_DEBUG
@@ -272,8 +271,8 @@ void connect_and_send(mapping file)
   privs = 0;
 
   f->set_nonblocking(0, lambda(array args) {
-#ifdef SOCKET_DEBUG
-    perror("SOCKETS: async_connect ok.\n");
+#ifdef FTP_DEBUG
+    perror("ftp: async_connect ok.\n");
 #endif
     args[2]->set_id(0);
     args[0](args[2], @args[1]);
@@ -290,7 +289,7 @@ void connect_and_send(mapping file)
   mark_fd(f->query_fd(),
 	  "ftp communication: -> "+dataport_addr+":"+dataport_port);
 
-  if(catch(f->connect(dataport_addr, dataport_port))) // Illegal format...
+  if(catch(f->connect(dataport_addr, dataport_port)))
   {
 #ifdef FTP_DEBUG
     perror("ftp: Illegal internet address in connect in async comm.\n");
@@ -785,6 +784,11 @@ void create(object f, object c)
     my_fd->set_read_callback(got_data);
     my_fd->set_write_callback(lambda(){});
     my_fd->set_close_callback(end);
+
+    if(2 != sscanf(my_fd->query_address(17)||"", "%*s %d", controlport_port))
+      controlport_port = 21;
+
+    sscanf(my_fd->query_address()||"", "%s %d", dataport_addr, dataport_port);
 
     not_query = "/welcome.msg";
     call_out(end, 3600);
