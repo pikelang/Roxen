@@ -290,6 +290,12 @@ string|array tag_insert(string tag,mapping m,RequestID id)
     return m->quote!="html"?n:({ Roxen.http_encode_string(n) });
   }
 
+  if(m->var) {
+    object|array tagfunc=RXML.get_context()->tag_set->get_tag("!--#echo");
+    if(!tagfunc) RXML.run_error("No SSI module added.\n");
+    return ({ 1, "!--#echo", m});
+  }
+
   return ({1});
 }
 
