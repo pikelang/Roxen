@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.19 2001/11/07 14:00:57 grubba Exp $
+ * $Id: debug_info.pike,v 1.20 2001/11/27 10:45:09 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -353,7 +353,8 @@ mixed page_0( object id )
 
 mixed parse( RequestID id )
 {
-  return page_0( id )
+  return "<p><cf-refresh/></p>\n" +
+    page_0( id )
 #if 0
 #if constant( get_profiling_info )
          + page_1( id )
