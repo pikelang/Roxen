@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.25 2000/03/10 02:15:08 nilsson Exp $
+// $Id: global_variables.pike,v 1.26 2000/03/13 06:12:32 per Exp $
 
 #pragma strict_types
 #define DEFVAR string,int|string,string|mapping,int,string|mapping(string:string),void|array(string),void|function:void
@@ -174,7 +174,7 @@ void set_up_fhttp_variables( object o )
              ]),
           ]) );
 
-  defvar( "log_file", "../logs/clog-"+[string]o->ip+":"+[string]o->port,
+  defvar( "log_file", "$LOGDIR/clog-"+[string]o->ip+":"+[string]o->port,
           ([ "standard":"Log file",
              "svenska":"Logfil",
              "deutsch":"Logdatei", ]), TYPE_FILE,
@@ -352,7 +352,7 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
                 "In diesen Verzeichnissen befinden sich Schriftarten.");
 
   globvar("logdirprefix", "../logs/", "Logging: Log directory prefix",
-	  TYPE_DIR|VAR_MORE,
+	  TYPE_STRING|VAR_MORE,
 	  #"This is the default file path that will be prepended to the log
  file path in all the default modules and the virtual server.");
 
@@ -1008,13 +1008,13 @@ så här ofta. Tiden är angiven i dagar");
                "Welche Datenbank soll für den Argumenten-Cache "
                "benutzt werden?");
 
-  globvar("argument_cache_dir", "../argument_cache/",
+  globvar("argument_cache_dir", "$VARDIR/cache/",
           "Cache: Argument Cache Directory",
           TYPE_DIR|VAR_MORE,
           "The cache directory to use to store the argument cache."
           " Please note that load balancing is not available for most modules "
           " (such as gtext, diagram etc) unless you use a mysql database to "
-          "store the argument caches");
+          "store the argument cache meta data");
   deflocaledoc("svenska", "argument_cache_dir",
                "Cache: Argumentcachedirectory",
                "Det directory i vilket cachen kommer att sparas. "
