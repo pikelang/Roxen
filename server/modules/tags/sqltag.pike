@@ -1,5 +1,5 @@
 /* 
- * $Id: sqltag.pike,v 1.31 1998/09/30 23:11:29 js Exp $
+ * $Id: sqltag.pike,v 1.32 1998/11/02 12:35:29 mast Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.31 1998/09/30 23:11:29 js Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.32 1998/11/02 12:35:29 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -38,7 +38,7 @@ array register_module()
 	     "<tr><td valign=top><b>&lt;sqloutput&gt;</b></td>"
 	     "<td>Executes an SQL-query, and "
 	     "replaces #-quoted fieldnames with the results. # is "
-	     "quoted as ##. The content inbetween &lt;sqloutput&gt; and "
+	     "quoted as ##. The content between &lt;sqloutput&gt; and "
 	     "&lt;/sqloutput&gt; is repeated once for every row in the "
 	     "result.</td></tr>\n"
 	     "<tr><td valign=top><b>&lt;sqlquery&gt;</b></td>\n"
@@ -52,7 +52,7 @@ array register_module()
 	     "The following attributes are used by the above tags:<ul>\n"
 	     "<table border=0>\n"
 	     "<tr><td valign=top><b>query</b></td>"
-	     "<td>The actual SQL-query. (<b>REQUIERED</b>)</td></tr>\n"
+	     "<td>The actual SQL-query. (<b>REQUIRED</b>)</td></tr>\n"
 	     "<tr><td valign=top><b>host<b></td>"
 	     "<td>The hostname of the machine the SQL-server runs on.<br>\n"
 	     "This argument can also be used to specify which SQL-server "
@@ -82,7 +82,7 @@ array register_module()
 	     "to be a security hole if the module is not loaded for some "
 	     "reason.<br>\n"
 	     "<b>SEE ALSO</b>: The &lt;FORMOUTPUT&gt; tag can be "
-	     "usefull to generate the queries.<br>\n",
+	     "useful to generate the queries.<br>\n",
 	     0,
 	     1 }) );
 }
