@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.42 2003/01/14 17:41:17 anders Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.43 2003/07/28 12:17:21 anders Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -490,6 +490,7 @@ class TagVForm {
       m_delete(id->misc, "vform_xml");
 
       if(!args->method) args->method="post";
+      if(!args->action) args->action=get_var("self", "page");
       result = RXML.t_xml->format_tag("form", args, content);
       return 0;
     }
@@ -550,9 +551,6 @@ constant tagdoc=([
 <attr name='name' value='string'><p>
  The name of the vform variable to force as verified ok.</p>
 </attr>",
-
-// It's a tagdoc bug that these, locally defined if-plugins does not show up
-// in the online manual.
 
 "if#vform-failed":#"<desc type='plugin'><p>
  If used with empty argument this will be true if the complete form is
