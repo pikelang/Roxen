@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.51 2000/05/14 23:43:17 nilsson Exp $
+// $Id: cache.pike,v 1.52 2000/06/20 19:59:04 grubba Exp $
 
 #pragma strict_types
 
@@ -237,9 +237,10 @@ void cache_clean()
       }
       else {
 	if(!c[SIZE]) {
-	  c[SIZE]=(get_size(c[DATA])+5*svalsize+4)/100;
+	  c[SIZE]=(get_size(b) + get_size(c[DATA]) + 5*svalsize + 4)/100;
 	  // (Entry size + cache overhead) / arbitrary factor
-          CACHE40_WERR("     Cache entry size percieved as "+([int]c[SIZE]*100)+" bytes\n");
+          CACHE40_WERR("     Cache entry size percieved as " +
+		       ([int]c[SIZE]*100) + " bytes\n");
 	}
 	if(c[TIMESTAMP]+1 < t && c[TIMESTAMP] + gc_time -
 	   c[SIZE] < t)
