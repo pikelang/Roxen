@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.290 2002/09/26 23:03:33 nilsson Exp $
+// $Id: module.pmod,v 1.291 2002/10/22 01:27:22 nilsson Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1601,7 +1601,7 @@ class Context
   //! when the scope and variable is known, it's more efficient to use
   //! @[get_var].
   {
-    if(!var || !sizeof(var)) return ([])[0];
+    if(!var || !sizeof(var)) return UNDEFINED;
     array(string|int) splitted = parse_user_var (var, scope_name);
     return get_var (splitted[1..], splitted[0], want_type);
   }
@@ -4749,12 +4749,12 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
     }
 
     if (val == nil)
-      return ([])[0];
+      return UNDEFINED;
     else if (!objectp (val) || !([object] val)->rxml_var_eval)
       if (want_type && !scope_got_type)
 	return
 	  // FIXME: Some system to find out the source type?
-	  zero_type (val = want_type->encode (val)) || val == nil ? ([])[0] : val;
+	  zero_type (val = want_type->encode (val)) || val == nil ? UNDEFINED : val;
       else
 	return val;
 
@@ -4773,7 +4773,7 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
       if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
 		       ctx, index, scope_name, want_type)) ||
 	  val == nil)
-	return ([])[0];
+	return UNDEFINED;
 #ifdef MODULE_DEBUG
       else if (mixed err = want_type && catch (want_type->type_check (val)))
 	if (objectp (err) && ([object] err)->is_RXML_Backtrace)
@@ -7945,7 +7945,7 @@ class RenewablePCode
 #  define ENCODE_DEBUG_RETURN(val) do {					\
   mixed _v__ = (val);							\
   report_debug ("  returned %s\n",					\
-		zero_type (_v__) ? "([])[0]" :				\
+		zero_type (_v__) ? "UNDEFINED" :				\
 		format_short (_v__, 160));				\
   return _v__;								\
 } while (0)
@@ -8104,7 +8104,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 		    (what->RXML_dump_frame_reference ?
 		     "it got no tag object\n" :
 		     "it got no identifier RXML_dump_frame_reference\n"));
-	return ([])[0];
+	return UNDEFINED;
       }
 
       else if (what->is_RXML_Tag) {
@@ -8116,7 +8116,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	    what->name + (what->plugin_name? "#"+what->plugin_name : "")}));
 	ENCODE_MSG ("  encoding tag recursively since " +
 		    (what->name ? "it got no tag set\n" : "it's nameless\n"));
-	return ([])[0];
+	return UNDEFINED;
       }
 
       else if (what->is_RXML_TagSet) {
@@ -8162,7 +8162,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 #endif
       else if (what->is_RXML_encodable) {
 	ENCODE_MSG ("  encoding object recursively\n");
-	return ([])[0];
+	return UNDEFINED;
       }
     }
 
@@ -8171,7 +8171,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	ENCODE_MSG ("nameof (program %s)\n", Program.defined (what));
 	if (what->is_RXML_pike_code) {
 	  ENCODE_MSG ("  encoding byte code\n");
-	  return ([])[0];
+	  return UNDEFINED;
 	}
 
 	else if (what->is_RXML_Parser) {
@@ -8189,7 +8189,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	  // identifier within it.
 	  ENCODE_MSG ("  encoding reference to program %O->%O\n",
 		      function_object (what), what);
-	  return ([])[0];
+	  return UNDEFINED;
 	}
       }
       else
@@ -8198,7 +8198,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
       if (object o = functionp (what) && function_object (what))
 	if (o->is_RXML_encodable) {
 	  ENCODE_MSG ("  encoding reference to function %O->%O\n", o, what);
-	  return ([])[0];
+	  return UNDEFINED;
 	}
     }
 
