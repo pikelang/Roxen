@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.182 2003/11/17 16:01:36 anders Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.183 2004/05/18 17:07:17 grubba Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -331,7 +331,7 @@ class Scope_usr
        return ENCODE_RXML_TEXT( (string)Image.Color( @map(map(a,max,0),min,255) ), type);
      }
     }
-    return config_setting( var );
+    return config_setting(var) || id->prestate[var];
   }
 
   string _sprintf() { return "RXML.Scope(usr)"; }
