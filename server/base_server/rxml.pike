@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.160 2000/03/07 22:15:56 nilsson Exp $
+// $Id: rxml.pike,v 1.161 2000/03/08 01:13:04 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -135,17 +135,7 @@ class ScopeRoxen {
        return time(1);
      case "server":
        //FIXME: This does not always work!
-       string world_url = c->id->conf->query("MyWorldLocation");
-       if (world_url == "") world_url = 0;
-       array(string) urls = c->id->conf->query("URLs");
-       string hostname = gethostname();
-       for (int i = 0; i < sizeof (urls); i++) {
-	 if (world_url && glob (urls[i], world_url)) urls[i] = 0;
-	 else if (sizeof (urls[i]/"*") == 2)
-	   urls[i] = replace(urls[i], "*", hostname);
-       }
-       if (world_url) urls = ({world_url}) | (urls - ({0}));
-       return urls*"";
+       return c->id->conf->query("MyWorldLocation");
     }
     :: `[] (var, c, scope);
   }
