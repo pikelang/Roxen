@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.79 1999/10/08 17:20:34 per Exp $
+# $Id: start,v 1.80 1999/11/03 20:19:32 grubba Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -79,7 +79,7 @@ parse_args() {
    DEFINES="$DEFINES $1"
   ;;
   -l*)
-   ARGS="$DEFINES $1"
+   ARGS="$ARGS $1"
   ;;
 # Used by the 'install' script
   --truss)
@@ -162,7 +162,7 @@ parse_args() {
     once=1
     shift
   ;;
-  -d*|-t*|-l*)
+  -d*|-t*|-l*|-w*)
     # Argument passed along to Pike.
     ARGS="$ARGS $1"
   ;;
@@ -285,6 +285,7 @@ the default arguments.
        .B-t<level>B.:                 Turn on more Pike tracing. This only 
 				  works if Pike is compiled with debug.
 
+       .B-wB.:                        Turn on Pike warnings.
 
   .BEnvironment variables:B.
 
@@ -397,6 +398,22 @@ if uname | grep 'HP-UX' >/dev/null 2>&1; then
   DEFINES="$DEFINES -DHPUX_KLUDGE"
 fi
 
+
+case "x$debug" in
+  "x")
+    DEBUG="-DMODULE_DEBUG"
+    ;;
+  "x-1")
+    DEBUG=""
+    ;;
+  "x1")
+    DEBUG="-DDEBUG -DMODULE_DEBUG"
+    ARGS="$ARGS -w"
+    ;;
+esac
+
+DEFINES="$DEBUG $DEFINES"
+
 ####### END PIKE OPTIONS
 
 
@@ -437,18 +454,6 @@ start_roxen() {
 #
 # Now do the stuff
 #
-
-if [ -z "$debug" ] ; then
-  DEBUG="-DMODULE_DEBUG";
-else
-  DEBUG="-DDEBUG -DMODULE_DEBUG"
-fi
-
-if [ "x$debug" = "x-1" ] ; then
-  DEBUG="";
-else :; fi
-
-DEFINES="$DEBUG $DEFINES"
 PIKEVERSION=`$pike --version 2>&1`
 
 
