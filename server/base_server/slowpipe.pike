@@ -10,7 +10,7 @@
 // on demand might be very interesting to save memory and increase
 // performance. We'll see.
 
-constant cvs_version="$Id: slowpipe.pike,v 1.13 2002/03/27 20:07:18 per-bash Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.14 2002/03/28 03:06:50 per-bash Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -54,7 +54,7 @@ void output (Stdio.File fd) {
   last_write=writing_starttime=time(1);
   bucket=initial_bucket; //need to initialize it here, or ftp
                          //will cause problems with long-lived sessions..
-  outfd->set_nonblocking(0,write_some,0);
+  outfd->set_nonblocking(lambda(){},write_some,check_for_closing);
   call_out(check_for_closing,10);
   call_out( write_some, 0.1 );
 }
@@ -186,7 +186,11 @@ void finally_write(int howmuch) {
   THROTTLING_DEBUG("slowpipe: finally_write. howmuch="+howmuch);
   int written;
   //actual write
-  written=outfd->write( tosend[..howmuch-1] );
+  if( catch (written=outfd->write( tosend[..howmuch-1] )) )
+  {
+    finish();
+    return;
+  }
   THROTTLING_DEBUG("slowpipe: actually wrote "+written);
   status->written += written;
   if (written==-1) {
@@ -204,26 +208,25 @@ void finally_write(int howmuch) {
 
 void check_for_closing()
 {
-  THROTTLING_DEBUG("slowpipe: check_for_closing "+
-                   (outfd?outfd->query_address():"unknown")
-                   );
-  if(!outfd || !outfd->query_address()) {
+  if(!outfd || catch(outfd->query_address()) || !outfd->query_address()) {
 #ifdef FD_DEBUG
     write("Detected closed FD. Self-Destructing.\n");
 #endif
     finish();
-  } else
-    call_out(check_for_closing, 10);
+  }
+  else
+    call_out(check_for_closing, 2);
 }
 
-void finish() {
+void finish()
+{
   status->closed = 1;
   int delta=time(1)-writing_starttime;
   if (!delta) delta=1; //avoid division by zero errors
   THROTTLING_DEBUG("slowpipe: cleaning up and leaving ("+
                    delta+" sec, "+(sent?(sent/delta):0)+" bps)");;
   if (outfd) {
-    outfd->set_blocking();
+    catch(outfd->set_blocking());
     outfd=0;
   }
   tosend=0;
