@@ -1,45 +1,6 @@
-// ftpgateway.pike
-
 // This module implements an ftp proxy
 
-// changelog:
-// 1.8a  dec 8 david
-//       Now handles the 213 Stat result code as well. Also fixed a
-//       bug so that you get a redirect from ftp://foo.bar.com to
-//       ftp://foo.bar.com/. The links from the first page didn't work
-//       if the trailing slash was missing.
-// 1.8   nov 19 kg
-//       Update to newer Pike/Roxen.
-//       Handle passwords.
-//       Do not reuse sessions with same host but different users.
-//       Include the request class in the main file.
-// 1.7e  oct 4 david
-//       Fixed the case when you open a directory that is a link.
-//       Some 'stat' replies with 212 instead of 211. 
-//	 The proxy now supports them as well.
-// 1.7d  aug 28 per  (95)
-//       Fixed all 'spinner' -> 'roxen'
-// 1.7c  feb 24 per
-//       Fixed all 'spider' -> 'spinner'
-// 1.7b  jan 11 law
-//       bugfix in stat_result
-//       (handle "ok" from "PASS" and 500 as stat is unknown command)
-// 1.7   nov 29 law
-//       remembers and show server information
-//       show session information (if SESSION_INFO is #defined) as comment in html
-// 1.6d  nov 25 law
-//       bugfix in one-link-only-in-directory-redirect
-//       effect is kept in links
-// 1.6c  nov 24 david h
-//       decription support in uwp directory type
-// 1.6b  nov 23 law
-//       ...version information in footers
-// 1.6   nov 23 law (96)
-//       new directory format (used by ftp.uwp.edu) 
-// 1.12  may '97
-//       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
-
-string cvs_version = "$Id: ftpgateway.pike,v 1.28 1999/09/25 14:56:37 nilsson Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.29 1999/12/18 14:48:18 nilsson Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -50,8 +11,6 @@ import Stdio;
 #  define PROXY_DEBUG
 # endif
 #endif
-
-#define VERSION "1.8b"
 
 // If this is defined, the session log will be included in a HTML
 // comment on the returned page.
@@ -69,7 +28,7 @@ Content-type: text/html\r\n\
 <hr>\
 <font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a></font>"
 
-#define INFOSTRING "<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a> FTP Gateway "+VERSION+" / <i>law@idonex.se</i></font>"
+#define INFOSTRING "<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a> FTP Gateway $Revision: 1.29 $ / <i>law@idonex.se</i></font>"
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -152,7 +111,7 @@ class Request {
 #ifdef FTP_GATEWAY_DEBUG
   void set_what_now(string s)
   {
-    roxen_perror("FTP GATEWAY: #"+serial+" "+host+"/"+file+": "+s+"\n");
+    werror("FTP GATEWAY: #"+serial+" "+host+"/"+file+": "+s+"\n");
     what_now=s;
   }
 #else
@@ -163,10 +122,10 @@ class Request {
   {
     set_what_now("selfdestructing");
     /*
-      if (objectp(dataport)) { perror("had dataport\n"); destruct(dataport); }
-      if (objectp(datacon)) { perror("had datacon\n"); destruct(datacon); }
-      if (objectp(server)) { perror("had server\n"); destruct(server); }
-      if (objectp(id)) { perror("had id\n"); id->end(); }
+      if (objectp(dataport)) { werror("had dataport\n"); destruct(dataport); }
+      if (objectp(datacon)) { werror("had datacon\n"); destruct(datacon); }
+      if (objectp(server)) { werror("had server\n"); destruct(server); }
+      if (objectp(id)) { werror("had id\n"); id->end(); }
       */
     i_am_destructed=1;
     call_out(lambda() { set_what_now("bye"); destruct(); },10);
@@ -497,7 +456,7 @@ class Request {
 	     !(res=parse_directory_without_first_line()))
     {
       /* unknown, return preformatted */
-      roxen_perror("FTP GATEWAY: unknown list format at "+
+      werror("FTP GATEWAY: unknown list format at "+
 		   (user?user+"@":"")+host+":"+port+"/"+file+"\n");
       res="(Unrecognized directory type)<br>\n<pre>"+buffer+"</pre>";
     }
@@ -582,7 +541,7 @@ class Request {
   void transfer_completed() /* called from pipe */
   {
 #ifdef DESTRUCT_CHECK
-    if (i_am_destructed) roxen_perror("I AM DESTRUCTED: transfer_completed\n");
+    if (i_am_destructed) werror("I AM DESTRUCTED: transfer_completed\n");
 #endif
     id->end();
     save_stuff();
@@ -692,7 +651,7 @@ class Request {
   {
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed)
-      roxen_perror("I AM DESTRUCTED: active_transfer_accept\n\n\n");
+      werror("I AM DESTRUCTED: active_transfer_accept\n\n\n");
 #endif
     remove_call_out(data_connect_timeout);
     datacon=port->accept();
@@ -787,7 +746,7 @@ class Request {
   {
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed)
-      roxen_perror("I AM DESTRUCTED: got_passive_connection\n");
+      werror("I AM DESTRUCTED: got_passive_connection\n");
 #endif
     if (!d)
     {
@@ -936,7 +895,7 @@ class Request {
 
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed)
-      roxen_perror("I AM DESTRUCTED: read_server\n");
+      werror("I AM DESTRUCTED: read_server\n");
 #endif
 
     if (!objectp(id)) 
@@ -955,7 +914,7 @@ class Request {
       session+="<- "+s+"\n";
 #endif
 #ifdef DEBUG
-      roxen_perror("parse "+s+"\n");
+      werror("parse "+s+"\n");
 #endif
       if (strlen(s)<4||s[3]!=' '||
 	  s[0]<'0'||s[0]>'9'||
@@ -1016,7 +975,7 @@ class Request {
   {
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed)
-      roxen_perror("I AM DESTRUCTED: server_close\n");
+      werror("I AM DESTRUCTED: server_close\n");
 #endif
     if (id) 
       id->end(ERROR_MESSAGE("Connection closed by <tt>"+host+"</tt>"));
@@ -1030,7 +989,7 @@ class Request {
   {
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed)
-      roxen_perror("I AM DESTRUCTED: connected\n\n\n");
+      werror("I AM DESTRUCTED: connected\n\n\n");
 #endif
     if (objectp(id)) 
     {
@@ -1046,7 +1005,7 @@ class Request {
   {
 #ifdef DESTRUCT_CHECK
     if (i_am_destructed)
-      roxen_perror("I AM DESTRUCTED: connected\n\n\n");
+      werror("I AM DESTRUCTED: connected\n\n\n");
 #endif
     remove_call_out(connection_timeout);
     if (!objectp(id)) 
@@ -1146,7 +1105,7 @@ void start()
     return;
 
 #ifdef PROXY_DEBUG
-  roxen_perror("FTP gateway online.\n");
+  werror("FTP gateway online.\n");
 #endif
 
   if(QUERY(logfile) == "stdout")
@@ -1334,7 +1293,7 @@ void connected_to_server(object o, string file, object id, int is_remote)
   }
 
 #ifdef PROXY_DEBUG
-  roxen_perror("FTP PROXY: Connected.\n");
+  werror("FTP PROXY: Connected.\n");
 #endif
 
 //  new_request=Request();
@@ -1497,7 +1456,7 @@ void remove_dataport(mixed m)
 void dataport_accept(object u)
 {
   if(!u){
-    roxen_perror("FTP GATEWAY: no arguments to dataport_accept()\n");
+    werror("FTP GATEWAY: no arguments to dataport_accept()\n");
     return;
   }
   if (request_port[u])
@@ -1505,7 +1464,7 @@ void dataport_accept(object u)
   else 
   {
     object con;
-    roxen_perror("FTP GATEWAY: accept on forgotten port, "
+    werror("FTP GATEWAY: accept on forgotten port, "
 		 "cancelling connection\n");
     con=u->accept();
     if (con) { destruct(con); }
@@ -1526,7 +1485,7 @@ mixed create_dataport(function acceptfunc)
   }
   if (dataport->query_id() != dataport){
 #ifdef PROXY_DEBUG
-    roxen_perror("FTP GATEWAY: id set to dataport\n");
+    werror("FTP GATEWAY: id set to dataport\n");
 #endif /* PROXY_DEBUG */
     dataport->set_id(dataport);
   }

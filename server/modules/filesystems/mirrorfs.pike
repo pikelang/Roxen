@@ -1,4 +1,4 @@
-constant cvs_version="$Id: mirrorfs.pike,v 1.11 1999/11/24 15:02:39 per Exp $";
+constant cvs_version="$Id: mirrorfs.pike,v 1.12 1999/12/18 14:42:09 nilsson Exp $";
 constant thread_safe=1;
 
 import RoxenRPC;
@@ -50,7 +50,7 @@ object rpc(int|void force)
       _rpc = Client(s[0],(int)s[1],"mirror",1);
     }) {
       _rpc = 0;
-      perror("mirrorfs:Failed to connect to server %s:%s\n",
+      werror("mirrorfs:Failed to connect to server %s:%s\n",
 	     s[0], s[1]);
     }
   }
@@ -127,7 +127,7 @@ void start(int arg, object conf)
 void get_remote_dir(string dir)
 {
 #ifdef MODULE_DEBUG
-  roxen_perror("get_remote_dir(\""+dir+"\")\n");
+  werror("get_remote_dir(\""+dir+"\")\n");
 #endif /* MODULE_DEBOG */
   string l = combine_path(path,combine_path("/",dir+"/")[1..]);
   array d ;
@@ -142,7 +142,7 @@ void get_remote_dir(string dir)
 void get_remote_file(string f)
 {
 #ifdef MODULE_DEBUG
-  roxen_perror("get_remote_file(\""+f+"\")\n");
+  werror("get_remote_file(\""+f+"\")\n");
 #endif /* MODULE_DEBOG */
   if(!strlen(f) || f[-1]=='/') f+="index.html";
   string l = combine_path(path,combine_path("/",f)[1..]);
@@ -234,7 +234,7 @@ class RemoteFile {
 object(RemoteFile) open_remote_file(string f)
 {
 #ifdef MODULE_DEBUG
-  roxen_perror("open_remote_file(\""+f+"\")\n");
+  werror("open_remote_file(\""+f+"\")\n");
 #endif /* MODULE_DEBOG */
   if(!strlen(f) || f[-1]=='/') f+="index.html";
   string l = combine_path(path,combine_path("/",f)[1..]);
@@ -272,7 +272,7 @@ array stat_file(string s, object id)
   array res;
   if(res=::stat_file(s,id)) return res;
 #ifdef MODULE_DEBUG
-  roxen_perror("remote_stat_file(\""+s+"\")\n");
+  werror("remote_stat_file(\""+s+"\")\n");
 #endif /* MODULE_DEBOG */
   return rpc() && rpc()->stat_file(s);
 }
@@ -282,7 +282,7 @@ mixed find_file(string s, object id)
 {
   mixed res;
 #ifdef MODULE_DEBUG
-  roxen_perror("find_file(\""+s+"\")\n");
+  werror("find_file(\""+s+"\")\n");
 #endif /* MODULE_DEBOG */
   if(res=::find_file(s,id)) return res;
   if((res=stat_file(s,id)) && res[ST_SIZE]<-1) return -1;
