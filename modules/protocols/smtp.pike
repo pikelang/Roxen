@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.6 1998/07/16 19:41:39 js Exp $
+ * $Id: smtp.pike,v 1.7 1998/09/02 00:25:40 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.6 1998/07/16 19:41:39 js Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.7 1998/09/02 00:25:40 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -148,6 +148,52 @@ class Server {
       }
     }
 
+    static multiset do_expn(multiset in)
+    {
+#ifdef SMTP_DEBUG
+      roxen_perror(sprintf("SMTP: Expanding %O\n", recipients));
+#endif /* SMTP_DEBUG */
+
+      multiset expanded = (<>);		// Addresses expanded ok.
+      multiset done = (<>);		// Addresses that have been EXPN'ed.
+      multiset to_do = copy_value(in);	// Addresses still left to expand.
+
+      array expns = Array.filter(conf->get_providers("smtp_rcpt")||({}),
+				 lambda(object o){ return(o->expn); });
+
+      while (sizeof(to_do)) {
+	foreach(indices(to_do), string addr) {
+	  done[addr] = 1;
+	  to_do[addr] = 0;
+	  int verbatim = 1;
+	  foreach(expns, object o) {
+	    string|multiset e = o->expn(addr);
+	    if (e) {
+	      verbatim = 0;
+	      if (stringp(e)) {
+		expanded[e] = 1;
+	      } else if (multisetp(e)) {
+		to_do |= e - done;
+	      } else {
+		report_error(sprintf("SMTP: EXPN returned other than "
+				     "mapping or string!\n"
+				     "%O => %O\n", addr, e));
+	      }
+	    }
+	  }
+	  if (verbatim) {
+	    expanded[addr] = 1;
+	  }
+	}
+      }
+
+#ifdef SMTP_DEBUG
+      roxen_perror(sprintf("SMTP: EXPN pass done: %O\n", expanded));
+#endif /* SMTP_DEBUG */
+
+      return(expanded);
+    }
+
     void smtp_NOOP(string noop, string args)
     {
       send(250, ({ "Nothing done OK" }));
@@ -211,40 +257,6 @@ class Server {
       smtp_HELO("HELO", args);
     }
 
-    static multiset(string) expand_recipient(string recipient)
-    {
-      multiset(string) expanded = (<>);
-      multiset(string) seen = (<>);
-      multiset(string) to_expand = (< recipient >);
-
-      while(sizeof(to_expand)) {
-	foreach(indices(to_expand), string r) {
-	  if (seen[r]) {
-	    // Shouldn't happen, but...
-	    expanded[r] = 1;
-	    continue;
-	  }
-	  to_expand[r] = 0;
-	  seen[r] = 1;
-	  foreach(conf->get_providers("smtp_recipient")||({}), object o) {
-	    if (functionp(o->expand_recipient)) {
-	      multiset(string) nr = o->expand_recipient(r);
-	      if (nr) {
-		if (nr[r]) {
-		  // Loop means keep me.
-		  expanded[r] = 1;
-		}
-		to_expand |= nr - seen;
-		break;
-	      }
-	    }
-	  }
-	  expanded[r] = 1;
-	}
-      }
-      return(expanded);
-    }
-
     void smtp_EXPN(string mail, string args)
     {
       if (!sizeof(args)) {
@@ -252,9 +264,29 @@ class Server {
 	return;
       }
 
-      multiset m = expand_recipient(args);
+      multiset m = do_expn((<args>));
 
-      send(250, sort(indices(m)));
+      array result = ({});
+
+      array rcpts = Array.filter(conf->get_providers("smtp_rcpt")||({}),
+				 lambda(object o) { return(o->desc); });
+
+      foreach(indices(m), string a) {
+	int handled = 0;
+	foreach(rcpts, object o) {
+	  string l = o->desc(a);
+	  if (l) {
+	    result += ({ l });
+	    handled = 1;
+	  }
+	}
+	if (!handled) {
+	  // Default.
+	  result += ({ a });
+	}
+      }
+
+      send(250, sort(result));
     }
 
     string sender = "";
@@ -322,7 +354,25 @@ class Server {
 	      }
 	    }
 
-	    recipients += expand_recipient(recipient);
+	    int recipient_ok = 0;
+
+	    foreach(conf->get_providers("smtp_expn")||({}), object o) {
+	      if (functionp(o->expn) &&
+		  o->expn(sender, recipient, this_object())) {
+		recipient_ok = 1;
+		break;
+	      }
+	    }
+
+	    if (!recipient_ok) {
+#ifdef SMTP_DEBUG
+	      roxen_perror("Unhandled recipient.\n");
+#endif /* SMTP_DEBUG */
+	      send(450);
+	      return;
+	    }
+
+	    recipients += (< recipient >);
 	    send(250);
 	    return;
 	  }
@@ -333,15 +383,13 @@ class Server {
 
     void handle_DATA(string data)
     {
-      // Add received-headers here.
-
       roxen_perror(sprintf("GOT: %O\n", data));
 
       array spooler;
 
-      foreach(conf->get_proviers("spooler")||({}), object o) {
+      foreach(conf->get_proviers("automail_clientlayer")||({}), object o) {
 	string id;
-	if ((id = o->reserve_spool_id())) {
+	if ((id = o->get_unique_body_id())) {
 	  spooler = ({ o, id });
 	  break;
 	}
@@ -353,6 +401,8 @@ class Server {
 	return;
       }
 
+      // Add received-headers here.
+
       string received = sprintf("from %s (%s [%s]) by %s with %s id %s; %s",
 				remotename, remotehost||"", remoteip,
 				localhost, prot, spooler[1], mktimestamp());
@@ -361,20 +411,26 @@ class Server {
 
       roxen_perror(sprintf("Received: %O\n", received));
 
-      object mess = MIME.Message(data, 0, 0, 1);
+      object f = spooler[0]->get_fileobject(spooler[1]);
 
-      mixed res;
-      res = spooler[0]->spool(({ sender, recipients, mess }), spooler[1]);
-
-      if (!res) {
+      if (f->write(data) != sizeof(data)) {
+	spooler[0]->delete_body(spooler[1]);
 	send(452);
 	report_error("SMTP: Spooler failed.\n");
-      } else if (res == spooler[1]) {
-	send(250);
-	report_notice("SMTP: Mail spooled OK.\n");
-      } else {
-	send(451);
-	report_error("SMTP: Internal spooler error.\n");
+	return;
+      }
+
+      send(250);
+      report_notice("SMTP: Mail spooled OK.\n");
+
+      // Now it's time to actually deliver the message.
+
+      // Expand.
+      multiset expanded = do_expn(recipients);
+
+      /* Do the delivery */
+      foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
+	o->put(expanded, spooler[1]);
       }
     }
 
@@ -504,17 +560,20 @@ array register_module()
 void create()
 {
   defvar("port", Protocols.Ports.tcp.smtp, "SMTP port number", TYPE_INT,
-	 "Portnumber to listen to. Usually " + Protocols.Ports.tcp.smtp + ".\n");
+	 "Portnumber to listen to. "
+	 "Usually " + Protocols.Ports.tcp.smtp + ".\n");
 }
 
 object smtp_server;
 
 void start(int i, object c)
 {
-  if (c && !smtp_server) {
+  if (c) {
     mixed err;
     err = catch {
-      smtp_server = Server(c, ([]), QUERY(port));
+      if (spooler && !smtp_server) {
+	smtp_server = Server(c, ([]), QUERY(port));
+      }
     };
     if (err) {
       report_error(sprintf("SMTP: Failed to initialize the server:\n"
