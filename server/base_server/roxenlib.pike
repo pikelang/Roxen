@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.201 2001/01/01 09:06:55 nilsson Exp $
+// $Id: roxenlib.pike,v 1.202 2001/02/16 15:07:16 mast Exp $
 
 //#pragma strict_types
 
@@ -261,11 +261,12 @@ mapping build_roxen_env_vars(RequestID id)
   foreach(indices(id->variables), tmp)
   {
     string name = replace(tmp," ","_");
-    if (id->variables[tmp] && (sizeof(id->variables[tmp]) < 8192)) {
-      /* Some shells/OS's don't like LARGE environment variables */
-      new["QUERY_"+name] = replace(id->variables[tmp],"\000"," ");
-      new["VAR_"+name] = replace(id->variables[tmp],"\000","#");
-    }
+    if (mixed value = id->variables[tmp])
+      if (!catch (value = (string) value) && (sizeof(value) < 8192)) {
+	/* Some shells/OS's don't like LARGE environment variables */
+	new["QUERY_"+name] = replace(value,"\000"," ");
+	new["VAR_"+name] = replace(value,"\000","#");
+      }
     if(new["VARIABLES"])
       new["VARIABLES"]+= " " + name;
     else
