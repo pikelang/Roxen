@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.152 1998/09/20 08:33:23 neotron Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.153 1998/09/21 16:29:40 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -431,7 +431,7 @@ object make_text_image(mapping args, object font, string text,object id)
       background=Image.image(xsize,ysize, @(parse_color(args->background[1..])));
     }
       
-    if((float)args->scale >= 0.1)
+    if((float)args->scale >= 0.1 && !alpha)
       background = background->scale(1.0/(float)args->scale);
     
     if(args->tile)
@@ -1179,9 +1179,9 @@ string magic_javascript_header(object id)
 
 string magic_image(string url, int xs, int ys, string sn,
 		   string image_1, string image_2, string alt,
-		   string mess,object id,string input,string extra_args)
+		   string mess,object id,string input,string extra_args,string lp)
 {
-  if(!id->supports->images) return alt;
+  if(!id->supports->images) return (lp?lp:"")+alt+(lp?"</a>":"");
   if(!id->supports->netscape_javascript)
     return (!input)?
        ("<a "+extra_args+"href=\""+url+"\"><img src=\""+image_1+"\" name="+sn+" border=0 "+
@@ -1461,7 +1461,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
 			       query_location()+num2+"/"+quote(gt)+gif,
 			       (arg->alt?arg->alt:replace(gt, "\"","'")),
 			       (magic=="magic"?0:magic),
-			       id,input?na||"submit":0,ea),
+			       id,input?na||"submit":0,ea,lp),
 		   "</script>\n<script>","");
   }
   if(input)
