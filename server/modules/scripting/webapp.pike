@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.26 2002/07/15 15:38:27 wellhard Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.27 2002/07/16 08:42:53 wellhard Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -1612,13 +1612,15 @@ class TagServlet
                          id, uri, hdrs);
           }
 
-          if (hdrs->error && hdrs->error != 200) {
-            RXML_CONTEXT->set_misc (" _error", hdrs->error);
-	    if (hdrs->rettext)
-	      RXML_CONTEXT->set_misc (" _rettext", hdrs->rettext);
+	  if (!args["no-headers"]) {
+	    if (hdrs->error && hdrs->error != 200) {
+	      RXML_CONTEXT->set_misc (" _error", hdrs->error);
+	      if (hdrs->rettext)
+		RXML_CONTEXT->set_misc (" _rettext", hdrs->rettext);
+	    }
+	    if (hdrs->extra_heads)
+	      RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
 	  }
-          if (hdrs->extra_heads && !args["no-headers"])
-            RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
 //               foreach(rxml_wrapper->headermap, string h)
 //               {
 //                 if (stringp(rxml_wrapper->headermap[h]))
@@ -2003,8 +2005,7 @@ constant tagdoc=([
 </attr>
 
 <attr name='no-headers'>
- <p>If set no headers from the result will be set in the page,
- except return code and return text.</p>
+ <p>If set no headers from the result will be set in the page.</p>
 </attr>"
 ,
 
