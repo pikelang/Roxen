@@ -1,5 +1,5 @@
 /*
- * $Id: requeststatus.pike,v 1.3 1998/07/20 20:37:43 neotron Exp $
+ * $Id: requeststatus.pike,v 1.4 1998/07/20 20:38:13 neotron Exp $
  */
 
 inherit "wizard";
@@ -11,7 +11,7 @@ constant more=0;
 
 mixed page_0(object id, object mc)
 {
-  return sprintf("<h1>Server Overview</h1>"
+  return sprintf("<h2>Server Overview</h2>"
 		 "This is the summary status of all virtual servers. "
 		 "Click <b>[Next->]</b> to see the statistics for each "
 		 "indiviual server, or <b>[Cancel]</b> to return to the "
