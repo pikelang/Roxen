@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.95 2002/08/13 11:42:42 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.96 2002/10/15 15:55:50 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -252,8 +252,8 @@ mapping parse_and_find_htaccess( RequestID id )
     if( access->authmethod )
     {
       flush_patterns();
-      roxen_allow += "authmethod "+access->userdb+"\n";
-      roxen_deny += "authmethod "+access->userdb+"\n";
+      roxen_allow += "authmethod "+access->authmethod+"\n";
+      roxen_deny += "authmethod "+access->authmethod+"\n";
     }
     
     if(!sizeof(m))
