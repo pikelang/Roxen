@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.65 2000/11/19 21:32:54 kuntri Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.66 2000/11/21 12:02:49 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -719,6 +719,34 @@ class ButtonFrame {
       "crop":args["crop"],
     ]);
 
+    if( fi )
+      new_args->stat = (id->conf->stat_file( fi,id )
+			|| file_stat( fi )
+			|| ({ 0,0,0,0 }))[ST_MTIME];
+
+
+    string fn;
+    // only for real files, to save CPU. That's somewhat hard on
+    // SiteBuilder, though, but the idea is that the cache object will
+    // be automatically destructed by sitebuilder when the image file
+    // is changed.
+    if( new_args->stat && (fn = id->conf->real_file( fi, id ) ) )
+    {
+      function(RequestID,object:int) get_cache_callback( string file, int ost )
+      {
+	return lambda( RequestID id, object key )
+        {
+	  Stat st = file_stat( file );
+	  if( !st || (st[ST_MTIME] != ost) )
+	  {
+	    destruct( key );
+	    return 0;
+	  }
+	  return 1;
+	};
+      };
+      Roxen.add_cache_callback( id, get_cache_callback( fn, new_args->stat ) );
+    }
     new_args->quant = args->quant || 128;
     foreach(glob("*-*", indices(args)), string n)
       new_args[n] = args[n];
