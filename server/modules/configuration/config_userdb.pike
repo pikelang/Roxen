@@ -132,7 +132,7 @@ class ConfigurationSettings
 	      "svenska":"Textfärg till konfigurationsgränssnittet."
 	    ]), 0, 0 );
 
-    defvar( "font", "haru", TYPE_FONT,
+    defvar( "font", "bastard", TYPE_FONT,
 	    ([
 	      "english":"Font",
 	      "svenska":"Typsnitt",
@@ -310,7 +310,7 @@ class User
       }
       m_delete( id->variables, rp );
     }
-    string set_src =  parse_rxml( "<gbutton-url width=180 preparse> <cf-locale get=save> </gbutton-url>", id );
+    string set_src =  parse_rxml( "<gbutton-url font=&usr.font; width=180 preparse> <cf-locale get=save> </gbutton-url>", id );
     string form = error+
 #"
 <table>
@@ -330,6 +330,7 @@ class User
       {
         string s = parse_rxml( "<gbutton-url "+(dim?"dim":"")+
                                "    icon_src=/standard/img/selected.gif "
+                               "    font=&usr.font; "
                                "    width=180>"+translate_perm(perm,id)+
                                "</gbutton-url>", id );
 
@@ -340,6 +341,7 @@ class User
       {
         string s = parse_rxml( "<gbutton-url "+(dim?"dim":"")+
                                "    icon_src=/standard/img/unselected.gif "
+                               "    font=&usr.font; "
                                "    width=180>"+translate_perm(perm,id)+
                                "</gbutton-url>", id );
         form += sprintf( "<input border=0 type=image name='PPPadd_%s'"
