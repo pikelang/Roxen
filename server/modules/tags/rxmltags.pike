@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.452 2004/03/25 16:09:10 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.453 2004/03/30 20:13:24 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -553,6 +553,23 @@ class TagSet {
       // Set an entity variable to a value.
       if(args->split && content)
 	RXML.user_set_var(args->variable, (string)content/args->split, args->scope);
+      else if (content == RXML.nil) {
+	if (compat_level >= 4.0) {
+	  if (content_type->sequential)
+	    RXML.user_set_var (args->variable, content_type->empty_value, args->scope);
+	  else if (content_type == RXML.t_any)
+	    RXML.user_set_var (args->variable, RXML.empty, args->scope);
+	  else
+	    parse_error ("The value is missing for non-sequential type %O.\n",
+			 content_type);
+	}
+	else if (compat_level < 2.2)
+	  RXML.user_set_var (args->variable, "", args->scope);
+	else
+	  // Bogus behavior between 2.4 and 3.4: The variable
+	  // essentially gets unset.
+	  RXML.user_set_var(args->variable, RXML.nil, args->scope);
+      }
       else
 	RXML.user_set_var(args->variable, content, args->scope);
       return 0;
