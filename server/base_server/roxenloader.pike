@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.202 2000/09/24 01:48:38 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.203 2000/09/26 23:11:59 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1328,9 +1328,9 @@ Please install a newer version of Pike.
   add_constant("roxenloader", this_object());
   add_constant("ErrorContainer", ErrorContainer);
 #if constant( Gz.inflate )
-  add_constant("grbf",lambda(string d){return Gz.inflate()->inflate(d);});
+  add_constant("grbz",lambda(string d){return Gz.inflate()->inflate(d);});
 #else
-  add_constant("grbf",lambda(string d){return d;});
+  add_constant("grbz",lambda(string d){return d;});
   report_debug(
 #"
 ------- WARNING -----------------------------------------

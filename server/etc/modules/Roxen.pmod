@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.41 2000/09/25 12:49:48 per Exp $
+ * $Id: Roxen.pmod,v 1.42 2000/09/26 23:12:10 per Exp $
  *
  * Various helper functions.
  *
@@ -755,9 +755,10 @@ string decode_charref (string chref)
 string|program safe_compile( string code )
 {
   program ret;
-  roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
+  roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer();
   roxenloader.push_compile_error_handler( ec );
   catch(ret = compile_string( code ));
+  roxenloader.pop_compile_error_handler( );
   if( !ret ) return ec->get();
   return ret;
 }
