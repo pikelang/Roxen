@@ -83,6 +83,9 @@ void use_image_dir( )
     werror(" %x\n", wc );
     add_to_cif( wc, Stdio.read_bytes( input+of ), prefix );
   }
+  if( strlen( prefix ) )
+    add_to_cif( 0xfffffffe, prefix, "" );
+
   // EOF marker. Not really needed, but somewhat nice.
   add_to_cif( 0, "", prefix );
 }
