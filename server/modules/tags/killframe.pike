@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.22 1999/07/21 05:12:03 nilsson Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.23 1999/11/29 16:49:19 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,7 +20,7 @@ inherit "module";
 
 void create()
 {
-  defvar( "killindex", 1, "Kill trailing 'indexfiles'?", TYPE_FLAG|VAR_MORE,
+  defvar( "killindex", 1, "Kill trailing 'indexfiles'?", TYPE_FLAG,
 	  "When set, the killframe module will remove occurrences of "
 	  "'indexfiles' (as set in the active directory module) from "
 	  "the end of the URL, leaving only a slash." );
@@ -72,7 +72,7 @@ string tag_killframe( string tag, mapping m, object id )
   
   // Links to index.html are ugly. All pages deserve a uniqe URL, and for
   // index-pages that URL in /.
-  if( query("killindex") )
+  if( query("killindex") || m->killindex )
   {
     //Get indexfiles from the directory-module if there is one.
     array indexfiles = ({});
@@ -102,9 +102,4 @@ string tag_killframe( string tag, mapping m, object id )
   return("<script language=\"javascript\"><!--\n"
 	 + javascript
 	 + "//--></script>\n");
-}
-
-mapping query_tag_callers()
-{
-  return ([ "killframe" : tag_killframe ]);
 }
