@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: cgi.pike,v 2.30 2000/01/17 02:42:01 nilsson Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.31 2000/01/25 10:47:22 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -48,7 +48,7 @@ problem.\n"
 #endif /* CGI_DEBUG */
 
 constant module_type = MODULE_LOCATION | MODULE_FILE_EXTENSION | MODULE_PARSER;
-constant module_name = "CGI executable support";
+constant module_name = "CGI scripting support";
 constant module_doc  = "Support for the <a href=\"http://hoohoo.ncsa.uiuc.edu/docs/cgi/"
   "interface.html\">CGI/1.1 interface</a>, and more.";
 
@@ -331,7 +331,7 @@ class Wrapper
 
 /* RXML wrapper.
 **
-** Simply waits until the CGI-script is done, then 
+** Simply waits until the CGI-script is done, then
 ** parses the result and sends it to the client.
 ** Please note that the headers are also parsed.
 */
@@ -829,7 +829,8 @@ class CGIScript
       arguments = ({});
 
     tosend = id->data;
-    ffd = id->my_fd;
+    if( id->method == "PUT" )
+      ffd = id->my_fd;
   }
 }
 
