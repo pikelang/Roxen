@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.848 2003/01/19 18:33:01 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.849 2003/01/21 22:59:11 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -341,7 +341,9 @@ static class Privs
 		   "%s\n",
 		   gid, new_gid, describe_backtrace(backtrace()));
     }
-#endif /* PRIVS_DEBUG */    seteuid(0);
+#endif /* PRIVS_DEBUG */
+
+    seteuid(0);
     array u = getpwuid(saved_uid);
 #if efun(cleargroups)
     catch { cleargroups(); };
