@@ -21,7 +21,7 @@ pidfile=/tmp/roxen_pid:0
 ### You should not _have_ to change anything below here...
 
 case $1 in
-	'start_msg')
+        'start_msg')
 	  echo 'Start Roxen 1.2'
 	  exit 0
 	;;
@@ -56,7 +56,8 @@ case $1 in
 	'restart')
 	  echo Restarting Roxen...
 	  if [ -f $pidfile ] ; then
-	    kill -INT `cat $pidfile` || kill 2 `cat $pidfile`
+	    read pid < $pidfile
+	    kill -INT $pid || kill 2 $pid
 	    rm $pidfile
 	    echo Done.
 	    exit 0
