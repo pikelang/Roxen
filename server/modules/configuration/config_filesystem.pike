@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.103 2001/10/09 14:57:20 per Exp $";
+  "$Id: config_filesystem.pike,v 1.104 2001/10/18 11:30:34 anders Exp $";
 
 constant path = "config_interface/";
 
@@ -365,6 +365,7 @@ void start(int n, Configuration cfg)
 	    DBManager.set_permission( "docs", c, DBManager.READ );
 	}
 	DBManager.restore( "docs", getcwd()+"/etc/", "docs", ({ "docs" }) );
+	docs = DBManager.get( "docs", cfg );
       }
       else
       {
