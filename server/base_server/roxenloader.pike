@@ -5,7 +5,7 @@ import spider;
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.43 1997/09/18 23:39:38 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.44 1997/09/19 15:38:22 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -429,7 +429,7 @@ object|void open(string filename, string mode, int|void perm)
     gc();
     // Retry...
     if(!(o->open(filename, mode, perm||0666))) {
-      destruct o;
+      destruct(o);
       return;
     }
   }
@@ -444,6 +444,7 @@ string make_path(string ... from)
     //return combine_path(b,a);
   }, getcwd())*":";
 }
+
 void main(mixed ... args)
 {
   string path = make_path("base_server", "etc/include", ".");
