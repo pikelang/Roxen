@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.113 2000/05/17 17:42:45 nilsson Exp $
+# $Id: start,v 1.114 2000/06/05 17:55:01 grubba Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -557,6 +557,15 @@ oo
   exec </dev/null
 
   if ((while : ; do
+      if test -d "$LOGDIR/debug/."; then :; else
+        # Avoid infinite loop if the debug directory is deleted.
+        # Thanks to Emils Klotins <emils@dot.lv> for reporting it.
+        if ./mkdir -p "$LOGDIR/debug/"; then :; else
+	  echo "Failed to create log directory $LOGDIR/debug/." 1>&2
+	  exit 1
+	fi
+      fi
+
       echo "$pre" "Server restart at `date`"
       echo "$pre" "Debug log in $LOGDIR/debug/$FILES.1"
       rotate $LOGDIR/debug/$FILES
