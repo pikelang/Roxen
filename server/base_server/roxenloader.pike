@@ -1,16 +1,11 @@
 /*
- * $Id: roxenloader.pike,v 1.117 1999/11/25 22:00:15 grubba Exp $
+ * $Id: roxenloader.pike,v 1.118 1999/11/29 18:50:55 per Exp $
  *
  * Roxen bootstrap program.
  *
  */
 
 // Sets up the roxen environment. Including custom functions like spawne().
-
-// Roxen 1.4 requires Pike 0.7 or later.
-#if __VERSION__ < 0.7
-#error Roxen 1.4 requires Pike 0.7 or later.
-#endif /* __VERSION__ < 0.7 */
 
 #include <stat.h>
 
@@ -22,7 +17,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.117 1999/11/25 22:00:15 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.118 1999/11/29 18:50:55 per Exp $";
 
 #define perror roxen_perror
 
@@ -1043,6 +1038,41 @@ void write_current_time()
 // Roxen bootstrap code.
 int main(int argc, array argv)
 {
+#ifdef NOT_INSTALLED
+roxen_perror(
+#"
+
+
+*************************** WARNING *************************** 
+You are running with an un-installed pike binary.
+
+Please note that this is unsupported, and might stop working at 
+any time, since some things are done differently in uninstalled
+pikes, as an example the module search paths are different, and
+some environment variables are ignored.
+*************************** WARNING *************************** 
+
+
+");
+#endif
+
+#if __VERSION__ < 0.7
+roxen_perror(
+#"
+
+
+****************************************************** 
+Roxen 1.4 requires pike 0.7.
+Please install a newer pike version
+****************************************************** 
+
+
+");
+ _exit(0); /* 0 means stop start script looping */
+#endif /* __VERSION__ < 0.7 */
+
+
+
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
   last_was_nl = 1;
