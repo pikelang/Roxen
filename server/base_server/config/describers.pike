@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.58 1998/11/18 04:53:56 per Exp $ */
+/* $Id: describers.pike,v 1.59 1998/11/22 17:08:02 per Exp $ */
 
 #include <module.h>
 #include <roxen.h>
@@ -309,8 +309,10 @@ string describe_module_subnode(object node)
 #define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/rm/"+LOCALE->button_more_documentation()+"></a>")
 #define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/rm/"+LOCALE->button_less_documentation()+"></a>")
 
-string shorten(string in, object node)
+string shorten(mapping|string in, object node)
 {
+  if(mappingp(in))
+    in = in[LOW_LOCALE->name] || in->standard;
   if(sizeof(in/"<hr>")<3 && sizeof(in/"<p>")<2) return in;
   if(strlen(in)<250) return in;
   if((search(in,"\n")<0) || (search(in,"\n")==strlen(in)-1)) return in;
