@@ -217,15 +217,22 @@ string describe_global_debug(object node)
     res = link("<font size=+1>Debug information for developers</font><ul>");
 #if efun(_memory_usage)
   foo = _memory_usage();
+  int total;
   string f;
   res+="<table border=0 cellspacing=0 cellpadding=2 width=50%>"
     "<tr align=left bgcolor=#000060><th colspan=3>Memory Usage:</th></tr>"
     "<tr bgcolor=darkblue><th align=left>Entry<th align=right>"
     "Current (KB)<th align=right>Change (KB)</tr>";
   foreach(sort(indices(foo)), f)
-    if(search(f, "num_"))
+    if(search(f, "num_")) {
+      foo->total_usage += foo[f]/1024;
       res += "<tr bgcolor=black><td><b>"+f+"</b></td><td align=right><b>"+(foo[f]/1024)+
 	"</b></td><td align=right><b>"+((foo[f]-last_usage[f])/1024)+"</b><br></td>";
+    }
+  res += "<tr bgcolor=black><td><b><font color=yellow>Total Usage"
+    "</font></b></td><td align=right><b><font color=yellow>"+
+    foo->total_usage+"</font></b></td><td align=right><b><font color=yellow>"+
+    (foo->total_usage-last_usage->total_usage)+"</font></b><br></td>";
 
   res+="</table>";
   res+="<table border=0 cellspacing=0 cellpadding=2 width=50%><tr bgcolor=darkblue><th align=left>Entry<th align=right>Current<th align=right>Change</tr>";
