@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.213 2000/03/06 16:48:58 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.214 2000/03/07 21:36:49 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -1502,8 +1502,16 @@ void send_result(mapping|void result)
       file = http_low_answer(misc->error_code, errors[misc->error]);
     else if(err = catch {
       file=http_low_answer(404,
+#ifdef OLD_RXML_COMPAT
+			   replace(parse_rxml(conf->query("ZNoSuchFile"),
+					      this_object()),
+				   ({"$File", "$Me"}),
+				   ({not_query,
+				     conf->query("MyWorldLocation")})));
+#else
 			   parse_rxml(conf->query("ZNoSuchFile"),
                                       this_object()));
+#endif
     }) {
       INTERNAL_ERROR(err);
     }
