@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.171 2001/07/02 02:53:18 mast Exp $
+# $Id: start,v 1.172 2001/07/09 21:06:43 nilsson Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -224,6 +224,9 @@ parse_args() {
   '--onve'|'--onec'|'--onev'|'--ocne')
     once=1
   ;;
+  '--keep-mysql')
+    keep_mysql=1
+  ;;
   '--gdb')
     gdb=gdb
     once=1
@@ -345,6 +348,11 @@ the default arguments.
 
       .B--onceB.:                     Run the server only once, in the foreground.
 			   	  This is very useful when debugging.
+
+      .B--keep-mysqlB.:               Don't shut down MySQL process when exiting
+				  the start script. Useful during development
+				  or any other scenario where the start script
+				  is frequently terminated.
 
       .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..
 
@@ -580,14 +588,16 @@ signal_exit() {
     kill $ROXEN_PID 2>/dev/null && wait $ROXEN_PID 2>/dev/null
     dp "Roxen WebServer shutdown."
   fi
-  if [ -f $DIR/_mysql/mysql_pid ] ; then
-    dp "Shutting down mysql"
-    kill `cat $DIR/_mysql/mysql_pid` 2>/dev/null
-    sleep 2
+  if [ "x$keep_mysql" = "x" ] ; then
     if [ -f $DIR/_mysql/mysql_pid ] ; then
-      kill -9 `cat $DIR/_mysql/mysql_pid` 2>/dev/null
+      dp "Shutting down mysql"
+      kill `cat $DIR/_mysql/mysql_pid` 2>/dev/null
+      sleep 2
+      if [ -f $DIR/_mysql/mysql_pid ] ; then
+        kill -9 `cat $DIR/_mysql/mysql_pid` 2>/dev/null
+      fi
+      rm -f $DIR/_mysql/mysql_pid 2>/dev/null
     fi
-    rm -f $DIR/_mysql/mysql_pid 2>/dev/null
   fi
   dp "Start script terminated."
   exit 0
