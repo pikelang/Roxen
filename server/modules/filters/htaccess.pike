@@ -5,7 +5,7 @@
 
 import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.24 1998/01/15 17:03:43 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.25 1998/01/15 17:13:19 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -339,8 +339,8 @@ int validate_user(int|multiset users, array auth, string userfile, object id)
   if((!(st = file_stat(userfile))) || (st[1] == -4) || (!(passwd = read_bytes(userfile))))
   {
     if (st && (st[1] == -4)) {
-      roxen_error(sprintf("HTACCESS: Userfile \"%s\" is a device!\n"
-			  "query: \"%s\"\n", userfile, id->query));
+      report_error(sprintf("HTACCESS: Userfile \"%s\" is a device!\n"
+			   "query: \"%s\"\n", userfile, id->query));
     }
 #ifdef HTACCESS_DEBUG
     werror(sprintf("HTACCESS: Failed to read password file (%s)\n", 
@@ -697,11 +697,17 @@ mapping htaccess_no_file(object id)
 
   if(access && access->nofile)
   {
-    file = read_bytes(access->nofile);
-    if(file) 
+    array st;
+
+    if ((st = file_stat(access->nofile)) && (st[1] != -4) &&
+	(file = read_bytes(access->nofile)))
     {
       file = parse_rxml(file, id);
       return http_string_answer( file );
+    }
+    if (st && (st[1] == -4)) {
+      report_error(sprintf("HTACCESS: Nofile \"%s\" is a device!\n"
+			   "query: \"%s\"\n", file, id->query));
     }
   }
   return 0;
@@ -735,8 +741,15 @@ mapping try_htaccess(object id)
       {
 	if(access->errorfile)
 	{
-	  file = read_bytes(access->errorfile);
-	  if(file) file = parse_rxml(file, id);
+	  array st;
+
+	  if ((st = file_stat(access->errorfile)) && (st[1] != -4) &&
+	      (file = read_bytes(access->errorfile))) {
+	    file = parse_rxml(file, id);
+	  } else if (st && (st[1] == -4)) {
+	    report_error(sprintf("HTACCESS: Errorfile \"%s\" is a device!\n"
+				 "query: \"%s\"\n", access->errorfile, id->query));
+	  }
 	}
 	id->misc->error_code = 403;
 	return http_low_answer(403, file || 
@@ -761,8 +774,15 @@ mapping try_htaccess(object id)
       {
 	if(access->errorfile)
 	{
-	  file = read_bytes(access->errorfile);
-	  if(file) file = parse_rxml(file, id);
+	  array st;
+
+	  if ((st = file_stat(access->errorfile)) && (st[1] != -4) &&
+	      (file = read_bytes(access->errorfile))) {
+	    file = parse_rxml(file, id);
+	  } else if (st && (st[1] == -4)) {
+	    report_error(sprintf("HTACCESS: Errorfile \"%s\" is a device!\n"
+				 "query: \"%s\"\n", access->errorfile, id->query));
+	  }
 	}
 	id->misc->error_code = ret->error || 403;
 	return  (["data":file || 
