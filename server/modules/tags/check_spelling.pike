@@ -7,7 +7,7 @@ inherit "roxenlib";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.9 2000/04/06 06:16:06 wing Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.10 2000/04/06 10:09:05 kuntri Exp $";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "Spell checker";
@@ -246,3 +246,25 @@ array spellcheck(array(string) words,string dict) {
     return res;
   }
 }
+
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+"spell":#"<desc cont><short>The spellchecker uses the ispell dictionary</short></desc>
+
+<attr name='dict' value='american,others'>
+ Select dictionary to use in the spellchecking. American is default.
+</attr>
+
+<attr name='prestate' value='string'>
+ What prestate to use.
+</attr>
+
+<attr name='report' value='popup,table'>
+ Either recieve the spellreport as a popup-window when clicking on the
+ misspelled word or as a table with all misspelled words.
+</attr>",
+
+    ]);
+#endif
