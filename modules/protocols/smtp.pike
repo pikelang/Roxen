@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.9 1998/09/03 00:18:29 grubba Exp $
+ * $Id: smtp.pike,v 1.10 1998/09/03 00:35:18 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.9 1998/09/03 00:18:29 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.10 1998/09/03 00:35:18 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -371,6 +371,9 @@ class Server {
 	if (upper_case(to_colon) == "TO:") {
 	  string recipient = args[i+1..];
 	  sscanf("%*[ ]%s", recipient, recipient);
+#ifdef SMTP_DEBUG
+	  roxen_perror(sprintf("SMTP: RCPT:%O\n", recipient));
+#endif /* SMTP_DEBUG */
 	  if (sizeof(recipient)) {
 	    foreach(conf->get_providers("smtp_filter")||({}), object o) {
 	      // roxen_perror("Got SMTP filter\n");
@@ -387,9 +390,14 @@ class Server {
 
 	    int recipient_ok = 0;
 
-	    foreach(conf->get_providers("smtp_expn")||({}), object o) {
+	    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
 	      if (functionp(o->expn) &&
 		  o->expn(recipient, this_object())) {
+		recipient_ok = 1;
+		break;
+	      }
+	      if (functionp(o->desc) &&
+		  o->desc(recipient)) {
 		recipient_ok = 1;
 		break;
 	      }
@@ -418,7 +426,7 @@ class Server {
 
       array spooler;
 
-      foreach(conf->get_proviers("automail_clientlayer")||({}), object o) {
+      foreach(conf->get_providers("automail_clientlayer")||({}), object o) {
 	string id;
 	if ((id = o->get_unique_body_id())) {
 	  spooler = ({ o, id });
