@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.157 1999/03/11 23:03:31 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.158 1999/05/17 06:45:43 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -190,9 +190,16 @@ object load_image(string f,object id)
 #endif
     ;
   
-  if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
-    if(!(file=open(f,"r")) || (!(data=file->read())))
-      return 0;
+  if(id->misc->_load_image_called<5) {
+    // We were recursing very badly with the demo module here...
+    id->misc->_load_image_called++;
+    if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
+      if(!(file=open(f,"r")) || (!(data=file->read())))
+	return 0;
+  }
+  id->misc->_load_image_called = 0;
+  if(!data)
+    return 0;
 //werror("Read "+strlen(data)+" bytes.\n");
 #if constant(Image.GIF.decode)
   catch { if(!img) img = Image.GIF.decode( data ); };
