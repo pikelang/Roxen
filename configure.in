@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.45 1998/03/12 17:18:58 grubba Exp $
+# $Id: configure.in,v 1.46 1998/03/12 20:02:35 grubba Exp $
 #
 
 prefix=$PWD
@@ -125,7 +125,7 @@ fi
 
 roxen_cv_prog_CC="$CC"
 
-if test -f stamp-h -a "x`cat stamp-h`" != "x${with_pike}" ; then
+if test -f stamp-h -a "x`cat stamp-h`" != "x${pike_version}" ; then
   unset ac_cv_prog_CC
 fi
 
@@ -138,7 +138,7 @@ AC_MINIX
 case $CC in
  *smartlink*) ;;
  *)
-   CC="$srcdir/pike/$with_pike/bin/smartlink $CC"
+   CC="$srcdir/pike/$pike_version/bin/smartlink $CC"
    ac_cv_prog_CC="$CC"
  ;;
 esac
