@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.180 2000/03/28 22:16:48 nilsson Exp $
+// $Id: rxml.pike,v 1.181 2000/03/30 18:16:08 nilsson Exp $
 
 inherit "rxmlhelp";
 #include <request_trace.h>
@@ -1367,12 +1367,17 @@ class TagEmit {
       scope_name=args->scope||args->source;
       res=plugin->get_dataset(args, id);
       if(arrayp(res)) {
-	if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
 	if(!plugin->skiprows && args->skiprows) res=res[(int)args->skiprows..];
 	if(!plugin->maxrows && args->maxrows) res=res[..(int)args->maxrows-1];
+	if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
 
 	do_iterate=array_iterate;
-	LAST_IF_TRUE = 1;
+
+	if(sizeof(res))
+	  LAST_IF_TRUE = 1;
+	else
+	  LAST_IF_TRUE = 0;
+
 	return 0;
       }
       if(functionp(res)) {
@@ -1882,7 +1887,7 @@ private int format_support(string t, mapping m, string c, mapping doc) {
 
 #ifdef manual
 constant tagdoc=([
-"&roxen.":#"<desc scope>This scope contains information specific to this Roxen WebServer.</desc>",
+"&roxen;":#"<desc scope>This scope contains information specific to this Roxen WebServer.</desc>",
 "&roxen.hits;":#"<desc ent>The number of hits, i.e. requests the
  webserver has accumulated since it was last started.</desc>",
 "&roxen.hits-per-minute;":"<desc ent>The number of hits per minute, in average.</desc>",
@@ -1900,12 +1905,12 @@ constant tagdoc=([
 "&roxen.uptime-minutes;":"<desc ent>The total uptime of the webserver, in minutes.</desc>",
 "&roxen.version;":"<desc ent>Which version of Roxen WebServer that is running.</desc>",
 
-"&client.":#"<desc scope>
+"&client;":#"<desc scope>
  This scope contains information specific to the client/browser that
  is accessing the page.
 </desc>",
 
-"&page.":"<desc scope>This scope contains information specific to this page.</desc>",
+"&page;":"<desc scope>This scope contains information specific to this page.</desc>",
 
 "case":#"<desc cont>
  Alters the case of the contents.
