@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.68 2001/02/06 22:39:03 nilsson Exp $
+// $Id: Roxen.pmod,v 1.69 2001/02/16 15:07:19 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -651,11 +651,13 @@ mapping build_roxen_env_vars(RequestID id)
   foreach(indices(id->variables), tmp)
   {
     string name = replace(tmp," ","_");
-    if (id->variables[tmp] && (sizeof(id->variables[tmp]) < 8192)) {
-      // Some shells/OS's don't like LARGE environment variables
-      new["QUERY_"+name] = replace(id->variables[tmp],"\000"," ");
-      new["VAR_"+name] = replace(id->variables[tmp],"\000","#");
-    }
+    if (mixed value = id->variables[tmp])
+      if (!catch (value = (string) value) && (sizeof(value) < 8192)) {
+	// Some shells/OS's don't like LARGE environment variables
+	new["QUERY_"+name] = replace(value,"\000"," ");
+	new["VAR_"+name] = replace(value,"\000","#");
+      }
+    // Is it correct to record the names for variables with no values here? /mast
     if(new["VARIABLES"])
       new["VARIABLES"]+= " " + name;
     else
