@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.61 1998/01/19 18:03:34 mirar Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.62 1998/01/21 00:44:51 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -460,8 +460,7 @@ void insert_in_map_list(mapping to_insert, string map_in_object)
   foreach(indices(to_insert), string s)
   {
     if(!in2[s]) in2[s] = ([]);
-    int i;
-    for(i=0; i<sizeof(in); i++)
+    for(int i=0; i<sizeof(in); i++)
       if(!in[i][s])
       {
 	in[i][s] = do_call;
@@ -1565,12 +1564,30 @@ string tag_add_cookie(string tag, mapping m, object got, object file,
 		      mapping defines)
 {
   string cookies;
-  
+  int    t;     //time
+
   if(m->name)
-    cookies = m->name+"="+http_encode_cookie(m->value||"")
-      +(m->persistent?"; expires=Sun, 29-Dec-99 23:59:59 GMT; path=/":"");
+    cookies = m->name+"="+http_encode_cookie(m->value||"");
   else
     return "<!-- set_cookie requires a `name' -->";
+
+  if(m->persistent)
+    t=(3600*(24*365*2));
+  else
+  {
+    if (m->hours)   t+=((int)(m->hours))*3600;
+    if (m->minutes) t+=((int)(m->minutes))*60;
+    if (m->seconds) t+=((int)(m->seconds));
+    if (m->days)    t+=((int)(m->days))*(24*3600);
+    if (m->weeks)   t+=((int)(m->weeks))*(24*3600*7);
+    if (m->months)  t+=((int)(m->months))*(24*3600*30+37800); /* 30.46d */
+    if (m->years)   t+=((int)(m->years))*(3600*(24*365+6));   /* 365.25d */
+  }
+
+  if(t) cookies += "; expires="+http_date(t+time());
+
+  //obs! no check of the parameter's usability
+  cookies += "; path=" +(m->path||"/");
 
   add_header(_extra_heads, "Set-Cookie", cookies);
 
