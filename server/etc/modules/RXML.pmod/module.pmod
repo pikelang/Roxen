@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.49 2000/02/12 21:24:03 mast Exp $
+//! $Id: module.pmod,v 1.50 2000/02/13 00:33:33 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1491,19 +1491,6 @@ class Frame
 	      subparser = 0;
 	    }
 	    break;
-	  case "object":
-	    if (([object] elem)->is_RXML_Frame) {
-	      ([object(Frame)] elem)->_eval (0); // Might unwind.
-	      piece = ([object(Frame)] elem)->result;
-	    }
-	    else if (([object] elem)->is_RXML_Parser) {
-	      // The subparser above unwound.
-	      ([object(Parser)] elem)->finish(); // Might unwind.
-	      piece = ([object(Parser)] elem)->eval(); // Might unwind.
-	    }
-	    else
-	      error ("File objects not yet implemented.\n");
-	    break;
 	  case "mapping":
 	    error ("Header mappings not yet implemented.\n");
 	    break;
@@ -1514,7 +1501,22 @@ class Frame
 	    else error ("No value in multiset in exec array.\n");
 	    break;
 	  default:
-	    error ("Invalid type %t in exec array.\n", elem);
+	    if (objectp (elem))
+	      // Can't count on that sprintf ("%t", ...) on an object
+	      // returns "object".
+	      if (([object] elem)->is_RXML_Frame) {
+		([object(Frame)] elem)->_eval (0); // Might unwind.
+		piece = ([object(Frame)] elem)->result;
+	      }
+	      else if (([object] elem)->is_RXML_Parser) {
+		// The subparser above unwound.
+		([object(Parser)] elem)->finish(); // Might unwind.
+		piece = ([object(Parser)] elem)->eval(); // Might unwind.
+	      }
+	      else
+		error ("File objects not yet implemented.\n");
+	    else
+	      error ("Invalid type %t in exec array.\n", elem);
 	}
 
 	if (result_type->sequential) res += piece;
