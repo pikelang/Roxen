@@ -121,8 +121,12 @@ static string ex_cont(Parser.HTML parser, mapping m, string c, string rt, void|o
   }
 }
 
-static string ex_box_cont(Parser.HTML parser, mapping m, string c, string rt, void|object id) {
+static string ex_box_cont(Parser.HTML parser, mapping m, string c, string rt) {
   return "<br />"+mktable( ({ ({ ex_quote(c) }) }) );
+}
+
+static string ex_html_cont(Parser.HTML parser, mapping m, string c, string rt) {
+  return "<br />" + mktable( ({ ({ c }) }) );
 }
 
 static string ex_src_cont(Parser.HTML parser, mapping m, string c, string rt, void|object id) {
@@ -208,6 +212,7 @@ static string format_doc(string|mapping doc, string name, void|object id)
            "ex":ex_cont,
 	   "ex-box":ex_box_cont,
 	   "ex-src":ex_src_cont,
+	   "ex-html":ex_html_cont,
            "noex":noex_cont,
            "tag":lambda(Parser.HTML p, mapping m, string c) {
                    return ({ "&lt;"+c+"&gt;" });
