@@ -9,6 +9,7 @@ void got_info()
   mapping m = decode_value(udp_broad->read()->data),
           ns = neighborhood[m->configurl]||([]);
 
+  m->rec_time = time();
   if(m->last_reboot > ns->last_reboot)
   {
     m->last_last_reboot = m->last_reboot;
