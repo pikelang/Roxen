@@ -1,6 +1,6 @@
 // Handles supports
 // Copyright © 1999 - 2000, Roxen IS.
-// $Id: supports.pike,v 1.19 2000/05/08 11:58:31 nilsson Exp $
+// $Id: supports.pike,v 1.20 2000/07/04 03:46:00 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -283,7 +283,8 @@ public void update_supports_from_roxen_com()
     remove_call_out( update_supports_from_roxen_com );
 
   // Check again in one week.
-    ([array(string|int)]roxenp()->variables["next_supports_update"])[VAR_VALUE]=3600*24*7 + time(1);
+    ([object(Variable.Variable)]roxenp()->variables["next_supports_update"])
+      ->set(3600*24*7 + time(1));
     roxenp()->store("Variables", roxenp()->variables, 0, 0);
   }
   call_out(update_supports_from_roxen_com,

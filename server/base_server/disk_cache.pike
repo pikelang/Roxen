@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.48 2000/03/29 17:16:47 grubba Exp $
+// $Id: disk_cache.pike,v 1.49 2000/07/04 03:46:10 per Exp $
 
 #include <module_constants.h>
 #include <stat.h>
@@ -18,7 +18,8 @@
 object this = this_object();
 
 #undef QUERY
-#define QUERY(x) roxenp()->variables->x[VAR_VALUE]
+#define QUERY(x) roxenp()->variables->x->query()
+#define SET(x,Y) roxenp()->variables->x->set(Y)
 
 string file_name_r(string what, int nd, int hv)
 {
@@ -349,16 +350,16 @@ private object cache;
 public void reinit_garber()
 {
   if(!QUERY(cache)) return;
-
+  
   if(!sscanf(QUERY(cachedir), "%*s/roxen_cache"))
-    QUERY(cachedir)+="roxen_cache/";
+    SET(cachedir, "roxen_cache/");
 
   mkdirhier(QUERY(cachedir)+"logs/oo");
   if(Stdio.file_size(QUERY(cachedir)+"logs")>-2)
   {
     report_error("Cache directory ("+QUERY(cachedir)+") cannot be"
 		 " accessed.\nCaching disabled.\n");
-    QUERY(cache)=0;
+    SET(cache,0);
     return;
   }
   if(cache)
