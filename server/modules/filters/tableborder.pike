@@ -1,7 +1,9 @@
+// This is a roxen module. Copyright © 2000, Roxen IS.
+
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: tableborder.pike,v 1.5 2000/02/16 07:16:54 per Exp $";
+constant cvs_version = "$Id: tableborder.pike,v 1.6 2000/03/01 16:57:01 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Table Unveiler";

@@ -1,7 +1,8 @@
+// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
-string cvs_version = "$Id: url_rectifier.pike,v 1.8 2000/02/16 07:16:54 per Exp $";
+string cvs_version = "$Id: url_rectifier.pike,v 1.9 2000/03/01 16:56:49 nilsson Exp $";
 inherit "module";
 inherit "roxenlib";
 
