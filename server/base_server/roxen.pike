@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.895 2005/02/25 15:21:06 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.896 2005/03/02 14:02:51 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1330,7 +1330,10 @@ class Protocol
   //! The currently bound portnumber
 
   string ip;
-  //! The IP-number (0 for ANY) this port is bound to
+  //! The canonical IP-number (0 for ANY) this port is bound to.
+  //!
+  //! IPv6 numbers are in colon separated four-digit lower-case hexadecimal
+  //! notation with the first longest sequence of zeros compressed.
 
   int refs;
   //! The number of references to this port
@@ -1543,7 +1546,7 @@ class Protocol
   }
 
   string get_key()
-  //! Return he key used for this port (protocol:ip:portno)
+  //! Return the key used for this port (protocol:ip:portno)
   {
     return name+":"+ip+":"+port;
   }
@@ -1604,11 +1607,118 @@ class Protocol
 #endif /* constant(System.EADDRINUSE) || constant(system.EADDRINUSE) */
   }
 
+  static array(int) get_ipv6_sequence(string partition)
+  {
+    array(int) segments = ({});
+    foreach(partition/":", string part) {
+      if (has_value(part, ".")) {
+	array(int) sub_segs = array_sscanf(part, "%d.%d.%d.%d");
+	switch(sizeof(sub_segs)) {
+	default:
+	case 4:
+	  segments += ({ sub_segs[0]*256+sub_segs[1],
+			 sub_segs[2]*256+sub_segs[3] });
+	  break;
+	case 3:
+	  segments += ({ sub_segs[0]*256+sub_segs[1],
+			 sub_segs[2] });
+	  break;
+	case 2:
+	  segments += ({ sub_segs[0]*256 + sub_segs[1]>>16,
+			 sub_segs[1]&0xffff });
+	  break;
+	}
+      } else {
+	segments += array_sscanf(part, "%x");
+      }
+    }
+    return segments;
+  }
+
+  string canonical_ip(string i)
+  {
+    if (has_value(i, ":")) {
+      // IPv6
+      if (i == "::") return "::";	// IPv6 ANY.
+      array(string) partitions = i/"::";
+      array(int) sections = get_ipv6_sequence(partitions[0]);
+      if (sizeof(partitions) > 1) {
+	array(int) tail = get_ipv6_sequence(partitions[1]);
+	sections += allocate(8 - sizeof(sections) - sizeof(tail)) + tail;
+      } else if (sizeof(sections) < 8) {
+	sections += allocate(8 - sizeof(sections));
+      }
+      i = sprintf("%04.4x:%04.4x:%04.4x:%04.4x:"
+		  "%04.4x:%04.4x:%04.4x:%04.4x",
+		  @sections);
+      // Common case.
+      if (i == "0000:0000:0000:0000:0000:0000:0000:0000") return "::";	// ANY
+
+      // Compress the longest sequence of zeros.
+      partitions = i/":";
+      int start;
+      int max;
+      int best;
+      foreach(partitions + ({ "SENTINEL" }); int ind; string part) {
+	if (part != "0000") {
+	  if ((ind - start) > max) {
+	    best = start;
+	    max = ind - start;
+	  }
+	  start = ind + 1;
+	}
+      }
+      if (max) {
+	i = (partitions[..best-1] + ({""}) + partitions[best+max..])*":";
+	if (!best) i = ":" + i;
+	if (best + max == 8) i += ":";
+      }
+      return i;
+    } else {
+      // IPv4
+      array(int) segments = array_sscanf(i, "%d.%d.%d.%d");
+      string bytes;
+      switch(sizeof(segments)) {
+      default:
+      case 4:
+	bytes = sprintf("%1c%1c%1c%1c", @segments);
+	break;
+      case 0: return 0;	// ANY.
+      case 1:
+	/* When only one part is given, the value is stored directly in
+	 * the network address without any byte rearrangement.
+	 */
+	bytes = sprintf("%4c", @segments);
+	break;
+      case 2:
+	/* When a two part address is supplied, the last part is inter-
+	 * preted  as  a  24-bit  quantity and placed in the right most
+	 * three bytes of the network address. This makes the two  part
+	 * address  format  convenient  for  specifying Class A network
+	 * addresses as  net.host.
+	 */
+	bytes = sprintf("%1c%3c", @segments);
+	break;
+      case 3:
+	/* When a three part address is specified,  the  last  part  is
+	 * interpreted  as  a  16-bit  quantity and placed in the right
+	 * most two bytes of the network address. This makes the  three
+	 * part  address  format convenient for specifying Class B net-
+	 * work addresses as  128.net.host.
+	 */
+	bytes = sprintf("%1c%1c%2c", @segments);
+	break;
+      }
+      if (bytes == "\0\0\0\0") return 0;	// ANY.
+      return sprintf("%d.%d.%d.%d", @((array(int))bytes));
+    }
+  }
+
   static void create( int pn, string i )
   //! Constructor. Bind to the port 'pn' ip 'i'
   {
     port = pn;
-    ip = i;
+    ip = canonical_ip(i);
 
     restore();
     if( file_stat( "../local/"+requesthandlerfile ) )
@@ -1632,6 +1742,7 @@ class Protocol
   }
 }
 
+// FIXME: Remove when retargetting for different version of Pike!
 #if constant(SSL.sslfile)
 class SSLProtocol
 //! Base protocol for SSL ports. Exactly like Port, but uses SSL.
@@ -1882,6 +1993,7 @@ class SSLProtocol
   }
 }
 #endif
+// FIXME: Remove when retargetting for different version of Pike!
 
 mapping(string:Protocol) build_protocols_mapping()
 {
