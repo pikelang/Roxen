@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.182 1999/04/22 05:38:27 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.183 1999/04/22 09:20:19 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -3570,6 +3570,8 @@ void enable_all_modules()
 
 void create(string config)
 {
+  add_parse_module( this_object() );
+
   name=config;
 
   perror("Creating virtual server '"+config+"'\n");
