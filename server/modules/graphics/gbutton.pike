@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.11 2000/02/02 00:21:49 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.12 2000/02/02 06:09:26 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -282,7 +282,7 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     "icn" : args->icon_src && fix_relative(args->icon_src, id),  // Icon URL
     "icd" : args->icon_data,                             //  Inline icon data
     "ica" : args->align_icon || "left",                  //  Icon alignment
-    "font": args->font,
+    "font": (args->font||id->misc->defines->font),
   ]);
 
   if(args->bordercolor)
