@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.92 1999/07/24 18:01:07 nilsson Exp $
+/* $Id: wizard.pike,v 1.93 1999/07/24 18:26:02 nilsson Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -900,6 +900,8 @@ string html_table(array(string) subtitles, array(array(string)) table,
    *   <fields>[num|text, ...]</fields>
    */
 
+  if(!opt) opt = ([]);
+
   // RXML <1.4 compatibility stuff
   if(opt->fgcolor0) {
     opt->oddbgcolor=opt->fgcolor0;
@@ -916,7 +918,6 @@ string html_table(array(string) subtitles, array(array(string)) table,
 
   string r = "";
 
-  if(!opt) opt = ([]);
   int m = (int)(opt->modulo?opt->modulo:1);
   r += ("<table bgcolor=\""+(opt->bordercolor||"#000000")+"\" border=\"0\" "
 	"cellspacing=\"0\" cellpadding=\"1\">\n"
