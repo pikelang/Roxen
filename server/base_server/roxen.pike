@@ -1523,31 +1523,45 @@ object load(string s)
     if(__p=(program)(s+".lpc")) return __p();
   if(file_size(s+".module")>0)
     if(__p=(program)(s+".module")) return __p();
+#if 0
   if(file_size(s)>0)
     if(__p=(program)(s)) return __p();
   if(file_size(s+".so")>0) // Loadable C-library.. TBD
     ; /* */
+#endif
   return 0; // FAILED..
 }
 
-object load_from_dir(string d, string f)
+array(string) expand_dir(string d)
 {
-  object o;
   string nd;
-  if(o = load(d+f)) return o;
+  array(string) dirs=({d});
 
-  foreach(get_dir(d), nd) if(file_size(d+nd)==-2)
-    if(o=load_from_dir(d+nd+"/",f))
-      return o;
+  foreach((get_dir(d) || ({})) - ({"CVS"}) , nd) 
+     if(file_size(d+nd)==-2)
+	dirs+=expand_dir(d+nd+"/");
+
+  return dirs;
 }
+
+array(string) last_dirs=0,last_dirs_expand;
+
 
 object load_from_dirs(array dirs, string f)
 {
   string dir;
   object o;
-  foreach(dirs, dir)
-    if(o=load_from_dir(dir, f))
-      return o;
+
+  if (dirs!=last_dirs)
+  {
+     last_dirs_expand=({});
+     foreach(dirs, dir)
+	last_dirs_expand+=expand_dir(dir);
+  }
+
+  foreach (last_dirs_expand,dir)
+     if ( (o=load(dir+f)) ) return o;
+
   return 0;
 }
 

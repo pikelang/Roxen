@@ -54,11 +54,14 @@ program cast_to_program(string pname)
 {
   program ret;
   string d=getcwd(),p=pname;
+
+  if(ret=programs[pname]) return ret;
+
   if(pname[0]!='/')
     pname=combine_path(d,pname);
 
   if(pname[sizeof(pname)-3..sizeof(pname)]==".pike")
-    pname=pname[0..sizeof(pname)-4];
+    pname=pname[0..sizeof(pname)-5];
 
   if(ret=programs[pname]) return ret;
   

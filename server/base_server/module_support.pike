@@ -574,17 +574,35 @@ int load_module(string module_file)
   else
   {
     string dir;
-    obj = load_from_dirs(QUERY(ModuleDirs), module_file);
+
+    _master->set_inhibit_compile_errors(1);
+
+    err = catch { obj = load_from_dirs(QUERY(ModuleDirs), module_file); };
+
+    if ( _master->errors != "" )
+    {
+       report_error( "Module load failed ("+module_file+"):\n  "
+		     +(err[0]-(getcwd()+"/"))+"- "
+		     + (((_master->errors-(getcwd()+"/"))||"")/"\n"
+			-({""}))*"\n- "+"\n" );
+       return 0;
+    }
+
+    _master->set_inhibit_compile_errors(0);
+
     prog = last_loaded();
   }
+
+
   if(!obj)
   {
 #ifdef MODULE_DEBUG
     perror("FAILED\n");
 #endif
-    report_error( "Module load failed.\n");
+    report_error( "Module load failed ("+module_file+") (not found).\n" );
     return 0;
   }
+
   err = catch (module_data = obj->register_module());
 
   if (err)

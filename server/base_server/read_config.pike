@@ -98,9 +98,9 @@ void fix_config(mixed c)
   }
   foreach(values(c),l)
   {
-    if(mappingp(l)) fix_config(c[l]);
-    else if(arrayp(l)) fix_array(c[l]);
-    else if(multisetp(l)) mkmultiset(fix_array(indices(c[l])));
+    if(mappingp(l)) fix_config(l);
+    else if(arrayp(l)) fix_array(l);
+    else if (multisetp(l)) perror("Warning; illegal value of config\n");
   }
 }
 
