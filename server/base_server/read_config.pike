@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.58 2001/06/17 20:07:10 nilsson Exp $
+// $Id: read_config.pike,v 1.59 2001/08/21 17:00:52 per Exp $
 
 #include <module.h>
 
@@ -87,7 +87,7 @@ void really_save_it( string cl, mapping data )
 #endif
     string data = encode_regions( data, config );
     int num = fd->write( data );
-
+    
     if(num != strlen(data))
       error("Failed to write all data to new config file ("+new+")"
             " ("+strerror(fd->errno())+")"
@@ -175,8 +175,10 @@ mapping read_it(string cl)
         if( strlen( data ) )
         {
           config_stat_cache[cl] = fd->stat();
+	  fd->close();
           return data;
         }
+	fd->close();
       }
     };
   };
