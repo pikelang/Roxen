@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.22 2001/04/21 18:30:43 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.23 2001/04/21 19:57:56 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -15,7 +15,6 @@ Stdio.File index_file;
 Protocol port;
 
 int verbose;
-
 
 void start(int n, Configuration c)
 {
@@ -44,6 +43,7 @@ RequestID get_id()
   id->not_query="/index.html";
   id->raw_url="/index.html";
   id->method="GET";
+  id->request_headers=([]);
   id->remoteaddr="127.0.0.1";
   NOCACHE();
 
@@ -244,6 +244,9 @@ void xml_test(string t, mapping args, string c) {
 			       case "query":
 				 id->query = m->value;
 				 break;
+			       case "request_header":
+			         id->request_headers[m->name] = m->value;
+			         break;
 			     }
 			   },
     ]) )->add_quote_tag("!--","","--");
@@ -270,7 +273,8 @@ void run_xml_tests(string data) {
 				    "drop-module" : xml_drop_module,
 				    "test" : xml_test,
 				    "comment": xml_comment,
-  ]) )->finish(data);
+  ]) )->add_quote_tag("!--","","--")->finish(data);
+  data = Parser.HTML()->add_quote_tag("!--","","--")->finish(data)->read();
   if(ltests<sizeof(data/"</test>")-1)
     report_warning("Possibly XML error in testsuite.\n");
   report_debug("Did %d tests, failed on %d.\n", ltests, lfails);
