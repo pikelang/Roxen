@@ -688,7 +688,7 @@ static string native_parse_rxml(object what, object id)
 static object native_get_variables(object id)
 {
   id = jotoid[id];
-  return id && objify(id->variables);
+  return id && objify((mapping)id->variables);
 }
 
 static object native_get_request_headers(object id)
