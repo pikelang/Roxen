@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.101 2000/08/15 01:25:33 mast Exp $
+//! $Id: module.pmod,v 1.102 2000/08/15 20:15:30 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1098,7 +1098,9 @@ class Context
 	e->error_count++;
       if (id && id->conf)
 	while (evaluator) {
-	  if (evaluator->report_error && evaluator->type->free_text) {
+	  if (evaluator->report_error &&
+	      !evaluator->disable_report_error &&
+	      evaluator->type->free_text) {
 	    string msg = err->type == "help" ? err->msg :
 	      (err->type == "run" ?
 	       ([function(Backtrace,Type:string)]
@@ -1477,7 +1479,22 @@ constant FLAG_UNPARSED		= 0x00001000;
 //! never be set in Tag.flags, but it's useful when creating frames
 //! directly.
 
-constant FLAG_RAW_ARGS		= 0x00002000;
+constant FLAG_DONT_REPORT_ERRORS = 0x00002000;
+//! This flag avoids RXML errors which occurs when parsing the content
+//! in the tag to be reported in it, instead the error report will be
+//! propagated to the parent tag.
+//!
+//! When an error occurs, the parser searches upward in the frame
+//! stack until it comes to one which looks like it can accept an
+//! error report in its content.
+//!
+//! The criteria for the frame which will get the error report is that
+//! its content type has the free_text property, and that the parser
+//! that parses it has an report_error function (which e.g. RXML.PXml
+//! has). With this flag, a frame can declare that it isn't suitable
+//! to receive error reports even if it satisfies this.
+
+constant FLAG_RAW_ARGS		= 0x00004000;
 //! Special flag to TXml.format_tag(); only defined here as a
 //! placeholder. When this is given to TXml.format_tag(), it only
 //! encodes the argument quote character with the "Roxen encoding"
@@ -1875,6 +1892,8 @@ class Frame
 	      piece = elem;
 	    else {
 	      subparser = result_type->get_parser (ctx, 0, parser);
+	      if (flags & FLAG_DONT_REPORT_ERRORS)
+		subparser->disable_report_error = 1;
 	      subparser->finish ([string] elem); // Might unwind.
 	      piece = subparser->eval(); // Might unwind.
 	      subparser = 0;
@@ -2225,6 +2244,8 @@ class Frame
 		      }
 		      else
 			subparser = content_type->get_parser (ctx, 0, parser);
+		      if (flags & FLAG_DONT_REPORT_ERRORS)
+			subparser->disable_report_error = 1;
 		      subparser->finish (raw_content); // Might unwind.
 		      finished = 1;
 		    }
@@ -2724,6 +2745,10 @@ class Parser
   //! it should be able to call that function again with identical
   //! arguments the next time it continues.
 
+  int disable_report_error;
+  //! Set to nonzero to avoid reporting errors in this parser. I.e.
+  //! report_error() will never be called if this is nonzero.
+
   mixed feed (string in);
   //! Feeds some source data to the parse stream. The parser may do
   //! scanning and parsing before returning. If context is set, it may
@@ -2737,10 +2762,11 @@ class Parser
 
   optional int report_error (string msg);
   //! Used to report errors to the end user through the output. This
-  //! is only called when type->free_text is nonzero. msg should be
-  //! stored in the output queue to be returned by eval(). If the
-  //! context is bad for an error message, do nothing and return zero,
-  //! and return nonzero if a message was written.
+  //! is only called when type->free_text is nonzero and
+  //! disable_report_error is zero. msg should be stored in the output
+  //! queue to be returned by eval(). If the context is bad for an
+  //! error message, do nothing and return zero. Return nonzero if a
+  //! message was written.
 
   optional mixed read();
   //! Define to allow streaming operation. Returns the evaluated
@@ -3002,7 +3028,9 @@ class Type
   //! it should only change representation.
 
   Type clone()
-  //! Returns a copy of the type.
+  //! Returns a copy of the type. Exists only for overriding purposes;
+  //! it's normally not useful to call this since type objects are
+  //! shared.
   {
     Type newtype = object_program ((object(this_program)) this_object())();
     newtype->_parser_prog = _parser_prog;
@@ -3180,7 +3208,7 @@ class Type
       else p->write_end (in);
       res = p->eval();
       if (p->reset) {
-	p->context = p->_parent = 0;
+	p->context = p->disable_report_error = p->_parent = 0;
 #ifdef RXML_OBJ_DEBUG
 	p->__object_marker->create (p);
 #endif
