@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.494 2000/07/09 14:13:05 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.495 2000/07/09 16:09:21 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -336,8 +336,16 @@ class container
 object fonts;
 
 
-// Locale support. Work in progress. The API is not fixed
-RoxenLocale.standard default_locale=RoxenLocale.standard;
+// ----------- Locale support ------------
+//<locale-token project="base_server">LOCALE</locale-token>
+
+#if constant(Locale.translate)
+#define LOCALE(X,Y)   Locale.translate(locale->get()->base_server, X, Y)
+#else
+#define LOCALE(X,Y)   RoxenLocale.translate(locale->get()->base_server, X, Y)
+#endif
+
+string default_locale;
 
 #if constant( thread_local )
 object locale = thread_local();
@@ -345,7 +353,48 @@ object locale = thread_local();
 object locale = container();
 #endif /* THREADS */
 
-#define LOCALE	LOW_LOCALE->base_server
+private constant languages = ([
+  "standard":"eng",
+  "english":"eng",
+  "svenska":"swe",
+]);
+
+void set_locale(void|string lang)
+  //! Changes the locale of the current thread. If no
+  //! argument is given, the default locale if used.
+  //! Valid arguments are ISO-639-2 codes, ISO-639-1
+  //! codes and the old symbolic names.
+{
+  string set;
+  if(
+#if constant(Standards.ISO639_2)
+     Standards.ISO639_2.get_language(lang)
+#else
+     RoxenLocale.ISO639_2.get_language(lang)
+#endif
+     )
+    set=lang;
+  else if(!lang)
+    set=default_locale;
+  else if(
+#if constant(Standards.ISO639_2)
+     set=Standards.ISO639_2.map_639_1(lang)
+#else
+     set=RoxenLocale.ISO639_2.map_639_1(lang)
+#endif
+     )
+    ;
+  else if(set=languages[lang])
+    ;
+  else
+    return;
+#if constant(Locale.get_objects)
+  locale->set(Locale.get_objects( set ));
+#else
+  locale->set(RoxenLocale.get_objects( set ));
+#endif
+}
+
 
 // For prototype reasons.
 program Configuration;	/*set in create*/
@@ -490,7 +539,7 @@ local static void handler_thread(int id)
 	if((h=handle_queue->read()) && h[0]) {
 	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(@%O)...",
 				id, h[0], h[1..]));
-	  SET_LOCALE(default_locale);
+	  set_locale();
 	  h[0](@h[1]);
 	  h=0;
 	} else if(!h) {
@@ -507,8 +556,9 @@ local static void handler_thread(int id)
       if (h = catch {
 	report_error(/* LOCALE->uncaught_error(*/describe_backtrace(q)/*)*/);
 	if (q = catch {h = 0;}) {
-	  report_error(LOCALE->
-		       uncaught_error(describe_backtrace(q)));
+	  report_error(LOCALE("", "Uncaught error in handler thread: %s"
+			      "Client will not get any response from Roxen.\n"),
+		       describe_backtrace(q));
 	}
       }) {
 	catch {
@@ -1800,7 +1850,7 @@ private void restore_current_user_id_number()
   report_debug("Restoring unique user ID information. (" + current_user_id_number
 	       + ")\n");
 #ifdef FD_DEBUG
-  mark_fd(current_user_id_file->query_fd(), LOCALE->unique_uid_logfile());
+  mark_fd(current_user_id_file->query_fd(), LOCALE("", "Unique user ID logfile.\n"));
 #endif
 }
 
@@ -1828,7 +1878,7 @@ public string full_status()
   string res="";
   array foo = ({0.0, 0.0, 0.0, 0.0, 0});
   if(!sizeof(configurations))
-    return LOCALE->no_servers_enabled();
+    return LOCALE("a", "<b>No virtual servers enabled</b>\n");
 
   foreach(configurations, object conf)
   {
@@ -1860,10 +1910,10 @@ public string full_status()
 
   tmp=(int)((foo[4]*600.0)/(uptime+1));
 
-  return(LOCALE->full_status(real_version, start_time,
-			     days, hrs, min, uptime%60,
-			     foo[1], foo[0] * 8192.0, foo[2],
-			     foo[4], (float)tmp/(float)10, foo[3]));
+  return(locale->get()->base_server("full_status", real_version, start_time,
+				    days, hrs, min, uptime%60,
+				    foo[1], foo[0] * 8192.0, foo[2],
+				    foo[4], (float)tmp/(float)10, foo[3]));
 }
 
 #ifndef __NT__
@@ -2671,8 +2721,11 @@ string decode_charset( string charset, string data )
 void create()
 {
   define_global_variables();
-
-  SET_LOCALE(default_locale);
+#if constant(Locale.register_project)
+  Locale.register_project("base_server","translations/%L/base_server.xml");
+#else
+  RoxenLocale.register_project("base_server","translations/%L/base_server.xml");
+#endif
 
   // Dump some programs (for speed)
   master()->resolv ("RXML.refs");
@@ -2691,9 +2744,6 @@ void create()
   // RXML.pmod correctly. :P
 
   dump( "base_server/disk_cache.pike" );
-  foreach( glob("*.pmod",get_dir( "etc/modules/RoxenLocale.pmod/")), string q )
-    if( q != "Modules.pmod" ) dump( "etc/modules/RoxenLocale.pmod/"+ q );
-
   dump( "base_server/roxen.pike" );
   dump( "base_server/roxenlib.pike" );
   dump( "base_server/basic_defvar.pike" );
@@ -2828,7 +2878,7 @@ int set_u_and_gid()
 	}
 	setuid(uid);
 	if (getuid() != uid) report_error ("Failed to set uid.\n"), u = 0;
-	if (u) report_notice(LOCALE->setting_uid_gid_permanently (uid, gid, u, g));
+	if (u) report_notice(locale->get()->base_server("setting_uid_gid_permanently", uid, gid, u, g));
 #else
 	report_warning ("Setting uid not supported on this system.\n");
 	u = g = 0;
@@ -2847,7 +2897,7 @@ int set_u_and_gid()
 	}
 	seteuid(uid);
 	if (geteuid() != uid) report_error ("Failed to set effective uid.\n"), u = 0;
-	if (u) report_notice(LOCALE->setting_uid_gid (uid, gid, u, g));
+	if (u) report_notice(locale->get()->base_server("setting_uid_gid", uid, gid, u, g));
 #else
 	report_warning ("Setting effective uid not supported on this system.\n");
 	u = g = 0;
@@ -2893,9 +2943,9 @@ void reload_all_configurations()
       {
 	conf = enable_configuration(config);
       }) {
-	report_error(LOCALE->
-		     error_enabling_configuration(config,
-						  describe_backtrace(err)));
+	string bt=describe_backtrace(err);
+	report_error(LOCALE("c", "Error while enabling configuration %s"),
+			    config, (bt ? ":\n"+bt : "\n"));
 	continue;
       }
     }
@@ -2904,9 +2954,9 @@ void reload_all_configurations()
       conf->start();
       conf->enable_all_modules();
     }) {
-      report_error(LOCALE->
-		   error_enabling_configuration(config,
-						describe_backtrace(err)));
+      string bt=describe_backtrace(err);
+      report_error(LOCALE("c", "Error while enabling configuration %s"),
+			  config, (bt ? ":\n"+bt : "\n" ));
       continue;
     }
     new_confs += ({ conf });
@@ -2915,7 +2965,7 @@ void reload_all_configurations()
   foreach(configurations - new_confs, conf)
   {
     modified = 1;
-    report_notice(LOCALE->disabling_configuration(conf->name));
+    report_notice(LOCALE("b", "Disabling old configuration %s\n"), conf->name);
     //    Array.map(values(conf->server_ports), lambda(object o) { destruct(o); });
     conf->stop();
     destruct(conf);
@@ -3143,14 +3193,6 @@ void exit_it()
   exit(-1);	// Restart.
 }
 
-void set_locale( string to )
-{
-  if( to == "standard" )
-    SET_LOCALE( default_locale );
-  SET_LOCALE( RoxenLocale[ to ] || default_locale );
-}
-
-
 // Dump all threads to the debug log.
 void describe_all_threads()
 {
@@ -3262,9 +3304,6 @@ int main(int argc, array tmp)
   fastpipe = ((program)"fastpipe");
 
   call_out( lambda() {
-              foreach(glob("*.pmod",get_dir( "etc/modules/RoxenLocale.pmod/")),
-                      string q )
-                dump( "etc/modules/RoxenLocale.pmod/"+ q );
               (program)"module";
               dump( "protocols/http.pike");
               dump( "protocols/ftp.pike");
@@ -3281,20 +3320,6 @@ int main(int argc, array tmp)
               dump( "base_server/fastpipe.pike" );
             }, 9);
 
-
-  switch(getenv("LANG"))
-  {
-   case "sv":
-     default_locale = RoxenLocale["svenska"];
-     break;
-   case "jp":
-     default_locale = RoxenLocale["nihongo"];
-     break;
-   case "de":
-     default_locale = RoxenLocale["deutsch"];
-     break;
-  }
-  SET_LOCALE(default_locale);
   initiate_languages();
   dump( "languages/abstract.pike" );
   mixed tmp;
@@ -3318,13 +3343,25 @@ int main(int argc, array tmp)
   argv -= ({ 0 });
   argc = sizeof(argv);
 
+  call_out(update_supports_from_roxen_com,
+	   QUERY(next_supports_update)-time());
 
-  object o;
-  if(QUERY(locale) != "standard" && (o = RoxenLocale[QUERY(locale)]))
-  {
-    default_locale = o;
-    SET_LOCALE(default_locale);
+  if(getenv("LANG")) {
+    default_locale = getenv("LANG");
+    set_locale();
   }
+
+  if(QUERY(locale) != "standard")
+  {
+    default_locale = QUERY(locale);
+    set_locale();
+  }
+
+  if(!locale->get()) {
+    default_locale = "eng";
+    set_locale();
+  }
+
 #if efun(syslog)
   init_logger();
 #endif
@@ -3345,9 +3382,6 @@ int main(int argc, array tmp)
     foreach( configurations, object c )
       if( c->query( "no_delayed_load" ) )
         c->enable_all_modules();
-
-  call_out(update_supports_from_roxen_com,
-	   QUERY(next_supports_update)-time());
 
 #ifdef THREADS
   start_handler_threads();
@@ -3400,11 +3434,16 @@ string check_variable(string name, mixed value)
       remove_call_out(restart);
     break;
    case "locale":
-     object o;
-     if(o = RoxenLocale[value])
+     if(sizeof(
+#if constant(Locale.get_objects)
+	       Locale.get_objects(value)
+#else
+	       RoxenLocale.get_objects(value)
+#endif
+	       ))
      {
-       default_locale = o;
-       SET_LOCALE(default_locale);
+       default_locale = value;
+       set_locale();
      } else {
        return sprintf("No such locale: %O\n", value);
      }
