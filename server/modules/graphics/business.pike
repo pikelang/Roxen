@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.145 2002/01/23 13:12:39 jonasw Exp $";
+constant cvs_version = "$Id: business.pike,v 1.146 2002/02/01 17:03:23 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -781,7 +781,7 @@ mixed draw_callback(mapping args, object id)
      img = Graphics.Graph.bars(args);
      break;
    case "sumbars":
-     img = Graphics.Graph.bars(args);
+     img = Graphics.Graph.sumbars(args);
      break;
    case "norm":
      img = Graphics.Graph.norm(args);
