@@ -5,27 +5,17 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.38 2002/05/22 09:51:51 anders Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.39 2002/06/14 10:34:58 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
-// #include <roxen.h>
 inherit "module";
 
-// begin locale stuff
-//<locale-token project="mod_obox">LOCALE</locale-token>
-//<locale-token project="mod_obox">SLOCALE</locale-token>
-#define SLOCALE(X,Y)	_STR_LOCALE("mod_obox",X,Y)
-#define LOCALE(X,Y)	_DEF_LOCALE("mod_obox",X,Y)
-// end locale stuff
-  
-
 constant module_type = MODULE_TAG;
-LocaleString module_name = LOCALE(1,"Tags: Outlined box");
-
-LocaleString module_doc  =
-  LOCALE(2,"This module provides the <tt>&lt;obox&gt;</tt> tag that "
-	 "draws outlined boxes.");
+constant module_name = "Tags: Outlined box";
+constant module_doc  =
+  ("This module provides the <tt>&lt;obox&gt;</tt> tag that "
+   "draws outlined boxes.");
 
 constant unit_gif = "/internal-roxen-unit";
 

@@ -1,14 +1,6 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 #include <module.h>
 
-// Some defines for the translation system
-// 
-//<locale-token project="mod_auth">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("mod_auth",X,Y)
-// end of the locale related stuff
-
-
-
 inherit UserDB;
 inherit "module";
 //! A user database module should inherit @[UserDB]. 
@@ -28,20 +20,18 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version="$Id: userdb_ex.pike,v 1.3 2001/10/09 18:07:50 nilsson Exp $";
-
-LocaleString module_name = LOCALE(1,"RefDoc for MODULE_USERDB");
-
-LocaleString module_doc =
-  LOCALE(2,"This module does nothing special, it implements a simple "
-	 "user database with the passwords and usernames in a string list, "
-	 "but its inlined documentation gets imported into the Roxen "
-	 "programmer manual.\n"
-	 "You definetely don't want to use this module in your virtual "
-	 "servers, since anybody with access to your admin interface or "
-	 "server configuration file automatically gains access to all "
-	 "your passwords. For a budding roxen programmer, the module "
-	 "however does show the basics of making a user database module.");
+constant cvs_version = "$Id: userdb_ex.pike,v 1.4 2002/06/14 10:34:58 nilsson Exp $";
+constant module_name = "RefDoc for MODULE_USERDB";
+constant  module_doc =
+  ("This module does nothing special, it implements a simple "
+   "user database with the passwords and usernames in a string list, "
+   "but its inlined documentation gets imported into the Roxen "
+   "programmer manual.\n"
+   "You definetely don't want to use this module in your virtual "
+   "servers, since anybody with access to your admin interface or "
+   "server configuration file automatically gains access to all "
+   "your passwords. For a budding roxen programmer, the module "
+   "however does show the basics of making a user database module.");
 
 
 static void create()
@@ -50,9 +40,8 @@ static void create()
 // could easily be extended to include more information.
 {
   defvar("users", Variable.StringList(({}), VAR_INITIAL,
-				      LOCALE(3,"Users and Passwords"),
-				      LOCALE(4,"A list of username:password "
-					     "pairs.")));
+				      "Users and Passwords",
+				      "A list of username:password pairs."));
 }
 
 

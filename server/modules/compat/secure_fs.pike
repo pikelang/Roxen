@@ -5,29 +5,24 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.28 2001/09/03 17:55:12 nilsson Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.29 2002/06/14 10:34:58 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-//<locale-token project="mod_secure_fs">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_secure_fs",X,Y)
-// end of the locale related stuff
-
 constant module_type = MODULE_LOCATION;
-LocaleString module_name = _(1,"File systems: Secure file system");
-LocaleString module_doc  = 
-_(2,
- "This is a file system module that allows for more fine-grained control\n"
+constant module_name = "File systems: Secure file system";
+constant module_doc  =
+("This is a file system module that allows for more fine-grained control\n"
  "over the Roxen's built-in module security. Instead of just having security\n"
  "pattern for the whole module it is possible to create several patterns.\n"
  "Glob patterns are used to decide which parts of the file system each\n"
-  "pattern affects.\n"
-  "\n"
-  "<p>The module also supports form based authentication. The same type of\n"
-  "access control can be achieved, in a different way, by using the\n"
-  "<i>.htaccess support</i> module.\n");
+ "pattern affects.\n"
+ "\n"
+ "<p>The module also supports form based authentication. The same type of\n"
+ "access control can be achieved, in a different way, by using the\n"
+ "<i>.htaccess support</i> module.\n");
 constant module_unique = 0;
 
 array seclevels = ({ });
@@ -95,11 +90,11 @@ void create()
 	 "# Only allow from localhost, or persons with a valid account\n"
 	 "*:  allow ip=127.0.0.1\n"
 	 "*:  allow user=any\n",
-	 _(3,"Security patterns"),
+	 "Security patterns",
 
 	 TYPE_TEXT_FIELD|VAR_INITIAL,
 
-	 (0,"This is the security pattern list, which follows the format"
+	 "This is the security pattern list, which follows the format"
 	 "<br><tt>files: security pattern</tt><p>"
 	 "Each <i>security pattern</i> can be any from this list:<br>"
 	 "<hr noshade>"
@@ -109,16 +104,18 @@ void create()
 	 "<hr noshade>"
 	 "<i>Files</i> are a glob pattern matching the files of the file "
 	 "system that will be affected by the security pattern. '*' will "
-	 "match one or more characters, '?' will match one character."));
+	 "match one or more characters, '?' will match one character.");
 
-  defvar("page", 0, _(4,"Use form authentication"), TYPE_FLAG,
-         (0,"If set it will produce a page containing a login form instead "
-	  "of sending a HTTP authentication needed header."), 0 );
-  defvar("expire", 60*15, (0,"Authentication expire time"),
+  defvar("page", 0, "Use form authentication", TYPE_FLAG,
+	 "If set it will produce a page containing a login form instead "
+	 "of sending a HTTP authentication needed header.", 0 );
+
+  defvar("expire", 60*15, "Authentication expire time",
          TYPE_INT,
-         _(5,"New authentication will be required if no page has been "
+         ("New authentication will be required if no page has been "
 	  "requested within this time, in seconds."),
          0, dont_use_page);
+
   defvar("authpage",
 	 "<HTML><HEAD><TITLE>Authentication needed</TITLE></HEAD><BODY>\n"
          "<FORM METHOD=post ACTION=$File>\n"
@@ -127,13 +124,13 @@ void create()
          "<INPUT TYPE=submit VALUE=Authenticate>\n"
          "</FORM>\n"
          "</BODY></HTML>",
-         _(6,"Form authentication page."),
+         "Form authentication page.",
          TYPE_TEXT_FIELD,
-         _(7,"Should contain an form with input fields named <i>httpuser</i> "
-	   "and <i>httppass</i>. "
-	   "The string $File will be replaced with the URL to the current "
-	   "page being accessed and "
-	   "$Me with the URL to the site."),
+         ("Should contain an form with input fields named <i>httpuser</i> "
+	  "and <i>httppass</i>. "
+	  "The string $File will be replaced with the URL to the current "
+	  "page being accessed and "
+	  "$Me with the URL to the site."),
          0, dont_use_page);
 
   ::create();

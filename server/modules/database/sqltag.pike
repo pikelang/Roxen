@@ -1,28 +1,22 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.98 2002/04/24 14:07:04 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.99 2002/06/14 10:34:58 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
 inherit "module";
 
-//<locale-token project="mod_sqltag">LOCALE</locale-token>
-//<locale-token project="mod_sqltag">SLOCALE</locale-token>
-#define SLOCALE(X,Y)	_STR_LOCALE("mod_sqltag",X,Y)
-#define LOCALE(X,Y)	_DEF_LOCALE("mod_sqltag",X,Y)
-// end locale stuff
 
 // Module interface functions
 
-constant module_type=MODULE_TAG|MODULE_PROVIDER;
-LocaleString module_name=LOCALE(1,"Tags: SQL tags");
-LocaleString module_doc =
-LOCALE(2,
-       "The SQL tags module provides the tags <tt>&lt;sqlquery&gt;</tt> and"
-       "<tt>&lt;sqltable&gt;</tt> as well as being a source to the "
-       "<tt>&lt;emit&gt;</tt> tag (<tt>&lt;emit source=\"sql\" ... &gt;</tt>)."
-       "All tags send queries to SQL databases.");
+constant module_type = MODULE_TAG|MODULE_PROVIDER;
+constant module_name = "Tags: SQL tags";
+constant  module_doc =
+("The SQL tags module provides the tags <tt>&lt;sqlquery&gt;</tt> and"
+ "<tt>&lt;sqltable&gt;</tt> as well as being a source to the "
+ "<tt>&lt;emit&gt;</tt> tag (<tt>&lt;emit source=\"sql\" ... &gt;</tt>)."
+ "All tags send queries to SQL databases.");
 
 TAGDOCUMENTATION
 #ifdef manual
@@ -142,12 +136,11 @@ array|object do_sql_query(mapping args, RequestID id,
   {
     RoxenModule module=id->conf->find_module(replace(args->module,"!","#"));
     if( !module )
-      RXML.run_error( (string)LOCALE(9,"Cannot find the module %s"),
-		      args->module );
+      RXML.run_error( "Cannot find the module" + args->module );
 
     if( error = catch( con = module->get_my_sql( ro ) ) )
-      RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
-		     ": "+ describe_error (error) +"\n");
+      RXML.run_error( "Couldn't connect to SQL server: " +
+		      describe_error(error) + "\n");
       
     if( catch
     {
@@ -172,8 +165,8 @@ array|object do_sql_query(mapping args, RequestID id,
 					 default_db||compat_default_host,
 					 my_configuration(), ro));
     if( !con )
-      RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
-		     (error?": "+ describe_error (error) :"")+"\n");
+      RXML.run_error( "Couldn't connect to SQL server"+
+		      (error?": "+ describe_error (error) :"")+"\n" );
 
     if( catch(result = (big_query?con->big_query:con->query)(args->query)) )
     {
@@ -416,28 +409,28 @@ void create()
 {
 #if ROXEN_COMPAT <= 1.3
   defvar("hostname", "mysql://localhost/",
-         LOCALE(4,"Default database"),
+         "Default database",
 	 TYPE_STRING | VAR_INVISIBLE,
-	 LOCALE(5,"The default database that will be used if no <i>host</i> "
-	 "attribute is given to the tags. "
-	 "The value is a database URL in this format:\n"
-	 "<p><blockquote><pre>"
-	 "<i>driver</i><b>://</b>"
-	 "[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]"
-	 "<i>host</i>[<b>:</b><i>port</i>]"
-	 "[<b>/</b><i>database</i>]\n"
-	 "</pre></blockquote>\n"
-	 "<p>If the <i>SQL databases</i> module is loaded, it's also "
-	 "possible to use an alias registered there. That's the "
-	 "recommended way, since this (usually sensitive) data is "
-	 "collected in one place then."));
+	 ("The default database that will be used if no <i>host</i> "
+	  "attribute is given to the tags. "
+	  "The value is a database URL in this format:\n"
+	  "<p><blockquote><pre>"
+	  "<i>driver</i><b>://</b>"
+	  "[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]"
+	  "<i>host</i>[<b>:</b><i>port</i>]"
+	  "[<b>/</b><i>database</i>]\n"
+	  "</pre></blockquote>\n"
+	  "<p>If the <i>SQL databases</i> module is loaded, it's also "
+	  "possible to use an alias registered there. That's the "
+	  "recommended way, since this (usually sensitive) data is "
+	  "collected in one place then."));
 #endif
   defvar( "db",
           DatabaseVar( " none",({}),0,
-                       LOCALE(4,"Default database"),
-                       LOCALE(8,"If this is defined, it's the "
-                              "database this server will use as the "
-                              "default database") ) );
+                       "Default database",
+                       ("If this is defined, it's the "
+			"database this server will use as the "
+			"default database") ) );
 }
 
 
@@ -460,17 +453,15 @@ string status()
       object o = DBManager.get(query("db"),my_configuration());
       if(!o)
         error("The database specified as default database does not exist");
-      return sprintf(LOCALE(6,"The default database is connected to %s "
-                            "server on %s.")+
-                     "<br />\n",
+      return sprintf("The default database is connected to %s "
+		     "server on %s.<br />\n",
                      Roxen.html_encode_string (o->server_info()),
                      Roxen.html_encode_string (o->host_info()));
     })
     {
       return
-        "<font color=\"red\">"+
-        LOCALE(7,"The default database is not connected")+
-        ":</font><br />\n" +
+        "<font color=\"red\">"
+        "The default database is not connected:</font><br />\n" +
         replace( Roxen.html_encode_string( describe_error(err) ),
                  "\n", "<br />\n") +
         "<br />\n";

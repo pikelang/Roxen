@@ -2,16 +2,8 @@
 
 inherit "module";
 // All roxen modules must inherit module.pike
-#include <roxen.h>
-// include roxen.h for locale specific stuff
 
-// Some defines for the translation system
-// 
-//<locale-token project="mod_common_api">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("mod_common_api",X,Y)
-// end of the locale related stuff
-
-constant cvs_version="$Id: common_api.pike,v 1.9 2002/06/05 10:12:33 nilsson Exp $";
+constant cvs_version="$Id: common_api.pike,v 1.10 2002/06/14 10:34:58 nilsson Exp $";
 //! This string (filtered to remove some ugly cvs id markup) shows up in
 //! the roxen administration interface when handling module parameters in
 //! developer mode (configured under "User Settings" below the Admin tab).
@@ -19,7 +11,7 @@ constant cvs_version="$Id: common_api.pike,v 1.9 2002/06/05 10:12:33 nilsson Exp
 //! the file in the inherit tree. Optional, but convenient, especially if
 //! you use cvs for version control of your code.
 
-LocaleString module_name = LOCALE(1,"Tamaroxchi");
+constant module_name = "Tamaroxchi";
 //! The name that will show up in the module listings when adding modules
 //! or viewing the modules of a virtual server. Keep it fairly informative
 //! and unique, since this is the only means for identification of your
@@ -30,11 +22,11 @@ constant module_type = MODULE_ZERO;
 //! (|) for hybrid modules. Hybrid modules must implement the required
 //! API functions for all of the module types they are hybrids of.
 
-LocaleString module_doc_locale = LOCALE(2,"This module does nothing, but its "
-				  "inlined documentation gets imported "
-				  "into the roxen programmer manual. "
-				  "You really don't want to add this "
-				  "module to your virtual server, promise!");
+constant module_doc = ("This module does nothing, but its "
+		       "inlined documentation gets imported "
+		       "into the roxen programmer manual. "
+		       "You really don't want to add this "
+		       "module to your virtual server, promise!");
 //! The documentation string that will end up in the administration
 //! interface view of the module just below the module name. Also shows
 //! up in the more verbose add module views.
@@ -85,7 +77,7 @@ mapping(LocaleString:function(RequestID:void)) query_action_buttons(RequestID id
 //! object in the admin interface sent with the request used to invoke the
 //! action by the administrator.
 {
-  return ([ LOCALE(3,"Scratch me!") : scratch_me ]);
+  return ([ "Scratch me!" : scratch_me ]);
 }
 
 void scratch_me()
@@ -94,29 +86,29 @@ void scratch_me()
   if(itching)
   {
     itching = 0;
-    report_notice(LOCALE(4,"Aah, that's good.\n"));
+    report_notice("Aah, that's good.\n");
   } else
-    report_warning(LOCALE(5,"Ouch!\n"));
+    report_warning("Ouch!\n");
 }
 
-LocaleString info( Configuration conf )
+string info( Configuration conf )
 //! Implementing this function in your module is optional.
 //!
 //! When present, it returns a string that describes the module.
-//! When absent, Roxen will use element <ref>module_doc_locale</ref>. Unlike
-//! module_doc_locale, though, this information is only shown when the module
+//! When absent, Roxen will use element <ref>module_doc</ref>. Unlike
+//! module_doc, though, this information is only shown when the module
 //! is present in a virtual server, so it won't show up when adding
 //! modules to a server.
 {
   string mp = query_internal_location();
   
-  return sprintf(LOCALE(6,"This string overrides the documentation string "
-			"given in module_doc[_locale], but only once the "
-			"module is added to a server. The module's internal "
-			"mountpoint is found at <tt>%s</tt>"), mp );
+  return sprintf("This string overrides the documentation string "
+		 "given in module_doc, but only once the "
+		 "module is added to a server. The module's internal "
+		 "mountpoint is found at <tt>%s</tt>", mp );
 }
 
-LocaleString check_variable(string variable, mixed set_to)
+string check_variable(string variable, mixed set_to)
 //! Custom checks of configuration variable validities. (optional)
 //!
 //! Check admin interface variables for sanity.
@@ -134,7 +126,7 @@ LocaleString check_variable(string variable, mixed set_to)
     if(set_to=="whatevervalueweaccept")
       return 0;
     else // if it's not, return an error message.
-      return LOCALE(7,"Sorry, we don't accept that value.")+"\n";
+      return "Sorry, we don't accept that value.\n";
   }
 }
 
@@ -153,7 +145,7 @@ void start(int occasion, Configuration conf)
 //! also happens just before calling <ref>stop()</ref> upon reloading
 //! the module.
 {
-  report_notice(LOCALE(8,"Wow, I feel good!")+"\n");
+  report_notice("Wow, I feel good!\n");
 }
 
 void stop()
@@ -163,7 +155,7 @@ void stop()
 //! when the administrator drops the module, reloads the module or
 //! when the server is being shut down.
 {
-  report_notice(LOCALE(9,"Guess that's what I get for all this itching. *sigh*")+"\n");
+  report_notice("Guess that's what I get for all this itching. *sigh*\n");
 }
 
 string status()
@@ -179,16 +171,16 @@ string status()
 
   switch(itching)
   {
-    case 0: return LOCALE(10,"Feelin' fine.");
-    case 1: how_much = LOCALE(11,"a bit"); break;
-    case 2: how_much = LOCALE(12,"noticeably"); break;
-    case 3: how_much = LOCALE(13,"quite a bit"); break;
-    case 4: how_much = LOCALE(14,"really much"); break;
-    case 5: how_much = LOCALE(15,"a lot"); break;
-    case 6: how_much = LOCALE(16,"unbearably"); break;
-    default: how_much = LOCALE(17,"more than any sane person could stand");
+    case 0: return "Feelin' fine.";
+    case 1: how_much = "a bit"; break;
+    case 2: how_much = "noticeably"; break;
+    case 3: how_much = "quite a bit"; break;
+    case 4: how_much = "really much"; break;
+    case 5: how_much = "a lot"; break;
+    case 6: how_much = "unbearably"; break;
+    default: how_much = "more than any sane person could stand";
   }
-  return sprintf(LOCALE(18,"I'm itching %s. Please scratch me!"), how_much);
+  return sprintf("I'm itching %s. Please scratch me!", how_much);
 }
 
 mapping|int|Stdio.File find_internal(string file, RequestID id)
