@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.1.1.1 1997/10/14 22:13:26 grubba Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.2 1997/10/21 20:39:45 grubba Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -22,7 +22,7 @@ inherit "roxenlib";
 inherit "module";
 
 #ifdef SQLAUTHDEBUG
-#define DEBUGLOG(X) perror("SQLauth: "+X+"\n");
+#define DEBUGLOG(X) perror("SQLuserdb: "+X+"\n");
 #else
 #define DEBUGLOG(X)
 #endif
