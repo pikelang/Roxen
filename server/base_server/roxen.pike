@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.314 1999/03/24 12:05:27 js Exp $
+ * $Id: roxen.pike,v 1.315 1999/04/14 15:23:36 marcus Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.314 1999/03/24 12:05:27 js Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.315 1999/04/14 15:23:36 marcus Exp $";
 
 
 // Some headerfiles
@@ -1241,6 +1241,7 @@ void post_create () {
 
 void create()
 {
+  ::create();
   catch
   {
     module_stat_cache = decode_value(Stdio.read_bytes(".module_stat_cache"));

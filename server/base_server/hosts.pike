@@ -1,9 +1,9 @@
-// "$Id: hosts.pike,v 1.24 1998/03/28 01:25:01 neotron Exp $";
+// "$Id: hosts.pike,v 1.25 1999/04/14 15:23:38 marcus Exp $";
 #include <roxen.h>
 
 public mapping (string:array(mixed)) do_when_found=([]);
-object dns = Protocols.DNS.async_client();
-mapping lookup_funs=([IP_TO_HOST:dns->ip_to_host,HOST_TO_IP:dns->host_to_ip]);
+object dns;
+mapping lookup_funs;
 
 #define lookup(MODE,NAME) lookup_funs[MODE](NAME, got_one_result)
 #define LOOKUP(MODE,NAME,CB,ARGS) do{if(!do_when_found[NAME]){do_when_found[NAME]=(CB?({({CB,ARGS})}):({}));lookup(MODE, NAME);} else if(CB) do_when_found[NAME]+=({({CB,ARGS})});}while(0)
@@ -91,5 +91,25 @@ void host_to_ip(string|void host, function|void callback, mixed ... args)
   }
   LOOKUP(HOST_TO_IP,host,callback,args);
 }
- 
+
+static void dummy_ip_to_host(string ip, function callback, mixed ... args)
+{
+  callback(ip, 0, @args);
+}
+
+static void dummy_host_to_ip(string host, function callback, mixed ... args)
+{
+  callback(host, 0, @args);
+}
+
+void create()
+{
+  mixed e;
+  if((e = catch(dns = Protocols.DNS.async_client()))) {
+    if(arrayp(e) && sizeof(e) && stringp(e[0]))
+      werror(e[0]);
+    lookup_funs = ([IP_TO_HOST:dummy_ip_to_host,HOST_TO_IP:dummy_host_to_ip]);
+  } else
+    lookup_funs = ([IP_TO_HOST:dns->ip_to_host,HOST_TO_IP:dns->host_to_ip]);
+}
 
