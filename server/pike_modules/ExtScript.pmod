@@ -2,26 +2,24 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.17 2004/05/16 21:54:36 mani Exp $
+// $Id: ExtScript.pmod,v 1.18 2004/05/22 16:26:25 _cvs_stephen Exp $
 
 // 
 
 mapping scripthandlers = ([ ]);
 
-static void diag(string x)
-{
 #ifdef EXTSCRIPT_DEBUG
-  werror(x);
+#define DEBUGMSG(X...) werror (X)
+#else
+#define DEBUGMSG(X...) 0
 #endif
-}
 
 class Handler
 {
   Process.Process
              proc;
   Stdio.File pipe;
-  Stdio.File pipe_other;
-  string     binpath;
+  array(string) command;
   mapping(string:mixed)
              settings;
   int        runcount = 0;
