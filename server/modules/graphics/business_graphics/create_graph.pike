@@ -30,10 +30,126 @@ void draw(object(image) img, float h, array(float) coords)
     }
 }
 
+mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
+{
+  object piediagram=diagram_data["image"];
+
+  if (diagram_data["xnames"]!=0)
+    if (sizeof(diagram_data["xnames"])!=sizeof(diagram_data["data"][0]))
+      diagram_data["xnames"]=0;
+  if (diagram_data["datacolors"])
+    {
+      if (sizeof(diagram_data["datacolors"])<sizeof(diagram_data["data"][0]))
+	diagram_data["datacolors"]=0;
+      else
+	foreach(diagram_data["datacolors"], mixed color)
+	  if (sizeof(color)!=3)
+	    diagram_data["datacolors"]=0;
+    }
+
+  if (diagram_data["datacolors"])
+    {
+      /*     //Colours are given!
+      for(int i=0; i<sizeof(pnumbers); i++)
+	{
+	  piediagram=piediagram->setcolor(@ colors[i]);
+	  piediagram=piediagram->polygone(({(float)xc,(float)yc})+
+			      arr[2*edge_nr..2*(edge_nr+pnumbers[i]+2)+1]);
+	  edge_nr+=pnumbers[i];
+	}
+      */
+    }
+  else
+    {
+      array(int|float) numbers=diagram_data["data"][0];
+      int** carr=allocate(sizeof(numbers));
+      int steg=128+128/(sizeof(numbers));
+      if (1==sizeof(numbers))
+	carr=({({39,155,102})});
+      else
+      if (2==sizeof(numbers))
+	carr=({({190, 180, 0}), ({39, 39, 155})});
+      else
+      if (3==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 39, 155}), ({42, 155, 39})});
+      else
+      if (4==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 66, 155}), ({180, 180, 0}), ({39, 155, 102})});
+      else
+      if (5==sizeof(numbers))
+	carr= ({({155, 39, 39}), ({39, 85, 155}), ({180, 180, 0}), ({129, 39, 155}), ({39, 155, 80})});
+      else
+     if (6==sizeof(numbers))
+	carr= ({({155, 39, 39}), ({39, 85, 155}), ({180, 180, 0}), ({74, 155, 39}), ({100, 39, 155}), ({39, 155, 102})});
+      else
+     if (7==sizeof(numbers))
+	carr= ({({155, 39, 39}), ({39, 85, 155}), ({180, 180, 0}), ({72, 39, 155}), ({74, 155, 39}), ({155, 39, 140}), ({39, 155, 102})});
+      else
+      if (8==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 110, 155}), ({180, 180, 0}), ({55, 39, 155}), ({96, 155, 39}), ({142, 39, 155}), ({39, 155, 69}), ({80, 39, 155})}) ;
+      else
+      if (9==sizeof(numbers))
+	carr= ({({155, 39, 39}), ({39, 115, 155}), ({155, 115, 39}), ({39, 39, 155}), ({118, 155, 39}), ({115, 39, 155}), ({42, 155, 39}), ({155, 39, 118}), ({39, 155, 112})});
+      else
+      if (10==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 121, 155}), ({155, 104, 39}), ({39, 55, 155}), ({140, 155, 39}), ({88, 39, 155}), ({74, 155, 39}), ({130, 24, 130}), ({39, 155, 69}), ({180, 180, 0})}) ;
+      else
+      if (11==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 123, 155}), ({155, 99, 39}), ({39, 63, 155}), ({150, 155, 39}), ({74, 39, 155}), ({91, 155, 39}), ({134, 39, 155}), ({39, 155, 47}), ({155, 39, 115}), ({39, 155, 107})}) ;
+      else
+      if (12==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 126, 155}), ({155, 93, 39}), ({39, 72, 155}), ({155, 148, 39}), ({61, 39, 155}), ({107, 155, 39}), ({115, 39, 155}), ({53, 155, 39}), ({155, 39, 140}), ({39, 155, 80}), ({155, 39, 85})}) ;
+      else
+	/*
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else*/
+	{
+	  //No colours given!
+	  //Now we have the %-numbers in pnumbers
+	  //Lets create a colourarray carr
+	  for(int i=0; i<sizeof(numbers); i++)
+	    {
+	      carr[i]=Colors.hsv_to_rgb((i*steg)%256,190,155);
+	    }
+	}
+
+      diagram_data["datacolors"]=carr;
+      
+    }
+  
+
+  diagram_data["image"]=piediagram;
+  return diagram_data["image"];
+
+}
+
+
 
 mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 {
   float xminvalue=0.0, xmaxvalue=-STORT, yminvalue=0.0, ymaxvalue=-STORT;
+
+  if (!(diagram_data["legendcolor"]))
+    diagram_data["legendcolor"]=diagram_data["bgcolor"];
 
   if (diagram_data["type"]=="graph")
     diagram_data["subtype"]="line";
@@ -346,33 +462,33 @@ mapping set_legend_size(mapping diagram_data)
       //Ta reda på hur många kolumner vi kan ha:
       int b;
       int columnnr=(diagram_data["image"]->xsize()-4)/(b=xmax+2*diagram_data["legendfontsize"]);
-
-      diagram_data["legend_size"]=((j-1)/columnnr+1)*diagram_data["legendfontsize"];
+      int raws=(j+columnnr-1)/columnnr;
+      diagram_data["legend_size"]=raws*diagram_data["legendfontsize"];
       
       write("diagram_data[\"legend_size\"]:"+diagram_data["legend_size"]+"\n");
 
       //placera ut bilder och text.
-      for(int i; i<j; i++)
+      for(int i=0; i<j; i++)
 	{
 	  diagram_data["image"]->paste_alpha_color(plupps[i], 
 						   @(diagram_data["datacolors"][i]), 
-						   (i%columnnr)*b,
-						   (i/columnnr)*diagram_data["legendfontsize"]+
+						   (i/raws)*b,
+						   (i%raws)*diagram_data["legendfontsize"]+
 						   diagram_data["image"]->ysize()-diagram_data["legend_size"]
 						   
 						   );
 	  diagram_data["image"]->setcolor(0,0,0);
 	  draw( diagram_data["image"], 0.5, 
-	       ({(i%columnnr)*b+0.01, (i/columnnr)*diagram_data["legendfontsize"]+
+	       ({(i/raws)*b+0.01, (i%raws)*diagram_data["legendfontsize"]+
 						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1 //FIXME
-		 ,(i%columnnr)*b+plupps[i]->xsize()-0.99 ,  (i/columnnr)*diagram_data["legendfontsize"]+
+		 ,(i/raws)*b+plupps[i]->xsize()-0.99 ,  (i%raws)*diagram_data["legendfontsize"]+
 						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1, //FIXME
-		 (i%columnnr)*b+plupps[i]->xsize()-1.0,  (i/columnnr)*diagram_data["legendfontsize"]+
+		 (i/raws)*b+plupps[i]->xsize()-1.0,  (i%raws)*diagram_data["legendfontsize"]+
 						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+plupps[i]->ysize()-1  //FIXME
-		 ,(i%columnnr)*b+1 ,  (i/columnnr)*diagram_data["legendfontsize"]+
+		 ,(i/raws)*b+1 ,  (i%raws)*diagram_data["legendfontsize"]+
 						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+plupps[i]->ysize()-1 //FIXME
 
-		 ,(i%columnnr)*b+0.01, (i/columnnr)*diagram_data["legendfontsize"]+
+		 ,(i/raws)*b+0.01, (i%raws)*diagram_data["legendfontsize"]+
 						   diagram_data["image"]->ysize()-diagram_data["legend_size"]+1 //FIXME
 
 	       })); 
@@ -380,8 +496,8 @@ mapping set_legend_size(mapping diagram_data)
 
 	  diagram_data["image"]->paste_alpha_color(texts[i], 
 						   @(diagram_data["textcolor"]), 
-						   (i%columnnr)*b+1+diagram_data["legendfontsize"],
-						   (i/columnnr)*diagram_data["legendfontsize"]+
+						   (i/raws)*b+1+diagram_data["legendfontsize"],
+						   (i%raws)*diagram_data["legendfontsize"]+
 						   diagram_data["image"]->ysize()-diagram_data["legend_size"]
 						   
 						   );
