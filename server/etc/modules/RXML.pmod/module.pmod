@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.241 2001/08/27 20:07:27 mast Exp $
+// $Id: module.pmod,v 1.242 2001/08/28 21:36:01 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -68,9 +68,9 @@ static object roxen;
 
 #ifdef RXML_OBJ_DEBUG
 #  define MARK_OBJECT \
-     mapping|object __object_marker = Debug.ObjectMarker (this_object())
+     mapping|object __object_marker = RoxenDebug.ObjectMarker (this_object())
 #  define MARK_OBJECT_ONLY \
-     mapping|object __object_marker = Debug.ObjectMarker (0)
+     mapping|object __object_marker = RoxenDebug.ObjectMarker (0)
 #else
 #  define MARK_OBJECT ;
 #  define MARK_OBJECT_ONLY ;
@@ -6486,11 +6486,11 @@ static class PikeCompile
 		"constant is_RXML_encodable = 1;\n"
 #ifdef RXML_OBJ_DEBUG
 		// Don't want to encode the cloning of
-		// Debug.ObjectMarker in the __INIT that is dumped,
-		// since that debug might not be wanted when the dump is
-		// decoded.
+		// RoxenDebug.ObjectMarker in the __INIT that is
+		// dumped, since that debug might not be wanted when
+		// the dump is decoded.
 		"mapping|object __object_marker = ",
-		bind (Debug.ObjectMarker ("object(compiled RXML code)")), ";\n"
+		bind (RoxenDebug.ObjectMarker ("object(compiled RXML code)")), ";\n"
 #else
 		LITERAL (MARK_OBJECT) ";\n"
 #endif
@@ -7268,7 +7268,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 
 #ifdef RXML_OBJ_DEBUG
 	case "ObjectMarker":
-	  ENCODE_DEBUG_RETURN (Debug.ObjectMarker (what[1]));
+	  ENCODE_DEBUG_RETURN (RoxenDebug.ObjectMarker (what[1]));
 #endif
       }
     }
@@ -7394,7 +7394,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
       else if (what == xml_tag_parser)
 	ENCODE_DEBUG_RETURN ("xtp");
 #ifdef RXML_OBJ_DEBUG
-      else if (object_program (what) == Debug.ObjectMarker)
+      else if (object_program (what) == RoxenDebug.ObjectMarker)
 	ENCODE_DEBUG_RETURN (({
 	  "ObjectMarker",
 	  reverse (array_sscanf (reverse (what->id), "]%*d[%s")[0])}));

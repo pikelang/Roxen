@@ -1,13 +1,13 @@
 // Some debug tools.
 //
-// $Id: Debug.pmod,v 1.3 2001/08/20 13:28:13 nilsson Exp $
+// $Id: RoxenDebug.pmod,v 1.4 2001/08/28 21:35:59 mast Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
 //! class for tracking:
 //!
 //! @example
-//! Debug.ObjectMarker __marker = Debug.ObjectMarker (this_object());
+//! RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this_object());
 
 mapping(string:int) object_markers = ([]);
 
@@ -52,7 +52,7 @@ class ObjectMarker
 
   string _sprintf()
   {
-    return "Debug.ObjectMarker(" + id + ")";
+    return "RoxenDebug.ObjectMarker(" + id + ")";
   }
 }
 

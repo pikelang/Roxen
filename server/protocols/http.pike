@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.333 2001/08/23 13:29:52 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.334 2001/08/28 21:35:56 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -23,7 +23,7 @@ int req_time = HRTIME();
 #endif
 
 #ifdef ID_OBJ_DEBUG
-Debug.ObjectMarker __marker = Debug.ObjectMarker (this_object());
+RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this_object());
 #endif
 
 #ifdef REQUEST_DEBUG
