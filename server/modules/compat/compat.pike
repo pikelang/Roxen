@@ -330,11 +330,10 @@ string|array tag_insert(string tag,mapping m,RequestID id)
 
   if(n = m->variable)
   {
-    if(!id->variables[n])
-      return rxml_error(tag, "No such variable ("+n+").", id);
+    string var=RXML.get_context()->user_get_var(n, m->scope);
     m_delete(m, "variable");
-    return m->quote=="none"?do_replace((string)id->variables[n], m-(["quote":""]), id):
-      ({ html_encode_string(do_replace((string)id->variables[n], m-(["quote":""]), id)) });
+    return m->quote=="none"?do_replace(var, m-(["quote":""]), id):
+      ({ html_encode_string(do_replace(var, m-(["quote":""]), id)) });
   }
 
   if(n = m->other) {
