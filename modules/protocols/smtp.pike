@@ -1,15 +1,16 @@
 /*
- * $Id: smtp.pike,v 1.35 1998/09/16 01:46:56 grubba Exp $
+ * $Id: smtp.pike,v 1.36 1998/09/17 15:00:24 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.35 1998/09/16 01:46:56 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.36 1998/09/17 15:00:24 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
+#include <syslog.h>
 
 inherit "module";
 
@@ -270,7 +271,7 @@ static class Smtp_Connection {
       }
       a[i] *= "";
     }
-    return(a);
+    return(lower_case(a));
   }
 
   void smtp_NOOP(string noop, string args)
@@ -1016,14 +1017,30 @@ static object open_spoolfile()
  */
 array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
 {
+  string csum = Crypto.sha()->update(data)->digest();
+
+  openlog("Roxen SMTP", 0, LOG_MAIL);
+  if (smtp) {
+    syslog(LOG_NOTICE, sprintf("%O: from=%s, size=%d, nrcpts=%d, "
+			       "proto=%s, relay=%s [%s]",
+			       replace(MIME.encode_base64(csum), "/", "."),
+			       mail->from, sizeof(data),
+			       sizeof(mail->recipients),
+			       smtp->prot, smtp->remotehost, smtp->remoteip));
+  } else {
+    syslog(LOG_NOTICE, sprintf("%O: from=%s, size=%d, nrcpts=%d, "
+			       "proto=INTERNAL",
+			       replace(MIME.encode_base64(csum), "/", "."),
+			       mail->from, sizeof(data),
+			       sizeof(mail->recipients)));
+  }
+
   object spool = open_spoolfile();
 
   if (!spool) {
     report_error("SMTP: Failed to open spoolfile!\n");
     return(({ 550, "No spooler available" }));
   }
-
-  string csum = Crypto.sha()->update(data)->digest();
 
   if (spool->write(data) != sizeof(data)) {
     spool->close();
