@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.29 2004/07/21 09:54:44 anders Exp $";
+constant cvs_version = "$Id: email.pike,v 1.30 2004/07/21 13:48:18 anders Exp $";
 
 constant thread_safe=1;
 
@@ -86,7 +86,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.29 $"/" ")[1];
+string revision = ("$Revision: 1.30 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -428,7 +428,8 @@ class TagEmail {
 			   "subject"      : subject,
 			   "from"         : nice_from_h(fromx),
 			   "to"           : replace(tox, split, ","),
-			   "content-type" : "multipart/mixed",
+			   "content-type" : (args["main-mimetype"] ||
+					     "multipart/mixed"),
 			   "x-mailer"     : "Roxen's email, r"+revision
 			]) + headers,
 			({ m }) + id->misc->_email_atts_ );
@@ -583,6 +584,14 @@ value=''><p>
 
 <attr name='mimetype' value='MIME type'><p>
  Overrides the MIME type of the body.
+</p>
+</attr>
+
+<attr name='main-mimetype' value='MIME type'><p>
+ Overrides the MIME type of the enclosing message when attachments are
+ used. Default is 'multipart/mixed' but it might be useful to set
+ this to 'multipart/related' when sending HTML-mail with inlined
+ images.
 </p>
 </attr>
 
