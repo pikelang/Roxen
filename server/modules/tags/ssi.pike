@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.36 2000/11/07 13:34:00 kuntri Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.37 2000/11/09 10:31:53 jhs Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -254,12 +254,9 @@ constant tagdoc=([
 </attr>",
 
 "!--#fsize":#"
-<desc tag='tag'><p><short hide>
-
+<desc tag='tag'><p><short>
  Prints the size of the specified file, subject to the sizefmt format
- specification used in the <tag>!--#config</tag> SSI tag. </short>Prints the
- size of the specified file, subject to the sizefmt format
- specification used in the <ref type=tag>!--#config</ref> SSI tag.
+ specification used in the <tag>!--#config</tag> SSI tag. </short>
  </p></desc>
 
 <attr name='file' value='path'><p>
@@ -290,12 +287,12 @@ constant tagdoc=([
 "!--#printenv":#"
 <desc tag='tag'><p><short>
  This tag outputs a listing of all existing variables and their
- values.</short> Attributes won't be printed.
+ values.</short> Attributes won't be printed.</p>
  <ex type='vert'><pre><!--#printenv --></pre></ex>
-</p></desc>",
+</desc>",
 
 "!--#set":#"<desc tag='tag'><p><short>
- Sets a value of a variable.</short>
+ Sets the value of a variable.</short>
 </p></desc>
 
 <attr name='var' value='value'><p>
