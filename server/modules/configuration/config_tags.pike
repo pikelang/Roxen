@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.172 2002/04/08 14:12:45 wellhard Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.173 2002/04/12 16:31:59 wellhard Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1239,6 +1239,8 @@ mapping get_license_vars(License.Key key)
 	    "number":       key->number(),
 	    "modules":      key->get_modules(),
 	    "name":         key->name(),
+	    "configurations":
+	      String.implode_nicely(License.get_configurations_for_license(key)->name),
 	    
 	    "filename":     key->filename(),
 	    "creator":      key->creator(),
