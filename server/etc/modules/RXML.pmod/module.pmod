@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.104 2000/08/21 01:02:01 nilsson Exp $
+//! $Id: module.pmod,v 1.105 2000/08/29 23:45:06 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -371,6 +371,9 @@ class TagSet
       error ("Trying to register a tag %O without a name.\n", tag);
     if (!functionp (tag->Frame) && !tag->plugin_name)
       error ("Trying to register a tag %O without a Frame class or function.\n", tag);
+    if (tag->name[..3] != "!--#" && // Ugly special case for SSI tags.
+	replace (tag->name, "#<>& \t\n\r" / "", ({""}) * 8) != tag->name)
+      error ("Invalid character(s) in name for tag %O.\n", tag);
 #endif
     if (tag->flags & FLAG_PROC_INSTR) {
       if (!proc_instrs) proc_instrs = ([]);
@@ -392,6 +395,9 @@ class TagSet
 	error ("Trying to register a tag %O without a name.\n", tag);
       if (!functionp (tag->Frame) && !tag->plugin_name)
 	error ("Trying to register a tag %O without a Frame class or function.\n", tag);
+      if (tag->name[..3] != "!--#" && // Ugly special case for SSI tags.
+	  replace (tag->name, "#<>& \t\n\r" / "", ({""}) * 8) != tag->name)
+	error ("Invalid character(s) in name for tag %O.\n", tag);
 #endif
       if (tag->flags & FLAG_PROC_INSTR) {
 	if (!proc_instrs) proc_instrs = ([]);
