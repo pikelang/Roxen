@@ -1,6 +1,6 @@
 /* This file is executed by Pike to bootstrap Roxen on NT.
  *
- * $Id: ntroxenloader.pike,v 1.3 2000/06/28 14:56:32 noring Exp $
+ * $Id: ntroxenloader.pike,v 1.4 2000/06/28 16:16:22 mast Exp $
  */
 
 string dir;
@@ -11,7 +11,7 @@ class Options
 {
   int redirect = 0; // Default is not to redirect stdout with friends.
   int verbose = 1;
-  string script;
+  array(string) script;
   string wd;
 }
 
@@ -87,11 +87,15 @@ int main(int argc, array (string) argv)
   }
 
   Options opt = Options();
-   
+  int i = search (argv, "--program");
+  if (i >= 0) {
+    opt->script = argv[i+1..];
+    argv = argv[..i-1];
+  }
+
   foreach(Getopt.find_all_options(argv, ({
     ({ "cd", Getopt.HAS_ARG, ({ "--cd" }) }),
     ({ "quiet", Getopt.NO_ARG, ({ "-q", "--quiet" }) }),
-    ({ "program", Getopt.HAS_ARG, ({ "--program" }) }),
     ({ "silent", Getopt.NO_ARG, ({ "-silent" }) })
   })), array arg)
     switch(arg[0])
@@ -103,15 +107,12 @@ int main(int argc, array (string) argv)
       case "quiet":
 	opt->verbose = 0;
 	break;
-	
-      case "program":
-	opt->script = arg[1];
-	break;
-	
+
       case "silent":
 	opt->redirect = 1;
 	break;
     }
+  argv = Getopt.get_args(argv, 0);
 
   dir = pathcnv (combine_path(getcwd(),__FILE__ + "/.."));
   log_dir = combine_path (dir, "../logs");
@@ -171,7 +172,7 @@ int main(int argc, array (string) argv)
   if(key) thread_create(read_from_stdin);
 
    if(opt->script)
-     argv[0] = combine_path(dir, opt->script);
+     argv = opt->script;
    else
      argv[0] = dir+"/base_server/roxenloader.pike";
  
