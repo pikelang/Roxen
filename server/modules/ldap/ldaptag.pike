@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.20 2001/10/08 12:32:54 anders Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.21 2001/11/05 10:10:19 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -222,12 +222,7 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
 
   switch (op) {
     case "search":
-#if __MAJOR__ == 7 && __MINOR__ == 0 && __BUILD__ < 236
-// buggy search required argument
-	error = catch(result = (con->search(args->filter||"")));
-#else
-	error = catch(result = (con->search()));
-#endif
+	error = catch(result = (con->search(args->filter)));
 	break;
 
     case "add":
