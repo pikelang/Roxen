@@ -100,7 +100,9 @@ class CIF
     if( offsets[ wc ] )
     {
       fd->seek( offsets[ wc ] );
-      return StringFile( prefix+fd->read( getint() ) );
+      if( wc <= 0x7fffffff ) // Normal character
+        return StringFile( prefix+fd->read( getint() ) );
+      return StringFile( fd->read( getint() ) );
     }
     return 0;
   }
