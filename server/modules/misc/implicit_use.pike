@@ -4,7 +4,7 @@
 #include <config.h>
 inherit "module";
 
-constant cvs_version = "$Id: implicit_use.pike,v 1.1 2000/11/03 06:09:08 nilsson Exp $";
+constant cvs_version = "$Id: implicit_use.pike,v 1.2 2000/11/18 04:24:47 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Implicit <use> Module";
@@ -35,7 +35,7 @@ void start(int num, Configuration c) {
 
 string status() { return sprintf("%O",matches); }
 
-RequestID first_try(RequestID id) {
+mapping first_try(RequestID id) {
 
   if(id->misc->_parser) return 0;
 
