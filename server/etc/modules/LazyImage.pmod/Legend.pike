@@ -3,10 +3,9 @@ constant operation_name = "legend";
 
 static
 {
-  array labels = ({});
-
   LazyImage.Layers process( LazyImage.Layers layers )
   {
+    array labels = args->parsed_labels;
     Image.Layer res;
     int col = 2;
       
@@ -154,7 +153,7 @@ static
   {
     if( !args->labels )
       RXML.parse_error("Expected labels in legend\n");
-    labels = ({});
+    array labels = ({});
     void parse_label( Parser.HTML h, mapping m, string c )
     {
       labels += ({ ([ "contents":c ])+m });
@@ -162,5 +161,7 @@ static
     Parser.HTML h = Parser.HTML()->add_container("label", parse_label);
     h->xml_tag_syntax( 2 );
     h->feed( args->labels )->finish();
+    args->parsed_labels = labels;
+    m_delete(args, "labels");
   }
 };
