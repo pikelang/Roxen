@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.213 2004/05/20 13:44:17 _cvs_stephen Exp $
+# $Id: start,v 1.214 2004/05/20 15:03:19 _cvs_stephen Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -77,11 +77,6 @@ SELF_TEST_DIR=data/test
 if test -d $LOCALDIR/.; then
   LOCALDIR="`cd $LOCALDIR; pwd`"
 else :; fi
-
-if test -d $VARDIR/.; then :; else
-  dp "Creating directory $VARDIR"
-  ./bin/mkdir -p $VARDIR/ || exit 1
-fi
 
 # Default verbosity level.
 verbose=1
@@ -557,6 +552,11 @@ if [ ! "X$pass" = "X" ] ; then set -- $pass ;fi
 # ChiliMoon will create files as the initial user, which it expects to
 # be able to read as the run-time user.
 umask 022
+
+if test -d $VARDIR/.; then :; else
+  dp "Creating directory $VARDIR"
+  ./bin/mkdir -p $VARDIR/ || exit 1
+fi
 
 if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
   # Pike default Master-program
