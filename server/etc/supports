@@ -1,4 +1,4 @@
-## $Id: supports,v 1.65 1999/10/29 23:18:37 nilsson Exp $
+## $Id: supports,v 1.66 1999/11/07 16:08:47 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -225,7 +225,7 @@ cern.*linemode.*	html
 # HotJava, SUNs little WWW browser with support for java aplets.
 .*			basic, java, center
 .*/1\.0/j.*1\.1\.[1-9]	frames, pjpeginline, supsub, fontcolor,\
-			backgrounds, bigsmall, divisions, font,\
+			backgrounds, bigsmall, divisions, div, font,\
 			imagealign, jpeginline, tables, tablecolor
 # }
 
@@ -237,7 +237,7 @@ cern.*linemode.*	html
 # Amiga MUIbrowser
 .*			basic, center, pnginline, imageinline,\
 			backgrounds, bigsmall, center, divisions,\
-			font, fontcolor, imagealign, tables,\
+			div, font, fontcolor, imagealign, tables,\
 			jpeginline, pjpeginline, pnginline
 
 .*1.1.*			frames, pull
@@ -248,7 +248,7 @@ cern.*linemode.*	html
 # Amigabrowser <http://www.xs4all.nl/~yrozijn/aweb/>
 .*			basic, center, pnginline, imageinline,\
 			backgrounds, bigsmall, center, divisions,\
-			font, fontcolor, imagealign, supsub,\
+			div, font, fontcolor, imagealign, supsub,\
 			jpeginline, pjpeginline, pnginline
 
 .*1\.[5-9].*		tables
@@ -302,7 +302,7 @@ nokia.7110.*	wml1.1, wbmp0
 # }
 
 #section mc218 {
-.*		phone, wml1.1, wbmp0
+.*		wml1.1, wbmp0
 # }
 
 #section jigsaw {
@@ -398,6 +398,10 @@ nokia.7110.*	wml1.1, wbmp0
 
 #section wget {
 .*		html, robot, *robot=wget
+# }
+
+#section xenu {
+.*		html, robot, *robot=xenu
 # }
 
 #section yahoo {
