@@ -1,9 +1,9 @@
-<topmenu base="../" selected=globals />
+<topmenu base="../" selected='globals' />
 
 
 Set all variables....
 
-   <emit source=global-variables section="&form.section;"></emit>
+   <emit source='global-variables' section="&form.section;"></emit>
 
 Then the page...
 
@@ -17,12 +17,13 @@ Then the page...
   </emit>
  </st-tabs>
  <st-page>
-  <input type=hidden name=section value="&form.section;">
+  <input type='hidden' name='section' value="&form.section;">
   <cf-save/><br clear="all" />
   <table>
-   <emit source=global-variables noset='' section="&form.section;">
-    <tr><td width='30%' valign='top'><b>&_.name;</b></td><td valign='top'>&_.form:none;</td></tr>
-    <tr><td></td><td>&_.doc:none;<p>&_.type_hint;</td></tr>
+   <emit source='global-variables' noset='' section="&form.section;">
+    <tr><td width='30%' valign='top'><b>&_.name;</b></td>
+        <td valign='top'>&_.form:none;</td></tr>
+    <tr><td></td><td>&_.doc:none;<p>&_.type_hint;</p></td></tr>
    </emit>
   </table>
   <cf-save/>
