@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.104 2000/03/24 23:18:22 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.105 2000/03/24 23:43:28 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -864,13 +864,9 @@ class TagScope {
 array(string) container_catch( string tag, mapping m, string c, RequestID id )
 {
   string r;
-  if(!id->misc->catcher_is_ready)
-    id->misc+=(["catcher_is_ready":1]);
-  else
-    id->misc->catcher_is_ready++;
-  array e = catch(r=Roxen.parse_rxml(c, id));
-  id->misc->catcher_is_ready--;
-  if(e) return e[0];
+  mixed e = catch(r=Roxen.parse_rxml(c, id));
+  if(e && objectp(e) && e->tag_throw) return ({ e->tag_throw });
+  if(e) throw(e);
   return ({r});
 }
 
@@ -1244,9 +1240,15 @@ string simpletag_trimlines( string tag_name, mapping args,
 
 void container_throw( string t, mapping m, string c, RequestID id)
 {
-  if(!id->misc->catcher_is_ready && c[-1]!='\n')
-    c+="\n";
-  throw( ({ c, backtrace() }) );
+  if(c[-1]!='\n') c+="\n";
+  throw(
+	class {
+	  string tag_throw;
+	  void create(string c) {
+	    tag_throw=c;
+	  }
+	}(c)
+	);
 }
 
 // Internal methods for the default tag
