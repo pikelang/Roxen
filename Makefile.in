@@ -312,6 +312,11 @@ $(SRCDIR)/ChangeLog.rxml.gz:
 	cd $(SRCDIR); pike tools/make_changelog.pike --rxml |gzip -9 > ChangeLog.rxml.gz
 
 
+force_update: force
+	@rm $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz \
+	    $(SRCDIR)/VERSION bump_version bump_version.stamp || true
+	@echo Prepared for version update.
+
 pre_dist: bump_version weak_cleanup depend run_autoconfig
 	@(cd pike; $(MAKE) pre_dist)
 
@@ -328,18 +333,33 @@ dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	mkdir $$version; \
 	echo Copying files...; \
 	(cd $(SRCDIR); tar cf - .)|(cd $$version; tar xf -; make dist_clean); \
+	echo Determining if this is a 0.5, 0.6 or dual distribution...; \
+	if test -d $$version/pike/0.5/. ; then \
+	  if test -d $$version/pike/0.6/. ; then \
+	    type="dual"; \
+	  else \
+	    type="0.5"; \
+	  fi ; \
+	else \
+	  if test -d $$version/pike/0.6/. ; then \
+	    type="0.6"; \
+	  else \
+	    type="no_pike"; \
+	  fi ; \
+	fi; \
+	echo Type $$type.; \
 	echo Building full NDA distribution...; \
-	tar cf - $$version | gzip -9 >$$version-nda.tar.gz; \
+	tar cf - $$version | gzip -9 >$$version-$$type-nda-full.tar.gz; \
 	if (cd $$version; make keep_dbapi || exit 1); then \
 	  mv $$version/dbapi.tar . || exit 1; \
 	else :; fi; \
 	(cd $$version; make censor_dbapi || exit 1); \
 	echo Building full ordinary distribution...; \
-	tar cf - $$version | gzip -9 >$$version.tar.gz; \
+	tar cf - $$version | gzip -9 >$$version-$$type.tar.gz; \
 	(cd $$version; make censor_crypto || exit 1); \
 	echo Building lobotomized ordinary distribution...; \
-	tar cf - $$version | gzip -9 >$$version-int.tar.gz; \
+	tar cf - $$version | gzip -9 >$$version-$$type-int.tar.gz; \
 	echo Restoring DBAPI...; \
 	(cd $$version; tar xf ../dbapi.tar || exit 1); \
 	echo Building lobotomized NDA distribution...; \
-	tar cf - $$version | gzip -9 >$$version-nda-int.tar.gz
+	tar cf - $$version | gzip -9 >$$version-$$type-nda-int.tar.gz
