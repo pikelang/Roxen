@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.54 1997/11/30 21:14:19 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.55 1997/11/30 21:57:53 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -553,7 +553,27 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	}
   
   //Rita pilen på xaxeln
-
+  if (diagram_data["subtype"]=="line")
+    barsdiagram->polygone(
+		    ({
+		      diagram_data["xsize"]-
+		      diagram_data["linewidth"]/2-
+		      (float)si-labelx/2,
+		      diagram_data["ysize"]-ypos_for_xaxis-
+		      (float)si/4.0,
+		      
+		      diagram_data["xsize"]-
+		      diagram_data["linewidth"]/2-labelx/2,
+		      diagram_data["ysize"]-ypos_for_xaxis,
+		      
+		      diagram_data["xsize"]-
+		      diagram_data["linewidth"]/2-
+		      (float)si-labelx/2,
+		      diagram_data["ysize"]-ypos_for_xaxis+
+		      (float)si/4.0
+		    })
+		    );  
+  
   //Rita yaxeln
   if ((diagram_data["yminvalue"]<=LITET)&&
       (diagram_data["ymaxvalue"]>=-LITET))
