@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.95 2000/02/05 04:18:08 nilsson Exp $
+ * $Id: rxml.pike,v 1.96 2000/02/06 11:48:22 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -16,8 +16,6 @@ inherit "rxmlhelp";
 #define RXML_NAMESPACE "rxml"
 
 #ifndef manual
-
-mapping (string:function) real_if_callers;
 
 string rxml_error(string tag, string error, RequestID id) {
   return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
@@ -451,8 +449,6 @@ string do_parse(string to_parse, RequestID id,
   }
 #endif
 
-  if(!id->misc->_ifs) id->misc->_ifs = copy_value(real_if_callers);
-
   if (mixed err = catch {
     if (parent_parser)
       parser->finish (to_parse);
@@ -469,19 +465,6 @@ string do_parse(string to_parse, RequestID id,
       error ("Can't handle RXML parser unwinding in "
 	     "compatibility mode (error=%O).\n", err);
     else throw (err);
-  }
-}
-
-void build_if_callers()
-{
-  real_if_callers=([]);
-
-  foreach (rxml_tag_set->modules, RoxenModule mod) {
-    mapping(string:function) defs;
-    if (mod->query_if_callers &&
-	mappingp (defs = mod->query_if_callers()) &&
-	sizeof (defs))
-      real_if_callers |= defs;
   }
 }
 
@@ -547,9 +530,6 @@ void add_parse_module (RoxenModule mod)
     remove_call_out (rxml_tag_set->sort_on_priority);
     call_out (rxml_tag_set->sort_on_priority, 0);
   }
-
-  remove_call_out (build_if_callers);
-  call_out (build_if_callers, 0);
 }
 
 void remove_parse_module (RoxenModule mod)
@@ -563,9 +543,6 @@ void remove_parse_module (RoxenModule mod)
       rxml_tag_set->imported[..i - 1] + rxml_tag_set->imported[i + 1..];
     if (tag_set) destruct (tag_set);
   }
-
-  remove_call_out (build_if_callers);
-  call_out (build_if_callers, 0);
 }
 
 
@@ -736,7 +713,7 @@ private string read_package( string p )
   return data;
 }
 
-private string use_file_doc( string f, string data, RequestID nid, Stdio.File id )
+private string use_file_doc( string f, string data, RequestID nid, RequestID id )
 {
   string res="";
   catch
@@ -749,7 +726,7 @@ private string use_file_doc( string f, string data, RequestID nid, Stdio.File id
     res += "<dt><b>"+f+"</b><dd>"+(doc?doc+"<br>":"");
     array tags = indices(nid->misc->tags||({}));
     array containers = indices(nid->misc->containers||({}));
-    array ifs = indices(nid->misc->_ifs||({}))- indices(id->misc->_ifs);
+    array ifs = indices(nid->misc->_ifs||({}))- indices(id->misc->_ifs||({}));
     array defines = indices(nid->misc->defines||({}))- indices(id->misc->defines);
     if(sizeof(tags))
       res += "defines the following tag"+
@@ -768,14 +745,6 @@ private string use_file_doc( string f, string data, RequestID nid, Stdio.File id
         (sizeof(defines)!=1?"s":"") +": "+
         String.implode_nicely( sort(defines) )+"<br>";
   };
-  nid->misc->tags = 0;
-  nid->misc->containers = 0;
-  nid->misc->defines = ([]);
-  nid->misc->_tags = 0;
-  nid->misc->_containers = 0;
-  nid->misc->defaults = ([]);
-  nid->misc->_ifs = ([]);
-  nid->misc->_parser = 0;
   return res;
 }
 
@@ -796,10 +765,11 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
 
   if(m->packageinfo)
   {
-    SETUP_NID();
     string res ="<dl>";
-    foreach(list_packages(), string f)
-      res += use_file_doc( f, read_package( f ), id, id );
+    foreach(list_packages(), string f) {
+      SETUP_NID();
+      res += use_file_doc( f, read_package( f ), nid, id );
+    }
     return ({res+"</dl>"});
   }
 
@@ -834,7 +804,7 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
       if(!res->containers[t]) m_delete(res->_containers, t);
     res->defines = nid->misc->defines||([]);
     res->defaults = nid->misc->defaults||([]);
-    res->_ifs = nid->misc->_ifs - id->misc->_ifs;
+    res->_ifs = nid->misc->_ifs - (id->misc->_ifs||([]));
     m_delete( res->defines, " _stat" );
     m_delete( res->defines, " _error" );
     m_delete( res->defines, " _extra_heads" );
@@ -952,8 +922,10 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 #endif
     id->misc->_containers[n] = call_user_container;
   }
-  else if (m["if"])
+  else if (m["if"]) {
+    if(!id->misc->_ifs) id->misc->_ifs=([]);
     id->misc->_ifs[ lower_case(m["if"]) ] = UserIf( str );
+  }
   else
     return rxml_error(tag, "No tag, variable, if or container specified.", id);
 
@@ -1122,44 +1094,59 @@ string tag_case(string t, mapping m, string c, RequestID id)
 
 #define LAST_IF_TRUE id->misc->defines[" _ok"]
 
-string tag_if( string t, mapping m, string c, RequestID id )
-{
-  int res, and = 1;
+class TagIf {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant flags = RXML.FLAG_CONTAINER | RXML.FLAG_SOCKET_TAG;
 
-  if(m->not)
-  {
-    m_delete( m, "not" );
-    tag_if( t, m, c, id );
-    LAST_IF_TRUE = !LAST_IF_TRUE;
-    if(LAST_IF_TRUE)
-      return c+"<true>";
-    return "<false>";
-  }
+  class Frame {
+    inherit RXML.Frame;
+    int do_iterate = 0;
 
-  if(m->or)  { and = 0; m_delete( m, "or" ); }
-  if(m->and) { and = 1; m_delete( m, "and" ); }
-  array possible = indices(m) & indices(id->misc->_ifs);
+    array do_enter(RequestID id) {
+      int res, and = 1;
 
-  int last=0;
-  foreach(possible, string s)
-  {
-    res = id->misc->_ifs[ s ]( m[s], id, m, and, s );
-    LAST_IF_TRUE=res;
-    last=res;
-    if(res)
-    {
-      if(!and)
-        return c+"<true>";
+      if(args->not) {
+	m_delete(args, "not");
+	do_enter(id);
+	do_iterate=!do_iterate;
+	return 0;
+      }
+
+      if(args->or)  { and = 0; m_delete( args, "or" ); }
+      if(args->and) { and = 1; m_delete( args, "and" ); }
+      mapping plugins=get_plugins();
+      if(id->misc->_ifs) plugins+=id->misc->_ifs;
+      array possible = indices(args) & indices(plugins);
+
+      int last=0;
+      foreach(possible, string s) {
+	res = plugins[ s ]( args[s], id, args, and, s );
+	LAST_IF_TRUE=res;
+	last=res;
+	if(res) {
+	  if(!and) {
+	    do_iterate = 1;
+	    return 0;
+	  }
+	}
+	else
+	  if(and) return 0;
+      }
+      if(last) do_iterate=1;
+      return 0;
     }
-    else
-    {
-      if(and)
-        return "<false>";
+
+    array do_return(RequestID id) {
+      if(do_iterate) {
+	result=content;
+	LAST_IF_TRUE=1;
+      }
+      else
+	LAST_IF_TRUE=0;
     }
+
   }
-  if( last )
-    return c+"<true>";
-  return "<false>";
 }
 
 string tag_else( string t, mapping m, string c, RequestID id )
@@ -1174,9 +1161,9 @@ string tag_then( string t, mapping m, string c, RequestID id )
   return "";
 }
 
-string tag_elseif( string t, mapping m, string c, RequestID id )
+string|array tag_elseif( string t, mapping m, string c, RequestID id )
 {
-  if(!LAST_IF_TRUE) return tag_if( t, m, c, id );
+  if(!LAST_IF_TRUE) return ({1, "if", m, c});
   return "";
 }
 
@@ -1192,12 +1179,12 @@ string tag_false( string t, mapping m, RequestID id )
   return "";
 }
 
-void internal_tag_case( string t, mapping m, string c, int l, RequestID id,
-                        mapping res )
+private void internal_tag_case( string t, mapping m, string c, int l, RequestID id,
+				mapping res )
 {
   if(res->res) return;
   LAST_IF_TRUE = 0;
-  tag_if( t, m, c, id );
+  //  tag_if( t, m, c, id );
   if(LAST_IF_TRUE) res->res = c+"<true>";
   return;
 }
@@ -1231,6 +1218,7 @@ class TagEmit {
       res=plugin->get_dataset(args, id);
       if(arrayp(res)) {
 	if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
+
 	do_iterate=array_iterate;
 	LAST_IF_TRUE = 1;
 	return 0;
@@ -1266,7 +1254,6 @@ mapping query_container_callers()
 {
   return ([
     "comment":lambda(){ return ""; },
-    "if":tag_if,
     "else":tag_else,
     "then":tag_then,
     "elseif":tag_elseif,
@@ -1342,23 +1329,12 @@ class UserIf
 
 class IfIs
 {
-  string index;
-  int cache, misc;
+  inherit RXML.Tag;
+  constant name = "if";
+
+  constant cache = 0;
+  function source;
   function `() = match_in_map;
-
-  string _sprintf()
-  {
-    return "IfIS("+index+")";
-  }
-
-  void create( string ind, int c, int|void m )
-  {
-    index = ind;
-    if(!ind)
-      `() = match_in_string;
-    cache = c;
-    misc = m;
-  }
 
   int match_in_string( string value, RequestID id )
   {
@@ -1377,7 +1353,7 @@ class IfIs
     string is,var;
     if(!cache) CACHE(0);
     array arr=value/" ";
-    var = misc? id->misc[index][arr[0]] : id[index][arr[0]];
+    var=source(id, arr[0]);
     if(sizeof(arr)<2 || !var) return !!var;
     var = lower_case( (var+"") );
     if(sizeof(arr)==1) return !!var;
@@ -1388,31 +1364,21 @@ class IfIs
     if(arr[1]=="!=") return (is!=var);
     if(arr[1]=="<") return ((int)var<(int)is);
     if(arr[1]==">") return ((int)var>(int)is);
-    value = misc?id->misc[index][value]:id[index][value];
+    value=source(id, value);
     return !!value;
   }
 }
 
 class IfMatch
 {
-  string index;
-  int cache, misc;
+  inherit RXML.Tag;
+  constant name = "if";
 
-  string _sprintf()
-  {
-    return "IfMatch("+index+")";
-  }
+  constant cache = 0;
+  function source;
 
-  void create(string ind, int c, int|void m)
-  {
-    index = ind;
-    cache = c;
-    misc = m;
-  }
-
-  int `()( string is, RequestID id )
-  {
-    array|string value = misc?id->misc[index]:id[index];
+  int `()( string is, RequestID id ) {
+    array|string value=source(id);
     if(!cache) CACHE(0);
     if(!value) return 0;
     if(arrayp(value)) value=value*" ";
@@ -1422,175 +1388,323 @@ class IfMatch
   }
 }
 
-int if_date( string date, RequestID id, mapping m )
-{
-  CACHE(60); // One minute accuracy is probably good enough...
-  int a, b;
-  mapping c;
-  c=localtime(time(1));
-  b=(int)sprintf("%02d%02d%02d", c->year, c->mon + 1, c->mday);
-  a=(int)replace(date,"-","");
-  if(a > 999999) a -= 19000000;
-  else if(a < 901201) a += 10000000;
-  if(m->inclusive || !(m->before || m->after) && a==b)
-    return 1;
-  if(m->before && a>b)
-    return 1;
-  else if(m->after && a<b)
-    return 1;
-}
+class TagIfdate {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "date";
 
-int if_time( string ti, RequestID id, mapping m )
-{
-  CACHE(time(1)%60); // minute resolution...
-
-  int tok, a, b, d;
-  mapping c;
-  c=localtime(time());
-
-  b=(int)sprintf("%02d%02d", c->hour, c->min);
-  a=(int)replace(ti,":","");
-
-  if(m->until) {
-    d = (int)m->until;
-    if (d > a && (b > a && b < d) )
+  int `() (string date, RequestID id, mapping m) {
+    CACHE(60); // One minute accuracy is probably good enough...
+    int a, b;
+    mapping c;
+    c=localtime(time(1));
+    b=(int)sprintf("%02d%02d%02d", c->year, c->mon + 1, c->mday);
+    a=(int)replace(date,"-","");
+    if(a > 999999) a -= 19000000;
+    else if(a < 901201) a += 10000000;
+    if(m->inclusive || !(m->before || m->after) && a==b)
       return 1;
-    if (d < a && (b > a || b < d) )
+    if(m->before && a>b)
       return 1;
-    if (m->inclusive && ( b==a || b==d ) )
+    else if(m->after && a<b)
       return 1;
   }
-  else if(m->inclusive || !(m->before || m->after) && a==b)
-    return 1;
-  if(m->before && a>b)
-    return 1;
-  else if(m->after && a<b)
-    return 1;
 }
 
-int match_passwd(string try, string org)
-{
-  if(!strlen(org))   return 1;
-  if(crypt(try, org)) return 1;
-}
+class TagIftime {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "time";
 
-string simple_parse_users_file(string file, string u)
-{
-  if(!file) return 0;
-  foreach(file/"\n", string line)
-  {
-    array(string) arr = line/":";
-    if (arr[0] == u && sizeof(arr) > 1)
-      return(arr[1]);
+  int `() (string ti, RequestID id, mapping m) {
+    CACHE(time(1)%60); // minute resolution...
+
+    int tok, a, b, d;
+    mapping c;
+    c=localtime(time());
+
+    b=(int)sprintf("%02d%02d", c->hour, c->min);
+    a=(int)replace(ti,":","");
+
+    if(m->until) {
+      d = (int)m->until;
+      if (d > a && (b > a && b < d) )
+	return 1;
+      if (d < a && (b > a || b < d) )
+	return 1;
+      if (m->inclusive && ( b==a || b==d ) )
+	return 1;
+    }
+    else if(m->inclusive || !(m->before || m->after) && a==b)
+      return 1;
+    if(m->before && a>b)
+      return 1;
+    else if(m->after && a<b)
+      return 1;
   }
 }
 
-int match_user(array u, string user, string f, int wwwfile, RequestID id)
-{
-  string s, pass;
-  if(u[1]!=user)
-    return 0;
-  if(!wwwfile)
-    s=Stdio.read_bytes(f);
-  else
-    s=id->conf->try_get_file(fix_relative(f,id), id);
-  return ((pass=simple_parse_users_file(s, u[1])) &&
-          (u[0] || match_passwd(u[2], pass)));
-}
+class TagIfuser {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "user";
 
-multiset simple_parse_group_file(string file, string g)
-{
- multiset res = (<>);
- array(string) arr ;
- foreach(file/"\n", string line)
-   if(sizeof(arr = line/":")>1 && (arr[0] == g))
-     res += (< @arr[-1]/"," >);
- return res;
-}
-
-int group_member(array auth, string group, string groupfile, RequestID id)
-{
-  if(!auth)
-    return 0; // No auth sent
-
-  string s;
-  catch { s = Stdio.read_bytes(groupfile); };
-
-  if (!s)
-    s = id->conf->try_get_file( fix_relative( groupfile, id), id );
-
-  if (!s)
-    return 0;
-
-  s = replace(s,({" ","\t","\r" }), ({"","","" }));
-
-  multiset(string) members = simple_parse_group_file(s, group);
-  return members[auth[1]];
-}
-
-int if_user( string u, RequestID id, mapping m )
-{
-  if(!id->auth)
-    return 0;
-  NOCACHE();
-  if(u == "any")
-    if(m->file)
-      return match_user(id->auth,id->auth[1],m->file,!!m->wwwfile, id);
+  int `() (string u, RequestID id, mapping m) {
+    if(!id->auth)
+      return 0;
+    NOCACHE();
+    if(u == "any")
+      if(m->file)
+	return match_user(id->auth,id->auth[1],m->file,!!m->wwwfile, id);
+      else
+	return id->auth[0];
     else
-      return id->auth[0];
-  else
-    if(m->file)
-      // FIXME: wwwfile attribute doesn't work.
-      return match_user(id->auth,u,m->file,!!m->wwwfile,id);
+      if(m->file)
+	// FIXME: wwwfile attribute doesn't work.
+	return match_user(id->auth,u,m->file,!!m->wwwfile,id);
+      else
+	return id->auth[0] && (search(u/",", id->auth[1]) != -1);
+  }
+
+  private int match_user(array u, string user, string f, int wwwfile, RequestID id) {
+    string s, pass;
+    if(u[1]!=user)
+      return 0;
+    if(!wwwfile)
+      s=Stdio.read_bytes(f);
     else
-      return id->auth[0] && (search(u/",", id->auth[1]) != -1);
+      s=id->conf->try_get_file(fix_relative(f,id), id);
+    return ((pass=simple_parse_users_file(s, u[1])) &&
+	    (u[0] || match_passwd(u[2], pass)));
+  }
+
+  private int match_passwd(string try, string org) {
+    if(!strlen(org)) return 1;
+    if(crypt(try, org)) return 1;
+  }
+
+  private string simple_parse_users_file(string file, string u) {
+    if(!file) return 0;
+    foreach(file/"\n", string line)
+      {
+	array(string) arr = line/":";
+	if (arr[0] == u && sizeof(arr) > 1)
+	  return(arr[1]);
+      }
+  }
 }
 
-int if_group( string u, RequestID id, mapping m)
-{
-  if( !id->auth )
-    return 0;
-  NOCACHE();
-  return ((m->groupfile && sizeof(m->groupfile))
-          && group_member(id->auth, m->group, m->groupfile, id));
+class TagIfgroup {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "group";
+
+  int `() (string u, RequestID id, mapping m) {
+    if( !id->auth )
+      return 0;
+    NOCACHE();
+    return ((m->groupfile && sizeof(m->groupfile))
+	    && group_member(id->auth, m->group, m->groupfile, id));
+  }
+
+  private int group_member(array auth, string group, string groupfile, RequestID id) {
+    if(!auth)
+      return 0; // No auth sent
+
+    string s;
+    catch { s = Stdio.read_bytes(groupfile); };
+
+    if (!s)
+      s = id->conf->try_get_file( fix_relative( groupfile, id), id );
+
+    if (!s) return 0;
+
+    s = replace(s,({" ","\t","\r" }), ({"","","" }));
+
+    multiset(string) members = simple_parse_group_file(s, group);
+    return members[auth[1]];
+  }
+
+  private multiset simple_parse_group_file(string file, string g) {
+    multiset res = (<>);
+    array(string) arr ;
+    foreach(file/"\n", string line)
+      if(sizeof(arr = line/":")>1 && (arr[0] == g))
+	res += (< @arr[-1]/"," >);
+    return res;
+  }
 }
 
-int if_exists( string u, RequestID id, mapping m)
-{
-  CACHE(5);
-  return id->conf->is_file(fix_relative(m->exists,id), id);
+class TagIfexists {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "exists";
+
+  int `() (string u, RequestID id) {
+    CACHE(5);
+    return id->conf->is_file(fix_relative(u, id), id);
+  }
 }
 
-mapping query_if_callers()
-{
-  return ([
-    "true":lambda(string u, RequestID id){ return LAST_IF_TRUE; },
-    "false":lambda(string u, RequestID id){ return !LAST_IF_TRUE; },
-    "accept":IfMatch( "accept", 0, 1),
-    "config":IfIs( "config", 0 ),
-    "cookie":IfIs( "cookies", 0 ),
-    "client":IfMatch( "client", 0 ),
-    "date":if_date,
-    "defined":IfIs( "defines", 1, 1 ),
-    "domain":IfMatch( "host", 0 ),
-    "exists":if_exists,
-    "group":if_group,
-    "host":IfMatch( "remoteaddr", 0 ),
-    "ip":IfMatch( "remoteaddr", 0 ),
-    "language":IfMatch( "accept-language", 0, 1),
-    "match":IfIs( 0, 0 ),
-    "name":IfMatch( "client", 0 ),
-    "pragma":IfIs( "pragma", 0 ),
-    "prestate":IfIs( "prestate", 1 ),
-    "referrer":IfMatch( "referrer", 0 ),
-    "supports":IfIs( "supports", 0 ),
-    "time":if_time,
-    "user":if_user,
-    "variable":IfIs( "variables", 1 ),
-  ]);
+class TagIftrue {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "true";
+
+  int `() (string u, RequestID id) {
+    return LAST_IF_TRUE;
+  }
+}
+
+class TagIffalse {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "false";
+
+  int `() (string u, RequestID id) {
+    return !LAST_IF_TRUE;
+  }
+}
+
+class TagIfaccept {
+  inherit IfMatch;
+  constant plugin_name = "accept";
+  array source(RequestID id) {
+    return id->misc->accept;
+  }
+}
+
+class TagIfconfig {
+  inherit IfIs;
+  constant plugin_name = "config";
+  string source(RequestID id, string s) {
+    return id->config[s];
+  }
+}
+
+class TagIfcookie {
+  inherit IfIs;
+  constant plugin_name = "cookie";
+  string source(RequestID id, string s) {
+    return id->cookies[s];
+  }
+}
+
+class TagIfclient {
+  inherit IfMatch;
+  constant plugin_name = "client";
+  array source(RequestID id) {
+    return id->client;
+  }
+}
+
+class TagIfdefined {
+  inherit IfIs;
+  constant plugin_name = "defined";
+  constant cache = 1;
+  string source(RequestID id, string s) {
+    return id->misc[s];
+  }
+}
+
+class TagIfdomain {
+  inherit IfMatch;
+  constant plugin_name = "domain";
+  string source(RequestID id) {
+    return id->host;
+  }
+}
+
+class TagIfhost {
+  inherit IfMatch;
+  constant plugin_name = "host";
+  string source(RequestID id) {
+    return id->remoteaddr;
+  }
+}
+
+class TagIfip {
+  inherit IfMatch;
+  constant plugin_name = "ip";
+  string source(RequestID id) {
+    return id->remoteaddr;
+  }
+}
+
+class TagIfLanguage {
+  inherit IfMatch;
+  constant plugin_name = "language";
+  array source(RequestID id) {
+    return id->pref_languages->get_languages();
+  }
+}
+
+class TagIfmatch {
+  inherit IfIs;
+  constant plugin_name = "match";
+  string source(RequestID id, string s) {
+    return s;
+  }
+}
+
+class TagIfname {
+  inherit TagIfclient;
+  constant plugin_name = "name";
+}
+
+class TagIfpragma {
+  inherit IfIs;
+  constant plugin_name = "pragma";
+  string source(RequestID id, string s) {
+    return id->pragma[s];
+  }
+}
+
+class TagIfprestate {
+  inherit IfIs;
+  constant plugin_name = "prestate";
+  constant cache = 1;
+  string source(RequestID id, string s) {
+    return id->prestate[s];
+  }
+}
+
+class TagIfreferrer {
+  inherit IfMatch;
+  constant plugin_name = "referrer";
+  array source(RequestID id) {
+    return id->referer;
+  }
+}
+
+class TagIfsupports {
+  inherit IfIs;
+  constant plugin_name = "supports";
+  string source(RequestID id, string s) {
+    return id->supports[s];
+  }
+}
+
+class TagIfvariable {
+  inherit IfIs;
+  constant plugin_name = "variable";
+  constant cache = 1;
+  string source(RequestID id, string s) {
+      return (string)RXML.get_context()->user_get_var(s);
+  }
+}
+
+class TagIfclientvar {
+  inherit IfIs;
+  constant plugin_name = "clientvar";
+  string source(RequestID id, string s) {
+    return id->client_var[s];
+  }
 }
 
 #endif
+
+// ------------------------ Documentation -----------------------------
 
 mapping tagdocumentation() {
   Stdio.File file=Stdio.File();
