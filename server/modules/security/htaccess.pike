@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.93 2002/06/03 17:21:04 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.94 2002/06/10 14:34:47 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -228,11 +228,11 @@ mapping parse_and_find_htaccess( RequestID id )
     void flush_patterns()
     {
       foreach(indices(allow), string cat) {
-	roxen_allow += "allow "+cat+"="+(allow[cat]*",");
+	roxen_allow += "allow "+cat+"="+(allow[cat]*",") + "\n";
       }
       allow = ([]);
       foreach(indices(deny), string cat) {
-	roxen_deny += "deny "+cat+"="+(deny[cat]*",");
+	roxen_deny += "deny "+cat+"="+(deny[cat]*",") + "\n";
       }
       deny = ([]);
     };
