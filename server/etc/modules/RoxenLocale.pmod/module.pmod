@@ -83,7 +83,7 @@ class LocaleObject {
     return functionp(functions[f]);
   }
 
-  mixed `() (string f, array ... args) {
+  mixed `() (string f, mixed ... args) {
     if(functionp(functions[f]))
       return functions[f](@args);
     else
@@ -230,7 +230,7 @@ string translate(LocaleObject locale_object, string id,
 }
 
 mixed call(LocaleObject locale_object, string f,
-	   function fb, array ... args)
+	   function fb, mixed ... args)
 {
   if(locale_object) {
     locale_object->timestamp=time(1);
