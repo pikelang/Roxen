@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 
-string cvs_version = "$Id: http.pike,v 1.11 1997/01/29 04:59:45 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.12 1997/01/29 06:17:13 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -225,12 +225,13 @@ private int parse_got(string s)
 
   raw_url    = f;
   time       = _time(1);
+
   if(!remoteaddr)
   {
     catch(remoteaddr = ((my_fd->query_address()||"")/" ")[0]);
     if(!remoteaddr) this_object()->end();
   }
-
+  
 #if 0
   sscanf(f,"%s;%s", f, range);
 #endif
@@ -575,7 +576,10 @@ void got_data(mixed fooid, string s);
 void keep_connection_alive()
 {
   pipe=0;
-  my_fd->set_nonblocking(got_data, lambda() { }, end);
+  my_fd->set_read_callback(got_data);
+  my_fd->set_close_callback(end);
+/*my_fd->set_write_callback(lambda(){});*/
+
   if(cache && strlen(cache))
     got_data(1, "");
   else
@@ -662,9 +666,9 @@ static void handle_request( )
     heads=
       ([
 	"Content-type":file["type"],
-	"Server":version(),
-        "Date":http_date(time)
-	]);
+		      "Server":version(),
+		      "Date":http_date(time)
+	 ]);
     
     if(file->encoding)
       heads["Content-Encoding"] = file->encoding;
@@ -759,7 +763,7 @@ static void handle_request( )
     if(conf)
       conf->sent+=(file->len>0 ? file->len : 1000);
     
-    if((file->len<=0 || (file->len > 10000))
+    if((file->len<=0 || (file->len > 30000))
        && !keep_alive && objectp(file->file))
     {
       if(file->data)  head_string += file->data;
@@ -771,25 +775,26 @@ static void handle_request( )
       shuffle( file->file, my_fd );
       if(conf)conf->log(file, thiso); 
       my_fd=file->file=file=pipe=0;
-      return;
+      destruct();
     }
   
-  if(!keep_alive && file->len < 3000 && file->len >= 0)
-  {
-//    perror("fo\n");
-    if(file->data) head_string += file->data;
-    if(file->file) 
+    if(!keep_alive && file->len < 3000 && file->len >= 0)
     {
-      head_string += file->file->read(file->len);
-      destruct(file->file);
-    }
-    file->len=strlen(head_string);
-    if(conf) conf->log(file, thiso);
-    end(head_string);
+//    perror("fo\n");
+      if(file->data)
+	head_string += file->data;
+      if(file->file) 
+      {
+	head_string += file->file->read(file->len);
+	destruct(file->file);
+      }
+      if(conf) conf->log(file, thiso);
+      end(head_string);
 //      perror("end\n");
-    return;
+      return;
+    }
   }
-  }
+
 // perror("Last case...\n");
   if(head_string) send(head_string);
   if(file->data)  send(file->data);
@@ -858,7 +863,7 @@ void got_data(mixed fooid, string s)
     return;
   }
 #ifdef THREADS
-  my_fd->set_blocking();
+//  my_fd->set_blocking();
 #endif
   if(conf)
   {
@@ -910,7 +915,9 @@ void create(object f, object c)
   {
     my_fd = f;
     my_fd->set_id(0);
-    my_fd->set_nonblocking(got_data, lambda(){}, end);
+
+    my_fd->set_read_callback(got_data);
+    my_fd->set_close_callback(end);
     conf = c;
     mark_fd(my_fd->query_fd(), "HTTP connection");
     
