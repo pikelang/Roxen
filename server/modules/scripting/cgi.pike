@@ -39,7 +39,7 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.25 1999/08/12 12:54:35 nilsson Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.26 1999/08/12 21:18:42 marcus Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -510,6 +510,66 @@ class CGIWrapper
   }
 }
 
+#ifdef __NT__
+mapping(string:object) nt_opencommands = ([]);
+
+class NTOpenCommand
+{
+  static array(string) line;
+  static array(string) repsrc;
+  static int starpos;
+
+  static int expiry;
+
+  int expired()
+  {
+    return time(1)>expiry;
+  }
+
+  array(string) open(string file, array(string) args)
+  {
+    array(string) res;
+    res = Array.map(line, replace, repsrc, 
+		    (({file})+args+
+		     (sizeof(args)+1>=sizeof(repsrc)? ({}) :
+		      allocate(sizeof(repsrc)-sizeof(args)-1, "")))
+		    [..sizeof(repsrc)-1]);
+    if(starpos>=0)
+      res = res[..starpos-1]+args+res[starpos+1..];
+    return res;
+  }
+
+  void create(string ext)
+  {    
+    string ft, cmd;
+
+    catch {
+      ft = RegGetValue(HKEY_CLASSES_ROOT, ext, "");
+      cmd = RegGetValue(HKEY_CLASSES_ROOT, ft+"\\shell\\open\\command", "");
+    };
+    if(!ft)
+      error("Unknown extension "+ext+"\n");
+    else if(!cmd)
+      error("No open command for filetype "+ft+"\n");
+    else {
+      line = cmd/" "-({""});
+      starpos = search(line, "%*");
+      int i=-1, n=0;
+      do {
+	int t;
+	i = search(cmd, "%", i+1);
+	if(i>=0 && sscanf(cmd[i+1..], "%d", t)==1 && t>n)
+	  n=t;
+      } while(i>=0);
+      repsrc = Array.map(indices(allocate(n)), lambda(int a) {
+						 return sprintf("%%%d", a+1);
+					       });
+    }
+    expiry = time(1)+600;
+    nt_opencommands[ext]=this_object();
+  }
+}
+#endif
 
 class CGIScript
 {
@@ -530,6 +590,9 @@ class CGIScript
   mapping (string:int)    limits;
   int uid, gid;  
   array(int) extra_gids;
+#endif
+#ifdef __NT__
+  function(string,array(string):array(string)) nt_opencommand;
 #endif
 
   void check_pid()
@@ -682,7 +745,12 @@ class CGIScript
       options->rlimit = limits;
 #endif
 
+#ifdef __NT__
+    if(!(pid = Process.create_process( nt_opencommand(command, arguments),
+ 				       options ))) 
+#else
     if(!(pid = Process.create_process( ({ command }) + arguments, options )))
+#endif /* __NT__ */
       error("Failed to create CGI process.\n");
     if(QUERY(kill_call_out))
       call_out( kill_script, QUERY(kill_call_out)*60 );
@@ -725,6 +793,18 @@ class CGIScript
     LIMIT( limits, map_mem, datasize, 1024, -2 );
     LIMIT( limits, mem, datasize, 1024, -2 );
 #undef LIMIT
+#endif
+
+#ifdef __NT__
+    {
+      string extn = "exe";
+      sscanf(reverse(command), "%s.", extn);
+      extn = "."+lower_case(reverse(extn));
+      object ntopencmd = nt_opencommands[extn];
+      if(!ntopencmd || ntopencmd->expired())
+	ntopencmd = NTOpenCommand(extn);
+      nt_opencommand = ntopencmd->open;    
+    }
 #endif
 
     environment =(QUERY(env)?getenv():([]));
