@@ -44,7 +44,10 @@ echo "Restart at `date`" >> $err_log
 
 # Max packet set to 225Mb or so. 
 # Should hopefully be enough...
-args="--set-variable max_allowed_packet=229496729 --set-variable net_buffer_length=65536 --basedir=$basedir/ --datadir=$datadir $@ --pid-file=$pid_file"
+args="--set-variable max_allowed_packet=16777215 "
+args="$args --skip-locking "
+args="$args --set-variable net_buffer_length=8192"
+args="$args --basedir=$basedir/ --datadir=$datadir $@ --pid-file=$pid_file"
 
 my_cp() {
   ln "$1" "$2" 2>/dev/null \
