@@ -1,4 +1,4 @@
-## $Id: supports,v 1.29 1997/05/15 23:39:57 neotron Exp $
+## $Id: supports,v 1.30 1997/05/31 13:11:43 peter Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -158,7 +158,7 @@ cern.*linemode.*           nothing
 .*	  basic, tables, imagealign, backgrounds, font
 # }
 
-#section IBrowse {
+#section ibrowse {
 # Amiga MUIbrowser
 .*			basic, center, pnginline, imageinline,\
                         backgrounds, bigsmall, center, division,\
@@ -169,7 +169,7 @@ cern.*linemode.*           nothing
 # }
 
 #section amiga-aweb {
-# One of the better Amigabrowsers  <http://www.xs4all.nl/~yrozijn/aweb/>
+# Amigabrowser <http://www.xs4all.nl/~yrozijn/aweb/>
 .*			basic, center, pnginline, imageinline,\
                         backgrounds, bigsmall, center, division,\
                         font, fontcolor, imagealign, images,\
