@@ -20,9 +20,14 @@ string query_configuration_dir();
 class ConfigIFCache
 {
   string dir;
-  Sql.Sql db;
+  function db;
   private static inherit "newdecode";
 
+  mixed query( string what, mixed ... args )
+  {
+    return db("local")->query( what, @args );
+  }
+  
   void create( string name, int|void _settings )
   {
     if( _settings )
@@ -33,18 +38,11 @@ class ConfigIFCache
     else
     {
       dir = name;
-      db = master()->resolv("DBManager.cached_get")( "local" );
-
-      if( !db )
-      {
-	report_fatal("No local database!\n");
-	exit(1);
-      }
-      
-      catch(db->query( "create table "+name+" ("
-                       "  id varchar(80) not null primary key,"
-                       "  data blob not null default ''"
-                       ")" ));
+      db = master()->resolv("DBManager.cached_get");
+      catch(query( "create table "+name+" ("
+		   "  id varchar(80) not null primary key,"
+		   "  data blob not null default ''"
+		   ")" ));
     }
   }
 
@@ -52,8 +50,8 @@ class ConfigIFCache
   {
     if( db )
     {
-      db->query("DELETE FROM "+dir+" where id=%s", name);
-      db->query("INSERT INTO "+dir+" VALUES (%s,%s)",
+      query("DELETE FROM "+dir+" where id=%s", name);
+      query("INSERT INTO "+dir+" VALUES (%s,%s)",
                 name,encode_value(to));
       return to;
     }
@@ -80,7 +78,7 @@ class ConfigIFCache
   {
     if( db )
       if( catch {
-        return decode_value( db->query( "SELECT data  FROM "+dir+
+        return decode_value( query( "SELECT data  FROM "+dir+
                                         " where id=%s",name)[0]->data );
       })
         return 0;
@@ -96,14 +94,14 @@ class ConfigIFCache
   array list()
   {
     if( db )
-      return db->query( "SELECT id from "+dir )->id;
+      return query( "SELECT id from "+dir )->id;
     return r_get_dir( dir );
   }
 
   void delete( string name )
   {
     if( db )
-      db->query("DELETE FROM "+dir+" WHERE id=%s",name);
+      query("DELETE FROM "+dir+" WHERE id=%s",name);
     r_rm( dir + replace( name, "/", "-" ) );
   }
 }
