@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.295 2002/10/07 17:56:53 mast Exp $
+// $Id: module.pmod,v 1.296 2002/10/14 13:12:29 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7093,12 +7093,12 @@ static class PikeCompile
     mixed resolved;
     if (zero_type (resolved = bindings[what[index]])) {
       delayed_resolve_places[what] = index;
-      COMP_MSG ("%O delayed_resolve %O in %O[%O]\n",
+      COMP_MSG ("%O delayed_resolve %O in %s[%O]\n",
 		this_object(), what[index], format_short (what), index);
     }
     else {
       what[index] = resolved;
-      COMP_MSG ("%O delayed_resolve immediately %O in %O[%O]\n",
+      COMP_MSG ("%O delayed_resolve immediately %O in %s[%O]\n",
 		this_object(), what[index], format_short (what), index);
     }
   }
@@ -7513,6 +7513,8 @@ class PCode
 	  exec[length] = frame = exec[length]->_clone_empty();
 	frame->_restore (exec[length + 2]);
 	frame->flags = frame_flags;
+	if (stringp (frame->args))
+	  p_code_comp->delayed_resolve (frame, "args");
 	exec[length + 1] = frame;
       }
 
@@ -7933,11 +7935,14 @@ class PCode
       mixed item = encode_p_code[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
 	encode_p_code[pos + 1] = 0; // Don't encode the cached frame.
-	if (stringp (encode_p_code[pos + 2][0]) ||
-	    exec[pos + 1] && stringp (exec[pos + 1]->args))
-	  // This is a debug check, but let's always do it since this
-	  // case would be very hard to track down otherwise.
-	  error ("Unresolved argument function in frame at position %d.\n", pos);
+	// The following are debug checks, but let's always do them
+	// since this case would be very hard to track down otherwise.
+	if (stringp (encode_p_code[pos + 2][0]))
+	  error ("Unresolved argument function in frame state %O at position %d.\n",
+		 encode_p_code[pos + 2], pos + 2);
+	if (exec[pos + 1] && stringp (exec[pos + 1]->args))
+	  error ("Unresolved argument function %O in frame %O at position %d.\n",
+		 exec[pos + 1]->args, exec[pos + 1], pos + 1);
       }
     }
 
