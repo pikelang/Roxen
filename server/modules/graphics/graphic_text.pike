@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.217 2000/03/18 19:11:01 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.218 2000/03/18 19:12:06 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -727,7 +727,7 @@ mapping mk_gtext_arg(mapping arg, RequestID id)
   m_delete(arg,"width");
   m_delete(arg,"height");
 
-   foreach(filearg + textarg, string tmp)
+   foreach(filearg, string tmp)
      if(arg[tmp]) 
      {
        p[tmp]=fix_relative(arg[tmp],id);
