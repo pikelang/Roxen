@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.105 2000/03/24 23:43:28 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.106 2000/03/25 01:42:09 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -24,7 +24,7 @@ constant module_doc  = "This module adds a lot of RXML tags.";
 
 void create()
 {
-  defvar("insert_href",1,"Allow &lt;insert href&gt;.",
+  defvar("insert_href",0,"Allow <insert href>",
 	 TYPE_FLAG|VAR_MORE,
          "Should the usage of &lt;insert href&gt; be allowed?");
 }
