@@ -43,6 +43,7 @@ static object cfg_init = config_class->get_method("<init>", "(Ljavax/servlet/Ser
 static object context_init = context_class->get_method("<init>", "(ILjava/lang/String;)V");
 static object context_id_field = context_class->get_field("id", "I");
 static object context_initpars_field = context_class->get_field("initparameters", "Ljava/util/Hashtable;");
+static object context_set_attribute = context_class->get_method("setAttribute", "(Ljava/lang/String;Ljava/lang/Object;)V");
 static object request_init = request_class->get_method("<init>", "(Lcom/roxen/servlet/RoxenServletContext;Lcom/roxen/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 static object response_init = response_class->get_method("<init>", "(Lcom/roxen/servlet/HTTPOutputStream;)V");
 static object dic_field = config_class->get_field("dic", "Ljava/util/Dictionary;");
@@ -323,6 +324,11 @@ class context {
 	destruct(context_for_conf[conf]);
       context_for_conf[conf] = this_object();
     }
+    if(c)
+    {
+      set_attribute("roxen_configuration", c->name);
+      check_exception();
+    }
   }
 
   void destroy()
@@ -412,6 +418,10 @@ class context {
     check_exception();
   }
 
+  void set_attribute(string name, mixed attribute)
+  {
+    context_set_attribute(ctx, name, attribute);
+  }
 };
 
 object conf_context(object conf)
