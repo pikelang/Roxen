@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.3 1998/09/14 20:44:17 grubba Exp $
+ * $Id: smtprelay.pike,v 1.4 1998/09/14 20:50:35 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.3 1998/09/14 20:44:17 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.4 1998/09/14 20:50:35 grubba Exp $";
 
 /*
  * Some globals
@@ -209,14 +209,19 @@ class MailSender
     send(sprintf("RCPT TO:%s@%s\r\n", message->user, message->domain));
   }
 
+  static void send_bounce(string code, array(string) text)
+  {
+    parent->bounce(message, code, text);
+
+    send("QUIT\r\n");
+  }
+
   static void bad_address(string code, array(string) text)
   {
     // Permanently bad address.
     result = -2;
 
-    parent->bounce(message, code, text);
-
-    send("QUIT\r\n");
+    send_bounce(code, text);
   }
 
   static void send_body()
@@ -265,11 +270,11 @@ class MailSender
 
   static array(mapping) state_actions = ({
     ([ "220":send_ehlo, ]),
-    ([ "250":send_mail_from, "":send_helo ]),
-    ([ "250":send_rcpt_to, ]),
-    ([ "250":send_mail_from, ]),
+    ([ "250":send_mail_from, "":send_helo, ]),
+    ([ "250":send_rcpt_to, "5":send_bounce, ]),
+    ([ "250":send_mail_from, "5":send_bounce, ]),
     ([ "25":"DATA", "55":bad_address, ]),
-    ([ "354":send_body, ]),
+    ([ "354":send_body, "":send_bounce, ]),
     ([ "250":send_ok, ]),
     ([]),
   });
