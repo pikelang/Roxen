@@ -301,6 +301,7 @@ worldmap binary
 /server/more_modules/emit_timerange.pike foreign_ident
 /server/more_modules/php4.pike foreign_ident
 /server/more_modules/rövarspråkare.pike foreign_ident
+/server/more_modules/tagdoc_notation.pike foreign_ident
 /server/ntroxenloader.pike foreign_ident
 /server/perl/bin/perlhelper foreign_ident
 /server/perl/bin/perlrun foreign_ident
