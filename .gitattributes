@@ -8,5 +8,6 @@
 # Remove the corresponding line before committing
 # changes to these files.
 /doc/db.spec foreign_ident
+/modules/admin/actions/20:Add_customer/wizards/edit.pike foreign_ident
 /modules/admin/admin.pike foreign_ident
 /modules/protocols/smtp.pike foreign_ident
