@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.83 1999/09/14 18:53:41 grubba Exp $
+ * $Id: smtp.pike,v 1.84 1999/09/14 21:34:14 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.83 1999/09/14 18:53:41 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.84 1999/09/14 21:34:14 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -62,6 +62,8 @@ inherit "module";
 // Valid flags from smtp_rcpt::put():
 constant SMTP_PUT_OK = 0x01;
 constant SMTP_PUT_QUOTA = 0x02;
+
+object dns = Protocols.DNS.async_client();
 
 static class Mail {
   string id;
@@ -157,6 +159,19 @@ static class do_multi_async
     func(@args, low_callback);
   }
 };
+
+// Call a single function several times asynchronously with differing
+// argument 1. Otherwise as do_multi_async().
+object do_multi_async_args(function func, array arg1, array args,
+			 function cb, mixed ... cb_args)
+{
+  array(function) funcs = Array.map(arg1, lambda(mixed arg) {
+					    return lambda(mixed ... x) {
+						     return func(arg, @x);
+						   };
+					      });
+  return do_multi_async(funcs, args, cb, @cb_args);
+}
 
 static class Smtp_Connection {
   inherit Protocols.Line.smtp_style;
@@ -850,8 +865,79 @@ static class Smtp_Connection {
       }
     }
 
+    array extras = ({});
+
     parent->update_domains();
 
+    if (!parent->domain_cache_ok) {
+      // Update the domain cache asynchronously.
+      do_multi_async_args(async_domain_to_ip,
+			  indices(parent->handled_domains), ({}),
+			  lambda(array(array(string)) res) {
+	// Array of tuples of IP, domain.
+	mapping(string:multiset(string)) new_domain_cache = ([]);
+	// Update the domain_cache
+	foreach(res, [string ip, string d]) {
+	  if (!new_domain_cache[ip]) {
+	    new_domain_cache[ip] = (< d >);
+	  } else {
+	    new_domain_cache[ip][d] = 1;
+	  }
+	}
+
+#ifdef SMTP_DEBUG
+	roxen_perror(sprintf("SMTP: Domain cache: %O\n", new_domain_cache));
+#endif /* SMTP_DEBUG */
+
+	parent->domain_cache = new_domain_cache;
+	parent->domain_cache_ok = 1;
+
+	// Done. Continue with processing as usual.
+	do_async_verify_sender(id);
+      });
+    } else {
+      do_async_verify_sender(id);
+    }
+  }
+
+  // Find the MX record for a domain.
+  void async_domain_to_mx_info(string domain,
+			       function(array(mapping(string:mixed)):void) cb)
+  {
+    dns->get_mx_all(domain,
+		    lambda(string d,
+			   array(mapping(string:mixed)) mx_info) {
+		      // Got MX info for the domain d.
+		      foreach(mx_info, mapping(string:mixed) mx) {
+			mx->name = mx->name || d;
+		      }
+		      cb(mx_info);
+		    });
+  }
+
+  // Find the IP's for an MX record.
+  void async_mx_to_ip(mapping(string:mixed) mx,
+		      function(array(string):void) cb)
+  {
+    // FIXME: Ought to use host_to_ip_all() when it exists.
+    dns->host_to_ip(mx->mx,
+		    lambda(string host, string ip) {
+		      cb(({ mx->name, ip }));
+		    });
+  }
+
+  void async_domain_to_ip(string domain,
+			  function(array(string):void) cb)
+  {
+    async_domain_to_mx_info(domain,
+			    lambda(array(mapping(string:mixed)) mx_info) {
+			      do_multi_async_args(async_mx_to_ip, mx_info,
+						  ({}), cb);
+			    });
+  }
+
+  void do_async_verify_sender(mapping id)
+  {
     do_multi_async(Array.map(conf->get_providers("smtp_filter")||({}),
 			     lambda(object o) {
 			       return(o->async_verify_sender);
@@ -937,7 +1023,7 @@ static class Smtp_Connection {
 	    // Try to find a domain from the localip.
 	    foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
 	      if (functionp(o->domain_from_ip) &&
-		  domain = o->domain_from_ip(user, localip, this_object())) {
+		  (domain = o->domain_from_ip(user, localip, this_object()))) {
 		recipient = user + "@" + domain;
 		break;
 	      } 
@@ -1256,10 +1342,10 @@ static class Smtp_Connection {
     remoteip = remote[0];
     remoteport = (remote[1..])*" ";
 
-    array(string) local = con->query_address(1)/" ";
+    array(string) local_addr = con->query_address(1)/" ";
 
-    localip = local[0];
-    localport = local[1];
+    localip = local_addr[0];
+    localport = local_addr[1];
 
     mapping con_info = ([
       "localip":localip,
@@ -1398,6 +1484,9 @@ multiset do_expn(multiset in, object|void smtp)
   return(expanded);
 }
 
+mapping(string:multiset(string)) domain_cache = ([]);
+int domain_cache_ok;
+
 multiset(string) handled_domains = (<>);
 
 void update_domains(int|void force)
@@ -1428,6 +1517,7 @@ void update_domains(int|void force)
     }
 
     handled_domains = domains;
+    domain_cache_ok = 0;
   }
 }
 
