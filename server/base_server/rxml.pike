@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.165 2000/03/11 03:33:45 nilsson Exp $
+// $Id: rxml.pike,v 1.166 2000/03/13 15:35:47 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -1156,16 +1156,13 @@ class FrameIf {
 	}
       }
       else
-	if(and) {
-	  LAST_IF_TRUE = 0;
+	if(and)
 	  return 0;
-	}
     }
     if(ifval) {
       do_iterate = 1;
       return 0;
     }
-    LAST_IF_TRUE = 0;
     return 0;
   }
 
@@ -1174,6 +1171,8 @@ class FrameIf {
       LAST_IF_TRUE = 1;
       result = content;
     }
+    else
+      LAST_IF_TRUE = 0;
     return 0;
   }
 }
