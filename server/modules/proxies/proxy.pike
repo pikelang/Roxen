@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.37 1999/04/17 20:59:05 grubba Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.38 1999/04/17 21:43:34 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1365,8 +1365,12 @@ class Request {
   {
     //REQUEST_DEBUG("send_pipe_done - sent=" + sent)
 
+#if constant(Stdio.sendfile)
+    sent += id->file->len;
+#else /* !constant(Stdio.sendfile) */
     sent += id->pipe->bytes_sent();
     id->pipe = 0;
+#endif /* constant(Stdio.sendfile) */
 
     if(!server)
     {
@@ -1387,11 +1391,10 @@ class Request {
       return;
     }
 
-    if(!id->file && id->pipe)
+    if(!id->file)
     {
       id->file = ([ "raw":1, "type":"raw" ]);
-      id->pipe->set_done_callback(send_pipe_done);
-      id->pipe->output(id->my_fd);
+      id->start_sender(send_pipe_done);
     }
   }
 
