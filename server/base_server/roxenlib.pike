@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.44 1998/01/28 21:31:59 marcus Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.45 1998/02/02 00:59:19 wing Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -869,3 +869,139 @@ string get_modname (object module)
 
   return "/";
 }
+
+// internal method for do_output_tag
+private string do_output_tag_var( string|array var, string multi_separator )
+{
+  if (arrayp( var ))
+    return var * multi_separator;
+  else if (search( var, "\000" ) != -1)
+    return var / "\000" * multi_separator;
+  else
+    return var;
+}
+
+// internal method for do_output_tag
+private string remove_leading_trailing_ws( string str )
+{
+  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str ); 
+  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str );
+  return str;
+}
+
+// method for use by tags that replace variables in their content, like
+// formoutput, sqloutput and others
+string do_output_tag( mapping args, array (mapping) var_arr, string contents,
+		      object id )
+{
+  string quote = args->quote || "#";
+  array exploded;
+  object my_id;
+  mapping parse_contents = ([ ]);
+  string new_contents = "";
+  string multi_separator = args->multi_separator || ", ";
+
+  if (args->preprocess)
+    contents = parse_rxml( contents, id );
+  foreach (var_arr, mapping vars)
+  {
+    if (args->set)
+      id->variables += vars;
+    my_id = copy_value( id );
+    if (my_id->misc->variables)
+      my_id->misc->variables += vars;
+    else
+      my_id->misc->variables = vars;
+    if (!args->replace || lower_case( args->replace ) != "no")
+    {
+      int c;
+      string result;
+      
+      exploded = contents / quote;
+      for (c=1; c < sizeof( exploded ); c+=2)
+	if (exploded[c] == "")
+	  exploded[c] = quote;
+	else
+	{
+	  array (string) options =  exploded[c] / ":";
+	  int done;
+	  
+	  options[0] = remove_leading_trailing_ws( options[0] );
+	  if (!vars[ options[0] ])
+	  {
+	    exploded[c] = "<!-- no variable " + options[0] + " -->";
+	    continue;
+	  }
+	  if (sizeof( options ) > 1)
+	  {
+	    array (string) foo = options[1] / "=";
+	    
+	    if (sizeof( foo ) > 1)
+	      switch (remove_leading_trailing_ws( foo[0] ))
+	      {
+	       case "quote":
+		switch (remove_leading_trailing_ws( foo[1] ))
+		{
+		 case "none":
+		  exploded[c] = do_output_tag_var( vars[ options[0] ],
+						   multi_separator );
+		  done = 1;
+		  break;
+		  
+		 case "url":
+		  exploded[c]
+		    = replace( do_output_tag_var( vars[ options[0] ],
+						  multi_separator ),
+			       ({ "\"", "'", " ", "\t", "\n", "\r",
+				  "&", "?", "=", "%" }),
+			       ({ "%22", "%27", "%20", "%0A", "%0D",
+				  "%26", "%3F", "%3D", "%25" }) );
+		  done = 1;
+		  break;
+		  
+		 case "mysql":
+		  exploded[c]
+		    = replace( do_output_tag_var( vars[ options[0] ],
+						  multi_separator ),
+			       ({ "\"", "'", "\\" }),
+			       ({ "\\\"'\"'\"", "\\'", "\\\\" }) );
+		  done = 1;
+		  break;
+		  
+		 case "sql":
+		 case "oracle":
+		  exploded[c]
+		    = replace( do_output_tag_var( vars[ options[0] ],
+						  multi_separator ),
+			       ({ "'", "\"" }),
+			       ({ "''", "\"'\"'\"" }) );
+		  break;
+
+		 case "html":
+		  exploded[c]
+		    = replace( do_output_tag_var( vars[ options[0] ],
+						  multi_separator ),
+			       ({ "<", ">", "&", "\"", "\'" }),
+			       ({ "&lt;", "&gt;", "&amp;", "&#34;",
+				  "&#39;" }) );
+		  done = 1;
+		  break;
+		}
+	      }
+	  }
+	  if (!done)
+	    exploded[c] = replace( do_output_tag_var( vars[ options[0] ],
+						      multi_separator ),
+				   ({ "<", ">", "&", "\"", "\'" }),
+				   ({ "&lt;", "&gt;", "&amp;", "&#34;",
+				      "&#39;" }) );
+	}
+      new_contents += exploded * "";
+    }
+  }
+  if (!args->preprocess)
+    return parse_rxml( new_contents, my_id );
+  else
+    return new_contents;
+}
+
