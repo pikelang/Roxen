@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.8 2002/01/30 00:19:44 mast Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.9 2003/01/23 16:52:57 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Really advanced wizard";
@@ -87,6 +87,7 @@ class PageFrame {
     content_type = RXML.t_xml(RXML.PXml);
     result_type = RXML.t_xml;
     flags = RXML.FLAG_UNPARSED;
+    scope = "wizz";
   }
 
   array do_enter(RequestID id) {
@@ -97,7 +98,7 @@ class PageFrame {
     if(!vars["ok-label"]) vars["ok-label"] = LOCALE(0,"Ok");
     if(!vars["previous-label"]) vars["previous-label"] = LOCALE(0, "< Previous");
     if(!vars["next-label"]) vars["next-label"] = LOCALE(0, "Next >");
-    if(!vars->title) vars->title = vars->name || vars->wizard_name || LOCALE(0, "Roxen wizard");
+    if(!vars->title) vars->title = vars->name || vars->wizard_name || LOCALE(0, "ChiliMoon Wizard");
     if(!vars->done) vars->done = "";
     if(!vars->cancel) vars->cancel = "";
   }
@@ -144,6 +145,7 @@ class TagWizard {
   class Template {
     inherit RXML.Tag;
     constant name = "template";
+    RXML.Type content_type = RXML.t_same;
 
     class Frame {
       inherit RXML.Frame;
@@ -157,7 +159,37 @@ class TagWizard {
   }
 
   RXML.TagSet internal_tags = RXML.TagSet(this_module(), "l1", ({ PageNOP(),
-									Template() }) );
+								  Template() }) );
+
+  // This is the logic of this module:
+  //
+  // Stage 1. (do_enter)
+  //   Form variables from last page hit, if any, is decoded and the
+  //   next page in the wizard is determined. The variable
+  //   page_internal_tags is updated with the latest tag set including
+  //   the Page and PageForm tags. It also inherits the outer RXML tag
+  //   set. The state of the page is synchronized with the state
+  //   handler.
+  //
+  // Stage 2. ((implicit) do_process)
+  //   The contents of the wizard tag is parsed once where the
+  //   contents of the <page> and <template> tags are untouched. In
+  //   this pass the number of total pages are counted and the correct
+  //   template is selected and stored in id->misc->wizard->template.
+  //   The selected page is stored in id->misc->wizard->the_page.
+  //
+  // Stage 3. (do_return)
+  //   A new frame is created which is initialized with the template
+  //   as content and the page_internal_tags a tagset. Further it uses
+  //   id->misc->wizard as variable mapping for its local (wizz)
+  //   scope. In the local tag set the tag <form> is overloaded to
+  //   expand to the selected <page> page. Thus the content of the
+  //   <page> is evaluated in the context of the <template>.
+  //
+  // Stage 4.
+  //   The frame in stage 3 is returned from do_return and thus gets
+  //   evaluated in tag post processing.
+
   class Frame {
     inherit RXML.Frame;
     RXML.TagSet additional_tags = internal_tags;
@@ -195,6 +227,10 @@ class TagWizard {
     }
 
     array do_return(RequestID id) {
+      result = "X";
+      return 0;
+
+      // Move these to do_enter? (verify done?)
       if((id->variables->__ok && id->variables["__done-url"]) ||
 	 (id->variables->__cancel && id->variables["__cancel-url"])) {
 	mapping r = Roxen.http_redirect(id->variables["__done-url"] ||
