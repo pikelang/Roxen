@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.117 2000/07/10 19:53:28 grubba Exp $
+# $Id: start,v 1.118 2000/08/02 15:21:32 marcus Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -77,7 +77,10 @@ if test -f $LOCALDIR/environment; then
 fi
 
 # Make sure $CLASSPATH contains the servlet stuff
-CLASSPATH=java/classes/roxen_module.jar:java/classes/roxen_servlet.jar:java/classes/servlet.jar:java/classes${CLASSPATH:+:}$CLASSPATH
+CLASSPATH=java/classes${CLASSPATH:+:}$CLASSPATH
+for jar in java/classes/*.jar; do
+  CLASSPATH="$jar:$CLASSPATH"
+done
 export CLASSPATH
 
 
