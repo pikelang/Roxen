@@ -100,18 +100,18 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
   diagram_data["xnamesimg"]=allocate(j=sizeof(diagram_data["xnames"]));
   for(int i=0; i<j; i++)
     if ((diagram_data["values_for_xnames"][i]>LITET)||(diagram_data["values_for_xnames"][i]<-LITET))
-      diagram_data["xnamesimg"][i]=notext->write(diagram_data["xnames"][i])->scale(0,diagram_data["font_size"]);
+      diagram_data["xnamesimg"][i]=notext->write(diagram_data["xnames"][i])->scale(0,diagram_data["fontsize"]);
     else
       diagram_data["xnamesimg"][i]=
-	image(diagram_data["font_size"],diagram_data["font_size"]);
+	image(diagram_data["fontsize"],diagram_data["fontsize"]);
 
   diagram_data["ynamesimg"]=allocate(j=sizeof(diagram_data["ynames"]));
   for(int i=0; i<j; i++)
     if ((diagram_data["values_for_ynames"][i]>LITET)||(diagram_data["values_for_ynames"][i]<-LITET))
-      diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])->scale(0,diagram_data["font_size"]);
+      diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])->scale(0,diagram_data["fontsize"]);
     else
       diagram_data["ynamesimg"][i]=
-	image(diagram_data["font_size"],diagram_data["font_size"]);
+	image(diagram_data["fontsize"],diagram_data["fontsize"]);
 
 
 
@@ -180,7 +180,7 @@ string no_end_zeros(string f)
 mapping(string:mixed) create_graph(mapping diagram_data)
 {
   //Supportar bara xsize>=100
-  int si=diagram_data["font_size"];
+  int si=diagram_data["fontsize"];
 
   string where_is_ax;
 
@@ -278,6 +278,20 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //ta ut xmaxynames, ymaxynames xmaxxnames ymaxxnames
   create_text(diagram_data);
 
+  //Skapa labelstexten för xaxlen
+  object labelimg;
+  string label;
+  int labelx=0;
+  int labely=0;
+  if (diagram_data["labels"])
+    {
+      label=diagram_data["labels"][0]+" ["+diagram_data["labels"][2]+"]"; //Xstorhet
+      labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
+	write(label)->scale(0,diagram_data["labelsize"]);
+      labely=diagram_data["labelsize"];
+      labelx=labelimg->xsize();
+    }
+
   int ypos_for_xaxis; //avstånd NERIFRÅN!
   int xpos_for_yaxis; //avstånd från höger
   //Bestäm var i bilden vi får rita graf
@@ -296,7 +310,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	(diagram_data["ymaxvalue"]-diagram_data["yminvalue"])+diagram_data["ystart"];
       
       int minpos;
-      minpos=diagram_data["ymaxxnames"]+si*2;
+      minpos=max(labely, diagram_data["ymaxxnames"])+si*2;
       if (minpos>ypos_for_xaxis)
 	{
 	  ypos_for_xaxis=minpos;
@@ -325,7 +339,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	// sätt x-axeln längst ner och diagram_data["ystart"] på samma ställe.
 	diagram_data["ystop"]=diagram_data["ysize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-diagram_data["labelsize"];
-	ypos_for_xaxis=diagram_data["ymaxxnames"]+si*2;
+	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si*2;
 	diagram_data["ystart"]=ypos_for_xaxis;
       }
     else
@@ -333,7 +347,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	//sätt x-axeln längst ner och diagram_data["ystart"] en aning högre
 	diagram_data["ystop"]=diagram_data["ysize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-diagram_data["labelsize"];
-	ypos_for_xaxis=diagram_data["ymaxxnames"]+si*2;
+	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si*2;
 	diagram_data["ystart"]=ypos_for_xaxis+si*2;
       }
   
@@ -341,11 +355,9 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   // si;
 
   //Bestäm positionen för y-axeln
-
-
   diagram_data["xstart"]=(int)ceil(diagram_data["linewidth"]);
   diagram_data["xstop"]=diagram_data["xsize"]-
-    (int)ceil(diagram_data["linewidth"]+si);
+    (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
   if (((float)diagram_data["xminvalue"]>-LITET)&&
       ((float)diagram_data["xminvalue"]<LITET))
     diagram_data["xminvalue"]=0.0;
@@ -370,7 +382,8 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	{
 	  int maxpos;
 	  maxpos=diagram_data["xsize"]-
-	    (int)ceil(diagram_data["linewidth"]+si*2);
+	    (int)ceil(diagram_data["linewidth"]+si*2)-
+	    labelx/2;
 	  if (maxpos<xpos_for_yaxis)
 	    {
 	      xpos_for_yaxis=maxpos;
@@ -387,7 +400,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	write("\nNu blev xminvalue noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 	
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"]+si);
+	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si*2;
 	diagram_data["xstart"]=xpos_for_yaxis;
       }
@@ -397,7 +410,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	write("\nNu blev xminvalue större än noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 
 	diagram_data["xstop"]=diagram_data["xsize"]-
-	  (int)ceil(diagram_data["linewidth"]+si);
+	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si*2;
 	diagram_data["xstart"]=xpos_for_yaxis+si*2;
       }
@@ -407,79 +420,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  /////////////////
-  /*
-  int t=xpos_for_yaxis;
-
-
-  xpos_for_yaxis=max(xpos_for_yaxis, 
-		     diagram_data["xsize"]*
-		     (-diagram_data["xminvalue"]/
-		      (diagram_data["xmaxvalue"]-
-		       diagram_data["xminvalue"]))
-		     );
-  if (t==xpos_for_yaxis)
-    where_is_ax="down";
-  else
-    {
-      t=xpos_for_yaxis;      
-      xpos_for_yaxis=min(xpos_for_yaxis,
-			 diagram_data["xsize"]-
-			 si);
-      if (t==xpos_for_yaxis)
-	where_is_ax="middle";
-      else
-	where_is_ax="up";
-    }
-  
-  //Bestäm var i bilden vi får rita graf
-  if (where_is_ax=="middle")
-    {
-      diagram_data["xstart"]=diagram_data["linewidth"];
-      diagram_data["xstop"]=diagram_data["xsize"]-
-	(int)ceil(diagram_data["linewidth"]+si*2.0/3.0);
-    }
-  else
-    if (where_is_ax=="up")
-      {
-	diagram_data["xstart"]=diagram_data["linewidth"];
-	diagram_data["xstop"]=xpos_for_yaxis+
-	    diagram_data["xmaxvalue"]*(diagram_data["xstart"]-xpos_for_yaxis)/
-	    (diagram_data["xminvalue"]);;
-      }
-    else
-      if (where_is_ax=="down")
-	{
-	  diagram_data["xstop"]=diagram_data["xsize"]-
-	    (int)ceil(diagram_data["linewidth"]+si*2.0/3.0);
-	  diagram_data["xstart"]=xpos_for_yaxis+
-	    diagram_data["xminvalue"]*(diagram_data["xstop"]-xpos_for_yaxis)/
-	    (diagram_data["xmaxvalue"]);
-	}
-  */
-
-
-  //xpos_for_yaxis=diagram_data["xmaxynames"]+min(si,
-  //					diagram_data["xmaxynames"]);
   
   //Rita ut axlarna
   graph->setcolor(@(diagram_data["axcolor"]));
@@ -495,7 +435,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					diagram_data["linewidth"],
 					diagram_data["ysize"]- ypos_for_xaxis,
 					diagram_data["xsize"]-
-					diagram_data["linewidth"], 
+					diagram_data["linewidth"]-labelx/2, 
 					diagram_data["ysize"]-ypos_for_xaxis
 				      }), 
 				      1, 1)[0]);
@@ -524,7 +464,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					    xpos_for_yaxis-si/3.0, 
 					    diagram_data["ysize"]-ypos_for_xaxis,
 
-					    diagram_data["xsize"]-diagram_data["linewidth"], 
+					    diagram_data["xsize"]-diagram_data["linewidth"]-labelx/2, 
 					    diagram_data["ysize"]-ypos_for_xaxis
 
 					  }), 
@@ -553,7 +493,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					      xpos_for_yaxis+4.0/3.0*si, 
 					      diagram_data["ysize"]-ypos_for_xaxis,
 					      
-					      diagram_data["xsize"]-diagram_data["linewidth"], 
+					      diagram_data["xsize"]-diagram_data["linewidth"]-labelx/2, 
 					      diagram_data["ysize"]-ypos_for_xaxis
 					      
 					    }), 
@@ -567,15 +507,15 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 				    ({
 				      diagram_data["xsize"]-
 				      diagram_data["linewidth"]-
-				      (float)si/2.0, 
+				      (float)si/2.0-labelx/2, 
 				      diagram_data["ysize"]-ypos_for_xaxis-
 				      (float)si/2.0,
 				      diagram_data["xsize"]-
-				      diagram_data["linewidth"], 
+				      diagram_data["linewidth"]-labelx/2, 
 				      diagram_data["ysize"]-ypos_for_xaxis,
 				      diagram_data["xsize"]-
 				      diagram_data["linewidth"]-
-				      (float)si/2.0, 
+				      (float)si/2.0-labelx/2, 
 				      diagram_data["ysize"]-ypos_for_xaxis+
 				      (float)si/2.0
 				    }), 
@@ -786,14 +726,18 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //Sätt ut labels ({xstorhet, ystorhet, xenhet, yenhet})
   if (diagram_data["labels"])
     {
+      graph->paste_alpha_color(labelimg, 
+			       @(diagram_data["labelcolor"]), 
+			       diagram_data["xsize"]-labelx-(int)ceil((float)diagram_data["linewidth"]),
+			       diagram_data["ysize"]-(int)ceil((float)(ypos_for_xaxis-si)));
+      
       string label;
-      object labelimg;
       int x;
       int y;
       
       label=diagram_data["labels"][1]+" ["+diagram_data["labels"][3]+"]"; //Ystorhet
       labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
-	write(label)->scale(0,diagram_data["font_size"]);
+	write(label)->scale(0,diagram_data["labelsize"]);
       
       /*
 	if (labelimg->xsize()> graph->xsize())
@@ -802,7 +746,8 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       x=max(0,((int)floor((float)xpos_for_yaxis)-labelimg->xsize()/2));
       x=min(x, graph->xsize()-labelimg->xsize());
       
-      y=0;    
+      y=0; 
+
       
       if (label && sizeof(label))
 	graph->paste_alpha_color(labelimg, 
@@ -849,10 +794,10 @@ int main(int argc, string *argv)
 		 "subtyp":"",
 		 "orient":"vert",
 		 "datapoints": 
-		 ({ ({-1.2, -12.3, -4.01, -10.0, -4.3, -12.0 }),
-		    ({-1.2, 11.3, -1.5, 11.7,  -1.0, -11.5, -1.0, -13.0, -2.0, -16.0  }),
-		    ({-1.2, -13.3, 1.5, 10.1 }),
-		    ({-3.2, -13.3, -3.5, 13.7} )}),
+		 ({ ({-1.2, 12.3, -4.01, 10.0, -4.3, 12.0 }),
+		    ({-1.2, 11.3, -1.5, 11.7,  -1.0, 11.5, -1.0, 13.0, -2.0, 16.0  }),
+		    ({-1.2, 13.3, 1.5, 10.1 }),
+		    ({-3.2, 13.3, -3.5, 13.7} )}),
 		 "fontsize":32,
 		 "axcolor":({0,0,0}),
 		 "bgcolor":({255,255,255}),
@@ -860,11 +805,11 @@ int main(int argc, string *argv)
 		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
 		 "orient":"hor",
 		 "linewidth":2.2,
-		 "xsize":1000,
-		 "ysize":800,
-		 "font_size":16,
+		 "xsize":300,
+		 "ysize":200,
+		 "fontsize":16,
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
-		 "labelsize":20/*,
+		 "labelsize":50/*,
 		 "xminvalue":0.0,
 		 "yminvalue":0.0*/
 
