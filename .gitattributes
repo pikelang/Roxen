@@ -222,6 +222,7 @@ nn binary
 /server/modules/scripting/cgi.pike foreign_ident
 /server/modules/scripting/fastcgi.pike foreign_ident
 /server/modules/scripting/fpscript.pike foreign_ident
+/server/modules/scripting/perl.pike foreign_ident
 /server/modules/scripting/php4.pike foreign_ident
 /server/modules/scripting/pikescript.pike foreign_ident
 /server/modules/scripting/piketag.pike foreign_ident
