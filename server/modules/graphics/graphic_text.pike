@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.32 1997/02/25 22:38:05 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.33 1997/02/27 04:06:58 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -57,6 +57,7 @@ array register_module()
 	      " xpad=X%         Increase padding between characters with X%\n"
 	      " xpad=Y%         Increase padding between lines with Y%\n"
 	      " shadow=int,dist Draw a drop-shadow (variable distance/intensity)\n"
+	      " bshadow=dist    Draw a blured drop-shadow (variable distance)\n"
 	      " glow=color      Draw a 'glow' outline around the text.\n"
 	      " opaque=0-100%   Draw with more or less opaque text (100%\n"
 	      "                 is default)\n"
@@ -313,6 +314,12 @@ object (image) make_text_image(mapping args, object font, string text)
     ysize+=((int)(args->shadow/",")[-1])+2;
   }
 
+  if(args->bshadow)
+  {
+    xsize+=(int)args->bshadow+4;
+    ysize+=(int)args->bshadow+4;
+  }
+
   if(args->move)
   {
     int dx,dy;
@@ -431,6 +438,18 @@ object (image) make_text_image(mapping args, object font, string text)
     background->paste_mask(image(txsize,tysize),ta,xoffset+sdist, yoffset+sdist);
   }
 
+#define MIN(x,y) ((x)<(y)?(x):(y))
+
+  if(args->bshadow)
+  {
+    int sdist = (int)(args->bshadow)+1;
+    object ta = image(text_alpha->xsize()+sdist*2,
+		      text_alpha->ysize()+sdist*2);
+    ta->paste(text_alpha,sdist,sdist);
+    ta = blur(ta, MIN((sdist/2),1))->color(256,256,256);
+    background->paste_mask(image(txsize,tysize),ta,xoffset, yoffset);
+  }
+
   if(args->glow)
   {
     int amnt = (int)(args->glow/",")[-1]+2;
@@ -492,7 +511,7 @@ string base_key = "gtext:"+roxen->current_configuration->name;
 //    perror("%d: %s\n", i, color_name(from[i]));
 //}
 
-int number=(time(1)/100) % 1000, _start=time(1)/100 % 1000;
+int number=(time(1)/10) % 1000, _start=time(1)/10 % 1000;
 
 array(int)|string write_text(int _args, string text, int size,
 			     object id)
@@ -912,10 +931,10 @@ string tag_fix_color(string tagname, mapping args, object id, object file,
   int changed;
 
   if(!id->misc->colors)
-    id->misc->colors = ({ ({ defines->fg, defines->bg }) });
+    id->misc->colors = ({ ({ defines->fg, defines->bg, tagname }) });
   else
-    id->misc->colors += ({ ({ defines->fg, defines->bg }) });
-      
+    id->misc->colors += ({ ({ defines->fg, defines->bg, tagname }) });
+//  perror("Push color "+tagname+"\n");
 #define FIX(X,Y) if(args->X){defines->Y=args->X;if(args->X[0]!='#'){args->X=ns_color(parse_color(args->X));changed = 1;}}
 
   FIX(bgcolor,bg);
@@ -929,12 +948,20 @@ string pop_color(string tagname,mapping args,object id,object file,
 		 mapping defines)
 {
   array c = id->misc->colors;
-  if(c && sizeof(c))
+  sscanf(tagname, "/%s", tagname);
+  while(c && sizeof(c))
   {
-    defines->fg = c[-1][0];
-    defines->bg = c[-1][1];
-    id->misc->colors = c[..sizeof(c)-2];
+    if(c[-1][2]==tagname)
+    {
+      defines->fg = c[-1][0];
+      defines->bg = c[-1][1];
+//      perror("Pop color "+tagname+" ("+
+//	     (sizeof(id->misc->colors)-sizeof(c)+1)+")\n");
+      break;
+    }
+    c = c[..sizeof(c)-2];
   }
+  id->misc->colors = c;
 }
 
 mapping query_tag_callers()
@@ -946,11 +973,16 @@ mapping query_tag_callers()
     "table":tag_fix_color,
     "tr":tag_fix_color,
     "td":tag_fix_color,
+    "layer":tag_fix_color,
+    "ilayer":tag_fix_color,
+
     "/td":pop_color,
     "/tr":pop_color,
     "/font":pop_color,
     "/body":pop_color,
     "/table":pop_color,
+    "/layer":pop_color,
+    "/ilayer":pop_color,
   ]);
 }
 
