@@ -4,7 +4,7 @@
 inherit "module";
 
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.12 2004/05/23 01:02:20 _cvs_stephen Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.13 2004/05/23 01:13:43 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -461,7 +461,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   }
 }
 
-Calendar get_calendar(string name)
+Calendar.TimeRange get_calendar(string name)
 {
   if(!name)
     return calendar;
@@ -521,7 +521,7 @@ class TagEmitTimeZones
     if(!region)
       return map(sort(indices(zones)),
 		 lambda(string region) { return ([ "name":region ]); });
-    Calendar cal = get_calendar(m_delete(args, "calendar"));
+    Calendar.TimeRange cal = get_calendar(m_delete(args, "calendar"));
     Calendar.TimeRange time, next_shift;
     if(!(time = get_date("", args, cal)))
       time = cal->Second();
@@ -548,7 +548,7 @@ class TagEmitTimeRange
   {
     // DEBUG("get_dataset(%O, %O)\b", args, id);
     string cal_type = args["calendar"];
-    Calendar cal = get_calendar(m_delete(args, "calendar"));
+    Calendar.TimeRange cal = get_calendar(m_delete(args, "calendar"));
     Calendar.TimeRange from, to, range;
     string what, output_unit;
     int compare_num, unit_no;
@@ -767,7 +767,7 @@ Calendar.TimeRange get_date(string name, mapping args, Calendar calendar)
 {
   if(name != "")
     name = name + "-";
-  Calendar cal = calendar; // local copy
+  Calendar.TimeRange cal = calendar; // local copy
   Calendar.TimeRange date; // carries the result
   string what; // temporary data
   if(what = m_delete(args, name + "timezone"))
