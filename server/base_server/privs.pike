@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-// string cvs_version = "$Id: privs.pike,v 1.35 1998/05/17 18:41:48 grubba Exp $";
+// string cvs_version = "$Id: privs.pike,v 1.36 1999/02/15 23:20:38 per Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -46,8 +46,11 @@ void create(string reason, int|string|void uid, int|string|void gid)
 #ifdef THREADS
 #if constant(roxen_pid)
   if(getpid() == roxen_pid)
+  {
+//     __disallow_threads();
     werror("Using Privs ("+reason+") in threaded environment, source is\n  "+
 	   replace(describe_backtrace(backtrace()), "\n", "\n  ")+"\n");
+  }
 #endif
 #endif
 #ifdef HAVE_EFFECTIVE_USER
