@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.17 2003/09/16 17:48:12 mast Exp $
+// $Id: ExtScript.pmod,v 1.18 2003/09/25 09:53:21 jonasw Exp $
 
 // 
 
@@ -433,7 +433,7 @@ class Handler
     if (cmd) {
       // Perform %-substitution.
       command = ({});
-      foreach(Process.split_quoted_string(cmd), string arg) {
+      foreach(Process.split_quoted_string(cmd, 1), string arg) {
 	if (sizeof(arg) && arg[0] == '%') {
 	  int argno;
 	  if (arg == "%*") {
@@ -454,7 +454,7 @@ class Handler
     } else {
       string s = Stdio.read_file(binpath, 0, 1);
       if (s && has_prefix(s, "#!")) {
-	command = Process.split_quoted_string(s[2..]) + command;
+	command = Process.split_quoted_string(s[2..], 1) + command;
       } else {
 	// Hope we can execute it anyway...
 	// Not likely, but we can hope.
