@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.197 2000/06/29 15:24:14 kuntri Exp $
+// $Id: rxml.pike,v 1.198 2000/07/13 15:09:07 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2077,15 +2077,41 @@ scope created within the define tag.
 </attr>",
 
 "if":#"<desc cont><short hide>
- <if> is used to conditionally show its contents.</short><tag><ref
- type='tag'>if</ref></tag> is used to conditionally show its contents.
+ If is used to conditionally show its contents.</short><tag><ref
+ type='tag'>If</ref></tag> is used to conditionally show its contents.
  <tag><ref type='tag'>else</ref></tag>, <tag><ref
  type='tag'>elif</ref></tag> or <tag><ref
  type='tag'>elseif</ref></tag> can be used to suggest alternative
- content. It is possible to use glob patterns in almost all
- attributes, where * means match zero or more characters while ?
- matches one character. * Thus t*f?? will match trainfoo as well as *
- tfoo but not trainfork or tfo. </desc>
+ content.
+
+ <p>It is possible to use glob patterns in almost all attributes,
+ where * means match zero or more characters while ? matches one
+ character. * Thus t*f?? will match trainfoo as well as * tfoo but not
+ trainfork or tfo. It is however not possible to use regexp's together
+ with any of the if-plugins.</p>
+
+  The <tag>if</tag> tag itself is useless without its plugins. Its
+ main functionality is to provide a framework for the plugins. The
+ <tag>if</tag> tag only provides the attributes <att>not</att>,
+ <att>or</att> and <att>and</att> which are used between two plugins.
+ An if-plugin is a used inside the <tag>if</tag> tag like an
+ attribute.</p>
+
+ <p>There are two main types of if-plugins defined, <i>IfIs</i> and
+ <i>IfMatch</i>. If the if-plugin is of an <i>IfMatch</i> type the if
+ statement will be matched as a glob, i.e. * is considered a
+ multicharacter wildcard:</p>
+
+ <ex type=vert>Your domain <if ip='130.236.*'>is</if><else>isn't</else> liu.se.</ex>
+
+ <p> If the if-plugin is of an <i>IfIs</i> type the if statement will
+ be compared with one of the following operators 'is', '=', '==',
+ '!=', '&lt;' and '&gt'. The operators 'is', '=' and '==' are the
+ same.</p>
+
+ <ex><set variable='var.x' value='6'/>
+ <if variable='var.x > 5'>More than one hand</if></ex>
+</desc>
 
 <attr name=not>
  Inverts the result (true->false, false->true).
@@ -2096,24 +2122,7 @@ scope created within the define tag.
 
 <attr name=and>
  If all criterions are met the result is true. And is default.
-</attr>
-
- <p>
- In the rxml.pike file the main if functionality is defined. There are
- two main types of if callers defined in rxml.pike,\"IfIs\" and \"IfMatch\".
- If the if caller is of an IfMatch type the if statement will be
- matched as a glob, i.e. * is considered a multicharacter wildcard.
- </p>
-
- <ex type=vert>Your domain <if ip=\"130.236.*\">is</if><else>isn't</else> liu.se.</ex>
-
- <p>
- If the if caller is of an IfIs type the if statement will be compared
- with one of the following operators is, =, ==, !=, &lt; and &gt. The
- operators is, = and == are the same.
- </p>
- <ex><set variable=x value=6>
-<if variable=\"x > 5\">More than one hand</if></ex>",
+</attr>",
 
 "if#true":#"<desc plugin>
  This will always be true if the truth value is set to be true.
@@ -2133,14 +2142,14 @@ scope created within the define tag.
  Returns true is the browser accept certain content types as specified
  by it's Accept-header, for example image/jpeg or text/html. If
  browser states that it accepts */* that is not taken in to account as
- this is always untrue. Accept is an IfMatch if caller.
+ this is always untrue. Accept is an IfMatch if-plugin.
 </desc>
 <attr name='accept' value='type1[,type2,...]' required>
 </attr>",
 
 "if#config":#"<desc plugin>
  Has the config been set by use of the <tag><ref
- type='tag'>aconf</ref></tag> tag? (Config is an IfIs if caller,
+ type='tag'>aconf</ref></tag> tag? (Config is an <i>IfIs</i> if-plugin,
  although that functionality does not apply here.).
 </desc>
 <attr name='config' value='name' required>
@@ -2148,14 +2157,14 @@ scope created within the define tag.
 
 "if#cookie":#"<desc plugin>
  Does the cookie exist and if a value is given, does it contain that
- value? Cookie is av IfIs if caller.
+ value? Cookie is an <i>IfIs</i> if-plugin.
 </desc>
 <attr name='cookie' value='name[ is value]' required>
 </attr>",
 
 "if#client":#"<desc plugin>
  Compares the user agent string with a pattern. Client and name is an
- IfMatch if caller.
+ <i>IfMatch</i> if-plugin.
 </desc>
 <attr name='client' value='' required>
 </attr>",
@@ -2177,7 +2186,7 @@ scope created within the define tag.
 </attr>",
 
 "if#defined":#"<desc plugin>
- Tests if a certain define is defined? Defined is an IfIs if caller.
+ Tests if a certain define is defined? Defined is an <i>IfIs</i> if-plugin.
 </desc>
 <attr name='defined' value='define' required>
 </attr>
@@ -2187,7 +2196,7 @@ scope created within the define tag.
  Does the user'\s computer'\s DNS name match any of the patterns? Note
  that domain names are resolved asynchronously, and the the first time
  someone accesses a page, the domain name will probably not have been
- resolved. Domain is an IfMatch if caller.
+ resolved. Domain is an <i>IfMatch</i> if-plugin.
 </desc>
 <attr name='domain' value='pattern1[,pattern2,...]' required>
 </attr>
@@ -2212,7 +2221,7 @@ scope created within the define tag.
 
 "if#ip":#"<desc plugin>
  Does the users computers IP address match any of the patterns? Host and
- ip are IfMatch if callers.
+ ip are <i>IfMatch</i> if-plugins.
 </desc>
 <attr name='ip' value='pattern1[,pattern2,...]' required>
 </attr>
@@ -2220,21 +2229,21 @@ scope created within the define tag.
 
 "if#language":#"<desc plugin>
  Does the client prefer one of the languages listed, as specified by the
- Accept-Language header? Language is an IfMatch if caller.
+ Accept-Language header? Language is an <i>IfMatch</i> if-plugin.
 </desc>
 <attr name='language' value='language1[,language2,...]' required>
 </attr>
 ",
 
 "if#match":#"<desc plugin>
- Does the string match one of the patterns? Match is an IfMatch if caller.
+ Does the string match one of the patterns? Match is an <i>IfMatch</i> if-plugin.
 </desc>
 <attr name='match' value='pattern1[,pattern2,...]' required>
 </attr>
 ",
 
 "if#pragma":#"<desc plugin>
- Compares the http header pragma with a string. Pragma is an IfIs if caller.
+ Compares the http header pragma with a string. Pragma is an <i>IfIs</i> if-plugin.
 </desc>
 <attr name='pragma' value='string' required>
 <ex>
@@ -2246,15 +2255,15 @@ scope created within the define tag.
 
 "if#prestate":#"<desc plugin>
  Are all of the specified prestate options present in the URL? Prestate is
- an IfIs if caller.
+ an <i>IfIs</i> if-plugin.
 </desc>
 <attr name='prestate' value='option1[,option2,...]' required>
 </attr>
 ",
 
 "if#referrer":#"<desc plugin>
- Does the referrer header match any of the patterns? Referrer is an IfMatch
- if caller.
+ Does the referrer header match any of the patterns? Referrer is an <i>IfMatch</i>
+ if-plugin.
 </desc>
 <attr name='referrer' value='pattern1[,pattern2,...]' required>
 </attr>
@@ -2263,7 +2272,7 @@ scope created within the define tag.
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
 "if#supports":#"<desc plugin>
- Does the browser support this feature? Supports is an IfIs if caller.
+ Does the browser support this feature? Supports is an <i>IfIs</i> if-plugin.
 </desc>
 
 <attr name=supports'' value='feature' required required>
@@ -2298,7 +2307,7 @@ scope created within the define tag.
 
 "if#variable":#"<desc plugin>
  Does the variable exist and, optionally, does it's content match the pattern?
- Variable is an IfIs plugin.
+ Variable is an <i>IfIs</i> plugin.
 </desc>
 <attr name='variable' value='name[ is pattern]' required>
 </attr>
