@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.356 2002/10/30 03:54:48 nilsson Exp $
+// $Id: loader.pike,v 1.357 2002/10/30 04:02:55 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.356 2002/10/30 03:54:48 nilsson Exp $";
+constant cvs_version="$Id: loader.pike,v 1.357 2002/10/30 04:02:55 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1173,7 +1173,7 @@ int main(int argc, array(string) argv)
   // For Pike 7.3
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
 
-  // FIXME: Bug in data/master.pike. Resolve this before we change master.
+  // FIXME: Bug in master.pike. Resolve this before we change master.
   Protocols.HTTP;
 
   // (. Note: Optimal implementation. .)
@@ -2113,7 +2113,7 @@ void do_main( int argc, array(string) argv )
   if (err = catch {
     if(master()->relocate_module)
       add_constant("PIKE_MODULE_RELOC", 1);
-    replace_master(new_master=[object(__builtin.__master)](((program)"data/master.pike")()));
+    replace_master(new_master=[object(__builtin.__master)](((program)"master.pike")()));
   }) {
     werror("Initialization of ChiliMoon's master failed:\n"
 	   "%s\n", describe_backtrace(err));

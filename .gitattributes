@@ -87,7 +87,6 @@ worldmap binary
 /server/data/include/udp.h foreign_ident
 /server/data/include/variables.h foreign_ident
 /server/data/include/version.h foreign_ident
-/server/data/master.pike foreign_ident
 /server/data/more_extensions/apache foreign_ident
 /server/data/more_extensions/chemical foreign_ident
 /server/data/more_extensions/inlinetypes foreign_ident
@@ -286,6 +285,7 @@ worldmap binary
 /server/server_core/javamodule.pike foreign_ident
 /server/server_core/language.pike foreign_ident
 /server/server_core/loader.pike foreign_ident
+/server/server_core/master.pike foreign_ident
 /server/server_core/module.pike foreign_ident
 /server/server_core/module_support.pike foreign_ident
 /server/server_core/newdecode.pike foreign_ident
