@@ -3,6 +3,7 @@ inherit "module";
 inherit "roxenlib";
 
 roxen.ImageCache the_cache;
+constant cvs_version="$Id: cimg.pike,v 1.6 1999/09/14 20:26:57 jhs Exp $";
 
 array register_module()
 {
@@ -11,7 +12,7 @@ array register_module()
       MODULE_PARSER,
       "Image converter",
       "Provides a tag 'cimg'. Usage: "
-      "<cimg src=indata format=outformat [quant=numcolors] [img args]>",
+      "&lt;cimg src=\"indata file\" format=outformat [quant=numcolors] [img args]&gt;",
       0,1
    });
 }
