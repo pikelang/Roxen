@@ -1,5 +1,7 @@
 inherit "module";
 
+constant module_name = "DEPRECATED: UserDB";
+
 void start(int num, Configuration conf)
 {
   module_dependencies( conf, ({ "userdb_system","auth_httpbasic"}));

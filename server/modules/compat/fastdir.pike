@@ -3,6 +3,8 @@
 
 inherit "module";
 
+constant module_name = "DEPRECATED: Fastdir";
+
 void start(int num, Configuration conf)
 {
   werror("\n ***** fastdir module is now directories. Adding directories module instead.\n");

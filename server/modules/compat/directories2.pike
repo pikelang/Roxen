@@ -3,6 +3,8 @@
 
 inherit "module";
 
+constant module_name = "DEPRECATED: Directories 2";
+
 void start(int num, Configuration conf)
 {
   module_dependencies (conf, ({ "directories" }));
