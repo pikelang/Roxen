@@ -1,6 +1,6 @@
 /*
 
-string cvs_version = "$Id: french.pike,v 1.8 2000/01/17 21:03:20 nilsson Exp $";
+string cvs_version = "$Id: french.pike,v 1.9 2000/01/23 06:18:39 nilsson Exp $";
 Created by:
 
 ---------------------+--------------------------------------------------
@@ -28,7 +28,7 @@ constant months = ({
   "juin", "juillet", "août", "septembre", "octobre",
   "novembre", "décembre" });
 
-constant day = ({
+constant days = ({
   "dimanche", "lundi", "mardi", "mercredi",
   "jeudi", "vendredi", "samedi" });
 
