@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.19 2001/05/03 17:33:11 per Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.20 2001/05/07 12:36:11 peter Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -76,7 +76,11 @@ class Relay
     int code;
     mapping h = ([]);
 
-
+    if(!id) {
+      destruct();
+      return;
+    }
+    
     string rewrite( string what )
     {
       // in what: URL.
@@ -123,10 +127,10 @@ class Relay
     if( sscanf( buffer, "%s\r\n\r\n%s", headers, data ) != 2 )
       sscanf( buffer, "%s\n\n%s", headers, data );
 
-    sscanf( headers, "HTTP/%*[^ ] %d", code );
-
     if( headers )
     {
+      sscanf( headers, "HTTP/%*[^ ] %d", code );
+
       foreach( ((headers-"\r")/"\n")[1..], string header )
       {
         if( sscanf( header, "%s:%s", string a, string b ) == 2 )
