@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.16 1997/04/12 07:55:52 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.17 1997/04/12 08:01:45 neotron Exp $";
 
 #include <module.h>
 
@@ -134,7 +134,7 @@ void create()
 	 "<p>More or less always, that is..");
 
   defvar("wrapper", "bin/cgi", "The wrapper to use",
-	 TYPE_FLAG|VAR_EXPERT,
+	 TYPE_STRING|VAR_EXPERT,
 	 "This is the pathname of the wrapper to use.\n");
   
   defvar("runuser", "", "Run scripts as", TYPE_STRING,
