@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.218 2000/08/11 09:51:17 nilsson Exp $
+// $Id: rxml.pike,v 1.219 2000/08/11 14:21:00 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1427,6 +1427,19 @@ class TagEmitSources {
   }
 }
 
+class TagEmitForeach {
+  inherit RXML.Tag;
+  constant name="emit";
+  constant plugin_name="foreach";
+
+  array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
+    if(!m->values) return ({});
+    if(stringp(m->values)) m->values=m->values / (m->split || "\000");
+    return Array.map( m->values,
+		      lambda(mixed val) { return (["value":val]); } );
+  }
+}
+
 class TagComment {
   inherit RXML.Tag;
   constant name = "comment";
@@ -2513,10 +2526,13 @@ is an <i>Eval</i> plugin.
 
 Available variables are:",
 
-"if#sizeof":#"<desc plugin><short>
-
-</short>
-
+"if#sizeof":#"<desc plugin><short>Compares the size of a variable with a number.</short>
+<ex>
+<set variable=\"var.x\" value=\"hello\"/>
+<set variable=\"var.y\" value=\"\"/>
+<if sizeof=\"var.x == 5\">Five</if>
+<if sizeof=\"var.y > 0\">Nonempty</if>
+</ex>
 </desc>",
 
 "nooutput":#"<desc cont><short>
@@ -2645,6 +2661,18 @@ Available variables are:",
  Provides a list of all available emit sources.
 </desc>",
   ([ "&_.source;":"<desc ent>The name of the source.</desc>" ]) }),
+
+"emit#foreach":({ #"<desc plugin>
+ Splits the string provided in the values attribute and outputs the parts in a loop. The
+ value in the values attribute may also be an array.
+</desc>
+<attr name=values value='string or array' required>
+The string to be splitted into an array or an array.
+</attr>
+<attr name=split value=string default=NULL>
+The string the values string is splitted with.
+</attr>",
+  ([ "&_.value;":"<desc ent>The value of one part of the splitted string</desc>" ]) }),
 
 "emit":({ #"<desc cont><short>Provides data, fetched from different sources, as
  entities</short></desc>
