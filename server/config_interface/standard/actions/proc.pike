@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.1 2000/02/02 04:14:17 per Exp $
+ * $Id: proc.pike,v 1.2 2000/02/03 20:33:43 per Exp $
  */
 
 inherit "wizard";
@@ -20,7 +20,19 @@ string proc(string prog, int pid )
 {
   if(!pid) pid=getpid();
   object p = Privs("Process status");
-  return Process.popen("/usr/proc/bin/p"+prog+" "+pid);
+  Stdio.File f = Stdio.File( "/tmp/"+getpid()+".tmp", "rwct" );
+
+  array a = prog/" ";
+  prog = a[0];
+  Process.create_process( ({ "/usr/proc/bin/p"+prog }) +
+                          a[1..]+({(string)pid}),
+                          ([ "stdout":f ]))
+                          ->wait();
+  f->seek( 0 );
+  prog = f->read();
+  f->close();
+  rm( "/tmp/"+getpid()+".tmp" );
+  return prog;
 }
 
 string process_map(string in)
@@ -30,7 +42,6 @@ string process_map(string in)
   foreach((in/"\n")[1..], string m)
   {
     string a,b;
-    while(sscanf(m, "%s: %s", a,b)==2) m=a+":"+b;
     m=replace(m,"[ heap ]","Heap&nbsp(malloced&nbsp;memory)");
     m=replace(m,"[ stack ]","Stack");
     array row = (replace(m,"\t"," ")/" "-({""}))[1..];
@@ -96,12 +107,12 @@ string cred(object id)
 #if constant(getgrgid)
   for(int i = 0; i < sizeof(groups); i++)
     groups[i] = (getgrgid((int)groups[i]) || ({ (string)groups[i] }))[0];
-  return sprintf("e/r/suid: %s<br>e/r/sgid: %s<br>groups: %O\n",
+  return sprintf("e/r/suid: %s<br>e/r/sgid: %s<br>groups: %s\n",
 		 (getpwuid(uid) || ({ (string)uid }))[0],
 		 (getgrgid(gid) || ({ (string)gid }))[0],
 		 String.implode_nicely(groups));
 #else
-  return sprintf("e/r/suid: %s<br>e/r/sgid: %d<br>groups: %O\n",
+  return sprintf("e/r/suid: %s<br>e/r/sgid: %d<br>groups: %s\n",
 		 (getpwuid(uid) || ({ (string)uid }))[0],
 		 gid,
 		 String.implode_nicely(groups));
