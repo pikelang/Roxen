@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.44 2003/09/25 11:00:31 anders Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.45 2003/10/07 08:42:17 anders Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -15,7 +15,7 @@ constant module_doc  = "Creates a self verifying form.";
 // since not all widgets have a value attribute, and those who do add
 // it themselves.
 constant ARGS=(< "type", "min", "max", "scope", "min", "max", "trim",
-		 "regexp", "glob", "minlength", "case",
+		 "regexp", "glob", "minlength", "case", "date",
 		 "mode", "fail-if-failed", "ignore-if-false", "ignore-if-gone",
 		 "ignore-if-failed", "ignore-if-verified", "optional", "value" >);
 
