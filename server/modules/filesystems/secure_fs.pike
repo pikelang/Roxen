@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.10 1998/04/17 11:08:53 grubba Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.11 1998/04/27 11:36:37 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -203,7 +203,13 @@ mixed find_file(string f, object id)
 
   if (query("page")) {
     int last;
-    sscanf(id->cookies["httpauth"]||"","%s:%s:%d", user, pass, last);
+    if (stringp(id->cookies["httpauth"])) {
+      sscanf(id->cookies["httpauth"],"%s:%s:%d", user, pass, last);
+    } else if (id->cookies["httpauth"]) {
+      report_warning(sprintf("Unexpected value for cookie \"httpauth\":\n"
+			     "%O\n",
+			     id->cookies["httpauth"]));
+    }
     if(!last || (last+query("expire") < time(1)))
       m_delete(id->cookies,"httpauth");
     if(id->variables["httpuser"]&&id->variables["httppass"])
