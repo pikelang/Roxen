@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.739 2001/09/13 13:15:19 hop Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.740 2001/09/21 09:50:55 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2921,7 +2921,8 @@ class ImageCache
 #else
 	a->format = "png";
 #endif
-      if( id->misc->authenticated_user )
+      if( id->misc->authenticated_user &&
+	  !id->misc->authenticated_user->is_transient )
 	// This entry is not actually used, it's only there to
 	// generate a unique key.
 	a["\0u"] = user = id->misc->authenticated_user->name();
