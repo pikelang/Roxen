@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.99 2000/09/01 21:38:49 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.100 2000/09/03 02:34:30 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -264,7 +264,8 @@ program low_findprog(string pname, string ext, object|void handler)
 	      program_names[ret] = fname;
 	      return ret;
             };
-	    string msg = sprintf("Failed to decode dumped file for %s: %s\n",
+#ifdef DUMP_DEBUG
+	    string msg = sprintf("Failed to decode dumped file for %s: %s",
 				 trim_file_name (fname), describe_error(err));
 	    if (ofile[..sizeof (dump_path) - 1] == dump_path)
 	      ofile = ofile[sizeof (dump_path)..];
@@ -273,6 +274,7 @@ program low_findprog(string pname, string ext, object|void handler)
 	    } else {
 	      compile_warning(ofile, 0, msg);
 	    }
+#endif
 	  }
         }
       }
