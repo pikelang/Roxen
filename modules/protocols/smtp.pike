@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.32 1998/09/13 14:49:47 grubba Exp $
+ * $Id: smtp.pike,v 1.33 1998/09/13 20:01:46 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.32 1998/09/13 14:49:47 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.33 1998/09/13 20:01:46 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -199,7 +199,7 @@ static class Smtp_Connection {
   static void got_remotehost(string h,
 			     function|void callback, mixed ... args)
   {
-    remotehost = h;
+    remotehost = h || remoteip;
     if (callback) {
       callback(@args);
     }
@@ -861,6 +861,8 @@ static class Smtp_Connection {
     // Expand.
     multiset expanded = do_expn(current_mail->recipients);
 
+    int any_handled = 0;
+
     /* Do the delivery */
     foreach(indices(expanded), string addr) {
       array a = addr/"@";
@@ -901,17 +903,30 @@ static class Smtp_Connection {
       }
       if (handled) {
 	expanded[addr] = 0;
+	any_handled = 1;
       }
     }
 
-    // Message received successfully.
+    if (!any_handled) {
+      // None of the recipients accepted the message.
+      send(554);
+      report_notice("SMTP: Failed to spool mail.\n");
+      return;
+    }
+
     // NOTE: After this point error-messages must be sent by mail.
-    send(250);
-    report_notice("SMTP: Mail spooled OK.\n");
 
     if (sizeof(expanded)) {
+      // Partial success.
+      send(250, "Partial failure. See bounce for details.");
       roxen_perror(sprintf("The following recipients were unavailable:\n"
 			   "%s\n", String.implode_nicely(indices(expanded))));
+
+      // FIXME: Send bounce here.
+    } else {
+      // Message received successfully.
+      send(250);
+      report_notice("SMTP: Mail spooled OK.\n");
     }
 
     do_RSET();
