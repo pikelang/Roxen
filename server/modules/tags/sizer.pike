@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.7 2001/03/06 12:00:41 jhs Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.8 2001/03/06 12:11:49 jhs Exp $";
 #include <module.h>
 inherit "module";
 
@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_sizer">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_sizer",X,Y)
 // end locale stuff
-  
+
 
 constant module_type = MODULE_TAG;
 LocaleString module_name = _(1,"Page sizer");
@@ -46,7 +46,7 @@ class Combo( string file, RequestID id )
     if( !fetched )fetch();
     return res && (!res->error || (res->error == 200));
   }
-  
+
   string data()
   {
     if( !fetched )fetch();
@@ -69,7 +69,7 @@ class Combo( string file, RequestID id )
     if( res->file )
       return res->file->stat()->size;
   }    
-  
+
   string headers()
   {
     if( !fetched ) fetch();
@@ -89,16 +89,16 @@ class Combo( string file, RequestID id )
     if(mappingp(id2->misc->moreheads)) heads |= id2->misc->moreheads;
     if( res->len > 0 || (res->error != 200) )
       heads["Content-Length"] = (string)res->len;
-    
+
     string head_string = sprintf( "%s %d %s\r\n", id2->prot, res->error,
 				  res->rettext||errors[res->error]||"");
-    
+
     if( (res->error/100 == 2) && (res->len <= 0) )
       heads->Connection = "close";
     return head_string+Roxen.make_http_headers( heads );
   }
 }
-  
+
 
 Combo do_read_file( string file, RequestID id )
 {
@@ -111,8 +111,8 @@ array size_file( string page, RequestID id )
   mapping sizes = ([]), types = ([]);
   array files = ({});
   id->misc->sizer_in_progress++;
-  
-  if( search( page, "http:" ) )
+
+  if( !has_prefix( lower_case(page), "http:" ) )
     page = Roxen.fix_relative( page, id );
   files = ({ page });
   if( strlen( page ) && page[0] == '/' )
@@ -230,7 +230,7 @@ string simpletag_page_size( string name,
 	  if( ar["max-height"] ) sz +=" (ys:"+((string)ar["max-height"]);
 	  if(strlen(sz))
 	    sz+=")";
-	  
+
 	  if( ar->src )
 	    return "Cimg of "+fname( ar->src )+sz;
 	  return "Cimg from data"+sz;
@@ -269,7 +269,7 @@ string simpletag_page_size( string name,
     total += sz[0] + sz[1];
     total_headers += sz[1];
   }
-  
+
   res += "<table width='100%' cellpadding='0' cellspacing='0'>\n"
     "  <tr><th align='left'><font size='-1' color='black'>File</font></th>"
     "<th align='right'><font size='-1' color='black'>Size (kb)</font></th>"
@@ -469,7 +469,7 @@ string simpletag_page_size( string name,
     }
     res += "</table>";
   }
-  
+
   res = "<table width='400' cellpadding='0' cellspacing='0' border='0'"
     " bgcolor='black'><tr><td>\n<table cellpadding='10' cellspacing='1'"
     " border='0' width='100%' bgcolor='white'>\n<tr><td>\n" + res +
