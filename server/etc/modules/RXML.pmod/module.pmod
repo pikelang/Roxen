@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.6 1999/12/31 02:55:39 mast Exp $
+//! $Id: module.pmod,v 1.7 2000/01/05 17:38:03 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -84,7 +84,7 @@ class Tag
 
   // Internals.
 
-  array _handle_tag (TagSetParser parser, mapping(string:string) args,
+  mixed _handle_tag (TagSetParser parser, mapping(string:string) args,
 		     void|string content)
   // Callback for tag set parsers. Returns a sequence of result values
   // to be added to the result queue. Note that this function handles
@@ -121,7 +121,7 @@ class Tag
 
   string _sprintf()
   {
-    return "Tag(" + [string] this_object()->name + ")";
+    return "RXML.Tag(" + [string] this_object()->name + ")";
   }
 }
 
@@ -129,11 +129,14 @@ class Tag
 class TagSet
 //! Contains a set of tags. Tag sets can import other tag sets, and
 //! later changes are propagated. Parser instances (contexts) to parse
-//! data are also created from this. TagSet objects may somewhat
-//! safely be destructed explicitly; the tags in a destructed tag set
-//! will not be active in parsers that are instantiated later, but
-//! will work in current instances.
+//! data are created from this. TagSet objects may somewhat safely be
+//! destructed explicitly; the tags in a destructed tag set will not
+//! be active in parsers that are instantiated later, but will work in
+//! current instances.
 {
+  string name;
+  //! Used for identification only.
+
   string prefix;
   //! A prefix that may precede the tags. If zero, it's up to the
   //! importing tag set(s).
@@ -150,24 +153,25 @@ class TagSet
   //! A number that is increased every time something changes in this
   //! object or in some tag set it imports.
 
-  mapping(string:string|
+  mapping(string:string|array|
 	  function(:int(1..1)|string|array)|
-	  function(object,mapping(string:string):
-		   int(1..1)|string|array)) low_tags;
-  mapping(string:string|
+	  function(object,mapping(string:string):int(1..1)|string|array)
+	 ) low_tags;
+  mapping(string:string|array|
 	  function(:int(1..1)|string|array)|
-	  function(object,mapping(string:string),string:
-		   int(1..1)|string|array)) low_containers;
-  mapping(string:string|
+	  function(object,mapping(string:string),string:int(1..1)|string|array)
+	 ) low_containers;
+  mapping(string:string|array|
 	  function(:int(1..1)|string|array)|
-	  function(object:
-		   int(1..1)|string|array)) low_entities;
-  //! Passed directly to Parser.HTML. Note: Changes in these aren't
-  //! tracked; changed() must be called.
+	  function(object:int(1..1)|string|array)
+	 ) low_entities;
+  //! Passed directly to Parser.HTML when that parser is used. Note:
+  //! Changes in these aren't tracked; changed() must be called.
 
-  void create (void|array(Tag) _tags)
+  static void create (string _name, void|array(Tag) _tags)
   //!
   {
+    name = _name;
     if (_tags) tags = mkmapping ([array(string)] _tags->name, _tags);
   }
 
@@ -200,8 +204,8 @@ class TagSet
   {
     Tag tag;
     if ((tag = tags[name])) return tag;
-    foreach (imported, TagSet tag_set)
-      if ((tag = tag_set->get_tag (name))) return tag;
+    foreach (imported, TagSet tagset)
+      if ((tag = tagset->get_tag (name))) return tag;
     return 0;
   }
 
@@ -215,6 +219,19 @@ class TagSet
   //!
   {
     return values (tags);
+  }
+
+  array(Tag) get_all_tags()
+  //! Returns all tags, even those who get overridden. A tag to the
+  //! left overrides one to the right.
+  {
+    array(Tag) tags = ({});
+    for (array(TagSet) list = ({this_object()}); sizeof (list);) {
+      TagSet tagset = list[0];
+      list = tagset->imported + list[1..];
+      tags += tagset->get_local_tags();
+    }
+    return tags;
   }
 
   mixed `->= (string var, mixed val)
@@ -275,9 +292,14 @@ class TagSet
 
   private array(function(:void)) notify_funcs = ({});
   // Weak (when nonempty).
+
+  string _sprintf()
+  {
+    return name ? "RXML.TagSet(" + name + ")" : "RXML.TagSet";
+  }
 }
 
-TagSet empty_tag_set;
+TagSet empty_tagset;
 //! The empty tag set.
 
 
@@ -299,12 +321,12 @@ class Context
   int type_check;
   //! Whether to do type checking.
 
-  TagSet tag_set;
+  TagSet tagset;
   //! The current tag set that will be inherited by subparsers.
 
-  int tag_set_is_local;
-  //! Nonzero if tag_set is a copy local to this context. A local tag
-  //! set that imports the old tag_set is created whenever need be.
+  int tagset_is_local;
+  //! Nonzero if tagset is a copy local to this context. A local tag
+  //! set that imports the old tagset is created whenever need be.
 
   mixed get_var (string var, void|string scope_name)
   //! Returns the value a variable in the specified scope, or the
@@ -355,8 +377,8 @@ class Context
 
   void add_runtime_tag (Tag tag)
   //! Adds a tag that will exist from this point forward in the
-  //! current context only. It will have effect in parent parsers up
-  //! to the point where tag_set changes.
+  //! current context only. It will have effect in the current parser
+  //! and parent parsers up to the point where tagset changes.
   {
     if (!new_runtime_tags) new_runtime_tags = RuntimeTags();
     new_runtime_tags->add_tags[tag] = 1;
@@ -367,7 +389,8 @@ class Context
 
   void remove_runtime_tag (string|Tag tag)
   //! Removes a tag added by add_runtime_tag(). It will have effect in
-  //! parent parsers up to the point where tag_set changes.
+  //! the current parser and parent parsers up to the point where
+  //! tagset changes.
   {
     if (!new_runtime_tags) new_runtime_tags = RuntimeTags();
     new_runtime_tags->remove_tags[tag] = 1;
@@ -508,29 +531,29 @@ class Context
 #define ENTER_SCOPE(ctx, frame) (frame->vars && ctx->enter_scope (frame))
 #define LEAVE_SCOPE(ctx, frame) (frame->vars && ctx->leave_scope (frame))
 
-  void make_tag_set_local()
+  void make_tagset_local()
   {
-    if (!tag_set_is_local) {
-      TagSet new_tag_set = TagSet(); // FIXME: Cache this?
-      new_tag_set->imported = ({tag_set});
-      tag_set = new_tag_set;
-      tag_set_is_local = 1;
+    if (!tagset_is_local) {
+      TagSet new_tagset = TagSet (tagset->name + " (local)"); // FIXME: Cache this?
+      new_tagset->imported = ({tagset});
+      tagset = new_tagset;
+      tagset_is_local = 1;
     }
   }
 
   class RuntimeTags
   {
     multiset(Tag) add_tags = (<>);
-    multiset(Tag|string) remove_tags = (<"foo">);
+    multiset(Tag|string) remove_tags = (<>);
   }
   RuntimeTags new_runtime_tags;
   // Used to record the result of any add_runtime_tag() and
   // remove_runtime_tag() calls since the last time the parsers ran.
 
-  void create (TagSet _tag_set, void|RequestID _id)
+   void create (TagSet _tagset, void|RequestID _id)
   // Normally TagSet.`() should be used instead of this.
   {
-    tag_set = _tag_set;
+    tagset = _tagset;
     id = _id;
   }
 
@@ -546,6 +569,8 @@ class Context
   //	do_return() with this stream piece.)
   // "exec_left": array (Exec array left to evaluate. Only used
   //	between Frame._exec_array() and Frame._eval().)
+
+  string _sprintf() {return "RXML.Context";}
 
 #ifdef MODULE_DEBUG
   int in_use;
@@ -928,6 +953,26 @@ class Frame
     throw (err);
   }
 
+  private void _handle_runtime_tags (TagSetParser parser,
+				     Context.RuntimeTags runtime_tags)
+  {
+    // FIXME: PCode handling.
+    multiset(string|Tag) rem_tags = runtime_tags->remove_tags;
+    multiset(Tag) add_tags = runtime_tags->add_tags - rem_tags;
+    if (sizeof (rem_tags))
+      foreach (indices (add_tags), Tag tag)
+	if (rem_tags[tag->name]) add_tags[tag] = 0;
+    array(string|Tag) arr_rem_tags = (array) rem_tags;
+    array(Tag) arr_add_tags = (array) add_tags;
+    for (Parser p = parser; p; p = p->_parent)
+      if (p->tagset_eval) {
+	foreach (arr_add_tags, Tag tag)
+	  ([object(TagSetParser)] p)->add_runtime_tag (tag);
+	foreach (arr_rem_tags, string|object(Tag) tag)
+	  ([object(TagSetParser)] p)->remove_runtime_tag (tag);
+      }
+  }
+
   void _eval (TagSetParser parser,
 	      void|mapping(string:string) raw_args,
 	      void|string raw_content)
@@ -935,11 +980,6 @@ class Frame
   {
     Frame this = this_object();
     Context ctx = parser->context;
-#ifdef DEBUG
-    if (ctx != get_context()) error ("Internal error: Context not current.\n");
-    if (!parser->tag_set_eval)
-      error ("Internal error: Calling _eval() with non-tag set parser.\n");
-#endif
 
     // Unwind state data:
     //raw_content
@@ -947,10 +987,23 @@ class Frame
     Parser subparser;
     mixed piece;
     array exec;
-    int tags_added;		// Flag that we added additional_tags to ctx->tag_set.
+    int tags_added;		// Flag that we added additional_tags to ctx->tagset.
     //ctx->new_runtime_tags
 
 #define PRE_INIT_ERROR(X) (ctx->frame = this, error (X))
+#ifdef DEBUG
+    // Internal sanity checks.
+    if (ctx != get_context())
+      PRE_INIT_ERROR ("Internal error: Context not current.\n");
+    if (!parser->tagset_eval)
+      PRE_INIT_ERROR ("Internal error: Calling _eval() with non-tag set parser.\n");
+#endif
+#ifdef MODULE_DEBUG
+    if (ctx->new_runtime_tags)
+      PRE_INIT_ERROR ("Looks like Context.add_runtime_tag() or "
+		      "Context.remove_runtime_tag() was used outside any parser.\n");
+#endif
+
     if (array state = ctx->unwind_state && ctx->unwind_state[this]) {
 #ifdef DEBUG
       if (!up)
@@ -960,7 +1013,8 @@ class Frame
 			"when resuming parse.\n");
 #endif
       object ignored;
-      [ignored, fn, iter, raw_content, subparser, piece, exec, tags_added] = state;
+      [ignored, fn, iter, raw_content, subparser, piece, exec, tags_added,
+       ctx->new_runtime_tags] = state;
       m_delete (ctx->unwind_state, this);
       if (!sizeof (ctx->unwind_state)) ctx->unwind_state = 0;
     }
@@ -972,6 +1026,7 @@ class Frame
       up = ctx->frame;
       piece = Void;
     }
+
 #undef PRE_INIT_ERROR
     ctx->frame = this;
 
@@ -1007,9 +1062,9 @@ class Frame
 #endif
 
     if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
-      if (!ctx->tag_set_is_local) ctx->make_tag_set_local();
-      if (search (ctx->tag_set->imported, add_tags) < 0) {
-	ctx->tag_set->imported = ({add_tags}) + ctx->tag_set->imported;
+      if (!ctx->tagset_is_local) ctx->make_tagset_local();
+      if (search (ctx->tagset->imported, add_tags) < 0) {
+	ctx->tagset->imported = ({add_tags}) + ctx->tagset->imported;
 	tags_added = 1;
       }
     }
@@ -1041,6 +1096,12 @@ class Frame
 	for (; iter > 0; iter--) {
 
 	  if (raw_content) {	// Got nested parsing to do.
+	    if (ctx->new_runtime_tags) {
+	      // Empty this first in case do_enter() set it.
+	      _handle_runtime_tags (parser, ctx->new_runtime_tags);
+	      ctx->new_runtime_tags = 0;
+	    }
+
 	    int finished = 0;
 	    if (!subparser) {	// The nested content is not yet parsed.
 	      subparser = content_type->get_parser (
@@ -1054,14 +1115,15 @@ class Frame
 	      if (flags & FLAG_STREAM_CONTENT && subparser->read) {
 		// Handle a stream piece.
 		// Squeeze out any free text from the subparser first.
-		mixed res = ([function(:mixed)] subparser->read)();
+		mixed res = subparser->read();
 		if (content_type->sequential) piece = res + piece;
 		else if (piece == Void) piece = res;
 		if (piece != Void) {
-		  array|function(RequestID,void|mixed:array) do_return;
+		  int|array|function(RequestID,void|mixed:array) do_return;
 		  if ((do_return =
-		       [array|function(RequestID,void|mixed:array)] this->do_return) &&
-		      !arrayp (do_return)) {
+		       [int|array|function(RequestID,void|mixed:array)]
+		       this->do_return) &&
+		      functionp (do_return)) {
 		    if (!exec) exec = do_return (ctx->id, piece); // Might unwind.
 		    if (exec) {
 		      mixed res = _exec_array (parser, exec); // Might unwind.
@@ -1103,12 +1165,13 @@ class Frame
 	    subparser = 0;
 	  }
 
-	  if (array|function(RequestID,void|mixed:array) do_return =
-	      [array|function(RequestID,void|mixed:array)] this->do_return) {
+	  if (int|array|function(RequestID,void|mixed:array) do_return =
+	      [int|array|function(RequestID,void|mixed:array)] this->do_return) {
 	    if (!exec)
-	      exec = arrayp (do_return) ?
-		[array] do_return :
-		([function(RequestID,void|mixed:array)] do_return) (ctx->id);// Might unw.
+	      exec = functionp (do_return) ?
+		([function(RequestID,void|mixed:array)] do_return) (
+		  ctx->id) :	// Might unwind.
+		[array] do_return;
 	    if (exec) {
 	      mixed res = _exec_array (parser, exec); // Might unwind.
 	      if (flags & FLAG_STREAM_RESULT) {
@@ -1131,20 +1194,7 @@ class Frame
       } while (fn);
 
       if (ctx->new_runtime_tags) {
-	multiset(string|Tag) rem_tags = ctx->new_runtime_tags->remove_tags;
-	multiset(Tag) add_tags = ctx->new_runtime_tags->add_tags - rem_tags;
-	if (sizeof (rem_tags))
-	  foreach (indices (add_tags), Tag tag)
-	    if (rem_tags[tag->name]) add_tags[tag] = 0;
-	array(string|Tag) arr_rem_tags = (array) rem_tags;
-	array(Tag) arr_add_tags = (array) add_tags;
-	for (Parser p = parser; p; p = p->_parent)
-	  if (p->tag_set_eval) {
-	    foreach (arr_add_tags, Tag tag)
-	      ([object(TagSetParser)] p)->add_runtime_tag (tag);
-	    foreach (arr_rem_tags, string|object(Tag) tag)
-	      ([object(TagSetParser)] p)->remove_runtime_tag (tag);
-	  }
+	_handle_runtime_tags (parser, ctx->new_runtime_tags);
 	ctx->new_runtime_tags = 0;
       }
     };
@@ -1174,7 +1224,7 @@ class Frame
 	    // case.
 	    if (err == this) err = 0;
 	    if (tags_added) {
-	      ctx->tag_set->imported -= ({/*[object(TagSet)]HMM*/ this->additional_tags});
+	      ctx->tagset->imported -= ({/*[object(TagSet)]HMM*/ this->additional_tags});
 	      tags_added = 0;
 	    }
 	    action = "break";
@@ -1194,7 +1244,8 @@ class Frame
 	}
 	else action = "break";	// Some other reason - back up to the top.
 
-	ustate[this] = ({err, fn, iter, raw_content, subparser, piece, exec, tags_added});
+	ustate[this] = ({err, fn, iter, raw_content, subparser, piece, exec, tags_added,
+			 ctx->new_runtime_tags});
       }
       else action = "throw";
 
@@ -1217,14 +1268,14 @@ class Frame
 
     else {
       if (tags_added)
-	ctx->tag_set->imported -= ({/*[object(TagSet)]HMM*/ this->additional_tags});
+	ctx->tagset->imported -= ({/*[object(TagSet)]HMM*/ this->additional_tags});
       ctx->frame = up;
     }
   }
 
   string _sprintf()
   {
-    return "Frame(" + (tag && [string] tag->name) + ")";
+    return "RXML.Frame(" + (tag && [string] tag->name) + ")";
   }
 }
 
@@ -1264,7 +1315,7 @@ class Parser
 	m_delete (context->unwind_state, "top");
 	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
       }
-      if (feed (in)) res = 1;	// Might unwind.
+      if (this_object()/*HMM*/->feed (in)) res = 1; // Might unwind.
       if (res && data_callback) data_callback (this_object());
     };
     LEAVE_CONTEXT();
@@ -1296,7 +1347,7 @@ class Parser
 	m_delete (context->unwind_state, "top");
 	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
       }
-      finish (in);		// Might unwind.
+      this_object()/*HMM*/->finish (in); // Might unwind.
       if (data_callback) data_callback (this_object());
     };
     LEAVE_CONTEXT();
@@ -1373,7 +1424,7 @@ class Parser
   //! with the same static configuration, i.e. the type. The instance
   //! this function is called in is never actually used for parsing.
 
-  void create (Context ctx, Type _type, mixed... args)
+  static void create (Context ctx, Type _type, mixed... args)
   {
     context = ctx;
     type = _type;
@@ -1386,6 +1437,8 @@ class Parser
 
   Parser _parent;
   // The parent parser if this one is nested.
+
+  string _sprintf() {return "RXML.Parser";}
 }
 
 
@@ -1399,22 +1452,30 @@ class TagSetParser
 {
   inherit Parser;
 
-  constant tag_set_eval = 1;
+  constant tagset_eval = 1;
+
+  // Services.
+
+  mixed eval() {return this_object()/*HMM*/->read();}
 
   // Interface.
 
-  TagSet tag_set;
+  TagSet tagset;
   //! The tag set used for parsing.
 
-  optional void reset (Context ctx, Type type, TagSet tag_set, mixed... args);
-  optional Parser clone (Context ctx, Type type, TagSet tag_set, mixed... args);
-  void create (Context ctx, Type type, TagSet _tag_set, mixed... args)
+  optional void reset (Context ctx, Type type, TagSet tagset, mixed... args);
+  optional Parser clone (Context ctx, Type type, TagSet tagset, mixed... args);
+  static void create (Context ctx, Type type, TagSet _tagset, mixed... args)
   {
     ::create (ctx, type);
-    tag_set = _tag_set;
+    tagset = _tagset;
   }
   //! In addition to the type, the tag set is part of the static
   //! configuration.
+
+  mixed read();
+  //! Not optional. Since the evaluation is done in Tag._handle_tag()
+  //! or similar, this always does the same as eval().
 
   void add_runtime_tag (Tag tag);
   //! Adds a tag that will exist from this point forward in the
@@ -1422,6 +1483,13 @@ class TagSetParser
 
   void remove_runtime_tag (string|Tag tag);
   //! Removes a tag added by add_runtime_tag().
+
+  void ignore_tag (Tag tag);
+  //! Temparily ignores the currently parsing tag (also given) so that
+  //! the tag definition it hides (if any) will be active if the
+  //! returned result is reparsed.
+
+  string _sprintf() {return "RXML.TagSetParser";}
 }
 
 class PNone
@@ -1466,6 +1534,8 @@ class PNone
     data = "";
     evalpos = 0;
   }
+
+  string _sprintf() {return "RXML.PNone";}
 }
 
 
@@ -1474,7 +1544,7 @@ mixed simple_parse (string in, void|program parser)
 //! set, and no variable references. The parser defaults to PExpr.
 {
   // FIXME: Recycle contexts?
-  return t_any (parser || PExpr)->eval (in, Context (empty_tag_set));
+  return t_any (parser || PExpr)->eval (in, Context (empty_tagset));
 }
 
 
@@ -1525,7 +1595,6 @@ class Type
   {
     Type newtype = object_program (this_object())();
     newtype->_parser_prog = _parser_prog;
-    newtype->_parser_args = _parser_args;
     newtype->_t_obj_cache = _t_obj_cache;
     return newtype;
   }
@@ -1545,7 +1614,7 @@ class Type
     return glob ([string] other->name, [string] this_object()->name);
   }
 
-  Type `() (program newparser, mixed... parser_args)
+  Type `() (program/*(Parser)HMM*/ newparser, mixed... parser_args)
   //! Returns a type identical to this one, but which has the given
   //! parser. parser_args is passed as extra arguments to the
   //! create()/reset()/clone() functions.
@@ -1554,7 +1623,7 @@ class Type
     if (sizeof (parser_args)) {	// Can't cache this.
       newtype = clone();
       newtype->_parser_args = parser_args;
-      if (newparser->tag_set_eval) newtype->_p_cache = ([]);
+      if (newparser->tagset_eval) newtype->_p_cache = ([]);
     }
     else {
       if (!_t_obj_cache) _t_obj_cache = ([]);
@@ -1564,45 +1633,45 @@ class Type
 	else {
 	  _t_obj_cache[newparser] = newtype = clone();
 	  newtype->_parser_prog = newparser;
-	  if (newparser->tag_set_eval) newtype->_p_cache = ([]);
+	  if (newparser->tagset_eval) newtype->_p_cache = ([]);
 	}
     }
     return newtype;
   }
 
-  inline Parser get_parser (Context ctx, void|TagSet tag_set)
+  inline Parser get_parser (Context ctx, void|TagSet tagset)
   //! Returns a parser instance initialized with the given context.
   {
     Parser p;
     if (_p_cache) {		// It's a tag set parser.
       TagSet tset;
       // vvv Using interpreter lock from here.
-      PCacheObj pco = _p_cache[tset = tag_set || ctx->tag_set];
-      if (pco && pco->tag_set_gen == tset->generation) {
+      PCacheObj pco = _p_cache[tset = tagset || ctx->tagset];
+      if (pco && pco->tagset_gen == tset->generation) {
 	if ((p = pco->free_parser)) {
 	  pco->free_parser = p->_next_free;
 	  // ^^^ Using interpreter lock to here.
 	  p->data_callback = p->compile = 0;
-	  p->reset (ctx, this_object(), @_parser_args);
+	  p->reset (ctx, this_object(), tset, @_parser_args);
 	}
 	else
 	  // ^^^ Using interpreter lock to here.
 	  if (pco->clone_parser)
-	    p = pco->clone_parser->clone (ctx, this_object(), @_parser_args);
-	  else if ((p = _parser_prog (ctx, this_object(), @_parser_args))->clone)
+	    p = pco->clone_parser->clone (ctx, this_object(), tset, @_parser_args);
+	  else if ((p = _parser_prog (ctx, this_object(), tset, @_parser_args))->clone)
 	    // pco->clone_parser might already be initialized here due
 	    // to race, but that doesn't matter.
-	    p = (pco->clone_parser = p)->clone (ctx, this_object(), @_parser_args);
+	    p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
       }
       else {
 	// ^^^ Using interpreter lock to here.
 	pco = PCacheObj();
-	pco->tag_set_gen = tset->generation;
+	pco->tagset_gen = tset->generation;
 	_p_cache[tset] = pco;	// Might replace an object due to race, but that's ok.
-	if ((p = _parser_prog (ctx, this_object(), @_parser_args))->clone)
+	if ((p = _parser_prog (ctx, this_object(), tset, @_parser_args))->clone)
 	  // pco->clone_parser might already be initialized here due
 	  // to race, but that doesn't matter.
-	  p = (pco->clone_parser = p)->clone (ctx, this_object(), @_parser_args);
+	  p = (pco->clone_parser = p)->clone (ctx, this_object(), tset, @_parser_args);
       }
     }
     else {
@@ -1623,7 +1692,7 @@ class Type
     return p;
   }
 
-  mixed eval (string in, void|Context ctx, void|TagSet tag_set, void|int dont_switch_ctx)
+  mixed eval (string in, void|Context ctx, void|TagSet tagset, void|int dont_switch_ctx)
   //! Convenience function to parse and evaluate the value in the
   //! given string. If a context isn't given, the current one is used.
   //! The current context and ctx are assumed to be the same if
@@ -1633,14 +1702,14 @@ class Type
     if (!ctx) ctx = get_context();
     if (_parser_prog == PNone) res = in;
     else {
-      Parser p = get_parser (ctx, tag_set);
+      Parser p = get_parser (ctx, tagset);
       if (dont_switch_ctx) p->finish (in); // Optimize the job in p->write_end().
       else p->write_end (in);
       res = p->eval();
       if (p->reset)
 	if (_p_cache) {
 	  // Relying on interpreter lock in this block.
-	  PCacheObj pco = _p_cache[tag_set || ctx->tag_set];
+	  PCacheObj pco = _p_cache[tagset || ctx->tagset];
 	  p->_next_free = pco->free_parser;
 	  pco->free_parser = p;
 	}
@@ -1671,11 +1740,13 @@ class Type
   // Cache used for parsers that depend on the tag set.
   private class PCacheObj
   {
-    int tag_set_gen;
+    int tagset_gen;
     Parser clone_parser;
     Parser free_parser;
   }
   /*private*/ mapping(TagSet:PCacheObj) _p_cache;
+
+  string _sprintf() {return "RXML.Type";}
 }
 
 
@@ -1687,6 +1758,7 @@ Type t_text = class
   constant sequential = 1;
   constant empty_value = "";
   constant free_text = 1;
+  string _sprintf() {return "RXML.t_text";}
 }();
 
 
@@ -1695,6 +1767,7 @@ Type t_any = class
 {
   inherit Type;
   constant name = "*";
+  string _sprintf() {return "RXML.t_any";}
 }();
 
 
@@ -1705,12 +1778,13 @@ class VarRef
 {
   constant is_RXML_VarRef = 1;
   string scope, var;
-  void create (string _scope, string _var) {scope = _scope, var = _var;}
+  static void create (string _scope, string _var) {scope = _scope, var = _var;}
   int valid (Context ctx) {return !!ctx->scopes[scope];}
   mixed get (Context ctx) {return ctx->scopes[scope][var];}
   mixed set (Context ctx, mixed val) {return ctx->scopes[scope][var] = val;}
   void remove (Context ctx) {m_delete (ctx->scopes[scope], var);}
   string name() {return scope + "." + var;}
+  string _sprintf() {return "RXML.VarRef";}
 }
 
 class PCode
@@ -1731,6 +1805,8 @@ class PCode
   function(Context:mixed) compile();
   //! Returns a compiled function for doing the evaluation. The
   //! function will receive a context to do the evaluation in.
+
+  string _sprintf() {return "RXML.PCode";}
 }
 
 
@@ -1741,7 +1817,7 @@ static class VoidType
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   mixed ``+ (mixed val) {return val;}
   int `!() {return 1;}
-  string _sprintf() {return "Void";}
+  string _sprintf() {return "RXML.Void";}
 };
 VoidType Void = VoidType();
 //! An object representing the void value. Works as initializer for
@@ -1856,6 +1932,8 @@ class ScanStream
   {
     return fin;
   }
+
+  string _sprintf() {return "RXML.ScanStream";}
 }
 
 
@@ -1870,7 +1948,7 @@ void _fix_module_ref (string name, mixed val)
     switch (name) {
       case "PHtml": PHtml = [program] val; break;
       case "PExpr": PExpr = [program] val; break;
-      case "empty_tag_set": empty_tag_set = [object(TagSet)] val; break;
+      case "empty_tagset": empty_tagset = [object(TagSet)] val; break;
       default: error ("Herk\n");
     }
   };
