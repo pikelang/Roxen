@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.156 2000/02/21 19:19:51 mast Exp $
+// $Id: roxenlib.pike,v 1.157 2000/02/29 15:01:23 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -613,7 +613,7 @@ static string make_tag_attributes(mapping in)
 {
   if(!in || !sizeof(in)) return "";
   int sl=0;
-  string res="";
+  string res=" ";
 #ifdef MODULE_DEBUG
   array s=sort(indices(in));
   foreach(s, string a) {
@@ -629,15 +629,14 @@ static string make_tag_attributes(mapping in)
   return res[..sizeof(res)-2];
 }
 
-static string make_tag(string s,mapping in)
+static string make_tag(string s, mapping in)
 {
-  string q = make_tag_attributes(in);
-  return "<"+s+(strlen(q)?" "+q:"")+">";
+  return "<"+s+make_tag_attributes(in)+">";
 }
 
-static string make_container(string s,mapping in, string contents)
+static string make_container(string s, mapping in, string contents)
 {
-  m_delete(in, "/");
+  if(in["/"]) m_delete(in, "/");
   return make_tag(s,in)+contents+"</"+s+">";
 }
 
