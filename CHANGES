@@ -24,6 +24,11 @@ Major changes from Roxen WebServer 3.3:
      - Localized code looks horrible and adds a lot of extra work to
        development. That's ok for paid development, but...
      - We will save memory and gain speed.
+ - Removed support for licenses. While it would have been good to have
+   a licensing system, to attract commercial entities in the future,
+   there is really not much of a point in an open source product.
+   Remember that the first pirated version of Roxen SiteBuilder appeard
+   in warez archives just _after_ the license system was added.
  - Lots of minor bugs has been fixed, and some has been introduced.
  - Improved easter eggs.
 
