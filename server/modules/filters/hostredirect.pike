@@ -8,7 +8,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-string cvs_version = "$Id: hostredirect.pike,v 1.10 1997/07/22 17:32:35 grubba Exp $";
+string cvs_version = "$Id: hostredirect.pike,v 1.11 1997/08/15 15:28:11 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -30,7 +30,7 @@ void create()
          "very recommended that this file contains a list of all the "
          "servers, with correct URL's. If someone visits with a client "
          "that doesn't send the <tt>host</tt> header, the module won't "
-         "do anything at all.<p>"
+         "do anything at all.<p>\n"
          "v2 also allows the following syntax for HTTP redirects:<pre>"
          "    ab.domain.org             http://my.university.edu/~me/ab/%p\n"
          "    bc.domain.com             %u/bc/%p\n"
@@ -38,8 +38,8 @@ void create()
          "A <tt>%p</tt> in the 'to' field will be replaced with the full "
          "path, and <tt>%u</tt> will be replaced with this server's URL "
          "(useful if you want to send a redirect instead of doing an "
-         "internal one).<p>"
-         "internal redirects will always have the path added, whether you "
+         "internal one).<p>\n"
+         "Internal redirects will always have the path added, whether you "
          "use <tt>%p</tt> or not. however for HTTP redirects <tt>%p</tt> "
          "is mandatory if you want the path. <strong><tt>default</tt> "
          "will never add a path, even if <tt>%p</tt> is present"
@@ -135,8 +135,9 @@ mixed first_try(object id)
 		   id->misc->host, id->raw, 
 		   lower_case((id->prot /"/")[0])+"://"+id->misc->host));  
 #endif     
-    if(search(id->referer[0], lower_case((id->prot /"/")[0])+"://"+
-	      id->misc->host) == 0)
+    if((!id->referrer) || (!sizeof(id->referrer)) ||
+       search(id->referer[0],
+	      lower_case((id->prot /"/")[0])+"://"+id->misc->host) == 0)
       return 0;
     // this is some magic here: in order to allow pictures in the defaultpage
     // they need to be referenced beginning with the same url
