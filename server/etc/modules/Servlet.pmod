@@ -1,20 +1,22 @@
 
 static constant jvm = Java.machine;
 
-static object servlet_ifc = jvm->find_class("javax/servlet/Servlet");
-static object singlethread_ifc = jvm->find_class("javax/servlet/SingleThreadModel");
-static object class_class = jvm->find_class("java/lang/Class");
-static object classloader_class = jvm->find_class("java/lang/ClassLoader");
-static object classloader2_class = jvm->find_class("se/idonex/servlet/ClassLoader");
-static object config_class = jvm->find_class("se/idonex/servlet/ServletConfig");
-static object context_class = jvm->find_class("se/idonex/servlet/RoxenServletContext");
-static object request_class = jvm->find_class("se/idonex/servlet/ServletRequest");
-static object response_class = jvm->find_class("se/idonex/servlet/ServletResponse");
-static object stream_class = jvm->find_class("se/idonex/servlet/HTTPOutputStream");
-static object dictionary_class = jvm->find_class("java/util/Dictionary");
-static object throwable_class = jvm->find_class("java/lang/Throwable");
-static object stringwriter_class = jvm->find_class("java/io/StringWriter");
-static object printwriter_class = jvm->find_class("java/io/PrintWriter");
+#define FINDCLASS(X) (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0))
+
+static object servlet_ifc = FINDCLASS("javax/servlet/Servlet");
+static object singlethread_ifc = FINDCLASS("javax/servlet/SingleThreadModel");
+static object class_class = FINDCLASS("java/lang/Class");
+static object classloader_class = FINDCLASS("java/lang/ClassLoader");
+static object classloader2_class = FINDCLASS("se/idonex/servlet/ClassLoader");
+static object config_class = FINDCLASS("se/idonex/servlet/ServletConfig");
+static object context_class = FINDCLASS("se/idonex/servlet/RoxenServletContext");
+static object request_class = FINDCLASS("se/idonex/servlet/ServletRequest");
+static object response_class = FINDCLASS("se/idonex/servlet/ServletResponse");
+static object stream_class = FINDCLASS("se/idonex/servlet/HTTPOutputStream");
+static object dictionary_class = FINDCLASS("java/util/Dictionary");
+static object throwable_class = FINDCLASS("java/lang/Throwable");
+static object stringwriter_class = FINDCLASS("java/io/StringWriter");
+static object printwriter_class = FINDCLASS("java/io/PrintWriter");
 static object new_instance = class_class->get_method("newInstance",
 						     "()Ljava/lang/Object;");
 static object load_class = classloader_class->get_method("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
