@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 inherit "module";
 
-constant cvs_version = "$Id: language.pike,v 1.1 2001/10/01 16:23:23 nilsson Exp $";
+constant cvs_version = "$Id: language.pike,v 1.2 2002/11/11 01:19:18 mani Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -83,7 +83,7 @@ void create()
 
   defvar( "configp", 1, "Use config (uses prestate otherwise).",
           TYPE_FLAG,
-          "If set the users chooen language will be stored using Roxens "
+          "If set the users chooen language will be stored using ChiliMoons "
           "which in turn will use a Cookie stored in the browser, if "
           "possible. Unfortunatly Netscape may not reload the page when the "
           "language is changed using Cookies, which means the end-users "

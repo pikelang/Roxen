@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 // A somewhat more secure version of the normal filesystem. This
 // module user regular expressions to regulate the access of files.
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.29 2002/06/14 10:34:58 nilsson Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.30 2002/11/11 01:19:18 mani Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -13,16 +13,16 @@ inherit "modules/filesystems/filesystem";
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "File systems: Secure file system";
-constant module_doc  =
-("This is a file system module that allows for more fine-grained control\n"
- "over the Roxen's built-in module security. Instead of just having security\n"
- "pattern for the whole module it is possible to create several patterns.\n"
- "Glob patterns are used to decide which parts of the file system each\n"
- "pattern affects.\n"
- "\n"
- "<p>The module also supports form based authentication. The same type of\n"
- "access control can be achieved, in a different way, by using the\n"
- "<i>.htaccess support</i> module.\n");
+constant module_doc  = #!
+This is a file system module that allows for more fine-grained control
+over the ChiliMoons built-in module security. Instead of just having
+security pattern for the whole module it is possible to create several
+patterns. Glob patterns are used to decide which parts of the file system
+each pattern affects.
+
+<p>The module also supports form based authentication. The same type of
+access control can be achieved, in a different way, by using the
+<i>.htaccess support</i> module.";
 constant module_unique = 0;
 
 array seclevels = ({ });
