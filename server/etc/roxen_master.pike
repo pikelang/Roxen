@@ -10,7 +10,7 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.13 1997/01/18 23:14:04 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.14 1997/01/18 23:43:04 grubba Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -166,6 +166,7 @@ void _main(string *argv, string *env)
 {
   int i;
   object script;
+  object tmp;
   string a,b;
   string *q;
 
@@ -188,7 +189,31 @@ void _main(string *argv, string *env)
 
 //  clone(compile_file(pike_library_path+"/simulate.pike"));
 
-  if(!sizeof(argv))
+  tmp=new(pike_library_path+"/include/getopt.pre.pike");
+
+  foreach(tmp->find_all_options(argv,({
+    ({"version",tmp->NO_ARG,({"-v","--version"})}),
+      ({"ignore",tmp->HAS_ARG,"-ms"}),
+	({"ignore",tmp->MAY_HAVE_ARG,"-Ddatp",0,1})}),1),
+	  mixed *opts)
+    {
+      switch(opts[0])
+      {
+      case "version":
+	werror(version() + " Copyright (C) 1994-1997 Fredrik Hübinette\n");
+	werror("Pike comes with ABSOLUTELY NO WARRANTY; This is free software and you are\n");
+	werror("welcome to redistribute it under certain conditions; Read the files\n");
+	werror("COPYING and DISCLAIMER in the Pike distribution for more details.\n");
+	exit(0);
+      case "ignore":
+	break;
+      }
+    }
+
+  argv=tmp->get_args(argv,1)[1..];
+  destruct(tmp);
+
+   if(!sizeof(argv))
   {
     werror("Usage: pike [-driver options] script [script arguments]\n");
     exit(1);
