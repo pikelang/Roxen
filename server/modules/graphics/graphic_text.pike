@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.251 2000/09/28 02:17:05 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.252 2000/09/29 07:39:24 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1008,7 +1008,7 @@ string do_gtext(mapping arg, string c, RequestID id)
     }
 
     arg->name=sn;
-    string res="\n<script>\n";
+    string res="<script>\n";
     if(!id->misc->gtext_magic_java) {
       res += "function i(ri,hi,txt)\n"
         "{\n"
@@ -1023,7 +1023,7 @@ string do_gtext(mapping arg, string c, RequestID id)
       res+
       " "+sn+"l = new Image("+arg->width+", "+arg->height+");"+sn+"l.src = \""+arg->src+"\";\n"
       " "+sn+"h = new Image("+arg->width+", "+arg->height+");"+sn+"h.src = \""+query_internal_location()+num2+ext+"\";\n"
-      "</script>\n"+
+      "</script>"+
       "<a"+ea+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
       +"onMouseover=\"i('"+sn+"',"+sn+"h,"+((strlen(magic) && magic != "magic")?
