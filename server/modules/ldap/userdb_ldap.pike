@@ -6,7 +6,7 @@ Roxen 2.2+ LDAP directory user database module
 
 */
 
-//#define LDAPAUTHDEBUG
+#define LDAPAUTHDEBUG
 #ifdef LDAPAUTHDEBUG
 #define DEBUGLOG(s) werror("LDAPuserdb: "+s+"\n")
 #else
@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.3 2001/05/24 12:01:41 hop Exp $";
+  "$Id: userdb_ldap.pike,v 1.4 2001/05/24 12:18:33 hop Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -493,6 +493,8 @@ int bind_dir(string|void userdn, string|void pass) {
     mixed err;
     string serverurl = query("CI_dir_server");
 
+    if(!connect_dir())
+      return 0;
     if(zero_type(userdn) ||		     // requested anonymous binding
        !access_mode_is_guest_or_roaming()) { // access type is "guest"/"roam."
 	bindpwd = query("CI_dir_pwd");
