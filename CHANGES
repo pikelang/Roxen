@@ -14,7 +14,7 @@ o The folder list module now works on pages with query variables
   (foo.html?bar=baz&gaz=zonk). The non-fl related variables will be
   kept when unfolding / folding.
 
-o roxen_perror() now reports time syncronously.
+o roxen_perror() now reports time synchronously.
 
 o open() of non-existant files speeded up.
 
