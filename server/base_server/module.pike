@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.77 2000/02/09 20:18:04 nilsson Exp $ */
+/* $Id: module.pike,v 1.78 2000/02/10 03:33:29 mast Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -53,9 +53,11 @@ int module_dependencies(Configuration configuration,
                         int|void now)
 {
   if(configuration) configuration->add_modules( modules, now );
-  mixed err;
-  if (err = catch (_do_call_outs()))
-    report_error ("Error doing call outs:\n" + describe_backtrace (err));
+// Shouldn't do call outs here, since things assume call outs aren't
+// done until all modules are loaded. /mast
+//   mixed err;
+//   if (err = catch (_do_call_outs()))
+//     report_error ("Error doing call outs:\n" + describe_backtrace (err));
   return 1;
 }
 
