@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.281 2000/10/17 21:01:34 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.282 2000/10/19 08:58:14 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -549,6 +549,8 @@ class PrefLanguages {
 }
 
 class CacheKey {}
+
+#define OLD_RXML_CONFIG
 
 void things_to_do_when_not_sending_from_cache( )
 {
