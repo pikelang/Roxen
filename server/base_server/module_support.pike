@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.119 2002/07/10 15:57:21 nilsson Exp $
+// $Id: module_support.pike,v 1.120 2002/09/26 22:17:41 nilsson Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -12,7 +12,7 @@ int dump( string file, program|void p );
 program my_compile_file(string file, void|int silent)
 {
   if( file[0] != '/' )
-    file = replace(getcwd()+"/"+file, "//", "/");
+    file = combine_path(getcwd(), file);
 
   program p;
 
