@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.468 2000/03/27 04:14:23 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.469 2000/03/28 16:02:27 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3132,9 +3132,10 @@ void initiate_argcache()
   e = catch( argcache = ArgCache(na,cp,id) );
   if( e )
   {
-    report_error( "Failed to initialize the global argument cache:\n"
+    report_fatal( "Failed to initialize the global argument cache:\n"
                   + (describe_backtrace( e )/"\n")[0]+"\n");
-    report_debug( describe_backtrace( e ) );
+    sleep(10);
+    exit(1);
   }
   add_constant( "roxen.argcache", argcache );
   report_debug("Done [%.2fms]\n", (gethrtime()-t)/1000.0);
