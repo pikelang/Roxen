@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.141 2000/02/20 04:30:10 mast Exp $
+ * $Id: rxml.pike,v 1.142 2000/02/20 09:04:12 mast Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -345,6 +345,7 @@ array|string call_tag(RXML.PXml parser, mapping args, string|function rf)
   }
 
   if(stringp(rf)) return rf;
+  if (!rf) return 0;
 
   TRACE_ENTER("tag &lt;" + tag + "&gt;", rf);
 
@@ -406,6 +407,7 @@ array(string)|string call_container(RXML.PXml parser, mapping args,
   }
 
   if(stringp(rf)) return rf;
+  if (!rf) return 0;
 
   TRACE_ENTER("container &lt;"+tag+"&gt", rf);
 
