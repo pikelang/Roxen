@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_sucker.pike,v 1.4 2001/04/18 23:31:55 nilsson Exp $";
+constant cvs_version = "$Id: whitespace_sucker.pike,v 1.5 2001/04/19 02:02:31 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Sucker";
@@ -12,6 +12,10 @@ void create() {
 
   defvar("comment", Variable.Flag(0, 0, "Strip HTML comments",
 				  "Removes all &lt;!-- --&gt; type of comments") );
+  defvar("verbatim", Variable.StringList( ({ "pre", "textarea", "script", "style" }),
+					  0, "Verbatim tags",
+					  "Whitespace stripping is not performed on the contents "
+					  "of these tags." ) );
 }
 
 int gain;
@@ -54,14 +58,11 @@ mapping filter(mapping result, RequestID id)
   || id->misc->ws_filtered++)
     return 0;
 
-  result->data = Parser.HTML()
-    ->add_containers( ([ "pre":verbatim,
-			 "textarea":verbatim,
-			 "script":verbatim,
-			 "style":verbatim ]) )
-    ->add_quote_tag("!--", query("comment")&&"", "--")
-    ->_set_data_callback( remove_consecutive_whitespace )
-    ->finish( result->data )
-    ->read();
+  Parser.HTML parser = Parser.HTML();
+  foreach(query("verbatim"), string tag)
+    parser->add_container( tag, verbatim );
+  parser->add_quote_tag("!--", query("comment")&&"", "--");
+  parser->_set_data_callback( remove_consecutive_whitespace );
+  result->data = parser->finish( result->data )->read();
   return result;
 }
