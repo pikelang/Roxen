@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.101 2004/05/05 15:39:47 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.102 2004/05/05 15:45:06 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -859,6 +859,12 @@ class RequestID
       case "word":
 	// Resource
 	resource = symbol[1];
+	// Normalize.
+	// FIXME: Check that the protocol and server parts refer
+	//        to this server.
+	// FIXME: Support for servers mounted on subpaths.
+	catch { resource = Standards.URI(resource)->path; };
+	if (!sizeof(resource) || (resource[-1] != '/')) resource += "/";
 	if (!res[resource])
 	  res[resource] = ({});
 	break;
