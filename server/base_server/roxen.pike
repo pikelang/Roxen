@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.641 2001/03/05 18:58:04 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.642 2001/03/06 09:07:36 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -2770,16 +2770,19 @@ class ArgCache
 
   static int create_key( string long_key )
   {
+    int hl = hash(long_key);
     array data = db->query("SELECT id,contents FROM "+name+" WHERE hash=%d",
-			   hash(long_key));
+			   hl);
     foreach( data, mapping m )
       if( m->contents == long_key )
         return m->id;
 
     db->query( "INSERT INTO "+name+" (contents,hash,atime) VALUES "
 	       "(%s,%d,UNIX_TIMESTAMP())",
-	       long_key, hash(long_key) );
-    return db->master_sql->insert_id();
+	       long_key, hl );
+    int id = (int)db->master_sql->insert_id();
+    (plugins->create_key-({0}))( id, hl, long_key );
+    return id;
   }
 
   static int low_key_exists( string key )
@@ -2803,6 +2806,25 @@ class ArgCache
     res = Gmp.mpz( res, 256 )->digits( 36 );
     return res;
   }
+  static array plugins;
+  static void get_plugins()
+  {
+    plugins = ({});
+    foreach( ({ "../local/arg_cache_plugins", "arg_cache_plugins" }), string d)
+      if( file_stat( d  ) )
+	foreach( get_dir( d ), string f )
+	  plugins += ({ (object)(d+"/"+f)  });
+  }
+
+  static array plugin_decode_id( string id )
+  {
+    if( !plugins ) get_plugins();
+    mixed r;
+    foreach( (plugins->decode_id-({0})), function(string:array(int)) f )
+      if( r = f( id ) )
+	return r;
+    return 0;
+  }
 
   static array decode_id( string a )
   {
@@ -2813,10 +2835,7 @@ class ArgCache
     a = crypto->crypt( a );
     int i, j;
     if( sscanf( a, "%d×%d", i, j ) != 2 )
-    {
-      // plugin decode here? 
-      return 0;
-    }
+      return plugin_decode_id( a );
     return ({ i, j });
   }
   
@@ -2862,22 +2881,24 @@ class ArgCache
     }
 
     int id = create_key( data );
+    if( !plugins ) get_plugins();
     cache[ hv ] = id;
     cache[ id ] = a;
     return id;
   }
 
-  mapping lookup( string id, array|void client )
-  //! Recall a mapping stored in the cache. The optional client array
-  //! may be supplied to get an error message stating the browser name
-  //! in the event of the key not being present any more in the cache.
+  mapping lookup( string id )
+  //! Recall a mapping stored in the cache. 
   {
     if( cache[id] )  return cache[id]+([]);
-    mixed v;
     array i = decode_id( id );
     if( !i )
     {
-      // ID does not belong to this server. Add system for this here.
+      mixed res;
+      if( !plugins ) get_plugins();
+      foreach( (plugins->lookup-({0})), function f )
+	if( res = f( id ) )
+	  return res;
       return 0;
     }
     array a = low_lookup( i[0] );
@@ -2892,7 +2913,15 @@ class ArgCache
     if( v = cache[id] )
       return v;
     string q = read_args( id );
-    if(!q) error("Requesting unknown key\n");
+    if( !q )
+    {
+      mixed res;
+      if( !plugins ) get_plugins();
+      foreach( (plugins->low_lookup-({0})), function f )
+	if( res = f( id ) )
+	  return res;
+      error("Requesting unknown key\n");
+    }
     mixed data = decode_value(q);
     cache[ hash( q ) ] = id;
     cache[ id ] = data;
@@ -2902,10 +2931,13 @@ class ArgCache
   void delete( string id )
   //! Remove the data element stored under the key 'id'.
   {
+    if(!plugins) get_plugins();
+    (plugins->delete-({0}))( id );
     m_delete( cache, id );
     
     foreach( decode_id( id ), int id )
     {
+      (plugins->low_delete-({0}))( id );
       if(cache[id])
       {
 	m_delete( cache, cache[id] );
