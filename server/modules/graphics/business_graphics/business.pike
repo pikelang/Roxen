@@ -13,7 +13,7 @@
  * 
  */
 
-constant cvs_version = "$Id: business.pike,v 1.31 1997/10/17 23:27:27 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.32 1997/10/20 00:58:52 peter Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -30,13 +30,13 @@ mixed *register_module()
   return ({ 
     MODULE_PARSER|MODULE_LOCATION,
     "Business Graphics",
-      ("Draws graphs that are pleasing to the eye."
-       "<br>This module defines some tags,"
+      ("Draws graphs that are pleasing to the eye.\n"
+       "<p>This module defines a tag,\n"
        "<pre>"
-       "\n&lt;diagram&gt; (container): \n"
-       "Draws different kinds of diagrams. \n"
-       "Defines the following attributes: \n"
-       " help            Displays this text.\n"
+       "\n&lt;diagram&gt; (container): <br>\n"
+       "Draws different kinds of diagrams. <br>\n"
+       "Defines the following attributes: <br>\n"
+       " help            Displays this text.<br>\n"
        " type=           { sumbars | normsumbars | linechart | barchart | piechart | graph }\n"
        "                 Mandatory!"
        " background=     Takes the filename of a ppm image as input.\n"
@@ -93,19 +93,11 @@ void create()
 
 string itag_xaxis(string tag, mapping m, mapping res)
 {
-  if(m->name)  res->xname = m->name;
-  
+  if(m->name)  res->xname = m->name;  
   if(m->start) res->xstart = m->start;
-  else         res->xstart = "foobar";
-
   if(m->stop)  res->xstop = m->stop;
-  else         res->xstop = "foobar";
-
   if(m->quantity) res->xstor = m->quantity;
-  else            res->xstor = "";
-
   if(m->unit) res->xunit = m->unit;
-  else        res->xunit = "";
 
   return "";
 }
@@ -113,23 +105,15 @@ string itag_xaxis(string tag, mapping m, mapping res)
 string itag_yaxis(string tag, mapping m, mapping res)
 {
   if(m->name)  res->yname = m->name;
-  
   if(m->start) res->ystart = m->start;
-  else         res->ystart = "foobar";
-
   if(m->stop)  res->ystop = m->stop;
-  else         res->ystop = "foobar";
-
   if(m->quantity) res->ystor = m->quantity;
-  else            res->ystor = "";
-
   if(m->unit) res->yunit = m->unit;
-  else        res->yunit = "";
 
   return "";
 }
 
-/* Handle <xdatanames> and <ydatanames> */
+/* Handle <xnames> and <ynames> */
 string itag_datanames(string tag, mapping m, string contents,
 		      mapping res)
 {
@@ -143,6 +127,25 @@ string itag_datanames(string tag, mapping m, string contents,
       res->xnames = contents/sep;
     else
       res->ynames = contents/sep;
+  }
+
+  return "";
+}
+
+/* Handle <xvalues> and <yvalues> */
+string itag_values(string tag, mapping m, string contents,
+		   mapping res)
+{
+  string sep=SEP;
+  if(m->separator)
+    sep=m->separator;
+  
+  if( contents-" " != "" )
+  {
+    if(tag=="xvalues")
+      res->xvalues = contents/sep;
+    else
+      res->yvalues = contents/sep;
   }
 
   return "";
@@ -162,41 +165,37 @@ string itag_data(mapping tag, mapping m, string contents,
   if(m->parse)
     contents = parse_rxml( contents, id );
 
-  if( 1 )
+  contents = contents - " ";
+  array lines = filter( contents/linesep, sizeof );
+  array foo = ({});
+  array bar = ({});
+  int maxsize=0;
+  
+  foreach( lines, string entries )
   {
-    contents = contents - " ";
-    array lines = filter( contents/linesep, sizeof );
-    array foo = ({});
-    array bar = ({});
-    int maxsize=0;
-
-    foreach( lines, string entries )
+    foreach( filter( ({ entries/sep - ({""}) }), sizeof ), array item)
     {
-      foreach( filter( ({ entries/sep - ({""}) }), sizeof ), array item)
-      {
-	foreach( item, string gaz )
-	  foo += ({ (float)gaz });
-      }
-      if (sizeof(foo)>maxsize)
-	maxsize=sizeof(foo);
-      bar += ({ foo });
-      foo = ({});
+      foreach( item, string gaz )
+	foo += ({ gaz });
     }
-
-    if (m->form == "column")
-    {
-      for(int i=0; i<sizeof(bar); i++)
-	if (sizeof(bar[i])<maxsize)
-	  bar[i]+=allocate(maxsize-sizeof(bar[i]));
-      
-      array bar2=allocate(maxsize);
-      for(int i=0; i<maxsize; i++)
-	bar2[i]=column(bar, i);
-      res->data=bar2;
-    }
-    else
-      res->data=bar;
+    if (sizeof(foo)>maxsize)
+      maxsize=sizeof(foo);
+    bar += ({ foo });
+    foo = ({});
   }
+  
+  if (m->form == "column")
+  {
+    for(int i=0; i<sizeof(bar); i++)
+      if (sizeof(bar[i])<maxsize)
+	bar[i]+=allocate(maxsize-sizeof(bar[i]));
+    
+    array bar2=allocate(maxsize);
+    for(int i=0; i<maxsize; i++)
+      bar2[i]=column(bar, i);
+    res->data=bar2;
+  } else
+    res->data=bar;
 
   return "";
 }
@@ -205,8 +204,7 @@ string itag_colors(mapping tag, mapping m, string contents,
 		   mapping res)
 {
   string sep=SEP;
-  if(m->separator)
-    sep=m->separator;
+  if(m->separator) sep=m->separator;
   
   res->colors = map(contents/sep, parse_color); 
 
@@ -235,13 +233,32 @@ string syntax( string error )
 mapping url_cache = ([]);
 string quote(string in)
 {
+  string option;
+  if(option = url_cache[in]) return option;
+  /*
   object g;
-  string res;
-
-  g=Gz;
-  res=MIME.encode_base64(g->deflate()->deflate(in), 1);
-
-  return res;
+  if (sizeof(indices(g=Gz))) {
+    option=MIME.encode_base64(g->deflate()->deflate(in), 1);
+  } else {
+  */
+    option=MIME.encode_base64(in, 1);
+    //  }
+  //  if(search(in,"/")!=-1) return url_cache[in]=option;
+  string res="$";	// Illegal in BASE64
+  for(int i=0; i<strlen(in); i++)
+    switch(in[i])
+    {
+     case 'a'..'z':
+     case 'A'..'Z':
+     case '0'..'9':
+     case '.': case ',': case '!':
+      res += in[i..i];
+      break;
+     default:
+      res += sprintf("%%%02x", in[i]);
+    }
+  if(strlen(res) < strlen(option)) return url_cache[in]=res;
+  return url_cache[in]=option;
 }
 
 string tag_diagram(string tag, mapping m, string contents,
@@ -309,30 +326,27 @@ string tag_diagram(string tag, mapping m, string contents,
   
   if(res->type == "sumbars")
     if(res->subtype!="norm")
-      res->subtype=0;         /* #%¤%& Hedda! Fixa ett riktigt namn! 
-			        - Näe! /Hedda                         */
 
   parse_html(contents,
 	     ([ "xaxis":itag_xaxis,
 		"yaxis":itag_yaxis ]),
-	     ([ "xdatanames":itag_datanames,
-		"ydatanames":itag_datanames,
+	     ([ "xnames":itag_datanames,
+		"ynames":itag_datanames,
+		"xvalues":itag_values,
+		"yvalues":itag_values,
 		"colors":itag_colors,
-		"legend":itag_legendtext ]), res );
+		"legend":itag_legendtext ]), 
+	     res );
 
   parse_html(contents, ([]), ([ "data":itag_data ]), res, id );
 
   if( res->data == ({ }) )
     return "<hr noshade><h3>No data for the diagram</h3><hr noshade>";
 
-  if(!res->colors)
-    res->colors = 0;
-
   res->bg = parse_color(defines->bg || "#e0e0e0");
   res->fg = parse_color(defines->fg || "black");
   
   if(m->center) res->center = (int)m->center;
-  else res->center = 0;
 
   if(m["3d"])
   {
@@ -346,12 +360,12 @@ string tag_diagram(string tag, mapping m, string contents,
     if(res->type=="pie") res->drawtype = "2D";
     else res->drawtype = "linear";
       
-  if(m->orientation && m->orientation[0..3] == "vert")
+  if(m->orient && m->orient[0..3] == "vert")
     res->orientation = "vert";
   else res->orientation="hor";
 
   if(m->fontsize) res->fontsize = (int)m->fontsize;
-  else res->fontsize=32;
+  else res->fontsize=16;
 
   if(m->legendfontsize) res->legendfontsize = (int)m->legendfontsize;
   else res->legendfontsize = res->fontsize;
@@ -362,32 +376,33 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->labelcolor) res->labelcolor = parse_color(m->labelcolor);
   else res->labelcolor=({0,0,0});
   
-  if(m->axiscolor) res->axiscolor=parse_color(m->axiscolor);
-  else res->axiscolor=({0,0,0});
+  if(m->linecolor) res->axcolor=parse_color(m->axcolor);
+  else res->axcolor=({0,0,0});
   
-  if(m->linewidth) res->linewidth=(float)m->linewidth;
-  else res->linewidth=2.2;
+  if(m->linewidth) res->linewidth=m->linewidth;
+  else res->linewidth="2.2";
 
-  if(m->sw) res->sw = 1;
-  else res->sw = 0;
+  if(m->rotate) res->rotate = m->rotate;
+
+  if(m->grey) res->bw = 1;
 
   if(m->width) {
     if((int)m->width > query("maxwidth"))
       m->width  = (string)query("maxwidth");
     if((int)m->width < 100)
       m->width  = "100";
-  } else if(!m->image)
+  } else if(!res->image)
     m->width = "350";
 
   if(m->height) {  
-    if((int)m->hight > query("maxheight"))
+    if((int)m->height > query("maxheight"))
       m->height = (string)query("maxheight");
-    if((int)m->hight < 100)
+    if((int)m->height < 100)
       m->height = "100";
-  } else if(!m->image)
+  } else if(!res->image)
     m->height = "250";
 
-  if(!m->image)
+  if(!res->image)
   {
     if(m->width) res->xsize = (int)m->width;
     else         res->xsize = 400; // A better algo for this is coming.
@@ -400,15 +415,16 @@ string tag_diagram(string tag, mapping m, string contents,
   }
 
   if(m->tone) res->tone = 1;
-  else res->tone = 0;
 
   if(!res->xnames)
     if(res->xname) res->xnames = ({ res->xname });
-    else res->xnames = 0;
       
   if(!res->ynames)
     if(res->yname) res->ynames = ({ res->yname });
-    else res->ynames = 0;
+
+  if(m->gridwidth) res->gridwidth = m->gridwidth;
+  if(m->vertgrid) res->vertgrid = 1;
+  if(m->horgrid) res->horgrid = 1;
 
   m_delete( m, "size" );
   m_delete( m, "type" );
@@ -445,6 +461,11 @@ object PPM(string fname, object id)
   return image()->fromppm(q);
 }
 
+float floatify( string in )
+{
+  return (float)in;
+}
+
 mapping find_file(string f, object id)
 {
   program Bars  = (program)"create_bars";
@@ -459,12 +480,33 @@ mapping find_file(string f, object id)
 
   mapping res;
 
+  if (sizeof(f)) {
+    object g;
+    if (f[0] == '$') {	// Illegal in BASE64
+      f = f[1..];
+      //    } else if (sizeof(indices(g=Gz))) {
+      /* Catch here later */
+      //      f = g->inflate()->inflate(MIME.decode_base64(f));
+    } else if (sizeof(f)) {
+      /* Catch here later */
+      f = MIME.decode_base64(f);
+    }
+    //perror("res-post: %O\n", decode_value(f));
+    res = decode_value(f);  
+  } else
+    perror( "Diagram: Fatal Error, f: %s\n", f );
+
+  perror("f-res: %O\n", res);
+
+  /*
   if (sizeof(f))
   {
     object g=Gz;
     catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
+    perror("f-data: %O\n", f);
     res = decode_value(f);  
-    /*FIXME
+
+    FIXME
 Rad 466 returnerar:
 Error: Internal server error.
 
@@ -476,12 +518,10 @@ handle_request() in line 814 in protocols/http.pike
 handler_thread(8) in line 201 in /home/peter/hack/roxen/server/base_server/roxen.pike
 
 
-    */
   }
   else
     return 0;
-
-  //  perror("f-data: %O\n", res->data);
+    */
 
   res->labels=      ({ res->xstor, res->ystor, res->xunit, res->yunit });
 
@@ -491,15 +531,21 @@ handler_thread(8) in line 201 in /home/peter/hack/roxen/server/base_server/roxen
 
   if(res->image)
   {
-    res->bg = 0;
+    m_delete( res, "bg" );
     res->image = PPM(res->image, id);
   }
 
-  if(res->xstart > res->xstop)
-    res->xstart = 0;
+  if(res->xstart > res->xstop) m_delete( res, "xstart" );
+  if(res->ystart > res->ystop) m_delete( res, "ystart" );
 
-  if(res->ystart > res->ystop)
-    res->ystart = 0;
+  // encode_value does not support negative floats.
+  array tmp2 = ({});
+  foreach(res->data, array tmp)
+  {
+    tmp = Array.map( tmp, floatify );
+    tmp2 += ({ tmp });
+  }
+  res->data = tmp2;
 
   diagram_data=(["type":      res->type,
 		 "subtype":   res->subtype,
@@ -519,10 +565,17 @@ handler_thread(8) in line 201 in /home/peter/hack/roxen/server/base_server/roxen
 		 "data":      res->data,
 		 "datacolors":res->colors,
 		 "fontsize":  res->fontsize,
-		 "xnames":    res->xnames,
-		 "ynames":    res->ynames,
 
-		 "axcolor":   res->axiscolor,
+		 "xnames":              res->xnames,
+		 "values_for_xnames":   res->xvalues,
+		 "ynames":              res->ynames,
+		 "values_for_ynames":   res->yvalues,
+
+		 "axcolor":   res->axcolor,
+
+		 "gridwidth": res->gridwidth,
+		 "vertgrid":  res->vertgrid,
+		 "horgrid":   res->horgrid,
 
 		 "labels":         res->labels,
 		 "labelsize":      res->labelsize,
@@ -530,14 +583,21 @@ handler_thread(8) in line 201 in /home/peter/hack/roxen/server/base_server/roxen
 		 "legend_texts":   res->legend_texts,
 		 "labelcolor":     res->labelcolor,
 
-		 "linewidth": res->linewidth,
+		 "linewidth": (float)res->linewidth,
 		 "tone":      res->tone,
 		 "center":    res->center,
+		 "rotate":    res->rotate,
 		 "image":     res->image,
 
-		 "sw":       res->sw,
-		 "sv":       res->sw
+		 "bw":       res->bw,
   ]);
+
+  if(!res->xstart)  m_delete( diagram_data, "xminvalue" );
+  if(!res->xstop)   m_delete( diagram_data, "xmaxvalue" );
+  if(!res->ystart)  m_delete( diagram_data, "yminvalue" );
+  if(!res->ystop)   m_delete( diagram_data, "ymaxvalue" );
+  if(!res->bg)      m_delete( diagram_data, "bgcolor" );
+  if(!res->rotate)  m_delete( diagram_data, "rotate" );
 
   object(Image.image) img;
 
