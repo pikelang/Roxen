@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.27 2000/10/12 16:12:00 nilsson Exp $
+// $Id: module.pmod,v 1.28 2000/10/19 12:14:20 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -69,7 +69,7 @@ class Variable
   void set_flags( int flags )
     //! Set the flags for this variable.
     //! Flags is a bitwise or of one or more of 
-    //! 
+    //!
     //! VAR_EXPERT         Only for experts 
     //! VAR_MORE           Only visible when more-mode is on (default on)
     //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
