@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.9 2000/09/10 16:35:08 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.10 2000/09/14 00:14:05 nilsson Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_TAG;
@@ -23,8 +23,12 @@ class TagVForm {
     constant ARGS=(< "type", "min", "max", "scope", "min", "max", "trim"
 		     "regexp", "glob", "minlength", "maxlength", "case",
 		     "mode", "fail-if-failed", "ignore-if-false",
-		     "ignore-if-failed", "ignore-if-verified" >);
+		     "ignore-if-failed", "ignore-if-verified", "optional" >);
 
+    constant forbidden = ({"\\", ".", "[", "]", "^",
+			   "$", "(", ")", "*", "+", "|"});
+    constant allowed = ({"\\\\", "\\.", "\\[", "\\]", "\\^",
+			 "\\$", "\\(", "\\)", "\\*", "\\+", "\\|"});
     class Frame {
       inherit RXML.Frame;
       string scope_name;
@@ -91,16 +95,20 @@ class TagVForm {
 	  var=Variable.VerifiedText(args->value||"");
 	case "string":
 	default:
-	  if(!var) var=Variable.VerifiedString(args->value||"");
+	  var=Variable.VerifiedString(args->value||"");
 	  if(args->regexp) var->add_regexp(args->regexp);
 	  if(args->glob) var->add_glob(args->glob);
 	  if(args->minlength) var->add_minlength((int)args->minlength);
 	  if(args->maxlength) var->add_maxlength((int)args->maxlength);
-	  if(args->case=="upper") var->add_upper();
-	  if(args->case=="lower") var->add_lower();
+
+	  if(args->case=="upper")
+	    var->add_upper();
+	  else if(args->case=="lower")
+	    var->add_lower();
 
 	  // Shortcuts
-	  if(args->equal) var->add_glob(args->equal); // Should use regexp
+	  if(args->equal)
+	    var->add_regexp( "^" + replace(args->equal, forbidden, allowed) + "$" );
 	  if(args->is=="empty") var->add_glob("");
 	  break;
 	}
@@ -149,6 +157,7 @@ class TagVForm {
 	if(show_err)
 	  failed_result(id);
 	else
+	  // Clear args->warning here?
 	  verified_result(id);
 	id->misc->vform_ok = 0;
 	return 0;
@@ -166,7 +175,7 @@ class TagVForm {
 	case "before":
 	case "after":
 	default:
-	  result = var->render_form(id, args);
+	  result = RXML.get_var("input");
 	}
       }
 
@@ -183,13 +192,13 @@ class TagVForm {
 	  result = content + var->render_form(id, args);
 	case "after":
 	default:
-	  result = var->render_form(id, args) + content;
+	  result = RXML.get_var("input") + content;
 	}
       }
     }
   }
 
-  class TagVerify {
+  class TagVSelect {
     inherit RXML.Tag;
     constant name = "vselect";
     mapping(string:RXML.Type) req_arg_types = ([ "name":RXML.t_text(RXML.PEnt) ]);
@@ -315,7 +324,7 @@ class TagVForm {
   RXML.TagSet internal = RXML.TagSet("TagVForm.internal", ({ TagVInput(),
 							     TagReload(),
 							     TagClear(),
-							     TagVerify(),
+							     TagVSelect(),
 							     TagIfVFailed(),
 							     TagIfVVerified(),
 							     TagVerifyFail(),
@@ -356,13 +365,34 @@ class TagVForm {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "vform":({ #"<desc cont>Creates a self verifying form.</desc>
+  "vform":({ #"<desc cont>Creates a self verifying form. You can use all stadard HTML-input
+widgets in this container as well.
+<ex type=box>
+<vform>
+  <vinput name='mail' type='email'>&_.warning;</vinput>
+  <input type='hidden' name='user' value='&form.userid:' />
+  <input type='submit' />
+</form>
+<then><redirect to='other_page.html' /></then>
+<else>No, this form is still not valid</else>
+</ex>
+</desc>
 <attr name=hide-if-verified>Hides the form if it is verified</attr>",
 
-	     ([ "reload":"<desc tag>Reload the page without variable checking.</desc>",
-		"clear":"<desc tag>Resets all the widgets.</desc>",
-		"verify":"<desc cont></desc>",
-		"vinput": ({ #"<desc cont>Create a self verifying input widget.</desc>
+	     ([ "reload":"<desc tag>Reload the page without variable checking.</desc>"
+		"<attr name=value value=string>The text on the button.</attr>",
+		"clear":"<desc tag>Resets all the widgets to their initial values.</desc>"
+		"<attr name=value value=string>The text in the button.</attr>",
+		"vselect":"<desc cont>Mail stewa@roxen.com for a description</desc>",
+		"verify-fail":"<desc tag>If put in a vform tag, the vform will always fail."
+		" This is useful e.g. if you put the verify-fail tag in an if tag.</desc>",
+		// It's a tagdoc bug that these, locally defined if-plugins does not show up
+		// in the online manual.
+		"if#vform-failed":#"<desc plugin>If used with empty arguemnt this will be
+true if the complete form is failed, otherwise only if the named field failed.</desc>",
+		"if#vform-verified":#"<desc plugin>If used with empty arguemnt this will be
+true if the complete form so far is verified, otherwise only if the named field was successfully verified.</desc>",
+		"vinput": ({ #"<desc cont>Creates a self verifying input widget.</desc>
 <attr name=fail-if-failed value=name>
   The verification of this variable will always fail if the verification of a named
   variable also failed.
@@ -376,17 +406,30 @@ constant tagdoc=([
 <attr name=ignore-if-verified value=name>
   Don't verify if the verification of a named variable succeeded.
 </attr>
+<attr name=name value=string required>
+  The name of the variable that should be set.
+</attr>
+<attr name=value value=anything>
+  The default value of this input widget.
+</attr>
+<attr name=scope value=name default=vinput>
+  The name of the scope that is created in this tag.
+</attr>
 <attr name=trim>
   Trim the variable before verification.
 </attr>
+<attr name=type value=int|float|email|date|text|string required>
+  Set the type of the data that should be inputed, and hence what widget should be used
+  and how the input should be verified.
+</attr>
 <attr name=minlength value=number>
-  Verify that the variable has at least this many characters.
+  Verify that the variable has at least this many characters. Only available when using the type string.
 </attr>
 <attr name=maxlength value=number>
-  Verify that the variable has at most this many characters.
+  Verify that the variable has at most this many characters. Only available when using the type string.
 </attr>
-<attr name=is value=mail|int|float|upper|lower|upper-alpha|lower-alpha|upper-alpha-num|lower-alpha-num>
-  Verify that the variable is of a certain kind.
+<attr name=is value=empty>
+  Verify that the variable is empty. Pretty useless...
 </attr>
 <attr name=glob value=pattern>
   Verify that the variable match a certain glob pattern.
@@ -394,22 +437,39 @@ constant tagdoc=([
 <attr name=regexp value=pattern>
   Verify that the variable match a certain regexp pattern.
 </attr>
+<attr name=case value=upper|lower>
+  Verify that the variable is all uppercased (or all lowercased).
+</attr>
+<attr name=equal value=string>
+  Verify that the variable is equal to a given string. Pretty useless...
+</attr>
 <attr name=mode value=before|after|complex>
   Select how to treat the contents of the vinput container. Before puts the contents before the
   input tag, and after puts it after, in the event of failed verification. If complex, use one
   tag <tag>verified</tag> for what should be outputted in the event of successful verification
   tag <tag>failed</tag> for every other event.
+
+<ex type=box>
+<table>
+<tr><td>upper</td><vinput name='a' case='upper' mode='complex'>
+<verified><td bgcolor=green></verified>
+<failed><td bgcolor=red></failed>&_.input:none;</td>
+</vinput></tr>
+<tr><td><input type='submit' /></td></tr>
+</table>
+</ex>
 </attr>
 <attr name=min value=number>
-  Check that the number is at least the given.
+  Check that the number is at least the given. Only available when using the type int or float.
 </attr>
 <attr name=max value=number>
-  Check that the number is at most the given.
+  Check that the number is at most the given. Only available when using the type int or float.
 </attr>
-<attr name=filter value=string>
-  Cehck that the variable only consists of the characters given in the filter string.
+<attr name=optional>
+  Indicates that the variable should only be tested if it does contain something.
 </attr>
 ", ([ "&_.input;":"<desc ent>The input tag, in complex mode</desc>",
+      "&_.warning;":"<desc ent>May contain a explaination of why the test failed</desc>",
       "verified":"<desc cont>The content will only be shown if the variable was verfied, in complex mode</desc>",
       "failed":"<desc cont>The content will only be shown if the variable failed to verify, in complex mode</desc>"
 ]) })
