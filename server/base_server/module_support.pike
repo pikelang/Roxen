@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.87 2001/03/12 15:11:54 anders Exp $
+// $Id: module_support.pike,v 1.88 2001/03/15 23:30:37 per Exp $
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
@@ -352,39 +352,40 @@ class ModuleInfo( string sname, string filename )
     return 0;
   }
 
+
+  static constant nomods = (< "pike-modules", "CVS" >);
+
   int rec_find_module( string what, string dir )
   {
-    array dirlist = (r_get_dir(dir) || ({})) - ({"CVS"});
+    array dirlist = r_get_dir( dir );
 
-    if( (search( dirlist, ".nomodules" ) != -1) ||
-        (search( dirlist, ".no_modules" ) != -1) )
+    if( sizeof( dirlist & ({ ".nomodules", ".no_modules" }) ) )
       return 0;
 
     foreach( dirlist, string file )
       catch
       {
-        if( r_file_stat( dir+file )[ ST_SIZE ] == -2
-            && file != "." && file != ".." )
+        if( file[0] != '.' &&
+	    file_stat( dir+file )->isdir &&
+	    !nomods[file] )
           if( rec_find_module( what, dir+file+"/" ) )
             return 1;
 	  else
 	    continue;
 
         if( strlen( file ) < 3 )
-          continue;
-        if( file[-1] == '~' )
-          continue;
-        if( file[-1] == 'o' && file[-2] == '.')
+	  continue;
+        if( (< '~','#' >)[file[-1]] )
           continue;
 
         if( strip_extention(file) == what )
         {
-          if( (search( file, ".pike" ) == strlen(file)-5 ) ||
-              (search( file, ".so" ) == strlen(file)-3 ) ||
-              (search( file, ".jar" ) == strlen(file)-4 ) ||
-              (search( file, ".class" ) == strlen(file)-6 ) )
+	  
+	  if( (< "pike", "so", "jar", "class" >)[ extension( file ) ] )
           {
-            Stdio.File f = Stdio.File( dir+file, "r" );
+            Stdio.File f = Stdio.File();
+	    if( !f->open( dir+file, "r" ) )
+	      throw( "Failed to open "+dir+file+"\n");
             if( (f->read( 4 ) != "#!NO" ) )
               if( init_module( dir+file ) )
                 return 1;
@@ -482,7 +483,9 @@ array rec_find_all_modules( string dir )
           if( (f->read( 4 ) != "#!NO" ) )
             modules |= ({ strip_extention( file ) });
         }
-        else if( r_file_stat( dir+file )[ ST_SIZE ] == -2 )
+        else if( file_stat( dir+file )->isdir &&
+		 (file != "pike-modules") &&
+		 (file != "CVS") )
           modules |= rec_find_all_modules( dir+file+"/" );
       };
   };
@@ -490,10 +493,12 @@ array rec_find_all_modules( string dir )
 }
 
 array(ModuleInfo) all_modules_cache;
+array(string) all_pike_module_cache;
 
 void clear_all_modules_cache()
 {
   all_modules_cache = 0;
+  all_pike_module_cache = 0;
   master()->clear_compilation_failures();
   foreach( values( modules ), RoxenModule o )
     if( !o || !o->check() )
@@ -505,6 +510,14 @@ array(ModuleInfo) all_modules()
   if( all_modules_cache ) 
     return all_modules_cache;
 
+  werror("Searching for pike-modules directories ... ");
+  int t = gethrtime();
+  foreach( find_all_pike_module_directories( ), string d )
+    master()->add_module_path( d );
+  werror(" Done [%dms]\n", (gethrtime()-t)/1000 );
+
+  werror("Searching for roxen modules ... ");
+  t = gethrtime();
   if( !modules )
   {
     modules = ([]);
@@ -515,10 +528,36 @@ array(ModuleInfo) all_modules()
 
   foreach( roxenp()->query( "ModuleDirs" ), string dir )
     possible |= rec_find_all_modules( dir );
+
   map( possible, find_module, 1 );
   array(ModuleInfo) tmp = values( modules ) - ({ 0 });
   sort( tmp->get_name(), tmp );
+  werror(" Done [%dms]\n", (gethrtime()-t)/1000 );
+
   return all_modules_cache = tmp;
+}
+
+
+array(string) find_all_pike_module_directories()
+{
+  if( all_pike_module_cache ) return all_pike_module_cache;
+
+  array(string) recurse( string dir )
+  {
+    array res = ({});
+    foreach( get_dir( dir ), string s )
+      if( file_stat( combine_path( dir, s ) )->isdir )
+	if( s == "pike-modules" )
+	  res += ({ dir });
+	else if( s != "CVS" )
+	  res += recurse( combine_path( dir, s ) );
+    return res;
+  };
+
+  all_pike_module_cache = ({});
+  foreach( roxenp()->query( "ModuleDirs" ), string dir )
+    all_pike_module_cache += recurse( dir );
+  return all_pike_module_cache;
 }
 
 ModuleInfo find_module( string name, int|void noforce )
