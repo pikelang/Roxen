@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.97 1999/05/24 05:16:45 peter Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.98 1999/05/24 06:08:02 peter Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -943,98 +943,84 @@ string roxen_encode( string val, string encoding )
   switch (encoding) {
    case "none":
    case "":
-     break;
+     return val;
    
    case "http":
      // HTTP encoding.
-     val = http_encode_string (val);
-     break;
+     return http_encode_string (val);
      
    case "cookie":
      // HTTP cookie encoding.
-     val = http_encode_cookie (val);
-     break;
+     return http_encode_cookie (val);
      
    case "url":
      // HTTP encoding, including special characters in URL:s.
-     val = http_encode_url (val);
-     break;
+     return http_encode_url (val);
        
    case "html":
      // For generic html text and in tag arguments. Does
      // not work in RXML tags (use dtag or stag instead).
-     val = html_encode_string (val);
-     break;
+     return html_encode_string (val);
      
    case "dtag":
      // Quote quotes for a double quoted tag argument. Only
      // for internal use, i.e. in arguments to other RXML tags.
-     val = replace (val, "\"", "\"'\"'\"");
-     break;
+     return replace (val, "\"", "\"'\"'\"");
      
    case "stag":
      // Quote quotes for a single quoted tag argument. Only
      // for internal use, i.e. in arguments to other RXML tags.
-     val = replace(val, "'", "'\"'\"'");
-     break;
+     return replace(val, "'", "'\"'\"'");
        
    case "pike":
      // Pike string quoting (e.g. for use in a <pike> tag).
-     val = replace (val,
+     return replace (val,
 		    ({ "\"", "\\", "\n" }),
 		    ({ "\\\"", "\\\\", "\\n" }));
-     break;
 
    case "js":
    case "javascript":
      // Javascript string quoting.
-     val = replace (val,
+     return replace (val,
 		    ({ "\b", "\014", "\n", "\r", "\t", "\\", "'", "\"" }),
 		    ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
 		       "\\'", "\\\"" }));
-     break;
        
    case "mysql":
      // MySQL quoting.
-     val = replace (val,
+     return replace (val,
 		    ({ "\"", "'", "\\" }),
 		    ({ "\\\"" , "\\'", "\\\\" }) );
-     break;
        
    case "sql":
    case "oracle":
      // SQL/Oracle quoting.
-     val = replace (val, "'", "''");
-     break;
+     return replace (val, "'", "''");
        
    case "mysql-dtag":
      // MySQL quoting followed by dtag quoting.
-     val = replace (val,
+     return replace (val,
 		    ({ "\"", "'", "\\" }),
 		    ({ "\\\"'\"'\"", "\\'", "\\\\" }));
-     break;
        
    case "mysql-pike":
      // MySQL quoting followed by Pike string quoting.
-     val = replace (val,
+     return replace (val,
 		    ({ "\"", "'", "\\", "\n" }),
 		    ({ "\\\\\\\"", "\\\\'",
 		       "\\\\\\\\", "\\n" }) );
-     break;
        
    case "sql-dtag":
    case "oracle-dtag":
      // SQL/Oracle quoting followed by dtag quoting.
-     val = replace (val,
+     return replace (val,
 		    ({ "'", "\"" }),
 		    ({ "''", "\"'\"'\"" }) );
-     break;
        
    default:
      // Unknown encoding. Let the caller decide what to do with it.
      return 0;
   }
-  return val;
 }
 
 // internal method for do_output_tag
