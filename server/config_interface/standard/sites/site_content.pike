@@ -1,5 +1,6 @@
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
+inherit "../statusinfo.pike";
 #include <module.h>
 #include <module_constants.h>
 #include <config_interface.h>
@@ -465,7 +466,7 @@ string parse( RequestID id )
          int open = roxen->urls[ url ] && roxen->urls[ url ]->port->bound;
          if( !open )
            res += url + " "+port_for(url)+(" <font color='&usr.warncolor;'>"+
-                                           LOCALE("", "Not open")+
+                                           LOCALE(301, "Not open")+
                                            "</font>")+"<br />\n";
          else if(search(url, "*")==-1)
            res += ("<a target='server_view' href='"+url+"'>"+
@@ -480,7 +481,7 @@ string parse( RequestID id )
        res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='' />";
 
        res +="<h1>"+LOCALE(260, "Request status")+"</h1>";
-       res += conf->status();
+       res += status(conf);
 
        res += "<h1>"+LOCALE(292, "Cache status")+"</h1><table cellpading='0' cellspacing='0' width='50'%>\n";
        
