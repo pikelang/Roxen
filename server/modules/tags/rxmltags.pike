@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.30 1999/11/19 06:54:20 per Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.31 1999/11/24 23:27:09 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -37,11 +37,76 @@ array register_module()
 	    ("This module adds a lot of RXML tags."), 0, 1 });
 }
 
-constant permitted = ({ "1", "2", "3", "4", "5", "6", "7", "8", "9",
-                        "x", "a", "b", "c,", "d", "e", "f", "n", "t", "\""
-                        "X", "A", "B", "C,", "D", "E", "F", "l", "o",
-                        "<", ">", "=", "0", "-", "*", "+","/", "%",
-                        "&", "|", "(", ")" });
+mapping TAGDOCUMENTATION;
+mapping tagdocumentation() {
+  if(TAGDOCUMENTATION) return TAGDOCUMENTATION;
+  int start=__LINE__;
+  /*
+    (["roxen-automatic-charset-variable":"<desc tag></desc>",
+"append":"<desc tag></desc>",
+"auth-required":"<desc tag></desc>",
+"clientname":"<desc tag></desc>",
+"expire-time":"<desc tag></desc>",
+"file":"<desc tag></desc>",
+"header":"<desc tag></desc>",
+"realfile":"<desc tag></desc>",
+"redirect":"<desc tag></desc>",
+"referer":"<desc tag></desc>",
+"referrer":"<desc tag></desc>",
+"unset":"<desc tag></desc>",
+"set":"<desc tag></desc>",
+"vfs":"<desc tag></desc>",
+"accept-language":"<desc tag></desc>",
+"quote":"<desc tag></desc>",
+"inc":"<desc tag></desc>",
+"dec":"<desc tag></desc>",
+"imgs":"<desc tag></desc>",
+"roxen":"<desc tag></desc>",
+"debug":"<desc tag></desc>",
+"fsize":"<desc tag></desc>",
+"configimage":"<desc tag></desc>",
+"date":"<desc tag></desc>",
+"insert":"<desc tag></desc>",
+"configurl":"<desc tag></desc>",
+"return":"<desc tag></desc>",
+"set-cookie":"<desc tag></desc>",
+"remove-cookie":"<desc tag></desc>",
+"modified":"<desc tag></desc>",
+"user":"<desc tag></desc>",
+"set-max-cache":"<desc tag></desc>",
+
+"scope":"<desc cont></desc>",
+"catch":"<desc cont></desc>",
+"cache":"<desc cont></desc>",
+"crypt":"<desc cont></desc>",
+"for":"<desc cont></desc>",
+"foreach":"<desc cont></desc>",
+"apre":"<desc cont></desc>",
+"aconf":"<desc cont></desc>",
+"maketag":"<desc cont></desc>",
+"doc":"<desc cont></desc>",
+"autoformat":"<desc cont></desc>",
+"smallcaps":"<desc cont></desc>",
+"random":"<desc cont></desc>",
+"formoutput":"<desc cont></desc>",
+"gauge":"<desc cont></desc>",
+"trimlines":"<desc cont></desc>",
+"throw":"<desc cont></desc>",
+"default":"<desc cont></desc>",
+"sort":"<desc cont></desc>",
+"recursive-output":"<desc cont></desc>",
+"repeat":"<desc cont></desc>",
+"replace":"<desc cont></desc>",
+"cset":"<desc cont></desc>"
+])
+  */
+  TAGDOCUMENTATION=get_commented_value(__FILE__,start);
+  if(!mappingp(TAGDOCUMENTATION)) TAGDOCUMENTATION=0;
+  return TAGDOCUMENTATION;
+}
+
+
+constant permitted = "123456789xabcdefnt\"XABCDEFlo<>=0-*+/%%|()"/"";
 
 string sexpr_eval(string what)
 {
@@ -225,9 +290,6 @@ array(string) tag_referrer(string tag, mapping m, RequestID id)
 {
   NOCACHE();
 
-  if(m->help)
-    return ({ "Shows from which page the client linked to this one." });
-
   return({ sizeof(id->referer) ?
     (m->quote=="none"?id->referer:(html_encode_string(id->referer*""))) :
     (m->alt || "") });
@@ -241,10 +303,6 @@ string tag_unset(string tag, mapping m, RequestID id) {
 
 string tag_set( string tag, mapping m, RequestID id )
 {
-  if(m->help)
-    return ("<b>&lt;set variable=...&gt;</b>: Sets the variable specified "
-      "by the 'variable' argument");
-
   if (m->variable)
   {
     if (m->value)
@@ -437,9 +495,6 @@ string tag_date(string q, mapping m, RequestID id)
 
 string|array(string) tag_insert( string tag, mapping m, RequestID id )
 {
-  if(m->help)
-    return ({ "Inserts a file, variable or other object into a webpage" });
-
   string n;
 
   if(n = m->variable)
@@ -827,8 +882,6 @@ string|array(string) container_aconf(string tag, mapping m,
   string href,s;
   mapping cookies = ([]);
 
-  if(m->help) return ({ "Adds or removes config options." });
-
   if(!m->href)
     href=strip_prestate(strip_config(id->raw_url));
   else
@@ -926,7 +979,7 @@ string container_autoformat(string tag, mapping m, string s, RequestID id)
   return s;
 }
 
-class smallcapsstr {
+class Smallcapsstr {
   constant UNDEF=0, BIG=1, SMALL=2;
   static string text="",part="",bigtag,smalltag;
   static mapping bigarg,smallarg;
@@ -937,6 +990,10 @@ class smallcapsstr {
     smalltag=ss;
     bigarg=bm;
     smallarg=sm;
+  }
+
+  string _sprintf() {
+    return "Smallcapsstr()";
   }
 
   void add(string char) {
@@ -1005,10 +1062,10 @@ string container_smallcaps(string t, mapping m, string s)
     else
       sm+=(["size":m->small||(string)((int)m->size-1)]);
     m_delete(m, "small");
-    ret=smallcapsstr("font","font", m+bm, m+sm);
+    ret=Smallcapsstr("font","font", m+bm, m+sm);
   }
   else
-    ret=smallcapsstr("big","small", m+bm, m+sm);
+    ret=Smallcapsstr("big","small", m+bm, m+sm);
 
   for(int i=0; i<strlen(s); i++)
     if(s[i]=='<') {
@@ -1090,23 +1147,32 @@ private int|array internal_tag_input(string t, mapping m, string name, multiset(
 
   return ({ make_tag(t, m) });
 }
+array split_on_option( string what, Regexp r )
+{
+  array a = r->split( what );
+  if( !a )
+     return ({ what });
+  return split_on_option( a[0], r ) + a[1..];
+}
 private int|array internal_tag_select(string t, mapping m, string c, string name, multiset(string) value)
 {
-  array(string) tmp;
-  int i;
-
-  if (m->name==name || !name)
-    c=parse_html(c, (["option":lambda(string t, mapping m, multiset(string) value) {
-				 if (value[m->value]) {
-				   if (m->selected)
-				     return 0;
-				   else
-				     m->selected = "selected";
-				 }
-				 return ({ make_tag(t, m) });
-			       }]), ([]), value);
-
-  return ({ make_container(t, m, c) });
+  if(m->name!=name) return ({ make_container(t,m,c) });
+  Regexp r = Regexp( "(.*)<([Oo][Pp][Tt][Ii][Oo][Nn])([^>]*)>(.*)" );
+  array(string) tmp=split_on_option(c,r);
+  string ret=tmp[0],nvalue;
+  int selected,stop;
+  tmp=tmp[1..];
+  while(sizeof(tmp)>2) {
+    stop=search(tmp[2],"<");
+    if(sscanf(lower_case(tmp[1]),"%*svalue=%s%*[ >]",nvalue)!=3) nvalue=tmp[2][..stop==-1?sizeof(tmp[2]):stop];
+    selected=Regexp(".*[Ss][Ee][Ll][Ee][Cc][Tt][Ee][Dd].*")->match(tmp[1]);
+    ret+="<"+tmp[0]+tmp[1];
+    if(value[nvalue] && !selected) ret+=" selected=\"selected\"";
+    ret+=">"+tmp[2];
+    if(!Regexp(".*</[Oo][Pp][Tt][Ii][Oo][Nn]")->match(tmp[2])) ret+="</"+tmp[0]+">";
+    tmp=tmp[3..];
+  }
+  return ({ make_container(t,m,ret) });
 }
 
 array(string) container_default( string t, mapping m, string c, RequestID id)
