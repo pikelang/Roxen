@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.93 2000/02/14 23:49:30 nilsson Exp $
+# $Id: start,v 1.94 2000/02/16 09:52:15 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -33,7 +33,7 @@ CLASSPATH=java/classes/roxen_module.jar:java/classes/roxen_servlet.jar:java/clas
 export CLASSPATH
 
 
-pike=pike
+pike=`type pike|head -1|sed -e's,.*is ,,'`
 if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
 if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
 if [ "x$PIKE" = "x" ]; then :; else
@@ -53,13 +53,6 @@ if uname | grep 'SunOS' >/dev/null 2>&1; then
       echo "$pre Solaris 2.5 or later detected. Enabling threads (if available)."
     fi
     DEFINES="$DEFINES -DENABLE_THREADS -DTHREADS"
-    if $pike --version 2>&1|head -1|grep 0.5 ; then
-       if [ $verbose -gt 0 ] ; then
-         echo "$pre Pike 0.5 detected. Exiting."
-         exit 1
-       fi
-       DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//'`"
-    fi
   fi
 fi
 
@@ -464,8 +457,12 @@ start_roxen() {
   fi
   if [ "x$gdb" = "xno" ]; then
     if [ $verbose -gt 0 ]; then
-      echo "$pre" "Executing $pike $args $@"|sed -e "s!`pwd`!.!g"
-    else :; fi
+      if [ $verbose -gt 1 ] ; then
+        echo "$pre" "Executing $pike $args $@"|sed -e "s!`pwd`!.!g"
+      else
+        echo "$pre" "Using '$pike'"|sed -e "s!`pwd`!.!g"
+      fi
+    fi
     args="-DSERIOUS $args"
     $pike $args $@
   else
@@ -516,7 +513,6 @@ oo
       echo "$pre" "Server restart at `date`"
       echo "$pre" "Debug log in $LOGDIR/debug/$FILES.1"
       rotate $LOGDIR/debug/$FILES
-
       start_roxen $extra_args 2>>$LOGDIR/debug/$FILES.1 1>&2
 
       exitcode="$?"
@@ -539,8 +535,5 @@ oo
     exit 1
   fi
 else
-  if [ $verbose -gt 0 ]; then
-    echo "$pre Start at `date`"
-  else :; fi
   start_roxen $extra_args 2>&1
 fi
