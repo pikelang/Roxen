@@ -14,6 +14,8 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
+constant cvs_version = "$Id: create_bars.pike,v 1.45 1997/10/24 19:15:50 peter Exp $";
+
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_bars can draw normal bars, sumbars and normalized sumbars.

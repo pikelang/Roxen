@@ -13,6 +13,7 @@ constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
+constant cvs_version = "$Id: create_pie.pike,v 1.25 1997/10/24 19:13:31 peter Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)

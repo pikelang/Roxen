@@ -12,6 +12,8 @@ inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
+constant cvs_version = "$Id: create_graph.pike,v 1.71 1997/10/24 19:16:00 peter Exp $";
+
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_graph draws a graph but there are also some other functions
