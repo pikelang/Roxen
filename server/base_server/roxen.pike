@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.31.2.1 1997/01/31 17:06:27 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.31.2.2 1997/03/01 17:27:27 grubba Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -1709,14 +1709,14 @@ void start(int num)
       array old = port;
       object o;
     
-      if(rp = ((object)("protocols/"+port[1]))->real_port)
+      if(rp = ((object)(getcwd()+"/protocols/"+port[1]))->real_port)
 	if(tmp = rp(port))
 	  port = tmp;
       object privs;
       if(port[0] < 1024)
 	privs = ((program)"privs")("Opening listen port below 1024");
       if(!(o=create_listen_socket(port[0], current_configuration, port[2],
-				  (program)("protocols/"+port[1]))))
+				  (program)(getcwd()+"/protocols/"+port[1]))))
       {
 	perror("I failed to open the port "+old[0]+" at "+old[2]
 	       +" ("+old[1]+")\n");
@@ -1763,9 +1763,11 @@ private string get_domain(int|void l)
 #if efun(gethostbyname) && efun(gethostname)
     f = gethostbyname(gethostname()); // First try..
     if(f)
-      foreach(f, f) foreach(f, t) if(search(t, ".") != -1 && !(int)t)
-	if(!s || strlen(s) < strlen(t))
-	  s=t;
+      foreach(f, f) if (arrayp(f)) { 
+	foreach(f, t) if(search(t, ".") != -1 && !(int)t)
+	  if(!s || strlen(s) < strlen(t))
+	    s=t;
+      }
 #endif
     if(!s)
     {
@@ -2802,7 +2804,7 @@ void initiate_configuration_port( int|void first )
     foreach(QUERY(ConfigPorts), port)
     {
       if(o=create_listen_socket(port[0],0,port[2],
-				(program)("protocols/"+port[1])))
+				(program)(getcwd()+"/protocols/"+port[1])))
       {
 	perror("Configuration port: port number "
 	       +port[0]+" interface " +port[2]+"\n");
@@ -2855,7 +2857,9 @@ private void dump_variables(string file, mapping variables, array info,
   f->write("<h1>"+info[1]+"</h1>\n\n");
   f->write("<font size=+1>"+info[2]+"</font><p>");
 
+#if 0
   f->write(describe_module_type(info[0])+"<p>");
+#endif /* 0 */
 
   f->write("<font color=black>File:</font> <i>"+file+"</i><br>\n");
 
@@ -2877,14 +2881,19 @@ private void dump_variables(string file, mapping variables, array info,
     if(v[VAR_CONFIGURABLE])
     {
       f->write("<dt><b>"+v[VAR_NAME]+"</b>\n"
+#if 0
 	       +(strlen(describe_variable_as_text(v,1))?
 		 "<i><br>Default value:</i>\n"
 		 "<font color=red>"+describe_variable_as_text(v,1)
 		 +"</font><br>"
 		 :"")
+#endif /* 0 */
 	       +"<dd>" + v[VAR_DOC_STR] + "<br>" 
+#if 0
 	       "<i><font color=black>"+describe_type(v[VAR_TYPE], v[VAR_MISC]) 
-	       + "</font></i><p>\n\n\n");
+	       + "</font></i>"
+#endif /* 0 */
+	       + "<p>\n\n\n");
     }
   }
   f->write("</dl>\n");
