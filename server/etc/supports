@@ -1,4 +1,4 @@
-## $Id: supports,v 1.60 1999/08/29 14:24:58 grubba Exp $
+## $Id: supports,v 1.61 1999/09/01 13:49:01 wellhard Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -65,7 +65,7 @@ mozilla/2.*Macintosh	-java
 
 mozilla/[3-9].*		javascript, tablecolor
 
-mozilla/[4-9].*		stylesheets, tableimages
+mozilla/[4-9].*		stylesheets, tableimages, javascript1.2
 mozilla/4\.0[4-9].*	pnginline
 mozilla/4\.[5-9].*	pnginline
 mozilla/5\.0b1		-java, pnginline, tcl
@@ -85,7 +85,7 @@ mozilla/[5-9].*		pnginline
 .*compatible.*msie.[2-9]	tablecolor, javascript
 .*compatible.*msie.[3-9]	activex, tableimages
 # MSIE3 stylesheets are broken
-.*compatible.*msie.[4-9]	stylesheets
+.*compatible.*msie.[4-9]	stylesheets, javascript1.2
 # }
 
 
