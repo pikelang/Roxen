@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.237 2000/08/12 06:16:22 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.238 2000/08/13 00:23:16 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -14,6 +14,20 @@ inherit "highlight_pike";
 
 // HTTP protocol module.
 #include <config.h>
+
+// #define DO_TIMER
+
+#ifdef DO_TIMER
+static int global_timer, global_total_timer;
+#  define ITIMER()  write("\n\n\n");global_total_timer = global_timer = gethrtime();
+#  define TIMER(X) do {int x=gethrtime()-global_timer; \
+                       int y=gethrtime()-global_total_timer; \
+                       write( "%20s ... %1.1fms / %1.1fms\n",X,x/1000.0,y/1000.0 );\
+                       global_timer = gethrtime(); } while(0);
+#else
+#  define ITIMER()
+#  define TIMER(X)
+#endif
 
 #ifdef PROFILE
 #define HRTIME() gethrtime()
@@ -1089,6 +1103,8 @@ void end(string|void s, int|void keepit)
   }
 #endif
 
+  TIMER("end[1]");
+
 #ifdef KEEP_ALIVE
   if(keepit && !file->raw
      && (misc->connection == "keep-alive" ||
@@ -1096,16 +1112,18 @@ void end(string|void s, int|void keepit)
      && my_fd)
   {
     // Now.. Transfer control to a new http-object. Reset all variables etc..
-    object o = object_program(this_object())(my_fd, port_obj, conf);
+    object o = object_program(this_object())(0, 0, 0);
     o->remoteaddr = remoteaddr;
     o->supports = supports;
     o->host = host;
     o->client = client;
+    o->conf = conf;
     MARK_FD("HTTP kept alive");
     object fd = my_fd;
     my_fd=0;
     if(s) leftovers += s;
     o->chain(fd,port_obj,leftovers);
+    TIMER("end[2]");
     disconnect();
     return;
   }
@@ -1124,6 +1142,7 @@ void end(string|void s, int|void keepit)
     };
     my_fd = 0;
   }
+  TIMER("end[3]");
   disconnect();
 }
 
@@ -1379,6 +1398,7 @@ int wants_more()
 void do_log()
 {
   MARK_FD("HTTP logging"); // fd can be closed here
+  TIMER("data sent");
   if(conf)
   {
     int len;
@@ -1628,9 +1648,8 @@ void send_result(mapping|void result)
   int tmp;
   mapping heads;
   string head_string;
-  if (result) {
+  if (result)
     file = result;
-  }
 
   REQUEST_WERR(sprintf("HTTP: send_result(%O)", file));
 
@@ -1824,6 +1843,7 @@ void send_result(mapping|void result)
   if(!leftovers) leftovers = data||"";
 #endif
 
+  TIMER("send_result");
   if(method != "HEAD" && file->error != 304)
     // No data for these two...
   {
@@ -1868,6 +1888,7 @@ void send_result(mapping|void result)
 void handle_request( )
 {
   REQUEST_WERR("HTTP: handle_request()");
+  TIMER("enter_handle");
 
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
@@ -1908,15 +1929,13 @@ void handle_request( )
   if(e= catch(file = conf->handle_request( this_object() )))
     INTERNAL_ERROR( e );
   
-  if( !file )
-    INTERNAL_ERROR(({"No data returned from handle_request\n",backtrace()}));
-  else if( file->try_again_later )
+  TIMER("conf->handle_request");
+  if( file->try_again_later )
   {
     call_out( handle_request, file->try_again_later );
     return;
   }
-  if( !file->pipe )
-    send_result();
+  send_result();
 }
 
 /* We got some data on a socket.
@@ -1925,6 +1944,8 @@ void handle_request( )
 int processed;
 void got_data(mixed fooid, string s)
 {
+  ITIMER();
+  TIMER("got_data");
   if (mixed err = catch {
 
   int tmp;
@@ -1951,10 +1972,11 @@ void got_data(mixed fooid, string s)
     }
   }
 
+  if(strlen(raw)) 
+    tmp = parse_got( s );
 
-  // If the request starts with newlines, it's a broken request. Really!
-  //  sscanf(s, "%*[\n\r]%s", s);
-  if(strlen(raw)) tmp = parse_got( s );
+  TIMER("parse");
+
   switch(tmp)
   {
    case 0:
@@ -1979,6 +2001,8 @@ void got_data(mixed fooid, string s)
     decode_charset_encoding( Roxen.get_client_charset_decoder( q,this_object() ) );
   if( input_charset )
     decode_charset_encoding( input_charset );
+
+  TIMER("charset");
 
   if( !conf )
   {
@@ -2007,6 +2031,8 @@ void got_data(mixed fooid, string s)
       }
     }
   }
+
+  TIMER("conf");
 
   if (rawauth)
   {
@@ -2045,8 +2071,8 @@ void got_data(mixed fooid, string s)
   my_fd->set_close_callback(0);
   my_fd->set_read_callback(0);
   processed=1;
+  TIMER("pre_handle");
   roxen.handle(handle_request);
-
   })
   {
     report_error("Internal server error: " + describe_backtrace(err));
@@ -2122,12 +2148,15 @@ static void create(object f, object c, object cc)
   if(f)
   {
     MARK_FD("HTTP connection");
-    f->set_nonblocking(got_data, 0, end);
+    f->set_read_callback(got_data);
+    f->set_close_callback(end);
     my_fd = f;
     if( c ) port_obj = c;
     if( cc ) conf = cc;
-    call_out(do_timeout, 30);
     time = _time(1);
+    string q = f->read( 8192, 1 );
+    if( q ) got_data( 0, q );
+    call_out(do_timeout, 30);
   }
 }
 
@@ -2147,6 +2176,8 @@ void chain(object f, object c, string le)
     remove_call_out(do_timeout);
     call_out(do_timeout, 150);
     time = _time(1);
+    string q = f->read( 8192, 1 );
+    if( q ) got_data( 0, q );
   }
 
   if(!my_fd)

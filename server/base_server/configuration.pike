@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.333 2000/08/12 21:47:26 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.334 2000/08/13 00:23:29 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -1269,7 +1269,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
   {
 #ifdef URL_MODULES
   // Map URL-modules
-    foreach(url_modules(id), funp)
+    foreach(url_module_cache||url_modules(id), funp)
     {
       LOCK(funp);
       TRACE_ENTER("URL module", funp);
@@ -1307,7 +1307,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
     }
 #endif
 
-    foreach(location_modules(id), tmp)
+    foreach(location_module_cache||location_modules(id), tmp)
     {
       loc = tmp[0];
       if(!search(file, loc))
@@ -1472,22 +1472,18 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
     return ([ "file":fid, ]);
   }
   if(!fid)
-  {
     TRACE_LEAVE("Returned 'no such file'.");
-  }
   else
     TRACE_LEAVE("Returning data");
   return fid;
 }
 
-
 mixed handle_request( RequestID id  )
 {
   function funp;
   mixed file;
-
   REQUEST_WERR("handle_request()");
-  foreach(first_modules(id), funp)
+  foreach(first_module_cache||first_modules(id), funp)
   {
     if(file = funp( id ))
       break;
@@ -1499,7 +1495,7 @@ mixed handle_request( RequestID id  )
   if(!mappingp(file) && !mappingp(file = get_file(id)))
   {
     mixed ret;
-    foreach(last_modules(id), funp) if(ret = funp(id)) break;
+    foreach(last_module_cache||last_modules(id), funp) if(ret = funp(id)) break;
     if (ret == 1) {
       REQUEST_WERR("handle_request(): Recurse");
       return handle_request(id);
@@ -1523,7 +1519,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   // finally map all filter type modules.
   // Filter modules are like TYPE_LAST modules, but they get called
   // for _all_ files.
-  foreach(filter_modules(id), tmp)
+  foreach(filter_module_cache||filter_modules(id), tmp)
   {
     TRACE_ENTER("Filter module", tmp);
     if(res2=tmp(res,id))
