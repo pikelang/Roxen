@@ -3,11 +3,13 @@
  * (C) 1996 - 2000 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.258 2000/02/07 02:37:30 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.259 2000/02/08 22:12:13 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
+
+inherit "basic_defvar";
 
 mapping enabled_modules = ([]);
 mapping(string:array(int)) error_log=([]);
@@ -71,73 +73,23 @@ string get_doc_for( string region, string variable )
       "\n"+variables[ variable ][ VAR_DOC_STR ];
 }
 
-public mixed query(string var, void|int ok)
-{
-  if(var && variables[var])
-    return variables[var][ VAR_VALUE ];
-  if(!var) return variables;
-  if (!ok) error("query("+var+"): Unknown variable.\n");
-  return 0;
-}
-
-mixed set(string var, mixed val)
-{
-  if(variables[var])
-    return variables[var][VAR_VALUE] = val;
-  error("set("+var+"). Unknown variable.\n");
-}
-
-int setvars( mapping (string:mixed) vars )
-{
-  string v;
-  foreach( indices( vars ), v )
-    if(variables[v])
-      variables[v][ VAR_VALUE ] = vars[ v ];
-  return 1;
-}
-
-void killvar(string name)
-{
-  m_delete(variables, name);
-}
-
-constant ConfigurableWrapper = roxen.ConfigurableWrapper;
-
 int defvar(string var, mixed value, string name, int type,
 	   string|void doc_str, mixed|void misc,
 	   int|function|void not_in_config)
 {
-  variables[var]                     = allocate( VAR_SIZE );
-  variables[var][ VAR_VALUE ]        = value;
-  variables[var][ VAR_TYPE ]         = type & VAR_TYPE_MASK;
-  variables[var][ VAR_DOC_STR ]      = doc_str;
-  variables[var][ VAR_NAME ]         = name;
-  variables[var][ VAR_MISC ]         = misc;
+  ::defvar( var, value, name, type, doc_str, misc );
 
-  Locale.Roxen.standard
-    ->register_module_doc( this_object(), var, name, doc_str );
-
-  type &= (VAR_EXPERT | VAR_MORE);
+  type &= (VAR_EXPERT | VAR_MORE | VAR_INITIAL | VAR_DEVELOPER);
   if (functionp(not_in_config))
     if (type)
-      variables[var][ VAR_CONFIGURABLE ] = ConfigurableWrapper(type, not_in_config)->check;
+      variables[ var ][ VAR_CONFIGURABLE ] =
+                 roxen->ConfigurableWrapper(type, not_in_config)->check;
     else
       variables[var][ VAR_CONFIGURABLE ] = not_in_config;
   else if (type)
     variables[var][ VAR_CONFIGURABLE ] = type;
   else if(intp(not_in_config))
     variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
-  variables[var][ VAR_SHORTNAME ] = var;
-}
-
-void deflocaledoc( string locale, string variable,
-		   string name, string doc, mapping|void translate )
-{
-  if( !Locale.Roxen[locale] )
-    report_warning("Invalid locale: "+locale+". Ignoring.\n");
-  else
-    Locale.Roxen[locale]
-      ->register_module_doc( this_object(), variable, name, doc, translate );
 }
 
 int definvisvar(string var, mixed value, int type)
