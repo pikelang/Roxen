@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.114 2001/12/21 12:31:45 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.115 2001/12/21 13:10:35 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -249,7 +249,7 @@ string query_location()
   (!id->misc->internal_get && sizeof (filter (internal_files, glob, (f/"/")[-1])))
 
 #define SETUID(X)							\
-  if( access_as_user )                                                  \
+  if( access_as_user && !id->misc->internal_get)                        \
   {									\
     User uid = id->conf->authenticate( id,access_as_user_db );		\
     if( access_as_user_throw && !uid )                                  \
@@ -259,7 +259,7 @@ string query_location()
   }
 
 #define SETUID_TRACE(X,LEVELS)						\
-  if( access_as_user )                                                  \
+  if( access_as_user && !id->misc->internal_get)                        \
   {									\
     User uid = id->conf->authenticate( id,access_as_user_db );		\
     if( access_as_user_throw && !uid ) {                                 \
@@ -273,7 +273,7 @@ string query_location()
   }
 
 #define SETUID_NT(X)							\
-  if( access_as_user )                                                  \
+  if( access_as_user && !id->misc->internal_get)                        \
   {									\
     User uid = id->conf->authenticate( id,access_as_user_db );		\
     if( uid && uid->uid() )						\
