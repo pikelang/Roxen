@@ -18,6 +18,10 @@ o ftp2.pike has also received some bug-compatibility with Netscape.
 
 o Pike 0.6 has gotten several portability fixes.
 
+o id->handle_request() has been split into two functions id->handle_request(),
+  and id->send_result() to make asynchronous I/O easier. Thanks to
+  Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>.
+
 o The testsuite for extern/ now tries to run as nobody if it ran as root.
 
 o The start and install scripts have received some updates needed for the
@@ -31,8 +35,12 @@ o The filesystem module has been updated to handle MV and CHMOD.
 
 o A new RXML tag: <use>. This tag can be used to define page-local tags
   and containers.
+
+o Improved diagnostic errors in the CGI module and wrapper.
+
+o The gopher protocol module now works again. :-)
   
-o Some minor bugs have been fixed.
+o Some minor bugs and cosmetic errors have been fixed.
 
 
 Changes since Roxen Challenger 1.2.24 Yellow
