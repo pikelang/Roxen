@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.81 2001/03/24 01:40:36 nilsson Exp $
+// $Id: Roxen.pmod,v 1.82 2001/03/29 01:54:03 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1649,6 +1649,8 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   else if(m->type) {
     switch(m->type)
     {
+     case "unix":
+       return (string)t;
      case "iso":
       mapping eris=localtime(t);
       if(m->date)
