@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.35 2000/05/29 14:05:24 grubba Exp $
+ * $Id: ftp.pike,v 2.36 2000/07/22 22:29:03 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3395,7 +3395,7 @@ class FTPSession
 
     if ((i = search(line, " ")) != -1) {
       cmd = line[..i-1];
-      args = line[i+1..];
+      args = line[i+1..] - "\0";
     }
     cmd = upper_case(cmd);
 
