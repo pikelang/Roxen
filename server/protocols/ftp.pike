@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.69 1997/11/06 20:21:11 grubba Exp $
+ * $Id: ftp.pike,v 1.70 1997/11/27 21:30:44 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -431,7 +431,7 @@ class ls_program {
     }
     void close()
     {
-      // _verify_internals();
+      _verify_internals();
       DWRITE("list_stream->close()\n");
       catch { id->ls_session = 0; };
       if (this_object()) {
@@ -839,14 +839,18 @@ void ftp_async_connect(function(object,mixed:void) fun, mixed arg)
   
   object(files.file) f = files.file();
 
-  object privs = Privs("FTP: Opening the control-port.");
+  string|int local_addr = cmd_fd->query_address(1);
 
-  if(!f->open_socket(controlport_port-1))
+  object privs = Privs("FTP: Opening the data connection on " + local_addr +
+		       ":" + (controlport_port-1) + ".");
+
+  if(!f->open_socket(controlport_port-1, local_addr))
   {
     privs = 0;
 #ifdef FTP_DEBUG
     perror("ftp: socket("+(controlport_port-1)+") failed. Trying with any port.\n");
 #endif
+    gc();
     if (!f->open_socket()) {
 #ifdef FTP_DEBUG
       perror("ftp: socket() failed. Out of sockets?\n");
@@ -874,8 +878,9 @@ void ftp_async_connect(function(object,mixed:void) fun, mixed arg)
     args[0](0, @args[1]);
   });
 
-  mark_fd(f->query_fd(),
-	  "ftp communication: -> "+dataport_addr+":"+dataport_port);
+  mark_fd(f->query_fd(), "ftp communication: " + local_addr + ":" +
+	  (controlport_port - 1) + " -> " +
+	  dataport_addr + ":" + dataport_port);
 
   if(catch(f->connect(dataport_addr, dataport_port)))
   {
