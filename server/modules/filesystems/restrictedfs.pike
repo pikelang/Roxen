@@ -1,5 +1,5 @@
 /*
- * This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
+ * This is a ChiliMoon module. Copyright © 1997 - 2001, Roxen IS.
  * Implements a restricted filesystem.
  * This filesystem only allows accesses to files that are a prefix of
  * id->misc->home (ie the users home-directory).
@@ -8,9 +8,9 @@
  * Thanks to Zsolt Varga <redax@agria.hu> for the idea.
  */
 
-inherit "filesystem";
+inherit "chili-module:filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.23 2002/06/14 00:08:07 nilsson Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.24 2002/11/14 05:01:33 mani Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -48,11 +48,9 @@ void create()
 
 string fix_slashes (string s)
 {
-  if (sizeof (s) && s[0] == '/') {
-    s = s[1..];
-  }
-  if (sizeof (s) && s[-1] != '/') {
-    s += "/";
+  if(sizeof(s)) {
+    if(s[0] == '/')  s = s[1..];
+    if(s[-1] != '/') s += "/";
   }
   return s;
 }
@@ -64,19 +62,20 @@ mixed stat_file(string f, object id)
   if (!stringp(home)) {
     // No home-directory
     TRACE_LEAVE("No home directory.");
-    return(0);
+    return 0;
   }
   if (query("remap_home")) {
     mixed res = ::stat_file(f = (fix_slashes (home) + f), id);
     TRACE_LEAVE(sprintf(" => %O => %O", f, res));
     return res;
-  } else {
-    if (search("/" + f, home)) {
+  }
+  else {
+    if (!has_prefix("/" + f, home)) {
       // Not a prefix, or short.
       if ((home[1..sizeof(f)] != f) ||
 	  ((home[sizeof(f)] != '/') && (home[sizeof(f)+1] != '/'))) {
 	TRACE_LEAVE("Bad prefix.");
-	return(0);
+	return 0;
       }
       // Short.
     }
@@ -91,12 +90,13 @@ array find_dir(string f, object id)
   string home = id->misc->home;
   if (!stringp(home)) {
     // No home-directory
-    return(0);
+    return 0;
   }
   if (query("remap_home")) {
     return(::find_dir(fix_slashes (home) + f, id));
-  } else {
-    if (search("/" + f, home)) {
+  }
+  else {
+    if (!has_prefix("/" + f, home)) {
       // Not a prefix, or short
       if (home[1..sizeof(f)] == f) {
 	// Short - return the next part of the path.
@@ -126,7 +126,7 @@ string real_file(string f, object id)
   if (!stringp(home)) {
     // No home-directory
     TRACE_LEAVE("No home directory.");
-    return(0);
+    return 0;
   }
   if (query("remap_home")) {
     string res = low_real_file(f = (fix_slashes(home) + f), id);
@@ -135,7 +135,7 @@ string real_file(string f, object id)
   } else {
     if (!has_prefix("/" + f, home)) {
       TRACE_LEAVE("Bad prefix.");
-      return(0);
+      return 0;
     }
     string res = low_real_file(f, id);
     TRACE_LEAVE(sprintf("=> %O => %O", f, res));
