@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.141 2002/06/10 15:00:26 jonasw Exp $
+// $Id: wizard.pike,v 1.142 2003/01/22 16:12:49 grubba Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -438,7 +438,7 @@ string compress_state(mapping state)
   return MIME.encode_base64( from );
 }
 
-string parse_wizard_help(string|Parser t, mapping m, string contents,
+string parse_wizard_help(string|Parser.HTML t, mapping m, string contents,
 			 RequestID id, void|mapping v)
 {
   if(v)
