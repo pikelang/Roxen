@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.27 1996/12/10 00:15:40 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.28 1996/12/10 03:39:45 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -1372,7 +1372,7 @@ mapping configuration_parse(object id)
   o->folded=i;
   
   PUSH("</dl>");
-  PUSH("<p><br clear=all><p>\n");
+  PUSH("<p><br clear=all>&nbsp;\n");
 
   int lm=1;
   
@@ -1410,14 +1410,19 @@ mapping configuration_parse(object id)
 //  else if(nfoldedr(o))
 //    BUTTON(unfoldall, "Unfold all", left);
 
+  
+  if(!lm)
+  {
+    PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
+    PUSH("</nobr><br clear=all>");
+    lm=1;
+  }
 
   if((o->changed||root->changed))
     BUTTON(save, "Save", left);
-
   BUTTON(restart, "Restart", left);
   BUTTON(shutdown,"Shutdown", left);
 
-  
   PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
   PUSH("</nobr><br clear=all>");
 //  PUSH("<p align=right><font size=-1 color=blue><a href=$docurl><font color=blue>"+roxen->real_version +"</font></a></font></p>");

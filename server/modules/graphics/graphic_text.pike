@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.11 1996/12/10 03:07:30 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.12 1996/12/10 03:39:46 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -156,22 +156,23 @@ array (array(int)) make_matrix(int size)
 }
 
 
+object last_image;
+string last_image_name;
 object (Image) load_image(string f)
 {
+  if(last_image_name==f) return last_image;
   object file = File();
   string data;
   object img = Image();
-  perror("Loading "+f+"\n");
-  if(!file->open(f,"r"))
-  {
-    perror("Failed to open file ("+f+").\n");
-    return 0;
-  }
+
+  if(!file->open(f,"r")) return 0;
   if(!(data=file->read(0x7fffffff))) return 0;
-  if(img->frompnm(data)) return img;
-  if(img->fromgif(data)) return img;
-  perror("Failed to parse file.\n");
-  return 0;
+  if(!img->frompnm(data) && !img->fromgif(data)) return 0;
+
+  last_image_name=f;
+  last_image=img;
+//call_out(lambda(){last_image=last_image_name=0;}, 10);
+  return img->copy();;
 }
 
 object (Image) blur(object (Image) img, int amnt)
