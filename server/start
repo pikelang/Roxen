@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.101 2000/03/24 20:08:14 grubba Exp $
+# $Id: start,v 1.102 2000/03/24 20:08:37 grubba Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -16,7 +16,7 @@ VARDIR=../var/
 LOCALDIR=../local/
 
 # Make LOCALDIR an absolute path
-if test -d $LOCALDIR; then
+if test -d $LOCALDIR/.; then
   LOCALDIR=`cd $LOCALSIR; pwd`
 else :; fi
 
