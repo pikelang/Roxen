@@ -2,8 +2,9 @@
 <locale version="1.0"/>
 <project>admin_tasks</project>
 <language>eng</language>
-<dumped>974723202</dumped>
+<dumped>974833136</dumped>
 <file>../base_server/roxen.pike</file>
+<file>../base_server/#roxen.pike#</file>
 <file>../config_interface/standard/actions/cachestatus.pike</file>
 <file>../config_interface/standard/actions/debug_info.pike</file>
 <file>../config_interface/standard/actions/feature_list.pike</file>

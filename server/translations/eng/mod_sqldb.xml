@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_sqldb</project>
+<language>eng</language>
+<dumped>974833141</dumped>
+<file>../modules/database/sqldb.pike</file>
+
+<str id="1">
+<o>SQL databases</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>SQL databases provides symbolic names to any number of database URLs. The
+symbolic names can later be used instead of the database URL. This makes
+it unnecessary to store full database URLs in RXML pages, which enhances
+security. It also becomes possible to change database without having to
+change any RXML pages.</o>
+<t></t>
+</str>
+
+<str id="3">
+<o>Database URL table</o>
+<t></t>
+</str>
+
+<str id="4">
+<o>The table with database URLs in the format:&lt;pre&gt;name	URL&lt;/pre&gt;The database URL is specified as &lt;tt&gt;driver://user name:password@host:port/database&lt;/tt&gt;.
+</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>Connection OK</o>
+<t></t>
+</str>
+
+<str id="6">
+<o>%[2]s server on %[3]s</o>
+<t></t>
+</str>
+
+<str id="7">
+<o>Connection failed</o>
+<t></t>
+</str>
+
+<str id="8">
+<o>Unknown reason</o>
+<t></t>
+</str>
+
+<str id="9">
+<o>No associations defined.</o>
+<t></t>
+</str>

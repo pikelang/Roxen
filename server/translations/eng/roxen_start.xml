@@ -2,9 +2,10 @@
 <locale version="1.0"/>
 <project>roxen_start</project>
 <language>eng</language>
-<dumped>974723224</dumped>
+<dumped>974833163</dumped>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
+<file>../base_server/#roxen.pike#</file>
 <file>../modules/configuration/update.pike</file>
 
 

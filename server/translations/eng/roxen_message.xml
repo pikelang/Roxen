@@ -2,9 +2,10 @@
 <locale version="1.0"/>
 <project>roxen_message</project>
 <language>eng</language>
-<dumped>974723218</dumped>
+<dumped>974833157</dumped>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
+<file>../base_server/#roxen.pike#</file>
 <file>../modules/configuration/update.pike</file>
 <file>../protocols/prot_hilfe.pike</file>
 <file>../protocols/prot_fhttp.pike</file>

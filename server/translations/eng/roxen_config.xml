@@ -2,11 +2,13 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>eng</language>
-<dumped>974723212</dumped>
+<dumped>974833150</dumped>
 <file>../base_server/config_userdb.pike</file>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
+<file>../base_server/module_support.pike</file>
 <file>../base_server/roxen.pike</file>
+<file>../base_server/#roxen.pike#</file>
 <file>../config_interface/standard/cv_startpage_tabs.pike</file>
 <file>../config_interface/standard/logutil.pike</file>
 <file>../config_interface/standard/statusinfo.pike</file>
@@ -1874,5 +1876,15 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 
 <str id="349">
 <o>Update Client</o>
+<t></t>
+</str>
+
+<str id="350">
+<o>Load of %s (%s) failed</o>
+<t></t>
+</str>
+
+<str id="351">
+<o>The module %s (%s) could not be loaded.</o>
 <t></t>
 </str>
