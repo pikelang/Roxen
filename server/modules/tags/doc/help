@@ -1,5 +1,0 @@
-<b>{help [for=...]}:</b>
-
-<p>This tag gives you a list of all documented tags. You can then click on them
-to get information about individual tags. You can also use it to show help
-about a specific tag by doing {help for="tag"}.

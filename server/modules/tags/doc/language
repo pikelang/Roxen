@@ -1,3 +1,0 @@
-{language [full]}:
-Returns the accepted languages (the accept-language header).
-This tag is mostly useful for debugging purposes.

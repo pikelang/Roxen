@@ -1,3 +1,0 @@
-<b>{accept-language [full]}:</b>
-<p>Returns the accepted languages (the accept-language header).
-This tag is mostly useful for debugging purposes.

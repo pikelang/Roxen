@@ -1,3 +1,0 @@
-<kbd><b>{crypt}text{/crypt}</b></kbd>
-
-<p>The enclosed text will be encrypted with crypt(1).

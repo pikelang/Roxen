@@ -1,2 +1,0 @@
-{return [code=...] [text=...]}: 
-Change the HTTP return code to something else than the default (200)

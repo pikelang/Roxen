@@ -1,2 +1,0 @@
-<kbd><b>{gauge}rxml-code-to-gauge{/gauge}</b></kbd>:
-Gives the time needed to parse the enclosed RXML code, in seconds
