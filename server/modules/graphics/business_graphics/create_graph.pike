@@ -14,7 +14,7 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.85 1997/12/20 23:48:42 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.86 1997/12/21 20:53:12 hedda Exp $";
 
 /*
 These functions are written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -325,6 +325,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 	if (diagram_data["type"]=="graph")
 	  {
 	    d-=({VOIDSYMBOL});
+	    j=sizeof(d)-1;
 	    for(int i=0; i<j; i++)
 	      {
 		float k;
@@ -1149,7 +1150,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       
       int minpos;
       minpos=diagram_data["xmaxynames"]+si/2+
-	  diagram_data["linewidth"];
+	  diagram_data["linewidth"]+2;
       if (minpos>xpos_for_yaxis)
 	{
 	  xpos_for_yaxis=minpos;
@@ -1180,7 +1181,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	diagram_data["xstop"]=diagram_data["xsize"]-
 	  (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-diagram_data["xmaxxnames"]/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2+
-	  diagram_data["linewidth"];
+	  diagram_data["linewidth"]+2;
 	diagram_data["xstart"]=xpos_for_yaxis;
       }
     else
@@ -1191,7 +1192,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	diagram_data["xstop"]=diagram_data["xsize"]-
 	  (int)ceil(diagram_data["linewidth"])-max(si,labelx+si/2)-diagram_data["xmaxxnames"]/2;
 	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2+
-	  diagram_data["linewidth"];
+	  diagram_data["linewidth"]+2;
 	diagram_data["xstart"]=xpos_for_yaxis+si*2;
       }
   
@@ -1525,7 +1526,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	labelimg=labelimg->scale(diagram_data["xsize"], 0);
       
       
-      x=max(0,((int)floor((float)xpos_for_yaxis)-labelimg->xsize()/2));
+      x=max(2,((int)floor((float)xpos_for_yaxis)-labelimg->xsize()/2));
       x=min(x, graph->xsize()-labelimg->xsize());
       
       y=0; 
@@ -1534,7 +1535,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	graph->paste_alpha_color(labelimg, 
 				 @(diagram_data["labelcolor"]), 
 				 x,
-				 0);
+				 2);
       
       
 
@@ -1543,9 +1544,10 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //Rita ut datan
   int farg=0;
 
-  foreach(diagram_data["data"], array(float|string) d)
+  foreach(diagram_data["data"], array(float) d)
     {
-      for(int i=0; i<sizeof(d); i++)
+      d-=({VOIDSYMBOL});
+      for(int i=0; i<sizeof(d)-1; i++)
 	{
 	  d[i]=(d[i]-diagram_data["xminvalue"])*xmore+xstart;
 	  i++;
