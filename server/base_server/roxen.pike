@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.480 2000/04/13 21:33:33 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.481 2000/04/14 22:32:28 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2119,27 +2119,19 @@ class ImageCache
       if( args["rotate-cw"] || args["rotate-ccw"])
       {
         float degree = (float)(args["rotate-cw"] || args["rotate-ccw"]);
-        switch( args["rotate-unit"] )
+        switch( args["rotate-unit"] && args["rotate-unit"][0..0] )
         {
-         case "r":
-           degree = (degree / 2*3.1415) * 360;
-           break;
-         case "d":
-           break;
-         case "n":
-           degree = (degree / 400) * 360;
-           break;
+         case "r":  degree = (degree / 2*3.1415) * 360;   break;
+         case "d":  break;
+         case "n":  degree = (degree / 400) * 360;        break;
+         case "p":  degree = (degree / 1.0) * 360;        break;
         }
-        if( args["rotate-ccw"] )
+        if( args["rotate-cw"] )
           degree = -degree;
-        if( alpha )
-        {
-          reply = reply->rotate_expand( degree );
-          alpha = alpha->rotate( degree, 0,0,0 );
-        } else {
-          alpha = reply->copy()->clear(255,255,255)->rotate(degree,0,0,0);
-          reply = reply->rotate_expand( degree );
-        }
+        if(!alpha)
+          alpha = reply->copy()->clear(255,255,255);
+        reply = reply->rotate_expand( degree );
+        alpha = alpha->rotate( degree, 0,0,0 );
       }
 
 
