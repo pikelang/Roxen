@@ -2,7 +2,7 @@
  * A quite complex directory module. Generates macintosh like listings.
  */
 
-string cvs_version = "$Id: directories.pike,v 1.23 1998/05/21 22:22:21 grubba Exp $";
+string cvs_version = "$Id: directories.pike,v 1.24 1998/10/11 06:32:49 peter Exp $";
 int thread_safe=1;   /* Probably. Check _root */
 
 #include <module.h>
@@ -266,7 +266,7 @@ string head_dir_mac(object node, object id)
   
   return ("<title>"+node->path()+"</title>"
 	  "<h1>Directory listing of "+node->path()+"</h1>\n<p>"+rm
-	  +"<pre>\n<dl><hr noshade>");
+	  +"<pre>\n<dl compact><hr noshade>");
 }
 
 string foot_dir_mac()
