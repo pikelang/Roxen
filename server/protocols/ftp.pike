@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.18 1999/10/29 20:36:53 grubba Exp $
+ * $Id: ftp.pike,v 2.19 1999/10/29 21:07:49 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -667,6 +667,8 @@ class LSFile
 
   static mapping(string:array) stat_cache = ([]);
 
+  static object conv;
+
   static array stat_file(string long, object|void session)
   {
     array st = stat_cache[long];
@@ -686,8 +688,11 @@ class LSFile
   {
     if(stringp(s)) {
       // ls is always ASCII-mode...
-      // FIXME: Check output_mode here.
       s = replace(s, "\n", "\r\n");
+      if (conv) {
+	// EBCDIC or potentially other charsets.
+	s = conv->feed(s)->drain();
+      }
     }
     output_queue += ({ s });
   }
@@ -964,6 +969,11 @@ class LSFile
     argv = argv_;
     output_mode = output_mode_;
     ftpsession = ftpsession_;
+
+    if (output_mode == "E") {
+      // EBCDIC
+      conv = Locale.Charset.encoder("EBCDIC-US", "");
+    }
     
     array(string) files = allocate(sizeof(argv));
     int n_files;
@@ -1874,6 +1884,7 @@ class FTPSession
 	// The list_stream object doesn't support nonblocking I/O,
 	// but converts to ASCII anyway, so we don't have to do
 	// anything about it.
+	// But EBCDIC doen't work...
 	file->file = ToEBCDICWrapper(file->file, 0, this_object());
       }
       break;
