@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenRequest.java,v 1.7 2000/02/21 18:30:46 marcus Exp $
+ * $Id: RoxenRequest.java,v 1.8 2000/10/24 16:47:46 marcus Exp $
  *
  */
 
@@ -55,15 +55,19 @@ public class RoxenRequest {
   /** The IP address of the client system */
   public final String remoteaddr;
 
-  private Map _variables, _requestHeaders;
-  private Set _supports, _pragma;
+  /** Time of the request, number of
+      milliseconds since January 1, 1970, 00:00:00 GMT. */
+  public final long time;
 
-  /* auth */
+  private Map _variables, _requestHeaders, _cookies;
+  private Set _supports, _pragma, _prestate;
 
   private native Map getVariables();
   private native Map getRequestHeaders();
+  private native Map getCookies();
   private native Set getSupports();
   private native Set getPragma();
+  private native Set getPrestate();
 
   /**
    * Returns the configuration object of the virtual server by which
@@ -103,6 +107,19 @@ public class RoxenRequest {
   }
 
   /**
+   * Returns a Map with all the cookies of the request
+   *
+   * @return      the cookies
+   */
+  public synchronized Map cookies()
+  {
+    if(_cookies == null)
+      if((_cookies = getCookies()) == null)
+	_cookies = new TreeMap();
+    return _cookies;
+  }
+
+  /**
    * Returns a Set with all known supported features of the client
    *
    * @return      the feature set
@@ -128,10 +145,38 @@ public class RoxenRequest {
     return _pragma;
   }
 
+  /**
+   * Returns a Set with all prestates sent by the client
+   *
+   * @return      the prestates
+   */
+  public synchronized Set prestate()
+  {
+    if(_prestate == null)
+      if((_prestate = getPrestate()) == null)
+	_prestate = new HashSet();
+    return _prestate;
+  }
+
+  /*
+   * Not available (yet):
+   *
+   * portObj
+   * doNotDisconnect
+   * misc
+   * clientVar
+   * config
+   * restQuery
+   * data
+   * host
+   * connection
+   * auth
+   */
+
   RoxenRequest(RoxenConfiguration _conf, String _rawURL, String _prot,
 	       String _clientprot, String _method, String _realfile,
 	       String _virtfile, String _raw, String _query,
-	       String _notQuery, String _remoteaddr)
+	       String _notQuery, String _remoteaddr, int _time)
   {
     conf = _conf;
     rawURL = _rawURL;
@@ -144,6 +189,7 @@ public class RoxenRequest {
     query = _query;
     notQuery = _notQuery;
     remoteaddr = _remoteaddr;
+    time = _time*1000L;
   }
 
 }

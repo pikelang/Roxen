@@ -70,7 +70,7 @@ static object response_class = FINDCLASS("com/roxen/roxen/RoxenResponse");
 static object response2_class = FINDCLASS("com/roxen/roxen/RoxenStringResponse");
 static object response3_class = FINDCLASS("com/roxen/roxen/RoxenFileResponse");
 static object response4_class = FINDCLASS("com/roxen/roxen/RoxenRXMLResponse");
-static object reqid_init = reqid_class->get_method("<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+static object reqid_init = reqid_class->get_method("<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
 static object conf_init = conf_class->get_method("<init>", "()V");
 static object frame_init = frame_class->get_method("<init>", "()V");
 static object _configuration = module_class->get_field("configuration", "Lcom/roxen/roxen/RoxenConfiguration;");
@@ -322,7 +322,7 @@ class ModuleWrapper
     reqid_init->call_nonvirtual(r, make_conf(id->conf), id->raw_url, id->prot,
 				id->clientprot, id->method, id->realfile,
 				id->virtfile, id->raw, id->query,
-				id->not_query, id->remoteaddr);
+				id->not_query, id->remoteaddr, id->time);
     check_exception();
     jotoid[r] = id;
     return r;
@@ -670,6 +670,12 @@ static object native_get_request_headers(object id)
   return id && objify(id->request_headers);
 }
 
+static object native_get_cookies(object id)
+{
+  id = jotoid[id];
+  return id && objify(id->cookies);
+}
+
 static object native_get_supports(object id)
 {
   id = jotoid[id];
@@ -681,6 +687,13 @@ static object native_get_pragma(object id)
   id = jotoid[id];
   return id && objify(id->pragma);
 }
+
+static object native_get_prestate(object id)
+{
+  id = jotoid[id];
+  return id && objify(id->prestate);
+}
+
 static string native_real_file(object conf, object filename, object id)
 {
   conf = jotoconf[conf];
@@ -719,7 +732,9 @@ void create()
   natives_bind4 = reqid_class->register_natives(({
     ({"getVariables", "()Ljava/util/Map;", native_get_variables}),
     ({"getRequestHeaders", "()Ljava/util/Map;", native_get_request_headers}),
+    ({"getCookies", "()Ljava/util/Map;", native_get_cookies}),
     ({"getSupports", "()Ljava/util/Set;", native_get_supports}),
     ({"getPragma", "()Ljava/util/Set;", native_get_pragma}),
+    ({"getPrestate", "()Ljava/util/Set;", native_get_prestate}),
   }));
 }
