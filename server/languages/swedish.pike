@@ -1,6 +1,6 @@
 /* Bugs by: Per */
 
-string cvs_version = "$Id: swedish.pike,v 1.3 1997/01/09 14:39:11 grubba Exp $";
+string cvs_version = "$Id: swedish.pike,v 1.4 1997/01/27 14:59:13 grubba Exp $";
 string month(int num)
 {
   return ({ "januari", "februari", "mars", "april", "maj",
@@ -57,10 +57,8 @@ string date(int timestamp, mapping m)
     return ctime(timestamp)[11..15];
 }
 
-string number(int num)
+string _number(int num)
 {
-  if(num<0)
-    return "minus "+number(-num);
   switch(num)
   {
    case 0:  return "";
@@ -96,11 +94,23 @@ string number(int num)
    case 81..89: case 91..99:
      return number((num/10)*10)+number(num%10);
    case 100..999: return number(num/100)+"hundra"+number(num%100);
-   case 1000..999999: return number(num/1000)+"tusen"+number(num%1000);
+   case 1000..999999: return replace(number(num/1000)+"tusen"+number(num%1000),
+				     ({ "ttt" }), ({ "tt" }));
    case 1000000..999999999: 
      return number(num/1000000)+"miljoner"+number(num%1000000);
    default:
     return "många";
+  }
+}
+
+string number(int num)
+{
+  if (num<0) {
+    return("minus "+_number(-num));
+  } if (num) {
+    return(_number(num));
+  } else {
+    return("noll");
   }
 }
 
