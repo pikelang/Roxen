@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.112 2000/09/23 02:30:25 per Exp $
+//! $Id: module.pmod,v 1.113 2000/09/24 20:40:07 grubba Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -3818,12 +3818,10 @@ static class THtml
 
 // P-code compilation and evaluation.
 
-class VarRef
+class VarRef(string scope, string var)
 //! A helper for representing variable reference tokens.
 {
   constant is_RXML_VarRef = 1;
-  string scope, var;
-  static void create (string _scope, string _var) {scope = _scope, var = _var;}
   int valid (Context ctx) {return ctx->exist_scope (scope);}
   mixed get (Context ctx) {return ctx->get_var (var, scope);}
   mixed set (Context ctx, mixed val) {return ctx->set_var (var, val, scope);}

@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.41 2000/09/20 12:42:57 grubba Exp $
+ * $Id: ftp.pike,v 2.42 2000/09/24 20:38:54 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -204,18 +204,15 @@ class RequestID2
   }
 };
 
-class FileWrapper
+class FileWrapper(static private object f,
+		  static private string data,
+		  static private object ftpsession)
 {
-  static private object f;
-
   static string convert(string s);
 
   static private function read_cb;
   static private function close_cb;
   static private mixed id;
-  static private object ftpsession;
-
-  static private string data;
 
   static private void read_callback(mixed i, string s)
   {
@@ -311,17 +308,6 @@ class FileWrapper
       BACKEND_CLOSE(f);
     }
   }
-
-  void create(object f_, string data_, object ftpsession_)
-  {
-    f = f_;
-    if (data_ && sizeof(data_)) {
-      data = data_;
-    } else {
-      data = 0;
-    }
-    ftpsession = ftpsession_;
-  }
 }
 
 class ToAsciiWrapper
@@ -403,11 +389,10 @@ class FromEBCDICWrapper
 }
 
 
-class PutFileWrapper
+class PutFileWrapper(static object from_fd,
+		     static object session,
+		     static object ftpsession)
 {
-  static object from_fd;
-  static object ftpsession;
-  static object session;
   static int response_code = 226;
   static string response = "Stored.";
   static string gotdata = "";
@@ -535,13 +520,6 @@ class PutFileWrapper
   {
     return from_fd->query_address(loc);
   }
-
-  void create(object fd_, object session_, object ftpsession_)
-  {
-    from_fd = fd_;
-    session = session_;
-    ftpsession = ftpsession_;
-  }
 }
 
 
@@ -568,11 +546,9 @@ class PutFileWrapper
 #define LS_FLAG_U       0x40000
 #define LS_FLAG_v	0x80000
 
-class LS_L
+class LS_L(static object master_session,
+	   static int|void flags)
 {
-  static object master_session;
-  static int flags;
-
   static constant decode_mode = ({
     ({ S_IRUSR, S_IRUSR, 1, "r" }),
     ({ S_IWUSR, S_IWUSR, 2, "w" }),
@@ -663,12 +639,6 @@ class LS_L
 		     user, group, (st[1]<0? 512:st[1]),
 		     ts, file);
     }
-  }
-
-  void create(object session_, int|void flags_)
-  {
-    master_session = session_;
-    flags = flags_;
   }
 }
 
@@ -1982,6 +1952,8 @@ class FTPSession
       send(425, ({ "Can't build data connect: Connection refused." }));
       return;
     }
+
+    data = data && sizeof(data) && data;
 
     switch(mode) {
     case "A":

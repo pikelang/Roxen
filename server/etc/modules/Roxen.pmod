@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.40 2000/09/21 03:57:42 per Exp $
+ * $Id: Roxen.pmod,v 1.41 2000/09/24 20:39:43 grubba Exp $
  *
  * Various helper functions.
  *
@@ -631,10 +631,8 @@ class QuotaDB
 
 
 #define CTX()   
-class EScope
+class EScope(string scope)
 {
-  string scope;
-  
   void delete( string var )
   {
     RXML.Context ctx = RXML.get_context( );  
@@ -647,44 +645,39 @@ class EScope
     return scope == "_" ? ctx->current_scope() : scope;
   }
 
-  /*static*/ mixed `[]( string what )
+  static mixed `[]( string what )
   {
     RXML.Context ctx = RXML.get_context( );  
     return ctx->get_var( what, scope );
   }
 
-  /*static*/ mixed `->( string what )
+  static mixed `->( string what )
   {
     return `[]( what );
   }
 
-  /*static*/ mixed `[]=( string what, mixed nval )
+  static mixed `[]=( string what, mixed nval )
   {
     RXML.Context ctx = RXML.get_context( );  
     ctx->set_var( what, nval, scope );
     return nval;
   }
 
-  /*static*/ mixed `->=( string what, mixed nval )
+  static mixed `->=( string what, mixed nval )
   {
     return `[]=( what, nval );
   }
 
-  /*static*/ array(string) _indices( )
+  static array(string) _indices( )
   {
     RXML.Context ctx = RXML.get_context( );  
     return ctx->list_var( scope );
   } 
 
-  /*static*/ array(string) _values( )
+  static array(string) _values( )
   {
     RXML.Context ctx = RXML.get_context( );  
     return map( ctx->list_var( scope ), `[] );
-  } 
-
-  /*static*/ void create( string _scope )
-  {
-    scope = _scope;
   }
 }
 
