@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.478 2005/02/01 13:25:57 stewa Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.479 2005/02/01 15:11:28 stewa Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -71,6 +71,8 @@ private mapping(string:mixed) sexpr_constants = ([
   "`>=":`>=,
 
   "sizeof": sizeof,
+
+  "pow":pow,
 
   "INT":lambda(void|mixed x) {
 	  return intp (x) || floatp (x) || stringp (x) ? (int) x : 0;
@@ -7472,6 +7474,9 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
  <p>The size of a string or array may be retrieved with
  sizeof(var.something).</p>
+
+ <p>The function pow(x,y) can be 
+ used for calculating the value x raised to the specified power y.</p>
 
  <p>Numbers can be represented as decimal integers when numbers
  are written out as normal, e.g. \"42\". Numbers can also be written
