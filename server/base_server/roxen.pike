@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.348 1999/06/10 23:03:22 peter Exp $
+ * $Id: roxen.pike,v 1.349 1999/06/11 01:07:13 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.348 1999/06/10 23:03:22 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.349 1999/06/11 01:07:13 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -1599,7 +1599,7 @@ class ImageCache
   static void draw( string name, object id )
   {
     mapping args = argcache->lookup( name );
-    mixed reply = draw_function( args, id );
+    mixed reply = draw_function( copy_value(args), id );
 
     mapping meta;
     string data;
@@ -1614,6 +1614,9 @@ class ImageCache
 
       if( args->fs  || dither == "fs" )
 	dither = "floyd_steinberg";
+
+      if(  dither == "random" )
+	dither = "random_dither";
 
       if( format == "jpg" ) 
         format = "jpeg";
@@ -1687,11 +1690,14 @@ class ImageCache
       switch(format)
       {
        case "gif":
-	 if( alpha )
-	   data = Image.GIF.encode_trans( reply, ct, alpha );
-	 else
-	   data = Image.GIF.encode( reply, ct );
-        break;
+         if( catch {
+           if( alpha )
+             data = Image.GIF.encode_trans( reply, ct, alpha );
+           else
+             data = Image.GIF.encode( reply, ct );
+         })
+           data = Image.GIF.encode( reply );
+         break;
        case "png":
          if( ct )
            enc_args->palette = ct;
@@ -1910,11 +1916,11 @@ class ArgCache
       path += replace(name, "/", "_")+"/";
       mkdirhier( path + "/tmp" );
       object test = Stdio.File();
-      if (!test->open (path + "/testfile", "wc"))
+      if (!test->open (path + "/.testfile", "wc"))
 	error ("Can't create files in the argument cache directory " + path + "\n");
       else {
 	test->close();
-	rm (path + "/testfile");
+	rm (path + "/.testfile");
       }
     }
   }
@@ -1923,10 +1929,11 @@ class ArgCache
   {
     if( is_db )
     {
-      mapping res = db->query("select * from "+name+" where id='"+id+"'");
+      mapping res = db->query("select contents from "+name+" where id='"+id+"'");
       if( sizeof(res) )
       {
-        db->query("update "+name+" set atime='"+time()+"' where id='"+id+"'");
+        db->query("update "+name+" set atime='"+
+                  time()+"' where id='"+id+"'");
         return res[0]->contents;
       }
       return 0;
@@ -1982,16 +1989,17 @@ class ArgCache
   string store( mapping args )
   {
     LOCK();
-    int e = gethrtime();
     array b = values(args), a = sort(indices(args),b);
     string data = MIME.encode_base64(encode_value(({a,b})),1);
+
     if( cache[ data ] )
       return cache[ data ][ CACHE_SKEY ];
 
+//     werror(" store -> ");
     string id = create_key( data );
-
+//     werror(id+"\n");
     cache[ data ] = ({ 0, 0 });
-    cache[ data ][ CACHE_VALUE ] = args;
+    cache[ data ][ CACHE_VALUE ] = copy_value( args );
     cache[ data ][ CACHE_SKEY ] = id;
     cache[ id ] = data;
 
@@ -2006,10 +2014,13 @@ class ArgCache
 
   mapping lookup( string id )
   {
+    LOCK();
+//     werror(" lookup -> "+id+"\n");
     if(cache[id])
       return cache[cache[id]][CACHE_VALUE];
 
     string q = read_args( id );
+
     if(!q) error("Key does not exist!\n");
     mixed data = decode_value(MIME.decode_base64( q ));
     data = mkmapping( data[0],data[1] );
@@ -2702,7 +2713,6 @@ private void define_global_variables( int argc, array (string) argv )
 	perror("Unknown global variable: "+c+"\n");
   }
   docurl=QUERY(docurl2);
-
 }
 
 
@@ -2716,31 +2726,6 @@ void do_dest(object|void o)
   catch {
     destruct(o);
   };
-}
-
-// return all available fonts. Taken from the font_dirs list.
-array font_cache;
-array available_fonts(int cache)
-{
-  array res = ({});
-  if(cache && font_cache) return font_cache;
-  foreach(QUERY(font_dirs), string dir)
-  {
-    dir+="32/";
-    array d;
-    if(array d = get_dir(dir))
-    {
-      foreach(d,string f)
-      {
-	if(f=="CVS") continue;
-	array a;
-	if((a=file_stat(dir+f)) && (a[1]==-2))
-	  res |= ({ replace(f,"_"," ") });
-      }
-    }
-  }
-  sort(res);
-  return font_cache = res;
 }
 
 
