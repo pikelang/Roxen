@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.11 1996/12/08 10:33:26 neotron Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.11.2.1 1997/02/15 23:23:53 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -515,6 +515,7 @@ mapping find_file( string f, object id )
     }
     port=80; /* Default */
   }
+  host = lower_case(host);
   id->misc->proxyhost = host; // Used if the host is unknown.
   if(tmp = proxy_auth_needed(id))
     return tmp;
