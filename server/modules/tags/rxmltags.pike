@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.359 2002/03/27 21:38:40 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.360 2002/04/08 17:50:28 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2538,7 +2538,7 @@ class UserTagContents
       }
     }
 
-    local mixed get_content()
+    local mixed get_content (RXML.Frame upframe, mixed content)
     {
       if (string expr = args["copy-of"] || args["value-of"]) {
 	string insert_type = args["copy-of"] ? "copy-of" : "value-of";
@@ -2657,32 +2657,38 @@ class UserTagContents
       else
 	content = upframe->content_result;
 
-      result = get_content();
-      return 0;
-    }
-
-    int save()
-    {
-      if (objectp (content)) upframe->compiled_content = content;
+      result = get_content (upframe, content);
       return 0;
     }
 
     // The frame might be used as a variable value if preparsing is in
-    // use (see the is_define_tag stuff in Frame.do_return).
+    // use (see the is_define_tag stuff in Frame.do_return). Note: The
+    // frame is not thread local in this case.
     mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
 			 void|RXML.Type type)
     {
-      upframe = ctx->frame;
+      RXML.Frame upframe = ctx->frame;
 #ifdef DEBUG
       if (!upframe || !upframe->is_user_tag)
 	error ("Expected current frame to be UserTag, but it's %O.\n", upframe);
 #endif
 
-      // Fake a tag by calling the callbacks and so on. (This is
-      // actually pretty much what the horrendous RXML.Frame._eval
-      // does, when all the hairy special cases is removed.)
-      do_enter();
-      if (do_iterate >= 0) {
+      mixed content;
+
+      // Do the work in _eval, do_enter and do_return. Can't use the
+      // do_* functions here since the frame isn't thread local here.
+
+      if (!upframe->got_content_result || args->eval) {
+	// Switch to the set of scopes that were defined at entry of
+	// the UserTag frame, to get static variable binding in the
+	// content. This is poking in the internals; there ought to be
+	// some sort of interface here.
+	RXML.Context ctx = RXML_CONTEXT;
+	mapping(string:mixed) orig_ctx_scopes = ctx->scopes;
+	ctx->scopes = upframe->saved_scopes;
+	mapping(RXML.Frame:array) orig_ctx_hidden = ctx->hidden;
+	ctx->hidden = upframe->saved_hidden;
+
 	if (upframe->compiled_content && !upframe->compiled_content->is_stale())
 	  content = upframe->compiled_content->eval (ctx);
 	else if (upframe->compile)
@@ -2690,14 +2696,22 @@ class UserTagContents
 	    ctx->eval_and_compile (content_type, upframe->content_text);
 	else
 	  content = content_type->eval (upframe->content_text);
+
+	// Switch back the set of scopes. This is poking in the
+	// internals; there ought to be some sort of interface here.
+	ctx->scopes = orig_ctx_scopes;
+	ctx->hidden = orig_ctx_hidden;
+	upframe->content_result = content;
+	upframe->got_content_result = 1;
       }
-      do_return();
+      else
+	content = upframe->content_result;
+
+      mixed result = get_content (upframe, content);
 
       // Note: result_type == content_type (except for the parser).
-      mixed ret = type && type != result_type ?
+      return type && type != result_type ?
 	type->encode (result, result_type) : result;
-      result = content = 0;
-      return ret;
     }
 
     array _encode() {return ({content_type, upframe, args});}
@@ -2713,8 +2727,6 @@ class UserTagContents
 	// suppress this one.
 	return "";
     }
-
-    string _sprintf() {return "UserTagContents.ExpansionFrame()";}
   }
 }
 
@@ -2865,11 +2877,7 @@ class UserTag {
 
     array save() {return ({content_text, compiled_content});}
     void restore (array saved) {[content_text, compiled_content] = saved;}
-
-    string _sprintf() {return sprintf ("UserTag.Frame(%O)", name);}
   }
-
-  string _sprintf() {return sprintf ("UserTag(%O)", name);}
 }
 
 // A helper Scope class used when preparsing in TagDefine: Every
