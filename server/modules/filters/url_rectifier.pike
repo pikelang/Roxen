@@ -5,7 +5,7 @@
 inherit "module";
 #include <request_trace.h>
 
-constant cvs_version = "$Id: url_rectifier.pike,v 1.15 2001/09/03 18:12:20 nilsson Exp $";
+constant cvs_version = "$Id: url_rectifier.pike,v 1.16 2002/10/14 14:20:10 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_LAST;
 constant module_name = "URL Rectifier";
@@ -46,6 +46,11 @@ mapping last_resort(RequestID id)
   function decode;
   string iq;
   int tries;
+
+  // Internal request do not have this method.
+  if(!id->decode_charset_encoding)
+    return 0;
+
   foreach(encodings, string encoding)
   {
     decode = decoders[ encoding ];
