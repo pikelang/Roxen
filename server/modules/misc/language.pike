@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.19 1998/12/17 10:11:50 peter Exp $";
+string cvs_version = "$Id: language.pike,v 1.20 1999/07/24 21:17:10 nilsson Exp $";
 /* Is threadsafe. */
 
 #if DEBUG_LEVEL > 20
@@ -10,6 +10,7 @@ string cvs_version = "$Id: language.pike,v 1.19 1998/12/17 10:11:50 peter Exp $"
 # endif
 #endif
 
+#define old_rxml_compat 1
 
 array register_module()
 {
@@ -27,9 +28,9 @@ array register_module()
 	      "<p>The module also defines three new tags. "
 	      "<br><b>&lt;language&gt;</b> that tells which language the "
 	      "current page is in. "
-	      "<br><b>&lt;available_languages&gt;</b> gives a list of other "
+	      "<br><b>&lt;available-languages&gt;</b> gives a list of other "
 	      "languages the current page is in, with links to them. "
-	      "<br><b>&lt;unavailable_language&gt;</b> shows the language "
+	      "<br><b>&lt;unavailable-language&gt;</b> shows the language "
 	      "the user wanted, if the page was not available in that "
 	      "language. "
 	      "<p>All tags take the argument type={txt,img}. ",
@@ -389,8 +390,13 @@ string tag_available_languages( string tag, mapping m, object id )
 
 mapping query_tag_callers()
 {
-  return ([ "unavailable_language" : tag_unavailable_language,
+  return ([ "unavailable-language" : tag_unavailable_language,
             "language" : tag_language,
-            "available_language" : tag_available_languages,  // compat lio
-            "available_languages" : tag_available_languages ]);
+            "available-languages" : tag_available_languages,
+#if old_rxml_compat
+            "available_language" : tag_available_languages,
+            "available_languages" : tag_available_languages,
+            "unavailable_languages" : tag_available_languages,
+#endif
+  ]);
 }
