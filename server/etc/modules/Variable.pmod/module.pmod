@@ -919,15 +919,16 @@ class List
     {
       res += "<tr>\n<td><font size='-1'>"+ input( prefix+"set."+i, val, width) + "</font></td>\n";
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
+#define REORDER(X,Y) ("<submit-gbutton2 name='"+X+"' icon-src='"+Y+"'></submit-gbutton2>")
       if( i )
         res += "\n<td>"+
-            BUTTON(prefix+"up."+i, "^")+
+            REORDER(prefix+"up."+i, "/internal-roxen-up")+
             "</td>";
       else
         res += "\n<td></td>";
       if( i != sizeof( query())- 1 )
         res += "\n<td>"+
-            BUTTON(prefix+"down."+i, "v")
+            REORDER(prefix+"down."+i, "/internal-roxen-down")
             +"</td>";
       else
         res += "\n<td></td>";
