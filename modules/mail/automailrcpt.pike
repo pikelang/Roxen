@@ -1,5 +1,5 @@
 /*
- * $Id: automailrcpt.pike,v 1.7 1998/09/30 23:00:40 js Exp $
+ * $Id: automailrcpt.pike,v 1.8 1999/08/23 23:11:22 grubba Exp $
  *
  * A RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: automailrcpt.pike,v 1.7 1998/09/30 23:00:40 js Exp $";
+constant cvs_version = "$Id: automailrcpt.pike,v 1.8 1999/08/23 23:11:22 grubba Exp $";
 
 /*
  * Roxen glue
@@ -29,6 +29,9 @@ object conf;
 
 void create()
 {
+  defvar("automail_admin_support", 0, "Enable AutoMail admin lockout",
+	 TYPE_FLAG|VAR_MORE,
+	 "Enable support for the AutoMail administration interface lockout.");
 }
 
 void start(int i, object c)
@@ -136,8 +139,9 @@ int put(string sender, string user, string domain,
     object u = o->get_user_from_address(addr) ||
       o->get_user_from_address(addr2);
 
-    if (u && conf->get_provider("automail_admin")->
-	query_status(u->id,query_automail_name()))
+    if (u && (!QUERY(automail_admin_support) ||
+	      conf->get_provider("automail_admin")->
+	      query_status(u->id,query_automail_name())))
     {
       u->get_incoming()->create_mail_from_fd(mail);
       res = 1;
