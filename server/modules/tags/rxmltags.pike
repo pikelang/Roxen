@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.445 2004/02/04 17:57:27 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.446 2004/02/09 15:56:57 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6551,7 +6551,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
      such errors to end up in the debug log:</p>
 
   <ex-box><debug werror='File &page.url; not found!
-(linked from &client.referrer;)'/></ex-box>
+\(linked from &client.referrer;)'/></ex-box>
 
   <p>The message is also shown the request trace, e.g. when
   \"Tasks\"/\"Debug information\"/\"Resolve path...\" is used in the
@@ -6639,12 +6639,12 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  The result is encapsulated within a <tag>pre</tag> container.</p>
 
 <ex><doc pre=''>
-{table}
+\{table}
  {tr}
     {td} First cell {/td}
     {td} Second cell {/td}
  {/tr}
-{/table}
+\{/table}
 </doc></ex>
 </attr>
 
@@ -7664,23 +7664,39 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "define":({ #"<desc type='cont'><p><short>
- Defines variables, tags, containers and if-callers.</short></p>
-<p>The values of the attributes given to the defined tag are
- available in the scope created within the define tag.</p></desc>
+Defines new tags, containers and if-callers. Can also be used to set
+variable values.</short></p>
+
+<p>The attributes \"tag\", \"container\", \"if\" and \"variable\"
+specifies what is being defined. Exactly one of them are required. See
+the respective attributes below for further information.</p></desc>
 
 <attr name='variable' value='name'><p>
  Sets the value of the variable to the contents of the container.</p>
 </attr>
 
 <attr name='tag' value='name'><p>
- Defines a tag that outputs the contents of the container.</p>
+ Defines a tag with the given name that doesn't take any content. When
+ the defined tag is used, the content of this <tag>define</tag> is
+ RXML parsed and the result is inserted in place of the defined tag.
+ The arguments to the defined tag are available in the current scope
+ in the <tag>define</tag>. An example:
 
-<ex><define tag=\"hi\">Hello &_.name;!</define>
-<hi name=\"Martin\"/></ex>
+ <ex><define tag='my-tag'>
+  <inc variable='var.counter'/>
+  A counter: &var.counter;<br />
+  The 'foo' argument is: &_.foo;<br />
+</define>
+<my-tag/>
+<my-tag foo='bar'/></ex>
 </attr>
 
 <attr name='container' value='name'><p>
- Defines a container that outputs the contents of the container.</p>
+ Like the 'tag' attribute, but the defined tag may also take content.
+ The unevaluated content is available in <ent>_.contents</ent> inside
+ the <tag>define</tag> (see the scope description below). You can also
+ get the content after RXML evaluation with the <tag>contents</tag>
+ tag - see below for further details.
 </attr>
 
 <attr name='if' value='name'><p>
