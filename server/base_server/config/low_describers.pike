@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.21 1998/03/02 12:58:16 grubba Exp $ */
+/* $Id: low_describers.pike,v 1.22 1998/03/02 12:59:06 grubba Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -142,7 +142,7 @@ string describe_variable_as_text(array var, int|void verbose)
 
    case TYPE_TEXT_FIELD:
     array f;
-    f=var[VAR_VALUE]/"\n" - ({ "" });
+    f=(var[VAR_VALUE]||"")/"\n" - ({ "" });
     if(!sizeof(f)) return "Empty";
     if(verbose)
       return "<pre>"+replace(var[VAR_VALUE], ({ "<", ">", "&" }), 
