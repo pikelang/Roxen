@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.50 2002/10/23 17:26:17 mast Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.51 2002/10/24 17:58:31 mast Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -82,58 +82,45 @@ void register_callback(string token, function(string,string,object:string) cb)
   callbacks[token] = cb;
 }
 
-// Rewrote the JSSupport/JSInsert objects to work with p-code. All
-// data must be stored with mapping/array types in RXML_CONTEXT->misc
-// to be able to encode and decode p-code frames. /Wellhardh
-//
-// Actually not, but you need to tell the p-code codec that it's ok to
-// store the objects in the p-code by defining the constant
-// is_RXML_encodable. /mast
 class JSInsert
 {
+  constant is_RXML_encodable = 1;
+
   static private string name;
   static private mapping(string:string) args;
-  static private array content; // Must be a reference type.
+  static private string content = "";
 
   void add(string s)
   {
-    content[0] += s;
+    content += s;
   }
 
   string get()
   {
-    return content[0];
+    return content;
   }
   
-  string _sprintf(int i, mapping(string:int)|void m)
+  string _sprintf()
   {
-    return sprintf("JSInsert(%O,%O,%O)", name, args, content && content[0][..20]);
+    return sprintf("JSInsert(%O)", name);
   }
 
-  void create(string|mapping data, mapping(string:string)|void _args)
+  void create(string _name, mapping(string:string) _args)
   {
-    if(mappingp(data)) {
-      name = data->name;
-      args = data->args;
-      content = data->content;
-      return;
-    }
-
-    name = data;
+    name = _name;
     args = _args;
-    content = ({ "" });
   }
 
-  mapping encode()
-  {
-    return ([ "name":name, "args":args, "content":content ]);
-  }
+  array _encode() {return ({name, args, content});}
+  void _decode (array data) {[name, args, content] = data;}
 }
 
 class JSSupport
 {
-  static private mapping(string:mapping) inserts;
-  static private mapping(string:int) keys;
+  constant is_RXML_encodable = 1;
+
+  static private mapping(string:JSInsert) inserts = ([]);
+  static private mapping(string:int) keys = ([]);
 
   string get_unique_id(string name)
   {
@@ -143,7 +130,7 @@ class JSSupport
   void create_insert(string name, string tag_name,
 		     mapping(string:string) args)
   {
-    inserts[name] = JSInsert(tag_name, args)->encode();
+    inserts[name] = JSInsert(tag_name, args);
   }
 
   JSInsert get_insert(string name)
@@ -151,27 +138,16 @@ class JSSupport
     if(!inserts[name])
       create_insert(name, 0, 0);
     
-    return JSInsert(inserts[name]);
+    return inserts[name];
   }
   
-  string _sprintf(int i, mapping(string:int)|void m)
+  string _sprintf()
   {
-    return sprintf("JSSupport: %O", inserts);
+    return sprintf("JSSupport(%d inserts)", sizeof (inserts));
   }
 
-  void create(mapping|void jssupport)
-  {
-    if(!jssupport)
-      jssupport = ([ ]);
-
-    inserts = jssupport->inserts = jssupport->inserts || ([ ]);
-    keys = jssupport->keys = jssupport->keys || ([ ]);
-  }
-
-  mapping encode()
-  {
-    return ([ "inserts": inserts, "keys": keys ]);
-  }
+  array _encode() {return ({inserts, keys});}
+  void _decode (array data) {[inserts, keys] = data;}
 }
 
 static private
@@ -218,26 +194,24 @@ string make_container_unquoted(string name, mapping args, string contents)
 
 int jssp(RequestID id)
 {
-  return !!(RXML_CONTEXT? RXML_CONTEXT->misc->javascript_support:
-	    id->misc->defines && id->misc->defines->javascript_support);
+  return !!id->root_id->misc->javascript_support;
 }
 
 JSSupport get_jss(RequestID id)
 {
   // The p-code codec can not handle objects so we have to store mapping
   // structures.
-  mapping jssupport =
-    (RXML_CONTEXT? RXML_CONTEXT->misc->javascript_support:
-     id->misc->defines->javascript_support);
-  
+  JSSupport jssupport = id->root_id->misc->javascript_support;
   if(!jssupport) {
-    jssupport = JSSupport()->encode();
+    jssupport = JSSupport();
     if(RXML_CONTEXT)
-      RXML_CONTEXT->set_misc("javascript_support", jssupport);
+      RXML_CONTEXT->set_root_id_misc("javascript_support", jssupport);
+    else
+      id->root_id->misc->javascript_support = jssupport;
   }
   
   //werror("get_jss: %O\n", jssupport);
-  return JSSupport(jssupport);
+  return jssupport;
 }
 
 class TagEmitJSHidePopup {
