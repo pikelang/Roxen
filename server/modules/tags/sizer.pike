@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.24 2004/06/30 16:59:27 mast Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.25 2004/07/05 17:23:00 grubba Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -182,11 +182,13 @@ mixed find_internal( string f, RequestID id )
 
   switch( fmt )
   {
+#if constant(Image.JPEG.encode)
     case "JPEG":
       return Roxen.http_string_answer(
 	Image.JPEG.encode( i->img, ([ "quality":quality ]) ),
 	"image/jpeg" );
       break;
+#endif
     case "GIF":
       break;
   }
@@ -353,6 +355,7 @@ string simpletag_page_size( string name,
 	switch( types[ f ] )
 	{
 	  case "image/jpeg":
+#if constant(Image.JPEG.encode) && constant(Image.JPEG.decode)
 	    if( sizes[f][0] < 300*1024 )
 	    {
 	      Image.Image i=Image.JPEG.decode( do_read_file( f, id )->data() );
@@ -416,6 +419,10 @@ string simpletag_page_size( string name,
 	      res += WARN("The image "+fname(f)+
 			  " is huge. Try making it smaller");
 	    }
+#else /* !constant(Image.JPEG.encode) || !constant(Image.JPEG.decode) */
+	    res += NOTE("Could not decode/encode JPEG image. "
+			"This server lacks JPEG support.");
+#endif /* constant(Image.JPEG.encode) */
 	    break;
 	  case "image/gif":
 #if constant(Image.GIF) && constant(Image.GIF.encode)
