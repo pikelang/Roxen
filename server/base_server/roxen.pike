@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.319 1999/09/02 18:32:16 per Exp $
+ * $Id: roxen.pike,v 1.320 1999/09/02 18:39:02 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.319 1999/09/02 18:32:16 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.320 1999/09/02 18:39:02 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -539,7 +539,7 @@ void unthreaded_handle(function f, mixed ... args)
 
 function handle = unthreaded_handle;
 #else
-function handle;
+function handle = threaded_handle;
 #endif
 
 /*
@@ -616,8 +616,6 @@ void start_handler_threads()
   for(; number_of_threads < QUERY(numthreads); number_of_threads++)
     do_thread_create( "Handle thread ["+number_of_threads+"]",
 		   handler_thread, number_of_threads );
-  if(number_of_threads > 0)
-    handle = threaded_handle;
 }
 
 void stop_handler_threads()
