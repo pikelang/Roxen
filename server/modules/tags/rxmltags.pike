@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.135 2000/07/02 16:58:56 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.136 2000/07/07 12:34:25 wellhard Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -777,7 +777,22 @@ class TagInsert {
 	return 0;
       }
 
-      if(args->file) {
+      if(args->file)
+      {
+	if(args["sb-search"] && id->misc->wa)
+	{
+	  object vcfile = 
+	    id->misc->wa->
+	    locate_file(args->file, id->misc->vcobj,
+			id->misc->sb->
+			find_content_type_from_filename(args->file), id);
+	  if(vcfile)
+	  {
+	    string name = vcfile->abspath(id);
+	    if(!mappingp(name))
+	      args->file = "/" + name;
+	  }
+	}
 	if(args->nocache) {
 	  int nocache=id->pragma["no-cache"];
 	  id->pragma["no-cache"] = 1;
@@ -788,7 +803,7 @@ class TagInsert {
 	else
 	  result=id->conf->try_get_file(args->file,id);
 	if(args->quote=="html") result=Roxen.html_encode_string(result);
-
+	
 #ifdef OLD_RXML_COMPAT
 	result=Roxen.parse_rxml(result, id);
 #endif

@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.1 2000/07/07 11:24:24 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.2 2000/07/07 12:34:25 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 constant module_name = "HTML washer";
@@ -24,6 +24,13 @@ class TagWashHtml
       ((replace(replace(s - "\r" - "\0", "\n\n", "\0"),
 		"\0\n", "\0")/"\0") - ({ "\n", "" }))*"</p>\n<p>"
       +"</p>";
+  }
+  
+  string unparagraphify(string s)
+  {
+    return replace(s,
+		   ({ "</p>\n<p>", "</p><p>", "<p>", "</p>" }),
+		   ({ "\n\n",      "\n\n",    "",    "" }) );
   }
   
   array parse_arg_array(string s)
@@ -67,15 +74,25 @@ class TagWashHtml
     
     array do_return(RequestID id)
     {
-      string res = 
-	filter_body(content,
-		    parse_arg_array(args["keep-tags"]) || ({ "br" }),
-		    parse_arg_array(args["keep-containers"]) || ({ "b", "i"}));
+      string res = content;
       
-      res = paragraphify(res);
-
-      if(args->doublequote)
+      if(args->unparagraphify)
+	res = unparagraphify(res);
+      
+      if(!args["keep-all"])
+	res =
+	  filter_body(res,
+		      parse_arg_array(args["keep-tags"]) || ({ "br" }),
+		      parse_arg_array(args["keep-containers"]) || ({"b","i"}));
+      
+      if(args->paragraphify)
+	res = paragraphify(res);
+      
+      if(args->quote)
 	res = Roxen.html_encode_string(res);
+      
+      if(args->unquote)
+	res = Roxen.html_decode_string(res);
       
       return ({ res });
     }
@@ -86,7 +103,11 @@ class TagWashHtml
     req_arg_types = ([ ]);
     opt_arg_types = ([ "keep-tags":RXML.t_text(RXML.PXml),
 		       "keep-containers":RXML.t_text(RXML.PXml),
-		       "doublequote":RXML.t_text(RXML.PXml) ]);
+		       "quote":RXML.t_text(RXML.PXml),
+		       "unquote":RXML.t_text(RXML.PXml),
+		       "paragraphify":RXML.t_text(RXML.PXml),
+                       "unparagraphify":RXML.t_text(RXML.PXml),
+		       "keep-all":RXML.t_text(RXML.PXml) ]);
   }
 }
 
