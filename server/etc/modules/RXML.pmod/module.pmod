@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.331 2004/06/18 16:56:02 mast Exp $
+// $Id: module.pmod,v 1.332 2004/06/23 13:00:11 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4775,7 +4775,7 @@ final void run_error (string msg, mixed... args)
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
   array bt = backtrace();
-  TAG_DEBUG (RXML_CONTEXT->frame, "Throwing run error: %s", msg);
+  TAG_DEBUG (RXML_CONTEXT && RXML_CONTEXT->frame, "Throwing run error: %s", msg);
   throw (Backtrace ("run", msg, RXML_CONTEXT, bt[..sizeof (bt) - 2]));
 }
 
@@ -4787,7 +4787,7 @@ final void parse_error (string msg, mixed... args)
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
   array bt = backtrace();
-  TAG_DEBUG (RXML_CONTEXT->frame, "Throwing parse error: %s", msg);
+  TAG_DEBUG (RXML_CONTEXT && RXML_CONTEXT->frame, "Throwing parse error: %s", msg);
   throw (Backtrace ("parse", msg, RXML_CONTEXT, bt[..sizeof (bt) - 2]));
 }
 
@@ -8945,21 +8945,19 @@ PCode string_to_p_code (string str, void|Configuration default_config,
   PCodec codec =
     codecs[!ignore_tag_set_hash] ||
     (codecs[!ignore_tag_set_hash] = PCodec (default_config, !ignore_tag_set_hash));
-#if 0
+
   mixed err = catch {
-#endif
-    return [object(PCode)]decode_value(str, codec);
-#if 0
-  };
-  // Try to explain the error a bit.
-  catch {
-    err[0] += #"\
-The encoded p-code probably comes from an older version or a site with
-a different set of RXML tags. In that case this error can be safely
-ignored; it will disappear the next time the page is evaluated.\n";
-  };
-  throw (err);
-#endif
+      return [object(PCode)]decode_value(str, codec);
+    };
+
+  // Ugly way to recognize the errors from decode_value that are due
+  // to staleness.
+  string errmsg = describe_error (err);
+  if (has_value (errmsg, "Bad instruction checksum") ||
+      has_value (errmsg, "encoded with other pike version"))
+    p_code_stale_error ("P-code is stale - " + errmsg);
+  else
+    throw (err);
 }
 
 // Some parser tools:
