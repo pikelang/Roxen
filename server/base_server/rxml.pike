@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.65 2000/01/13 15:34:36 nilsson Exp $
+ * $Id: rxml.pike,v 1.66 2000/01/14 05:27:24 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -41,17 +41,28 @@ string rxml_error(string tag, string error, RequestID id) {
 // is no longer parsed multiple times.
 
 class Entity_roxen_time {
-  string rxml_var_eval() { return (string)time(1); }
+  int rxml_var_eval() { return time(1); }
 }
 
 class Entity_roxen_server {
   string rxml_var_eval(RXML.Context c) { return c->id->conf->query("MyWorldLocation"); }
 }
 
+class Entity_page_truth {
+  int rxml_var_eval(RXML.Context c) { return c->id->misc->defines[" _ok"]; }
+}
+
 void global_entities(RXML.Context c) {
   c->add_scope("roxen",(["version":roxen.version(),
 			 "time":Entity_roxen_time(),
 			 "server":Entity_roxen_server() ])  );
+  c->add_scope("cookie" ,c->id->cookies);
+  c->add_scope("form", c->id->variables);
+  c->add_scope("var", ([]) );
+  c->add_scope("page",(["realfile":c->id->realfile,
+			"vfs":c->id->virtfile,
+			"uri":c->id->raw_url,
+			"truth":Entity_page_truth() ]) );
 }
 
 RXML.TagSet rxml_tag_set = lambda ()
@@ -79,11 +90,24 @@ RXML.TagSet entities_tag_set = class
   ]);
 } ("entities_tag_set");
 
-RXML.Type t_text_parse_varrefs = RXML.t_text (RXML.PHtmlCompat);
+RXML.Type t_html_parse_varrefs = RXML.t_html (RXML.PHtmlCompat);
+
+class BacktraceFrame
+// Only used to get old style tags in the RXML backtraces.
+{
+  inherit RXML.Frame;
+  void create (RXML.Frame _up, string name, mapping(string:string) _args)
+  {
+    up = _up;
+    tag = class {inherit RXML.Tag; string name;}();
+    tag->name = name;
+    args = _args;
+  }
+}
 
 array|string call_overridden (array call_to, RXML.PHtml parser,
 			      string name, mapping(string:string) args,
-			      string content, RequestID id, mixed... extra)
+			      string content, RequestID id)
 {
   mixed tdef, cdef;
 
@@ -108,17 +132,16 @@ array|string call_overridden (array call_to, RXML.PHtml parser,
     if (stringp (tdef))
       result = ({tdef});
     else if (arrayp (tdef))
-      result = tdef[0] (parser, call_to[2] || args, @tdef[1..], id, @extra);
+      result = tdef[0] (parser, call_to[2] || args, @tdef[1..]);
     else
-      result = tdef (parser, call_to[2] || args, id, @extra);
+      result = tdef (parser, call_to[2] || args);
   else if (cdef)		// Call an overridden container.
     if (stringp (cdef))
       result = ({cdef});
     else if (arrayp (cdef))
-      result = cdef[0] (parser, call_to[2] || args, call_to[3] || content,
-			@cdef[1..], id, @extra);
+      result = cdef[0] (parser, call_to[2] || args, call_to[3] || content, @cdef[1..]);
     else
-      result = cdef (parser, call_to[2] || args, call_to[3] || content, id, @extra);
+      result = cdef (parser, call_to[2] || args, call_to[3] || content);
   else				// Nothing is overridden.
     if (sizeof (call_to) == 3)
       result = make_tag (call_to[1] || name, call_to[2] || args);
@@ -130,11 +153,13 @@ array|string call_overridden (array call_to, RXML.PHtml parser,
   return result;
 }
 
-array|string call_tag(RXML.PHtml parser, mapping args, string|function rf,
-		      RequestID id, Stdio.File file, mapping defines)
+array|string call_tag(RXML.PHtml parser, mapping args, string|function rf)
 {
+  RXML.Context ctx = parser->context;
+  RequestID id = ctx->id;
   string tag = parser->tag_name();
   id->misc->line = (string)parser->at_line();
+
   if(args->help)
   {
     TRACE_ENTER("tag &lt;"+tag+" help&gt", rf);
@@ -142,8 +167,11 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf,
     TRACE_LEAVE("");
     return h;
   }
+
   if(stringp(rf)) return rf;
+
   TRACE_ENTER("tag &lt;" + tag + "&gt;", rf);
+
 #ifdef MODULE_LEVEL_SECURITY
   if(check_security(rf, id, id->misc->seclevel))
   {
@@ -151,24 +179,36 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf,
     return 0;
   }
 #endif
-  foreach (indices (args), string arg)
-    // Parse variable entities in arguments.
-    args[arg] = t_text_parse_varrefs->eval (args[arg], 0, entities_tag_set, 1);
-  mixed result=rf(tag,args,id,file,defines);
+
+  mixed result;
+  RXML.Frame orig_frame = ctx->frame;
+  ctx->frame = BacktraceFrame (orig_frame, tag, args);
+  mixed err = catch {
+    foreach (indices (args), string arg)
+      // Parse variable entities in arguments.
+      args[arg] = t_html_parse_varrefs->eval (args[arg], 0, entities_tag_set, parser, 1);
+    result=rf(tag,args,id,parser->_source_file,parser->_defines);
+  };
+  ctx->frame = orig_frame;
+  if (err) throw (err);
+
   TRACE_LEAVE("");
+
   if(args->noparse && stringp(result)) return ({ result });
   if (arrayp (result) && sizeof (result) && result[0] == 1)
-    return call_overridden (result, parser, tag, args, 0,
-			    id, file, defines);
+    return call_overridden (result, parser, tag, args, 0, id);
+
   return result;
 }
 
 array(string)|string call_container(RXML.PHtml parser, mapping args,
-				    string contents, string|function rf,
-				    RequestID id, Stdio.File file, mapping defines)
+				    string contents, string|function rf)
 {
+  RXML.Context ctx = parser->context;
+  RequestID id = ctx->id;
   string tag = parser->tag_name();
   id->misc->line = (string)parser->at_line();
+
   if(args->help)
   {
     TRACE_ENTER("container &lt;"+tag+" help&gt", rf);
@@ -176,8 +216,11 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
     TRACE_LEAVE("");
     return h;
   }
+
   if(stringp(rf)) return rf;
+
   TRACE_ENTER("container &lt;"+tag+"&gt", rf);
+
   if(args->preparse) contents = parse_rxml(contents, id);
   if(args->trimwhites) {
     sscanf(contents, "%*[ \t\n\r]%s", contents);
@@ -185,6 +228,7 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
     sscanf(contents, "%*[ \t\n\r]%s", contents);
     contents = reverse(contents);
   }
+
 #ifdef MODULE_LEVEL_SECURITY
   if(check_security(rf, id, id->misc->seclevel))
   {
@@ -192,20 +236,26 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
     return 0;
   }
 #endif
-  foreach (indices (args), string arg)
-    // Parse variable entities in arguments.
-    args[arg] = t_text_parse_varrefs->eval (args[arg], 0, entities_tag_set, 1);
-  mixed result=rf(tag,args,contents,id,file,defines);
+
+  mixed result;
+  RXML.Frame orig_frame = ctx->frame;
+  ctx->frame = BacktraceFrame (orig_frame, tag, args);
+  mixed err = catch {
+    foreach (indices (args), string arg)
+      // Parse variable entities in arguments.
+      args[arg] = t_html_parse_varrefs->eval (args[arg], 0, entities_tag_set, parser, 1);
+    result=rf(tag,args,contents,id,parser->_source_file,parser->_defines);
+  };
+  ctx->frame = orig_frame;
+  if (err) throw (err);
+
   TRACE_LEAVE("");
+
   if(args->noparse && stringp(result)) return ({ result });
   if (arrayp (result) && sizeof (result) && result[0] == 1)
-    return call_overridden (result, parser, tag, args, contents,
-			    id, file, defines);
-  return result;
-}
+    return call_overridden (result, parser, tag, args, contents, id);
 
-class Entity_page_truth {
-  string rxml_var_eval(RXML.Context c) { return (string)c->id->misc->defines[" _ok"]; }
+  return result;
 }
 
 string do_parse(string to_parse, RequestID id,
@@ -213,22 +263,18 @@ string do_parse(string to_parse, RequestID id,
 {
   RXML.PHtml parent_parser = id->misc->_parser;	// Don't count on that this exists.
   RXML.PHtml parser;
+  RXML.Context ctx;
 
-  if (parent_parser)
-    parser = RXML.t_text (RXML.PHtmlCompat)->get_parser (parent_parser->context);
+  if ((ctx = parent_parser && parent_parser->context) && ctx->id == id) {
+    parser = RXML.t_html (RXML.PHtmlCompat)->get_parser (ctx);
+    parser->_parent = parent_parser;
+  }
   else
-    parser = rxml_tag_set (RXML.t_text (RXML.PHtmlCompat), id);
+    parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
   parser->parse_html_compat (parse_html_compat);
-  parser->set_extra (id, file, defines);
   id->misc->_parser = parser;
-
-  parser->context->add_scope("cookie" ,id->cookies);
-  parser->context->add_scope("form", id->variables);
-  parser->context->add_scope("var", ([]) );
-  parser->context->add_scope("page",(["realfile":id->realfile,
-				      "vfs":id->virtfile,
-				      "uri":id->raw_url,
-				      "truth":Entity_page_truth() ]) );
+  parser->_source_file = file;
+  parser->_defines = defines;
 
 #ifdef TAGMAP_COMPAT
   if (id->misc->_tags) {
@@ -278,35 +324,33 @@ void build_callers()
 	sizeof (defs))
       real_if_callers |= defs;
 
-    if (!(tag_set = module_tag_sets[mod])) {
-      tag_set = mod->query_tag_set ? mod->query_tag_set() :
-	RXML.TagSet (sprintf ("%O", mod));
+    tag_set = mod->query_tag_set ? mod->query_tag_set() :
+      module_tag_sets[mod] || RXML.TagSet (sprintf ("%O", mod));
 
-      if (mod->query_tag_callers &&
-	  mappingp (defs = mod->query_tag_callers()) &&
-	  sizeof (defs)) {
-	tag_set->low_tags =
-	  mkmapping (indices (defs),
-		     Array.transpose (({({call_tag}) * sizeof (defs),
-					values (defs)})));
-	tag_set->changed();
-      }
-
-      if (mod->query_container_callers &&
-	  mappingp (defs = mod->query_container_callers()) &&
-	  sizeof (defs)) {
-	tag_set->low_containers =
-	  mkmapping (indices (defs),
-		     Array.transpose (({({call_container}) * sizeof (defs),
-					values (defs)})));
-	tag_set->changed();
-      }
-
-      if (!(sizeof (tag_set->get_local_tags()) || sizeof (tag_set->imported) ||
-	    tag_set->low_tags || tag_set->low_containers) ||
-	  mod == this_object())
-	continue;
+    if (mod->query_tag_callers &&
+	mappingp (defs = mod->query_tag_callers()) &&
+	sizeof (defs)) {
+      tag_set->low_tags =
+	mkmapping (indices (defs),
+		   Array.transpose (({({call_tag}) * sizeof (defs),
+				      values (defs)})));
+      tag_set->changed();
     }
+
+    if (mod->query_container_callers &&
+	mappingp (defs = mod->query_container_callers()) &&
+	sizeof (defs)) {
+      tag_set->low_containers =
+	mkmapping (indices (defs),
+		   Array.transpose (({({call_container}) * sizeof (defs),
+				      values (defs)})));
+      tag_set->changed();
+    }
+
+    if (!(sizeof (tag_set->get_local_tags()) || sizeof (tag_set->imported) ||
+	  tag_set->low_tags || tag_set->low_containers) ||
+	mod == this_object())
+      continue;
 
     tag_sets[mod] = tag_set;
     ts_list += ({tag_set});
@@ -330,14 +374,19 @@ void add_parse_module(RoxenModule o)
 void remove_parse_module(RoxenModule o)
 {
   parse_modules -= ({o});
+  if (module_tag_sets[o]) {
+    destruct (module_tag_sets[o]);
+    m_delete (module_tag_sets, o);
+  }
   remove_call_out(build_callers);
   call_out(build_callers,0);
 }
 
 
 
-string call_user_tag(RXML.PHtml parser, mapping args, RequestID id)
+string call_user_tag(RXML.PHtml parser, mapping args)
 {
+  RequestID id = parser->context->id;
   string tag = parser->tag_name();
   id->misc->line = (string)parser->at_line();
   args = id->misc->defaults[tag]|args;
@@ -351,9 +400,9 @@ string call_user_tag(RXML.PHtml parser, mapping args, RequestID id)
   return r;
 }
 
-array|string call_user_container(RXML.PHtml parser, mapping args,
-				 string contents, RequestID id)
+array|string call_user_container(RXML.PHtml parser, mapping args, string contents)
 {
+  RequestID id = parser->context->id;
   string tag = parser->tag_name();
   if(!id->misc->defaults[tag] && id->misc->defaults[""])
     tag = "";
@@ -440,20 +489,20 @@ string parse_rxml(string what, RequestID id,
   return what;
 }
 
-string report_rxml_error (mixed err)
+string report_rxml_error (mixed err, RXML.Type type)
 {
 #ifdef MODULE_DEBUG
-  report_notice (describe_backtrace (err));
-#else
-  report_notice (err[0]);
+  report_notice (describe_error (err));
 #endif
-  return "<br clear=all>\n<pre>" + html_encode_string (err[0]) + "</pre>";
+  if (type == RXML.t_html)
+    return "<br clear=all>\n<pre>" + html_encode_string (describe_error (err)) + "</pre>";
+  else return describe_error (err);
 }
 
 
 string tag_help(string t, mapping args, RequestID id)
 {
-  RXML.PHtml parser = rxml_tag_set (RXML.t_text (RXML.PHtmlCompat), id);
+  RXML.PHtml parser = rxml_tag_set (RXML.t_html (RXML.PHtmlCompat), id);
   array tags = sort(indices(parser->tags()+parser->containers()));
   string help_for = args->for || id->variables->_r_t_h;
 
