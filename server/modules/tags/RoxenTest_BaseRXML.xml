@@ -59,115 +59,504 @@
 </test>
 
 
-<comment>Config image</comment>
+<comment>Case</comment>
 <test>
-<rxml><configimage src="unit"/></rxml>
-<result><img alt="unit" border="0" src="/internal-roxen-unit" /></result>
+<rxml><case case=upper>aA</case></rxml>
+<result>AA</result>
 </test>
 
 <test>
-<rxml><configimage src="unit" noxml=''/></rxml>
-<result><img alt="unit" border="0" src="/internal-roxen-unit"></result>
+<rxml><case>aA</case></rxml>
+<result>aA</result>
 </test>
 
 <test>
-<rxml><configimage alt=x border=1 src=fold class=a /></rxml>
-<result><img alt="x" border="1" class="a" src="/internal-roxen-fold" /></result>
-</test>
-
-
-<comment>Imgs</comment>
-<test>
-<rxml><imgs src="/internal-roxen-unit"/></rxml>
-<result><img alt="Unit" height="1" src="/internal-roxen-unit" width="1" /></result>
+<rxml><case case=capitalize>aaAa</case></rxml>
+<result>AaAa</result>
 </test>
 
 <test>
-<rxml><imgs src="/internal-roxen-unit" noxml=''/></rxml>
-<result><img alt="Unit" height="1" src="/internal-roxen-unit" width="1"></result>
+<rxml><case case=lower>aA</case></rxml>
+<result>aa</result>
+</test>
+
+<test>
+<rxml><case type="html" case="upper">a &amp; &quot; <br /></case></rxml>
+<result>A &amp; &#34; <br /></result>
 </test>
 
 
-<comment>Insert</comment>
+<comment>Comment</comment>
 <test>
-<rxml><set variable='var.foo' value='a,b,c,d,e,f,g,h'/><insert variable='var.foo' index='1' split=','/></rxml>
+<rxml><set variable='var.i' value='3'/><comment preparse><set variable=var.i value='4'/>x</comment>&var.i;</rxml>
+<result>4</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='3'/><comment><set variable='var.i' value='4'/>x</comment>&var.i;</rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><comment>a</comment></rxml>
+<result></result>
+</test>
+
+
+<comment>Define/undefine</comment>
+<test>
+<rxml><define if='x'>3</define><if x='3'>1</if><undefine if='x'/><if x='3'>1</if><else>0</else></rxml>
+<result>10</result>
+</test>
+
+<test>
+<rxml><define tag='a'>&_.b;&a.c;</define><a c='2' b='1'/></rxml>
+<result>12</result>
+</test>
+
+<test>
+<rxml><define tag='q'>&_.args:none;</define><q a='b'/></rxml>
+<result>a="b"</result>
+</test>
+
+<test>
+<rxml><define variable='var.i'>b</define>a&var.i;<undefine variable='var.i'/>c&var.i;d</rxml>
+<result>abcd</result>
+</test>
+
+<test>
+<rxml><define container='x'><p ::='&_.args;'><contents/></p></define><x align='center'>hej</x></rxml>
+<result><p align="center">hej</p></result>
+</test>
+
+<test>
+<rxml><define tag='a'>A</define><a/><define tag='b'><a/>B</define><b/></rxml>
+<result>AAB</result>
+</test>
+
+<test>
+<rxml><define tag='q'>b</define>a<q/><undefine tag='q'/><q/></rxml>
+<result>ab<q/></result>
+</test>
+
+<test>
+<rxml><define tag='x'>y</define><x/><if true><x/></if></rxml>
+<result>yy</result>
+</test>
+
+<test>
+<rxml><define container='x'>a<contents/>c</define><x>b</x><undefine container='x'/><x>d</x></rxml>
+<result>abc<x>d</x></result>
+</test>
+
+<test>
+<rxml><define tag="ä">a</define><define tag="Ä">A</define>x<ä/><Ä/></rxml>
+<result>xaA</result>
+</test>
+
+<test>
+<rxml><define tag='x'><attrib name='y'>z</attrib>a&_.y;</define><x/>b<x y='c'/></rxml>
+<result>azbac</result>
+</test>
+
+<test>
+<rxml><define container='x'><attrib name='y'>z</attrib>a<contents/>&_.y;d</define><x y='c'>b</x>e<x>b</x></rxml>
+<result>abcdeabzd</result>
+</test>
+
+
+<comment>String number test</comment>
+<test>
+<rxml><number lang=swe num=43></rxml>
+<result>fyrtiotre</result>
+</test>
+
+<test>
+<rxml><number lang=sv num=43></rxml>
+<result>fyrtiotre</result>
+</test>
+
+<test>
+<rxml><number num=42></rxml>
+<result>fortytwo</result>
+</test>
+
+
+<comment>IfIs operands</comment>
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><set variable="var.x" value=""/><if sizeof="var.x is 0">5</if></rxml>
+<result>5</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i is 8,9,10,11">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i != 11">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.foo">1</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><set variable="var.x" value="-5"/><if variable="var.x < 3">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i < 11">1</if><else>0</else></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i == 10">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.j < 0">1</if><else>0</else></rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i is 11">1</if><else>0</else></rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i == ?1,?0">8</if></rxml>
+<result>8</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i is ?">6</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i is *">5</if></rxml>
+<result>5</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><set variable="var.x" value="-30"/><if variable="var.x < -2">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i < 10">1</if><else>0</else></rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i = 10">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i is 10">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i is ??">7</if></rxml>
+<result>7</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i > 9">1</if><else>0</else></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i is *10*">3</if></rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.j > 0">1</if><else>0</else></rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i is *11*">4</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.j > -1">1</if><else>0</else></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.j != 0">1</if><else>0</else></rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.j is 0">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if sizeof="var.i == 2">3</if></rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i > 10">1</if><else>0</else></rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i is 8,9,11">2</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.j < 1">1</if><else>0</else></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i != 10">1</if><else>0</else></rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.j != 1">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if sizeof="var.i != 2">4</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><if variable="var.i">2</if></rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><set variable="var.x" value="-0.2"/><if variable="var.x > -0.3">1</if><else>0</else></rxml>
+<result>1</result>
+</test>
+
+
+<comment>Sort</comment>
+<test>
+<rxml><sort separator=,>1,3,5,0,8</sort></rxml>
+<result>0,1,3,5,8</result>
+</test>
+
+<test>
+<rxml><sort>1
+3
+5
+0
+8
+</sort></rxml>
+<result>0
+1
+3
+5
+8
+</result>
+</test>
+
+
+<comment>If caller test</comment>
+<test>
+<rxml><set variable='var.a' value='foo'/><if match="&var.a; is foo">x</if><else>y</else>&var.a;</rxml>
+<result>xfoo</result>
+</test>
+
+<test>
+<rxml><if match="foo is bar">x</if><else>y</else></rxml>
+<result>y</result>
+</test>
+
+<test>
+<rxml><if match="foo is foo">x</if><else>y</else></rxml>
+<result>x</result>
+</test>
+
+<test>
+<rxml><set variable='var.a' value='0'/><if variable="var.a is 0">x</if><else>y</else></rxml>
+<result>x</result>
+</test>
+
+<test>
+<rxml><set variable='a' value='4' scope='var'/><if variable="var.a is 4">x</if><else>y</else></rxml>
+<result>x</result>
+</test>
+
+<test>
+<rxml><set variable='var.a' value='3'/><if variable="var.a is 3">x</if><else>y</else></rxml>
+<result>x</result>
+</test>
+
+
+<comment>Strlen</comment>
+<test>
+<rxml><strlen>a
+b</strlen></rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><strlen>Roxen<b>&ouml;</b></strlen></rxml>
+<result>18</result>
+</test>
+
+<test>
+<rxml>a<strlen>b</strlen>c</rxml>
+<result>a1c</result>
+</test>
+
+<test>
+<rxml><strlen></strlen></rxml>
+<result>0</result>
+</test>
+
+
+<comment>User Ifs</comment>
+<test>
+<rxml><define if=q><if variable="var.i = 4"></if></define><if q>a</if><set variable=var.i value='3'/><if q>b</if><set variable='var.i' value='4'/><if q>c</if></rxml>
+<result>c</result>
+</test>
+
+<test>
+<rxml><if q>X</if><else>Y</else></rxml>
+<result>Y</result>
+</test>
+
+<test>
+<rxml><define if=q>a</define><if q=a>x</if><if q=b>b</if><if q>c</if></rxml>
+<result>x</result>
+</test>
+
+<test>
+<rxml><true/><define if=q><false/></define><then>A</then><if q>F</if><if q=1>F</if></rxml>
+<result>A</result>
+</test>
+
+<test>
+<rxml><false/><define if=q><true/></define><then>A</then><if q>T</if><if q=1>F</if></rxml>
+<result>T</result>
+</test>
+
+
+<comment>Loops (for)</comment>
+<test>
+<rxml><for variable=var.i from=3 to=3><insert variable=var.i></for></rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><for variable=var.i from=1 to=5>&var.i;</for>&var.i;</rxml>
+<result>123455</result>
+</test>
+
+<test>
+<rxml><for from=10 to=1>x</for></rxml>
+<result>xxxxxxxxxx</result>
+</test>
+
+<test>
+<rxml><for variable=var.i from=10 to=5><insert variable=var.i></for></rxml>
+<result>1098765</result>
+</test>
+
+<test>
+<rxml><for from=1 to=10>x</for></rxml>
+<result>xxxxxxxxxx</result>
+</test>
+
+<test>
+<rxml><for variable=var.i from=3 to=3 step=-1><insert variable=var.i></for></rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><for variable=var.i from=1 to=3><for variable=var.j from=7 to=9><insert variable=var.j /></for>:<insert variable=var.i />;</for></rxml>
+<result>789:1;789:2;789:3;</result>
+</test>
+
+<test>
+<rxml><set variable='var.i' value='3'/><for variable='var.i' from='1' to='10' step='2'><insert variable='var.i'/></for></rxml>
+<result>13579</result>
+</test>
+
+
+<comment>If test</comment>
+<test>
+<rxml><define if=p><true/></define><define if=q><false/></define><if p and q>p&q</if><if p and p>p</if><if q and q>q</if></rxml>
+<result>p</result>
+</test>
+
+<test>
+<rxml><define if=p><true/></define><define if=q><false/></define><true/><if true>a</if><else>b</else><then>c</then></rxml>
+<result>ac</result>
+</test>
+
+<test>
+<rxml><define if=p><true/></define><define if=q><false/></define><if not p q>p&q</if><if not p p>p</if><if not q q>q</if></rxml>
+<result>p&qq</result>
+</test>
+
+<test>
+<rxml><define if=p><true/></define><define if=q><false/></define><false/><if false>a</if><else>b</else></rxml>
 <result>a</result>
 </test>
 
 <test>
-<rxml><set variable='var.foo' value='a,b,c,d,e,f,g,h'/><insert variable='var.foo' index='-1' split=','/></rxml>
-<result>h</result>
-</test>
-
-<!test>
-<rxml><set variable='var.a' value="x"/>&var.a;<insert file="test1.html"/>&var.a;</rxml>
-<result>xayx</result>
-</!test>
-
-
-<comment>Autoformat</comment>
-<test>
-<rxml><autoformat>abc
-abc
-
-
-c</autoformat></rxml>
-<result>abc<br />
-abc<br />
-<br />
-<br />
-c</result>
+<rxml><define if=p><true/></define><define if=q><false/></define><false/><if p>A<if false>B</if></if></rxml>
+<result>AB</result>
 </test>
 
 <test>
-<rxml><autoformat p>abc
-abc
-
-
-c</autoformat></rxml>
-<result><p>abc<br />
-abc
-</p><p>
-<br />
-c</p></result>
+<rxml><define if=p><true/></define><define if=q><false/></define><if not p>p</if><if not q>q</if></rxml>
+<result>q</result>
 </test>
 
 <test>
-<rxml><autoformat p nobr>abc
-abc
-
-
-c</autoformat></rxml>
-<result><p>abc
-abc
-</p><p>
-
-c</p></result>
+<rxml><define if=p><true/></define><define if=q><false/></define><false/><if true>a</if><else>b</else><then>c</then></rxml>
+<result>b</result>
 </test>
 
 <test>
-<rxml><autoformat p class=x>abc
-abc
-
-
-c</autoformat></rxml>
-<result><p class="x">abc<br />
-abc
-</p><p class="x">
-<br />
-c</p></result>
+<rxml><define if=p><true/></define><define if=q><false/></define><if p q>p&q</if><if p p>p</if><if q q>q</if></rxml>
+<result>p</result>
 </test>
 
 <test>
-<rxml><autoformat p nobr class=x>abc
-abc
-
-
-c</autoformat></rxml>
-<result><p class="x">abc
-abc
-</p><p class="x">
-
-c</p></result>
+<rxml><define if=p><true/></define><define if=q><false/></define><if p>p</if><if q>q</if></rxml>
+<result>p</result>
 </test>
 
+<test>
+<rxml><define if=p><true/></define><define if=q><false/></define><if not p and q>p&q</if><if not p and p>p</if><if not q and q>q</if></rxml>
+<result>p&qq</result>
+</test>
+
+<test>
+<rxml><define if=p><true/></define><define if=q><false/></define><if not p or q>p|q</if><if not p or p>p</if><if not q or q>q</if></rxml>
+<result>q</result>
+</test>
+
+<test>
+<rxml><define if=p><true/></define><define if=q><false/></define><if p or q>p|q</if><if p or p>p</if><if q or q>q</if></rxml>
+<result>p|qp</result>
+</test>
+
+<test>
+<rxml><define if=p><true/></define><define if=q><false/></define><true/><if false>a</if><else>b</else></rxml>
+<result>b</result>
+</test>
