@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.7 1998/09/28 00:33:25 grubba Exp $
+ * $Id: pop3.pike,v 1.8 1998/09/28 00:36:23 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.7 1998/09/28 00:33:25 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.8 1998/09/28 00:36:23 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -203,7 +203,7 @@ static class Pop_Session
       return;
     }
 
-    string body = mail->get_body();
+    string body = mail->body();
     int i;
     if (body[..1] != "\r\n") {
       i = search(body, "\r\n\r\n");
