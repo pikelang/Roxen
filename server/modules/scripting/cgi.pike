@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.67 1998/01/24 01:35:58 peter Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.68 1998/01/24 17:11:56 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -228,7 +228,7 @@ string check_variable(string name, string value)
     call_out(set, 0, "mountpoint", value+"/");
 }
 
-static string path;
+static string search_path;
 
 void start(int n, object conf)
 {
@@ -244,7 +244,7 @@ void start(int n, object conf)
   array us;
   if(!conf) // When reloading, no conf is sent.
     return; 
-  path = query("searchpath");
+  search_path = query("searchpath");
 #if efun(getpwnam)
   if(us = getpwnam(  QUERY(runuser) ))
     runuser = ({ (int)us[2], (int)us[3] });
@@ -307,7 +307,7 @@ array stat_file(string f, object id)
   roxen_perror("CGI: stat_file(\"" + f + "\")\n");
 #endif /* CGI_DEBUG */
 
-  return file_stat(path+f);
+  return file_stat(search_path+f);
 }
 
 string real_file( mixed f, mixed id )
@@ -317,7 +317,7 @@ string real_file( mixed f, mixed id )
 #endif /* CGI_DEBUG */
 
   if(stat_file( f, id )) 
-    return path+f;
+    return search_path+f;
 }
 
 array find_dir(string f, object id) 
@@ -327,7 +327,7 @@ array find_dir(string f, object id)
 #endif /* CGI_DEBUG */
 
   if(QUERY(ls)) 
-    return get_dir(path+f);
+    return get_dir(search_path+f);
 }
 
 
@@ -643,8 +643,6 @@ mixed low_find_file(string f, object id, string path)
   string path_info, wd;
   int pid;
 
-  if(!path) path = QUERY(searchpath);
- 
 #ifdef CGI_DEBUG
   roxen_perror("CGI: find_file(\"" + f + "\")...\n");
 #endif /* CGI_DEBUG */
@@ -750,9 +748,9 @@ mixed low_find_file(string f, object id, string path)
   return http_stream(pipe2);
 }
 
-mixed find_file(string f, object id, void|string path)
+mixed find_file(string f, object id)
 {
-  return(low_find_file(f, id, path));
+  return(low_find_file(f, id, search_path));
 }
 
 array (string) query_file_extensions()
@@ -817,7 +815,7 @@ mapping handle_file_extension(object o, string e, object id)
   write_file(q, f);
 
   popen("chmod u+x "+q);
-  err=catch(toret = find_file(w, id, "/tmp/"));
+  err=catch(toret = low_find_file(w, id, "/tmp/"));
 
   if(err) throw(err);
   return toret;
