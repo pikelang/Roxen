@@ -72,6 +72,7 @@
 /server/modules/filters/htaccess.pike foreign_ident
 /server/modules/filters/redirect.pike foreign_ident
 /server/modules/filters/relay.pike foreign_ident
+/server/modules/graphics/graphic_text.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
