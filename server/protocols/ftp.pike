@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.27 1997/06/12 00:29:12 marcus Exp $
+ * $Id: ftp.pike,v 1.28 1997/07/05 18:17:34 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -705,7 +705,7 @@ void got_data(mixed fooid, string s)
 
 	  if (y[0] == 1) {
 	    /* Authentification successfull */
-	    if (Query("named_ftp") && !check_shell(misc->shell)) {
+	    if (!Query("named_ftp") || !check_shell(misc->shell)) {
 	      reply("432 You are not allowed to use named-ftp. Try using anonymous\n");
 	      /* roxen->(({ "error":403, "len":-1 ]), this_object()); */
 	      break;
