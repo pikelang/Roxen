@@ -565,12 +565,14 @@ multiplicera detta värde med den här faktorn.</t>
 </str>
 
 <str id="74">
-<o>Logging: Set unique user id cookies</o>
+<changed from="Logging: Set unique user id cookies"/>
+<o>Logging: Set unique browser id cookies</o>
 <t>Loggning: Sätt en unik cookie för alla användare</t>
 </str>
 
 <str id="75">
-<o>If set to Yes, all users of your server whose clients support cookies will get a unique 'user-id-cookie', this can then be used in the log and in scripts to track individual users.</o>
+<changed from="If set to Yes, all users of your server whose clients support cookies will get a unique 'user-id-cookie', this can then be used in the log and in scripts to track individual users."/>
+<o>If set to Yes, all clients that accepts cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users.</o>
 <t>Om du sätter den här variabeln till 'ja', så kommer alla användare att få en unik kaka (cookie) med namnet 'RoxenUserID' satt. Den här kakan kan användas i skript för att spåra individuella användare.  Det är inte rekommenderat att använda den här variabeln, en del användare tycker illa om cookies</t>
 </str>
 
@@ -580,7 +582,8 @@ multiplicera detta värde med den här faktorn.</t>
 </str>
 
 <str id="77">
-<o>If set to Yes, Roxen will attempt to set unique user ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests.</o>
+<changed from="If set to Yes, Roxen will attempt to set unique user ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests."/>
+<o>If set to Yes, Roxen will attempt to set unique browser ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests.</o>
 <t>Om den här variablen är satt till 'ja' så kommer Roxen bara försöka sätta den unika användarkakan en gång. Det gör att om användaren inte tillåter att kakan sätts, så slipper hon eller han iallafall nya frågor under några minuter</t>
 </str>
 
