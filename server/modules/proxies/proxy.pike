@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.56 2002/11/11 01:56:04 mani Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.57 2003/01/14 22:55:09 zino Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -797,6 +797,8 @@ class Server
     }
 
     // write got data to disk if over memory filesize max and caching
+    //FIXME: Disk cache is broken. Don't do this.
+    /*
     if(!to_disk && (strlen(_data) > cache_memory_filesize))
     {
       if(to_disk = roxen->create_cache_file("http", name))
@@ -816,6 +818,7 @@ class Server
         return;
       }
     }
+    */
 
     if(to_disk)
     {
@@ -1602,6 +1605,8 @@ class Request
     //REQUEST_DEBUG("finish(" + http_or_last_message + "," + s + ")")
 
     server = 0;
+    //FIXME: The proxy doesn't handle keep alive.
+    id->misc->connection = "close";
 
     // immediate finish with http_code
     if(s && intp(http_or_last_message))
