@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.22 1997/04/13 23:25:40 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.23 1997/04/28 16:48:20 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -637,17 +637,17 @@ public string status()
   return res +"</table>";
 }
 
-public string *userinfo(string u, object id)
+public string *userinfo(string u, object|void id)
 {
   if(auth_module) return auth_module->userinfo(u);
 }
 
-public string *userlist(object id)
+public string *userlist(object|void id)
 {
   if(auth_module) return auth_module->userlist();
 }
 
-public string *user_from_uid(int u, object id)
+public string *user_from_uid(int u, object|void id)
 {
   if(auth_module)
     return auth_module->user_from_uid(u);
@@ -1031,9 +1031,9 @@ public array find_dir(string file, object id)
     
     if(!search(file, loc))
     {
-//#ifdef MODULE_LEVEL_SECURITY
-//      if(check_security(tmp[1], id)) continue;
-//#endif
+#ifdef MODULE_LEVEL_SECURITY
+      if(check_security(tmp[1], id)) continue;
+#endif
       if(d=function_object(tmp[1])->find_dir(file[strlen(loc)..1000000], id))
 	dir |= d;
     } else {
@@ -1067,9 +1067,9 @@ public array stat_file(string file, object id)
       return ({ 0, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
     if(!search(file, loc)) 
     {
-//#ifdef MODULE_LEVEL_SECURITY
-//      if(check_security(tmp[1], id)) continue;
-//#endif
+#ifdef MODULE_LEVEL_SECURITY
+      if(check_security(tmp[1], id)) continue;
+#endif
       if(s=function_object(tmp[1])->stat_file(file[strlen(loc)..], id))
 	return s;
     }
@@ -1217,10 +1217,9 @@ void start(int num)
   init_log_file();
   map(indices(open_ports), do_dest);
 
-  erro = catch {
-    perror("Opening ports for "+query_name()+" ");
-    foreach(query("Ports"), port )
-    {
+  perror("Opening ports for "+query_name()+" ");
+  foreach(query("Ports"), port ) {
+    erro = catch {
       array tmp;
       function rp;
       array old = port;
@@ -1241,13 +1240,13 @@ void start(int num)
 	err++;
       } else
 	open_ports[o]=old;
+    };
+    if(erro) {
+      perror("Error:\n"+describe_backtrace(erro));
     }
     perror("\n");
-  };
-  if(erro)
-  {
-    perror("Error:\n"+describe_backtrace(erro));
   }
+
   if(!num && sizeof(query("Ports")))
   {
     if(err == sizeof(query("Ports")))
