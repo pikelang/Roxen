@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.1 2000/03/14 15:36:11 js Exp $
+ * $Id: update.pike,v 1.2 2000/03/14 21:05:26 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -132,7 +132,8 @@ array(array) menu = ({
 string tag_update_sidemenu(string t, mapping m, RequestID id)
 {
   string ret =
-    "<gbutton width=150 bgcolor=&usr.fade1;>Update List</gbutton><br><br>";
+    "<gbutton href=\"update.html?update_list=1\" width=150 "
+    "bgcolor=&usr.fade1;>Update List</gbutton><br><br>";
 
   foreach(menu, array entry)
   {
@@ -166,7 +167,7 @@ string container_update_package_output(string t, mapping m, string c, RequestID 
     foreach(packages, string pkg)
     {
       mapping p=pkginfo[pkg];
-      if( (m->type && p["package-type"]==m->type) || !m->type)
+      if( !installed[pkg] && ((m->type && p["package-type"]==m->type) || !m->type))
 	res+=({ p });
       i++;
       if(m->limit && i>=(int)m->limit)
@@ -188,7 +189,6 @@ string container_update_package_output(string t, mapping m, string c, RequestID 
 
 string tag_update_start_download(string t, mapping m, RequestID id)
 {
-  werror("update_start_download\n");
   mixed err=catch(start_package_download((int)m->package));
   if(err) report_error("Upgrade: %s",err);
   return "";
@@ -222,6 +222,40 @@ string container_update_download_progress_output(string t, mapping m,
   return do_output_tag(m, res, c, id);
 }
 
+mapping get_package_info(string dir, int package)
+{
+  object fs=Filesystem.Tar(dir+package+".tar");
+  Stdio.File fd=fs->open("info/"+package+".info", "r");
+  if(!fd)
+    return 0;
+  string s=fd->read();
+  fd->close();
+  array stat=file_stat(pkgdir+package+".tar");
+  return parse_info_file(s) | ([ "size":stat[1] ]);    
+}
+
+string tag_update_scan_local_packages(string t, mapping m,
+				      RequestID id)
+{
+  array(int) packages=sort((array(int))glob("*.tar",r_get_dir(pkgdir)));
+  foreach(packages, int package)
+  {
+    mapping pkg=pkginfo[(string)package];
+    if(!pkg)
+    {
+      mapping tmp=get_package_info(pkgdir,package);
+      if(tmp && tmp->id)
+      {
+	pkginfo[tmp->id]=tmp;
+	pkginfo->sync();
+	report_notice("Update: Added information about package number "
+		      +tmp->id+".\n");
+      }
+    }
+  }
+  return "";
+}
+
 string container_update_downloaded_packages_output(string t, mapping m,
 					    string c, RequestID id)
 {
@@ -231,7 +265,7 @@ string container_update_downloaded_packages_output(string t, mapping m,
   foreach(packages, int package)
   {
     mapping pkg=pkginfo[(string)package];
-    if(pkg)
+    if(pkg && !installed[(string)package])
     {
       pkg->size=sprintf("%3.1f",(float)pkg->size/1024.0);
       res+=({ pkg });
@@ -370,6 +404,13 @@ string tag_update_package_contents(string t, mapping m, RequestID id)
   return tarfile_contents(pkgdir+m->package+".tar")*"\n";
 }
 
+string tag_update_update_list(string t, mapping m, RequestID id)
+{
+  remove_call_out(updater->do_request);
+  updater->do_request();
+  return "";
+}
+
 string encode_ranges(array(int) a)
 {
   a=sort(a);
@@ -433,7 +474,7 @@ int completely_downloaded(int num)
 {
   array stat=r_file_stat(pkgdir+num+".tar");
 
-  return (stat && stat[1]==pkginfo[(string)num]->size);
+  return (stat && (stat[1]==pkginfo[(string)num]->size));
 }
 
 
@@ -507,15 +548,37 @@ class GetPackage
 }
 
 
+string get_containers(string t, mapping m, string c, int line, mapping res)
+{
+  if(sizeof(t) && t[0]!='/')
+    res[t]=c;
+}
+
+mapping parse_info_file(string s)
+{
+  mapping res=([]);
+  parse_html_lines(s,
+		   ([]),
+		   (["id" : get_containers,
+		     "title": get_containers,
+		     "description": get_containers,
+		     "organization": get_containers,
+		     "license": get_containers,
+		     "author-email": get_containers,
+		     "author-name": get_containers,
+		     "package-type": get_containers,
+		     "issued-date": get_containers,
+		     "roxen-low": get_containers,
+		     "roxen-high": get_containers,
+		     "crypto": get_containers ]),
+		   res);
+  return res;
+}
+
 class GetInfoFile
 {
   inherit Protocols.HTTP.Query;
 
-  string get_containers(string t, mapping m, string c, int line, mapping res)
-  {
-    if(sizeof(t) && t[0]!='/')
-      res[t]=c;
-  }
 
   void request_ok(object httpquery, int num)
   {
@@ -526,28 +589,11 @@ class GetInfoFile
     {
       report_error("Update: Wrong answer from server for package %d. "
 		   "Error code: %d\n",num,httpquery->status);
-      werror("Answer: %O %O\n",httpquery->status, httpquery->data());
-
       return;
     }
 
-    parse_html_lines(httpquery->data(),
-		     ([]),
-		     (["id" : get_containers,
-		       "title": get_containers,
-		       "description": get_containers,
-		       "organization": get_containers,
-		       "license": get_containers,
-		       "author-email": get_containers,
-		       "author-name": get_containers,
-		       "package-type": get_containers,
-		       "issued-date": get_containers,
-		       "roxen-low": get_containers,
-		       "roxen-high": get_containers,
-		       "crypto": get_containers ]),
-		     res);
+    res=parse_info_file(httpquery->data());
     res->size=(int)httpquery->headers->pkgsize;
-    werror("%O\n",res);
     pkginfo[(string)num]=res;
     pkginfo->sync();
     report_notice("Update: Added information about package number "
@@ -591,7 +637,6 @@ class UpdateInfoFiles
     {
       report_error("Update: Wrong answer from server. "
 		   "Error code: %d\n",httpquery->status);
-      werror("Answer: %O %O\n",httpquery->status, httpquery->data());
       return;
     }
 
@@ -628,7 +673,6 @@ class UpdateInfoFiles
 
   void do_request()
   {
-//     werror("foo: %O\n",encode_ranges((array(int))indices(pkginfo)));
     async_request(QUERY(server),QUERY(port),
 		  "POST /updateserver/get_packages HTTP/1.0",
 		  get_headers() |
