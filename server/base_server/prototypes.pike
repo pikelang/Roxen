@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.126 2004/05/13 17:45:20 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.127 2004/05/14 16:29:32 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -179,23 +179,23 @@ static constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
 //! @note
 //! @[DAVLock] objects might be shared between filesystems but not
 //! between configurations.
-class DAVLock(
-
-  string locktoken,
+class DAVLock
+{
+  string locktoken;
   //! The lock token given to the client. It may be zero in case there
   //! only is knowledge that a lock exists but the lock instance has
   //! been forgotten. This can happen in a filesystem that has some
   //! way of recording locks but doesn't store the DAV lock tokens.
 
-  string path,
+  string path;
   //! Canonical absolute path to the locked resource. Always ends with
   //! a @expr{"/"@}.
 
-  int(0..1) recursive,
+  int(0..1) recursive;
   //! @expr{1@} if the lock applies to all resources under @[path],
   //! @expr{0@} if it applies to @[path] only.
 
-  string|SimpleNode lockscope,
+  string|SimpleNode lockscope;
   //! The lock scope (RFC 2518 12.7). As a special case, if it only is
   //! an empty element without attributes then the element name is
   //! stored as a string.
@@ -204,7 +204,7 @@ class DAVLock(
   //! RFC 2518 specifies the lock scopes @expr{"DAV:exclusive"@} and
   //! @expr{"DAV:shared"@}.
 
-  string|SimpleNode locktype,
+  string|SimpleNode locktype;
   //! The lock type (RFC 2518 12.8). As a special case, if it only is
   //! an empty element without attributes then the element name is
   //! stored as a string.
@@ -212,15 +212,42 @@ class DAVLock(
   //! @note
   //! RFC 2518 only specifies the lock type @expr{"DAV:write"@}.
 
-  void|array(SimpleNode) owner,
+  int(0..) expiry_delta;
+  //! Idle time before this lock expires.
+  //!
+  //! As a special case, if the value is @expr{0@} (zero), the lock
+  //! has infinite duration.
+
+  array(SimpleNode) owner;
   //! The owner identification (RFC 2518 12.10), or zero if unknown.
   //! More precisely, it's the children of the @expr{"DAV:owner"@}
   //! element.
   //!
   //! @[RoxenModule.lock_file] may set this if it's zero, otherwise
   //! it shouldn't change.
-)
-{
+
+  int(0..) expiry_time;
+  //! Absolute time when this lock expires.
+  //!
+  //! As a special case, if the value is @expr{0@} (zero), the lock
+  //! has infinite duration.
+
+  static void create(string locktoken, string path, int(0..1) recursive,
+		     string|SimpleNode lockscope, string|SimpleNode locktype,
+		     int(0..) expiry_delta, array(SimpleNode) owner)
+  {
+    DAVLock::locktoken = locktoken;
+    DAVLock::path = path;
+    DAVLock::recursive = recursive;
+    DAVLock::lockscope = lockscope;
+    DAVLock::locktype = locktype;
+    DAVLock::expiry_delta = expiry_delta;
+    DAVLock::owner = owner;
+    if (expiry_delta) {
+      if (expiry_delta < 0) error("Negative expiry delta!\n");
+      expiry_time = time(0) + expiry_delta;
+    }
+  }
 
   //! Returns a DAV:activelock @[Parser.XML.Tree.SimpleNode] structure
   //! describing the lock.
@@ -243,7 +270,14 @@ class DAVLock(
       node->replace_children(owner);
     }
 
-    // FIXME: <DAV:timeout>.
+    if (expiry_delta) {
+      res->add_child(SimpleElementNode("DAV:timeout", ([]))->
+		     add_child(SimpleTextNode(sprintf("Second-%d",
+						      expiry_delta))));
+    } else {
+      res->add_child(SimpleElementNode("DAV:timeout", ([]))->
+		     add_child(SimpleTextNode("Infinite")));
+    }
 
     res->add_child(SimpleElementNode("DAV:locktoken", ([]))->
 		   add_child(SimpleElementNode("DAV:href", ([]))->
@@ -1463,6 +1497,7 @@ class RequestID
     c->pragma = pragma;
 
     c->cookies = cookies;
+    c->request_headers = request_headers + ([]);
     c->my_fd = 0;
     c->prot = prot;
     c->clientprot = clientprot;
