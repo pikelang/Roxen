@@ -34,7 +34,7 @@ multiset enabled;
 void start (int when, Configuration conf)
 {
   set("_priority",7);
-  if (!when) conf->parse_html_compat++;
+  if (!when) conf->old_rxml_compat++;
   enabled=(<>);
   foreach(indices(conf->enabled_modules), string name)
     enabled+=(<name[0..sizeof(name)-3]>);
@@ -43,7 +43,7 @@ void start (int when, Configuration conf)
 
 void stop()
 {
-  my_configuration()->parse_html_compat--;
+  my_configuration()->old_rxml_compat--;
 }
 
 string query_provides() {

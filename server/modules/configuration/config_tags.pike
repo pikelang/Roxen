@@ -22,12 +22,12 @@ constant thread_safe = 1;
 
 void start(int num, Configuration conf)
 {
-  if (!num) conf->parse_html_compat++;
+  if (!num) conf->old_rxml_compat++;
 }
 
 void stop()
 {
-  my_configuration()->parse_html_compat--;
+  my_configuration()->old_rxml_compat--;
 }
 
 void create()
