@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.15 1997/04/05 01:25:30 per Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.16 1997/04/19 14:06:02 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -440,6 +440,7 @@ object cache_file(string cl, string entry)
   if(!cf->open(QUERY(cachedir)+name, "r"))
     return 0;
 
+  cf->set_close_on_exec(1);
   cf=new_cache_stream(cf, name);
   cf->done_callback = 0;
   
@@ -559,7 +560,7 @@ object create_cache_file(string cl, string entry)
   int i;
 
   // to reduce IO-load try open before making directories 14-Nov-96-wk
-  if(!(cf = open(rfile, "rwcx")))
+  if(!(cf->open(rfile, "rwcx")))
   {
     mkdirhier(rfile);
 
@@ -582,6 +583,7 @@ object create_cache_file(string cl, string entry)
     }
   }
 
+  cf->set_close_on_exec(1);
   cache->accessed(name, 0);
   cf=new_cache_stream(cf, name);
   cf->headers->name = entry;
