@@ -10,7 +10,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.17 1999/12/09 00:27:03 grubba Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.18 1999/12/22 01:34:08 per Exp $";
 
 constant path = "config_interface/";
 
@@ -56,6 +56,7 @@ mixed find_file( string f, object id )
 {
   string locale;
 
+  id->since = 0;
   if( !id->misc->request_charset_decoded )
   {
     // We only need to decode f (and id->not_query)  here, 
@@ -136,7 +137,8 @@ mixed find_file( string f, object id )
        id->misc->defines = ([]);
      id->misc->defines[" _stat"] = id->misc->stat;
      retval = http_rxml_answer( data, id );
-     if(charset_encoder) {
+     if(charset_encoder) 
+     {
        retval->data = charset_encoder->clear()->feed( retval->data )->drain();
        retval->extra_heads["Content-type"]
 	 = "text/html; charset="+QUERY(encoding);
@@ -145,6 +147,10 @@ mixed find_file( string f, object id )
        retval->extra_heads["Content-type"]
 	 = "text/html; charset=utf-8";
      }
+     NOCACHE();
+     retval->stat = 0;
+     retval->len = strlen( retval->data );
+     retval->expires = time();
      if( locale != "standard" )
        roxen.set_locale( "standard" );
   }
@@ -152,11 +158,13 @@ mixed find_file( string f, object id )
   foreach( glob( "cf_goto_*", indices( id->variables )  ), string q )
     if( sscanf( q, "cf_goto_%s.x", q ) )
     {
+      while( id->misc->orig ) id = id->misc->orig;
+      q = fix_relative( q, id );
       if( charset_encoder )
         q = charset_encoder->clear()->feed( q )->drain();
       else
         q = string_to_utf8( q );
-      return http_redirect( fix_relative( q, id ), id );
+      return http_redirect( q, id );
     }
   return retval;
 }
