@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.41 2003/01/07 16:26:29 anders Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.42 2003/01/14 17:41:17 anders Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -618,34 +618,36 @@ constant tagdoc=([
  If not specified toghether with the type=\"date\" attribute the date will be
  verified as an ISO-date, i.e Y-M-D. If another date format is
  desired it should be specified with the date-attribute.
+ </p>
 
  <p>
  Examples:<br />
  date='%Y-%M-%D %h:%m' will verify a date formatted as '2040-11-08 2:46',<br />
  date='%Y w%W %e %h:%m %p %z' will verify '1913 w4 monday 2:14 pm CET'
  </p>
- <p>
- These are the format characters:<br />
- %Y absolute year <br />
- %y dwim year (70-99 is 1970-1999, 0-69 is 2000-2069)<br />
- %M month (number, name or short name) (needs %y)<br />
- %W week (needs %y)<br />
- %D date (needs %y, %m)<br />
- %d short date (20000304, 000304)<br />
- %a day (needs %y)<br />
- %e weekday (needs %y, %w)<br />
- %h hour (needs %d, %D or %W)<br />
- %m minute (needs %h)<br />
- %s second (needs %m)<br />
- %f fraction of a second (needs %s)<br />
- %t short time (205314, 2053)<br />
- %z zone<br />
- %p 'am' or 'pm'<br />
- %n empty string (to be put at the end of formats).
- You can also use '%*[....]' to skip some characters.
- </p>
-	    
-</p>
+
+ <p>These are the format characters:</p>
+
+ <xtable>
+  <row><c><p>%Y</p></c><c><p>absolute year</p></c></row>
+  <row><c><p>%y</p></c><c><p>dwim year (70-99 is 1970-1999, 0-69 is 2000-2069)</p></c></row>
+  <row><c><p>%M</p></c><c><p>month (number, name or short name) (needs %y)</p></c></row>
+  <row><c><p>%W</p></c><c><p>week (needs %y)</p></c></row>
+  <row><c><p>%D</p></c><c><p>date (needs %y, %m)</p></c></row>
+  <row><c><p>%d</p></c><c><p>short date (20000304, 000304)</p></c></row>
+  <row><c><p>%a</p></c><c><p>day (needs %y)</p></c></row>
+  <row><c><p>%e</p></c><c><p>weekday (needs %y, %w)</p></c></row>
+  <row><c><p>%h</p></c><c><p>hour (needs %d, %D or %W)</p></c></row>
+  <row><c><p>%m</p></c><c><p>minute (needs %h)</p></c></row>
+  <row><c><p>%s</p></c><c><p>second (needs %m)</p></c></row>
+  <row><c><p>%f</p></c><c><p>fraction of a second (needs %s)</p></c></row>
+  <row><c><p>%t</p></c><c><p>short time (205314, 2053)</p></c></row>
+  <row><c><p>%z</p></c><c><p>zone</p></c></row>
+  <row><c><p>%p</p></c><c><p>'am' or 'pm'</p></c></row>
+  <row><c><p>%n</p></c><c><p>empty string (to be put at the end of formats).
+       You can also use '%*[....]' to skip some characters.</p></c></row>
+ </xtable>
+
 </attr>
 	    
 <attr name='minlength' value='number'><p>
