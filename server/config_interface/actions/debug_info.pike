@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.33 2004/05/19 13:08:21 grubba Exp $
+ * $Id: debug_info.pike,v 1.34 2004/05/25 17:49:47 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -83,16 +83,18 @@ mixed page_0( object id )
   object obj = next_object();
   // next_object skips over destructed objects, so back up over them.
   while (zero_type (_prev (obj))) obj = _prev (obj);
-  for (; objectp (obj) ||	// It's a normal object.
-       (intp (obj) && obj) ||	// It's a bignum object.
-       zero_type (obj);		// It's a destructed object.
-       obj = _next (obj)) {
+  while (1) {
+    object next_obj;
+    // Objects can be very much like zeroes, so the only reliable way
+    // to go through them all is to continue until _next balks.
+    if (catch (next_obj = _next (obj))) break;
     string|program p = object_program (obj);
     if (p == this_program && obj == this_object()) this_found = 1;
     p = p ? functionp (p) && Function.defined (p) ||
       programp (p) && Program.defined (p) || p : "    ";
     if (++numobjs[p] <= 50) allobj[p] += ({obj});
     walked_objects++;
+    obj = next_obj;
   }
   mapping(string:int) mem_usage_afterwards = _memory_usage();
   int num_things_afterwards =
