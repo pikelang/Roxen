@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.182 2004/06/29 10:57:59 mast Exp $
+// $Id: Roxen.pmod,v 1.183 2004/06/30 13:01:57 stewa Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2261,7 +2261,8 @@ class _charset_decoder(object cs)
 
 static multiset(string) charset_warned_for = (<>);
 
-constant magic_charset_variable_value = "едц&#x829f;";
+constant magic_charset_variable_placeholder = "__MaGIC_RoxEn_Actual___charseT";
+constant magic_charset_variable_value = "едц&#x829f;@" + magic_charset_variable_placeholder;
 
 function get_client_charset_decoder( string едц, RequestID|void id )
   //! Returns a decoder for the clients charset, given the clients
@@ -2280,22 +2281,27 @@ function get_client_charset_decoder( string едц, RequestID|void id )
       return http_decode_string;
     }
   }
-  
+
   // Netscape seems to send "?" for characters that can't be represented
   // by the current character set while IE encodes those characters
   // as entities, while Opera uses "\201" or "?x829f;"...
-  string test = replace((едц/"\0")[0],
-			({ "&aring;", "&#229;", "&#xe5;",
-			   "&auml;", "&#228;", "&#xe4;",
-			   "&ouml;", "&#246;", "&#xf6;",
-			   "&#33439;","&#x829f;", "\201", "?x829f;",
-			   "\x829f" }),
-			({ "?", "?", "?",
-			   "?", "?", "?",
-			   "?", "?", "?",
-			   "?", "?", "?", "?",
-			   "?" }));
-			
+  string charset;
+  string test = (едц/"\0")[0];
+  array tmp = test/"@";
+  if(sizeof(tmp)>1)
+    charset = tmp[1];
+  test = tmp[0];
+
+  test = replace(test,
+		 ({ "&aring;", "&#229;", "&#xe5;",
+		    "&auml;", "&#228;", "&#xe4;",
+		    "&ouml;", "&#246;", "&#xf6;",
+		    "&#33439;","&#x829f;", "\201", "?x829f;" }),
+		 ({ "?", "?", "?",
+		    "?", "?", "?",
+		    "?", "?", "?",
+		    "?", "?", "?", "?" }));
+  
   switch( test ) {
   case "edv":
   case "edv?":
@@ -2340,6 +2346,13 @@ function get_client_charset_decoder( string едц, RequestID|void id )
     id && id->set_output_charset && id->set_output_charset( "shift_jis" );
     return _charset_decoder(Locale.Charset.decoder("shift_jis"))->decode;
   }
+
+  // If the actual charset is valid, return a decoder for that charset
+  catch {
+    function f = _charset_decoder(Locale.Charset.decoder(charset))->decode;
+    return f;
+  };
+  
   if (!charset_warned_for[test] && (sizeof(charset_warned_for) < 256)) {
     charset_warned_for[test] = 1;
     report_warning( "Unable to find charset decoder for %O, vector: %O\n",
