@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.163 2004/03/23 17:15:16 mast Exp $
+// $Id: module.pike,v 1.164 2004/04/20 21:10:15 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -287,6 +287,48 @@ mapping(string:Stat) find_dir_stat(string f, RequestID id)
   return(res);
 }
 
+class DefaultPropertySet
+{
+  inherit PropertySet;
+
+  static mapping(string:string) response_headers;
+
+  mapping(string:string) get_response_headers()
+  {
+    if (!response_headers) {
+      // Old kludge inherited from configuration.try_get_file.
+      if (!id->misc->common)
+	id->misc->common = ([]);
+
+      RequestID sub_id = id->clone_me();
+      sub_id->misc->common = id->misc->common;
+
+      sub_id->not_query = query_location() + path;
+      sub_id->raw_url = replace (id->raw_url, id->not_query, sub_id->not_query);
+      sub_id->method = "HEAD";
+
+      mapping(string:mixed)|int(-1..-1)|object res = find_file (path, sub_id);
+      if (res == -1) res = ([]);
+      else if (objectp (res)) {
+	string ext;
+	if(stringp(sub_id->extension)) {
+	  sub_id->not_query += sub_id->extension;
+	  ext = lower_case(Roxen.extension(sub_id->not_query, sub_id));
+	}
+	array(string) tmp=sub_id->conf->type_from_filename(sub_id->not_query, 1, ext);
+	if(tmp)
+	  res = ([ "file":res, "type":tmp[0], "encoding":tmp[1] ]);
+	else
+	  res = (["file": res]);
+      }
+      response_headers = sub_id->make_response_headers (res);
+      destruct (sub_id);
+    }
+
+    return response_headers;
+  }
+}
+
 //! Return the set of properties for @[path].
 //!
 //! @returns
@@ -306,7 +348,7 @@ PropertySet|mapping(string:mixed) query_properties(string path, RequestID id)
     return 0;
   }
 
-  PropertySet res = PropertySet(path, st, id);
+  PropertySet res = DefaultPropertySet(path, st, id);
   SIMPLE_TRACE_LEAVE ("");
   return res;
 }
@@ -525,7 +567,7 @@ mapping(string:mixed) delete_file(string path, RequestID id)
 {
   // Fall back to find_file().
   RequestID tmp_id = id->close_me();
-  tmp_id->not_query = query_location() + "/" + path;
+  tmp_id->not_query = query_location() + path;
   tmp_id->method = "DELELE";
   // FIXME: Logging?
   return find_file(path, id) || Roxen.http_status(404);
