@@ -117,7 +117,7 @@ class CIF
 void main( int argc, array argv)
 {
   CIF input_file = CIF( argv[-1] );
-  foreach( input_file->get_dir("/"), string f )
+  foreach( input_file->get_dir("/")-({"/0xfffffffe"}), string f )
   {
     Stdio.File out = Stdio.File( getcwd()+f, "wct" );
     out->write( input_file->open( f,"r" )->read() );
