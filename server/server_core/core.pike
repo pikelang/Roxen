@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.843 2002/11/17 17:42:24 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.844 2002/11/18 00:11:02 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2137,8 +2137,7 @@ void nwrite(string s, int|void perr, int|void errtype,
 }
 
 // When was ChiliMoon started?
-int boot_time  =time();
-int start_time =time();
+int start_time = time();
 
 string version()
 {
@@ -4413,8 +4412,6 @@ int main(array(string) tmp)
   // Signals which cause ChiliMoon to dump the thread state
   foreach( ({ "SIGBREAK", "SIGQUIT" }), string sig)
     catch( signal(signum(sig),async_sig_start(describe_all_threads,-1)));
-
-  start_time=time();		// Used by the "uptime" info later on.
 
   restart_suicide_checker();
 
