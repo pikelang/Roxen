@@ -1,6 +1,6 @@
 /*
 
-Copyright 2001, Roxen IS
+Copyright 2001, Honza Petrous, hop@unibase.cz
 
 Roxen 2.2+ LDAP directory user database module
 
@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.9 2001/10/29 06:40:08 hop Exp $";
+  "$Id: userdb_ldap.pike,v 1.10 2002/02/12 16:52:32 hop Exp $";
 inherit UserDB;
 inherit "module";
 
