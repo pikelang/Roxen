@@ -1,12 +1,12 @@
 /*
- * $Id: tablist.pike,v 1.25 1999/11/17 23:25:49 per Exp $
+ * $Id: tablist.pike,v 1.26 1999/11/19 02:05:26 per Exp $
  *
  * Makes a tab list like the one in the config interface.
  *
  * $Author: per $
  */
 
-constant cvs_version="$Id: tablist.pike,v 1.25 1999/11/17 23:25:49 per Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.26 1999/11/19 02:05:26 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -180,11 +180,17 @@ Image.Image draw_tab(mapping args, string txt)
 
   if( args->last )
   {
-    i = i->copy( 0,0, i->xsize()+9, i->ysize()-1, args->bg );
-    for( int x=0; x<10; x++)
-      i->setpixel( i->xsize()-11+x,
+    int size;
+    if( (int)args->last )
+      size = (int)args->last;
+    else
+      size = 100;
+    i = i->copy( 0,0, i->xsize()+(size-1), i->ysize()-1, args->bg );
+    for( int x=0; x<size; x++)
+      i->setpixel( i->xsize()-(size+1)+x,
                    i->ysize()-1,
-                   (args->bg[0]*x)/10, (args->bg[1]*x)/10, (args->bg[2]*x)/10);
+                   (args->bg[0]*x)/size, (args->bg[1]*x)/size, 
+                   (args->bg[2]*x)/size);
   }
   
   return i;
