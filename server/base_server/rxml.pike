@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.192 2000/04/29 20:25:59 nilsson Exp $
+// $Id: rxml.pike,v 1.193 2000/05/02 16:42:45 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2056,12 +2056,18 @@ scope created within the define tag.
  type='tag'>if</ref></tag> lookalike tag. </desc>",
 
 "help":#"<desc tag><short>
- Gives help texts for tags.</short> If given no arguments, it will list all
- available tags.
+ Gives help texts for tags.</short> If given no arguments, it will
+ list all available tags. By inserting <tag>help/</tag> in a page, a
+ full index of the tags available in that particular Roxen WebServer
+ will be presented. If a particular tag is missing from that index, it
+ is not available at that moment. All tags are available through
+ modules, hence that particular tags' module hasn't been added to the
+ Roxen WebServer. Ask an administrator to add the module.
 </desc>
 
 <attr name=for value=tag>
  Gives the help text for that tag.
+<ex type='vert'><help for='roxen'/></ex>
 </attr>",
 
 "if":#"<desc cont><short hide>
@@ -2256,15 +2262,20 @@ The following features are supported:
 
 <attr name=num value=number required>
  Print this number.
+<ex type='vert'><number num='4711'/></ex>
 </attr>
 
 <attr name=language value=langcodes>
  The language to use.
  <lang/>
+<ex type='vert'>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
+<ex type='vert'>My favorite number is <number num='21' language='en'/>.</ex>
+<ex type='vert'>Il mio numero preferito &egrave;<number num='15' language='it'/>.</ex>
 </attr>
 
 <attr name=type value=number|ordered default=number>
  Sets output format.
+<ex type='vert'>It was his <number num='15' type='ordered'/> birthday yesterday.</ex>
 </attr>",
 
 "strlen":#"<desc cont><short>
