@@ -10,7 +10,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.28 1999/10/17 22:52:01 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.29 1999/10/18 18:41:33 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -95,7 +95,7 @@ mapping handle_file_extension(object file, string e, object id)
 
   bytes += strlen(to_parse = file->read());
 
-  return http_rxml_answer( to_parse, id, file, "text/html" );
+  return http_rxml_answer( to_parse, id, file, id->conf->type_from_filename(id->realfile) );
 }
 
 array(string) tag_version() { return ({ roxen.version() }); }
