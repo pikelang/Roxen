@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.28 1998/05/14 16:42:51 grubba Exp $
+ * $Id: ftp2.pike,v 1.29 1998/05/14 21:19:50 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1147,6 +1147,9 @@ class FTPSession
     "FEAT":"(Feature list)",
     "MDTM":"<sp> path-name (Modification time)",
     "SIZE":"<sp> path-name (Size)",
+    "MLST":"<sp> path-name (Machine Processing List File)",
+    "MLSD":"<sp> path-name (Machine Processing List Directory)",
+    "OPTS":"<sp> command <sp> options (Set Command-specific Options)",
 
     // These are in RFC 765 but not in RFC 959
     "MAIL":"[<sp> <recipient name>] (Mail to user)",
@@ -1957,6 +1960,60 @@ class FTPSession
   }
 
   /*
+   * Listings for Machine Processing
+   */
+
+  string make_MDTM(int t)
+  {
+    mapping lt = localtime(t);
+    return(sprintf("%04d%02d%02d%02d%02d%02d",
+		   lt->year + 1900, lt->mon + 1, lt->mday,
+		   lt->hour, lt->min, lt->sec));
+  }
+
+  string make_MLSD_fact(string f, mapping(string:array) dir)
+  {
+    array st = dir[f];
+
+    mapping(string:string) facts = ([]);
+
+    // Construct the facts here.
+
+    facts["UNIX.mode"] = st[0];
+
+    if (st[1] >= 0) {
+      facts->size = (string)st[1];
+      facts->type = "File";
+    } else {
+      facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
+    }
+
+    facts->modify = make_MDTM(st[3]);
+
+    facts->charset = "8bit";
+
+    // Construct and return the answer.
+
+    return(Array.map(indices(facts), lambda(string s, mapping f) {
+				       return s + "=" + f[s];
+				     }, facts) * ";" + " " + f);
+  }
+
+  void send_MLSD_response(mapping(string:array) dir, object session)
+  {
+    dir = dir || ([]);
+
+    array f = indices(dir);
+
+    session->file->data = (Array.map(f, make_MLSD_fact, dir) * "\r\n") + "\r\n";
+
+    string old_mode = mode;
+    mode = "I";
+    connect_and_send(session->file, session);
+    mode = old_mode;
+  }
+
+  /*
    * FTP commands begin here
    */
 
@@ -2435,6 +2492,48 @@ class FTPSession
     ftp_NLST("-l " + (args||""));
   }
 
+  void ftp_MLST(string args)
+  {
+    args = fix_path(args || ".");
+
+    object session = RequestID(master_session);
+
+    session->method = "DIR";
+
+    array st = stat_file(args, session);
+
+    if (st) {
+      session->file = ([]);
+      session->file->full_path = args;
+      send_MLSD_response(([ args:st ]), session);
+    } else {
+      send(501, ({ "File not found or permission denied." }));
+    }
+  }
+
+  void ftp_MLSD(string args)
+  {
+    args = fix_path(args || ".");
+    
+    object session = RequestID(master_session);
+
+    session->method = "DIR";
+
+    array st = stat_file(args, session);
+
+    if (st && (st[1] < 0)) {
+      if (args[-1] != '/') {
+	args += "/";
+      }
+
+      session->file = ([]);
+      session->file->full_path = args;
+      send_MLSD_response(session->conf->find_dir_stat(args, session), session);
+    } else {
+      send(501, ({ "File not found or permission denied." }));
+    }
+  }
+
   void ftp_DELE(string args)
   {
     if (!expect_argument("DELE", args)) {
@@ -2535,9 +2634,13 @@ class FTPSession
 				lambda(string s) {
 				  return(this_object()["ftp_"+s]);
 				}));
-    a = Array.map(a, lambda(string s) {
-		       return(([ "REST":"REST STREAM" ])[s] || s);
-		     });
+    a = Array.map(a,
+		  lambda(string s) {
+		    return(([ "REST":"REST STREAM",
+			      "MLST":"MLST UNIX.mode;size;type;modify;charset",
+			      "MLSD":"",
+		    ])[s] || s);
+		  }) - ({ "" });
 
     send(211, ({ "The following features are supported:" }) + a +
 	 ({ "END" }));
@@ -2557,10 +2660,29 @@ class FTPSession
       send_error("MDTM", args, st, session);
       return;
     }
-    mapping lt = localtime(st[3]);
-    send(213, ({ sprintf("%04d%02d%02d%02d%02d%02d",
-			 lt->year + 1900, lt->mon + 1, lt->mday,
-			 lt->hour, lt->min, lt->sec) }));
+    send(213, ({ make_MDTM(st[3]) }));
+  }
+
+  void ftp_SIZE(string args)
+  {
+    if (!expect_argument("SIZE", args)) {
+      return;
+    }
+    args = fix_path(args);
+
+    object session = RequestID(master_session);
+    session->method = "STAT";
+    mapping|array st = stat_file(args, session);
+
+    if (!arrayp(st)) {
+      send_error("SIZE", args, st, session);
+      return;
+    }
+    int size = st[1];
+    if (size < 0) {
+      size = 512;
+    }
+    send(213, ({ (string)size }));
   }
 
   void ftp_STAT(string args)
@@ -2587,28 +2709,6 @@ class FTPSession
     send(213, sprintf("status of \"%s\":\n"
 		      "%s"
 		      "End of Status", args, s)/"\n");
-  }
-
-  void ftp_SIZE(string args)
-  {
-    if (!expect_argument("SIZE", args)) {
-      return;
-    }
-    args = fix_path(args);
-
-    object session = RequestID(master_session);
-    session->method = "STAT";
-    mapping|array st = stat_file(args, session);
-
-    if (!arrayp(st)) {
-      send_error("SIZE", args, st, session);
-      return;
-    }
-    int size = st[1];
-    if (size < 0) {
-      size = 512;
-    }
-    send(213, ({ (string)size }));
   }
 
   void ftp_NOOP(string args)
