@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.64 1998/06/01 00:54:18 wing Exp $
+/* $Id: wizard.pike,v 1.65 1998/06/07 18:41:12 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -259,7 +259,6 @@ string compress_state(mapping state)
   m_delete(state,"help");
   m_delete(state,"action");
   m_delete(state,"unique");
-  m_delete(state,"help");
 
 //  werror(sprintf("State=%O\n", state));
 
