@@ -16,7 +16,7 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed", "graphic_text" }));
 }
 
-constant cvs_version = "$Id: counter.pike,v 1.42 2001/10/01 14:14:07 anders Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.43 2001/10/08 12:32:52 anders Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Counter";
 constant thread_safe = 1;
@@ -55,7 +55,7 @@ constant a_args=({"add","addreal","case","cheat","database","factor","file","lan
 class TagCounter {
   inherit RXML.Tag;
   constant name = "counter";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
   array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
 
   constant gtext = "gtext";

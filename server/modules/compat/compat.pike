@@ -762,7 +762,7 @@ array(string) tag_line(string tag, mapping m, RequestID id) {
 class TagQuote {
   inherit RXML.Tag;
   constant name="quote";
-  int flags=0;
+  constant flags=0;
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {

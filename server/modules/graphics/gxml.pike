@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.19 2001/10/01 14:14:07 anders Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.20 2001/10/08 12:32:53 anders Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -91,7 +91,7 @@ class GXML##X								\
 {									\
   inherit RXML.Tag;							\
   constant name = LazyImage.X.operation_name;				\
-  int flags = RXML.FLAG_DONT_REPORT_ERRORS;				\
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;			\
 									\
   class Frame								\
   {									\
@@ -124,7 +124,7 @@ class GXMLPush
 {
   inherit RXML.Tag;
   constant name = "push";
-  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -149,7 +149,7 @@ class GXMLStackDup
 {
   inherit RXML.Tag;
   constant name = "stack-dup";
-  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -170,7 +170,7 @@ class GXMLStackSwap
 {
   inherit RXML.Tag;
   constant name = "stack-swap";
-  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -192,7 +192,7 @@ class GXMLClearStack
 {
   inherit RXML.Tag;
   constant name = "stack-clear";
-  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -211,7 +211,7 @@ class GXMLMerge
 {
   inherit RXML.Tag;
   constant name = "merge";
-  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -244,7 +244,7 @@ class GXMLPopDup
 {
   inherit RXML.Tag;
   constant name = "merge-dup";
-  int flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame
   {
@@ -353,7 +353,7 @@ class TagGXML
 {
   inherit RXML.Tag;
   constant name = "gxml";
-  int flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
+  constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
 
   static class GXTag
   {

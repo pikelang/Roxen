@@ -11,7 +11,7 @@ constant module_type = MODULE_TAG;
 constant module_name = "Tags: Translation module";
 constant module_doc  = "This module provides an RXML API to the Pike localization system.";
 constant thread_safe = 1;
-constant cvs_version = "$Id: translation_mod.pike,v 1.12 2001/10/01 09:21:35 anders Exp $";
+constant cvs_version = "$Id: translation_mod.pike,v 1.13 2001/10/08 12:32:56 anders Exp $";
 
 
 
@@ -21,7 +21,7 @@ constant cvs_version = "$Id: translation_mod.pike,v 1.12 2001/10/01 09:21:35 and
 class TagTranslationRegistration {
   inherit RXML.Tag;
   constant name = "trans-reg";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   mapping(string:RXML.Type) req_arg_types = 
     ([ "project" : RXML.t_text(RXML.PEnt) ]);

@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.18 2001/10/01 14:14:08 anders Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.19 2001/10/08 12:32:55 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -169,7 +169,7 @@ class TagSscanf {
 class TagDice {
   inherit RXML.Tag;
   constant name = "dice";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;

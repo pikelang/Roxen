@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.31 2001/10/05 08:54:58 sara Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.32 2001/10/08 12:32:57 anders Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -325,7 +325,7 @@ class TagVForm {
   class TagReload {
     inherit RXML.Tag;
     constant name = "reload";
-    int flags = RXML.FLAG_EMPTY_ELEMENT;
+    constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
     class Frame {
       inherit RXML.Frame;
@@ -343,7 +343,7 @@ class TagVForm {
   class TagVerifyFail {
     inherit RXML.Tag;
     constant name = "verify-fail";
-    int flags = RXML.FLAG_EMPTY_ELEMENT;
+    constant flags = RXML.FLAG_EMPTY_ELEMENT;
     
     class Frame {
       inherit RXML.Frame;
@@ -362,7 +362,7 @@ class TagVForm {
   class TagClear {
     inherit RXML.Tag;
     constant name = "clear";
-    int flags = RXML.FLAG_EMPTY_ELEMENT;
+    constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
     class Frame {
       inherit RXML.Frame;

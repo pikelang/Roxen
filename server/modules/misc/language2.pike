@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.18 2001/10/01 16:39:15 nilsson Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.19 2001/10/08 12:32:54 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
@@ -137,7 +137,7 @@ function(string:string) translator(array(string) client, RequestID id) {
 class TagLanguage {
   inherit RXML.Tag;
   constant name = "language";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -157,7 +157,7 @@ class TagLanguage {
 class TagUnavailableLanguage {
   inherit RXML.Tag;
   constant name = "unavailable-language";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;

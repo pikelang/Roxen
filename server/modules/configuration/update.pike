@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.35 2001/10/04 15:05:06 per Exp $
+ * $Id: update.pike,v 1.36 2001/10/08 12:32:51 anders Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000 - 2001, Roxen IS.
@@ -176,7 +176,7 @@ static string describe_time_period( int amnt )
 class TagUpdateShowBacktrace {
   inherit RXML.Tag;
   constant name = "update-show-backtrace";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -216,7 +216,7 @@ class TagEmitUpdateProducts {
 class TagUpdateUninstallPackage {
   inherit RXML.Tag;
   constant name = "update-uninstall-package";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -293,7 +293,7 @@ class TagUpdatePackage {
 class TagUpdateStartDownload {
   inherit RXML.Tag;
   constant name = "update-start-download";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -309,7 +309,7 @@ class TagUpdateStartDownload {
 class TagUpdatePackageIsDownloaded {
   inherit RXML.Tag;
   constant name = "update-package-is-downloaded";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 //   mapping(string:RXML.Type) req_arg_types = ([ "package" : RXML.t_text ]);
 
   class Frame {
@@ -514,7 +514,7 @@ string unpack_tarfile(string tarfile)
 class TagUpdateInstallPackage {
   inherit RXML.Tag;
   constant name = "update-install-package";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 //   mapping(string:RXML.Type) req_arg_types = ([ "package" : RXML.t_text ]);
 
   class Frame {
@@ -593,7 +593,7 @@ class TagUpdatePackageContents {
 class TagUpdateUpdateList {
   inherit RXML.Tag;
   constant name = "update-update-list";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.86 2001/10/05 12:53:06 sara Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.87 2001/10/08 12:32:52 anders Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -279,7 +279,7 @@ class TagSqlplugin {
 class TagSQLQuery {
   inherit RXML.Tag;
   constant name = "sqlquery";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([
     "host":RXML.t_text(RXML.PEnt),
@@ -310,7 +310,7 @@ class TagSQLQuery {
 class TagSQLTable {
   inherit RXML.Tag;
   constant name = "sqltable";
-  int flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "query":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([
     "host":RXML.t_text(RXML.PEnt),

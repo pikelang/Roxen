@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.166 2001/10/01 14:14:06 anders Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.167 2001/10/08 12:32:51 anders Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -965,7 +965,7 @@ class TagThemePath
 {
   inherit RXML.Tag;
   constant name = "theme-path";
-  int flags = 0;
+  constant flags = 0;
   class Frame 
   {
     inherit RXML.Frame;
@@ -1014,7 +1014,7 @@ class TagCfPerm
 {
   inherit RXML.Tag;
   constant name = "cf-perm";
-  int flags = 0;
+  constant flags = 0;
   class Frame
   {
     inherit RXML.Frame;
@@ -1152,7 +1152,7 @@ class TagCfUserWants
 {
   inherit RXML.Tag;
   constant name = "cf-userwants";
-  int flags = 0;
+  constant flags = 0;
   class Frame
   {
     inherit RXML.Frame;

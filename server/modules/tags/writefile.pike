@@ -10,7 +10,7 @@
 
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: writefile.pike,v 1.7 2001/10/05 11:58:19 sara Exp $";
+constant cvs_version = "$Id: writefile.pike,v 1.8 2001/10/08 12:32:57 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -50,7 +50,7 @@ void create() {
 class TagWritefile {
   inherit RXML.Tag;
   constant name = "writefile";
-  int flags = RXML.FLAG_DONT_RECOVER;
+  constant flags = RXML.FLAG_DONT_RECOVER;
   mapping(string:RXML.Type) req_arg_types = ([
    "filename" : RXML.t_text(RXML.PEnt)
   ]);
