@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.334 2002/01/07 10:28:40 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.335 2002/01/07 13:08:07 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3278,7 +3278,7 @@ class TagCond
 class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
-  constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
+  constant flags = RXML.FLAG_SOCKET_TAG;
   mapping(string:RXML.Type) req_arg_types = ([ "source":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([ "scope":RXML.t_text(RXML.PEnt),
 					       "maxrows":RXML.t_int(RXML.PEnt),
