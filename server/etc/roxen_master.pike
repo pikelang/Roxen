@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.85 2000/03/27 01:17:01 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.86 2000/04/03 03:49:53 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -143,14 +143,22 @@ string dump_path = "../var/"+roxen_version()+"/precompiled/"+
 
 string make_ofilename( string from )
 {
-  return dump_path + sprintf( "%s-%08x.o",((from/"/")[-1]/".")[0], hash(from));
+  return dump_path+sprintf( "%s-%d-%08x.o",
+                            ((from/"/")[-1]/".")[0],getuid(),hash(from));
 }
 
 void dump_program( string pname, program what )
 {
   string outfile = make_ofilename( pname );
   string data = encode_value( what, MyCodec( what ) );
+  mkdirhier( outfile );
+#if constant( chmod )
+  chmod( dirname( outfile ), 01777  );
+#endif
   _static_modules.files()->Fd(outfile,"wct")->write(data);
+#if constant( chmod )
+  chmod( outfile, 0664  );
+#endif
 }
 
 int loaded_at( program p )
