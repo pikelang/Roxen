@@ -1,6 +1,6 @@
 inherit "http";
 
-string _cvs_version = "$Id: roxenlib.pike,v 1.9.2.2 1997/02/11 14:00:07 grubba Exp $";
+string _cvs_version = "$Id: roxenlib.pike,v 1.9.2.3 1997/03/02 19:16:59 grubba Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -660,3 +660,19 @@ string sizetostring( int size )
   }
   return sprintf("%.1f %s", s, prefix[ size ]);
 }
+
+mapping proxy_auth_needed(object id)
+{
+  mixed res = roxen->check_security(proxy_auth_needed, id);
+  if(res)
+  {
+    if(res==1) // Nope...
+      return http_low_answer(403, "You are not allowed to access this proxy");
+    if(!mappingp(res))
+      return 0; // Error, really.
+    res->error = 407;
+    return res;
+  }
+  return 0;
+}
+
