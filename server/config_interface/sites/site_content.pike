@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.121 2001/08/17 16:55:19 per Exp $
+// $Id: site_content.pike,v 1.122 2001/08/17 19:46:34 per Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -229,9 +229,9 @@ string buttons( Configuration c, string mn, RequestID id )
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
   if( c != id->conf )
 #endif
-    buttons += "<a href='../../../../drop_module.pike?config="+
-            path[0]+"&drop="+mn+"'><gbutton>"+
-            LOCALE(252, "Drop Module")+"</gbutton></a>";
+    buttons += "<link-gbutton href='../../../../drop_module.pike?config="+
+            path[0]+"&drop="+mn+"'>"+
+            LOCALE(252, "Drop Module")+"</link-gbutton></a>";
   return buttons;
 }
 
