@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.164 2000/08/29 18:55:23 kuntri Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.165 2000/09/02 14:09:34 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1722,10 +1722,9 @@ class TagEmitFonts
 {
   inherit RXML.Tag;
   constant name = "emit", plugin_name = "fonts";
-  array get_dataset(mapping arg, RequestID id)
+  array get_dataset(mapping args, RequestID id)
   {
-    return map(roxen->fonts->available_fonts(),
-	       lambda(string name) { return ([ "name" : name ]); });
+    return roxen->fonts->get_font_information(args->ttf_only);
   }
 }
 
@@ -3096,19 +3095,34 @@ Sets a variable.</short>
 "emit#fonts":({ #"<desc plugin><short>
  Prints available fonts.</short> This plugin makes it easy to list all
  available fonts in Roxen WebServer.
+
+<attr name='type' value='ttf|all'>
+Which font types to list. ttf means all true type fonts, whereas all means all
+available fonts.
+</attr>
 </desc>",
 		([
 "&_.name;":#"<desc ent>
- Returns a fontname.
+ Returns a font identification name.
 
-<p>This example will print all available fonts in gtext-style.</p>
+<p>This example will print all available ttf fonts in gtext-style.</p>
 <ex type='box'>
- <emit source='fonts'>
-   <ent>_.name</ent>:<br />
-   <gtext font='<ent>_.name</ent>'>Full speed ahead, Mr Cohen!</gtext><br />
+ <emit source='fonts' type='ttf'>
+   <gtext font='&_.name;'><ent>_.expose</ent></gtext><br />
  </emit>
 </ex>
-</desc>"
+</desc>",
+"&_.copyright;":"<desc ent>Font copyright notice. Only available for true type fonts.</desc>",
+"&_.expose;":"<desc ent>The preferred list name. Only available for true type fonts.</desc>",
+"&_.family;":"<desc ent>The font family name. Only available for true type fonts.</desc>",
+"&_.full;":"<desc ent>The full name of the font. Only available for true type fonts.</desc>",
+"&_.path;":"<desc ent>The location of the font file.</desc>",
+"&_.postscript;":"<desc ent>The fonts postscript identification. Only available for true type fonts.</desc>",
+"&_.style;":"<desc ent>Font style type. Only available for true type fonts.</desc>",
+"&_.ttf;":"<desc ent>Is either yes or no depending on if the font is a true type font or not</desc>",
+"&_.version;":"<desc ent>The version of the font. Only available for true type fonts.</desc>",
+"&_.trademark;":"<desc ent>Font trademark notice. Only available for true type fonts.</desc>",
+"&_.styles;":"<desc ent>The number of different styles available for this font.</desc>",
 		])
 	     }),
     ]);
