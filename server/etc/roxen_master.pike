@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.79 2000/03/20 07:01:34 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.80 2000/03/20 07:24:31 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -75,6 +75,9 @@ class MyCodec
 
   object objectof(string x)
   {
+    if(!stringp(x))
+      return class{}();
+
     if(sscanf(x,"efun:%s",x))
     {
       if( !objectp( all_constants()[x] ) )
