@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.40 1999/12/07 14:26:05 mast Exp $
+ * $Id: rxml.pike,v 1.41 1999/12/07 22:01:54 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -114,39 +114,8 @@ string do_parse(string to_parse, RequestID id,
     id->misc->_ifs = copy_value(real_if_callers);
   }
 
-#ifdef OLD_PARSE_HTML
   to_parse=parse_html_lines(to_parse,id->misc->_tags,id->misc->_containers,
 			    0, id, file, defines, my_fd);
-#else
-  // Hack, hack, gak.. This is temporary.
-  object parser;
-  if (id->misc->_parser_obj)
-    parser = id->misc->_parser_obj->clone (id->misc->_parser_obj);
-  else
-  {
-    parser =  class 
-    {
-      inherit Parser.HTML;
-      object up;
-      string _sprintf()
-      {
-        return "CompatRXMLParser()";
-      }
-      void create (object _up) {::create(); up = _up;}
-    }(0);
-  }
-  parser->lazy_entity_end (1);
-  parser->add_tags (map( id->misc->_tags, roxenloader.make_caller, 
-                         roxenloader.TagCaller ) );
-  parser->add_containers (map ( id->misc->_containers, roxenloader.make_caller,
-                                roxenloader.ContainerCaller ));
-  parser->_set_tag_callback (1);
-  id->misc->_parser_obj = parser;
-  parser->set_extra( 0, id, file, defines, my_fd );
-  to_parse = parser->finish( to_parse )->read();
-  id->misc->_parser_obj = 0;
-  destruct( parser );
-#endif
 
   for(int i = 1; i<sizeof(tag_callers); i++)
     to_parse=parse_html_lines(to_parse,tag_callers[i], container_callers[i],
@@ -665,10 +634,6 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     id->misc->tags[n] = str;
 #endif
     id->misc->_tags[n] = call_user_tag;
-#ifndef OLD_PARSE_HTML
-    for (object p = id->misc->_parser_obj; p; p = p->up)
-      p->add_tag (n, roxenloader.make_caller( n, roxenloader.TagCaller ) );
-#endif
   }
   else if (m->container) 
   {
@@ -706,11 +671,6 @@ string tag_define(string tag, mapping m, string str, RequestID id,
     id->misc->containers[n] = str;
 #endif
     id->misc->_containers[n] = call_user_container;
-#ifndef OLD_PARSE_HTML
-    for (object p = id->misc->_parser_obj; p; p = p->up)
-      p->add_container(n, roxenloader.make_caller( n, 
-                                    roxenloader.ContainerCaller ));
-#endif
   }
   else if (m["if"])
     id->misc->_ifs[ lower_case(m["if"]) ] = UserIf( str );
@@ -733,10 +693,6 @@ string tag_undefine(string tag, mapping m, RequestID id,
   {
     m_delete(id->misc->tags,m->tag);
     m_delete(id->misc->_tags,m->tag);
-#ifndef OLD_PARSE_HTML
-    for (object p = id->misc->_parser_obj; p; p = p->up)
-      p->add_tag (m->tag, 0);
-#endif
   }
   else if (m["if"]) 
     m_delete(id->misc->_ifs,m["if"]);
@@ -744,10 +700,6 @@ string tag_undefine(string tag, mapping m, RequestID id,
   {
     m_delete(id->misc->containers,m->container);
     m_delete(id->misc->_containers,m->container);
-#ifndef OLD_PARSE_HTML
-    for (object p = id->misc->_parser_obj; p; p = p->up)
-      p->add_container (m->container, 0);
-#endif
   }
   else
     return rxml_error(tag, "No tag, variable, if or container specified.", id);

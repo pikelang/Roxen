@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.123 1999/12/07 14:26:05 mast Exp $
+ * $Id: roxenloader.pike,v 1.124 1999/12/07 22:01:54 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -17,7 +17,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.123 1999/12/07 14:26:05 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.124 1999/12/07 22:01:54 mast Exp $";
 
 #define perror roxen_perror
 
@@ -655,113 +655,107 @@ void load_roxen()
 
 #ifndef OLD_PARSE_HTML
 
-// Temporary kludge to get wide string rxml parsing.
-
-class TagCallerNoLine
+class ParseHtmlCompat
 {
-  mixed what;
-  string _sprintf()
+  inherit Parser.HTML;
+
+  mapping(string:string|function) m_tags, m_containers;
+
+  void create (mapping(string:string|function) tags,
+	       mapping(string:string|function) containers,
+	       mixed... extra)
   {
-    return sprintf( "Tag(%O)", what );
+    m_tags = tags;
+    m_containers = containers;
+    add_containers (mkmapping (indices (m_containers),
+			       ({call_container}) * sizeof (m_containers)));
+    _set_tag_callback (call_tag);
+    set_extra (@extra);
+    lazy_entity_end (1);
   }
 
-  mixed call (object parser, mapping args, mixed... extra) 
+  string|array(string) call_tag (Parser.HTML p, string str, mixed... extra)
   {
-    return what (parser->tag_name(), args, @extra);
-  }
-  void create( mixed f ) 
-  {
-    what = f;
-  }
-}
-
-class ContainerCallerNoLine
-{
-  mixed what;
-  string _sprintf()
-  {
-    return sprintf( "Container(%O)", what );
-  }
-  mixed call (object parser, mapping args, string contents, mixed... extra) 
-  {
-    return what (parser->tag_name(), args, contents, @extra);
-  }
-  void create( mixed f ) 
-  {
-    what = f;
-  }
-}
-
-class TagCaller
-{
-  mixed what;
-  string _sprintf()
-  {
-    return sprintf( "Tag(%O)", what );
-  }
-  mixed call (object parser, mapping args, mixed... extra) 
-  {
-    return what (parser->tag_name(), args, parser->at_line(), @extra);
-  }
-  void create( mixed f ) 
-  {
-    what = f;
-  }
-}
-
-class ContainerCaller
-{
-  mixed what;
-  string _sprintf()
-  {
-    return sprintf( "Container(%O)", what );
+    string name = tag_name();
+    if (string|function tag = m_tags[name])
+      if (stringp (tag)) return ({tag});
+      else return tag (name, (werror ("%O\n", tag_args()), tag_args()), @extra);
+    else if (string|function container = m_containers[name]) {
+      // A container has been added.
+      add_container (name, call_container);
+      return str;
+    }
+    else {
+      write_out (str[..0]);
+      return str[1..];
+    }
   }
 
-  mixed call (object parser, mapping args, string contents, mixed... extra) 
+  string|array(string) call_container (Parser.HTML p, mapping(string:string) args,
+				       string content, mixed... extra)
   {
-    return what(parser->tag_name(), args, contents, parser->at_line(), @extra);
+    string name = tag_name();
+    if (string|function container = m_containers[name])
+      if (stringp (container)) return ({container});
+      else return container (name, args, content, @extra);
+    else {
+      // The container has disappeared from the mapping.
+      add_container (name, 0);
+      string text = current();
+      write_out (text[..0]);
+      return text[1..];
+    }
   }
-  void create( mixed f ) 
-  {
-    what = f;
-  }
-}
-
-mapping caller_cache = ([]);
-int num;
-function make_caller( mixed fun, program p, int|void no_cache )
-{
-  if( no_cache ) 
-    return p(fun)->call;
-  if( !caller_cache[ p ] )
-    caller_cache[ p ]  = ([]); /* set_weak_flag( ([]), 1 ); */
-  if( !caller_cache[ p ][ fun ] )
-    caller_cache[ p ][ fun ] = p( fun );
-  return caller_cache[ p ][ fun ]->call;
 }
 
 string parse_html (string data, mapping tags, mapping containers,
 		   mixed... args)
 {
-  Parser.HTML parser = Parser.HTML();
-  parser->lazy_entity_end (1);
-  parser->add_tags (map ( tags, make_caller,TagCallerNoLine,1) );
-  parser->add_containers(map (containers,make_caller,ContainerCallerNoLine,1));
-  parser->_set_tag_callback (1);
-  parser->set_extra (@args);
-  return parser->finish (data)->read();
+  return ParseHtmlCompat (tags, containers, @args)->finish (data)->read();
+}
+
+class ParseHtmlLinesCompat
+{
+  inherit ParseHtmlCompat;
+
+  string|array(string) call_tag (Parser.HTML p, string str, mixed... extra)
+  {
+    string name = tag_name();
+    if (string|function tag = m_tags[name])
+      if (stringp (tag)) return ({tag});
+      else return tag (name, tag_args(), at_line(), @extra);
+    else if (string|function container = m_containers[name]) {
+      // A container has been added.
+      add_container (name, call_container);
+      return str;
+    }
+    else {
+      write_out (str[..0]);
+      return str[1..];
+    }
+  }
+
+  string|array(string) call_container (Parser.HTML p, mapping(string:string) args,
+				       string content, mixed... extra)
+  {
+    string name = tag_name();
+    if (string|function container = m_containers[name])
+      if (stringp (container)) return ({container});
+      else return container (name, args, content, at_line(), @extra);
+    else {
+      // The container has disappeared from the mapping.
+      add_container (name, 0);
+      string text = current();
+      write_out (text[..0]);
+      return text[1..];
+    }
+  }
 }
 
 string parse_html_lines (string data, mapping tags, mapping containers,
 			 mixed... args)
 {
-  Parser.HTML parser = Parser.HTML();
-  parser->lazy_entity_end (1);
-  parser->add_tags (map ( tags, make_caller, TagCaller,1 ) );
-  parser->add_containers(map (containers, make_caller, ContainerCaller,1));
-  parser->_set_tag_callback (1);
-  parser->set_extra (@args);
-  return parser->finish (data)->read();
+  return ParseHtmlLinesCompat (tags, containers, @args)->finish (data)->read();
 }
 
 #endif
