@@ -66,7 +66,7 @@ void run(object env)
   }
   write(" JREHOME="+jrehome+"\n");
   env->set("JREHOME", jrehome);
-  arch = (Process.popen("(/usr/bin/uname -p||uname -p) 2>/dev/null")||"")-"\n";
+  arch = (Process.popen("(/usr/bin/uname -p||uname -p) 2>/dev/null | sed -e 's/^i[4-9]86/i386/'")||"")-"\n";
   if(arch=="unknown")
     arch = (Process.popen("uname -m | sed -e 's/^i[4-9]86/i386/'")||"")-"\n";
   if(arch == "")
