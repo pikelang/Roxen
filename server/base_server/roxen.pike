@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.181 1998/04/03 17:46:07 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.182 1998/04/07 15:15:15 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -535,11 +535,17 @@ private void parse_supports_string(string what)
       else
       {
 	gazonk = bar[1..];
-	supports[current_section]
-	  += ({ ({ Regexp(bar[0])->match,
+	mixed err;
+	if (err = catch {
+	  supports[current_section]
+	    += ({ ({ Regexp(bar[0])->match,
 		     aggregate_multiset(@positive_supports(gazonk)),
 		     aggregate_multiset(@negative_supports(gazonk)),
-		     })});
+	    })});
+	}) {
+	  report_error(sprintf("Failed to parse supports regexp:\n%s\n",
+			       describe_backtrace(err)));
+	}
       }
     }
   }
@@ -2233,7 +2239,7 @@ void exit_when_done()
   foreach(indices(portno)||({}), o)
   {
 #ifdef THREADS
-    object fd = files.file();
+    object fd = Stdio.File();
     fd->connect( portno[o][2]!="Any"?portno[o][2]:"127.0.0.1", portno[o][0] );
     destruct(fd);
 #endif
