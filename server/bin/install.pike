@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.30 1998/04/07 22:19:30 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.31 1998/09/15 13:58:18 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -143,11 +143,11 @@ string gets(void|int sp)
   while((tmp = stdin -> read(1)))
     switch(tmp)
     {
-     case "\010":
+    case "\010":
       s = s[0..strlen(s) - 2];
       break;
 
-     case " ":  case "\t": 
+    case " ":  case "\t": 
       if(!sp)
 	while((stdin -> read(1)) != "\n") 
 	  ;
@@ -155,10 +155,14 @@ string gets(void|int sp)
 	s += tmp;
 	break;
       }
-     case "\n": case "\r":
+    case "\n": case "\r":
+      // Truncate any terminating spaces.
+      while (sizeof(s) && (s[-1] == ' ')) {
+	s = s[..sizeof(s)-2];
+      }
       return s;
 	
-     default:
+    default:
       s += tmp;
     }
 #endif
