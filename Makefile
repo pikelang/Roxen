@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.11 1997/10/07 12:20:32 grubba Exp $
+# $Id: Makefile,v 1.12 1997/10/10 20:10:48 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -65,6 +65,17 @@ install : all
 	@echo Starting the install program...
 	@echo
 	@cd $(prefix)/roxen/server; ./install
+
+localinstall : all
+	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
+	srcdir=`pwd`; \
+	echo Installing Roxen 1.2 from build/$$os...; \
+	echo; \
+	cd build/$$os && \
+	$(MAKE) localinstall;
+	@echo
+	@echo Roxen successfully installed.
+	@echo
 
 install_all :
 	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
