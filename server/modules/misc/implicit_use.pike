@@ -4,7 +4,7 @@
 #include <config.h>
 inherit "module";
 
-constant cvs_version = "$Id: implicit_use.pike,v 1.6 2001/09/25 15:21:25 nilsson Exp $";
+constant cvs_version = "$Id: implicit_use.pike,v 1.7 2002/12/03 01:16:20 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Implicit <use> Module";
@@ -38,7 +38,7 @@ void start(int num, Configuration c) {
 }
 
 string status() {
-  HTML.OBox obox = HTML.OBox();
+  String.HTML.OBox obox = String.HTML.OBox();
   obox->add_tagdata_cell("th", (["align":"center"]), "Pattern");
   obox->add_tagdata_cell("th", (["align":"center"]), "Use");
 
