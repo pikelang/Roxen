@@ -35,7 +35,9 @@ found.
 
 <h2>Template Editor</h2>
 
-This is where the layout of the site is configured.
+This is where the layout of the site is configured. The template
+contains information of style, layout, colors, fonts etc used for the
+pages of the site.
 
 
 <h3>Layout</h3>
@@ -69,16 +71,16 @@ will be used for &lt;h1&gt;...&lt;/h1&gt;
 <dt>Heading 2...<dd>Edit the preferences for the graphical text that
 will be used for &lt;h2&gt;...&lt;/h2&gt;
 
-<dt>Footer...<dd>Choose how the footer should be aligned. If there is
-a file called <i>footer.html</i> in a directory its contents will be
-included on every page in this directory.
+<dt>Footer...<dd>Choose how the footer should be aligned. The contents
+of the file <i>/footer.html</i> will be included on all pages using
+the template.
 </dl>
 
 
 <h3>Navigation</h3>
 
 If the menu file, which is configurable under <i>Menu Editor</i>, is
-not empty a navigation menu will be included on all pages using the
+not empty, a navigation menu will be included on all pages using the
 template. Clicking on one of the headings will allow you to edit the
 preferences for the background, text style and colors of the
 navigation menu.
@@ -95,12 +97,13 @@ predefined styles.
 
 <h3>Template Functions</h3>
 
-The <i>Load...</i> button will allow you to load a new template to the
-active template. The properties of the layout and navigation will be
-changed.
+The <i>Load...</i> button will allow you to change the style of the
+active template. The active template will be replaced with one you
+choose from the list of predefined templates. The properties of the
+layout and navigation will be changed.
 
-<p>The <i>New...</i> button will create a new template that will be
-chosen as active template.
+<p>The <i>New...</i> button will create a new template, based on one
+of the predefined templates, that will be chosen as active template.
 
 <p>The <i>Change...</i> button will change the active template.
 
@@ -285,7 +288,10 @@ pages on the site.
 
 <h3>&lt;forms-mail&gt;...&lt;/forms-mail&gt;</h3>
 
-<tt>&lt;forms-mail&gt;</tt>
+The <tt>&lt;forms-mail&gt;</tt> container tag can be used to put a
+form on a web page and have the result sent as a mail.
+
+<p><tt>&lt;forms-mail&gt;</tt>
 
 
 <h4>Attributes:</h4>
