@@ -830,7 +830,7 @@ int main(int argc, string *argv)
 
 
   object o=Stdio.File();
-  o->open("test.ppm", "wtc");
+  o->open("test.gif", "wtc");
   o->write(create_bars(diagram_data)["image"]->togif());
   o->close();
 

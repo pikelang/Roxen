@@ -610,16 +610,16 @@ mapping set_legend_size(mapping diagram_data)
 	      {
 		texts[i]=
 		  texts[i]->scale((int)m,0);
-		write("x: "+texts[i]->xsize()+"\n");
-		write("y: "+texts[i]->ysize()+"\n");
+		//write("x: "+texts[i]->xsize()+"\n");
+		//write("y: "+texts[i]->ysize()+"\n");
 	      }
 	  columnnr=1;
 	}
 
-      write("columnnr: "+columnnr+"\n");
-      write("image ->xsize() "+diagram_data["image"]->xsize()+"\n");
-      write("columnnr: "+columnnr+"\n");
-      write("b"+b+"\n");
+      //write("columnnr: "+columnnr+"\n");
+      //write("image ->xsize() "+diagram_data["image"]->xsize()+"\n");
+      //write("columnnr: "+columnnr+"\n");
+      //write("b"+b+"\n");
 
       int raws=(j+columnnr-1)/columnnr;
       diagram_data["legend_size"]=raws*diagram_data["legendfontsize"];
