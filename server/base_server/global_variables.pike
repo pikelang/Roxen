@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.80 2001/08/24 14:45:14 nilsson Exp $
+// $Id: global_variables.pike,v 1.81 2001/08/24 15:45:16 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -388,11 +388,16 @@ void define_global_variables(  )
   
   defvar("User", "", LOCALE(128, "Change uid and gid to"), 
 	 TYPE_STRING,
-	 LOCALE(129, "When Roxen is run as root, to be able to open port 80 "
-		"for listening, change to this user-id and group-id when the "
-		"port has been opened. If you specify a symbolic username, "
-		"the default group of that user will be used. "
-		"The syntax is user[:group]."));
+	 LOCALE(129, #"\
+When Roxen is run as root, to be able to open port 80 for listening,
+change to this user-id and group-id when the port has been opened. If
+you specify a symbolic username, the default group of that user will
+be used. The syntax is user[:group].
+
+<p>A server restart is necessary for a change of this variable to take
+effect. Note that it also can lead to file permission errors if the
+Roxen process no longer can read files it previously has written,
+although the start script fixes this for the standard file locations."));
 
   defvar("permanent_uid", 0, LOCALE(130, "Change uid and gid permanently"),
 	 TYPE_FLAG,
