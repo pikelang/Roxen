@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.219 2001/03/28 09:56:15 kuntri Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.220 2001/03/29 02:06:43 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2436,7 +2436,7 @@ using the pre tag.
 <ex ><date date=''/></ex>
 </attr>
 
-<attr name=type value=string|ordered|iso|discordian|stardate|number>
+<attr name=type value=string|ordered|iso|discordian|stardate|number|unix>
  <p>Defines in which format the date should be displayed in. Discordian
  and stardate only make a difference when not using part. Note that
  type=stardate has a separate companion attribute, prec, which sets
@@ -2449,6 +2449,7 @@ using the pre tag.
 <row><c><p><i>type=ordered</i></p></c><c><p><ex ><date date='' type='ordered'/></ex></p></c></row>
 <row><c><p><i>type=stardate</i></p></c><c><p><ex ><date date='' type='stardate'/></ex></p></c></row>
 <row><c><p><i>type=string</i></p></c><c><p><ex ><date date='' type='string'/></ex></p></c></row>
+<row><c><p><i>type=unix</i></p></c><c><p><ex ><date date='' type='unix'/></ex></p></c></row>
 </xtable>
 </attr>
 
