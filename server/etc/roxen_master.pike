@@ -1,6 +1,12 @@
+#if efun(__version)
+#define VERSION		__version()
+#else
+#define VERSION		"Pike v0.4pl2"
+#endif /* __version */
+
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.11 1997/01/14 13:31:53 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.12 1997/01/18 18:11:24 grubba Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -30,7 +36,7 @@ void create()
   add_constant("_master",this_object());
   add_constant("master",lambda() { return this_object(); });
   add_constant("describe_backtrace",describe_backtrace);
-  add_constant("version",lambda() { return "Pike v0.2"; });
+  add_constant("version",lambda() { return VERSION + " Roxen Challenger master"; });
   add_constant("mkmultiset",lambda(mixed *a) { return aggregate_multiset(@a); });
   add_constant("strlen",sizeof);
   add_constant("new",new);
