@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.193 2000/08/21 01:04:03 nilsson Exp $
+// $Id: roxenlib.pike,v 1.194 2000/08/22 18:52:35 nilsson Exp $
 
 //#pragma strict_types
 
@@ -642,25 +642,17 @@ string make_entity( string q )
   return "&"+q+";";
 }
 
-string make_tag_attributes(mapping(string:string) in, void|int xml)
+string make_tag_attributes(mapping(string:string) in)
 {
   if(!in || !sizeof(in)) return "";
-  string res=" ";
+  string res="";
 #ifdef MODULE_DEBUG
   foreach(sort(indices(in)), string a)
 #else
   foreach(indices(in), string a)
 #endif
-  {
-#ifdef OLD_RXML_COMPAT
-    if(a=="/" && in[a]=="/")
-      xml=1;
-    else
-#endif
-      res+=a+"=\""+html_encode_string((string)in[a])+"\" ";
-  }
-  if(xml) return res+"/";
-  return res[..sizeof(res)-2];
+    res+=" "+a+"=\""+html_encode_string((string)in[a])+"\"";
+  return res;
 }
 
 string make_tag(string name, mapping(string:string) args, void|int xml)
@@ -668,7 +660,7 @@ string make_tag(string name, mapping(string:string) args, void|int xml)
 //! by the mapping `args'. If the flag xml is set, slash character will be
 //! added in the end of the tag. Use RXML.t_xml->format_tag(name, args) instead.
 {
-  return "<"+name+make_tag_attributes(args,xml)+">";
+  return "<"+name+make_tag_attributes(args,xml)+(xml?" /":"")+">";
 }
 
 string make_container(string name, mapping(string:string) args, string content)
