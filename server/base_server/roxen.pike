@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.645 2001/03/08 15:34:46 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.646 2001/03/11 18:51:30 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -383,9 +383,6 @@ private void stop_all_configurations()
   configurations->stop(1);
 }
 
-// When true, roxen will shut down as soon as possible.
-local static int die_die_die;
-
 // Function that actually shuts down Roxen. (see low_shutdown).
 private static void really_low_shutdown(int exit_code)
 {
@@ -396,22 +393,36 @@ private static void really_low_shutdown(int exit_code)
   exit( exit_code );		// Now we die...
 }
 
+static private int _recurse;
+
 // Shutdown Roxen
 //  exit_code = 0	True shutdown
 //  exit_code = -1	Restart
 private static void low_shutdown(int exit_code)
 {
+
+  if(++_recurse > 4)
+  {
+    report_notice("Exiting roxen (spurious signals received).\n");
+    stop_all_configurations();
+    destruct(cache);
+#ifdef THREADS
+    stop_handler_threads();
+#endif /* THREADS */
+    exit(-1);	// Restart.
+  }
+
+  catch(stop_all_configurations());
+  destruct(cache);
   catch
   {
-    stop_all_configurations();
-    int pid;
-    if (exit_code) {
-      report_debug("Restarting Roxen.\n");
-    } else {
-      report_debug("Shutting down Roxen.\n");
-      // exit(0);
-    }
+    if (exit_code)
+      report_notice("Restarting Roxen.\n");
+    else
+      report_notice("Shutting down Roxen.\n");
   };
+
+
   call_out(really_low_shutdown, 0.1, exit_code);
 }
 
@@ -429,6 +440,13 @@ void shutdown(float|void i)
 {
   call_out(low_shutdown, i, 0);
 }
+
+void exit_when_done()
+{
+  report_notice("Interrupt request received.\n");
+  low_shutdown(-1);
+}
+
 
 /*
  * handle() stuff
@@ -2649,7 +2667,7 @@ class ImageCache
 
   static void setup_tables()
   {
-    if(catch(db->query("select id from "+name+" where id=-1")))
+    if(catch(db->query("select id from "+name+" where id=''")))
     {
       db->query("CREATE TABLE "+name+" ("
                 "id CHAR(64) NOT NULL PRIMARY KEY, "
@@ -2730,7 +2748,7 @@ class ArgCache
 
   static void setup_table()
   {
-    if(catch(db->query("SELECT id FROM "+name+" WHERE id=-1")))
+    if(catch(db->query("SELECT id FROM "+name+" WHERE id=0")))
       db->query("CREATE TABLE "+name+" ("
                 "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, "
                 "hash INT NOT NULL DEFAULT 0, "
@@ -3477,38 +3495,6 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
 #endif
 }
 
-
-static private int _recurse;
-// FIXME: Ought to use the shutdown code.
-void exit_when_done()
-{
-  report_debug("Interrupt request received.\n");
-  die_die_die=1;
-
-  if(++_recurse > 4)
-  {
-    report_debug("Exiting roxen (spurious signals received).\n");
-    stop_all_configurations();
-#ifdef THREADS
-    stop_handler_threads();
-#endif /* THREADS */
-    exit(-1);	// Restart.
-  }
-
-  report_debug("Exiting roxen.\n");
-  stop_all_configurations();
-#ifdef THREADS
-  stop_handler_threads();
-#endif /* THREADS */
-  exit(-1);	// Restart.
-}
-
-void exit_it()
-{
-  report_debug("Recursive signals.\n");
-  exit(-1);	// Restart.
-}
-
 // Dump all threads to the debug log.
 void describe_all_threads()
 {
@@ -3630,8 +3616,7 @@ int main(int argc, array tmp)
   initiate_supports();
   initiate_argcache();
   init_configuserdb();
-
-
+  cache.init_session_cache();
 
   protocols = build_protocols_mapping();  
   enable_configurations();
