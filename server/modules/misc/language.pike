@@ -318,7 +318,7 @@ string tag_unavailable_language( string tag, mapping m, object id )
   if (m[ "type" ] == "txt" || textonly && m[ "type" ] != "img")
     return id->misc[ "language_data" ][ id->misc[ "chosen_language" ] ];
   else
-    return "<img scr=" + query( "flag_dir" ) + id->misc[ "chosen_language" ]
+    return "<img src=" + query( "flag_dir" ) + id->misc[ "chosen_language" ]
             + ".unavailable.gif alt=\""
             + id->misc[ "language_data" ][ id->misc[ "chosen_language" ] ][0]
             + "\">";
@@ -332,7 +332,7 @@ string tag_language( string tag, mapping m, object id )
   if (m[ "type" ] == "txt" || textonly && m[ "type" ] != "img")
     return id->misc[ "language_data" ][ id->misc[ "language" ] ][0];
   else
-    return "<img scr=" + query( "flag_dir" ) + id->misc[ "language" ]
+    return "<img src=" + query( "flag_dir" ) + id->misc[ "language" ]
             + ".selected.gif alt=\""
             + id->misc[ "language_data" ][ id->misc[ "language" ] ][0]
             + "\">";
@@ -363,7 +363,7 @@ string tag_available_languages( string tag, mapping m, object id )
     if (m[ "type" ] == "txt" || textonly && m[ "type" ] != "img")
       result += id->misc[ "language_data" ][ available_languages[c] ];
     else
-      result += "<img scr=" + query( "flag_dir" ) + available_languages[c]
+      result += "<img src=" + query( "flag_dir" ) + available_languages[c]
             + ".available.gif alt=\""
   	    + id->misc[ "language_data" ][ available_languages[c] ][0]
             + "\">";
