@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.44 2000/09/26 23:12:24 per Exp $
+ * $Id: Roxen.pmod,v 1.45 2000/11/02 08:30:12 per Exp $
  *
  * Various helper functions.
  *
@@ -1157,15 +1157,27 @@ RoxenModule get_owning_module (object|function thing)
 //! thing can be e.g. a module object, a Tag object or a simple_tag
 //! callback.
 {
-  if (functionp (thing)) thing = function_object (thing);
-  if (objectp (thing)) {
-    if (thing->is_module) return thing;
-    if (object parent =
-	functionp (object_program (thing)) &&
-	function_object (object_program (thing))) {
+  if (functionp (thing))
+    thing = function_object (thing);
+  if (objectp (thing))
+  {
+    if (thing->is_module)
+      return thing;
+    object o = [object]thing;
+    while (object parent =
+	   functionp (object_program (o)) &&
+	   function_object (object_program (o)))
+    {
       // FIXME: This way of finding the module for a tag is ugly.
-      if (parent->is_module) return parent;
+      if (parent->is_module)
+	return parent;
+      o = parent;
     }
+
+    // So. No such luck. Now we have a problem. This hack finds the
+    // owning module of simple_tag and simple_pi_tag objects.
+    if( thing->_do_return )
+      return get_owning_module( thing->_do_return );
   }
   return 0;
 }
