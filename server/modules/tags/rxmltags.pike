@@ -7,13 +7,11 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.194 2000/12/15 17:13:43 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.195 2001/01/04 07:28:13 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
 #include <module.h>
-#include <config.h>
-
 inherit "module";
 
 
@@ -900,7 +898,7 @@ class TagInsertFile {
     else result = id->conf->try_get_file(var, id);
     if(!result) RXML.run_error("No such file ("+var+").\n");
 
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
     if(id->conf->old_rxml_compat)
       return Roxen.parse_rxml(result, id);
 #endif
@@ -1139,7 +1137,7 @@ class TagScope {
 
     array do_enter(RequestID id) {
       scope_name=args->extend || "form";
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
       if(scope_name=="form") oldvar=id->variables;
 #endif
       if(args->extend)
@@ -1148,14 +1146,14 @@ class TagScope {
 	vars=copy_value(RXML.get_context()->scopes[scope_name]);
       else
 	vars=([]);
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
       if(oldvar) id->variables=vars;
 #endif
       return 0;
     }
 
     array do_return(RequestID id) {
-#ifdef OLD_RXML_COMPAT
+#if ROXEN_COMPAT <= 1.3
       if(oldvar) id->variables=oldvar;
 #endif
       result=content;
