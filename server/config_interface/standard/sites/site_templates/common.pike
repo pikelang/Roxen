@@ -53,13 +53,18 @@ int form_is_ok( RequestID id )
       {
         foreach( indices(moo->query()), string v )
         {
-          Variable.Variable va;
-          if( ((va=moo->getvar( v ))->get_flags() & VAR_INITIAL) &&
-              va->get_warnings())
+          Variable.Variable va = moo->getvar( v );
+          if( va->get_warnings() )
             return 0;
         }
       }
     }
+  }
+  foreach( indices( conf->query() ), string v )
+  {
+    Variable.Variable va = conf->getvar( v );
+    if( va->get_warnings() )
+      return 0;
   }
   return 1;
 }
