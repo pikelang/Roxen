@@ -1,34 +1,4 @@
 
-<diagram type=piechart><data form=rows>0</data></diagram>
-
-ger:
-
-Error: Internal server error.
-
-Division by zero.
-create_pie(mapping[39]) in line 158 in /home/noring/src/Business_graphics/creat\
-e_pie.pike
-find_file(string[229],object) in line 634 in /home/noring/src/Business_graphics\
-/business.pike
-low_get_file(object,0) in line 1045 in /home/noring/roxen/server/base_server/co\
-nfiguration.pike
-get_file(object,0) in line 1131 in /home/noring/roxen/server/base_server/config\
-uration.pike                                           
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 1.1
 
