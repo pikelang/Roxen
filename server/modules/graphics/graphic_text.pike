@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.80 1997/09/26 17:11:46 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.81 1997/09/26 17:39:18 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -50,6 +50,7 @@ array register_module()
 	      " 2 3 4 5 6       Short for scale=1.0/([number]*0.6)\n"
 	      " notrans         Do _not_ make the background color transparent\n"
 	      " split           Make each word into a separate gif image\n"
+	      " split=char      Split the string also at CHAR\n"
 	      " href=url        Link the image to the specified URL\n"
 	      "                 The 'link' color of the document will be\n"
 	      "                 used as the default foreground of the text\n"
@@ -1027,7 +1028,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
 #endif
 
   string pre, post, defalign, gt, rest, magic;
-  int i, split;
+  int i;
+  string split;
 
  // No images here, let's generate an alternative..
   if(!id->supports->images || id->prestate->noimages)
@@ -1099,7 +1101,9 @@ string tag_graphicstext(string t, mapping arg, string contents,
 
   if(arg->split)
   {
-    split=1;
+    if (sizeof(split=arg->split) != 1) {
+      split = " ";
+    }
     m_delete(arg,"split");
   }
 
@@ -1151,11 +1155,29 @@ string tag_graphicstext(string t, mapping arg, string contents,
     
     foreach(gt/" "-({""}), word)
     {
-      array size = write_text(num,word,1,id);
-      res += ({ "<img _parsed=1 border=0 alt=\""+replace(word,"\"","'")
-		  +"\" src=\""+pre+quote(word)+"\" width="+
-		  size[0]+" height="+size[1]+" "+ea+">\n"
-		  });
+      if (split != " ") {
+	array arr = word/split;
+	int i;
+	for (i = sizeof(arr)-1; i--;) {
+	  arr[i] += split;
+	}
+	if (arr[-1] == "") {
+	  arr = arr[..sizeof(arr)-2];
+	}
+	foreach (arr, word) {
+	  array size = write_text(num,word,1,id);
+	  res += ({ "<img _parsed=1 border=0 alt=\""+replace(word,"\"","'")
+		      +"\" src=\""+pre+quote(word)+"\" width="+
+		      size[0]+" height="+size[1]+" "+ea+">\n"
+		      });
+	}
+      } else {
+	array size = write_text(num,word,1,id);
+	res += ({ "<img _parsed=1 border=0 alt=\""+replace(word,"\"","'")
+		    +"\" src=\""+pre+quote(word)+"\" width="+
+		    size[0]+" height="+size[1]+" "+ea+">\n"
+		    });
+      }
     }
     if(lp) res+=({ "</a>"+post });
     return res*"";
