@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.218 1998/07/12 00:22:44 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.219 1998/07/13 20:13:38 neotron Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -79,11 +79,6 @@ private object root;
 // This mutex is used by privs.pike
 object euid_egid_lock = Thread.Mutex();
 #endif /* THREADS */
-
-
-//these mixed's are used by the ABS and suicide options,
-//to determine whether a call_out is active.
-static mixed abs_call_out=0, suicide_call_out=0;
 
 int privs_level;
 int die_die_die;
@@ -1164,25 +1159,29 @@ object load_from_dirs(array dirs, string f, object conf)
 
   return 0;
 }
-
-void restart_if_stuck () {
-  abs_call_out=0;
-  if (!QUERY(ABS_engage))
+static int abs_started;
+void restart_if_stuck (int force) {
+  remove_call_out(restart_if_stuck);
+  if (!(QUERY(abs_engage) || force))
     return;
-  abs_call_out=call_out (restart_if_stuck,10);
+  if(!abs_started) {
+    abs_started = 1;
+    werror("Anti-Block System Enabled.\n");
+  }
+  call_out (restart_if_stuck,10);
   signal(signum("SIGALRM"),lambda( int n ) {
-			     perror ((ctime(time())-"\n")+
-				     "**** ABS engaged! Restarting. ***\n");
+			     werror ("**** %s: ABS engaged! Restarting. \n",
+				     (ctime(time())-"\n"));
 			     fork_or_quit();
 			   });
-  alarm (60*QUERY(ABS_timeout)+10);
+  alarm (60*QUERY(abs_timeout)+10);
 }
 
 void post_create () {
-  if (QUERY(ABS_engage))
-    abs_call_out=call_out (restart_if_stuck,10);
+  if (QUERY(abs_engage))
+    call_out (restart_if_stuck,10);
   if (QUERY(suicide_engage))
-    suicide_call_out=call_out (restart,60*60*24*QUERY(suicide_timeout));
+    call_out (restart,60*60*24*QUERY(suicide_timeout));
 }
 
 void create()
@@ -1198,7 +1197,7 @@ void create()
   (object)"color.pike";
   (object)"fonts.pike";
   Configuration = (program)"configuration";
-	call_out(post_create,1); //we just want to delay some things a little
+  call_out(post_create,1); //we just want to delay some things a little
 }
 
 
@@ -1852,6 +1851,43 @@ private void define_global_variables( int argc, array (string) argv )
 	  TYPE_TEXT|VAR_MORE, "A short string describing this server");
 #endif /* ENABLE_NEIGHBOURHOOD */  
 
+  globvar("abs_engage", 0, "Anti-Block-System: Enable", TYPE_FLAG|VAR_MORE,
+	  "If set, it will enable the anti-block-system. "
+	  "This will restart the server after a configurable number of minutes if it "
+	  "locks up. If you are running in a single threaded environment heavy calculations "
+	  "will also halt the server. In multi-threaded mode bugs as eternal loops will not "
+	  "cause the server to reboot, since only one thread is blocked. In general there is "
+	  "no harm in having this option enabled. ");
+
+  globvar("abs_timeout", 5, "Anti-Block-System: Timeout", TYPE_INT_LIST,
+	  "If the server is unable to accept connection for this many "
+	  "minutes, it will be restarted. You need to find a balance: "
+	  "if set too low, the server will be restarted even if it's doing "
+	  "legal things (like generating many images), if set too high you will "
+	  "have long downtimes.",
+	  ({1,2,3,4,5,10,15}),
+	  lambda() {return !QUERY(abs_engage);}
+	  );
+	
+  globvar ("suicide_engage",
+	   0,
+	   "Automatic Restart: Enable",
+	   TYPE_FLAG|VAR_MORE,
+	   "If set, Roxen will automatically restart after a configurable number "
+	   "of days. Since Roxen uses a monolith, non-forking server "
+	   "model the process tends to grow in size over time. This is mainly due to "
+	   "heap fragmentation but also because of memory leaks."
+	   );
+
+  globvar("suicide_timeout",
+	  7,
+	  "Automatic Restart: Timeout",
+	  TYPE_INT_LIST,
+	  "Automatically restart the server after this many days.",
+	  ({1,2,3,4,5,6,7,14,30}),
+	  lambda(){return !QUERY(suicide_engage);}
+	  );
+
   setvars(retrieve("Variables", 0));
 
   if(QUERY(_v) < CONFIGURATION_FILE_LEVEL)
@@ -1873,42 +1909,6 @@ private void define_global_variables( int argc, array (string) argv )
   }
   docurl=QUERY(docurl2);
 
-  globvar("ABS_engage", 0, "Anti-Block-System: Enable", TYPE_FLAG|VAR_MORE,
-	  "If set, it will enable the anti-block-system. "
-	  "This will restart the server after a configurable number of minutes if it "
-	  "locks up. If you are running in a single threaded environment heavy calculations "
-	  "will also halt the server. In multi-threaded mode bugs as eternal loops will not "
-	  "cause the server to reboot, since only one thread is blocked. In general there is "
-	  "no harm in having this option enabled. ");
-
-  globvar("ABS_timeout", 5, "Anti-Block-System: Timeout", TYPE_INT_LIST,
-	  "If the server is unable to accept connection for this many "
-	  "minutes, it will be restarted. You need to find a balance: "
-	  "if set too low, the server will be restarted even if it's doing "
-	  "legal things (like generating many images), if set too high you will "
-	  "have long downtimes.",
-	  ({1,2,3,4,5,10,15}),
-	  lambda() {return !QUERY(ABS_engage);}
-	  );
-	
-  globvar ("suicide_engage",
-	   0,
-	   "Automatic Restart: Enable",
-	   TYPE_FLAG|VAR_MORE,
-	   "If set, Roxen will automatically restart after a configurable number "
-	   "of days. Since Roxen uses a monolith, non-forking server "
-	   "model the process tends to grow in size over time. This is mainly due to "
-	   "heap fragmentation but also because of memory leaks."
-	   );
-
-  globvar("suicide_timeout",
-	  7,
-	  "Automatic Restart: Timeout",
-	  TYPE_INT_LIST,
-	  "Automatically restart the server after this many days.",
-	  ({1,2,3,4,5,6,7,14,30}),
-	  lambda(){return !QUERY(suicide_engage);}
-	  );
 }
 
 
@@ -2520,13 +2520,13 @@ string diagnose_error(array from)
 }
 
 // Called from the configuration interface.
-string check_variable(string name, string value)
+string check_variable(string name, mixed value)
 {
   switch(name)
   {
    case "ConfigPorts":
-     config_ports_changed = 1;
-     break;
+    config_ports_changed = 1;
+    break;
    case "cachedir":
     if(!sscanf(value, "%*s/roxen_cache"))
     {
@@ -2544,30 +2544,20 @@ string check_variable(string name, string value)
     if(strlen(value)<7 || value[-1] != '/' ||
        !(sscanf(value,"%*s://%*s/")==2))
       return "The URL should follow this format: protocol://computer[:port]/";
-		break;
+    break;
 
-		case "ABS_engage":
-			if (value) {
-				if (!abs_call_out)
-					restart_if_stuck();
-			} else {
-				if (abs_call_out) {
-					remove_call_out(abs_call_out);
-					abs_call_out=0;
-				}
-			}
-			break;
+   case "abs_engage":
+    if (value)
+      restart_if_stuck(1);
+    else 
+      remove_call_out(restart_if_stuck);
+    break;
 
-		case "suicide_engage":
-			if (value) {
-				if (!suicide_call_out)
-					suicide_call_out=call_out(restart,60*60*24*QUERY(suicide_timeout));
-			} else {
-				if (suicide_call_out) {
-						remove_call_out(suicide_call_out);
-						suicide_call_out=0;
-				}
-			}
-			break;
+   case "suicide_engage":
+    if (value) 
+      call_out(restart,60*60*24*QUERY(suicide_timeout));
+    else
+      remove_call_out(restart);
+    break;
   }
 }
