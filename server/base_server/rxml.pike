@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.289 2001/04/05 11:24:53 kuntri Exp $
+// $Id: rxml.pike,v 1.290 2001/04/07 23:45:18 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1424,10 +1424,15 @@ class TagEmit {
   mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text(RXML.PEnt)]);
 
   int(0..1) should_filter(mapping vs, mapping filter) {
+    RXML.Context ctx = RXML.get_context();
     foreach(indices(filter), string v) {
-      if(!vs[v])
+      string|object val = vs[v];
+      if(objectp(val))
+	val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "", RXML.t_text) :
+	  val->rxml_var_eval(ctx, v, "", RXML.t_text);
+      if(!val)
 	return 1;
-      if(!glob(filter[v], vs[v]))
+      if(!glob(filter[v], val))
 	return 1;
     }
     return 0;
@@ -1476,7 +1481,19 @@ class TagEmit {
 
   // A slightly modified Array.dwim_sort_func
   // used as emits sort function.
-  static int compare(string a0,string b0) {
+  static int compare(string|object a0,string|object b0, string v) {
+    RXML.Context ctx;
+    if(objectp(a0)) {
+      if(!ctx) ctx = RXML.get_context();
+      a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+	a0->rxml_var_eval(ctx, v, "", RXML.t_text);
+    }
+    if(objectp(b0)) {
+      if(!ctx) ctx = RXML.get_context();
+      b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+	b0->rxml_var_eval(ctx, v, "", RXML.t_text);
+    }
+
     if (!a0) {
       if (b0)
 	return -1;
@@ -1495,7 +1512,7 @@ class TagEmit {
     if (a1>b1) return 1;
     if (a1<b1) return -1;
     if (a2==b2) return 0;
-    return compare(a2,b2);
+    return compare(a2,b2,v);
   }
 
   class Frame {
@@ -1600,12 +1617,15 @@ class TagEmit {
 				      
 				      if (field[0] == '-')
 					tmp = compare( m2[field[1..]],
-						       m1[field[1..]] );
+						       m1[field[1..]],
+						       field );
 				      else if (field[0] == '+')
 					tmp = compare( m1[field[1..]],
-						       m2[field[1..]] );
+						       m2[field[1..]],
+						       field );
 				      else
-					tmp = compare( m1[field], m2[field] );
+					tmp = compare( m1[field], m2[field],
+						       field );
 
 				      if (tmp == 1)
 					return 1;
