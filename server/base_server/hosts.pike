@@ -1,4 +1,4 @@
-string cvs_version = "$Id: hosts.pike,v 1.15 1997/12/03 17:27:13 grubba Exp $";
+string cvs_version = "$Id: hosts.pike,v 1.16 1997/12/04 04:26:45 per Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7
@@ -19,10 +19,25 @@ string|int|array(string|int|array(int)) query(string varname)
   return module_support::query(varname);
 }
 #endif
+
+
+mapping (string:array(mixed)) do_when_found=([]);
+
+void notify(mixed *callbacks, string res)
+{
+  mixed *c;
+  if(!arrayp(callbacks))
+    return 0;
+  foreach(callbacks, c)
+    c[0](res, @c[1]);
+}
+
+
+#ifdef EXTERNAL_HOSTNAME_PROCESS
+
+
 object *out = ({ });
 int curr;
-
-
 void died(object o) { if(objectp(o)) { out -= ({ o }); destruct(o);  } }
 
 int lookup(int mode, string name)
@@ -64,17 +79,6 @@ int lookup(int mode, string name)
     sent += tmp;
   }
   return 1;
-}
-
-mapping (string:mixed *) do_when_found=([]);
-
-void notify(mixed *callbacks, string res)
-{
-  mixed *c;
-  if(!arrayp(callbacks))
-    return 0;
-  foreach(callbacks, c)
-    c[0](res, @c[1]);
 }
 
 void got_one_result(object o, string res)
@@ -122,12 +126,72 @@ void got_one_result(object o, string res)
       cache_set("hosts", from, ({ to, time(1)+(to?3600:10) }));
     if(to && strlen(to))
       cache_set("hosts", to , ({ from, time(1)+3600 }));
-    // FIXME: Arbitrary limit to 100000 bytes?
-    //	/grubba 1997-10-03
-    res=res[9+lenf+lent..100000];
+    res=res[9+lenf+lent..];
   }
 }
 
+
+void nil(){}
+
+void create_host_name_lookup_processes()
+{
+  object out2;
+  int i, j;
+
+  j=this_object()->variables->NumHostnameLookup[VAR_VALUE];
+
+  if(!j) j=1;
+
+  out=allocate(j);
+  for(i=0; i<j; i++)
+  {
+    out[i]=files.file();
+    if (!(out2=out[i]->pipe())) {
+      error("Couldn't create pipe! Out of fd's?\n");
+    }
+    mark_fd(out[i]->query_fd(), "Host name lookup local end of pipe.\n");
+    spawne("bin/roxen_hostname", ({}), 0, out2, out2, files.file("stderr"),
+           0, 0);
+    destruct(out2);
+    out[i]->set_nonblocking(got_one_result, nil, died);
+  }
+}
+
+#else
+function low_host_to_ip = Protocols.DNS.async_client()->host_to_ip;
+function low_ip_to_host = Protocols.DNS.async_client()->ip_to_host;
+void got_one_result(string from, string to)
+{
+#ifdef HOST_NAME_DEBUG
+    report_debug("Hostnames:   ---- <"+from+"> == <"+to+"> ----\n");
+#endif
+  /* Save them in the cache for a while, to speed things up a bit... */
+  cache_set("hosts", from, ({ to, time(1)+(to?3600:10) }));
+  if(to) cache_set("hosts", to , ({ from, time(1)+3600 }));
+  if(do_when_found[from]) {
+    array tn = do_when_found[from];
+    m_delete(do_when_found,from);
+    notify(tn, to);
+  }
+}
+
+int lookup(int mode, string name)
+{
+#ifdef HOST_NAME_DEBUG
+  report_debug(sprintf("lookup:  %c %s\n",mode,name,"\n"));
+#endif
+  if(mode == IP_TO_HOST)
+    low_ip_to_host(name, got_one_result);
+  else 
+    low_host_to_ip(name, got_one_result);
+  return 1;
+}
+
+void create_host_name_lookup_processes()
+{
+  report_debug("Using built-in (async) DNS code\n");
+}
+#endif
 
 string blocking_ip_to_host(string ip)
 {
@@ -209,8 +273,6 @@ varargs void ip_to_host(string ipnumber, function callback, mixed ... args)
   if(entry=cache_lookup("hosts", ipnumber))
     if((entry[1] > time(1)) && entry[0]) // No negative caching.
       return callback(entry[0], @args);
-  if(!sizeof(out))
-    return callback(ipnumber, @args);
 
   if(!do_when_found[ipnumber])
   {
@@ -251,9 +313,6 @@ varargs void host_to_ip(string host, function callback, mixed ... args)
     if((entry[1] > time(1)) && entry[0])
       return callback(entry[0], @args);
 
-  if(!sizeof(out))
-    return callback(host, @args);
-
   if(!do_when_found[ host ])
   {
     do_when_found[host] = ({ ({ callback, args }) });
@@ -263,32 +322,6 @@ varargs void host_to_ip(string host, function callback, mixed ... args)
     }
   } else {
     do_when_found[host] += ({ ({ callback, args }) });
-  }
-}
-
-void nil(){}
-
-void create_host_name_lookup_processes()
-{
-  object out2;
-  int i, j;
-
-  j=this_object()->variables->NumHostnameLookup[VAR_VALUE];
-
-  if(!j) j=1;
-
-  out=allocate(j);
-  for(i=0; i<j; i++)
-  {
-    out[i]=files.file();
-    if (!(out2=out[i]->pipe())) {
-      error("Couldn't create pipe! Out of fd's?\n");
-    }
-    mark_fd(out[i]->query_fd(), "Host name lookup local end of pipe.\n");
-    spawne("bin/roxen_hostname", ({}), 0, out2, out2, files.file("stderr"),
-           0, 0);
-    destruct(out2);
-    out[i]->set_nonblocking(got_one_result, nil, died);
   }
 }
  

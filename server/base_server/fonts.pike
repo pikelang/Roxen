@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.14 1997/09/05 22:35:09 per Exp $ */
+/* $Id: fonts.pike,v 1.15 1997/12/04 04:26:43 per Exp $ */
 
 #include <module.h>
 
@@ -135,10 +135,55 @@ object get_font(string f, int size, int bold, int italic,
   return 0;
 }
 
+object resolve_font(string f, string|void justification)
+{
+  int bold, italic;
+  float xspace=0.0;
+  string a,b;
+  if(sscanf(f, "%sbold%s", a,b)==2)
+  {
+    bold=1;
+    f = a+b;
+  }
+  if(sscanf(f, "%sblack%s", a,b)==2)
+  {
+    bold=2;
+    f = a+b;
+  }
+  if(sscanf(f, "%slight%s", a,b)==2)
+  {
+    bold=-1;
+    f = a+b;
+  }
+  if(sscanf(f, "%sitalic%s", a,b)==2)
+  {
+    italic=1;
+    f = a+b;
+  }
+  if(sscanf(f, "%sslant%s", a,b)==2)
+  {
+    italic=-1;
+    f = a+b;
+  }
+  if(sscanf(f, "%scompressed%s", a,b)==2)
+  {
+    xspace = -20.0;
+    f = a+b;
+  }
+  if(sscanf(f, "%sspaced%s", a,b)==2)
+  {
+    xspace = 20.0;
+    f = a+b;
+  }
+
+  return get_font(f, 32, bold, italic, justification||"left", xspace, 0.0);
+}
+
 void create()
 {
   add_constant("get_font", get_font);
   add_constant("available_font_versions", available_font_versions);
   add_constant("describe_font_type", describe_font_type);
   add_constant("get_font_italic_bold", get_font_italic_bold);
+  add_constant("resolve_font", resolve_font);
 }

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.152 1997/11/28 05:28:37 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.153 1997/12/04 04:26:47 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1735,7 +1735,7 @@ void do_dest(object|void o)
   };
 }
 
-// return all available fonts. Taken from thef ont_dirs list.
+// return all available fonts. Taken from the font_dirs list.
 array font_cache;
 array available_fonts(int cache)
 {

@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.50 1997/10/09 00:52:10 grubba Exp $ */
+/* $Id: describers.pike,v 1.51 1997/12/04 04:26:50 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -205,24 +205,19 @@ mixed describe_actions(object node, object id)
        ->handle(id,this_object()));
 }
 
+int reverse_report = 1;
 string describe_errors(object node)
 {
-//  if(node->folded)
-//    return (link("<font size=+2>&nbsp;Event log</font>"));
-  array(string) report = ({ });
+  array report = indices(node->data), r2;
+
   last_time=0;
-  string err;
-  array report = ({ }), r1=indices(node->data), r2;
-  r2 = map(values(node->data), lambda(array a){ return a[0]; });
-
-  sort(r2,r1);
-  
-  foreach(r1, err)
-    report += ({ describe_error(err, node->data[err]) });
-
-//  return (link("<font size=+2>&nbsp;Event log")+"</font><dd><pre>"+
+  r2 = map(values(node->data),lambda(array a){
+     return reverse_report?-a[-1]:a[0];
+  });
+  sort(r2,report);
+  for(int i=0;i<sizeof(report);i++) 
+     report[i] = describe_error(report[i], node->data[report[i]]);
   return "</dl>"+(sizeof(report)?(report*""):"Empty")+"<dl>";
-//+"</pre>");
 }
 
 string module_var_name(object n)
