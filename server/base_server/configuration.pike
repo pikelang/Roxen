@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.365 2000/09/09 05:07:12 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.366 2000/09/10 17:19:01 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2175,7 +2175,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if (module_type & (MODULE_LOCATION|MODULE_EXTENSION|
                      MODULE_CONFIG|MODULE_FILE_EXTENSION|MODULE_LOGGER|
                      MODULE_URL|MODULE_LAST|MODULE_PROVIDER|
-                     MODULE_FILTER|MODULE_PARSER|MODULE_FIRST))
+                     MODULE_FILTER|MODULE_TAG|MODULE_FIRST))
   {
     if(module_type != MODULE_CONFIG)
     {
@@ -2403,7 +2403,7 @@ void call_low_start_callbacks( RoxenModule me,
     types_fun = me->type_from_extension;
   }
 
-  if(module_type & MODULE_PARSER)
+  if(module_type & MODULE_TAG)
     add_parse_module( me );
 
 
@@ -2545,7 +2545,7 @@ int disable_module( string modname, int|void nodest )
     types_fun = 0;
   }
 
-  if(moduleinfo->type & MODULE_PARSER)
+  if(moduleinfo->type & MODULE_TAG)
     remove_parse_module( me );
 
   if( moduleinfo->type & MODULE_AUTH )
