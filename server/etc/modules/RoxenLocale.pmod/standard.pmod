@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.16 2000/07/09 18:42:42 per Exp $
+ * $Id: standard.pmod,v 1.17 2000/07/25 09:30:59 per Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -337,55 +337,6 @@ class _config_interface
 
   constant font_test_string = "Jackdaws love my big sphinx of quartz.";
 
-  // config/low_describers.pike
-  string module_hint() {
-    return "(Module.)";
-  }
-  string font_hint() {
-    return "(Font.)";
-  }
-  string location_hint() {
-    return "(A location in the virtual filesystem.)";
-  }
-  string file_hint() {
-    return "(A filename in the real filesystem. "
-      "Always use '/' as directory separator.)";
-  }
-  string dir_hint() {
-    return "(A directory in the real filesystem. "
-      "Always use '/' as directory separator.)";
-  }
-  string float_hint() {
-    return "(A number.)";
-  }
-  string int_hint() {
-    return "(An integer number.)";
-  }
-  string stringlist_hint() {
-    return "(Comma separated list.)";
-  }
-  string intlist_hint() {
-    return "(Comma separated list of integers.)";
-  }
-  string floatlist_hint() {
-    return "(Comma separated list of floats.)";
-  }
-  string dirlist_hint() {
-    return "(Comma separated list of directories. "
-      "Always use '/' as directory separator.)";
-  }
-  string password_hint() {
-    return "(A password. Your input will not be visible.)";
-  }
-  string ports_configured( int n )
-  {
-    if(!n) return "no ports configured";
-    if(n == 1) return "one port configured";
-    return _whatevers("ports configured", n);
-  }
-  string unkown_variable_type() {
-    return "Unknown variable type";
-  }
   string lines( int n )
   {
     if(!n) return "empty";
@@ -393,18 +344,21 @@ class _config_interface
     return _whatevers("lines", n);
   }
 
-
-  string administration_interface() {
+  string administration_interface() 
+  {
     return("Administration Interface");
   }
-  string admin_logged_on(string who, string from) {
-    return("Administrator logged on as "+who+" from " + from + ".\n");
+
+  string admin_logged_on(string who, string from) 
+  {
+    return sprintf("Administrator logged on as %s from %s", who, from );
   }
 
 
   string translate_cache_class( string classname )
   {
-    return ([
+    return 
+    ([
       "supports":"supportdb",
       "fonts":"fonts",
       "hosts":"DNS",
