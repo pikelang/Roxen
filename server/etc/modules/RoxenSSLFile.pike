@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.4 2005/01/27 14:24:09 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.5 2005/01/27 14:26:41 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -114,9 +114,6 @@ static function(void|mixed,void|string:int) read_callback;
 static function(void|mixed:int) write_callback;
 static function(void|mixed:int) close_callback;
 
-static Pike.Backend real_backend;
-// The real backend for the stream.
-
 static Pike.Backend local_backend;
 // Internally all I/O is done using callbacks. When the real backend
 // can't be used, either because we aren't in callback mode (i.e. the
@@ -188,14 +185,13 @@ static void thread_error (string msg, THREAD_T other_thread)
   error ("%s"
 	 "User callbacks: a=%O r=%O w=%O c=%O\n"
 	 "Internal callbacks: r=%O w=%O c=%O\n"
-	 "Backend: %O  This thread: %O  Other thread: %O\n"
+	 "This thread: %O  Other thread: %O\n"
 	 "Other thread backtrace:\n%s----------\n",
 	 msg,
 	 accept_callback, read_callback, write_callback, close_callback,
 	 stream && stream->query_read_callback(),
 	 stream && stream->query_write_callback(),
 	 stream && stream->query_close_callback(),
-	 stream && stream->query_backend(),
 	 this_thread(), other_thread,
 	 describe_backtrace (other_thread->backtrace()));
 }
@@ -209,14 +205,12 @@ static void thread_error (string msg, THREAD_T other_thread)
 {
   error ("%s"
 	 "User callbacks: a=%O r=%O w=%O c=%O\n"
-	 "Internal callbacks: r=%O w=%O c=%O\n"
-	 "Backend: %O\n",
+	 "Internal callbacks: r=%O w=%O c=%O\n",
 	 msg,
 	 accept_callback, read_callback, write_callback, close_callback,
 	 stream && stream->query_read_callback(),
 	 stream && stream->query_write_callback(),
-	 stream && stream->query_close_callback(),
-	 stream && stream->query_backend());
+	 stream && stream->query_close_callback());
 }
 
 #endif	// !constant (Thread.thread_create)
@@ -239,16 +233,6 @@ static THREAD_T op_thread;
     if (OP_THREAD && OP_THREAD != CUR_THREAD)				\
       thread_error ("Already doing operation in another thread.\n",	\
 		    OP_THREAD);						\
-									\
-    if (Pike.Backend backend = local_backend || real_backend)		\
-      if (THREAD_T backend_thread = backend->executing_thread())	\
-	if (backend_thread != CUR_THREAD &&				\
-	    stream && (stream->query_read_callback() ||			\
-		       stream->query_write_callback() ||		\
-		       stream->query_close_callback()))			\
-	  thread_error ("Already in callback mode "			\
-			"in a backend in another thread.\n",		\
-			backend_thread);				\
   } while (0)
 
 #define CHECK(IN_CALLBACK, CALLED_FROM_REAL_BACKEND) do {		\
@@ -293,7 +277,7 @@ static THREAD_T op_thread;
   run_maybe_blocking:							\
     if (COND) {								\
       if (!local_backend) local_backend = Pike.Backend();		\
-      stream->set_backend (local_backend);				\
+      local_backend->add (stream);					\
       stream->set_id (0);						\
       SSL3_DEBUG_MSG ("Starting %s local backend\n",			\
 		      NONBLOCKING_MODE ? "nonblocking" : "blocking");	\
@@ -340,7 +324,7 @@ static THREAD_T op_thread;
 	    SSL3_DEBUG_MSG ("%s local backend ended with error\n",	\
 			    NONBLOCKING_MODE ? "Nonblocking" : "Blocking"); \
 	    if (stream) {						\
-	      stream->set_backend (real_backend);			\
+	      Pike.DefaultBackend->add_file (stream);			\
 	      stream->set_id (1);					\
 	      update_internal_state();					\
 	    }								\
@@ -369,7 +353,7 @@ static THREAD_T op_thread;
 			NONBLOCKING_MODE ? "nonblocking" : "blocking");	\
       }									\
 									\
-      stream->set_backend (real_backend);				\
+      Pike.DefaultBackend->add_file (stream);				\
       stream->set_id (1);						\
       update_internal_state();						\
     }									\
@@ -401,7 +385,6 @@ static void create (Stdio.File stream, SSL.context ctx,
     write_buffer = ({});
     read_buffer = String.Buffer();
     callback_id = 0;
-    real_backend = stream->query_backend();
     local_backend = 0;
     close_state = STREAM_OPEN;
     local_errno = cb_errno = 0;
@@ -552,7 +535,7 @@ Stdio.File shutdown()
     close_callback = 0;
 
     if (got_extra_read_call_out > 0)
-      real_backend->remove_call_out (ssl_read_callback);
+      remove_call_out (ssl_read_callback);
     got_extra_read_call_out = 0;
 
     Stdio.File stream = global::stream;
@@ -1006,35 +989,6 @@ mixed query_id()
   return callback_id;
 }
 
-void set_backend (Pike.Backend backend)
-//! Set the backend used for the file callbacks.
-{
-  ENTER (0, 0) {
-    // Only signal an error after an explicit close() call.
-    if (close_state > 0) error ("Not open.\n");
-
-    if (stream) {
-      if (stream->query_backend() != local_backend)
-	stream->set_backend (backend);
-
-      if (got_extra_read_call_out > 0) {
-	real_backend->remove_call_out (ssl_read_callback);
-	backend->call_out (ssl_read_callback, 0, 1, 0);
-      }
-    }
-
-    real_backend = backend;
-  } LEAVE;
-}
-
-Pike.Backend query_backend()
-//! Return the backend used for the file callbacks.
-{
-  // Only signal an error after an explicit close() call.
-  if (close_state > 0) error ("Not open.\n");
-  return real_backend;
-}
-
 string query_address(int|void arg)
 //!
 {
@@ -1086,7 +1040,7 @@ static void update_internal_state()
 {
   // When the local backend is used, callbacks are set explicitly
   // before it's started.
-  if (stream->query_backend() != local_backend) {
+  if (stream->query_id()) {
 
     if (CALLBACK_MODE) {
 
@@ -1096,7 +1050,7 @@ static void update_internal_state()
 	if (got_extra_read_call_out < 0) {
 	  // Install it even if we're in a handshake. There might
 	  // still be old data to read if we're renegotiating.
-	  real_backend->call_out (ssl_read_callback, 0, 1, 0);
+	  call_out (ssl_read_callback, 0, 1, 0);
 	  got_extra_read_call_out = 1;
 	}
       }
@@ -1104,7 +1058,7 @@ static void update_internal_state()
 	stream->set_read_callback (0);
 	stream->set_close_callback (0);
 	if (got_extra_read_call_out > 0) {
-	  real_backend->remove_call_out (ssl_read_callback);
+	  remove_call_out (ssl_read_callback);
 	  got_extra_read_call_out = -1;
 	}
       }
@@ -1130,7 +1084,7 @@ static void update_internal_state()
     stream->set_close_callback (0);
     stream->set_write_callback (0);
     if (got_extra_read_call_out > 0) {
-      real_backend->remove_call_out (ssl_read_callback);
+      remove_call_out (ssl_read_callback);
       got_extra_read_call_out = -1;
     }
 
@@ -1312,7 +1266,7 @@ static int ssl_read_callback (int called_from_real_backend, string input)
 	       "when no callbacks are supposed to be installed.\n");
 #endif
       if (!got_extra_read_call_out) {
-	real_backend->call_out (ssl_read_callback, 0, 1, 0);
+	call_out (ssl_read_callback, 0, 1, 0);
 	got_extra_read_call_out = 1;
 	SSL3_DEBUG_MSG ("ssl_read_callback: Too much to do (%O, %O, %O) - "
 			"queued another call\n",
