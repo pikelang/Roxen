@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.64 1998/10/06 21:26:32 grubba Exp $
+ * $Id: ftp2.pike,v 1.65 1998/10/06 21:30:43 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -501,22 +501,27 @@ class LS_L
     }
   
     mapping lt = localtime(st[3]);
+
+    string user = (string)st[5];
+    string group = (string)st[6];
     if (!(flags & LS_FLAG_n)) {
       // Use symbolic names for uid and gid.
       if (!stringp(st[5])) {
-	st[5] = name_from_uid(st[5]);
+	user = name_from_uid(st[5]);
       }
+
+      // FIXME: Convert st[6] to symbolic group name.
     }
 
     if (flags & LS_FLAG_G) {
       // No group.
       return sprintf("%s   1 %-10s %12d %s %02d %02d:%02d %s\n", perm*"",
-		     (string)st[5], (st[1]<0? 512:st[1]),
+		     user, (st[1]<0? 512:st[1]),
 		     months[lt->mon], lt->mday,
 		     lt->hour, lt->min, file);
     } else {
       return sprintf("%s   1 %-10s %-6s %12d %s %02d %02d:%02d %s\n", perm*"",
-		     (string)st[5], (string)st[6], (st[1]<0? 512:st[1]),
+		     user, group, (st[1]<0? 512:st[1]),
 		     months[lt->mon], lt->mday,
 		     lt->hour, lt->min, file);
     }
