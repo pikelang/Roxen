@@ -1,7 +1,9 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
+//
+// German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.267 2000/03/01 01:58:21 neotron Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.268 2000/03/06 14:44:09 peter Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2253,6 +2255,10 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 		   " Modules with the same priority can be assumed to be "
 		   "called in random order",
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+	me->deflocaledoc("deutsch", "_priority", "Priorität",
+                         "Modul Priorität. 9 höchste, 0 niedrigste."
+                         " Module mit gleicher Priorität werden in "
+                         "zufälliger Reihenfolge aufgerufen.");
 	me->deflocaledoc("svenska", "_priority", "Prioritet",
 			 "Modulens prioritet, 9 är högst och 0 är"
 			 " lägst. Moduler med samma prioritet anropas i "
@@ -2271,6 +2277,11 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 		   "client. Usually used as an informative message to the "
 		   "user.");
 
+	me->deflocaledoc("deutsch", "_sec_group", "Sicherheit: Bereich",
+                         "Bereichsname, der benutzt werden soll, "
+                         "wenn vom Webbrowser ein Passwort angefordert "
+                         "werden soll. Wird üblicherweise als informativer "
+                         "Hinweis für den Benutzer verwendet.");
 	me->deflocaledoc("svenska", "_sec_group", "Säkerhet: Grupp",
 			 "Gruppnamnet som används när klienten bes"
 			 " ange lösenord. I de flesta klienter visas den "
@@ -2311,6 +2322,44 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 		   "\n<p>On the other hand, a request handled by the the"
 		   " \"Filsystem module\" could later be handled by the"
 		   " \"CGI module\".");
+
+       me->deflocaledoc("deutsch", "_seclvl", "Sicherheit: Sicherheitsebene",
+                   "Die Sicherheitsebene des Moduls wird verwendet, "
+                   "wenn ein Request vom Modul behandelt werden soll."
+                  "\n<p><h2>Sicherheitsebene vs Vertrauensebene</h2> "
+                   "Jedes Modul hat eine konfigurierbare "
+                   "<i>Sicherheitsebene</i>."
+                   "Jeder Request hat eine zugewiesene Vertrauensebene. "
+                   "Höhere <i>Vertrauensebeben</i> erlauben Zugriff zu "
+                   "Modulen mir höherer <i>Sicherheitsebene</i>."
+                  "\n<p><h2>Definitionen</h2><ul>"
+                   " <li>Die ursprüngliche Vertrauensebene eines Requests "
+                   "     ist unendlich hoch."
+                   " <li> Ein Request wird nur von einem Modul behandelt, wenn"
+                   "      seine <i>Vertrauensebene</i> mindestens so hoch ist,"
+                   "      wie die <i>Sicherheitsebene</i> des Moduls."
+                   " <li> Jedes Mal wenn ein Request von einem Modul "
+                   "      behandelt wird, wird die <i>Vertrauensebene</i>"
+                   "      des Requests auf den jeweils niedrigeren Wert"
+                   "      von der <i>Vertrauensebene</i> des Requests und der"
+                   "     <i>Sicherheitsebene</i> des Moduls, gesetzt."
+                  " </ul>"
+                  "\n<p><h2>Beispiel</h2>"
+                  " Module:<ul>"
+                  " <li>  User filesystem, <i>Sicherheitsebene</i> 1"
+                  " <li>  Filesystem module, <i>Sicherheitsebene</i> 3"
+                  " <li>  CGI module, <i>Sicherheitsebene</i> 2"
+                  " </ul>"
+                   "\n<p>Ein Request der vom \"User filesystem\" behandelt "
+                   "wird bekommt eine <i>Vertrauensebene</i> die der "
+                   "<i>Sicherheitsebene</i> des Moduls entspricht. "
+                   "Der Request kann dann nicht mehr vom \"CGI module\" "
+                   "behandelt werden, da dieses eine höhere "
+                   "<i>Sicherheitsebene</i> hat als die Vertrauensebene "
+                   "des Requests."
+                   "\n<p>Ein Request der vom \"Filsystem module\" behandelt "
+                   "wurde kann andererseits später vom \"CGI module\" "
+                   "behandelt werden.");
 	me->deflocaledoc("svenska", "_seclvl", "Säkerhet: Säkerhetsnivå",
 			 "Modulens säkerhetsnivå används för att avgöra om "
 			 " en specifik request ska få hanteras av  modulen. "
@@ -2370,6 +2419,29 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 		   "entries are present) is 'allow ip=*', allowing"
 		   " everyone to access the module");
 
+	me->deflocaledoc("deutsch", "_seclevels",
+			 "Sicherheit: Muster",
+			 "Dies ist die Liste der Sicherheitsmuster.<p>"
+			 "Jede Sicherheitsebene kann aus einem oder mehr "
+			 "der folgenden Einträgen bestehen: "
+			 "<hr noshade>"
+			 "allow ip=<i>IP-Adresse</i>/<i>Bits</i><br>"
+			 "allow ip=<i>IP-Adresse</i>:<i>Netzmaske</i><br>"
+			 "allow ip=<i>Muster</i><br>"
+			 "allow user=<i>Benutzername</i>,...<br>"
+			 "deny ip=<i>IP-Adresse</i>/<i>Bits</i><br>"
+			 "deny ip=<i>IP-nummer</i>:<i>Netzmaske</i><br>"
+			 "deny ip=<i>Muster</i><br>"
+			 "<hr noshade>"
+			 "Bei den Mustern trifft '*' auf ein oder "
+			 "mehrere Zeichen zu, '?' auf genau ein "
+			 "Zeichen.<p> "
+			 "Bei den Benutzernamen steht 'any' für jeden "
+			 "gültigen Benutzernamen "
+			 "(aus einer .htaccess-Datei oder jedem anderen "
+                         "Auth-Modul)  Der Standard-Wert (wenn keine Eingaben "
+                         "gemacht wurden), ist 'allow ip=*', d.h. jeder "
+                         "darf auf das Modul zugreifen.");
 	me->deflocaledoc("svenska", "_seclevels",
 			 "Säkerhet: Behörighetsregler",
 			 "Det här är en lista av behörighetsregler.<p>"
@@ -2397,6 +2469,12 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 		   "The realm to use when requesting password from the "
 		   "client. Usually used as an informative message to the "
 		   "user.");
+
+        me->deflocaledoc("deutsch", "_sec_group", "Sicherheit: Bereich",
+                         "Bereichsname, der benutzt werden soll, "
+                         "wenn vom Webbrowser ein Passwort angefordert "
+                         "werden soll. Wird üblicherweise als informativer "
+                         "Hinweis für den Benutzer verwendet.");
 	me->deflocaledoc("svenska", "_sec_group", "Säkerhet: Grupp",
 			 "Gruppnamnet som används när klienten bes"
 			 " ange lösenord. I de flesta klienter visas den "
@@ -2421,6 +2499,30 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 		   " (from .htaccess"
 		   " or an auth module. The default is 'deny ip=*'");
 
+
+        me->deflocaledoc("deutsch", "_seclevels",
+                         "Sicherheit: Muster",
+                         "Dies ist die Liste der Sicherheitsmuster.<p>"
+                         "Jede Sicherheitsebene kann aus einem oder mehr "
+                         "der folgenden Einträgen bestehen: "
+                         "<hr noshade>"
+                         "allow ip=<i>IP-Adresse</i>/<i>Bits</i><br>"
+                         "allow ip=<i>IP-Adresse</i>:<i>Netzmaske</i><br>"
+                         "allow ip=<i>Muster</i><br>"
+                         "allow user=<i>Benutzername</i>,...<br>"
+                         "deny ip=<i>IP-Adresse</i>/<i>Bits</i><br>"
+                         "deny ip=<i>IP-nummer</i>:<i>Netzmaske</i><br>"
+                         "deny ip=<i>Muster</i><br>"
+                         "<hr noshade>"
+                         "Bei den Mustern trifft '*' auf ein oder "
+                         "mehrere Zeichen zu, '?' auf genau ein "
+                         "Zeichen.<p> "
+                         "Bei den Benutzernamen steht 'any' für jeden "
+                         "gültigen Benutzernamen "
+                         "(aus einer .htaccess-Datei oder jedem anderen "
+                         "Auth-Modul)  Der Standard-Wert (wenn keine Eingaben "
+                         "gemacht wurden), ist 'allow ip=*', d.h. jeder "
+                         "darf auf das Modul zugreifen.");
 	me->deflocaledoc("svenska", "_seclevels",
 			 "Säkerhet: Behörighetsregler",
 			 "Det här är en lista av behörighetsregler.<p>"
@@ -2454,6 +2556,11 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 	     "is only a text field for comments that the administrator "
 	     "might have (why the module are here, etc.)");
 
+  me->deflocaledoc("deutsch", "_comment",
+                   "Kommentar",
+                   "Ein Kommentar, der keinen technischen Einfluss "
+                   "auf das Modul hat, sondern lediglich ein Textfeld "
+                   "für Kommentare seitens des Administrators ist.");
   me->deflocaledoc("svenska", "_comment",
 		   "Kommentar",
 		   "En kommentar. Den här kommentaren påverkar inte "
@@ -2466,6 +2573,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 	     "An optional name. You can set it to something to remaind you what "
 	     "the module really does.");
 
+  me->deflocaledoc("deutsch", "_name", "Modul-Name",
+		   "Modul-Name.  Hier kann ein beliebiger Wert eingetragen "
+                   "werden, um die Funktionsweise des Moduls zu beschreiben.");
   me->deflocaledoc("svenska", "_name", "Namn",
 		   "Modulens namn. Om den här variablen är satt så "
 		   "används dess värde istället för modulens riktiga namn "
@@ -2922,6 +3032,9 @@ void create(string config)
 	 "This text will be visible in the configuration interface, it "
 	 " can be quite useful to use as a memory helper.");
 
+  deflocaledoc("deutsch", "comment", "Kommentar",
+              "Ein Kommentar, der im Konfigurations-Interface "
+               "sichtbar ist und als Dokumentation nützlich ist.");
   deflocaledoc("svenska", "comment", "Kommentar",
 	       "En kommentar som syns i konfigurationsinterfacet");
 
@@ -2931,6 +3044,10 @@ void create(string config)
 	 "interface. If this is left empty, the actual name of the "
 	 "virtual server will be used");
 
+  deflocaledoc("deutsch", "name", "Servername",
+#"Dies ist der Name, der im Konfigurations-Interface für den
+  virtuellen Server benutzt wird.  Wird dieses Feld leer gelassen,
+  wird der eigentliche Name des virtuellen Servers benutzt.");
   deflocaledoc("svenska", "name", "Serverns namn",
 #"Det här är namnet som kommer att synas i
   konfigurationsgränssnittet. Om du lämnar det här fältet tomt kommer
@@ -2979,6 +3096,40 @@ void create(string config)
 	 "$user_id       -- A unique user ID, if cookies are supported,\n"
 	 "                  by the client, otherwise '0'\n"
 	 "</pre>", 0, lambda(){ return !query("Log");});
+
+  deflocaledoc("deutsch", "LogFormat", "Logging: Loggingformat",
+#"Welches Format soll für die Logfiles benutzt werden.
+<pre>
+Antwort-Code oder *: Loggingformat für diesen Antwort-Code (z.B 404)
+
+Das Loggingformat ist normaler Text, in den folgende
+Variabeln eingesetzt werden können.
+
+\\n \\t \\r    -- Newline, Tab oder Linefeed-Zeichen (wie in C)
+$char(int)     -- Fügt das 8Bit-Zeichen ein, das dem Integerwert entspricht.
+$wchar(int)    -- Fügt das 16Bit-Zeichen ein, das dem Integerwert entspricht.
+$int(int)      -- Fügt das 32Bit-Word ein, das dem Integerwert entspricht.
+$^             -- Unterdrückt das Newline-Zeichen am Ende des Eintrages.
+$host          -- Hostname oder IP-Adresse des Webbrowsers.
+$ip_number     -- IP-Adresse des Webbrowsers.
+$bin-ip_number -- IP-Adresse des Webbrowsers in 32Bit-Dezimaldarstellung.
+$cern_date     -- Uhrzeit und Datum im CERN-Format.
+$bin-date      -- Zeit als 32Bit-Integer-Darstellung (Sekunden seit 1.1.1970).
+$method        -- Anfrage-Methode (GET, POST, usw.)
+$resource      -- Angeforderte Datei.
+$protocol      -- Verwendetes Protokoll (normalerweise HTTP/1.0 oder HTTP/1.1)
+$response      -- Der verschichte Antwort-Code
+$bin-response  -- Der verschickte Antwort-Code in 32Bit-Dezimaldarstellung
+$length        -- Die Größe der verschickten Daten
+$bin-length    -- Die Größe der verschickten Daten in 32Bit-Dezimaldarstellung
+$request-time  -- Verstrichene Zeit in Sekunden, die die Anfrage benötigt hat
+$referer       -- Die 'referer'-Information aus der Anfrage, oder '-'
+$user_agent    -- Die 'user-agent'-Information aus der Anfrage, oder '-'
+$user          -- Der Name des angemeldeten Benutzers, sofern vorhanden
+$user_id       -- Die eindeutige Benutzerkennung, sofern Cookies vom
+                  Browser unterstützt wurden, ansonsten '0'.
+</pre>");
+
   deflocaledoc("svenska", "LogFormat", "Loggning: Loggningsformat",
 #"Vilket format som ska användas för att logga
 <pre>
@@ -3044,6 +3195,16 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
 	 "%H    Hostname\n"
 	 "</pre>"
 	 ,0, lambda(){ return !query("Log");});
+  deflocaledoc("deutsch", "LogFile",
+               "Logging: Logdatei",
+               "Ein Dateiname.  Kann relativ zu "+getcwd()+" sein."
+               "Einige Ersetzungen werden vorgenommen:"
+#"<pre>
+%y    Jahr     (z.B. '1997')
+%m    Monat    (z.B. '08')
+%d    Tag      (z.B. '10' für den 10. des Monats)
+%h    Stunden  (z.B. '00')
+</pre>");
   deflocaledoc("svenska", "LogFile",
 	       "Loggning: Loggfil",
 	       "Filen som roxen loggar i. Filnamnet kan vara relativt "
@@ -3063,6 +3224,11 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
          "Don't log requests from hosts with an IP number which matches any "
 	 "of the patterns in this list. This also affects the access counter "
 	 "log.\n",0, lambda(){ return !query("Log");});
+
+  deflocaledoc("deutsch", "NoLog",
+               "Logging: Kein Log für",
+#"Für die folgenden IP-Adressen werden keine Log-Einträge vorgenommen.
+Dies hat auch Einfluss auf den Access-Counter.");
   deflocaledoc("svenska", "NoLog",
 	       "Loggning: Logga inte för",
 #"Logga inte några förfrågningar vars IP-nummer matchar
@@ -3072,6 +3238,11 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
   defvar("Domain", roxen->get_domain(), "Domain", TYPE_STRING,
 	 "The domainname of the server. The domainname is used "
 	 " to generate default URLs, and to gererate email addresses");
+
+  deflocaledoc( "deutsch", "Domain",
+                "DNS-Domain",
+#"Der Domainname des Servers, der für die Generierung der
+Standard-URLs und Email-Adressen verwendet wird");
   deflocaledoc( "svenska", "Domain",
 		"DNS Domän",
 #"Serverns domännamn. Det av en del RXML styrkoder för att generara
@@ -3080,6 +3251,11 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 
   defvar("MyWorldLocation", "", "Server URL", TYPE_STRING,
 	 "This is the main server URL, where your start page is located.");
+
+  deflocaledoc( "deutsch", "MyWorldLocation",
+                "Server-URL",
+                "Dies ist die URL des Haupt-Servers, auf dem die Startseite "
+                "abgelegt ist.");
   deflocaledoc( "svenska", "MyWorldLocation",
 		"Serverns URL",
 #"Det här är huvudURLen till din startsida. Den används av många
@@ -3100,6 +3276,12 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 	 "be used for such purposes.  Simply select a location that you are "
 	 "not likely to use for regular resources.");
 
+  deflocaledoc("deutsch", "InternalLoc",
+               "Interner Modulressourcen-Mountpoint",
+#"Einige Module erzeugen Links auf interne Ressourcen. Diese Einstellung
+bestimmt eine intern verwandte Position im virtuellen Dateisystem, um
+solche Zwecke zu erfüllen.  Es sollte ein Wert benutzt werden, der nicht
+durch andere Ressourcen benutzt wird.");
   deflocaledoc("svenska", "InternalLoc",
 	       "Intern modulresursmountpoint",
 #"Somliga moduler kan vilja skapa länkar till interna resurser.
@@ -3118,6 +3300,11 @@ Tokens are added to a repository at a constant rate. When there's not enough,
 we can't transmit. When there's too many, they \"spill\" and are lost.");
   //TODO: move this explanation somewhere on the website and just put a link.
 
+  deflocaledoc( "deutsch", "throttle",
+                "Bandbreitenbegrenzung: Server: Aktiviert",
+#"Wenn gesetzt, wird pro Server eine Bandbreitenbegrenzung aktiviert.
+Dadurch kann man die zur Verfügung stehende Bandbreite für diesen
+virtuellen Server begrenzen.<br>");
   deflocaledoc( "svenska", "throttle", "Bandviddsbegränsning: Servernivå: På",
                #"Om den här variablen är på så kommer bandvisddsbegränsning
 på servernivå att ske. Det gör det möjligt för dig att begränsa den totala
@@ -3137,6 +3324,12 @@ många poletter i hinken så kommer de nya som kommer in att \"ramla ut\".");
 bytes/sec (the bucket \"fill rate\").",
          0,arent_we_throttling_server);
 
+  deflocaledoc( "deutsch", "throttle_fill_rate",
+                "Bandbreitenbegrenzung: Server: "
+                "Durchschnittliche Bandbreite",
+                "Dies ist die durchschnittliche Bandbreite, die "
+                "für diesen virtuellen Server zur Verfügung steht. "
+                "(in Bytes/Sekunde).");
   deflocaledoc( "svenska", "throttle_fill_rate",
                 "Bandviddsbegränsning: Servernivå:"
                 " Genomsnittlig tillgänglig bandvidd",
@@ -3151,6 +3344,7 @@ throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow
 any data bursts. This value determines the length of the time over which the
 bandwidth is averaged",0,arent_we_throttling_server);
 
+  //FIXME: German Translation missing.
   deflocaledoc( "svenska", "throttle_bucket_depth",
                 "Bandviddsbegränsning: Servernivå:"
                 " Hinkstorlek",
@@ -3167,6 +3361,7 @@ be delayed rather than granted minimal amounts of bandwidth. The purpose
 is to avoid sending too small packets (which would increase the IP overhead)",
          0,arent_we_throttling_server);
 
+  //FIXME: German Translation missing.
   deflocaledoc( "svenska", "throttle_min_grant",
                 "Bandviddsbegränsning: Servernivå:"
                 " Minimalt antal bytes",
@@ -3183,6 +3378,7 @@ overhead and (marginally) CPU usage. You'll want to set it just a tiny
 bit lower than any integer multiple of your network's MTU (typically 1500
 for ethernet)",0,arent_we_throttling_server);
 
+  //FIXME: German Translation missing.
   deflocaledoc( "svenska", "throttle_max_grant",
                 "Bandviddsbegränsning: Servernivå:"
                 " Maximalt antal bytes",
@@ -3200,6 +3396,7 @@ ditt nätverks MTU (normala ethernetförbindelser har en MTU på 1500)
 #"If set, per-request bandwidth throttling will be enabled."
          );
 
+  //FIXME: German Translation missing.
   deflocaledoc( "svenska", "req_throttle",
                 "Bandviddsbegränsning: Förbindelsenivå: På",
                 "Om på så begränsas bandvidden individuellt på förbindelser"
@@ -3214,7 +3411,7 @@ or even negative bandwidths for particularly unlucky requests. This variable
 guarantees a minimum bandwidth for each request",
          0,arent_we_throttling_request);
 
-
+  //FIXME: German Translation missing.
   deflocaledoc( "svenska", "req_throttle_min",
                 "Bandviddsbegränsning: Förbindelsenivå: Minimal bandvidd",
 #"Den maximala bandvidden som varje förbindelse får bestäms av en kombination
@@ -3232,6 +3429,7 @@ the modules combination. The bucket depth will be determined multiplying
 the rate by this factor.",
          0,arent_we_throttling_request);
 
+  //FIXME: German Translation missing.
   deflocaledoc( "svenska", "req_throttle_depth_mult",
                 "Bandviddsbegränsning: Förbindelsenivå: Hinkstorlek",
 #"Den genomsnittliga bandvidden som varje förbindelse bestäms av
@@ -3262,6 +3460,11 @@ multiplicera detta värde med den här faktorn.");
 	 "What to return when there is no resource or file available "
 	 "at a certain location.");
 
+  deflocaledoc("deutsch", "ZNoSuchFile",
+	       "Mitteilungen: Datei nicht gefunden",
+#"Dieser Text wird angezeigt, wenn eine nicht verfügbare Datei
+aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
+'$Me' durch die Server-URL");
   deflocaledoc("svenska", "ZNoSuchFile",
 	       "Meddelanden: Filen finns inte",
 #"Det här meddelandet returneras om en användare frågar efter en

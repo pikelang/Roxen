@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.22 2000/02/28 05:21:57 peter Exp $
+// $Id: global_variables.pike,v 1.23 2000/03/06 14:44:12 peter Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -73,6 +73,10 @@ or writing Pike scripts.");
   deflocaledoc( "svenska", "show_internals", "Visa interna fel",
 		#"Visa interna server fel för användaren av servern.
 Det är väldigt användbart när du utvecklar egna moduler eller pikeskript.");
+  deflocaledoc( "deutsch", "show_internals", "Anzeige von internen Fehlern",
+		#"Anzeige von internen Server-Fehlern an den Benutzer.
+Dies ist bei der Entwicklung und bei der Fehlersuche von eigenen Modulen
+oder Pike-Scripten nützlich.");
 
   if(!fhttp)
   {
@@ -88,6 +92,11 @@ alla användare att få en unik kaka (cookie) med namnet 'RoxenUserID' satt.  Den
 här kakan kan användas i skript för att spåra individuella användare.  Det är
 inte rekommenderat att använda den här variabeln, många användare tycker illa
 om cookies");
+    deflocaledoc( "deutsch", "set_cookie",
+                  "Logging: Setzen eines eindeutigen Benutzer-Cookies",
+#"An alle Benutzer der Website wird ein eindeutiger Benutzer-Cookie geschickt,
+sofern deren Browser Cookies annimmt.  Dieser kann in Scripten und im Logfile
+zur Identifizierung einzelner Benutzer verwendet werden.");
 
     defvar("set_cookie_only_once",1,"Logging: Set ID cookies only once",
            TYPE_FLAG,
@@ -103,6 +112,11 @@ multiple requests.",0,
 försöka sätta den unika användarkakan en gång. Det gör att om användaren inte
 tillåter att kakan sätts, så slipper hon eller han iallafall nya frågor under
 några minuter");
+    deflocaledoc( "deutsch", "set_cookie_only_once",
+                  "Logging: Benutzer-Cookie nur einmal setzen",
+#"Dem Benutzer wird nur beim ersten Aufruf ein eindeutiger Benutzer-Cookie
+geschickt. Dadurch wird der Benutzer nur einmal aufgefordert, einen Cookie
+anzunehmen.");
   }
 }
 
@@ -113,7 +127,8 @@ void set_up_fhttp_variables( object o )
 
   defvar( "log", "None",
           (["standard":"Logging method",
-            "svenska":"Loggmetod", ]), TYPE_STRING_LIST,
+            "svenska":"Loggmetod",
+            "deutsch": "Logging-Methode", ]), TYPE_STRING_LIST,
           (["standard":
             "None - No log<br>"
             "CommonLog - A common log in a file<br>"
@@ -127,6 +142,12 @@ void set_up_fhttp_variables( object o )
             "speciellt fort att logga med den här metoden, det begränsar "
             "roxens hastighet till strax under 1000 requests/sekund på "
             "en normalsnabb dator år 1999.",
+            "deutsch":
+            "Keine - Kein Logfile<br>"
+            "CommonLog - Logging nach dem CommonLog-Format<br>"
+            "Compat - Mit Roxen's normalem Format arbeiten.<br>"
+            "<p>Hinweis: Die Compat-Methode beschränkt Roxen auf "
+            "1000 Zugriffe/Sekunde.",
           ]),
           ({ "None", "CommonLog", "Compat" }),
           ([ "svenska":
@@ -134,31 +155,45 @@ void set_up_fhttp_variables( object o )
                "None":"Ingen",
                "CommonLog":"Commonlog",
                "Compat":"Kompatibel",
-             ])
+             ]),
+             "deutsch":
+             ([
+               "None":"Keine",
+               "CommonLog":"CommonLog",
+               "Compat":"Compat",
+             ]),
           ]) );
 
   defvar( "log_file", "../logs/clog-"+o->ip+":"+o->port,
           ([ "standard":"Log file",
-             "svenska":"Logfil", ]), TYPE_FILE,
+             "svenska":"Logfil",
+             "deutsch":"Logdatei", ]), TYPE_FILE,
           ([ "svenska":"Den här filen används om man loggar med "
              " commonlog metoden.",
              "standard":"This file is used if logging is done using the "
-             "CommonLog method."
+             "CommonLog method.",
+             "deutsch":"Diese Datei wird zum Logging im CommonLog-Format "
+             "benutzt."
           ]));
 
   defvar( "ram_cache", 20,
           (["standard":"Ram cache",
-            "svenska":"Minnescache"]), TYPE_INT,
+            "svenska":"Minnescache",
+            "deutsch":"Speicher-Cache"]), TYPE_INT,
           (["standard":"The size of the ram cache, in MegaBytes",
-            "svenska":"Storleken hos minnescachen, i Megabytes"]));
+            "svenska":"Storleken hos minnescachen, i Megabytes",
+            "deutsch":"Die Größe des Speicher-Caches, in Megabytes"]));
 
   defvar( "read_timeout", 120,
           ([ "standard":"Client timeout",
-             "svenska":"Klienttimeout" ]),TYPE_INT,
+             "svenska":"Klienttimeout",
+             "deutsch":"Client-Timout" ]),TYPE_INT,
           ([ "standard":"The maximum time roxen will wait for a "
              "client before giving up, and close the connection, in seconds",
              "svenska":"Maxtiden som roxen väntar innan en klients "
-             "förbindelse stängs, i sekunder" ]) );
+             "förbindelse stängs, i sekunder",
+             "deutsch":"Die maximale Zeit in Sekunden, die Roxen wartet, "
+             "bevor die Verbindung zum Client abgebrochen wird" ]) );
 
 
   set_up_http_variables( o,1 );
@@ -174,12 +209,15 @@ void set_up_ssl_variables( object o )
           ([
             "standard":"SSL certificate file",
             "svenska":"SSL-certifikatsfil",
+            "deutsch":"SSL-Zertifikatsdatei"
           ]), TYPE_STRING,
           ([
             "standard":"The SSL certificate file to use. The path "
             "is relative to "+getcwd()+"\n",
             "svenska":"SSLcertifikatfilen som den här porten ska använda."
             " Filnamnet är relativt "+getcwd()+"\n",
+            "deutsch":"Die SSL-Zertifikatsdatei, die verwendet werden soll. "
+            "Der Pfad ist relativ zu "+getcwd()+"\n"
           ]) );
 
 
@@ -187,6 +225,7 @@ void set_up_ssl_variables( object o )
           ([
             "standard":"SSL key file",
             "svenska":"SSL-nyckelfil",
+            "deutsch":"SSL-Schlüsseldatei"
           ]),          TYPE_STRING,
           ([
             "standard":"The SSL key file to use. The path "
@@ -196,6 +235,10 @@ void set_up_ssl_variables( object o )
             " Filnamnet är relativt "+getcwd()+". Du behöver inte ange en "
             "nyckelfil, lämna det här fältet tomt om du bara har en "
             "certifikatfil\n",
+            "deutsch":"Die SSL-Schlüsseldatei, die verwendet werden soll. "
+            "Der Pfad ist relativ zu "+getcwd()+".  Die Schlüsseldatei muß "
+            "nicht angeben werden, sondern man kann dieses Feld leer lassen "
+            "und nur mit der Zertifikatsdatei arbeiten\n",
           ]) );
 }
 
@@ -266,6 +309,14 @@ void define_global_variables( int argc, array (string) argv )
 	       "<p>Detta kan vara användbart om du vill se om en användare "
 	       "har lyckats ladda hem hela filen. I normalfallet vill du "
 	       "ha denna flagga avslagen.");
+  deflocaledoc("deutsch", "RestoreConnLogFull",
+               "Logging: Bei wiederaufgenommenen Verbindungen werden die "
+               "übertragenen Daten sowie die bisher verschickten Daten "
+               "verzeichnet.  Wenn ein Benutzer bereits 100 Bytes einer Datei "
+               "geladen hat, und in einem späteren Download die fehlenden 900 "
+               "Bytes überträgt, werden im Logfile die gesamten 1000 Bytes "
+               "verzeichnet.<p>Dies ist nützlich, um erfolgreiche Downloads "
+               "zu erkennen.");
 
   globvar("default_font", "franklin_gothic_demi", "Default font", TYPE_FONT,
 	  "The default font to use when modules request a font.");
@@ -273,6 +324,9 @@ void define_global_variables( int argc, array (string) argv )
   deflocaledoc( "svenska", "default_font", "Normaltypsnitt",
 		#"När moduler ber om en typsnitt som inte finns, eller skriver
 grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
+  deflocaledoc( "deutsch", "default_font", "Standard-Schriftart",
+                "#Die Schriftart, die von Modulen benutzt werden soll.");
+
 
   globvar("font_dirs", ({"../local/nfonts/", "nfonts/" }),
 	  "Font directories", TYPE_DIR_LIST,
@@ -280,7 +334,8 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 
   deflocaledoc( "svenska", "font_dirs", "Typsnittssökväg",
 		"Sökväg för typsnitt.");
-
+  deflocaledoc( "deutsch", "font_dirs", "Schriftarten-Verzeichnisse",
+                "In diesen Verzeichnissen befinden sich Schriftarten.");
 
   globvar("logdirprefix", "../logs/", "Logging: Log directory prefix",
 	  TYPE_DIR|VAR_MORE,
@@ -289,11 +344,16 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 
   deflocaledoc( "svenska", "logdirprefix", "Loggning: Loggningsmappprefix",
 		"Alla nya loggar som skapas får det här prefixet.");
+  deflocaledoc( "deutsch", "logdirprefix", "Logging: Logverzeichnis-Prefix",
+		"Alle Logdateien werden unterhalb dieses Verzeichnisses
+                 abgelegt.");
 
   globvar("cache", 0, "Cache: Proxy Disk Cache Enabled", TYPE_FLAG,
 	  "If set to Yes, caching will be enabled.");
   deflocaledoc( "svenska", "cache", "Cache: Proxydiskcachen är på",
 		"Om ja, använd cache i alla proxymoduler som hanterar det.");
+  deflocaledoc( "deutsch", "cache", "Cache: Proxy-Cache aktivieren",
+		"Der Proxy-Festplatten-Cache wird benutzt.");
 
   globvar("garb_min_garb", 1, "Cache: Proxy Disk Cache Clean size", TYPE_INT,
   "Minimum number of Megabytes removed when a garbage collect is done.",
@@ -301,6 +361,10 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
   deflocaledoc( "svenska", "garb_min_garb",
 		"Cache: Proxydiskcache Minimal rensningsmängd",
 		"Det minsta antalet Mb som tas bort vid en cacherensning.");
+  deflocaledoc( "deutsch", "garb_min_garb",
+		"Cache: Proxy Disk Cache Reinigungsgröße",
+		"Wird der Cache geleert, werden mindestens soviel Megabytes
+                 entfernt.");
 
 
   globvar("cache_minimum_left", 5, "Cache: Proxy Disk Cache Minimum "
@@ -319,6 +383,10 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 		"Cache: Proxydiskcache minimal fri disk",
 	"Om det är mindre plats (i %) ledigt på disken än vad som "
 	"anges i den här variabeln så kommer en cacherensning ske.");
+  deflocaledoc( "deutsch", "cache_minimum_free",
+		"Cache: Minimale Größe des Proxy-Caches",
+	"Bei Unterschreiten dieses Wertes (in %) werden einige Dateien "
+	"aus dem Cache entfernt.");
 
 
   globvar("cache_size", 25, "Cache: Proxy Disk Cache Size", TYPE_INT,
@@ -326,6 +394,8 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 	  0, cache_disabled_p);
   deflocaledoc( "svenska", "cache_size", "Cache: Proxydiskcachens storlek",
 		"Cachens maximala storlek, i Mb.");
+  deflocaledoc( "deutsch", "cache_size", "Cache: Größe des Proxy-Caches",
+		"Maximale Größe des Proxy-Caches auf der Festplatte, in MB.");
 
   globvar("cache_max_num_files", 0, "Cache: Proxy Disk Cache Maximum number "
 	  "of files", TYPE_INT, "How many cache files (inodes) may "
@@ -337,6 +407,11 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 		"Om det finns fler än så här många filer i cachen "
 		"kommer en cacherensning ske. Sätt den här variabeln till "
 		"noll för att hoppa över det här testet.");
+  deflocaledoc( "deutsch", "cache_max_num_files",
+		"Cache: Maximale Anzahl an Dateien im Proxy-Cache",
+		"Wie viele Dateien dürfen im Cache sein, bevor eine "
+		"Reinigung (Garbage Collection) stattfindet. Durch "
+		"Setzen auf Null wird diese Abfrage ignoriert.");
 
   globvar("bytes_per_second", 50, "Cache: Proxy Disk Cache bytes per second",
 	  TYPE_INT,
@@ -350,6 +425,12 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 		"storlek modifierar dess 'ålder' i cacherensarens ögon. "
 		"Den här variabeln anger hur många bytes som ska motsvara "
 		"en sekund.");
+  deflocaledoc( "deutsch", "bytes_per_second",
+                "Cache: Proxy-Cache Bytes pro Sekunde",
+                "Wie wichtig ist die Dateigröße beim Reinigen des Caches? "
+                "Jedes Byte entspricht einem gewissen Dateialter in Sekunden. "
+                "Größere Dateien werden also eher entfernt.");
+
 
   globvar("cachedir", "/tmp/roxen_cache/",
 	  "Cache: Proxy Disk Cache Base Cache Dir",
@@ -362,6 +443,10 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 	       "Den här variabeln anger vad cachen ska sparas. "
 	       "För att undvika fatala misstag så adderas alltid "
 	       "'roxen_cache/' till den här variabeln när den sätts om.");
+  deflocaledoc("deutsch", "cachedir", "Cache: Proxy-Cache-Verzeichnis",
+	       "In diesem Verzeichnis werden die Cache-Dateien abgelegt. "
+               "Um Pannen zu vermeiden, wird 'roxen_cache' an diesen "
+               "Wert angehängt.");
 
   globvar("hash_num_dirs", 500,
 	  "Cache: Proxy Disk Cache Number of hash directories",
@@ -377,6 +462,11 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 	       "variabeln anger i hur många olika directoryn som datan ska "
 	       "lagras. Om du ändrar på den här variabeln så blir hela den "
 	       "gamla cachen invaliderad.");
+  deflocaledoc("deutsch", "hash_num_dirs",
+	       "Cache: Anzahl der Hash-Verzeichnisse im Proxy-Cache",
+               "Dies ist die Anzahl an Verzeichnissen, auf die die "
+               "Cache-Dateien verteilt werden.  Das Ändern dieses Wertes "
+               "macht den bisherigen Proxy-Cache ungültig.");
 
   globvar("cache_keep_without_content_length", 1, "Cache: "
 	  "Proxy Disk Cache Keep without Content-Length",
@@ -388,6 +478,9 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 	       "Spara filer även om de inte har någon fillängd. "
 	       "Cachen kan innehålla trasiga filer om den här "
 	       "variabeln är satt, men fler filer kan sparas");
+  deflocaledoc("deutsch", "cache_keep_without_content_length",
+               "Cache: Dateien ohne Content-Length behalten",
+               "Sollen Dateien ohne Content-Length im Cache behalten werden?");
 
   globvar("cache_check_last_modified", 0, "Cache: "
 	  "Proxy Disk Cache Refreshes on Last-Modified", TYPE_FLAG,
@@ -403,6 +496,11 @@ grafisk text utan att ange ett typsnitt, så används det här typsnittet.");
 bort ur cachen när de blir dubbelt så gamla som de var när de hämtades från
 källservern om de har en last-modified header som anger när de senast
 ändrades");
+  deflocaledoc("deutsch", "cache_check_last_modified",
+               "Cache: Proxy-Cache benutzt Last-Modified-Information",
+#"Der Cache wird anhand der Last-Modified-Information Dateien aus dem Cache
+entfernen, sofern kein Expire-Header vorhanden ist.  Die Dateien verbleiben
+im Cache, bis sie ihr Alter verdoppelt haben.");
 
   globvar("cache_last_resort", 0, "Cache: "
 	  "Proxy Disk Cache Last resort (in days)", TYPE_INT,
@@ -414,6 +512,10 @@ källservern om de har en last-modified header som anger när de senast
 	       "Hur många dagar ska en fil utan både Expire och "
 	       "Last-Modified behållas i cachen? Om du sätter den "
 	       "här variabeln till noll kommer de inte att sparas alls.");
+  deflocaledoc("deutsch", "cache_last_resort",
+               "Cache: Verweildauer (in Tagen) im Proxy-Cache",
+               "Wieviel Tage sollen Dateien ohne Expire- und "
+               "Last-Modifier-Informationen im Cache verbleiben?");
 
   globvar("cache_gc_logfile",  "",
 	  "Cache: "
@@ -426,6 +528,12 @@ källservern om de har en last-modified header som anger när de senast
 	       "Cache: Proxydiskcacheloggfil",
 	       "Information om cacherensningskörningar sparas i den här filen"
 	       ".");
+  deflocaledoc("deutsch", "cache_gc_logfile",
+               "Cache: Logfile für Garbage Collection",
+               "Informationen über Aktivitäten der Garbage Collection: "
+               "gelöschte und aktualisierte Dateien, Cache- und "
+               "Festplatten-Status werden vermerkt.");
+
   /// End of cache variables..
 
   globvar("pidfile", "/tmp/roxen_pid_$uid", "PID file",
@@ -438,6 +546,10 @@ källservern om de har en last-modified header som anger när de senast
 	       "I den här filen sparas roxen processid och processidt "
 	       "for roxens start-skript. $uid byts ut mot användaridt för "
 	       "den användare som kör roxen");
+  deflocaledoc("deutsch", "pidfile", "PID-Datei",
+               "In dieser Datei legt der Server seine eigene PID und die "
+               "des start-Scripts ablegen. $pid wird mit der PID ersetzt "
+               "und $uid mit der UID des ausführenden Benutzers.");
 
   globvar("default_ident", 1, "Identify, Use default identification string",
 	  TYPE_FLAG|VAR_MORE,
@@ -458,6 +570,9 @@ källservern om de har en last-modified header som anger när de senast
 	       "Ska roxen använda sitt normala namn ("+real_version+")?"
 	       "Om du sätter den här variabeln till 'nej' så kommer du att "
 	       "få välja vad roxen ska kalla sig.");
+  deflocaledoc("deutsch", "default_ident", "Benutze Standard-Identität",
+               "Bei Nein, kann eine andere Identität als der "
+               "Standardwert ("+real_version+") eingetragen werden.");
 
   globvar("ident", replace(real_version," ","·"), "Identify, Identify as",
 	  TYPE_STRING /* |VAR_MORE */,
@@ -466,6 +581,9 @@ källservern om de har en last-modified header som anger när de senast
   deflocaledoc("svenska", "ident", "Identifiera roxen som",
 	       "Det här är det namn som roxen kommer att använda sig av "
 	       "gentemot omvärlden.");
+  deflocaledoc("deutsch", "ident", "Identifiziere Roxen als",
+               "Hier kann der Namen eingegeben werden, mit dem Roxen "
+               "sich zu erkennen gibt, wenn ein Client Anfragen stellt.");
 
 
 //   globvar("NumAccept", 1, "Number of accepts to attempt",
@@ -511,6 +629,12 @@ specifieras antingen som ett symbolisk användarnamn (t.ex. 'www') eller som ett
 numeriskt användarID.  Om du vill kan du specifera vilken grupp som ska
 användas genom att skriva användare:grupp. Normalt sätt så används användarens
 normal grupper.");
+  deflocaledoc("deutsch", "User", "Wechsel von UID und GID zu",
+#"Wenn Roxen unter der root-Kennung läuft, um den Port 80 
+öffnen zu können, wird die User-ID und die Group-ID auf diesen Wert
+gesetzt, nachdem der Port geöffnet wurde. Wenn ein Benutzername (z.B. 'www')
+verwendet wird, wird die Standardgruppe dieses Benutzers verwendet.
+Die Syntax ist user[:group].");
 
   globvar("permanent_uid", 0, "Change uid and gid permanently",
 	  TYPE_FLAG,
@@ -525,6 +649,12 @@ normal grupper.");
   den användare som äger skriptet. Däremot så kommer säkerheten att vara högre,
   eftersom ingen kan få roxen att göra något som administratöranvändaren
   root");
+  deflocaledoc("deutsch", "permanent_uid",
+               "Permanenter Wechsel von UID und GID",
+#"Wenn diese Variable gesetzt ist, wird Roxen seine UID und GID permanent
+auf die eingestellten Werte wechseln.  Dadurch können CGI-Scripte nicht
+mehr unter der Kennung anderer Benutzer ausgeführt werden. Allerdings
+erhöht sich so die Sicherheit des Servers.");
 
   globvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
 	  "Module directories", TYPE_DIR_LIST,
@@ -536,6 +666,11 @@ normal grupper.");
 #"En lista av directoryn som kommer att sökas igenom när en
   modul ska laddas. Directorynamnen kan vara relativa från "+getcwd()+
 ", och de kommer att sökas igenom i den ordning som de står i listan.");
+  deflocaledoc("deutsch", "ModuleDirs", "Modul-Verzeichnisse",
+#"Eine Liste von Verzeichnissen, in denen Roxen nach Modulen
+suchen wird. Dies können relative Pfade zu "+getcwd()+" sein.
+Die Verzeichnisse werden in der eingegeben Reihenfolge nach Modulen
+durchsucht.");
 
   globvar("Supports", "#include <etc/supports>\n",
 	  "Client supports regexps", TYPE_TEXT_FIELD|VAR_MORE,
@@ -559,6 +694,15 @@ normal grupper.");
   reguljärt uttryck 	funktion, funktion
   ...
  </pre>Se filen server/etc/supports för en mer utförlig dokumentation");
+  deflocaledoc("deutsch", "Browser-Unterstützung",
+#"Welche unterschiedlichen Möglichkeiten werden durch die verschiedenen
+Webbrowser unterstützt. Die Standard-Informationen werden aus der
+Datei server/etc/supports entnommen, das Format ist:<pre>
+Regulärer Ausdruck    Funktion, Funktion
+Regulärer Ausdruck    Funktion, Funktion
+...
+</pre>Wenn '-' der Funktion vorangestellt wird, wird es von der Liste
+entfernt.");
 
   globvar("audit", 0, "Logging: Audit trail", TYPE_FLAG,
 	  "If Audit trail is set to Yes, all changes of uid will be "
@@ -567,6 +711,9 @@ normal grupper.");
 #"Om du slår på den är funktionen så kommer roxen logga i debugloggen (eller
 systemloggen om den funktionen används) så fort användaridt byts av någon
 anlending.");
+  deflocaledoc("deutsch", "audit", "Logging: Wechsel der Benutzerkennungen",
+#"Wenn auf Ja gesetzt, werden sämtliche Wechsel von Benutzerkennungen
+im Ereignis-Log verzeichnet.");
 
 #if efun(syslog)
   globvar("LogA", "file", "Logging: Logging method", TYPE_STRING_LIST|VAR_MORE,
@@ -581,12 +728,19 @@ anlending.");
   kan även skickas till systemloggen kan om du vill.",
 		 ([ "file":"loggfil",
 		    "syslog":"systemloggen"]));
+  deflocaledoc("deutsch", "LogA", "Logging: Logging-Methode",
+#"Welche Methode soll für das Logging benutzt werden. Standard ist Datei,
+aber Syslog ist ebenfalls möglich.",
+                 ([ "file":"Datei",
+                    "syslog":"Syslog"]));
 
   globvar("LogSP", 1, "Logging: Log PID", TYPE_FLAG,
 	  "If set, the PID will be included in the syslog.", 0,
 	  syslog_disabled);
   deflocaledoc("svenska", "LogSP", "Loggning: Logga roxens processid",
 		 "Ska roxens processid loggas i systemloggen?");
+  deflocaledoc("deutsch", "LogSP", "Logging: PID festhalten",
+                 "Soll Roxen die eigene PID ins Syslog schreiben?");
 
   globvar("LogCO", 0, "Logging: Log to system console", TYPE_FLAG,
 	  "If set and syslog is used, the error/debug message will be printed"
@@ -596,6 +750,10 @@ anlending.");
 	       "Ska roxen logga till konsolen? Om den här variabeln är satt "
 	       "kommer alla meddelanden som går till systemloggen att även "
 	       "skickas till datorns konsol.");
+  deflocaledoc("deutsch", "LogCO", "Logging: Schreiben auf Konsole",
+               "Soll Roxen auf die Konsole schreiben?  Fehler- und "
+               "Debug-Meldungen werden sowohl auf die Konsole als auch "
+               "in das Syslog geschrieben.");
 
   globvar("LogST", "Daemon", "Logging: Syslog type", TYPE_STRING_LIST,
 	  "When using SYSLOG, which log type should be used.",
@@ -605,6 +763,8 @@ anlending.");
   deflocaledoc( "svenska", "LogST", "Loggning: Systemloggningstyp",
 		"När systemloggen används, vilken loggningstyp ska "
 		"roxen använda?");
+  deflocaledoc( "deutsch", "LogST", "Logging: Syslog-Typ",
+                "Wenn Syslog verwendet wird, welcher Typ soll benutzt werden?");
 
   globvar("LogWH", "Errors", "Logging: Log what to syslog", TYPE_STRING_LIST,
 	  "When syslog is used, how much should be sent to it?<br><hr>"
@@ -627,6 +787,19 @@ anlending.");
 		  "Warnings":"Varningar",
 		  "Debug":"Debug",
 		  "All":"Allt" ]));
+  deflocaledoc("deutsch", "LogWH", "Logging: zu protokollierende Daten",
+               "Wenn Syslog verwendet wird, welche Informationen sollen "
+               "festgehalten werden?<br><hr>"
+          "Fatal:    Nur Mitteilungen über fatale Fehler<br>"+
+          "Errors:   Nur Fehler und fatale Mitteilungen<br>"+
+          "Warning:  wie oben, jedoch auch Warnungen<br>"+
+          "Debug:    wie oben, jedoch auch Hinweise<br>"+
+          "All:      Alles<br>",
+               ([ "Fatal":"Fatal",
+                  "Errors":"Errors",
+                  "Warnings":"Warnings",
+                  "Debug":"Debug",
+                  "All":"All" ]));
 
   globvar("LogNA", "Roxen", "Logging: Log as", TYPE_STRING,
 	  "When syslog is used, this will be the identification of the "
@@ -637,6 +810,10 @@ anlending.");
 	       "Loggining: Logga som",
 #"När systemloggen används så kommer värdet av den här variabeln användas
   för att identifiera den här roxenservern i loggarna.");
+  deflocaledoc("deutsch", "LogNA",
+               "Logging: Loggen als",
+#"Wenn Syslog benutzt wird, wird dieser Wert als Identifikation in allen
+Logs angehängt.");
 #endif
 
 #ifdef THREADS
@@ -656,6 +833,12 @@ anlending.");
  bara ta hänsyn till evenetuella processorintensiva saker (som &lt;gtext&gt;)
  när då ställer in den här variabeln. Skönskvärdet 5 räcker för de allra
  flesta servrar");
+  deflocaledoc("deutsch", "numthreads",
+               "Anzahl Threads",
+#"Die Anzahl an parallelen Threads, mit denen Roxen arbeiten wird.\n
+Hinweis: Auch wenn nur ein Thread eingestellt wird, können mehrere
+Zugriffe gleichzeitig bearbeitet werden.\n
+<i>Dies ist nützlich für Mehrprozessor-Systeme.</i>");
 #endif
 
   globvar("AutoUpdate", 1, "Update the supports database automatically",
@@ -671,6 +854,10 @@ anlending.");
   en ny version av filen etc/supports från http://www.roxen.com/supports en
   gång per vecka. Det är rekommenderat att du låter den vara på, eftersom det
   kommer nya versioner av bläddrare hela tiden, som kan hantera nya saker.");
+  deflocaledoc("deutsch", "AutoUpdate",
+               "automatische Aktualisierung der Supports-Datenbank",
+#"Die Datei /etc/supports wird automatisch von www.roxen.com aktualisiert.
+Dadurch erhält man immer die aktuelle Liste aller bekannten Features.");
 
   globvar("next_supports_update", time()+3600, "", TYPE_INT,"",0,1);
 
@@ -689,6 +876,13 @@ anlending.");
   hängningar på buggar i antingen operativsystemet eller i en modul. Den
   senare typen av hängningar påverkar inte en trådad roxen, medans den första
   typen gör det.");
+  deflocaledoc("deutsch", "abs_engage",
+               "ABS: AntiBlockSystem aktivieren",
+#"Das AntiBlockSystem wird aktiviert, dies startet den Server nach einer
+einstellbaren Zahl von Minuten neu, wenn ein Thread blockiert ist.  Bei
+mehr als einem Thread wird der gesamte Server nicht komplett angehalten,
+sondern nur der blockierte Thread.  Im allgemeinen hat diese Option keine
+Nachteile.");
 
   globvar("abs_timeout", 5, "ABS: Timeout",
 	  TYPE_INT_LIST|VAR_MORE,
@@ -707,7 +901,12 @@ anlending.");
  har en väldigt långsam dator kan en minut vara för
  kort tid för en del saker, t.ex. diagramritning kan ta
  ett bra tag.");
-
+  deflocaledoc("deutsch", "abs_timeout",
+               "ABS: Zeitbegrenzung",
+#"Wenn der Server soviele Minuten nicht in der Lage ist, Anfragen
+zu beantworten, wird er neu gestartet.  Zu beachten ist, daß
+bei komplexen Berechnungen es durchaus normal ist, wenn eine
+Anfrage eine Weile benötigt.");
 
   globvar("locale", "standard", "Language", TYPE_STRING_LIST,
 	  "Locale, used to localise all messages in roxen.\n"
@@ -718,6 +917,9 @@ value of the 'LANG' environment variable.",
 	       "Den här variablen anger vilket språk roxen ska använda. "
 	       "'standard' betyder att språket sätts automatiskt från "
 	       "värdet av omgivningsvariabeln LANG.");
+  deflocaledoc("deutsch", "locale", "Sprache",
+               "Die Sprache, in der alle Roxen-Meldungen ausgeben werden.\n "
+               "'standard' ist abhängig von der LANG Umgebungsvariable.");
 
   globvar("suicide_engage",
 	  0,
@@ -737,6 +939,11 @@ på att en del minnesläckor fortfarande finns kvar. Ett sätt att återvinna minne
 är att starta om servern lite då och då, vilket roxen kommer att göra om du
 slår på den här funktionen. Notera att det tar ett litet tag att starta om
  servern.");
+  deflocaledoc("deutsch", "suicide_engage",
+               "Automatischer Neustart: Aktivieren",
+#"Wenn gesetzt, wird Roxen automatisch nach einer bestimmten Anzahl von
+Tagen neugestartet. Hin und wieder wächst der Roxen-Prozess im Laufe der
+Zeit an. Diese Option ist in diesem Falle dann sinnvoll.");
 
 globvar("suicide_timeout",
 	  7,
@@ -749,7 +956,9 @@ globvar("suicide_timeout",
 	       "Automatomstart: Tidsbegränsning (i dagar)",
 #"Om roxen är inställd till att starta om automatiskt, starta om
 så här ofta. Tiden är angiven i dagar");
-
+  deflocaledoc("deutsch", "suicide_timeout",
+               "Automatischer Neustart: Zeitbegrenzung (in Tagen)",
+#Roxen wird nach soviel Tagen automatisch neugestartet.");
 
   globvar("argument_cache_in_db", 0,
          "Cache: Store the argument cache in a mysql database",
@@ -764,6 +973,12 @@ så här ofta. Tiden är angiven i dagar");
                "databas istället för filer. Det gör det möjligt att använda "
                "multipla frontendor, dvs, flera separata roxenservrar som "
                "serverar samma site" );
+  deflocaledoc("deutsch", "argument_cache_in_db",
+               "Cache: Speichern des Argumenten-Caches in eine Datenbank",
+               "Wenn gesetzt, wird der Argumenten-Cache in eine "
+               "SQL-Datenbank gespeichert. Dies ist sinnvoll bei mehreren "
+               "Roxen-Servern, da die Datenbank die Synchronisation "
+               "übernimmt.");
 
   globvar("argument_cache_db_path", "mysql://localhost/roxen",
           "Cache: Argument Cache Database URL to use",
@@ -774,6 +989,10 @@ så här ofta. Tiden är angiven i dagar");
   deflocaledoc("svenska", "argument_cache_db_path",
                "Cache: ArgumentcachedatabasURL",
                "Databasen i vilken argumentcachen kommer att sparas" );
+  deflocaledoc("deutsch", "argument_cache_db_path",
+               "Cache: Datenbank-URL für Argumenten-Cache",
+               "Welche Datenbank soll für den Argumenten-Cache "
+               "benutzt werden?");
 
   globvar("argument_cache_dir", "../argument_cache/",
           "Cache: Argument Cache Directory",
@@ -789,6 +1008,11 @@ så här ofta. Tiden är angiven i dagar");
                "cachen i en databas, och även om du sparar cachen i en "
                "databas så kommer det fortfarande skrivas saker i det "
                "här directoryt.");
+  deflocaledoc("deutsch", "argument_cache_dir",
+               "Cache: Verzeichnis für Argumenten-Cache",
+               "Dieses Verzeichnis wird für die Speicherung des "
+               "Argumenten-Caches benutzt.  Für Load-Balancing sollte "
+               "jedoch eine SQL-Datenbank verwendet werden.");
 
   globvar("mem_cache_gc", 300,
 	  "Cache: Memory Cache Garbage Collect Interval",
@@ -803,6 +1027,12 @@ så här ofta. Tiden är angiven i dagar");
 	       "allt gammalt innehåll i cachen städas bort. Minnescachen "
 	       "används till många olika saker som till exempel att komma "
 	       "ihåg vilka supportsflaggor som hör till vilken klient.");
+  deflocaledoc("deutsch", "mem_cache_gc",
+               "Cache: Intervall zwischen Garbage Collections im "
+               "Speicher-Cache",
+               "Wieviele Sekunden sollen zwischen zwei Ausführungen "
+               "einer Garbage Collection im Speicher-Cache liegen? "
+               "Der Speicher-Cache enthält u.a. die Supports-Daten.");
 
   setvars(retrieve("Variables", 0));
 
