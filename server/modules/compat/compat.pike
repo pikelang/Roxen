@@ -24,8 +24,18 @@ constant language = roxen->language;
 
 constant module_type   = MODULE_PARSER | MODULE_PROVIDER;
 LocaleString module_name   = LOCALE(3,"Old RXML Compatibility Module");
+
+#if ROXEN_COMPAT > 1.3
+LocaleString module_doc    =
+  LOCALE(4,"Adds support for old (deprecated) RXML tags and attributes.") + " " +
+  sprintf( LOCALE(1, "In order to function properly the ROXEN_COMPAT define must be "
+		  "set to 1.3 or lower. It is currently set to %1.1f."), ROXEN_COMPAT);
+#else // ROXEN_COMPAT > 1.3
 LocaleString module_doc    =
   LOCALE(4,"Adds support for old (deprecated) RXML tags and attributes.");
+
+// Cached version of the virtual servers compatibility level.
+string compat_level;
 
 void create()
 {
@@ -52,6 +62,8 @@ void create()
 		"decreased performance and disabled error checking. This "
 		"option overrides the 'Enable all tag compatibility' "
 		"setting."));
+
+  compat_level = my_configuration()->query("compat_level");
 }
 
 constant relevant=(<"rxmltags","graphic_text","tablify","countdown","counter","ssi","obox">);
@@ -95,7 +107,13 @@ string status() {
   ret+="<b>"+LOCALE(12,"RXML Warnings:")+"</b> "+warnings+"<br />\n"
     "<b>"+LOCALE(13,"Support enabled for:")+"</b> "+
     String.implode_nicely(indices(enabled))+"<br />\n";
-  return ret;
+  if(compat_level >= "2.2")
+    ret += "<font color='red'>" + LOCALE(2, "Warning!") + "</font> " +
+      sprintf(LOCALE(39, "This sites compatibility level is set to %s, but it "
+		     "must be set to a value below 2.2. Change the value in the "
+		     "site global settings and restart the server."), compat_level);
+
+return ret;
 }
 
 
@@ -224,6 +242,8 @@ string|array tag_set(string tag, mapping m, RequestID id)
 array tag_pr(string tag, mapping m, RequestID id)
 {
   old_rxml_warning(id,LOCALE(26,"pr tag"),LOCALE(27,"roxen tag"));
+  if(m->color && m->color!="white" && m->color!="black")
+    m->color="black";
   return ({1, "roxen", m});
 }
 
@@ -915,3 +935,5 @@ class TagIffailed {
     return !id->misc->defines[" _ok"];
   }
 }
+
+#endif // !ROXEN_COMPAT > 1.3
