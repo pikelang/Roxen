@@ -216,7 +216,7 @@ localinstall: all
 		chmod u+w "$(SRCDIR)/server/lib/pike/$$f"; \
 	      fi ; \
 	    done; \
-          else : ; fi); \
+          else : ; fi); : ; \
 	done
 	(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 
