@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.72 2000/08/17 00:40:01 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.73 2000/08/17 22:10:56 mast Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -86,16 +86,16 @@ void start(int n, Configuration c)
           <else>
             <font size=-1>&nbsp;</font>
           </else>
-          <a href='?sort=&_.order;'><font color=black>&_.title; &nbsp;</font></a>
+          <a href='?sort=&_.order;'><font color=black>&_.title;</font></a> &nbsp;
          </if>
          <else>
          <if match='&form.sort; is &_.order;'>
           <font size=-1>v</font>
-          <a href='?sort=&_.order;&reverse=1'><font color=black>&_.title; &nbsp;</font></a>
+          <a href='?sort=&_.order;&reverse=1'><font color=black>&_.title;</font></a> &nbsp;
         </if>
         <else>
           <font size=-1>&nbsp;</font>
-          <a href='?sort=&_.order;'><font color=black>&_.title; &nbsp;</font></a>
+          <a href='?sort=&_.order;'><font color=black>&_.title;</font></a> &nbsp;
         </else>
        </else>
       </th>
@@ -119,7 +119,7 @@ void start(int n, Configuration c)
             ::='&var.doreverse;'>
         <tr bgcolor='#eeeeee'>
           <td align=left><a href='&_.path;'><img src='&_.icon;' border='0' /></a></td>
-          <td align=left><a href='&_.path;'>&_.name; &nbsp;</a></td>
+          <td align=left><a href='&_.path;'>&_.name;</a> &nbsp;</td>
           <td align=right>&_.size; &nbsp;</td>
           <td align=right>&_.type; &nbsp;</td>
           <td align=right>&_.mtime; &nbsp;</td>
