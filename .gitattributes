@@ -216,6 +216,7 @@ rbf binary
 /server/modules/misc/pathinfo.pike foreign_ident
 /server/modules/misc/preferred_language.pike foreign_ident
 /server/modules/misc/randomtext.pike foreign_ident
+/server/modules/misc/robots.txt.pike foreign_ident
 /server/modules/misc/userdb.pike foreign_ident
 /server/modules/misc/wapadapter.pike foreign_ident
 /server/modules/misc/ypuserdb.pike foreign_ident
