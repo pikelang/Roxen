@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.21 2002/11/12 10:49:28 wellhard Exp $
+// $Id: License.pmod,v 1.22 2003/02/07 13:19:48 jonasw Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -122,6 +122,11 @@ class Key
     warnings[type] = WarningEntry(msg, type);
   }
 
+  void clear_warning(string type)
+  {
+    m_delete(warnings, type);
+  }
+  
   array(mapping(string:string)) get_warnings()
   {
     array(mapping(string:string)) res = values(warnings)->to_mapping();
