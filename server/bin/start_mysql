@@ -2,13 +2,14 @@
 
 datadir="$1" # Supplied from roxen.
 basedir="$2"
-bindir="$basedir/libexec/"
-shift;shift
+uid="$3"
+bindir="${basedir}libexec/"
+shift;shift;shift
 . bin/functions
 
 if [ ! -f $bindir/mysqld ] ; then
   obindir="$bindir"
-  bindir="$basedir/bin/"
+  bindir="${basedir}bin/"
   if [ ! -f $bindir/mysqld ] ; then
     dp "No Mysql in $bindir or $obindir"
     dp "Aborting."
@@ -29,16 +30,21 @@ export MYSQL_TCP_PORT
 
 raise_limit -silent
 
-echo "Restart at `date`" >> $err_log
-
+echo "Restart at `date`" > $err_log
+args=""
+if [ x$uid = xroot ] ; then 
+ args="--user=$uid"
+fi
+args="$args --socket=$MYSQL_UNIX_PORT "
+args="$args --skip-networking "
 # Max packet set to 225Mb or so. 
 # Should hopefully be enough...
-args="--socket=\"$MYSQL_UNIX_PORT\" "
-args="--skip-networking "
-args="--set-variable max_allowed_packet=16777215 "
+args="$args --set-variable max_allowed_packet=16777215 "
 args="$args --skip-locking "
 args="$args --set-variable net_buffer_length=8192"
-args="$args --basedir=$basedir/ --datadir=$datadir $@ --pid-file=$pid_file"
+args="$args --basedir=$basedir --datadir=$datadir $@ --pid-file=$pid_file"
+
+# echo "Using $args" >> $err_log
 
 my_cp() {
   ln "$1" "$2" 2>/dev/null \
@@ -50,9 +56,9 @@ rm -f "bin/roxen_mysql"
 my_cp $bindir/mysqld bin/roxen_mysql
 
 if [ -f  bin/roxen_mysql ] ; then 
-  bin/roxen_mysql $args >$err_log 2>&1 &
+  bin/roxen_mysql $args >>$err_log 2>&1 &
 else
-  $bindir/mysqld $args >$err_log 2>&1 &
+  $bindir/mysqld $args >>$err_log 2>&1 &
 fi
 
 exit 0

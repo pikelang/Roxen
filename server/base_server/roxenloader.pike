@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.230 2001/01/19 12:41:35 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.231 2001/01/21 21:56:23 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1026,12 +1026,75 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
   return tl->get();
 }
 
+static mapping tailf_info = ([]);
+static void do_tailf( int loop, string f )
+{
+  string mysqlify( string what )
+  {
+    string res = (what/"\n")[0];
+    foreach( (what/"\n")[1..], string line )
+    {
+      if( line == "" )
+	return res+"\n";
+      res += "\n";
+      res += "mysql: "+line[..49];
+      line = line[50..];
+      while( strlen( line )  )
+      {
+	res += "\n";
+	res += "mysql:     "+line[..47];
+	line = line[48..];
+      }
+    }
+    return res;
+  };
+
+  int os, si, first;
+  if( tailf_info[f] )
+    os = tailf_info[f];
+  do
+  {
+    Stdio.Stat s = file_stat( f );
+    if(!s) continue;
+    si = s[ ST_SIZE ];
+    if(!first++ && !os)
+      os = si;
+    if( os != si )
+    {
+      Stdio.File f = Stdio.File( f, "r" );
+      if(!f) return;
+      if( os < si )
+      {
+	f->seek( os );
+	report_debug( mysqlify( f->read( si - os ) ) );
+      }
+      else
+	report_debug( mysqlify( f->read( si ) ) );
+      os = tailf_info[ f ] = si;
+    }
+    if( loop ) sleep(1);
+  } while( loop );
+}
+
 void start_mysql()
 {
   int st = gethrtime();
   Sql.Sql db;
+  string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
   
   report_debug( "Starting mysql ... ");
+#if constant( thread_create )
+  thread_create( do_tailf, 1, mysqldir+"/error_log" );
+  sleep(0.1);
+#else
+  void do_do_tailf( )
+  {
+    call_out( do_do_tailf, 1 );
+    do_tailf( 0, mysqldir+"/error_log"  );
+  };
+  call_out( do_do_tailf, 0 );
+#endif
+
   void connected_ok(int was)
   {
     string version = db->query( "SELECT VERSION() AS v" )[0]->v;
@@ -1065,8 +1128,6 @@ void start_mysql()
     return;
   }
 
-  string mysqldir = combine_path( getcwd(),
-                                  query_configuration_dir()+"_mysql");
   if( !file_stat( mysqldir+"/mysql/user.MYD" ) ||
       !file_stat( mysqldir+"/mysql/host.MYD" ) ||
       !file_stat( mysqldir+"/mysql/db.MYD" ) )
@@ -1083,10 +1144,17 @@ void start_mysql()
       report_debug("\n");
     }
   }
+
+  rm( mysqldir+"/error_log"  );
+
   Process.Process p = 
   Process.create_process( ({"bin/start_mysql",
                             mysqldir,
-                            query_mysql_dir() }) );
+                            query_mysql_dir(),
+			    getpwuid(getuid())[ 0 ]
+			  }) );
+
+  
   string mysql_socket = mysqldir+"/socket";
   int repeat;
   while( 1 )
@@ -1094,6 +1162,9 @@ void start_mysql()
     sleep( 0.2 );
     if( repeat++ > 100 )
     {
+#if !constant( thread_create )
+      do_tailf(0, mysqldir+"/error_log" );
+#endif
       report_fatal("\nFailed to start mysql. Aborting\n");
       exit(1);
     }
