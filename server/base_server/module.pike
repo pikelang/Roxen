@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.114 2001/06/28 19:14:12 mast Exp $
+// $Id: module.pike,v 1.115 2001/06/28 20:04:26 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -18,8 +18,10 @@ constant is_module = 1;
 constant module_unique  = 1;
 
 
-private string _module_identifier;
-private Configuration _my_configuration;
+private Configuration _my_configuration =
+  roxen->module_init_info->get()[0];
+private string _module_identifier =
+  _my_configuration->name + "/" + roxen->module_init_info->get()[1];
 static mapping _api_functions = ([]);
 
 string|array(string) module_creator;
@@ -41,14 +43,10 @@ void report_debug( mixed ... args )  { predef::report_debug( @args );  }
 
 string module_identifier()
 {
-  if (!_module_identifier) {
 #if 1
-    string cname = my_configuration()->name;
-    string mname = my_configuration()->otomod[this_object()];
-    if (!cname || !mname)
-      error ("Called too early; module identifier not known yet.\n");
-    _module_identifier = cname + "/" + mname;
+  return _module_identifier;
 #else
+  if (!_module_identifier) {
     string|mapping name = this_object()->register_module()[1];
     if (mappingp (name)) name = name->standard;
     string cname = sprintf ("%O", my_configuration());
@@ -57,14 +55,14 @@ string module_identifier()
       cname = cname[..sizeof (cname) - 2];
     _module_identifier = sprintf ("%s,%s",
 				  name||this_object()->module_name, cname);
-#endif
   }
   return _module_identifier;
+#endif
 }
 
 string _sprintf()
 {
-  return "RoxenModule(" + module_identifier() + ")";
+  return sprintf ("RoxenModule(%s)", _module_identifier);
 }
 
 array register_module()
@@ -123,13 +121,7 @@ Configuration my_configuration()
 //! Returns the Configuration object of the virtual server the module
 //! belongs to.
 {
-  if(_my_configuration)
-    return _my_configuration;
-  Configuration conf;
-  foreach(roxen->configurations, conf)
-    if(conf->otomod[this_object()])
-      return _my_configuration = conf;
-  return 0;
+  return _my_configuration;
 }
 
 nomask void set_configuration(Configuration c)

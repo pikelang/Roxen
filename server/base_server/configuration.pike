@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.442 2001/06/26 09:41:06 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.443 2001/06/28 20:09:18 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2453,6 +2453,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   mixed err;
   int module_type;
 
+  roxen->module_init_info->set (({this_object(), modname}));
 
   if( datacache ) datacache->flush();
 
@@ -2464,13 +2465,14 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
   if( !moduleinfo )
   {
-    moduleinfo = roxen.find_module( modname );
+    moduleinfo = roxen->find_module( modname );
 
     if (!moduleinfo)
     {
       report_warning("Failed to load %s. The module probably "
                      "doesn't exist in the module path.\n", modname);
       got_no_delayed_load = -1;
+      roxen->module_init_info->set (0);
       return 0;
     }
   }
@@ -2506,6 +2508,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       }
 #endif
       got_no_delayed_load = -1;
+      roxen->module_init_info->set (0);
       return module[id];
     }
   }
@@ -2536,6 +2539,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   "called in random order"),
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
       }) {
+	roxen->module_init_info->set (0);
 	throw(err);
       }
     }
@@ -2670,6 +2674,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if( me->no_delayed_load && got_no_delayed_load >= 0 )
     got_no_delayed_load = 1;
 
+  roxen->module_init_info->set (0);
   return me;
 }
 
