@@ -1,7 +1,7 @@
 #include <config_interface.h>
 
 constant base = #"
-<use file='/standard/template'/>
+<use file='/template'/>
 <tmpl>
 <topmenu base='../' selected='sites'/>
 <content><cv-split><subtablist><st-page>

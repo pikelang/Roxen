@@ -12,7 +12,7 @@ string site_url( RequestID id, string site )
 
 string page_base( RequestID id, string content )
 {
-  return sprintf( "<use file=/standard/template />\n"
+  return sprintf( "<use file=/template />\n"
                   "<tmpl title=''>"
                   "<topmenu base='&cf.num-dotdots;' selected='sites' />\n"
                   "<content><cv-split>"

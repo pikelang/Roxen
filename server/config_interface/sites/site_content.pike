@@ -204,9 +204,11 @@ string buttons( Configuration c, string mn, RequestID id )
 
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
 
+  string section = RXML.get_var( "section", "form" );
+
   string buttons = 
          "<input type=hidden name=section value='" +
-         (id->variables->section||LOCALE(299,"Information")) + "'>";
+         (section||LOCALE(299,"Information")) + "'>";
   if( current_compile_errors[ mn ] )
     buttons += 
             "<font color='&usr.warncolor;'><pre>"+
@@ -371,12 +373,10 @@ string module_page( RequestID id, string conf, string module )
   while( id->misc->orig )
     id = id->misc->orig;
 
-  if( id->variables->section )
-    id->variables->section = (id->variables->section/"\0")[0];
+  string section = RXML.get_var( "section", "form" );
 
-  if((id->variables->section == "Information")
-     ||!(id->variables->section)
-     ||id->variables->info_section_is_it)
+  if( section == "Information" || !section
+      || RXML.get_var( "info_section_is_it", "form" ) )
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
 
   return "<cfg-variables source='module-variables' configuration='"+conf+"' "
@@ -401,8 +401,15 @@ string parse( RequestID id )
 
   // roxen_perror(sprintf("site_content:parse(): path: %{%O,%}\n", path));
 
-  if( id->variables->section )
-    sscanf( id->variables->section, "%s\0", id->variables->section );
+  string section;
+  array(string) _sec = id->real_variables->section;
+
+  if( _sec )
+  {
+    if( sizeof( _sec ) > 0 )
+      RXML.set_var( "section",  _sec[0], "form" );
+    section = _sec[0];
+  }
 
   if( !sizeof( path )  )
     return "Hm?";
@@ -420,7 +427,7 @@ string parse( RequestID id )
   if( sizeof( path ) == 1 )
   {
     /* Global information for the configuration */
-    switch( id->variables->section )
+    switch( section )
     {
      default: /* Not status info */
        do  id->misc->do_not_goto = 1; while( id = id->misc->orig );

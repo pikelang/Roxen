@@ -16,7 +16,7 @@ string|mapping parse( RequestID id )
   if( !id->variables["really.x"] )
   {
     return 
-      "<use file='/standard/template' />\n"
+      "<use file='/template' />\n"
       "<tmpl title=' "+ LOCALE(249,"Drop old site") +"'>"
       "<topmenu base='&cf.num-dotdots;' selected='sites'/>\n"
       "<content><cv-split>"
