@@ -42,7 +42,13 @@ string available_languages(object id) {
 
 // --------------------- Help layout functions --------------------
 
-static string desc_cont(Parser.HTML parser, mapping m, string c, string rt)
+class TagdocParser
+{
+  inherit Parser.HTML;
+  mapping misc = ([]);
+}
+
+static string desc_cont(TagdocParser parser, mapping m, string c, string rt)
 {
   string type;
   if(m->tag)	type = "tag";
@@ -69,7 +75,7 @@ static string desc_cont(Parser.HTML parser, mapping m, string c, string rt)
   return sprintf("<h2>%s</h2><p>%s</p>", rt, c);
 }
 
-static string attr_cont(Parser.HTML parser, mapping m, string c)
+static string attr_cont(TagdocParser parser, mapping m, string c)
 {
   string p="";
   if(!m->name) m->name="(Not entered)";
@@ -79,7 +85,14 @@ static string attr_cont(Parser.HTML parser, mapping m, string c)
 			 m->default?" ("+m->default+")":""
 			 );
   if(m->required) p+="<i>This attribute is required.</i><br />";
-  return sprintf("<p><dl><dt><b>%s</b></dt><dd>%s%s</p></dl>",m->name,p,c);
+  p = sprintf("<p><dl><dt><b>%s</b></dt><dd>%s%s</p></dl>",m->name,p,c);
+
+  if (!parser->misc->got_attrs) {
+    parser->misc->got_attrs = 1;
+    p = "<h3>Attributes</h3>\n" + p;
+  }
+
+  return p;
 }
 
 static string attr_vals(string v)
@@ -90,7 +103,7 @@ static string attr_vals(string v)
   return v;
 }
 
-static string noex_cont(Parser.HTML parser, mapping m, string c) {
+static string noex_cont(TagdocParser parser, mapping m, string c) {
   return Parser.HTML()->add_container("ex","")->
     add_quote_tag("!--","","--")->feed(c)->read();
 }
@@ -99,7 +112,7 @@ static string ex_quote(string in) {
   return "<pre>"+replace(in, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
 }
 
-static string ex_cont(Parser.HTML parser, mapping m, string c, string rt, void|object id)
+static string ex_cont(TagdocParser parser, mapping m, string c, string rt, void|object id)
 {
   c=Parser.HTML()->add_container("ent", lambda(Parser.HTML parser, mapping m, string c) {
 					  return "&amp;"+c+";"; 
@@ -131,21 +144,21 @@ static string ex_cont(Parser.HTML parser, mapping m, string c, string rt, void|o
   }
 }
 
-static string ex_box_cont(Parser.HTML parser, mapping m, string c, string rt) {
+static string ex_box_cont(TagdocParser parser, mapping m, string c, string rt) {
   return "<br />"+mktable( ({ ({ ex_quote(c) }) }) );
 }
 
-static string ex_html_cont(Parser.HTML parser, mapping m, string c, string rt) {
+static string ex_html_cont(TagdocParser parser, mapping m, string c, string rt) {
   return "<br />" + mktable( ({ ({ c }) }) );
 }
 
-static string ex_src_cont(Parser.HTML parser, mapping m, string c, string rt, void|object id) {
+static string ex_src_cont(TagdocParser parser, mapping m, string c, string rt, void|object id) {
   string quoted = ex_quote(c);
   string parsed = parse_rxml("<colorscope bgcolor="+TDBG+">"+c+"</colorscope>", id);
   return "<br />" + mktable( ({ ({ quoted }), ({ ex_quote(parsed) }) }) );
 }
 
-static string list_cont( Parser.HTML parser, mapping m, string c )
+static string list_cont( TagdocParser parser, mapping m, string c )
 {
   string type = m->type || "ul";
   return "<"+type+">"+
@@ -218,7 +231,7 @@ static string format_doc(string|mapping doc, string name, void|object id)
 
   name=replace(name, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" }) );
 
-  return Parser.HTML()->
+  return TagdocParser()->
          add_tag( "lang",lambda() { return available_languages(id); } )->
          add_tag( "help", help_tag )->
          add_containers( ([
@@ -235,23 +248,23 @@ static string format_doc(string|mapping doc, string name, void|object id)
 	   "ex-src":ex_src_cont,
 	   "ex-html":ex_html_cont,
            "noex":noex_cont,
-           "tag":lambda(Parser.HTML p, mapping m, string c) {
+           "tag":lambda(TagdocParser p, mapping m, string c) {
                    return ({ "&lt;"+c+"&gt;" });
                  },
-	   "ent":lambda(Parser.HTML p, mapping m, string c) {
+	   "ent":lambda(TagdocParser p, mapping m, string c) {
 		   return ({ "&amp;" + c + ";" });
 		 },
-           "xref":lambda(Parser.HTML p, mapping m, string c) {
+           "xref":lambda(TagdocParser p, mapping m, string c) {
 		    if( (!c || !sizeof(c)) && m->href ) {
 		      c = m->href;
 		      sscanf(c, "%s.tag", c);
 		      return replace((c/"/")[-1], "_", " ");
 		    }
 		    return c; },
-           "short":lambda(Parser.HTML p, mapping m, string c) {
+           "short":lambda(TagdocParser p, mapping m, string c) {
                      return m->hide?"":c; 
                    },
-	   "note":lambda(Parser.HTML p, mapping m, string c) {
+	   "note":lambda(TagdocParser p, mapping m, string c) {
 		    return c;
 		  },
          ]) )->
