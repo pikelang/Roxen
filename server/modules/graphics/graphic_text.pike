@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.107 1998/02/27 05:19:21 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.108 1998/02/27 05:20:51 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1523,7 +1523,7 @@ array (string) tag_body(string t, mapping args, object id, object file,
     FIX(alink,  "#ff0000",alink);
     FIX(vlink,  "#551a8b",vlink);
   }
-  if(changed) return ({make_tag("body", args); })
+  if(changed) return ({make_tag("body", args) });
 }
 
 
