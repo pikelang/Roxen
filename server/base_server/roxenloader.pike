@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.190 2000/08/14 15:07:31 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.191 2000/08/22 21:54:57 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1044,6 +1044,10 @@ string roxen_path( string filename )
     if( search( filename, "$LOGDIR" ) != -1 )
       roxen_perror("Warning: mkdirhier with $LOGDIR before variable is available\n");
   filename = replace( filename, "$VARDIR", getenv ("VARDIR") || "../var" );
+#ifdef __NT__
+  while( strlen(filename) && filename[-1] == '/' )
+    filename = filename[..strlen(filename)-2];
+#endif
   return filename;
 }
 
