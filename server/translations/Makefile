@@ -2,6 +2,8 @@
 EXTRACT=/home/anders/Pike/7.2/bin/extract.pike
 PIKE=pike
 
+LANG=C
+
 # do not alter
 all: modules xmls translations
 
