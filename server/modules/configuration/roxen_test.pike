@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.6 2000/12/10 02:24:14 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.7 2000/12/12 06:15:38 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -210,11 +210,18 @@ class TagEmitTESTER {
   constant plugin_name = "TESTER";
 
   array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
-    return ({
-      ([ "a":"kex", "b":"foo", "c":"1", "d":"12foo" ]),
-      ([ "a":"kex", "b":"boo", "c":"2", "d":"foo" ]),
-      ([ "a":"krut", "b":"gazonk", "c":"3", "d":"5foo33a" ]),
-      ([ "a":"kox", "c":"4", "d":"5foo4a" ])
-    });
+    switch(m->test) {
+    case "2":
+      return map( "aa,a,aa,a,bb,b,cc,c,aa,a,dd,d,ee,e,aa,a,a,a,aa"/",",
+		  lambda(string in) { return (["data":in]); } );
+    case "1":
+    default:
+      return ({
+	([ "a":"kex", "b":"foo", "c":"1", "d":"12foo" ]),
+	([ "a":"kex", "b":"boo", "c":"2", "d":"foo" ]),
+	([ "a":"krut", "b":"gazonk", "c":"3", "d":"5foo33a" ]),
+	([ "a":"kox", "c":"4", "d":"5foo4a" ])
+      });
+    }
   }
 }
