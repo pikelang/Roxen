@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.42 2000/09/25 08:02:51 per Exp $
+ * $Id: Roxen.pmod,v 1.43 2000/09/25 12:49:47 per Exp $
  *
  * Various helper functions.
  *
@@ -1103,10 +1103,12 @@ void add_cache_callback( RequestID id,function(RequestID,object:int) callback )
 {
   while( id->misc->orig )
     id = id->misc->orig;
+  if( !id->misc->_cachecallbacks )  return;
   id->misc->_cachecallbacks |= ({ callback });
 }
 
-string get_server_url(object c) {
+string get_server_url(Configuration c) 
+{
   string url=c->query("MyWorldLocation");
   if(stringp(url) && sizeof(url)) return url;
   array(string) urls=c->query("URLs");
