@@ -3,7 +3,7 @@
 
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.6 2000/10/21 18:46:47 per Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.7 2000/12/11 05:12:55 nilsson Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -136,7 +136,7 @@ class TTFWrapper
         rr->paste_alpha_color( r, 255,255,255, 0, (int)start );
       start += r->ysize()*y_spacing;
     }
-    return rr->scale(0.5);
+    return rr;
   }
 
   array text_extents( string what )
@@ -150,7 +150,7 @@ class TTFWrapper
     string encoding;
     real = r;
     size = s;
-    real->set_height( (int)(size*64/34.5) ); // aproximate to pixels
+    real->set_height( (int)(size*32/34.5) ); // aproximate to pixels
 
     if(r_file_stat(fn+".properties"))
       parse_html(lopen(fn+".properties","r")->read(), ([]),
