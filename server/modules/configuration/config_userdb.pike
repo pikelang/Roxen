@@ -131,6 +131,7 @@ mapping permission_translations = ([ ]);
 
 void add_permission( string perm, mapping translations )
 {
+  possible_permissions -= ({ perm });
   possible_permissions += ({ perm });
   if( !translations )
     translations = ([]);
@@ -184,6 +185,11 @@ void create()
   add_permission( "Add Module",  ([
                     "svenska":"Addera moduler"
                   ]));
+  if(sizeof(roxen->configuration_perm))
+    foreach(indices(roxen->configuration_perm), string perm)
+      add_permission(perm, roxen->configuration_perm[perm]);
+  roxen->configuration_auth=this_object();
+
 }
 
 
