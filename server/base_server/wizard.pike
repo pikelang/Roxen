@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.54 1998/02/27 07:12:23 per Exp $
+/* $Id: wizard.pike,v 1.55 1998/02/28 05:53:37 mirar Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -293,7 +293,7 @@ string parse_wizard_page(string form, object id, string wiz_name)
 		       "help":parse_wizard_help]), id, foo );
   
   res = ("<!--Wizard-->\n"
-         "<form method=post>\n"
+         "<form method=get>\n"
 	 " <input type=hidden name=action value=\""+id->variables->action+"\">\n"
 	 " <input type=hidden name=_page value=\""+page+"\">\n"
 	 " <input type=hidden name=_state value=\""+compress_state(id->variables)+"\">\n"
