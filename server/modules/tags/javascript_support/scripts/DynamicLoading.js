@@ -104,8 +104,9 @@ function loadLayer(e, layer_name, src, properties, parent)
     clearToPopup(parent);
     return retFromEvent(false);
   }
-  
-  clearToPopup(parent);
+
+  if(!properties.stay_put)
+    clearToPopup(parent);
   if(isNav4)
   {
     var l = getObject(layer_name);
@@ -126,6 +127,7 @@ function loadLayer(e, layer_name, src, properties, parent)
     file_loader.loadDocument(src);
   }
   var pos = new properties.LayerPosition(new TriggerCoord(e, 0), 0, properties);
-  shiftTo(layer_name, pos.x, pos.y);
+  if(!properties.stay_put)
+    shiftTo(layer_name, pos.x, pos.y);
   return retFromEvent(false);
 }

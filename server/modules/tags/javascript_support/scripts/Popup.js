@@ -186,6 +186,7 @@ function PopupProperties(ox, oy, absx, absy)
   this.absy = absy;
   this.hide_2nd_click = false;
   this.LayerPosition = LayerPosition;
+  this.stay_put = false;
   
   this.setHide2ndClick =
     function() { this.hide_2nd_click = true; return this;};
