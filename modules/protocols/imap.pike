@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.56 1999/02/13 16:49:57 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.57 1999/02/13 16:51:53 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -918,7 +918,7 @@ class backend
       return(0);
     }
 
-    return(session->user->create_mailbox(mailbox_name) != 0);
+    return(session->user->get_or_create_mailbox(mailbox_name) != 0);
   }
 
   array(array(object|string)) list(object|mapping(string:mixed) session,
