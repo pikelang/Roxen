@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.20 1999/07/04 12:40:21 grubba Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.21 1999/10/12 15:34:42 marcus Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -125,7 +125,9 @@ private nomask inline string pre(string what)
 // Will be added at the end...
 private nomask inline string post(string what) 
 {
-  if (what[-1] != ";")
+  if(search(what, "parse(") != -1)
+    return "";
+  if (!strlen(what) || what[-1] != ';')
     return ";}";
   else
     return "}";
