@@ -3,6 +3,8 @@ Changes since Roxen Challenger 1.2.36 Yellow
 
 o PATH_INFO handling has been extracted into a separate module.
 
+o The CGI module now uses the PATH_INFO module to do PATH_INFO handling.
+
 
 Changes since Roxen Challenger 1.2.35 Yellow
 -----------------------------------------------
