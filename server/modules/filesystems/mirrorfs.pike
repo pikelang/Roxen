@@ -1,4 +1,4 @@
-constant cvs_version="$Id: mirrorfs.pike,v 1.8 1997/09/01 01:35:35 per Exp $";
+constant cvs_version="$Id: mirrorfs.pike,v 1.9 1997/09/16 20:54:25 grubba Exp $";
 constant thread_safe=1;
 
 import RoxenRPC;
@@ -68,7 +68,11 @@ void update_file(string path, string rpath)
     get_remote_dir(rpath);
     return;
   }
-  array s1=rpc()->stat_file(rpath), s2=file_stat(path);
+  object _rpc = rpc();
+  if (!_rpc) {
+    return;
+  }
+  array s1=_rpc->stat_file(rpath), s2=file_stat(path);
   if(!s1)
     rm(path);
   else if(s1[ST_MTIME] > s2[ST_MTIME])
@@ -93,8 +97,16 @@ void update_one(string fs_path, string rpath)
 }
 
 void update();
+
+#ifdef THREADS
+object lock = Thread.Mutex();
+#endif /* THREADS */
 void handle_update_queue()
 {
+#ifdef THREADS;
+  mixed key;
+  catch { key = lock->lock(); };
+#endif /* THREADS */
   remove_call_out(handle_update_queue);
   if(sizeof(update_queue))
   {
@@ -108,12 +120,20 @@ void handle_update_queue()
 
 void update()
 {
+#ifdef THREADS;
+  mixed key;
+  catch { key = lock->lock(); };
+#endif /* THREADS */
   update_queue = ({ ({path,""}) });
   handle_update_queue();
 }
 
 void start(int arg, object conf)
 {
+#ifdef THREADS;
+  mixed key;
+  catch { key = lock->lock(); };
+#endif /* THREADS */
   ::start();
   call_out(update, query("mrefresh")*3600);
   if(conf) catch{rpc(1);};
