@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.200 2001/04/05 11:25:24 kuntri Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.201 2001/05/22 20:57:56 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1327,9 +1327,11 @@ string simpletag_maketag(string tag, mapping m, string cont, RequestID id)
     feed(cont)->read();
 
   if(m->type=="container")
-    return RXML.t_xml->format_tag(m->name, args, cont);
+    return RXML.t_xml->format_tag(m->name, args, cont, RXML.FLAG_RAW_ARGS);
   if(m->type=="tag")
-    return Roxen.make_tag(m->name, args, !m->noxml);
+    return RXML.t_xml->format_tag(m->name, args, 0,
+				  (m->noxml?RXML.FLAG_COMPAT_PARSE:0)|
+				  RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_RAW_ARGS);
   RXML.parse_error("No type given.\n");
 }
 
