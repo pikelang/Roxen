@@ -47,7 +47,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.4 1999/08/23 18:43:45 peter Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.5 1999/08/26 16:50:53 js Exp $";
 constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
@@ -191,7 +191,13 @@ void create()
         defvar ("CI_default_attrname_uid", "uidnumber",
 		   "Defaults: User ID map", TYPE_STRING,
                    "The mapping between passwd:uid and LDAP.");
-        defvar ("CI_default_gid", getegid(), "Defaults: Group ID", TYPE_INT,
+        defvar ("CI_default_gid",
+#ifdef __NT__
+		0,
+#else		
+		getegid(),
+#endif		
+		"Defaults: Group ID", TYPE_INT,
                    "Same as User ID, only it refers rather to the group.");
         defvar ("CI_default_attrname_gid", "gidnumber",
 		   "Defaults: Group ID map", TYPE_STRING,

@@ -1,12 +1,14 @@
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 1.4 1999/06/23 00:35:57 js Exp $";
+string cvs_version = "$Id: servlet.pike,v 1.5 1999/08/26 16:50:53 js Exp $";
 int thread_safe=1;
 
 inherit "module";
 inherit "roxenlib";
 static inherit "http";
 
+/* Doesn't work on NT yet */
+#ifndef __NT__
 #if constant(Java)
 
 object servlet;
@@ -141,3 +143,4 @@ mixed find_file( string f, object id )
 }
 
 #endif
+#end

@@ -3,14 +3,14 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: ypuserdb.pike,v 1.11 1999/05/31 22:19:32 js Exp $";
+constant cvs_version = "$Id: ypuserdb.pike,v 1.12 1999/08/26 16:50:53 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-#if constant(Yp)
+#ifndef __NT__
 #if constant(Yp.Domain)
 
 // import Stdio;
