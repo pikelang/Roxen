@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.158 2003/06/24 12:42:12 grubba Exp $
+// $Id: Roxen.pmod,v 1.159 2003/07/07 18:15:45 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -466,6 +466,16 @@ string http_date( mixed t )
   return(sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT",
 		 days[l->wday], l->mday, months[l->mon], 1900+l->year,
 		 l->hour, l->min, l->sec));
+}
+
+//! Returns a timestamp formatted according to ISO 8601 Date and Time
+//! RFC 2518 23.2. No fraction, UTC only.
+string iso8601_date_time(int ts)
+{
+  mapping(string:int) gmt = gmtime(ts);
+  return sprintf("%04d-%02d-%02dT%02d:%02d:%02dZ",
+		 1900 + gmt->year, gmt->mon, gmt->mday,
+		 gmt->hour, gmt->min, gmt->sec);
 }
 
 string http_encode_string(string f)

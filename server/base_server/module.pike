@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.141 2003/07/07 17:44:58 mast Exp $
+// $Id: module.pike,v 1.142 2003/07/07 18:15:43 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -287,17 +287,6 @@ mapping(string:Stat) find_dir_stat(string f, RequestID id)
   return(res);
 }
 
-// ISO 8601 Date and Time
-// RFC 2518 23.2
-// No fraction, UTC only.
-static string iso8601_date_time(int ts)
-{
-  mapping(string:int) gmt = gmtime(ts);
-  return sprintf("%04d-%02d-%02dT%02d:%02d:%02dZ",
-		 1900 + gmt->year, gmt->mon, gmt->mday,
-		 gmt->hour, gmt->min, gmt->sec);
-}
-
 //! Returns a multiset with the names off all supported properties.
 multiset(string) query_all_properties(string path, RequestID id)
 {
@@ -345,7 +334,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     }
     break;
   case "DAV:getlastmodified":	// 13.7
-    return iso8601_date_time(st->mtime);
+    return Roxen.iso8601_date_time(st->mtime);
   case "DAV:resourcetype":	// 13.9
     if (st->isdir) {
       return ({
