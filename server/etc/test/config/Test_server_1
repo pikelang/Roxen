@@ -56,6 +56,10 @@
   <var name='tilde'>             <int>0</int> </var>
 </region>
 
+<region name='roxen_test#0'>
+  <var name='selftestdir'>       <str>etc/test</str> </var>
+</region>
+
 <region name='rxmlparse#0'>
   <var name='logerrorsp'>        <int>1</int> </var>
   <var name='logerrorsr'>        <int>1</int> </var>
