@@ -1,6 +1,6 @@
-# $Id: db.spec,v 1.2 1998/07/13 07:11:19 js Exp $
+# $Id: db.spec,v 1.3 1998/07/15 22:54:24 js Exp $
 
-drop table clients;
+drop table customers;
 drop table dns;
 drop table messages;
 drop table mailboxes;
@@ -9,8 +9,8 @@ drop table users;
 create table customers (
              id	                     int auto_increment primary key,
              user_id                 varchar(64) not null,
+	     password		     varchar(64) not null,
 	     name		     varchar(255) not null,
-	     domain_id		     int,
 	     intraseek		     int,
 	     logview		     int,
 	     sms		     int,
@@ -20,7 +20,7 @@ create table customers (
 
 create table dns (
              id                      int auto_increment primary key,
-             client_id		     int,
+             customer_id             int,
              rr_type		     varchar(8),
              rr_value		     varchar(255)
      );
