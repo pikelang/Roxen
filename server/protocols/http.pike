@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.190 2000/01/22 00:25:05 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.191 2000/01/22 21:46:12 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -1781,11 +1781,8 @@ void clean()
     end();
 }
 
-private int __count = ++all_constants()->__SDf_DAsdf;
-
 void create(object f, object c)
 {
-  werror ("id create %d\n", __count);
   if(f)
   {
     MARK_FD("HTTP connection");
@@ -1797,8 +1794,6 @@ void create(object f, object c)
     time = _time(1);
   }
 }
-
-void destroy () {werror ("id destroy %d\n", __count);}
 
 void chain(object f, object c, string le)
 {
