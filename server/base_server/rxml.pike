@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.190 2000/04/19 00:27:10 nilsson Exp $
+// $Id: rxml.pike,v 1.191 2000/04/25 12:05:46 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -359,8 +359,6 @@ array(string)|string call_container(RXML.PXml parser, mapping args,
 
   return result || ({Roxen.make_container (tag, args, contents)});
 }
-
-int do_parse_depth;
 
 string do_parse(string to_parse, RequestID id,
                 Stdio.File file, mapping defines)
