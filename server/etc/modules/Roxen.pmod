@@ -1,10 +1,7 @@
-/*
- * $Id: Roxen.pmod,v 1.60 2000/12/11 04:05:46 nilsson Exp $
- *
- * Various helper functions.
- *
- * Henrik Grubbström 1999-05-03
- */
+// This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
+//
+// $Id: Roxen.pmod,v 1.61 2000/12/18 09:41:07 nilsson Exp $
+
 #include <roxen.h>
 #include <config.h>
 #include <version.h>
@@ -37,18 +34,16 @@ string http_roxen_id_cookie()
 // These five functions are questionable, but rather widely used.
 string msectos(int t)
 {
-  if(t<1000) /* One sec. */
+  if(t<1000) // One sec.
   {
     return sprintf("0.%02d sec", t/10);
-  } else if(t<6000) {  /* One minute */
+  } else if(t<6000) {  // One minute
     return sprintf("%d.%02d sec", t/1000, (t%1000 + 5) / 10);
-  } else if(t<3600000) { /* One hour */
+  } else if(t<3600000) { // One hour
     return sprintf("%d:%02d m:s", t/60000,  (t%60000)/1000);
   }
   return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
 }
-
-
 
 string decode_mode(int m)
 {
@@ -227,8 +222,6 @@ array(object|mapping) http_try_resume( RequestID id, float|void max_delay )
   return ({delay, ([ "try_again":delay ]) });
 }
 
-
-
 mapping http_string_answer(string text, string|void type)
 //! Generates a result mapping with the given text as the request body
 //! with a content type of `type' (or "text/html" if none was given).
@@ -249,7 +242,6 @@ mapping http_file_answer(Stdio.File text, string|void type, void|int len)
 static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 static constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
-
 
 
 static int chd_lt;
@@ -661,7 +653,7 @@ mapping build_roxen_env_vars(RequestID id)
   {
     string name = replace(tmp," ","_");
     if (id->variables[tmp] && (sizeof(id->variables[tmp]) < 8192)) {
-      /* Some shells/OS's don't like LARGE environment variables */
+      // Some shells/OS's don't like LARGE environment variables
       new["QUERY_"+name] = replace(id->variables[tmp],"\000"," ");
       new["VAR_"+name] = replace(id->variables[tmp],"\000","#");
     }
@@ -1353,9 +1345,8 @@ string strftime(string fmt, int t)
 		// with Monday as the first day of week 1; 0-prefix
       res += sprintf("%02d", ((lt->yday+(5+lt->wday)%7)/7));
       break;
-    case 'Z':	/* FIXME: Time zone name or abbreviation, or no bytes if
-		 * no time zone information exists
-		 */
+    case 'Z':	// FIXME: Time zone name or abbreviation, or no bytes if
+		// no time zone information exists
     }
     res+=key[1..];
   }
@@ -1764,7 +1755,6 @@ function get_client_charset_decoder( string åäö, RequestID|void id )
   }
   report_warning( "Unable to find charset decoder for åäö == %O\n",åäö);
 }
-
 
 
 // Low-level C-roxen optimization functions.
