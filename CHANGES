@@ -3,6 +3,10 @@ Changes since Roxen Challenger 1.2.37 Yellow
 
 o Fixed broken dependencies rule.
 
+o Fixed bug in userfs banish list.
+
+o Fixed compability with the old language module.
+
 o Config action "Thread backtrace" removed from the 1.2 dist.
 
 o Improved Bussiness Graphics cache.
