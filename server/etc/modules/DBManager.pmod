@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.22 2001/08/13 18:23:57 per Exp $
+// $Id: DBManager.pmod,v 1.23 2001/08/14 15:12:06 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -708,6 +708,15 @@ void is_module_table( RoxenModule module, string db, string table,
 	"(%s,%s,%s,%s,%s)",
 	cn,mn,db,table,comment||"" );
 }
+
+void is_module_db( RoxenModule module, string db, string|void comment )
+//! Tell the system that the databse 'db' belongs to the module 'module'.
+//! The comment is optional, and will be shown in the configuration
+//! interface if present.
+{
+  is_module_table( module, db, "", comment );
+}
+  
 
 static void create()
 {
