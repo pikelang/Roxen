@@ -88,6 +88,7 @@ nn binary
 /server/etc/extensions foreign_ident
 /server/etc/include/config.h foreign_ident
 /server/etc/include/module.h foreign_ident
+/server/etc/include/request_trace.h foreign_ident
 /server/etc/include/roxen.h foreign_ident
 /server/etc/include/stat.h foreign_ident
 /server/etc/include/udp.h foreign_ident
