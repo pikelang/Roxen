@@ -2,7 +2,7 @@
 //
 inherit "module";
 
-constant cvs_version = "$Id: language.pike,v 1.34 2001/09/03 18:31:04 nilsson Exp $";
+constant cvs_version = "$Id: language.pike,v 1.35 2001/09/26 14:39:50 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -13,17 +13,19 @@ constant thread_safe = 1;
 #endif
 
 constant module_type = MODULE_URL | MODULE_TAG;
-constant module_name = "Language module";
+constant module_name = "DEPRECATED: Language module";
 constant module_doc  = "Handles documents in different languages. "
 	      "What language a file is in is specified with an "
 	      "extra extension. index.html.sv would be a file in swedish "
-	      "while index.html.en would be one in english. "
+	      "while index.html.en would be one in english. <b>Note: needs "
+              "'Old RXML Compatibility Module' in order for available_languages and "
+              "unavailable_language to work.</b> "
 	      "<p>The module also defines three new tags. "
-	      "<br><b>&lt;language&gt;</b> that tells which language the "
+	      "<br><b>&lt;language/&gt;</b> that tells which language the "
 	      "current page is in. "
-	      "<br><b>&lt;available-languages&gt;</b> gives a list of other "
+	      "<br><b>&lt;available_languages/&gt;</b> gives a list of other "
 	      "languages the current page is in, with links to them. "
-	      "<br><b>&lt;unavailable-language&gt;</b> shows the language "
+	      "<br><b>&lt;unavailable_language/&gt;</b> shows the language "
 	      "the user wanted, if the page was not available in that "
 	      "language. "
               "<p>All tags take the argument type={txt,img}.</p>";
