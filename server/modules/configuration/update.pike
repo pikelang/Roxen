@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.18 2000/06/04 17:18:44 js Exp $
+ * $Id: update.pike,v 1.19 2000/06/29 13:00:30 noring Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -49,16 +49,21 @@ mapping(int:GetPackage) package_downloads = ([ ]);
 int inited;
 void post_start()
 {
-#ifdef UPDATE_DEBUG
-  if(mixed error =
-#endif
-  catch(db=Yabu.db(roxen_path(QUERY(yabudir)),"wcSQ"))
-#ifdef UPDATE_DEBUG
-    )
-    UPDATE_MSGS("post_start() failed to create yabu database: %O", ({ error }));
-#else
-  ;
-#endif
+  // It is very important that errors from the Yabu database are
+  // reported properly. Events which cause errors include:
+  //
+  //    1. Yabu does not have permission to create/write/read its files.
+  //       Solution: Change permissions on the relevant files.
+  //
+  //    2. Yabu is out locked by another process. This indicates
+  //       that several Roxen servers are running on the same files!
+  //       Solution: Kill the offending Roxen processes.
+  //
+  // Both errors listed above should be corrected by the administrator
+  // of Roxen.
+  //
+  init_error = catch { db=Yabu.db(roxen_path(QUERY(yabudir)),"wcSQ"); };
+  
   pkginfo=db["pkginfo"];
   misc=db["misc"];
   installed=db["installed"];
@@ -66,6 +71,9 @@ void post_start()
   if(QUERY(do_external_updates))
     updater=UpdateInfoFiles();
   UPDATE_NOISES("db == %O", ({ db }));
+
+  if(init_error)
+    throw(init_error);
 }
 
 void start(int num, Configuration conf)
@@ -158,6 +166,15 @@ array(array) menu = ({
   ({ "Bugfixes","bugfixes" }),
   ({ "Third party","3rdpart" }),
 });
+
+
+string tag_show_backtrace(string t, mapping m, RequestID id)
+{
+  if(init_error)
+    throw(init_error);
+  else
+    return "";
+}
 
 string tag_update_sidemenu(string t, mapping m, RequestID id)
 {
