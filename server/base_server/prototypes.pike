@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.84 2004/04/19 16:45:07 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.85 2004/04/20 21:03:27 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -985,9 +985,30 @@ class RequestID
   //! Is destructive on @[file] and on various data in the request;
   //! should only be called once for a @[RequestID] instance.
   {
-    mapping(string:string) heads = ([]);
+    if (!file->stat) file->stat = misc->stat;
+    if(objectp(file->file)) {
+      if(!file->stat)
+	file->stat = file->file->stat();
+      if (zero_type(misc->cacheable) && file->file->is_file) {
+	// Assume a cacheablity on the order of the age of the file.
+	misc->cacheable = (predef::time(1) - file->stat[ST_MTIME])/4;
+      }
+    }
+
+    if( Stat fstat = file->stat )
+    {
+      if( !file->len && fstat[1] >= 0 )
+	file->len = fstat[1];
+      if ( fstat[ST_MTIME] > misc->last_modified )
+	misc->last_modified = fstat[ST_MTIME];
+    }	
+
+    if (!file->error)
+      file->error = Protocols.HTTP.HTTP_OK;
 
     if(!file->type) file->type="text/plain";
+
+    mapping(string:string) heads = ([]);
 
     if( !zero_type(misc->cacheable) &&
 	(misc->cacheable != INITIAL_CACHEABLE) ) {
@@ -1183,7 +1204,20 @@ class XMLPropStatNode
   {
     Node n;
     if (!(n = properties[prop_name])) {
-      n = ElementNode(prop_name, ([]));
+      string type;
+      // The DAV client in Windows XP Pro (at least) requries types on
+      // the date fields to parse them correctly. The type system is
+      // of course some MS goo.
+      switch (prop_name) {
+	case "DAV:creationdate":     type = "dateTime.tz"; break;
+	case "DAV:getlastmodified":  type = "dateTime.rfc1123"; break;
+	  // MS header - format unknown.
+	  //case "DAV:lastaccessed": type = "dateTime.tz"; break;
+      }
+      n = ElementNode(prop_name,
+		      type ?
+		      (["urn:schemas-microsoft-com:datatypesdt": type]) :
+		      ([]));
       properties[prop_name] = n;
       prop_node->add_child(n);
     }
@@ -1275,7 +1309,8 @@ class MultiStatus
       status_set[href] = ({ stat_node = XMLPropStatNode(code, message) });
     } else {
       int index;
-      foreach(stat_nodes; index; Node n) {
+      for (; index < sizeof (stat_nodes); index++) {
+	XMLStatusNode n = stat_nodes[index];
 	if (n->http_code == code) {
 	  stat_node = n;
 	  break;
@@ -1300,9 +1335,15 @@ class MultiStatus
   Node get_xml_node()
   {
     Node root =
-      Parser.XML.Tree.parse_input("<?xml version='1.0' encoding='utf-8'?>\n"
-				  "<DAV:multistatus xmlns:DAV='DAV:'>\n"
-				  "</DAV:multistatus>");
+      Parser.XML.Tree.parse_input(
+	"<?xml version='1.0' encoding='utf-8'?>"
+	"<DAV:multistatus xmlns:DAV='DAV:' "
+	// MS namespace for data types; see comment in
+	// XMLPropStatNode.add_property. Note: The XML parser in the
+	// MS DAV client is broken and requires the break of the last
+	// word "datatypesdt" to be exactly at this point.
+	"xmlns:MS='urn:schemas-microsoft-com:datatypes'>"
+	"</DAV:multistatus>");
     array(Node) response_xml = allocate(sizeof(status_set));
     int i;
 
