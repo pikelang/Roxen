@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.101 1998/05/18 22:01:44 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.102 1998/05/19 21:15:07 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2553,7 +2553,7 @@ string tag_default( string tag_name, mapping args, string contents,
     return contents;
 }
 
-string tag_noparse(string t, mapping m, string c)
+array(string) tag_noparse(string t, mapping m, string c)
 {
   return ({ c });
 }
