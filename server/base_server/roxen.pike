@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.238 1998/09/16 21:19:40 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.239 1998/09/17 07:24:44 mast Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -1591,7 +1591,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  "If set to Yes, Roxen will attempt to set unique user ID cookies "
 	  "only upon receiving the first request (and again after some "
 	  "minutes). Thus, if the user doesn't allow the cookie to be set, "
-	  "he won't be bothered with multiple requests",0,
+	  "he won't be bothered with multiple requests.",0,
 	  lambda() {return !QUERY(set_cookie);});
 
   globvar("show_internals", 1, "Show the internals", TYPE_FLAG,
@@ -1633,7 +1633,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  "If set to Yes, caching will be enabled.");
   
   globvar("garb_min_garb", 1, "Proxy disk cache: Clean size", TYPE_INT,
-	  "Minimum number of Megabytes removed when a garbage collect is done",
+	  "Minimum number of Megabytes removed when a garbage collect is done.",
 	  0, cache_disabled_p);
 
   globvar("cache_minimum_left", 5, "Proxy disk cache: Minimum "
@@ -1685,7 +1685,7 @@ private void define_global_variables( int argc, array (string) argv )
   
   globvar("cache_keep_without_content_length", 1, "Proxy disk cache: "
 	  "Keep without Content-Length", TYPE_FLAG, "Keep files "
-	  "without Content-Length header information in the cache ?",
+	  "without Content-Length header information in the cache?",
 	  0, cache_disabled_p);
 
   globvar("cache_check_last_modified", 0, "Proxy disk cache: "
@@ -1699,7 +1699,7 @@ private void define_global_variables( int argc, array (string) argv )
   globvar("cache_last_resort", 0, "Proxy disk cache: "
 	  "Last resort (in days)", TYPE_INT,
 	  "How many days shall files without Expires and without "
-	  "Last-Modified header information be kept ?",
+	  "Last-Modified header information be kept?",
 	  0, cache_disabled_p);
 
   globvar("cache_gc_logfile",  "",
@@ -1770,7 +1770,7 @@ private void define_global_variables( int argc, array (string) argv )
   globvar("ConfigPorts", ({ ({ 22202, "http", "ANY", "" }) }),
 	  "Configuration interface: Ports",
 	  TYPE_PORTS,
-	  "These are the ports through which you can configure the"
+	  "These are the ports through which you can configure the "
 	  "server.<br>Note that you should at least have one open port, since "
 	  "otherwise you won't be able to configure your server.");
   
@@ -1796,8 +1796,8 @@ private void define_global_variables( int argc, array (string) argv )
   
   globvar("ConfigurationIPpattern","*", "Configuration interface: IP-Pattern", 
 	  TYPE_STRING|VAR_MORE,
-	  "Only clients running on computers with IP numbers matching"
-	  "this pattern will be able to use the configuration"
+	  "Only clients running on computers with IP numbers matching "
+	  "this pattern will be able to use the configuration "
 	  "interface.");
   
   globvar("User", "", "Change uid and gid to", TYPE_STRING,
@@ -1843,20 +1843,20 @@ private void define_global_variables( int argc, array (string) argv )
 	  "What method to use for logging, default is file, but "
 	  "syslog is also available. When using file, the output is really"
 	  " sent to stdout and stderr, but this is handled by the "
-	  "start script",
+	  "start script.",
 	  ({ "file", "syslog" }));
   
   globvar("LogSP", 1, "Syslog: Log PID", TYPE_FLAG,
-	  "If set, the PID will be included in the syslog", 0, 
+	  "If set, the PID will be included in the syslog.", 0,
 	  syslog_disabled);
   
   globvar("LogCO", 0, "Syslog: Log to system console", TYPE_FLAG,
 	  "If set and syslog is used, the error/debug message will be printed"
-	  " to the system console as well as to the system log", 
+	  " to the system console as well as to the system log.",
 	  0, syslog_disabled);
   
   globvar("LogST", "Daemon", "Syslog: Log type", TYPE_STRING_LIST,
-	  "When using SYSLOG, which log type should be used",
+	  "When using SYSLOG, which log type should be used.",
 	  ({ "Daemon", "Local 0", "Local 1", "Local 2", "Local 3",
 	     "Local 4", "Local 5", "Local 6", "Local 7", "User" }),
 	  syslog_disabled);
@@ -1872,7 +1872,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  syslog_disabled);
   
   globvar("LogNA", "Roxen", "Syslog: Log as", TYPE_STRING,
-	  "When syslog is used, this will be the identification of the"
+	  "When syslog is used, this will be the identification of the "
 	  "Roxen daemon. The entered value will be appended to all logs.",
 	  0, syslog_disabled);
 #endif
@@ -1901,13 +1901,13 @@ private void define_global_variables( int argc, array (string) argv )
 	  "Neighborhood: Register with other Roxen servers on the local network"
 	  ,TYPE_FLAG|VAR_MORE,
 	  "If this option is set, Roxen will automatically broadcast it's "
-	  "existence to other Roxen servers on the local network");
+	  "existence to other Roxen servers on the local network.");
 
   globvar("neigh_tcp_ips",  ({}), "Neighborhood: TCP hosts",
   TYPE_STRING_LIST|VAR_MORE,
   "This is the list of direct host<-->host links to establish. "
   "The local host is always present (if the neighbourhood functionality "
-  "is at all enabled)");
+  "is at all enabled).");
 
 
   globvar("neigh_ips",  ({lambda(){
@@ -1924,7 +1924,7 @@ private void define_global_variables( int argc, array (string) argv )
 			  "");
 
   globvar("neigh_com", "", "Neighborhood: Server informational comment",
-	  TYPE_TEXT|VAR_MORE, "A short string describing this server");
+	  TYPE_TEXT|VAR_MORE, "A short string describing this server.");
 #endif /* ENABLE_NEIGHBOURHOOD */  
 
   globvar("abs_engage", 0, "Anti-Block-System: Enable", TYPE_FLAG|VAR_MORE,
