@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.67 1999/05/25 20:45:46 grubba Exp $
+# $Id: start,v 1.68 1999/07/21 21:33:51 marcus Exp $
 
 cd `dirname $0`
 
@@ -19,6 +19,16 @@ verbose=1
 
 # Default to using a relative path.
 roxendir="."
+
+# Set up environment
+if test -f etc/environment; then
+  . etc/environment
+fi
+
+# Make sure $CLASSPATH contains the servlet stuff
+CLASSPATH=etc/classes:etc/classes/roxen_servlet.jar:etc/classes/jsdk.jar${CLASSPATH:+:}$CLASSPATH
+export CLASSPATH
+
 
 pike=pike
 if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
