@@ -4,36 +4,38 @@
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.20 2000/03/16 18:57:13 nilsson Exp $";
-constant thread_safe=1;
-
-#include <module.h>
 inherit "module";
+
+constant cvs_version = "$Id: contenttypes.pike,v 1.21 2000/08/15 13:35:15 jhs Exp $";
+constant thread_safe = 1;
+constant module_type = MODULE_TYPES;
+constant module_name = "Content types";
+constant module_doc  = #"This module handles all normal extension to content type mapping.
+Given the file 'foo.html', it will normally set the content type to 'text/html'.";
 
 mapping (string:string) extensions=([]), encodings=([]);
 mapping  (string:int) accessed=([]);
 
 void create()
 {
-  defvar("exts", "\n"
-	 "# This will include the defaults from a file.\n"
-	 "# Feel free to add to this, but do it after the #include line if\n"
-	 "# you want to override any defaults\n"
-	 "\n"
-	 "#include <etc/extensions>\n\n", "Extensions",
-	 TYPE_TEXT_FIELD,
-	 "This is file extension "
-	 "to content type mapping. The format is as follows:\n"
-	 "<pre>extension type encoding\ngif image/gif\n"
-	 "gz STRIP application/gnuzip\n</pre>"
-	 "For a list of types, see <a href=ftp://ftp.isi.edu/in-"
-	 "notes/iana/assignments/media-types/media-types>ftp://ftp"
-	 ".isi.edu/in-notes/iana/assignments/media-types/media-types</a>");
+  defvar("exts", Variable.Text(#"# This will include the defaults from a file.
+# Feel free to add to this, but do it after the #include
+# line if you want to override any defaults
 
-  defvar("default", "application/octet-stream", "Default content type",
-	 TYPE_STRING,
-	 "This is the default content type which is used if a file lacks "
-	 "extension or if the extension is unknown.\n");
+#include <etc/extensions>", 0, "Extensions",
+#"This is file extension to content type mapping. The format is as
+follows: <table><tr><th>extension</th><th>type</th><th>encoding</th></tr>
+<tr><td>gif</td><td>image/gif</td></tr>
+<tr><td>gz</td> <td>STRIP</td><td>application/gnuzip</td></tr></table>
+For a list of types, see <a
+href='ftp://ftp.isi.edu/in-notes/iana/assignments/media-types/media-types'
+>ftp://ftp.isi.edu/in-notes/iana/assignments/media-types/media-types</a>"));
+
+  defvar("default", Variable.String("application/octet-stream", 0,
+				    "Default content type",
+				    "This is the default content type which is "
+				    "used if a file lacks extension or if the "
+				    "extension is unknown.\n"));
 }
 
 string status()
@@ -77,22 +79,21 @@ void parse_ext_string(string exts)
 
 void start()
 {
-  parse_ext_string(QUERY(exts));
+  parse_ext_string(query("exts"));
 }
 
-constant module_type = MODULE_TYPES;
-constant module_name = "Content types";
-constant module_doc  = "This module handles all normal extension to "
-  "content type mapping. Given the file 'foo.html', it will "
-  "normally set the content type to 'text/html'.";
-
-array type_from_extension(string ext)
+array(string|int) type_from_extension(string ext)
+//! Return an array <tt>({ content_type, content_encoding })</tt>
+//! devised from the file extension `ext'. When `ext' equals
+//! "default", roxen wants to know a default type/encoding. If the
+//! content-type returned is the string <tt>"strip"</tt>, the
+//! content-encoding returned will be kept, and another call be made
+//! for the last-but-one file extension to get the content type (eg
+//! for <tt>".tar.gz"</tt> to resolve correctly).
 {
-  if(ext == "default") {
-    accessed[ ext ] ++;
-    return ({ QUERY(default), 0 });
-  } else if(extensions[ ext ]) {
-    accessed[ ext ]++;
+  accessed[ ext ]++;
+  if(ext == "default")
+    return ({ query("default"), 0 });
+  if(extensions[ ext ])
     return ({ extensions[ ext ], encodings[ ext ] });
-  }
 }
