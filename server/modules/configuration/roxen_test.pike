@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.36 2001/07/25 18:57:19 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.37 2001/08/10 09:04:47 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -13,6 +13,12 @@ constant is_roxen_tester_module = 1;
 Configuration conf;
 Stdio.File index_file;
 Protocol port;
+
+#ifdef SELF_TEST_DIR
+string self_test_dir = SELF_TEST_DIR;
+#else
+string self_test_dir = "/etc/test";
+#endif
 
 int verbose;
 
@@ -39,7 +45,7 @@ RequestID get_id()
   id->pragma=(<>);
   id->client=({});
 
-  id->realfile="etc/test/filesystem/index.html";
+  id->realfile=self_test_dir+"/filesystem/index.html";
   id->query = "";
   id->not_query="/index.html";
   id->raw_url="/index.html";
@@ -287,6 +293,101 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
   return;
 }
 
+string tag_test_data;
+class PrefLang {
+  array(string) get_languages()
+  {
+    return ({});
+  }
+    
+  string get_language()
+  {
+    return 0;
+  }
+  
+  void set_sorted(array(string) lang) {}
+}
+
+void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
+
+  ltests++;
+  tests++;
+  
+  string indent( int l, string what )
+  {
+    array q = what/"\n";
+    //   if( q[-1] == "" )  q = q[..sizeof(q)-2];
+    string i = (" "*l+"|  ");
+    return i+q*("\n"+i)+"\n";
+  };
+  
+  string test_error( string message, mixed ... args )
+  {
+    if( sizeof( args ) )
+      message = sprintf( message, @args );
+    if( verbose )
+      report_debug("FAIL\n" );
+    report_debug( indent(2, message ) );
+  };
+  
+  string test_ok(  )
+  {
+    if( verbose )
+      report_debug( "PASS\n" );
+  };
+  
+  Parser.HTML parser =
+    Roxen.get_xml_parser()->
+    add_containers( ([ "rxml":
+		       lambda(object t, mapping m, string c) {
+			 tag_test_data = c;
+		       },
+
+		       "result":
+		       lambda(object t, mapping m, string c) {
+			 mapping request_headers = ([]);
+			 if(args->admin && args->password)
+			   request_headers->authorization =
+			     "Basic " + MIME.encode_base64(args->user+":"+args->password);
+			 roxen.InternalRequestID id = roxen.InternalRequestID();
+			 id->misc->pref_languages = PrefLang();
+			 id->conf = conf;
+			 id->realauth = args->user+":"+args->password;
+			 id->request_headers = request_headers;
+			 id->prot = "HTTP";
+			 string res = conf->try_get_file(args->file, id);
+			 res = canon_html( res );
+			 c = canon_html( c );
+
+			 if(res != c) {
+			   if(m->not) return;
+			   test_error("Failed (result %O != %O)\n", res, c);
+			   throw(1);
+			 }
+			 test_ok( );
+		       },
+    ]));
+  
+  if( mixed error = catch(parser->finish(c)) ) {
+    //werror("Error: %s\n", describe_backtrace(error));
+    fails++;
+    lfails++;
+  }
+}
+
+class TagTestData {
+  inherit RXML.Tag;
+  constant name = "test-data";
+  array(RXML.Type) result_types = ({RXML.t_html (RXML.PXml)});
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      return ({ tag_test_data });
+    }
+  }
+}
+
 void xml_comment(object t, mapping m, string c) {
   if(verbose)
     report_debug(c + (c[-1]=='\n'?"":"\n"));
@@ -303,6 +404,7 @@ void run_xml_tests(string data) {
     "drop-module" : xml_drop_module,
     "use-module": xml_use_module,
     "test" : xml_test,
+    "tag-test" : xml_tag_test,
     "comment": xml_comment,
   ]) )->
     add_quote_tag("!--","","--")->
@@ -421,7 +523,7 @@ void do_tests()
   tests_to_run = Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
   verbose = !!Getopt.find_option(roxen.argv, 0,({"tests-verbose"}),0, 0 );
   file_stack->push( 0 );
-  file_stack->push( "etc/test/tests" );
+  file_stack->push( self_test_dir + "/tests" );
   call_out( continue_find_tests, 0 );
 }
 
