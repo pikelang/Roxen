@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.50 1999/06/07 03:02:33 mast Exp $
+# $Id: Makefile,v 1.51 1999/06/11 06:38:11 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -67,8 +67,13 @@ configure : configure.in
 configure_all : configure
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	if test -d pike/0.6/src ; then pikeversion=0.6; \
-	else pikeversion=0.5; \
+	if test -z "$$pikeversion"; then \
+	  test -d pike/0.7/src && pikeversion=0.7; \
+	  if test -z "$$pikeversion"; then \
+	    echo "WARNING: No compatible Pike source found - building without Pike"; \
+	    echo; \
+	    pikeversion=no; \
+	  fi; \
 	fi; \
 	./mkdir -p "$$builddir"; \
 	cd "$$builddir" && \
