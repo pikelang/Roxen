@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.38 1998/09/17 20:02:40 grubba Exp $
+ * $Id: smtp.pike,v 1.39 1998/09/17 20:38:11 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.38 1998/09/17 20:02:40 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.39 1998/09/17 20:38:11 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -846,7 +846,7 @@ static class Smtp_Connection {
 	if (sizeof(disconnect_reason)) {
 	  // Give a reason why we disconnect
 	  ::create(con, parent->query_timeout());
-	  send(550, ({
+	  send(421, ({
 	    sprintf("%s ESMTP %s; %s",
 			   gethostname(), roxen->version(),
 		    mktimestamp(time())),
@@ -1214,7 +1214,7 @@ void create()
   defvar("spooldir", "/var/spool/mqueue/", "Mail spool directory", TYPE_DIR,
 	 "Directory to temporary keep incoming mail.");
 
-  defvar("timeout", 10*60, "Timeout", TYPE_INT,
+  defvar("timeout", 10*60, "Timeout", TYPE_INT|VAR_MORE,
 	 "Idle time before connection is closed (seconds).<br>\n"
 	 "Zero or negative to disable timeouts.");
 }
@@ -1240,4 +1240,9 @@ void start(int i, object c)
 void stop()
 {
   destroy();
+}
+
+string query_name()
+{
+  return(sprintf("smtp://%s:%d/", gethostname(), QUERY(port)));
 }
