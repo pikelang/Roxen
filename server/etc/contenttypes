@@ -20,6 +20,7 @@
 
 
 <type mime='audio/x-mpeg'    	title='MPEG audio file' icon='audio-mpeg'/>
+<type mime='audio/mpeg'		title='MPEG audio file' icon='audio-mpeg'/>
 <type mime='audio/x-mpegurl' 	title='MPEG playlist'   icon='audio-mpeg'/>
 
 <type mime='audio/x-aiff'    	   title='AIFF audio file'/>
