@@ -229,6 +229,7 @@ static object ctx_object(object ctx)
   return contexts[context_id_field->get(ctx)];
 }
 
+
 class context {
 
   object ctx, sctx, conf;
@@ -273,6 +274,13 @@ class context {
     ctx=0;
   }
 
+  RequestID make_dummy_id()
+  {
+    RequestID req = roxen->InternalRequestID();
+    req->conf = conf;
+    return req;
+  }
+
   void log(string msg)
   {
     werror(msg+"\n");
@@ -280,8 +288,7 @@ class context {
 
   string get_real_path(string path)
   {
-    // FIXME (no id object...)
-    return 0;
+    return conf && conf->real_file(path, make_dummy_id());
   }
 
   string get_mime_type(string file)
@@ -302,7 +309,9 @@ class context {
 
   string get_resource(string path)
   {
-    return 0;
+    string rp;
+    return conf && (rp = conf->real_file(path, make_dummy_id())) &&
+      ("file:"+rp);
   }
 
   void set_init_parameters(mapping(string:string) pars)
