@@ -1,6 +1,8 @@
 Changes since Roxen Challenger 1.2.21 Yellow
 -----------------------------------------------
 
+o LOTS of changes to Pike 0.6.
+
 o Added new module type, MODULE_PROVIDER. This is a module type which
   enables other modules, scripts or protocols to call other modules
   in a standard way. Function needed in the module:
@@ -29,6 +31,33 @@ o Added new tag - echo. It's usable with one of the following syntaxes:
   Case doesn't matter and in the first syntax, ' ' and '_' are
   interchangable. The available variables are identical to the SSI
   <!--#echo var="..." -->
+
+o Fix of killframe.
+
+o A new protocol-module - ftp2 has been added, which hopefully will
+  work better than the old ftp module.
+
+o htaccess.pike now strips '\r' from the file before parsing.
+
+o Improved handling of opening and closing of configuration ports.
+
+o Various Business Graphics fixes.
+
+o sed module added.
+
+o Several fixes to smartpipe.pike
+
+o Some fixes to graphic_text.pike
+
+o Several fixes to the HTTP protocol module.
+
+o A ChangeLog for the entire Roxen distribution is now automatically
+  made from the log entries in out CVS repository.
+
+o Applied patches by Jordi Murgo <jordi@serveis.lleida.net> to
+  spanish.pike.
+
+o Applied patches by Wilhelm Köhler <wk@cs.tu-berlin.de> to userfs.pike.
 
 o Added the graphical counter module by Jordi Murgo <jordi@lleida.net>
   to the distribution.  
