@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.621 2001/01/31 05:34:40 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.622 2001/01/31 09:39:13 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -519,7 +519,7 @@ local static void handler_thread(int id)
   }
 }
 
-local static void handle(function f, mixed ... args)
+ void handle(function f, mixed ... args)
 {
   handle_queue->write(({f, args }));
 }
@@ -572,7 +572,7 @@ void stop_handler_threads()
 
 #else
 // handle function used when THREADS is not enabled.
-local static void handle(function f, mixed ... args)
+ void handle(function f, mixed ... args)
 {
   f(@args);
 }
