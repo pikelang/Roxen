@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.7 1997/02/27 19:45:59 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.8 1997/04/12 15:25:19 per Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -10,10 +10,90 @@ string cvs_version = "$Id: http.pike,v 1.7 1997/02/27 19:45:59 per Exp $";
 #define roxen roxenp()
 #endif
 
+string http_date(int t);
+
+string http_res_to_string( mapping file, object id )
+{
+#include <variables.h>
+  mapping heads=
+    ([
+      "Content-type":file["type"],
+      "Server":id->version(),
+      "Date":http_date(id->time)
+      ]);
+    
+  if(file->encoding)
+    heads["Content-Encoding"] = file->encoding;
+    
+  if(!file->error) 
+    file->error=200;
+    
+  if(file->expires)
+      heads->Expires = http_date(file->expires);
+
+  if(!file->len)
+  {
+    if(objectp(file->file))
+      if(!file->stat && !(file->stat=id->misc->stat))
+	file->stat = (int *)file->file->stat();
+    array fstat;
+    if(arrayp(fstat = file->stat))
+    {
+      if(file->file && !file->len)
+	file->len = fstat[1];
+      
+      heads["Last-Modified"] = http_date(fstat[3]);
+#if 0
+      if(since)
+      {
+	if(is_modified(since, fstat[3], fstat[1]))
+	{
+	  file->error = 304;
+	  id->method="HEAD";
+	}
+      }
+#endif
+    }
+    if(stringp(file->data)) 
+      file->len += strlen(file->data);
+  }
+
+  if(mappingp(file->extra_heads)) 
+    heads |= file->extra_heads;
+
+  if(mappingp(id->misc->moreheads))
+    heads |= id->misc->moreheads;
+    
+  array myheads=({id->prot+" "+(file->rettext||errors[file->error])});
+  foreach(indices(heads), string h)
+    if(arrayp(heads[h]))
+      foreach(heads[h], string tmp)
+	myheads += ({ `+(h,": ", tmp)});
+    else
+      myheads +=  ({ `+(h, ": ", heads[h])});
+  
+
+  if(file->len > -1)
+    myheads += ({"Content-length: " + file->len });
+  string head_string = (myheads+({"",""}))*"\r\n";
+
+  if(id->conf) {
+    id->conf->hsent+=strlen(head_string||"");
+    if(id->method != "HEAD")
+      id->conf->sent+=(file->len>0 ? file->len : 1000);
+  }
+  if(id->method != "HEAD")
+    head_string+=(file->data||"")+(file->file?file->file->read(0x7ffffff):"");
+  return head_string;
+}
+
+
 /* Return a filled out struct with the error and data specified.  The
  * error is infact the status response, so '200' is HTTP Document
  * follows, and 500 Internal Server error, etc.
  */
+
+
 
 mapping http_low_answer( int errno, string data )
 {

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.50 1997/04/09 06:56:59 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.51 1997/04/12 15:25:21 per Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -1706,14 +1706,16 @@ void scan_module_dir(string d)
 	{
 	 case "pike":
 	 case "lpc":
-//	  if(catch{
+	  if(catch{
 	    if((open(path+file,"r")->read(4))=="#!NO")
 	    {
-//	      perror("Nomodule: "+path+file+"\n");
+#ifdef MODULE_DEBUG
+	      perror("no module\n");
+#endif
 	      continue;
 	    }
-//	  })
-//	    break;
+	  })
+          break;
 
 	 case "mod":
 	 case "so":
@@ -1767,16 +1769,18 @@ void rescan_modules()
   allmodules=([]);
   foreach(QUERY(ModuleDirs), path)
   {
-    _master->set_inhibit_compile_errors("");
-    catch(scan_module_dir( path ));
+    array err;
+//    _master->set_inhibit_compile_errors("");
+    err = catch(scan_module_dir( path ));
+    if(err)
+      perror("Error while scanning module dir: %O\n", describe_backtrace(err));
   }
-  if(strlen(_master->errors))
-  {
-    nwrite("While rescanning module list:\n" + _master->errors, 1);
-    _master->set_inhibit_compile_errors(0);
-  }
-
-  _master->set_inhibit_compile_errors(0);
+//  if(strlen(_master->errors))
+//  {
+//    nwrite("While rescanning module list:\n" + _master->errors, 1);
+//    _master->set_inhibit_compile_errors(0);
+//  }
+//  _master->set_inhibit_compile_errors(0);
 }
 
 // ================================================= 

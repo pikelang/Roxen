@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.20 1997/04/11 14:24:01 per Exp $ */
+/* $Id: persistent.pike,v 1.21 1997/04/12 15:25:20 per Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -40,7 +40,7 @@ void really_save()
     if(!catch { this_object()[a]=b; } ) // It can be assigned. Its a variable!
       res += ({ ({ a, b }) });
   }
-  open_db(__id[..0])->set(__id[1..], encode_value(res) );
+  open_db(__id[0])->set(__id[1], encode_value(res) );
 }
 
 
@@ -52,7 +52,7 @@ public void begone()
   remove_call_out(really_save);
   ___destructed=1;
   if(__id)
-    open_db(__id[..0])->delete(__id[1..]);
+    open_db(__id[0])->delete(__id[1]);
   __id=0;
   call_out(destruct,2,this_object());
 }
@@ -70,18 +70,21 @@ static void compat_persist()
 #define COMPAT_DIR "dbm_dir.perdbm/"
  object file = files.file();
   array var;
-//  perror("compat persist "+COMPAT_DIR+"/"+_id+"\n");
   catch {
     if(!file->open(COMPAT_DIR+_id, "r")) return 0;
     perror("compat restore ("+ _id +")\n");
     var=decode_value(file->read(0x7ffffff));
   };
-  if(var) foreach(var, var) catch {
-    this_object()[var[0]] = var[1];
-  };
-  remove_call_out(really_save);
-  call_out(really_save,0);
-  rm(COMPAT_DIR+_id);
+  if(var)
+  {
+    foreach(var, var) catch {
+      this_object()[var[0]] = var[1];
+    };
+    remove_call_out(really_save);
+    call_out(really_save,0);
+    rm(COMPAT_DIR+_id);
+  }
+
 }
 
 nomask public void persist(mixed id)
@@ -91,18 +94,20 @@ nomask public void persist(mixed id)
   if(!id)  error("No known id in persist.\n");
   __id = id;
 
-//  perror("restore ("+ id*";  " +")\n");
 // Restore
   array var;
   catch {
-    var=decode_value(open_db(id[..0])->get(id[1..]));
-//    perror("decode_value ok\n");
+    var=decode_value(open_db(__id[0])->get(__id[1]));
+//  perror("decode_value ok\n");
   };
+  
+
   if(var && sizeof(var)) foreach(var, var) catch {
     this_object()[var[0]] = var[1];
   };
   else
     compat_persist();
+
   if(functionp(this_object()->persisted))
     this_object()->persisted();
 }

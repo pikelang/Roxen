@@ -4,7 +4,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.15 1997/04/11 14:24:02 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.16 1997/04/12 15:25:22 per Exp $";
 
 mapping dbs = ([ ]);
 array adbs = ({});
@@ -42,48 +42,57 @@ class db {
     }
   }
 
-  void delete(array index)
+  void delete(string index)
   {
-    mydb->delete(index*",");
-    remove_call_out(mydb->sync);
-    call_out(mydb->sync, 10);
+    mydb->delete(index);
   }
 
-  void get(array index)
+  void get(string index)
   {
-    return mydb->fetch(index*",");
+//    werror("Get: "+index+"\n");
+    return mydb->fetch(index);
   }
 
-  void set(array index, string to)
+  array indices()
   {
-    mydb->store(index*",", to);
-    remove_call_out(mydb->sync);
-    call_out(mydb->sync, 10);
+    array res = ({});
+    for(string k=mydb->firstkey(); k; k=mydb->nextkey(k))
+      res += ({ k });
+    return res;
   }
   
-  void create(object|string mdb)
+  void set(string index, string to)
+  {
+//    werror("Store: "+index+"\n");
+    mydb->store(index, to);
+  }
+  
+  void create(object|string mdb, program gdbm)
   {
     if(objectp(mdb)) mydb=mdb;
     else
     {
-      werror("PERSIST: Really opening database "+mdb+"\n");
-      if(catch(mydb=master()->resolv("Gdbm")->gdbm(mdb,"cwrf")) ||!mydb)
+      if(catch(mydb=gdbm(mdb,"cwrf")) ||!mydb)
       {
 	mkdirhier(mdb);
-	if(!(mydb=master()->resolv("Gdbm")->gdbm(mdb,"cwrf")))
+	if(!(mydb=gdbm(mdb,"cwrf")))
 	  error("Failed to open database.\n");
       }
     }
   }
 };
 
-object open_db(array id)
+program gdbm;
+object open_db(string id)
 {
-  if(!sizeof(dbs) && !master()->resolv("Gdbm"))
-    error("No gdbm module installed.\n");
-  string fname = "dbs/"+(id*"/")+".gdbm";
-  if(dbs[fname]) return db(dbs[fname]);
-  object d = db(fname);
+  if(!gdbm && !(gdbm = master()->resolv("PerGdbm","base_server/foo")->gdbm))
+  {
+    werror("No gdbm module installed.\n");
+    exit(0);
+  }
+  string fname = "dbs/"+id+".gdbm";
+  if(dbs[fname]) return db(dbs[fname],gdbm);
+  object d = db(fname,gdbm);
   dbs[fname]=d->mydb;
   adbs+=({fname});
   if(sizeof(adbs)>100)
