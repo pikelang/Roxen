@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.96 1999/09/06 13:03:42 per Exp $
+ * $Id: roxenloader.pike,v 1.97 1999/09/17 22:26:15 hubbe Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.96 1999/09/06 13:03:42 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.97 1999/09/17 22:26:15 hubbe Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -414,7 +414,7 @@ object spawne(string s,string *args, mapping|array env, object stdin,
 	      object stdout, object stderr, void|string wd, 
 	      void|array (int) uid)
 {
-  int pid, *olduid = allocate(2, "int");
+  int pid;
   object privs;
 
   int u, g;
