@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.97 2002/10/23 16:28:35 nilsson Exp $
+// $Id: global_variables.pike,v 1.98 2002/10/24 02:22:34 nilsson Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -235,7 +235,7 @@ void define_global_variables(  )
 	   "bandwidth statistics on the log file will be incorrect. The "
 	   "statistics in Roxen will still be correct.</p>"));
 
-  defvar("default_font", "roxen builtin", "Default font",
+  defvar("default_font", "bastard", "Default font",
 	 TYPE_FONT,
 	 "The default font to use when modules request a font.");
 
