@@ -1,13 +1,12 @@
-inherit "roxenlib";
 #include <config.h>
 #include <roxen.h>
 
 #if constant(Locale.translate)
-#define LOCALE(X,Y)	Locale.translate(roxen.locale->get()->config_interface,X,Y)
+#define CALL(X,P,Q,Y)	Locale.call(roxen.locale->get()->config_interface,X,Y,P,Q)
 #else
-#define LOCALE(X,Y)	RoxenLocale.translate(roxen.locale->get()->config_interface,X,Y)
+#define CALL(X,P,Q,Y)	RoxenLocale.call(roxen.locale->get()->config_interface,X,Y,P,Q)
 #endif
-#define LOCALE_FUN(X,Y) roxen.locale->get->config_interface(X,Y)
+#define LOCALE(X,Y)	_STR_LOCALE(config_interface,X,Y)
 
 int __lt;
 string describe_time(int t)
@@ -25,13 +24,20 @@ string describe_time(int t)
     return sprintf("%02d:%02d",localtime(t)->hour,localtime(t)->min);
 }
 
+string _units(string unit, int num) {
+  if(num==1) return "one "+unit;
+  return num+" "+unit+"s";
+}
+
 string describe_interval(int i)
 {
-  switch(i)
-  {
-    //   case 0..50:       return LOW_LOCALE->seconds(i);
-    //   case 51..3560:    return LOW_LOCALE->minutes(((i+20)/60));
-    //   default:          return LOW_LOCALE->hours(((i+300)/3600));
+  switch(i) {
+  case 0..50:
+    return CALL("units", "second", i, _units);
+  case 51..3560:
+    return CALL("units", "minute", ((i+20)/60), _units);
+  default:
+    return CALL("units", "hour", ((i+300)/3600), _units);
   }
 }
 
@@ -70,7 +76,7 @@ string fix_err(string s)
   if(s=="")
     return s;
   if(!(<'.','!','?'>)[s[-1]]) s+=".";
-  return html_encode_string(capitalize(s));
+  return Roxen.html_encode_string(capitalize(s));
 }
 
 int last_time;
@@ -96,7 +102,7 @@ string describe_error(string err, array (int) times,
 	links += sprintf("<a href=\"%s\">%s</a> : ",
 			 @get_conf_url_to_virtual_server( conf, lang ));
     case 1: // find_configuration(configinterface)->query_name() == realname
-      if(module = get_module( reference ))
+      if(module = Roxen.get_module( reference ))
 	links += sprintf("<a href=\"%s\">%s</a> : ",
 			 @get_conf_url_to_module( module, lang ));
   }
@@ -112,14 +118,14 @@ string describe_error(string err, array (int) times,
 array(string) get_conf_url_to_module(string|object(RoxenModule) m, string|void lang)
 { // module is either a RoxenModule object or a string as returned by
   // get_modname(some RoxenModule), eg "ConfigInterface/piketag#0"
-  RoxenModule module = stringp(m) ? get_module(m) : m;
+  RoxenModule module = stringp(m) ? Roxen.get_module(m) : m;
   Configuration conf = module->my_configuration();
   string url_modname = replace(conf->otomod[module], "#", "!"),
 	url_confname = conf->name;
 
   return ({ sprintf("/%s/sites/site.html/%s/modules/%s/",
 		    lang || "standard", url_confname, url_modname),
-	    get_modfullname(module) });
+	    Roxen.get_modfullname(module) });
 }
 
 // Returns ({ URL to virtual server config page, virtual server name })
