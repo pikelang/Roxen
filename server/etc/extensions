@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.39 1999/11/15 14:05:49 nilsson Exp $
+# $Id: extensions,v 1.40 1999/11/15 14:15:08 nilsson Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -241,10 +241,6 @@ hdml	text/x-hdml
 htt	text/webviewhtml
 pgr	text/parsnegar-document
 rt	text/vnd.rn-realtext
-rxml	text/roxencode
-spider	text/spidercode
-spml	text/spinnercode
-##spml	text/spidercode
 ##src	text/speech
 ##talk	text/speech
 vcf	text/x-vcard
