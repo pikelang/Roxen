@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.149 2000/03/07 21:12:17 nilsson Exp $
+ * $Id: roxenloader.pike,v 1.150 2000/03/08 01:04:26 nilsson Exp $
  *
  * Roxen bootstrap program.
  *
@@ -18,7 +18,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.149 2000/03/07 21:12:17 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.150 2000/03/08 01:04:26 nilsson Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -261,9 +261,12 @@ class _roxen {
   string real_version;
   object LOW_LOCALE;
   object locale;
+  int start_time;
 
   mixed query(string var) { }
-  void store(string a, mapping b, int c, void|object d) { }
+  void store(string a, mapping b, int c, object d) { }
+  mapping(string:mixed) retrieve(string a, object b) { }
+  void remove(string a, object b) { }
   string version() { }
   void dump(string what) { }
 }
