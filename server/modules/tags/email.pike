@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.9 2001/07/20 12:13:16 jhs Exp $";
+constant cvs_version = "$Id: email.pike,v 1.10 2001/08/22 18:53:16 nilsson Exp $";
 
 constant thread_safe=1;
 
@@ -84,7 +84,6 @@ void create()
          TYPE_FLAG|VAR_MORE,
          "Setting this enable more detailed status of processed mails "
 	 "");
-
 
 }
 
@@ -441,7 +440,7 @@ constant module_doc  = "Adds an extra container tag &lt;email&gt; "
   " mail to mail server by (E)SMTP protocol.";
 
 
-TAGDOCUMENTATION
+TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=(["email":({ #"
 <desc cont='cont'><p><short></short>
@@ -546,7 +545,7 @@ Roxen Administrator
 </email>
 </ex>",
 
-"attachment":#"<desc tag='tag' cont='cont''><p><short hide='hide'>
+"attachment":#"<desc tag='tag' cont='cont'><p><short hide='hide'>
  Adds attachments to the mail.</short>This tag/subcontainer is
  designed for adding attachments to the mail.</p>
 
@@ -608,12 +607,9 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
  module's</i> default setting within the <webserver /> Administration
  interface will be used. Only applicable for <i>file</i>
  attachments.</p>
-</attr>
+</attr>"
 
-
-"])
-
-
-			  })
-		]);
+   ])
+ })
+]);
 #endif
