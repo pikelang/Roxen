@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.862 2004/02/09 18:22:46 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.863 2004/02/16 13:41:46 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -4178,7 +4178,7 @@ mapping low_decode_image(string data, void|mixed tocolor)
 
 constant decode_layers = Image.decode_layers;
 
-mapping low_load_image(string f, RequestID id)
+mapping low_load_image(string f, RequestID id, void|mapping err)
 {
   string data;
   Stdio.File file;
@@ -4186,7 +4186,7 @@ mapping low_load_image(string f, RequestID id)
   {
     // We were recursing very badly with the demo module here...
     id->misc->_load_image_called++;
-    if(!(data=id->conf->try_get_file(f, id)))
+    if(!(data=id->conf->try_get_file(f, id, 0, 0, 0, err)))
     {
       //  This is a major security hole! It can load any (image) file
       //  in the low-level file system using the server's user privileges.
