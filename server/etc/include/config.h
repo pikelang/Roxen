@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.22 2000/08/28 05:31:05 per Exp $
+ * $Id: config.h,v 1.23 2000/09/21 03:57:41 per Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -75,6 +75,6 @@
 #else
 #define Stat array(int)
 #endif
-
+#define add_efun add_constant
 /*---------------- End of configurable options. */
 #endif /* if _ROXEN_CONFIG_H_ */

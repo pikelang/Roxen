@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.196 2000/09/12 14:05:53 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.197 2000/09/21 03:57:40 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -724,14 +724,14 @@ static private void initiate_cache()
 
 #if constant(_Roxen)
   add_constant("http_decode_string", _Roxen.http_decode_string );
-  add_constant( "Stat", Stat );
+  add_constant("Stat", Stat);
 #endif
-  add_constant("cache_set", cache->cache_set);
+  add_constant("cache_set",    cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
   add_constant("cache_expire", cache->cache_expire);
-  add_constant("cache_clear", cache->cache_expire);
-  add_constant("cache_indices", cache->cache_indices);
+  add_constant("cache_clear",  cache->cache_expire);
+  add_constant("cache_indices",cache->cache_indices);
 }
 
 class _error_handler {
@@ -1332,6 +1332,7 @@ Please install a newer pike version
   add_constant("r_file_stat", file_stat);
   add_constant("roxenloader", this_object());
   add_constant("ErrorContainer", ErrorContainer);
+  add_constant("grbf",lambda(string d){return Gz.inflate()->inflate(d);});
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
   add_constant("popen",popen);
@@ -1347,6 +1348,8 @@ Please install a newer pike version
   {
     add_constant ("has_Image_TTF", 1);
     add_constant( "Image.TTF", Image.TTF );
+    // We can load the builtin font.
+    add_constant("__rbf", "font_handlers/rbf" );
   }
 #endif
 

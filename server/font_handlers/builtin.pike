@@ -1,6 +1,6 @@
 #include <config.h>
 inherit "ttf";
-constant cvs_version = "$Id: builtin.pike,v 1.3 2000/09/19 12:20:40 per Exp $";
+constant cvs_version = "$Id: builtin.pike,v 1.4 2000/09/21 03:57:44 per Exp $";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";
@@ -17,7 +17,7 @@ array(mapping) font_information( string fnt )
   switch( replace(lower_case(fnt)," ","_")-"_" )
   {
    case "roxenbuiltin":
-#if constant(has_Image_TTF)
+#if constant(__rbf)
      return ({
               ([
                 "name":"roxen builtin",
@@ -64,14 +64,9 @@ Font open( string name, int size, int bold, int italic )
 #ifdef THREADS
      object lock = lock->lock();
 #endif
-#if constant(has_Image_TTF) && constant(Crypto.arcfour) && constant(Gz.inflate)
+#if constant(__rbf)
      if( !roxenbuiltin )
-       roxenbuiltin = compile_string( 
-Gz.inflate()->inflate(MIME.decode_base64( 
-#"eNpljzEOwjAMRfeewuqUSjQcAMGCBGKGPQqJA4E2QcaAAHF3Skshgj9Z38/2N0CruN6hYbBookVR
-ZJ0L974AWLL1UV7IMyrnKxS5lMOzpiGtXT4A+JIvzW/SB1dpTpZ1Kid9Y0rXA0epybh4IlGUkyOy
-wmBevtrjVUB+jt5+Ut0fOfxta2nRpSPU9h3OxcBqq4OtkI5txqLR6Dv9/tjBGBa13qBcrWbNweQp
-SHGj2WwF1b9IyhDyiQK4j/UYZU+gUV5J" ) ))()->decode();
+       roxenbuiltin = grbf();
      if( roxenbuiltin )
        return TTFWrapper( roxenbuiltin(), size, "-" );
 #endif

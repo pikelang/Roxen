@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.39 2000/09/19 22:46:08 per Exp $
+ * $Id: Roxen.pmod,v 1.40 2000/09/21 03:57:42 per Exp $
  *
  * Various helper functions.
  *
@@ -750,6 +750,16 @@ string decode_charref (string chref)
   else
     if (sscanf (chref, "&%*c%d;%*c", int c) == 2) return sprintf ("%c", c);
   return 0;
+}
+
+string|program safe_compile( string code )
+{
+  program ret;
+  roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
+  roxenloader.push_compile_error_handler( ec );
+  catch(ret = compile_string( code ));
+  if( !ret ) return ec->get();
+  return ret;
 }
 
 string encode_charref (string char)

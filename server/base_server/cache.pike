@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.56 2000/09/04 12:11:09 jonasw Exp $
+// $Id: cache.pike,v 1.57 2000/09/21 03:57:39 per Exp $
 
 #pragma strict_types
 
@@ -9,7 +9,6 @@
 
 // A cache entry is an array with four elements
 #define ENTRY_SIZE 4
-
 // The elements are as follows:
 // A timestamp when the entry was last used
 #define TIMESTAMP 0
