@@ -227,6 +227,7 @@ string devel_buttons( object c, string mn, object id )
 string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
 {
   mapping log = o->error_log;
+  werror ("%O\n", log);
   if(!sizeof(log)) return "";
 
   array report = indices(log), r2;
@@ -321,7 +322,7 @@ string module_page( RequestID id, string conf, string module )
      ||id->variables->info_section_is_it)
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
 
-  return #"<cf-save what=Module>
+  return #"
  <input type=hidden name=section value=\"&form.section;\">
 <table>
   <configif-output source=module-variables configuration=\""+
@@ -403,7 +404,6 @@ string parse( RequestID id )
 path[ 0 ]+#"\" section=\"&form.section;\"></configif-output>"+#"
 <input type=hidden name=section value=\"&form.section;\">
 <table>
-   <cf-save what=Site>
   <configif-output source=config-variables configuration=\""+
 path[ 0 ]+#"\" section=\"&form.section;\">
     <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
