@@ -5,7 +5,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.22 2002/06/14 00:08:58 nilsson Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.23 2002/07/03 14:54:26 per Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: GXML tag";
 constant module_doc  = "Provides the tag <tt>&lt;gxml&gt;</tt>.";
@@ -337,6 +337,7 @@ SIMPLE_LI(Invert);
 SIMPLE_LI(Grey);
 SIMPLE_LI(Color);
 SIMPLE_LI(MirrorX);
+SIMPLE_LI(Rotate);
 SIMPLE_LI(MirrorY);
 SIMPLE_LI(HSV2RGB);
 SIMPLE_LI(RGB2HSV);
