@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.232 2000/05/14 16:10:09 kinkie Exp $";
+constant cvs_version = "$Id: http.pike,v 1.233 2000/06/26 21:04:12 neotron Exp $";
 
 #define MAGIC_ERROR
 
@@ -527,7 +527,7 @@ class PrefLanguages {
     sorted=1;
   }
 }
-
+int last;
 private int parse_got()
 {
   multiset (string) sup;
@@ -537,6 +537,7 @@ private int parse_got()
 
   REQUEST_WERR(sprintf("HTTP: parse_got(%O)", raw));
   if (!method) {  // Haven't parsed the first line yet.
+    int start;
     // We check for \n only if \r\n fails, since Netscape 4.5 sends
     // just a \n when doing a proxy-request.
     // example line:
@@ -544,14 +545,31 @@ private int parse_got()
     //   "User-Agent: Mozilla/4.5 [en] (X11; U; Linux 2.0.35 i586)"
     // Die Netscape, die! *grumble*
     // Luckily the solution below shouldn't ever cause any slowdowns
+    //
+    // Note by Neo:  Rewrote the sscanf code to use search with a memory.
+    // The reason is that otherwise it's really, REALLY easy to lock up
+    // a Roxen server by sending a request that either has no newlines at all
+    // or has infinite sized headers. With this version, Roxen doesn't die but
+    // it does suck up data ad finitum - a configurable max GET request size and
+    // also a max GET+headers would be nice. 
 
-    if (!sscanf(raw, "%s\r\n%s", line, s) &&
-	!sscanf(raw, "%s\n%s", line, s)) {
-      // Not enough data. Unless the client writes one byte at a time,
-      // this should never happen, really.
-
+    if((start = search(raw[last..], "\n")) == -1) {
+      last = max(strlen(raw) - 3, 4);
       REQUEST_WERR(sprintf("HTTP: parse_got(%O): Not enough data.", raw));
       return 0;
+    } else {
+      start += last;
+      last = 0;
+      if(!start) {
+	REQUEST_WERR(sprintf("HTTP: parse_got(%O): malformed request.", raw));
+	return 1; // malformed request
+      }
+    }
+    if (raw[start-1] == '\r') {
+      line = raw[..start-2];
+    } else {
+      // Kludge for Netscape 4.5 sending bad requests.
+      line = raw[..start-1];
     }
     if(strlen(line) < 4)
     {
@@ -601,18 +619,17 @@ private int parse_got()
 	// is something very weird.
 	prot = "HTTP/1.1";
       }
-
       // Do we have all the headers?
-      if (!sscanf(raw, "%s\r\n\r\n%s", s, data)) {
-	// No, we need more data.
-	REQUEST_WERR("HTTP: parse_got(): Request is not complete.");
+      if ((end = search(raw[last..], "\r\n\r\n")) == -1) {
+	// No, we still need more data.
+	REQUEST_WERR("HTTP: parse_got(): Request is still not complete.");
+	last = max(strlen(raw) - 5, 0);
 	return 0;
       }
-      // Remove the first line (ie the command).
-      // Note: This works since both \r\n and \n end with \n..
-      if (!sscanf(s, "%*s\n%s", s)) {
-	s = "";
-      }
+      end += last;
+      last = 0;
+      data = raw[end+4..];
+      s = s[sizeof(line)+2..end-1];
       // s now contains the unparsed headers.
       break;
 
@@ -638,11 +655,16 @@ private int parse_got()
   } else {
     // HTTP/1.0 or later
     // Check that the request is complete
-    if (!sscanf(raw, "%s\r\n\r\n%s", s, data)) {
-      // No, we need more data.
+    int end;
+    if ((end = search(raw[last..], "\r\n\r\n")) == -1) {
+      // No, we still need more data.
       REQUEST_WERR("HTTP: parse_got(): Request is still not complete.");
+      last = max(strlen(raw) - 5, 0);
       return 0;
     }
+    end += last;
+    data = raw[end+4..];
+    s = s[sizeof(line)+2..end-1];
   }
   if(method == "PING") {
     my_fd->write("PONG\r\n");
