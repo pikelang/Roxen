@@ -42,6 +42,36 @@ NOTE: The two changes above can lead to Challenger beeing unable to
  etc/supports
  configurations/*
  logs/*
+ bgcache/*
+
+o Added internal mountpoint for usage with modules that need a mount
+  point to export data and converted gtext to use it.
+
+o Added a global persistent argument cache and converted gtext to use it.
+
+o Fixed bug in SSL that that broke <aconf> on Unix and SSL on NT.
+
+o Added kludge for glibc2.1
+
+o Added config action that makes a self-signed SSL sertificate.
+
+o Added quoting to insert. When used with the argument variable or
+  cookie the inserted string will will have "<", ">", "&",""" ,"'"
+  and ":" quoted to HTML entities. Use the argument encode=none to
+  avoid this.
+
+o Added ":" to the characters that are quoted by default by formoutput,
+  sqloutput.
+
+NOTE: The two quoting changes above might break RXML-pages the rely on
+      unquoted content. Those Change was therefore not made lightly, but
+      due to security conserns it had to be done.
+
+o Moved newpikescript.pike to unfinishedmodules/
+
+o Added truetype font support.
+
+o Support for jpeg, gif and png as indata for gtext.
 
 
 Changes since Roxen Challenger 1.2.93 Yellow
