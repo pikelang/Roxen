@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.45 1999/12/11 21:29:40 grubba Exp $
+ * $Id: rxml.pike,v 1.46 1999/12/18 13:14:22 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -589,6 +589,13 @@ string|array tag_use(string tag, mapping m, string c, RequestID id)
   return ({ c });
 }
 
+RoxenModule rxml_warning_cache;
+void old_rxml_warning(RequestID id, string no, string yes) {
+  if(!rxml_warning_cache) rxml_warning_cache=id->conf->get_provider("oldRXMLwarning");
+  if(!rxml_warning_cache) return;
+  rxml_warning_cache->old_rxml_warning(id, no, yes);
+}
+
 string tag_define(string tag, mapping m, string str, RequestID id, 
                   Stdio.File file, mapping defines)
 { 
@@ -597,8 +604,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 #if old_rxml_compat
   else if (m->name) {
     defines[m->name]=str;
-    if(id->conf->api_functions()->old_rxml_warning)
-      id->conf->api_functions()->old_rxml_warning[0](id, "attempt to define name ","variable");
+    old_rxml_warning(id, "attempt to define name ","variable");
   }
 #endif
   else if (m->tag) 
@@ -618,8 +624,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
       if( arg[..7] == "default_" )
       {
 	id->misc->defaults[n][arg[8..]] = m[arg];
-        if(id->conf->api_functions()->old_rxml_warning)
-          id->conf->api_functions()->old_rxml_warning[0](id, "define attribute "+arg,"attrib container");
+        old_rxml_warning(id, "define attribute "+arg,"attrib container");
         m_delete( m, arg );
       }
 #endif
@@ -654,8 +659,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
       if( arg[0..7] == "default_" )
       {
 	id->misc->defaults[n][arg[8..]] = m[arg];
-        if(id->conf->api_functions()->old_rxml_warning)
-          id->conf->api_functions()->old_rxml_warning[0](id, "define attribute "+arg,"attrib container");
+        old_rxml_warning(id, "define attribute "+arg,"attrib container");
         m_delete( m, arg );
       }
 #endif
@@ -830,18 +834,15 @@ string tag_case(string t, mapping m, string c, RequestID id)
 #if old_rxml_compat
   if(m->lower) {
     c = lower_case(c);
-    if(id->conf->api_functions()->old_rxml_warning)
-      id->conf->api_functions()->old_rxml_warning[0](id, "attribute lower","case=lower");
+    old_rxml_warning(id, "attribute lower","case=lower");
   }
   if(m->upper) {
     c = upper_case(c);
-    if(id->conf->api_functions()->old_rxml_warning)
-      id->conf->api_functions()->old_rxml_warning[0](id, "attribute upper","case=upper");
+    old_rxml_warning(id, "attribute upper","case=upper");
   }
   if(m->capitalize){
     c = capitalize(c);
-    if(id->conf->api_functions()->old_rxml_warning)
-      id->conf->api_functions()->old_rxml_warning[0](id, "attribute capitalize","case=capitalize");
+    old_rxml_warning(id, "attribute capitalize","case=capitalize");
   }
 #endif
   return c;
