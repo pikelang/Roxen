@@ -80,7 +80,7 @@
   <var name='LogFormat'><str>404: $host $referer - [$cern_date] "$method $resource $protocol" 404 -
 500: $host $referer ERROR [$cern_date] "$method $resource $protocol" 500 -
 *: $host - - [$cern_date] "$method $resource $protocol" $response $length</str></var>
-  <var name='MyWorldLocation'>   <str></str> </var>
+  <var name='MyWorldLocation'>   <str>http://localhost:17369</str> </var>
   <var name='NoLog'>             <a></a> </var>
   <var name='URLs'><a>
     <str>http://*:17369/</str>
