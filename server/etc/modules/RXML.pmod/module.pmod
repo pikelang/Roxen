@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.314 2003/05/27 11:33:06 mast Exp $
+// $Id: module.pmod,v 1.315 2003/06/24 12:44:10 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -628,7 +628,7 @@ class TagSet
   //! imported tag sets will be called in order of precedence; highest
   //! last.
 
-  function(Context:void) eval_finish;
+  //! @decl function(Context:void) eval_finish;
   //! If set, this will be called just before an evaluation of the
   //! given @[RXML.Context] finishes. The callbacks in imported tag
   //! sets will be called in order of precedence; highest last.
@@ -1158,7 +1158,7 @@ class TagSet
     array(function(Context:void)) funs = ({});
     for (int i = sizeof (imported) - 1; i >= 0; i--)
       funs += imported[i]->get_eval_finish_funs();
-    if (eval_finish) funs += ({eval_finish});
+    if (this->eval_finish) funs += ({this->eval_finish});
     // We don't cache in eval_finish_funs; do that only at the top level.
     return funs;
   }
@@ -4518,7 +4518,9 @@ class Frame
 #define CLEANUP do {							\
 	  DO_IF_DEBUG (							\
 	    if (id && ctx->misc != ctx->id->misc->defines)		\
-	      fatal_error ("ctx->misc != ctx->id->misc->defines\n");	\
+	      fatal_error ("ctx->misc != ctx->id->misc->defines\n"	\
+			   "%O != %O\n",				\
+			   ctx->misc, ctx->id->misc->defines);		\
 	  );								\
 	  if (in_args) {						\
 	    args = in_args;						\
@@ -6652,7 +6654,7 @@ class TText
 
   string _sprintf()
   {
-    return "RXML.t_text(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+    return "RXML.t_text(" + (parser_prog?parser_prog->name:"NULL") + ")" + OBJ_COUNT;
   }
 }
 
