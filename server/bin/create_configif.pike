@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.46 2002/10/22 01:26:34 nilsson Exp $
+ * $Id: create_configif.pike,v 1.47 2003/01/14 20:41:35 marcus Exp $
  *
  * Create an initial administration interface server.
  */
@@ -238,9 +238,13 @@ Example of a batch installation:
     do
     {
       if(passwd2 && password)
-	write("\n   Please select a password with one or more characters. "
-	      "You will\n   be asked to type the password twice for "
-	      "verification.\n\n");
+	if(!strlen(password))
+	  write("\n   Please select a password with one or more characters. "
+		"You will\n   be asked to type the password twice for "
+		"verification.\n\n");
+	else
+	  write("\n   You did not type the same password the second time.\n"
+		"   Please try again.\n\n");
       rl->get_input_controller()->dumb=1;
       password = read_string(rl, "Administrator password:", 0, batch->password);
       passwd2 = read_string(rl, "Administrator password (again):", 0, batch->password);
