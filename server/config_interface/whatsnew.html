@@ -364,6 +364,19 @@ an example, Javascript popup menus)
 
 <rul>
 
+<new-feature name='The global variable "PID file" has been removed'>
+ The start script now makes a PID file earlier to be better at
+ avoiding duplicate server processes, and to work better together
+ init.d scripts. The global variable "PID file" is no longer
+ consulted, due to the "chicken-and-egg" problem that would occur
+ then.
+
+ <p>If you depend on the PID file location specified by the "PID file"
+ variable, you need to move that setting to the start script, either
+ by adding a --pid-file argument or by setting the environment
+ variable ROXEN_PID_FILE.
+</new-feature>
+
 <new-feature name='MODULE_DEBUG is no longer defined by default by the start script'>
  Previously the start script added the MODULE_DEBUG define when
  neither --with-debug nor --without-debug was given to it. That define
@@ -418,7 +431,7 @@ an example, Javascript popup menus)
 </ul>
 </new-feature>
 
-<new-feature name='The module path is searched for pike modules'>
+<new-feature name='The Roxen module path is searched for Pike modules'>
  It's possible to use Pike modules (.pmod files and directories)
  in Roxen modules in a convenient way. Roxen now adds all directories
  called "pike-modules" that are found in the Roxen module search path
@@ -504,6 +517,21 @@ an example, Javascript popup menus)
 
 <rul>
 
+<new-feature name='Different format for RoxenModule.module_identifier()'>
+ The function module_identifier in Roxen modules has been changed to
+ return a string on the same format as Roxen.get_modname. The old
+ format was bulkier and not guaranteed to be unique for the module.
+</new-feature>
+
+<new-feature name='Different type handling for RXML.Value and RXML.Scope objects'>
+ The responsibility to do type conversion for values from RXML.Value
+ and RXML.Scope objects has been moved from the caller to the callee
+ (i.e. RXML.Value.rxml_var_eval and RXML.Scope.`[]). It is therefore
+ an error to ignore the fourth RXML.Type argument to these functions.
+ The inline doc for RXML.Value.rxml_var_eval contains motivation and
+ further discussion of this.
+</new-feature>
+
 <new-feature name='Changed API in RXML.TagSet.create'>
  The way to create new RXML tag sets has changed slightly due to
  encoding issues when p-code is dumped to disk. It's however fairly
@@ -512,7 +540,7 @@ an example, Javascript popup menus)
 
  <pre>RXML.TagSet internal = RXML.TagSet("TagFoldlist.internal", ({ TagFT(), TagFD() }) );</pre>
 
- The first argument should earlier be a string that uniquely
+ <p>The first argument should earlier be a string that uniquely
  identifies the tag set in the whole server (which the one in the
  example above from the foldlist module clearly doesn't). Now, one
  instead gives the own module as the first argument and a string that
@@ -522,14 +550,11 @@ an example, Javascript popup menus)
 
  <pre>RXML.TagSet internal = RXML.TagSet(this_module(), "foldlist", ({ TagFT(), TagFD() }) );</pre>
 
- For tag sets that are used for local or additional tags inside a
+ <p>For tag sets that are used for local or additional tags inside a
  container tag, it's typically a good idea to use the name of the
  container tag as the unique identifier, hence "foldlist" above. (Note
  that these identifier strings are stored in the dumped p-code, so
  it's a good idea to keep them fairly short.)
-
- This change also changed the format of dumped p-code, so any old
- p-code will fail to decode.
 </new-feature>
 
 <new-feature name='The Roxen module Debug.pmod renamed RoxenDebug.pmod'>
