@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.19 2000/09/10 16:37:50 nilsson Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.20 2000/09/14 19:10:18 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -78,7 +78,7 @@ static int init_wiretap_stack (mapping(string:string) args, RequestID id)
   FIX(alink,  "#ff0000","alink");
   FIX(vlink,  "#551a8b","vlink");
 
-  if(has_value(id->client_var->fullname||"","windows"))
+  if(id->client_var && has_value(id->client_var->fullname||"","windows"))
   {
     FIX(bgcolor,"#c0c0c0","bgcolor");
   } else {
