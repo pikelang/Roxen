@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.140 2000/07/13 15:57:14 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.141 2000/07/14 15:02:11 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1893,17 +1893,12 @@ Pike-script or Roxen module.
  with <att>type=string</att> and the <att>part</att> attribute to get
  written dates in the specified language.
 
- Available languages:
- <lang/>
 <ex> <date part='day' type='string' lang='de'></ex>
-<ex><date type=\"string\" lang=\"sv\"/></ex>
 </attr>
 
 <attr name=case value=upper|lower|capitalize>
  Changes the case of the output to upper, lower or capitalize.
- <ex ><date part='day' type=string case='capitalize' lang='&client.language;'></ex>
-<ex >Today is <date part='day' type=string case='lower'/>.</ex>
-<ex><date date='' lang='&client.language;' case='upper'/></ex>
+ <ex><date date='' lang='&client.language;' case='upper'/></ex>
 </attr>
 
 <attr name=prec value=number>
@@ -1959,7 +1954,7 @@ Pike-script or Roxen module.
 </attr>
 
 <attr name=separator value=string default=','>
-If several values are to be selected, this is the string that seperates them.
+ If several values are to be selected, this is the string that seperates them.
 </attr>
 
 <attr name=name value=string>
@@ -1967,18 +1962,18 @@ If several values are to be selected, this is the string that seperates them.
 </attr>
 
 <ex type='box'>
-<default name='my-select' value='&form.preset;'>
-  <select name='my-select'>
-    <option value='1'>First</option>
-    <option value='2'>Second</option>
-    <option value='3'>Third</option>
-  </select>
-</default>
+ <default name='my-select' value='&form.preset;'>
+   <select name='my-select'>
+     <option value='1'>First</option>
+     <option value='2'>Second</option>
+     <option value='3'>Third</option>
+   </select>
+ </default>
 </ex>",
 
 "doc":#"<desc cont><short hide>
  Eases code documentation by reformatting it.</short>
- Eases documentation by replacing \"{\". \"}\" and \"&amp;\" with \"&amp;lt;\", \"&amp;gt;\" and
+ Eases documentation by replacing \"{\", \"}\" and \"&amp;\" with \"&amp;lt;\", \"&amp;gt;\" and
  \"&amp;amp;\". No attributes required.
 </desc>
 
@@ -2012,8 +2007,8 @@ If several values are to be selected, this is the string that seperates them.
 </attr>
 
 <attr name=class value=string>
-This cascading style sheet (CSS) definition will be applied on the pre element.
-</attr>",
+ This cascading style sheet (CSS) definition will be applied on the pre element.
+  </attr>",
 
 "expire-time":#"<desc tag><short>
  Sets cache expire time for the document.</short>
@@ -2121,7 +2116,7 @@ This cascading style sheet (CSS) definition will be applied on the pre element.
  The value of the header.
 </attr>
 
- More information about HTTP headers please steer your browser to chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'> RFC 2616</a> at Roxen Community.",
+ For more information about HTTP headers please steer your browser to chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'> RFC 2616</a> at Roxen Community.",
 
 "imgs":#"<desc tag><short>
  Generates a image tag with proper dimensions.</short>
@@ -2159,23 +2154,21 @@ This cascading style sheet (CSS) definition will be applied on the pre element.
 <attr name=variables>
  Inserts a variable listing. Presently, only the argument 'full' is available.
 
-<ex>
-<pre>
-<insert variables='full' scope='roxen'/>
-</pre>
-</ex>
+ <ex>
+  <pre>
+   <insert variables='full' scope='roxen'/>
+  </pre>
+ </ex>
 </attr>
 
 <attr name=scopes>
  Inserts a listing of all present scopes.
 
-<ex>
-<pre>
-<insert scopes=''/>
-</pre>
-</ex>
-
-
+ <ex>
+  <pre>
+   <insert scopes=''/>
+  </pre>
+ </ex>
 </attr>
 
 <attr name=file value=string>
@@ -2229,7 +2222,8 @@ This cascading style sheet (CSS) definition will be applied on the pre element.
 <attr name=by>
  Print by whom the page was modified. Takes the same attributes as the
  <tag><ref type='tag'>user</ref></tag> tag. This attribute requires a
- userdatabase.<ex type='box'>This page was last modified by &lt;modified by='' realname=''/&gt;.</ex>
+ userdatabase.
+ <ex type='box'>This page was last modified by <modified by='' realname=''/>.</ex>
 </attr>
 
 <attr name=date>
@@ -2553,9 +2547,9 @@ Sets a variable.</short>
 
 <attr name=space>
  Put a space between every character.
-<ex>
-<smallcaps space=''>Roxen WebServer</smallcaps>
-</ex>
+ <ex>
+  <smallcaps space=''>Roxen WebServer</smallcaps>
+ </ex>
 </attr>
 
 <attr name=class value=string>
@@ -2576,62 +2570,62 @@ Sets a variable.</short>
 
 <attr name=small value=number default=size-1>
  Size of the small tags. Only applies when size is specified.
-</attr>
 
-<ex>
-<smallcaps size='6' small='2'>Roxen WebServer</smallcaps>
-</ex>
-<ex>
-<smallcaps>Roxen WebServer</smallcaps>
-</ex>
-
-",
+ <ex>
+  <smallcaps size='6' small='2'>Roxen WebServer</smallcaps>
+ </ex>
+ <ex>
+  <smallcaps>Roxen WebServer</smallcaps>
+ </ex>
+</attr>",
 
 "sort":#"<desc cont><short>
  Sorts the contents.</short>
+
+ <ex>
+  <sort>
+   1
+   Hello
+   3
+   World
+   Are
+   2
+   We
+   4
+   Communicating?
+  </sort>
+ </ex>
 </desc>
 
-<ex>
-<sort>
-1
-Hello
-3
-World
-Are
-2
-We
-4
-Communicating?
-</sort>
-</ex>
+
 
 <attr name=separator value=string>
  Defines what the strings to be sorted are separated with. The sorted
  string will be separated by the string.
 
-<ex>
-<sort separator='#'>
-1#Hello#3#World#Are#2#We#4#Communicating?
-</sort>
-</ex>
+ <ex>
+  <sort separator='#'>
+   1#Hello#3#World#Are#2#We#4#Communicating?
+  </sort>
+ </ex>
 </attr>
 
 <attr name=reverse>
  Reversed order sort.
 
-<ex>
-<sort reverse=''>
-1
-Hello
-3
-World
-Are
-2
-We
-4
-Communicating?
-</sort>
-</ex>
+ <ex>
+  <sort reverse=''>
+   1
+   Hello
+   3
+   World
+   Are
+   2
+   We
+   4
+   Communicating?
+  </sort>
+ </ex>
 </attr>",
 
 "throw":#"<desc cont><short hide>
@@ -2643,22 +2637,22 @@ Communicating?
 
 "trimlines":#"<desc cont><short>
  Removes all empty lines from the contents.</short>
-</desc>
 
-<ex>
-<trimlines>
-
-
-Are
+ <ex>
+  <trimlines>
 
 
-We
-
-Communicating?
+   Are
 
 
-</trimlines>
-</ex>",
+   We
+
+   Communicating?
+
+
+  </trimlines>
+ </ex>
+</desc>",
 
 "unset":#"
 <desc tag><short>
@@ -2668,12 +2662,12 @@ Communicating?
 <attr name=variable value=string required>
  The name of the variable.
 
-<ex>
-<set variable='var.jump' value='do it'/>
-&var.jump;
-<unset variable='var.jump'/>
-&var.jump;
-</ex>
+ <ex>
+  <set variable='var.jump' value='do it'/>
+  &var.jump;
+  <unset variable='var.jump'/>
+  &var.jump;
+ </ex>
 </attr>",
 
 "user":#"<desc tag><short>
@@ -2716,7 +2710,7 @@ Communicating?
  Evaluates expressions.</short> It is not possible to use regexp's.
  The following characters may be used: \"1, 2, 3, 4, 5, 6, 7, 8, 9, x,
  a, b, c, d, e, f, i, n, t, \, X. A, B, C, D, E, F, l, o, &lt;, &gt;,
- =, 0, -, +, /, %, &, |, (, ) and .\". </desc>",
+ =, 0, -, +, *, /, %, &, |, (, ) and .\". </desc>",
 
     ]);
 #endif
