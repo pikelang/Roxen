@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.124 2001/08/24 14:43:46 nilsson Exp $
+// $Id: site_content.pike,v 1.125 2001/08/28 14:55:08 per Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -200,7 +200,7 @@ string buttons( Configuration c, string mn, RequestID id )
 
   string buttons = 
          "<input type=hidden name=section value='" +
-         (section||LOCALE(299,"Information")) + "'>";
+         (section||"Status") + "'>";
 
   // Do not allow reloading of modules _in_ the configuration interface.
   // It's not really all that good an idea, I promise.
@@ -399,7 +399,7 @@ string module_page( RequestID id, string conf, string module )
 
   string section = RXML.get_var( "section", "form" );
 
-  if( section == "Information" || RXML.get_var( "info_section_is_it", "form" ) )
+  if( section == "Status" || RXML.get_var( "info_section_is_it", "form" ) )
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
 
   if( section == "Docs" )
