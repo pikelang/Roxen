@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.853 2004/01/25 18:49:00 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.854 2004/04/03 16:03:45 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -68,8 +68,7 @@ Shuffler.Shuffle get_shuffler( Stdio.File fd )
 
 string md5( string what )
 {
-  return Gmp.mpz(Crypto.md5()->update( what )->digest(),256)
-    ->digits(32);
+  return String.string2hex(Crypto.MD5.hash(what));
 }
 
 // NGSERVER: remove this function
@@ -89,7 +88,7 @@ string filename( program|object o )
   return fname-(getcwd()+"/");
 }
 
-array(string) compat_levels = ({"2.1", "2.2", "2.5", "2003"});
+array(string) compat_levels = ({"2.1", "2.2", "2.5", "2003", "2004"});
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
@@ -3522,7 +3521,7 @@ class ArgCache
     if( !q )
       error("Requesting unknown key\n");
     mixed data = decode_value(q);
-    string hl = Crypto.md5()->update( q )->digest();
+    string hl = Crypto.MD5.hash( q );
     cache[ hl ] = id;
     cache[ id ] = data;
     return data;
