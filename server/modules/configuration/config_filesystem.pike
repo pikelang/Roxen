@@ -22,8 +22,16 @@ string template_for( string f, object id )
 
 mixed stat_file( string f, object id )
 {
+  mixed ret;
   f = utf8_to_string( f );
-  return ::stat_file( f, id );
+  ret = ::stat_file( f, id );
+  if( !ret )
+  {
+    sscanf( f, "%*[^/]/%s", f );
+    f = "standard/"+f;
+    ret = ::stat_file( f, id );
+  }
+  return ret;
 }
 
 constant base ="<use file='%s' /><tmpl title='%s'>%s</tmpl>";
