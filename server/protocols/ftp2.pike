@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.61.2.4 1999/05/19 19:00:00 grubba Exp $
+ * $Id: ftp2.pike,v 1.61.2.5 1999/05/19 19:02:00 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1804,7 +1804,14 @@ class FTPSession
       }
       break;
     }
-
+#if constant(Stdio.sendfile)
+    curr_pipe = Stdio.sendfile(stringp(file->data) && ({ file->data }),
+			       file->file, -1, -1,
+			       0,
+			       fd,
+			       send_done_callback,
+			       ({ fd, session }));
+#else /* !constant(Stdio.sendfile) */
     object pipe=roxen->pipe();
 
     pipe->set_done_callback(send_done_callback, ({ fd, session }) );
@@ -1818,6 +1825,7 @@ class FTPSession
     }
     curr_pipe = pipe;
     pipe->output(fd);
+#endif /* constant(Stdio.sendfile) */
   }
 
   static private void connected_to_receive(object fd, string args)
