@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.102 1999/03/03 18:13:07 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.103 1999/03/06 15:50:23 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -547,8 +547,7 @@ class imap_mail
 			       & msg->headers ));
 	    
       case "header": {
-	mapping(string:string|array(string)) headers = msg->headers +
-	  "\r\n\r\n";
+	mapping(string:string|array(string)) headers = msg->headers;
 	
 	if (sizeof(attr->section) == 1)
 	  return body_response(format_headers(headers));
