@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.219 2004/05/14 09:13:50 grubba Exp $
+# $Id: start,v 1.220 2004/05/14 18:31:39 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -532,7 +532,7 @@ parse_args "$@"
 
 if [ "$once" = "" ]; then :; else
   # Once-mode.
-  if [ "$passhelp" = "" ]; then
+  if [ "x$passhelp" = "x1" ]; then :; else
     # We're not using --program.
     # Pass --once along to roxenloader.
     pass="$pass --once=$once"
