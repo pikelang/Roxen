@@ -56,6 +56,14 @@ string parse( RequestID id )
 #endif
       connections[replace(name,":",";")+":rw"]++;
 
+#ifdef THREADS
+  foreach( indices( DBManager->dead_sql_cache ), object t )
+    foreach( indices( DBManager->dead_sql_cache[t] ), string name )
+#else
+    foreach( indices( DBManager->dead_sql_cache ), string name )
+#endif
+      connections[replace(name,":",";")+":rw"]++;
+
   res += "<h2>Active connections</h2>";
   
   res +=
