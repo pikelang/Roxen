@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.102 2000/03/24 20:08:37 grubba Exp $
+# $Id: start,v 1.103 2000/03/24 20:17:12 grubba Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -17,7 +17,7 @@ LOCALDIR=../local/
 
 # Make LOCALDIR an absolute path
 if test -d $LOCALDIR/.; then
-  LOCALDIR=`cd $LOCALSIR; pwd`
+  LOCALDIR=`cd $LOCALDIR; pwd`
 else :; fi
 
 roxen_version() {
