@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.17 1997/04/20 10:57:57 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.18 1997/04/30 12:28:56 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -282,10 +282,10 @@ class Cache {
     object privs = ((program)"privs")("Starting the garbage collector");
     // start garbagecollector niced as possible to reduce I/O-Load  12-Nov-96-wk
     exec("/usr/bin/nice", "-19",
-	 "bin/pike", "-m", "lib/master.pike", "-I", "etc/include",
+	 "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
 	 "-M", "etc/modules", "bin/garbagecollector.pike");
     perror("Failed to start niced garbage collector - retry without nice\n");
-    exec("bin/pike", "-m", "lib/master.pike", "-I", "etc/include",
+    exec("bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
 	 "-M", "etc/modules", "bin/garbagecollector.pike");
     perror("Failed to start garbage collector (exec failed)!\n");
 #if efun(real_perror)
