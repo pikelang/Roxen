@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.16 1997/09/15 12:50:54 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.17 1997/09/20 15:02:06 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -60,9 +60,11 @@ void mkdirhier(string from)
 
 mapping(string:mixed) variables = ([ "audit":0 ]);
 
+// We never need to change priviliges...
+mixed Privs(mixed ... args) { return 0; }
+
 #define VAR_VALUE 0
 #define IN_INSTALL 1
-#define Privs	((program)"privs")
 #include "../base_server/read_config.pike"
 
 void setglobvar(string var, mixed value)
