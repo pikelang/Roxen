@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.16 1997/05/07 19:07:15 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.17 1997/05/07 19:31:13 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -950,14 +950,26 @@ void got_data(mixed fooid, string s)
       break;
 
       // Extended commands
-    case "pres":
-      if (!arg || !strlen(arg)) {
+    case "site":
+      array(string) arr;
+
+      if (!arg || !strlen(arg) || !sizeof(arr = (arg/" ")-({""}))) {
+	reply(reply_enumerate("The following site dependant commands are available:\n"
+			      "SITE PRESTATE <prestate>\tSet the prestate.\n",
+			      220));
+	break;
+      }
+      if (lower_case(arr[0]) != "prestate") {
+	reply("504 Bad SITE command\n");
+	break;
+      }
+      if (sizeof(arr) == 1) {
 	reply("220 Prestate cleared\n");
 	prestate = (<>);
 	break;
       }
       
-      prestate = aggregate_multiset(@(arg/","-({""})));
+      prestate = aggregate_multiset(@((arr[1..]*" ")/","-({""})));
       reply("220 Prestate set\n");
       break;
 
