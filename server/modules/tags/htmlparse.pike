@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.60 1998/01/17 02:57:30 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.61 1998/01/19 18:03:34 mirar Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1752,12 +1752,12 @@ string tag_expire_time(string tag, mapping m, object got, object file,
 {
   int t=time();
   if (m->hours) t+=((int)(m->hours))*3600;
-  if (m->minutes) t+=((int)(m->hours))*60;
-  if (m->seconds) t+=((int)(m->hours));
-  if (m->days) t+=((int)(m->hours))*(24*3600);
-  if (m->weeks) t+=((int)(m->hours))*(24*3600*7);
-  if (m->months) t+=((int)(m->hours))*(24*3600*30+37800); /* 30.46d */
-  if (m->years) t+=((int)(m->hours))*(3600*(24*365+6));   /* 365.25d */
+  if (m->minutes) t+=((int)(m->minutes))*60;
+  if (m->seconds) t+=((int)(m->seconds));
+  if (m->days) t+=((int)(m->days))*(24*3600);
+  if (m->weeks) t+=((int)(m->weeks))*(24*3600*7);
+  if (m->months) t+=((int)(m->months))*(24*3600*30+37800); /* 30.46d */
+  if (m->years) t+=((int)(m->years))*(3600*(24*365+6));   /* 365.25d */
   add_header(_extra_heads, "Expires", http_date(t));
   return "";
 }
