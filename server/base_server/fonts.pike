@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.59 2000/09/03 16:47:17 nilsson Exp $
+// $Id: fonts.pike,v 1.60 2000/09/04 06:50:47 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -150,20 +150,6 @@ string describe_font_type(string n)
   return res;
 }
 
-// array get_font_italic_bold(string n)
-// {
-//   int italic,bold;
-//   if(n[1]=='i') italic = 1;
-
-//   switch(n[0])
-//   {
-//    case 'B': bold=2; break;
-//    case 'b': bold=1; break;
-//    case 'l': bold=-1;  break;
-//   }
-//   return ({ italic, bold });
-// }
-
 object get_font(string f, int size, int bold, int italic,
                 string justification, float xspace, float yspace)
 {
@@ -287,7 +273,6 @@ void create()
   add_constant("get_font", get_font);
   add_constant("available_font_versions", available_font_versions);
   add_constant("describe_font_type", describe_font_type);
-//   add_constant("get_font_italic_bold", get_font_italic_bold);
   add_constant("resolve_font", resolve_font);
   add_constant("available_fonts", available_fonts);
 
@@ -299,7 +284,8 @@ void create()
     catch {
       if( has_value( fh, ".pike" ) && fh[-1] == 'e' )
       {
-        FontHandler f = compile_file( roxen_path( "font_handlers/"+fh ) )( );
+        FontHandler f = ((program)( roxen_path( "font_handlers/"+fh ) ))( );
+        roxen.dump( roxen_path( "font_handlers/"+fh ) );
         werror("    "+f->name+" ("+(f->scalable?"scalable":"bitmap")+")\n");
         if( f->scalable )
           font_handlers = ({ f }) + font_handlers;
@@ -309,5 +295,4 @@ void create()
     };
   }
   werror("Done [%.1fms]\n", (gethrtime()-h)/1000.0 );
-
 }
