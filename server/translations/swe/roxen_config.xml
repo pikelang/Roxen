@@ -347,7 +347,6 @@ behöva för vanliga resurser.</t>
 </str>
 
 <str id="42">
-<changed from="Bandwidth Throttling: Server: Enabled"/>
 <o>Throttling: Server; Enabled</o>
 <t>Bandviddsbegränsning: Servernivå: Aktiverad</t>
 </str>
@@ -1779,342 +1778,253 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 </str>
 
 <str id="311">
-<new/>
 <o>Site event log for '%s' cleared by %s (%s) from %s</o>
-<t></t>
+<t>Sajtloggen för '%s' blev rensad av %s (%s) från %s</t>
 </str>
 
 <str id="312">
-<new/>
 <o>Could not interpret the date</o>
-<t></t>
+<t>Kunde inte tolka datumet</t>
 </str>
 
 <str id="313">
-<new/>
 <o>An email address must contain "@".</o>
-<t></t>
+<t>En emailadress måste innehålla ett "@".</t>
 </str>
 
 <str id="314">
-<new/>
 <o>The email address domain contains forbidden characters.</o>
-<t></t>
+<t>Email-adressens domän innehåller förbjudna tecken.</t>
 </str>
 
 <str id="315">
-<new/>
 <o>The email address user contains forbidden characters.</o>
-<t></t>
+<t>Email-adressens användare innehåller förbjudna tecken.</t>
 </str>
 
 <str id="316">
-<new/>
 <o>The email address does not contain a user.</o>
-<t></t>
+<t>Email-adressen saknar användare.</t>
 </str>
 
 <str id="317">
-<new/>
 <o>The email address does not contain a domain.</o>
-<t></t>
+<t>Email-adressen saknar domän.</t>
 </str>
 
 <str id="318">
-<new/>
 <o>The email address begins with an character that is not legal in that position.</o>
-<t></t>
+<t>Email-adressen börjar med ett tecken som inte är tillåtet där.</t>
 </str>
 
 <str id="319">
-<new/>
 <o>The domain %s could not be found.</o>
-<t></t>
+<t>Domänen %s kunde inte hittas.</t>
 </str>
 
 <str id="320">
-<new/>
 <o>Value %s does not match the regexp %s.</o>
-<t></t>
+<t>Värdet %s matchar inte regexpen %s.</t>
 </str>
 
 <str id="321">
-<new/>
 <o>Value %s does not match the glob %s.</o>
-<t></t>
+<t>Värdet %s matchar inte globben %s.</t>
 </str>
 
 <str id="322">
-<new/>
 <o>Value %s must be at least %d characters long. (%d character short)</o>
-<t></t>
+<t>Värdet %s måste vara minst %d tecken långt. (%d tecken för lite)</t>
 </str>
 
 <str id="323">
-<new/>
 <o>Value %s must not be more than %d characters long. (%d character too long)</o>
-<t></t>
+<t>Värdet %s får inte vara mer än %d tecken långt. (%d tecken är för långt)</t>
 </str>
 
 <str id="324">
-<new/>
 <o>Value %s is not uppercased.</o>
-<t></t>
+<t>Värdet %s är inte versalt.</t>
 </str>
 
 <str id="325">
-<new/>
 <o>Value %s is not lowercased.</o>
-<t></t>
+<t>Värdet %s är inte gement.</t>
 </str>
 
 <str id="326">
-<new/>
 <o>unnamed</o>
-<t></t>
+<t>utan namn</t>
 </str>
 
 <str id="327">
-<new/>
 <o>Internal error: Illegal sized array from verify_set_from_form
 </o>
-<t></t>
+<t>Internal error: Illegal sized array from verify_set_from_form
+</t>
 </str>
 
 <str id="328">
-<new/>
 <o>Value is bigger than %s, adjusted</o>
-<t></t>
+<t>Värdet är större än %s. Ändrat</t>
 </str>
 
 <str id="329">
-<new/>
 <o>Value is less than %s, adjusted</o>
-<t></t>
+<t>Värdet är mindre än %s. Ändrat</t>
 </str>
 
 <str id="330">
-<new/>
 <o>You most likely want an ending '/' on this variable</o>
-<t></t>
+<t>Du vill troligtvis ha ett avslutande '/' efter den här variabeln</t>
 </str>
 
 <str id="331">
-<new/>
 <o>%s is not a directory</o>
-<t></t>
+<t>%s är inte en katalog</t>
 </str>
 
 <str id="332">
-<new/>
 <o>(keep stale value %s)</o>
-<t></t>
+<t>(behåller det gamla värdet %s)</t>
 </str>
 
 <str id="333">
-<new/>
 <o>Assuming http://*:%[0]d/ for %[0]d</o>
-<t></t>
+<t>Antar http://*:%[0]d/ för %[0]d</t>
 </str>
 
 <str id="334">
-<new/>
 <o>Empty URL field</o>
-<t></t>
+<t>Tomt URL-fält</t>
 </str>
 
 <str id="335">
-<new/>
 <o>%s does not conform to URL syntax</o>
-<t></t>
+<t>%s följer inte URL-syntaxen</t>
 </str>
 
 <str id="336">
-<new/>
 <o>Added / to the end of %s</o>
-<t></t>
+<t>Lade till / på slutet av %s</t>
 </str>
 
 <str id="337">
-<new/>
 <o>Changed %s to http</o>
-<t></t>
+<t>Ändrade %s till http</t>
 </str>
 
 <str id="338">
-<new/>
 <o>Changed %s to %s</o>
-<t></t>
+<t>Ändrade %s till %s</t>
 </str>
 
 <str id="339">
-<new/>
 <o>SSL support not available in this Pike version.</o>
-<t></t>
+<t>SSL-support finns inte tillgängligt i denna version av Pike.</t>
 </str>
 
 <str id="340">
-<new/>
 <o>Please use %s instead.</o>
-<t></t>
+<t>Var god, använd %s istället.</t>
 </str>
 
 <str id="341">
-<new/>
 <o>Removed the default port number (%d) from %s</o>
-<t></t>
+<t>Tog bort default-porten (%d) from %s</t>
 </str>
 
 <str id="342">
-<new/>
 <o>Warning: The protocol %s is not known by roxen</o>
-<t></t>
+<t>Varning: Roxen känner inte till protokollet %s</t>
 </str>
 
 <str id="343">
-<new/>
 <o>Internal error: Illegal sized array from verify_set_from_form</o>
-<t></t>
+<t>Internal error: Illegal sized array from verify_set_from_form</t>
 </str>
 
 <str id="344">
-<new/>
 <o>Uploaded file: %s</o>
-<t></t>
+<t>Laddade upp fil: %s</t>
 </str>
 
 <str id="345">
-<new/>
 <o>Cannot decode this file as an image</o>
-<t></t>
+<t>Kan inte avkoda filen som en bild</t>
 </str>
 
 <str id="346">
-<new/>
 <o>Error while decoding image</o>
-<t></t>
+<t>Fel vid avkodning av bilden</t>
 </str>
 
 <str id="347">
-<new/>
 <o>Valid image set (no cimg module available, cannot show it)</o>
-<t></t>
+<t>Korrekt bild vald (kan inte visas; ingen cimg-modul laddad)</t>
 </str>
 
 <str id="348">
-<new/>
 <o>No image set</o>
-<t></t>
+<t>Ingen bild vald</t>
 </str>
 
 <str id="349">
-<new/>
 <o>Update Client</o>
-<t></t>
+<t>Uppdateringsklienten</t>
 </str>
 
 <str id="350">
-<new/>
 <o>Load of %s (%s) failed</o>
-<t></t>
+<t>Inladdning av %s (%s) misslyckades</t>
 </str>
 
 <str id="351">
-<new/>
 <o>The module %s (%s) could not be loaded.</o>
-<t></t>
+<t>Modulen %s (%s) kunde inte laddas.</t>
 </str>
 
 <str id="352">
-<new/>
 <o>Found trailing data after the date. </o>
-<t></t>
+<t>Hittade mer data efter datumet. </t>
 </str>
 
 <str id="353">
-<new/>
 <o>Month must be at least 1. </o>
-<t></t>
+<t>Månaden måste vara minst 1. </t>
 </str>
 
 <str id="354">
-<new/>
 <o>Month must be 12 or less. </o>
-<t></t>
+<t>Månaden måste vara 12 eller mindre. </t>
 </str>
 
 <str id="355">
-<new/>
 <o>Day must be at least 1.</o>
-<t></t>
+<t>Dagen måste vara minst 1.</t>
 </str>
 
 <str id="356">
-<new/>
 <o>%s does not appear to be a valid date.</o>
-<t></t>
+<t>%s verkar inte vara ett korrekt datum.</t>
 </str>
 
 <str id="357">
-<new/>
 <o>Day must be %d or less.</o>
-<t></t>
+<t>Dagen måste vara %d eller mindre.</t>
 </str>
 
 <str id="5">
-<changed from="Number of requests:"/>
 <o>Interface language</o>
-<t>Antal träffar:</t>
+<t>Administrationsgränssnittets språk</t>
 </str>
 
 <str id="19">
-<changed from="The modules security level is used to determine if a  request should be handled by the module.
-&lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
-&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
-&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;"/>
 <o>Select the Administration interface language.</o>
-<t>Modulens säkerhetsnivå används för att avgöra om 
-en specifik request ska få hanteras av  modulen. 
-&lt;p&gt;&lt;h2&gt;Säkerhetsnivå och pålitlighetsnivå&lt;/h2&gt;
-Varje modul har en konfigurerbar 
-&lt;i&gt;säkerhtesnivå&lt;/i&gt;. 
-Varje request har en &lt;i&gt;pålitlighetsnivå&lt;/i&gt;.&lt;p&gt;
-Högre &lt;i&gt;pålitlighetsnivåer&lt;/i&gt; ger 
-requesten tillgång till moduler med högre
-&lt;i&gt;säkerhetsnivå&lt;/i&gt;. &lt;p&gt;
-&lt;p&gt;&lt;h2&gt;Definitioner&lt;/h2&gt;&lt;ul&gt;
-&lt;li&gt;En requests initialpålitlighetsnivå är
-oändligt hög.
-&lt;li&gt; En request hanteras bara av moduler om 
-dess &lt;i&gt;pålitlighetsnivå&lt;/i&gt; är högre eller
-lika hög som modulens &lt;i&gt;säkerhetsnivå&lt;/i&gt;
-&lt;li&gt; Varje gång en request hanteras av en
-modul så sätts dess &lt;i&gt;pålitlighetsnivå&lt;/i&gt;
-till modulens &lt;i&gt;säkerhetsnivå&lt;/i&gt; om 
-modulen har en &lt;i&gt;säkerhetsnivå&lt;/i&gt; som är skiljd från noll. 
-&lt;/ul&gt;
-&lt;p&gt;&lt;h2&gt;Ett exempel&lt;/h2&gt;
-Moduler:&lt;ul&gt;
- &lt;li&gt;  Användarfilsystem, &lt;i&gt;säkerhetsnivå&lt;/i&gt; 1
- &lt;li&gt;  Filesystem, &lt;i&gt;säkerhetsnivå&lt;/i&gt; 3
- &lt;li&gt;  CGI modul, &lt;i&gt;säkerhetsnivå&lt;/i&gt; 2
-&lt;/ul&gt;
- &lt;p&gt;En request hanterad av 
- &lt;i&gt;Användarfilsystemet&lt;/i&gt; får ett 
-som &lt;i&gt;pålitlighetsnivå&lt;/i&gt;. Den här
-requesten kan därför inte skickas vidare 
-till &lt;i&gt;CGI modulen&lt;/i&gt; eftersom den har
-en &lt;i&gt;säkerhetsnivå&lt;/i&gt; som är högre än
-requestens &lt;i&gt;pålitlighetsnivå&lt;/i&gt;.&lt;p&gt;
-Å andra sidan så kan en request som 
-hanteras av &lt;i&gt;Filsystem&lt;/i&gt; modulen 
-skickas vidare till &lt;i&gt;CGI modulen&lt;/i&gt;.</t>
+<t>Välj administrationsgränssnittets språk.</t>
 </str>
 
 <str id="152">
-<new/>
 <o>%O is not an integer</o>
-<t></t>
+<t>%O är inte ett heltal</t>
 </str>
