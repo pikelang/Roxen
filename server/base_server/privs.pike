@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.20 1997/09/14 17:26:41 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.21 1997/09/17 21:40:06 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -59,7 +59,7 @@ void create(string reason, int|string|void uid, int|void gid)
   if(u && !gid) gid = u[3];
   
   if(!u) {
-    if (uid) {
+    if (uid && (uid != "root")) {
       error("Unknown user: "+uid+"\n");
     } else {
       u = ({ "root", "x", 0, gid, "The super-user", "/", "/sbin/sh" });
