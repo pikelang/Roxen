@@ -30,29 +30,61 @@ private string attr_vals(string v)
   return v;
 }
 
-private string format_doc(string|mapping doc, string name, string language) {
-  if(mappingp(doc)) doc=doc[language];
+private string ex_cont(string t, mapping m, string c, string rt, void|object id)
+{
+  if(!id) return "";
+  string parsed=id->conf->parse_rxml(c,id);
+  c=replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) );
+
+  switch(m->type) {
+  case "hr":
+    return c+"<hr>"+parsed;
+  case "vert":
+    return "<br><table boder=\"0\" cellpadding=\"0\" border=\"0\"><tr><td bgcolor=\"#000000\">"
+      "<table border=\"0\" cellspacing=\"1\" cellpadding=\"5\">\n"
+      "<tr><td bgcolor=\"#d9dee7\">"+c+"</td></tr>\n"
+      "<tr><td bgcolor=\"#d9dee7\">"+parsed+"</td></tr>\n"
+      "</table></tr></td></table>";
+  case "hor":
+  default:
+    return "<br><table boder=\"0\" cellpadding=\"0\" border=\"0\"><tr><td bgcolor=\"#000000\">"
+      "<table border=\"0\" cellspacing=\"1\" cellpadding=\"5\">\n"
+      "<tr><td bgcolor=\"#d9dee7\">"+c+"</td><td bgcolor=\"d9dee7\">"+parsed+"</td></tr>\n"
+      "</table></tr></td></table>";
+  }
+}
+
+private string format_doc(string|mapping doc, string name, void|object id) {
+  if(mappingp(doc)) {
+    if(id && id->misc->pref_language) {
+      object lang=roxen->languages[id->misc->pref_language];
+      doc=doc[lang?lang->id[1]:"standard"];
+    }
+    else
+      doc=doc->standard;
+  }
   return parse_html(doc, ([]), ([
     "desc":desc_cont,
-    "attr":attr_cont
-  ]), name);
+    "attr":attr_cont,
+    "ex":ex_cont
+  ]), name, id);
 }
 
 
 // ------------------ Parse docs in mappings --------------
 
-private string parse_doc(string|mapping|array doc, string name, string language) {
+private string parse_doc(string|mapping|array doc, string name, void|object id) {
   if(arrayp(doc))
-    return format_doc(doc[0], name, language)+
-      "<dl><dd>"+parse_mapping(doc[1], language)+"</dd></dl>";
-  return format_doc(doc, name, language);
+    return format_doc(doc[0], name, id)+
+      "<dl><dd>"+parse_mapping(doc[1], id)+"</dd></dl>";
+  return format_doc(doc, name, id);
 }
 
-private string parse_mapping(mapping doc, string language) {
+private string parse_mapping(mapping doc, void|object id) {
   string ret="";
   if(!mappingp(doc)) return "";
   foreach(indices(doc), string tmp) {
-    ret+=parse_doc(doc[tmp], tmp, language);
+    ret+=parse_doc(doc[tmp], tmp, id);
   }
   return ret;
 }
@@ -67,17 +99,18 @@ mapping call_tagdocumentation(RoxenModule o) {
   return doc;
 }
 
-int generation;
-string find_tag_doc(string name, RequestID id) {
+private int generation;
+multiset undocumented_tags=(<>);
+string find_tag_doc(string name, void|object id) {
   RXML.TagSet tag_set=RXML.get_context()->tag_set;
   string doc;
   int new_gen=tag_set->generation;
 
-  if((doc=cache_lookup("tagdoc",name)) && generation==new_gen) {
+  if((doc=cache_lookup("tagdoc",name)) && generation==new_gen)
     return doc;
-  }
 
   if(generation!=new_gen) {
+    undocumented_tags=(<>);
     cache_expire("tagdoc");
     generation=new_gen;
   }
@@ -101,11 +134,12 @@ string find_tag_doc(string name, RequestID id) {
 
     mapping tagdoc=call_tagdocumentation(tag);
     if(!tagdoc || !tagdoc[name]) continue;
-    doc=parse_doc(tagdoc[name], name, "standard");
-    cache_set("tagdoc", name, doc);
+    cache_set("tagdoc", name, tagdoc[name]);
+    doc=parse_doc(tagdoc[name], name, id);
     return doc;
   }
 
+  undocumented_tags[name]=1;
   return "<h4>No documentation available for \""+name+"\".</h4>\n";
 }
 
