@@ -1,4 +1,4 @@
-/* $Id: savers.pike,v 1.5 1997/08/19 00:36:14 grubba Exp $ */
+/* $Id: savers.pike,v 1.6 1997/10/12 21:10:29 grubba Exp $ */
 #include <confignode.h>
 #include <module.h>
 
@@ -78,7 +78,7 @@ void save_module_master_copy(object o, object config)
   roxen->current_configuration = config;
   roxen->store(s=o->data->sname+"#0", o->data->master->query(), 0, o->config());
   o->data->master->start(2, config);
-  o->config()->unvalidate_cache();
+  o->config()->invalidate_cache();
   if(o->changed) o->change(-o->changed);
 }
 
@@ -92,6 +92,7 @@ void save_configuration_global_variables(object o, object config)
 void save_configuration(object o, object config)
 {
   if(o->changed) o->change(-o->changed);
+  config->invalidate_cache();
 //o->config()->start(2, config);
 }
 
@@ -103,7 +104,7 @@ void save_module_copy(object o, object config)
 
   if(!s) error("Fop fip.\n");
 
-  cf->unvalidate_cache();
+  cf->invalidate_cache();
   
   roxen->store(s, o->data->query(), 0, cf);
   if(o->data->start) o->data->start(2, config);
