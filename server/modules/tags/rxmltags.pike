@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.224 2001/04/23 15:55:05 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.225 2001/04/23 23:56:36 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2128,13 +2128,11 @@ class TagDefine {
 	return 0;
       }
 
-#if ROXEN_COMPAT <= 1.3
-      if (n==args->name) {
+      if (n=args->name) {
 	id->misc->defines[n]=content;
 	old_rxml_warning(id, "attempt to define name ","variable");
 	return 0;
       }
-#endif
 
       parse_error("No tag, variable, if or container specified.\n");
     }
