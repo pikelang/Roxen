@@ -1,11 +1,11 @@
 /*
- * $Id: hostnames.pike,v 1.1 1997/08/24 02:20:42 peter Exp $
+ * $Id: hostnames.pike,v 1.2 1997/08/30 16:13:15 peter Exp $
  */
 
 inherit "wizard";
 constant name= "Status//Hostname lookup status";
 
-constant doc = ("Show status for the nslookup process.");
+constant doc = "Show status for the nslookup process.";
 
 constant more=1;
 

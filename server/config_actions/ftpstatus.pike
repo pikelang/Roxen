@@ -1,3 +1,5 @@
+/* $Id: ftpstatus.pike,v 1.2 1997/08/30 16:14:54 peter Exp $ */
+
 inherit "wizard";
 
 constant name= "Status//Current FTP sessions";

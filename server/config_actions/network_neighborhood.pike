@@ -1,7 +1,9 @@
+/* $Id: network_neighborhood.pike,v 1.16 1997/08/30 16:13:15 peter Exp $ */
+
 inherit "wizard";
 
 string name = "Neighbourhood//Roxen Neighbourhood...";
-string doc = "";
+string doc = "Action for showing the status of other Roxen servers";
 
 string sv(mixed in)
 {
