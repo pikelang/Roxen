@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.18 2002/06/27 21:16:59 mast Exp $
+// $Id: License.pmod,v 1.19 2002/10/09 12:19:51 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -196,7 +196,7 @@ class Key
     s = replace(s, "\r", "\n");
 
     // Parse license file.
-    if(sscanf(s, "Roxen%*s\n-START-\n%s\n-END-", s) < 2)
+    if(sscanf(s, "%*sRoxen%*s\n-START-\n%s\n-END-%*s", s) < 4)
       error("Malformed license file %s.\n", license_name);
     s = MIME.decode_base64(s);
     string msg = decrypt(s);
