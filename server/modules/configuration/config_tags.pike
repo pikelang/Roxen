@@ -9,6 +9,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
+constant cvs_version = "$Id: config_tags.pike,v 1.102 2000/08/19 07:17:25 per Exp $";
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -778,7 +779,8 @@ class TagThemePath
   inherit RXML.Tag;
   constant name = "theme-path";
   constant flags = 0;
-  class Frame {
+  class Frame 
+  {
     inherit RXML.Frame;
     int do_iterate=-1;
     void do_enter( RequestID id )

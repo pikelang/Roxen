@@ -162,6 +162,7 @@ nn binary
 /server/modules/compat/flik.pike foreign_ident
 /server/modules/compat/ximg.pike foreign_ident
 /server/modules/configuration/config_filesystem.pike foreign_ident
+/server/modules/configuration/config_tags.pike foreign_ident
 /server/modules/configuration/update.pike foreign_ident
 /server/modules/database/SQLuserdb.pike foreign_ident
 /server/modules/database/sqldb.pike foreign_ident
