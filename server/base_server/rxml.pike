@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.271 2000/12/30 10:31:58 nilsson Exp $
+// $Id: rxml.pike,v 1.272 2000/12/30 10:33:51 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -3120,8 +3120,8 @@ Available variables are:",
  with an HTTP request. This makes it possible to use Pike script
  results and other dynamic documents. Note, however, that the results
  of the parsing are heavily cached for performance reasons. If you do
- not want this cache, use <tag><ref type='tag'>insert file="..."
- nocache="1"</ref></tag> instead.</p>
+ not want this cache, use <tag><ref type='tag'>insert file='...'
+ nocache='1'</ref></tag> instead.</p>
 </attr>
 
 <attr name=info>
