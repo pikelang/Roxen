@@ -10,7 +10,7 @@
 
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: writefile.pike,v 1.6 2001/10/01 14:14:09 anders Exp $";
+constant cvs_version = "$Id: writefile.pike,v 1.7 2001/10/05 11:58:19 sara Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -184,19 +184,19 @@ constant tagdoc=([
 </attr>
 
 <attr name='from' value='string'>
- <p>Specifies the type=file form field variable which uploaded the file to be
-  written.  If this attribute is omitted, the container content is what
-  will be written instead.  Given the example below, the parameter
-  <var>from=wrapupafile</var> should be specified.</p>
+<p>Specifies the type=file form field variable which uploaded the
+     file to be written. If this attribute is omitted, the container
+     content is what will be written instead. Given the example
+     below, the parameter from=wrapupafile should be specified.</p>
 
 <ex-box><form method='post'
-   enctype=\"multipart/form-data\">
+   enctype='multipart/form-data'>
  <input type='file' name='wrapupafile' />
- <input type='submit' value=\"Upload file\" />
+ <input type='submit' value='Upload file' />
 </form>
 File uploaded:
-  <insert scope='form'
-    variable=\"wrapupafile..filename\"/>
+   <insert scope='form'
+     variable='wrapupafile.filename'/>
 </ex-box>
 </attr>
 
