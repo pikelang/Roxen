@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.7 2000/02/10 06:32:08 nilsson Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.8 2000/02/10 10:17:39 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -75,7 +75,7 @@ int|array tag_body(string t, mapping args, RequestID id)
   FIX(alink,  "#ff0000","alink");
   FIX(vlink,  "#551a8b","vlink");
 
-  if(search(id->client_var->fullname,"windows")!=-1)
+  if(search(id->client_var->fullname||"","windows")!=-1)
   {
     FIX(bgcolor,"#c0c0c0","bgcolor");
   } else {
