@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.75 2001/08/23 18:04:52 nilsson Exp $
+// $Id: fonts.pike,v 1.76 2001/08/27 15:33:53 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -155,9 +155,9 @@ Font get_font(string f, int size, int bold, int italic,
 	      string justification, float|int xspace, float|int yspace)
 {
   Font fnt;
-
+  
   foreach( font_handlers, FontHandler fh )
-    if( fh->has_font( f,size )  && 
+    if( fh->has_font( f,size ) &&
 	(fnt = fh->open(f,size,bold,italic)))
     {
       if(justification=="right") fnt->right();
@@ -176,20 +176,22 @@ Font get_font(string f, int size, int bold, int italic,
       return fnt;
     }
 
+  
   if( has_value( f, "_" ) )
     return get_font(f-"_", size, bold, italic, justification, xspace, yspace);
+
   if( has_value( f, " " ) )
     return get_font(replace(f," ", "_"), 
                     size, bold, italic, justification, xspace, yspace );
 
-  if( roxen->query("default_font") == f )
+  if( f == replace( roxen->query("default_font"),([" ":"","_":""])) )
   {
     report_error("Failed to load the default font (%O)\n",
 		 roxen->query("default_font"));
     return 0;
   }
-  return get_font(roxen->query("default_font"),
-                  size,bold,italic,justification,xspace,yspace);
+  return get_font(roxen->query("default_font"), size, bold, italic,
+		  justification, xspace, yspace);
 }
 
 Font resolve_font(string f, string|void justification)
@@ -260,7 +262,7 @@ Font resolve_font(string f, string|void justification)
   if( sizeof(q)>1 && (int)q[-1] )
   {
     size = (int)q[-1];
-    f = q[..sizeof(q)-2]*" ";
+    f = (q[..sizeof(q)-2]-({""}))*" ";
   }
 
   return get_font(f, size, bold, italic,
@@ -268,8 +270,8 @@ Font resolve_font(string f, string|void justification)
 }
 
 //! Returns the real name of the resolved font.
-string verify_font(string font, int size) {
-
+string verify_font(string font, int size)
+{
   if(!font)
     return verify_font(roxen->query("default_font"), size||32);
 
@@ -280,10 +282,13 @@ string verify_font(string font, int size) {
 
     if(has_value(font,"_"))
       return verify_font(font-"_", size);
+
     if(has_value(font," "))
       return verify_font(replace(font, " ", "_"), size);
-    if(font == roxen->query("default_font"))
+
+    if(font == replace( roxen->query("default_font"),([" ":"","_":""])) )
       return 0;
+
     return verify_font(roxen->query("default_font"), size);
   }
 
