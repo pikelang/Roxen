@@ -14,6 +14,8 @@
 <dd>Defines a new RXML tag, or overrides the previous definition</dd>
 <dt><kbd>containers=..</kbd>
 <dd>Defines a new RXML container, or overrides the previous definition</dd>
+<dt><kbd>default_<i>attribute</i>=<i>value</i></kbd>
+<dd>If no value for <i>attribute</i> is defined when the tag is used, <i>value</i> will be the one returned from <i>&amp;attribute;</i>, see below.
 </dl>
 <p> 
 

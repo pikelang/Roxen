@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.108 1998/06/28 17:25:30 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.109 1998/07/04 00:42:19 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -387,7 +387,7 @@ string call_container(string tag, mapping args, string contents, int line,
   defines->line = (string)line;
   string|function rf = real_container_callers[tag][i];
   if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
-    return handle_help("modules/tags/doc/"+tag, tag, args);
+    return handle_help("modules/tags/doc/"+tag, tag, args)+contents;
   if(stringp(rf)) return rf;
   TRACE_ENTER("container (&lt;"+tag+"&gt on line "+line+")", rf);
 #ifdef MODULE_LEVEL_SECURITY
@@ -424,6 +424,7 @@ string do_parse(string to_parse, object id, object file, mapping defines,
 string call_user_tag(string tag, mapping args, int line, mixed foo, object id)
 {
   id->misc->line = line;
+  args = id->misc->defaults[tag]|args;
   if(!id->misc->up_args) id->misc->up_args = ([]);
   array replace_from = ({"#args#"})+
     Array.map(indices(args)+indices(id->misc->up_args),
@@ -442,6 +443,7 @@ string call_user_container(string tag, mapping args, string contents, int line,
 			 mixed foo, object id)
 {
   id->misc->line = line;
+  args = id->misc->defaults[tag]|args;
   if(!id->misc->up_args) id->misc->up_args = ([]);
   array replace_from = ({"#args#", "<contents>"})+
     Array.map(indices(args)+indices(id->misc->up_args),
@@ -831,29 +833,30 @@ string tag_use(string tag, mapping m, object id)
   nid->misc->defines = ([]);
   nid->misc->_tags = 0;
   nid->misc->_containers = 0;
-
+  nid->misc->defaults = ([]);
 
   if(m->packageinfo)
   {
     string res ="<dl>";
     foreach(get_dir("../rxml_packages"), string f)
-    {
-      string doc = "";
-      string data = Stdio.read_bytes("../rxml_packages/"+f);
-      sscanf(data, "%*sdoc=\"%s\"", doc);
-      parse_rxml(data, nid);
-      res += "<dt><b>"+f+"</b><dd>"+doc+"<br>";
-      array tags = indices(nid->misc->tags||({}));
-      array containers = indices(nid->misc->containers||({}));
-      if(sizeof(tags))
-	res += "defines the following tag"+
-	  (sizeof(tags)!=1?"s":"") +": "+
-	  String.implode_nicely( sort(tags) )+"<br>";
-      if(sizeof(containers))
-	res += "defines the following container"+
-	  (sizeof(tags)!=1?"s":"") +": "+
-	  String.implode_nicely( sort(containers) )+"<br>";
-    }
+      catch 
+      {
+	string doc = "";
+	string data = Stdio.read_bytes("../rxml_packages/"+f);
+	sscanf(data, "%*sdoc=\"%s\"", doc);
+	parse_rxml(data, nid);
+	res += "<dt><b>"+f+"</b><dd>"+doc+"<br>";
+	array tags = indices(nid->misc->tags||({}));
+	array containers = indices(nid->misc->containers||({}));
+	if(sizeof(tags))
+	  res += "defines the following tag"+
+	    (sizeof(tags)!=1?"s":"") +": "+
+	    String.implode_nicely( sort(tags) )+"<br>";
+	if(sizeof(containers))
+	  res += "defines the following container"+
+	    (sizeof(tags)!=1?"s":"") +": "+
+	    String.implode_nicely( sort(containers) )+"<br>";
+      };
     return res+"</dl>";
   }
 
@@ -866,7 +869,7 @@ string tag_use(string tag, mapping m, object id)
   {
     string foo;
     if(m->file)
-      foo = nid->conf->try_get_file( m->file, nid );
+      foo = nid->conf->try_get_file( fix_relative(m->file,nid), nid );
     else 
       foo=Stdio.read_bytes("../rxml_packages/"+combine_path("/",m->package));
       
@@ -885,6 +888,7 @@ string tag_use(string tag, mapping m, object id)
     foreach(indices(res->_containers), string t)
       if(!res->containers[t]) m_delete(res->_containers, t);
     res->defines = nid->misc->defines||([]);
+    res->defaults = nid->misc->defaults||([]);
     m_delete(res->defines, "line");
     cache_set("macrofiles", (m->file || m->package), res);
   }
@@ -893,10 +897,16 @@ string tag_use(string tag, mapping m, object id)
     id->misc->tags = res->tags;
   else
     id->misc->tags |= res->tags;
+
   if(!id->misc->containers)
     id->misc->containers = res->containers;
   else
     id->misc->containers |= res->containers;
+
+  if(!id->misc->defaults)
+    id->misc->defaults = res->defaults;
+  else
+    id->misc->defaults |= res->defaults;
 
   id->misc->defines |= res->defines;
 
@@ -912,32 +922,46 @@ string tag_use(string tag, mapping m, object id)
     return "";
 }
 
-string tag_define(string tag,mapping m, string str, object got,object file,
+string tag_define(string tag, mapping m, string str, object id, object file,
 		  mapping defines)
 { 
   if (m->name) 
     defines[m->name]=str;
   else if (m->tag) 
   {
-    if(!got->misc->tags)
-    {
-      got->misc->tags = ([]);
-//       got->misc->_tags = ([]);
-    }
-    got->misc->tags[m->tag] = str;
-    got->misc->_tags[m->tag] = call_user_tag;
+    if(!id->misc->tags)
+      id->misc->tags = ([]);
+    if(!id->misc->defaults)
+      id->misc->defaults = ([]);
+    if(!id->misc->defaults[m->tag])
+      id->misc->defaults[m->tag] = ([]);
+
+    foreach( indices(m), string arg )
+      if( arg[0..7] == "default_" )
+	id->misc->defaults[m->tag] += ([ arg[8..]:m[arg] ]);
+    
+    id->misc->tags[m->tag] = str;
+    id->misc->_tags[m->tag] = call_user_tag;
   }
   else if (m->container) 
   {
-    if(!got->misc->containers)
-    {
-      got->misc->containers = ([]);
-//       got->misc->_containers = ([]);
-    }
-    got->misc->containers[m->container] = str;
-    got->misc->_containers[m->container] = call_user_container;
+    if(!id->misc->containers)
+      id->misc->containers = ([]);
+
+    if(!id->misc->defaults)
+      id->misc->defaults = ([]);
+    if(!id->misc->defaults[m->container])
+      id->misc->defaults[m->container] = ([]);
+
+    foreach( indices(m), string arg )
+      if( arg[0..7] == "default_" )
+	id->misc->defaults[m->container] += ([ arg[8..]:m[arg] ]);
+    
+    id->misc->containers[m->container] = str;
+    id->misc->_containers[m->container] = call_user_container;
   }
-  else return "<!-- No name specified for the define! <define name=...> -->";
+  else return "<!-- No name, tag or container specified for the define! "
+	 "&lt;define help&gt; for instructions. -->";
   return ""; 
 }
 
