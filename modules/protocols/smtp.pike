@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.53 1998/09/19 23:07:35 grubba Exp $
+ * $Id: smtp.pike,v 1.54 1998/09/20 01:00:07 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.53 1998/09/19 23:07:35 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.54 1998/09/20 01:00:07 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -205,7 +205,7 @@ static class Smtp_Connection {
   string remoteip;		// IP
   string remoteport;		// PORT
   string remotehost;		// Name from the IP.
-  string remotename = "";	// Name given in HELO or EHLO.
+  string remotename;		// Name given in HELO or EHLO.
   array(string) ident;
   object conf;
   object parent;
@@ -254,9 +254,14 @@ static class Smtp_Connection {
     roxen_perror(sprintf("SMTP: Command: %s\n", cmd));
 #endif /* SMTP_DEBUG */
 
-    // FIXME: Command sequencing.
-    // Client should be required to say HELO/EHLO before
-    // sending other commands.
+    if (!remotename && (!(< "EHLO", "HELO" >)[cmd])) {
+      // Client is required to be polite.
+      report_warning(sprintf("Got command %O %O before EHLO or HELO "
+			     "from %s@%s [%s]\n",
+			     cmd, arg, remoteident, remotehost, remoteip));
+      send(503, ({ "Expected EHLO or HELO command." }));
+      return;
+    }
 
     function f;
     if (f = this_object()["smtp_"+cmd]) {
@@ -361,7 +366,7 @@ static class Smtp_Connection {
   void smtp_EHLO(string ehlo, string args)
   {
     prot = "ESMTP";
-    smtp_HELO("HELO", args);
+    smtp_HELO("EHLO", args);
   }
 
   void smtp_EXPN(string mail, string args)
@@ -424,7 +429,7 @@ static class Smtp_Connection {
 	  }
 	}
 	if (!handled) {
-	  send(550, ({ sprintf("<%s>... User unknown", addr) }));
+	  send(550, ({ sprintf("<%s>... Unhandled recipient.", addr) }));
 	  return;
 	}
       } else {
