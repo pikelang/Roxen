@@ -1,0 +1,13 @@
+-*- html -*-
+<info>
+version="$Id: gtext_headers,v 1.1 1998/06/03 17:16:03 per Exp $";
+name="gtext_headers";
+doc="Replace the normal header tags with graphical headers.";
+</info>
+
+<define container=h1><p><gh1 #args#><contents></gh1><p></define>
+<define container=h2><p><gh2 #args#><contents></gh2><p></define>
+<define container=h3><p><gh3 #args#><contents></gh3><p></define>
+<define container=h4><p><gh4 #args#><contents></gh4><p></define>
+<define container=h5><p><gh5 #args#><contents></gh5><p></define>
+<define container=h6><p><gh6 #args#><contents></gh6><p></define>
