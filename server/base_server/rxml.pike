@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.211 2000/07/26 14:12:37 kuntri Exp $
+// $Id: rxml.pike,v 1.212 2000/07/31 01:06:34 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1799,7 +1799,7 @@ class TagIfLanguage {
   inherit IfMatch;
   constant plugin_name = "language";
   array source(RequestID id) {
-    return id->pref_languages->get_languages();
+    return id->misc->pref_languages->get_languages();
   }
 }
 
