@@ -10,13 +10,19 @@
  * Thanks to 
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.14 1998/03/11 19:42:43 neotron Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.15 1998/04/03 19:03:53 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 
-void create() { }
+void create()
+{
+  defvar( "killindex", 1, "Kill trailing 'indexfiles'?", TYPE_FLAG|VAR_MORE,
+	  "When set, the killframes module will remove occurances of "
+	  "'indexfiles' (as set in the active directory module) from "
+	  "the end of the URL, leaving only a slash." );
+}
 
 mixed *register_module()
 {
@@ -28,8 +34,8 @@ mixed *register_module()
        "<pre>"
        "&lt;killframe&gt;: Adds some java script that will prevent others\n"
        "             from putting your page in a frame.\n\n"
-       /*       "             Will also strip any occurences of the string\n"
-		"             'index.html' from the end of the URL." */
+       "             Will also strip any occurences of the string\n"
+       "             'index.html' from the end of the URL."
        "</pre>"
        ), ({}), 1,
     });
@@ -37,22 +43,46 @@ mixed *register_module()
 
 string tag_killframe( string tag, mapping m, object id )
 {
-  /* Links to index.html are ugly. */
+  string javascript;
+
   if(m->help) return register_module()[2];
 
-  string my_url = id->conf->query("MyWorldLocation") + id->raw_url[1..];
-  int l=strlen(my_url);
+  array indexfiles;
+  if( id->conf->dir_module )
+    indexfiles = id->conf->dir_module->query("indexfiles");
 
-  if( my_url[l-11..] == "/index.html" )
-    my_url = my_url[..l-11];
+  while( id->misc->orig )
+    id = id->misc->orig;
   
+  if( query("killindex") )
+  {
+    string tmp;
+
+    /* Links to index.html are ugly. */
+
+    string my_url = id->conf->query("MyWorldLocation");
+    if( sscanf(my_url, "%s:80/", tmp ) )
+      my_url = tmp +"/"+ id->not_query[1..];
+    else
+      my_url += id->not_query[1..];
+
+    int l=strlen(my_url)-1;
+
+    foreach( indexfiles, string index )
+      if( my_url[l-strlen(index)..] == "/" +index )
+	my_url = my_url[..l-strlen(index)];
+
+    javascript = ( "   if(top.location != \""+ my_url  +"\")\n"
+		   "     top.location = \""+ my_url  +"\";\n"   );
+  }
+  else
+    javascript = ( "   if (self != top) top.location = self.location;\n" );
+
   if (id->supports->javascript)
-    return("<script language=javascript>\n"
-	   "<!--\n"
-	   "   if(top.location != \""+ my_url  +"\")\n"
-	   "     top.location = \""+ my_url  +"\";\n"
-	   "//-->"
-	   "</script>\n");
+    return("<script language=javascript><!--\n"
+	   + javascript
+	   + "//--></script>\n");
+
   return "";
 }
 
