@@ -1,4 +1,4 @@
-<h1>Välkommen till Roxen WebServer 2.0</h1>    
+<h1>Välkommen till Roxen WebServer 2.1</h1>    
     
 <blockquote>
 Om dina fonter är alldeles för stora (eller för små, beroende på tycke),
@@ -8,4 +8,19 @@ netscape har olika fontstorlek för unicodefonter (default 18) än
 normala fonter (default 12).
 </blockquote>
 
-<a href="whatsnew.html"><h2>Vad är nytt i 2.0?</h2></a>
+<a href="whatsnew.html"><h2>Vad är nytt i 2.1?</h2></a>
+
+<h2>Manualer:</h2>
+<blockquote>
+<font size=+1><b>
+<if exists="docs/creator/index.html">
+  <li> <a href="docs/creator/">Web Site Creator Manual</a>
+</if>
+<if exists="docs/administrator/index.html">
+  <li> <a href="docs/administrator/">Administrator Manual</a>
+</if>
+<if exists="docs/user/index.html">
+ <li> <a href="docs/user/">User Manual</a>
+</if>
+</b></font>
+</blockquote>
