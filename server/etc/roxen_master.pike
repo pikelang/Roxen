@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.60 1999/11/25 22:40:45 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.61 1999/11/26 21:44:42 grubba Exp $";
 
 /*
  * name = "Roxen Master";
@@ -130,6 +130,13 @@ int loaded_at( program p )
   return load_time[ search( programs, p ) ];
 } 
 
+// Make low_find_prog() search in precompiled/ for precompiled files.
+array(string) query_precompiled_names(string fname)
+{
+  return ({ make_ofilename(fname) }) + ::query_precompiled_names(fname);
+}
+
+#if 0
 program low_findprog(string pname, string ext, object|void handler)
 {
   program ret;
@@ -146,21 +153,38 @@ program low_findprog(string pname, string ext, object|void handler)
     {
     case "":
     case ".pike":
-      foreach( ({ make_ofilename( fname ), fname+".o" }), string ofile )
+      foreach( ({ make_ofilename( fname ), fname+".o" }), string ofile ) {
         if(array s2=master_file_stat( ofile ))
         {	
           if(s2[1]>0 && s2[3]>=s[3])
           {
-            catch 
+            mixed err = catch 
             {
               load_time[ fname ] = time();
               return programs[fname]=
                      decode_value(_static_modules.files()->
                                   Fd(ofile,"r")->read(),Codec());
             };
+	    if (handler) {
+	      handler->compile_warning(ofile, 0,
+				       sprintf("Decode failed:\n"
+					       "\t%s", err[0]));
+	    } else {
+	      compile_warning(ofile, 0,
+			      sprintf("Decode failed:\n"
+				      "\t%s", err[0]));
+	    }
+	  } else {
+	    if (handler) {
+	      handler->compile_warning(ofile, 0,
+				       "Compiled file is out of date\n");
+	    } else {
+	      compile_warning(ofile, 0, "Compiled file is out of date\n");
+	    }
           }
         }
-      
+      }
+
       if ( mixed e=catch { ret=compile_file(fname); } )
       {
 	if(arrayp(e) && sizeof(e)==2 &&
@@ -177,16 +201,19 @@ program low_findprog(string pname, string ext, object|void handler)
     load_time[fname] = time();
     return programs[fname] = ret;
   }
-  if( programs[ fname ] ) 
-    return programs[ fname ];
+  // werror("Failed to find program: %O\n", fname);
   return UNDEFINED;
 }
+
+#endif /* 0 */
 
 mapping resolv_cache = ([]);
 mixed resolv(string a, string b)
 {
+  // werror("resolv(%O, %O)\n", a, b);
   if( resolv_cache[a] )
     return resolv_cache[a]->value ? resolv_cache[a]->value : ([])[0];
+  // werror("Not in cache\n");
   resolv_cache[a] = ([ "value":(::resolv(a,b)) ]);
   return resolv_cache[a]->value ? resolv_cache[a]->value : ([])[0];
 }
