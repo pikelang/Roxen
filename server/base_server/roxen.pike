@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.764 2001/11/29 17:03:51 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.765 2001/12/04 12:53:42 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2114,7 +2114,8 @@ string create_unique_id()
 static int abs_started;
 
 void restart_if_stuck (int force)
-//! @note Must be called from the backend thread due to Linux peculiarities.
+//! @note
+//! Must be called from the backend thread due to Linux peculiarities.
 {
   remove_call_out(restart_if_stuck);
   if (!(query("abs_engage") || force))
