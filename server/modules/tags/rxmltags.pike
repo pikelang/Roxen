@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.385 2002/10/23 20:15:20 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.386 2002/10/23 20:18:05 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -639,7 +639,7 @@ class TagImgs {
 	    RXML.run_error("Dimensions quering failed.\n");
 	}
 	else if(!args->quiet)
-	  RXML.run_error("Virtual path failed.\n");
+	  RXML.run_error("Image file not found.\n");
 
 	if(!args->alt) {
 	  string src=(args->src/"/")[-1];
@@ -1339,6 +1339,41 @@ class TagCache {
     array(string|int) subvariables;
     mapping(string:RXML.PCode|array(int|RXML.PCode)) alternatives;
 
+    static void add_subvariables_to_keymap()
+    {
+      RXML.Context ctx = RXML_CONTEXT;
+      foreach (subvariables, string var) {
+	array splitted = ctx->parse_user_var (var, 1);
+	if (intp (splitted[0])) { // Depend on the whole scope.
+	  mapping|RXML.Scope scope = ctx->get_scope (var);
+	  if (mappingp (scope))
+	    keymap[var] = scope + ([]);
+	  else if (var == "form")
+	    // Special case to optimize this scope.
+	    keymap->form = ctx->id->real_variables + ([]);
+	  else {
+	    array indices = scope->_indices (ctx, var);
+	    keymap[var] = mkmapping (indices, rows (scope, indices));
+	  }
+	}
+	else
+	  keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
+      }
+    }
+
+    static void make_key_from_keymap()
+    {
+      key = encode_value_canonic (keymap);
+      if (!args["disable-key-hash"])
+	// Initialize with a 32 char string to make sure MD5 goes
+	// through all the rounds even if the key is very short.
+	// Otherwise the risk for coincidental equal keys gets much
+	// bigger.
+	key = Crypto.md5()->update ("................................")
+			  ->update (key)
+			  ->digest();
+    }
+
     array do_enter (RequestID id)
     {
       persistent_cache = 0;
@@ -1432,24 +1467,7 @@ class TagCache {
 	keymap["page.path"] = id->not_query;
       }
 
-      if (subvariables)
-	foreach (subvariables, string var) {
-	  array splitted = ctx->parse_user_var (var, 1);
-	  if (intp (splitted[0])) { // Depend on the whole scope.
-	    mapping|RXML.Scope scope = ctx->get_scope (var);
-	    if (mappingp (scope))
-	      keymap[var] = scope + ([]);
-	    else if (var == "form")
-	      // Special case to optimize this scope.
-	      keymap->form = id->real_variables + ([]);
-	    else {
-	      array indices = scope->_indices (ctx, var);
-	      keymap[var] = mkmapping (indices, rows (scope, indices));
-	    }
-	  }
-	  else
-	    keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
-	}
+      if (subvariables) add_subvariables_to_keymap();
 
       if (args->shared) {
 	if(args->nohash)
@@ -1471,15 +1489,7 @@ class TagCache {
 	}
       }
 
-      key = encode_value_canonic (keymap);
-      if (!args["disable-key-hash"])
-	// Initialize with a 32 char string to make sure MD5 goes
-	// through all the rounds even if the key is very short.
-	// Otherwise the risk for coincidental equal keys gets much
-	// bigger.
-	key = Crypto.md5()->update ("................................")
-			  ->update (key)
-			  ->digest();
+      make_key_from_keymap();
 
       timeout = Roxen.time_dequantifier (args);
 
@@ -1528,15 +1538,14 @@ class TagCache {
 
       keymap += ([]);
       do_iterate = 1;
-      TAG_TRACE_ENTER ("cache miss%s, %s for key %s",
+      TAG_TRACE_ENTER ("cache miss%s, %s",
 		       args->shared ?
 		       (timeout ? " (shared timeout cache)" : " (shared cache)") :
 		       (timeout ? " (timeout cache)" : ""),
 		       removed == 1 ? "entry p-code is stale" :
 		       removed == 2 ? "entry had timed out" :
 		       removed == 3 ? "a pragma no-cache request removed the entry" :
-		       "no entry",
-		       RXML.utils.format_short (keymap, 200));
+		       "no entry");
       id->cache_status->cachetag = 0;
       id->misc->cache_tag_miss = 1;
       return 0;
@@ -1551,12 +1560,16 @@ class TagCache {
 	  // RXML_CONTEXT->misc->cache_key.
 	  subvariables = filter (indices (subkeymap - keymap), stringp);
 	  // subvariables is part of the persistent state, but we'll
-	  // come to update_state later anyway if it should be called.
+	  // come to state_update later anyway if it should be called.
+	  add_subvariables_to_keymap();
+	  make_key_from_keymap();
 	}
 
 	if (args->shared) {
 	  cache_set(cache_tag_location, key, evaled_content, timeout);
-	  TAG_TRACE_LEAVE ("added shared%s cache entry", timeout ? " timeout" : "");
+	  TAG_TRACE_LEAVE ("added shared%s cache entry with key %s",
+			   timeout ? " timeout" : "",
+			   RXML.utils.format_short (keymap, 200));
 	}
 	else
 	  if (timeout) {
@@ -1566,8 +1579,9 @@ class TagCache {
 	      persistent_cache = 1;
 	      RXML_CONTEXT->state_update();
 	    }
-	    TAG_TRACE_LEAVE ("added%s timeout cache entry",
-			     persistent_cache ? " (possibly persistent)" : "");
+	    TAG_TRACE_LEAVE ("added%s timeout cache entry with key %s",
+			     persistent_cache ? " (possibly persistent)" : "",
+			     RXML.utils.format_short (keymap, 200));
 	  }
 	  else {
 	    if (!alternatives) alternatives = ([]);
@@ -1576,8 +1590,9 @@ class TagCache {
 	      persistent_cache = 1;
 	      RXML_CONTEXT->state_update();
 	    }
-	    TAG_TRACE_LEAVE ("added%s cache entry",
-			     persistent_cache ? " (possibly persistent)" : "");
+	    TAG_TRACE_LEAVE ("added%s cache entry with key %s",
+			     persistent_cache ? " (possibly persistent)" : "",
+			     RXML.utils.format_short (keymap, 200));
 	  }
       }
       else
