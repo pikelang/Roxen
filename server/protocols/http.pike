@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.134 2000/07/21 23:14:58 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.135 2000/11/14 05:25:38 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -651,25 +651,6 @@ void disconnect()
 void end(string|void s, int|void keepit)
 {
   pipe = 0;
-#ifdef PROFILE
-  if(conf)
-  {
-    float elapsed = SECHR(HRTIME()-req_time);
-    string nid =
-#ifdef FILE_PROFILE
-      not_query
-#else
-      dirname(not_query)
-#endif
-      ;
-    array p;
-    if(!(p=conf->profile_map[nid]))
-      p = conf->profile_map[nid] = ({0,0.0,0.0});
-    conf->profile_map[nid][0]++;
-    p[1] += elapsed;
-    if(elapsed > p[2]) p[2]=elapsed;
-  }
-#endif
 
 #ifdef KEEP_ALIVE
   if(keepit &&
@@ -1192,6 +1173,26 @@ void send_result(mapping|void result)
   mapping heads;
   string head_string;
   object thiso = this_object();
+
+#ifdef PROFILE
+  if(conf)
+  {
+    float elapsed = SECHR(HRTIME()-req_time);
+    string nid =
+#ifdef FILE_PROFILE
+      not_query
+#else
+      dirname(not_query)
+#endif
+      ;
+    array p;
+    if(!(p=conf->profile_map[nid]))
+      p = conf->profile_map[nid] = ({0,0.0,0.0});
+    conf->profile_map[nid][0]++;
+    p[1] += elapsed;
+    if(elapsed > p[2]) p[2]=elapsed;
+  }
+#endif
 
   if (result) {
     file = result;
