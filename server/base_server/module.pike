@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.204 2004/05/13 13:40:52 grubba Exp $
+// $Id: module.pike,v 1.205 2004/05/13 14:03:28 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1514,7 +1514,7 @@ static mapping(string:mixed) move_collection(string source, string destination,
     SIMPLE_TRACE_ENTER(this, "Recursive move from %O to %O\n",
 		       subsrc, subdst);
     mapping(string:mixed) sub_res =
-      recurse_move_file(subsrc, subdst, behavior, overwrite, id);
+      recurse_move_files(subsrc, subdst, behavior, overwrite, id);
     if (sub_res && (sub_res->error != 204) && (sub_res->error != 201)) {
       result->add_status(subdst, sub_res->error, sub_res->rettext);
       if (sub_res->error >= 300) {
@@ -1528,9 +1528,9 @@ static mapping(string:mixed) move_collection(string source, string destination,
 }
 
 //! Move/rename a file or collection (aka directory).
-mapping(string:mixed) recurse_move_file(string source, string destination,
-					PropertyBehavior behavior,
-					Overwrite overwrite, RequestID id)
+mapping(string:mixed) recurse_move_files(string source, string destination,
+					 PropertyBehavior behavior,
+					 Overwrite overwrite, RequestID id)
 {
   Stat st = stat_file(source, id);
   if (!st) return 0;
