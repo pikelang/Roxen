@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.33 2001/07/19 00:27:41 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.34 2001/07/21 11:05:42 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -40,6 +40,7 @@ RequestID get_id()
   id->client=({});
 
   id->realfile="etc/test/filesystem/index.html";
+  id->query = "";
   id->not_query="/index.html";
   id->raw_url="/index.html";
   id->method="GET";
