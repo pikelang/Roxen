@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.68 2002/11/02 17:56:36 mani Exp $
+// $Id: read_config.pike,v 1.69 2002/11/04 20:26:18 mani Exp $
 
 #include <module.h>
 #include <module_constants.h>
@@ -20,15 +20,9 @@ array(string) list_all_configurations()
 
   if(!fii)
   {
-    mkdirhier("$CONFIGDIR/test"); // removes the last element..
-    fii=get_dir("$CONFIGDIR");
-    if(!fii)
-    {
-      report_fatal("I cannot read from the configurations directory ("+
-		   combine_path(getcwd(), roxen_path("$CONFIGDIR"))+")\n");
-      exit(-1);	// Restart.
-    }
-    return ({});
+    report_fatal("I cannot read from the configurations directory ("+
+		 combine_path(getcwd(), roxen_path("$CONFIGDIR"))+")\n");
+    exit(-1); // Restart.
   }
 
   return map(filter(fii, lambda(string s){
