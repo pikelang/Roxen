@@ -44,10 +44,14 @@
 			- added uid->name mapping
 			! known bug: 1. unsuc. auth. is logged twice - status()
 			  function returns incorrect values !!!
+  1999-10-04 v1.11	- added "smart" checking of hashed passwords
+			  (SHA, MD5 and CRYPT)
+			- added config variable "userPassword map"
+  1999-10-11 v1.12	- moved settings of 'pw' variable after checking it
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.5 1999/08/26 16:50:53 js Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.6 1999/10/17 17:04:39 hop Exp $";
 constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
@@ -184,6 +188,9 @@ void create()
 //		    "'cn' and 'userPassword'.");
 
 	// Defaults:
+        defvar ("CI_default_attrname_upw", "userpassword",
+		   "Defaults: User password map", TYPE_STRING,
+                   "The mapping between passwd:password and LDAP.");
         defvar ("CI_default_uid",default_uid(),"Defaults: User ID", TYPE_INT,
                    "Some modules require an user ID to work correctly. This is the "
                    "user ID which will be returned to such requests if the information "
@@ -393,10 +400,10 @@ string *userinfo (string u,mixed p) {
 	tmp=results->fetch();
 	//DEBUGLOG(sprintf("userinfo: got %O",tmp));
 	if(access_mode_is_user()) {	// mode is 'guest'
-	    if(zero_type(tmp["userpassword"]))
-		werror("LDAPuserauth: WARNING: entry haven't 'userpassword' attribute !\n");
+	    if(zero_type(tmp[QUERY(CI_default_attrname_upw)]))
+		werror("LDAPuserauth: WARNING: entry haven't '" + QUERY(CI_default_attrname_upw) + "' attribute !\n");
 	    else
-		rpwd = tmp->userpassword[0];
+		rpwd = tmp[QUERY(CI_default_attrname_upw)][0];
 	} else
 	    rpwd = stringp(p) ? p : "{x-hop}*";
 	dirinfo= ({
@@ -491,15 +498,38 @@ array|int auth (string *auth, object id)
 	roxen->quick_ip_to_host(id->remoteaddr);
 	return ({0,u,p});
     }
-    if(dirinfo[1] == "{x-hop}*")  // !!!! HACK
-	dirinfo[1] = p;
-    if(p != dirinfo[1]) {
-	// <- Zapracovat  {CRYPT} a {SHA1} !!!
-	DEBUGLOG ("password check ("+dirinfo[1]+","+p+") failed");
-	//fail++;
-	failed[id->remoteaddr]++;
-	roxen->quick_ip_to_host(id->remoteaddr);
-	return ({0,u,p});
+    pw = dirinfo[1];
+    if(pw == "{x-hop}*")  // !!!! HACK
+	pw = p;
+    if(p != pw) {
+	// Digests {CRYPT}, {SH1} and {MD5}
+	int pok = 0;
+	if (sizeof(pw) > 6)
+	    switch (upper_case(pw[..4])) {
+		case "{SHA}" :
+		    pok = (pw[5..] == MIME.encode_base64(Crypto.sha()->update(p)->digest()));
+		    DEBUGLOG ("Trying SHA digest ...");
+		    break;
+
+		case "{MD5}" :
+		    pok = (pw[5..] == MIME.encode_base64(Crypto.md5()->update(p)->digest()));
+		    DEBUGLOG ("Trying MD5 digest ...");
+		    break;
+
+		case "{CRYP" :
+		    if (sizeof(pw) > 7 && pw[5..7] == "T}") {
+			pok = !crypt(p,pw[8..]);
+			DEBUGLOG ("Trying CRYPT digest ...");
+		    }
+		    break;
+	    } // switch
+	if (!pok) {
+	    DEBUGLOG ("password check (" + pw + ", " + p + ") failed");
+	    //fail++;
+	    failed[id->remoteaddr]++;
+	    roxen->quick_ip_to_host(id->remoteaddr);
+	    return ({0,u,p});
+	}
     }
 
     if(!access_mode_is_user()) {
