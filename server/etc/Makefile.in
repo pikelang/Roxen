@@ -1,7 +1,7 @@
 #
 # Sub makefile for extracting autodoc
 #
-# $Id: Makefile.in,v 1.1 2001/08/20 16:25:37 nilsson Exp $
+# $Id: Makefile.in,v 1.2 2001/08/23 18:58:16 nilsson Exp $
 #
 
 PIKE=pike
@@ -12,6 +12,7 @@ SRCDIR=@SRCDIR@
 PIKEROOT=@PIKEROOT@
 ROOT=@ROOT@
 BUILDROT=@BUILDROOT@
+EXTARGS=@EXTARGS@
 
 XMLFILES=
 
@@ -23,27 +24,27 @@ extract: xml recurse
 
 .c.xml: $(PIKEROOT)/bin/autodoc.pike $(PIKEROOT)/bin/mkxml.pike
 	@rm -f "$@.new" 2>/dev/null || /bin/true
-	@$(PIKE) $(PIKEROOT)/bin/autodoc.pike "$<" >"$@.new" && \
+	@$(PIKE) $(PIKEROOT)/bin/autodoc.pike $(EXTARGS) "$<" >"$@.new" && \
 	  mv -f "$@.new" "$@"
 
 .pike.xml: $(PIKEROOT)/bin/autodoc.pike $(PIKEROOT)/bin/mkxml.pike
 	@rm -f "$@.new" 2>/dev/null || /bin/true
-	@$(PIKE) $(PIKEROOT)/bin/autodoc.pike "$<" >"$@.new" && \
+	@$(PIKE) $(PIKEROOT)/bin/autodoc.pike $(EXTARGS) "$<" >"$@.new" && \
 	  mv -f "$@.new" "$@"
 
 .pike.in.xml: $(PIKEROOT)/bin/autodoc.pike $(PIKEROOT)/bin/mkxml.pike
 	@rm -f "$@.new" 2>/dev/null || /bin/true
-	@$(PIKE) $(PIKEROOT)/bin/autodoc.pike "$<" >"$@.new" && \
+	@$(PIKE) $(PIKEROOT)/bin/autodoc.pike $(EXTARGS) "$<" >"$@.new" && \
 	  mv -f "$@.new" "$@"
 
 .pmod.xml: $(PIKEROOT)/bin/autodoc.pike $(PIKEROOT)/bin/mkxml.pike
 	@rm -f "$@.new" 2>/dev/null || /bin/true
-	@$(PIKE) $(PIKEROOT)/bin/autodoc.pike "$<" >"$@.new" && \
+	@$(PIKE) $(PIKEROOT)/bin/autodoc.pike $(EXTARGS) "$<" >"$@.new" && \
 	  mv -f "$@.new" "$@"
 
 .pmod.in.xml: $(PIKEROOT)/bin/autodoc.pike $(PIKEROOT)/bin/mkxml.pike
 	@rm -f "$@.new" 2>/dev/null || /bin/true
-	@$(PIKE) $(PIKEROOT)/bin/autodoc.pike "$<" >"$@.new" && \
+	@$(PIKE) $(PIKEROOT)/bin/autodoc.pike $(EXTARGS) "$<" >"$@.new" && \
 	  mv -f "$@.new" "$@"
 
 xml:
@@ -102,6 +103,7 @@ subdirectories:
 	          -e "s#@""PIKEROOT@#$(PIKEROOT)#" \
 	          -e "s#@""ROOT@#../$(ROOT)#" \
 	          -e "s#@""BUILDROOT@#../$(BUILDROOT)#" \
+	          -e "s#@""EXTARGS@#$(EXTARGS)#" \
 	        <$(ROOT)/Makefile.in >"$$d/Makefile" || exit 1; \
 	    fi; \
 	  fi; \
