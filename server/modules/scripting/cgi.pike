@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.37 2000/04/28 22:39:00 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.38 2000/05/25 17:14:10 grubba Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -827,7 +827,7 @@ class CGIScript
     }
 
     if(environment->INDEX)
-      arguments = environment->INDEX/"+";
+      arguments = Array.map(environment->INDEX/"+", http_decode_string);
     else
       arguments = ({});
 
