@@ -460,7 +460,10 @@ array get_variable_maps( object mod,
       // configuration variable basis in that case. /mast
       //remove_call_out( mod->save );
       //call_out( mod->save, 5 );
-      mod->save();
+      if( mod->save_me )
+        mod->save_me();
+      else
+        mod->save();
     }
   return variables;
 }
