@@ -1,5 +1,5 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
-// $Id: sed.pike,v 1.1 1998/04/02 00:27:22 mirar Exp $
+// $Id: sed.pike,v 1.2 1998/04/02 00:42:53 mirar Exp $
 // by Mirar <mirar@idonex.se>
 
 // Adds the <sed> tag, to emulate a subset of sed operations in rxml
@@ -37,7 +37,7 @@
 // 
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.1 1998/04/02 00:27:22 mirar Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.2 1998/04/02 00:42:53 mirar Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -74,13 +74,8 @@ array sedreplace(string s,object re,string with,
    string w=0;
    array pr=({});
 
-   write("split: "+s+" -> ");
    if (!(a=re->split(s)))
-   {
-      write("0\n");
       return 0;
-   }
-   write("["+a*"]["+"] ->\n");
 
    if (first)
    {
@@ -119,8 +114,6 @@ array sedreplace(string s,object re,string with,
    }
    else
       s+=a[-1];
-
-   write("-> "+s+"\n");
 
    return ({pr,s});
 };
@@ -186,14 +179,13 @@ array execute_sed(array(string) e,array(string) in,int suppress)
       start=a1[0]; 
       cmd=a1[1];
 
-      if (cmd[0..1]==",$") cmd=cmd[2..];
+      if (cmd[0..1]==",$") { cmd=cmd[2..]; stop=sizeof(in)-1; }
       else if (sscanf(cmd,",%s",cmd))
       {
 	 a1=scan_for_linenumber(cmd,in,start);
 	 stop=a1[0]; 
 	 cmd=a1[1];
       }
-      else stop=start;
 
       if (stop>sizeof(in)-1) stop=sizeof(in)-1;
       if (start<0) start=0;
@@ -219,7 +211,6 @@ array execute_sed(array(string) e,array(string) in,int suppress)
 
 	    while (start<=stop)
 	    {
-write("start="+start+" stop="+stop+"\n");
 	       array sa=sedreplace(in[start],re,with,whatin,
 				   first,lastmod,flags);
 
@@ -250,7 +241,7 @@ write("start="+start+" stop="+stop+"\n");
 
 	    while (start<=stop)
 	    {
-	       in[start]=replace(in[start],what,with);
+	       in[start]=replace(in[start],a1,a2);
 	       start++;
 	    }
 	    break;
