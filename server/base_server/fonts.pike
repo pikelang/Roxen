@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.51 2000/05/26 22:20:02 per Exp $
+// $Id: fonts.pike,v 1.52 2000/12/14 15:56:10 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -204,12 +204,13 @@ class TTFWrapper
     return real->write(@(encoder?
 			 Array.map(what, lambda(string s) {
 					   return encoder->clear()->
-					     feed(s)->drain();
+                                                  feed(s)->drain();
 					 }):what));
   }
 
   array text_extents( string what )
   {
+    if( what == "" ) what = " ";
     Image.Image o = real_write( what );
     return ({ o->xsize(), o->ysize() });
   }
@@ -235,7 +236,8 @@ class TTFWrapper
 
   Image.Image write( string ... what )
   {
-    return real_write(@Array.map( (array(string))what,replace," ",""))
+    return real_write(@Array.map( (array(string))replace(what,"", " "),
+                                  replace," ",""))
            ->scale(0.5);
   }
 }
