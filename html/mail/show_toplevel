@@ -1,0 +1,15 @@
+<gh2>Mail boxes</gh2>
+<table width=400 bgcolor=black cellpadding=1><tr><td>
+<table width=100% bgcolor=#ffeedd border=0 cellspacing=0 cellpadding=2>
+<tr bgcolor=black><td><font color=white>Mailbox</td><td align=right><font color=white>Mail</td><td align=right><font color=white>Unread</td></tr>
+<list-mailboxes>
+  <tr><td><mail-a mailbox_id=#id#>#name#</a></td><td align=right>#mail#</td><td align=right>#unread#</td></tr>
+</list-mailboxes>
+</table></tr></td>
+</table>
+
+<glinkbutton value="Create a new mailbox" href=new_mailbox.pike>
+<glinkbutton value="Delete a mailbox"     href=delete_mailbox.pike>
+
+<gh2>Preferences</gh2>
+  

@@ -1,3 +1,4 @@
+<gbutton name=list_boxes value="Toplevel">
 <font size=-1>
 <select onChange='document.forms[0].submit();' 
         name=mailbox_id>
@@ -9,5 +10,15 @@
      value=#id#>#name# (unread: #unread#/#mail#)
   </list-mailboxes>
 </select>
-</font> <gbutton name=list_unread value="List unread"><gbutton name=list_all value="List all">
+</font> 
+
+<if not variable=listall
+><gbutton selected name=list_unread value="Unread"
+><gbutton name=list_all value="All"></if><else
+><gbutton name=list_unread value="Unread"
+><gbutton selected name=list_all value="All"></else> 
+<font size=-1>matching</font> 
+<font size=-1><formoutput><input name=mail_match value="#mail_match:quote=dtag#"> 
+<if variable=mail_match><gbutton name=list_clear_match value="Clear"></if>
+<gbutton name=list_match value="Ok"></formoutput></font>
 

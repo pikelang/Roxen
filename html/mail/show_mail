@@ -7,7 +7,11 @@
       </tr>
       <tr>
         <td valign=top><font color=black>Sender:</td>
-        <td valign=top><font color=##550000>#from#</td>
+        <td valign=top><table border=0 cellpadding=0 cellspacing=0>
+               <tr>
+                <td><mail-xface align=right>#x-face:quote=none#</mail-xface></td>
+                <td valign=top><font color=##550000>#from#</td>
+               </tr></table></td>
         <td valign=top><font color=black>To:</td> 
         <td valign=top><font color=##550000>#to#</td>
       </tr>

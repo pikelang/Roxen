@@ -1,5 +1,14 @@
-<define tag=mset>
-<cset variable=&variable; preparse
-  ><amail-user-variable variable='&from;' default='&default;'><
-/cset>
+<define tag=gbutton><formoutput><input valign=bottom border=0 type=image name=&name; src="#gtextid&selected;:quote=http#&value;"></formoutput></define>
+<define tag=glinkbutton><formoutput><a href='&href;'><img valign=bottom border=0 src="#gtextid&selected;:quote=http#&value;"></formoutput></define>
+
+<define tag=do>
+  <set variable=&action;.x value=1>
+</define>
+
+<define container=action>
+ <if variable='&name;.x'>
+   <unset variable='&name;.x'>
+   <unset variable='&name;.y'>
+   <contents>
+  </if>
 </define>

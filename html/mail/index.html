@@ -1,11 +1,42 @@
-<gauge>
-<insert file=actions>
+<mail-verify-login>
+<title>Automail for <mail-userinfo real> &lt;<mail-userinfo email>&gt;</title>
 
-<insert file=stddef>
-<insert file=show_mailboxes>
-<if not variable=mail_id>
- <if variable=mailbox_id><insert file=show_mailbox></if>
-</if>
-<insert file=show_buttons>
-<if variable=mail_id noparse><insert file=show_mail></if>
-<insert file=show_buttons>
+
+<gauge resultonly>
+  <use file=macros>
+  <set variable="gtextid&selected;" 
+       eval="<gtext-id talign=center xspacing=20 yspacing=8 
+                       bg=#fea fg=black scale=0.3 notrans 
+                       bevel=3 quant=14>$">
+  <set variable="gtextidselected" 
+       eval="<gtext-id talign=center xspacing=20 yspacing=8 
+                       bg=#aef fg=black scale=0.3 notrans 
+                       bevel=3 quant=14>$">
+
+  <process-user-buttons>
+  <process-move-actions>
+  <process-mail-actions>
+  <expire_time now>
+  <body bgcolor="#ffffff" text="#000000" link="#000088"
+        vlink="#000088" alink="#880000">
+  <form action="" method=get>
+  <if not variable=mailbox_id>
+    <insert file=show_toplevel>
+  </if>
+  <else>
+    <insert file=show_mailboxes>
+    <if not variable=mail_id>
+      <if variable=mailbox_id>
+        <insert file=show_mailbox>
+      </if>
+    </if>
+    <insert file=show_buttons>
+    <if variable=mail_id noparse>
+      <insert file=show_mail>
+      <insert file=show_buttons>
+    </if>
+    <mail-make-hidden>
+  </else>
+</gauge>
+<p>
+<br>Time: <b><insert name=gauge_time></b>

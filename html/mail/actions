@@ -1,54 +1,9 @@
-<set variable="gtextid" eval="<gtext-id talign=center xspacing=20 yspacing=8 bg=#fea fg=black scale=0.3 notrans bevel=3 quant=255>$">
-
-<define tag=gbutton><formoutput><input valign=bottom border=0 type=image name=&name; src="#gtextid:quote=http#&value;"></formoutput></define>
-
 <form method=get action="">
-<if variable=list_unread.x>
-  <unset variable=list_unread.x>
-  <unset variable=list_unread.y>
-  <unset variable=listall>
-  <unset variable=mail_id>
-</if>
 
-<if variable=list_all.x>
-  <unset variable=list_all.x>
-  <unset variable=list_all.y>
-  <set variable=listall value=1>
-  <unset variable=mail_id>
-</if>
+<action name=delete_mailbox>
+  <formoutput><delete-mailbox mailbox=#mailbox_id#></formoutput>
+</action>
 
-<if variable=next.x>
-  <unset variable=next.x>
-  <unset variable=next.y>
-  <if variable=mailbox_id> 
-     <set variable=mail_id eval="<mail-next>">
-  </if>
-</if>
+<if variable="mail_id is NOPE"><unset variable=mail_id></if>
 
-<if variable=next_unread.x>
-  <unset variable=next_unread.x>
-  <unset variable=next_unread.y>
-  <if variable=mailbox_id> 
-     <set variable=mail_id eval="<mail-next unread>">
-  </if>
-</if>
-
-<if variable=previous.x>
-  <unset variable=previous.x>
-  <unset variable=previous.y>
-  <if variable=mailbox_id> 
-     <set variable=mail_id eval="<mail-next previous>">
-  </if>
-</if>
-
-<if variable=previous_unread.x>
-  <unset variable=previous_unread.x>
-  <unset variable=previous_unread.y>
-  <if variable=mailbox_id> 
-     <set variable=mail_id eval="<mail-next previous unread>">
-  </if>
-</if>
-
-<unset variable=st><unset variable=rf><unset variable=qt>
-<unset variable=lk><unset variable=nh><unset variable=qc>
 <mail-make-hidden>
