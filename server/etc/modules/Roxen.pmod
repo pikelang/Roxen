@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.20 2000/07/05 23:09:42 mast Exp $
+ * $Id: Roxen.pmod,v 1.21 2000/07/11 01:47:07 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -793,11 +793,10 @@ array(int) parse_since(string date)
 {
   if(!date || sizeof(date)<14) return({0,-1});
   int t=0, length = -1;
-  string dat;
 
 #if constant(mktime)
-  // Tue, 28 Apr 1998 13:31:29 GMT
-  sscanf(dat=lower_case(date+"; length="), "%*s, %s; length=%d", dat, length);
+  string dat=lower_case(date);
+  sscanf(dat+"; length=", "%*s, %s; length=%d", dat, length);
 
   if(!(t=since_cache[dat])) {
     int day, year = -1, month, hour, minute, second;
