@@ -111,7 +111,7 @@ AC_CACHE_VAL(lpc_cv_shuffle, [
       case "`uname -m`" in
         sun4*)
 	  case "`uname -r`" in
-	    5.*) lpc_cv_shuffle="shuffle" ;;
+	    5.[45]*) lpc_cv_shuffle="shuffle" ;;
 	  esac
         ;;
       esac
