@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.50 2001/03/13 01:23:36 nilsson Exp $
+ * $Id: Roxen.pmod,v 1.51 2001/04/17 08:00:53 per Exp $
  *
  * Various helper functions.
  *
@@ -1104,7 +1104,7 @@ void remove_cookie( RequestID id,
 //! Sends a Set-Cookie header with an expire time of 00:00 1/1 1970.
 //! The domain and path arguments are optional.
 {
-  set_cookie( id, name, value, -time(1), domain, path );
+  set_cookie( id, name, value, -time(1)+1, domain, path );
 }
 
 void add_cache_callback( RequestID id,function(RequestID,object:int) callback )
