@@ -11,7 +11,7 @@
 
 string describe_backtrace(mixed *trace);
 
-string cvs_version = "$Id: roxen_master.pike,v 1.16.2.3 1997/02/06 00:16:59 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.16.2.4 1997/02/06 00:23:51 grubba Exp $";
 string pike_library_path;
 object stdout, stdin;
 mapping names=([]);
@@ -270,7 +270,7 @@ void _main(string *argv, string *env)
   argv=tmp->get_args(argv,1)[1..];
   destruct(tmp);
 
-#endif /* version of __version */
+#endif /* version or __version */
 
    if(!sizeof(argv))
   {
