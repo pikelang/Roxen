@@ -1,7 +1,7 @@
 // This is the Roxen WebServer state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.8 2002/01/24 01:12:01 mast Exp $
+// $Id: StateHandler.pmod,v 1.9 2002/01/24 01:22:12 mast Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -263,8 +263,8 @@ class Page_state {
   //! from the client and not the values they have currently. That's a
   //! feature, since the revisit URL will then "redo" the page in all
   //! respects except the state change. Variables that were passed as
-  //! headers in a POST method are left out too, which also is a
-  //! feature considering the intended use of POST.
+  //! headers in a POST method are left out, which also is a feature
+  //! for the same reason, considering the intended use of POST.
   {
     string other_vars;
 
