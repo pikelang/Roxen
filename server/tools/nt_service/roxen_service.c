@@ -2,7 +2,7 @@
  *
  * Based on the service example code from Microsoft.
  *
- * $Id: roxen_service.c,v 1.5 2000/06/28 18:49:08 mast Exp $
+ * $Id: roxen_service.c,v 1.6 2000/06/29 21:33:33 mast Exp $
  */
 
 #include <windows.h>
@@ -33,7 +33,7 @@ HANDLE hThread;
 char key[9];
 int stopping = 0;
 
-int start_roxen();
+int start_roxen (int first_time);
 
 void error_msg (int show_last_err, const TCHAR *fmt, ...)
 {
@@ -104,7 +104,7 @@ VOID ServiceStart()
 	goto error_cleanup;
 
     /* Start roxen */
-    if (!start_roxen())
+    if (!start_roxen (1))
       goto error_cleanup;
 
     /* report the status to the service control manager. */
@@ -129,7 +129,7 @@ VOID ServiceStart()
 	    break;
 	  }
 	  else			/* Restart */
-	    if (!start_roxen())
+	    if (!start_roxen (0))
 	      goto error_cleanup;
 	}
       }
@@ -208,7 +208,7 @@ VOID ServiceStop (int write_stop_file)
 		&dwThreadId);
   }
 
-int start_roxen()
+int start_roxen (int first_time)
 {
   STARTUPINFO info;
   PROCESS_INFORMATION proc;
@@ -222,28 +222,51 @@ int start_roxen()
   cwd[0] = 0;
   _tgetcwd (cwd, _MAX_PATH);
 
-  if (!(fd = fopen ("pikelocation.txt", "r"))) {
-    if (_chdir ("..")) {
-      error_msg (1, TEXT("Could not change to the directory %s\\.."), cwd);
+  if (first_time) {
+#define CLASSPATH TEXT("java/classes/roxen_module.jar;java/classes/roxen_servlet.jar;java/classes/servlet.jar;java/classes")
+    TCHAR *old = _tgetenv (TEXT("CLASSPATH"));
+    TCHAR *new = 0;
+    if (old) {
+      new = malloc (sizeof (CLASSPATH) + sizeof (TCHAR) +
+		    _tcslen (old) * sizeof (TCHAR));
+      _stprintf (new, TEXT("%s;%s"), CLASSPATH, old);
+    }
+    if (!SetEnvironmentVariable (TEXT("CLASSPATH"), new ? new : CLASSPATH)) {
+      error_msg (1, TEXT("Could not set the CLASSPATH environment variable"));
+      if (new) free (new);
       return 0;
     }
-    if (!(fd = fopen ("pikelocation.txt", "r"))) {
-      if (_chdir (server_location + sizeof (LOCATION_COOKIE) - sizeof (""))) {
-	error_msg (1, TEXT("Could not change to the Roxen server directory %hs"),
-		   server_location + sizeof (LOCATION_COOKIE) - sizeof (""));
+    if (new) free (new);
+  }
+
+  if (!(fd = fopen ("pikelocation.txt", "r"))) {
+    if (first_time) {
+      if (_chdir ("..")) {
+	error_msg (1, TEXT("Could not change to the directory %s\\.."), cwd);
 	return 0;
       }
       if (!(fd = fopen ("pikelocation.txt", "r"))) {
-	error_msg (1, TEXT("Roxen server directory not found - "
-			   "failed to open %s\\pikelocation.txt, "
-			   "%s\\..\\pikelocation.txt, and "
-			   "&hs\\pikelocation.txt"),
-		   cwd, cwd, server_location + sizeof (LOCATION_COOKIE) - sizeof (""));
-	return 0;
+	if (_chdir (server_location + sizeof (LOCATION_COOKIE) - sizeof (""))) {
+	  error_msg (1, TEXT("Could not change to the Roxen server directory %hs"),
+		     server_location + sizeof (LOCATION_COOKIE) - sizeof (""));
+	  return 0;
+	}
+	if (!(fd = fopen ("pikelocation.txt", "r"))) {
+	  error_msg (1, TEXT("Roxen server directory not found - "
+			     "failed to open %s\\pikelocation.txt, "
+			     "%s\\..\\pikelocation.txt, and "
+			     "&hs\\pikelocation.txt"),
+		     cwd, cwd, server_location + sizeof (LOCATION_COOKIE) - sizeof (""));
+	  return 0;
+	}
       }
+      cwd[0] = 0;
+      _tgetcwd (cwd, _MAX_PATH);
     }
-    cwd[0] = 0;
-    _tgetcwd (cwd, _MAX_PATH);
+    else {
+      error_msg (1, TEXT("Failed to open %s\\pikelocation.txt"), cwd);
+      return 0;
+    }
   }
   if (!(len = fread (pikeloc, 1, _MAX_PATH, fd))) {
     error_msg (1, TEXT("Could not read %s\\pikelocation.txt"), cwd);
