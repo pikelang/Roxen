@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.11 2000/02/12 18:38:17 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.12 2000/02/12 18:41:23 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -159,7 +159,7 @@ JSSupport get_jss(object id)
 static private string container_js_link(string name, mapping args,
 					string contents, object id)
 {
-  args->onMouseOver = "clearToPopup('"+id->misc->_popupparent||"none"+"')";
+  args->onMouseOver = "clearToPopup('"+(id->misc->_popupparent||"none")+"')";
   return make_container_unquoted("a", args, contents);
 }
 
