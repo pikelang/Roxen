@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.142 1999/03/30 20:44:39 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.143 1999/03/30 20:47:56 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1092,7 +1092,7 @@ class backend
   void log(object|mapping(string:mixed) session,
 	   string cmd, string arg, int errcode, int|void size)
   {
-    mixed err = {
+    mixed err = catch {
       conf->log(([ "error":errcode, "len":size ]), session->log_id +
 		([ "method":cmd, "not_query":arg, "time":time(1) ]));
     };
