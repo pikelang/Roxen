@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.24 2004/02/09 17:54:51 wellhard Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.25 2004/02/09 18:12:23 anders Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -341,6 +341,7 @@ SIMPLE_LI(Gamma);
 SIMPLE_LI(Invert);
 SIMPLE_LI(Grey);
 SIMPLE_LI(Color);
+SIMPLE_LI(Clear);
 SIMPLE_LI(MirrorX);
 SIMPLE_LI(MirrorY);
 SIMPLE_LI(HSV2RGB);
@@ -396,6 +397,18 @@ class TagGXML
   
 
 #define V(X) ("$["+X+"]")
+  class LayersVars
+  {
+    inherit RXML.Scope;
+    mixed `[] (string var, void|RXML.Context ctx,
+	       void|string scope_name, void|RXML.Type type)
+    {
+      string scope;
+      if (sscanf(scope_name, "%*s.layers.%s", scope) == 2)
+	return V("layers."+scope+"."+var);
+      return this_object();
+    }
+  }
     mapping make_guides_mapping( string v )
     {
       mapping res = ([]);
@@ -429,6 +442,7 @@ class TagGXML
 	"width":V("layer.w"), "w":V("layer.w"),
 	"height":V("layer.h"),"h":V("layer.h"),
       ]),
+      "layers":LayersVars(),
     ]);
 #undef V
 
