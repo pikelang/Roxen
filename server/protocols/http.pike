@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.130 1999/04/17 21:34:44 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.131 1999/04/22 09:34:29 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -726,7 +726,7 @@ void end(string|void s, int|void keepit)
     array p;
     if(!(p=conf->profile_map[nid]))
       p = conf->profile_map[nid] = ({0,0.0,0.0});
-    conf->profile_map[nid][0]++;
+    p[0]++;
     p[1] += elapsed;
     if(elapsed > p[2]) p[2]=elapsed;
   }
