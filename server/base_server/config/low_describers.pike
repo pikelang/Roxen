@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.16 1997/09/03 12:11:11 per Exp $ */
+/* $Id: low_describers.pike,v 1.17 1997/09/14 22:40:21 grubba Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -212,7 +212,7 @@ void init_ip_list()
                              "/usr/bin/ifconfig");  
   string aliasesfile;
  
-  ip_number_list = ({ "ANY",  });
+  array new_ip_number_list = ({ "ANY",  });
  
   if(!ifconfig) ifconfig = "ifconfig";
 
@@ -226,7 +226,7 @@ void init_ip_list()
       {
         // Get the last entry on the line.
         data = (replace(data, "\t", " ")/" "-({""}))[-1];
-        ip_number_list |= ({ to_hostname(data) });
+        new_ip_number_list |= ({ to_hostname(data) });
       }
     }
   }
@@ -242,13 +242,15 @@ void init_ip_list()
     {
       while(sscanf(ip, "%*s:%s", ip));
       // Only add it if it was not there before
-      ip_number_list |= ({ to_hostname(ip) });
+      new_ip_number_list |= ({ to_hostname(ip) });
     }
   }
     
-  sort(ip_number_list);
-  if(sizeof(ip_number_list) == 2)
+  sort(new_ip_number_list);
+  if(sizeof(new_ip_number_list) == 2)
     ip_number_list = 0;
+  else
+    ip_number_list = new_ip_number_list;
 }
  
 
