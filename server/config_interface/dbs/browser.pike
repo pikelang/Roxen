@@ -282,14 +282,14 @@ mixed delete_db( string db, RequestID id )
 {
   string msg;
   if( DBManager.is_internal( db ) )
-    msg = (string)_(361, "Are you sure you want to delete the database %s "
+    msg = (string)_(423, "Are you sure you want to delete the database %s "
 		    "and the data?");
   else
-    msg = (string)_(362,"Are you sure you want to delete the database %s?"
+    msg = (string)_(423,"Are you sure you want to delete the database %s?"
 		    " No data will be deleted from the remote datbase.");
     
   VERIFY(msg);
-  report_notice( _(424,"The database %s was deleted by %s")+"\n",
+  report_notice( _(424,"The database %s was deleted by b%s")+"\n",
 		 db, id->misc->authenticated_user->name() );
   DBManager.drop_db( db );
   return Roxen.http_redirect( "/dbs/", id );
@@ -305,7 +305,6 @@ mixed clear_db( string db, RequestID id )
 }
 
 
-mapping images = ([]);
 int image_id = time() ^ gethrtime();
 
 string is_image( string x )
@@ -321,7 +320,7 @@ string is_image( string x )
 
 int is_encode_value( string what )
 {
-  return !search( what, "¶ke" );
+  return strlen(what) >= 5 && !search( what, "¶ke" );
 }
 
 string format_decode_value( string what )
@@ -334,12 +333,18 @@ string format_decode_value( string what )
     return what;
   };
 
+  // Type is program or object?
+  if( (what[4] & 15) == 5 || (what[4] & 15) == 3 )
+    return Roxen.html_encode_string(
+      sprintf("<"+_(233,"bytecode data")+" ("+
+	      _(0,"%d bytes")+")>", strlen(what)));
+  
   catch
   {
-    mixed q = decode_value( what );
-    if( objectp( q ) || programp( q ) )
-      return Roxen.html_encode_string("<"+_(233,"bytecode data")+">");
-    return "<pre>"+Roxen.html_encode_string( trim_comments( sprintf("%O", q ) ) )+"</pre>";
+    return
+      "<pre>"+
+      Roxen.html_encode_string(trim_comments(sprintf("%O",decode_value(what))))+
+      "</pre>";
   };
   return Roxen.html_encode_string( what );
 }
@@ -348,17 +353,23 @@ string store_image( string x )
 {
   string id = (string)image_id++;
 
-  images[ id ] = ([
+  .State->images[ id ] = ([
     "type":"image/"+(is_image( x )||"unknown"),
     "data":x,
     "len":strlen(x),
   ]);
-  
   return id;
 }
 
 mapping|string parse( RequestID id )
 {
+  if( id->variables->image )
+  {
+    return m_delete( .State->images, id->variables->image );
+  }
+  if( !id->variables->db )
+    return Roxen.http_redirect( "/dbs/", id );
+
   string res =
     "<use file='/template'/><tmpl>"
     "<topmenu base='../' selected='dbs'/>"
@@ -366,11 +377,6 @@ mapping|string parse( RequestID id )
     "<insert file='subtabs.pike'/></st-tabs><st-page>"
     "<input type=hidden name='sort' value='&form.sort:http;' />\n"
     "<input type=hidden name='db' value='&form.db:http;' />\n";
-  if( id->variables->image )
-    return m_delete( images, id->variables->image );
-
-  if( !id->variables->db )
-    return Roxen.http_redirect( "/dbs/", id );
 
   if( id->variables->action && actions[ id->variables->action ])
   {

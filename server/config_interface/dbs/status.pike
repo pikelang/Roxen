@@ -39,14 +39,9 @@ string parse( RequestID id )
 //       sql->master_sql->host_info()+"</td></tr>\n";
   
   res += "</table>";
-  mapping connections = ([]);
-#ifdef THREADS
-  foreach( indices( roxenloader->my_mysql_cache ),  object t )
-    foreach( indices( roxenloader->my_mysql_cache[t] ), string name )
-#else
-    foreach( indices( roxenloader->my_mysql_cache ), string name )
-#endif
-      connections[name]++;
+  mapping connections = roxenloader->sql_active_list+([]);
+  foreach( indices( roxenloader->sql_free_list ), string name )
+    connections[name]=sizeof(roxenloader->sql_free_list[name]);
 
 #ifdef THREADS
   foreach( indices( DBManager->sql_cache ), object t )
