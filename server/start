@@ -126,11 +126,11 @@ else
 fi
 
 if [ -z "$once" ] ; then
- (while : ; do
-   sdfile="/tmp/Roxen_Shutdown_$$"
-   rm $sdfile
-   if [ -f "$sdfile" ] ; then
-     cat << oo
+  (while : ; do
+    sdfile="/tmp/Roxen_Shutdown_$$"
+    rm $sdfile
+    if [ -f "$sdfile" ] ; then
+      cat << oo
 WARNING:
 A shutdown file '('$sdfile')' is present, and the file cannot be
 removed by this script.
@@ -140,20 +140,20 @@ the future.
 
 The file:
 oo
-    ls -l $sdfile
-    noshutdown="yes"
-  else
-    noshutdown=""
-  fi
+      ls -l $sdfile
+      noshutdown="yes"
+    else
+      noshutdown=""
+    fi
   
-  echo $$: "Server restart at `date`"
-  echo $$: "Debug log in $LOGDIR/debug/$FILES.1"
-  rotate $LOGDIR/debug/$FILES
+    echo $$: "Server restart at `date`"
+    echo $$: "Debug log in $LOGDIR/debug/$FILES.1"
+    rotate $LOGDIR/debug/$FILES
 
-  start_roxen 2>>$LOGDIR/debug/$FILES.1 1>&2
+    start_roxen 2>>$LOGDIR/debug/$FILES.1 1>&2
 
-  if [ -z "$noshutdown" ] ; then 
-    if [ -f "$sdfile" ] ; then
+    if [ -z "$noshutdown" ] ; then 
+      if [ -f "$sdfile" ] ; then
 
 # A shutdown file. This is only done if Roxen cannot kill this script
 # for some reason, the most common beeing the lack of a seteuid()
@@ -164,22 +164,25 @@ oo
 # shutdown file, but since it is extremely unlikely that two
 # start-scripts get the same PID, this is not done.
 
-      echo $$: Server shutdown file detected. Shutting down
-      rm "$sdfile"
-      if [ -f "$sdfile" ] ; then
-        echo $$: "Failed to remove '"$sdfile"'. This could be a problem"
-        exit 0
-      else
-        exit 0
+        echo $$: Server shutdown file detected. Shutting down
+        rm "$sdfile"
+        if [ -f "$sdfile" ] ; then
+          echo $$: "Failed to remove '"$sdfile"'. This could be a problem"
+          exit 0
+        else
+          exit 0
+        fi
       fi
     fi
-  fi
-done
+    echo $$: Roxen died. Restarting in 5 seconds...
+    # Don't take all available CPU if Roxen keeps dieing. 
+    sleep 5
+  done
     
-echo $$: Not Reached "famous last words"
+  echo $$: Not Reached "famous last words"
 
-) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1 &
-cat << oo
+  ) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1 &
+  cat << oo
 Using configuration from $DIR, storing the debug log in $LOGDIR/debug/$FILES.1
 You can use the configuration interface in the server to get debug info.
 oo
