@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.201 2000/02/11 08:53:32 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.202 2000/02/14 09:22:40 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -98,6 +98,55 @@ string data, leftovers;
 array (int|string) auth;
 string rawauth, realauth;
 string since;
+array(string) output_charset = ({});
+
+void set_output_charset( string|function to )
+{
+  output_charset = ({ to }) + output_charset;
+}
+
+array(string) output_encode( string what )
+{
+  string charset;
+  if( sizeof( output_charset ) )
+  {
+    foreach( output_charset, string|function f )
+    {
+      if( stringp( f ) )
+        if( !catch( what = Locale.Charset.encoder( f, "?" )
+                    ->feed( what )->drain() ) )
+        {
+          charset = f;
+          break;
+        }
+      else
+        if( !catch( what = f( what ) ) )
+        {
+          switch( f )
+          {
+           case string_to_unicode:
+             charset = "ISO10646-1";
+             break;
+           case string_to_utf8:
+             charset = "UTF-8";
+             break;
+           default:
+             break;
+          }
+          break;
+        }
+    }
+  }
+  else
+  {
+    if( String.width( what ) > 1 )
+    {
+      charset = "UTF-8";
+      what = string_to_utf8( what );
+    }
+  }
+  return ({ charset, what });
+}
 
 void decode_map( mapping what, function decoder )
 {
@@ -132,6 +181,8 @@ void decode_map( mapping what, function decoder )
 
 void decode_charset_encoding( function(string:string) decoder )
 {
+  if( misc->request_charset_decoded )
+    return;
   misc->request_charset_decoded = 1;
   if( !decoder )
     return;
@@ -840,6 +891,7 @@ private int parse_got()
   if (supports->requests_are_utf8_encoded) {
     catch
     {
+      set_output_charset( string_to_utf8 );
       if( !variables->magic_roxen_automatic_charset_variable )
         variables->magic_roxen_automatic_charset_variable = "Ã¥Ã¤Ã¶";
 //       f = utf8_to_string(f);
@@ -1472,10 +1524,20 @@ void send_result(mapping|void result)
 	file->len += strlen(file->data);
     }
     if(prot != "HTTP/0.9") {
-      string h;
-      heads += ([
+      string h, charset;
+
+      if( stringp(file->data) )
+      {
+        [charset,file->data] = output_encode( file->data );
+        if( charset )
+          charset = "; charset="+charset;
+        else
+          charset="";
+      }
+
+      heads |= ([
 	"MIME-Version" 	: (file["mime-version"] || "1.0"),
-	"Content-type" 	: file["type"],
+	"Content-type" 	: file["type"]+charset,
 	"Accept-Ranges" 	: "bytes",
 	"Server" 		: replace(version(), " ", "·"),
 #ifdef KEEP_ALIVE
@@ -1578,8 +1640,6 @@ void send_result(mapping|void result)
   if(!leftovers) leftovers = data||"";
 #endif
 
-  if(head_string) send(head_string);
-
   if(method != "HEAD" && file->error != 304)
     // No data for these two...
   {
@@ -1588,13 +1648,14 @@ void send_result(mapping|void result)
     {
       // Ordinary connection, and a short file.
       // Just do a blocking write().
-      my_fd->write((head_string || "") +
-		   (file->file?file->file->read(file->len):
-		    (file->data[..file->len-1])));
+      my_fd->write(head_string+
+                   (file->file?file->file->read(file->len):
+                    (file->data[..file->len-1])));
       do_log();
       return;
     }
-
+    if(head_string)
+      send(head_string);
     if(file->data && strlen(file->data))
       send(file->data, file->len);
     if(file->file)
@@ -1718,7 +1779,7 @@ void got_data(mixed fooid, string s)
 
   mixed q;
   if( q = variables->magic_roxen_automatic_charset_variable )
-    decode_charset_encoding( get_client_charset_decoder( q )  );
+    decode_charset_encoding( get_client_charset_decoder( q,this_object() )  );
 
   if (misc->host) {
     // FIXME: port_obj->name & port_obj->default_port are constant
