@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.5 2000/08/22 17:53:03 leif Exp $";
+       "$Id: perl.pike,v 2.6 2000/08/22 22:38:30 leif Exp $";
 
 constant module_type = MODULE_EXPERIMENTAL |
             MODULE_FILE_EXTENSION | MODULE_PARSER;
@@ -73,7 +73,7 @@ void create()
     "The default for this setting is 2.",
          ({ 1, 2, 3, 4, 5 }) );
 
-#if constant(system.getpwnam)
+#if constant(getpwnam)
   defvar("identity", "nobody:*", "Run Perl as...", TYPE_STRING,
     "User and group to run Perl scripts and tags as. The default for "
     "this option is `nobody:*'. Note that Roxen can't change user ID "
@@ -87,7 +87,7 @@ string status()
              "<b>Script errors</b>: " + script_errors + " <br />\n" +
              "<b>Parsed tags</b>: "  + parsed_tags + " <br />\n";
 
-#if constant(system.getpwnam)
+#if constant(getpwnam)
   if (handler_settings->set_uid)
         s += sprintf("<b>Subprocess UID</b>: set uid=%O <br />\n",
                      handler_settings->set_uid);
@@ -117,7 +117,7 @@ static void fix_settings()
   string u, g;
   mapping s = ([ ]);
 
-#if constant(system.getpwnam)
+#if constant(getpwnam)
   if (sscanf(QUERY(identity), "%s:%s", u, g) == 2)
   {
     array ua = getpwnam(u), ga = getgrnam(g);
