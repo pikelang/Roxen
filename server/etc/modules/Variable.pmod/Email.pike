@@ -26,6 +26,9 @@ array(string) verify_set( string new_value ) {
   if(arrayp(tmp)) return tmp;
   new_value=tmp;
 
+  if(!has_value(new_value, "@"))
+    return ({ LOCALE(0,"This does not look like a valid email address."), new_value });
+
   string user, domain;
   sscanf(new_value, "%s@%s", user, domain);
 
