@@ -20,6 +20,7 @@ Major changes from Roxen WebServer 2.4:
      - Localized code looks horrible and adds a lot of extra work to
        development. That's ok for paid development, but...
      - We will save memory and gain speed.
+ - Improved easter eggs.
 
  New modules:
    - CVS Repository file system; can mount a CVS repository.
