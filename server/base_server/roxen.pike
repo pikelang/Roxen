@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.330 1999/10/08 13:49:44 grubba Exp $
+ * $Id: roxen.pike,v 1.331 1999/10/08 17:19:52 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.330 1999/10/08 13:49:44 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.331 1999/10/08 17:19:52 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -416,8 +416,14 @@ private static void low_shutdown(int exit_code)
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports and then quit.  The 'start' script should then start a
 // new copy of roxen automatically.
-void restart()  { low_shutdown(-1); } 
-void shutdown() { low_shutdown(0);  }
+void restart(float|void i)  
+{ 
+  call_out(low_shutdown, i, -1); 
+} 
+void shutdown(float|void i) 
+{ 
+  call_out(low_shutdown, i, 0); 
+}
 
 /*
  * handle() stuff
