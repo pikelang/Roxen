@@ -246,8 +246,6 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/throttling/throttling_bytype.pike foreign_ident
 /server/more_modules/bofh.pike foreign_ident
 /server/more_modules/clock.pike foreign_ident
-/server/more_modules/configure.pike foreign_ident
-/server/more_modules/lysator.pike foreign_ident
 /server/protocols/ftp.pike foreign_ident
 /server/protocols/gopher.pike foreign_ident
 /server/protocols/http.pike foreign_ident
