@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <module.h>
 #include <simulate.h>
 
@@ -26,13 +27,39 @@ string hash_file_name(string what)
  | of this class.
  */
 
-private program CacheStream = class {
+
+class CacheStream {
+
   inherit "socket";
   string fname;
   object file;
   function done_callback;
   int new;
   mapping headers = ([]);
+
+  int get_code(string from)
+  {
+    int i;
+    sscanf(upper_case(from), "HTTP/%*s %d", i);
+    return i;
+  }
+  
+  void parse_headers()
+  {
+    object(FILE) cf;
+    string line, name, value;
+    cf->open(QUERY(cachedir)+fname,"r");
+    headers[" returncode"] = get_code((cf->gets()-"\r")-"\n");
+    while(strlen( (line = (cf->gets()-"\r")-"\n") || "" ))
+    {
+      if(sscanf(cf, "%s:%s", name, value) == 2)
+      {
+	sscanf(value, "%*[ \t]%s", value);
+	headers[lower_case(name-" ")] = value;
+      }
+    }
+    destruct(cf);
+  }
   
   void load_headers()
   {
@@ -72,10 +99,10 @@ private program CacheStream = class {
     catch(destruct(file)); // 'file' might be gone
     if(new) catch(rm(QUERY(cachedir)+fname)); // roxen might be gone
   }
-};
+}
 
 
-program Cache = class {
+class Cache {
   object lock = ((program) "lock" )();
   object this = this_object();
   string cd;
@@ -178,7 +205,7 @@ program Cache = class {
     if(f) return (int)("0x"+(read_bytes(QUERY(cachedir)+"size")-" "));
     return 0;
   }
-};
+}
 
 
 
@@ -363,10 +390,6 @@ string get_garb_info()
 
 
 
-/*
- */
-
-inherit "/precompiled/http_parse" : parse;
 #define DELETE_AND_RETURN(){if(cachef){cachef->new=1;destruct(cachef);}return;}
 
 #include <stat.h>
@@ -376,17 +399,44 @@ void http_check_cache_file(object cachef)
   if(!cachef->file) DELETE_AND_RETURN();
   string rfile = QUERY(cachedir)+cachef->fname;
   array (int) stat = cachef->file->stat();
+
   /*  soo..  Lets check if this is a file we want to keep. */
   /*  Initial screening is done in the proxy module. */
   if(stat[ST_SIZE] <= 0) DELETE_AND_RETURN();
 
+  if((float)stat[ST_SIZE] >=
+     (float)QUERY(cachesize)*1024.0*1024.0)
+    DELETE_AND_RETURN();
+
+  cachef->parse_headers();
+
+  if((cachef->headers[" returncode"]/100 != 2) &&
+     (cachef->headers[" returncode"]/2 != 150))
+    DELETE_AND_RETURN();
+  
+  if(!is_modified(cachef->headers->expire, time()))
+    DELETE_AND_RETURN();
+
+  if(cachef->headers->pragma &&
+     (search(cachef->headers->pragma, "no-cache") != -1))
+    DELETE_AND_RETURN();
+
+  if(cachef->headers["set-cookie"])
+    DELETE_AND_RETURN();
+
+  if(!((int)cachef["content-length"] > stat[ST_SIZE]))
+    DELETE_AND_RETURN();
+
+  if((int)cachef["content-length"] > stat[ST_SIZE])
+    DELETE_AND_RETURN();
+  
   cachef->save_headers();
 
   mv(rfile, rfile+".done");
 
   cache->accessed( cachef->fname+".done", stat[1]/QUERY(bytes_per_second) );
   cache->accessed( cachef->fname+".head", stat[1]/QUERY(bytes_per_second) );
-  cache->check( stat[1] );
+  cache->check( stat[ST_SIZE] );
 
   destruct(cachef);
 }

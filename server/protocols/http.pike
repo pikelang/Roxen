@@ -438,9 +438,9 @@ private int parse_got(string s)
     config = prestate;
   else
     if(conf
-       &&!cookies->RoxenUserID && strlen(not_query)
-       &&not_query[0]=='/'
-       &&  QUERY(set_cookie))
+       && !cookies->RoxenUserID && strlen(not_query)
+       && not_query[0]=='/' && method!="PUT"
+       && QUERY(set_cookie))
     {
 #ifdef DEBUG
       perror("Setting unique ID.\n");
@@ -609,7 +609,7 @@ void got_data(mixed fooid, string s)
   if(conf)
   {
     roxen->current_configuration = conf;
-    conf->add_received(strlen(s));
+    conf->received += strlen(s);
     conf->requests++;
     
     foreach(conf->first_modules(), funp) if(file = funp( this_object())) break;
@@ -743,8 +743,8 @@ void got_data(mixed fooid, string s)
 
     if(conf)
     {
-      conf->add_sent(file->len>0 ? file->len : 1000);
-      conf->add_hsent(strlen(head_string||""));
+      conf->sent+=(file->len>0 ? file->len : 1000);
+      conf->hsent+=strlen(head_string||"");
     }
     
     if(method=="HEAD")

@@ -201,25 +201,7 @@ string find_one(string ... of)
   foreach(of, s) if(file_size( s ) > 0) return s;
 }
 
-string to_hostname(string in)
-{
-  if(!(int)in) return in;
-  return roxen->quick_ip_to_host( in );
-}
-
-array unique(array from) // Unique array and remove all zeroes.
-{
-  array res = allocate(sizeof(from));
-  int i;
-  mixed last, current;
-  foreach(from, current)
-    if(last != current)
-    {
-      res[i++]=current;
-      last = current;
-    }
-  return res[..i-1];
-}
+#define to_hostname roxen->blocking_ip_to_host
 
 void init_ip_list()
 {
@@ -228,9 +210,11 @@ void init_ip_list()
                              "/usr/bin/ifconfig");  
   string aliasesfile;
  
-  ip_number_list = ({ "ANY", to_hostname("127.0.0.1") });
+  ip_number_list = ({ "ANY",  });
  
   if(!ifconfig) ifconfig = "ifconfig";
+
+  // LINUX
   if(aliasesfile = find_one("/proc/net/aliases"))
   {
     string data = read_bytes(aliasesfile);
@@ -244,6 +228,8 @@ void init_ip_list()
       }
     }
   }
+
+  // Most others
   string ips = popen(ifconfig+" -a 2>/dev/null");
   if(!ips || !strlen(ips))
     ; // No output from the 'ifconfig' call.
@@ -258,8 +244,8 @@ void init_ip_list()
     }
   }
     
-  ip_number_list = unique(sort_array(ip_number_list));
-     
+  ip_number_list = sort_array(ip_number_list);
+  
   if(sizeof(ip_number_list) == 2)
     ip_number_list = 0;
 }

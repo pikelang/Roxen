@@ -30,13 +30,9 @@ string comment()
 }
 
 
-/* For debug and statistics info only */
-int requests;
-int received, received_wrapped;
-int sent, sent_wrapped;
-int hsent, hsent_wrapped;
 
-static private program prip=class {
+static private program Priority = class
+{
   array (object) url_modules = ({ });
   array (object) logger_modules = ({ });
   array (object) location_modules = ({ });
@@ -59,108 +55,64 @@ array (object) allocate_pris()
   int a;
   array (object) tmp;
   tmp=allocate(10);
-  for(a=0; a<10; a++)  tmp[a]=prip();
+  for(a=0; a<10; a++)  tmp[a]=Priority();
   return tmp;
 }
 
 void create(string n) { name=n; }
 
-float mb; // <blink>Ugly</blink> global variable.. 
-
-/* Describe a pseudo-64 bit integer as a string. If 'c' is present, it
-   is either a factor (3.5, e.g.) that will be used to multiply the
-   number of MBytes, igf it is an integer (like '1'), the actual
-   number of MBytes will be returned, instead of a string that will
-   describe them. This is perhaps just a tad bit too horrible...  */
-
-string|float describe_large(int a, int b, int|void|float c)
-{
-  mb=(float)(b*(4*1024));
-  
-  if(a<0)
+class Bignum {
+  object this = this_object();
+  program This = object_program(this);
+#if efun(Mpz)
+  inherit Mpz;
+  float mb()
   {
-    a -= 2<<16;
-    mb += (float)(2*1024);
+    return (float)this_object()/(1024.0*1024.0);
+  }
+#else
+  int msb;
+  int lsb=-0x7ffffffe;
+
+  object `+(int i)
+  {
+    object res = This(lsb+i,msb,2);
+    if(res->lsb < lsb) res->msb++;
+    return res;
   }
 
-  mb += (float)a / (float)(1024*1024);
-  if(intp(c))
-    return mb;
-  if(floatp(c))
-    mb *= c;
-  if(mb < 1024.0)
-    return sprintf("%.2f Mb", mb);
-  return sprintf("%.2f Gb", mb/1024.0);
+  object `-(int i)
+  {
+    object res = This(lsb-i,msb,2);
+    if(res->lsb > lsb) res->msb--;
+    return res;
+  }
+
+  float mb()
+  {
+    return ((((float)lsb/1024.0/1024.0)+2048.0)+(msb*4096.0));
+  }
+
+  void create(int num, int|void bnum, int|void d)
+  {
+    if(!d)
+      lsb = num-0x7ffffffe;
+    else
+      lsb = num;
+    msb = bnum;
+  }
+#endif
 }
 
 
-float sent_mb()
-{
-  return describe_large( sent, sent_wrapped, 1 );
-}
 
+/* For debug and statistics info only */
+int requests;
 
-void add_received(int i)
-{ 
-  int o; 
-  o=received; 
-  received+=i; 
-  if(received<o) 
-    received_wrapped++; 
-}
+object sent=Bignum();     // Sent data
+object hsent=Bignum();    // Sent headers
+object received=Bignum(); // Received data
 
-float|string describe_received(int|void|float a)
-{
-  return describe_large(received, received_wrapped, a); 
-}
-
-void add_sent(int i)
-{ 
-  if(i < 0) return;
-  int o;
-  o=sent; 
-  sent+=i; 
-  if(sent<o) 
-    sent_wrapped++; 
-}
-
-float|string describe_sent(int|void a)
-{
-  return describe_large(sent, sent_wrapped, a); 
-}
-
-void add_hsent(int i)
-{ 
-  if(sent < 0) return;
-  int o; 
-  o=hsent; 
-  hsent+=i; 
-  if(hsent<o) 
-    hsent_wrapped++; 
-}
-
-float|string describe_hsent(int|void a)
-{ 
-  return describe_large(hsent, hsent_wrapped, a); 
-}
-
-// Min/Average/Max access time, in milliseconds. Not currently used.
-
-// int avgs=30;
-// int maxs;
-// int mins=10000;
-
-// static private int _ct; // Used to mark the beginning of a request
-
-void begin_request()
-{
-  
-}
-
-void end_request()
-{
-
-}
 
 
 // Used to store 'parser' modules before the main parser module
@@ -471,7 +423,7 @@ string desc()
       prt += port[2];
     else
       prt += (gethostname()/".")[0] + "." + QUERY(Domain);
-    prt += ":"+port[0]+"/";
+ prt += ":"+port[0]+"/";
     if(port_open( port ))
       res += "<a target=server_view href='"+prt+"'>"+prt+"</a>\n<br>";
     else

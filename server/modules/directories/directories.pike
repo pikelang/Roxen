@@ -164,24 +164,9 @@ void start()
 
 /*  Module specific stuff */
 
-mapping (string:object) _root = ([ ]);
-
 object root(object id)
 {
-  if(QUERY(separateroots))
-  {
-    if(!objectp(_root[id->remoteaddr]))
-      _root[id->remoteaddr] = dirnode_program();
-    remove_call_out(_root[id->remoteaddr]->dest);
-    call_out(_root[id->remoteaddr]->dest, 100);
-    return _root[id->remoteaddr];
-  } else {
-    if(!objectp(_root[0]))
-      _root[0] = dirnode_program();
-    remove_call_out(_root[0]->dest);
-    call_out(_root[0]->dest, 1000);
-    return _root[0];
-  }
+  return dirnode_program();
 }
 
 

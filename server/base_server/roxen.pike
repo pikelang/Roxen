@@ -775,35 +775,27 @@ public string status()
   if(!current_configuration)
     return ("No current_configuration. No configurations enabled?\n");
 
-  tmp = (int)(current_configuration->sent_mb()/(float)(time(1)-start_time+1)*
+  tmp = (int)(current_configuration->sent->mb()/(float)(time(1)-start_time+1)*
 	      QUERY(copies));
 
-  res = ("<table><tr align=right><td><b>Sent data:</b></td><td>"
-	  + current_configuration->describe_sent((float)QUERY(copies)) 
-	  + sprintf("</td><td>%.2f Kbit</td>", tmp * 8192.0));
+  res = sprintf("<table><tr align=right><td><b>Sent data:</b></td><td>%.2fMB"
+		"</td><td>%.2f Kbit/sec</td>",
+		current_configuration->sent->mb()*(float)QUERY(copies),
+		tmp * 8192.0);
   
-  res += ("<td><b>Sent headers:</b></td><td>"
-	  + current_configuration->describe_hsent((float)QUERY(copies)))
-    +"</td>\n";
-	    
-  tmp=(current_configuration->requests*600)/((time(1)-start_time)+1)
-      *QUERY(copies);
+  res += sprintf("<td><b>Sent headers:</b></td><td>%.2fMB</td>",
+		 current_configuration->hsent->mb()*(float)QUERY(copies));
+  
+  tmp=(int)(((float)current_configuration->requests*(float)600)/
+	    (float)((time(1)-start_time)+1)*QUERY(copies));
 
   res += ("<tr align=right><td><b>Number of requests:</b></td><td>" 
 	  + sprintf("%8d", current_configuration->requests*QUERY(copies))
-	  + sprintf("</td><td>%.2f/min</td>", (float)tmp/(float)10)+
-	  "<td><b>Recieved data:</b></td><td>"
-	  + current_configuration->describe_received((float)QUERY(copies)) 
-	  + "</td>");
+	  + sprintf("</td><td>%.2f/min</td><td><b>Recieved data:</b></"
+		    "td><td>%.2f</td>", (float)tmp/(float)10,
+		    (current_configuration->received->mb()
+		     *(float)QUERY(copies))));
   
-#ifdef USE_RUSAGE
-  res += ("<tr>Max request serving time:</td><td>"
-	  +msectos(current_configuration->maxs)
-	  +"</td><td>Average request serving time:</td><td>"
-	  +msectos(current_configuration->avgs)
-	  +"</td><td>Min request serving time:</td><td></tr><tr>"
-	  +msectos(current_configuration->mins)+"</td></tr>");
-#endif
   return res +"</table>";
 }
 
@@ -818,19 +810,19 @@ public string full_status()
   
   foreach(configurations, conf)
   {
-    foo[0]+=conf->sent_mb()/(float)(time(1)-start_time+1)*(float)QUERY(copies);
-    foo[1]+=conf->describe_sent(1)*(float)QUERY(copies);
-    foo[2]+=conf->describe_hsent(1)*(float)QUERY(copies);
-    foo[3]+=conf->describe_received(1)*(float)QUERY(copies);
-    foo[4]+=conf->requests*QUERY(copies);
+    foo[0]+=conf->sent->mb()/(float)(time(1)-start_time+1)*(float)QUERY(copies);
+    foo[1]+=conf->sent->mb()*(float)QUERY(copies);
+    foo[2]+=conf->hsent->mb()*(float)QUERY(copies);
+    foo[3]+=conf->received->mb()*(float)QUERY(copies);
+    foo[4]+=conf->requests * QUERY(copies);
   }
 
   for(tmp = 1; tmp < 4; tmp ++)
   {
     if(foo[tmp] < 1024.0)     
-      foo[tmp] = sprintf("%.2f Mb", foo[tmp]);
+      foo[tmp] = sprintf("%.2f MB", foo[tmp]);
     else
-      foo[tmp] = sprintf("%.2f Gb", foo[tmp]/1024.0);
+      foo[tmp] = sprintf("%.2f GB", foo[tmp]/1024.0);
   }
 
   res = ("<table><tr align=right><td><b>Sent data:</b></td><td>"+ foo[1] 
@@ -956,7 +948,7 @@ int|mapping check_security(function a, object id, void|int slevel)
   array level;
   int need_auth;
   array seclevels;
-
+  
   if(!(seclevels = misc_cache[ a ]))
     misc_cache[ a ] = seclevels = ({
       function_object(a)->query_seclevels(),
@@ -982,7 +974,7 @@ int|mapping check_security(function a, object id, void|int slevel)
        case MOD_DENY: // deny ip=...
 	if(level[1](id->remoteaddr)) throw("");
 	continue;
-      
+
        case MOD_USER: // allow user=...
 	if(id->auth && id->auth[0] && level[1](id->auth[1])) return 0;
 	need_auth = 1;
@@ -2438,13 +2430,13 @@ private void define_global_variables( int argc, array (string) argv )
 #if 0 // TBD 
   globvar("cache_minimum_left", 5, "Proxy disk cache: Minimum "
 	  "available free space", TYPE_INT,
-	  "If less than this amount of disk space (in Mb) is left, "
+	  "If less than this amount of disk space (in MB) is left, "
 	  "the cache will remove a few files",
 	  0, cache_disabled_p);
 #endif
   
   globvar("cache_size", 25, "Proxy disk cache: Size", TYPE_INT,
-        "How many Mb may the cache grow to before a garbage collect is done?",
+        "How many MB may the cache grow to before a garbage collect is done?",
 	  0, cache_disabled_p);
   
   globvar("bytes_per_second", 50, "Proxy disk cache: Bytes per second", 

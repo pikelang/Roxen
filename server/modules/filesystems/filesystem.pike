@@ -109,7 +109,7 @@ string real_file( mixed f, mixed id )
 {
   if(this->stat_file( f, id )) 
 /* This filesystem might be inherited by other filesystem, therefore
-   'this_object'  */
+   'this'  */
     return path + f;
 }
 

@@ -276,6 +276,7 @@ string describe_backtrace(mixed *trace)
 {
   int e;
   string ret;
+  string wd = getcwd();
 
   if(arrayp(trace) && sizeof(trace)==2 && stringp(trace[0]))
   {
@@ -309,7 +310,7 @@ string describe_backtrace(mixed *trace)
 
 	if(sizeof(tmp)>=2 && stringp(tmp[0]) && intp(tmp[1]))
 	{
-	  row+="line "+tmp[1]+" in "+tmp[0];
+	  row+="line "+tmp[1]+" in "+((tmp[0]-(wd+"/"))-"base_server/");
 	}else{
 	  row+="Unknown program";
 	}

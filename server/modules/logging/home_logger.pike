@@ -25,11 +25,13 @@ string create()
 	 "If set, no entry will be written to the normal log.\n");
   
   defvar("Logs", ({ "/~%s/" }), "Private logs", TYPE_STRING_LIST,
-	 "Theese directories want their own log files."
+	 "These directories want their own log files."
 	 "Either use a specific path, or a pattern, /foo/ will check "
          "/foo/AccessLog, /users/%s/ will check for an AccessLog in "
          "all subdirectories in the users directory. All filenames are "
          "in the virtual filesystem, not the physical one.\n");
+  defvar("AccessLog", "AccessLog", "AccessLog filename", TYPE_STRING,
+	 "The filename of the access log file.");
 }
 
 
@@ -203,7 +205,7 @@ mixed log(object id, mapping file)
 {
   string s;
   object fnord;
-  if((s = home(id->not_query, id)) && (fnord=find_cache_file(s+"AccessLog")))
+  if((s = home(id->not_query, id)) && (fnord=find_cache_file(s+QUERY(AccessLog))))
     fnord->write(format_log(id, file));
   if(QUERY(block) && fnord)
     return 1;

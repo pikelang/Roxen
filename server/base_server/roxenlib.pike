@@ -303,7 +303,17 @@ string short_name(string long_name)
   return lower_case(long_name);
 }
 
+string strip_config(string from)
+{
+  sscanf(from, "/<%*s>%s", from);
+  return from;
+}
 
+string strip_prestate(string from)
+{
+  sscanf(from, "/(%*s)%s", from);
+  return from;
+}
 
 string parse_rxml(string what, void|object|mapping id, void|object file)
 {

@@ -30,6 +30,7 @@ void got_data(object f, string s)
     // There should be more info passed here in the future.
     if(sscanf(s, "%s\0%s", remoteaddr, s)==1)
     {
+      conf->received+=strlen(remoteaddr);
 #ifdef SSL_DEBUG
       perror("SSL: Real Remote-Addr: "+remoteaddr+"\n");
 #endif

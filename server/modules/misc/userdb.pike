@@ -125,6 +125,8 @@ void create()
 	 "the GECOS field of the user database.");
 }
 
+private static int last_password_read = 0;
+
 #if efun(getpwent)
 private static array foo_users;
 private static int foo_pos;
@@ -155,9 +157,17 @@ void read_data()
   int foo;
   int original_data = 1; // Did we inherit this user list from another
                         //  user-database module?
-
+  int saved_uid;
+  
   users=([]);
   uid2user=([]);
+#if efun(geteuid)
+  if(getuid() != geteuid())
+  {
+    saved_uid = geteuid();
+    seteuid(0);
+  }
+#endif
   switch(query("method"))
   {
    case "ypcat":
@@ -180,6 +190,7 @@ void read_data()
    case "file":
      fstat = file_stat(query("file"));
      data=read_bytes(query("file"));
+     last_password_read = time();
      break;
 
    case "niscat":
@@ -213,10 +224,30 @@ void read_data()
   if(QUERY(method) == "getpwent" && (original_data))
     slow_update();
 #endif
+#if efun(geteuid)
+  if(saved_uid) seteuid(saved_uid);
+#endif
 }
 
 void start() { (void)read_data(); }
 
+void read_data_if_not_current()
+{
+  if (query("method") == "file")
+    {
+      string filename=query("file");
+      array|int status=file_stat(filename);
+      int mtime;
+
+      if (arrayp(status))
+       mtime = status[3];
+      else
+       return;
+      
+      if (mtime > last_password_read)
+       read_data();
+    }
+}
 
 int succ, fail, nouser;
 
@@ -236,6 +267,8 @@ array|int auth(string *auth, object id)
     succ++;
     return ({ 1, u, 0 });
   }
+
+  read_data_if_not_current();
 
   if(!users[u] || !(stringp(users[u][1]) && strlen(users[u][1]) > 6))
   {
@@ -271,7 +304,9 @@ string status()
      map_array(indices(failed), lambda(string s) {
        return roxen->quick_ip_to_host(s) + ": "+failed[s]+"<br>\n";
      }) * "" 
-     + "<p>The database has "+ sizeof(users)+" entries");
+     + "<p>The database has "+ sizeof(users)+" entries"
+//     + "<P>The netgroup database has "+sizeof(group)+" entries"
+);
 }
 
 mixed *register_module()

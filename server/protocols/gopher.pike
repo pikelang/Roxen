@@ -100,6 +100,8 @@ void got_data(mixed fooid, string s)
   prot = "GOPHER";
   method = "GET";
 
+  conf->received += strlen(s);
+  
   if(not_query[-1] == '/')
     file = generate_directory();
   else if(err = catch(file = roxen->get_file(this_object())))
@@ -119,7 +121,7 @@ void got_data(mixed fooid, string s)
     if(file->data)   file->len = strlen(file->data);
     if(file->file)   file->len += file->file->stat()[1];
   }
-
+  if(file->len > 0) conf->sent+=file->len;
   if(stringp(file->type) && file->type[0..3] == "text")
   {
     /* Bugger.   No shuffle possible.. */

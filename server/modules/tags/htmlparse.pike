@@ -16,77 +16,21 @@ function language = roxen->language;
 
 int cnum=0;
 mapping fton=([]), tag_callers, container_callers;
-object database, database2, database3;
 int bytes;
 array (object) parse_modules = ({ });
 
+object database, names_file;
 string sizefmt = "abbrev";
 
 void build_callers();
 
-
-inline void parse_arguments(mapping m, object id)
-{
-  string q, vnam;
-  foreach(indices(m), vnam)
-  {
-    q = m[vnam];
-    if(search(q, "$") != -1)
-    {
-      string a, b, w, res;
-      b=q;
-      res="";
-      while(sscanf(b, "%s${%s}%s", a, w, b)==3)
-      {
-	switch(w)
-	{
-#define IDVAR(X) case "X": w=((string)id->X)||""; break
-
-	 case "path":
-	  w = id->not_query;
-	  break;
-	 case "vfs":
-	  w = id->virtfile;
-	  break;
-	 case "auth":
-	  w = (id->auth&&id->auth[0]&&id->auth[1]);
-	  break;
-
-	  IDVAR(realfile);
-	  IDVAR(time);
-	  IDVAR(raw_url);
-	  IDVAR(remoteadr);
-	  IDVAR(prot);
-	  IDVAR(method);
-	  IDVAR(rest_query);
-	  IDVAR(query);
-	  IDVAR(raw);
-	  IDVAR(extra_extension);
-	  IDVAR(data);
-	  IDVAR(rawauth);
-	  IDVAR(realauth);
-	  IDVAR(since);
-	  
-	 default:
-	  w = id->variables[w] || id->cookies[w];
-	}
-	res += a+(w||"")+b;
-      }
-      if(a) m[vnam] = res;
-    }
-  }
-}
-
-#define STANDARDPARSE(X) (X)
-
+// If the string 'w' match any of the patterns in 'a', return 1, else 0.
 int _match(string w, array (string) a)
 {
   string q;
   foreach(a, q)
-  {
     if(stringp(w) && stringp(q) && glob(q, w))
       return 1;
-  }
 }
 
 string comment()
@@ -118,6 +62,11 @@ void create()
 	 "In this file all accesses to files using the &lt;accessd&gt;"
 	 " tag will be logged.", 0, ac_is_not_set);
 
+  defvar("noparse", ({  }), "Extensions to accesscount",
+          TYPE_STRING_LIST,
+         "Accesscount all files ending with these extensions.");
+ 
+  
   defvar("toparse", ({ "rxml","spml", "html", "htm" }), "Extensions to parse", 
 	 TYPE_STRING_LIST, "Parse all files ending with these extensions.");
 
@@ -137,13 +86,39 @@ void create()
 	 "If set and if server side include support is enabled, Roxen "
 	 "will accept NCSA / Apache &lt;!--#exec cmd=\"XXX\"--&gt;.",
 	 ssi_is_not_set);
+
+  defvar("close_db", 1, "Close the database if it is not used",
+	 TYPE_FLAG,
+	 "If set, the accessed database will be closed if it is not used for "
+	 "8 seconds");
 }
 
 static string olf;
 
 int __db_changed;
 
-object lock;
+
+static mixed names_file_callout_id;
+inline void open_names_file()
+{
+  if(objectp(names_file)) return;
+  remove_call_out(names_file_callout_id);
+  names_file=open(QUERY(AccessLog)+".names", "wrca");
+  names_file_callout_id = call_out(destruct, 1, names_file);
+}
+
+
+static mixed db_file_callout_id;
+inline void open_db_file()
+{
+  if(objectp(database)) return;
+  if(!database || QUERY(close_db))
+  {
+    if(db_file_callout_id) remove_call_out(db_file_callout_id);
+    database=open(QUERY(AccessLog)+".db", "wrc");
+    db_file_callout_id = call_out(destruct, 9, database);
+  }
+}
 
 void start()
 {
@@ -154,8 +129,7 @@ void start()
   if(!QUERY(ac))
   {
     if(database)  destruct(database);
-    if(database2) destruct(database2);
-    if(database3) destruct(database3);
+    if(names_file) destruct(names_file);
     return;
   }
 
@@ -164,38 +138,22 @@ void start()
     olf = QUERY(Accesslog);
 
     mkdirhier(query("Accesslog"));
-    if(!(database=open(olf, "wrc")))
+    if(!QUERY(close_db))
+      if(!(database=open(olf+".db", "wrc")))
+      {
+	perror("RXMLPARSE: Failed to open access database.\n");
+	return;
+      }
+
+
+    if(names_file=open(olf+".names", "r"))
     {
-      perror("RXMLPARSE: Failed to open access database.\n");
-      return;
+      __db_changed = names_file->stat()[3];
+      cnum=0;
+      tmp=parse_accessed_database(names_file->read(0x7ffffff));
+      fton=tmp[0];
+      cnum=tmp[1];
     }
-
-    // Since the semaphore ID is that of the access database, 
-    // this will work even if two completely different processes
-    // is run, as long as it is on the same computer.
-    //
-    // Locking between different computers is not really possible,
-    // but it should work most of the time anyway..
-    lock = ((program)"lock")(hash(olf)); 
-
-
-    database2=open(olf+".main", "wrc");
-    __db_changed = database2->stat()[3];
-
-    database3=open(olf+".times", "wrc");
-
-
-    mark_fd(database->query_fd(), "Access log file "
-	    "(" + roxen->current_configuration->name + ")");
-    mark_fd(database2->query_fd(), "Access log index file "
-	    "(" + roxen->current_configuration->name + ")");
-    mark_fd(database3->query_fd(), "Access log timestamp file "
-	    "(" + roxen->current_configuration->name + ")");
-
-    cnum=0;
-    tmp=parse_accessed_database(database2->read(0x7ffffff));
-    fton=tmp[0];
-    cnum=tmp[1];
   }
 }
 
@@ -206,8 +164,10 @@ int main_database_created()
 
   if(!mdc)
   {
+    open_db_file();
     database->seek(0);
-    mdc=(int)("0x"+database->read(8));
+    sscanf(database->read(4), "%4c", mdc);
+    return mdc;
   }
   return mdc;
 }
@@ -220,8 +180,9 @@ int database_set_created(string file, void|int t)
 
   p=fton[file];
   if(!p) return 0;
-  database3->seek(p*8);
-  return database3->write(sprintf("%08x", t||time(1)));
+  open_db_file();
+  database->seek((p*8)+4);
+  return database->write(sprintf("%4c", t||time(1)));
 }
 
 int database_created(string file)
@@ -232,8 +193,9 @@ int database_created(string file)
 
   p=fton[file];
   if(!p) return main_database_created();
-  database3->seek(p*8);
-  w=(int)("0x"+database3->read(8));
+  open_db_file();
+  database->seek((p*8)+4);
+  sscanf(database->read(4), "%4c", w);
   if(!w)
   {
     w=main_database_created();
@@ -250,62 +212,63 @@ int query_num(string file, int count)
 
   if(!QUERY(ac)) return -1;
 
+  open_db_file();
 
-  if(lock) lock->aquire();
+  // if(lock) lock->aquire();
   
   if(!(p=fton[file]))
   {
     if(!cnum)
     {
       database->seek(0);
-      database->write(sprintf("%08x", time(1)));
+      database->write(sprintf("%4c", time(1)));
     }
     fton[file]=++cnum;
     p=cnum;
 
 //  perror(file + ": New entry.\n");
-    if(database2->stat()[3] != __db_changed) /* Ouch */
+    open_names_file();
+    if(names_file->stat()[3] != __db_changed) /* Ouch */
     {
       mixed tmp;
       // Somebody else added one or more entries to the database. This
       // is not exactly great, since we don't know how many entries
       // were added, so just reread the whole beast :-)
       
-      database2=open(query("Accesslog")+".main", "wrc");
+      names_file=open(query("Accesslog")+".names", "wrc");
       perror("RXMLPARSE: Syncing accessed database...\n");
-      tmp=parse_accessed_database(database2->read(0x7ffffff));
+      tmp=parse_accessed_database(names_file->read(0x7ffffff));
       fton=tmp[0];
       cnum=tmp[1];
-      __db_changed = database2->stat()[3];
-      lock->free();
+      __db_changed = names_file->stat()[3];
+      //lock->free();
       return query_num(file, count);
     }
 //  perror(file + ": Created new entry.\n");
-    database2->write(file+":"+cnum+"\n");
+    names_file->write(file+":"+cnum+"\n");
 
     database->seek(p*8);
-    database->write("00000000");
+    database->write(sprintf("%4c", 0));
     database_set_created(file);
 
-    __db_changed = database2->stat()[3];
+    __db_changed = names_file->stat()[3];
   }
   if(database->seek(p*8) > -1)
   {
-    f=database->read(8);
-    n=(int)("0x"+f);
+    sscanf(database->read(4), "%4c", n);
 //  perror("Old count: " + n + "\n");
     if (count) 
     { 
 //    perror("Adding "+count+" to it..\n");
       n+=count; 
       database->seek(p*8);
-      database->write(sprintf("%08x", n)); 
+      database->write(sprintf("%4c", n)); 
     }
-    lock->free();
+    //lock->free();
     return n;
   } 
 //perror("Seek failed\n");
-  lock->free();
+  //lock->free();
   return 0;
 }
 
@@ -320,7 +283,7 @@ array register_module()
 
 string *query_file_extensions() 
 { 
-  return query("toparse"); 
+  return query("toparse") + query("noparse"); 
 }
 
 int *stat;
@@ -337,6 +300,12 @@ mapping handle_file_extension( object file, string e, object id)
   int ook;
   array (int) ostat;
 
+  if(search(QUERY(noparse),e)!=-1)
+  {
+    query_num(id->not_query, 1);
+    return 0;
+  }
+  
 #if efun(set_start_quote)
   if(!in_parse)
     set_start_quote(set_end_quote(0));
@@ -523,7 +492,7 @@ string tag_date(string q, mapping m)
   if(m->minute) t += (int)m->minute * 60;
   if(m->min)    t += (int)m->min * 60;
   if(m->sec)    t += (int)m->sec;
-  if(m->second) t += (int)m->sec;
+  if(m->second) t += (int)m->second;
 
   if(!(m->time || m->date))
     m->full=1;
@@ -548,8 +517,6 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
 {
   string n;
   mapping fake_id=([]);
-
-  STANDARDPARSE(m);
 
   if (n=m->name) 
   {
@@ -615,8 +582,6 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
   if(!QUERY(ssi))
     return "SSI support disabled";
 
-  STANDARDPARSE(m);
-
   if(m->cgi)
   {
     m->file = m->cgi;
@@ -653,7 +618,6 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
 string tag_compat_config(string tag,mapping m,object got,object file,
 			 mapping defines)
 {
-  STANDARDPARSE(m);
   if(QUERY(ssi)&& m->sizefmt == "abbrev" || m->sizefmt == "bytes")
     sizefmt = m->sizefmt;
   else
@@ -663,7 +627,6 @@ string tag_compat_config(string tag,mapping m,object got,object file,
 string tag_compat_include(string tag,mapping m,object got,object file,
 			  mapping defines)
 {
-  STANDARDPARSE(m);
   if(!QUERY(ssi))
     return "SSI support disabled";
 
@@ -693,7 +656,6 @@ string tag_compat_include(string tag,mapping m,object got,object file,
 string tag_compat_echo(string tag,mapping m,object got,object file,
 			  mapping defines)
 {
-  STANDARDPARSE(m);
   if(!QUERY(ssi))
     return "SSI support disabled";
   if(m->var)
@@ -790,7 +752,6 @@ string tag_compat_echo(string tag,mapping m,object got,object file,
 string tag_compat_fsize(string tag,mapping m,object got,object file,
 			mapping defines)
 {
-  STANDARDPARSE(m);
   if(!QUERY(ssi))
     return "SSI support disabled";
 
@@ -826,7 +787,6 @@ string tag_accessed(string tag,mapping m,object got,object file,
   int counts, n, prec, q, timep;
   string real, res;
 
-  STANDARDPARSE(m);
   if(!QUERY(ac))
     return "Accessed support disabled.";
 
@@ -950,7 +910,6 @@ string tag_modified(string tag, mapping m, object got, object file)
 {
   array (int) s;
   object f;
-  STANDARDPARSE(m);
   
   if(m->by && !m->file && !m->realfile)
   {
@@ -1005,7 +964,6 @@ string tag_version() { return roxen->version(); }
 
 string tag_clientname(string tag, mapping m, object got)
 {
-  STANDARDPARSE(m);
   if(m->full) 
     return got->client * " ";
   else 
@@ -1015,7 +973,6 @@ string tag_clientname(string tag, mapping m, object got)
 string tag_signature(string tag, mapping m, object got)
 {
   string w;
-  STANDARDPARSE(m);
   if(!(w=m->user || m->name))
     return "";
   return "<right><address>"+tag_user(tag, m, got)+"</address></right>";
@@ -1026,7 +983,6 @@ string tag_user(string tag, mapping m, object got)
   string *u;
   string b, dom;
 
-  STANDARDPARSE(m);
   if(!got->conf->auth_module)
     return "<!-- user requires an user database! -->\n";
 
@@ -1060,7 +1016,7 @@ string tag_user(string tag, mapping m, object got)
 	  b + "@" + dom + "&gt;</a>");
 }
 
-int match_passwd(string org, string try)
+int match_passwd(string try, string org)
 {
   if(!strlen(org))   return 1;
   if(crypt(try, org)) return 1;
@@ -1068,11 +1024,16 @@ int match_passwd(string org, string try)
 
 string simple_parse_users_file(string file, string u)
 {
-  if(sscanf(file, "%*s\n"+u+":%s:", file)==2)
-    return file;
+ string line, user, pass;
+ foreach(file/"\n", line)
+ {
+   if((sscanf(line, "%s:%s", user, pass) == 2) && (user==u))
+     return pass;
+ }
+ return 0;
 }
 
-int match_user(array u, string f, int wwwfile, object got)
+int match_user(array u, string user, string f, int wwwfile, object got)
 {
   string s, pass;
 
@@ -1082,7 +1043,9 @@ int match_user(array u, string f, int wwwfile, object got)
     s=roxen->try_get_file(f, got);
   if(!s)
     return 0;
+  if(u[1]!=user) return 0;
   pass=simple_parse_users_file(s, u[1]);
+  if(!pass) return 0;
   if(u[0] == 1 && pass)
     return 1;
   return match_passwd(u[2], pass);
@@ -1116,7 +1079,6 @@ string tag_allow(string a, mapping (string:string) m,
 {
   int ok;
 
-  STANDARDPARSE(m);
   got->misc->internal_get=1; /* ? */
 
   if(m->not)
@@ -1135,8 +1097,8 @@ string tag_allow(string a, mapping (string:string) m,
 		    lower_case(m->language)/","));
     }
 
-  if(m->file)
-    TEST(_match(got->not_query, m->file/","));
+  if(m->filename)
+    TEST(_match(got->not_query, m->filename/","));
 
   IS_TEST(variable, got->variables);
   IS_TEST(cookie, got->cookies);
@@ -1195,6 +1157,36 @@ string tag_allow(string a, mapping (string:string) m,
     TEST(tok);
   }
 
+
+  if(m->time)
+  {
+    int tok, a, b, d;
+    mapping c;
+    c=localtime(time(1));
+
+    b=(int)sprintf("%02d%02d", c->hour, c->min);
+    a=(int)m->time;
+
+    if(m->until) {
+      d = (int)m->until;
+      if (d > a && (b > a && b < d) )
+        tok = 1 ;
+      if (d < a && (b > a || b < d) )
+        tok = 1 ;
+      if (m->inclusive && ( b==a || b==d ) )
+        tok = 1 ;
+    }
+    else if(m->inclusive || !(m->before || m->after) && a==b)
+      tok=1;
+    if(m->before && a>b)
+      tok=1;
+    else if(m->after && a<b)
+      tok=1;
+
+    TEST(tok);
+  }
+ 
+
   if(m->supports || m->name)
   {
     string q;
@@ -1227,10 +1219,14 @@ string tag_allow(string a, mapping (string:string) m,
   
   if(m->user)
     if(m->user == "any")
-      TEST(got->auth && got->auth[0]);
-    else 
       if(m->file)
-	TEST(match_user(got->auth,fix_relative(m->file,got),
+	TEST(match_user(got->auth,got->auth[1],fix_relative(m->file,got),
+			!!m->wwwfile, got));
+      else
+	TEST(got->auth && got->auth[0]);
+    else
+      if(m->file)
+	TEST(match_user(got->auth,m->user,fix_relative(m->file,got),
 			!!m->wwwfile, got));
       else
 	TEST(got->auth && got->auth[0] && search(m->user/",", got->auth[1])
@@ -1267,14 +1263,13 @@ string tag_configimage(string f, mapping m)
 string tag_aprestate(string tag, mapping m, string q, object got)
 {
   string href, s, *foo, target;
-  STANDARDPARSE(m);
   multiset prestate=(< >);
 
   target=m->target;
   m_delete(m, "target");
 
   if(!m->href)
-    href=got->not_query;
+    href=strip_prestate(strip_config(got->raw_url));
   else 
   {
     href=m->href;
@@ -1289,7 +1284,7 @@ string tag_aprestate(string tag, mapping m, string q, object got)
     href="";
 
   foreach(indices(got->prestate) + indices(m), s)
-    if(s[0] == '-')
+    if(strlen(s) && s[0] == '-')
       prestate[s[1..1000]]=0;
     else
       prestate[s]=1;
@@ -1302,9 +1297,8 @@ string tag_aconfig(string tag, mapping m, string q, object got)
 {
   string href, opts="", opt;
 
-  STANDARDPARSE(m);
   if(!m->href)
-    href=got->not_query;
+    href=strip_config(got->raw_url);
   else 
   {
     array foo;
@@ -1351,8 +1345,6 @@ string tag_add_cookie(string tag, mapping m, object got)
 {
   string cookies;
   
-  STANDARDPARSE(m);
-  
   if(m->name)
     cookies = m->name+"="+http_encode_cookie(m->value||"")
       +(m->persistent?"; expires=Sun, 29-Dec-99 23:59:59 GMT; path=/":"");
@@ -1367,7 +1359,6 @@ string tag_add_cookie(string tag, mapping m, object got)
 string tag_remove_cookie(string tag, mapping m, object got)
 {
   string cookies;
-  STANDARDPARSE(m);
   if(m->name)
     cookies = m->name+"="+http_encode_cookie(m->value||"")+
       "; expires="+http_date(0)+"; path=/";
@@ -1384,7 +1375,6 @@ string tag_prestate(string tag, mapping m, string q, object got)
   multiset pre=got->prestate;
   string s;
 
-  STANDARDPARSE(m);
   foreach(indices(m), s)
     if(pre[s])
     {
@@ -1454,7 +1444,6 @@ string tag_client(string tag,mapping m, string s,object got,object file)
 {
   int isok, invert;
 
-  STANDARDPARSE(m);
   if (m->not) invert=1; 
 
   if (m->supports)
@@ -1471,7 +1460,6 @@ string tag_client(string tag,mapping m, string s,object got,object file)
 
 string tag_return(string tag, mapping m, object got, object file)
 {
-  STANDARDPARSE(m);
   error=(int)m->code || 200;
   rettext=m->text;
   return "";
@@ -1486,7 +1474,6 @@ string tag_referer(string tag, mapping m, object got, object file)
 
 string tag_header(string tag, mapping m, object got, object file)
 {
-  STANDARDPARSE(m);
   if(m->name == "WWW-Authenticate")
   {
     string r;
@@ -1508,36 +1495,6 @@ string tag_header(string tag, mapping m, object got, object file)
   add_header(extra_heads, m->name, m->value);
   return "";
 }
-
-#if 0
-string tag_meta(string tag, mapping m, object got, object file)
-{
-  STANDARDPARSE(m);
-  if(!m["http-equiv"]) 
-    return 0;
-
-    if(m->content)
-      m->value = m->content;
-    else if(m->contents)
-      m->value = m->contents;
-
-  if(m["http-equiv"] == "WWW-Authenticate")
-  {
-    string r;
-
-    if(m->value)
-    {
-      if(sscanf(m->value, "%*[rR]ealm=%s", r)!=2)
-	r=m->value;
-    } else {
-      r="Users";
-    }
-    m->value="basic realm=\""+r+"\"";
-  }
-  add_header(extra_heads, m->name, m["http-equiv"]);
-  return "";
-}
-#endif
 
 string tag_file(string tag, mapping m, object got)
 {
@@ -1599,7 +1556,6 @@ mapping query_tag_callers()
 	    "realfile":tag_realfile,
 	    "vfs":tag_vfs,
 	    "header":tag_header,
-	   //	    "meta":tag_meta, BUG! Funkar inte! Ick! eller nåt
 	    "signature":tag_signature,
 	    "user":tag_user,
  	    "quote":tag_quote,

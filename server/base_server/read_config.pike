@@ -51,20 +51,50 @@ void save_it(string cl)
   perror("CONFIG: Writing configuration file for cl "+cl+"\n");
 #endif
 
+
+#if efun(seteuid)
+  int saved_uid;
+  if(geteuid() != getuid())
+  {
+    saved_uid = geteuid();
+    seteuid(0);
+  }
+#endif
+
+  
   f = configuration_dir + replace(cl, " ", "_");
   mv(f, f+"~");
   fd = open(f, "wc");
   if(!fd)
   {
-    report_error("Creation of configuration file failed ("+f+").\n"
-#if 0&&efun(strerror)
-		 +"("+strerror()+")\n"
+#if efun(seteuid)
+  if(saved_uid) seteuid(saved_uid);
 #endif
-		  "");
+    error("Creation of configuration file failed ("+f+") "
+#if 0&&efun(strerror)
+	  " ("+strerror()+")"
+#endif
+	  "\n");
     return;
   }
-  fd->write(encode_regions( configs[ cl ] ));
-  fd->close("w");
+  string data = encode_regions( configs[ cl ] );
+  int num;
+  catch(num = fd->write(data));
+  if(num != strlen(data))
+  {
+#if efun(seteuid)
+    if(saved_uid) seteuid(saved_uid);
+#endif
+    error("Failed to write all data to configuration file ("+f+") "
+#if 0&&efun(strerror)
+	  " ("+strerror()+")"
+#endif
+	  "\n");
+  }
+  catch(fd->close("w"));
+#if efun(seteuid)
+  if(saved_uid) seteuid(saved_uid);
+#endif
   destruct(fd);
 }
 
@@ -110,24 +140,37 @@ private static void read_it(string cl)
 
   object fd;
 
-  fd = open(configuration_dir + replace(cl, " ", "_"), "r");
+#if efun(seteuid)
+  int saved_uid;
+  if(geteuid() != getuid())
+  {
+    saved_uid = geteuid();
+    seteuid(0);
+  }
+#endif
 
-  if(!fd)
-  {
-    fd = open(configuration_dir + cl, "r");
-    if(fd) rm(configuration_dir + cl);
-  }
+  catch {
+    fd = open(configuration_dir + replace(cl, " ", "_"), "r");
+
+    if(!fd)
+    {
+      fd = open(configuration_dir + cl, "r");
+      if(fd) rm(configuration_dir + cl);
+    }
   
-  if(!fd)
-    configs[cl] = ([ ]);
-  else
-  {
-    configs[cl] = decode_config_file( fd->read( 0x7fffffff ));
-    fd->close("rw");
-    fix_config(configs[cl]);
-    destruct(fd);
-    return 0;
-  }
+    if(!fd)
+      configs[cl] = ([ ]);
+    else
+    {
+      configs[cl] = decode_config_file( fd->read( 0x7fffffff ));
+      fd->close("rw");
+      fix_config(configs[cl]);
+      destruct(fd);
+    }
+  };
+#if efun(seteuid)
+  if(saved_uid) seteuid(saved_uid);
+#endif
 }
 
 
@@ -151,14 +194,32 @@ void remove( string reg )
 void remove_configuration( string name )
 {
   string f;
+  
+#if efun(seteuid)
+  int saved_uid;
+  if(geteuid() != getuid())
+  {
+    saved_uid = geteuid();
+    seteuid(0);
+  }
+#endif
+
   f = configuration_dir + replace(name, " ", "_");
   if(file_size( f )==-1)   f = configuration_dir + name;
-  if(file_size( f )==1)    error("Failed to remove configuration file!\n");
-  if(!rm(f)) error("Failed to remove configuration file!\n"
-#if 0&&efun(strerror)
-+ strerror()
+  if(!rm(f))
+  {
+#if efun(seteuid)
+    if(saved_uid) seteuid(saved_uid);
 #endif
-    );
+    error("Failed to remove configuration file ("+f+")! "+
+#if 0&&efun(strerror)
+	  strerror()
+#endif
+	  "\n");
+  }
+#if efun(seteuid)
+  if(saved_uid) seteuid(saved_uid);
+#endif
 }
 
 void store( string reg, mapping vars, int q )

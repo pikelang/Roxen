@@ -30,7 +30,7 @@ int GRUK = random(_time(1));
 /********************************/
 /* private functions            */
 
-#define reply(X) (my_fd->write(replace(X, "\n","\r\n")))
+#define reply(X) do{conf->hsent += strlen(X); my_fd->write(replace(X, "\n","\r\n"))}while(0)
 
 private string reply_enumerate(string s,string num)
 {
@@ -349,6 +349,8 @@ int open_file(string arg)
     if(file->data)   file->len = strlen(file->data);
     if(file->file)   file->len += file->file->stat()[1];
   }
+  if(file->len > 0)
+    conf->sent += file->len;
   if(file->error == 403)
   {
     reply("550 "+arg+": Permission denied by rule.\n");
@@ -369,6 +371,7 @@ void got_data(mixed fooid, string s)
   time = _time(1);
   if (!objectp(my_fd)) return;
 
+  conf->received += strlen(s);
   remove_call_out(end);
   call_out(end, 3600);
   remoteaddr = my_fd->query_address();

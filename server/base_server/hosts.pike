@@ -121,6 +121,28 @@ void got_one_result(object o, string res)
 }
 
 
+string blocking_ip_to_host(string ip)
+{
+  array addr;
+  if(!(int)ip) return ip;
+  addr = gethostbyaddr( ip );
+  if(do_when_found[ip]) 
+    notify(do_when_found[ip], addr[0][random(sizeof(addr[0]))]);
+  m_delete(do_when_found, ip);
+  return addr?addr[0]:ip;
+}
+
+string blocking_host_to_ip(string host)
+{
+  array addr;
+  if((int)host) return host;
+  addr = gethostbyname( host );
+  if(do_when_found[host]) 
+    notify(do_when_found[host], addr[0][random(sizeof(addr[0]))]);
+  m_delete(do_when_found, host);
+  return addr?addr[0][random(sizeof(addr[0]))]:host;
+}
+
 string quick_ip_to_host(string ipnumber)
 {
 #ifdef NO_REVERSE_LOOKUP

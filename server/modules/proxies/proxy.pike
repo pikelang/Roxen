@@ -33,6 +33,8 @@ function nf=lambda(){};
 
 void init_proxies();
 
+function (string:int) no_cache_for
+
 void start()
 {
   string pos;
@@ -41,6 +43,13 @@ void start()
   if(strlen(pos)>2 && (pos[-1] == pos[-2]) && pos[-1] == '/')
     set("mountpoint", pos[0..strlen(pos)-2]); // Evil me..
 
+  if(strlen(QUERY(NoCacheFor)))
+    if(catch(no_cache_for = Regexp("("+(QUERY(NoCacheFor)-"\r")/"\n"*")|("
+				   +")")->match))
+      report_error("Parse error in 'No cache' regular expression.\n");
+
+  if(!no_cache_for) no_cache_for = lambda(){};
+  
   if(logfile) 
     destruct(logfile);
 
@@ -66,7 +75,8 @@ void start()
 void do_write(string host, string oh, string id, string more)
 {
   if(!host)     host=oh;
-  logfile->write("http://" + host + ":" + id + "\t" + more + "\n");
+  logfile->write("[" + cern_http_date(time(1)) + "] http://" +
+		 host + ":" + id + "\t" + more + "\n");
 }
 
 void log(string file, string more)
@@ -153,6 +163,10 @@ void create()
 	 " this: &lt;a href=\"/http/\"&lt;my.www.server&gt;/a&gt; will enable"
 	 " accesses to local WWW-servers through a firewall.<p>"
 	 "Please consider security, though.");
+
+  defvar("NoCacheFor", "", "No cache for", TYPE_TEXT_FIELD,
+	 "This is a list of regular expressions. URLs that match "
+	 "any entry in this list will not be cached at all.");
   
   defvar("Proxies", "", "Remote proxy regular expressions", TYPE_TEXT_FIELD,
 	 "Here you can add redirects to remote proxy servers. If a file is "
@@ -239,9 +253,9 @@ program Connection = class {
   
   int cache_wanted(object id)
   {
-    if(id &&
-       (((id->method == "POST") || (id->query && strlen(id->query)))
-	|| id->auth) || sizeof(id->cookies))
+    if(id && (((id->method == "POST") || (id->query && strlen(id->query)))
+	|| id->auth)
+       || sizeof(id->cookies) && !proxy->no_cache_for(id->not_query))
       return 0;
     return 1;
   }
@@ -282,9 +296,9 @@ program Connection = class {
       foreach(ids, id) 
 	if(id)
 	{
-	  if(b) id->conf->add_sent(b[1]);
+	  if(b) id->conf->sent += b[1];
 	  if(received) {
-	    id->conf->add_received(b[1]);
+	    id->conf->received += b[1];
 	    received = 0;
 	  }
 	  id->end();

@@ -134,7 +134,8 @@ string real_file( mixed f, mixed id )
       path = us[ 5 ] + "/" + QUERY(pdir);
     else
       path = us[ 5 ] + QUERY(pdir);
-    return path + f ;
+    if(file_size(path + f) > 0)
+      return path+f;
   }
   return 0;
 }
