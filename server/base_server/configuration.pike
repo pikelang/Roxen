@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.580 2004/06/15 09:24:28 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.581 2004/06/21 08:11:11 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4122,7 +4122,7 @@ also set 'URLs'."));
       leftmargin='0' rightmargin='0' topmargin='0' bottommargin='0'
       style='margin: 0; padding: 0'>
 
-<table border='0' cellspacing='0' cellpadding='0' height='100%'>
+<table border='0' cellspacing='0' cellpadding='0' height='99%'>
   <colgroup>
     <col span='3' />
     <col width='356' />
@@ -4171,7 +4171,7 @@ also set 'URLs'."));
           </td>
         </tr>
       </table>
-      <img src='/internal-roxen-unit' height='20' />
+      <img src='/internal-roxen-unit' height='15' />
     </td>
     <td></td>
   </tr>

@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.455 2004/06/21 08:06:06 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.456 2004/06/21 08:11:07 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1034,7 +1034,7 @@ static string error_page(string line1, string title, string body)
     "<body text='#000000' style='margin: 0; padding: 0' vlink='#2331d1' "
     "      rightmargin='0' leftmargin='0' alink='#f6f6ff' link='#0000ee' "
     "      bgcolor='#f2f1eb' bottommargin='0' topmargin='0'>"
-    "<table border='0' cellspacing='0' cellpadding='0' height='100%'>"
+    "<table border='0' cellspacing='0' cellpadding='0' height='99%'>"
     "  <tr>"
     "    <td><img src='/internal-roxen-unit' height='30' /></td>"
     "  </tr><tr>"
@@ -1068,7 +1068,7 @@ static string error_page(string line1, string title, string body)
     "          </td>"
     "        </tr>"
     "      </table>"
-    "      <img src='/internal-roxen-unit' height='20' />"
+    "      <img src='/internal-roxen-unit' height='15' />"
     "    </td>"
     "  </tr>"
     "</table>"
