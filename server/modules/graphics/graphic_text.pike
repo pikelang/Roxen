@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.19 1996/12/10 04:52:30 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.20 1996/12/10 05:39:32 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -315,14 +315,16 @@ object (Image) make_text_image(mapping args, object font, string text)
     }
   } else
     background = Image(xsize, ysize, @bgcolor);
+
   background->setcolor(@bgcolor);
+
   if(args->size || args->xsize || args->ysize)
   {
     int xs=background->xsize(), ys=background->ysize();
     if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
     if(args->xsize) xs=(int)args->xsize; 
     if(args->ysize) ys=(int)args->ysize;
-    background = background->copy(0,0,xsize,ysize);
+    background = background->copy(0,0,xs,ys);
   }
 
   
@@ -418,7 +420,7 @@ array(int)|string write_text(int _args, string text, int size,
 
 
 
-  string key = args->font+args->justift+":"+args->xpad+":"+args->ypad;
+  string key = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
   data = cache_lookup("fonts", key);
   if(!data)
   { 
