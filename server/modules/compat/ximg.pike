@@ -1,7 +1,7 @@
 // This is (not really) a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: ximg.pike,v 1.7 2000/02/24 05:27:36 nilsson Exp $";
+constant cvs_version="$Id: ximg.pike,v 1.8 2000/08/22 19:09:41 nilsson Exp $";
 inherit "module";
 inherit "roxenlib";
 
@@ -19,5 +19,5 @@ void old_rxml_warning(RequestID id, string no, string yes) {
 
 string tag_ximg(string t, mapping m, RequestID id) {
   old_rxml_warning(id, "ximg tag","imgs");
-  return make_tag("imgs",m);
+  return ({1, "imgs", m});
 }
