@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.32 2000/07/10 22:41:13 nilsson Exp $
+// $Id: global_variables.pike,v 1.33 2000/07/11 01:51:59 nilsson Exp $
 
 /*
 #pragma strict_types
@@ -16,7 +16,10 @@ inherit "basic_defvar";
 #include <version.h>
 
 //<locale-token project="base_server">LOCALE</locale-token>
-#define LOCALE(X,Y)  (Y)
+static inline object GETLOCOBJ() {
+ return roxenp()->locale->get()->base_server;
+}
+#define LOCALE(X,Y)  _DEF_LOCALE(X,Y)
 
 mixed save()
 {
@@ -526,13 +529,17 @@ void define_global_variables(  )
 	 lambda() {return !QUERY(abs_engage);});
 #endif
 
-  /*
-  defvar("locale", "standard", "Language", TYPE_STRING_LIST,
-	  "Locale, used to localise all messages in roxen.\n"
-"Standard means using the default locale, which varies according to the
-value of the 'LANG' environment variable.",
-          (sort(indices(RoxenLocale)) - ({ "Modules" })));
-  */
+
+  defvar("locale", "standard", LOCALE("", "Default language"), TYPE_STRING_LIST,
+	  LOCALE("", "Locale, used to localise all messages in roxen.\n"
+	  "Standard means using the default locale, which varies according to the "
+          "value of the 'LANG' environment variable."),
+#if constant(Locale.list_languages)
+	 sort(Locale.list_languages("base_server"))
+#else
+	 sort(RoxenLocale.list_languages("base_server"))
+#endif
+	 );
 
   defvar("suicide_engage", 0,
 	 LOCALE("", "Auto Restart: Enable Automatic Restart"),
