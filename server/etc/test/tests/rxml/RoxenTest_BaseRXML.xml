@@ -102,6 +102,16 @@
 <result></result>
 </test>
 
+<test>
+<rxml><set variable="var.i">3</set><?comment <set variable="var.i">5</set>?>&var.i;</rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml>a<?comment <b <?comment ?> ?>c</rxml>
+<result>a ?>c</result>
+</test>
+
 
 <comment>Define/undefine</comment>
 <test>
@@ -611,6 +621,156 @@ b</strlen></rxml>
 <result>b</result>
 </test>
 
+
+<comment>Elseif tests</comment>
+<test>
+<rxml><set variable="var.x">Y</set><if variable="var.x = Y">A</if><elseif variable="var.x = Y">B</elseif><else>C</else></rxml>
+<result>A</result>
+</test>
+
+<test>
+<rxml><set variable="var.x">Y</set><if variable="var.x = X">A</if><elseif variable="var.x = Y">B</elseif><else>C</else></rxml>
+<result>B</result>
+</test>
+
+<test>
+<rxml><set variable="var.x">Z</set><if variable="var.x = Y">X</if><elseif variable="var.x = Y">B</elseif><else>C</else></rxml>
+<result>C</result>
+</test>
+
+
+<comment>If plugins</comment>
+<test>
+<rxml><if exists="/index.html">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
+<rxml><if exists="/does_not_exist">yes</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><if nserious="1">yes</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><if module="rxmltags">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
+<rxml><if module="nomodule">yes</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><true/><if true="1">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
+<rxml><false/><if true="1">yes</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><true/><if false="1">yes</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><false/><if false="1">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
+<rxml><if match="buhu is buhu">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><if match="Buhu is buhu">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><if Match="Buhu is buhu">1</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><if Match="buhu is buhu">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><if match="a = a">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><if match="a = a = a = a">1</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><if sizeof="var.basun = 0">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><if sizeof="var.basun">1</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><set variable="var.basun">abc</set><if sizeof="var.basun == 3">7</if></rxml>
+<result>7</result>
+</test>
+
+<test>
+<rxml><set variable="var.basun">abc</set><if sizeof="var.basun == 4">7</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><set variable="var.x">A</set><if variable="var.x == a">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable="var.x">A</set><if Variable="var.x == A">1</if></rxml>
+<result>1</result>
+</test>
+
+<test>
+<rxml><set variable="var.x">A</set><if Variable="var.x == a">1</if></rxml>
+<result></result>
+</test>
+
+
+<comment>Missing test: if date</comment>
+<comment>Missing test: if time</comment>
+<comment>Missing test: if user</comment>
+<comment>Missing test: if group</comment>
+<comment>Missing test: if accept</comment>
+<comment>Missing test: if config</comment>
+<comment>Missing test: if cookie</comment>
+<comment>Missing test: if client</comment>
+<comment>Missing test: if defined</comment>
+<comment>Missing test: if domain</comment>
+<comment>Missing test: if ip</comment>
+<comment>Missing test: if language</comment>
+<comment>Missing test: if pragma</comment>
+<comment>Missing test: if prestate</comment>
+<comment>Missing test: if referrer</comment>
+<comment>Missing test: if supports</comment>
+<comment>Missing test: if clientvar</comment>
+<comment>Missing test: <cond></comment>
+<comment>Missing test: path emit plugin</comment>
+
 <comment>Emit tests</comment>
 <test>
 <rxml><emit source="values" values="1,2,3" split=",">&_.value;:</emit></rxml>
@@ -789,6 +949,7 @@ b</strlen></rxml>
 <result>c:a:d:e:a</result>
 </test>
 
+<comment>Missing test: values emit plugin</comment>
 
 <comment>Use tests</comment>
 <test>
@@ -938,4 +1099,21 @@ b</strlen></rxml>
 <rxml><strlen>ab
 cd</rxml>
 <result>5</result>
+</test>
+
+
+<comment>Entity tests</comment>
+<test>
+<rxml><set variable="var.x">&amp;</set>&var.x;</rxml>
+<result>&amp;amp;</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" value="&amp;"/>&var.x;</rxml>
+<result>&amp;</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" value="&amp;"/>&var.x:none;</rxml>
+<result>&</result>
 </test>
