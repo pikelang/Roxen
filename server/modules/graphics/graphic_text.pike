@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.134 1998/07/19 17:57:41 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.135 1998/08/02 00:59:35 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -55,13 +55,20 @@ void create()
 	 "If the images in the cache have not been accessed for this "
 	 "number of hours they are removed.");
   
-  defvar("speedy", 0, "Avoid automatic detection of document colors",
+  defvar("speedy", 0, "Avoid automatic detection of document colors in tables",
 	 TYPE_FLAG|VAR_MORE,
-	 "If this flag is set, the tags 'body', 'tr', 'td', 'font' and 'th' "
+	 "If this flag is set, the tags 'tr', 'td', 'font' and 'th' "
+	 " will <b>not</b> be parsed to automatically detect the colors of "
+	 " a document. You will then have to specify all colors in all calls "
+	 " to &lt;gtext&gt; or in the 'body' tag");
+  
+  defvar("nobody", 0, "Avoid automatic detection of document colors from body",
+	 TYPE_FLAG|VAR_MORE,
+	 "If this flag is set, the 'body' tag"
 	 " will <b>not</b> be parsed to automatically detect the colors of "
 	 " a document. You will then have to specify all colors in all calls "
 	 " to &lt;gtext&gt;");
-  
+
   defvar("deflen", 300, "Default maximum text-length", TYPE_INT|VAR_MORE,
 	 "The module will, per default, not try to render texts "
 	 "longer than this. This is a safeguard for things like "
@@ -767,16 +774,19 @@ array(int)|string write_text(int _args, string text, int size, object id)
   {
     if(args->nocache) // Remove from cache. Very useful for access counters
       cache_remove(key, text);
+    perror("Cache (1)\n");
     if(size) return data[1];
     return data[0];
   } else if(data = get_cache_file( key, text )) {
     cache_set(key, text, data);
+    perror("Cache (2)\n");
     if(size) return data[1];
     return data[0];
   }
 
 
   // So. We have to actually draw the thing...
+  perror("Drawing...\n");
 
   err = catch
   {
@@ -1530,22 +1540,24 @@ string|void pop_color(string tagname,mapping args,object id,object file,
 
 mapping query_tag_callers()
 {
-  return ([ "gtext-id":tag_gtext_id, ]) | (query("speedy")?([]):
-  (["font":tag_fix_color,
-    "body":tag_body,
-    "table":tag_fix_color,
-    "tr":tag_fix_color,
-    "td":tag_fix_color,
-    "layer":tag_fix_color,
-    "ilayer":tag_fix_color,
-    "/td":pop_color,
-    "/tr":pop_color,
-    "/font":pop_color,
-    "/body":pop_color,
-    "/table":pop_color,
-    "/layer":pop_color,
-    "/ilayer":pop_color,
-   ]));
+  return ([ "gtext-id":tag_gtext_id, ])
+    | (query("nobody")?([]):
+       (["body":tag_body,
+	 "/body":pop_color])),
+    | (query("speedy")?([]):
+       (["font":tag_fix_color,
+	 "table":tag_fix_color,
+	 "tr":tag_fix_color,
+	 "td":tag_fix_color,
+	 "layer":tag_fix_color,
+	 "ilayer":tag_fix_color,
+	 "/td":pop_color,
+	 "/tr":pop_color,
+	 "/font":pop_color,
+	 "/table":pop_color,
+	 "/layer":pop_color,
+	 "/ilayer":pop_color,
+       ]));
 }
 
 
