@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.25 1999/08/20 16:47:44 nilsson Exp $
+ * $Id: rxml.pike,v 1.26 1999/08/22 13:38:54 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -813,12 +813,23 @@ string tag_for(string t, mapping args, string c, RequestID id)
   string v = args->variable;
   int from = (int)args->from;
   int to = (int)args->to;
-  int step = (int)args->step||1;
-  
+  int step = (int)args->step!=0?(int)args->step:(to<from?-1:1);
+
+  if((to<from && step>0)||(to>from && step<0)) to=from+step;
+
   string res="";
-  for(int i=from; i<=to; i+=step)
-    res += "<set variable="+v+" value="+i+">"+c;
-  return res;
+  if(to<from) {
+    for(int i=from; i>=to; i+=step)
+      res += "<set variable="+v+" value="+i+">"+c;
+    return res;
+  }
+  else if(to>from) {
+    for(int i=from; i<=to; i+=step)
+      res += "<set variable="+v+" value="+i+">"+c;
+    return res;
+  }
+
+  return "<set variable="+v+" value="+to+">"+c;
 }
 
 string tag_foreach(string t, mapping args, string c, RequestID id)
