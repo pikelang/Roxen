@@ -1,8 +1,6 @@
 // Handles supports
 // Copyright © 1999 - 2000, Roxen IS.
-// $Id: supports.pike,v 1.16 2000/03/11 17:18:20 nilsson Exp $
-
-#pragma strict_types
+// $Id: supports.pike,v 1.17 2000/03/13 06:19:09 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -49,10 +47,10 @@ private void parse_supports_string(string what, string current_section,
       string name, to;
       if(sscanf(line, "#include <%s>", file))
       {
-	if(line=Stdio.read_bytes(file))
-	  parse_supports_string(line, current_section, defines);
-	else
+	if(catch(line=lopen(file,"r")->read()))
 	  report_error(LOCALE->supports_bad_include(file));
+	else
+	  parse_supports_string(line, current_section, defines);
       }
       else if(sscanf(line, "#define %[^ \t]%*[ \t]%s", name, to)) {
 	name -= "\t";
@@ -205,7 +203,7 @@ void done_with_roxen_com()
   string new, old;
   new = _new_supports * "";
   new = (new/"\r\n\r\n")[1..]*"\r\n\r\n";
-  old = Stdio.read_bytes( "etc/supports" );
+  catch( old = lopen( "etc/supports","r" )->read() );
 
   if(strlen(new) < strlen(old)-200) // Error in transfer?
     return;
@@ -213,14 +211,16 @@ void done_with_roxen_com()
   if(old != new) {
     report_debug("Got new supports data from www.roxen.com\n"
 		 "Replacing old file with new data.\n");
-    mv("etc/supports", "etc/supports~");
-    Stdio.write_file("etc/supports", new, 0660);
-    old = Stdio.read_bytes( "etc/supports" );
+    mkdirhier( "../local/etc/supports" );
+    rm("../local/etc/supports~");
+    mv("../local/etc/supports", "../local/etc/supports~");
+    catch(open("../local/etc/supports","wct",0666)->write(new));
+    catch(old = lopen( "etc/supports","r" )->read());
 
     if(old != new)
     {
       report_debug("FAILED to update the supports file.\n");
-      mv("etc/supports~", "etc/supports");
+      mv("../local/etc/supports~", "../local/etc/supports");
     } else {
       initiate_supports();
     }
