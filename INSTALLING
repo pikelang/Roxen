@@ -20,16 +20,17 @@
 
   3. Type cd roxen to change to the new directory. This directory
      should contain at the very least four directories: 
-     server (roxen server source), ulpc (the µLPC intepretator), 
+     server (roxen server source), pike (the Pike intepreter), 
      extern (misc. programs used by roxen) and tools (misc tools).
 
   4. Type ./configure --prefix=<wanted_base_path_for_roxen>
+     (defaults to /usr/local, thus placing roxen in /usr/local/roxen/)
      followed by make and make install to build the binaries and copy them 
      to the correct place.
 
      You can later on move the 'roxen' directory that will be
      generated when you type 'make install' to anywhere in your
-     filesystem. 
+     filesystem, roxen does not keep any absolute paths.
      
   5. If everything worked fine and the compilation is done, type 
      cd <dir>/server.
