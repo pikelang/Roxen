@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 //
 // A filesystem for the roxen administration interface.
 // NGSERVER: Rename to admin_filesystem.pike
@@ -14,7 +14,7 @@ constant module_doc  = "This filesystem serves the administration interface";
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.125 2004/06/04 08:33:15 _cvs_stephen Exp $";
+  "$Id: config_filesystem.pike,v 1.126 2004/06/05 15:19:42 _cvs_dirix Exp $";
 
 constant path = "admin_interface/";
 

@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 //
 
 //#pragma strict_types
@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.23 2004/05/31 23:01:54 _cvs_stephen Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.24 2004/06/05 15:19:47 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";

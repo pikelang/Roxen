@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1997 - 2001, Roxen IS.
 // Released under GPL
 // made by Per Hedbor
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.33 2004/06/01 00:54:03 _cvs_stephen Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.34 2004/06/05 15:19:49 _cvs_dirix Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";

@@ -8,7 +8,7 @@ void run_tests( Configuration c )
   if( !sql )
   {
     werror("  | *** Note: Failed to connect to mysql.\n" );
-    werror("  | ***       Roxen will not work\n" );
+    werror("  | ***       ChiliMoon will not work\n" );
     return;
   }
   test(sql->query, "CREATE TABLE testtable (value VARCHAR(10) NOT NULL)" );
@@ -30,7 +30,7 @@ void run_tests( Configuration c )
   if( !test_equal( ({ str1,str2 }), pass, m->value ) )
   {
     werror("  | *** Note: Mysql does not support binary data.\n" );
-    werror("  | ***       Roxen will not work\n" );
+    werror("  | ***       ChiliMoon will not work\n" );
   }
 
   test( sql->query, "DROP TABLE testtable" );

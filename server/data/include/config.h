@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.35 2004/05/24 17:03:17 mani Exp $
+ * $Id: config.h,v 1.36 2004/06/05 15:19:41 _cvs_dirix Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -49,7 +49,7 @@
 // #define DISABLE_SUPPORTS
 
 
-/* Define this if you don't want Roxen to use DNS. Note: This
+/* Define this if you don't want ChiliMoon to use DNS. Note: This
  * doesn't make the server itself faster. It only reduces the netload
  * some. This option turns off ALL ip -> hostname and hostname -> ip
  * conversion. Thus you can't use if if you want to run a proxy. 
@@ -82,9 +82,9 @@
 // include the Pike backtraces too.
 //#define VERBOSE_RXML_ERRORS
 
-// Define back to which Roxen version you would like to keep 
+// Define back to which ChiliMoon version you would like to keep 
 // compatibility.
-#define ROXEN_COMPAT 2.0
+//#define ROXEN_COMPAT 4.0
 
 
 //  Cache timeout for RAM cache

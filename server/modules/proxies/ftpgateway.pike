@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.47 2004/06/04 08:33:18 _cvs_stephen Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.48 2004/06/05 15:19:47 _cvs_dirix Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -28,7 +28,7 @@ string CONNECTION_REFUSED=#"
 HTTP/1.0 500 Connection refused by remote host\r\n
 Content-type: text/html\r\n
 \r\n
-<title>Roxen internal error</title>\n
+<title>ChiliMoon internal error</title>\n
 <h1>Proxy request failed</h1>
 <hr>
 <font size=\"+2\"><i>Host unknown or connection refused</i></font>
@@ -36,7 +36,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+core->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+core->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.47 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.48 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 

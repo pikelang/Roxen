@@ -48,7 +48,7 @@ server must be a MySQL server, nothing else will work.
   </tr>
   <tr>
   <td valign='top' colspan='2'>
-    <i>The identifier of the group. This is used internally in Roxen,
+    <i>The identifier of the group. This is used internally in ChiliMoon,
        and must be unique.If you leave it as automatic, a ID will be selected
        automatically.</i>
    </td>

@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 
 #include <module.h>
 inherit "module";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.14 2001/11/12 17:52:13 mast Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.15 2004/06/05 15:19:49 _cvs_dirix Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG

@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-constant cvs_version = "$Id: ismap.pike,v 1.22 2004/06/04 08:33:18 _cvs_stephen Exp $";
+constant cvs_version = "$Id: ismap.pike,v 1.23 2004/06/05 15:19:47 _cvs_dirix Exp $";
 
 #include <module.h>
 inherit "module";

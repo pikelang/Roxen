@@ -1,4 +1,4 @@
-/* This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
+/* This is a ChiliMoon module. Copyright © 1997 - 2001, Roxen IS.
  *
  * Adds some java script that will prevent others from putting
  * your page in a frame.
@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.37 2004/06/04 08:29:26 _cvs_stephen Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.38 2004/06/05 15:19:48 _cvs_dirix Exp $";
 constant thread_safe=1;
 
 #include <module.h>

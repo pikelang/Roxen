@@ -1,4 +1,4 @@
-/* This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
+/* This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
  *
  * Draws diagrams pleasing to the eye.
  *
@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.152 2004/06/04 08:33:17 _cvs_stephen Exp $";
+constant cvs_version = "$Id: business.pike,v 1.153 2004/06/05 15:19:45 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";

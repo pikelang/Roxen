@@ -1,12 +1,12 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 // This is a small sample module.  It is intended to show a simple example
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: fnord.pike,v 1.18 2004/05/23 15:08:56 _cvs_dirix Exp $";
+constant cvs_version = "$Id: fnord.pike,v 1.19 2004/06/05 15:19:44 _cvs_dirix Exp $";
 
-// Tell Roxen that this module is threadsafe. That is there is no
+// Tell ChiliMoon that this module is threadsafe. That is there is no
 // request specific data in global variables.
 constant thread_safe=1;
 
@@ -66,7 +66,7 @@ inherit "module";
 
 
 // This is the code for the actual container.  By naming it "simpletag_"
-// it is automatically recognized by Roxen as the code for a tag.
+// it is automatically recognized by ChiliMoon as the code for a tag.
 
 // First, check the 'request_id->prestate' multiset for the presence
 // of 'fnord'. If it is there, show the contents, otherwise, if there

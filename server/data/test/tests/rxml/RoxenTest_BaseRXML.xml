@@ -1153,7 +1153,7 @@ b</sizeof></rxml>
 </test>
 
 <test>
-<rxml><sizeof>Roxen<b>&ouml;</b></sizeof></rxml>
+<rxml><sizeof>ChiliMoon<b>&ouml;</b></sizeof></rxml>
 <result>18</result>
 </test>
 
@@ -2887,7 +2887,7 @@ cd</rxml>
 
 
 <!-- ............................................................ -->
-<comment>Roxen scope</comment>
+<comment>ChiliMoon scope</comment>
 <test>
 <rxml>&server.no-such-variable;</rxml>
 <result></result>

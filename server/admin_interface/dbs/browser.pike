@@ -287,8 +287,8 @@ mixed move_db( string db, RequestID id )
 
     <i>
     The database type. Internal means that it will be stored
-    in the Roxen MySQL database, and the permissions of the
-    database will be automatically manged by Roxen. External
+    in the ChiliMoon MySQL database, and the permissions of the
+    database will be automatically manged by ChiliMoon. External
     means that the database resides in another database.</i>
   </td>
   </tr>
@@ -298,7 +298,7 @@ mixed move_db( string db, RequestID id )
   </tr>
   <tr><td colspan='4'><i>
     This URL is only used for </i>External<i> databases, it is
-    totally ignored for databases defined internally in Roxen.
+    totally ignored for databases defined internally in ChiliMoon.
     </i>
   </td></tr>
 </table>

@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
 inherit "module";
@@ -330,7 +330,7 @@ constant tagdoc=([
 </p></desc>",
 
 "&_.type-img;":#"<desc type='entity'><p>
- Returns the internal Roxen name of the icon representating the
+ Returns the internal ChiliMoon name of the icon representating the
  directory or the file's content-type, e.g. internal-gopher-menu for a
  directory-folder or internal-gopher-text for a HTML-file.
 </p></desc>",

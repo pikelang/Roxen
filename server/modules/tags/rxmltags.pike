@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.428 2004/06/03 23:56:36 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.429 2004/06/05 15:19:48 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -2999,7 +2999,7 @@ constant tagdoc=([
  specified Unix 'time_t' time as the starting time (which is
  <i>01:00, January the 1st, 1970</i>), instead of the current time.
  This is mostly useful when the <tag>date</tag> tag is used from a
- Pike-script or Roxen module.</p>
+ Pike-script or ChiliMoon module.</p>
 
 <ex><date unix-time='120'/></ex>
 </attr>

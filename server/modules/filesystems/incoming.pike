@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1997 - 2001, Roxen IS.
 
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.18 2002/06/14 00:08:07 nilsson Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.19 2004/06/05 15:19:44 _cvs_dirix Exp $";
 constant module_name = "File systems: Incoming filesystem";
 constant module_doc =
 ("This file system is used only for uploads, the files that are uploaded\n"

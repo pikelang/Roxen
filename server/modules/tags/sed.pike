@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 // by Mirar <mirar@roxen.com>
 
 // Adds the <sed> tag, to emulate a subset of sed operations in rxml
@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.14 2004/06/04 00:11:53 mani Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.15 2004/06/05 15:19:49 _cvs_dirix Exp $";
 constant thread_safe=1;
 
 #include <module.h>

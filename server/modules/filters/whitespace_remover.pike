@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_remover.pike,v 1.3 2004/05/21 02:38:23 _cvs_stephen Exp $";
+constant cvs_version = "$Id: whitespace_remover.pike,v 1.4 2004/06/05 15:19:45 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Sucker";

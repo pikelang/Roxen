@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 // The main RXML parser. If this module is not added to a configuration,
 // no RXML parsing will be done at all for .html files.
@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.78 2004/06/01 22:28:48 _cvs_dirix Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.79 2004/06/05 15:19:48 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <config.h>

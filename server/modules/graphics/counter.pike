@@ -16,7 +16,7 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed", "graphic_text" }));
 }
 
-constant cvs_version = "$Id: counter.pike,v 1.44 2004/05/22 19:16:00 _cvs_stephen Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.45 2004/06/05 15:19:45 _cvs_dirix Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Counter";
 constant thread_safe = 1;
@@ -80,28 +80,12 @@ class TagCounter {
       foreach(a_args, string arg)
 	if(args[arg]) accessed_args[arg]=args[arg];
 
-#if ROXEN_COMPAT <= 2.0
-      if(args->nfont) gtext_args->font=args->nfont;
-      if(args->style) gtext_args->font=args->style;
-      if(args->len) accessed_args->minlength=args->len;
-      if(gtext_args->font=="ListAllFonts")
-	return ({
-	  "<table border='1'><tr><th>Name</th><th>Type</th><th>Sample</th></tr></table>"
-	  "<emit source='fonts'><tr><td>&_.name;</td><td>&_.type;</td><td><gtext font='&_.name'>123</gtext></td></tr></emit>"
-	  "</table>"
-	});
-#endif
 
       if(!gtext_args->font) gtext_args->font=query("font");
 
       string res=RXML.t_xml->
 	format_tag( gtext, gtext_args,
 		    RXML.t_xml->format_tag( "accessed", accessed_args ) );
-
-#if ROXEN_COMPAT <= 2.0
-      if(args->bordercolor)
-	res="<font color=\""+args->bordercolor+"\">"+res+"</font>";
-#endif
 
       return ({ res });
     }
@@ -114,10 +98,3 @@ class TagCounterURL {
   constant gtext="gtext-url";
 }
 
-#if ROXEN_COMPAT <= 2.0
-class TagCounter_URL {
-  inherit TagCounter;
-  constant name="counter_url";
-  constant gtext="gtext_url";
-}
-#endif

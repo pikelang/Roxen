@@ -1,4 +1,4 @@
-// The Atlas module. Copyright © 1999 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 //
 // Please note: The map is incomplete and incorrect in details.  Countries
 // and territories are missing.
@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.16 2004/05/31 23:01:51 _cvs_stephen Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.17 2004/06/05 15:19:45 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";

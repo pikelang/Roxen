@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000, Roxen IS.
 //
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.15 2004/05/27 21:24:38 _cvs_stephen Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.16 2004/06/05 15:19:49 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Really advanced wizard";

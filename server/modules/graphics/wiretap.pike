@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 2000-2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000-2001, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.36 2004/06/03 23:05:35 mani Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.37 2004/06/05 15:19:45 _cvs_dirix Exp $";
 
 #include <module.h>
 inherit "module";

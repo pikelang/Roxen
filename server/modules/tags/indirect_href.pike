@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 // This module makes it possible to write symbolic names instead of
 // absoulte hrefs.
@@ -7,7 +7,7 @@
 
 #pragma strict_types
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.34 2002/06/15 21:04:40 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.35 2004/06/05 15:19:48 _cvs_dirix Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -99,7 +99,7 @@ constant tagdoc=([
  Which link to fetch from the database. There is a special case,
  <att>name='random'</att> that will choose a random link from the
  database.</p>
- <ex><ai name='roxen'>Roxen Internet Software</ai></ex>
+ <ex><ai name='ChiliMoon'>ChiliMoon Webserver</ai></ex>
  </attr>",
     ]);
 #endif

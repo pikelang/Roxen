@@ -1,6 +1,6 @@
-// This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1997 - 2001, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.36 2004/06/04 08:29:22 _cvs_stephen Exp $";
+string cvs_version="$Id: pimage.pike,v 1.37 2004/06/05 15:19:45 _cvs_dirix Exp $";
 
 #include <module.h>
 inherit "module";

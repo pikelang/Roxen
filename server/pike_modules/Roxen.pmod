@@ -1,6 +1,6 @@
-// This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
+// This is a ChiliMoon pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.196 2004/06/04 08:33:19 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.197 2004/06/05 15:19:50 _cvs_dirix Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -375,7 +375,7 @@ mapping(string:mixed) http_rxml_answer( string rxml, RequestID id,
 //! Convenience functions to use in Roxen modules. When you just want
 //! to return a string of data, with an optional type, this is the
 //! easiest way to do it if you don't want to worry about the internal
-//! roxen structures.
+//! ChiliMoon structures.
 {
   rxml = 
        ([function(string,RequestID,Stdio.File:string)]id->conf->parse_rxml)
@@ -658,7 +658,7 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
 mapping http_stream(Stdio.File from)
 //! Returns a result mapping where the data returned to the client
 //! will be streamed raw from the given Stdio.File object, instead of
-//! being packaged by roxen. In other words, it's entirely up to you
+//! being packaged by ChiliMoon. In other words, it's entirely up to you
 //! to make sure what you send is HTTP data.
 {
   return ([ "raw":1, "file":from, "len":-1, ]);
@@ -940,7 +940,7 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 mapping build_roxen_env_vars(RequestID id)
 //! Generate a mapping with additional environment variables suitable
 //! for use with CGI-scripts or SSI scripts etc. These variables are
-//! roxen extensions and not defined in any standard document.
+//! ChiliMoon extensions and not defined in any standard document.
 //! Specifically:
 //! @pre{
 //! For each cookie:          COOKIE_cookiename=cookievalue
@@ -2130,7 +2130,7 @@ constant magic_charset_variable_value = "едц&#x829f;";
 function get_client_charset_decoder( string едц, RequestID|void id )
   //! Returns a decoder for the clients charset, given the clients
   //! encoding of the string "едц&#x829f;".
-  //! See the roxen-automatic-charset-variable tag.
+  //! See the ChiliMoon-automatic-charset-variable tag.
 {
   //  If the first character is "%" the whole request is most likely double
   //  encoded. We'll undo the decoding by combining the charset decoder with
@@ -2212,7 +2212,7 @@ function get_client_charset_decoder( string едц, RequestID|void id )
 }
 
 
-// Low-level C-roxen optimization functions.
+// Low-level C-ChiliMoon optimization functions.
 inherit _Roxen;
 
 /*

@@ -109,8 +109,8 @@ string describe_error(string err, array (int) times,
 // Returns ({ URL to module config page, human-readable (full) module name })
 array(string) get_conf_url_to_module(string|RoxenModule m, string|void lang)
 {
-  // module is either a RoxenModule object or a string as returned by
-  // get_modname(some RoxenModule), eg "ConfigInterface/piketag#0"
+  // module is either a ChiliMoonModule object or a string as returned by
+  // get_modname(some ChiliMoonModule), eg "ConfigInterface/piketag#0"
   RoxenModule module = stringp(m) ? Roxen.get_module(m) : m;
   Configuration conf = module->my_configuration();
   string url_modname = replace(conf->otomod[module], "#", "!"),

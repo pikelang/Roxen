@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 // Adds support for inline pike in documents.
 //
@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.39 2004/06/04 08:29:25 _cvs_stephen Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.40 2004/06/05 15:19:48 _cvs_dirix Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -70,7 +70,7 @@ inserted into the page. It is not reparsed with the RXML parser.</p>
 </dl>
 
 <p>When files are included or inherited, they will be read from the
-virtual filesystem in Roxen, relative to the location during whose
+virtual filesystem in ChiliMoon, relative to the location during whose
 parsing the pike tag was encountered. Entities and scopes are
 available as variables named like the entity/scope itself. The
 RequestID object is available as <code>id</code>.</p>
@@ -606,7 +606,7 @@ constant tagdoc=([
 <attr name='#inherit \"...\"'><p>
  An #inherit preprocessor directive puts a corresponding inherit
  declaration in the class that's generated to contain the Pike code in
- the tag, i.e. it inherits a specified file from the Roxen filesystem.</p>
+ the tag, i.e. it inherits a specified file from the ChiliMoon filesystem.</p>
 
  <ex-box><?pike
   //O <pre>

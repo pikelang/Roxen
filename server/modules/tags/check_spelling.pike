@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 //
 
 #include <module.h>
@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.19 2004/05/27 18:28:44 _cvs_stephen Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.20 2004/06/05 15:19:48 _cvs_dirix Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Spell checker";

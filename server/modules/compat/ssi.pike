@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 //
 
 inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.47 2004/05/31 23:01:50 _cvs_stephen Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.48 2004/06/05 15:19:43 _cvs_dirix Exp $";
 
 
 constant module_type = MODULE_TAG;

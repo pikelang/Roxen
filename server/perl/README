@@ -1,4 +1,4 @@
-Note: The Roxen Perl support is still experimental, so don't rely
+Note: The ChiliMoon Perl support is still experimental, so don't rely
 on these things quite yet.
 
 /Stensson, April 2000.
@@ -6,6 +6,6 @@ on these things quite yet.
 ---
 
 The server/perl/lib/ directory will contain Perl modules, and should
-be added to @INC for Roxen-related Perl scripts.
+be added to @INC for ChiliMoon-related Perl scripts.
 
 

@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
 // This module redirects requests to different places, depending on the
 // hostname that was used to access the server. It can be used as a
@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.28 2004/06/04 08:33:16 _cvs_stephen Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.29 2004/06/05 15:19:45 _cvs_dirix Exp $";
 constant thread_safe=1;
 
 inherit "module";

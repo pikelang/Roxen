@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.104 2004/05/31 23:01:52 _cvs_stephen Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.105 2004/06/05 15:19:45 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -755,7 +755,7 @@ int get_file_stat( string f, RequestID id  )
   //  we must let the stat_file() run unconditionally to register
   //  dependencies properly.
   if (stat_cache = id->misc->gbutton_statcache) {
-    if (!id->misc->persistent_cache_crawler)
+//    if (!id->misc->persistent_cache_crawler)
       if (res = stat_cache[f])
 	return (res > 0) && res;
   } else

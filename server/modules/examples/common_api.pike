@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version="$Id: common_api.pike,v 1.10 2002/06/14 10:34:58 nilsson Exp $";
+constant cvs_version="$Id: common_api.pike,v 1.11 2004/06/05 15:19:44 _cvs_dirix Exp $";
 //! This string (filtered to remove some ugly cvs id markup) shows up in
 //! the roxen administration interface when handling module parameters in
 //! developer mode (configured under "User Settings" below the Admin tab).
@@ -36,7 +36,7 @@ constant module_unique = 1;
 //! 1 to allow at most one.
 
 constant thread_safe = 0;
-//! Tell Roxen that this module is thread safe. That is, there is no
+//! Tell ChiliMoon that this module is thread safe. That is, there is no
 //! request specific data in module global variables (such state is
 //! better put in the <ref>RequestID</ref> object, preferably in the
 //! <pi>id->misc</pi> mapping under some key unique to your module).
@@ -95,7 +95,7 @@ string info( Configuration conf )
 //! Implementing this function in your module is optional.
 //!
 //! When present, it returns a string that describes the module.
-//! When absent, Roxen will use element <ref>module_doc</ref>. Unlike
+//! When absent, Chilimoon will use element <ref>module_doc</ref>. Unlike
 //! module_doc, though, this information is only shown when the module
 //! is present in a virtual server, so it won't show up when adding
 //! modules to a server.

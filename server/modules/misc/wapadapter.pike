@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 //
 
 #define _id_misc ([mapping(string:mixed)]id->misc)
@@ -11,7 +11,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.14 2004/05/31 23:01:54 _cvs_stephen Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.15 2004/06/05 15:19:47 _cvs_dirix Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG;
 constant module_name = "WAP Adapter";

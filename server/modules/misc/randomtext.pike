@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 // randomtext.pike -- random text generator module
 //
 // By Leif Stensson.
 //
-//   This is a Roxen module for generating semi-random text based on
+//   This is a ChiliMoon module for generating semi-random text based on
 //   a set of rules. The functionality is available through a tag
 //
 //         <make-random-text rules="NAME_OF_RULE_FILE" />
@@ -52,15 +52,15 @@
 //   randomly once, but then produce the same result every time it is
 //   called.
 //
-//   ... any yes, this module was a quick hack for amusement and for
+//   ... and yes, this module was a quick hack for amusement and for
 //   use in some courses to help provide dummy contents for new sites,
-//   so don't use this as a model for how to write Roxen modules.
+//   so don't use this as a model for how to write ChiliMoon modules.
 
 inherit "module";
 
 #include <module.h>
 
-string version = "$Id: randomtext.pike,v 1.9 2002/10/22 00:24:20 nilsson Exp $";
+string version = "$Id: randomtext.pike,v 1.10 2004/06/05 15:19:47 _cvs_dirix Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Random Text";

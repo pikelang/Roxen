@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
 inherit "module";
 #include <request_trace.h>
 
-constant cvs_version = "$Id: url_rectifier.pike,v 1.15 2001/09/03 18:12:20 nilsson Exp $";
+constant cvs_version = "$Id: url_rectifier.pike,v 1.16 2004/06/05 15:19:45 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_LAST;
 constant module_name = "URL Rectifier";

@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: filter.pike,v 1.3 2001/09/03 18:05:10 nilsson Exp $";
+constant cvs_version = "$Id: filter.pike,v 1.4 2004/06/05 15:19:44 _cvs_dirix Exp $";
 constant module_type = MODULE_FILTER;
 constant module_name = "RefDoc for MODULE_FILTER";
 constant module_doc = "This module does nothing, but its inlined "

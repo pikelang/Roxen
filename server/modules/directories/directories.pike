@@ -1,4 +1,4 @@
-// This is a Roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 // Directory listings mark 3
 //
@@ -9,7 +9,7 @@
 //  o Add readme support
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.103 2004/05/31 16:09:26 _cvs_stephen Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.104 2004/06/05 15:19:43 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"

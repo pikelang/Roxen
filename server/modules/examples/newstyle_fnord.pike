@@ -9,9 +9,9 @@
 
 // This variable is shown in the configinterface as the version of the module.
 constant cvs_version =
- "$Id: newstyle_fnord.pike,v 1.16 2004/05/22 18:14:05 _cvs_stephen Exp $";
+ "$Id: newstyle_fnord.pike,v 1.17 2004/06/05 15:19:44 _cvs_dirix Exp $";
 
-// Tell Roxen that this module is threadsafe.
+// Tell ChiliMoon that this module is threadsafe.
 constant thread_safe=1;
 
 // Inherit code that is needed in every module.

@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 inherit "module";
 
-constant cvs_version = "$Id: robots.txt.pike,v 1.5 2002/10/22 00:33:07 nilsson Exp $";
+constant cvs_version = "$Id: robots.txt.pike,v 1.6 2004/06/05 15:19:47 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "robots.txt generator";
