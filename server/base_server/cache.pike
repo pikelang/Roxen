@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.5 1996/12/10 04:25:18 per Exp $";
+string cvs_version = "$Id: cache.pike,v 1.6 1996/12/10 04:26:00 per Exp $";
 #include <config.h>
 
 inherit "roxenlib";
@@ -66,7 +66,7 @@ string status()
     totalr += all[a];
   }
   res += "<tr align=right bgcolor=darkblue><td align=left>Total</td><td>"+totale+"</td><td>" + (totalm/1024) + "</td>";
-    res += "<td>"+titalh+"</td><td>"+(totalr-totalh)+"</td>";
+    res += "<td>"+totalh+"</td><td>"+(totalr-totalh)+"</td>";
     if(totalr)
       res += "<td>"+(totalh*100)/totalr+"%</td>";
     else
