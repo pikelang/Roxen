@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: fcgi_stdio.c,v 1.2 1997/04/09 02:06:02 grubba Exp $";
+static const char rcsid[] = "$Id: fcgi_stdio.c,v 1.3 1999/05/24 01:00:04 peter Exp $";
 #endif /* not lint */
 
 #define NO_FCGI_DEFINES
@@ -40,7 +40,20 @@ static const char rcsid[] = "$Id: fcgi_stdio.c,v 1.2 1997/04/09 02:06:02 grubba 
 #define TRUE  (1)
 #endif
 
+#ifdef USE_GCC_CONSTRUCTOR_ATTR
+FCGI_FILE _fcgi_sF[3];
+static void _init_fcgi_sF(void) __attribute__((constructor))
+{
+  _fcgi_sF[0].stdio_stream = stdin;
+  _fcgi_sF[0].fcgx_stream = NULL;
+  _fcgi_sF[1].stdio_stream = stdout;
+  _fcgi_sF[1].fcgx_stream = NULL;
+  _fcgi_sF[2].stdio_stream = stderr;
+  _fcgi_sF[2].fcgx_stream = NULL;
+}
+#else /* !USE_GCC_CONSTRUCTOR_ATTR */
 FCGI_FILE _fcgi_sF[3] = {{stdin, NULL}, {stdout, NULL}, {stderr, NULL}};
+#endif /* !USE_GCC_CONSTRUCTOR_ATTR */
 
 /*
  *----------------------------------------------------------------------

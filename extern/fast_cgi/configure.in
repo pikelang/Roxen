@@ -1,4 +1,4 @@
-dnl     $Id: configure.in,v 1.7 1998/06/18 00:47:59 grubba Exp $
+dnl     $Id: configure.in,v 1.8 1999/05/24 00:59:53 peter Exp $
 dnl
 dnl     This file is an input file used by the GNU "autoconf" program to
 dnl     generate the file "configure", which is run during the build
@@ -6,6 +6,8 @@ dnl     to configure the system for the local environment.
 dnl
 dnl Mark R. Brown
 dnl mbrown@openmarket.com
+dnl
+dnl Lots of patches by Henrik Grubbström <grubba@idonex.se>
 dnl
 
 CCDEFS="$DEFS"
@@ -66,6 +68,57 @@ dnl AC_FUNC_MEMCMP
 dnl AC_CHECK_FUNCS(select socket)
 
 AC_HAVE_FUNCS(memmove memcpy realloc)
+
+
+#
+# In glibc 2.1 stdio, stdout and stderr are ordinary variables,
+# and not constant.
+#
+# /grubba 1999-05-23
+#
+AC_MSG_CHECKING([if stdin, stdout and stderr are constant expressions])
+AC_CACHE_VAL(pike_cv_constant_stdio, [
+  AC_TRY_COMPILE([
+#include <stdio.h>
+
+    FILE *f[3] = { stdin, stdout, stderr };
+  ], [
+    return 0;
+  ], [
+    pike_cv_constant_stdio="yes"
+  ], [
+    pike_cv_constant_stdio="no"
+  ])
+])
+AC_MSG_RESULT($pike_cv_constant_stdio)
+if test "$pike_cv_constant_stdio" = "yes"; then :; else
+  # Try using a workaround suggested by
+  # Rainer Maximini <maximini@informatik.uni-kl.de>
+  AC_MSG_CHECKING(if gcc style constructors can be used)
+  AC_CACHE_VAL(pike_cv_gcc_constructor_attr, [
+    AC_TRY_RUN([
+#include <stdio.h>
+
+      FILE *f[3];
+
+static void f_init(void) __attribute__((constructor)) {
+  f[0] = stdin;
+  f[1] = stdout;
+  f[2] = stderr;
+}
+    ], [
+  return ((f[0] != stdin) || (f[1] != stdout) || (f[2] != stderr));
+    ], [
+      pike_cv_gcc_constructor_attr="yes"
+    ], [
+      pike_cv_gcc_constructor_attr="no"
+    ])
+  ])
+  AC_MSG_RESULT($pike_cv_gcc_constructor_attr)
+  if test "$pike_cv_gcc_constructor_attr" = "yes"; then
+    AC_DEFINE(USE_GCC_CONSTRUCTOR_ATTR)
+  else :; fi
+fi
 
 #--------------------------------------------------------------------
 #  Build with profiling?

@@ -27,3 +27,6 @@
 
 /* Define if we need cross-process locking */
 #undef USE_LOCKING
+
+/* Define this if we need to use gcc-style constructors */
+#undef USE_GCC_CONSTRUCTOR_ATTR
