@@ -103,7 +103,7 @@ string present_items(array i, int ind, object id)
 
 
     res+=("<nobr>"+
-          submit_gtxt( "goto_"+item->href,
+          submit_gtxt( "cf_goto_"+item->href,
                        ([ "scale":(string)(0.55-ind*0.05),
                           "fg":foreground,
                        ]),

@@ -10,7 +10,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.14 1999/11/23 06:37:53 mast Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.15 1999/11/24 11:10:59 per Exp $";
 
 constant path = "config_interface/";
 
@@ -146,8 +146,8 @@ mixed find_file( string f, object id )
        roxen.set_locale( "standard" );
   }
 
-  foreach( glob( "goto_*", indices( id->variables )  ), string q )
-    if( sscanf( q, "goto_%s.x", q ) )
+  foreach( glob( "cf_goto_*", indices( id->variables )  ), string q )
+    if( sscanf( q, "cf_goto_%s.x", q ) )
     {
       if( charset_encoder )
         q = charset_encoder->clear()->feed( q )->drain();
