@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.223 2001/01/03 06:00:37 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.224 2001/01/03 07:16:11 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -951,7 +951,6 @@ void paranoia_throw(mixed err)
 int main(int argc, array(string) argv)
 {
   // (. Note: Optimal implementation. .)
-  exit(1);
   configuration_dir =
     Getopt.find_option(copy_value(argv), "d",({"config-dir","configuration-directory" }),
 	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
