@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.113 2002/10/23 13:45:13 nilsson Exp $ -->
+<!-- $Id: template,v 1.114 2002/10/24 03:30:13 nilsson Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -177,22 +177,13 @@
 </gauge>
     <div align="right">
       <font size="-1">
-  	<if variable="roxen.product-name is Roxen CMS">
-  	  <font color="#999999">
-	    <b>Roxen CMS</b>
-	    <font color="#ffbe00">|</font>
-	    version &roxen.dist-version;
-	  </font>
-  	</if>
-  	<else>
-  	  <b>&roxen.version; / &roxen.pike-version;</b><br />
- 	  <if debug=yes >
- 	    <set variable=var.time-ms expr='(int)(&var.time-spent; * 1000)'/>
- 	    Total render time: &var.time-ms;ms <br />
- 	    <set variable=var.time-ms expr='(int)(&var.time-parse-spent; * 1000)'/>
- 	    Content file: &var.time-ms;ms <br />
- 	  </if>
-  	</else>
+  	<b>&roxen.version; / &roxen.pike-version;</b><br />
+ 	<if debug="yes">
+ 	  <set variable=var.time-ms expr='(int)(&var.time-spent; * 1000)'/>
+ 	  Total render time: &var.time-ms;ms <br />
+ 	  <set variable=var.time-ms expr='(int)(&var.time-parse-spent; * 1000)'/>
+ 	  Content file: &var.time-ms;ms <br />
+ 	</if>
       </font>
     </div>
   </body>

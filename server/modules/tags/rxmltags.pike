@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.388 2002/10/24 00:01:14 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.389 2002/10/24 03:31:11 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5830,12 +5830,7 @@ using the pre tag.
  <p>Also note that non-shared timeout caches are only effective if the
  p-code is cached in RAM. If it should work for p-code that is cached
  on disk but not in RAM, you need to add the attribute
- \"persistent-cache=yes\".</p>
-
- <p>Note to Roxen CMS (a.k.a. SiteBuilder) users: The RXML parser
- module in WebServer is <i>not</i> used by Roxen CMS. See the CMS
- documentation for details about how to control RXML p-code
- caching.</p></note>
+ \"persistent-cache=yes\".</p></note>
 
  <h1>Cache static tags</h1>
 
