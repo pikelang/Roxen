@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.92 1997/11/09 18:29:37 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.93 1997/12/17 00:51:51 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1337,7 +1337,7 @@ string tag_body(string t, mapping args, object id, object file,
      ||args->background||args->vlink)
     cols=1;
 
-#define FIX(Y,Z,X) do{if(!args->Y){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;if(args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
+#define FIX(Y,Z,X) do{if(!args->Y || args->Y==""){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;if(args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
 
   if(!search(id->client*"","Mosaic"))
   {
