@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.264 2001/03/21 14:05:52 jhs Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.265 2001/03/28 22:57:43 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -995,7 +995,8 @@ string do_gtext(mapping arg, string c, RequestID id)
   }
 
   foreach( ({ "class", "onClick", "onclick", "onMouseover", "onmouseover",
-	      "onMouseout", "onmouseout" }), string name)
+	      "onMouseout", "onmouseout", "target", "accesskey", "charset",
+	      "hreflang", "suppress", "tabindex" }), string name)
     if(arg[name]) {
       ea+=name+"=";
       if(!has_value(arg[name], "\"")) ea+="\""+arg[name]+"\" ";
