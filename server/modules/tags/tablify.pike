@@ -5,18 +5,23 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.11 1998/03/06 11:25:43 noring Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.12 1998/03/07 17:30:49 noring Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
 inherit "wizard";
 
+string doc()
+{
+  return replace(Stdio.read_bytes("modules/tags/doc/tablify")||"",
+		 ({ "{", "}" }), ({ "&lt;", "&gt;" }));
+}
+
 mixed *register_module()
 {
   return ({ 
     MODULE_PARSER,
-    "Tablify",
-    (Stdio.read_bytes("modules/tags/docs/tablify")),
+    "Tablify", doc(),
     ({}), 1, });
 }
 
