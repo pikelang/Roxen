@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.7 1998/03/07 03:06:01 neotron Exp $
+ * $Id: smartpipe.pike,v 1.8 1998/03/28 22:57:30 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -43,12 +43,11 @@ void write_more()
   int len;
   len = write_out(current_input);
   sent += len;
-  if(sent <= 0)
+  if(len <= 0)
   {
     finish();
     return;
   }
-  sent += len;
   if(len >= strlen(current_input))
     next_input();
   else
@@ -107,7 +106,7 @@ void next_input()
 
   if(stringp(current_input))
   {
-    outfd->set_nonblocking(0,write_more,0);
+    outfd->set_nonblocking(0, write_more, finish);
     return;
   }
   if(outfd->query_fd()>0 && current_input->query_fd()>0)
