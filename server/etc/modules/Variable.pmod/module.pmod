@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.12 2000/09/03 02:33:00 per Exp $
+// $Id: module.pmod,v 1.13 2000/09/04 13:52:44 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -352,9 +352,7 @@ class Variable
   static string _sprintf( int i )
   {
     if( i == 'O' )
-      return sprintf( "Variables.%s(%s) [%O]", type, 
-                      (string)name(), 
-                      query() );
+      return sprintf( "Variable.%s(%s)",type,(string)name());
   }
 
   static void create(mixed default_value, void|int flags,
