@@ -10,12 +10,9 @@
  * Thanks for suggestions and bugreports:
  * Barry Treahy <treahy@allianceelec.com>
  * Chris Burgess <chris@ibex.co.nz>
- *
- * BUGS:
- * Removes document-internal links. (gazink.html#foo)
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.19 1998/06/06 16:35:31 peter Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.20 1998/08/01 20:28:23 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -34,36 +31,42 @@ mixed register_module()
   return ({ 
     MODULE_PARSER,
     "Killframe tag",
-      ("Makes pages frameproof."
-       "<br>This module defines a tag,"
-       "<pre>"
-       "&lt;killframe&gt;: Adds some java script that will prevent others\n"
-       "             from putting your page in a frame.\n\n"
-       "             Will also strip any occurrences of 'indexfiles'\n"
-       "             from the end of the URL."
-       "</pre>"
-       ), ({}), 1,
-    });
+    ("Makes pages frameproof."
+     "<br>This module defines a tag,"
+     "<pre>"
+     "&lt;killframe&gt;: Adds some java script that will prevent others\n"
+     "             from putting your page in a frame.\n\n"
+     "             Will also strip any occurrences of 'indexfiles'\n"
+     "             from the end of the URL."
+     "</pre>"
+     ), ({}), 1,
+  });
 }
 
 string tag_killframe( string tag, mapping m, object id )
 {
   if(m->help) return register_module()[2];
-
+  
   if( !id->supports->javascript ) return "";
-
+  
   string javascript;
-
+  
   while( id->misc->orig )
     id = id->misc->orig;
   
   // Some versions of IE will choke on :80. (Reload and repeat..)
   string tmp;
+  string prestate;
   string my_url = id->conf->query("MyWorldLocation");
+
+  //Get the prestates in correct order. id->prestates is sorted.
+  if( sscanf(id->raw_url, "/(%s)", tmp) )
+    prestate = "("+ tmp +")/";
+
   if( sscanf(my_url, "%s:80/", tmp ) )
-    my_url = tmp +"/"+ id->not_query[1..];
+    my_url = tmp +"/"+ (prestate?prestate:"") + id->not_query[1..];
   else
-    my_url += id->not_query[1..];
+    my_url += (prestate?prestate:"") + id->not_query[1..];
   
   // Links to index.html are ugly. All pages deserve a uniqe URL, and for
   // index-pages that URL in /.
@@ -85,11 +88,15 @@ string tag_killframe( string tag, mapping m, object id )
   if(id->query)
     my_url += "?"+ id->query;
 
-  // top.location = self.location is more beutiful, but it breaks some
-  // version of IE
-  javascript = ( "   if(top.location != \""+ my_url  +"\")\n"
-		 "     top.location = \""+ my_url  +"\";\n"   );
-  
+  //top.location = self.location breaks some versions of IE.
+  //Mozilla 3 on Solaris cows with top.frames.length
+  if( id->client && id->client[0][..8] == "Mozilla/3" )
+    javascript = ( "   if(top.location != \""+ my_url  +"\")\n"
+		   "     top.location = \""+ my_url  +"\";\n" );
+  else
+    javascript = ( "   if(top.frames.length>1)\n"
+		   "     top.location = \""+ my_url +"\";\n" );
+
   return("<script language=javascript><!--\n"
 	 + javascript
 	 + "//--></script>\n");
