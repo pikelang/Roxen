@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.134 2000/09/13 18:29:38 jonasw Exp $";
+constant cvs_version = "$Id: business.pike,v 1.135 2000/10/04 04:26:10 hedda Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Business graphics";
@@ -23,42 +23,29 @@ pie charts or graphs.";
 #define VOIDSYMBOL "\n"
 #define SEP "\t"
 
-function create_pie, create_bars, create_graph;
-
 #ifdef BG_DEBUG
 mapping bg_timers = ([]);
 #endif
 
-//FIXME (Inte alltid VOID!
+//FIXME (Not always VOID!?!)
 #define VOIDCODE \
   do { voidsep = m->voidseparator||m->voidsep||res->voidsep||"VOID"; } while(0)
 
 int loaded;
 
 
-
 roxen.ImageCache image_cache;
 
 void start(int num, object configuration)
 {
-  if (!loaded) {
-    loaded = 1;
-    create_pie   = ((program)"create_pie")()->create_pie;
-    roxen->dump( (combine_path( __FILE__, "../" ) + "create_pie.pike")
-                 -(getcwd()+"/") );
-    create_bars  = ((program)"create_bars")()->create_bars;
-    roxen->dump( (combine_path( __FILE__, "../" ) + "create_bars.pike")
-                 -(getcwd()+"/"));
-    create_graph = ((program)"create_graph")()->create_graph;
-    roxen->dump( (combine_path( __FILE__, "../" ) + "create_graph.pike")
-                 -(getcwd()+"/"));
-  }
+  if (!loaded) loaded = 1; 
   image_cache = roxen.ImageCache( "diagram", draw_callback );
 }
 
 void stop()
 {
   /* Reload Pie, Bars and Graph */
+  //This is not needed since Graphics.Graph is used
 #ifdef MODULE_DEBUG
   mapping progs = master()->programs;
   foreach(glob(combine_path(__FILE__,"../*"), indices(progs)),
@@ -515,10 +502,12 @@ string container_diagram(string tag, mapping m, string contents,
   if (m->notrans) {
     res->colorbg=parse_color(m->bgcolor||m->colorbg||id->misc->defines->bgcolor||"white");
     m_delete(m, "bgcolor");
+    res->notrans=1;
   }
 
   res->drawtype="linear";
 
+  //Allow shortened names for some reason:
   switch(res->type[0..3]) {
    case "pie":
    case "piec":
@@ -530,24 +519,21 @@ string container_diagram(string tag, mapping m, string contents,
    case "bars":
    case "barc":
      res->type = "bars";
-     res->subtype = "box";
+     res->subtype = "box";  //Not needed, I think
      m_delete( res, "drawtype" );
      break;
-   case "line":
-     res->type = "bars";
-     res->subtype = "line";
-     break;
-   case "norm":
-     res->type = "sumbars";
-     res->subtype = "norm";
-     break;
+     case "line": 
+       res->type = "line";
+       break;
+  case "norm":
+    res->type = "norm";
+    break;
    case "grap":
      res->type = "graph";
      res->subtype = "line";
      break;
    case "sumb":
      res->type = "sumbars";
-     //res->subtype = "";
      break;
    default:
      return syntax("\""+res->type+"\" is an FIX unknown type of diagram\n");
@@ -772,21 +758,29 @@ mixed draw_callback(mapping args, object id)
   }
 
   Image.Image img;
-
+  
 #ifdef BG_DEBUG
   bg_timers->drawing = gauge {
 #endif
 
   switch(args->type) {
    case "pie":
-     img = create_pie(args)["image"];
+     img = Graphics.Graph.pie(args);
      break;
    case "bars":
+     img = Graphics.Graph.bars(args);
+     break;
    case "sumbars":
-     img = create_bars(args)["image"];
+     img = Graphics.Graph.bars(args);
+     break;
+   case "norm":
+     img = Graphics.Graph.norm(args);
+     break;
+   case "line":
+     img = Graphics.Graph.line(args);
      break;
    case "graph":
-     img = create_graph(args)["image"];
+     img = Graphics.Graph.graph(args);
      break;
   }
 #ifdef BG_DEBUG
@@ -802,6 +796,22 @@ mixed draw_callback(mapping args, object id)
     werror("Timers: %O\n", bg_timers);
 #endif
 
+  if (!args->notrans)
+    {
+      Image.Image alpha;
+      if (args->bgcolor)
+	{
+	  //Make an alpha-image with everything in
+	  //bgcolor black and the rest white.
+	  alpha=Image.Image(img->xsize(), img->ysize(), @args->bgcolor);
+	  alpha=((img-alpha)+(alpha-img));
+	  alpha=alpha->threshold(4);
+	  }
+      else
+	alpha=img->threshold(4);
+      return ([ "img":img, "alpha": alpha]);
+
+    }
   return img;
 }
 
