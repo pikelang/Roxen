@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.36 2004/08/18 12:04:38 _cvs_stenitzer Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.37 2004/08/20 18:17:29 _cvs_stenitzer Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -1077,68 +1077,6 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-//----------------------------------------------------------------------
-			]) }),
-
-#if 0
-  // This applies to the old rxml 1.x parser. The doc for this tag is
-  // here only for historical interest, to serve as a monument over
-  // the quoting horrors that do_output_tag and its likes incurred.
-  "recursive-output": #"\
-<desc type='cont'>
-  <p>This container provides a way to implement recursive output,
-  which is mainly useful when you want to create arbitrarily nested
-  trees from some external data, e.g. an SQL database. Put simply, the
-  <tag>recurse</tag> tag is replaced by everything inside and
-  including the <tag>recursive-output</tag> container. Although simple
-  in theory, it tends to get a little bit messy in practice.</p>
-
-  <p>To make it work you have to pay some attention to the parsing
-  order of the involved tags. After the <tag>recursive-output</tag>
-  container have replaced every <tag>recurse</tag> with itself, the
-  whole thing is parsed again. Therefore, to make it terminate, you
-  must always put the <tag>recurse</tag> inside a conditional
-  container (typically an <tag>if</tag>) that does not preparse its
-  contents.</p>
-
-  <p>So far so good, but you'll almost always want to use some sort of
-  output container, e.g. <tag>formoutput</tag> or
-  <tag>sqloutput</tag>, together with this tag, which makes it
-  slightly more complex due to the necessary treatment of the quote
-  characters. Since the contents of <tag>recursive-output</tag> is
-  expanded two levels at any time, each level needs its own set of
-  quotes. To accomplish this, <tag>recursive-output</tag> can rotate
-  two quote sets which are specified by the `inside' and `outside'
-  arguments. Each time a <tag>recurse</tag> is replaced, every string
-  in the `inside' set is replaced by the string in the corresponding
-  position in the `outside' set, then the two sets trade places. Thus,
-  you should put all quote characters you use inside
-  <tag>recursive-output</tag> in the `inside' set and some other
-  characters that doesn't clash with anything in the `outside' set.
-  You might also have to quote the quote characters when writing these
-  sets, which is done by doubling them.</p>
-</desc>
-
-<attr name='inside' value='string,...'><p>
-  The list of quotes `inside' the container, to be replaced in with the
-  `outside' set in every other round of recursion.</p>
-</attr>
-
-<attr name='outside' value='string,...'><p>
-  The list of quotes `outside' the container, to be replaced in with
-  the `inside' set in every other round of recursion.</p>
-</attr>
-
-<attr name='multisep' value='separator'><p>
-  The given value is used as the separator between the strings in the
-  two sets. It defaults to ','.</p>
-</attr>
-
-<attr name='limit' value='number'><p>
-  Specifies the maximum nesting depth. As a safeguard it defaults to
-  100.</p>
-</attr>",
-#endif
 
 ]);
 #endif
