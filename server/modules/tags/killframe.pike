@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.16 1998/04/03 19:11:51 peter Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.17 1998/04/03 19:20:53 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -21,12 +21,12 @@ inherit "module";
 void create()
 {
   defvar( "killindex", 1, "Kill trailing 'indexfiles'?", TYPE_FLAG|VAR_MORE,
-	  "When set, the killframes module will remove occurances of "
+	  "When set, the killframe module will remove occurrences of "
 	  "'indexfiles' (as set in the active directory module) from "
 	  "the end of the URL, leaving only a slash." );
 }
 
-mixed *register_module()
+mixed register_module()
 {
   return ({ 
     MODULE_PARSER,
@@ -36,8 +36,8 @@ mixed *register_module()
        "<pre>"
        "&lt;killframe&gt;: Adds some java script that will prevent others\n"
        "             from putting your page in a frame.\n\n"
-       "             Will also strip any occurences of the string\n"
-       "             'index.html' from the end of the URL."
+       "             Will also strip any occurrences of 'indexfiles'\n"
+       "             from the end of the URL."
        "</pre>"
        ), ({}), 1,
     });
