@@ -1,0 +1,48 @@
+Graphs: 
+
+Graphs är punkter eller punkter med linjer mellan sig. Punkterna anges
+med x, y.
+Indata på formen x, y, y, y omvandlas.
+
+Data lagras i ett data-objekt:
+class Diagram_data
+{
+//behöver man följande två?
+string typ;
+Är lika med "graph", "bars", "sumbars", "pie";
+
+string subtyp;
+//för "bars" kan den vara "line"(vågräta linjer), "bars", "dot", "linear", 
+//"quadratic", "cubic" (Fixa stavningen!)
+
+
+array(array(float)) datapoints; 
+//Innehåller en array med x-data-array, y-data-array, x-data-array, ...
+
+array(string) labels;
+//Innehåller en array med ({xstorhet, ystorhet, xenhet, yenhet})
+
+array(string) xnames;
+//Innehåller en array med olika namn som ska stå längs x-axeln 
+//(t ex jan, feb).
+
+array(string) ynames;
+//Innehåller en array med olika namn som ska stå längs y-axeln (t ex
+//lite, mycket).
+
+array(froat) values_for_xnames;
+//Innehåller en array med nivåerna som ska förknippas med vissa xnames.
+//Om dessa inte anges kan de sättas ut jämt.
+
+array(froat) values_for_ynames;
+//Innehåller en array med nivåerna som ska förknippas med vissa ynames.
+//Om dessa inte anges kan de sättas ut jämt.
+
+float maxvalue, minvalue;
+//anger inom vilka områden man ska förvänta sig data. Minvalue sätts
+//i normala fall till min(0, minsta_värde)
+
+int width, height;
+//anger hur stor bild man ska generera.
+
+
