@@ -2,12 +2,11 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.235 2001/08/23 17:22:12 mast Exp $
+// $Id: module.pmod,v 1.236 2001/08/23 23:20:13 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
 static object Roxen;
-class RequestID { };
 
 //! API stability notes:
 //!
@@ -159,22 +158,35 @@ static mapping(int|string:TagSet) composite_tag_set_cache =
 #define GET_COMPOSITE_TAG_SET(a, b, res) do {				\
   int|string hash = HASH_INT2 (b->id_number, a->id_number);		\
   if (!(res = composite_tag_set_cache[hash])) {				\
-    res = shared_tag_set (						\
-      a->name && b->name &&						\
-      sprintf ("[%d]%s+%s", sizeof (a->name), a->name, b->name));	\
+    res = TagSet (0, 0);						\
     res->imported = ({a, b});						\
     /* Race, but it doesn't matter. */					\
     composite_tag_set_cache[hash] = res;				\
   }									\
 } while (0)
 
-static mapping(string:TagSet|int) all_tagsets = set_weak_flag(([]), 1);
-// Maps all tag set names to their TagSet objects.
+static mapping(RoxenModule|Configuration:mapping(string:TagSet|int)) all_tag_sets = ([]);
+// Maps all tag sets to their TagSet objects. The top mapping is
+// indexed with the owner of the tag set, or 0 for global tag sets.
+// The inner mappings (which always are weak) are indexed by the tag
+// set names.
 //
 // For tag sets that have been removed, the value is their generation
 // number, so that a new tag set with that name will continue the
 // generation sequence. We use the fact that a weak mapping won't
 // remove items that aren't refcounted (and strings).
+
+static Thread.Mutex all_tag_sets_mutex = Thread.Mutex();
+
+#define LOOKUP_TAG_SET(owner, name) ((all_tag_sets[owner] || ([]))[name])
+
+// Assumes all_tag_sets_mutex is locked.
+#define SET_TAG_SET(owner, name, value) do {				\
+  mapping(string:TagSet|int) map =					\
+    all_tag_sets[owner] ||						\
+    (all_tag_sets[owner] = set_weak_flag (([]), 1));			\
+  map[name] = (value);							\
+} while (0)
 
 static mapping(string:program/*(Parser)*/) reg_parsers = ([]);
 // Maps each parser name to the parser program.
@@ -562,12 +574,23 @@ class TagSet
 {
   constant is_RXML_TagSet = 1;
 
+  RoxenModule|Configuration owner;
+  //! The owner of this tag set, or zero if the tag set is globally
+  //! shared. The owner is typically the Roxen module that created the
+  //! tag set, but it can also be the @[Configuration] object for some
+  //! special tag sets that don't belong to any module.
+
   string name;
-  //! Unique identification string. Must be stable across server
-  //! restarts since it's used to identify tag sets in dumped p-code.
-  //! The name may contain the characters "!", "#", "(", ")", ",",
-  //! "-", ".", "/", ":", ";", "<", "=", ">", "?", "@@", "_", and any
-  //! alphanumeric character.
+  //! Unique identification string among all with the same @[owner].
+  //! It may also be zero, in which case the tag set is nameless.
+  //! Nameless tag sets cannot be encoded by @[RXML.p_code_to_string],
+  //! with the exception when they only contain imported tag sets.
+  //!
+  //! If set, the name must be stable across server restarts since
+  //! it's used to identify tag sets in dumped p-code. The name may
+  //! contain the characters "!", "#", "(", ")", ",", "-", ".", "/",
+  //! ":", ";", "<", "=", ">", "?", "@@", "_", and any alphanumeric
+  //! character.
 
   string prefix;
   //! A namespace prefix that may precede the tags. If it's zero, it's
@@ -614,11 +637,21 @@ class TagSet
   int id_number;
   //! Unique number identifying this tag set.
 
-  static void create (string _name, void|array(Tag) _tags)
-  //!
+  static void create (RoxenModule|Configuration _owner, string _name,
+		      void|array(Tag) _tags)
+  //! @[_owner] and @[_name] initializes @[owner] and @[name],
+  //! respectively; see those two for further details about tag set
+  //! identification issues.
   {
     id_number = ++tag_set_count;
-    set_name (_name);
+    if (_name) {
+      Thread.MutexKey key = all_tag_sets_mutex->lock (2);
+      // Allow recursive locking since we don't touch any other
+      // locks in here.
+      set_name (_owner, _name);
+      key = 0;
+    }
+    else owner = _owner;
     if (_tags) add_tags (_tags);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
@@ -882,10 +915,22 @@ class TagSet
   local mixed `->= (string var, mixed val)
   {
     switch (var) {
-      case "name":
-	if (name) all_tagsets[name] = generation;
-	set_name (val);
+      case "owner": {
+	Thread.MutexKey key = all_tag_sets_mutex->lock (2);
+	// Allow recursive locking since we don't touch any other
+	// locks in here.
+	if (name) SET_TAG_SET (owner, name, generation);
+	set_name (val, name);
 	break;
+      }
+      case "name": {
+	Thread.MutexKey key = all_tag_sets_mutex->lock (2);
+	// Allow recursive locking since we don't touch any other
+	// locks in here.
+	if (name) SET_TAG_SET (owner, name, generation);
+	set_name (owner, val);
+	break;
+      }
       case "imported":
 	if (!val) return val;	// Pike can call us with 0 as part of an optimization.
 	filter (imported, "dont_notify", changed);
@@ -984,30 +1029,43 @@ class TagSet
     set_weak_flag (notify_funcs, 1);
   }
 
+  array(TagSet) tag_set_components()
+  // If this is a composite tag set importing exactly two other tag
+  // sets and nothing else, those two are returned. Used by the codec
+  // to encode tag sets produced by GET_COMPOSITE_TAG_SET.
+  {
+    return !sizeof (tags) && !proc_instrs && !string_entities &&
+      sizeof (imported) == 2 && imported;
+  }
+
   static void destroy()
   {
     catch (changed());
-    if (name) all_tagsets[name] = generation;
+    if (name) SET_TAG_SET (owner, name, generation);
   }
 
-  static void set_name (string new_name)
+  static void set_name (Configuration new_owner, string new_name)
+  // Note: Assumes all_tag_sets_mutex is locked already.
   {
     if (new_name) {
-      object(TagSet)|int old_tag_set = all_tagsets[new_name];
+      object(TagSet)|int old_tag_set = LOOKUP_TAG_SET (owner, name);
       if (objectp (old_tag_set)) {
 	// It'd be nice if we could warn about duplicate tag sets with
 	// the same name here, but unfortunately that doesn't work
 	// well enough: Local tag sets from old module instances might
 	// still be around with references from cached frames in stale
-	// p-code. We can remove the name in the old tag set anyway,
-	// so that it doesn't work to dump references to it.
-	old_tag_set->name = 0;
+	// p-code.
 	old_tag_set = old_tag_set->generation;
       }
       if (generation <= old_tag_set) generation = old_tag_set;
-      all_tagsets[name = new_name] = this_object();
+      owner = new_owner;
+      name = new_name;
+      SET_TAG_SET (owner, name, this_object());
     }
-    else name = 0;
+    else {
+      owner = new_owner;
+      name = 0;
+    }
   }
 
   static mapping(string:Tag) tags = ([]), proc_instrs;
@@ -1151,9 +1209,19 @@ class TagSet
       ({0}) + indices (dep_tag_sets)->get_hash_data();
   }
 
+  /*static*/ string tag_set_component_names()
+  {
+    return name || sizeof (imported) && imported->tag_set_component_names() * "+";
+  }
+
   string _sprintf()
   {
-    return "RXML.TagSet(" + id_number + ")" + OBJ_COUNT;
+    return "RXML.TagSet(" +
+      // No, the owner isn't written unambiguously; we try to be brief here.
+      (owner && (owner->is_module ?
+		 owner->module_local_id() :
+		 owner->name)) + "," + tag_set_component_names() + ")" + OBJ_COUNT;
+    //return "RXML.TagSet(" + id_number + ")" + OBJ_COUNT;
   }
 
   //! @ignore
@@ -1164,15 +1232,17 @@ class TagSet
 TagSet empty_tag_set;
 //! The empty tag set.
 
-TagSet shared_tag_set (string name, void|array(Tag) tags)
-//! If a tag set with the given name exists, it's returned. Otherwise
-//! a new tag set is created with that name. @[tags] is passed along
-//! to its @[RXML.TagSet.create] function in that case.
+TagSet shared_tag_set (RoxenModule|Configuration owner, string name, void|array(Tag) tags)
+//! If a tag set with the given owner and name exists, it's returned.
+//! Otherwise a new tag set is created with them. @[tags] is passed
+//! along to its @[RXML.TagSet.create] function in that case. Note
+//! that @[owner] may be zero to get a tag set that is global.
 {
-  if (TagSet tag_set = all_tagsets[name])
+  Thread.MutexKey key = all_tag_sets_mutex->lock();
+  if (TagSet tag_set = LOOKUP_TAG_SET (owner, name))
     if (objectp (tag_set))
       return tag_set;
-  return TagSet (name, tags);
+  return TagSet (owner, name, tags);
 }
 
 
@@ -7122,33 +7192,8 @@ string _sprintf() {return "RXML.pmod";}
 constant is_RXML_encodable = 1;
 static object rxml_module = this_object();
 
-class PCodec
+class PCodec (Configuration default_config)
 {
-  static TagSet resolve_composite_tag_set (int pos, string compname)
-  {
-#ifdef DEBUG
-    if (compname[pos..pos] != "+")
-      error ("Ill-formed composite tag set name %O.\n", "[" + pos + "]" + compname);
-#endif
-
-    string name_1 = compname[..pos - 1], name_2 = compname[pos + 1..];
-    TagSet tag_set_1, tag_set_2;
-    if (sscanf (name_1, "[%d]%s", pos, compname) == 2)
-      tag_set_1 = resolve_composite_tag_set (pos, compname);
-    else
-      if (!objectp (tag_set_1 = all_tagsets[name_1]))
-	error ("Cannot find tag set %O.\n", name_1);
-    if (sscanf (name_2, "[%d]%s", pos, compname) == 2)
-      tag_set_2 = resolve_composite_tag_set (pos, compname);
-    else
-      if (!objectp (tag_set_2 = all_tagsets[name_2]))
-	error ("Cannot find tag set %O.\n", name_2);
-
-    TagSet tag_set;
-    GET_COMPOSITE_TAG_SET (tag_set_1, tag_set_2, tag_set);
-    return tag_set;
-  }
-
   object objectof(string|array what)
   {
     if (arrayp (what)) {
@@ -7161,20 +7206,35 @@ class PCodec
 	  frame->_restore (saved);
 	  ENCODE_DEBUG_RETURN (frame);
 	}
+
 	case "tag": {
-	  [string ignored, string ts_name, int proc_instr, string name] = what;
-	  sscanf (ts_name, "ts:%s", ts_name);
+	  [string ignored, object(RoxenModule)|object(Configuration) ts_owner,
+	   string ts_name, int proc_instr, string name] = what;
 	  TagSet tag_set;
-	  if (sscanf (ts_name, "[%d]%s", int pos, ts_name) == 2)
-	    ENCODE_DEBUG_RETURN (resolve_composite_tag_set (pos, ts_name));
-	  if (!(tag_set = all_tagsets[ts_name]) || !objectp (tag_set))
-	    error ("Cannot find tag set %O.\n", ts_name);
+	  if (!(tag_set = LOOKUP_TAG_SET (ts_owner, ts_name)) || !objectp (tag_set))
+	    error ("Cannot find tag set %O in %O.\n", ts_name, ts_owner);
 	  if (Tag tag = tag_set->get_local_tag(name, proc_instr))
 	    ENCODE_DEBUG_RETURN (tag);
 	  error ("Cannot find %s %O in tag set %O.\n",
 		 proc_instr ? "processing instruction" : "tag",
 		 name, tag_set);
 	}
+
+	case "ts": {
+	  [string ignored, object(RoxenModule)|object(Configuration) owner,
+	   string name] = what;
+	  if (TagSet tag_set = LOOKUP_TAG_SET (owner, name))
+	    if (objectp (tag_set))
+	      ENCODE_DEBUG_RETURN (tag_set);
+	  error ("Cannot find tag set %O in %O.\n", name, owner);
+	}
+
+	case "cts": {
+	  TagSet tag_set;
+	  GET_COMPOSITE_TAG_SET (what[1], what[2], tag_set);
+	  ENCODE_DEBUG_RETURN (tag_set);
+	}
+
 	case "type": {
 	  string parser_name;
 	  sscanf (what[2], "p:%s", parser_name);
@@ -7183,6 +7243,28 @@ class PCodec
 	    error ("Cannot find parser %O.\n", parser_name);
 	  ENCODE_DEBUG_RETURN (reg_types[what[1]] (parser_prog, @what[3..]));
 	}
+
+	case "mod": {
+	  [string ignored, Configuration config, string name] = what;
+	  if (RoxenModule mod = config->find_module (name))
+	    ENCODE_DEBUG_RETURN (mod);
+	  error ("Cannot find module %O in configuration %O.\n", what, config);
+	}
+
+	case "conf":
+	  if (!what[1]) {
+#ifdef DEBUG
+	    if (!default_config)
+	      error ("No default configuration given to string_to_p_code.\n");
+#endif
+	    ENCODE_DEBUG_RETURN (default_config);
+	  }
+	  else {
+	    if (Configuration config = roxen->get_configuration (what[1]))
+	      ENCODE_DEBUG_RETURN (config);
+	    error ("Cannot find configuration %O.\n", what[1]);
+	  }
+
 #ifdef RXML_OBJ_DEBUG
 	case "ObjectMarker":
 	  ENCODE_DEBUG_RETURN (Debug.ObjectMarker (what[1]));
@@ -7199,20 +7281,7 @@ class PCodec
 	case "xml_tag_parser": ENCODE_DEBUG_RETURN (xml_tag_parser);
       }
 
-      if (sscanf (what, "ts:%s", what)) {
-	if (sscanf (what, "[%d]%s", int pos, what) == 2)
-	  ENCODE_DEBUG_RETURN (resolve_composite_tag_set (pos, what));
-	if (TagSet tag_set = all_tagsets[what])
-	  if (objectp (tag_set))
-	    ENCODE_DEBUG_RETURN (tag_set);
-	error ("Cannot find tag set %O.\n", what);
-      }
-      else if(sscanf (what, "mod:%s", what)) {
-	if (object/*(RoxenModule)*/ mod = Roxen->get_module(what))
-	  ENCODE_DEBUG_RETURN (mod);
-	error ("Cannot find module %O.\n", what);
-      }
-      else if (sscanf (what, "c:%s", what)) {
+      if (sscanf (what, "c:%s", what)) {
 	mixed efun;
 	if (objectp (efun = all_constants()[what]))
 	  ENCODE_DEBUG_RETURN (efun);
@@ -7265,6 +7334,7 @@ class PCodec
   {
     if(objectp(what)) {
       ENCODE_MSG ("nameof (object %O)\n", what);
+
       if(what->is_RXML_Frame) {
 	if (Tag tag = what->RXML_dump_frame_reference && what->tag)
 	  ENCODE_DEBUG_RETURN (({"frame", tag, what->_save()}));
@@ -7274,12 +7344,14 @@ class PCodec
 		     "it got no identifier RXML_dump_frame_reference\n"));
 	return ([])[0];
       }
+
       else if (what->is_RXML_Tag) {
 	TagSet tagset;
 	if ((tagset = what->tagset) && what->name && tagset->name)
 	  ENCODE_DEBUG_RETURN (({
 	    "tag",
-	    "ts:" + tagset->name,
+	    tagset->owner,
+	    tagset->name,
 	    what->flags & FLAG_PROC_INSTR,
 	    what->name + (what->plugin_name? "#"+what->plugin_name : "")}));
 	ENCODE_MSG ("  encoding tag recursively since " +
@@ -7290,11 +7362,15 @@ class PCodec
 		     "it got no tag set\n"));
 	return ([])[0];
       }
+
       else if (what->is_RXML_TagSet) {
 	if (what->name)
-	  ENCODE_DEBUG_RETURN ("ts:" + what->name);
+	  ENCODE_DEBUG_RETURN (({"ts", what->owner, what->name}));
+	if (array components = what->tag_set_components())
+	  ENCODE_DEBUG_RETURN (({"cts"}) + components);
 	error ("Cannot encode unnamed tag set %O.\n", what);
       }
+
       else if (what->is_RXML_Type) {
 	string parser_name = what->parser_prog->name;
 #ifdef DEBUG
@@ -7305,8 +7381,15 @@ class PCodec
 	ENCODE_DEBUG_RETURN (({"type", what->name, "p:" + parser_name}) +
 			     what->parser_args);
       }
-      else if(string modname = what->is_module && what->module_identifier())
-	ENCODE_DEBUG_RETURN ("mod:" + modname);
+
+      else if (what->is_module)
+	ENCODE_DEBUG_RETURN (({"mod",
+			       what->my_configuration(),
+			       what->module_local_id()}));
+
+      else if (what->is_configuration)
+	ENCODE_DEBUG_RETURN (({"conf", what != default_config && what->name}));
+
       else if(what == nil)
 	ENCODE_DEBUG_RETURN ("nil");
       else if (what == rxml_module)
@@ -7334,6 +7417,7 @@ class PCodec
 	  ENCODE_MSG ("  encoding byte code\n");
 	  return ([])[0];
 	}
+
 	else if (what->is_RXML_Parser) {
 #ifdef DEBUG
 	  if (!reg_parsers[what->name])
@@ -7341,6 +7425,7 @@ class PCodec
 #endif
 	  ENCODE_DEBUG_RETURN ("p:" + what->name);
 	}
+
 	else if (functionp (what) && what->is_RXML_encodable) {
 	  // If the program also is a function the encoder won't dump
 	  // the byte code, but instead the parent object and the
@@ -7352,6 +7437,7 @@ class PCodec
       }
       else
 	ENCODE_MSG ("nameof (%O)\n", what);
+
       if (object o = functionp (what) && function_object (what))
 	if (o->is_RXML_encodable) {
 	  ENCODE_MSG ("  encoding reference to function %O->%O\n", o, what);
@@ -7393,24 +7479,51 @@ class PCodec
   }
 }
 
-static PCodec p_codec = PCodec();
+static mapping(Configuration:PCodec) p_codecs = ([]);
 
-string p_code_to_string(PCode p_code)
+string p_code_to_string (PCode p_code, void|Configuration default_config)
+//! Encodes the @[PCode] object @[p_code] to a string which can be
+//! decoded by @[string_to_p_code].
+//!
+//! A default @[Configuration] object can be given as the second
+//! argument. Whenever it's encountered (typically when encoding
+//! references to @[TagSet] or @[RoxenModule] instances), a special
+//! value is encoded instead so that references to that configuration
+//! are replaced with references to the corresponding default
+//! configuration given to @[p_code_to_string].
 {
-  return encode_value(p_code, p_codec);
+  PCodec codec =
+    p_codecs[default_config] ||
+    (p_codecs[default_config] = PCodec (default_config));
+  return encode_value(p_code, codec);
 }
 
-PCode string_to_p_code(string str)
+PCode string_to_p_code (string str, void|Configuration default_config)
+//! Decodes a @[PCode] object from the string @[str] encoded by
+//! @[p_code_to_string].
+//!
+//! If the call to @[p_code_to_string] had a default configuration
+//! specified, then @[default_config] should be set to the
+//! configuration you wish to map that one to.
+//!
+//! The decode can fail for many reasons, e.g. because some tag, tag
+//! set or module doesn't exist or because it was encoded with a
+//! different Pike version, or because the coding format has changed.
+//! All such errors are thrown as exceptions. The caller should thus
+//! catch all errors and fall back to RXML evaluation from source.
 {
+  PCodec codec =
+    p_codecs[default_config] ||
+    (p_codecs[default_config] = PCodec (default_config));
   mixed err = catch {
-    return [object(PCode)]decode_value(str, p_codec);
+    return [object(PCode)]decode_value(str, codec);
   };
   // Try to explain the error a bit.
   catch {
     err[0] += #"\
-The encoded p-code probably comes from an older version or a different
-server configuration. In that case this error can be safely ignored;
-it will disappear the next time the page is evaluated.\n";
+The encoded p-code probably comes from an older version or a site with
+a different set of RXML tags. In that case this error can be safely
+ignored; it will disappear the next time the page is evaluated.\n";
   };
   throw (err);
 }
@@ -7694,6 +7807,7 @@ static program PEnt;
 static program PExpr;
 static program Parser_HTML = master()->resolv ("Parser.HTML");
 static object utils;
+static object roxen;
 
 void create()
 {
@@ -7719,6 +7833,7 @@ void _fix_module_ref (string name, mixed val)
 	format_short = utils->format_short;
 	break;
       case "Roxen": Roxen = [object] val; init_parsers(); break;
+      case "roxen": roxen = [object] val; break;
       case "empty_tag_set": empty_tag_set = [object(TagSet)] val; break;
       default: error ("Herk\n");
     }
