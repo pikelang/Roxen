@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project name="base_server">
+<nocopy/>
+<out>../translations/base_server.xml</out>
+<includepath>../etc/include</includepath>
+<file>roxen.pike</file>
+<file>configuration.pike</file>
+<add id="1">
+<pike>
+
+string full_status(string real_version, int boot_time,
+     		   int days, int hrs, int min, int sec, string sent_data,
+		   float kbps, string sent_headers, int num_requests,
+		   float rpm, string received_data) {
+  return(sprintf("<table>"
+		 "<tr><td><b>Version:</b></td><td colspan=\"2\">%s</td></tr>\n"
+		 "<tr><td><b>Booted on:</b></td><td colspan=\"2\">%s</td></tr>\n"
+		 "<tr><td><b>Uptime:</b></td>"
+		 "<td colspan=\"2\">%d day%s, %02d:%02d:%02d</td></tr>\n"
+		 "<tr><td colspan=\"3\">&nbsp;</td></tr>\n"
+		 "<tr><td><b>Sent data:</b></td><td>%s"
+		 "</td><td>%.2f Kbit/sec</td></tr><tr>\n"
+		 "<td><b>Sent headers:</b></td><td>%s</td></tr>\n"
+
+		 "<tr><td><b>Number of requests:</b></td>"
+		 "<td>%8d</td><td>%.2f/min</td></tr>\n"
+		 "<tr><td><b>Received data:</b></td>"
+		 "<td>%s</td></tr>\n"
+		 "</table>",
+		 real_version, ctime(boot_time),
+		 days, (days==1?"":"s"), hrs, min, sec,
+		 sent_data, kbps, sent_headers,
+		 num_requests, rpm, received_data));
+}
+
+string setting_uid_gid_permanently(int uid, int gid, string uname, string gname) {
+  return("Setting uid to "+uid+" ("+uname+")"+
+	 (gname ? " and gid to "+gid+" ("+gname+")" : "")+" permanently.\n");
+}
+
+string setting_uid_gid(int uid, int gid, string uname, string gname) {
+  return("Setting uid to "+uid+" ("+uname+")"+
+	 (gname ? " and gid to "+gid+" ("+gname+")" : "")+".\n");
+}
+
+string ftp_stat_line(string cmd, int times) {
+  return(sprintf("<tr align=\"right\"><td><b>%s</b></td>"
+		 "<td align=\"right\">%d</td><td> time%s</td></tr>\n",
+		 cmd, times, (times == 1)?"":"s"));
+}
+
+</pike>
+</add>
+</project>
