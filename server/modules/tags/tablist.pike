@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-1999, Idonex AB.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.38 2000/02/11 13:58:29 jonasw Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.39 2000/02/21 17:49:46 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -53,6 +53,22 @@ constant tagdoc=(["tablist":({ "<desc cont>Tab list</desc>", (["tab":"<desc cont
  */
 #endif
 
+void add_layers( mapping m, string lay )
+{
+  foreach( ({"","background-","mask-","frame-","left-","right-" }), string s )
+  {
+    string ind="extra-"+s+"layers", l;
+    if( strlen( s ) )
+      l = lay+" "+(s-"-");
+    else
+      l = lay;
+    if( m[ind] )
+      m[ind]+=","+l;
+    else
+      m[ind] = l;
+  }
+}
+
 string internal_tag_tab(string t, mapping a, string contents, mapping d,
                         RequestID id)
 {
@@ -75,6 +91,7 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
 
   if( a->selected  )
   {
+    add_layers( gbutton_args, "selected" );
     gbutton_args->bgcolor = a->selcolor || d->selcolor || "white";
     gbutton_args->textcolor = (a->seltextcolor || d->seltextcolor ||
                                a->textcolor || d->textcolor ||
@@ -82,7 +99,7 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
                                id->misc->defines->theme_fgcolor ||
                                "black");
   } else {
-    gbutton_args["extra-layers"] = "unselected";
+    add_layers( gbutton_args, "unselected" );
     gbutton_args->bgcolor =  a->dimcolor || d->dimcolor || "#003366";
     gbutton_args->textcolor = (a->textcolor || d->textcolor || "white");
   }
@@ -101,14 +118,29 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
   } else
     gbutton_args->alt = "_/" + contents + "\\_";
 
-  d->result += make_container( "gbutton", gbutton_args, contents );
+  d->result += ({ ({gbutton_args,contents}) });
   return 0;
 }
 
 string container_tablist(string t, mapping a, string contents, RequestID id)
 {
-  a->result="";
+  a->result=({});
   parse_html(contents, ([]), (["tab":internal_tag_tab]), a, id);
+  if(!sizeof(a->result))
+    return "";
 
-  return a->result;
+  if( a->result[0][0]->selected )
+    add_layers( a->result[0][0], "first selected" );
+  else
+    add_layers( a->result[0][0], "first unselected" );
+  add_layers( a->result[0][0], "first" );
+  if( a->result[-1][0]->selected )
+    add_layers( a->result[-1][0], "last selected" );
+  else
+    add_layers( a->result[-1][0], "last unselected" );
+  add_layers( a->result[-1][0], "last" );
+
+  return map( a->result, lambda( array q ) {
+                           return make_container( "gbutton",q[0],q[1]);
+                         } )*"";
 }
