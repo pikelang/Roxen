@@ -632,10 +632,10 @@ mapping|string parse( RequestID id )
 
   res +=
     "<br />"
-    "<table cellspacing=0 cellpadding=0 border=0 width=100%><tr><td>"
+    "<table cellspacing=3 cellpadding=0 border=0 width=100%><tr><td>"
     "<colorscope bgcolor='&usr.content-bg;' text='&usr.fgcolor;'>"
     "<cimg border='0' format='gif' src='&usr.database-small;' alt='' "
-    "max-height='20'/></td><td>"
+    "max-height='20'/></td><td width=100%>"
     "<gtext fontsize='20'>"+id->variables->db+
     "</gtext></colorscope></td></tr>"
     "<tr><td></td><td>";
