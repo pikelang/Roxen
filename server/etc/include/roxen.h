@@ -1,5 +1,6 @@
-// $Id: roxen.h,v 1.22 2000/11/24 16:50:35 per Exp $
-// -*- Pike -*-
+// -*- pike -*-
+//
+// $Id: roxen.h,v 1.23 2002/03/12 13:18:27 mast Exp $
 
 #ifndef _ROXEN_H_
 
@@ -30,5 +31,13 @@ mixed get_locale();
 #ifndef _LOCALE_FUN
 #define _LOCALE_FUN(X, Y, Z)    Locale.call(X, __LOCALE(), Y, Z)
 #endif /* !_LOCALE_FUN */
+
+// Debug macros.
+
+#ifdef DEBUG
+#define DO_IF_DEBUG(X...) X
+#else
+#define DO_IF_DEBUG(X...)
+#endif
 
 #endif  /* !_ROXEN_H_ */
