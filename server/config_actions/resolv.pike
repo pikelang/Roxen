@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.9 1998/02/27 07:13:07 per Exp $
+ * $Id: resolv.pike,v 1.10 1998/03/06 15:13:04 grubba Exp $
  */
 
 inherit "wizard";
@@ -46,8 +46,10 @@ void trace_leave_ol(string desc)
   level--;
   string efont="", font="";
   if(level>1) {efont="</font>";font="<font size=-1>";} 
-  resolv += (font+"</ol>"+"Time: "+sprintf("%.5f",delay/1000000.0)
-	     +" (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
+  resolv += (font+"</ol>"+"Time: "+sprintf("%.5f",delay/1000000.0)+
+#if efun(gethrvtime)
+	     " (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
+#endif /* efun(gethrvtime) */
 	     "<br>"+desc+efont)+"<p>";
 
 }
