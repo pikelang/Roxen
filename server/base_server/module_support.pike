@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.30 1999/11/02 01:37:22 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.31 1999/11/04 18:51:25 grubba Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -214,8 +214,6 @@ mixed set(string var, mixed val)
   error("set("+var+"). Unknown variable.\n");
 }
 
-
-
 program my_compile_file(string file)
 {
   string ofile = file + ".o";
@@ -227,19 +225,26 @@ program my_compile_file(string file)
   program p;
 
   object e = ErrorContainer();
-  master()->set_inhibit_compile_errors(e->got_error);
+  master()->set_inhibit_compile_errors(e);
   catch {
     p  = (program)( file );
   };
   master()->set_inhibit_compile_errors(0);
+
+  string q = e->get();
+
   if( !p )
   {
-    if( string q = e->get() )
+    if(q)
     {
-      report_error( "Failed to compile module:\n"+q );
-      throw("");
+      report_error(sprintf("Failed to compile module %O:\n"
+			   "%s", file, q));
     }
     throw( "Compilation failed\n"); 
+  }
+  if (q && sizeof(q)) {
+    report_debug(sprintf("Warnings during compilation of module %O:\n"
+			 "%s", file, q));
   }
   if( !file_stat( ofile ) ||
       file_stat(ofile)[ST_MTIME] <
