@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.481 2000/04/17 16:54:53 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.482 2000/04/25 17:41:30 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3370,17 +3370,28 @@ int is_ip(string s)
 array(RoxenModule) configuration_auth=({});
 mapping configuration_perm=([]);
 
+private int configs_loaded = 0;
+array(RoxenModule) get_configuration_auth()
+{
+  if (!configs_loaded) {
+    foreach (configurations, object c)
+      if (!c->inited && c->retrieve("EnabledModules", c)["config_userdb#0"])
+	c->enable_all_modules();
+    configs_loaded = 1;
+  }
+  configuration_auth -= ({0});
+  return configuration_auth;
+}
+
+// Temporary compatibility kludge.
 void fix_configuration_auth()
 {
-  foreach (configurations, object c)
-    if (!c->inited && c->retrieve("EnabledModules", c)["config_userdb#0"])
-      c->enable_all_modules();
-  configuration_auth -= ({0});
+  get_configuration_auth();
 }
 
 void add_permission(string name, mapping desc)
 {
-  fix_configuration_auth();
+  get_configuration_auth();
   configuration_perm[ name ]=desc;
   configuration_auth->add_permission( name, desc );
 }
@@ -3400,7 +3411,7 @@ string configuration_authenticate(RequestID id, string what)
 {
   if(!id->realauth)
     return 0;
-  fix_configuration_auth();
+  get_configuration_auth();
 
   array auth;
   RoxenModule o;
@@ -3421,14 +3432,14 @@ string configuration_authenticate(RequestID id, string what)
 
 array(object) get_config_users( string uname )
 {
-  fix_configuration_auth();
+  get_configuration_auth();
   return configuration_auth->find_admin_user( uname );
 }
 
 
 array(string|object) list_config_users(string uname, string|void required_auth)
 {
-  fix_configuration_auth();
+  get_configuration_auth();
   array users = `+( ({}), configuration_auth->list_admin_users( ) );
   if( !required_auth )
     return users;
