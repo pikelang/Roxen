@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.23 1998/09/28 00:42:38 per Exp $
+ * $Id: clientlayer.pike,v 1.24 1998/09/29 03:04:55 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.23 1998/09/28 00:42:38 per Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.24 1998/09/29 03:04:55 per Exp $";
 constant thread_safe=1;
 
 
@@ -313,7 +313,17 @@ class Mail
       return _dh;
     mapping heads = copy_value(headers(force));
     foreach(indices(heads), string w)
-      heads[w] = column(Array.map( heads[w]/" ", MIME.decode_word ),0)*" ";
+    {
+      array(string) fusk0 = heads[w]/"=?";
+      heads[w]=fusk0[0];
+      foreach(fusk0[1..], string fusk)
+      {
+	string fusk2;
+	if(sscanf(fusk, "%s?=%s", fusk2, fusk) == 2)
+	  heads[w] += MIME.decode_word( "=?"+fusk2+"?=" )[0];
+	heads[w] += fusk;
+      }
+    }
     return _dh=heads;
   }
 
