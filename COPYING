@@ -1,13 +1,13 @@
 This version, 1.2, of Roxen(TM) Challenger is distributed under GNU's
-General Public License version 2. You should have recived a copy of
+General Public License version 2. You should have received a copy of
 the GPL License in the file "GPL" with your copy of Roxen(TM)
 Challenger. We have chosen to make a restriction, in accordance to
-section 8 of the license, that Roxen(TM) Challanger 1.2 may not be
+section 8 of the license, that Roxen(TM) Challenger 1.2 may not be
 distributed to or used in the United States of America since it
 contains an implementation of the RSA patent (U.S. Patent No,
 4,405,829).
 
-This file, nor the file "GPL" may be removed from the Roxen(TM)
+Neither file, nor the file "GPL" may be removed from the Roxen(TM)
 Challenger distribution. See GPL for further restrictions.
 
 Sweden has export control laws governing export of cryptographic
@@ -20,4 +20,3 @@ the agency handling export control issues. Please note that these laws
 are currently being revised. We do not advise anyone to bring with
 him, distribute or export this software outside of Sweden, without
 being fully aware of the possible legal consequences.
-
