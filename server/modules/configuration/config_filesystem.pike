@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.104 2001/10/18 11:30:34 anders Exp $";
+  "$Id: config_filesystem.pike,v 1.105 2001/10/25 11:45:22 grubba Exp $";
 
 constant path = "config_interface/";
 
@@ -334,6 +334,9 @@ mixed find_file( string f, RequestID id )
 	url += "&section="+id->real_variables->section[0];
       retval = Roxen.http_redirect( url, id );
     }
+  } else {
+    // Most likely cacheable for quite a while.
+    id->misc->cacheable = 100000;	// 2 days, 4:46:40
   }
   if( stringp( retval ) )
     retval = Roxen.http_string_answer( retval, type );
