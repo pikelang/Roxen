@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.281 2001/08/23 23:34:48 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.282 2001/08/24 20:49:44 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -458,7 +458,7 @@ class TagSet {
   mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_type(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
-  int flags;
+  int flags = RXML.FLAG_DONT_RECOVER;
 
   class Frame {
     inherit RXML.Frame;
@@ -2410,11 +2410,11 @@ class UserTag {
   // RXML.Context.misc we can get the current definition even if it
   // changes in loops etc.
 
-  void create(string _name, int tag) {
+  void create(string _name, int moreflags) {
     if (_name) {
       name=_name;
       lookup_name = "tag\0" + name;
-      if(tag) flags |= RXML.FLAG_EMPTY_ELEMENT;
+      flags |= moreflags;
     }
   }
 
@@ -2523,7 +2523,7 @@ class UserTag {
 class TagDefine {
   inherit RXML.Tag;
   constant name = "define";
-  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  constant flags = RXML.FLAG_DONT_RECOVER;
   RXML.Type content_type = RXML.t_xml (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
@@ -2561,9 +2561,9 @@ class TagDefine {
 #if ROXEN_COMPAT <= 1.3
 	n = id->conf->old_rxml_compat?lower_case(n):n;
 #endif
-	int tag=0;
+	int moreflags=0;
 	if(args->tag) {
-	  tag=1;
+	  moreflags = RXML.FLAG_EMPTY_ELEMENT;
 	  m_delete(args, "tag");
 	} else
 	  m_delete(args, "container");
@@ -2622,6 +2622,13 @@ class TagDefine {
 	    m_delete (args, "trimwhites");
 	  }
 
+#ifdef DEBUG
+	  if (defaults->_debug_) {
+	    moreflags |= RXML.FLAG_DEBUG;
+	    m_delete (defaults, "_debug_");
+	  }
+#endif
+
 #if ROXEN_COMPAT <= 1.3
 	  if(id->conf->old_rxml_compat)
 	    content = replace( content, indices(args), values(args) );
@@ -2634,10 +2641,10 @@ class TagDefine {
 	UserTag user_tag;
 	if ((oldtagdef = ctx->misc[lookup_name]) &&
 	    !((user_tag = oldtagdef[3])->flags & RXML.FLAG_EMPTY_ELEMENT) ==
-	    !tag)		// Redefine.
+	    !(moreflags & RXML.FLAG_EMPTY_ELEMENT)) // Redefine.
 	  ctx->misc[lookup_name] = ({def, defaults, args->scope, user_tag});
 	else {
-	  user_tag = UserTag (n, tag);
+	  user_tag = UserTag (n, moreflags);
 	  ctx->misc[lookup_name] = ({def, defaults, args->scope, user_tag});
 	  ctx->add_runtime_tag(user_tag);
 	}
