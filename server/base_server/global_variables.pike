@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.41 2000/09/08 23:00:48 nilsson Exp $
+// $Id: global_variables.pike,v 1.42 2000/09/13 11:36:05 lange Exp $
 
 /*
 #pragma strict_types
@@ -363,18 +363,21 @@ void define_global_variables(  )
   defvar("default_ident", 1, 
 	 LOCALE(124, "Identify, Use default identification string"),
 	 TYPE_FLAG|VAR_MORE,
-	 LOCALE(125, "Setting this variable to No will display "
-		"the \"Identify as\" node where you can state what Roxen "
+	 LOCALE(125, "Setting this variable to No will display the "
+		"\"Identify as\" node where you can state what Roxen "
 		"should call itself when talking to clients.<br />"
-	  "It is possible to disable this so that you can enter an "
-	  "identification-string that does not include the actual version of "
-	  "Roxen, as recommended by the HTTP/1.0 draft 03:<p><blockquote><i>"
-	  "Note: Revealing the specific software version of the server "
-	  "may allow the server machine to become more vulnerable to "
-	  "attacks against software that is known to contain security "
-	  "holes. Server implementors are encouraged to make this field "
-	  "a configurable option.</i></blockquote></p>"));
-
+		"It is possible to disable this so that you can enter an "
+		"identification-string that does not include the actual "
+		"version of Roxen, as recommended by the HTTP/1.0 and "
+		"HTTP/1.1 RFCs:"
+         "<p><blockquote><i>"
+	 "Note: Revealing the specific software version of the server "
+	 "may allow the server machine to become more vulnerable to "
+	 "attacks against software that is known to contain security "
+	 "holes. Server implementors are encouraged to make this field "
+	 "a configurable option."
+	 "</i></blockquote></p>"));
+  
   defvar("ident", replace(real_version," ","·"), 
 	 LOCALE(126, "Identify, Identify as"),
 	 TYPE_STRING /* |VAR_MORE */,
@@ -383,7 +386,7 @@ void define_global_variables(  )
   
   defvar("User", "", LOCALE(128, "Change uid and gid to"), 
 	 TYPE_STRING,
-	 LOCALE(129, "When roxen is run as root, to be able to open port 80 "
+	 LOCALE(129, "When Roxen is run as root, to be able to open port 80 "
 		"for listening, change to this user-id and group-id when the "
 		"port has been opened. If you specify a symbolic username, "
 		"the default group of that user will be used. "
@@ -391,9 +394,9 @@ void define_global_variables(  )
 
   defvar("permanent_uid", 0, LOCALE(130, "Change uid and gid permanently"),
 	 TYPE_FLAG,
-	 LOCALE(131, "If this variable is set, roxen will set it's uid and gid "
-	  "permanently. This disables the 'exec script as user' fetures "
-	  "for CGI, and also access files as user in the filesystems, but "
+	 LOCALE(131, "If this variable is set, Roxen will set it's uid and gid "
+	  "permanently. This disables the 'exec script as user' features "
+	  "for CGI, and also 'access files as user' in the filesystems, but "
 	  "it gives better security."));
 
   // FIXME: Should mention getcwd()

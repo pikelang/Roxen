@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.367 2000/09/12 22:04:06 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.368 2000/09/13 11:36:04 lange Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -2046,7 +2046,7 @@ RoxenModule reload_module( string modname )
 
     catch( mi->update_with( nm,0 ) ); // This is sort of nessesary...   
 
-    nm->report_notice(LOC_C(11, "Reloaded %s.\n"), mi->get_name());
+    nm->report_notice(LOC_C(11, "Reloaded %s.")+"\n", mi->get_name());
     // It's possible e.g. in the config interface that the module
     // being reloaded is in use for the current request, so delay it a
     // little.
@@ -2898,7 +2898,7 @@ void create(string config)
 
   defvar("name", "", DLOCALE(24, "Virtual server name"),
 	 TYPE_STRING|VAR_MORE,
-	 DLOCALE(25, "This is the name that will be used in the configuration "
+	 DLOCALE(25, "This is the name that will be used in the administration "
 	 "interface. If this is left empty, the actual name of the "
 	 "virtual server will be used."));
 
