@@ -348,7 +348,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    (m->thread_safe ? 
 		     LOCALE("yes", "Yes") : LOCALE("no", "No")) +
 #ifdef THREADS
-		    " <small>(<a href='../../../../actions/?action"
+		    " <small>(<a href='../../../../../actions/?action"
 		    "=locks.pike&class=status'>more info</a>)</small><br />\n"
 		    "<b>Number of accesses:</b> " + my_accesses +
 #endif
@@ -402,15 +402,12 @@ string module_page( RequestID id, string conf, string module )
 
   string section = RXML.get_var( "section", "form" );
 
-  if( section == "Information"
-      || RXML.get_var( "info_section_is_it", "form" ) )
+  if( section == "Information" || RXML.get_var( "info_section_is_it", "form" ) )
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
 
   if( section == "Docs" )
     return
-      "<blockquote>"+
-         find_module_documentation( conf, module, id )+
-      "</blockquote>";
+      "<blockquote>"+find_module_documentation( conf, module, id )+"</blockquote>";
   
   return "<cfg-variables source='module-variables' configuration='"+conf+"' "
           "section='&form.section;' module='"+module+"'/>";
