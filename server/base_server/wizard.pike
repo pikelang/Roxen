@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.114 2000/02/20 17:41:35 nilsson Exp $
+// $Id: wizard.pike,v 1.115 2000/03/01 16:32:38 wellhard Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -542,7 +542,7 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 	   wiz_name!="done")?
 	  "\n        <input type=\"submit\" name=\"next_page\" value=\""+NEXT+"\" />":"")+
 	 "</td></tr></table>\n"
-	 "    </td><tr>\n"
+	 "    </td></tr>\n"
 	 "  </table>\n"
 	 "  </td></tr>\n"
          "</table>\n"
