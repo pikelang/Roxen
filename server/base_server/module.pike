@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.135 2003/06/11 15:48:25 grubba Exp $
+// $Id: module.pike,v 1.136 2003/06/11 17:08:00 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -355,11 +355,6 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
 				     "DAV:collection") });	// 12.2
     }
     return "";
-  case "DAV:collection":	// MacOS X mount_webdav uses this.
-    if (st->isdir) {
-      return "";
-    }
-    break;
   default:
     break;
   }
