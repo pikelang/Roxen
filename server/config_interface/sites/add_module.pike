@@ -557,10 +557,18 @@ array initial_form( RequestID id, Configuration conf, array modules )
         res += "<tr><td colspan='3'><h2>"
         +LOCALE(1,"Initial variables for ")+
             Roxen.html_encode_string(mi->get_name())+"</h2></td></tr>"
-        "<emit source='module-variables' configuration=\""+conf->name+"\""
+        "<emit source='module-variables' "
+	  " configuration=\""+conf->name+"\""
+        " module=\""+mod+#"\"/>
+        <emit noset='1' source='module-variables' "
+	  " configuration=\""+conf->name+"\""
         " module=\""+mod+#"\">
- <tr><td width='50'></td><td width=20%><b>&_.name;</b></td><td><eval>&_.form:none;</eval></td></tr>
- <tr><td></td><td colspan=2>&_.doc:none;<p>&_.type_hint;</td></tr>
+ <tr>
+ <td width='150' valign='top' colspan='2'><b>&_.name;</b></td>
+ <td valign='top'><eval>&_.form:none;</eval></td></tr>
+ <tr>
+<td width='30'><img src='/internal-roxen-unit' width=50 height=1 alt='' /></td>
+  <td colspan=2>&_.doc:none;</td></tr>
 </emit>";
         break;
       }
@@ -584,7 +592,7 @@ mixed do_it_pass_2( array modules, Configuration conf,
       RoxenModule mm = conf->enable_module( mod,0,0,1 );
       if( !mm || !conf->otomod[mm] )
       {
-	report_error("Failed to enable "+mod+"\n" );
+	report_error(LOCALE(0,"Failed to enable %s")+"\n");
 	return Roxen.http_redirect( site_url(id,conf->name), id );
       }      
       conf->call_low_start_callbacks( mm, 
