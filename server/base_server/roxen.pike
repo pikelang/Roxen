@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.738 2001/09/12 15:57:33 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.739 2001/09/13 13:15:19 hop Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -438,12 +438,14 @@ private void low_shutdown(int exit_code)
   }
   if (_recurse++) return;
 
-#ifdef SNMP_AGENT
-  if(objectp(snmpagent))
-    snmpagent->disable();
-#endif
-
   catch(stop_all_configurations());
+
+#ifdef SNMP_AGENT
+  if(objectp(snmpagent)) {
+    snmpagent->stop_trap();
+    snmpagent->disable();
+  }
+#endif
 
   call_out(really_low_shutdown, 0.1, exit_code);
 }
@@ -4043,7 +4045,7 @@ int main(int argc, array tmp)
     snmpagent = SNMPagent();
     snmpagent->enable();
     report_debug("\benabled.\n");
-    snmpagent->coldstart_trap();
+    snmpagent->start_trap();
 
   } else
     report_debug("\bdisabled.\n");
@@ -4149,9 +4151,11 @@ string check_variable(string name, mixed value)
           report_notice("SNMPagent enabling ...\n");
           snmpagent = SNMPagent();
           snmpagent->enable();
+          snmpagent->start_trap();
       }
       if (!value && objectp(snmpagent)) {
           report_notice("SNMPagent disabling ...\n");
+          snmpagent->stop_trap();
           snmpagent->disable();
           snmpagent = 0;
       }

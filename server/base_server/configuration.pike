@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.487 2001/09/11 14:30:46 hop Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.488 2001/09/13 13:15:18 hop Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -368,6 +368,14 @@ void stop (void|int asynch)
 //! handler threads to lessen the impact if a module hangs. Doesn't
 //! wait for all modules to finish if @[asynch] is nonzero.
 {
+
+#ifdef SNMP_AGENT
+  if(query("snmp_process") && objectp(roxen->snmpagent)) {
+    roxen->snmpagent->vs_stop_trap(get_config_id());
+    roxen->snmpagent->del_virtserv(get_config_id());
+  }
+#endif
+
   unregister_urls();
 
   multiset allmods = mkmultiset (indices (otomod));
@@ -3195,9 +3203,9 @@ void low_init(void|int modules_already_enabled)
 		  "\n\n", query_name(), (gethrtime()-start_time)/1000000.0);
 
 #ifdef SNMP_AGENT
-  // Cold start trap after real virt.serv. loading
-  if(objectp(roxen->snmpagent))
-        roxen->snmpagent->vs_start_trap(get_config_id());
+  // Start trap after real virt.serv. loading
+  if(query("snmp_process") && objectp(roxen->snmpagent))
+    roxen->snmpagent->vs_start_trap(get_config_id());
 #endif
 
 }
