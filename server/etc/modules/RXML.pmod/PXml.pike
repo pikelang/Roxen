@@ -8,7 +8,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.41 2000/03/16 10:39:16 mast Exp $
+//! $Id: PXml.pike,v 1.42 2000/03/18 03:33:17 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -60,6 +60,8 @@ static void _tag_set_parser_create (RXML.Context ctx, RXML.Type type,
 
 string html_context() {return low_parser::context();}
 
+constant reset = 0;
+
 static void set_quote_tag_cbs()
 {
   add_quote_tag ("!--", .utils.p_xml_comment_cb, "--");
@@ -101,6 +103,13 @@ static void create (
     return;
   }
   overridden = ([]);
+
+#ifdef RXML_OBJ_DEBUG
+  master_parser = 1;
+  __object_marker->create (this_object());
+#elif defined (OBJ_COUNT_DEBUG)
+  master_parser = 1;
+#endif
 
   array(RXML.TagSet) list = ({tag_set});
   array(string) plist = ({tag_set->prefix});
@@ -353,8 +362,18 @@ TAG_DEF_TYPE get_overridden_low_tag (string name, void|TAG_TYPE|CONTAINER_TYPE o
     return ({tags()[name], containers()[name]});
 }
 
-#ifdef OBJ_COUNT_DEBUG
-string _sprintf() {return "RXML.PXml(" + __count + ")";}
+#if defined (OBJ_COUNT_DEBUG) || defined (RXML_OBJ_DEBUG)
+static int master_parser;
+string _sprintf()
+{
+  return sprintf ("RXML.PXml(%s,%O,%O,%O)%s",
+		  master_parser ? "master" : "clone",
+		  context, type, tag_set,
+		  __object_marker ? "[" + __object_marker->count + "]" : "");
+}
 #else
-string _sprintf() {return "RXML.PXml";}
+string _sprintf()
+{
+  return sprintf ("RXML.PXml(%O,%O,%O)", context, type, tag_set);
+}
 #endif
