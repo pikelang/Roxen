@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.404 2002/10/15 09:21:31 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.405 2002/10/15 12:59:45 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -108,7 +108,7 @@ private void old_rxml_warning(RequestID id, string no, string yes) {
 
 class EntityClientTM {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_var_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable=0;
     if(c->id->supports->trade) return ENCODE_RXML_XML("&trade;", type);
     if(c->id->supports->supsub) return ENCODE_RXML_XML("<sup>TM</sup>", type);
