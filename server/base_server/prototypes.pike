@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.43 2001/10/09 14:57:09 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.44 2001/10/09 15:07:12 grubba Exp $";
 
 class Variable
 {
@@ -1082,7 +1082,7 @@ class UserDB
   //! Return a list of all users handled by this database module.
 
   User create_user( string s )
-  //! Not nessesarily implemented, as an example, it's not possible to
+  //! Not necessarily implemented, as an example, it's not possible to
   //! create users in the system user database from Roxen WebServer.
   //! The default implementation returns 0.
   {
@@ -1090,7 +1090,7 @@ class UserDB
   }
 
   Group create_group( string s )
-  //! Not nessesarily implemented, as an example, it's not possible to
+  //! Not necessarily implemented, as an example, it's not possible to
   //! create groups in the system user database from Roxen WebServer.
   //! The default implementation returns 0.
   {
