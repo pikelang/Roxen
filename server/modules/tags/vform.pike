@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.47 2004/06/30 16:59:27 mast Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.48 2005/02/08 17:55:55 wellhard Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -293,7 +293,9 @@ class TagVForm {
 
       array do_return(RequestID id) {
 	int ok=1;
-	if(args->not && id->real_variables[args->name][0]==args->not) ok=0;
+	if(args->not && id->real_variables[args->name] &&
+	   id->real_variables[args->name][0] == args->not)
+	  ok = 0;
 	
 	m_delete(args, "not");
 	if(ok) {
