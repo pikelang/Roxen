@@ -60,15 +60,14 @@ class Data( string data )
 	return "";
       
       if( status == "RESOLVED" )
-	status = "";
-      else
- 	resolution = "";
-
-      return "<tr valign=top><td align=right><font size=-1><a href='http://community.roxen.com/"+
-	id+"'>"+id+"</a></font></td>"
-	"<td><font size=-1>"+(product - "Roxen ")+" <nobr>"+component+"</nobr></font></td>"
+	status = "<i>fixed</i>";
+      resolution = "";
+      return "<tr valign=top><td align=right><font size=-1>"
+	"<a href='http://community.roxen.com/"+	id+"'>"+id+"</a></font></td>"
+	"<td><font size=-1>"+(product - "Roxen ")+
+	" <nobr>"+component+"</nobr></font></td>"
 	"<td><font size=-1>"+short+"</font></td>"
-	"<td><font size=-1>"+lower_case(status+resolution)+"</font></td></tr>";
+	"<td><font size=-1>"+lower_case(status)+"</font></td></tr>";
     }
   }
 
