@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.120 1997/09/03 02:27:33 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.121 1997/09/03 07:48:58 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1328,7 +1328,7 @@ private void define_global_variables( int argc, array (string) argv )
   globvar("default_font", "lucida", "Fonts: Default font", TYPE_FONT,
 	  "The default font to use when modules request a font.");
 
-  globvar("font_dirs", ({"../local/nfonts/", "../nfonts/", "nfonts/" }),
+  globvar("font_dirs", ({"../local/nfonts/", "nfonts/" }),
 	  "Fonts: Font directories", TYPE_DIR_LIST,
 	  "This is where the fonts are located.");
 
@@ -1527,7 +1527,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  "</ul>\n");
   
   
-  globvar("ModuleDirs", ({ "../local/modules/", "../modules/", "modules/" }),
+  globvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
 	  "Module directories", TYPE_DIR_LIST,
 	  "Where to look for modules. Can be relative paths, from the "
 	  "directory you started roxen, " + getcwd() + " this time."
