@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.129 2002/10/18 09:09:19 jonasw Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.130 2003/01/15 10:22:21 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -297,6 +297,7 @@ mapping dump_constants = ([]), dump_constants_rev = ([]);
 // E.g. Image.Color.black thinks it's equal to 0, which means that
 // search (all_constants(), Image.Color.black) == "UNDEFINED".
 static mapping(mixed:string) all_constants_rev = ([]);
+static mapping(program:string) all_constants_object_program_rev = ([]);
 static mapping(mixed:string) __builtin_rev =
   mkmapping (values (__builtin), indices (__builtin));
 static mapping(mixed:string) _static_modules_rev =
@@ -312,7 +313,7 @@ mixed add_dump_constant( string f, mixed what )
 }
 
 #ifdef DUMP_DEBUG
-#define DUMP_DEBUG_ENTER(X...) do {log->add (sprintf (X));} while (0)
+#define DUMP_DEBUG_ENTER(X...) do {werror(X);log->add (sprintf (X));} while (0)
 #define DUMP_DEBUG_RETURN(val) do {					\
     mixed _v__ = (val);							\
     log->add ("  returned ",						\
@@ -333,9 +334,58 @@ class MyCodec
   String.Buffer log = String.Buffer();
 #endif
 
+  static mapping(program:string) nameof_program_cache = ([]);
+  static string nameof_program(program prog)
+  {
+    string res;
+    DUMP_DEBUG_ENTER("nameof_program(%O)\n", prog);
+    if (prog == p) DUMP_DEBUG_RETURN(UNDEFINED);
+    if (res = nameof_program_cache[prog]) DUMP_DEBUG_RETURN(res);
+    res = sprintf("%O", prog);
+    if (prog == resolv(res)) {
+      DUMP_DEBUG_RETURN("resolv:" + res);
+    }
+    if (res == "master().dirnode") error("Encoding dirnode program");
+    program parent = function_program(prog);
+    DUMP_DEBUG_ENTER("  parent:%O\n", parent);
+    if (parent && (parent != p)) {
+      string name = function_name(prog);
+      DUMP_DEBUG_ENTER("  name:%O\n", name);
+      if (name) {
+	if (res = all_constants_object_program_rev[parent]) {
+	  res = "efun:" + res + "\0" + name;
+	  nameof_program_cache[prog] = res;
+	  DUMP_DEBUG_RETURN(res);
+	}
+	  
+	if ((objects[parent]) && (res = nameof(objects[parent]))) {
+	  res += "\0" + name;
+	  nameof_program_cache[prog] = res;
+	  DUMP_DEBUG_RETURN(res); 
+	}
+	
+	if ((prog == parent[name]) && (res = nameof_program(parent))) {
+	  if (programs[res]) {
+	    res += "\0" + name;
+	  } else {
+	    res += "\0" + name;
+	  }
+	  nameof_program_cache[prog] = res;
+	  DUMP_DEBUG_RETURN(res); 
+	}
+      }
+    }
+    if(string tmp=search(programs, prog)) {
+      nameof_program_cache[prog] = tmp;
+      DUMP_DEBUG_RETURN(tmp);
+    }
+    DUMP_DEBUG_RETURN(UNDEFINED);
+  }
+
   string nameof(mixed x)
   {
 #ifdef DUMP_DEBUG
+#if __VERSION__ < 7.4
     if (objectp (x))
       DUMP_DEBUG_ENTER ("nameof (object %s: %O)\n",
 			Program.defined (object_program (x)), x);
@@ -349,6 +399,13 @@ class MyCodec
       DUMP_DEBUG_ENTER ("nameof (program %s)\n", Program.defined (x));
     else
       DUMP_DEBUG_ENTER ("nameof (%O)\n", x);
+#else /* __VERSION__ >= 7.4 */
+    string type_str = "";
+    if (objectp(x)) type_str="object ";
+    else if (functionp(x)) type_str="function ";
+    else if (programp(x)) type_str="program ";
+    DUMP_DEBUG_ENTER("nameof (%s%O)\n", type_str, x);
+#endif /* __VERSION__ < 7.4 */
 #endif
 
     if(p!=x)
@@ -356,10 +413,18 @@ class MyCodec
       if( string n = dump_constants_rev[ x ] )
 	DUMP_DEBUG_RETURN ("defun:"+n);
 
-      if (sizeof (all_constants()) != sizeof (all_constants_rev))
+      if (sizeof (all_constants()) != sizeof (all_constants_rev)) {
 	// We assume that all_constants() doesn't shrink.
 	all_constants_rev =
 	  mkmapping (values (all_constants()), indices (all_constants()));
+	all_constants_object_program_rev = ([]);
+	foreach(indices(all_constants()), string sym) {
+	  mixed val = all_constants()[sym];
+	  if (objectp(val)) {
+	    all_constants_object_program_rev[object_program(val)] = sym;
+	  }
+	}
+      }
 
       if (string name = all_constants_rev[x])
 	DUMP_DEBUG_RETURN ("efun:" + name);
@@ -370,8 +435,10 @@ class MyCodec
 
       if ( programp (x) )
       {
-	if(mixed tmp=search(programs,x))
-	  DUMP_DEBUG_RETURN (tmp);
+	mixed tmp;
+	if (tmp = nameof_program(x)) {
+	  DUMP_DEBUG_RETURN(tmp);
+	}
 
 	if( (program)x != x )
 	  DUMP_DEBUG_RETURN (nameof( (program)x ));
@@ -406,7 +473,7 @@ class MyCodec
 	{
 	  if(tmp=search(programs,tmp))
 	  {
-	    if (sizeof (ids)) DUMP_DEBUG_RETURN (tmp + "//" + ids * ".");
+	    if (sizeof (ids)) DUMP_DEBUG_RETURN (tmp + "\0" + ids * "\0");
 	    else DUMP_DEBUG_RETURN (tmp);
 	  }
 	}
@@ -436,77 +503,53 @@ class MyCodec
     DUMP_DEBUG_RETURN (([])[0]);
   }
 
+  static mixed low_lookup(string x)
+  {
+    array(string) segments = x/"\0";
+    string s;
+    mixed part = UNDEFINED;
+    x = segments[0];
+    if (sscanf(x,"defun:%s",s)) {
+      part = dump_constants[s];
+    }
+    else if (sscanf(x,"efun:%s",s)) {
+      part = all_constants()[s];
+    }
+    else if (sscanf(x,"resolv:%s",s)) {
+      part = resolv(s);
+    }
+    else {
+      part = (object)x;
+    }
+    foreach(segments[1..], string id) {
+      if (zero_type(part = part[id]))
+	error("Failed to decode symbol %O\n", segments * "\0" );
+    }
+    return part||UNDEFINED;
+  }
+
   function functionof(string x)
   {
     DUMP_DEBUG_ENTER ("functionof (%O)\n", x);
-    string s;
-    if (sscanf(x,"defun:%s",s)) {
-      if (function v = dump_constants[s])
-	DUMP_DEBUG_RETURN (v);
-    }
-    else if (sscanf(x,"efun:%s",s)) {
-      if (function v = all_constants()[s])
-	DUMP_DEBUG_RETURN (v);
-    }
-    else if (sscanf(x,"resolv:%s",s)) {
-      if (function v = resolv(s))
-	DUMP_DEBUG_RETURN (v);
-    }
-    error("Failed to decode function %s\n",x);
+    mixed res = low_lookup(x);
+    if (functionp(res)) DUMP_DEBUG_RETURN(res);
+    error("Failed to decode function %s:%O\n", x, res);
   }
 
   object objectof(string x)
   {
     DUMP_DEBUG_ENTER ("objectof (%O)\n", x);
-    if (sscanf (x, "defun:%s", string s)) {
-      if (object v = dump_constants[s])
-	DUMP_DEBUG_RETURN (v);
-    }
-    else if (sscanf (x, "efun:%s", string s)) {
-      if (object v = all_constants()[s])
-	DUMP_DEBUG_RETURN (v);
-    }
-    else if (sscanf (x, "resolv:%s", string s)) {
-      if (object v = resolv(s))
-	DUMP_DEBUG_RETURN (v);
-    }
-    else {
-      sscanf (x, "%s//%s", string s, string ids);
-      object tmp;
-      if(objectp(tmp=(object)(s || x))) {
-	if (ids)
-	  foreach (ids / ".", string id)
-	    if (!objectp (tmp = tmp[id]))
-	      error("Failed to decode object %s\n", x );
-	DUMP_DEBUG_RETURN (tmp);
-      }
-    }
-    error("Failed to decode object %s\n", x );
+    mixed res = low_lookup(x);
+    if (objectp(res)) DUMP_DEBUG_RETURN(res);
+    error("Failed to decode object %s:%O\n", x, res );
   }
 
   program programof(string x)
   {
     DUMP_DEBUG_ENTER ("programof (%O)\n", x);
-    string s;
-    if (sscanf(x,"defun:%s",s)) {
-      if (program v = dump_constants[s])
-	DUMP_DEBUG_RETURN (v);
-    }
-    else if (sscanf(x,"efun:%s",s)) {
-      if (program v = all_constants()[s])
-	DUMP_DEBUG_RETURN (v);
-    }
-    else if (sscanf(x,"_static_modules.%s",s)) {
-      if (program v = (program)_static_modules[s])
-	DUMP_DEBUG_RETURN (v);
-    }
-    else if (sscanf(x,"resolv:%s",s)) {
-      if (program v = resolv(s))
-	DUMP_DEBUG_RETURN ((program) v);
-    }
-    else if(program tmp=(program)x)
-      DUMP_DEBUG_RETURN (tmp);
-    error("Failed to decode program %s\n", x );
+    mixed res = low_lookup(x);
+    if (programp(res) || objectp(res)) DUMP_DEBUG_RETURN(res);
+    error("Failed to decode program %s:%O\n", x, res );
   }
 
   mixed encode_object(object x)
@@ -684,6 +727,18 @@ program low_findprog(string pname, string ext, object|void handler)
           return ret;                                                        \
         }; DUMP_WARNING(fname,err)                                           \
       } while(0)
+#define LOAD_OFILE( DATA )                                                    \
+      do {                                                                   \
+        mixed err = catch                                                    \
+        {                                                                    \
+          load_time[ fname ] = time();                                       \
+          programs[ fname ] = 0;                                             \
+          ret = programs[ fname ] = decode_value( DATA, Codec() );	     \
+          program_names[ ret ] = fname;                                      \
+          m_delete(has_set_on_load, fname );                                 \
+          return ret;                                                        \
+        }; DUMP_WARNING(fname,err)                                           \
+      } while(0)
       if(sizeof(q=sql_query( "SELECT data,mtime FROM precompiled_files WHERE id=%s",
 			     make_ofilename( fname )))) {
 	if( (int)q[0]->mtime > s[3] ) {
@@ -698,7 +753,7 @@ program low_findprog(string pname, string ext, object|void handler)
       foreach(query_precompiled_names(fname), string ofile )
         if(array s2=master_file_stat( ofile ))
           if(s2[1]>0 && s2[3]>=s[3])
-            LOAD_DATA( Stdio.File( ofile,"r")->read() );
+            LOAD_OFILE( Stdio.File( ofile,"r")->read() );
 
       DDEBUG( "Really compile: %O\n", fname );
 #ifdef DUMP_DEBUG
