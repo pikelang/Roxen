@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.41 1997/08/26 12:44:06 grubba Exp $
+ * $Id: ftp.pike,v 1.42 1997/08/28 18:57:31 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -244,7 +244,7 @@ string file_ls(array (int) st, string file)
     else
       perm += "-";
   string ct = ctime(st[-4]);
-  return sprintf("%s   1 %-10s %-6d%12d %s %s %s\r\n", perm,
+  return sprintf("%s   1 %-10s %-6d%12d %s %s %s\n", perm,
 		 name_from_uid(st[-2]), st[-1],
 		 (st[1]<0? 512:st[1]), ct[4..9], ct[11..15], file);
 }
