@@ -85,12 +85,24 @@ string selected_item( string q, Configuration c, RequestID id, string module )
            object mi = roxen->find_module( q );
            foreach( sort(indices(c->modules[q]->copies)), int i )
            {
+	     string name, doc;
+	     mixed err;
+	     if(err=catch(name=mi->get_name()+(i?" # "+i:""))) {
+	       name = q + (i?" # "+i:"") + " (Generated an error)";
+	       report_error("Error reading module name from %s#%d\n%O\n",
+			    q, i, err);
+	     }
+	     if(err=catch(doc=mi->get_description())) {
+	       doc = "(Documentation generated an error)";
+	       report_error("Error reading module documentation from %s#%d\n%O\n",
+			    q, i, err);
+	     }
              variables +=
              ({
                ([
                  "sname":q+"!"+i,
-                 "name":mi->get_name()+(i?" # "+i:""),
-                 "doc":mi->get_description(),
+                 "name":name,
+                 "doc":doc,
                ]),
              });
            }
