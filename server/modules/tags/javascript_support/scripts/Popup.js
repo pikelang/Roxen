@@ -5,9 +5,12 @@ function checkPopupCoord(x, y, popup_index)
   if(popup_index < 0)
     return;
   p = popups[popup_index];
-  //setStatus("x: "+x+", y: "+y+", i:"+p.inside+", p: "+popups.length+".");
+  p.w = getObjectWidth(p.name);
+  p.h = getObjectHeight(p.name) + p.oy;
+  //setStatus("x: "+x+", y: "+y+", i:"+p.inside+", p: "+popups.length+" " +
+  //	    "p.x:"+p.x+", p.y:"+p.y+", p.w:"+p.w+", p.h:"+p.h+".");
   //alert("x: "+x+", y: "+y+", i:"+p.inside+", p: "+popups.length+".");
-  if((x > p.x && x < p.x + p.w) && (y > p.y && y < p.y + p.h)) {
+  if((x > p.x && x < p.x + p.w) && (y > p.y+p.oy && y < p.y + p.h)) {
     if(!p.inside) p.inside = true;
   } else {
     if(p.inside) {
@@ -29,7 +32,7 @@ function popupMove(e)
   checkPopupCoord(getEventX(e), getEventY(e), popups.length-1);
 }
 
-function popup_coord(name, parent, x, y, w, h)
+function popup_coord(name, parent, x, y, w, h, oy)
 {
   this.name = name;
   this.parent = parent;
@@ -37,6 +40,7 @@ function popup_coord(name, parent, x, y, w, h)
   this.y = y;
   this.w = w;
   this.h = h;
+  this.oy = oy;
   this.inside = false;
 }
 
@@ -57,9 +61,17 @@ function showPopup(name, parent, ox, oy, od, e)
 
   if(oy == 0)
     oy = 15;
-  
+
   if(od == 0)
     od = 10;
+
+  if(isNav5) {
+    ox += 8;
+    if (oy == -1)
+      oy += 9;
+    else
+      oy += 8;
+  }
   
   if(popups.length != 0) {
     if(popups[popups.length - 1].name == name)
@@ -68,8 +80,14 @@ function showPopup(name, parent, ox, oy, od, e)
   }
   
   clearToPopup(parent);
-  
+
   var popup = getObject(name);
+
+  if (!popup) {
+    alert("Unknown object: " + name);
+    return;
+  }
+  
   var p_x = getTargetX(e);
   var p_y = getTargetY(e);
   
@@ -111,7 +129,8 @@ function showPopup(name, parent, ox, oy, od, e)
   //alert("D, "+p_x);
   popups[popups.length] = new popup_coord(name, parent,
 					  p_x, p_y - (parent == "none"?oy:0),
-					  p_w, p_h + (parent == "none"?oy:0));
+					  p_w, p_h + (parent == "none"?oy:0),
+					  (parent == "none"?oy:0));
   //popups.push(new popup_coord(name, parent,
   //				p_x, p_y - (parent == "none"?oy:0),
   //				p_w, p_h + (parent == "none"?oy:0)));
@@ -121,7 +140,7 @@ function showPopup(name, parent, ox, oy, od, e)
   if(isNav4) {
     document.captureEvents(Event.MOUSEMOVE);
     document.onMouseMove = popupMove;
-  } else { 
+  } else {
     document.onmousemove = popupMove;
   }
   return retFromEvent(false);

@@ -80,9 +80,9 @@ function showLayer(path, e)
 }
 
 // Function to render Internet Explorer popup.
-function ieShowPopup(lang, path, url, url_target, actions)
+function ieShowPopup(lang, path, url, url_target, actions, e)
 {
   getObject("popup").innerHTML
     = renderPopup("popup", lang, path, url, url_target, actions, 1);
-  return showPopup("popup", "none", 1, 1, 0);
+  return showPopup("popup", "none", 1, 1, 0, e);
 }

@@ -1,5 +1,5 @@
 // Global variables
-var isNav4 = false, isIE4 = false;
+var isNav4 = false, isIE4 = false, isNav5 = false;
 var insideWindowWidth;
 var range = "";
 var styleObj = "";
@@ -13,15 +13,24 @@ if (navigator.appVersion.charAt(0) == "4") {
     range = "all.";
     styleObj = ".style";
   }
+} else if(navigator.appVersion.charAt(0) == "5") {
+  if (navigator.appName == "Netscape") {
+    isNav5 = true;
+    insideWindowWidth = window.innerWidth;
+  }
 }
 
 // Convert object name string or object reference
 // into a valid object reference
 function getObject(obj) {
-  if (typeof obj == "string")
-    return eval("document." + range + obj);
-  else
-    return obj;
+    if (typeof obj == "string") {
+	if (isNav5)
+	    return document.getElementById(obj);
+	else
+	    return eval("document." + range + obj);
+    }
+    else
+	return obj;
 }
 
 // Positioning an object at a specific pixel coordinate
@@ -29,6 +38,9 @@ function shiftTo(obj, x, y) {
   var theObj = getObject(obj);
   if (isNav4) {
     theObj.moveTo(x,y);
+  } else if (isNav5) {
+    theObj.style.left = x;
+    theObj.style.top = y;
   } else {
     theObj.style.pixelLeft = x;
     theObj.style.pixelTop = y;
@@ -163,7 +175,7 @@ function showProps(o) {
 
 function getEventX(e)
 {
-  if(isNav4) {
+  if(isNav4||isNav5) {
     return e.pageX;
   }
   if(isIE4) {
@@ -174,7 +186,7 @@ function getEventX(e)
 
 function getEventY(e)
 {
-  if(isNav4) {
+  if(isNav4||isNav5) {
     return e.pageY;
   }
   if(isIE4) {
@@ -220,11 +232,12 @@ function getRecursiveTop(o)
 
 function getTargetX(e)
 {
-  //showProps(window.event.srcElement);
   if(isNav4){
-    //showProps(document.links);
-    //showProps(e.target);
     return e.target.x;
+  }
+  if(isNav5){
+    if(e)
+      return e.target.offsetLeft;
   }
   if(isIE4){
     return getRecursiveLeft(window.event.srcElement);
@@ -235,6 +248,9 @@ function getTargetY(e)
 {
   if(isNav4){
     return e.target.y;
+  }
+  if(isNav5){
+    return e.target.offsetTop;
   }
   if(isIE4){
     return getRecursiveTop(window.event.srcElement);

@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.22 2000/11/03 15:36:31 jhs Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.23 2000/12/12 13:31:40 anders Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -259,7 +259,9 @@ static private string container_js_popup(string name, mapping args,
   
   get_jss(id)->get_insert("style")->
     add("#"+popupname+" {position:absolute; "
-	"left:0; top:0; visibility:hidden; width:1; z-index:"+
+	"left:0; top:0; visibility:hidden; "+
+	(id->supports->msie?"width:1; ":"")+
+	"z-index:"+
 	(id->misc->_popuplevel+1)+"}\n");
   
   string old_pparent = id->misc->_popupparent;
@@ -303,7 +305,7 @@ string internal_container_js_dragdrop_drag(string name, mapping args,
 {
   if(!args->href) args->href = "javascript:void";
   args->onMouseDown =
-    "if(isNav4) { return dragDown('"+args->name+"', '"+
+    "if(isNav4||isNav5) { return dragDown('"+args->name+"', '"+
     xargs->name+args->icon+"', event); } "
     "else { return dragDown('"+args->name+"', '"+
     xargs->name+args->icon+"'); }";
