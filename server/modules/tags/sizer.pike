@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.10 2001/03/06 12:23:17 jhs Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.11 2001/03/06 14:00:14 jhs Exp $";
 #include <module.h>
 inherit "module";
 
@@ -243,8 +243,9 @@ string simpletag_page_size( string name,
 	return "Gtext";
       }
     }
-    if( f[..strlen(d)-1] == d )
-      f = f[strlen(d)+1..];
+    if( d != "" )
+      if( f[..strlen(d)-1] == d )
+	f = f[strlen(d)+1..];
     return f;
   };
   int mpct;
