@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.266 2002/01/30 00:32:03 mast Exp $
+// $Id: module.pmod,v 1.267 2002/02/05 19:53:57 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2690,7 +2690,7 @@ class Frame
   //! contains the value after any parsing and will not be parsed
   //! again.
 
-  //! @decl optional mapping(string:mixed) vars;
+  //! @decl optional mapping(string:mixed)|object(Scope) vars;
   //!
   //! Set this to introduce a new variable scope that will be active
   //! during parsing of the content and return values.
@@ -3204,14 +3204,26 @@ class Frame
 		  p_code = RenewablePCode (0);
 		  p_code->source = [string] elem;
 		}
-		subparser = result_type->get_parser (ctx, ctx->tag_set, evaler, p_code);
+		if (this_object()->local_tags) {
+		  subparser = result_type->get_parser (
+		    ctx, [object(TagSet)] this_object()->local_tags, evaler, p_code);
+		  subparser->_local_tag_set = 1;
+		  THIS_TAG_DEBUG ("Exec[%d]: Parsing%s string %s with %O "
+				  "from local_tags\n", i,
+				  p_code ? " and compiling" : "",
+				  format_short (elem), subparser);
+		}
+		else {
+		  subparser = result_type->get_parser (
+		    ctx, ctx->tag_set, evaler, p_code);
+		  THIS_TAG_DEBUG ("Exec[%d]: Parsing%s string %s with %O\n", i,
+				  p_code ? " and compiling" : "",
+				  format_short (elem), subparser);
+		}
 		if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
 		  subparser->recover_errors = 1;
 		  if (p_code) p_code->set_recover_errors (1);
 		}
-		THIS_TAG_DEBUG ("Exec[%d]: Parsing%s string %s with %O\n", i,
-				p_code ? " and compiling" : "",
-				format_short (elem), subparser);
 	      }
 	      subparser->finish ([string] elem); // Might unwind.
 	      piece = subparser->eval(); // Might unwind.
@@ -3751,20 +3763,6 @@ class Frame
 	  eval_state = EVSTAT_BEGIN;
 	}
 
-	if (TagSet add_tags = [object(TagSet)] this_object()->additional_tags) {
-	  TagSet tset = ctx->tag_set;
-	  if (!tset->has_effective_tags (add_tags)) {
-	    THIS_TAG_DEBUG ("Installing additional_tags %O\n", add_tags);
-	    orig_tag_set = tset;
-	    TagSet comp_ts;
-	    GET_COMPOSITE_TAG_SET (add_tags, tset, comp_ts);
-	    ctx->tag_set = comp_ts;
-	  }
-	  else
-	    THIS_TAG_DEBUG ("Not installing additional_tags %O "
-			    "since they're already in the tag set\n", add_tags);
-	}
-
 	if (!zero_type (this_object()->parent_frame))
 	  // Note: This could be done in _prepare, but then we'd have
 	  // to fix some sort of frame addressing when saving the
@@ -3809,6 +3807,20 @@ class Frame
 	    if (flags & FLAG_UNPARSED) content = nil;
 	    eval_state = EVSTAT_ENTERED;
 	    // Fall through.
+
+	    if (TagSet add_tags = [object(TagSet)] this_object()->additional_tags) {
+	      TagSet tset = ctx->tag_set;
+	      if (!tset->has_effective_tags (add_tags)) {
+		THIS_TAG_DEBUG ("Installing additional_tags %O\n", add_tags);
+		orig_tag_set = tset;
+		TagSet comp_ts;
+		GET_COMPOSITE_TAG_SET (add_tags, tset, comp_ts);
+		ctx->tag_set = comp_ts;
+	      }
+	      else
+		THIS_TAG_DEBUG ("Not installing additional_tags %O "
+				"since they're already in the tag set\n", add_tags);
+	    }
 
 	  case EVSTAT_ENTERED:
 	  case EVSTAT_LAST_ITER:
@@ -4846,6 +4858,11 @@ class Parser
   // The parent parser if this one is nested. This is only used to
   // register runtime tags.
 
+  int _local_tag_set;
+  // The local tag set, if any. It's actually used only in
+  // TagSetParser, but defined here so that no special cases are
+  // needed when assigning the value.
+
   //! @ignore
   MARK_OBJECT_ONLY;
   //! @endignore
@@ -4954,8 +4971,6 @@ class TagSetParser
   //! it unset.
 
   // Internals:
-
-  int _local_tag_set;
 
   string _sprintf()
   {
