@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.46 1997/10/12 21:13:25 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.47 1997/10/13 12:03:28 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -400,8 +400,26 @@ class spawn_cgi
 	  // Try to change user anyway, but don't throw an error if we fail.
 	  catch(privs = Privs("CGI script", uid || 65534));
 	}
-	setgid(getegid() || 65534);
-	setuid(geteuid() || 65534);
+	int uid = geteuid() || 65534;
+	int gid = getegid() || 65534;
+	// Can't change uid & gid to euid & egid directly on some OS's
+	// -- stupid.
+	seteuid(0);
+	setgid(gid);
+	setegid(gid);
+	setuid(uid);
+	seteuid(uid);
+
+#ifdef DEBUG
+	if (getuid() != (geteuid() || 65534)) {
+	  roxen_perror("CGI: Failed to change uid! uid:%d euid:%d\n",
+		       getuid(), geteuid());
+	}
+	if (getgid() != (getegid() || 65534)) {
+	  roxen_perror("CGI: Failed to change gid! gid:%d egid:%d\n",
+		       getgid(), getegid());
+	}
+#endif /* DEBUG */
 	
 	/* Now that the correct privileges are set, the current working
 	 * directory can be changed. This implies a check for user permissions
