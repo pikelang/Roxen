@@ -5,7 +5,11 @@ string domain;
 
 void find_user(string u)
 {
-  users[u] = getpwnam(u)[4]+" <"+u+"@"+domain+">";
+  array userinfo;
+  if( userinfo = getpwnam(u) )
+    users[u] = userinfo[4]+" <"+u+"@"+domain+">";
+  else
+    users[u] = " <"+u+"@"+domain+">";    
 }
 
 string mymktime(string from)
@@ -114,15 +118,14 @@ void output_entry(array files, string message)
 
 void twiddle()
 {
-   while(1) 
-   {
-     werror("\\"); sleep(0.1);
-     werror("|"); sleep(0.1);
-     werror("/"); sleep(0.1);
-     werror("-"); sleep(0.1);
-     if(!random(3)) werror(".");
-   }
-   
+  while(1) 
+  {
+    werror("\\"); sleep(0.1);
+    werror("|"); sleep(0.1);
+    werror("/"); sleep(0.1);
+    werror("-"); sleep(0.1);
+    if(!random(3)) werror(".");
+  }
 }
 
 void main(int argc, array (string) argv)
