@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.in,v 1.100 1999/08/27 13:02:48 grubba Exp $
+# $Id: Makefile.in,v 1.101 1999/12/02 20:44:39 per Exp $
 #
 
 # @configure_input@
@@ -23,7 +23,7 @@ PIKEVERSION=@PIKEVERSION@
 # Used to avoid make compatibility problems.
 BIN_TRUE=":"
 
-all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern tools
+all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike tools
 	-@$(BIN_TRUE)
 
 pike: force
@@ -31,9 +31,6 @@ pike: force
 	  cd pike/$(PIKEVERSION)/src && \
 	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS) @LINKFORSHARED@"; \
 	)
-
-extern: force
-	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
 
 tools: force
 	@(cd tools;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
@@ -75,16 +72,13 @@ verbose_verify: all verify_other
 	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verbose_verify; \
 	)
 
-verify_other: verify_extern
+verify_other:
 	@if test "@MAKE_ZLIB@" = "zlib"; then \
 	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify_zlib; \
 	fi
 	@if test "@MAKE_GMP@" = "gmp"; then \
 	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify_gmp; \
 	fi
-
-verify_extern:
-	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify)
 
 verify_zlib:
 	@(cd zlib;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" test)
@@ -106,7 +100,6 @@ clean:
 	  cd pike/$(PIKEVERSION)/src && \
 	  $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean; \
 	)
-	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
 	@(cd tools;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
 
 install_all: install_pike install
@@ -148,7 +141,6 @@ install_only:
 	  rm -f $(prefix)/roxen/server/bin/roxen >/dev/null 2>&1; \
 	  ln $(prefix)/roxen/server/bin/pike $(prefix)/roxen/server/bin/roxen; \
 	)
-	-@(cd extern;$(MAKE) install "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)";cd ../)
 	-@(cd tools;$(MAKE) install "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)";cd ../)
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/configurations
@@ -206,11 +198,9 @@ localinstall: all
 	  rm -f $(SRCDIR)/server/bin/roxen >/dev/null 2>&1; \
 	  ln $(SRCDIR)/server/bin/pike $(SRCDIR)/server/bin/roxen; \
 	)
-	(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 	(cd tools; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 
 spotless:  clean
-	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" spotless)
 	@(cd tools;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" spotless)
 	@test $(PIKEVERSION) = none || ( \
 	  cd pike/$(PIKEVERSION)/src && \
@@ -227,7 +217,6 @@ spotless:  clean
 
 
 distribute:	spotless
-	@(cd extern; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" distribute)
 	@(cd tools; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" distribute)
 
 run_autoconfig:
