@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.431 2000/02/16 08:22:33 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.432 2000/02/16 11:04:46 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3166,7 +3166,8 @@ int main(int argc, array tmp)
   create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE")
 		  || QUERY(pidfile));
 
-//   enable_configurations_modules();
+  if( Getopt.find_option( argv, 0, "no-delayed-load" ) )
+    enable_configurations_modules();
 
   call_out(update_supports_from_roxen_com,
 	   QUERY(next_supports_update)-time());
