@@ -12,7 +12,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.16 1999/08/13 19:11:12 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.17 1999/08/16 10:58:58 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -537,6 +537,20 @@ string tag_user_wrapper(object id, string tag, mapping m, object file)
   return tag_user(tag, m, id, file);
 }
 
+int time_quantifier(object id, mapping m)
+{
+  float t=0;
+  if (m->seconds) t+=((float)(m->seconds));
+  if (m->minutes) t+=((float)(m->minutes))*60;
+  if (m->beats)   t+=((float)(m->beats))*86.4;
+  if (m->hours)   t+=((float)(m->hours))*3600;
+  if (m->days)    t+=((float)(m->days))*86400;
+  if (m->weeks)   t+=((float)(m->weeks))*604800;
+  if (m->months)  t+=((float)(m->months))*(24*3600*30.46);
+  if (m->years)   t+=((float)(m->years))*(3600*(24*365.242190));
+  return (int)round(t);
+}
+
 void define_API_functions()
 {
   add_api_function("parse_rxml", api_parse_rxml, ({ "string" }));
@@ -574,6 +588,7 @@ void define_API_functions()
   add_api_function("roxen_version", tag_version, ({}));
   add_api_function("config_url", api_configurl, ({}));
   add_api_function("old_rxml_warning", api_old_rxml_warning, ({ "string", "string" }));
+  add_api_function("time_quantifier", time_quantifier, ({ "mapping" }));
 }
 
 int may_disable()  { return 0; }
