@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.462 2004/08/17 15:16:16 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.463 2004/08/18 17:08:18 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -66,7 +66,7 @@ int kept_alive;
 
 #ifdef DEBUG
 #define CHECK_FD_SAFE_USE do {						\
-    if (my_fd && this_thread() != roxen->backend_thread &&		\
+    if (this_thread() != roxen->backend_thread &&			\
 	(my_fd->query_read_callback() || my_fd->query_write_callback() || \
 	 my_fd->query_close_callback() ||				\
 	 !zero_type (find_call_out (do_timeout))))			\
@@ -399,13 +399,7 @@ private void really_set_config(array mod_config)
                   "\r\nContent-Type: text/html\r\n"
                   "Content-Length: 1\r\n\r\nx" );
     my_fd->close();
-#if constant (SSL.sslfile.PACKET_MAX_SIZE)
-    // Necessary since the old SSL.sslfile implementation contains
-    // cyclic refs.
-    destruct (my_fd);
-#else
     my_fd = 0;
-#endif
     end();
   };
 
@@ -901,32 +895,16 @@ void disconnect()
   if (my_fd) {
     MARK_FD("HTTP closed");
     CHECK_FD_SAFE_USE;
-#if constant (SSL.sslfile.PACKET_MAX_SIZE)
-    // Destruct necessary since the old SSL.sslfile implementation
-    // contains cyclic refs.
-
-    // Don't set to blocking mode in SSL since naughty clients can
-    // hang the backend then. Otoh, not doing it can cause connections
-    // to be closed prematurely which typically leads to broken images
-    // in browsers that don't support keep-alive (e.g. Safari). The
-    // real problem is that SSL.sslfile in pike <= 7.4 has flawed
-    // buffering in callback mode. It's fixed by a complete rewrite in
-    // 7.6. FIXME: Use the 7.6 version of SSL.sslfile in Roxen.
-#if 0
-    if (my_fd->CipherSpec)
-      my_fd->set_blocking();
+    if (mixed err = catch (my_fd->close())) {
+#ifdef DEBUG
+      report_debug ("Failed to close http(s) connection: " +
+		    describe_error (err));
 #endif
-
-    my_fd->close();
-    destruct (my_fd);
-#else
-    my_fd->close();
+    }
     my_fd = 0;
-#endif
   }
 
   MERGE_TIMERS(conf);
-  if(do_not_disconnect) return;
   destruct();
 }
 
@@ -965,8 +943,8 @@ void end(int|void keepit)
     o->kept_alive = kept_alive+1;
     object fd = my_fd;
     my_fd=0;
-    o->chain(fd,port_obj,leftovers);
     pipe = 0;
+    call_out (o->chain, 0, fd,port_obj,leftovers);
     disconnect();
     return;
   }
@@ -992,13 +970,6 @@ static void close_cb()
   pipe = 0;
 
   // Already closed - simply drop the fd.
-#if constant (SSL.sslfile.PACKET_MAX_SIZE)
-  // Destruct necessary since the old SSL.sslfile implementation
-  // contains cyclic refs. Delay it a little to let the close
-  // handshake be carried out properly; I'm not comfortable doing
-  // blocking I/O here. /mast
-  call_out (destruct, 1, my_fd);
-#endif
   my_fd = 0;
 
   disconnect();
@@ -1695,8 +1666,6 @@ void send_result(mapping|void result)
       TIMER_END(send_result);
       file = 0;
       pipe = 0;
-      if(do_not_disconnect) 
-	return;
       my_fd = 0;
       return;
     }
@@ -2101,9 +2070,8 @@ string url_base()
 /* We got some data on a socket.
  * =================================================
  */
-int processed;
 // array ccd = ({});
-void got_data(mixed fooid, string s)
+void got_data(mixed fooid, string s, void|int chained)
 {
 #ifdef CONNECTION_DEBUG
   werror ("HTTP: Request --------------------------------------------------\n"
@@ -2130,10 +2098,14 @@ void got_data(mixed fooid, string s)
       data_buffer->add(s);
       have_data += strlen(s);
 
+      REQUEST_WERR("HTTP: We want more data.");
+
       // Reset timeout.
       remove_call_out(do_timeout);
       call_out(do_timeout, 90);
-      REQUEST_WERR("HTTP: We want more data.");
+
+      if (chained)
+	my_fd->set_nonblocking(got_data, 0, close_cb);
       return;
     }
     if (data_buffer) {
@@ -2164,6 +2136,8 @@ void got_data(mixed fooid, string s)
     {
       case 0:
 	REQUEST_WERR("HTTP: Request needs more data.");
+	if (chained)
+	  my_fd->set_nonblocking(got_data, 0, close_cb);
 	return;
 
       case 1:
@@ -2272,7 +2246,6 @@ void got_data(mixed fooid, string s)
     CHECK_FD_SAFE_USE;
     my_fd->set_close_callback(0);
     my_fd->set_read_callback(0);
-    processed=1;
 
     remove_call_out(do_timeout);
 #ifdef RAM_CACHE
@@ -2386,15 +2359,6 @@ void got_data(mixed fooid, string s)
   })
   {
     report_error("Internal server error: " + describe_backtrace(err));
-    my_fd->set_blocking();
-    my_fd->close();
-#if constant (SSL.sslfile.PACKET_MAX_SIZE)
-    // Necessary since the old SSL.sslfile implementation contains
-    // cyclic refs.
-    destruct (my_fd);
-#else
-    my_fd = 0;
-#endif
     disconnect();
   }
 }
@@ -2469,13 +2433,10 @@ static void create(object f, object c, object cc)
 {
   if(f)
   {
-#if !constant (SSL.sslfile.PACKET_MAX_SIZE)
     if (f->query_accept_callback)
-      // The new SSL.sslfile in 7.5.12 sets the accept callback too.
       f->set_nonblocking(got_data, f->query_write_callback(), close_cb, 0, 0,
 			 f->query_accept_callback());
     else
-#endif
       f->set_nonblocking(got_data, f->query_write_callback(), close_cb);
     my_fd = f;
     CHECK_FD_SAFE_USE;
@@ -2492,29 +2453,16 @@ void chain(object f, object c, string le)
 {
   my_fd = f;
 
+#ifdef DEBUG
+  if (this_thread() != roxen->backend_thread)
+    error ("Not called from backend\n");
+#endif
+
   CHECK_FD_SAFE_USE;
 
   port_obj = c;
-  processed = 0;
-  do_not_disconnect=-1;		// Block destruction until we return.
   MARK_FD("HTTP kept alive");
   time = predef::time();
-
-  if(!my_fd)
-  {
-    if(do_not_disconnect == -1)
-    {
-      do_not_disconnect=0;
-      disconnect();
-    }
-    return;
-  }
-  else
-  {
-    if(do_not_disconnect == -1)
-      do_not_disconnect = 0;
-    f->set_nonblocking(!processed && got_data, f->query_write_callback(), close_cb);
-  }
 
   if ( le && strlen( le ) ) {
 #ifdef CONNECTION_DEBUG
@@ -2522,13 +2470,15 @@ void chain(object f, object c, string le)
 #else
     REQUEST_WERR(sprintf("HTTP: %d bytes left over.\n", sizeof(le)));
 #endif
-    got_data(0, le);
+    got_data(0, le, 1);
   }
   else
   {
     // If no pipelined data is available, call out...
     remove_call_out(do_timeout);
     call_out(do_timeout, 90);
+
+    my_fd->set_nonblocking(got_data, 0, close_cb);
   }
 }
 
