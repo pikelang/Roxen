@@ -116,7 +116,7 @@ float|string describe_received(int|void|float a)
 
 void add_sent(int i)
 { 
-  if(sent < 0) return;
+  if(i < 0) return;
   int o;
   o=sent; 
   sent+=i; 
