@@ -18,7 +18,8 @@ string mktable(array table) {
     "<table border=\"0\" cellspacing=\"1\" cellpadding=\"5\">\n";
 
   foreach(table, array row)
-    ret+="<tr valign=\"top\"><td bgcolor=\"#d9dee7\">"+(row*"</td><td bgcolor=\"#d9dee7\">")+"</td></tr>\n";
+    ret+="<tr valign=\"top\"><td bgcolor=\"#d9dee7\"><font color=\"#000000\">"+
+      (row*"</font></td><td bgcolor=\"#d9dee7\"><font color=\"#000000\">")+"</font></td></tr>\n";
 
   ret+="</table></tr></td></table>";
   return ret;
