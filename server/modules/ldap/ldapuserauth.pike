@@ -50,10 +50,11 @@
   1999-10-11 v1.12	- moved settings of 'pw' variable after checking it
   1999-12-14 v1.13	- fixed bug in required atrribute part
 			- a litle optimalisation of cached values
+  2000-02-13 v1.14	- added roaming auth mode
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.13 1999/12/14 16:12:37 hop Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.14 2000/02/13 04:54:26 hop Exp $";
 constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
@@ -85,13 +86,30 @@ mapping gids = ([ ]);
 
 int access_mode_is_user() {
 
-  return (QUERY(CI_access_mode) != "user");
+  return !(QUERY(CI_access_mode) == "user");
 }
 
 int access_mode_is_guest() {
 
-  return (QUERY(CI_access_mode) != "guest");
+  return !(QUERY(CI_access_mode) == "guest");
 }
+
+int access_mode_is_roaming() {
+
+  return !(QUERY(CI_access_mode) == "roaming");
+}
+
+int access_mode_is_user_or_roaming() {
+
+  return access_mode_is_user() & access_mode_is_roaming();
+}
+
+
+int access_mode_is_guest_or_roaming() {
+
+  return access_mode_is_guest() & access_mode_is_roaming();
+}
+
 
 int default_uid() {
 
@@ -118,8 +136,11 @@ void create()
 		   "<p><b>guest</b><br>"
 		   "The mode assume public access to the directory entries."
 		   "<br>This mode is for testing purpose. It's not recommended"
-		   " for real using.",
-		({ "user", "guest" }) );
+		   " for real using."
+		   "<p><b>roaming</b><br>"
+		   "Mode designed to works with Netscape roaming LDAP"
+		   " DIT tree.",
+		({ "user", "guest", "roaming" }) );
         defvar ("CI_access_type","search","Access type",
                    TYPE_STRING_LIST, "Type of LDAP operation used "
 		   "for authorization  checking."
@@ -152,14 +173,14 @@ void create()
 		   " authenticate user (can be empty)"
 		   "<p>For example: <br>memberOf",
 		   0,
-		   access_mode_is_user
+		   access_mode_is_user_or_roaming
 		   );
         defvar ("CI_required_value","","LDAP server: Required value",
                    TYPE_STRING|VAR_MORE,
 		   "Which value must be in required attribute (can be empty)" 
 		   "<p>For example: <br>cn=KISS-PEOPLE",
 		   0,
-		   access_mode_is_user
+		   access_mode_is_user_or_roaming
 		   );
         defvar ("CI_bind_templ","uid=%u%","LDAP server: Bind template",
                    TYPE_STRING|VAR_MORE,
@@ -177,19 +198,24 @@ void create()
                    "when connecting to the LDAP server. Refer to your LDAP "
                    "server documentation, this could be irrelevant.",
 		   0,
-		   access_mode_is_guest
+		   access_mode_is_guest_or_roaming
 		   );
         defvar ("CI_dir_pwd","", "LDAP server: Directory user's password",
 		    TYPE_STRING|VAR_MORE,
 		    "This is the password used to authenticate "
 		    "connection to directory.",
 		   0,
-		   access_mode_is_guest
+		   access_mode_is_guest_or_roaming
 		    );
-//        defvar ("dirattrs","", "LDAP server: Directory authentication attributes",
-//		    TYPE_STRING, "These are the attributes that the entered "
-//		    "name and password are compared against.  The defaults are "
-//		    "'cn' and 'userPassword'.");
+
+	// "roaming" access type
+        defvar ("CI_owner_attr","owner","LDAP server: Indirect DN attributename",
+                   TYPE_STRING|VAR_MORE,
+		   "Attribute name which contains DN for indirect authorization"
+                   ". Value is used as DN for binding to the directory.",
+		   0,
+		   access_mode_is_roaming
+		   );
 
 	// Defaults:
         defvar ("CI_default_attrname_upw", "userpassword",
@@ -241,11 +267,11 @@ void create()
 		   TYPE_FLAG|VAR_MORE,
                    "Setting this will save one filedescriptor without a small "
                    "performance loss.",0,
-		   access_mode_is_guest);
+		   access_mode_is_guest_or_roaming);
         defvar ("CI_timer",60,"Directory connection close timer",
 		   TYPE_INT|VAR_MORE,
                    "The time after which the directory is closed",0,
-                   lambda(){return !QUERY(CI_close_dir) || !(QUERY(CI_access_mode) == "guest");});
+                   lambda(){return !QUERY(CI_close_dir) || access_mode_is_guest_or_roaming;});
 
 }
 
@@ -275,7 +301,7 @@ void open_dir(string u, string p) {
     if(dir)
 	return;
 
-    if(!access_mode_is_guest()) { // access type is "guest"
+    if(!access_mode_is_guest_or_roaming()) { // access type is "guest"/"roam."
 	binddn = QUERY(CI_dir_username);
 	bindpwd = QUERY(CI_dir_pwd);
     } else {                      // access type is "user"
@@ -395,7 +421,7 @@ string *userinfo (string u,mixed p) {
 	err = catch(results=dir->search(replace(QUERY(CI_search_templ), "%u%", u)));
 	if (err || !objectp(results) || !results->num_entries()) {
 	    DEBUGLOG ("no entry in directory, returning unknown");
-	    if(access_mode_is_guest() && objectp(dir)) {
+	    if(access_mode_is_guest_or_roaming() && objectp(dir)) {
 		catch(dir->unbind());
 		dir=0;
 	    }
@@ -403,13 +429,56 @@ string *userinfo (string u,mixed p) {
 	}
 	tmp=results->fetch();
 	//DEBUGLOG(sprintf("userinfo: got %O",tmp));
-	if(access_mode_is_user()) {	// mode is 'guest'
+	if(!access_mode_is_guest()) {	// mode is 'guest'
 	    if(zero_type(tmp[QUERY(CI_default_attrname_upw)]))
 		werror("LDAPuserauth: WARNING: entry haven't '" + QUERY(CI_default_attrname_upw) + "' attribute !\n");
 	    else
 		rpwd = tmp[QUERY(CI_default_attrname_upw)][0];
-	} else
+	}
+	if(!access_mode_is_user())	// mode is 'user'
 	    rpwd = stringp(p) ? p : "{x-hop}*";
+	if(!access_mode_is_roaming()) {	// mode is 'roaming'
+	  // OK, now we'll try to bind ...
+	  string binddn = get_attrval(tmp, QUERY(CI_owner_attr), "");
+	  DEBUGLOG (sprintf("LDAPauth: indirect DN: [%s]\n", binddn));
+	  if(!sizeof(binddn)) {
+	    DEBUGLOG ("no value for indirect attribute, returning unknown");
+	    return 0;
+	  }
+	  err = catch (dir->bind(binddn, p));
+	  if (arrayp(err)) {
+	    werror ("LDAPauth: Couldn't open authentication directory!\n[Internal: "+err[0]+"]\n");
+	    if (objectp(dir)) {
+	      werror("LDAPauth: directory interface replies: "+dir->error_string()+"\n");
+	      catch(dir->unbind());
+	    } else
+	      werror("LDAPauth: unknown reason\n");
+	    werror ("LDAPauth: check the values in the configuration interface,"
+		    " and that the user\n\trunning the server has adequate"
+		    " permissions to the server\n");
+	    dir=0;
+	    return 0;
+	  }
+	  if(dir->error_code) {
+	    werror ("LDAPauth: authentification error ["+dir->error_string+"]\n");
+	    dir=0;
+	    return 0;
+	  }
+	  dir->set_scope(0);
+	  dir->set_basedn(binddn);
+	  //err = catch(results=dir->search(replace(QUERY(CI_search_templ), "%u%", u)));
+	  err = catch(results=dir->search("objectclass=*")); // FIXME: modify
+							      // to conf. int!
+	  if (err || !objectp(results) || !results->num_entries()) {
+	    DEBUGLOG ("no entry in directory, returning unknown");
+	    if(objectp(dir)) {
+	      catch(dir->unbind());
+	      dir=0;
+	    }
+	    return 0;
+	  }
+	  tmp=results->fetch();
+	}
 	dirinfo= ({
 		u, 			//tmp->uid[0],
 		rpwd,
@@ -427,9 +496,12 @@ string *userinfo (string u,mixed p) {
     if (QUERY(CI_use_cache))
 	cache_set("ldapauthentries",u,dirinfo);
     #endif
-    if(QUERY(CI_access_mode) == "user") { // Should be 'closedir' method?
+    if(!access_mode_is_user()) { // Should be 'closedir' method?
       dir->unbind();
       dir=0;
+    }
+    if(!access_mode_is_roaming()) { // We must rebind connection
+      dir->bind(QUERY(CI_dir_username), QUERY(CI_dir_pwd));
     }
 
     if(zero_type(uids[(string)dirinfo[2]]))
