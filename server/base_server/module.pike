@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.211 2004/05/14 21:42:47 mast Exp $
+// $Id: module.pike,v 1.212 2004/05/15 11:23:36 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -603,7 +603,7 @@ mapping(string:mixed) remove_property (string path, string prop_name,
   return 0;
 }
 
-string resource_id (string path, RequestID id)
+string resource_id (string path, RequestID|int(0..0) id)
 //! Return a string that within the filesystem uniquely identifies the
 //! resource on @[path] in the given request. This is commonly @[path]
 //! itself but can be extended with e.g. language, user or some form
@@ -630,6 +630,10 @@ string resource_id (string path, RequestID id)
 //! @param path
 //! The requested path below the filesystem location. It has been
 //! normalized with @[VFS.normalize_path].
+//!
+//! @param id
+//!   The request id may have the value @expr{0@} (zero) if called
+//!   by @[Configuration()->expire_locks()].
 {
   return has_suffix (path, "/") ? path : path + "/";
 }
@@ -951,21 +955,38 @@ static void register_lock(string path, DAVLock lock, RequestID id)
 //! @param lock
 //!   The lock to unregister. (It must not be changed or destructed.)
 //!
-//! @returns
-//!   Returns a status mapping on any error, zero otherwise.
-static void unregister_lock (string path, DAVLock lock, RequestID id)
+//! @param id
+//!   The request id may have the value @expr{0@} (zero) if called
+//!   by @[Configuration()->expire_locks()].
+static void unregister_lock (string path, DAVLock lock, RequestID|int(0..0) id)
 {
   TRACE_ENTER(sprintf("unregister_lock(%O, lock(%O), X).", path, lock->locktoken),
 	      this);
-  mixed auth_user = authenticated_user_id (path, id);
+  mixed auth_user = id && authenticated_user_id (path, id);
   path = resource_id (path, id);
   DAVLock removed_lock;
   if (lock->recursive) {
-    removed_lock = m_delete(prefix_locks[path], auth_user);
+    if (id) {
+      removed_lock = m_delete(prefix_locks[path], auth_user);
+    } else {
+      foreach(prefix_locks[path]; mixed user; DAVLock l) {
+	if (l == lock) {
+	  removed_lock = m_delete(prefix_locks[path], user);
+	}
+      }
+    }
     if (!sizeof (prefix_locks[path])) m_delete (prefix_locks, path);
   }
   else if (file_locks[path]) {
-    removed_lock = m_delete (file_locks[path], auth_user);
+    if (id) {
+      removed_lock = m_delete (file_locks[path], auth_user);
+    } else {
+      foreach(file_locks[path]; mixed user; DAVLock l) {
+	if (l == lock) {
+	  removed_lock = m_delete(file_locks[path], user);
+	}
+      }
+    }
     if (!sizeof (file_locks[path])) m_delete (file_locks, path);
   }
   ASSERT_IF_DEBUG (lock /*%O*/ == removed_lock /*%O*/, lock, removed_lock);
