@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.61 2001/01/25 23:20:54 nilsson Exp $
+// $Id: cache.pike,v 1.62 2001/02/04 19:06:40 nilsson Exp $
 
 #pragma strict_types
 
@@ -229,11 +229,29 @@ void cache_clean()
 # define SESSION_SHIFT_TIME 15*60
 #endif
 
+private mapping(string:int) session_persistence;
 private array(mapping(string:mixed)) session_buckets;
 
 private void session_cache_handler() {
   remove_call_out(session_cache_handler);
-  session_buckets = ({ ([]) }) + session_buckets[..SESSION_BUCKETS-1];
+  int t=time(1);
+ clean:
+  foreach(indices(session_buckets[-1]), string id) {
+    if(session_persistence[id]<t) {
+      m_delete(session_buckets[-1], id);
+      m_delete(session_persistence, id);
+      continue;
+    }
+    for(int i; i<SESSION_BUCKETS-2; i++)
+      if(session_buckets[i][id]) continue clean;
+    if(objectp(session_buckets[-1][id])) {
+      m_delete(session_buckets[-1], id);
+      m_delete(session_persistence, id);
+      continue;
+    }
+    // Store in db
+  }
+  session_buckets = ({ ([]) }) + session_buckets[..SESSION_BUCKETS-2];
   call_out(session_cache_handler, SESSION_SHIFT_TIME);
 }
 
@@ -244,11 +262,13 @@ mixed get_session_data(string id) {
       session_buckets[0][id] = data;
       return data;
     }
+  // Retrieve from db
   return ([])[0];
 }
 
-string set_session_data(mixed data, void|string id) {
+string set_session_data(mixed data, void|string id, void|int persistence) {
   if(!id) id = ([function(void:string)]roxenp()->create_unique_id)();
+  session_persistence[id] = persistence;
   session_buckets[0][id] = data;
   return id;
 }
