@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.528 2002/12/10 18:31:07 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.529 2003/01/13 15:16:40 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3436,7 +3436,9 @@ modules.</p>
   issues with 2.4, notably the optimization of cache static tags in
   the &lt;cache&gt; tag.</td></tr>
 <tr valign='top'><td>3.3&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen WebServer 3.3.</td></tr>
+  <td>Corresponds to Roxen 3.3.</td></tr>
+<tr valign='top'><td>3.4&nbsp;&nbsp;</td>
+  <td>Corresponds to Roxen 3.4.</td></tr>
 </table></p>")));
 
   set ("compat_level", roxen.__roxen_version__);
