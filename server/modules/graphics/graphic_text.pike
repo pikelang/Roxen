@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.78 1997/09/24 14:27:19 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.79 1997/09/26 17:10:39 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -814,24 +814,29 @@ mapping find_file(string f, object rid)
   object g;
   if (sizeof(indices(g=Gz))) {
     catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
-  } else {
-    catch(f = MIME.decode_base64(f));
+  } else if (sizeof(f)) {
+    if (f[0] == '$') {
+      f = f[1..];
+    } else {
+      catch(f = MIME.decode_base64(f));
+    }
   }
+
   return http_string_answer(write_text(id,f,0,rid), "image/gif");
 }
 mapping url_cache = ([]);
 string quote(string in)
 {
-  if(url_cache[in]) return url_cache[in];
-  object g;
   string option;
+  if(option = url_cache[in]) return option;
+  object g;
   if (sizeof(indices(g=Gz))) {
     option=MIME.encode_base64(g->deflate()->deflate(in));
   } else {
     option=MIME.encode_base64(in);
   }
-  if((search(in,"/")!=-1) || (search(in,"/.")!=-1)) return url_cache[in]=option;
-  string res="";
+  if(search(in,"/")!=-1) return url_cache[in]=option;
+  string res="$";
   for(int i=0; i<strlen(in); i++)
     switch(in[i])
     {
