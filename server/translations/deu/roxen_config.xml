@@ -64,9 +64,8 @@
 </str>
 
 <str id="6">
-<new/>
 <o>min</o>
-<t></t>
+<t>Min</t>
 </str>
 
 <str id="7">
@@ -325,9 +324,8 @@ Standard-URLs und E-Mail-Adressen verwendet.</t>
 </str>
 
 <str id="38">
-<new/>
 <o>URLs</o>
-<t></t>
+<t>URLs</t>
 </str>
 
 <str id="39">
@@ -635,9 +633,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="98">
-<new/>
 <o>Cache: Proxy Disk Cache Enabled</o>
-<t></t>
+<t>Cache: Proxy Plattencache aktivieren</t>
 </str>
 
 <str id="99">
@@ -646,9 +643,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="100">
-<new/>
 <o>Cache: Proxy Disk Cache Clean size</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Reinigungsgröße</t>
 </str>
 
 <str id="101">
@@ -657,9 +653,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="102">
-<new/>
 <o>Cache: Proxy Disk Cache Minimum available free space and inodes (in %)</o>
-<t></t>
+<t>Cache: Proxy Plattencache, minimaler freier Platz und Inodes (in %)</t>
 </str>
 
 <str id="103">
@@ -668,9 +663,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="104">
-<new/>
 <o>Cache: Proxy Disk Cache Size</o>
-<t></t>
+<t>Cache: Proxy Plattencache-Größe</t>
 </str>
 
 <str id="105">
@@ -679,9 +673,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="106">
-<new/>
 <o>Cache: Proxy Disk Cache Maximum number of files</o>
-<t></t>
+<t>Cache: Proxy Plattencache, maximale Dateienanzahl</t>
 </str>
 
 <str id="107">
@@ -690,9 +683,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="108">
-<new/>
 <o>Cache: Proxy Disk Cache bytes per second</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Bytes pro Sekunde</t>
 </str>
 
 <str id="109">
@@ -701,9 +693,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="110">
-<new/>
 <o>Cache: Proxy Disk Cache Base Cache Dir</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Basis-Cache-Verzeichnis</t>
 </str>
 
 <str id="111">
@@ -712,9 +703,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="112">
-<new/>
 <o>Cache: Proxy Disk Cache Number of hash directories</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Anzahl der Hash-Verzeichnisse</t>
 </str>
 
 <str id="113">
@@ -723,9 +713,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="114">
-<new/>
 <o>Cache: Proxy Disk Cache Keep without Content-Length</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Ohne Content-Length speichern</t>
 </str>
 
 <str id="115">
@@ -734,9 +723,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="116">
-<new/>
 <o>Cache: Proxy Disk Cache Refreshes on Last-Modified</o>
-<t></t>
+<t>Cache: Proxy Plattencache, aktualisieren bei Last-Modified</t>
 </str>
 
 <str id="117">
@@ -747,9 +735,8 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="118">
-<new/>
 <o>Cache: Proxy Disk Cache Last resort (in days)</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Verweildauer (in Tagen)</t>
 </str>
 
 <str id="119">
@@ -758,9 +745,8 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="120">
-<new/>
 <o>Cache: Proxy Disk Cache Garbage collector logfile</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Garbage Collector Logdatei</t>
 </str>
 
 <str id="121">
@@ -769,9 +755,8 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="122">
-<new/>
 <o>PID file</o>
-<t></t>
+<t>PID-Datei</t>
 </str>
 
 <str id="123">
@@ -783,9 +768,8 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="124">
-<new/>
 <o>Identify, Use default identification string</o>
-<t></t>
+<t>Identität, Verwendung der Standard-Identifikation</t>
 </str>
 
 <str id="125">
@@ -794,9 +778,8 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="126">
-<new/>
 <o>Identify, Identify as</o>
-<t></t>
+<t>Identität, Identifizieren als</t>
 </str>
 
 <str id="127">
@@ -805,9 +788,8 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="128">
-<new/>
 <o>Change uid and gid to</o>
-<t></t>
+<t>uid und gid wechseln auf</t>
 </str>
 
 <str id="129">
@@ -820,9 +802,8 @@ Die Syntax ist user[:group].</t>
 </str>
 
 <str id="130">
-<new/>
 <o>Change uid and gid permanently</o>
-<t></t>
+<t>uid und gid permanent wechseln</t>
 </str>
 
 <str id="131">
@@ -834,9 +815,8 @@ erhöht sich so die Sicherheit des Servers.</t>
 </str>
 
 <str id="132">
-<new/>
 <o>Module directories</o>
-<t></t>
+<t>Modul-Verzeichnisse</t>
 </str>
 
 <str id="133">
@@ -848,9 +828,8 @@ durchsucht.</t>
 </str>
 
 <str id="134">
-<new/>
 <o>Client supports regexps</o>
-<t></t>
+<t>Browser-Unterstützung, reguläre Ausdrücke </t>
 </str>
 
 <str id="135">
@@ -869,9 +848,8 @@ entfernt.</t>
 </str>
 
 <str id="136">
-<new/>
 <o>Logging: Audit trail</o>
-<t></t>
+<t>Logging: Auditprotokollierung</t>
 </str>
 
 <str id="137">
@@ -881,9 +859,8 @@ im Ereignis-Log verzeichnet.</t>
 </str>
 
 <str id="138">
-<new/>
 <o>Logging: Debug log method</o>
-<t></t>
+<t>Logging: Debug-Protokollmethode</t>
 </str>
 
 <str id="139">
@@ -893,9 +870,8 @@ aber Syslog ist ebenfalls möglich.</t>
 </str>
 
 <str id="140">
-<new/>
 <o>Logging: Log PID</o>
-<t></t>
+<t>Logging: PID protokollieren</t>
 </str>
 
 <str id="141">
@@ -904,9 +880,8 @@ aber Syslog ist ebenfalls möglich.</t>
 </str>
 
 <str id="142">
-<new/>
 <o>Logging: Log to system console</o>
-<t></t>
+<t>Logging: Auf Systemkonsole protokollieren</t>
 </str>
 
 <str id="143">
@@ -915,9 +890,8 @@ aber Syslog ist ebenfalls möglich.</t>
 </str>
 
 <str id="144">
-<new/>
 <o>Logging: Syslog type</o>
-<t></t>
+<t>Logging: Syslog-Typ</t>
 </str>
 
 <str id="145">
@@ -926,9 +900,8 @@ aber Syslog ist ebenfalls möglich.</t>
 </str>
 
 <str id="146">
-<new/>
 <o>Logging: Log what to syslog</o>
-<t></t>
+<t>Logging: Was an Syslog protokollieren</t>
 </str>
 
 <str id="147">
@@ -942,9 +915,8 @@ aber Syslog ist ebenfalls möglich.</t>
 </str>
 
 <str id="148">
-<new/>
 <o>Logging: Log as</o>
-<t></t>
+<t>Logging: Protokollieren als</t>
 </str>
 
 <str id="149">
@@ -954,9 +926,8 @@ Logs angehängt.</t>
 </str>
 
 <str id="150">
-<new/>
 <o>Number of threads to run</o>
-<t></t>
+<t>Anzahl zu startender Threads</t>
 </str>
 
 <str id="151">
@@ -973,14 +944,13 @@ Zugriffe gleichzeitig bearbeitet werden.\n
 </str>
 
 <str id="154">
-<new/>
 <o>ABS: Enable Anti-Block-System</o>
-<t></t>
+<t>ABS: Anti-Block-System aktivieren</t>
 </str>
 
 <str id="155">
 <o>If set, the anti-block-system will be enabled. This will restart the server after a configurable number of minutes if it locks up. If you are running in a single threaded environment heavy calculations will also halt the server. In multi-threaded mode bugs such as eternal loops will not cause the server to reboot, since only one thread is blocked. In general there is no harm in having this option enabled. </o>
-<t>Das AntiBlockSystem wird aktiviert, dies startet den Server nach einer
+<t>Das Anti-Block-System wird aktiviert, dies startet den Server nach einer
 einstellbaren Zahl von Minuten neu, wenn ein Thread blockiert ist.  Bei
 mehr als einem Thread wird der gesamte Server nicht komplett angehalten,
 sondern nur der blockierte Thread.  Im allgemeinen hat diese Option keine
@@ -988,9 +958,8 @@ Nachteile.</t>
 </str>
 
 <str id="156">
-<new/>
 <o>ABS: Timeout</o>
-<t></t>
+<t>ABS: Timeout</t>
 </str>
 
 <str id="157">
@@ -1002,9 +971,8 @@ Anfrage eine Weile benötigt.</t>
 </str>
 
 <str id="158">
-<new/>
 <o>Default language</o>
-<t></t>
+<t>Standard-Sprache</t>
 </str>
 
 <str id="159">
@@ -1014,9 +982,8 @@ Anfrage eine Weile benötigt.</t>
 </str>
 
 <str id="160">
-<new/>
 <o>Auto Restart: Enable Automatic Restart</o>
-<t></t>
+<t>Auto Restart: Automatischer Neustart aktivieren</t>
 </str>
 
 <str id="161">
@@ -1027,9 +994,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="162">
-<new/>
 <o>Auto Restart: Timeout</o>
-<t></t>
+<t>Auto Restart: Timeout</t>
 </str>
 
 <str id="163">
@@ -1038,9 +1004,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="170">
-<new/>
 <o>Cache: Memory Cache Garbage Collect Interval</o>
-<t></t>
+<t>Cache: Speichercache, Gargabe Collection Intervall</t>
 </str>
 
 <str id="171">
@@ -1049,117 +1014,98 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="172">
-<new/>
 <o>Commented config files</o>
-<t></t>
+<t>Kommentierte Konfigurationsdateien</t>
 </str>
 
 <str id="173">
-<new/>
 <o>Save the variable documentation strings as comments in the configuration files. Only useful if you read or edit the config files directly.</o>
-<t></t>
+<t>Die Dokumentationsvariablen als Kommentare in die Konfigurationsdateien speichern. Nur nützlich, wenn die Konfigurationsdateien direkt gelesen oder bearbeitet werden.</t>
 </str>
 
 <str id="174">
-<new/>
 <o>Show documentation</o>
-<t></t>
+<t>Zeige Dokumentation</t>
 </str>
 
 <str id="175">
-<new/>
 <o>Show the variable documentation.</o>
-<t></t>
+<t>Zeige Dokumentationsvariablen</t>
 </str>
 
 <str id="176">
-<new/>
 <o>Show advanced configuration options</o>
-<t></t>
+<t>Zeige fortgeschrittenen Konfigurationsoptionen</t>
 </str>
 
 <str id="177">
-<new/>
 <o>Show all possible configuration options, not only the ones that are most often changed.</o>
-<t></t>
+<t>Alle möglichen Konfigurationsoptionen zeigen, nicht nur die am meisten benötigten.</t>
 </str>
 
 <str id="180">
-<new/>
 <o>Show developer options and actions</o>
-<t></t>
+<t>Zeige Entwickleroptionen und -aktionen</t>
 </str>
 
 <str id="181">
-<new/>
 <o>Show settings and actions that are not normaly useful for non-developer users. If you develop your own Roxen modules, this option is for you.</o>
-<t></t>
+<t>Zeige Einstellungen und Aktionen, die normalerweise nicht nützlich sind für nicht-Entwickler. Wenn Sie eigene Roxen-Module entwickeln, ist diese Option richtig für Sie.</t>
 </str>
 
 <str id="182">
-<new/>
 <o>Background color</o>
-<t></t>
+<t>Hintergrundfarbe</t>
 </str>
 
 <str id="183">
-<new/>
 <o>Administration interface background color.</o>
-<t></t>
+<t>Hintergrundfarbe Administrations-Interface.</t>
 </str>
 
 <str id="184">
-<new/>
 <o>Text color</o>
-<t></t>
+<t>Textfarbe</t>
 </str>
 
 <str id="185">
-<new/>
 <o>Administration interface text color.</o>
-<t></t>
+<t>Textfarbe Administrations-Interface.</t>
 </str>
 
 <str id="186">
-<new/>
 <o>Link color</o>
-<t></t>
+<t>Linkfarbe</t>
 </str>
 
 <str id="187">
-<new/>
 <o>Font</o>
-<t></t>
+<t>Schriftart</t>
 </str>
 
 <str id="188">
-<new/>
 <o>Administration interface font.</o>
-<t></t>
+<t>Schriftart Administrations-Interface.</t>
 </str>
 
 <str id="189">
-<new/>
 <o>Add/Delete module page type</o>
-<t></t>
+<t>Seitentyp Modul hinzufügen/löschen</t>
 </str>
 
 <str id="191">
-<new/>
 <o>All Permissions</o>
-<t></t>
+<t>Alle Berechtigungen</t>
 </str>
 
 <str id="192">
-<new/>
 <o>View Settings</o>
-<t></t>
+<t>Einstellungen betrachten</t>
 </str>
 
 <str id="194">
-<new/>
 <o>Edit Global Variables</o>
-<t></t>
+<t>Globale Variablen bearbeiten</t>
 </str>
 
 <str id="196">
@@ -1178,15 +1124,13 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="199">
-<new/>
 <o>Create Sites</o>
-<t></t>
+<t>Site erstellen</t>
 </str>
 
 <str id="200">
-<new/>
 <o>Add Modules</o>
-<t></t>
+<t>Modul hinzufügen</t>
 </str>
 
 <str id="bA">
@@ -1215,9 +1159,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="206">
-<new/>
 <o>User</o>
-<t></t>
+<t>Benutzer</t>
 </str>
 
 <str id="cw">
@@ -1251,9 +1194,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="212">
-<new/>
 <o>Admin</o>
-<t></t>
+<t>Administration</t>
 </str>
 
 <str id="213">
@@ -1263,7 +1205,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 
 <str id="214">
 <o>Globals</o>
-<t>Globale Einstellungen</t>
+<t>Globale Variablen</t>
 </str>
 
 <str id="216">
@@ -1272,15 +1214,13 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="217">
-<new/>
 <o>Docs</o>
-<t></t>
+<t>Dokumentation</t>
 </str>
 
 <str id="219">
-<new/>
 <o>Update</o>
-<t></t>
+<t>Update</t>
 </str>
 
 <str id="220">
@@ -1304,9 +1244,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="228">
-<new/>
 <o>Status</o>
-<t></t>
+<t>Status</t>
 </str>
 
 <str id="247">
@@ -1315,9 +1254,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="249">
-<new/>
 <o>Drop old site</o>
-<t></t>
+<t>Alte Site entfernen</t>
 </str>
 
 <str id="250">
@@ -1326,9 +1264,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="255">
-<new/>
 <o>Disabling old configuration %s</o>
-<t></t>
+<t>Alte Konfiguration %s deaktivieren</t>
 </str>
 
 <str id="256">
@@ -1339,15 +1276,13 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 
 
 <str id="258">
-<new/>
 <o>Add module</o>
-<t></t>
+<t>Modul hinzfügen</t>
 </str>
 
 <str id="259">
-<new/>
 <o>Drop module</o>
-<t></t>
+<t>Modul entfernen</t>
 </str>
 
 <str id="251">
@@ -1357,7 +1292,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 
 <str id="252">
 <o>Drop Module</o>
-<t>Modul löschen</t>
+<t>Modul entfernen</t>
 </str>
 
 <str id="253">
@@ -1366,321 +1301,268 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="254">
-<new/>
 <o>Module homepage</o>
-<t></t>
+<t>Modul-Homepage</t>
 </str>
 
 <str id="260">
-<new/>
 <o>Request status</o>
-<t></t>
+<t>Anfragen-Status</t>
 </str>
 
 <str id="261">
-<new/>
 <o>Inherit tree</o>
-<t></t>
+<t>Vererbungsbaum</t>
 </str>
 
 <str id="dt">
-<new/>
 <o>Administrator logged on as %s from %s.</o>
-<t></t>
+<t>Verwalter als %s von %s eingeloggt.</t>
 </str>
 
 <str id="264">
-<new/>
 <o>Mountpoint</o>
-<t></t>
+<t>Mountpunkt</t>
 </str>
 
 <str id="265">
-<new/>
 <o>Usually / is a good idea</o>
-<t></t>
+<t>Normalerweise ist / eine gute Idee</t>
 </str>
 
 <str id="266">
-<new/>
 <o>Will be loaded from: </o>
-<t></t>
+<t>Wird geladen von: </t>
 </str>
 
 <str id="267">
-<new/>
 <o>View</o>
-<t></t>
+<t>Betrachte</t>
 </str>
 
 <str id="272">
-<new/>
 <o>Reload module list</o>
-<t></t>
+<t>Modul-Liste neu laden</t>
 </str>
 
 <str id="273">
-<new/>
 <o>Select one or several modules to add.</o>
-<t></t>
+<t>Wählen Sie ein oder mehrere Module aus.</t>
 </str>
 
 <str id="274">
-<new/>
 <o>Cache:Cache size</o>
-<t></t>
+<t>Cache: Cache-Größe</t>
 </str>
 
 <str id="275">
-<new/>
 <o>The size of the data cache used to speed up requests for commonly requested files, in KBytes</o>
-<t></t>
+<t>Die Größe des Daten-Caches, die zur Beschleunigung von Anfragen auf häufig abgerufene Dateien benutzt wird. In KBytes</t>
 </str>
 
 <str id="276">
-<new/>
 <o>Cache:Max file size</o>
-<t></t>
+<t>Cache: maximale Dateigroße</t>
 </str>
 
 <str id="277">
-<new/>
 <o>The maximum size of a file that is to be considered for the cache</o>
-<t></t>
+<t>Die maximale Dateigröße, die für den Cache verwendet werden soll</t>
 </str>
 
 <str id="278">
-<new/>
 <o>Compact site list</o>
-<t></t>
+<t>Kompakte Site-Liste</t>
 </str>
 
 <str id="279">
-<new/>
 <o>If true, the list list will be presented in a compact format suitable for servers with many sites.</o>
-<t></t>
+<t>Wenn ja, die Liste wird in einem kompakten Format angezeigt, brauchbar für Server mit vielen Sites.</t>
 </str>
 
 <str id="280">
-<new/>
 <o>normal</o>
-<t></t>
+<t>normal</t>
 </str>
 
 <str id="282">
-<new/>
 <o>fast</o>
-<t></t>
+<t>schnell</t>
 </str>
 
 <str id="284">
-<new/>
 <o>faster</o>
-<t></t>
+<t>schneller</t>
 </str>
 
 <str id="286">
-<new/>
 <o>compact</o>
-<t></t>
+<t>kompakt</t>
 </str>
 
 <str id="288">
-<new/>
 <o>really compact</o>
-<t></t>
+<t>sehr kompakt</t>
 </str>
 
 <str id="290">
-<new/>
 <o>Module event log for '%s' cleared by %s (%s) from %s</o>
-<t></t>
+<t>Modulereignisprotokoll für '%s' gelöscht durch %s (%s) von %s</t>
 </str>
 
 <str id="291">
-<new/>
 <o>handled by</o>
-<t></t>
+<t>bearbeitet durch</t>
 </str>
 
 <str id="292">
-<new/>
 <o>Cache status</o>
-<t></t>
+<t>Cache-Status</t>
 </str>
 
 <str id="293">
-<new/>
 <o>Hits</o>
-<t></t>
+<t>Zugriffe</t>
 </str>
 
 <str id="294">
-<new/>
 <o>Misses</o>
-<t></t>
+<t>Fehlschlöge</t>
 </str>
 
 <str id="295">
-<new/>
 <o>Entries</o>
-<t></t>
+<t>Einträge</t>
 </str>
 
 <str id="297">
-<new/>
 <o>New row</o>
-<t></t>
+<t>Neue Zeile</t>
 </str>
 
 <str id="yes">
-<new/>
 <o>Yes</o>
-<t></t>
+<t>Ja</t>
 </str>
 
 <str id="no">
-<new/>
 <o>No</o>
-<t></t>
+<t>Nein</t>
 </str>
 
 <str id="298">
-<new/>
 <o>Event log cleared by %s from %s</o>
-<t></t>
+<t>Ereignisprotokoll gelöscht durch %s von %s</t>
 </str>
 
 <str id="299">
-<new/>
 <o>Information</o>
-<t></t>
+<t>Information</t>
 </str>
 
 <str id="300">
-<new/>
 <o>This port was requested, but binding it failed.</o>
-<t></t>
+<t>Dieser Port wurde verlangt, aber Bindung schlug fehl.</t>
 </str>
 
 <str id="301">
-<new/>
 <o>Not open</o>
-<t></t>
+<t>Nicht offen</t>
 </str>
 
 <str id="1">
-<new/>
 <o>Initial variables for </o>
-<t></t>
+<t>Initiale Variablen für</t>
 </str>
 
 <str id="190">
-<new/>
 <o>Initial variables for the site</o>
-<t></t>
+<t>Initiale Variablen für die Site</t>
 </str>
 
 <str id="229">
-<new/>
 <o>Page charset</o>
-<t></t>
+<t>Seiten-Zeichensatz</t>
 </str>
 
 <str id="230">
-<new/>
 <o>The charset to use when rendering configuration interface pages.</o>
-<t></t>
+<t>Der Zeichensatz, der für das Konifgurations-Interface benutzt wird.</t>
 </str>
 
 <str id="234">
-<new/>
 <o>Requests</o>
-<t></t>
+<t>Anfragen</t>
 </str>
 
 <str id="235">
-<new/>
 <o>Are you sure you want to disable the site %s?</o>
-<t></t>
+<t>Sind Sie sicher, dass sie die Site %s deaktivieren wollen?</t>
 </str>
 
 <str id="236">
-<new/>
 <o>Default variable sort order</o>
-<t></t>
+<t>Standard-Sortierreihenfolge für Variablen</t>
 </str>
 
 <str id="237">
-<new/>
 <o>The default order variables are sorted in</o>
-<t></t>
+<t>Die Standard-Sortierreihenfolge für Variablen</t>
 </str>
 
 <str id="238">
-<new/>
 <o>alphabetical</o>
-<t></t>
+<t>alphabetisch</t>
 </str>
 
 <str id="239">
-<new/>
 <o>as defined</o>
-<t></t>
+<t>wie definiert</t>
 </str>
 
 <str id="240">
-<new/>
 <o>alphabetical, changed first</o>
-<t></t>
+<t>alphabetisch, geänderte zuerst</t>
 </str>
 
 <str id="241">
-<new/>
 <o>as defined, changed first</o>
-<t></t>
+<t>wie definiert, geänderte zuerst</t>
 </str>
 
 <str id="242">
-<new/>
 <o>Changed variables are highlighted</o>
-<t></t>
+<t>Geänderte Variablen sind hervorgehoben</t>
 </str>
 
 <str id="243">
-<new/>
 <o>How to highlight variables that does not have their default value</o>
-<t></t>
+<t>Wie sollen die Variablen hervorgehoben werden, die nicht ihren Standardwert haben</t>
 </str>
 
 <str id="244">
-<new/>
 <o>Not at all</o>
-<t></t>
+<t>Überhaupt nicht</t>
 </str>
 
 <str id="268">
-<new/>
 <o>Different background color</o>
-<t></t>
+<t>Unterschiedliche Hintergrundfarbe</t>
 </str>
 
 <str id="302">
-<new/>
 <o>Add a header</o>
-<t></t>
+<t>Eine Zeile hinzufügen</t>
 </str>
 
 <str id="303">
-<new/>
 <o>Group Tasks</o>
-<t></t>
+<t>Aufgaben zusammenfassen</t>
 </str>
 
 <str id="304">
-<new/>
 <o>If true, tasks are grouped acording to type, otherwise all tasks will be listed on one page</o>
-<t></t>
+<t>Wenn ja, werden Aufgaben nach Typ in Gruppen zusammengefasst, ansonsten werden alle Aufgaben auf einer Seite aufgelistet</t>
 </str>
 
 <str id="305">
@@ -1695,9 +1577,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="306">
-<new/>
 <o>Site</o>
-<t></t>
+<t>Site</t>
 </str>
 
 <str id="307">
@@ -1714,257 +1595,215 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 </str>
 
 <str id="309">
-<new/>
 <o>Require user with the 'hilfe' permission</o>
-<t></t>
+<t>Benötige Benutzer mit der 'hilfe'-Berechtigung</t>
 </str>
 
 <str id="310">
-<new/>
 <o>If yes, require a user with the hilfe permission set, otherwise, any configuration interface user will work,  even one with only the view settings permission</o>
-<t></t>
+<t>Wenn ja, wird ein Benutzer mit der 'hilfe'-Berechtigung benötigt. Ansonsten reicht jeder Benutzer, auch solche mit nur-Lese-Berechtigung</t>
 </str>
 
 <str id="311">
-<new/>
 <o>Site event log for '%s' cleared by %s (%s) from %s</o>
-<t></t>
+<t>Eventprotokoll für '%s' gelöscht durch %s (%s) von %s</t>
 </str>
 
 <str id="312">
-<new/>
 <o>Could not interpret the date</o>
-<t></t>
+<t>Datum kann nicht interpretiert werden</t>
 </str>
 
 <str id="313">
-<new/>
 <o>An email address must contain "@".</o>
-<t></t>
+<t>Eine Email-Adresse muss "@" enthalten.</t>
 </str>
 
 <str id="314">
-<new/>
 <o>The email address domain contains forbidden characters.</o>
-<t></t>
+<t>Die Domain der Email-Adresse enthält verbotene Zeichen.</t>
 </str>
 
 <str id="315">
-<new/>
 <o>The email address user contains forbidden characters.</o>
-<t></t>
+<t>Der Benutzername der Email-Adresse enthält verbotene Zeichen.</t>
 </str>
 
 <str id="316">
-<new/>
 <o>The email address does not contain a user.</o>
-<t></t>
+<t>Die Email-Adresse enthölt keinen Benutzernamen.</t>
 </str>
 
 <str id="317">
-<new/>
 <o>The email address does not contain a domain.</o>
-<t></t>
+<t>Die Email-Adresse enthält keine Domain.</t>
 </str>
 
 <str id="318">
-<new/>
 <o>The email address begins with an character that is not legal in that position.</o>
-<t></t>
+<t>Die Email-Adresse beginnt mit einem Zeichen, das an dieser Position nicht erlaubt ist.</t>
 </str>
 
 <str id="319">
-<new/>
 <o>The domain %s could not be found.</o>
-<t></t>
+<t>Die Domain %s konnte nicht gefunden werden.</t>
 </str>
 
 
 
 <str id="326">
-<new/>
 <o>unnamed</o>
-<t></t>
+<t>unbenannt</t>
 </str>
 
 <str id="328">
-<new/>
 <o>Value is bigger than %s, adjusted</o>
-<t></t>
+<t>Wert ist größer als %s, angepasst</t>
 </str>
 
 <str id="329">
-<new/>
 <o>Value is less than %s, adjusted</o>
-<t></t>
+<t>Wert ist niedriger als %s, angepasst</t>
 </str>
 
 <str id="330">
-<new/>
 <o>You most likely want an ending '/' on this variable</o>
-<t></t>
+<t>Sie benötigen sicher ein '/' am Ende dieser Variablen</t>
 </str>
 
 <str id="331">
-<new/>
 <o>%s is not a directory</o>
-<t></t>
+<t>%s ist kein Verzeichnis</t>
 </str>
 
 <str id="332">
-<new/>
 <o>(keep stale value %s)</o>
-<t></t>
+<t>(behalte abgelaufenen Wert %s)</t>
 </str>
 
 <str id="333">
-<new/>
 <o>Assuming http://*:%[0]d/ for %[0]d</o>
-<t></t>
+<t>http://*:%[0]d/ für %[0]d angenommen</t>
 </str>
 
 <str id="334">
-<new/>
 <o>Empty URL field</o>
-<t></t>
+<t>Leeres URL-Feld</t>
 </str>
 
 <str id="335">
-<new/>
 <o>%s does not conform to URL syntax</o>
-<t></t>
+<t>%s entspricht nicht der URL-Syntax</t>
 </str>
 
 <str id="336">
-<new/>
 <o>Added / to the end of %s</o>
-<t></t>
+<t>/ an %s angehängt</t>
 </str>
 
 <str id="337">
-<new/>
 <o>Changed %s to http</o>
-<t></t>
+<t>%s nach http geändert</t>
 </str>
 
 <str id="338">
-<new/>
 <o>Changed %s to %s</o>
-<t></t>
+<t>Von %s nach %s geändert</t>
 </str>
 
 <str id="339">
-<new/>
 <o>SSL support not available in this Pike version.</o>
-<t></t>
+<t>SSL-Unterstützung nicht verfügbar in dieser Pike-Version</t>
 </str>
 
 <str id="340">
-<new/>
 <o>Please use %s instead.</o>
-<t></t>
+<t>Bitte %s stattdessen benutzen.</t>
 </str>
 
 <str id="341">
-<new/>
 <o>Removed the default port number (%d) from %s</o>
-<t></t>
+<t>Standard-Portnummer (%d) von %s entfernt</t>
 </str>
 
 <str id="342">
-<new/>
 <o>Warning: The protocol %s is not known by roxen</o>
-<t></t>
+<t>Warnung: Das Protokoll %s wird nicht von Roxen erkannt</t>
 </str>
 
 <str id="344">
-<new/>
 <o>Uploaded file: %s</o>
-<t></t>
+<t>Datei geladen: %s</t>
 </str>
 
 <str id="345">
-<new/>
 <o>Cannot decode this file as an image</o>
-<t></t>
+<t>Kann diese Datei nicht als Bild dekodieren</t>
 </str>
 
 <str id="346">
-<new/>
 <o>Error while decoding image</o>
-<t></t>
+<t>Fehler beim Bild-Dekodieren</t>
 </str>
 
 <str id="347">
-<new/>
 <o>Valid image set (no cimg module available, cannot show it)</o>
-<t></t>
+<t>Gültiges Bild gesetzt (kein cimg-Modul verfügbar, kann nicht angezeigt werden)</t>
 </str>
 
 <str id="348">
-<new/>
 <o>No image set</o>
-<t></t>
+<t>Kein Bild gesetzt</t>
 </str>
 
 <str id="349">
-<new/>
 <o>Update Client</o>
-<t></t>
+<t>Update-Client</t>
 </str>
 
 <str id="350">
-<new/>
 <o>Load of %s (%s) failed</o>
-<t></t>
+<t>Laden von %s (%s) fehlgeschlagen</t>
 </str>
 
 <str id="351">
-<new/>
 <o>The module %s (%s) could not be loaded.</o>
-<t></t>
+<t>Das Modul %s (%s) konnte nicht geladen werden.</t>
 </str>
 
 <str id="352">
-<new/>
 <o>Found trailing data after the date. </o>
-<t></t>
+<t>Zusätzliche Daten nach dem Datum gefunden. </t>
 </str>
 
 <str id="353">
-<new/>
 <o>Month must be at least 1. </o>
-<t></t>
+<t>Monat muss mindestens 1 sein. </t>
 </str>
 
 <str id="354">
-<new/>
 <o>Month must be 12 or less. </o>
-<t></t>
+<t>Monat muss 12 oder kleiner sein. </t>
 </str>
 
 <str id="355">
-<new/>
 <o>Day must be at least 1.</o>
-<t></t>
+<t>Tag muss mindestens 1 sein.</t>
 </str>
 
 <str id="356">
-<new/>
 <o>%s does not appear to be a valid date.</o>
-<t></t>
+<t>%s ist kein gültiges Datum</t>
 </str>
 
 <str id="357">
-<new/>
 <o>Day must be %d or less.</o>
-<t></t>
+<t>Tag muss %d oder kleiner sein.</t>
 </str>
 
 <str id="5">
-<new/>
 <o>Interface language</o>
-<t></t>
+<t>Interface-Sprache</t>
 </str>
 
 <str id="19">
@@ -1981,9 +1820,8 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 </str>
 
 <str id="152">
-<new/>
 <o>%O is not an integer</o>
-<t></t>
+<t>%O ist kein Integer</t>
 </str>
 
 <str id="153">
@@ -1999,27 +1837,23 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 </str>
 
 <str id="222">
-<new/>
 <o>Create new user</o>
-<t></t>
+<t>Erzeuge neuen Benutzer</t>
 </str>
 
 <str id="223">
-<new/>
 <o>Delete old user</o>
-<t></t>
+<t>Lösche alten Benutzer</t>
 </str>
 
 <str id="224">
-<new/>
 <o>Create User</o>
-<t></t>
+<t>Erzeuge Benutzer</t>
 </str>
 
 <str id="225">
-<new/>
 <o>User ID</o>
-<t></t>
+<t>User-ID</t>
 </str>
 
 
@@ -2027,19 +1861,16 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 
 
 <str id="248">
-<new/>
 <o>Create new site</o>
-<t></t>
+<t>Neue Site erstellen</t>
 </str>
 
 <str id="269">
-<new/>
 <o>Site name:</o>
-<t></t>
+<t>Sitename:</t>
 </str>
 
 <str id="270">
-<new/>
 <o>
 The name of the configuration must contain characters
 other than space and tab, it should not end with
@@ -2051,223 +1882,187 @@ lowercased, filesystem-friendly version will become
 the virtual server's configuration file name as well
 as the name of its log file directory.
 </o>
-<t></t>
+<t>Der Name der Konfiguration darf keine Leerzeichen oder Tabs enthalten, es darf nicht mit ~ enden, und es darf nicht 'CVS', 'Global Variables' oder 'global variables' sein, auch nicht der Name einer bestehenden Konfiguration.  Das Zeichen '/' darf ebenfalls nicht benutzt werden. Der Name erscheint im Site-Menu, ein lowercase dateisystemfreundlicher Name wird der Dateiname der Konfigurationsdatei und des Protokollverzeichnisses.</t>
 </str>
 
 <str id="271">
-<new/>
 <o>with template</o>
-<t></t>
+<t>mit Template</t>
 </str>
 
 <str id="296">
-<new/>
 <o>Illegal site name</o>
-<t></t>
+<t>Illegaler Sitename</t>
 </str>
 
 <str id="195">
-<new/>
 <o>Community articles</o>
-<t></t>
+<t>Community-Artikel</t>
 </str>
 
 <str id="231">
-<new/>
 <o>Most recently published community articles</o>
-<t></t>
+<t>Die zuletzt veröffentlichten Community-Artikel</t>
 </str>
 
 <str id="232">
-<new/>
 <o>Crunch activity</o>
-<t></t>
+<t>Crunch-Aktivität</t>
 </str>
 
 <str id="262">
-<new/>
 <o>Recently changed Crunch reports</o>
-<t></t>
+<t>Kürzlich geänderte Crunch-Reports</t>
 </str>
 
 <str id="263">
-<new/>
 <o>News from www.roxen.com</o>
-<t></t>
+<t>News von www.roxen.com</t>
 </str>
 
 <str id="281">
-<new/>
 <o>The news headlines from www.roxen.com</o>
-<t></t>
+<t>Die Schlagzeilen von www.roxen.com</t>
 </str>
 
 <str id="283">
-<new/>
 <o>Unknown box %s</o>
-<t></t>
+<t>Unbekannte Box %s</t>
 </str>
 
 <str id="285">
-<new/>
 <o>Large Content Boxes</o>
-<t></t>
+<t>Grosse Content-Boxen</t>
 </str>
 
 <str id="287">
-<new/>
 <o>Content boxes on the Startpage</o>
-<t></t>
+<t>Content-Boxen auf der Startseite</t>
 </str>
 
 <str id="289">
-<new/>
 <o>Small Content Boxes</o>
-<t></t>
+<t>Kleine Content-Boxen</t>
 </str>
 
 <str id="327">
-<new/>
 <o>Theme</o>
-<t></t>
+<t>Thema</t>
 </str>
 
 <str id="343">
-<new/>
 <o>The theme to use</o>
-<t></t>
+<t>Das zu benutzende Thema</t>
 </str>
 
 <str id="358">
-<new/>
 <o>Changed</o>
-<t></t>
+<t>Geändert</t>
 </str>
 
 <str id="359">
-<new/>
 <o>Unchanged</o>
-<t></t>
+<t>Ungeändert</t>
 </str>
 
 <str id="360">
-<new/>
 <o>Home</o>
-<t></t>
+<t>Startseite</t>
 </str>
 
 <str id="361">
-<new/>
 <o>Slashdot headlines</o>
-<t></t>
+<t>Slashdot-Headlines</t>
 </str>
 
 <str id="362">
-<new/>
 <o>The headlines from Slashdot: News for nerds, stuff that matters</o>
-<t></t>
+<t>Slashdot-Schlagzeilen: News for nerds, stuff that matters</t>
 </str>
 
 <str id="363">
-<new/>
 <o>Documentation links</o>
-<t></t>
+<t>Dokumentationsverweise</t>
 </str>
 
 <str id="364">
-<new/>
 <o>Links to the inline documentation</o>
-<t></t>
+<t>Verweise auf die Inline-Dokumentation</t>
 </str>
 
 <str id="365">
-<new/>
 <o>Welcome message</o>
-<t></t>
+<t>Begrüssungsnachricht</t>
 </str>
 
 <str id="366">
-<new/>
 <o>Roxen welcome message and news</o>
-<t></t>
+<t>Roxen Begrüssungsnachricht und Neuigkeiten</t>
 </str>
 
 <str id="218">
-<new/>
 <o>DBs</o>
-<t></t>
+<t>Datenbanken</t>
 </str>
 
 <str id="367">
-<new/>
 <o>Server status</o>
-<t></t>
+<t>Server-Status</t>
 </str>
 
 <str id="368">
-<new/>
 <o>Various global server statistics</o>
-<t></t>
+<t>Verschiedene globale Server-Statistiken</t>
 </str>
 
 <str id="369">
-<new/>
 <o>Server started</o>
-<t></t>
+<t>Server gestartet</t>
 </str>
 
 <str id="370">
-<new/>
 <o>Server uptime</o>
-<t></t>
+<t>Server-Laufzeit</t>
 </str>
 
 <str id="371">
-<new/>
 <o>CPU-time used</o>
-<t></t>
+<t>Benutzte CPU-Zeit</t>
 </str>
 
 <str id="372">
-<new/>
 <o>MySQL status</o>
-<t></t>
+<t>MySQL-Status</t>
 </str>
 
 <str id="8">
-<new/>
 <o>Server secret</o>
-<t></t>
+<t>Server-Geheimnis</t>
 </str>
 
 <str id="9">
-<new/>
 <o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced</o>
-<t></t>
+<t>Das Server-Geheimnis ist eine Zeichenkette, die in einigen kryptographischen Funktionen verwendet wird, um u.a. eindeutige und nicht-ratbare Session-Identifikatoren zu erzeugen. Ändern Sie diesen Wert in etwas hart zu erratendes, sofern Sie nicht mit dem bereits zufällig erzeugten Wert zufrieden sind.</t>
 </str>
 
 <str id="164">
-<new/>
 <o>Databases</o>
-<t></t>
+<t>Datenbanken</t>
 </str>
 
 <str id="165">
-<new/>
 <o>Configuration Filesystem</o>
-<t></t>
+<t>Konfiguration Dateisystem</t>
 </str>
 
 <str id="166">
-<new/>
 <o>This filesystem serves the administration interface</o>
-<t></t>
+<t>Dieses Dateisystem bedient das Administrations-Interface</t>
 </str>
 
 <str id="168">
-<new/>
 <o>Hide</o>
-<t></t>
+<t>Verstecke</t>
 </str>
 
 
@@ -2283,115 +2078,96 @@ as the name of its log file directory.
 
 
 <str id="169">
-<new/>
 <o>Login attempt from %s</o>
-<t></t>
+<t>Login-Versuch von %s</t>
 </str>
 
 <str id="167">
-<new/>
 <o>Form font size</o>
-<t></t>
+<t>Schriftgröße Formulare</t>
 </str>
 
 <str id="178">
-<new/>
 <o>The fontsize of the variables in the configuration interface</o>
-<t></t>
+<t>Die Schriftgröße der Variablen im Konfigurations-Interface</t>
 </str>
 
 <str id="179">
-<new/>
 <o>Documentation font size</o>
-<t></t>
+<t>Schriftgröße Dokumentation</t>
 </str>
 
 <str id="193">
-<new/>
 <o>The fontsize of the documentation in the configuration interface</o>
-<t></t>
+<t>Die Schriftgröße der Dokumentation im Konfigurations-Interface</t>
 </str>
 
 <str id="205">
-<new/>
 <o>Minumum allowed bitrate</o>
-<t></t>
+<t>Minimal erlaubte Bitrate</t>
 </str>
 
 <str id="215">
-<new/>
 <o>The minimum allowed bitrate, in Kbits/second. If the  client is slower than this set bitrate, it will be disconnected (after a timeout). Setting this higher than 14 is not recommended if you have modem users.</o>
-<t></t>
+<t>Die minimal erlaubte Bitrate, in KBits/Sekunde. Wenn der Browser langsamer ist als diese Rate, wird seine Verbindung nach einem Timeout gelöst.  Bei Modem-Benutzern ist es nicht empfohlen, diesen Wert auf 14 oder höher zu setzen.</t>
 </str>
 
 <str id="233">
-<new/>
 <o>bytecode data</o>
-<t></t>
+<t>Bytecode-Daten</t>
 </str>
 
 <str id="373">
-<new/>
 <o>Key</o>
-<t></t>
+<t>Schlüssel</t>
 </str>
 
 <str id="374">
-<new/>
 <o>rows</o>
-<t></t>
+<t>Zeilen</t>
 </str>
 
 <str id="375">
-<new/>
 <o>KiB</o>
-<t></t>
+<t>KiB</t>
 </str>
 
 <str id="376">
-<new/>
 <o>Name</o>
-<t></t>
+<t>Name</t>
 </str>
 
 <str id="377">
-<new/>
 <o>Size</o>
-<t></t>
+<t>Größe</t>
 </str>
 
 <str id="378">
-<new/>
 <o>Clear query</o>
-<t></t>
+<t>Abfrage löschen</t>
 </str>
 
 <str id="379">
-<new/>
 <o>Run query</o>
-<t></t>
+<t>Abfrage ausführen</t>
 </str>
 
 <str id="380">
-<new/>
 <o>While running %s: %s</o>
-<t></t>
+<t>Bei Ausführung von %s: %s</t>
 </str>
 
 <str id="381">
-<new/>
 <o>Failed to connect</o>
-<t></t>
+<t>Verbindung fehlgeschlagen</t>
 </str>
 
 <str id="382">
-<new/>
 <o>Failed to enable %s</o>
-<t></t>
+<t>Aktivierung von %s fehlgeschlagen</t>
 </str>
 
 <str id="383">
-<new/>
 <o>Documentation</o>
-<t></t>
+<t>Dokumentation</t>
 </str>
