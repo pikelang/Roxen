@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.61 1998/01/12 21:47:25 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.62 1998/01/12 22:14:01 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -113,6 +113,7 @@ mixed *register_module()
        "Options:\n"
        /* " name=        Dunno what this does.\n" */
        "  <b>start</b>          Limit the start of the diagram at this quantity.\n"
+       "                 If set to <b>min</b> the axis starts at the lowest value.\n\n"
        "  <b>stop</b>           Limit the end of the diagram at this quantity.\n"
        "  <b>quantity</b>       Name things represented in the diagram.\n"
        "  <b>unit</b>           Name the unit.\n"
@@ -155,7 +156,11 @@ void create()
 string itag_xaxis(string tag, mapping m, mapping res)
 {
   if(m->name)  res->xname = m->name;  
-  if(m->start) res->xstart = (float)m->start;
+  if(m->start) 
+    if (lower_case(m->start[0..2])=="min")
+      res->xmin=1;
+    else 
+      res->xstart = (float)m->start;
   if(m->stop)  res->xstop = (float)m->stop;
   if(m->quantity) res->xstor = m->quantity;
   if(m->unit) res->xunit = m->unit;
@@ -166,7 +171,11 @@ string itag_xaxis(string tag, mapping m, mapping res)
 string itag_yaxis(string tag, mapping m, mapping res)
 {
   if(m->name)  res->yname = m->name;
-  if(m->start) res->ystart = (float)m->start;
+  if(m->start) 
+    if (lower_case(m->start[0..2])=="min")
+      res->ymin=1;
+    else 
+      res->ystart = (float)m->start;
   if(m->stop)  res->ystop = (float)m->stop;
   if(m->quantity) res->ystor = m->quantity;
   if(m->unit) res->yunit = m->unit;
@@ -746,7 +755,9 @@ mapping find_file(string f, object id)
 		 "image":     res->image,
 
 		 "bw":       res->bw,
-		 "eng":      res->eng
+		 "eng":      res->eng,
+		 "xmin":     res->xmin,
+		 "ymin":     res->ymin
   ]);
 
   if(!res->xstart)  m_delete( diagram_data, "xminvalue" );
@@ -755,6 +766,8 @@ mapping find_file(string f, object id)
   if(!res->ystop)   m_delete( diagram_data, "ymaxvalue" );
   if(!res->bg)      m_delete( diagram_data, "bgcolor" );
   if(!res->rotate)  m_delete( diagram_data, "rotate" );
+  if(!res->xmin)  m_delete( diagram_data, "xmin" );
+  if(!res->ymin)  m_delete( diagram_data, "ymin" );
 
   object(Image.image) img;
 

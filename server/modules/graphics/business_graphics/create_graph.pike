@@ -14,7 +14,7 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.88 1997/12/21 22:00:18 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.89 1998/01/12 22:14:10 hedda Exp $";
 
 /*
 These functions are written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -224,6 +224,11 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 {
   float xminvalue=0.0, xmaxvalue=-STORT, yminvalue=0.0, ymaxvalue=-STORT;
+
+  if (diagram_data["xmin"])
+    xminvalue=STORT;
+  if (diagram_data["ymin"])
+    yminvalue=STORT;
 
   if (diagram_data["labelcolor"]==0)
     diagram_data["labelcolor"]=diagram_data["textcolor"];
