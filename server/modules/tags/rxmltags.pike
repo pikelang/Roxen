@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.238 2001/06/11 13:57:34 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.239 2001/06/11 14:47:08 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2540,10 +2540,11 @@ class TagCase {
 
 class FrameIf {
   inherit RXML.Frame;
-  int do_iterate = -1;
+  int do_iterate;
 
   array do_enter(RequestID id) {
     int and = 1;
+    do_iterate = -1;
 
     if(args->not) {
       m_delete(args, "not");
@@ -6466,7 +6467,7 @@ load.</p>
  pattern?</short> Variable is an <i>Eval</i> plugin.
 </p></desc>
 
-<attr name='variable' value='name[ is pattern]' required='required'><p>
+<attr name='variable' value='name[ operator pattern]' required='required'><p>
  Choose variable to test. Valid operators are '=', '==', 'is', '!=',
  '&lt;' and '&gt;'.</p>
 </attr>",
