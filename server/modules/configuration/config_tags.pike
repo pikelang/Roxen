@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.168 2002/01/15 11:38:24 grubba Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.169 2002/03/06 16:22:31 wellhard Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1167,3 +1167,159 @@ class TagCfUserWants
     }
   }
 }
+
+
+// License tags.
+constant license_dir = "../license";
+
+class TagUploadLicense
+{
+  inherit RXML.Tag;
+  constant name = "upload-license";
+  mapping req_arg_types = ([ "filename":RXML.t_text(RXML.PXml),
+			     "from":RXML.t_text(RXML.PXml) ]);
+  class Frame
+  {
+    inherit RXML.Frame;
+    License.Key key;
+    
+    array do_return(RequestID id)
+    {
+      string filename = Stdio.append_path(license_dir, args["filename"]);
+      string tmpname = Stdio.append_path(license_dir, args["filename"]+"~");
+      string s = RXML.user_get_var(args["from"]);
+      if(!s || sizeof(s) < 10)
+	RXML.run_error("Specified licens file is not valid %O.\n", filename);
+      int bytes = Stdio.write_file(tmpname, s);
+      if(bytes != sizeof(s))
+	RXML.run_error("Could not write file %O.\n", tmpname);
+
+      License.Key(license_dir, args["filename"]+"~");
+      
+      mv(tmpname, filename);
+    }
+  }
+}
+
+class TagIfLicense {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "license";
+  int eval(string u, RequestID id, mapping args)
+  {
+    return Stdio.is_file(Stdio.append_path(license_dir, u));
+  }
+}
+
+mapping get_license_vars(License.Key key)
+{
+  return ([ "company_name": key->company_name(),
+	    "expires":      key->expires(),
+	    "hostname":     key->hostname(),
+	    "type":         key->type(),
+	    "number":       key->number(),
+	    "modules":      key->get_modules(),
+	    "name":         key->name(),
+	    
+	    "filename":     key->filename(),
+	    "creator":      key->creator(),
+	    "created":      key->created() ]);
+}
+
+class TagLicense
+{
+  inherit RXML.Tag;
+  constant name = "license";
+  
+  class Frame
+  {
+    inherit RXML.Frame;
+    string scope_name;
+    mapping vars;
+    License.Key key;
+    
+    array do_enter(RequestID id)
+    {
+      if(!args->name || args->name == "")
+	RXML.parse_error("No license name specified.\n");
+      
+      scope_name = args->scope||"license";
+      key = License.Key(license_dir, args->name);
+      if(!key)
+      {
+	RXML.run_error("Can not find license %O.\n", args->name);
+	return ({});
+      }
+      vars = get_license_vars(key);
+    }
+  }
+}
+
+class TagEmitLicenseModules {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "license-modules";
+  array get_dataset(mapping args, RequestID id)
+  {
+    RXML.Context c = RXML.get_context();
+    mapping modules = c->get_var("modules");
+    if(!modules)
+    {
+      RXML.parse_error("No key defined. emit#license-modules can only be used "
+		       "within <license>.\n");
+      return ({});
+    }
+    array res = ({});
+    foreach(sort(indices(modules)), string name)
+    {
+      res += ({ ([ "name":name,
+		   "enabled":(modules[name]?"yes":"no"),
+		   "features":modules[name] ]) });
+    }
+    return res;
+  }
+}
+
+class TagEmitLicenseModuleFeature {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "license-module-features";
+  array get_dataset(mapping args, RequestID id)
+  {
+    RXML.Context c = RXML.get_context();
+    if(!c->get_var("enabled"))
+    {
+      RXML.parse_error("No key defined. emit#license-module-features can only be used "
+		       "within emit#license-modules.\n");
+      return ({});
+    }
+    mapping features = c->get_var("features");
+    if(!features)
+      return ({});
+
+    array res = ({});
+    foreach(sort(indices(features)), string name)
+    {
+      res += ({ ([ "name":name,
+		   "value":features[name] ]) });
+    }
+    return res;
+  }
+}
+
+class TagEmitLicenses {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "licenses";
+  array get_dataset(mapping args, RequestID id)
+  {
+    array(mapping) licenses = ({});
+    foreach(glob("*.lic", get_dir(license_dir)), string filename)
+    {
+      License.Key key = License.Key(license_dir, filename);
+      licenses += ({ get_license_vars(key) });
+    }
+    return licenses;
+  }
+}
+
