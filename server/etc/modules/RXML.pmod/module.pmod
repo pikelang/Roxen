@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.97 2000/08/05 21:57:42 mast Exp $
+//! $Id: module.pmod,v 1.98 2000/08/09 13:25:53 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -2375,6 +2375,7 @@ class Frame
 	  if (id->misc->trace_leave && tag)
 	    TRACE_LEAVE ("exception");
 	  ctx->handle_exception (err, parser); // Will rethrow unknown errors.
+	  result = Void;
 	  action = "return";
 	}
 
