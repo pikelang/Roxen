@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.100 2002/12/09 16:11:47 anders Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.101 2003/05/07 21:26:18 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -628,32 +628,36 @@ array(mapping) parse_groupfile( string f )
   int gid = 10000;
   foreach( f / "\n", string r )
   {
-    array q = r/":";
+    array(string) q = r/":";
+    string members;
+    string passwd = "";
+    int this_gid;
     switch( sizeof( q ) ) 
     {
-      case 2: // group:members
-	foreach( q[1]/",", string u )
-	{
-	  if( u2g[u] )
-	    u2g[u]+=(<q[0]>);
-	  else
-	    u2g[u]=(<q[0]>);
-	}
-	groups[q[0]]=({ q[0], "", gid++, (multiset)(q[1]/",") });
-	groups[gid-1] = groups[q[0]];
-	break;
-      case 4: // group:passwd:gid:
-	foreach( q[3]/",", string u )
-	{
-	  if( u2g[u] )
-	    u2g[u]+=(<q[0]>);
-	  else
-	    u2g[u]=(<q[0]>);
-	}
-	groups[q[0]]=({ q[0], q[1], (int)q[2], (multiset)(q[3]/",") });
-	groups[(int)q[2]] = groups[q[0]];
-	break;
+    default:
+      continue;
+    case 2: // group:members
+      this_gid = gid++;
+      members = q[1];
+      break;
+    case 4: // group:passwd:gid:members
+      passwd = q[1];
+      this_gid = (int)q[2];
+      members = q[3];
+      break;
     }
+    // NB: members can be separated by either space or comma.
+    multiset(string) user_set =
+      (multiset(string))(replace(members, ",", " ")/" " - ({""}));
+    foreach(indices(user_set), string u)
+    {
+      if( u2g[u] )
+	u2g[u]+=(<q[0]>);
+      else
+	u2g[u]=(<q[0]>);
+    }
+    groups[q[0]] = ({ q[0], passwd, this_gid, user_set });
+    groups[this_gid] = groups[q[0]];
   }
   return ({ groups, u2g });
 }
