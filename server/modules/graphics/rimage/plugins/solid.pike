@@ -5,8 +5,8 @@ constant doc =
 
 void render( mapping args, mapping this, string channel, object id, object m )
 {
-  int xs = (int)args->width  || this->width;
-  int ys = (int)args->height || this->height;
+  int xs = (int)(args->width  || this->width);
+  int ys = (int)(args->height || this->height);
   int xp = (int)args->xpos;
   int yp = (int)args->ypos;
   array (int) color = Colors.parse_color( args->color || "black" );
@@ -15,7 +15,7 @@ void render( mapping args, mapping this, string channel, object id, object m )
   {
     if(!args["nomask"] && channel == "image")
       this->mask->box( xp,yp,xp+xs-1,yp+ys-1, 255,255,255, 255-(int)this->alpha);
-    this[channel]->box( xp,yp,xp+xs-1,yp+ys-1, @this->color, 
+    this[channel]->box( xp,yp,xp+xs-1,yp+ys-1, @color, 
 			255-(int)this->alpha);
   }
   else

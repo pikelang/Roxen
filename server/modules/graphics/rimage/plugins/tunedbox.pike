@@ -1,8 +1,8 @@
 constant doc=" corners='col1,col2,col3,col4' xpos= ypos= width= height=";
 void render( mapping args, mapping this, string channel, object id, object m)
 {
-  int xs = (int)args->width  || this->width;
-  int ys = (int)args->height || this->height;
+  int xs = (int)(args->width  || this->width);
+  int ys = (int)(args->height || this->height);
   int xp = (int)args->xpos;
   int yp = (int)args->ypos;
   
