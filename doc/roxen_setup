@@ -1,0 +1,31 @@
+Roxen modules neded by AutoSite
+-------------------------------
+  AutoMail Database API Module
+    Database URL : mysql://auto:site@kopparorm.idonex.se/autosite 
+  AutoSite Administration Interface
+    Mountpoint : /admin/ 
+  AutoSite DNS Administration Module
+    Database URL : mysql://auto:site@kopparorm.idonex.se/autosite 
+  AutoSite IP-less hosting Filesystem
+     Mount point : / 
+     Search path : /.../AutoSite/sites/
+     Priority : 6
+  AutoWeb Administration Interface
+     Mount point : /webadm/
+     Search path : /.../AutoSite/sites/
+  Config tab-list 
+  Content types 
+  Directory parsing module 
+  Filesystem
+    /.../AutoSite/modules/autoweb/img/ mounted on /webadmimg/ 
+    /.../AutoSite/templates/img/ mounted on /img/ 
+  Graphics text 
+  Main RXML parser 
+  Menumaker 
+  Navigation version 1.0alpha2 
+  Pike tag 
+  SQL-module
+     Default SQL-database host : mysql://auto:site@kopparorm.idonex.se/autosite 
+  Tablify 
+  WebLayout Templates 
+  Wizard generator 
