@@ -87,11 +87,13 @@ mixed move_db( string db, RequestID id )
         warning= "<font color='&usr.warncolor;'>"
 	  +_(406,"Please specify an URL to define an external database")+
 	  "</font>";
-      else if( catch( Sql.Sql( id->variables->url ) ) )
+      else if( mixed err = catch( Sql.Sql( id->variables->url ) ) )
         warning = sprintf("<font color='&usr.warncolor;'>"+
-			  _(407,"It is not possible to connect to %s")+
+			  _(407,"It is not possible to connect to %s.")+
+			  "<br /> (%s)"
 			  "</font>",
-			  id->variables->url );
+			  id->variables->url,
+			  describe_error(err));
     }
     if( !strlen( warning ) )
       switch( id->variables->name )
