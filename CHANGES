@@ -1,3 +1,16 @@
+Changes since Roxen Challenger 1.2.37 Yellow
+-----------------------------------------------
+
+o Fixed broken dependencies rule.
+
+o Config action "Thread backtrace" removed from the 1.2 dist.
+
+o Improved Bussiness Graphics cache.
+
+o Separated Roxen 1.2 from the main Roxen cvs-tree. There is now an
+  absolute feature freeze in effect.
+
+
 Changes since Roxen Challenger 1.2.36 Yellow
 -----------------------------------------------
 
