@@ -100,9 +100,18 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	{
 	  //if (names[i]=="")
 	    //names[i]="Fel så inåt helvete";
-	  text[i]=notext->write((string)(names[i]))
-->scale(0,diagram_data["fontsize"])
-;
+	  
+	  if ((names[i]!=0) && (names[i]!=""))
+	    text[i]=notext->write((string)(names[i]))
+	      ->scale(0,diagram_data["fontsize"]);
+	  else
+	    text[i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
+
+	  if (text[i]->xsize()<1)
+	    text[i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
+
+	  write("sizeof text"+text[i]->xsize()+", "+text[i]->ysize()+"\n");
+
 	  if (text[i]->xsize()>diagram_data["xsize"]/5+diagram_data["3Ddepth"])
 	    text[i]=text[i]->scale((int)diagram_data["xsize"]/5, 0);
 
@@ -462,7 +471,7 @@ int main(int argc, string *argv)
 		     ({91.2, 101.3, 91.5, 101.7,  -91.0, 101.5}),
 		    ({91.2, 103.3, -91.5, 100.1, 94.3, 95.2 }),
 		    ({93.2, -103.3, 93.5, 103.7, 94.3, -91.2 }) */}),
-		 "fontsize":66,
+		 "fontsize":3,
 		 "axcolor":({0,0,0}),
 		 "bgcolor":0, //({255,255,255}),
 		 "labelcolor":({0,0,0}),
@@ -475,11 +484,11 @@ int main(int argc, string *argv)
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 //"legendfontsize":12,
 		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!", "lila", "turkos" }),
-		 "labelsize":12,
+		 "labelsize":3,
 		 "xminvalue":0.1,
 		 "yminvalue":0,
 		 "3Ddepth":10,
-		 "drawtype": "3D",
+		 "drawtype": "2D",
 		 "tone":0,
 		 "center":9,
 		 "rotate":30

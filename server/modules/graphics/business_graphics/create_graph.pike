@@ -1,4 +1,4 @@
-#!/usr/local/bin/pike
+!/usr/local/bin/pike
 #define max(i, j) (((i)>(j)) ? (i) : (j))
 #define min(i, j) (((i)<(j)) ? (i) : (j))
 #define abs(arg) ((arg)*(1-2*((arg)<0)))
@@ -376,17 +376,25 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
       diagram_data["xnamesimg"][i]=
 	image(diagram_data["fontsize"],diagram_data["fontsize"]);
 
+  if (diagram_data["xnamesimg"][i]->xsize()<1)
+    diagram_data["xnamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
+
+
   diagram_data["ynamesimg"]=allocate(j=sizeof(diagram_data["ynames"]));
   for(int i=0; i<j; i++)
-    if (((diagram_data["values_for_ynames"][i]>LITET)||(diagram_data["values_for_ynames"][i]<-LITET))&&    
-	((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i]))))
-      diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
-	->scale(0,diagram_data["fontsize"])
-	;
-    else
-      diagram_data["ynamesimg"][i]=
-	image(diagram_data["fontsize"],diagram_data["fontsize"]);
-  
+    {
+      if (((diagram_data["values_for_ynames"][i]>LITET)||(diagram_data["values_for_ynames"][i]<-LITET))&&    
+	  ((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i]))))
+	diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
+	  ->scale(0,diagram_data["fontsize"])
+	  ;
+      else
+	diagram_data["ynamesimg"][i]=
+	  image(diagram_data["fontsize"],diagram_data["fontsize"]);
+      
+      if (diagram_data["ynamesimg"][i]->xsize()<1)
+	diagram_data["ynamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
+    }
 
   if (diagram_data["orient"]=="vert")
     for(int i; i<sizeof(diagram_data["xnamesimg"]); i++)
@@ -555,14 +563,18 @@ mapping set_legend_size(mapping diagram_data)
 	  if (!diagram_data["legendcolor"])
 	    diagram_data["legendcolor"]=diagram_data["bgcolor"];
 	  for(int i=0; i<j; i++)
-	    if (diagram_data["legend_texts"][i] && (sizeof(diagram_data["legend_texts"][i])))
-	      texts[i]=notext->write(diagram_data["legend_texts"][i])
-		->scale(0,diagram_data["legendfontsize"])
-		;
-	    else
-	      texts[i]=
-		image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
-	  
+	    {
+	      if (diagram_data["legend_texts"][i] && (sizeof(diagram_data["legend_texts"][i])))
+		texts[i]=notext->write(diagram_data["legend_texts"][i])
+		  ->scale(0,diagram_data["legendfontsize"])
+		  ;
+	      else
+		texts[i]=
+		  image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
+	      
+	      if (texts[i]->xsize()<1)
+		texts[i]=image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
+	    }
 	  
 	  xmax=0, ymax=0;
 	  
@@ -851,10 +863,14 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       if ((label!="")&&(label!=0))
 	labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0, "left",0,0)->
 	  write(label)
-->scale(0,diagram_data["labelsize"])
-;
+->scale(0,diagram_data["labelsize"]);
       else
 	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
+      
+      if (labelimg->xsize()<1)
+	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
+
+
       if (labelimg->xsize()>
 	  diagram_data["xsize"]/2)
 	labelimg=labelimg->scale(diagram_data["xsize"]/2,0);
@@ -1293,7 +1309,9 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       else
 	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
       
-      
+      if (labelimg->xsize()<1)
+	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
+
 	//if (labelimg->xsize()> graph->xsize())
 	//labelimg->scale(graph->xsize(),labelimg->ysize());
 

@@ -151,6 +151,10 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       else
 	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
 
+      if (labelimg->xsize()<1)
+	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
+
+
       if (labelimg->xsize()>
 	  diagram_data["xsize"]/2)
 	labelimg=labelimg->scale(diagram_data["xsize"]/2,0);
@@ -696,7 +700,10 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 ;
       else
 	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
-      
+
+      if (labelimg->xsize()<1)
+	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
+ 
       if (labelimg->xsize()>
 	  diagram_data["xsize"])
 	labelimg=labelimg->scale(diagram_data["xsize"], 0);
