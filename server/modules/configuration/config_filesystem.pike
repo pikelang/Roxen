@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.95 2001/09/03 17:57:01 nilsson Exp $";
+  "$Id: config_filesystem.pike,v 1.96 2001/09/03 18:15:05 per Exp $";
 
 constant path = "config_interface/";
 
@@ -85,6 +85,7 @@ mapping get_docfile( string f )
   array q;
   if( f=="" || f[-1] == '/' )
     return get_docfile( f+"index.html" )||get_docfile( f+"index.xml" );
+
   if( sizeof(q = docs->query( "SELECT * FROM docs WHERE name=%s",
                               "/"+f )) )
     return q[0];
@@ -94,51 +95,14 @@ mapping get_docfile( string f )
 
 array(int)|Stat stat_file( string f, object id )
 {
-//   while( strlen( f ) && (f[0] == '/' ))
-//     f = f[1..];
-#if 0
-#ifdef CFFS_DEBUG
-  int depth = 1;
-  RequestID nid = id;
-  while( nid->misc->orig )
-  {
-    depth++;
-    nid = nid->misc->orig;
-  }
-  string db_indent = ("   "*(depth-1));
-  werror(db_indent+"sf: "+f+"\n"+
-	 db_indent+"  path_info="+id->misc->path_info+"\n"+
-	 db_indent+"  iget="+id->misc->internal_get+", depth="+depth+
-	 ", iter="+(id->misc->reqno++)+"\n");
-#endif
-#endif
   if (f == "")
-  {
-#if 0
-#ifdef CFFS_DEBUG
-    werror( db_indent+"Returning stat of "+path+"\n");
-#endif
-#endif
     return file_stat(path);
-  }
 
   if( docs && sscanf( f, "docs/%s", f ) )
     if( mapping rf = get_docfile( f ) )
-    {
-#if 0
-#ifdef CFFS_DEBUG
-      werror( db_indent+"was docfile\n");
-#endif
-#endif
       return ({ 0555, strlen(rf->contents), time(), 0, 0, 0, 0 });
-    }
 
   array(string|Stat) ret = low_stat_file(f, id);
-#if 0
-#ifdef CFFS_DEBUG
-  werror( db_indent+(ret?"Found":"Not found")+"\n");
-#endif
-#endif
   return ret && ret[1];
 }
 
@@ -146,10 +110,6 @@ constant base ="<use file='%s'/><tmpl title='%s'>%s</tmpl>";
 
 mixed find_dir( string f, object id )
 {
-//   while( strlen( f ) && (f[0] == '/' ))
-//     f = f[1..];
-  // FIXME: Add support for getdir in the doc directories (must query
-  // mysql)
   return get_dir(path + f );
 }
 
@@ -157,20 +117,6 @@ mapping logged_in = ([]);
 int last_cache_clear_time;
 mixed find_file( string f, RequestID id )
 {
-#ifdef CFFS_DEBUG
-  int depth = 1;
-  RequestID nid = id;
-  while( nid->misc->orig )
-  {
-    depth++;
-    nid = nid->misc->orig;
-  }
-  string db_indent = ("   "*(depth-1));
-  werror(db_indent+"ff: "+f+"\n"+
-	 db_indent+"  path_info="+id->misc->path_info+"\n"+
-	 db_indent+"  iget="+id->misc->internal_get+", depth="+depth+
-	 ", iter="+(id->misc->reqno++)+"\n");
-#endif
   int is_docs;
   User user;
   string locale = "standard";
@@ -205,15 +151,9 @@ mixed find_file( string f, RequestID id )
 		      +"\n", user->name(), host+" ("+id->remoteaddr+")" );
       logged_in[ user->name()+host ] = time(1);
       roxen.adminrequest_get_context( user->name(), host, id );
-#ifdef CFFS_DEBUG
-      werror( db_indent+"  uid="+user->name()+"\n" );
-#endif
     }
     else
     {
-#ifdef CFFS_DEBUG
-      werror( db_indent+"Returning login fail\n" );
-#endif
       report_notice(LOCALE(169,"Login attempt from %s")+"\n",host);
       return id->conf->authenticate_throw( id, "Roxen configuration",
 					   roxen.config_userdb_module );
@@ -287,9 +227,6 @@ mixed find_file( string f, RequestID id )
     if( mapping m = get_docfile( f ) )
     {
       is_docs = 1;
-#ifdef CFFS_DEBUG
-      werror( db_indent+"Documentation, getting from SQL\n" );
-#endif
       string data = m->contents;
       m = 0;
       if( type == "text/html" )
@@ -305,75 +242,35 @@ mixed find_file( string f, RequestID id )
                            retval;
       } else
         retval = data;
-    } else
-#ifdef CFFS_DEBUG
-      werror( db_indent+"Was documentation, but no such file\n" )
-#endif
-	;
+    }
   }
   else
   {
     array(string|array) stat_info = low_stat_file( f, id );
     if( !stat_info ) // No such luck...
-    {
-#ifdef CFFS_DEBUG
-      werror( db_indent+"Returning no such file\n" );
-#endif
       return 0;
-    }
+
     [string realfile, array stat] = stat_info;
     switch( stat[ ST_SIZE ] )
     {
      case -1:  case -3: case -4:
-#ifdef CFFS_DEBUG
-      werror( db_indent+"device or special, returning no such file\n" );
-#endif
        return 0; /* Not suitable (device or no file) */
      case -2: /* directory */
-#ifdef CFFS_DEBUG
-      werror( db_indent+"directory, returning dir indicator\n" );
-#endif
        return -1;
-//      default:
-//        if (f[-1] == '/')
-//        {
-// #ifdef CFFS_DEBUG
-// 	 werror( db_indent+"No such file, waiting for pathinfo\n" );
-// #endif
-//          return 0;	/* Let the PATH_INFO module handle it */
-//        }
     }
     id->realfile = realfile;
     retval = Stdio.File( realfile, "r" );
     if( id->misc->internal_get )
-    {
-#ifdef CFFS_DEBUG
-      if( retval )
-	werror( db_indent+"normal file, internal get, quick (unparsed) return\n" );
-      else
-	werror( db_indent+"Was normal file, but open failed (internal get, quick (unparsed) return)\n" );
-#endif
       return retval;
-    }
   }
 
 #ifdef DEBUG
   if( id->variables["content-type"] )
-  {
-#ifdef CFFS_DEBUG
-    werror( db_indent+"normal file, forced type, quick return\n" );
-#endif
     return Roxen.http_file_answer( retval, id->variables["content-type"] );
-  }
 #endif
   
   if( !retval )
-  {
-#ifdef CFFS_DEBUG
-    werror( db_indent+"file exists, but open failed\n" );
-#endif
     return 0;
-  }
 
   if( type  == "text/html" )
   {
@@ -434,10 +331,6 @@ mixed find_file( string f, RequestID id )
       retval = Roxen.http_redirect( url, id );
     }
   }
-#ifdef CFFS_DEBUG
-  werror( db_indent+"returning "+
-	  (stringp( retval )?"parsed data":"normal file")+"\n" );
-#endif
   if( stringp( retval ) )
     retval = Roxen.http_string_answer( retval, type );
   return retval;
