@@ -220,7 +220,9 @@ string find_module_doc( string cn, string mn, object id )
                   ( id->misc->config_settings->query( "devel_mode" ) ?
                     "<h2>Developer information</h2>"+
                     "<b>Identifier:</b> " + mi->sname+" <br>"
-                    "<table><tr><td valign=top><b>Type:</b></td><td valign=top>"+describe_type( m,mi->type )+"</td></tr></table><br>"+
+                    "<table><tr><td valign=top><b>Type:</b></td><td "
+                    "valign=top>"+describe_type( m,mi->type )+
+                    "</td></tr></table><br>"+
                     translate(m->file_name_and_stuff())+ "<dl>"+
                     rec_print_tree( Program.inherit_tree( object_program(m) ) )
                     +"</dl>" : ""),

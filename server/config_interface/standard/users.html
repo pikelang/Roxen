@@ -38,6 +38,7 @@ string parse( RequestID id )
 </cf-perm>
 <!-- */ -->
 <pike>
+#include <config_interface.h>
 string parse( RequestID id )
 {
   string res="";
@@ -47,8 +48,8 @@ string parse( RequestID id )
   foreach( sort( id->misc->list_config_users() ), string uid )
   {
     object u  = id->misc->get_config_user( uid );
-    res += "<table width=100%><tr><td bgcolor=&usr.bgcolor;><font size=+2>"+uid
-            +"</font></td></tr></table>";
+    res += "<table width=100%><tr><td bgcolor='"+config_setting("bgcolor")+
+           "'><font size=+2>&nbsp;&nbsp;<b>"+uid+"</b></font></td></tr></table>";
     res += u->form( id );
   }
   return res;

@@ -1,5 +1,5 @@
-<left-menu title="Global Settings"> 
-  <item href="?section=section" title="Misc"
+<left-menu title="Global Settings">
+  <item  href="?section=section" title="Misc"
     <if not variable=section or variable="section is section">
       selected
     </if>
@@ -7,7 +7,7 @@
 
   <configif-output source=global-variables-sections>
     <item href="?section=#section#"
-         title="#section:quote=dtag#"
+          title="#section:quote=dtag#"
     <if variable="section is #section#">selected</if>></item>
   </configif-output>
 </left-menu>
