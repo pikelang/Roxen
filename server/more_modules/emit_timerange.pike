@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.9 2004/02/26 16:10:38 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.10 2004/02/26 16:52:20 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -1024,7 +1024,6 @@ constant tagdoc = ([
 
   <ex>
     <emit source='timerange' unit='hours' 
-      from-date='2002-06-30' to-date='2002-06-30'
       from-time='08:00:00' to-time='12:00:00' inclusive='1'>
       <div>&_.hour;:&_.minute;:&_.second;</div>
     </emit>
