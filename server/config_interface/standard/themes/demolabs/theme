@@ -24,6 +24,8 @@ to='pagebgcolor="#000000"
 <theme-set what=fgcolor   to=#000000/>
 <theme-set what=linkcolor to=#ff8c00/>
 
+<theme-set what=obox-titlebg   to=#000000/>
+
 <theme-set what=fade1     to=#ffee88/>
 <theme-set what=fade2     to=#ffffff/>
 <theme-set what=fade3     to=#ffffff/>
