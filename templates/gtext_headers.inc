@@ -6,7 +6,7 @@
     <p><br>
     <div align=$$h1_align$$>
       <gtext fg=$$h1_color$$ bg=$$bg_color$$ afont='$$h1_font$$' %shadow%
-      $$h1_size$$>$h1$</gtext>
+      scale=$$h1_size$$>$h1$</gtext>
     </div>
   </formoutput>
 </tmplblock>
@@ -19,7 +19,7 @@
     <p>
     <div align=$$h2_align$$>
       <gtext fg=$$h2_color$$ bg=$$bg_color$$ afont='$$h2_font$$' %shadow%
-        $$h2_size$$>$h2$</gtext>
+        scale=$$h2_size$$>$h2$</gtext>
     </div>
   </formoutput>
 </tmplblock>
