@@ -148,6 +148,7 @@ worldmap binary
 /server/modules/filesystems/tarfs.pike foreign_ident
 /server/modules/filesystems/userfs.pike foreign_ident
 /server/modules/filters/auto_gzip.pike foreign_ident
+/server/modules/filters/deflate.pike foreign_ident
 /server/modules/filters/hostredirect.pike foreign_ident
 /server/modules/filters/redirect.pike foreign_ident
 /server/modules/filters/supports_filter.pike foreign_ident
@@ -204,6 +205,8 @@ worldmap binary
 /server/modules/security/auth_httpcookie.pike foreign_ident
 /server/modules/security/htaccess.pike foreign_ident
 /server/modules/security/userdb_sql.pike foreign_ident
+/server/modules/security/userdb_sql1.pike foreign_ident
+/server/modules/security/userdb_sql2.pike foreign_ident
 /server/modules/security/userdb_system.pike foreign_ident
 /server/modules/tags/accessed.pike foreign_ident
 /server/modules/tags/additional_rxml.pike foreign_ident
@@ -213,6 +216,7 @@ worldmap binary
 /server/modules/tags/email.pike foreign_ident
 /server/modules/tags/emit_timerange.pike foreign_ident
 /server/modules/tags/foldlist.pike foreign_ident
+/server/modules/tags/html2x.pike foreign_ident
 /server/modules/tags/html_wash.pike foreign_ident
 /server/modules/tags/id3tag.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
@@ -224,6 +228,7 @@ worldmap binary
 /server/modules/tags/sed.pike foreign_ident
 /server/modules/tags/session_tag.pike foreign_ident
 /server/modules/tags/sizer.pike foreign_ident
+/server/modules/tags/snmp.pike foreign_ident
 /server/modules/tags/tablify.pike foreign_ident
 /server/modules/tags/translation_mod.pike foreign_ident
 /server/modules/tags/vform.pike foreign_ident
