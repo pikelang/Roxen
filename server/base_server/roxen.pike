@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.380 2000/01/02 01:03:49 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.381 2000/01/02 23:55:53 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2389,7 +2389,9 @@ void create()
     add_constant("Privs", Privs);
   else
 #endif /* !__NT__ */
-    add_constant("Privs",class{});
+    add_constant("Privs", class {
+      void create(string reason, int|string|void uid, int|string|void gid) {}
+    });
 
 
   // for module encoding stuff
