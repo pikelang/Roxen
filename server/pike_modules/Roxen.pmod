@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.151 2002/10/26 01:20:44 nilsson Exp $
+// $Id: Roxen.pmod,v 1.152 2002/10/27 20:13:17 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2314,49 +2314,6 @@ class QuotaDB
 
       store();
     }
-
-#if !constant(set_weak_flag)
-    static int refs;
-
-    void add_ref()
-    {
-      refs++;
-    }
-
-    void free_ref()
-    {
-      if (!(--refs)) {
-	destruct();
-      }
-    }
-  }
-
-  static class QuotaProxy
-  {
-    static object(QuotaEntry) master;
-
-    function(string, int:int) check_quota;
-    function(string, int:int) allocate;
-    function(string, int:int) deallocate;
-    function(string, int:void) set_usage;
-    function(string:int) get_usage;
-
-    void create(object(QuotaEntry) m)
-    {
-      master = m;
-      master->add_ref();
-      check_quota = master->check_quota;
-      allocate = master->allocate;
-      deallocate = master->deallocate;
-      set_usage = master->set_usage;
-      get_usage = master->get_usage;
-    }
-
-    void destroy()
-    {
-      master->free_ref();
-    }
-#endif /* !constant(set_weak_flag) */
   }
 
   static object read_entry(int offset, int|void quota)
@@ -2651,21 +2608,12 @@ class QuotaDB
     if (res = active_objects[key]) {
       QD_WRITE(sprintf("QuotaDB::lookup(%O, %O): User in active objects.\n",
 		       key, quota));
-
-#if constant(set_weak_flag)
       return res;
-#else /* !constant(set_weak_flag) */
-      return QuotaProxy(res);
-#endif /* constant(set_weak_flag) */
     }
+
     if (res = low_lookup(key, quota)) {
       active_objects[key] = res;
-
-#if constant(set_weak_flag)
       return res;
-#else /* !constant(set_weak_flag) */
-      return QuotaProxy(res);
-#endif /* constant(set_weak_flag) */
     }
 
     QD_WRITE(sprintf("QuotaDB::lookup(%O, %O): New user.\n", key, quota));
@@ -2709,9 +2657,7 @@ class QuotaDB
     data_file = open(base_name + ".data", create_new);
     object index_file = open(base_name + ".index", 1);
 
-#if constant(set_weak_flag)
     set_weak_flag(active_objects, 1);
-#endif /* constant(set_weak_flag) */
 
     /* Initialize the new_entries table. */
     array index_st = index_file->stat();
@@ -3384,7 +3330,6 @@ array(int) parse_since(string date)
   if(!date || sizeof(date)<14) return({0,-1});
   int t=0, length = -1;
 
-#if constant(mktime)
   string dat=lower_case(date);
   sscanf(dat+"; length=", "%*s, %s; length=%d", dat, length);
 
@@ -3395,7 +3340,8 @@ array(int) parse_since(string date)
     {
       month=monthnum[m];
     } else if(!(int)dat) {
-      sscanf(dat, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
+      sscanf(dat, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour,
+	     minute, second, year);
       month=monthnum[m];
     } else {
       sscanf(dat, "%d %s %d %d:%d:%d", day, m, year, hour, minute, second);
@@ -3422,7 +3368,7 @@ array(int) parse_since(string date)
       since_cache = ([]);
     since_cache[dat]=t;
   }
-#endif /* constant(mktime) */
+
   return ({ t, length });
 }
 
