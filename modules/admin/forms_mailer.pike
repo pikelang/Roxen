@@ -1,5 +1,5 @@
 /*
- * $Id: forms_mailer.pike,v 1.7 1998/10/12 09:33:23 js Exp $
+ * $Id: forms_mailer.pike,v 1.8 1998/10/12 09:45:56 js Exp $
  *
  * AutoSite Forms Mailer module
  *
@@ -7,7 +7,7 @@
  * Partly based on code made by <mirar@mirar.org>
  */
 
-constant cvs_version = "$Id: forms_mailer.pike,v 1.7 1998/10/12 09:33:23 js Exp $";
+constant cvs_version = "$Id: forms_mailer.pike,v 1.8 1998/10/12 09:45:56 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -71,6 +71,7 @@ string fill_in_form(string data,mapping vars)
 		      "td":empty,"/td":empty,
 		      "font":empty,"/font":empty,
 		      "b":empty,"/b":empty,
+		      "p":empty,"/p":empty,
 		      "i":empty,"/i":empty,
 		      "img":empty
 		    ]),
