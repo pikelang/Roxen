@@ -48,6 +48,8 @@ string describe_tags( RoxenModule m, int q )
 {
   multiset tags=(<>), conts=(<>);
   RXML.TagSet new=m->query_tag_set();
+  if(!new) return "";
+
   foreach(indices(new->get_tag_names()), string name) {
     if(tags[name] || conts[name])
       continue;
