@@ -18,6 +18,11 @@ o Fixed several small bugs here and there.
 
 o Ftp-module now supports STOR.
 
+o Ftp-module now restores auth-information for every transaction. This is
+  necessary since eg the htaccess-module modifies the auth-field, which is
+  fine for single-transaction protocols like HTTP, but won't do for
+  multiple-transaction protocols like FTP.
+
 o Support for SSLv3 added.
   NOTE: People in the US may not use this module since it violates patents
 	held by RSA Inc.
