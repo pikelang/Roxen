@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.26 1999/02/04 20:25:12 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.27 1999/02/04 20:37:19 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -37,7 +37,7 @@ import types;
 
 class imap_mail
 {  
-  object mail;     // Clientlayer object
+  object mail;     // Clientlayer object(Mail)
   int serial;      // To poll for changes */
 
   // FIXME: Recent status should be recorded in the database. Idea:
@@ -55,84 +55,84 @@ class imap_mail
   int index;  /* Index in the mailbox */
   
   void create(object m, int r, int i)
-    {
-      mail = m;
-      is_recent = r;
-      index = i;
-      flags = get_flags();
-      uid = mail->get(UID);
-    }
+  {
+    mail = m;
+    is_recent = r;
+    index = i;
+    flags = get_flags();
+    uid = mail->get(UID);
+  }
   
   multiset get_flags()
+  {
+    multiset res = (< >);
+
+    res["\\Recent"] = is_recent;
+
+    foreach(indices(mail->flags()), string flag)
     {
-      multiset res = (< >);
-
-      res["\\Recent"] = is_recent;
-
-      foreach(indices(mail->flags()), string flag)
+      string imap_flag =
+      ([ "read" : "\\Seen",
+	 "answered" : "\\Answered",
+	 "deleted" : "\\Deleted",
+	 "draft" : "\\Draft" ]) [flag];
+      if (imap_flag)
+	res[imap_flag] = 1;
+      else
       {
-	string imap_flag =
-	([ "read" : "\\Seen",
-	   "answered" : "\\Answered",
-	   "deleted" : "\\Deleted",
-	   "draft" : "\\Draft" ]) [flag];
-	if (imap_flag)
-	  res[imap_flag] = 1;
-	else
-	{
-	  if ((strlen(flag) > 5) && (flag[..4] == "IMAP:"))
-	    res[flag[5..]] = 1;
-	}
+	if ((strlen(flag) > 5) && (flag[..4] == "IMAP:"))
+	  res[flag[5..]] = 1;
       }
-      return res;
     }
+    return res;
+  }
 
   array update()
+  {
+    int current = mail->get_serial();
+    if (serial < current)
     {
-      int current = mail->get_serial();
-      if (serial < current)
-      {
-	serial = current;
-	return ({ "FETCH", imap_number(index),
-		  imap_list( ({ "FLAGS",
-				imap_list(indices(get_flags())) }) ) });
-      }
-      return 0;
+      serial = current;
+      return ({ "FETCH", imap_number(index),
+		imap_list( ({ "FLAGS",
+			      imap_list(indices(get_flags())) }) ) });
     }
+    return 0;
+  }
 
   object mapping_to_list(mapping m)
   {
     return imap_list( ((array) m) * ({ }));
   }
 
-  object make_bodystructure(MIME.Message msg, int extension_data)
+  object make_bodystructure(int extension_data)
   {
     array a;
 
 #ifdef IMAP_DEBUG
     werror("imap_mail->make_bodystructure(%O, %O)\n",
-	   mkmapping(indices(msg), values(msg)), extension_data);
+	   mkmapping(indices(mail), values(mail)), extension_data);
 #endif /* IMAP_DEBUG */
 
-    if (msg->body_parts)
+    if (mail->body_parts)
     {
-      a = Array.map(msg->body_parts, make_bodystructure, extension_data)
-	+ ({ msg->subtype });
+      a = Array.map(mail->body_parts, make_bodystructure, extension_data)
+	+ ({ mail->subtype });
       if (extension_data)
-	a += ({ mapping_to_list(msg->params),
+	a += ({ mapping_to_list(mail->params),
 		// FIXME: Disposition header described in rfc 1806,
 		// FIXME: Language tag (rfc 1766).
 	});
     } else {
-      string data = msg->getdata() || "";
+      string data = mail->getdata() || "";
 
-      a = ({ msg->type, msg->subtype,
-	     mapping_to_list(msg->params),
+      a = ({ mail->type, mail->subtype,
+	     mapping_to_list(mail->params),
 	     // FIXME: Content id (rfc 2045)
 	     // FIXME: Body description
 	       
 	     // NOTE: The MIME module decodes any transfer encoding
-	     "binary",  // msg->transfer_encoding, 
+	     "binary",  // mail->transfer_encoding, 
 	     imap_number(strlen(data)) });
 	
       // FIXME: Type specific fields, for text/* and message/rfc822 messages
@@ -337,6 +337,11 @@ class imap_mail
       }
 
       string raw_body = mail->body();
+
+#ifdef IMAP_DEBUG
+      werror("fetch_attr(): raw_body: %O\n", raw_body);
+#endif /* IMAP_DEBUG */
+
       // Use multiple headers
       MIME.Message msg = get_message(raw_body);
       
