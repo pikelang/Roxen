@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.262 2000/11/19 21:32:52 kuntri Exp $
+// $Id: rxml.pike,v 1.263 2000/11/23 14:53:42 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -2927,14 +2927,14 @@ Kibibits.
 </attr>",
 
 "strlen":#"<desc cont='cont'><p><short>
- Returns the length of the contents.</short>
-</p></desc>",
-
-"then":#"<desc cont='cont'><p><short>
- Shows its content if the truth value is true.</short></p>
+ Returns the length of the contents.</short></p>
 
  <ex>There is <strlen>foo bar gazonk</strlen> characters inside the
  tag.</ex>
+</desc>",
+
+"then":#"<desc cont='cont'><p><short>
+ Shows its content if the truth value is true.</short></p>
 </desc>",
 
 "trace":#"<desc cont='cont'><p><short>
