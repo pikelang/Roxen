@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.16 2000/11/08 13:12:09 stewa Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.17 2000/12/29 23:18:16 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -49,6 +49,8 @@ RequestID first_try(RequestID id) {
   array(string) lang = (pre&languages) + (config&languages);
 
   lang+=([object(PrefLang)]id->misc->pref_languages)->get_languages();
+
+  lang = Array.uniq(lang);
 
   if(sizeof(defaults))
     lang=lang&defaults;
