@@ -66,11 +66,11 @@ string rec_print_tree( array q )
   return res;
 }
 
-string parse( object id )
-{
-  object module = find_module( id->misc->path_info );
-  if( !module ) module = roxen;
-  return "<dl>"+
-         rec_print_tree( Program.inherit_tree( object_program(module) ) )+
-         "</dl>";
-}
+// string parse( object id )
+// {
+//   object module = find_module( id->misc->path_info );
+//   if( !module ) module = roxen;
+//   return "<dl>"+
+//          rec_print_tree( Program.inherit_tree( object_program(module) ) )+
+//          "</dl>";
+// }

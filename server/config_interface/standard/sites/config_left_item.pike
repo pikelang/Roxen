@@ -1,10 +1,14 @@
 inherit "roxenlib";
 
-string dotdot( RequestID id, int x )
+string dotdot( RequestID id, int n )
 {
-  string dotodots = (sizeof( id->misc->path_info/"/" )-x)>0?((({ "../" })*(sizeof( id->misc->path_info/"/" )-x))*""):"./";
-
   while( id->misc->orig ) id = id->misc->orig;
+
+  int depth = sizeof( (id->not_query+(id->misc->path_info||"") )/"/" )-n;
+
+  depth -= 3;
+  string dotodots = depth>0?(({ "../" })*depth)*"":"./";
+
   return combine_path( id->not_query+id->misc->path_info, dotodots );
 }
 
@@ -13,7 +17,7 @@ string dotdot( RequestID id, int x )
 
 string selected_item( string q, roxen.Configuration c, RequestID id )
 {
-  while ( id->misc->orig ) 
+  while ( id->misc->orig )
     id = id->misc->orig;
 
   string subsel;
@@ -21,17 +25,17 @@ string selected_item( string q, roxen.Configuration c, RequestID id )
 
   sscanf( id->misc->path_info, "/"+q+"/%[^/]", subsel );
 
-  string pre = ("<item selected "
-                "title='"+(c->name-"'") +
-                "' href='"+(subsel==""? DOTDOT(1):DOTDOT(2)+(q-"'")+"/")+"'>");
+  string pre = (("<a href='"+DOTDOT(1)+(q-"'")+"/")+"'><b><font size=+2>"+c->name+"</font></b></a><br>");
 
-  foreach( ({ "modules", "settings", }), string q )
+  array sub = ({ "modules", "settings", });
+  if( subsel == "modules" )
+    sub = reverse(sub);
+
+  foreach( sub, string q )
   {
     if( subsel == q )
     {
-      pre += ("<item selected title='<cf-locale get="+q+">' "
-              " href='"+DOTDOT(3)+q+"/'>");
-
+      pre += ("&nbsp;<cf-locale get="+q+"><br>\n");
       string url = id->not_query + id->misc->path_info;
       id->variables->_config = cfg;
       id->variables->_url = url;
@@ -39,16 +43,12 @@ string selected_item( string q, roxen.Configuration c, RequestID id )
       switch( q )
       {
        case "settings":
-         pre += #"
-  <configif-output source=config-variables-sections configuration=\""+
-cfg+#"\"><item href=\""+url+#"?section=#section#\"
-         title=\"#section:quote=dtag#\"
-    <if variable=\"section is #section#\">selected</if>></item>
-  </configif-output>
-";
          break;
+
        case "modules":
-         string qurl = url, sel_module="";
+         string qurl = url;
+         if( search( qurl, "!" ) != -1 )
+           qurl += "../";
          array variables = ({});
          object c = roxen->find_configuration(cfg);
          foreach( indices(c->modules), string q )
@@ -67,32 +67,21 @@ cfg+#"\"><item href=\""+url+#"?section=#section#\"
            }
          }
          sort( variables->name, variables );
-         if( sscanf( id->misc->path_info, 
-                     "/"+cfg+"/"+subsel+"/%[^/]", 
-                     id->variables->module ) && strlen(id->variables->module) )
-         {
-           qurl += "../";
-           sel_module = replace( #string "module_variables.html", 
-                                   ({"¤_url¤","¤_config¤", "¤module¤" }), 
-           ({ url, cfg, (string)id->variables->module }) );
-         }
 
          foreach( variables, mapping data )
          {
            if( data->sname == id->variables->module )
-             pre += ("\n<item href=\""+qurl+data->sname+
-                     "/\" title=\""+data->name+"\" selected>"+sel_module+
-                     "</item>\n");
+             pre += ("\n&nbsp;&nbsp;<a href=\""+qurl+data->sname+
+                     "/\">"+replace(data->name, " ", "&nbsp;")+"</a><br>\n");
            else 
-             pre += ("\n<item href=\""+qurl+data->sname+
-                     "/\" title=\""+data->name+"\"></item>\n");
+             pre += ("\n&nbsp;&nbsp;<a href=\""+qurl+data->sname+
+                     "/\"><b>"+replace(data->name, " ", "&nbsp;")+"</b></a><br>\n");
          }
          break;
       }
-      pre += "\n</item>";
+      pre += "\n";
     } else
-      pre += ("<item title='<cf-locale get="+q+">' "
-              " href='"+DOTDOT(3)+q+"/'></item>");
+      pre += ("&nbsp;<a href='"+DOTDOT(3)+q+"/'><cf-locale get="+q+"></a><br>");
   }
   pre += "</item>";
   return pre;
@@ -104,5 +93,4 @@ string parse( RequestID id )
   if( !id->misc->path_info ) id->misc->path_info = "";
   sscanf( id->misc->path_info, "/%[^/]/", site );
   return selected_item( site, roxen.find_configuration( site ), id );
-  return "";
 }

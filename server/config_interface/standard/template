@@ -18,6 +18,10 @@
   </top-menu>
 </define>
 
+<define container=submit-gbutton default_align=baseline>
+ <cset variable=___________ preparse><gbutton-url #args#><contents></gbutton-url></cset>
+  <input align=&align; type=image name='<contents>' value='<contents>' src='<insert variable=___________>' border=0>
+</define>
 
 <define container=tmpl>
   <title><version> <cf-locale get=administration_interface> &title;</title>
@@ -34,8 +38,10 @@
       <roxen-config preparse>
         <middle title="">
           <table>
+         <cf-userwants option=devel_mode>
           <tr><td align=right>
-          <gtext fg=#48546c font_size=40 talign=right border=1,black xspacing=40 scale=0.5>Language:</gtext>
+          <gbutton align=right dim bgcolor=#d9dee7 fg=#48546c 
+                   talign=right width=70>Language:</gbutton>
           </td><td>
           <configif-output quote=¤ source=locales>
             <a href="¤path¤"><img
@@ -43,16 +49,24 @@
               alt="¤latin1-name¤" border=0 height=16
             ></a>
           </configif-output>
-          </tr><tr><td align=right>
-          <gtext href=/standard/change_user.html talign=right xspacing=80 fg=#48546c font_size=40 border=1,black scale=0.5>User:</gtext> 
+          </tr>
+         </cf-userwants>
+         <tr><td align=right>
+            <formoutput>
+              <gbutton href='/standard/change_user.html?uid=#config_user_uid#'
+                       align=right bgcolor=##d9dee7 width=70>User:</gbutton> 
+             </formoutput>
           </td><td>
             <font color=#78849c>
             <pike>return id->misc->config_user->real_name+ " "+ "("+id->misc->config_user->name+")";</pike>
-           </td></tr></table>
+           </td></tr>
+          </table>
         </middle>
         <contents>
       </roxen-config>
     </form>
   </body>
 </define>
+
+
 

@@ -1,3 +1,5 @@
+inherit "../inheritinfo.pike";
+
 string module_global_page( RequestID id, Configuration conf )
 {
   switch( id->variables->action )
@@ -7,17 +9,60 @@ string module_global_page( RequestID id, Configuration conf )
    case "add_module":
      return "<insert file=add_module.inc nocache>\n";
    case "delete_module":
-     return "<insert file=add_module.inc nocache>\n";
+     return "<insert file=delete_module.inc nocache>\n";
   }
+}
+
+#define translate( X ) _translate( (X), id )
+
+string _translate( mixed what, object id )
+{
+  if( mappingp( what ) )
+    if( what[ id->misc->cf_locale ] )
+      return what[ id->misc->cf_locale ];
+    else
+      return what->standard;
+  return what;
+}
+
+string find_module_doc( string cn, string mn, object id )
+{
+  object c = roxen.find_configuration( cn );
+
+  if(!c)
+    return "";
+
+  object m = c->find_module( replace(mn,"!","#") );
+
+  if(!m)
+    return "";
+
+  return replace( "<p><b><font size=+2>"
+                  + translate(m->register_module()[1]) + "</font></b><br>"
+                  + translate(m->info()) + "<p>"
+                  + translate(m->status()||"") +"<p>"+
+                  ( id->misc->config_settings->query( "devel_mode" ) ?
+                    "<hr noshade size=1><h2>Developer information</h2>"+
+                    translate(m->file_name_and_stuff())
+                    + "<dl>"+
+                    rec_print_tree( Program.inherit_tree( object_program(m) ) )
+                    +"</dl>" : ""),
+                  ({ "/image/", }), ({ "/internal-roxen-" }));
 }
 
 string module_page( RequestID id, string conf, string module )
 {
-//   if( id->variables->section )
-//   {
-//     werror("hmm\n");
-return #"<formoutput quote=\"么">
-<input type=hidden name=section value=\"山ection么">
+  while( id->misc->orig )
+    id = id->misc->orig;
+  if((id->variables->section == "Information") ||
+     id->variables->info_section_is_it)
+    return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
+
+  return #"<formoutput quote=\"么">
+  <cf-perm perm='Edit Module Variables'>
+    <submit-gbutton align=right>Save all changes</submit-gbutton>
+  </cf-perm>
+ <input type=hidden name=section value=\"山ection么">
 <table>
   <configif-output source=module-variables configuration=\""+
    conf+"\" section=\"山ection:quote=dtag么" module=\""+module+#"\">
@@ -25,12 +70,10 @@ return #"<formoutput quote=\"么">
     <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
    </configif-output>
   </table>
-  <input type=submit value=\" Apply \" name=action>
+  <cf-perm perm='Edit Module Variables'>
+    <submit-gbutton align=right>Save all changes</submit-gbutton>
+  </cf-perm>
 </formoutput>";
-    
-//   } else {
-    
-//   }
 }
 
 
@@ -72,7 +115,5 @@ path[ 0 ]+#"\" section=\"山ection:quote=dtag么">
          return module_page( id, path[0], path[2] );
     }
   }
-
-
-  return sprintf( "Path info: %O\n", path );
+  return "";
 }

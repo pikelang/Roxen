@@ -1,14 +1,19 @@
-<left-menu title="Sites">
-  <configif-output source=configurations>
-     <item title='#name:quote=dtag#' href=site.html/#sname#/>
-     </item>
-  </configif-output>
-</left-menu>
 
 <topmenu base="../" selected=sites>
 
 <content>
+
+<table width=100%><tr>
+<td>
+<configif-output source=configurations>
+  <a href=site.html/#sname#/>#name:quote=dtag#</a><br>
+</configif-output>
+</td><br><p>
+<td bgcolor="#eeeeee" width=80%>
 <cf-perm perm="Create Site">
 <h1><a href=new_site.html><cf-locale get=create_new_site></a></h1>
 </cf-perm>
+</td>
+</tr></table>
 </content>
+

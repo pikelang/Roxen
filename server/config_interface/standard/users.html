@@ -29,9 +29,11 @@ string parse( RequestID id )
          fgcolor="#999999"
          bgcolor=white>
     <tab href="../"><cf-locale get=welcome></tab>
+  <cf-userwants option=devel_mode>
   <cf-perm perm="View Settings">
     <tab href="debug_info.html"><cf-locale get=debug_info></tab>
   </cf-perm>
+  </cf-userwants>
     <tab href="settings.html"><cf-locale get=settings></tab>
   <cf-perm perm="Edit Users">
     <tab href="users.html" selected><cf-locale get=users></tab>
@@ -42,29 +44,12 @@ string parse( RequestID id )
   <cf-perm perm="Shutdown">
     <tab href="shutdown.html"><cf-locale get=shutdown></tab>
   </cf-perm>
-</tablist></td><td width=100% valign=bottom><img src=/internal-roxen-black-dot width=100% height=1></td></tr></table></td></tr>
+</tablist></td><td width=100% valign=bottom><img src=/internal-roxen-black-dot width=100% height=1></td></tr></table></td><o/tr>
 <tr><td bgcolor="#eeeeee">
 <awizard>
 
 <page name=top>
-  <button title=" Edit Users " page=edit_users>
-  <button title=" Create new user " page=create_user>
-</page>
- 
-<page name=create_user>
-<pre>
-User ID:  <input name=user_name>
-<dbutton page=top title=" Create User ">
-<pike>
-  if( !strlen(id->variables->user_name) ) 
-    return "<error>Too short user name</error>";
-  id->misc->create_new_config_user(   id->variables->user_name );
-</pike>
-</dbutton>
-</page>
-
-<page name=edit_users>
-<button title=" Back " page=top>
+  <button gbutton_title=" Create new user " page=create_user>
 <pike>
 string parse( RequestID id )
 {
@@ -82,6 +67,16 @@ string parse( RequestID id )
   return res;
 }
 </pike>
+</page>
+ 
+<page name=create_user>
+<table><tr><td>User ID:</td><td><input name=user_name></td><td><dbutton page=top gbutton_title=" Create User "></td></tr></table>
+<pike>
+  if( !strlen(id->variables->user_name) ) 
+    return "<error>Too short user name</error>";
+  id->misc->create_new_config_user(   id->variables->user_name );
+</pike>
+</dbutton>
 </page>
 </awizard>
 </td></table>

@@ -1,9 +1,11 @@
 <configif-output source="module-variables-sections"
-                  configuration="¤_config¤"
-                  module="¤module¤"
-                  quote="%">
-   <item href="¤_url¤?section=%section%"
-         title="%section:quote=dtag%"
-         <if variable="section is %section%">selected</if>>
-   </item>
+                 configuration="¤_config¤"
+                 module="¤module¤"
+                 quote="%">
+    <tab dimcolor="#999999"
+         txtcolor="white"
+         selcolor="#eeeeee"
+         %selected%
+         fgcolor="#999999"
+         href="?section=%section%">%section%</tab>
 </configif-output>
