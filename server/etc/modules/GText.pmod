@@ -1,5 +1,5 @@
 
-#define MAX(a,b) ((a)<(b)?(b):(a))
+class Gtext {
 
 #if !efun(make_matrix)
 static private mapping (int:array(array(int))) matrixes = ([]);
@@ -9,12 +9,10 @@ array (array(int)) make_matrix(int size)
   array res;
   int i;
   int j;
-  res = Array.map(allocate(size), lambda(int s, int size){
-    return allocate(size); }, size);
-
+  res = allocate(size, allocate)(size);
   for(i=0; i<size; i++)
     for(j=0; j<size; j++)
-      res[i][j] = (int)MAX((float)size/2.0-sqrt((size/2-i)*(size/2-i) + (size/2-j)*(size/2-j)),0);
+      res[i][j] = (int)max((float)size/2.0-sqrt((size/2-i)*(size/2-i) + (size/2-j)*(size/2-j)),0);
   return matrixes[size] = res;
 }
 #endif
@@ -26,17 +24,17 @@ string fix_relative(string file, string bd)
   return combine_path(bd+"/",file);
 }
 
-object  blur(object img, int amnt)
+Image.Image blur(object img, int amnt)
 {
   img->setcolor(0,0,0);
   img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
 
-  for(int i=0; i<amnt; i++) 
+  for(int i=0; i<amnt; i++)
     img = img->apply_matrix( make_matrix((int)sqrt(img->ysize()+20)));
   return img;
 }
 
-object  outline(object  on, object  with,
+Image.Image outline(Image.Image on, Image.Image with,
 		       array (int) color, int radie, int x, int y)
 {
   int steps=10;
@@ -51,16 +49,16 @@ array white = ({ 255,255,255 });
 array lgrey = ({ 200,200,200 });
 array grey = ({ 128,128,128 });
 array black = ({ 0,0,0 });
-
 array wwwb = ({ lgrey,lgrey,grey,black });
-object  bevel(object  in, int width, int|void invert)
+
+Image.Image bevel(Image.Image in, int width, int|void invert)
 {
   int h=in->ysize();
   int w=in->xsize();
 
-  object corner = Image.image(width+1,width+1);
-  object corner2 = Image.image(width+1,width+1);
-  object pix = Image.image(1,1);
+  Image.Image corner = Image.Image(width+1,width+1);
+  Image.Image corner2 = Image.Image(width+1,width+1);
+  Image.Image pix = Image.Image(1,1);
 
   for(int i=-1; i<=width; i++) {
     corner->line(i,width-i,i,-1, @white);
@@ -70,17 +68,17 @@ object  bevel(object  in, int width, int|void invert)
 
   if(!invert)
   {
-    in->paste_alpha(Image.image(width,h-width*2,@white), 160, 0, width);
-    in->paste_alpha(Image.image(width,h-width*2,@black), 128, in->xsize()-width, width);
-    in->paste_alpha(Image.image(w-width,width,@white), 160, 0, 0);
-    in->paste_alpha(Image.image(w-width,width,@black), 128, width, in->ysize()-width);
+    in->paste_alpha(Image.Image(width,h-width*2,@white), 160, 0, width);
+    in->paste_alpha(Image.Image(width,h-width*2,@black), 128, in->xsize()-width, width);
+    in->paste_alpha(Image.Image(w-width,width,@white), 160, 0, 0);
+    in->paste_alpha(Image.Image(w-width,width,@black), 128, width, in->ysize()-width);
   } else  {
     corner=corner->invert();
     corner2=corner2->invert();
-    in->paste_alpha(Image.image(width,h-width*2,@black), 160, 0, width);
-    in->paste_alpha(Image.image(width,h-width*2,@white), 128, in->xsize()-width, width);
-    in->paste_alpha(Image.image(w-width,width,@black), 160, 0, 0);
-    in->paste_alpha(Image.image(w-width,width,@white), 128, width, in->ysize()-width);
+    in->paste_alpha(Image.Image(width,h-width*2,@black), 160, 0, width);
+    in->paste_alpha(Image.Image(width,h-width*2,@white), 128, in->xsize()-width, width);
+    in->paste_alpha(Image.Image(w-width,width,@black), 160, 0, 0);
+    in->paste_alpha(Image.Image(w-width,width,@white), 128, width, in->ysize()-width);
   }
 
   in->paste_mask(corner, corner->color(95,95,95), in->xsize()-width,-1);
@@ -141,27 +139,24 @@ object load_image(string f,string bd, object|void id)
   return img->copy();
 }
 
-object make_text_image(mapping args, object font, string text,string basedir,
-		       object|void id)
+Image.Image make_text_image(mapping args, Image.Font font, string text, RequestID id)
 {
-  object text_alpha=font->write(@(text/"\n"));
+  if( args->encoding )
+    text = roxen.decode_charset(args->encoding,text);
+  Image.Image text_alpha=font->write(@(text/"\n"));
   int xoffset=0, yoffset=0;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
-    text_alpha = Image.image(10,10, 0,0,0);
-  
-//  perror("Making image of '%s', args=%O\n", text, args);
+    text_alpha = Image.Image(10,10, 0,0,0);
 
   if(int op=((((int)args->opaque)*255)/100)) // Transparent text...
     text_alpha=text_alpha->color(op,op,op);
 
   int txsize=text_alpha->xsize();
-  int tysize=text_alpha->ysize(); // Size of the text, in pixels. 
+  int tysize=text_alpha->ysize(); // Size of the text, in pixels.
 
   int xsize=txsize; // image size, in pixels
   int ysize=tysize;
-
-//  perror("Xsize=%d; ysize=%d\n",xsize,ysize);
 
   if(args->bevel)
   {
@@ -208,9 +203,12 @@ object make_text_image(mapping args, object font, string text,string basedir,
   if(args->move)
   {
     int dx,dy;
-    sscanf(args->move, "%d,%d", dx, dy);
-    xoffset += dx;
-    yoffset += dy;
+    if(sscanf(args->move, "%d,%d", dx, dy)==2)
+      m_delete(args,"move");
+    else {
+      xoffset += dx;
+      yoffset += dy;
+    }
   }
 
   if(args->ghost)
@@ -235,60 +233,78 @@ object make_text_image(mapping args, object font, string text,string basedir,
     ysize += ((int)args->border)*2;
   }
 
-  
-  array (int) bgcolor = Colors.parse_color(args->bg);
-  array (int) fgcolor = Colors.parse_color(args->fg);
+  array (int) bgcolor = parse_color(args->bgcolor);
+  array (int) fgcolor = parse_color(args->fgcolor);
 
-  object background,foreground;
+  Image.Image background,foreground;
 
-
-  if(args->texture) {
-    foreground = load_image(args->texture,basedir,id);
-    if(args->tile)
+  if(args->texture)
+  {
+    Image.Image t = roxen.load_image(args->texture,id);
+    if( t )
     {
-      object b2 = Image.image(xsize,ysize);
-      for(int x=0; x<xsize; x+=foreground->xsize())
-	for(int y=0; y<ysize; y+=foreground->ysize())
-	  b2->paste(foreground, x, y);
-      foreground = b2;
-    } else if(args->mirrortile) {
-      object b2 = Image.image(xsize,ysize);
-      object b3 = Image.image(foreground->xsize()*2,foreground->ysize()*2);
-      b3->paste(foreground,0,0);
-      b3->paste(foreground->mirrorx(),foreground->xsize(),0);
-      b3->paste(foreground->mirrory(),0,foreground->ysize());
-      b3->paste(foreground->mirrorx()->mirrory(),foreground->xsize(),
-		foreground->ysize());
-      foreground = b3;
-      for(int x=0; x<xsize; x+=foreground->xsize())
+      foreground = t;
+      if(args->tile)
       {
-	for(int y=0; y<ysize; y+=foreground->ysize())
-	  if(y%2)
-	    b2->paste(foreground->mirrory(), x, y);
-	  else
+	Image.Image b2 = Image.Image(xsize,ysize);
+	for(int x=0; x<xsize; x+=foreground->xsize())
+	  for(int y=0; y<ysize; y+=foreground->ysize())
 	    b2->paste(foreground, x, y);
-	foreground = foreground->mirrorx();
+	foreground = b2;
+      } else if(args->mirrortile) {
+	Image.Image b2 = Image.Image(xsize,ysize);
+	Image.Image b3 = Image.Image(foreground->xsize()*2,foreground->ysize()*2);
+	b3->paste(foreground,0,0);
+	b3->paste(foreground->mirrorx(),foreground->xsize(),0);
+	b3->paste(foreground->mirrory(),0,foreground->ysize());
+	b3->paste(foreground->mirrorx()->mirrory(),foreground->xsize(),
+		  foreground->ysize());
+	foreground = b3;
+	for(int x=0; x<xsize; x+=foreground->xsize())
+	{
+	  for(int y=0; y<ysize; y+=foreground->ysize())
+	    if(y%2)
+	      b2->paste(foreground->mirrory(), x, y);
+	    else
+	      b2->paste(foreground, x, y);
+	  foreground = foreground->mirrorx();
+	}
+	foreground = b2;
       }
-      foreground = b2;
-    }
+    } else
+      werror("Failed to load image for "+args->texture+"\n");
   }
+  int background_is_color;
+  if(args->background &&
+     ((background = roxen.load_image(args->background, id)) ||
+      (sizeof(args->background)>1 &&
+       (background=Image.Image(xsize,ysize,
+                               @(parse_color(args->background[1..]))))
+       && (background_is_color=1))))
+  {
+    Image.Image alpha;
+    if(args->alpha && (alpha = roxen.load_image(args->alpha,id)) && background_is_color)
+    {
+      xsize=max(xsize,alpha->xsize());
+      ysize=max(ysize,alpha->ysize());
+      if((float)args->scale)
+	alpha=alpha->scale(1/(float)args->scale);
+      background=Image.Image(xsize,ysize, @(parse_color(args->background[1..])));
+    }
 
-  if((args->background) && 
-     (background=load_image(args->background,basedir,id))) {
-    background = background;
-    if((float)args->scale >= 0.1)
+    if((float)args->scale >= 0.1 && !alpha)
       background = background->scale(1.0/(float)args->scale);
 
     if(args->tile)
     {
-      object b2 = Image.image(xsize,ysize);
+      Image.Image b2 = Image.Image(xsize,ysize);
       for(int x=0; x<xsize; x+=background->xsize())
 	for(int y=0; y<ysize; y+=background->ysize())
 	  b2->paste(background, x, y);
       background = b2;
     } else if(args->mirrortile) {
-      object b2 = Image.image(xsize,ysize);
-      object b3 = Image.image(background->xsize()*2,background->ysize()*2);
+      Image.Image b2 = Image.Image(xsize,ysize);
+      Image.Image b3 = Image.Image(background->xsize()*2,background->ysize()*2);
       b3->paste(background,0,0);
       b3->paste(background->mirrorx(),background->xsize(),0);
       b3->paste(background->mirrory(),0,background->ysize());
@@ -306,58 +322,66 @@ object make_text_image(mapping args, object font, string text,string basedir,
       }
       background = b2;
     }
+    xsize = max(xsize,background->xsize());
+    ysize = max(ysize,background->ysize());
+
+    if(alpha)
+      background->paste_alpha_color(alpha->invert(),@bgcolor);
+
+    switch(lower_case(args->talign||"left")) {
+    case "center":
+      xoffset = (xsize/2 - txsize/2);
+      yoffset = (ysize/2 - tysize/2);
+      break;
+    case "right":
+      xoffset = (xsize - txsize);
+      break;
+    case "left":
+    }
   } else
-    background = Image.image(xsize, ysize, @bgcolor);
+    background = Image.Image(xsize, ysize, @bgcolor);
 
   if(args->border)
   {
     int b = (int)args->border;
-    background->setcolor(@Colors.parse_color((args->border/",")[-1]));
+    background->setcolor(@parse_color((args->border/",")[-1]));
 
     for(--b;b>=0;b--)
     {
       // upper left -- upper right
       background->line(b,b, xsize-b-1, b);
-
       // lower left -- lower right
       background->line(b,ysize-b-1, xsize-b-1, ysize-b-1);
-
       // upper left -- lower left
       background->line(b,b,   b, ysize-b-1);
       // upper right -- lower right
       background->line(xsize-b-1,b, xsize-b-1, ysize-b-1);
     }
   }
-  
+
   background->setcolor(@bgcolor);
 
-  if(args->size || args->xsize || args->ysize)
+  int xs=background->xsize(), ys=background->ysize();
+
+  if( args->rescale )
   {
-    int xs=background->xsize(), ys=background->ysize();
-    if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
-    if(args->xsize) xs=(int)args->xsize; 
-    if(args->ysize) ys=(int)args->ysize;
-    if(args->scale == "scale")
-      background = background->scale(xs,ys);
-    else
+    xs = txsize;
+    ys = tysize;
+  }
+
+  if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
+  if(args->xsize) xs=(int)args->xsize;
+  if(args->ysize) ys=(int)args->ysize;
+
+  if( xs != background->xsize() ||
+      ys != background->ysize() )
+  {
+    if(!args->rescale)
       background = background->copy(0,0,xs-1,ys-1);
+    else
+      background = background->scale(xs, ys);
   }
 
-  xsize = background->xsize();
-  ysize = background->ysize();
-  switch(lower_case(args->talign||"left")) 
-  {
-   case "center":
-     xoffset = (xsize/2 - txsize/2);
-     yoffset = (ysize/2 - tysize/2);
-     break;
-   case "right":
-     xoffset = (xsize - txsize);
-     break;
-   case "left":
-  }
-
-  
   if(args->turbulence)
   {
     array (float|array(int)) arg=({});
@@ -365,11 +389,10 @@ object make_text_image(mapping args, object font, string text,string basedir,
     {
       array q= s/",";
       if(sizeof(q)<2) args+=({ ((float)s)||0.2, ({ 255,255,255 }) });
-      arg+=({ ((float)q[0])||0.2, Colors.parse_color(q[1]) });
+      arg+=({ ((float)q[0])||0.2, parse_color(q[1]) });
     }
     background=background->turbulence(arg);
   }
-  
 
   if(args->bevel)
     background = bevel(background,(int)args->bevel,!!args->pressed);
@@ -378,41 +401,44 @@ object make_text_image(mapping args, object font, string text,string basedir,
   {
     int alpha,border;
     string bg;
-    sscanf(args->textbox, "%d,%s", alpha, bg);
+    alpha = (int)args->textbox;
+    sscanf(args->textbox, "%*[^,],%s", bg);
     sscanf(bg,"%s,%d", bg,border);
-    background->paste_alpha(Image.image(txsize+border*2,tysize+border*2,
-				  @Colors.parse_color(bg)),
+    background->paste_alpha(Image.Image(txsize+border*2,tysize+border*2,
+				  @parse_color(bg)),
 			    255-(alpha*255/100),xoffset-border,yoffset-border);
   }
 
   if(args->ghost)
   { // Francesco..
-    int sdist = (int)args->ghost;
-    int bl=(int)(args->ghost/",")[1];
-    array(int)clr=Colors.parse_color((args->ghost/",")[-1]);
-    int j;
-    object ta = text_alpha->copy();
-    for (j=0;j<bl;j++)
-      ta=ta->apply_matrix(({
-	({6,7,7,7,6}),({7,8,8,8,7}),({7,8,8,8,7}),({7,8,8,8,7}),({6,7,7,7,6})
-       }));
-    background->paste_alpha_color(ta,@clr,xoffset+sdist,yoffset+sdist);
-    fgcolor=bgcolor;
+    array(string) a = (args->ghost/",");
+    if (sizeof(a) < 2) {
+      // Bad argument.
+    } else {
+      int sdist = (int)(a[0]);
+      int bl=(int)(a[1]);
+      array(int)clr=parse_color(a[-1]);
+      int j;
+      Image.Image ta = text_alpha->copy();
+      for (j=0;j<bl;j++)
+	ta=ta->apply_matrix(({
+	  ({6,7,7,7,6}),({7,8,8,8,7}),({7,8,8,8,7}),({7,8,8,8,7}),({6,7,7,7,6})
+	}));
+      background->paste_alpha_color(ta,@clr,xoffset+sdist,yoffset+sdist);
+      fgcolor=bgcolor;
+    }
   }
 
-  
   if(args->shadow)
   {
     int sd = ((int)args->shadow+10)*2;
     int sdist = ((int)(args->shadow/",")[-1])+2;
-    object ta = text_alpha->copy();
+    Image.Image ta = text_alpha->copy();
     ta = ta->color(256-sd,256-sd,256-sd);
-    array sc = Colors.parse_color(args->scolor||"black");
+    array sc = parse_color(args->scolor||"black");
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
   }
-
-#define MIN(x,y) ((x)<(y)?(x):(y))
 
   if(args->bshadow)
   {
@@ -420,11 +446,11 @@ object make_text_image(mapping args, object font, string text,string basedir,
     int xs,ys;
     xs = text_alpha->xsize()+sdist*2+4;
     ys = text_alpha->ysize()+sdist*2+4;
-    object ta = Image.image(xs+sdist*2,ys+sdist*2);
-    array sc = Colors.parse_color(args->scolor||"black");
+    Image.Image ta = Image.Image(xs+sdist*2,ys+sdist*2);
+    array sc = parse_color(args->scolor||"black");
 
     ta->paste_alpha_color(text_alpha,255,255,255,sdist,sdist);
-    ta = blur(ta, MIN((sdist/2),1))->color(256,256,256);
+    ta = blur(ta, min((sdist/2),1))->color(256,256,256);
 
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
@@ -433,54 +459,63 @@ object make_text_image(mapping args, object font, string text,string basedir,
   if(args->glow)
   {
     int amnt = (int)(args->glow/",")[-1]+2;
-    array (int) blurc = Colors.parse_color((args->glow/",")[0]);
+    array (int) blurc = parse_color((args->glow/",")[0]);
     background->paste_alpha_color(blur(text_alpha, amnt),@blurc,
 				  xoffset-amnt, yoffset-amnt);
   }
-  
+
   if(args->chisel)
     foreground=text_alpha->apply_matrix(({ ({8,1,0}),
 					   ({1,0,-1}),
 					   ({0,-1,-8}) }),
 					128,128,128, 15 )
       ->color(@fgcolor);
-  
 
-  if(!foreground)  foreground=Image.image(txsize, tysize, @fgcolor);
+  if(!foreground)  foreground=Image.Image(txsize, tysize, @fgcolor);
   if(args->textscale)
   {
     string c1="black",c2="black",c3="black",c4="black";
     sscanf(args->textscale, "%s,%s,%s,%s", c1, c2, c3, c4);
     foreground->tuned_box(0,0, txsize,tysize,
-			  ({Colors.parse_color(c1),Colors.parse_color(c2),Colors.parse_color(c3),
-			      Colors.parse_color(c4)}));
+			  ({parse_color(c1),parse_color(c2),parse_color(c3),
+			      parse_color(c4)}));
   }
   if(args->outline)
-    outline(background, text_alpha, Colors.parse_color((args->outline/",")[0]),
+    outline(background, text_alpha, parse_color((args->outline/",")[0]),
 	    ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
 
-  background->paste_mask(foreground, text_alpha, xoffset, yoffset);
+  if(args->textbelow)
+  {
+    array color = parse_color(args->textbelow);
 
-  if((float)args->scale != 0.0)
-    if((float)args->scale <= 2.0)
-      background = background->scale((float)args->scale);
-
+    background->setcolor( @color );
+    int oby = background->ysize();
+    background = background->copy(0,0,
+				  max(background->xsize()-1,
+				      foreground->xsize()-1),
+				  background->ysize()-1
+				  +foreground->ysize());
+    background->paste_mask( foreground, text_alpha,
+			    (background->xsize()-foreground->xsize())/2,
+			    oby );
+  } else
+    background->paste_mask(foreground, text_alpha, xoffset, yoffset);
 
   foreground = text_alpha = 0;
-
 
   if(args->rotate)
   {
     string c;
     if(sscanf(args->rotate, "%*d,%s", c)==2)
-       background->setcolor(@Colors.parse_color(c));
+       background->setcolor(@parse_color(c));
     else
        background->setcolor(@bgcolor);
     background = background->rotate((float)args->rotate);
   }
 
   if(args->crop) background = background->autocrop();
-  
   return background;
 }
 
+
+}
