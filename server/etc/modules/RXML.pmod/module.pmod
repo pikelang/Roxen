@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.40 2000/02/04 18:18:28 nilsson Exp $
+//! $Id: module.pmod,v 1.41 2000/02/04 21:31:08 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -74,13 +74,6 @@ class Tag
   //! and returns a new frame object.) This is not used for plugin
   //! tags.
 
-  //!object(Frame) Frame (mapping(string:Tag) plugins);
-  //! If this tag is a socket tag (see below), the Frame program/
-  //! function gets a mapping containing the registered plugins.
-  //! Indices are the plugin_name values for the plugins, values are
-  //! the plugin objects themselves. Don't be destructive on the
-  //! mapping.
-
   //!string plugin_name;
   //! If this is defined, this is a so-called plugin tag. That means
   //! it plugs in some sort of functionality in another Tag object
@@ -92,13 +85,13 @@ class Tag
   //!    name as this one. Socket tags have the FLAG_SOCKET_TAG flag
   //!    set to signify that they accept plugins.
   //!
-  //! o  When a frame for the socket tag is created, it gets the
-  //!    registered plugin tags (see Frame above). It's then up to the
-  //!    socket tag to use the plugins according to some API it
-  //!    defines.
+  //! o  When the socket tag is parsed or evaluated, it can get the
+  //!    Tag objects for the registered plugins with the function
+  //!    Frame.get_plugins(). It's then up to the socket tag to use
+  //!    the plugins according to some API it defines.
   //!
   //! o  plugin_name is the name of the plugin. It's used as index in
-  //!    the mapping that the plugin tag receives (see above).
+  //!    the mapping that the Frame.get_plugins() returns.
   //!
   //! o  The plugin tag is registered in the tag set with the
   //!    identifier
@@ -117,24 +110,15 @@ class Tag
 
   //! Services.
 
-  inline object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed content,
-				   void|TagSet tag_set)
+  inline object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed content)
   //! Make an initialized frame for the tag. Typically useful when
   //! returning generated tags from e.g. RXML.Frame.do_return(). The
-  //! argument values and the content are normally not parsed. The tag
-  //! set is used to find the plugin tags if this is a socket tag (see
-  //! plugin_name blurb above). If it's left out, the current tag set
-  //! in the current context is used.
+  //! argument values and the content are normally not parsed.
   //!
   //! Note: Never reuse the same frame object.
   {
     Tag this = this_object();
-    object/*(Frame)HMM*/ frame;
-    if (flags & FLAG_SOCKET_TAG)
-      frame = ([function(mapping(string:Tag):object/*(Frame)HMM*/)] this->Frame) (
-	(tag_set || get_context()->tag_set)->get_plugins (this->name));
-    else
-      frame = ([function(:object/*(Frame)HMM*/)] this->Frame)();
+    object/*(Frame)HMM*/ frame = ([function(:object/*(Frame)HMM*/)] this->Frame)();
     frame->tag = this;
     frame->flags = flags;
     frame->args = args;
@@ -203,8 +187,8 @@ class Tag
 	m_delete (ustate, parser);
 	if (!sizeof (ustate)) ctx->unwind_state = 0;
       }
-      else frame = `() (args, Void, ctx->tag_set);
-    else frame = `() (args, Void, ctx->tag_set);
+      else frame = `() (args, Void);
+    else frame = `() (args, Void);
 
     mixed err = catch {
       frame->_eval (parser, args, content);
@@ -1421,6 +1405,20 @@ class Frame
   //! called suspend() will be called again.
   {
     error ("FIXME\n");
+  }
+
+  mapping(string:Tag) get_plugins()
+  //! Returns the plugins registered for this tag, which is assumed to
+  //! be a socket tag, i.e. to have FLAG_SOCKET_TAG set (see
+  //! Tag.plugin_name for details). Indices are the plugin_name values
+  //! for the plugin Tag objects, values are the plugin objects
+  //! themselves. Don't be destructive on the returned mapping.
+  {
+#ifdef MODULE_DEBUG
+    if (!(flags & FLAG_SOCKET_TAG))
+      error ("This tag is not a socket tag.\n");
+#endif
+    return get_context()->tag_set->get_plugins (tag->name);
   }
 
   // Internals.
