@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.126 2001/01/17 16:26:01 anders Exp $
+// $Id: wizard.pike,v 1.127 2001/03/07 14:52:41 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -792,6 +792,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 
 mapping wizards = ([]);
 string err;
+
 object get_wizard(string act, string dir, mixed ... args)
 {
   act-="/";
@@ -804,7 +805,13 @@ int zonk=time(1);
 mapping get_actions(RequestID id, string base,string dir, array args)
 {
   mapping acts = ([  ]);
-  if(id->pragma["no-cache"]) wizards=([]);
+  
+  //  Cannot clear wizard cache since it will trigger massive recompiles of
+  //  wizards from inside SiteBuilder. It also breaks wizards which use
+  //  persistent storage.
+  //
+  //  if(id->pragma["no-cache"]) wizards=([]);
+  
   foreach(get_dir(dir), string act)
   {
     mixed err;
@@ -856,8 +863,13 @@ string focused_wizard_menu;
 mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
 {
   mapping acts;
-  if(id->pragma["no-cache"]) wizards=([]);
-
+  
+  //  Cannot clear wizard cache since it will trigger massive recompiles of
+  //  wizards from inside SiteBuilder. It also breaks wizards which use
+  //  persistent storage.
+  //
+  //  if(id->pragma["no-cache"]) wizards=([]);
+  
   if(!id->variables->sm)
     id->variables->sm = focused_wizard_menu;
   else
