@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.19 1999/08/07 21:39:18 nilsson Exp $
+ * $Id: rxml.pike,v 1.20 1999/08/13 15:14:34 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -1060,7 +1060,7 @@ class IfIs
     if(!cache) CACHE(0);
     array arr=value/" ";
     var = misc? id->misc[index][arr[0]] : id[index][arr[0]];
-    if(!var) return !!var;
+    if(sizeof(arr)<2 || !var) return !!var;
     var = lower_case( var );
     if(sizeof(arr)==1) return !!var;
     is=lower_case(arr[2..]*" ");
