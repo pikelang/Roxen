@@ -1,12 +1,5 @@
-// The outlined box module, Copyright © 1996 - 2000, Roxen IS.
-//
-// Fredrik Noring et al
-//
-// Several modifications by Francesco Chemolli.
-
-
 constant thread_safe=1;
-
+constant cvs_version = "$Id: sizer.pike,v 1.2 2000/12/08 03:02:37 per Exp $";
 #include <module.h>
 inherit "module";
 
