@@ -203,16 +203,6 @@ function PopupProperties(ox, oy, absx, absy)
     function(x) { this.ox = x; this.absx = true; return this; };
   this.setPageY =
     function(y) { this.oy = y; this.absy = true; return this; };
-
-  // Modify the offsets
-    if(isNav5) {
-      this.ox += 1;
-      this.oy += 1;
-    }
-  if(isMac) {
-    this.ox += 10;
-    this.oy += 15;
-  }
 }
 
 // Default popup properties
