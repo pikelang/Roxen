@@ -7,13 +7,15 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.4 2000/03/17 14:13:27 nilsson Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.5 2000/05/06 09:35:52 kinkie Exp $";
 
 #include <module.h>
 inherit "module";
 
-string filter_type=""; //override this to allow for more verbose debugging
-                       //include parentheses in the name
+//override this to allow for more verbose debugging
+//include parentheses in the name
+string filter_type="FIXME: override filter_type"; 
+string rules_doc="FIXME: override rules_doc";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -143,6 +145,7 @@ void start() {
 }
 
 //looks for a rule, matching the patterns in tomatch.
+//If no pattern is found, returns 0
 array low_find_rule(string tomatch, array(string) rulenames, mapping rules) {
   THROTTLING_DEBUG("got request for "+tomatch);
   string s;
@@ -191,24 +194,5 @@ mixed filter (mapping res, object id) {
 
 
 void create() {
-  defvar("rules","","Rules",TYPE_TEXT_FIELD,
-#"Throttling rules. One rule per line, whose format is:<br>
-<tt>type-glob modifier [fix]</tt><br>
-<tt>type-glob</tt> is matched on the Content Type header.
-(i.e. <tt>image/gif</tt> or <tt>text/html</tt>).<p>
-<i>modifier</i> is the altering rule. There are six possible rule types:<br>
-<tt>+{number}</tt> adds <i>number</i> bytes/sec to the request<br>
-<tt>-{number}</tt> subtracts <i>number</i> bytes/sec to the request<br>
-<tt>*{number}</tt> multiplies the bandwidth assigned to the request
-  by <i>number</i> (a floating-point number)<br>
-<tt>/{number}</tt> divides the bandwidth assigned to the request
-  by <i>number</i> (a floating-point number)<br>
-<tt>={number}</tt> assigns the request <i>number</i> bytes/sec of 
-  bandwidth<br>
-<tt>nothrottle</tt> asserts that the request is not to be throttled.
-  It implies using <tt>fix</tt>.<p>
-  The optional keyword <tt>fix</tt> will make the assigned bandwidth final.
-The entries are scanned in order, and processing is stopped as soon as 
-a match is found.<p>
-Lines starting with <tt>#</tt> are considered comments.");
+  defvar("rules","","Rules",TYPE_TEXT_FIELD,rules_doc);
 }
