@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.414 2004/05/22 12:52:42 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.415 2004/05/23 02:23:44 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -114,8 +114,7 @@ string|int|float sexpr_eval(string what)
     })
     RXML.parse_error ("Error in expr attribute: %s\n",
 		      handler->errmsg || describe_error (err));
-  if (compat_level < 2.2) return (string) res;
-  else return res;
+  return res;
 }
 
 
@@ -1451,17 +1450,30 @@ class TagCache {
       }
     }
 
-    static void make_key_from_keymap()
+    static void make_key_from_keymap(RequestID id)
     {
+      // Caching is not allowed if there are keys except '1' and
+      // page.path, i.e. when different cache entries might be chosen
+      // for the same page.
+      array(string|int) keys = indices(keymap) - ({1}) - ({"page.path"});
+      if (sizeof(keys)) {
+	if (!args["enable-client-cache"])
+	  NOCACHE();
+	else if(!args["enable-protocol-cache"])
+	  NO_PROTO_CACHE();
+      }
+
       key = encode_value_canonic (keymap);
       if (!args["disable-key-hash"])
-	key = Crypto.SHA1.hash(key);
+	// Initialize with a 32 char string to make sure MD5 goes
+	// through all the rounds even if the key is very short.
+	// Otherwise the risk for coincidental equal keys gets much
+	// bigger.
+	key = Crypto.SHA1.hash("................................"+key);
     }
 
     array do_enter (RequestID id)
     {
-      persistent_cache = 0;
-
       if( args->nocache || args["not-post-method"] && id->method == "POST" ) {
 	do_iterate = 1;
 	key = 0;
@@ -1473,14 +1485,6 @@ class TagCache {
       }
 
       RXML.Context ctx = RXML_CONTEXT;
-
-      // Disable the protocol cache, under the assumption that our
-      // cache key will depend on things it disregards. Could be
-      // avoided if the cache key is on e.g. page.path, but it's so
-      // unlikely it's not worth the effort to check that.
-      if (disable_protocol_cache) {
-	NOCACHE();
-      }
 
       overridden_keymap = 0;
       if (!args->propagate ||
@@ -1555,15 +1559,13 @@ class TagCache {
 	    // p-code which has static type inference.
 	    if (!content) content = "";
 	    if (String.width (content) != 8) content = encode_value_canonic (content);
-	    content_hash = Crypto.SHA1()->update (content)
-				       ->update (content_type->name)
-				       ->digest();
+	    content_hash = Crypto.SHA1.hash(content+content_type->name);
 	  }
 	  keymap[1] = ({id->conf->name, content_hash});
 	}
       }
 
-      make_key_from_keymap();
+      make_key_from_keymap(id);
 
       timeout = Roxen.time_dequantifier (args);
 
@@ -1636,7 +1638,7 @@ class TagCache {
 	  // subvariables is part of the persistent state, but we'll
 	  // come to state_update later anyway if it should be called.
 	  add_subvariables_to_keymap();
-	  make_key_from_keymap();
+	  make_key_from_keymap(id);
 	}
 
 	if (args->shared) {
@@ -1647,12 +1649,15 @@ class TagCache {
 	}
 	else
 	  if (timeout) {
-	    if (!alternatives) add_timeout_cache (alternatives = ([]));
-	    alternatives[key] = ({time() + timeout, evaled_content});
 	    if (args["persistent-cache"] == "yes") {
 	      persistent_cache = 1;
 	      RXML_CONTEXT->state_update();
 	    }
+	    if (!alternatives) {
+	      alternatives = ([]);
+	      if (!persistent_cache) add_timeout_cache (alternatives);
+	    }
+	    alternatives[key] = ({time() + timeout, evaled_content});
 	    TAG_TRACE_LEAVE ("added%s timeout cache entry with key %s",
 			     persistent_cache ? " (possibly persistent)" : "",
 			     RXML.utils.format_short (keymap, 200));
@@ -1677,24 +1682,24 @@ class TagCache {
 	overridden_keymap = 0;
       }
 
-      if (overridden_keymap) {
-	RXML_CONTEXT->misc->cache_key = overridden_keymap;
-	overridden_keymap = 0;
-      }
-
       result += content;
       return 0;
     }
 
     array save()
     {
-      return ({content_hash, subvariables,
+      if (persistent_cache && timeout && alternatives) {
+	int now = time (1);
+	foreach (alternatives; string key; array(int|RXML.PCode) entry)
+	  if (entry[0] < now) m_delete (alternatives, key);
+      }
+      return ({content_hash, subvariables, persistent_cache,
 	       persistent_cache && alternatives});
     }
 
     void restore (array saved)
     {
-      [content_hash, subvariables, alternatives] = saved;
+      [content_hash, subvariables, persistent_cache, alternatives] = saved;
     }
   }
 }
