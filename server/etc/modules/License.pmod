@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.16 2002/05/14 14:03:02 wellhard Exp $
+// $Id: License.pmod,v 1.17 2002/05/31 11:53:48 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -299,7 +299,7 @@ class Key
     if(time)
     {
       // verify expiration integrity.
-      if(expires() != "*" && Calendar.ISO->dwim_day(expires()) < time)
+      if(expires() != "*" && Calendar.ISO->dwim_day(expires())->unix_time() < time)
 	if(verify_mode)
 	  return sprintf("The license "+filename()+" has expired.");
 	else
