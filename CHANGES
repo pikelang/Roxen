@@ -5,6 +5,21 @@ Major changes from Roxen WebServer 2.4:
    compatibility issues.
  - The update client is removed.
  - Several major improvements has been made to the Icecast modules.
+ - Removed localizations of Administration Interface. There where
+   several reasons that lead to this decision:
+     - Keeping the localizations synchronized with the latest code
+       changes is a big and never ending job, which only Kai Voigt has
+       managed to be good enough for when it comes to the german
+       locale.
+     - No matter how good the translators are, there will almost
+       certainly be parts that has not been translated.
+     - Most people use the english locale anyway, which not only is
+       the most up to date, but also provides a vocabulary that makes
+       it possible to read/write docmentation, report understandable
+       bugs and in general communicate with others.
+     - Localized code looks horrible and adds a lot of extra work to
+       development. That's ok for paid development, but...
+     - We will save memory and gain speed.
 
  New modules:
    - CVS Repository file system; can mount a CVS repository.
