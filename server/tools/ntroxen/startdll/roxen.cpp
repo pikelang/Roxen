@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.12 2002/02/04 17:43:23 tomas Exp $
+// $Id: roxen.cpp,v 1.13 2002/02/05 15:26:48 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -16,6 +16,7 @@
 
 #define LOCATION_COOKIE "(#*&)@(*&$Server Location Cookie:"
 #define DEFAULT_LOCATION "C:\\Program Files\\Roxen Internet Software\\WebServer\\server"
+#define DEFAULT_PIKE_JRE_JVMDLL "java/jre/bin/hotspot/jvm.dll"
 
 char server_location[_MAX_PATH * 2] = LOCATION_COOKIE DEFAULT_LOCATION;
 
@@ -226,6 +227,56 @@ std::string CRoxen::FindPike(BOOL setEnv)
   return pikeloc;
 }
 
+
+std::string CRoxen::FindJvm()
+{
+  char jvmloc[2*_MAX_PATH];
+  int len,pathlen;
+  char *p;
+  int i;
+  FILE *fd;
+  TCHAR cwd[_MAX_PATH];
+  cwd[0] = 0;
+  _tgetcwd (cwd, _MAX_PATH);
+  static int m_initDone = 0;
+
+  if (!(fd = fopen ("java/jvmlocation.txt", "r"))) {
+    //ErrorMsg (1, TEXT("Failed to open %s\\java\\jvmlocation.txt"), cwd);
+    return DEFAULT_PIKE_JRE_JVMDLL;
+  }
+  if (!(len = fread (jvmloc, 1, sizeof(jvmloc)-1, fd))) {
+    ErrorMsg (1, TEXT("Could not read %s\\jvmlocation.txt"), cwd);
+    return DEFAULT_PIKE_JRE_JVMDLL;
+  }
+  fclose (fd);
+  jvmloc[len] = '\0';
+
+  if (memchr (jvmloc, 0, len)) {
+    ErrorMsg (0, TEXT("%s\\jvmlocation.txt contains a null character"), cwd);
+    return DEFAULT_PIKE_JRE_JVMDLL;
+  }
+
+  if (p=strtok(jvmloc, "\n"))
+  {
+    pathlen=strlen(p);
+  }
+  else
+    pathlen = len;
+
+  if (pathlen >= _MAX_PATH) {
+    ErrorMsg (0, TEXT("Exceedingly long path to jvm.dll "
+      "in %s\\jvmlocation.txt"), cwd);
+    return DEFAULT_PIKE_JRE_JVMDLL;
+  }
+
+  for (i = pathlen - 1; i && isspace (jvmloc[i]); i--) {}
+  pathlen = i + 1;
+  jvmloc[pathlen] = 0;
+
+  return jvmloc;
+}
+
+
 int stracat(char *out, char **arr)
 {
   char *p = out;
@@ -352,6 +403,19 @@ int CRoxen::Start(int first_time)
       return FALSE;
     }
     if (tofree) free (tofree);
+
+    // Find the jvm.dll to use
+    std::string jvmloc = FindJvm();
+    if(jvmloc.length() > 0 &&
+        (d = FindFirstFile(jvmloc.c_str(), &dir)) != INVALID_HANDLE_VALUE) {
+      FindClose(d);
+      if (!SetEnvironmentVariable (TEXT("PIKE_JRE_JVMDLL"), jvmloc.c_str() )) {
+        ErrorMsg (1, TEXT("Could not set the PIKE_JRE_JVMDLL environment variable"));
+        return FALSE;
+      }
+    }
+    else
+      SetEnvironmentVariable(TEXT("PIKE_JRE_JVMDLL"), NULL);
   }
   
   // seed the random number generator
