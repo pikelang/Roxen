@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.39 1997/11/22 18:26:53 noring Exp $";
+constant cvs_version = "$Id: business.pike,v 1.40 1997/11/22 19:25:47 noring Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -34,7 +34,7 @@ mixed *register_module()
     (  "<hr noshade>"
        "<font size=+1><b>The Business Graphics tag</b></font>\n<br>"
        "Draws different kinds of diagrams.<br>"
-       "<pre>"
+       "<p><pre>"
        "\n&lt;<b>diagram</b>&gt; (container)\n"
        "Options:\n"
        "  <b>help</b>           Displays this text.\n"
