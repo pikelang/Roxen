@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.483 2001/09/06 12:50:14 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.484 2001/09/06 13:34:45 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2432,7 +2432,7 @@ RoxenModule reload_module( string modname )
   RoxenModule nm;
 
   // Load up a new instance.
-  nm = mi->instance( 0 );
+  nm = mi->instance( this_object() );
   // If this is a faked module, let's call it a failure.
   if( nm->not_a_module )
   {
