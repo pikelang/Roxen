@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.392 2003/02/17 15:54:14 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.393 2003/02/17 16:36:36 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2209,7 +2209,7 @@ static void create(object f, object c, object cc)
 {
   if(f)
   {
-    f->set_nonblocking(got_data, f->query_write_callback(), end, 0, 0);
+    f->set_nonblocking(got_data, f->query_write_callback(), end);
     my_fd = f;
     MARK_FD("HTTP connection");
     if( c ) port_obj = c;
@@ -2223,7 +2223,7 @@ static void create(object f, object c, object cc)
 void chain(object f, object c, string le)
 {
   my_fd = f;
-  f->set_nonblocking(0, f->query_write_callback(), end, 0, 0);
+  f->set_nonblocking(0, f->query_write_callback(), end);
   port_obj = c;
   processed = 0;
   do_not_disconnect=-1;		// Block destruction until we return.
@@ -2253,7 +2253,7 @@ void chain(object f, object c, string le)
       do_not_disconnect = 0;
     if(!processed)
     {
-      f->set_nonblocking(got_data, f->query_write_callback(), end, 0, 0);
+      f->set_nonblocking(got_data, f->query_write_callback(), end);
     }
   }
 }
