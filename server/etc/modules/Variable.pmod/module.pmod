@@ -1,6 +1,5 @@
 #include <module.h>
 #include <roxen.h>
-static inherit "html";
 
 // Locale macros
 static inline string getloclang() {
@@ -324,7 +323,7 @@ class Variable
     _path = to;
   }
 
-  string render_form( RequestID id );
+  string render_form( RequestID id, void|mapping additional_args );
     //! Return a (HTML) form to change this variable. The name of all <input>
     //! or similar variables should be prefixed with the value returned
     //! from the path() function.
@@ -343,8 +342,8 @@ class Variable
                       query() );
   }
 
-  static void create(mixed default_value,int flags,
-                     string|object std_name,string|object std_doc)
+  static void create(mixed default_value, void|int flags,
+                     void|string|object std_name, void|string|object std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 
@@ -376,7 +375,7 @@ class Float
   inherit Variable;
   constant type = "Float";
   static float _max, _min;
-  static int _prec = 2, mm_set;
+  static int _prec = 2;
 
   static string _format( float m )
   {
@@ -389,10 +388,6 @@ class Float
     //! Set the range of the variable, if minimum and maximum are both
     //! 0.0 (the default), the range check is removed.
   {
-    if( minimum == maximum )
-      mm_set = 0;
-    else
-      mm_set = 1;
     _max = maximum;
     _min = minimum;
   }
@@ -408,18 +403,15 @@ class Float
   array(string|float) verify_set( float new_value )
   {
     string warn;
-    if( mm_set )
+    if( new_value > _max && _max > _min)
     {
-      if( new_value > _max )
-      {
-        warn = sprintf("Value is bigger than %s, adjusted", _format(_max) );
-        new_value = _max;
-      }
-      else if( new_value < _min )
-      {
-        warn = sprintf("Value is less than %s, adjusted", _format(_min) );
-        new_value = _min;
-      }
+      warn = sprintf("Value is bigger than %s, adjusted", _format(_max) );
+      new_value = _max;
+    }
+    else if( new_value < _min && _min < _max)
+    {
+      warn = sprintf("Value is less than %s, adjusted", _format(_min) );
+      new_value = _min;
     }
     return ({ warn, new_value });
   }
@@ -434,12 +426,12 @@ class Float
     return Roxen.html_encode_string( _format(query()) );
   }
   
-  string render_form( RequestID id )
+  string render_form( RequestID id, void|mapping additional_args )
   {
     int size = 15;
-    if( mm_set ) 
+    if( _max == _min ) 
       size = max( strlen(_format(_max)), strlen(_format(_min)) )+2;
-    return input(path(), _format(query()), size);
+    return input(path(), _format(query()), size, additional_args);
   }
 }
 
@@ -455,16 +447,12 @@ class Int
 {
   inherit Variable;
   constant type = "Int";
-  static int _max, _min, mm_set;
+  static int _max, _min;
 
   void set_range(int minimum, int maximum )
     //! Set the range of the variable, if minimum and maximum are both
     //! 0 (the default), the range check is removed.
   {
-    if( minimum == maximum )
-      mm_set = 0;
-    else
-      mm_set = 1;
     _max = maximum;
     _min = minimum;
   }
@@ -472,18 +460,15 @@ class Int
   array(string|int) verify_set( int new_value )
   {
     string warn;
-    if( mm_set )
+    if( new_value > _max && _max > _min )
     {
-      if( new_value > _max )
-      {
-        warn = sprintf("Value is bigger than %d, adjusted", _max );
-        new_value = _max;
-      }
-      else if( new_value < _min )
-      {
-        warn = sprintf("Value is less than %d, adjusted", _min );
-        new_value = _min;
-      }
+      warn = sprintf("Value is bigger than %d, adjusted", _max );
+      new_value = _max;
+    }
+    else if( new_value < _min && _min < _max)
+    {
+      warn = sprintf("Value is less than %d, adjusted", _min );
+      new_value = _min;
     }
     return ({ warn, new_value });
   }
@@ -493,12 +478,12 @@ class Int
     return (int)what;
   }
 
-  string render_form( RequestID id )
+  string render_form( RequestID id, void|mapping additional_args )
   {
     int size = 10;
-    if( mm_set ) 
+    if( _min == _max ) 
       size = max( strlen((string)_max), strlen((string)_min) )+2;
-    return input(path(), (string)query(), size);    
+    return input(path(), (string)query(), size, additional_args);
   }
 }
 
@@ -514,9 +499,9 @@ class String
   constant type = "String";
   constant width = 40;
   //! The width of the input field. Used by overriding classes.
-  string render_form( RequestID id )
+  string render_form( RequestID id, void|mapping additional_args )
   {
-    return input(path(), (string)query(), width);
+    return input(path(), (string)query(), width, additional_args);
   }
 }
 
@@ -532,7 +517,7 @@ class Text
   //! The width of the textarea
   constant rows = 10;
   //! The height of the textarea
-  string render_form( RequestID id )
+  string render_form( RequestID id, void|mapping additional_args )
   {
     return "<textarea cols='"+cols+"' rows='"+rows+"' name='"+path()+"'>"
            + Roxen.html_encode_string( query() || "" ) +
@@ -565,9 +550,11 @@ class Password
     return "******";
   }
 
-  string render_form( RequestID id )
+  string render_form( RequestID id, void|mapping additional_args )
   {
-    return "<input name=\""+path()+"\" type=\"password\" size=\"30\">";
+    additional_args = additional_args || ([]);
+    additional_args->type="password";
+    input(path(), "", 30, additional_args);
   }
 }
 
@@ -709,7 +696,7 @@ class MultipleChoice
     return (string)what;
   }
 
-  string render_form( RequestID id )
+  string render_form( RequestID id, void|mapping additional_args )
   {
     string res = "<select name='"+path()+"'>\n";
     foreach( get_choice_list(), mixed elem )
@@ -915,7 +902,7 @@ class List
     set( l ); // We are done. :-)
   }
 
-  string render_form( RequestID id )
+  string render_form( RequestID id, void|mapping additional_args )
   {
     string prefix = path()+".";
     int i;
@@ -1010,7 +997,7 @@ class FloatList
 //! A list of floating point numbers
 {
   inherit List;
-  constant type="DirectorYList";
+  constant type="DirectoryList";
   constant width=20;
 
   static int _prec = 3;
@@ -1034,7 +1021,7 @@ class URLList
 //! A list of URLs
 {
   inherit List;
-  constant type="UrlList";
+  constant type="URLList";
 
   array verify_set( array(string) new_value )
   {
@@ -1109,7 +1096,7 @@ class Flag
     return (int)what;
   }
 
-  string render_form( RequestID id )
+  string render_form( RequestID id, void|mapping additional_args )
   {
     string res = "<select name=\""+path()+"\"> ";
     if(query())
@@ -1130,7 +1117,7 @@ class Flag
 // Utility functions used in multiple variable classes above
 // =================================================================
 
-array(string) verify_port( string port, int nofhttp )
+static array(string) verify_port( string port, int nofhttp )
 {
   if(!strlen(port))
     return ({ 0, port });
@@ -1178,4 +1165,29 @@ array(string) verify_port( string port, int nofhttp )
   if( !roxenp()->protocols[ lower_case( protocol ) ] )
     warning += "Warning: The protocol "+lower_case(protocol)+" is unknown\n";
   return ({ (strlen(warning)?warning:0), port });
+}
+
+static string input(string name, string value, int size,
+		    void|mapping(string:string) args, void|int noxml)
+{
+  if(!args)
+    args=([]);
+  else
+    args+=([]);
+
+  args->name=name;
+  args->value=value;
+  args->size=(string)size; 
+
+  string render="<input";
+
+  foreach(indices(args), string attr) {
+    render+=" "+attr+"=";
+    if(!has_value(args[attr], "\"")) render+="\""+args[attr]+"\"";
+    else if(!has_value(args[attr], "'")) render+="'"+args[attr]+"'";
+    else render+="\""+replace(args[attr], "'", "&#39;")+"\"";
+  }
+
+  if(noxml) return render+">";
+  return render+" />";
 }
