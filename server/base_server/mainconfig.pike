@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.68 1997/08/13 22:10:09 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.69 1997/08/13 22:29:29 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -522,7 +522,7 @@ string configuration_list()
   string res="";
   object o;
   foreach(roxen->configurations, o)
-    res += "<option>Copy of '"+o->name+"'";
+    res += "<option>Copy of '"+o->name+"'\n";
   return res;
 }
 
@@ -556,7 +556,7 @@ string describe_config_modules(array mods)
   foreach(mods, string mod)
   {
     sscanf(mod, "%s#", mod);
-    if(!roxen->allmodules[mod]) res += "<li>The unknown modules '"+mod+"'";
+    if(!roxen->allmodules[mod]) res += "<li>The unknown modules '"+mod+"'\n";
     else res += "<li>"+roxen->allmodules[mod][0]+"\n";
   }
   return res+"</ul>";
@@ -569,9 +569,9 @@ string configuration_docs()
   {
     catch {
       if(c[-1]=='e' || c[0]!='#')
-	res += ("<dt><b>"+get_template(c)->name+"</b>"+
-		"<dd>"+get_template(c)->desc+"<br>"+
-		describe_config_modules(get_template(c)->modules));
+	res += ("<dt><b>"+get_template(c)->name+"</b>\n"+
+		"<dd>"+get_template(c)->desc+"<br>\n"+
+		describe_config_modules(get_template(c)->modules) + "\n");
     };
   }
   return res;
@@ -592,17 +592,17 @@ string new_configuration_form()
 	  "<tr><td colspan=2><table><tr><td align=left>"
 	  "<input type=submit name=ok value=\" Ok \"></td>"
 	  "<td align=right>"
-	  "<input type=submit name=no value=\" Cancel \"></td></tr>"
-	  "</table></td></tr></table></td></tr></table>" +
+	  "<input type=submit name=no value=\" Cancel \"></td></tr>\n"
+	  "</table></td></tr></table></td></tr>\n</table>\n" +
 	  "<p>The only thing the type change is the initial "
-	  "configuration of the server. <p>The types are:<dl>"+
-	  configuration_docs() +
+	  "configuration of the server.\n"
+	  "<p>The types are:<dl>\n" + configuration_docs() +
 	  "<dt><b>Copy of ...</b>:\n"
 	  "<dd>Make an exact copy of the mentioned virtual server.\n"
-	  "You should change at least the listen ports.    <p>"
+	  "You should change at least the listen ports.<p>\n"
 	  "This can be very useful, since you can make 'template' virtual "
 	  "servers (servers without any open ports), that you can copy later "
-	  "on.\n</dl>\n</body>");
+	  "on.\n</dl>\n</body>\n");
 }
 
 
@@ -1161,9 +1161,9 @@ string describe_node_path(object node)
     if(cnt>0)
     {
 //      werror("q="+q+"\n");
-      res += ("<b><font size=+1><a href=\""+q+"?"+bar+++"\">"+
+      res += ("\n<b><font size=+1><a href=\""+q+"?"+bar+++"\">"+
 	      dn(find_node(http_decode_string(q[..strlen(q)-2])))+
-	      "</a></font></b> -&gt; ");
+	      "</a></font></b> -&gt;\n");
     }
     else
       cnt++;
@@ -1174,10 +1174,11 @@ string describe_node_path(object node)
 string status_row(object node)
 {
    return ("<table width=\"100%\" bgcolor=\"#dddddd\" border=0 cellpadding=0"
-	   " cellspacing=0><tr><td valign=middle align=left><a "
-	   "href=\"$docurl\"><img border=0 src=\"/image/roxen-small.gif\" "
-	   "alt=\"Roxen\"></a></td><td align=right valign=top>"+
-	   describe_node_path(node)+"</td><td>&nbsp;</td></tr></table><br>");
+	   " cellspacing=0>\n"
+	   "<tr><td valign=middle align=left><a href=\"$docurl\">"
+	   "<img border=0 src=\"/image/roxen-small.gif\" alt=\"Roxen\"></a>"
+	   "</td>\n<td align=right valign=top>" + describe_node_path(node) +
+	   "</td>\n<td>&nbsp;</td></tr>\n</table><br>");
 }
 
 mapping logged = ([ ]);
