@@ -25,6 +25,7 @@ mapping last_seen_on = ([]);
 string parse( RequestID id )
 {
   string res = "<tablist "+config_setting2("toptabs-args")+">";
+  mapping last_tag_args = id->misc->last_tag_args || ([]);
   foreach( selections, array t )
   {
     if(!t[3] || config_perm( t[3] ) )
@@ -32,14 +33,14 @@ string parse( RequestID id )
       mapping a = ([]);
       string default_href()
       {
-        if( id->misc->last_tag_args->base )
-          a->href = id->misc->last_tag_args->base + t[2];
+        if( last_tag_args->base )
+          a->href = last_tag_args->base + t[2];
         else
           a->href = "/"+t[2];
       };
       if( last_seen_on[ t[1] ] )
         a->href = last_seen_on[ t[1] ];
-      if( id->misc->last_tag_args->selected == t[1] )
+      if( last_tag_args->selected == t[1] )
       {
         while( id->misc->orig )
           id = id->misc->orig;
