@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.763 2001/11/28 09:36:10 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.764 2001/11/29 17:03:51 wellhard Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3364,8 +3364,10 @@ class ArgCache
   {
     (plugins->delete-({0}))( id );
     m_delete( cache, id );
-    
-    foreach( decode_id( id ), int id )
+    array i = decode_id( id );
+    if(!i)
+      error("Deleting unknown key %O for %O\n", id, secret);
+    foreach( i, int id )
     {
       (plugins->low_delete-({0}))( id );
       if(cache[id])
