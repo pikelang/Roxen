@@ -14,6 +14,8 @@ mapping actions = ([
 ]);
 
 
+#define CU_AUTH id->misc->config_user->auth
+
 #define VERIFY(X) do {						\
   if( !id->variables["yes.x"] )					\
   {								\
@@ -430,7 +432,8 @@ mapping|string parse( RequestID id )
   if( id->variables->image )
     return m_delete( .State->images, id->variables->image );
 
-  if( !id->variables->db )
+  if( !id->variables->db ||
+      !( CU_AUTH( "Edit Global Variables" ) ) )
     return Roxen.http_redirect( "/dbs/", id );
 
   string res =

@@ -4,6 +4,7 @@
 //<locale-token project="roxen_config">_</locale-token>
 #define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
+#define CU_AUTH id->misc->config_user->auth
 
 
 string get_conf_name( string c )
@@ -14,7 +15,11 @@ string get_conf_name( string c )
 
 string|mapping parse( RequestID id )
 {
-  if( id->variables->db )
+  int view_mode;
+  if ( !(CU_AUTH( "Edit Global Variables" )) )
+    view_mode = 1;
+
+  if( id->variables->db  && !view_mode )
   {
     if( id->variables->set_read )
       DBManager.set_permission( id->variables->db,
@@ -113,14 +118,16 @@ string|mapping parse( RequestID id )
     string ct = colors[y%sizeof(colors)][0];
     int ii = DBManager.is_internal( db );
     rres[DBManager.db_group(db)] +=
-        "<tr><td bgcolor='"+ct+"'>"
-        "<nobr>"
-        +"&nbsp; &nbsp;<a href='browser.pike?db="+db+"'>"+
-        "<cimg border='0' format='gif'"
-        "      src='&usr.database-small;' alt='' max-height='12'/>"
-        "&nbsp;&nbsp;"+db+"</a>"+
-        "</nobr>"
-        "</td>";
+      "<tr><td bgcolor='"+ct+"'>"
+      "<nobr>"
+      +"&nbsp; &nbsp;"+
+      (view_mode ? "" : "<a href='browser.pike?db="+db+"'>")+
+      "<cimg border='0' format='gif'"
+      "      src='&usr.database-small;' alt='' max-height='12'/>"
+      "&nbsp;&nbsp;"+db+
+      (view_mode ? "" : "</a>")+
+      "</nobr>"
+      "</td>";
     foreach( sort(roxen->configurations->name), string conf )
     {
       x++;
@@ -129,10 +136,10 @@ string|mapping parse( RequestID id )
       rres[DBManager.db_group(db)] += "<td bgcolor='"+col+"' width='1%'><nobr>";
 
 #define PERM(P,T,L)\
-     rres[DBManager.db_group(db)] += sprintf("<a href='?set_"+L+"=%s&db=%s'>"+\
+     rres[DBManager.db_group(db)] += sprintf((view_mode ? "":"<a href='?set_"+L+"=%s&db=%s'>")+\
 		     "<gtext  fontsize=13 "+\
 		     ">"+((p[conf]==DBManager.P)?(DBManager.P!=DBManager.NONE?"&nbsp;":"")+T:(DBManager.P!=DBManager.NONE?"&nbsp;-":"-"))+"</gtext>"\
-		     "</a>", Roxen.http_encode_string(conf),\
+		     +(view_mode?"":"</a>"), Roxen.http_encode_string(conf),\
 		     Roxen.http_encode_string(db))
 
       PERM(NONE,_(431,"N"),"none");
