@@ -243,18 +243,28 @@
 <!-- ............................................................ -->
 <comment>String number test</comment>
 <test>
-<rxml><number lang=swe num=43></rxml>
+<rxml><number lang=swe num=43 /></rxml>
 <result>fyrtiotre</result>
 </test>
 
 <test>
-<rxml><number lang=sv num=43></rxml>
+<rxml><number lang=sv num=43 /></rxml>
 <result>fyrtiotre</result>
 </test>
 
 <test>
-<rxml><number num=42></rxml>
+<rxml><number num=42 /></rxml>
 <result>fortytwo</result>
+</test>
+
+<test>
+<rxml><number num=11 type=roman /></rxml>
+<result>XI</result>
+</test>
+
+<test>
+<rxml><number num=61254312 type=memory /></rxml>
+<result>58.4 Mb</result>
 </test>
 
 
