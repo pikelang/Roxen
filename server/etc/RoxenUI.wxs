@@ -2,6 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2003/01/wi">
   <Fragment Id="RoxenUI">
     <CustomAction Id="DIRCA_TARGETDIR" Property="TARGETDIR" Value="[ProgramFilesFolder][Manufacturer]\[ProductName]" Execute="firstSequence" />
+    <CustomAction Id="DONT_INSTALL_SERVICE" Property="INSTALL_SERVICE" Value="0" Execute="firstSequence" />
     <CustomAction Id="ERRCA_CANCELNEWERVERSION" Error="[VSDVERSIONMSG]" />
     <CustomAction Id="ERRCA_UIANDADVERTISED" Error="[VSDUIANDADVERTISED]" />
     <CustomAction Id="CustomTextA_SetProperty_EDIT3" Property="SERVER_PORT" Value="22202" Execute="firstSequence" />
@@ -25,6 +26,9 @@
       VBScriptCall="CreatePikeLocation" Execute="deferred" />
     <CustomAction Id="StartBrowser" Property="BROWSER"
       ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
+      Execute="deferred" Return="asyncNoWait" />
+    <CustomAction Id="ConsoleStartServer" Directory="TARGETDIR"
+      ExeCommand='"[TARGETDIR]ntstart"'
       Execute="deferred" Return="asyncNoWait" />
     <UI>
       <Property Id="ErrorDialog"><![CDATA[ErrorDialog]]></Property>
@@ -954,9 +958,6 @@ Click "Next" to start the installation.</Text>
           <Publish Event="EndDialog" Value="Return"><![CDATA[Custom2Buttons_NextArgs=""]]></Publish>
           <Publish Event="NewDialog" Value="[Custom2Buttons_NextArgs]"><![CDATA[Custom2Buttons_NextArgs<>""]]></Publish>
         </Control>
-        <Control Id="RadioButtonGroup" Type="RadioButtonGroup" X="18" Y="108" Width="348" Height="138" Property="INSTALLATION_TYPE">
-          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
-        </Control>
         <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
           <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
@@ -977,8 +978,27 @@ Click "Next" to start the installation.</Text>
         <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
           <Text>{\VSI_MS_Sans_Serif16.0_1_0}Type of installation</Text>
         </Control>
-        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="42">
+        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="21">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Select type of installation</Text>
+        </Control>
+        <Control Id="RadioButtonGroup" Type="RadioButtonGroup" X="18" Y="84" Width="348" Height="48" Property="INSTALLATION_TYPE">
+          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
+        </Control>
+        <Control Id="StartServerText" Type="Text" X="9" Y="132" Width="354" Height="21">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Start server after installation</Text>
+        </Control>
+	<Control Id="StartServerGroup" Type="RadioButtonGroup" X="18" Y="153" Width="348" Height="48" Property="START_SERVER">
+          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
+        </Control>
+        <Control Id="InstallServiceText" Type="Text" X="9" Y="201" Width="354" Height="21">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Install as service</Text>
+	  <Condition Action="disable">NOT VersionNT</Condition>
+	  <Condition Action="enable">VersionNT</Condition>
+        </Control>
+	<Control Id="InstallServiceGroup" Type="RadioButtonGroup" X="18" Y="222" Width="348" Height="48" Property="INSTALL_SERVICE">
+          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
+	  <Condition Action="disable">NOT VersionNT</Condition>
+	  <Condition Action="enable">VersionNT</Condition>
         </Control>
       </Dialog>
       <RadioGroup Property="AdminMaintenanceForm_Action">
@@ -996,6 +1016,14 @@ Click "Next" to start the installation.</Text>
       <RadioGroup Property="INSTALLATION_TYPE">
         <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Custom" X="0" Y="0" Width="348" Height="17">1</RadioButton>
         <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Typical" X="0" Y="24" Width="348" Height="17">2</RadioButton>
+      </RadioGroup>
+      <RadioGroup Property="START_SERVER">
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17">1</RadioButton>
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17">0</RadioButton>
+      </RadioGroup>
+      <RadioGroup Property="INSTALL_SERVICE">
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17">1</RadioButton>
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17">0</RadioButton>
       </RadioGroup>
       <ComboBox Property="SERVER_PROTOCOL">
 	<ListItem Id="http" />
@@ -1103,6 +1131,8 @@ Click "Next" to start the installation.</Text>
     <Property Id="FolderForm_AllUsers"><![CDATA[ME]]></Property>
     <Property Id="ARPCONTACT"><![CDATA[Roxen Internet Software]]></Property>
     <Property Id="INSTALLATION_TYPE"><![CDATA[2]]></Property>
+    <Property Id="START_SERVER"><![CDATA[1]]></Property>
+    <Property Id="INSTALL_SERVICE"><![CDATA[1]]></Property>
     <Property Id="VSDNETURLMSG"><![CDATA[This setup requires the .NET Framework version [1].  Please install the .NET Framework and run this setup again.  The .NET Framework can be obtained from the web.  Would you like to do this now?]]></Property>
     <Property Id="AdminMaintenanceForm_Action"><![CDATA[Repair]]></Property>
     <Property Id="VSDVERSIONMSG"><![CDATA[Unable to install because a newer version of this product is already installed.]]></Property>
@@ -1123,6 +1153,7 @@ Click "Next" to start the installation.</Text>
         Guid='8c53c060-a679-3ab2-a67f-0e7f84da59ab' />
     </Property>
     <AdminExecuteSequence>
+      <Custom Action="DONT_INSTALL_SERVICE" Before="DIRCA_TARGETDIR">NOT VersionNT</Custom>
       <Custom Action="DIRCA_TARGETDIR" Before="CostInitialize"><![CDATA[TARGETDIR=""]]></Custom>
     </AdminExecuteSequence>
     <InstallExecuteSequence>
@@ -1132,13 +1163,19 @@ Click "Next" to start the installation.</Text>
       <Custom Action="CustomTextA_SetProperty_EDIT3" After="CustomTextA_SetProperty_EDIT2" />
       <Custom Action="CustomTextA_SetProperty_EDIT4" After="CustomTextA_SetProperty_EDIT3" />
       <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
+      <Custom Action="DONT_INSTALL_SERVICE" After="DIRCA_TARGETDIR">NOT VersionNT</Custom>
       <RemoveExistingProducts After="InstallInitialize" />
-      <Custom Action="SetRemoveOldService" After="InstallFiles">REMOVE=""</Custom>
-      <Custom Action="RemoveOldService" After="SetRemoveOldService">REMOVE=""</Custom>
+      <StopServices Sequence="1900">VersionNT AND INSTALL_SERVICE="1"</StopServices>
+      <DeleteServices Sequence="2000">VersionNT AND INSTALL_SERVICE="1"</DeleteServices>
+      <InstallServices Sequence="5800">VersionNT AND INSTALL_SERVICE="1"</InstallServices>
+      <StartServices Sequence="5900">VersionNT AND INSTALL_SERVICE="1" AND START_SERVER="1"</StartServices>
+      <Custom Action="SetRemoveOldService" After="InstallFiles">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
+      <Custom Action="RemoveOldService" After="SetRemoveOldService">REMOVE="" AND_INSTALL_SERVICE="1"</Custom>
       <Custom Action="SetCreateConfigInterface" Sequence="5100">REMOVE=""</Custom>
       <Custom Action="CreateConfigInterface" After="SetCreateConfigInterface">REMOVE=""</Custom>
       <Custom Action="SetCreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
       <Custom Action="CreatePikeLocation" After="SetCreatePikeLocation">REMOVE=""</Custom>
+      <Custom Action="ConsoleStartServer" After="StartServices">((NOT VersionNT) OR INSTALL_SERVICE&lt;&gt;"1") AND START_SERVER="1"</Custom>
     </InstallExecuteSequence>
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
     <Binary Id="UpFldrBtn" src="UpFldrBtn.icon" />
