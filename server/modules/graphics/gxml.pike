@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.27 2004/02/23 12:08:01 wellhard Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.28 2004/03/11 14:13:42 wellhard Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -493,6 +493,7 @@ class TagGXML
 	"dither":    args->dither,
 	"gamma":     args->gamma,
 	"size":      args->size,
+	"background":args->background, // Compatibility
       ]);
       foreach( glob( "*-*", indices(args)), string n )
 	my_args[n] = args[n];
