@@ -5,7 +5,7 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.14 1998/03/11 19:42:43 neotron Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.15 1998/05/08 11:50:33 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -68,7 +68,7 @@ string tag_tablify( string tag, mapping m, string q, mapping request_id )
   else
     sep = "\n";
 
-  rows = (q / sep);
+  rows = (q / sep) - ({""});
   
   if(sep = m->cellseparator)
     m->cellseparator = 0;
