@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.377 2002/06/18 16:27:28 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.378 2002/06/24 23:10:00 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7648,7 +7648,7 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if#config":#"<desc type='plugin'><p><short>
- Has the config been set by use of the <xref href='../http/aconf.tag'
+ Has the config been set by use of the <xref href='../protocol/aconf.tag'
  /> tag?</short> Config is a <i>State</i> plugin.</p>
 </desc>
 
