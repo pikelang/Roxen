@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.570 2000/12/28 20:09:12 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.571 2001/01/23 17:28:40 anders Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2160,6 +2160,59 @@ class ImageCache
           if( alpha )
             alpha = alpha->scale( 0, y );
         }
+      }
+
+      if( args["span-width"] ||
+	  args["span-height"] )
+      {
+	int width  = (int)args["span-width"];
+	int height = (int)args["span-height"];
+	if( (width && reply->xsize() > width) ||
+	    (height && reply->ysize() > height) )
+	{
+	  if( (width && height && (reply->xsize() / (float)width >
+				   reply->ysize() / (float)height)) ||
+	      !height )
+	  {
+	    reply = reply->scale( width, 0 );
+	    if( alpha )
+	      alpha = alpha->scale( width, 0 );
+	  }
+	  else if( height )
+	  {
+	    reply = reply->scale( 0, height );
+	    if( alpha )
+	      alpha = alpha->scale( 0, height );
+	  }
+	}
+
+	int x1,x2,y1,y2;
+	if( width )
+	{
+	  x1 = -((width - reply->xsize()) / 2);
+	  x2 = x1 + width - 1;
+	}
+	if( height )
+	{
+	  y1 = -((height - reply->ysize()) / 2);
+	  y2 = y1 + height - 1;
+	}
+	
+	if( width && height )
+	{
+	  reply = reply->copy(x1,y1,x2,y2,(bgcolor?bgcolor->rgb():0));
+	  if( alpha ) alpha = alpha->copy(x1,y1,x2,y2);
+	}
+	else if( width )
+	{
+	  reply = reply->copy(x1,0,x2,reply->ysize(),(bgcolor?bgcolor->rgb():0));
+	  if ( alpha ) alpha = alpha->copy(x1,0,x2,alpha->ysize());
+	}
+	else
+	{
+	  reply = reply->copy(0,y1,reply->xsize(),y2,(bgcolor?bgcolor->rgb():0));
+	  if( alpha ) alpha = alpha->copy(0,y1,alpha->xsize(),y2);
+	}
       }
 
       if( args["rotate-cw"] || args["rotate-ccw"])
