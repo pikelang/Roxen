@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.25 1997/11/06 20:18:49 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.26 1997/12/11 22:11:58 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -139,6 +139,8 @@ string gets(void|int sp)
 #else
   string s="", tmp;
   
+  trace(100);
+
   while((tmp = stdin -> read(1)))
     switch(tmp)
     {
@@ -155,6 +157,8 @@ string gets(void|int sp)
 	break;
       }
      case "\n": case "\r":
+       trace(0);
+       write("gets("+sp+") returns \""+s+"\"\n");
       return s;
 	
      default:
@@ -391,8 +395,10 @@ void main(int argc, string *argv)
   catch(have_gmp = sizeof(indices(master()->resolv("Gmp"))));
   int have_crypto = 0;
   catch(have_crypto = sizeof(indices(master()->resolv("_Crypto"))));
+  int have_ssl3 = 0;
+  have_ssl3 = stat("protocols/ssl3.pike") != 0;
 
-  if (have_gmp && have_crypto) {
+  if (have_gmp && have_crypto && have_ssl3) {
     write("[1mUse SSL3 (https://) for the configuration-interface [Y/n][0m? ");
     tmp = gets() - " ";
     if (!strlen(tmp) || lower_case(tmp)[0] != 'n') {
@@ -404,7 +410,7 @@ void main(int argc, string *argv)
 	    "It is recommended that you change the certificate to one of your own.\n");
     }
   } else {
-    if (have_crypto) {
+    if (have_crypto && have_ssl3) {
       write("[1mNo Gmp-module -- using http for the configuration-interface[0m.\n");
     } else {
       write("[1mExport version -- using http for the configuration-interface[0m.\n");
