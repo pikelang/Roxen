@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.294 1999/06/08 03:22:33 mast Exp $
+ * $Id: roxen.pike,v 1.295 1999/06/10 23:39:20 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.294 1999/06/08 03:22:33 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.295 1999/06/10 23:39:20 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1918,6 +1918,28 @@ class ImageCache
         alpha = reply->alpha;
         reply = reply->img;
       }
+      
+      if( args->gamma )
+        reply = reply->gamma( (float)args->gamma );
+
+      if( args["opaque-value"] )
+      {
+        int ov = (int)(((float)args["opaque-value"])*2.55);
+        if( ov < 0 )
+          ov = 0;
+        else if( ov > 255 )
+          ov = 255;
+        if( alpha )
+        {
+          object i = Image.image( reply->xsize(), reply->ysize(), ov,ov,ov );
+          i->paste_alpha( alpha, ov );
+          alpha = i;
+        }
+        else
+        {
+          alpha = Image.image( reply->xsize(), reply->ysize(), ov,ov,ov );
+        }
+      }
 
       if( args->scale )
       {
@@ -1982,6 +2004,12 @@ class ImageCache
       switch(format)
       {
        case "gif":
+         if( alpha )
+         {
+           object ct = Image.Colortable( ({ ({ 0,0,0 }), ({ 255,255,255 }) }) );
+           ct->floyd_steinberg();
+           alpha = ct->map( alpha );
+         }
          if( catch {
            if( alpha )
              data = Image.GIF.encode_trans( reply, ct, alpha );
