@@ -4,7 +4,7 @@
  * doc = "Handles the conversion of numbers and dates to Swedish. You have to restart the server for updates to take effect.";
  */
 
-string cvs_version = "$Id: swedish.pike,v 1.9 1997/08/22 04:15:02 nisse Exp $";
+string cvs_version = "$Id: swedish.pike,v 1.10 1997/09/16 17:17:49 grubba Exp $";
 string month(int num)
 {
   return ({ "januari", "februari", "mars", "april", "maj",
@@ -20,9 +20,10 @@ string day(int num)
 
 string ordered(int i)
 {
-  if(((10<i) && (i<20)) || ((i%10)>2))
-    return i + ":e";
-  return i+":a"; 
+  if (((< 1,2 >)[i%10]) && (!(< 11,12 >)[i%100])) {
+    return i + ":a";
+  }
+  return i + ":e";
 }
 
 string date(int timestamp, mapping m)
