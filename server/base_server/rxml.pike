@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.264 2000/12/10 02:21:04 nilsson Exp $
+// $Id: rxml.pike,v 1.265 2000/12/11 03:24:35 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1448,6 +1448,7 @@ class TagEmit {
   RXML.TagSet internal = RXML.TagSet("TagEmit.internal", ({ TagDelimiter() }) );
 
   // A slightly modified Array.dwim_sort_func
+  // used as emits sort function.
   static int compare(string a0,string b0) {
     if (!a0) {
       if (b0)
@@ -1489,6 +1490,11 @@ class TagEmit {
       TRACE_ENTER("Fetch emit dataset for source "+args->source, 0);
       res=plugin->get_dataset(args, id);
       TRACE_LEAVE("");
+
+      if(plugin->skiprows && args->skiprows)
+	m_delete(args, "skiprows");
+      if(plugin->maxrows && args->maxrows)
+	m_delete(args, "maxrows");
 
       if(arrayp(res)) {
 	vars = (["counter":0]);
@@ -1533,7 +1539,7 @@ class TagEmit {
 	      filter[v] = g;
 	  }
 
-	  if(args->rowinfo || args["do-once"]) {
+	  if(args->rowinfo) {
 	    m_delete(args, "filter");
 	    for(int i; i<sizeof(res); i++)
 	      if(should_filter(res[i])) {
@@ -1549,7 +1555,7 @@ class TagEmit {
 	}
 
 	if(!args->filter) {
-	  if(!plugin->skiprows && args->skiprows) {
+	  if(args->skiprows) {
 	    if(args->skiprows[0]=='-') args->skiprows=sizeof(res)-(int)args->skiprows-1;
 	    res=res[(int)args->skiprows..];
 	  }
@@ -1558,7 +1564,7 @@ class TagEmit {
 	    RXML.user_set_var(args->remainderinfo, (int)args->maxrows?
 			      max(sizeof(res)-(int)args->maxrows, 0): 0);
 
-	  if(!plugin->maxrows && args->maxrows) res=res[..(int)args->maxrows-1];
+	  if(args->maxrows) res=res[..(int)args->maxrows-1];
 
 	  if(args->rowinfo) RXML.user_set_var(args->rowinfo, sizeof(res));
 	  if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
@@ -1599,10 +1605,18 @@ class TagEmit {
       return 0;
     }
 
+    int(0..1) do_once_more() {
+      if(vars->counter>0 || !args["do-once"]) return 0;
+      vars->counter = 1;
+      return 1;
+    }
+
     function do_iterate;
 
     int(0..1) function_iterate(RequestID id) {
+      int counter = vars->counter;
       vars=res(args, id);
+      vars->counter = counter++;
       return mappingp(vars);
     }
 
@@ -1618,16 +1632,17 @@ class TagEmit {
       int real_counter = vars->real_counter;
       int counter = vars->counter;
 
-      if(real_counter>=sizeof(res)) return 0;
-      if(args->maxrows && counter == (int)args->maxrows) return 0;
+      if(real_counter>=sizeof(res)) return do_once_more();
+      if(args->maxrows && counter == (int)args->maxrows)
+	return do_once_more();
       if(args->skiprows>0) {
-	if(args->skiprows > sizeof(res)) return 0;
+	if(args->skiprows > sizeof(res)) return do_once_more();
 	while(--args->skiprows)
 	  while(should_filter(res[real_counter++]))
-	    if(real_counter>=sizeof(res)) return 0;
+	    if(real_counter>=sizeof(res)) return do_once_more();
       }
       while(should_filter(res[real_counter++]))
-	if(real_counter>=sizeof(res)) return 0;
+	if(real_counter>=sizeof(res)) return do_once_more();
       vars=res[real_counter-1];
 
       vars->real_counter = real_counter;
