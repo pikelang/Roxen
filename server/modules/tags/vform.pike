@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.34 2001/11/22 17:20:27 anders Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.35 2002/01/07 16:16:15 mast Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -128,6 +128,8 @@ class VInputFrame {
 	var->add_regexp( "^" + replace(args->equal, forbidden, allowed) + "$" );
       if(args->is=="empty") var->add_glob("");
       break;
+    case 0:
+      RXML.parse_error("There is no type argument.\n");
     default:
       RXML.parse_error("There is no type %s.\n", args->type);
     }
