@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.113 1999/05/03 12:04:15 marcus Exp $";
+constant cvs_version = "$Id: business.pike,v 1.114 1999/05/19 06:47:30 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -574,7 +574,7 @@ constant _shuffle_args =
    "axwidth", "xstor", "ystor", "xunit", "yunit", "fg", "bg", "voidsep" });
 constant shuffle_args = mkmapping( _shuffle_args, _shuffle_args );
 
-string tag_diagram(string tag, mapping m, string contents,
+string container_diagram(string tag, mapping m, string contents,
 		   object id, object f, mapping defines)
 {
   int l=query("maxstringlength")-1;
@@ -833,10 +833,10 @@ string tag_diagram(string tag, mapping m, string contents,
   return make_tag("img", m);
 }
 
-mapping query_container_callers()
-{
-  return ([ "diagram" : tag_diagram ]);
-}
+// mapping query_container_callers()
+// {
+//   return ([ "diagram" : tag_diagram ]);
+// }
 
 int|object PPM(string fname, object id)
 {
