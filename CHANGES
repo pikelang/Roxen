@@ -12,6 +12,8 @@ o <expire-time> now supports the argument "now".
 
 o Updated Pike 0.6
 
+o Fixed bug in module trust levels.
+
 
 Changes since Roxen Challenger 1.2.34 Yellow
 -----------------------------------------------
