@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.32 1999/11/29 22:07:46 per Exp $ */
+/* $Id: fonts.pike,v 1.33 1999/12/15 01:45:06 marcus Exp $ */
 
 #include <module.h>
 
@@ -192,6 +192,8 @@ class TTFWrapper
 {
   int size;
   Image.TTF real;
+  static object encoder;
+  static function(string ... : Image.image) real_write;
   int height( )
   {
     return size;
@@ -202,22 +204,40 @@ class TTFWrapper
     return sprintf( "TTF(%O,%d)", real, size );
   }
 
+  static Image.image write_encoded(string ... what)
+  {
+    return real->write(@(encoder?
+			 Array.map(what, lambda(string s) {
+					   return encoder->clear()->
+					     feed(s)->drain();
+					 }):what));
+  }
+
   array text_extents( string what )
   {
-    Image.Image o = real->write( what );
+    Image.Image o = real_write( what );
     return ({ o->xsize(), o->ysize() });
   }
 
-  void create(Image.TTF r, int s)
+  void create(Image.TTF r, int s, string fn)
   {
+    string encoding;
     real = r;
     size = s;
     real->set_height( size );
+    if(file_stat(fn+".properties"))
+      parse_html(Stdio.read_file(fn+".properties")||"", ([]),
+		 (["encoding":lambda(string tag, mapping m, string enc) {
+				encoding = enc;
+			      }]));
+    if(encoding)
+      encoder = Locale.Charset.encoder(encoding, "");
+    real_write = (encoder? write_encoded : real->write);
   }
 
   Image.Image write( string ... what )
   {
-    return real->write(@Array.map( (array(string))what,replace," ",""));
+    return real_write(@Array.map( (array(string))what,replace," ",""));
   }
 }
 
@@ -241,20 +261,22 @@ object get_font(string f, int size, int bold, int italic,
       f = lower_case(f);
       if( ttf_font_names_cache[ lower_case(f) ][ (name/"/")[1] ] )
       {
-	object f = Image.TTF( ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]] );
-	f = TTFWrapper( f(), size );
-	cache_set("fonts", key, f); 
-	return f;
+	object fo = Image.TTF( f = ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]] );
+	fo = TTFWrapper( fo(), size, f );
+	cache_set("fonts", key, fo); 
+	return fo;
       }
-      object f = Image.TTF( values(ttf_font_names_cache[ lower_case(f) ])[0]);
-      return TTFWrapper( f(), size );
+      object fo = Image.TTF( f = values(ttf_font_names_cache[ lower_case(f) ])[0]);
+      return TTFWrapper( fo(), size, f );
     } else if( search( lower_case(f), ".ttf" ) != -1 ) {
-      if( object f = Image.TTF( f ) )
-      {
-        f = TTFWrapper( f(), size );
-        cache_set("fonts", key, f); 
-        return f;
-      }
+      catch {
+	if( object fo = Image.TTF( f ) )
+	{
+	  fo = TTFWrapper( fo(), size, f );
+	  cache_set("fonts", key, fo); 
+	  return fo;
+	}
+      };
     }
 #endif
     fnt = Font();
