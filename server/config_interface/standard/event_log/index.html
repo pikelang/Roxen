@@ -1,21 +1,22 @@
-<topmenu base="../" selected=event_log>
+<topmenu base="../" selected="event_log"/>
 
 <content>
 
 <cv-split>
-<subtablist width=100%>
+<subtablist width="100%">
   <st-tabs>
-  <if not variable="reversed is 1">
-    <tab selected href="?"> &locale.normal; </tab>
+  <if not="" variable="reversed is 1">
+    <tab selected="" href="?"> &locale.normal; </tab>
     <tab href="?reversed=1"> &locale.reverse; </tab>
   </if>
   <else>
     <tab href="?"> &locale.normal; </tab>
-    <tab selected href="?reversed=1"> &locale.reverse; </tab>
+    <tab selected="" href="?reversed=1"> &locale.reverse; </tab>
   </else>
   </st-tabs>
   <st-page>
-    <insert file=log.pike nocache>
+    <insert file="log.pike" nocache="">
+    <a href="clear_log.pike"><gbutton preparse="">&locale.clear_log;</gbutton></a>
   </st-page>
 </subtablist>
 </cv-split>
