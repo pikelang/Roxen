@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.189 1999/10/04 10:27:10 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.190 1999/11/28 02:52:24 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -11,27 +11,25 @@ inherit "roxenlib";
 #define VAR_MORE	0
 #endif /* VAR_MORE */
 
-#define old_rxml_compat 1
+
+// ------------------- Module registration ---------------------
 
 array register_module()
 {
   return ({ MODULE_PARSER,
 	    "Graphics text",
-	    "Generates graphical texts.<p>"
-	    "See <tt>&lt;gtext help&gt;&lt;/gtext&gt;</tt> for "
-	    "more information.",
+	    "Generates graphical texts.",
 	    0, 1
          });
 }
-
 
 void create()
 {
   defvar("colorparse", 1, "Parse tags for document colors", TYPE_FLAG,
 	 "If set, parse the specified tags for document colors.");
-  
+
   defvar("colorparsing", ({"body", "td", "layer", "ilayer", "table"}),
-	 "Tags to parse for color", 
+	 "Tags to parse for color",
 	 TYPE_STRING_LIST,
 	 "Which tags should be parsed for document colors? "
 	 "This will affect documents without gtext as well as documents "
@@ -46,7 +44,7 @@ void create()
 	 "performance impact of the 'Tags to parse for color' option quite"
 	 " dramatically. You can try this out with the &lt;gauge&gt; tag.",
 	 0,  lambda(){return !query("colorparse");});
-	 
+
   defvar("deflen", 300, "Default maximum text-length", TYPE_INT|VAR_MORE,
 	 "The module will, per default, not try to render texts "
 	 "longer than this. This is a safeguard for things like "
@@ -54,15 +52,17 @@ void create()
 	 " whole document. This can be overrided with maxlen=... in the "
 	 "tag.");
 
-  defvar("gif", 0, "Append .fmt (gif, jpeg etc) to all images",
+  defvar("ext", 0, "Append .fmt (gif, jpeg etc) to all images",
 	 TYPE_FLAG|VAR_MORE,
 	 "Append .gif, .png, .gif etc to all images made by gtext. "
          "Normally this will only waste bandwidth");
 }
 
-static private mapping cached_args = ([ ]);
+
+// ------------------- The actual graphics routines ----------------------
 
 #define MAX(a,b) ((a)<(b)?(b):(a))
+#define MIN(a,b) ((a)<(b)?(a):(b))
 
 static private mapping (int:array(array(int))) matrixes = ([]);
 array (array(int)) make_matrix(int size)
@@ -78,17 +78,17 @@ array (array(int)) make_matrix(int size)
   return matrixes[size] = res;
 }
 
-object  blur(object img, int amnt)
+object blur(object img, int amnt)
 {
   img->setcolor(0,0,0);
   img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
 
-  for(int i=0; i<amnt; i++) 
+  for(int i=0; i<amnt; i++)
     img = img->apply_matrix( make_matrix((int)sqrt(img->ysize()+20)));
   return img;
 }
 
-object  outline(object  on, object  with,
+object outline(object on, object with,
 		       array (int) color, int radie, int x, int y)
 {
   int steps=10;
@@ -105,7 +105,7 @@ constant grey = ({ 128,128,128 });
 constant black = ({ 0,0,0 });
 constant wwwb = ({ lgrey,lgrey,grey,black });
 
-object  bevel(object  in, int width, int|void invert)
+object bevel(object in, int width, int|void invert)
 {
   int h=in->ysize();
   int w=in->xsize();
@@ -148,10 +148,8 @@ object  bevel(object  in, int width, int|void invert)
   return in;
 }
 
-
-object make_text_image(mapping args, object font, string text,object id)
+object make_text_image(mapping args, object font, string text, RequestID id)
 {
-  // object text_alpha=font->write(@(text/"\n"));
   if( args->encoding )
     text = roxen.decode_charset(args->encoding,text);
   object text_alpha=font->write(@(text/"\n"));
@@ -159,19 +157,15 @@ object make_text_image(mapping args, object font, string text,object id)
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
     text_alpha = Image.Image(10,10, 0,0,0);
-  
-//  perror("Making image of '%s', args=%O\n", text, args);
 
   if(int op=((((int)args->opaque)*255)/100)) // Transparent text...
     text_alpha=text_alpha->color(op,op,op);
 
   int txsize=text_alpha->xsize();
-  int tysize=text_alpha->ysize(); // Size of the text, in pixels. 
+  int tysize=text_alpha->ysize(); // Size of the text, in pixels.
 
   int xsize=txsize; // image size, in pixels
   int ysize=tysize;
-
-//  perror("Xsize=%d; ysize=%d\n",xsize,ysize);
 
   if(args->bevel)
   {
@@ -245,12 +239,10 @@ object make_text_image(mapping args, object font, string text,object id)
     ysize += ((int)args->border)*2;
   }
 
-  
   array (int) bgcolor = parse_color(args->bg);
   array (int) fgcolor = parse_color(args->fg);
 
   object background,foreground;
-
 
   if(args->texture)
   {
@@ -305,10 +297,10 @@ object make_text_image(mapping args, object font, string text,object id)
 	alpha=alpha->scale(1/(float)args->scale);
       background=Image.Image(xsize,ysize, @(parse_color(args->background[1..])));
     }
-      
+
     if((float)args->scale >= 0.1 && !alpha)
       background = background->scale(1.0/(float)args->scale);
-    
+
     if(args->tile)
     {
       object b2 = Image.Image(xsize,ysize);
@@ -338,7 +330,7 @@ object make_text_image(mapping args, object font, string text,object id)
     }
     xsize = MAX(xsize,background->xsize());
     ysize = MAX(ysize,background->ysize());
- 
+
     if(alpha)
       background->paste_alpha_color(alpha->invert(),@bgcolor);
 
@@ -372,7 +364,7 @@ object make_text_image(mapping args, object font, string text,object id)
       background->line(xsize-b-1,b, xsize-b-1, ysize-b-1);
     }
   }
-  
+
   background->setcolor(@bgcolor);
 
   int xs=background->xsize(), ys=background->ysize();
@@ -384,9 +376,8 @@ object make_text_image(mapping args, object font, string text,object id)
   }
 
   if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
-  if(args->xsize) xs=(int)args->xsize; 
+  if(args->xsize) xs=(int)args->xsize;
   if(args->ysize) ys=(int)args->ysize;
-
 
   if( xs != background->xsize() ||
       ys != background->ysize() )
@@ -408,7 +399,6 @@ object make_text_image(mapping args, object font, string text,object id)
     }
     background=background->turbulence(arg);
   }
-  
 
   if(args->bevel)
     background = bevel(background,(int)args->bevel,!!args->pressed);
@@ -445,7 +435,6 @@ object make_text_image(mapping args, object font, string text,object id)
     }
   }
 
-  
   if(args->shadow)
   {
     int sd = ((int)args->shadow+10)*2;
@@ -456,8 +445,6 @@ object make_text_image(mapping args, object font, string text,object id)
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
   }
-
-#define MIN(x,y) ((x)<(y)?(x):(y))
 
   if(args->bshadow)
   {
@@ -482,14 +469,13 @@ object make_text_image(mapping args, object font, string text,object id)
     background->paste_alpha_color(blur(text_alpha, amnt),@blurc,
 				  xoffset-amnt, yoffset-amnt);
   }
-  
+
   if(args->chisel)
     foreground=text_alpha->apply_matrix(({ ({8,1,0}),
 					   ({1,0,-1}),
 					   ({0,-1,-8}) }),
 					128,128,128, 15 )
       ->color(@fgcolor);
-  
 
   if(!foreground)  foreground=Image.Image(txsize, tysize, @fgcolor);
   if(args->textscale)
@@ -507,12 +493,10 @@ object make_text_image(mapping args, object font, string text,object id)
   if(args->textbelow)
   {
     array color = parse_color(args->textbelow);
-//     foreground = foreground->autocrop();
-//     text_alpha = text_alpha->autocrop();
-    
+
     background->setcolor( @color );
     int oby = background->ysize();
-    background = background->copy(0,0, 
+    background = background->copy(0,0,
 				  max(background->xsize()-1,
 				      foreground->xsize()-1),
 				  background->ysize()-1
@@ -524,12 +508,6 @@ object make_text_image(mapping args, object font, string text,object id)
     background->paste_mask(foreground, text_alpha, xoffset, yoffset);
 
   foreground = text_alpha = 0;
-
-  // handled by the image cache nowdays. :-)
-//   if((float)args->scale>0.0)
-//     if((float)args->scale <= 2.0)
-//       background = background->scale((float)args->scale);
-
 
   if(args->rotate)
   {
@@ -545,6 +523,9 @@ object make_text_image(mapping args, object font, string text,object id)
   return background;
 }
 
+
+// -------------------- Image cache functions --------------------
+
 roxen.ImageCache image_cache;
 
 void start(int|void val, object|void conf)
@@ -554,12 +535,11 @@ void start(int|void val, object|void conf)
 
 constant nbsp = iso88591["&nbsp;"];
 constant replace_from = indices( iso88591 )+ ({"&ss;","&lt;","&gt;","&amp;",});
-constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", }); 
+constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", });
 
 #define simplify_text( from ) replace(from,replace_from,replace_to)
 
-
-mixed draw_callback(mapping args, string text, object id)
+mixed draw_callback(mapping args, string text, RequestID id)
 {
   array err;
   mixed data;
@@ -607,7 +587,7 @@ mixed draw_callback(mapping args, string text, object id)
       res+="\n";
     }
     text=replace(res[..strlen(res)-2], ({"!","?",": "}),({ nbsp+"!",nbsp+"?",nbsp+": "}));
-    text=replace(replace(replace(text,({". ",". "+nbsp}), 
+    text=replace(replace(replace(text,({". ",". "+nbsp}),
                                  ({"\000","\001"})),".","."+nbsp+nbsp),
                  ({"\000","\001"}),({". ","."+nbsp}));
   }
@@ -628,7 +608,7 @@ mixed draw_callback(mapping args, string text, object id)
                     (float)(int)args->xpad, (float)(int)args->ypad);
   }
 
-  if (!data) 
+  if (!data)
     error("gtext: No font!\n");
 
   // Fonts and such are now initialized.
@@ -669,7 +649,7 @@ mixed draw_callback(mapping args, string text, object id)
     res += img->gif_end();
     data = ({ res, ({ img->xsize(), img->ysize() }) });
   }
-  else 
+  else
   {
     int len=100, steps=30, delay=5, ox;
     string res = img->gif_begin() + img->gif_netscape_loop();
@@ -686,22 +666,21 @@ mixed draw_callback(mapping args, string text, object id)
     data = ({ res, ({ len, img->ysize() }) });
   }
 
-  return 
-  ([ 
-    "data":data[0], 
+  return
+  ([
+    "data":data[0],
     "meta":
     ([
       "xsize":data[1][0],
       "ysize":data[1][1],
-      "type":"image/gif",
+      "type":(args->format?id->conf->type_from_filename("x."+args->format):"image/gif"),
     ])
   ]);
 }
 
-
 mapping find_internal(string f, object rid)
 {
-  if( strlen(f)>4 && query("gif") && f[-4]=='.') // Remove .ext
+  if( strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
     f = f[..strlen(f)-5];
   if( strlen(f) && f[0]=='$' )
   {
@@ -715,187 +694,153 @@ mapping find_internal(string f, object rid)
   return image_cache->http_file_answer( f, rid );
 }
 
-string magic_javascript_header(object id)
-{
-  if(!id->supports->netscape_javascript || !id->supports->images) return "";
-  return
-    ("<script>\n"
-     "function i(ri,hi,txt)\n"
-     "{\n"
-     "  document.images[ri].src = hi.src;\n"
-     "  setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
-     "}\n"
-     "</script>");
 
-}
+// -------------- helpfunctions to gtext tags and containers -----------------
 
+constant filearg=({"background","texture","magic-texture","magic-background","magic-bg","alpha"});
+constant textarg=({"afont",
+		   "alpha",
+		   "bevel",
+		   "bg",
+		   "black",
+		   "bold",
+		   "border",
+		   "bshadow",
+		   "chisel",
+		   "crop",
+		   "encoding",
+		   "fadein",
+		   "fg",
+		   "fs",
+		   "font",
+		   "font_size",
+                   "format",
+		   "ghost",
+		   "glow",
+		   "italic",
+		   "light",
+		   "mirrortile",
+		   "more",
+		   "narrow",
+		   "nfont",
+		   "notrans",
+		   "opaque",
+		   "outline",
+		   "pressed",
+		   "quant",
+		   "rescale",
+		   "rotate",
+		   "scale",
+		   "scolor",
+		   "scroll",
+		   "shadow",
+		   "size",
+		   "spacing",
+		   "talign",
+		   "tile",
+		   "textbox",
+		   "textbelow",
+		   "textscale",
+		   "turbulence",
+		   "verbatim",
+		   "xpad",
+		   "xsize",
+		   "xspacing",
+		   "ypad",
+		   "ysize",
+		   "yspacing"
+});
 
-string magic_image(string url, int xs, int ys, string sn,
-		   string image_1, string image_2, string alt,
-		   string mess,object id,string input,string extra_args,string lp, string img_extra_args)
-{
-  if(!id->supports->images) return (lp?lp:"")+alt+(lp?"</a>":"");
-  if(!id->supports->netscape_javascript)
-    return (!input)?
-       ("<a "+extra_args+"href=\""+url+"\"><img src=\""+image_1+"\" name="+sn+" border=0 "+img_extra_args+" "
-       "alt=\""+alt+"\"></a>"):
-    ("<input type=image "+extra_args+" src=\""+image_1+"\" name="+input+">");
+mapping mk_gtext_arg(mapping arg, RequestID id) {
 
-  return
-    ("<script>\n"
-     " "+sn+"l = new Image("+xs+", "+ys+");"+sn+"l.src = \""+image_1+"\";\n"
-     " "+sn+"h = new Image("+xs+", "+ys+");"+sn+"h.src = \""+image_2+"\";\n"
-     "</script>"+
-     ("<a "+extra_args+"href=\""+url+"\" "+
-      (input?"onClick='document.forms[0].submit();' ":"")
-      +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
-      "onMouseout=\"top.window.status='';document.images['"+sn+"'].src = "+sn+"l.src;\"><img "+img_extra_args+" "
-      "width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
-      " border=0 alt=\""+alt+"\" ></a>"));
-}
+  mapping defines=id->misc->defines;
+  mapping p=([]); //Picture rendering arguments.
 
-
-string extra_args(mapping in)
-{
-  string s="";
-  foreach(indices(in), string i)
-  {
-    switch(i)
-    {
-     case "target":
-     case "hspace":
-     case "vspace":
-     case "onclick":
-     case "class":
-     case "id":
-      s+=i+"='"+in[i]+"' ";
-      m_delete(in, i);
-      break;
+  foreach(filearg, string tmp)
+    if(arg[tmp]) {
+      p[tmp]=fix_relative(arg[tmp],id);
+      m_delete(arg,tmp);
     }
+
+  foreach(textarg, string tmp)
+    if(arg[tmp]) {
+      p[tmp]=arg[tmp],id;
+      m_delete(arg,tmp);
+    }
+
+  if(defines->fg && !p->fg) p->fg=defines->fg;
+  if(defines->bg && !p->bg) p->bg=defines->bg;
+  if(defines->nfont && !p->nfont) p->nfont=defines->nfont;
+  if(defines->afont && !p->afont) p->afont=defines->afont;
+  if(defines->font &&  !p->font) p->font=defines->font;
+  if(defines->bold && !p->bold) p->bold=defines->bold;
+  if(defines->italic && !p->italic) p->italic=defines->italic;
+  if(defines->black && !p->black) p->black=defines->black;
+  if(defines->narrow && !p->narrow) p->narrow=defines->narrow;
+
+  return p;
+}
+
+string fix_text(string c, mapping m, RequestID id) {
+
+  if(m->nowhitespace)
+  {
+    sscanf(c,"%*[ \n\r\t]%s",c);
+    sscanf(reverse(c),"%*[ \n\r\t]%s",c);
+    c=reverse(c);
+    m_delete(m, "nowhitespace");
   }
-  return s;
+
+  if(!m->noparse && !m->preparse)
+    c = parse_rxml(c, id);
+  else {
+    m_delete(m, "noparse");
+    m_delete(m, "preparse");
+  }
+
+  c = c[..(((int)m->maxlen||QUERY(deflen))-1)];
+  m_delete(m, "maxlen");
+
+  return c;
 }
 
-string tag_gtext_url(string t, mapping arg, string ctn,
-		    object id, object foo, mapping defines)
-{
-  int short=!!arg->short;
-  if(arg->help) return "Arguments are identical to the argumets to &lt;gtext&gt;. This tag returns a url-prefix that can be used to generate gtexts.";
-  m_delete(arg, "short"); m_delete(arg, "maxlen");
-  m_delete(arg,"magic");  m_delete(arg,"submit");
-  extra_args(arg);        m_delete(arg,"split");
-  if(defines->fg && !arg->fg) arg->fg=defines->fg;
-  if(defines->bg && !arg->bg) arg->bg=defines->bg;
-  if(defines->nfont && !arg->nfont) arg->nfont=defines->nfont;
-  if(defines->afont && !arg->afont) arg->afont=defines->afont;
-  if(defines->font &&  !arg->font) arg->font=defines->font;
 
-  if(arg->background) 
-    arg->background = fix_relative(arg->background,id);
-  if(arg->texture)
-    arg->texture = fix_relative(arg->texture,id);
-  if(arg->magic_texture)
-    arg->magic_texture=fix_relative(arg->magic_texture,id);
-  if(arg->magic_background)
-    arg->magic_background=fix_relative(arg->magic_background,id);
-  if(arg->magicbg)
-    arg->magicbg = fix_relative(arg->magicbg,id);
-  if(arg->alpha)
-    arg->alpha = fix_relative(arg->alpha,id);
+// ----------------- gtext tags and containers -------------------
 
-  if(!short)
-    return query_internal_location()+image_cache->store( ({arg,ctn}), id )+
-      (query("gif")?".foo":"");
+string tag_gtext_url(string t, mapping arg, string c, RequestID id) {
+  c=fix_text(c,arg,id);
+  mapping p=mk_gtext_arg(arg,id);
+  if(arg->href && !p->fg) p->fg=id->misc->defines->link||"#0000ff";
+  string ext="";
+  if(query("ext")) ext="."+(p->format || "gif");
+  if(!arg->short)
+    return query_internal_location()+image_cache->store( ({p,c}), id )+ext;
   else
-    return image_cache->store( ({arg,ctn}), id )+(query("gif")?".foo":"");
+    return "+"+image_cache->store( ({p,c}), id )+ext;
 }
 
-string tag_gtext_id(string t, mapping arg, object id, 
-                    object foo, mapping defines)
-{
-  int short=!!arg->short;
-  if(arg->help) return "Arguments are identical to the argumets to &lt;gtext&gt;. This tag returns a url-prefix that can be used to generate gtexts.";
-  m_delete(arg, "short"); m_delete(arg, "maxlen");
-  m_delete(arg,"magic");  m_delete(arg,"submit");
-  extra_args(arg);        m_delete(arg,"split");
-  if(defines->fg && !arg->fg) arg->fg=defines->fg;
-  if(defines->bg && !arg->bg) arg->bg=defines->bg;
-  if(defines->nfont && !arg->nfont) arg->nfont=defines->nfont;
-  if(defines->afont && !arg->afont) arg->afont=defines->afont;
-  if(defines->font &&  !arg->font) arg->font=defines->font;
-
-  if(arg->background) 
-    arg->background = fix_relative(arg->background,id);
-  if(arg->texture) 
-    arg->texture = fix_relative(arg->texture,id);
-  if(arg->magic_texture)
-    arg->magic_texture=fix_relative(arg->magic_texture,id);
-  if(arg->magic_background) 
-    arg->magic_background=fix_relative(arg->magic_background,id);
-  if(arg->magicbg) 
-    arg->magicbg = fix_relative(arg->magicbg,id);
-  if(arg->alpha) 
-    arg->alpha = fix_relative(arg->alpha,id);
-
-  //  arg->text = ctn;
-
-  if(!short)
-    return query_internal_location()+"$"+image_cache->store( arg, id )+"/";
+string tag_gtext_id(string t, mapping arg, RequestID id) {
+  mapping p=mk_gtext_arg(arg,id);
+  if(arg->href && !p->fg) p->fg=id->misc->defines->link||"#0000ff";
+  if(!arg->short)
+    return query_internal_location()+"$"+image_cache->store(p, id)+"/";
   else
-    return "+"+image_cache->store( arg, id )+"/";
+    return "+"+image_cache->store(p, id )+"/";
 }
 
-string tag_graphicstext(string t, mapping arg, string contents,
-			object id, object foo, mapping defines)
+string tag_graphicstext(string t, mapping arg, string c, RequestID id)
 {
-  if((contents-" ")=="") 
+  mapping defines=id->misc->defines;
+  if((c-" ")=="") 
     return "";
-//Allow <accessed> and others inside <gtext>.
-  if(arg->nowhitespace)
-  {
-    sscanf(contents,"%*[ \n\r\t]%s",contents);
-    sscanf(reverse(contents),"%*[ \n\r\t]%s",contents);
-    contents=reverse(contents);
-  }
-  if(arg->help)
-    return "This tag calls &lt;gtext&gt; with different default values.";
-  if(arg->background) 
-    arg->background = fix_relative(arg->background,id);
-  if(arg->texture) 
-    arg->texture = fix_relative(arg->texture,id);
-  if(arg->magic_texture)
-    arg->magic_texture=fix_relative(arg->magic_texture,id);
-  if(arg->magic_background) 
-    arg->magic_background=fix_relative(arg->magic_background,id);
-  if(arg->magicbg) 
-    arg->magicbg = fix_relative(arg->magicbg,id);
-  if(arg->alpha) 
-    arg->alpha = fix_relative(arg->alpha,id);
-  
-  string gif="";
-  if(query("gif")) gif="."+(arg->format?arg->format[..2]:"gif");
 
-  if( !arg->noparse && !arg->preparse )
-    contents = parse_rxml(contents, id);
-  else
-  {
-    m_delete( arg, "noparse" );
-    m_delete( arg, "preparse" );
-  }
+  c=fix_text(c,arg,id);
+  mapping p=mk_gtext_arg(arg,id);
 
-  string lp, url, ea;
-  string pre, post, defalign, gt, rest, magic;
-  int i;
-  string split;
+  string ext="";
+  if(query("ext")) ext="."+(p->format || "gif");
 
-  contents = contents[..(((int)arg->maxlen||QUERY(deflen))-1)];
-  m_delete(arg, "maxlen");
-
-  if(arg->magic)
-  {
-    magic=replace(arg->magic,"'","`");
-    m_delete(arg,"magic");
-  }
+  string lp="%s", url="", ea="";
 
   int input;
   if(arg->submit)
@@ -903,158 +848,135 @@ string tag_graphicstext(string t, mapping arg, string contents,
     input=1;
     m_delete(arg,"submit");
   }
-  
 
-  ea = extra_args(arg);
+  if(!arg->noxml) { arg["/"]="/"; m_delete(arg, "noxml"); }
+  if(!arg->border) arg->border=arg->border||"0";
 
-  // Modify the 'arg' mapping...
   if(arg->href)
   {
     url = arg->href;
-    lp = "<a href=\""+arg->href+"\" "+ea+">";
-    if(!arg->fg) arg->fg=defines->link||"#0000ff";
+    lp = make_container("a",arg,"%s"); //This anchor might have some extra args.
+    if(!p->fg) p->fg=defines->link||"#0000ff";
     m_delete(arg, "href");
   }
 
-  if(defines->fg && !arg->fg) arg->fg=defines->fg;
-  if(defines->bg && !arg->bg) arg->bg=defines->bg;
-  if(defines->nfont && !arg->nfont) arg->nfont=defines->nfont;
-  if(defines->afont && !arg->afont) arg->afont=defines->afont;
-  if(defines->font &&  !arg->font) arg->font=defines->font;
-  if(defines->bold && !arg->bold) arg->bold=defines->bold;
-  if(defines->italic && !arg->italic) arg->italic=defines->italic;
-  if(defines->black && !arg->black) arg->black=defines->black;
-  if(defines->narrow && !arg->narrow) arg->narrow=defines->narrow;
-
   if(arg->split)
   {
-    if ((split=arg->split) == "split")
-      split = " ";
+    string res="",split=arg->split;
+    if(lower_case(split)=="split") split=" ";
     m_delete(arg,"split");
-  }
-
-  // Support for <gh 2> like things.
-  for(i=2; i<10; i++) 
-    if(arg[(string)i])
+    c=replace(c, "\n", " ");
+    int setalt=!arg->alt;
+    foreach(c/split-({""}), string word)
     {
-      arg->scale = (string)(1.0 / ((float)i*0.6));
-      m_delete(arg, (string)i);
-      break;
-    }
-
-  // Support for <gh1> like things.
-  if(sscanf(t, "%s%d", t, i)==2)
-    if(i > 1) arg->scale = (string)(1.0 / ((float)i*0.6));
-
-  string na = arg->name, al=arg->align;
-  m_delete(arg, "name"); m_delete(arg, "align");
-
-  // Now the 'arg' mapping is modified enough..
-  gt=contents;
-  rest="";
-
-  switch(t)
-  {
-#if old_rxml_compat
-   case "gh1": case "gh2": case "gh3": case "gh4":
-   case "gh5": case "gh6": case "gh7":
-#endif
-   case "gh": pre="<p>"; post="<br>"; defalign="top"; break;
-   case "gtext":
-    pre="";  post=""; defalign="bottom";
-    break;
-   case "anfang":
-    gt=contents[0..0]; rest=contents[1..];
-    pre="<br clear=left>"; post=""; defalign="left";
-    break;
-  }
-
-  if(split)
-  {
-    string word;
-    array res = ({ pre });
-    if(lp) res+=({ lp });
-    
-    gt=replace(gt, "\n", " ");
-    
-    foreach(gt/split-({""}), word)
-    {
-      string fn = image_cache->store( ({arg,word}),id );
+      string fn = image_cache->store( ({ p, word }),id );
       mapping size = image_cache->metadata( fn, id, 1 );
-      mapping tag = 
-      ([ 
-        "alt":(arg->alt||word),
-        "src":query_internal_location()+fn+gif,
-      ]);
-      if(!arg->noxml) tag+=(["/":"/"]);
+      if(setalt) arg->alt=word;
+      arg->src=query_internal_location()+fn+ext;
       if( size )
       {
-        tag->width  = (string)size->xsize;
-        tag->height = (string)size->ysize;
+        arg->width  = (string)size->xsize;
+        arg->height = (string)size->ysize;
       }
-      res += ({ make_tag( "img", tag )+" " });
+      res+=make_tag( "img", arg )+" ";
     }
-    if(lp) res += ({ "</a>"+post });
-    return res*"";
+    return sprintf(lp,res);
   }
-  
-  string num = image_cache->store( ({arg,gt}),id );
+
+  string num = image_cache->store( ({ p, c }), id );
   mapping size = image_cache->metadata( num, id, 1 );
+  if(!arg->alt) arg->alt=replace(c,"\"","'");
 
-  if(magic)
+  arg->src=query_internal_location()+num+ext;
+  if(size) {
+    arg->width=size->xsize;
+    arg->height=size->ysize;
+  }
+
+  if(arg->magic)
   {
-    string res = "";
-    if(!arg->fg) arg->fg=defines->link||"#0000ff";
-    arg = mkmapping(indices(arg), values(arg));
-    if(arg->fuzz)
-      if(arg->fuzz != "fuzz")
-	arg->glow = arg->fuzz;
-      else
-	arg->glow = arg->fg;
-    arg->fg = defines->alink||"#ff0000";
-    if(arg->magicbg) arg->background = arg->magicbg;
-    if(arg->bevel) arg->pressed=1;
+    string magic=replace(arg->magic,"'","`");
+    m_delete(arg,"magic");
 
-    foreach(glob("magic_*", indices(arg)), string q)
+    if(!arg->fg) p->fg=defines->alink||"#ff0000";
+    if(p->bevel) p->pressed=1;
+
+    if(arg->fuzz) p->glow = arg->fuzz!="fuzz"?arg->fuzz:p->fg;
+    if(arg["magic-bg"]) p->background = p["magic-bg"];
+    m_delete(p,"fuzz");
+    m_delete(p,"magic-bg");
+
+    foreach(glob("magic-*", indices(arg)), string q)
     {
-      arg[q[6..]]=arg[q];
+      p[q[6..]]=arg[q];
       m_delete(arg, q);
     }
-    
-    string num2 = image_cache->store( ({ arg, gt }),id );
+
+    string num2 = image_cache->store( ({ p, c }),id );
     size = image_cache->metadata( num2, id );
+    if(size) {
+      arg->width=MAX(arg->xsize,size->xsize);
+      arg->height=MAX(arg->ysize,size->ysize);
+    }
 
-    if(!defines->magic_java) 
-      res = magic_javascript_header(id);
+    if(!id->supports->images) return sprintf(lp,arg->alt);
+
+    string sn="i"+defines->mi++;
+    if(!id->supports->netscape_javascript) {
+      return (!input)?
+        ("<a "+ea+"href=\""+url+"\">"+make_tag("img",arg+(["name":sn]))+"</a>"):
+        make_tag("input",arg+(["type":"image"]));
+    }
+
+    arg->name=sn;
+    string res="<script>\n";
+    if(!defines->magic_java)
+      res += "function i(ri,hi,txt)\n"
+        "{\n"
+        "  document.images[ri].src = hi.src;\n"
+        "  setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
+	"}\n";
     defines->magic_java="yes";
-    if(!size) size = ([ ]);
-    return replace(res +
-		   magic_image(url||"", size->xsize, size->ysize, "i"+(defines->mi++),
-			       query_internal_location()+num+gif,
-			       query_internal_location()+num2+gif,
-			       (arg->alt?arg->alt:replace(gt, "\"","'")),
-			       (magic=="magic"?0:magic),
-			       id,input?na||"submit":0,ea,lp,
-                               " align="+(al || defalign)),
-		   "</script><script>","");
-  }
-  if(input)
-    return (pre+"<input type=image name=\""+na+"\" border=0 alt=\""+
-	    (arg->alt?arg->alt:replace(gt,"\"","'"))+
-	    "\" src="+query_internal_location()+num+gif
-	    +" align="+(al || defalign)+ea+
-            (size?(" width="+size->xsize+" height="+size->ysize):"")+">"+
-            rest+post);
 
-  return (pre+(lp?lp:"")
-	  + "<img border=0 alt=\""
-	  + (arg->alt?arg->alt:replace(gt,"\"","'"))
-	  + "\" src=\""
-	  + query_internal_location()+num+gif+"\" "+ea
-	  + " align="+(al || defalign)
-	  + (size?(" width="+size->xsize+" height="+size->ysize):"")+(arg->nomxl?"":" /")+">"+
-          rest+(lp?"</a>":"")+post);
+    return
+      res+
+      " "+sn+"l = new Image("+arg->width+", "+arg->height+");"+sn+"l.src = \""+arg->src+"\";\n"
+      " "+sn+"h = new Image("+arg->width+", "+arg->height+");"+sn+"h.src = \""+query_internal_location()+num2+ext+"\";\n"
+      "</script>"+
+      "<a "+ea+"href=\""+url+"\" "+
+      (input?"onClick='document.forms[0].submit();' ":"")
+      +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(magic=="magic"?url:magic)+"'); return true;\"\n"
+      "onMouseout=\"top.window.status='';document.images['"+sn+"'].src = "+sn+"l.src;\">"
+      +make_tag("img",arg)+"</a>";
+  }
+
+  if(input)
+    return make_tag("input",arg+(["type":"image"]));
+
+  return sprintf(lp,make_tag("img",arg));
 }
+
+array(string) tag_gh(string t, mapping m, string c, RequestID id) {
+  int i;
+  if(sscanf(t, "%s%d", t, i)==2 && i>1)
+    m->scale = (string)(1.0 / ((float)i*0.6));
+  for(i=2; i<10; i++)
+    if(m[(string)i])
+    {
+      m->scale = (string)(1.0 / ((float)i*0.6));
+      break;
+    }
+  if(!m->valign) m->valign="top";
+ return ({ "<p>"+tag_graphicstext("",m,c,id)+"<br>" });
+}
+
+array(string) tag_anfang(string t, mapping m, string c, RequestID id) {
+  if(!m->align) m->align="left";
+  return ({ "<br clear=\"left\">"+tag_graphicstext("",m,c[0..0],id)+c[1..] });
+}
+
+
+// ------------ Wiretap code to find HTML-colours ---------------------
 
 inline string ns_color(array (int) col)
 {
@@ -1063,12 +985,10 @@ inline string ns_color(array (int) col)
   return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
 }
 
-
-string|array (string) tag_body(string t, mapping args, object id, object file,
+string|array (string) tag_body(string t, mapping args, RequestID id, object file,
 			       mapping defines)
 {
   int cols,changed;
-  if(args->help) return "This tag is parsed by &lt;gtext&gt; to get the document colors.";
   if(args->bgcolor||args->text||args->link||args->alink
      ||args->background||args->vlink)
     cols=1;
@@ -1093,13 +1013,11 @@ string|array (string) tag_body(string t, mapping args, object id, object file,
     return ({make_tag("body", args) });
 }
 
-
-string|array(string) tag_fix_color(string tagname, mapping args, object id, 
+string|array(string) tag_fix_color(string tagname, mapping args, RequestID id,
 				   object file, mapping defines)
 {
   int changed;
 
-  if(args->help) return "This tag is parsed by &lt;gtext&gt; to get the document colors.";
   if(!id->misc->colors)
     id->misc->colors = ({ ({ defines->fg, defines->bg, tagname }) });
   else
@@ -1117,12 +1035,11 @@ string|array(string) tag_fix_color(string tagname, mapping args, object id,
   return 0;
 }
 
-string|void pop_color(string tagname,mapping args,object id,object file,
+string|void pop_color(string tagname,mapping args,RequestID id,object file,
 		 mapping defines)
 {
-  if(args->help) return "This end-tag is parsed by &lt;gtext&gt; to get the document colors.";
   array c = id->misc->colors;
-  if(!c ||!sizeof(c)) 
+  if(!c ||!sizeof(c))
     return;
 
   int i;
@@ -1138,6 +1055,9 @@ string|void pop_color(string tagname,mapping args,object id,object file,
   c = c[..sizeof(c)-i-2];
   id->misc->colors = c;
 }
+
+
+// --------------- tag and container registration ----------------------
 
 mapping query_tag_callers()
 {
@@ -1158,15 +1078,12 @@ mapping query_tag_callers()
   return tags;
 }
 
-
 mapping query_container_callers()
 {
-  return ([ "anfang":tag_graphicstext,
-            "gtext-url":tag_gtext_url, "gh":tag_graphicstext,
-#if old_rxml_compat
-	    "gh1":tag_graphicstext, "gh2":tag_graphicstext,
-	    "gh3":tag_graphicstext, "gh4":tag_graphicstext,
-	    "gh5":tag_graphicstext, "gh6":tag_graphicstext,
-#endif
-	    "gtext":tag_graphicstext, ]);
+  return ([ "anfang":tag_anfang,
+            "gtext-url":tag_gtext_url, "gh":tag_gh,
+	    "gh1":tag_gh, "gh2":tag_gh,
+	    "gh3":tag_gh, "gh4":tag_gh,
+	    "gh5":tag_gh, "gh6":tag_gh,
+	    "gtext":tag_graphicstext ]);
 }
