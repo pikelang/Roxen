@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.39 1998/09/17 20:38:11 grubba Exp $
+ * $Id: smtp.pike,v 1.40 1998/09/17 20:42:32 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.39 1998/09/17 20:38:11 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.40 1998/09/17 20:42:32 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1207,14 +1207,15 @@ array(string)|multiset(string)|string query_provides()
 
 void create()
 {
-  defvar("port", Protocols.Ports.tcp.smtp, "SMTP port number", TYPE_INT,
-	 "Portnumber to listen to. "
+  defvar("port", Protocols.Ports.tcp.smtp, "SMTP port number",
+	 TYPE_INT | VAR_MORE,
+	 "Portnumber to listen to.<br>\n"
 	 "Usually " + Protocols.Ports.tcp.smtp + ".\n");
 
   defvar("spooldir", "/var/spool/mqueue/", "Mail spool directory", TYPE_DIR,
 	 "Directory to temporary keep incoming mail.");
 
-  defvar("timeout", 10*60, "Timeout", TYPE_INT|VAR_MORE,
+  defvar("timeout", 10*60, "Timeout", TYPE_INT | VAR_MORE,
 	 "Idle time before connection is closed (seconds).<br>\n"
 	 "Zero or negative to disable timeouts.");
 }
