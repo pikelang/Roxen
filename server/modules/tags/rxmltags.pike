@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.473 2004/12/07 14:45:29 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.474 2004/12/07 15:04:17 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -9148,6 +9148,13 @@ the respective attributes below for further information.</p></desc>
 </attr>",
 
 	  ([
+
+	    "delimiter": #"<desc type='cont'><p>
+  The content is inserted in the result except in the last iteration
+  through the <tag>emit</tag> tag. It's therefore useful to insert
+  stuff that only should delimit the entries, i.e. not occur before
+  the first one or after the last.</p>
+</desc>",
 
 "&_.counter;":#"<desc type='entity'><p>
  Gives the current number of loops inside the <tag>emit</tag> tag.
