@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.122 1999/12/07 00:00:27 grubba Exp $
+ * $Id: roxenloader.pike,v 1.123 1999/12/07 14:26:05 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -17,7 +17,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.122 1999/12/07 00:00:27 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.123 1999/12/07 14:26:05 mast Exp $";
 
 #define perror roxen_perror
 
@@ -744,6 +744,7 @@ string parse_html (string data, mapping tags, mapping containers,
 		   mixed... args)
 {
   Parser.HTML parser = Parser.HTML();
+  parser->lazy_entity_end (1);
   parser->add_tags (map ( tags, make_caller,TagCallerNoLine,1) );
   parser->add_containers(map (containers,make_caller,ContainerCallerNoLine,1));
   parser->_set_tag_callback (1);
@@ -755,6 +756,7 @@ string parse_html_lines (string data, mapping tags, mapping containers,
 			 mixed... args)
 {
   Parser.HTML parser = Parser.HTML();
+  parser->lazy_entity_end (1);
   parser->add_tags (map ( tags, make_caller, TagCaller,1 ) );
   parser->add_containers(map (containers, make_caller, ContainerCaller,1));
   parser->_set_tag_callback (1);
