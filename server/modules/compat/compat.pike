@@ -30,7 +30,7 @@ void create(object c)
 }
 
 string query_providers() {
-  return "oldRXMLwarning";
+  return "old_rxml_warning";
 }
 
 void old_rxml_warning(object id, string problem, string solution)
@@ -451,6 +451,14 @@ mapping|int gtext_compat(mapping m, RequestID id) {
     old_rxml_warning(id, "gtext attribute "+q,"magic-"+q[6..]);
     ch++;
   }
+  for(int i=2; i<10; i++)
+    if(m[(string)i])
+    {
+      m->scale = (string)(1.0 / ((float)i*0.6));
+      m_delete(m,(string)i);
+      ch++;
+      break;
+    }
   if(m->fg) {
     m->fgcolor=m->fg;
     m_delete(m, "fg");
