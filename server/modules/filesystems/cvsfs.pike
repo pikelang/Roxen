@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-constant cvs_version = "$Id: cvsfs.pike,v 1.20 1999/12/28 02:25:54 nilsson Exp $";
+constant cvs_version = "$Id: cvsfs.pike,v 1.21 2000/02/10 04:40:34 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -208,13 +208,10 @@ string find_cvs_dir(string path)
   return 0;
 }
 
-array register_module()
-{
-  return ({ MODULE_LOCATION,
-	      "CVS File system",
-	      "Accessing files under CVS control.",
-	      0, 0 });
-}
+constant module_type = MODULE_LOCATION;
+constant module_name = "CVS File system";
+constant module_doc  = "Accessing files under CVS control.";
+constant module_unique = 0;
 
 string query_name()
 {

@@ -1,13 +1,12 @@
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
-constant cvs_version = "$Id: tableborder.pike,v 1.2 2000/02/03 23:22:39 jhs Exp $";
-constant thread_safe = 1;
 
-array register_module()
-{
-  return ({ MODULE_FILTER,
-	    "Table Unveiler",
+constant cvs_version = "$Id: tableborder.pike,v 1.3 2000/02/10 04:54:17 nilsson Exp $";
+constant thread_safe = 1;
+constant module_type = MODULE_FILTER;
+constant module_name = "Table Unveiler";
+constnat module_doc  =
 	    "<p>"
 	      "This module modifies &lt;table&gt; tags when a prestate "
 	      "\"tables\" is added, forcing the border attribute to 1. "
@@ -33,8 +32,7 @@ array register_module()
 	        "with(location)"
 	          "pathname=R(/^(\\/\\(([^)]*)\\))?(.*)/(pathname))"
 	      "\">toggles the prestate</a>."
-	    "</p>", 0, 1 });
-}
+	    "</p>";
 
 array(string) alter_table(string name, mapping arg, string contents)
 {

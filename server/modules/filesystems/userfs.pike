@@ -20,7 +20,16 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.48 2000/01/31 03:48:21 per Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.49 2000/02/10 04:40:34 nilsson Exp $";
+constant module_type = MODULE_LOCATION;
+constant module_name = "User Filesystem";
+constant module_doc  = "User filesystem. Uses the userdatabase (and thus the system passwd "
+  "database) to find the home-dir of users, and then looks in a "
+  "specified directory in that directory for the files requested. "
+  "<p>Normaly mounted under /~, but / or /users/ would work equally well. "
+  " is quite useful for IPPs, enabling them to have URLs like "
+  " http://www.hostname.of.provider/customer/.</p>";
+constant module_unique = 0;
 
 #define BAD_PASSWORD(us)	(QUERY(only_password) && \
                                  ((us[1] == "") || (us[1][0] == '*')))
@@ -122,20 +131,6 @@ void start()
   banish_list = mkmultiset(QUERY(banish_list));
   dude_ok = ([]);
   // This is needed to override the inherited filesystem module start().
-}
-
-array register_module()
-{
-  return ({
-    MODULE_LOCATION,
-    "User Filesystem",
-      "User filesystem. Uses the userdatabase (and thus the system passwd "
-      "database) to find the home-dir of users, and then looks in a "
-      "specified directory in that directory for the files requested. "
-      "<p>Normaly mounted under /~, but / or /users/ would work equally well. "
-      " is quite useful for IPPs, enabling them to have URLs like "
-      " http://www.hostname.of.provider/customer/."
-    });
 }
 
 static array(string) find_user(string f, object id)

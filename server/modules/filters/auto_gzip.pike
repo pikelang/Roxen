@@ -3,31 +3,23 @@
 inherit "module";
 #include <module.h>
 
-constant cvs_version="$Id: auto_gzip.pike,v 1.6 1999/12/14 01:58:28 nilsson Exp $";
-constant thread_safe=1;
-
-array register_module()
-{
-  return ({ 
-    MODULE_FIRST,
-    "Automatic sending of compressed files", 
-    "This module implements a suggestion by Francesco Chemolli:<br>\n"
-      "The modified filesystem should do\n"
-      "about this:<br>\n"
-      "-check if the browser supports on-the-fly decompression<br>\n"
-      "-check if a precompressed file already exists.<BR>\n"
-      "-if so, send a redirection to the precompressed file<p>\n"
-      "\n"
-      "So, no cost for compression, all URLs, content-types and such would "
-      "remain vaild, no compression overhead and should be really simple "
-      "to implement. Also, it would allow a site mantainer to "
-      "choose WHAT to precompress and what not to.<p>"
-      "This module acts as a filter, and it _will_ use one extra stat "
-      "per access from browsers that support automatic decompression.",
-      0,1
-    });
-}
-
+constant cvs_version = "$Id: auto_gzip.pike,v 1.7 2000/02/10 04:54:17 nilsson Exp $";
+constant thread_safe = 1;
+constant module_type = MODULE_FIRST;
+constant module_name = "Automatic sending of compressed files";
+constant module_doc  = "This module implements a suggestion by Francesco Chemolli:<br>\n"
+  "The modified filesystem should do\n"
+  "about this:<br>\n"
+  "-check if the browser supports on-the-fly decompression<br>\n"
+  "-check if a precompressed file already exists.<BR>\n"
+  "-if so, send a redirection to the precompressed file<p>\n"
+  "\n"
+  "So, no cost for compression, all URLs, content-types and such would "
+  "remain vaild, no compression overhead and should be really simple "
+  "to implement. Also, it would allow a site mantainer to "
+  "choose WHAT to precompress and what not to.<p>"
+  "This module acts as a filter, and it _will_ use one extra stat "
+  "per access from browsers that support automatic decompression.";
 
 mapping first_try(RequestID id)
 {

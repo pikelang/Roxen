@@ -1,7 +1,7 @@
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
-string cvs_version = "$Id: url_rectifier.pike,v 1.6 1999/11/24 11:11:24 per Exp $";
+string cvs_version = "$Id: url_rectifier.pike,v 1.7 2000/02/10 04:54:17 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -20,13 +20,10 @@ void start()
       decoders[ enc ]= _charset_decoder(Locale.Charset.decoder(enc))->decode;
 }
 
-array (mixed) register_module()
-{
-  return ({ MODULE_LAST, "URL Rectifier",
-            "If no file is found, assume the url is "
-	    "UTF-8 or Macintosh encoded and try again.",
-	     0, 1 });
-}
+constant module_type = MODULE_LAST;
+constant module_name = "URL Rectifier";
+constant module_doc  = "If no file is found, assume the url is "
+  "UTF-8 or Macintosh encoded and try again.";
 
 string status()
 {

@@ -1,7 +1,7 @@
 /*
- * $Id: restrictedfs.pike,v 1.10 1999/08/12 17:13:49 grubba Exp $
+ * $Id: restrictedfs.pike,v 1.11 2000/02/10 04:40:34 nilsson Exp $
  *
- * $Author: grubba $
+ * $Author: nilsson $
  *
  * Implements a restricted filesystem.
  * This filesystem only allows accesses to files that are a prefix of
@@ -13,21 +13,19 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.10 1999/08/12 17:13:49 grubba Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.11 2000/02/10 04:40:34 nilsson Exp $";
 
 #include <module.h>
 #include <roxen.h>
 
 // import Array;
 
-mixed *register_module()
-{
-  return ({ MODULE_LOCATION, "Restricted filesystem", 
-	      "This is a restricted filesystem, use it to make users home "
-	      "directories available to them if they login.<br>\n"
-	      "Usable for eg ftp-servers."
-	      });
-}
+constant module_type = MODULE_LOCATION;
+constant module_name = "Restricted filesystem";
+constant module_doc  = "This is a restricted filesystem, use it to make users home "
+  "directories available to them if they login.<br>\n"
+  "Usable for eg ftp-servers.";
+constant module_unique = 0;
 
 void create()
 {

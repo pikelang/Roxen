@@ -5,21 +5,18 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.13 1999/08/05 11:07:00 grubba Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.14 2000/02/10 04:40:34 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "filesystem";
 
-array register_module()
-{
-  return ({ MODULE_LOCATION,
-	    "Secure file system module (Mk II)",
-	    "This is a (somewhat) more secure filesystem module. It "
-            "allows an per-regexp level security.\n"
-	    "Mark 2 allows for authentication via a form.\n"
-  });
-}
+constant module_type = MODULE_LOCATION;
+constant module_name = "Secure file system module (Mk II)";
+constant module_doc  = "This is a (somewhat) more secure filesystem module. It "
+  "allows an per-regexp level security.\n"
+  "Mark 2 allows for authentication via a form.\n";
+constant module_unique = 0;
 
 array seclevels = ({ });
 

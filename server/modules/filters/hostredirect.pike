@@ -8,7 +8,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.18 1999/12/14 06:45:11 nilsson Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.19 2000/02/10 04:54:17 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -69,18 +69,14 @@ void start()
   }
 }
 
-array register_module()
-{
-  return ({ MODULE_FIRST, 
-            "Host Redirect, v2", 
-            ("This module redirects requests to different places, "
-             "depending on the hostname that was used to access the " 
-             "server. It can be used as a cheap way (IP number wise) "
-             "to do virtual hosting. <i>Note that this won't work with "
-             "all clients.</i>"
-             "<p>v2 now also allows HTTP redirects.</p>"), 
-             0, 1, });
-}
+constant module_type = MODULE_FIRST;
+constant module_name = "Host Redirect, v2";
+constant module_doc  = "This module redirects requests to different places, "
+  "depending on the hostname that was used to access the " 
+  "server. It can be used as a cheap way (IP number wise) "
+  "to do virtual hosting. <i>Note that this won't work with "
+  "all clients.</i>"
+  "<p>v2 now also allows HTTP redirects.</p>";
 
 int|mapping first_try(RequestID id)
 {
