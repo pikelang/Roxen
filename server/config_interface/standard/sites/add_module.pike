@@ -210,7 +210,7 @@ string page_compact( RequestID id )
                                 class_visible_compact, id );
   return page_base(id,
                    "<form action=add_module.pike method=POST>"
-                   "<input type=hidden name=config value=&form.config;>"+
+                   "<input type=hidden name=config value='&form.config;'>"+
                    desc+"</select><br><submit-gbutton> "
                    "&locale.add_module; </submit-gbutton><p><pre>"
                    +html_encode_string(err)+"</pre></form>",
