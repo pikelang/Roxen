@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.186 2000/11/02 14:19:22 kuntri Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.187 2000/11/02 22:23:41 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1835,7 +1835,13 @@ constant tagdoc=([
 
 "aconf":#"<desc cont='cont'><p><short>
  Creates a link that can modify the persistent states in the cookie
- RoxenConfig.</short>
+ RoxenConfig.</short> In practice it will add &lt;keyword&gt;/ right after the
+ server, i.e. if you want to remove bacon and add egg the first
+ \"directory\" in the path will be &lt;-bacon,egg&gt;. If the user
+ follows this link the WebServer will understand how the RoxenConfig
+ cookie should be modified and will send a new cookie along with a
+ redirect to the given url, but with the first \"directory\" removed. The
+ presence of a certain keyword in can be controlled with <tag>if conf='keyword'</tag>.
 </p></desc>
 
 <attr name=href value=uri>
@@ -1882,10 +1888,13 @@ This cascading style sheet (CSS) class definition will apply to the a-element.
 </attr>",
 
 "apre":#"<desc cont='cont'><p><short>
- Creates a link that can modify prestates.</short> Prestate options
- are simple toggles, and are added to the URL of the page. Use <tag>if
+ Creates a link that can modify prestates.</short> Prestates can be seen
+ as valueless cookies or toggles that are easily modified by the user.
+ The prestates are added to the URL. If you set the prestate \"no-images\"
+ on \"http://www.demolabs.com/index.html\" the URL would be
+ \"http://www.demolabs.com/(no-images)/\". Use <tag>if
  prestate='...'</tag> ... <tag>/if</tag>to test for the presence of a
- prestate. <tag>apre</tag> works just like the <tag>a href=...</tag>
+ prestate. <tag>apre</tag> works just like the <tag>a href='...'</tag>
  container, but if no \"href\" attribute is specified, the current
  page is used.
 </p></desc>
@@ -1916,7 +1925,7 @@ This cascading style sheet (CSS) class definition will apply to the a-element.
 </p></desc>
 
 <attr name=realm value=string>
- The realm you are logging on to, i.e \"Intranet foo\".
+ The realm you are logging on to, i.e \"Demolabs Intranet\".
 </attr>
 
 <attr name=message value=string>
@@ -2336,12 +2345,13 @@ Display the time from another timezone.
   This cascading style sheet (CSS) definition will be applied on the pre element.
   </attr>",
 
-"expire-time":#"<desc tag='tag'><p><short>
- Sets cache expire time for the document.</short>
+"expire-time":#"<desc tag='tag'><p><short hide='hide'>Sets client cache expire time for the document.</short>
+Sets client cache expire time for the document by sending the HTTP header \"Expires\".
 </p></desc>
 
 <attr name=now>
- The document expires now.
+  Notify the client that the document expires now. The headers \"Pragma: no-cache\" and \"Cache-Control: no-cache\"
+  will be sent, besides the \"Expires\" header.
 </attr>
 
 <attr name=years value=number>
@@ -2430,8 +2440,10 @@ Display the time from another timezone.
  a database or such.
 </attr>",
 
-"header":#"<desc tag='tag'><p><short>
- Adds a header to the document.</short>
+"header":#"<desc tag='tag'><p><short>Adds a HTTP header to the page sent back to the client.</short>
+ For more information about HTTP headers please steer your browser to chapter 14,
+ 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'>RFC 2616</a>,
+ available at Roxen Community.
 </p></desc>
 
 <attr name=name value=string>
@@ -2440,8 +2452,6 @@ Display the time from another timezone.
 
 <attr name=value value=string>
  The value of the header.
-
- For more information about HTTP headers please steer your browser to chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'>RFC 2616</a> at Roxen Community.
 </attr>",
 
 "imgs":#"<desc tag='tag'><p><short>
@@ -2651,11 +2661,11 @@ Roxen#Pike#Foo#Bar#roxen.com#community.roxen.com#Roxen Internet Software
 
 </attr>",
 
-"redirect":#"<desc tag='tag'><p><short>
- Redirects the user to another page.</short> Requires the to attribute.
+"redirect":#"<desc tag='tag'><p><short hide='hide'>Redirects the user to another page.</short>
+ Redirects the user to another page by sending a HTTP redirect header to the client.
 </p></desc>
 
-<attr name=to value=string>
+<attr name=to value=string required>
  Where the user should be sent to.
 </attr>
 
@@ -2730,8 +2740,7 @@ load.",
 
 "return":#"<desc tag='tag'><p><short>
  Changes the HTTP return code for this page.</short>
-
- See the Appendix for a list of HTTP return codes.
+ <!-- See the Appendix for a list of HTTP return codes. (We have no appendix) -->
 </p></desc>
 
 <attr name=code>
