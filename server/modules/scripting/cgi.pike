@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.65 1998/01/23 17:43:02 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.66 1998/01/23 20:49:07 peter Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -748,7 +748,7 @@ mixed low_find_file(string f, object id, string path)
   return http_stream(pipe2);
 }
 
-mixed find_file(string f, object id)
+mixed find_file(string f, object id, void|string path)
 {
   return(low_find_file(f, id, path));
 }
