@@ -1,5 +1,5 @@
 inherit "roxenlib";
-constant name= "Clear Event Log";
+constant name= "Clear Event Log...";
 
 constant doc = ("Clear all or specified (on type) events from the Event Log.");
 

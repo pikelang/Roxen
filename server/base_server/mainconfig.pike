@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.61 1997/08/12 23:47:24 peter Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.62 1997/08/13 03:35:27 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -7,6 +7,7 @@ import Array;
 import Stdio;
 string status_row(object node);
 string display_tabular_header(object node);
+object get_template(string t);
 
 /* Work-around for Simulate.perror */
 #define perror roxen_perror
@@ -517,13 +518,76 @@ string configuration_list()
   return res;
 }
 
+string configuration_types()
+{
+  string res="";
+  foreach(get_dir("server_templates"), string c)
+  {
+    catch {
+      if(c[-1]=='e' || c[0]!='#')
+	res += "<option value=\""+c+"\">"+get_template(c)->name;
+    };
+  }
+  return res;
+}
+
+string describe_config_modules(array mods)
+{
+  string res = "This configuration template adds the following modules:<p><ul>";
+  if(!mods||!sizeof(mods)) return "This configuration template adds no modules";
+  
+  foreach(mods, string mod)
+  {
+    sscanf(mod, "%s#", mod);
+    if(!roxen->allmodules[mod]) res += "<li>The unknown modules '"+mod+"'";
+    else res += "<li>"+roxen->allmodules[mod][0]+"\n";
+  }
+  return res+"</ul>";
+}
+
+string configuration_docs()
+{
+  string res;
+  foreach(get_dir("server_templates"), string c)
+  {
+    catch {
+      if(c[-1]=='e' || c[0]!='#')
+	res += ("<dt><b>"+get_template(c)->name+"</b>"+
+		"<dd>"+get_template(c)->desc+"<br>"+
+		describe_config_modules(get_template(c)->modules));
+    };
+  }
+  return res;
+}
+
 string new_configuration_form()
 {
-  return replace(default_head("") + read_bytes("etc/newconfig.html"),
-		 ({"$COPIES", "$configurl"}), 
-		 ({configuration_list(), CONFIG_URL})) +
-    "\n\n</body>";
+  return (default_head("") + status_row(root) +
+	  "<h2>Add a new virtual server</h2>\n"
+	  "<table bgcolor=#000000><tr><td >\n"
+	  "<table cellpadding=3 cellspacing=1 bgcolor=lightblue><tr><td>\n"
+	  "<form>\n"
+	  "<tr><td>Server name:</td><td><input name=name size=40,1>"
+	  "</td></tr>\n"
+	  "<tr><td>Configuration type:</td><td><select name=type>"+
+	  configuration_types()+configuration_list()+"</select></tr>"
+	  "</td>\n"
+	  "<tr><td colspan=2><table><tr><td align=left>"
+	  "<input type=submit name=ok value=\" Ok \"></td>"
+	  "<td align=right>"
+	  "<input type=submit name=no value=\" Cancel \"></td></tr>"
+	  "</table></td></tr></table></td></tr></table>" +
+	  "<p>The only thing the type change is the initial "
+	  "configuration of the server. <p>The types are:<dl>"+
+	  configuration_docs() +
+	  "<dt><b>Copy of ...</b>:\n"
+	  "<dd>Make an exact copy of the mentined virtual server.\n"
+	  "You should change at least the listen ports.    <p>"
+	  "This can be very useful, since you can make 'template' virtual "
+	  "servers (servers without any open ports), that you can copy later "
+	  "on.\n</dl>\n</body>");
 }
+
 
 mapping module_nomore(string name, int type, object conf)
 {
@@ -662,172 +726,90 @@ mapping new_module(object id, object node)
   return new_module_copy(node, varname, id);
 }
 
+string ot;
+object oT;
+object get_template(string t)
+{
+  t-=".pike";
+  if(ot==t) return oT; ot=t;
+  return (oT=compile_file("server_templates/"+t+".pike")());
+}
+
+int check_config_name(string name)
+{
+  if(strlen(name) && name[-1] == '~') name = "";
+  if(search(name, "/")!= -1) return 1;
+  
+  foreach(roxen->configurations, object c)
+    if(lower_case(c->name) == lower_case(name))
+      return 1;
+
+  switch(name) {
+   case " ": case "\t": case "CVS":
+   case "Global Variables": case "global variables": case "Global variables":
+    return 1;
+  }
+  return !strlen(name);
+}
+
 int low_enable_configuration(string name, string type)
 {
   object node;
+  object o, o2, confnode;
+  array(string) arr = replace(type,"."," ")/" ";
+
+  if(check_config_name(name)) return 0;
   
-  if(strlen(name) && name[-1] == '~')
-    name = "";
+  if((type = lower_case(arr[0])) == "copy")
+  {
+    string from;
+    mapping tmp;
+    if ((sizeof(arr) > 1) &&
+	(sscanf(arr[1..]*" ", "%*s'%s'", from) == 2) &&
+	(tmp = roxen->copy_configuration(from, name)))
+    {
+      tmp["spider#0"]->LogFile =
+	"../logs/" + roxenp()->short_name(name) + "/Log";
+      roxenp()->save_it(name);
+      roxen->enable_configuration(name);
+    }
+  } else
+    get_template(type)->enable(roxen->enable_configuration(name));
 
-  if(search(name, "/")!= -1)
-    return 0;
+  confnode = root->descend("Configurations");
+  node=confnode->descend(name);
   
-  foreach(roxen->configurations, node)
-    if(node->name == name) 
-      return 0;
-
-  switch(name) {
-  case "":
-  case " ":
-  case "\t":
-  case "CVS":
-  case "Global Variables":
-  case "global variables":
-  case "Global variables":
-    return 0;
-    break;
-    
-  default:
-    object o, o2, confnode;
-    array(string) arr = type/" ";
-    
-    switch(type = lower_case(arr[0])) {
-    default: /* Minimal configuration */
-    case "bare":
-      o=roxen->enable_configuration(name);
-      break;
-      
-    case "standard":
-      o = roxen->enable_configuration(name);
-      o->enable_module("cgi#0");
-      o->enable_module("contenttypes#0");
-      o->enable_module("ismap#0");
-      o->enable_module("pikescript#0");
-      o->enable_module("htmlparse#0");
-      o->enable_module("directories#0");
-      o->enable_module("userdb#0");
-      o->enable_module("userfs#0"); // I _think_ we want this.
-      o->enable_module("filesystem#0");
-      break;
-      
-    case "ipp":
-      o=roxen->enable_configuration(name);
-      o->enable_module("contenttypes#0");
-      o->enable_module("ismap#0");
-      o->enable_module("htmlparse#0");
-      o->enable_module("directories#0");
-      o->enable_module("filesystem#0");
-      break;
-
-    case "ftp":
-      o=roxen->enable_configuration(name);
-      o->enable_module("filesystem#0");
-      o->enable_module("userdb#0");
-      o->enable_module("htaccess#0");
-      break;
-
-    case "proxy":
-      o=roxen->enable_configuration(name);
-      o->enable_module("proxy#0");
-      o->enable_module("gopher#0");
-      o->enable_module("ftpgateway#0");
-      o->enable_module("contenttypes#0");
-      o->enable_module("wais#0");
-      break;
-      
-    case "copy":
-      string from;
-      mapping tmp;
-      if ((sizeof(arr) > 1) &&
-	  (sscanf(arr[1..]*" ", "%*s'%s'", from) == 2) &&
-	  (tmp = roxen->copy_configuration(from, name))) {
-	tmp["spider#0"]->LogFile =
-	  "../logs/" + roxenp()->short_name(name) + "/Log";
-	roxenp()->save_it(name);
-	roxen->enable_configuration(name);
-      } else {
-	error("No configuration to copy from!\n");
+  node->describer = describe_configuration;
+  node->saver = save_configuration;
+  node->data = roxen->configurations[-1];
+  node->type = NODE_CONFIGURATION;
+  build_configuration(node);
+  node->folded=0;
+  node->change(1);
+  
+  if(get_template(type)->post)
+    get_template(type)->post(node);
+  
+  if(o = node->descend( "Global", 1 )) {
+    o->folded = 0;
+    if(o2 = o->descend( "Listen ports", 1 )) {
+      o2->folded = 0;
+      o2->change(1);
+    }
+  }
+  
+  if(o = node->descend( "Filesystem", 1 )) {
+    o->folded=0;
+    if(o = o->descend( "0", 1)) {
+      o->folded=0;
+      if(o2 = o->descend( "Search path", 1)) {
+	o2->folded=0;
+	o2->change(1);
       }
-      break;
-    }    
-    confnode = root->descend("Configurations");
-    node=confnode->descend(name);
-
-    node->describer = describe_configuration;
-    node->saver = save_configuration;
-    node->data = roxen->configurations[-1];
-    node->type = NODE_CONFIGURATION;
-    build_configuration(node);
-    node->folded=0;
-    node->change(1);
-    
-    if(o = node->descend( "Global", 1 )) {
-      o->folded = 0;
-      if (type != "ftp") {
-	if(o2 = o->descend( "Server URL", 1 )) {
-	  o2->folded = 0;
-	  o2->change(1);
-	}
-      }
-      if(o2 = o->descend( "Listen ports", 1 )) {
+      if (o2 = o->descend("Handle the PUT method", 1)) {
 	o2->folded = 0;
 	o2->change(1);
       }
-    }
-
-    switch(type) {
-    case "ftp":
-      if (o = node->descend("Global", 1)) {
-	if (o2 = o->descend("Listen ports", 1)) {
-	  o2->data[VAR_VALUE] = ({ ({ 21, "ftp", "ANY", "" }) });
-	}
-	if (o2 = o->descend("Allow named FTP", 1)) {
-	  o2->folded = 0;
-	  o2->change(1);
-	}
-	if (o2 = o->descend("Messages", 1)) {
-	  o2->folded = 0;
-	  o2->change(1);
-	  if (o2 = o2->descend("FTP Welcome", 1)) {
-	    o2->folded = 0;
-	    o2->change(1);
-	  }
-	}
-	if (o2 = o->descend("Shell database", 1)) {
-	  o2->folded = 0;
-	  o2->change(1);
-	}
-      }
-      if (o = node->descend("User database and security", 1)) {
-	object o2;
-	if (o2 = o->descend("Password database request method", 1)) {
-	  o2->folded = 0;
-	  o2->change(1);
-	}
-	if (o2 = o->descend("Password database file", 1)) {
-	  o2->folded = 0;
-	  o2->change(1);
-	}
-      }
-      /* FALL_THROUGH */
-    case "standard":
-      if(o = node->descend( "Filesystem", 1 )) {
-	o->folded=0;
-	if(o = o->descend( "0", 1)) {
-	  o->folded=0;
-	  if(o2 = o->descend( "Search path", 1)) {
-	    o2->folded=0;
-	    o2->change(1);
-	  }
-	  if (o2 = o->descend("Handle the PUT method", 1)) {
-	    o2->folded = 0;
-	    o2->change(1);
-	  }
-	}
-      }
-      break;
-    default:
-      break;
     }
   }
   return 1;
