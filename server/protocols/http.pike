@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.29 1997/05/30 12:33:44 grubba Exp $";
+string cvs_version = "$Id: http.pike,v 1.30 1997/06/11 23:19:36 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -60,6 +60,7 @@ object pipe;
 
 // string range;
 string prot;
+string clientprot;
 string method;
 
 string realfile, virtfile;
@@ -219,16 +220,17 @@ private int parse_got(string s)
   real_raw = s;
   s -= "\r"; // I just hate all thoose CR LF.
   
-  if(strlen(s) < 3)
-    return 0;			// Not finished, I promise.
+  // if(strlen(s) < 3)
+  //   return 0;			// Not finished, I promise.
   
-  if(!(s[-1] == '\n' && search(s, "HTTP/") == -1))
+  if((s[-1] != '\n') || (search(s, "HTTP/") >= 0))
     if(search(s, "\n\n") == -1)
       return 0;
   raw = s;
   
   s = replace(s, "\t", " ");
   
+#if 0
   if(sscanf(s,"%s %s %s\n%s", method, f, prot, s) < 4)
   {
     if(sscanf(s,"%s %s\n", method, f) < 2)
@@ -236,9 +238,40 @@ private int parse_got(string s)
     s="";
     prot = "HTTP/0.9";
   }
-  
   if(!method)
     method = "GET";
+#else
+  {
+    array arr = s/"\n";
+    // Defaults:
+    prot = clientprot = "HTTP/0.9";
+    s="";
+    f="/";
+    method = "GET";
+    if (sizeof(arr[0])) {
+      array arr2 = arr[0]/" ";
+      switch(sizeof(arr2)) {
+      default:
+      case 3:
+	if ((clientprot = arr2[-1]) != "HTTP/0.9") {
+	  prot = "HTTP/1.0";
+	  if (sizeof(arr)>1) {
+	    s = arr[1..]*"\n";
+	  }
+	}
+	f = arr2[1..sizeof(arr2)-2]*" ";
+	method = arr2[0];
+	break;
+      case 2:
+	f = arr2[1];
+	/* FALL-THROUGH */
+      case 1:
+	method = arr2[0];
+	break;
+      }
+    }
+  }
+#endif /* 0 */
   method = upper_case(method);
   if(method == "PING")
   { 
@@ -1059,6 +1092,7 @@ object clone_me()
 // pipe..
   
   c->prot = prot;
+  c->clientprot = clientprot;
   c->method = method;
   
 // realfile virtfile   // Should not be copied.  
