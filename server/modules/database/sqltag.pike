@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.114 2004/06/20 16:12:58 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.115 2004/06/21 11:44:02 _cvs_stephen Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -88,6 +88,10 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 </ex-box>
 </p>
 </attr>
+
+<attr name='rowinfo' value='variable'><p>
+ Set the given variable to the number of rows processed.</p>
+</attr>"
 
 <attr name='mysql-insert-id' value='variable'><p>
  Set the given variable to the insert id used by Mysql for
@@ -211,12 +215,10 @@ array|object do_sql_query(mapping args, RequestID id,
     }
   }
 
-  if(result && args->rowinfo) {
+  if(result && arrayp(result) && args->rowinfo) {
     int rows;
-    if(arrayp(result)) rows=sizeof(result);
-    if(objectp(result)) rows=result->num_rows();
+    rows=sizeof(result); // FIXME use the intrinsic value passed by SQL instead
     RXML.user_set_var(args->rowinfo, rows);
-    if(objectp(result)) m_delete(args, "rowinfo");
   }
   return querytype==2 ? con : result;
 }
@@ -294,6 +296,7 @@ class TagSQLQuery {
   mapping(string:RXML.Type) opt_arg_types = ([
     "db":RXML.t_text(RXML.PEnt),
     "module":RXML.t_text(RXML.PEnt),
+    "rowinfo":RXML.t_text(RXML.PEnt), // t_var
     "mysql-insert-id":RXML.t_text(RXML.PEnt), // t_var
   ]);
 
