@@ -206,7 +206,8 @@ mapping find_file(string f, object id)
   perror("f-data: %O\n", data);
 
   //strap
-  res->fontsize=32;
+  if(!res->fontsize)
+    res->fontsize=32;
   res->legendfontsize=12;
   res->labelcolor=({0,0,0});
   res->axiscolor=({0,0,0});
