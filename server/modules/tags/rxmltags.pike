@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.349 2002/02/15 16:30:51 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.350 2002/03/06 17:05:29 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5983,8 +5983,8 @@ using the pre tag.
  the contents.
 </p></desc>
 
-<attr name='define' value='string'>
- <p>The result will be put into a variable. E.g. define=\"var.gauge\" will
+<attr name='variable' value='string'>
+ <p>The result will be put into a variable. E.g. variable=\"var.gauge\" will
  put the result in a variable that can be reached with <ent>var.gauge</ent>.</p>
 </attr>
 
