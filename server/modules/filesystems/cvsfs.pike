@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-static string cvs_version = "$Id: cvsfs.pike,v 1.1 1997/02/07 22:22:18 nisse Exp $";
+static string cvs_version = "$Id: cvsfs.pike,v 1.2 1997/02/07 22:39:21 grubba Exp $";
 
 #include <module.h>
 #include <string.h>
@@ -177,11 +177,22 @@ string status()
     (dirlists ? ("<b>Directories</b>: " + (string) dirlists + "<br>") : "");
 }
 
+mixed stat_file(string name, object id)
+{
+  return(file_stat(query("cvsroot") + cvs_module_path + "/" + name + ",v"));
+}
+
 object|mapping find_file(string name, object id)
 {
+  array(string) extra_args = ({});
+
   werror(sprintf("find_file: Looking for '%s'\n", name));
-  if (cvs_module_path
-      && file_stat(query("cvsroot") + cvs_module_path + "/" + name + ",v"))
+
+  foreach(indices(id->prestate)) {
+    
+  }
+
+  if (cvs_module_path && this->stat_file(name, id))
     return run_cvs(query("cvsprogram"), 0, 0,
 		   "-d", query("cvsroot"), "checkout", "-p",
 		   cvs_module_path + name);
