@@ -1,0 +1,21 @@
+<h3>SQL query</h3>
+
+The {sqlquery}-tag is used to run SQL queries with
+no result returned.
+
+<h3>SQL query options</h3>
+<blockquote><dl>
+
+<dt><b>host</b>=<tt>hostname or alias</tt><dd>
+          Use this SQL-URL to connect, or, alias as defined
+          in the SQL databases table.
+
+<dt><b>query</b>=<tt>SQL statement</tt><dd>
+          The actual SQL statement.
+
+<dt><b>mysql-insert-id</b>=<tt>form-variable</tt><dd>
+          Set <tt>form-variable</tt> to the insert id
+          used by Mysql for auto-incrementing columns. <br>
+          <i>Note: This is only available with Mysql.</i>
+
+</dl></blockquote>
