@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: read_config.pike,v 1.66 2004/08/18 17:33:51 mast Exp $
+// $Id: read_config.pike,v 1.67 2005/02/08 18:41:22 mast Exp $
 
 #include <module.h>
 
@@ -45,29 +45,38 @@ array(string) list_all_configurations()
 }
 
 
-mapping call_outs = ([]);
-Thread.Mutex call_outs_mutex = Thread.Mutex();
-int counter = 0;
+private	mapping call_outs = ([]);
+private	Thread.Mutex call_outs_mutex = Thread.Mutex();
+private	int counter = 0;
 void save_it(string cl, mapping data)
 {
   Thread.MutexKey lock = call_outs_mutex->lock();
-  if( call_outs[ cl ] )
+  if( call_outs[ cl ] ) {
+#ifdef DEBUG_CONFIG
+    report_debug ("CONFIG: save_it removing call out for %O, count %O\n",
+		  cl, call_outs[cl]->counter);
+#endif
     remove_call_out( call_outs[ cl ]->callout );
+  }
   data = COPY(data);
   counter++;
   call_outs[ cl ] = ([ "callout" : call_out( really_save_it, 0.1,
                                              cl, data, counter ),
                        "data" : data,
-                       "counter" : counter ]);
+		       "counter" : counter ]);
+#ifdef DEBUG_CONFIG
+  report_debug ("CONFIG: save_it added call out for %O, count %O\n", cl, counter);
+#endif
 }
 
-void really_save_it( string cl, mapping data, int counter )
+private void really_save_it( string cl, mapping data, int counter )
 {
   Stdio.File fd;
   string f, new;
 
 #ifdef DEBUG_CONFIG
-  report_debug("CONFIG: Writing configuration file for cl "+cl+"\n");
+  report_debug("CONFIG: Writing configuration file for cl %O, count %O\n",
+	       cl, counter);
 #endif
 
   f = configuration_dir + replace(string_to_utf8(cl), " ", "_");
@@ -179,8 +188,15 @@ Stat config_is_modified(string cl)
 
 mapping read_it(string cl)
 {
-  if (call_outs[cl])
+  Thread.MutexKey lock = call_outs_mutex->lock();
+  if (call_outs[cl]) {
+#ifdef DEBUG_CONFIG
+    report_debug ("CONFIG: Reading data for %O count %O from call out list.\n",
+		  cl, call_outs[cl]->counter);
+#endif
     return call_outs[cl]->data;
+  }
+  lock = 0;
 
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Read configuration file for cl "+cl+"\n");
@@ -314,8 +330,12 @@ void store( string reg, mapping vars, int q,
   // Call any potential special save callbacks.
   indices(savers)();
 
-  if( equal( old_reg, m ) )
+  if( equal( old_reg, m ) ) {
+#ifdef DEBUG_CONFIG
+    report_debug ("CONFIG: Not storing %O in %O since data is equal.\n", reg, cl);
+#endif
     return;
+  }
   last_read = 0; last_data = 0;
   save_it(cl, data);
 }
