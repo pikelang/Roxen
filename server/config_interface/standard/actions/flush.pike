@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.3 2000/03/23 00:40:09 mast Exp $
+ * $Id: flush.pike,v 1.4 2000/05/14 23:44:39 nilsson Exp $
  */
 #include <config_interface.h>
 
@@ -19,7 +19,7 @@ mixed doit()
       c->modules["userdb"]->master->read_data();
 
   /* Flush the memory cache. */
-  function_object(cache_set)->cache = ([]);
+  cache.flush_memory_cache();
 
   /* Flush the dir cache. */
   foreach(roxen->configurations, object c)
