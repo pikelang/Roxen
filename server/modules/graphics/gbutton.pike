@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.100 2003/09/22 15:55:46 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.101 2003/10/16 11:46:15 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -881,10 +881,11 @@ class TagGButton {
 			     "vspace" : args->vspace ]);
       if (img_align)
         img_attrs->align = img_align;
-      
+
+      int no_draw = !id->misc->generate_images;
       if (mapping size = button_cache->metadata( ({ new_args, (string)content }),
-						 id, 1)) {
-	//  Image in cache (1 above prevents generation on-the-fly, i.e.
+						 id, no_draw)) {
+	//  Image in cache (no_draw above prevents generation on-the-fly, i.e.
 	//  first image will lack sizes).
 	img_attrs->width = size->xsize;
 	img_attrs->height = size->ysize;
