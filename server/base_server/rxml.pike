@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.124 2000/02/13 18:25:53 mast Exp $
+ * $Id: rxml.pike,v 1.125 2000/02/14 14:29:15 nilsson Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -950,9 +950,9 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 #endif
     id->misc->_containers[n] = call_user_container;
   }
-  else if (m["if"]) {
+  else if (m->if) {
     if(!id->misc->_ifs) id->misc->_ifs=([]);
-    id->misc->_ifs[ lower_case(m["if"]) ] = UserIf( str );
+    id->misc->_ifs[ lower_case(m->if) ] = UserIf(m->if, str);
   }
   else
     return rxml_error(tag, "No tag, variable, if or container specified.", id);
@@ -1156,7 +1156,7 @@ class FrameIf {
 
     int ifval=0;
     foreach(possible, string s) {
-      ifval = plugins[ s ]( args[s], id, args, and, s );
+      ifval = plugins[ s ]->eval( args[s], id, args, and, s );
       if(ifval) {
 	if(!and) {
 	  do_iterate = 1;
@@ -1405,32 +1405,30 @@ RXML.TagSet query_tag_set()
 
 class UserIf
 {
+  inherit RXML.Tag;
+  constant name = "if";
+  string plugin_name;
   string rxml_code;
-  void create( string what )
-  {
-    rxml_code = what;
+
+  void create(string pname, string code) {
+    plugin_name = pname;
+    rxml_code = code;
   }
 
-  string _sprintf()
-  {
-    return "UserIf("+rxml_code+")";
-  }
-
-  int `()( string ind, RequestID id, mapping args, int and, string a )
-  {
+  int eval(string ind, RequestID id) {
     int otruth, res;
     string tmp;
 
-    TRACE_ENTER("user defined if argument &lt;"+a+"&gt;", UserIf);
+    TRACE_ENTER("user defined if argument "+plugin_name, UserIf);
     otruth = LAST_IF_TRUE;
     LAST_IF_TRUE = -2;
-    tmp = parse_rxml(rxml_code, id );
+    tmp = parse_rxml(rxml_code, id);
     res = LAST_IF_TRUE;
     LAST_IF_TRUE = otruth;
 
     TRACE_LEAVE("");
 
-    if(ind==a && res!=-2)
+    if(ind==plugin_name && res!=-2)
       return res;
 
     return (ind==tmp);
@@ -1444,7 +1442,7 @@ class IfIs
 
   constant cache = 0;
   function source;
-  function `() = match_in_map;
+  function eval = match_in_map;
 
   int match_in_string( string value, RequestID id )
   {
@@ -1488,7 +1486,7 @@ class IfMatch
   constant cache = 0;
   function source;
 
-  int `()( string is, RequestID id ) {
+  int eval( string is, RequestID id ) {
     array|string value=source(id);
     if(!cache) CACHE(0);
     if(!value) return 0;
@@ -1504,7 +1502,7 @@ class TagIfDate {
   constant name = "if";
   constant plugin_name = "date";
 
-  int `() (string date, RequestID id, mapping m) {
+  int eval(string date, RequestID id, mapping m) {
     CACHE(60); // One minute accuracy is probably good enough...
     int a, b;
     mapping c;
@@ -1527,7 +1525,7 @@ class TagIfTime {
   constant name = "if";
   constant plugin_name = "time";
 
-  int `() (string ti, RequestID id, mapping m) {
+  int eval(string ti, RequestID id, mapping m) {
     CACHE(time(1)%60); // minute resolution...
 
     int tok, a, b, d;
@@ -1560,7 +1558,7 @@ class TagIfUser {
   constant name = "if";
   constant plugin_name = "user";
 
-  int `() (string u, RequestID id, mapping m) {
+  int eval(string u, RequestID id, mapping m) {
     if(!id->auth)
       return 0;
     NOCACHE();
@@ -1610,7 +1608,7 @@ class TagIfGroup {
   constant name = "if";
   constant plugin_name = "group";
 
-  int `() (string u, RequestID id, mapping m) {
+  int eval(string u, RequestID id, mapping m) {
     if( !id->auth )
       return 0;
     NOCACHE();
@@ -1651,7 +1649,7 @@ class TagIfExists {
   constant name = "if";
   constant plugin_name = "exists";
 
-  int `() (string u, RequestID id) {
+  int eval(string u, RequestID id) {
     CACHE(5);
     return id->conf->is_file(fix_relative(u, id), id);
   }
@@ -1662,7 +1660,7 @@ class TagIfTrue {
   constant name = "if";
   constant plugin_name = "true";
 
-  int `() (string u, RequestID id) {
+  int eval(string u, RequestID id) {
     return LAST_IF_TRUE;
   }
 }
@@ -1672,7 +1670,7 @@ class TagIfFalse {
   constant name = "if";
   constant plugin_name = "false";
 
-  int `() (string u, RequestID id) {
+  int eval(string u, RequestID id) {
     return !LAST_IF_TRUE;
   }
 }
