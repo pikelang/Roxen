@@ -201,7 +201,7 @@ mixed parse_sexpr(string what)
 {
   if( (string)(int)what == what )
     return (int)what;
-  return compile_string("mixed foo="+what+";",0,compile_handler)()->foo;
+  return compile("mixed foo="+what+";",compile_handler,-1,-1)()->foo;
 }
 
 

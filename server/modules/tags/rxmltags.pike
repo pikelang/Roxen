@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.396 2002/11/11 01:56:30 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.397 2002/11/13 16:24:36 mani Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -87,8 +87,8 @@ string sexpr_eval(string what)
   what -= "lambda";
   what -= "\"";
   what -= ";";
-  return compile_string( "int|float foo=" + what + ";",
-			 0, compile_handler )()->foo;
+  return compile( "int|float foo=" + what + ";",
+		  compile_handler, -1, -1 )()->foo;
 }
 
 #if ROXEN_COMPAT <= 1.3
