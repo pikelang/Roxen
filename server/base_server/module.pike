@@ -292,13 +292,17 @@ array query_seclevels()
 	
 	for(i=0; i < sizeof(users); i++) {
 	  if (users[i] == "any") {
-	    users[i & 0x0f] = "(^.*$)";
+	    if(this->register_module()[0] & MODULE_PROXY) 
+	      patterns += ({ ({ MOD_PROXY_USER, lambda(){ return 1; } }) });
+	    else
+	      patterns += ({ ({ MOD_USER, lambda(){ return 1; } }) });
+	    break;
 	  } else {
 	    users[i & 0x0f] = "(^"+users[i]+"$)";
 	  }
 	  if ((i & 0x0f) == 0x0f) {
 	    value = users[0..0x0f]*"|";
-	    if(this->proxy_auth_needed) {
+	    if(this->register_module()[0] & MODULE_PROXY) {
 	      patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
 	    } else {
 	      patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
@@ -307,7 +311,7 @@ array query_seclevels()
 	}
 	if (i & 0x0f) {
 	  value = users[0..(i-1)&0x0f]*"|";
-	  if(this->proxy_auth_needed) {
+	  if(this->register_module()[0] & MODULE_PROXY) {
 	    patterns += ({ ({ MOD_PROXY_USER, Regexp(value)->match, }) });
 	  } else {
 	    patterns += ({ ({ MOD_USER, Regexp(value)->match, }) });
