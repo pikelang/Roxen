@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.218 1999/11/05 08:00:51 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.219 1999/11/06 07:44:04 per Exp $";
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
@@ -2211,9 +2211,8 @@ object enable_module( string modname )
     while( modules[modname] && modules[modname]->copies[id] )
       id++;
 
-#if constant(gethrtime)
   int start_time = gethrtime();
-#endif
+
   moduleinfo = roxen->find_module( modname );
 
 
@@ -2845,9 +2844,8 @@ void enable_all_modules()
   parse_log_formats();
   init_log_file();
 
-#if efun(gethrtime)
   int start_time = gethrtime();
-#endif
+
   report_debug("\nEnabling all modules for "+query_name()+"... \n");
 
   // Always enable the user database module first.
@@ -2864,7 +2862,7 @@ void enable_all_modules()
                                                   describe_backtrace(err)));
   }
 
-  report_debug("All modules for %s enabled in %4.3f seconds\n\n", query_name(),
+  report_debug("All modules for %s enabled in %3.1f seconds\n\n", query_name(),
                (gethrtime()-start_time)/1000000.0);
 }
 
