@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.45 2000/09/19 12:46:28 lange Exp $
+// $Id: global_variables.pike,v 1.46 2000/09/19 12:55:09 per Exp $
 
 /*
 #pragma strict_types
@@ -250,7 +250,7 @@ void define_global_variables(  )
 	  "bandwidth statistics on the log file will be incorrect. The "
 	  "statistics in Roxen will still be correct."));
 
-  defvar("default_font", "franklin_gothic_demi", LOCALE(92, "Default font"), 
+  defvar("default_font", "roxen builtin", LOCALE(92, "Default font"), 
 	 TYPE_FONT,
 	 LOCALE(93, "The default font to use when modules request a font."));
 
