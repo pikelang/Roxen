@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.98 2001/10/04 13:57:39 per Exp $";
+  "$Id: config_filesystem.pike,v 1.99 2001/10/04 14:06:11 per Exp $";
 
 constant path = "config_interface/";
 
@@ -351,7 +351,7 @@ void start(int n, Configuration cfg)
       {
 	// Restore from "backup".
 	report_notice("Creating the 'docs' database.\n");
-	DBManager.restore_backup( "docs", getcwd()+"/etc/" );
+	DBManager.restore( "docs", getcwd()+"/etc/" );
       }
       else
 	report_warning( "There is no documentation available\n");
