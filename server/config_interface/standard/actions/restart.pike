@@ -12,7 +12,7 @@ string parse(object id)
    case "restart":
      if( config_perm( "Restart" ) )
      {
-       roxen->restart(0.1);
+       roxen->restart(0.5);
        return
 #"<input type=hidden name=action value=restart.pike>
 <font color=darkred><h1>&locale.restart;</h1></font>
@@ -28,7 +28,7 @@ most 15 minutes.</i> </font>";
    case "shutdown":
      if( config_perm( "Shutdown" ) )
      {
-       roxen->shutdown(0.1);
+       roxen->shutdown(0.5);
        return
 #"<font color=darkred><h1>&locale.shutdown;</h1></font>
 Roxen will <b>not</b> restart automatically.
@@ -62,6 +62,10 @@ most 15 minutes.</i> </font>";
 <cf-perm not perm='Shutdown'>
   <gbutton dim width=300  preparse
            icon_src=/internal-roxen-err_3> &locale.shutdown; </gbutton>
-</cf-perm>";
+</cf-perm>
+
+</blockquote>
+
+<p><cf-cancel href='?class=&form.class;'/>";
      }
 }
