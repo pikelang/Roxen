@@ -1,4 +1,4 @@
-/* This is a roxen module. Copyright © 1997, 1998, Idonex AB.
+/* This is a roxen module. Copyright © 1997-1999, Idonex AB.
  *
  * Adds some java script that will prevent others from putting
  * your page in a frame.
@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.21 1998/08/10 21:39:31 per Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.22 1999/07/21 05:12:03 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -99,7 +99,7 @@ string tag_killframe( string tag, mapping m, object id )
     javascript = ( "   if(top.frames.length>1)\n"
 		   "     top.location = \""+ my_url +"\";\n" );
 
-  return("<script language=javascript><!--\n"
+  return("<script language=\"javascript\"><!--\n"
 	 + javascript
 	 + "//--></script>\n");
 }
