@@ -8,13 +8,13 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.13 2004/05/22 22:23:42 _cvs_stephen Exp $";
+constant cvs_version = "$Id: chilimoon_network.pike,v 1.1 2004/05/29 02:25:50 _cvs_stephen Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "ChiliMoon Network module";
 constant module_doc  = #"This module advertises the servers capabilities 
-on community.roxen.com. In practice that means that the server sends the
-following information to Roxen:
+on stats.chilimoon.org. In practice that means that the server sends the
+following information to the ChiliMoon stats-server:
 <ul>
 <li>Server version</li>
 <li>Pike version</li>
@@ -32,11 +32,11 @@ class PositionAccess {
   inherit Variable.MapLocation;
 
   int low_set( mixed to ) {
-    return roxen->variables->global_position->set(to);
+    return core->variables->global_position->set(to);
   }
 
   mixed query() {
-    return roxen->variables->global_position->query();
+    return core->variables->global_position->query();
   }
 }
 
@@ -62,7 +62,7 @@ void create(Configuration _conf) {
 
   defvar("ad",
 	 Variable.Text("", 0, "Free Text",
-		       "Write whatever you like the community.roxen.com visitors "
+		       "Write whatever you like the stats.chilimoon.org visitors "
 		       "to know about your server..."));
 
   defvar("trans_mods",
@@ -100,7 +100,7 @@ class Poster
   
   void fail( Protocols.HTTP.Query qu )
   {
-    report_warning( "ChiliMoon Network: Failed to connect to community.roxen.com.\n" );
+    report_warning( "ChiliMoon Network: Failed to connect to stats.chilimoon.org.\n" );
     call_out( start, 60 );
   }
 
@@ -109,9 +109,9 @@ class Poster
     remove_call_out( start );
     call_out( start, 60*60*24 );
     query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
-    query->async_request( "community.roxen.com", 80,
-			  "POST /register/roxen_network.html HTTP/1.0",
-			  ([ "Host":"community.roxen.com:80" ]),
+    query->async_request( "stats.chilimoon.org", 80,
+			  "POST /register/chilimoon_network.html HTTP/1.0",
+			  ([ "Host":"stats.chilimoon.org:80" ]),
 			  "data=" + Roxen.http_encode_string(mk_pkg()) );
   }
   
@@ -129,7 +129,7 @@ string build_package() {
 
   info->pike_version = predef::version();
   info->roxen_version = __roxen_version__ + "." + __roxen_build__;
-  info->id_string = roxen->version();
+  info->id_string = core->version();
 
   foreach( ({ "owner", "webmaster", "ad" }), string var)
     if(sizeof(query(var)))

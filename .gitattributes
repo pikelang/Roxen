@@ -165,10 +165,10 @@ worldmap binary
 /server/modules/icecast/icecast.pike foreign_ident
 /server/modules/ldap/ldaptag.pike foreign_ident
 /server/modules/ldap/userdb_ldap.pike foreign_ident
+/server/modules/logging/chilimoon_network.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
-/server/modules/logging/roxen_network.pike foreign_ident
 /server/modules/misc/contenttypes.pike foreign_ident
 /server/modules/misc/demo.pike foreign_ident
 /server/modules/misc/implicit_use.pike foreign_ident
