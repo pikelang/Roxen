@@ -1,6 +1,6 @@
 inherit "module";
 
-constant cvs_version= "$Id: tarfs.pike,v 1.2 2000/09/14 13:51:13 per Exp $";
+constant cvs_version= "$Id: tarfs.pike,v 1.3 2000/09/23 02:05:51 per Exp $";
 
 // The Filesystem.Tar module is not threadsafe.
 constant thread_safe=0;
@@ -22,7 +22,8 @@ void create()
           "Where the module will be mounted in the site's virtual file "
           "system." );
 
-  defvar("tarfile", "docs.tar", "Tar file and root path", TYPE_FILE|VAR_INITIAL,
+  defvar("tarfile", "config_interface/docs.tar", 
+         "Tar file and root path", TYPE_FILE|VAR_INITIAL,
 	 "The tarfile, and an optional root path (syntax: /tar/file.tar:/"
          "root/dir/)" );
 }
