@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.144 1997/10/15 02:46:13 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.145 1997/10/15 02:50:47 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -930,7 +930,7 @@ void kill_me()
     }
   }
   // Die.
-  exit(0);
+  call_out(exit, 2, 0);
 }
 
 mapping shutdown() 
