@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.863 2004/02/16 13:41:46 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.864 2004/03/09 16:04:31 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -433,6 +433,14 @@ private void really_low_shutdown(int exit_code)
 #ifdef THREADS
   catch (stop_handler_threads());
 #endif /* THREADS */
+  if (!exit_code) {
+    // We're shutting down; Attempt to take mysqld with us.
+    catch { report_notice("Shutting down MySQL.\n"); };
+    catch {
+      Sql.sql db = connect_to_my_mysql(0, "mysql");
+      db->shutdown();
+    };
+  }
   destruct (cache);
   catch {
 #if 0
