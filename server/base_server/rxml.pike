@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.314 2001/08/23 23:34:41 mast Exp $
+// $Id: rxml.pike,v 1.315 2001/09/20 20:26:53 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -237,13 +237,12 @@ class CompatTag
   string|COMPAT_TAG_TYPE|COMPAT_CONTAINER_TYPE fn;
 
   RXML.Type content_type = RXML.t_same; // No preparsing.
-  array(RXML.Type) result_types =
-    ({RXML.t_xml (RXML.PXml), RXML.t_html (RXML.PXml)}); // Postparsing.
 
   void create (string _name, int empty, string|COMPAT_TAG_TYPE|COMPAT_CONTAINER_TYPE _fn)
   {
     name = _name, fn = _fn;
     flags = empty && RXML.FLAG_EMPTY_ELEMENT;
+    result_types = result_types(RXML.PXml); // Postparsing
   }
 
   class Frame
