@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.40 1999/05/18 03:54:38 per Exp $ */
+/* $Id: module.pike,v 1.41 1999/05/24 08:41:59 per Exp $ */
 
 #include <module.h>
 
@@ -49,7 +49,7 @@ object my_configuration()
   object conf;
   foreach(roxen->configurations, conf)
     if(conf->otomod[this])
-      return conf;
+      return _my_configuration = conf;
   return 0;
 }
 
