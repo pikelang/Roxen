@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.117 2000/04/03 15:49:30 jonasw Exp $
+// $Id: wizard.pike,v 1.118 2000/04/18 23:34:13 mast Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -789,8 +789,9 @@ string err;
 object get_wizard(string act, string dir, mixed ... args)
 {
   act-="/";
-  if(!wizards[dir+act]) wizards[dir+act]=compile_file(dir+act)(@args);
-  return wizards[dir+act];
+  object w = wizards[dir+act];
+  if(!w) w = wizards[dir+act] = compile_file(dir+act)(@args);
+  return w;
 }
 
 int zonk=time();
