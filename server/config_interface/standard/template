@@ -7,12 +7,12 @@
   <br clear="all" />
   <emit ::='&_.args;'/>
   <set variable='var.oldchanged' value='notreally'/>
-  <table cellspacing=0 cellpadding=4>
+  <table cellspacing="0" cellpadding="4">
     <emit ::='&_.args;' noset=''>
       <cond>
         <case variable='usr.changemark is not'>
           <tr><td valign=top width="20%" valign="top"><b>&_.name;</b></td>
-		<td valign=top><eval>&_.form:none;</eval></td></tr>
+		<td valign="top"><eval>&_.form:none;</eval></td></tr>
           <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
         </case>
     
@@ -24,8 +24,8 @@
            <set variable='var.extraargs' value=''/>
           </else>
           <tr>
-            <td valign=top width="20%"><b>&_.name;</b></td>
-            <td valign=top ::='&var.extraargs;'><eval>&_.form:none;</eval></td>
+            <td valign="top" width="20%"><b>&_.name;</b></td>
+            <td valign="top" ::='&var.extraargs;'><eval>&_.form:none;</eval></td>
           </tr>
           <tr>
             <td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td>
@@ -37,20 +37,20 @@
             <set variable='var.oldchanged' value='&_.changed;'/>
             <if variable='_.changed is 1'>
             <tr bgcolor='&usr.content-titlebg;'>
-              <td colspan=2 width="100%">
-                <font size='+1' color='&usr.content-titlefg;'>Changed</font>
+              <td colspan="2" width="100%">
+                <font size='+1' color='&usr.content-titlefg;'><translate id="358">Changed</translate></font>
              </td>
             </tr>
           </if>
           <else>
             <tr bgcolor='&usr.content-titlebg;'>
-              <td colspan=2 width="100%">
-                <font size='+1' color='&usr.content-titlefg;'>Unchanged</font>
+              <td colspan="2" width="100%">
+                <font size='+1' color='&usr.content-titlefg;'><translate id="359">Unchanged</translate></font>
               </td>
             </tr>
           </else>
          </if>
-         <tr><td valign=top width="20%"><b>&_.name;</b></td><td valign=top><eval>&_.form:none;</eval></td></tr>
+         <tr><td valign="top" width="20%"><b>&_.name;</b></td><td valign="top"><eval>&_.form:none;</eval></td></tr>
          <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
         </case>
       </cond>
