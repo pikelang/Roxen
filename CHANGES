@@ -3,9 +3,9 @@ Changes since Roxen Challenger 1.1.1 alpha 6
 -----------------------------------------------
 
 o etc/master.pike has been renamed to etc/roxen_master to avoid
-  name conflicts.
+  name conflicts/confusion.
 
-o Applied a patch for the disk cache by Wilhelm Köhler (Thanks!)
+o Applied a LARGE patch for the disk cache by Wilhelm Köhler (Thanks!)
 
 o Fixed the install-script.
 
@@ -15,6 +15,8 @@ o Should now start the garbage-collector correctly when started from a
 o Fixed most of the bugs in the ticket-database.
 
 o Fixed several small bugs here and there.
+
+o Ftp-module now supports STOR.
 
 o Support for SSLv3 added.
   NOTE: People in the US may not use this module since it violates patents
