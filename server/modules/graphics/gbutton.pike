@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.67 2000/11/21 13:14:55 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.68 2000/12/05 00:40:28 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -743,7 +743,7 @@ class ButtonFrame {
       new_args[n] = args[n];
 
     string img_src =
-      query_internal_location() +
+      query_absolute_internal_location(id) +
       button_cache->store( ({ new_args, content }), id);
 
     return ({ img_src, new_args });

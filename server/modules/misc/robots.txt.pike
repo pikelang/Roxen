@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: robots.txt.pike,v 1.1 2000/11/18 04:25:25 nilsson Exp $";
+constant cvs_version = "$Id: robots.txt.pike,v 1.2 2000/12/05 00:41:19 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "robots.txt generator";
@@ -58,7 +58,7 @@ mapping first_try(RequestID id) {
     _robots = 0;
     _loc_mods = loc_mods;
   }
-  string internal_location = query_internal_location();
+  string internal_location = query_absolute_internal_location(id);
   if(!_robots || _internal_location != internal_location) {
     _robots = 0;
     _internal_location = internal_location;

@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.1 2000/12/02 16:13:06 nilsson Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.2 2000/12/05 00:39:39 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Atlas";
@@ -160,7 +160,8 @@ class TagAtlas {
     array do_return(RequestID id) {
       mapping state = id->misc->atlas_state;
 
-      args->src = query_internal_location() + the_cache->store(state, id);
+      args->src = query_absolute_internal_location(id) +
+	the_cache->store(state, id);
       if(!args->alt)
 	args->alt = state->region || "The World";
  

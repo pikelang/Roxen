@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.252 2000/10/19 09:17:03 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.253 2000/12/05 00:40:12 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -856,7 +856,8 @@ class TagGTextURL {
       string ext="";
       if(query("ext")) ext="."+(p->format || "gif");
       if(!args->short)
-	return ({ query_internal_location()+image_cache->store( ({p,content}), id )+ext });
+	return ({ query_absolute_internal_location(id) +
+		  image_cache->store( ({p,content}), id )+ext });
       return ({ "+"+image_cache->store( ({p,content}), id )+ext });
     }
   }
@@ -874,7 +875,8 @@ class TagGTextID {
       mapping p=mk_gtext_arg(args,id);
       if(args->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
       if(!args->short)
-	return ({ query_internal_location()+"$"+image_cache->store(p, id)+"/" });
+	return ({ query_absolute_internal_location(id) +
+		  "$"+image_cache->store(p, id)+"/" });
       return ({ "+"+image_cache->store(p, id )+"/foo" });
     }
   }
@@ -947,7 +949,7 @@ string do_gtext(mapping arg, string c, RequestID id)
       string fn = image_cache->store( ({ p, word }),id );
       mapping size = image_cache->metadata( fn, id, 1 );
       if(setalt) arg->alt=word;
-      arg->src=query_internal_location()+fn+ext;
+      arg->src=query_absolute_internal_location(id)+fn+ext;
       if( size )
       {
         arg->width  = (string)size->xsize;
@@ -962,7 +964,7 @@ string do_gtext(mapping arg, string c, RequestID id)
   mapping size = image_cache->metadata( num, id, 1 );
   if(!arg->alt) arg->alt=replace(c,"\"","'");
 
-  arg->src=query_internal_location()+num+ext;
+  arg->src=query_absolute_internal_location(id)+num+ext;
   if(size) {
     arg->width=(string)size->xsize;
     arg->height=(string)size->ysize;
@@ -1012,7 +1014,8 @@ string do_gtext(mapping arg, string c, RequestID id)
     return
       res+
       " "+sn+"l = new Image("+arg->width+", "+arg->height+");"+sn+"l.src = \""+arg->src+"\";\n"
-      " "+sn+"h = new Image("+arg->width+", "+arg->height+");"+sn+"h.src = \""+query_internal_location()+num2+ext+"\";\n"
+      " "+sn+"h = new Image("+arg->width+", "+arg->height+");"+sn+"h.src = \"" +
+      query_absolute_internal_location(id)+num2+ext+"\";\n"
       "</script>\n"+
       "<a"+ea+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
