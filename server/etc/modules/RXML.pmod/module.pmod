@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.68 2000/02/20 04:16:22 mast Exp $
+//! $Id: module.pmod,v 1.69 2000/02/21 18:55:16 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1159,7 +1159,7 @@ constant FLAG_NONE		= 0x00000000;
 
 //! Static flags (i.e. tested in the Tag object).
 
-constant FLAG_NONCONTAINER	= 0x00000001;
+constant FLAG_EMPTY_ELEMENT	= 0x00000001;
 //! If set, the tag does not use any content. E.g. with a HTML parser
 //! this defines whether the tag is a container or not, and in XML
 //! parsing it simply causes the content (if any) to be thrown away.
@@ -1910,7 +1910,7 @@ class Frame
 
 	  /* Fall through. */
 	case EVSTAT_ITER_DONE:
-	  if (!this->do_return && result == Void && !(flags & FLAG_NONCONTAINER))
+	  if (!this->do_return && result == Void && !(flags & FLAG_EMPTY_ELEMENT))
 	    if (result_type->_parser_prog == PNone) {
 	      if (content_type->subtype_of (result_type))
 		result = content;

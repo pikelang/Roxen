@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.145 2000/02/20 19:46:11 nilsson Exp $
+// $Id: rxml.pike,v 1.146 2000/02/21 18:55:12 mast Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -647,7 +647,7 @@ void ready_to_receive_requests (object this)
 class TagHelp {
   inherit RXML.Tag;
   constant name = "help";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -692,7 +692,7 @@ class TagHelp {
 class TagNumber {
   inherit RXML.Tag;
   constant name = "number";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -768,7 +768,7 @@ private string use_file_doc(string f, string data)
 class TagUse {
   inherit RXML.Tag;
   constant name = "use";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -827,7 +827,7 @@ class UserTagContents
 {
   inherit RXML.Tag;
   constant name = "contents";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
   array(RXML.Type) result_types = ({RXML.t_any (RXML.PXml)});
 
   class Frame
@@ -865,7 +865,7 @@ class UserTag {
     name=_name;
     c=_c;
     defaults=_defaults;
-    flags|=RXML.FLAG_NONCONTAINER*tag;
+    flags|=RXML.FLAG_EMPTY_ELEMENT*tag;
     scope=scope_name;
   }
 
@@ -882,13 +882,13 @@ class UserTag {
       scope_name=scope||name;
       vars = nargs;
 
-      if(!(RXML.FLAG_NONCONTAINER&flags) && args->trimwhites)
+      if(!(RXML.FLAG_EMPTY_ELEMENT&flags) && args->trimwhites)
 	content=String.trim_all_whites(content);
 
 #ifdef OLD_RXML_COMPAT
       if(parse_html_compat) {
 	array replace_from, replace_to;
-	if (flags & RXML.FLAG_NONCONTAINER) {
+	if (flags & RXML.FLAG_EMPTY_ELEMENT) {
 	  replace_from = map(indices(nargs),make_entity)+({"#args#"});
 	  replace_to = values(nargs)+({ make_tag_attributes(nargs) });
 	}
@@ -990,7 +990,7 @@ class TagDefine {
 
 class TagUndefine {
   inherit RXML.Tag;
-  int flags = RXML.FLAG_NONCONTAINER;
+  int flags = RXML.FLAG_EMPTY_ELEMENT;
   constant name = "undefine";
   class Frame {
     inherit RXML.Frame;
@@ -1321,7 +1321,7 @@ class TagElseif {
 class TagTrue {
   inherit RXML.Tag;
   constant name = "true";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -1334,7 +1334,7 @@ class TagTrue {
 class TagFalse {
   inherit RXML.Tag;
   constant name = "false";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
   class Frame {
     inherit RXML.Frame;
     array do_enter(RequestID id) {

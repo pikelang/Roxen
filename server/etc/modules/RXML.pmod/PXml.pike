@@ -8,7 +8,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.35 2000/02/20 02:04:46 mast Exp $
+//! $Id: PXml.pike,v 1.36 2000/02/21 18:55:16 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -152,7 +152,7 @@ static void create (
 	foreach (tlist, RXML.Tag tag)
 	  if (!(tag->plugin_name || tag->flags & RXML.FLAG_NO_PREFIX))
 	    new_tagdefs[prefix + ":" + [string] tag->name] =
-	      tag->flags & RXML.FLAG_NONCONTAINER ?
+	      tag->flags & RXML.FLAG_EMPTY_ELEMENT ?
 	      ({tag->_handle_tag, 0}) : ({0, tag->_handle_tag});
 #endif
     }
@@ -169,8 +169,8 @@ static void create (
       foreach (tlist, RXML.Tag tag)
 	if (!tag->plugin_name && (!tset->prefix_req || tag->flags & RXML.FLAG_NO_PREFIX))
 	  new_tagdefs[[string] tag->name] =
-	    ((tag->flags & (RXML.FLAG_NO_PREFIX|RXML.FLAG_NONCONTAINER)) ==
-	     (RXML.FLAG_NO_PREFIX|RXML.FLAG_NONCONTAINER)) ?
+	    ((tag->flags & (RXML.FLAG_NO_PREFIX|RXML.FLAG_EMPTY_ELEMENT)) ==
+	     (RXML.FLAG_NO_PREFIX|RXML.FLAG_EMPTY_ELEMENT)) ?
 	    ({tag->_handle_tag, 0}) : ({0, tag->_handle_tag});
 #ifdef OLD_RXML_COMPAT
     }
@@ -178,7 +178,7 @@ static void create (
       foreach (tlist, RXML.Tag tag)
 	if (!tag->plugin_name && (!tset->prefix_req || tag->flags & RXML.FLAG_NO_PREFIX))
 	  new_tagdefs[[string] tag->name] =
-	    tag->flags & RXML.FLAG_NONCONTAINER ?
+	    tag->flags & RXML.FLAG_EMPTY_ELEMENT ?
 	    ({tag->_handle_tag, 0}) : ({0, tag->_handle_tag});
 #endif
 
@@ -286,14 +286,14 @@ local void add_runtime_tag (RXML.Tag tag)
 #ifdef OLD_RXML_COMPAT
     if (not_compat)
 #endif
-      if ((tag->flags & (RXML.FLAG_NO_PREFIX|RXML.FLAG_NONCONTAINER)) ==
-	  (RXML.FLAG_NO_PREFIX|RXML.FLAG_NONCONTAINER))
+      if ((tag->flags & (RXML.FLAG_NO_PREFIX|RXML.FLAG_EMPTY_ELEMENT)) ==
+	  (RXML.FLAG_NO_PREFIX|RXML.FLAG_EMPTY_ELEMENT))
 	add_tag (name, tag->_handle_tag), add_container (name, 0);
       else
 	add_tag (name, 0), add_container (name, tag->_handle_tag);
 #ifdef OLD_RXML_COMPAT
     else
-      if (tag->flags & RXML.FLAG_NONCONTAINER)
+      if (tag->flags & RXML.FLAG_EMPTY_ELEMENT)
 	add_tag (name, tag->_handle_tag), add_container (name, 0);
       else
 	add_tag (name, 0), add_container (name, tag->_handle_tag);
@@ -306,14 +306,14 @@ local void add_runtime_tag (RXML.Tag tag)
 #ifdef OLD_RXML_COMPAT
     if (not_compat)
 #endif
-      if ((tag->flags & (RXML.FLAG_NO_PREFIX|RXML.FLAG_NONCONTAINER)) ==
-	  (RXML.FLAG_NO_PREFIX|RXML.FLAG_NONCONTAINER))
+      if ((tag->flags & (RXML.FLAG_NO_PREFIX|RXML.FLAG_EMPTY_ELEMENT)) ==
+	  (RXML.FLAG_NO_PREFIX|RXML.FLAG_EMPTY_ELEMENT))
 	add_tag (name, tag->_handle_tag), add_container (name, 0);
       else
 	add_tag (name, 0), add_container (name, tag->_handle_tag);
 #ifdef OLD_RXML_COMPAT
     else
-      if (tag->flags & RXML.FLAG_NONCONTAINER)
+      if (tag->flags & RXML.FLAG_EMPTY_ELEMENT)
 	add_tag (name, tag->_handle_tag), add_container (name, 0);
       else
 	add_tag (name, 0), add_container (name, tag->_handle_tag);

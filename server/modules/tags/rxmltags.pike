@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.74 2000/02/21 16:29:47 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.75 2000/02/21 18:55:14 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -203,7 +203,7 @@ void set_entities(RXML.Context c) {
 class TagRoxenACV {
   inherit RXML.Tag;
   constant name = "roxen-automatic-charset-variable";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -219,7 +219,7 @@ class TagRoxenACV {
 class TagAppend {
   inherit RXML.Tag;
   constant name = "append";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "variable" : RXML.t_text ]);
 
   class Frame {
@@ -345,7 +345,7 @@ string tag_redirect(string tag, mapping m, RequestID id)
 class TagUnset {
   inherit RXML.Tag;
   constant name = "unset";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
     inherit RXML.Frame;
@@ -365,7 +365,7 @@ class TagUnset {
 class TagSet {
   inherit RXML.Tag;
   constant name = "set";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "variable": RXML.t_text ]);
 
   class Frame {
@@ -398,7 +398,7 @@ class TagSet {
 class TagInc {
   inherit RXML.Tag;
   constant name = "inc";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
 
   class Frame {
@@ -415,7 +415,7 @@ class TagInc {
 class TagDec {
   inherit RXML.Tag;
   constant name = "dec";
-  constant flags = RXML.FLAG_NONCONTAINER;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
 
   class Frame {
@@ -529,7 +529,7 @@ string tag_fsize(string tag, mapping args, RequestID id)
 class TagCoding {
   inherit RXML.Tag;
   constant name="\x266a";
-  constant flags=RXML.FLAG_NONCONTAINER;
+  constant flags=RXML.FLAG_EMPTY_ELEMENT;
   class Frame {
     inherit RXML.Frame;
     constant space=({147, 188, 196, 185, 188, 187, 119, 202, 201, 186, 148, 121, 191, 203,
