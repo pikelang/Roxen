@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.48 1998/09/19 18:20:33 grubba Exp $
+ * $Id: smtp.pike,v 1.49 1998/09/19 18:31:24 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.48 1998/09/19 18:20:33 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.49 1998/09/19 18:31:24 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1065,6 +1065,11 @@ int query_timeout()
   return(QUERY(timeout));
 }
 
+string query_spooldir()
+{
+  return(QUERY(spooldir));
+}
+
 multiset do_expn(multiset in, object|void smtp)
 {
 #ifdef SMTP_DEBUG
@@ -1295,11 +1300,6 @@ array register_module()
   return({ MODULE_PROVIDER,
 	   "SMTP protocol",
 	   "Experimental module for receiving mail." });
-}
-
-string query_spooldir()
-{
-  return(QUERY(spooldir));
 }
 
 array(string)|multiset(string)|string query_provides()
