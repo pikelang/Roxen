@@ -366,7 +366,15 @@ void main(int argc, char **argv)
   if(!getuid()) {
     int euid = geteuid();
     int egid = getegid();
+#ifdef HAVE_SETEUID
     seteuid(0);
+#else
+#ifdef HAVE_SETRESUID
+    setresuid(-1, 0, -1);
+#else
+    /* No way to change euid, so we don't */
+#endif /* HAVE_SETRESUID */
+#endif /* HAVE_SETEUID */
     setgid(egid);
     setuid(euid);
   }
