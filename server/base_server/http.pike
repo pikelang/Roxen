@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.40 2000/04/13 19:02:21 per Exp $
+// $Id: http.pike,v 1.41 2000/08/12 06:13:26 per Exp $
 
 //#pragma strict_types
 
@@ -120,6 +120,11 @@ mapping http_rxml_answer( string rxml, RequestID id,
 	   "rettext":id->misc->defines[" _rettext"],
 	   "extra_heads":id->misc->defines[" _extra_heads"],
 	   ]);
+}
+
+mapping http_try_again( float delay )
+{
+  return ([ "try_again_later":delay ]);
 }
 
 mapping http_string_answer(string text, string|void type)
