@@ -11,7 +11,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.116 2001/08/09 15:02:47 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.117 2001/08/15 23:06:17 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -615,7 +615,8 @@ program low_findprog(string pname, string ext, object|void handler)
 	// pike modules. /mast
 	load_time[fname] = time();
 	programs[fname]=0;
-        if(arrayp(e) && sizeof(e) && e[0] == "Compilation failed.\n")
+        if(arrayp(e) && sizeof(e) &&
+	   (<"Compilation failed.\n", "Cpp() failed\n">)[e[0]])
           e[1]=({});
 	DDEBUG( "FAILED\n",0 );
 	throw(e);
