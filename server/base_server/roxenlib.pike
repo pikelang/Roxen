@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.130 1999/11/29 22:10:20 per Exp $
+// $Id: roxenlib.pike,v 1.131 1999/11/30 14:42:25 nilsson Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1433,7 +1433,7 @@ string|int tagtime(int t, mapping m, RequestID id, object language)
 			   language(m->lang, sp||"month"));
 #if constant(Calendar.ISO)
      case "week":
-      return number2string(Calendar.ISO.Week()->number(),m,
+      return number2string(Calendar.ISO.Second(t)->minute()->hour()->day()->week()->number(),m,
                            language(m->lang, sp||"number"));
 #endif
      case "day":
