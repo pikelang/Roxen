@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.75 2000/03/09 09:53:10 mast Exp $
+//! $Id: module.pmod,v 1.76 2000/03/11 02:24:00 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -66,8 +66,9 @@ class Tag
 
   array(Type) result_types = ({t_xml, t_html, t_text});
   //! The possible types of the result, in order of precedence. If a
-  //! result type has a parser, it'll be used to parse any strings
-  //! gotten from Frame.do_return (see that function for details).
+  //! result type has a parser, it'll be used to parse any strings in
+  //! the exec array returned from Frame.do_enter() and similar
+  //! callbacks.
 
   //!program Frame;
   //!object(Frame) Frame();
@@ -115,7 +116,7 @@ class Tag
 
   inline object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed content)
   //! Make an initialized frame for the tag. Typically useful when
-  //! returning generated tags from e.g. RXML.Frame.do_return(). The
+  //! returning generated tags from e.g. RXML.Frame.do_process(). The
   //! argument values and the content are normally not parsed.
   //!
   //! Note: Never reuse the same frame object.
@@ -1022,7 +1023,7 @@ class Context
   //
   // "top": ({Frame|Parser|PCode (top object)})
   // "stream_piece": mixed (When continuing, do a streaming
-  //	do_return() with this stream piece.)
+  //	do_process() with this stream piece.)
   // "exec_left": array (Exec array left to evaluate. Only used
   //	between Frame._exec_array() and Frame._eval().)
 
@@ -1185,22 +1186,21 @@ constant FLAG_POSTPARSE		= 0x00000080;
 //! The rest of the flags are dynamic (i.e. tested in the Frame object).
 
 constant FLAG_PARENT_SCOPE	= 0x00000100;
-//! If set, the array from do_enter(), do_return() and cached_return()
-//! will be interpreted in the scope of the parent tag, rather than in
-//! the current one.
+//! If set, exec arrays will be interpreted in the scope of the parent
+//! tag, rather than in the current one.
 
 constant FLAG_NO_IMPLICIT_ARGS	= 0x00000200;
 //! If set, the parser won't apply any implicit arguments. FIXME: Not
 //! yet implemented.
 
 constant FLAG_STREAM_RESULT	= 0x00000400;
-//! If set, the do_return() function will be called repeatedly until
+//! If set, the do_process() function will be called repeatedly until
 //! it returns 0 or no more content is wanted.
 
 constant FLAG_STREAM_CONTENT	= 0x00000800;
 //! If set, the tag supports getting its content in streaming mode:
-//! do_return() will be called repeatedly with successive parts of the
-//! content then. Can't be changed from do_return().
+//! do_process() will be called repeatedly with successive parts of the
+//! content then. Can't be changed from do_process().
 
 //! Note: It might be obvious, but using streaming is significantly
 //! less effective than nonstreaming, so it should only be done when
@@ -1240,9 +1240,9 @@ constant FLAG_CACHE_SAME_STACK	= 0x00100000;
 //! If set, the stack of call frames needs to be the same.
 
 constant FLAG_CACHE_EXECUTE_RESULT = 0x00200000;
-//! If set, an array to execute will be stored in the frame instead of
-//! the final result. On a cache hit it'll be executed like the return
-//! value from do_return() to produce the result.
+//! If set, an exec array will be stored in the frame instead of the
+//! final result. On a cache hit it'll be executed to produce the
+//! result.
 
 class Frame
 //! A tag instance.
@@ -1254,8 +1254,8 @@ class Frame
 
   Frame up;
   //! The parent frame. This frame is either created from the content
-  //! inside the up frame, or it's in the array returned from
-  //! do_return() in the up frame.
+  //! inside the up frame, or it's in an exec array produced by the up
+  //! frame.
 
   Tag tag;
   //! The RXML.Tag object this frame was created from.
@@ -1264,22 +1264,24 @@ class Frame
   //! Various bit flags that affect parsing. See the FLAG_* constants.
 
   mapping(string:mixed) args;
-  //! The arguments passed to the tag. Set before
-  //! do_enter()/do_return() are called.
+  //! The arguments passed to the tag. Set before any frame callbacks
+  //! are called.
 
   Type content_type;
   //! The type of the content.
 
   mixed content = Void;
-  //! The content. Set before do_return() is called, but only when the
-  //! tag is actually used with container syntax.
+  //! The content, if any. Set before do_process() and do_return() are
+  //! called.
 
   Type result_type;
-  //! The required result type. Set before do_enter()/do_return() are
-  //! called. do_return() should produce a result of this type.
+  //! The required result type. Set before any frame callbacks are
+  //! called. The frame should produce a result of this type.
 
   mixed result = Void;
-  //! The result.
+  //! The result, which is assumed to be either Void or a valid value
+  //! according to result_type. The exec arrays returned by e.g.
+  //! do_return() changes this. It may also be set directly.
 
   //!mapping(string:mixed) vars;
   //! Set this to introduce a new variable scope that will be active
@@ -1301,13 +1303,16 @@ class Frame
   //! parser. The tags are not inherited by subparsers.
 
   //!array do_enter (RequestID id);
-  //!array do_return (RequestID id, void|mixed piece);
+  //!array do_process (RequestID id, void|mixed piece);
+  //!array do_return (RequestID id);
   //! do_enter() is called first thing when processing the tag.
-  //! do_return() is called after the content (if any) is processed.
+  //! do_process() is called after (some of) the content has been
+  //! processed. do_return() is called lastly before leaving the tag.
   //!
   //! For tags that loops more than one time (see do_iterate):
   //! do_enter() is only called initially before the first call to
-  //! do_iterate(). do_return() is called after each iteration.
+  //! do_iterate(). do_process() is called after each iteration.
+  //! do_return() is called after the last call to do_process().
   //!
   //! The result_type variable is set to the type of result the parser
   //! wants. It's any type or subtype that is valid by
@@ -1329,8 +1334,7 @@ class Frame
   //!		arguments nor content will be parsed. It's result is
   //!		added or put into the result of this tag.
   //!	mapping(string:mixed) - Fields to merge into the headers.
-  //!		FIXME: Not yet implemented. FIXME: Somehow represent
-  //!		removal of headers?
+  //!		FIXME: Not yet implemented.
   //!	object - Treated as a file object to read in blocking or
   //!		nonblocking mode. FIXME: Not yet implemented, details
   //!		not decided.
@@ -1339,7 +1343,7 @@ class Frame
   //!		assign it directly to the result variable instead.
   //!
   //! 0 -	Do nothing special. Exits the tag when used from
-  //!		do_return() and FLAG_STREAM_RESULT is set.
+  //!		do_process() and FLAG_STREAM_RESULT is set.
   //!
   //! Note that the intended use is not to postparse by setting a
   //! parser on the result type, but instead to return an array with
@@ -1347,14 +1351,13 @@ class Frame
   //! accurately, evaluation) needs to be done.
   //!
   //! If an array instead of a function is given, the array is handled
-  //! as above. If do_return is zero, the value in the result variable
-  //! is simply used. If the result variable is Void, content is used
-  //! as result if it's of a compatible type.
+  //! as above. If the result variable is Void (which it defaults to),
+  //! content is used as result if it's of a compatible type.
   //!
-  //! Regarding do_return only:
+  //! Regarding do_process only:
   //!
   //! Normally the content variable is set to the parsed content of
-  //! the tag before do_return() is called. This may be Void if the
+  //! the tag before do_process() is called. This may be Void if the
   //! content parsing didn't produce any result.
   //!
   //! If the result from parsing the content is not Void, it's
@@ -1365,20 +1368,20 @@ class Frame
   //! piece is used when the tag is operating in streaming mode (i.e.
   //! FLAG_STREAM_CONTENT is set). It's then set to each successive
   //! part of the content in the stream, and the content variable is
-  //! never touched. do_return() is also called "normally" with no
+  //! never touched. do_process() is also called "normally" with no
   //! piece argument afterwards. Note that tags that support streaming
   //! mode might still be used nonstreaming (it might also vary
   //! between iterations).
   //!
-  //! As long as FLAG_STREAM_RESULT is set, do_return() will be called
-  //! repeatedly until it returns 0. It's only the result piece from
-  //! the execution array that is propagated after each turn; the
+  //! As long as FLAG_STREAM_RESULT is set, do_process() will be
+  //! called repeatedly until it returns 0. It's only the result piece
+  //! from the execution array that is propagated after each turn; the
   //! result variable only accumulates all these pieces.
 
   //!int do_iterate (RequestID id);
   //! Controls the number of passes in the tag done by the parser. In
   //! every pass, the content of the tag (if any) is processed, then
-  //! do_return() is called.
+  //! do_process() is called.
   //!
   //! Before doing any pass, do_iterate() is called. If the return
   //! value is nonzero, that many passes is done, then do_iterate() is
@@ -1449,10 +1452,10 @@ class Frame
 
   void suspend()
   //! Used together with resume() for nonblocking mode. May be called
-  //! from do_enter() or do_return() to suspend the parser: The parser
-  //! will just stop, leaving the context intact. If it returns, the
-  //! parser is used in a place that doesn't support nonblocking, so
-  //! just go ahead and block.
+  //! from any frame callback to suspend the parser: The parser will
+  //! just stop, leaving the context intact. If it returns, the parser
+  //! is used in a place that doesn't support nonblocking, so just go
+  //! ahead and block.
   {
     fatal_error ("FIXME\n");
   }
@@ -1603,6 +1606,7 @@ class Frame
 #define EVSTAT_ENTERED 1
 #define EVSTAT_LAST_ITER 2
 #define EVSTAT_ITER_DONE 3
+#define EVSTAT_RETURNED 4
     int eval_state = EVSTAT_BEGIN;
     int iter;
     Parser subparser;
@@ -1822,13 +1826,13 @@ class Frame
 		    if (content_type->sequential) piece = res + piece;
 		    else if (piece == Void) piece = res;
 		    if (piece != Void) {
-		      array|function(RequestID,void|mixed:array) do_return;
-		      if ((do_return =
+		      array|function(RequestID,void|mixed:array) do_process;
+		      if ((do_process =
 			   [array|function(RequestID,void|mixed:array)]
-			   this->do_return) &&
-			  !arrayp (do_return)) {
+			   this->do_process) &&
+			  !arrayp (do_process)) {
 			if (!exec) {
-			  exec = do_return (ctx->id, piece); // Might unwind.
+			  exec = do_process (ctx->id, piece); // Might unwind.
 			  if (ctx->new_runtime_tags)
 			    _handle_runtime_tags (ctx, parser);
 			}
@@ -1851,7 +1855,7 @@ class Frame
 			  exec = 0;
 			}
 			else if (flags & FLAG_STREAM_RESULT) {
-			  // do_return() finished the stream. Ignore remaining content.
+			  // do_process() finished the stream. Ignore remaining content.
 			  ctx->unwind_state = 0;
 			  piece = Void;
 			  break;
@@ -1877,11 +1881,11 @@ class Frame
 		subparser = 0;
 	      }
 
-	      if (array|function(RequestID,void|mixed:array) do_return =
-		  [array|function(RequestID,void|mixed:array)] this->do_return) {
+	      if (array|function(RequestID,void|mixed:array) do_process =
+		  [array|function(RequestID,void|mixed:array)] this->do_process) {
 		if (!exec) {
-		  exec = arrayp (do_return) ? [array] do_return :
-		    ([function(RequestID,void|mixed:array)] do_return) (
+		  exec = arrayp (do_process) ? [array] do_process :
+		    ([function(RequestID,void|mixed:array)] do_process) (
 		      ctx->id); // Might unwind.
 		  if (ctx->new_runtime_tags)
 		    _handle_runtime_tags (ctx, parser);
@@ -1913,14 +1917,32 @@ class Frame
 
 	  /* Fall through. */
 	case EVSTAT_ITER_DONE:
-	  if (!this->do_return && result == Void && !(flags & FLAG_EMPTY_ELEMENT))
+	  if (array|function(RequestID:array) do_return =
+	      [array|function(RequestID:array)] this->do_return) {
+	    eval_state = EVSTAT_ITER_DONE; // Only need to record this state here.
+	    if (!exec) {
+	      exec = arrayp (do_return) ? [array] do_return :
+		([function(RequestID:array)] do_return) (ctx->id); // Might unwind.
+	      if (ctx->new_runtime_tags)
+		_handle_runtime_tags (ctx, parser);
+	    }
+	    if (exec) {
+	      ENTER_SCOPE (ctx, this);
+	      _exec_array (parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
+	      exec = 0;
+	    }
+	  }
+
+	  /* Fall through. */
+	case EVSTAT_RETURNED:
+	  if (result == Void && !(flags & FLAG_EMPTY_ELEMENT))
 	    if (result_type->_parser_prog == PNone) {
 	      if (content_type->subtype_of (result_type))
 		result = content;
 	    }
 	    else
 	      if (stringp (content_type)) {
-		eval_state = EVSTAT_ITER_DONE; // Only need to record this state here.
+		eval_state = EVSTAT_RETURNED; // Only need to record this state here.
 		if (!exec) exec = ({content});
 		_exec_array (parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
 		exec = 0;
@@ -1954,8 +1976,8 @@ class Frame
 	  // This frame or a frame in the exec array wants to stream.
 	  if (parser->unwind_safe) {
 	    // Rethrow to continue in parent since we've already done
-	    // the appropriate do_return stuff in this frame in either
-	    // case.
+	    // the appropriate do_process stuff in this frame in
+	    // either case.
 	    if (err == this) err = 0;
 	    if (tags_added) {
 	      ctx->tag_set->imported -= ({/*[object(TagSet)]HMM*/ this->additional_tags});
