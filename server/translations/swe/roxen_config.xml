@@ -3217,11 +3217,7 @@ server must be a MySQL server, nothing else will work.
 <t></t>
 </str>
 
-<str id="513">
-<new/>
-<o>Content Editor (Advanced Edition)</o>
-<t></t>
-</str>
+
 
 <str id="514">
 <new/>
@@ -3316,5 +3312,11 @@ server must be a MySQL server, nothing else will work.
 <str id="523">
 <new/>
 <o>Forum Module</o>
+<t></t>
+</str>
+
+<str id="524">
+<new/>
+<o>Content Editor</o>
 <t></t>
 </str>

@@ -2994,10 +2994,7 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <t>Content Editor (Instant Edition)</t>
 </str>
 
-<str id="513">
-<o>Content Editor (Advanced Edition)</o>
-<t>Content Editor (Advanced Edition)</t>
-</str>
+
 
 <str id="514">
 <o>Web Developer</o>
@@ -3080,5 +3077,11 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <str id="523">
 <new/>
 <o>Forum Module</o>
+<t></t>
+</str>
+
+<str id="524">
+<new/>
+<o>Content Editor</o>
 <t></t>
 </str>

@@ -34,7 +34,7 @@ string parse( RequestID id )
   foreach( ({ "docs/roxen/3.3/" }), string rpath )
   {
     add_doc_link(rpath + "content_editor_manual/index.xml",
-		 _(0, "Content Editor"));
+		 _(524, "Content Editor"));
 
     add_doc_link(rpath + "content_editor_manual_(i)/index.xml",
 		 _(512, "Content Editor (Instant Edition)"));

@@ -2793,10 +2793,7 @@ server must be a MySQL server, nothing else will work.
 <t></t>
 </str>
 
-<str id="513">
-<o>Content Editor (Advanced Edition)</o>
-<t></t>
-</str>
+
 
 <str id="514">
 <o>Web Developer</o>
@@ -2875,5 +2872,10 @@ server must be a MySQL server, nothing else will work.
 
 <str id="523">
 <o>Forum Module</o>
+<t></t>
+</str>
+
+<str id="524">
+<o>Content Editor</o>
 <t></t>
 </str>

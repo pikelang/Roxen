@@ -43,12 +43,14 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 </str>
 
 <str id="8">
-<o>SSL3: Reading cert-file failed!</o>
+<changed from="SSL3: Reading cert-file failed!"/>
+<o>SSL3: Reading cert-file '%s' failed!</o>
 <t>SSL3: Kunde ej läsa cert-filen!</t>
 </str>
 
 <str id="9">
-<o>SSL3: Reading key-file failed!</o>
+<changed from="SSL3: Reading key-file failed!"/>
+<o>SSL3: Reading key-file '%s' failed!</o>
 <t>SSL3: Kunde ej läsa nyckelfilen!</t>
 </str>
 
