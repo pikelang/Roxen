@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.227 2000/03/26 15:44:44 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.228 2000/03/27 13:19:06 jhs Exp $";
 
 #define MAGIC_ERROR
 
@@ -1102,7 +1102,7 @@ string link_to(string file, int line, string fun, int eid, int qq)
 {
   if (!file || !line) return "<a>";
   if(file[0]!='/') file = combine_path(getcwd(), file);
-  return ("<a href=\"/(old_error,find_file)/error?"+
+  return ("<a href=\"/(old_error,find_file)/error/?"+
 	  "file="+http_encode_string(file)+
 	  (fun ? "&fun="+http_encode_string(fun) : "") +
 	  "&off="+qq+
@@ -1156,7 +1156,7 @@ string format_backtrace(int eid)
     res += "</ul>\n\n";
   }
 
-  res += ("<p><b><a href=\"/(old_error,plain)/error?error="+eid+"\">"
+  res += ("<p><b><a href=\"/(old_error,plain)/error/?error="+eid+"\">"
 	  "Generate text only version of this error message, for bug reports"+
 	  "</a></b></p>\n\n");
   return res+"</body></html>";
