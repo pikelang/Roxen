@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.39 1998/07/22 19:14:02 grubba Exp $
+/* $Id: ssl3.pike,v 1.40 1998/07/22 19:21:30 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -13,6 +13,14 @@ mapping to_send;
 #include <stdio.h>
 #include <roxen.h>
 #include <module.h>
+
+// #define SSL3_DEBUG
+
+#ifdef SSL3_DEBUG
+#ifndef SSL3_CLOSE_DEBUG
+#define SSL3_CLOSE_DEBUG
+#endif /* !SSL3_CLOSE_DEBUG */
+#endif /* SSL3_DEBUG */
 
 mapping parse_args(string options)
 {
