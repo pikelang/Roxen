@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.57 1998/09/20 01:58:53 grubba Exp $
+ * $Id: smtp.pike,v 1.58 1998/09/20 18:20:21 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.57 1998/09/20 01:58:53 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.58 1998/09/20 18:20:21 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -47,6 +47,7 @@ inherit "module";
  * 	                        string remotehost);
  *	void async_classify_connection(object con, mapping con_info,
  *				       function cb, mixed ... args);
+ *	int classify_address(string user, string domain);
  *
  * smtp_relay:
  * 	int relay(string sender, string user, string domain,
@@ -853,12 +854,34 @@ static class Smtp_Connection {
 	    // Remote address.
 
 	    // FIXME: Some relay tests are necessary here.
+	    // FIXME: Check if we allow relaying.
+
+	    int address_class = 0x7fffffff;		// MAXINT
+
+	    foreach(conf->get_providers("smtp_filter")||({}), object o) {
+	      if (o->classify_address) {
+		int ac = o->classify_address(user, domain);
+		if (ac < address_class) {
+		  address_class = ac;
+		}
+	      }
+	    }
+
+	    if (connection_class < address_class) {
+#ifdef SMTP_DEBUG
+	      roxen_perror("SMTP: Relaying to address %s denied.\n",
+			   recipient);
+#endif /* SMTP_DEBUG */
+	      send(550, ({ "Relaying denied." }));
+	      return;
+	    }
+      
 	    recipient_ok = 1;
 	  }
 
 	  if (!recipient_ok) {
 #ifdef SMTP_DEBUG
-	    roxen_perror("Unhandled recipient.\n");
+	    roxen_perror("SMTP: Unhandled recipient.\n");
 #endif /* SMTP_DEBUG */
 	    send(550, sprintf("%s... Unhandled recipient.", recipient));
 	    return;
@@ -955,11 +978,13 @@ static class Smtp_Connection {
 
   static void con_class_done(array(string) reason, object con)
   {
+    int classified;
     foreach(conf->get_providers("smtp_filter") ||({}), object o) {
       // roxen_perror("Got SMTP filter\n");
       if (functionp(o->classify_connection)) {
 	int c = o->classify_connection(remoteip, remoteport, remotehost);
-	
+
+	classified = 1;
 	if (c < 0) {
 	  // Refuse connection.
 #ifdef SMTP_DEBUG
@@ -971,6 +996,9 @@ static class Smtp_Connection {
 	  connection_class = c;
 	}
       }
+    }
+    if (!classified) {
+      connection_class = 0x7fffffff;
     }
 
     if (sizeof(reason)) {
@@ -1322,7 +1350,6 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
       }
     } else {
       // Remote delivery.
-      // FIXME: Check if we allow relaying.
       foreach(conf->get_providers("smtp_relay")||({}), object o) {
 	handled |= o->relay(mail->from, user, domain,
 			    spool, csum, this_object());
