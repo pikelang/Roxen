@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.17 1999/11/10 04:53:26 per Exp $";
+string cvs_version="$Id: pimage.pike,v 1.18 1999/12/15 03:44:21 marcus Exp $";
 
 #include <module.h>
 inherit "module";
@@ -147,7 +147,7 @@ class Constructors
     class FunctionCall
     {
       function f; object img;
-      void `()(mixed ... args)
+      mixed `()(mixed ... args)
       {
 	mixed res=f(@args);
 	return (objectp(res)&&(img->image=res))?img:res;
