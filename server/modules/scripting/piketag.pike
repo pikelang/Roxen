@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.23 2000/09/18 15:29:07 kuntri Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.24 2000/09/19 23:02:44 kuntri Exp $";
 constant thread_safe=1;
 
 
@@ -511,7 +511,7 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 "<?pike":#"<desc pi><short hide>
- <p>Pike processing instruction tag.</short>This processing intruction
+ Pike processing instruction tag.</short>This processing intruction
  tag allows for evaluating Pike code directly in the document.</p>
 
  <p>Note: With this tag, users are able to run programs with the same
