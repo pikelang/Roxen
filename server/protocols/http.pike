@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.454 2004/06/20 23:45:33 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.455 2004/06/21 08:06:06 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1035,11 +1035,6 @@ static string error_page(string line1, string title, string body)
     "      rightmargin='0' leftmargin='0' alink='#f6f6ff' link='#0000ee' "
     "      bgcolor='#f2f1eb' bottommargin='0' topmargin='0'>"
     "<table border='0' cellspacing='0' cellpadding='0' height='100%'>"
-    "  <colgroup>"
-    "    <col span='3' />"
-    "    <col width='356' />"
-    "    <col width='0*' />"
-    "  </colgroup>"
     "  <tr>"
     "    <td><img src='/internal-roxen-unit' height='30' /></td>"
     "  </tr><tr>"
@@ -1047,21 +1042,19 @@ static string error_page(string line1, string title, string body)
     "    <td><img src='/internal-roxen-500' /></td>"
     "    <td><img src='/internal-roxen-unit' width='30' /></td>"
     "    <td valign='bottom'><img src='/internal-roxen-server-error' /></td>"
-    "    <td></td>"
     "  </tr><tr>"
     "    <td><img src='/internal-roxen-unit' height='30' /></td>"
     "  </tr><tr>"
     "    <td colspan='3'></td>"
-    "    <td colspan='2'>"
+    "    <td>"
     "      <div class='msg'>" + line1 + "</div>"
     "      <div class='big'>" + title + "</div>"
     "    </td>"
     "  </tr><tr>"
     "    <td colspan='3'></td>"
-    "    <td width='356'>"
+    "    <td>"
     "      <div class='msg'>" + body + "</div>"
     "    </td>"
-    "    <td>&nbsp;</td>"
     "  </tr><tr valign='bottom' height='100%'>"
     "    <td colspan='3'></td>"
     "    <td>"
@@ -1077,7 +1070,6 @@ static string error_page(string line1, string title, string body)
     "      </table>"
     "      <img src='/internal-roxen-unit' height='20' />"
     "    </td>"
-    "    <td></td>"
     "  </tr>"
     "</table>"
     "</body></html>";
