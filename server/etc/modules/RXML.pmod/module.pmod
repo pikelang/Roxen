@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.277 2002/04/03 12:02:03 mast Exp $
+// $Id: module.pmod,v 1.278 2002/04/03 12:37:28 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3580,7 +3580,7 @@ class Frame
 
 	    if (splice_arg) {
 	      // Note: This assumes an XML-like parser.
-	      sub_p_code->create (splice_arg_type, ctx->tag_set);
+	      if (sub_p_code) sub_p_code->create (splice_arg_type, ctx->tag_set);
 	      Parser parser = splice_arg_type->get_parser (ctx, ctx->tag_set, 0,
 							   sub_p_code);
 	      THIS_TAG_DEBUG ("Evaluating splice argument %s\n",
@@ -3631,7 +3631,7 @@ class Frame
 		foreach (indices (raw_args), string arg) {
 		  Type t = atypes[arg] || default_type;
 		  if (t->parser_prog != PNone) {
-		    sub_p_code->create (t, ctx_tag_set);
+		    if (sub_p_code) sub_p_code->create (t, ctx_tag_set);
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, sub_p_code);
 		    THIS_TAG_DEBUG ("Evaluating and compiling "
 				    "argument value %s with %O\n",
