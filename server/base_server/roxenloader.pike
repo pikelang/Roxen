@@ -20,7 +20,7 @@ constant s = spider;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.211 2000/10/29 03:40:59 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.212 2000/10/30 18:57:39 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1595,6 +1595,20 @@ void do_main( int argc, array(string) argv )
   array(string) hider = argv;
   argv = 0;
 
+#ifdef SECURITY
+#if !constant(__builtin.security.Creds)
+  report_debug(
+#"
+------ FATAL ----------------------------------------------------
+SECURITY defined (the internal security system in roxen), but
+the pike binary has not been compiled --with-security. This makes
+it impossible for roxen to have any internal security at all.
+-----------------------------------------------------------------
+");
+  exit(-1);
+#endif
+#endif
+
   if( (-1&0xffffffff) < 0 )
   {
     report_debug(
@@ -1690,8 +1704,8 @@ Please install a newer version of Pike.
   if (err = catch {
     replace_master(new_master=[object(__builtin.__master)](((program)"etc/roxen_master.pike")()));
   }) {
-    report_error(sprintf("Initialization of Roxen's master failed:\n"
-			 "%s\n", describe_backtrace(err)));
+    werror("Initialization of Roxen's master failed:\n"
+	   "%s\n", describe_backtrace(err));
     exit(1);
   }
 
