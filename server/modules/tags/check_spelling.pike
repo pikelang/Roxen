@@ -1,14 +1,12 @@
 // This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 //
 
-#define _ok RXML_CONTEXT->misc[" _ok"]
-
 #include <module.h>
 inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.27 2004/08/12 08:33:37 noring Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.28 2004/08/12 11:34:38 noring Exp $";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -304,7 +302,8 @@ class TagEmitSpellcheck {
       string s = run_spellcheck(text, dict);
       if(!s)
       {
-	_ok = 0;
+	if(args["error"])
+	  RXML.user_set_var(args["error"], "checkfailed");
 	return ({});
       }
       foreach(s/"\n", string line)
@@ -335,7 +334,6 @@ class TagEmitSpellcheck {
       }
     }
 
-    _ok = 1;
     return entries;
   }
 }
@@ -352,6 +350,8 @@ constant tagdoc=([
 <attr name='text' value='string'><p>The text to be spell checked. Tags are allowed in the text.</p></attr>
 
 <attr name='dict' value='string'><p>Optionally select a dictionary.</p></attr>
+
+<attr name='error' value='string'><p>Variable to set if an error occurs.</p></attr>
 ",
  ([
    "&_.word;":#"<desc type='entity'><p>The word not found in the dictionary.</p></desc>",
