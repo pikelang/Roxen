@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.28 1997/07/05 18:17:34 grubba Exp $
+ * $Id: ftp.pike,v 1.29 1997/07/19 23:24:27 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -79,7 +79,7 @@ private int check_shell(string shell)
 	  return((((line/"#")[0])/"" - ({" ", "\t"}))*"");
 	} )-({""})));
 #ifdef DEBUG
-	perror(sprintf("ftp.pike(): allowed_shells:%O\n", allowed_shells));
+	perror(sprintf("ftp.pike: allowed_shells:%O\n", allowed_shells));
 #endif /* DEBUG */
       } else {
 	perror(sprintf("ftp.pike: Failed to open shell database (\"%s\")\n",
