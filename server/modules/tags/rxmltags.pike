@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.292 2001/08/31 08:33:16 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.293 2001/09/01 01:03:41 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4947,7 +4947,7 @@ using the pre tag.
  a <tag>cache</tag> tag. Note that this implies that any RXML tags
  that surrounds the inner <tag>cache</tag> tag(s) won't be cached.</p>
 
- <p>Besides the value produced by the content, any assignments to RXML
+ <p>Besides the value produced by the content, all assignments to RXML
  variables in any scope are cached. I.e. an RXML code block which
  produces a value in a variable may be cached, and the same value will
  be assigned again to that variable when the cached entry is used
