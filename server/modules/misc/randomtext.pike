@@ -56,7 +56,7 @@
 inherit "module";
 inherit "roxenlib";
 
-string version = "$Id: randomtext.pike,v 1.1 2000/02/01 18:25:55 leif Exp $";
+string version = "$Id: randomtext.pike,v 1.2 2000/02/12 16:09:55 nilsson Exp $";
 
 mapping text_cache = ([ ]);
 
@@ -81,17 +81,13 @@ void create()
         );
 }
 
-array register_module()
-{ return ({ MODULE_PARSER,
-       "Random Text Generator Module",
-       ("This module provides a simple way of generating texts on a "
-        "semi-random basis according to a set of rules. Apart from its "
-        "amusement value, this can be useful for testing and educational "
-        "purposes, such as generating small quiz pages or producing "
-        "many different kinds of input to text processing tags."),
-       0,
-       1 });
-}
+constant module_type = MODULE_PARSER;
+constant module_name = "Random Text Generator Module";
+constant module_doc  = "This module provides a simple way of generating texts on a "
+  "semi-random basis according to a set of rules. Apart from its "
+  "amusement value, this can be useful for testing and educational "
+  "purposes, such as generating small quiz pages or producing "
+  "many different kinds of input to text processing tags.";
 
 string status()
 { return

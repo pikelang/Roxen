@@ -6,7 +6,7 @@
  * a "library" program plus a tiny imlpementation module
  */
 
-constant cvs_version="$Id: throttling_bytype.pike,v 1.4 1999/12/18 14:35:02 nilsson Exp $";
+constant cvs_version="$Id: throttling_bytype.pike,v 1.5 2000/02/12 16:09:30 nilsson Exp $";
 
 #include <module.h>
 inherit "throttlelib";
@@ -20,13 +20,10 @@ string filter_type="(by type)";
 #define THROTTLING_DEBUG(X)
 #endif
 
-array register_module() {
-  return ({
-    MODULE_FILTER,
-    "Throttling: throttle by type",
-    "This module will alter the throttling definitions by content type",
-    0,0});
-}
+constant module_type = MODULE_FILTER;
+constant module_name = "Throttling: throttle by type";
+constant module_doc  = "This module will alter the throttling definitions by content type";
+constant module_unique = 0;
 
 array find_rule (mapping res, object id, 
                  array(string) rulenames, mapping rules) {

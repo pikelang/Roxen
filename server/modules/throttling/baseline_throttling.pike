@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: baseline_throttling.pike,v 1.3 1999/12/18 14:35:02 nilsson Exp $";
+constant cvs_version="$Id: baseline_throttling.pike,v 1.4 2000/02/12 16:09:30 nilsson Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -10,14 +10,11 @@ constant cvs_version="$Id: baseline_throttling.pike,v 1.3 1999/12/18 14:35:02 ni
 #define THROTTLING_DEBUG(X)
 #endif
 
-array register_module() {
-  return ({
-    MODULE_FIRST,
-    "Throttling: baseline setting",
-#"This module will assign all requests a \"base\" bandwidth. That bandwidth
-will usually then be altered by other throttling modules",
-    0,1}); //having many is not a problem, but it doesn't really make sense
-}
+constant module_type = MODULE_FIRST;
+constant module_name = "Throttling: baseline setting";
+constant module_doc  = "This module will assign all requests"
+  "a \"base\" bandwidth. That bandwidth"
+  "will usually then be altered by other throttling modules";
 
 void create() {
   defvar("rate",10240,"Assigned bandwidth",TYPE_INT,

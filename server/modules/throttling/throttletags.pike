@@ -3,7 +3,7 @@ inherit "module";
 inherit "roxenlib";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.3 1999/12/18 14:35:02 nilsson Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.4 2000/02/12 16:09:30 nilsson Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -14,14 +14,10 @@ constant cvs_version="$Id: throttletags.pike,v 1.3 1999/12/18 14:35:02 nilsson E
 
 #define THROW(X) throw( X+"\n" )
 
-array register_module() {
-  return ({
-    MODULE_PARSER,
-      "Throttling control tags",
-      "This module provides a <tt>&lt;THROTTLE&gt;</tt> tag "
-    "that you can use to determine a request's allocated bandwidth",
-    0,1});
-}
+constant module_type = MODULE_PARSER;
+constant module_name = "Throttling control tags";
+constant module_doc  = "This module provides a <tt>&lt;THROTTLE&gt;</tt> tag "
+  "that you can use to determine a request's allocated bandwidth";
 
 TAGDOCUMENTATION;
 #ifdef manual
