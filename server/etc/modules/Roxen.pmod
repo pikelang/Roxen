@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.149 2002/10/16 16:26:02 jonasw Exp $
+// $Id: Roxen.pmod,v 1.150 2002/10/22 08:50:01 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1387,8 +1387,8 @@ string make_tag_attributes(mapping(string:string) in,
 
 string make_tag(string name, mapping(string:string) args, void|int xml,
 		void|int preserve_roxen_entities)
-//! Returns an empty element tag [@name], with the tag arguments dictated
-//! by the mapping [@args]. If the flag [@xml] is set, slash character will
+//! Returns an empty element tag @[name], with the tag arguments dictated
+//! by the mapping @[args]. If the flag @[xml] is set, slash character will
 //! be added in the end of the tag. Use RXML.t_xml->format_tag(name, args)
 //! instead.
 {
@@ -1398,8 +1398,8 @@ string make_tag(string name, mapping(string:string) args, void|int xml,
 
 string make_container(string name, mapping(string:string) args, string content,
 		      void|int preserve_roxen_entities)
-//! Returns a container tag [@name] encasing the string [@content], with
-//! the tag arguments dictated by the mapping [@args]. Use
+//! Returns a container tag @[name] encasing the string @[content], with
+//! the tag arguments dictated by the mapping @[args]. Use
 //! RXML.t_xml->format_tag(name, args, content) instead.
 {
   if(args["/"]=="/") m_delete(args, "/");

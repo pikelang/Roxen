@@ -28,7 +28,7 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version="$Id: userdb_ex.pike,v 1.3 2001/10/09 18:07:50 nilsson Exp $";
+constant cvs_version="$Id: userdb_ex.pike,v 1.4 2002/10/22 08:49:08 jonasw Exp $";
 
 LocaleString module_name = LOCALE(1,"RefDoc for MODULE_USERDB");
 
@@ -158,6 +158,7 @@ class ExUser
 
 
 class ExGroup
+//! ExGroup.
 {
   inherit Group;
   //! All groups should inherit the group class.
@@ -175,6 +176,7 @@ class ExGroup
     // Our one and only group is named example.
     return "example";
   }
+  
   int gid()
   //! A numerical GID, or -1 if not applicable
   {

@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.81 2002/09/04 12:18:05 mast Exp $
+ * $Id: ftp.pike,v 2.82 2002/10/22 08:48:38 jonasw Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1536,7 +1536,7 @@ class FTPSession
   static private string cwd = "/";
 
   static private User auth_user;
-  //! Authenticated user.
+  // Authenticated user.
 
   static private string user;
   static private string password;

@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.298 2002/10/15 12:05:13 mast Exp $
+// $Id: module.pmod,v 1.299 2002/10/22 08:50:57 jonasw Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2620,7 +2620,6 @@ constant FLAG_IS_CACHE_STATIC	= 0x00000200;
 //!   	<nocache>Your name is &registered-user.name;</nocache>
 //!   </registered-user>
 //! </cache>
-//! @endexample
 //!
 //! The tag @tt{<registered-user>@} is a custom tag that ignores its
 //! content whenever the user isn't registered. When it doesn't have

@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.19 2002/10/09 12:19:51 wellhard Exp $
+// $Id: License.pmod,v 1.20 2002/10/22 08:50:01 jonasw Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -79,6 +79,7 @@ array(Key|mapping) get_licenses(string license_dir)
 
 static int key_count;  // How many licenses has been created, used for debug.
 
+//!  License key created from a key file.
 class Key
 {
   static mapping content;

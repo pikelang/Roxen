@@ -10,7 +10,7 @@ inherit "module";
 int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql.pike,v 1.8 2002/01/17 22:35:38 nilsson Exp $";
+  "$Id: userdb_sql.pike,v 1.9 2002/10/22 08:48:32 jonasw Exp $";
 
 LocaleString module_name = _(1,"Authentication: SQL user database");
 LocaleString module_doc  = _(2,"This module implements a user database via "
@@ -36,7 +36,7 @@ class SqlUser
   }
 
   int password_authenticate(string password)
-  //! Return 1 if the password is correct, 0 otherwise.
+  // Return 1 if the password is correct, 0 otherwise.
   {
     switch(query("passwd_type")) {
       case "password":
