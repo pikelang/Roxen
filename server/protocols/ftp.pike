@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.32 1997/08/13 02:59:23 grubba Exp $
+ * $Id: ftp.pike,v 1.33 1997/08/14 22:45:03 marcus Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -89,7 +89,7 @@ private int check_shell(string shell)
     }
     return(allowed_shells[shell]);
   }
-  return(0);
+  return(1);
 }
 
 /********************************/
