@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.67 2001/02/08 00:58:43 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.68 2002/02/15 18:18:03 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -209,6 +209,7 @@ class TagSqlplugin {
   constant plugin_name = "sql";
 
   array get_dataset(mapping m, RequestID id) {
+    NOCACHE();
     array(mapping(string:string|int)) res=do_sql_query(m, id);
 
     foreach(res, mapping(string:string|int) row)
