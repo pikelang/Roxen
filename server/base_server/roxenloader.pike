@@ -3,7 +3,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.29 1997/08/12 06:32:09 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.30 1997/08/12 21:41:04 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -377,6 +377,16 @@ void report_debug(string message)
     nwrite(message,0,2);
 }
 
+void report_warning(string message)
+{
+#if efun(syslog)
+  if(use_syslog && (loggingfield&LOG_WARNING))
+    syslog(LOG_WARNING, replace(message, "%", "%%"));
+  else
+#endif
+    nwrite(message,0,2);
+}
+
 void report_notice(string message)
 {
 #if efun(syslog)
@@ -473,8 +483,9 @@ void main(mixed ... args)
   add_constant("popen",popen);
 
   add_constant("roxenp", lambda() { return roxen; });
-  add_constant("report_debug", report_debug);
   add_constant("report_notice", report_notice);
+  add_constant("report_debug", report_debug);
+  add_constant("report_warning", report_warning);
   add_constant("report_error", report_error);
   add_constant("report_fatal", report_fatal);
   add_constant("init_logger", init_logger);
