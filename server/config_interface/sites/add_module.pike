@@ -67,10 +67,10 @@ string site_url( RequestID id, string site )
   return "/sites/site.html/"+site+"/";
 }
 
-string page_base( RequestID id, string content )
+string page_base( RequestID id, string content, int|void noform )
 {
   return sprintf( "<use file='/template' />\n"
-                  "<tmpl title=' %s'>"
+                  "<tmpl title=' %s'%s>"
                   "<topmenu base='/' selected='sites'/>\n"
                   "<content><cv-split>"
                   "<subtablist width='100%%'>"
@@ -83,7 +83,8 @@ string page_base( RequestID id, string content )
                   "<p>\n</if>%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
-		  LOCALE(258,"Add module"), 
+		  LOCALE(258,"Add module"),
+		  noform?" noform='noform'":"",
                   LOCALE(272,"Reload module list"),
 		  LOCALE(202,"Cancel"), content );
 }
@@ -307,6 +308,7 @@ return sprintf(
    <tr>
      <td valign='top'>
        <form method='post' action='add_module.pike'>
+         <roxen-automatic-charset-variable/>
          <input type='hidden' name='module_to_add' value='%s'>
          <input type='hidden' name='config' value='&form.config;'>
          <submit-gbutton preparse='1'>%s</submit-gbutton>
@@ -374,7 +376,7 @@ string page_normal( RequestID id, int|void noimage )
   [desc,err] = get_module_list( describe_module_normal(!noimage),
                                 class_visible_normal, id );
   content += (desc+"</table>"+err);
-  return page_base( id, content );
+  return page_base( id, content, 1 );
 }
 
 string page_fast( RequestID id )
