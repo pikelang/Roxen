@@ -180,6 +180,7 @@ class Scope_usr
      case "content-toptableargs": return "";
      case "left-image":           return "/internal-roxen-unit";
      case "selected-indicator":   return "/internal-roxen-next";
+     case "item-indicator":       return "/internal-roxen-dot";
      case "logo":                 return "/internal-roxen-roxen";
      case "err-1":                return "/internal-roxen-err_1";
      case "err-2":                return "/internal-roxen-err_2";
