@@ -13,6 +13,7 @@ mixed parse( RequestID id )
   if( id->variables->url )
   {
     id->misc->new_configuration->set( "URLs", ({ id->variables->url }) );
+    id->misc->new_configuration->set( "MyWorldLocation", Roxen.get_world( ({ id->variables->url }) ) );
     return "<done/>";
   }
   return "<b>URL</b>: <input size=50 name=url value='http://*:80/'>"
