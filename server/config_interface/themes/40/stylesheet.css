@@ -1,0 +1,153 @@
+*
+{
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+tt, pre, textarea
+{
+	font-family: monospace;
+}
+
+a { text-decoration: none; color: #2331d1 }
+a:hover { text-decoration: underline; color: #6d7cff }
+
+li
+{
+	/*margin-left: -1em;*/
+	/*margin-bottom: 0.3em;*/
+	list-style-image: URL(/themes/default/bullet.gif);
+}
+
+/* For Mozilla */
+.add-module-select option
+{
+	font-family: monospace;
+}
+
+/* IE */
+.add-module-select
+{
+	font-family: monospace;
+}
+
+
+li.item-indicator
+{
+	/*margin-left: 0;*/
+	/*margin-bottom: 0.3em;*/
+	/*list-style-image: URL(/themes/default/bullet.gif);*/
+}
+
+li.selected-indicator
+{
+	/*margin-left: 0;*/
+	/*margin-bottom: 0.3em;*/
+	list-style-image: URL(/themes/default/sel2.gif);
+}
+
+td.selected-indicator
+{
+	/*font-size: 80%;*/
+	background-color: #e0e0e0;
+}
+
+div.bottom-div
+{
+	padding-right: 10;
+}
+
+ul.module-list
+{
+	font-size: 90%;
+	margin-left: 20px;
+	margin-right: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	padding: 0;
+}
+
+table.module-list
+{
+	font-size: 90%;
+	/*margin-left: 20px;*/
+	/*margin-right: 5px;*/
+	/*margin-top: 5px;*/
+	/*margin-bottom: 5px;*/
+	/*padding: 0;*/
+	/*cursor: default;*/
+}
+
+ul.module-sub-list
+{
+	font-size: 90%;
+	margin-left: 15px;
+	padding: 0;
+}
+
+table.module-sub-list
+{
+	font-size: 90%;
+}
+
+.module-list-item-hover,
+.module-list-item-hover a,
+.module-list-item-hover a:hover
+{
+	color: #ffffff;
+	background-color: #5f89d3;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.module-sub-list-item-hover,
+.module-sub-list-item-hover a,
+.module-sub-list-item-hover a:hover
+{
+	/*font-size: 90%;*/
+	color: #ffffff;
+	background-color: #5f89d3;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+
+/* popups */
+
+.module-popup-list {
+	font-size: 81%;
+	margin: 0;
+	padding: 2px;
+	cursor: default;
+}
+
+.module-popup-list-item td {
+	/*color: #215dc6;*/
+	padding-left: 16px;
+	padding-right: 16px;
+}
+
+.module-popup-list-item-hover td {
+	color: #ffffff;
+	padding-left: 16px;
+	padding-right: 16px;
+	background-color:  #5f89d3;
+}
+
+
+/* docs tab */
+
+.doc * {
+       font-size: 11px;
+}
+
+.doc h1 {
+       font-size: 16px;
+}
+
+.doc h2 {
+       font-size: 13px;
+}
+
+.doc li {
+       list-style-image: inherit;
+}
