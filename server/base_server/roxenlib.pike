@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.155 2000/02/20 17:41:34 nilsson Exp $
+// $Id: roxenlib.pike,v 1.156 2000/02/21 19:19:51 mast Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -692,7 +692,7 @@ string extension( string f, RequestID|void id)
     if(!ext) ext = "";
     else {
       ext = lower_case(reverse(ext));
-      if(ext[-1] == '~' || ext[-1] == '#')
+      if(sizeof (ext) && (ext[-1] == '~' || ext[-1] == '#'))
         ext = ext[..strlen(ext)-2];
     }
     if(id) id->misc[key]=ext;
