@@ -1,5 +1,5 @@
 /*
- * $Id: clearlog.pike,v 1.6 1997/08/30 22:57:56 peter Exp $
+ * $Id: clearlog.pike,v 1.7 1997/12/18 21:05:01 neotron Exp $
  */
 
 inherit "wizard";
@@ -22,18 +22,20 @@ mixed page_0(object id)
 
 mixed wizard_done(object id)
 {
-  array types=Array.map(id->variables->types/"\0",
-			lambda(string s){return (s[0]=='I'?1:s[0]=='W'?2:3);});
-  foreach(indices(roxen->error_log), string err)
-  {
-    int type;
-    sscanf(err, "%d,%*s", type);
-    if(search(types,type) != -1) m_delete(roxen->error_log, err);
+  if(stringp(id->variables->types)) {
+    array types=Array.map(id->variables->types/"\0",
+			  lambda(string s){
+      return (s[0]=='I'?1:s[0]=='W'?2:3);});
+    foreach(indices(roxen->error_log), string err)
+    {
+      int type;
+      sscanf(err, "%d,%*s", type);
+      if(search(types,type) != -1) m_delete(roxen->error_log, err);
+    }
+    roxen->last_error = "";
+    report_notice("Event log cleared by admin from "+
+		  roxen->blocking_ip_to_host(id->remoteaddr)+".");
   }
-  roxen->last_error = "";
-  report_notice("Event log cleared by admin from "+
-		roxen->blocking_ip_to_host(id->remoteaddr)+".");
-
   return http_redirect(roxen->config_url()+"Errors/?"+time());
 }
 
