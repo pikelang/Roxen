@@ -5,164 +5,28 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.30 2000/09/10 16:35:07 nilsson Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.31 2000/11/20 13:36:37 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
+// #include <roxen.h>
 inherit "module";
 
-TAGDOCUMENTATION
-#ifdef manual
-constant tagdoc=(["obox":([
-  "standard":#"<desc cont><short>This tag creates an outlined box.</short></desc>
+// begin locale stuff
+//<locale-token project="mod_obox">LOCALE</locale-token>
+//<locale-token project="mod_obox">SLOCALE</locale-token>
+#define SLOCALE(X,Y)	_STR_LOCALE("mod_obox",X,Y)
+#define LOCALE(X,Y)	_DEF_LOCALE("mod_obox",X,Y)
+// end locale stuff
+  
 
-<attr name=align value=left|right>
- Vertical alignment of the box.
-</attr>
+constant module_type = MODULE_TAG;
+object module_name_locale =
+  LOCALE(1,"Outlined box");
 
-<attr name=bgcolor value=color>
- Color of the background and title label.
-</attr>
-
-<attr name=fixedleft value=number>
- Fixed length of line on the left side of the title. The unit is the
- approximate width of a character.
-</attr>
-
-<attr name=fixedright value=number>
- Fixed length of line on the right side of the title. The unit is the
- approximate width of a character.
-</attr>
-
-<attr name=left value=number>
- Length of the line on the left of the title.
-</attr>
-
-<attr name=outlinecolor value=color>
- Color of the outline.
-</attr>
-
-<attr name=outlinewidth value=number>
- Width, in pixels, of the outline.
-</attr>
-
-<attr name=right value=number>
- Length of the line on the right of the title.
-</attr>
-
-<attr name=spacing value=number>
- Width, in pixels, of the space in the box.
-</attr>
-
-<attr name=style value=caption|groupbox>
- Style of the box. Groupbox is default
-</attr>
-
-<attr name=textcolor value=color>
- Color of the text inside the box.
-</attr>
-
-<attr name=title value=string>
- Sets the title of the obox.
-</attr>
-
-<attr name=titlecolor value=color>
- Color of the title text.
-</attr>
-
-<attr name=width value=number>
- Width, in pixels, of the box.
-
-
- Note that the left and right attributes are constrained by the width
- argument. If the title is not specified in the argument list, you can
- put it in a <tag>title</tag> container in the obox contents.
-
-<ex><obox align='left' outlinewidth='5' outlinecolor='green' width='200'>
-<title>Sample box</title>
-
-This is just a sample box.
-
-</obox>
-</ex>
-
-</attr>",
-
-
-  "svenska":#"<desc cont><short>Denna tagg skapar en ramlåda runt dess innehåll.</short></desc>
-
-<attr name=align value=left|right>
- Ramlådans vertikala position.
-</attr>
-
-<attr name=bgcolor value=färg>
- Färgen på bakgrunden samt titeln.
-</attr>
-
-<attr name=fixedleft value=nummer>
- Längden på linjen till vänster om titeln. Värdet på 1 'nummer' är den
- ungefärliga bredden av ett tecken.
-</attr>
-
-<attr name=fixedright value=nummer>
- Längden på linjen till vänster om titeln. Värdet på 1 'nummer' är den
- ungefärliga bredden av ett tecken.
-</attr>
-
-<attr name=left value=nummer>
- Längden på linjen till vänster om titeln.
-</attr>
-
-<attr name=outlinecolor value=färg>
- Färgen på ramen.
-</attr>
-
-<attr name=outlinewidth value=nummer>
- Ramens bredd, i antal pixlar.
-</attr>
-
-<attr name=right value=nummer>
- Längden på linjen till höger om titeln.
-</attr>
-
-<attr name=spacing value=nummer>
- Vidden på utrymmet i ramlådan, i antal pixlar.
-</attr>
-
-<attr name=style value=caption|groupbox>
- Ramlådans stil. Groupbox är standardvärde.
-</attr>
-
-<attr name=textcolor value=färg>
- Färgen på texten inuti lådan.
-</attr>
-
-<attr name=title value=textsträng>
- Ramlådans titel.
-</attr>
-
-<attr name=titlecolor value=färg>
- Färgen på titeltexten.
- </attr>
-
-<attr name=width value=nummer>
- Bredden på lådan, i antal pixlar.
-
- Tänk på att <att>left</att> och <att>right</att> attributen begränsas
- av värdet på <att>width</att> attributet. Om titeln inte är satt i
- taggen, finns möjligheten att sätta den inuti en <tag>title</tag>
- tagg och placera denna i ramlådans innehåll.
-
-<ex><obox align='left' outlinewidth='5' outlinecolor='green' width='200'>
-<title>Ramlåda</title>
-
-Detta är innehållet.
-
-</obox>
-</ex>
-
-</attr>"]) ]);
-#endif
+object module_doc_locale  =
+  LOCALE(2,"This module provides the <tt>&lt;obox&gt;</tt> tag that "
+	 "draws outlined boxes.");
 
 constant unit_gif = "/internal-roxen-unit";
 
@@ -322,18 +186,168 @@ string simpletag_obox(string name, mapping args, string contents)
   return s;
 }
 
-constant module_type = MODULE_TAG;
-constant module_name =
-    ([
-      "standard":"Outlined box",
-      "svenska":"Ramlåda",
-    ]);
-constant module_doc =
-    ([
-      "standard":
-      "This module provides the <tt>&lt;obox&gt;</tt> tag that draws outlined "
-      "boxes.",
-      "svenska":
-      "<tt>&lt;obox&gt;&lt;/obox&gt;</tt> är en tag som ramar "
-      "in det som står i den.",
-    ]);
+
+
+
+
+
+
+
+
+
+
+
+
+TAGDOCUMENTATION
+#ifdef manual
+constant tagdoc=(["obox":([
+  "standard":#"<desc cont><short>This tag creates an outlined box.</short></desc>
+
+<attr name=align value=left|right>
+ Vertical alignment of the box.
+</attr>
+
+<attr name=bgcolor value=color>
+ Color of the background and title label.
+</attr>
+
+<attr name=fixedleft value=number>
+ Fixed length of line on the left side of the title. The unit is the
+ approximate width of a character.
+</attr>
+
+<attr name=fixedright value=number>
+ Fixed length of line on the right side of the title. The unit is the
+ approximate width of a character.
+</attr>
+
+<attr name=left value=number>
+ Length of the line on the left of the title.
+</attr>
+
+<attr name=outlinecolor value=color>
+ Color of the outline.
+</attr>
+
+<attr name=outlinewidth value=number>
+ Width, in pixels, of the outline.
+</attr>
+
+<attr name=right value=number>
+ Length of the line on the right of the title.
+</attr>
+
+<attr name=spacing value=number>
+ Width, in pixels, of the space in the box.
+</attr>
+
+<attr name=style value=caption|groupbox>
+ Style of the box. Groupbox is default
+</attr>
+
+<attr name=textcolor value=color>
+ Color of the text inside the box.
+</attr>
+
+<attr name=title value=string>
+ Sets the title of the obox.
+</attr>
+
+<attr name=titlecolor value=color>
+ Color of the title text.
+</attr>
+
+<attr name=width value=number>
+ Width, in pixels, of the box.
+
+
+ Note that the left and right attributes are constrained by the width
+ argument. If the title is not specified in the argument list, you can
+ put it in a <tag>title</tag> container in the obox contents.
+
+<ex><obox align='left' outlinewidth='5' outlinecolor='green' width='200'>
+<title>Sample box</title>
+
+This is just a sample box.
+
+</obox>
+</ex>
+
+</attr>",
+
+
+  "svenska":#"<desc cont><short>Denna tagg skapar en ramlåda runt dess innehåll.</short></desc>
+
+<attr name=align value=left|right>
+ Ramlådans vertikala position.
+</attr>
+
+<attr name=bgcolor value=färg>
+ Färgen på bakgrunden samt titeln.
+</attr>
+
+<attr name=fixedleft value=nummer>
+ Längden på linjen till vänster om titeln. Värdet på 1 'nummer' är den
+ ungefärliga bredden av ett tecken.
+</attr>
+
+<attr name=fixedright value=nummer>
+ Längden på linjen till vänster om titeln. Värdet på 1 'nummer' är den
+ ungefärliga bredden av ett tecken.
+</attr>
+
+<attr name=left value=nummer>
+ Längden på linjen till vänster om titeln.
+</attr>
+
+<attr name=outlinecolor value=färg>
+ Färgen på ramen.
+</attr>
+
+<attr name=outlinewidth value=nummer>
+ Ramens bredd, i antal pixlar.
+</attr>
+
+<attr name=right value=nummer>
+ Längden på linjen till höger om titeln.
+</attr>
+
+<attr name=spacing value=nummer>
+ Vidden på utrymmet i ramlådan, i antal pixlar.
+</attr>
+
+<attr name=style value=caption|groupbox>
+ Ramlådans stil. Groupbox är standardvärde.
+</attr>
+
+<attr name=textcolor value=färg>
+ Färgen på texten inuti lådan.
+</attr>
+
+<attr name=title value=textsträng>
+ Ramlådans titel.
+</attr>
+
+<attr name=titlecolor value=färg>
+ Färgen på titeltexten.
+ </attr>
+
+<attr name=width value=nummer>
+ Bredden på lådan, i antal pixlar.
+
+ Tänk på att <att>left</att> och <att>right</att> attributen begränsas
+ av värdet på <att>width</att> attributet. Om titeln inte är satt i
+ taggen, finns möjligheten att sätta den inuti en <tag>title</tag>
+ tagg och placera denna i ramlådans innehåll.
+
+<ex><obox align='left' outlinewidth='5' outlinecolor='green' width='200'>
+<title>Ramlåda</title>
+
+Detta är innehållet.
+
+</obox>
+</ex>
+
+</attr>"]) ]);
+#endif
+

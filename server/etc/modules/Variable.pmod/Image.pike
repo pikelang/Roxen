@@ -47,9 +47,9 @@ array(string) verify_set_from_form( string newval )
   string warning;
   if( catch{
     if( !Image._decode( newval ) )
-      warning = LOCALE(0,"Cannot decode this file as an image")+"\n";
+      warning = LOCALE(345,"Cannot decode this file as an image")+"\n";
   } )
-    warning = LOCALE(0,"Error while decoding image")+"\n";
+    warning = LOCALE(346,"Error while decoding image")+"\n";
   return ({ warning, newval });
 }
 
@@ -70,11 +70,11 @@ string render_view( RequestID id, int|void thumb )
     }
     else 
     {
-      return LOCALE(0,"Valid image set (no cimg module available, "
+      return LOCALE(347,"Valid image set (no cimg module available, "
 		    "cannot show it)")+"\n";
     }
   } else {
-    return LOCALE(0,"No image set");
+    return LOCALE(348,"No image set");
   }
 }
 

@@ -9,9 +9,6 @@ inherit "language";
 
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 //<locale-token project="roxen_config"> SLOCALE </locale-token>
-static inline string GETLOCLANG() {
-  return roxenp()->locale->get();
-}
 #define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 #define SLOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 string query_configuration_dir();
@@ -201,24 +198,24 @@ class ConfigurationSettings
             }));
 
     defvar( "sortorder", "alphabetical",
-	    LOCALE(0, "Default variable sort order"), TYPE_STRING_LIST,
-	    LOCALE(0, "The default order variables are sorted in" ),
+	    LOCALE(236, "Default variable sort order"), TYPE_STRING_LIST,
+	    LOCALE(237, "The default order variables are sorted in" ),
 	    ([
-	      "alphabetical" : LOCALE(0,"alphabetical"),
-	      "as defined"   : LOCALE(0,"as defined"),
-	      "changed/alphabetical" : LOCALE(0,"alphabetical, changed first"),
-	      "changed/as defined"   : LOCALE(0,"as defined, changed first"),
+	      "alphabetical" : LOCALE(238,"alphabetical"),
+	      "as defined"   : LOCALE(239,"as defined"),
+	      "changed/alphabetical" : LOCALE(240,"alphabetical, changed first"),
+	      "changed/as defined"   : LOCALE(241,"as defined, changed first"),
 	    ]) );
 
     defvar( "changemark", "not",
-	    LOCALE(0, "Changed variables are highlighted"),
+	    LOCALE(242, "Changed variables are highlighted"),
 	    TYPE_STRING_LIST,
-	    LOCALE(0, "How to highlight variables that does not have "
+	    LOCALE(243, "How to highlight variables that does not have "
 		   "their default value" ),
 	    ([
-	      "not"   :LOCALE(0, "Not at all"),
-	      "color" :LOCALE(0, "Different background color"),
-	      "header":LOCALE(0, "Add a header")
+	      "not"   :LOCALE(244, "Not at all"),
+	      "color" :LOCALE(268, "Different background color"),
+	      "header":LOCALE(302, "Add a header")
 	    ]) );
 
     defvar( "docs", 1, LOCALE(174, "Show documentation"),
@@ -256,8 +253,8 @@ class ConfigurationSettings
     defvar( "font", "franklin gothic demi", LOCALE(187, "Font"),
 	    TYPE_FONT, LOCALE(188, "Administration interface font."));
 
-    defvar( "group_tasks", 1, LOCALE(0,"Group Tasks"),
-	    TYPE_FLAG, LOCALE( 0, "If true, tasks are grouped acording to "
+    defvar( "group_tasks", 1, LOCALE(303,"Group Tasks"),
+	    TYPE_FLAG, LOCALE( 304, "If true, tasks are grouped acording to "
 			       "type, otherwise all tasks will be listed on "
 			       "one page") );
 
@@ -464,7 +461,7 @@ class AdminUser
 array possible_permissions = ({ });
 mapping permission_translations = ([ ]);
 
-void add_permission( string perm, string|mapping text )
+void add_permission( string perm, string|object text )
 {
   if( mappingp( text ) )
   {

@@ -2,7 +2,6 @@
 #include <roxen.h>
 
 //<locale-token project="roxen_config">LOCALE</locale-token>
-USE_DEFERRED_LOCALE;
 #define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 

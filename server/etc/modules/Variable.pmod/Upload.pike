@@ -39,7 +39,7 @@ void set_from_form( RequestID id )
       if( q )
         add_warning( q );
       else
-        add_warning( LOCALE(0,"Internal error: Illegal sized array "
+        add_warning( LOCALE(343,"Internal error: Illegal sized array "
 			    "from verify_set_from_form")+"\n" );
       return;
     }
@@ -59,6 +59,6 @@ string render_form( RequestID id, void|mapping additional_args )
 string render_view( RequestID id )
 {
   return get_filename()
-    ? sprintf( LOCALE(0,"Uploaded file: %s"), get_filename() )
+    ? sprintf( LOCALE(344,"Uploaded file: %s"), get_filename() )
     : "";
 }

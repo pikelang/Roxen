@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.35 2000/11/20 07:30:15 per Exp $
+// $Id: module.pmod,v 1.36 2000/11/20 13:36:36 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -172,7 +172,7 @@ class Variable
     //! The default implementation queries the locale object in roxen
     //! to get the documentation.
   {
-    return __name || LOCALE(0,"unnamed")+" "+_id;
+    return __name || LOCALE(326,"unnamed")+" "+_id;
   } 
 
   string type_hint(  )
@@ -330,7 +330,7 @@ class Variable
         if( q )
           add_warning( q );
         else
-          add_warning( LOCALE(0,"Internal error: Illegal sized array "
+          add_warning( LOCALE(327,"Internal error: Illegal sized array "
 			      "from verify_set_from_form\n") );
         return;
       }
@@ -448,13 +448,13 @@ class Float
     string warn;
     if( new_value > _max && _max > _min)
     {
-      warn = sprintf(LOCALE(0,"Value is bigger than %s, adjusted"),
+      warn = sprintf(LOCALE(328,"Value is bigger than %s, adjusted"),
 		     _format(_max) );
       new_value = _max;
     }
     else if( new_value < _min && _min < _max)
     {
-      warn = sprintf(LOCALE(0,"Value is less than %s, adjusted"),
+      warn = sprintf(LOCALE(329,"Value is less than %s, adjusted"),
 		     _format(_min) );
       new_value = _min;
     }
@@ -507,13 +507,13 @@ class Int
     string warn;
     if( new_value > _max && _max > _min )
     {
-      warn = sprintf(LOCALE(0,"Value is bigger than %s, adjusted"),
+      warn = sprintf(LOCALE(328,"Value is bigger than %s, adjusted"),
 		     (string)_max );
       new_value = _max;
     }
     else if( new_value < _min && _min < _max)
     {
-      warn = sprintf(LOCALE(0,"Value is less than %s, adjusted"),
+      warn = sprintf(LOCALE(329,"Value is less than %s, adjusted"),
 		     (string)_min );
       new_value = _min;
     }
@@ -649,7 +649,7 @@ class Location
   {
     if( !strlen( value ) || !((<'~','/'>)[value[-1]]) )
       return ({
-	LOCALE(0,"You most likely want an ending '/' on this variable"),
+	LOCALE(330,"You most likely want an ending '/' on this variable"),
 	value
       });
     return ::verify_set( value );
@@ -686,7 +686,7 @@ class Directory
     if( !strlen( value ) )
       return ::verify_set( value );
     if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
-       return ({sprintf(LOCALE(0,"%s is not a directory"),value)+"\n",value});
+       return ({sprintf(LOCALE(331,"%s is not a directory"),value)+"\n",value});
     return ::verify_set( value );
   }
 
@@ -779,11 +779,12 @@ class MultipleChoice
       // the value doesn't change as a side-effect by another change.
       res += "  " + Roxen.make_container (
 	"option", (["value":_name(current), "selected": "selected"]),
-	sprintf(LOCALE(0,"(keep stale value %s)"),_name(current)));
+	sprintf(LOCALE(332,"(keep stale value %s)"),_name(current)));
     return res + "</select>";
   }
   static void create( mixed default_value, array|mapping choices,
-                      int _flags, string std_name, string std_doc )
+                      int _flags, string|object std_name,
+		      string|object std_doc )
     //! Constructor. 
     //!
     //! Choices is the list of possible choices, can be set with 
@@ -875,7 +876,7 @@ class FontChoice
     return roxenp()->fonts->available_fonts();
   }
   static void create(mixed default_value,int flags,
-                     string std_name,string std_doc)
+                     string|object std_name,string|object std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 
@@ -986,7 +987,7 @@ class List
       if( q )
 	set_warning( q );
       else
-	set_warning( LOCALE(0,"Internal error: Illegal sized array "
+	set_warning( LOCALE(327,"Internal error: Illegal sized array "
 			    "from verify_set_from_form\n" ));
       return;
     }
@@ -1055,7 +1056,7 @@ class DirectoryList
       if(!strlen(vi)) // empty
         continue;
       if( !(r_file_stat( vi ) && (r_file_stat( vi )[ ST_SIZE ] == -2 )))
-        warn += sprintf(LOCALE(0,"%s is not a directory"),vi)+"\n";
+        warn += sprintf(LOCALE(331,"%s is not a directory"),vi)+"\n";
       if( strlen(vi) && vi[-1] != '/' )
         value = replace( value, vi, vi+"/" );
     }
@@ -1218,32 +1219,32 @@ static array(string) verify_port( string port, int nofhttp )
   string warning="";
   if( (int)port )
   {
-    warning += sprintf(LOCALE(0,"Assuming http://*:%[0]d/ for %[0]d")+"\n",
+    warning += sprintf(LOCALE(333,"Assuming http://*:%[0]d/ for %[0]d")+"\n",
 		       (int)port);
     port = "http://*:"+port+"/";
   }
   string protocol, host, path;
 
   if(!strlen( port ) )
-    return ({ LOCALE(0,"Empty URL field")+"\n", port });
+    return ({ LOCALE(334,"Empty URL field")+"\n", port });
 
   if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
-    return ({ sprintf(LOCALE(0,"%s does not conform to URL syntax")+"\n",port),
+    return ({ sprintf(LOCALE(335,"%s does not conform to URL syntax")+"\n",port),
 	      port });
   
   if( path == "" || path[-1] != '/' )
   {
-    warning += sprintf(LOCALE(0,"Added / to the end of %s")+"\n",port);
+    warning += sprintf(LOCALE(336,"Added / to the end of %s")+"\n",port);
     path += "/";
   }
   if( nofhttp && protocol == "fhttp" )
   {
-    warning += sprintf(LOCALE(0,"Changed %s to http")+"\n",protocol);
+    warning += sprintf(LOCALE(337,"Changed %s to http")+"\n",protocol);
     protocol = "http";
   }
   if( protocol != lower_case( protocol ) )
   {
-    warning += sprintf(LOCALE(0,"Changed %s to %s"),
+    warning += sprintf(LOCALE(338,"Changed %s to %s"),
 		       protocol, lower_case( protocol ))+"\n";  
     protocol = lower_case( protocol );
   }
@@ -1254,8 +1255,8 @@ static array(string) verify_port( string port, int nofhttp )
 #else
     if( (protocol == "https" || protocol == "ftps") )
       warning +=
-	LOCALE(0,"SSL support not available in this Pike version.")+"\n"+
-	sprintf(LOCALE(0,"Please use %s instead."),
+	LOCALE(339,"SSL support not available in this Pike version.")+"\n"+
+	sprintf(LOCALE(340,"Please use %s instead."),
 		protocol[..strlen(protocol)-2])+"\n";
 #endif
   }
@@ -1263,7 +1264,7 @@ static array(string) verify_port( string port, int nofhttp )
   if( sscanf( host, "%s:%d", host, pno ) == 2)
     if( roxenp()->protocols[ lower_case( protocol ) ] 
         && (pno == roxenp()->protocols[ lower_case( protocol ) ]->default_port ))
-        warning += sprintf(LOCALE(0,"Removed the default port number "
+        warning += sprintf(LOCALE(341,"Removed the default port number "
 				  "(%d) from %s"),pno,port)+"\n";
     else
       host = host+":"+pno;
@@ -1272,7 +1273,7 @@ static array(string) verify_port( string port, int nofhttp )
   port = protocol+"://"+host+path;
 
   if( !roxenp()->protocols[ protocol ] )
-    warning += sprintf(LOCALE(0,"Warning: The protocol %s is not known "
+    warning += sprintf(LOCALE(342,"Warning: The protocol %s is not known "
 			      "by roxen"),protocol)+"\n";
   return ({ (strlen(warning)?warning:0), port });
 }

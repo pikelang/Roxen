@@ -19,6 +19,6 @@ Calendar.Day get_date()
 array(string) verify_set( string new_value )
 {
   if( catch( Calendar.dwim_day( new_value ) ) )
-    return ({ LOCALE(0,"Could not interpret the date"), new_value });
+    return ({ LOCALE(312,"Could not interpret the date"), new_value });
   return ({ 0, new_value });
 }

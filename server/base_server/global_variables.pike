@@ -1,24 +1,22 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.49 2000/11/17 23:23:19 nilsson Exp $
+// $Id: global_variables.pike,v 1.50 2000/11/20 13:36:33 per Exp $
 
 /*
 #pragma strict_types
 */
-#define DEFVAR string,int|string,string|mapping,int,string|mapping(string:string),void|array(string),void|function:void
-#define BDEFVAR string,int|string,string|mapping,int,string|mapping(string:string),void|array(string),void|mapping(string:mapping(string:string)):void
+#define DEFVAR mixed...:object
+// string,int|string,string|object|mapping,int,string|object|mapping(string:string),mixed,void|function:object
+#define BDEFVAR mixed...:object
+//string,int|string,string|object|mapping,int,string|object|mapping(string:string),void|array(string),void|mapping(string:mapping(string:string)):object
 
+#define IN_ROXEN
 #include <module.h>
-#include <roxen.h>
-#include <config.h>
 inherit "read_config";
 inherit "basic_defvar";
 #include <version.h>
 
 //<locale-token project="roxen_config">LOCALE</locale-token>
-static inline string GETLOCLANG() {
-  return roxenp()->locale->get();
-}
 #define LOCALE(X,Y)  _DEF_LOCALE("roxen_config",X,Y)
 
 mixed save()
@@ -45,8 +43,8 @@ void set_up_hilfe_variables( object o )
   function(DEFVAR) defvar = [function(DEFVAR)] o->defvar;
 
   defvar( "require_auth", 1,
-	  LOCALE(0,"Require user with the 'hilfe' permission"), TYPE_FLAG,
-	  LOCALE(0,"If yes, require a user with the hilfe permission "
+	  LOCALE(309,"Require user with the 'hilfe' permission"), TYPE_FLAG,
+	  LOCALE(310,"If yes, require a user with the hilfe permission "
 		 "set, otherwise, any configuration interface user will "
 		 "work,  even one with only the view settings permission" ) );
 }

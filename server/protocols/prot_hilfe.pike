@@ -453,7 +453,7 @@ class Connection
 
 void create( mixed ... args )
 {
-  roxen.add_permission( "Hilfe", LOC_M( 0, "Hilfe" ) );
+  roxen.add_permission( "Hilfe", LOC_M( 12, "Hilfe" ) );
   roxen.set_up_hilfe_variables( this_object() );
   requesthandler = Connection;
   ::create( @args );

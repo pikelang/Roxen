@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.20 2000/11/02 16:46:51 per Exp $
+// $Id: basic_defvar.pike,v 1.21 2000/11/20 13:36:32 per Exp $
 // (string:Variable.Variable) 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -61,28 +61,24 @@ void setvars( mapping (string:mixed) vars )
       q->set( vars[v] );
 }
 
-/*
-
-Variable.Variable defvar( string sname, Variable.Variable variable )
+//! @decl Variable.Variable defvar( string sname, Variable.Variable variable )
 //! Define 'sname' to be 'variable',
-
-Variable.Variable defvar( string sname, mixed value, string name,
-                          int type, string doc, array|void misc,
-                          int|function not_in_config  )
+//!
+//! @decl Variable.Variable defvar( string sname, mixed value, string name, @@
+//!                                  int type, string doc, array|void misc, @@
+//!                                  int|function not_in_config  ) @@
 //! Define a new variable named sname, with the options specified in the list.
 //! This is a compatibility version of the function, and as such is deprecated.
 //! But it will be supported for the forseeable function.
-
-*/
 
 
 // Define a variable, with more than a little error checking...
 Variable.Variable defvar(string var, mixed value, 
 
 // rest is compat, and thus optional...
-                         mapping|string|void|object name,
+                         mapping|string|object|void name,
                          int|void type, 
-                         mapping|string|void|object doc_str, 
+                         mapping|string|object|void doc_str, 
                          mixed|void misc,
                          int|function|void not_in_config,
                          mapping|void option_translations)

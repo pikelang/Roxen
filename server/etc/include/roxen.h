@@ -1,4 +1,4 @@
-// $Id: roxen.h,v 1.18 2000/09/24 13:35:51 nilsson Exp $
+// $Id: roxen.h,v 1.19 2000/11/20 13:36:35 per Exp $
 // -*- Pike -*-
 
 #ifndef _ROXEN_H_
@@ -14,7 +14,7 @@
 
 #ifndef __LOCALEOBJECT
 #ifdef IN_ROXEN
-#define __LOCALEOBJECT locale
+#define __LOCALEOBJECT roxenp()["locale"]
 #else /* !IN_ROXEN */
 #define __LOCALEOBJECT roxen.locale
 #endif /* IN_ROXEN */
@@ -26,16 +26,15 @@
 #endif /* !_STR_LOCALE */
 
 #ifndef _DEF_LOCALE
-#define _DEF_LOCALE(X, Y, Z)	\
-    ([string](mixed)Locale.DeferredLocale(X, GETLOCLANG, Y, Z))
+#  ifndef GETLOCLANG
+#    ifdef IN_ROXEN
+#      define GETLOCLANG (this_object()->locale->get)
+#    else
+#      define GETLOCLANG roxen.get_locale
+#    endif
+#  endif
+#  define _DEF_LOCALE(X, Y, Z)	Locale.DeferredLocale(X, GETLOCLANG, Y, Z)
 #endif /* !_DEF_LOCALE */
-
-#ifndef USE_DEFERRED_LOCALE
-#define USE_DEFERRED_LOCALE	\
-    static local inline string GETLOCLANG() { \
-      return __LOCALEOBJECT->get(); \
-    }
-#endif /* !USE_DEFERRED_LOCALE */
 
 #ifndef _LOCALE_FUN
 #define _LOCALE_FUN(X, Y, Z)	\

@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.396 2000/11/16 11:51:29 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.397 2000/11/20 13:36:33 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -17,7 +17,6 @@ constant cvs_version = "$Id: configuration.pike,v 1.396 2000/11/16 11:51:29 per 
 #define LOC_S(X,Y)  _STR_LOCALE("roxen_start",X,Y)
 #define LOC_C(X,Y)  _STR_LOCALE("roxen_config",X,Y)
 #define LOC_M(X,Y)  _STR_LOCALE("roxen_message",X,Y)
-USE_DEFERRED_LOCALE;
 #define DLOCALE(X,Y) _DEF_LOCALE("roxen_config",X,Y)
 #define CALL(X,Y)    _LOCALE_FUN("roxen_config",X,Y)
 
@@ -2234,7 +2233,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       {
 	me->defvar("_seclvl",  0, DLOCALE(18, "Security: Security level"), 
 		   TYPE_INT,
-		   DLOCALE(0, "The modules security level is used to determine if a "
+		   DLOCALE(305, "The modules security level is used to determine if a "
 		   " request should be handled by the module."
 		   "\n<p><h2>Security level vs Trust level</h2>"
 		   " Each module has a configurable <i>security level</i>."
@@ -2820,7 +2819,7 @@ static void create(string config)
 {
   name=config;
 
-  roxen.add_permission( "Site:"+config, LOC_C(0,"Site")+": "+config );
+  roxen.add_permission( "Site:"+config, LOC_C(306,"Site")+": "+config );
 
   // for now only theese two. In the future there might be more variables.
   defvar( "data_cache_size", 2048, DLOCALE(274, "Cache:Cache size"),
@@ -3015,9 +3014,9 @@ static void create(string config)
 
 
   defvar("404-files", ({ "404.inc" }),
-	 DLOCALE("", "No such file message override files"),
+	 DLOCALE(307, "No such file message override files"),
 	 TYPE_STRING_LIST|VAR_PUBLIC,
-	 DLOCALE("",
+	 DLOCALE(308,
 		 "If no file match a given resource all directories above the"
 		 " wanted file is searched for one of the files in this list."
 		 "<p>\n"

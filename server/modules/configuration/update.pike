@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.25 2000/09/20 04:02:07 js Exp $
+ * $Id: update.pike,v 1.26 2000/11/20 13:36:36 per Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -34,7 +34,6 @@ inherit "module";
 //<locale-token project="roxen_start">   LOC_S </locale-token>
 //<locale-token project="roxen_config">  LOC_C </locale-token>
 //<locale-token project="roxen_message"> LOC_M </locale-token>
-USE_DEFERRED_LOCALE;
 #define LOC_S(X,Y)	_STR_LOCALE("roxen_start",X,Y)
 #define LOC_C(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 #define LOC_M(X,Y)	_STR_LOCALE("roxen_message",X,Y)

@@ -14,7 +14,7 @@ static int check_domain=1;
 
 array(string) verify_set( string new_value ) {
   if(!has_value(new_value, "@"))
-    return ({ LOCALE(0,"An email address must contain \"@\"."), new_value });
+    return ({ LOCALE(313,"An email address must contain \"@\"."), new_value });
 
   // RFC 822 tells us that <>, if present, contains the address.
   sscanf(new_value, "%*s<%s>%*s", new_value);
@@ -30,20 +30,20 @@ array(string) verify_set( string new_value ) {
   sscanf(domain,
 	 "%*[abcdefghijklmnopqrstuvwxyz0123456789.-_]%s", tmp); // More characters?
   if(sizeof(tmp))
-    return ({ LOCALE(0,"The email address domain contains forbidden characters."), new_value });
+    return ({ LOCALE(314,"The email address domain contains forbidden characters."), new_value });
 
   sscanf(lower_case(user),
 	 "%*[abcdefghijklmnopqrstuvwxyz0123456789.-_]%s", tmp); // More characters?
   if(sizeof(tmp))
-    return ({ LOCALE(0,"The email address user contains forbidden characters."), new_value });
+    return ({ LOCALE(315,"The email address user contains forbidden characters."), new_value });
 
   if( !sizeof( user ))
-    return({ LOCALE(0,"The email address does not contain a user."), new_value });
+    return({ LOCALE(316,"The email address does not contain a user."), new_value });
   if( !sizeof( domain ))
-    return({ LOCALE(0,"The email address does not contain a domain."), new_value });
+    return({ LOCALE(317,"The email address does not contain a domain."), new_value });
 
   if(user[0]=='.')
-    return ({ LOCALE(0,"The email address begins with an character that is not legal in that position."),
+    return ({ LOCALE(318,"The email address begins with an character that is not legal in that position."),
 	      new_value[1..] });
 
 #ifdef NSERIOUS
@@ -52,7 +52,7 @@ array(string) verify_set( string new_value ) {
 #endif
 
   if(check_domain && !Protocols.DNS.client()->get_primary_mx(domain))
-    return ({ sprintf(LOCALE(0,"The domain %s could not be found."),domain),
+    return ({ sprintf(LOCALE(319,"The domain %s could not be found."),domain),
 	      new_value });
   // We could perhaps take this a step further and ask the mailserver if the account is present.
 

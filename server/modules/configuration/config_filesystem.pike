@@ -10,14 +10,13 @@ inherit "module";
 inherit "roxenlib";
 
 //<locale-token project="roxen_config">LOCALE</locale-token>
-USE_DEFERRED_LOCALE;
 #define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.63 2000/10/04 21:26:45 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.64 2000/11/20 13:36:36 per Exp $";
 
 constant path = "config_interface/";
 

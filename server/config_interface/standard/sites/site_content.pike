@@ -505,7 +505,7 @@ string parse( RequestID id )
 	 }
 	 conf->error_log = ([]);
 	 roxen->nwrite( 
-	   sprintf(LOCALE(290,"Site event log for '%s' "
+	   sprintf(LOCALE(311,"Site event log for '%s' "
 			  "cleared by %s (%s) from %s"),
 		   conf->query_name(),
 		   id->misc->config_user->real_name,

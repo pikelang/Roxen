@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.575 2000/11/16 13:35:11 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.576 2000/11/20 13:36:34 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -34,7 +34,6 @@ inherit "config_userdb";
 
 //<locale-token project="roxen_start">   LOC_S </locale-token>
 //<locale-token project="roxen_message"> LOC_M </locale-token>
-
 #define LOC_S(X,Y)	_STR_LOCALE("roxen_start",X,Y)
 #define LOC_M(X,Y)	_STR_LOCALE("roxen_message",X,Y)
 #define CALL_M(X,Y)	_LOCALE_FUN("roxen_message",X,Y)
@@ -1209,7 +1208,7 @@ int register_url( string url, Configuration conf )
 
   if( !protocols[ protocol ] )
   {
-    report_error(LOC_M(0,"The protocol '%s' is not available")+"\n", protocol);
+    report_error(LOC_M(7,"The protocol '%s' is not available")+"\n", protocol);
     return 0;
   }
 
@@ -2404,6 +2403,8 @@ void create()
 
   add_constant( "load",    load);
   add_constant( "Roxen.set_locale", set_locale );
+  add_constant( "Roxen.get_locale", get_locale );
+
   add_constant( "roxen.locale", locale );
   //add_constant( "roxen.ImageCache", ImageCache );
 
@@ -2414,6 +2415,11 @@ void create()
   add_constant( "Configuration", _configuration );
 
 //   report_debug( "[Configuration: %.2fms] ", (gethrtime()-s)/1000.0);
+}
+
+mixed get_locale( )
+{
+  return locale->get();
 }
 
 int set_u_and_gid()

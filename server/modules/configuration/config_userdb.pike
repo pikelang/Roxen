@@ -1,15 +1,15 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: config_userdb.pike,v 1.57 2000/11/08 22:55:48 per Exp $
+// $Id: config_userdb.pike,v 1.58 2000/11/20 13:36:36 per Exp $
 
 inherit "module";
+#define IN_ROXEN
 #include <config_interface.h>
 #include <roxen.h>
 #include <module.h>
 
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 //<locale-token project="roxen_config"> SLOCALE </locale-token>
-USE_DEFERRED_LOCALE;
 #define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 #define SLOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
@@ -24,7 +24,7 @@ void create()
 {
   roxen.add_permission( "View Settings", LOCALE(192, "View Settings"));
   roxen.add_permission( "Edit Users",    LOCALE(193, "Edit Users"));
-  roxen.add_permission( "Update",    LOCALE(0, "Update Client"));
+  roxen.add_permission( "Update",    LOCALE(349, "Update Client"));
   roxen.add_permission( "Edit Global Variables",
 			LOCALE(194, "Edit Global Variables"));
   roxen.add_permission( "Tasks", LOCALE(196, "Tasks"));

@@ -1,10 +1,13 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.79 2000/11/13 10:23:20 per Exp $
-
+// $Id: module_support.pike,v 1.80 2000/11/20 13:36:34 per Exp $
+#define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
 #include <stat.h>
+
+//<locale-token project="roxen_config"> LOCALE </locale-token>
+#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 program my_compile_file(string file, void|int silent)
 {
@@ -189,7 +192,7 @@ class ModuleInfo( string sname, string filename )
 
   string get_name()
   {
-    if( stringp( name ) )
+    if( !mappingp( name ) )
       return name;
     if( mappingp( name ) )
     {
@@ -202,7 +205,7 @@ class ModuleInfo( string sname, string filename )
 
   string get_description()
   {
-    if( stringp( description ) )
+    if( !mappingp( description ) )
       return description;
     if( mappingp( description ) )
     {
@@ -229,9 +232,11 @@ class ModuleInfo( string sname, string filename )
     {
       return ({
 	0, // type
-	"Load of "+sname+" ("+filename+") failed.",
-	"The module "+sname+" ("+get_name()+") could not be loaded."+
-	get_compile_errors(),
+	sprintf(LOCALE(0,"Load of %s (%s) failed"),
+		sname,filename),
+	sprintf(LOCALE(0,"The module %s (%s) could not be loaded."),
+		sname, get_name()||"unknown")+
+	get_compile_errors(),0,0
       });
     }
   }
@@ -240,7 +245,7 @@ class ModuleInfo( string sname, string filename )
   {
     roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
     roxenloader.push_compile_error_handler( ec );
-    catch
+    mixed err = catch
     {
 #if constant(Java.jvm)
       if( filename[sizeof(filename)-6..]==".class" ||
@@ -250,7 +255,11 @@ class ModuleInfo( string sname, string filename )
       return load( filename, silent )( conf );
     };
     roxenloader.pop_compile_error_handler( );
-    return LoadFailed( ec );
+    if( !silent )
+      return LoadFailed( ec );
+    if( err )
+      werror( describe_backtrace( err ) );
+    return 0;
   }
 
   void save()
