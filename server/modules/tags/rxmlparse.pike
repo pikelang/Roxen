@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.59 2001/06/20 23:30:19 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.60 2001/06/26 15:04:27 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -254,6 +254,10 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
 
 string api_parse_rxml(RequestID id, string r)
 {
+#ifdef MAY_OVERRIDE_RXML_PARSING
+  if(id->prestate->norxml)
+    return r;
+#endif
   return Roxen.parse_rxml( r, id );
 }
 
