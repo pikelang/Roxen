@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.90 1998/01/19 22:09:43 mirar Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.91 1998/01/20 16:20:50 grubba Exp $";
 //inherit "roxenlib";
 import Image;
 
@@ -179,7 +179,11 @@ void create()
 #define BUTTON(ACTION,TEXT,ALIGN) do{PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":"")+replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>");lm=0;}while(0)
 #else
 
-#define BUTTON(ACTION,TEXT,ALIGN) do{buttons += ({({"<a href=\"/("#ACTION")"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":""),replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>"})});lm=0;}while(0)
+#if constant(cpp)
+#define BUTTON(ACTION,TEXT,ALIGN) do{buttons += ({({"<a href=\"/("#ACTION")"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":""),replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+((#ALIGN-" ")=="left"?"":" align="+(#ALIGN-" "))+"></a>"})});lm=0;}while(0)
+#else /* !constant(cpp) */
+#define BUTTON(ACTION,TEXT,ALIGN) do{buttons += ({({"<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":""),replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>"})});lm=0;}while(0)
+#endif /* constant(cpp) */
 #define PUSH_BUTTONS(CLEAR) do{if(sizeof(buttons)){buttons[-1][0]+="rm/";res+=`+(@buttons);if(CLEAR){PUSH("<br clear=all>");}}lm=1;buttons=({});}while(0)
 
 #endif /* 0 */
