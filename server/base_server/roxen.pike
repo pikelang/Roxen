@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.402 2000/02/02 04:15:19 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.403 2000/02/02 10:30:03 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1471,6 +1471,7 @@ void sort_urls()
 
 int register_url( string url, object conf )
 {
+  if (!sizeof (url - " " - "\t")) return 1;
   report_notice("Register "+url+" for "+conf->query_name()+"\n");
   string protocol;
   string host;
