@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.145 2002/06/26 14:10:16 nilsson Exp $
+// $Id: Roxen.pmod,v 1.146 2002/07/03 12:46:07 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -735,8 +735,8 @@ mapping build_env_vars(string f, RequestID id, string path_info)
       }
     } else {
       // Extra paranoia.
-      report_error(sprintf("real_file(%O, %O) returned %O\n",
-			   tmpid->not_query||"", tmpid, real_file));
+      report_error("real_file(%O, %O) returned %O\n",
+		   tmpid->not_query||"", tmpid, real_file);
     }
   }
 
@@ -2324,9 +2324,9 @@ class QuotaDB
       len -= 8;
 
       if (sizeof(key) != len) {
-	error(sprintf("Failed to read catalog entry at offset %d.\n"
-		      "len: %d, sizeof(key):%d\n",
-		      offset, len, sizeof(key)));
+	error("Failed to read catalog entry at offset %d.\n"
+	      "len: %d, sizeof(key):%d\n",
+	      offset, len, sizeof(key));
       }
     } else {
       key = data[8..len-1];
@@ -2342,10 +2342,10 @@ class QuotaDB
     string mode = create_new?"rwc":"rw";
 
     if (!f->open(fname, mode)) {
-      error(sprintf("Failed to open quota file %O.\n", fname));
+      error("Failed to open quota file %O.\n", fname);
     }
     if (f->try_lock && !f->try_lock()) {
-      error(sprintf("Failed to lock quota file %O.\n", fname));
+      error("Failed to lock quota file %O.\n", fname);
     }
     return(f);
   }
@@ -2621,12 +2621,12 @@ class QuotaDB
 
     // Initialize.
     if (data_file->write(sprintf("%4c", 0)) != 4) {
-      error(sprintf("write() failed for quota data file!\n"));
+      error("write() failed for quota data file!\n");
     }
     string entry = sprintf("%4c%4c%s", sizeof(key)+8, data_offset, key);
 
     if (catalog_file->write(entry) != sizeof(entry)) {
-      error(sprintf("write() failed for quota catalog file!\n"));
+      error("write() failed for quota catalog file!\n");
     }
 
     new_entries_cache[key] = next_offset;
@@ -2655,11 +2655,11 @@ class QuotaDB
     /* Initialize the new_entries table. */
     array index_st = index_file->stat();
     if (!index_st || !sizeof(index_st)) {
-      error(sprintf("stat() failed for quota index file!\n"));
+      error("stat() failed for quota index file!\n");
     }
     array data_st = data_file->stat();
     if (!data_st || !sizeof(data_st)) {
-      error(sprintf("stat() failed for quota data file!\n"));
+      error("stat() failed for quota data file!\n");
     }
     if (index_st[1] < 0) {
       error("quota index file isn't a regular file!\n");

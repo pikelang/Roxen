@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.94 2002/06/10 14:34:47 nilsson Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.95 2002/07/03 12:41:47 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -152,7 +152,7 @@ mapping|string|int htaccess(mapping access, RequestID id)
     }
   }
 #ifdef HTACCESS_DEBUG
-  report_debug(sprintf("HTACCESS: access[%O]: %O\n", method, access[method]));
+  report_debug("HTACCESS: access[%O]: %O\n", method, access[method]);
 #endif /* HTACCESS_DEBUG */
   return access[ method ]( id );
 }
@@ -366,8 +366,8 @@ mapping parse_and_find_htaccess( RequestID id )
   [string file,string htaccess,int mtime] = cv;
 
 #ifdef HTACCESS_DEBUG
-  report_debug(sprintf("HTACCESS: File:%O, mtime: %d\n"
-		       "%{    %s\n%}\n", file, mtime, (htaccess||"-")/"\n"));
+  report_debug("HTACCESS: File:%O, mtime: %d\n"
+	       "%{    %s\n%}\n", file, mtime, (htaccess||"-")/"\n");
 #endif /* HTACCESS_DEBUG */
     
   cache_key = "htaccess:parsed:" + id->conf->name + ":" + (id->misc->host||"*");
@@ -382,9 +382,9 @@ mapping parse_and_find_htaccess( RequestID id )
       "<limit get post head put>\n"
       "  deny all\n"
       "</limit>";
-    report_debug(sprintf("HTACCESS: Failed to read htaccess file: %O\n"
-			 "HTACCESS: Using paranoia fallback:\n"
-			 "%{    %s\n%}\n", file, htaccess/"\n"));
+    report_debug("HTACCESS: Failed to read htaccess file: %O\n"
+		 "HTACCESS: Using paranoia fallback:\n"
+		 "%{    %s\n%}\n", file, htaccess/"\n");
   }
 
   if( !strlen(htaccess) )
@@ -568,9 +568,9 @@ class HtUser
   int password_authenticate(string password)
   {
     int res = ::password_authenticate(password);
-    report_debug(sprintf("HTACCESS: password_authenticate(%O)\n"
-			 "  user:%O, crypt:%O ==> %O\n",
-			 password, name(), crypted_password(), res));
+    report_debug("HTACCESS: password_authenticate(%O)\n"
+		 "  user:%O, crypt:%O ==> %O\n",
+		 password, name(), crypted_password(), res);
     return res;
   }
 #endif /* HTACCESS_DEBUG */

@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.56 2002/06/28 23:17:10 nilsson Exp $
+// $Id: prototypes.pike,v 1.57 2002/07/03 12:38:47 nilsson Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -94,7 +94,7 @@ class StringFile( string data, mixed|void _st )
 
   void write(mixed ... args)
   {
-    throw( ({ "File not open for write\n", backtrace() }) );
+    error( "File not open for write\n" );
   }
 
   void seek(int to)

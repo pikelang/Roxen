@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.812 2002/06/28 23:19:51 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.813 2002/07/03 12:38:48 nilsson Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -153,9 +153,9 @@ static class Privs
     if(getuid()) return;
 
 #ifdef PRIVS_DEBUG
-    report_debug(sprintf("Privs(%O, %O, %O)\n"
-			 "privs_level: %O\n",
-			 reason, uid, gid, privs_level));
+    report_debug("Privs(%O, %O, %O)\n"
+		 "privs_level: %O\n",
+		 reason, uid, gid, privs_level);
 #endif /* PRIVS_DEBUG */
 
 #ifdef HAVE_EFFECTIVE_USER
@@ -281,29 +281,29 @@ static class Privs
     if(getuid()) return;
 
 #ifdef PRIVS_DEBUG
-    report_debug(sprintf("Privs->destroy()\n"
-			 "privs_level: %O\n",
-			 privs_level));
+    report_debug("Privs->destroy()\n"
+		 "privs_level: %O\n",
+		 privs_level);
 #endif /* PRIVS_DEBUG */
 
 #ifdef HAVE_EFFECTIVE_USER
     /* Check that we don't increase the privs level */
     if (p_level >= privs_level) {
-      report_error(sprintf("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
-			   "in wrong order! Saved level:%d Current level:%d\n"
-			   "Occurs in:\n%s\n",
-			   saved_uid, saved_gid, new_uid, new_gid,
-			   p_level, privs_level,
-			   describe_backtrace(backtrace())));
+      report_error("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
+		   "in wrong order! Saved level:%d Current level:%d\n"
+		   "Occurs in:\n%s\n",
+		   saved_uid, saved_gid, new_uid, new_gid,
+		   p_level, privs_level,
+		   describe_backtrace(backtrace()));
       return(0);
     }
     if (p_level != privs_level-1) {
-      report_error(sprintf("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
-			   "Skips privs level. Saved level:%d Current level:%d\n"
-			   "Occurs in:\n%s\n",
-			   saved_uid, saved_gid, new_uid, new_gid,
-			   p_level, privs_level,
-			   describe_backtrace(backtrace())));
+      report_error("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
+		   "Skips privs level. Saved level:%d Current level:%d\n"
+		   "Occurs in:\n%s\n",
+		   saved_uid, saved_gid, new_uid, new_gid,
+		   p_level, privs_level,
+		   describe_backtrace(backtrace()));
     }
     privs_level = p_level;
 
@@ -597,8 +597,8 @@ local static void handler_thread(int id)
       }) {
 	catch {
 	  report_error("Error reporting error:\n");
-	  report_error(sprintf("Raw error: %O\n", h[0]));
-	  report_error(sprintf("Original raw error: %O\n", q[0]));
+	  report_error("Raw error: %O\n", h[0]);
+	  report_error("Original raw error: %O\n", q[0]);
 	};
 	catch (q = 0);
 	catch (h = 0);
@@ -1917,10 +1917,9 @@ int register_url( string url, Configuration conf )
       m[ required_host ][ port ] = prot( port, required_host );
     }) {
       failures++;
-      report_error(sprintf("Initializing the port handler for URL " +
-			   url + " failed!\n"
-			   "%s\n",
-			   describe_backtrace(err)));
+      report_error("Initializing the port handler for URL " +
+		   url + " failed!\n%s\n",
+		   describe_backtrace(err));
       continue;
     }
 
@@ -4939,19 +4938,19 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 		  "%{               \"  \" %O \"\\n\"\n%}"
 		  "               \"...\\n\");\n"
 		  "%s"
-		  "  report_debug(sprintf(\"  Result: %%O\\n\", fail));\n",
+		  "  report_debug(\"  Result: %%O\\n\", fail);\n",
 		  pattern/"\n", code) +
 #else /* !SECURITY_PATTERN_DEBUG && !HTACCESS_DEBUG */
 	  code +
 #endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
 	  "  return fail;\n}\n" );
 #if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
-  report_debug(sprintf("Compiling security pattern:\n"
-		       "%{    %s\n%}\n"
-		       "Code:\n"
-		       "%{    %s\n%}\n",
-		       pattern/"\n",
-		       code/"\n"));
+  report_debug("Compiling security pattern:\n"
+	       "%{    %s\n%}\n"
+	       "Code:\n"
+	       "%{    %s\n%}\n",
+	       pattern/"\n",
+	       code/"\n");
 #endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
   mixed res = compile_string( code );
    

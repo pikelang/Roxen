@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.15 2001/08/03 13:59:08 leif Exp $
+// $Id: ExtScript.pmod,v 1.16 2002/07/03 12:46:07 nilsson Exp $
 
 // 
 
@@ -167,8 +167,8 @@ class Handler
       /* more cases here to support "script callbacks" */
 
       default:
-        werror(sprintf("ExtScript: bad command code 0x%02X from subprocess\n",
-                        data[0]));
+        werror("ExtScript: bad command code 0x%02X from subprocess\n",
+	       data[0]);
         break;
     }
   }

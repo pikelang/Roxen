@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.18 2002/04/24 10:54:41 anders Exp $";
+constant cvs_version = "$Id: email.pike,v 1.19 2002/07/03 12:41:48 nilsson Exp $";
 
 constant thread_safe=1;
 
@@ -87,7 +87,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.18 $"/" ")[1];
+string revision = ("$Revision: 1.19 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -243,7 +243,7 @@ class TagEmail {
 	  RXML.run_error(EMAIL_LABEL+"Attachment: MIME message processing error: "+Roxen.html_encode_string(error[0]));
 
 	id->misc["_email_atts_"] += ({ m });
-//werror(sprintf("D: attachms: %O\n", id->misc["_email_atts_"]));
+//werror("D: attachms: %O\n", id->misc["_email_atts_"]);
 	
 	return 0;
       }
@@ -406,7 +406,7 @@ class TagEmail {
 
      catch(msglast = (string)m);
 
-//werror(sprintf("D: send_mess: %O\n", (string)m));
+//werror("D: send_mess: %O\n", (string)m);
      error = catch(o->send_message(only_from_addr(fromx), tox/split,
 				   (string)m));
      if (error)

@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.338 2002/06/28 23:16:47 nilsson Exp $
+// $Id: roxenloader.pike,v 1.339 2002/07/03 12:38:48 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.338 2002/06/28 23:16:47 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.339 2002/07/03 12:38:48 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1130,9 +1130,9 @@ void paranoia_throw(mixed err)
 		       !arrayp(([array]err)[1]) ||
 		       !(arrayp(([array(array)]err)[1][0])||stringp(([array(array)]err)[1][0])))) ||
       (!arrayp(err) && (!objectp(err) || !([object]err)->is_generic_error))) {
-    report_debug(sprintf("Warning: throwing non-error: %O\n"
-			 "From: %s\n",
-			 err, describe_backtrace(backtrace())));
+    report_debug("Warning: throwing non-error: %O\n"
+		 "From: %s\n",
+		 err, describe_backtrace(backtrace()));
   }
   throw(err);
 }
@@ -1216,8 +1216,7 @@ void do_main_wrapper(int argc, array(string) argv)
   };
   catch {
     if (err) {
-      werror(sprintf("Roxen loader failed:\n"
-                     "%s\n", describe_backtrace(err)));
+      werror("Roxen loader failed:\n%s\n", describe_backtrace(err));
     }
   };
   exit(1);

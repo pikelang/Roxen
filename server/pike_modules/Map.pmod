@@ -2,8 +2,6 @@
  * Map of the Earth.
  */
 
-#define ERR(msg) throw(({ msg+"\n", backtrace() }))
-
 mapping(string:string) aliases =
   ([ "usa":"United States of America",
      "us":"United States of America",
@@ -235,7 +233,7 @@ class Legend {
   array(int) color_scale(float x, string|void color_scheme)
   {
     if(x < 0.0 | x > 1.0)
-      ERR(sprintf("Value of the scale (%f).", x));
+      error("Value of the scale (%f).\n", x);
     color_scheme = color_scheme || state_color_scheme;
     if(x == 0 || x == 0.0)
       return color_schemes[color_scheme][0];

@@ -1,5 +1,5 @@
 /*
- * $Id: lsquota.pike,v 1.2 2001/01/19 12:41:36 per Exp $
+ * $Id: lsquota.pike,v 1.3 2002/07/03 12:45:05 nilsson Exp $
  *
  * List the keys of a quotadb.
  *
@@ -27,7 +27,7 @@ int main(int argc, array(string) argv)
       exit(0);
       break;
     case "version":
-      werror("$Id: lsquota.pike,v 1.2 2001/01/19 12:41:36 per Exp $\n");
+      werror("$Id: lsquota.pike,v 1.3 2002/07/03 12:45:05 nilsson Exp $\n");
       exit(0);
       break;
     }
@@ -36,15 +36,15 @@ int main(int argc, array(string) argv)
   argv = Getopt.get_args(argv, 1);
 
   if (sizeof(argv) < 2) {
-    werror(sprintf("Too few arguments to %s\n", argv[0]));
+    werror("Too few arguments to %s\n", argv[0]);
     exit(1);
   } else if (sizeof(argv) > 2) {
-    werror(sprintf("Too many arguments to %s\n", argv[0]));
+    werror("Too many arguments to %s\n", argv[0]);
     exit(1);
   }
 
   if (!cat->open(argv[1] + ".cat", "r")) {
-    werror(sprintf("Failed to open file %O\n", argv[1] + ".cat"));
+    werror("Failed to open file %O\n", argv[1] + ".cat");
     exit(1);
   }
 
@@ -57,8 +57,8 @@ int main(int argc, array(string) argv)
     if (data == "") {
       // EOF
       if (buf != "") {
-	werror(sprintf("File truncated. Expected %d bytes more data.\n",
-		       len - sizeof(buf)));
+	werror("File truncated. Expected %d bytes more data.\n",
+	       len - sizeof(buf));
 	exit(1);
       }
       exit(0);
@@ -69,7 +69,7 @@ int main(int argc, array(string) argv)
       sscanf(buf[..3], "%4c", len);
 
       if (len < 8) {
-	werror(sprintf("Bad entry length:%d\n", len));
+	werror("Bad entry length:%d\n", len);
 	exit(1);
       }
       if (len > sizeof(buf)) {

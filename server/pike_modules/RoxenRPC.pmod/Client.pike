@@ -1,8 +1,6 @@
 /*
- * $Id: Client.pike,v 1.15 1998/04/22 15:23:08 grubba Exp $
+ * $Id: Client.pike,v 1.16 2002/07/03 12:46:07 nilsson Exp $
  */
-
-#define error(X) throw( ({ X, backtrace() }) )
 
 class RemoteFunctionCall
 {

@@ -171,9 +171,8 @@ string|mapping parse( RequestID id )
       }
     };
     if (err) {
-      report_error(sprintf("Template %O failed:\n"
-			   "%s\n",
-			   st, describe_backtrace(err)));
+      report_error("Template %O failed:\n%s\n",
+		   st, describe_backtrace(err));
     }
   }
 

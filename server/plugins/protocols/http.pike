@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.372 2002/06/28 23:14:03 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.373 2002/07/03 12:44:18 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1277,7 +1277,7 @@ void internal_error(array _err)
   report_error("Internal server error: " +
 	       describe_backtrace(err) + "\n");
 #ifdef INTERNAL_ERROR_DEBUG
-  report_error(sprintf("Raw backtrace:%O\n", err));
+  report_error("Raw backtrace:%O\n", err);
 #endif /* INTERNAL_ERROR_DEBUG */
 }
 

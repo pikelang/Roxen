@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.58 2001/09/14 18:05:14 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.59 2002/07/03 12:41:47 nilsson Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -541,7 +541,7 @@ class NTOpenCommand
       if (s && has_prefix(s, "#!")) {
 	res = Process.split_quoted_string(s[2..]) + ({ file }) + args;
       } else {
-	error(sprintf("CGI: Unknown filetype %O\n", file));
+	error("CGI: Unknown filetype %O\n", file);
       }
     }
     return res;

@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.146 2002/02/01 17:07:57 anders Exp $";
+constant cvs_version = "$Id: business.pike,v 1.147 2002/07/03 12:41:47 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -746,7 +746,7 @@ mixed draw_callback(mapping args, object id)
     {
       args->image=get_font(0, 24, 0, 0,"left", 0.0, 0.0);
       if (!(args->image))
-	throw(({"Missing font or similar error!\n", backtrace() }));
+	error( "Missing font or similar error!\n" );
       args->image=args->image->
 	write("The file was", "not found ",
 	      "or was not a","jpeg-, gif- or","pnm-picture.");

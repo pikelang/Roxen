@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.379 2002/06/28 23:39:11 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.380 2002/07/03 12:41:48 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -77,8 +77,7 @@ private object compile_handler = class {
     }
 
     mixed resolv(string id, void|string fn, void|string ch) {
-      throw( ({ sprintf("The symbol %O is forbidden.\n", id),
-		backtrace() }) );
+      error( "The symbol %O is forbidden.\n", id );
     }
   }();
 

@@ -43,7 +43,7 @@ class StringFile
 
   void write(mixed ... args)
   {
-    throw( ({ "File not open for write\n", backtrace() }) );
+    error( "File not open for write\n" );
   }
 
   void seek(int to)

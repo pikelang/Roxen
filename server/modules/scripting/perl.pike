@@ -14,7 +14,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.23 2002/01/30 00:19:42 mast Exp $";
+       "$Id: perl.pike,v 2.24 2002/07/03 12:41:47 nilsson Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -255,7 +255,7 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
     else if (arrayp(result))
     { string r = sizeof(result) > 1 ? result[1] : "";
 
-//      werror("Result: " + sprintf("%O", r) + "\n");
+//      werror("Result: %O\n", r);
       if (r == "") r = " "; // Some browsers don't like null answers.
       if (!stringp(r)) r = "(not a string)";
 

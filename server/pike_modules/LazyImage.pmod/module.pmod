@@ -193,8 +193,7 @@ static object compile_handler = class {
     }
 
     mixed resolv(string id, void|string fn, void|string ch) {
-      throw( ({ sprintf("The symbol %O is not known.\n", id),
-		backtrace() }) );
+      error( "The symbol %O is not known.\n", id );
     }
   }();
 

@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.20 2001/01/19 12:41:36 per Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.21 2002/07/03 12:45:05 nilsson Exp $";
 
 //#define DEBUG
 
@@ -459,12 +459,12 @@ static mixed do_command(array what)
   mixed res;
   if(!arrayp(what))
   {
-    werror(sprintf("Got strange command (%O)\n", what));
+    werror("Got strange command (%O)\n", what);
     return 0;
   }
 
 #ifdef DEBUG
-//  werror(sprintf("Got command %O\n", what));
+//  werror("Got command %O\n", what);
 #endif
   
   return this_object()[what[0]](@what[1..]);

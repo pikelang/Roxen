@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.21 2002/02/12 16:52:33 hop Exp $
+ * $Id: snmpagent.pike,v 1.22 2002/07/03 12:38:48 nilsson Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
@@ -509,8 +509,8 @@ class SNMPagent {
   int add_virtserv(int vsid) {
 
     if(zero_type(vsdb[vsid])) {
-      report_debug(sprintf("SNMPagent: added server %O(#%d)\n",
-		           roxen->configurations[vsid]->name, vsid));
+      report_debug("SNMPagent: added server %O(#%d)\n",
+		   roxen->configurations[vsid]->name, vsid);
 	  vsdb += ([vsid: roxen->configurations[vsid]]);
      }
 
@@ -567,8 +567,8 @@ class SNMPagent {
   int del_virtserv(int vsid) {
 
     if(!zero_type(vsdb[vsid])) {
-      report_debug(sprintf("SNMPagent: deleted server %O(#%d)\n",
-		           roxen->configurations[vsid]->name, vsid));
+      report_debug("SNMPagent: deleted server %O(#%d)\n",
+		   roxen->configurations[vsid]->name, vsid);
 	  vsdb -= ([ vsid: 0 ]);
 	}
 
@@ -778,7 +778,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.21 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.22 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'

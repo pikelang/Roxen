@@ -30,7 +30,7 @@ void set_sea_color(int(0..255) r, int(0..255) g, int(0..255) b)
 void set_marker_size(int size)
   //! Sets the size of the marker.
 {
-  if(size<1) throw( ({ "Marker size less than 1.\n", backtrace() }) );
+  if(size<1) error( "Marker size less than 1.\n" );
   marker_settings = marker_settings || ([]);
   marker_settings->size = size;
 }

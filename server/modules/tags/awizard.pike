@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.25 2002/01/07 16:04:14 mast Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.26 2002/07/03 12:41:48 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";
@@ -393,7 +393,7 @@ class AWizard
       {
 	extra_eval = lookup( extra_eval )->code;
         if(!extra_eval)
-          throw(({"Failed to find extra eval in cache\n", backtrace()}));
+          error("Failed to find extra eval in cache\n");
       }
       last_page = pages[ (int)v->_page_num ];
 

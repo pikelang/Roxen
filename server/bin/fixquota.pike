@@ -19,14 +19,14 @@ int du(string dir)
 	// Ordinary file
 	total += st[1];
       } else {
-	werror(sprintf("%O is not an ordinary file!\n", path));
+	werror("%O is not an ordinary file!\n", path);
       }
     } else {
       // Probably not reached.
     }
   }
 
-  werror(sprintf("du(%O) => %d\n", dir, total));
+  werror("du(%O) => %d\n", dir, total);
 
   return(total);
 }
@@ -65,7 +65,7 @@ int main(int argc, array(string) argv)
       exit(0);
       break;
     case "version":
-      werror("$Id: fixquota.pike,v 1.2 2000/08/28 05:31:52 per Exp $\n");
+      werror("$Id: fixquota.pike,v 1.3 2002/07/03 12:45:05 nilsson Exp $\n");
       exit(0);
       break;
     }
@@ -74,10 +74,10 @@ int main(int argc, array(string) argv)
   argv = Getopt.get_args(argv, 1);
 
   if (sizeof(argv) < 2) {
-    werror(sprintf("Too few arguments to %s\n", argv[0]));
+    werror("Too few arguments to %s\n", argv[0]);
     exit(1);
   } else if (sizeof(argv) > 2) {
-    werror(sprintf("Too many arguments to %s\n", argv[0]));
+    werror("Too many arguments to %s\n", argv[0]);
     exit(1);
   }
 
@@ -110,17 +110,17 @@ int main(int argc, array(string) argv)
 
   werror("Done. Rebuilding index...\n");
 
-  werror(sprintf("Before:\n"
-		 "index:%O\n"
-		 "index_acc:%O\n",
-		 quota_db->index,
-		 quota_db->index_acc));
+  werror("Before:\n"
+	 "index:%O\n"
+	 "index_acc:%O\n",
+	 quota_db->index,
+	 quota_db->index_acc);
 
   quota_db->rebuild_index();
 
-  werror(sprintf("After:\n"
-		 "index:%O\n",
-		 quota_db->index));
+  werror("After:\n"
+	 "index:%O\n",
+	 quota_db->index);
 
   exit(0);
 }

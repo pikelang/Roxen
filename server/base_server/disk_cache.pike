@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: disk_cache.pike,v 1.62 2002/06/14 16:05:03 jhs Exp $
+// $Id: disk_cache.pike,v 1.63 2002/07/03 12:38:47 nilsson Exp $
 
 #include <config.h>
 #include <module_constants.h>
@@ -293,8 +293,8 @@ class Cache
       command_stream->set_nonblocking(nil, really_send, do_create);
     };
     if (err) {
-      report_error(sprintf("Error initiating garbage-collector:\n"
-			   "%s\n", describe_backtrace(err)));
+      report_error("Error initiating garbage-collector:\n%s\n",
+		   describe_backtrace(err));
     }
     return;
   }

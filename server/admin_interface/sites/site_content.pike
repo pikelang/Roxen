@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.137 2002/06/15 21:04:25 nilsson Exp $
+// $Id: site_content.pike,v 1.138 2002/07/03 12:40:09 nilsson Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -413,11 +413,8 @@ string port_for( string url, int settings )
   string ourl = (url/"#")[0];
   url = roxen->normalize_url(url);
   if(!roxen->urls[url]) {
-    report_debug(sprintf("site_content.pike:port_for(): URL %O not found!\n",
-			 ourl));
-    report_debug(sprintf("Known URLS are:\n"
-			 "%{  %O\n%}\n",
-			 indices(roxen->urls)));
+    report_debug("site_content.pike:port_for(): URL %O not found!\n", ourl);
+    report_debug("Known URLS are:\n%{  %O\n%}\n", indices(roxen->urls));
     return "";
   }
   Protocol p = roxen->urls[url]->port;
@@ -463,7 +460,7 @@ string parse( RequestID id )
 {
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
 
-  // roxen_perror(sprintf("site_content:parse(): path: %{%O,%}\n", path));
+  // roxen_werror("site_content:parse(): path: %{%O,%}\n", path);
 
   string section;
   array(string) _sec = id->real_variables->section;

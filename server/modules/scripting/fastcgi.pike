@@ -2,7 +2,7 @@
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.10 2001/09/03 18:38:37 nilsson Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.11 2002/07/03 12:41:47 nilsson Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -309,7 +309,7 @@ class Packet
     int eLen = (dLen + 7) & (0xFFFF - 7); // align to an 8-byte boundary
     int paddinglen = eLen - dLen;
 #ifdef FCGI_DEBUG
-    werror(sprintf("\nPADDING: %d\n", paddinglen));
+    werror("\nPADDING: %d\n", paddinglen);
 #endif
 
     return sprintf( "%c%c%2c%2c%c\0%s%s",1,type,requestid,strlen(data),paddinglen

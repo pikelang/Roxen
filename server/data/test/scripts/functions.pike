@@ -1,13 +1,13 @@
-#define ERROR(x,y) throw(({ sprintf(x, y), backtrace() }))
+
 void copy_file(string src_name, string dest_name)
 {
   Stdio.File src = Stdio.File(src_name, "r");
   if(!src)
-    ERROR("Can't open source file: %O\n", src);
+    error("Can't open source file: %O\n", src);
   
   Stdio.File dest = Stdio.File(dest_name, "cwt");
   if(!dest)
-    ERROR("Can't open destination file: %O\n", dest);
+    error("Can't open destination file: %O\n", dest);
   
   dest->write(src->read());
   dest->close();
@@ -17,10 +17,10 @@ void copy_file(string src_name, string dest_name)
 void recursive_cp(string src, string dest)
 {
   if(!Stdio.is_dir(src))
-    ERROR("Source file is not a directory: %O\n", src);
+    error("Source file is not a directory: %O\n", src);
 
   if(!Stdio.is_dir(dest) && !mkdir(dest))
-    ERROR("Can not create destination directory: %O\n", dest);
+    error("Can not create destination directory: %O\n", dest);
   
   foreach(get_dir(src), string item)
   {

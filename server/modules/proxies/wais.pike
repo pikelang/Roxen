@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.25 2001/09/03 18:35:38 nilsson Exp $";
+string cvs_version = "$Id: wais.pike,v 1.26 2002/07/03 12:41:47 nilsson Exp $";
 
 #include <config.h>
 #include <module.h>
@@ -414,8 +414,8 @@ string writeBinaryInteger(int num,int size)
 		(num>>(bitsPerByte*2))&255,(num>>(bitsPerByte))&255,num&255);
     break;
   default:
-    werror(sprintf("Invalid writeBinaryInteger call: num %d, size &d\n",
-		   num,size));
+    werror("Invalid writeBinaryInteger call: num %d, size &d\n",
+	   num,size);
     buf="";
   }
   return buf;

@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.4 2002/05/02 12:01:43 jhs Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.5 2002/07/03 12:47:31 nilsson Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -350,7 +350,7 @@ class TagEmitTimeRange
       string calendar = calendars[search(map(calendars, upper_case),
 					 upper_case(what))];
       if(calendar == "unknown")
-	RXML.parse_error(sprintf("Unknown calendar %O.\n", what));
+	RXML.parse_error("Unknown calendar %O.\n", what);
       cal = Calendar[calendar];
     }
     what = m_delete(args, "unit");

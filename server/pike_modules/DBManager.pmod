@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.56 2002/06/15 21:04:51 nilsson Exp $
+// $Id: DBManager.pmod,v 1.57 2002/07/03 12:46:07 nilsson Exp $
 
 //! Manages database aliases and permissions
 
@@ -163,7 +163,7 @@ private
           has_prefix( lower_case(query), "describe" ))
         return sql->query( query, @args );
       pe = 1;
-      throw( ({ "Permission denied\n", backtrace()}) );
+      ::error( "Permission denied\n" );
     }
     static object big_query( string query, mixed ... args )
     {
@@ -172,7 +172,7 @@ private
           has_prefix( lower_case(query), "describe" ))
         return sql->big_query( query, @args );
       pe = 1;
-      throw( ({ "Permission denied\n", backtrace()}) );
+      ::error( "Permission denied\n" );
     }
     static string error()
     {

@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.68 2002/06/14 00:08:07 nilsson Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.69 2002/07/03 12:41:47 nilsson Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "File systems: User file system";
 constant module_doc  =
@@ -299,7 +299,7 @@ string real_file(string f, RequestID id)
     // Use the inherited stat_file
     fs = filesystem::stat_file( f,id );
 
-    //    werror(sprintf("%O: %O\n", f, fs));
+    //    werror("%O: %O\n", f, fs);
     // FIXME: Should probably have a look at this code.
     if (fs && ((fs[1] >= 0) || (fs[1] == -2)))
       return f;

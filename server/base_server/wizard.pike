@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.142 2002/06/14 16:05:04 jhs Exp $
+// $Id: wizard.pike,v 1.143 2002/07/03 12:38:48 nilsson Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -429,7 +429,7 @@ string compress_state(mapping state)
   foreach(glob("!_*", indices(state)), string s)
     m_delete(state, s);
   
-//  report_debug(sprintf("State=%O\n", state));
+//  report_debug("State=%O\n", state);
 
   string from = encode_value(state);
   object gz = Gz;

@@ -25,7 +25,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.11 2002/03/05 14:32:56 hop Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.12 2002/07/03 12:41:47 nilsson Exp $";
 
 
 
@@ -50,8 +50,6 @@ int total_connections_number=0, total_transferred_kb=0;
 #else
 #define debug_perror
 #endif
-
-#define THROW(X) throw( ({X,backtrace()}) )
 
 Stdio.Port accept_port;
 
@@ -182,11 +180,11 @@ void start()
   debug_perror("Opening port "+port+"\n");
   accept_port=Stdio.Port();
   if (!accept_port)
-    THROW("Can't create a port to listen on");
+    error("Can't create a port to listen on");
   if (port<1024)
     privs=Privs("Opening forwarded port");
   if (!(accept_port->bind(port,got_connection)))
-    THROW("Can't bind (errno="+accept_port->errno()+": \""+strerror(accept_port->errno())+"\")\n");;
+    error("Can't bind (errno=%d: %O)\n", accept_port->errno(), strerror(accept_port->errno()));
   privs=0;
 }
 
@@ -202,7 +200,7 @@ void got_connection (mixed port) {
   object in;
   in=accept_port->accept();
   if (!in)
-    THROW("Couldn't accept connection");
+    error("Couldn't accept connection");
   total_connections_number++;
   async_connect(query("host"),query("r_port"),connected,in);
 }

@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.528 2002/06/19 22:59:36 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.529 2002/07/03 12:38:47 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1727,7 +1727,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   int sub_req_limit = query("SubRequestLimit");
   root_id->misc->_request_depth++;
   if(sub_req_limit && root_id->misc->_request_depth > sub_req_limit)
-    throw( ({ "Subrequest limit reached. (Possibly an insertion loop.)", backtrace() }) );
+    error( "Subrequest limit reached. (Possibly an insertion loop.)" );
 
   mapping|int res;
   mapping res2;
@@ -2377,13 +2377,13 @@ void start(int num)
   fix_my_url();
 
 #if 0
-  report_debug(sprintf("configuration:start():\n"
-		       "  registered_urls: ({ %{%O, %}})\n"
-		       "  failed_urls:     ({ %{%O, %}})\n"
-		       "  URLs:            ({ %{%O, %}})\n",
-		       registered_urls,
-		       failed_urls,
-		       query("URLs")));
+  report_debug("configuration:start():\n"
+	       "  registered_urls: ({ %{%O, %}})\n"
+	       "  failed_urls:     ({ %{%O, %}})\n"
+	       "  URLs:            ({ %{%O, %}})\n",
+	       registered_urls,
+	       failed_urls,
+	       query("URLs"));
 #endif /* 0 */
 
   // Note: This is run as root if roxen is started as root

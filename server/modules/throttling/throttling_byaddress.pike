@@ -3,7 +3,7 @@
  * This is a Roxen module. Copyright © 2000 - 2001, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_byaddress.pike,v 1.4 2001/09/03 18:55:11 nilsson Exp $";
+constant cvs_version="$Id: throttling_byaddress.pike,v 1.5 2002/07/03 12:41:48 nilsson Exp $";
 
 #include <module.h>
 inherit "throttlelib";
@@ -45,8 +45,8 @@ class IP_with_mask
     net = ip_to_int(_ip);
     if (intp(_mask)) {
       if (_mask > 32) {
-	report_error(sprintf("Bad netmask: %s/%d\n"
-			     "Using %s/32\n", _ip, _mask, _ip));
+	report_error("Bad netmask: %s/%d\n"
+		     "Using %s/32\n", _ip, _mask, _ip);
 	_mask = 32;
       }
       mask = ~0<<(32-_mask);
@@ -54,8 +54,8 @@ class IP_with_mask
       mask = ip_to_int(_mask);
     }
     if (net & ~mask) {
-      report_error(sprintf("Bad netmask: %s for network %s\n"
-			   "Ignoring node-specific bits\n", _ip, _mask));
+      report_error("Bad netmask: %s for network %s\n"
+		   "Ignoring node-specific bits\n", _ip, _mask);
       net &= mask;
     }
   }
@@ -81,7 +81,7 @@ object(IP_with_mask) add_to_cache(string rule) {
   if (sscanf(rule,"%*d.%*d.%*d.%*d")==4) { //exact IP
     return IP_with_mask(rule,32);
   }
-  throw( ({ "Can't parse rule: "+rule , backtrace() }) );
+  error( "Can't parse rule: "+rule );
 }
 
 string|void update_rules(string new_rules) {

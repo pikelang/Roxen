@@ -72,8 +72,6 @@ static object jarutil_expand = jarutil_class->get_static_method("expand", "(Ljav
 
 static object natives_bind1, natives_bind2, natives_bind3;
 
-#define error(X) throw(({(X), backtrace()}))
-
 static void check_exception()
 {
   object e = jvm->exception_occurred();

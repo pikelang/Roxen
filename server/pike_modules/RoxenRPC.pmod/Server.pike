@@ -1,8 +1,6 @@
 /*
- * $Id: Server.pike,v 1.18 2001/04/18 20:54:25 js Exp $
+ * $Id: Server.pike,v 1.19 2002/07/03 12:46:07 nilsson Exp $
  */
-
-#define error(X) throw(({X, backtrace()}))
 
 class Connection
 {
@@ -285,14 +283,13 @@ int low_got_connection(object c)
 #ifdef RPC_DEBUG
     werror("RoxenRPC->low_got_connection(): Connection Refused:\n");
     if (c) {
-      werror(sprintf("Connection from:%s\n", c->query_address()));
+      werror("Connection from:%s\n", c->query_address());
       if (ip_security) {
-	werror(sprintf("IP-security enabled:%O\n",
-		       ip_security(c->query_address())));
+	werror("IP-security enabled:%O\n",
+	       ip_security(c->query_address()));
       }
       if (security) {
-	werror(sprintf("Security enabled:%O\n",
-		       security(c)));
+	werror("Security enabled:%O\n", security(c));
       }
     } else {
       werror("No connection!\n");

@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.71 2001/09/03 18:38:38 nilsson Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.72 2002/07/03 12:41:47 nilsson Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -118,16 +118,16 @@ array|mapping call_script(function fun, RequestID id, Stdio.File file)
 #if constant(__builtin.security)
   if (!query("trusted")) {
     // EXPERIMENTAL: Call with low credentials.
-    // werror(sprintf("call_script(): Calling %O with creds.\n", fun));
+    // werror("call_script(): Calling %O with creds.\n", fun);
     err = catch {
       result = call_with_creds(luser_creds, fun, id);
-      // werror(sprintf("call_with_creds() succeeded; result = %O\n", result));
+      // werror("call_with_creds() succeeded; result = %O\n", result);
     };
   } else
 #endif /* constant(__builtin.security) */
     err = catch {
       result = fun(id);
-      // werror(sprintf("calling of script succeeded; result = %O\n", result));
+      // werror("calling of script succeeded; result = %O\n", result);
     };
 
   // werror("call_script() err: %O result:%O\n", err, result);
