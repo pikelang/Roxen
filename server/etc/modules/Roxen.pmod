@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.61 2000/12/18 09:41:07 nilsson Exp $
+// $Id: Roxen.pmod,v 1.62 2001/01/01 09:05:40 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1309,7 +1309,7 @@ string strftime(string fmt, int t)
       res += sprintf("%02d:%02d", lt->hour, lt->min);
       break;
     case 'S':	// Seconds [00,61]; 0-prefix
-      res += sprintf("%02", lt->sec);
+      res += sprintf("%02d", lt->sec);
       break;
     case 't':	// Tab
       res += "\t";
@@ -2929,7 +2929,7 @@ RXML.TagSet entities_tag_set = class
     c->add_scope("page",scope_page);
     c->add_scope("cookie", scope_cookie);
     c->add_scope("modvar", scope_modvar);
-    c->add_scope("form", FormScope( c->id->real_variables) );
+    c->add_scope("form", FormScope( c->id->real_variables ) );
     c->add_scope("client", c->id->client_var);
     c->add_scope("var", ([]) );
   }
