@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.301 2004/05/27 18:28:42 _cvs_stephen Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.302 2004/05/27 21:24:37 _cvs_stephen Exp $";
 
 #include <module.h>
 inherit "module";
@@ -135,7 +135,7 @@ bshadow=\"2\">&lt;gtext bshadow=2&gt;</gtext>
  <ex>
 <gtext font=\"lucida\" bold=\"\" chisel=\"\" talign=\"center\" tile=\"\"
 opaque=\"70\" fgcolor=\"gold\" bevel=\"2\"
-background=\"/%01/squares\"> Chisel opaque=\"70\"</gtext>
+background=\"/*/squares\"> Chisel opaque=\"70\"</gtext>
  </ex>
 </attr>
 
@@ -314,8 +314,8 @@ shadow=\"40,2\">&lt;gtext shadow=40,2&gt;</gtext></ex>
  Place the text centered in a box of the given color below the image
  area. Useful together with background to make captions for images.</p>
  <ex>
-<imgs src=\"/%01/chili-small-white\" /> &nbsp;
-<gtext scale=\"0.5\" background=\"/%01/chili-small-white\"
+<imgs src=\"/*/chili-small-white\" /> &nbsp;
+<gtext scale=\"0.5\" background=\"/*/chili-small-white\"
 textbelow=\"#c0c0c0\">ChiliMoon</gtext>
  </ex>
 </attr>
@@ -339,7 +339,7 @@ red, darkgreen</gtext>
 <attr name='texture' value='path'><p>
  Uses the specified images as a field texture.</p>
 <ex>
-<gtext texture=\"/%01/squares\"
+<gtext texture=\"/*/squares\"
  tile=\"1\" fontsize=\"100\">A</gtext>
 </ex>
 </attr>

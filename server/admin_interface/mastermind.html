@@ -45,7 +45,7 @@ colors[5] = "red";
 function shiftColor(imgName) {
   if(buggy_image_counter) imgName--;
   arrej[imgName] = (arrej[imgName]+1)%6;
-  document [imgName].src = "/%01/pixel-" + colors[arrej[imgName]];
+  document [imgName].src = "/*/pixel-" + colors[arrej[imgName]];
 }
 
 function send() {
@@ -66,7 +66,7 @@ function send() {
 
 <?comment draw the previous guesses ?>
 <if variable="form.turn > 0">
-<define tag="square"><td><img src="/%01/pixel-&_.color;" width="20" height="20" border="0" /></td></define>
+<define tag="square"><td><img src="/*/pixel-&_.color;" width="20" height="20" border="0" /></td></define>
 <set variable="var.qs" split="">&var.q;</set>
 <for variable="var.i" from="1" to="&form.turn;">
   <tr>
@@ -97,10 +97,10 @@ function send() {
   <td></td>
   <td><font style="font-size: 4px">
     <for variable="var.j" from="1" to="&var.gold;">
-      <img src="/%01/pixel-green" width="5" height="5" hspace="1" vspace="1" border="1"/>
+      <img src="/*/pixel-green" width="5" height="5" hspace="1" vspace="1" border="1"/>
     </for><br />
     <for variable="var.j" from="1" to="&var.silver;">
-      <img src="/%01/pixel-yellow" width="5" height="5" hspace="1" vspace="1" border="1"/>
+      <img src="/*/pixel-yellow" width="5" height="5" hspace="1" vspace="1" border="1"/>
     </for>
   </font></td></tr>
 </for>
@@ -115,7 +115,7 @@ function send() {
 <else>
 <tr><for variable="var.i" from="1" to="6">
   <td><a href="javascript:shiftColor(&var.i;)">
-  <img src="/%01/pixel-grey" width="20" height="20" border="0" name="&var.i;" /></a></td>
+  <img src="/*/pixel-grey" width="20" height="20" border="0" name="&var.i;" /></a></td>
 </for><td></td><td>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;</td></tr>
 </else>
 

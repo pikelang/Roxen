@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.563 2004/05/27 19:34:35 mani Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.564 2004/05/27 21:24:40 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -654,7 +654,7 @@ static mixed strip_fork_information(RequestID id)
 {
   array a = id->not_query/"::";
   //  FIX: Must not subtract ":" chars since it breaks proper URL:s,
-  //  e.g. "/%01/colorbar:x,y,z" and several others.
+  //  e.g. "/*/colorbar:x,y,z" and several others.
   //  id->not_query = a[0]-":";
   id->not_query = a[0];
   id->misc->fork_information = a[1..];
@@ -1588,11 +1588,11 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     TIMER_START(internal_magic);
 #ifndef NO_INTERNAL_HACK
     // Find internal-foo-bar images
-    // min length == 17 (/%01/?..)
+    // min length == 17 (/*/?..)
     // This will save some time indeed.
-    if(sizeof(file) > 3 && file[1]==1
-       && has_prefix(file,"/\1/") && (loc=file[3..])) {
-	//  Mark all /%01/* as cacheable even though the user might be
+    if(sizeof(file) > 3 && file[1]=='*'
+       && has_prefix(file,"/*/") && (loc=file[3..])) {
+	//  Mark all /*/* as cacheable even though the user might be
 	//  authenticated (which normally disables protocol-level caching).
 	RAISE_CACHE(60 * 60 * 24 * 365);  //  1 year
 	PROTO_CACHE();
@@ -2779,10 +2779,10 @@ int(0..1) is_file(string virt_path, RequestID id, int(0..1)|void internal)
       m_delete(id->misc, "internal_get");
     return res;
   }
-  if(stat_file(virt_path, id) || virt_path=="/%01/unit")
+  if(stat_file(virt_path, id) || virt_path=="/*/unit")
     return 1;
   string f = (virt_path/"/")[-1];
-  if(has_prefix(virt_path, "/%01/")) {
+  if(has_prefix(virt_path, "/*/")) {
     if(internal_roxen_image(f, id) ||
        has_prefix(f, "pixel-"))
       return 1;
@@ -4013,7 +4013,7 @@ td {font: 12px Helvetica, Arial; font-weight: bold}
 <table width='99%' height='99%'>
 <tr height='10%'></tr>
 <tr height='65%'><td align='center'>
-<img src='/%01/chili-large-black' alt='ChiliMoon' title='ChiliMoon' />
+<imgs src='/*/chili-large-black' alt='ChiliMoon' title='ChiliMoon' />
 <table><tr><td><h1>Requested file not found</h1>
 <emit source='path'>
 <if exists='&_.path;/'><a href='&_.path;'>&_.name;</a> </if>

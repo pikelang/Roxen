@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.76 2004/05/27 18:28:44 _cvs_stephen Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.77 2004/05/27 21:24:37 _cvs_stephen Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -22,7 +22,7 @@ handled internally in the server, and thus much faster, but blocking,
 and less secure.
 <br />
 <br />
-<table><tr><td valign='top'><imgs src=\"/%01/err_2\" alt=\"Warning\" /></td>
+<table><tr><td valign='top'><imgs src=\"/*/err_2\" alt=\"Warning\" /></td>
 <td>NOTE: This module should not be enabled if you allow anonymous PUT!<br />
 NOTE: Enabling this module is the same thing as letting your users run
 programs with the same right as the server!

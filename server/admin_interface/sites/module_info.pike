@@ -28,7 +28,7 @@ string find_module_doc( string cn, string mn, RequestID id )
                   + translate(m->info()||"") + "</p><p>"
                   + translate(m->status()||"") +"</p><p>"
                   + translate(m->file_name_and_stuff())+"</p>",
-                  ({ "/image/", }), ({ "/%01/" }));
+                  ({ "/image/", }), ({ "/*/" }));
 }
 
 string parse( RequstID id )

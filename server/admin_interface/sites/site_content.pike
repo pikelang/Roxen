@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.141 2004/05/16 02:53:19 mani Exp $
+// $Id: site_content.pike,v 1.142 2004/05/27 21:24:32 _cvs_stephen Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -360,7 +360,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    + 
                     "</dl>" 
                     : homepage + creators),
-                  ({ "/image/", }), ({ "/%01/" }));
+                  ({ "/image/", }), ({ "/*/" }));
 }
 
 string find_module_documentation( string conf, string mn, RequestID id )

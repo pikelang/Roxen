@@ -40,9 +40,9 @@ string parse( RequestID id )
       for( int i = 4; i<sizeof(st); i++ )
 	status += (st[i]/"</font")[0]+"<br />";
 
-      status = "<cimg format='png' src='/%01/pixel-orange' "
+      status = "<cimg format='png' src='/*/pixel-orange' "
 	"     scale='"+(int)(2.8*(int)tmp)+",12'/>"
-	"<cimg format='png' src='/%01/pixel-black' "
+	"<cimg format='png' src='/*/pixel-black' "
 	"     scale='"+(int)(280-(2.5*(int)tmp))+",12' />"
 	"<br />"+status;
     }

@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.14 2004/05/27 16:19:36 _cvs_stephen Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.15 2004/05/27 21:24:38 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Really advanced wizard";
@@ -262,7 +262,7 @@ constant default_template = #"
           <td align=\"right\"><if variable='_.page == &_.pages;'>Completed</if>
                               <else>&_.page;/&_.pages;</else></td>
     <if variable='_.help'>
-	  <td align=\"right\"><input type=\"image\" name=\"help\" src=\"/%01/help\" border=\"0\" value=\"Help\"></td>
+	  <td align=\"right\"><input type=\"image\" name=\"help\" src=\"/*/help\" border=\"0\" value=\"Help\"></td>
     </if>
       </tr>
     </table>

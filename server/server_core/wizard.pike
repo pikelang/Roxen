@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.155 2004/05/27 19:42:13 mani Exp $
+// $Id: wizard.pike,v 1.156 2004/05/27 21:24:41 _cvs_stephen Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -226,7 +226,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "<td width='258' rowspan='2'>\n"
       "  <table bgcolor='#000000' cellpadding='1' border='0' cellspacing='0' "
           "width='258'><tr><td>\n"
-      "  <input type='image' name='"+m->name+".foo' src='/%01/colsel'"
+      "  <input type='image' name='"+m->name+".foo' src='/*/colsel'"
         " width='256' height='256' border='0'></td>\n"
       "</table>\n"
       "</td>\n"
@@ -234,7 +234,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "<td width='32' rowspan='2'>\n"
       "  <table bgcolor='#000000' cellpadding='1' border='0' cellspacing='0' "
          "width='32'><tr><td>\n"
-      "<input type='image' src='/%01/colorbar:"+
+      "<input type='image' src='/*/colorbar:"+
       (string)h+","+(string)v+","+(string)s+"' "
       "name='"+m->name+".bar' width='30' height='256' border='0'></td>"
       "</table>\n"
@@ -297,21 +297,21 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "  <table bgcolor='#000000' cellpadding='1' border='0' cellspacing='0'>"
          "<tr><td>\n"
       "    <input type='image' name='"+m->name+".foo' "
-            "src='/%01/colsel-small' "
+            "src='/*/colsel-small' "
             "width='128' height='128' border='0'></td>\n"
       "  </table>\n"
       "</td>\n"
-      "<td width='8' rowspan='2'><img src='/%01/unit' width='8' />"
+      "<td width='8' rowspan='2'><img src='/*/unit' width='8' />"
       "</td>\n"
       "<td width='18' rowspan='2'>\n"
       "  <table bgcolor='#000000' cellpadding='1' border='0' cellspacing='0'>"
       "<tr><td>\n"
-      "    <input type='image' src='/%01/colorbar:"+
+      "    <input type='image' src='/*/colorbar:"+
              (string)h+","+(string)v+","+(string)s+"' "
             "name='"+m->name+".bar' width='16' height='128' border='0'></td>\n"
       "  </table>\n"
       "</td>\n"
-      "<td width='8' rowspan='2'><img src='/%01/unit' width='8' />"
+      "<td width='8' rowspan='2'><img src='/*/unit' width='8' />"
       "</td>\n"
       "<td>\n"
       "  <table bgcolor='#000000' width='64' border='3' "
@@ -360,21 +360,21 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "  }\n"
        "</script>"
        "<js-popup args-variable='__popup' event='onClick' props='color_props'>"
-       "  <imgs src='/%01/colsel-mark-x' id='PREFIX_mark_x'"
+       "  <imgs src='/*/colsel-mark-x' id='PREFIX_mark_x'"
        "       onClick='PREFIX_colsel_click(event, 0, \"x\"); return false;'"
        "       style='position: absolute;"
        "              cursor:   crosshair;"
        "              left:     " + (5 + (int) (h / 2)) + ";"
        "              top:      5;"
        "              z-index:  2'>"
-       "  <imgs src='/%01/colsel-mark-y' id='PREFIX_mark_y'"
+       "  <imgs src='/*/colsel-mark-y' id='PREFIX_mark_y'"
        "       onClick='PREFIX_colsel_click(event, 0, \"y\"); return false;'"
        "       style='position: absolute;"
        "              cursor:   crosshair;"
        "              left:     5;"
        "              top:      " + (5 + (int) ((255 - v) / 2)) + ";"
        "              z-index:  2'>"
-       "  <imgs src='/%01/colsel-mark-y-small'"
+       "  <imgs src='/*/colsel-mark-y-small'"
        "       id='PREFIX_mark_y_small'"
        "       style='position: absolute;"
        "              cursor:   pointer;"
@@ -388,21 +388,21 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "                border-right:  2px solid #888888'>"
        "    <tr>"
        "      <td style='border-right: 1px solid #888888'"
-       "        ><imgs src='/%01/colsel-small'"
+       "        ><imgs src='/*/colsel-small'"
        "             width='128' height='128' style='cursor: crosshair'"
        "             onClick='PREFIX_colsel_click(event, 0); return false;'"
        "        /></td>"
        "      <td><img id='PREFIX_colorbar' width='16' height='128'"
-       " src='/%01/colorbar-small:" + h + "," + v + ",-1'"
+       " src='/*/colorbar-small:" + h + "," + v + ",-1'"
        "               style='cursor: pointer'"
        "               onClick='PREFIX_colsel_click(event, 1); return false;'"
        "        /></td>"
        "    </tr><tr>"
        "      <td colspan='2' style='border-top: 1px solid #888888'"
-       "        ><img src='/%01/pixel-000000'"
+       "        ><img src='/*/pixel-000000'"
        "              width='76' height='10' style='cursor: pointer'"
        "              onClick='PREFIX_colsel_type(\"#000000\", 1);' "
-       "        /><img src='/%01/pixel-ffffff'"
+       "        /><img src='/*/pixel-ffffff'"
        "               width='76' height='10' style='cursor: pointer'"
        "               onClick='PREFIX_colsel_type(\"#FFFFFF\", 1);' "
        "        /></td>"
@@ -424,7 +424,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "      	<td style='background: " + current +
                   "; border: 1px solid #888888' "
        "      	    id='PREFIX_preview'"
-       "      	  ><img src='/%01/colsel-arrow'"
+       "      	  ><img src='/*/colsel-arrow'"
        "                width='49' height='16' border='0'"
        "      	        style='border: 4px solid #ffffff; cursor: pointer'"
        "                ::='&form.__popup;'"
@@ -667,13 +667,13 @@ string parse_wizard_page(string form, RequestID id, string wiz_name,
 	  " \n<td align='right'>"+
 	 (foo->help && !id->variables->help?
 	  "<font size=-1><input type=image name=help src="+
-	  (id->conf?"/%01/help":"/image/help.gif")+
+	  (id->conf?"/*/help":"/image/help.gif")+
 	  " border='0' value='Help'></font>":"")
 	 +"</td>\n"
 	 " </tr><tr><td colspan='3'><table cellpadding='0' cellspacing='0' "
 	   "border='0' width='100%'>"
            "<tr bgcolor='#000000'><td><img src='"+
-	 (id->conf?"/%01/unit":"/image/unit.gif")+
+	 (id->conf?"/*/unit":"/image/unit.gif")+
 	 "' width='1' height='1' alt='' /></td></tr></table></td></tr>\n"
 	 "  </table><table cellpadding='6'><tr><td>\n"
 	 "<!-- The output from the page function -->\n"
@@ -1237,24 +1237,24 @@ string html_table(array(string) subtitles, array(array(string)) table,
 
 string html_notice(string notice, RequestID id)
 {
-  return ("<table><tr><td valign='top'><imgs alt='Notice:' src='"+
-	  (id->conf?"/%01/":"/image/")
+  return ("<table><tr><td valign='top'><img \nalt='Notice:' src='"+
+	  (id->conf?"/*/":"/image/")
 	  +"err_1.gif' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
 	  "</td></tr></table>");
 }
 
 string html_warning(string notice, RequestID id)
 {
-  return ("<table><tr><td valign='top'><imgs alt='Warning:' src='"+
-	  (id->conf?"/%01/":"/image/")
+  return ("<table><tr><td valign='top'><img \nalt='Warning:' src='"+
+	  (id->conf?"/*/":"/image/")
 	  +"err_2.gif' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
 	  "</td></tr></table>");
 }
 
 string html_error(string notice, RequestID id)
 {
-  return ("<table><tr><td valign='top'><imgs alt='Error:' src='"+
-	  (id->conf?"/%01/":"/image/")
+  return ("<table><tr><td valign='top'><img \nalt='Error:' src='"+
+	  (id->conf?"/*/":"/image/")
 	  +"err_3.gif' />&nbsp;&nbsp;</td><td valign='top'>"+notice+
 	  "</td></tr></table>");
 }

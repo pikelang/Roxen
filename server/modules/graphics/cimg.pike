@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.55 2004/05/22 18:24:06 _cvs_stephen Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.56 2004/05/27 21:24:37 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -21,7 +21,7 @@ mapping tagdocumentation()
   mapping doc = compile_string("#define manual\n"+file->read())->tagdoc;
   foreach(({ "cimg", "cimg-url" }), string tag)
     doc[tag] += the_cache->documentation(tag +
-					 " src='/%01/testimage'");
+					 " src='/*/testimage'");
   return doc;
 }
 
@@ -36,7 +36,7 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 <attr name='src' value='url' required='required'><p>
  The path to the indata file.</p>
 
-<ex><cimg src='/%01/testimage'/></ex>
+<ex><cimg src='/*/testimage'/></ex>
 </attr>
 
 <attr name='data' value='imagedata'><p>
@@ -72,7 +72,7 @@ layers are hidden regardless of their original state.</p>
 <attr name='src' value='url' required='required'><p>
  The path to the indata file.</p>
 
-<ex><cimg-url src='/%01/testimage'/></ex>
+<ex><cimg-url src='/*/testimage'/></ex>
 </attr>
 
 <attr name='data' value='imagedata'><p>

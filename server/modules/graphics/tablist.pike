@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 // Makes a tab list like the one in the administration interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.60 2004/05/27 16:19:36 _cvs_stephen Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.61 2004/05/27 21:24:37 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -52,13 +52,13 @@ tag, will be sent as an extra argument to <tag>gbutton</tag>.
 </tablist></ex>
 </desc>
 
-<attr name='frame-image' value='' default='/%01/tabframe'>
+<attr name='frame-image' value='' default='/*/tabframe'>
 <p>A layered Photoshop (PSD) or Gimp (XCF) image which portrays the
 tab's appearance. Descriptions of the different layers follows below.
 If a <tag>define
 name=\"frame-image\"</tag>Image_path<tag>/define</tag> definition is
 set that image will be the default value instead of
-<tt>/%01/tabframe</tt>. </p>
+<tt>/*/tabframe</tt>. </p>
 </attr>
 
 <attr name='selcolor' value='color' default='white'>
@@ -291,7 +291,7 @@ class TagTablist {
 	else
 	  //  We need an absolute path or else gbutton will "fix" this according
 	  //  to the path in the request...
-	  fimage = "/%01/tabframe";
+	  fimage = "/*/tabframe";
   
 	mapping gbutton_args = d|args;
 

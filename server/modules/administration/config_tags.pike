@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.193 2004/05/27 16:19:35 _cvs_stephen Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.194 2004/05/27 21:24:36 _cvs_stephen Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -206,18 +206,18 @@ class Scope_usr
      case "split-tableargs":      return ENCODE_RXML_TEXT("", type);
      case "split2-tableargs":     return ENCODE_RXML_TEXT("", type);
      case "split2-width":         return ENCODE_RXML_TEXT("", type);
-     case "left-image":           return ENCODE_RXML_TEXT("/%01/unit", type);
-     case "selected-indicator":   return ENCODE_RXML_TEXT("/%01/next", type);
-     case "database-small":       return ENCODE_RXML_TEXT("/%01/database_small", type);
-     case "table-small":          return ENCODE_RXML_TEXT("/%01/table_small", type);
-     case "next":                 return ENCODE_RXML_TEXT("/%01/next", type);
-     case "item-indicator":       return ENCODE_RXML_TEXT("/%01/dot", type);
-     case "logo":                 return ENCODE_RXML_TEXT("/%01/roxen", type);
-     case "err-1":                return ENCODE_RXML_TEXT("/%01/err_1", type);
-     case "err-2":                return ENCODE_RXML_TEXT("/%01/err_2", type);
-     case "err-3":                return ENCODE_RXML_TEXT("/%01/err_3", type);
+     case "left-image":           return ENCODE_RXML_TEXT("/*/unit", type);
+     case "selected-indicator":   return ENCODE_RXML_TEXT("/*/next", type);
+     case "database-small":       return ENCODE_RXML_TEXT("/*/database_small", type);
+     case "table-small":          return ENCODE_RXML_TEXT("/*/table_small", type);
+     case "next":                 return ENCODE_RXML_TEXT("/*/next", type);
+     case "item-indicator":       return ENCODE_RXML_TEXT("/*/dot", type);
+     case "logo":                 return ENCODE_RXML_TEXT("/*/roxen", type);
+     case "err-1":                return ENCODE_RXML_TEXT("/*/err_1", type);
+     case "err-2":                return ENCODE_RXML_TEXT("/*/err_2", type);
+     case "err-3":                return ENCODE_RXML_TEXT("/*/err_3", type);
      case "obox-titlefont":       return ENCODE_RXML_TEXT("helvetica,arial", type);
-     case "padlock":              return ENCODE_RXML_TEXT("/%01/padlock", type);
+     case "padlock":              return ENCODE_RXML_TEXT("/*/padlock", type);
      case "obox-titlestyle":      return ENCODE_RXML_TEXT("", type);
      case "obox-border":          return ENCODE_RXML_TEXT("black", type);
      case "content-frame":        return ENCODE_RXML_TEXT("", type);
@@ -226,8 +226,8 @@ class Scope_usr
 
 
       /* 1-st level */
-     case "tab-frame-image":      return ENCODE_RXML_TEXT("/%01/tabframe", type);
-     case "gbutton-frame-image":  return ENCODE_RXML_TEXT("/%01/gbutton", type);
+     case "tab-frame-image":      return ENCODE_RXML_TEXT("/*/tabframe", type);
+     case "gbutton-frame-image":  return ENCODE_RXML_TEXT("/*/gbutton", type);
 
     /* also: font, bgcolor, fgcolor */
 

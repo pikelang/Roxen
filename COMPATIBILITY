@@ -100,3 +100,9 @@ and Roxen WebServer 4.0.
 
  - Locales in the admininterface have been dropped.  All interactions with
    the administrator are in English.
+
+ - /internal-roxen- support has been dropped.  Anyone needing it is invited
+   to create a compatibility module which will support this.
+
+ - /internal-gopher- generation has been dropped, but should reappear in
+   a separate module.  Volunteers please.

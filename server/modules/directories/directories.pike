@@ -9,7 +9,7 @@
 //  o Add readme support
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.100 2004/05/27 18:28:42 _cvs_stephen Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.101 2004/05/27 21:24:36 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -28,7 +28,7 @@ constant default_template= #"
     <table width='100%' cellspacing='0' cellpadding='2' border='0'>
       <tr>
         <td width='100%' height='1' colspan='5' bgcolor='#bf2727'><img
-          src='/%01/unit' width='100%' height='1' /></td>
+          src='/*/unit' width='100%' height='1' /></td>
       </tr>
 
     <define tag='mitem'>
@@ -36,7 +36,7 @@ constant default_template= #"
          <if variable='form.reverse'>
           <cset variable='var.doreverse'>sort-reverse</cset>
           <if match='&form.sort; is &_.order;'>
-            <imgs src='/%01/up' />
+            <imgs src='/*/up' />
           </if>
           <else>
             <font size='-1'>&nbsp;</font>
@@ -45,7 +45,7 @@ constant default_template= #"
          </if>
          <else>
          <if match='&form.sort; is &_.order;'>
-          <imgs src='/%01/down' />
+          <imgs src='/*/down' />
           <a href='?sort=&_.order;&reverse=1'><font color='black'>&_.title;</font></a> &nbsp;
         </if>
         <else>
@@ -65,7 +65,7 @@ constant default_template= #"
       </tr>
       <tr>
         <td width='100%' height='1' colspan='5' bgcolor='#bf2727'><img
-          src='/%01/unit' width='100%' height='1' /></td>
+          src='/*/unit' width='100%' height='1' /></td>
       </tr>
 
       <emit source='dir'
@@ -82,7 +82,7 @@ constant default_template= #"
       </emit>
       <tr>
         <td width='100%' height='4' colspan='5' bgcolor='#bf2727'><img
-          src='/%01/unit' width='100%' height='1' /></td>
+          src='/*/unit' width='100%' height='1' /></td>
       </tr>
     </table>
 
