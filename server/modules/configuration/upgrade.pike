@@ -9,10 +9,12 @@ inherit "roxenlib";
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Upgrade handler for the config interface";
 
+object db;
 
 void start(int num, Configuration conf)
 {
   conf->parse_html_compat=1;
+  db=Yabu.lookup(QUERY("yabuname","wS");
 }
 
 void create()
@@ -42,22 +44,69 @@ void set_entities(RXML.Context c)
 
 string tag_foo(string t, mapping m, RequestID id)
 {
-  
 }
 
 string container_bar(string t, mapping m, string c, RequestID id)
 {
-  
 }
 
-/*
 
-Fetchers:
+string encode_ranges(array(int) a)
+{
+  a=sort(a);
+  string s="";
+  int last;
+  if(!sizeof(a))
+    return "";
+  for(int i=0;i<sizeof(a);i++)
+  {
+    if(i==0)
+    {
+      s+=(string)a[i];
+      last=a[i];
+      continue;
+    }
+    
+    if(a[i]==last+1)
+    {
+      last=a[i];
+      if(s[-1]!='-')
+	s+="-";
+      continue;
+    }
+    
+    if(s[-1]=='-')
+      s+=(string)last;
 
-get_new_info_files
+    s+=", "+(string)a[i];
+    last=a[i];
+  }
+  if(s[-1]=='-')
+    s+=(string)last;
+  return s;
+}
+
+array(int) decode_ranges(string s)
+{
+  array a=({ });
+  int start,stop;
+  foreach( ((s-" ")/",")-({""}), string r)
+    if(sscanf(r,"%d-%d",start,stop)==2 && stop>start && (stop-start)< 1<<16 )
+      for(int i=start; i<=stop; i++)
+	a+=({ i });
+    else
+      a+=({ (int)r });
+  return sort(a);
+}
 
 
-*/
+mapping get_headers()
+{
+  return ([ "host":QUERY(server)+":"+QUERY(port),
+	    "user-agent": "Roxen·WebServer/1.4.143", // FIXME
+	    "authorization": "Basic "+MIME.encode_base64("foo:bar"), // FIXME
+  ]);
+}
 
 
 
@@ -80,12 +129,14 @@ class GetInfoFile
     
   }
   
-  void create()
+  void create(int pkgnum)
   {
     set_callbacks(request_ok, request_fail);
-    async_request(QUERY(server),QUERY(port), query, headers);
+    async_request(QUERY(server),QUERY(port), query, get_headers());
   }
 }
+
+
 
 class UpdateInfoFiles
 {
@@ -101,9 +152,17 @@ class UpdateInfoFiles
 
   }
 
+  string format_have_packages()
+  {
+    return "have_packages="+encode_ranges(indices(db->pkginfo));
+  }
+
   void do_request()
   {
-    async_request(string server,int port,string query,mapping headers,void|string data);
+    async_request(QUERY(server),QUERY(PORT),
+		  "POST /upgradeserver/get-packages HTTP/1.0",
+		  get_headers() | (["Content-type":"application/x-www-form-urlencoded"]),
+		  format_have_packages());
   }
   
   void create()
@@ -112,11 +171,10 @@ class UpdateInfoFiles
   }
 }
 
-
 /*
-object db=Yabu.lookup(fname,"wS");
+  object db=Yabu.lookup(fname,"wS");
   db->pkginfo[17]["foobar"]="gazonk";
-
+  
   indices(db->pkginfo);
 
 */
