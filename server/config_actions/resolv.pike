@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.8 1998/02/27 05:31:28 per Exp $
+ * $Id: resolv.pike,v 1.9 1998/02/27 07:13:07 per Exp $
  */
 
 inherit "wizard";
@@ -107,7 +107,7 @@ string page_0(object id)
 
     nid->not_query = id->variables->path;
     nid->conf = c;
-
+    nid->method = "GET";
     if (id->variables->user && id->variables->user!="")
     {
        string *y;
