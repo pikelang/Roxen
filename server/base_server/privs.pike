@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.11 1997/06/09 17:40:04 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.12 1997/06/10 10:43:18 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -13,10 +13,17 @@ int saved_gid;
 #define HAVE_EFFECTIVE_USER
 #endif
 
+static private string _getcwd()
+{
+  if (catch{return(getcwd());}) {
+    return("Unknown directory (no x-bit on current directory?)");
+  }
+}
+
 static private string dbt(array t)
 {
   if(sizeof(t)<2) return "";
-  return (((t[0]||"Unknown program")-(getcwd()+"/"))-"base_server/")+":"+t[1]+"\n";
+  return (((t[0]||"Unknown program")-(_getcwd()+"/"))-"base_server/")+":"+t[1]+"\n";
 }
 
 
