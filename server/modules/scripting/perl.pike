@@ -1,26 +1,22 @@
-// This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 // Perl script and tag handler module.
 // by Leif Stensson.
 
 #include <roxen.h>
 #include <module.h>
 
-//<locate-token project="perl_module">LOCALE</locale-token>
-// USE_DEFERRED_LOCALE;
-#define LOCALE(X,Y)  _DEF_LOCALE("perl_module",X,Y)
-
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.24 2002/07/03 12:41:47 nilsson Exp $";
+       "$Id: perl.pike,v 2.25 2002/11/11 01:55:25 mani Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
 constant module_name = "Scripting: Perl support";
 constant module_doc =
-   "This module provides a faster way of running Perl scripts with Roxen. "
+   "This module provides a faster way of running Perl scripts with ChiliMoon. "
    "The module also optionally provides a &lt;perl&gt;..&lt;/perl&gt; "
    "container (and a corresponding processing instruction &lt;?perl ... "
    "?&gt;) to run Perl code from inside RXML pages."; 
@@ -43,78 +39,78 @@ static object mutex = Thread.Mutex();
 void create()
 {
   defvar("extensions", ({ "pl", "perl" }),
-    LOCALE(0,"Extensions"), TYPE_STRING_LIST,
-    LOCALE(0,"List of URL extensions that indicate that the document "
-	   "is a Perl script."));
+	 "Extensions", TYPE_STRING_LIST,
+	 "List of URL extensions that indicate that the document "
+	 "is a Perl script.");
 
 #if 0
   defvar("libdir", "./perl",
-    LOCALE(0, "Roxen Perl Directory"), TYPE_DIR,
-    LOCALE(0, "This is the name of a directory with Roxen-related Perl "
-    "stuff. It should normally point to `perl' in the Roxen server directory, "
-    "but you may want to point it elsewhere if you want to modify the "
-    "code."));
+	 "ChiliMoon Perl Directory", TYPE_DIR,
+	 "This is the name of a directory with ChiliMoon-related Perl "
+	 "stuff. It should normally point to `perl' in the ChiliMoon server "
+	 "directory, but you may want to point it elsewhere if you want to "
+	 "modify the code.");
 #endif
 
   defvar("showbacktrace", 0,
-    LOCALE(0, "Show Backtraces"), TYPE_FLAG,
-    LOCALE(0, "This setting decides whether to deliver a backtrace in the "
-	   "document if an error is caught while a script runs."));
+	 "Show Backtraces", TYPE_FLAG,
+	 "This setting decides whether to deliver a backtrace in the "
+	 "document if an error is caught while a script runs.");
 
   defvar("tagenable", 0,
-    LOCALE(0, "Enable Perl Tag"), TYPE_FLAG,
-    LOCALE(0, "This setting decides whether to enable parsing of Perl code "
-	   "in RXML pages, in &lt;perl&gt;..&lt;/perl&gt; containers."));
+	 "Enable Perl Tag", TYPE_FLAG,
+	 "This setting decides whether to enable parsing of Perl code "
+	 "in RXML pages, in &lt;perl&gt;..&lt;/perl&gt; containers.");
 
   defvar("scriptout", "HTTP",
-    LOCALE(0, "Script output"), TYPE_MULTIPLE_STRING,
-    LOCALE(0, "How to treat script output. HTML means treat it as a plain "
-    "HTML document. RXML is similar, but passes it through the RXML parser "
-    "before returning it to the client. HTTP is the traditional CGI "
-    "output style, where the script is responsible for producing the "
-    "HTTP headers before the document, as well as the main document "
-    "data."),
-         ({ "HTML", "RXML", "HTTP" })
+	 "Script output", TYPE_MULTIPLE_STRING,
+	 "How to treat script output. HTML means treat it as a plain "
+	 "HTML document. RXML is similar, but passes it through the RXML "
+	 "parser before returning it to the client. HTTP is the traditional "
+	 "CGI output style, where the script is responsible for producing "
+	 "the HTTP headers before the document, as well as the main document "
+	 "data.",
+	 ({ "HTML", "RXML", "HTTP" })
         );
 
   defvar("rxmltag", 0,
-    LOCALE(0, "RXML-parse tag results"), TYPE_FLAG,
-    LOCALE(0, "Whether to RXML parse tag results or not."));
+	 "RXML-parse tag results", TYPE_FLAG,
+	 "Whether to RXML parse tag results or not.");
 
 #if constant(system.NetWkstaUserEnum)
   // WinNT.
   defvar("helper", "perl/bin/ntperl.pl",
-    LOCALE(0, "Perl Helper"), TYPE_FILE,
-    LOCALE(0, "Path to the helper program used to start a Perl subprocess. "
-    "The default for this setting is `perl/bin/ntperl.pl'."));
+	 "Perl Helper", TYPE_FILE,
+	 "Path to the helper program used to start a Perl subprocess. "
+	 "The default for this setting is `perl/bin/ntperl.pl'.");
 #else
   // Assume Unix.
   defvar("helper", "perl/bin/perlrun",
-    LOCALE(0, "Perl Helper"), TYPE_FILE,
-    LOCALE(0, "Path to the helper program used to start a Perl subprocess. "
-    "The default for this setting is `perl/bin/perlrun'."));
+	 "Perl Helper", TYPE_FILE,
+	 "Path to the helper program used to start a Perl subprocess. "
+	 "The default for this setting is `perl/bin/perlrun'.");
 #endif
 
   defvar("parallel", 3,
-    LOCALE(0, "Parallel scripts"), TYPE_MULTIPLE_INT,
-    LOCALE(0, "Number of scripts/tags that may be evaluated in parallel. "
-    "Don't set this higher than necessary, since it may cause the server "
-    "to block (by using all available threads). The default for this "
-    "setting is 3."),
-         ({ 1, 2, 3, 4, 5, 6 }) );
+	 "Parallel scripts", TYPE_MULTIPLE_INT,
+	 "Number of scripts/tags that may be evaluated in parallel. "
+	 "Don't set this higher than necessary, since it may cause the server "
+	 "to block (by using all available threads). The default for this "
+	 "setting is 3.",
+	 ({ 1, 2, 3, 4, 5, 6 }) );
 
   defvar("caching", 0,
-	 LOCALE(0, "Cache output"), TYPE_FLAG,
-	 LOCALE(0, "Whether to cache the result of scripts. This is usually "
-		"not desirable, so the default for this setting is No."));
+	 "Cache output", TYPE_FLAG,
+	 "Whether to cache the result of scripts. This is usually "
+	 "not desirable, so the default for this setting is No.");
 
 #if constant(getpwnam)
   defvar("identity", "nobody:*",
-    LOCALE(0, "Run Perl as..."), TYPE_STRING,
-    LOCALE(0, "User and group to run Perl scripts and tags as. The default "
-    "for this option is `nobody:*'. Note that Roxen can't change user ID "
-    "unless it has sufficient permissions to do so. `*' means `use "
-    "same as Roxen'."));
+	 "Run Perl as...", TYPE_STRING,
+	 "User and group to run Perl scripts and tags as. The default "
+	 "for this option is `nobody:*'. Note that ChiliMoon can't change "
+	 "user ID unless it has sufficient permissions to do so. `*' means "
+	 "`use same as ChiliMoon'."));
 #endif
 }
 
@@ -129,7 +125,7 @@ string status()
         s += sprintf("<b>Subprocess UID</b>: set uid=%O <br />\n",
                      handler_settings->set_uid);
   else
-        s += "<b>Subprocess UID</b>: same as Roxen<br />\n";
+        s += "<b>Subprocess UID</b>: same as ChiliMoon<br />\n";
 #endif
 
   s += "<b>Helper script</b>: ";
