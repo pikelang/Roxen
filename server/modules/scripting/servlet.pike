@@ -4,7 +4,7 @@ inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.17 2000/11/14 18:38:55 marcus Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.18 2000/12/05 23:57:39 marcus Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
@@ -75,10 +75,10 @@ string status()
 string query_name()
 {
   if(query("ex"))
-    return sprintf("<i>%s</i> handling extension <i>%s</i>",
+    return sprintf("Servlet %s handling extension %s",
 		   query("classname"), query("ext")*", ");
   else
-    return sprintf("<i>%s</i> mounted on <i>%s</i>",
+    return sprintf("Servlet %s mounted on %s",
 		   query("classname"), query("location"));
 }
 
