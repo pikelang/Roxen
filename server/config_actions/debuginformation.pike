@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.16 1998/11/18 04:53:59 per Exp $
+ * $Id: debuginformation.pike,v 1.17 1999/12/27 12:38:20 mast Exp $
  */
 
 inherit "wizard";
@@ -39,7 +39,6 @@ array (program) all_modules()
 string program_name(program|object what)
 {
   string p;
-  if(p = search(master()->programs,what)) return remove_cwd(p);
   if(roxen->filename(what)) return remove_cwd(roxen->filename(what));
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.7 1999/11/27 07:53:46 per Exp $
+ * $Id: debug_info.pike,v 1.8 1999/12/27 12:38:22 mast Exp $
  */
 inherit "roxenlib";
 #include <stat.h>
@@ -32,7 +32,7 @@ array (program) all_modules()
 string program_name(program|object what)
 {
   string p;
-  if(p = search(master()->programs,what)) return remove_cwd(p);
+  if(p = master()->program_name(what)) return remove_cwd(p);
   return "?";
 }
 
