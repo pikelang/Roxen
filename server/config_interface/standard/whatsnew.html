@@ -3,21 +3,27 @@
 <content>
 <cv-startpage>
 <br>
-<blockquote><dl>
+<blockquote>
+<rul>
 <define container=new-feature>
-  <dt><b><font size=+1>&name;</font></b>
+  <rli><dl><dt><b><font size=+1>&name;</font></b>
   <dd><contents>
-  <p>
+  <p></dl>
 </define>
 
 <new-feature name="Java module interface">
 It is now possible to write Roxen-modules in Java.
 </new-feature>
 
+<new-feature name="Java servlet interface">
+The Java Servlet interface has been updated to be compliant with the
+latest specification.
+</new-feature>
+
 <new-feature name="New configuration interface">
  There is, as you have probably noted, a brand new configuration
  interface in roxen 2.0. It supports multiple users and multiple
- languages.
+ languages, and themes.
 <p>
 
  The event log has also been enhanced, and now includes information
@@ -26,36 +32,55 @@ It is now possible to write Roxen-modules in Java.
 
 <p>
 
-  The configuration interface is also written mostly in RXML, and can be
-  found in the 'configuration_interface' directory in your roxen
-  installation.
+ The configuration interface is written mostly in RXML, and can be
+ found in the 'configuration_interface' directory in your roxen
+ installation.
 </new-feature>
 
-|Roxen WebServer Core:
-| Nytt config-gui
-|   Multiuser
-|   Multilanguage
-|   Förbättrad modulinfo för utvecklare
-|   Eventlog i flera nivåer
-|   Konfigurerbart utseende
-  Unicode-stöd
-| Ny RXML-parser (entiteter för variabler)
-  Sybase
-| Hela före detta dbapi pro (väl?)
-  PHP-stöd
+<new-feature name="New upgrade system">
+
+</new-feature>
+
+<new-feature name="Full-fledged Unicode support">
+</new-feature>
+
+<new-feature name="New RXML parser">
+The new RXML parser is XML compliant.
+
+<new-feature name="Support for Sybase, Oracle and ODBC">
+  Support for commercial databases is now included in the GPL Roxen
+  version.
+</new-feature>
+
+<new-feature name="PHP4 / Zend">
+  PHP4 / Zend now supports Roxen Challenger, thanks to work done by <a
+  href=http://david.hedbor.org>David Hedbor</a>
+</new-feature>
+
+<new-feature name="Bandwidth Throttling and fast HTTP">
+  The normal HTTP module can now throttle the bandwidth, both for
+  requests and per virtual server.<p>
+
+  There is also an alternative HTTP module (called 'fhttp') that
+  provides the maximum possible performance, mostly useful for
+  <em>very</em> busy sites, or benchmarking. Speeds of over 20.000
+  requests/second has been clocked on normal x86 hardware.<p>
+  The normal HTTP protocol module has also been performance tuned, and
+  is now aproximately 10% faster than before.
+</new-feature>
+
+
+</rul>
+<comment>
   ASP (klart?)
   Perl/Python (?)
-  Java-servlets uppdaterade
-| Roxens eget modul-API stöder moduler i Java
   Mac OS X (coming RSN)
   Online-manual (synkad med tryckta)
-  Throttling
-  HTTPLoop(?) (f.d. Accept & Parse)
   Multiple frontend (ev. enbart SiteBuilder)
   RSA-krypto + fri stark krypto-source
   Branding! Pike7, Roxen 2.0 osv...
+</comment>
 
-
-</dl></blockquote><br>
+</blockquote><br>
 </cv-startpage>
 </content>
