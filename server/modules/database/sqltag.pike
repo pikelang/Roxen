@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.76 2001/03/08 14:35:42 per Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.77 2001/04/17 11:11:23 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -148,8 +148,8 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
   else
 #endif
   {
-    error = catch(con = DBManager.get( args->db || default_db,
-                                       my_configuration() ));
+    error = catch(con = DBManager.get( args->db || args->host || default_db ||
+				       compat_default_host, my_configuration() ));
     if (error)
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
                      ": "+error[0]+"\n");
