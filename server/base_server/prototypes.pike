@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.145 2004/06/30 16:58:39 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.146 2005/01/14 16:44:58 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -964,8 +964,8 @@ class RequestID
   //! The part of the path segment of the requested URL that is below
   //! the virtual server's mountpoint. For a typical server
   //! registering a URL with no ending path component, not_query will
-  //! contain all characters from the leading '/' to, but not
-  //! including, the first question mark ('?') of the URL.
+  //! contain all characters from and including the leading '/' to but
+  //! not including the first question mark ('?') of the URL.
 
   string extra_extension;
 
