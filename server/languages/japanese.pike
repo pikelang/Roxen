@@ -1,10 +1,13 @@
-/* Kanji */
-
-string cvs_version = "$Id: japanese.pike,v 1.3 1996/12/02 17:33:00 peter Exp $";
-string month(int num);
+/* Japanese (Was Kanji) */
+/* Bugs by Marcus Comstedt <marcus@infovav.se> */
 
 /* Tip: put <header name="Content-type" value="text/html; charset=iso-2022-jp">
-   on the page since Netscape caches charsets. */
+ *      on the page since Netscape caches charsets.
+ */
+
+string cvs_version = "$Id: japanese.pike,v 1.4 1996/12/05 23:12:42 grubba Exp $";
+string month(int num);
+
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */
 
 string mknumber(int n)
@@ -112,6 +115,7 @@ string day(int num)
 
 array aliases()
 {
-  return ({ "kj", "kanji" });
+  return ({ "kj", "kanji", /* For backward compatibility */
+	    "jp", "japanese", "nihon-go" /* To keep Peter Evans happy */});
 }
 
