@@ -6,9 +6,6 @@
 <xmlpath>../translations/%L/roxen_config.xml</xmlpath>
 
 
-
-
-
 <!-- The rest of the files in this dir in the project 'admin_tasks' -->
 
 
@@ -25,15 +22,20 @@
   <file>../config_interface/standard/topmenu.pike</file>
   <file>../config_interface/standard/user_delete.pike</file>
   <file>../config_interface/standard/user_form.pike</file>
+  <file>../config_interface/standard/users.html</file>
   <file>../config_interface/standard/actions/index.html</file>
   <file>../config_interface/standard/event_log/clear_log.pike</file>
+  <file>../config_interface/standard/event_log/index.html</file>
   <file>../config_interface/standard/event_log/log.pike</file>
   <file>../config_interface/standard/sites/add_module.pike</file>
   <file>../config_interface/standard/sites/config_left_item.pike</file>
   <file>../config_interface/standard/sites/create_site.pike</file>
   <file>../config_interface/standard/sites/drop_module.pike</file>
+  <file>../config_interface/standard/sites/drop_site.html</file>
   <file>../config_interface/standard/sites/drop_site.pike</file>
+  <file>../config_interface/standard/sites/index.html</file>
   <file>../config_interface/standard/sites/log.pike</file>
+  <file>../config_interface/standard/sites/new_site.html</file>
   <file>../config_interface/standard/sites/site_content.pike</file>
   <file>../config_interface/standard/sites/site_header.pike</file>
   <file>../config_interface/standard/sites/site_templates/common.pike</file>

@@ -26,6 +26,7 @@
 <file>../config_interface/standard/topmenu.pike</file>
 <file>../config_interface/standard/user_delete.pike</file>
 <file>../config_interface/standard/user_form.pike</file>
+<file>../config_interface/standard/users.html</file>
 <file>../etc/modules/Variable.pmod/Date.pike</file>
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
@@ -1542,21 +1543,9 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="281">
-<new/>
-<o>Show module name and documentation with images.</o>
-<t></t>
-</str>
-
 <str id="282">
 <new/>
 <o>fast</o>
-<t></t>
-</str>
-
-<str id="283">
-<new/>
-<o>Like normal, but no type images.</o>
 <t></t>
 </str>
 
@@ -1566,33 +1555,15 @@ $user_id       -- A unique user ID, if cookies are supported,
 <t></t>
 </str>
 
-<str id="285">
-<new/>
-<o>Like normal, but allows selecting multiple modules at once.</o>
-<t></t>
-</str>
-
 <str id="286">
 <new/>
 <o>compact</o>
 <t></t>
 </str>
 
-<str id="287">
-<new/>
-<o>Only show the names of modules, and allow addition/deletion of multiple modules at once.</o>
-<t></t>
-</str>
-
 <str id="288">
 <new/>
 <o>really compact</o>
-<t></t>
-</str>
-
-<str id="289">
-<new/>
-<o>Like compact, but no module classes.</o>
 <t></t>
 </str>
 
@@ -1932,13 +1903,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <t></t>
 </str>
 
-<str id="327">
-<new/>
-<o>Internal error: Illegal sized array from verify_set_from_form
-</o>
-<t></t>
-</str>
-
 <str id="328">
 <new/>
 <o>Value is bigger than %s, adjusted</o>
@@ -2026,12 +1990,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <str id="342">
 <new/>
 <o>Warning: The protocol %s is not known by roxen</o>
-<t></t>
-</str>
-
-<str id="343">
-<new/>
-<o>Internal error: Illegal sized array from verify_set_from_form</o>
 <t></t>
 </str>
 
@@ -2134,5 +2092,41 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <str id="152">
 <new/>
 <o>%O is not an integer</o>
+<t></t>
+</str>
+
+<str id="153">
+<new/>
+<o>&lt;dl&gt;
+&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
+&lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
+&lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows selecting multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
+&lt;/dl&gt;</o>
+<t></t>
+</str>
+
+<str id="222">
+<new/>
+<o>Create new user</o>
+<t></t>
+</str>
+
+<str id="223">
+<new/>
+<o>Delete old user</o>
+<t></t>
+</str>
+
+<str id="224">
+<new/>
+<o>Create User</o>
+<t></t>
+</str>
+
+<str id="225">
+<new/>
+<o>User ID</o>
 <t></t>
 </str>
