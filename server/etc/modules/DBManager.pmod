@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.16 2001/08/09 12:43:04 per Exp $
+// $Id: DBManager.pmod,v 1.17 2001/08/09 12:51:17 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -74,7 +74,6 @@ private
   void changed()
   {
     changed_callbacks-=({0});
-
     clear_sql_caches();
     
     foreach( changed_callbacks, function cb )
@@ -508,10 +507,11 @@ int set_permission( string name, Configuration c, int level )
   query( "INSERT INTO db_permissions VALUES (%s,%s,%s)", name,c->name,
 	 (level?level==2?"write":"read":"none") );
   
-  connection_cache  = ([]);
-
   if( (int)d[0]["local"] )
     set_user_permissions( c, name, level );
+
+  clear_sql_caches();
+
   return 1;
 }
 
