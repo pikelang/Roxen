@@ -1,5 +1,5 @@
 // Roxen AutoMail POP3 Server
-// $Id: pop3.pike,v 1.5 1998/09/24 11:34:03 js Exp $
+// $Id: pop3.pike,v 1.6 1998/09/24 20:53:50 leif Exp $
 // Leif Stensson, September 1998.
 
 #include <module.h>
@@ -22,6 +22,8 @@ object clientlayer;
 array  CurrentSessions = ({ });
 
 int    serial;
+
+string last3_command, last2_command, last_command;
 
 void create ()
 { defvar(LISTENPORT, 110,
@@ -46,7 +48,7 @@ array register_module()
 }
 
 string status()
-{ string s = "<H2>Roxen AutoMail POP3 Server Status</H2>\n";
+{ string s = "<B>Roxen AutoMail POP3 Server Status</B><BR>\n";
 
   if (!clientlayer)
      s += "AutoMail Client Layer not found.<BR>\n";
@@ -55,6 +57,11 @@ string status()
      s += "Listening on port " + query(LISTENPORT) + ".<BR>\n";
   else 
      s += "Unable to bind port " + query(LISTENPORT) + ".<BR>\n";
+
+  s += "<B>Most recent commands</B>:<BR>\n";
+  s += "&nbsp;&nbsp;" + last3_command + "<BR>\n";
+  s += "&nbsp;&nbsp;" + last2_command + "<BR>\n";
+  s += "&nbsp;&nbsp;" + last_command  + "<BR>\n";
 
   return s;
 }
@@ -142,24 +149,23 @@ void retrieve_mail(mixed id, int msgno, int lines)
     { Stdio.FILE f = Stdio.FILE(); f->assign(f0);
       mixed s;
       id->clientport->write("+OK Mail data follows.\r\n");
-      while ((s = f->gets()) != 0)
-      {
-	s += "\n";
-        if (sizeof(s) > 0 && s[0] == '.')
+      while (stringp(s = f->gets()))
+      { if (sizeof(s) > 0 && s[0] == ".")
             s="."+s;
         id->clientport->write(s);
-        if (sizeof(s) < 2 || s[sizeof(s)-2..] != "\r\n")
-            id->clientport->write("\r\n");
-        if (s == "\n" || s == "\r\n" || s == "") break;
+        if (sizeof(s) > 0 && s[sizeof(s)-1..] == "\r")
+             id->clientport->write("\n");
+          else
+             id->clientport->write("\r\n");
       }
-      while ((s = f->gets()) != 0 && (--lines != -1))
-      {
-        s+="\n";
-	if (sizeof(s) > 0 && s[0] == '.')
+      while (stringp(s = f->gets()) && (--lines != -1))
+      { if (sizeof(s) > 0 && s[0] == ".")
             s="."+s;
         id->clientport->write(s);
-        if (sizeof(s) < 2 || s[sizeof(s)-2..] != "\r\n")
-            id->clientport->write("\r\n");
+        if (sizeof(s) > 0 && s[sizeof(s)-1..] == "\r")
+             id->clientport->write("\n");
+          else
+             id->clientport->write("\r\n");
       }
       id->clientport->write(".\r\n");
       return;
@@ -193,6 +199,12 @@ void client_read_callback(mixed id, string data)
   { string cmd = a[i];
 
     cmd = (cmd / "\n")[0];
+
+    if (sizeof(cmd) > 3) 
+    { last3_command = last2_command;
+      last2_command = last_command;
+      last_command  = cmd;
+    }
 
     if (i == sizeof(a)-1 && cmd != "")
     { /* incomplete command */
