@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.57 2004/05/21 04:07:24 jonasw Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.58 2004/05/21 04:22:54 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -517,7 +517,7 @@ javascript support.</p></desc>
  <p>The component to include. May be one of <tt>CrossPlatform.js</tt>,
  <tt>DragDrop.js</tt>, <tt>DynamicLoading.js</tt>, <tt>Popup.js</tt>
  or <tt>Scroll.js</tt>.</p>
-</attr>"
+</attr>
 <attr name='defer'>
  <p>Set to add the <tt>defer</tt> flag to the generated <tag>script</tag>
     tag. It's used to tell browsers that the referenced script doesn't
