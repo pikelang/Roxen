@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.137 1999/03/29 01:03:37 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.138 1999/03/29 01:45:31 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -222,8 +222,9 @@ class imap_mail
 
     if (msg->body_parts)
     {
-      a = Array.map(msg->body_parts, make_bodystructure, extension_data) + ({
-	imap_string(msg->subtype)
+      a = ({ Array.map(msg->body_parts, make_bodystructure,
+		       extension_data)->format()*"",
+	     imap_string(msg->subtype),
       });
       if (extension_data)
 	a += ({ mapping_to_list(msg->params),
@@ -326,17 +327,20 @@ class imap_mail
     }
 
     return
-      imap_list(Array.map(tokens,
-			  lambda(array(string|int) token) {
-			    mapping(string:string) addr =
-			      parse_address(token);
-			    return addr && imap_list( ({
-			      addr->name && string_to_imap(addr->name),
-			      0,
-			      addr->mailbox && string_to_imap(addr->mailbox),
-			      addr->domain && string_to_imap(addr->domain),
-			    }) );
-			  }));
+      imap_list(({
+	(Array.map(tokens,
+		   lambda(array(string|int) token) {
+		     mapping(string:string) addr =
+				  parse_address(token);
+		     return addr &&
+		       imap_list( ({
+			 addr->name && string_to_imap(addr->name),
+			 0,
+			 addr->mailbox && string_to_imap(addr->mailbox),
+			 addr->domain && string_to_imap(addr->domain),
+		       }) );
+		   }) - ({ 0 }))->format()*"",
+      }) );
   }
 
   string first_header(array|string v)
