@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.23 2001/04/26 14:20:56 nilsson Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.24 2001/05/22 20:10:46 nilsson Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -139,7 +139,7 @@ class VInputFrame {
       if(args->trim) 
         id->real_variables[args->name][0]
            = String.trim_all_whites(id->real_variables[args->name][0]);
-      var->set_from_form( id );
+      var->set_from_form( id, 1 );
     }
 
     mapping new_args=([]);
@@ -158,7 +158,7 @@ class VInputFrame {
     if(args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]])
       ok=1;
 
-    if( (!id->real_variables[args->name] && !id->misc->vform_objects[args->name]) ||
+    if(!id->real_variables[args->name] ||
        (args["ignore-if-false"] && !id->misc->vform_ok) ||
        id->real_variables["__reload"] ||
        id->real_variables["__clear"] ||
