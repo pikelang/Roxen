@@ -37,7 +37,7 @@ array list_state_consumers(object id) {
 
 string encode_state(object id) {
   if(!id->misc->state)
-    return "";
+    return 0;
   return encode_state4real(id->misc->state->values);
 }
 
@@ -47,13 +47,13 @@ private string encode_state4real(mapping state) {
   return MIME.encode_base64( gz->deflate()->deflate(from));
 }
 
-string get_state(string key, object id) {
+mixed get_state(string key, object id) {
   if(id->misc->state && id->misc->state->values[key])
     return id->misc->state->values[key];
-  return "";
+  return 0;
 }
 
-string alter_state(object id, string key, string value) {
+string alter_state(object id, string key, mixed value) {
   if(!id->misc->state)
     return "";
 
@@ -65,7 +65,7 @@ string alter_state(object id, string key, string value) {
   return encode_state4real(id->misc->state->values);
 }
 
-string preview_altered_state(object id, string key, string value) {
+string preview_altered_state(object id, string key, mixed value) {
   string ret="";
 
   if(!id->misc->state)
