@@ -1,5 +1,23 @@
+Changes since Roxen Challenger 1.3.121 Yellow
+-----------------------------------------------
+
+o Fixed the manual-server server template.
+
+o Ignore \r in .htaccess passwd and group files.
+
+Changes since Roxen Challenger 1.3.120 Yellow
+-----------------------------------------------
+
+o HTML-quoted the output from information tags in htmlparse that
+  weren't already doing that. (security fix)
+
+o Fixed fontlistings in wizards and config action.
+
 Changes since Roxen Challenger 1.3.115 Yellow
 -----------------------------------------------
+
+o Rigged the binary build-script to make binaries that work on
+  unpatched AIX4.2 and HPUX10.20 systems.
 
 o The SSI compat command, <!--#exec cgi="..."--> changed to not use
   the cache per default. If you do want to use the cache, use the
@@ -14,10 +32,12 @@ o Fixed start --version to acctually output the correct version.
 
 o Fixed ABS to print out the backtraces of all threds if engaged.
 
-o Added workaround in the CGI-module for systems that dont like
+o Added workaround in the CGI-module for systems that don't like
   negative UIDs/GIDs.
 
 o Fixed new "power by"-icons.
+
+o LDAP upgrades by Honza.
 
 o Made new manuals. Now includes the mythical programmers manual.
 
