@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.35 1999/04/30 11:28:34 js Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.36 1999/05/23 20:44:50 js Exp $";
 
 Image.image load_image(string f)
 {
@@ -161,7 +161,8 @@ Image.image draw_tab( object tab, object text, array(int) bgcolor )
 {
   text = text->scale( 0, tab->ysize()-2 );
   object i = Image.image( tab->xsize()*2 + text->xsize(), tab->ysize() );
-  tab *= bgcolor;
+  if(bgcolor)
+    tab *= bgcolor;
   i = i->paste( tab );
   i = i->paste( tab->mirrorx(), i->xsize()-tab->xsize(), 0 );
   object linje=tab->copy(tab->xsize()-1, 0, tab->xsize()-1, tab->ysize());
