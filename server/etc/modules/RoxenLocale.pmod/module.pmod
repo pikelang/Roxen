@@ -133,9 +133,10 @@ object get_object(string project, string lang) {
   if(!line)
     return 0;
 
-  function(string:string) decode=0;
+  // Check encoding
   sscanf(line, "%*sencoding=\"%s\"",string encoding);
   if(encoding && encoding!="") {
+    function(string:string) decode=0;
     switch(lower_case(encoding)) 
       {
       case "iso-8859-1":
@@ -169,14 +170,14 @@ object get_object(string project, string lang) {
 	    return dec->clear()->feed(s)->drain();
 	  };
       }
-  } else
-    data = line+data;
-
-  if(decode && catch( data = decode(data) )) {
-    werror("\n* Warning: unable to decode %O from %O\n",
-	   filename, encoding);
-    return 0;
+    if(decode && catch( data = decode(data) )) {
+      werror("\n* Warning: unable to decode from %O in %O\n",
+	     encoding, filename);
+      return 0;
+    }
   }
+  else
+    data = line+data;
 
   mapping(string:string) bindings=([]);
   mapping(string:function) functions=([]);
@@ -306,13 +307,13 @@ class DeferredLocale
       error(sprintf("Illegal formatting char '%c'\n", c));
     }
   }
-  string `+(mixed x)
+  string `+(mixed ... args)
   {
-    return lookup()+x;
+    return predef::`+(lookup(), @args);
   }
-  string ``+(mixed x)
+  string ``+(mixed ... args)
   {
-    return x+lookup();
+    return predef::`+(@args, lookup());
   }
   int _sizeof()
   {
