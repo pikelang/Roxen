@@ -5,12 +5,9 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.49 2000/03/09 09:05:18 mast Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.50 2000/03/25 02:28:11 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
-
-// Compatibility with old versions of the sqltag module.
-// #define SQL_TAG_COMPAT
 
 inherit "module";
 inherit "roxenlib";
@@ -86,58 +83,27 @@ constant tagdoc=([
 
 array|object do_sql_query(string tag, mapping args, RequestID id)
 {
+  string host = query("hostname");
+  if (args->host) {
+    host=args->host;
+    args->host="CENSORED";
+  }
+
   if (!args->query)
     RXML.parse_error("No query.");
 
   if (args->parse)
     args->query = parse_rxml(args->query, id);
 
-  string host = query("hostname");
   Sql.sql con;
   array(mapping(string:mixed)) result;
   function sql_connect = id->conf->sql_connect;
   mixed error;
 
-#ifdef SQL_TAG_COMPAT
-  string database = query("database");
-  string user = query("user");
-  string password = query("password");
-
-  if (args->host) {
-    host = args->host;
-    user = "";
-    password = "";
-  }
-  if (args->database) {
-    database = args->database;
-    user = "";
-    password = "";
-    sql_connect = 0;
-  }
-  if (args->user) {
-    user = args->user;
-    sql_connect = 0;
-  }
-  if (args->password) {
-    password = args->password;
-    sql_connect = 0;
-  }
-
-  if (sql_connect)
-    error = catch(con = sql_connect(host));
-  else {
-    host = (lower_case(host) == "localhost")?"":host;
-    error = catch(con = Sql.sql(host, database, user, password));
-  }
-#else
-  if (args->host)
-    host=args->host;
-
   if(sql_connect)
     error = catch(con = sql_connect(host));
   else
     error = catch(con = Sql.sql(lower_case(host)=="localhost"?"":host));
-#endif
 
   if (error)
     RXML.run_error("Couldn't connect to SQL server. "+html_encode_string(error[0]));
@@ -155,15 +121,15 @@ array|object do_sql_query(string tag, mapping args, RequestID id)
 
 // -------------------------------- Tag handlers ------------------------------------
 
-array|string container_sqloutput(string tag, mapping args, string contents,
-		    RequestID id)
+string simpletag_sqloutput(string tag, mapping args, string contents,
+			   RequestID id)
 {
   NOCACHE();
 
   array res=do_sql_query(tag, args, id);
 
   if (res && sizeof(res)) {
-    array ret = ({ do_output_tag(args, res, contents, id) });
+    string ret = do_output_tag(args, res, contents, id);
     id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
 
     if( args["rowinfo"] )
@@ -175,6 +141,10 @@ array|string container_sqloutput(string tag, mapping args, string contents,
   if (args["do-once"])
     return do_output_tag( args, ({([])}), contents, id )+ "<true>";
 
+  if(args->quiet) {
+    id->misc->defines[" _ok"] = 0;
+    return "";
+  }
   RXML.run_error("No SQL return values.");
 }
 
@@ -288,18 +258,6 @@ void create()
 	 "Valid values for \"sqlserver\" depend on which "
 	 "SQL servers your pike has support for, but the following "
 	 "might exist: msql, mysql, odbc, oracle, postgres.\n");
-
-#ifdef SQL_TAG_COMPAT
-  defvar("database", "", "Default SQL database (deprecated)",
-	 TYPE_STRING,
-	 "Specifies the name of the default SQL database.\n");
-  defvar("user", "", "Default username (deprecated)",
-	 TYPE_STRING,
-	 "Specifies the default username to use for access.\n");
-  defvar("password", "", "Default password (deprecated)",
-	 TYPE_STRING,
-	 "Specifies the default password to use for access.\n");
-#endif // SQL_TAG_COMPAT
 }
 
 
@@ -307,14 +265,8 @@ void create()
 
 void start(int level, object _conf)
 {
-  if (_conf) {
+  if (_conf)
     conf = _conf;
-  }
-//add_api_function("sql_query", api_sql_query, ({ "string", 0,"int" }));
-}
-
-void stop()
-{
 }
 
 string status()
@@ -324,17 +276,13 @@ string status()
     if (conf->sql_connect)
       o = conf->sql_connect(QUERY(hostname));
     else
-      o = Sql.sql(QUERY(hostname)
-#ifdef SQL_TAG_COMPAT
-		  , QUERY(database), QUERY(user), QUERY(password)
-#endif // SQL_TAG_COMPAT
-		 );
-    return(sprintf("Connected to %s server on %s<br>\n",
+      o = Sql.sql(QUERY(hostname));
+
+    return(sprintf("Connected to %s server on %s<br />\n",
 		   o->server_info(), o->host_info()));
   })
     return
-      "<font color=red>Not connected:</font> " +
-      replace (html_encode_string (describe_error(err)), "\n", "<br>\n") +
-      "<br>\n";
+      "<font color=\"red\">Not connected:</font> " +
+      replace (html_encode_string (describe_error(err)), "\n", "<br />\n") +
+      "<br />\n";
 }
-
