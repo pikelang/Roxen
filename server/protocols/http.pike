@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.160 1999/10/08 11:47:34 grubba Exp $
+// $Id: http.pike,v 1.161 1999/10/08 17:22:53 per Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.160 1999/10/08 11:47:34 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.161 1999/10/08 17:22:53 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -853,7 +853,7 @@ string format_backtrace(array bt, int eid)
   // first entry is always the error, 
   // second is the actual function, 
   // rest is backtrace.
-
+  bt = map( bt, html_encode_string );
   string reason = roxen.diagnose_error( bt );
   if(sizeof(bt) == 1) // No backtrace?!
     bt += ({ "Unknown error, no backtrace."});
@@ -876,7 +876,8 @@ string format_backtrace(array bt, int eid)
 		"<img alt=\"\" hspace=10 align=left src="+
 		(conf?"/internal-roxen-":"/img/") +"manual-warning.gif>"
 		+bt[0]+"</font><br>\n"
-		"The error occured while calling <b>"+bt[1]+"</b><p>\n"
+		"The error occured while calling <b>"+
+                bt[1]+"</b><p>\n"
 		+(reason?reason+"<p>":"")
 		+"<br><h3><br>Complete Backtrace:</h3>\n\n<ol>");
 
