@@ -30,6 +30,12 @@ static string findjre()
   dir =
     (Process.popen("java -verbose 2>&1 | sed -n -e 's/^[^/]*//' -e "
 		   "'s:/lib/rt\\.jar.*$::' -e p -e q")||"")-"\n";  
+
+  //  Mac OS X uses a non-standard directory
+  if (has_value(dir, "JavaVM.framework"))
+    return "/System/Library/Frameworks/JavaVM.framework/Versions/"
+      "CurrentJDK/Home/";
+
   if(check_jre_dir(dir))
     return dir;
   foreach(`+(@Array.map(({"/usr/local", "/usr", "/usr/java"}),
@@ -90,5 +96,5 @@ void run(object env)
 
   //  Only add _JAVA_OPTIONS if user hasn't got it already
   if (!env->get("_JAVA_OPTIONS"))
-    env->set("_JAVA_OPTIONS", "\"-Xmx256m\"");
+    env->set("_JAVA_OPTIONS", "\"-Xmx256m -Xrs\"");
 }
