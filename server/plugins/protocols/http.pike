@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.376 2002/07/03 19:23:57 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.377 2002/07/04 09:20:07 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -358,6 +358,7 @@ void start_sender( )
     pipe->set_throttler( throttler || conf->throttler );
   pipe->set_done_callback( do_log );
   pipe->start( );
+  pipe = 0;
 }
 
 string scan_for_query( string f )
