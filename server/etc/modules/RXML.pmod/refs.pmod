@@ -11,7 +11,6 @@ void create()
     "empty_tag_set",
     class {
 	inherit RXML.TagSet;
-	void create() {}
 	void add_tag (RXML.Tag t)
 	  {RXML.fatal_error ("Trying to change the empty tag set.\n");}
 	void add_tags (array(RXML.Tag) ts)
@@ -26,5 +25,5 @@ void create()
 	  {RXML.fatal_error ("Trying to change the empty tag set.\n");}
 	void changed()
 	  {RXML.fatal_error ("Trying to change the empty tag set.\n");}
-      }());
+      } (0));
 }

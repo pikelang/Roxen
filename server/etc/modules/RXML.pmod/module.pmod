@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.185 2001/06/29 15:11:30 mast Exp $
+// $Id: module.pmod,v 1.186 2001/06/30 15:47:09 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -552,7 +552,12 @@ class TagSet
   {
     id_number = ++tag_set_count;
     if (_name) {
-      if (!zero_type (all_tagsets[_name])) {
+      if (zero_type (all_tagsets[_name]) ||
+	  (gc() && zero_type (all_tagsets[_name])))
+	// Have to try to gc here to remove the old tag set object in
+	// case the only ref left to it is through all_tagsets.
+	all_tagsets[name = _name] = this_object();
+      else {
 	report_warning ("The tag set name %O is not unique - ignoring it.\n", _name);
 	if (TagSet other = all_tagsets[_name]) {
 	  // The already registered name is ambigious anyway.
@@ -560,8 +565,6 @@ class TagSet
 	  all_tagsets[_name] = 0;
 	}
       }
-      else
-	all_tagsets[name = _name] = this_object();
     }
     if (_tags) add_tags (_tags);
 #ifdef RXML_OBJ_DEBUG
@@ -4212,8 +4215,7 @@ void register_parser (program/*(Parser)*/ parser_prog)
 {
 #ifdef DEBUG
   if (!stringp (parser_prog->name))
-    error ("Parser %s lacks name.\n",
-	   __builtin.program_defined (parser_prog));
+    error ("Parser %s lacks name.\n", Program.defined (parser_prog));
 #endif
   if (zero_type (reg_parsers[parser_prog->name]))
     reg_parsers[parser_prog->name] = parser_prog;
@@ -4221,8 +4223,8 @@ void register_parser (program/*(Parser)*/ parser_prog)
     error ("Cannot register duplicate parser %O.\n"
 	   "Old parser program is %s,\n"
 	   "New parser program is %s.\n", parser_prog->name,
-	   __builtin.program_defined (reg_parsers[parser_prog->name]),
-	   __builtin.program_defined (parser_prog));
+	   Program.defined (reg_parsers[parser_prog->name]),
+	   Program.defined (parser_prog));
 }
 
 class TagSetParser
@@ -6051,36 +6053,8 @@ static class PCodec
 {
   object objectof(string|array what)
   {
-    if (stringp (what)) {
-      ENCODE_MSG ("objectof (%O)\n", what);
-      switch (what) {
-	case "nil": return nil;
-	case "utils": return utils;
-	case "xml_tag_parser": return xml_tag_parser;
-      }
-
-      if (sscanf (what, "ts:%s", what)) {
-	if (TagSet tag_set = all_tagsets[what])
-	  return tag_set;
-	error ("Cannot find tag set %O.\n", what);
-      }
-      else if (sscanf (what, "t:%*c%s\n%s", what, string t, string ts)) {
-      }
-      else if(sscanf (what, "mod:%s", what)) {
-	if (object/*(RoxenModule)*/ mod = Roxen->get_module(what))
-	  return mod;
-	error ("Cannot find module %O.\n", what);
-      }
-      else if (sscanf (what, "c:%s", what)) {
-	mixed efun;
-	if (objectp (efun = all_constants()[what]))
-	  return efun;
-	error ("Cannot find global constant object %O.\n", what);
-      }
-    }
-
-    else if (arrayp (what) && sizeof (what)) {
-      ENCODE_MSG ("objectof (%{%O, %})\n", what);
+    if (arrayp (what) && sizeof (what)) {
+      ENCODE_MSG ("objectof (({%{%O, %}}))\n", what);
       switch (what[0]) {
 	case "tag": {
 	  [string ignored, string ts, int proc_instr, string t] = what;
@@ -6098,12 +6072,53 @@ static class PCodec
       }
     }
 
+    else {
+      ENCODE_MSG ("objectof (%O)\n", what);
+      switch (what) {
+	case "nil": return nil;
+	case "utils": return utils;
+	case "xml_tag_parser": return xml_tag_parser;
+      }
+
+      if (sscanf (what, "ts:%s", what)) {
+	if (TagSet tag_set = all_tagsets[what])
+	  return tag_set;
+	error ("Cannot find tag set %O.\n", what);
+      }
+      else if(sscanf (what, "mod:%s", what)) {
+	if (object/*(RoxenModule)*/ mod = Roxen->get_module(what))
+	  return mod;
+	error ("Cannot find module %O.\n", what);
+      }
+      else if (sscanf (what, "c:%s", what)) {
+	mixed efun;
+	if (objectp (efun = all_constants()[what]))
+	  return efun;
+	error ("Cannot find global constant object %O.\n", what);
+      }
+    }
+
     error ("Cannot decode object %O.\n", what);
   }
 
   function functionof(string|array what)
   {
-    if (stringp (what)) {
+    if (arrayp (what)) {
+      ENCODE_MSG ("functionof (({%{%O, %}}))\n", what);
+      if (what[0] == "tag") {
+	[string ignored, string ts, int proc_instr, string t] = what;
+	TagSet tagset;
+	Tag tag;
+	if ((tagset = all_tagsets[ts]) &&
+	    (tag = tagset->get_local_tag(t, proc_instr)))
+	  return tag->`();
+	error ("Cannot find %s %O in tag set %O.\n",
+	       proc_instr ? "processing instruction" : "tag",
+	       t, tagset || ts);
+      }
+    }
+
+    else {
       ENCODE_MSG ("functionof (%O)\n", what);
       switch (what) {
 	case "PCode": return PCode;
@@ -6121,21 +6136,6 @@ static class PCodec
 	if (functionp (efun = all_constants()[what]))
 	  return efun;
 	error ("Cannot find global constant function %O.\n", what);
-      }
-    }
-
-    else if (arrayp (what)) {
-      ENCODE_MSG ("functionof (%{%O, %})\n", what);
-      if (what[0] == "tag") {
-	[string ignored, string ts, int proc_instr, string t] = what;
-	TagSet tagset;
-	Tag tag;
-	if ((tagset = all_tagsets[ts]) &&
-	    (tag = tagset->get_local_tag(t, proc_instr)))
-	  return tag->`();
-	error ("Cannot find %s %O in tag set %O.\n",
-	       proc_instr ? "processing instruction" : "tag",
-	       t, tagset || ts);
       }
     }
 
@@ -6197,7 +6197,7 @@ static class PCodec
 	error ("Cannot encode unnamed tag set %O.\n", what);
       }
       else if (what->is_RXML_Type)
-	return ({"type", what->name, what->parser_prog, @what->parser_args});
+	return ({"type", what->name, what->parser_prog}) + what->parser_args;
       else if(string modname = what->is_module && what->module_identifier())
 	return "mod:"+modname;
       else if(what == nil)
@@ -6228,8 +6228,7 @@ static class PCodec
 	  return id;
 	}
 	else if (what->is_RXML_pike_code) {
-	  ENCODE_MSG ("encoding byte code for %s\n",
-		      __builtin.program_defined (what));
+	  ENCODE_MSG ("encoding byte code for %s\n", Program.defined (what));
 	  return ([])[0];
 	}
 	else if (what->is_RXML_Parser) {
@@ -6263,7 +6262,7 @@ static class PCodec
     }
 
     if (programp (what))
-      error("Cannot encode program %s.\n", __builtin.program_defined (what));
+      error("Cannot encode program %s.\n", Program.defined (what));
     else
       error ("Cannot encode %O.\n", what);
   }
