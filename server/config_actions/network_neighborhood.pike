@@ -48,7 +48,10 @@ string page_0()
 		 { return neighborhood[s]->host+":"+
 		          getpwuid(neighborhood[s]->uid)[0]+":"+
 		          neighborhood[s]->config_url; }), sn);
-  return html_table(({"Config URL", "User", "Host", "Uptime",
+  return "A red line indicates that the server is constantly restarting. "
+	  "A orange line indicates that the server is not sending any "
+	  "information about its presence anymore.<p>" +
+          html_table(({"Config URL", "User", "Host", "Uptime",
 		      "Last Reboot","Version", /*({"Server info"})*/}),
 		    Array.map(sn, lambda(string s) {
      mapping ns = neighborhood[s];
@@ -69,9 +72,7 @@ string page_0()
 	       RE+roxen->language("en","date")(ns->last_reboot)+ER,
 	       RE+sv(ns->version)+ER
      });
-    })) + "<p>A red line indicates that the server is constantly restarting. "
-	  "A orange line indicates that the server is not sending any "
-	  "information about presence anymore.";
+    }));
 }
 
 mixed handle(object id)
