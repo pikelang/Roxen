@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.103 1998/09/15 20:47:13 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.104 1998/10/02 15:16:44 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -146,12 +146,6 @@ void create()
 	 "PRESTATE_name: True if the prestate is present<br>"
 	 "PRESTATES: A space separated list of all states");
 
-#if 0
-  // This is not needed anymore, due to the "frontpage" module.
-  defvar("ApacheBugCompliance", 0, "Apache Bug Compliance", TYPE_FLAG|VAR_MORE,
-	 "If defined, Roxen will attempt to be a bit more bug-compliant "
-	 "with Apache.");
-#endif /* 0 */
   defvar("mountpoint", "/cgi-bin/", "CGI-bin path", TYPE_LOCATION, 
 	 "This is where the module will be inserted in the "
 	 "namespace of your server. The module will, per default, also"
@@ -218,6 +212,12 @@ void create()
 	 "%d    Date  (i.e. '10' for the tenth)\n"
 	 "%h    Hour  (i.e. '00')\n</pre>", 0,
 	 lambda() { if(QUERY(stderr) != "custom log file") return 1; });
+
+  defvar("virtual_cgi", 0, "Support dynamically generated CGI scripts",
+	 TYPE_FLAG|VAR_EXPERT,
+	 "If set, attempt to execute CGI's that only exist as virtual "
+	 "files, by copying them to /tmp/.<br>\n"
+	 "Not recomended.");
 
   defvar("rawauth", 0, "Raw user info", TYPE_FLAG|VAR_MORE,
 	 "If set, the raw, unparsed, user info will be sent to the script, "
@@ -316,7 +316,7 @@ void create()
 mixed *register_module()
 {
   return ({ 
-    MODULE_LAST | MODULE_LOCATION | MODULE_FILE_EXTENSION,
+    MODULE_LOCATION | MODULE_FILE_EXTENSION,
     "CGI executable support", 
     "Support for the <a href=\"http://hoohoo.ncsa.uiuc.edu/docs/cgi/"
       "interface.html\">CGI/1.1 interface</a>, and more. It is too bad "
@@ -342,6 +342,8 @@ void start(int n, object conf)
 
   if(!conf) conf=roxen->current_configuration;
   if(!conf) return;
+
+  module_dependencies(conf, ({ "pathinfo" }));
 
   init_log_file();
 
@@ -433,37 +435,6 @@ array find_dir(string f, object id)
     return get_dir(search_path+f);
 }
 
-
-array extract_path_info(string f, string path)
-{
-  string hmm, tmp_path=path, path_info="";
-  int found = 0;
-  
-  foreach(f/"/", hmm)
-  {
-    if(!found)
-    {
-      switch(file_size(tmp_path + hmm))
-      {
-       case -1:
-	return 0;
-
-       case -2:
-	 tmp_path += hmm + "/";
-	break;
-	
-       default:
-	f = tmp_path + hmm;
-	found = 1;
-	break;
-      }
-    } else {
-      path_info += "/" + hmm;
-    }
-  }
-  if(!found)  return 0;
-  return ({ path_info, f });
-}
 
 class spawn_cgi
 {
@@ -835,22 +806,34 @@ mixed low_find_file(string f, object id, string path)
   NOCACHE();
 
 #ifdef CGI_DEBUG
-  roxen_perror("CGI: find_file(\"" + f + "\")...\n");
+  roxen_perror(sprintf("CGI: find_file(%O, X, %O)...\n", f, path));
 #endif /* CGI_DEBUG */
 
-  if(id->misc->path_info && strlen(id->misc->path_info))
-    // From last_try code below..
+  if (sizeof(path) && (path[-1] != '/')) {
+    f = path + "/" + f;
+  } else {
+    f = path + f;
+  }
+
+#ifdef CGI_DEBUG
+  roxen_perror("CGI: => f = \"" + f + "\"\n");
+#endif /* CGI_DEBUG */
+
+  if(id->misc->path_info)
+    // From the PATH_INFO last-try module.
     path_info = id->misc->path_info;
   else 
   {
-    if(!(tmp2 = extract_path_info( f, path )))
-    {
-      if(file_size( path + f ) == -2)
-	return -1; // It's a directory...
-      return 0;
+    int sz;
+    if((sz = file_size( f )) < 0) {
+      return (sz == -2)?-1:0; // It's a directory...
+    } else if (f[-1] == '/') {
+      // Special case.
+      // Most UNIXen ignore the trailing /
+      // but we have to make path-info out of it.
+      path_info = "/";
+      f = f[..sizeof(f)-2];
     }
-    path_info = tmp2[0];
-    f = tmp2[1];
   }
   
 #ifdef CGI_DEBUG
@@ -1047,19 +1030,27 @@ mapping handle_file_extension(object o, string e, object id)
     path=c[0..sizeof(c)-2]*"/" + "/";
 
     //  use full path in case of path_info                         1-Nov-96-wk
-    if(id->misc->path_info)
-      err=catch(toret = low_find_file(id->realfile, id, path));
-    else
-      err=catch(toret = low_find_file(c[-1], id, path));
+    // FIXME: Why?	/grubba 1998-10-02
+    // if(id->misc->path_info)
+    //   err=catch(toret = low_find_file(id->realfile, id, path));
+    // else
+    err=catch(toret = low_find_file(c[-1], id, path));
 
     if(err) throw(err);
     return toret;
   }
 
-  // Fallback for odd location modules that does not set the
+  if (!QUERY(virtual_cgi))
+    return 0;
+
+  // Fallback for odd location modules that do not set the
   // realfile entry in the id object.
   // This could be useful when the data is not really a file, but instead
   // generated internally, or if it is a socket.
+
+  // FIXME: This should probably use a configurable directory
+  // instead of /tmp/ but I don't think this code has ever been
+  // used.	/grubba 1998-10-02
 #ifdef CGI_DEBUG
   roxen_perror("CGI: Handling "+e+" by copying to /tmp/....\n");
 #endif
@@ -1082,33 +1073,4 @@ mapping handle_file_extension(object o, string e, object id)
 
   if(err) throw(err);
   return toret;
-}
-
-mapping last_resort(object id)
-{
-  if(QUERY(ex)) // Handle path_info for *.ext files as well.
-  {            // but only if extensions are used.
-    string a, b, e;
-    object fid; // As in fake id.. :-)
-    mapping res;
-
-    foreach(query_file_extensions(), e)
-    {
-      if(strlen(e) && sscanf(id->not_query, "%s."+e+"%s", a, b))
-      {
-#ifdef CGI_DEBUG
-	roxen_perror(sprintf("CGI: %O has extension %O with a:%O and b:%O\n",
-			     id->not_query, e, a, b));
-#endif /* CGI_DEBUG */
-	if (sizeof(b) && !((<'?','/'>)[b[0]])) {
-	  continue;
-	}
-	fid = id->clone_me();
-	fid->not_query = a+"."+e;
-	fid->misc->path_info = b;
-	res = id->conf->get_file(fid); // Recurse.
-	if(res) return res;
-      }
-    }
-  }
 }
