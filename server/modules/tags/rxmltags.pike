@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.380 2002/06/18 11:17:12 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.381 2002/06/24 11:30:03 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -75,13 +75,15 @@ private object compile_handler = class {
   }();
 
 
-string sexpr_eval(string what)
+string|int|float sexpr_eval(string what)
 {
   what -= "lambda";
   what -= "\"";
   what -= ";";
-  return compile_string( "int|float foo=" + what + ";",
-			 0, compile_handler )()->foo;
+  int|float res = compile_string( "int|float foo=" + what + ";",
+				  0, compile_handler )()->foo;
+  if (compat_level < 2.2) return (string) res;
+  else return res;
 }
 
 #if ROXEN_COMPAT <= 1.3
@@ -4317,6 +4319,18 @@ class IfIs
 
   int(0..1) do_check( string var, array arr, RequestID id) {
     if(sizeof(arr)<2) return !!var;
+
+    // var is typically zero here for unset variables and those with
+    // the integer value zero (see note in TagIfVariable). By doing
+    // the below they're compared as the empty string which is
+    // arguably wrong. It's also a compatibility issue, e.g.
+    //
+    //     <if variable="var.x is ">
+    //
+    // is true in 2.2 if var.x is unset, while it's false in 2.1
+    // (which also is the correct thing imho). This is hard to fix at
+    // this point since the de-facto API for sources can return zero
+    // to get it to behave as the empty string.
     if(!var) var = "";
 
     string is;
@@ -4809,8 +4823,12 @@ class TagIfVariable {
   constant plugin_name = "variable";
   constant cache = 1;
   string source(RequestID id, string s) {
-    mixed var;
-    if (zero_type (var = RXML.user_get_var(s))) return 0;
+    mixed var=RXML.user_get_var(s);
+    // The check below makes it impossible to tell the value 0 from an
+    // unset variable. It should be zero_type(var), but there are
+    // compatibility problems if it's changed. It's not certain it's
+    // worth the hassle to get the correct behavior. /mast
+    if (!var) return 0;
     if(arrayp(var)) return var;
     return RXML.t_text->encode (var);
   }
