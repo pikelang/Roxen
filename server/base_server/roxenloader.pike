@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.326 2002/06/03 20:36:11 per Exp $
+// $Id: roxenloader.pike,v 1.327 2002/06/04 23:44:05 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.326 2002/06/03 20:36:11 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.327 2002/06/04 23:44:05 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1144,16 +1144,6 @@ int main(int argc, array(string) argv)
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
   Protocols.HTTP; // FIXME: Workaround for bug 2637.
 
-#if __VERSION__ < 7.2
-    report_debug(
-#"
-------- FATAL -------------------------------------------------
-Roxen 2.4 should be run with Pike 7.2.
----------------------------------------------------------------
-");
-	exit(1);
-#endif
-
   // (. Note: Optimal implementation. .)
   array av = copy_value( argv );
   configuration_dir =
@@ -1989,20 +1979,20 @@ some environment variables are ignored.
 ");
 #endif
 
-#if __VERSION__ < 7.2
+#if __VERSION__ < 7.3
   report_debug(
 #"
 
 
 ******************************************************
-Roxen 2.4 requires pike 7.2.
+Roxen 2.4 requires pike 7.3.
 Please install a newer version of Pike.
 ******************************************************
 
 
 ");
   _exit(0); /* 0 means stop start script looping */
-#endif /* __VERSION__ < 7.2 */
+#endif /* __VERSION__ < 7.3 */
 
 #if !constant (Mysql.mysql)
   report_debug (#"
@@ -2024,7 +2014,6 @@ and rebuild Pike from scratch.
   string path = make_path("base_server", "etc/include", ".");
   last_was_nl = 1;
   report_debug("-"*58+"\n"+version()+", Roxen WebServer "+roxen_version()+"\n");
-//   report_debug("Roxen loader version "+(cvs_version/" ")[2]+"\n");
   master()->putenv("PIKE_INCLUDE_PATH", path);
   foreach(path/":", string p) {
     add_include_path(p);
