@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.689 2001/08/09 07:57:14 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.690 2001/08/09 09:21:43 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2621,7 +2621,6 @@ class ImageCache
   {
     array q;
     string uid;
-
     if( zero_type(uid = uid_cache[id]) )
     {
       q = QUERY( "SELECT uid FROM "+name+" WHERE id=%s",id);
@@ -2632,7 +2631,7 @@ class ImageCache
       uid_cache[id] = uid;
     }
 
-    if( uid )
+    if( uid && strlen(uid) )
     {
       User u;
       if( !(u=rid->conf->authenticate(rid)) || (u->name() != uid ) )
@@ -2642,7 +2641,6 @@ class ImageCache
 
     if( rst_cache[ id ] )
       return rst_cache[ id ] + ([]);
-
 
     q = QUERY( "SELECT data FROM "+name+" WHERE id=%s",id);
     if( sizeof(q) )
