@@ -6,7 +6,7 @@ inherit "roxenlib";
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.19 2001/03/13 15:13:54 leif Exp $";
+       "$Id: perl.pike,v 2.20 2001/08/08 12:40:53 leif Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -152,7 +152,8 @@ void start()
 }
 
 mixed handle_file_extension(Stdio.File file, string ext, object id)
-{ object h = gethandler();
+{
+  object h = gethandler();
 
   if (id->realfile && stringp(id->realfile))
   { array result;
@@ -199,9 +200,14 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
     }
   }
 
-  return http_string_answer("FOO!");
-
+#if 1
+  return http_string_answer("Script file not accessible in this filesystem "
+			    "(no real file).");
+#else
+  // Possible security leak allowing people to read the contents
+  // of script files.
   return 0;
+#endif
 }
 
 constant simpletag_perl_flags = 0;
