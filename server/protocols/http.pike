@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.284 2000/11/22 07:11:30 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.285 2000/12/04 22:31:10 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1970,7 +1970,7 @@ void adjust_for_config_path( string p )
 {
   if( not_query )  not_query = not_query[ strlen(p).. ];
   raw_url = raw_url[ strlen(p).. ];
-  misc->stite_prefix_path = p;
+  misc->site_prefix_path = p;
 }
 
 /* We got some data on a socket.
