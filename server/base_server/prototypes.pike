@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.108 2004/05/06 18:24:50 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.109 2004/05/07 11:52:51 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -160,11 +160,11 @@ class ModuleCopies
 }
 
 // Simulate an import of useful stuff from Parser.XML.Tree.
-static constant Node = Parser.XML.Tree.Node;
-static constant RootNode = Parser.XML.Tree.RootNode;
-static constant HeaderNode = Parser.XML.Tree.HeaderNode;
-static constant TextNode = Parser.XML.Tree.TextNode;
-static constant ElementNode = Parser.XML.Tree.ElementNode;
+static constant SimpleNode = Parser.XML.Tree.SimpleNode;
+static constant SimpleRootNode = Parser.XML.Tree.SimpleRootNode;
+static constant SimpleHeaderNode = Parser.XML.Tree.SimpleHeaderNode;
+static constant SimpleTextNode = Parser.XML.Tree.SimpleTextNode;
+static constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
 
 //! Container for information about an outstanding DAV lock. No field
 //! except @[owner] may change after the object has been created since
@@ -189,7 +189,7 @@ class DAVLock(
   //! @expr{1@} if the lock applies to all resources under @[path],
   //! @expr{0@} if it applies to @[path] only.
 
-  string|Node lockscope,
+  string|SimpleNode lockscope,
   //! The lock scope (RFC 2518 12.7). As a special case, if it only is
   //! an empty element without attributes then the element name is
   //! stored as a string.
@@ -198,7 +198,7 @@ class DAVLock(
   //! RFC 2518 specifies the lock scopes @expr{"DAV:exclusive"@} and
   //! @expr{"DAV:shared"@}.
 
-  string|Node locktype,
+  string|SimpleNode locktype,
   //! The lock type (RFC 2518 12.8). As a special case, if it only is
   //! an empty element without attributes then the element name is
   //! stored as a string.
@@ -206,7 +206,7 @@ class DAVLock(
   //! @note
   //! RFC 2518 only specifies the lock type @expr{"DAV:write"@}.
 
-  void|array(Node) owner,
+  void|array(SimpleNode) owner,
   //! The owner identification (RFC 2518 12.10), or zero if unknown.
   //! More precisely, it's the children of the @expr{"DAV:owner"@}
   //! element.
@@ -216,29 +216,32 @@ class DAVLock(
 )
 {
 
-  //! Returns a DAV:activelock @[Parser.XML.Tree.Node] structure
+  //! Returns a DAV:activelock @[Parser.XML.Tree.SimpleNode] structure
   //! describing the lock.
-  Node get_xml()
+  SimpleNode get_xml()
   {
-    ElementNode res = ElementNode("DAV:activelock", ([]));
-    ElementNode tmp;
-    res->add_child(tmp = ElementNode("DAV:locktype", ([])));
-    tmp->add_child(stringp(locktype)?ElementNode(locktype, ([])):locktype);
-    res->add_child(tmp = ElementNode("DAV:lockscope", ([])));
-    tmp->add_child(stringp(lockscope)?ElementNode(lockscope, ([])):lockscope);
-    res->add_child(tmp = ElementNode("DAV:depth", ([])));
-    tmp->add_child(recursive?TextNode("Infinity"):TextNode("0"));
+    SimpleElementNode res = SimpleElementNode("DAV:activelock", ([]))->
+      add_child(SimpleElementNode("DAV:locktype", ([]))->
+		add_child(stringp(locktype)?
+			  SimpleElementNode(locktype, ([])):locktype))->
+      add_child(SimpleElementNode("DAV:lockscope", ([]))->
+		add_child(stringp(lockscope)?
+			  SimpleElementNode(lockscope, ([])):lockscope))->
+      add_child(SimpleElementNode("DAV:depth", ([]))->
+		add_child(recursive?
+			  SimpleTextNode("Infinity"):SimpleTextNode("0")));
 
     if (owner) {
-      res->add_child(tmp = ElementNode("DAV:owner", ([])));
-      tmp->replace_children (owner);
+      SimpleElementNode node;
+      res->add_child(node = SimpleElementNode("DAV:owner", ([])));
+      node->replace_children(owner);
     }
 
     // FIXME: <DAV:timeout>.
 
-    res->add_child(tmp = ElementNode("DAV:locktoken", ([])));
-    tmp->add_child(tmp = ElementNode("DAV:href", ([])));
-    tmp->add_child(TextNode(locktoken));
+    res->add_child(SimpleElementNode("DAV:locktoken", ([]))->
+		   add_child(SimpleElementNode("DAV:href", ([]))->
+			     add_child(SimpleTextNode(locktoken))));
 
     return res;
   }
@@ -795,16 +798,19 @@ class RequestID
   static void create(Stdio.File fd, Protocol port, Configuration conf){}
   void send(string|object what, int|void len){}
 
-  static Parser.XML.Tree.Node xml_data;	// XML data for the request.
+  static SimpleNode xml_data;	// XML data for the request.
 
-  Parser.XML.Tree.Node get_xml_data()
+  SimpleNode get_xml_data()
   {
     if (!sizeof(data)) return 0;
     if (xml_data) return xml_data;
     // FIXME: Probably ought to check that the content-type for
     //        the request is text/xml.
     DAV_WERROR("Parsing XML data: %O\n", data);
-    return xml_data = Parser.XML.Tree.parse_input(data, 0, 0, 0, 1);
+    return xml_data =
+      Parser.XML.Tree.simple_parse_input(data,
+					 0,
+					 Parser.XML.Tree.PARSE_ENABLE_NAMESPACES);
   }
 
   // Parsed if-header for the request.
@@ -1442,18 +1448,18 @@ class MultiStatusStatus (int http_code, void|string message)
 {
   constant is_status = 1;
 
-  void build_response (ElementNode response_node)
+  void build_response (SimpleElementNode response_node)
   {
-    ElementNode node = ElementNode("DAV:status", ([]));
+    SimpleElementNode node = SimpleElementNode("DAV:status", ([]));
     response_node->add_child (node);
     // No use wasting space on a good message in the status node since
     // we have it in the responsedescription instead.
-    node->add_child(TextNode(sprintf("HTTP/1.1 %d ", http_code)));
+    node->add_child(SimpleTextNode(sprintf("HTTP/1.1 %d ", http_code)));
 
     if (message) {
-      node = ElementNode ("DAV:responsedescription", ([]));
+      node = SimpleElementNode ("DAV:responsedescription", ([]));
       response_node->add_child (node);
-      node->add_child (TextNode (message));
+      node->add_child (SimpleTextNode (message));
     }
   }
 
@@ -1477,30 +1483,30 @@ class MultiStatusStatus (int http_code, void|string message)
   }
 }
 
-private ElementNode ok_status_node =
+private SimpleElementNode ok_status_node =
   lambda () {
-    ElementNode node = ElementNode ("DAV:status", ([]));
-    node->add_child (TextNode ("HTTP/1.1 200 OK"));
-    return node;
+    return SimpleElementNode("DAV:status", ([]))->
+      add_child(SimpleTextNode("HTTP/1.1 200 OK"));
   }();
 
 class MultiStatusPropStat
 {
   constant is_prop_stat = 1;
 
-  mapping(string:string|Node|array(Node)|MultiStatusStatus) properties = ([]);
+  mapping(string:string|SimpleNode|array(SimpleNode)|MultiStatusStatus)
+    properties = ([]);
   //! The property settings. Indexed on property name (with complete
   //! XML namespace). Values are:
   //!
   //! @mixed
-  //!   @type array(Node)
+  //!   @type array(SimpleNode)
   //!     The property value as a sequence of XML nodes. These nodes
   //!     are used as children to the property nodes in the DAV
   //!     protocol.
-  //!   @type Node
+  //!   @type SimpleNode
   //!     Same as an array containing only this node.
   //!   @type string
-  //!     Same as a single @[Parser.XML.Tree.TextNode] with this value.
+  //!     Same as a single @[Parser.XML.Tree.SimpleTextNode] with this value.
   //!   @type int(0..0)
   //!     The property exists but has no value.
   //!   @type MultiStatusStatus
@@ -1508,19 +1514,20 @@ class MultiStatusPropStat
   //!     status it generated instead of a value.
   //! @endmixed
 
-  void build_response (ElementNode response_node)
+  void build_response (SimpleElementNode response_node)
   {
-    ElementNode ok_prop_node = ElementNode ("DAV:prop", ([]));
-    mapping(MultiStatusStatus:Node) prop_nodes = ([]);
+    SimpleElementNode ok_prop_node = SimpleElementNode("DAV:prop", ([]));
+    mapping(MultiStatusStatus:SimpleNode) prop_nodes = ([]);
 
     foreach (properties;
-	     string prop_name; string|Node|array(Node)|MultiStatusStatus value) {
+	     string prop_name;
+	     string|SimpleNode|array(SimpleNode)|MultiStatusStatus value) {
       if (objectp (value) && value->is_status) {
 	// Group together failed properties according to status codes.
-	Node prop_node = prop_nodes[value];
+	SimpleNode prop_node = prop_nodes[value];
 	if (!prop_node)
-	  prop_nodes[value] = prop_node = ElementNode ("DAV:prop", ([]));
-	prop_node->add_child (ElementNode (prop_name, ([])));
+	  prop_nodes[value] = prop_node = SimpleElementNode("DAV:prop", ([]));
+	prop_node->add_child(SimpleElementNode(prop_name, ([])));
       }
 
       else {
@@ -1536,31 +1543,33 @@ class MultiStatusPropStat
 	    // MS header - format unknown.
 	    //case "DAV:lastaccessed": ms_type = "dateTime.tz"; break;
 	}
-	ElementNode node =
-	  ElementNode(prop_name,
-		      ms_type ?
-		      (["urn:schemas-microsoft-com:datatypesdt": ms_type]) :
-		      ([]));
+	SimpleElementNode node =
+	  SimpleElementNode(prop_name,
+			    ms_type ?
+			    ([ "urn:schemas-microsoft-com:datatypesdt":
+			       ms_type ]) : ([]));
 	ok_prop_node->add_child (node);
 
 	if (arrayp (value))
 	  node->replace_children (value);
 	else if (stringp (value))
-	  node->add_child (TextNode (value));
+	  node->add_child(SimpleTextNode(value));
 	else if (objectp (value))
 	  node->add_child (value);
       }
     }
 
     if (ok_prop_node->count_children()) {
-      ElementNode propstat_node = ElementNode ("DAV:propstat", ([]));
+      SimpleElementNode propstat_node =
+	SimpleElementNode("DAV:propstat", ([]));
       response_node->add_child (propstat_node);
       propstat_node->add_child (ok_prop_node);
       propstat_node->add_child (ok_status_node);
     }
 
-    foreach (prop_nodes; MultiStatusStatus status; Node prop_node) {
-      ElementNode propstat_node = ElementNode ("DAV:propstat", ([]));
+    foreach (prop_nodes; MultiStatusStatus status; SimpleNode prop_node) {
+      SimpleElementNode propstat_node =
+	SimpleElementNode("DAV:propstat", ([]));
       response_node->add_child (propstat_node);
       propstat_node->add_child (prop_node);
       status->build_response (propstat_node);
@@ -1647,14 +1656,14 @@ class MultiStatus
   //!   @mixed prop_value
   //!     @type void|int(0..0)
   //!       Operation performed ok, no value.
-  //!     @type string|Node|array(Node)
+  //!     @type string|SimpleNode|array(SimpleNode)
   //!       Property has value @[prop_value].
   //!     @type MultiStatusStatus
   //!     @type mapping(string:mixed)
   //!       Operation failed as described by the mapping.
   //!   @endmixed
   void add_property(string href, string prop_name,
-		    void|int(0..0)|string|array(Node)|Node|
+		    void|int(0..0)|string|array(SimpleNode)|SimpleNode|
 		    MultiStatusStatus|mapping(string:mixed) prop_value)
   {
     MultiStatusPropStat prop_stat;
@@ -1694,25 +1703,26 @@ class MultiStatus
     args[ns_name] = namespace;
   }
 
-  Node get_xml_node()
+  SimpleNode get_xml_node()
   {
-    RootNode root = RootNode();
-    root->add_child (HeaderNode ((["version": "1.0", "encoding": "utf-8"])));
-    ElementNode node = ElementNode ("DAV:multistatus", args);
-    root->add_child (node);
+    SimpleElementNode node;
+    SimpleRootNode root = SimpleRootNode()->
+      add_child(SimpleHeaderNode((["version": "1.0",
+				   "encoding": "utf-8"])))->
+      add_child(node = SimpleElementNode("DAV:multistatus", args));
 
-    array(Node) response_xml = allocate(sizeof(status_set));
+    array(SimpleNode) response_xml = allocate(sizeof(status_set));
     int i;
 
     DAV_WERROR("Generating XML Nodes for status_set:%O\n",
 	       status_set);
 
     foreach(sort(indices(status_set)), string href) {
-      ElementNode href_node = ElementNode("DAV:href", ([]));
-      href_node->add_child(TextNode(href));
-      ElementNode response_node = ElementNode("DAV:response", ([]));
+      SimpleElementNode response_node =
+	SimpleElementNode("DAV:response", ([]))->
+	add_child(SimpleElementNode("DAV:href", ([]))->
+		  add_child(SimpleTextNode(href)));
       response_xml[i++] = response_node;
-      response_node->add_child (href_node);
       status_set[href]->build_response (response_node);
     }
     node->replace_children(response_xml);
@@ -1735,7 +1745,7 @@ class MultiStatus
   {
     MultiStatus get_multi_status() {return MultiStatus::this;}
     void add_property(string path, string prop_name,
-		      void|int(0..0)|string|array(Node)|Node|
+		      void|int(0..0)|string|array(SimpleNode)|SimpleNode|
 		      MultiStatusStatus|mapping(string:mixed) prop_value)
     {
       MultiStatus::add_property(href_prefix + path, prop_name, prop_value);
@@ -1771,15 +1781,15 @@ static class PropertySet
   Stat get_stat();
   mapping(string:string) get_response_headers();
   multiset(string) query_all_properties();
-  string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
+  string|array(SimpleNode)|mapping(string:mixed)
     query_property(string prop_name);
   mapping(string:mixed) start();
   void unroll();
   void commit();
   mapping(string:mixed) set_property(string prop_name,
-				     string|array(Parser.XML.Tree.Node) value);
+				     string|array(SimpleNode) value);
   mapping(string:mixed) set_dead_property(string prop_name,
-					  array(Parser.XML.Tree.Node) value);
+					  array(SimpleNode) value);
   mapping(string:mixed) remove_property(string prop_name);
   mapping(string:mixed) find_properties(string mode,
 					MultiStatus.Prefixed result,
@@ -1820,7 +1830,7 @@ class RoxenModule
   string comment();
 
   PropertySet|mapping(string:mixed) query_properties(string path, RequestID id);
-  string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
+  string|array(SimpleNode)|mapping(string:mixed)
     query_property(string path, string prop_name, RequestID id);
   void recurse_find_properties(string path, string mode, int depth,
 			       MultiStatus.Prefixed result, RequestID id,
@@ -1829,7 +1839,7 @@ class RoxenModule
 					 array(PatchPropertyCommand) instructions,
 					 MultiStatus.Prefixed result, RequestID id);
   mapping(string:mixed) set_property (string path, string prop_name,
-				      string|array(Parser.XML.Tree.Node) value,
+				      string|array(SimpleNode) value,
 				      RequestID id);
   mapping(string:mixed) remove_property (string path, string prop_name,
 					 RequestID id);

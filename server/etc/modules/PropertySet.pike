@@ -54,6 +54,10 @@ Stat get_stat();
 //! response headers.
 mapping(string:string) get_response_headers();
 
+// Simulate an import of useful stuff from Parser.XML.Tree.
+static constant SimpleNode = Parser.XML.Tree.SimpleNode;
+static constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
+
 private constant all_properties_common = (<
   "DAV:getcontentlength",
   "DAV:getcontenttype",
@@ -264,7 +268,7 @@ multiset(string) query_all_properties()
 //! @note
 //!   Returning a string is shorthand for returning an array
 //!   with a single text node.
-string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
+string|array(SimpleNode)|mapping(string:mixed)
   query_property(string prop_name)
 {
   switch(prop_name) {
@@ -305,26 +309,26 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   case "DAV:resourcetype":	// RFC2518 13.9
     if (get_stat()->isdir) {
       return ({
-	Parser.XML.Tree.ElementNode("DAV:collection", ([])),	// 12.2
+	SimpleElementNode("DAV:collection", ([])),	// 12.2
       });
     }
     return 0;
 
   case "DAV:supportedlock":	// RFC2518 13.11
     {
-      array(Parser.XML.Tree.Node) res = ({
-	Parser.XML.Tree.ElementNode("DAV:lockentry", ([])),
-	Parser.XML.Tree.ElementNode("DAV:lockentry", ([])),
+      return ({
+	SimpleElementNode("DAV:lockentry", ([]))->
+	add_child(SimpleElementNode("DAV:lockscope", ([]))->
+		  add_child(SimpleElementNode("DAV:exclusive", ([]))))->
+	add_child(SimpleElementNode("DAV:locktype", ([]))->
+		  add_child(SimpleElementNode("DAV:write", ([])))),
+
+	SimpleElementNode("DAV:lockentry", ([]))->
+	add_child(SimpleElementNode("DAV:lockscope", ([]))->
+		  add_child(SimpleElementNode("DAV:shared", ([]))))->
+	add_child(SimpleElementNode("DAV:locktype", ([]))->
+		  add_child(SimpleElementNode("DAV:write", ([])))),
       });
-      res[0]->add_child(Parser.XML.Tree.ElementNode("DAV:lockscope", ([])))->
-	add_child(Parser.XML.Tree.ElementNode("DAV:exclusive", ([])));
-      res[1]->add_child(Parser.XML.Tree.ElementNode("DAV:lockscope", ([])))->
-	add_child(Parser.XML.Tree.ElementNode("DAV:shared", ([])));
-      res[0]->add_child(Parser.XML.Tree.ElementNode("DAV:locktype", ([])))->
-	add_child(Parser.XML.Tree.ElementNode("DAV:write", ([])));
-      res[1]->add_child(Parser.XML.Tree.ElementNode("DAV:locktype", ([])))->
-	add_child(Parser.XML.Tree.ElementNode("DAV:write", ([])));
-      return res;
     }
   case "http://apache.org/dav/props/executable":
     // http://www.webdav.org/mod_dav/:
@@ -473,7 +477,7 @@ void commit()
 //!   entity returned by a GET request, automatically calculated by
 //!   the server.
 mapping(string:mixed) set_property(string prop_name,
-				   string|array(Parser.XML.Tree.Node) value)
+				   string|array(SimpleNode) value)
 {
   switch(prop_name) {
   case "http://apache.org/dav/props/executable":
@@ -514,7 +518,7 @@ mapping(string:mixed) set_property(string prop_name,
 //!    maintaining the consistency of the syntax and semantics of a
 //!    dead property.
 mapping(string:mixed) set_dead_property(string prop_name,
-					array(Parser.XML.Tree.Node) value)
+					array(SimpleNode) value)
 {
   return Roxen.http_status (Protocols.HTTP.HTTP_METHOD_INVALID,
 			    "Setting of dead properties is not supported.");

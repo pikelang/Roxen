@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.440 2004/05/06 15:22:50 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.441 2004/05/07 11:53:04 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -904,22 +904,7 @@ static void cleanup_request_object()
 {
   if( conf )
     conf->connection_drop( this_object() );
-
-#if constant(Parser.XML.Tree.XMLNSParser)
-  if (xml_data) {
-    mixed err = catch {
-      // Disconnect the XML graph to make it easier on the gc.
-      xml_data->walk_postorder(lambda(Parser.XML.Tree.AbstractNode node) {
-				 node->mParent = 0;
-			       });
-      xml_data = 0;
-    };
-#ifdef DEBUG
-    if (err)
-      report_debug ("Failed to disconnect XML tree: " + describe_backtrace (err));
-#endif
-  }
-#endif /* Parser.XML.Tree.XMLNSParser */
+  xml_data = 0;
 }
 
 void end(int|void keepit)

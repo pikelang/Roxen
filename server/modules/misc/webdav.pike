@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.19 2004/05/06 18:25:28 mast Exp $
+// $Id: webdav.pike,v 1.20 2004/05/07 11:53:21 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.19 2004/05/06 18:25:28 mast Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.20 2004/05/07 11:53:21 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -57,13 +57,18 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
   return 0;
 }
 
+static constant SimpleNode = Parser.XML.Tree.SimpleNode;
+static constant SimpleRootNode = Parser.XML.Tree.SimpleRootNode;
+static constant SimpleHeaderNode = Parser.XML.Tree.SimpleHeaderNode;
+static constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
+
 //! Implements PROPPATCH <DAV:set/>.
 class PatchPropertySetCmd
 {
   constant command="DAV:set";
   string property_name;
-  string|array(Parser.XML.Tree.Node) value;
-  static void create(Parser.XML.Tree.Node prop_node)
+  string|array(SimpleNode) value;
+  static void create(SimpleNode prop_node)
   {
     property_name = prop_node->get_full_name();
     value = prop_node->get_children();
@@ -112,15 +117,10 @@ class PatchPropertyRemoveCmd(string property_name)
   }
 }
 
-static constant Node = Parser.XML.Tree.Node;
-static constant RootNode = Parser.XML.Tree.RootNode;
-static constant HeaderNode = Parser.XML.Tree.HeaderNode;
-static constant ElementNode = Parser.XML.Tree.ElementNode;
-
 //! Handle WEBDAV requests.
 mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 {
-  Parser.XML.Tree.Node xml_data;
+  SimpleNode xml_data;
   TRACE_ENTER("Handle WEBDAV request...", 0);
   if (catch { xml_data = id->get_xml_data(); }) {
     // RFC 2518 8:
@@ -185,13 +185,13 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       id->conf->refresh_lock(lock = state, id);
     } else {
       // New lock.
-      Node lock_info_node =
+      SimpleNode lock_info_node =
 	xml_data->get_first_element("DAV:lockinfo", 1);
       if (!lock_info_node) {
 	TRACE_LEAVE("LOCK: No DAV:lockinfo.");
 	return Roxen.http_status(422, "Missing DAV:lockinfo.");
       }
-      Node lock_scope_node =
+      SimpleNode lock_scope_node =
 	lock_info_node->get_first_element("DAV:lockscope", 1);
       if (!lock_scope_node) {
 	TRACE_LEAVE("LOCK: No DAV:lockscope.");
@@ -212,7 +212,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	TRACE_LEAVE("LOCK: Both DAV:lockscope.");
 	return Roxen.http_status(422, "Unsupported DAV:lockscope.");
       }
-      Node lock_type_node =
+      SimpleNode lock_type_node =
 	  lock_info_node->get_first_element("DAV:locktype", 1);
       if (!lock_type_node) {
 	TRACE_LEAVE("LOCK: Both DAV:locktype.");
@@ -225,8 +225,8 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       }
       string locktype = "DAV:write";
 
-      array(Node) owner;
-      if (Node owner_node = lock_info_node->get_first_element("DAV:owner", 1))
+      array(SimpleNode) owner;
+      if (SimpleNode owner_node = lock_info_node->get_first_element("DAV:owner", 1))
 	owner = owner_node->get_children();
 
       // Parameters OK, try to create a lock.
@@ -252,17 +252,15 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       TRACE_LEAVE("Ok.");
       lock = new_lock;
     }
-    Node root = RootNode();
-    root->add_child(HeaderNode((["version":"1.0", "encoding":"utf-8"])));
-    Node prop_node =
-      ElementNode("DAV:prop",
-		  ([ "xmlns:DAV":"DAV:",
-		     "xmlns:MS":"urn:schemas-microsoft-com:datatypes" ]));
-    root->add_child(prop_node);
-    Node lock_discovery_node = ElementNode("DAV:lockdiscovery", ([]));
-    prop_node->add_child(lock_discovery_node);
-    lock_discovery_node->add_child(lock->get_xml());
-    string xml = root->render_xml();
+    string xml = SimpleRootNode()->
+      add_child(SimpleHeaderNode((["version":"1.0", "encoding":"utf-8"])))->
+      add_child(SimpleElementNode("DAV:prop",
+				  ([ "xmlns:DAV":"DAV:",
+				     "xmlns:MS":
+				     "urn:schemas-microsoft-com:datatypes"
+				  ]))->
+		add_child(SimpleElementNode("DAV:lockdiscovery", ([]))->
+			  add_child(lock->get_xml())))->render_xml();
     TRACE_LEAVE("Returning XML.");
     return ([
       "error":200,
@@ -330,7 +328,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       //     keepalive
       // @endint
       mapping(string:int(-1..1)) propertybehavior = ([]);
-      Node prop_behav_node =
+      SimpleNode prop_behav_node =
 	xml_data->get_first_element("DAV:propertybehavior", 1);
       if (!prop_behav_node) {
 	TRACE_LEAVE("COPY: No DAV:propertybehavior.");
@@ -341,7 +339,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
        * or
        *   <DAV:omit>		(12.12.2)
        */
-      foreach(prop_behav_node->get_children(), Node n) {
+      foreach(prop_behav_node->get_children(), SimpleNode n) {
 	switch(n->get_full_name()) {
 	case "DAV:omit":
 	  if (propertybehavior[0] > 0) {
@@ -350,7 +348,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	  propertybehavior[0] = -1;
 	  break;
 	case "DAV:keepalive":
-	  foreach(n->get_children(), Node href) {
+	  foreach(n->get_children(), SimpleNode href) {
 	    if (href->get_full_name == "DAV:href") {
 	      propertybehavior[href->value_of_node()] = 1;
 	    } else if (href->mNodeType == Parser.XML.Tree.XML_TEXT) {
@@ -392,7 +390,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     break;
   case "PROPFIND":	// Get meta data.
     if (xml_data) {
-      Node propfind = xml_data->get_first_element("DAV:propfind", 1);
+      SimpleNode propfind = xml_data->get_first_element("DAV:propfind", 1);
       if (!propfind) {
 	TRACE_LEAVE("COPY: No DAV:propfind.");
 	return Roxen.http_status(400, "Missing DAV:propfind.");
@@ -404,7 +402,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
        * or
        *   <DAV:prop>{propertylist}*</DAV:prop>
        */
-      foreach(propfind->get_children(), Node prop) {
+      foreach(propfind->get_children(), SimpleNode prop) {
 	switch(prop->get_full_name()) {
 	case "DAV:propname":
 	  if (recur_func) {
@@ -486,7 +484,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     }
     break;
   case "PROPPATCH":	// Set/delete meta data.
-    Node propupdate = xml_data->get_first_element("DAV:propertyupdate", 1);
+    SimpleNode propupdate = xml_data->get_first_element("DAV:propertyupdate", 1);
     if (!propupdate) {
       TRACE_LEAVE("PROPPATCH: No DAV:propertyupdate.");
       return Roxen.http_status(400, "Missing DAV:propertyupdate.");
@@ -501,12 +499,11 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
      *   are received (i.e., from top to bottom).
      */
     array(PatchPropertyCommand) instructions = ({});
-    foreach(propupdate->get_children(), Node cmd) {
+    foreach(propupdate->get_children(), SimpleNode cmd) {
       switch(cmd->get_full_name()) {
       case "DAV:set":
       case "DAV:remove":
-	Parser.XML.Tree.Node prop =
-	  cmd->get_first_element("DAV:prop", 1);
+	SimpleNode prop = cmd->get_first_element("DAV:prop", 1);
 	if (!prop) {
 	  TRACE_LEAVE("PROPPATCH: No DAV:prop.");
 	  return Roxen.http_status(400, "Bad DAV request (no properties specified).");
