@@ -2,18 +2,12 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.172 2001/06/25 15:20:22 mast Exp $
+// $Id: module.pmod,v 1.173 2001/06/25 19:20:45 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
 static object Roxen;
 class RequestID { };
-
-//(!) FIXME: This was not legal autodoc; do we need some form of markup
-//(!) to do what it tried to do? I'm not sure I fully understand what the
-//(!) (now) (!) marked lines were meant to do; if it's just a comment
-//(!) worth reading when browsing the source, please remove this and turn
-//(!) these comments into normal "//" comments.                     / jhs
 
 //! API stability notes:
 //!
@@ -141,7 +135,7 @@ class Tag
 {
   constant is_RXML_Tag = 1;
 
-  //(!) Interface:
+  // Interface:
 
   //! @decl string name;
   //!
@@ -254,7 +248,7 @@ class Tag
   //!   socket. Such plugins are simply ignored.
   //! @endlist
 
-  //(!) Services:
+  // Services:
 
   inline final object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed content)
   //! Make an initialized frame for the tag. Typically useful when
@@ -311,7 +305,7 @@ class Tag
     return 1;
   }
 
-  //(!) Internals:
+  // Internals:
 
 #define MAKE_FRAME(_frame, _ctx, _parser, _args)			\
   make_new_frame: do {							\
@@ -827,7 +821,7 @@ class TagSet
       return 0;
     };
 
-  //(!) Internals:
+  // Internals:
 
   void do_notify (function(:void) func)
   {
@@ -1594,7 +1588,7 @@ class Context
     return ({res, p_code});
   }
 
-  //(!) Internals:
+  // Internals:
 
   final Parser new_parser (Type top_level_type, void|int make_p_code)
   // Returns a new parser object to start parsing with this context.
@@ -1852,13 +1846,7 @@ class Backtrace
 }
 
 
-//(!) Current context:
-
-#if constant (thread_create)
-Thread.Local _cur_rxml_context = Thread.Local();
-#else
-Context _cur_rxml_context;
-#endif
+// Current context:
 
 final void set_context (Context ctx) {SET_RXML_CONTEXT (ctx);}
 
@@ -1901,7 +1889,7 @@ final Context get_context() {return [object(Context)] RXML_CONTEXT;}
 #endif
 
 
-//(!) Constants for the bit field RXML.Frame.flags.
+// Constants for the bit field RXML.Frame.flags.
 
 constant FLAG_NONE		= 0x00000000;
 //! The no-flags flag. In case you think 0 is too ugly. ;)
@@ -1913,7 +1901,7 @@ constant FLAG_DEBUG		= 0x40000000;
 //! be compiled in (normally enabled with the @tt{--debug@} flag to
 //! Roxen).
 
-//(!) Static flags (i.e. tested in the Tag object):
+// Static flags (i.e. tested in the Tag object):
 
 constant FLAG_PROC_INSTR	= 0x00000010;
 //! Flags this as a processing instruction tag (i.e. one parsed with
@@ -1944,7 +1932,7 @@ constant FLAG_POSTPARSE		= 0x00000080;
 //! Postparse the result with the @[RXML.PXml] parser. This is only
 //! used in the simple tag wrapper. Defined here as placeholder.
 
-//(!) The rest of the flags are dynamic (i.e. tested in the Frame object):
+// The rest of the flags are dynamic (i.e. tested in the Frame object):
 
 constant FLAG_EMPTY_ELEMENT	= 0x00000001;
 //! If set, the tag does not use any content. E.g. with an HTML parser
@@ -2011,37 +1999,36 @@ constant FLAG_RAW_ARGS		= 0x00004000;
 //! been parsed by @[Parser.HTML] (or @[parse_html]) but hasn't been
 //! processed further.
 
-//(!) The following flags specifies whether certain conditions must be
-//(!) met for a cached frame to be considered (if RXML.Frame.is_valid()
-//(!) is defined). They may be read directly after do_return() returns.
-//(!) The tag name is always the same. FIXME: These are ideas only;
-//(!) nothing is currently implemented and they might change
-//(!) arbitrarily.
+// The following flags specifies whether certain conditions must be
+// met for a cached frame to be considered (if RXML.Frame.is_valid()
+// is defined). They may be read directly after do_return() returns.
+// The tag name is always the same. FIXME: These are ideas only;
+// nothing is currently implemented and they might change arbitrarily.
 
 constant FLAG_CACHE_DIFF_ARGS	= 0x00010000;
-//(!) If set, the arguments to the tag need not be the same (using
-//(!) @[equal]) as the cached args.
+// If set, the arguments to the tag need not be the same (using
+// @[equal]) as the cached args.
 
 constant FLAG_CACHE_DIFF_CONTENT = 0x00020000;
-//(!) If set, the content need not be the same.
+// If set, the content need not be the same.
 
 constant FLAG_CACHE_DIFF_RESULT_TYPE = 0x00040000;
-//(!) If set, the result type need not be the same. (Typically
-//(!) not useful unless @[cached_return] is used.)
+// If set, the result type need not be the same. (Typically not useful
+// unless @[cached_return] is used.)
 
 constant FLAG_CACHE_DIFF_VARS	= 0x00080000;
-//(!) If set, the variables with external scope in vars (i.e. normally
-//(!) those that has been accessed with @[get_var]) need not have the
-//(!) same values (using @[equal]) as the actual variables.
+// If set, the variables with external scope in vars (i.e. normally
+// those that has been accessed with @[get_var]) need not have the
+// same values (using @[equal]) as the actual variables.
 
 constant FLAG_CACHE_DIFF_TAG_INSTANCE = 0x00100000;
-//(!) If set, the tag in the source document needs to be the same, so
-//(!) the same frame may be used when the tag occurs in another context.
+// If set, the tag in the source document needs to be the same, so the
+// same frame may be used when the tag occurs in another context.
 
 constant FLAG_CACHE_EXECUTE_RESULT = 0x00200000;
-//(!) If set, an exec array will be stored in the frame instead of the
-//(!) final result. On a cache hit it'll be executed to produce the
-//(!) result.
+// If set, an exec array will be stored in the frame instead of the
+// final result. On a cache hit it'll be executed to produce the
+// result.
 
 class Frame
 //! A tag instance. A new frame is normally created for every parsed
@@ -2053,7 +2040,7 @@ class Frame
   constant is_RXML_Frame = 1;
   constant thrown_at_unwind = 1;
 
-  //(!) Interface:
+  // Interface:
 
   Frame up;
   //! The parent frame. This frame is either created from the content
@@ -2280,7 +2267,7 @@ class Frame
   //! frame may be used from several threads. FIXME: Not yet
   //! implemented.
 
-  //(!) Services:
+  // Services:
 
   final mixed get_var (string var, void|string scope_name, void|Type want_type)
   //! A wrapper for easy access to @[RXML.Context.get_var].
@@ -2470,7 +2457,7 @@ class Frame
     }
   }
 
-  //(!) Internals:
+  // Internals:
 
 #ifdef DEBUG
 #  define THIS_TAG_TOP_DEBUG(msg, args...) \
@@ -3501,7 +3488,7 @@ class Frame
 }
 
 
-//(!) Global services.
+// Global services.
 
 //! Shortcuts to some common functions in the current context (see the
 //! corresponding functions in the @[Context] class for details).
@@ -3802,7 +3789,7 @@ final mixed eval_p_code (PCode p_code, void|RequestID id)
 }
 
 
-//(!) Parsers:
+// Parsers:
 
 
 class Parser
@@ -3813,7 +3800,7 @@ class Parser
   constant is_RXML_Parser = 1;
   constant thrown_at_unwind = 1;
 
-  //(!) Services:
+  // Services:
 
   int error_count;
   //! Number of RXML errors that occurred during evaluation. If this
@@ -3969,7 +3956,7 @@ class Parser
     return val;
   }
 
-  //(!) Interface:
+  // Interface:
 
   Context context;
   //! The context to do evaluation in. It's assumed to never be
@@ -4074,7 +4061,7 @@ class Parser
   //! current tag, entity or text being parsed, or 0 if it isn't
   //! known.
 
-  //(!) Internals:
+  // Internals:
 
   mixed _eval (Context ignored) {return eval();}
   // To be call compatible with PCode.
@@ -4110,7 +4097,7 @@ class TagSetParser
   constant is_RXML_TagSetParser = 1;
   constant tag_set_eval = 1;
 
-  //(!) Services:
+  // Services:
 
   mixed eval (void|int eval_piece)
   {
@@ -4121,7 +4108,7 @@ class TagSetParser
     return res;
   }
 
-  //(!) Interface:
+  // Interface:
 
   TagSet tag_set;
   //! The tag set used for parsing.
@@ -4176,7 +4163,7 @@ class TagSetParser
   //! newly created frame. This default implementation simply leaves
   //! it unset.
 
-  //(!) Internals:
+  // Internals:
 
   int _local_tag_set;
 
@@ -4243,7 +4230,7 @@ mixed simple_parse (string in, void|program parser)
 }
 
 
-//(!) Types:
+// Types:
 
 
 static mapping(string:Type) reg_types = ([]);
@@ -4263,7 +4250,7 @@ class Type
 {
   constant is_RXML_Type = 1;
 
-  //(!) Services:
+  // Services:
 
   int `== (mixed other)
   //! Returns nonzero iff this type is the same as @[other], i.e. has
@@ -4522,7 +4509,7 @@ class Type
   //! after being initialized when the type is created; use @[`()]
   //! instead.
 
-  //(!) Interface:
+  // Interface:
 
   //! @decl constant string name;
   //!
@@ -4773,7 +4760,7 @@ class Type
     parse_error ("Cannot convert type %s to %s.\n", from->name, this_object()->name);
   }
 
-  //(!) Internals:
+  // Internals:
 
   /*private*/ mapping(program:Type) _t_obj_cache;
   // To avoid creating new type objects all the time in `().
@@ -4797,7 +4784,7 @@ static class PCacheObj
   Parser free_parser;
 }
 
-//(!) Special types:
+// Special types:
 
 TAny t_any = TAny();
 //! A completely unspecified nonsequential type. Every type is a
@@ -4923,10 +4910,10 @@ static class TType
   string _sprintf() {return "RXML.t_type" + OBJ_COUNT;}
 }
 
-//(!) Basic types. Even though most of these have a `+ that fulfills
-//(!) requirements to make them sequential, we don't want all those to be
-//(!) treated that way. It would imply that a sequence of e.g. integers
-//(!) are implicitly added together, which would be nonintuitive.
+// Basic types. Even though most of these have a `+ that fulfills
+// requirements to make them sequential, we don't want all those to be
+// treated that way. It would imply that a sequence of e.g. integers
+// are implicitly added together, which would be nonintuitive.
 
 TScalar t_scalar = TScalar();
 //! Any type of scalar, i.e. text or number. It's not sequential, as
@@ -5155,7 +5142,7 @@ static class TString
   string _sprintf() {return "RXML.t_string" + OBJ_COUNT;}
 }
 
-//(!) Text types:
+// Text types:
 
 TAnyText t_any_text = TAnyText();
 //! Any type of text, i.e. the supertype for all text types. It's
@@ -5397,7 +5384,7 @@ static class THtml
 }
 
 
-//(!) P-code compilation and evaluation:
+// P-code compilation and evaluation:
 
 class VarRef (string scope, string|array(string|int) var, void|string encoding)
 //! A helper for representing variable reference tokens.
@@ -5676,7 +5663,7 @@ class PCode
   }
 
 
-  //(!) Internals:
+  // Internals:
 
   static array p_code = allocate (16);
   static int length = 0;
@@ -5919,7 +5906,7 @@ PCode string_to_p_code(string str)
   return [object(PCode)]decode_value(str, PCodec());
 }
 
-//(!) Some parser tools:
+// Some parser tools:
 
 Nil nil = Nil();
 //! An object representing the empty value. Works as initializer for
@@ -6091,7 +6078,7 @@ private class Link
 }
 
 
-//(!) Caches and object tracking:
+// Caches and object tracking:
 
 static int tag_set_count = 0;
 
@@ -6105,7 +6092,7 @@ mapping(int|string:TagSet) local_tag_set_cache = garb_local_tag_set_cache();
 
 static mapping(string:TagSet) all_tagsets = set_weak_flag(([]), 1);
 
-//(!) Various internal kludges:
+// Various internal kludges:
 
 static Type splice_arg_type;
 
