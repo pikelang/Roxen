@@ -1,4 +1,4 @@
-string cvs_version = "$Id: cache.pike,v 1.13 1997/08/12 06:43:58 per Exp $";
+string cvs_version = "$Id: cache.pike,v 1.14 1997/09/18 21:36:01 grubba Exp $";
 
 #include <config.h>
 
@@ -20,14 +20,25 @@ inherit "roxenlib";
 mapping cache;
 mapping hits=([]), all=([]);
 
+#ifdef THREADS
+object cleaning_lock = Thread.Mutex();
+#endif /* THREADS */
 
 void cache_expire(string in)
 {
+#ifdef THREADS
+  mixed key;
+  catch { key = cleaning_lock->lock(); };
+#endif /* THREADS */
   m_delete(cache, in);
 }
 
 mixed cache_lookup(string in, string what)
 {
+#ifdef THREADS
+  mixed key;
+  catch { key = cleaning_lock->lock(); };
+#endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror(sprintf("CACHE: cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
 #endif
@@ -49,6 +60,10 @@ mixed cache_lookup(string in, string what)
 
 string status()
 {
+#ifdef THREADS
+  mixed key;
+  catch { key = cleaning_lock->lock(); };
+#endif /* THREADS */
   string res, a;
   res = "<table border=0 cellspacing=0 cellpadding=2><tr bgcolor=lightblue>"
     "<th align=left>Class</th><th align=left>Entries</th><th align=left>(KB)</th><th align=left>Hits</td><th align=left>Misses</th><th align=left>Hitrate</th></tr>";
@@ -103,6 +118,10 @@ string status()
 
 void cache_remove(string in, string what)
 {
+#ifdef THREADS
+  mixed key;
+  catch { key = cleaning_lock->lock(); };
+#endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror(sprintf("CACHE: cache_remove(\"%s\",\"%O\")\n", in, what));
 #endif
@@ -115,6 +134,10 @@ void cache_remove(string in, string what)
 
 void cache_set(string in, string what, mixed to)
 {
+#ifdef THREADS
+  mixed key;
+  catch { key = cleaning_lock->lock(); };
+#endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror(sprintf("CACHE: cache_set(\"%s\", \"%s\", %O)\n",
 		 in, what, to));
@@ -128,6 +151,10 @@ void cache_set(string in, string what, mixed to)
 
 void cache_clear(string in)
 {
+#ifdef THREADS
+  mixed key;
+  catch { key = cleaning_lock->lock(); };
+#endif /* THREADS */
 #ifdef CACHE_DEBUG
   perror("CACHE: cache_clear(\"%s\")\n", in);
 #endif
@@ -137,6 +164,10 @@ void cache_clear(string in)
 
 void cache_clean()
 {
+#ifdef THREADS
+  mixed key;
+  catch { key = cleaning_lock->lock(); };
+#endif /* THREADS */
   string a, b;
   int cache_time_out=CACHE_TIME_OUT;
 #ifdef CACHE_DEBUG
@@ -159,7 +190,6 @@ void cache_clean()
 #ifdef DEBUG
       if(!intp(cache[a][b][TIMESTAMP]))
 	error("Illegal timestamp in cache ("+a+":"+b+")\n");
-#endif
 #endif
       if(cache[a][b][TIMESTAMP] <
 	 (time(1) - (cache_time_out - get_size(cache[a][b][DATA])/100)))
