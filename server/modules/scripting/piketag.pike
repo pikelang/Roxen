@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.40 2004/06/05 15:19:48 _cvs_dirix Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.41 2004/06/07 11:00:02 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -19,7 +19,7 @@ constant module_doc =  #"
 <p>This module adds a processing instruction tag, <code>&lt;?pike ...
 ?&gt;</code>, for evaluating Pike code directly in the document.</p>
 
-<p><imgs src=\"internal-roxen-err_2\" align=\"left\" alt=\"Warning\" />
+<p><imgs src=\"/$/err_2\" align=\"left\" alt=\"Warning\" />
 NOTE: Enabling this module is the same thing as letting your users
 run programs with the same right as the server!</p>
 

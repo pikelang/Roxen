@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.106 2004/06/06 11:03:59 _cvs_stephen Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.107 2004/06/07 11:00:01 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -101,7 +101,7 @@ constant gbuttonattr=#"
 <attr name='frame-image' value='path'><p>
  Use this XCF-image as a frame for the button. The image is required
  to have at least the following layers: background, mask and frame.</p>
-"+/* <ex><gbutton frame-image='internal-roxen-tabframe'>foo</gbutton></ex> */#"
+"+/* <ex><gbutton frame-image='/$/tabframe'>foo</gbutton></ex> */#"
 </attr>
 
 <attr name='alt' value='string'><p>
@@ -161,7 +161,7 @@ constant gbuttonattr=#"
 </xtable>
 
 <ex>
-<gbutton width='150' align-icon='center-before' icon-src='internal-roxen-help'>Roxen 2.0</gbutton>
+<gbutton width='150' align-icon='center-before' icon-src='/$/help'>Roxen 2.0</gbutton>
 </ex>
 <ex>
 <gbutton width='150' align='center' align-icon='center-after'
