@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.125 2000/05/28 11:04:13 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.126 2000/06/01 12:56:13 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1314,7 +1314,7 @@ array split_on_option( string what, Regexp r )
 }
 private int|array internal_tag_select(string t, mapping m, string c, string name, multiset(string) value)
 {
-  if(m->name!=name) return ({ Roxen.make_container(t,m,c) });
+  if(name && m->name!=name) return ({ Roxen.make_container(t,m,c) });
 
   // Split indata into an array with the layout
   // ({ "option", option_args, stuff_before_next_option })*n
@@ -1970,17 +1970,23 @@ Pike-script or Roxen module.
  The value to set.
 </attr>
 
-<attr name=separator value=string>
-
+<attr name=separator value=string default=','>
+ If several values are to be selected, this is the string that seperates them.
 </attr>
 
 <attr name=name value=string>
  Only affect form element with this name.
 </attr>
 
-<attr name=variable value=string>
-
-</attr>",
+<ex type='box'>
+ <default name='my-select' value='&form.preset;'>
+    <select name='my-select'>
+      <option value='1'>First</option>
+      <option value='2'>Second</option>
+      <option value='3'>Third</option>
+    </select>
+ </default>
+</ex>",
 
 "doc":#"<desc cont><short hide>
  Eases code documentation by reformatting it.</short>
