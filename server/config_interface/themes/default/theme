@@ -1,6 +1,6 @@
 <!-- -*- html -*- -->
 
-<if variable="roxen.product-name == Roxen CMS1">
+<if variable="roxen.product-name == Roxen CMS">
   <theme-set what=logo                 to="cms-logo.gif" themefile />
   <theme-set what=logo-html
 	   to="<imgs border='0' src='&usr.logo;' vspace='10' hspace='10'>"/>
