@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.203 2003/04/14 16:57:41 mast Exp $
+# $Id: start,v 1.204 2003/07/11 15:47:16 jonasw Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -42,7 +42,7 @@ check_owner() {
 
 
 # Breaks on linux when using symlinks.
-dn="`dirname $0`"
+dn="`dirname "$0"`"
 case "$dn" in 
  ""|".")
   ;;
