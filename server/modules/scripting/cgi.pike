@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.1 1999/04/22 09:08:29 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.2 1999/04/22 13:57:35 per Exp $";
 
 
 array register_module()
@@ -346,7 +346,7 @@ class CGIWrapper
       result += "Server: "+roxen.version()+"\r\n";
     if(!ct_received)
       result += "Content-Type: text/html\r\n";
-    return "HTTP/1.1 "+code+"\r\n"+result+"\r\n"+post;
+    return "HTTP/1.0 "+code+"\r\n"+result+"\r\n"+post;
   }
 
   string parse_headers( )
