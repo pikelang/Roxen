@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.54 2003/01/13 15:49:31 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.55 2003/02/05 16:25:41 jonasw Exp $";
 
 class Variable
 {
@@ -501,6 +501,10 @@ class PrefLanguages
   }
 }
 
+
+//  Kludge for resolver problems
+static function _charset_decoder_func;
+
 class RequestID
 //! @appears RequestID
 //! The request information object contains all request-local information and
@@ -788,6 +792,9 @@ class RequestID
     }
   }
 
+
+  //  Charset handling
+  
   array(string) output_charset = ({});
   string input_charset;
 
@@ -812,6 +819,91 @@ class RequestID
 	break;
     }
   }
+
+  static string charset_name(function|string what)
+  {
+    switch (what) {
+    case string_to_unicode: return "ISO10646-1";
+    case string_to_utf8:    return "UTF-8";
+    default:                return upper_case((string) what);
+    }
+  }
+
+  static function charset_function(function|string what, int allow_entities)
+  {
+    switch (what) {
+    case "ISO-10646-1":
+    case "ISO10646-1":
+    case string_to_unicode:
+      return string_to_unicode;
+      
+    case "UTF-8":
+    case string_to_utf8:
+      return string_to_utf8;
+      
+    default:
+      catch {
+	//  Use entity fallback if content type allows it
+	function fallback_func =
+	  allow_entities &&
+	  lambda(string char) {
+	    return sprintf("&#x%x;", char[0]);
+	  };
+	
+	_charset_decoder_func =
+	  _charset_decoder_func || master()->resolv("Roxen._charset_decoder");
+	return
+	  _charset_decoder_func(Locale.Charset.encoder((string) what, "",
+						       fallback_func))
+	  ->decode;
+      };
+    }
+    return lambda(string what) { return what; };
+  }
+  
+  static array(string) join_charset(string old,
+				    function|string add,
+				    function oldcodec,
+				    int allow_entities)
+  {
+    switch (old && upper_case(old)) {
+    case 0:
+      return ({ charset_name(add), charset_function(add, allow_entities) });
+    case "ISO10646-1":
+    case "UTF-8":
+      return ({ old, oldcodec }); // Everything goes here. :-)
+    case "ISO-2022":
+      return ({ old, oldcodec }); // Not really true, but how to know this?
+    default:
+      // Not true, but there is no easy way to add charsets yet...
+      return ({ charset_name(add), charset_function(add, allow_entities) });
+    }
+  }
+  
+  array(string) output_encode(string what, int|void allow_entities,
+			      string|void force_charset)
+  {
+    if (!force_charset) {
+      string charset;
+      function encoder;
+      
+      foreach( output_charset, string|function f )
+	[charset,encoder] = join_charset(charset, f, encoder, allow_entities);
+      if (!encoder)
+	if (String.width(what) > 8) {
+	  charset = "UTF-8";
+	  encoder = string_to_utf8;
+	}
+      if (encoder)
+	what = encoder(what);
+      return ({ charset, what });
+    } else
+      return ({
+	0,
+	Locale.Charset.encoder((force_charset / "=")[-1])->feed(what)->drain()
+      });
+  }
+
 
   string scan_for_query( string f )
   {
