@@ -1,7 +1,7 @@
 Fixa följande kollar i init:
-om labels saknas: sätt labelsize till 0
+?om labels saknas: sätt labelsize till 0
 
-get_font ska implementeras rätt. Se till att inga scale finns!
+%get_font ska implementeras rätt. Se till att inga scale finns!
 
 Övriga kollar:
 Graph:
