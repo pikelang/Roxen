@@ -1,7 +1,8 @@
-          Installing Roxen Challenger 1.2 - the Binary distribution
-          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+          Installing Roxen Platform 1.0  - the Binary distribution
+          ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  1. Get the binary server package appropriate for your architeture.
+  1. Download the binary distribution and place at appropriate place in 
+     the file system
 
   2. Issue the command to unpack the archive:
 
@@ -24,18 +25,24 @@
 
   5. Answer the simple questions and wait for your client.
 
-  6. If everything worked, configure the server, otherwise move on to the
-     troubleshooting section on the roxen WWW-pages. 
+  6. Configure the server, makeing a new virtual server choosing
+     "SiteBuilder server" as configuration type.
 
+  7. Set up the necessary variables.
+
+  8. Also, set up a "Manual server" to view the online manuals.
 
   note:
       You can later on move the <roxen_version> directory to anywhere
      in your filesystem. Roxen does not keep any absolute paths.
 
 
+
  Once you have installed the server, consider joining the Roxen
- mailinglist (by sending a mail to roxen-request@idonex.se, with
- the Subject: subscribe).
+ mailinglist 
+
+ (by sending a mail to roxen-request@roxen.com, with
+  Subject: subscribe).
 
  For more information about Roxen, read the online documentation at
  http://www.roxen.com/
@@ -43,10 +50,7 @@
 ----------------------------------------------------------------------------
 Example installation session:
 
-bash$ tar xzf Roxen_1.2.tar.gz
-bash$ cd Roxen_1.2/server
+bash$ tar xzf roxen_1.2-platform.tar.gz
+bash$ cd roxen_1.2-platform/server
 bash$ ./install
 <answer a few questions>
-
-
-
