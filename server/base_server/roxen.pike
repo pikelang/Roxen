@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.475 2000/04/04 16:47:38 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.476 2000/04/06 16:25:13 leif Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3112,10 +3112,17 @@ void dump( string file )
      (file_stat( ofile )[ ST_MTIME ] < file_stat(file)[ ST_MTIME ]))
   {
     if(q=catch( master()->dump_program( replace(file, "//", "/"), p ) ) )
-      report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
+    {
 #ifdef DUMP_DEBUG
+      report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
+    }
     else
       werror( file+" dumped successfully to "+ofile+"\n" );
+#else
+      array parts = replace(file, "//", "/") / "/";
+      if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
+      report_debug("[Encode failed for " + parts*"/" + "]\n");
+    }
 #endif
   }
 #ifdef DUMP_DEBUG
