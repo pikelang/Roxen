@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.222 2000/08/12 19:39:28 nilsson Exp $
+// $Id: rxml.pike,v 1.223 2000/08/14 15:16:58 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -1892,7 +1892,7 @@ class TagIfVariable {
   string source(RequestID id, string s) {
     mixed var=RXML.user_get_var(s);
     if(!var) return var;
-    return RXML.t_text->convert (var);
+    return RXML.t_text->encode (var);
   }
 }
 
