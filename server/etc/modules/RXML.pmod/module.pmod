@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.36 2000/01/28 16:25:17 mast Exp $
+//! $Id: module.pmod,v 1.37 2000/01/31 03:38:53 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1044,6 +1044,13 @@ constant FLAG_CACHE_EXECUTE_RESULT = 0x00200000;
 //! the final result. On a cache hit it'll be executed like the return
 //! value from do_return() to produce the result.
 
+constant FLAG_DONT_PREPARSE = 0x00000004;
+//! This is only used in the simple tag wrapper. Defined here as
+//!  placeholder
+
+constant FLAG_POSTPARSE = 0x00000008;
+//! This is only used in the simple tag wrapper. Defined here as
+//!  placeholder
 
 class Frame
 //! A tag instance.
