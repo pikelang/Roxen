@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.16 2001/02/06 22:42:06 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.17 2001/03/15 18:38:39 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -214,7 +214,7 @@ void xml_test(string t, mapping args, string c) {
 				 break;
 			     }
 			   },
-    ]) );
+    ]) )->add_quote_tag("!--","","--");
 
   if( catch(parser->finish(c)) ) {
     fails++;
@@ -357,5 +357,24 @@ class TagEmitTESTER {
 	([ "a":"kox", "c":"4", "d":"5foo4a" ])
       });
     }
+  }
+}
+
+class TagOEmitTESTER {
+  inherit TagEmitTESTER;
+  inherit "emit_object";
+  constant plugin_name = "OTESTER";
+
+  class MyEmit (array(mapping) dataset) {
+    inherit EmitObject;
+    int pos;
+
+    private mapping(string:mixed) really_get_row() {
+      return pos<sizeof(dataset)?dataset[pos++]:0;
+    }
+  }
+
+  EmitObject get_dataset(mapping m, RequestID id) {
+    return MyEmit( ::get_dataset(m,id) );
   }
 }
