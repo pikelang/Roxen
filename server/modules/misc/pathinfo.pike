@@ -1,5 +1,5 @@
 /*
- * $Id: pathinfo.pike,v 1.3 1999/03/25 22:01:22 grubba Exp $
+ * $Id: pathinfo.pike,v 1.4 1999/10/04 15:00:28 per Exp $
  *
  * PATH_INFO support for Roxen.
  *
@@ -10,7 +10,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.3 1999/03/25 22:01:22 grubba Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.4 1999/10/04 15:00:28 per Exp $";
 constant thread_safe = 1;
 
 // #define PATHINFO_DEBUG
@@ -36,6 +36,7 @@ mapping|int last_resort(object id)
   }
 
   string query = id->not_query;
+#if 0
   array(int) offsets = Array.map(query/"/", sizeof);
 
   int sum = 0;
@@ -71,13 +72,35 @@ mapping|int last_resort(object id)
 #ifdef PATHINFO_DEBUG
       roxen_perror(sprintf("PATHINFO: Directory: %O\n", file));
 #endif /* PATHINFO_DEBUG */
-
+      /* Hm. Lets try this: */
+      id->misc->path_info = query[offsets[probe]+1..];
+      id->not_query = file+"/";
+      return 1;
       lo = probe + 1;
     } else {
       hi = probe - 1;
     }
   }
-  /* not_query is zapped by id->conf->stat_file(). */
-  id->not_query = query;
+#else /* Slower, but it works... */
+  string pi = "";
+  while( (search( query, "/" ) != -1) && strlen( query ) > 0 )
+  {
+    query = reverse(query);
+    string add_path_info;
+    sscanf( query, "%[^/]/%s", add_path_info, query );
+    query = reverse( query );
+    if( strlen( pi ) )
+      pi = "/"+reverse( add_path_info )+pi;
+    else
+      pi = "/"+add_path_info;
+    id->misc->path_info = pi;
+    array st = id->conf->stat_file( query, id );
+    if( st )
+    {
+      id->not_query = query;
+      return 1;
+    }
+  }
+#endif
   return 0;
 }
