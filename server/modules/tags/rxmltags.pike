@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.248 2001/06/25 22:02:37 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.249 2001/06/28 19:17:09 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -266,7 +266,7 @@ class TagAppend {
 
     array do_enter (RequestID id)
     {
-      if (args->value || args->from) flags = RXML.FLAG_EMPTY_ELEMENT;
+      if (args->value || args->from) flags |= RXML.FLAG_EMPTY_ELEMENT;
       if (args->type) content_type = args->type (RXML.PXml);
     }
 
@@ -463,7 +463,7 @@ class TagSet {
 
     array do_enter (RequestID id)
     {
-      if (args->value || args->expr || args->from) flags = RXML.FLAG_EMPTY_ELEMENT;
+      if (args->value || args->expr || args->from) flags |= RXML.FLAG_EMPTY_ELEMENT;
       if (args->type) content_type = args->type (RXML.PXml);
     }
 
@@ -2096,7 +2096,7 @@ class UserTag {
   void create(string _name, int tag) {
     name=_name;
     lookup_name = "tag\0" + name;
-    if(tag) flags=RXML.FLAG_EMPTY_ELEMENT;
+    if(tag) flags |= RXML.FLAG_EMPTY_ELEMENT;
   }
 
   mixed _encode()
@@ -2621,8 +2621,6 @@ class FrameIf {
 	  if(and)
 	    return 0;
       }
-//        else if (compat_level > "2.1")
-//  	parse_error ("Unknown if test %O.\n", s);
     if(ifval) {
       do_iterate = 1;
       return 0;
