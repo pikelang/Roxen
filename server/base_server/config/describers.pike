@@ -5,6 +5,8 @@ int zonk;
 
 inherit "config/low_describers";
 
+import Array;
+
 string describe_configuration_global_variables(object node)
 {
   return link("<font size=+1><b>Server variables</b></font>");

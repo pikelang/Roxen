@@ -2,7 +2,7 @@
 
 // A fast directory module, without support for the fold/unfold stuff
 // in the normal one.
-string cvs_version = "$Id: fastdir.pike,v 1.5 1996/12/02 04:32:38 per Exp $";
+string cvs_version = "$Id: fastdir.pike,v 1.5.2.1 1997/03/02 19:22:17 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -130,7 +130,7 @@ string new_dir(string path, object id)
 
   files = roxen->find_dir(path, id);
   if(!files) return "<h1>There is no such directory.</h1>";
-  files = sort_array(files);
+  files = sort(files);
 
   for(i=0; i<sizeof(files) ; i++)
   {

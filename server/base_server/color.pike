@@ -1,6 +1,8 @@
 // Color support for roxen. 
 
-string cvs_version = "$Id: color.pike,v 1.2 1997/01/26 23:45:40 per Exp $";
+import Stdio;
+
+string cvs_version = "$Id: color.pike,v 1.2.2.1 1997/03/02 19:12:34 grubba Exp $";
 
 mapping (string:array(int)) colors = ([]);
 

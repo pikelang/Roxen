@@ -1,10 +1,10 @@
 //#define USE_GDBM
 
-string cvs_version = "$Id: db.pike,v 1.2 1996/12/01 19:18:27 per Exp $";
+string cvs_version = "$Id: db.pike,v 1.2.2.1 1997/03/02 19:13:07 grubba Exp $";
 #ifdef USE_GDBM
-inherit "/precompiled/gdbm";
+inherit Gdbm.gdbm;
 #else
-inherit "/precompiled/file";
+inherit files.file;
 private static mapping db;
 #endif
 

@@ -10,7 +10,7 @@ mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
-string cvs_version = "$Id: pikescript.pike,v 1.6.2.1 1997/03/01 17:39:29 grubba Exp $";
+string cvs_version = "$Id: pikescript.pike,v 1.6.2.2 1997/03/02 19:28:27 grubba Exp $";
 #include <module.h>
 
 #if constant(_static_modules)
@@ -161,10 +161,10 @@ mapping handle_file_extension(object f, string e, object got)
   ban[2] = seteuid;
   ban[3] = setuid;
 
-  add_efun("setegid", 0);
-  add_efun("seteuid", 0);
-  add_efun("setgid", 0);
-  add_efun("setuid", 0);
+  add_constant("setegid", 0);
+  add_constant("seteuid", 0);
+  add_constant("setgid", 0);
+  add_constant("setuid", 0);
 
   _master->set_inhibit_compile_errors(1);
   err=catch(p=compile_string(file, "Script:"+got->not_query));
@@ -172,10 +172,10 @@ mapping handle_file_extension(object f, string e, object got)
     s=_master->errors + "\n\n" + s;
   _master->set_inhibit_compile_errors(0);
 
-  add_efun("setegid", ban[0]);
-  add_efun("seteuid", ban[2]);
-  add_efun("setgid", ban[1]);
-  add_efun("setuid", ban[3]);
+  add_constant("setegid", ban[0]);
+  add_constant("seteuid", ban[2]);
+  add_constant("setgid", ban[1]);
+  add_constant("setuid", ban[3]);
   
   if(err)
   {

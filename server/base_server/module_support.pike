@@ -1,6 +1,6 @@
 inherit "read_config";
 
-string cvs_version = "$Id: module_support.pike,v 1.7 1996/12/02 04:32:34 per Exp $";
+string cvs_version = "$Id: module_support.pike,v 1.7.2.1 1997/03/02 19:14:15 grubba Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <config.h>
@@ -11,6 +11,7 @@ string cvs_version = "$Id: module_support.pike,v 1.7 1996/12/02 04:32:34 per Exp
 #endif
 #endif
 
+import Array;
 
 /* Set later on to something better in roxen.pike::main() */
 array (object) configurations;
@@ -488,9 +489,9 @@ object enable_module( string modname )
     {
       current_configuration->parse_module = me;
       if(current_configuration->_toparse_modules)
-	map_array(current_configuration->_toparse_modules,
-		  lambda(object o, object me) 
-		  { me->add_parse_module(o); }, me);
+	map(current_configuration->_toparse_modules,
+	    lambda(object o, object me) 
+	    { me->add_parse_module(o); }, me);
     }
 
     if(module->type & MODULE_PARSER)

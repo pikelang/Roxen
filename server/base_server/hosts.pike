@@ -1,4 +1,4 @@
-string cvs_version = "$Id: hosts.pike,v 1.8 1997/01/26 23:48:21 per Exp $";
+string cvs_version = "$Id: hosts.pike,v 1.8.2.1 1997/03/02 19:15:14 grubba Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7
@@ -8,6 +8,9 @@ string cvs_version = "$Id: hosts.pike,v 1.8 1997/01/26 23:48:21 per Exp $";
 #endif
 
 inherit "module_support";
+
+import files;
+import Stdio;
 
 #if 0
 inline nomask private static 
@@ -273,7 +276,7 @@ void create_host_name_lookup_processes()
   out=allocate(j);
   for(i=0; i<j; i++)
   {
-    out[i]=File();
+    out[i]=file();
     if (!(out2=out[i]->pipe())) {
       error("Couldn't create pipe! Out of fd's?\n");
     }

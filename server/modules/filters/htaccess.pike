@@ -3,10 +3,12 @@
 // .htaccess compability by David Hedbor, neotron@infovav.se 
 //   Changed into module by Per Hedbor, per@infovav.se
 
-string cvs_version = "$Id: htaccess.pike,v 1.7 1996/12/07 11:37:52 neotron Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.7.2.1 1997/03/02 19:23:33 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
+
+import Stdio;
 
 /*#define HTACCESS_DEBUG*/
 
@@ -379,7 +381,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 
   cache_key = "groupfile:" + roxen->current_configuration->name;
 
-  f = File();
+  f = files.file();
   if(!(f->open(groupfile, "r")))
   {
 #ifdef HTACCESS_DEBUG

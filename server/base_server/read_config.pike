@@ -2,10 +2,13 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.6 1996/12/06 23:01:17 per Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.6.2.1 1997/03/02 19:14:54 grubba Exp $";
 #else
 # include "base_server/newdecode.pike"
 #endif
+
+import Array;
+import Stdio;
 
 private mapping (string:mapping) configs = ([ ]);
 

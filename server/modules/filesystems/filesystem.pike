@@ -3,7 +3,7 @@
 // This is a virtual "file-system".
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
-string cvs_version = "$Id: filesystem.pike,v 1.7 1997/01/26 23:56:47 per Exp $";
+string cvs_version = "$Id: filesystem.pike,v 1.7.2.1 1997/03/02 19:23:04 grubba Exp $";
 #include <module.h>
 
 #if DEBUG_LEVEL > 20
@@ -15,6 +15,9 @@ string cvs_version = "$Id: filesystem.pike,v 1.7 1997/01/26 23:56:47 per Exp $";
 inherit "module";
 inherit "roxenlib";
 inherit "socket";
+
+import Array;
+import Stdio;
 
 int redirects, accesses, errors, dirlists;
 int puts, deletes;
@@ -157,7 +160,7 @@ array find_dir( string f, object id )
   if(QUERY(tilde) && QUERY(.files)) /* This is quite a lot faster */
     return dir;
 
-  return filter_array(dir, dir_filter_function);
+  return filter(dir, dir_filter_function);
 }
 
 

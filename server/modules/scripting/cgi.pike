@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.9.2.1 1997/02/24 18:39:40 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.9.2.2 1997/03/02 19:28:11 grubba Exp $";
 #include <module.h>
 
 inherit "module";
@@ -15,6 +15,8 @@ inherit "roxenlib";
 static mapping env=([]);
 static array runuser;
 
+import String;
+import Stdio;
 
 mapping build_env_vars(string f, object id, string|void path_info)
 {
@@ -35,7 +37,7 @@ mapping build_env_vars(string f, object id, string|void path_info)
   if(id->misc->ssi_env)
     new |= id->misc->ssi_env;
   
-  return new|env|(QUERY(env)?environment:([]));
+  return new|env|(QUERY(env)?getenv():([]));
 }
 
 
@@ -299,7 +301,7 @@ mixed find_file(string f, object id)
 #endif
   
   wd = dirname(f);
-  pipe1=File();
+  pipe1=files.file();
   pipe2=pipe1->pipe();
     
   array (int) uid;

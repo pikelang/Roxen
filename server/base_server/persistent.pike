@@ -1,13 +1,13 @@
 inherit "db";
 
-string cvs_version = "$Id: persistent.pike,v 1.3 1996/12/10 05:04:19 neotron Exp $";
+string cvs_version = "$Id: persistent.pike,v 1.3.2.1 1997/03/02 19:14:42 grubba Exp $";
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
 *                                                             *
 * What is not saved?                                          *
-* o Listening info (/precompiled/port)                        *
-* o Open files (/precompiled/file)                            *
+* o Listening info (files.port)                               *
+* o Open files (files.file)                                   *
 *                                                             *
 * This can be solved by specifying two new objects, like      *
 * persists/port and persist/file in Pike. I leave that as an  *

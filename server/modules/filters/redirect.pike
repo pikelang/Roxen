@@ -4,13 +4,15 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-string cvs_version = "$Id: redirect.pike,v 1.4 1996/12/02 04:32:41 per Exp $";
+string cvs_version = "$Id: redirect.pike,v 1.4.2.1 1997/03/02 19:23:49 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
 private int redirs = 0;
-inherit "/precompiled/regexp";
+inherit Regexp : regexp;
+
+import Array;
 
 void create()
 {
@@ -136,14 +138,14 @@ mixed first_try(object id)
 	  
 	  if((foo=regexp::split(m)))
 	  {
-	    array bar = map_array(foo, lambda(string s, mapping f) {
+	    array bar = map(foo, lambda(string s, mapping f) {
 	      return "$"+(f->num++);
 	    }, ([ "num":1 ]));
 	    foo +=({(id->not_query/"/"-({""}))[-1], 
 						 id->not_query[1..100000] });
 	    bar +=({ "%f", "%p" });
-	    foo = map_array(foo, lambda(mixed s) { return (string)s; });
-	    bar = map_array(bar, lambda(mixed s) { return (string)s; });
+	    foo = map(foo, lambda(mixed s) { return (string)s; });
+	    bar = map(bar, lambda(mixed s) { return (string)s; });
 	    to = replace(redirect_patterns[f], bar, foo);
 	    break;
 	  }

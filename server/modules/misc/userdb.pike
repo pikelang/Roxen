@@ -3,10 +3,13 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.8 1996/12/30 23:51:16 neotron Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.8.2.1 1997/03/02 19:25:04 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
+
+import Stdio;
+import Array;
 
 mapping users, uid2user;
 array fstat;
@@ -191,8 +194,8 @@ void read_data()
      setpwent();
      while(tmp = getpwent())
        tmp2 += ({
-	 map_array(tmp, lambda(mixed s) { return (string)s; }) * ":" 
-               }); 
+	 map(tmp, lambda(mixed s) { return (string)s; }) * ":"
+       }); 
      endpwent();
      data = tmp2 * "\n";
      break;
@@ -332,7 +335,7 @@ string status()
      +", "+(string)nouser+" had the wrong username<br>\n"
      + "<p>"+
      "<h3>Failure by host</h3>" +
-     map_array(indices(failed), lambda(string s) {
+     map(indices(failed), lambda(string s) {
        return roxen->quick_ip_to_host(s) + ": "+failed[s]+"<br>\n";
      }) * "" 
      + "<p>The database has "+ sizeof(users)+" entries"

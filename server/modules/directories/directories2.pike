@@ -1,15 +1,17 @@
 /*
- * $Id: directories2.pike,v 1.1.2.3 1997/03/01 17:37:25 grubba Exp $
+ * $Id: directories2.pike,v 1.1.2.4 1997/03/02 19:22:45 grubba Exp $
  *
  * Directory listings mark 2
  *
  * Henrik Grubbström 1997-02-13
  */
 
-string cvs_version = "$Id: directories2.pike,v 1.1.2.3 1997/03/01 17:37:25 grubba Exp $";
+string cvs_version = "$Id: directories2.pike,v 1.1.2.4 1997/03/02 19:22:45 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
+
+import Array;
 
 array register_module()
 {

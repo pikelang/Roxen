@@ -1,10 +1,16 @@
+import files;
+
 void perror(string format,mixed ... args);
+
+#if !efun(error)
+#define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
+#endif /* !error */
 
 string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
   object p,p2;
 
-  p2 = File();
+  p2 = file();
   p=p2->pipe();
   if(!p) error("Popen failed. (couldn't create pipe)\n");
 
@@ -17,7 +23,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 	perror("File to dup2 to closed!\n");
 	exit(99);
       }
-      p->dup2(File("stdout"));
+      p->dup2(file("stdout"));
       if(uid || gid)
       {
 	object privs = ((program)"privs")("Executing script as non-www user");
@@ -29,7 +35,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 	if(pw) initgroups(pw[0], (int)olduid[0]);
 #endif
       }
-      catch(exece("/bin/sh", ({ "-c", s }), (env||environment)));
+      catch(exece("/bin/sh", ({ "-c", s }), (env||getenv())));
     };
     exit(69);
   }else{
@@ -67,9 +73,9 @@ int low_spawne(string s,string *args, mapping|array env, object stdin,
     env=([]);
   
   
-  stdin->dup2(File("stdin"));
-  stdout->dup2(File("stdout"));
-  stderr->dup2(File("stderr"));
+  stdin->dup2(file("stdin"));
+  stdout->dup2(file("stdout"));
+  stderr->dup2(file("stderr"));
   if(stringp(wd) && sizeof(wd))
     cd(wd);
   exece(s, args, env);

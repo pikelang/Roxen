@@ -1,4 +1,5 @@
-string cvs_version = "$Id: roxen.pike,v 1.31.2.2 1997/03/01 17:27:27 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.31.2.3 1997/03/02 19:11:56 grubba Exp $";
+
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -13,6 +14,10 @@ inherit "hosts";
 inherit "socket";
 inherit "disk_cache";
 inherit "language";
+
+import Stdio;
+import Array;
+import String;
 
 int num_connections;
 
@@ -140,7 +145,7 @@ private static void fork_or_quit()
     exit(0);
 #if efun(_pipe_debug)
   call_out(lambda() {  // Wait for all connections to finish
-    call_out(this_function(), 20);
+    call_out(Simulate.this_function(), 20);
     if(!_pipe_debug()[0]) exit(0);
   }, 1);
 #endif
@@ -257,7 +262,7 @@ object create_listen_socket(mixed port_no, object conf,
 
   if(!port_no)
   {
-    port = Port ( "stdin", accept_callback );
+    port = files.port ( "stdin", accept_callback );
 
     if(port->errno())
     {
@@ -265,7 +270,7 @@ object create_listen_socket(mixed port_no, object conf,
 		   "Errno is "+port->errno()+"\n");
     }
   } else {
-    port = Port ();
+    port = files.port ();
     if(!stringp(ether) || (lower_case(ether) == "any"))
       ether=0;
     if(ether)
@@ -932,7 +937,7 @@ public varargs string type_from_filename( string file, int to )
   string ext=extension(file);
     
   if(!current_configuration)
-    current_configuration = find_configuration_for(previous_object());
+    current_configuration = find_configuration_for(Simulate.previous_object());
   if(!current_configuration->types_fun)
     return to?({ "application/octet-stream", 0 }):"application/octet-stream";
 
@@ -1498,7 +1503,7 @@ int startpid;
 
 mapping shutdown() 
 {
-  catch(map_array(indices(portno)), destruct);
+  catch(map(indices(portno)), destruct);
 
   object privs = ((program)"privs")("Shutting down the server");
   // Change to root user.
@@ -1509,13 +1514,13 @@ mapping shutdown()
   {
     // Only _really_ do something in the main process.
     int pid;
-    catch(map_array(configuration_ports, destruct));
+    catch(map(configuration_ports, destruct));
   
     if(search(subs, getpid()) == -1)
     {
       perror("Shutting down Roxen.\n");
-      catch(map_array(subs, kill, signum("SIGUSR1")));
-      catch(map_array(subs, kill, signum("SIGKILL")));
+      catch(map(subs, kill, signum("SIGUSR1")));
+      catch(map(subs, kill, signum("SIGKILL")));
       
       // Fallback for systems without geteuid, Roxen will (probably)
       // not be able to kill the start-script if this is the case.
@@ -1699,7 +1704,7 @@ void start(int num)
 
   init_log_file(current_configuration);
 
-  map_array(indices(current_configuration->open_ports), do_dest);
+  map(indices(current_configuration->open_ports), do_dest);
 
   catch {
     foreach(query("Ports"), port )
@@ -1734,7 +1739,7 @@ void start(int num)
 		    "Tried:\n"
 		    "Port  Protocol   IP-Number \n"
 		    "---------------------------\n"
-		    + map_array(query("Ports"), lambda(array p) {
+		    + map(query("Ports"), lambda(array p) {
 		      return sprintf("%5d %-10s %-20s\n", @p);
 		    })*"");
     }
@@ -1744,9 +1749,9 @@ void start(int num)
 
 void create()
 {
-  add_efun("roxen", this_object());
-  add_efun("spinner", this_object());
-  add_efun("load",    load);
+  add_constant("roxen", this_object());
+  add_constant("spinner", this_object());
+  add_constant("load",    load);
   (object)"color";
 }
 
@@ -2791,8 +2796,8 @@ void initiate_configuration_port( int|void first )
   object o;
   array port;
 
-  if(catch(map_array(configuration_ports, destruct)))
-    catch(map_array(configuration_ports, do_dest));
+  if(catch(map(configuration_ports, destruct)))
+    catch(map(configuration_ports, do_dest));
   
   catch(do_dest(main_configuration_port));
   
@@ -3168,7 +3173,7 @@ void exit_when_done()
   // Then wait for all sockets, but maximum 10 minutes.. 
 #if efun(_pipe_debug)
   call_out(lambda() { 
-    call_out(this_function(), 5);
+    call_out(Simulate.this_function(), 5);
     if(!_pipe_debug()[0])
     {
       werror("Exiting roxen (all connections closed).\n");
@@ -3194,7 +3199,7 @@ array fork_it();
 
 array do_fork_it()
 { 
-  catch(map_array(configuration_ports, destruct));
+  catch(map(configuration_ports, destruct));
   if(objectp(main_configuration_port))
     destruct(main_configuration_port);
   main_configuration_port = 0;
@@ -3272,7 +3277,7 @@ varargs int main(int argc, array (string) argv)
   destruct(stdout);
   destruct(stdin);
 
-  add_efun("write", perror);
+  add_constant("write", perror);
   
   
   mark_fd(0, "Stdin");
@@ -3393,14 +3398,14 @@ string checkfd(object id)
      "<table width=100% cellspacing=0 cellpadding=0>\n"+
      "<tr align=right><td>fd</td><td>type</td><td>mode</td>"+
      "<td>size</td></tr>\n"+
-     (map_array(get_all_active_fd(),
-		lambda(int fd) 
-		{
-		  return ("<tr align=right><th>"+fd+"</th><td>"+
-			  replace(checkfd_fix_line(fd_info(fd)),",",
-				  "</td><td>")
-			  +"</td><td align=left>"
-			  +(mark_fd(fd)||"")+"<br></td></tr>"); 
-		})*"\n")+
+     (map(get_all_active_fd(),
+	  lambda(int fd) 
+	  {
+	    return ("<tr align=right><th>"+fd+"</th><td>"+
+		    replace(checkfd_fix_line(fd_info(fd)),",",
+			    "</td><td>")
+		    +"</td><td align=left>"
+		    +(mark_fd(fd)||"")+"<br></td></tr>"); 
+	  })*"\n")+
      "</table>");
 }

@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.19.2.2 1997/03/01 13:01:54 grubba Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.19.2.3 1997/03/02 19:28:43 grubba Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -20,6 +20,11 @@ string cvs_version = "$Id: htmlparse.pike,v 1.19.2.2 1997/03/01 13:01:54 grubba 
 
 inherit "module";
 inherit "roxenlib";
+
+import String;
+import Array;
+import Stdio;
+
 int ok;
 
 function language = roxen->language;
@@ -530,7 +535,7 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   if (n=m->variables) 
   {
     if(n!="variables")
-      return map_array(indices(got->variables), lambda(string s, mapping m) {
+      return map(indices(got->variables), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
       }, got->variables)*"\n";
     return implode_nicely(indices(got->variables));
@@ -539,7 +544,7 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   if (n=m->cookies) 
   {
     if(n!="cookies")
-      return map_array(indices(got->cookies), lambda(string s, mapping m) {
+      return map(indices(got->cookies), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
       }, got->cookies)*"\n";
     return implode_nicely(indices(got->cookies));
@@ -601,7 +606,7 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
 	user=got->auth[1];
       string addr=got->remoteaddr || "Internal";
       return popen(m->cmd,
-		   environment
+		   getenv()
 		   | build_roxen_env_vars(got)
 		   | build_env_vars(got->not_query, got, 0));
 
@@ -1451,8 +1456,8 @@ string tag_client(string tag,mapping m, string s,object got,object file)
     isok=!!got->supports[m->support];
 
   if (!(isok && m->or) && m->name)
-    isok=_match(got->client*" ", map_array(m->name/",", 
-					   lambda(string s){return s+"*";}));
+    isok=_match(got->client*" ", map(m->name/",", 
+				     lambda(string s){return s+"*";}));
   return (isok^invert)?s:""; 
 }
 

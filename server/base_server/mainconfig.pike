@@ -1,7 +1,10 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.29 1996/12/13 00:41:16 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.29.2.1 1997/03/02 19:13:53 grubba Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
+
+import Array;
+import Stdio;
 
 #include <confignode.h>
 #include <module.h>
@@ -24,6 +27,8 @@ int bar=time(1);
 
 class Node {
   inherit "struct/node";
+
+  import Simulate;
 
   mixed original;
   int changed, moredocs;
@@ -250,7 +255,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
   switch(type)
   {
   case TYPE_MODULE_LIST:
-    return map_array(var/"\000", find_module);
+    return map(var/"\000", find_module);
 
   case TYPE_MODULE:
     return find_module(var);
@@ -295,7 +300,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
 
    case TYPE_DIR_LIST:
     array foo;
-    foo=map_array((var-" ")/",", lambda(string var, object node) {
+    foo=map((var-" ")/",", lambda(string var, object node) {
       if (!strlen( var ) || file_size( var ) != -2)
       {
 	if(node->error)	
@@ -360,7 +365,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     if(node->data[VAR_MISC])
       return (int)var;
     else
-      return map_array((var-" ")/",", lambda(string s){ 
+      return map((var-" ")/",", lambda(string s){ 
 	return (int)s;
       });
     
@@ -870,8 +875,8 @@ int nunfolded(object o)
 }
 
 
-object module_font = Font()->load("base_server/config/font");
-object button_font = Font()->load("base_server/config/button_font");
+object module_font = Image.font()->load("base_server/config/font");
+object button_font = Image.font()->load("base_server/config/button_font");
 
 mapping auto_image(string in, object id)
 {
@@ -1198,7 +1203,7 @@ mapping configuration_parse(object id)
 	roxen->remove_configuration(o->data->name);
 
 	if(roxen->configurations[i]->ports_open)
-	  map_array(values(roxen->configurations[i]->ports_open), destruct);
+	  map(values(roxen->configurations[i]->ports_open), destruct);
 	destruct(roxen->configurations[i]);
 	
 	roxen->configurations = 

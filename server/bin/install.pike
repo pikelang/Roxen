@@ -1,5 +1,5 @@
 #!bin/pike -m etc/master.pike
-string cvs_version = "$Id: install.pike,v 1.8 1997/01/07 03:35:06 neotron Exp $";
+string cvs_version = "$Id: install.pike,v 1.8.2.1 1997/03/02 19:18:36 grubba Exp $";
 #include <simulate.h>
 #include <roxen.h>
 
@@ -72,7 +72,7 @@ int verify_port(int try)
 {
   int ret;
   object p;
-  p = (object)"/precompiled/port";
+  p = files.port();
   ret = p->bind(try);
   destruct(p);
   return ret;  
@@ -83,7 +83,7 @@ int getport()
   object p;
   int port;
 
-  p = (object)"/precompiled/port";
+  p = files.port();
 
   while(!(p -> bind(port = 10000 + random(10000))))
     ;

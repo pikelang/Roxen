@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 // A quite complex directory module. Generates macintosh like listings.
-string cvs_version = "$Id: directories.pike,v 1.7 1997/01/26 23:56:23 per Exp $";
+string cvs_version = "$Id: directories.pike,v 1.7.2.1 1997/03/02 19:22:31 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -286,7 +286,7 @@ object create_node(string f, object id)
   
   if(!dir)    return my_node;
   
-  foreach(sort_array((array)dir), file)
+  foreach(sort((array)dir), file)
   {
     node = my_node->descend(file);
     node->data = file;
