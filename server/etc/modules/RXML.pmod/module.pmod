@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.84 2000/03/19 16:32:51 nilsson Exp $
+//! $Id: module.pmod,v 1.85 2000/03/20 07:27:12 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1368,17 +1368,17 @@ class Frame
   //! as above. If the result variable is Void (which it defaults to),
   //! content is used as result if it's of a compatible type.
   //!
-  //! Regarding do_process only:
-  //!
-  //! Normally the content variable is set to the parsed content of
-  //! the tag before do_process() is called. This may be Void if the
-  //! content parsing didn't produce any result.
-  //!
   //! If there is no do_return() and the result from parsing the
   //! content is not Void, it's assigned to or added to the content
   //! variable. Assignment is used if the content type is
   //! nonsequential, addition otherwise. Thus earlier values are
   //! simply overridden for nonsequential types.
+  //!
+  //! Regarding do_process only:
+  //!
+  //! Normally the content variable is set to the parsed content of
+  //! the tag before do_process() is called. This may be Void if the
+  //! content parsing didn't produce any result.
   //!
   //! piece is used when the tag is operating in streaming mode (i.e.
   //! FLAG_STREAM_CONTENT is set). It's then set to each successive
@@ -2734,10 +2734,11 @@ class Type
 	p->__object_marker->create (p);
 #endif
 	if (_p_cache) {
-	  // Relying on interpreter lock in this block.
-	  PCacheObj pco = _p_cache[tag_set || ctx->tag_set];
-	  p->_next_free = pco->free_parser;
-	  pco->free_parser = p;
+	  if (PCacheObj pco = _p_cache[tag_set || ctx->tag_set]) {
+	    // Relying on interpreter lock here.
+	    p->_next_free = pco->free_parser;
+	    pco->free_parser = p;
+	  }
 	}
 	else {
 	  // Relying on interpreter lock in this block.
