@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.26 2001/08/28 15:48:00 per Exp $
+// $Id: DBManager.pmod,v 1.27 2001/08/31 17:57:31 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -179,8 +179,27 @@ private
 
     if( (int)d[0]["local"] )
     {
-      res= connect_to_my_mysql( user, db );
-      return res;
+#ifdef THREADS
+      mapping m = sql_cache[this_thread()] ||
+	(sql_cache[this_thread()] = ([]));
+#else
+      mapping m = sql_cache;
+#endif /* THREADS */
+      string what = d[0]->path;
+      if (m[what]) {
+	return m[what];
+      }
+      sql_cache_size++;
+      if( sql_cache_size > 30 )
+      {
+	clear_sql_caches();
+#ifdef THREADS
+	m = sql_cache[this_thread()] = ([]);
+#else
+	m = sql_cache;
+#endif /* THREADS */
+      }      
+      return m[what] = connect_to_my_mysql( user, db );
     }
     // Otherwise it's a tad more complex...  
     if( user[strlen(user)-2..] == "ro" )
