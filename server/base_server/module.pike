@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.83 2000/02/20 17:41:33 nilsson Exp $
+// $Id: module.pike,v 1.84 2000/02/24 04:48:52 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -642,17 +642,6 @@ void add_api_function( string name, function f, void|array(string) types)
 mapping api_functions()
 {
   return _api_functions;
-}
-
-function _rxml_error;
-string rxml_error(string tag, string error, RequestID id) {
-  if(_rxml_error) return _rxml_error(tag, error, id);
-  if(id->conf->get_provider("RXMLErrorAlert")) {
-    _rxml_error=id->conf->get_provider("RXMLErrorAlert")->rxml_error;
-    return _rxml_error(tag, error, id);
-  }
-  return ((id->misc->debug||id->prestate->debug)?
-    sprintf("(%s: %s)", capitalize(tag), error):"")+"<false>";
 }
 
 mapping query_tag_callers()
