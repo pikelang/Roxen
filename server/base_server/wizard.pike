@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.83 1999/01/10 06:21:56 mast Exp $
+/* $Id: wizard.pike,v 1.84 1999/02/26 16:40:38 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -452,6 +452,10 @@ string parse_wizard_page(string form, object id, string wiz_name, void|string pa
   string page = id->variables->_page;
   int pageno = (int)page;
   mapping foo = ([]);
+
+  // FIXME: Add support for preparse on the page-level.
+  // form = parse_rxml(form, id);
+
   // Cannot easily be inlined below, believe me... Side-effects.
   form = parse_html(form,(id->misc->extra_wizard_tags||([]))+
 		    ([ "var":wizard_tag_var, ]),
