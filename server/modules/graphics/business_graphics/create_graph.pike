@@ -10,12 +10,13 @@ import Array;
 import Stdio;
 inherit "polyline.pike";
 constant LITET = 1.0e-40;
+constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.79 1997/11/29 22:00:29 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.80 1997/11/30 05:05:48 hedda Exp $";
 
 /*
-These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
+These functions are written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_graph draws a graph but there are also some other functions
 used by create_pie and create_bars.
 */ 
@@ -43,6 +44,22 @@ object tileimage(object img, int xs, int ys)
       dest->paste(img,x,y);
 
   return dest;
+}
+
+//Key word eng:
+//This function writes a float like on a engineer-format
+string diagram_eng(float a)
+{
+  array(string) pfix = ({ "a", "f", "p", "n", "µ", "m", "",
+			  "k", "M", "G", "T", "P", "E" });
+  if (a == 0.0) return "0";
+  float p = log(a)/log(1000.0);
+  if (p < -6.0) p = 0.0;
+  if (p >= 7.0) p = 0.0;
+  int i = (int) floor(p+0.000001);
+  string s;
+  sscanf(sprintf("%g%s", a*exp(-i*log(1000.0)), pfix[6+i]), "%*[ ]%s", s);
+  return s;
 }
 
 void draw(object(image) img, float h, array(float) coords)
@@ -321,8 +338,8 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
     diagram_data["box"]=0;
 
 
-  xmaxvalue=max(xmaxvalue, xminvalue+LITET);
-  ymaxvalue=max(ymaxvalue, yminvalue+LITET);
+  xmaxvalue=max(xmaxvalue, xminvalue+STORTLITET);
+  ymaxvalue=max(ymaxvalue, yminvalue+STORTLITET);
 
 
   if (!(diagram_data["xminvalue"]))
@@ -916,15 +933,28 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	diagram_data["values_for_ynames"]+=({start+=diagram_data["yspace"]});
     }
   
-  //Generera texten om den inte finns
+  //Generate the texten if it don't exist
   if (!(diagram_data["ynames"]))
-    {
-      diagram_data["ynames"]=
-	allocate(sizeof(diagram_data["values_for_ynames"]));
-      
-      for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
-	diagram_data["ynames"][i]=no_end_zeros((string)(diagram_data["values_for_ynames"][i]));
-    }
+    if (diagram_data["eng"])
+      {
+	diagram_data["ynames"]=
+	  allocate(sizeof(diagram_data["values_for_ynames"]));
+	
+	for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
+	  diagram_data["ynames"][i]=
+	    diagram_eng((float)(diagram_data["values_for_ynames"][i]));
+      }
+    else
+      {
+	diagram_data["ynames"]=
+	  allocate(sizeof(diagram_data["values_for_ynames"]));
+	
+	for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
+	  diagram_data["ynames"][i]=no_end_zeros((string)(diagram_data["values_for_ynames"][i]));
+      }
+  
+
+
   if (!(diagram_data["xnames"]))
     {
       diagram_data["xnames"]=

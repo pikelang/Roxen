@@ -14,7 +14,7 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.51 1997/11/29 22:00:26 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.52 1997/11/30 05:05:41 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -121,13 +121,25 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   
   //Generera texten om den inte finns
   if (!(diagram_data["ynames"]))
-    {
-      diagram_data["ynames"]=
-	allocate(sizeof(diagram_data["values_for_ynames"]));
-      
-      for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
-	diagram_data["ynames"][i]=no_end_zeros((string)(diagram_data["values_for_ynames"][i]));
-    }
+    if (diagram_data["eng"])
+      {
+	diagram_data["ynames"]=
+	  allocate(sizeof(diagram_data["values_for_ynames"]));
+	
+	for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
+	  diagram_data["ynames"][i]=
+	    diagram_eng((float)(diagram_data["values_for_ynames"][i]));
+      }
+    else
+      {
+	diagram_data["ynames"]=
+	  allocate(sizeof(diagram_data["values_for_ynames"]));
+	
+	for(int i=0; i<sizeof(diagram_data["values_for_ynames"]); i++)
+	  diagram_data["ynames"][i]=no_end_zeros((string)(diagram_data["values_for_ynames"][i]));
+      }
+  
+
   if (!(diagram_data["xnames"]))
     {
       diagram_data["xnames"]=

@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.46 1997/11/30 04:56:12 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.47 1997/11/30 05:05:33 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -429,6 +429,8 @@ string tag_diagram(string tag, mapping m, string contents,
 
   if(m->center) res->center = (int)m->center;
 
+  if (m->eng) res->eng=1;
+
   if(m["3d"])
   {
     res->drawtype = "3D";
@@ -625,7 +627,7 @@ mapping find_file(string f, object id)
 		 "textcolor": res->fg,
 		 "bgcolor":   res->bg,
 		 "orient":    res->orientation,
-
+		 
 		 "xminvalue": (float)res->xstart,
 		 "xmaxvalue": (float)res->xstop,
 		 "yminvalue": (float)res->ystart,
@@ -661,6 +663,7 @@ mapping find_file(string f, object id)
 		 "image":     res->image,
 
 		 "bw":       res->bw,
+		 "eng":      res->eng
   ]);
 
   if(!res->xstart)  m_delete( diagram_data, "xminvalue" );
