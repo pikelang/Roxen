@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.110 2003/11/17 14:52:04 anders Exp $";
+  "$Id: config_filesystem.pike,v 1.111 2004/01/14 16:46:30 jonasw Exp $";
 
 constant path = "config_interface/";
 
@@ -256,7 +256,9 @@ mixed find_file( string f, RequestID id )
 	  "</define>"
 	  "<content>"
 	  "<dox>"
+	  "<div class='doc'>"
 	  +data+
+	  "</div>"
 	  "</dox>"
 	  "</content>";
         if( title )
