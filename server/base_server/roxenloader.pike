@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.260 2001/06/27 13:02:36 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.261 2001/06/27 15:46:59 tomas Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -526,7 +526,7 @@ Process.Process spawn_pike(array(string) args, void|string wd,
 #ifndef __NT__
     ({getcwd()+"/start",
 #else /* __NT__ */
-    ({getcwd()+"/bin/roxen.exe","-once","-silent",
+    ({getcwd()+"/../ntstart.exe",
 #endif /* __NT__ */
       "--cd",wd,
       "--quiet","--program"})+args,
