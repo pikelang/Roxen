@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.898 2005/03/07 16:47:34 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.899 2005/03/10 18:06:12 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2084,7 +2084,11 @@ array sorted_urls = ({});
 array(string) find_ips_for( string what )
 {
   if( what == "*" || lower_case(what) == "any" )
-    return ({ 0, "::" });	// ANY
+    return ({ 0,
+#if constant(__ROXEN_SUPPORTS_IPV6__)
+	      "::",
+#endif /* __ROXEN_SUPPORTS_IPV6__ */
+    });	// ANY
 
   if( is_ip( what ) )
     return ({ what });
@@ -2300,11 +2304,21 @@ int register_url( string url, Configuration conf )
       // We have a non-ANY IPv4 IP number.
       ipv4 = ({ 0 });
     }
+#if constant(__ROXEN_SUPPORTS_IPV6__)
     if (m["::"][port] && sizeof(ipv6 - ({ "::" }))) {
       // We have a non-ANY IPv6 IP number.
       ipv6 = ({ "::" });
     }
     required_hosts = ipv4 + ipv6;
+#else
+    if (sizeof(ipv6)) {
+      foreach(ipv6, string p) {
+	report_warning(LOC_M(0, "IPv6 port for URL %s disabled: %s\n"),
+		       url, p);
+      }
+    }
+    required_hosts = ipv4;
+#endif /* __ROXEN_SUPPORTS_IPV6__ */
   }
 
   int failures;
