@@ -138,6 +138,9 @@ mapping call_tagdocumentation(RoxenModule o) {
   return doc;
 }
 
+// Remember a tag documentation for 15 minutes.
+#define CACHE_TIMEOUT 900 
+
 private int generation;
 multiset undocumented_tags=(<>);
 string find_tag_doc(string name, void|object id) {
@@ -147,7 +150,7 @@ string find_tag_doc(string name, void|object id) {
   int new_gen=tag_set->generation;
 
   if((doc=cache_lookup("tagdoc",name)) && generation==new_gen)
-    return doc;
+    return parse_doc(doc, name, id);
 
   if(generation!=new_gen) {
     undocumented_tags=(<>);
@@ -175,9 +178,8 @@ string find_tag_doc(string name, void|object id) {
 
     mapping tagdoc=call_tagdocumentation(tag);
     if(!tagdoc || !tagdoc[name]) continue;
-    cache_set("tagdoc", name, tagdoc[name]);
-    doc=parse_doc(tagdoc[name], name, id);
-    return doc;
+    cache_set("tagdoc", name, tagdoc[name], CACHE_TIMEOUT);
+    return parse_doc(tagdoc[name], name, id);
   }
 
   undocumented_tags[name]=1;
