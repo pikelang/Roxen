@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.38 1998/07/02 13:01:06 grubba Exp $
+# $Id: start,v 1.39 1998/07/08 19:13:08 mast Exp $
 
 VERSION=202; BETA=.b;
 
@@ -25,22 +25,16 @@ umask 022
 
 # Pike default Master-program
 if [ "x$PIKE_MASTER" = "x" ]; then
-  if [ -f lib/master.pike ]; then
+  if [ -d lib/pike/share ]; then
+    # This is used with localinstall
+    DEFINES="$DEFINES -mlib/pike/master.pike -Ilib/pike/share/include"
+    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/pike/modules:lib/pike/share/modules"
+  elif [ -f lib/master.pike ]; then
     DEFINES="$DEFINES -mlib/master.pike -Ilib/include"
     PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/modules"
   elif [ -f lib/pike/master.pike ]; then
     DEFINES="$DEFINES -mlib/pike/master.pike -Ilib/pike/include"
     PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/pike/modules"
-  else
-    # This is used with localinstall
-    if [ -f ../pike/src/lib/master.pike ]; then
-      DEFINES="$DEFINES -m../pike/src/lib/master.pike -I../pike/src/lib/include"
-      PIKE_MODULE_PATH="$PIKE_MODULE_PATH:../pike/src/lib/modules"
-      if [ -d ../pike/src/share/modules/. ]; then
-        DEFINES="$DEFINES -I../pike/src/share/include"
-        PIKE_MODULE_PATH="$PIKE_MODULE_PATH:../pike/src/share/modules"
-      fi
-    fi
   fi
   export PIKE_MODULE_PATH
 else
