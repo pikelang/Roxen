@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.17 2000/11/07 10:09:26 kuntri Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.18 2000/11/07 10:10:27 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -102,7 +102,7 @@ class TagEmitLanguages {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "emit#languages":({ #"<desc plugin><p><short>
+  "emit#languages":({ #"<desc plugin='plugin'><p><short>
  Outputs language descriptions.</short>It will output information
  associated to languages, such as the name of the language in
  different languages. A list of languages that should be output can
@@ -112,35 +112,35 @@ constant tagdoc=([
  Analyzer module will be used.</p>
 </desc>
 
-<attr name=langs><p>
+<attr name='langs'><p>
  Should contain comma separated list of language codes. The languages
  associated with these codes will be emitted in this order.</p>
 </attr>",
 
 		      ([
-"&_.code;":#"<desc ent><p>
+"&_.code;":#"<desc ent='ent'><p>
  The language code.</p>
 </desc>",
 
-"&_.en;":#"<desc ent><p>
+"&_.en;":#"<desc ent='ent'><p>
  The language name in english.</p>
 </desc>",
 
-"&_.local;":#"<desc ent><p>
+"&_.local;":#"<desc ent='ent'><p>
  The language name as written in the language itself.</p>
 </desc>",
 
-"&_.preurl;":#"<desc ent><p>
+"&_.preurl;":#"<desc ent='ent'><p>
  A URL which makes this language the used one by altering
  prestates.</p>
 </desc>",
 
-"&_.confurl;":#"<desc ent><p>
+"&_.confurl;":#"<desc ent='ent'><p>
  A URL which makes the language the used one by altering the roxen
  cookie.</p>
 </desc>",
 
-"&_.localized;":#"<desc ent><p>
+"&_.localized;":#"<desc ent='ent'><p>
  The language name as written in the currently selected language.</p>
 </desc>"
 		      ])
