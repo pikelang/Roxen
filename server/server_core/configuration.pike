@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.558 2004/05/20 22:12:27 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.559 2004/05/22 15:47:42 mani Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1326,7 +1326,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
   if(!no_magic)
   {
-    // NGSERVER: Remove the /internal-foo-bar and use only /%00/bar
+    // NGSERVER: Remove the /internal-foo-bar and use only /%01/bar
     TIMER_START(internal_magic);
 #ifndef NO_INTERNAL_HACK
     // Find internal-foo-bar images
