@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.48 1999/12/27 13:12:36 mast Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.49 1999/12/28 00:57:47 nilsson Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -117,12 +117,12 @@ mixed save()
 mixed set(string var, mixed val)
 {
 #if DEBUG_LEVEL > 30
-  perror(sprintf("MAIN: set(\"%s\", %O)\n", var, val));
+  werror(sprintf("MAIN: set(\"%s\", %O)\n", var, val));
 #endif
   if(variables[var])
   {
 #if DEBUG_LEVEL > 28
-    perror("MAIN:    Setting global variable.\n");
+    werror("MAIN:    Setting global variable.\n");
 #endif
     return variables[var][VAR_VALUE] = val;
   }
@@ -173,12 +173,12 @@ program my_compile_file(string file)
     if( catch ( master()->dump_program( file, p ) ) )
     {
 #ifdef MODULE_DEBUG
-      report_debug("\b [nodump] \b");
+      werror("\b [nodump] \b");
 #endif
       catch( Stdio.File( ofile, "wct" ) );
     } else {
 #ifdef MODULE_DEBUG
-      report_debug("\b [dump] \b");
+      werror("\b [dump] \b");
 #endif
     }
   return p;
@@ -307,9 +307,9 @@ class ModuleInfo
       return 1;
     };
     if( stringp( q ) )
-      werror( q );
+      report_debug( q );
     else if( q && sizeof(q) )
-      werror(describe_backtrace(q));
+      report_debug(describe_backtrace(q));
     return 0;
   }
 

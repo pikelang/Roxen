@@ -1,17 +1,13 @@
-// import Array;
+// string cvs_version = "$Id: read_config.pike,v 1.30 1999/12/28 01:08:12 nilsson Exp $";
 
 #include <module.h>
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.29 1999/12/13 22:09:16 mast Exp $";
 #else
 import spider;
 # include "newdecode.pike"
 #endif
-
-// import Array;
-// import Stdio;
 
 mapping (string:mapping) configs = ([ ]);
 mapping (string:array(int)) config_stat_cache = ([]);
@@ -21,7 +17,7 @@ mapping copy_configuration(string from, string to)
 {
   if(!configs[from]) return 0;
 #ifdef DEBUG
-  write(sprintf("Copying configuration \"%s\" to \"%s\"\n", from, to));
+  werror("Copying configuration \"%s\" to \"%s\"\n", from, to);
 #endif /* DEBUG */
   configs[to] = copy_value( configs[from] );
   return configs[to];
@@ -56,7 +52,7 @@ void save_it(string cl)
   Stdio.File fd;
   string f;
 #ifdef DEBUG_CONFIG
-  perror("CONFIG: Writing configuration file for cl "+cl+"\n");
+  werror("CONFIG: Writing configuration file for cl "+cl+"\n");
 #endif
 
   f = configuration_dir + replace(cl, " ", "_");

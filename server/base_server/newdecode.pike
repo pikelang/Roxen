@@ -1,13 +1,10 @@
-// import Array;
+// string cvs_version = "$Id: newdecode.pike,v 1.19 1999/12/28 01:03:33 nilsson Exp $";
 
 // The magic below is for the 'install' program
 #ifndef roxenp
-#if !efun(roxenp)
-#define roxenp this_object()
-#endif
-#endif
-#ifndef IN_INSTALL
-// string cvs_version = "$Id: newdecode.pike,v 1.18 1999/12/27 20:55:58 mast Exp $";
+# if !efun(roxenp)
+#  define roxenp this_object()
+# endif
 #endif
 
 #include <roxen.h>
@@ -30,10 +27,9 @@ private string decode_list(Parser.HTML p, mapping m, string s, mapping res)
 private string decode_array(Parser.HTML p, mapping m, string s, mapping res)
 {
   mapping myres = ([ "res":({}) ]);
-  parse(s, myres); 
+  parse(s, myres);
   ENC_ADD( myres->res );
 }
-
 
 private string decode_mapping(Parser.HTML p, mapping m, string s, mapping res)
 {
@@ -63,8 +59,8 @@ void parse(string s, mapping mr)
     ->add_containers (([
       "a":decode_array,  "map":decode_mapping,
       "lst":decode_list,  "mod":decode_module,
-      "int":decode_int,   "str":decode_string, 
-      "flt":decode_float 
+      "int":decode_int,   "str":decode_string,
+      "flt":decode_float
     ]))
     ->add_quote_tag ("!--", "", "--")
     ->set_extra (mr)
@@ -112,7 +108,7 @@ mapping decode_config_file(string s)
 }
 
 private string encode_mixed(mixed from, object c)
-{ 
+{
   switch(sprintf("%t", from))
   {
    case "string":
@@ -138,8 +134,8 @@ private string encode_mixed(mixed from, object c)
       res += "    " + encode_mixed(i, c) + " : " + encode_mixed(from[i],c)+"\n";
     return res + "  </map>\n";
    default:
-     werror("I do not know how to encode "+
-            sprintf("%t (%O)\n", from, from)+"\n");
+     report_debug("I do not know how to encode "+
+		  sprintf("%t (%O)\n", from, from)+"\n");
      return "<int>0</int>";
   }
 }
@@ -250,9 +246,8 @@ string encode_regions(mapping r, object c)
   string res = ("<!-- -*- html -*- -->\n"
                 "<?XML version=\"1.0\"?>\n\n");
   foreach(sort(indices(r)), v)
-    res += "<region name='"+v+"'>\n" + 
+    res += "<region name='"+v+"'>\n" +
              encode_config_region(r[v],v,c)
            + "</region>\n\n";
   return string_to_utf8( res );
 }
-
