@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.124 1998/07/21 18:42:37 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.125 1998/07/21 20:02:25 noring Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -155,7 +155,9 @@ inline void open_names_file()
 #endif
   names_file=open(QUERY(Accesslog)+".names", "wrca");
 #if efun(chmod)
-  chmod( QUERY(Accesslog)+".names", 0666 );
+  mixed x;
+  if(x = catch { chmod( QUERY(Accesslog)+".names", 0666 ); })
+    report_warning(master()->describe_backtrace(x)+"\n");
 #endif
   names_file_callout_id = call_out(destruct, 1, names_file);
 }
@@ -195,7 +197,9 @@ inline mixed open_db_file()
 		       QUERY(Accesslog)), backtrace() }));
     }
 #if efun(chmod)
-    chmod( QUERY(Accesslog)+".db", 0666 );
+    mixed x;
+    if(x = catch { chmod( QUERY(Accesslog)+".db", 0666 ); })
+      report_warning(master()->describe_backtrace(x)+"\n");
 #endif
     if (QUERY(close_db)) {
       db_file_callout_id = call_out(close_db_file, 9, database);
@@ -229,7 +233,9 @@ void start()
     {
       cnum=0;
 #if efun(chmod)
-      chmod( QUERY(Accesslog)+".names", 0666 );
+      mixed x;
+      if(x = catch { chmod( QUERY(Accesslog)+".names", 0666 ); })
+	report_warning(master()->describe_backtrace(x)+"\n");
 #endif
       tmp=parse_accessed_database(names_file->read(0x7ffffff));
       fton=tmp[0];
