@@ -1,11 +1,11 @@
 /*
- * $Id: problems.pike,v 1.3 1997/08/25 23:47:40 grubba Exp $
+ * $Id: problems.pike,v 1.4 1997/08/26 18:35:26 grubba Exp $
  */
 
 inherit "wizard";
 
 constant name= "Maintenance//Check your Roxen configuration for problems...";
-constant doc = "Perform several santiy-checks of your configuration.";
+constant doc = "Perform several sanity-checks of your configuration.";
 constant wizard_name = "Check configuration";
 
 

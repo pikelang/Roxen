@@ -1,11 +1,11 @@
 /*
- * $Id: debuginformation.pike,v 1.2 1997/08/26 16:07:39 peter Exp $
+ * $Id: debuginformation.pike,v 1.3 1997/08/26 18:34:23 grubba Exp $
  */
 
 inherit "wizard";
 constant name= "Development//Debug information for developers";
 
-constant doc = ("Show some internals of Roxen, usefull for debugging "
+constant doc = ("Show some internals of Roxen, useful for debugging "
 		"code.");
 
 constant more=1;
