@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.58 1997/10/04 19:07:12 grubba Exp $
+ * $Id: ftp.pike,v 1.59 1997/10/05 03:17:38 per Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -47,10 +47,12 @@ function(object,mixed:void) pasv_callback;
 mixed pasv_arg;
 array(object) pasv_accepted;
 array(string|int) session_auth = 0;
-string username="";
+string username="", mode="I";
 #undef QUERY
 #define QUERY(X) roxen->variables->X[VAR_VALUE]
 #define Query(X) conf->variables[X][VAR_VALUE]  /* Per */
+
+#define DESCRIBE_MODE(m) (m=="I"?"BINARY":"ASCII")
 
 /********************************/
 /* private functions            */
@@ -733,10 +735,10 @@ void connected_to_send(object fd,mapping file)
   if(fd)
   {
     if (file->len) {
-      reply(sprintf("150 Opening BINARY mode data connection for %s "
+      reply(sprintf("150 Opening "+DESCRIBE_MODE(mode)+" data connection for %s "
 		    "(%d bytes).\n", not_query, file->len));
     } else {
-      reply(sprintf("150 Opening BINARY mode data connection for %s\n",
+      reply(sprintf("150 Opening "+DESCRIBE_MODE(mode)+" mode data connection for %s\n",
 		    not_query));
     }
   }
@@ -745,7 +747,17 @@ void connected_to_send(object fd,mapping file)
     reply("425 Can't build data connect: Connection refused.\n"); 
     return;
   }
-
+  if(mode == "A")
+  {
+    if(file->data)
+      file->data = replace(file->data, "\n", "\r\n");
+    if(file->file)
+    {
+      if(!file->data) file->data="";
+      file->data += replace(file->file->read(), "\n", "\r\n");
+      file->file=0;
+    }
+  }
   if(stringp(file->data))  pipe->write(file->data);
   if(file->file) {
     file->file->set_blocking();
@@ -829,7 +841,7 @@ class put_file_wrapper {
   static string gotdata;
   static int done, recvd;
   static function other_read_callback;
-
+  static string mode;
   int bytes_received()
   {
     return recvd;
@@ -849,6 +861,7 @@ class put_file_wrapper {
   string read(mixed ... args)
   {
     string r = ::read(@args);
+    if(stringp(r) && (mode=="A")) r = replace(r, "\r\n", "\n");
     if(stringp(r))
       recvd += sizeof(r);
     return r;
@@ -856,6 +869,7 @@ class put_file_wrapper {
 
   static mixed my_read_callback(mixed id, string data)
   {
+    if(stringp(data) && (mode=="A")) data = replace(data, "\r\n", "\n");
     if(stringp(data))
       recvd += sizeof(data);
     return other_read_callback(id, data);
@@ -895,12 +909,14 @@ class put_file_wrapper {
       }
       gotdata = gotdata[n+1..];
     }
+    if(mode=="A") gotdata = replace(gotdata, "\n", "\r\n");
     return strlen(data);
   }
 
-  void create(object i, object f)
+  void create(object i, object f, string m)
   {
     id = i;
+    mode=m;
     assign(f);
     response = "200 Stored.\n";
     gotdata = "";
@@ -916,7 +932,7 @@ void connected_to_receive(object fd, string arg)
 {
   if(fd)
   {
-    reply(sprintf("150 Opening BINARY mode data connection for %s.\n", arg));
+    reply(sprintf("150 Opening "+DESCRIBE_MODE(mode)+" mode data connection for %s.\n", arg));
   }
   else
   {
@@ -925,7 +941,7 @@ void connected_to_receive(object fd, string arg)
   }
 
   method = "PUT";
-  my_fd = put_file_wrapper(this_object(), fd);
+  my_fd = put_file_wrapper(this_object(), fd, mode);
   data = 0;
   misc->len = 0x7fffffff;
 
@@ -1271,11 +1287,20 @@ void handle_data(string s, mixed key)
       reply("250 CWD command successful.\n");
       break;
       
-    case "type": 
-       /*  if (arg!="I") reply("504 Only binary mode supported (sorry)\n"); 
-	   else */
-      reply("200 Using binary mode for transferring files\n");
-      break;
+    case "type":
+     if(arg == "I")
+     {
+       mode="I";
+       reply("200 Using BINARY mode for transferring files\n");
+     }
+     else if(arg == "A")
+     {
+       mode="A";
+       reply("200 Using ASCII mode for transferring files\n");
+     } else {
+       reply("504 Only ASCII and BINARY modes supported\n");
+     }
+     break;
 
     case "port": 
       int a,b,c,d,e,f;
