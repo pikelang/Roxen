@@ -23,7 +23,7 @@ OS=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`
 all: pike_version_test
 
 
-install : all install_dirs install_data mysql config_test buildenv_test
+install : all install_dirs install_data mysql make_demo_cert config_test buildenv_test
 
 	
 pike_version_test:
@@ -75,6 +75,7 @@ install_data:
 	${INSTALL_DATA_R} server/data/randomtext	${PROG_DIR}/server/data/;
 	${INSTALL_DATA_R} server/data/refdoc		${PROG_DIR}/server/data/;
 	${INSTALL_DATA}   server/data/supports		${PROG_DIR}/server/data/;
+	${INSTALL_DATA}   server/mysql/lnmysql.sh	${PROG_DIR}/server/mysql;
 	${INSTALL_DATA_R} server/java			${PROG_DIR}/server/;
 	${INSTALL_DATA_R} server/modules		${PROG_DIR}/server/;
 	${INSTALL_DATA_R} server/perl			${PROG_DIR}/server/;
@@ -117,27 +118,22 @@ selftest:
 	./start --self-test-verbose;
 
 mysql:
-	if [ -f /usr/sbin/mysqld ] ; then\
-	if [ -d /usr/share/mysql ] ; then\
-	ln -s /usr/sbin ${PROG_DIR}/server/mysql/. ;\
-	ln -s /usr/share/mysql ${PROG_DIR}/server/mysql/share ;\
-  	fi\
+	
+	cd ${PROG_DIR}/server/mysql;\
+	if [ ./lnmysql.sh; ] ; then\
+	: ;\
 	fi
-	if [ -f /usr/libexec/mysqld ] ; then\
-	if [ -d /usr/share/mysql ] ; then\
-	ln -s /usr/libexec ${PROG_DIR}/server/mysql/. ;\
-	ln -s /usr/share/mysql ${PROG_DIR}/server/mysql/share ;\
-  	fi\
-	fi
-	if [ -f /usr/local/libexec/mysqld ] ; then\
-	if [ -d /usr/local/share/mysql ] ; then\
-	ln -s /usr/local/libexec ${PROG_DIR}/server/mysql/.;\
-	ln -s /usr/local/share/mysql ${PROG_DIR}/server/mysql/share;\
-  	fi\
+
+make_demo_cert:
+	if [ -f ${PROG_DIR}/local/demo_certificate.pem ] ; then\
+	: ;\
+	else\
+	cd ${PROG_DIR}/local;\
+	pike ../server/bin/create_testcert.pike;\
 	fi
 
 buildenv_test:
-	@if [ -f /etc/chilimoon/environment ] ; then\
+	@if [ -f ${PROG_DIR}/local/environment ] ; then\
 	:;\
 	else\
 	make buildenv;\

@@ -64,9 +64,6 @@ ChiliMoon specific guidelines.
   (to end users and administrators) references to Roxen should be replaced
   by ChiliMoon.
 
-- References to and code for SiteBuilder needs to be removed, the same
-  holds true for license-support code.
-
 - Alle visible locales in the admininterface must be removed.
 
 - We're aiming for compatibility with RXML2 of Roxen 4.0.
@@ -97,3 +94,5 @@ ChiliMoon specific guidelines.
   cvs -d :ext:_cvs_stephen@cvs.lysator.liu.se:/cvsroot/ChiliMoon \
    co ChiliMoon/2004
   should be able to be used to gain access.
+- The roxen source contains a file: ntroxenloader.pike, is this file needed in chilimoon?
+	Also if we're planning to distribute chilimoon to the winNT environment?
