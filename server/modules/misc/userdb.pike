@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.8.2.2 1997/03/09 13:38:26 grubba Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.8.2.3 1997/03/20 16:10:45 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -142,6 +142,12 @@ void create()
   defvar("Strip", 1, "Strip finger information from fullname", TYPE_FLAG,
 	 "This will strip everyting after the first ',' character from "
 	 "the GECOS field of the user database.");
+
+  defvar("update", 60,
+	 "Intervall between automatic updates of the user database",
+	 TYPE_INT,
+	 "This specifies the intervall in minutes between automatic updates "
+	 "of the user database.");
 }
 
 private static int last_password_read = 0;
@@ -261,6 +267,14 @@ void read_data()
   if(QUERY(method) == "getpwent" && (original_data))
     slow_update();
 #endif
+
+  /* Automatic update */
+  int delta = QUERY(update);
+  if (delta > 0) {
+    last_password_read=time(1);
+    remove_call_out(read_data);
+    call_out(read_data, delta*60);
+  }
 }
 
 void start() { if(!uid2user) (void)read_data(); }
