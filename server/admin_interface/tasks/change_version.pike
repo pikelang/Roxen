@@ -91,7 +91,7 @@ string nice_relative_date( object t )
 string parse( RequestID id )
 {
  string res =
-   "<font size='+1'><b>Change ChiliMoon version")+"</b></font>\n"
+   "<font size='+1'><b>Change ChiliMoon version</b></font>\n"
    "<br />\n"
    "<p>";
   int warn;
@@ -117,11 +117,11 @@ string parse( RequestID id )
     "<th></th>"
     "<th align='left'>Version</th>"
     "<th></th>"
-    "<th><img src='/internal-roxen-unit' width=10 height=1 /></th>"
+    "<th><img src='/*/unit' width=10 height=1 /></th>"
     "<th align='left'>Release date</th>"
-    "<th><img src='/internal-roxen-unit' width=10 height=1 /></th>"
+    "<th><img src='/*/unit' width=10 height=1 /></th>"
     "<th align='left'>Age</th>"
-    "<th><img src='/internal-roxen-unit' width=10 height=1 /></th>"
+    "<th><img src='/*/unit' width=10 height=1 /></th>"
     "<th align='left'>Directory</th>"
     "</tr>\n";
   foreach( available_versions(), Server f )
