@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.166 1998/02/10 18:36:09 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.167 1998/02/17 05:00:11 mast Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -897,6 +897,7 @@ string check_variable(string name, string value)
   {
    case "ConfigPorts":
      config_ports_changed = 1;
+     break;
    case "cachedir":
     if(!sscanf(value, "%*s/roxen_cache"))
     {
