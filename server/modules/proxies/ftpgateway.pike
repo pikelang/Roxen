@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.12 1997/05/07 23:07:45 per Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.13 1997/05/16 17:38:26 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -1354,7 +1354,7 @@ void connected_to_server(object o, string file, object id, int is_remote)
     //new_request->assign(o, file, id, 1);
   }
   
-  if(objectp(new_request)) requests[new_request] = 1;
+  // if(objectp(new_request)) requests[new_request] = 1;
 }
 
 array is_remote_proxy(string hmm)

@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.17 1997/05/13 15:55:20 grubba Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.18 1997/05/16 17:38:46 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -346,7 +346,7 @@ program Connection = class {
     // Sometimes this was roxen, which caused.. problems. =)
     proxy = prox;
     name = f;
-    my_clients = ({ i->remote_addr });
+    my_clients = ({ i->remoteaddr });
     ids = ({ i });
 
     if(!no_cache && (!i || cache_wanted(i)))

@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.25 1997/05/13 17:06:25 marcus Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.26 1997/05/16 17:37:58 grubba Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -272,13 +272,12 @@ static int is_modified(string a, int t, void|int len)
   string m, extra;
   if(!a)
     return 1;
-  t1=localtime(t+timezone());
+  t1=localtime(t + timezone() - localtime(t)->isdst*3600);
    // Expects 't' as returned from time(), not UTC.
   sscanf(lower_case(a), "%*s, %s; %s", a, extra);
   if(extra && sscanf(extra, "length=%d", length) && len && length != len)
     return 0;
 
-  t1->hour += t1->timezone/3600;
   if(search(a, "-") != -1)
   {
     sscanf(a, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second);

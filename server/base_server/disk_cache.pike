@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.19 1997/05/07 23:07:30 per Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.20 1997/05/16 17:37:18 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -35,15 +35,15 @@ string file_name(string what)
 
 class CacheStream 
 {
-import Stdio;
+  import Stdio;
+
   inherit "socket";
+
   string fname, rfile, rfiledone;
   object file;
   function done_callback;
   int new;
   mapping headers = ([]);
-
-  import Stdio;
 
   int get_code(string from)
   {
@@ -72,19 +72,18 @@ import Stdio;
     headers->headers_size = headers->head_size = ROXEN_HEAD_SIZE;
     
     line = ((file->gets()||"")-"\r")-"\n";
-    headers->headers_size += sizeof(line);
     if(!(headers[" returncode"] = get_code(line)))
       return 0;
 
     while(strlen( (line = ((file->gets()||"")-"\r")-"\n")))
     {
-      headers->headers_size += sizeof(line);
       if(sscanf(line, "%s:%s", name, value) == 2)
       {
 	sscanf(value, "%*[ \t]%s", value);
 	headers[lower_case(name-" ")] = value;
       }
     }
+    headers->headers_size += file->tell();
     return 1;
   }
   
@@ -206,16 +205,16 @@ import Stdio;
 
 
 class Cache {
+  import Process;
   import Stdio;
+
   object lock = ((program) "lock" )();
   object this = this_object();
   string cd;
   object command_stream = files.file();
+  int last_ressort;
 
   string to_send="";
-
-  import Process;
-  import Stdio;
 
   void really_send()
   {
@@ -420,8 +419,6 @@ object new_cache_stream(object fp, string fn)
  *
  */
 
-// as long as is_modified does not handle timezone
-int tz = timezone();
 #ifdef CACHE_DEBUG
 string age(int x)
 {
@@ -456,17 +453,22 @@ object cache_file(string cl, string entry)
     return 0;
   }
 
+  /* act as proxy only for non http class */
+  /*
   if(!cf->headers[" returncode"])
   {
     destruct(cf);
     return 0;
   }
+  */
 
+#if 0
   if(cf->headers[" returncode"] == 302)
   {
     destruct(cf);
     return 0;
   }
+#endif /* 0 */
 
   if(cf->headers->name != entry)
   {
@@ -481,11 +483,17 @@ object cache_file(string cl, string entry)
 
   cf->new = 0;
 
+  /* non http class cache files get returned here */
   if(!cf->headers[" returncode"])
     return cf;
 
-  // get rid of cache files which have not been checked for content-length in 1.1
-  if((((int)cf->headers["content-length"] <= 20) &&
+  if(cf->headers[" returncode"] == 302) {
+    destruct(cf);
+    return 0;
+  }
+
+  /* check content-length again in case files got damaged */
+  if((((int)cf->headers["content-length"] <= 0) &&
       (cf->headers[" returncode"]/100 == 2)) ||
      ((int)cf->headers["content-length"] > (stat[ST_SIZE] - cf->headers->headers_size)))
   {
@@ -563,7 +571,7 @@ object create_cache_file(string cl, string entry)
   object cf = FILE();
   int i;
 
-  // to reduce IO-load try open before making directories 14-Nov-96-wk
+  // to reduce IO-load try open before making directories
   if(!(cf->open(rfile, "rwcx")))
   {
     mkdirhier(rfile);
@@ -702,16 +710,16 @@ void http_check_cache_file(object cachef)
       stat[ST_SIZE] - cachef->headers->headers_size;
 
   if(cachef->headers["expires"]&&
-     !is_modified(cachef->headers["expires"], time()))
-    DELETE_AND_RETURN();
-
-  if(cachef->headers["pragma"] &&
-     (search(cachef->headers["pragma"], "no-cache") != -1)) {
+     !is_modified(cachef->headers["expires"], time())) {
 #ifdef CACHE_DEBUG
     perror(cachef->rfile+": already expired "+cachef->headers["expires"]+"\n");
 #endif
     DELETE_AND_RETURN();
   }
+
+  if(cachef->headers["pragma"] &&
+     (search(cachef->headers["pragma"], "no-cache") != -1))
+    DELETE_AND_RETURN();
   
   if(cachef->headers["set-cookie"])
     DELETE_AND_RETURN();
