@@ -43,6 +43,7 @@ class SSL_decode
 
   void handle_output()
   {
+    werror("output thread\n");
     while (1)
       {
 	string data = http::read(BUFFER_SIZE, 1);
