@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.235 2001/06/08 16:56:03 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.236 2001/06/09 02:41:55 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2765,7 +2765,16 @@ class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
   constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
-  mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text(RXML.PEnt)]);
+  mapping(string:RXML.Type) req_arg_types = ([ "source":RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "scope":RXML.t_text(RXML.PEnt),
+					       "maxrows":RXML.t_int(RXML.PEnt),
+					       "skiprows":RXML.t_int(RXML.PEnt),
+					       "rowinfo":RXML.t_text(RXML.PEnt), // t_var
+					       "do-once":RXML.t_text(RXML.PEnt), // t_bool
+					       "filter":RXML.t_text(RXML.PEnt),  // t_list
+					       "sort":RXML.t_text(RXML.PEnt),    // t_list
+  ]);
+  RXML.Type def_arg_type = RXML.t_text(RXML.PNone);
 
   int(0..1) should_filter(mapping vs, mapping filter) {
     RXML.Context ctx = RXML.get_context();
@@ -2812,7 +2821,7 @@ class TagEmit {
 	  return 0;
 	}
 	if(id->misc->emit_args->maxrows &&
-	   (int)id->misc->emit_args->maxrows == RXML.get_var("counter"))
+	   id->misc->emit_args->maxrows == RXML.get_var("counter"))
 	  return 0;
 	if(more_rows(res, id->misc->emit_filter))
 	  result = content;
@@ -2892,19 +2901,16 @@ class TagEmit {
 
       TRACE_ENTER("Fetch emit dataset for source "+args->source, 0);
       PROF_ENTER( args->source, "emit" );
-      res=plugin->get_dataset(args, id);
+      plugin->eval_args( args, 0, 0, indices(opt_arg_types+req_arg_types) );
+      res = plugin->get_dataset(args, id);
       PROF_LEAVE( args->source, "emit" );
       TRACE_LEAVE("");
 
       if(plugin->skiprows && args->skiprows)
 	m_delete(args, "skiprows");
 
-      if(args->maxrows) {
-	if(plugin->maxrows)
+      if(args->maxrows && plugin->maxrows)
 	  m_delete(args, "maxrows");
-	else
-	  args->maxrows = (int)args->maxrows;
-      }
 
       // Parse the filter argument
       if(args->filter) {
@@ -2929,12 +2935,11 @@ class TagEmit {
 
       if(objectp(res))
 	if(args->sort ||
-	   (args->skiprows && args->skiprows[0]=='-') )
+	   (args->skiprows<0) )
 	  res = expand(res);
 	else if(filter) {
 	  do_iterate = object_filter_iterate;
 	  id->misc->emit_rows = res;
-	  if(args->skiprows) args->skiprows = (int)args->skiprows;
 	  return 0;
 	}
 	else {
@@ -2942,7 +2947,7 @@ class TagEmit {
 	  id->misc->emit_rows = res;
 
 	  if(args->skiprows) {
-	    int loop = (int)args->skiprows;
+	    int loop = args->skiprows;
 	    while(loop--)
 	      res->skip_row();
 	  }
@@ -2988,8 +2993,7 @@ class TagEmit {
 	  // If rowinfo or negative skiprows are used we have
 	  // to do filtering in a loop of its own, instead of
 	  // doing it during the emit loop.
-	  if(args->rowinfo ||
-	     (args->skiprows && args->skiprows[-1]=='-')) {
+	  if(args->rowinfo || args->skiprows<0) {
 	    for(int i; i<sizeof(res); i++)
 	      if(should_filter(res[i], filter)) {
 		res = res[..i-1] + res[i+1..];
@@ -3003,7 +3007,7 @@ class TagEmit {
 	    // the rows that wouldn't be filtered in the
 	    // emit loop.
 	    if(args->skiprows) {
-	      int skiprows = (int)args->skiprows;
+	      int skiprows = args->skiprows;
 	      if(skiprows > sizeof(res))
 		res = ({});
 	      else {
@@ -3025,8 +3029,8 @@ class TagEmit {
 	if(!filter) {
 
 	  if(args->skiprows) {
-	    if(args->skiprows[0]=='-') args->skiprows=sizeof(res)+(int)args->skiprows;
-	    res=res[(int)args->skiprows..];
+	    if(args->skiprows<0) args->skiprows = sizeof(res) + args->skiprows;
+	    res=res[args->skiprows..];
 	  }
 
  	  if(args->remainderinfo)
