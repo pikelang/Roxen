@@ -1,5 +1,5 @@
 /*
- * $Id: mk_wxs.pike,v 1.4 2004/11/16 11:49:54 grubba Exp $
+ * $Id: mk_wxs.pike,v 1.5 2004/11/16 12:05:30 grubba Exp $
  *
  * Make a Windows Installer XML Source file (wxs) suitable
  * for a Roxen installer.
@@ -42,7 +42,7 @@ int main(int argc, array(string) argv)
       if (stringp(opt[1])) {
 	version_str = opt[1];
       } else {
-	werror("$Id: mk_wxs.pike,v 1.4 2004/11/16 11:49:54 grubba Exp $\n");
+	werror("$Id: mk_wxs.pike,v 1.5 2004/11/16 12:05:30 grubba Exp $\n");
 	exit(0);
       }
       break;
@@ -67,9 +67,15 @@ int main(int argc, array(string) argv)
 			     "TARGETDIR");
   string server_dir = "server-"+version_str;
 
+#if defined(UNIX_PREFIX) && defined(NT_PREFIX)
+  if (has_prefix(pike_module, UNIX_PREFIX)) {
+    pike_module = NT_PREFIX + pike_module[sizeof(UNIX_PREFIX)..];
+  }
+#endif
+
   // First make sure we have a pike binary in the appropriate place.
-  root->merge_module(server_dir+"/pike", pike_module, "Pike",
-		     "PIKE_TARGETDIR");
+  root->merge_module(server_dir+"/pike", replace(pike_module, "/", "\\"),
+		     "Pike", "PIKE_TARGETDIR");
 
   Parser.XML.Tree.SimpleTextNode line_feed =
     Parser.XML.Tree.SimpleTextNode("\n");
@@ -88,6 +94,12 @@ int main(int argc, array(string) argv)
   // Then populate with the other modules.
   foreach(argv[1..]; int number; string module_name) {
     string id = "M_"+number;
+#if defined(UNIX_PREFIX) && defined(NT_PREFIX)
+    if (has_prefix(module_name, UNIX_PREFIX)) {
+      module_name = NT_PREFIX + module_name[sizeof(UNIX_PREFIX)..];
+    }
+#endif
+    module_name = replace(module_name, "/", "\\");
     if (has_suffix(module_name, "_server.msm")) {
       root->merge_module(server_dir, module_name, id, "SERVERDIR");
     } else {
