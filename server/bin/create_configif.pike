@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.36 2001/11/07 12:52:40 grubba Exp $
+ * $Id: create_configif.pike,v 1.37 2001/12/17 12:45:37 anders Exp $
  *
  * Create an initial administration interface server.
  */
@@ -143,8 +143,8 @@ Example of a batch installation:
                       "../configurations");
   int admin = has_value(argv, "-a");
 
-  werror("Admin mode: %O\n"
-	 "Argv: ({%{%O, %}})\n", admin, argv);
+//    werror("Admin mode: %O\n"
+//  	 "Argv: ({%{%O, %}})\n", admin, argv);
 
   int batch_args = search(argv, "--batch");
   if(batch_args>=0)
