@@ -1,0 +1,17 @@
+<pike>
+  // Yes, this is a kludge.
+  int y=localtime(time())->year+1900;
+  int m=localtime(time())->mon+1;
+  id->prestate=(<>);
+  id->prestate[sprintf("cal_month=%d",m)]=1;
+  id->prestate["cal_type=month"]=1;
+  id->prestate[sprintf("cal_year=%d",y)]=1;
+  id->prestate["msel_display=Linechart"]=1;
+  id->prestate["msel_report=Hits"]=1;
+  return "";
+</pike>
+
+<lsql>
+  <p><font size=+1><b><lsql-result-title></b><font/><br><br>
+  <lsql-result anchor=result>
+</lsql>
