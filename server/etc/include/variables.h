@@ -1,5 +1,5 @@
 // -*- Pike -*-
-// $Id: variables.h,v 1.7 1999/04/21 14:46:50 grubba Exp $
+// $Id: variables.h,v 1.8 2000/01/03 00:09:49 nilsson Exp $
 // Fallback-resources, don't change here.
 
 private static constant errors=
@@ -12,7 +12,7 @@ private static constant errors=
   203:"203 Provisional Information",	// Non-Authoritative Information
   204:"204 No Content",
   205:"205 Reset Content",
-  206:"206 Partial Content",
+  206:"206 Partial Content", // Byte Ranges
   
   300:"300 Moved",			// Multiple Choices
   301:"301 Permanent Relocation",
@@ -37,6 +37,7 @@ private static constant errors=
   413:"413 Request Entity Too Large",
   414:"414 Request-URI Too Large",
   415:"415 Unsupported Media Type",
+  416:"416 Requested range not satisfiable",
   
   500:"500 Internal Server Error.",
   501:"501 Not Implemented",
