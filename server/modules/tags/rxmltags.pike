@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.433 2004/07/11 16:35:53 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.434 2004/08/18 18:51:32 _cvs_stenitzer Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -583,6 +583,8 @@ class TagImgs {
 	file=id->conf->try_get_file(src,id);
 	if(file) file = Stdio.FakeFile(file);
       }
+      else
+        file=Stdio.File(file);
 
       if(file) {
 	array(int) xysize;
