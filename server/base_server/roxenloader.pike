@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.124 1999/12/07 22:01:54 mast Exp $
+ * $Id: roxenloader.pike,v 1.125 1999/12/07 22:03:35 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -17,7 +17,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.124 1999/12/07 22:01:54 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.125 1999/12/07 22:03:35 mast Exp $";
 
 #define perror roxen_perror
 
@@ -679,7 +679,7 @@ class ParseHtmlCompat
     string name = tag_name();
     if (string|function tag = m_tags[name])
       if (stringp (tag)) return ({tag});
-      else return tag (name, (werror ("%O\n", tag_args()), tag_args()), @extra);
+      else return tag (name, tag_args(), @extra);
     else if (string|function container = m_containers[name]) {
       // A container has been added.
       add_container (name, call_container);
