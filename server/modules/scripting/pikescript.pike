@@ -10,7 +10,7 @@ mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
-string cvs_version = "$Id: pikescript.pike,v 1.5 1996/12/06 23:01:23 per Exp $";
+string cvs_version = "$Id: pikescript.pike,v 1.6 1997/01/27 00:02:30 per Exp $";
 #include <module.h>
 
 mixed *register_module()
@@ -46,6 +46,8 @@ array (string) query_file_extensions()
   return QUERY(exts);
 }
 
+mapping locks = ([]);
+
 array|mapping call_script(function fun, object got, object file)
 {
   mixed result, err;
@@ -56,12 +58,18 @@ array|mapping call_script(function fun, object got, object file)
   array (int) uid, olduid, us;
 
   if(got->misc->is_user && (us = file_stat(got->misc->is_user)))
-    privs = ((program)"privs")("Executing program as non-www user",@us[5..6]);
+    privs = ((program)"privs")("Executing pikescript as non-www user",@us[5..6]);
 
   if(sizeof(got->variables))
     foreach(indices(got->variables), s)
       got->variables[s] = replace(got->variables[s], "\000", " ");
   
+#if efun(thread_create)
+  if(!locks[fun])
+    locks[fun]=Mutex();
+  object key = locks[fun]->lock();
+#endif
+
 #if efun(set_max_eval_time)
   if(catch {
     set_max_eval_time(query("evaltime"));
@@ -128,7 +136,7 @@ mapping handle_file_extension(object f, string e, object got)
   }
 
   if(scripts[ got->not_query ])
-  {  
+  {
     err=call_script(scripts[got->not_query], got, f);
     destruct(f);
     if(arrayp(err))
