@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.96 2002/01/07 18:08:11 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.97 2002/02/15 18:08:52 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -293,6 +293,7 @@ class TagSqlplugin {
   ]);
 
   object get_dataset(mapping m, RequestID id) {
+    NOCACHE();
     return SqlEmitResponse(do_sql_query(m+([]), id, 1));
   }
 }
