@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.336 2003/02/21 12:26:05 anders Exp $
+// $Id: roxenloader.pike,v 1.337 2003/03/02 11:41:57 anders Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.336 2003/02/21 12:26:05 anders Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.337 2003/03/02 11:41:57 anders Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -305,6 +305,12 @@ Roxen roxen;
 // The function used to report notices/debug/errors etc.
 function(string, int|void, int|void, void|mixed ...:void) nwrite;
 
+// Standin for nwrite until roxen is loaded.
+void early_nwrite(string s, int|void perr, int|void errtype,
+		  object|void mod, object|void conf)
+{
+  report_debug(s);
+}
 
 /*
  * Code to get global configuration variable values from Roxen.
@@ -1551,7 +1557,7 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
 
 
 static mapping tailf_info = ([]);
-static void do_tailf( int loop, string f )
+static void do_tailf( int loop, string file )
 {
   string mysqlify( string what )
   {
@@ -1569,18 +1575,18 @@ static void do_tailf( int loop, string f )
   };
 
   int os, si, first;
-  if( tailf_info[f] )
-    os = tailf_info[f];
+  if( tailf_info[file] )
+    os = tailf_info[file];
   do
   {
-    Stdio.Stat s = file_stat( f );
+    Stdio.Stat s = file_stat( file );
     if(!s) continue;
     si = s[ ST_SIZE ];
-    if(!first++ && !os)
+    if(!first++ && !os && loop)
       os = si;
     if( os != si )
     {
-      Stdio.File f = Stdio.File( f, "r" );
+      Stdio.File f = Stdio.File( file, "r" );
       if(!f) return;
       if( os < si )
       {
@@ -1589,7 +1595,7 @@ static void do_tailf( int loop, string f )
       }
       else
 	report_debug( mysqlify( f->read( si ) ) );
-      os = tailf_info[ f ] = si;
+      os = tailf_info[ file ] = si;
     }
     if( loop )
       sleep( 1 );
@@ -1718,6 +1724,16 @@ void start_mysql()
 {
   Sql.Sql db;
   int st = gethrtime();
+  string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
+  string err_log = mysqldir+"/error_log";
+  string pid_file = mysqldir+"/mysql_pid";
+  int do_tailf_threaded = 0;
+#ifdef THREADS
+  // Linux pthreads hangs in mutex handling if uid is changed
+  // permanently and there are threads already running.
+  if (uname()->sysname != "Linux")
+    do_tailf_threaded = 1;
+#endif
   void assure_that_base_tables_exists( )
   {
     // 1: Create the 'ofiles' database.
@@ -1771,6 +1787,7 @@ void start_mysql()
       report_debug( "Warning: This is a very old MySQL. "
                      "Please use 3.23.*\n");
 
+    if( !do_tailf_threaded ) do_tailf(0, err_log );
     assure_that_base_tables_exists();
   };
 
@@ -1795,27 +1812,20 @@ void start_mysql()
     exit(1);
   }
 
-  string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
-  rm( mysqldir+"/mysql_pid" );
-  rm( mysqldir+"/error_log" );
-#ifdef THREADS
-  // Linux pthreads hangs in mutex handling if
-  // uid is changed permanently and there are threads
-  // already running.
-  if (uname()->sysname != "Linux") {
-    thread_create( do_tailf, 1, mysqldir+"/error_log" );
+  rm( pid_file );
+  rm( err_log );
+
+  if( do_tailf_threaded ) {
+    thread_create( do_tailf, 1, err_log );
     sleep(0.1);
   } else {
-#endif
     void do_do_tailf( )
     {
       call_out( do_do_tailf, 1 );
-      do_tailf( 0, mysqldir+"/error_log"  );
+      do_tailf( 0, err_log  );
     };
     call_out( do_do_tailf, 0 );
-#ifdef THREADS
   }
-#endif
 
   if( !file_stat( mysqldir+"/mysql/user.MYD" ) ||
       !file_stat( mysqldir+"/mysql/host.MYD" ) ||
@@ -1863,9 +1873,7 @@ void start_mysql()
     sleep( 0.1 );
     if( repeat++ > 100 )
     {
-#ifndef THREADS
-      do_tailf(0, mysqldir+"/error_log" );
-#endif
+      if( !do_tailf_threaded ) do_tailf(0, err_log );
       report_fatal("\nFailed to start MySQL. Aborting\n");
       exit(1);
     }
@@ -1945,6 +1953,8 @@ void do_main( int argc, array(string) argv )
 {
   array(string) hider = argv;
   argv = 0;
+
+  nwrite = early_nwrite;
 
   add_constant( "connect_to_my_mysql", connect_to_my_mysql );
   add_constant( "clear_connect_to_my_mysql_cache",
