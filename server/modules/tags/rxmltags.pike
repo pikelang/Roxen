@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.266 2001/07/25 22:54:40 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.267 2001/07/25 23:20:13 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4702,11 +4702,22 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "cache":#"<desc cont='cont'><p><short>
- This tag caches the evaluated result of its contents.</short> If
- there are nested <tag>cache</tag> tags, they are normally cached
- separately, and they are also recognized so that this tag doesn't
- cache their contents too. Thus it's possible to e.g. disable caching
- of a certain part of the content inside a <tag>cache</tag> tag.</p>
+ This tag caches the evaluated result of its contents.</short> When
+ the tag is encountered again in a later request, it can thus look up
+ and return that result without evaluating the content again.</p>
+
+ <p>Nested <tag>cache</tag> tags are normally cached separately, and
+ they are also recognized so that the surrounding tag doesn't cache
+ their contents too. It's thus possible to change the cache parameters
+ or completely disable caching of a certain part of the content inside
+ a <tag>cache</tag> tag. Note that this implies that any RXML tags
+ that surrounds the inner <tag>cache</tag> won't be cached.</p>
+
+ <p>Besides the value produced by the content, any assignments to RXML
+ variables in any scope are cached. I.e. an RXML code block which
+ produces a value in a variable may be cached, and the same value will
+ be assigned again to that variable when the cached entry is used
+ again.</p>
 
  <p>When the content is evaluated, the produced result is associated
  with a key that is built by taking the values of certain variables
@@ -4717,7 +4728,7 @@ using the pre tag.
  <p>Note that it's easy to create huge amounts of cached values if the
  cache parameters are chosen badly. E.g. the default cache parameters,
  which are like that mostly for compatibility, are typically only
- acceptable when combined with a short cache time, since they
+ acceptable when combined with a fairly short cache time, since they
  otherwise make it easy to fill up the memory on the server simply by
  making many requests with random variables.</p>
 
@@ -4725,9 +4736,8 @@ using the pre tag.
  identical content, which is typically useful in <tag>cache</tag> tags
  used in templates included into many pages. The drawback is that
  cache entries stick around when the <tag>cache</tag> tags change and
- that the cache won't be persistent (see below). Shared caches are the
- only type of caches which have any effect if the RXML pages aren't
- compiled.</p>
+ that the cache won't be persistent (see below). Only shared caches
+ have any effect if the RXML pages aren't compiled and cached.</p>
 
  <p>If the the page is compiled to p-code which is saved, and the
  cache is not shared, and there is no timeout on it, then the produced
@@ -4738,9 +4748,9 @@ using the pre tag.
 
 <attr name=variable value=string>
  <p>This is a comma-separated list of variables and scopes that the
- cache should depend on. If this doesn't exist, the default depends on
- the form scope and <ent>page.path</ent> are used, i.e. it's the same
- as specifying variable=\"form, page.path\".</p>
+ cache should depend on. If it doesn't exist, the default is to depend
+ on the form scope and <ent>page.path</ent>, i.e. it's the same as
+ specifying variable=\"form, page.path\".</p>
 
  <p>Since it's important to keep down the size of the cache, this
  should typically be kept to only a few variables with a limited set
@@ -4767,7 +4777,7 @@ using the pre tag.
 <attr name=propagate>
  <p>Propagate the cache settings to the surrounding <tag>cache</tag>
  tag, if there is any. Useful to locally add depends to a cache
- without introducing a new one. If there is no surrounding
+ without introducing a new cache level. If there is no surrounding
  <tag>cache</tag> tag, this argument is ignored.
 </attr>
 
