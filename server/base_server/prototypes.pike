@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.88 2004/04/29 13:56:18 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.89 2004/04/29 14:39:35 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -161,9 +161,55 @@ class ModuleCopies
 
 class DAVLock(string locktoken,
 	      string path,
-	      string lockscope,
-	      int(0..1) recursive)
+	      int(0..1) recursive,
+	      string|Node lockscope,
+	      string|Node locktype,
+	      void|string owner,
+	     )
+//! Container for information about outstanding DAV write locks. No
+//! field may change after the object has been created since
+//! filesystem modules might store this info persistently.
 {
+  //! @decl string locktoken;
+  //!
+  //! The lock token given to the client. It may be zero in case there
+  //! only is knowledge that a lock exists but the lock instance has
+  //! been forgotten. This can happen in a filesystem that has some
+  //! way of recording locks but doesn't store the DAV lock tokens.
+
+  //! @decl string path;
+  //!
+  //! Canonical absolute path to the locked resource. Always ends with
+  //! a @expr{"/"@}.
+
+  //! @decl int(0..1) recursive;
+  //!
+  //! @expr{1@} if the lock applies to all resources under @[path],
+  //! @expr{0@} if it applies to @[path] only.
+
+  //! @decl string|Node lockscope;
+  //!
+  //! The lock scope (RFC 2518 12.7). As a special case, if it only is
+  //! an empty element without attributes then the element name is
+  //! stored as a string.
+  //!
+  //! @note
+  //! RFC 2518 specifies the lock scopes @expr{"DAV:exclusive"@} and
+  //! @expr{"DAV:shared"@}.
+
+  //! @decl string|Node locktype;
+  //!
+  //! The lock type (RFC 2518 12.8). As a special case, if it only is
+  //! an empty element without attributes then the element name is
+  //! stored as a string.
+  //!
+  //! @note
+  //! RFC 2518 only specifies the lock type @expr{"DAV:write"@}.
+
+  //! @decl string owner;
+  //!
+  //! The owner identification (RFC 2518 12.10), or zero if unknown.
+  //! The content is XML in string form.
 }
 
 class Configuration
@@ -1177,8 +1223,6 @@ class RequestID
   }
 }
 
-#if constant(Parser.XML.Tree.XMLNSParser)
-
 static constant Node = Parser.XML.Tree.Node;
 static constant RootNode = Parser.XML.Tree.RootNode;
 static constant HeaderNode = Parser.XML.Tree.HeaderNode;
@@ -1431,8 +1475,6 @@ class MultiStatus
     }
   }
 }
-
-#endif /* Parser.XML.Tree.XMLNSParser */
 
 // Only for protyping and breaking of circularities.
 static class PropertySet
