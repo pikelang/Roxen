@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.159 2000/03/06 17:50:04 mast Exp $
+// $Id: rxml.pike,v 1.160 2000/03/07 22:15:56 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -2245,12 +2245,6 @@ scope created within the define tag.
  with the <tag><ref type=tag>if</ref></tag>-statement.
 </desc>",
 
-"if#expr":#"<desc plugin>
- Evaluates expressions. The following characters may be used: \"1, 2,
- 3, 4, 5, 6, 7, 8, 9, x, a, b, c, d, e, f, i, n, t, \, X. A, B, C, D, E,
- F, l, o, &lt;, &gt;, =, 0, -, +, /, %, &, |, (, ), .\".
-</desc>",
-
 "if#group":#"<desc plugin>
  Checks if the current user is a member of the group according
  the groupfile. Syntax is groupfile=path.
@@ -2436,6 +2430,13 @@ it, jp, mi, no, pt, ru, sr, si, es, sv>
 "eval":#"<desc cont>Postparses its content. Useful when an entity contains
  RXML-code. <tag>eval</tag> is then placed around the entity to get its
  content parsed.</desc>",
+
+"emit":#"<desc cont>Provides data, fetched from different sources, as
+ entities</desc>
+
+<attr name=source type=plugin>
+ The source from which the data should be fetched.
+</attr>",
 
 ]);
 #endif
