@@ -1,10 +1,12 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
 
+#include <module.h>
+
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: language2.pike,v 1.4 2000/03/09 19:05:13 nilsson Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.5 2000/03/10 18:28:58 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_PARSER;
 constant module_name = "Language module II";
@@ -30,11 +32,13 @@ void create() {
 string default_language;
 array languages;
 array rxml;
+string cache_id;
 
-void start() {
+void start(int n, Configuration c) {
   default_language=query("default_language");
   languages=query("languages");
   rxml=query("rxml");
+  cache_id="lang_mod"+c->get_config_id();
 }
 
 
@@ -56,7 +60,7 @@ object remap_url(RequestID id, string url) {
 
   multiset(string) found;
   mapping(string:string) files;
-  array split=cache_lookup("lang_mod",url);
+  array split=cache_lookup(cache_id,url);
   if(!found) {
     found=(<>);
     files=([]);
@@ -83,7 +87,7 @@ object remap_url(RequestID id, string url) {
       }
     }
 
-    cache_set("lang_mod", url, ({ found,files }) );
+    cache_set(cache_id, url, ({ found,files }) );
   }
   else
     [found,files]=split;
@@ -98,6 +102,7 @@ object remap_url(RequestID id, string url) {
 
       if(!id->misc->defines) id->misc->defines=([]);
       id->misc->defines->language=lang;
+      id->misc->defines->present_languages=found;
       id->not_query=files[lang];
       id->misc->language_remap=([]);
       return id;
@@ -128,7 +133,7 @@ class TagLanguage {
 
     array do_return(RequestID id) {
       string lang=id->misc->defines->language;
-      if(args->type=="short") {
+      if(args->type=="code") {
 	result=lang;
 	return 0;
       }
@@ -147,9 +152,9 @@ class TagUnavailableLanguage {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      string lang=find_language(id)[0];
+      string lang=id->misc->pref_languages->get_languages()[0];
       if(lang==id->misc->defines->language) return 0;
-      if(args->type=="short") {
+      if(args->type=="code") {
 	result=lang;
 	return 0;
       }
@@ -159,40 +164,10 @@ class TagUnavailableLanguage {
   }
 }
 
-class TagLanguages {
-  inherit RXML.Tag;
-  constant name = "languages";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
-
-  class Frame {
-    inherit RXML.Frame;
-    string scope_name="language";
-    mapping vars=([]);
-
-    string url;
-    array conf_langs;
-    int counter;
-    function(string:string) trans;
-
-    array do_enter(RequestID id) {
-      trans=translator(find_language(id), id);
-      url=strip_prestate(strip_config(id->raw_url));
-
-      conf_langs=id->cookies->RoxenConfig?id->cookies->RoxenConfig/",":({});
-      conf_langs=Array.map(conf_langs-(conf_langs-query("languages")),
-			   lambda(string lang) { return "-"+lang; } );
-      if(args->scope) scope_name=args->scope;
-      return 0;
-    }
-
-    int do_iterate(RequestID id) {
-      string lang=languages[counter];
-      vars->short=lang;
-      vars->long=trans(lang);
-      vars->preurl=add_pre_state(url, id->prestate-aggregate_multiset(@languages)+(<lang>));
-      vars->confurl=add_config(url, conf_langs+({lang}), id->prestate);
-      counter++;
-      return counter<sizeof(languages);
-    }
-  }
-}
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+  "language":"<desc tag>Show the pages language.</desc>",
+  "unavailable-language":"<desc cont>Show what language the user wanted, if this isn't it.</desc>"
+]);
+#endif
