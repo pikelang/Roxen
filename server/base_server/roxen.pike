@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.638 2001/02/27 03:13:37 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.639 2001/03/01 20:52:52 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -2345,6 +2345,11 @@ class ImageCache
 
       switch(format)
       {
+	case "wbf":
+	  format = "wbmp";
+	case "wbmp":
+	  data = Image.WBF.encode( reply, enc_args );
+	  break;
        case "gif":
 #if constant(Image.GIF) && constant(Image.GIF.encode)
          if( alpha && true_alpha )
@@ -2385,7 +2390,7 @@ class ImageCache
        default:
          if(!Image[upper_case( format )]
             || !Image[upper_case( format )]->encode )
-           error("Image format "+format+" unknown\n");
+           error("Image format "+format+" not supported\n");
 	 data = Image[upper_case( format )]->encode( reply, enc_args );
       }
 
@@ -2393,7 +2398,7 @@ class ImageCache
       ([
         "xsize":reply->xsize(),
         "ysize":reply->ysize(),
-        "type":"image/"+format,
+        "type":(format == "wbmp" ? "image/vnd.wap.wbmp" : "image/"+format ),
       ]);
     }
     else if( mappingp(reply) )
