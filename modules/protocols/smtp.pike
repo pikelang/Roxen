@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.45 1998/09/18 18:59:12 grubba Exp $
+ * $Id: smtp.pike,v 1.46 1998/09/18 19:05:01 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.45 1998/09/18 18:59:12 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.46 1998/09/18 19:05:01 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -640,7 +640,6 @@ static class Smtp_Connection {
 			   }
 			 });
 
-	  send(250);
 	  return;
 	}
       }
