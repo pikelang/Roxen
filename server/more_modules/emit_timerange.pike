@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.3 2002/05/02 11:37:18 jhs Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.4 2002/05/02 12:01:43 jhs Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -53,7 +53,6 @@ static constant units = ({ "Year", "Month", "Week", "Day",
 			 "minute"		: "minute_no",
 			 "second"		: "second_no",
 			 "timezone"		: "tzname_iso",
-
 			 "timezone.name"	: "tzname",
 			 "timezone.iso-name"	: "tzname_iso",
 			 "timezone.seconds-to-utc" : "utc_offset",
@@ -168,16 +167,30 @@ int is_supported(string class_name)
 string wash_language_name(string class_name)
 { return String.capitalize(lower_case(class_name[1..])); }
 
-function use_what = query; // kludge to see the module's query() method below
+int is_valid_timezone(string tzname)
+{ return !catch(Calendar[ query("calendar") ]->set_timezone( tzname )); }
+
 class TZVariable
 {
   inherit Variable.String;
 
   array(string) verify_set_from_form( mixed new )
   {
-    if(catch(Calendar[ use_what("calendar") ]->set_timezone( [string]new )))
-      return ({ "Unknown timezone " + [string]new, query() });
-    return ({ 0, [string]new - "\r" - "\n" });
+    if(is_valid_timezone( [string]new ))
+      return ({ 0, [string]new - "\r" - "\n" });
+    return ({ "Unknown timezone " + [string]new, query() });
+  }
+}
+
+class TagIfIsValidTimezone
+{
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "is-valid-timezone";
+
+  int(0..1) eval(string tzname, RequestID id)
+  {
+    return is_valid_timezone(tzname);
   }
 }
 
