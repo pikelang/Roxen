@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.5 2002/02/27 10:52:15 wellhard Exp $
+// $Id: License.pmod,v 1.6 2002/03/06 10:15:29 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -11,7 +11,7 @@
 class Key
 {
   static mapping content;
-  static string license_dir, filename;
+  static string license_dir, _filename;
   
   static array(Gmp.mpz) read_public_key()
   {
@@ -63,11 +63,12 @@ class Key
 
   int write()
   {
-    string license_name = combine_path(license_dir, filename);
+    string license_name = Stdio.append_path(license_dir, _filename);
     string s = sprintf("Roxen License:\n %O\n-START-\n%s\n-END-\n",
 		       content,
 		       MIME.encode_base64(encrypt(encode_value(content))));
     int bytes = Stdio.write_file(license_name, s);
+    chmod(license_name, 384);
     if(sizeof(s) != bytes)
       error("Can't write license file %s.\n", license_name);
     return bytes;
@@ -75,7 +76,7 @@ class Key
 
   int read()
   {
-    string license_name = combine_path(license_dir, filename);
+    string license_name = Stdio.append_path(license_dir, _filename);
     string s = Stdio.read_bytes(license_name);
     if(!s)
       error("Can't read license file %s.\n", license_name);
@@ -92,12 +93,15 @@ class Key
   }
   
   string company_name() { return content->company_name; }
-  string number()       { return content->number; }
+  int number()          { return (int)content->number; }
   string type()         { return content->type; }
-  string created()      { return content->created; }
   string expires()      { return content->expires; }
   string hostname()     { return content->hostname; }
   static string enterprise()     { return content->enterprise; }
+  
+  string created()      { return content->created; }
+  string creator()      { return content->creator; }
+  string filename()     { return _filename; }
   
   int is_module_unlocked(string m, string|void mode)
   //! Returns true if the module @[m] with optional mode @[mode] is
@@ -118,6 +122,15 @@ class Key
     return mappingp(content->modules[m]) && content->modules[m][feature];
   }
 
+  mapping get_modules()
+  //! Returns the modules mapping. Note, this function should only be
+  //! used for display purposes NOT for module/feature
+  //! verification. Use @[is_module_unlocked] or @[get_module_feature]
+  //! instead.
+  {
+    return copy_value(content->modules);
+  }
+  
 #ifdef INSIDE_ROXEN
   Configuration used_in(Configuration|void configuration)
   // Returns the first configuration the license key is used in. If a
@@ -139,7 +152,7 @@ class Key
   // supplied that one is omited from the "used by other configuration"
   // check.
   {
-    return sprintf("%s (%s #%d)%s", filename, type(), number(),
+    return sprintf("%s (%s #%d)%s", _filename, type(), number(),
 		   used_in(configuration)?"!":"");
   }
 #endif
@@ -152,15 +165,15 @@ class Key
       Configuration conf = used_in(configuration);
       if(conf)
 	return sprintf("Error: License %O is already used in "
-		       "configuration %O.", filename, conf->name);;
+		       "configuration %O.", _filename, conf->name);;
     }
 #endif
   }
 
-  void create(string _license_dir, string _filename, mapping|void _content)
+  void create(string _license_dir, string __filename, mapping|void _content)
   {
     license_dir = _license_dir;
-    filename = _filename;
+    _filename = __filename;
     if(!_content)
       read();
     else
@@ -178,7 +191,7 @@ class LicenseVariable
   Key get_key()
   {
     return query() &&
-      Stdio.is_file(combine_path(license_dir, query())) &&
+      Stdio.is_file(Stdio.append_path(license_dir, query())) &&
       Key(license_dir, query());
   }
   
