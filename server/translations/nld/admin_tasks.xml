@@ -26,43 +26,43 @@
 <str id="1">
 <new/>
 <o>Pike memory usage information</o>
-<t></t>
+<t>Informatie geheugengebruik Pike</t>
 </str>
 
 <str id="2">
 <new/>
 <o>Show some information about how pike is using the memory it has allocated. Mostly useful for developers.</o>
-<t></t>
+<t>Toon informatie over hoe pike het gealloceerde geheugen gebruikt. Voonamelijk nuttig voor ontwikkelaars</t>
 </str>
 
 <str id="3">
 <new/>
 <o>Type</o>
-<t></t>
+<t>Type</t>
 </str>
 
 <str id="4">
 <new/>
 <o>Number</o>
-<t></t>
+<t>Nummer</t>
 </str>
 
 <str id="5">
 <new/>
 <o>Change</o>
-<t></t>
+<t>Wijzig</t>
 </str>
 
 <str id="6">
 <new/>
 <o>Pike module list</o>
-<t></t>
+<t>Pike module-lijst</t>
 </str>
 
 <str id="7">
 <new/>
 <o>Show information about which features and modules are available in the Pike this Roxen is using.</o>
-<t></t>
+<t>Toon welke features en modules beschikbaar zijn in de Pike die Roxen gebruikt. </t>
 </str>
 
 <str id="238">
@@ -109,13 +109,13 @@
 <str id="8">
 <new/>
 <o>Flush caches</o>
-<t></t>
+<t>Schoon geheugenbuffers op</t>
 </str>
 
 <str id="9">
 <new/>
 <o>Flush all memory caches.</o>
-<t></t>
+<t>Schoon alle geheugenbuffers op.</t>
 </str>
 
 <str id="232">
@@ -126,31 +126,31 @@
 <str id="10">
 <new/>
 <o>List fonts</o>
-<t></t>
+<t>Toon lettertypes</t>
 </str>
 
 <str id="11">
 <new/>
 <o>List all available fonts</o>
-<t></t>
+<t>Toon alle beschikbare lettertypes</t>
 </str>
 
 <str id="dH">
 <new/>
 <o>Not available.</o>
-<t></t>
+<t>Niet beschikbaar.</t>
 </str>
 
 <str id="dI">
 <new/>
 <o>All available fonts</o>
-<t></t>
+<t>Alle beschikbare lettertypes</t>
 </str>
 
 <str id="236">
 <new/>
 <o>Example text</o>
-<t></t>
+<t>Voorbeeldtekst</t>
 </str>
 
 <str id="237">
@@ -174,7 +174,7 @@
 <str id="12">
 <new/>
 <o>Unknown module</o>
-<t></t>
+<t>Onbekende module</t>
 </str>
 
 <str id="13">
@@ -198,13 +198,13 @@
 <str id="17">
 <new/>
 <o>Module</o>
-<t></t>
+<t>Module</t>
 </str>
 
 <str id="18">
 <new/>
 <o>File</o>
-<t></t>
+<t>Bestand</t>
 </str>
 
 <str id="19">
@@ -228,31 +228,31 @@
 <str id="22">
 <new/>
 <o>Show a list of all open files and network connections.</o>
-<t></t>
+<t>Toont een lijst van alle open bestanden en netwerkverbindingen</t>
 </str>
 
 <str id="23">
 <new/>
 <o>Active filedescriptors</o>
-<t></t>
+<t>Actieve filedescriptors</t>
 </str>
 
 <str id="24">
 <new/>
 <o>Reload configurations from disk</o>
-<t></t>
+<t>Herlaad de configuratie vanaf schijf.</t>
 </str>
 
 <str id="25">
 <new/>
 <o>Force a reload of all configuration information from the configuration files.</o>
-<t></t>
+<t>Forceer het herladen van alle configuraties uit de configuratiebestanden.</t>
 </str>
 
 <str id="26">
 <new/>
 <o>All configurations reloaded from disk.</o>
-<t></t>
+<t>Alle configuraties opnieuw geladen vanaf schijf.</t>
 </str>
 
 <str id="27">
