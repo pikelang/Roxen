@@ -1,5 +1,5 @@
 
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // This module redirects requests to different places, depending on the
 // hostname that was used to access the server. It can be used as a
@@ -8,7 +8,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.14 1997/09/28 12:47:52 grubba Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.15 1998/03/11 19:42:36 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>

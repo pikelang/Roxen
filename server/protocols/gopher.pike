@@ -1,5 +1,5 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
-string cvs_version = "$Id: gopher.pike,v 1.5 1997/07/16 01:02:01 grubba Exp $";
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+string cvs_version = "$Id: gopher.pike,v 1.6 1998/03/11 19:42:44 neotron Exp $";
 // Gopher protocol module
 
 inherit "protocols/http"; /* For the variables and such.. */

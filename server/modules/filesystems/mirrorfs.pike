@@ -1,4 +1,4 @@
-constant cvs_version="$Id: mirrorfs.pike,v 1.9 1997/09/16 20:54:25 grubba Exp $";
+constant cvs_version="$Id: mirrorfs.pike,v 1.10 1998/03/11 19:42:35 neotron Exp $";
 constant thread_safe=1;
 
 import RoxenRPC;
@@ -16,7 +16,7 @@ array register_module()
 	     "The searchpath of the Mirror Filesystem is used as a "
 	     "cache.  It is not a good idea to use the same cache-directory "
 	     "in multiple mirror filesystems, and never store other files in it"
-	     ". There is a mirror for www.roxen.com at skuld.infovav.se:2000, "
+	     ". There is a mirror for www.roxen.com at skuld.idonex.se:2000, "
 	     "if you want to test this module.<p><b>Do not under any "
 	     "circumstances let this module connect to a mirror server in the "
 	     "same Roxen server. It will not work. At all.</b>"});

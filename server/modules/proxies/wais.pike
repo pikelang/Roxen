@@ -1,10 +1,10 @@
 // This is a roxen module.
 
-// A WAIS proxy module, not written by anyone at Infovav, and it would
+// A WAIS proxy module, not written by anyone at Idonex, and it would
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.10 1997/10/03 17:16:55 grubba Exp $";
+string cvs_version = "$Id: wais.pike,v 1.11 1998/03/11 19:42:40 neotron Exp $";
 
 #include <config.h>
 

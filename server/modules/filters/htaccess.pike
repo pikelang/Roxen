@@ -1,11 +1,11 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-// .htaccess compability by David Hedbor, neotron@infovav.se 
-//   Changed into module by Per Hedbor, per@infovav.se
+// .htaccess compability by David Hedbor, neotron@idonex.se 
+//   Changed into module by Per Hedbor, per@idonex.se
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.30 1998/03/05 18:48:34 neotron Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.31 1998/03/11 19:42:37 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>

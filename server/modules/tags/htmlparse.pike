@@ -1,6 +1,6 @@
 import Simulate;
 
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 //
 // The main RXML parser. If this module is not added to a configuration,
 // no RXML parsing will be done at all.  This module also maintains an
@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.87 1998/03/08 13:48:53 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.88 1998/03/11 19:42:42 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>

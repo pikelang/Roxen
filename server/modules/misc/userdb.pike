@@ -1,9 +1,9 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.25 1998/03/01 02:49:54 per Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.26 1998/03/11 19:42:39 neotron Exp $";
 
 #include <module.h>
 inherit "module";

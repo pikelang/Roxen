@@ -1,4 +1,4 @@
-## $Id: supports,v 1.50 1998/02/24 17:00:09 peter Exp $
+## $Id: supports,v 1.51 1998/03/11 19:42:33 neotron Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -274,7 +274,7 @@ cern.*linemode.*           nothing
 # }
 
 #section intraseek {
-.*		robot	intraseek infovav
+.*		robot	intraseek idonex infovav
 # }
 
 #section harvest {

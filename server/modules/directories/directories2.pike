@@ -1,5 +1,5 @@
-/* This is a Roxen module. (c) Informationsvävarna AB 1996, (c) Idonex AB 1998
- * $Id: directories2.pike,v 1.8 1998/01/15 10:29:37 peter Exp $
+/* This is a Roxen module. Copyright © 1996 - 1998, Idonex AB, (c) Idonex AB 1998
+ * $Id: directories2.pike,v 1.9 1998/03/11 19:42:34 neotron Exp $
  *
  * Directory listings mark 2
  *
@@ -12,7 +12,7 @@
  * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.8 1998/01/15 10:29:37 peter Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.9 1998/03/11 19:42:34 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>

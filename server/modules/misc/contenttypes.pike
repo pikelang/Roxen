@@ -1,10 +1,10 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // This module handles all normal extension to content type
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.11 1998/02/10 18:36:18 per Exp $";
+constant cvs_version = "$Id: contenttypes.pike,v 1.12 1998/03/11 19:42:38 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>

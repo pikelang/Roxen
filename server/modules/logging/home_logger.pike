@@ -1,9 +1,9 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.15 1998/03/01 02:49:54 per Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.16 1998/03/11 19:42:37 neotron Exp $";
 constant thread_safe=1;
 
 

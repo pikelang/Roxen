@@ -1,6 +1,6 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-string cvs_version = "$Id: deepthought.pike,v 1.2 1996/12/01 19:18:50 per Exp $";
+string cvs_version = "$Id: deepthought.pike,v 1.3 1998/03/11 19:42:45 neotron Exp $";
 // This module should have the strings in a separate file.. :)
 #include <module.h>
 inherit "module";

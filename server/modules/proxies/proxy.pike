@@ -1,10 +1,10 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // HTTP Proxy module. Should be cleaned and optimized. Currently the
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.28 1998/01/17 02:57:27 grubba Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.29 1998/03/11 19:42:40 neotron Exp $";
 #include <module.h>
 #include <config.h>
 

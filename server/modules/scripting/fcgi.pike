@@ -1,9 +1,9 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.13 1998/01/24 17:56:47 grubba Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.14 1998/03/11 19:42:41 neotron Exp $";
 
 #include <module.h>
 inherit "modules/scripting/cgi";

@@ -1,9 +1,9 @@
 //
-// $Id: Server.pike,v 1.2 1998/03/02 18:32:33 grubba Exp $
+// $Id: Server.pike,v 1.3 1998/03/11 19:42:34 neotron Exp $
 //
 // Roxen HTTP RPC
 //
-// Copyright (C) 1996, 1997 Informationsvävarna
+// Copyright © 1996 - 1998, Idonex AB
 //
 
 static private int port;

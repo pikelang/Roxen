@@ -1,4 +1,4 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // User filesystem. Uses the userdatabase (and thus the system passwd
 // database) to find the home-dir of users, and then looks in a
@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.23 1998/03/11 19:14:05 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.24 1998/03/11 19:42:36 neotron Exp $";
 
 // import Array;
 // import Stdio;

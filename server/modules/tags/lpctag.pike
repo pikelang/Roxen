@@ -1,4 +1,4 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 //
 // Adds support for inline pike in documents.
 //
@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: lpctag.pike,v 1.12 1998/03/08 13:48:56 per Exp $";
+constant cvs_version = "$Id: lpctag.pike,v 1.13 1998/03/11 19:42:43 neotron Exp $";
 constant thread_safe=1;
 
 inherit "module";

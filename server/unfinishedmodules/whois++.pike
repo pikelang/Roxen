@@ -1,9 +1,9 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 
-string cvs_version = "$Id: whois++.pike,v 1.6 1997/10/03 17:44:27 grubba Exp $";
+string cvs_version = "$Id: whois++.pike,v 1.7 1998/03/11 19:42:45 neotron Exp $";
 // Experimental whois++ *client* module
-// Written by Pontus Hagland <law@infovav.se>
+// Written by Pontus Hagland <law@idonex.se>
 #include <module.h>
 
 inherit "module";

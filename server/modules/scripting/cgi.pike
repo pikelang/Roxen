@@ -1,4 +1,4 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // Support for the <a
 // href="http://hoohoo.ncsa.uiuc.edu/docs/cgi/interface.html">CGI/1.1
@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.76 1998/03/09 19:48:23 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.77 1998/03/11 19:42:41 neotron Exp $";
 int thread_safe=1;
 
 #include <module.h>

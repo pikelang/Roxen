@@ -1,4 +1,4 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // Like the redirect module, but transparent to the user. This module
 // will connect to another server, and get the data from there, and
@@ -7,7 +7,7 @@
 // caching. This module is therefore quite obsolete, really.  But
 // since it is so small, I have left it here.
 
-constant cvs_version = "$Id: relay.pike,v 1.9 1997/08/31 04:12:42 peter Exp $";
+constant cvs_version = "$Id: relay.pike,v 1.10 1998/03/11 19:42:37 neotron Exp $";
 constant thread_safe = 1;
 
 #include <module.h>

@@ -1,6 +1,6 @@
 #include <config.h>
 
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // Support for user Pike-scripts, like CGI, but handled internally in
 // the server, and thus much faster, but blocking, and somewhat less
@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.22 1998/02/27 05:39:30 neotron Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.23 1998/03/11 19:42:41 neotron Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);

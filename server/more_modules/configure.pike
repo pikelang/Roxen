@@ -1,6 +1,6 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-string cvs_version = "$Id: configure.pike,v 1.3 1997/10/03 17:16:56 grubba Exp $";
+string cvs_version = "$Id: configure.pike,v 1.4 1998/03/11 19:42:43 neotron Exp $";
 // Mounts the configuration interface on a location in the virtual
 // filesystem.
 

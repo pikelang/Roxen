@@ -1,8 +1,8 @@
-/* $Id: ssl3.pike,v 1.25 1998/03/10 21:35:12 grubba Exp $
+/* $Id: ssl3.pike,v 1.26 1998/03/11 19:42:44 neotron Exp $
  *
- * © 1997 Informationsvävarna AB
+ * Copyright © 1996-1998, Idonex AB
  *
- * This is unpublished alpha source code of Infovav AB.
+ * This is unpublished alpha source code of Idonex AB.
  *
  * Do NOT redistribute!
  */

@@ -1,6 +1,6 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.60 1998/03/11 19:26:56 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.61 1998/03/11 19:42:44 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";

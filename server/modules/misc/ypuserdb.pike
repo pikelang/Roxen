@@ -1,9 +1,9 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: ypuserdb.pike,v 1.8 1998/02/24 12:06:55 grubba Exp $";
+constant cvs_version = "$Id: ypuserdb.pike,v 1.9 1998/03/11 19:42:39 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>

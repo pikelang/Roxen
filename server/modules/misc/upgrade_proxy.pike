@@ -2,7 +2,7 @@
 inherit "module";
 object proxy;
 constant thread_safe = 1;
-constant cvs_version = "$Id: upgrade_proxy.pike,v 1.5 1997/10/09 00:16:35 grubba Exp $";
+constant cvs_version = "$Id: upgrade_proxy.pike,v 1.6 1998/03/11 19:42:39 neotron Exp $";
 
 array register_module()
 {
@@ -46,6 +46,6 @@ void start()
 void create()
 {
   defvar("port", 55875, "Proxy Port", TYPE_INT,  "The port to bind to");
-  defvar("master", "skuld.infovav.se:23", "Upgrade server master", TYPE_STRING,
+  defvar("master", "skuld.idonex.se:23", "Upgrade server master", TYPE_STRING,
 	 "The server to connect to");
 }

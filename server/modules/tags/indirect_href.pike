@@ -2,10 +2,10 @@
 
 // This module makes it possible to write symbolic names instead of
 // absoulte hrefs.
-// Written by Mattias Wingstedt, <wing@infovav.se>, please refer
+// Written by Mattias Wingstedt, <wing@idonex.se>, please refer
 // to him for further info.
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.6 1997/08/31 02:49:25 peter Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.7 1998/03/11 19:42:42 neotron Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -40,7 +40,7 @@ array (mixed) register_module()
 	      "is used, a random link will be selected from the database. "
 	      "Example:<pre>"
 	      "   roxen=http://www.roxen.com/\n"
- 	      "   infovav=http://www.infovav.se/</pre>", });
+ 	      "   idonex=http://www.idonex.se/</pre>", });
 }
 
 void start()

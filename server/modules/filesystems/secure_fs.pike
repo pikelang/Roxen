@@ -1,11 +1,11 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // A somewhat more secure version of the normal filesystem. This
 // module user regular expressions to regulate the access of files.
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.8 1997/11/30 01:35:45 grubba Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.9 1998/03/11 19:42:36 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>

@@ -1,10 +1,10 @@
-/* This is a roxen module. (c) Informationsvävarna AB 1996.
+/* This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  *
  * Index files only module, a directory module that will not try to
  * generate any directory listings, instead only using index files.
  */
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.5 1997/08/31 03:47:17 peter Exp $";
+constant cvs_version = "$Id: indexfiles.pike,v 1.6 1998/03/11 19:42:35 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>

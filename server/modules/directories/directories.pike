@@ -1,8 +1,8 @@
-/* This is a roxen module. (c) Informationsvävarna AB 1996, (c) Idonex AB 1998
+/* This is a roxen module. Copyright © 1996 - 1998, Idonex AB, (c) Idonex AB 1998
  * A quite complex directory module. Generates macintosh like listings.
  */
 
-string cvs_version = "$Id: directories.pike,v 1.19 1998/01/15 10:28:43 peter Exp $";
+string cvs_version = "$Id: directories.pike,v 1.20 1998/03/11 19:42:34 neotron Exp $";
 int thread_safe=1;   /* Probably. Check _root */
 
 #include <module.h>

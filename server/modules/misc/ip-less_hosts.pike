@@ -1,6 +1,6 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.12 1998/03/09 16:18:07 grubba Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.13 1998/03/11 19:42:38 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>

@@ -1,10 +1,10 @@
-/* This is a roxen module. (c) Informationsvävarna AB 1996, (c) Idonex AB 1998
+/* This is a roxen module. Copyright © 1996 - 1998, Idonex AB, (c) Idonex AB 1998
  *
  * A fast directory module, without support for the fold/unfold stuff
  * in the normal one.
  */
 
-constant cvs_version = "$Id: fastdir.pike,v 1.11 1998/01/15 10:38:56 peter Exp $";
+constant cvs_version = "$Id: fastdir.pike,v 1.12 1998/03/11 19:42:35 neotron Exp $";
 int thread_safe=1;
 
 #include <module.h>

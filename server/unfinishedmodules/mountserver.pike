@@ -1,6 +1,6 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-string cvs_version = "$Id: mountserver.pike,v 1.3 1997/10/02 21:36:15 grubba Exp $";
+string cvs_version = "$Id: mountserver.pike,v 1.4 1998/03/11 19:42:45 neotron Exp $";
 // Mounts a virtual server on a location in the virtual filesystem of
 // another one (or, infact, the same one, but that is probably quite
 // useless).

@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.19 1997/12/11 01:16:37 neotron Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.20 1998/03/11 19:42:39 neotron Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -69,7 +69,7 @@ Content-type: text/html\r\n\
 <hr>\
 <font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a></font>"
 
-#define INFOSTRING "<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a> FTP Gateway "+VERSION+" / <i>law@infovav.se</i></font>"
+#define INFOSTRING "<font size=-2><a href=http://www.roxen.com/>"+roxen->version()+"</a> FTP Gateway "+VERSION+" / <i>law@idonex.se</i></font>"
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.109 1998/03/02 18:50:26 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.110 1998/03/11 19:42:33 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -3040,7 +3040,7 @@ void create(string config)
   defvar("Domain", get_domain(), "Domain", TYPE_STRING, 
 	 "Your domainname, should be set automatically, if not, "
 	 "enter the correct domain name here, and send a bug report to "
-	 "<a href=\"mailto:roxen-bugs@infovav.se\">roxen-bugs@infovav.se"
+	 "<a href=\"mailto:roxen-bugs@idonex.se\">roxen-bugs@idonex.se"
 	 "</a>");
   
 

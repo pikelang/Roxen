@@ -1,9 +1,9 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 inherit "module";
 #include <module.h>
 
-constant cvs_version="$Id: auto_gzip.pike,v 1.2 1997/08/31 04:12:40 peter Exp $";
+constant cvs_version="$Id: auto_gzip.pike,v 1.3 1998/03/11 19:42:36 neotron Exp $";
 constant thread_safe=1;
 
 mixed *register_module()

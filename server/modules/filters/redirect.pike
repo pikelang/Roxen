@@ -1,10 +1,10 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
 // The redirect module. Redirects requests from one filename to
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.12 1998/02/10 18:36:15 per Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.13 1998/03/11 19:42:37 neotron Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -19,7 +19,7 @@ void create()
 	 "Redirect one file to another. The syntax is 'regexp to_URL',"
 	 "or 'prefix to_URL', or 'exact file_name to_URL<p>Some examples:'"
 	 "<pre>"
-         "/from/.*      http://to.infovav.se/to/%f\n"
+         "/from/.*      http://to.idonex.se/to/%f\n"
          ".*\\.cgi       http://cgi.foo.bar/cgi-bin/%p\n"
 	 "/thb/.*       %u/thb_gone.html\n"
 	 "/roxen/     http://www.roxen.com/\n"

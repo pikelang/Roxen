@@ -1,11 +1,11 @@
-/* This is a roxen module. (c) Informationsvävarna AB 1997.
+/* This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  *
  * Converts tab and newline separated lists to tables.
  * 
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: tablify.pike,v 1.13 1998/03/07 19:03:13 noring Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.14 1998/03/11 19:42:43 neotron Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";

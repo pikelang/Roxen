@@ -1,12 +1,12 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.81 1998/03/02 16:50:26 grubba Exp $
+ * $Id: ftp.pike,v 1.82 1998/03/11 19:42:43 neotron Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
- *	David Hedbor <neotron@infovav.se>,
- *	Henrik Grubbström <grubba@infovav.se> and
- *	Marcus Comstedt <marcus@infovav.se>
+ *	David Hedbor <neotron@idonex.se>,
+ *	Henrik Grubbström <grubba@idonex.se> and
+ *	Marcus Comstedt <marcus@idonex.se>
  *
  * Some of the features: 
  *

@@ -1,5 +1,5 @@
-// This is a roxen module. (c) Informationsvävarna AB 1996.
-// $Id: flik.pike,v 1.9 1997/12/11 01:15:45 neotron Exp $
+// This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
+// $Id: flik.pike,v 1.10 1998/03/11 19:42:42 neotron Exp $
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -14,9 +14,9 @@
 // the fl-list can be nestled
 // ie <ft>...<fd>...</fd></ft> with implicit end tags
 
-// made by Pontus Hagland <law@infovav.se> december -96
+// made by Pontus Hagland <law@idonex.se> december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.9 1997/12/11 01:15:45 neotron Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.10 1998/03/11 19:42:42 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
