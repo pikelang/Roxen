@@ -1,5 +1,5 @@
 /*
- * $Id: Server.pike,v 1.17 2000/11/16 11:50:43 per Exp $
+ * $Id: Server.pike,v 1.18 2001/04/18 20:54:25 js Exp $
  */
 
 #define error(X) throw(({X, backtrace()}))
@@ -363,7 +363,7 @@ void create(string|object host, int|string|void p, string|void key)
   if(objectp(host))
   {
     if(!low_got_connection(host))
-      werror("Remote host failed authentification test.\n");
+      werror("Remote host failed authentication test.\n");
     else
       host->write("=");
   } 

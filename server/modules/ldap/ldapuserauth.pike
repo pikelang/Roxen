@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright 2000, Roxen IS
 
-/* LDAP User authentification. Reads the directory and use it to
+/* LDAP User authentication. Reads the directory and use it to
    authentificate users.
 
    Basic authentication names and passwords are mapped onto attributes
@@ -58,7 +58,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.24 2001/01/23 15:42:08 hop Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.25 2001/04/18 20:54:24 js Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -301,7 +301,7 @@ void open_dir(string u, string p) {
 	return;
     }
     if(dir->error_number()) {
-	werror ("LDAPauth: authentification error ["+dir->error_string()+"]\n");
+	werror ("LDAPauth: authentication error ["+dir->error_string()+"]\n");
 	dir=0;
 	return;
     }
@@ -317,7 +317,7 @@ void open_dir(string u, string p) {
 
     dir->bind(binddn, bindpwd);
     if(dir->error_number()) {
-	werror ("LDAPauth: authentification error ["+dir->error_string()+"]\n");
+	werror ("LDAPauth: authentication error ["+dir->error_string()+"]\n");
 	dir=0;
 	return;
     }
@@ -441,7 +441,7 @@ array(string) userinfo (string u,mixed p) {
 	    return 0;
 	  }
 	  if(dir->error_number()) {
-	    werror ("LDAPauth: authentification error ["+dir->error_string()+"]\n");
+	    werror ("LDAPauth: authentication error ["+dir->error_string()+"]\n");
 	    dir=0;
 	    return 0;
 	  }
