@@ -286,7 +286,7 @@ constant tagdoc=([
 </xtable>
 </attr>
 
-<attr name='sort-reversed'><p>
+<attr name='sort-reverse'><p>
  Reverse the sort order.</p>
 </attr>",
 
