@@ -12,6 +12,9 @@
     <CustomAction Id="CreateConfigInterface" Directory="SERVERDIR"
       ExeCommand='"[SERVERDIR]\pike\bin\pike" bin\create_configif.pike --batch server_name "[SERVER_NAME]" server_url "[SERVER_PROTOCOL]://*:[SERVER_PORT]/" user "[ADM_USER]" password "[ADM_PASS1]" ok y update n'
       Execute="commit" />
+    <CustomAction Id="CreatePikeLocation" Directory="SERVERDIR"
+      ExeCommand='"[SERVERDIR]\pike\bin\pike" -e "Stdio.write_file(argv[1], argv[2]);" "pikelocation.txt" "[SERVERDIR]\pike\bin\pike"'
+      Execute="commit" />
     <UI>
       <Property Id="ErrorDialog"><![CDATA[ErrorDialog]]></Property>
       <Property Id="DefaultUIFont"><![CDATA[VsdDefaultUIFont.524F4245_5254_5341_4C45_534153783400]]></Property>
@@ -1137,6 +1140,7 @@ Click "Next" to start the installation.</Text>
       <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
       <RemoveExistingProducts After="InstallInitialize" />
       <Custom Action="CreateConfigInterface" Sequence="4100">REMOVE=""</Custom>
+      <Custom Action="CreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
     </InstallExecuteSequence>
     <Binary Id="DefSplashBitmap" src="Splash.bmp" />
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
