@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.18 2000/04/04 19:15:30 mast Exp $
+ * $Id: create_configif.pike,v 1.19 2000/04/05 16:41:05 js Exp $
  *
  * Create an initial administration interface server.
  */
@@ -201,6 +201,19 @@ int main(int argc, array argv)
   <var name='proxyport'>         <int>$PROXY_PORT$</int> </var>
   <var name='proxyserver'>       <str>$PROXY_HOST</str> </var>
   <var name='userpassword'>      <str>$COMMUNITY_USERPASSWORD$</str> </var>
+</region>
+
+<region name='contenttypes#0'>
+  <var name='_priority'>         <int>0</int> </var>
+  <var name='default'>           <str>application/octet-stream</str> </var>
+  <var name='exts'><str># This will include the defaults from a file.
+# Feel free to add to this, but do it after the #include line if
+# you want to override any defaults
+
+#include %3cetc/extensions%3e
+tag text/html
+xml text/html
+</str></var>
 </region>
 
 <region name='spider#0'>
