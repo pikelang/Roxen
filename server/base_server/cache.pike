@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.82 2003/10/28 14:40:38 jonasw Exp $
+// $Id: cache.pike,v 1.83 2003/11/11 15:33:24 grubba Exp $
 
 // #pragma strict_types
 
@@ -282,10 +282,8 @@ private int max_persistence;
 // The low level call for storing a session in the database
 private void store_session(string id, mixed data, int t) {
   data = encode_value(data);
-  if(catch(db("local")->query("INSERT INTO session_cache VALUES (%s," +
-		     t + ",%s)", id, data)))
-    db("local")->query("UPDATE session_cache SET data=%s, persistence=" +
-	      t + " WHERE id=%s", data, id);
+  db("local")->query("REPLACE INTO session_cache VALUES (%s," + t + ",%s)",
+		     id, data);
 }
 
 // GC that, depending on the sessions session_persistence either
