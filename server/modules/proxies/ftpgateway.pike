@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.38 2001/01/04 06:03:28 nilsson Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.39 2001/03/05 23:34:40 nilsson Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -36,7 +36,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.38 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.39 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -1495,7 +1495,7 @@ void save_dataport(array m) /* ({portno,object}) */
       m+=({serial++});
       dataports[m]=1;
       m_delete(request_port,m[1]);
-      call_out(remove_dataport,QUERY(portkeeptime),m);
+      call_out(remove_dataport,query("portkeeptime"),m);
    }
    if(objectp(m[1])) destruct(m[1]);
 }
