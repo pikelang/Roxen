@@ -10,7 +10,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.13 2000/04/06 01:49:41 wing Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.14 2000/05/03 08:38:54 mast Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -38,6 +38,17 @@ void create()
 	 "set and as <tt>/ftp/home/me/</tt> if it is not set.");
 }
 
+string fix_slashes (string s)
+{
+  if (sizeof (s) && s[0] == '/') {
+    s = s[1..];
+  }
+  if (sizeof (s) && s[-1] != '/') {
+    s += "/";
+  }
+  return s;
+}
+
 mixed stat_file(string f, object id)
 {
   string home = id->misc->home;
@@ -46,13 +57,7 @@ mixed stat_file(string f, object id)
     return(0);
   }
   if (QUERY(remap_home)) {
-    if (home[0] == '/') {
-      home = home[1..];
-    }
-    if (home[-1] != '/') {
-      home += "/";
-    }
-    return(::stat_file(home + f, id));
+    return(::stat_file(fix_slashes (home) + f, id));
   } else {
     if (search("/" + f, home)) {
       // Not a prefix, or short.
@@ -74,13 +79,7 @@ array find_dir(string f, object id)
     return(0);
   }
   if (QUERY(remap_home)) {
-    if (home[0] == '/') {
-      home = home[1..];
-    }
-    if (home[-1] != '/') {
-      home += "/";
-    }
-    return(::find_dir(home + f, id));
+    return(::find_dir(fix_slashes (home) + f, id));
   } else {
     if (search("/" + f, home)) {
       // Not a prefix, or short
@@ -102,13 +101,7 @@ string real_file(string f, object id)
     return(0);
   }
   if (QUERY(remap_home)) {
-    if (home[0] == '/') {
-      home = home[1..];
-    }
-    if (home[-1] != '/') {
-      home += "/";
-    }
-    return(::real_file(home + f, id));
+    return(::real_file(fix_slashes (home) + f, id));
   } else {
     if (search("/" + f, home)) {
       // Not a prefix, or short.
@@ -126,13 +119,7 @@ mixed find_file(string f, object id)
     return(0);
   }
   if (QUERY(remap_home)) {
-    if (home[0] == '/') {
-      home = home[1..];
-    }
-    if (home[-1] != '/') {
-      home += "/";
-    }
-    return(::find_file(home + f, id));
+    return(::find_file(fix_slashes (home) + f, id));
   } else {
     if (search("/" + f, home)) {
       // Not a prefix, or short.
