@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.56 1998/03/12 19:16:58 mirar Exp $
+/* $Id: wizard.pike,v 1.57 1998/03/12 20:08:54 mirar Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -23,7 +23,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     if(m->type != "password")
       m->type = "string";
     m_delete(m,"default");
-    m->value = current||"";
+    m->value = current||m->value||"";
     if(!m->size)m->size="60,1";
     return make_tag("input", m);
 
