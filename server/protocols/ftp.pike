@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 1.97 1999/02/15 01:09:55 peter Exp $
+ * $Id: ftp.pike,v 1.98 1999/03/18 15:30:07 mast Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -986,10 +986,10 @@ class TelnetSession {
 	// FIXME: Is this the correct use?
 	fd->set_write_callback(0);
 
-	report_warning("FTP2: Write callback with nothing to send.\n");
+	report_warning("FTP: Write callback with nothing to send.\n");
       }
     } else {
-      report_error("FTP2: Write callback with no fd.\n");
+      report_error("FTP: Write callback with no fd.\n");
       destruct();
     }
   }
@@ -1288,19 +1288,19 @@ class FTPSession
 
     if (to_send->is_empty()) {
 
-      DWRITE(sprintf("FTP2: write_cb(): Empty send queue.\n"));
+      DWRITE(sprintf("FTP: write_cb(): Empty send queue.\n"));
 
       ::set_write_callback(0);
       if (end_marker) {
-	DWRITE(sprintf("FTP2: write_cb(): Sending EOF.\n"));
+	DWRITE(sprintf("FTP: write_cb(): Sending EOF.\n"));
 	return(0);	// Mark EOF
       }
-      DWRITE(sprintf("FTP2: write_cb(): Sending \"\"\n"));
+      DWRITE(sprintf("FTP: write_cb(): Sending \"\"\n"));
       return("");	// Shouldn't happen, but...
     } else {
       string s = to_send->get();
 
-      DWRITE(sprintf("FTP2: write_cb(): Sending \"%s\"\n", s));
+      DWRITE(sprintf("FTP: write_cb(): Sending \"%s\"\n", s));
 
       if ((to_send->is_empty()) && (!end_marker)) {
 	::set_write_callback(0);
@@ -1313,7 +1313,7 @@ class FTPSession
 
   void send(int code, array(string) data, int|void enumerate_all)
   {
-    DWRITE(sprintf("FTP2: send(%d, %O)\n", code, data));
+    DWRITE(sprintf("FTP: send(%d, %O)\n", code, data));
 
     if (!data || end_marker) {
       end_marker = 1;
@@ -1344,7 +1344,7 @@ class FTPSession
 	to_send->put(s);
       }
     } else {
-      DWRITE(sprintf("FTP2: send(): Nothing to send!\n"));
+      DWRITE(sprintf("FTP: send(): Nothing to send!\n"));
     }
   }
 
@@ -1652,16 +1652,16 @@ class FTPSession
       }
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
-	DWRITE(sprintf("FTP: Error opening file \"%s\"\n"
-		       "%s\n", fname, describe_backtrace(err)));
+	report_error(sprintf("FTP: Error opening file \"%s\"\n"
+			     "%s\n", fname, describe_backtrace(err)));
 	send(550, ({ sprintf("%s: Error, can't open file.", fname) }));
 	return 0;
       }
     } else if ((< "STOR", "MKD", "MOVE" >)[cmd]) {
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
-	DWRITE(sprintf("FTP: Error opening file \"%s\"\n"
-		       "%s\n", fname, describe_backtrace(err)));
+	report_error(sprintf("FTP: Error opening file \"%s\"\n"
+			     "%s\n", fname, describe_backtrace(err)));
 	send(550, ({ sprintf("%s: Error, can't open file.", fname) }));
 	return 0;
       }
@@ -2204,7 +2204,7 @@ class FTPSession
   {
     if (user && Query("ftp_user_session_limit") > 0) {
       // Logging out...
-      DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
+      DWRITE(sprintf("FTP: Decreasing # of sessions for user %O\n", user));
       conf->misc->ftp_sessions[user]--;
     }
 
@@ -2232,7 +2232,7 @@ class FTPSession
   {
     if (user && Query("ftp_user_session_limit") > 0) {
       // Logging out...
-      DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
+      DWRITE(sprintf("FTP: Decreasing # of sessions for user %O\n", user));
       conf->misc->ftp_sessions[user]--;
     }
     auth = 0;
@@ -2263,7 +2263,7 @@ class FTPSession
 	if (!conf->misc->ftp_sessions) {
 	  conf->misc->ftp_sessions = ([]);
 	}
-	DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n", user));
+	DWRITE(sprintf("FTP: Increasing # of sessions for user %O\n", user));
 	if (conf->misc->ftp_sessions[user]++ >=
 	    Query("ftp_user_session_limit")) {
 	  // Session limit exceeded.
@@ -2273,7 +2273,7 @@ class FTPSession
 	  }));
 	  conf->log(([ "error":403 ]), master_session);
 
-	  DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n",user));
+	  DWRITE(sprintf("FTP: Increasing # of sessions for user %O\n",user));
 	  conf->misc->ftp_sessions[user]--;
 
 	  user = 0;	  
@@ -2317,7 +2317,7 @@ class FTPSession
       };
       if (err) {
 	master_session->auth = 0;
-	report_error(sprintf("FTP2: Authentication error.\n"
+	report_error(sprintf("FTP: Authentication error.\n"
 			     "%s\n", describe_backtrace(err)));
 	send(451, ({ "Authentication error." }));
 	conf->log(([ "error":500 ]), master_session);
@@ -3098,7 +3098,7 @@ class FTPSession
 
   static private void got_command(mixed ignored, string line)
   {
-    DWRITE(sprintf("FTP2: got_command(X, \"%s\")\n", line));
+    DWRITE(sprintf("FTP: got_command(X, \"%s\")\n", line));
 
     touch_me();
 
@@ -3147,7 +3147,7 @@ class FTPSession
 	if (err = catch {
 	  this_object()["ftp_"+cmd](args);
 	}) {
-	  report_error(sprintf("Internal server error in FTP2\n"
+	  report_error(sprintf("Internal server error in FTP\n"
 			       "Handling command \"%s\"\n"
 			       "%s\n",
 			       line, describe_backtrace(err)));
@@ -3175,7 +3175,7 @@ class FTPSession
     if (Query("ftp_user_session_limit") > 0) {
       if (user) {
 	// Logging out...
-	DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
+	DWRITE(sprintf("FTP: Decreasing # of sessions for user %O\n", user));
 	conf->misc->ftp_sessions[user]--;
       } else {
 	DWRITE("Exiting with no user.\n");
