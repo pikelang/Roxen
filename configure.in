@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.41 1997/12/16 22:19:41 grubba Exp $
+# $Id: configure.in,v 1.42 1997/12/17 22:28:11 grubba Exp $
 #
 
 prefix=$PWD
@@ -451,7 +451,7 @@ fi
 
 MAKE_ZLIB=""
 AC_SUBST(MAKE_ZLIB)
-if test -d zlib/.; then
+if test -d $srcdir/zlib/.; then
   # We don't trust the config-cache for these two.
   unset ac_cv_header_zlib_h
   unset ac_cv_lib_z_compress
@@ -504,7 +504,7 @@ fi
 
 MAKE_GDBM=""
 AC_SUBST(MAKE_GDBM)
-if test -d gdbm/.; then
+if test -d $srcdir/gdbm/.; then
   unset ac_cv_header_gdbm_h
   unset ac_cv_lib_gdbm_gdbm_open
   if test x$with_gdbm = xyes; then
