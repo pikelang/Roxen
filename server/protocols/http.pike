@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.352 2001/12/05 13:53:07 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.353 2002/01/16 15:38:01 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -836,7 +836,9 @@ private final int parse_got_2( )
     if( arrayp(contents) ) contents = contents[0];
     switch (linename) 
     {
+     case "cache-control":	// Opera sends "no-cache" here.
      case "pragma": pragma|=(multiset)((contents-" ")/",");  break;
+
      case "content-length": misc->len = (int)contents;       break;
      case "authorization":  rawauth = contents;              break;
      case "referer": referer = ({contents}); break;
