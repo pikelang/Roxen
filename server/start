@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.183 2001/09/25 15:27:18 wellhard Exp $
+# $Id: start,v 1.184 2001/10/04 15:04:23 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -202,6 +202,9 @@ parse_args() {
   '--strip-backslash'|'--without-backslash'|'--strip-back-slash')
     DEFINES="-DSTRIP_BSLASH $DEFINES"
   ;;
+  '--offline')
+    DEFINES="-DNO_DNS -DOFFLINE $DEFINES"
+  ;;
   '--without-ram-cache'|'--disable-ram-cache')
     DEFINES="`echo $DEFINES | sed -e 's/-DRAM_CACHE//g'`"
   ;;
@@ -317,6 +320,10 @@ the default arguments.
       .B--versionB.:                  Output version information.
 
       .B--help -?B.:                  This information.
+
+      .B--offlineB.:                  Indicate that there is no network 
+				  connection available. Disables DNS and some
+				  other similar things.
 
       .B--remove-dumpedB.:            Remove all dumped code, thus forcing
                                   a recompile.
