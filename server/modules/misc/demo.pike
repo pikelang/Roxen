@@ -5,7 +5,7 @@ inherit "roxenlib";
 
 // import Array;
 
-constant cvs_version = "$Id: demo.pike,v 1.13 2000/03/16 18:57:13 nilsson Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.14 2000/03/21 18:58:42 per Exp $";
 
 void create()
 {
@@ -58,7 +58,7 @@ mixed find_file( string f, object id )
   if(id->variables->go)
     return http_redirect(query("location")+id->variables->pos,id);
   if (!mdb) {
-    mdb = Yabu.db(".demo-bookmarks", "wcCr")["demo"];
+    mdb = Yabu.db("../var/demomodule-bookmarks", "wcCr")["demo"];
     if(!mdb[42])
       mdb[42]=
 #"<for variable=i from=99 to=1 step=-1>
