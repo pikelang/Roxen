@@ -1,32 +1,54 @@
 // This is Roxen state mechanism. Copyright © 1999, Idonex AB.
 //
 
+#define CHKSPACE "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
 string register_state_consumer(string name, object id) {
 
   if(!id->misc->state)
-    id->misc->state=(["keys":([]),"values":([])]);
+    id->misc+=(["state":(["keys":(<>),"values":([])])]);
 
-  if(search(indices(id->misc->state->keys),name)!=-1)
-    return ((string)id->misc->state->keys[name]++)+name;
+  if(id->misc->state->keys[name]) {
+    int prefix=0;
+    while(id->misc->state->keys[(string)prefix+name])
+      prefix++;
+    name=(string)prefix+name;
+  }
 
-  id->misc->state->keys+=([name:0]);
+  id->misc->state->keys+=(<name>);
   return name;
 }
 
 int decode_state(string from, object id) {
-  if(!id->misc->state || !from)
+  if(!from)
     return 0;
-  from = MIME.decode_base64(from);
+
+  int chksum=0;
+  for(int i=1; i<sizeof(from); i++)
+    chksum+=from[i];
+  if(from[0] != CHKSPACE[chksum%64])
+    return 0;
+
   mixed error=catch {
+    from = MIME.decode_base64(from[1..]);
     object gz = Gz;
     from = gz->inflate()->inflate(from);
   };
-  if(arrayp(error)) return 0;
-  mapping map=decode_value(from);
+  if(!intp(error) || error!=0) return 0;
+
+  mapping map;
+  mixed error=catch {
+    map=decode_value(from);
+  };
+  if(!intp(error) || error!=0) return 0;
   if(!mappingp(map)) return 0;
-  foreach(indices(map),string tmp)
+
+  if(!id->misc->state)
+    id->misc+=(["state":(["keys":([]),"values":([]) ]) ]);
+  foreach(indices(map),string tmp) {
     if(!id->misc->state->values[tmp])
       id->misc->state->values+=([tmp:map[tmp]]);
+  }
   return 1;
 }
   
@@ -44,7 +66,13 @@ string encode_state(object id) {
 private string encode_state4real(mapping state) {
   string from = encode_value(state);
   object gz = Gz;
-  return MIME.encode_base64( gz->deflate()->deflate(from));
+  string to = MIME.encode_base64( gz->deflate()->deflate(from));
+  to-="\r";
+  to-="\n";
+  int chksum=0;
+  for(int i=0; i<sizeof(to); i++)
+    chksum+=to[i];
+  return CHKSPACE[chksum%64..chksum%64]+to;
 }
 
 mixed get_state(string key, object id) {
