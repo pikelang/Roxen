@@ -19,7 +19,7 @@ string describe_arglist( array args )
 	res += ({ sprintf("%O", arg ) });
     else
       res+=({sprintf("%O",arg)});
-  return res * ", ";
+  return replace(res * ", ","%","%%");
 }
 
 void report_1st(function cb, array args, function check )
@@ -247,6 +247,10 @@ void run_tests( Configuration c );
 void low_run_tests( Configuration c,
 		    function go_on )
 {
-  run_tests( c );
+  mixed err = catch {
+    run_tests( c );
+  };
+  if( err )
+    write( describe_backtrace( err ) );
   go_on(  current_test, tests_failed  );
 }
