@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.320 1999/05/18 21:19:09 mast Exp $
+ * $Id: roxen.pike,v 1.321 1999/05/19 01:23:29 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.320 1999/05/18 21:19:09 mast Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.321 1999/05/19 01:23:29 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -1605,6 +1605,279 @@ int cache_disabled_p() { return !QUERY(cache);         }
 int syslog_disabled()  { return QUERY(LogA)!="syslog"; }
 private int ident_disabled_p() { return QUERY(default_ident); }
 
+class ImageCache
+{
+  string name;
+  string dir;
+  function draw_function;
+  mapping data_cache = ([]); // not normally used.
+  mapping meta_cache = ([]);
+
+
+  static mapping meta_cache_insert( string i, mapping what )
+  {
+    return meta_cache[i] = what;
+  }
+  
+  static string data_cache_insert( string i, string what )
+  {
+    return data_cache[i] = what;
+  }
+
+
+  static void draw( string name, RequestID id )
+  {
+    mapping args = argcache->lookup( name );
+    mixed reply = draw_function( args, id );
+
+    mapping meta;
+    string data;
+
+    if( objectp( reply ) || (mappingp(reply) && reply->img) )
+    {
+      int quant = (int)args->quant;
+      string format = lower_case(args->format || "gif");
+      string dither = args->dither;
+      Image.Colortable ct;
+      object alpha;
+
+      if( format == "jpg" ) 
+        format = "jpeg";
+
+      if(mappingp(reply))
+      {
+        alpha = reply->alpha;
+        reply = reply->img;
+      }
+
+      if( args->scale )
+      {
+        int x, y;
+        if( sscanf( args->scale, "%d,%d", x, y ) == 2)
+        {
+          reply = reply->scale( x, y );
+          if( alpha )
+            alpha = alpha->scale( x, y );
+        }
+        else 
+        {
+          reply->scale( ((float)args->scale)/100.0 );
+          if( alpha )
+            alpha->scale( ((float)args->scale)/100.0 );
+        }
+      }
+
+      if( args->maxwidth || args->maxheight )
+      {
+        int x = (int)args->maxwidth, y = (int)args->maxheight;
+        if( x && reply->xsize() > x )
+        {
+          reply = reply->scale( x, 0 );
+          if( alpha )
+            alpha = alpha->scale( x, 0 );
+        }
+        if( y && reply->ysize() > y )
+        {
+          reply = reply->scale( 0, y );
+          if( alpha )
+            alpha = alpha->scale( 0, y );
+        }
+      }
+
+      if( quant || (format=="gif") )
+      {
+        ct = Image.Colortable( reply, quant||id->misc->defquant||16 );
+        if( dither )
+          if( ct[dither] )
+            ct[dither]();
+          else
+            ct->ordered();
+      }
+
+      if( !Image[upper_case( format )] || !Image[upper_case( format )]->encode )
+        error("Image format "+format+" unknown\n");
+
+      mapping enc_args = ([]);
+      if( ct )
+        enc_args->colortable = ct;
+      if( alpha )
+        enc_args->alpha = alpha;
+
+      foreach( glob( "*-*", indices(args)), string n )
+        if(sscanf(n, "%*[^-]-%s", string opt ) == 2)
+          enc_args[opt] = (int)args[n];
+
+      switch(format)
+      {
+       case "gif":
+        data = Image.GIF.encode_trans( reply, ct, alpha );
+        break;
+       case "png":
+         if( ct )
+           enc_args->palette = ct;
+         m_delete( enc_args, "colortable" );
+       default:
+        data = Image[upper_case( format )]->encode( reply, enc_args );
+      }
+
+      meta = ([ 
+        "xsize":reply->xsize(),
+        "ysize":reply->ysize(),
+        "type":"image/"+format,
+      ]);
+    }
+    else if( mappingp(reply) ) 
+    {
+      meta = reply->meta;
+      data = reply->data;
+      if( !meta || !data )
+        error("Invalid reply mapping.\n"
+              "Should be ([ \"meta\": ([metadata]), \"data\":\"data\" ])\n");
+    }
+    store_meta( name, meta );
+    store_data( name, data );
+  }
+
+
+  static void store_meta( string id, mapping meta )
+  {
+    meta_cache_insert( id, meta );
+
+    string data = encode_value( meta );
+    Stdio.File f = Stdio.File(  dir+id+".i", "wct" );
+    if(!f) 
+    {
+      report_error( "Failed to open image cache persistant cache file "+
+                    dir+id+".i: "+strerror( errno() )+ "\n" );
+      return;
+    }
+    f->write( data );
+  }
+
+  static void store_data( string id, string data )
+  {
+    Stdio.File f = Stdio.File(  dir+id, "wct" );
+    if(!f) 
+    {
+      data_cache_insert( id, data );
+      report_error( "Failed to open image cache persistant cache file "+
+                    dir+id+": "+strerror( errno() )+ "\n" );
+      return;
+    }
+    f->write( data );
+  }
+
+
+  static mapping restore_meta( string id )
+  {
+    Stdio.File f;
+    if( meta_cache[ id ] )
+      return meta_cache[ id ];
+    f = Stdio.File( );
+    if( !f->open(dir+id+".i", "r" ) )
+      return 0;
+    return meta_cache_insert( id, decode_value( f->read() ) );
+  }
+
+  static mapping restore( string id )
+  {
+    string|object(Stdio.File) f;
+    mapping m;
+    if( data_cache[ id ] )
+      f = data_cache[ id ];
+    else 
+      f = Stdio.File( );
+
+    if(!f->open(dir+id, "r" ))
+      return 0;
+
+    m = restore_meta( id );
+    
+    if(!m)
+      return 0;
+
+    if( stringp( f ) )
+      return http_string_answer( f, m->type||("image/gif") );
+    return roxenp()->http_file_answer( f, m->type||("image/gif") );
+  }
+
+
+  string data( string|mapping args, RequestID id, int|void nodraw )
+  {
+    string na = store( args, id );
+    mixed res;
+
+    if(!( res = restore( na )) )
+    {
+      if(nodraw)
+        return 0;
+      draw( na, id );
+      res = restore( na );
+    }
+    if( res->file )
+      return res->file->read();
+    return res->data;
+  }
+
+  mapping http_file_answer( string|mapping data, RequestID id, int|void nodraw )
+  {
+    string na = store( data,id );
+    mixed res;
+
+    if(!( res = restore( na )) )
+    {
+      if(nodraw)
+        return 0;
+      draw( na, id );
+      res = restore( na );
+    }
+    return res;
+  }
+
+  mapping metadata( string|mapping data, RequestID id, int|void nodraw )
+  {
+    string na = store( data,id );
+    if(!restore_meta( na ))
+    {
+      if(nodraw)
+        return 0;
+      draw( na, id );
+      return restore_meta( na );
+    }
+    return restore_meta( na );
+  }
+
+  string store( string|mapping data, RequestID id )
+  {
+    string ci;
+    if( mappingp( data ) )
+      ci = argcache->store( data );
+    else
+      ci = data;
+    return ci;
+  }
+
+  void set_draw_function( function to )
+  {
+    draw_function = to;
+  }
+
+  void create( string id, function draw_func, string|void d )
+  {
+    if(!d) d = roxenp()->QUERY(argument_cache_dir);
+    if( d[-1] != '/' )
+      d+="/";
+    d += id+"/";
+
+    mkdirhier( d+"foo");
+
+    dir = d;
+    name = id;
+    draw_function = draw_func;
+  }
+}
+
+
 class ArgCache
 {
   static string name;
@@ -1994,13 +2267,14 @@ mapping low_load_image(string f,object id)
 {
   string data;
   object file, img;
-  
-  if(id->misc->_load_image_called < 5) {
+  if(id->misc->_load_image_called < 5) 
+  {
     // We were recursing very badly with the demo module here...
     id->misc->_load_image_called++;
-    if(!(data=id->conf->try_get_file(f, id))) {
+    if(!(data=id->conf->try_get_file(f, id)))
+    {
       file=Stdio.File();
-      if(!file->open(f,"r") || !(data=file->read))
+      if(!file->open(f,"r") || !(data=file->read()))
 	return 0;
     }
   }
@@ -2008,8 +2282,6 @@ mapping low_load_image(string f,object id)
   if(!data)  return 0;
   return low_decode_image( data );
 }
-
-
 
 object load_image(string f,object id)
 {
