@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.191 2000/04/25 12:05:46 mast Exp $
+// $Id: rxml.pike,v 1.192 2000/04/28 13:56:36 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1496,8 +1496,8 @@ class IfIs
   {
     if(!cache) CACHE(0);
     array arr=value/" ";
-    string var=source(id, arr[0]);
-    if( zero_type( var ) ) return 0;
+    string|int|float var=source(id, arr[0]);
+    if( !var && zero_type( var ) ) return 0;
     if(sizeof(arr)<2) return !!var;
     var = lower_case( (var+"") );
     if(sizeof(arr)==1) return !!var;
@@ -1732,7 +1732,7 @@ class TagIfAccept {
 class TagIfConfig {
   inherit IfIs;
   constant plugin_name = "config";
-  string source(RequestID id, string s) {
+  int source(RequestID id, string s) {
     return id->config[s];
   }
 }
@@ -1764,8 +1764,11 @@ class TagIfDefined {
   inherit IfIs;
   constant plugin_name = "defined";
   constant cache = 1;
-  string source(RequestID id, string s) {
-    return id->misc->defines && id->misc->defines[s];
+  string|int|float source(RequestID id, string s) {
+    mixed val;
+    if(!id->misc->defines || !(val=id->misc->defines[s])) return 0;
+    if(stringp(val) || intp(val) || floatp(val)) return val;
+    return 1;
   }
 }
 
@@ -1820,7 +1823,7 @@ class TagIfPrestate {
   inherit IfIs;
   constant plugin_name = "prestate";
   constant cache = 1;
-  string source(RequestID id, string s) {
+  int source(RequestID id, string s) {
     return id->prestate[s];
   }
 }
@@ -1836,7 +1839,7 @@ class TagIfReferrer {
 class TagIfSupports {
   inherit IfIs;
   constant plugin_name = "supports";
-  string source(RequestID id, string s) {
+  int source(RequestID id, string s) {
     return id->supports[s];
   }
 }
