@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.71 2000/03/07 23:58:06 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.72 2000/03/08 01:36:19 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -140,12 +140,12 @@ void create()
 	 "The charset the files on disk have.");
 
   defvar("internal_files", ({}), "Internal files", TYPE_STRING_LIST,
-	 "A comma separated list of glob patterns that matches files "
-	 "which should be considered internal. Internal files can't be "
-	 "requested directly from a client, won't show up in directory "
-	 "listings and can never be uploaded, moved or deleted from a "
-	 "client. They can only be accessed internally, e.g. with the "
-	 "RXML <tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt> tags.");
+	 "A list of glob patterns that matches files which should be "
+	 "considered internal. Internal files can't be requested directly "
+	 "from a client, won't show up in directory listings and can "
+	 "never be uploaded, moved or deleted from a client. They can "
+	 "only be accessed internally, e.g. with the RXML "
+	 "<tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt> tags.");
 }
 
 
@@ -208,7 +208,6 @@ int dir_filter_function(string f, RequestID id)
 {
   if(f[0]=='.' && !QUERY(.files))           return 0;
   if(!QUERY(tilde) && backup_extension(f))  return 0;
-  if (FILTER_INTERNAL_FILE (f, id))         return 0;
   return 1;
 }
 
@@ -256,7 +255,13 @@ array find_dir( string f, RequestID id )
     /* This is quite a lot faster */
     return dir;
 
-  return Array.filter(dir, dir_filter_function, id);
+  dir = Array.filter(dir, dir_filter_function, id);
+
+  if (!id->misc->internal_get)
+    foreach (QUERY (internal_files), string globstr)
+      dir -= glob (globstr, dir);
+
+  return dir;
 }
 
 
