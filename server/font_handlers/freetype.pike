@@ -70,7 +70,7 @@ class FTFont
   static int size;
   static Image.FreeType.Face face;
   static object encoder;
-  
+
   array text_extents( string what )
   {
     Image.Image o = write( what );
@@ -209,6 +209,10 @@ class FTFont
     if( fake_italic )
       rr = rr->skewx( -(rr->ysize()/3), Image.Color.black );
     return rr;
+  }
+
+  string _sprintf() {
+    return "Freetype";
   }
 
   static void create(object r, int s, string fn, int fb, int fi)

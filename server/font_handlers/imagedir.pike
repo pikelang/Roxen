@@ -1,6 +1,6 @@
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.10 2001/01/04 10:00:12 nilsson Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.11 2001/08/29 18:42:28 nilsson Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
@@ -29,8 +29,7 @@ class myFont
   static int size, rsize;
   static array files;
 
-
-  static string _sprintf()
+  string _sprintf()
   {
     return sprintf( "FontDir(%O,%d)", path, height() );
   }

@@ -27,6 +27,11 @@ class myFont
   inherit id::myFont;
   object mytar; // don't type, CIF use this file.
 
+  string _sprintf()
+  {
+    return sprintf( "FontTar(%O,%d)", path, height() );
+  }
+
   static mapping(string:Image.Image) load_char( string c )
   {
 #ifdef THREADS

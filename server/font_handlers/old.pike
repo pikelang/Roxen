@@ -2,7 +2,7 @@
 // Copyright © 1996 - 2000, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.10 2001/05/04 14:26:14 jonasw Exp $";
+constant cvs_version = "$Id: old.pike,v 1.11 2001/08/29 18:42:29 nilsson Exp $";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = 
@@ -117,6 +117,11 @@ class MyFont {
     else
       ::set_y_spacing( (float)delta );
   }
+
+  string _sprintf() {
+    return sprintf( "OldFont" );
+  }
+
 }
 
 Font open( string name, int size, int bold, int italic )
