@@ -16,6 +16,7 @@
 
 <define container=subtablist default_width=90%>
 <contents>
+<cset variable=dammit preparse>&usr.fade1;</cset>
 <formoutput quote=½>
 <p><br><p>
 <div align=right>
@@ -24,16 +25,18 @@
 
 <td valign=bottom
 ><tablist preparse
-         dimcolor="#999999"
-         txtcolor="white"
-         selcolor="#eeeeee"
+         font="&usr.font;"
+         dimcolor="&usr.fade2;"
+         textcolor="&usr.bgcolor;"
+         seltextcolor="&usr.fgcolor;"
+         selcolor="&usr.fade1;"
          #selected#
-         fgcolor="#999999">
+         fgcolor="&usr.fgcolor;">
    ½__tabs:quote=none½
 </tablist
 ></td></tr>
 <tr>
-<td bgcolor="#eeeeee">½__contents:quote=none½</td>
+<td bgcolor="½dammit½">½__contents:quote=none½</td>
 </tr></table>
 </div>
 </formoutput>
@@ -58,9 +61,10 @@
 </define>
 
 <define container=submit-gbutton default_align=baseline>
-<cset variable=gbutton_url>
-  <gbutton-url preparse><contents></gbutton-url>
-</cset>
+
+<cset variable=gbutton_url preparse
+><gbutton-url font='&usr.font;' preparse><contents></gbutton-url
+></cset>
 <input align=&align; type=image name='<contents>' value='<contents>'
        src='&form.gbutton_url;' border=0>
 </define>
@@ -69,12 +73,13 @@
   <title>&roxen.version; <cf-locale get=administration_interface> &title;</title>
   <expire-time now>
 
-  <define name=font>haru</define>
+  <define name=font>&usr.font;</define>
 
   <body hspace=0 vspace=0
         topmargin=0 leftmargin=0 marginwidth=0 marginheight=0
         bottommargin=0 rightmargin=0 margin=0
-        bgcolor=&usr.bgcolor; text=black>
+        link=&usr.linkcolor; vlink=&usr.linkcolor; alink=&usr.fade2;
+        bgcolor=&usr.bgcolor; text=&usr.fgcolor;>
 
     <form method=POST action='<cf-current-url>'>
       <roxen-automatic-charset-variable>
@@ -83,21 +88,21 @@
           <table>
          <cf-userwants option=devel_mode>
           <tr><td align=right>
-            <gtext bgcolor="d9dee7" font=haru scale=0.45 hspace=3>Language:</gtext>
-          </td><td>
+            <gtext bgcolor="&usr.fade3;" font='&usr.font;' fgcolor=black scale=0.45 hspace=3>Language:</gtext>
+          </td><td><font color=black>
           <configif-output quote=¤ source=locales>
             <a href="¤path¤"><img
               src="/internal-roxen-¤latin1-name¤¤-selected¤.gif"
               alt="¤latin1-name¤" border=0 height=16
             ></a>
-          </configif-output>
+          </configif-output></font>
           </tr>
          </cf-userwants>
-         <tr><td align=right>
-         <gbutton href='/standard/change_user.html?uid=&form.config_user_uid;'
-                  align=right bgcolor=#d9dee7 width=70>User:</gbutton>
+         <tr><td align=right><font color=black>
+         <gbutton font="&usr.font;" href='/standard/change_user.html?uid=&form.config_user_uid;'
+                  align=right textcolor=black bgcolor='&usr.fade3;' width=70>User:</gbutton>
           </td><td>
-            <font color=#78849c>
+            <font color=&usr.fade4;>
                &form.config_user_name; (&form.config_user_uid;)
             </font>
            </td></tr>

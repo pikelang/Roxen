@@ -26,10 +26,10 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
   sscanf( id->misc->path_info, "/"+q+"/%[^/]", subsel );
 
   string pre = ("<gbutton href='/"+id->misc->cf_locale+"/sites' "
-                "width=150 bgcolor=#eeeeee icon_src=/internal-roxen-next "
+                "width=150 bgcolor=&usr.fade1; icon_src=/internal-roxen-next "
                 "align_icon=left preparse><cf-locale get=servers></gbutton><br>"
-                "<gbutton width=150 "+(subsel == ""?"bgcolor=#d9dee7":
-			      "bgcolor=#eeeeee href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' ")+
+                "<gbutton width=150 "+(subsel == ""?"bgcolor=&usr.fade3;":
+			      "bgcolor=&usr.fade1; href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' ")+
                 " icon_src=/internal-roxen-next align_icon=left>"+
                 c->query_name()+"</gbutton><br><br>");
 
@@ -42,7 +42,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
     if( subsel == q )
     {
       pre += ("<gbutton icon_src=/internal-roxen-next align_icon=right "
-              "width=150 preparse bgcolor=d9dee7 href='"+DOTDOT(3)+q+"/'>"
+              "width=150 preparse bgcolor=&usr.fade3; href='"+DOTDOT(3)+q+"/'>"
               "<cf-locale get="+q+"></gbutton><br>");
 
       string url = id->not_query + id->misc->path_info;
@@ -65,7 +65,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
            object mi = roxen->find_module( q );
            foreach( sort(indices(c->modules[q]->copies)), int i )
            {
-             variables += 
+             variables +=
              ({
                ([
                  "sname":q+"!"+i,
@@ -83,7 +83,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
              pre += ("\n<img src=\"/internal-roxen-unit\" width=12 height=12>"
 		     "<a href=\""+qurl+data->sname+
                      "/\">"+replace(data->name, " ", "&nbsp;")+"</a><br>\n");
-           else 
+           else
              pre += ("\n<img src=\"/internal-roxen-next\" width=12 height=12>"
 		     "<b>" + replace(data->name, " ", "&nbsp;") + "</b><br>\n");
          }
@@ -91,7 +91,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
       }
       pre += "\n";
     } else
-      pre += ("<gbutton preparse bgcolor=#eeeeee width=150 href='"+DOTDOT(3)+q+"/'>"
+      pre += ("<gbutton preparse bgcolor=&usr.fade1; width=150 href='"+DOTDOT(3)+q+"/'>"
               "<cf-locale get="+q+"></gbutton><br>");
   }
   pre += "</item>";

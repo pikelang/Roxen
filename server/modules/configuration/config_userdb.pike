@@ -122,6 +122,26 @@ class ConfigurationSettings
 	      "svenska":"Bakgrundsfärg till konfigurationsgränssnittet."
 	    ]), 0, 0 );
 
+    defvar( "fgcolor", "black", TYPE_STRING,
+	    ([
+	      "english":"Text color",
+	      "svenska":"Textfärg",
+	    ]),
+	    ([
+	      "english":"Configuration interface text color.",
+	      "svenska":"Textfärg till konfigurationsgränssnittet."
+	    ]), 0, 0 );
+
+    defvar( "font", "haru", TYPE_FONT,
+	    ([
+	      "english":"Font",
+	      "svenska":"Typsnitt",
+	    ]),
+	    ([
+	      "english":"Configuration interface font.",
+	      "svenska":"Typsnitt som konfigurationsgränssnittetet ska använda."
+	    ]), 0, 0 );
+
     defvar( "addmodulemethod", "normal", TYPE_STRING_LIST,
             ([
               "english":"Add/Delete module page type",
@@ -144,7 +164,8 @@ class ConfigurationSettings
              på samma gång
 " ]),
 ({ "normal","fast","compact"}),
-(["svenska":({ "normal","snabb","kompakt"}),])
+(["svenska":([ "normal":"normal","fast":"snabb","compact":"kompakt"]),
+ ])
             );
   }
 }
@@ -428,6 +449,7 @@ array auth( array auth, RequestID id )
     }
     id->variables->config_user_uid = u;
     id->variables->config_user_name = admin_users[u]->real_name;
+
     id->misc->remote_config_host = host;
     id->misc->create_new_config_user = create_admin_user;
     id->misc->delete_old_config_user = delete_admin_user;

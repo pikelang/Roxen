@@ -21,11 +21,76 @@ void create() {
   query_tag_set()->prepare_context=set_entities;
 }
 
-class Scope_usr {
+class Scope_usr
+{
   inherit RXML.Scope;
 
-  mixed `[]  (string var, void|RXML.Context c, void|string scope) {
-    return c->id->misc->config_settings->query(var);
+  mixed `[]  (string var, void|RXML.Context c, void|string scope)
+  {
+    object id = c->id;
+    switch( var )
+    {
+     case "linkcolor":
+       object c1 = Image.Color( config_setting( "bgcolor" ) );
+       if(!c1)
+         c1 = Image.Color.black;
+       if( `+(0,@(array)c1) < 200 )
+         return (string)Image.Color.lightblue;
+       return (string)Image.Color.darkblue;
+
+     case "fade1":
+       object c1 = Image.Color( config_setting( "bgcolor" ) );
+       if(!c1)
+         c1 = Image.Color.black;
+       if( `+(0,@(array)c1) < 200 )
+         return (string)Image.Color(@map(map((array)c1, `+, 0x21 ),min,255));
+       return (string)Image.Color(@map(map( (array)c1, `-, 0x11 ),max,0) );
+
+     case "fade2":
+       object c1 = Image.Color( config_setting( "bgcolor" ) );
+       if(!c1)
+         c1 = Image.Color.black;
+       if( `+(0,@(array)c1) < 200 )
+         return (string)Image.Color( @map(map((array)c1, `+, 0x61 ),min,255));
+       return (string)Image.Color( @map(map( (array)c1, `-, 0x51 ),max,0) );
+
+     case "fade3":
+       object c1 = Image.Color( config_setting( "bgcolor" ) );
+       if(!c1) c1 = Image.Color.black;
+       array sub = ({ 0x26, 0x21, 0x18 });
+       array add = ({ 0x18, 0x21, 0x26 });
+       array a =  (array)c1;
+       if( `+(0,@(array)c1) < 200 )
+       {
+         a[0] += add[0];
+         a[1] += add[1];
+         a[2] += add[2];
+       } else {
+         a[0] -= sub[0];
+         a[1] -= sub[1];
+         a[2] -= sub[2];
+       }
+       return (string)Image.Color( @map(map(a,max,0),min,255) );
+
+     case "fade4":
+       object c1 = Image.Color( config_setting( "bgcolor" ) );
+       if(!c1) c1 = Image.Color.black;
+       array sub = ({ 0x87, 0x7b, 0x63 });
+       array add = ({ 0x63, 0x7b, 0x87 });
+       array a =  (array)c1;
+       if( `+(0,@(array)c1) < 200 )
+       {
+         a[0] += add[0];
+         a[1] += add[1];
+         a[2] += add[2];
+       } else {
+         a[0] -= sub[0];
+         a[1] -= sub[1];
+         a[2] -= sub[2];
+       }
+       return (string)Image.Color( @map(map(a,max,0),min,255) );
+    }
+    return config_setting( var );
   }
 
   string _sprintf() { return "RXML.Scope(usr)"; }
@@ -56,23 +121,23 @@ string internal_c_topmenu(string t, mapping m, string d, mapping c, RequestID id
 
   items = items->them;
 
-  c->top=( "<tablist bgcolor=#d9dee7>" );
+  c->top=( "<tablist bgcolor='"+config_setting2("fade3")+
+           "' font='"+config_setting( "font" ) +"'>" );
   foreach(items, mapping i)
   {
-    string color, fgcolor;
     mapping targs = ([]);
     if(i->selected)
     {
       targs->selected = "selected";
-      targs->bgcolor = "#d9dee7";
-      targs->selcolor = RXML.get_context()->get_var("bgcolor","usr");
-      targs->txtcolor = "black";
+      targs->bgcolor =  config_setting2( "fade3" );
+      targs->selcolor = config_setting( "bgcolor" );
+      targs->textcolor = config_setting( "fgcolor" );
     }
     else
     {
-      targs->bgcolor = "#d9dee7";
-      targs->dimcolor = "#9aa2ae";
-      targs->txtcolor = "white";
+      targs->bgcolor =  config_setting2( "fade3" );
+      targs->dimcolor = config_setting2( "fade2" );
+      targs->textcolor = config_setting( "bgcolor" );
     }
     if( i->first ) targs->first=i->first;
     if( i->last )  targs->last=i->last;
@@ -111,52 +176,6 @@ string submit_gtxt( string name, mapping gta, string cnts, object id )
 }
 
 constant nbsp = iso88591["&nbsp;"];
-string present_items(array i, int ind, object id)
-{
-  string res="";
-  foreach(i, mapping item)
-  {
-    string foreground = "$LEFT_FG$";
-    if(item->selected)
-    {
-      res += ("<table cols=1 width=100% cellpadding=0 cellspacing=0 border=0>\n"
-	      "<tr>\n<td bgcolor=\"$LEFT_SELECTED_BG$\">\n");
-      foreground = "$LEFT_SELECTED_FG$";
-    }
-
-
-    res+=("<nobr>"+
-          submit_gtxt( "cf_goto_"+item->href,
-                       ([ "scale":(string)(0.55-ind*0.05),
-                          "fg":foreground,
-                       ]),
-                       (" "*(ind*4+2))+(item->title),
-                       id )+
-          "</nobr><br>\n");
-    if(item->selected)
-      res += "</td>\n</tr></table>\n";
-    res += present_items(item->items,ind+1,id);
-  }
-  return res;
-}
-
-string internal_c_leftmenu(string t, mapping m, string d, mapping c, RequestID id)
-{
-  mixed items = (["them":({})]);
-
-  mapping a = ([]);
-  parse_html( d, a, (["item":i_lmenu_tag_item]), items, id );
-  items = items->them;
-
-  if( !m->title )
-    m->title = "";
-  c->left += "<gtext verbatim afont=haru font_size=40 scale=0.5 fg=#dcefff> "+
-    (m->title/""*" ")+
-    "</gtext><br>\n<img src=/internal-roxen-unit height=3 width=1><br>\n"
-             + present_items( items,0,id );
-  return "";
-}
-
 string internal_c_middle(string t, mapping m, string d, mapping c,RequestID id)
 {
   c->middle = (d);
@@ -220,20 +239,19 @@ string container_roxen_config(string t, mapping m, string data, RequestID id)
                     ([
                       "middle":internal_c_middle,
                       "top-menu":internal_c_topmenu,
-                      "left-menu":internal_c_leftmenu,
                       "content":internal_c_content,
                     ]), c, id);
 
 
 //   c->title =
   string page =  #"
-  <table width=100% cellpadding=0 cellspacing=0 border=0 bgcolor='#d9dee7'>
-    <tr bgcolor='#d9dee7'>
+  <table width=100% cellpadding=0 cellspacing=0 border=0 bgcolor='"+config_setting2("fade3")+#"'>
+    <tr bgcolor='"+config_setting2("fade3")+#"'>
       <td colspan=2>
        <table><tr><td>
          <img src=/internal-roxen-roxen-blue-small.gif xspacing=10>
          </td>
-          <td><font color='#78849c'><cf-locale get=administration_interface>
+          <td><font color='"+config_setting2("fade4")+#"'><cf-locale get=administration_interface>
               </font></td></tr></table></td>
       <td align=right valign=top rowspan=2>"+c->middle+#"</td>
     </tr>
@@ -338,7 +356,8 @@ string set_variable( string v, object in, mixed to, object id )
    case TYPE_PASSWORD:
      if( val == "" )
        return "";
-
+     val = crypt( val );
+     break;
    case TYPE_TEXT_FIELD:
      val = replace( val, "\r\n", "\n" );
      val = replace( val, "\r", "\n" );
