@@ -1,4 +1,4 @@
-#include "module.h"
+#include <module.h>
 
 inherit "module";
 inherit "roxenlib";

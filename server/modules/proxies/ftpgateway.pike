@@ -99,7 +99,7 @@ void init_proxies()
     
     bar = replace(foo, "\t", " ")/" " -({ "" });
     if(sizeof(bar) < 3) continue;
-    if(err=catch(proxies += ({ ({ new(Regexp, bar[0])->match, 
+    if(err=catch(proxies += ({ ({ Regexp(bar[0])->match, 
 				  ({ bar[1], (int)bar[2] }) }) })))
       report_error("Syntax error in regular expression in gateway: "
                    +bar[0]+"\n"+err[0]);
@@ -240,7 +240,7 @@ void connected_to_server(object o, string file, object id, int is_remote)
   perror("FTP PROXY: Connected.\n");
 #endif
 
-  new_request=clone((program)"struct/proxy_request");
+  new_request=((program)"struct/proxy_request")();
   if(o->query_address())
   {
     string to_send;
@@ -393,7 +393,7 @@ mixed create_dataport(function acceptfunc)
 {
   int i, ii;
   object dataport;
-  dataport=new( Port );
+  dataport=Port();
   ii=random(20000)+20000;
   for (i=0; i<500&&ii<65535; i++)
   {

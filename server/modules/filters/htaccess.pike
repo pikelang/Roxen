@@ -376,7 +376,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 
   cache_key = "groupfile:" + roxen->current_configuration->name;
 
-  f = new(File);
+  f = File();
   if(!(f->open(groupfile, "r")))
   {
 #ifdef HTACCESS_DEBUG

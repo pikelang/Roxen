@@ -33,7 +33,7 @@ string make_regexp(array from)
 
 string checkvar(string name, mixed value)
 {
-  if(catch(new(Regexp, make_regexp(QUERY(value)/"\n"-({""})))))
+  if(catch(Regexp(make_regexp(QUERY(value)/"\n"-({""})))))
     return "Compile error in regular expression.\n";
 }
 
@@ -42,18 +42,15 @@ function no_log_match, log_match;
 
 void start()
 {
-  object o;
-  o = new(Regexp, make_regexp(QUERY(nlog)/"\n"-({""})));
-  no_log_match = o->match;
-  o = new(Regexp, make_regexp(QUERY(log)/"\n"-({""})));
-  log_match = o->match;
+  no_log_match = Regexp(make_regexp(QUERY(nlog)/"\n"-({""})))->match;
+  log_match = Regexp(make_regexp(QUERY(log)/"\n"-({""})))->match;
 }
 
 
 int nolog(string what)
 {
-  if(no_log_match(what)) return 0;
-  if(log_match(what)) return 1;
+  if(no_log_match(what)) return 1;
+  if(log_match(what)) return 0;
 }
 
 

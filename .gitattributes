@@ -3,7 +3,7 @@
 *.gif binary
 *.gz binary
 *.jpg binary
-/server/modules/gopher.pike -text -crlf
+/server/modules/proxies/gopher.pike -text -crlf
 
 # Handling of foreign (ie CVS) identifiers.
 #

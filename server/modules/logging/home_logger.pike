@@ -33,10 +33,10 @@ string create()
 }
 
 
-program cachefile = class {
+program CacheFile = class {
   inherit "/precompiled/file";
   string file;
-  int ready = 1, d;
+  int ready = 1, d, n;
   object next;
   object master;
 
@@ -61,8 +61,8 @@ program cachefile = class {
   
   string status()
   {
-    return ((ready?"Free (closed) cache file.\n":"Open: "+file+"\n") +
-	    (next?next->status():""));
+    return ((ready?"Free (closed) cache file ("+n+").\n":"Open: "+file+"\n") +
+	    (next?next->status():"")+"("+n+")");
   }
 
   void move_this_to_head()
@@ -85,13 +85,18 @@ program cachefile = class {
   {
     object tmp;
 
-    if (this_object() == master->cache_head)
+    if(this_object() == master->cache_head)
+    {
       master->cache_head = next;
-
-    tmp = master->cache_head;
-    while(tmp->next != this_object())
-      tmp = tmp->next;
-    tmp->next = next;
+      tmp = next;
+    }
+    else
+    {
+      tmp = master->cache_head;
+      while(tmp->next != this_object())
+	tmp = tmp->next;
+      tmp->next = next;
+    }
 
     // Now this_object() is removed.
     while (tmp->next)
@@ -110,10 +115,11 @@ program cachefile = class {
 
   void create(int num, int delay, object m)
   {
+    n = num;
     d = delay;
     master = m;
     if(num > 1)
-      next = clone(object_program(this_object()), --num, delay, m);
+      next = object_program(this_object())( --num, delay, m );
   }
 
   void destroy()
@@ -130,16 +136,26 @@ string start()
 {
   object f;
   if(cache_head) destruct(cache_head);
-  cache_head = clone(cachefile, QUERY(num), QUERY(delay), this_object());
+  cache_head = CacheFile(QUERY(num), QUERY(delay), this_object());
 }
 
 string status()
 {
+ if (!cache_head)
+   start();
+ if (!cache_head)
+ {
+   werror("logger.lpc->status(): cache_head = 0\n");
+   return "Error";
+ }
   return "Logfile cache status:\n<pre>\n" + cache_head->status() + "</pre>";
 }
 
 object find_cache_file(string f)
 {
+  if(!cache_head)
+    start();
+  
   object c = cache_head;
   do {
     if((c->file == f) && !c->ready)

@@ -52,6 +52,10 @@ void create()
 	 "This is where the module will find the files in the real "
 	 "file system.");
 
+  defvar("noexec", 1, "Ignore non-executable files", TYPE_FLAG,
+	 "If this flag is set, non-executable files will be returned "
+	 "as-is to the client.");
+
   defvar("ls", 0, "Allow listing of cgi-bin directory", TYPE_FLAG,
 	 "If set, the users can get a listing of all files in the CGI-bin "
 	 "directory.");
@@ -275,7 +279,13 @@ mixed find_file(string f, object id)
     
   array (int) uid;
   array us;
-    
+  if(query("noexec"))
+  {
+    us = file_stat(f);
+    if(us && !(us[0]&0111)) // Not executable...
+      return open(f,"r");
+  }
+  
   if(!getuid())
   {
     if(QUERY(user) && id->misc->is_user && (us = file_stat(id->misc->is_user)))
@@ -323,9 +333,12 @@ mapping handle_file_extension(object o, string e, object id)
   string oldp;
   mixed toret;
   mixed err;
-  
+
 
   if(!QUERY(ex))
+    return 0;
+
+  if(QUERY(noexec) && !(o->stat()[0]&0111))
     return 0;
 
   if(id->realfile) 
@@ -337,9 +350,11 @@ mapping handle_file_extension(object o, string e, object id)
     // Handle the request with the location code.
     // This is done by setting the cgi-bin dir to the path of the 
     // script, and then calling the location dependant code.
+    destruct( o );
+    o = 0;
     oldp=path;
     path=c[0..sizeof(c)-2]*"/" + "/";
-    err=catch(toret = find_file(c[-1], id));
+    err = catch(toret = find_file(c[-1], id));
     path=oldp;
     if(err) throw(err);
     return toret;

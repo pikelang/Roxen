@@ -1,4 +1,4 @@
-#include "module.h"
+#include <module.h>
 
 inherit "module";
 inherit "roxenlib";
@@ -81,20 +81,18 @@ void start()
   anti_list=(QUERY(anti)-"\r")/"\n";
 }
 
-#define match(s,b) do_match(b,s)
-
 int is_in_anti_list(string s)
 {
   int i;
   for(i=0; i<sizeof(anti_list); i++) 
-    if(match(anti_list[i], s))  return 1;
+    if(glob(anti_list[i], s))  return 1;
 }
 
 int is_in_always_list(string s)
 {
   int i;
   for(i=0; i<sizeof(always_list); i++) 
-    if(match(always_list[i], s)) return 1;
+    if(glob(always_list[i], s)) return 1;
 }
 
 mapping relay(object fid)

@@ -16,7 +16,6 @@ function language = roxen->language;
 
 int cnum=0;
 mapping fton=([]), tag_callers, container_callers;
-program filep = (program)"file";
 object database, database2, database3;
 int bytes;
 array (object) parse_modules = ({ });

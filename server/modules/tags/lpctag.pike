@@ -84,7 +84,7 @@ string tag_lpc(string tag, mapping m, string s, object got, object file,
     }
     _master->set_inhibit_compile_errors(0);
     if(err = catch{
-      res = (o=clone(p))->parse(got, defs, file, m);
+      res = (o=p())->parse(got, defs, file, m);
     })
     {
       perror(err[0]-"\n"+" in "+got->not_query+"\n");

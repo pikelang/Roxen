@@ -142,7 +142,7 @@ object tab(string name, int select, int n, int last, string font,
   perror("Creating tab \"" + name + (select==n?"\" (selected)\n":"\"\n"));
 #endif
 
-  fnt = clone((program) "/precompiled/font");
+  fnt = Font();
   if (!fnt->load(font))
      perror("Could not load font \"" + font + "\"\n");
    txt = fnt->write(name)->scale(2.0);
@@ -152,7 +152,7 @@ object tab(string name, int select, int n, int last, string font,
   width = txt->xsize() + w_spacing;
   height = txt->ysize() + h_spacing;
 
-  img = clone((program) "/precompiled/image")->new(width, height);
+  img = Image(width,height);
   draw_bg(img, bg, tc);
   if (n == select)
     selected(img, bg);
@@ -163,7 +163,7 @@ object tab(string name, int select, int n, int last, string font,
   else if (n+1 != select)
     right_shadow(img, tc);
 
-  tmp=txt->new(txt->xsize(), txt->ysize());
+  tmp=Image(txt->xsize(), txt->ysize());
   tmp->box(0, 0, tmp->xsize()-1, tmp->ysize()-1, @fc);
   img->paste_mask(tmp, txt, w_spacing/3, h_spacing/2);
 

@@ -1,5 +1,5 @@
 #include <module.h>
-inherit "modules/cgi";
+inherit "modules/scripting/cgi";
 
 #define ipaddr(x,y) (((x)/" ")[y])
 
@@ -84,7 +84,7 @@ mixed find_file(string f, object id)
   perror("FCGI: Starting '"+f+"'...\n");
 #endif
     
-  pipe1=clone(File);
+  pipe1=File();
   pipe2=pipe1->pipe();
     
   array (int) uid;
@@ -105,7 +105,7 @@ mixed find_file(string f, object id)
 	 " "+QUERY(numsimul)+"\n");
 #endif
   
-  spawne(cwd()+"/bin/fcgi", ({"-connect", make_pipe_name(f), f,
+  spawne(getcwd()+"/bin/fcgi", ({"-connect", make_pipe_name(f), f,
 				 QUERY(numsimul)+"" }),
 	 ::build_env_vars(f, id, path_info),
 	 pipe1, pipe1, QUERY(err)?pipe1:stderr, dirname(f),

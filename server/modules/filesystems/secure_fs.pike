@@ -12,7 +12,7 @@ array register_module()
 
 array seclevels = ({ });
 
-#define  regexp(_) (new(Regexp, (_))->match)
+#define  regexp(_) (Regexp(_)->match)
 
 #define ALLOW 1
 #define DENY 2

@@ -98,7 +98,7 @@ void init_proxies()
     
     bar = replace(foo, "\t", " ")/" " -({ "" });
     if(sizeof(bar) < 3) continue;
-    if(err=catch(proxies += ({ ({ clone(Regexp, bar[0])->match, 
+    if(err=catch(proxies += ({ ({ Regexp(bar[0])->match, 
 				  ({ bar[1], (int)bar[2] }) }) })))
       report_error("Syntax error in regular expression in proxy: "+bar[0]+"\n"+
 		   err[0]);
@@ -112,7 +112,7 @@ void init_proxies()
     
     bar = replace(foo, "\t", " ")/" " -({ "" });
     if(sizeof(bar) < 2) continue;
-    if(err=catch(filters += ({ ({ clone(Regexp, bar[0])->match, 
+    if(err=catch(filters += ({ ({ Regexp(bar[0])->match, 
 				   bar[1..10000]*" " })})))
       report_error("Syntax error in regular expression in proxy: "+bar[0]+"\n"+
 		   err[0]);
@@ -222,7 +222,7 @@ string process_request(object id, int is_remote)
 			      "\n", "\r\n"));
 }
 
-program connection_program = class {
+program Connection = class {
   object cache, pipe, proxy, from;
   array ids;
   string name;
@@ -299,7 +299,7 @@ program connection_program = class {
 
     from = s;
     proxy = previous_object();
-    pipe = clone( Pipe );
+    pipe =  Pipe();
     if(!no_cache && (!i || cache_wanted(i)))
     {
       if(cache = roxen->create_cache_file("http", f))
@@ -381,7 +381,7 @@ void connected_to_server(object o, string file, object id, int is_remote,
   perror("PROXY: Connected.\n");
 #endif
 
-  new_request=clone(connection_program);
+  new_request=Connection();
 
   if(o->query_address())
   {
@@ -398,7 +398,7 @@ void connected_to_server(object o, string file, object id, int is_remote,
     if(filter)
     {
       object f, q;
-      f=clone(File);
+      f=File();
       q=f->pipe();
       o->set_blocking();
       spawne((filter/" ")[0], (filter/" ")[1..100000], ([ ]), o, q, stderr);

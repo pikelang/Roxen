@@ -61,7 +61,7 @@ void write_to_client_and_cache(object client, string data, string key)
   if(key)
     cache = roxen->create_cache_file("gopher", key);
 
-  pipe=new(Pipe);
+  pipe=Pipe();
   if(cache)
   {
     pipe->set_done_callback(my_pipe_done, ({ cache, client }));

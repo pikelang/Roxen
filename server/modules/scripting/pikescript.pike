@@ -87,8 +87,8 @@ array|mapping call_script(function fun, object got, object file)
 
   if(mappingp(result))
   {
-    if(!result["type"])
-      result["type"]="text/html";
+    if(!result->type)
+      result->type="text/html";
     return result;
   }
 
@@ -100,9 +100,9 @@ array|mapping call_script(function fun, object got, object file)
 
 void my_error(array err, string|void a, string|void b)
 {
-  err[0] = ("<font size=+1>"+(b||"Error while executing code in µLPC script")
-	    + "</font>" +(err[0]||"") + (a||"")
-	    + "The µLPC Script will be reloaded automatically.\n");
+  err[0] = ("<font size=+1>"+(b||"Error while executing code in pike script")
+	    + "</font><br><p>" +(err[0]||"") + (a||"")
+	    + "<br><p>The pike Script will be reloaded automatically.\n");
   throw(err);
 }
 
@@ -155,9 +155,9 @@ mapping handle_file_extension(object f, string e, object got)
   add_efun("setuid", 0);
 
   _master->set_inhibit_compile_errors(1);
-  err=catch(p=compile_string(file, "Script:"+got["not_query"]));
+  err=catch(p=compile_string(file, "Script:"+got->not_query));
   if(strlen(_master->errors)) 
-    s=_master->errors + s;
+    s=_master->errors + "\n\n" + s;
   _master->set_inhibit_compile_errors(0);
 
   add_efun("setegid", ban[0]);
@@ -168,16 +168,16 @@ mapping handle_file_extension(object f, string e, object got)
   if(err)
   {
     destruct(f);
-    my_error(err, got->not_query+": "+s, 
-	     "Error while compiling µLPC script:<br>");
+    my_error(err, got->not_query+":\n"+(s?s+"\n\n":"\n"), 
+	     "Error while compiling pike script:<br>\n\n");
   }
   if(!p) 
   {
     destruct(f);
     return http_string_answer("<h1>While compiling pike script</h1>\n"+s);
   }
-  o=clone(p);
-  scripts[got["not_query"]]=o->parse;
+  o=p();
+  scripts[got->not_query]=o->parse;
   err=call_script(o->parse, got, f);
   destruct(f);
   if(arrayp(err))
