@@ -676,9 +676,8 @@ mixed do_it_pass_2( array modules, Configuration conf,
     // set initial variables from form variables...
     if( num ) Roxen.parse_rxml( cf_form, id );
     foreach( modules, string mod )
-     conf->call_start_callbacks( conf->find_module( replace(mod,"!","#") ),
-                                 roxen.find_module( (mod/"!")[0] ),
-                                 conf->modules[ mod ] );
+     conf->call_high_start_callbacks( conf->find_module( replace(mod,"!","#") ),
+				      roxen.find_module( (mod/"!")[0] ) );
     already_added = ([ ]);
     conf->save( ); // save it all in one go
     conf->forcibly_added = ([]);

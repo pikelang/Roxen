@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.527 2002/11/05 18:09:54 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.528 2002/12/10 18:31:07 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2889,34 +2889,8 @@ void call_start_callbacks( RoxenModule me,
                            ModuleInfo moduleinfo, 
                            ModuleCopies module )
 {
-  if(!me) return;
-  if(!moduleinfo) return;
-  if(!module) return;
-
   call_low_start_callbacks(  me, moduleinfo, module );
-
-  mixed err;
-  if((me->start) && (err = catch( me->start(0, this_object()) ) ) )
-  {
-#ifdef MODULE_DEBUG
-    if (enable_module_batch_msgs) 
-      report_debug("\bERROR\n");
-#endif
-    string bt=describe_backtrace(err);
-    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
-			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
-    got_no_delayed_load = -1;
-  }
-  if( inited && me->ready_to_receive_requests )
-    if( mixed q = catch( me->ready_to_receive_requests( this_object() ) ) ) 
-    {
-#ifdef MODULE_DEBUG
-      if (enable_module_batch_msgs) report_debug("\bERROR\n");
-#endif
-      report_error( "While calling ready_to_receive_requests:\n"+
-		    describe_backtrace( q ) );
-      got_no_delayed_load = -1;
-    }
+  call_high_start_callbacks (me, moduleinfo);
 }
 
 void call_low_start_callbacks( RoxenModule me, 
@@ -3025,6 +2999,36 @@ void call_low_start_callbacks( RoxenModule me,
     pri[pr]->first_modules += ({ me });
 
   invalidate_cache();
+}
+
+void call_high_start_callbacks (RoxenModule me, ModuleInfo moduleinfo)
+{
+  // This is icky, but I don't know if it's safe to remove. /mast
+  if(!me) return;
+  if(!moduleinfo) return;
+
+  mixed err;
+  if((me->start) && (err = catch( me->start(0, this_object()) ) ) )
+  {
+#ifdef MODULE_DEBUG
+    if (enable_module_batch_msgs) 
+      report_debug("\bERROR\n");
+#endif
+    string bt=describe_backtrace(err);
+    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
+			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+    got_no_delayed_load = -1;
+  }
+  if( inited && me->ready_to_receive_requests )
+    if( mixed q = catch( me->ready_to_receive_requests( this_object() ) ) ) 
+    {
+#ifdef MODULE_DEBUG
+      if (enable_module_batch_msgs) report_debug("\bERROR\n");
+#endif
+      report_error( "While calling ready_to_receive_requests:\n"+
+		    describe_backtrace( q ) );
+      got_no_delayed_load = -1;
+    }
 }
 
 // Called from the administration interface.
