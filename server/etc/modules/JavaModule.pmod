@@ -4,9 +4,11 @@ static constant jvm = Java.machine;
 #define FINDCLASS(X) (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0))
 
 /* Marshalling */
+static object object_class = FINDCLASS("java/lang/Object");
 static object int_class = FINDCLASS("java/lang/Integer");
 static object map_class = FINDCLASS("java/util/HashMap");
 static object int_value = int_class->get_method("intValue", "()I");
+static object int_init = int_class->get_method("<init>", "(I)V");
 static object map_init = map_class->get_method("<init>", "(I)V");
 static object map_put = map_class->get_method("put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
@@ -49,12 +51,18 @@ static object containercaller_ifc = FINDCLASS("se/idonex/roxen/ContainerCaller")
 static object response_class = FINDCLASS("se/idonex/roxen/RoxenResponse");
 static object response2_class = FINDCLASS("se/idonex/roxen/RoxenStringResponse");
 static object response3_class = FINDCLASS("se/idonex/roxen/RoxenFileResponse");
+static object response4_class = FINDCLASS("se/idonex/roxen/RoxenRXMLResponse");
 static object conf_init = conf_class->get_method("<init>", "()V");
 static object _configuration = module_class->get_field("configuration", "Lse/idonex/roxen/RoxenConfiguration;");
 static object query_type = module_class->get_method("queryType", "()I");
-static object query_name = module_class->get_method("queryName", "()Ljava/lang/String;");
-static object query_desc = module_class->get_method("queryDescription", "()Ljava/lang/String;");
+static object query_unique = module_class->get_method("queryUnique", "()Z");
+static object _query_name = module_class->get_method("queryName", "()Ljava/lang/String;");
+static object query_desc = module_class->get_method("info", "()Ljava/lang/String;");
 static object _status = module_class->get_method("status", "()Ljava/lang/String;");
+static object _start = module_class->get_method("start", "()V");
+static object _stop = module_class->get_method("stop", "()V");
+static object _query_provides = module_class->get_method("queryProvides", "()Ljava/lang/String;");
+static object _check_variable = module_class->get_method("checkVariable", "(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/String;");
 static object _getdefvars = module_class->get_method("getDefvars", "()[Lse/idonex/roxen/Defvar;");
 static object _find_internal = module_class->get_method("findInternal", "(Ljava/lang/String;Lse/idonex/roxen/RoxenRequest;)Lse/idonex/roxen/RoxenResponse;");
 static object _query_location = location_ifc->get_method("queryLocation", "()Ljava/lang/String;");
@@ -134,7 +142,27 @@ static string stringify(object o)
   return o && (string)o;
 }
 
-static mixed valify(mixed o)
+static mixed valify(mixed v)
+{
+  if(!v)
+    return v;
+  else if(intp(v)) {
+    object z = int_class->alloc();
+    int_init(z, v);
+    check_exception();
+    return z;
+  } else if(arrayp(v)) {
+    object a = object_class->new_array(sizeof(v), 0);
+    check_exception();
+    foreach(indices(v), int i)
+      a[i] = v[i];
+    check_exception();
+    return a;
+  } else
+    return (string)v;
+}
+
+static mixed objify(mixed o)
 {
   if(!objectp(o))
     return o;
@@ -215,6 +243,7 @@ class ModuleWrapper
   static object modobj, confobj;
   static int modtype;
   static string modname, moddesc;
+  static int modunique;
 
   static object make_conf(object conf)
   {
@@ -245,7 +274,7 @@ class ModuleWrapper
     return m;
   }
 
-  static mapping make_response(object r)
+  static mapping make_response(object r, RequestID id)
   {
     if(!r)
       return 0;
@@ -262,9 +291,17 @@ class ModuleWrapper
       rr->len = n;
     check_exception();
     if(r->is_instance_of(response2_class) &&
-       (s = _data->get(r)))
+       (s = _data->get(r))) {
       rr->data = (string)s;
-    else if(r->is_instance_of(response3_class) &&
+      if(r->is_instance_of(response4_class)) {
+	rr->data = id->conf->parse_rxml(rr->data, id, 0);
+	rr->stat = id->misc->defines[" _stat"];
+	rr->error = id->misc->defines[" _error"] || rr->error;
+	rr->rettext = id->misc->defines[" _rettext"];
+	rr->extra_heads = id->misc->defines[" _extra_heads"];	
+	m_delete(rr, "len");
+      }
+    } else if(r->is_instance_of(response3_class) &&
 	    (s = _file->get(r)))
       rr->file = ReaderFile(s);
     check_exception();
@@ -273,12 +310,52 @@ class ModuleWrapper
 
   array register_module()
   {
-    return ({ modtype, modname, moddesc, 0, 1 });
+    return ({ modtype, modname, moddesc, 0, modunique });
+  }
+
+  void start()
+  {
+    _start(modobj);
+    check_exception();
+  }
+
+  void stop()
+  {
+    _stop(modobj);
+    check_exception();
+  }
+
+  string query_name()
+  {
+    object s = _query_name(modobj);
+    check_exception();
+    return s && (string)s;
+  }
+
+  string info()
+  {
+    object s = query_desc(modobj);
+    check_exception();
+    return s && (string)s;
   }
 
   string status()
   {
     object s = _status(modobj);
+    check_exception();
+    return s && (string)s;
+  }
+
+  string query_provides()
+  {
+    object s = _query_provides(modobj);
+    check_exception();
+    return s && (string)s;
+  }
+
+  string check_variable(string s, mixed value)
+  {
+    object s = _check_variable(modobj, s, objify(value));
     check_exception();
     return s && (string)s;
   }
@@ -324,14 +401,14 @@ class ModuleWrapper
   {
     object r = _find_file(modobj, f, make_reqid(id));
     check_exception();
-    return make_response(r);
+    return make_response(r, id);
   }
 
   mixed find_internal(string f, RequestID id)
   {
     object r = _find_internal(modobj, f, make_reqid(id));
     check_exception();
-    return make_response(r);
+    return make_response(r, id);
   }
 
   static void load(string filename)
@@ -378,17 +455,25 @@ class ModuleWrapper
     }
     modtype = query_type(modobj);
     check_exception();
-    modname = stringify(query_name(modobj));
+    modname = stringify(_query_name(modobj));
     check_exception();
     moddesc = stringify(query_desc(modobj));
+    check_exception();
+    modunique = query_unique(modobj);
     check_exception();
   }
 }
 
-static object native_query(object mod, object var)
+static mixed native_query(object mod, object var)
 {
   mod = jotomod[mod];
-  return mod && mod->query((string)var);
+  return mod && objify(mod->query((string)var));
+}
+
+static void native_set(object mod, object var, object val)
+{
+  if(mod = jotomod[mod])
+    mod->set((string)var, valify(val));
 }
 
 static object native_queryconf(object conf, object var)
@@ -407,6 +492,7 @@ void create()
 {
   natives_bind1 = module_class->register_natives(({
     ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_query}),
+    ({"set", "(Ljava/lang/String;Ljava/lang/Object;)V", native_set}),
   }));
   natives_bind2 = conf_class->register_natives(({
     ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_queryconf}),
