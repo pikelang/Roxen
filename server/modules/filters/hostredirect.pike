@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.22 2000/08/19 08:52:40 per Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.23 2000/09/25 11:13:54 per Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -158,6 +158,7 @@ int|mapping first_try(RequestID id)
        to[5]==':' || to[6]==':')))
   {
      to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
+     NOCACHE();
      return Roxen.http_low_answer( 302, "")
         + ([ "extra_heads":([ "Location":to ]) ]);
   } else {
