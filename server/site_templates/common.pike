@@ -134,6 +134,8 @@ mixed parse( RequestID id, mapping|void opt )
     foreach( silent_modules, string mod )
       conf->enable_module( mod );
 
+    conf->forcibly_added = ([]);
+
     init_modules( conf, id );
 
     conf->fix_no_delayed_load_flag();
