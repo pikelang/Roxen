@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.586 2000/12/12 14:39:25 noring Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.587 2000/12/13 02:47:34 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -458,13 +458,40 @@ class Queue
 }
 
 #if constant(thread_create)
-function async_sig_start( function f )
+// This is easier than when there is no threads.
+// See the discussion below. :-)
+function async_sig_start( function f, int really )
 {
   return lambda( mixed ... args ) { thread_create( f, @args ); };
 }
 #else
-function async_sig_start( function f )
+function async_sig_start( function f, int really )
 {
+  class SignalAsyncVerifier( function f )
+  {
+    static int async_called;
+
+    void really_call( array args )
+    {
+      async_called = 0;
+      f( @args );
+    }
+
+    void call( mixed ... args )
+    {
+      if( async_called )
+      {
+        report_debug("\n\n"
+                     "Async calling failed for %O, calling synchronous\n", f);
+        report_debug("Backtrace at time of hangup:\n%s\n",
+                     describe_backtrace( backtrace() ));
+        f( @args );
+        return;
+      }
+      async_called=1;
+      call_out( really_call, 0, args );
+    }
+  };
   // call_out is not really useful here, since we probably want to run
   // the signal handler immediately, not whenever the backend thread
   // is available. /per
@@ -483,8 +510,26 @@ function async_sig_start( function f )
   // only allow one (1) caller at any given time. It's a bug if this
   // restriction can be circumvented using signals. I suggest that
   // Thread.Mutex takes care of this problem in non-threaded mode.
-  // /noring
-  return f;
+  // /  noring
+  //
+  // Apparantly it already did that. :-)
+  // 
+  // I also fixed SIGHUP to be somewhat more asynchronous.  
+  //
+  // I also added a rather small amount of magic so that it is called
+  // asynchronously the first time it is received, but repeated
+  // signals are not called asynchronously unless the first signal
+  // handler was actually called.
+  //
+  // Except for the SIGQUIT signal, which dumps a backtrace. It would
+  // be an excercise in futility to call that one asynchronously.
+  //
+  // I hope that this will solve all your problems. /per
+  if( really > 0 )
+    return lambda( mixed ... args ){ call_out( f, 0, @args ); };
+  if( really < 0 )
+    return f;
+  return SignalAsyncVerifier( f )->call;
 }
 #endif
 
@@ -3115,13 +3160,13 @@ int main(int argc, array tmp)
 
   // Signals which cause a restart (exitcode != 0)
   foreach( ({ "SIGINT", "SIGTERM" }), string sig)
-    catch( signal(signum(sig), async_sig_start(exit_when_done)) );
+    catch( signal(signum(sig), async_sig_start(exit_when_done,0)) );
 
-  catch(signal(signum("SIGHUP"), async_sig_start(reload_all_configurations)));
+  catch(signal(signum("SIGHUP"),async_sig_start(reload_all_configurations,1)));
 
   // Signals which cause Roxen to dump the thread state
   foreach( ({ "SIGUSR1", "SIGUSR2", "SIGTRAP" }), string sig)
-    catch( signal(signum(sig), async_sig_start(describe_all_threads)) );
+    catch( signal(signum(sig),async_sig_start(describe_all_threads,0)) );
 
 #ifdef __RUN_TRACE
   trace(1);
