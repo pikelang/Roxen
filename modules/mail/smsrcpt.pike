@@ -1,5 +1,5 @@
 /*
- * $Id: smsrcpt.pike,v 1.6 2000/10/04 12:05:30 grubba Exp $
+ * $Id: smsrcpt.pike,v 1.7 2000/10/04 12:15:54 grubba Exp $
  *
  * A SMS module for the AutoMail system.
  *
@@ -13,7 +13,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: smsrcpt.pike,v 1.6 2000/10/04 12:05:30 grubba Exp $";
+constant cvs_version = "$Id: smsrcpt.pike,v 1.7 2000/10/04 12:15:54 grubba Exp $";
 
 /*
  * Roxen glue
@@ -135,10 +135,7 @@ mapping decoded_headers(mapping heads)
 	string fusk2;
 	string p1,p2,p3;
 	if(sscanf(fusk, "%[^?]?%1s?%[^?]%s", p1,p2,p3, fusk) == 4)
-	{
-	  werror("dw: =?"+p1+"?"+p2+"?"+p3+"?=\n");
 	  heads[w] += MIME.decode_word("=?"+p1+"?"+p2+"?"+p3+"?=")[0];
-	}
 	sscanf(fusk, "?=%s", fusk);
 	heads[w] += fusk;
     }
@@ -175,6 +172,7 @@ int put(string sender, string user, string domain,
 			   get_real_body(msg));
 	if(query("strip_aao"))
 	  res=replace(res, "≈ƒ÷Â‰ˆ"/"", "AAOaao"/"");
+	res=res[..1023];
 	werror("sms: res: %O\n",res);
 	Process.create_process( ({ "/usr/bin/sms",
 				   smsnumber,
