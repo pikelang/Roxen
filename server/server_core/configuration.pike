@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.539 2002/10/23 16:26:12 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.540 2002/10/23 20:39:10 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -449,10 +449,7 @@ void stop (void|int asynch)
     if (num_modules) {
 #ifdef THREADS
       // Relying on the interpreter lock here.
-      object mutex = Thread.Mutex();
-      object silly = mutex->lock();
-      modules_stopped->wait(silly);
-      silly = 0;
+      modules_stopped->wait();
 #else
       error ("num_modules shouldn't be nonzero here when running nonthreaded.\n");
 #endif
