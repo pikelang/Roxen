@@ -9,19 +9,17 @@
     <translate id="223" variable="var.delete_txt">Delete old user</translate>
     <table border="0" cellpadding="5" cellspacing="0"><tr><td>
 
-     <a href='users.html?page=create_user'>
-       <gbutton icon_src="/internal-roxen-next"  preparse="1"
-                font="&usr.gbutton-font;"
-                width="200"
-                align_icon="right">&var.create_txt;</gbutton>
-     </a>
+    <gbutton href='users.html?page=create_user'
+             icon_src="/internal-roxen-next"  preparse="1"
+             font="&usr.gbutton-font;"
+             width="200"
+             align_icon="right">&var.create_txt;</gbutton>
      <br />
-     <a href='users.html?page=delete_user'>
-       <gbutton icon_src="/internal-roxen-next"  preparse="1"
-                font="&usr.gbutton-font;"
-                width="200"
-                align_icon="right">&var.delete_txt;</gbutton>
-     </a>
+     <gbutton href='users.html?page=delete_user'
+              icon_src="/internal-roxen-next"  preparse="1"
+	      font="&usr.gbutton-font;"
+              width="200"
+              align_icon="right">&var.delete_txt;</gbutton>
 
      <insert file=user_form.pike nocache="" />
     </td></tr></table>
@@ -38,9 +36,7 @@
     <td><submit-gbutton> &var.create_txt; </submit-gbutton></td></tr></table>
     <p>
     <translate id="202" variable="var.cancel_txt">Cancel</translate>
-    <a href='users.html'>
-      <gbutton font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>
-    </a>
+    <gbutton href='users.html' font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>
     </p>
   </if>
   <else>
@@ -54,9 +50,7 @@
   <insert file=user_delete.pike nocache=""/>
   <p>
   <translate id="202" variable="var.cancel_txt">Cancel</translate>
-  <a href=users.html>
-    <gbutton font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>
-  </a>
+  <gbutton href=users.html font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>
   </p>
   </cf-perm>
 </page>
