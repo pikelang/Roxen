@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.14 2000/01/12 15:38:43 mast Exp $
+//! $Id: module.pmod,v 1.15 2000/01/12 20:14:52 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -382,6 +382,22 @@ TagSet empty_tag_set;
 //! The empty tag set.
 
 
+class Value
+//! Interface for objects used as variable values that are evaluated
+//! when referenced.
+{
+  mixed rxml_var_eval (Context ctx, string var, string scope_name);
+}
+
+class Scope
+//! Interface for objects that emulates a scope mapping.
+{
+  mixed `[] (string var);
+  array(string) _indices();
+  void m_delete (string var);
+}
+
+
 class Context
 //! A parser context. This contains the current variable bindings and
 //! so on. The current context can always be retrieved with
@@ -407,17 +423,18 @@ class Context
   //! Nonzero if tag_set is a copy local to this context. A local tag
   //! set that imports the old tag set is created whenever need be.
 
+#define SCOPE_TYPE mapping(string:mixed)|object(Scope)
+
   mixed get_var (string var, void|string scope_name)
   //! Returns the value a variable in the specified scope, or the
   //! current scope if none is given. Returns zero with zero_type 1 if
   //! there's no such variable.
   {
-    if (mapping(string:mixed) vars = scopes[scope_name || ""]) {
+    if (SCOPE_TYPE vars = scopes[scope_name || ""]) {
       mixed val;
       if (zero_type (val = vars[var])) return ([])[0];
       else if (objectp (val) && ([object] val)->rxml_var_eval)
-	return ([function(Context,string,string:mixed)] ([object] val)->rxml_var_eval) (
-	  this_object(), var, scope_name);
+	return ([object(Value)] val)->rxml_var_eval (this_object(), var, scope_name);
       else return val;
     }
     else if (scope_name) error ("Unknown scope %O.\n", scope_name);
@@ -428,7 +445,7 @@ class Context
   //! Sets the value of a variable in the specified scope, or the
   //! current scope if none is given. Returns val.
   {
-    if (mapping(string:mixed) vars = scopes[scope_name || ""])
+    if (SCOPE_TYPE vars = scopes[scope_name || ""])
       return vars[var] = val;
     else if (scope_name) error ("Unknown scope %O.\n", scope_name);
     else error ("No current scope.\n");
@@ -438,8 +455,9 @@ class Context
   //! Removes a variable in the specified scope, or the current scope
   //! if none is given.
   {
-    if (mapping(string:mixed) vars = scopes[scope_name || ""])
-      m_delete (vars, var);
+    if (SCOPE_TYPE vars = scopes[scope_name || ""])
+      if (objectp (vars)) ([object(Scope)] vars)->m_delete (var);
+      else m_delete ([mapping(string:mixed)] vars, var);
     else if (scope_name) error ("Unknown scope %O.\n", scope_name);
     else error ("No current scope.\n");
   }
@@ -448,31 +466,10 @@ class Context
   //! Returns the names of all variables in the specified scope, or
   //! the current scope if none is given.
   {
-    if (mapping(string:mixed) vars = scopes[scope_name || ""])
+    if (SCOPE_TYPE vars = scopes[scope_name || ""])
       return indices (vars);
     else if (scope_name) error ("Unknown scope %O.\n", scope_name);
     else error ("No current scope.\n");
-  }
-
-  void add_runtime_tag (Tag tag)
-  //! Adds a tag that will exist from this point forward in the
-  //! current context only. It will have effect in the current parser
-  //! and parent parsers up to the point where tag_set changes.
-  {
-    if (!new_runtime_tags) new_runtime_tags = RuntimeTags();
-    new_runtime_tags->add_tags[tag] = 1;
-    // By doing the following, we can let remove_tags take precedence.
-    new_runtime_tags->remove_tags[tag] = 0;
-    new_runtime_tags->remove_tags[tag->name] = 0;
-  }
-
-  void remove_runtime_tag (string|Tag tag)
-  //! Removes a tag added by add_runtime_tag(). It will have effect in
-  //! the current parser and parent parsers up to the point where
-  //! tag_set changes.
-  {
-    if (!new_runtime_tags) new_runtime_tags = RuntimeTags();
-    new_runtime_tags->remove_tags[tag] = 1;
   }
 
   array(string) list_scopes()
@@ -481,13 +478,21 @@ class Context
     return indices (scopes) - ({""});
   }
 
-  void add_scope (string scope_name, mapping(string:mixed) vars)
-  //! Adds or replaces the specified scope at the global level.
+  int exist_scope (void|string scope_name)
+  //!
+  {
+    return !!scopes[scope_name || ""];
+  }
+
+  void add_scope (string scope_name, SCOPE_TYPE vars)
+  //! Adds or replaces the specified scope at the global level. A
+  //! scope can be an object. It must implement the methods `[],
+  //! _indices(), and m_delete().
   {
     if (scopes[scope_name])
       if (scope_name == "") {
-	mapping(string:mixed) inner = scopes[""];
-	while (mapping(string:mixed) outer = hidden[inner]) inner = outer;
+	SCOPE_TYPE inner = scopes[""];
+	while (SCOPE_TYPE outer = hidden[inner]) inner = outer;
 	hidden[inner] = vars;
       }
       else {
@@ -516,12 +521,33 @@ class Context
   string current_scope()
   //! Returns the name of the current scope, if it has any.
   {
-    if (mapping(string:mixed) vars = scopes[""]) {
+    if (SCOPE_TYPE vars = scopes[""]) {
       string scope_name;
       while (scope_name = search (scopes, vars, scope_name))
 	if (scope_name != "") return scope_name;
     }
     return 0;
+  }
+
+  void add_runtime_tag (Tag tag)
+  //! Adds a tag that will exist from this point forward in the
+  //! current context only. It will have effect in the current parser
+  //! and parent parsers up to the point where tag_set changes.
+  {
+    if (!new_runtime_tags) new_runtime_tags = RuntimeTags();
+    new_runtime_tags->add_tags[tag] = 1;
+    // By doing the following, we can let remove_tags take precedence.
+    new_runtime_tags->remove_tags[tag] = 0;
+    new_runtime_tags->remove_tags[tag->name] = 0;
+  }
+
+  void remove_runtime_tag (string|Tag tag)
+  //! Removes a tag added by add_runtime_tag(). It will have effect in
+  //! the current parser and parent parsers up to the point where
+  //! tag_set changes.
+  {
+    if (!new_runtime_tags) new_runtime_tags = RuntimeTags();
+    new_runtime_tags->remove_tags[tag] = 1;
   }
 
   static constant rxml_errmsg_prefix = "RXML parser error: ";
@@ -594,11 +620,11 @@ class Context
     return top_level_type->get_parser (this_object());
   }
 
-  mapping(string:mapping(string:mixed)) scopes = ([]);
+  mapping(string:SCOPE_TYPE) scopes = ([]);
   // The variable mappings for every currently visible scope. A
   // special entry "" points to the current local scope.
 
-  mapping(mapping(string:mixed)|Frame:mapping(string:mixed)) hidden = ([]);
+  mapping(SCOPE_TYPE|Frame:SCOPE_TYPE) hidden = ([]);
   // The currently hidden variable mappings in scopes. The old ""
   // entries are indexed by the replacing variable mapping. The old
   // named scope entries are indexed by the frame object which
@@ -606,11 +632,11 @@ class Context
 
   void enter_scope (Frame frame)
   {
-    mapping(string:mixed) vars;
+    SCOPE_TYPE vars;
 #ifdef DEBUG
     if (!frame->vars) error ("Internal error: Frame has no variables.\n");
 #endif
-    if ((vars = [mapping(string:mixed)] frame->vars) != scopes[""]) {
+    if ((vars = [SCOPE_TYPE] frame->vars) != scopes[""]) {
       hidden[vars] = scopes[""];
       scopes[""] = vars;
       if (string scope_name = [string] frame->scope_name) {
@@ -627,8 +653,8 @@ class Context
 	scopes[scope_name] = hidden[frame];
 	m_delete (hidden, frame);
       }
-    mapping(string:mixed) vars;
-    if (hidden[vars = [mapping(string:mixed)] frame->vars]) {
+    SCOPE_TYPE vars;
+    if (hidden[vars = [SCOPE_TYPE] frame->vars]) {
       scopes[""] = hidden[vars];
       m_delete (hidden, vars);
     }
@@ -1897,12 +1923,12 @@ class VarRef
   constant is_RXML_VarRef = 1;
   string scope, var;
   static void create (string _scope, string _var) {scope = _scope, var = _var;}
-  int valid (Context ctx) {return !!ctx->scopes[scope];}
-  mixed get (Context ctx) {return ctx->scopes[scope][var];}
-  mixed set (Context ctx, mixed val) {return ctx->scopes[scope][var] = val;}
-  void remove (Context ctx) {m_delete (ctx->scopes[scope], var);}
+  int valid (Context ctx) {return ctx->exist_scope (scope);}
+  mixed get (Context ctx) {return ctx->get_var (var, scope);}
+  mixed set (Context ctx, mixed val) {return ctx->set_var (var, val, scope);}
+  void delete (Context ctx) {ctx->delete_var (var, scope);}
   string name() {return scope + "." + var;}
-  string _sprintf() {return "RXML.VarRef";}
+  string _sprintf() {return "RXML.VarRef(" + scope + "." + var + ")";}
 }
 
 class PCode
