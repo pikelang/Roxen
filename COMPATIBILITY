@@ -152,4 +152,32 @@ and Roxen WebServer 4.0.
 
  - wizard.pike: html_table: drop support for fgcolor0, fgcolor1, fgcolor
 
+ - sqltag.pike as been overhauled, the following should be considered:
+    In Roxen, there never was a defined "SQL-session" associated with an
+    RXML page.
+    However, if the load is low enough, then (by accident) all sqlqueries
+    and emits (even nested ones) in Roxen *will* end up in the same
+    SQL-session.
+    Now, if the queries and emits actually mess around with temporary
+    tables and/or transactions, this means that they have a certain
+    probability of working as intended given a low enough load on Roxen.
+
+    In ChiliMoon however, the following holds true:
+    + An SQL-session is bound to an RXML-page.
+    + Nested emits *will* open up new sessions, and therefore will never run
+      in the same session as any queries or emits on the top level.
+
+    That means that, in the case of the non-nested emit, you'll now get the
+    guarantee that it will work and porting is easy (no changes).
+    In the case of the nested emit that works without temporary tables or
+    transactions, they will run in different SQL-sessions, but that will not
+    impact functionality (no changes either).
+
+    In the case of the nested emit that does use temporary tables or
+    transactions, you're in trouble.  In Roxen you had a probability of
+    larger than 0% of it working.  In ChiliMoon this probability reduces to 0%.
+    Either rewrite the code to avoid nested emits in this case, or, add the
+    argument "prefetch" to the outer emit(s) so they behave like in Roxen
+    MySQL of old (i.e. same session, uses more temporary memory).
+
  - Dropped support for Dims, use Image.Dims instead
