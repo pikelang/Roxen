@@ -4,7 +4,7 @@ import Array;
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.12 1997/08/13 21:37:33 per Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.13 1997/08/20 07:46:57 per Exp $";
 
 #else
 import spider;
@@ -184,7 +184,7 @@ void remove_configuration( string name )
 
   f = configuration_dir + replace(name, " ", "_");
   if(!file_stat( f ))   f = configuration_dir + name;
-  if(!rm(f))
+  if(!rm(f) && file_stat(f))
   {
     error("Failed to remove configuration file ("+f+")! "+
 #if 0&&efun(strerror)

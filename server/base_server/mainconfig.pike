@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.73 1997/08/19 00:36:13 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.74 1997/08/20 07:46:55 per Exp $";
 //inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -406,8 +406,10 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
 
        if(allvars["key_"+i] || allvars["cert_"+i])
 	 op[i][3] =
-	   (allvars["key_"+i]?"key-file "+allvars["key_"+i]+"\n":"")+
-	   (allvars["cert_"+i]?"cert-file "+allvars["cert_"+i]+"\n":"");
+	   (allvars["key_"+i]&&strlen(allvars["key_"+i])?
+	    "key-file "+allvars["key_"+i]+"\n":"")+
+	   (allvars["cert_"+i]&&strlen(allvars["cert_"+i])?
+	    "cert-file "+allvars["cert_"+i]+"\n":"");
      } else  // Delete this port.
        op[i]=0;
    }
