@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.45 1999/12/19 00:33:09 marcus Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.46 1999/12/21 23:51:13 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -146,19 +146,19 @@ program my_compile_file(string file)
     rm (ofile);
   program p;
 
-  ErrorContainer e = ErrorContainer();
-  master()->set_inhibit_compile_errors(e);
+//   ErrorContainer e = ErrorContainer();
+//   master()->set_inhibit_compile_errors(e);
   catch {
     p  = (program)( file );
   };
-  master()->set_inhibit_compile_errors(0);
+//   master()->set_inhibit_compile_errors(0);
 
-  string q = e->get();
+//   string q = e->get();
 
   if( !p )
   {
-    if( strlen( q ) )
-      report_error("Failed to compile module %s:\n%s", file, q);
+//     if( strlen( q ) )
+//       report_error("Failed to compile module %s:\n%s", file, q);
     throw( "" ); 
   }
 //   if ( strlen(q) )
@@ -173,7 +173,7 @@ program my_compile_file(string file)
 #ifdef MODULE_DEBUG
       report_debug("\b [nodump] \b");
 #endif
-      Stdio.File( ofile, "wct" );
+      catch( Stdio.File( ofile, "wct" ) );
     } else {
 #ifdef MODULE_DEBUG
       report_debug("\b [dump] \b");
@@ -294,6 +294,7 @@ class Module
       destruct( mod );
       return 1;
     };
+    werror(describe_backtrace(q));
     return 0;
   }
 
@@ -354,7 +355,7 @@ class Module
         return find_module(sname);
       }
       if( filename && (data->filename != filename ))
-        report_debug("Possible module conflict for %s, %s != %s\n",
+        report_debug("Possible module conflict for %s != %s\n",
                      data->filename, filename );
       else
       {
@@ -363,9 +364,8 @@ class Module
         if(!(stat = file_stat( filename ) ))
           filename=0;
         else
-          if( data->last_checked == stat[ ST_MTIME ] )
+          if( data->last_checked >= stat[ ST_MTIME ] )
           {
-            last_checked = stat[ ST_MTIME ];
             type = data->type;
             multiple_copies = data->multiple_copies;
             name = data->name;
@@ -373,7 +373,9 @@ class Module
             return 1;
           }
           else
+          {
             last_checked = stat[ ST_MTIME ];
+          }
       }
     }
     if( filename )
