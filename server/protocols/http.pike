@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.268 2000/09/02 21:46:49 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.269 2000/09/02 22:22:59 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -988,24 +988,30 @@ private int parse_got( string new_data )
 	
     switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
     {
-     default: // Normal form data.
+     default: 
+       // Normal form data.
        string v;
+
+       // Ok.. This might seem somewhat odd, but IE seems to add a
+       // (spurious) \r\n to the end of the data, and some versions of
+       // opera seems to add (spurious) \r\n to the start of the data.
+       //
+       // Oh, the joy of supporting all webbrowsers is endless.
+       data = String.trim_all_whites( data );
+       l = misc->len = strlen(data);
+
        if(l < 200000)
-       {
-         foreach(replace(data,
-                         ({ "\n", "\r", "+" }),
-                         ({ "", "", " "}))/"&", v)
+         foreach(replace(data,"+"," ")/"&", v)
            if(sscanf(v, "%s=%s", a, b) == 2)
            {
              a = http_decode_string( a );
              b = http_decode_string( b );
 		      
-             if(variables[ a ])
+             if( variables[ a ] )
                variables[ a ] +=  "\0" + b;
              else
                variables[ a ] = b;
            }
-       }
        break;
 	    
      case "multipart/form-data":
@@ -1229,8 +1235,10 @@ string censor(string what)
   return what;
 }
 
-int store_error(mixed err)
+int store_error(mixed _err)
 {
+  mixed err = _err;
+  _err = 0; // hide in backtrace, they are bad enough anyway...
   mapping e = roxen.query_var("errors");
   if(!e) roxen.set_var("errors", ([]));
   e = roxen.query_var("errors"); /* threads... */
@@ -1252,7 +1260,13 @@ int store_error(mixed err)
       msg = msg[..i - 1];
     }
   }
-
+  function dp =  master()->describe_program;
+#if __VERSION__ > 7.0
+  object d = master()->Describer();
+  function dcl = d->describe_comma_list;
+#else
+  function dcl = master()->stupid_describe_comma_list;
+#endif
   string cwd = getcwd() + "/";
   array bt;
   if (arrayp (err) && sizeof (err) >= 2 && arrayp (err[1]) ||
@@ -1279,18 +1293,14 @@ int store_error(mixed err)
 	    func += function_name(ent[2]);
 	    if (!file)
 	      catch {
-		file = master()->describe_program (
-		  object_program (function_object (ent[2])));
+		file = dp(object_program( function_object( ent[2] ) ) );
 		if (file[..sizeof (cwd) - 1] == cwd) file = file[sizeof (cwd)..];
 	      };
 	  }
 	  else if (stringp(ent[2])) func = ent[2];
 	  else func ="<unknown function>";
 	if (sizeof (ent) >= 4)
-	  descr = func + "(" + 
-                master()->describe_comma_list( ent[3..], 
-                                               master()->bt_max_string_len) 
-                + ")";
+	  descr = func + "(" +dcl(ent[3..],999999)+")";
 	else
 	  descr = func + "()";
       }
@@ -1314,8 +1324,10 @@ array get_error(string eid)
 }
 
 
-void internal_error(array err)
+void internal_error(array _err)
 {
+  mixed err = _err;
+  _err = 0; // hide in backtrace, they are bad enough anyway...
   array err2;
   if(port_obj->query("show_internals"))
   {
