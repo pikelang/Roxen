@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.76 1998/03/26 17:21:53 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.77 1998/03/28 01:25:01 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -677,7 +677,8 @@ string format_backtrace(array bt)
   // rest is backtrace.
 
   string reason = roxen->diagnose_error( bt );
-
+  if(sizeof(bt) == 1) // No backtrace?!
+    bt += ({ "Unknown error, no backtrace."});
   string res = ("<title>Internal Server Error</title>"
 		"<body bgcolor=white text=black link=darkblue vlink=darkblue>"
 		"<table width=\"100%\" border=0 cellpadding=0 cellspacing=0>"
@@ -731,19 +732,28 @@ string generate_bugreport(array from)
 
 void internal_error(array err)
 {
+  array err2;
   if(QUERY(show_internals)) {
-    if(prestate->plain) 
-    {
-      file =  http_low_answer(500,generate_bugreport(err));
-      return;
+    err2 = catch { 
+      if(prestate->plain) 
+      {
+	file =  http_low_answer(500,generate_bugreport(err));
+	return;
+      }
+      array(string) bt = (describe_backtrace(err)/"\n") - ({""});
+      file = http_low_answer(500, format_backtrace(bt));
+    };	
+    if(err2) {
+      werror("Internal server error in internal_error():\n" +
+	     describe_backtrace(err));
+      file = http_low_answer(500, "<h1>Error: The server failed to "
+			     "fulfill your query, due to an "
+			     "internal error.</h1>");
     }
-    array(string) bt = (describe_backtrace(err)/"\n") - ({""});
-    file = http_low_answer(500, format_backtrace(bt));
   } else {
     file = http_low_answer(500, "<h1>Error: The server failed to "
 			   "fulfill your query, due to an internal error.</h1>");
   }
-  
   report_error("Internal server error: " +
 	       describe_backtrace(err) + "\n");
 }
@@ -845,13 +855,13 @@ void handle_request( )
     else if(method != "GET" && method != "HEAD" && method != "POST")
       file = http_low_answer(501, "Not implemented.");
     else
-      if(catch {
+      if(err = catch {
 	file=http_low_answer(404,
 			     replace(parse_rxml(conf->query("ZNoSuchFile"),
 						thiso),
 				     ({"$File", "$Me"}), 
 				     ({not_query,
-				       conf->query("MyWorldLocation")})));})
+				       conf->query("MyWorldLocation")}))); })
 	internal_error(err);
   } else {
     if((file->file == -1) || file->leave_me) 
@@ -948,7 +958,7 @@ void handle_request( )
     file->file = 0;
     file->data="";
   }
-MARK_FD("HTTP handled");
+  MARK_FD("HTTP handled");
 
 
 #ifdef KEEP_ALIVE
