@@ -1,3 +1,5 @@
+void perror(string format,mixed ... args);
+
 string popen(string s, void|mapping env)
 {
   object p,p2;

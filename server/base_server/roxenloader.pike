@@ -1,5 +1,6 @@
-string cvs_version = "$Id: roxenloader.pike,v 1.3 1996/11/27 14:10:28 per Exp $";
-#include <roxen.h>
+string cvs_version = "$Id: roxenloader.pike,v 1.4 1996/11/30 00:45:33 nisse Exp $";
+#include <stdio.h>  // load "perror" in this before "roxen.pre.pike"'s perror
+#include <roxen.h>  
 
 object roxen;
 function nwrite;
@@ -111,7 +112,7 @@ static private void initiate_cache()
 void load_roxen()
 {
   roxen = ((program)"roxen")();
-  perror("Roxen version "+roxen->version+"\n");
+  perror("Roxen version "+roxen->cvs_version+"\n");
   nwrite = roxen->nwrite;
 }
 
