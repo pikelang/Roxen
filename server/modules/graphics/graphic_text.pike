@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.183 1999/07/10 21:42:58 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.184 1999/07/16 02:34:38 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -805,13 +805,12 @@ string tag_gtext_url(string t, mapping arg, string ctn,
   if(arg->alpha) 
     arg->alpha = fix_relative(arg->alpha,id);
 
-  arg->text = ctn;
 
   if(!short)
-    return query_internal_location()+image_cache->store( arg, id )+
+    return query_internal_location()+image_cache->store( ({arg,ctn}), id )+
       (query("gif")?".foo":"");
   else
-    return image_cache->store( arg, id )+(query("gif")?".foo":"");
+    return image_cache->store( ({arg,ctn}), id )+(query("gif")?".foo":"");
 }
 
 string tag_gtext_id(string t, mapping arg, object id, object foo,
