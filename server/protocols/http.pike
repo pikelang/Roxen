@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.323 2001/07/21 12:01:44 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.324 2001/07/31 10:36:45 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -387,7 +387,7 @@ private void setup_pipe()
 void send (string|object what, int|void len)
 {
   REQUEST_WERR(sprintf("send(%O, %O)\n", what, len));
-  if( len && port_obj->minimum_bitrate )
+  if( len && port_obj && port_obj->minimum_bitrate )
     call_out( end, len / port_obj->minimum_bitrate );
 
   if(!what) return;
@@ -1233,7 +1233,7 @@ void internal_error(array _err)
   mixed err = _err;
   _err = 0; // hide in backtrace, they are bad enough anyway...
   array err2;
-  if(port_obj->query("show_internals"))
+  if(port_obj && port_obj->query("show_internals"))
   {
     err2 = catch {
       file = Roxen.http_low_answer(500, format_backtrace(store_error(err)));
@@ -1895,7 +1895,7 @@ string url_base()
   if (!cached_url_base) {
     // First look at the host header in the request.
     if (string tmp = misc->host) {
-      string default_port = ":" + port_obj->default_port;
+      string default_port = ":" + (port_obj && port_obj->default_port);
       if (has_suffix (tmp, default_port))
 	// Remove redundant port number.
 	cached_url_base = port_obj->prot_name + "://" +
