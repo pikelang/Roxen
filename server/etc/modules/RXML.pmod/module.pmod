@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.59 2000/02/15 06:06:09 mast Exp $
+//! $Id: module.pmod,v 1.60 2000/02/15 07:53:45 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -441,8 +441,7 @@ class TagSet
   {
     Context ctx = Context (this_object(), id);
     if (!prepare_funs) prepare_funs = get_prepare_funs();
-    prepare_funs -= ({0});
-    prepare_funs (ctx);
+    (prepare_funs -= ({0})) (ctx);
     return ctx->new_parser (top_level_type);
   }
 
@@ -493,6 +492,13 @@ class TagSet
     if (prepare_context) funs += ({prepare_context});
     // We don't cache in prepare_funs; do that only at the top level.
     return funs;
+  }
+
+  void call_prepare_funs (Context ctx)
+  // Kludge function used from rxml.pike.
+  {
+    if (!prepare_funs) prepare_funs = get_prepare_funs();
+    (prepare_funs -= ({0})) (ctx);
   }
 
   static mapping(string:mapping(string:Tag)) plugins = ([]);
@@ -1751,7 +1757,7 @@ class Frame
 	    ENTER_SCOPE (ctx, this);
 
 	    for (; iter > 0; iter--) {
-	      if (raw_content) { // Got nested parsing to do.
+	      if (raw_content && raw_content != "") { // Got nested parsing to do.
 		int finished = 0;
 		if (!subparser) { // The nested content is not yet parsed.
 		  subparser = content_type->get_parser (
