@@ -25,6 +25,41 @@ mapping dl(object id, string filename)
     return 0;
 }
 
+#if 1
+string encode_url(string base, string func, string path)
+{
+  if(func=="dl")
+    return combine_path(base, func, MIME.encode_base64(path)+"/"+path);
+  return combine_path(base, func, MIME.encode_base64(path));
+}
+
+mapping decode_url(string s)
+{
+  string func = "", path = "";
+  sscanf(s, "%s/%s", func, path);
+  sscanf(path, "%s/%*s", path);
+  path = MIME.decode_base64(path);
+  if(!sizeof(path)||path[0]!='/') path = "/" + path;
+  return ([ "func":func, "path":path ]);
+}
+#else
+string encode_url(string base, string func, string path)
+{
+  if(sizeof(path)) path = path[1..];
+  return combine_path(base, func, http_encode_string(path));
+}
+
+mapping decode_url(string s)
+{
+  string func = "", path = "";
+  sscanf("hej", "%s/%s", func, path);
+  sscanf(s, "%s/%s", func, path);
+//  path = MIME.decode_base64(path);
+  if(!sizeof(path)||path[0]!='/') path = "/" + path;
+  return ([ "func":func, "path":path ]);
+}
+#endif
+
 string|mapping navigate(object id, string f, string base_url)
 {
 
@@ -34,7 +69,8 @@ string|mapping navigate(object id, string f, string base_url)
   string res="";
 
   if(!file_stat(wa->real_path(id, f)))
-    return "Location "+f+" not found or permission denied.\n";
+    return "Location "+wa->html_safe_encode(f)+
+      " not found or permission denied.\n";
   
   if(f[-1]!='/') // it's a file
   {
@@ -42,12 +78,13 @@ string|mapping navigate(object id, string f, string base_url)
     int t;
     
     mapping md = wa->get_md(id, f);
-    br += ({ ({ "View",  f+" target=_autosite_show_real" }) });
-    werror("%O\n", md);
+    br += ({ ({ "View",  "'"+http_encode_string(f)+"'"
+		  " target='_autosite_show_real'" }) });
+    //werror("%O\n", md);
     if(md->content_type=="text/html")
       br += ({ ({ "Edit File", (["filename":f ]) }) });
     br += ({ ({ "Edit Metadata", ([ "path":f ]) }),
-	     ({ "Download File", base_url+"dl"+f }),
+	     ({ "Download File", encode_url(base_url, "dl", f) }),
 	     ({ "Remove File", ([ "path":f ]) }) });
     wanted_buttons=br;
 
@@ -55,7 +92,7 @@ string|mapping navigate(object id, string f, string base_url)
     res += "<img src='"+
 	   wa->content_types[md->content_type||"autosite/unknown"]->img+
 	   "'>&nbsp;&nbsp;";
-    res += "<b>"+f+"</b><br>\n";
+    res += "<b>"+wa->html_safe_encode(f)+"</b><br>\n";
 
     mapping md = wa->get_md(id, f);
     array md_order = ({ "title", "content_type", "template",
@@ -69,7 +106,9 @@ string|mapping navigate(object id, string f, string base_url)
 	rows += ({ ({ "<b>"+md_variables[variable]+"</b>",
 		      (variable=="content_type"?
 		       wa->content_types[md[variable]]->name:
-		       md[variable]) }) });
+		       wa->html_safe_encode(md[variable])
+		       // md[variable]
+			) }) });
     }
     res += html_table( ({ "Metadata", "Value" }), rows);
   }
@@ -101,9 +140,9 @@ string|mapping navigate(object id, string f, string base_url)
 
     // Display directories.
     foreach(sort(dirs), string item) {
-      string href = "<a href='"+base_url+"go"+f+item+"/'>";
+      string href = "<a href='"+encode_url(base_url, "go", f+item+"/")+"'>";
       res += href+"<img src='internal-gopher-menu' border=0></a>";
-      res += "&nbsp;&nbsp;"+href+item+"/</a><br>\n";
+      res += "&nbsp;&nbsp;"+href+wa->html_safe_encode(item+"/")+"</a><br>\n";
     }
     
     // Display files.
@@ -113,14 +152,15 @@ string|mapping navigate(object id, string f, string base_url)
       if(md)
 	img = wa->content_types[md->content_type||
 			       "autosite/unknown"]->img;
-      string href = "<a href='"+base_url+"go"+f+item+"'>";
+      string href = "<a href='"+encode_url(base_url, "go", f+item)+"'>";
       res += href+"<img src='"+img+"' border=0></a>";
-      res += "&nbsp;&nbsp;"+href+item+"</a><br>\n";
+      res += "&nbsp;&nbsp;"+href+wa->html_safe_encode(item)+"</a><br>\n";
     }
   }
   
   if(sizeof(f)>1)
-    res = "<a href=../>Up to parent directory</a><br>\n<br>\n"+res;
+    res = "<a href='"+encode_url(base_url, "go", combine_path(f, "../"))+"'>"
+      "Up to parent directory</a><br>\n<br>\n"+res;
   
   return res;
 }
@@ -128,21 +168,18 @@ string|mapping navigate(object id, string f, string base_url)
 string|mapping handle(string sub, object id)
 {
   wanted_buttons=({ });
-
-  string resource="/";
   string base_url = id->not_query[..sizeof(id->not_query)-sizeof(sub)-1];
 
-  if(2==sscanf(sub, "%s/%s", sub, resource))
-    resource = "/"+resource;
-  switch(sub) {
+  mapping m = decode_url(sub);
+  switch(m->func) {
   case "":
     break;
   case "go":
     break;
   case "dl":
-    return dl(id, resource);
+    return dl(id, m->path);
   default:
     return "What?";
   }
-  return navigate(id, resource, base_url);
+  return navigate(id, m->path, base_url);
 }

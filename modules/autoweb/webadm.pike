@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.9 1998/07/31 19:47:06 wellhard Exp $
+ * $Id: webadm.pike,v 1.10 1998/08/02 19:56:52 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.9 1998/07/31 19:47:06 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.10 1998/08/02 19:56:52 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -228,6 +228,7 @@ string make_tablist(array(object) tabs, object current, object id)
 
 int validate_customer(object id)
 {
+  werror("Validating customer: %O", id->misc->customer_id);
   catch {
     return equal(credentials[id->misc->customer_id],
 		 ((id->realauth||"*:*")/":"));
@@ -276,6 +277,9 @@ mixed find_file(string f, object id)
 	     "data":"<title>Access Denied</title>"
 	     "<h2 align=center>Access forbidden</h2>\n"
     ]);
+#else
+  id->misc->customer_id = "1";
+  id->variables->customer_id = "1";
 #endif
 
   // State
@@ -563,4 +567,12 @@ mapping state_for(object id)
   if(!saved_state[u])
     return init_state( u );
   return saved_state[u];
+}
+
+
+// Misc
+
+string html_safe_encode(string s)
+{
+  return replace(s, ({ "<", ">" }), ({ "&lt;", "&gt;" }));
 }

@@ -2,8 +2,8 @@ inherit "wizard";
 
 constant name = "Create File";
 
-#define ERROR (id->variables->error?"<font color=darkred>"+\
-	       id->variables->error+"</font><p>":"")
+#define ERROR (id->variables->error?"<error>"+\
+	       id->variables->error+"</error>":"")
 
 string page_0( object id )
 {

@@ -37,7 +37,7 @@ class tab
   string buttonrow_submitbuttons(array brow, object id)
   {
     string s="";
-    s+="<table><tr>";
+    s+="<table><tr>\n";
     foreach(brow, array a)
       if(sizeof(a))
 	if (stringp(a[1]))
@@ -51,7 +51,7 @@ class tab
 	      s+="<input type=hidden name=\""+input_hidden+
        "\" value=\""+a[2][input_hidden]+"\">";
 	  }
-	  s+="</form></td>";
+	  s+="</form></td>\n";
 	}
 	else
 	{

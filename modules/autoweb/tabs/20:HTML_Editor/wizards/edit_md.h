@@ -75,7 +75,7 @@ string page_editmetadata( object id, string f, mapping|void m)
     }),
   });
   
-  return "<b>File Metadata for "+f+":</b><p>\n" + 
+  return "<b>File Metadata for "+wa->html_safe_encode(f)+":</b><p>\n" + 
     html_table(({ "Data", "Value", ({ "Description" }) }),
 	       Array.map(rows, describe_metadata_var));
 }
