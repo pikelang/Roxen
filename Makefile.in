@@ -14,13 +14,13 @@ exterm: force
 	@(cd extern;$(MAKE) all)
 
 gmp: force
-	-@(cd gmp;$(MAKE) all && $(MAKE) install)
+	-@(cd gmp;$(MAKE) all)
 
 gdbm: force
-	-@(cd gdbm;$(MAKE) all && $(MAKE) install)
+	-@(cd gdbm;$(MAKE) all)
 
 zlib: force
-	-@(cd zlib;$(MAKE) all && $(MAKE) install)
+	-@(cd zlib;$(MAKE) all)
 
 force:
 
