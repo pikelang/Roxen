@@ -188,7 +188,7 @@ void create()
   if(sizeof(roxen->configuration_perm))
     foreach(indices(roxen->configuration_perm), string perm)
       add_permission(perm, roxen->configuration_perm[perm]);
-  roxen->configuration_auth=this_object();
+  roxen->add_configuration_auth(this_object());
 
 }
 
