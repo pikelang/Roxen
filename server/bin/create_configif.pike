@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.29 2000/09/04 04:03:24 per Exp $
+ * $Id: create_configif.pike,v 1.30 2000/09/04 13:12:04 noring Exp $
  *
  * Create an initial administration interface server.
  */
@@ -322,7 +322,7 @@ ent text/html
 
   string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
   mkdirhier( ufile );
-  Stdio.file( ufile, "wct", 0770 )
+  Stdio.File( ufile, "wct", 0770 )
     ->write(
 string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
 <map>
