@@ -1,4 +1,4 @@
-constant cvs_version="$Id: mirrorfs.pike,v 1.16 2000/02/16 07:16:02 per Exp $";
+constant cvs_version="$Id: mirrorfs.pike,v 1.17 2000/03/16 17:22:30 nilsson Exp $";
 constant thread_safe=1;
 
 #include <roxen.h>
@@ -19,8 +19,7 @@ constant module_doc  = "This is a mirror filesystem, it mirrors the virtual file
   "<p>The searchpath of the Mirror Filesystem is used as a "
   "cache.  It is not a good idea to use the same cache-directory "
   "in multiple mirror filesystems, and never store other files in it"
-  ". There is a mirror for www.roxen.com at skuld.idonex.se:2000, "
-  "if you want to test this module.</p><b>Do not under any "
+  ".</p><b>Do not under any "
   "circumstances let this module connect to a mirror server in the "
   "same Roxen server. It will not work. At all.</b>";
 
