@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.18 1997/09/20 15:04:13 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.19 1997/09/20 15:06:26 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -43,7 +43,7 @@ object|void open(string filename, string mode, int|void perm)
   destruct(o);
 }
 
-void mkdirhier(string from)
+void mkdirhier(string from, int|void mode)
 {
   string a, b;
   array f;
@@ -54,6 +54,11 @@ void mkdirhier(string from)
   foreach(f[0..sizeof(f)-2], a)
   {
     mkdir(b+a);
+#if constant(chmod)
+    if (mode) {
+      catch { chmod(b+a, mode); };
+    }
+#endif /* constant(chmod) */
     b+=a+"/";
   }
 }
