@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.73 2000/02/03 17:12:54 jhs Exp $ */
+/* $Id: module.pike,v 1.74 2000/02/04 01:58:10 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -141,11 +141,6 @@ void defvar(string var, mixed value, string name,
 
   switch (type & VAR_TYPE_MASK)
   {
-  case TYPE_NODE:
-    if(!arrayp(value))
-      report_error("TYPE_NODE variables should contain a list of variables "
-	    "to use as subnodes.\n");
-    break;
   case TYPE_CUSTOM:
     if(!misc
        && arrayp(misc)
@@ -182,10 +177,6 @@ void defvar(string var, mixed value, string name,
       report_error("%s:\nPassing illegal value (%t:%O) "
 		   "(not int) to integer number variable.\n",
 		   roxen->filename(this), value, value);
-    break;
-
-  case TYPE_MODULE_LIST:
-    value = ({});
     break;
 
   case TYPE_MODULE:
@@ -246,18 +237,14 @@ void defvar(string var, mixed value, string name,
     value=!!value;
     break;
 
-  case TYPE_ERROR:
-    break;
-
-  case TYPE_COLOR:
-    if (!intp(value))
-      report_error("%s:\nPassing illegal value (%t:%O) (not int) "
-		   "to color variable.\n",
-		   roxen->filename(this), value, value);
-    break;
+//   case TYPE_COLOR:
+//     if (!intp(value))
+//       report_error("%s:\nPassing illegal value (%t:%O) (not int) "
+// 		   "to color variable.\n",
+// 		   roxen->filename(this), value, value);
+//     break;
 
   case TYPE_FILE_LIST:
-  case TYPE_PORTS:
   case TYPE_FONT:
     // FIXME: Add checks for these.
     break;
