@@ -6,3 +6,6 @@ Between InternetServer 2.4 and Roxen WebServer <= 2.4
  - The font folder has moved from server/nfonts to etc/fonts. The font
    directory setting must be updated in all configurations.
 
+ - The example file folder example_pages has moved from
+   server/example_pages to server/etc/example_pages. All example
+   servers must have their filesystem module search path updated.
