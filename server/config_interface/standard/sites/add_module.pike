@@ -406,7 +406,7 @@ mixed do_it( RequestID id )
   if( !conf->inited )
     conf->enable_all_modules();
 
-  // FIXME! 
+  werror("%O\n", id->variables->mod_init_vars);
   foreach( id->variables->module_to_add/"\0", string mod ) {
     if (RoxenModule m = conf->enable_module( mod )) {
       mod = conf->otomod[m];
@@ -425,12 +425,12 @@ mixed do_it( RequestID id )
 	}
       }
       else
-	foreach (indices (m->variables), string var)
-	  if (roxen.query_configurable (m->variables[var], VAR_INITIAL)) {
-	    got_initial = 1;
-	    initial_modules += ({ last_module });
-	  }
-    */
+      */
+      foreach (indices (m->variables), string var)
+	if ( m->variables[var]->get_flags()&VAR_INITIAL ) {
+	  got_initial = 1;
+	  initial_modules += ({ last_module });
+	}
     }
     else last_module = "";
   }
