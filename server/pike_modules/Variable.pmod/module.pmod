@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.89 2004/06/01 17:21:19 _cvs_stephen Exp $
+// $Id: module.pmod,v 1.90 2004/06/01 23:05:33 mani Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1776,7 +1776,7 @@ static array(string) verify_port( string port )
 
   if( !get_core()->protocols[ protocol ] )
     warning += sprintf(LOCALE(342,"Warning: The protocol %s is not known "
-			      "by roxen"),protocol)+"\n";
+			      "by ChiliMoon"),protocol)+"\n";
   return ({ (strlen(warning)?warning:0), port });
 }
 
