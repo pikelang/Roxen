@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.63 1999/03/27 17:24:21 grubba Exp $
+# $Id: configure.in,v 1.64 1999/04/14 14:21:04 grubba Exp $
 #
 
 prefix=$PWD
@@ -566,6 +566,27 @@ export CC CFLAGS REALCFLAGS WARN OPTIMIZE
 ## Kluges
 ###################################################################
 
+# Find an AR.
+# This is needed here since automake generates broken Makefile.in's.
+echo Searching for binary directories...
+for d in `echo $exec_prefix | sed "s@^NONE@$prefix@g" | sed "s@^NONE@$ac_default_prefix@g"` \
+    "" /usr /usr/ccs /usr/local /sw/local /usr/gnu /opt/gnu /sw/gnu \
+    /sw /usr/freeware
+do
+  AC_MSG_CHECKING($d/bin)
+  if test -d "$d/bin/." ; then
+    AC_MSG_RESULT(added)
+    EXTRA_PATH="${EXTRA_PATH}:$d/bin"
+  else
+    AC_MSG_RESULT(no)
+  fi
+done
+
+AC_PATH_PROG(AR, ar, ar, $PATH:$EXTRA_PATH)
+export AR
+AC_SUBST(AR)
+
+# socketpair is broken on Linux, but not in a way that affects Roxen.
 if test "x`uname`" = "xLinux" ; then
   echo
   echo 'Warning! Linux detected, enabling the socketpair kluge.'
