@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.140 1998/08/10 05:09:09 js Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.141 1998/08/10 06:26:00 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -453,8 +453,7 @@ object make_text_image(mapping args, object font, string text,object id)
     }
     xsize = MAX(xsize,background->xsize());
     ysize = MAX(ysize,background->ysize());
-    werror("x: %O, y: %O\n",xsize,ysize);
-
+ 
     if(alpha)
       background->paste_alpha_color(alpha->invert(),@bgcolor);
 
