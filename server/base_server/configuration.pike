@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.548 2004/03/06 22:38:23 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.549 2004/03/08 09:18:05 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1135,22 +1135,31 @@ void clear_memory_caches()
 }
 
 //  Returns tuple < image, mime-type >
-static array(string) draw_saturation_bar(int hue,int brightness, int where)
+static array(string) draw_saturation_bar(int hue,int brightness, int where,
+					 int small_version)
 {
-  Image.Image bar=Image.Image(30,256);
-
+  Image.Image bar =
+    small_version ? Image.Image(16, 128) : Image.Image(30, 256);
+  
   for(int i=0;i<128;i++)
   {
     int j = i * 2;
     array color = hsv_to_rgb(hue, 255 - j, brightness);
-    bar->line(0, j, 29, j, @color);
-    bar->line(0, j + 1,29, j + 1, @color);
+    if (small_version) {
+      bar->line(0, i, 15, i, @color);
+    } else {
+      bar->line(0, j, 29, j, @color);
+      bar->line(0, j + 1,29, j + 1, @color);
+    }
   }
-
-  where = 255-where;
+  
+  where = 255 - where;
   int hilite = (brightness > 128) ? 0 : 255;
-  bar->line(0, where, 29, where, hilite, hilite, hilite);
-
+  if (small_version)
+    bar->line(0, where / 2, 15, where / 2, hilite, hilite, hilite);
+  else
+    bar->line(0, where, 29, where, hilite, hilite, hilite);
+  
 #if constant(Image.JPEG) && constant(Image.JPEG.encode)
   return ({ Image.JPEG.encode(bar), "image/jpeg" });
 #else
@@ -1170,8 +1179,10 @@ private mapping internal_roxen_image( string from, RequestID id )
 
   // Automatically generated colorbar. Used by wizard code...
   int hue,bright,w;
-  if(sscanf(from, "%*s:%d,%d,%d", hue, bright,w)==4) {
-    array bar = draw_saturation_bar(hue, bright, w);
+  string colorbar;
+  if(sscanf(from, "%s:%d,%d,%d", colorbar, hue, bright,w)==4) {
+    array bar = draw_saturation_bar(hue, bright, w,
+				    colorbar == "colorbar-small");
     return Roxen.http_string_answer(bar[0], bar[1]);
   }
 

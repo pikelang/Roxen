@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.147 2004/03/07 08:54:14 jonasw Exp $
+// $Id: wizard.pike,v 1.148 2004/03/08 09:18:05 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -357,11 +357,11 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "    <tr>"
        "      <td style='border-right: 1px solid #888888'"
        "        ><img src='/internal-roxen-colsel-small'"
-       "             width='128' height='128' style='cursor: pointer'"
+       "             width='128' height='128' style='cursor: crosshair'"
        "             onClick='PREFIX_colsel_click(event, 0); return false;'"
        "        /></td>"
        "      <td><img id='PREFIX_colorbar' width='16' height='128'"
-       "               src='/internal-roxen-colorbar:" +h+ "," +v+ "," +s+ "'"
+       " src='/internal-roxen-colorbar-small:" + h + "," + v + "," + s + "'"
        "               style='cursor: pointer'"
        "               onClick='PREFIX_colsel_click(event, 1); return false;'"
        "        /></td>"
