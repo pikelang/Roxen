@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.120 2001/08/01 17:10:32 per Exp $
+// $Id: module.pike,v 1.121 2001/08/01 17:57:05 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -411,7 +411,7 @@ static string sql_table_exists( string name )
   string res = hash(_my_configuration->name)->digits(36)
     + "_" + replace(sname(),"#","_") + name;
 
-  return catch(sql->query( "SELECT * FROM "+res+" LIMIT 1" ))?0:res;
+  return catch(get_my_sql()->query( "SELECT * FROM "+res+" LIMIT 1" ))?0:res;
 }
 
 
