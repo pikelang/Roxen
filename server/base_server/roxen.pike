@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.853 2003/11/25 16:01:35 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.854 2003/12/04 12:33:26 anders Exp $";
 
 //! @appears roxen
 //!
@@ -2319,8 +2319,10 @@ void restart_if_stuck (int force)
 	     return;
 	   }
 	   report_debug("**** %s: ABS engaged!\n"
+			"Waited more than %d minute(s).\n"
 			"Trying to dump backlog: \n",
-			ctime(time()) - "\n");
+			ctime(time()) - "\n",
+			query("abs_timeout"));
 	   catch {
 	     // Catch for paranoia reasons.
 	     describe_all_threads();
