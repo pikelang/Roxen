@@ -64,7 +64,6 @@ worldmap binary
 /server/admin_interface/tasks/resolv.pike foreign_ident
 /server/admin_interface/tasks/restart.pike foreign_ident
 /server/admin_interface/tasks/ssl_common.pike foreign_ident
-/server/admin_interface/tasks/upload_license.pike foreign_ident
 /server/admin_interface/template foreign_ident
 /server/admin_interface/user_form.pike foreign_ident
 /server/bin/buildenv.pike foreign_ident
