@@ -1,4 +1,4 @@
-string cvs_version = "$Id: hosts.pike,v 1.14 1997/10/05 03:35:30 grubba Exp $";
+string cvs_version = "$Id: hosts.pike,v 1.15 1997/12/03 17:27:13 grubba Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7
@@ -214,10 +214,11 @@ varargs void ip_to_host(string ipnumber, function callback, mixed ... args)
 
   if(!do_when_found[ipnumber])
   {
-    if(lookup(IP_TO_HOST, ipnumber))
-      do_when_found[ipnumber] = ({ ({ callback, args }) });
-    else
+    do_when_found[ipnumber] = ({ ({ callback, args }) });
+    if(!lookup(IP_TO_HOST, ipnumber)) {
+      m_delete(do_when_found, ipnumber);
       return callback(ipnumber, @args);
+    }
   } else {
     do_when_found[ipnumber] += ({ ({ callback, args }) });
   }
@@ -255,10 +256,11 @@ varargs void host_to_ip(string host, function callback, mixed ... args)
 
   if(!do_when_found[ host ])
   {
-    if(lookup(HOST_TO_IP, host))
-      do_when_found[host] = ({ ({ callback, args }) });
-    else
+    do_when_found[host] = ({ ({ callback, args }) });
+    if(!lookup(HOST_TO_IP, host)) {
+      m_delete(do_when_found, host);
       return callback(host, @args);
+    }
   } else {
     do_when_found[host] += ({ ({ callback, args }) });
   }
