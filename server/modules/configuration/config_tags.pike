@@ -582,6 +582,7 @@ string set_variable( string v, object in, mixed to, object id )
      return "";
   }
 
+  mixed old=var[ VAR_VALUE ];
   if (in->check_variable) 
   {
     string err = in->check_variable(v, val);
@@ -607,10 +608,16 @@ string set_variable( string v, object in, mixed to, object id )
                verify_port((Roxen.get_world(val)||""),1)[0]);
   }
 
-  if( in->set )
-    in->set( v, val );
-  else
-    var[ VAR_VALUE ] = val;
+#ifdef VARIABLE_WARNING_IS_ERROR
+  if (!sizeof(warning) && equal(old,var[ VAR_VALUE ])) {
+#else
+    if (equal(old,var[ VAR_VALUE ])) { //var hasn't been changed while checked
+#endif
+    if( in->set )
+      in->set( v, val );
+    else
+      var[ VAR_VALUE ] = val;
+  }
 
   if( in->save_me )
   {
