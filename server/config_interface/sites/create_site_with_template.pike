@@ -46,11 +46,15 @@ string|mapping parse( RequestID id )
 
   id->variables->name = decode_site_name( id->variables->name );
 
-  foreach( glob( SITE_TEMPLATES "*.x",
-                 indices(id->variables) ), string t )
-  {
-    id->real_variables->site_template = ({ t-".x" });
-    id->variables->site_template = t-".x";
+  if (!id->variables->site_template ||
+      search(id->variables->site_template, "site_templates")!=-1 ) {
+    foreach( glob( SITE_TEMPLATES "*.x",
+		   indices(id->variables) ), string t )
+    {
+      t = t[..sizeof(t)-3];
+      id->real_variables->site_template = ({ t });
+      id->variables->site_template = t;
+    }
   }
 
   License.LicenseVariable license =
@@ -193,7 +197,8 @@ string|mapping parse( RequestID id )
     res += q[2] + "\n\n\n";
   }
 
-  res += "<cf-cancel href='./'/>\n";
+  res += "<cf-cancel href='./'/>\n"
+    "<input type='hidden' name='initialize_template' value='1' />\n";
 
 
   if( strlen( e->get() ) ) {
