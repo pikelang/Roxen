@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.5 1999/11/24 01:59:53 per Exp $
+ * $Id: debug_info.pike,v 1.6 1999/11/24 19:12:33 per Exp $
  */
 inherit "roxenlib";
 #include <stat.h>
@@ -205,7 +205,7 @@ mixed page_0( object id )
   mapping bar = roxen->query_var( "__num_clones" )||([]);
 
   object t = ADT.Table->table(table, 
-                              ({ "<font color=black    >Entry", "Number", 
+                              ({ "<font color=black    >Type", "Number", 
                                  "Change", "KB", "Change</font>"}),
                               ({
                                 0, 
