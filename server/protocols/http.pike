@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.418 2004/01/19 15:54:48 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.419 2004/01/19 16:27:13 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1192,10 +1192,11 @@ void internal_error(array _err)
 // This macro ensures that something gets reported even when the very
 // call to internal_error() fails. That happens eg when this_object()
 // has been destructed.
-#define INTERNAL_ERROR(err)							\
-  if (mixed __eRr = catch (internal_error (err)))				\
-    report_error("Internal server error: " + describe_backtrace(err) +		\
-		 "internal_error() also failed: " + describe_backtrace(__eRr))
+#define INTERNAL_ERROR(err) do {					\
+    if (mixed __eRr = catch (internal_error (err)))			\
+      report_error("Internal server error: " + describe_backtrace(err) + \
+		   "internal_error() also failed: " + describe_backtrace(__eRr)); \
+  } while (0)
 
 int wants_more()
 {
