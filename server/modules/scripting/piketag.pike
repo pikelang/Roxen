@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.15 2000/08/10 23:29:57 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.16 2000/08/11 02:04:55 mast Exp $";
 constant thread_safe=1;
 
 
@@ -39,13 +39,16 @@ run programs with the same right as the server!
 
 <dl>
   <dt><code>write(string fmt, mixed ... args)</code></dt>
-    <dd>Formats and appends a string to the output buffer.</dd>
+    <dd>Formats a string in the same way as <code>printf</code> and
+    appends it to the output buffer. If given only one string
+    argument, it's written directly to the output buffer without being
+    interpreted as a format specifier.</dd>
 
   <dt><code>flush()</code></dt>
     <dd>Returns the contents of the output buffer and resets it.</dd>
 
   <dt><code>rxml(string rxmlcode)</code></dt>
-    <dd>Parses the string with the rxml parser.</dd>
+    <dd>Parses the string with the RXML parser.</dd>
 </dl>
 
 <p>When the pike tag returns, the contents of the output buffer is
@@ -54,25 +57,29 @@ inserted into the page. It is not reparsed with the RXML parser.
 <p>These special constructs are also recognized:
 
 <dl>
-  <dt><code>//O ...</code> or <code>/*O ... */</code></dt>
+  <dt><code>//O ... </code> or <code>/*O ... */</code></dt>
     <dd>A Pike comment with an 'O' (the letter, not the number) as the
     very first character treats the rest of the text in the comment as
     output text that's written directly to the output buffer.</dd>
 
-  <dt><code>//X ...</code> or <code>/*X ... */</code></dt>
+  <dt><code>//X ... </code> or <code>/*X ... */</code></dt>
     <dd>A Pike comment with an 'X' as the very first character treats
-    the rest of the text in the comment as RXML code that's parsed
-    with the RXML parser and then written to the output buffer.</dd>
+    the rest of the text in the comment as RXML code that's executed
+    by the RXML parser and then written to the output buffer.</dd>
 
   <dt><code>#include \"...\"</code></dt>
     <dd>An <code>#include</code> preprocessor directive includes the
-    specified file in the virtual filesystem.</dd>
+    specified file.</dd>
 
   <dt><code>#inherit \"...\"</code></dt>
     <dd>An <code>#inherit</code> preprocessor directive puts a
-    corresponding inherit declaration in the class that's generated
-    by the Pike code in the tag.</dd>
+    corresponding inherit declaration in the class that's generated to
+    contain the Pike code in the tag.</dd>
 </dl>
+
+<p>When files are included or inherited, they will be read from the
+virtual filesystem in Roxen, relative to the location during whose
+parsing the pike tag was encountered.
 
 <p>Note that every RXML fragment is parsed by itself, so you can't
 have unmatched RXML tags in them. E.g. the following does not work:
@@ -282,7 +289,7 @@ program my_compile_string(string s, object id, int dom, string fn)
   }
 
   if (dom)
-    pre += SPLIT("string|int parse(RequestID id)\n{\n",PREFN) +
+    pre += SPLIT("void parse(RequestID id)\n{\n",PREFN) +
       data + SPLIT("}",POSTFN);
   else
     pre += data;
