@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.19 2000/02/08 03:35:57 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.20 2000/02/08 17:35:44 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -120,7 +120,7 @@ Image.Layer stretch_layer( Image.Layer o, int x1, int x2, int w )
   object oo = o;
 
   l = layer_slice( o, 0, x1 );
-  m = layer_slice( o, x1+1, x2+1 );
+  m = layer_slice( o, x1+1, x2-1 );
   r = layer_slice( o, x2, o->xsize() );
 
   m->set_image( m->image()->scale( leftovers, l->ysize() ),
@@ -206,6 +206,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     icon = roxen.low_decode_image(args->icd);
 
   int i_width = icon && icon->img->xsize();
+  int i_spc = i_width ? 5 : 0;
 
   //  Generate text
   if (sizeof(text))
@@ -219,13 +220,13 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   int t_width = text_img && text_img->xsize();
 
   //  Compute text and icon placement
-  req_width = text_img->xsize() + left + right + (i_width?i_width + 5:0);
-
+  req_width = text_img->xsize() + left + right + i_width + i_spc;
+  
   if (args->wi && (req_width < args->wi))
     req_width = args->wi;
 
   int icn_x, txt_x;
-
+  
   switch (lower_case(args->al))
   {
   case "left":
@@ -234,7 +235,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     {
      case "left":
        icn_x = left;
-       txt_x = icn_x + i_width + 5;
+       txt_x = icn_x + i_width + i_spc;
        break;
      default:
      case "right":
@@ -252,23 +253,22 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     {
      case "left":
        icn_x = left;
-       txt_x = icn_x + i_width +
-             (req_width - icn_x - i_width - 5)
-             - t_width / 2;
+       txt_x = (req_width - right - left - i_width - i_spc - t_width) / 2;
+       txt_x += icn_x + i_width + i_spc;
        break;
      default:
      case "center":
      case "center_before":
-       icn_x = (req_width - i_width - t_width) / 2;
-       txt_x = icn_x + i_width;
+       icn_x = (req_width - i_width - i_spc - t_width) / 2;
+       txt_x = icn_x + i_width + i_spc;
        break;
      case "center_after":
-       txt_x = (req_width - i_width - t_width) / 2;
-       icn_x = txt_x + t_width + left;
+       txt_x = (req_width - i_width - i_spc - t_width) / 2;
+       icn_x = txt_x + t_width + i_spc;
        break;
      case "right":
        icn_x = req_width - right - i_width;
-       txt_x = left + (icn_x - 5 - t_width) / 2;
+       txt_x = left + (icn_x - i_spc - t_width) / 2;
        break;
     }
     break;
@@ -284,16 +284,16 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
        break;
      case "right":
        icn_x = req_width - right - i_width;
-       txt_x = icn_x - 5 - t_width;
+       txt_x = icn_x - i_spc - t_width;
        break;
     }
     break;
   }
 
-
   right = frame->xsize()-right;
-
   frame = stretch_layer( frame, left, right, req_width );
+  if (mask != frame)
+    mask = stretch_layer( mask, left, right, req_width );
 
   if( background )
   {
