@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.24 2004/08/27 14:33:23 stewa Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.25 2004/08/31 08:44:52 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -18,6 +18,10 @@ void create() {
          "If set, it will be possible to use <tt>&lt;insert href&gt;</tt> to "
 	 "insert pages from another web server. Note that the thread will be "
 	 "blocked while it fetches the web page.");
+  defvar("recursion_limit", 5, "Maximum recursion depth for <insert href>",
+	 TYPE_INT|VAR_MORE,
+	 "Maxumum number of nested <insert href>'s allowed. "
+	 "May be set to zero to disable the limit.");
 }
 
 #ifdef THREADS
@@ -131,7 +135,7 @@ class AsyncHTTPClient {
     queue->read();
   }
 
-  void create(string method, mapping args) {
+  void create(string method, mapping args, mapping|void headers) {
     if(method == "POST") {
       mapping vars = ([ ]);
 #if constant(roxen)
@@ -141,10 +145,10 @@ class AsyncHTTPClient {
 	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
       }
 #endif
-      do_method("POST", args->href, vars);
+      do_method("POST", args->href, vars, headers);
     }
     else
-      do_method("GET", args->href);
+      do_method("GET", args->href, 0, headers);
 
     if(args->timeout)
       con->timeout = (int) args->timeout;
@@ -162,6 +166,14 @@ class TagInsertHref {
   string get_data(string var, mapping args, RequestID id) {
     if(!query("insert_href")) RXML.run_error("Insert href is not allowed.");
 
+    int recursion_depth = (int)id->request_headers["x-roxen-recursion-depth"];
+
+    if (query("recursion_limit") &&
+	(recursion_depth >= query("recursion_limit")))
+      RXML.run_error("Too deep insert href recursion.");
+
+    recursion_depth++;
+
     if(args->nocache)
       NOCACHE();
     else
@@ -174,7 +186,9 @@ class TagInsertHref {
     object /*Protocols.HTTP|AsyncHTTPClient*/ q;
 
 #ifdef THREADS
-    q = AsyncHTTPClient(method, args);
+    q = AsyncHTTPClient(method, args,
+			([ "X-Roxen-Recursion-Depth":
+			   (string)recursion_depth ]));
     q->run();
 #else
     if(method == "POST") {
@@ -184,10 +198,14 @@ class TagInsertHref {
 	if(sizeof(a) == 2)
 	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
       }
-      q=Protocols.HTTP.post_url(args->href, vars);
+      q = Protocols.HTTP.post_url(args->href, vars,
+				  ([ "X-Roxen-Recursion-Depth":
+				     (string)recursion_depth ]));
     }
     else
-      q=Protocols.HTTP.get_url(args->href);
+      q = Protocols.HTTP.get_url(args->href, 0,
+			       ([ "X-Roxen-Recursion-Depth":
+				  (string)recursion_depth ]));
 #endif
     
     _ok = 1;
