@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.6 2001/04/03 09:08:57 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.7 2001/04/03 11:06:54 per Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(0,"Graphics: GXML tag");
@@ -90,11 +90,11 @@ class GXML##X								\
     {									\
       LazyImage.LazyImage i = TMP_POP();				\
       LazyImage.LazyImage ii = STACK_POP();				\
-      if( ii )								\
-	STACK_PUSH(LazyImage.join_images(i, LazyImage.new(LazyImage.X,	\
-							  ii,args)));	\
+      if( ii && i )							\
+	STACK_PUSH(LazyImage.join_images(i->ref(), LazyImage.new(LazyImage.X,	\
+							  ii->ref(),args)));	\
       else								\
-	STACK_PUSH( LazyImage.new(LazyImage.X,i,args) );		\
+	STACK_PUSH( LazyImage.new(LazyImage.X,ii||i,args) );		\
     }									\
   }                                                                     \
 }
@@ -140,11 +140,11 @@ class GXML##X								\
       LazyImage.LazyImage i = TMP_POP();				\
       LazyImage.LazyImage ii = STACK_POP();				\
       args->Y = Z(content);						\
-      if( ii )								\
-	STACK_PUSH(LazyImage.join_images(i, LazyImage.new(LazyImage.X,	\
-							  ii,args)));	\
+      if( ii&&i )							\
+	STACK_PUSH(LazyImage.join_images(i->ref(),LazyImage.new(LazyImage.X,	\
+							  ii->ref(),args)));	\
       else								\
-	STACK_PUSH( LazyImage.new(LazyImage.X,i,args) );		\
+	STACK_PUSH( LazyImage.new(LazyImage.X,i||ii,args) );		\
     }									\
   }                                                                     \
 }
@@ -351,8 +351,20 @@ SIMPLE_LI(NewLayer);
 
 SIMPLE_LI(Crop);
 SIMPLE_LI(Blur);
+SIMPLE_LI(GreyBlur);
 SIMPLE_LI(Expand);
 
+
+SIMPLE_LI(Gamma);
+SIMPLE_LI(Invert);
+SIMPLE_LI(Grey);
+SIMPLE_LI(Color);
+SIMPLE_LI(MirrorX);
+SIMPLE_LI(MirrorY);
+SIMPLE_LI(HSV2RGB);
+SIMPLE_LI(RGB2HSV);
+SIMPLE_LI(Distance);
+SIMPLE_LI(SelectFrom);
 
 
 array(string|RXML.Tag) builtin_tags = gxml_find_builtin_tags();
