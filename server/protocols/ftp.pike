@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.40 2002/02/13 10:05:00 grubba Exp $
+ * $Id: ftp.pike,v 2.41 2003/02/05 16:37:59 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1782,12 +1782,15 @@ class FTPSession
       }
       break;
     case 401:
-    case 403:
       send(530, ({ sprintf("'%s': %s: Access denied.",
 			   cmd, f) }));
       break;
+    case 403:
+      send(451, ({ sprintf("'%s': %s: Forbidden.",
+			   cmd, f) }));
+      break;
     case 405:
-      send(530, ({ sprintf("'%s': %s: Method not allowed.",
+      send(550, ({ sprintf("'%s': %s: Method not allowed.",
 			   cmd, f) }));
       break;
     case 500:
