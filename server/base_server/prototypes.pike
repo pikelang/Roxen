@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.91 2004/04/30 09:17:17 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.92 2004/04/30 09:19:30 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -241,7 +241,7 @@ class DAVLock(string locktoken,
     }
 #endif /* 0 */
 
-    // FIXME: Timeout.
+    // FIXME: <DAV:timeout>.
 
     res->add_child(tmp = ElementNode("DAV:locktoken", ([])));
     tmp->add_child(tmp = ElementNode("DAV:href", ([])));
