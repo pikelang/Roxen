@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.529 2003/01/13 15:16:40 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.530 2003/01/15 14:53:12 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1547,7 +1547,6 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
 	  if(mappingp(fid))
 	  {
-	    TRACE_LEAVE("");
 	    TRACE_LEAVE(examine_return_mapping(fid));
 	    TIMER_END(location_modules);
 	    return fid;
