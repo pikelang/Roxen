@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.100 1997/08/14 16:04:11 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.101 1997/08/15 09:47:20 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1392,7 +1392,7 @@ private void define_global_variables( int argc, array (string) argv )
 
   /// End of cache variables..
   
-  globvar("docurl", "http://www.roxen.com", "Documentation URL",
+  globvar("docurl", "http://www.roxen.com/", "Documentation URL",
 	  TYPE_STRING|VAR_MORE,
 	 "The URL to prepend to all documentation urls throughout the "
 	 "server. This URL should _not_ end with a '/'.");
