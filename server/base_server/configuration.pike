@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.490 2001/10/05 15:07:59 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.491 2001/10/05 15:10:08 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3295,6 +3295,9 @@ static void create()
   // that a reload of all modules is necessary to propagate a change
   // the setting.
 
+  defvar("Log", 1, DLOCALE(28, "Logging: Enabled"), 
+	 TYPE_FLAG, DLOCALE(29, "Log requests"));
+
   defvar("LogFormat",
 	 "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
 	 "500: $host $referer ERROR [$cern_date] \"$method $resource $protocol\" 500 -\n"
@@ -3342,9 +3345,6 @@ $cache-status  -- A comma separated list of words (containing no
                   cachetag  -- No RXML &lt;cache&gt; tag misses.
                   nocache   -- No hit in any known cache.
 </pre>"), 0, lambda(){ return !query("Log");});
-
-  defvar("Log", 1, DLOCALE(28, "Logging: Enabled"), 
-	 TYPE_FLAG, DLOCALE(29, "Log requests"));
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
   defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
