@@ -1,9 +1,9 @@
 // Color support for roxen. 
 
-string cvs_version = "$Id: color.pike,v 1.4 1997/02/07 21:08:01 per Exp $";
+string cvs_version = "$Id: color.pike,v 1.5 1997/02/07 23:36:22 per Exp $";
 
 mapping (string:array(int)) colors = ([]);
-mapping (string:array(int)) html_32_colors =
+mapping (string:string) html_32_colors =
 ([
   "black":"#000000", "green":"#008000", "silver":"#C0C0C0", "lime":"#00FF00",
   "gray":"#808080", "olive":"#808000", "white":"#FFFFFF","yellow":"#FFFF00",
