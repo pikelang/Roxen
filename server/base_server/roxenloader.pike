@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.280 2001/08/31 00:10:38 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.281 2001/08/31 20:01:00 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1312,11 +1312,24 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
 #ifdef DB_DEBUG
     werror("Connect took %.2fms\n", (gethrtime()-t)/1000.0 );
 #endif
-    if( my_mysql_num_connections++ > 40 )
+    if( my_mysql_num_connections++ > 40 ) {
       clear_connect_to_my_mysql_cache();
+      m = my_mysql_cache;
+#ifdef THREADS
+      m = (m[this_thread()] = ([]));
+#endif /* THREADS */
+    }
     call_out( lambda(){
-		m_delete(m,i);
-		my_mysql_num_connections--;
+		if (m[i] == res) {
+		  m_delete(m,i);
+		  my_mysql_num_connections--;
+		}
+		if (res) {
+		  if (res->master_sql) {
+		    destruct(res->master_sql);
+		  }
+		  destruct(res);
+		}
 	      }, 10 );
     return m[ i ] = res;
   } )
