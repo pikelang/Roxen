@@ -1,5 +1,5 @@
 // AutoSite Mail API
-// $Id: AutoMailAPI.pike,v 1.5 1998/07/22 13:53:40 leif Exp $
+// $Id: AutoMailAPI.pike,v 1.6 1998/07/23 11:28:49 leif Exp $
 // Leif Stensson, July 1998.
 
 #include <module.h>
@@ -27,11 +27,32 @@ string status()
   if (last_insert_id)
   { s += "<BR>\n<B>ID of most recent insert</B>: " + last_insert_id;
   }
+  int user_id = this_object()->find_user("test");
+  s += "<BR>\n<B>ID of user 'test'</B>: " + user_id;
+  
   return s;
 }        
 
 array register_module()
 { return ({ 0, "AutoMail Database API Module", "", 0, 1 });
+}
+
+mixed get_mail_contents(int mail_id)
+{ if (!database) return -1;
+  object result = database->big_query(
+        "SELECT contents FROM mail WHERE mail_id="+mail_id);
+  array row = result->fetch_row();
+  if (!row) return 0;
+  return row[0];
+}
+
+mixed get_mail_header(int mail_id)
+{ if (!database) return -1;
+  object result = database->big_query(
+        "SELECT header FROM mail WHERE mail_id="+mail_id);
+  array row = result->fetch_row();
+  if (!row) return 0;
+  return row[0];
 }
 
 int new_mail(string from, string header, string contents)
@@ -79,11 +100,11 @@ int find_user(string user_address)
   // Match in other ways?
 
   // Fail.
-  return -1;
+  return 0;
 }
 
 mixed add_receiver(int mail_id, int user_id, string folder)
-{ if (!database) return "unable to access AutoMail database";
+{ if (!database) return -1;
 
   database->big_query("INSERT INTO mailboxes (user_id,message_id,folder) "
             "VALUES (:user_id,:mail_id,:folder)",
@@ -94,6 +115,78 @@ mixed add_receiver(int mail_id, int user_id, string folder)
                  );
 
   return 0;
+}
+
+static mixed mailbox_entries(object query_result)
+{ array row, news = 0;
+
+  while (row = query_result->fetch_row())
+  { if (news == 0) news = ({ });
+    news += ({ ([ "mail_id": row[0],
+                  "from"   : row[1],
+                  "subject": row[2],
+                  "date"   : row[3] ]) });
+  }
+
+  return news;
+}
+
+mixed get_new_mail(int user_id, void|string folder)
+//
+// Gets all unread (= not marked as received) mail. If
+// the 'folder' argument is given, only mail from that
+// folder will be listed.
+//
+// Returns an array of mappings with the fields
+// "mail_id", "from", "subject" and "date".
+//
+{ if (!database) return -1;
+
+  string request = "SELECT mail_id,from,subject,date FROM mailboxes WHERE ";
+  object result;
+
+  if (folder) request += "folder='" + folder + "' AND ";
+  request += "user_id=" + user_id + " AND received IS NULL";
+
+  return mailbox_entries(database->big_query(request));
+}
+
+mixed mark_as_received(int mail_id, int user_id)
+{ if (!database) return -1;
+  database->big_query("UPDATE mailboxes SET received=NOW() "
+               "WHERE mail_id="+mail_id+" AND user_id="+user_id);
+  return 1;
+}
+
+mixed delete_from_mailbox(int mail_id, int user_id)
+{ if (!database) return -1;
+
+  object result = database->big_query("SELECT * FROM mailboxes "
+               "WHERE mail_id="+mail_id+" AND user_id="+user_id);
+
+  if (!result->fetch_row())
+                 return 0;
+
+  database->big_query("DELETE FROM mailboxes "
+               "WHERE mail_id="+mail_id+" AND user_id="+user_id);
+
+  return 1;
+}
+
+mixed get_all_mail_in_folder(int user_id, void|string folder)
+{ string where;
+  object result;
+
+  while (folder[0] == " ") folder = folder[1..40];
+
+  if (folder && folder != "")
+    return mailbox_entries(database->big_query(
+      "SELECT mail_id,from,subject,date"
+      " WHERE folder='" + folder + "' AND user_id=" + user_id));
+  else  
+    return mailbox_entries(database->big_query(
+      "SELECT mail_id,from,subject,date"
+      " WHERE user_id=" + user_id));
 }
 
 int start()
