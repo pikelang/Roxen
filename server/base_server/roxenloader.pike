@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.231 2001/01/21 21:56:23 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.232 2001/01/22 11:40:20 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1134,7 +1134,7 @@ void start_mysql()
   {
     report_debug("Mysql data directory does not exist -- copying template\n");
     mkdirhier( mysqldir+"/mysql/" );
-    Filesystem.Tar tar = Filesystem.Tar( "etc/mysql-template.tar" );
+    Filesystem.System tar = Filesystem.Tar( "etc/mysql-template.tar" );
     foreach( tar->get_dir( "mysql" ), string f )
     {
       report_debug("copying "+f+" ... ");
