@@ -276,14 +276,14 @@ string|array tag_insert(string tag,mapping m,RequestID id)
     if(m->nocache) {
       int nocache=id->pragma["no-cache"];
       id->pragma["no-cache"] = 1;
-      n=read_file(id,m->file);
+      n=id->conf->try_get_file(fix_relative(m->file,id),id);
       if(!n) RXML.run_error("No such file ("+m->file+").");
       id->pragma["no-cache"] = nocache;
       m_delete(m, "nocache");
       m_delete(m, "file");
       return do_replace(n, m, id);
     }
-    string n=read_file(id,m->file);
+    n=id->conf->try_get_file(fix_relative(m->file,id),id);
     if(!n) RXML.run_error("No such file ("+m->file+").");
     return do_replace(n, m-(["file":""]), id);
   }
