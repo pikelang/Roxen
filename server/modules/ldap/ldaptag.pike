@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.6 2000/11/10 13:34:45 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.7 2000/11/15 12:17:29 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -203,7 +203,7 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
 
   switch (op) {
     case "search":
-#if __MAJOR __ = 7 && __MINOR__ = 0 && __BUILD__ < 236
+#if __MAJOR__ = 7 && __MINOR__ = 0 && __BUILD__ < 236
 // buggy search required argument
 	error = catch(result = (con->search(args->filter||"")));
 #else
@@ -382,7 +382,7 @@ string status()
 {
   string rv = "";
 
-#if __MAJOR __ = 7 && __MINOR__ = 0 && __BUILD__ < 236
+#if __MAJOR__ = 7 && __MINOR__ = 0 && __BUILD__ < 236
     rv += "<br /><p><b>WARNING:</b> Roxen is powered by Pike with BUGGY LDAP";
     rv += " client support! You must use 'filter=' attribute inside ";
     rv += " &lt;emit source='ldap' &gt;&lt/emit&gt; container or upgrade ";
