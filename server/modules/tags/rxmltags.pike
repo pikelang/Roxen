@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.33 1999/12/12 08:15:11 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.34 1999/12/12 23:23:53 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -451,7 +451,7 @@ string tag_fsize(string tag, mapping args, RequestID id)
 
 array(string) tag_configimage(string t, mapping m, RequestID id)
 {
-  if (!m->src) return rxml_error(t, "No src given", id);
+  if (!m->src) return ({rxml_error(t, "No src given", id)});
 
   if (m->src[sizeof(m->src)-4..][0] == '.')
     m->src = m->src[..sizeof(m->src)-5];
