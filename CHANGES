@@ -9,7 +9,7 @@ o stop() is now called in modules on restart and shutdown, and when
 
 o FTP gateway now handles the 213 status response code.
 
-o If you access ftp://foo.bar.com via the FTP gateway, you now get a
+o If you access ftp://ftp.bar.com via the FTP gateway, you now get a
   redirect to ftp://ftp.bar.com/. If the trailing slash is missing,
   the links from that page got screwed up.
 
