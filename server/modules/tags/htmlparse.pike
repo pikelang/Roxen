@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.44 1997/09/14 14:13:36 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.45 1997/09/16 01:35:10 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1780,6 +1780,10 @@ mapping query_tag_callers()
 	    "configimage":tag_configimage,
 	    "date":tag_date,
 	    "referer":tag_referer,
+	    "referrer":tag_referer,
+	    "refferrer":tag_referer,
+	    "referererer":tag_referer,
+	    "refferrerr":tag_referer,
 	    "accept-language":tag_language,
 	    "insert":tag_insert,
 	    "return":tag_return,

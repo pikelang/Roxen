@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.3 1997/09/16 01:03:54 grubba Exp $
+ * $Id: locks.pike,v 1.4 1997/09/16 01:35:03 per Exp $
  */
 #include <config.h>
 
@@ -44,7 +44,11 @@ mixed page_0(object id, object mc)
 	       "Locked means that the access was done using a serializing lock since "
 	       "the module was not thread-safe, unlocked means that there was no need "
 	       "for a lock.<p>Locked accesses to a single module can be a "
-	       "quite severe performance degradation of the whole server");
+	       "quite severe performance degradation of the whole server, since the "
+	       "module will act as a bottleneck, blocking access for all other "
+	       "threads that want to access that module.<p>This is only a problem if "
+	       "a significant percentage of the accesses are passed throgh that the "
+	       "non-threadsafe module<p>");
   array mods = (indices(L)+indices(l));
   mods &= mods;
   foreach(mods, object q)

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.134 1997/09/14 23:00:58 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.135 1997/09/16 01:35:01 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -382,8 +382,16 @@ int add_new_configuration(string name, string type)
 // Call the configuration interface function. This is more or less
 // equivalent to a virtual configuration with the configurationinterface
 // mounted on '/'. This will probably be the case in future versions
+#ifdef THREADS
+object configuration_lock = Thread.Mutex();
+#endif
+
 mixed configuration_parse(mixed ... args)
 {
+#ifdef THREADS
+  object key;
+  catch(key = configuration_lock->lock());
+#endif
   if(args)
     return configuration_interface()->configuration_parse(@args);
 }

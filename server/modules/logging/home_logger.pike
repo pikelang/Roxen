@@ -3,7 +3,7 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.11 1997/09/12 06:14:34 per Exp $";
+constant cvs_version = "$Id: home_logger.pike,v 1.12 1997/09/16 01:35:08 per Exp $";
 constant thread_safe=1;
 
 
@@ -199,7 +199,7 @@ program CacheFile = class {
   {
     object tmp, tmp2;
 #ifdef THREADS
-    object key = mutex->lock();
+    object key = mutex?mutex->lock():0;
 #endif
     tmp2 = tmp = master->cache_head;
 
@@ -217,7 +217,7 @@ program CacheFile = class {
   {
     object tmp;
 #ifdef THREADS
-    object key = mutex->lock();
+    object key = mutex?mutex->lock():0;
 #endif
 
     if(this_object() == master->cache_head)

@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.39 1997/09/14 13:34:19 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.40 1997/09/16 01:35:07 per Exp $";
 
 object stdout, stdin;
 mapping names=([]);
@@ -91,8 +91,11 @@ array|string low_nameof(object|program|function fo)
   if(p=search(programs, object_program(foo)))
     return ({ p, (functionp(foo->name)?foo->name():
 		  (stringp(foo->name)?foo->name:time(1)+":"+mid++)),post})-({"",0});
-		  
+#ifdef DEBUG		  
   throw(({"nameof: unknown thingie.\n",backtrace()}));
+#else
+  return 0;
+#endif
 }
 
 array|string nameof(mixed foo)
