@@ -49,12 +49,14 @@ function setPStat()
 // Function to possition a netscape layer.
 function bound_me_nicely()
 {
-  if( (this.left + this.clip.width - window.pageXOffset) > (window.innerWidth - 16) )
+  if( (this.left + this.clip.width - window.pageXOffset) >
+      (window.innerWidth - 16) )
     this.left = window.innerWidth - this.clip.width + window.pageXOffset - 16;
   if( this.left < window.pageXOffset )
     this.left = Math.max(0, window.pageXOffset);
-  if( (this.top + this.clip.height - window.pageYOffset) > (window.innerHeight) )
-    this.top = window.innerHeight - this.clip.height + window.pageYOffset;
+  if( (this.top + this.clip.height - window.pageYOffset) >
+      (window.innerHeight - 16) )
+    this.top = window.innerHeight - this.clip.height + window.pageYOffset - 16;
   if( this.top < window.pageYOffset )
   {
     this.top = Math.max(0, this.top);
