@@ -18,7 +18,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.9 1999/08/01 22:12:30 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.10 1999/08/03 13:32:03 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -479,8 +479,9 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
     mixed error=catch {
       n=(string)Protocols.HTTP.get_url_data(m->href);
     };
-    if(arrayp(error)) return "\n<!-- "+error[0]+ "-->\n";
-    return n;
+    if(arrayp(error)) return id->misc->debug?"\n<!-- "+error[0]+ "--><false>\n":"<false>";
+    if(n=="0") return id->misc->debug?"\n<!-- Page could not be fetched --><false>\n":"<false>";
+    return n+"<true>";
   }
 
   if(id->misc->debug) {
@@ -982,19 +983,19 @@ string tag_imgs(string tagname, mapping m, object id)
 	m->width=(string)xysize[0];
 	m->height=(string)xysize[1];
       }else{
-	tmp+="<!-- Dimensions quering failed -->";
+	tmp+=" Dimensions quering failed.";
       }
     }else{
-      tmp+="<!-- Virtual path failed -->";
+      tmp+=" Virtual path failed";
     }
     if(!m->alt) {
       array src=m->src/"/";
       string src=src[sizeof(src)-1];
       m->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
     }
-    return make_tag("img", m)+tmp;
+    return make_tag("img", m)+(id->misc->debug?tmp:"");
   }
-  return "<!-- No src given -->";
+  return id->misc->debug?"No src given":"";
 }
 
 string tag_roxen(string tagname, mapping m, object id)
