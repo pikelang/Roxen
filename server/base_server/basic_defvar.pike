@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.16 2000/08/12 18:21:05 nilsson Exp $
+// $Id: basic_defvar.pike,v 1.17 2000/08/17 16:49:32 lange Exp $
 // (string:Variable.Variable) 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -131,7 +131,7 @@ Variable.Variable defvar(string var, mixed value,
                               doc_str );
      break;
    case TYPE_STRING_LIST:
-     if( arrayp( misc ) )
+     if( arrayp( misc ) || mappingp( misc) )
        vv = Variable.StringChoice( value,
                                    misc, 
                                    type&~VAR_TYPE_MASK,

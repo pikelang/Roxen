@@ -650,6 +650,7 @@ class MultipleChoice
 {
   inherit Variable;
   static array _list = ({});
+  static mapping _table = ([]);
 
   void set_choice_list( array to )
     //! Set the list of choices.
@@ -664,6 +665,19 @@ class MultipleChoice
     return _list;
   }
 
+  void set_translation_table( mapping to )
+    //! Set the lookup table.
+  {
+    _table = to;
+  }
+
+  mapping get_translation_table( )
+    //! Get the lookup table. Used by this class as well.
+    //! You can overload this function if you want a dynamic table.
+  {
+    return _table;
+  }
+
   static string _name( mixed what )
     //! Get the name used as value for an element gotten from the
     //! get_choice_list() function.
@@ -671,16 +685,12 @@ class MultipleChoice
     return (string)what;
   }
 
-  mapping(string:string) translation_table()
-  {
-  }
-
   static string _title( mixed what )
     //! Get the title used as description (shown to the user) for an
     //! element gotten from the get_choice_list() function.
   {
-    if( mapping tr = translation_table() )
-      return tr[ what ] || (string)what;
+    if( mapping tt = get_translation_table() )
+      return tt[ what ] || (string)what;
     return (string)what;
   }
 
@@ -697,7 +707,7 @@ class MultipleChoice
     }
     return res + "</select>";
   }
-  static void create( mixed default_value, array choices,
+  static void create( mixed default_value, array|mapping choices,
                       int _flags, string std_name, string std_doc )
     //! Constructor. 
     //!
@@ -715,7 +725,11 @@ class MultipleChoice
     //! for the default locale (always english)
   {
     ::create( default_value, _flags, std_name, std_doc );
-    set_choice_list( choices );
+    if( mappingp( choices ) ) {
+      set_translation_table( choices );
+      set_choice_list( indices(choices) );
+    } else
+      set_choice_list( choices );
   }
 }
 
@@ -815,7 +829,7 @@ class List
 
   string transform_to_form( mixed what )
     //! Override this function to do the value->form mapping for
-    //! indivindial elements in the array.
+    //! individual elements in the array.
   {
     return (string)what;
   }
@@ -1080,7 +1094,7 @@ array(string) verify_port( string port, int nofhttp )
   string warning="";
   if( (int)port )
   {
-    warning += "Asuming http://*:"+port+"/ for "+port+"\n";
+    warning += "Assuming http://*:"+port+"/ for "+port+"\n";
     port = "http://*:"+port+"/";
   }
   string protocol, host, path;
