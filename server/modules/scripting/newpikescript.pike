@@ -1,3 +1,6 @@
+constant cvs_version="$Id: newpikescript.pike,v 1.4 1998/03/26 08:26:04 per Exp $";
+constant thread_safe=1;
+
 #if !constant(Remote)
 # error The remote module was not present
 #endif
@@ -23,9 +26,6 @@ mixed *register_module()
     });
 }
 
-
-constant cvs_version="$Id: newpikescript.pike,v 1.3 1998/03/25 05:37:03 per Exp $";
-constant thread_safe=1;
 
 void create()
 {

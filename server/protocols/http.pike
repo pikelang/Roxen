@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.71 1998/03/26 07:51:52 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.72 1998/03/26 08:26:05 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -569,11 +569,8 @@ private int parse_got(string s)
 void disconnect()
 {
   file = 0;
-//   werror("DND\n");
-  if(do_not_disconnect) {
-    return;
-  }
   MARK_FD("my_fd in HTTP disconnected?");
+  if(do_not_disconnect)return;
   destruct();
 }
 
@@ -650,6 +647,27 @@ static void do_timeout(mapping foo)
   }
 }
 
+static string last_id, last_from;
+string get_id(string from)
+{
+  if(last_from == from) return last_id;
+  last_from=from;
+  catch {
+    object f = open(from,"r");
+    string id;
+    id = f->read(200);
+    if(sscanf(id, "%*s$"+"Id: %*s,v %s ", id) == 3)
+      return " (version "+(last_id=id)+")";
+  };
+  last_id = "";
+  return "";
+}
+
+void add_id(array to)
+{
+  foreach(to, array q) q[0]+=add_id(q[0]);
+}
+
 string format_backtrace(array bt)
 {
   // first entry is always the error, 
@@ -679,9 +697,11 @@ string format_backtrace(array bt)
   int q = sizeof(bt)-1;
   foreach(bt[1..], string line)
   {
-    string fun, args, where;
+    string fun, args, where, fo;
     if(sscanf(html_encode_string(line), "%s(%s) in %s", fun, args, where) == 3)
     {
+      sscanf(where, "%*s in %s", fo);
+      line += get_id(fo);
       res += ("<li value="+(q--)+"> "+(line-(getcwd()+"/"))+"<p>\n");
     } else
       res += "<li value="+(q--)+"> <b><font color=darkgreen>"+line+"</font></b><p>\n";
@@ -693,24 +713,14 @@ string format_backtrace(array bt)
   return res+"</body>";
 }
 
-array add_id(array from)
-{
-  foreach(from[1], array q)
-  catch {
-    int id;
-    if(sscanf(Stdio.read_bytes(q[0]), "%*s$"+"Id: %*s,v %[^ ] ", id) == 2)
-      q[0] += "  ("+id+")";
-  };
-  return from;
-}
-
 string generate_bugreport(array from)
 {
+  add_id(from);
   return ("Roxen version: "+version()+
 	  (roxen->real_version != version()?" ("+roxen->real_version+")":"")+
 	  "\nRequested URL: "+not_query+(query?"?"+query:"")+"\n"
 	  "\nError: "+
-	  describe_backtrace(add_id(from))-(getcwd()+"/")+
+	  describe_backtrace(from)-(getcwd()+"/")+
 	  "\n\nRequest data:\n"+raw);
 }
 
@@ -1022,7 +1032,6 @@ void got_data(mixed fooid, string s)
 
   my_fd->set_close_callback(0); 
   my_fd->set_read_callback(0); 
-//   my_fd->set_blocking();
   processed=1;
 #ifdef THREADS
   roxen->handle(this_object()->handle_request);
@@ -1043,7 +1052,6 @@ object clone_me()
   c->conf = conf;
   c->time = time;
   c->raw_url = raw_url;
-// c->do_not_disconnect = do_not_disconnect;  // No use where there is no fd..
   c->variables = copy_value(variables);
   c->misc = copy_value(misc);
   c->misc->orig = t;
@@ -1060,10 +1068,7 @@ object clone_me()
   c->pragma = pragma;
 
   c->cookies = cookies;
-// file..
   c->my_fd = 0;
-// pipe..
-
   c->prot = prot;
   c->clientprot = clientprot;
   c->method = method;
@@ -1095,6 +1100,7 @@ void create(object f, object c)
 {
   if(f)
   {
+    f->set_blocking();
     my_fd = f;
     conf = c;
     MARK_FD("HTTP connection");
@@ -1124,7 +1130,6 @@ void chain(object f, object c, string le)
     if(!processed) {
       f->set_close_callback(end);
       f->set_read_callback(got_data);
-      f->write("");
     }
   }
 }
