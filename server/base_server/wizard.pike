@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.138 2001/08/24 11:57:57 jonasw Exp $
+// $Id: wizard.pike,v 1.139 2001/09/10 09:39:58 noring Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -826,7 +826,7 @@ mapping get_actions(RequestID id, string base,string dir, array args)
   //
   //  if(id->pragma["no-cache"]) wizards=([]);
   
-  foreach(get_dir(dir), string act)
+  foreach(get_dir(dir) - ({ ".distignore" }), string act)
   {
     mixed err;
     object e;
