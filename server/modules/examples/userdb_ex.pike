@@ -28,7 +28,7 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version="$Id: userdb_ex.pike,v 1.5 2002/12/14 14:43:48 anders Exp $";
+constant cvs_version="$Id: userdb_ex.pike,v 1.6 2002/12/16 11:07:34 mast Exp $";
 
 LocaleString module_name = LOCALE(1,"RefDoc for MODULE_USERDB");
 
@@ -190,14 +190,14 @@ class ExGroup
   {
     // All our users are members of this group, the default
     // implementation would work, bit it would be rather inefficient.
-    return ::members();
+    return list_users(0);
   }
 }
 
 static ExGroup the_one_and_only_group = ExGroup();
 // There can be only one.
 
-array(string) list_users( RequestID id )
+array(string) list_users( RequestID dummy )
 //! Return a list of all users handled by this database module.
 {
   return column( map( query( "users" ), `/, ":" ), 0 );
