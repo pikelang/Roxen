@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.557 2000/09/19 12:47:23 lange Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.558 2000/09/23 02:40:41 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2626,7 +2626,17 @@ class ArgCache
 
   string tohex( string what ) 
   {
+#if constant(Gmp.mpz)
     return sprintf( "%x", Gmp.mpz( what, 256 ) );
+#else
+    int i = 0; 
+    for( int q = 0; q<strlen(what); q++ )
+    {
+      i<<=8;
+      i |= what[strlen(what)-1-q];
+    }
+    return sprintf( "%x", i );
+#endif
   }
 
   static string create_key( string long_key )

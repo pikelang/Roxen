@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.199 2000/09/23 02:30:24 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.200 2000/09/23 02:40:42 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1224,33 +1224,29 @@ void do_main( int argc, array(string) argv )
   {
     report_debug(
 #"
-
-
-******************* FATAL **********************
+------- WARNING -----------------------------------------
 Roxen 2.0 requires bignum support in pike.
 Please recompile pike with gmp / bignum support
 to run Roxen.
-************************************************
 
+It iMight still be possible to start roxen, but the 
+functionaly will be affected, and stange erros might occur.
+----------------------------------------------------------
 
 ");
-    _exit( 0 );
   }
 
 #ifdef NOT_INSTALLED
     report_debug(
 #"
-
-
-*************************** WARNING ***************************
+------- WARNING -----------------------------------------------
 You are running with an un-installed pike binary.
 
 Please note that this is unsupported, and might stop working at
 any time, since some things are done differently in uninstalled
 pikes, as an example the module search paths are different, and
 some environment variables are ignored.
-*************************** WARNING ***************************
-
+---------------------------------------------------------------
 
 ");
 #endif
