@@ -904,8 +904,8 @@ int var_configurable( array var, object id )
 
 mapping get_variable_section( string s, object mod, object id )
 {
-  if( s[0] == '_' )
-    return 0;
+//   if( s[0] == '_' )
+//     return 0;
   array var = mod->variables[ s ];
   if( !var_configurable( var,id ) )
     return 0;
@@ -934,8 +934,9 @@ array get_variable_maps( object mod, mapping m, object id )
   variables = filter( variables,
                       lambda( mapping q ) {
                         return q->form &&
-                               strlen(q->sname) &&
-                               (q->sname[0] != '_');
+                               strlen(q->sname);
+//                         &&
+//                                (q->sname[0] != '_');
                       } );
   map( variables, lambda( mapping q ) {
                     if( search( q->form, "<" ) != -1 )
