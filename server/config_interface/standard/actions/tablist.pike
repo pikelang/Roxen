@@ -2,7 +2,10 @@ array pages =
 ({
   ({ "status",            "Tasks",               0             }),
   ({ "maintenance",       "Tasks",               0             }),
-  /*  ({ "developer",         "Tasks",               "devel_mode"  }),*/
+#if constant(_Crypto) && constant(Crypto.rsa)
+  ({ ({"SSL"}),           "Tasks",               0             }),
+#endif
+/*({ "developer",         "Tasks",               "devel_mode"  }),*/
   ({ "debug_info",        "Tasks",               0             }),
 });
 
@@ -30,8 +33,19 @@ string parse(object id)
     if( page == pages[0] )       ea = "first ";
     if( page == pages[-1] )      ea = "last=30 ";
 
-    res += "<tab "+ea+"href='?class="+page[0]+"'"+((page[0] == q)?" selected":"")+" preparse>";
-    res += "&locale."+page[0]+";";
+    string s( mixed q )
+    {
+      if( arrayp( q ) ) return q[0];
+      return q;
+    };
+
+    string sel = (s(page[0])==q?" selected":"");
+
+    res += "<tab "+ea+"href='?class="+s(page[0])+"'"+sel+" preparse=''>";
+    if( stringp( page[0] ) )
+      res += "&locale."+page[0]+";";
+    else
+      res += page[0][0];
     res += "</tab>";
     res += tpost;
   }

@@ -1,5 +1,5 @@
 /*
- * $Id: make_rsa_csr.pike,v 1.4 2000/04/05 23:40:18 per Exp $
+ * $Id: make_rsa_csr.pike,v 1.5 2000/04/06 05:20:24 per Exp $
  */
 #if constant(Standards.ASN1) && constant( Crypto.rsa )
 inherit "wizard";
@@ -24,7 +24,7 @@ constant doc =
  "certificate authority will return the signed "
  "certificate that is needed to run a secure server.");
 
-constant action = "maintenance";
+constant action = "SSL";
 
 
 // Change this page to generate the key...

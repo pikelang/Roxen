@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.2 2000/03/16 17:54:56 nilsson Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.3 2000/04/06 05:20:24 per Exp $
  */
 
 #if constant(_Crypto) && constant(Crypto.dsa)
@@ -28,7 +28,7 @@ constant doc =
  "self-signed certificate is a lot better than "
  "nothing.");
 
-constant action = "maintenance";
+constant action = "SSL";
 
 mixed page_0(object id, object mc)
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.2 2000/04/05 23:40:18 per Exp $
+ * $Id: generate_rsa.pike,v 1.3 2000/04/06 05:20:24 per Exp $
  */
 
 inherit "wizard";
@@ -10,7 +10,7 @@ inherit "wizard";
 #define WERROR(x)
 #endif
 
-constant name = "Security//Generate a new RSA key pair...";
+constant name = "Generate a new RSA key pair...";
 
 constant doc = ("In order to use the SSL on your server, "
 		"you first have to create a random RSA key pair. "
@@ -21,6 +21,8 @@ constant doc = ("In order to use the SSL on your server, "
 		"certificate that need to run a secure server." 
 		"Note that it is possible to have more than one "
 		"certificate for the same key.");
+
+constant action = "SSL";
 
 #if !constant(_Crypto) || !constant(Crypto.rsa)
 
