@@ -29,6 +29,7 @@ mapping group( array(string) w )
 string selected_item( string q, Configuration c, RequestID id,
 		      string module_group,string module )
 {
+  int first_js;
   while ( id->misc->orig )
     id = id->misc->orig;
 
@@ -99,47 +100,107 @@ string selected_item( string q, Configuration c, RequestID id,
   {
     int onlysel,fin;
     string group_name = gd[0];
+    string r_module_group = module_group;
+    // Step 1: Is the selected module in this group?
+    //         If so, force-select this group.
+
+    foreach( gd[1], mapping data )
+      if( data->sname == module )
+	r_module_group = group_name;
+
+    // Step 2: If this group is not called '_misc' (the default one),
+    //         check if it should be unfolded.
     if( (group_name != "_misc")  )
     {
-      fin = 1;
-      if( group_name != module_group && (sizeof( gd[1] ) > 3) )
-	onlysel = 1;
+      string sel = "selected";
+      if( group_name != r_module_group )
+      {
+	sel = "item";
+	if (sizeof( gd[1] ) > 1)
+	  onlysel = 1;
+      }
       if( onlysel )
-	pre += ("\n<tr><td valign='top'><img src=\"&usr.item-indicator;\" width='12' height='12' alt='' /></td>"
+	pre += ("\n<tr><td valign='top'><img src=\"&usr."+sel+"-indicator;\" width='12' height='12' alt='' /></td>"
 		"<td><a href=\""+quoted_url+Roxen.http_encode_string(group_name)+
 		"!0/"+module+"/\">"+Roxen.html_encode_string(group_name)+
-		":...</a><br />\n");
+		":</a>\n");
       else
+      {
 	pre += ("\n<tr><td valign='top'>"
-		"<img src=\"&usr.selected-indicator;\" width='12'"
+		"<img src=\"&usr."+sel+"-indicator;\" width='12'"
 		" height='12' alt='' /></td>"
 		"<td>"+Roxen.html_encode_string(group_name)+":<br />\n");
-      pre += "<table cellspacing='0' cellpadding='0'>\n";
+	pre += "<table cellspacing='0' cellpadding='0'>\n";
+	fin = 1;
+      }
     }
-    foreach( gd[1], mapping data )
+    // If the group should be unfolded, or this is the _misc group,
+    // draw the module entries.
+    if( !onlysel )
+      foreach( gd[1], mapping data )
+      {
+	if( data->sname != module )
+	  pre += ("\n<tr><td valign='top'>"
+		  "<img src=\"&usr.item-indicator;\" width='12' "
+		  "height='12' alt='' /></td>"
+		  "<td><a href=\""+quoted_url+
+		  Roxen.http_encode_string(group_name)+"!0/"+data->sname+
+		  "/\">"+Roxen.html_encode_string(data->name)+
+		  "</a></td></tr>\n");
+	else
+	  pre += ("\n<tr><td valign='top'>"
+		  "<img src=\"&usr.selected-indicator;\" width='12' "
+		  "height='12' alt='' /></td>"
+		  "<td><b>" + Roxen.html_encode_string(data->name) +
+		  "</b></td></tr>\n");
+      }
+    else
     {
-      if( onlysel && data->sname != module )
-	continue;
-      if( data->sname != module )
-	pre += ("\n<tr><td valign='top'>"
-		"<img src=\"&usr.item-indicator;\" width='12' "
-		"height='12' alt='' /></td>"
-		"<td><a href=\""+quoted_url+
+      pre += "<a href='javascript:null()' onMouseOver='return popup_"+group_name+"(event);'>";
+      pre += "<font size=-1>("+sizeof(gd[1])+")</font>...";
+      pre += "</a>";
+
+      if( id->supports->layers )
+	pre += "<layer id='ly_"+group_name+"' visibility='hidden'>";
+      else
+	pre += "<div id='ly_"+group_name+"' "
+	  "style='position:absolute; z-index:1; visibility:hidden;'>";
+      pre += "<table border=0 bgcolor='&usr.bgcolor;' cellspacing='0' cellpadding='0'><tr><td valign=top>";
+      pre += "<img src=\"&usr.selected-indicator;\" width='12' height='12' "
+	"alt='&gt;' /></td><td>";
+      foreach( gd[1], mapping data )
+      {
+	pre += ("<img src=\"&usr.item-indicator;\" width='12' "
+		"height='12' alt='' />"
+		"<nobr><a href=\""+quoted_url+
 		Roxen.http_encode_string(group_name)+"!0/"+data->sname+
 		"/\">"+Roxen.html_encode_string(data->name)+
-		"</a></td></tr>\n");
+		"</a></nobr><br />");
+      }
+      pre += "</td></tr></table>";
+      if( id->supports->layers )
+	pre += "</layer>";
       else
-	pre += ("\n<tr><td valign='top'>"
-		"<img src=\"&usr.selected-indicator;\" width='12' "
-		"height='12' alt='' /></td>"
-		"<td><b>" + Roxen.html_encode_string(data->name) +
-		"</b></td></tr>\n");
+	pre += "</div>";
+      pre += "<script language=javascript><!--\n";
+
+      if( !first_js++ )
+	pre += #string "support.js";
+
+      pre +=
+"function popup_"+group_name+"(event)\n"
+"{\n"
+"  shiftTo( \"ly_"+group_name+"\", getEventX(event)-30, getEventY(event)-8 );\n"
+"  if( last_popup != false ) hide( last_popup );\n"
+"  last_popup = \"ly_"+group_name+"\";\n"
+"  show( \"ly_"+group_name+"\" );\n"
+"}\n";
+      pre += "\n// --></script>";
     }
     if( fin )
       pre += "</table></td></tr>";
   }
   pre += "</table>\n";
-
 
   // Do not allow easy addition and removal of modules to and
   // from the configuration interface server. Most of the time
