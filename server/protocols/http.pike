@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.285 2000/11/05 21:26:25 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.286 2000/11/13 15:08:47 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -996,23 +996,6 @@ void disconnect()
 
 void end(int|void keepit)
 {
-#ifdef PROFILE
-  float elapsed = SECHR(HRTIME()-req_time);
-  string nid =
-#ifdef FILE_PROFILE
-         not_query
-#else
-         dirname(not_query)
-#endif
-         ;
-  array p;
-  if(!(p=conf->profile_map[nid]))
-    p = conf->profile_map[nid] = ({0,0.0,0.0});
-  p[0]++;
-  p[1] += elapsed;
-  if(elapsed > p[2]) p[2]=elapsed;
-#endif
-
   if(keepit
      && !file->raw
      && (misc->connection == "keep-alive" ||
@@ -1579,6 +1562,23 @@ void send_result(mapping|void result)
   if (result)
     file = result;
 
+#ifdef PROFILE
+  float elapsed = SECHR(HRTIME()-req_time);
+  string nid =
+#ifdef FILE_PROFILE
+    (raw_url/"?")[0]
+#else
+    dirname((raw_url/"?")[0])
+#endif
+         ;
+  array p;
+  if(!(p=conf->profile_map[nid]))
+    p = conf->profile_map[nid] = ({0,0.0,0.0});
+  p[0]++;
+  p[1] += elapsed;
+  if(elapsed > p[2]) p[2]=elapsed;
+#endif
+
   REQUEST_WERR(sprintf("HTTP: send_result(%O)", file));
 
 
@@ -1908,10 +1908,35 @@ void adjust_for_config_path( string p )
  * =================================================
  */
 int processed;
+// array ccd = ({});
 void got_data(mixed fooid, string s)
 {
   ITIMER();
   TIMER("got_data");
+
+  if(wanted_data)
+  {
+    werror(" Wanted: %d; have: %d\n", wanted_data, have_data );
+//     ccd += ({ s });
+    data += s;
+    if(strlen(s) + have_data < wanted_data)
+    {
+      //      cache += ({ s });
+      have_data += strlen(s);
+      REQUEST_WERR("HTTP: We want more data.");
+      return;
+    }
+//     data += ccd*"";
+  }
+
+  if (mixed err = catch {
+  int tmp;
+
+  MARK_FD("HTTP got data");
+//   time = _time(1); // Check is made towards this to make sure the object
+//                   // is not killed prematurely.
+  if(!raw) raw = s; else raw += s;
+
 
   // The port has been closed, but old (probably keep-alive
   // connections remain.  Close those connections.
@@ -1924,27 +1949,6 @@ void got_data(mixed fooid, string s)
       destruct( );
     };
     return;
-  }
-
-  if (mixed err = catch {
-
-  int tmp;
-
-  MARK_FD("HTTP got data");
-//   time = _time(1); // Check is made towards this to make sure the object
-//                   // is not killed prematurely.
-  if(!raw) raw = s; else raw += s;
-
-  if(wanted_data)
-  {
-    data += s;
-    if(strlen(s) + have_data < wanted_data)
-    {
-      //      cache += ({ s });
-      have_data += strlen(s);
-      REQUEST_WERR("HTTP: We want more data.");
-      return;
-    }
   }
 
   if(strlen(raw)) 

@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.571 2000/11/13 08:54:56 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.572 2000/11/13 15:08:45 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1031,557 +1031,87 @@ class SSLProtocol
 }
 #endif
 
-#if constant(HTTPLoop.prog)
-class FHTTP
+mapping(string:Protocol) build_protocols_mapping()
 {
-  inherit Protocol;
-//   inherit Stdio.Port : port;
-  constant supports_ipless=1;
-  constant name = "fhttp";
-  constant default_port = 80;
-
-  int dolog;
-
-  int requests, received, sent;
-
-  HTTPLoop.Loop l;
-  Stdio.Port portobj;
-
-  mapping flatten_headers( mapping from )
+  mapping protocols = ([]);
+  int st = gethrtime();
+  werror("Protocol handlers ... ");
+#ifndef DEBUG
+  class lazy_load( string prog, string name )
   {
-    mapping res = ([]);
-    foreach(indices(from), string f)
-      res[f] = from[f]*", ";
-    return res;
-  }
-
-  void setup_fake(object o)
-  {
-    mapping vars = ([]);
-    o->extra_extension = "";
-    o->misc = flatten_headers(o->headers);
-
-    o->cmf = 100*1024;
-    o->cmp = 100*1024;
-
-    if(o->method == "POST" && strlen(o->data))
+    program real;
+    static void realize()
     {
-      mapping variabels = ([]);
-      switch((o->misc["content-type"]/";")[0])
-      {
-       default: // Normal form data, handled in the C part.
-         break;
-
-       case "multipart/form-data":
-         object messg = MIME.Message(o->data, o->misc);
-         mapping misc = o->misc;
-         foreach(messg->body_parts, object part)
-         {
-           if(part->disp_params->filename)
-           {
-             vars[part->disp_params->name]=part->getdata();
-             vars[part->disp_params->name+".filename"]=
-               part->disp_params->filename;
-             if(!misc->files)
-               misc->files = ({ part->disp_params->name });
-             else
-               misc->files += ({ part->disp_params->name });
-           } else {
-             vars[part->disp_params->name]=part->getdata();
-           }
-         }
-         break;
-      }
-      o->variables = vars|o->variables;
+      if( catch {
+	real = (program)prog;
+	protocols[name] = real;
+      } )
+	report_error("Failed to compile protocol handler for "+name+"\n");
     }
 
-    string contents;
-    if(contents = o->misc["cookie"])
+    Protocol `()(mixed ... x)
     {
-      string c;
-      mapping cookies = ([]);
-      multiset config = (<>);
-      o->misc->cookies = contents;
-      foreach(((contents/";") - ({""})), c)
-      {
-        string name, value;
-        while(sizeof(c) && c[0]==' ') c=c[1..];
-        if(sscanf(c, "%s=%s", name, value) == 2)
-        {
-          value=http_decode_string(value);
-          name=http_decode_string(name);
-          cookies[ name ]=value;
-          if(name == "RoxenConfig" && strlen(value))
-            config = aggregate_multiset(@(value/"," + ({ })));
-        }
-      }
-
-
-      o->cookies = cookies;
-      o->config = config;
-    } else {
-      o->cookies = ([]);
-      o->config = (<>);
-    }
-
-    if(contents = o->misc->accept)
-      o->misc->accept = contents/",";
-
-    if(contents = o->misc["accept-charset"])
-      o->misc["accept-charset"] = ({ contents/"," });
-
-    if(contents = o->misc["accept-language"])
-      o->misc["accept-language"] = ({ contents/"," });
-
-    if(contents = o->misc["session-id"])
-      o->misc["session-id"] = ({ contents/"," });
-  }
-
-
-  void handle_request(object o)
-  {
-    setup_fake( o ); // Equivalent to parse_got in http.pike
-    handle( o->handle_request, this_object() );
-  }
-
-  int cdel=10;
-  void do_log()
-  {
-    if(l->logp())
+      if(!real) realize();
+      return real(@x);
+    };
+    mixed `->( string x )
     {
-      //     werror("log..\n");
-      switch(query("log"))
-      {
-       case "None":
-         l->log_as_array();
-         break;
-       case "CommonLog":
-         object f = Stdio.File( query("log_file"), "wca" );
-         l->log_as_commonlog_to_file( f );
-         destruct(f);
-         break;
-       default:
-         report_notice( "It is not yet possible to log using the "+
-                        query("log")+" method. Sorry. Out of time...");
-         break;
-      }
-      cdel--;
-      if(cdel < 1) cdel=1;
-    } else {
-      cdel++;
-      //     werror("nolog..\n");
+      if(!real) realize();
+      return predef::`->(real, x);
     }
-    call_out(do_log, cdel);
-  }
-
-  string status( )
-  {
-    mapping m = l->cache_status();
-    string res;
-    low_adjust_stats( m );
-#define PCT(X) ((int)(((X)/(float)(m->total+0.1))*100))
-    res = ("\nCache statistics\n<pre>\n");
-    m->total = m->hits + m->misses + m->stale;
-    res += sprintf(" %d elements in cache, size is %1.1fMb max is %1.1fMb\n"
-            " %d cache lookups, %d%% hits, %d%% misses and %d%% stale.\n",
-            m->entries, m->size/(1024.0*1024.0), m->max_size/(1024*1024.0),
-            m->total, PCT(m->hits), PCT(m->misses), PCT(m->stale));
-    return res+"\n</pre>\n";
-  }
-
-  void low_adjust_stats(mapping m)
-  {
-    array q = values( urls )->conf;
-    if( sizeof( q ) ) /* This is not exactly correct if sizeof(q)>1 */
-    {
-      q[0]->requests += m->num_request;
-      q[0]->received += m->received_bytes;
-      q[0]->sent     += m->sent_bytes;
-    }
-    requests += m->num_requests;
-    received += m->received_bytes;
-    sent     += m->sent_bytes;
-  }
-
-
-  void adjust_stats()
-  {
-    call_out(adjust_stats, 2);
-// werror( status() );
-     low_adjust_stats( l->cache_status() );
-  }
-
-
-  void create( int pn, string i )
-  {
-    requesthandler = (program)"protocols/fhttp.pike";
-
-    port = pn;
-    ip = i;
-    set_up_fhttp_variables( this_object() );
-    restore();
-
-    dolog = (query_option( "log" ) && (query_option( "log" )!="None"));
-    portobj = Stdio.Port(); /* No way to use ::create easily */
-    if( !portobj->bind( port, 0, ip ) )
-    {
-      report_error(LOC_M(6,"Failed to bind %s://%s:%d/ (%s)")+"\n",
-                   name,ip||"*",(int)port, strerror(errno()));
-      destruct(portobj);
-      return;
-    }
-
-    l = HTTPLoop.Loop( portobj, requesthandler,
-                       handle_request, 0,
-                       ((int)query_option("ram_cache")||20)*1024*1024,
-                       dolog, (query_option("read_timeout")||120) );
-
-    call_out(adjust_stats, 10);
-    if(dolog)
-      call_out(do_log, 5);
-  }
-}
+  };
 #endif
-
-class HTTP
-{
-  inherit Protocol;
-  constant supports_ipless = 1;
-  constant name = "http";
-  constant requesthandlerfile = "protocols/http.pike";
-  constant default_port = 80;
-
-  int set_cookie, set_cookie_only_once;
-
-  void fix_cvars( Variable.Variable a )
+  foreach( glob( "prot_*.pike", get_dir("protocols") ), string s )
   {
-    set_cookie = query( "set_cookie" );
-    set_cookie_only_once = query( "set_cookie_only_once" );
-  }
-
-  void create( mixed ... args )
-  {
-    set_up_http_variables( this_object() );
-    if( variables[ "set_cookie" ] )
-      variables[ "set_cookie" ]->set_changed_callback( fix_cvars );
-    if( variables[ "set_cookie_only_once" ] )
-      variables[ "set_cookie_only_once" ]->set_changed_callback( fix_cvars );
-    fix_cvars(0);
-    ::create( @args );
-  }
-
-}
-
-#if constant(SSL.sslfile)
-class HTTPS
-{
-  inherit SSLProtocol;
-
-  constant supports_ipless = 0;
-  constant name = "https";
-  constant requesthandlerfile = "protocols/http.pike";
-  constant default_port = 443;
-
-
-  class fallback_redirect_request
-  {
-    string in = "";
-    string out;
-    string default_prefix;
-    int port;
-    Stdio.File f;
-
-    void die()
+    sscanf( s, "prot_%s.pike", s );
+#if !constant(SSL.sslfile)
+    switch( s )
     {
-      SSL3_WERR(sprintf("fallback_redirect_request::die()"));
-      f->close();
-      destruct(f);
-      destruct(this_object());
+      case "https":
+      case "ftps":
+	continue;
     }
-
-    void write_callback(object id)
-    {
-      SSL3_WERR(sprintf("fallback_redirect_request::write_callback()"));
-      int written = id->write(out);
-      if (written <= 0)
-        die();
-      out = out[written..];
-      if (!strlen(out))
-        die();
-    }
-
-    void read_callback(object id, string s)
-    {
-      SSL3_WERR(sprintf("fallback_redirect_request::read_callback(X, \"%s\")\n", s));
-      in += s;
-      string name;
-      string prefix;
-
-      if (search(in, "\r\n\r\n") >= 0)
-      {
-        //      werror("request = '%s'\n", in);
-        array(string) lines = in / "\r\n";
-        array(string) req = replace(lines[0], "\t", " ") / " ";
-        if (sizeof(req) < 2)
-        {
-          out = "HTTP/1.0 400 Bad Request\r\n\r\n";
-        }
-        else
-        {
-          if (sizeof(req) == 2)
-          {
-            name = req[1];
-          }
-          else
-          {
-            name = req[1..sizeof(req)-2] * " ";
-            foreach(map(lines[1..], `/, ":"), array header)
-            {
-              if ( (sizeof(header) >= 2) &&
-                   (lower_case(header[0]) == "host") )
-                prefix = "https://" + header[1] - " ";
-            }
-          }
-          if (prefix) {
-            if (prefix[-1] == '/')
-              prefix = prefix[..strlen(prefix)-2];
-            prefix = prefix + ":" + port;
-          } else {
-            /* default_prefix (aka MyWorldLocation) already contains the
-             * portnumber.
-             */
-            if (!(prefix = default_prefix)) {
-              /* This case is most unlikely to occur,
-               * but better safe than sorry...
-               */
-              string ip = (f->query_address(1)/" ")[0];
-              prefix = "https://" + ip + ":" + port;
-            } else if (prefix[..4] == "http:") {
-              /* Broken MyWorldLocation -- fix. */
-              prefix = "https:" + prefix[5..];
-            }
-          }
-          out = sprintf("HTTP/1.0 301 Redirect to secure server\r\n"
-                        "Location: %s%s\r\n\r\n", prefix, name);
-        }
-        f->set_read_callback(0);
-        f->set_write_callback(write_callback);
-      }
-    }
-
-    void create(object socket, string s, string l, int p)
-    {
-      SSL3_WERR(sprintf("fallback_redirect_request(X, \"%s\", \"%s\", %d)", s, l||"CONFIG PORT", p));
-      f = socket;
-      default_prefix = l;
-      port = p;
-      f->set_nonblocking(read_callback, 0, die);
-      f->set_id(f);
-      read_callback(f, s);
-    }
-  }
-
-  class http_fallback {
-    object my_fd;
-
-    void ssl_alert_callback(object alert, object|int n, string data)
-    {
-      SSL3_WERR(sprintf("http_fallback(X, %O, \"%s\")", n, data));
-      //  trace(1);
-      if ( (my_fd->current_write_state->seq_num == 0)
-	   && search(lower_case(data), "http"))
-      {
-	object raw_fd = my_fd->socket;
-	my_fd->socket = 0;
-
-	/* Redirect to a https-url */
-	//    my_fd->set_close_callback(0);
-	//    my_fd->leave_me_alone = 1;
-	fallback_redirect_request(raw_fd, data,
-				  my_fd->config &&
-				  my_fd->config->query("MyWorldLocation"),
-				  port);
-	destruct(my_fd);
-	destruct(this_object());
-	//    my_fd = 0; /* Forget ssl-object */
-      }
-    }
-
-    void ssl_accept_callback(object id)
-    {
-      SSL3_WERR(sprintf("ssl_accept_callback(X)"));
-      id->set_alert_callback(0); /* Forget about http_fallback */
-      my_fd = 0;          /* Not needed any more */
-    }
-
-    void create(object fd)
-    {
-      my_fd = fd;
-      fd->set_alert_callback(ssl_alert_callback);
-      fd->set_accept_callback(ssl_accept_callback);
-    }
-  }
-
-  object accept()
-  {
-    object q = ::accept();
-
-    if (q) {
-      http_fallback(q);
-    }
-    return q;
-  }
-
-  int set_cookie, set_cookie_only_once;
-  void fix_cvars( Variable.Variable a )
-  {
-    set_cookie = query( "set_cookie" );
-    set_cookie_only_once = query( "set_cookie_only_once" );
-  }
-
-  void create( mixed ... args )
-  {
-    set_up_http_variables( this_object() );
-    if( variables[ "set_cookie" ] )
-      variables[ "set_cookie" ]->set_changed_callback( fix_cvars );
-    if( variables[ "set_cookie_only_once" ] )
-      variables[ "set_cookie_only_once" ]->set_changed_callback( fix_cvars );
-    fix_cvars(0);
-    ::create( @args );
-  }
-}
 #endif
-
-class HILFE
-{
-  inherit Protocol;
-  constant supports_ipless = 0;
-  constant name = "hilfe";
-  constant requesthandlerfile = "protocols/hilfe.pike";
-  constant default_port = 2345;
-
-  void create( mixed ... args )
-  {
-    add_permission( "Hilfe", LOC_M( 0, "Hilfe" ) );
-    set_up_hilfe_variables( this_object() );
-    ::create( @args );
-  }
-}
-
-class FTP
-{
-  inherit Protocol;
-  constant supports_ipless = 0;
-  constant name = "ftp";
-  constant requesthandlerfile = "protocols/ftp.pike";
-  constant default_port = 21;
-
-  // Some statistics
-  int sessions;
-  int ftp_users;
-  int ftp_users_now;
-
-  mapping(string:int) ftp_sessions = ([]);
-
-  void create( mixed ... args )
-  {
-    set_up_ftp_variables( this_object() );
-    ::create( @args );
-  }
-}
-
-#if constant(SSL.sslfile)
-class FTPS
-{
-  inherit SSLProtocol;
-  constant supports_ipless = 0;
-  constant name = "ftps";
-  constant requesthandlerfile = "protocols/ftp.pike";
-  constant default_port = 21;	/*** ???? ***/
-
-  // Some statistics
-  int sessions;
-  int ftp_users;
-  int ftp_users_now;
-
-  mapping(string:int) ftp_sessions = ([]);
-
-  void create( mixed ... args )
-  {
-    set_up_ftp_variables( this_object() );
-    ::create( @args );
-  }
-}
+#if !constant(HTTPLoop.prog)
+    if( s == "fhttp" ) continue;
 #endif
+    werror( s+" " );
 
-class GOPHER
-{
-  inherit Protocol;
-  constant supports_ipless = 0;
-  constant name = "gopher";
-  constant requesthandlerfile = "protocols/gopher.pike";
-  constant default_port = 70;
-}
-
-class TETRIS
-{
-  inherit Protocol;
-  constant supports_ipless = 0;
-  constant name = "tetris";
-  constant requesthandlerfile = "protocols/tetris.pike";
-  constant default_port = 2050;
-}
-
-class SMTP
-{
-  inherit Protocol;
-  constant supports_ipless = 1;
-  constant name = "smtp";
-  constant requesthandlerfile = "protocols/smtp.pike";
-  constant default_port = Protocols.Ports.tcp.smtp;
-}
-
-class POP3
-{
-  inherit Protocol;
-  constant supports_ipless = 0;
-  constant name = "pop3";
-  constant requesthandlerfile = "protocols/pop3.pike";
-  constant default_port = Protocols.Ports.tcp.pop3;
-}
-
-class IMAP
-{
-  inherit Protocol;
-  constant supports_ipless = 0;
-  constant name = "imap";
-  constant requesthandlerfile = "protocols/imap.pike";
-  constant default_port = Protocols.Ports.tcp.imap2;
-}
-
-mapping protocols = ([
-#if constant(HTTPLoop.prog)
-  "fhttp":FHTTP,
+    catch
+    {
+#ifdef DEBUG
+      protocols[ s ] = (program)("protocols/prot_"+s+".pike");
 #else
-  "fhttp":HTTP,
+      protocols[ s ] = lazy_load( ("protocols/prot_"+s+".pike"),s );
 #endif
-  "http":HTTP,
-  "ftp":FTP,
-
-#if constant(SSL.sslfile)
-  "https":HTTPS,
-  "ftps":FTPS,
+    };
+  }
+  foreach( glob("prot_*.pike",get_dir("../local/protocols")||({})), string s )
+  {
+    sscanf( s, "prot_%s.pike", s );
+#if !constant(SSL.sslfile)
+    switch( s )
+    {
+      case "https":
+      case "ftps":
+	continue;
+    }
 #endif
+    werror( s+" " );
+    catch {
+#ifdef DEBUG
+      protocols[ s ] = (program)("../local/protocols/prot_"+s+".pike");
+#else
+      protocols[ s ] = lazy_load( ("../local/protocols/prot_"+s+".pike"),s );
+#endif
+    };
+  }
+  werror(" [%.1fms]\n", (gethrtime()-st)/1000.0 );
+  return protocols;
+}
 
-  "hilfe":HILFE,
 
-  "gopher":GOPHER,
-  "tetris":TETRIS,
-
-  "smtp":SMTP,
-  "pop3":POP3,
-  "imap":IMAP,
-]);
+mapping protocols;
 
 mapping(string:mapping) open_ports = ([ ]);
 mapping(string:object) urls = ([]);
@@ -3461,6 +2991,11 @@ int main(int argc, array tmp)
   slowpipe = ((program)"slowpipe");
   fastpipe = ((program)"fastpipe");
 
+  add_constant( "Protocol", Protocol );
+#if constant(SSL.sslfile)
+  add_constant( "SSLProtocol", SSLProtocol );
+#endif
+
   call_out( lambda() {
               (program)"module";
               dump( "protocols/http.pike");
@@ -3513,6 +3048,7 @@ int main(int argc, array tmp)
   initiate_argcache();
   init_configuserdb();
 
+  protocols = build_protocols_mapping();  
   enable_configurations();
 
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
