@@ -8,7 +8,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.34 2000/02/16 23:16:19 mast Exp $
+//! $Id: PXml.pike,v 1.35 2000/02/20 02:04:46 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -135,42 +135,37 @@ static void create (
     mapping(string:TAG_DEF_TYPE) new_tagdefs = ([]);
 
     if (prefix) {
+      if (mapping(string:TAG_TYPE) m = tset->low_tags)
+	foreach (indices (m), string n) new_tagdefs[prefix + ":" + n] = ({m[n], 0});
+      if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
+	foreach (indices (m), string n) new_tagdefs[prefix + ":" + n] = ({0, m[n]});
 #ifdef OLD_RXML_COMPAT
       if (not_compat) {
 #endif
-	if (mapping(string:TAG_TYPE) m = tset->low_tags)
-	  foreach (indices (m), string n) new_tagdefs[prefix + ":" + n] = ({0, m[n]});
-	if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
-	  foreach (indices (m), string n) new_tagdefs[prefix + ":" + n] = ({0, m[n]});
 	foreach (tlist, RXML.Tag tag)
 	  if (!(tag->plugin_name || tag->flags & RXML.FLAG_NO_PREFIX))
 	    new_tagdefs[prefix + ":" + [string] tag->name] =
 	      ({0, tag->_handle_tag});
 #ifdef OLD_RXML_COMPAT
       }
-      else {
-	if (mapping(string:TAG_TYPE) m = tset->low_tags)
-	  foreach (indices (m), string n) new_tagdefs[prefix + ":" + n] = ({m[n], 0});
-	if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
-	  foreach (indices (m), string n) new_tagdefs[prefix + ":" + n] = ({0, m[n]});
+      else
 	foreach (tlist, RXML.Tag tag)
 	  if (!(tag->plugin_name || tag->flags & RXML.FLAG_NO_PREFIX))
 	    new_tagdefs[prefix + ":" + [string] tag->name] =
 	      tag->flags & RXML.FLAG_NONCONTAINER ?
 	      ({tag->_handle_tag, 0}) : ({0, tag->_handle_tag});
-      }
 #endif
     }
 
+    if (!tset->prefix_req) {
+      if (mapping(string:TAG_TYPE) m = tset->low_tags)
+	foreach (indices (m), string n) new_tagdefs[n] = ({m[n], 0});
+      if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
+	foreach (indices (m), string n) new_tagdefs[n] = ({0, m[n]});
+    }
 #ifdef OLD_RXML_COMPAT
     if (not_compat) {
 #endif
-      if (!tset->prefix_req) {
-	if (mapping(string:TAG_TYPE) m = tset->low_tags)
-	  foreach (indices (m), string n) new_tagdefs[n] = ({0, m[n]});
-	if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
-	  foreach (indices (m), string n) new_tagdefs[n] = ({0, m[n]});
-      }
       foreach (tlist, RXML.Tag tag)
 	if (!tag->plugin_name && (!tset->prefix_req || tag->flags & RXML.FLAG_NO_PREFIX))
 	  new_tagdefs[[string] tag->name] =
@@ -179,19 +174,12 @@ static void create (
 	    ({tag->_handle_tag, 0}) : ({0, tag->_handle_tag});
 #ifdef OLD_RXML_COMPAT
     }
-    else {
-      if (!tset->prefix_req) {
-	if (mapping(string:TAG_TYPE) m = tset->low_tags)
-	  foreach (indices (m), string n) new_tagdefs[n] = ({m[n], 0});
-	if (mapping(string:CONTAINER_TYPE) m = tset->low_containers)
-	  foreach (indices (m), string n) new_tagdefs[n] = ({0, m[n]});
-      }
+    else
       foreach (tlist, RXML.Tag tag)
 	if (!tag->plugin_name && (!tset->prefix_req || tag->flags & RXML.FLAG_NO_PREFIX))
 	  new_tagdefs[[string] tag->name] =
 	    tag->flags & RXML.FLAG_NONCONTAINER ?
 	    ({tag->_handle_tag, 0}) : ({0, tag->_handle_tag});
-    }
 #endif
 
     foreach (indices (new_tagdefs), string name) {
