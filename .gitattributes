@@ -84,6 +84,7 @@ worldmap binary
 /server/bin/fixquota.pike foreign_ident
 /server/bin/garbagecollector.pike foreign_ident
 /server/bin/lsquota.pike foreign_ident
+/server/bin/mysql_client foreign_ident
 /server/bin/pdbi.pike foreign_ident
 /server/bin/sqladduser.pike foreign_ident
 /server/config_interface/actions/debug_info.pike foreign_ident
