@@ -1,9 +1,11 @@
-
+//! A class that enables specification of a physicla location.
 
 inherit Variable.Variable;
 
 constant type = "MapLocation";
+
 roxen.ImageCache cache;
+//! This is the image cache used for the maps.
 
 static int width = 500;
 static int height = 300;
@@ -11,14 +13,14 @@ static function(void:string) internal_location;
 static mapping map_settings;
 static mapping marker_settings;
 
-void set_land_color(int r, int g, int b)
+void set_land_color(int(0..255) r, int(0..255) g, int(0..255) b)
   //! Sets the color of the land areas.
 {
   map_settings = map_settings || ([]);
   map_settings->color_fu = lambda(string name) { return ({ r, g, b }); };
 }
 
-void set_sea_color(int r, int g, int b)
+void set_sea_color(int(0..255) r, int(0..255) g, int(0..255) b)
   //! Sets the color of the sea areas.
 {
   map_settings = map_settings ||([]);
@@ -28,11 +30,12 @@ void set_sea_color(int r, int g, int b)
 void set_marker_size(int size)
   //! Sets the size of the marker.
 {
+  if(size<1) throw( ({ "Marker size less than 1.\n", backtrace() }) );
   marker_settings = marker_settings || ([]);
   marker_settings->size = size;
 }
 
-void set_marker_color(int r, int g, int b)
+void set_marker_color(int(0..255) r, int(0..255) g, int(0..255) b)
   //! Sets the color of the marker.
 {
   marker_settings = marker_settings || ([]);
@@ -115,6 +118,8 @@ void set_from_form( RequestID id )
       set( b[1] );
     }
   }
+  else if( sizeof( val = get_form_vars(id) ) && val["R.x"] )
+    set( 0 );
 }
 
 string render_form( RequestID id, void|mapping additional_args ) {
@@ -132,9 +137,13 @@ string render_form( RequestID id, void|mapping additional_args ) {
     state += map_settings;
 
   string src = internal_location() + cache->store(state, id);
-  return Variable.input(path(), 0, 0, additional_args +
+  string ret = Variable.input(path(), 0, 0, additional_args +
 			([ "src":src,
 			   "type":"image" ]) );
+  if(coord)
+    ret += "<submit-gbutton2 name=\""+path()+"R\">"+"Remove marker"+"</submit-gbutton2>";
+
+  return ret;
 }
 
 void create(array default_value, function(void:string) _internal_location,
