@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.292 1999/06/07 00:22:51 mast Exp $
+ * $Id: roxen.pike,v 1.293 1999/06/07 05:21:12 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.292 1999/06/07 00:22:51 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.293 1999/06/07 05:21:12 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -135,7 +135,7 @@ static class Privs {
   }
 
 #ifdef THREADS
-  mixed mutex_key;	// Only one thread may modify the euid/egid at a time.
+  static mixed mutex_key;	// Only one thread may modify the euid/egid at a time.
   static object threads_disabled;
 #endif /* THREADS */
 
@@ -149,16 +149,6 @@ static class Privs {
 		   reason, uid, gid, privs_level));
 #endif /* PRIVS_DEBUG */
 
-#ifdef THREADS
-#if constant(roxen_pid) && !constant(_disable_threads)
-    if(getpid() == roxen_pid)
-    {
-      //     __disallow_threads();
-      werror("Using Privs ("+reason+") in threaded environment, source is\n  "+
-	     replace(describe_backtrace(backtrace()), "\n", "\n  ")+"\n");
-    }
-#endif
-#endif
 #ifdef HAVE_EFFECTIVE_USER
     array u;
 
@@ -205,8 +195,8 @@ static class Privs {
     if(!u) {
       if (uid && (uid != "root")) {
 	if (intp(uid) && (uid >= 60000)) {
-	  report_debug(sprintf("Privs: User %d is not in the password database.\n"
-			       "Assuming nobody.\n", uid));
+	  report_warning(sprintf("Privs: User %d is not in the password database.\n"
+				 "Assuming nobody.\n", uid));
 	  // Nobody.
 	  gid = gid || uid;	// Fake a gid also.
 	  u = ({ "fake-nobody", "x", uid, gid, "A real nobody", "/", "/sbin/sh" });
@@ -1602,17 +1592,18 @@ int set_u_and_gid()
 	u = pw[0], uid = pw[2];
 	if (!g) gid = pw[3];
       }
-#if constant(initgroups)
-      catch {
-	initgroups(pw[0], gid);
-	// Doesn't always work - David.
-      };
-#endif
 
 #ifdef THREADS
       object mutex_key;
       catch { mutex_key = euid_egid_lock->lock(); };
       object threads_disabled = _disable_threads();
+#endif
+
+#if constant(initgroups)
+      catch {
+	initgroups(pw[0], gid);
+	// Doesn't always work - David.
+      };
 #endif
 
 #if constant(seteuid)
@@ -2216,6 +2207,13 @@ class ArgCache
         path += "/";
       path += replace(name, "/", "_")+"/";
       mkdirhier( path + "/tmp" );
+      object test = Stdio.File();
+      if (!test->open (path + "/.testfile", "wc"))
+	error ("Can't create files in the argument cache directory " + path + "\n");
+      else {
+	test->close();
+	rm (path + "/.testfile");
+      }
     }
   }
 
@@ -3678,8 +3676,6 @@ int main(int|void argc, array (string)|void argv)
   roxen_perror("Restart initiated at "+ctime(time())); 
 
   define_global_variables(argc, argv);
-  create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE")
-		  || QUERY(pidfile));
   object o;
   if(QUERY(locale) != "standard" && (o = Locale.Roxen[QUERY(locale)]))
   {
@@ -3696,6 +3692,13 @@ int main(int|void argc, array (string)|void argv)
   initiate_supports();
   
   initiate_configuration_port( 1 );
+  enable_configurations();
+
+  set_u_and_gid();		// Running with the right uid:gid from this point on.
+
+  create_pid_file(Getopt.find_option(argv, "p", "pid-file", "ROXEN_PID_FILE")
+		  || QUERY(pidfile));
+
   roxen_perror("Initiating argument cache ... ");
 
   int id;
@@ -3715,9 +3718,6 @@ int main(int|void argc, array (string)|void argv)
     werror( describe_backtrace( e ) );
   }
   roxen_perror( "\n" );
-  enable_configurations();
-  if(set_u_and_gid())
-    roxen_perror("Setting UID and GID ...\n");
 
   enable_configurations_modules();
 
