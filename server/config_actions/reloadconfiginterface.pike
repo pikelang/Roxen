@@ -1,5 +1,5 @@
 /*
- * $Id: reloadconfiginterface.pike,v 1.5 1997/08/21 10:50:36 per Exp $
+ * $Id: reloadconfiginterface.pike,v 1.6 1998/04/23 13:17:03 grubba Exp $
  */
 
 inherit "roxenlib";
@@ -18,12 +18,18 @@ constant programs = ({
 
 mixed handle(object id, object mc)
 {
-  roxen->configuration_interface_obj=0;
-  roxen->loading_config_interface=0;
-  roxen->enabling_configurations=0;
-  roxen->build_root=0;
-  catch{roxen->root->dest();};
-  roxen->root=0;
+  if (roxen->unload_configuration_interface) {
+    roxen->unload_configuration_interface();
+  } else {
+    /* Some backward compatibility */
+    roxen->configuration_interface_obj=0;
+    roxen->loading_config_interface=0;
+    roxen->enabling_configurations=0;
+    roxen->build_root=0;
+    catch{roxen->root->dest();};
+    roxen->root=0;
+  }
+
   report_notice("Reloading the configuration interface from disk\n");
 
   foreach(indices(master()->programs), string s)
