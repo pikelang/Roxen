@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.16 1997/03/26 05:54:03 per Exp $ */
+/* $Id: persistent.pike,v 1.17 1997/04/01 16:00:59 per Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -18,8 +18,7 @@
 
 #define PRIVATE private static inline 
 
-private static string __id;
-#define DIR "dbm_dir.perdbm/"
+private static array __id;
 
 void really_save()
 {
@@ -30,7 +29,8 @@ void really_save()
   if(!__id)
   {
     mixed i = nameof(this_object());
-    if(arrayp(i)) __id=(i[0]+".class/"+i[1]);
+    if(!arrayp(i)) __id=({i});
+    else __id = i;
   }
 
   foreach(indices(this_object()), string a)
@@ -39,25 +39,7 @@ void really_save()
     if(!catch { this_object()[a]=b; } ) // It can be assigned. Its a variable!
       res += ({ ({ a, b }) });
   }
-//  perror("save ("+ __id +")\n");
-
-  if(!file->open(DIR+__id,"wct"))
-  {
-    mkdirhier(DIR+__id);
-    if(!file->open(DIR+__id, "wct"))
-      error("Save of object not possible.\n");
-  }
-  file->write( encode_value(res) );
-  file->close();
-
-  if(!file->open(BACKUPDIR+__id,"wct"))
-  {
-    mkdirhier(BACKUPDIR+__id);
-    if(!file->open(BACKUPDIR+__id, "wct"))
-      error("Save of object not possible.\n");
-  }
-  file->write( encode_value(res) );
-  file->close();
+  open_db(__id[..0])->set(__id[1..], encode_value(res) );
 }
 
 
@@ -68,27 +50,29 @@ public void begone()
 {
   remove_call_out(really_save);
   ___destructed=1;
-  rm(DIR+__id);
+  if(__id)
+    open_db(__id[..0])->delete(__id[1..]);
   __id=0;
+  call_out(destruct,2,this_object());
+}
+
+void destroy()
+{
+  remove_call_out(really_save);
 }
 
 
 nomask public void persist(mixed id)
 {
   object file = files.file();
-
-  if(arrayp(id)) id=(id[0]+".class/"+id[1]);
   /* No known id. This should not really happend. */
   if(!id)  error("No known id in persist.\n");
-  
   __id = id;
-// Restore
 
+// Restore
   array var;
   catch {
-    if(!file->open(DIR+__id, "r")) return 0;
-//    perror("restore ("+ __id +")\n");
-    var=decode_value(file->read(0x7ffffff));
+    var=decode_value(open_db(id[..0])->get(id[1..]));
   };
   if(var) foreach(var, var) catch {
     this_object()[var[0]] = var[1];

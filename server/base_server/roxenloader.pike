@@ -4,7 +4,95 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.11 1997/03/26 05:54:05 per Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.12 1997/04/01 16:01:00 per Exp $";
+
+mapping dbs = ([ ]);
+array adbs = ({});
+
+void mkdirhier(string from)
+{
+  string a, b;
+  array f;
+
+  f=(from/"/");
+  b="";
+
+  foreach(f[0..sizeof(f)-2], a)
+  {
+    mkdir(b+a);
+    b+=a+"/";
+  }
+}
+
+class db {
+  object mydb;
+
+  void mkdirhier(string from)
+  {
+    string a, b;
+    array f;
+    
+    f=(from/"/");
+    b="";
+    
+    foreach(f[0..sizeof(f)-2], a)
+    {
+      mkdir(b+a);
+      b+=a+"/";
+    }
+  }
+
+  void delete(array index)
+  {
+    mydb->delete(index*",");
+  }
+
+  void get(array index)
+  {
+    return mydb->fetch(index*",");
+  }
+
+  void set(array index, string to)
+  {
+    mydb->store(index*",", to);
+    call_out(mydb->sync, 10);
+  }
+  
+  void create(object|string mdb)
+  {
+    if(objectp(mdb)) mydb=mdb;
+    else
+    {
+      werror("PERSIST: Really opening database "+mdb+"\n");
+      if(catch(mydb=master()->resolv("Gdbm")->gdbm(mdb,"cwrf")) ||!mydb)
+      {
+	mkdirhier(mdb);
+	if(!(mydb=master()->resolv("Gdbm")->gdbm(mdb,"cwrf")))
+	  error("Failed to open database.\n");
+      }
+    }
+  }
+};
+
+object open_db(array id)
+{
+  if(!master()->resolv("Gdbm"))
+    error("No gdbm module installed.\n");
+  string fname = "dbs/"+id*"/"+".gdbm";
+  if(dbs[fname]) return db(dbs[fname]);
+  object d = db(fname);
+  dbs[fname]=d->mydb;
+  adbs+=({fname});
+  if(sizeof(adbs)>100)
+  {
+    m_delete(dbs,adbs[0]);
+    adbs=adbs[1..];
+  }
+  return d;
+}
+
+
+
 
 void perror(string format,mixed ... args);
 
@@ -280,20 +368,6 @@ object|void open(string filename, string mode)
 }
 
 
-void mkdirhier(string from)
-{
-  string a, b;
-  array f;
-
-  f=(from/"/");
-  b="";
-
-  foreach(f[0..sizeof(f)-2], a)
-  {
-    mkdir(b+a);
-    b+=a+"/";
-  }
-}
 
 string make_path(string ... from)
 {
@@ -315,6 +389,7 @@ void main(mixed ... args)
   mm->pike_include_path = path/":";
   mm->pike_library_path = master()->pike_library_path;
 
+  add_constant("open_db", open_db);
   add_constant("error", lambda(string s){error(s);});
 
   add_constant("spawne",spawne);
