@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.524 2002/10/23 19:07:01 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.525 2002/10/28 15:27:32 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -338,6 +338,15 @@ string query_name()
 string comment()
 {
   return query("comment");
+}
+
+private float cached_compat_level;
+
+float compat_level()
+{
+  if (cached_compat_level == 0.0)
+    cached_compat_level = (float) query ("compat_level");
+  return cached_compat_level;
 }
 
 /* A 'pri' is one of the ten priority objects. Each one holds a list
