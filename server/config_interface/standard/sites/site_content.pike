@@ -331,7 +331,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 #endif
 
   return replace( "<br /><b><font size='+2'>"
-                  + EC(TRANSLATE(m->register_module()[1])) +
+                  + Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1]))) +
                   "</font></b><br />"
                   + EC(TRANSLATE(m->info(id))) + "</p><p>"
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
