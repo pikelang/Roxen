@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.19 1998/09/17 00:42:04 grubba Exp $
+ * $Id: smtprelay.pike,v 1.20 1998/09/17 00:51:22 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.19 1998/09/17 00:42:04 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.20 1998/09/17 00:51:22 grubba Exp $";
 
 /*
  * Some globals
@@ -315,8 +315,14 @@ class MailSender
       extras += " BODY=8BITMIME";
     }
     if (esmtp_features["size"]) {
-      // Add some margin for safety.
-      extras += " SIZE="+(sizeof(message)+10);
+      array a = mail->stat();
+      if (a && (a[1] >= 0)) {
+	// Add some margin for safety.
+	extras += " SIZE="+(a[1]+128);
+      } else {
+	// Shouldn't happen, but...
+	extras += " SIZE=10240";
+      }
     }
     send_command(sprintf("MAIL FROM:%s%s", message->sender, extras));
   }
