@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.354 2002/03/13 13:18:46 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.355 2002/03/13 16:52:38 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1306,19 +1306,17 @@ class TagCache {
     mapping(string|int:mixed) keymap, overridden_keymap;
     string key;
     RXML.PCode evaled_content;
-    int timeout;
-
-    // FIXME: This cache ought to be shared between concurrently
-    // evaluating tag instances, but it still shouldn't be persistent.
-    mapping(string:array(int|RXML.PCode)) timeout_cache;
+    int timeout, persistent_cache;
 
     // The following are retained for frame reuse.
     string content_hash;
     array(string|int) subvariables;
-    mapping(string:RXML.PCode) alternatives;
+    mapping(string:RXML.PCode|array(int|RXML.PCode)) alternatives;
 
     array do_enter (RequestID id)
     {
+      persistent_cache = 0;
+
       if( args->nocache || args["not-post-method"] && id->method == "POST" ) {
 	do_iterate = 1;
 	key = 0;
@@ -1425,8 +1423,6 @@ class TagCache {
 	    keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
 	}
 
-      timeout = Roxen.time_dequantifier (args);
-
       if (args->shared) {
 	if(args->nohash)
 	  // Always use the configuration in the key; noone really
@@ -1436,85 +1432,77 @@ class TagCache {
 	  if (!content_hash)
 	    // Include the content type in the hash since we cache the
 	    // p-code which has static type inference.
-	    content_hash = Crypto.md5()->update (content)
+	    content_hash = Crypto.md5()->update ("................................")
+				       ->update (content)
 				       ->update (content_type->name)
 				       ->digest();
 	  keymap[1] = ({id->conf->name, content_hash});
 	}
-
-	key = encode_value_canonic (keymap);
-	if (!args["disable-key-hash"])
-	  key = Crypto.md5()->update (key)->digest();
-
-	if (id->pragma["no-cache"] && args["flush-on-no-cache"])
-	  cache_remove ("tag_cache", key);
-	else
-	  if ((evaled_content = cache_lookup("tag_cache", key)))
-	    if (evaled_content->is_stale()) {
-	      cache_remove ("tag_cache", key);
-	      evaled_content = 0;
-	    }
-	    else {
-	      do_iterate = -1;
-	      TAG_TRACE_ENTER ("cache hit (shared%s cache) for key %s",
-			       timeout ? " timeout" : "",
-			       RXML.utils.format_short (keymap, 200));
-	      key = keymap = 0;
-	      return ({evaled_content});
-	    }
       }
 
-      else {
-	key = encode_value_canonic (keymap);
-	if (!args["disable-key-hash"])
-	  key = Crypto.md5()->update (key)->digest();
+      key = encode_value_canonic (keymap);
+      if (!args["disable-key-hash"])
+	// Initialize with a 32 char string to make sure MD5 goes
+	// through all the rounds even if the key is very short.
+	// Otherwise the risk for coincidental equal keys gets much
+	// bigger.
+	key = Crypto.md5()->update ("................................")
+			  ->update (key)
+			  ->digest();
 
-	if (timeout)
-	  if (timeout_cache) {
-	    array entry = timeout_cache[key];
-	    if (entry) {
-	      evaled_content = entry[1];
-	      if (evaled_content->is_stale()) {
-		m_delete (timeout_cache, key);
-		evaled_content = 0;
-	      }
-	      else {
-		entry[0] = time() + timeout;
-		do_iterate = -1;
-		TAG_TRACE_ENTER ("cache hit (timeout cache) for key %s",
-				 RXML.utils.format_short (keymap, 200));
-		key = keymap = 0;
-		return ({evaled_content});
-	      }
+      timeout = Roxen.time_dequantifier (args);
+
+      // Now we have the cache key.
+
+      object(RXML.PCode)|array(int|RXML.PCode) entry = args->shared ?
+	cache_lookup ("tag_cache", key) :
+	alternatives && alternatives[key];
+
+      int removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
+
+      if (entry) {
+      check_entry_valid: {
+	  if (arrayp (entry)) {
+	    if (entry[0] < time (1)) {
+	      removed = 2;
+	      break check_entry_valid;
 	    }
+	    else evaled_content = entry[1];
 	  }
-	  else add_timeout_cache (timeout_cache = ([]));
+	  else evaled_content = entry;
+	  if (evaled_content->is_stale())
+	    removed = 1;
+	  else if (id->pragma["no-cache"] && args["flush-on-no-cache"])
+	    removed = 3;
+	}
 
-	else
-	  if (alternatives) {
-	    if ((evaled_content = alternatives[key]))
-	      if (evaled_content->is_stale()) {
-		m_delete (alternatives, key);
-		evaled_content = 0;
-	      }
-	      else {
-		if (timeout) timeout_cache[key] = time() + timeout;
-		do_iterate = -1;
-		TAG_TRACE_ENTER ("cache hit for key %s",
-				 RXML.utils.format_short (keymap, 200));
-		key = keymap = 0;
-		return ({evaled_content});
-	      }
-	  }
-	  else alternatives = ([]);
+	if (removed) {
+	  if (args->shared)
+	    cache_remove ("tag_cache", key);
+	  else
+	    if (alternatives) m_delete (alternatives, key);
+	}
+
+	else {
+	  do_iterate = -1;
+	  TAG_TRACE_ENTER ("cache hit (%s cache) for key %s",
+			   args->shared ? (timeout ? "shared timeout" : "shared")
+			   : (timeout ? "timeout" : "possibly persistent"),
+			   RXML.utils.format_short (keymap, 200));
+	  key = keymap = 0;
+	  return ({evaled_content});
+	}
       }
 
       keymap += ([]);
       do_iterate = 1;
-      TAG_TRACE_ENTER ("cache miss%s for key %s",
-		       (args->shared ?
-			(timeout ? " (shared timeout cache)" : " (shared cache)") :
-			timeout ? " (timeout cache)" : ""),
+      TAG_TRACE_ENTER ("cache miss (%s cache), %s for key %s",
+		       args->shared ? (timeout ? "shared timeout" : "shared")
+		       : (timeout ? "timeout" : "possibly persistent"),
+		       removed == 1 ? "entry p-code is stale" :
+		       removed == 2 ? "entry had timed out" :
+		       removed == 3 ? "a pragma no-cache request removed the entry" :
+		       "no entry",
 		       RXML.utils.format_short (keymap, 200));
       id->cache_status->cachetag = 0;
       id->misc->cache_tag_miss = 1;
@@ -1536,30 +1524,44 @@ class TagCache {
 	  RXML_CONTEXT->misc->cache_key = overridden_keymap;
 	  overridden_keymap = 0;
 	}
+
 	if (args->shared) {
 	  cache_set("tag_cache", key, evaled_content, timeout);
 	  TAG_TRACE_LEAVE ("added shared%s cache entry", timeout ? " timeout" : "");
 	}
 	else
 	  if (timeout) {
-	    timeout_cache[key] = ({time() + timeout, evaled_content});
-	    TAG_TRACE_LEAVE ("added timeout cache entry");
+	    if (!alternatives) add_timeout_cache (alternatives = ([]));
+	    alternatives[key] = ({time() + timeout, evaled_content});
+	    if (args["persistent-cache"] == "yes") {
+	      persistent_cache = 1;
+	      RXML_CONTEXT->state_update();
+	    }
+	    TAG_TRACE_LEAVE ("added%s timeout cache entry",
+			     persistent_cache ? " (possibly persistent)" : "");
 	  }
 	  else {
+	    if (!alternatives) alternatives = ([]);
 	    alternatives[key] = evaled_content;
-	    RXML_CONTEXT->state_update();
-	    TAG_TRACE_LEAVE ("added (possibly persistent) cache entry");
+	    if (args["persistent-cache"] != "no") {
+	      persistent_cache = 1;
+	      RXML_CONTEXT->state_update();
+	    }
+	    TAG_TRACE_LEAVE ("added%s cache entry",
+			     persistent_cache ? " (possibly persistent)" : "");
 	  }
       }
       else
 	TAG_TRACE_LEAVE ("");
+
       result += content;
       return 0;
     }
 
     array save()
     {
-      return ({content_hash, subvariables, alternatives});
+      return ({content_hash, subvariables,
+	       persistent_cache && alternatives});
     }
 
     void restore (array saved)
@@ -3700,7 +3702,7 @@ class TagEmit {
       if(args->filter) {
 	array pairs = args->filter / ",";
 	filter = ([]);
-	foreach( args->filter / ",", string pair) {
+	foreach( pairs, string pair) {
 	  string v,g;
 	  if( sscanf(pair, "%s=%s", v,g) != 2)
 	    continue;
@@ -5304,8 +5306,11 @@ using the pre tag.
  or completely disable caching of a certain part of the content inside
  a <tag>cache</tag> tag.</p>
  
- <note><p>This implies that any RXML tags that surrounds the inner 
- <tag>cache</tag> tag(s) won't be cached.</p></note>
+ <note><p>This implies that any RXML tags that surrounds the inner
+ <tag>cache</tag> tag(s) won't be cached. The reason is that those
+ surrounding tags use the result of the inner <tag>cache</tag> tag(s),
+ which can only be established when the actual context in each request
+ is compared to the cache parameters.</p></note>
 
  <p>Besides the value produced by the content, all assignments to RXML
  variables in any scope are cached. I.e. an RXML code block which
@@ -5315,8 +5320,9 @@ using the pre tag.
  <p>When the content is evaluated, the produced result is associated
  with a key that is built by taking the values of certain variables
  and other pieces of data, which thus are what the cache depends on.
- The arguments \"variable\", \"key\" and \"profile\" lets you specify
- the cache dependencies.</p>
+ The attributes \"variable\", \"key\" and \"profile\" lets you specify
+ these cache dependencies. If none of them are used, the tag will
+ have a single cache entry that always matches.</p>
 
  <note><p>It is easy to create huge amounts of cached values if the
  cache parameters are chosen badly. E.g. to depend on the contents of
@@ -5328,22 +5334,43 @@ using the pre tag.
  <p>The cache can be shared between all <tag>cache</tag> tags with
  identical content, which is typically useful in <tag>cache</tag> tags
  used in templates included into many pages. The drawback is that
- cache entries stick around when the <tag>cache</tag> tags change and
- that the cache won't be persistent (see below). Only shared caches
- have any effect if the RXML pages aren't compiled and cached.</p>
+ cache entries stick around when the <tag>cache</tag> tags change in
+ the RXML source, and that the cache cannot be persistent (see below).
+ Only shared caches have any effect if the RXML pages aren't compiled
+ and cached as p-code.</p>
 
- <p>If the page is compiled to p-code which is saved, and the cache is
- not shared, and there is no timeout on it, then the produced cache
- entries are also saved, and the cache is thus persistent. In this
- case it's thus especially important to limit the number of
- alternative cache entries.</p>
+ <p>If the cache isn't shared, and the page is compiled to p-code
+ which is saved persistently then the produced cache entries can also
+ be saved persistently. See the \"persistent-cache\" attribute for
+ more details.</p>
+
+ <note><p>For non-shared caches, this tag depends on the caching in
+ the RXML parser to work properly, since the cache is associated with
+ the specific tag instance in the compiled RXML code. I.e. there must
+ be some sort of cache on the top level that can associate the RXML
+ source to an old p-code entry before the cache in this tag can have
+ any effect. E.g. if the RXML parser module in WebServer is used, you
+ have to make sure page caching is turned on in it. So if you don't
+ get cache hits when you think there should be, the cache miss might
+ not be in this tag but instead in the top level cache that maps the
+ RXML source to p-code.</p>
+
+ <p>Also note that non-shared timeout caches are only effective if the
+ p-code is cached in RAM. If it should work for p-code that is cached
+ on disk but not in RAM, you need to add the attribute
+ \"persistent-cache=yes\".</p>
+
+ <p>Note to Roxen CMS (a.k.a. SiteBuilder) users: The RXML parser
+ module in WebServer is <i>not</i> used by Roxen CMS. See the CMS
+ documentation for details about how to control RXML p-code
+ caching.</p></note>
 
  <p>Compatibility note: If the compatibility level of the site is
- lower than 2.2 and there are no \"variable\" or \"profile\"
- arguments, the cache depends on the contents of the form scope and
- the path of the current page (i.e. <ent>page.path</ent>). This is
- often a bad policy since it's easy for a client to generate many
- cache entries.</p>
+ lower than 2.2 and there is no \"variable\" or \"profile\" attribute,
+ the cache depends on the contents of the form scope and the path of
+ the current page (i.e. <ent>page.path</ent>). This is often a bad
+ policy since it's easy for a client to generate many cache
+ entries.</p>
 </desc>
 
 <attr name='variable' value='string'>
@@ -5382,16 +5409,31 @@ using the pre tag.
  for details about shared caches.</p>
 </attr>
 
+<attr name='persistent-cache' value='yes|no'>
+  <p>If the value is \"yes\" then the cache entries are saved
+  persistently, providing the RXML p-code is saved. If it's \"no\"
+  then the cache entries are not saved. If it's left out then the
+  default is to save if there's no timeout on the cache, otherwise
+  not. This attribute has no effect if the \"shared\" attribute is
+  used; shared caches can not be saved persistently.</p>
+</attr>
+
 <attr name='nocache'>
  <p>Do not cache the content in any way. Typically useful to disable
  caching of a section inside another cache tag.</p>
 </attr>
 
 <attr name='propagate'>
- <p>Propagate the cache settings to the surrounding <tag>cache</tag>
- tag, if there is any. Useful to locally add depends to a cache
- without introducing a new cache level. If there is no surrounding
- <tag>cache</tag> tag, this argument is ignored.</p>
+ <p>Propagate the cache dependencies to the surrounding
+ <tag>cache</tag> tag, if there is any. Useful to locally add
+ dependencies to a cache without introducing a new cache level. If
+ there is no surrounding <tag>cache</tag> tag, this attribute is
+ ignored.</p>
+
+ <p>Note that only the dependencies are propagated, i.e. the settings
+ in the \"variable\", \"key\" and \"profile\" attributes. The other
+ attributes are used only if there's no surrounding <tag>cache</tag>
+ tag.</p>
 </attr>
 
 <attr name='nohash'>
@@ -5452,7 +5494,7 @@ using the pre tag.
 "nocache": #"<desc type='cont'><p><short>
  Avoid caching of a part inside a <tag>cache</tag> tag.</short> This
  is the same as using the <tag>cache</tag> tag with the nocache
- argument.</p>
+ attribute.</p>
 
  <p>Note that when a part inside a <tag>cache</tag> tag isn't cached,
  it implies that any RXML tags that surround the <tag>nocache</tag>
