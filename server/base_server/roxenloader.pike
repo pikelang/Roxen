@@ -16,7 +16,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.198 2000/09/23 00:53:43 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.199 2000/09/23 02:30:24 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1336,11 +1336,17 @@ Please install a newer pike version
   add_constant("grbf",lambda(string d){return Gz.inflate()->inflate(d);});
 #else
   add_constant("grbf",lambda(string d){return d;});
-  report_notice("Warning: The Gz (zlib) module is not available.\n"
-               "The default builtin font will not be available.\n"
-               "To get zlib support, install zlib from\n"
-               "ftp://ftp.freesoftware.com/pub/infozip/zlib/zlib.html\n"
-               "and recompile pike, after removing the file 'config.cache'\n");
+  report_debug(
+#"
+------- WARNING -----------------------------------------
+The Gz (zlib) module is not available.
+The default builtin font will not be available.
+To get zlib support, install zlib from
+ftp://ftp.freesoftware.com/pub/infozip/zlib/zlib.html
+and recompile pike, after removing the file 'config.cache'
+----------------------------------------------------------
+
+");
 #endif
 
   add_constant("spawne",spawne);
@@ -1362,16 +1368,23 @@ Please install a newer pike version
     add_constant("__rbf", "font_handlers/rbf" );
   }
 #else
-  report_notice(
-#"Warning: The Image.TTF (freeetype) module is not available.
+  report_debug(
+#"
+------- WARNING ----------------------------------------------
+The Image.TTF (freeetype) module is not available.
 True Type fonts and the default font  will not be available.
 To get TTF support, download a Freetype 1 package from
+
 http://freetype.sourceforge.net/download.html#freetype1
+
 Install it, and then remove config.cache in pike and recompile.
 If this was a binary release of Roxen, there should be no need
-to recompile the pike binary, since the one included should already
-have the FreeType interface module, installing the library should be
-enough." );
+to recompile the pike binary, since the one included should
+already have the FreeType interface module, installing the 
+library should be enough.
+--------------------------------------------------------------
+
+" );
 #endif
 
   if( search( hider, "--long-error-file-names" ) != -1 )
