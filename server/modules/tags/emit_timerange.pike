@@ -4,7 +4,7 @@
 inherit "module";
 
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.17 2004/05/24 21:59:23 _cvs_dirix Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.18 2004/05/26 05:10:01 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -569,7 +569,7 @@ class TagEmitTimeRange
       if((what = m_delete(args, "from-week-day")) && from)
       {
         what = lower_case(what);
-        if(!has_value(gregorian_weekdays,lower_case(what))
+        if(!has_value(gregorian_weekdays,lower_case(what)))
           RXML.parse_error("Unknown day: %O\n",what);
         int weekday = from->week_day();
 
