@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.94 1998/02/10 18:36:05 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.95 1998/02/17 04:58:58 mast Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1377,6 +1377,8 @@ mapping configuration_parse(object id)
  	error("This module cannot be updated");
       
       o->save();
+      program oldprg = cache_lookup ("modules", modname);
+      mapping oldprgs = copy_value (master()->programs);
       cache_remove("modules", modname);
 
       // Not useful since load_module() also does it.
@@ -1391,11 +1393,32 @@ mapping configuration_parse(object id)
 	// _master->set_inhibit_compile_errors(0);
 	return rep;
       }
+      program newprg = cache_lookup ("modules", modname);
       // _master->set_inhibit_compile_errors(0);
       object mod;
-      if(!o->config()->disable_module(name))error("Failed to disable module.\n");
-      if(!(mod=o->config()->enable_module(name)))error("Failed to enable module.\n");
-      
+      if(!o->config()->disable_module(name)) {
+	mapping rep;
+	rep = http_string_answer("Failed to disable this module.\n"
+				 "This is (probably) the reason:\n<pre>"
+				 + roxen->last_error + "</pre>" );
+	return rep;
+      }
+      cache_set ("modules", modname, newprg); // Do not compile again in enable_module.
+      if(!(mod=o->config()->enable_module(name))) {
+	mapping rep;
+	rep = http_string_answer("Failed to enable this module.\n"
+				 "This is (probably) the reason:\n<pre>"
+				 + roxen->last_error + "</pre>" );
+	// Recover..
+	master()->programs = oldprgs;
+	cache_set ("modules", modname, oldprg);
+#ifdef MODULE_DEBUG
+	perror ("Modules: Trying to re-enable the old module.\n");
+#endif
+	o->config()->enable_module(name);
+	return rep;
+      }
+
       o->clear();
 //    roxen->fork_it();
       
