@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.170 1999/05/19 09:33:26 peter Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.171 1999/05/19 16:18:49 grubba Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1609,11 +1609,11 @@ string tag_cache(string tag, mapping args, string contents, object id)
 
 string tag_fsize(string tag, mapping args, object id)
 {
-  array s;
-  catch
-  {
-    id->conf->stat_file( fix_relative( args->file, id ), id );
-    return (string)s[1];
+  catch {
+    array s = id->conf->stat_file( fix_relative( args->file, id ), id );
+    if (s && (s[1]>= 0)) {
+      return (string)s[1];
+    }
   };
   if(string s=id->conf->try_get_file(fix_relative(args->file, id), id ) )
     return (string)strlen(s);
