@@ -1,10 +1,12 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.10.2.1 1997/02/13 23:28:02 grubba Exp $";
+string cvs_version = "$Id: http.pike,v 1.10.2.2 1997/03/03 11:42:25 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
 int first;
+
+import Simulate;
 
 function decode = roxen->decode;
 
@@ -76,7 +78,7 @@ void end(string|void);
 private void setup_pipe(int noend)
 {
   if(!my_fd) return end();
-  if(!pipe)  pipe=((program)"/precompiled/pipe")();
+  if(!pipe)  pipe=Pipe.pipe();
   if(!noend) pipe->set_done_callback(end);
 #ifdef REQUEST_DEBUG
   perror("REQUEST: Pipe setup.\n");

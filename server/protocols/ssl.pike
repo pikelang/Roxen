@@ -1,6 +1,6 @@
 // This is a roxen protocol module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: ssl.pike,v 1.4 1996/12/01 19:18:03 per Exp $";
+string cvs_version = "$Id: ssl.pike,v 1.4.2.1 1997/03/03 11:42:26 grubba Exp $";
 // Support for SSL, using an external process. Work is in progress for
 // native SSL support.
 
@@ -10,7 +10,7 @@ inherit "protocols/http";
 private static int free_port()
 {
   int i;
-  object port = ((program)"/precompiled/port")();
+  object port = files.port();
   
   /* There has to be a better way. */
   /* This is quite ugly, really.  */

@@ -12,8 +12,8 @@ inherit "protocols/http" : http;
 
 class SSL_decode
 {
-  inherit "/precompiled/file" : pipe;
-  inherit "/precompiled/ssleay_connection" : ssl;
+  inherit files.file : pipe;
+  inherit Ssleay.connection : ssl;
 
   object http;
   object https;
@@ -112,7 +112,7 @@ private object get_context(string interface, string port)
   ctx = contexts[key];
   if (!ctx)
     {
-      ctx = contexts[key] = ((program)"/precompiled/ssleay")();
+      ctx = contexts[key] = Ssleay.ssleay();
     }
   return ctx;
 }
