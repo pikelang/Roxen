@@ -5,7 +5,7 @@
 //
 // made by Mattias Wingstedt
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.13 2000/03/17 00:30:48 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.14 2000/03/17 00:51:00 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -63,7 +63,7 @@ void start()
   tagname = query( "tagname" );
 }
 
-string tag_newa(string tag, mapping m, string q)
+string newa(string tag, mapping m, string q)
 {
   if(!m->name && !m->random) return q;
   if(m->name) {
@@ -79,6 +79,6 @@ string tag_newa(string tag, mapping m, string q)
 
 mapping query_simpletag_callers()
 {
-  return ([ tagname : ({ 0, tag_newa }) ]);
+  return ([ tagname : ({ 0, newa }) ]);
 }
 
