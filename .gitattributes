@@ -175,6 +175,7 @@ nn binary
 /server/modules/directories/directories.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
 /server/modules/examples/common_api.pike foreign_ident
+/server/modules/examples/filter.pike foreign_ident
 /server/modules/examples/fnord.pike foreign_ident
 /server/modules/examples/location.pike foreign_ident
 /server/modules/examples/newstyle_fnord.pike foreign_ident
