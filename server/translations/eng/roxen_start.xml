@@ -2,7 +2,7 @@
 <locale version="1.0"/>
 <project>roxen_start</project>
 <language>eng</language>
-<dumped>968470415</dumped>
+<dumped>968669963</dumped>
 <file>../base_server/roxen.pike</file>
 <file>../base_server/configuration.pike</file>
 <file>../modules/configuration/update.pike</file>
@@ -29,13 +29,11 @@
 </str>
 
 <str id="5">
-<o>Update: Found new packages: %s
-</o>
+<o>Update: Found new packages: %s</o>
 <t></t>
 </str>
 
 <str id="6">
-<o>Update: No new packages found.
-</o>
+<o>Update: No new packages found.</o>
 <t></t>
 </str>
