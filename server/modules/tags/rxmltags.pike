@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.334 2002/01/07 13:08:09 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.335 2002/01/07 18:27:56 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1687,7 +1687,7 @@ class TagMaketag {
       inherit RXML.Frame;
 
       array do_return(RequestID id) {
-	id->misc->makeargs[args->name] = content;
+	id->misc->makeargs[args->name] = content || "";
 	return 0;
       }
     }
