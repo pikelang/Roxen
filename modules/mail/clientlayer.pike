@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.34 1999/02/05 10:52:31 js Exp $
+ * $Id: clientlayer.pike,v 1.35 1999/02/23 18:19:19 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.34 1999/02/05 10:52:31 js Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.35 1999/02/23 18:19:19 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -260,6 +260,7 @@ class Mail
   mapping _dh;
   mapping _headers;
   static multiset _flags;
+  static string _incoming_date;
 
   void modify()
   {
@@ -352,9 +353,18 @@ class Mail
     if(!_headers || force)
     {
       mapping h = get_mail_headers( message_id );
+      _incoming_date = h->incoming_date;
       return _headers = parse_headers( h[ "headers" ] )[0] | h;
     }
     return _headers;
+  }
+
+  string incoming_date(int|void force)
+  {
+    if (!_incoming_date || force) {
+      headers(force);
+    }
+    return _incoming_date;
   }
 
   multiset(string) flags(int|void force)
