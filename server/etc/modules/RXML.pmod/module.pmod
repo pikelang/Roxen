@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.46 2000/02/08 06:28:14 mast Exp $
+//! $Id: module.pmod,v 1.47 2000/02/08 21:24:56 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -514,7 +514,7 @@ class Value
 //! Interface for objects used as variable values that are evaluated
 //! when referenced.
 {
-  mixed rxml_var_eval (Context ctx, string var, string scope_name, void|Type type);
+  mixed rxml_var_eval (Context ctx, string var, string scope_name, void|Type type)
   //! This is called to get the value of the variable. ctx, var and
   //! scope_name are set to where this Value object was found.
   //!
@@ -523,6 +523,18 @@ class Value
   //! RXML error should be thrown. If you don't want to do any special
   //! handling of this, it's enough to call type->convert(value),
   //! since that function does just that.
+  {
+    mixed val = rxml_const_eval (ctx, var, scope_name, type);
+    ctx->set_var(var, val, scope_name);
+    return val;
+  }
+
+  mixed rxml_const_eval (Context ctx, string var, string scope_name, void|Type type)
+  //! If the variable value is the same throughout the life of the context,
+  //! this method could be used instead of rxml_var_eval.
+  {
+    return 0;
+  }
 
   string _sprintf() {return "RXML.Value";}
 }
@@ -617,11 +629,12 @@ class Context
       else
 	if (zero_type (val = vars[var]))
 	  return ([])[0];
-      if (objectp (val) && ([object] val)->rxml_var_eval)
+      if (objectp (val) && ([object] val)->rxml_var_eval) {
 	return
 	  zero_type (val = ([object(Value)] val)->rxml_var_eval (
 		       this_object(), var, scope_name || "_", want_type)) ||
 	  val == Void ? ([])[0] : val;
+      }
       else
 	if (want_type)
 	  return
@@ -1367,9 +1380,8 @@ class Frame
   //! through the content. This will repeat until 0 is returned.
   //!
   //! If do_iterate is a positive integer, that many passes is done
-  //! and then the tag exits. If do_iterate is zero or missing, one
-  //! pass is done. If do_iterate is a negative integer, no pass is
-  //! done, and the tag exits right away.
+  //! and then the tag exits. If do_iterate is zero no pass is done.
+  //! If do_iterate is missing, one pass is done.
 
   //!int|function(RequestID:int) is_valid;
   //! When defined, the frame may be cached. First the name of the tag
