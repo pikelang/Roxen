@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.85 1999/02/23 17:21:49 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.86 1999/02/23 18:29:15 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -397,7 +397,13 @@ class imap_mail
     array(object|mixed) `()(mixed response)
     {
       if (stringp(response)) {
-	return ({ wanted, sprintf("{%d}\r\n%s", sizeof(response), response) });
+	if (search(response, "\n") != -1) {
+	  return ({ wanted,
+		    sprintf("{%d}\r\n%s", sizeof(response), response)
+	  });
+	} else {
+	  return ({ wanted, "\"" + response + "\"" });
+	}
       }
       return ({ wanted, response });
     }
@@ -576,7 +582,22 @@ class imap_mail
     case "internaldate":
       // FIXME: Where can a suitable date be found?
       // Use mail->headers()->incoming_date
-      werror("mail->headers(): %O\n", mail->headers());
+      string incoming_date = mail->incoming_date();
+      werror("mail->incoming_date(): %O\n", incoming_date);
+      // FIXME: Relies on that the result from timestamp in Mysql is stable:
+      // YYYYMMDDhhmmss
+      // FIXME: Timezone is hardcoded!
+      return response(sprintf("%s-%s-%s %s:%s:%s +0100",
+			      incoming_date[6..7],
+			      ([ "01":"Jan", "02":"Feb", "03":"Mar",
+				 "04":"Apr", "05":"May", "06":"Jun",
+				 "07":"Jul", "08":"Aug", "09":"Sep",
+				 "10":"Oct", "11":"Nov", "12":"Dec"
+			      ])[incoming_date[4..5]],
+			      incoming_date[..3],
+			      incoming_date[8..9],
+			      incoming_date[10..11],
+			      incoming_date[12..13]));
       // FIXME
       return response("internaldate_unimplemented");
 
