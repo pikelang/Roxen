@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.64 1998/06/26 13:14:32 grubba Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.65 1998/06/30 02:04:33 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -913,14 +913,17 @@ string get_modfullname (object module)
 }
 
 // internal method for do_output_tag
-private string do_output_tag_var( string|array var, string multi_separator )
+private string do_output_tag_var( mixed var, string multi_separator )
 {
   if (arrayp( var ))
     return var * multi_separator;
-  else if (search( var, "\000" ) != -1)
-    return var / "\000" * multi_separator;
-  else
-    return var;
+  else {
+    var = (string) var;
+    if (search( var, "\000" ) != -1)
+      return var / "\000" * multi_separator;
+    else
+      return var;
+  }
 }
 
 // internal method for do_output_tag
