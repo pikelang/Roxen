@@ -17,6 +17,32 @@ string is_image( string x )
     return "png";
 }
 
+
+int is_encode_value( string what )
+{
+  return !search( what, "¶ke0" );
+}
+
+string format_decode_value( string what )
+{
+  string trim_comments( string what ) /* Needs work */
+  {
+    string a, b;
+    while( sscanf( what, "%s/*%*s*/%s", a, b ) )
+      what = a+b;
+    return what;
+  };
+
+  catch
+  {
+    mixed q = decode_value( what );
+    if( objectp( q ) || programp( q ) )
+      return Roxen.http_encode_string("<"+_(0,"bytecode data")+">");
+    return trim_comments( sprintf("%O", q ) );
+  };
+  return what;
+}
+
 string store_image( string x )
 {
   string id = (string)image_id++;
@@ -188,59 +214,68 @@ mapping|string parse( RequestID id )
 
   if( id->variables["run_q.x"] )
   {
-    mixed e = catch {
-      string q = id->variables->query;
-
-      string a, b, c;
-      multiset right_columns = (<>);
-//      multiset image_columns = (<>), 
-//       while( sscanf( q, "%sIMAGE(%s)%s", a, b, c ) == 3 )
-//       {
-// 	q = a+b+c;
-// 	image_columns[String.trim_all_whites(b)]=1;
-//       }
-
-      object big_q = db->big_query( q );
-
+    string query = "";
+    // 1: Normalize.
+    foreach( replace((id->variables->query-"\r"),"\t"," ")/"\n", string q )
+    {
+      q = (q/" "-({""}))*" ";
+      if( strlen(q) && (q[0] == ' ') )  q = q[1..];
+      if( strlen(q) && (q[-1] == ' ') ) q = q[..strlen(q)-2];
+      query +=  q + "\n";
+    }
+    foreach( (query/";\n")-({""}), string q )
+    {
       res += "<table celpadding=2><tr>";
-
-      int column;
-      foreach( big_q->fetch_fields(), mapping field )
-      {
-	switch( field->type  )
+      mixed e = catch {
+	multiset right_columns = (<>);
+	object big_q = db->big_query( q );
+	int column;
+	if( big_q )
 	{
-	  case "long":
-	  case "int":
-	  case "short":
-	    right_columns[column]=1;
-	    res += "<td align=right>";
-	    break;
-	  default:
-	    res += "<td>";
-	}
-	res += "<b><font size=-1>"+field->name+"</font size=-1></b></td>\n";
-// 	if( image_columns[field->name] )
-// 	  image_columns[column] = 1;
-	column++;
-      }
-      res += "</tr>";
+	  foreach( big_q->fetch_fields(), mapping field )
+	  {
+	    switch( field->type  )
+	    {
+	      case "long":
+	      case "int":
+	      case "short":
+		right_columns[column]=1;
+		res += "<td align=right>";
+		break;
+	      default:
+		res += "<td>";
+	    }
+	    res += "<b><font size=-1>"+field->name+
+	      "</font size=-1></b></td>\n";
+	    column++;
+	  }
+	  res += "</tr>";
       
-      while( array q = big_q->fetch_row() )
-      {
-	res += "<tr>";
-	for( int i = 0; i<sizeof(q); i++ )
-	  if( /* image_columns[i] ||*/ is_image( q[i] ) )
-	    res +=
-           "<td><img src='browser.pike?image="+store_image( q[i] )+"' /></td>";
-	  else if( right_columns[i] )
-	    res += "<td align=right>"+ Roxen.html_encode_string(q[i]) +"</td>";
-	  else
-	    res += "<td>"+ Roxen.html_encode_string(q[i]) +"</td>";
-      }
+	  while( array q = big_q->fetch_row() )
+	  {
+	    res += "<tr>";
+	    for( int i = 0; i<sizeof(q); i++ )
+	      if( /* image_columns[i] ||*/ is_image( q[i] ) )
+		res +=
+		  "<td><img src='browser.pike?image="+store_image( q[i] )+
+		  "' /></td>";
+	      else if( is_encode_value( q[i] ) )
+		res +=
+		  "<td>"+format_decode_value(q[i]) +"</td>";
+	      else if( right_columns[i] )
+		res += "<td align=right>"+ Roxen.html_encode_string(q[i]) +
+		  "</td>";
+	      else
+		res += "<td>"+ Roxen.html_encode_string(q[i]) +"</td>";
+	  }
+	}
+      };
+      if( e )
+	res += "<tr><td> <font color='&usr.warncolor;'>"+
+	  sprintf((string)_(0,"While running %s: %s"), q,describe_error(e) )+
+	  "</td></tr>\n";
       res += "</table>";
-    };
-    if( e )
-      res += "<font color='&usr.warncolor;'>"+describe_error(e)+"</font>";
+    }
   }
   
   // TODO: actions:
