@@ -35,11 +35,11 @@ array(string) verify_set( string new_value ) {
   if(sizeof(err))
     return ({ err, sprintf("%04d-%02d-%02d", y,m,d) });
 
-  object month;
-  if(catch(month=Calendar.ISO.Year(y)->month(m)))
+  int days;
+  if(catch(days=Calendar.ISO.Year(y)->month(m)->number_of_days()))
     return ({ new_value+" does not appear to be a valid date.", new_value });
-  if(!has_value(month->days(), d)) {
-    d = max(@month->days());
+  if(d > days) {
+    d = days;
     return ({ "Day must be "+d+" or less.", sprintf("%04d-%02d-%02d", y,m,d) });
   }
   return ({ 0, sprintf("%04d-%02d-%02d", y,m,d) });
