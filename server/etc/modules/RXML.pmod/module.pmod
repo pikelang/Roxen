@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.244 2001/08/31 21:43:38 mast Exp $
+// $Id: module.pmod,v 1.245 2001/09/13 14:03:48 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1860,12 +1860,12 @@ class Context
   //! destructively, or else those changes can have propagated
   //! "backwards" when the cached p-code is used.
   {
+    if (value == nil) m_delete (misc, index);
+    else misc[index] = value;
     if (mapping var_chg = misc->variable_changes) {
       if (stringp (index)) index = encode_value_canonic (index);
       var_chg[index] = value;
     }
-    if (value == nil) m_delete (misc, index);
-    else misc[index] = value;
   }
 
   void add_runtime_tag (Tag tag)
@@ -3104,7 +3104,8 @@ class Frame
 				  string msg, mixed... args)
   {
     if (sizeof (args)) msg = sprintf (msg, args);
-    fatal_error ("Position %d in exec array from %s is %s: %s", pos, where, elem, msg);
+    fatal_error ("Position %d in exec array from %s is %s: %s",
+		 pos, where, format_short (elem), msg);
   };
 
   mixed _exec_array (Context ctx, TagSetParser|PCode evaler, array exec, string where)
@@ -6290,8 +6291,9 @@ class VariableChange (static mapping settings)
   {
   handle_var_loop:
     foreach (indices (settings), mixed encoded_var) {
+      mixed var;
       if (stringp (encoded_var)) {
-	mixed var = decode_value (encoded_var);
+	var = decode_value (encoded_var);
 	if (arrayp (var)) {
 	  if (sizeof (var) == 1) {
 #ifdef DEBUG
@@ -6319,14 +6321,15 @@ class VariableChange (static mapping settings)
 	  }
 	  continue handle_var_loop;
 	}
-	encoded_var = var;
       }
+      else
+	var = encoded_var;
 #ifdef DEBUG
       if (TAG_DEBUG_TEST (ctx->frame))
 	TAG_DEBUG (ctx->frame, "    Installing cached misc entry: %s: %s\n",
-		   encoded_var, format_short (settings[encoded_var]));
+		   format_short (var), format_short (settings[encoded_var]));
 #endif
-      ctx->set_misc (encoded_var, settings[encoded_var]);
+      ctx->set_misc (var, settings[encoded_var]);
     }
     return nil;
   }
