@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.187 2004/05/09 17:54:21 grubba Exp $
+// $Id: module.pike,v 1.188 2004/05/10 08:21:36 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1121,7 +1121,8 @@ mapping(string:mixed) delete_file(string path, RequestID id)
   tmp_id->not_query = query_location() + path;
   tmp_id->method = "DELETE";
   // FIXME: Logging?
-  return find_file(path, id) || Roxen.http_status(id->misc->error_code || 404);
+  return find_file(path, tmp_id) ||
+    Roxen.http_status(tmp_id->misc->error_code || 404);
 }
 
 //! Delete @[path] recursively.
@@ -1138,8 +1139,9 @@ int(0..3) recurse_delete_files(string path, MultiStatus.Prefixed stat, RequestID
     //   The DELETE operation on a collection MUST act as if a
     //   "Depth: infinity" header was used on it.
     int(0..3) fail;
+    if (!has_suffix(path, "/")) path += "/";
     foreach(find_dir(path, id) || ({}), string fname) {
-      fail |= recurse_delete_files(path+"/"+fname, stat, id);
+      fail |= recurse_delete_files(path+fname, stat, id);
     }
     // RFC 2518 8.6.2
     //   424 (Failed Dependancy) errors SHOULD NOT be in the
