@@ -5,7 +5,7 @@
 
 import Stdio;
 
-string cvs_version = "$Id: htaccess.pike,v 1.17 1997/08/15 02:06:49 grubba Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.18 1997/08/15 02:16:20 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 inherit "module";
@@ -753,9 +753,6 @@ mapping last_resort(object id)
 mapping remap_url(object id)
 {
   mapping access_violation;
-
-  perror("htaccess: remap_url(\"%s\")\n"
-	 "%s\n", id->not_query, describe_backtrace(backtrace()));
 
   if(strlen(id->not_query)&&id->not_query[0]=='/')
   {
