@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.7 2000/03/26 04:06:28 mast Exp $
+ * $Id: resolv.pike,v 1.8 2000/03/27 04:15:03 per Exp $
  */
 
 inherit "wizard";
@@ -212,13 +212,16 @@ string parse(object id)
       nid = id->clone_me();
       nid->raw_url = file;
       nid->not_query = (http_decode_string((file/"?")[0]));
-      if( (c=q->port->find_configuration_for_url( op, nid ))
-          && !nid->misc->defaulted )
+      if( (c=q->port->find_configuration_for_url( op, nid, 1 )) )
       {
         nid->conf = c;
         break;
       }
     }
+
+    if(!c)
+      return "There is no configuration available that match this URL\n";
+
     id->variables->path = nid->not_query;
     nid->variables = ([]);
 
