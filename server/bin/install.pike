@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.21 1997/09/20 15:18:52 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.22 1997/10/15 13:57:31 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -380,12 +380,14 @@ void main(int argc, string *argv)
 
   int have_gmp = 0;
   catch(have_gmp = sizeof(indices(master()->resolv("Gmp"))));
+  int have_crypto = 0;
+  catch(have_crypto = !!master()->resolv("Crypto"));
 
   string prot_prog = "http";
   string prot_spec = "http://";
   string prot_extras = "";
 
-  if (have_gmp) {
+  if (have_gmp && have_crypto) {
     write("[1mUse SSL3 (https://) for the configuration-interface [Y/n][0m? ");
     tmp = gets() - " ";
     if (!strlen(tmp) || lower_case(tmp)[0] != 'n') {
@@ -397,7 +399,11 @@ void main(int argc, string *argv)
 	    "It is recommended that you change the certificate to one of your own.\n");
     }
   } else {
-    write("[1mNo Gmp-module -- using http for the configuration-interface[0m.\n");
+    if (crypto) {
+      write("[1mNo Gmp-module -- using http for the configuration-interface[0m.\n");
+    } else {
+      write("[1mExport version -- using http for the configuration-interface[0m.\n");
+    }
   }
 
   write(sprintf("\nStarting Roxen on %s%s:%d/ ...\n\n",
