@@ -9,7 +9,13 @@
  *      on the page since Netscape caches charsets.
  */
 
-string cvs_version = "$Id: japanese.pike,v 1.11 1999/05/15 21:58:31 grubba Exp $";
+inherit "abstract.pike";
+
+constant cvs_version = "$Id: japanese.pike,v 1.12 2000/01/17 21:03:20 nilsson Exp $";
+constant _id = ({ "kj", "japanese" });
+constant _aliases =  ({ "kj", "kanji", /* For backward compatibility */
+			"jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
+			"日本語" });
 
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */
 
@@ -118,13 +124,5 @@ string day(int num)
 {
   return ({ "日", "月", "火", "水", "木", "金", "土" })[ num - 1 ]+
 	    "曜日";
-}
-
-array aliases()
-{
-  return ({ "kj", "kanji", /* For backward compatibility */
-	    "jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
-	    "日本語"
-  });
 }
 

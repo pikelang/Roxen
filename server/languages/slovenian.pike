@@ -6,13 +6,20 @@
    Please consult me before modifying slovenian.pike.
 */
 
-string cvs_version = "$Id: slovenian.pike,v 1.10 1998/07/11 18:54:15 grubba Exp $";
-string month(int num)
-{
-  return ({ "Januar", "Februar", "Marec", "April", "Maj",
-	    "Junij", "Julij", "Avgust", "September", "Oktober",
-	    "November", "December" })[ num - 1 ];
-}
+inherit "abstract.pike";
+
+constant cvs_version = "$Id: slovenian.pike,v 1.11 2000/01/17 21:03:20 nilsson Exp $";
+constant _id = ({ "si", "slovenian" });
+constant _aliases = ({ "si", "svn", "slovenian" });
+
+constant months = ({
+  "Januar", "Februar", "Marec", "April", "Maj",
+  "Junij", "Julij", "Avgust", "September", "Oktober",
+  "November", "December" });
+
+constant days = ({
+  "Nedelja","Ponedeljek","Torek","Sreda",
+  "Èetrtek","Petek","Sobota" });
 
 string number(int num)
 {
@@ -118,17 +125,3 @@ string date(int timestamp, mapping|void m)
   if(m["time"])
     return ctime(timestamp)[11..15];
 }
-
-
-
-string day(int num)
-{
-  return ({ "Nedelja","Ponedeljek","Torek","Sreda",
-	    "Èetrtek","Petek","Sobota" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "si", "svn", "slovenian" });
-}
-

@@ -6,14 +6,20 @@
  * doc = "Handles the conversion of numbers and dates to Portuguese. You have to restart the server for updates to take effect. Translation by cjsawaia@8415.com.br";
  */
 
-string cvs_version = "$Id: portuguese.pike,v 1.7 1998/07/11 18:54:12 grubba Exp $";
+inherit "abstract.pike";
+
+constant cvs_version = "$Id: portuguese.pike,v 1.8 2000/01/17 21:03:20 nilsson Exp $";
+constant _id = ({ "pt", "portuguese" });
+constant _aliases = ({ "pt", "port", "portuguese" });
  
-string month(int num)
-{
-  return ({ "Janeiro", "Fevereiro", "Março", "Abril", "Maio",
-            "Junho", "Julho", "Agosto", "Setembro", "Outubro",
-            "Novembro", "Dezembro" })[ num - 1 ];
-}
+constant months = ({
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio",
+  "Junho", "Julho", "Agosto", "Setembro", "Outubro",
+  "Novembro", "Dezembro" });
+ 
+constant days = ({
+  "Domingo","Segunda Feira","Terça Feira","Quarta Feira",
+  "Quinta Feira","Sexta Feira","Sábado" });
  
 string ordered(int i)
 {
@@ -121,15 +127,4 @@ string number(int num)
    default:
     return "muito!!";
   }
-}
- 
-string day(int num)
-{
-  return ({ "Domingo","Segunda Feira","Terça Feira","Quarta Feira",
-            "Quinta Feira","Sexta Feira","Sábado" })[ num - 1 ];
-}
- 
-array aliases()
-{
-  return ({ "pt", "port", "portuguese" });
 }

@@ -8,13 +8,20 @@
    Please consult me before upgrading serbian.pike.
 */
 
-string cvs_version = "$Id: serbian.pike,v 1.5 1999/08/30 09:33:02 per Exp $";
-string month(int num)
-{
-  return ({ "Januar", "Februar", "Mart", "April", "Maj",
-	    "Jun", "Jul", "Avgust", "Septembar", "Oktobar",
-	    "Novembar", "Decembar" })[ num - 1 ];
-}
+inherit "abstract.pike";
+
+constant cvs_version = "$Id: serbian.pike,v 1.6 2000/01/17 21:03:20 nilsson Exp $";
+constant _id = ({ "sr", "serbian" });
+constant _aliases = ({ "sr", "ser", "serbian" });
+
+constant  months = ({
+  "Januar", "Februar", "Mart", "April", "Maj",
+  "Jun", "Jul", "Avgust", "Septembar", "Oktobar",
+  "Novembar", "Decembar" });
+
+constant days = ({
+  "Nedelja","Ponedeljak","Utorak","Sreda",
+  "Cetvrtak","Petak","Subota" });
 
 string ordered(int i)
 {
@@ -117,15 +124,4 @@ string number(int num)
     if ((num>4999) && (num<1000000)) return number(num/1000)+" hiljada "+number(num%1000);
     return "mnogo";
   }
-}
-
-string day(int num)
-{
-  return ({ "Nedelja","Ponedeljak","Utorak","Sreda",
-	    "Cetvrtak","Petak","Subota" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "sr", "ser", "serbian" });
 }

@@ -1,5 +1,4 @@
 /* Created by Janne Edelman, Turku Unix Users Group ry, Turku, Finland
-string cvs_version = "$Id: finnish.pike,v 1.5 1998/07/11 18:54:03 grubba Exp $";
    http://www.tuug.utu.fi/~edelman/ or http://website.tuug.utu.fi/ 
    */
 /*
@@ -7,12 +6,20 @@ string cvs_version = "$Id: finnish.pike,v 1.5 1998/07/11 18:54:03 grubba Exp $";
  * doc = "Handles the conversion of numbers and dates to finnish. You have to restart the server for updates to take effect. Translation by Janne Edelman, Turku Unix Users Group ry, Turku, Finland";
  */
 
-string month(int num)
-{
-  return ({ "tammikuu", "helmikuu", "maaliskuu", "huhtikuu", "toukokuu",
-	    "kesäkuu", "heinäkuu", "elokuu", "syyskuu", "lokakuu",
-	    "marraskuu", "joulukuu" })[ num - 1 ];
-}
+inherit "abstract.pike";
+
+constant cvs_version = "$Id: finnish.pike,v 1.6 2000/01/17 21:03:19 nilsson Exp $";
+constant _id = ({ "fi", "finnish" });
+constant _aliases = ({ "fi", "fin", "finnish" });
+
+constant months = ({
+  "tammikuu", "helmikuu", "maaliskuu", "huhtikuu", "toukokuu",
+  "kesäkuu", "heinäkuu", "elokuu", "syyskuu", "lokakuu",
+  "marraskuu", "joulukuu" });
+
+constant days = ({
+  "Sunnuntai","Maanantai","Tiistai","Keskiviikko",
+  "Torstai","Perjantai","Lauantai" });
 
 string ordered(int i)
 {
@@ -98,15 +105,4 @@ string number(int num)
    default:
     return "paljon";
   }
-}
-
-string day(int num)
-{
-  return ({ "Sunnuntai","Maanantai","Tiistai","Keskiviikko",
-	    "Torstai","Perjantai","Lauantai" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "fi", "fin", "finnish" });
 }

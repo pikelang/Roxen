@@ -5,22 +5,22 @@
  * doc = "Handles the conversion of numbers and dates to Russian. You have to restart the server for updates to take effect.";
  */
 
-string cvs_version = "$Id: russian.pike,v 1.4 1999/03/01 01:06:54 grubba Exp $";
+inherit "abstract.pike";
+
+constant cvs_version = "$Id: russian.pike,v 1.5 2000/01/17 21:03:20 nilsson Exp $";
+constant _id = ({ "ru", "russian" });
+constant _aliases = ({ "ru", "rus", "russian", "русский" });
 
 #define error(x) throw( ({ x, backtrace() }) )
 
-string month(int num)
-{
-  return ({ "январь", "фебраль", "март", "апрель", "май",
-	      "июнь", "июль", "августь", "сентябрь", "октябь",
-	      "ноябрь", "декабрь" })[num - 1];
-}
+constant months = ({
+  "январь", "фебраль", "март", "апрель", "май",
+  "июнь", "июль", "августь", "сентябрь", "октябь",
+  "ноябрь", "декабрь" });
 
-string day(int num)
-{
-  return ({ "воскресенье","понедельник","вторник","среда", "четверк",
-	      "пятница", "суббота" }) [ num - 1 ];
-}
+constant days = ({
+  "воскресенье","понедельник","вторник","среда", "четверк",
+  "пятница", "суббота" });
 
 string ordered(int i)
 {
@@ -198,9 +198,3 @@ string number(int num, string|void gender)
     return("ноль");
   }
 }
-
-array aliases()
-{
-  return ({ "ru", "rus", "russian", "русский" });
-}
-

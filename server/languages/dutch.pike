@@ -1,5 +1,3 @@
-/* */
-
 /*
  * name = "Dutch language plugin ";
  * doc = "Handles the conversion of numbers and dates to Dutch. You have to restart the server for updates to take effect.";
@@ -7,14 +5,20 @@
  * Rewritten by Stephen R. van den Berg <srb@cuci.nl>, 1998/06/16
  */
 
-constant cvs_version="$Id: dutch.pike,v 1.6 1998/06/16 09:35:06 grubba Exp $";
+inherit "abstract.pike";
 
-string month(int num)
-{
-  return ({ "januari", "februari", "maart", "april", "mei",
-	    "juni", "juli", "augustus", "september", "oktober",
-	    "november", "december" })[ num - 1 ];
-}
+constant cvs_version="$Id: dutch.pike,v 1.7 2000/01/17 21:03:19 nilsson Exp $";
+constant _id = ({ "du", "dutch" });
+constant _aliases = ({ "du", "nl", "ned", "dutch" });
+
+constant months = ({
+  "januari", "februari", "maart", "april", "mei",
+  "juni", "juli", "augustus", "september", "oktober",
+  "november", "december" });
+
+constant days = ({
+  "zondag", "maandag", "dinsdag", "woensdag",
+  "donderdag", "vrijdag", "zaterdag" });
 
 string ordered(int i)
 {
@@ -119,15 +123,4 @@ static string snumber(int num)
 string number(int num)
 {
   return num?snumber(num):"nul";
-}
-
-string day(int num)
-{
-  return ({ "zondag", "maandag", "dinsdag", "woensdag",
-	    "donderdag", "vrijdag", "zaterdag" }) [ num -1 ];
-}
-
-array aliases()
-{
-  return ({ "du", "nl", "ned", "dutch" });
 }

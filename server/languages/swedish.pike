@@ -4,19 +4,43 @@
  * doc = "Handles the conversion of numbers and dates to Swedish. You have to restart the server for updates to take effect.";
  */
 
-string cvs_version = "$Id: swedish.pike,v 1.10 1997/09/16 17:17:49 grubba Exp $";
-string month(int num)
-{
-  return ({ "januari", "februari", "mars", "april", "maj",
-	    "juni", "juli", "augusti", "september", "oktober",
-	    "november", "december" })[num - 1];
-}
+inherit "abstract.pike";
 
-string day(int num)
-{
-  return ({ "söndag","måndag","tisdag","onsdag", "torsdag","fredag",
-	      "lördag" }) [ num - 1 ];
-}
+constant cvs_version = "$Id: swedish.pike,v 1.11 2000/01/17 21:03:20 nilsson Exp $";
+constant _id = ({ "sv", "swedish" });
+constant _aliases = ({ "sv", "se", "sve", "swe", "swedish", "svenska" });
+
+constant months = ({
+  "januari", "februari", "mars", "april", "maj",
+  "juni", "juli", "augusti", "september", "oktober",
+  "november", "december" });
+
+constant days = ({
+  "söndag","måndag","tisdag","onsdag", "torsdag","fredag",
+  "lördag" });
+
+constant languages=([
+  "ca":"katalanska",
+  "cs":"tjeckiska",
+  "du":"nederldndska",
+  "fi":"finska",
+  "fr":"franska",
+  "de":"tyska",
+  "en":"engelska",
+  "es":"spanska",
+  "hr":"kroatiska",
+  "hu":"ungerska",
+  "it":"italienska",
+  "jp":"japanska",
+  "mi":"maori",
+  "no":"norska",
+  "pl":"polska",
+  "pt":"portugisiska",
+  "ru":"ryska",
+  "si":"slovenska",
+  "sr":"serbiska",
+  "sv":"svenska"
+]);
 
 string ordered(int i)
 {
@@ -26,7 +50,7 @@ string ordered(int i)
   return i + ":e";
 }
 
-string date(int timestamp, mapping m)
+string date(int timestamp, mapping|void m)
 {
   mapping t1=localtime(timestamp);
   mapping t2=localtime(time(0));
@@ -37,22 +61,22 @@ string date(int timestamp, mapping m)
   {
     if(t1["yday"] == t2["yday"] && t1["year"] == t2["year"])
       return "i dag, klockan " + ctime(timestamp)[11..15];
-  
+
     if(t1["yday"] == t2["yday"]-1 && t1["year"] == t2["year"])
       return "i går, klockan " + ctime(timestamp)[11..15];
-  
+
     if(t1["yday"] == t2["yday"]+1 && t1["year"] == t2["year"])
       return "i morgon, vid "  + ctime(timestamp)[11..15];
-  
+
     if(t1["year"] != t2["year"])
       return month(t1["mon"]+1) + " " + (t1["year"]+1900);
     else
       return "den " + t1["mday"] + " " + month(t1["mon"]+1);
   }
   if(m["full"])
-    return sprintf("%s, den %s %s %d", 
+    return sprintf("%s, den %s %s %d",
 		   ctime(timestamp)[11..15],
-		   ordered(t1["mday"]), 
+		   ordered(t1["mday"]),
 		   month(t1["mon"]+1), t1["year"]+1900);
   if(m["date"])
     return sprintf("den %s %s %d", ordered(t1["mday"]),
@@ -94,17 +118,17 @@ string _number(int num)
    case 70: return "sjuttio";
    case 80: return "åttio";
    case 90: return "nittio";
-   case 21..29: case 31..39: case 41..49: 
-   case 51..59: case 61..69: case 71..79: 
+   case 21..29: case 31..39: case 41..49:
+   case 51..59: case 61..69: case 71..79:
    case 81..89: case 91..99:
     return _number((num/10)*10)+_number(num%10);
    case 100..999: return _number(num/100)+"hundra"+_number(num%100);
    case 1000..1999:
     return _number(num/1000)+"tusen"+_number(num%1000);
    case 2000..999999: return _number(num/1000)+"tusen"+_number(num%1000);
-   case 1000000..1999999: 
+   case 1000000..1999999:
     return "en miljon"+_number(num%1000000);
-   case 2000000..999999999: 
+   case 2000000..999999999:
      return _number(num/1000000)+"miljoner"+_number(num%1000000);
    default:
     return "många";
@@ -121,9 +145,3 @@ string number(int num)
     return("noll");
   }
 }
-
-array aliases()
-{
-  return ({ "sv", "se", "sve", "swe", "swedish", "svenska" });
-}
-

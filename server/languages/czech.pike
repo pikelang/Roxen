@@ -14,13 +14,21 @@
              		(First letter must be lower case)
 
 */
-string cvs_version = "$Id: czech.pike,v 1.9 1999/10/11 18:03:26 hop Exp $";
-string month(int num)
-{
-  return ({ "ledna", "února", "bøezna", "dubna", "kvìtna",
-	    "èervna", "èervence", "srpna", "záøí", "øíjna",
-	    "listopadu", "prosince" })[ num - 1 ];
-}
+
+inherit "abstract.pike";
+
+constant cvs_version = "$Id: czech.pike,v 1.10 2000/01/17 21:03:19 nilsson Exp $";
+constant _id = ({ "cs", "czech" });
+constant _aliases = ({ "cs", "cz", "cze", "czech" });
+
+constant months = ({
+  "ledna", "února", "bøezna", "dubna", "kvìtna",
+  "èervna", "èervence", "srpna", "záøí", "øíjna",
+  "listopadu", "prosince" });
+
+constant days = ({
+  "nedìle","pondìlí","úterý","støeda",
+  "ètvrtek","pátek","sobota" });
 
 string ordered(int i)
 {
@@ -116,17 +124,3 @@ string number(int num)
     return ("hodnì");
   }
 }
-
-string day(int num)
-{
-  return ({ "nedìle","pondìlí","úterý","støeda",
-	    "ètvrtek","pátek","sobota" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "cs", "cz", "cze", "czech" });
-}
-
-
-

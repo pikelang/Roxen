@@ -1,5 +1,5 @@
 /* From: Tvns B|ker <bueker@bidnix.bid.fh-hannover.de> 
-string cvs_version = "$Id: german.pike,v 1.7 1998/07/11 18:54:05 grubba Exp $";
+string cvs_version = "$Id: german.pike,v 1.8 2000/01/17 21:03:20 nilsson Exp $";
    Subject: New 'german.lpc' ...
  
    Hi,
@@ -13,15 +13,23 @@ string cvs_version = "$Id: german.pike,v 1.7 1998/07/11 18:54:05 grubba Exp $";
 
 /*
  * name = "German language plugin ";
- * doc = "Handles the conversion of numbers and dates to German. You have to restart the server for updates to take effect. Translation by Tvns Böker (bueker@bidnix.bid.fh-hannover.de)";
+ * doc = "Handles the conversion of numbers and dates to German. Translation by Tvns Böker (bueker@bidnix.bid.fh-hannover.de)";
  */
 
-string month(int num)
-{
-  return ({ "Januar", "Februar", "März", "April", "Mai",
-	    "Juni", "Juli", "August", "September", "Oktober",
-	    "November", "Dezember" })[ num - 1 ];
-}
+inherit "abstract.pike";
+
+constant _id = ({ "de", "german" });
+constant _aliases = ({ "de", "deu", "deutsch", "german" });
+
+constant months = ({
+  "Januar", "Februar", "März", "April", "Mai",
+  "Juni", "Juli", "August", "September", "Oktober",
+  "November", "Dezember" });
+
+
+constant days = ({
+  "Sonntag","Montag","Dienstag","Mittwoch",
+  "Donnerstag","Freitag","Samstag" });
 
 string ordered(int i)
 {
@@ -107,15 +115,4 @@ string number(int num)
    default:
     return "verdammt viele";
   }
-}
-
-string day(int num)
-{
-  return ({ "Sonntag","Montag","Dienstag","Mittwoch",
-	    "Donnerstag","Freitag","Samstag" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "de", "deu", "deutsch", "german" });
 }

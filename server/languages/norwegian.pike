@@ -1,17 +1,24 @@
 /*
-string cvs_version = "$Id: norwegian.pike,v 1.5 1998/07/11 18:54:11 grubba Exp $";
+string cvs_version = "$Id: norwegian.pike,v 1.6 2000/01/17 21:03:20 nilsson Exp $";
   norwegian.lpc         morten@nvg.unit.no
   Støtte for norsk på www-serveren..
   name="Norwegian language plugin";
   doc="Støtte for norsk på www-serveren.. morten@nvg.unit.no";
 */
 
-string month(int num)
-{
-  return ({ "januar", "februar", "mars", "april", "mai",
-            "juni", "juli", "august", "september", "oktober",
-            "november", "december" })[num - 1];
-}
+inherit "abstract.pike";
+
+constant _id = ({ "no", "norwegian" });
+constant _aliases = ({ "no", "nor", "norwegian", "norsk" });
+
+constant months = ({
+  "januar", "februar", "mars", "april", "mai",
+  "juni", "juli", "august", "september", "oktober",
+  "november", "december" });
+
+constant days = ({
+  "søndag","mandag","tisdag","onsdag",
+  "torsdag","fredag","lørdag" });
 
 string ordered(int i)
 {
@@ -100,15 +107,3 @@ string number(int num)
     return "ekstremt mange";
   }
 }
-
-string day(int num)
-{
-  return ({ "søndag","mandag","tisdag","onsdag",
-            "torsdag","fredag","lørdag" }) [ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "no", "nor", "norwegian", "norsk" });
-}
-

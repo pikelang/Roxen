@@ -7,17 +7,21 @@
 "Rumney (jasonr@pec.co.nz)";
  */
 
+inherit "abstract.pike";
 
-string cvs_version = "$Id: maori.pike,v 1.5 1998/07/11 18:54:10 grubba Exp $";
+constant cvs_version = "$Id: maori.pike,v 1.6 2000/01/17 21:03:20 nilsson Exp $";
+constant _id = ({ "mi", "maori" });
+constant _aliases = ({ "mi", "maori", "maaori" });
 
-string month( int num )
-     {
-	return ( {
-	   "Haanuere", "Pepuere", "Maehe", "Aaperira", "Mei",
-	   "Hune", "Huurae", "Aakuhata", "Hepetema", "Oketopa",
-	   "Nowema", "Tiihema" 
-	})[num-1];
-     }
+constant months = ({ 
+  "Haanuere", "Pepuere", "Maehe", "Aaperira", "Mei",
+  "Hune", "Huurae", "Aakuhata", "Hepetema", "Oketopa",
+  "Nowema", "Tiihema" });
+
+
+constant days = ({
+  "Raatapu","Mane","Tuurei","Wenerei",
+  "Taaite","Paraire","Haatarei" });
 
 string number( int i ) ;
 
@@ -79,15 +83,4 @@ string number(int num)
    default:
     return "tini ("+num+")";
   }
-}
-
-string day(int num)
-{
-  return ({ "Raatapu","Mane","Tuurei","Wenerei",
-	    "Taaite","Paraire","Haatarei" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "mi", "maori", "maaori" });
 }

@@ -4,13 +4,43 @@
  * doc = "Handles the conversion of numbers and dates to English. You have to restart the server for updates to take effect.";
  */
 
-string cvs_version = "$Id: english.pike,v 1.9 1999/08/30 09:33:02 per Exp $";
-string month(int num)
-{
-  return ({ "January", "February", "March", "April", "May",
-	    "June", "July", "August", "September", "October",
-	    "November", "December" })[ num - 1 ];
-}
+inherit "abstract.pike";
+
+constant cvs_version = "$Id: english.pike,v 1.10 2000/01/17 21:03:19 nilsson Exp $";
+constant _id = ({ "en", "english" });
+constant _aliases = ({ "en", "eng", "english" });
+
+constant months = ({
+  "January", "February", "March", "April", "May",
+  "June", "July", "August", "September", "October",
+  "November", "December" });
+
+constant days = ({
+  "Sunday","Monday","Tuesday","Wednesday",
+  "Thursday","Friday","Saturday" });
+
+constant languages=([
+  "ca":"catalan",
+  "cs":"czech",
+  "du":"dutch",
+  "fi":"finnish",
+  "fr":"french",
+  "de":"german",
+  "en":"english",
+  "es":"spanish",
+  "hr":"croatian",
+  "hu":"hungarian",
+  "it":"italian",
+  "jp":"japanese",
+  "mi":"maori",
+  "no":"norwegian",
+  "pl":"polish",
+  "pt":"portuguese",
+  "ru":"russian",
+  "si":"slovenian",
+  "sr":"serbian",
+  "sv":"swedish"
+]);
 
 string ordered(int i)
 {
@@ -19,7 +49,7 @@ string ordered(int i)
    case 0:
     return "buggy";
    case 1:
-    return "1st"; 
+    return "1st";
    case 2:
     return "2nd";
    case 3:
@@ -27,9 +57,9 @@ string ordered(int i)
    default:
     if((i%100 > 10) && (i%100 < 14))
       return i+"th";
-    if((i%10) == 1)  
+    if((i%10) == 1)
       return i+"st";
-    if((i%10) == 2) 
+    if((i%10) == 2)
       return i+"nd";
     if((i%10) == 3)
       return i+"rd";
@@ -48,13 +78,13 @@ string date(int timestamp, mapping|void m)
   {
     if(t1["yday"] == t2["yday"] && t1["year"] == t2["year"])
       return "today, "+ ctime(timestamp)[11..15];
-  
+
     if(t1["yday"]+1 == t2["yday"] && t1["year"] == t2["year"])
       return "yesterday, "+ ctime(timestamp)[11..15];
-  
+
     if(t1["yday"]-1 == t2["yday"] && t1["year"] == t2["year"])
       return "tomorrow, "+ ctime(timestamp)[11..15];
-  
+
     if(t1["year"] != t2["year"])
       return (month(t1["mon"]+1) + " " + (t1["year"]+1900));
     return (month(t1["mon"]+1) + " " + ordered(t1["mday"]));
@@ -105,9 +135,9 @@ string number(int num)
    case 60: case 70: case 90:
      return number(num/10)+"ty";
    case 50: return "fifty";
-   case 21..29: case 31..39: 
-   case 51..59: case 61..69: case 71..79: 
-   case 81..89: case 91..99: case 41..49: 
+   case 21..29: case 31..39:
+   case 51..59: case 61..69: case 71..79:
+   case 81..89: case 91..99: case 41..49:
      return number((num/10)*10)+number(num%10);
    case 100: case 200: case 300: case 400: case 500:
    case 600: case 700: case 800: case 900:
@@ -128,17 +158,3 @@ string number(int num)
     return "many";
   }
 }
-
-string day(int num)
-{
-  return ({ "Sunday","Monday","Tuesday","Wednesday",
-	    "Thursday","Friday","Saturday" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "en", "eng", "english" });
-}
-
-
-

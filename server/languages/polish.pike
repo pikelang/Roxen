@@ -9,13 +9,20 @@
  * Character encoding: ISO-8859-2
  */
 
-string cvs_version = "$Id: polish.pike,v 1.2 1999/08/30 09:33:02 per Exp $";
-string month(int num)
-{
-  return ({ "Styczeñ", "Luty", "Marzec", "Kwiecieñ", "Maj",
-	    "Czerwiec", "Lipiec", "Sierpieñ", "Wrzesieñ", "Pa¼dziernik",
-	    "Listopad", "Grudzieñ" })[ num - 1 ];
-}
+inherit "abstract.pike";
+
+constant cvs_version = "$Id: polish.pike,v 1.3 2000/01/17 21:03:20 nilsson Exp $";
+constant _id = ({ "pl", "polish" });
+constant _aliases = ({ "pl", "po", "pol", "polish" });
+
+constant months = ({
+  "Styczeñ", "Luty", "Marzec", "Kwiecieñ", "Maj",
+  "Czerwiec", "Lipiec", "Sierpieñ", "Wrzesieñ", "Pa¼dziernik",
+  "Listopad", "Grudzieñ" });
+
+constant days = ({
+  "Niedziela","Poniedzia³ek","Wtorek","¦roda",
+  "Czwartek","Pi±tek","Sobota" });
 
 string ordered(int i)
 {
@@ -127,15 +134,4 @@ string number(int num)
    default:
     return "wiele";
   }
-}
-
-string day(int num)
-{
-  return ({ "Niedziela","Poniedzia³ek","Wtorek","¦roda",
-	    "Czwartek","Pi±tek","Sobota" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "pl", "po", "pol", "polish" });
 }

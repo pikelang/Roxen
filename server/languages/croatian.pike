@@ -8,15 +8,20 @@
    Please consult me before upgrading croatian.pike.
 */
 
+inherit "abstract.pike";
 
+constant cvs_version = "$Id: croatian.pike,v 1.7 2000/01/17 21:03:19 nilsson Exp $";
+constant _id = ({ "hr", "croatian" });
+constant _aliases = ({ "hr", "cro", "croatian" });
 
-string cvs_version = "$Id: croatian.pike,v 1.6 1999/08/30 09:33:02 per Exp $";
-string month(int num)
-{
-  return ({ "Sijecanj", "Veljaca", "Ozujak", "Travanj", "Svibanj",
-	    "Lipanj", "Srpanj", "Kolovoz", "Rujan", "Listopad",
-	    "Studeni", "Prosinac" })[ num - 1 ];
-}
+constant  months = ({
+  "Sijecanj", "Veljaca", "Ozujak", "Travanj", "Svibanj",
+  "Lipanj", "Srpanj", "Kolovoz", "Rujan", "Listopad",
+  "Studeni", "Prosinac" });
+
+constant days = ({
+  "Nedjelja","Ponedjeljak","Utorak","Srijeda",
+  "Cetvrtak","Petak","Subota" });
 
 string ordered(int i)
 {
@@ -122,16 +127,3 @@ number((num-(num%1000))/1000)+" tisuce "+number(num%1000);
     return "mnogo";
   }
 }
-
-string day(int num)
-{
-  return ({ "Nedjelja","Ponedjeljak","Utorak","Srijeda",
-	    "Cetvrtak","Petak","Subota" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "hr", "cro", "croatian" });
-}
-
-

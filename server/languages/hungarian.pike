@@ -11,22 +11,22 @@
  *  source.
  */
 
-string cvs_version = "$Id: hungarian.pike,v 1.2 1998/07/11 18:54:07 grubba Exp $";
+inherit "abstract.pike";
 
-string month(int num)
-{
-  return ({ "janu&aacute;r",  "febru&aacute;r", "m&aacute;rcius",
-            "&aacute;prilis", "m&aacute;jus",   "j&uacute;nius",
-            "j&uacute;lius",  "augusztus",      "szeptember",
-            "okt&oacute;ber", "november",       "december" })[ num - 1 ];
-}
+constant cvs_version = "$Id: hungarian.pike,v 1.3 2000/01/17 21:03:20 nilsson Exp $";
+constant _id = ({ "hu", "hungarian" });
+constant _aliases = ({ "hu", "hun", "magyar", "hungarian" });
 
-string day(int num)
-{
-  return ({ "vas&aacute;rnap", "h&eacute;tf&otilde;",      "kedd",
-            "szerda",          "cs&uuml;t&ouml;rt&ouml;k", "p&eacute;ntek",
-            "szombat" })[ num - 1 ];
-}
+constant months = ({
+  "janu&aacute;r", "febru&aacute;r", "m&aacute;rcius",
+  "&aacute;prilis", "m&aacute;jus", "j&uacute;nius",
+  "j&uacute;lius", "augusztus", "szeptember",
+  "okt&oacute;ber", "november", "december" });
+
+constant days = ({
+  "vas&aacute;rnap", "h&eacute;tf&otilde;", "kedd",
+  "szerda", "cs&uuml;t&ouml;rt&ouml;k", "p&eacute;ntek",
+  "szombat" });
 
 string ordered(int i)
 {
@@ -34,7 +34,6 @@ string ordered(int i)
       return "&eacute;rtelmezhetetlen";
     return i+". ";
 }
-
 
 string date(int timestamp, mapping|void m)
 {
@@ -118,9 +117,4 @@ string number(int num)
    default:
     return "sok";
   }
-}
-
-array aliases()
-{
-  return ({ "hu", "hun", "magyar", "hungarian" });
 }

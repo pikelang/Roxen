@@ -1,6 +1,6 @@
 /*
 
-string cvs_version = "$Id: french.pike,v 1.7 1998/09/22 14:53:53 grubba Exp $";
+string cvs_version = "$Id: french.pike,v 1.8 2000/01/17 21:03:20 nilsson Exp $";
 Created by:
 
 ---------------------+--------------------------------------------------
@@ -18,13 +18,19 @@ http://ftp.geog.ucl.ac.be/~patrick/
  * doc = "Handles the conversion of numbers and dates to French. You have to restart the server for updates to take effect. Translation by Patrick Kremer.";
  */
 
+inherit "abstract.pike";
 
-string month(int num)
-{
-  return ({ "janvier", "février", "mars", "avril", "mai",
-	    "juin", "juillet", "août", "septembre", "octobre",
-	    "novembre", "décembre" })[ num - 1 ];
-}
+constant _id = ({ "fr", "french" });
+constant _aliases = ({ "fr", "fra", "français", "french" });
+
+constant months = ({
+  "janvier", "février", "mars", "avril", "mai",
+  "juin", "juillet", "août", "septembre", "octobre",
+  "novembre", "décembre" });
+
+constant day = ({
+  "dimanche", "lundi", "mardi", "mercredi",
+  "jeudi", "vendredi", "samedi" });
 
 string ordered(int i)
 {
@@ -136,15 +142,3 @@ string number(int num)
     return "beaucoup";
   }
 }
-
-string day(int num)
-{
-  return ({ "dimanche", "lundi", "mardi", "mercredi",
-	    "jeudi", "vendredi", "samedi" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "fr", "fra", "français", "french" });
-}
-

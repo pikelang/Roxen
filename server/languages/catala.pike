@@ -1,5 +1,4 @@
 /* Bugs by: Per */
-string cvs_version = "$Id: catala.pike,v 1.6 1998/07/11 18:53:57 grubba Exp $";
 /* Trans by: jordi@lleida.net 
  * This version revised by a catalan linguist. 
  */
@@ -8,13 +7,20 @@ string cvs_version = "$Id: catala.pike,v 1.6 1998/07/11 18:53:57 grubba Exp $";
  * doc = "Handles the conversion of numbers and dates to Catalan. You have to restart the server for updates to take effect. Translation by jordi@lleida.net, revised by a catalan linguist.";
  */
 
+inherit "abstract.pike";
 
-string month(int num)
-{
-  return ({ "gener", "febrer", "març", "abril", "maig",
-            "juny", "juliol", "agost", "setembre", "octubre",
-            "novembre", "desembre" })[ num - 1 ];
-}
+constant cvs_version = "$Id: catala.pike,v 1.7 2000/01/17 21:03:19 nilsson Exp $";
+constant _id = ({ "ca", "catala" });
+constant _aliases = ({ "ca", "cat", "catala", "es_CA" });
+
+constant months=({
+  "gener", "febrer", "març", "abril", "maig",
+  "juny", "juliol", "agost", "setembre", "octubre",
+  "novembre", "desembre" });
+
+constant days = ({
+  "diumenge","dilluns","dimarts","dimecres",
+  "dijous","divendres","dissabte" });
 
 string ordered(int i)
 {
@@ -133,15 +139,4 @@ string number(int num)
    default:
     return "molt&iacute;ssim";
   }
-}
-
-string day(int num)
-{
-  return ({ "diumenge","dilluns","dimarts","dimecres",
-            "dijous","divendres","dissabte" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "ca", "cat", "catala", "es_CA" });
 }

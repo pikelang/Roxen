@@ -1,17 +1,24 @@
 /* Bugs by: Per */
-string cvs_version = "$Id: spanish.pike,v 1.6 1998/07/11 18:54:16 grubba Exp $";
 /*
  * name = "Spanish language plugin ";
  * doc = "Handles the conversion of numbers and dates to spanish. Translated by jordi@lleida.net. You have to restart the server for updates to take effect.";
  */
 /* Trans by: jordi@lleida.net */
 
-string month(int num)
-{
-  return ({ "Enero", "Febrero", "Marzo", "Abril", "Mayo",
-	    "Junio", "Julio", "Agosto", "Septiembre", "Octubre",
-	    "Noviembre", "Diciembre" })[ num - 1 ];
-}
+inherit "abstract.pike";
+
+constant cvs_version = "$Id: spanish.pike,v 1.7 2000/01/17 21:03:20 nilsson Exp $";
+constant _id = ({ "es", "spanish" });
+constant _aliases = ({ "es", "esp", "spanish" });
+
+constant months = ({
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo",
+  "Junio", "Julio", "Agosto", "Septiembre", "Octubre",
+  "Noviembre", "Diciembre" });
+
+constant days = ({
+  "Domingo","Lunes","Martes","Miercoles",
+  "Jueves","Viernes","Sabado" });
 
 string ordered(int i)
 {
@@ -109,17 +116,3 @@ string number(int num)
     return "muchisimo";
   }
 }
-
-string day(int num)
-{
-  return ({ "Domingo","Lunes","Martes","Miercoles",
-	    "Jueves","Viernes","Sabado" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "es", "esp", "spanish" });
-}
-
-
-

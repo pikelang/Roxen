@@ -14,14 +14,20 @@
  *	would be rude, wouldn't it? ^_^
  */
 
-string cvs_version = "$Id: italian.pike,v 1.9 1999/06/16 21:59:55 grubba Exp $";
+inherit "abstract";
 
-string month(int num)
-{
-  return ({ "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio",
-	    "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre",
-	    "Novembre", "Dicembre" })[ num - 1 ];
-}
+constant cvs_version = "$Id: italian.pike,v 1.10 2000/01/17 21:03:20 nilsson Exp $";
+constant _id = ({ "it", "italian" });
+constant _aliases = ({ "it", "ita", "italiano", "italian" });
+
+constant months = ({
+  "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio",
+  "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre",
+  "Novembre", "Dicembre" });
+
+constant days = ({
+  "domenica","lunedì","martedì","mercoledì",
+  "giovedì","venerdì","sabato" });
 
 string number (int num)
 {
@@ -147,15 +153,4 @@ string date(int timestamp, mapping|void m)
       (1900+t1["year"]);
   if(m["time"])
     return ctime(timestamp)[11..15];
-}
-
-string day(int num)
-{
-  return ({ "domenica","lunedì","martedì","mercoledì",
-	    "giovedì","venerdì","sabato" })[ num - 1 ];
-}
-
-array aliases()
-{
-  return ({ "it", "ita", "italiano", "italian" });
 }
