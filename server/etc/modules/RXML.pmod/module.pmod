@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.323 2004/01/27 19:27:49 mast Exp $
+// $Id: module.pmod,v 1.324 2004/02/17 20:14:58 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1089,7 +1089,7 @@ class TagSet
   static void destroy()
   {
     catch (changed());
-    if (name) SET_TAG_SET (owner, name, generation);
+    if (name && global::this) SET_TAG_SET (owner, name, generation);
   }
 
   static void set_name (Configuration new_owner, string new_name)

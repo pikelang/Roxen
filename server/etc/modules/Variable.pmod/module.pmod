@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.83 2003/11/17 16:01:36 anders Exp $
+// $Id: module.pmod,v 1.84 2004/02/17 20:15:40 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -228,11 +228,13 @@ class Variable
 
   void destroy()
   {
-    // clean up...
-    m_delete( all_flags, _id );
-    m_delete( all_warnings, _id );
-    m_delete( invisibility_callbacks, _id );
-    m_delete( changed_values, _id );
+    if (global::this) {
+      // clean up...
+      m_delete( all_flags, _id );
+      m_delete( all_warnings, _id );
+      m_delete( invisibility_callbacks, _id );
+      m_delete( changed_values, _id );
+    }
   }
 
   string get_warnings()
