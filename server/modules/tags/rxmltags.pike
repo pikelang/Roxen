@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.427 2003/04/22 09:44:03 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.428 2003/04/23 12:28:25 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -118,98 +118,95 @@ class EntityClientTM {
 
 class EntityClientReferrer {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     array referrer=c->id->referer;
-    return referrer && sizeof(referrer)?ENCODE_RXML_TEXT(referrer[0], type):RXML.nil;
+    return referrer && sizeof(referrer)? referrer[0] :RXML.nil;
   }
 }
 
 class EntityClientName {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     array client=c->id->client;
-    return client && sizeof(client)?ENCODE_RXML_TEXT(client[0], type):RXML.nil;
+    return client && sizeof(client)? client[0] :RXML.nil;
   }
 }
 
 class EntityClientIP {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
-    return ENCODE_RXML_TEXT(c->id->remoteaddr, type);
+    return c->id->remoteaddr;
   }
 }
 
 class EntityClientAcceptLanguage {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if(!c->id->misc["accept-language"]) return RXML.nil;
-    return ENCODE_RXML_TEXT(c->id->misc["accept-language"][0], type);
+    return c->id->misc["accept-language"][0];
   }
 }
 
 class EntityClientAcceptLanguages {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if(!c->id->misc["accept-language"]) return RXML.nil;
     // FIXME: Should this be an array instead?
-    return ENCODE_RXML_TEXT(c->id->misc["accept-language"]*", ", type);
+    return c->id->misc["accept-language"]*", ";
   }
 }
 
 class EntityClientLanguage {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if(!c->id->misc->pref_languages) return RXML.nil;
-    return ENCODE_RXML_TEXT(c->id->misc->pref_languages->get_language(), type);
+    return c->id->misc->pref_languages->get_language();
   }
 }
 
 class EntityClientLanguages {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if(!c->id->misc->pref_languages) return RXML.nil;
     // FIXME: Should this be an array instead?
-    return ENCODE_RXML_TEXT(c->id->misc->pref_languages->get_languages()*", ", type);
+    return c->id->misc->pref_languages->get_languages()*", ";
   }
 }
 
 class EntityClientHost {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
-    if(c->id->host) return ENCODE_RXML_TEXT(c->id->host, type);
-    return ENCODE_RXML_TEXT(c->id->host=roxen->quick_ip_to_host(c->id->remoteaddr),
-			    type);
+    if(c->id->host) return c->id->host;
+    return c->id->host=roxen->quick_ip_to_host(c->id->remoteaddr);
   }
 }
 
 class EntityClientAuthenticated {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var,
-			string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     // Actually, it is cacheable, but _only_ if there is no authentication.
     c->id->misc->cacheable=0;
     User u = c->id->conf->authenticate(c->id);
     if (!u) return RXML.nil;
-    return ENCODE_RXML_TEXT(u->name(), type );
+    return u->name();
   }
 }
 
 class EntityClientUser {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var,
-			string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if (c->id->realauth) {
       // Extract the username.
-      return ENCODE_RXML_TEXT((c->id->realauth/":")[0], type);
+      return (c->id->realauth/":")[0];
     }
     return RXML.nil;
   }
@@ -217,13 +214,12 @@ class EntityClientUser {
 
 class EntityClientPassword {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var,
-			string scope_name, void|RXML.Type type) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     array tmp;
     c->id->misc->cacheable=0;
     if( c->id->realauth
        && (sizeof(tmp = c->id->realauth/":") > 1) )
-      return ENCODE_RXML_TEXT(tmp[1..]*":", type);
+      return tmp[1..]*":";
     return RXML.nil;
   }
 }
@@ -3848,7 +3844,7 @@ class TagEmit {
     foreach(indices(filter), string v) {
       string|object val = vs[v];
       if(objectp(val))
-	val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "", RXML.t_text) :
+	val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "") :
 	  val->rxml_var_eval(ctx, v, "", RXML.t_text);
       if(!val)
 	return 1;
@@ -3907,7 +3903,7 @@ class TagEmit {
 
     if(objectp(a0) && a0->rxml_var_eval) {
       if(!ctx) ctx = RXML_CONTEXT;
-      a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+      a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "") :
 	a0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
     else
@@ -3915,7 +3911,7 @@ class TagEmit {
 
     if(objectp(b0) && b0->rxml_var_eval) {
       if(!ctx) ctx = RXML_CONTEXT;
-      b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+      b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "") :
 	b0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
     else
@@ -3959,13 +3955,13 @@ class TagEmit {
 
     if(objectp(a0) && a0->rxml_var_eval) {
       if(!ctx) ctx = RXML_CONTEXT;
-      a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+      a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "") :
 	a0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
 
     if(objectp(b0) && b0->rxml_var_eval) {
       if(!ctx) ctx = RXML_CONTEXT;
-      b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "", RXML.t_text) :
+      b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "") :
 	b0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
 
