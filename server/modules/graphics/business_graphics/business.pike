@@ -16,7 +16,7 @@
  * Prevent less that 100x100 in size.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.11 1997/10/15 03:03:23 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.12 1997/10/15 03:14:38 hedda Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -222,7 +222,7 @@ string tag_diagram(string tag, mapping m, string contents,
    case "graph":
      break;
    default:
-     return syntax("Wrong type of diagram.");
+     return syntax("\""+res->type+"\" is an unknown type of diagram\n");
   }
 
   if(m->subtype)
