@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.261 2001/11/23 20:55:35 mast Exp $
+// $Id: module.pmod,v 1.262 2001/11/27 18:57:35 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3646,8 +3646,6 @@ class Frame
       PRE_INIT_ERROR ("Calling _eval() with non-tag set parser.\n");
     if (up)
       PRE_INIT_ERROR ("Up frame already set. Frame reused in different context?\n");
-    if (id && ctx->misc != ctx->id->misc->defines)
-      PRE_INIT_ERROR ("ctx->misc != ctx->id->misc->defines\n");
 #endif
 #ifdef MODULE_DEBUG
     if (ctx->new_runtime_tags)
@@ -4031,6 +4029,10 @@ class Frame
 	  _handle_runtime_tags (ctx, evaler);
 
 #define CLEANUP do {							\
+	  DO_IF_DEBUG (							\
+	    if (id && ctx->misc != ctx->id->misc->defines)		\
+	      fatal_error ("ctx->misc != ctx->id->misc->defines\n");	\
+	  );								\
 	  if (in_args) args = in_args;					\
 	  if (in_content) content = in_content;				\
 	  ctx->make_p_code = orig_make_p_code;				\
