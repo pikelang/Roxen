@@ -1,5 +1,5 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
-// $Id: flik.pike,v 1.2 1996/12/11 13:22:23 law Exp $
+// $Id: flik.pike,v 1.3 1997/01/20 05:08:15 law Exp $
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to 
 // build a folder list or an outline. Example:
@@ -16,7 +16,7 @@
 
 // made by Pontus Hagland <law@infovav.se> december -96
 
-string cvs_version = "$Id: flik.pike,v 1.2 1996/12/11 13:22:23 law Exp $";
+string cvs_version = "$Id: flik.pike,v 1.3 1997/01/20 05:08:15 law Exp $";
 #include <module.h>
 
 inherit "module";
@@ -65,7 +65,8 @@ array (mixed) register_module()
 	       "   &lt;fd&gt;heyhepp\n"
 	       "  &lt;ft&gt;alakazot\n"
 	       "   &lt;fd&gt;no more\n"
-	       "&lt;/fl&gt;</pre>"});
+	       "&lt;/fl&gt;</pre>",
+	       ({}),1 });
 }
 
 void start()
@@ -136,9 +137,12 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
 
 string recurse_parse_ftfd(string cont,mapping m,string id);
 
-string tag_fl( string tag, mapping arg, string cont, mapping ma, string id)
+string tag_fl( string tag, mapping arg, string cont, 
+	       mapping ma, string id, mapping defines)
 {
    mapping m=(["ld":"","t":"","cont":"","count":0]);
+
+   if (defines && defines[" fl "]) m=defines[" fl "];
 
    if (objectp(id)) id="";
    else id=((id=="")?"":id+":")+ma->count+":";
@@ -147,6 +151,8 @@ string tag_fl( string tag, mapping arg, string cont, mapping ma, string id)
    else m->folded="folded";
 
    recurse_parse_ftfd(cont,m,id);
+
+   if (defines) defines[" fl "]=m;
 
    return "<dl>"+m->cont+"</dl>";
 }
