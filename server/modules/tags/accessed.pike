@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.43 2001/08/23 21:01:08 per Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.44 2001/08/23 21:02:01 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -50,7 +50,7 @@ void create(Configuration c) {
 
   //------ SQL database settings
   defvar("sqldb",
-	 Variable.DatabaseChoice( "local", 0, "SQL Database", 
+	 Variable.DatabaseChoice( "shared", 0, "SQL Database", 
 				  "What database to use for the "
 				  "database backend." ) )
     ->set_invisibility_check_callback(
