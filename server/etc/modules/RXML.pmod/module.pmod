@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.177 2001/06/27 17:10:46 mast Exp $
+// $Id: module.pmod,v 1.178 2001/06/27 19:24:05 jonasw Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3546,7 +3546,8 @@ class Frame
   {
     return (["_content_type":content_type, "_content":content,
 	     "_result_type":result_type, "_args":args,
-	     "_raw_tag_text":this_object()->raw_tag_text]);
+	     "_raw_tag_text":this_object()->raw_tag_text,
+	     "_tag" : !tag->tagset && tag ]);
   }
 
   void _decode(mixed cookie)
@@ -3555,6 +3556,8 @@ class Frame
     content = cookie->_content;
     result_type = cookie->_result_type;
     args = cookie->_args;
+    if (cookie->_tag)
+      tag = cookie->_tag;
     if(cookie->_raw_tag_text)
       this_object()->raw_tag_text = cookie->_raw_tag_text;
   }
@@ -5649,7 +5652,8 @@ static class PikeCompile
   object compile()
   {
     COMP_MSG ("%O compile\n", this_object());
-    code->add("mixed _encode() { } void _decode(mixed v) { }\n");
+    code->add("mixed _encode() { } void _decode(mixed v) { }\n"
+	      "constant is_RXML_dynamic_program = 1;\n");
 
     program res;
     string txt = code->get();
@@ -5982,6 +5986,8 @@ static class PCodec
 
   object objectof(string what)
   {
+    if (!what)
+      return 0;
     if(what[..1] == "t:")
       return reg_types[what[2..]];
     else if(what[..3] == "mod:")
@@ -5990,6 +5996,8 @@ static class PCodec
       return nil;
     else if(what == "utils")
       return utils;
+    else if (what == "xml_tag_parser")
+      return xml_tag_parser;
 #ifdef RXML_ENCODE_DEBUG
     report_debug("objectof(%O) failed.\n", what);
 #endif
@@ -6001,6 +6009,8 @@ static class PCodec
     string t, ts;
     TagSet tagset;
     Tag tag;
+    if (!what)
+      return 0;
     if(what == "PCode")
       return PCode;
     else if(what == "VarRef")
@@ -6039,6 +6049,8 @@ static class PCodec
 	return "nil";
       else if(what == utils)
 	return "utils";
+      else if (what == xml_tag_parser)
+	return "xml_tag_parser";
     } else if(programp(what)) {
       string id;
       if(what == PCode)
@@ -6049,11 +6061,24 @@ static class PCodec
 	return "CompiledError";
       else if(what->is_RXML_Frame && saved_id[what])
 	return "f:"+saved_id[what];
+
+      if (!what->is_RXML_dynamic_program &&
+	  !what->is_RXML_Frame &&
+	  !what->is_RXML_Tag) {
+	error("PCodec::nameof(%O) for program; ::nameof() returns: %O!\n",
+	      master()->program_name(what), ::nameof(what));
+      }
+      else
+	return ([ ])[0];
     }
 #ifdef RXML_ENCODE_DEBUG
     werror("nameof(%O) failed.\n", what);
 #endif
-    return ::nameof(what);
+    string res = ::nameof(what);
+    if (res || zero_type(res))
+      return res;
+    else 
+      error("PCodec::nameof(%O) failed!\n", what);
   }
 }
 
