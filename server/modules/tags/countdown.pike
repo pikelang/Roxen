@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.17 1999/10/09 17:23:19 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.18 1999/10/24 18:45:40 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -365,7 +365,7 @@ string tag_countdown(string t, mapping m, object id)
     m_delete(m, tmp);
   }
 
-  if(m->adjust) when+=(int)m->adjust;
+  when+=time_dequantifier(m);
   int delay = when-unix_now;
   if(m->since) delay = -delay;
 
