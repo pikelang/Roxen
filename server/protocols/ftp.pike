@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.97 2004/05/26 13:46:51 mast Exp $
+ * $Id: ftp.pike,v 2.98 2004/06/08 12:47:43 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -216,7 +216,7 @@ class RequestID2
       client = ({ "ftp" });
       prot = "FTP";
       clientprot = "FTP";
-      real_variables = ([]);
+      variables = FakedVariables(real_variables = ([]));
       misc = (["pref_languages": PrefLanguages()]);
       cookies = ([]);
       throttle = ([]);
