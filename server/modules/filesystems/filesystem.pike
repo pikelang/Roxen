@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version = "$Id: filesystem.pike,v 1.123 2004/05/22 11:08:54 _cvs_stephen Exp $";
+constant cvs_version = "$Id: filesystem.pike,v 1.124 2004/05/22 11:10:30 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1398,7 +1398,7 @@ mixed find_file( string f, RequestID id )
 	return res;
       }
 #if 0
-      report_notice(LOCALE(64,"DELETING the directory %s.\n"), f);
+      report_notice("DELETING the directory %O.\n", f);
 #endif
 
       accesses++;
