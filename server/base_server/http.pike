@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.42 2000/08/15 12:50:10 jhs Exp $
+// $Id: http.pike,v 1.43 2000/08/15 15:56:31 jhs Exp $
 
 //#pragma strict_types
 
@@ -260,9 +260,16 @@ mapping http_stream(Stdio.File from)
 mapping http_auth_required(string realm, string|void message)
 //! Generates a result mapping that will instruct the web browser that
 //! the user needs to authorize himself before being allowed access.
-//! `realm' is the name of the realm on the server, which will typically
-//! end up in the browser's prompt for a name and password (e g "Enter
-//! username for <i>realm</i> at <i>hostname</i>:").
+//! `realm' is the name of the realm on the server, which will
+//! typically end up in the browser's prompt for a name and password
+//! (e g "Enter username for <i>realm</i> at <i>hostname</i>:"). The
+//! optional message is the message body that the client typically
+//! shows the user, should he decide not to authenticate himself, but
+//! rather refraim from trying to authenticate himself.
+//!
+//! In HTTP terms, this sends a <tt>401 Auth Required</tt> response
+//! with the header <tt>WWW-Authenticate: basic realm="`realm'"</tt>.
+//! For more info, see RFC 2617.
 {
   if(!message)
     message = "<h1>Authentication failed.\n</h1>";
@@ -272,6 +279,18 @@ mapping http_auth_required(string realm, string|void message)
 }
 
 mapping http_proxy_auth_required(string realm, void|string message)
+//! Generates a result mapping that will instruct the client end that
+//! it needs to authenticate itself before being allowed access.
+//! `realm' is the name of the realm on the server, which will
+//! typically end up in the browser's prompt for a name and password
+//! (e g "Enter username for <i>realm</i> at <i>hostname</i>:"). The
+//! optional message is the message body that the client typically
+//! shows the user, should he decide not to authenticate himself, but
+//! rather refraim from trying to authenticate himself.
+//!
+//! In HTTP terms, this sends a <tt>407 Proxy authentication
+//! failed</tt> response with the header <tt>Proxy-Authenticate: basic
+//! realm="`realm'"</tt>. For more info, see RFC 2617.
 {
   HTTP_WERR("Proxy auth required ("+realm+")");
   if(!message)
