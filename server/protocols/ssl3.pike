@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.28 1998/03/20 03:32:23 per Exp $
+/* $Id: ssl3.pike,v 1.29 1998/04/13 15:15:56 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -16,6 +16,9 @@ mapping to_send;
 
 mapping parse_args(string options)
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:parse_args(\"%s\")\n", options));
+#endif /* SSL3_DEBUG */
   mapping res = ([]);
   string line;
   
@@ -35,6 +38,9 @@ class roxen_ssl_context {
 
 private object new_context(object c)
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:new_context(X)\n"));
+#endif /* SSL3_DEBUG */
   mapping contexts = roxen->query_var("ssl3_contexts");
   object ctx = roxen_ssl_context();
   
@@ -50,6 +56,9 @@ private object new_context(object c)
 
 private object get_context(object c)
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:get_context()\n"));
+#endif /* SSL3_DEBUG */
   mapping contexts = roxen->query_var("ssl3_contexts");
 
   return contexts && contexts[c];
@@ -104,6 +113,9 @@ static void write_more();
 
 void got_data_to_send(mixed fooid, string data)
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:got_data_to_send(X, \"%s\")\n", data));
+#endif /* SSL3_DEBUG */
   if (!to_send_buffer) {
     to_send_buffer = data;
     my_fd->set_nonblocking(0, write_more, end);
@@ -114,6 +126,9 @@ void got_data_to_send(mixed fooid, string data)
 
 void no_data_to_send(mixed fooid)
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:no_data_to_send(X)\n"));
+#endif /* SSL3_DEBUG */
   if (to_send->file) {
     to_send->file->set_blocking();
     to_send->file->close();
@@ -128,6 +143,9 @@ void no_data_to_send(mixed fooid)
 
 string get_data()
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:get_data()\n"));
+#endif /* SSL3_DEBUG */
   string s;
   if(to_send->head)
   {
@@ -160,6 +178,9 @@ string get_data()
 string cache;
 static void write_more()
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:write_more()\n"));
+#endif /* SSL3_DEBUG */
   string s;
   if(!cache)
     s = get_data();
@@ -203,6 +224,9 @@ static void write_more()
 
 string get_data_file()
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:get_data_file()\n"));
+#endif /* SSL3_DEBUG */
   string s;
   if(to_send->head)
   {
@@ -228,6 +252,9 @@ string get_data_file()
 
 static void write_more_file()
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:write_more_file()\n"));
+#endif /* SSL3_DEBUG */
   string s;
   if(!cache)
     s = get_data_file();
@@ -272,6 +299,9 @@ static void write_more_file()
 
 void handle_request( )
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:handle_request()\n"));
+#endif /* SSL3_DEBUG */
   mixed *err;
   int tmp;
 #ifdef KEEP_CONNECTION_ALIVE
@@ -445,6 +475,9 @@ class fallback_redirect_request {
 
   void die()
   {
+#ifdef SSL3_DEBUG
+    roxen_perror(sprintf("SSL3:fallback_redirect_request::die()\n"));
+#endif /* SSL3_DEBUG */
 #if 0
     /* Close the file, DAMMIT */
     object dummy = Stdio.File();
@@ -458,6 +491,9 @@ class fallback_redirect_request {
   
   void write_callback(object id)
   {
+#ifdef SSL3_DEBUG
+    roxen_perror(sprintf("SSL3:fallback_redirect_request::write_callback()\n"));
+#endif /* SSL3_DEBUG */
     int written = id->write(out);
     if (written <= 0)
       die();
@@ -468,6 +504,9 @@ class fallback_redirect_request {
 
   void read_callback(object id, string s)
   {
+#ifdef SSL3_DEBUG
+    roxen_perror(sprintf("SSL3:fallback_redirect_request::read_callback(X, \"%s\")\n", s));
+#endif /* SSL3_DEBUG */
     in += s;
     string name;
 
@@ -508,6 +547,9 @@ class fallback_redirect_request {
   
   void create(object socket, string s, string l, int p)
   {
+#ifdef SSL3_DEBUG
+    roxen_perror(sprintf("SSL3:fallback_redirect_request(X, \"%s\", \"%s\", %d)\n", s, l, p));
+#endif /* SSL3_DEBUG */
     f = socket;
     prefix = l;
     port = p;
@@ -519,6 +561,9 @@ class fallback_redirect_request {
 
 void http_fallback(object alert, object|int n, string data)
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:http_fallback(X, %O, \"%s\")\n", n, data));
+#endif /* SSL3_DEBUG */
 //  trace(1);
 #if 0
   werror(sprintf("ssl3->http_fallback: alert(%d, %d)\n"
@@ -544,6 +589,9 @@ void http_fallback(object alert, object|int n, string data)
 
 void ssl_accept_callback(object id)
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:ssl_accept_callback(X)\n"));
+#endif /* SSL3_DEBUG */
   id->set_alert_callback(0); /* Forget about http_fallback */
   id->raw_file = 0;          /* Not needed any more */
 }
@@ -562,6 +610,9 @@ class roxen_sslfile {
 
   void die(int status)
   {
+#ifdef SSL3_DEBUG
+    roxen_perror(sprintf("SSL3:roxen_sslfile::die(%d)\n", status));
+#endif /* SSL3_DEBUG */
 //    werror("ssl3.pike, roxen_ssl_file: die called\n");
     if (!leave_me_alone)
       ssl::die(status);
@@ -570,6 +621,9 @@ class roxen_sslfile {
   
   void create(object f, object ctx, object id)
   {
+#ifdef SSL3_DEBUG
+    roxen_perror(sprintf("SSL3:roxen_sslfile(X, X, X)\n"));
+#endif /* SSL3_DEBUG */
     raw_file = f;
     config = id;
     ssl::create(f, ctx);
@@ -578,6 +632,9 @@ class roxen_sslfile {
 
 void create(object f, object c)
 {
+#ifdef SSL3_DEBUG
+  roxen_perror(sprintf("SSL3:create(X, X)\n"));
+#endif /* SSL3_DEBUG */
   if(f)
   {
     object ctx;
