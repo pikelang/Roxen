@@ -67,10 +67,10 @@ string site_url( RequestID id, string site )
   return "/sites/site.html/"+site+"/";
 }
 
-string page_base( RequestID id, string content )
+string page_base( RequestID id, string content, int|void noform )
 {
   return sprintf( "<use file='/template' />\n"
-                  "<tmpl title=' %s'>"
+                  "<tmpl title=' %s'%s>"
                   "<topmenu base='/' selected='sites'/>\n"
                   "<content><cv-split>"
                   "<subtablist width='100%%'>"
@@ -83,7 +83,8 @@ string page_base( RequestID id, string content )
                   "<p>\n</if>%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
-		  LOCALE(258,"Add module"), 
+		  LOCALE(258,"Add module"),
+		  noform?" noform='noform'":"",
                   LOCALE(272,"Reload module list"),
 		  LOCALE(202,"Cancel"), content );
 }
@@ -329,6 +330,7 @@ function describe_module_normal( int image )
    <tr>
      <td valign='top'>
        <form method='post' action='add_module.pike'>
+         <roxen-automatic-charset-variable/>
          <input type='hidden' name='module_to_add' value='%s'>
          <input type='hidden' name='config' value='&form.config;'>
          <submit-gbutton preparse='1'>%s</submit-gbutton>
@@ -397,7 +399,7 @@ string page_normal( RequestID id, int|void noimage )
   [desc,err] = get_module_list( describe_module_normal(!noimage),
                                 class_visible_normal, id );
   content += (desc+"</table>"+err);
-  return page_base( id, content );
+  return page_base( id, content, 1 );
 }
 
 string page_fast( RequestID id )
@@ -698,7 +700,13 @@ mixed do_it( RequestID id )
   if( id->variables->encoded )
     id->variables->config = decode_site_name( id->variables->config );
 
-  Configuration conf = roxen.find_configuration( id->variables->config );
+  Configuration conf;
+  foreach(id->variables->config/"\0", string config) {
+    if (conf = roxen.find_configuration( id->variables->config )) {
+      id->variables->config = config;
+      break;
+    }
+  }
 
   if( !conf->inited )
     conf->enable_all_modules();
@@ -717,8 +725,14 @@ mixed parse( RequestID id )
   if( id->variables->module_to_add )
     return do_it( id );
 
-  object conf = roxen.find_configuration( id->variables->config );
-  
+  Configuration conf;
+  foreach(id->variables->config/"\0", string config) {
+    if (conf = roxen.find_configuration( id->variables->config )) {
+      id->variables->config = config;
+      break;
+    }
+  }
+
   if( !config_perm( "Site:"+conf->name ) )
     return LOCALE(226,"Permission denied");
 
