@@ -89,14 +89,6 @@ string describe_tags( RoxenModule m, int q )
       conts+=(< name >);
   }
 
-  foreach(indices(tags), string tag)
-    if(has_value(tag, "#"))
-      tags-=(< tag >);
-
-  foreach(indices(conts), string tag)
-    if(has_value(tag, "#"))
-      conts-=(< tag >);
-
   return html_encode_string(String.implode_nicely(map(sort(indices(tags)-
                                                            ({"\x266a"})),
 						      lambda(string tag) {
