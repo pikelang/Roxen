@@ -1,20 +1,25 @@
+// Experimental Perl script and tag handler module.
+// by Leif Stensson.
+
+#include <roxen.h>
+#include <module.h>
+
+//<locate-token project="perl_module">LOCALE</locale-token>
+// USE_DEFERRED_LOCALE;
+#define LOCALE(X,Y)  _DEF_LOCALE("perl_module",X,Y)
+
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-// Experimental Perl script and tag handler module.
-// by Leif Stensson.
-
 string cvs_version =
-       "$Id: perl.pike,v 2.12 2000/09/21 17:51:31 jhs Exp $";
+       "$Id: perl.pike,v 2.13 2001/01/12 17:06:00 leif Exp $";
 
-constant module_type = MODULE_EXPERIMENTAL |
-            MODULE_FILE_EXTENSION | MODULE_TAG;
+constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
 constant module_name = "Perl support";
 constant module_doc =
-   "EXPERIMENTAL MODULE! This module provides a faster way of running "
-   "Perl scripts with Roxen. "
+   "This module provides a faster way of running Perl scripts with Roxen. "
    "The module also optionally provides a &lt;perl&gt;..&lt;/perl&gt; "
    "container to run Perl code from inside RXML pages."; 
 
@@ -22,6 +27,8 @@ static string recent_error = 0;
 static int parsed_tags = 0, script_calls = 0, script_errors = 0;
 
 static mapping handler_settings = ([ ]);
+
+static string script_output_mode;
 
 constant thread_safe = 1;
 
@@ -31,59 +38,79 @@ static object mutex = Thread.Mutex();
 
 void create()
 {
-  defvar("extensions", ({ "pl", "perl" }), "Extensions", TYPE_STRING_LIST,
-    "List of URL extensions that should be taken to indicate that the "
-    "document is a Perl script.");
+  defvar("extensions", "pl, perl",
+    LOCALE(0,"Extensions"), TYPE_STRING,
+    LOCALE(0,"Comma-separated list of URL extensions that indicate that "
+    "the document is a Perl script."));
 
 #if 0
-  defvar("libdir", "./perl", "Roxen Perl Directory", TYPE_DIR,
-    "This is the name of a directory with Roxen-related Perl stuff. It "
-    "should normally point to `perl' in the Roxen server directory, "
+  defvar("libdir", "./perl",
+    LOCALE(0, "Roxen Perl Directory"), TYPE_DIR,
+    LOCALE(0, "This is the name of a directory with Roxen-related Perl "
+    "stuff. It should normally point to `perl' in the Roxen server directory, "
     "but you may want to point it elsewhere if you want to modify the "
-    "code.");
+    "code."));
 #endif
 
-  defvar("showbacktrace", 0, "Show Backtraces", TYPE_FLAG,
-    "This setting decides whether to deliver a backtrace in the document "
-    "if an error is caught while a script runs.");
+  defvar("showbacktrace", 0,
+    LOCALE(0, "Show Backtraces"), TYPE_FLAG,
+    LOCALE(0, "This setting decides whether to deliver a backtrace in the "
+    "document if an error is caught while a script runs."));
 
-  defvar("tagenable", 0, "Enable Perl Tag", TYPE_FLAG,
-    "This setting decides whether to enable parsing of Perl code in "
-    "RXML pages, in &lt;perl&gt;..&lt;/perl&gt; containers.");
+  defvar("tagenable", 0,
+    LOCALE(0, "Enable Perl Tag"), TYPE_FLAG,
+    LOCALE(0, "This setting decides whether to enable parsing of Perl code "
+	   "in RXML pages, in &lt;perl&gt;..&lt;/perl&gt; containers."));
 
-  defvar("scriptout", "HTML", "Script output", TYPE_MULTIPLE_STRING,
-    "How to treat script output. HTML means treat it as a plain HTML "
-    "document. RXML is similar, but passes it through the RXML parser "
+  defvar("scriptout", "HTTP",
+    LOCALE(0, "Script output"), TYPE_MULTIPLE_STRING,
+    LOCALE(0, "How to treat script output. HTML means treat it as a plain "
+    "HTML document. RXML is similar, but passes it through the RXML parser "
     "before returning it to the client. HTTP is the traditional CGI "
     "output style, where the script is responsible for producing the "
     "HTTP headers before the document, as well as the main document "
-    "data.",
+    "data."),
          ({ "HTML", "RXML", "HTTP" })
         );
 
-  defvar("rxmltag", 0, "RXML-parse tag results", TYPE_FLAG,
-    "Allow RXML parsing of tag results.");
+  defvar("rxmltag", 0,
+    LOCALE(0, "RXML-parse tag results"), TYPE_FLAG,
+    LOCALE(0, "Whether to RXML parse tag results or not."));
 
-  defvar("bindir", "perl/bin", "Perl Helper Binaries", TYPE_DIR,
-    "Perl helper binaries directory.");
+#if constant(system.NetWkstaUserEnum)
+  // WinNT.
+  defvar("helper", "perl/bin/ntperl.pl",
+    LOCALE(0, "Perl Helper"), TYPE_FILE,
+    LOCALE(0, "Path to the helper program used to start a Perl subprocess. "
+    "The default for this setting is `perl/bin/ntperl.pl'."));
+#else
+  // Assume Unix.
+  defvar("helper", "perl/bin/perlrun",
+    LOCALE(0, "Perl Helper"), TYPE_FILE,
+    LOCALE(0, "Path to the helper program used to start a Perl subprocess. "
+    "The default for this setting is `perl/bin/perlrun'."));
+#endif
 
-  defvar("parallel", 2, "Parallel scripts", TYPE_MULTIPLE_INT,
-    "Number of scripts/tags that may be evaluated in parallel. Don't set "
-    "this higher than necessary, since it may cause the server to block. "
-    "The default for this setting is 2.",
+  defvar("parallel", 2,
+    LOCALE(0, "Parallel scripts"), TYPE_MULTIPLE_INT,
+    LOCALE(0, "Number of scripts/tags that may be evaluated in parallel. "
+    "Don't set this higher than necessary, since it may cause the server "
+    "to block. The default for this setting is 2."),
          ({ 1, 2, 3, 4, 5 }) );
 
 #if constant(getpwnam)
-  defvar("identity", "nobody:*", "Run Perl as...", TYPE_STRING,
-    "User and group to run Perl scripts and tags as. The default for "
-    "this option is `nobody:*'. Note that Roxen can't change user ID "
+  defvar("identity", "nobody:*",
+    LOCALE(0, "Run Perl as..."), TYPE_STRING,
+    LOCALE(0, "User and group to run Perl scripts and tags as. The default "
+    "for this option is `nobody:*'. Note that Roxen can't change user ID "
     "unless it has sufficient permissions to do so. `*' means `use "
-    "same as Roxen'.");
+    "same as Roxen'."));
 #endif
 }
 
 string status()
-{ string s = "<b>Script calls</b>: " + script_calls + " <br />\n" +
+{
+  string s = "<b>Script calls</b>: " + script_calls + " <br />\n" +
              "<b>Script errors</b>: " + script_errors + " <br />\n" +
              "<b>Parsed tags</b>: "  + parsed_tags + " <br />\n";
 
@@ -96,8 +123,8 @@ string status()
 #endif
 
   s += "<b>Helper script</b>: ";
-  if (Stdio.File(QUERY(bindir)+"/perlrun", "r"))
-       s += "found: " + QUERY(bindir)+"/perlrun <br />\n";
+  if (Stdio.File(QUERY(helper), "r"))
+       s += "found: " + QUERY(helper)+" <br />\n";
   else
        s += "not found.<br />\n";
 
@@ -108,7 +135,7 @@ string status()
 }
 
 static object gethandler()
-{ return ExtScript.getscripthandler(QUERY(bindir)+"/perlrun",
+{ return ExtScript.getscripthandler(QUERY(helper),
                                     QUERY(parallel), handler_settings);
 }
 
@@ -141,8 +168,43 @@ static void periodic()
 }
 
 void start()
-{ fix_settings();
-  call_out(periodic, 900);
+{
+  periodic();
+  script_output_mode = QUERY(scriptout);
+}
+
+static void add_headers(string headers, object id)
+{ string header, name, value;
+  if (headers)
+    foreach(headers / "\r\n", header)
+    { if (sscanf(header, "%[^:]:%s", name, value) == 2)
+        switch (name)
+        { case "Content-Type":
+          case "Content-Encoding":
+          case "Content-Languages":
+            // Might require special treatment in the future?
+            ;
+          default:
+            Roxen.add_http_header(id->misc->defines[" _extra_heads"],
+                                     name, value);
+        }
+    }
+}
+
+static void do_response_callback(RequestID id, array result)
+{
+//  werror("perl:do_response_callback: %O %O\n", id, result);
+  id->connection()->write("HTTP/1.0 200 OK\r\n");
+  if (arrayp(result) && sizeof(result) > 1)
+  { if (sizeof(result) > 2 && stringp(result[2]))
+    {
+      foreach(result[2] / "\r\n" - "", string s)
+          id->connection()->write(s + "\r\n");
+      id->connection()->write("\r\n");
+    }
+    id->connection()->write(result[1]);
+  }
+  id->connection()->close();
 }
 
 mixed handle_file_extension(Stdio.File file, string ext, object id)
@@ -153,9 +215,15 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
 
     NOCACHE();
 
-    if (!h) return http_string_answer("<h1>Script support failed.</h1>");
+    if (!h)
+      return
+        Roxen.http_string_answer("<h1>Script support failed.</h1>");
 
-    mixed bt = catch (result = h->run(id->realfile, id));
+    mixed bt;
+    if (script_output_mode == "HTTP")
+       bt = catch (result = h->run(id->realfile, id, do_response_callback));
+    else
+       bt = catch (result = h->run(id->realfile, id));
 
     ++script_calls;
 
@@ -163,37 +231,45 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
     { ++script_errors;
       report_error("Perl script `" + id->realfile + "' failed.\n");
       if (QUERY(showbacktrace))
-        return http_string_answer("<h1>Script Error!</h1>\n<pre>" +
+        return Roxen.http_string_answer("<h1>Script Error!</h1>\n<pre>" +
                        describe_backtrace(bt) + "\n</pre>");
       else
-        return http_string_answer("<h1>Script Error!</h1>");
+        return Roxen.http_string_answer("<h1>Script Error!</h1>");
     }
-    else if (sizeof(result) > 1)
-    { string r = result[1];
+    else if (arrayp(result))
+    { string r = sizeof(result) > 1 ? result[1] : "";
 //      werror("Result: " + sprintf("%O", r) + "\n");
       if (r == "") r = " "; // Some browsers don't like null answers.
       if (!stringp(r)) r = "(not a string)";
-      switch (QUERY(scriptout))
+      switch (script_output_mode)
       { case "RXML":
-          return http_rxml_answer(r, id);
+          if (sizeof(result) > 2 && stringp(result[2]))
+               add_headers(result[2], id);
+          return Roxen.http_rxml_answer(r, id);
         case "HTML":
-          return http_string_answer(r);
+          if (sizeof(result) > 2 && stringp(result[2]))
+               add_headers(result[2], id);
+          return Roxen.http_string_answer(r);
         case "HTTP":
-	  id->connection()->write("HTTP/1.0 200 OK\r\n");
-          id->connection()->write(r);
-          id->connection()->close();
-          return http_pipe_in_progress();
+          if (sizeof(result) > 0)
+          {
+            id->connection()->write("HTTP/1.0 200 OK\r\n");
+            id->connection()->write(r);
+            id->connection()->close();
+//            werror("id/perl: connection closed.\n");
+          }
+//          else werror("id/perl: nonblocking.\n");
+
+          return Roxen.http_pipe_in_progress();
         default:
-          return http_string_answer("SCRIPT ERROR: "
+          return Roxen.http_string_answer("SCRIPT ERROR: "
                                     "bad output mode configured.\n");
       }
     }
     else
-    { return http_string_answer(sprintf("RESULT: %O", result));
+    { return Roxen.http_string_answer(sprintf("RESULT: %O", result));
     }
   }
-
-  return http_string_answer("FOO!");
 
   return 0;
 }
@@ -204,7 +280,7 @@ mixed simpletag_perl(string tag, mapping attr, string contents, object id,
                      RXML.Frame frame)
 {
   if (!QUERY(tagenable))
-       RXML.run_error("<perl>...</perl> tag not enabled in this server.");
+       RXML.run_error("Perl tag not enabled in this server.");
 
   object h = gethandler();
 
@@ -228,7 +304,7 @@ mixed simpletag_perl(string tag, mapping attr, string contents, object id,
     else if (QUERY(rxmltag))
     {
       frame->result_type = frame->result_type(RXML.PXml);
-      return parse_rxml(result[1], id);
+      return Roxen.parse_rxml(result[1], id);
     }
     else
       return result[1];
@@ -236,7 +312,7 @@ mixed simpletag_perl(string tag, mapping attr, string contents, object id,
   else
     return sprintf("SCRIPT ERROR: bad result: %O", result);
 
-  return "<b>(No perl tag support?)</b>";
+  return "<b>(?perl?)</b>";
 }
 
 mixed simple_pi_tag_perl(string tag, mapping attr, string contents, object id,
@@ -247,7 +323,7 @@ mixed simple_pi_tag_perl(string tag, mapping attr, string contents, object id,
 
 array(string) query_file_extensions()
 {
-  return QUERY(extensions);
+  return (QUERY(extensions) - " ") / ",";
 }
 
 TAGDOCUMENTATION;
