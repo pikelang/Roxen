@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.43 1997/11/04 01:11:52 neotron Exp $
+/* $Id: wizard.pike,v 1.44 1997/11/06 05:15:11 neotron Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -98,16 +98,19 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
      {
        array tmp = rgb_to_hsv(@parse_color(current||"black"));
        h = tmp[0]; s = tmp[1];  v = tmp[2];
-     }
-     if(id->variables[m->name+".entered"] &&
-	strlen(current=id->variables[m->name+".entered"]))
+     } 
+     if(id->variables["foo.x"]) {
+       h = (int)id->variables["foo.x"];
+       v = 255-(int)id->variables["foo.y"];
+     } else if(id->variables["bar.y"])
+       s=255-(int)id->variables["bar.y"];
+     else if(id->variables[m->name+".entered"] &&
+	     strlen(current=id->variables[m->name+".entered"]))
      {
        array tmp = rgb_to_hsv(@parse_color(current||"black"));
        h = tmp[0]; s = tmp[1];  v = tmp[2];
      }
-     if(id->variables["foo.x"]) h=(int)id->variables["foo.x"];
-     if(id->variables["bar.y"]) s=255-(int)id->variables["bar.y"];
-     if(id->variables["foo.y"]) v=255-(int)id->variables["foo.y"];
+
      m_delete(id->variables, "foo.x");
      m_delete(id->variables, "foo.y");
      m_delete(id->variables, "bar.x");
@@ -562,11 +565,14 @@ string html_error(string notice, object id)
         +"err_3.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
 }
 
-string html_border(string what, int|void width, int|void ww)
+string html_border(string what, int|void width, int|void ww,
+		   string|void bgcolor, string|void bdcolor)
 {
   return ("<table border=0 cellpadding="+(width+1)+" cellspacing=0 "
-	  "bgcolor=black><tr><td><table border=0 cellpadding="+(ww)+
-	  " cellspacing=0 bgcolor=white><tr><td>"+what+"</tr></td></table>"
+	  "bgcolor="+(bdcolor||"black")+
+	  "><tr><td><table border=0 cellpadding="+(ww)+
+	  " cellspacing=0 bgcolor="+(bgcolor||"white")+
+	  "><tr><td>"+what+"</tr></td></table>"
           "</td></tr></table>");
 }
 
