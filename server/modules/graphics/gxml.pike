@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.26 2004/02/12 16:22:53 wellhard Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.27 2004/02/23 12:08:01 wellhard Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -40,7 +40,7 @@ string status() {
 Image.Layer generate_image( mapping a, mapping node_tree, RequestID id )
 {
   LazyImage.clear_cache();
-  LazyImage image = LazyImage.decode(node_tree);
+  LazyImage.LazyImage image = LazyImage.decode(node_tree);
   array ll = image->run(0, id);
   LazyImage.clear_cache();
   
