@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.353 2002/07/10 13:57:35 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.354 2002/07/12 11:34:25 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1660,35 +1660,36 @@ void send_result(mapping|void result)
 	if ( fstat[ST_MTIME] > misc->last_modified )
 	  misc->last_modified = fstat[ST_MTIME];
 	
-	if(prot != "HTTP/0.9" &&
-	   (misc->cacheable >= INITIAL_CACHEABLE))
-	{
-	  heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
+  	if( misc->cacheable < INITIAL_CACHEABLE )
+	  heads["Expires"] = Roxen.http_date( predef::time(1)+misc->cacheable );
 
-	  if(since)
-	  {
-	    /* ({ time, len }) */
-	    array(int) since_info = Roxen.parse_since( since );
-// 	    werror("since: %{%O, %}\n"
-// 		   "lm:    %O\n",
-// 		   since_info,
-// 		   misc->last_modified );
-	    if ( ((since_info[0] >= misc->last_modified) && 
-		  ((since_info[1] == -1) || (since_info[1] == file->len)))
+	heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
+
+	if(since)
+	{
+	  /* ({ time, len }) */
+	  array(int) since_info = Roxen.parse_since( since );
+//   	    werror("since: %{%O, %}\n"
+//   		   "lm:    %O\n"
+//  		   "cacheable: %O\n",
+//   		   since_info,
+//   		   misc->last_modified,
+//  		   misc->cacheable);
+	  if ( ((since_info[0] >= misc->last_modified) && 
+		((since_info[1] == -1) || (since_info[1] == file->len)))
+	       // never say 'not modified' if not cacheable at all.
+	       && (misc->cacheable != 0)
 		 // actually ok, or...
 // 		 || ((misc->cacheable>0) 
 // 		     && (since_info[0] + misc->cacheable<= predef::time(1))
 // 		 // cacheable, and not enough time has passed.
-	       )
-	    {
-	      file->error = 304;
-	      file->file = 0;
-	      file->data="";
-	    }
+	     )
+	  {
+	    file->error = 304;
+	    file->file = 0;
+	    file->data="";
 	  }
 	}
-	else // Dynamic content.
-	  heads["Expires"] = Roxen.http_date( misc->last_modified );
       }
 
       if(prot != "HTTP/0.9") 
