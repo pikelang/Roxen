@@ -70,9 +70,12 @@ class Connection
   
   void return_res(array res)
   {
-    if(objectp(res[1])) res = ({ 2, identifier_for(res[1]) });
+    if(objectp(res[1]))
+      res = ({ 2, identifier_for(res[1]) });
+    else if(programp(res[1]) || functionp(res[1]))
+      res = ({ 3, identifier_for(res[1]) });
     string data = encode_value(res);
-    sending = sprintf("%4c%s", strlen(data), data);
+    sending += sprintf("%4c%s", strlen(data), data);
     write_data();
   }
   
@@ -96,14 +99,17 @@ class Connection
 	    handle_cmd( val ); // Do not return anything....
 	    mode=WAITING;
 	    expected_len=0;
-	    return got_data(c,"");
+	    sending+="!"; write_data();
+	    got_data(c,"");
+	    return;
 	  }
 	})
-	  res = ({ 0, err[0] });
+	  res = ({ 0, describe_backtrace(err) });
 	return_res(res);
 	mode=WAITING;
 	expected_len = 0;
-	return got_data(c,"");
+	got_data(c,"");
+	return;
       }
       return;
     } else if((strlen(buffer)>=4) &&
@@ -180,8 +186,13 @@ int provide(string what, object caller)
 mixed do_call(object con, string in, string fun, mixed args)
 {
   mixed me;
+
   if(fun=="create") error("Create is not a valid identifier.\n");
+
   if(!(me = identifiers[in]))  error("Identifier "+in+" not valid.\n");
+
+  if(!fun) return me( @args );
+
   if(programp(me))
   {
     me = con->object_for(me, in);
