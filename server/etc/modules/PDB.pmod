@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.27 1998/03/28 19:10:14 noring Exp $
+ * $Id: PDB.pmod,v 1.28 1999/06/26 01:58:03 peter Exp $
  */
 
 #if constant(thread_create)
@@ -14,6 +14,8 @@
 
 #define PDB_ERR(msg) (exceptions?throw(({ "(PDB) "+msg+"\n",backtrace() })):0)
 #define PDB_WARN(msg) werror("(PDB Warning) "+msg+"\n")
+
+#define DISABLE_BUG 1
 
 class FileIO {
 
@@ -306,6 +308,16 @@ class Table
       };
     LOCK();
     object bucket = get_bucket(scheme(strlen(ts)));
+#ifdef DISABLE_BUG
+    if(index[in] && index[in][0] == bucket->size) {
+      log('D', in);
+      if(bucket->set_entry(index[in][1], ts))
+	log('C', in, index[in]);
+      else
+	to = 0;
+      return to;
+    }
+#endif /* DISABLE_BUG */
     int of = bucket->allocate_entry();
     if(of>=0 && bucket->set_entry(of, ts)) {
       array new_entry = ({ bucket->size, of });
