@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.43 1997/12/11 22:42:10 grubba Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.44 1998/04/03 19:11:13 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -73,6 +73,7 @@ void name_program(program foo, string name)
 {
   programs[name] = foo;
   saved_names[foo] = name;
+  saved_names[(program)foo] = name;
 }
 
 private static int mid = 0;
