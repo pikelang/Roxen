@@ -17,6 +17,8 @@ PIKEVERSION=@PIKEVERSION@
 
 all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern
 
+VPATH_SUPPORT: VPATH_SUPPORT.in
+
 pike: force
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS) @LINKFORSHARED@")
 
