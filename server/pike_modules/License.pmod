@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.19 2002/06/05 20:14:18 nilsson Exp $
+// $Id: License.pmod,v 1.20 2002/06/28 23:25:48 nilsson Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -386,7 +386,7 @@ class LicenseVariable
 
       if(!key) {
 	report_debug("Error: Trying to load a nonexisting license: %s\n", new_value);
-	return ({ sprintf("License %s does not exists.\n", new_value),
+	return ({ sprintf("License %s does not exist.\n", new_value),
 		  query() });
       }
       
