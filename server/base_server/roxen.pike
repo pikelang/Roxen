@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.573 2000/11/13 19:08:06 marcus Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.574 2000/11/14 14:34:41 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3028,8 +3028,8 @@ int main(int argc, array tmp)
   restore_global_variables(); // restore settings...
 
   // Dangerous...
-  mixed tmp;
-  if(tmp = Getopt.find_option(argv, "r", "root")) fix_root(tmp);
+  mixed tmp_root;
+  if(tmp_root = Getopt.find_option(argv, "r", "root")) fix_root(tmp_root);
 
   argv -= ({ 0 });
   argc = sizeof(argv);
