@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.404 2004/04/04 15:15:43 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.405 2004/04/04 15:21:52 mani Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1064,10 +1064,16 @@ class TagRemoveCookie {
 //    really... is this error a good idea?  I don't think so, it makes
 //    it harder to make pages that use cookies. But I'll let it be for now.
 //       /Per
+//
+//    Run errors are not shown by default, but sets the truth state to
+//    false. Hence it is possible to do
+//    <true/><remove-cookie><then>...</then><else>...</else>
+//       /Nilsson
+
 
       if(!id->cookies[args->name])
         RXML.run_error("That cookie does not exist.\n");
-      Roxen.remove_cookie( id, args->name, 
+      Roxen.remove_cookie( id, args->name,
                            (args->value||id->cookies[args->name]||""), 
                            args->domain, args->path );
       return 0;
@@ -2644,7 +2650,7 @@ class UserTagContents
 
 #ifdef DEBUG
 	if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG))
-	  tag_debug ("%O:   Did %s %O in %s: %s\n", this_object(),
+	  tag_debug ("%O:   Did %s %O in %s: %s\n", this,
 		     insert_type, expr,
 		     RXML.utils.format_short (
 		       objectp (content) ? content->xml_format() : content),
