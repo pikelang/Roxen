@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.65 1999/02/18 20:25:13 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.66 1999/02/18 20:30:50 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -802,7 +802,7 @@ class imap_mailbox
     });
   }
 
-  array(array(string|object)) store(object|mapping(string:mixed) session, object message_set,
+  array(array(string|object)) store(object message_set,
 				    array(string) flags, int mode, int silent, int uid_mode)
   {
     array(int) message_numbers = message_set->expand(sizeof(contents));
@@ -814,7 +814,7 @@ class imap_mailbox
     int i;
 
     for(i=0; i < sizeof(message_numbers); i++) {
-      res[i] = contents[message_numbers[i]-1]->store(session, new_flags, mode, silent, uid_mode);
+      res[i] = contents[message_numbers[i]-1]->store(new_flags, mode, silent, uid_mode);
     }
 
     return(res - ({ 0 }));
@@ -1139,6 +1139,12 @@ class backend
 	      m->get_flags(),
 	      m->get_permanent_flags() });
       
+  }
+
+  array(array(string|object)) store(object|mapping(string:mixed) session, object message_set,
+				    array(string) flags, int mode, int silent, int uid_mode)
+  {
+    return session->mailbox->store(message_set, flags, mode, silent, uid_mode);
   }
 
   array(array(string|object)) fetch(object|mapping(string:mixed) session,
