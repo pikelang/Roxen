@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.265 2001/07/25 22:47:58 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.266 2001/07/31 11:57:18 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1253,7 +1253,15 @@ void low_start_mysql( string datadir,
   env->MYSQL_TCP_PORT  = "0";
 #endif
 
+  rm( datadir+"/my.cfg" );
+  catch(Stdio.write_file( datadir+"/my.cfg",
+			  "[mysqld]\n"
+			  "set-variable = max_allowed_packet=16M\n"
+			  "set-variable = net_buffer_length=8K\n"
+			));
+
   array(string) args = ({
+		  "--defaults-file="+datadir+"/my.cfg",
 #ifdef __NT__
                   "--skip-networking",
                   // Use pipes with default name "MySQL" unless --socket is set
@@ -1263,8 +1271,6 @@ void low_start_mysql( string datadir,
 		  "--skip-networking",
 #endif
 		  "--skip-locking",
-		  "--set-variable","max_allowed_packet=16777215",
-		  "--set-variable","net_buffer_length=8192",
 		  "--basedir="+basedir,
 		  "--datadir="+datadir,
 		  "--pid-file="+pid_file,
