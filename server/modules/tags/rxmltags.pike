@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.38 1999/12/27 19:02:59 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.39 2000/01/03 06:05:58 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -420,11 +420,11 @@ array(string) tag_roxen(string tagname, mapping m, RequestID id)
   return ({ "<a href=\"http://www.roxen.com/\">"+make_tag("img", m)+"</a>" });
 }
 
-string|array(string) tag_debug( string tag_name, mapping args, RequestID id )
+string|array(string) tag_debug( string tag_name, mapping m, RequestID id )
 {
-  if (args->showid)
+  if (m->showid)
   {
-    array path=lower_case(args->showid)/"->";
+    array path=lower_case(m->showid)/"->";
     if(path[0]!="id" || sizeof(path)==1) return "Can only show parts of the id object.";
     mixed obj=id;
     foreach(path[1..], string tmp) {
@@ -433,9 +433,9 @@ string|array(string) tag_debug( string tag_name, mapping args, RequestID id )
     }
     return ({ "<pre>"+html_encode_string(sprintf("%O",obj))+"</pre>" });
   }
-  if (args->off)
+  if (m->off)
     id->misc->debug = 0;
-  else if (args->toggle)
+  else if (m->toggle)
     id->misc->debug = !id->misc->debug;
   else
     id->misc->debug = 1;
@@ -564,8 +564,8 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
   }
 
   if(m->var && provides_ssi()) {
-    string ret=_ssi->tag_echo("", m, id);
-    if(ret) return ret;
+    return ({_ssi->get_var(m->var, id)}) ||
+      rxml_error(tag, "SSI variable "+m->var+" not defined.", id);
   }
 
   string ret="Could not fullfill your request.<br>\nArguments:";
@@ -673,10 +673,11 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
   if(!s) s = id->conf->stat_file( id->not_query, id );
   if(s) {
     if(m->ssi)
-      return strftime(id->misc->defines->timefmt || "%c", s[3]);
+      return strftime(id->misc->ssi_timefmt || "%c", s[3]);
     return tagtime(s[3], m, id, language);
   }
 
+  if(m->ssi) return id->misc->ssi_errmsg||"";
   return rxml_error(tag, "Couldn't stat file.", id);
 }
 
