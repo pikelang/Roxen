@@ -281,6 +281,5 @@ class db
       mkdirhier(d+"/Buckets/foo");
     }
     dir = replace(d+"/","//","/");
-//    call_out(sync, 10);
   }
 };
