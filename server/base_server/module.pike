@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.181 2004/05/06 16:50:16 grubba Exp $
+// $Id: module.pike,v 1.182 2004/05/07 17:34:14 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -976,22 +976,32 @@ mapping(string:mixed) write_access(string path, int(0..1) recursive, RequestID i
 
   if (!has_suffix (path, "/")) path += "/";
 
+  SIMPLE_TRACE_ENTER(this, "write_access(%O, %O, X)", path, recursive);
+
   int(0..3)|DAVLock lock = check_locks(path, 0, id);
 
-  if (lock && intp(lock))
+  if (lock && intp(lock)) {
+    TRACE_LEAVE("Locked by other user.");
     return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
+  }
 
   path = query_location() + path; // No need for fancy combine_path stuff here.
 
   mapping(string:array(array(array(string)))) if_data = id->get_if_data();
   array(array(array(string))) condition;
   if (!if_data || !sizeof(condition = if_data[path] || if_data[0])) {
-    if (lock) return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
+    if (lock) {
+      TRACE_LEAVE("Locked, no if header.");
+      return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
+    }
+    TRACE_LEAVE("No lock and no if header.");
     return 0;	// No condition and no lock -- Ok.
   }
   mapping(string:mixed) res;
  next_condition:
   foreach(condition, array(array(string)) sub_cond) {
+    SIMPLE_TRACE_ENTER(this,
+		       "Trying condition ( %{%{%x:%O%} %})...", sub_cond);
     int negate;
     foreach(sub_cond, array(string) token) {
       switch(token[0]) {
@@ -1003,18 +1013,23 @@ mapping(string:mixed) write_access(string path, int(0..1) recursive, RequestID i
 	// matches.
 	res = Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL,
 				 "Etag conditions not supported.");
+	TRACE_LEAVE("Conditional etag not supported.");
 	continue next_condition;	// Fail.
       case "lock":
 	if ((lock && lock->locktoken == token[1]) != negate) {
 	  // Lock mismatch.
+	  TRACE_LEAVE("Lock mismatch.");
 	  continue next_condition;	// Fail.
 	}
 	negate = 0;
 	break;
       }
     }
+    TRACE_LEAVE("Found match.");
+    TRACE_LEAVE("Ok.");
     return 0;	// Found matching sub-condition.
   }
+  TRACE_LEAVE("Failed.");
   return res || Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
 }
 
@@ -1035,18 +1050,23 @@ mapping(string:mixed) delete_file(string path, RequestID id)
   tmp_id->not_query = query_location() + path;
   tmp_id->method = "DELETE";
   // FIXME: Logging?
-  return find_file(path, id) || Roxen.http_status(404);
+  return find_file(path, id) || Roxen.http_status(id->misc->error_code || 404);
 }
 
-int(0..1) recurse_delete_files(string path, MultiStatus.Prefixed stat, RequestID id)
+//! Delete @[path] recursively.
+//! @returns
+//!   Returns @expr{0@} (zero) on success.
+//!   Returns @expr{1@} on file not found.
+//!   Returns @expr{2@} or @expr{3@} on other errors.
+int(0..3) recurse_delete_files(string path, MultiStatus.Prefixed stat, RequestID id)
 {
   Stat st = stat_file(path, id);
-  if (!st) return 0;
+  if (!st) return 1;
   if (st->isdir) {
     // RFC 2518 8.6.2
     //   The DELETE operation on a collection MUST act as if a
     //   "Depth: infinity" header was used on it.
-    int(0..1) fail;
+    int(0..3) fail;
     foreach(find_dir(path, id) || ({}), string fname) {
       fail |= recurse_delete_files(path+"/"+fname, stat, id);
     }
@@ -1056,14 +1076,14 @@ int(0..1) recurse_delete_files(string path, MultiStatus.Prefixed stat, RequestID
     if (fail) return fail;
   }
   mapping ret = delete_file(path, id);
-  if (ret->code != 204) {
+  if (ret->error != 204) {
     // RFC 2518 8.6.2
     //   Additionally 204 (No Content) errors SHOULD NOT be returned
     //   in the 207 (Multi-Status). The reason for this prohibition
     //   is that 204 (No COntent) is the default success code.
-    stat->add_status (path, ret->code, ret->rettext);
+    stat->add_status (path, ret->error, ret->rettext);
   }
-  return ret->code >= 300;
+  return (ret->error >= 300) && 2;
 }
 
 mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
