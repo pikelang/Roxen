@@ -1,6 +1,8 @@
 /* Program to start Roxen as a service or in console mode on NT.
  *
  * Based on the service example code from Microsoft.
+ *
+ * $Id: roxen.c,v 1.2 2000/06/28 01:39:42 mast Exp $
  */
 
 // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF

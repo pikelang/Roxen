@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.118 2000/04/18 23:34:13 mast Exp $
+// $Id: wizard.pike,v 1.119 2000/06/28 01:39:37 mast Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -884,7 +884,12 @@ mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
       return res;
     }
   } else {
-    object o = get_wizard(id->variables->action,dir);
+    // We commonly feed the action variable both from the URL with
+    // "...?action=foo.pike" and with an <input> tag from the previous
+    // page. Netscape ignores one of them, but IE sends both. Thus we
+    // have to discard the extra value in the IE case. (We simply assume
+    // both values are the same here; maybe it could be done better.)
+    object o = get_wizard((id->variables->action/"\0")[0],dir);
     if(!o) {
       mixed res = "<pre>"+err+"</pre>";
       err="";
