@@ -15,9 +15,8 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.73 2004/05/23 14:14:41 _cvs_dirix Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.74 2004/05/24 10:15:14 mani Exp $";
 constant thread_safe = 1;
-constant language = roxen->language;
 
 #include <config.h>
 #include <module.h>
@@ -276,7 +275,7 @@ string api_tagtime(RequestID id, int ti, string t, string l)
 {
   mapping m = ([ "type":t, "lang":l ]);
   NOCACHE();
-  return Roxen.tagtime( ti, m, id, language );
+  return Roxen.tagtime( ti, m, id );
 }
 
 string api_relative(RequestID id, string path)
@@ -394,7 +393,7 @@ string api_read_file(RequestID id, string file) {
 void define_API_functions()
 {
   add_api_function("parse_rxml", api_parse_rxml, ({ "string" }));
-  add_api_function("tag_time", api_tagtime, ({ "int", 0,"string", "string" }));
+  add_api_function("tag_time", api_tagtime, ({ "int", 0, "string", "string" }));
   add_api_function("fix_relative", api_relative, ({ "string" }));
   add_api_function("set_variable", api_set, ({ "string", "string", 0, "string" }));
   add_api_function("define", api_define, ({ "string", "string" }));

@@ -7,9 +7,8 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.416 2004/05/23 11:31:32 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.417 2004/05/24 10:15:14 mani Exp $";
 constant thread_safe = 1;
-constant language = roxen->language;
 
 #include <module.h>
 #include <config.h>
@@ -864,7 +863,7 @@ class TagDate {
       else
 	CACHE(60);
 
-      result = Roxen.tagtime(t, args, id, language);
+      result = Roxen.tagtime(t, args, id);
       return 0;
     }
   }
@@ -1184,7 +1183,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
     CACHE(10);
     if(m->ssi)
       return Roxen.strftime(id->misc->ssi_timefmt || "%c", s[3]);
-    return Roxen.tagtime(s[3], m, id, language);
+    return Roxen.tagtime(s[3], m, id);
   }
 
   if(m->ssi) return id->misc->ssi_errmsg||"";

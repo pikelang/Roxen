@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.55 2004/05/23 01:52:36 _cvs_stephen Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.56 2004/05/24 10:15:14 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -561,8 +561,8 @@ string tag_accessed(string tag, mapping m, RequestID id)
 
   if(m->since) {
     if(m->database)
-      return Roxen.tagtime(counter->creation_date(), m, id, roxen.language);
-    return Roxen.tagtime(counter->creation_date(m->file), m, id, roxen.language);
+      return Roxen.tagtime(counter->creation_date(), m, id);
+    return Roxen.tagtime(counter->creation_date(m->file), m, id);
   }
 
   string real="<!-- ("+counts+") -->";

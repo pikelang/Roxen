@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.185 2004/05/24 00:27:51 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.186 2004/05/24 10:14:04 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1552,6 +1552,7 @@ string short_date(int timestamp)
   return ctime(timestamp)[4..9] +" "+ ctime(timestamp)[11..15];
 }
 
+// NGSERVER remove
 constant int2roman = String.int2roman;
 
 string number2string(int n, mapping m, array|function names)
@@ -1614,6 +1615,7 @@ string image_from_type( string t )
   return "internal-gopher-unknown";
 }
 
+// NGSERVER remove
 constant sizetostring = String.int2size;
 
 string html_decode_string(LocaleString str)
@@ -1630,8 +1632,7 @@ string html_encode_tag_value(LocaleString str)
 			({"&amp;", "&quot;", "&lt;"})) + "\"";
 }
 
-string strftime(string fmt, int t,
-		void|string lang, void|function language, void|RequestID id)
+string strftime(string fmt, int t, void|string lang)
 //! Encodes the time `t' according to the format string `fmt'.
 {
   if(!sizeof(fmt)) return "";
@@ -1645,36 +1646,22 @@ string strftime(string fmt, int t,
     if(key=="") continue;
     switch(key[0]) {
     case 'a':	// Abbreviated weekday name
-      if (language)
-	res += number2string(lt->wday+1,m,language(lang,"short_day",id));
-      else
-	res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
+      res += number2string(lt->wday+1, m, get_core()->language(lang, "short_day"));
       break;
     case 'A':	// Weekday name
-      if (language)
-	res += number2string(lt->wday+1,m,language(lang,"day",id));
-      else
-	res += ({ "Sunday", "Monday", "Tuesday", "Wednesday",
-		  "Thursday", "Friday", "Saturday" })[lt->wday];
+      res += number2string(lt->wday+1, m, get_core()->language(lang, "day"));
       break;
     case 'b':	// Abbreviated month name
     case 'h':	// Abbreviated month name
-      if (language)
-	res += number2string(lt->mon+1,m,language(lang,"short_month",id));
-      else
-	res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
+      res += number2string(lt->mon+1, m, get_core()->language(lang, "short_month"));
       break;
     case 'B':	// Month name
-      if (language)
-	res += number2string(lt->mon+1,m,language(lang,"month",id));
-      else
-	res += ({ "January", "February", "March", "April", "May", "June",
-		  "July", "August", "September", "October", "November", "December" })[lt->mon];
+      res += number2string(lt->mon+1, m, get_core()->language(lang, "month"));
       break;
     case 'c':	// Date and time
       res += strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
-			      lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
+			      lt->mday, lt->hour, lt->min, lt->sec,
+			      1900 + lt->year), t);
       break;
     case 'C':	// Century number; 0-prefix
       res += sprintf("%02d", 19 + lt->year/100);
@@ -1755,7 +1742,8 @@ string strftime(string fmt, int t,
 		// with Sunday as the first day of week 1; 0-prefix
       res += sprintf("%02d", ((lt->yday-1+lt->wday)/7));
       break;
-    case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
+    case 'V':	// ISO week number of the year as a decimal number
+                // [01,53]; 0-prefix
       res += sprintf("%02d", Calendar.ISO.Second(t)->week_no());
       break;
     case 'W':	// Week number of year as a decimal number [00,53],
@@ -1984,9 +1972,7 @@ Stdio.File open_log_file( string logfile )
   return Stdio.stderr;
 }
 
-string tagtime(int t, mapping(string:string) m, RequestID id,
-	       function(string, string,
-			object:function(int, mapping(string:string):string)) language)
+string tagtime(int t, mapping(string:string) m, RequestID id)
   //! A rather complex function used as presentation function by
   //! several RXML tags. It takes a unix-time integer and a mapping
   //! with formating instructions and returns a string representation
@@ -2001,7 +1987,7 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   if(m->lang) lang=m->lang;
 
   if(m->strftime)
-    return strftime(m->strftime, t, lang, language, id);
+    return strftime(m->strftime, t, lang);
 
   if (m->part)
   {
@@ -2015,14 +2001,14 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
     switch (m->part)
     {
      case "year":
-      return number2string(localtime(t)->year+1900,m,
-			   language(lang, sp||"number",id));
+      return number2string(localtime(t)->year+1900, m,
+			   get_core()->language(lang, sp||"number"));
      case "month":
-      return number2string(localtime(t)->mon+1,m,
-			   language(lang, sp||"month",id));
+      return number2string(localtime(t)->mon+1, m,
+			   get_core()->language(lang, sp||"month"));
      case "week":
       return number2string(Calendar.ISO.Second(t)->week_no(),
-			   m, language(lang, sp||"number",id));
+			   m, get_core()->language(lang, sp||"number"));
      case "beat":
        //FIXME This should be done inside Calendar.
        mapping lt=gmtime(t);
@@ -2032,36 +2018,35 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
        secs+=lt->sec;
        secs%=24*3600;
        float beats=secs/86.4;
-       if(!sp) return sprintf("@%03d",(int)beats);
-       return number2string((int)beats,m,
-                            language(lang, sp||"number",id));
+       if(!sp) return sprintf("@%03d", (int)beats);
+       return number2string((int)beats, m,
+                            get_core()->language(lang, sp||"number"));
 
      case "day":
      case "wday":
-      return number2string(localtime(t)->wday+1,m,
-			   language(lang, sp||"day",id));
+      return number2string(localtime(t)->wday+1, m,
+			   get_core()->language(lang, sp||"day"));
      case "date":
      case "mday":
-      return number2string(localtime(t)->mday,m,
-			   language(lang, sp||"number",id));
+      return number2string(localtime(t)->mday, m,
+			   get_core()->language(lang, sp||"number"));
      case "hour":
-      return number2string(localtime(t)->hour,m,
-			   language(lang, sp||"number",id));
+      return number2string(localtime(t)->hour, m,
+			   get_core()->language(lang, sp||"number"));
 
-     case "min":  // Not part of RXML 2.0
+     case "min":  // Not part of RXML 2.0, NGSERVER remove
      case "minute":
-      return number2string(localtime(t)->min,m,
-			   language(lang, sp||"number",id));
-     case "sec":  // Not part of RXML 2.0
+      return number2string(localtime(t)->min, m,
+			   get_core()->language(lang, sp||"number"));
+     case "sec":  // Not part of RXML 2.0, NGSERVER remove
      case "second":
-      return number2string(localtime(t)->sec,m,
-			   language(lang, sp||"number",id));
+      return number2string(localtime(t)->sec, m,
+			   get_core()->language(lang, sp||"number"));
      case "seconds":
-      return number2string(t,m,
-			   language(lang, sp||"number",id));
+      return number2string(t, m, get_core()->language(lang, sp||"number"));
      case "yday":
-      return number2string(localtime(t)->yday,m,
-			   language(lang, sp||"number",id));
+      return number2string(localtime(t)->yday, m,
+			   get_core()->language(lang, sp||"number"));
      default: return "";
     }
   }
@@ -2091,7 +2076,7 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
     }
   }
 
-  res=language(lang, "date", id)(t,m);
+  res = get_core()->language(lang, "date")(t, m);
 
   if(m["case"])
     switch(lower_case(m["case"]))
@@ -2101,6 +2086,7 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
      case "capitalize": return capitalize(res);
     }
 
+  // NGSERVER remove
 #ifdef old_rxml_compat
   // Not part of RXML 2.0
   if (m->upper) {

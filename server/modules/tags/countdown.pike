@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1997 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.51 2004/05/23 01:54:59 _cvs_stephen Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.52 2004/05/24 10:15:14 mani Exp $";
 #include <module.h>
 inherit "module";
 
@@ -138,15 +138,15 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "rxmltags" }));
 }
 
-array languages = roxen->list_languages();
-constant language_low = roxen->language_low;
+array languages = core.list_languages();
 int find_a_month(string which)
 {
   which = lower_case(which);
   foreach(languages, string lang)
     for(int i=1; i<13; i++)
       catch {
-      if(which == lower_case(language_low(lang)->month(i))[..strlen(which)])
+      if(which ==
+	 lower_case(core.language_low(lang)->month(i))[..strlen(which)])
 	return i-1;
     };
   return 1;
@@ -157,16 +157,17 @@ int find_a_day(string which)
   which = lower_case(which);
   foreach(languages, string lang)
     for(int i=1; i<8; i++)
-      if(which == lower_case(language_low(lang)->day(i))[..strlen(which)])
+      if(which == lower_case(core.language_low(lang)->day(i))[..strlen(which)])
 	return i;
   return 1;
 }
 
-constant language=roxen->language;
 string show_number(int n, mapping m, RequestID id)
 {
-  return Roxen.number2string(n, m, language(m->lang||id->misc->defines->pref_language,
-					    m->ordered?"ordered":"number", id));
+  return Roxen.number2string(n, m,
+			     core.language(m->lang ||
+					   id->misc->defines->pref_language,
+					   m->ordered?"ordered":"number"));
 }
 
 // This function should be fixed to support different languages.
@@ -473,7 +474,7 @@ string countdown(mapping m, RequestID id)
 
   switch(m_delete(m, "display")) {
     case "when":
-    return Roxen.tagtime(when, m, id, language);
+    return Roxen.tagtime(when, m, id);
 
     case "combined":
     delay-=delay%prec;
@@ -527,6 +528,7 @@ string countdown(mapping m, RequestID id)
   if(tprec) return delay/prec+" "+tprec+(delay/prec>1?"s":"");
 
   return "I don't think I understood that, but I think you want to count to "+
-    Roxen.tagtime(when, m, id, language)+" to which it is "+when+" seconds. Write &lt;countdown"
-    " help&gt; to get an idea of what you ougt to write.";
+    Roxen.tagtime(when, m, id) + " to which it is " + when +
+    " seconds. Write &lt;countdown help&gt; to get an idea of what you ought "
+    "to write.";
 }
