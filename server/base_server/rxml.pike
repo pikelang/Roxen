@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.138 2000/02/19 23:50:15 mast Exp $
+ * $Id: rxml.pike,v 1.139 2000/02/20 02:52:34 nilsson Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -874,7 +874,8 @@ class UserTag {
 	c2 = replace(c, replace_from, replace_to);
 	if(c2!=c) {
 	  vars=([]);
-	  return ({replace (c2, "<contents>", content)});
+	  //FIXME: When the parser provides proper empty variables the ||"" wont be needed.
+	  return ({replace (c2, "<contents>", content||"")});
 	}
       }
 #endif
