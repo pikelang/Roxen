@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: fonts.pike,v 1.83 2002/07/15 14:14:07 mast Exp $
+// $Id: fonts.pike,v 1.84 2002/07/15 14:39:02 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -173,14 +173,25 @@ static Font get_font_2(string f, int size, int bold, int italic)
   if (Font fnt = get_font_3 (f, size, bold, italic))
     return fnt;
 
-  if( has_value( f, "_" ) )
-    if (Font fnt = get_font_3 (f - "_", size, bold, italic))
+  if( has_value( f, "_" ) ) {
+    string f2 = f - "_";
+    if (Font fnt = get_font_3 (f2, size, bold, italic))
       return fnt;
+    if( has_value( f2, " " ) ) {
+      // The old code tested this as a side effect of the tail
+      // recursion thingies, but I doubt it was really intended. Keep
+      // it to avoid compatibility trouble (although that's unlikely).
+      f2 = replace (f2, " ", "_");
+      if (Font fnt = get_font_3 (f2, size, bold, italic))
+	return fnt;
+    }
+  }
 
   if( has_value( f, " " ) ) {
-    if (Font fnt = get_font_3 (replace (f, " ", "_"), size, bold, italic))
+    f = replace (f, " ", "_");
+    if (Font fnt = get_font_3 (f, size, bold, italic))
       return fnt;
-    return get_font_3 (f - " ", size, bold, italic);
+    return get_font_3 (f - "_", size, bold, italic);
   }
 
   return 0;
@@ -306,12 +317,19 @@ static string verify_font_2 (string font, int size)
   if( has_value( font, "_" ) ) {
     string f = font - "_";
     if (verify_font_3 (f, size)) return f;
+    if( has_value( f, " " ) ) {
+      // The old code tested this as a side effect of the tail
+      // recursion thingies, but I doubt it was really intended. Keep
+      // it to avoid compatibility trouble (although that's unlikely).
+      f = replace (f, " ", "_");
+      if (verify_font_3 (f, size)) return f;
+    }
   }
 
   if( has_value( font, " " ) ) {
     string f = replace (font, " ", "_");
     if (verify_font_3 (f, size)) return f;
-    f = font - " ";
+    f -= "_";
     if (verify_font_3 (f, size)) return f;
   }
 
