@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.15 1999/10/28 21:54:49 grubba Exp $
+ * $Id: ftp.pike,v 2.16 1999/10/29 20:27:52 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -196,6 +196,8 @@ class FileWrapper
   static private mixed id;
   static private object ftpsession;
 
+  static private string data;
+
   static private void read_callback(mixed i, string s)
   {
     read_cb(id, convert(s));
@@ -211,12 +213,30 @@ class FileWrapper
     ftpsession->touch_me();
   }
 
+  static private void delayed_nonblocking(function w_cb)
+  {
+    string d = data;
+    data = 0;
+    f->set_nonblocking(read_callback, w_cb, close_callback);
+    if (d) {
+      read_callback(0, d);
+    }
+  }
+
   void set_nonblocking(function r_cb, function w_cb, function c_cb)
   {
     read_cb = r_cb;
     close_cb = c_cb;
+    remove_callout(delayed_nonblocking);
     if (r_cb) {
-      f->set_nonblocking(read_callback, w_cb, close_callback);
+      if (data) {
+	// We need to call r_cb as soon as possible, but we can't do it here
+	// and we can't enable the read_callback just yet to maintain order.
+	call_out(delayed_nonblocking, 0, w_cb);
+	f->set_nonblocking(0, w_cb, 0);
+      } else {
+	f->set_nonblocking(read_callback, w_cb, close_callback);
+      }
     } else {
       f->set_nonblocking(0, w_cb, 0);
     }
@@ -224,6 +244,9 @@ class FileWrapper
 
   void set_blocking()
   {
+    if (data) {
+      remove_callout(delayed_nonblocking);
+    }
     f->set_blocking();
   }
 
@@ -241,6 +264,23 @@ class FileWrapper
   string read(int|void n)
   {
     ftpsession->touch_me();
+    if (data) {
+      if (n) {
+	if (n < sizeof(data)) {
+	  string d = data[..n-1];
+	  data = data[n..];
+	  return convert(d);
+	} else {
+	  string d = data;
+	  data = 0;
+	  return convert(d + f->read(n - sizeof(d)));
+	}
+      } else {
+	string d = data;
+	data = 0;
+	return convert(d + f->read());
+      }
+    }
     return(convert(f->read(n)));
   }
 
@@ -253,9 +293,14 @@ class FileWrapper
     }
   }
 
-  void create(object f_, object ftpsession_)
+  void create(object f_, string data_, object ftpsession_)
   {
     f = f_;
+    if (_data && sizeof(_data)) {
+      data = data_;
+    } else {
+      data = 0;
+    }
     ftpsession = ftpsession_;
   }
 }
@@ -1524,7 +1569,7 @@ class FTPSession
 		"ftp communication: -> "+remote[0]+":"+remote[1]);
 #endif
 	if(pasv_callback) {
-	  pasv_callback(fd, @pasv_args);
+	  pasv_callback(fd, "", @pasv_args);
 	  pasv_callback = 0;
 	} else {
 	  pasv_accepted += ({ fd });
@@ -1539,7 +1584,7 @@ class FTPSession
     touch_me();
 
     if (sizeof(pasv_accepted)) {
-      fun(pasv_accepted[0], @args);
+      fun(pasv_accepted[0], "", @args);
       pasv_accepted = pasv_accepted[1..];
     } else {
       pasv_callback = fun;
@@ -1551,13 +1596,19 @@ class FTPSession
    * PORT handling
    */
 
-  static private void ftp_async_connect(function(object,mixed ...:void) fun,
+  static private void ftp_async_connect(function(object,string,mixed ...:void) fun,
 					mixed ... args)
   {
     DWRITE(sprintf("FTP: async_connect(%O, %@O)...\n", fun, args));
 
     // More or less copied from socket.pike
-  
+
+    if (!dataport_addr) {
+      DWRITE("FTP: No dataport specified.\n");
+      fun(0, @args);
+      return;
+    }
+
     object(Stdio.File) f = Stdio.File();
 
     // FIXME: Race-condition: open_socket() for other connections will fail
@@ -1581,7 +1632,7 @@ class FTPSession
 		       local_addr));
 	if (!f->open_socket()) {
 	  DWRITE("FTP: socket() failed. Out of sockets?\n");
-	  fun(0, @args);
+	  fun(0, 0, @args);
 	  destruct(f);
 	  return;
 	}
@@ -1589,32 +1640,32 @@ class FTPSession
     }
     privs = 0;
 
-    f->set_nonblocking(0, lambda(mixed ignored) {
-			    DWRITE("FTP: async_connect ok.\n");
-			    fun(f, @args);
-			  }, lambda(mixed ignored) {
-			       DWRITE("FTP: connect_and_send failed\n");
-			       destruct(f);
-			       fun(0, @args);
-			     });
+    f->set_nonblocking(lambda(mixed ignored, string data) {
+			 DWRITE("FTP: async_connect ok. Got data.\n");
+			 f->set_nonblocking(0,0,0);
+			 fun(f, data, @args);
+		       },
+		       lambda(mixed ignored) {
+			 DWRITE("FTP: async_connect ok.\n");
+			 f->set_nonblocking(0,0,0);
+			 fun(f, "", @args);
+		       },
+		       lambda(mixed ignored) {
+			 DWRITE("FTP: connect_and_send failed\n");
+			 destruct(f);
+			 fun(0, 0, @args);
+		       });
 
-    if (dataport_addr) {
 #ifdef FD_DEBUG
-      mark_fd(f->query_fd(), sprintf("ftp communication: %s:%d -> %s:%d",
-				     local_addr, local_port - 1,
-				     dataport_addr, dataport_port));
+    mark_fd(f->query_fd(), sprintf("ftp communication: %s:%d -> %s:%d",
+				   local_addr, local_port - 1,
+				   dataport_addr, dataport_port));
 #endif
 
-      if(catch(f->connect(dataport_addr, dataport_port))) {
-	DWRITE("FTP: Illegal internet address in connect in async comm.\n");
-	destruct(f);
-	fun(0, @args);
-	return;
-      }
-    } else {
-      DWRITE("FTP: No dataport specified.\n");
+    if(catch(f->connect(dataport_addr, dataport_port))) {
+      DWRITE("FTP: Illegal internet address in connect in async comm.\n");
       destruct(f);
-      fun(0, @args);
+      fun(0, 0, @args);
       return;
     }
   }
@@ -1768,10 +1819,10 @@ class FTPSession
     return 1;
   }
 
-  static private void connected_to_send(object fd, mapping file,
-					object session)
+  static private void connected_to_send(object fd, string ignored,
+					mapping file, object session)
   {
-    DWRITE(sprintf("FTP: connected_to_send(X, %O)\n", file));
+    DWRITE(sprintf("FTP: connected_to_send(X, %O, %O, X)\n", ignored, file));
 
     touch_me();
 
@@ -1809,7 +1860,7 @@ class FTPSession
 	// The list_stream object doesn't support nonblocking I/O,
 	// but converts to ASCII anyway, so we don't have to do
 	// anything about it.
-	file->file = ToAsciiWrapper(file->file, this_object());
+	file->file = ToAsciiWrapper(file->file, 0, this_object());
       }
       break;
     case "E":
@@ -1823,14 +1874,14 @@ class FTPSession
 	// The list_stream object doesn't support nonblocking I/O,
 	// but converts to ASCII anyway, so we don't have to do
 	// anything about it.
-	file->file = ToEBCDICWrapper(file->file, this_object());
+	file->file = ToEBCDICWrapper(file->file, 0, this_object());
       }
       break;
     default:
       // "I" and "L"
       // Binary -- no conversion needed.
       if (objectp(file->file) && file->file->set_nonblocking) {
-	file->file = BinaryWrapper(file->file, this_object());
+	file->file = BinaryWrapper(file->file, 0, this_object());
       }
       break;
     }
@@ -1877,9 +1928,9 @@ class FTPSession
     pipe->output(fd);
   }
 
-  static private void connected_to_receive(object fd, string args)
+  static private void connected_to_receive(object fd, string data, string args)
   {
-    DWRITE(sprintf("FTP: connected_to_receive(X, \"%s\")\n", args));
+    DWRITE(sprintf("FTP: connected_to_receive(X, %O, %O)\n", data, args));
 
     touch_me();
 
@@ -1893,14 +1944,14 @@ class FTPSession
 
     switch(mode) {
     case "A":
-      fd = FromAsciiWrapper(fd, this_object());
+      fd = FromAsciiWrapper(fd, data, this_object());
       break;
     case "E":
-      fd = FromEBCDICWrapper(fd, this_object());
+      fd = FromEBCDICWrapper(fd, data, this_object());
       return;
     default:	// "I" and "L"
       // Binary, no need to do anything.
-      fd = BinaryWrapper(fd, this_object());
+      fd = BinaryWrapper(fd, data, this_object());
       break;
     }
 
